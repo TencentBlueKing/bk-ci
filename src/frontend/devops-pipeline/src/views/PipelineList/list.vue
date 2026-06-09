@@ -10,10 +10,27 @@
         @after-resize="afterResize"
     >
         <pipeline-group-aside slot="aside" />
-        <Component
-            :is="ListRightComponent"
+        <div
             slot="main"
-        />
+            class="main-content"
+        >
+            <bk-alert
+                v-if="showAlert"
+                type="warning"
+            >
+                <div slot="title">
+                    {{ $t('taskingDecs', [1]) }}
+                    <span
+                        @click="handleAlertClose"
+                        class="know-btn"
+                    >{{ $t('IKnow') }}</span>
+                </div>
+            </bk-alert>
+            <Component
+                :is="ListRightComponent"
+                ref="listComponent"
+            />
+        </div>
     </bk-resize-layout>
 </template>
 
@@ -34,6 +51,7 @@
         },
         data () {
             return {
+                showAlert: true,
                 initialDivide: Number(localStorage.getItem(PIPELINE_GROUP_ASIDE_WIDTH_CACHE)) || 280
             }
         },
@@ -53,6 +71,14 @@
             },
             afterResize (width) {
                 localStorage.setItem(PIPELINE_GROUP_ASIDE_WIDTH_CACHE, JSON.stringify(width))
+            },
+            handleAlertClose () {
+                this.showAlert = false
+                this.$nextTick(() => {
+                    if (this.$refs.listComponent && typeof this.$refs.listComponent.updateTableHeight === 'function') {
+                        this.$refs.listComponent.updateTableHeight()
+                    }
+                })
             }
         }
     }
@@ -70,12 +96,24 @@
             display: flex;
             align-items: center;
         }
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            overflow: hidden;
+            height: 100%;
+
+            .know-btn {
+                color: #3A84FF;
+                cursor: pointer;
+                margin-left: 8px;
+            }
+        }
         .pipeline-list-main {
             display: flex;
             flex-direction: column;
             flex: 1;
             padding: 24px;
-            overflow: hidden;
             height: 100%;
             .pipeline-list-box {
                 flex: 1;
@@ -85,10 +123,11 @@
             .current-pipeline-group-name {
                 display: flex;
                 align-items: center;
+                justify-content: space-between;
                 font-size: 14px;
                 line-height: 26px;
                 margin: 0 0 16px 0;
-                > :first-child {
+                p > :first-child {
                     margin: 0 8px 0 0;
                 }
                 > span {
@@ -98,6 +137,9 @@
                 h5 {
                     color: #313238;
                     font-weight: normal;
+                }
+                .historical-task {
+                    font-weight: 400;
                 }
             }
             .pipeline-list-main-header {

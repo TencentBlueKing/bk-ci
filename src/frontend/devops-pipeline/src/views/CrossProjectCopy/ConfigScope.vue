@@ -1,27 +1,31 @@
 <template>
-    <div class="config-scope">
+    <div
+        class="config-scope"
+        :style="{ height: isLoading ? '100%' : 'auto' }"
+    >
         <!-- 配置任务信息表单 -->
         <div class="config-form-section">
             <div class="section-title">
                 <p>
                     <span class="title-text">{{ $t('configTaskInfo') }}</span>
-                    <i18n
-                        class="pipeline-count"
-                        path="pipelineCount"
-                        tag="span"
-                    >
-                        <span class="blod">{{ pipelineCount }}</span>
-                        <span>{{ autoPipelineCount }}</span>
-                    </i18n>
+                    <span class="pipeline-count">
+                        <span v-html="$t('pipelineCount', [taskData?.pipelineCount])"></span>
+                        <template v-if="taskData?.subPipelineCount > 0">（{{ $t('includingAutoAdded', [taskData.subPipelineCount]) }}）</template>
+                    </span>
                 </p>
                 <p class="pipeline-desc">{{ $t('configTaskInfoDesc') }}</p>
             </div>
-            <hr style="border: 0; border-top: 1px solid #DCDEE5; margin: 16px 0 24px;" />
+        </div>
+        
+        <hr style="border: 0; border-top: 1px solid #DCDEE5; margin: 16px 0 24px;" />
+
+        <div v-bkloading="{ isLoading: isLoading, title: $t('analyzingPipeline'), zIndex: 10 }">
             <bk-form
-                :model="formData.configScope"
+                :model="configScopeData"
                 :rules="formRules"
                 ref="configForm"
                 form-type="vertical"
+                class="config-form"
             >
                 <div class="form-row">
                     <bk-form-item
@@ -31,16 +35,17 @@
                         class="form-item-half"
                     >
                         <bk-select
-                            :value="formData.configScope.targetProjectId"
-                            @change="handleUpdate('configScope', 'targetProjectId', $event)"
+                            v-model="configScopeData.targetProjectId"
+                            @change="(value) => handleUpdate(value, 'targetProjectId')"
                             :placeholder="$t('pleaseSelect')"
+                            :disabled="isReadOnly"
                             searchable
                         >
                             <bk-option
                                 v-for="project in projectList"
-                                :key="project.id"
-                                :id="project.id"
-                                :name="project.name"
+                                :key="project.projectCode"
+                                :id="project.projectCode"
+                                :name="project.projectName"
                             />
                         </bk-select>
                     </bk-form-item>
@@ -51,28 +56,33 @@
                         class="form-item-half"
                     >
                         <bk-input
-                            :value="formData.configScope.taskName"
-                            @change="handleUpdate('configScope', 'taskName', $event)"
-                            @blur="handleTaskNameBlur"
+                            v-model="configScopeData.taskName"
+                            @change="(value) => handleUpdate(value, 'taskName')"
                             :placeholder="$t('enterTaskName')"
+                            :disabled="isReadOnly"
+                            :readonly="isReadOnly"
                         />
                     </bk-form-item>
                 </div>
                 <bk-form-item
                     :label="$t('pipelineIdStrategy')"
                     :required="true"
-                    property="pipelineIdStrategy"
+                    class="strategy-form"
+                    property="pipelineCopyStrategy"
                 >
                     <bk-radio-group
                         class="pipeline-strategy"
-                        :value="formData.configScope.pipelineIdStrategy"
-                        @change="handleUpdate('configScope', 'pipelineIdStrategy', $event)"
+                        v-model="configScopeData.pipelineCopyStrategy"
+                        @change="(value) => handleUpdate(value, 'pipelineCopyStrategy')"
                     >
                         <div
                             class="pipeline-strategy-item"
-                            :class="{ active: formData.configScope.pipelineIdStrategy === 'auto' }"
+                            :class="{ active: configScopeData.pipelineCopyStrategy === PipelineIdStrategy.PIPELINE_CREATE_NEW_ID }"
                         >
-                            <bk-radio value="auto">
+                            <bk-radio
+                                :value="PipelineIdStrategy.PIPELINE_CREATE_NEW_ID"
+                                :disabled="isReadOnly"
+                            >
                                 {{ $t('autoGenerateNewId') }}
                                 <span class="recommend">{{ $t('recommend') }}</span>
                             </bk-radio>
@@ -80,425 +90,608 @@
                         </div>
                         <div
                             class="pipeline-strategy-item"
-                            :class="{ active: formData.configScope.pipelineIdStrategy === 'keep' }"
+                            :class="{ active: configScopeData.pipelineCopyStrategy === PipelineIdStrategy.PIPELINE_REUSE_SOURCE_ID }"
                         >
-                            <bk-radio value="keep">{{ $t('keepSourceId') }}</bk-radio>
+                            <bk-radio
+                                :value="PipelineIdStrategy.PIPELINE_REUSE_SOURCE_ID"
+                                :disabled="isReadOnly"
+                            >
+                                {{ $t('keepSourceId') }}
+                            </bk-radio>
                             <p>{{ $t('keepSourceIdDesc') }}</p>
                         </div>
                     </bk-radio-group>
                 </bk-form-item>
             </bk-form>
-        </div>
-        <hr style="border: 0; border-top: 1px solid #DCDEE5; margin: 24px 0 24px;" />
-        <!-- 提示栏区域 -->
-        <div
-            class="alert-bars-section"
-            v-if="pacPipelineCount > 0 || subPipelineCount > 0"
-        >
-            <div
-                class="alert-bar alert-bar--pac"
-                v-if="pacPipelineCount > 0"
-            >
-                <div class="alert-bar__left">
-                    <Logo
-                        name="excluded-pipeline"
-                        size="20"
-                    />
-                    <p>
-                        <i18n
-                            path="autoExcludedPacPipeline"
-                            tag="span"
-                        >
-                            <span class="alert-bar__count">{{ pacPipelineCount }}</span>
-                        </i18n>
-                        <span class="desc">{{ $t('autoExcludedPacPipelineDesc') }}</span>
-                    </p>
-                </div>
-                <div class="alert-bar__right">
-                    <bk-button
-                        text
-                        @click="handleViewDetails('pac')"
-                    >
-                        {{ $t('viewDetails') }}
-                    </bk-button>
-                </div>
-            </div>
-            <div
-                class="alert-bar alert-bar--sub"
-                v-if="subPipelineCount > 0"
-            >
-                <div class="alert-bar__left">
-                    <Logo
-                        name="sub-pipeline"
-                        size="20"
-                    />
-                    <p>
-                        <i18n
-                            path="autoAddedSubPipeline"
-                            tag="span"
-                        >
-                            <span class="alert-bar__count">{{ subPipelineCount }}</span>
-                        </i18n>
-                        <span class="desc">{{ $t('autoAddedSubPipelineDesc') }}</span>
-                    </p>
-                </div>
-                <div class="alert-bar__right">
-                    <bk-button
-                        text
-                        @click="handleViewDetails('sub')"
-                    >
-                        {{ $t('viewDetails') }}
-                    </bk-button>
-                </div>
-            </div>
-        </div>
 
-        <!-- 流水线表格区域 -->
-        <div class="pipeline-table-section">
-            <!-- Tab 筛选和操作栏 -->
-            <div class="table-toolbar">
-                <div class="toolbar-left">
-                    <div class="custom-tabs">
-                        <div
-                            v-for="tab in tabList"
-                            :key="tab.name"
-                            :class="['custom-tab-item', { 'is-active': activeTab === tab.name }]"
-                            @click="handleTabChange(tab.name)"
+            <hr style="border: 0; border-top: 1px solid #DCDEE5; margin: 24px 0 24px;" />
+
+            <!-- 提示栏区域 -->
+            <div
+                class="alert-bars-section"
+                v-if="taskData?.pacCount > 0 || taskData?.subPipelineCount > 0"
+            >
+                <div
+                    class="alert-bar alert-bar--pac"
+                    v-if="taskData?.pacCount > 0"
+                >
+                    <div class="alert-bar__left">
+                        <Logo
+                            name="excluded-pipeline"
+                            size="20"
+                        />
+                        <p>
+                            <i18n
+                                path="autoExcludedPacPipeline"
+                                tag="span"
+                            >
+                                <span class="alert-bar__count">{{ taskData?.pacCount }}</span>
+                            </i18n>
+                            <span class="desc">{{ $t('autoExcludedPacPipelineDesc') }}</span>
+                        </p>
+                    </div>
+                    <div class="alert-bar__right">
+                        <bk-button
+                            text
+                            @click="handleViewDetails('pac')"
                         >
-                            <span class="tab-label">{{ tab.label }}</span>
-                            <span class="tab-count">{{ tab.count }}</span>
-                        </div>
+                            {{ $t('viewDetails') }}
+                        </bk-button>
                     </div>
                 </div>
-                <div class="toolbar-right">
-                    <bk-input
-                        v-model="searchKeyword"
-                        :placeholder="$t('searchPipelineNameOrGroup')"
-                        :right-icon="'bk-icon icon-search'"
-                        :clearable="true"
-                        @change="handleSearch"
-                        style="width: 300px; margin-right: 8px;"
-                    />
-                    <bk-button @click="handleRestoreAll">
-                        {{ $t('restoreAll') }}
-                    </bk-button>
+                <div
+                    class="alert-bar alert-bar--sub"
+                    v-if="taskData?.subPipelineCount > 0"
+                >
+                    <div class="alert-bar__left">
+                        <Logo
+                            name="sub-pipeline"
+                            size="20"
+                        />
+                        <p>
+                            <i18n
+                                path="autoAddedSubPipeline"
+                                tag="span"
+                            >
+                                <span class="alert-bar__count">{{ taskData?.subPipelineCount }}</span>
+                            </i18n>
+                            <span class="desc">{{ $t('autoAddedSubPipelineDesc') }}</span>
+                        </p>
+                    </div>
+                    <div class="alert-bar__right">
+                        <bk-button
+                            text
+                            @click="handleViewDetails('subPipeline')"
+                        >
+                            {{ $t('viewDetails') }}
+                        </bk-button>
+                    </div>
                 </div>
             </div>
 
-            <!-- 表格 -->
-            <bk-table
-                :data="filteredPipelineList"
-                :pagination="tablePagination"
-                @page-change="handlePageChange"
-                @page-limit-change="handlePageLimitChange"
-            >
-                <bk-table-column
-                    :label="$t('pipelineName')"
-                    prop="pipelineName"
-                    min-width="250"
+            <!-- 流水线表格区域 -->
+            <div class="pipeline-table-section">
+                <!-- Tab 筛选和操作栏 -->
+                <div class="table-toolbar">
+                    <div class="toolbar-left">
+                        <custom-tabs
+                            :active-tab="activeTab"
+                            :tabs="tabList"
+                            @tab-change="handleTabChange"
+                        />
+                    </div>
+                    <div class="toolbar-right">
+                        <search-select
+                            :key="searchSelectKey"
+                            class="pipeline-search-select"
+                            :data="searchDropList"
+                            :values="searchValues"
+                            :placeholder="$t('searchPipelineNameOrGroup')"
+                            @change="handleSearch"
+                            style="width: 360px; margin-right: 8px;"
+                        />
+                        <bk-button @click="handleRestoreAll">
+                            {{ $t('restoreAll') }}
+                        </bk-button>
+                    </div>
+                </div>
+
+                <!-- 表格 -->
+                <bk-table
+                    :data="pipelineList"
+                    :pagination="tablePagination"
+                    :outer-border="false"
+                    :header-border="false"
+                    v-bkloading="{ isLoading: tableLoading }"
+                    @page-change="handlePageChange"
+                    @page-limit-change="handlePageLimitChange"
                 >
-                    <template slot-scope="{ row }">
-                        <div class="pipeline-name-cell">
-                            <span class="pipeline-name-text">{{ row.pipelineName }}</span>
-                            <span
-                                v-if="row.type === 'sub'"
-                                class="sub-tag"
-                            >
-                                {{ $t('subPipeline') }}
-                                <Logo
-                                    name="link"
-                                    size="10"
-                                />
+                    <bk-table-column
+                        :label="$t('pipelineName')"
+                        prop="pipelineName"
+                        min-width="250"
+                    >
+                        <template slot-scope="{ row }">
+                            <div class="pipeline-name-cell">
+                                <span class="pipeline-name-text">{{ row.pipelineName }}</span>
+                                <span
+                                    v-if="row.subPipeline"
+                                    class="sub-tag"
+                                >
+                                    {{ $t('subPipeline') }}
+                                    <Logo
+                                        name="link"
+                                        size="10"
+                                    />
+                                </span>
+                                <span
+                                    v-if="row.pac"
+                                    class="pac-tag"
+                                >
+                                    <i class="devops-icon icon-code" />
+                                    PAC
+                                </span>
+                                <bk-tag
+                                    v-if="row.versionStatus === 'COMMITTING'"
+                                    theme="success"
+                                    class="draft-tag"
+                                >
+                                    {{ $t('draft') }}
+                                </bk-tag>
+                                <span
+                                    v-if="row.constraint"
+                                    class="template-tag"
+                                >
+                                    {{ $t('constraint') }}
+                                </span>
+                            </div>
+                        </template>
+                    </bk-table-column>
+                    <bk-table-column
+                        :label="$t('creator')"
+                        prop="creator"
+                    />
+                    <bk-table-column
+                        :label="$t('status')"
+                        prop="status"
+                    >
+                        <template slot-scope="{ row }">
+                            <span :class="['status-text', `status-text--${row.status}`]">
+                                {{ getStatusText(row.status) }}
                             </span>
-                            <span
-                                v-if="row.type === 'pac'"
-                                class="pac-tag"
-                            >
-                                <i class="devops-icon icon-code" />
-                                PAC
-                            </span>
-                            <bk-tag
-                                v-if="row.onlyDraftVersion"
-                                theme="success"
-                                class="draft-tag"
-                            >
-                                {{ $t('draft') }}
-                            </bk-tag>
-                            <span
-                                v-if="row.templateId"
-                                class="template-tag"
-                            >
-                                {{ $t('constraint') }}
-                            </span>
-                        </div>
-                    </template>
-                </bk-table-column>
-                <bk-table-column
-                    :label="$t('pipelineGroups')"
-                    prop="groupName"
-                    min-width="150"
-                />
-                <bk-table-column
-                    :label="$t('creator')"
-                    prop="creator"
-                    width="120"
-                />
-                <bk-table-column
-                    :label="$t('status')"
-                    prop="status"
-                    width="120"
-                >
-                    <template slot-scope="{ row }">
-                        <span :class="['status-text', `status-text--${row.status}`]">
-                            {{ getStatusText(row.status) }}
-                        </span>
-                    </template>
-                </bk-table-column>
-                <bk-table-column
-                    :label="$t('operation')"
-                    width="180"
-                >
-                    <template slot-scope="{ row }">
-                        <div class="operation-cell">
-                            <bk-button
-                                v-if="row.status === 'excluded' && row.canRestore"
-                                text
-                                @click="handleRestore(row)"
-                            >
-                                {{ $t('restore.restore') }}
-                            </bk-button>
-                            <bk-button
-                                v-else-if="row.status === 'pending' && row.canExclude"
-                                text
-                                @click="handleExclude(row)"
-                            >
-                                {{ $t('exclude') }}
-                            </bk-button>
-                            <span
-                                v-else-if="row.autoAction"
-                                class="auto-action-text"
-                            >
-                                {{ row.autoAction }}
-                            </span>
-                            <span
-                                v-else
-                                class="not-support-text"
-                            >
-                                {{ $t('notSupportMigration') }}
-                            </span>
-                        </div>
-                    </template>
-                </bk-table-column>
-            </bk-table>
+                        </template>
+                    </bk-table-column>
+                    <bk-table-column
+                        :label="$t('operation')"
+                        width="180"
+                    >
+                        <template slot-scope="{ row }">
+                            <div class="operation-cell">
+                                <bk-button
+                                    v-if="row.status === PipelineBatchTaskDetailStatus.EXCLUDED"
+                                    text
+                                    @click="handleRestore(row)"
+                                >
+                                    {{ $t('restore.restore') }}
+                                </bk-button>
+                                <bk-button
+                                    v-else-if="row.status === PipelineBatchTaskDetailStatus.WAIT_COPY"
+                                    text
+                                    @click="handleExclude(row)"
+                                >
+                                    {{ $t('exclude') }}
+                                </bk-button>
+                                <span
+                                    v-else-if="row.pac"
+                                    class="auto-action-text"
+                                >
+                                    {{ $t('notSupportMigration') }}
+                                </span>
+                                <span
+                                    v-else-if="row.subPipeline"
+                                    class="not-support-text"
+                                >
+                                    {{ $t('systemAutoAdded') }}
+                                </span>
+                            </div>
+                        </template>
+                    </bk-table-column>
+                </bk-table>
+            </div>
         </div>
     </div>
 </template>
 
 <script>
+    import { mapActions } from 'vuex'
+    import Logo from '@/components/Logo'
+    import CustomTabs from '@/views/CrossProjectCopy/components/CustomTabs.vue'
+    import SearchSelect from '@blueking/search-select'
+    import '@blueking/search-select/dist/styles/index.css'
+    import { getTimestamp } from '@/utils/util'
+    import { PipelineIdStrategy, PipelineBatchTaskDetailStatus } from '@/store/modules/crossProjectCopy/constants'
+
     export default {
         name: 'ConfigScope',
+        components: {
+            Logo,
+            CustomTabs,
+            SearchSelect
+        },
         props: {
-            formData: {
+            configScopeData: {
                 type: Object,
-                required: true
+                required: true,
+                default: () => ({
+                    targetProjectId: '',
+                    taskName: '',
+                    pipelineCopyStrategy: ''
+                })
+            },
+            taskData: {
+                type: Object,
+                default: null
+            },
+            analyzingPipeline: {
+                type: Boolean,
+                default: false
+            },
+            isReadOnly: {
+                type: Boolean,
+                default: false
             }
         },
         data () {
             return {
                 // 当前激活的 Tab
                 activeTab: 'all',
-                // 搜索关键词
-                searchKeyword: '',
-                // 从提示栏点击「查看明细」时的类型筛选
-                typeFilter: '',
-                pipelineCount: 9,
-                autoPipelineCount: 3,
+                // 搜索条件值（SearchSelect 的值结构）
+                searchValues: [],
+                searchSelectKey: 0,
+                // 内部 loading 状态（用于接口加载）
+                isLoadingData: false,
+                // 表格 loading 状态
+                tableLoading: false,
                 // 项目列表
-                projectList: [
-                    { id: 'proj-001', name: '项目A' },
-                    { id: 'proj-002', name: '项目B' },
-                    { id: 'proj-003', name: '项目C' }
-                ],
-                // 流水线列表（Mock 数据）
-                pipelineList: [
-                    { pipelineId: 'p-001', pipelineName: 'yamb1-trigger', groupName: '构建发布，精品服务', creator: 'fayewang', status: 'pending', type: 'normal', templateId: '123456', canExclude: true, autoAction: '系统自动添加' },
-                    { pipelineId: 'p-002', pipelineName: 'frontend-app / 灰度流水线', groupName: '质量测试', creator: 'fayewang', status: 'pending', type: 'pac', canExclude: false, autoAction: '' },
-                    { pipelineId: 'p-003', pipelineName: 'data-pipeline / ETL任务', onlyDraftVersion: true, groupName: '核心服务', creator: 'fayewang', status: 'pending', type: 'normal', canExclude: true, autoAction: '' },
-                    { pipelineId: 'p-004', pipelineName: 'mobile-sdk / 质量扫描', groupName: '质量扫描', creator: 'fayewang', status: 'pending', type: 'sub', canExclude: true, autoAction: '系统自动添加' },
-                    { pipelineId: 'p-005', pipelineName: 'gateway / 回归测试', groupName: '自动化测试', creator: 'fayewang', status: 'pending', type: 'normal', canExclude: true, autoAction: '' },
-                    { pipelineId: 'p-006', pipelineName: 'infra / 基础设施监控', groupName: '基础设施', creator: 'fayewang', status: 'pending', type: 'normal', canExclude: true, autoAction: '' },
-                    { pipelineId: 'p-007', pipelineName: 'infra / 测试环境', groupName: '基础设施', creator: 'fayewang', status: 'excluded', type: 'normal', canRestore: true, autoAction: '' },
-                    { pipelineId: 'p-008', pipelineName: 'security / 安全扫描', groupName: '质量扫描', creator: 'fayewang', status: 'pending', type: 'normal', canExclude: true, autoAction: '' },
-                    { pipelineId: 'p-009', pipelineName: 'nightly-regression / 夜间回归', groupName: '自动化测试', creator: 'fayewang', status: 'pending', type: 'normal', canExclude: true, autoAction: '' },
-                    { pipelineId: 'p-010', pipelineName: 'asset-center / 资产构建 #098', groupName: '质量扫描', creator: 'fayewang', status: 'excluded', type: 'pac', canRestore: false, autoAction: '暂不支持迁移' }
-                ],
+                projectList: [],
+                // 流水线列表
+                pipelineList: [],
+                // 状态汇总数据
+                statusSummary: [],
                 // 表格分页
                 tablePagination: {
                     current: 1,
                     limit: 10,
                     count: 0,
-                    'show-total-count': true
                 },
                 // 表单验证规则
                 formRules: {
                     targetProjectId: [
-                        { required: true, message: this.$t('notSelectedTargetProject'), trigger: 'blur' }
+                        { required: true, message: this.$t('notSelectedTargetProject'), trigger: 'change' }
                     ],
                     taskName: [
                         { required: true, message: this.$t('pleaseEnterTaskName'), trigger: 'blur' }
                     ],
-                    pipelineIdStrategy: [
+                    pipelineCopyStrategy: [
                         { required: true, message: this.$t('pleaseSelectPipelineIdStrategy'), trigger: 'change' }
                     ]
                 }
             }
         },
         computed: {
-            // Tab 列表（包含动态数量）
+            projectId () {
+                return this.$route.params.projectId
+            },
+            taskId () {
+                return this.$route.params.taskId
+            },
+            // 统一的 loading 状态 包括：父组件轮询阶段 + 子组件数据加载阶段
+            isLoading () {
+                return this.analyzingPipeline || this.isLoadingData
+            },
+            // Tab 列表
             tabList () {
-                const allCount = this.pipelineList.length
-                const pendingCount = this.pipelineList.filter(item => item.status === 'pending').length
-                const excludedCount = this.pipelineList.filter(item => item.status === 'excluded').length
+                const waitCopyItem = this.statusSummary.find(item => item.status === PipelineBatchTaskDetailStatus.WAIT_COPY)
+                const excludedItem = this.statusSummary.find(item => item.status === PipelineBatchTaskDetailStatus.EXCLUDED)
+
+                const pendingCount = waitCopyItem ? waitCopyItem.count : 0
+                const excludedCount = excludedItem ? excludedItem.count : 0
+                // 全部数量 = 待复制 + 已排除（或从statusSummary中计算全部）
+                const allCount = this.statusSummary.reduce((sum, item) => sum + (item.count || 0), 0)
 
                 return [
                     { name: 'all', label: this.$t('all'), count: allCount },
-                    { name: 'pending', label: this.$t('pendingCopy'), count: pendingCount },
-                    { name: 'excluded', label: this.$t('excluded'), count: excludedCount }
+                    { name: PipelineBatchTaskDetailStatus.WAIT_COPY, label: this.$t('pendingCopy'), count: pendingCount },
+                    { name: PipelineBatchTaskDetailStatus.EXCLUDED, label: this.$t('excluded'), count: excludedCount }
                 ]
             },
-            // 已排除的 PAC 流水线数量
-            pacPipelineCount () {
-                return this.pipelineList.filter(item => item.type === 'pac' && item.status === 'excluded').length
-            },
-            // 已添加的子流水线数量
-            subPipelineCount () {
-                return this.pipelineList.filter(item => item.type === 'sub' && item.status === 'pending').length
-            },
-            // 筛选后的流水线列表
-            filteredPipelineList () {
-                let list = this.pipelineList
-
-                // 1. 按 Tab 筛选状态
-                if (this.activeTab !== 'all') {
-                    list = list.filter(item => item.status === this.activeTab)
+            searchDropList () {
+                const usedIds = (this.searchValues || []).map(v => v.id)
+                const list = [
+                    {
+                        id: 'pipelineName',
+                        name: this.$t('pipelineName'),
+                        default: true
+                    },
+                    {
+                        id: 'type',
+                        name: this.$t('pipelineType'),
+                        children: [
+                            { id: 'pac', name: this.$t('pacPipeline') },
+                            { id: 'subPipeline', name: this.$t('subPipeline') }
+                        ]
+                    },
+                    {
+                        id: 'creator',
+                        name: this.$t('creator'),
+                        default: true
+                    }
+                ]
+                return list.filter(item => !usedIds.includes(item.id))
+            }
+        },
+        watch: {
+            // 监听父组件的 analyzingPipeline 状态
+            // 当从非 false（null 或 true）变为 false 时，说明轮询完成，自动加载数据
+            async analyzingPipeline (newVal, oldVal) {
+                if (oldVal !== false && newVal === false) {
+                    await this.loadPipelineListWithLoading()
                 }
-
-                // 2. 按类型筛选（从提示栏点击「查看明细」）
-                if (this.typeFilter) {
-                    list = list.filter(item => item.type === this.typeFilter)
-                }
-
-                // 3. 按搜索关键词筛选
-                if (this.searchKeyword) {
-                    const keyword = this.searchKeyword.toLowerCase()
-                    list = list.filter(item => {
-                        return item.pipelineName.toLowerCase().includes(keyword)
-                            || item.groupName.toLowerCase().includes(keyword)
-                    })
-                }
-
-                // 更新分页总数
-                this.tablePagination.count = list.length
-
-                return list
+            }
+        },
+        created () {
+            this.PipelineIdStrategy = PipelineIdStrategy
+            this.PipelineBatchTaskDetailStatus = PipelineBatchTaskDetailStatus
+            this.loadProjectList()
+            
+            // 如果已经不在分析中状态，主动加载流水线列表
+            if (!this.analyzingPipeline) {
+                this.loadPipelineListWithLoading()
             }
         },
         methods: {
-            handleUpdate (stepName, field, value) {
-                this.$emit('update-form-data', stepName, field, value)
-                
-                // 当选择目标项目时，如果任务名称为空，则自动填充默认名称
-                if (field === 'targetProjectId' && value) {
-                    if (!this.formData.configScope.taskName || !this.formData.configScope.taskName.trim()) {
-                        // 获取目标项目名称
-                        const targetProject = this.projectList.find(p => p.id === value)
-                        const projectName = targetProject ? targetProject.name : value
-                        
-                        // 生成时间戳：格式为 YYYYMMDDHHmm
-                        const now = new Date()
-                        const prezero = (num) => num < 10 ? '0' + num : num
-                        const timestamp = `${now.getFullYear()}${prezero(now.getMonth() + 1)}${prezero(now.getDate())}${prezero(now.getHours())}${prezero(now.getMinutes())}`
-                        
-                        // 生成默认任务名称
-                        const defaultTaskName = `copy-to-${projectName}-${timestamp}`
-                        this.$emit('update-form-data', stepName, 'taskName', defaultTaskName)
-                        
-                        // 通知父组件更新顶部标题
-                        this.$emit('update-task-title', defaultTaskName)
-                    }
+            ...mapActions('crossProjectCopy', [
+                'getTaskDetails',
+                'getTaskStatusSummary',
+                'restoreTaskDetail',
+                'excludeTaskDetail',
+                'restoreAllExcludedTaskDetail',
+                'getProjectList'
+            ]),
+            /**
+             * 加载项目列表
+             */
+            async loadProjectList () {
+                try {
+                    this.projectList  = await this.getProjectList()
+                } catch (error) {
+                    this.$bkMessage({
+                        theme: 'error',
+                        message: error.message || error
+                    })
                 }
             },
-            handleTaskNameBlur () {
-                // 任务名称失焦时，同步更新顶部标题
-                const taskName = this.formData.configScope.taskName
-                if (taskName && taskName.trim()) {
-                    this.$emit('update-task-title', taskName)
+            /**
+             * 加载配置复制范围数据 — 首次加载，需要同时拉取列表数据和状态汇总数据
+             */
+            async loadPipelineListWithLoading () {
+                this.isLoadingData = true
+                try {
+                    await Promise.all([
+                        this.loadPipelineList(),
+                        this.loadStatusSummary()
+                    ])
+                } finally {
+                    this.isLoadingData = false
                 }
+            },
+            /**
+             * 加载流水线列表数据
+             */
+            async loadPipelineList () {
+                this.tableLoading = true
+                try {
+                    const queryParams = {
+                        projectId: this.projectId,
+                        taskId: this.taskId,
+                        params: {
+                            page: this.tablePagination.current,
+                            pageSize: this.tablePagination.limit,
+                            ...this.getStatusParam(),
+                            ...this.getSearchParams()
+                        }
+                    }
+                    const detailsData = await this.getTaskDetails(queryParams)
+                    
+                    this.pipelineList = detailsData.records || []
+                    this.tablePagination.count = detailsData.count || 0
+                } catch (error) {
+                    this.$bkMessage({
+                        theme: 'error',
+                        message: error.message || error
+                    })
+                } finally {
+                    this.tableLoading = false
+                }
+            },
+            /**
+             * 当前 Tab 对应的 status 参数
+             */
+            getStatusParam () {
+                const status = this.activeTab !== 'all' ? this.activeTab : ''
+                return status ? { status } : {}
+            },
+            /**
+             * 加载状态汇总数据（仅 Tab 数量等场景需要）
+             */
+            async loadStatusSummary () {
+                try {
+                    const summaryData = await this.getTaskStatusSummary({
+                        projectId: this.projectId,
+                        taskId: this.taskId
+                    })
+                    this.statusSummary = summaryData || []
+                } catch (error) {
+                    this.$bkMessage({
+                        theme: 'error',
+                        message: error.message || error
+                    })
+                }
+            },
+            handleUpdate (value, field) {
+                // 当选择目标项目时，如果任务名称为空，则自动填充默认名称
+                if (field === 'targetProjectId' && value) {
+                    if (!this.configScopeData.taskName || !this.configScopeData.taskName.trim()) {
+                        // 获取目标项目名称
+                        const targetProject = this.projectList.find(p => p.projectCode === value)
+                        const projectName = targetProject ? targetProject.projectName : value
+
+                        const timestamp = getTimestamp()
+
+                        // 生成默认任务名称
+                        const defaultTaskName = `copy-to-${projectName}-${timestamp}`
+                        this.$emit('update-form-data', 'taskName', defaultTaskName)
+                        this.validateField('taskName')
+                    }
+                }
+                
+                this.$emit('update-form-data', field, value)
             },
             handleTabChange (name) {
                 this.activeTab = name
-                this.typeFilter = '' // 切换 Tab 时清除类型筛选
-            },
-            handleSearch () {
-                // 搜索时重置分页
+
                 this.tablePagination.current = 1
+                this.loadPipelineList()
             },
+            /**
+             * 搜索框搜索
+             */
+            handleSearch (value) {
+                this.searchValues = value || []
+                this.tablePagination.current = 1
+                this.loadPipelineList()
+            },
+            /**
+             * 把 SearchSelect 的搜索条件转换为接口可用的参数
+             */
+            getSearchParams () {
+                return (this.searchValues || []).reduce((acc, item) => {
+                    if (item.id === 'type') {
+                        item.values.forEach(v => {
+                            acc[v.id] = true
+                        })
+                    } else {
+                        acc[item.id] = item.values.map(v => v.id).join(',')
+                    }
+                    return acc
+                }, {})
+            },
+            /**
+             * 点击「查看明细」
+             */
             handleViewDetails (type) {
-                // 点击提示栏的「查看明细」，筛选对应类型
-                this.typeFilter = type
-                if (type === 'pac') {
-                    this.activeTab = 'excluded'
-                } else if (type === 'sub') {
-                    this.activeTab = 'pending'
+                const typeName = type === 'pac' ? this.$t('pacPipeline') : this.$t('subPipeline')
+                
+                const newSearchValues = [
+                    {
+                        id: 'type',
+                        name: this.$t('pipelineType'),
+                        values: [{ id: type, name: typeName }]
+                    }
+                ]
+                this.activeTab = 'all'
+                this.searchSelectKey++
+                
+                this.handleSearch(newSearchValues)
+            },
+            /**
+             * 恢复全部已排除的流水线
+             */
+            async handleRestoreAll () {
+                try {
+                    await this.restoreAllExcludedTaskDetail({
+                        projectId: this.projectId,
+                        taskId: this.taskId
+                    })
+                    this.$bkMessage({
+                        theme: 'success',
+                        message: this.$t('restoreSuccess')
+                    })
+                    this.loadPipelineListWithLoading()
+                } catch (error) {
+                    this.$bkMessage({
+                        theme: 'error',
+                        message: error.message || error
+                    })
                 }
             },
-            handleRestoreAll () {
-                // 恢复全部已排除的流水线
-                this.pipelineList.forEach(item => {
-                    if (item.status === 'excluded' && item.canRestore) {
-                        item.status = 'pending'
-                    }
-                })
-                this.$bkMessage({
-                    theme: 'success',
-                    message: this.$t('restoreAllSuccess')
-                })
+            /**
+             * 恢复单个流水线
+             */
+            async handleRestore (row) {
+                try {
+                    await this.restoreTaskDetail({
+                        projectId: this.projectId,
+                        taskId: this.taskId,
+                        pipelineId: row.pipelineId
+                    })
+                    this.$bkMessage({
+                        theme: 'success',
+                        message: this.$t('restoreSuccess')
+                    })
+                    this.loadPipelineListWithLoading()
+                } catch (error) {
+                    this.$bkMessage({
+                        theme: 'error',
+                        message: error.message || error
+                    })
+                }
             },
-            handleRestore (row) {
-                // 恢复单个流水线
-                row.status = 'pending'
-                this.$bkMessage({
-                    theme: 'success',
-                    message: this.$t('restoreSuccess')
-                })
-            },
-            handleExclude (row) {
-                // 排除单个流水线
-                row.status = 'excluded'
-                this.$bkMessage({
-                    theme: 'success',
-                    message: this.$t('excludeSuccess')
-                })
+            /**
+             *  排除单个流水线
+             */
+            async handleExclude (row) {
+                try {
+                    await this.excludeTaskDetail({
+                        projectId: this.projectId,
+                        taskId: this.taskId,
+                        pipelineId: row.pipelineId
+                    })
+                    this.$bkMessage({
+                        theme: 'success',
+                        message: this.$t('excludeSuccess')
+                    })
+                    this.loadPipelineListWithLoading()
+                } catch (error) {
+                    this.$bkMessage({
+                        theme: 'error',
+                        message: error.message || error
+                    })
+                }
             },
             getStatusText (status) {
                 const statusMap = {
-                    pending: this.$t('pendingCopy'),
-                    excluded: this.$t('excluded')
+                    [PipelineBatchTaskDetailStatus.EXCLUDED]: this.$t('excluded'),
+                    [PipelineBatchTaskDetailStatus.SUCCESS]: this.$t('success'),
+                    [PipelineBatchTaskDetailStatus.FAILED]: this.$t('failed'),
+                    [PipelineBatchTaskDetailStatus.WAIT_COPY]: this.$t('pendingCopy')
                 }
                 return statusMap[status] || '-'
             },
             handlePageChange (page) {
                 this.tablePagination.current = page
+                this.loadPipelineList()
             },
             handlePageLimitChange (limit) {
                 this.tablePagination.limit = limit
                 this.tablePagination.current = 1
+                this.loadPipelineList()
             },
             /**
              * 表单验证方法,供父组件调用
              */
             validate () {
-                return this.$refs.configForm?.validate?.() || Promise.resolve()
+                return this.$refs.configForm?.validate?.()
             },
             /**
              * 校验指定字段
@@ -515,57 +708,16 @@
 
 <style lang="scss" scoped>
     @import '@/scss/conf.scss';
+
+    .config-scope {
+        
+        padding: 16px 24px 0;
+    }
     
     .config-form-section {
         background: #FFFFFF;
         border-radius: 2px;
         margin-bottom: 16px;
-
-        .pipeline-strategy {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-
-            .pipeline-strategy-item {
-                display: flex;
-                flex-direction: column;
-                flex: 1;
-                padding: 12px 16px;
-                align-items: flex-start;
-                gap: 8px;
-                height: 90px;
-                border-radius: 2px;
-                background: #F5F7FA;
-                border: 1px solid transparent;
-
-                .recommend {
-                    padding: 2px 8px;
-                    margin-left: 8px;
-                    border-radius: 2px;
-                    border: 1px #A1E3BA solid;
-                    background: #DAF6E5;
-                    color: #299e56;
-                    font-size: 12px;
-                    line-height: 20px;
-                }
-
-                ::v-deep .bk-radio-text {
-                    margin-left: 4px;
-                    color: #313238;
-                }
-
-                &.active {
-                    border: 1px solid #C4C6CC;
-                }
-
-                p {
-                    color: #979ba5;
-                    font-size: 12px;
-                    line-height: 20px;
-                    margin-left: 18px;
-                }
-            }
-        }
 
         .section-title {
 
@@ -579,16 +731,12 @@
 
             .pipeline-count {
                 display: inline-block;
-                padding: 0 8px;
+                padding: 2px 8px;
                 font-size: 12px;
                 flex-wrap: wrap;
                 border-radius: 2px;
                 font-weight: 400;
                 background:#F0F1F5;
-
-                .blod {
-                    font-weight: 700;
-                }
             }
             .pipeline-desc {
                 color: #979ba5;
@@ -598,41 +746,93 @@
             }
         }
 
+    }
+    .config-form {
         .form-row {
             display: flex;
             gap: 20px;
             align-items: flex-start;
-
+    
             .form-item-half {
                 flex: 1;
             }
-
+    
             ::v-deep .bk-form-item {
                 margin: 0;
             }
-
+    
             ::v-deep .bk-select-dropdown{
                 margin-top: 1px;
             }
-
+    
             ::v-deep .bk-input-text {
                 height: 33px;
             }
         }
-
+    
         ::v-deep .bk-form-item {
             margin-bottom: 20px;
-
+    
             &:last-child {
                 margin-bottom: 0;
             }
         }
-
+    
         ::v-deep .bk-label-text {
             font-size: 12px;
             color: #4D4F56;
             margin-bottom: 6px;
             font-weight: 400;
+        }
+
+        .strategy-form {
+            margin-top: 24px;
+
+            .pipeline-strategy {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+    
+                .pipeline-strategy-item {
+                    display: flex;
+                    flex-direction: column;
+                    flex: 1;
+                    padding: 12px 16px;
+                    align-items: flex-start;
+                    gap: 8px;
+                    height: 90px;
+                    border-radius: 2px;
+                    background: #F5F7FA;
+                    border: 1px solid transparent;
+    
+                    .recommend {
+                        padding: 2px 8px;
+                        margin-left: 8px;
+                        border-radius: 2px;
+                        border: 1px #A1E3BA solid;
+                        background: #DAF6E5;
+                        color: #299e56;
+                        font-size: 12px;
+                        line-height: 20px;
+                    }
+    
+                    ::v-deep .bk-radio-text {
+                        margin-left: 4px;
+                        color: #313238;
+                    }
+    
+                    &.active {
+                        border: 1px solid #C4C6CC;
+                    }
+    
+                    p {
+                        color: #979ba5;
+                        font-size: 12px;
+                        line-height: 20px;
+                        margin-left: 18px;
+                    }
+                }
+            }
         }
     }
 
@@ -818,7 +1018,13 @@
             .toolbar-right {
                 display: flex;
                 align-items: center;
-                gap: 8px;
+
+                .pipeline-search-select {
+                    background-color: white;
+                    ::placeholder {
+                        color: #c4c6cc;
+                    }
+                }
             }
         }
 
@@ -840,34 +1046,39 @@
             }
 
             .status-text {
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
                 font-size: 12px;
+                color: #4D4F56;
 
-                &--pending {
-                    color: #FF9C01;
-
-                    &::before {
-                        content: '';
-                        display: inline-block;
-                        width: 6px;
-                        height: 6px;
-                        border-radius: 50%;
-                        background: #FF9C01;
-                        margin-right: 6px;
-                    }
+                &::before {
+                    content: '';
+                    display: inline-block;
+                    width: 8px;
+                    height: 8px;
+                    border-radius: 50%;
+                    border: 1px solid transparent;
                 }
 
-                &--excluded {
-                    color: #979BA5;
+                &--WAIT_COPY::before {
+                    background-color: #FDF4E8;
+                    border-color: #F59500;
+                }
 
-                    &::before {
-                        content: '';
-                        display: inline-block;
-                        width: 6px;
-                        height: 6px;
-                        border-radius: 50%;
-                        background: #979BA5;
-                        margin-right: 6px;
-                    }
+                &--EXCLUDED::before {
+                    background-color: #F5F7FA;
+                    border-color: #C4C6CC;
+                }
+
+                &--SUCCESS::before {
+                    background-color: #DAF6E5;
+                    border-color: #2CAF5E;
+                }
+
+                &--FAILED::before {
+                    background-color: #FFEBEB;
+                    border-color: #EA3636;
                 }
             }
 

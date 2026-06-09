@@ -62,6 +62,9 @@ const DraftDebugHeader = () => import(/* webpackChunkName: "draftDebug" */'../co
 // 跨项目复制
 const CrossProjectCopy = () => import(/* webpackChunkName: "crossProjectCopy" */'../views/CrossProjectCopy')
 
+// 批量历史任务
+const BatchHistoricalTask = () => import(/* webpackChunkName: "batchHistoricalTask" */'../views/BatchHistoricalTask')
+
 // 客户端流水线执行预览 - edit
 const pipelinesPreview = () => import(/* webpackChunkName: "pipelinesPreview" */'../views/subpages/preview.vue')
 const PreviewHeader = () => import(/* webpackChunkName: "pipelinesPreview" */'../components/PipelineHeader/PreviewHeader.vue')
@@ -179,11 +182,23 @@ const routes = [
             },
             {
                 // 跨项目复制
-                path: 'crossProjectCopy/:tab?',
+                path: 'crossProjectCopy/:taskId/:tab?',
                 name: 'crossProjectCopy',
                 component: CrossProjectCopy,
                 meta: {
                     title: 'crossProjectCopy',
+                    header: 'pipeline',
+                    icon: 'pipeline',
+                    to: 'PipelineManageList'
+                }
+            },
+            {
+                // 批量历史任务
+                path: 'batchHistoricalTask',
+                name: 'batchHistoricalTask',
+                component: BatchHistoricalTask,
+                meta: {
+                    title: 'batchHistoricalTask',
                     header: 'pipeline',
                     icon: 'pipeline',
                     to: 'PipelineManageList'

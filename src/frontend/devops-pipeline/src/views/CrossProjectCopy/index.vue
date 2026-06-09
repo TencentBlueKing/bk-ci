@@ -17,14 +17,17 @@
                             size="18"
                         />
                         <span class="task-name__text">{{ taskName }}</span>
-                        <span class="task-name__status">{{ $t('draft') }}</span>
+                        <span
+                            v-if="taskStatusText"
+                            class="task-name__status"
+                        >{{ taskStatusText }}</span>
                     </div>
-                    <span class="auto-save-time">{{ $t('autoSave') }} {{ autoSaveTime }}</span>
+                    <!-- <span class="auto-save-time">{{ $t('autoSave') }} {{ autoSaveTime }}</span> -->
                 </div>
                 <div class="header-full__project">
                     <p class="project-info">
                         <span class="source-project">{{ $t('source') }}</span>
-                        <span class="project-name">{{ sourceProjectName || '--' }}</span>
+                        <span class="project-name">{{ taskData?.projectId || '--' }}</span>
                         <Logo
                             name="arrows-right"
                             size="12"
@@ -37,7 +40,7 @@
                             {{ targetProjectName || $t('notSelected') }}
                         </span>
                     </p>
-                    <span class="pipeline-count">{{ $t('totalPipelines', [pipelineCount]) }}</span>
+                    <span class="pipeline-count">{{ $t('totalPipelines', [(taskData?.pipelineCount) || 0]) }}</span>
                 </div>
             </div>
             <div
@@ -46,7 +49,7 @@
             >
                 <span class="meta-item">
                     <span class="meta-label">ID：</span>
-                    <span>{{ taskId || '--' }}</span>
+                    <span>{{ (taskData?.taskId) || '--' }}</span>
                 </span>
                 <span class="meta-separator">|</span>
                 <span class="meta-item">
@@ -56,7 +59,7 @@
                 <span class="meta-separator">|</span>
                 <span class="meta-item">
                     <span class="meta-label">{{ $t('submitter') }}：</span>
-                    <span>{{ submitter || '--' }}</span>
+                    <span>{{ (taskData?.creator) || '--' }}</span>
                 </span>
             </div>
         </div>
@@ -74,6 +77,7 @@
                     'is-completed': step.completed,
                     'is-current': index === currentStepIndex
                 }"
+                @click="handleStepClick(step, index)"
             >
                 <div class="step-circle">
                     {{ index + 1 }}
@@ -85,17 +89,30 @@
             </div>
         </div>
         <!-- 主内容区 -->
-        <div class="main-content">
+        <div
+            class="main-content"
+            :style="{ 'padding-bottom': footerHeight }"
+        >
             <!-- 左侧内容区 -->
             <div
                 class="left-content"
+                :style="{ background: currentStepIndex < 2 ? 'white' : 'none' }"
+                v-bkloading="{ isLoading: savingDraft }"
                 ref="leftContent"
             >
                 <component
                     :is="currentTabComponent"
-                    :form-data="formData"
+                    :key="currentStepIndex"
+                    :config-scope-data="configScopeData"
+                    :task-data="taskData"
+                    :analyzing-pipeline="analyzingPipeline"
+                    :is-read-only="isReadOnly"
                     @update-form-data="handleUpdateFormData"
-                    @update-task-title="handleUpdateTaskTitle"
+                    @update-loading-state="handleUpdateLoadingState"
+                    @update-validation-data="handleUpdateValidationData"
+                    @update-execution-summary="handleUpdateExecutionSummary"
+                    @prev-step="handlePrev"
+                    @cancel="handleCancel"
                     ref="currentComponent"
                 />
             </div>
@@ -105,127 +122,296 @@
                 class="right-sidebar"
                 :class="{ 'is-sticky': isSticky }"
             >
-                <!-- 提交检查区域 -->
-                <div class="sidebar-section submit-check-section">
-                    <div class="section-header">
-                        <h3 class="section-title">{{ $t('submitCheck') }}</h3>
-                        <span
-                            v-if="validationItems.length > 0"
-                            class="error-count-badge"
-                        >
-                            {{ $t('waitingForHandle', [validationItems.length]) }}
-                        </span>
-                    </div>
-                    
-                    <!-- 检查项列表 -->
+                <template v-if="currentStepIndex < 2">
+                    <!-- 提交检查区域 -->
                     <div
-                        class="check-list"
+                        v-if="!loadingStatus"
+                        class="sidebar-section submit-check-section"
                     >
+                        <div class="section-header">
+                            <h3 class="section-title">{{ $t('submitCheck') }}</h3>
+                            <span
+                                v-if="errorValidationCount > 0"
+                                class="error-count-badge"
+                            >
+                                {{ $t('waitingForHandle', [errorValidationCount]) }}
+                            </span>
+                        </div>
+                        
+                        <!-- 检查项列表 -->
                         <div
-                            v-for="(item, index) in validationItems"
-                            :key="index"
-                            :class="['check-item', `check-item-${item.type}`]"
-                            @click="handleErrorClick(item)"
+                            class="check-list"
                         >
-                            <i
-                                v-if="item.type === 'success'"
-                                class="devops-icon icon-check-1 success-icon"
-                            />
-                            <i
-                                v-else
-                                class="devops-icon icon-close-small error-icon"
-                            />
-                            <span
-                                :class="item.type === 'success' ? 'success-text' : 'error-text'"
-                            >{{ item.message }}</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 任务摘要区域 -->
-                <div class="sidebar-section task-summary-section">
-                    <h3 class="section-title">{{ $t('taskSummary') }}</h3>
-                    
-                    <div class="summary-list">
-                        <div class="summary-item">
-                            <span class="summary-label">{{ $t('sourceProject') }}</span>
-                            <span class="summary-value">{{ sourceProjectName || '--' }}</span>
-                        </div>
-                        <div class="summary-item">
-                            <span class="summary-label">{{ $t('targetProject') }}</span>
-                            <span
-                                class="summary-value"
-                                :class="{ 'is-error': !targetProjectName }"
+                            <div
+                                v-for="(item, index) in validationItems"
+                                :key="index"
+                                :class="['check-item', `check-item-${item.type}`]"
+                                @click="handleErrorClick(item)"
                             >
-                                {{ targetProjectName || $t('notSelected') }}
-                            </span>
-                        </div>
-                        <hr style="border: 0; border-top: 1px solid #DCDEE5;" />
-                        <div class="summary-item">
-                            <span class="summary-label">{{ $t('pipelineCopyCount') }}</span>
-                            <span class="summary-value"><span class="number-bold">{{ pipelineCount }}</span> {{ $t('items') }}</span>
-                        </div>
-                        <div class="summary-item">
-                            <span class="summary-label">{{ $t('autoAddSubPipeline') }}</span>
-                            <span class="summary-value"><span class="number-bold">{{ autoAddSubPipelineCount }}</span> {{ $t('items') }}</span>
-                        </div>
-                        <div class="summary-item">
-                            <span class="summary-label">{{ $t('autoRemovePacPipeline') }}</span>
-                            <span class="summary-value"><span class="number-bold">{{ autoRemovePacCount }}</span> {{ $t('items') }}</span>
-                        </div>
-                        <div class="summary-item">
-                            <span class="summary-label">{{ $t('pipelineIdStrategy') }}</span>
-                            <span class="summary-value">{{ $t('autoGenerateNewId') }}</span>
-                        </div>
-                        <div class="summary-item">
-                            <span class="summary-label">{{ $t('unhandledResources') }}</span>
-                            <span
-                                class="summary-value"
-                                :class="{ 'is-warning': unhandledResourceCount > 0 }"
-                            >
-                                <span class="number-bold">{{ unhandledResourceCount }}</span>
-                            </span>
-                        </div>
-                        <div class="summary-item">
-                            <span class="summary-label">{{ $t('highRiskOperations') }}</span>
-                            <span
-                                class="summary-value"
-                                :class="{ 'is-success': highRiskOperationCount === 0 }"
-                            >
+                                <i
+                                    v-if="item.type === 'success'"
+                                    class="devops-icon icon-check-1 success-icon"
+                                />
+                                <i
+                                    v-else
+                                    class="devops-icon icon-close-small error-icon"
+                                />
                                 <span
-                                    class="number-bold"
-                                    v-if="highRiskOperationCount !== 0"
-                                >{{ highRiskOperationCount }}</span>
-                                <template v-else>{{ $t('none') }}</template>
-                            </span>
-                        </div>
-                        <div class="summary-item">
-                            <span class="summary-label">{{ $t('autoExecuteAfterCopy') }}</span>
-                            <span class="summary-value"><span class="number-bold">{{ autoExecuteCount }}</span> {{ $t('items') }}</span>
+                                    :class="item.type === 'success' ? 'success-text' : 'error-text'"
+                                >{{ item.message }}</span>
+                            </div>
                         </div>
                     </div>
-                </div>
+
+                    <!-- 任务摘要区域 -->
+                    <div class="sidebar-section task-summary-section">
+                        <h3 class="section-title">{{ $t('taskSummary') }}</h3>
+                        
+                        <div class="summary-list">
+                            <div class="summary-item">
+                                <span class="summary-label">{{ $t('sourceProject') }}</span>
+                                <span class="summary-value">{{ taskData?.projectId || '--' }}</span>
+                            </div>
+                            <div class="summary-item">
+                                <span class="summary-label">{{ $t('targetProject') }}</span>
+                                <span
+                                    class="summary-value"
+                                    :class="{ 'is-error': !targetProjectName }"
+                                >
+                                    {{ targetProjectName || $t('notSelected') }}
+                                </span>
+                            </div>
+                            <hr style="border: 0; border-top: 1px solid #DCDEE5;" />
+                            <div class="summary-item">
+                                <span class="summary-label">{{ $t('pipelineCopyCount') }}</span>
+                                <span class="summary-value"><span class="number-bold">{{ (taskData?.pipelineCount) || 0 }}</span> {{ $t('strip') }}</span>
+                            </div>
+                            <div class="summary-item">
+                                <span class="summary-label">{{ $t('autoAddSubPipeline') }}</span>
+                                <span class="summary-value"><span class="number-bold">{{ (taskData?.subPipelineCount) || 0 }}</span> {{ $t('strip') }}</span>
+                            </div>
+                            <div class="summary-item">
+                                <span class="summary-label">{{ $t('autoRemovePacPipeline') }}</span>
+                                <span class="summary-value"><span class="number-bold">{{ (taskData?.pacCount) || 0 }}</span> {{ $t('strip') }}</span>
+                            </div>
+                            <div class="summary-item">
+                                <span class="summary-label">{{ $t('pipelineIdStrategy') }}</span>
+                                <span class="summary-value">{{ pipelineCopyStrategyText }}</span>
+                            </div>
+                            <div class="summary-item">
+                                <span class="summary-label">{{ $t('unhandledResources') }}</span>
+                                <span
+                                    class="summary-value"
+                                    :class="{ 'is-warning': currentUnprocessedCount > 0 }"
+                                >
+                                    <span class="number-bold">{{ currentUnprocessedCount || '--' }}</span>
+                                </span>
+                            </div>
+                            <div class="summary-item">
+                                <span class="summary-label">{{ $t('highRiskOperations') }}</span>
+                                <span
+                                    class="summary-value"
+                                    :class="{ 'is-success': currentHighRiskCount === 0 }"
+                                >
+                                    <span
+                                        class="number-bold high-risk-number"
+                                        v-if="currentHighRiskCount !== 0"
+                                    >{{ currentHighRiskCount }}</span>
+                                    <span
+                                        class="none-high-risk"
+                                        v-else
+                                    >{{ $t('none') }}</span>
+                                </span>
+                            </div>
+                            <div class="summary-item">
+                                <span class="summary-label">{{ $t('autoExecuteAfterCopy') }}</span>
+                                <span
+                                    class="summary-value"
+                                    v-if="taskData?.autoFinishCount"
+                                >
+                                    <span class="number-bold">{{ taskData?.autoFinishCount }}</span>
+                                    {{ $t('strip') }}
+                                </span>
+                                <span v-else>--</span>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+                <template v-else>
+                    <!-- 任务执行中：展示通用指引 -->
+                    <div
+                        v-if="!isTaskCompleted"
+                        class="sidebar-section task-execution"
+                    >
+                        <div class="section-title">{{ $t('taskExecutionGuidance') }}</div>
+                        <div
+                            v-for="(item, index) in taskExecutionGuidance"
+                            :key="index"
+                            class="task-executionlist"
+                        >
+                            <Logo
+                                name="guidance-arrow"
+                                size="16"
+                            />
+                            <p>
+                                <span class="title">{{ item.title }}</span>
+                                <span>{{ item.desc }}</span>
+                            </p>
+                        </div>
+                    </div>
+                    <!-- 任务已完成：展示结果指引 -->
+                    <div
+                        v-else
+                        class="sidebar-section task-execution-result"
+                    >
+                        <div class="section-title">{{ $t('currentTaskGuidance') }}</div>
+                        <!-- 补齐资源配置 -->
+                        <div class="guidance-item">
+                            <div class="guidance-header">
+                                <Logo
+                                    name="guidance-arrow"
+                                    size="16"
+                                />
+                                <span class="guidance-title">{{ $t('completeResourceConfig') }}</span>
+                            </div>
+                            <p class="guidance-desc">
+                                <template v-if="executionSummary.needCompletionCount > 0">
+                                    {{ $t('needCompletionGuidance', [executionSummary.needCompletionCount]) }}
+                                    <p
+                                        class="view-resource-link"
+                                        @click="handleViewResources('NEED_COMPLETION')"
+                                    >
+                                        {{ $t('viewResource') }}
+                                    </p>
+                                </template>
+                                <template v-else>
+                                    {{ $t('noNeedCompletionGuidance') }}
+                                </template>
+                            </p>
+                        </div>
+                        <!-- 资源转移处理事项 -->
+                        <div class="guidance-item">
+                            <div class="guidance-header">
+                                <Logo
+                                    name="guidance-arrow"
+                                    size="16"
+                                />
+                                <span class="guidance-title">{{ $t('resourceTransferIssues') }}</span>
+                            </div>
+                            <p class="guidance-desc">
+                                <template v-if="executionSummary.needTransferCount > 0">
+                                    {{ $t('needTransferGuidance', [executionSummary.needTransferCount]) }}
+                                    <p
+                                        class="view-resource-link"
+                                        @click="handleViewResources('NEED_TRANSFER')"
+                                    >
+                                        {{ $t('viewResource') }}
+                                    </p>
+                                </template>
+                                <template v-else>
+                                    {{ $t('noNeedTransferGuidance') }}
+                                </template>
+                            </p>
+                        </div>
+                        <!-- 到目标项目验证流水线 -->
+                        <div class="guidance-item">
+                            <div class="guidance-header">
+                                <Logo
+                                    name="guidance-arrow"
+                                    size="16"
+                                />
+                                <span class="guidance-title">{{ $t('verifyPipelineInTarget') }}</span>
+                            </div>
+                            <p class="guidance-desc">{{ $t('verifyPipelineDesc') }}</p>
+                        </div>
+                    </div>
+                </template>
             </div>
         </div>
 
-        <!-- 底部操作栏 -->
-        <div class="footer-actions">
-            <bk-popover
-                v-for="btn in footerButtons"
-                :key="btn.action"
-                :disabled="!btn.tooltip"
-                placement="top"
+
+        <!-- 底部操作栏（第三步时不显示，且只读状态下不显示） -->
+        <div
+            v-if="currentStepIndex < 2 && !isReadOnly"
+            class="footer-actions"
+        >
+            <!-- 高风险操作确认（仅在资源依赖步骤且有高风险操作时显示） -->
+            <div
+                v-if="currentStepIndex === 1 && resourceValidationData.highRiskOperationCount > 0"
+                class="high-risk-confirm"
             >
-                <bk-button
-                    :theme="btn.theme"
-                    :disabled="btn.disabled"
-                    @click="btn.handler"
+                <bk-checkbox v-model="highRiskConfirmed" />
+                <i18n
+                    path="highRiskConfirmText"
+                    tag="span"
+                    class="high-risk-confirm__text"
                 >
-                    {{ btn.text }}
-                </bk-button>
-                <div slot="content">{{ btn.tooltip }}</div>
-            </bk-popover>
+                    <span class="high-risk-count">{{ resourceValidationData.highRiskOperationCount }}</span>
+                    <span
+                        class="high-risk-link"
+                        @click="handleShowHighRiskDialog"
+                    >{{ $t('highRiskOperations') }}</span>
+                </i18n>
+            </div>
+            
+            <div class="footer-buttons">
+                <bk-popover
+                    v-for="btn in footerButtons"
+                    :key="btn.action"
+                    :disabled="!btn.tooltip"
+                    placement="top"
+                >
+                    <bk-button
+                        :theme="btn.theme"
+                        :disabled="btn.disabled"
+                        @click="btn.handler"
+                    >
+                        {{ btn.text }}
+                    </bk-button>
+                    <div slot="content">{{ btn.tooltip }}</div>
+                </bk-popover>
+            </div>
         </div>
+        
+        <!-- 高风险操作提示弹窗 -->
+        <bk-dialog
+            v-model="highRiskDialog.visible"
+            theme="primary"
+            :mask-close="false"
+            :esc-close="false"
+            :width="640"
+            footer-position="right"
+            header-position="left"
+            :title="$t('riskWarning')"
+            class="high-risk-dialog"
+        >
+            <bk-tab
+                v-if="highRiskDialog.visible"
+                :key="highRiskTabs.map(t => t.type).join(',')"
+                :active.sync="highRiskDialog.activeTab"
+                type="unborder-card"
+            >
+                <bk-tab-panel
+                    v-for="tab in highRiskTabs"
+                    :key="tab.type"
+                    :name="tab.type"
+                    :label="tab.label"
+                >
+                    <RiskWarningContent
+                        :resource-type="tab.type"
+                        :resource-names="tab.resourceNames"
+                    />
+                </bk-tab-panel>
+            </bk-tab>
+            <template #footer>
+                <bk-button
+                    theme="primary"
+                    @click="handleHighRiskDialogConfirm"
+                >
+                    {{ $t('IKnow') }}
+                </bk-button>
+            </template>
+        </bk-dialog>
     </div>
 </template>
 
@@ -233,7 +419,10 @@
     import ConfigScope from './ConfigScope.vue'
     import ResourceDependency from './ResourceDependency.vue'
     import TaskExecution from './TaskExecution.vue'
+    import RiskWarningContent from './components/RiskWarningContent.vue'
     import Logo from '@/components/Logo'
+    import { PipelineBatchTaskStep, PipelineBatchTaskStatus, PipelineIdStrategy, PipelineCopyResourceType, PipelineCopyStrategy } from '@/store/modules/crossProjectCopy/constants'
+    import { mapActions } from 'vuex'
 
     export default {
         name: 'CrossProjectCopy',
@@ -241,212 +430,389 @@
             ConfigScope,
             ResourceDependency,
             TaskExecution,
+            RiskWarningContent,
             Logo,
         },
         data () {
             return {
+                // 吸顶相关
                 isSticky: false,
-                scrollThrottle: null,
-                shouldEnableSticky: true, // 是否应该启用吸顶效果
-                resizeObserver: null, // ResizeObserver实例
-                taskName: this.$t('newCrossProjectCopyTask'),
-                isDraft: true,
-                autoSaveTime: '--',
-                taskId: '',
-                submitter: '',
-                sourceProjectName: '',
-                targetProjectName: '',
-                pipelineCount: 0,
-                autoAddSubPipelineCount: 1,
-                autoRemovePacCount: 1,
-                unhandledResourceCount: 15,
-                highRiskOperationCount: 0,
-                autoExecuteCount: 32,
-                currentStepIndex: 0,
-                formData: {
-                    configScope: {
-                        targetProjectId: '',
-                        taskName: '',
-                        pipelineIdStrategy: '', // 'auto' | 'keep'
-                        selectedPipelines: [],
-                        copyOptions: []
-                    },
-                    resourceDependency: {
-                        selectedResources: []
-                    },
-                    taskExecution: {
-                        executeOption: '',
-                        scheduleTime: ''
-                    }
+                shouldEnableSticky: true,
+                resizeObserver: null,
+                // autoSaveTime: '--',
+                // 轮询相关
+                pollingTimer: null,
+                isPolling: false,
+                taskStatus: '',
+
+                loadingStatus: false,
+                // 分析中的 loading 状态（null: 未开始, true: 分析中, false: 分析完成）
+                analyzingPipeline: null,
+                // 保存草稿时的 loading 状态
+                savingDraft: false,
+                // 任务详情数据
+                taskData: null,
+                // 资源依赖步骤的校验数据
+                resourceValidationData: {
+                    pendingDependencyResourceCount: 0,
+                    highRiskOperationCount: 0,
+                    pendingConflictCount: 0
+                },
+                // 高风险操作确认状态
+                highRiskConfirmed: false,
+                // 高风险提示弹窗
+                highRiskDialog: {
+                    visible: false,
+                    activeTab: ''
+                },
+                // 配置范围数据
+                configScopeData: {
+                    targetProjectId: '',
+                    taskName: '',
+                    pipelineCopyStrategy: ''
+                },
+                resourceData: [],
+                // 任务执行汇总数据（由 TaskExecution 子组件传递过来）
+                executionSummary: {
+                    pipelineCount: 0,
+                    needCompletionCount: 0,
+                    needTransferCount: 0,
+                    autoFinishCount: 0
                 },
                 steps: [
                     {
-                        name: 'configScope',
+                        name: PipelineBatchTaskStep.CONFIG,
                         title: this.$t('configScope'),
                         desc: this.$t('configScopeDesc'),
+                        component: 'ConfigScope',
                         completed: false
                     },
                     {
-                        name: 'resourceDependency',
+                        name: PipelineBatchTaskStep.RESOURCE_DEPEND,
                         title: this.$t('resourceDependency'),
                         desc: this.$t('resourceDependencyDesc'),
+                        component: 'ResourceDependency',
                         completed: false
                     },
                     {
-                        name: 'taskExecution',
+                        name: PipelineBatchTaskStep.EXECUTE,
                         title: this.$t('taskExecution'),
                         desc: this.$t('taskExecutionDesc'),
+                        component: 'TaskExecution',
                         completed: false
                     }
-                ],
-                tabs: [
-                    { name: 'configScope', component: 'ConfigScope' },
-                    { name: 'resourceDependency', component: 'ResourceDependency' },
-                    { name: 'taskExecution', component: 'TaskExecution' }
                 ]
             }
         },
         computed: {
+            projectId () {
+                return this.$route.params.projectId
+            },
+            taskId () {
+                return this.$route.params.taskId
+            },
+            taskName () {
+                return this.configScopeData.taskName
+                    || (this.taskData && this.taskData.taskName)
+                    || this.$t('newCrossProjectCopyTask')
+            },
+            targetProjectName () {
+                const targetProjectId = this.configScopeData.targetProjectId
+                if (!targetProjectId) return ''
+                
+                const currentComponent = this.$refs.currentComponent
+                if (currentComponent && currentComponent.projectList) {
+                    const targetProject = currentComponent.projectList.find(p => p.id === targetProjectId)
+                    return targetProject ? targetProject.name : targetProjectId
+                }
+                return targetProjectId
+            },
+            pipelineCopyStrategyText () {
+                // 优先取用户实时选择的策略，而非初始数据
+                const strategy = this.configScopeData.pipelineCopyStrategy || (this.taskData && this.taskData.pipelineCopyStrategy)
+                if (strategy === PipelineIdStrategy.PIPELINE_CREATE_NEW_ID) {
+                    return this.$t('autoGenerateNewId')
+                } else if (strategy === PipelineIdStrategy.PIPELINE_REUSE_SOURCE_ID) {
+                    return this.$t('keepSourceId')
+                }
+                return '--'
+            },
+            taskStatusText () {
+                const statusTextMap = {
+                    [PipelineBatchTaskStatus.DRAFT]: this.$t('draft'),
+                    [PipelineBatchTaskStatus.PIPELINE_ANALYZING]: this.$t('pipelineAnalyzing'),
+                    [PipelineBatchTaskStatus.PIPELINE_RESOURCE_ANALYZING]: this.$t('pipelineResourceAnalyzing'),
+                    [PipelineBatchTaskStatus.EXECUTING]: this.$t('executing'),
+                    [PipelineBatchTaskStatus.SUCCESS]: this.$t('success'),
+                    [PipelineBatchTaskStatus.FAILED]: this.$t('failed'),
+                    [PipelineBatchTaskStatus.PARTIAL_FAILED]: this.$t('partialFailed')
+                }
+                return statusTextMap[this.taskStatus] || ''
+            },
+            // 是否为只读状态（任务执行中或已完成）当任务状态为 EXECUTING、SUCCESS、FAILED、PARTIAL_FAILED 时，页面不允许编辑
+            isReadOnly () {
+                const readOnlyStatuses = [
+                    PipelineBatchTaskStatus.EXECUTING,
+                    PipelineBatchTaskStatus.SUCCESS,
+                    PipelineBatchTaskStatus.FAILED,
+                    PipelineBatchTaskStatus.PARTIAL_FAILED
+                ]
+                return readOnlyStatuses.includes(this.taskStatus)
+            },
+            // 任务是否已完成
+            isTaskCompleted () {
+                const completedStatuses = [
+                    PipelineBatchTaskStatus.SUCCESS,
+                    PipelineBatchTaskStatus.FAILED,
+                    PipelineBatchTaskStatus.PARTIAL_FAILED
+                ]
+                return completedStatuses.includes(this.taskStatus)
+            },
+            // 当前步骤索引（从路由参数 tab 计算）
+            currentStepIndex () {
+                const tab = this.$route.params.tab
+                const index = this.steps.findIndex(step => step.name === tab)
+                return index !== -1 ? index : 0
+            },
             activeTab () {
-                return this.tabs[this.currentStepIndex].name
+                return this.steps[this.currentStepIndex].name
+            },
+            // 未处理资源总数：优先使用实时校验数据，否则回退到初始 taskData
+            currentUnprocessedCount () {
+                const { pendingDependencyResourceCount, pendingConflictCount } = this.resourceValidationData
+                const realtimeCount = pendingDependencyResourceCount + pendingConflictCount
+                // resourceValidationData 有更新时使用实时数据（初始值均为 0，需判断是否已接收过数据）
+                if (pendingDependencyResourceCount > 0 || pendingConflictCount > 0) {
+                    return realtimeCount
+                }
+                return this.taskData?.unprocessedCount ?? 0
+            },
+            // 高风险操作数量：优先使用实时校验数据，否则回退到初始 taskData
+            currentHighRiskCount () {
+                const { highRiskOperationCount } = this.resourceValidationData
+                if (highRiskOperationCount > 0) {
+                    return highRiskOperationCount
+                }
+                return this.taskData?.highRiskCount ?? 0
             },
             currentTabComponent () {
-                return this.tabs[this.currentStepIndex].component
+                return this.steps[this.currentStepIndex].component
             },
             validationItems () {
-                const items = []
-                
-                // 检查第一步（配置复制范围）的必填项
-                // 1. 检查目标项目
-                const hasTargetProject = !!this.formData.configScope.targetProjectId
-                items.push({
-                    field: 'targetProjectId',
-                    message: hasTargetProject ? this.$t('selectedTargetProject') : this.$t('notSelectedTargetProject'),
-                    stepIndex: 0,
-                    type: hasTargetProject ? 'success' : 'error'
+                // 创建校验项的辅助函数
+                const createValidationItem = (field, isValid, successKey, errorKey, stepIndex, errorParams = []) => ({
+                    field,
+                    message: isValid ? this.$t(successKey) : this.$t(errorKey, errorParams),
+                    stepIndex,
+                    type: isValid ? 'success' : 'error'
                 })
                 
-                // 2. 检查任务名称
-                const hasTaskName = !!(this.formData.configScope.taskName && this.formData.configScope.taskName.trim())
-                items.push({
-                    field: 'taskName',
-                    message: hasTaskName ? this.$t('filledTaskName') : this.$t('notFilledTaskName'),
-                    stepIndex: 0,
-                    type: hasTaskName ? 'success' : 'error'
+                // 第一步：配置复制范围
+                if (this.currentStepIndex === 0) {
+                    const { targetProjectId, taskName, pipelineCopyStrategy } = this.configScopeData
+                    
+                    return [
+                        createValidationItem('targetProjectId', !!targetProjectId, 'selectedTargetProject', 'notSelectedTargetProject', 0),
+                        createValidationItem('taskName', !!(taskName && taskName.trim()), 'filledTaskName', 'notFilledTaskName', 0),
+                        createValidationItem('pipelineCopyStrategy', !!pipelineCopyStrategy, 'selectedIdStrategy', 'notSelectedIdStrategy', 0)
+                    ]
+                }
+                
+                // 第二步：资源依赖
+                if (this.currentStepIndex === 1) {
+                    const { pendingDependencyResourceCount, highRiskOperationCount, pendingConflictCount } = this.resourceValidationData
+                    const hasHighRiskOperation = highRiskOperationCount > 0
+                    
+                    return [
+                        createValidationItem('dependencyResources', pendingDependencyResourceCount === 0, 'allResourcesHandled', 'unhandledResourceCount', 1, [pendingDependencyResourceCount]),
+                        hasHighRiskOperation
+                            ? createValidationItem('highRiskOperation', this.highRiskConfirmed, 'highRiskOperationConfirmed', 'highRiskOperationNotConfirmed', 1)
+                            : createValidationItem('highRiskOperation', true, 'noHighRiskOperation', 'highRiskOperationNotConfirmed', 1),
+                        createValidationItem('pipelineConflict', pendingConflictCount === 0, 'allConflictsHandled', 'unhandledConflictCount', 1, [pendingConflictCount])
+                    ]
+                }
+                
+                return []
+            },
+            // 待处理（error 类型）的校验项数量
+            errorValidationCount () {
+                return this.validationItems.filter(item => item.type === 'error').length
+            },
+            // 计算底部操作栏的高度
+            footerHeight () {
+                if (this.isReadOnly) return '0'
+                if (this.currentStepIndex === 2) return '24px'
+                const hasHighRiskConfirm = this.currentStepIndex === 1 && this.resourceValidationData.highRiskOperationCount > 0
+                return hasHighRiskConfirm ? '86px' : '48px'
+            },
+            // 任务执行指引列表
+            taskExecutionGuidance () {
+                return [
+                    {
+                        title: this.$t('canClosePage'),
+                        desc: this.$t('canClosePageDesc')
+                    },
+                    {
+                        title: this.$t('canRetryAfterFailure'),
+                        desc: this.$t('canRetryAfterFailureDesc')
+                    },
+                    {
+                        title: this.$t('verifyAfterCompletion'),
+                        desc: this.$t('verifyAfterCompletionDesc')
+                    }
+                ]
+            },
+            // 高风险操作tabs配置
+            highRiskTabs () {
+                const resourceData = this.resourceData
+                if (!resourceData || !Array.isArray(resourceData)) return []
+                
+                // 高风险策略配置，与 ResourceDependency 中 HIGH_RISK_STRATEGIES 保持一致
+                const highRiskConfig = [
+                    { type: PipelineCopyResourceType.BUILD_ENV, strategy: PipelineCopyStrategy.BUILD_ENV_CREATE_AND_MOVE_NODE, label: this.$t('buildEnvironment') },
+                    { type: PipelineCopyResourceType.BUILD_NODE, strategy: PipelineCopyStrategy.BUILD_NODE_MOVE_TO_TARGET_PROJECT, label: this.$t('buildNode') },
+                    { type: PipelineCopyResourceType.DEPLOY_ENV, strategy: PipelineCopyStrategy.DEPLOY_ENV_CREATE_AND_MOVE_NODE, label: this.$t('deployEnvironment') },
+                    { type: PipelineCopyResourceType.DEPLOY_NODE, strategy: PipelineCopyStrategy.DEPLOY_NODE_MOVE_TO_TARGET_PROJECT, label: this.$t('deployNode') },
+                    { type: PipelineCopyResourceType.CREDENTIAL, strategy: PipelineCopyStrategy.CREDENTIAL_CREATE_NEW, label: this.$t('credential') }
+                ]
+                
+                // 将 resourceData 数组转为以 resourceType 为 key 的映射
+                const resourceDataMap = {}
+                resourceData.forEach(item => {
+                    resourceDataMap[item.resourceType] = item
                 })
                 
-                // 3. 检查ID处理策略
-                const hasPipelineIdStrategy = !!this.formData.configScope.pipelineIdStrategy
-                items.push({
-                    field: 'pipelineIdStrategy',
-                    message: hasPipelineIdStrategy ? this.$t('selectedIdStrategy') : this.$t('notSelectedIdStrategy'),
-                    stepIndex: 0,
-                    type: hasPipelineIdStrategy ? 'success' : 'error'
+                const tabs = []
+                // 只显示有高风险操作的资源类型
+                highRiskConfig.forEach(config => {
+                    const resources = resourceDataMap[config.type]?.resources || []
+                    const highRiskList = resources.filter(item => item.copyStrategy === config.strategy)
+                    
+                    if (highRiskList.length > 0) {
+                        tabs.push({
+                            type: config.type,
+                            label: `${config.label} ${highRiskList.length}`,
+                            resourceNames: highRiskList.map(item => item.resourceName)
+                        })
+                    }
                 })
-                
-                return items
+                return tabs
             },
             footerButtons () {
                 const buttons = []
+                
+                // 上一步按钮
                 if (this.currentStepIndex > 0) {
                     buttons.push({
                         action: 'prev',
                         theme: 'default',
+                        disabled: this.loadingStatus,
                         text: this.$t('previousStep'),
                         handler: this.handlePrev
                     })
                 }
-                if (this.currentStepIndex < this.steps.length - 1) {
-                    let isDisabled = false
-                    let tooltip = ''
+                
+                // 下一步按钮（只在前两步显示）
+                let isDisabled = false
+                let tooltip = ''
+                
+                // 第一步：检查必填项
+                if (this.currentStepIndex === 0) {
+                    const hasTargetProject = !!this.configScopeData.targetProjectId
+                    const hasTaskName = !!(this.configScopeData.taskName && this.configScopeData.taskName.trim())
+                    const hasPipelineIdStrategy = !!this.configScopeData.pipelineCopyStrategy
                     
-                    // 第一步：检查必填项
-                    if (this.currentStepIndex === 0) {
-                        const hasTargetProject = !!this.formData.configScope.targetProjectId
-                        const hasTaskName = !!(this.formData.configScope.taskName && this.formData.configScope.taskName.trim())
-                        const hasPipelineIdStrategy = !!this.formData.configScope.pipelineIdStrategy
-                        
-                        isDisabled = !hasTargetProject || !hasTaskName || !hasPipelineIdStrategy
-                        
-                        if (!hasTargetProject) {
-                            tooltip = this.$t('pleaseSelectTargetProjectFirst')
-                        } else if (!hasTaskName) {
-                            tooltip = this.$t('pleaseEnterTaskName')
-                        } else if (!hasPipelineIdStrategy) {
-                            tooltip = this.$t('pleaseSelectPipelineIdStrategy')
-                        }
-                    } else if (this.currentStepIndex === 1) {
-                        // 第二步：检查资源是否选择
-                        const isResourceSelected = this.formData.resourceDependency.selectedResources.length > 0
-                        isDisabled = !isResourceSelected
-                        tooltip = isDisabled ? this.$t('pleaseSelectResourceHandle') : ''
+                    isDisabled = !hasTargetProject || !hasTaskName || !hasPipelineIdStrategy
+                    
+                    if (!hasTargetProject) {
+                        tooltip = this.$t('pleaseSelectTargetProjectFirst')
+                    } else if (!hasTaskName) {
+                        tooltip = this.$t('pleaseEnterTaskName')
+                    } else if (!hasPipelineIdStrategy) {
+                        tooltip = this.$t('pleaseSelectPipelineIdStrategy')
                     }
+                } else if (this.currentStepIndex === 1) {
+                    // 第二步：检查资源依赖是否全部处理完成
+                    const hasPendingDependency = this.resourceValidationData.pendingDependencyResourceCount > 0
+                    const hasPendingConflict = this.resourceValidationData.pendingConflictCount > 0
+                    const hasHighRiskOperation = this.resourceValidationData.highRiskOperationCount > 0
+                    const needHighRiskConfirm = hasHighRiskOperation && !this.highRiskConfirmed
+                    isDisabled = hasPendingDependency || hasPendingConflict || needHighRiskConfirm
                     
-                    buttons.push({
-                        action: 'next',
-                        theme: 'primary',
-                        text: this.currentStepIndex === 0
-                            ? this.$t('nextStepToResourceDependency')
-                            : this.$t('nextStepToTaskExecution'),
-                        disabled: isDisabled,
-                        tooltip: tooltip,
-                        handler: this.handleNext
-                    })
-                } else {
-                    buttons.push({
-                        action: 'start',
-                        theme: 'primary',
-                        text: this.$t('startCopy'),
-                        handler: this.handleStartCopy
-                    })
+                    if (hasPendingDependency) {
+                        tooltip = this.$t('pendingDependencyResourceTooltip', [this.resourceValidationData.pendingDependencyResourceCount])
+                    } else if (hasPendingConflict) {
+                        tooltip = this.$t('pendingConflictTooltip', [this.resourceValidationData.pendingConflictCount])
+                    } else if (needHighRiskConfirm) {
+                        tooltip = this.$t('highRiskOperationTooltip', [this.resourceValidationData.highRiskOperationCount])
+                    }
                 }
+                
+                buttons.push({
+                    action: 'next',
+                    theme: 'primary',
+                    text: this.currentStepIndex === 0
+                        ? this.$t('nextStepToResourceDependency')
+                        : this.$t('nextStepToTaskExecution'),
+                    disabled: isDisabled,
+                    tooltip: tooltip,
+                    handler: this.handleNext
+                })
+                
+                // 保存草稿按钮
                 buttons.push({
                     action: 'saveDraft',
                     theme: 'default',
                     text: this.$t('saveDraft'),
                     handler: this.handleSaveDraft
                 })
+                
+                // 取消按钮
                 buttons.push({
                     action: 'cancel',
                     theme: 'default',
                     text: this.$t('cancel'),
                     handler: this.handleCancel
                 })
+                
                 return buttons
             }
         },
         watch: {
-            '$route.params.tab' (newTab) {
-                const index = this.tabs.findIndex(t => t.name === newTab)
-                if (index !== -1) {
-                    this.currentStepIndex = index
+            // 监听完整路由变化
+            '$route': {
+                immediate: true,
+                handler (to, from) {
+                    const newTab = to.params.tab
+                    const index = this.steps.findIndex(t => t.name === newTab)
+                    
+                    if (index !== -1) {
+                        // 仅在页面初始进入时（!from），初始化 completed 状态
+                        if (!from) {
+                            this.initStepsCompleted(index)
+                        }
+                        
+                        // 先停止之前的轮询
+                        this.stopPolling()
+                        
+                        this.$nextTick(() => {
+                            this.setupResizeObserver()
+                            this.checkContentHeight()
+                        })
+                        
+                        // 所有步骤统一使用轮询获取数据
+                        this.startPolling()
+                    }
                 }
             },
-            currentStepIndex () {
-                // 切换步骤时重新检测内容高度和设置监听
-                this.$nextTick(() => {
-                    this.setupResizeObserver()
-                    this.checkContentHeight()
-                })
-            },
-            // 监听目标项目ID变化,更新显示的项目名称
-            'formData.configScope.targetProjectId' (newVal) {
-                if (newVal) {
-                    // 通过子组件获取项目列表
-                    const currentComponent = this.$refs.currentComponent
-                    if (currentComponent && currentComponent.projectList) {
-                        const targetProject = currentComponent.projectList.find(p => p.id === newVal)
-                        this.targetProjectName = targetProject ? targetProject.name : newVal
-                    } else {
-                        this.targetProjectName = newVal
-                    }
-                } else {
-                    this.targetProjectName = ''
+            // 监听高风险操作数量变化，数量变化时重置确认状态
+            'resourceValidationData.highRiskOperationCount' (newVal, oldVal) {
+                if (oldVal !== undefined && newVal !== oldVal) {
+                    this.highRiskConfirmed = false
                 }
             }
         },
         mounted () {
-            this.initData()
             this.$nextTick(() => {
                 this.checkContentHeight()
                 this.setupResizeObserver()
@@ -461,25 +827,134 @@
             if (el) {
                 el.removeEventListener('scroll', this.handleScroll)
             }
-            // 清理ResizeObserver
             if (this.resizeObserver) {
                 this.resizeObserver.disconnect()
                 this.resizeObserver = null
             }
+
+            this.stopPolling()
         },
         methods: {
-            handleUpdateFormData (stepName, field, value) {
-                if (this.formData[stepName]) {
-                    this.$set(this.formData[stepName], field, value)
+            ...mapActions('crossProjectCopy', [
+                'getCopyTaskDetail',
+                'analyzeResourceDepend',
+                'saveConfigDraft',
+                'saveResourceDraft',
+                'prepareExecute'
+            ]),
+            /**
+             * 开始轮询任务状态
+             */
+            async startPolling () {
+                this.stopPolling()
+                this.isPolling = true
+                await this.pollTaskStatus()
+            },
+            /**
+             * 停止轮询
+             */
+            stopPolling () {
+                if (this.pollingTimer) {
+                    clearTimeout(this.pollingTimer)
+                    this.pollingTimer = null
+                }
+                this.isPolling = false
+            },
+            /**
+             * 初始化步骤条状态
+             * completed 表示是否已至该步骤（包括当前步骤及之前）
+             * 仅在页面初始进入时调用
+             * @param {number} currentIndex - 当前步骤索引
+             */
+            initStepsCompleted (currentIndex) {
+                this.steps.forEach((step, index) => {
+                    step.completed = index <= currentIndex
+                })
+            },
+            /**
+             * 轮询任务状态（通过 getCopyTaskDetail 接口获取任务详情及状态）
+             */
+            async pollTaskStatus () {
+                if (!this.isPolling) return
+                
+                try {
+                    const taskData = await this.getCopyTaskDetail({ projectId: this.projectId, taskId: this.taskId})
+
+                    this.taskData = taskData
+                    this.taskStatus = taskData.status
+                    
+                    if (taskData.status === PipelineBatchTaskStatus.PIPELINE_ANALYZING || taskData.status === PipelineBatchTaskStatus.PIPELINE_RESOURCE_ANALYZING) {
+                        this.analyzingPipeline = true
+                        this.pollingTimer = setTimeout(() => {
+                            this.pollTaskStatus()
+                        }, 2000)
+                    } else {
+                        this.configScopeData = {
+                            targetProjectId: taskData.targetProjectId,
+                            taskName: taskData.taskName,
+                            pipelineCopyStrategy: taskData.pipelineCopyStrategy
+                        }
+                        this.stopPolling()
+                        this.analyzingPipeline = false
+                    }
+                } catch (error) {
+                    this.stopPolling()
+                    this.analyzingPipeline = false
+                    this.$bkMessage({
+                        theme: 'error',
+                        message: error.message || error
+                    })
                 }
             },
-            handleUpdateTaskTitle (title) {
-                this.taskName = title
+            handleUpdateFormData (field, value) {
+                if (this.currentStepIndex === 0) {
+                    this.configScopeData[field] = value
+                } else if (field === 'resourceData') {
+                    this.resourceData = value
+                }
             },
-            initData () {
-                this.sourceProjectName = this.$route.params.projectId || ''
-                const pipelineIds = this.$route.query.pipelineIds
-                this.pipelineCount = pipelineIds ? pipelineIds.split(',').length : 0
+            handleUpdateLoadingState (value) {
+                this.loadingStatus = value
+            },
+            /**
+             * 接收资源依赖步骤的校验数据
+             */
+            handleUpdateValidationData (data) {
+                this.resourceValidationData = {
+                    ...this.resourceValidationData,
+                    ...data
+                }
+            },
+            /**
+             * 接收任务执行步骤的汇总数据
+             */
+            handleUpdateExecutionSummary (data) {
+                this.executionSummary = {
+                    ...this.executionSummary,
+                    ...data
+                }
+            },
+            /**
+             * 点击"查看资源"链接，通知子组件切换对应 tab
+             */
+            handleViewResources (tabKey) {
+                const currentComponent = this.$refs.currentComponent
+                if (currentComponent && typeof currentComponent.handleTabChange === 'function') {
+                    currentComponent.handleTabChange(tabKey)
+                }
+            },
+            /**
+             * 显示高风险操作提示弹窗
+             */
+            handleShowHighRiskDialog () {
+                const firstTab = this.highRiskTabs[0]
+                if (firstTab) {
+                    this.highRiskDialog.activeTab = firstTab.type
+                }
+                this.highRiskDialog.visible = true
+            },
+            handleHighRiskDialogConfirm () {
+                this.highRiskDialog.visible = false
             },
             /**
              * 设置ResizeObserver监听子组件高度变化
@@ -540,30 +1015,208 @@
                 this.isSticky = scrollTop > 0
             },
             async handleNext () {
-                // 校验当前步骤的表单
+                // 校验当前步骤的表单（如果组件有 validate 方法）
                 const currentComponent = this.$refs.currentComponent
                 if (currentComponent && typeof currentComponent.validate === 'function') {
-                    await currentComponent.validate()
-                    
-                    if (this.currentStepIndex < this.steps.length - 1) {
-                        this.steps[this.currentStepIndex].completed = true
-                        this.currentStepIndex++
-                        this.syncRoute()
+                    const isValid = await currentComponent.validate()
+                    if (isValid === false) {
+                        return
                     }
                 }
-            },
-            handlePrev () {
-                if (this.currentStepIndex > 0) {
-                    this.steps[this.currentStepIndex].completed = false
-                    this.currentStepIndex--
-                    this.syncRoute()
+                
+                // 第一步：校验通过后，调用资源依赖分析接口
+                if (this.currentStepIndex === 0) {
+                    const success = await this.analyzeResource()
+                    if (!success) return
+                } else {
+                    // 第二步：调用执行准备接口
+                    const success = await this.prepareResourceExecute()
+                    if (!success) return
+                }
+                
+                // 执行下一步（通过路由跳转）
+                if (this.currentStepIndex < this.steps.length - 1) {
+                    this.initStepsCompleted(this.currentStepIndex + 1)
+                    const nextStep = this.steps[this.currentStepIndex + 1]
+                    this.$router.push({
+                        name: 'crossProjectCopy',
+                        params: {
+                            projectId: this.projectId,
+                            taskId: this.taskId,
+                            tab: nextStep.name
+                        }
+                    })
                 }
             },
-            handleStartCopy () {
-                console.log('Start copy')
+            /**
+             * 分析资源依赖
+             */
+            async analyzeResource () {
+                try {
+                    const result = await this.analyzeResourceDepend({
+                        projectId: this.projectId,
+                        taskId: this.taskId,
+                        params: { ...this.configScopeData }
+                    })
+                    return result === true
+                } catch (error) {
+                    this.$bkMessage({ theme: 'error', message: error.message || error })
+                    return false
+                }
             },
-            handleSaveDraft () {
-                console.log('Save draft')
+            /**
+             * 转换资源数据格式
+             * 过滤出 resourceType 不是 PIPELINE_GROUP 和 PIPELINE_LABEL 的项
+             * 把其他的每一项的 resources 组合在一起，放在 resources 数组中
+             * PIPELINE_GROUP 和 PIPELINE_LABEL 这两项，只需要把每一项的 copyStrategy 找到传给 pipelineLabelCopyStrategy 和 pipelineGroupCopyStrategy
+             */
+            transformResourceData () {
+                const result = {
+                    pipelineLabelCopyStrategy: '',
+                    pipelineGroupCopyStrategy: '',
+                    resources: []
+                }
+
+                this.resourceData.forEach(item => {
+                    if (item.resourceType === PipelineCopyResourceType.PIPELINE_LABEL) {
+                        result.pipelineLabelCopyStrategy = item.copyStrategy || ''
+                    } else if (item.resourceType === PipelineCopyResourceType.PIPELINE_GROUP) {
+                        result.pipelineGroupCopyStrategy = item.copyStrategy || ''
+                    } else {
+                        if (item.resources && Array.isArray(item.resources)) {
+                            result.resources.push(...item.resources)
+                        }
+                    }
+                })
+
+                return result
+            },
+            /**
+             * 执行准备
+             */
+            async prepareResourceExecute () {
+                try {
+                    const params = this.transformResourceData()
+                    await this.prepareExecute({
+                        projectId: this.projectId,
+                        taskId: this.taskId,
+                        params
+                    })
+                    return true
+                } catch (error) {
+                    this.$bkMessage({ theme: 'error', message: error.message || error })
+                    return false
+                }
+            },
+            async handlePrev () {
+                if (this.currentStepIndex > 0) {
+                    const canNavigate = await this.saveDraftBeforeNavigate()
+                    if (!canNavigate) {
+                        return
+                    }
+                    
+                    const prevStep = this.steps[this.currentStepIndex - 1]
+                    this.$router.push({
+                        name: 'crossProjectCopy',
+                        params: {
+                            projectId: this.projectId,
+                            taskId: this.taskId,
+                            tab: prevStep.name
+                        }
+                    })
+                    this.analyzingPipeline = null
+                }
+            },
+            /**
+             * 点击步骤条，跳转到已完成的步骤查看
+             * 只有 completed 为 true 且不是当前步骤时，才允许跳转
+             */
+            async handleStepClick (step, index) {
+                if (step.completed && index !== this.currentStepIndex) {
+                    const canNavigate = await this.saveDraftBeforeNavigate(index)
+                    if (!canNavigate) {
+                        return
+                    }
+                    
+                    this.$router.push({
+                        name: 'crossProjectCopy',
+                        params: {
+                            projectId: this.projectId,
+                            taskId: this.taskId,
+                            tab: step.name
+                        }
+                    })
+                }
+            },
+            /**
+             * 导航前保存草稿
+             * @param {Number} targetIndex - 目标步骤索引，默认是上一步
+             * @returns {Boolean} 是否允许导航
+             */
+            async saveDraftBeforeNavigate (targetIndex = this.currentStepIndex - 1) {
+                if (this.currentStepIndex === 1 && targetIndex < this.currentStepIndex) {
+                    this.savingDraft = true // 显示 loading
+                    const saveSuccess = await this.saveResourceDependencyDraft()
+                    this.savingDraft = false // 隐藏 loading
+                    
+                    if (!saveSuccess) {
+                        return false
+                    }
+                }
+                return true
+            },
+            async handleSaveDraft () {
+                this.savingDraft = true // 显示 loading
+                try {
+                    if (this.currentStepIndex === 0) {
+                        await this.saveConfigScopeDraft()
+                    } else {
+                        await this.saveResourceDependencyDraft()
+                    }
+                } finally {
+                    this.savingDraft = false // 隐藏 loading
+                }
+            },
+            /**
+             * 保存配置范围草稿
+             * @returns {Boolean} 保存是否成功
+             */
+            async saveConfigScopeDraft () {
+                try {
+                    const res = await this.saveConfigDraft({
+                        projectId: this.projectId,
+                        taskId: this.taskId,
+                        params: { ...this.configScopeData }
+                    })
+                    if (res) {
+                        this.$bkMessage({ theme: 'success', message: this.$t('saveDraftSuccess') })
+                    }
+                    return !!res
+                } catch (error) {
+                    this.$bkMessage({ theme: 'error', message: error.message || error })
+                    return false
+                }
+            },
+            /**
+             * 保存资源依赖草稿
+             * @returns {Boolean} 保存是否成功
+             */
+            async saveResourceDependencyDraft () {
+                try {
+                    const params = this.transformResourceData()
+                    const res = await this.saveResourceDraft({
+                        projectId: this.projectId,
+                        taskId: this.taskId,
+                        params
+                    })
+                    if (res) {
+                        this.$bkMessage({ theme: 'success', message: this.$t('saveDraftSuccess') })
+                    }
+                    return !!res
+                } catch (error) {
+                    this.$bkMessage({ theme: 'error', message: error.message || error })
+                    return false
+                }
             },
             handleCancel () {
                 this.$router.back()
@@ -571,8 +1224,15 @@
             handleErrorClick (item) {
                 // 如果错误项不在当前步骤,先跳转到对应步骤
                 if (item.stepIndex !== undefined && item.stepIndex !== this.currentStepIndex) {
-                    this.currentStepIndex = item.stepIndex
-                    this.syncRoute()
+                    const targetStep = this.steps[item.stepIndex]
+                    this.$router.push({
+                        name: 'crossProjectCopy',
+                        params: {
+                            projectId: this.projectId,
+                            taskId: this.taskId,
+                            tab: targetStep.name
+                        }
+                    })
                 }
                 
                 // 等待组件渲染完成后,触发指定字段的校验
@@ -580,14 +1240,6 @@
                     const currentComponent = this.$refs.currentComponent
                     if (currentComponent && typeof currentComponent.validateField === 'function') {
                         currentComponent.validateField(item.field)
-                    }
-                })
-            },
-            syncRoute () {
-                this.$router.push({
-                    name: 'crossProjectCopy',
-                    params: {
-                        tab: this.tabs[this.currentStepIndex].name
                     }
                 })
             }
@@ -829,7 +1481,7 @@
 
     /* ========== 主内容区 ========== */
     .main-content {
-        padding: 0 24px 48px; // 增加底部padding(48px操作栏)
+        padding: 0 24px;
         display: flex;
         flex: 1;
         overflow: hidden;
@@ -837,10 +1489,9 @@
 
         .left-content {
             flex: 1;
-            background: white;
             border-radius: 2px;
-            padding: 16px 24px 0;
             overflow-y: auto;
+            height: 100%;
             @include scroller();
         }
     
@@ -881,6 +1532,54 @@
                     font-size: 12px;
                     border-radius: 2px;
                     font-weight: 500;
+                }
+            }
+
+            &.task-execution-result {
+                box-shadow: 0 2px 4px 0 #1919290d;
+                background-color: #fff;
+
+                .section-title {
+                    margin-bottom: 16px;
+                }
+
+                .guidance-item {
+                    margin-bottom: 16px;
+
+                    &:last-child {
+                        margin-bottom: 0;
+                    }
+
+                    .guidance-header {
+                        display: flex;
+                        align-items: center;
+                        gap: 8px;
+                        margin-bottom: 4px;
+
+                        .guidance-title {
+                            font-size: 12px;
+                            font-weight: 700;
+                            color: #313238;
+                            line-height: 20px;
+                        }
+                    }
+
+                    .guidance-desc {
+                        font-size: 12px;
+                        color: #63656E;
+                        line-height: 20px;
+                        padding-left: 24px;
+                        margin: 0;
+
+                        .view-resource-link {
+                            color: #3A84FF;
+                            cursor: pointer;
+
+                            &:hover {
+                                color: #1768EF;
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -970,6 +1669,35 @@
                 margin-bottom: 16px;
             }
         }
+
+        .task-execution {
+            box-shadow: 0 2px 4px 0 #1919290d;
+            background-color: #fff;
+
+            .section-title {
+                margin-bottom: 4px;
+            }
+
+            .task-executionlist {
+                display: flex;
+                gap: 8px;
+                padding-top: 12px;
+                font-size: 12px;
+                color: #4d4f56;
+
+                p {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 4px;
+
+                    .title {
+                        font-size: 12px;
+                        font-weight: 700;
+                        line-height: 20px;
+                    }
+                }
+            }
+        }
         
         .summary-list {
             .summary-item {
@@ -997,8 +1725,8 @@
                     .number-bold {
                         font-weight: 700;
                     }
-                    
-                    &.is-error {
+
+                    &.is-error, .high-risk-number {
                         color: #EA3636;
                     }
                     
@@ -1006,7 +1734,7 @@
                         color: #FF9C01;
                     }
                     
-                    &.is-success {
+                    &.is-success, .none-high-risk {
                         color: #2DCB56;
                     }
                 }
@@ -1016,17 +1744,73 @@
 
     /* ========== 底部操作栏 ========== */
     .footer-actions {
-        height: 48px;
-        background: #FFFFFF;
-        border-top: 1px solid #EAEBF0;
+        background: #FAFBFD;
+        box-shadow: inset 0 1px 0 0 #EAEBF0;
         display: flex;
+        flex-direction: column;
         gap: 8px;
-        align-items: center;
-        justify-content: start;
+        align-items: start;
+        justify-content: center;
         padding: 8px 24px;
         width: 100%;
         position: fixed;
         bottom: 0;
         z-index: 99;
+        
+        .high-risk-confirm {
+            flex: 1;
+            margin-right: 16px;
+            margin-bottom: 8px;
+            font-size: 14px;
+            line-height: 22px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            
+            &__text {
+                font-size: 12px;
+                color: #63656E;
+            }
+            
+            .high-risk-count {
+                color: #EA3636;
+                font-weight: 700;
+                font-size: 14px;
+            }
+            
+            .high-risk-link {
+                color: #3A84FF;
+                cursor: pointer;
+                font-weight: 500;
+                
+                &:hover {
+                    text-decoration: underline;
+                }
+            }
+            
+            ::v-deep .bk-checkbox-text {
+                font-size: 12px;
+                color: #FF9C01;
+                font-weight: 500;
+            }
+        }
+        
+        .footer-buttons {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+    }
+
+    .high-risk-dialog {
+        ::v-deep .bk-tab-section {
+            padding: 0;
+        }
+        ::v-deep .bk-tab-label-item {
+            padding: 0 16px 0 0 !important;
+        }
+        ::v-deep .bk-tab-label {
+            padding: 0 8px;
+        }
     }
 </style>
