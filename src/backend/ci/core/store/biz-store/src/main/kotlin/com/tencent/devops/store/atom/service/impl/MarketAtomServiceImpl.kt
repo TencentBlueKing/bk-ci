@@ -372,7 +372,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                             code = atomCode,
                             version = it[tAtom.VERSION] as String,
                             status = AtomStatusEnum.getAtomStatus((it[tAtom.ATOM_STATUS] as Byte).toInt()),
-                            type = it[tAtom.JOB_TYPE] as String,
+                            type = StoreTypeEnum.ATOM.name,
                             rdType = AtomTypeEnum.getAtomType((it[tAtom.ATOM_TYPE] as Byte).toInt()),
                             classifyCode = if (classifyMap.containsKey(classifyId)) classifyMap[classifyId] else "",
                             category = AtomCategoryEnum.getAtomCategory((it[tAtom.CATEGROY] as Byte).toInt()),
