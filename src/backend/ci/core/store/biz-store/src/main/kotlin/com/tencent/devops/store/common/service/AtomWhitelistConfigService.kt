@@ -29,81 +29,33 @@ package com.tencent.devops.store.common.service
 
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.github.benmanes.caffeine.cache.Cache
-import com.github.benmanes.caffeine.cache.Caffeine
-import com.tencent.devops.store.common.dao.BusinessConfigDao
-import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.util.concurrent.TimeUnit
 
-/**
- * 插件功能白名单配置服务
- * 基于 T_BUSINESS_CONFIG 存储，Caffeine 本地缓存
- *
- * 存储映射：
- *   BUSINESS = "STORE"
- *   FEATURE = "ATOM_WHITELIST"
- *   BUSINESS_VALUE = whitelistType (如 PYTHON_VENV)
- *   CONFIG_VALUE = ["atom1","atom2"] (JSON 数组)
- */
 @Service
 class AtomWhitelistConfigService @Autowired constructor(
-    private val dslContext: DSLContext,
-    private val businessConfigDao: BusinessConfigDao
+    private val businessConfigService: BusinessConfigService
 ) {
-    companion object {
-        private val logger = LoggerFactory.getLogger(AtomWhitelistConfigService::class.java)
-        private const val BUSINESS = "STORE"
-        private const val FEATURE = "ATOM_WHITELIST"
-        private const val CACHE_EXPIRE_SECONDS = 60L
-        private val objectMapper = ObjectMapper()
-    }
+    private val logger = LoggerFactory.getLogger(AtomWhitelistConfigService::class.java)
+    private val objectMapper = ObjectMapper()
 
-    // 本地缓存：key = whitelistType, value = atomCode 集合
-    private val cache: Cache<String, Set<String>> = Caffeine.newBuilder()
-        .maximumSize(50)
-        .expireAfterWrite(CACHE_EXPIRE_SECONDS, TimeUnit.SECONDS)
-        .build()
-
-    /**
-     * 判断插件是否在指定类型的白名单中
-     */
     fun isAtomInWhitelist(atomCode: String, whitelistType: String): Boolean {
-        val atomCodes = getAtomCodes(whitelistType)
-        return atomCodes.contains(atomCode)
-    }
-
-    /**
-     * 获取指定类型白名单中所有插件代码
-     */
-    fun getAtomCodes(whitelistType: String): Set<String> {
         return try {
-            cache.get(whitelistType) { loadFromDb(whitelistType) } ?: emptySet()
-        } catch (e: Exception) {
-            logger.warn("getAtomCodes failed for whitelistType=$whitelistType", e)
-            emptySet()
-        }
-    }
-
-    /**
-     * 主动失效缓存（配置变更后调用）
-     */
-    fun invalidateCache(whitelistType: String) {
-        cache.invalidate(whitelistType)
-        logger.info("invalidateCache: whitelistType=$whitelistType")
-    }
-
-    private fun loadFromDb(whitelistType: String): Set<String> {
-        return try {
-            val record = businessConfigDao.get(dslContext, BUSINESS, FEATURE, whitelistType)
-            record?.let {
-                objectMapper.readValue(it.configValue, object : TypeReference<Set<String>>() {})
-            } ?: emptySet()
-        } catch (e: Exception) {
-            logger.warn("loadFromDb failed for whitelistType=$whitelistType", e)
-            emptySet()
+            val configValue = businessConfigService.getConfigValue(
+                business = "ATOM",
+                feature = "ATOM_WHITELIST",
+                businessValue = whitelistType
+            )
+            val atomCodes = if (configValue != null) {
+                objectMapper.readValue(configValue, object : TypeReference<List<String>>() {})
+            } else {
+                emptyList()
+            }
+            atomCodes.contains(atomCode)
+        } catch (ignored: Throwable) {
+            logger.warn("isAtomInWhitelist failed|atomCode=$atomCode|whitelistType=$whitelistType", ignored)
+            true // fail-open: 异常时放行
         }
     }
 }
