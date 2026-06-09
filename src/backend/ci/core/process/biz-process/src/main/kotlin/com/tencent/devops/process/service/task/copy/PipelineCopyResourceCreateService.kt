@@ -181,7 +181,8 @@ class PipelineCopyResourceCreateService @Autowired constructor(
         sourceProjectId: String,
         nodeHashId: String?,
         agentHashId: String?,
-        targetProjectId: String
+        targetProjectId: String,
+        resourceType: PipelineDependentResourceType
     ): PipelineCopyResourceBasicInfo {
         val sourceNode = client.get(ServiceNodeResource::class).getNodeStatus(
             userId = userId,
@@ -206,7 +207,12 @@ class PipelineCopyResourceCreateService @Autowired constructor(
             result = transferResult
         )
         return PipelineCopyResourceBasicInfo(
-            resourceId = sourceNode.nodeHashId,
+            // 构建节点,流水线使用的agentHashId
+            resourceId = if (resourceType == PipelineDependentResourceType.BUILD_NODE) {
+                sourceNode.agentHashId!!
+            } else {
+                sourceNode.nodeHashId
+            },
             resourceName = sourceNode.displayName ?: sourceNode.name
         )
     }
