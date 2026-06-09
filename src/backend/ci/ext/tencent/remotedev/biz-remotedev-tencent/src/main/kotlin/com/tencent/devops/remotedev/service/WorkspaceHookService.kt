@@ -27,7 +27,6 @@
 
 package com.tencent.devops.remotedev.service
 
-import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonTypeRef
 import com.tencent.devops.common.api.exception.RemoteServiceException
@@ -40,9 +39,10 @@ import com.tencent.devops.environment.pojo.DEVXHook
 import com.tencent.devops.model.remotedev.tables.TWorkspace
 import com.tencent.devops.remotedev.config.BkConfig
 import com.tencent.devops.remotedev.dao.WorkspaceJoinDao
+import com.tencent.devops.remotedev.pojo.bk.BkSopRequestBody
+import com.tencent.devops.remotedev.pojo.bk.BkSopResponse
 import com.tencent.devops.remotedev.service.redis.ConfigCacheService
 import java.util.Base64
-import okhttp3.Headers.Companion.toHeaders
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
@@ -83,24 +83,6 @@ class WorkspaceHookService @Autowired constructor(
                 }
             }
         }
-    }
-
-    private data class RequestBody(
-        val name: String,
-        val constants: Map<String, String>,
-        val scope: String = "project"
-    )
-
-    private data class Response(
-        val result: Boolean,
-        val data: Data?
-    ) {
-        data class Data(
-            @JsonProperty("task_id")
-            val taskId: Int,
-            @JsonProperty("task_url")
-            val taskUrl: String
-        )
     }
 
     companion object {
@@ -238,7 +220,7 @@ class WorkspaceHookService @Autowired constructor(
         }
         val vmIp = ip.joinToString(",")
         val actionString = JsonUtil.toJson(Actions(actions), false)
-        val req = RequestBody(
+        val req = BkSopRequestBody(
             name = "【云桌面】钩子安装 将实施共${ip.size}个ip",
             constants = mapOf(
                 "\${vm_ip}" to vmIp,
@@ -250,11 +232,11 @@ class WorkspaceHookService @Autowired constructor(
         logger.info("installHook|request url: ${bkConfig.bksopsCreateTask}, body: $body")
         val request = Request.Builder()
             .url(bkConfig.bksopsCreateTask)
-            .headers(headers())
+            .headers(bkConfig.sopHeaders())
             .post(body.toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull()))
             .build()
 
-        val resp = OkhttpUtils.doHttp(request).resolveResponse<Response>()
+        val resp = OkhttpUtils.doHttp(request).resolveResponse<BkSopResponse>()
         logger.info("installHook|task status: ${resp.result}|task url: ${resp.data?.taskUrl}")
         if (resp.data?.taskId != null) {
             startTask(resp.data.taskId)
@@ -266,7 +248,7 @@ class WorkspaceHookService @Autowired constructor(
         logger.info("startTask|request url: $url")
         val request = Request.Builder()
             .url(url)
-            .headers(headers())
+            .headers(bkConfig.sopHeaders())
             .post("{\"scope\":\"project\"}".toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull()))
             .build()
         OkhttpUtils.doHttp(request).resolveResponse<Any>()
@@ -277,7 +259,7 @@ class WorkspaceHookService @Autowired constructor(
             logger.warn("uninstallHook|ip: $ip")
         }
         val vmIp = ip.joinToString(",")
-        val req = RequestBody(
+        val req = BkSopRequestBody(
             name = "【云桌面】钩子卸载 将实施共${ip.size}个ip",
             constants = mapOf(
                 "\${vm_ip}" to vmIp,
@@ -288,23 +270,16 @@ class WorkspaceHookService @Autowired constructor(
         logger.info("uninstallHook|request url: ${bkConfig.bksopsCreateTask}, body: $body")
         val request = Request.Builder()
             .url(bkConfig.bksopsCreateTask)
-            .headers(headers())
+            .headers(bkConfig.sopHeaders())
             .post(body.toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull()))
             .build()
 
-        val resp = OkhttpUtils.doHttp(request).resolveResponse<Response>()
+        val resp = OkhttpUtils.doHttp(request).resolveResponse<BkSopResponse>()
         logger.info("uninstallHook|task status: ${resp.result}|task url: ${resp.data?.taskUrl}")
         if (resp.data?.taskId != null) {
             startTask(resp.data.taskId)
         }
     }
-
-    private fun headers() = mapOf(
-        "X-Bkapi-Authorization" to
-            "{\"bk_app_code\":\"${bkConfig.appCode}\"," +
-            "\"bk_app_secret\":\"${bkConfig.appSecret}\"," +
-            "\"bk_username\":\"${bkConfig.ccUserName}\"}"
-    ).toHeaders()
 
     private inline fun <reified T> okhttp3.Response.resolveResponse(): T {
         this.use {

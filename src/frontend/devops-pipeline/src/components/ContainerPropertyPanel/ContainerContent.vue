@@ -486,6 +486,15 @@
             :build-resource-type="buildResourceType"
             @choose="choose"
         ></image-selector>
+        <MacDebugDialog
+            ref="macDebugDialog"
+            :is-show="isShowDebug"
+            :pipeline-id="pipelineId"
+            :container-id="container.containerId"
+            :build-id="buildId"
+            :execute-count="container.executeCount"
+            @close="closeDebugDialog"
+        />
     </section>
 </template>
 
@@ -507,6 +516,7 @@
     import JobMutual from './JobMutual'
     import JobOption from './JobOption'
     import LinuxOsDockerImage from './LinuxOsDockerImage'
+    import MacDebugDialog from '../MacDebugDialog.vue'
 
     export default {
         name: 'container-content',
@@ -525,6 +535,7 @@
             ImageSelector,
             SelectInput,
             CustomEnvField,
+            MacDebugDialog,
             LinuxOsDockerImage
         },
         props: {
@@ -554,6 +565,7 @@
                 isLoadingWin: false,
                 windowsVersionList: [],
                 macOSHwSpecList: [],
+                isShowDebug: false,
                 isShowPerformance: false
             }
         },
@@ -1034,8 +1046,8 @@
                         this.macOSHwSpecList = res.data
 
                         const defaultHwSpec = res.data.find(i => i.uid === 'VMware')
-                        const defaultImage = defaultHwSpec.images[0]
-                        const defaultXcode = defaultImage.xcodes?.[0]
+                        const defaultImage = defaultHwSpec?.images?.[0]
+                        const defaultXcode = defaultImage?.xcodes?.[0]
 
                         // 新建流水线：初始化默认值
                         if (this.macOSHwSpec === undefined || (this.systemVersion === undefined && this.xcodeVersion === undefined)) {
@@ -1070,7 +1082,6 @@
                     if (res.data) {
                         this.macOSHwSpecList = res.data.models
                         this.systemVersionList = res.data.images
-                        
                         // 如果是存量数据，没有 macOSHwSpec 或者 macOSHwSpec 为空，设置macOSHwSpec默认值为VMware
                         if (!this.macOSHwSpec && res.data.models.length > 0) {
                             const defaultMacOSHwSpec = res.data.models.find(i => i.uid === 'VMware')
@@ -1271,6 +1282,12 @@
                 const buildIdStr = this.buildId ? `&buildId=${this.buildId}` : ''
                 const url = `${WEB_URL_PREFIX}/pipeline/${this.projectId}/dockerConsole/?pipelineId=${this.pipelineId}&dispatchType=${this.buildResourceType}&vmSeqId=${vmSeqId}${buildIdStr}`
                 tab.location = url
+            },
+            openDebug () {
+                this.isShowDebug = true
+            },
+            closeDebugDialog () {
+                this.isShowDebug = false
             },
             handleNfsSwitchChange (name, value) {
                 if (!value) {

@@ -40,6 +40,7 @@ import validationCNMessages from 'vee-validate/dist/locale/zh_CN'
 import ExtendsCustomRules from './utils/customRules'
 import validDictionary from './utils/validDictionary'
 import tapdSocketManager from './utils/tapdSocketManager'
+import { BkXssFilterDirective } from '@blueking/xss-filter'
 
 import { handlePipelineNoPermission, RESOURCE_ACTION } from '@/utils/permission'
 import bkMagic from '@tencent/bk-magic-vue'
@@ -62,6 +63,7 @@ Vue.use(enClass)
 Vue.use(enStyle)
 Vue.use(PortalVue)
 Vue.use(mavonEditor)
+Vue.use(BkXssFilterDirective)
 Vue.use(PermissionDirective(handlePipelineNoPermission))
 Vue.use(BkPermission, {
     i18n

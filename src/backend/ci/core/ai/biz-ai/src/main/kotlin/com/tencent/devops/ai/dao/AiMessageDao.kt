@@ -83,6 +83,20 @@ class AiMessageDao {
         }
     }
 
+    /** 取会话最后一条消息（按 MESSAGE_INDEX 倒序），用于判断末尾 role。 */
+    fun getLastBySessionId(
+        dslContext: DSLContext,
+        sessionId: String
+    ): TAiMessageRecord? {
+        with(TAiMessage.T_AI_MESSAGE) {
+            return dslContext.selectFrom(this)
+                .where(SESSION_ID.eq(sessionId))
+                .orderBy(MESSAGE_INDEX.desc())
+                .limit(1)
+                .fetchOne()
+        }
+    }
+
     fun deleteBySessionId(dslContext: DSLContext, sessionId: String): Int {
         with(TAiMessage.T_AI_MESSAGE) {
             return dslContext.deleteFrom(this)

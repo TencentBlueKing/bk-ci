@@ -467,7 +467,7 @@ class LogServiceLuceneImpl constructor(
                 stepId = stepId
             )
             queryLogs.logs.addAll(logs)
-            if (logs.isEmpty()) queryLogs.status = LogStatus.EMPTY.status
+//            if (logs.isEmpty()) queryLogs.status = LogStatus.EMPTY.status
         } catch (ignore: Exception) {
             logger.error("Query init logs failed because of ${ignore.javaClass}. buildId: $buildId", ignore)
             queryLogs.status = LogStatus.FAIL.status
@@ -577,7 +577,7 @@ class LogServiceLuceneImpl constructor(
             )
             logger.info("logs query time cost: ${System.currentTimeMillis() - startTime}")
             queryLogs.logs.addAll(logs)
-            if (logs.isEmpty()) queryLogs.status = LogStatus.EMPTY.status
+//            if (logs.isEmpty()) queryLogs.status = LogStatus.EMPTY.status
             queryLogs.hasMore = size > logs.size
         } catch (ignore: Exception) {
             logger.error("Query init logs failed because of ${ignore.javaClass}. buildId: $buildId", ignore)

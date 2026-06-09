@@ -373,7 +373,7 @@
         if (instanceViewType.value === INSTANCE_OPERATE_TYPE.CREATE && !pipelineName.value) {
             handleShowInstanceCreate()
         }
-       
+
     }
     function handleBatchEdit () {
         if (editingIndex.value > -1) return
@@ -382,7 +382,7 @@
     onMounted(() => {
         init()
     })
-    
+
     onBeforeUnmount(() => {
         proxy.$store.commit(`templates/${SET_TEMPLATE_DETAIL}`, {
             templateVersion: '',

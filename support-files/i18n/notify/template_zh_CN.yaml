@@ -164,7 +164,7 @@
     id: "3ffdfe998646421ba8672a9268069e4c"
     sender: "DevOps"
     title: "蓝盾流水线【${pipelineName}】#${buildNum} 构建成功"
-    body: "✔️${successContent}\n查看详情:${detailUrl}"
+    body: "✔️${successContent}\n[查看详情](${detailUrl})"
   creator: "system"
   modifior: "system"
 - index: 7
@@ -505,7 +505,7 @@
     id: "391b2aed3ca1479b9fd78b609b23f49b"
     sender: "DevOps"
     title: "蓝盾流水线【${pipelineName}】#${buildNum} 构建失败"
-    body: "❌${failContent}\n\n查看详情:${detailUrl}"
+    body: "❌${failContent}\n\n[查看详情](${detailUrl})"
   creator: "system"
   modifior: "system"
 - index: 23

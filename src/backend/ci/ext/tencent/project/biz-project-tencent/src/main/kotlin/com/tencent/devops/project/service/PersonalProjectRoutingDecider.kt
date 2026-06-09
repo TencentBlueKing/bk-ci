@@ -42,12 +42,21 @@ object PersonalProjectRoutingDecider {
     fun decide(
         userId: String,
         legacyProjectCode: String?,
+        legacyProjectDisabled: Boolean,
         legacyProjectMembers: Set<String>
     ): PersonalProjectRoutingDecision {
         return when {
             legacyProjectCode == null -> {
                 PersonalProjectRoutingDecision(
                     action = PersonalProjectRoutingAction.CREATE_NEW_PERSONAL_PROJECT
+                )
+            }
+
+            // 已禁用的旧项目直接复用，避免重复创建
+            legacyProjectDisabled -> {
+                PersonalProjectRoutingDecision(
+                    action = PersonalProjectRoutingAction.REUSE_LEGACY_PROJECT,
+                    shouldPromoteLegacyProject = true
                 )
             }
 

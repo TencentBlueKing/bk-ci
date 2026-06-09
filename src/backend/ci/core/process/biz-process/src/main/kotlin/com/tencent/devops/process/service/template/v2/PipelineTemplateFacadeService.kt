@@ -1464,7 +1464,7 @@ class PipelineTemplateFacadeService @Autowired constructor(
                 templateId = templateId,
                 version = version
             )
-        } ?: pipelineTemplateResourceService.getLatestVersionResource(
+        } ?: pipelineTemplateResourceService.getLatestReleasedResource(
             projectId = projectId,
             templateId = templateId
         ) ?: throw ErrorCodeException(errorCode = ERROR_TEMPLATE_NOT_EXISTS)

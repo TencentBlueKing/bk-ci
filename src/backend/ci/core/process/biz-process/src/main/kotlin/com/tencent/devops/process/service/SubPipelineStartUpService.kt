@@ -129,11 +129,14 @@ class SubPipelineStartUpService @Autowired constructor(
         branch: String?
     ): Result<ProjectBuildId> {
         val fixProjectId = callProjectId.ifBlank { projectId }
+        // PAC子流水线相关的参数
+        val yamlParams = mutableMapOf<String, BuildParameters>()
         // 获取分支版本Model
         val subPipelineResource = getBranchVersionResource(
             projectId = fixProjectId,
             pipelineId = callPipelineId,
-            branch = branch
+            branch = branch,
+            yamlParams = yamlParams
         )
         // 通过 runVariables获取 userId 和 channelCode
         val runVariables = buildVariableService.getAllVariable(projectId, parentPipelineId, buildId)
@@ -164,6 +167,10 @@ class SubPipelineStartUpService @Autowired constructor(
         val startParams = mutableMapOf<String, String>()
         values.forEach {
             startParams[it.key] = parseVariable(it.value, runVariables)
+        }
+        // 子流水线启动时补充pac相关参数
+        yamlParams.map { (key, value) -> key to value.value.toString() }.forEach {
+            startParams.putIfAbsent(it.first, it.second)
         }
 
         val existPipelines = HashSet<String>()
@@ -216,7 +223,8 @@ class SubPipelineStartUpService @Autowired constructor(
             triggerUser = triggerUser,
             runMode = runMode,
             parentExecuteCount = executeCount,
-            pipelineResource = subPipelineResource
+            pipelineResource = subPipelineResource,
+            branch = branch
         )
         pipelineTaskService.updateSubBuildId(
             projectId = projectId,
@@ -252,7 +260,8 @@ class SubPipelineStartUpService @Autowired constructor(
         triggerUser: String? = null,
         runMode: String,
         parentExecuteCount: Int?,
-        pipelineResource: PipelineResourceVersion?
+        pipelineResource: PipelineResourceVersion?,
+        branch: String?
     ): BuildId {
         val readyToBuildPipelineInfo = getPipelineInfo(
             projectId = projectId,
@@ -270,9 +279,12 @@ class SubPipelineStartUpService @Autowired constructor(
         if (readyToBuildPipelineInfo.locked == true) {
             throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_PIPELINE_LOCK)
         }
-        if (readyToBuildPipelineInfo.latestVersionStatus?.isNotReleased() == true) throw ErrorCodeException(
-            errorCode = ProcessMessageCode.ERROR_NO_RELEASE_PIPELINE_VERSION
-        )
+        // 引用分支版本时，无需校验是否存在正式版本
+        if (branch.isNullOrBlank() && readyToBuildPipelineInfo.latestVersionStatus?.isNotReleased() == true) {
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_NO_RELEASE_PIPELINE_VERSION
+            )
+        }
         val parentPipelineInfo = getPipelineInfo(
             projectId = parentProjectId,
             pipelineId = parentPipelineId
@@ -568,14 +580,22 @@ class SubPipelineStartUpService @Autowired constructor(
     private fun getBranchVersionResource(
         projectId: String,
         pipelineId: String,
-        branch: String?
+        branch: String?,
+        yamlParams: MutableMap<String, BuildParameters> = mutableMapOf()
     ): PipelineResourceVersion? {
         return if (!branch.isNullOrBlank()) {
-            val branchVersionResource = pipelineRepositoryService.getBranchVersionResource(
+            val branchVersionResource = pipelineBuildFacadeService.getPipelineYamlVersion(
                 projectId = projectId,
                 pipelineId = pipelineId,
-                branchName = branch
-            )
+                branchName = branch,
+                yamlParams = yamlParams
+            )?.let {
+                pipelineRepositoryService.getPipelineResourceVersion(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    version = it
+                )
+            }
             if (branchVersionResource == null) {
                 val pipelineInfo = getPipelineInfo(projectId, pipelineId)
                 throw ErrorCodeException(
