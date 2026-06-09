@@ -253,7 +253,6 @@ class BkRepoService @Autowired constructor(
                     projectId = targetProjectId,
                     pipelineId = targetPipelineId,
                     buildNum = crossBuildNo ?: throw BadRequestException("invalid buildNo"),
-                    channelCode = ChannelCode.BS
                 ).data
                 targetBuildId = (targetBuild ?: throw BadRequestException(
                     I18nUtil.getCodeLanMessage(
