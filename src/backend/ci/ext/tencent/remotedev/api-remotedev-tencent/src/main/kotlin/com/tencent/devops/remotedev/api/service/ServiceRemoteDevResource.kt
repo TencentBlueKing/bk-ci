@@ -1138,7 +1138,7 @@ interface ServiceRemoteDevResource {
     ): Result<Page<Workspace>>
 
     @Operation(summary = "分页批量获取THUMBNAIL的实例id列表")
-    @GET
+    @POST
     @Path("/batch_query_thumbnail_workspaces")
     fun batchQueryThumbnailWorkspaces(
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
@@ -1163,7 +1163,6 @@ interface ServiceRemoteDevResource {
             description = "工作空间名称列表（可选过滤条件，不传则不限定实例；最多1000个）",
             required = false
         )
-        @QueryParam("workspaceNames")
         workspaceNames: List<String>?
     ): Result<Page<String>>
 
