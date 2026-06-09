@@ -117,6 +117,24 @@ interface ServiceNodeResource {
         nodeHashIds: List<String>
     ): Result<List<NodeBaseInfo>>
 
+    @Operation(summary = "根据hashId或别名获取节点信息(不校验权限)")
+    @GET
+    @Path("/projects/{projectId}/getRawNode")
+    fun getRawNode(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "节点 hashId (nodeHashId、nodeName 两个参数任选其一填入即可)", required = false)
+        @QueryParam("nodeHashId")
+        nodeHashId: String?,
+        @Parameter(description = "节点别名 (nodeHashId、nodeName 两个参数任选其一填入即可)", required = false)
+        @QueryParam("nodeName")
+        nodeName: String?
+    ): Result<NodeBaseInfo>
+
     @Operation(summary = "根据环境hashId获取项目节点列表(不校验权限)")
     @POST
     @Path("/projects/{projectId}/listRawByEnvHashIds")

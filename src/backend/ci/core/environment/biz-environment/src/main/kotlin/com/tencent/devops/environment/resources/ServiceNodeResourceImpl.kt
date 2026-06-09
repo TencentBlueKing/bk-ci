@@ -76,6 +76,16 @@ class ServiceNodeResourceImpl @Autowired constructor(
     }
 
     @BkTimed(extraTags = ["operate", "getNode"])
+    override fun getRawNode(
+        userId: String,
+        projectId: String,
+        nodeHashId: String?,
+        nodeName: String?
+    ): Result<NodeBaseInfo> {
+        return Result(nodeService.getRawServerNode(userId, projectId, nodeHashId, nodeName))
+    }
+
+    @BkTimed(extraTags = ["operate", "getNode"])
     override fun listRawByEnvHashIds(
         userId: String,
         projectId: String,

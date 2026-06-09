@@ -707,6 +707,28 @@ class NodeService @Autowired constructor(
         return nodeRecords.map { NodeStringIdUtils.getNodeBaseInfo(it) }
     }
 
+    fun getRawServerNode(
+        userId: String,
+        projectId: String,
+        nodeHashId: String?,
+        nodeName: String?
+    ): NodeBaseInfo {
+        val hashId = when {
+            !nodeHashId.isNullOrBlank() -> nodeHashId
+            !nodeName.isNullOrBlank() -> nodeDao.getByDisplayName(dslContext, projectId, nodeName, null)
+                .firstOrNull()?.nodeHashId
+
+            else -> null
+        } ?: throw ErrorCodeException(
+            errorCode = ERROR_NODE_NAME_OR_ID_INVALID
+        )
+        return listRawServerNodeByIds(userId, projectId, listOf(hashId)).firstOrNull()
+            ?: throw ErrorCodeException(
+                errorCode = ERROR_NODE_NOT_EXISTS,
+                params = arrayOf(hashId)
+            )
+    }
+
     fun listRawServerNodeByIds(nodeHashIds: List<String>): List<NodeBaseInfo> {
         val nodeRecords =
             nodeDao.listServerNodesByIds(dslContext, nodeHashIds.map { HashUtil.decodeIdToLong(it) })

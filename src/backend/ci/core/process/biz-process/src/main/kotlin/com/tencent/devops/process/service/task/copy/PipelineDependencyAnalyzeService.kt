@@ -658,9 +658,12 @@ class PipelineDependencyAnalyzeService @Autowired constructor(
                     resolveEnvironmentRef(userId = userId, ref = ref)?.let { resources.add(it) }
                 }
 
-                PipelineDependentResourceType.BUILD_NODE,
+                PipelineDependentResourceType.BUILD_NODE -> {
+                    resolveBuildNodeRef(userId = userId, ref = ref)?.let { resources.add(it) }
+                }
+
                 PipelineDependentResourceType.DEPLOY_NODE -> {
-                    resolveNodeRef(userId = userId, ref = ref)?.let { resources.add(it) }
+                    resolveDeployNodeRef(userId = userId, ref = ref)?.let { resources.add(it) }
                 }
 
                 PipelineDependentResourceType.CREDENTIAL -> {
@@ -754,26 +757,16 @@ class PipelineDependencyAnalyzeService @Autowired constructor(
         )
     }
 
-    private fun resolveNodeRef(userId: String, ref: PipelineDependentResourceRef): PipelineDependentResource? {
+    private fun resolveBuildNodeRef(userId: String, ref: PipelineDependentResourceRef): PipelineDependentResource? {
         val node = try {
             if (ref.refType == PipelineDependentResourceRefType.ID) {
-                if (ref.resourceType == PipelineDependentResourceType.BUILD_NODE) {
-                    client.get(ServiceNodeResource::class).getNodeStatus(
-                        userId = userId,
-                        projectId = ref.projectId,
-                        nodeHashId = null,
-                        nodeName = null,
-                        agentHashId = ref.refValue
-                    ).data
-                } else {
-                    client.get(ServiceNodeResource::class).getNodeStatus(
-                        userId = userId,
-                        projectId = ref.projectId,
-                        nodeHashId = ref.refValue,
-                        nodeName = null,
-                        agentHashId = null
-                    ).data
-                }
+                client.get(ServiceNodeResource::class).getNodeStatus(
+                    userId = userId,
+                    projectId = ref.projectId,
+                    nodeHashId = null,
+                    nodeName = null,
+                    agentHashId = ref.refValue
+                ).data
             } else {
                 client.get(ServiceNodeResource::class).getNodeStatus(
                     userId = userId,
@@ -784,18 +777,42 @@ class PipelineDependencyAnalyzeService @Autowired constructor(
                 ).data
             }
         } catch (ignored: Exception) {
-            logger.warn("get node info failed|${ref.projectId}|${ref.refType}|${ref.refValue}", ignored)
+            logger.warn("get build node info failed|${ref.projectId}|${ref.refType}|${ref.refValue}", ignored)
             null
         } ?: return null
         return PipelineDependentResource(
             projectId = ref.projectId,
             resourceType = ref.resourceType,
-            // 部署节点,流水线使用的是agentHashId
-            resourceId = if (ref.resourceType == PipelineDependentResourceType.BUILD_NODE) {
-                node.agentHashId!!
+            resourceId = node.agentHashId!!,
+            resourceName = node.displayName!!
+        )
+    }
+
+    private fun resolveDeployNodeRef(userId: String, ref: PipelineDependentResourceRef): PipelineDependentResource? {
+        val node = try {
+            if (ref.refType == PipelineDependentResourceRefType.ID) {
+                client.get(ServiceNodeResource::class).getRawNode(
+                    userId = userId,
+                    projectId = ref.projectId,
+                    nodeHashId = ref.refValue,
+                    nodeName = null
+                ).data
             } else {
-                node.nodeHashId
-            },
+                client.get(ServiceNodeResource::class).getRawNode(
+                    userId = userId,
+                    projectId = ref.projectId,
+                    nodeHashId = null,
+                    nodeName = ref.refValue
+                ).data
+            }
+        } catch (ignored: Exception) {
+            logger.warn("get deploy node info failed|${ref.projectId}|${ref.refType}|${ref.refValue}", ignored)
+            null
+        } ?: return null
+        return PipelineDependentResource(
+            projectId = ref.projectId,
+            resourceType = ref.resourceType,
+            resourceId = node.nodeHashId,
             resourceName = node.displayName!!
         )
     }
