@@ -162,6 +162,7 @@ internal class NodeJsAtomRunConditionHandleServiceImplTest {
             val workspace = Files.createTempDirectory(UUIDUtil.generate()).toFile()
             Assertions.assertNotNull(
                 self.prepareRunEnv(
+                    atomCode = "",
                     osType = osType,
                     language = "nodejs",
                     runtimeVersion = "16.*",
@@ -188,6 +189,7 @@ internal class NodeJsAtomRunConditionHandleServiceImplTest {
             val workspace = Files.createTempDirectory(UUIDUtil.generate()).toFile()
             try {
                 self.prepareRunEnv(
+                    atomCode = "",
                     osType = osType,
                     language = "nodejs",
                     runtimeVersion = "16.*",
