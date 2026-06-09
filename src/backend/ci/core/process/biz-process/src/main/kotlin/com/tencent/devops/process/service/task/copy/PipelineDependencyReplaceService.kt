@@ -1,6 +1,8 @@
 package com.tencent.devops.process.service.task.copy
 
+import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.enums.RepositoryType
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.enums.TriggerRepositoryType
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.pipeline.container.Container
@@ -623,7 +625,9 @@ class PipelineDependencyReplaceService @Autowired constructor(
         fieldName: String,
         context: ReplaceContext
     ): Map<*, *>? {
-        val envId = input[fieldName]?.toString()?.takeIf { it.isNotBlank() } ?: return null
+        val envId = input[fieldName]?.let {
+            JsonUtil.anyToOrNull(it, object : TypeReference<List<String>>() {})
+        }?.firstOrNull()?.takeIf { it.isNotBlank() } ?: return null
         val targetEnv = context.getTargetResource(
             resourceType = PipelineDependentResourceType.DEPLOY_ENV,
             resourceId = envId
@@ -631,14 +635,14 @@ class PipelineDependencyReplaceService @Autowired constructor(
         return replaceInputField(
             input = input,
             fieldName = fieldName,
-            value = targetEnv.resourceId
+            value = listOf(targetEnv.resourceId)
         )
     }
 
     private fun replaceInputField(
         input: Map<*, *>,
         fieldName: String,
-        value: String
+        value: Any
     ): Map<*, *> {
         val newInput = input.toMutableMap()
         newInput[fieldName] = value
