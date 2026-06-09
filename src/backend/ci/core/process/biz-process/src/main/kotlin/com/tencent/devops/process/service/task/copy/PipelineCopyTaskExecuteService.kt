@@ -543,26 +543,22 @@ class PipelineCopyTaskExecuteService @Autowired constructor(
 
                 PipelineCopyStrategy.BUILD_NODE_MOVE_TO_TARGET_PROJECT -> {
                     // 构建节点,存储的是构建机agentId
-                    val targetResource = pipelineCopyResourceCreateService.moveNodeToTargetProject(
+                    val targetResource = pipelineCopyResourceCreateService.moveBuildNodeToTargetProject(
                         userId = userId,
                         sourceProjectId = projectId,
-                        nodeHashId = null,
                         agentHashId = resource.resourceId,
-                        targetProjectId = targetProjectId,
-                        resourceType = resource.resourceType
+                        targetProjectId = targetProjectId
                     )
                     targetResourceId = targetResource.resourceId
                     targetResourceName = targetResource.resourceName
                 }
 
                 PipelineCopyStrategy.DEPLOY_NODE_MOVE_TO_TARGET_PROJECT -> {
-                    val targetResource = pipelineCopyResourceCreateService.moveNodeToTargetProject(
+                    val targetResource = pipelineCopyResourceCreateService.moveDeployNodeToTargetProject(
                         userId = userId,
                         sourceProjectId = projectId,
                         nodeHashId = resource.resourceId,
-                        agentHashId = null,
-                        targetProjectId = targetProjectId,
-                        resourceType = resource.resourceType
+                        targetProjectId = targetProjectId
                     )
                     targetResourceId = targetResource.resourceId
                     targetResourceName = targetResource.resourceName
