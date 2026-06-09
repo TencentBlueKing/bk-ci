@@ -3,7 +3,6 @@ package com.tencent.devops.process.service.task.copy
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.environment.api.thirdpartyagent.ServiceThirdPartyAgentResource
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.dao.PipelineBatchTaskDao
 import com.tencent.devops.process.dao.PipelineBatchTaskDetailDao
@@ -543,25 +542,24 @@ class PipelineCopyTaskExecuteService @Autowired constructor(
                 }
 
                 PipelineCopyStrategy.BUILD_NODE_MOVE_TO_TARGET_PROJECT -> {
-                    // 构建节点,存储的是构建机agentId,需要转换成nodeId
-                    val thirdPartyAgent = pipelineCopyResourceGetService.getAgentById(
-                        projectId = projectId,
-                        agentHashId = resource.resourceId
-                    )
+                    // 构建节点,存储的是构建机agentId
                     val targetResource = pipelineCopyResourceCreateService.moveNodeToTargetProject(
                         userId = userId,
                         sourceProjectId = projectId,
-                        nodeHashId = thirdPartyAgent.nodeId!!,
+                        nodeHashId = null,
+                        agentHashId = resource.resourceId,
                         targetProjectId = targetProjectId
                     )
                     targetResourceId = targetResource.resourceId
                     targetResourceName = targetResource.resourceName
                 }
+
                 PipelineCopyStrategy.DEPLOY_NODE_MOVE_TO_TARGET_PROJECT -> {
                     val targetResource = pipelineCopyResourceCreateService.moveNodeToTargetProject(
                         userId = userId,
                         sourceProjectId = projectId,
                         nodeHashId = resource.resourceId,
+                        agentHashId = null,
                         targetProjectId = targetProjectId
                     )
                     targetResourceId = targetResource.resourceId

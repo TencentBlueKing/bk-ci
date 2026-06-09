@@ -179,7 +179,8 @@ class PipelineCopyResourceCreateService @Autowired constructor(
     fun moveNodeToTargetProject(
         userId: String,
         sourceProjectId: String,
-        nodeHashId: String,
+        nodeHashId: String?,
+        agentHashId: String?,
         targetProjectId: String
     ): PipelineCopyResourceBasicInfo {
         val sourceNode = client.get(ServiceNodeResource::class).getNodeStatus(
@@ -187,16 +188,17 @@ class PipelineCopyResourceCreateService @Autowired constructor(
             projectId = sourceProjectId,
             nodeHashId = nodeHashId,
             nodeName = null,
-            agentHashId = null
+            agentHashId = agentHashId
         ).data ?: throw ErrorCodeException(
             errorCode = ProcessMessageCode.ERROR_PIPELINE_COPY_SOURCE_RESOURCE_NOT_EXISTS,
-            params = arrayOf(sourceProjectId, nodeHashId)
+            params = arrayOf(sourceProjectId, nodeHashId ?: agentHashId ?: "")
         )
         val transferResult = client.get(ServiceNodeResource::class).transferNode(
             userId = userId,
             projectId = sourceProjectId,
             targetProjectId = targetProjectId,
-            nodeHashId = nodeHashId
+            nodeHashId = nodeHashId,
+            agentHashId = agentHashId
         )
         checkTargetResourceCreateResult(
             targetProjectId = targetProjectId,

@@ -886,14 +886,25 @@ class NodeService @Autowired constructor(
         userId: String,
         sourceProjectId: String,
         targetProjectId: String,
-        nodeHashId: String,
+        nodeHashId: String? = null,
+        agentHashId: String? = null,
         checkPermission: Boolean = true
     ): Boolean {
         logger.info(
             "transfer node start|userId=$userId|sourceProjectId=$sourceProjectId|" +
-                "targetProjectId=$targetProjectId|nodeHashId=$nodeHashId"
+                    "targetProjectId=$targetProjectId|nodeHashId=$nodeHashId|$agentHashId=$agentHashId"
         )
-        val nodeId = HashUtil.decodeIdToLong(nodeHashId)
+        val nodeId = when {
+            nodeHashId != null -> HashUtil.decodeIdToLong(nodeHashId)
+
+            agentHashId != null -> thirdPartyAgentDao.getAgent(
+                dslContext, HashUtil.decodeIdToLong(agentHashId)
+            )?.nodeId
+
+            else -> null
+        } ?: throw ErrorCodeException(
+            errorCode = ERROR_NODE_NAME_OR_ID_INVALID
+        )
         if (checkPermission) {
             checkProjectManager(userId, sourceProjectId)
             checkProjectManager(userId, targetProjectId)
@@ -904,13 +915,13 @@ class NodeService @Autowired constructor(
             if (targetNode != null) {
                 logger.info(
                     "transfer node skipped|userId=$userId|sourceProjectId=$sourceProjectId|" +
-                        "targetProjectId=$targetProjectId|nodeHashId=$nodeHashId"
+                            "targetProjectId=$targetProjectId|nodeHashId=$nodeHashId"
                 )
                 return true
             }
             throw ErrorCodeException(
                 errorCode = ERROR_NODE_NOT_EXISTS,
-                params = arrayOf(nodeHashId)
+                params = arrayOf(HashUtil.encodeLongId(nodeId))
             )
         }
         dslContext.transaction { configuration ->

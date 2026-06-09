@@ -143,14 +143,16 @@ class ServiceNodeResourceImpl @Autowired constructor(
         userId: String,
         projectId: String,
         targetProjectId: String,
-        nodeHashId: String
+        nodeHashId: String?,
+        agentHashId: String?
     ): Result<Boolean> {
         return Result(
             nodeService.transferNode(
                 userId = userId,
                 sourceProjectId = projectId,
                 targetProjectId = targetProjectId,
-                nodeHashId = nodeHashId
+                nodeHashId = nodeHashId,
+                agentHashId = agentHashId
             )
         )
     }

@@ -7,8 +7,6 @@ import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.environment.api.ServiceEnvironmentResource
 import com.tencent.devops.environment.api.ServiceNodeResource
-import com.tencent.devops.environment.api.thirdpartyagent.ServiceThirdPartyAgentResource
-import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgent
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.dao.label.PipelineGroupDao
 import com.tencent.devops.process.dao.label.PipelineLabelDao
@@ -127,19 +125,6 @@ class PipelineCopyResourceGetService @Autowired constructor(
                 )
             }
         }
-    }
-
-    fun getAgentById(
-        projectId: String,
-        agentHashId: String
-    ): ThirdPartyAgent {
-        return client.get(ServiceThirdPartyAgentResource::class).getAgentById(
-            projectId = projectId,
-            agentId = agentHashId
-        ).data ?: throw ErrorCodeException(
-            errorCode = ProcessMessageCode.ERROR_PIPELINE_COPY_SOURCE_RESOURCE_NOT_EXISTS,
-            params = arrayOf(projectId, agentHashId)
-        )
     }
 
     fun getPipelineViewByName(

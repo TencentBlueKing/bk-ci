@@ -186,7 +186,7 @@ interface ServiceNodeResource {
 
     @Operation(summary = "迁移节点到目标项目")
     @POST
-    @Path("/projects/{projectId}/transfer_node/{targetProjectId}/{nodeHashId}")
+    @Path("/projects/{projectId}/transfer_node/{targetProjectId}/")
     fun transferNode(
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -197,9 +197,12 @@ interface ServiceNodeResource {
         @Parameter(description = "目标项目ID", required = true)
         @PathParam("targetProjectId")
         targetProjectId: String,
-        @Parameter(description = "节点 hashId", required = true)
-        @PathParam("nodeHashId")
-        nodeHashId: String
+        @Parameter(description = "节点 hashId (nodeHashId、agentHashId 两个参数任选其一填入即可)", required = false)
+        @QueryParam("nodeHashId")
+        nodeHashId: String?,
+        @Parameter(description = "节点 agentId (nodeHashId、agentHashId 两个参数任选其一填入即可)", required = false)
+        @QueryParam("agentHashId")
+        agentHashId: String?
     ): Result<Boolean>
 
     @Operation(summary = "删除节点")
