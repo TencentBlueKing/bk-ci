@@ -105,6 +105,10 @@ import com.tencent.devops.environment.pojo.enums.EnvType
 import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.environment.pojo.enums.NodeType
 import com.tencent.devops.environment.pojo.enums.SharedEnvType
+import com.tencent.devops.environment.pojo.envOperate.EnableNodeEnvData
+import com.tencent.devops.environment.pojo.envOperate.EnvOperateContent
+import com.tencent.devops.environment.pojo.envOperate.EnvOperateName
+import com.tencent.devops.environment.pojo.envOperate.EnvOperateOrigin
 import com.tencent.devops.environment.service.node.EnvCreatorFactory
 import com.tencent.devops.environment.service.slave.SlaveGatewayService
 import com.tencent.devops.environment.utils.AgentStatusUtils.getAgentStatus
@@ -138,7 +142,8 @@ class EnvService @Autowired constructor(
     private val client: Client,
     private val authProjectApi: AuthProjectApi,
     private val pipelineAuthServiceCode: PipelineAuthServiceCode,
-    private val createEnvService: CreateEnvService
+    private val createEnvService: CreateEnvService,
+    private val envOperateLogService: EnvOperateLogService
 ) : IEnvService {
 
     override fun checkName(projectId: String, envId: Long?, envName: String) {
@@ -1573,7 +1578,9 @@ class EnvService @Autowired constructor(
         nodeHashId: String?,
         envName: String?,
         nodeName: String?,
-        enableNode: Boolean
+        enableNode: Boolean,
+        data: EnableNodeEnvData,
+        operateOrigin: EnvOperateOrigin
     ): Result<Boolean> {
         val env = if (envHashId != null) {
             envDao.get(dslContext, projectId, envId = HashUtil.decodeIdToLong(envHashId))
@@ -1639,15 +1646,26 @@ class EnvService @Autowired constructor(
             ActionAuditContext.current().addAttribute(PROJECT_ENABLE_OR_DISABLE_TEMPLATE, "disable")
         }
         return if (envNodeDao.exists(dslContext, projectId, envId, nodeId)) {
-            Result(
-                data = envNodeDao.disableOrEnableNode(
-                    dslContext = dslContext,
-                    projectId = projectId,
-                    envId = envId,
-                    nodeId = nodeId,
-                    enable = enableNode
-                )
+            val result = envNodeDao.disableOrEnableNode(
+                dslContext = dslContext,
+                projectId = projectId,
+                envId = envId,
+                nodeId = nodeId,
+                enable = enableNode
             )
+            envOperateLogService.addOperateLog(
+                projectId = projectId,
+                envId = envId,
+                operateOrigin = operateOrigin,
+                operateName = if (enableNode) {
+                    EnvOperateName.ENABLE_NODE
+                } else {
+                    EnvOperateName.DISABLE_NODE
+                },
+                operateContent = EnvOperateContent(content = data.reason, resourceCount = 1),
+                operator = userId
+            )
+            Result(result)
         } else {
             Result(
                 data = false,

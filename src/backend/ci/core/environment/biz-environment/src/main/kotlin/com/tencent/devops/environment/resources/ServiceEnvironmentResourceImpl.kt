@@ -47,6 +47,8 @@ import com.tencent.devops.environment.pojo.NodeBaseInfo
 import com.tencent.devops.environment.pojo.SharedProjectInfoWrap
 import com.tencent.devops.environment.pojo.enums.EnvType
 import com.tencent.devops.environment.pojo.enums.NodeStatus
+import com.tencent.devops.environment.pojo.envOperate.EnableNodeEnvData
+import com.tencent.devops.environment.pojo.envOperate.EnvOperateOrigin
 import com.tencent.devops.environment.service.EnvService
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -266,7 +268,8 @@ class ServiceEnvironmentResourceImpl @Autowired constructor(
         nodeHashId: String?,
         envName: String?,
         nodeName: String?,
-        enableNode: Boolean
+        enableNode: Boolean,
+        data: EnableNodeEnvData
     ): Result<Boolean> {
         if (envHashId.isNullOrBlank() && envName.isNullOrBlank()) {
             throw ErrorCodeException(
@@ -287,7 +290,9 @@ class ServiceEnvironmentResourceImpl @Autowired constructor(
             nodeHashId = nodeHashId,
             envName = envName,
             nodeName = nodeName,
-            enableNode = enableNode
+            enableNode = enableNode,
+            data = data,
+            operateOrigin = EnvOperateOrigin.API
         )
     }
 

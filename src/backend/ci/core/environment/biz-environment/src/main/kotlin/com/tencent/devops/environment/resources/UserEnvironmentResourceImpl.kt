@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.service.prometheus.BkTimed
@@ -51,6 +52,10 @@ import com.tencent.devops.environment.pojo.SharedProjectInfo
 import com.tencent.devops.environment.pojo.SharedProjectInfoWrap
 import com.tencent.devops.environment.pojo.enums.EnvType
 import com.tencent.devops.environment.pojo.enums.NodeStatus
+import com.tencent.devops.environment.pojo.envOperate.EnableNodeEnvData
+import com.tencent.devops.environment.pojo.envOperate.EnvOperateLog
+import com.tencent.devops.environment.pojo.envOperate.EnvOperateOrigin
+import com.tencent.devops.environment.service.EnvOperateLogService
 import com.tencent.devops.environment.service.EnvService
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -58,7 +63,8 @@ import org.springframework.beans.factory.annotation.Autowired
 @RestResource
 class UserEnvironmentResourceImpl @Autowired constructor(
     private val envService: EnvService,
-    private val environmentPermissionService: EnvironmentPermissionService
+    private val environmentPermissionService: EnvironmentPermissionService,
+    private val envOperateLogService: EnvOperateLogService
 ) : UserEnvironmentResource {
 
     @BkTimed(extraTags = ["operate", "getEnv"])
@@ -379,7 +385,8 @@ class UserEnvironmentResourceImpl @Autowired constructor(
         projectId: String,
         envHashId: String,
         nodeHashId: String,
-        enableNode: Boolean
+        enableNode: Boolean,
+        data: EnableNodeEnvData
     ): Result<Boolean> {
         return envService.enableNodeEnv(
             projectId = projectId,
@@ -388,7 +395,9 @@ class UserEnvironmentResourceImpl @Autowired constructor(
             nodeHashId = nodeHashId,
             envName = null,
             nodeName = null,
-            enableNode = enableNode
+            enableNode = enableNode,
+            data = data,
+            operateOrigin = EnvOperateOrigin.WEB
         )
     }
 
@@ -398,6 +407,29 @@ class UserEnvironmentResourceImpl @Autowired constructor(
         createEnv: Boolean?
     ): Result<Map<String, Int>> {
         return Result(envService.getEnvCount(projectId, createEnv))
+    }
+
+    override fun fetchEnvOperateLog(
+        userId: String,
+        projectId: String,
+        envHashId: String,
+        operator: String?,
+        page: Int?,
+        pageSize: Int?
+    ): Result<Page<EnvOperateLog>> {
+        checkParam(userId, projectId, envHashId)
+        val envId = HashUtil.decodeIdToLong(envHashId)
+        // TODO: #12764 这里要确认下是否是查看权限
+        environmentPermissionService.checkEnvPermission(userId, projectId, envId, AuthPermission.VIEW)
+        return Result(
+            envOperateLogService.fetchOperateLog(
+                projectId = projectId,
+                envId = envId,
+                operator = operator,
+                page = page ?: 1,
+                pageSize = pageSize ?: 10
+            )
+        )
     }
 
     private fun checkParam(

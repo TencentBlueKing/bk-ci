@@ -43,6 +43,7 @@ import com.tencent.devops.environment.pojo.NodeBaseInfo
 import com.tencent.devops.environment.pojo.SharedProjectInfoWrap
 import com.tencent.devops.environment.pojo.enums.EnvType
 import com.tencent.devops.environment.pojo.enums.NodeStatus
+import com.tencent.devops.environment.pojo.envOperate.EnableNodeEnvData
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -335,7 +336,9 @@ interface ServiceEnvironmentResource {
         @Parameter(description = "启动或者停用", required = true)
         @QueryParam("enableNode")
         @BkField(patternStyle = BkStyleEnum.BOOLEAN_STYLE, required = true)
-        enableNode: Boolean
+        enableNode: Boolean,
+        // TODO: #12764 确认下面向API的是强制要求还是给个默认值
+        data: EnableNodeEnvData
     ): Result<Boolean>
 
     @Operation(summary = "根据工作空间ID,获取所有拥有这个节点的环境(创作流)")

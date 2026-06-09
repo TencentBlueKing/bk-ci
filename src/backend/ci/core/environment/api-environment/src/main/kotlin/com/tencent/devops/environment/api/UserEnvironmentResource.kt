@@ -46,6 +46,8 @@ import com.tencent.devops.environment.pojo.SharedProjectInfo
 import com.tencent.devops.environment.pojo.SharedProjectInfoWrap
 import com.tencent.devops.environment.pojo.enums.EnvType
 import com.tencent.devops.environment.pojo.enums.NodeStatus
+import com.tencent.devops.environment.pojo.envOperate.EnableNodeEnvData
+import com.tencent.devops.environment.pojo.envOperate.EnvOperateLog
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -474,7 +476,8 @@ interface UserEnvironmentResource {
         @Parameter(description = "启动或者停用", required = true)
         @QueryParam("enableNode")
         @BkField(patternStyle = BkStyleEnum.BOOLEAN_STYLE, required = true)
-        enableNode: Boolean
+        enableNode: Boolean,
+        data: EnableNodeEnvData
     ): Result<Boolean>
 
     @Operation(summary = "获取项目下环境数量")
@@ -491,4 +494,28 @@ interface UserEnvironmentResource {
         @QueryParam("createEnv")
         createEnv: Boolean?
     ): Result<Map<String, Int>>
+
+    @Operation(summary = "获取环境操作记录")
+    @GET
+    @Path("/operateLog")
+    fun fetchEnvOperateLog(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @QueryParam("projectId")
+        projectId: String,
+        @Parameter(description = "环境HashId", required = false)
+        @QueryParam("envHashId")
+        envHashId: String,
+        @Parameter(description = "操作人查询", required = false)
+        @QueryParam("operator")
+        operator: String?,
+        @Parameter(description = "第几页", required = false)
+        @QueryParam("page")
+        page: Int? = 1,
+        @Parameter(description = "每页多少条", required = false)
+        @QueryParam("pageSize")
+        pageSize: Int? = 10
+    ): Result<Page<EnvOperateLog>>
 }
