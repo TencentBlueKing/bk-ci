@@ -58,12 +58,9 @@ class PipelineAiSummaryVersionPostProcessor constructor(
             if (pipelineResourceVersion.status != VersionStatus.RELEASED) {
                 return
             }
-            if (pipelineBasicInfo.channelCode != ChannelCode.CREATIVE_STREAM) {
-                return
-            }
 
             logger.info(
-                "Dispatching AI summary event for CREATIVE_STREAM pipeline[$pipelineId] " +
+                "Dispatching AI summary event for pipeline[$pipelineId] " +
                     "project[$projectId] version[${pipelineResourceVersion.version}]"
             )
 
