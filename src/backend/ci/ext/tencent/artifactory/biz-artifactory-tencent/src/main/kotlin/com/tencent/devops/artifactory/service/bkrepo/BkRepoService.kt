@@ -816,11 +816,13 @@ class BkRepoService @Autowired constructor(
         projectId: String,
         artifactoryType: ArtifactoryType,
         fullPath: String,
-        ttl: Int
+        ttl: Int,
+        authorizedUserList: List<String> = emptyList()
     ): String {
         logger.info(
             "externalDownloadUrl, creatorId: $creatorId, userId: $userId," +
-                    " projectId: $projectId, artifactoryType: $artifactoryType, fullPath: $fullPath, ttl: $ttl"
+                    " projectId: $projectId, artifactoryType: $artifactoryType, fullPath: $fullPath, ttl: $ttl," +
+                    " authorizedUserList: $authorizedUserList"
         )
         val shareUri = StringUtil.repoPathUrlEncode(
             bkRepoClient.createShareUri(
@@ -828,7 +830,7 @@ class BkRepoService @Autowired constructor(
                 projectId = projectId,
                 repoName = RepoUtils.getRepoByType(artifactoryType),
                 fullPath = fullPath,
-                downloadUsers = listOf(),
+                downloadUsers = authorizedUserList,
                 downloadIps = listOf(),
                 timeoutInSeconds = ttl.toLong()
             )

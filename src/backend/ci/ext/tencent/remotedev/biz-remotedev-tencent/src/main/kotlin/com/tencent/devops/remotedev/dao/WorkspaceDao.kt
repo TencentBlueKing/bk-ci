@@ -731,7 +731,8 @@ class WorkspaceDao {
                 resourceId = record.getOrNull(TWorkspaceWindows.T_WORKSPACE_WINDOWS.RESOURCE_ID) as String?,
                 enableRecord = (record.getOrNull(TWorkspaceWindows.T_WORKSPACE_WINDOWS.ENABLE_RECORD_USER) as? String)
                     ?.isNotBlank() ?: false,
-                coffeeAi = (record.getOrNull(TWorkspace.T_WORKSPACE.COFFEE_AI) as? Byte)?.let { it != 0.toByte() } ?: false
+                coffeeAi = (record.getOrNull(TWorkspace.T_WORKSPACE.COFFEE_AI) as? Byte)?.let { it != 0.toByte() }
+                    ?: false
             )
         }
 
@@ -763,6 +764,33 @@ class WorkspaceDao {
                         )
                         .fetch(workspaceMapper)
                 }
+        }
+    }
+
+    // 查询一台最早创建的待分配coffeeAi工作空间
+    fun fetchOldDistributingAIWorkspace(
+        dslContext: DSLContext,
+        projectId: String
+    ): WorkspaceRecord? {
+        with(TWorkspace.T_WORKSPACE) {
+            return dslContext.selectFrom(this).where(PROJECT_ID.eq(projectId))
+                .and(COFFEE_AI.eq(1))
+                .and(STATUS.eq(WorkspaceStatus.DISTRIBUTING.ordinal))
+                .orderBy(CREATE_TIME.asc())
+                .fetchAny(workspaceMapper)
+        }
+    }
+
+    fun fetchAIWorkspaceByIp(
+        dslContext: DSLContext,
+        projectId: String,
+        ip: String
+    ): WorkspaceRecord? {
+        with(TWorkspace.T_WORKSPACE) {
+            return dslContext.selectFrom(this).where(PROJECT_ID.eq(projectId))
+                .and(COFFEE_AI.eq(1))
+                .and(IP.eq(ip))
+                .fetchAny(workspaceMapper)
         }
     }
 

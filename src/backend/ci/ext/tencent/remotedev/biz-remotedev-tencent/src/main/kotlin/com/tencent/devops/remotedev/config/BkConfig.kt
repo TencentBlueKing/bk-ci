@@ -1,6 +1,7 @@
 package com.tencent.devops.remotedev.config
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import okhttp3.Headers.Companion.toHeaders
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
@@ -43,12 +44,16 @@ class BkConfig @Autowired constructor(
     // itsm配置
     @Value("\${bkitsm.host:}")
     val itsmHost: String = ""
+
     @Value("\${bkitsm.tgitLinkServiceId:#{null}}")
     val tgitLinkServiceId: Int? = null
+
     @Value("\${bkitsm.recordViewServiceId:#{null}}")
     val recordViewServiceId: Int? = null
+
     @Value("\${bkitsm.dailyCheckServiceId:#{null}}")
     val dailyCheckServiceId: Int? = null
+
     @Value("\${bkitsm.userAuthCheckServiceId:#{null}}")
     val userAuthCheckServiceId: Int? = null
 
@@ -56,10 +61,19 @@ class BkConfig @Autowired constructor(
     @Value("\${bkvision.url:}")
     val bkvisionUrl: String = ""
 
+    // 标准运维配置
     @Value("\${bksops.createTask:}")
     val bksopsCreateTask: String = ""
+
     @Value("\${bksops.startTask:}")
     val bksopsStartTask: String = ""
+
+    @Value("\${bksops.openClawCreateTask:}")
+    val bksopsOpenClawCreateTask: String = ""
+
+    @Value("\${bksops.taskStatus:}")
+    val bksopsTaskStatus: String = ""
+
 
     @Value("\${remoteDev.desktopSdkToken:D1oXVCZnVQ9Vu65eXG5R}")
     val desktopSdkToken: String = "D1oXVCZnVQ9Vu65eXG5R"
@@ -108,4 +122,15 @@ class BkConfig @Autowired constructor(
             )
         ).replace("\\s".toRegex(), "")
     }
+
+
+    /**
+     * 请求标准运维的头部
+     */
+    fun sopHeaders() = mapOf(
+        "X-Bkapi-Authorization" to
+                "{\"bk_app_code\":\"${appCode}\"," +
+                "\"bk_app_secret\":\"${appSecret}\"," +
+                "\"bk_username\":\"${ccUserName}\"}"
+    ).toHeaders()
 }
