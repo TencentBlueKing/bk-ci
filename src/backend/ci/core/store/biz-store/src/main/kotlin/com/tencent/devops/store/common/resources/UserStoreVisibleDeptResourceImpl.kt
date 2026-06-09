@@ -19,7 +19,8 @@ class UserStoreVisibleDeptResourceImpl @Autowired constructor(
             userId = userId,
             storeCode = storeVisibleDeptReq.storeCode,
             storeType = StoreTypeEnum.valueOf(storeVisibleDeptReq.storeType),
-            deptInfos = storeVisibleDeptReq.deptInfos
+            deptInfos = storeVisibleDeptReq.deptInfos,
+            projectInfos = storeVisibleDeptReq.projectInfos
         )
     }
 
@@ -40,13 +41,15 @@ class UserStoreVisibleDeptResourceImpl @Autowired constructor(
         userId: String,
         storeType: String,
         storeCode: String,
-        deptIds: String
+        deptIds: String?,
+        projectCodes: String?
     ): Result<Boolean> {
         return storeVisibleDeptService.deleteVisibleDept(
             userId = userId,
             storeCode = storeCode,
             storeType = StoreTypeEnum.valueOf(storeType),
-            deptIds = deptIds
+            deptIds = deptIds,
+            projectCodes = projectCodes
         )
     }
 }

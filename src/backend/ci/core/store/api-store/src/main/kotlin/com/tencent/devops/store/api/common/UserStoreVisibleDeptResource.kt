@@ -102,8 +102,11 @@ interface UserStoreVisibleDeptResource {
         @PathParam("storeCode")
         @BkField(patternStyle = BkStyleEnum.CODE_STYLE)
         storeCode: String,
-        @Parameter(description = "机构Id集合，用\",\"分隔进行拼接（如1,2,3）", required = true)
+        @Parameter(description = "机构Id集合，用\",\"分隔进行拼接（如1,2,3）", required = false)
         @QueryParam("deptIds")
-        deptIds: String
+        deptIds: String? = null,
+        @Parameter(description = "项目编码集合，用\",\"分隔进行拼接（如p1,p2,p3）", required = false)
+        @QueryParam("projectCodes")
+        projectCodes: String? = null
     ): Result<Boolean>
 }

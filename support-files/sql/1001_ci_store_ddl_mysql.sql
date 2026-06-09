@@ -494,6 +494,26 @@ CREATE TABLE IF NOT EXISTS `T_STORE_DEPT_REL` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='商店组件与与机构关联关系表';
 
 -- ----------------------------
+-- Table structure for T_STORE_PROJECT_VISIBLE_REL
+-- ----------------------------
+
+CREATE TABLE IF NOT EXISTS `T_STORE_PROJECT_VISIBLE_REL` (
+  `ID` varchar(32) NOT NULL DEFAULT '' COMMENT '主键ID',
+  `STORE_CODE` varchar(64) NOT NULL DEFAULT '' COMMENT 'store组件编码',
+  `STORE_TYPE` tinyint(4) NOT NULL DEFAULT '0' COMMENT 'store组件类型',
+  `PROJECT_CODE` varchar(64) NOT NULL DEFAULT '' COMMENT '项目编码',
+  `PROJECT_NAME` varchar(256) DEFAULT NULL COMMENT '项目名称',
+  `CREATOR` varchar(50) NOT NULL DEFAULT 'system' COMMENT '创建者',
+  `MODIFIER` varchar(50) NOT NULL DEFAULT 'system' COMMENT '修改者',
+  `CREATE_TIME` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `UPDATE_TIME` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '更新时间',
+  PRIMARY KEY (`ID`),
+  UNIQUE KEY `UNI_INX_TSPVR_TYPE_CODE_PROJECT` (`STORE_TYPE`,`STORE_CODE`,`PROJECT_CODE`),
+  KEY `INX_TSPVR_PROJECT` (`PROJECT_CODE`),
+  KEY `INX_TSPVR_CODE` (`STORE_CODE`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='商店组件与项目可见范围关联关系表';
+
+-- ----------------------------
 -- Table structure for T_STORE_MEMBER
 -- ----------------------------
 

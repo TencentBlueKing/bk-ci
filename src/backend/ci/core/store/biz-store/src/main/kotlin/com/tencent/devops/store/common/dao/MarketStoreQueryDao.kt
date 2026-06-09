@@ -34,6 +34,7 @@ import com.tencent.devops.model.store.tables.TStoreBaseFeature
 import com.tencent.devops.model.store.tables.TStoreCategoryRel
 import com.tencent.devops.model.store.tables.TStoreDeptRel
 import com.tencent.devops.model.store.tables.TStoreLabelRel
+import com.tencent.devops.model.store.tables.TStoreProjectVisibleRel
 import com.tencent.devops.model.store.tables.TStoreStatisticsTotal
 import com.tencent.devops.store.pojo.common.KEY_STORE_CODE
 import com.tencent.devops.store.pojo.common.StoreInfoQuery
@@ -194,18 +195,39 @@ class MarketStoreQueryDao {
 
         val finalConditions = if (storeType == StoreTypeEnum.DEVX && storeInfoQuery.queryTestFlag != true) {
             val tStoreBaseFeature = TStoreBaseFeature.T_STORE_BASE_FEATURE
-            val deptCondition = tStoreDeptRel.STORE_CODE.eq(tStoreBase.STORE_CODE)
-                .and(tStoreDeptRel.STORE_TYPE.eq(tStoreBase.STORE_TYPE))
-                .and(tStoreDeptRel.DEPT_ID.`in`(userDeptList))
-            val existsCondition = DSL.exists(
-                dslContext.selectOne()
-                    .from(tStoreDeptRel)
-                    .where(deptCondition)
-            )
-            val publicFlagCondition = tStoreBaseFeature.PUBLIC_FLAG.eq(true)
-            val combinedCondition = DSL.or(publicFlagCondition, existsCondition)
-
-            conditions.plus(combinedCondition)
+            // 可见范围条件：公共组件 OR 命中组织架构可见范围 OR 命中项目可见范围（满足其一即可被查出）
+            val visibleConditions = mutableListOf<Condition>()
+            // 公共组件全员可见
+            visibleConditions.add(tStoreBaseFeature.PUBLIC_FLAG.eq(true))
+            // 按组织架构授权：用户所属机构命中组件可见机构
+            if (userDeptList.isNotEmpty()) {
+                val deptCondition = tStoreDeptRel.STORE_CODE.eq(tStoreBase.STORE_CODE)
+                    .and(tStoreDeptRel.STORE_TYPE.eq(tStoreBase.STORE_TYPE))
+                    .and(tStoreDeptRel.DEPT_ID.`in`(userDeptList))
+                visibleConditions.add(
+                    DSL.exists(
+                        dslContext.selectOne()
+                            .from(tStoreDeptRel)
+                            .where(deptCondition)
+                    )
+                )
+            }
+            // 按项目授权：当前浏览的项目命中组件的项目可见范围
+            storeInfoQuery.projectCode?.takeIf { it.isNotBlank() }?.let { projectCode ->
+                val tStoreProjectVisibleRel = TStoreProjectVisibleRel.T_STORE_PROJECT_VISIBLE_REL
+                val projectVisibleCondition =
+                    tStoreProjectVisibleRel.STORE_CODE.eq(tStoreBase.STORE_CODE)
+                        .and(tStoreProjectVisibleRel.STORE_TYPE.eq(tStoreBase.STORE_TYPE))
+                        .and(tStoreProjectVisibleRel.PROJECT_CODE.eq(projectCode))
+                visibleConditions.add(
+                    DSL.exists(
+                        dslContext.selectOne()
+                            .from(tStoreProjectVisibleRel)
+                            .where(projectVisibleCondition)
+                    )
+                )
+            }
+            conditions.plus(DSL.or(visibleConditions))
         } else {
             conditions
         }

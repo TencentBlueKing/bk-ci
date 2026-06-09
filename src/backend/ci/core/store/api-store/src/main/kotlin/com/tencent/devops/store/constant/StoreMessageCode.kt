@@ -175,4 +175,6 @@ object StoreMessageCode {
     // 组件包文件[{0}]不存在，请检查文件所在路径是否正确
     const val STORE_PACKAGE_FILE_NOT_FOUND = "2120939"
     const val OFFSET_REASON_IS_NOT_ALLOW_NULL = "2120940" // 下架原因不允许为空
+    // 研发商店：项目[{0}]不存在或你没有该项目的权限，请填写你有权限的项目
+    const val USER_STORE_VISIBLE_PROJECT_INVALID = "2120941"
 }

@@ -28,18 +28,23 @@
 package com.tencent.devops.store.common.service.impl
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.store.tables.TStoreDeptRel
 import com.tencent.devops.project.api.service.ServiceProjectOrganizationResource
+import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.store.common.dao.StoreDeptRelDao
 import com.tencent.devops.store.common.dao.StoreMemberDao
+import com.tencent.devops.store.common.dao.StoreVisibleProjectRelDao
 import com.tencent.devops.store.common.service.StoreVisibleDeptService
+import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.pojo.common.enums.DeptStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.visible.DeptInfo
 import com.tencent.devops.store.pojo.common.visible.StoreVisibleDeptResp
+import com.tencent.devops.store.pojo.common.visible.StoreVisibleProjectInfo
 import com.tencent.devops.store.pojo.common.visible.UserStoreDeptInfoRequest
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -55,7 +60,8 @@ class StoreVisibleDeptServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
     private val client: Client,
     private val storeDeptRelDao: StoreDeptRelDao,
-    private val storeMemberDao: StoreMemberDao
+    private val storeMemberDao: StoreMemberDao,
+    private val storeVisibleProjectRelDao: StoreVisibleProjectRelDao
 ) : StoreVisibleDeptService {
 
     private val logger = LoggerFactory.getLogger(StoreVisibleDeptServiceImpl::class.java)
@@ -77,13 +83,21 @@ class StoreVisibleDeptServiceImpl @Autowired constructor(
             storeType = storeType.type.toByte(),
             deptStatusList = deptStatusList
         )
+        // 查询按项目授权的可见范围（仅部分组件类型如DEVX会存在数据）
+        val projectInfos = storeVisibleProjectRelDao.getProjectInfosByStoreCode(
+            dslContext = dslContext,
+            storeCode = storeCode,
+            storeType = storeType.type.toByte()
+        ).map {
+            StoreVisibleProjectInfo(projectCode = it.projectCode, projectName = it.projectName)
+        }.ifEmpty { null }
         return Result(
-            if (storeDeptRelRecords == null) {
+            if (storeDeptRelRecords == null && projectInfos == null) {
                 null
             } else {
                 var fullScopeVisible = false
                 val deptInfos = mutableListOf<DeptInfo>()
-                storeDeptRelRecords.forEach {
+                storeDeptRelRecords?.forEach {
                     if (!fullScopeVisible) {
                         // 判断该组件的可见范围是否设置了全公司可见，层级为0，最顶层部门，为全公司
                         fullScopeVisible = client.get(ServiceProjectOrganizationResource::class)
@@ -103,7 +117,8 @@ class StoreVisibleDeptServiceImpl @Autowired constructor(
                 }
                 StoreVisibleDeptResp(
                     deptInfos = deptInfos,
-                    fullScopeVisible = fullScopeVisible
+                    fullScopeVisible = fullScopeVisible,
+                    projectInfos = projectInfos
                 )
             }
         )
@@ -142,10 +157,14 @@ class StoreVisibleDeptServiceImpl @Autowired constructor(
     override fun addVisibleDept(
         userId: String,
         storeCode: String,
-        deptInfos: List<DeptInfo>,
-        storeType: StoreTypeEnum
+        deptInfos: List<DeptInfo>?,
+        storeType: StoreTypeEnum,
+        projectInfos: List<StoreVisibleProjectInfo>?
     ): Result<Boolean> {
-        logger.info("addVisibleDept userId:$userId,storeCode:$storeCode,deptInfos:$deptInfos,storeType:$storeType")
+        logger.info(
+            "addVisibleDept userId:$userId,storeCode:$storeCode,deptInfos:$deptInfos," +
+                "storeType:$storeType,projectInfos:$projectInfos"
+        )
         // 判断用户是否有权限设置可见范围
         if (!storeMemberDao.isStoreAdmin(
                 dslContext = dslContext,
@@ -159,27 +178,102 @@ class StoreVisibleDeptServiceImpl @Autowired constructor(
                 language = I18nUtil.getLanguage(userId)
             )
         }
-        val pendingDeptInfoList = mutableListOf<DeptInfo>()
-        deptInfos.forEach forEach@{
-            val count = storeDeptRelDao.countByCodeAndDeptId(
+        // 设置按组织架构的可见范围
+        if (!deptInfos.isNullOrEmpty()) {
+            val pendingDeptInfoList = mutableListOf<DeptInfo>()
+            deptInfos.forEach forEach@{
+                val count = storeDeptRelDao.countByCodeAndDeptId(
+                    dslContext = dslContext,
+                    storeCode = storeCode,
+                    deptId = it.deptId,
+                    storeType = storeType.type.toByte()
+                )
+                if (count > 0) {
+                    return@forEach
+                }
+                pendingDeptInfoList.add(it)
+            }
+            storeDeptRelDao.batchAdd(
                 dslContext = dslContext,
+                userId = userId,
                 storeCode = storeCode,
-                deptId = it.deptId,
+                deptInfoList = pendingDeptInfoList,
                 storeType = storeType.type.toByte()
             )
-            if (count > 0) {
-                return@forEach
-            }
-            pendingDeptInfoList.add(it)
         }
-        storeDeptRelDao.batchAdd(
+        // 设置按项目的可见范围（保存前校验项目ID合法性及用户权限）
+        if (!projectInfos.isNullOrEmpty()) {
+            addVisibleProjects(
+                userId = userId,
+                storeCode = storeCode,
+                storeType = storeType,
+                projectInfos = projectInfos
+            )
+        }
+        return Result(true)
+    }
+
+    /**
+     * 校验并保存组件按项目授权的可见范围。
+     * 校验内容：项目ID是否存在，以及当前用户是否拥有该项目的权限；任一不满足则保存失败。
+     */
+    private fun addVisibleProjects(
+        userId: String,
+        storeCode: String,
+        storeType: StoreTypeEnum,
+        projectInfos: List<StoreVisibleProjectInfo>
+    ) {
+        // 去重，避免重复校验与写入
+        val distinctProjectInfos = projectInfos.distinctBy { it.projectCode }
+        val projectCodes = distinctProjectInfos.map { it.projectCode }
+        val validProjectNameMap = validateVisibleProjects(userId = userId, projectCodes = projectCodes)
+        // 补全项目名称（优先使用前端传入的名称，缺省时使用项目服务返回的名称）
+        distinctProjectInfos.forEach { it.projectName = it.projectName ?: validProjectNameMap[it.projectCode] }
+        storeVisibleProjectRelDao.batchAdd(
             dslContext = dslContext,
             userId = userId,
             storeCode = storeCode,
-            deptInfoList = pendingDeptInfoList,
-            storeType = storeType.type.toByte()
+            storeType = storeType.type.toByte(),
+            projectInfoList = distinctProjectInfos
         )
-        return Result(true)
+    }
+
+    /**
+     * 校验用户填写的项目可见范围是否合法。
+     * @return 合法项目的 projectCode -> projectName 映射
+     */
+    private fun validateVisibleProjects(userId: String, projectCodes: List<String>): Map<String, String> {
+        if (projectCodes.isEmpty()) return emptyMap()
+        val serviceProjectResource = client.get(ServiceProjectResource::class)
+        // 批量获取存在的项目名称，既用于回显也用于校验项目ID是否存在
+        val projectNameMap = try {
+            serviceProjectResource.getNameByCode(projectCodes.joinToString(",")).data
+        } catch (ignored: Throwable) {
+            logger.warn("validateVisibleProjects getNameByCode error, projectCodes:$projectCodes", ignored)
+            null
+        } ?: emptyMap()
+        val invalidProjectCodes = projectCodes.filter { projectCode ->
+            // 项目不存在直接判定为非法
+            if (!projectNameMap.containsKey(projectCode)) {
+                return@filter true
+            }
+            // 校验用户是否拥有该项目的权限
+            val hasPermission = try {
+                serviceProjectResource
+                    .verifyUserProjectPermission(projectCode = projectCode, userId = userId).data ?: false
+            } catch (ignored: Throwable) {
+                logger.warn("validateVisibleProjects verifyPermission error, $userId|$projectCode", ignored)
+                false
+            }
+            !hasPermission
+        }
+        if (invalidProjectCodes.isNotEmpty()) {
+            throw ErrorCodeException(
+                errorCode = StoreMessageCode.USER_STORE_VISIBLE_PROJECT_INVALID,
+                params = arrayOf(invalidProjectCodes.joinToString(","))
+            )
+        }
+        return projectNameMap
     }
 
     /**
@@ -188,10 +282,14 @@ class StoreVisibleDeptServiceImpl @Autowired constructor(
     override fun deleteVisibleDept(
         userId: String,
         storeCode: String,
-        deptIds: String,
-        storeType: StoreTypeEnum
+        deptIds: String?,
+        storeType: StoreTypeEnum,
+        projectCodes: String?
     ): Result<Boolean> {
-        logger.info("deleteVisibleDept userId:$userId,storeCode:$storeCode,deptIds:$deptIds,storeType:$storeType")
+        logger.info(
+            "deleteVisibleDept userId:$userId,storeCode:$storeCode,deptIds:$deptIds," +
+                "storeType:$storeType,projectCodes:$projectCodes"
+        )
         // 判断用户是否有权限删除可见范围
         if (!storeMemberDao.isStoreAdmin(
                 dslContext = dslContext,
@@ -205,17 +303,28 @@ class StoreVisibleDeptServiceImpl @Autowired constructor(
                 language = I18nUtil.getLanguage(userId)
             )
         }
-        val deptIdIntList = mutableListOf<Int>()
-        val deptIdStrList = deptIds.split(",")
-        deptIdStrList.forEach {
-            deptIdIntList.add(it.toInt())
+        if (!deptIds.isNullOrBlank()) {
+            val deptIdIntList = deptIds.split(",").filter { it.isNotBlank() }.map { it.trim().toInt() }
+            if (deptIdIntList.isNotEmpty()) {
+                storeDeptRelDao.batchDelete(
+                    dslContext = dslContext,
+                    storeCode = storeCode,
+                    deptIdList = deptIdIntList,
+                    storeType = storeType.type.toByte()
+                )
+            }
         }
-        storeDeptRelDao.batchDelete(
-            dslContext = dslContext,
-            storeCode = storeCode,
-            deptIdList = deptIdIntList,
-            storeType = storeType.type.toByte()
-        )
+        if (!projectCodes.isNullOrBlank()) {
+            val projectCodeList = projectCodes.split(",").filter { it.isNotBlank() }.map { it.trim() }
+            if (projectCodeList.isNotEmpty()) {
+                storeVisibleProjectRelDao.batchDelete(
+                    dslContext = dslContext,
+                    storeCode = storeCode,
+                    storeType = storeType.type.toByte(),
+                    projectCodeList = projectCodeList
+                )
+            }
+        }
         return Result(true)
     }
 
@@ -266,21 +375,15 @@ class StoreVisibleDeptServiceImpl @Autowired constructor(
         return flag
     }
 
-    private fun validateDeptId(
-        storeDeptId: Int,
-        userDeptIdList: List<Int>
-    ): Boolean {
-        if (storeDeptId == 0 || userDeptIdList.contains(storeDeptId)) {
-            return true // 用户在组件的可见范围内
-        } else {
-            // 判断该组件的可见范围是否设置了全公司可见
-            val parentDeptInfoList = client.get(ServiceProjectOrganizationResource::class)
-                .getParentDeptInfos(storeDeptId.toString(), 1).data
-            if (null != parentDeptInfoList && parentDeptInfoList.isEmpty()) {
-                // 没有上级机构说明设置的可见范围是全公司
-                return true // 用户在组件的可见范围内
-            }
-            return false
+    private fun validateDeptId(storeDeptId: Int, userDeptIdList: List<Int>): Boolean {
+        // 如果部门ID为0（全公司可见）或者用户属于该部门，直接通过
+        if (storeDeptId == 0 || storeDeptId in userDeptIdList) {
+            return true
         }
+        // 检查该部门是否没有上级部门（即全公司可见）
+        val parentDeptInfos = client.get(ServiceProjectOrganizationResource::class)
+            .getParentDeptInfos(storeDeptId.toString(), 1).data
+        // 只有当 parentDeptInfos 不为 null 且为空列表时，才表示全公司可见
+        return parentDeptInfos != null && parentDeptInfos.isEmpty()
     }
 }
