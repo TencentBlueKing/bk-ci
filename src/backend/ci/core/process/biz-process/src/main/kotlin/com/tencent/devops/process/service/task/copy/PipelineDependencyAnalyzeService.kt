@@ -1,10 +1,12 @@
 package com.tencent.devops.process.service.task.copy
 
+import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.enums.RepositoryConfig
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.HashUtil
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Stage
@@ -462,35 +464,40 @@ class PipelineDependencyAnalyzeService @Autowired constructor(
         input: Map<*, *>,
         variables: Map<String, String>
     ): PipelineDependentResourceRef? {
-        val (resourceType, refType, valueField) = when (input["envType"]?.toString()) {
+        val (resourceType, refType, refValue) = when (input["envType"]?.toString()) {
             "ENV" -> Triple(
                 PipelineDependentResourceType.DEPLOY_ENV,
                 PipelineDependentResourceRefType.ID,
-                "envId"
+                input["envId"]?.let {
+                    JsonUtil.to(it.toString(), object : TypeReference<List<String>>() {})
+                }?.firstOrNull()
             )
 
             "ENV_NAME" -> Triple(
                 PipelineDependentResourceType.DEPLOY_ENV,
                 PipelineDependentResourceRefType.NAME,
-                "envName"
+                EnvUtils.parseEnv(input["envName"]?.toString(), variables).takeIf { it.isNotBlank() }
             )
 
             "NODE" -> Triple(
                 PipelineDependentResourceType.DEPLOY_NODE,
                 PipelineDependentResourceRefType.ID,
-                "nodeId"
+                input["nodeId"]?.let {
+                    JsonUtil.to(it.toString(), object : TypeReference<List<String>>() {})
+                }?.firstOrNull()
             )
 
             "NODE_NAME" -> Triple(
                 PipelineDependentResourceType.DEPLOY_NODE,
                 PipelineDependentResourceRefType.NAME,
-                "nodeName"
+                EnvUtils.parseEnv(input["nodeName"]?.toString(), variables).takeIf { it.isNotBlank() }
             )
 
             else -> return null
         }
-        val refValue = EnvUtils.parseEnv(input[valueField]?.toString(), variables).takeIf { it.isNotBlank() }
-            ?: return null
+        if (refValue == null) {
+            return null
+        }
         return PipelineDependentResourceRef(
             projectId = projectId,
             resourceType = resourceType,
@@ -504,35 +511,40 @@ class PipelineDependencyAnalyzeService @Autowired constructor(
         input: Map<*, *>,
         variables: Map<String, String>
     ): PipelineDependentResourceRef? {
-        val (resourceType, refType, valueField) = when (input["targetEnvType"]?.toString()) {
+        val (resourceType, refType, refValue) = when (input["targetEnvType"]?.toString()) {
             "ENV" -> Triple(
                 PipelineDependentResourceType.DEPLOY_ENV,
                 PipelineDependentResourceRefType.ID,
-                "targetEnvId"
+                input["targetEnvId"]?.let {
+                    JsonUtil.to(it.toString(), object : TypeReference<List<String>>() {})
+                }?.firstOrNull()
             )
 
             "ENV_NAME" -> Triple(
                 PipelineDependentResourceType.DEPLOY_ENV,
                 PipelineDependentResourceRefType.NAME,
-                "targetEnvName"
+                EnvUtils.parseEnv(input["targetEnvName"]?.toString(), variables).takeIf { it.isNotBlank() }
             )
 
             "NODE" -> Triple(
                 PipelineDependentResourceType.DEPLOY_NODE,
                 PipelineDependentResourceRefType.ID,
-                "targetNodeId"
+                input["targetNodeId"]?.let {
+                    JsonUtil.to(it.toString(), object : TypeReference<List<String>>() {})
+                }?.firstOrNull()
             )
 
             "NODE_NAME" -> Triple(
                 PipelineDependentResourceType.DEPLOY_NODE,
                 PipelineDependentResourceRefType.NAME,
-                "targetNodeName"
+                EnvUtils.parseEnv(input["targetNodeName"]?.toString(), variables).takeIf { it.isNotBlank() }
             )
 
             else -> return null
         }
-        val refValue = EnvUtils.parseEnv(input[valueField]?.toString(), variables).takeIf { it.isNotBlank() }
-            ?: return null
+        if (refValue == null) {
+            return null
+        }
         return PipelineDependentResourceRef(
             projectId = projectId,
             resourceType = resourceType,
