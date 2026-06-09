@@ -169,7 +169,7 @@ class TapdEventTriggerMatcher {
         val ownerFilter = UserFilter(
             filterName = "tapdOwner",
             pipelineId = taskId,
-            triggerOnUser = triggerOwner ?: "",
+            triggerOnUser = (triggerOwner ?: "").split(";").firstOrNull() ?: "",
             includedUsers = input.includeOwner?.parseEnv(variables) ?: listOf(),
             excludedUsers = input.excludeOwner?.parseEnv(variables) ?: listOf(),
             includedFailedReason = I18Variable(
