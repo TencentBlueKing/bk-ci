@@ -954,12 +954,14 @@ class NodeService @Autowired constructor(
                 targetProjectId = targetProjectId,
                 nodeId = nodeId
             )
-            thirdPartyAgentDao.updateProjectIdByNodeId(
-                dslContext = transactionContext,
-                sourceProjectId = sourceProjectId,
-                targetProjectId = targetProjectId,
-                nodeId = nodeId
-            )
+            if (sourceNode.nodeType == NodeType.THIRDPARTY.name) {
+                thirdPartyAgentDao.updateProjectIdByNodeId(
+                    dslContext = transactionContext,
+                    sourceProjectId = sourceProjectId,
+                    targetProjectId = targetProjectId,
+                    nodeId = nodeId
+                )
+            }
             environmentPermissionService.createNode(userId, targetProjectId, nodeId, sourceNode.nodeName)
             environmentPermissionService.deleteNode(sourceProjectId, nodeId)
         }

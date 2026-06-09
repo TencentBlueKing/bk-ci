@@ -41,6 +41,7 @@ import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.ScmGitRepository
 import com.tencent.devops.repository.pojo.ScmSvnRepository
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
+import com.tencent.devops.store.api.template.ServiceTemplateResource
 import com.tencent.devops.ticket.api.ServiceCredentialResource
 import com.tencent.devops.ticket.pojo.CredentialCreate
 import org.jooq.DSLContext
@@ -436,6 +437,12 @@ class PipelineCopyResourceCreateService @Autowired constructor(
             targetPipelineId = targetPipelineId,
             targetPipelineName = targetPipelineName,
             replaceResourceMap = buildReplaceResourceMap(dependentResources)
+        )
+        // 校验插件是否在目标项目可见
+        client.get(ServiceTemplateResource::class).validateModelComponentVisibleDept(
+            userId = userId,
+            model = modelAndSetting.model,
+            projectCode = targetProjectId
         )
         pipelineInfoFacadeService.createPipeline(
             userId = userId,
