@@ -24,6 +24,7 @@ import com.tencent.devops.remotedev.pojo.WorkspaceShared
 import com.tencent.devops.remotedev.pojo.bk.BkSopRequestBody
 import com.tencent.devops.remotedev.pojo.bk.BkSopResponse
 import com.tencent.devops.remotedev.pojo.bk.BkSopStatusResp
+import com.tencent.devops.remotedev.pojo.project.WorkspaceProperty
 import com.tencent.devops.remotedev.service.workspace.DeliverControl
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
@@ -48,7 +49,8 @@ class OpenClawService @Autowired constructor(
     private val workspaceWindowsDao: WorkspaceWindowsDao,
     private val deliverControl: DeliverControl,
     private val tokenService: ClientTokenService,
-    private val permissionService: PermissionService
+    private val permissionService: PermissionService,
+    private val workspaceService: WorkspaceService
 ) {
     fun createOpenClaw(userId: String, data: CreateOpenClawData): CreateOpenClawDataResp {
         // 1、添加用户到项目用户组(AnyDev云桌面用户组)：先判断用户是否有项目权限，
@@ -157,6 +159,25 @@ class OpenClawService @Autowired constructor(
                 params = arrayOf("create task no taskId $resp")
             )
         }
+
+        // 4、根据入参 name 修改实例别名（失败仅记录日志，不影响主流程）
+        if (data.name.isNotBlank()) {
+            try {
+                workspaceService.modifyWorkspaceProperty(
+                    userId = userId,
+                    workspaceName = workspaceName,
+                    ip = null,
+                    workspaceProperty = WorkspaceProperty(displayName = data.name),
+                    checkPermission = false
+                )
+            } catch (e: Exception) {
+                logger.error(
+                    "createOpenClaw modifyDisplayName failed|workspaceName=$workspaceName|name=${data.name}",
+                    e
+                )
+            }
+        }
+
         return CreateOpenClawDataResp(
             taskId = resp.data.taskId.toString(),
             workspaceName = workspaceName,

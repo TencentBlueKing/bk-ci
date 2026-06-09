@@ -394,12 +394,12 @@ class ServiceRemoteDevResourceImpl(
         workspaceName: String,
         delaySeconds: Int?
     ): Result<Boolean> {
-        if (delaySeconds != null && (delaySeconds <= 1 || delaySeconds >= MAX_DELETE_DELAY_SECONDS)) {
+        if (delaySeconds != null && (delaySeconds < 1 || delaySeconds > MAX_DELETE_DELAY_SECONDS)) {
             throw ErrorCodeException(
                 errorCode = PARAMETER_ILLEGAL_ERROR,
                 statusCode = Response.Status.BAD_REQUEST.statusCode,
-                defaultMessage = "delaySeconds must be > 1 and < $MAX_DELETE_DELAY_SECONDS (24h), got $delaySeconds",
-                params = arrayOf("delaySeconds", "must be > 1 and < $MAX_DELETE_DELAY_SECONDS (24h)")
+                defaultMessage = "delaySeconds must be >= 1 and <= $MAX_DELETE_DELAY_SECONDS (24h), got $delaySeconds",
+                params = arrayOf("delaySeconds", "must be >= 1 and <= $MAX_DELETE_DELAY_SECONDS (24h)")
             )
         }
 

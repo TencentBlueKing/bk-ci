@@ -790,6 +790,7 @@ class WorkspaceDao {
             return dslContext.selectFrom(this).where(PROJECT_ID.eq(projectId))
                 .and(COFFEE_AI.eq(1))
                 .and(IP.eq(ip))
+                .and(STATUS.notEqual(WorkspaceStatus.DELETED.ordinal))
                 .fetchAny(workspaceMapper)
         }
     }
