@@ -548,7 +548,8 @@ class PipelineCopyTaskExecuteService @Autowired constructor(
                         sourceProjectId = projectId,
                         nodeHashId = null,
                         agentHashId = resource.resourceId,
-                        targetProjectId = targetProjectId
+                        targetProjectId = targetProjectId,
+                        resourceType = resource.resourceType
                     )
                     targetResourceId = targetResource.resourceId
                     targetResourceName = targetResource.resourceName
@@ -560,7 +561,8 @@ class PipelineCopyTaskExecuteService @Autowired constructor(
                         sourceProjectId = projectId,
                         nodeHashId = resource.resourceId,
                         agentHashId = null,
-                        targetProjectId = targetProjectId
+                        targetProjectId = targetProjectId,
+                        resourceType = resource.resourceType
                     )
                     targetResourceId = targetResource.resourceId
                     targetResourceName = targetResource.resourceName
