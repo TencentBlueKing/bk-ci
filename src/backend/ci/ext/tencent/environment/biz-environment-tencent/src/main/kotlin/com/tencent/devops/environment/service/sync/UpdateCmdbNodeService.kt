@@ -193,7 +193,12 @@ class UpdateCmdbNodeService @Autowired constructor(
         )
     }
 
-    private fun updateCmdbNodeCCInfoByPage(nodeId: Long, pageSize: Int): Long /* return nodeId, -1 means no more data */ {
+    /**
+     * 使用 nodeId 作为游标分页更新，避免深分页
+     * @param nodeId 本地分页起始id
+     * @return nodeId 下一页的起始id，-1表示没有更多数据
+     */
+    private fun updateCmdbNodeCCInfoByPage(nodeId: Long, pageSize: Int): Long  {
         var nextNodeId = nodeId
         // 1. 节点record："部署"类型，且在CMDB
         val nodeRecords = cmdbNodeDao.getDeployNodesInCmdbLimit(dslContext, nodeId, DEFAULT_PAGE_SIZE)
