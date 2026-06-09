@@ -68,6 +68,7 @@ import com.tencent.devops.common.archive.pojo.ArtifactorySearchParam
 import com.tencent.devops.common.archive.pojo.QueryNodeInfo
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.web.utils.I18nUtil
@@ -251,7 +252,8 @@ class BkRepoService @Autowired constructor(
                 val targetBuild = client.get(ServiceBuildResource::class).getSingleHistoryBuild(
                     projectId = targetProjectId,
                     pipelineId = targetPipelineId,
-                    buildNum = crossBuildNo ?: throw BadRequestException("invalid buildNo")
+                    buildNum = crossBuildNo ?: throw BadRequestException("invalid buildNo"),
+                    channelCode = ChannelCode.BS
                 ).data
                 targetBuildId = (targetBuild ?: throw BadRequestException(
                     I18nUtil.getCodeLanMessage(
