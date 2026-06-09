@@ -55,7 +55,7 @@ class AtomWhitelistConfigService @Autowired constructor(
             atomCodes.contains(atomCode)
         } catch (ignored: Throwable) {
             logger.warn("isAtomInWhitelist failed|atomCode=$atomCode|whitelistType=$whitelistType", ignored)
-            true // fail-open: 异常时放行
+            false
         }
     }
 }
