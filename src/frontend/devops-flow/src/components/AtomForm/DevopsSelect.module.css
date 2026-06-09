@@ -1,0 +1,146 @@
+.devopsSelect {
+  position: relative;
+}
+
+.inputWrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.inputWrapper :global(.bk-input) {
+  padding-right: 40px;
+}
+
+.inputWrapper :global(.bk-input input) {
+  text-overflow: ellipsis;
+}
+
+.clearIcon,
+.loadingIcon {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #c4c6cc;
+  font-size: 14px;
+  z-index: 1;
+}
+
+.clearIcon {
+  cursor: pointer;
+}
+
+.clearIcon:hover {
+  color: #979ba5;
+}
+
+.loadingIcon {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: translateY(-50%) rotate(0deg);
+  }
+  to {
+    transform: translateY(-50%) rotate(360deg);
+  }
+}
+
+.dropdownContainer {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 100%;
+  max-height: 222px;
+  margin-top: 4px;
+  background: #fff;
+  border: 1px solid #dcdee5;
+  border-radius: 2px;
+  box-shadow: 0 2px 6px 0 rgba(0, 0, 0, 0.1);
+  z-index: 1111;
+  overflow: auto;
+}
+
+.optionList {
+  margin: 0;
+  padding: 4px 0;
+  list-style: none;
+}
+
+.groupWrap:not(:first-child) .groupName {
+  border-top: 1px solid #dcdee5;
+}
+
+.groupName {
+  padding: 0 12px;
+  line-height: 32px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #979ba5;
+  border-bottom: 1px solid #dcdee5;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.optionItem,
+.groupItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 12px;
+  line-height: 32px;
+  font-size: 12px;
+  white-space: nowrap;
+  cursor: pointer;
+  color: #63656e;
+  border: 1px solid transparent;
+}
+
+.groupItem {
+  padding-left: 18px;
+}
+
+.optionLabel {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.optionItem:hover,
+.optionItem.highlighted,
+.groupItem:hover,
+.groupItem.highlighted {
+  background-color: #e1ecff;
+  color: #3a84ff;
+}
+
+.optionItem.active,
+.groupItem.active {
+  background-color: #f5f7fa;
+  color: #3a84ff;
+}
+
+.optionItem.highlighted,
+.groupItem.highlighted {
+  border-color: #3a84ff;
+}
+
+.optionItem.disabled,
+.groupItem.disabled {
+  color: #c4c6cc;
+  cursor: not-allowed;
+}
+
+.optionItem.disabled:hover,
+.groupItem.disabled:hover {
+  background-color: transparent;
+  color: #c4c6cc;
+}
+
+.checkIcon {
+  margin-left: 8px;
+  font-size: 14px;
+  color: #3a84ff;
+}
