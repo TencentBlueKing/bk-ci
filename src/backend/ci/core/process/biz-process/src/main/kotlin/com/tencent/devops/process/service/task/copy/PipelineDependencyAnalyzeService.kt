@@ -447,7 +447,8 @@ class PipelineDependencyAnalyzeService @Autowired constructor(
                     }?.let { refs.add(it) }
                 } catch (ignored: Exception) {
                     logger.warn(
-                        "analysis job element dependent resource failed|$projectId|${element.id}|${element.getAtomCode()}",
+                        "analysis market element dependent resource failed|" +
+                                "$projectId|${element.id}|${element.getAtomCode()}",
                         ignored
                     )
                 }
@@ -744,20 +745,30 @@ class PipelineDependencyAnalyzeService @Autowired constructor(
     private fun resolveNodeRef(userId: String, ref: PipelineDependentResourceRef): PipelineDependentResource? {
         val node = try {
             if (ref.refType == PipelineDependentResourceRefType.ID) {
-                client.get(ServiceNodeResource::class).getNodeStatus(
-                    userId = userId,
-                    projectId = ref.projectId,
-                    nodeHashId = null,
-                    nodeName = null,
-                    agentHashId = ref.refValue
-                ).data
+                if (ref.resourceType == PipelineDependentResourceType.BUILD_NODE) {
+                    client.get(ServiceNodeResource::class).getNodeStatus(
+                        userId = userId,
+                        projectId = ref.projectId,
+                        nodeHashId = null,
+                        nodeName = null,
+                        agentHashId = ref.refValue
+                    ).data
+                } else {
+                    client.get(ServiceNodeResource::class).getNodeStatus(
+                        userId = userId,
+                        projectId = ref.projectId,
+                        nodeHashId = ref.refValue,
+                        nodeName = null,
+                        agentHashId = null
+                    ).data
+                }
             } else {
                 client.get(ServiceNodeResource::class).getNodeStatus(
                     userId = userId,
                     projectId = ref.projectId,
                     nodeHashId = null,
-                    nodeName = null,
-                    agentHashId = ref.refValue
+                    nodeName = ref.refValue,
+                    agentHashId = null
                 ).data
             }
         } catch (ignored: Exception) {
@@ -768,10 +779,10 @@ class PipelineDependencyAnalyzeService @Autowired constructor(
             projectId = ref.projectId,
             resourceType = ref.resourceType,
             // 部署节点,流水线使用的是agentHashId
-            resourceId = if (ref.resourceType == PipelineDependentResourceType.DEPLOY_NODE) {
-                node.nodeHashId
-            } else {
+            resourceId = if (ref.resourceType == PipelineDependentResourceType.BUILD_NODE) {
                 node.agentHashId!!
+            } else {
+                node.nodeHashId
             },
             resourceName = node.displayName!!
         )
