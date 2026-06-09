@@ -469,7 +469,7 @@ class PipelineDependencyAnalyzeService @Autowired constructor(
                 PipelineDependentResourceType.DEPLOY_ENV,
                 PipelineDependentResourceRefType.ID,
                 input["envId"]?.let {
-                    JsonUtil.to(it.toString(), object : TypeReference<List<String>>() {})
+                    JsonUtil.anyToOrNull(it, object : TypeReference<List<String>>() {})
                 }?.firstOrNull()
             )
 
@@ -483,7 +483,7 @@ class PipelineDependencyAnalyzeService @Autowired constructor(
                 PipelineDependentResourceType.DEPLOY_NODE,
                 PipelineDependentResourceRefType.ID,
                 input["nodeId"]?.let {
-                    JsonUtil.to(it.toString(), object : TypeReference<List<String>>() {})
+                    JsonUtil.anyToOrNull(it, object : TypeReference<List<String>>() {})
                 }?.firstOrNull()
             )
 
@@ -516,7 +516,7 @@ class PipelineDependencyAnalyzeService @Autowired constructor(
                 PipelineDependentResourceType.DEPLOY_ENV,
                 PipelineDependentResourceRefType.ID,
                 input["targetEnvId"]?.let {
-                    JsonUtil.to(it.toString(), object : TypeReference<List<String>>() {})
+                    JsonUtil.anyToOrNull(it, object : TypeReference<List<String>>() {})
                 }?.firstOrNull()
             )
 
@@ -530,7 +530,7 @@ class PipelineDependencyAnalyzeService @Autowired constructor(
                 PipelineDependentResourceType.DEPLOY_NODE,
                 PipelineDependentResourceRefType.ID,
                 input["targetNodeId"]?.let {
-                    JsonUtil.to(it.toString(), object : TypeReference<List<String>>() {})
+                    JsonUtil.anyToOrNull(it, object : TypeReference<List<String>>() {})
                 }?.firstOrNull()
             )
 
