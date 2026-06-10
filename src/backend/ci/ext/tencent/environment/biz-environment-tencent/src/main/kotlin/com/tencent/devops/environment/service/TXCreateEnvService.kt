@@ -132,18 +132,23 @@ class TXCreateEnvService @Autowired constructor(
     }
 
     fun refreshCreateDisplayName() {
-        val agents = agentDao.getAllCreateAgent(dslContext).forEach { agent ->
+        agentDao.getAllCreateAgent(dslContext).forEach { agent ->
             sleep(100)
-            val node = nodeDao.get(dslContext, agent.projectId, agent.nodeId) ?: return@forEach
-            val displayName =
-                getWorkspaceDisplayName(agent.createdUser, agent.projectId, agent.createWorkspaceName) ?: return@forEach
-            if (node.displayName != displayName) {
-                nodeService.updateDisplayName(
-                    agent.createdUser,
-                    agent.projectId,
-                    HashUtil.encodeLongId(agent.nodeId),
-                    displayName
-                )
+            try {
+                val node = nodeDao.get(dslContext, agent.projectId, agent.nodeId) ?: return@forEach
+                val displayName =
+                    getWorkspaceDisplayName(agent.createdUser, agent.projectId, agent.createWorkspaceName)
+                        ?: return@forEach
+                if (node.displayName != displayName) {
+                    nodeService.updateDisplayName(
+                        agent.createdUser,
+                        agent.projectId,
+                        HashUtil.encodeLongId(agent.nodeId),
+                        displayName
+                    )
+                }
+            }catch (e:Exception){
+                logger.error("refreshCreateDisplayName error", e)
             }
         }
     }
