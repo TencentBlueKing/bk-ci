@@ -24,7 +24,7 @@ object CmdbNodeUtils {
         if (nodeType !in OPERATOR_STATUS_NODE_TYPES) {
             return null
         }
-        val bakOperators = bakOperator?.split(";")?.filter { it.isNotBlank() } ?: emptyList()
+        val bakOperators = bakOperator?.split(";")?.map { it.trim() }?.filter { it.isNotBlank() } ?: emptyList()
 
         val ok = createdUser == operator || createdUser in bakOperators
         return if (ok) NodeOperatorStatus.NORMAL else NodeOperatorStatus.OPERATOR_CHANGED

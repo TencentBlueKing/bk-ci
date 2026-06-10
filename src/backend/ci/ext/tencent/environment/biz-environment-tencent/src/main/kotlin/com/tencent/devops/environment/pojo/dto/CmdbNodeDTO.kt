@@ -41,7 +41,7 @@ data class CmdbNodeDTO(
 
         return  operatorStatus != operatorStatusIndeed ||
             operator != cmdbServerDTO.operator ||
-            bakOperator != cmdbServerDTO.getBakOperatorStr() ||
+            bakOperator != cmdbServerDTO.getBakOperatorStrLessThanMaxLength() ||
             serverId != cmdbServerDTO.serverId ||
             osName != cmdbServerDTO.osName
     }
