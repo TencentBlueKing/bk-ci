@@ -36,6 +36,6 @@ data class AgentProps(
 
 enum class AgentPropsSource {
     REMOTEDEV, // 云桌面
-    DEVCOUD, // 团队imate龙虾
+    DEVCLOUD, // 团队imate龙虾
     ;
 }

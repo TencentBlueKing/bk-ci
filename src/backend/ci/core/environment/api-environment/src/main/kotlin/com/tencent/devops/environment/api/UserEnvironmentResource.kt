@@ -291,7 +291,6 @@ interface UserEnvironmentResource {
         envName: String
     ): Result<Page<NodeBaseInfo>>
 
-    @Deprecated("动态环境全部上线后就废弃")
     @Operation(summary = "添加节点到环境")
     @POST
     @Path("/{projectId}/{envHashId}/addNodes")

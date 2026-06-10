@@ -141,7 +141,7 @@ class ServiceEnvironmentResourceImpl @Autowired constructor(
             throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_ENV_NODE_HASH_ID_ILLEGAL)
         }
 
-        envService.addEnvNodes(userId, projectId, envHashId, nodeHashIds)
+        envService.addEnvNodes(userId, projectId, envHashId, nodeHashIds, EnvOperateOrigin.API)
         return Result(true)
     }
 
@@ -160,7 +160,7 @@ class ServiceEnvironmentResourceImpl @Autowired constructor(
             throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_ENV_NODE_HASH_ID_ILLEGAL)
         }
 
-        envService.deleteEnvNodes(userId, projectId, envHashId, nodeHashIds)
+        envService.deleteEnvNodes(userId, projectId, envHashId, nodeHashIds, EnvOperateOrigin.API)
         return Result(true)
     }
 
@@ -257,7 +257,7 @@ class ServiceEnvironmentResourceImpl @Autowired constructor(
         sharedProjects: SharedProjectInfoWrap
     ): Result<Boolean> {
         checkParam(userId, projectId, envHashId)
-        envService.setShareEnv(userId, projectId, envHashId, sharedProjects.sharedProjects)
+        envService.setShareEnv(userId, projectId, envHashId, sharedProjects.sharedProjects, EnvOperateOrigin.API)
         return Result(true)
     }
 
@@ -269,7 +269,7 @@ class ServiceEnvironmentResourceImpl @Autowired constructor(
         envName: String?,
         nodeName: String?,
         enableNode: Boolean,
-        data: EnableNodeEnvData
+        data: EnableNodeEnvData?
     ): Result<Boolean> {
         if (envHashId.isNullOrBlank() && envName.isNullOrBlank()) {
             throw ErrorCodeException(

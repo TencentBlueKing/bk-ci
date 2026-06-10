@@ -104,7 +104,7 @@ class UserEnvironmentResourceImpl @Autowired constructor(
             throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_ENV_NAME_NULL)
         }
 
-        envService.updateEnvironment(userId, projectId, envHashId, environment)
+        envService.updateEnvironment(userId, projectId, envHashId, environment, EnvOperateOrigin.WEB)
         return Result(true)
     }
 
@@ -263,7 +263,7 @@ class UserEnvironmentResourceImpl @Autowired constructor(
             throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_ENV_NODE_HASH_ID_ILLEGAL)
         }
 
-        envService.addEnvNodes(userId, projectId, envHashId, nodeHashIds)
+        envService.addEnvNodes(userId, projectId, envHashId, nodeHashIds, EnvOperateOrigin.WEB)
         return Result(true)
     }
 
@@ -279,7 +279,7 @@ class UserEnvironmentResourceImpl @Autowired constructor(
         if (data.nodeHashIds == null && data.tags == null) {
             throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_ENV_NODE_HASH_ID_ILLEGAL)
         }
-        envService.addEnvNodesNew(userId, projectId, envHashId, data)
+        envService.addEnvNodesNew(userId, projectId, envHashId, data, EnvOperateOrigin.WEB)
         return Result(true)
     }
 
@@ -298,7 +298,7 @@ class UserEnvironmentResourceImpl @Autowired constructor(
             throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_ENV_NODE_HASH_ID_ILLEGAL)
         }
 
-        envService.deleteEnvNodes(userId, projectId, envHashId, nodeHashIds)
+        envService.deleteEnvNodes(userId, projectId, envHashId, nodeHashIds, EnvOperateOrigin.WEB)
         return Result(true)
     }
 
@@ -356,7 +356,7 @@ class UserEnvironmentResourceImpl @Autowired constructor(
         sharedProjects: SharedProjectInfoWrap
     ): Result<Boolean> {
         checkParam(userId, projectId, envHashId)
-        envService.setShareEnv(userId, projectId, envHashId, sharedProjects.sharedProjects)
+        envService.setShareEnv(userId, projectId, envHashId, sharedProjects.sharedProjects, EnvOperateOrigin.WEB)
         return Result(true)
     }
 
@@ -419,7 +419,6 @@ class UserEnvironmentResourceImpl @Autowired constructor(
     ): Result<Page<EnvOperateLog>> {
         checkParam(userId, projectId, envHashId)
         val envId = HashUtil.decodeIdToLong(envHashId)
-        // TODO: #12764 这里要确认下是否是查看权限
         environmentPermissionService.checkEnvPermission(userId, projectId, envId, AuthPermission.VIEW)
         return Result(
             envOperateLogService.fetchOperateLog(
