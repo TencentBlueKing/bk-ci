@@ -71,6 +71,7 @@ import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_BUG_URL_PATT
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_EVENT_SEPARATOR
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_BUG_ID
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_CHANGE_FIELDS
+import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_CURRENT_OWNER
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_CURRENT_USER
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_DESCRIPTION
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_ENTITY_ID
@@ -495,7 +496,9 @@ class TapdWebhookRequestService(
                     startParams = startParams,
                     triggerPriority = body.getHookField(TAPD_KEY_PRIORITY_LABEL, update),
                     triggerLabels = body.getHookField(TAPD_KEY_LABEL, update),
-                    triggerOwner = body.getHookField(TAPD_KEY_OWNER, update),
+                    triggerOwner = body.getHookField(TAPD_KEY_OWNER, update).ifBlank {
+                        body.getHookField(TAPD_KEY_CURRENT_OWNER, update)
+                    },
                     eventFrom = body.getHookField(TAPD_KEY_EVENT_FROM)
                 )
             )
