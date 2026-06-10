@@ -237,19 +237,6 @@ class RestartWorkspaceHandler @Autowired constructor(
                         WorkspaceStatus.RUNNING.name
                     )
                 )
-
-                notifyControl.notify4User(
-                    userIds = owners,
-                    notifyType = mutableSetOf(RemoteDevNotifyType.EMAIL),
-                    bodyParams = mutableMapOf(
-                        "workspaceName" to workspace.workspaceName,
-                        "projectId" to workspace.projectId,
-                        "cgsId" to (workspace.hostIp ?: workspace.workspaceName),
-                        "displayName" to workspace.displayName,
-                        "time" to DateTimeUtil.formatDate(Date()),
-                        "notifyTemplateCode" to WINDOWS_GPU_RESTART_NOTIFY
-                    )
-                )
             }
             // 重装成功后做异步设置(L盘挂载)
             val ip = event.environmentIp
