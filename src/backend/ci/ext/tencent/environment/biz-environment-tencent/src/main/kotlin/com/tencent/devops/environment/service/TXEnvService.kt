@@ -58,6 +58,7 @@ import com.tencent.devops.environment.permission.EnvironmentPermissionService
 import com.tencent.devops.environment.pojo.EnvCreateInfo
 import com.tencent.devops.environment.pojo.EnvironmentId
 import com.tencent.devops.environment.pojo.enums.TXEnvType
+import com.tencent.devops.environment.pojo.envOperate.EnvOperateOrigin
 import com.tencent.devops.environment.service.slave.SlaveGatewayService
 import com.tencent.devops.remotedev.api.service.ServiceRemoteDevResource
 import org.jooq.DSLContext
@@ -84,7 +85,8 @@ class TXEnvService @Autowired constructor(
     private val client: Client,
     private val authProjectApi: AuthProjectApi,
     private val pipelineAuthServiceCode: PipelineAuthServiceCode,
-    private val createEnvService: CreateEnvService
+    private val createEnvService: CreateEnvService,
+    private val envOperateLogService: EnvOperateLogService
 ) : EnvService(
     dslContext = dslContext,
     objectMapper = objectMapper,
@@ -101,7 +103,8 @@ class TXEnvService @Autowired constructor(
     client = client,
     authProjectApi = authProjectApi,
     pipelineAuthServiceCode = pipelineAuthServiceCode,
-    createEnvService = createEnvService
+    createEnvService = createEnvService,
+    envOperateLogService = envOperateLogService
 ) {
 
     override fun checkName(projectId: String, envId: Long?, envName: String) {
@@ -158,7 +161,8 @@ class TXEnvService @Autowired constructor(
         userId: String,
         projectId: String,
         envHashId: String,
-        nodeHashIds: List<String>
+        nodeHashIds: List<String>,
+        envOperateOrigin: EnvOperateOrigin
     ) {
         val env = envDao.get(dslContext, projectId, HashUtil.decodeIdToLong(envHashId))
         if (env.envType == TXEnvType.DEVX.name) {
@@ -171,7 +175,7 @@ class TXEnvService @Autowired constructor(
                 throw ErrorCodeException(errorCode = ERROR_NODE_HAD_BEEN_ASSIGN)
             }
         }
-        super.addEnvNodes(userId, projectId, envHashId, nodeHashIds)
+        super.addEnvNodes(userId, projectId, envHashId, nodeHashIds, envOperateOrigin)
         if (env.envType == TXEnvType.DEVX.name) {
             client.get(ServiceRemoteDevResource::class).reloadEnvHook(
                 userId = userId,
@@ -219,7 +223,13 @@ class TXEnvService @Autowired constructor(
         scopeId = "#projectId",
         content = ActionAuditContent.ENVIRONMENT_EDIT_DELETE_NODES_CONTENT
     )
-    override fun deleteEnvNodes(userId: String, projectId: String, envHashId: String, nodeHashIds: List<String>) {
+    override fun deleteEnvNodes(
+        userId: String,
+        projectId: String,
+        envHashId: String,
+        nodeHashIds: List<String>,
+        envOperateOrigin: EnvOperateOrigin
+    ) {
         val envId = HashUtil.decodeIdToLong(envHashId)
         if (!environmentPermissionService.checkEnvPermission(userId, projectId, envId, AuthPermission.EDIT)) {
             throw PermissionForbiddenException(
@@ -236,6 +246,6 @@ class TXEnvService @Autowired constructor(
                 nodeHashIds = nodeHashIds
             )
         }
-        super.deleteEnvNodes(userId, projectId, envHashId, nodeHashIds)
+        super.deleteEnvNodes(userId, projectId, envHashId, nodeHashIds, envOperateOrigin)
     }
 }
