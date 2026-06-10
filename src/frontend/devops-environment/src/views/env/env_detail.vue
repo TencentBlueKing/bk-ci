@@ -160,6 +160,10 @@
                     name: 'node',
                     label: proxy.$t('environment.node')
                 },
+                {
+                    name: 'schedulingStrategy',
+                    label: proxy.$t('environment.schedulingStrategy')
+                },
                 ...(currentEnv.value?.envType === ENV_TYPE_MAP.BUILD ? [
                     {
                         name: 'variable',
@@ -322,6 +326,7 @@
     .env-name {
         flex: 0 1 auto;
         font-weight: 700;
+        flex: 0 1 auto;
         font-size: 14px;
         max-width: 300px;
         overflow: hidden;
