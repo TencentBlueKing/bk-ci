@@ -494,10 +494,10 @@ class TapdWebhookRequestService(
                     eventAction = eventAction,
                     triggerUser = triggerUser,
                     startParams = startParams,
-                    triggerPriority = body.getHookField(TAPD_KEY_PRIORITY_LABEL, update),
-                    triggerLabels = body.getHookField(TAPD_KEY_LABEL, update),
-                    triggerOwner = body.getHookField(TAPD_KEY_OWNER, update).ifBlank {
-                        body.getHookField(TAPD_KEY_CURRENT_OWNER, update)
+                    triggerPriority = body.getHookField(TAPD_KEY_PRIORITY_LABEL),
+                    triggerLabels = body.getHookField(TAPD_KEY_LABEL),
+                    triggerOwner = body.getHookField(TAPD_KEY_OWNER).ifBlank {
+                        body.getHookField(TAPD_KEY_CURRENT_OWNER)
                     },
                     eventFrom = body.getHookField(TAPD_KEY_EVENT_FROM)
                 )
