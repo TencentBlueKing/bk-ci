@@ -47,6 +47,8 @@ import com.tencent.devops.environment.pojo.NodeBaseInfo
 import com.tencent.devops.environment.pojo.SharedProjectInfoWrap
 import com.tencent.devops.environment.pojo.enums.EnvType
 import com.tencent.devops.environment.pojo.enums.NodeStatus
+import com.tencent.devops.environment.pojo.envOperate.EnableNodeEnvData
+import com.tencent.devops.environment.pojo.envOperate.EnvOperateOrigin
 import com.tencent.devops.environment.service.EnvService
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -139,7 +141,7 @@ class ServiceEnvironmentResourceImpl @Autowired constructor(
             throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_ENV_NODE_HASH_ID_ILLEGAL)
         }
 
-        envService.addEnvNodes(userId, projectId, envHashId, nodeHashIds)
+        envService.addEnvNodes(userId, projectId, envHashId, nodeHashIds, EnvOperateOrigin.API)
         return Result(true)
     }
 
@@ -158,7 +160,7 @@ class ServiceEnvironmentResourceImpl @Autowired constructor(
             throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_ENV_NODE_HASH_ID_ILLEGAL)
         }
 
-        envService.deleteEnvNodes(userId, projectId, envHashId, nodeHashIds)
+        envService.deleteEnvNodes(userId, projectId, envHashId, nodeHashIds, EnvOperateOrigin.API)
         return Result(true)
     }
 
@@ -255,7 +257,7 @@ class ServiceEnvironmentResourceImpl @Autowired constructor(
         sharedProjects: SharedProjectInfoWrap
     ): Result<Boolean> {
         checkParam(userId, projectId, envHashId)
-        envService.setShareEnv(userId, projectId, envHashId, sharedProjects.sharedProjects)
+        envService.setShareEnv(userId, projectId, envHashId, sharedProjects.sharedProjects, EnvOperateOrigin.API)
         return Result(true)
     }
 
@@ -266,7 +268,8 @@ class ServiceEnvironmentResourceImpl @Autowired constructor(
         nodeHashId: String?,
         envName: String?,
         nodeName: String?,
-        enableNode: Boolean
+        enableNode: Boolean,
+        data: EnableNodeEnvData?
     ): Result<Boolean> {
         if (envHashId.isNullOrBlank() && envName.isNullOrBlank()) {
             throw ErrorCodeException(
@@ -287,7 +290,9 @@ class ServiceEnvironmentResourceImpl @Autowired constructor(
             nodeHashId = nodeHashId,
             envName = envName,
             nodeName = nodeName,
-            enableNode = enableNode
+            enableNode = enableNode,
+            data = data,
+            operateOrigin = EnvOperateOrigin.API
         )
     }
 
