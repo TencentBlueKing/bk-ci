@@ -87,6 +87,7 @@
       "searchEnvironment": "Search Creation Environment",
       "environmentManagement": "Creation Environment Management",
       "creationEnvironment": "Creation Environment",
+      "selectEnvironment": "Select Environment",
       "description": "Description",
       "inputFlowName": "Please enter a creation flow name, no more than 128 characters",
       "basicInfo": "Basic Information",

@@ -86,6 +86,7 @@
       "searchEnvironment": "作成環境を検索",
       "environmentManagement": "作成環境管理",
       "creationEnvironment": "作成環境",
+      "selectEnvironment": "環境を選択",
       "description": "説明",
       "inputFlowName": "作成フロー名を入力してください、128文字以内",
       "basicInfo": "基本情報",

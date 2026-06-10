@@ -86,6 +86,7 @@
       "searchEnvironment": "搜索创作环境",
       "environmentManagement": "创作环境管理",
       "creationEnvironment": "创作环境",
+      "selectEnvironment": "选择环境",
       "description": "描述",
       "inputFlowName": "请输入创作流名称，不超过 128 字符",
       "basicInfo": "基础信息",
