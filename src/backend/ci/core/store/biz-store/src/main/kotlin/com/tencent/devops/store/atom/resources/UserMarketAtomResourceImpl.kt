@@ -48,6 +48,7 @@ import com.tencent.devops.store.pojo.common.version.StoreShowVersionInfo
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.atom.service.MarketAtomService
 import com.tencent.devops.store.common.service.StoreProjectService
+import com.tencent.devops.store.pojo.common.enums.ServiceScopeEnum
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -57,8 +58,19 @@ class UserMarketAtomResourceImpl @Autowired constructor(
     private val storeProjectService: StoreProjectService
 ) : UserMarketAtomResource {
 
-    override fun mainPageList(userId: String, page: Int?, pageSize: Int?): Result<List<MarketMainItem>> {
-        return marketAtomService.mainPageList(userId, page, pageSize, urlProtocolTrim = true)
+    override fun mainPageList(
+        userId: String,
+        serviceScope: ServiceScopeEnum?,
+        page: Int?,
+        pageSize: Int?
+    ): Result<List<MarketMainItem>> {
+        return marketAtomService.mainPageList(
+            userId = userId,
+            page = page,
+            pageSize = pageSize,
+            urlProtocolTrim = true,
+            serviceScope = serviceScope
+        )
     }
 
     override fun list(

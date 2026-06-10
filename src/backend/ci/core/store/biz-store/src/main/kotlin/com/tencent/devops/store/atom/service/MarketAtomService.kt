@@ -46,6 +46,7 @@ import com.tencent.devops.store.pojo.atom.enums.AtomTypeEnum
 import com.tencent.devops.store.pojo.atom.enums.MarketAtomSortTypeEnum
 import com.tencent.devops.store.pojo.common.MarketMainItem
 import com.tencent.devops.store.pojo.common.StoreErrorCodeInfo
+import com.tencent.devops.store.pojo.common.enums.ServiceScopeEnum
 import com.tencent.devops.store.pojo.common.version.StoreShowVersionInfo
 
 @Suppress("ALL")
@@ -56,9 +57,10 @@ interface MarketAtomService {
      */
     fun mainPageList(
         userId: String,
-        page: Int?,
-        pageSize: Int?,
-        urlProtocolTrim: Boolean = false
+        page: Int? = 1,
+        pageSize: Int? = 100,
+        urlProtocolTrim: Boolean = false,
+        serviceScope: ServiceScopeEnum? = null
     ): Result<List<MarketMainItem>>
 
     /**
