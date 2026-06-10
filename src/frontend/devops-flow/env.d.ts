@@ -1,4 +1,5 @@
 /// <reference types="vite/client" />
+/// <reference types="bkui-vue/global" />
 
 declare module 'bk-permission' {
   import type { App, Directive } from 'vue'

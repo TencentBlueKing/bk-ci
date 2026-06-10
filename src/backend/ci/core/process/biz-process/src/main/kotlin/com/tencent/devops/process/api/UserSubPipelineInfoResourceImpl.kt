@@ -30,6 +30,8 @@ package com.tencent.devops.process.api
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.environment.pojo.NodeBaseInfo
+import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.process.api.user.UserSubPipelineInfoResource
 import com.tencent.devops.process.pojo.pipeline.PipelineBuildParamFormProp
 import com.tencent.devops.process.service.SubPipelineStartUpService
@@ -59,6 +61,30 @@ class UserSubPipelineInfoResourceImpl @Autowired constructor (
             includeConst = includeConst,
             includeNotRequired = includeNotRequired,
             branch = subBranch
+        )
+    }
+
+    override fun subStreamManualStartupNodeList(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        nodeIp: String?,
+        displayName: String?,
+        createdUser: String?,
+        nodeStatus: NodeStatus?
+    ): Result<List<NodeBaseInfo>> {
+        checkParam(userId)
+        if (pipelineId.isBlank() || projectId.isBlank()) {
+            return Result(emptyList())
+        }
+        return subPipeService.subStreamManualStartupNodeList(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            nodeIp = nodeIp,
+            displayName = displayName,
+            createdUser = createdUser,
+            nodeStatus = nodeStatus
         )
     }
 

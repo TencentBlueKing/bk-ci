@@ -28,9 +28,19 @@
             </Logo>
             <Logo name="angle-circle-down" size="18" @click.stop="toggleShowAtom()" :class="matrixFoldLogoCls">
             </Logo>
-            <bk-button v-if="showDebugBtn" class="debug-btn" theme="warning" @click.stop="debugDocker">
+            <hover-slide-btn
+                v-if="showDebugBtn"
+                class="debug-slide-btn"
+                icon="debug"
+                :icon-size="10"
+                color="#ffb400"
+                text-color="white"
+                :width="80"
+                :height="42"
+                @click.stop="debugDocker"
+            >
                 {{ t("debugConsole") }}
-            </bk-button>
+            </hover-slide-btn>
             <Logo v-if="container.locateActive" name="location-right" class="container-locate-icon" size="18" />
         </h3>
         <atom-list v-if="showAtomList" ref="atomList" :stage="stage" :container="container" :stage-index="stageIndex"
@@ -53,6 +63,7 @@ import {
 
 import AtomList from "./AtomList"
 import ContainerType from "./ContainerType"
+import HoverSlideBtn from "./HoverSlideBtn"
 import Logo from "./Logo"
 import StatusIcon from "./StatusIcon"
 import {
@@ -71,6 +82,7 @@ export default {
         StatusIcon,
         ContainerType,
         AtomList,
+        HoverSlideBtn,
         Logo,
     },
     mixins: [localeMixins],
@@ -188,20 +200,34 @@ export default {
                 return DOCKER_BUILD_TYPE
             }
         },
+        isThirdDockerContainer() {
+            const { dispatchType } = this.container || {}
+            return dispatchType?.buildType?.indexOf("THIRD_PARTY_") > -1
+                && dispatchType?.dockerInfo
+                && Object.keys(dispatchType.dockerInfo).length > 0
+        },
+        isMacOSNonVMware() {
+            const { dispatchType } = this.container || {}
+            return dispatchType?.buildType === "MACOS"
+                && typeof dispatchType?.macOSHwSpec === "string"
+                && dispatchType.macOSHwSpec !== "VMware"
+        },
         showDebugBtn() {
             const {
                 reactiveData,
                 container: { baseOS, status },
             } = this
-            const isshowDebugType = [
-                DOCKER_BUILD_TYPE,
-                PUBLIC_DEVCLOUD_BUILD_TYPE,
-                PUBLIC_BCS_BUILD_TYPE,
-            ].includes(this.buildResourceType)
+            const isLinuxDebugable = baseOS === "LINUX" && (
+                this.buildResourceType === DOCKER_BUILD_TYPE
+                || this.buildResourceType === PUBLIC_DEVCLOUD_BUILD_TYPE
+                || this.buildResourceType === PUBLIC_BCS_BUILD_TYPE
+                || this.isThirdDockerContainer
+            )
+            const isMacOSDebugable = this.isMacOSNonVMware
+            if (!isLinuxDebugable && !isMacOSDebugable) return false
+
             return (
-                baseOS === "LINUX"
-                && isshowDebugType
-                && reactiveData.isExecDetail
+                reactiveData.isExecDetail
                 && reactiveData.isLatestBuild
                 && status === STATUS_MAP.FAILED
             )
@@ -401,10 +427,10 @@ export default {
             }
         }
 
-        .debug-btn {
+        .debug-slide-btn {
             position: absolute;
-            height: 100%;
             right: 0;
+            top: 0;
         }
 
         .container-locate-icon {

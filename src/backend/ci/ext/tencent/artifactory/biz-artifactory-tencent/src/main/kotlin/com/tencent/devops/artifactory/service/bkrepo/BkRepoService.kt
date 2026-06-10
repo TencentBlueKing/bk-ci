@@ -68,6 +68,7 @@ import com.tencent.devops.common.archive.pojo.ArtifactorySearchParam
 import com.tencent.devops.common.archive.pojo.QueryNodeInfo
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.web.utils.I18nUtil
@@ -251,7 +252,7 @@ class BkRepoService @Autowired constructor(
                 val targetBuild = client.get(ServiceBuildResource::class).getSingleHistoryBuild(
                     projectId = targetProjectId,
                     pipelineId = targetPipelineId,
-                    buildNum = crossBuildNo ?: throw BadRequestException("invalid buildNo")
+                    buildNum = crossBuildNo ?: throw BadRequestException("invalid buildNo"),
                 ).data
                 targetBuildId = (targetBuild ?: throw BadRequestException(
                     I18nUtil.getCodeLanMessage(
@@ -816,11 +817,13 @@ class BkRepoService @Autowired constructor(
         projectId: String,
         artifactoryType: ArtifactoryType,
         fullPath: String,
-        ttl: Int
+        ttl: Int,
+        authorizedUserList: List<String> = emptyList()
     ): String {
         logger.info(
             "externalDownloadUrl, creatorId: $creatorId, userId: $userId," +
-                    " projectId: $projectId, artifactoryType: $artifactoryType, fullPath: $fullPath, ttl: $ttl"
+                    " projectId: $projectId, artifactoryType: $artifactoryType, fullPath: $fullPath, ttl: $ttl," +
+                    " authorizedUserList: $authorizedUserList"
         )
         val shareUri = StringUtil.repoPathUrlEncode(
             bkRepoClient.createShareUri(
@@ -828,7 +831,7 @@ class BkRepoService @Autowired constructor(
                 projectId = projectId,
                 repoName = RepoUtils.getRepoByType(artifactoryType),
                 fullPath = fullPath,
-                downloadUsers = listOf(),
+                downloadUsers = authorizedUserList,
                 downloadIps = listOf(),
                 timeoutInSeconds = ttl.toLong()
             )

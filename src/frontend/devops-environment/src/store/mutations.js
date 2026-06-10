@@ -48,9 +48,6 @@ const mutations = {
     },
     setSelectionTagList (state, list) {
         state.selectionTagList = list
-    },
-    setEnvList (state, list) {
-        state.envList = list
     }
 }
 

@@ -121,11 +121,13 @@ open class BkRepoDownloadService(
         projectId: String,
         artifactoryType: ArtifactoryType,
         path: String,
-        ttl: Int
+        ttl: Int,
+        authorizedUserList: List<String>?
     ): Url {
         logger.info(
             "outerBkrepoDownloadUrl, creatorId: $creatorId, userId:$userId, projectId: $projectId, " +
-                    "artifactoryType: $artifactoryType, path: $path, ttl: $ttl"
+                    "artifactoryType: $artifactoryType, path: $path, ttl: $ttl, " +
+                    "authorizedUserList: $authorizedUserList"
         )
         val normalizedPath = getNormalizePath(path, artifactoryType, creatorId ?: userId, projectId)
         val url = bkRepoService.externalDownloadUrl(
@@ -134,7 +136,8 @@ open class BkRepoDownloadService(
             projectId = projectId,
             artifactoryType = artifactoryType,
             fullPath = normalizedPath,
-            ttl = ttl
+            ttl = ttl,
+            authorizedUserList = authorizedUserList ?: emptyList()
         )
         // 审计
         audit(
@@ -786,7 +789,7 @@ open class BkRepoDownloadService(
                     val targetBuild = client.get(ServiceBuildResource::class).getSingleHistoryBuild(
                         targetProjectId,
                         targetPipelineId,
-                        crossBuildNo ?: throw BadRequestException("Invalid Parameter buildNo")
+                        crossBuildNo ?: throw BadRequestException("Invalid Parameter buildNo"),
                     ).data ?: throw BadRequestException(
                         I18nUtil.getCodeLanMessage(
                             messageCode = BUILD_NOT_EXIST,

@@ -68,6 +68,7 @@ import com.tencent.devops.metrics.service.MetricsDataClearService
 import com.tencent.devops.metrics.service.MetricsDataReportService
 import com.tencent.devops.metrics.service.ProjectBuildSummaryService
 import com.tencent.devops.metrics.utils.ErrorCodeInfoCacheUtil
+import com.tencent.devops.metrics.utils.ProjectAtomRelationCacheUtil
 import com.tencent.devops.model.metrics.tables.records.TAtomFailSummaryDataRecord
 import com.tencent.devops.model.metrics.tables.records.TAtomOverviewDataRecord
 import com.tencent.devops.model.metrics.tables.records.TPipelineFailSummaryDataRecord
@@ -78,6 +79,7 @@ import com.tencent.devops.store.pojo.common.enums.ErrorCodeTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import java.math.BigDecimal
 import java.time.LocalDateTime
+import java.util.concurrent.ThreadLocalRandom
 import kotlin.math.roundToLong
 import org.jooq.DSLContext
 import org.jooq.Result
@@ -106,6 +108,14 @@ class MetricsDataReportServiceImpl @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(MetricsDataReportService::class.java)
         private fun metricsDataReportKey(key: String) = "metricsDataReport:$key"
+
+        // 锁获取失败时的最大重试次数，防止某些项目竞争过大导致MQ消息无限重发堆积
+        private const val MAX_LOCK_RETRY = 5
+        // 锁获取失败后下次重投的基础延迟(毫秒)
+        private const val LOCK_RETRY_BASE_DELAY_MILLS = 10_000
+        // 重投延迟的随机抖动上限(毫秒)；用 base+random(0, jitter) 打散并发失败的重试时刻，
+        // 避免「同一时刻一批 build 失败 → 整齐延迟 10 秒 → 再次同时冲击锁」的重试风暴
+        private const val LOCK_RETRY_JITTER_MILLS = 5_000
     }
 
     /**
@@ -130,34 +140,36 @@ class MetricsDataReportServiceImpl @Autowired constructor(
             expiredTimeInSeconds = 100
         ).use { lock ->
             if (!lock.tryLock()) {
-                logger.warn("[$projectId|$pipelineId|$buildId]|try lock failed, resend message")
-                // 锁获取失败，消息延迟10秒发送以减少同一条流水线同时间触发大量构建带来的竞争压力
-                event.delayMills = 10000
-                measureEventDispatcher.dispatch(event)
-                return false
-            } else {
-                // 流水线model数据解析上报
-                watcher.start("doPipelineModelDataReportBus")
-                doPipelineModelDataReportBus(
-                    buildEndPipelineMetricsData = buildEndPipelineMetricsData,
-                    currentTime = currentTime,
+                // 锁获取失败：受控重试，避免无限重发导致MQ堆积
+                retryOrDiscardOnLockFailed(
+                    event = event,
                     projectId = projectId,
                     pipelineId = pipelineId,
-                    statisticsTime = statisticsTime
+                    buildId = buildId
                 )
-                // 流水线级别概览数据上报
-                watcher.start("pipelineOverviewDataReport")
-                pipelineOverviewDataReport(
-                    buildEndPipelineMetricsData = buildEndPipelineMetricsData,
-                    currentTime = currentTime
-                )
-                // 流水线失败数据上报
-                watcher.start("pipelineFailDataReport")
-                pipelineFailDataReport(
-                    buildEndPipelineMetricsData = buildEndPipelineMetricsData,
-                    currentTime = currentTime
-                )
+                return false
             }
+            // 流水线model数据解析上报
+            watcher.start("doPipelineModelDataReportBus")
+            doPipelineModelDataReportBus(
+                buildEndPipelineMetricsData = buildEndPipelineMetricsData,
+                currentTime = currentTime,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                statisticsTime = statisticsTime
+            )
+            // 流水线级别概览数据上报
+            watcher.start("pipelineOverviewDataReport")
+            pipelineOverviewDataReport(
+                buildEndPipelineMetricsData = buildEndPipelineMetricsData,
+                currentTime = currentTime
+            )
+            // 流水线失败数据上报
+            watcher.start("pipelineFailDataReport")
+            pipelineFailDataReport(
+                buildEndPipelineMetricsData = buildEndPipelineMetricsData,
+                currentTime = currentTime
+            )
         }
 
         // 特殊渠道（BS/CREATIVE_STREAM）的项目构建数统计
@@ -175,6 +187,35 @@ class MetricsDataReportServiceImpl @Autowired constructor(
         return true
     }
 
+    /**
+     * 锁获取失败时的受控重试：
+     * - 未达到最大重试次数：递增 retryTime 并延迟重投，错峰缓解锁竞争
+     * - 已达到最大重试次数：放弃本次上报，仅打 warn 日志，避免消息在MQ无限堆积（统计上报不属于核心业务链路，丢失单次构建的统计影响可控）
+     */
+    private fun retryOrDiscardOnLockFailed(
+        event: BuildEndMetricsBroadCastEvent,
+        projectId: String,
+        pipelineId: String,
+        buildId: String
+    ) {
+        if (event.retryTime >= MAX_LOCK_RETRY) {
+            logger.warn(
+                "[$projectId|$pipelineId|$buildId]|try lock failed, " +
+                    "discard metrics report after ${event.retryTime} retries"
+            )
+            return
+        }
+        event.retryTime += 1
+        // 基础延迟 + 随机抖动，避免一批同时失败的消息又同时到达造成锁竞争惊群
+        event.delayMills = LOCK_RETRY_BASE_DELAY_MILLS +
+            ThreadLocalRandom.current().nextInt(LOCK_RETRY_JITTER_MILLS)
+        logger.warn(
+            "[$projectId|$pipelineId|$buildId]|try lock failed, resend message, " +
+                "retryTime=${event.retryTime}, delayMills=${event.delayMills}"
+        )
+        measureEventDispatcher.dispatch(event)
+    }
+
     private fun doPipelineModelDataReportBus(
         buildEndPipelineMetricsData: BuildEndPipelineMetricsData,
         currentTime: LocalDateTime,
@@ -186,6 +227,9 @@ class MetricsDataReportServiceImpl @Autowired constructor(
         val updatePipelineStageOverviewDataPOs = mutableListOf<UpdatePipelineStageOverviewDataPO>()
         val saveAtomOverviewDataPOs = mutableListOf<SaveAtomOverviewDataPO>()
         val saveProjectAtomRelationPOs = mutableListOf<SaveProjectAtomRelationDataPO>()
+        // 收集"DB 中尚不存在、本次构建待写入"的项目-插件关系缓存 key，
+        // 在 batchSaveProjectAtomInfo 真正成功之后再统一 put 缓存，避免 DAO 失败时缓存与 DB 不一致。
+        val pendingProjectAtomCacheKeys = mutableSetOf<String>()
         val updateAtomOverviewDataPOs = mutableListOf<UpdateAtomOverviewDataPO>()
         val saveErrorCodeInfoPOs = mutableSetOf<SaveErrorCodeInfoPO>()
         val saveAtomFailSummaryDataPOs = mutableListOf<SaveAtomFailSummaryDataPO>()
@@ -221,7 +265,8 @@ class MetricsDataReportServiceImpl @Autowired constructor(
                         atomOverviewDataRecords = atomOverviewDataRecords,
                         updateAtomOverviewDataPOs = updateAtomOverviewDataPOs,
                         saveAtomOverviewDataPOs = saveAtomOverviewDataPOs,
-                        saveProjectAtomRelationPOs = saveProjectAtomRelationPOs
+                        saveProjectAtomRelationPOs = saveProjectAtomRelationPOs,
+                        pendingProjectAtomCacheKeys = pendingProjectAtomCacheKeys
                     )
                     // 插件失败汇总数据上报
                     atomFailSummaryDataReport(
@@ -268,9 +313,6 @@ class MetricsDataReportServiceImpl @Autowired constructor(
             if (updateAtomOverviewDataPOs.isNotEmpty()) {
                 metricsDataReportDao.batchUpdateAtomOverviewData(context, updateAtomOverviewDataPOs)
             }
-            if (saveProjectAtomRelationPOs.isNotEmpty()) {
-                projectInfoDao.batchSaveProjectAtomInfo(context, saveProjectAtomRelationPOs)
-            }
             if (saveAtomFailSummaryDataPOs.isNotEmpty()) {
                 metricsDataReportDao.batchSaveAtomFailSummaryData(context, saveAtomFailSummaryDataPOs)
             }
@@ -282,6 +324,24 @@ class MetricsDataReportServiceImpl @Autowired constructor(
             }
             if (saveErrorCodeInfoPOs.isNotEmpty()) {
                 metricsDataReportDao.batchSaveErrorCodeInfo(context, saveErrorCodeInfoPOs)
+            }
+        }
+        // 项目-插件关系是幂等写入(onDuplicateKeyUpdate)，与上面的聚合统计数据无强一致性要求，
+        // 单独在大事务外提交，缩短主事务的持锁时间，进一步减轻并发场景下的间隙锁等待
+        if (saveProjectAtomRelationPOs.isNotEmpty()) {
+            try {
+                projectInfoDao.batchSaveProjectAtomInfo(dslContext, saveProjectAtomRelationPOs)
+                // DAO 真正成功之后再把 key 写入缓存
+                if (pendingProjectAtomCacheKeys.isNotEmpty()) {
+                    pendingProjectAtomCacheKeys.forEach { ProjectAtomRelationCacheUtil.put(it) }
+                }
+            } catch (ignored: Exception) {
+                // metrics 上报路径上，项目-插件关系写入失败不影响主流程，仅记录日志
+                logger.warn(
+                    "batchSaveProjectAtomInfo failed, size=${saveProjectAtomRelationPOs.size}, " +
+                        "projectId=$projectId",
+                    ignored
+                )
             }
         }
     }
@@ -391,49 +451,48 @@ class MetricsDataReportServiceImpl @Autowired constructor(
             }
             existUpdateAtomFailSummaryDataPO?.let { updateAtomFailSummaryDataPOs.add(it) }
         }
-        if (atomFailSummaryDataRecord != null || existUpdateAtomFailSummaryDataPO != null) {
-            // 由于插件的构建数据是遍历model完成才进行db操作处理，故集合中的数据代表是最新的统计数据
-            val originErrorCount = existUpdateAtomFailSummaryDataPO?.errorCount
-                ?: atomFailSummaryDataRecord?.errorCount ?: 0
-            val currentErrorCount = originErrorCount + 1
-            if (existUpdateAtomFailSummaryDataPO != null) {
-                existUpdateAtomFailSummaryDataPO.errorCount = currentErrorCount
+        when {
+            existUpdateAtomFailSummaryDataPO != null -> {
+                // 由于插件的构建数据是遍历model完成才进行db操作处理，故集合中的数据代表是最新的统计数据
+                existUpdateAtomFailSummaryDataPO.errorCount += 1
                 existUpdateAtomFailSummaryDataPO.modifier = startUser
                 existUpdateAtomFailSummaryDataPO.updateTime = currentTime
-            } else {
+            }
+            atomFailSummaryDataRecord != null -> {
                 updateAtomFailSummaryDataPOs.add(
                     UpdateAtomFailSummaryDataPO(
-                        id = atomFailSummaryDataRecord!!.id,
+                        id = atomFailSummaryDataRecord.id,
                         projectId = projectId,
                         atomCode = taskMetricsData.atomCode,
-                        errorCount = currentErrorCount,
+                        errorCount = atomFailSummaryDataRecord.errorCount + 1,
                         modifier = startUser,
                         updateTime = currentTime
                     )
                 )
             }
-        } else {
-            saveAtomFailSummaryDataPOs.add(
-                SaveAtomFailSummaryDataPO(
-                    id = client.get(ServiceAllocIdResource::class)
-                        .generateSegmentId("ATOM_FAIL_SUMMARY_DATA").data ?: 0,
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    pipelineName = pipelineName,
-                    channelCode = buildEndPipelineMetricsData.channelCode,
-                    atomCode = taskMetricsData.atomCode,
-                    atomName = taskMetricsData.atomName,
-                    classifyCode = taskMetricsData.classifyCode,
-                    classifyName = taskMetricsData.classifyName,
-                    errorType = taskErrorType,
-                    errorCount = 1,
-                    statisticsTime = statisticsTime,
-                    creator = startUser,
-                    modifier = startUser,
-                    createTime = currentTime,
-                    updateTime = currentTime
+            else -> {
+                saveAtomFailSummaryDataPOs.add(
+                    SaveAtomFailSummaryDataPO(
+                        id = client.get(ServiceAllocIdResource::class)
+                            .generateSegmentId("ATOM_FAIL_SUMMARY_DATA").data ?: 0,
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        pipelineName = pipelineName,
+                        channelCode = buildEndPipelineMetricsData.channelCode,
+                        atomCode = taskMetricsData.atomCode,
+                        atomName = taskMetricsData.atomName,
+                        classifyCode = taskMetricsData.classifyCode,
+                        classifyName = taskMetricsData.classifyName,
+                        errorType = taskErrorType,
+                        errorCount = 1,
+                        statisticsTime = statisticsTime,
+                        creator = startUser,
+                        modifier = startUser,
+                        createTime = currentTime,
+                        updateTime = currentTime
+                    )
                 )
-            )
+            }
         }
         // 添加插件失败详情
         saveAtomFailDetailDataPOs.add(
@@ -486,7 +545,10 @@ class MetricsDataReportServiceImpl @Autowired constructor(
         atomOverviewDataRecords: Result<TAtomOverviewDataRecord>?,
         updateAtomOverviewDataPOs: MutableList<UpdateAtomOverviewDataPO>,
         saveAtomOverviewDataPOs: MutableList<SaveAtomOverviewDataPO>,
-        saveProjectAtomRelationPOs: MutableList<SaveProjectAtomRelationDataPO>
+        saveProjectAtomRelationPOs: MutableList<SaveProjectAtomRelationDataPO>,
+        // 收集"DB 中尚不存在、本次构建待写入"的项目-插件关系缓存 key；
+        // 由调用方在 batchSaveProjectAtomInfo 成功之后统一 put 缓存，保证缓存与 DB 一致。
+        pendingProjectAtomCacheKeys: MutableSet<String>
     ) {
         val projectId = buildEndPipelineMetricsData.projectId
         val pipelineId = buildEndPipelineMetricsData.pipelineId
@@ -495,44 +557,33 @@ class MetricsDataReportServiceImpl @Autowired constructor(
         val taskSuccessFlag = taskMetricsData.successFlag
         val atomCode = taskMetricsData.atomCode
         val statisticsTime = DateTimeUtil.stringToLocalDateTime(buildEndPipelineMetricsData.statisticsTime, YYYY_MM_DD)
-        val atomOverviewDataRecord = atomOverviewDataRecords?.firstOrNull { it.atomCode == atomCode }
-        // 获取该插件在更新集合中的记录
-        var existUpdateAtomOverviewDataPO = updateAtomOverviewDataPOs.firstOrNull {
-            it.atomCode == atomCode
-        }
-        if (existUpdateAtomOverviewDataPO == null) {
-            // 判断该插件是否存在新增集合中，如果存在只需更新记录即可
-            val existSaveAtomOverviewDataPO = saveAtomOverviewDataPOs.firstOrNull {
-                it.atomCode == atomCode
-            }
-            existUpdateAtomOverviewDataPO = if (existSaveAtomOverviewDataPO != null) {
-                UpdateAtomOverviewDataPO(
-                    id = existSaveAtomOverviewDataPO.id,
-                    projectId = projectId,
-                    atomCode = atomCode,
-                    successRate = existSaveAtomOverviewDataPO.successRate,
-                    avgCostTime = existSaveAtomOverviewDataPO.avgCostTime,
-                    totalExecuteCount = existSaveAtomOverviewDataPO.totalExecuteCount,
-                    successExecuteCount = existSaveAtomOverviewDataPO.successExecuteCount,
-                    failExecuteCount = existSaveAtomOverviewDataPO.failExecuteCount,
-                    modifier = startUser,
-                    updateTime = currentTime
-                )
-            } else {
-                null
-            }
-            existUpdateAtomOverviewDataPO?.let { updateAtomOverviewDataPOs.add(it) }
-        }
-        if (atomOverviewDataRecord != null || existUpdateAtomOverviewDataPO != null) {
+        val atomOverviewDataRecord: TAtomOverviewDataRecord? =
+            atomOverviewDataRecords?.firstOrNull { it.atomCode == atomCode }
+        val existUpdateAtomOverviewDataPO: UpdateAtomOverviewDataPO? =
+            updateAtomOverviewDataPOs.firstOrNull { it.atomCode == atomCode }
+                ?: saveAtomOverviewDataPOs.firstOrNull { it.atomCode == atomCode }
+                    ?.let { existSavePO ->
+                        UpdateAtomOverviewDataPO(
+                            id = existSavePO.id,
+                            projectId = projectId,
+                            atomCode = atomCode,
+                            successRate = existSavePO.successRate,
+                            avgCostTime = existSavePO.avgCostTime,
+                            totalExecuteCount = existSavePO.totalExecuteCount,
+                            successExecuteCount = existSavePO.successExecuteCount,
+                            failExecuteCount = existSavePO.failExecuteCount,
+                            modifier = startUser,
+                            updateTime = currentTime
+                        ).also { updateAtomOverviewDataPOs.add(it) }
+                    }
+        fun updateAtomOverviewData(
+            originAvgCostTime: Long,
+            originTotalExecuteCount: Long,
+            originSuccessExecuteCount: Long,
+            originFailExecuteCount: Long,
+            updateAction: (BigDecimal, Long, Long, Long, Long) -> Unit
+        ) {
             // 由于插件的构建数据是遍历model完成才进行db操作处理，故集合中的数据代表是最新的统计数据
-            val originAvgCostTime = existUpdateAtomOverviewDataPO?.avgCostTime
-                ?: atomOverviewDataRecord?.avgCostTime ?: 0L
-            val originTotalExecuteCount = existUpdateAtomOverviewDataPO?.totalExecuteCount
-                ?: atomOverviewDataRecord?.totalExecuteCount ?: 0L
-            val originSuccessExecuteCount = existUpdateAtomOverviewDataPO?.successExecuteCount
-                ?: atomOverviewDataRecord?.successExecuteCount ?: 0L
-            val originFailExecuteCount = existUpdateAtomOverviewDataPO?.failExecuteCount
-                ?: atomOverviewDataRecord?.failExecuteCount ?: 0L
             val currentTotalExecuteCount = originTotalExecuteCount + 1
             val currentTotalCostTime = originAvgCostTime * originTotalExecuteCount + taskMetricsData.costTime
             val currentAvgCostTime = currentTotalCostTime.toDouble().div(currentTotalExecuteCount).roundToLong()
@@ -549,8 +600,23 @@ class MetricsDataReportServiceImpl @Autowired constructor(
             val currentSuccessRate = currentSuccessExecuteCount.toBigDecimal()
                 .divide(currentTotalExecuteCount.toBigDecimal(), 4, BigDecimal.ROUND_HALF_UP)
             val formatSuccessRate = currentSuccessRate.multiply(100.toBigDecimal())
-            // 更新已存在的插件统计记录数据
-            if (existUpdateAtomOverviewDataPO != null) {
+            updateAction(
+                formatSuccessRate,
+                currentAvgCostTime,
+                currentTotalExecuteCount,
+                currentSuccessExecuteCount,
+                currentFailExecuteCount
+            )
+        }
+
+        when {
+            existUpdateAtomOverviewDataPO != null -> updateAtomOverviewData(
+                originAvgCostTime = existUpdateAtomOverviewDataPO.avgCostTime,
+                originTotalExecuteCount = existUpdateAtomOverviewDataPO.totalExecuteCount,
+                originSuccessExecuteCount = existUpdateAtomOverviewDataPO.successExecuteCount,
+                originFailExecuteCount = existUpdateAtomOverviewDataPO.failExecuteCount
+            ) { formatSuccessRate, currentAvgCostTime, currentTotalExecuteCount,
+                currentSuccessExecuteCount, currentFailExecuteCount ->
                 existUpdateAtomOverviewDataPO.successRate = formatSuccessRate
                 existUpdateAtomOverviewDataPO.avgCostTime = currentAvgCostTime
                 existUpdateAtomOverviewDataPO.totalExecuteCount = currentTotalExecuteCount
@@ -558,10 +624,17 @@ class MetricsDataReportServiceImpl @Autowired constructor(
                 existUpdateAtomOverviewDataPO.failExecuteCount = currentFailExecuteCount
                 existUpdateAtomOverviewDataPO.modifier = startUser
                 existUpdateAtomOverviewDataPO.updateTime = currentTime
-            } else {
+            }
+            atomOverviewDataRecord != null -> updateAtomOverviewData(
+                originAvgCostTime = atomOverviewDataRecord.avgCostTime,
+                originTotalExecuteCount = atomOverviewDataRecord.totalExecuteCount,
+                originSuccessExecuteCount = atomOverviewDataRecord.successExecuteCount,
+                originFailExecuteCount = atomOverviewDataRecord.failExecuteCount
+            ) { formatSuccessRate, currentAvgCostTime, currentTotalExecuteCount,
+                currentSuccessExecuteCount, currentFailExecuteCount ->
                 updateAtomOverviewDataPOs.add(
                     UpdateAtomOverviewDataPO(
-                        id = atomOverviewDataRecord!!.id,
+                        id = atomOverviewDataRecord.id,
                         projectId = projectId,
                         atomCode = atomCode,
                         successRate = formatSuccessRate,
@@ -574,56 +647,72 @@ class MetricsDataReportServiceImpl @Autowired constructor(
                     )
                 )
             }
-        } else {
-            val successRate = if (taskSuccessFlag) {
-                BigDecimal(100.00)
-            } else {
-                BigDecimal(0.00)
-            }
-            saveAtomOverviewDataPOs.add(
-                SaveAtomOverviewDataPO(
-                    id = client.get(ServiceAllocIdResource::class)
-                        .generateSegmentId("ATOM_OVERVIEW_DATA").data ?: 0,
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    pipelineName = pipelineName,
-                    channelCode = buildEndPipelineMetricsData.channelCode,
-                    atomCode = taskMetricsData.atomCode,
-                    atomName = taskMetricsData.atomName,
-                    classifyCode = taskMetricsData.classifyCode,
-                    classifyName = taskMetricsData.classifyName,
-                    successRate = successRate,
-                    avgCostTime = taskMetricsData.costTime,
-                    totalExecuteCount = 1,
-                    successExecuteCount = if (taskSuccessFlag) 1 else 0,
-                    failExecuteCount = if (taskSuccessFlag) 0 else 1,
-                    statisticsTime = statisticsTime,
-                    creator = startUser,
-                    modifier = startUser,
-                    createTime = currentTime,
-                    updateTime = currentTime
+            else -> {
+                val successRate = if (taskSuccessFlag) {
+                    BigDecimal(100.00)
+                } else {
+                    BigDecimal(0.00)
+                }
+                saveAtomOverviewDataPOs.add(
+                    SaveAtomOverviewDataPO(
+                        id = client.get(ServiceAllocIdResource::class)
+                            .generateSegmentId("ATOM_OVERVIEW_DATA").data ?: 0,
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        pipelineName = pipelineName,
+                        channelCode = buildEndPipelineMetricsData.channelCode,
+                        atomCode = taskMetricsData.atomCode,
+                        atomName = taskMetricsData.atomName,
+                        classifyCode = taskMetricsData.classifyCode,
+                        classifyName = taskMetricsData.classifyName,
+                        successRate = successRate,
+                        avgCostTime = taskMetricsData.costTime,
+                        totalExecuteCount = 1,
+                        successExecuteCount = if (taskSuccessFlag) 1 else 0,
+                        failExecuteCount = if (taskSuccessFlag) 0 else 1,
+                        statisticsTime = statisticsTime,
+                        creator = startUser,
+                        modifier = startUser,
+                        createTime = currentTime,
+                        updateTime = currentTime
+                    )
                 )
-            )
+            }
         }
 
-        if (projectInfoDao.projectAtomRelationCountByAtomCode(
+        // 项目-插件关系：先走本地缓存判断是否已写入过，避免每次构建都对 T_PROJECT_ATOM 进行
+        // "先查再写"，降低唯一索引 UNI_TPA_PROJECT_CODE 上的 next-key / gap lock 等待
+        val projectAtomCacheKey = ProjectAtomRelationCacheUtil.buildKey(
+            projectId = projectId,
+            atomCode = atomCode,
+            atomName = taskMetricsData.atomName
+        )
+        if (ProjectAtomRelationCacheUtil.getIfPresent(projectAtomCacheKey) == null) {
+            val projectAtomRelationCount = projectInfoDao.projectAtomRelationCountByAtomCode(
                 dslContext = dslContext,
                 projectId = projectId,
                 atomCode = atomCode,
-                atomName = taskMetricsData.atomCode
-            ) <= 0
-        ) {
-            saveProjectAtomRelationPOs.add(
-                SaveProjectAtomRelationDataPO(
-                    id = client.get(ServiceAllocIdResource::class)
-                        .generateSegmentId("METRICS_PROJECT_ATOM_RELEVANCY_INFO").data ?: 0,
-                    projectId = projectId,
-                    atomCode = atomCode,
-                    atomName = taskMetricsData.atomName,
-                    creator = SYSTEM,
-                    modifier = SYSTEM
-                )
+                atomName = taskMetricsData.atomName
             )
+            if (projectAtomRelationCount <= 0) {
+                saveProjectAtomRelationPOs.add(
+                    SaveProjectAtomRelationDataPO(
+                        id = client.get(ServiceAllocIdResource::class)
+                            .generateSegmentId("METRICS_PROJECT_ATOM_RELEVANCY_INFO").data ?: 0,
+                        projectId = projectId,
+                        atomCode = atomCode,
+                        atomName = taskMetricsData.atomName,
+                        creator = SYSTEM,
+                        modifier = SYSTEM
+                    )
+                )
+                // 延迟 put：等 doPipelineModelDataReportBus 末尾 batchSaveProjectAtomInfo 成功后再写缓存，
+                // 避免 DAO 失败被 catch 吞掉时，缓存却"已写入"导致 24 小时内本机不再尝试。
+                pendingProjectAtomCacheKeys.add(projectAtomCacheKey)
+            } else {
+                // DB 已存在该 (projectId, atomCode, atomName)，立即写缓存让同 build 内后续 task 命中。
+                ProjectAtomRelationCacheUtil.put(projectAtomCacheKey)
+            }
         }
         metricsDataReportDao.saveAtomMonitorDailyData(
             dslContext = dslContext,
@@ -739,40 +828,50 @@ class MetricsDataReportServiceImpl @Autowired constructor(
         }
         val existUpdateStageOverviewDataPO = existUpdateStageOverviewDataPOs.firstOrNull()
         val updateStageTagNames = existUpdateStageOverviewDataPOs.map { it.stageTagName }.toMutableSet()
-        if (stageOverviewDataRecord != null || existUpdateStageOverviewDataPO != null) {
+        fun updateStageOverviewData(originStageAvgCostTime: Long, originStageExecuteCount: Long) {
             // 由于stage的构建数据是遍历model完成才进行db操作处理，故集合中的数据代表是最新的统计数据
-            val originStageAvgCostTime = existUpdateStageOverviewDataPO?.avgCostTime
-                ?: stageOverviewDataRecord?.avgCostTime ?: 0L
-            val originStageExecuteCount = existUpdateStageOverviewDataPO?.executeCount
-                ?: stageOverviewDataRecord?.executeCount ?: 0L
             val currentStageExecuteCount = originStageExecuteCount + 1
-            val currentStageTotalCostTime = originStageAvgCostTime * originStageExecuteCount + stageCostTime
-            val currentStageAvgCostTime = currentStageTotalCostTime.toDouble().div(currentStageExecuteCount)
-                .roundToLong()
+            val currentStageAvgCostTime =
+                (originStageAvgCostTime * originStageExecuteCount + stageCostTime)
+                    .toDouble().div(currentStageExecuteCount).roundToLong()
+            // 批量更新已存在的stage统计数据
             existUpdateStageOverviewDataPOs.forEach { stageOverviewDataPO ->
                 stageOverviewDataPO.avgCostTime = currentStageAvgCostTime
                 stageOverviewDataPO.executeCount = currentStageExecuteCount
                 stageOverviewDataPO.modifier = startUser
                 stageOverviewDataPO.updateTime = currentTime
             }
-            // 更新db中已存在的stage统计记录数据
-            stageOverviewDataRecords?.filter {
-                // 剔除掉集合中已存在的更新记录
-                !updateStageTagNames.contains(it.stageTagName)
-            }?.forEach { tmpStageOverviewDataRecord ->
-                updateStageTagNames.add(tmpStageOverviewDataRecord.stageTagName)
-                existUpdateStageOverviewDataPOs.add(
-                    UpdatePipelineStageOverviewDataPO(
-                        id = tmpStageOverviewDataRecord.id,
-                        projectId = projectId,
-                        stageTagName = tmpStageOverviewDataRecord.stageTagName,
-                        avgCostTime = currentStageAvgCostTime,
-                        executeCount = currentStageExecuteCount,
-                        modifier = startUser,
-                        updateTime = currentTime
-                    )
-                )
+            // 将db中已存在但尚未在更新集合中的stage记录也加入更新列表
+            if (stageOverviewDataRecords != null) {
+                for (index in 0 until stageOverviewDataRecords.size) {
+                    val tmpStageOverviewDataRecord = stageOverviewDataRecords[index]
+                    if (!updateStageTagNames.contains(tmpStageOverviewDataRecord.stageTagName)) {
+                        updateStageTagNames.add(tmpStageOverviewDataRecord.stageTagName)
+                        existUpdateStageOverviewDataPOs.add(
+                            UpdatePipelineStageOverviewDataPO(
+                                id = tmpStageOverviewDataRecord.id,
+                                projectId = projectId,
+                                stageTagName = tmpStageOverviewDataRecord.stageTagName,
+                                avgCostTime = currentStageAvgCostTime,
+                                executeCount = currentStageExecuteCount,
+                                modifier = startUser,
+                                updateTime = currentTime
+                            )
+                        )
+                    }
+                }
             }
+        }
+
+        when {
+            existUpdateStageOverviewDataPO != null -> updateStageOverviewData(
+                originStageAvgCostTime = existUpdateStageOverviewDataPO.avgCostTime,
+                originStageExecuteCount = existUpdateStageOverviewDataPO.executeCount
+            )
+            stageOverviewDataRecord != null -> updateStageOverviewData(
+                originStageAvgCostTime = stageOverviewDataRecord.avgCostTime,
+                originStageExecuteCount = stageOverviewDataRecord.executeCount
+            )
         }
         // 排除已存在的stage统计记录
         stageTagNames.removeAll(updateStageTagNames)

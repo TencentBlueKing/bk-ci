@@ -116,9 +116,10 @@ class DeleteControl @Autowired constructor(
     fun deleteWorkspace(
         userId: String,
         workspaceName: String,
-        needPermission: Boolean = true
+        needPermission: Boolean = true,
+        delaySeconds: Int? = null
     ): Boolean {
-        logger.info("$userId delete workspace $workspaceName")
+        logger.info("$userId delete workspace $workspaceName with delaySeconds=$delaySeconds")
         val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName)
             ?: throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
@@ -155,7 +156,8 @@ class DeleteControl @Autowired constructor(
                     type = UpdateEventType.DELETE,
                     workspaceName = workspace.workspaceName,
                     mountType = workspace.workspaceMountType,
-                    appName = gameId.first
+                    appName = gameId.first,
+                    deleteDelaySeconds = delaySeconds
                 )
             )
 

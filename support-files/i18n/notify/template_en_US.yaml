@@ -164,7 +164,7 @@
     id: "3ffdfe998646421ba8672a9268069e4c"
     sender: "DevOps"
     title: "BK-CI pipeline [${pipelineName}] # ${buildNum} built successfully"
-    body: "✔️ ${successContent}\nView details: ${detailUrl}"
+    body: "✔️ ${successContent}\n[View details](${detailUrl})"
   creator: "system"
   modifior: "system"
 - index: 7
@@ -505,7 +505,7 @@
     id: "391b2aed3ca1479b9fd78b609b23f49b"
     sender: "DevOps"
     title: "Failed to build Blue Shield pipeline [${pipelineName}] # ${buildNum}"
-    body: "❌ ${failContent}\n\nView details: ${detailUrl}"
+    body: "❌ ${failContent}\n\n[View details](${detailUrl})"
   creator: "system"
   modifior: "system"
 - index: 23

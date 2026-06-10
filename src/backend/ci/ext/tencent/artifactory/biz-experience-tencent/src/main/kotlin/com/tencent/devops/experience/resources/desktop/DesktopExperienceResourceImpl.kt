@@ -112,7 +112,8 @@ class DesktopExperienceResourceImpl @Autowired constructor(
             experienceHashId = experienceHashId,
             organization = organization,
             ttl = DEFAULT_DOWNLOAD_URL_EXPERIENCED,
-            enablePublicAccess = true
+            enablePublicAccess = true,
+            restrictToCurrentUser = true
         )
         return Result(result)
     }

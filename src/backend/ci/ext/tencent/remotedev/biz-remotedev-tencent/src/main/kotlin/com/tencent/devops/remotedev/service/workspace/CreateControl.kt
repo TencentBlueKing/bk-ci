@@ -548,11 +548,14 @@ class CreateControl @Autowired constructor(
 
                 // 个人云桌面创建成功后做异步设置，团队项目改到分配时做L盘挂载
                 if (ws.ownerType.personalUse()) {
+                    val regionId = workspaceWindowsDao
+                        .fetchAnyWorkspaceWindowsInfo(dslContext, ws.workspaceName)?.regionId
                     workspaceCommon.makeDiskMount(
                         ip = ip,
                         user = event.userId,
                         owner = ws.createUserId,
-                        type = EnvironmentAction.CREATE.name
+                        type = EnvironmentAction.CREATE.name,
+                        regionId = regionId
                     )
                 }
 

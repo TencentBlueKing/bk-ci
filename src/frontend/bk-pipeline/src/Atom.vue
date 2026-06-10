@@ -76,22 +76,8 @@
           <span>{{ t("stop") }}</span>
         </span>
       </template>
-      <span class="atom-operate-area">
-        <span v-if="atom.canRetry && !isBusy" @click.stop="skipOrRetry(false)">
-          {{ t("retry") }}
-        </span>
-        <span v-if="atom.canSkip && !isBusy" @click.stop="skipOrRetry(true)">
-          {{ t("SKIP") }}
-        </span>
-        <bk-popover v-if="
-          !isSkip &&
-          !isWaiting &&
-          atom.timeCost &&
-          !atom.canSkip &&
-          !atom.canRetry &&
-          !isExecuting &&
-          !reactiveData.editable
-        " :delay="[300, 0]" placement="top" :disabled="!atom.timeCost.executeCost">
+      <span v-if="showExecuteTime" class="atom-operate-area">
+        <bk-popover :delay="[300, 0]" placement="top" :disabled="!atom.timeCost.executeCost">
           <span class="atom-execute-time">
             {{ formatTime }}
           </span>
@@ -100,6 +86,14 @@
           </template>
         </bk-popover>
       </span>
+      <hover-slide-btn
+        v-if="atomOperateList.length"
+        :actions="atomOperateList"
+        :icon-size="9"
+        :badge-size="12"
+        :action-width="52"
+        @action-click="handleAtomOperateClick"
+      />
 
       <Logo v-if="reactiveData.editable && !atom.isError" name="clipboard" class="copy" size="14" :title="t('copyAtom')"
         @click.stop="copyAtom" />
@@ -126,6 +120,7 @@
 
 <script setup>
 import { ref, computed, inject, watch, onMounted, onBeforeUnmount } from "vue";
+import HoverSlideBtn from "./HoverSlideBtn";
 import Logo from "./Logo";
 import StatusIcon from "./StatusIcon";
 import {
@@ -245,7 +240,7 @@ const isReviewing = computed(() => {
 const reviewUsers = computed(() => {
   try {
     const list =
-      props.atom?.reviewUsers ?? props.atom?.data?.input?.reviewers ?? [];
+      props.atom?.actualReviewUsers ?? props.atom?.reviewUsers ?? props.atom?.data?.input?.reviewers ?? [];
     const reviewUsersList = list
       .map((user) => user.split(";").map((val) => val.trim()))
       .reduce((prev, curr) => {
@@ -382,6 +377,43 @@ const pauseReviewerStr = computed(() => {
   );
 });
 
+const showExecuteTime = computed(() => {
+  return (
+    !isSkip.value &&
+    !props.isWaiting &&
+    !!props.atom.timeCost &&
+    !isBusy.value &&
+    !isExecuting.value &&
+    !reactiveData.editable
+  );
+});
+
+const atomOperateList = computed(() => {
+  if (isBusy.value) return [];
+  return [
+    {
+      key: "retry",
+      label: t("retry"),
+      icon: "refresh-line",
+      color: "#E1ECFF",
+      textColor: "#3A84FF",
+      hoverTextColor: "#699DF4",
+      skip: false,
+      visible: props.atom.canRetry,
+    },
+    {
+      key: "skip",
+      label: t("SKIP"),
+      icon: "cc-skip",
+      color: "#DAF6E5",
+      textColor: "#2CAF5E",
+      hoverTextColor: "#65C389",
+      skip: true,
+      visible: props.atom.canSkip,
+    },
+  ].filter((action) => action.visible);
+});
+
 const formatTime = computed(() => {
   try {
     const totalCost = Math.max(0, props.atom?.timeCost?.totalCost ?? 0);
@@ -497,6 +529,10 @@ const handleAtomSkipChange = (value) => {
   });
 };
 
+const handleAtomOperateClick = (action) => {
+  skipOrRetry(action.skip);
+};
+
 const asyncEvent = (...args) => {
   return new Promise((resolve, reject) => {
     eventBus.$emit(
@@ -505,7 +541,10 @@ const asyncEvent = (...args) => {
         isBusy.value = false;
         resolve();
       },
-      reject
+      (error) => {
+        isBusy.value = false;
+        reject(error);
+      }
     );
   });
 };
@@ -805,12 +844,21 @@ onBeforeUnmount(() => {
   .atom-execounter {
     color: $primaryColor;
     font-size: 12px;
+    flex-shrink: 0;
+    margin-right: 8px;
+  }
+
+  .spin-icon {
+    margin-right: 8px;
   }
 
   .atom-operate-area {
     margin: 0 8px 0 0;
     color: $primaryColor;
     font-size: 12px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
   }
 
   .atom-reviewing-tips {

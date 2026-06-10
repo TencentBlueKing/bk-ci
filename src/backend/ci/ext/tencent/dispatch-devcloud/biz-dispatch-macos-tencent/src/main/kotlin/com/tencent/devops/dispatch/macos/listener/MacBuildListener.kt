@@ -20,6 +20,7 @@ import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.dispatch.macos.dao.DebugHistoryDao
 import com.tencent.devops.dispatch.macos.enums.MacJobStatus
 import com.tencent.devops.dispatch.macos.pojo.devcloud.DevCloudMacosVmDelete
 import com.tencent.devops.dispatch.macos.service.BuildHistoryService
@@ -47,7 +48,8 @@ class MacBuildListener @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val devCloudMacosService: DevCloudMacosService,
     private val macosVMRedisService: MacosVMRedisService,
-    private val buildLogPrinter: BuildLogPrinter
+    private val buildLogPrinter: BuildLogPrinter,
+    private val debugHistoryDao: DebugHistoryDao
 ) : BuildListener {
 
     override fun getShutdownQueue(): String {
@@ -150,10 +152,16 @@ class MacBuildListener @Autowired constructor(
                 return
             }
 
-            val devCloudMacosVmInfo = devCloudMacosService.creatVM(dispatchMessage)
+            val (devCloudMacosVmInfo, taskId) = devCloudMacosService.creatVM(dispatchMessage)
             devCloudMacosVmInfo?.let {
                 devCloudMacosService.saveVM(it)
-                buildHistoryService.saveBuildTask(it.ip, it.id, buildHistoryId, dispatchMessage.event)
+                buildHistoryService.saveBuildTask(
+                    vmIp = it.ip,
+                    vmId = it.id,
+                    buildHistoryId = buildHistoryId,
+                    taskId = taskId,
+                    event = dispatchMessage.event
+                )
                 macosVMRedisService.saveRedisBuild(dispatchMessage, it.ip)
 
                 logger.info("[${event.projectId}|${event.pipelineId}|${event.buildId}] " +
@@ -236,8 +244,7 @@ class MacBuildListener @Autowired constructor(
                 buildId = buildId,
                 containerHashId = containerHashId,
                 vmSeqId = vmSeqId,
-                message = "${I18nUtil.getCodeLanMessage("${CommonMessageCode.BK_FAILED_START_BUILD_MACHINE}")} " +
-                        "- ${t.message}",
+                message = "${I18nUtil.getCodeLanMessage(CommonMessageCode.BK_FAILED_START_BUILD_MACHINE)}-${t.message}",
                 executeCount = executeCount,
                 jobId = jobId
             )
@@ -275,7 +282,8 @@ class MacBuildListener @Autowired constructor(
                         buildId = buildTask.buildId,
                         vmSeqId = buildTask.vmSeqId,
                         id = vmId.toString()
-                    )
+                    ),
+                    executeCount = buildTask.executeCount
                 )
 
                 logger.info("${event.buildId}|${event.vmSeqId} end build. buildId: ${buildTask.id}")
