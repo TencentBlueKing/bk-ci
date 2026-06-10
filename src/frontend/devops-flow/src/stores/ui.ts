@@ -1,5 +1,12 @@
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { defineStore } from 'pinia'
+import {
+  getAuthoringBaseOS,
+  getCurrentProject,
+  getWindowProjectList,
+  isPersonalProject as checkPersonalProject,
+  type ProjectMeta,
+} from '@/utils/project'
 
 /**
  * UI 状态管理 Store
@@ -11,6 +18,15 @@ export const useUIStore = defineStore('ui', () => {
 
   // 当前项目 ID（用于检测项目切换）
   const currentProjectId = ref<string | null>(null)
+
+  // 父应用同步过来的项目列表，用于判断当前项目类型
+  const projectList = ref<ProjectMeta[]>(getWindowProjectList())
+
+  const currentProject = computed(() => getCurrentProject(projectList.value, currentProjectId.value))
+
+  const isPersonalProject = computed(() => checkPersonalProject(currentProject.value))
+
+  const authoringBaseOS = computed(() => getAuthoringBaseOS(currentProject.value))
 
   /**
    * 设置变量面板状态
@@ -33,11 +49,23 @@ export const useUIStore = defineStore('ui', () => {
     currentProjectId.value = projectId
   }
 
+  /**
+   * 设置父应用同步的项目列表
+   */
+  function setProjectList(list: unknown) {
+    projectList.value = Array.isArray(list) ? (list as ProjectMeta[]) : []
+  }
+
   return {
     isVariablePanelOpen,
     setVariablePanelOpen,
     toggleVariablePanel,
     currentProjectId,
     setCurrentProjectId,
+    projectList,
+    currentProject,
+    isPersonalProject,
+    authoringBaseOS,
+    setProjectList,
   }
 })
