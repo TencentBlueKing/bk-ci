@@ -61,7 +61,7 @@ class TXCreateEnvService @Autowired constructor(
                 null
             }
         }
-        if (source == AgentPropsSource.DEVCOUD || (source == null && record.os == OS.LINUX.name)) {
+        if (source == AgentPropsSource.DEVCLOUD || (source == null && record.os == OS.LINUX.name)) {
             return client.get(ServiceIMateResource::class)
                 .queryUserRobots(userId).data?.filter { it.username == userId }
                 ?.firstOrNull { it.clientUuid == workspaceId }?.botName
