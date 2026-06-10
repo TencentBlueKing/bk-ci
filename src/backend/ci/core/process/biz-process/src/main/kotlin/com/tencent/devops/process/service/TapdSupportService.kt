@@ -13,6 +13,7 @@ package com.tencent.devops.process.service
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.repository.api.tapd.ServiceTapdResource
 import com.tencent.devops.scm.pojo.tapd.TapdBug
+import com.tencent.devops.scm.pojo.tapd.TapdBugFieldConfig
 import com.tencent.devops.scm.pojo.tapd.TapdStory
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -57,6 +58,24 @@ class TapdSupportService(private val client: Client) {
             ).data
         } catch (ignored: Exception) {
             logger.warn("fail to query tapd bug|workspaceId=$workspaceId|bugId=$bugId", ignored)
+            null
+        }
+    }
+
+    /**
+     * 查询 TAPD 缺陷详情
+     */
+    fun getBugFieldsInfo(workspaceId: String): TapdBugFieldConfig? {
+        if (workspaceId.isBlank()) {
+            logger.warn("invalid tapd bug fields query|workspaceId=$workspaceId")
+            return null
+        }
+        return try {
+            client.get(ServiceTapdResource::class).getBugFieldsInfo(
+                workspaceId = workspaceId
+            ).data
+        } catch (ignored: Exception) {
+            logger.warn("fail to query tapd bug|workspaceId=$workspaceId", ignored)
             null
         }
     }

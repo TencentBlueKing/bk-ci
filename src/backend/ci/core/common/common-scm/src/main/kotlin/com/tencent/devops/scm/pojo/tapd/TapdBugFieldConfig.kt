@@ -25,29 +25,37 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.repository.sdk.tapd.service
+package com.tencent.devops.scm.pojo.tapd
 
-import com.tencent.devops.scm.pojo.tapd.TapdBug
-import com.tencent.devops.scm.pojo.tapd.TapdBugFieldConfig
-import com.tencent.devops.scm.pojo.tapd.TapdStory
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.annotation.JsonProperty
+import com.fasterxml.jackson.databind.PropertyNamingStrategies
+import com.fasterxml.jackson.databind.annotation.JsonNaming
+import io.swagger.v3.oas.annotations.media.Schema
 
 /**
- * TAPD 业务对象（需求/缺陷）查询服务
+ * TAPD 缺陷字段配置（纯选项）
  */
-interface ITapdItemService {
+@JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy::class)
+@JsonIgnoreProperties(ignoreUnknown = true)
+@Schema(description = "TAPD 缺陷字段纯信息")
+data class TapdBugFieldConfig(
+    @JsonProperty("priority_label")
+    val priorityLabel: TapdBugField? = null
+)
 
-    /**
-     * 查询 TAPD 需求详情
-     */
-    fun getStoryInfo(workspaceId: String, storyId: String): TapdStory?
 
-    /**
-     * 查询 TAPD 缺陷详情
-     */
-    fun getBugInfo(workspaceId: String, bugId: String): TapdBug?
-
-    /**
-     * 查询 TAPD 缺陷详情
-     */
-    fun getBugFieldsInfo(workspaceId: String): TapdBugFieldConfig?
-}
+/**
+ * TAPD 缺陷字段定义
+ */
+@JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy::class)
+@JsonIgnoreProperties(ignoreUnknown = true)
+@Schema(description = "TAPD 缺陷字段定义")
+data class TapdBugField(
+    @get:Schema(description = "字段名称")
+    val name: String,
+    @get:Schema(description = "字段标签（中文名）")
+    val label: String? = null,
+    @get:Schema(description = "选项（Map 结构，key-value 对）")
+    val options: Map<String, String>? = null
+)
