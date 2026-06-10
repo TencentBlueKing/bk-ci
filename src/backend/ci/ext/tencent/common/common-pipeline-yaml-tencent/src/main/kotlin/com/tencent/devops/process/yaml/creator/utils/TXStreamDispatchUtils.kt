@@ -124,6 +124,7 @@ object TXStreamDispatchUtils {
         val poolName = EnvUtils.parseEnv(job.runsOn.poolName, context ?: mapOf())
         val workspace = EnvUtils.parseEnv(job.runsOn.workspace, context ?: mapOf())
         val xcode = EnvUtils.parseEnv(job.runsOn.xcode, context ?: mapOf())
+        val hwSpec = EnvUtils.parseEnv(job.runsOn.hwSpec, context ?: mapOf())
 
         // 第三方构建机
         if (job.runsOn.selfHosted == true) {
@@ -174,7 +175,8 @@ object TXStreamDispatchUtils {
             return MacOSDispatchType(
                 macOSEvn = "${poolName.removePrefix("macos-")}:$xcode",
                 systemVersion = poolName.removePrefix("macos-"),
-                xcodeVersion = xcode
+                xcodeVersion = xcode,
+                macOSHwSpec = hwSpec
             )
         }
 
