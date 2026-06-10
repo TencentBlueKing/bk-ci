@@ -72,7 +72,7 @@ class TXCreateEnvService @Autowired constructor(
         }
         if (source == AgentPropsSource.REMOTEDEV || (source == null && record.os == OS.WINDOWS.name)) {
             return client.get(ServiceRemoteDevResource::class).startCloudWorkspaceDetail(
-                userId, projectId, null
+                userId, workspaceId, null
             ).data?.displayName
         }
         return null
