@@ -26,6 +26,7 @@ export interface SelectDataConf {
   settingKey?: string
   initRequest?: boolean
   multiple?: boolean
+  multiSelect?: boolean
   searchable?: boolean
   clearable?: boolean
   [key: string]: unknown
@@ -184,6 +185,7 @@ export function useUrlParser() {
  * Supports URL parameter replacement from multiple sources
  */
 export function useDataSource(options: SelectDataConf) {
+  console.log(options, 'SelectDataConf')
   const { t } = useI18n()
   const { parseUrl } = useUrlParser()
 
@@ -204,7 +206,7 @@ export function useDataSource(options: SelectDataConf) {
   }
 
   const selectConf = computed(() => ({
-    multiple: options.multiple ?? false,
+    multiple: options.multiple ?? options.multiSelect ?? false,
     searchable: options.searchable ?? true,
     clearable: options.clearable ?? true,
   }))

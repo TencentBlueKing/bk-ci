@@ -1,0 +1,21 @@
+.compositeInputWrapper {
+  display: flex;
+}
+
+.iconDesc {
+  margin-left: 10px;
+  line-height: 32px;
+  cursor: pointer;
+}
+
+.compositeInput :global(.bk-input--prefix-area),
+.compositeInput :global(.bk-input--suffix-area) {
+  min-width: var(--composite-label-width, auto);
+  justify-content: center;
+}
+
+.groupText {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
