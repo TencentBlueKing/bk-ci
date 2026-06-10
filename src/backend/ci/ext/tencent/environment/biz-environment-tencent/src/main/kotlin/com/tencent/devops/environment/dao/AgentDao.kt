@@ -59,4 +59,10 @@ class AgentDao {
             }
         ).execute()
     }
+
+    fun getAllCreateAgent(dslContext: DSLContext): List<TEnvironmentThirdpartyAgentRecord> {
+        with(TEnvironmentThirdpartyAgent.T_ENVIRONMENT_THIRDPARTY_AGENT) {
+            return dslContext.selectFrom(this).where(CREATE_WORKSPACE_NAME.isNotNull).fetch()
+        }
+    }
 }
