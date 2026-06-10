@@ -1144,6 +1144,38 @@ class WorkspaceService @Autowired constructor(
         return workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName)
     }
 
+    fun kickInstance(
+        userId: String,
+        workspaceName: String
+    ): Boolean {
+        logger.info("$userId kick instance for workspace $workspaceName")
+        workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName)
+            ?: throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
+                params = arrayOf(workspaceName)
+            )
+        if (!permissionService.checkUserPermission(userId, workspaceName)) {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
+                params = arrayOf(
+                    "You don't have permission to access workspace $workspaceName"
+                )
+            )
+        }
+        val environmentUid = dispatchWorkspaceDao.getWorkspaceInfo(workspaceName, dslContext)?.environmentUid
+            ?: throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
+                params = arrayOf(workspaceName)
+            )
+        if (environmentUid.isBlank()) {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.BASE_ERROR.errorCode,
+                params = arrayOf("environmentUid is empty for workspace $workspaceName")
+            )
+        }
+        return startCloudClient.kickInstance(userId = userId, envId = environmentUid)
+    }
+
     @ActionAuditRecord(
         actionId = TencentActionId.CGS_VIEW,
         instance = AuditInstanceRecord(

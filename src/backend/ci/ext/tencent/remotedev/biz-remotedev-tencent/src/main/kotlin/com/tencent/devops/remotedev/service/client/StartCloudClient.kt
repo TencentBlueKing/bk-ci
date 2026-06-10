@@ -12,6 +12,7 @@ import com.tencent.devops.remotedev.pojo.startcloud.StartCloudAppCreateReq
 import com.tencent.devops.remotedev.pojo.startcloud.StartCloudAppCreateRespData
 import com.tencent.devops.remotedev.pojo.startcloud.StartCloudComputerStatusReqBody
 import com.tencent.devops.remotedev.pojo.startcloud.StartCloudComputerStatusRespData
+import com.tencent.devops.remotedev.pojo.startcloud.StartCloudKickInstanceReq
 import com.tencent.devops.remotedev.pojo.startcloud.StartCloudNoDataResp
 import com.tencent.devops.remotedev.pojo.startcloud.StartCloudResp
 import com.tencent.devops.remotedev.pojo.startcloud.StartMessageRegisterReq
@@ -132,6 +133,36 @@ class StartCloudClient @Autowired constructor(
             )
         }
         logger.info("notify screenshot upload success: cdsIds=${requests.map { it.cdsId }}")
+    }
+
+    /**
+     * 剔除用户在指定环境实例上的登录态，用于同一用户切换本地设备登录云桌面
+     */
+    fun kickInstance(
+        userId: String,
+        envId: String
+    ): Boolean {
+        val url = "${config.apiUrl}/openapi/capi/schedule/kick-instance"
+        val body = JsonUtil.toJson(
+            StartCloudKickInstanceReq(
+                userId = userId,
+                envId = envId
+            ),
+            false
+        )
+        logger.info("kickInstance request url: $url, body: $body")
+        val request = Request.Builder()
+            .url(url)
+            .headers(genStartApiHeaders(body).toHeaders())
+            .post(body.toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull()))
+            .build()
+
+        val resp = doRequest(request).resolveResponse<StartCloudNoDataResp>()
+        if (resp.code != 0) {
+            logger.warn("request kick-instance error ${resp.code}|${resp.message}")
+            return false
+        }
+        return true
     }
 
     private fun messageRegister(
