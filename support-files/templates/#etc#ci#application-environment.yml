@@ -14,6 +14,8 @@ environment:
   agentCollectorOn: __BK_CI_ENVIRONMENT_AGENT_COLLECTOR_ON__
   certFilePath: __BK_CI_FQDN_CERT__
   jdkCompatibility: false
+  batch-install:
+    aes-key: __BK_CI_ENVIRONMENT_BATCH_INSTALL_AES_KEY__
 
 influxdb:
   server: __BK_CI_INFLUXDB_ADDR__

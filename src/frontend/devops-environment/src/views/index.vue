@@ -27,6 +27,7 @@
                 </bk-tab-panel>
             </bk-tab>
         </div>
+
         <router-view :container-width="containerWidth"></router-view>
     </div>
 </template>
@@ -43,7 +44,8 @@
             return {
                 environmentUrl,
                 containerWidth: 0,
-                currentResType: SERVICE_RESOURCE_TYPE.PIPELINE
+                currentResType: SERVICE_RESOURCE_TYPE.PIPELINE,
+                SERVICE_RESOURCE_TYPE
             }
         },
 
@@ -72,8 +74,11 @@
             }
         },
         created () {
-            // 初始化资源类型
-            this.initResType()
+            if (!this.$route.name) {
+                this.$router.push({
+                    name: 'envList'
+                })
+            }
         },
         mounted () {
             this.updateContainerWidth()
@@ -171,8 +176,7 @@
                     }
                 }
                 this.$router.push({
-                    name: routeMap[name].name,
-                    params: routeMap[name].params
+                    name: routeMap[name]
                 })
             }
         }

@@ -97,7 +97,7 @@ class PipelineYamlReleaseService(
                     )
                 ).data
             } catch (ignored: RemoteServiceException) {
-                throw when (ignored.errorCode) {
+                throw when (ignored.httpStatus) {
                     // 目标仓库被删除
                     HTTP_404 -> ErrorCodeException(
                         errorCode = ProcessMessageCode.ERROR_GIT_PROJECT_NOT_FOUND_OR_NOT_PERMISSION,
@@ -106,7 +106,7 @@ class PipelineYamlReleaseService(
 
                     HTTP_401, HTTP_403 -> ErrorCodeException(
                         errorCode = ProcessMessageCode.ERROR_USER_NO_PUSH_PERMISSION,
-                        params = arrayOf(repository.userName, repository.projectName)
+                        params = arrayOf(userId, repository.projectName)
                     )
 
                     else -> ignored

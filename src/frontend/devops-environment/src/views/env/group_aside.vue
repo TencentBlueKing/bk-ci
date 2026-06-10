@@ -190,12 +190,13 @@
                 //     count: envCountData.value[ENV_TYPE_MAP.DEVX] ?? 0
                 // }
             ]))
-            const handleCreateEnvSuccess = (envId) => {
-                fetchEnvList()
+            const handleCreateEnvSuccess = async ({ hashId }) => {
+                await fetchEnvList()
                 proxy.$router.replace({
+                    name: 'envDetail',
                     params: {
                         ...proxy.$route.params,
-                        envId
+                        envId: hashId
                     }
                 })
             }

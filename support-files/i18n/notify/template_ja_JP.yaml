@@ -162,7 +162,7 @@
     id: "3ffdfe998646421ba8672a9268069e4c"
     sender: "DevOps"
     title: "BlueKing CIパイプライン【${pipelineName}】#${buildNum} 構築成功"
-    body: "✔️${successContent}\n詳細を見る:${detailUrl}"
+    body: "✔️${successContent}\n[詳細を見る](${detailUrl})"
   creator: "system"
   modifior: "system"
 - index: 7
@@ -501,7 +501,7 @@
     id: "391b2aed3ca1479b9fd78b609b23f49b"
     sender: "DevOps"
     title: "BlueKing CIパイプライン【${pipelineName}】#${buildNum} ビルド失敗"
-    body: "❌${failContent}\n\n詳細を見る:${detailUrl}"
+    body: "❌${failContent}\n\n[詳細を見る](${detailUrl})"
   creator: "system"
   modifior: "system"
 - index: 23

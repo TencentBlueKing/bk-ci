@@ -1,7 +1,7 @@
 /*
 * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
 *
-* Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+* Copyright (C) 2019 Tencent.  All rights reserved.
 *
 * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
 *
@@ -30,11 +30,11 @@ package com.tencent.devops.ai.service
 import com.tencent.devops.ai.context.AgentSessionContext
 import com.tencent.devops.ai.context.AiChatContext
 import com.tencent.devops.ai.pojo.ChatContextDTO
+import com.tencent.devops.ai.pojo.event.AiRunStopBroadcastEvent
 import com.tencent.devops.ai.session.PersistentAgentResolver
 import com.tencent.devops.ai.util.AguiEventSanitizer
 import com.tencent.devops.ai.util.AiErrorMessageTranslator
 import com.tencent.devops.ai.util.ReasoningCompensationTracker
-import com.tencent.devops.ai.util.SseEventWriter
 import io.agentscope.core.agent.Agent
 import io.agentscope.core.agent.AgentBase
 import io.agentscope.core.agui.encoder.AguiEventEncoder
@@ -66,7 +66,8 @@ class AiChatService @Autowired constructor(
     private val aiSessionService: AiSessionService,
     private val activeRunManager: ActiveRunManager,
     private val sessionContext: AgentSessionContext,
-    private val aiRunEventService: AiRunEventService
+    private val aiRunEventService: AiRunEventService,
+    private val aiMessageService: AiMessageService
 ) {
 
     /** 缓存 AgentBase.running 字段的反射引用，避免每次重复查找 */
@@ -102,17 +103,48 @@ class AiChatService @Autowired constructor(
             }
             val result = processor.process(input, null, null)
             agent = result.agent()
-            val (activeRun, mergedEvents) = setupEventStream(agent, result, threadId, runId)
+            val (activeRun, mergedEvents) = setupEventStream(agent, result, output, threadId, runId)
+            // 处理"早到 stop"，详见 [ActiveRunManager.pendingStops]。
+            applyPendingStopIfAny(threadId, runId)
             subscribeAndAwait(
                 mergedEvents = mergedEvents,
                 activeRun = activeRun,
-                output = output,
                 encoder = AguiEventEncoder(),
                 threadId = threadId,
                 runId = runId
             )
         } finally {
             cleanup(threadId, agent)
+        }
+    }
+
+    /**
+     * 处理"早到 stop"：register 之前到达的 stop 请求由 [ActiveRunManager.pendingStops] 暂存，
+     * 这里命中即复用 [AiRunEventService.handleStopBroadcast] 的同步终止流程。
+     *
+     * 后续 [subscribeAndAwait] 会因 result.events() 被 interrupt 而快速 onComplete，
+     * `terminalEventSent` 已置位，[writeRunFinishedIfMissing] 会 dedup 跳过，不重复写出。
+     */
+    private fun applyPendingStopIfAny(
+        threadId: String?,
+        runId: String?
+    ) {
+        if (threadId.isNullOrBlank()) return
+        val pending = activeRunManager.consumePendingStop(threadId) ?: return
+        logger.info(
+            "[AguiChat] Apply pending stop registered before ActiveRun: threadId={}, runId={}, status={}",
+            threadId, runId, pending.status
+        )
+        try {
+            aiRunEventService.handleStopBroadcast(
+                AiRunStopBroadcastEvent(threadId, pending.status),
+                activeRunManager
+            )
+        } catch (e: Exception) {
+            logger.warn(
+                "[AguiChat] Apply pending stop failed: threadId={}, runId={}, error={}",
+                threadId, runId, e.message
+            )
         }
     }
 
@@ -150,6 +182,7 @@ class AiChatService @Autowired constructor(
     private fun setupEventStream(
         agent: Agent,
         result: AguiRequestProcessor.ProcessResult,
+        output: ChunkedOutput<String>,
         threadId: String?,
         runId: String?
     ): Pair<ActiveRunManager.ActiveRun, Flux<AguiEvent>> {
@@ -158,7 +191,7 @@ class AiChatService @Autowired constructor(
             agent,
             AgentSessionContext.SinkInfo(subAgentSink, threadId ?: "", runId ?: "")
         )
-        val activeRun = activeRunManager.register(threadId ?: "", runId ?: "", agent)
+        val activeRun = activeRunManager.register(threadId ?: "", runId ?: "", agent, output)
 
         val tracker = ReasoningCompensationTracker(threadId ?: "", runId ?: "")
         val mergedEvents = Flux.merge(
@@ -172,7 +205,14 @@ class AiChatService @Autowired constructor(
                     logger.warn(
                         "[AguiChat] Reasoning-only stream detected,compensating TEXT_MESSAGE: threadId={}", threadId
                     )
-                    Flux.fromIterable(tracker.buildCompensationEvents())
+                    val message = aiMessageService.createMessage(
+                        sessionId = threadId ?: "",
+                        role = ReasoningCompensationTracker.ROLE_ASSISTANT,
+                        content = tracker.compensationText()
+                    )
+                    Flux.fromIterable(
+                        message?.let { tracker.buildCompensationEvents(msgId = it.id) } ?: emptyList()
+                    )
                 } else {
                     Flux.empty()
                 }
@@ -185,55 +225,46 @@ class AiChatService @Autowired constructor(
     private fun subscribeAndAwait(
         mergedEvents: Flux<AguiEvent>,
         activeRun: ActiveRunManager.ActiveRun,
-        output: ChunkedOutput<String>,
         encoder: AguiEventEncoder,
         threadId: String?,
         runId: String?
     ) {
         val latch = CountDownLatch(1)
-        var disconnected = false
 
         mergedEvents.subscribe(
             { event ->
-                val encoded = encoder.encode(event)
-                val sanitizedEncoded = AguiEventSanitizer.sanitizeEncodedEvent(encoded)
-                if (sanitizedEncoded == null) {
-                    logger.warn("[AguiChat] Dropped raw tool-call marker event: threadId={}, runId={}", threadId, runId)
-                    return@subscribe
-                }
-                activeRun.replaySink.tryEmitNext(event)
-                // 同步持久化到 DB
-                aiRunEventService.sendPersistEvent(
+                writeOutgoingEvent(
+                    event = event,
+                    activeRun = activeRun,
+                    encoder = encoder,
                     threadId = threadId,
-                    runId = runId,
-                    eventIndex = activeRun.nextEventIndex(),
-                    eventData = sanitizedEncoded
+                    runId = runId
                 )
-                if (!disconnected) {
-                    try {
-                        output.write(sanitizedEncoded)
-                    } catch (e: Exception) {
-                        disconnected = true
-                        logger.info(
-                            "[AguiChat] Client disconnected, agent continues: threadId={}",
-                            threadId
-                        )
-                    }
-                }
             },
             { error ->
                 logger.error("[AguiChat] Stream error: {}", error.message, error)
+                writeErrorAndFinish(
+                    errorMessage = toFriendlyErrorMessage(error),
+                    activeRun = activeRun,
+                    encoder = encoder,
+                    threadId = threadId,
+                    runId = runId
+                )
                 activeRun.replaySink.tryEmitComplete()
                 activeRunManager.remove(threadId ?: "")
-                SseEventWriter.writeErrorAndFinish(
-                    output, threadId, runId, toFriendlyErrorMessage(error)
-                )
                 persistAgentState(threadId)
                 aiRunEventService.sendCleanupEvent(threadId, runId)
                 latch.countDown()
             },
             {
                 logger.info("[AguiChat] Stream completed: threadId={}, runId={}", threadId, runId)
+                writeRunFinishedIfMissing(
+                    reason = "stream completed without terminal event",
+                    activeRun = activeRun,
+                    encoder = encoder,
+                    threadId = threadId,
+                    runId = runId
+                )
                 activeRun.replaySink.tryEmitComplete()
                 activeRunManager.remove(threadId ?: "")
                 persistAgentState(threadId)
@@ -245,19 +276,146 @@ class AiChatService @Autowired constructor(
         val completed = latch.await(STREAM_TIMEOUT_MINUTES, TimeUnit.MINUTES)
         if (!completed) {
             logger.warn("[AguiChat] Timeout: threadId={}", threadId)
+            writeErrorAndFinish(
+                errorMessage = "对话超时（${STREAM_TIMEOUT_MINUTES}分钟），请重新发起。",
+                activeRun = activeRun,
+                encoder = encoder,
+                threadId = threadId,
+                runId = runId
+            )
             activeRun.replaySink.tryEmitComplete()
             activeRunManager.remove(threadId ?: "")
-            SseEventWriter.writeErrorAndFinish(
-                output, threadId, runId, "对话超时（${STREAM_TIMEOUT_MINUTES}分钟），请重新发起。"
-            )
             aiRunEventService.sendCleanupEvent(threadId, runId)
         }
     }
 
+    /**
+     * 统一写出 AG-UI 事件，确保当前 SSE、内存 replay 和 DB replay 使用同一份事件。
+     *
+     * 多实例部署下，断线重连可能落到其它 ai-service 实例，因此兜底终止事件也必须同步落库。
+     */
+    private fun writeOutgoingEvent(
+        event: AguiEvent,
+        activeRun: ActiveRunManager.ActiveRun,
+        encoder: AguiEventEncoder,
+        threadId: String?,
+        runId: String?
+    ) {
+        val encoded = encoder.encode(event)
+        val sanitizedEncoded = AguiEventSanitizer.sanitizeEncodedEvent(encoded)
+        if (sanitizedEncoded == null) {
+            // 过滤底层模型或框架偶发泄漏到前端的原始 tool-call 控制标记。
+            // 这类标记不应直接展示给用户，一旦透传通常意味着本轮工具调用
+            // 没有被正确解析，继续展示只会污染界面。
+            logger.warn(
+                "[AguiChat] Dropped raw tool-call marker event: threadId={}, runId={}",
+                threadId, runId
+            )
+            return
+        }
+        val duplicatedTerminalEvent = isTerminalEvent(sanitizedEncoded) &&
+                !activeRun.terminalEventSent.compareAndSet(false, true)
+        if (duplicatedTerminalEvent) {
+            logger.info(
+                "[AguiChat] Skip duplicated terminal event: threadId={}, runId={}",
+                threadId, runId
+            )
+            return
+        }
+        activeRun.replaySink.tryEmitNext(event)
+        // 同步持久化到 DB，供多实例重连时从 DB 回放。
+        aiRunEventService.sendPersistEvent(
+            threadId = threadId,
+            runId = runId,
+            eventIndex = activeRun.nextEventIndex(),
+            eventData = sanitizedEncoded
+        )
+        if (!activeRun.clientDisconnected.get()) {
+            try {
+                activeRun.output.write(sanitizedEncoded)
+            } catch (e: Exception) {
+                activeRun.clientDisconnected.set(true)
+                logger.info(
+                    "[AguiChat] Client disconnected, agent continues: threadId={}",
+                    threadId
+                )
+            }
+        }
+    }
+
+    private fun isTerminalEvent(encoded: String): Boolean {
+        return encoded.contains(RUN_FINISHED_MARKER) || encoded.contains(RUN_ERROR_MARKER)
+    }
+
+    /** 按现有前端契约写出 Raw(error) + RunFinished，并进入 replay/DB 链路。 */
+    private fun writeErrorAndFinish(
+        errorMessage: String,
+        activeRun: ActiveRunManager.ActiveRun,
+        encoder: AguiEventEncoder,
+        threadId: String?,
+        runId: String?
+    ) {
+        writeOutgoingEvent(
+            event = AguiEvent.Raw(threadId, runId, mapOf("error" to errorMessage)),
+            activeRun = activeRun,
+            encoder = encoder,
+            threadId = threadId,
+            runId = runId
+        )
+        writeRunFinishedIfMissing(
+            reason = "stream terminated with error",
+            activeRun = activeRun,
+            encoder = encoder,
+            threadId = threadId,
+            runId = runId
+        )
+    }
+
+    /** 框架未发终止事件时兜底补一个 RUN_FINISHED，避免前端长期停留 running。 */
+    private fun writeRunFinishedIfMissing(
+        reason: String,
+        activeRun: ActiveRunManager.ActiveRun,
+        encoder: AguiEventEncoder,
+        threadId: String?,
+        runId: String?
+    ) {
+        if (activeRun.terminalEventSent.get()) {
+            return
+        }
+        logger.warn(
+            "[AguiChat] Fallback RUN_FINISHED emitted: threadId={}, runId={}, reason={}",
+            threadId, runId, reason
+        )
+        writeOutgoingEvent(
+            event = AguiEvent.RunFinished(threadId, runId),
+            activeRun = activeRun,
+            encoder = encoder,
+            threadId = threadId,
+            runId = runId
+        )
+    }
+
     /** 清理活跃运行、Sink、ThreadLocal 及上下文绑定。 */
     private fun cleanup(threadId: String?, agent: Agent?) {
+        // 兜底确保 USER 消息后跟着 ASSISTANT。中途被打断（CANCELLED / TIMEOUT / ERROR / 流超时）时，
+        // PostCall hook 不会触发，ASSISTANT 不会落库；末尾停留在 USER 会让前端打开历史会话时自动重发，
+        // 详见 [AiMessageService.ensureAssistantPlaceholderIfMissing]。
         if (!threadId.isNullOrBlank()) {
+            try {
+                aiMessageService.ensureAssistantPlaceholderIfMissing(
+                    sessionId = threadId,
+                    placeholder = ASSISTANT_TERMINATED_PLACEHOLDER
+                )
+            } catch (e: Exception) {
+                logger.warn(
+                    "[AguiChat] Ensure assistant placeholder failed: threadId={}, error={}",
+                    threadId, e.message
+                )
+            }
             activeRunManager.remove(threadId)
+            // 会话彻底结束，丢弃可能残留的 pendingStop（应对 register 前抛异常等异常路径），
+            // 避免影响下一次同 threadId 新会话。详见 [ActiveRunManager.pendingStops]。
+            activeRunManager.discardPendingStop(threadId)
             sessionContext.evictAll(threadId)
         }
         agent?.let { sessionContext.removeSink(it) }
@@ -384,11 +542,16 @@ class AiChatService @Autowired constructor(
         /** 单次对话流的最大等待时长（分钟） */
         private const val STREAM_TIMEOUT_MINUTES = 15L
         private const val ROLE_USER = "user"
+        private const val RUN_FINISHED_MARKER = "\"type\":\"RUN_FINISHED\""
+        private const val RUN_ERROR_MARKER = "\"type\":\"RUN_ERROR\""
 
         /** 等待框架层 Agent running 标志释放的最大时长（毫秒） */
         private const val AGENT_IDLE_WAIT_TIMEOUT_MS = 5000L
 
         /** 轮询 Agent running 标志的间隔（毫秒） */
         private const val AGENT_IDLE_POLL_INTERVAL_MS = 200L
+
+        /** 会话被中途打断时的 ASSISTANT 占位文案，避免历史会话末尾停留在 USER。 */
+        private const val ASSISTANT_TERMINATED_PLACEHOLDER = "本次回答已中止。"
     }
 }
