@@ -41,8 +41,10 @@ import com.tencent.devops.process.pojo.pipeline.PipelineDependentResource
 import com.tencent.devops.process.pojo.pipeline.PipelineDependentResourceRef
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineDependentResourceRefType
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineDependentResourceType
+import com.tencent.devops.process.pojo.template.v2.PipelineTemplateResource
 import com.tencent.devops.process.service.template.v2.PipelineTemplateInfoService
 import com.tencent.devops.process.service.template.v2.PipelineTemplateRelatedService
+import com.tencent.devops.process.service.template.v2.PipelineTemplateResourceService
 import com.tencent.devops.process.utils.PipelineVarUtil
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.repository.pojo.CodeGitRepository
@@ -75,6 +77,7 @@ class PipelineDependencyAnalyzeService @Autowired constructor(
     private val subPipelineRefService: SubPipelineRefService,
     private val pipelineTemplateRelatedService: PipelineTemplateRelatedService,
     private val pipelineTemplateInfoService: PipelineTemplateInfoService,
+    private val pipelineTemplateResourceService: PipelineTemplateResourceService,
     private val pipelineRepositoryService: PipelineRepositoryService
 ) {
 
@@ -102,9 +105,14 @@ class PipelineDependencyAnalyzeService @Autowired constructor(
         )
         resources.addAll(collectPipelineGroupResources(projectId = projectId, pipelineId = pipelineId))
         resources.addAll(collectPipelineLabelResources(projectId = projectId, pipelineId = pipelineId))
-        collectPipelineTemplateResource(projectId = projectId, pipelineId = pipelineId)?.let { resources.add(it) }
 
         val refs = mutableSetOf<PipelineDependentResourceRef>()
+        collectPipelineTemplateResource(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            resources = resources,
+            resourceRefs = refs
+        )
         val model = pipelineRepositoryService.getModel(
             projectId = projectId,
             pipelineId = pipelineId
@@ -118,6 +126,7 @@ class PipelineDependencyAnalyzeService @Autowired constructor(
                 )
             )
         }
+
         resources.addAll(resolveResourceRefs(userId = userId, refs = refs))
         return resources
     }
@@ -199,8 +208,10 @@ class PipelineDependencyAnalyzeService @Autowired constructor(
 
     private fun collectPipelineTemplateResource(
         projectId: String,
-        pipelineId: String
-    ): PipelineDependentResource? {
+        pipelineId: String,
+        resources: MutableSet<PipelineDependentResource>,
+        resourceRefs: MutableSet<PipelineDependentResourceRef>
+    ) {
         val pipelineTemplateRelated = pipelineTemplateRelatedService.get(
             projectId = projectId,
             pipelineId = pipelineId
@@ -208,17 +219,63 @@ class PipelineDependencyAnalyzeService @Autowired constructor(
         if (pipelineTemplateRelated == null ||
             pipelineTemplateRelated.instanceType != PipelineInstanceTypeEnum.CONSTRAINT
         ) {
-            return null
+            return
         }
-        val template = pipelineTemplateInfoService.getOrNull(
+        val templateInfo = pipelineTemplateInfoService.getOrNull(
             projectId = projectId,
             templateId = pipelineTemplateRelated.templateId
-        ) ?: return null
-        return PipelineDependentResource(
+        ) ?: return
+        resources.add(
+            PipelineDependentResource(
+                projectId = projectId,
+                resourceType = PipelineDependentResourceType.PIPELINE_TEMPLATE,
+                resourceId = pipelineTemplateRelated.templateId,
+                resourceName = templateInfo.name
+            )
+        )
+        val latestReleasedResource = pipelineTemplateResourceService.getLatestReleasedResource(
             projectId = projectId,
-            resourceType = PipelineDependentResourceType.PIPELINE_TEMPLATE,
-            resourceId = pipelineTemplateRelated.templateId,
-            resourceName = template.name
+            templateId = templateInfo.id
+        )
+        latestReleasedResource?.let { templateResource ->
+            resourceRefs.addAll(
+                collectRefsFromTemplateResource(
+                    projectId = projectId,
+                    templateResource = templateResource
+                )
+            )
+        }
+        // 需要把模版最新版本和流水线关联版本都分析出来,方便执行时,将模版编排中的资源替换成目标项目资源
+        if (templateInfo.releasedVersion != pipelineTemplateRelated.version) {
+            pipelineTemplateResourceService.getByRelatedPipeline(
+                projectId = projectId,
+                pipelineTemplateRelated = pipelineTemplateRelated
+            )?.let { templateResource ->
+                resourceRefs.addAll(
+                    collectRefsFromTemplateResource(
+                        projectId = projectId,
+                        templateResource = templateResource
+                    )
+                )
+            }
+        }
+    }
+
+    private fun collectRefsFromTemplateResource(
+        projectId: String,
+        templateResource: PipelineTemplateResource
+    ): Set<PipelineDependentResourceRef> {
+        val templateModel = templateResource.model
+        if (templateModel !is Model) {
+            logger.warn(
+                "template model type not match|$projectId|${templateResource.templateId}|${templateResource.version}"
+            )
+            return emptySet()
+        }
+        return collectModelResourceRefs(
+            projectId = projectId,
+            model = templateModel,
+            variables = getContextMap(templateModel)
         )
     }
 

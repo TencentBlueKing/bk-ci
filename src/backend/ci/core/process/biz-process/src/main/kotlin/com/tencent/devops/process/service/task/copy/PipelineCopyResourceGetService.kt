@@ -11,6 +11,8 @@ import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.dao.label.PipelineGroupDao
 import com.tencent.devops.process.dao.label.PipelineLabelDao
 import com.tencent.devops.process.dao.label.PipelineViewDao
+import com.tencent.devops.process.pojo.template.v2.PipelineTemplateCommonCondition
+import com.tencent.devops.process.service.template.v2.PipelineTemplateInfoService
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.ticket.api.ServiceCredentialResource
 import org.jooq.DSLContext
@@ -26,7 +28,8 @@ class PipelineCopyResourceGetService @Autowired constructor(
     private val dslContext: DSLContext,
     private val pipelineLabelDao: PipelineLabelDao,
     private val pipelineGroupDao: PipelineGroupDao,
-    private val pipelineViewDao: PipelineViewDao
+    private val pipelineViewDao: PipelineViewDao,
+    private val pipelineTemplateInfoService: PipelineTemplateInfoService
 ) {
     fun getCredentialBasicInfo(
         userId: String,
@@ -176,6 +179,30 @@ class PipelineCopyResourceGetService @Autowired constructor(
             )?.let {
                 PipelineCopyResourceBasicInfo(
                     resourceId = HashUtil.encodeLongId(it.id),
+                    resourceName = it.name
+                )
+            }
+        }
+    }
+
+    fun getTemplateByName(
+        projectId: String,
+        templateName: String,
+        expectExists: Boolean?
+    ): PipelineCopyResourceBasicInfo? {
+        return getResource(
+            projectId = projectId,
+            resourceName = templateName,
+            expectExists = expectExists
+        ) {
+            pipelineTemplateInfoService.getOrNull(
+                PipelineTemplateCommonCondition(
+                    projectId = projectId,
+                    exactSearchName = templateName
+                )
+            )?.let {
+                PipelineCopyResourceBasicInfo(
+                    resourceId = it.id,
                     resourceName = it.name
                 )
             }

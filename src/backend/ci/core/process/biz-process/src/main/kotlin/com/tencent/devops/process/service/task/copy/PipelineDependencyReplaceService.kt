@@ -2,9 +2,11 @@ package com.tencent.devops.process.service.task.copy
 
 import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.enums.RepositoryType
-import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.enums.TriggerRepositoryType
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.pipeline.Model
+import com.tencent.devops.common.pipeline.TemplateInstanceDescriptor
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.Stage
@@ -41,7 +43,9 @@ import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.pojo.pipeline.PipelineDependentResource
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineDependentResourceType
+import com.tencent.devops.process.pojo.template.v2.PipelineTemplateResource
 import com.tencent.devops.process.service.pipeline.PipelineSettingFacadeService
+import com.tencent.devops.process.service.template.v2.PipelineTemplateSettingService
 import com.tencent.devops.process.utils.PipelineVarUtil
 import jakarta.ws.rs.core.Response
 import org.springframework.beans.factory.annotation.Autowired
@@ -53,10 +57,11 @@ import org.springframework.stereotype.Service
 @Service
 class PipelineDependencyReplaceService @Autowired constructor(
     private val pipelineRepositoryService: PipelineRepositoryService,
-    private val pipelineSettingFacadeService: PipelineSettingFacadeService
+    private val pipelineSettingFacadeService: PipelineSettingFacadeService,
+    private val pipelineTemplateSettingService: PipelineTemplateSettingService
 ) {
 
-    fun replaceResourceDependency(
+    fun replacePipelineResourceDependency(
         userId: String,
         projectId: String,
         pipelineId: String,
@@ -91,6 +96,10 @@ class PipelineDependencyReplaceService @Autowired constructor(
                 projectId = projectId,
                 stages = resource.model.stages,
                 context = context
+            ),
+            template = replaceTemplate(
+                template = resource.model.template,
+                context = context
             )
         ).copy(
             name = targetPipelineName
@@ -107,6 +116,66 @@ class PipelineDependencyReplaceService @Autowired constructor(
             )
         }
         return PipelineModelAndSetting(model = replacedModel, setting = replaceSetting)
+    }
+
+    fun replaceTemplateResourceDependency(
+        sourceProjectId: String,
+        sourceTemplateId: String,
+        sourceTemplateVersion: Long,
+        sourceTemplateResource: PipelineTemplateResource,
+        targetProjectId: String,
+        targetTemplateId: String,
+        targetTemplateName: String,
+        replaceResourceMap: Map<String, PipelineDependentResource>
+    ): PipelineModelAndSetting {
+        val sourceModel = sourceTemplateResource.model
+        if (sourceModel !is Model) {
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_PIPELINE_COPY_SOURCE_RESOURCE_NOT_EXISTS,
+                params = arrayOf(sourceProjectId, "$sourceTemplateId@$sourceTemplateVersion")
+            )
+        }
+        val sourceSetting = pipelineTemplateSettingService.get(
+            projectId = sourceProjectId,
+            templateId = sourceTemplateId,
+            settingVersion = sourceTemplateResource.settingVersion
+        )
+        val context = ReplaceContext(replaceResourceMap = replaceResourceMap)
+        val replacedModel = sourceModel.copy(
+            stages = replaceStages(
+                projectId = sourceProjectId,
+                stages = sourceModel.stages,
+                context = context
+            )
+        ).copy(
+            name = targetTemplateName
+        )
+        val replaceSetting = sourceSetting.copy(
+            projectId = targetProjectId,
+            pipelineId = targetTemplateId,
+            pipelineName = targetTemplateName
+        )
+        if (context.missingResources.isNotEmpty()) {
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_PIPELINE_COPY_RESOURCE_MIGRATE_FAILED,
+                params = arrayOf(formatMissingResources(context.missingResources))
+            )
+        }
+        return PipelineModelAndSetting(model = replacedModel, setting = replaceSetting)
+    }
+
+    private fun replaceTemplate(
+        template: TemplateInstanceDescriptor?,
+        context: ReplaceContext
+    ): TemplateInstanceDescriptor? {
+        if (template == null || template.templateId.isNullOrBlank()) {
+            return null
+        }
+        val targetTemplateId = context.getTargetResource(
+            resourceType = PipelineDependentResourceType.REPOSITORY,
+            resourceId = template.templateId!!
+        )?.resourceId
+        return template.copy(templateId = targetTemplateId)
     }
 
     private fun replaceStages(
@@ -499,12 +568,6 @@ class PipelineDependencyReplaceService @Autowired constructor(
             (element is MarketBuildAtomElement && element.getAtomCode() in REPO_CHECKOUT_ATOM_CODES)
     }
 
-    private fun isSubPipelineElement(element: Element): Boolean {
-        return element is SubPipelineCallElement ||
-            (element is MarketBuildAtomElement && element.getAtomCode() == SUB_PIPELINE_EXEC_ATOM_CODE) ||
-            (element is MarketBuildLessAtomElement && element.getAtomCode() == SUB_PIPELINE_EXEC_ATOM_CODE)
-    }
-
     private fun replaceMarketBuildAtomElement(
         projectId: String,
         element: MarketBuildAtomElement,
@@ -681,7 +744,7 @@ class PipelineDependencyReplaceService @Autowired constructor(
 
     private data class ReplaceContext(
         val replaceResourceMap: Map<String, PipelineDependentResource>,
-        val missingResources: MutableSet<MissingReplaceResource> = linkedSetOf()
+        val missingResources: MutableSet<MissingReplaceResource> = mutableSetOf()
     ) {
         fun getTargetResource(
             resourceType: PipelineDependentResourceType,

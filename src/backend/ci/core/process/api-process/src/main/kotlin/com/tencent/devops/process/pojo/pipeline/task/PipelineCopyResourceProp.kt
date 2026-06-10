@@ -22,6 +22,10 @@ import io.swagger.v3.oas.annotations.media.Schema
     JsonSubTypes.Type(
         value = PipelineViewCopyResourceProp::class,
         name = PipelineViewCopyResourceProp.classType
+    ),
+    JsonSubTypes.Type(
+        value = PipelineTemplateCopyResourceProp::class,
+        name = PipelineTemplateCopyResourceProp.classType
     )
 )
 interface PipelineCopyResourceProp
