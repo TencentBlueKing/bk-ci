@@ -34,6 +34,7 @@ import com.tencent.devops.scm.pojo.tapd.TapdBug
 import com.tencent.devops.scm.pojo.tapd.TapdStory
 import com.tencent.devops.scm.pojo.tapd.BugResponse
 import com.tencent.devops.scm.pojo.tapd.StoryResponse
+import com.tencent.devops.scm.pojo.tapd.TapdBugFieldConfig
 import com.tencent.devops.scm.pojo.tapd.TapdResult
 import com.tencent.devops.scm.utils.RetryUtils
 import okhttp3.Headers
@@ -117,6 +118,41 @@ class TapdItemService {
                     it,
                     object : TypeReference<TapdResult<List<BugResponse>>>() {}
                 )?.data?.firstOrNull()?.bug
+            }
+        }
+    }
+
+    fun getBugFieldsInfo(
+        apiUrl: String,
+        authorToken: String,
+        workspaceId: String
+    ): TapdBugFieldConfig? {
+        if (workspaceId.isBlank()) {
+            logger.warn("invalid tapd bug field query|workspaceId=$workspaceId")
+            return null
+        }
+        val url = "${apiUrl.removeSuffix("/")}/bugs/get_fields_info".addParams(
+            mapOf(
+                "workspace_id" to workspaceId
+            )
+        )
+        val request = Request.Builder()
+                .url(url)
+                .headers(authHeaders(authorToken))
+                .get()
+                .build()
+        RetryUtils.doRetryHttp(request).use { response ->
+            if (!response.isSuccessful) {
+                throw RemoteServiceException(
+                    httpStatus = response.code,
+                    errorMessage = "(${response.code})${response.message}"
+                )
+            }
+            return response.body?.string()?.takeIf { it.isNotBlank() }?.let {
+                JsonUtil.toOrNull(
+                    it,
+                    object : TypeReference<TapdResult<TapdBugFieldConfig>>() {}
+                )?.data
             }
         }
     }

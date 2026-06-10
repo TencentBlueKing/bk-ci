@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.scm.api.ServiceTapdResource
 import com.tencent.devops.scm.pojo.tapd.TapdBug
+import com.tencent.devops.scm.pojo.tapd.TapdBugFieldConfig
 import com.tencent.devops.scm.pojo.tapd.TapdStory
 import com.tencent.devops.scm.services.TapdItemService
 import org.springframework.beans.factory.annotation.Autowired
@@ -67,6 +68,20 @@ class ServiceTapdResourceImpl @Autowired constructor(
                 authorToken = authorToken,
                 workspaceId = workspaceId,
                 bugId = bugId
+            )
+        )
+    }
+
+    override fun getBugFieldsInfo(
+        apiUrl: String,
+        authorToken: String,
+        workspaceId: String
+    ): Result<TapdBugFieldConfig?> {
+        return Result(
+            tapdItemService.getBugFieldsInfo(
+                apiUrl = apiUrl,
+                authorToken = authorToken,
+                workspaceId = workspaceId
             )
         )
     }
