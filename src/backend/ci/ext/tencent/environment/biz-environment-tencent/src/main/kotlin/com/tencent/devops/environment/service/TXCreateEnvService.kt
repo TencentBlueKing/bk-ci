@@ -71,8 +71,8 @@ class TXCreateEnvService @Autowired constructor(
                 ?.firstOrNull { it.clientUuid == workspaceId }?.botName
         }
         if (source == AgentPropsSource.REMOTEDEV || (source == null && record.os == OS.WINDOWS.name)) {
-            return client.get(ServiceRemoteDevResource::class).getProjectWorkspace(
-                userId, projectId, workspaceId
+            return client.get(ServiceRemoteDevResource::class).startCloudWorkspaceDetail(
+                userId, projectId, null
             ).data?.displayName
         }
         return null
@@ -140,6 +140,7 @@ class TXCreateEnvService @Autowired constructor(
                     getWorkspaceDisplayName(agent.createdUser, agent.projectId, agent.createWorkspaceName)
                         ?: return@forEach
                 if (node.displayName != displayName) {
+                    logger.info("refreshCreateDisplayName ${node.projectId}|${node.nodeId}|$displayName")
                     nodeService.updateDisplayName(
                         agent.createdUser,
                         agent.projectId,
