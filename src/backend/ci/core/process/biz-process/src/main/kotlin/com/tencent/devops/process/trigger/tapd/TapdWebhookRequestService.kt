@@ -128,6 +128,7 @@ class TapdWebhookRequestService(
     }
 
     fun dispatch(body: Map<String, Any>): Result<Boolean> {
+        logger.info("Receive TapdWebhook|${JsonUtil.toJson(body, false)}")
         val rawEvent = body[TAPD_KEY_EVENT]?.toString() ?: run {
             logger.warn("Tapd webhook missing event field")
             return Result(false)
@@ -274,14 +275,24 @@ class TapdWebhookRequestService(
     ) = if (needGetInfo(eventAction)) {
         when (eventType) {
             TapdEventType.BUG -> {
-                getBugInfo(workspaceId, objectId)?.let {
-                    mapOf(
-                        TAPD_KEY_LABEL to (it.label ?: ""),
-                        TAPD_KEY_PRIORITY_LABEL to (it.priorityLabel ?: ""),
-                        TAPD_KEY_OWNER to (it.currentOwner?.removeSuffix(";") ?: ""),
-                        TAPD_KEY_NAME to it.title
-                    )
+                val bugInfo = getBugInfo(workspaceId, objectId)
+                bugInfo?.let {
+                    val map = mutableMapOf<String, String>()
+                    // tapd bug priority 需要额外转化一下，hook里面是英文，但是界面显示又为中文
+                    if(!it.priorityLabel.isNullOrBlank()) {
+                        map[TAPD_KEY_PRIORITY_LABEL] = getBugFieldsInfo(workspaceId)
+                                ?.priorityLabel
+                                ?.options
+                                ?.get(it.priorityLabel) ?: ""
+                    }
+                    map[TAPD_KEY_LABEL] = it.label ?: ""
+                    map[TAPD_KEY_OWNER] = (it.currentOwner?.removeSuffix(";") ?: "")
+                    map[TAPD_KEY_NAME] = it.title ?: ""
+                    map
                 }
+
+
+                mapOf()
             }
 
             TapdEventType.STORY -> {
@@ -307,7 +318,8 @@ class TapdWebhookRequestService(
         TapdEventAction.BUG_LINK,
         TapdEventAction.BUG_UNLINK,
         TapdEventAction.STORY_LINK,
-        TapdEventAction.STORY_UNLINK
+        TapdEventAction.STORY_UNLINK,
+        TapdEventAction.UPDATE
     ).contains(eventAction)
 
     private fun getStoryInfo(workspaceId: String, storyId: String) = tapdSupportService.getStoryInfo(
@@ -318,6 +330,10 @@ class TapdWebhookRequestService(
     private fun getBugInfo(workspaceId: String, bugId: String) = tapdSupportService.getBugInfo(
         workspaceId = workspaceId,
         bugId = bugId
+    )
+
+    private fun getBugFieldsInfo(workspaceId: String) = tapdSupportService.getBugFieldsInfo(
+        workspaceId = workspaceId
     )
 
     private fun extractReplayBody(sourceTriggerEvent: PipelineTriggerEvent): Map<String, String>? {

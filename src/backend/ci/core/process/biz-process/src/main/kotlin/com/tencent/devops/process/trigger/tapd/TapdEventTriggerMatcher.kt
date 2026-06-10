@@ -166,19 +166,20 @@ class TapdEventTriggerMatcher {
             ).toJsonStr()
         )
         // 当前处理人过滤
+        val finalTriggerOwner = (triggerOwner ?: "").split(";").firstOrNull() ?: ""
         val ownerFilter = UserFilter(
             filterName = "tapdOwner",
             pipelineId = taskId,
-            triggerOnUser = (triggerOwner ?: "").split(";").firstOrNull() ?: "",
+            triggerOnUser = finalTriggerOwner,
             includedUsers = input.includeOwner?.parseEnv(variables) ?: listOf(),
             excludedUsers = input.excludeOwner?.parseEnv(variables) ?: listOf(),
             includedFailedReason = I18Variable(
                 code = OWNER_NOT_MATCH,
-                params = listOf(triggerOwner ?: "")
+                params = listOf(finalTriggerOwner ?: "")
             ).toJsonStr(),
             excludedFailedReason = I18Variable(
                 code = OWNER_IGNORED,
-                params = listOf(triggerOwner ?: "")
+                params = listOf(finalTriggerOwner ?: "")
             ).toJsonStr()
         )
         listOf(

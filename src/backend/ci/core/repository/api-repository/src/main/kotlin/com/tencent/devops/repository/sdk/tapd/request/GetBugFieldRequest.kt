@@ -25,29 +25,27 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.repository.sdk.tapd.service
+package com.tencent.devops.repository.sdk.tapd.request
 
-import com.tencent.devops.scm.pojo.tapd.TapdBug
+import com.fasterxml.jackson.annotation.JsonProperty
+import com.tencent.devops.repository.sdk.common.enums.HttpMethod
+import com.tencent.devops.repository.sdk.tapd.TapdRequest
+import com.tencent.devops.scm.pojo.tapd.TapdResult
+import com.tencent.devops.scm.pojo.tapd.BugResponse
 import com.tencent.devops.scm.pojo.tapd.TapdBugFieldConfig
-import com.tencent.devops.scm.pojo.tapd.TapdStory
 
 /**
- * TAPD 业务对象（需求/缺陷）查询服务
+ * 查询 TAPD 缺陷详情请求
+ *
+ * 接口：`GET /bugs?workspace_id=xx&id=yy`
  */
-interface ITapdItemService {
+data class GetBugFieldRequest(
+    /** TAPD 项目 ID */
+    @JsonProperty("workspace_id")
+    val workspaceId: String
+) : TapdRequest<TapdResult<TapdBugFieldConfig>>() {
 
-    /**
-     * 查询 TAPD 需求详情
-     */
-    fun getStoryInfo(workspaceId: String, storyId: String): TapdStory?
+    override fun getHttpMethod(): HttpMethod = HttpMethod.GET
 
-    /**
-     * 查询 TAPD 缺陷详情
-     */
-    fun getBugInfo(workspaceId: String, bugId: String): TapdBug?
-
-    /**
-     * 查询 TAPD 缺陷详情
-     */
-    fun getBugFieldsInfo(workspaceId: String): TapdBugFieldConfig?
+    override fun getApiPath(): String = "bugs/get_fields_info"
 }

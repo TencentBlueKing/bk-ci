@@ -30,6 +30,7 @@ package com.tencent.devops.repository.api.tapd
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.repository.sdk.tapd.request.StatusMapRequest
 import com.tencent.devops.scm.pojo.tapd.TapdBug
+import com.tencent.devops.scm.pojo.tapd.TapdBugFieldConfig
 import com.tencent.devops.scm.pojo.tapd.TapdStory
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
@@ -76,4 +77,13 @@ interface ServiceTapdResource {
         @QueryParam("bugId")
         bugId: String
     ): Result<TapdBug?>
+
+    @Operation(summary = "查询 TAPD 缺陷所有字段及候选值")
+    @GET
+    @Path("/bugFields")
+    fun getBugFieldsInfo(
+        @Parameter(description = "TAPD 项目 ID", required = true)
+        @QueryParam("workspaceId")
+        workspaceId: String
+    ): Result<TapdBugFieldConfig?>
 }

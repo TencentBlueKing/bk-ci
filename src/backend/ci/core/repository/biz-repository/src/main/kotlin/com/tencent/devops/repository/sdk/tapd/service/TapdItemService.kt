@@ -28,9 +28,11 @@
 package com.tencent.devops.repository.sdk.tapd.service
 
 import com.tencent.devops.repository.sdk.tapd.AutoRetryTapdClient
+import com.tencent.devops.repository.sdk.tapd.request.GetBugFieldRequest
 import com.tencent.devops.repository.sdk.tapd.request.GetBugRequest
 import com.tencent.devops.repository.sdk.tapd.request.GetStoryRequest
 import com.tencent.devops.scm.pojo.tapd.TapdBug
+import com.tencent.devops.scm.pojo.tapd.TapdBugFieldConfig
 import com.tencent.devops.scm.pojo.tapd.TapdStory
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -72,6 +74,22 @@ class TapdItemService @Autowired constructor(
             result.data?.firstOrNull()?.bug
         } catch (ignored: Exception) {
             logger.warn("fail to query tapd bug|workspaceId=$workspaceId|bugId=$bugId", ignored)
+            null
+        }
+    }
+
+    override fun getBugFieldsInfo(workspaceId: String): TapdBugFieldConfig? {
+        if (workspaceId.isBlank()) {
+            logger.warn("invalid tapd bug field query|workspaceId=$workspaceId")
+            return null
+        }
+        return try {
+            val result = autoRetryTapdClient.execute(
+                GetBugFieldRequest(workspaceId = workspaceId)
+            )
+            result.data
+        } catch (ignored: Exception) {
+            logger.warn("fail to query tapd bug field|workspaceId=$workspaceId", ignored)
             null
         }
     }
