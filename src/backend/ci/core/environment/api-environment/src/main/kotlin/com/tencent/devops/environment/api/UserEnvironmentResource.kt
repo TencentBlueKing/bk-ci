@@ -476,7 +476,8 @@ interface UserEnvironmentResource {
         @QueryParam("enableNode")
         @BkField(patternStyle = BkStyleEnum.BOOLEAN_STYLE, required = true)
         enableNode: Boolean,
-        data: EnableNodeEnvData
+        // TODO: 兼容发布，前端实现后去掉可空
+        data: EnableNodeEnvData?
     ): Result<Boolean>
 
     @Operation(summary = "获取项目下环境数量")

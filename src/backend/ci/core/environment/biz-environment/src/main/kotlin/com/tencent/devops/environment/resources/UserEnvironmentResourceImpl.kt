@@ -386,7 +386,7 @@ class UserEnvironmentResourceImpl @Autowired constructor(
         envHashId: String,
         nodeHashId: String,
         enableNode: Boolean,
-        data: EnableNodeEnvData
+        data: EnableNodeEnvData?
     ): Result<Boolean> {
         return envService.enableNodeEnv(
             projectId = projectId,
