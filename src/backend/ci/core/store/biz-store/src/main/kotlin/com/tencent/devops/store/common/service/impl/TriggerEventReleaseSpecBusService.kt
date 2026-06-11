@@ -21,16 +21,24 @@ import com.tencent.devops.common.api.constant.UNDO
 import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.store.atom.service.AtomService
 import com.tencent.devops.store.common.service.StoreCommonService
 import com.tencent.devops.store.common.service.StoreComponentQueryService
 import com.tencent.devops.store.common.service.StoreReleaseSpecBusService
 import com.tencent.devops.store.constant.StoreMessageCode.OWNER_STORE_CODE_NOT_NULL
 import com.tencent.devops.store.constant.StoreMessageCode.TRIGGER_EVENT_CONFIG_EXIST
+import com.tencent.devops.store.pojo.atom.AtomCreateRequest
+import com.tencent.devops.store.pojo.atom.AtomUpgradeRequest
+import com.tencent.devops.store.pojo.atom.enums.AtomCategoryEnum
+import com.tencent.devops.store.pojo.atom.enums.AtomTypeEnum
+import com.tencent.devops.store.pojo.atom.enums.JobTypeEnum
 import com.tencent.devops.store.trigger.utils.TriggerEventConverter
 import com.tencent.devops.store.pojo.common.KEY_ATOM_FORM
+import com.tencent.devops.store.pojo.common.KEY_STORE_ID
 import com.tencent.devops.store.pojo.common.KEY_TRIGGER_EVENT_CONFIG
 import com.tencent.devops.store.pojo.common.QueryComponentPkgEnvInfoParam
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
+import com.tencent.devops.store.pojo.common.enums.ServiceScopeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.publication.ReleaseProcessItem
@@ -39,6 +47,7 @@ import com.tencent.devops.store.pojo.common.publication.StorePkgEnvInfo
 import com.tencent.devops.store.pojo.common.publication.StoreRunPipelineParam
 import com.tencent.devops.store.pojo.common.publication.StoreUpdateRequest
 import com.tencent.devops.store.pojo.trigger.TriggerEventConfig
+import com.tencent.devops.store.trigger.service.TriggerEventService.Companion.TRIGGER_CLASSIFY_ID
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -47,7 +56,8 @@ import org.springframework.stereotype.Service
 @SuppressWarnings("TooManyFunctions")
 class TriggerEventReleaseSpecBusService @Autowired constructor(
     private val storeCommonService: StoreCommonService,
-    private val storeComponentQueryService: StoreComponentQueryService
+    private val storeComponentQueryService: StoreComponentQueryService,
+    private val atomService: AtomService
 ) : StoreReleaseSpecBusService {
     override fun doStoreCreatePreBus(storeCreateRequest: StoreCreateRequest) {
         logger.info("doStoreCreatePreBus")
@@ -203,8 +213,36 @@ class TriggerEventReleaseSpecBusService @Autowired constructor(
         logger.info("doStoreEnvBus")
     }
 
-    override fun doStoreCreatePostBus(userId: String, storeCode: String, storeType: StoreTypeEnum) {
+    override fun doStoreCreatePostBus(
+        userId: String,
+        storeCode: String,
+        storeType: StoreTypeEnum,
+        storeCreateRequest: StoreCreateRequest
+    ) {
         logger.info("doStoreCreatePostBus")
+        with(storeCreateRequest) {
+            // 将触发事件信息保存到T_ATOM表中，后续查询创作流触发事件直接走T_ATOM表
+            atomService.savePipelineAtom(
+                userId = userId,
+                atomRequest = convertTriggerEventAtom()
+            )
+        }
+    }
+
+    override fun doStoreUpdatePostBus(
+        userId: String,
+        storeCode: String,
+        storeType: StoreTypeEnum,
+        storeUpdateRequest: StoreUpdateRequest
+    ) {
+        logger.info("doStoreUpdatePostBus")
+        with(storeUpdateRequest) {
+            // 将触发事件信息保存到T_ATOM表中，后续查询创作流触发事件直接走T_ATOM表
+            atomService.upgradeAtom(
+                userId = userId,
+                atomRequest = convertTriggerEventAtom()
+            )
+        }
     }
 
     /**
@@ -238,6 +276,50 @@ class TriggerEventReleaseSpecBusService @Autowired constructor(
         }
         return map
     }
+
+    /**
+     * 新增组件请求转化为AtomCreateRequest
+     */
+    private fun StoreCreateRequest.convertTriggerEventAtom() = AtomCreateRequest(
+        id = bkStoreContext[KEY_STORE_ID]?.toString(),
+        name = baseInfo.name,
+        atomCode = baseInfo.storeCode,
+        serviceScope = arrayListOf(ServiceScopeEnum.CREATIVE_STREAM.name),
+        jobType = JobTypeEnum.CREATIVE_STREAM,
+        os = arrayListOf(),
+        classifyId = TRIGGER_CLASSIFY_ID,
+        docsLink = null,
+        atomType = AtomTypeEnum.SELF_DEVELOPED,
+        defaultFlag = true,
+        category = AtomCategoryEnum.TRIGGER,
+        buildLessRunFlag = false,
+        props = baseInfo.extBaseInfo?.get(KEY_ATOM_FORM)?.toString(),
+        weight = null,
+        data = null,
+        ownerStoreCode = baseInfo.ownerStoreCode
+    )
+
+    /**
+     * 新增组件请求转化为AtomCreateRequest
+     */
+    private fun StoreUpdateRequest.convertTriggerEventAtom() = AtomUpgradeRequest(
+        name = baseInfo.name,
+        atomCode = baseInfo.storeCode,
+        serviceScope = arrayListOf(ServiceScopeEnum.CREATIVE_STREAM.name),
+        jobType = JobTypeEnum.CREATIVE_STREAM,
+        os = arrayListOf(),
+        classifyId = TRIGGER_CLASSIFY_ID,
+        docsLink = null,
+        atomType = AtomTypeEnum.SELF_DEVELOPED,
+        defaultFlag = true,
+        category = AtomCategoryEnum.TRIGGER,
+        buildLessRunFlag = false,
+        props = baseInfo.extBaseInfo?.get(KEY_ATOM_FORM)?.toString(),
+        weight = null,
+        data = null,
+        version = baseInfo.versionInfo.version,
+        ownerStoreCode = baseInfo.ownerStoreCode
+    )
 
     companion object {
         private val logger = LoggerFactory.getLogger(TriggerEventReleaseSpecBusService::class.java)

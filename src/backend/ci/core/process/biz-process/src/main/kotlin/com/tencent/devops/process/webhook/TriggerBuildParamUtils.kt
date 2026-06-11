@@ -181,7 +181,7 @@ object TriggerBuildParamUtils {
             CI_REMARK,
             CI_CATEGORY
         ).let {
-            if (channelCode?.name == "CREATIVE_STREAM") {
+            if (channelCode == ChannelCode.CREATIVE_STREAM) {
                 it.plus(getCreativeStreamBasicBuildParams())
             } else {
                 it
@@ -191,7 +191,10 @@ object TriggerBuildParamUtils {
         }.map {
             BuildEnvParameters(
                 name = it,
-                desc = I18nUtil.getCodeLanMessage(it)
+                // 根据渠道对描述信息需进行调整
+                desc = I18nUtil.getCodeLanMessage("$channelCode.$it").ifBlank {
+                    I18nUtil.getCodeLanMessage(it)
+                },
             )
         }
     }

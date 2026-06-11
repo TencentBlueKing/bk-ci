@@ -164,6 +164,17 @@ interface StoreReleaseSpecBusService {
     fun doStoreCreatePostBus(
         userId: String,
         storeCode: String,
-        storeType: StoreTypeEnum
+        storeType: StoreTypeEnum,
+        storeCreateRequest: StoreCreateRequest
+    )
+
+    /**
+     * 执行更新组件请求后置业务
+     */
+    fun doStoreUpdatePostBus(
+        userId: String,
+        storeCode: String,
+        storeType: StoreTypeEnum,
+        storeUpdateRequest: StoreUpdateRequest
     )
 }

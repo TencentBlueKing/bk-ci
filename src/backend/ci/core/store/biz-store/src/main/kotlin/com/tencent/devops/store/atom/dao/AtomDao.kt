@@ -57,6 +57,7 @@ import com.tencent.devops.store.pojo.atom.AtomBaseInfoUpdateRequest
 import com.tencent.devops.store.pojo.atom.AtomCreateRequest
 import com.tencent.devops.store.pojo.atom.AtomFeatureUpdateRequest
 import com.tencent.devops.store.pojo.atom.AtomUpdateRequest
+import com.tencent.devops.store.pojo.atom.AtomUpgradeRequest
 import com.tencent.devops.store.pojo.atom.enums.AtomCategoryEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomTypeEnum
@@ -90,9 +91,11 @@ import com.tencent.devops.store.pojo.common.KEY_PUBLISHER
 import com.tencent.devops.store.pojo.common.KEY_RECENT_EXECUTE_NUM
 import com.tencent.devops.store.pojo.common.KEY_RECOMMEND_FLAG
 import com.tencent.devops.store.pojo.common.KEY_SERVICE_SCOPE
+import com.tencent.devops.store.pojo.atom.AtomGroupQueryParam
 import com.tencent.devops.store.pojo.common.KEY_UPDATE_TIME
 import com.tencent.devops.store.pojo.common.ServiceScopeConfig
 import com.tencent.devops.store.pojo.common.enums.ServiceScopeEnum
+import com.tencent.devops.store.pojo.common.enums.StoreGroupByEnum
 import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.util.ServiceScopeUtil
@@ -127,7 +130,8 @@ data class AtomQueryParam(
     val keyword: String?,
     val fitOsFlag: Boolean?,
     val queryFitAgentBuildLessAtomFlag: Boolean?,
-    val queryProjectAtomFlag: Boolean = true
+    val queryProjectAtomFlag: Boolean = true,
+    val ownerStoreCode: String? = null
 )
 
 /**
@@ -198,7 +202,9 @@ class AtomDao : AtomBaseDao() {
                 PROPS,
                 DATA,
                 CREATOR,
-                MODIFIER
+                MODIFIER,
+                OWNER_STORE_CODE,
+                LOGO_URL
             )
                 .values(
                     id,
@@ -230,7 +236,9 @@ class AtomDao : AtomBaseDao() {
                     atomRequest.props,
                     atomRequest.data,
                     userId,
-                    userId
+                    userId,
+                    atomRequest.ownerStoreCode,
+                    atomRequest.logoUrl
                 )
                 .execute()
         }
@@ -976,6 +984,9 @@ class AtomDao : AtomBaseDao() {
         if (!param.keyword.isNullOrEmpty()) {
             conditions.add(tAtom.NAME.contains(param.keyword).or(tAtom.SUMMARY.contains(param.keyword)))
         }
+        if (!param.ownerStoreCode.isNullOrEmpty()) {
+            conditions.add(tAtom.OWNER_STORE_CODE.eq(param.ownerStoreCode))
+        }
         conditions.add(tAtom.DELETE_FLAG.eq(false))
         return conditions
     }
@@ -1581,6 +1592,84 @@ class AtomDao : AtomBaseDao() {
         }
     }
 
+    fun upgradeAtom(
+        dslContext: DSLContext,
+        userId: String,
+        id: String,
+        classType: String,
+        atomRequest: AtomUpgradeRequest
+    ) {
+        with(TAtom.T_ATOM) {
+            val osMapJson = if (atomRequest.os.isNotEmpty() && atomRequest.jobType.isBuildEnv()) {
+                JsonUtil.toJson(mapOf(atomRequest.jobType.name to atomRequest.os), formatted = false)
+            } else null
+            dslContext.insertInto(
+                this,
+                ID,
+                NAME,
+                ATOM_CODE,
+                CLASS_TYPE,
+                SERVICE_SCOPE,
+                JOB_TYPE,
+                JOB_TYPE_MAP,
+                OS,
+                OS_MAP,
+                CLASSIFY_ID,
+                CLASSIFY_ID_MAP,
+                DOCS_LINK,
+                ATOM_TYPE,
+                ATOM_STATUS,
+                VERSION,
+                DEFAULT_FLAG,
+                LATEST_FLAG,
+                CATEGROY,
+                BUILD_LESS_RUN_FLAG,
+                WEIGHT,
+                PROPS,
+                DATA,
+                CREATOR,
+                MODIFIER,
+                OWNER_STORE_CODE,
+                LOGO_URL
+            )
+                    .values(
+                        id,
+                        atomRequest.name,
+                        atomRequest.atomCode,
+                        classType,
+                        JsonUtil.toJson(atomRequest.serviceScope, formatted = false),
+                        atomRequest.jobType.name,
+                        JsonUtil.toJson(
+                            mapOf(ServiceScopeEnum.PIPELINE.name to listOf(atomRequest.jobType.name)),
+                            formatted = false
+                        ),
+                        JsonUtil.toJson(atomRequest.os, formatted = false),
+                        osMapJson,
+                        atomRequest.classifyId,
+                        JsonUtil.toJson(
+                            mapOf(ServiceScopeEnum.PIPELINE.name to atomRequest.classifyId),
+                            formatted = false
+                        ),
+                        atomRequest.docsLink,
+                        atomRequest.atomType.type.toByte(),
+                        AtomStatusEnum.RELEASED.status.toByte(),
+                        atomRequest.version,
+                        atomRequest.defaultFlag,
+                        true,
+                        atomRequest.category.category.toByte(),
+                        atomRequest.buildLessRunFlag,
+                        atomRequest.weight,
+                        atomRequest.props,
+                        atomRequest.data,
+                        userId,
+                        userId,
+                        atomRequest.ownerStoreCode,
+                        atomRequest.logoUrl
+                    )
+                    .execute()
+        }
+    }
+
     private fun buildClassifyIdMap(
         dslContext: DSLContext,
         atomBaseInfoUpdateRequest: AtomBaseInfoUpdateRequest
@@ -1665,5 +1754,42 @@ class AtomDao : AtomBaseDao() {
                 )
             )
         )
+    }
+
+    /**
+     * 分组统计插件数量
+     */
+    fun getAtomGroupCount(
+        dslContext: DSLContext,
+        atomGroupQueryParam: AtomGroupQueryParam,
+        atomCodes: Set<String>
+    ): List<Pair<String, Int>> {
+        return with(TAtom.T_ATOM) {
+            val conditions = mutableListOf<Condition>(
+                ATOM_CODE.`in`(atomCodes)
+            )
+            val groupField = when (atomGroupQueryParam.groupBy) {
+                StoreGroupByEnum.OWNER_STORE_CODE -> {
+                    conditions.add(
+                        OWNER_STORE_CODE.isNotNull
+                    )
+                    OWNER_STORE_CODE
+                }
+                StoreGroupByEnum.STORE_CODE -> {
+                    ATOM_CODE
+                }
+                else -> {
+                    ATOM_TYPE.cast(String::class.java)
+                }
+            }
+            dslContext.select(groupField, DSL.countDistinct(ATOM_CODE))
+                .from(this)
+                .where(conditions)
+                .groupBy(groupField)
+                .fetch()
+                .map {
+                    Pair(it.value1() as String, it.value2())
+                }
+        }
     }
 }

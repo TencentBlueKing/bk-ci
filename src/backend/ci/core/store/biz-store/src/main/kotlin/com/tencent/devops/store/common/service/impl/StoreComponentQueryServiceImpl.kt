@@ -1069,6 +1069,21 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
         it.convertStoreBaseInfo()
     }
 
+    override fun getComponentBaseInfoList(
+        storeType: String,
+        storeCode: String,
+        storeStatusList: List<StoreStatusEnum>?,
+        page: Int?,
+        pageSize: Int?
+    ) = storeBaseQueryDao.getComponentsByCode(
+        dslContext = dslContext,
+        storeCode = storeCode,
+        storeType = StoreTypeEnum.valueOf(storeType),
+        storeStatusList = storeStatusList?.map { it.name },
+        page = page,
+        pageSize = pageSize
+    ).map { it.convertStoreBaseInfo() }
+
     private fun TStoreBaseRecord.convertStoreBaseInfo() = StoreBaseInfo(
         storeId = id,
         storeCode = storeCode,
@@ -1078,7 +1093,8 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
         status = status,
         logoUrl = logoUrl,
         publisher = publisher,
-        classifyId = classifyId
+        classifyId = classifyId,
+        ownerStoreCode = ownerStoreCode
     )
 
     private fun isUpdateRequired(

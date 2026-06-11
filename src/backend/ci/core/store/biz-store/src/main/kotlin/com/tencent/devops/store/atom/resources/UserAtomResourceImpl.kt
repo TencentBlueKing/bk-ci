@@ -29,6 +29,7 @@ package com.tencent.devops.store.atom.resources
 
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.atom.UserAtomResource
 import com.tencent.devops.store.atom.dao.AtomQueryParam
@@ -40,6 +41,7 @@ import com.tencent.devops.store.pojo.atom.AtomRespItem
 import com.tencent.devops.store.pojo.atom.InstalledAtom
 import com.tencent.devops.store.pojo.atom.PipelineAtom
 import com.tencent.devops.store.pojo.atom.enums.JobTypeEnum
+import com.tencent.devops.store.pojo.common.BK_STORE_ALL_TRIGGER
 import com.tencent.devops.store.pojo.common.UnInstallReq
 import com.tencent.devops.store.pojo.common.enums.ServiceScopeEnum
 import com.tencent.devops.store.pojo.common.version.VersionInfo
@@ -81,10 +83,15 @@ class UserAtomResourceImpl @Autowired constructor(
         fitOsFlag: Boolean?,
         queryFitAgentBuildLessAtomFlag: Boolean?,
         page: Int,
-        pageSize: Int
+        pageSize: Int,
+        ownerStoreCode: String?
     ): Result<AtomResp<AtomRespItem>?> {
         val queryParam = AtomQueryParam(
-            serviceScope = serviceScope,
+            serviceScope = serviceScope ?: run {
+                if (ChannelCode.getRequestChannelCode() == ChannelCode.CREATIVE_STREAM) {
+                    ServiceScopeEnum.CREATIVE_STREAM
+                } else null
+            },
             jobType = jobType?.name,
             os = os,
             projectCode = projectCode,
@@ -94,7 +101,8 @@ class UserAtomResourceImpl @Autowired constructor(
             keyword = keyword,
             fitOsFlag = fitOsFlag,
             queryFitAgentBuildLessAtomFlag = queryFitAgentBuildLessAtomFlag,
-            queryProjectAtomFlag = queryProjectAtomFlag
+            queryProjectAtomFlag = queryProjectAtomFlag,
+            ownerStoreCode = ownerStoreCode.takeIf { !it.isNullOrBlank() && it != BK_STORE_ALL_TRIGGER }
         )
         return atomService.getPipelineAtoms(
             userId = userId,
