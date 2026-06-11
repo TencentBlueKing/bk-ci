@@ -109,16 +109,18 @@ class PythonAtomRunConditionHandleServiceImpl : AtomRunConditionHandleService {
     ): String {
         // 若虚拟环境路径存在，将启动命令拼接为虚拟环境内的绝对路径
         var convertTarget = if (!atomExecuteEnvPath.isNullOrBlank()) {
-            // 分离可执行文件名和可能的参数
-            // target 通常是纯可执行文件名（如 "demo"，来自 entry_points 的 console_scripts），
-            // 但也可能包含参数（如 "demo --config"）。
-            // 为安全起见，只给可执行文件路径加引号，参数保持在外面，
-            // 避免 Windows 将 "path\to\exe args" 误解析为一个带空格的可执行文件名。
+            // 只对 Python 相关的可执行文件进行路径替换
+            val pythonExecutables = listOf("python", "python3", "python2", "pip", "pip3", "pip2")
             val parts = target.trim().split(Regex("\\s+"), limit = 2)
             val executableName = parts[0]
             val args = if (parts.size > 1) parts[1] else ""
 
-            val fullPath = "$atomExecuteEnvPath${File.separator}$executableName"
+            val fullPath = if (pythonExecutables.any { executableName.equals(it, ignoreCase = true) }) {
+                "$atomExecuteEnvPath${File.separator}$executableName"
+            } else {
+                // 非 Python 可执行文件，不进行路径替换
+                executableName
+            }
             // Windows路径含反斜杠，用双引号包裹防止被shell错误解析
             val quotedPath = if (osType == OSType.WINDOWS) "\"$fullPath\"" else fullPath
 
@@ -200,8 +202,9 @@ class PythonAtomRunConditionHandleServiceImpl : AtomRunConditionHandleService {
             if (!isVirtualenvAvailable(pythonCmd)) {
                 logger.info("virtualenv not found, installing...")
                 LoggerService.addNormalLine("Installing virtualenv...")
+                // 使用 $pythonCmd -m pip install 避免污染系统环境
                 CommandLineUtils.execute(
-                    command = "pip install virtualenv",
+                    command = "$pythonCmd -m pip install virtualenv --user",
                     workspace = null,
                     print2Logger = true
                 )
