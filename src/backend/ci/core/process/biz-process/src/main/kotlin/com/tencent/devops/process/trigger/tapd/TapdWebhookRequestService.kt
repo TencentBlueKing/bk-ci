@@ -291,9 +291,6 @@ class TapdWebhookRequestService(
                     map[TAPD_KEY_NAME] = it.title ?: ""
                     map
                 }
-
-
-                mapOf()
             }
 
             TapdEventType.STORY -> {
