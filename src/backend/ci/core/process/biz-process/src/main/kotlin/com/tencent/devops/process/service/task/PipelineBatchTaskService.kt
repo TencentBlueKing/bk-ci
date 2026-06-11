@@ -122,6 +122,7 @@ class PipelineBatchTaskService @Autowired constructor(
         projectId: String,
         taskId: String,
         pipelineName: String?,
+        pipelineCreator: String?,
         status: PipelineBatchTaskDetailStatus?,
         pac: Boolean?,
         subPipeline: Boolean?,
@@ -134,6 +135,7 @@ class PipelineBatchTaskService @Autowired constructor(
             projectId = projectId,
             taskId = taskId,
             pipelineName = pipelineName,
+            pipelineCreator = pipelineCreator,
             status = status,
             pac = pac,
             subPipeline = subPipeline
@@ -143,6 +145,7 @@ class PipelineBatchTaskService @Autowired constructor(
             projectId = projectId,
             taskId = taskId,
             pipelineName = pipelineName,
+            pipelineCreator = pipelineCreator,
             status = status,
             pac = pac,
             subPipeline = subPipeline,

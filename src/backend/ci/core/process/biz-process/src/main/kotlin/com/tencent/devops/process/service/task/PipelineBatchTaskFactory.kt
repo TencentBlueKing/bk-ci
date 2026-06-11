@@ -34,6 +34,7 @@ class PipelineBatchTaskFactory @Autowired constructor(
             pipelineIds = pipelineIds.toSet()
         )
         val pipelineNameMap = pipelineInfos.associate { it.pipelineId to it.pipelineName }
+        val pipelineCreatorMap = pipelineInfos.associate { it.pipelineId to it.creator }
         val pipelineLockedMap = pipelineInfos.associate { it.pipelineId to (it.locked ?: false) }
         val pipelineVersionStatusMap = pipelineInfos.associate {
             it.pipelineId to it.latestVersionStatus?.let { status -> VersionStatus.valueOf(status) }
@@ -56,6 +57,7 @@ class PipelineBatchTaskFactory @Autowired constructor(
                 taskType = taskType,
                 pipelineId = pipelineId,
                 pipelineName = pipelineNameMap[pipelineId].orEmpty(),
+                pipelineCreator = pipelineCreatorMap[pipelineId].orEmpty(),
                 pac = pipelineEnablePacSet.contains(pipelineId),
                 constraint = pipelineConstraintSet.contains(pipelineId),
                 subPipeline = subPipeline,

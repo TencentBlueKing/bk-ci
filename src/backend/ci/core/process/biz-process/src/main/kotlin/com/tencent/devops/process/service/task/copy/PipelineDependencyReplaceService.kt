@@ -688,17 +688,20 @@ class PipelineDependencyReplaceService @Autowired constructor(
         fieldName: String,
         context: ReplaceContext
     ): Map<*, *>? {
-        val envId = input[fieldName]?.let {
+        val envIds = input[fieldName]?.let {
             JsonUtil.anyToOrNull(it, object : TypeReference<List<String>>() {})
-        }?.firstOrNull()?.takeIf { it.isNotBlank() } ?: return null
-        val targetEnv = context.getTargetResource(
-            resourceType = PipelineDependentResourceType.DEPLOY_ENV,
-            resourceId = envId
-        ) ?: return null
+        } ?: return null
+        val targetEnvs = envIds.map { envId ->
+            context.getTargetResource(
+                resourceType = PipelineDependentResourceType.DEPLOY_ENV,
+                resourceId = envId
+            ) ?: return null
+        }
+
         return replaceInputField(
             input = input,
             fieldName = fieldName,
-            value = listOf(targetEnv.resourceId)
+            value = targetEnvs.map { targetEnv -> targetEnv.resourceId }
         )
     }
 

@@ -107,6 +107,9 @@ interface UserPipelineBatchTaskResource {
         @Parameter(description = "流水线名称", required = false)
         @QueryParam("pipelineName")
         pipelineName: String?,
+        @Parameter(description = "流水线创建人", required = false)
+        @QueryParam("pipelineCreator")
+        pipelineCreator: String?,
         @Parameter(description = "明细状态", required = false)
         @QueryParam("status")
         status: PipelineBatchTaskDetailStatus?,

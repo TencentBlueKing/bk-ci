@@ -503,7 +503,7 @@ class PipelineDependencyAnalyzeService @Autowired constructor(
                             variables = variables
                         )
                         else -> null
-                    }?.let { refs.add(it) }
+                    }?.let { refs.addAll(it) }
                 } catch (ignored: Exception) {
                     logger.warn(
                         "analysis market element dependent resource failed|" +
@@ -520,20 +520,20 @@ class PipelineDependencyAnalyzeService @Autowired constructor(
         projectId: String,
         input: Map<*, *>,
         variables: Map<String, String>
-    ): PipelineDependentResourceRef? {
-        val (resourceType, refType, refValue) = when (input["envType"]?.toString()) {
+    ): List<PipelineDependentResourceRef>? {
+        val (resourceType, refType, refValues) = when (input["envType"]?.toString()) {
             "ENV" -> Triple(
                 PipelineDependentResourceType.DEPLOY_ENV,
                 PipelineDependentResourceRefType.ID,
                 input["envId"]?.let {
                     JsonUtil.anyToOrNull(it, object : TypeReference<List<String>>() {})
-                }?.firstOrNull()
+                }
             )
 
             "ENV_NAME" -> Triple(
                 PipelineDependentResourceType.DEPLOY_ENV,
                 PipelineDependentResourceRefType.NAME,
-                EnvUtils.parseEnv(input["envName"]?.toString(), variables).takeIf { it.isNotBlank() }
+                parseEnvNameList(input["envName"], variables)
             )
 
             "NODE" -> Triple(
@@ -541,46 +541,48 @@ class PipelineDependencyAnalyzeService @Autowired constructor(
                 PipelineDependentResourceRefType.ID,
                 input["nodeId"]?.let {
                     JsonUtil.anyToOrNull(it, object : TypeReference<List<String>>() {})
-                }?.firstOrNull()
+                }
             )
 
             "NODE_NAME" -> Triple(
                 PipelineDependentResourceType.DEPLOY_NODE,
                 PipelineDependentResourceRefType.NAME,
-                EnvUtils.parseEnv(input["nodeName"]?.toString(), variables).takeIf { it.isNotBlank() }
+                parseEnvNameList(input["nodeName"], variables)
             )
 
             else -> return null
         }
-        if (refValue == null) {
+        if (refValues == null) {
             return null
         }
-        return PipelineDependentResourceRef(
-            projectId = projectId,
-            resourceType = resourceType,
-            refType = refType,
-            refValue = refValue
-        )
+        return refValues.map { refValue ->
+            PipelineDependentResourceRef(
+                projectId = projectId,
+                resourceType = resourceType,
+                refType = refType,
+                refValue = refValue
+            )
+        }
     }
 
     private fun getJobPushFileResourceRef(
         projectId: String,
         input: Map<*, *>,
         variables: Map<String, String>
-    ): PipelineDependentResourceRef? {
-        val (resourceType, refType, refValue) = when (input["targetEnvType"]?.toString()) {
+    ): List<PipelineDependentResourceRef>? {
+        val (resourceType, refType, refValues) = when (input["targetEnvType"]?.toString()) {
             "ENV" -> Triple(
                 PipelineDependentResourceType.DEPLOY_ENV,
                 PipelineDependentResourceRefType.ID,
                 input["targetEnvId"]?.let {
                     JsonUtil.anyToOrNull(it, object : TypeReference<List<String>>() {})
-                }?.firstOrNull()
+                }
             )
 
             "ENV_NAME" -> Triple(
                 PipelineDependentResourceType.DEPLOY_ENV,
                 PipelineDependentResourceRefType.NAME,
-                EnvUtils.parseEnv(input["targetEnvName"]?.toString(), variables).takeIf { it.isNotBlank() }
+                parseEnvNameList(input["targetEnvName"], variables)
             )
 
             "NODE" -> Triple(
@@ -588,26 +590,28 @@ class PipelineDependencyAnalyzeService @Autowired constructor(
                 PipelineDependentResourceRefType.ID,
                 input["targetNodeId"]?.let {
                     JsonUtil.anyToOrNull(it, object : TypeReference<List<String>>() {})
-                }?.firstOrNull()
+                }
             )
 
             "NODE_NAME" -> Triple(
                 PipelineDependentResourceType.DEPLOY_NODE,
                 PipelineDependentResourceRefType.NAME,
-                EnvUtils.parseEnv(input["targetNodeName"]?.toString(), variables).takeIf { it.isNotBlank() }
+                parseEnvNameList(input["targetNodeName"], variables)
             )
 
             else -> return null
         }
-        if (refValue == null) {
+        if (refValues == null) {
             return null
         }
-        return PipelineDependentResourceRef(
-            projectId = projectId,
-            resourceType = resourceType,
-            refType = refType,
-            refValue = refValue
-        )
+        return refValues.map { refValue ->
+            PipelineDependentResourceRef(
+                projectId = projectId,
+                resourceType = resourceType,
+                refType = refType,
+                refValue = refValue
+            )
+        }
     }
 
     private fun RepositoryConfig.toResourceRef(projectId: String): PipelineDependentResourceRef? {
@@ -918,6 +922,13 @@ class PipelineDependencyAnalyzeService @Autowired constructor(
         }
     }
 
+    private fun parseEnvNameList(rawValue: Any?, variables: Map<String, String>): List<String>? {
+        return EnvUtils.parseEnv(rawValue?.toString(), variables)
+            .trim()
+            .takeIf { it.isNotBlank() }
+            ?.split(MULTI_VALUE_SEPARATOR_REGEX)
+    }
+
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineDependencyAnalyzeService::class.java)
 
@@ -926,5 +937,6 @@ class PipelineDependencyAnalyzeService @Autowired constructor(
         )
         private const val JOB_PUSH_FILE_ATOM_CODE = "JobPushFile"
         private const val JOB_SCRIPT_EXECUTION_ATOM_CODE = "JobScriptExecutionA"
+        private val MULTI_VALUE_SEPARATOR_REGEX = Regex("[,;，]+")
     }
 }

@@ -17,6 +17,8 @@ data class PipelineBatchTaskDetail(
     val pipelineId: String,
     @get:Schema(description = "流水线名称", required = true)
     val pipelineName: String,
+    @get:Schema(description = "流水线创建人", required = true)
+    val pipelineCreator: String = "",
     @get:Schema(description = "是否开启PAC", required = true)
     val pac: Boolean = false,
     @get:Schema(description = "是否是约束流水线", required = true)

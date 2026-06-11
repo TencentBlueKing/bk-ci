@@ -35,6 +35,7 @@ class PipelineBatchTaskDetailDao {
                     TASK_TYPE,
                     PIPELINE_ID,
                     PIPELINE_NAME,
+                    PIPELINE_CREATOR,
                     PAC,
                     CONSTRAINT,
                     SUB_PIPELINE,
@@ -51,6 +52,7 @@ class PipelineBatchTaskDetailDao {
                     detail.taskType.name,
                     detail.pipelineId,
                     detail.pipelineName,
+                    detail.pipelineCreator,
                     detail.pac,
                     detail.constraint,
                     detail.subPipeline,
@@ -72,6 +74,7 @@ class PipelineBatchTaskDetailDao {
         projectId: String,
         taskId: String,
         pipelineName: String? = null,
+        pipelineCreator: String? = null,
         status: PipelineBatchTaskDetailStatus? = null,
         pac: Boolean? = null,
         subPipeline: Boolean? = null,
@@ -85,6 +88,7 @@ class PipelineBatchTaskDetailDao {
                         projectId = projectId,
                         taskId = taskId,
                         pipelineName = pipelineName,
+                        pipelineCreator = pipelineCreator,
                         status = status,
                         pac = pac,
                         subPipeline = subPipeline,
@@ -100,6 +104,7 @@ class PipelineBatchTaskDetailDao {
         projectId: String,
         taskId: String,
         pipelineName: String? = null,
+        pipelineCreator: String? = null,
         status: PipelineBatchTaskDetailStatus? = null,
         pac: Boolean? = null,
         subPipeline: Boolean? = null,
@@ -116,6 +121,7 @@ class PipelineBatchTaskDetailDao {
                         projectId = projectId,
                         taskId = taskId,
                         pipelineName = pipelineName,
+                        pipelineCreator = pipelineCreator,
                         status = status,
                         pac = pac,
                         subPipeline = subPipeline,
@@ -270,6 +276,7 @@ class PipelineBatchTaskDetailDao {
         projectId: String,
         taskId: String,
         pipelineName: String? = null,
+        pipelineCreator: String? = null,
         status: PipelineBatchTaskDetailStatus? = null,
         pac: Boolean? = null,
         subPipeline: Boolean? = null,
@@ -283,6 +290,9 @@ class PipelineBatchTaskDetailDao {
             conditions.add(TASK_ID.eq(taskId))
             if (!pipelineName.isNullOrBlank()) {
                 conditions.add(PIPELINE_NAME.like("%$pipelineName%"))
+            }
+            if (!pipelineCreator.isNullOrBlank()) {
+                conditions.add(PIPELINE_CREATOR.like("%$pipelineCreator%"))
             }
             if (status != null) {
                 conditions.add(STATUS.eq(status.name))
@@ -314,6 +324,7 @@ class PipelineBatchTaskDetailDao {
                 taskType = PipelineBatchTaskType.valueOf(taskType),
                 pipelineId = pipelineId,
                 pipelineName = pipelineName,
+                pipelineCreator = pipelineCreator,
                 pac = pac,
                 constraint = constraint,
                 subPipeline = subPipeline,

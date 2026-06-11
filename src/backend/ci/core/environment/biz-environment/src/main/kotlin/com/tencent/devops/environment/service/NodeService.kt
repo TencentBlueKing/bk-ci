@@ -962,7 +962,13 @@ class NodeService @Autowired constructor(
                     nodeId = nodeId
                 )
             }
-            environmentPermissionService.createNode(userId, targetProjectId, nodeId, sourceNode.nodeName)
+
+            environmentPermissionService.createNode(
+                userId,
+                targetProjectId,
+                nodeId,
+                "${NodeStringIdUtils.getNodeStringId(sourceNode)}(${sourceNode.nodeIp})"
+            )
             environmentPermissionService.deleteNode(sourceProjectId, nodeId)
         }
         ActionAuditContext.current()
