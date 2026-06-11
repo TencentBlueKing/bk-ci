@@ -25,27 +25,36 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.pojo.common
+package com.tencent.devops.store.common.service
 
-import io.swagger.v3.oas.annotations.media.Schema
-import java.time.LocalDateTime
+import com.fasterxml.jackson.core.type.TypeReference
+import com.tencent.devops.common.api.util.JsonUtil
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
 
-@Schema(title = "插件功能白名单响应报文")
-data class AtomWhitelist(
-    @get:Schema(title = "白名单类型", required = true)
-    val whitelistType: String,
-    @get:Schema(title = "原子代码列表", required = true)
-    val atomCodes: List<String>,
-    @get:Schema(title = "描述", required = false)
-    val description: String? = null,
-    @get:Schema(title = "是否启用", required = true)
-    val enabled: Boolean,
-    @get:Schema(title = "创建者", required = false)
-    val creator: String? = null,
-    @get:Schema(title = "创建时间", required = false)
-    val createTime: LocalDateTime? = null,
-    @get:Schema(title = "修改者", required = false)
-    val modifier: String? = null,
-    @get:Schema(title = "更新时间", required = false)
-    val updateTime: LocalDateTime? = null
-)
+@Service
+class AtomWhitelistConfigService @Autowired constructor(
+    private val businessConfigService: BusinessConfigService
+) {
+    private val logger = LoggerFactory.getLogger(AtomWhitelistConfigService::class.java)
+
+    fun isAtomInWhitelist(atomCode: String, whitelistType: String): Boolean {
+        return try {
+            val configValue = businessConfigService.getConfigValue(
+                business = "ATOM",
+                feature = "ATOM_WHITELIST",
+                businessValue = whitelistType
+            )
+            val atomCodes = if (configValue != null) {
+                JsonUtil.to(configValue, object : TypeReference<List<String>>() {})
+            } else {
+                emptyList()
+            }
+            atomCodes.contains(atomCode)
+        } catch (ignored: Throwable) {
+            logger.warn("isAtomInWhitelist failed|atomCode=$atomCode|whitelistType=$whitelistType", ignored)
+            false
+        }
+    }
+}
