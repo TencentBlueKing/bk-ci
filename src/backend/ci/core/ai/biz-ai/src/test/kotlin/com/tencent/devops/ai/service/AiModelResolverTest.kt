@@ -10,7 +10,9 @@ import io.agentscope.core.model.OpenAIChatModel
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import kotlin.random.Random
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNotSame
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
@@ -98,5 +100,100 @@ class AiModelResolverTest {
         verify(exactly = 0) { modelFactory.create(any()) }
         verify(exactly = 1) { modelFactory.createSingleAttempt(primaryEffective) }
         verify(exactly = 1) { modelFactory.createSingleAttempt(backupEffective) }
+    }
+
+    @Test
+    fun `should reuse underlying platform model instances across multiple resolve calls`() {
+        val primaryOverride = AiLlmModelOverride(
+            id = "primary",
+            baseUrl = "https://primary.example.com",
+            modelName = "primary-model",
+            apiKey = "primary-key",
+            priority = 10
+        )
+        val backupOverride = AiLlmModelOverride(
+            id = "backup",
+            baseUrl = "https://backup.example.com",
+            modelName = "backup-model",
+            apiKey = "backup-key",
+            priority = 20
+        )
+        val properties = AiLlmProperties(models = listOf(backupOverride, primaryOverride))
+        val primaryEffective = primaryOverride.toEffective(properties)
+        val backupEffective = backupOverride.toEffective(properties)
+
+        every { userLlmConfigService.getEnabledModel("tester") } returns null
+        every { modelFactory.createSingleAttempt(primaryEffective) } returns mockk(relaxed = true)
+        every { modelFactory.createSingleAttempt(backupEffective) } returns mockk(relaxed = true)
+
+        val resolver = AiModelResolver(
+            properties = properties,
+            modelFactory = modelFactory,
+            userLlmConfigService = userLlmConfigService,
+            errorClassifier = errorClassifier
+        )
+
+        val first = resolver.resolve("tester")
+        val second = resolver.resolve("tester")
+        val third = resolver.resolve("tester")
+
+        assertEquals("primary -> backup", first.identifier)
+        assertEquals("primary -> backup", second.identifier)
+        assertEquals("primary -> backup", third.identifier)
+        assertNotSame(
+            first.model,
+            second.model,
+            "FailoverChatModel wrapper should be rebuilt per resolve"
+        )
+        verify(exactly = 1) { modelFactory.createSingleAttempt(primaryEffective) }
+        verify(exactly = 1) { modelFactory.createSingleAttempt(backupEffective) }
+    }
+
+    @Test
+    fun `should randomize order across multiple resolve calls for same priority models`() {
+        val aOverride = AiLlmModelOverride(
+            id = "a",
+            baseUrl = "https://a.example.com",
+            modelName = "a-model",
+            apiKey = "a-key",
+            priority = 1
+        )
+        val bOverride = AiLlmModelOverride(
+            id = "b",
+            baseUrl = "https://b.example.com",
+            modelName = "b-model",
+            apiKey = "b-key",
+            priority = 1
+        )
+        val properties = AiLlmProperties(models = listOf(aOverride, bOverride))
+        val aEffective = aOverride.toEffective(properties)
+        val bEffective = bOverride.toEffective(properties)
+
+        every { userLlmConfigService.getEnabledModel("tester") } returns null
+        every { modelFactory.createSingleAttempt(aEffective) } returns mockk(relaxed = true)
+        every { modelFactory.createSingleAttempt(bEffective) } returns mockk(relaxed = true)
+
+        val resolver = AiModelResolver(
+            properties = properties,
+            modelFactory = modelFactory,
+            userLlmConfigService = userLlmConfigService,
+            errorClassifier = errorClassifier,
+            random = Random(42)
+        )
+
+        val observedIdentifiers = (1..50)
+            .map { resolver.resolve("tester").identifier }
+            .toSet()
+
+        assertTrue(
+            observedIdentifiers.contains("a -> b"),
+            "expected to observe 'a -> b' across resolves, got $observedIdentifiers"
+        )
+        assertTrue(
+            observedIdentifiers.contains("b -> a"),
+            "expected to observe 'b -> a' across resolves, got $observedIdentifiers"
+        )
+        verify(exactly = 1) { modelFactory.createSingleAttempt(aEffective) }
+        verify(exactly = 1) { modelFactory.createSingleAttempt(bEffective) }
     }
 }

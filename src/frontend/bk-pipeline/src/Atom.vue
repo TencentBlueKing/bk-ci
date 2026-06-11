@@ -155,29 +155,11 @@
                     <span>{{ t("stop") }}</span>
                 </span>
             </template>
-            <span class="atom-operate-area">
-                <span
-                    v-if="atom.canRetry && !isBusy"
-                    @click.stop="skipOrRetry(false)"
-                >
-                    {{ t("retry") }}
-                </span>
-                <span
-                    v-if="atom.canSkip && !isBusy"
-                    @click.stop="skipOrRetry(true)"
-                >
-                    {{ t("SKIP") }}
-                </span>
+            <span
+                v-if="showExecuteTime"
+                class="atom-operate-area"
+            >
                 <bk-popover
-                    v-if="
-                        !isSkip &&
-                            !isWaiting &&
-                            atom.timeCost &&
-                            !atom.canSkip &&
-                            !atom.canRetry &&
-                            !isExecuting &&
-                            !reactiveData.editable
-                    "
                     :delay="[300, 0]"
                     placement="top"
                     :disabled="!atom.timeCost.executeCost"
@@ -190,6 +172,14 @@
                     </template>
                 </bk-popover>
             </span>
+            <hover-slide-btn
+                v-if="atomOperateList.length"
+                :actions="atomOperateList"
+                :icon-size="9"
+                :badge-size="12"
+                :action-width="52"
+                @action-click="handleAtomOperateClick"
+            />
 
             <Logo
                 v-if="reactiveData.editable && !atom.isError"
@@ -236,6 +226,7 @@
 
 <script>
     import { bkCheckbox, bkPopover } from '@tencent/bk-magic-vue'
+    import HoverSlideBtn from './HoverSlideBtn'
     import Logo from './Logo'
     import StatusIcon from './StatusIcon'
     import {
@@ -265,6 +256,7 @@
         components: {
             StatusIcon,
             Logo,
+            HoverSlideBtn,
             bkPopover,
             bkCheckbox
         },
@@ -435,6 +427,39 @@
                 return (
                     Array.isArray(this.atom.pauseReviewers) && this.atom.pauseReviewers.join(';')
                 )
+            },
+            showExecuteTime () {
+                return !this.isSkip
+                    && !this.isWaiting
+                    && this.atom.timeCost
+                    && !this.isBusy
+                    && !this.isExecuting
+                    && !this.reactiveData.editable
+            },
+            atomOperateList () {
+                if (this.isBusy) return []
+                return [
+                    {
+                        key: 'retry',
+                        label: this.t('retry'),
+                        icon: 'refresh-line',
+                        color: '#E1ECFF',
+                        textColor: '#3A84FF',
+                        hoverTextColor: '#699DF4',
+                        skip: false,
+                        visible: this.atom.canRetry
+                    },
+                    {
+                        key: 'skip',
+                        label: this.t('SKIP'),
+                        icon: 'cc-skip',
+                        color: '#DAF6E5',
+                        textColor: '#2CAF5E',
+                        hoverTextColor: '#65C389',
+                        skip: true,
+                        visible: this.atom.canSkip
+                    }
+                ].filter((action) => action.visible)
             },
             formatTime () {
                 try {
@@ -640,6 +665,10 @@
                 })
             },
 
+            handleAtomOperateClick (action) {
+                this.skipOrRetry(action.skip)
+            },
+
             async skipOrRetry (skip = false) {
                 if (this.isBusy) return
                 try {
@@ -838,11 +867,21 @@
   .atom-execounter {
     color: $primaryColor;
     font-size: 12px;
+    flex-shrink: 0;
+    margin-right: 8px;
   }
+
+  .spin-icon {
+    margin-right: 8px;
+  }
+
   .atom-operate-area{
     margin: 0 8px 0 0;
     color: $primaryColor;
     font-size: 12px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
   }
 
   .atom-reviewing-tips {

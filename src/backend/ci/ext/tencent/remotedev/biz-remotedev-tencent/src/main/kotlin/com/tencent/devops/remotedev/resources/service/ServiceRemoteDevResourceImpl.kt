@@ -1,5 +1,6 @@
 package com.tencent.devops.remotedev.resources.service
 
+import com.tencent.devops.common.api.constant.CommonMessageCode.PARAMETER_ILLEGAL_ERROR
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
@@ -10,12 +11,15 @@ import com.tencent.devops.common.web.constant.BkApiHandleType
 import com.tencent.devops.remotedev.api.service.ServiceRemoteDevResource
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.config.async.AsyncExecute
+import com.tencent.devops.remotedev.pojo.CreateOpenClawData
+import com.tencent.devops.remotedev.pojo.CreateOpenClawDataResp
 import com.tencent.devops.remotedev.pojo.IWhiteList
 import com.tencent.devops.remotedev.pojo.OperateCvmData
 import com.tencent.devops.remotedev.pojo.OperateCvmDataType
 import com.tencent.devops.remotedev.pojo.ProjectWorkspace
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
 import com.tencent.devops.remotedev.pojo.RemoteDevGitType
+import com.tencent.devops.remotedev.pojo.TaskStatusResp
 import com.tencent.devops.remotedev.pojo.UserNotifyInfo
 import com.tencent.devops.remotedev.pojo.UserOnePassword
 import com.tencent.devops.remotedev.pojo.WhiteListType
@@ -29,6 +33,7 @@ import com.tencent.devops.remotedev.pojo.WorkspaceRebuildReq
 import com.tencent.devops.remotedev.pojo.WorkspaceRegistration
 import com.tencent.devops.remotedev.pojo.Workspace
 import com.tencent.devops.remotedev.pojo.WorkspaceSearch
+import com.tencent.devops.remotedev.pojo.WorkspaceStartCloudDetail
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.WorkspaceUpgradeReq
 import com.tencent.devops.remotedev.pojo.async.AsyncNotify
@@ -74,6 +79,7 @@ import com.tencent.devops.remotedev.resources.op.OpProjectWorkspaceResourceImpl
 import com.tencent.devops.remotedev.service.BKItsmService
 import com.tencent.devops.remotedev.service.CoffeeAIService
 import com.tencent.devops.remotedev.service.DesktopWorkspaceService
+import com.tencent.devops.remotedev.service.OpenClawService
 import com.tencent.devops.remotedev.service.PermissionService
 import com.tencent.devops.remotedev.service.ProjectStrategyService
 import com.tencent.devops.remotedev.service.RemotedevProjectService
@@ -104,6 +110,7 @@ import com.tencent.devops.remotedev.service.workspace.NotifyControl
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
 import com.tencent.devops.repository.pojo.AuthorizeResult
 import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
+import jakarta.ws.rs.core.Response
 import java.net.URLDecoder
 import org.slf4j.LoggerFactory
 import org.springframework.cloud.stream.function.StreamBridge
@@ -142,12 +149,14 @@ class ServiceRemoteDevResourceImpl(
     private val projectStrategyService: ProjectStrategyService,
     private val tGitBindService: TGitService,
     private val gitTransfer: RemoteDevGitTransfer,
-    private val coffeeAIService: CoffeeAIService
+    private val coffeeAIService: CoffeeAIService,
+    private val openClawService: OpenClawService
 ) : ServiceRemoteDevResource {
     companion object {
         private const val MAX_REFRESH_SIZE = 100
         private const val DEFAULT_PAGE_SIZE = 100
         private const val MAX_PAGE_SIZE = 1000
+        private const val MAX_DELETE_DELAY_SECONDS = 24 * 60 * 60
         private val logger = LoggerFactory.getLogger(
             OpProjectWorkspaceResourceImpl::class.java
         )
@@ -376,7 +385,21 @@ class ServiceRemoteDevResourceImpl(
         )
     }
 
-    override fun deleteProjectWorkspace(userId: String, projectId: String, workspaceName: String): Result<Boolean> {
+    override fun deleteProjectWorkspace(
+        userId: String,
+        projectId: String,
+        workspaceName: String,
+        delaySeconds: Int?
+    ): Result<Boolean> {
+        if (delaySeconds != null && (delaySeconds < 1 || delaySeconds > MAX_DELETE_DELAY_SECONDS)) {
+            throw ErrorCodeException(
+                errorCode = PARAMETER_ILLEGAL_ERROR,
+                statusCode = Response.Status.BAD_REQUEST.statusCode,
+                defaultMessage = "delaySeconds must be >= 1 and <= $MAX_DELETE_DELAY_SECONDS (24h), got $delaySeconds",
+                params = arrayOf("delaySeconds", "must be >= 1 and <= $MAX_DELETE_DELAY_SECONDS (24h)")
+            )
+        }
+
         val record = workspaceService.getWorkspaceRecord(workspaceName = workspaceName)
         if (record == null || !record.ownerType.projectUse() || record.projectId != projectId) {
             logger.warn("delete project workspace with invalid workspace type: $userId|$projectId|$workspaceName")
@@ -387,7 +410,8 @@ class ServiceRemoteDevResourceImpl(
             deleteControl.deleteWorkspace(
                 userId = userId,
                 workspaceName = workspaceName,
-                needPermission = !permissionService.hasUserManager(userId, projectId)
+                needPermission = !permissionService.hasUserManager(userId, projectId),
+                delaySeconds = delaySeconds
             )
         )
     }
@@ -1010,8 +1034,7 @@ class ServiceRemoteDevResourceImpl(
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.BASE_ERROR.errorCode,
                 params = arrayOf(
-                    "instanceIds size ${instanceIds.size}" +
-                        " exceeds max $MAX_REFRESH_SIZE"
+                    "instanceIds size ${instanceIds.size} exceeds max $MAX_REFRESH_SIZE"
                 )
             )
         }
@@ -1061,5 +1084,61 @@ class ServiceRemoteDevResourceImpl(
                 search = search
             )
         )
+    }
+
+    override fun batchQueryThumbnailWorkspaces(
+        userId: String,
+        enable: Boolean,
+        page: Int,
+        pageSize: Int
+    ): Result<Page<String>> {
+        logger.info(
+            "batchQueryThumbnailWorkspaces |$userId|enable=$enable|page=$page|pageSize=$pageSize"
+        )
+        return Result(
+            workspaceRecordService.batchQueryThumbnailWorkspaces(
+                enable = enable,
+                page = page,
+                pageSize = pageSize
+            )
+        )
+    }
+
+    override fun enableWorkspaceThumbnail(
+        userId: String,
+        workspaceName: String,
+        enable: Boolean
+    ): Result<Boolean> {
+        logger.info(
+            "enableWorkspaceThumbnail |$userId|$workspaceName|enable=$enable"
+        )
+        return Result(
+            workspaceRecordService.enableThumbnail(
+                workspaceName = workspaceName,
+                enable = enable
+            )
+        )
+    }
+
+    override fun startCloudWorkspaceDetail(
+        userId: String,
+        workspaceName: String?,
+        envHashId: String?
+    ): Result<WorkspaceStartCloudDetail?> {
+        return Result(workspaceService.startCloudWorkspaceDetail(userId, workspaceName, envHashId))
+    }
+
+    override fun createOpenClaw(
+        userId: String,
+        data: CreateOpenClawData
+    ): Result<CreateOpenClawDataResp> {
+        return Result(openClawService.createOpenClaw(userId, data))
+    }
+
+    override fun openClawTaskStatus(
+        userId: String,
+        taskId: String
+    ): Result<TaskStatusResp> {
+        return Result(openClawService.getTaskStatus(taskId))
     }
 }

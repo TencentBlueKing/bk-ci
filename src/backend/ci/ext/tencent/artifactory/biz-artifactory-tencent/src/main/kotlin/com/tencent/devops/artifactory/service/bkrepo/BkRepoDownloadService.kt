@@ -58,6 +58,7 @@ import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.MessageUtil
+import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.archive.client.BkRepoClient
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_APP_TITLE
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_BUNDLE_IDENTIFIER
@@ -96,6 +97,7 @@ import jakarta.ws.rs.core.Response
 import java.net.URLEncoder
 import java.util.regex.Pattern
 import okhttp3.HttpUrl.Companion.toHttpUrl
+import okhttp3.Request
 import org.slf4j.LoggerFactory
 import org.springframework.util.DigestUtils
 
@@ -121,11 +123,13 @@ open class BkRepoDownloadService(
         projectId: String,
         artifactoryType: ArtifactoryType,
         path: String,
-        ttl: Int
+        ttl: Int,
+        authorizedUserList: List<String>?
     ): Url {
         logger.info(
             "outerBkrepoDownloadUrl, creatorId: $creatorId, userId:$userId, projectId: $projectId, " +
-                    "artifactoryType: $artifactoryType, path: $path, ttl: $ttl"
+                    "artifactoryType: $artifactoryType, path: $path, ttl: $ttl, " +
+                    "authorizedUserList: $authorizedUserList"
         )
         val normalizedPath = getNormalizePath(path, artifactoryType, creatorId ?: userId, projectId)
         val url = bkRepoService.externalDownloadUrl(
@@ -134,7 +138,8 @@ open class BkRepoDownloadService(
             projectId = projectId,
             artifactoryType = artifactoryType,
             fullPath = normalizedPath,
-            ttl = ttl
+            ttl = ttl,
+            authorizedUserList = authorizedUserList ?: emptyList()
         )
         // 审计
         audit(
@@ -200,6 +205,23 @@ open class BkRepoDownloadService(
             path = argPath,
             ttl = ttl
         )
+
+        // 对IPA下载链接发起HEAD请求，校验合规状态
+        try {
+            val headRequest = Request.Builder().url(ipaExternalDownloadUrl.url).head().build()
+            OkhttpUtils.doShortHttp(headRequest).use { headResponse ->
+                if (headResponse.code == 451) {
+                    throw CustomException(
+                        Response.Status.UNAVAILABLE_FOR_LEGAL_REASONS,
+                        ""
+                    )
+                }
+            }
+        } catch (e: CustomException) {
+            throw e
+        } catch (e: Exception) {
+            logger.warn("HEAD request to check IPA download URL failed, continue normally", e)
+        }
 
         // 获取IPA属性
         val fileProperties = bkRepoClient.listMetadata(

@@ -17,6 +17,7 @@
             :data="versionList"
             :outer-border="false"
             :header-border="false"
+            :max-height="521"
             :header-cell-style="{ background: '#fff' }"
             :pagination="pagination"
             @page-change="(page) => $emit('pageChanged', page)"

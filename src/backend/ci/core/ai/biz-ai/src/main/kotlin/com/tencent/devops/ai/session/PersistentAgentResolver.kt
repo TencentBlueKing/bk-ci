@@ -19,7 +19,8 @@ class PersistentAgentResolver(
     private val sessionManager: ThreadSessionManager,
     private val session: Session,
     private val serverSideMemory: Boolean,
-    private val sessionContext: AgentSessionContext
+    private val sessionContext: AgentSessionContext,
+    private val llmConfigBindingTracker: AiLlmConfigBindingTracker
 ) : AgentResolver {
 
     /** 根据 agentId 和 threadId 解析或创建 Agent 实例，并从 DB 恢复状态。 */
@@ -46,6 +47,18 @@ class PersistentAgentResolver(
             }
         }
 
+        val userId = sessionContext.getUserId(threadId)
+        if (!userId.isNullOrBlank()) {
+            if (llmConfigBindingTracker.invalidateIfStale(threadId, userId)) {
+                sessionManager.removeSession(threadId)
+                llmConfigBindingTracker.evict(threadId)
+                logger.info(
+                    "[PersistentResolver] LLM config changed, evicted session: threadId={}",
+                    threadId
+                )
+            }
+        }
+
         val hadSession = sessionManager.getSession(threadId).isPresent
         val agent = sessionManager.getOrCreateAgent(
             threadId, agentId
@@ -61,7 +74,12 @@ class PersistentAgentResolver(
         }
 
         sessionContext.registerAgentThread(agent, threadId)
-        val userId = sessionContext.getUserId(threadId)
+        if (!userId.isNullOrBlank()) {
+            llmConfigBindingTracker.bind(
+                threadId,
+                llmConfigBindingTracker.resolveFingerprint(userId)
+            )
+        }
         logger.info(
             "[PersistentResolver] resolveAgent: " +
                 "threadId={}, agentId={}, " +

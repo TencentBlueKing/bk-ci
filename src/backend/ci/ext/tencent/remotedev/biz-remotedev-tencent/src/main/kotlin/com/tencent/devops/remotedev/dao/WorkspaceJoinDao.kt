@@ -9,6 +9,7 @@ import com.tencent.devops.model.remotedev.tables.TWindowsResourceType
 import com.tencent.devops.model.remotedev.tables.TWindowsResourceZone
 import com.tencent.devops.model.remotedev.tables.TWorkspace
 import com.tencent.devops.model.remotedev.tables.TWorkspaceLabels
+import com.tencent.devops.model.remotedev.tables.TWorkspaceRecordTicket
 import com.tencent.devops.model.remotedev.tables.TWorkspaceShared
 import com.tencent.devops.model.remotedev.tables.TWorkspaceWindows
 import com.tencent.devops.remotedev.dao.WorkspaceDao.Companion.workspaceWithWindowsMapper
@@ -21,6 +22,7 @@ import com.tencent.devops.remotedev.pojo.WorkspaceShared
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
 import com.tencent.devops.remotedev.pojo.common.QueryType
+import com.tencent.devops.remotedev.pojo.record.WorkspaceRecordTicketType
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Field
@@ -693,6 +695,47 @@ class WorkspaceJoinDao {
                 TWorkspaceShared.T_WORKSPACE_SHARED.ASSIGN_TYPE
                     .`in`(assignTypes)
             )
+    }
+
+    /**
+     * 分页查询指定 ENABLE 状态下 THUMBNAIL 类型的实例名称列表
+     * （仅返回未删除的实例，即 T_WORKSPACE.STATUS != DELETED.ordinal）
+     */
+    fun fetchThumbnailWorkspaceNames(
+        dslContext: DSLContext,
+        enable: Boolean,
+        limit: Int,
+        offset: Int
+    ): List<String> {
+        val t1 = TWorkspaceRecordTicket.T_WORKSPACE_RECORD_TICKET
+        val t2 = TWorkspace.T_WORKSPACE
+        return dslContext.select(t1.WORKSPACE_NAME)
+            .from(t1)
+            .innerJoin(t2).on(t1.WORKSPACE_NAME.eq(t2.NAME))
+            .where(t1.TYPE.eq(WorkspaceRecordTicketType.THUMBNAIL.name))
+            .and(t1.ENABLE.eq(ByteUtils.bool2Byte(enable)))
+            .and(t2.STATUS.notEqual(WorkspaceStatus.DELETED.ordinal))
+            .orderBy(t1.WORKSPACE_NAME.asc())
+            .limit(limit).offset(offset)
+            .fetch(t1.WORKSPACE_NAME)
+    }
+
+    /**
+     * 统计指定 ENABLE 状态下 THUMBNAIL 类型的未删除实例总数
+     */
+    fun countThumbnailWorkspaces(
+        dslContext: DSLContext,
+        enable: Boolean
+    ): Long {
+        val t1 = TWorkspaceRecordTicket.T_WORKSPACE_RECORD_TICKET
+        val t2 = TWorkspace.T_WORKSPACE
+        return dslContext.selectCount()
+            .from(t1)
+            .innerJoin(t2).on(t1.WORKSPACE_NAME.eq(t2.NAME))
+            .where(t1.TYPE.eq(WorkspaceRecordTicketType.THUMBNAIL.name))
+            .and(t1.ENABLE.eq(ByteUtils.bool2Byte(enable)))
+            .and(t2.STATUS.notEqual(WorkspaceStatus.DELETED.ordinal))
+            .fetchOne(0, Long::class.java) ?: 0L
     }
 
     companion object {

@@ -2981,6 +2981,17 @@ class PipelineBuildFacadeService(
         )
     }
 
+    fun getByTaskId(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        taskId: String
+    ) = pipelineTaskService.getByTaskId(
+        projectId = projectId,
+        buildId = buildId,
+        taskId = taskId
+    )
+
     fun buildRestart(
         userId: String,
         projectId: String,

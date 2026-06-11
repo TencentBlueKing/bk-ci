@@ -137,6 +137,7 @@ import com.tencent.devops.store.pojo.common.MarketMainItem
 import com.tencent.devops.store.pojo.common.MarketMainItemLabel
 import com.tencent.devops.store.pojo.common.StoreErrorCodeInfo
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
+import com.tencent.devops.store.pojo.common.enums.ServiceScopeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.statistic.StoreDailyStatistic
 import com.tencent.devops.store.pojo.common.version.StoreShowVersionInfo
@@ -372,7 +373,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                             code = atomCode,
                             version = it[tAtom.VERSION] as String,
                             status = AtomStatusEnum.getAtomStatus((it[tAtom.ATOM_STATUS] as Byte).toInt()),
-                            type = it[tAtom.JOB_TYPE] as String,
+                            type = StoreTypeEnum.ATOM.name,
                             rdType = AtomTypeEnum.getAtomType((it[tAtom.ATOM_TYPE] as Byte).toInt()),
                             classifyCode = if (classifyMap.containsKey(classifyId)) classifyMap[classifyId] else "",
                             category = AtomCategoryEnum.getAtomCategory((it[tAtom.CATEGROY] as Byte).toInt()),
@@ -418,7 +419,8 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         userId: String,
         page: Int?,
         pageSize: Int?,
-        urlProtocolTrim: Boolean
+        urlProtocolTrim: Boolean,
+        serviceScope: ServiceScopeEnum?
     ): Result<List<MarketMainItem>> {
         val result = mutableListOf<MarketMainItem>()
         // 获取用户组织架构
@@ -473,8 +475,8 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
             )
         )
 
-        val classifyList = marketAtomClassifyDao.getAllAtomClassify(dslContext)
-        classifyList?.forEach {
+        val classifyList = marketAtomClassifyDao.getAllAtomClassify(dslContext, serviceScope)
+        classifyList.forEach {
             val classifyCode = it[KEY_CLASSIFY_CODE] as String
             if (classifyCode != "trigger") {
                 val classifyName = it[KEY_CLASSIFY_NAME] as String

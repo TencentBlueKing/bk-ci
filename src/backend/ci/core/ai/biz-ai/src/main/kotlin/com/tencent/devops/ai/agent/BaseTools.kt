@@ -286,7 +286,7 @@ abstract class BaseTools(
     companion object {
         private val schemaCache = ConcurrentHashMap<Class<*>, Map<String, String>>()
         private const val MAX_SCHEMA_DEPTH = 3
-        private const val MAX_TOOL_OUTPUT_CHARS = 48_000
+        private const val MAX_TOOL_OUTPUT_CHARS = 150_000
         private const val TRUNCATION_SUFFIX = "...(已截断)"
     }
 }
