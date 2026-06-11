@@ -823,7 +823,7 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
                 installFlag = marketItem.flag,
                 latestVersion = latestVersion,
                 // 组件级共享扩展(含安装路径installPath等)，取自extBaseFeatureInfo
-                extData = marketItem.extData,
+                extData = marketItem.extData?.filterKeys { it != KEY_URL_SCHEME }?.toMap(),
                 versionInfos = versions
             )
         }
