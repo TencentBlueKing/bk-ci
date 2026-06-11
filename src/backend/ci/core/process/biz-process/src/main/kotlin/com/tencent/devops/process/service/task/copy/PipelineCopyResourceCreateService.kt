@@ -3,9 +3,12 @@ package com.tencent.devops.process.service.task.copy
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.auth.api.service.ServiceResourceMemberResource
 import com.tencent.devops.common.api.util.DHUtil
 import com.tencent.devops.common.api.util.HashUtil
+import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.PipelineInstanceTypeEnum
 import com.tencent.devops.common.pipeline.enums.VersionStatus
@@ -53,6 +56,7 @@ import com.tencent.devops.store.api.template.ServiceTemplateResource
 import com.tencent.devops.ticket.api.ServiceCredentialResource
 import com.tencent.devops.ticket.pojo.CredentialCreate
 import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.util.Base64
@@ -63,6 +67,7 @@ import java.util.Base64
 @Service
 class PipelineCopyResourceCreateService @Autowired constructor(
     private val client: Client,
+    private val clientTokenService: ClientTokenService,
     private val dslContext: DSLContext,
     private val pipelineGroupDao: PipelineGroupDao,
     private val pipelineLabelDao: PipelineLabelDao,
@@ -147,6 +152,13 @@ class PipelineCopyResourceCreateService @Autowired constructor(
             resourceName = credentialId,
             result = createResult
         )
+        copyResourceGroupMembersSafely(
+            sourceProjectId = sourceProjectId,
+            targetProjectId = targetProjectId,
+            resourceType = AuthResourceType.TICKET_CREDENTIAL.value,
+            sourceResourceCode = credentialId,
+            targetResourceCode = credentialId
+        )
         return PipelineCopyResourceBasicInfo(
             resourceId = credentialId,
             resourceName = credentialId
@@ -183,6 +195,13 @@ class PipelineCopyResourceCreateService @Autowired constructor(
             resourceName = repoName,
             result = createResult
         )
+        copyResourceGroupMembersSafely(
+            sourceProjectId = sourceProjectId,
+            targetProjectId = targetProjectId,
+            resourceType = AuthResourceType.CODE_REPERTORY.value,
+            sourceResourceCode = repository.repoHashId!!,
+            targetResourceCode = targetRepoHashId.hashId
+        )
         return PipelineCopyResourceBasicInfo(
             resourceId = targetRepoHashId.hashId,
             resourceName = repoName
@@ -217,6 +236,13 @@ class PipelineCopyResourceCreateService @Autowired constructor(
             resourceName = sourceNode.displayName ?: sourceNode.name,
             result = transferResult
         )
+        copyResourceGroupMembersSafely(
+            sourceProjectId = sourceProjectId,
+            targetProjectId = targetProjectId,
+            resourceType = AuthResourceType.ENVIRONMENT_ENV_NODE.value,
+            sourceResourceCode = sourceNode.nodeHashId,
+            targetResourceCode = sourceNode.nodeHashId
+        )
         return PipelineCopyResourceBasicInfo(
             resourceId = sourceNode.agentHashId!!,
             resourceName = sourceNode.displayName ?: sourceNode.name
@@ -249,6 +275,13 @@ class PipelineCopyResourceCreateService @Autowired constructor(
             targetProjectId = targetProjectId,
             resourceName = sourceNode.displayName ?: sourceNode.name,
             result = transferResult
+        )
+        copyResourceGroupMembersSafely(
+            sourceProjectId = sourceProjectId,
+            targetProjectId = targetProjectId,
+            resourceType = AuthResourceType.ENVIRONMENT_ENV_NODE.value,
+            sourceResourceCode = sourceNode.nodeHashId,
+            targetResourceCode = sourceNode.nodeHashId
         )
         return PipelineCopyResourceBasicInfo(
             // 构建节点,流水线使用的agentHashId
@@ -288,6 +321,13 @@ class PipelineCopyResourceCreateService @Autowired constructor(
                 ),
                 pipelineIds = if (sourceView.viewType == PipelineViewType.STATIC) emptyList() else null
             )
+        )
+        copyResourceGroupMembersSafely(
+            sourceProjectId = sourceProjectId,
+            targetProjectId = targetProjectId,
+            resourceType = AuthResourceType.PIPELINE_GROUP.value,
+            sourceResourceCode = HashUtil.encodeLongId(sourceView.id),
+            targetResourceCode = HashUtil.encodeLongId(targetViewId)
         )
         return PipelineCopyResourceBasicInfo(
             resourceId = HashUtil.encodeLongId(targetViewId),
@@ -395,6 +435,13 @@ class PipelineCopyResourceCreateService @Autowired constructor(
             resourceName = sourceEnv.name,
             result = createResult
         )
+        copyResourceGroupMembersSafely(
+            sourceProjectId = sourceProjectId,
+            targetProjectId = targetProjectId,
+            resourceType = AuthResourceType.ENVIRONMENT_ENVIRONMENT.value,
+            sourceResourceCode = sourceEnvHashId,
+            targetResourceCode = envId.hashId
+        )
         return PipelineCopyResourceBasicInfo(
             resourceId = envId.hashId,
             resourceName = sourceEnv.name
@@ -425,6 +472,13 @@ class PipelineCopyResourceCreateService @Autowired constructor(
                 targetProjectId = targetProjectId,
                 sourceEnvHashId = sourceEnvHashId
             )
+        )
+        copyResourceGroupMembersSafely(
+            sourceProjectId = sourceProjectId,
+            targetProjectId = targetProjectId,
+            resourceType = AuthResourceType.ENVIRONMENT_ENVIRONMENT.value,
+            sourceResourceCode = sourceEnvHashId,
+            targetResourceCode = envId.hashId
         )
         return PipelineCopyResourceBasicInfo(
             resourceId = envId.hashId,
@@ -481,6 +535,13 @@ class PipelineCopyResourceCreateService @Autowired constructor(
             targetProjectId = targetProjectId,
             targetPipelineId = targetPipelineId,
             resourceMap = resourceMap
+        )
+        copyResourceGroupMembersSafely(
+            sourceProjectId = sourceProjectId,
+            targetProjectId = targetProjectId,
+            resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
+            sourceResourceCode = sourcePipelineId,
+            targetResourceCode = targetPipelineId
         )
 
         return PipelineCopyResourceBasicInfo(
@@ -727,5 +788,34 @@ class PipelineCopyResourceCreateService @Autowired constructor(
             )
         }
         return result.data!!
+    }
+
+    private fun copyResourceGroupMembersSafely(
+        sourceProjectId: String,
+        targetProjectId: String,
+        resourceType: String,
+        sourceResourceCode: String,
+        targetResourceCode: String
+    ) {
+        try {
+            client.get(ServiceResourceMemberResource::class).copyResourceGroupMembers(
+                token = clientTokenService.getSystemToken() ?: "",
+                sourceProjectCode = sourceProjectId,
+                resourceType = resourceType,
+                sourceResourceCode = sourceResourceCode,
+                targetProjectCode = targetProjectId,
+                targetResourceCode = targetResourceCode
+            )
+        } catch (ignored: Exception) {
+            logger.warn(
+                "copy resource group members failed|$sourceProjectId|$targetProjectId|" +
+                    "$resourceType|$sourceResourceCode|$targetResourceCode",
+                ignored
+            )
+        }
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(PipelineCopyResourceCreateService::class.java)
     }
 }

@@ -749,6 +749,64 @@ class RbacPermissionResourceMemberService(
         )
     }
 
+    override fun copyResourceGroupMembers(
+        sourceProjectCode: String,
+        targetProjectCode: String,
+        resourceType: String,
+        sourceResourceCode: String,
+        targetResourceCode: String
+    ): Boolean {
+        logger.info(
+            "[RBAC-IAM] copy resource group members|$sourceProjectCode|$targetProjectCode|" +
+                "$resourceType|$sourceResourceCode|$targetResourceCode"
+        )
+        val sourceGroups = authResourceGroupDao.listByResourceCode(
+            dslContext = dslContext,
+            projectCode = sourceProjectCode,
+            resourceType = resourceType,
+            resourceCode = sourceResourceCode
+        )
+        if (sourceGroups.isEmpty()) {
+            return true
+        }
+        val now = LocalDateTime.now()
+        sourceGroups.forEach { sourceGroup ->
+            try {
+                val targetIamGroupId = roleCodeToIamGroupId(
+                    projectCode = targetProjectCode,
+                    resourceType = resourceType,
+                    resourceCode = targetResourceCode,
+                    roleCode = sourceGroup.groupCode
+                )
+                val sourceMembers = authResourceGroupMemberDao.listResourceGroupMember(
+                    dslContext = dslContext,
+                    projectCode = sourceProjectCode,
+                    iamGroupId = sourceGroup.relationId.toInt(),
+                    minExpiredTime = now
+                )
+                sourceMembers.forEach { member ->
+                    try {
+                        addGroupMember(
+                            projectCode = targetProjectCode,
+                            memberId = member.memberId,
+                            memberType = member.memberType,
+                            expiredAt = member.expiredTime.timestamp(),
+                            iamGroupId = targetIamGroupId
+                        )
+                    } catch (ignored: Exception) {
+                        logger.warn(
+                            "copy single member failed|${sourceGroup.groupCode}|${member.memberId}",
+                            ignored
+                        )
+                    }
+                }
+            } catch (ignored: Exception) {
+                logger.warn("copy group failed|${sourceGroup.groupCode}", ignored)
+            }
+        }
+        return true
+    }
+
     private fun getAllRoleGroupMembersV2(
         iamGroupId: Int
     ): List<RoleGroupMemberInfo> {

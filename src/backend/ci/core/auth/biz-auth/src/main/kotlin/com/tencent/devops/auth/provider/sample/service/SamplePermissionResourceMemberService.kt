@@ -114,4 +114,12 @@ class SamplePermissionResourceMemberService : PermissionResourceMemberService {
         projectCode: String,
         memberId: String
     ): List<Int> = emptyList()
+
+    override fun copyResourceGroupMembers(
+        sourceProjectCode: String,
+        targetProjectCode: String,
+        resourceType: String,
+        sourceResourceCode: String,
+        targetResourceCode: String
+    ): Boolean = true
 }
