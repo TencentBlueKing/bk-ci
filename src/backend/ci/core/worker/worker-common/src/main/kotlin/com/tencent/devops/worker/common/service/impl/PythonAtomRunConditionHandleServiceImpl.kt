@@ -75,15 +75,12 @@ class PythonAtomRunConditionHandleServiceImpl : AtomRunConditionHandleService {
             )
             return null
         }
-        // 根据runtimeVersion确定Python命令，支持python3.x场景
-        val pythonCmd = when {
-            runtimeVersion.startsWith("python3") -> runtimeVersion
-            runtimeVersion.startsWith("python2") -> runtimeVersion
-            else -> "python"
-        }
+        // 根据环境中实际可用的Python命令确定使用哪个
+        // 优先级：python3 > python > python2（更现代的版本优先）
+        val (pythonCmd, pythonVersion) = listOf("python3", "python", "python2")
+            .mapNotNull { cmd -> getPythonVersion(cmd)?.let { cmd to it } }
+            .firstOrNull() ?: (runtimeVersion to null)
         logger.info("prepareRunEnv pythonCmd:$pythonCmd, runtimeVersion:$runtimeVersion")
-        // 验证Python命令是否可用，同时获取版本信息
-        val pythonVersion = getPythonVersion(pythonCmd)
         if (pythonVersion == null) {
             logger.warn("prepareRunEnv python command[$pythonCmd] is not available, fallback to system env")
             LoggerService.addWarnLine("Python command [$pythonCmd] is not available, skip venv creation")
