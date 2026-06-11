@@ -187,11 +187,7 @@
                     const res = await this.$store.dispatch('environment/getUserImateList', {
                         projectId: this.projectId
                     })
-                    if (res && res.data) {
-                        this.allNodeList = res.data || []
-                    } else {
-                        this.allNodeList = []
-                    }
+                    this.allNodeList = res || []
                 } catch (err) {
                     console.error(err)
                     this.allNodeList = []
