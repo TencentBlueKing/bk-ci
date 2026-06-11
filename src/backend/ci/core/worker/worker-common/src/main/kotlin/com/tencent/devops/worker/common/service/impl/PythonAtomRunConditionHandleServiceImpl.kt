@@ -76,14 +76,32 @@ class PythonAtomRunConditionHandleServiceImpl : AtomRunConditionHandleService {
             return null
         }
         // 根据环境中实际可用的Python命令确定使用哪个
-        // 优先级：python3 > python > python2（更现代的版本优先）
-        val (pythonCmd, pythonVersion) = listOf("python3", "python", "python2")
-            .mapNotNull { cmd -> getPythonVersion(cmd)?.let { cmd to it } }
-            .firstOrNull() ?: (runtimeVersion to null)
+        // runtimeVersion 可能是 "python", "python3", "python3.11", "python2" 等
+        // 优先使用配置的版本，如果不可用则尝试其他候选命令
+        val (pythonCmd, pythonVersion) = when {
+            runtimeVersion.startsWith("python3") -> {
+                // 优先使用 python3，如果不可用则尝试 python
+                getPythonVersion("python3")?.let { "python3" to it }
+                    ?: getPythonVersion("python")?.let { "python" to it }
+                    ?: runtimeVersion to null
+            }
+            runtimeVersion.startsWith("python2") -> {
+                // 优先使用 python2，如果不可用则尝试 python
+                getPythonVersion("python2")?.let { "python2" to it }
+                    ?: getPythonVersion("python")?.let { "python" to it }
+                    ?: runtimeVersion to null
+            }
+            else -> {
+                // 默认情况，优先使用 python，如果不可用则尝试 python3
+                getPythonVersion("python")?.let { "python" to it }
+                    ?: getPythonVersion("python3")?.let { "python3" to it }
+                    ?: "python" to null
+            }
+        }
         logger.info("prepareRunEnv pythonCmd:$pythonCmd, runtimeVersion:$runtimeVersion")
         if (pythonVersion == null) {
-            logger.warn("prepareRunEnv python command[$pythonCmd] is not available, fallback to system env")
-            LoggerService.addWarnLine("Python command [$pythonCmd] is not available, skip venv creation")
+            logger.warn("prepareRunEnv all python commands are not available, fallback to system env")
+            LoggerService.addWarnLine("No available python command found, skip venv creation")
             return null
         }
         val venvPath = File(atomTmpSpace, PYTHON_VENV_DIR)
@@ -109,18 +127,13 @@ class PythonAtomRunConditionHandleServiceImpl : AtomRunConditionHandleService {
     ): String {
         // 若虚拟环境路径存在，将启动命令拼接为虚拟环境内的绝对路径
         var convertTarget = if (!atomExecuteEnvPath.isNullOrBlank()) {
-            // 只对 Python 相关的可执行文件进行路径替换
-            val pythonExecutables = listOf("python", "python3", "python2", "pip", "pip3", "pip2")
+            // target 可能是 console_scripts 入口点名称（如 "demo"）或 Python 可执行文件名
+            // 无论哪种情况，都需要加虚拟环境路径，因为 venv 创建后入口点在 venv/bin 或 venv/Scripts 下
             val parts = target.trim().split(Regex("\\s+"), limit = 2)
             val executableName = parts[0]
             val args = if (parts.size > 1) parts[1] else ""
 
-            val fullPath = if (pythonExecutables.any { executableName.equals(it, ignoreCase = true) }) {
-                "$atomExecuteEnvPath${File.separator}$executableName"
-            } else {
-                // 非 Python 可执行文件，不进行路径替换
-                executableName
-            }
+            val fullPath = "$atomExecuteEnvPath${File.separator}$executableName"
             // Windows路径含反斜杠，用双引号包裹防止被shell错误解析
             val quotedPath = if (osType == OSType.WINDOWS) "\"$fullPath\"" else fullPath
 
