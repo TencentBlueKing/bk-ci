@@ -59,14 +59,13 @@ class AtomRunEnvPrepareTask : ITask() {
             val atomRunConditionHandleService = AtomRunConditionFactory.createAtomRunConditionHandleService(language)
             // 准备插件运行环境
             val atomCode = params["atomCode"] as String
-            atomRunConditionHandleService.prepareRunEnv(
+            val atomExecutePath = atomRunConditionHandleService.prepareRunEnv(
                 osType = AgentEnv.getOS(),
                 language = language,
                 runtimeVersion = runtimeVersion,
                 workspace = workspace,
                 atomCode = atomCode
             )
-            val atomExecutePath = System.getProperty(BK_CI_ATOM_EXECUTE_ENV_PATH)
             atomExecutePath?.let {
                 // 把插件执行环境路径加入环境变量
                 addEnv(BK_CI_ATOM_EXECUTE_ENV_PATH, atomExecutePath)
