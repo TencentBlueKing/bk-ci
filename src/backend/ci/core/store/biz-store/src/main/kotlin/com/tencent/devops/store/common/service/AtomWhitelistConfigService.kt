@@ -28,7 +28,7 @@
 package com.tencent.devops.store.common.service
 
 import com.fasterxml.jackson.core.type.TypeReference
-import com.fasterxml.jackson.databind.ObjectMapper
+import com.tencent.devops.common.api.util.JsonUtil
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -38,7 +38,6 @@ class AtomWhitelistConfigService @Autowired constructor(
     private val businessConfigService: BusinessConfigService
 ) {
     private val logger = LoggerFactory.getLogger(AtomWhitelistConfigService::class.java)
-    private val objectMapper = ObjectMapper()
 
     fun isAtomInWhitelist(atomCode: String, whitelistType: String): Boolean {
         return try {
@@ -48,7 +47,7 @@ class AtomWhitelistConfigService @Autowired constructor(
                 businessValue = whitelistType
             )
             val atomCodes = if (configValue != null) {
-                objectMapper.readValue(configValue, object : TypeReference<List<String>>() {})
+                JsonUtil.to(configValue, object : TypeReference<List<String>>() {})
             } else {
                 emptyList()
             }
