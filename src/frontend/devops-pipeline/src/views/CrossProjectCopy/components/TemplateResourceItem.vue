@@ -36,7 +36,7 @@
                         showJumpIcon: this.item.targetNameExists
                     },
                     {
-                        value: PipelineCopyStrategy.PIPELINE_REUSE_SOURCE_ID,
+                        value: PipelineCopyStrategy.PIPELINE_TEMPLATE_CREATE_NEW,
                         label: this.$t('copyAsNewTemplate'),
                         description: this.$t('copyAsNewTemplateDesc'),
                         disabled: false

@@ -190,9 +190,9 @@
                             @change="handleSearch"
                             style="width: 360px; margin-right: 8px;"
                         />
-                        <bk-button @click="handleRestoreAll">
+                        <!-- <bk-button @click="handleRestoreAll">
                             {{ $t('restoreAll') }}
-                        </bk-button>
+                        </bk-button> -->
                     </div>
                 </div>
 
@@ -262,12 +262,13 @@
                         </template>
                     </bk-table-column>
                     <bk-table-column
+                        v-if="!isReadOnly"
                         :label="$t('operation')"
                         width="180"
                     >
                         <template slot-scope="{ row }">
                             <div class="operation-cell">
-                                <bk-button
+                                <!-- <bk-button
                                     v-if="row.status === PipelineBatchTaskDetailStatus.EXCLUDED"
                                     text
                                     @click="handleRestore(row)"
@@ -275,20 +276,20 @@
                                     {{ $t('restore.restore') }}
                                 </bk-button>
                                 <bk-button
-                                    v-else-if="row.status === PipelineBatchTaskDetailStatus.WAIT_COPY"
+                                    v-if="row.status === PipelineBatchTaskDetailStatus.WAIT_COPY"
                                     text
                                     @click="handleExclude(row)"
                                 >
                                     {{ $t('exclude') }}
-                                </bk-button>
+                                </bk-button> -->
                                 <span
-                                    v-else-if="row.pac"
+                                    v-if="row.pac"
                                     class="auto-action-text"
                                 >
                                     {{ $t('notSupportMigration') }}
                                 </span>
                                 <span
-                                    v-else-if="row.subPipeline"
+                                    v-if="row.subPipeline"
                                     class="not-support-text"
                                 >
                                     {{ $t('systemAutoAdded') }}

@@ -10,12 +10,15 @@
                 ></span>
                 <span class="source-label">{{ $t('source') }}</span>
                 <span class="header-name">{{ item.resourceName }}</span>
-                <Logo
-                    name="tiaozhuan"
-                    size="16"
+                <a
                     class="jump-icon"
                     @click="handleJump"
-                />
+                >
+                    <Logo
+                        name="tiaozhuan"
+                        size="16"
+                    />
+                </a>
                 <p class="repo-url">
                     <span>{{ item.resourceId }}</span>
                 </p>
@@ -40,6 +43,7 @@
                                 <p>
                                     <span class="target-name name-conflict">{{ nameConflictData.pipelineName }}</span>
                                     <Logo
+                                        v-if="!item.copyStrategy"
                                         name="tiaozhuan"
                                         size="16"
                                         class="jump-icon"
@@ -65,6 +69,7 @@
                                 <p>
                                     <span class="target-name">{{ idConflictData.pipelineName }}</span>
                                     <Logo
+                                        v-if="!item.copyStrategy"
                                         name="tiaozhuan"
                                         size="16"
                                         class="jump-icon"
@@ -219,6 +224,7 @@
                 }
                 this.$emit('strategy-change', value)
             },
+            // 这里待考量
             handleJump () {
                 window.open(`/console/pipeline/${this.projectId}/${this.item.resourceId}/history/pipeline`, '__blank')
             },

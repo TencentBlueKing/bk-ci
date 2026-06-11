@@ -14,13 +14,16 @@
                 <!-- 插槽：自定义 header 内容 -->
                 <slot name="header">
                     <span class="header-name">{{ headerTitle }}</span>
-                    <Logo
+                    <a
                         v-if="showJumpIcon"
-                        name="tiaozhuan"
-                        size="16"
                         class="jump-icon"
                         @click="handleJump"
-                    />
+                    >
+                        <Logo
+                            name="tiaozhuan"
+                            size="16"
+                        />
+                    </a>
                 </slot>
                 <!-- 插槽：header 额外信息 -->
                 <slot name="header-extra"></slot>
@@ -181,8 +184,9 @@
             handleShowPipelines () {
                 this.pipelineDialogVisible = true
             },
+            // 这里点击没跳转
             handleJump () {
-                const { resourceType, resourceId } = this.item
+                const { resourceType, resourceId, resourceProperties } = this.item
                 const projectId = this.projectId
                 let url = ''
                 switch (resourceType) {
@@ -190,7 +194,7 @@
                         url = `/console/pipeline/${projectId}/template/${resourceId}`
                         break
                     case 'REPOSITORY':
-                        url = `/console/codelib/${projectId}/?id=${resourceId}`
+                        url = `/console/codelib/${projectId}/?id=${resourceId}&scmType=${resourceProperties.scmCode}`
                         break
                     case 'BUILD_ENV':
                     case 'DEPLOY_ENV':

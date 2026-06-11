@@ -616,6 +616,7 @@
                     align-items: center;
                     color: #3A84FF;
                     font-size: 12px;
+                    gap: 8px;
                     cursor: pointer;
 
                     &:hover {

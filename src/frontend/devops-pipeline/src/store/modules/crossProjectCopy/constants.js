@@ -58,7 +58,7 @@ export const PipelineCopyResourceType = {
 export const PipelineCopyStrategy = {
     // 流水线模板
     PIPELINE_TEMPLATE_REUSE_SAME_NAME: 'PIPELINE_TEMPLATE_REUSE_SAME_NAME',   // 自动创建新流水线ID
-    PIPELINE_REUSE_SOURCE_ID: 'PIPELINE_REUSE_SOURCE_ID',   // 复用源流水线ID
+    PIPELINE_TEMPLATE_CREATE_NEW: 'PIPELINE_TEMPLATE_CREATE_NEW',   // 复用源流水线ID
     // 代码库
     REPOSITORY_REUSE_SAME_NAME_PROTOCOL: 'REPOSITORY_REUSE_SAME_NAME_PROTOCOL',   // 复用目标项目同名同协议代码库
     REPOSITORY_CREATE_NEW: 'REPOSITORY_CREATE_NEW',   // 创建新代码库
@@ -134,7 +134,7 @@ export const PipelineCopyResourceTypeMap = {
 export const PipelineCopyStrategyMap = {
     // 流水线模板
     [PipelineCopyStrategy.PIPELINE_TEMPLATE_REUSE_SAME_NAME]: '复用同名模板',
-    [PipelineCopyStrategy.PIPELINE_REUSE_SOURCE_ID]: '复用源流水线ID',
+    [PipelineCopyStrategy.PIPELINE_TEMPLATE_CREATE_NEW]: '复用源流水线ID',
     // 代码库
     [PipelineCopyStrategy.REPOSITORY_REUSE_SAME_NAME_PROTOCOL]: '复用同名同协议代码库',
     [PipelineCopyStrategy.REPOSITORY_CREATE_NEW]: '创建新代码库',

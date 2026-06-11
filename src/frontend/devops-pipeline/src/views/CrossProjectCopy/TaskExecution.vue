@@ -249,6 +249,7 @@
                 v-else
                 class="task-result-alert is-success"
             >
+                <i class="devops-icon icon-check-1 success-icon" />
                 <div
                     class="task-result-title"
                 >
@@ -271,7 +272,8 @@
                             <p>
                                 <Logo
                                     :name="tab.icon"
-                                    size="12"
+                                    :color="tab.color"
+                                    size="14"
                                     class="tab-icon"
                                 />
                                 <span class="tab-label">{{ tab.label }}</span>
@@ -348,8 +350,11 @@
                 // 轮询定时器
                 pollingTimer: null,
                 // 轮询间隔(毫秒)
-                pollingInterval: 3000,
-                progressInfo: {},
+                pollingInterval: 2000,
+                progressInfo: {
+                    totalCount: 0,
+                    executedCount: 0
+                },
                 // 流水线列表
                 pipelineList: [],
                 // 表格 loading 状态
@@ -384,12 +389,14 @@
                         key: 'PIPELINE',
                         label: this.$t('pipeline'),
                         icon: 'template-pipeline',
+                        color: '#3764DC',
                         totalCount: 0
                     },
                     {
                         key: 'NEED_COMPLETION',
                         label: this.$t('pendingCompletion'),
                         icon: 'exclamation-triangle-shape',
+                        color: '#EBB401',
                         subCount: 0,
                         totalCount: 0
                     },
@@ -397,6 +404,7 @@
                         key: 'NEED_TRANSFER',
                         label: this.$t('resourceTransferIssues'),
                         icon: 'transfer',
+                        color: '#D75573',
                         subCount: 0,
                         totalCount: 0
                     },
@@ -404,6 +412,7 @@
                         key: 'AUTO_FINISH',
                         label: this.$t('autoComplete'),
                         icon: 'auto-complete',
+                        color: '#559BD2',
                         totalCount: 0
                     }
                 ]
@@ -425,8 +434,10 @@
             },
             // 进度百分比
             progressPercent () {
-                if (this.totalPipelines === 0) return 0
-                return Math.floor((this.progressInfo.executedCount / this.progressInfo.totalCount) * 100)
+                const total = this.progressInfo?.totalCount ?? 0
+                const executed = this.progressInfo?.executedCount ?? 0
+                if (total === 0) return 0
+                return Math.floor((executed / total) * 100)
             },
             // 当前tab对应的组件
             currentTabComponent () {
@@ -1158,6 +1169,16 @@
             &.is-success {
                 background-color: #EBFAF0;
                 border: 1px solid #A1E3BA;
+
+                .success-icon {
+                    color: #2CAF5E;
+                    background-color: #CBF0DA;
+                    border-radius: 50%;
+                    font-size: 8px;
+                    padding: 8px;
+                    flex-shrink: 0;
+                    font-weight: 700;
+                }
             }
 
             .info-icon {

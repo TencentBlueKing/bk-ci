@@ -15,6 +15,7 @@
                             name="arrows-left"
                             class="task-name__logo"
                             size="18"
+                            @click="handleCancel"
                         />
                         <span class="task-name__text">{{ taskName }}</span>
                         <span
