@@ -38,6 +38,7 @@ import com.tencent.devops.store.pojo.common.MarketMainItem
 import com.tencent.devops.store.pojo.common.StoreDetailInfo
 import com.tencent.devops.store.pojo.common.StorePackageInfoReq
 import com.tencent.devops.store.pojo.common.UnInstallReq
+import com.tencent.devops.store.pojo.common.deploy.UserComponentDeployInfo
 import com.tencent.devops.store.pojo.common.enums.RdTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreSortTypeEnum
 import com.tencent.devops.store.pojo.common.version.VersionInfo
@@ -173,6 +174,41 @@ interface ServiceStoreComponentResource {
         @BkField(patternStyle = BkStyleEnum.PAGE_SIZE_STYLE)
         pageSize: Int = 10
     ): Result<Page<MarketItem>>
+
+    @Operation(summary = "获取用户可拉取的组件部署信息列表")
+    @Path("/types/{storeType}/component/deploy/list")
+    @GET
+    @BkInterfaceI18n(
+        keyPrefixNames = ["{data.records[*].storeType}", "{data.records[*].storeCode}",
+            "{data.records[*].latestVersion}", "releaseInfo"]
+    )
+    fun getUserComponentDeployInfos(
+        @Parameter(description = "userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "组件类型", required = true)
+        @PathParam("storeType")
+        @BkField(patternStyle = BkStyleEnum.CODE_STYLE)
+        storeType: String,
+        @Parameter(description = "项目代码", required = false)
+        @QueryParam("projectCode")
+        projectCode: String? = null,
+        @Parameter(description = "实例ID", required = false)
+        @QueryParam("instanceId")
+        instanceId: String? = null,
+        @Parameter(description = "搜索关键字", required = false)
+        @QueryParam("keyword")
+        @BkField(patternStyle = BkStyleEnum.COMMON_STYLE, required = false)
+        keyword: String? = null,
+        @Parameter(description = "页码", required = true)
+        @QueryParam("page")
+        @BkField(patternStyle = BkStyleEnum.NUMBER_STYLE)
+        page: Int = 1,
+        @Parameter(description = "每页数量", required = true)
+        @QueryParam("pageSize")
+        @BkField(patternStyle = BkStyleEnum.PAGE_SIZE_STYLE)
+        pageSize: Int = 10
+    ): Result<Page<UserComponentDeployInfo>>
 
     @Operation(summary = "根据组件ID获取组件详情")
     @GET

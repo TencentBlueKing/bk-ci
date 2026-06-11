@@ -136,6 +136,12 @@ class StoreBaseCreateServiceImpl @Autowired constructor(
             latestFlag = true,
             busNum = CommonUtils.generateNumber(VersionUtils.getMajorVersion(version, storeType), 1, STORE_BUS_NUM_LEN)
         )
+        // 校验部署相关扩展字段(安装路径/安装方式/安装参数)的合法性与安全性
+        StoreReleaseUtils.validateDeployExtInfo(
+            storeType = storeType,
+            extBaseInfo = storeBaseCreateRequest.extBaseInfo,
+            extBaseFeatureInfo = storeBaseCreateRequest.baseFeatureInfo?.extBaseFeatureInfo
+        )
         val storeBaseExtDataPOs = StoreReleaseUtils.generateStoreBaseExtDataPO(
             extBaseInfo = storeBaseCreateRequest.extBaseInfo,
             storeId = storeId,

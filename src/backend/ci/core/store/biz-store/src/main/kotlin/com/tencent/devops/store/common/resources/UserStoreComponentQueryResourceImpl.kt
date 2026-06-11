@@ -39,6 +39,7 @@ import com.tencent.devops.store.pojo.common.MarketMainItem
 import com.tencent.devops.store.pojo.common.MyStoreComponent
 import com.tencent.devops.store.pojo.common.StoreDetailInfo
 import com.tencent.devops.store.pojo.common.StoreInfoQuery
+import com.tencent.devops.store.pojo.common.deploy.UserComponentDeployInfo
 import com.tencent.devops.store.pojo.common.enums.RdTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreSortTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
@@ -187,6 +188,32 @@ class UserStoreComponentQueryResourceImpl @Autowired constructor(
                     updateFlag = updateFlag
                 ),
                 urlProtocolTrim = true
+            )
+        )
+    }
+
+    override fun getUserComponentDeployInfos(
+        userId: String,
+        storeType: String,
+        projectCode: String?,
+        instanceId: String?,
+        keyword: String?,
+        page: Int,
+        pageSize: Int
+    ): Result<Page<UserComponentDeployInfo>> {
+        return Result(
+            storeComponentQueryService.getUserComponentDeployInfos(
+                userId = userId,
+                storeInfoQuery = StoreInfoQuery(
+                    storeType = storeType,
+                    projectCode = projectCode,
+                    instanceId = instanceId,
+                    keyword = keyword,
+                    // 指定项目时按项目维度查询，可纳入该项目下处于调试的组件及其测试版本
+                    queryProjectComponentFlag = !projectCode.isNullOrBlank(),
+                    page = page,
+                    pageSize = pageSize
+                )
             )
         )
     }

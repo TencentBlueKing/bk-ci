@@ -41,6 +41,7 @@ import com.tencent.devops.store.pojo.common.StoreDetailInfo
 import com.tencent.devops.store.pojo.common.StoreInfoQuery
 import com.tencent.devops.store.pojo.common.StorePackageInfoReq
 import com.tencent.devops.store.pojo.common.UnInstallReq
+import com.tencent.devops.store.pojo.common.deploy.UserComponentDeployInfo
 import com.tencent.devops.store.pojo.common.enums.RdTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreSortTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
@@ -95,6 +96,31 @@ class ServiceStoreComponentResourceImpl @Autowired constructor(
                 instanceId = instanceId,
                 osName = osName,
                 osArch = osArch
+            )
+        )
+    }
+
+    override fun getUserComponentDeployInfos(
+        userId: String,
+        storeType: String,
+        projectCode: String?,
+        instanceId: String?,
+        keyword: String?,
+        page: Int,
+        pageSize: Int
+    ): Result<Page<UserComponentDeployInfo>> {
+        return Result(
+            storeComponentQueryService.getUserComponentDeployInfos(
+                userId = userId,
+                storeInfoQuery = StoreInfoQuery(
+                    storeType = storeType,
+                    projectCode = projectCode,
+                    instanceId = instanceId,
+                    keyword = keyword,
+                    queryProjectComponentFlag = !projectCode.isNullOrBlank(),
+                    page = page,
+                    pageSize = pageSize
+                )
             )
         )
     }

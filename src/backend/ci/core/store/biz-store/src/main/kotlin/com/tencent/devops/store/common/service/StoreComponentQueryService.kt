@@ -35,6 +35,7 @@ import com.tencent.devops.store.pojo.common.MyStoreComponent
 import com.tencent.devops.store.pojo.common.QueryComponentsParam
 import com.tencent.devops.store.pojo.common.StoreDetailInfo
 import com.tencent.devops.store.pojo.common.StoreInfoQuery
+import com.tencent.devops.store.pojo.common.deploy.UserComponentDeployInfo
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.version.StoreDeskVersionItem
 import com.tencent.devops.store.pojo.common.version.StoreShowVersionInfo
@@ -111,6 +112,17 @@ interface StoreComponentQueryService {
         storeInfoQuery: StoreInfoQuery,
         urlProtocolTrim: Boolean = false
     ): Page<MarketItem>
+
+    /**
+     * 获取用户可拉取的组件部署信息列表
+     * 聚合返回：用户配置的应用名、版本列表(标注最新版本)、应用安装路径(组件级共享，可空)、
+     * 各版本的安装方式与安装参数(跟随版本)。下载链接由客户端按需调用
+     * UserArchiveComponentPkgResource#getComponentPkgDownloadUrl 获取。
+     */
+    fun getUserComponentDeployInfos(
+        userId: String,
+        storeInfoQuery: StoreInfoQuery
+    ): Page<UserComponentDeployInfo>
 
     /**
      * 根据组件标识获取组件回显版本信息

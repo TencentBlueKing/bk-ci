@@ -92,6 +92,8 @@ import com.tencent.devops.store.pojo.common.QueryComponentsParam
 import com.tencent.devops.store.pojo.common.StoreBaseInfo
 import com.tencent.devops.store.pojo.common.StoreDetailInfo
 import com.tencent.devops.store.pojo.common.StoreInfoQuery
+import com.tencent.devops.store.pojo.common.deploy.ComponentDeployVersionInfo
+import com.tencent.devops.store.pojo.common.deploy.UserComponentDeployInfo
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreSortTypeEnum
@@ -103,16 +105,15 @@ import com.tencent.devops.store.pojo.common.version.StoreVersionLogInfo
 import com.tencent.devops.store.pojo.common.version.StoreVersionSizeInfo
 import com.tencent.devops.store.pojo.common.version.VersionInfo
 import com.tencent.devops.store.pojo.common.version.VersionModel
+import org.jooq.DSLContext
+import org.jooq.Record
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 import java.util.concurrent.Callable
 import java.util.concurrent.Executors
 import java.util.concurrent.Future
 import java.util.concurrent.TimeUnit
-import org.jooq.DSLContext
-import org.jooq.Record
-import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
 
 @Suppress("TooManyFunctions", "LargeClass")
 @Service
@@ -198,7 +199,6 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
 
     companion object {
         private val executor = Executors.newFixedThreadPool(30)
-        private val logger = LoggerFactory.getLogger(StoreComponentQueryServiceImpl::class.java)
     }
 
     private val storeBusNumCache = Caffeine.newBuilder()
@@ -738,6 +738,101 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
             storeInfoQuery = storeInfoQuery,
             urlProtocolTrim = urlProtocolTrim
         ).get()
+    }
+
+    override fun getUserComponentDeployInfos(
+        userId: String,
+        storeInfoQuery: StoreInfoQuery
+    ): Page<UserComponentDeployInfo> {
+        val storeTypeEnum = StoreTypeEnum.valueOf(storeInfoQuery.storeType)
+        // 复用市场组件查询逻辑(含可见性/权限/项目维度过滤)，得到用户可见的组件(每个组件返回最新版本)
+        val marketItemPage = queryComponents(
+            userId = userId,
+            storeInfoQuery = storeInfoQuery,
+            urlProtocolTrim = true
+        )
+        val marketItems = marketItemPage.records
+        if (marketItems.isEmpty()) {
+            return Page(
+                page = storeInfoQuery.page,
+                pageSize = storeInfoQuery.pageSize,
+                count = marketItemPage.count,
+                records = emptyList()
+            )
+        }
+        val storeCodes = marketItems.map { it.code }
+        // 调试项目下的组件代码：这些组件除已发布版本外，还需展示测试中/填写中/审核中的版本
+        val projectCode = storeInfoQuery.projectCode
+        val testStoreCodes: Set<String> = if (!projectCode.isNullOrBlank()) {
+            storeProjectService.getProjectComponents(
+                projectCode = projectCode,
+                storeType = storeTypeEnum.type.toByte(),
+                storeProjectTypes = listOf(StoreProjectTypeEnum.TEST.type.toByte()),
+                instanceId = storeInfoQuery.instanceId
+            )?.keys.orEmpty()
+        } else {
+            emptySet()
+        }
+        // 版本状态过滤：默认仅已发布；存在调试组件时额外包含测试中/填写中/审核中状态
+        val statusList = mutableListOf(StoreStatusEnum.RELEASED.name)
+        if (testStoreCodes.isNotEmpty()) {
+            statusList.addAll(StoreStatusEnum.getTestStatusList())
+        }
+        val componentRecords = storeBaseQueryDao.getStoreBaseInfoByConditions(
+            dslContext = dslContext,
+            storeCodeList = storeCodes,
+            storeType = storeTypeEnum,
+            storeStatusList = statusList
+        )
+        // 非调试组件仅保留已发布版本；调试项目下的组件保留已发布+测试中/审核中版本
+        val recordsByCode = componentRecords.groupBy { it.storeCode }.mapValues { (code, records) ->
+            if (code in testStoreCodes) {
+                records
+            } else {
+                records.filter { it.status == StoreStatusEnum.RELEASED.name }
+            }
+        }
+        // 批量查询各版本的扩展信息(安装方式/安装参数等，跟随版本，存于extBaseInfo)
+        val versionStoreIds = recordsByCode.values.flatten().map { it.id }
+        val baseExtMap: Map<String, Map<String, Any>> = if (versionStoreIds.isEmpty()) {
+            emptyMap()
+        } else {
+            storeBaseExtQueryDao.getBaseExtByIds(dslContext, versionStoreIds)
+                .groupBy({ it.storeId }, { it.fieldName to formatJson(it.fieldValue) })
+                .mapValues { it.value.toMap() }
+        }
+        val deployInfos = marketItems.map { marketItem ->
+            val storeCode = marketItem.code
+            val latestVersion = marketItem.version
+            val codeVersionRecords = recordsByCode[storeCode].orEmpty()
+            val versions = codeVersionRecords.map { record ->
+                ComponentDeployVersionInfo(
+                    version = record.version,
+                    storeId = record.id,
+                    latestFlag = record.version == latestVersion,
+                    status = record.status,
+                    // 版本级扩展(含安装方式installType、安装参数installParams等)
+                    extData = baseExtMap[record.id]
+                )
+            }
+            UserComponentDeployInfo(
+                storeCode = storeCode,
+                storeType = marketItem.type,
+                storeId = marketItem.id,
+                name = marketItem.name,
+                installFlag = marketItem.flag,
+                latestVersion = latestVersion,
+                // 组件级共享扩展(含安装路径installPath等)，取自extBaseFeatureInfo
+                extData = marketItem.extData,
+                versionInfos = versions
+            )
+        }
+        return Page(
+            page = storeInfoQuery.page,
+            pageSize = storeInfoQuery.pageSize,
+            count = marketItemPage.count,
+            records = deployInfos
+        )
     }
 
     override fun getComponentShowVersionInfo(
