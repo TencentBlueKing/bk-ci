@@ -216,7 +216,6 @@
 
             async handleImport () {
                 if (this.selectedNodes.length === 0) return
-                this.step = 'success'
                 this.importLoading = true
                 try {
                     const res = await this.$store.dispatch('environment/batchImportImateNodes', {
@@ -227,7 +226,7 @@
                             agentList: this.selectedNodes.map(deviceId => ({ deviceId }))
                         }
                     })
-                    if (res && res.data) {
+                    if (res) {
                         this.importResultCount = this.selectedNodes.length
                         this.step = 'success'
                         this.$emit('import-success')
