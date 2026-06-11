@@ -112,9 +112,24 @@ class PythonAtomRunConditionHandleServiceImpl : AtomRunConditionHandleService {
     ): String {
         // 若虚拟环境路径存在，将启动命令拼接为虚拟环境内的绝对路径
         var convertTarget = if (!atomExecuteEnvPath.isNullOrBlank()) {
-            val fullPath = "$atomExecuteEnvPath${File.separator}$target"
+            // 分离可执行文件名和可能的参数
+            // target 通常是纯可执行文件名（如 "demo"，来自 entry_points 的 console_scripts），
+            // 但也可能包含参数（如 "demo --config"）。
+            // 为安全起见，只给可执行文件路径加引号，参数保持在外面，
+            // 避免 Windows 将 "path\to\exe args" 误解析为一个带空格的可执行文件名。
+            val parts = target.trim().split(Regex("\\s+"), limit = 2)
+            val executableName = parts[0]
+            val args = if (parts.size > 1) parts[1] else ""
+
+            val fullPath = "$atomExecuteEnvPath${File.separator}$executableName"
             // Windows路径含反斜杠，用双引号包裹防止被shell错误解析
-            if (osType == OSType.WINDOWS) "\"$fullPath\"" else fullPath
+            val quotedPath = if (osType == OSType.WINDOWS) "\"$fullPath\"" else fullPath
+
+            if (args.isBlank()) {
+                quotedPath
+            } else {
+                "$quotedPath $args"
+            }
         } else {
             target
         }
