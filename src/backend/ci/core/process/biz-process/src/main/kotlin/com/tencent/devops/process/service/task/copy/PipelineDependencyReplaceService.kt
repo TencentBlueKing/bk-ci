@@ -172,7 +172,7 @@ class PipelineDependencyReplaceService @Autowired constructor(
             return null
         }
         val targetTemplateId = context.getTargetResource(
-            resourceType = PipelineDependentResourceType.REPOSITORY,
+            resourceType = PipelineDependentResourceType.PIPELINE_TEMPLATE,
             resourceId = template.templateId!!
         )?.resourceId
         return template.copy(templateId = targetTemplateId)

@@ -671,28 +671,28 @@ class PipelineCopyResourceCreateService @Autowired constructor(
 
     private fun Repository.copyUserName(userId: String): Repository {
         return when (this) {
-            is CodeGitRepository -> copy(userName = userId)
-            is CodeTGitRepository -> copy(userName = userId)
-            is CodeGitlabRepository -> copy(userName = userId)
-            is ScmGitRepository -> copy(userName = userId)
-            is CodeSvnRepository -> copy(userName = userId)
-            is ScmSvnRepository -> copy(userName = userId)
-            is GithubRepository -> copy(userName = userId)
-            is CodeP4Repository -> copy(userName = userId)
+            is CodeGitRepository -> copy(userName = userId, enablePac = false)
+            is CodeTGitRepository -> copy(userName = userId, enablePac = false)
+            is CodeGitlabRepository -> copy(userName = userId, enablePac = false)
+            is ScmGitRepository -> copy(userName = userId, enablePac = false)
+            is CodeSvnRepository -> copy(userName = userId, enablePac = false)
+            is ScmSvnRepository -> copy(userName = userId, enablePac = false)
+            is GithubRepository -> copy(userName = userId, enablePac = false)
+            is CodeP4Repository -> copy(userName = userId, enablePac = false)
             else -> this
         }
     }
 
     private fun Repository.copyCredentialId(credentialId: String): Repository {
         return when (this) {
-            is CodeGitRepository -> copy(credentialId = credentialId)
-            is CodeTGitRepository -> copy(credentialId = credentialId)
-            is CodeGitlabRepository -> copy(credentialId = credentialId)
-            is ScmGitRepository -> copy(credentialId = credentialId)
-            is CodeSvnRepository -> copy(credentialId = credentialId)
-            is ScmSvnRepository -> copy(credentialId = credentialId)
-            is GithubRepository -> copy(credentialId = credentialId)
-            is CodeP4Repository -> copy(credentialId = credentialId)
+            is CodeGitRepository -> copy(credentialId = credentialId, enablePac = false)
+            is CodeTGitRepository -> copy(credentialId = credentialId, enablePac = false)
+            is CodeGitlabRepository -> copy(credentialId = credentialId, enablePac = false)
+            is ScmGitRepository -> copy(credentialId = credentialId, enablePac = false)
+            is CodeSvnRepository -> copy(credentialId = credentialId, enablePac = false)
+            is ScmSvnRepository -> copy(credentialId = credentialId, enablePac = false)
+            is GithubRepository -> copy(credentialId = credentialId, enablePac = false)
+            is CodeP4Repository -> copy(credentialId = credentialId, enablePac = false)
             else -> this
         }
     }
