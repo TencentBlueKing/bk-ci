@@ -176,11 +176,12 @@ class PythonAtomRunConditionHandleServiceImpl : AtomRunConditionHandleService {
     /** Get python version string, return null if command is not available */
     private fun getPythonVersion(pythonCmd: String): String? {
         return try {
+            // python --version 在部分平台上输出到 stderr，用 2>&1 重定向到 stdout 确保能被捕获
             CommandLineUtils.execute(
-                command = "$pythonCmd --version",
+                command = "$pythonCmd --version 2>&1",
                 workspace = null,
-                print2Logger = true
-            )
+                print2Logger = false
+            )?.trim()?.takeIf { it.isNotBlank() }
         } catch (ignored: Throwable) {
             logger.warn("getPythonVersion [$pythonCmd] failed: ${ignored.message}")
             null
