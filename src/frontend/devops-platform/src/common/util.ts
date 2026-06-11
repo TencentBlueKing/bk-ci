@@ -19,6 +19,20 @@ export function getCookie(name: string): string {
 }
 
 /**
+ * 获取部署在域名子路径下时的路径前缀
+ * 生产环境由部署脚本将 __BK_CI_PUBLIC_PATH__ 替换为真实前缀；
+ * 开发环境占位符未被替换时按空前缀处理
+ * @returns {string} 规范化后的前缀，如 '/sub' 或 ''
+ */
+export function getPublicUrlPrefix(): string {
+  const prefix = window.PUBLIC_URL_PREFIX || '';
+  if (!prefix || prefix.startsWith('__') || prefix === '/') {
+    return '';
+  }
+  return prefix.replace(/\/+$/, '');
+}
+
+/**
  * 检查是不是 object 类型
  * @param item
  * @returns {boolean}

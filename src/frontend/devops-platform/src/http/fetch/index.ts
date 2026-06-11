@@ -1,4 +1,4 @@
-import { deepMerge } from '@/common/util';
+import { deepMerge, getPublicUrlPrefix } from '@/common/util';
 import errorInterceptor from './error-interceptor';
 import RequestError from './request-error';
 import successInterceptor from './success-interceptor';
@@ -65,15 +65,27 @@ const getFetchConfig = (method: string, payload: any, config: IFetchConfig) => {
   return fetchConfig;
 };
 
+// 拼接请求 url 前缀，支持部署在域名子路径下
+const joinUrl = (url: string) => {
+  if (/^https?:\/\//.test(url)) {
+    return url;
+  }
+  const ajaxPrefixEnv = import.meta.env.VITE_AJAX_URL_PREFIX;
+  // VITE_AJAX_URL_PREFIX 配置为完整地址时直接使用，否则拼接子路径前缀
+  let ajaxUrlPrefix = /^https?:\/\//.test(ajaxPrefixEnv)
+    ? ajaxPrefixEnv
+    : `${getPublicUrlPrefix()}${ajaxPrefixEnv}`;
+  if (ajaxUrlPrefix.endsWith('/')) {
+    ajaxUrlPrefix = ajaxUrlPrefix.slice(0, -1);
+  }
+  return url.startsWith('/') ? `${ajaxUrlPrefix}${url}` : `${ajaxUrlPrefix}/${url}`;
+};
+
 // 拼装发送请求 url
 const getFetchUrl = (url, method, payload = {}) => {
   try {
-    // 基础 url
-    const baseUrl = /http(s)?:\/\//.test(import.meta.env.VITE_AJAX_URL_PREFIX)
-      ? import.meta.env.VITE_AJAX_URL_PREFIX
-      : location.origin + import.meta.env.VITE_AJAX_URL_PREFIX;
-      // 构造 url 对象
-    const urlObject: URL = new URL(url, baseUrl);
+    // 构造 url 对象
+    const urlObject: URL = new URL(joinUrl(url), location.origin);
     if (methodsWithoutData.includes(method)) {
       Object.keys(payload).forEach((key) => {
         const value = payload[key];
