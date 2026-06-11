@@ -69,6 +69,14 @@
                                 </ul>
                             </bk-dropdown-menu>
                         </template>
+                        <template v-else-if="isCreateResType && !isPersonalProject">
+                            <bk-button
+                                theme="primary"
+                                @click="handleImportIMetaNode"
+                            >
+                                {{ $t('environment.nodeInfo.importIMetaNode') }}
+                            </bk-button>
+                        </template>
                         <bk-dropdown-menu
                             trigger="click"
                             ext-cls="batch-menu"
@@ -218,6 +226,12 @@
             @cancelMakeMirror="makeMirrorConf.isShow = false"
             @submitMakeMirror="requestList"
         ></make-mirror-dialog>
+
+        <!-- 导入数字同事节点 -->
+        <import-i-meta-node
+            ref="importIMetaNode"
+            @import-success="requestList(queryParams)"
+        />
 
         <!-- 导入成功、失败提示弹框 -->
         <import-tips-dialog
@@ -399,8 +413,10 @@
     import { ENV_ACTIVE_NODE_TYPE, ALLNODE, SERVICE_RESOURCE_TYPE } from '@/store/constants'
     import CollapseLayout from '@/components/CollapseLayout'
     import useCollapseLayout from '@/hooks/useCollapseLayout'
+    import useEnvDetail from '@/hooks/useEnvDetail'
     import useUrlQuery from '@/hooks/useUrlQuery'
     import NodeDetail from './node_detail.vue'
+    import importIMetaNode from '@/components/devops/environment/import-IMeta-node.vue'
     export default {
         components: {
             thirdConstruct,
@@ -411,10 +427,12 @@
             ListTable,
             SearchSelect,
             CollapseLayout,
-            NodeDetail
+            NodeDetail,
+            importIMetaNode
         },
         setup () {
             const { flod, toggleFlod: originalToggleFlod, setFlod } = useCollapseLayout('node_list', false)
+            const { isPersonalProject } = useEnvDetail()
             const {
                 queryParams,
                 updateSearchValue,
@@ -448,7 +466,8 @@
                 updateSort,
                 updateNodeHashId,
                 getRequestParams,
-                getTagRequestParams
+                getTagRequestParams,
+                isPersonalProject
             }
         },
         data () {
@@ -1648,6 +1667,10 @@
             },
             handleInstallEnd () {
                 this.requestList(this.requestParams)
+            },
+
+            handleImportIMetaNode () {
+                this.$refs.importIMetaNode.open()
             }
         }
     }

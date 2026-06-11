@@ -285,7 +285,20 @@
         },
         "switchRunningAccount": "Auto Switch Running Account",
         "switchAccountTips": "Defaults to running as syste 'system'. To access user-specific data (e.g., environment variables), account switching is required. Supports automatic switching with credentials or manual switching after installation.",
-        "operatorStatus": "Operator Status"
+        "operatorStatus": "Operator Status",
+        "importIMetaNode": "Import iMeta Node",
+        "importIMetaTip1": "Import shared iMeta nodes to reuse standardized office automation workflows and reduce repetitive operations.",
+        "importIMetaTip2": "1. A single shared node only supports importing to one BlueShield project.",
+        "importIMetaTip3": "2. When triggering a workflow, the system will automatically verify the trigger's permissions.",
+        "searchIMetaPlaceholder": "Name/IP/Status",
+        "name": "Name",
+        "nodeId": "ID",
+        "engine": "Engine",
+        "importIMetaSuccess": "Successfully imported {count} nodes!",
+        "importIMetaSuccessTip": "After import, the creative Agent will be automatically installed asynchronously. Please observe the creative Agent status in the list. If installation fails, please \"Reinstall\".",
+        "iGotIt": "I Got It",
+        "totalNodes": "Total {count} nodes",
+        "deleteIMetaNodeTips": "When removing, the system will automatically uninstall the corresponding creative Agent"
     },
     "nodeTypeMap": {
         "CC": "CC",
@@ -713,5 +726,8 @@
         "atLeastOneCondition": "At least one condition must be selected",
         "fetchFailed": "Failed to fetch scheduling strategy list",
         "atLeastOneEnabled": "At least one scheduling strategy must be enabled"
+    },
+    "IMetaNodeStatus": {
+        "RUNNING": "Running"
     }
 }

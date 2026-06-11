@@ -425,7 +425,7 @@
                                     </span>
                                     <!-- 重装Agent -->
                                     <bk-button
-                                        v-if="props.row.nodeStatus === 'ABNORMAL' || (props.row.nodeStatus === 'RUNNING' && props.row.agentStatus === 1)"
+                                        v-if="(props.row.nodeStatus === 'ABNORMAL' || (props.row.nodeStatus === 'RUNNING' && props.row.agentStatus === 1) && !isCreateResType)"
                                         v-perm="{
                                             hasPermission: props.row.canEdit,
                                             disablePermissionApi: true,
@@ -1054,7 +1054,7 @@
                     extCls: 'info-content',
                     confirmLoading: true,
                     title: `${this.$t('environment.nodeInfo.deleteNodetips', [row.displayName])}`,
-                    subTitle: this.$t('environment.nodeInfo.stopAgentProcessOnly'),
+                    subTitle: this.isCreateResType ? this.$t('environment.nodeInfo.deleteIMetaNodeTips') : this.$t('environment.nodeInfo.stopAgentProcessOnly'),
                     confirmFn: async () => {
                         let message, theme
                         try {
