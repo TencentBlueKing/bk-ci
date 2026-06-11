@@ -3,9 +3,9 @@ package com.tencent.devops.remotedev.pojo.startcloud
 import com.fasterxml.jackson.annotation.JsonProperty
 
 data class StartCloudKickInstanceReq(
-    @JsonProperty("user_id")
+    @JsonProperty("userId")
     val userId: String,
 
-    @JsonProperty("env_id")
+    @JsonProperty("envId")
     val envId: String
 )
