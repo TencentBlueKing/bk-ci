@@ -21,6 +21,30 @@ class CommandLineUtilsTest {
         /*兼容多空格*/
         Assertions.assertEquals(func("::set-progress-rate    0.3758"), 0.3758)
         Assertions.assertEquals(func(" ::set-progress-rate 0.3758"), 0.3758)
+        /*非法数字*/
+        Assertions.assertEquals(func("::set-progress-rate 1.1"), null)
+        Assertions.assertEquals(func("::set-progress-rate abc"), null)
+    }
+
+    @Test
+    fun reportProgressDetailTest() {
+        fun func(str: String) = CommandLineUtils.reportProgressRate("test-json", str, "build-1")
+        val fullPayload = """::set-progress-rate {"progress":{"value":0.33335,"summary":"1/3"},"subtasks":""" +
+            """{"items":[{"name":"download","progress":0.5,"status":"running"}]},"timeline":""" +
+            """{"items":[{"name":"prepare","startTime":"2026-05-27T07:00:00Z","duration":1000}]}}"""
+
+        Assertions.assertEquals(func(fullPayload), 0.3334)
+        Assertions.assertEquals(func("""::set-progress-rate {"progress":{"value":0.5}}"""), 0.5)
+        Assertions.assertEquals(func("""::set-progress-rate {"progress":{"value":1.1}}"""), null)
+        Assertions.assertEquals(func("""::set-progress-rate {"progress":{"value":0.5},"subtasks":{"items":[]}}"""), 0.5)
+        Assertions.assertEquals(func("""::set-progress-rate {"progress":{"value":0.5},"timeline":{"items":[]}}"""), 0.5)
+        Assertions.assertEquals(
+            func(
+                """::set-progress-rate {"progress":{"value":0.5},"subtasks":""" +
+                    """{"items":[{"name":"a","progress":0.5,"status":"unknown"}]}}"""
+            ),
+            null
+        )
     }
 
     @Test
