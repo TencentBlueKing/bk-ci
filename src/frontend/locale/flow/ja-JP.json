@@ -83,6 +83,7 @@
       "previewDetailsAfterEnvironmentSelection": "作成環境を選択した後、詳細をプレビュー",
       "environmentRequired": "作成環境を空にすることはできません",
       "creationNode": "作成ノード",
+      "noCreationNodeInEnvironment": "この環境にはノードがありません",
       "searchEnvironment": "作成環境を検索",
       "environmentManagement": "作成環境管理",
       "creationEnvironment": "作成環境",

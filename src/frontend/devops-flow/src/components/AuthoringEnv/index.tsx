@@ -1,7 +1,7 @@
 import { getAuthoringNodeDisplayText } from '@/api/authoringEnvironmentApi'
 import { SvgIcon } from '@/components/SvgIcon'
 import useAuthoringEnvironment, { type EnvSelectItem } from '@/hooks/useAuthoringEnvironment'
-import { Loading, Select, Tag } from 'bkui-vue'
+import { Exception, Loading, Select, Tag } from 'bkui-vue'
 import { computed, defineComponent, nextTick, onMounted, ref, watch, type PropType } from 'vue'
 import { useI18n } from 'vue-i18n'
 import styles from './AuthoringEnv.module.css'
@@ -135,6 +135,50 @@ export default defineComponent({
       )
     }
 
+    function renderNodeEmpty() {
+      return (
+        <Exception type="empty" scene="part" class={styles.nodeEmpty}>
+          {t('flow.content.noCreationNodeInEnvironment')}
+        </Exception>
+      )
+    }
+
+    function renderNodeList() {
+      return (
+        <div class={styles.nodeTag}>
+          {props.nodeList.map((node: any) => (
+            <Tag key={node.nodeId}>{getAuthoringNodeDisplayText(node)}</Tag>
+          ))}
+        </div>
+      )
+    }
+
+    function renderEnvironmentDetails() {
+      if (props.nodeList.length === 0) {
+        return renderNodeEmpty()
+      }
+
+      return (
+        <>
+          <div class={styles.envItem}>
+            <p class={styles.envItemTit}>
+              {t('flow.content.creationNode')}
+              {props.isEdit ? (
+                <span onClick={goToEnvironment}>
+                  <SvgIcon name="set-line" size={12} class={`cursor-pointer ${styles.setLine}`} />
+                </span>
+              ) : null}
+            </p>
+            {renderNodeList()}
+          </div>
+          <div class={styles.envItem}>
+            <p class={styles.envItemTit}>{t('flow.content.workspace')}</p>
+            <div>{t('flow.content.workSpaceDesc', [envHashId.value])}</div>
+          </div>
+        </>
+      )
+    }
+
     return () => (
       <div class={styles.authoringRoot}>
         {props.isEdit ? renderEnvSelect() : null}
@@ -146,27 +190,7 @@ export default defineComponent({
           ) : null}
           {envHashId.value ? (
             <Loading loading={props.nodeLoading} size="small" class="p-lg">
-              <div class={styles.envItem}>
-                <p class={styles.envItemTit}>
-                  {t('flow.content.creationNode')}
-                  {props.isEdit ? (
-                    <span onClick={goToEnvironment}>
-                      <SvgIcon name="set-line" size={12} class={`cursor-pointer ${styles.setLine}`} />
-                    </span>
-                  ) : null}
-                </p>
-                <div class={styles.nodeTag}>
-                  {props.nodeList.length > 0
-                    ? props.nodeList.map((node: any) => (
-                        <Tag key={node.nodeId}>{getAuthoringNodeDisplayText(node)}</Tag>
-                      ))
-                    : '--'}
-                </div>
-              </div>
-              <div class={styles.envItem}>
-                <p class={styles.envItemTit}>{t('flow.content.workspace')}</p>
-                <div>{t('flow.content.workSpaceDesc', [envHashId.value])}</div>
-              </div>
+              {renderEnvironmentDetails()}
             </Loading>
           ) : (
             <p class={styles.noData}>{t('flow.content.previewDetailsAfterEnvironmentSelection')}</p>

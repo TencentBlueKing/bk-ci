@@ -83,6 +83,7 @@
       "previewDetailsAfterEnvironmentSelection": "选择创作环境后可预览详情",
       "environmentRequired": "创作环境不能为空",
       "creationNode": "创作节点",
+      "noCreationNodeInEnvironment": "该环境下暂无节点",
       "searchEnvironment": "搜索创作环境",
       "environmentManagement": "创作环境管理",
       "creationEnvironment": "创作环境",

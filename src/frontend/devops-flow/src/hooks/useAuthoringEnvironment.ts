@@ -199,7 +199,7 @@ export function useAuthoringEnvironment(options: UseAuthoringEnvironmentOptions 
   function goEnvironment(envHashId?: string) {
     let url = `${location.origin}/console/environment/${route.params.projectId}`
     if (envHashId) {
-      url += `/creative/env/ALL/${envHashId}/node`
+      url += `/creative-stream/env/ALL/${envHashId}/node`
     }
     window.open(url, '_blank')
   }

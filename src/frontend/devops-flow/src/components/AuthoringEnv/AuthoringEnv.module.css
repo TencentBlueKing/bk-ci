@@ -135,6 +135,15 @@
   gap: var(--spacing-sm);
 }
 
+.nodeEmpty {
+  padding: 12px 0;
+}
+
+.nodeEmpty :global(.bk-exception-img) {
+  width: 80px;
+  height: 64px;
+}
+
 .noData {
   margin-top: 58px;
   text-align: center;

@@ -84,6 +84,7 @@
       "previewDetailsAfterEnvironmentSelection": "Preview details after selecting creation environment",
       "environmentRequired": "Creation environment cannot be empty",
       "creationNode": "Creation Node",
+      "noCreationNodeInEnvironment": "No nodes in this environment",
       "searchEnvironment": "Search Creation Environment",
       "environmentManagement": "Creation Environment Management",
       "creationEnvironment": "Creation Environment",
