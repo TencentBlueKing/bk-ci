@@ -30,6 +30,9 @@ package com.tencent.devops.auth.service.iam
 
 import com.tencent.devops.auth.pojo.dto.MigrateResourceDTO
 import com.tencent.devops.auth.pojo.dto.PermissionHandoverDTO
+import com.tencent.devops.auth.pojo.dto.ProjectGroupIncrementalMigrationDTO
+import com.tencent.devops.auth.pojo.dto.ProjectGroupMigrationDTO
+import com.tencent.devops.auth.pojo.dto.ProjectGroupMigrationResultDTO
 import com.tencent.devops.common.auth.api.pojo.ProjectConditionDTO
 
 /**
@@ -75,6 +78,12 @@ interface PermissionMigrateService {
      * filterActions:listOf(project_api-operate,project_api-operate)
      */
     fun resetProjectPermissions(migrateResourceDTO: MigrateResourceDTO): Boolean
+
+    fun migrateProjectGroups(migrationDTO: ProjectGroupMigrationDTO): ProjectGroupMigrationResultDTO
+
+    fun migrateProjectGroupsIncremental(
+        migrationDTO: ProjectGroupIncrementalMigrationDTO
+    ): ProjectGroupMigrationResultDTO
 
     fun resetPermissionsWhenEnabledProject(projectCode: String): Boolean
 
