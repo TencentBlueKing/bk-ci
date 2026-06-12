@@ -84,6 +84,7 @@ import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_NAME
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_NEW_PREFIX
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_OWNER
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_PARENT_ID
+import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_PRIORITY
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_PRIORITY_LABEL
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_REFERER
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_SOURCE_ID
@@ -494,7 +495,9 @@ class TapdWebhookRequestService(
                     eventAction = eventAction,
                     triggerUser = triggerUser,
                     startParams = startParams,
-                    triggerPriority = body.getHookField(TAPD_KEY_PRIORITY_LABEL),
+                    triggerPriority = body.getHookField(TAPD_KEY_PRIORITY_LABEL).ifBlank {
+                        body.getHookField(TAPD_KEY_PRIORITY)
+                    },
                     triggerLabels = body.getHookField(TAPD_KEY_LABEL),
                     triggerOwner = body.getHookField(TAPD_KEY_OWNER).ifBlank {
                         body.getHookField(TAPD_KEY_CURRENT_OWNER)
