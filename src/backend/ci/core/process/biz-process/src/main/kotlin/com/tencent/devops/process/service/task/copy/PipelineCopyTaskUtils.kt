@@ -5,11 +5,13 @@ import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.pojo.pipeline.PipelineDependentResource
+import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskStatus
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineCopyAction
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineCopyTaskResourceStatus
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineDependentResourceType
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchCopyTaskParam
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTask
+import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskConfigRequest
 import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskResource
 import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskResourceUpdate
 import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskSummary
@@ -38,6 +40,16 @@ object PipelineCopyTaskUtils {
         return task.taskParam?.takeIf { it.isNotBlank() }?.let {
             JsonUtil.to(it, PipelineBatchCopyTaskParam::class.java)
         }
+    }
+
+    fun needAnalyzeAgain(
+        task: PipelineBatchTask,
+        request: PipelineCopyTaskConfigRequest
+    ): Boolean {
+        val oldParam = parseParam(task) ?: return false
+        return task.status == PipelineBatchTaskStatus.PIPELINE_RESOURCE_ANALYZE_FAILED ||
+            oldParam.targetProjectId != request.targetProjectId ||
+            oldParam.pipelineCopyStrategy != request.pipelineCopyStrategy
     }
 
     fun buildSummary(resources: List<PipelineCopyTaskResource>): PipelineCopyTaskSummary {

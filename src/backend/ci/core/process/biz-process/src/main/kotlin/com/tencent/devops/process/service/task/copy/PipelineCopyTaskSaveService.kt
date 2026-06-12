@@ -100,7 +100,7 @@ class PipelineCopyTaskSaveService @Autowired constructor(
                         clearErrorMessage = true
                     )
                 )
-                if (oldParam != null && task.needAnalyzeAgain(request)) {
+                if (oldParam != null && PipelineCopyTaskUtils.needAnalyzeAgain(task, request)) {
                     pipelineBatchTaskDetailDao.updateChange(
                         dslContext = transactionContext,
                         projectId = projectId,
@@ -446,13 +446,6 @@ class PipelineCopyTaskSaveService @Autowired constructor(
             PipelineBatchTaskStatus.PIPELINE_RESOURCE_ANALYZE_FAILED,
             PipelineBatchTaskStatus.EXECUTE_FAILED
         )
-    }
-
-    private fun PipelineBatchTask.needAnalyzeAgain(request: PipelineCopyTaskConfigRequest): Boolean {
-        val oldParam = PipelineCopyTaskUtils.parseParam(this) ?: return false
-        return status == PipelineBatchTaskStatus.PIPELINE_RESOURCE_ANALYZE_FAILED ||
-            oldParam.targetProjectId != request.targetProjectId ||
-            oldParam.pipelineCopyStrategy != request.pipelineCopyStrategy
     }
 
     companion object {

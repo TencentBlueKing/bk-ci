@@ -44,7 +44,9 @@ class PipelineCopyTaskService @Autowired constructor(
     private val authProjectApi: AuthProjectApi,
     private val sampleEventDispatcher: SampleEventDispatcher,
     private val pipelineAuthServiceCode: PipelineAuthServiceCode,
-    private val pipelineCopyTaskSaveService: PipelineCopyTaskSaveService
+    private val pipelineCopyTaskSaveService: PipelineCopyTaskSaveService,
+    private val pipelineCopyTaskAnalyzeService: PipelineCopyTaskAnalyzeService,
+    private val pipelineCopyTaskExecuteService: PipelineCopyTaskExecuteService
 ) {
 
     fun get(userId: String, projectId: String, taskId: String): PipelineCopyTask? {
@@ -93,8 +95,10 @@ class PipelineCopyTaskService @Autowired constructor(
         taskId: String,
         request: PipelineCopyTaskConfigRequest
     ): Boolean {
-        saveConfigDraft(
-            userId = userId,
+        val targetProjectId = request.targetProjectId
+        checkProjectManager(userId = userId, projectId = projectId)
+        checkProjectManager(userId = userId, projectId = targetProjectId)
+        pipelineCopyTaskAnalyzeService.prepareAnalyze(
             projectId = projectId,
             taskId = taskId,
             request = request
@@ -265,35 +269,16 @@ class PipelineCopyTaskService @Autowired constructor(
         taskId: String
     ) {
         val task = getTask(projectId = projectId, taskId = taskId)
-        if (task.status !in setOf(
-                PipelineBatchTaskStatus.DRAFT,
-                PipelineBatchTaskStatus.EXECUTE_FAILED
-            )
-        ) {
-            throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ERROR_PIPELINE_BATCH_TASK_STATUS_CAN_NOT_EXECUTE,
-                params = arrayOf(taskId, task.status.name)
-            )
-        }
         val param = PipelineCopyTaskUtils.parseParam(task) ?: throw ErrorCodeException(
             errorCode = ProcessMessageCode.ERROR_PIPELINE_COPY_TASK_CONFIG_NOT_EXISTS,
             params = arrayOf(taskId)
         )
         checkProjectManager(userId = userId, projectId = projectId)
         checkProjectManager(userId = userId, projectId = param.targetProjectId)
-
-        val unprocessedCount = pipelineCopyTaskResourceDao.count(
-            dslContext = dslContext,
+        pipelineCopyTaskExecuteService.prepareExecute(
             projectId = projectId,
-            taskId = taskId,
-            status = PipelineCopyTaskResourceStatus.UNPROCESSED
+            taskId = taskId
         )
-        if (unprocessedCount > 0) {
-            throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ERROR_PIPELINE_COPY_RESOURCE_NOT_ALL_PROCESSED,
-                params = arrayOf(taskId, unprocessedCount.toString())
-            )
-        }
         sampleEventDispatcher.dispatch(
             PipelineBatchTaskExecuteEvent(
                 taskId = taskId,

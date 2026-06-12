@@ -27,12 +27,14 @@ import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskType
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineCopyStrategy
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineCopyTaskResourceStatus
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineDependentResourceType
+import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchCopyTaskParam
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTask
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskAnalyzeEvent
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskDetail
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskDetailUpdate
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskUpdate
 import com.tencent.devops.process.pojo.pipeline.task.PipelineConflictInfo
+import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskConfigRequest
 import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskResource
 import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskResourceRel
 import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskResourceUpdate
@@ -70,6 +72,86 @@ class PipelineCopyTaskAnalyzeService @Autowired constructor(
     private val pipelineCopyTaskStateService: PipelineCopyTaskStateService,
     private val pipelineIdGenerator: PipelineIdGenerator
 ) {
+    fun prepareAnalyze(
+        projectId: String,
+        taskId: String,
+        request: PipelineCopyTaskConfigRequest
+    ) {
+        val lock = PipelineCopyTaskLock(
+            redisOperation = redisOperation,
+            projectId = projectId,
+            taskId = taskId
+        )
+        try {
+            lock.lock()
+            val task = pipelineBatchTaskDao.get(
+                dslContext = dslContext,
+                projectId = projectId,
+                taskId = taskId
+            ) ?: throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_PIPELINE_BATCH_TASK_NOT_EXISTS,
+                params = arrayOf(taskId)
+            )
+            if (task.taskType != PipelineBatchTaskType.PIPELINE_COPY) {
+                throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.ERROR_PIPELINE_BATCH_TASK_TYPE_NOT_MATCH,
+                    params = arrayOf(taskId, task.taskType.name, PipelineBatchTaskType.PIPELINE_COPY.name)
+                )
+            }
+            if (task.status !in setOf(
+                    PipelineBatchTaskStatus.DRAFT,
+                    PipelineBatchTaskStatus.PIPELINE_RESOURCE_ANALYZE_FAILED
+                )
+            ) {
+                throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.ERROR_PIPELINE_BATCH_TASK_STATUS_CAN_NOT_ANALYZE,
+                    params = arrayOf(taskId, task.status.name)
+                )
+            }
+            if (pipelineBatchTaskDao.countByTaskName(
+                    dslContext = dslContext,
+                    projectId = projectId,
+                    taskName = request.taskName,
+                    excludeTaskId = taskId
+                ) > 0
+            ) {
+                throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.ERROR_PIPELINE_BATCH_TASK_NAME_DUPLICATE,
+                    params = arrayOf(request.taskName)
+                )
+            }
+            val oldParam = PipelineCopyTaskUtils.parseParam(task)
+            val param = PipelineBatchCopyTaskParam(
+                targetProjectId = request.targetProjectId,
+                pipelineCopyStrategy = request.pipelineCopyStrategy
+            )
+            dslContext.transaction { configuration ->
+                val transactionContext = DSL.using(configuration)
+                pipelineBatchTaskDao.update(
+                    dslContext = transactionContext,
+                    update = PipelineBatchTaskUpdate(
+                        projectId = projectId,
+                        taskId = taskId,
+                        taskName = request.taskName,
+                        taskParam = JsonUtil.toJson(param, formatted = false),
+                        status = PipelineBatchTaskStatus.PIPELINE_RESOURCE_ANALYZING,
+                        clearErrorMessage = true
+                    )
+                )
+                if (oldParam != null && PipelineCopyTaskUtils.needAnalyzeAgain(task, request)) {
+                    pipelineBatchTaskDetailDao.updateChange(
+                        dslContext = transactionContext,
+                        projectId = projectId,
+                        taskId = taskId,
+                        change = true
+                    )
+                }
+            }
+        } finally {
+            lock.unlock()
+        }
+    }
+
     fun analyze(event: PipelineBatchTaskAnalyzeEvent) {
         with(event) {
             try {
@@ -1186,33 +1268,10 @@ class PipelineCopyTaskAnalyzeService @Autowired constructor(
                 logger.warn("pipeline batch task type not match|$projectId|$taskId")
                 return null
             }
-            if (task.status !in setOf(
-                    PipelineBatchTaskStatus.DRAFT,
-                    PipelineBatchTaskStatus.PIPELINE_RESOURCE_ANALYZE_FAILED
-                )
-            ) {
+            if (task.status != PipelineBatchTaskStatus.PIPELINE_RESOURCE_ANALYZING) {
                 logger.warn("pipeline batch task status not match|$projectId|$taskId|${task.status}")
                 return null
             }
-            val changeCount = pipelineBatchTaskDetailDao.count(
-                dslContext = dslContext,
-                projectId = projectId,
-                taskId = taskId,
-                change = true
-            )
-            if (changeCount == 0L && task.status != PipelineBatchTaskStatus.PIPELINE_RESOURCE_ANALYZE_FAILED) {
-                logger.warn("pipeline batch task has no changed detail, no need to analyze|$projectId|$taskId")
-                return null
-            }
-            pipelineBatchTaskDao.update(
-                dslContext = dslContext,
-                update = PipelineBatchTaskUpdate(
-                    projectId = projectId,
-                    taskId = taskId,
-                    status = PipelineBatchTaskStatus.PIPELINE_RESOURCE_ANALYZING,
-                    clearErrorMessage = true
-                )
-            )
             return task
         } finally {
             lock.unlock()

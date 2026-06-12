@@ -51,6 +51,72 @@ class PipelineCopyTaskExecuteService @Autowired constructor(
     private val pipelineTemplateRelatedService: PipelineTemplateRelatedService,
     private val pipelineTemplateGenerator: PipelineTemplateGenerator
 ) {
+    fun prepareExecute(
+        projectId: String,
+        taskId: String
+    ) {
+        val lock = PipelineCopyTaskLock(
+            redisOperation = redisOperation,
+            projectId = projectId,
+            taskId = taskId
+        )
+        try {
+            lock.lock()
+            val task = pipelineBatchTaskDao.get(
+                dslContext = dslContext,
+                projectId = projectId,
+                taskId = taskId
+            ) ?: throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_PIPELINE_BATCH_TASK_NOT_EXISTS,
+                params = arrayOf(taskId)
+            )
+            if (task.taskType != PipelineBatchTaskType.PIPELINE_COPY) {
+                throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.ERROR_PIPELINE_BATCH_TASK_TYPE_NOT_MATCH,
+                    params = arrayOf(taskId, task.taskType.name, PipelineBatchTaskType.PIPELINE_COPY.name)
+                )
+            }
+            if (task.status !in setOf(
+                    PipelineBatchTaskStatus.DRAFT,
+                    PipelineBatchTaskStatus.EXECUTE_FAILED
+                )
+            ) {
+                throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.ERROR_PIPELINE_BATCH_TASK_STATUS_CAN_NOT_EXECUTE,
+                    params = arrayOf(taskId, task.status.name)
+                )
+            }
+            if (PipelineCopyTaskUtils.parseParam(task) == null) {
+                throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.ERROR_PIPELINE_COPY_TASK_CONFIG_NOT_EXISTS,
+                    params = arrayOf(taskId)
+                )
+            }
+            val unprocessedCount = pipelineCopyTaskResourceDao.count(
+                dslContext = dslContext,
+                projectId = projectId,
+                taskId = taskId,
+                status = PipelineCopyTaskResourceStatus.UNPROCESSED
+            )
+            if (unprocessedCount > 0) {
+                throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.ERROR_PIPELINE_COPY_RESOURCE_NOT_ALL_PROCESSED,
+                    params = arrayOf(taskId, unprocessedCount.toString())
+                )
+            }
+            pipelineBatchTaskDao.update(
+                dslContext = dslContext,
+                update = PipelineBatchTaskUpdate(
+                    projectId = projectId,
+                    taskId = taskId,
+                    status = PipelineBatchTaskStatus.EXECUTING,
+                    clearErrorMessage = true
+                )
+            )
+        } finally {
+            lock.unlock()
+        }
+    }
 
     fun execute(event: PipelineBatchTaskExecuteEvent) {
         with(event) {
@@ -176,29 +242,10 @@ class PipelineCopyTaskExecuteService @Autowired constructor(
                 logger.warn("pipeline batch task type not match|$projectId|$taskId")
                 return null
             }
-            if (task.status !in setOf(PipelineBatchTaskStatus.DRAFT, PipelineBatchTaskStatus.EXECUTE_FAILED)) {
-                logger.warn("pipeline batch task status not match|$projectId|$taskId|${task.status}")
+            if (task.status != PipelineBatchTaskStatus.EXECUTING) {
+                logger.warn("pipeline batch task status not match|$projectId|$taskId")
                 return null
             }
-            val unprocessedCount = pipelineCopyTaskResourceDao.count(
-                dslContext = dslContext,
-                projectId = projectId,
-                taskId = taskId,
-                status = PipelineCopyTaskResourceStatus.UNPROCESSED
-            )
-            if (unprocessedCount > 0) {
-                logger.warn("pipeline copy task has unprocessed resources|$projectId|$taskId|$unprocessedCount")
-                return null
-            }
-            pipelineBatchTaskDao.update(
-                dslContext = dslContext,
-                update = PipelineBatchTaskUpdate(
-                    projectId = projectId,
-                    taskId = taskId,
-                    status = PipelineBatchTaskStatus.EXECUTING,
-                    clearErrorMessage = true
-                )
-            )
             return task
         } finally {
             lock.unlock()
