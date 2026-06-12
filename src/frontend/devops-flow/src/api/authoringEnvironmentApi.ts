@@ -1,5 +1,6 @@
 import { ENVIRONMENT_API_URL_PREFIX } from '@/utils/apiUrlPrefix'
 import { get } from '@/utils/http'
+import { getNodeNameIpDisplayText } from '@/utils/nodeDisplay'
 
 /**
  * ====================================
@@ -201,10 +202,10 @@ export function convertToCreationNode(node: AuthoringNodeItem): CreationNode {
 
 /**
  * Get node display text for UI.
- * Prefer IP because it is more recognizable than node IDs.
+ * Display both node name and IP when both are available.
  */
 export function getAuthoringNodeDisplayText(
-  node: Pick<AuthoringNodeItem, 'ip' | 'displayName' | 'name'>,
+  node: Pick<AuthoringNodeItem, 'ip' | 'displayName' | 'name' | 'nodeName'>,
 ): string {
-  return node.ip || node.displayName || node.name || '--'
+  return getNodeNameIpDisplayText(node)
 }
