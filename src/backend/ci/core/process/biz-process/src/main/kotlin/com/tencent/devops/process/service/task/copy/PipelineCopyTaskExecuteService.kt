@@ -45,6 +45,7 @@ class PipelineCopyTaskExecuteService @Autowired constructor(
     private val pipelineCopyTaskResourceRelDao: PipelineCopyTaskResourceRelDao,
     private val pipelineCopyResourceGetService: PipelineCopyResourceGetService,
     private val pipelineCopyResourceCreateService: PipelineCopyResourceCreateService,
+    private val pipelineCopyTemplateCreateService: PipelineCopyTemplateCreateService,
     private val pipelineCopyTaskStateService: PipelineCopyTaskStateService,
     private val pipelineTemplateInfoService: PipelineTemplateInfoService,
     private val pipelineTemplateRelatedService: PipelineTemplateRelatedService,
@@ -881,7 +882,7 @@ class PipelineCopyTaskExecuteService @Autowired constructor(
             return null
         }
         val versionMappings = sourceVersions.map { sourceVersion ->
-            pipelineCopyResourceCreateService.createTemplateVersion(
+            pipelineCopyTemplateCreateService.createTemplateVersion(
                 userId = userId,
                 sourceProjectId = projectId,
                 sourceTemplateId = resource.resourceId,
@@ -1024,8 +1025,6 @@ class PipelineCopyTaskExecuteService @Autowired constructor(
                     val targetResource = pipelineCopyResourceCreateService.createPipeline(
                         userId = userId,
                         projectId = projectId,
-                        taskId = taskId,
-                        sourceProjectId = projectId,
                         sourcePipelineId = resource.resourceId,
                         targetProjectId = targetProjectId,
                         targetPipelineId = targetResourceId!!,

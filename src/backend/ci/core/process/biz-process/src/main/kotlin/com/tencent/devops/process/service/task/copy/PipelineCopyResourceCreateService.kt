@@ -1,9 +1,9 @@
 package com.tencent.devops.process.service.task.copy
 
+import com.tencent.devops.auth.api.service.ServiceResourceMemberResource
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.auth.api.service.ServiceResourceMemberResource
 import com.tencent.devops.common.api.util.DHUtil
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.auth.api.AuthResourceType
@@ -11,7 +11,6 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.PipelineInstanceTypeEnum
-import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.environment.api.ServiceEnvironmentResource
 import com.tencent.devops.environment.api.ServiceNodeResource
 import com.tencent.devops.environment.pojo.EnvCreateInfo
@@ -28,17 +27,13 @@ import com.tencent.devops.process.pojo.classify.PipelineGroupCreate
 import com.tencent.devops.process.pojo.classify.PipelineLabelCreate
 import com.tencent.devops.process.pojo.classify.PipelineViewForm
 import com.tencent.devops.process.pojo.classify.enums.Logic
-import com.tencent.devops.process.pojo.pipeline.PipelineDependentResource
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineCopyTaskResourceStatus
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineDependentResourceType
 import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskResource
-import com.tencent.devops.process.pojo.pipeline.task.TemplateVersionMapping
-import com.tencent.devops.process.pojo.template.v2.PipelineTemplateCompatibilityCreateReq
+import com.tencent.devops.process.pojo.pipeline.task.PipelineTemplateCopyResourceProp
 import com.tencent.devops.process.service.PipelineInfoFacadeService
 import com.tencent.devops.process.service.label.PipelineGroupService
-import com.tencent.devops.process.service.template.v2.PipelineTemplateInfoService
-import com.tencent.devops.process.service.template.v2.PipelineTemplateResourceService
-import com.tencent.devops.process.service.template.v2.version.PipelineTemplateVersionManager
+import com.tencent.devops.process.service.template.v2.PipelineTemplateRelatedService
 import com.tencent.devops.process.service.view.PipelineViewService
 import com.tencent.devops.process.utils.CredentialUtils
 import com.tencent.devops.repository.api.ServiceRepositoryResource
@@ -78,9 +73,7 @@ class PipelineCopyResourceCreateService @Autowired constructor(
     private val pipelineCopyTaskResourceRelDao: PipelineCopyTaskResourceRelDao,
     private val pipelineDependencyReplaceService: PipelineDependencyReplaceService,
     private val pipelineInfoFacadeService: PipelineInfoFacadeService,
-    private val pipelineTemplateResourceService: PipelineTemplateResourceService,
-    private val pipelineTemplateVersionManager: PipelineTemplateVersionManager,
-    private val pipelineTemplateInfoService: PipelineTemplateInfoService
+    private val pipelineTemplateRelatedService: PipelineTemplateRelatedService
 ) {
     fun createCredential(
         userId: String,
@@ -489,17 +482,20 @@ class PipelineCopyResourceCreateService @Autowired constructor(
     fun createPipeline(
         userId: String,
         projectId: String,
-        taskId: String,
-        sourceProjectId: String,
         sourcePipelineId: String,
         targetProjectId: String,
         targetPipelineId: String,
         targetPipelineName: String,
         resourceMap: MutableMap<String, PipelineCopyTaskResource>
     ): PipelineCopyResourceBasicInfo {
+        val templateVersion = resolveTemplateVersion(
+            projectId = projectId,
+            sourcePipelineId = sourcePipelineId,
+            resourceMap = resourceMap
+        )
         val modelAndSetting = pipelineDependencyReplaceService.replacePipelineResourceDependency(
             userId = userId,
-            projectId = sourceProjectId,
+            projectId = projectId,
             pipelineId = sourcePipelineId,
             targetProjectId = targetProjectId,
             targetPipelineId = targetPipelineId,
@@ -525,19 +521,11 @@ class PipelineCopyResourceCreateService @Autowired constructor(
             } else {
                 PipelineInstanceTypeEnum.FREEDOM.type
             },
-            fixPipelineId = targetPipelineId
-        )
-        associateStaticPipelineGroups(
-            userId = userId,
-            projectId = projectId,
-            taskId = taskId,
-            sourcePipelineId = sourcePipelineId,
-            targetProjectId = targetProjectId,
-            targetPipelineId = targetPipelineId,
-            resourceMap = resourceMap
+            fixPipelineId = targetPipelineId,
+            fixTemplateVersion = templateVersion
         )
         copyResourceGroupMembersSafely(
-            sourceProjectId = sourceProjectId,
+            sourceProjectId = projectId,
             targetProjectId = targetProjectId,
             resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
             sourceResourceCode = sourcePipelineId,
@@ -550,134 +538,41 @@ class PipelineCopyResourceCreateService @Autowired constructor(
         )
     }
 
-    fun createTemplateVersion(
-        userId: String,
-        sourceProjectId: String,
-        sourceTemplateId: String,
-        sourceTemplateVersion: Long,
-        targetProjectId: String,
-        targetTemplateId: String,
-        replaceResourceMap: Map<String, PipelineDependentResource>
-    ): TemplateVersionMapping {
-        val sourceTemplateInfo = pipelineTemplateInfoService.getOrNull(
-            projectId = sourceProjectId,
-            templateId = sourceTemplateId
-        ) ?: throw ErrorCodeException(
-            errorCode = ProcessMessageCode.ERROR_PIPELINE_COPY_SOURCE_RESOURCE_NOT_EXISTS,
-            params = arrayOf(sourceProjectId, "$sourceTemplateId@$sourceTemplateVersion")
-        )
-        val sourceTemplateResource = pipelineTemplateResourceService.getOrNull(
-            projectId = sourceProjectId,
-            templateId = sourceTemplateId,
-            version = sourceTemplateVersion
-        ) ?: throw ErrorCodeException(
-            errorCode = ProcessMessageCode.ERROR_PIPELINE_COPY_SOURCE_RESOURCE_NOT_EXISTS,
-            params = arrayOf(sourceProjectId, "$sourceTemplateId@$sourceTemplateVersion")
-        )
-        val sourceVersionName = sourceTemplateResource.versionName!!
-        val existingTargetResource = pipelineTemplateResourceService.getLatestResource(
-            projectId = targetProjectId,
-            templateId = targetTemplateId,
-            status = VersionStatus.RELEASED,
-            versionName = sourceVersionName
-        )
-        if (existingTargetResource != null) {
-            return TemplateVersionMapping(
-                sourceVersion = sourceTemplateVersion,
-                sourceVersionName = sourceVersionName,
-                targetVersion = existingTargetResource.version,
-                targetVersionName = existingTargetResource.versionName!!
-            )
-        }
-        val modelAndSetting = pipelineDependencyReplaceService.replaceTemplateResourceDependency(
-            sourceProjectId = sourceProjectId,
-            sourceTemplateId = sourceTemplateId,
-            sourceTemplateVersion = sourceTemplateVersion,
-            sourceTemplateResource = sourceTemplateResource,
-            targetProjectId = targetProjectId,
-            targetTemplateId = targetTemplateId,
-            targetTemplateName = sourceTemplateInfo.name,
-            replaceResourceMap = replaceResourceMap
-        )
-        // 校验插件是否在目标项目可见
-        client.get(ServiceTemplateResource::class).validateModelComponentVisibleDept(
-            userId = userId,
-            model = modelAndSetting.model,
-            projectCode = targetProjectId
-        )
-        val deployResult = pipelineTemplateVersionManager.deployTemplate(
-            userId = userId,
-            projectId = targetProjectId,
-            templateId = targetTemplateId,
-            request = PipelineTemplateCompatibilityCreateReq(
-                model = modelAndSetting.model,
-                setting = modelAndSetting.setting,
-                v1VersionName = sourceVersionName,
-                category = sourceTemplateInfo.category,
-                logoUrl = sourceTemplateInfo.logoUrl
-            )
-        )
-        return TemplateVersionMapping(
-            sourceVersion = sourceTemplateVersion,
-            sourceVersionName = sourceVersionName,
-            targetVersion = deployResult.version,
-            targetVersionName = deployResult.versionName!!
-        )
-    }
-
-    private fun associateStaticPipelineGroups(
-        userId: String,
+    private fun resolveTemplateVersion(
         projectId: String,
-        taskId: String,
         sourcePipelineId: String,
-        targetProjectId: String,
-        targetPipelineId: String,
         resourceMap: Map<String, PipelineCopyTaskResource>
-    ) {
-        val relations = pipelineCopyTaskResourceRelDao.list(
-            dslContext = dslContext,
+    ): Long? {
+        val related = pipelineTemplateRelatedService.get(
             projectId = projectId,
-            taskId = taskId,
-            pipelineIds = setOf(sourcePipelineId),
-            resourceType = PipelineDependentResourceType.PIPELINE_GROUP
-        )
-        relations.forEach { relation ->
-            val resource = resourceMap[
-                PipelineCopyTaskUtils.resourceKey(
-                    resourceType = relation.resourceType,
-                    resourceId = relation.resourceId
-                )
-            ] ?: return@forEach
-            if (resource.status != PipelineCopyTaskResourceStatus.SUCCESS) {
-                return@forEach
-            }
-            val targetViewId = parseViewId(resource.targetResourceId) ?: return@forEach
-            val targetView = pipelineViewDao.get(
-                dslContext = dslContext,
-                projectId = targetProjectId,
-                viewId = targetViewId
-            ) ?: return@forEach
-            if (targetView.isProject && targetView.viewType == PipelineViewType.STATIC) {
-                pipelineViewGroupDao.create(
-                    dslContext = dslContext,
-                    projectId = targetProjectId,
-                    viewId = targetViewId,
-                    pipelineId = targetPipelineId,
-                    userId = userId
-                )
-            }
-        }
-    }
-
-    private fun parseViewId(viewId: String?): Long? {
-        if (viewId.isNullOrBlank()) {
+            pipelineId = sourcePipelineId
+        ) ?: return null
+        if (related.instanceType != PipelineInstanceTypeEnum.CONSTRAINT) {
             return null
         }
-        val decoded = HashUtil.decodeIdToLong(viewId)
-        if (decoded > 0L) {
-            return decoded
+        val templateResource = resourceMap[
+            PipelineCopyTaskUtils.resourceKey(
+                resourceType = PipelineDependentResourceType.PIPELINE_TEMPLATE,
+                resourceId = related.templateId
+            )
+        ] ?: throw ErrorCodeException(
+            errorCode = ProcessMessageCode.ERROR_PIPELINE_COPY_DEPENDENT_RESOURCE_NOT_EXISTS,
+            params = arrayOf(projectId, "${related.templateId}@${related.versionName}")
+        )
+        if (templateResource.status != PipelineCopyTaskResourceStatus.SUCCESS) {
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_PIPELINE_COPY_DEPENDENT_RESOURCE_FAILED,
+                params = arrayOf("PIPELINE_TEMPLATE:${templateResource.resourceName}")
+            )
         }
-        return viewId.toLongOrNull()
+        val versionMappings = (templateResource.targetResourceProp as? PipelineTemplateCopyResourceProp)
+            ?.versionMappings
+        val versionMapping = versionMappings?.find { it.sourceVersion == related.version }
+            ?: throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_PIPELINE_COPY_DEPENDENT_RESOURCE_FAILED,
+                params = arrayOf("PIPELINE_TEMPLATE:${related.templateId}@${related.versionName}")
+            )
+        return versionMapping.targetVersion
     }
 
     private fun buildTargetRepository(

@@ -63,6 +63,16 @@ class PipelineBatchTaskService @Autowired constructor(
         return SQLPage(count = count, records = records)
     }
 
+    fun count(projectId: String, status: PipelineBatchTaskStatus?): Long {
+        return pipelineBatchTaskDao.count(
+            dslContext = dslContext,
+            projectId = projectId,
+            type = null,
+            status = status,
+            creator = null
+        )
+    }
+
     fun create(
         userId: String,
         projectId: String,

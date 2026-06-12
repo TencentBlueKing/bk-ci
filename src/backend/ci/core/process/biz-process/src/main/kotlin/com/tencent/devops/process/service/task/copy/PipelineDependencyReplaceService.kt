@@ -44,6 +44,7 @@ import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.pojo.pipeline.PipelineDependentResource
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineDependentResourceType
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateResource
+import com.tencent.devops.process.service.PipelineInfoFacadeService
 import com.tencent.devops.process.service.pipeline.PipelineSettingFacadeService
 import com.tencent.devops.process.service.template.v2.PipelineTemplateSettingService
 import com.tencent.devops.process.utils.PipelineVarUtil
@@ -58,7 +59,8 @@ import org.springframework.stereotype.Service
 class PipelineDependencyReplaceService @Autowired constructor(
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val pipelineSettingFacadeService: PipelineSettingFacadeService,
-    private val pipelineTemplateSettingService: PipelineTemplateSettingService
+    private val pipelineTemplateSettingService: PipelineTemplateSettingService,
+    private val pipelineInfoFacadeService: PipelineInfoFacadeService
 ) {
 
     fun replacePipelineResourceDependency(
@@ -70,7 +72,7 @@ class PipelineDependencyReplaceService @Autowired constructor(
         targetPipelineName: String,
         replaceResourceMap: Map<String, PipelineDependentResource>
     ): PipelineModelAndSetting {
-        pipelineRepositoryService.getPipelineInfo(projectId = projectId, pipelineId = pipelineId)
+        val pipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId = projectId, pipelineId = pipelineId)
             ?: throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS
@@ -84,6 +86,13 @@ class PipelineDependencyReplaceService @Autowired constructor(
             statusCode = Response.Status.NOT_FOUND.statusCode,
             errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS
         )
+        val model = pipelineInfoFacadeService.getFixedModel(
+            resource = resource,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            userId = userId,
+            pipelineInfo = pipelineInfo
+        )
         val setting = pipelineSettingFacadeService.userGetSetting(
             userId = userId,
             projectId = projectId,
@@ -91,23 +100,39 @@ class PipelineDependencyReplaceService @Autowired constructor(
             version = resource.settingVersion ?: 0
         )
         val context = ReplaceContext(replaceResourceMap = replaceResourceMap)
-        val replacedModel = resource.model.copy(
+        val replacedModel = model.copy(
+            name = targetPipelineName,
             stages = replaceStages(
                 projectId = projectId,
                 stages = resource.model.stages,
                 context = context
             ),
             template = replaceTemplate(
-                template = resource.model.template,
+                template = model.template,
+                context = context
+            ),
+            labels = replaceLabels(
+                labels = model.labels,
+                context = context
+            ),
+            staticViews = replaceStaticViews(
+                staticViews = model.staticViews,
+                context = context
+            ),
+            templateId = replaceModelTemplateId(
+                templateId = model.templateId,
                 context = context
             )
-        ).copy(
-            name = targetPipelineName
         )
         val replaceSetting = setting.copy(
             projectId = targetProjectId,
             pipelineId = targetPipelineId,
-            pipelineName = targetPipelineName
+            pipelineName = targetPipelineName,
+            labels = replaceLabels(
+                labels = setting.labels,
+                context = context
+            ),
+            labelNames = emptyList()
         )
         if (context.missingResources.isNotEmpty()) {
             throw ErrorCodeException(
@@ -119,6 +144,7 @@ class PipelineDependencyReplaceService @Autowired constructor(
     }
 
     fun replaceTemplateResourceDependency(
+        userId: String,
         sourceProjectId: String,
         sourceTemplateId: String,
         sourceTemplateVersion: Long,
@@ -135,25 +161,29 @@ class PipelineDependencyReplaceService @Autowired constructor(
                 params = arrayOf(sourceProjectId, "$sourceTemplateId@$sourceTemplateVersion")
             )
         }
-        val sourceSetting = pipelineTemplateSettingService.get(
+        val sourceSetting = pipelineTemplateSettingService.getWithLabels(
+            userId = userId,
             projectId = sourceProjectId,
             templateId = sourceTemplateId,
             settingVersion = sourceTemplateResource.settingVersion
         )
         val context = ReplaceContext(replaceResourceMap = replaceResourceMap)
         val replacedModel = sourceModel.copy(
+            name = targetTemplateName,
             stages = replaceStages(
                 projectId = sourceProjectId,
                 stages = sourceModel.stages,
                 context = context
             )
-        ).copy(
-            name = targetTemplateName
         )
         val replaceSetting = sourceSetting.copy(
             projectId = targetProjectId,
             pipelineId = targetTemplateId,
-            pipelineName = targetTemplateName
+            pipelineName = targetTemplateName,
+            labels = replaceLabels(
+                labels = sourceSetting.labels,
+                context = context
+            )
         )
         if (context.missingResources.isNotEmpty()) {
             throw ErrorCodeException(
@@ -162,6 +192,43 @@ class PipelineDependencyReplaceService @Autowired constructor(
             )
         }
         return PipelineModelAndSetting(model = replacedModel, setting = replaceSetting)
+    }
+
+    private fun replaceLabels(
+        labels: List<String>,
+        context: ReplaceContext
+    ): List<String> {
+        return labels.mapNotNull { labelId ->
+            context.getTargetResourceOptional(
+                resourceType = PipelineDependentResourceType.PIPELINE_LABEL,
+                resourceId = labelId
+            )?.resourceId
+        }
+    }
+
+    private fun replaceStaticViews(
+        staticViews: List<String>,
+        context: ReplaceContext
+    ): List<String> {
+        return staticViews.mapNotNull { viewId ->
+            context.getTargetResourceOptional(
+                resourceType = PipelineDependentResourceType.PIPELINE_GROUP,
+                resourceId = viewId
+            )?.resourceId
+        }
+    }
+
+    private fun replaceModelTemplateId(
+        templateId: String?,
+        context: ReplaceContext
+    ): String? {
+        if (templateId.isNullOrBlank()) {
+            return templateId
+        }
+        return context.getTargetResourceOptional(
+            resourceType = PipelineDependentResourceType.PIPELINE_TEMPLATE,
+            resourceId = templateId
+        )?.resourceId ?: templateId
     }
 
     private fun replaceTemplate(
@@ -754,7 +821,10 @@ class PipelineDependencyReplaceService @Autowired constructor(
             resourceId: String
         ): PipelineDependentResource? {
             val sourceResourceId = resourceId.takeIf { it.isNotBlank() } ?: return null
-            return replaceResourceMap["${resourceType}_$sourceResourceId"] ?: run {
+            return getTargetResourceOptional(
+                resourceType = resourceType,
+                resourceId = sourceResourceId
+            ) ?: run {
                 missingResources.add(
                     MissingReplaceResource(
                         resourceType = resourceType,
@@ -763,6 +833,14 @@ class PipelineDependencyReplaceService @Autowired constructor(
                 )
                 null
             }
+        }
+
+        fun getTargetResourceOptional(
+            resourceType: PipelineDependentResourceType,
+            resourceId: String
+        ): PipelineDependentResource? {
+            val sourceResourceId = resourceId.takeIf { it.isNotBlank() } ?: return null
+            return replaceResourceMap["${resourceType}_$sourceResourceId"]
         }
     }
 

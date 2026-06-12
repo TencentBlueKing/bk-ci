@@ -62,6 +62,21 @@ interface UserPipelineBatchTaskResource {
         pageSize: Int
     ): Result<SQLPage<PipelineBatchTask>>
 
+    @Operation(summary = "查询流水线批量任务数量")
+    @GET
+    @Path("/{projectId}/tasks/count")
+    fun count(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "任务状态", required = false)
+        @QueryParam("status")
+        status: PipelineBatchTaskStatus?
+    ): Result<Long>
+
     @Operation(summary = "创建流水线批量任务")
     @POST
     @Path("/{projectId}/tasks")

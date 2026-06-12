@@ -505,6 +505,10 @@ object ProcessMessageCode {
     // 资源类型{0}，资源ID{1}自动完成，不需要确认
     const val ERROR_PIPELINE_COPY_RESOURCE_AUTO_FINISH_CAN_NOT_CONFIRM = "2101674"
     const val ERROR_PIPELINE_BATCH_TASK_NAME_DUPLICATE = "2101675" // 流水线批量任务名称[{0}]已存在，不允许重复
+    // 目标项目{0}模板{1}已存在版本名称{2}，不能复制
+    const val ERROR_PIPELINE_COPY_TARGET_TEMPLATE_VERSION_NAME_CONFLICT = "2101676"
+    // 目标项目{0}模板{1}已存在版本排序号{2}，不能复制
+    const val ERROR_PIPELINE_COPY_TARGET_TEMPLATE_VERSION_NUMBER_CONFLICT = "2101677"
 
     const val BK_SUCCESSFULLY_DISTRIBUTED = "bkSuccessfullyDistributed" // 跨项目构件分发成功，共分发了{0}个文件
     const val BK_SUCCESSFULLY_FAILED = "bkSuccessfullyFailed" // 跨项目构件分发失败，

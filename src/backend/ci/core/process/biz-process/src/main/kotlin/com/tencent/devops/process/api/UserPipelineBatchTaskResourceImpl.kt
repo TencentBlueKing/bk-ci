@@ -40,6 +40,14 @@ class UserPipelineBatchTaskResourceImpl @Autowired constructor(
         )
     }
 
+    override fun count(
+        userId: String,
+        projectId: String,
+        status: PipelineBatchTaskStatus?
+    ): Result<Long> {
+        return Result(pipelineBatchTaskService.count(projectId = projectId, status = status))
+    }
+
     override fun create(
         userId: String,
         projectId: String,
