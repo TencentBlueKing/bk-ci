@@ -232,6 +232,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         queryProjectAtomFlag: Boolean,
         fitOsFlag: Boolean?,
         queryFitAgentBuildLessAtomFlag: Boolean?,
+        installed: Boolean?,
         page: Int,
         pageSize: Int
     ): Result<AtomResp<AtomRespItem>?> {
@@ -272,6 +273,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
             keyword = keyword,
             fitOsFlag = fitOsFlag,
             queryFitAgentBuildLessAtomFlag = queryFitAgentBuildLessAtomFlag,
+            installed = installed,
             page = page,
             pageSize = pageSize
         )
@@ -291,6 +293,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         queryProjectAtomFlag: Boolean,
         fitOsFlag: Boolean?,
         queryFitAgentBuildLessAtomFlag: Boolean?,
+        installed: Boolean?,
         page: Int?,
         pageSize: Int?
     ): Result<AtomResp<AtomRespItem>?> {
@@ -308,6 +311,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
             fitOsFlag = fitOsFlag,
             queryProjectAtomFlag = queryProjectAtomFlag,
             queryFitAgentBuildLessAtomFlag = queryFitAgentBuildLessAtomFlag,
+            installed = installed,
             page = page,
             pageSize = pageSize
         )
@@ -425,7 +429,12 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                 uninstallFlag = if (atomPipelineCnt == null) null else atomPipelineCnt < 1,
                 labelList = atomLabelInfoMap?.get(it[KEY_ID] as String),
                 installFlag = installFlag,
-                installed = if (queryProjectAtomFlag) true else installedAtomList?.contains(atomCode),
+                installed = when {
+                    // 已显式按安装状态过滤时，DAO 已将结果集精确划分为已装/未装，直接回填过滤值
+                    installed != null && projectCode.isNotBlank() -> installed
+                    queryProjectAtomFlag -> true
+                    else -> installedAtomList?.contains(atomCode)
+                },
                 honorInfos = honorInfos,
                 indexInfos = indexInfos,
                 hotFlag = it[KEY_HOT_FLAG] as Boolean
@@ -445,7 +454,8 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
             keyword = keyword,
             fitOsFlag = fitOsFlag,
             queryProjectAtomFlag = queryProjectAtomFlag,
-            queryFitAgentBuildLessAtomFlag = queryFitAgentBuildLessAtomFlag
+            queryFitAgentBuildLessAtomFlag = queryFitAgentBuildLessAtomFlag,
+            installed = installed
         )
         val totalPage = PageUtil.calTotalPage(pageSize, totalSize)
         return Result(AtomResp(totalSize, page, pageSize, totalPage, dataList))
