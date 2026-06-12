@@ -16,6 +16,7 @@ import com.tencent.devops.process.pojo.pipeline.enums.PipelineCopyStrategy
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineCopyTaskResourceStatus
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineDependentResourceType
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTask
+import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskDetail
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskDetailUpdate
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskExecuteEvent
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskUpdate
@@ -977,6 +978,53 @@ class PipelineCopyTaskExecuteService @Autowired constructor(
         return templateVersions
     }
 
+    /**
+     * 分析流水线执行链路，返回叶子优先的执行顺序列表。
+     * - 把本任务内 PIPELINE→PIPELINE 关系组织成调用森林
+     * - DFS 后序遍历：子流水线先于父流水线
+     * - visited 集合负责防重 + 防循环
+     */
+    private fun analyzePipelineExecutionOrder(
+        projectId: String,
+        taskId: String,
+        details: List<PipelineBatchTaskDetail>
+    ): List<PipelineBatchTaskDetail> {
+        if (details.isEmpty()) {
+            return emptyList()
+        }
+        val detailMap = details.associateBy { it.pipelineId }
+        val parentToSubs = pipelineCopyTaskResourceRelDao.list(
+            dslContext = dslContext,
+            projectId = projectId,
+            taskId = taskId,
+            pipelineIds = detailMap.keys,
+            resourceType = PipelineDependentResourceType.PIPELINE
+        ).filter { rel ->
+            rel.pipelineId != rel.resourceId && detailMap.containsKey(rel.resourceId)
+        }.groupBy({ it.pipelineId }, { it.resourceId })
+        val visited = mutableSetOf<String>()
+        val ordered = mutableListOf<PipelineBatchTaskDetail>()
+
+        fun dfs(pipelineId: String) {
+            if (!visited.add(pipelineId)) {
+                return
+            }
+            parentToSubs[pipelineId]?.forEach { subPipelineId ->
+                dfs(subPipelineId)
+            }
+            detailMap[pipelineId]?.let { ordered.add(it) }
+        }
+
+        details.forEach { detail ->
+            dfs(detail.pipelineId)
+        }
+        logger.info(
+            "pipeline copy execution order|$projectId|$taskId|" +
+                ordered.joinToString(",") { it.pipelineId }
+        )
+        return ordered
+    }
+
     private fun executePipelines(
         userId: String,
         projectId: String,
@@ -1004,47 +1052,20 @@ class PipelineCopyTaskExecuteService @Autowired constructor(
         val pipelineResourceMap = latestResources.filter {
             it.resourceType == PipelineDependentResourceType.PIPELINE
         }.associateBy { it.resourceId }
-        val resourceUpdates = mutableListOf<PipelineCopyTaskResourceUpdate>()
-        val detailUpdates = mutableListOf<PipelineBatchTaskDetailUpdate>()
-        details.forEach { detail ->
-            val resource = pipelineResourceMap[detail.pipelineId]
-            if (resource == null) {
-                val exception = ErrorCodeException(
-                    errorCode = ProcessMessageCode.ERROR_PIPELINE_COPY_DEPENDENT_RESOURCE_NOT_EXISTS,
-                    params = arrayOf(projectId, detail.pipelineName)
-                )
-                detailUpdates.add(
-                    PipelineBatchTaskDetailUpdate(
-                        projectId = projectId,
-                        taskId = taskId,
-                        pipelineId = detail.pipelineId,
-                        status = PipelineBatchTaskDetailStatus.FAILED,
-                        change = false,
-                        errorMessage = PipelineCopyTaskUtils.getErrorMessage(exception)
-                    )
-                )
-                return@forEach
-            }
+        val executionOrder = analyzePipelineExecutionOrder(
+            projectId = projectId,
+            taskId = taskId,
+            details = details
+        )
+        executionOrder.forEach { detail ->
             executePipeline(
                 userId = userId,
                 projectId = projectId,
                 taskId = taskId,
                 targetProjectId = targetProjectId,
-                resource = resource,
-                resourceMap = resourceMap,
-                resourceUpdates = resourceUpdates,
-                detailUpdates = detailUpdates
-            )
-        }
-        dslContext.transaction { configuration ->
-            val transactionContext = DSL.using(configuration)
-            pipelineCopyTaskResourceDao.batchUpdate(
-                dslContext = transactionContext,
-                updates = resourceUpdates
-            )
-            pipelineBatchTaskDetailDao.batchUpdate(
-                dslContext = transactionContext,
-                updates = detailUpdates
+                detail = detail,
+                resource = pipelineResourceMap[detail.pipelineId],
+                resourceMap = resourceMap
             )
         }
     }
@@ -1054,16 +1075,27 @@ class PipelineCopyTaskExecuteService @Autowired constructor(
         projectId: String,
         taskId: String,
         targetProjectId: String,
-        resource: PipelineCopyTaskResource,
-        resourceMap: MutableMap<String, PipelineCopyTaskResource>,
-        resourceUpdates: MutableList<PipelineCopyTaskResourceUpdate>,
-        detailUpdates: MutableList<PipelineBatchTaskDetailUpdate>
+        detail: PipelineBatchTaskDetail,
+        resource: PipelineCopyTaskResource?,
+        resourceMap: MutableMap<String, PipelineCopyTaskResource>
     ) {
+        updatePipelineDetailStatus(
+            projectId = projectId,
+            taskId = taskId,
+            pipelineId = detail.pipelineId,
+            status = PipelineBatchTaskDetailStatus.EXECUTING
+        )
         var status = PipelineCopyTaskResourceStatus.SUCCESS
         var targetResourceId = resource.targetResourceId
         var targetResourceName = resource.targetResourceName
         var errorMessage: String? = null
         try {
+            if (resource == null) {
+                throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.ERROR_PIPELINE_COPY_DEPENDENT_RESOURCE_NOT_EXISTS,
+                    params = arrayOf(projectId, detail.pipelineName)
+                )
+            }
             when (val copyStrategy = validateCopyStrategy(resource)) {
                 PipelineCopyStrategy.PIPELINE_CREATE_NEW_ID,
                 PipelineCopyStrategy.PIPELINE_REUSE_SOURCE_ID,
@@ -1096,27 +1128,40 @@ class PipelineCopyTaskExecuteService @Autowired constructor(
             status = PipelineCopyTaskResourceStatus.FAILED
             errorMessage = PipelineCopyTaskUtils.getErrorMessage(ignored)
         }
-        resourceUpdates.add(
-            PipelineCopyTaskResourceUpdate(
-                projectId = projectId,
-                taskId = taskId,
-                resourceType = resource.resourceType,
-                resourceId = resource.resourceId,
-                targetResourceType = resource.resourceType,
-                status = status,
-                targetResourceId = targetResourceId,
-                targetResourceName = targetResourceName,
-                errorMessage = errorMessage
-            )
-        )
-        addPipelineDetailUpdate(
-            updates = detailUpdates,
+        val resourceUpdate = PipelineCopyTaskResourceUpdate(
             projectId = projectId,
             taskId = taskId,
-            pipelineId = resource.resourceId,
+            resourceType = resource.resourceType,
+            resourceId = resource.resourceId,
+            targetResourceType = resource.resourceType,
             status = status,
+            targetResourceId = targetResourceId,
+            targetResourceName = targetResourceName,
             errorMessage = errorMessage
         )
+        val detailStatus = when (status) {
+            PipelineCopyTaskResourceStatus.SUCCESS -> PipelineBatchTaskDetailStatus.SUCCESS
+            PipelineCopyTaskResourceStatus.SKIP -> PipelineBatchTaskDetailStatus.SUCCESS
+            PipelineCopyTaskResourceStatus.FAILED -> PipelineBatchTaskDetailStatus.FAILED
+            else -> return
+        }
+        dslContext.transaction { configuration ->
+            val transactionContext = DSL.using(configuration)
+            pipelineCopyTaskResourceDao.update(
+                dslContext = transactionContext,
+                update = resourceUpdate
+            )
+            pipelineBatchTaskDetailDao.update(
+                dslContext = transactionContext,
+                update = PipelineBatchTaskDetailUpdate(
+                    projectId = projectId,
+                    taskId = taskId,
+                    pipelineId = detail.pipelineId,
+                    status = detailStatus,
+                    errorMessage = errorMessage
+                )
+            )
+        }
         val resourceKey = PipelineCopyTaskUtils.resourceKey(
             resourceType = resource.resourceType,
             resourceId = resource.resourceId
@@ -1174,29 +1219,48 @@ class PipelineCopyTaskExecuteService @Autowired constructor(
         }
     }
 
-    private fun addPipelineDetailUpdate(
-        updates: MutableList<PipelineBatchTaskDetailUpdate>,
+    private fun updatePipelineDetailStatus(
         projectId: String,
         taskId: String,
         pipelineId: String,
-        status: PipelineCopyTaskResourceStatus,
-        errorMessage: String?
+        status: PipelineBatchTaskDetailStatus,
+        errorMessage: String? = null,
+        transactionContext: DSLContext = dslContext
     ) {
-        val detailStatus = when (status) {
+        pipelineBatchTaskDetailDao.update(
+            dslContext = transactionContext,
+            update = PipelineBatchTaskDetailUpdate(
+                projectId = projectId,
+                taskId = taskId,
+                pipelineId = pipelineId,
+                status = status,
+                change = false,
+                errorMessage = errorMessage
+            )
+        )
+    }
+
+    private fun updatePipelineDetailStatus(
+        projectId: String,
+        taskId: String,
+        pipelineId: String,
+        resourceStatus: PipelineCopyTaskResourceStatus,
+        errorMessage: String?,
+        transactionContext: DSLContext = dslContext
+    ) {
+        val detailStatus = when (resourceStatus) {
             PipelineCopyTaskResourceStatus.SUCCESS -> PipelineBatchTaskDetailStatus.SUCCESS
             PipelineCopyTaskResourceStatus.SKIP -> PipelineBatchTaskDetailStatus.SUCCESS
             PipelineCopyTaskResourceStatus.FAILED -> PipelineBatchTaskDetailStatus.FAILED
             else -> return
         }
-        updates.add(
-            PipelineBatchTaskDetailUpdate(
-                projectId = projectId,
-                taskId = taskId,
-                pipelineId = pipelineId,
-                status = detailStatus,
-                change = false,
-                errorMessage = errorMessage
-            )
+        updatePipelineDetailStatus(
+            projectId = projectId,
+            taskId = taskId,
+            pipelineId = pipelineId,
+            status = detailStatus,
+            errorMessage = errorMessage,
+            transactionContext = transactionContext
         )
     }
 

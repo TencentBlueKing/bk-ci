@@ -10,10 +10,12 @@ import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.dao.PipelineBatchTaskDao
+import com.tencent.devops.process.dao.PipelineBatchTaskDetailDao
 import com.tencent.devops.process.dao.PipelineCopyTaskResourceDao
 import com.tencent.devops.process.dao.PipelineCopyTaskResourceRelDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.pojo.PipelineInfoQueryCondition
+import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskDetailStatus
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskStatus
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskType
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineCopyAction
@@ -38,6 +40,7 @@ import org.springframework.stereotype.Service
 class PipelineCopyTaskService @Autowired constructor(
     private val dslContext: DSLContext,
     private val pipelineBatchTaskDao: PipelineBatchTaskDao,
+    private val pipelineBatchTaskDetailDao: PipelineBatchTaskDetailDao,
     private val pipelineCopyTaskResourceDao: PipelineCopyTaskResourceDao,
     private val pipelineCopyTaskResourceRelDao: PipelineCopyTaskResourceRelDao,
     private val pipelineInfoDao: PipelineInfoDao,
@@ -293,10 +296,24 @@ class PipelineCopyTaskService @Autowired constructor(
         taskId: String
     ): PipelineCopyTaskExecuteProgress {
         val task = getTask(projectId = projectId, taskId = taskId)
+        val statusSummary = pipelineBatchTaskDetailDao.detailStatusSummary(
+            dslContext = dslContext,
+            projectId = projectId,
+            taskId = taskId,
+            taskType = PipelineBatchTaskType.PIPELINE_COPY
+        )
+        val countByStatus = statusSummary.associate { it.status to it.count }
+        val totalCount = statusSummary.filter {
+            it.status != PipelineBatchTaskDetailStatus.EXCLUDED
+        }.sumOf { it.count }.toInt()
+        val executedCount = (
+            (countByStatus[PipelineBatchTaskDetailStatus.SUCCESS] ?: 0) +
+                (countByStatus[PipelineBatchTaskDetailStatus.FAILED] ?: 0)
+            ).toInt()
         return PipelineCopyTaskExecuteProgress(
             status = task.status,
-            totalCount = task.totalCount,
-            executedCount = task.successCount + task.failedCount,
+            totalCount = totalCount,
+            executedCount = executedCount,
             errorMessage = task.errorMessage
         )
     }

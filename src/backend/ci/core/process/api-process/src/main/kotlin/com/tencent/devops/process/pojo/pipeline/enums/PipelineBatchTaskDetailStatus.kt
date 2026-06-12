@@ -18,4 +18,7 @@ enum class PipelineBatchTaskDetailStatus {
      */
     @Schema(description = "待复制")
     WAIT_COPY,
+
+    @Schema(description = "执行中")
+    EXECUTING,
 }

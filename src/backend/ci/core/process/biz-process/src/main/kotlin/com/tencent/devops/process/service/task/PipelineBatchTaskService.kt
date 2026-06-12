@@ -395,6 +395,7 @@ class PipelineBatchTaskService @Autowired constructor(
 
         private val DETAIL_STATUS_CAN_NOT_EXCLUDE = setOf(
             PipelineBatchTaskDetailStatus.EXCLUDED,
+            PipelineBatchTaskDetailStatus.EXECUTING,
             PipelineBatchTaskDetailStatus.SUCCESS,
             PipelineBatchTaskDetailStatus.FAILED
         )
