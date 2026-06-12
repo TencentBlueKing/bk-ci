@@ -189,7 +189,7 @@ class ImportService @Autowired constructor(
                 ip = agentRecord.ip,
                 name = agentRecord.hostname,
                 osName = agentRecord.os.lowercase(),
-                status = NodeStatus.NOT_INSTALLED,
+                status = NodeStatus.CREATING,
                 type = if (agentRecord.agentType == AgentType.CREATE.name) {
                     NodeType.CREATE
                 } else {
@@ -210,7 +210,7 @@ class ImportService @Autowired constructor(
                 id = agentId,
                 nodeId = nodeId,
                 projectId = projectId,
-                status = AgentStatus.IMPORT_OK
+                status = AgentStatus.UN_IMPORT
             )
             if (count != 1) {
                 LOG.warn("Fail to update the agent($agentId) to OK status")
