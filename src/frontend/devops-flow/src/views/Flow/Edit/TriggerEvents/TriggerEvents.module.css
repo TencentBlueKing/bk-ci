@@ -1,0 +1,108 @@
+.triggerEvents {
+  padding: var(--spacing-xxl);
+  max-width: 1200px;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-lg);
+  position: relative;
+}
+
+.addTriggerBtnIcon {
+  width: var(--icon-size-lg);
+  height: var(--icon-size-lg);
+  border-radius: 50%;
+  background-color: var(--color-primary);
+  color: var(--bg-primary);
+  margin-right: var(--spacing-xs);
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all var(--transition-normal);
+  padding: 0;
+}
+
+.addTriggerText {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-primary);
+  font-weight: 500;
+}
+
+.triggerTable {
+  margin-top: var(--spacing-xxl);
+}
+
+.eventCell {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.eventCellClickable {
+  cursor: pointer;
+}
+
+.eventIcon {
+  color: var(--color-text-secondary);
+  flex-shrink: 0;
+}
+
+.eventIcon.deletedIcon {
+  color: var(--color-text-disabled);
+}
+
+.eventName {
+  color: var(--color-text-primary);
+}
+
+.eventName.deletedName {
+  color: var(--color-text-disabled);
+}
+
+.errorText {
+  color: var(--color-danger-light);
+}
+
+.deletedRow {
+  background-color: var(--bg-warning-light) !important;
+}
+
+.deletedVersion {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
+}
+
+.deleteIconBtn {
+  width: var(--spacing-xxl);
+  height: var(--spacing-xxl);
+  border-radius: 50%;
+  border: none;
+  background-color: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  color: var(--color-text-secondary);
+  transition: all var(--transition-normal);
+}
+
+.deleteIconBtn:hover {
+  background-color: var(--bg-hover);
+  color: var(--color-primary);
+}
+
+.emptyState {
+  padding: var(--spacing-huge);
+  text-align: center;
+  color: var(--color-text-tertiary);
+}
+
+.triggerEventSelectorPopover {
+  padding: 0 !important;
+}
