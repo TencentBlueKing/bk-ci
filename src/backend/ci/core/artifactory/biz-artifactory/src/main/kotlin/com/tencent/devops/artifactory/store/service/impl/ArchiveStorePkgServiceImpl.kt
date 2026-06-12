@@ -37,6 +37,7 @@ import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.STATIC
 import com.tencent.devops.common.api.enums.OSType
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.util.FileUtil
 import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.client.Client
@@ -105,10 +106,12 @@ abstract class ArchiveStorePkgServiceImpl : ArchiveStorePkgService {
         }
         val storePkgEnvInfos: List<StorePkgEnvInfo>?
         var packageFileInfos: MutableList<PackageFileInfo>? = null
+        // 上传 multipart 的 filename 由客户端控制，必须先 basename 化以阻断 ../、绝对路径、盘符等路径穿越
+        val safeFileName = FileUtil.getSafeFileName(disposition.fileName)
         try {
             // 解压上传的包
             handlePkgFile(
-                disposition = disposition,
+                fileName = safeFileName,
                 inputStream = inputStream,
                 storeType = storeType,
                 storeCode = storeCode,
@@ -118,7 +121,7 @@ abstract class ArchiveStorePkgServiceImpl : ArchiveStorePkgService {
             val bkConfigFile = File(storeArchivePath, CONFIG_YML_NAME)
             storePkgEnvInfos = if (bkConfigFile.exists()) {
                 // 如果上传的文件是压缩包需要删除原压缩包
-                File(storeArchivePath, disposition.fileName).deleteRecursively()
+                File(storeArchivePath, safeFileName).deleteRecursively()
                 client.get(ServiceStoreArchiveResource::class).getComponentPkgEnvInfo(
                     userId = userId,
                     storeType = storeType,
@@ -132,7 +135,7 @@ abstract class ArchiveStorePkgServiceImpl : ArchiveStorePkgService {
                 listOf(
                     StorePkgEnvInfo(
                         osName = OSType.WINDOWS.name.lowercase(),
-                        pkgLocalPath = disposition.fileName,
+                        pkgLocalPath = safeFileName,
                         defaultFlag = true
                     )
                 )
@@ -156,9 +159,11 @@ abstract class ArchiveStorePkgServiceImpl : ArchiveStorePkgService {
                     packageFileInfos = mutableListOf()
                 }
                 if (pkgLocalPath.isNullOrBlank()) {
-                    pkgLocalPath = disposition.fileName
+                    pkgLocalPath = safeFileName
                 }
-                val packageFile = File("$storeArchivePath/$pkgLocalPath")
+                // pkgLocalPath 在 bkConfigFile 存在分支下来自 getComponentPkgEnvInfo（解析自 config.yml），
+                // 仍由攻击者控制，必须做 canonical-path 校验防止 ../ 等穿越逃离 storeArchivePath
+                val packageFile = FileUtil.resolveSafeChildFile(storeArchivePath, pkgLocalPath)
                 val packageFileName = packageFile.name
                 val packageFileInfo = PackageFileInfo(
                     packageFileName = packageFileName,
@@ -251,13 +256,12 @@ abstract class ArchiveStorePkgServiceImpl : ArchiveStorePkgService {
     }
 
     private fun handlePkgFile(
-        disposition: FormDataContentDisposition,
+        fileName: String,
         inputStream: InputStream,
         storeType: StoreTypeEnum,
         storeCode: String,
         version: String
     ) {
-        val fileName = disposition.fileName
         val storeArchivePath = buildStoreArchivePath(storeType, storeCode, version)
         val file = File(storeArchivePath, fileName)
         val parentDir = file.parentFile

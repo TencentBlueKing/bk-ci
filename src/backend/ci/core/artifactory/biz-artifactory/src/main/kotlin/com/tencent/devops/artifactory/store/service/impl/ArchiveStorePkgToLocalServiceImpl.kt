@@ -28,8 +28,7 @@
 package com.tencent.devops.artifactory.store.service.impl
 
 import com.tencent.devops.artifactory.constant.REALM_LOCAL
-import com.tencent.devops.common.api.constant.CommonMessageCode
-import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.util.FileUtil
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
@@ -77,7 +76,8 @@ class ArchiveStorePkgToLocalServiceImpl : ArchiveStorePkgServiceImpl() {
             if (pkgLocalPath.isNullOrBlank()) {
                 return@forEach
             }
-            val file = File(storeArchivePath, pkgLocalPath)
+            // pkgLocalPath 来自 config.yml/task.json，仍由外部输入控制，强制 canonical-path 校验防止穿越
+            val file = FileUtil.resolveSafeChildFile(storeArchivePath, pkgLocalPath)
             if (!file.exists()) {
                 logger.warn("uploadLocalFile file[$pkgLocalPath] not exist!!")
                 return@forEach
@@ -89,17 +89,19 @@ class ArchiveStorePkgToLocalServiceImpl : ArchiveStorePkgServiceImpl() {
                 osName = storePkgEnvInfo.osName,
                 osArch = storePkgEnvInfo.osArch
             )
-            file.renameTo(File(storeArchivePath, pkgRepoPath))
+            file.renameTo(FileUtil.resolveSafeChildFile(storeArchivePath, pkgRepoPath))
         }
     }
 
     override fun getStoreFileContent(filePath: String, storeType: StoreTypeEnum, repoName: String?): String {
-        if (filePath.contains("../")) {
-            throw ErrorCodeException(errorCode = CommonMessageCode.PARAMETER_IS_INVALID, params = arrayOf(filePath))
-        }
         val charSet = Charsets.UTF_8.name()
         val fileRepoName = repoName ?: getPkgFileTypeDir(storeType)
-        val file = File("$storeArchiveLocalBasePath/$fileRepoName/${URLDecoder.decode(filePath, charSet)}")
+        // 弱字符串匹配（如 contains("../")）易被 .. \、URL 二次编码绕过，
+        // 改用 canonical-path 校验，确保最终落点严格位于 $storeArchiveLocalBasePath/$fileRepoName 之下
+        val file = FileUtil.resolveSafeChildFile(
+            "$storeArchiveLocalBasePath/$fileRepoName",
+            URLDecoder.decode(filePath, charSet)
+        )
         return if (file.exists()) {
             FileUtils.readFileToString(file, charSet)
         } else {
@@ -138,12 +140,12 @@ class ArchiveStorePkgToLocalServiceImpl : ArchiveStorePkgServiceImpl() {
     }
 
     override fun getStoreFileSize(filePath: String, storeType: StoreTypeEnum, repoName: String?): Long? {
-        if (filePath.contains("../")) {
-            throw ErrorCodeException(errorCode = CommonMessageCode.PARAMETER_IS_INVALID, params = arrayOf(filePath))
-        }
         val charSet = Charsets.UTF_8.name()
         val fileRepoName = repoName ?: getPkgFileTypeDir(storeType)
-        val file = File("$storeArchiveLocalBasePath/$fileRepoName/${URLDecoder.decode(filePath, charSet)}")
+        val file = FileUtil.resolveSafeChildFile(
+            "$storeArchiveLocalBasePath/$fileRepoName",
+            URLDecoder.decode(filePath, charSet)
+        )
         return if (file.exists()) {
             file.length()
         } else {
