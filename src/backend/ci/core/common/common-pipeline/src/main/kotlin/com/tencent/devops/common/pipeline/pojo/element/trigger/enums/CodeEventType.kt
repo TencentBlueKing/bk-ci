@@ -63,7 +63,12 @@ enum class CodeEventType {
     SHELVE_SUBMIT,
 
     // 子流水线
-    PARENT_PIPELINE;
+    PARENT_PIPELINE,
+
+    // TAPD event
+    STORY,
+    BUG
+    ;
 
     fun isMergeRequest() = this == MERGE_REQUEST || this == MERGE_REQUEST_ACCEPT || this == PULL_REQUEST
 
