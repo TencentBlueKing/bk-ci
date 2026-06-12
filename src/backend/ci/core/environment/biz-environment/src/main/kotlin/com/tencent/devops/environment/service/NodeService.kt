@@ -63,7 +63,6 @@ import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_NOT_EXISTS
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_NO_EDIT_PERMISSSION
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_NO_IMPORT_PERMISSION_NODES
-import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_NOT_CMDB_PRIMARY_BAK_OPERATOR
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_TYPE_TO_CHANGE_CREATOR_ONLY_SUPPORT_CMDB
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.NODE_USAGE_BUILD
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.NODE_USAGE_DEPLOYMENT
@@ -487,7 +486,7 @@ class NodeService @Autowired constructor(
         val nodeEnvsGroups = nodeEnvs.groupBy({ it.nodeId }, { envInfos[it.envId]?.envName ?: "" })
         val envNodeRecordList = envNodeDao.list(dslContext, projectId, envInfos.values.map { it.envId })
         val nodeIdMaps = envNodeRecordList.associate { it.nodeId to it.enableNode }
-        return nodeListResult.map {
+        val result = nodeListResult.map {
             val thirdPartyAgent = thirdPartyAgentMap[it.nodeId]
             val gatewayShowName = if (thirdPartyAgent != null) {
                 slaveGatewayService.getShowName(thirdPartyAgent.gateway)
@@ -545,7 +544,55 @@ class NodeService @Autowired constructor(
                 envEnableNode = nodeIdMaps[it.nodeId] ?: true,
                 createWorkspaceId = thirdPartyAgent?.createWorkspaceName
             )
+        }.toMutableList()
+        if (resourceType != AuthResourceType.CREATIVE_STREAM_NODE) {
+            return result
         }
+        // 创作流节点存在有创作流资源但是未导入的情况，单独展示下
+        thirdPartyAgentDao.getNotImportCreateAgent(dslContext, projectId).forEach {
+            result.add(
+                NodeWithPermission(
+                    nodeHashId = HashUtil.encodeLongId(it.nodeId),
+                    nodeId = it.nodeId.toString(),
+                    name = it.ip,
+                    ip = it.ip,
+                    nodeStatus = NodeStatus.NOT_INSTALLED.name,
+                    taskId = null,
+                    nodeType = NodeType.CREATE.name,
+                    osName = it.os,
+                    createdUser = it.createdUser,
+                    operator = null,
+                    bakOperator = null,
+                    canUse = canUseNodeIds.contains(it.nodeId),
+                    canEdit = canEditNodeIds.contains(it.nodeId),
+                    canDelete = canDeleteNodeIds.contains(it.nodeId),
+                    canView = canViewNodeIds.contains(it.nodeId),
+                    gateway = slaveGatewayService.getShowName(it.gateway),
+                    displayName = it.ip,
+                    createTime = if (null == it.createdTime) {
+                        ""
+                    } else {
+                        DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(it.createdTime)
+                    },
+                    lastModifyTime = "",
+                    lastModifyUser = "",
+                    agentStatus = false,
+                    agentVersion = "",
+                    agentHashId = HashUtil.encodeLongId(it.id ?: 0L),
+                    cloudAreaId = null,
+                    osType = it.os,
+                    bkHostId = null,
+                    serverId = null,
+                    size = null,
+                    envNames = nodeEnvsGroups[it.nodeId],
+                    lastBuildTime = "",
+                    tags = tagMaps[it.nodeId],
+                    envEnableNode = nodeIdMaps[it.nodeId] ?: true,
+                    createWorkspaceId = it.createWorkspaceName
+                )
+            )
+        }
+        return result
     }
 
     fun getNodeStatus(
