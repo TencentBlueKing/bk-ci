@@ -28,6 +28,7 @@
 package com.tencent.devops.plugin.worker.task.archive
 
 import com.tencent.bkrepo.repository.pojo.token.TokenType
+import com.tencent.devops.common.api.constant.SHOULD_ARCHIVE_TO_PARENT_PIPELINE
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
@@ -36,6 +37,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.archive.element.ReportArchiveElement
 import com.tencent.devops.common.util.HttpRetryUtils
+import com.tencent.devops.process.enums.VariableType
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.pojo.report.ReportEmail
@@ -82,6 +84,7 @@ class ReportArchiveTask : ITask() {
         val reportType = taskParams["reportType"] ?: ReportTypeEnum.INTERNAL.name
         val indexFileParam: String
         var indexFileContent: String
+        val shouldArchiveToParentPipeline = shouldArchiveToParentPipeline(buildVariables, buildTask)
         val token = api.getRepoToken(
             userId = buildVariables.variables[PIPELINE_START_USER_ID] ?: "",
             projectId = buildVariables.projectId,
@@ -152,6 +155,15 @@ class ReportArchiveTask : ITask() {
                     uploadReportFile(fileDirPath, it, elementId, buildVariables, token)
                 }
             }
+            if (shouldArchiveToParentPipeline) {
+                uploadReportFileToParentPipeline(
+                    fileDirPath = fileDirPath,
+                    elementId = elementId,
+                    buildVariables = buildVariables,
+                    allFileList = allFileList,
+                    buildTask = buildTask
+                )
+            }
             LoggerService.addNormalLine(
                 MessageUtil.getMessageByLocale(
                     UPLOAD_CUSTOM_OUTPUT_SUCCESS,
@@ -190,6 +202,24 @@ class ReportArchiveTask : ITask() {
             token = token,
             compressed = compressed
         )
+        if (shouldArchiveToParentPipeline) {
+            executor.execute {
+                try {
+                    HttpRetryUtils.retry(retryTime = 3) {
+                        api.createParentReportRecord(
+                            buildVariables = buildVariables,
+                            taskId = elementId,
+                            indexFile = indexFileParam,
+                            name = reportNameParam,
+                            reportType = reportType,
+                            token = token
+                        )
+                    }
+                } catch (ignore: Throwable) {
+                    logger.warn("create parent report record fail", ignore)
+                }
+            }
+        }
     }
 
     private fun uploadReportFile(
@@ -207,6 +237,86 @@ class ReportArchiveTask : ITask() {
                 relativePath = relativePath,
                 buildVariables = buildVariables,
                 token = token
+            )
+        }
+    }
+
+    private fun uploadReportFileToParentPipeline(
+        fileDirPath: Path,
+        elementId: String,
+        buildVariables: BuildVariables,
+        allFileList: List<File>,
+        buildTask: BuildTask
+    ) {
+        val pipelineBuildInfo = api.getParentPipelineBuildInfo(buildVariables.buildId, buildVariables.projectId).data!!
+        try {
+            val token = api.getRepoToken(
+                userId = buildVariables.variables[PIPELINE_START_USER_ID] ?: "",
+                projectId = pipelineBuildInfo.projectId,
+                repoName = "report",
+                path = "/${pipelineBuildInfo.pipelineId}/${pipelineBuildInfo.buildId}",
+                type = TokenType.UPLOAD,
+                expireSeconds = TaskUtil.getTimeOut(buildTask).times(60)
+            )
+
+            if (allFileList.size <= 10) {
+                allFileList.forEach { file ->
+                    uploadSingleFile(
+                        file = file,
+                        fileDirPath = fileDirPath,
+                        elementId = elementId,
+                        buildVariables = buildVariables,
+                        token = token
+                    )
+                }
+                return
+            }
+
+            allFileList.forEach { file ->
+                executor.execute {
+                    uploadSingleFile(
+                        file = file,
+                        fileDirPath = fileDirPath,
+                        elementId = elementId,
+                        buildVariables = buildVariables,
+                        token = token
+                    )
+                }
+            }
+            if (!executor.awaitTermination(buildVariables.timeoutMills, TimeUnit.MILLISECONDS)) {
+                LoggerService.addNormalLine("parallel upload to parent report timeout")
+            }
+        } catch (ignore: Throwable) {
+            LoggerService.addNormalLine(
+                "upload report to parent pipeline failed:" +
+                        " ${ignore.message}"
+            )
+            logger.error("upload report to parent pipeline failed", ignore)
+        }
+    }
+
+    private fun uploadSingleFile(
+        file: File,
+        fileDirPath: Path,
+        elementId: String,
+        buildVariables: BuildVariables,
+        token: String?
+    ) {
+        try {
+            val relativePath = fileDirPath.relativize(Paths.get(file.canonicalPath)).toString()
+            HttpRetryUtils.retry(retryTime = 3) {
+                api.uploadReportFileToParentPipeline(
+                    file = file,
+                    taskId = elementId,
+                    relativePath = relativePath,
+                    buildVariables = buildVariables,
+                    token = token
+                )
+            }
+        } catch (ignore: Throwable) {
+            LoggerService.addNormalLine(
+                "upload report to parent pipeline failed:" +
+                        " ${file.name}, failed message ${ignore.message}"
             )
         }
     }
@@ -285,5 +395,30 @@ class ReportArchiveTask : ITask() {
 
     companion object {
         const val COMPRESS_REPORT_FILE_NAME = "bkrepo_compressed_report.zip"
+        private val executor = Executors.newFixedThreadPool(5)
+    }
+
+    private fun shouldArchiveToParentPipeline(buildVariables: BuildVariables, buildTask: BuildTask): Boolean {
+        val parentProjectId = buildVariables.variables[VariableType.BK_CI_PARENT_PROJECT_ID.name]
+        val parentPipelineId = buildVariables.variables[VariableType.BK_CI_PARENT_PIPELINE_ID.name]
+        val parentBuildId = buildVariables.variables[VariableType.BK_CI_PARENT_BUILD_ID.name]
+
+        // 先进行基础判断 是否设置归档标记和是否存在父构建信息
+        val shouldArchive = "true" == buildTask.params?.get(SHOULD_ARCHIVE_TO_PARENT_PIPELINE) &&
+                !parentProjectId.isNullOrBlank() &&
+                !parentPipelineId.isNullOrBlank() &&
+                !parentBuildId.isNullOrBlank()
+
+        if (shouldArchive) {
+            // 基于上面的基础判断通过 然后再调用接口来获取顶级构建信息
+            val topParentBuildInfo =
+                api.getParentPipelineBuildInfo(buildVariables.buildId, buildVariables.projectId).data ?: return false
+
+            // 再判断顶级构建信息是否是当前构建信息 如果是 就不用归档了 否则就归档
+            val isTopParentSelf = topParentBuildInfo.buildId == buildVariables.buildId &&
+                    topParentBuildInfo.projectId == buildVariables.projectId
+            return !isTopParentSelf
+        }
+        return false
     }
 }
