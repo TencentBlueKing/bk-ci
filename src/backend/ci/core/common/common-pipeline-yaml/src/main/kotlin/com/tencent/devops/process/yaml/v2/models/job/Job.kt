@@ -128,6 +128,7 @@ data class RunsOn(
     val agentSelector: List<String>? = null,
     val workspace: String? = null,
     val xcode: String? = null,
+    val hwSpec: String? = "VMware",
     @get:Schema(title = "queue-timeout-minutes")
     @JsonProperty("queue-timeout-minutes")
     val queueTimeoutMinutes: Int? = null,
