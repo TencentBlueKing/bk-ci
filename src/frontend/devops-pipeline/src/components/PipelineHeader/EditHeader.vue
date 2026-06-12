@@ -25,7 +25,6 @@
             >
                 {{ $t("cancel") }}
             </bk-button>
-
             <bk-button
                 :disabled="saveStatus || !isEditing"
                 :loading="saveStatus"
