@@ -342,6 +342,9 @@
                   "pool-name" : {
                     "type" : "string"
                   },
+                  "hw-spec" : {
+                    "type" : "string"
+                  },
                   "agent-selector" : {
                     "type" : "array",
                     "items" : {
