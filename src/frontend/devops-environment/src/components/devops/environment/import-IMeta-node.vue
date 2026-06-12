@@ -60,11 +60,13 @@
                     :label="$t('environment.nodeInfo.os')"
                     prop="os"
                     width="100"
+                    show-overflow-tooltip
                 />
                 <bk-table-column
                     :label="$t('environment.nodeInfo.engine')"
                     prop="engine"
                     width="100"
+                    show-overflow-tooltip
                 />
                 <bk-table-column
                     :label="$t('environment.IMetaStatus')"
@@ -81,15 +83,13 @@
                     :label="$t('environment.envInfo.creator')"
                     prop="createUser"
                     width="100"
+                    show-overflow-tooltip
                 />
                 <bk-table-column
                     :label="$t('environment.envInfo.creationTime')"
                     prop="createTime"
-                >
-                    <template slot-scope="{ row }">
-                        {{ localConvertTime(row.createTime) }}
-                    </template>
-                </bk-table-column>
+                    show-overflow-tooltip
+                />
             </bk-table>
 
             <!-- 分页 -->
@@ -151,7 +151,6 @@
 </template>
 
 <script>
-    import { convertTime } from '@/utils/util'
     import StatusIcon from '@/components/status-icon.vue'
 
     export default {
@@ -266,10 +265,6 @@
                 this.step = 'list'
                 this.selectedNodes = []
                 this.pagination.current = 1
-            },
-            localConvertTime (timestamp) {
-                if (!timestamp) return ''
-                return convertTime(timestamp * 1000)
             }
         }
     }
