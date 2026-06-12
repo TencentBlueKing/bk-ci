@@ -25,12 +25,14 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.repository.sdk.tapd.service
+package com.tencent.devops.scm.pojo.tapd
 
-import com.tencent.devops.scm.pojo.tapd.TapdResult
-import com.tencent.devops.repository.sdk.tapd.request.StatusMapRequest
+import com.fasterxml.jackson.annotation.JsonProperty
 
-interface ITapdWorkflowService {
-
-    fun getWorkflowStatusMap(request: StatusMapRequest): TapdResult<Map<String, String>>
-}
+/**
+ * TAPD 需求列表外层包装
+ */
+data class StoryResponse(
+    @JsonProperty("Story")
+    val story: TapdStory
+)

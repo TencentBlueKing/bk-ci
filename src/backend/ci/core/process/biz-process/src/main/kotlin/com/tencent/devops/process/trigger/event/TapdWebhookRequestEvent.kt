@@ -25,12 +25,31 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.repository.sdk.tapd.service
+package com.tencent.devops.process.trigger.event
 
-import com.tencent.devops.scm.pojo.tapd.TapdResult
-import com.tencent.devops.repository.sdk.tapd.request.StatusMapRequest
+import com.tencent.devops.common.event.annotation.Event
+import com.tencent.devops.common.event.pojo.IEvent
+import com.tencent.devops.common.stream.constants.StreamBinding
+import io.swagger.v3.oas.annotations.media.Schema
 
-interface ITapdWorkflowService {
-
-    fun getWorkflowStatusMap(request: StatusMapRequest): TapdResult<Map<String, String>>
-}
+/**
+ * TAPD Webhook 请求事件
+ */
+@Event(StreamBinding.TAPD_WEBHOOK_REQUEST_EVENT)
+@Schema(title = "TAPD webhook 请求事件")
+data class TapdWebhookRequestEvent(
+    @get:Schema(description = "TAPD 项目ID")
+    val tapdProjectId: String,
+    @get:Schema(description = "事件类型")
+    val eventType: String,
+    @get:Schema(description = "事件动作")
+    val eventAction: String,
+    @get:Schema(description = "原始 event 字符串")
+    val rawEvent: String,
+    @get:Schema(description = "触发用户 (current_user)")
+    val triggerUser: String,
+    @get:Schema(description = "TAPD 主机地址（schema + host）")
+    val tapdHost: String,
+    @get:Schema(description = "原始请求体")
+    val body: Map<String, Any?>
+) : IEvent()

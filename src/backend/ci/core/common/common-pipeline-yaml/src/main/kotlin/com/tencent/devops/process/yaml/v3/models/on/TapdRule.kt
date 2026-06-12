@@ -30,53 +30,41 @@ package com.tencent.devops.process.yaml.v3.models.on
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonProperty
-import com.tencent.devops.process.yaml.pojo.YamlVersion
 import io.swagger.v3.oas.annotations.media.Schema
 
+/**
+ * TAPD 触发器 YAML 规则
+ *
+ * 对应 YAML：
+ * ```yaml
+ * on:
+ *   tapd:
+ *     - tapd-project-id: "12345"
+ *       event-type: story
+ *       include-actions: [create, update]
+ *       include-users: [user1]
+ *       exclude-users: [user2]
+ * ```
+ */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
-data class PreTriggerOnV3(
-    @JsonProperty("repo-name")
-    @get:Schema(title = "repo-name")
-    var repoName: String? = null,
-    var type: String? = null,
-    @JsonProperty("scm-code")
-    @get:Schema(title = "scm-code")
-    val scmCode: String? = null,
-    override val push: Any? = null,
-    override val tag: Any? = null,
-    override val mr: Any? = null,
-    @JsonProperty("mr-merged")
-    @get:Schema(title = "mr-merged")
-    override val mrMerged: Any? = null,
-    override val schedules: Any? = null,
-    override val delete: DeleteRule? = null,
-    override val issue: IssueRule? = null,
-    override val review: ReviewRule? = null,
-    override val note: NoteRule? = null,
-    @get:Schema(title = "repo_hook")
-    @JsonProperty("repo_hook")
-    override val repoHook: List<Any>? = null,
-    override var manual: Any? = null,
-    override val openapi: String? = null,
-    override val remote: Any? = null,
-    @JsonProperty("change-commit")
-    @get:Schema(title = "change-commit")
-    override var changeCommit: Any? = null,
-    @JsonProperty("change-content")
-    @get:Schema(title = "change-content")
-    override var changeContent: Any? = null,
-    @JsonProperty("change-submit")
-    @get:Schema(title = "change-submit")
-    override var changeSubmit: Any? = null,
-    @JsonProperty("shelve-commit")
-    @get:Schema(title = "shelve-commit")
-    override var shelveCommit: Any? = null,
-    @JsonProperty("shelve-submit")
-    @get:Schema(title = "shelve-submit")
-    override var shelveSubmit: Any? = null,
-    @get:Schema(title = "tapd")
-    override val tapd: Any? = null
-) : IPreTriggerOn {
-    override fun yamlVersion() = YamlVersion.V3_0
-}
+data class TapdRule(
+    override val id: String? = null,
+    override val name: String? = null,
+    override val enable: Boolean? = true,
+    @get:Schema(title = "tapd-project-id")
+    @JsonProperty("tapd-project-id")
+    val tapdProjectId: String,
+    @get:Schema(title = "event-type")
+    @JsonProperty("event-type")
+    val eventType: String?,
+    @get:Schema(title = "include-actions")
+    @JsonProperty("include-actions")
+    val includeActions: List<String>? = null,
+    @get:Schema(title = "include-users")
+    @JsonProperty("include-users")
+    val includeUsers: List<String>? = null,
+    @get:Schema(title = "exclude-users")
+    @JsonProperty("exclude-users")
+    val excludeUsers: List<String>? = null
+) : Rule(id, name, enable)

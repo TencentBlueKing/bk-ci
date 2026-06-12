@@ -25,12 +25,27 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.repository.sdk.tapd.service
+package com.tencent.devops.repository.sdk.tapd.request
 
+import com.fasterxml.jackson.annotation.JsonProperty
+import com.tencent.devops.repository.sdk.common.enums.HttpMethod
+import com.tencent.devops.repository.sdk.tapd.TapdRequest
 import com.tencent.devops.scm.pojo.tapd.TapdResult
-import com.tencent.devops.repository.sdk.tapd.request.StatusMapRequest
+import com.tencent.devops.scm.pojo.tapd.BugResponse
+import com.tencent.devops.scm.pojo.tapd.TapdBugFieldConfig
 
-interface ITapdWorkflowService {
+/**
+ * 查询 TAPD 缺陷详情请求
+ *
+ * 接口：`GET /bugs?workspace_id=xx&id=yy`
+ */
+data class GetBugFieldRequest(
+    /** TAPD 项目 ID */
+    @JsonProperty("workspace_id")
+    val workspaceId: String
+) : TapdRequest<TapdResult<TapdBugFieldConfig>>() {
 
-    fun getWorkflowStatusMap(request: StatusMapRequest): TapdResult<Map<String, String>>
+    override fun getHttpMethod(): HttpMethod = HttpMethod.GET
+
+    override fun getApiPath(): String = "bugs/get_fields_info"
 }

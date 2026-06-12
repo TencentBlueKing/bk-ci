@@ -25,12 +25,28 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.repository.sdk.tapd.service
+package com.tencent.devops.repository.sdk.tapd.request
 
+import com.fasterxml.jackson.annotation.JsonProperty
+import com.tencent.devops.repository.sdk.common.enums.HttpMethod
+import com.tencent.devops.repository.sdk.tapd.TapdRequest
 import com.tencent.devops.scm.pojo.tapd.TapdResult
-import com.tencent.devops.repository.sdk.tapd.request.StatusMapRequest
+import com.tencent.devops.scm.pojo.tapd.StoryResponse
 
-interface ITapdWorkflowService {
+/**
+ * 查询 TAPD 需求详情请求
+ *
+ * 接口：`GET /stories?workspace_id=xx&id=yy`
+ */
+data class GetStoryRequest(
+    /** TAPD 项目 ID */
+    @JsonProperty("workspace_id")
+    val workspaceId: String,
+    /** TAPD 需求 ID */
+    val id: String
+) : TapdRequest<TapdResult<List<StoryResponse>>>() {
 
-    fun getWorkflowStatusMap(request: StatusMapRequest): TapdResult<Map<String, String>>
+    override fun getHttpMethod(): HttpMethod = HttpMethod.GET
+
+    override fun getApiPath(): String = "stories"
 }
