@@ -302,7 +302,7 @@ class NodeService @Autowired constructor(
             sortType = sortType,
             collation = collation,
             tagValueIds = tagValues,
-            nodeIds = nodes.map { it.nodeId.toLong() }
+            nodeIds = nodes.filter { it.nodeId.isNotBlank() }.map { it.nodeId.toLong() }
         ).toLong()
         if (-1 != page) {
             val nodesMap = nodes.associateBy { it.agentHashId }
@@ -548,7 +548,7 @@ class NodeService @Autowired constructor(
         if (resourceType != AuthResourceType.CREATIVE_STREAM_NODE) {
             return result
         }
-        // 创作流节点存在有创作流资源但是未导入的情况，单独展示下
+        // 创作流节点存在有创作流资源但是未导入的情况，单独展示下.TODO: 先这样子，后面改为用NODE的状态
         thirdPartyAgentDao.getNotImportCreateAgent(dslContext, projectId).forEach {
             result.add(
                 NodeWithPermission(
