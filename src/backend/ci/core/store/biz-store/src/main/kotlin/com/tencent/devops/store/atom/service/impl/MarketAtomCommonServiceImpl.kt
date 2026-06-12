@@ -66,6 +66,7 @@ import com.tencent.devops.store.atom.util.AtomOsMapUtil
 import com.tencent.devops.store.common.dao.StoreProjectRelDao
 import com.tencent.devops.store.common.service.StoreCommonService
 import com.tencent.devops.store.common.utils.BkInitProjectCacheUtil
+import com.tencent.devops.store.common.utils.PublicComponentCacheManager
 import com.tencent.devops.store.common.utils.StoreUtils
 import com.tencent.devops.store.constant.StoreConstants.BK_DEFAULT_FAIL_POLICY
 import com.tencent.devops.store.constant.StoreConstants.BK_DEFAULT_RETRY_POLICY
@@ -926,15 +927,21 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
     }
 
     override fun isPublicAtom(atomCode: String): Boolean {
+        // 先检查 Redis 中是否存在，如果不存在则从数据库加载
         val storePublicFlagKey = StoreUtils.getStorePublicFlagKey(StoreTypeEnum.ATOM.name)
         if (!redisOperation.hasKey(storePublicFlagKey)) {
-            // 从db去查查默认插件
+            // 从数据库加载默认插件
             val defaultAtomCodeRecords = atomDao.batchGetDefaultAtomCode(dslContext)
             val defaultAtomCodeList = defaultAtomCodeRecords.map { it.value1() }
-            redisOperation.sadd(storePublicFlagKey, *defaultAtomCodeList.toTypedArray())
+            if (defaultAtomCodeList.isNotEmpty()) {
+                redisOperation.sadd(storePublicFlagKey, *defaultAtomCodeList.toTypedArray())
+                // 此时其它线程可能在 Redis 初始化前已通过 PublicComponentCacheManager 把空 Set 写入本地缓存，
+                // 主动失效一次避免本地缓存被空集污染达 CACHE_EXPIRE_SECONDS。
+                PublicComponentCacheManager.invalidateCache(StoreTypeEnum.ATOM.name)
+            }
         }
-        // 判断是否是默认插件
-        return redisOperation.isMember(storePublicFlagKey, atomCode)
+        // 使用缓存管理器检查是否是公共插件（优化性能）
+        return PublicComponentCacheManager.isPublicComponent(redisOperation, StoreTypeEnum.ATOM.name, atomCode)
     }
 
     override fun getValidOsNameFlag(atomEnvRequests: List<AtomEnvRequest>): Boolean {

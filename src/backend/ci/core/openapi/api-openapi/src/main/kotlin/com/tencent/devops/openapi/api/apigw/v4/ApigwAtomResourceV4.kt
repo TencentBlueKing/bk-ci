@@ -34,12 +34,17 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.web.annotation.BkField
+import com.tencent.devops.common.web.constant.BkStyleEnum
 import com.tencent.devops.openapi.BkApigwApi
 import com.tencent.devops.store.pojo.atom.AtomPipeline
+import com.tencent.devops.store.pojo.atom.AtomResp
+import com.tencent.devops.store.pojo.atom.AtomRespItem
 import com.tencent.devops.store.pojo.atom.AtomVersion
 import com.tencent.devops.store.pojo.atom.InstallAtomReq
 import com.tencent.devops.store.pojo.atom.MarketAtomResp
 import com.tencent.devops.store.pojo.atom.PipelineAtom
+import com.tencent.devops.store.pojo.atom.enums.AtomCategoryEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomTypeEnum
 import com.tencent.devops.store.pojo.atom.enums.MarketAtomSortTypeEnum
 import com.tencent.devops.store.pojo.common.enums.ServiceScopeEnum
@@ -48,6 +53,7 @@ import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.ws.rs.Consumes
+import jakarta.ws.rs.DefaultValue
 import jakarta.ws.rs.GET
 import jakarta.ws.rs.HeaderParam
 import jakarta.ws.rs.POST
@@ -147,6 +153,27 @@ interface ApigwAtomResourceV4 {
         installAtomReq: InstallAtomReq
     ): Result<Boolean>
 
+    @Operation(summary = "查看插件的yml 2.0信息", tags = ["v4_user_atom_yml_v2_detail", "v4_app_atom_yml_v2_detail"])
+    @GET
+    @Path("/atom_yml_v2_detail")
+    fun getAtomYmlV2Info(
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @Parameter(description = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @Parameter(description = "插件代码", required = true)
+        @QueryParam("atomCode")
+        atomCode: String,
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @Parameter(description = "是否展示系统自带的yml信息", required = false)
+        @QueryParam("defaultShowFlag")
+        defaultShowFlag: Boolean?
+    ): Result<String?>
+
     @Operation(summary = "根据插件代码获取插件详细信息", tags = ["v4_user_atom_detail"])
     @GET
     @Path("/atom_detail")
@@ -186,7 +213,8 @@ interface ApigwAtomResourceV4 {
         userId: String,
         @Parameter(description = "支持的服务范围", required = false)
         @QueryParam("serviceScope")
-        serviceScope: ServiceScopeEnum? = null,
+        @DefaultValue("PIPELINE")
+        serviceScope: ServiceScopeEnum? = ServiceScopeEnum.PIPELINE,
         @Parameter(description = "搜索关键字", required = false)
         @QueryParam("keyword")
         keyword: String?,
@@ -221,4 +249,62 @@ interface ApigwAtomResourceV4 {
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<MarketAtomResp>
+
+    @Operation(
+        summary = "获取所有流水线插件信息",
+        tags = ["v4_user_atom_list_all", "v4_app_atom_list_all"]
+    )
+    @GET
+    @Path("/atom_list")
+    fun listAllPipelineAtoms(
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @Parameter(description = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @Parameter(description = "userId", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @Parameter(description = "项目编码", required = true)
+        @QueryParam("projectCode")
+        projectCode: String,
+        @Parameter(description = "支持的服务范围（pipeline/quality/all 分别表示流水线/质量红线/全部）", required = false)
+        @QueryParam("serviceScope")
+        serviceScope: String?,
+        @Parameter(description = "job类型，AGENT： 编译环境，AGENT_LESS：无编译环境", required = false)
+        @QueryParam("jobType")
+        jobType: String?,
+        @Parameter(description = "操作系统（ALL/WINDOWS/LINUX/MACOS）", required = false)
+        @QueryParam("os")
+        os: String?,
+        @Parameter(description = "插件所属范畴，TRIGGER：触发器类插件 TASK：任务类插件", required = false)
+        @QueryParam("category")
+        category: String? = AtomCategoryEnum.TASK.name,
+        @Parameter(description = "插件分类id", required = false)
+        @QueryParam("classifyId")
+        classifyId: String?,
+        @Parameter(description = "是否推荐", required = false)
+        @QueryParam("recommendFlag")
+        recommendFlag: Boolean?,
+        @Parameter(description = "搜索关键字", required = false)
+        @QueryParam("keyword")
+        keyword: String?,
+        @Parameter(description = "查询项目插件标识", required = false)
+        @QueryParam("queryProjectAtomFlag")
+        queryProjectAtomFlag: Boolean = true,
+        @Parameter(description = "是否适配操作系统标识", required = false)
+        @QueryParam("fitOsFlag")
+        fitOsFlag: Boolean? = true,
+        @Parameter(description = "查询支持有编译环境下的无编译环境插件标识", required = false)
+        @QueryParam("queryFitAgentBuildLessAtomFlag")
+        queryFitAgentBuildLessAtomFlag: Boolean? = true,
+        @Parameter(description = "页码", required = false)
+        @QueryParam("page")
+        page: Int = 1,
+        @Parameter(description = "每页数量", required = false)
+        @QueryParam("pageSize")
+        @BkField(patternStyle = BkStyleEnum.PAGE_SIZE_STYLE)
+        pageSize: Int = 10
+    ): Result<AtomResp<AtomRespItem>?>
 }

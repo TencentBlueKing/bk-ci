@@ -54,6 +54,8 @@ import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentDockerInfoDi
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.dispatch.dao.ThirdPartyAgentBuildDao
+import com.tencent.devops.dispatch.exception.DispatchRetryMQException
+import com.tencent.devops.dispatch.exception.ErrorCodeEnum
 import com.tencent.devops.dispatch.pojo.ThirdPartyAgentDispatchData
 import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
 import com.tencent.devops.dispatch.pojo.thirdpartyagent.AgentBuildInfo
@@ -71,6 +73,8 @@ import com.tencent.devops.dispatch.utils.ThirdPartyAgentLock
 import com.tencent.devops.dispatch.utils.ThirdPartyAgentUtils
 import com.tencent.devops.dispatch.utils.redis.ThirdPartyAgentBuildRedisUtils
 import com.tencent.devops.environment.api.thirdpartyagent.ServiceThirdPartyAgentResource
+import com.tencent.devops.environment.pojo.DispatchStrategyConfig
+import com.tencent.devops.environment.pojo.EnabledStrategiesWithTags
 import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgent
 import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentUpgradeByVersionInfo
 import com.tencent.devops.model.dispatch.tables.records.TDispatchThirdpartyAgentBuildRecord
@@ -913,6 +917,37 @@ class ThirdPartyAgentService @Autowired constructor(
         }.onFailure {
             logger.warn("agentStartup|sendNotifyMessageByTemplate|$projectId|$agentId")
         }
+    }
+
+    fun getEnvStrategiesWithTags(projectId: String, envId: Long?, nodeIds: Set<Long>): EnabledStrategiesWithTags {
+        if (envId == null) {
+            return EnabledStrategiesWithTags(
+                strategies = DispatchStrategyConfig.buildDefaults(projectId, 0L, "system"),
+                nodeTagValues = emptyMap(),
+                tagKeys = emptyMap()
+            )
+        }
+        val strategyResult = try {
+            client.get(ServiceThirdPartyAgentResource::class).getEnabledStrategiesWithTags(projectId, envId, nodeIds)
+        } catch (e: Exception) {
+            throw DispatchRetryMQException(
+                errorCodeEnum = ErrorCodeEnum.GET_ENV_STRATEGY_ERROR,
+                errorMessage = if (e is RemoteServiceException) {
+                    e.errorMessage
+                } else {
+                    e.message ?: (ErrorCodeEnum.GET_VM_ERROR.getErrorMessage())
+                }
+            )
+        }
+
+        if (strategyResult.isNotOk() || strategyResult.data == null) {
+            throw DispatchRetryMQException(
+                errorCodeEnum = ErrorCodeEnum.GET_ENV_STRATEGY_ERROR,
+                errorMessage = ErrorCodeEnum.GET_VM_ERROR.getErrorMessage()
+            )
+        }
+
+        return strategyResult.data!!
     }
 
     fun fetchBuildPipeline(

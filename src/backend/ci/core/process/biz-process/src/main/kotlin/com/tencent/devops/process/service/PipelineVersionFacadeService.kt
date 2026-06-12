@@ -37,6 +37,7 @@ import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.db.pojo.ARCHIVE_SHARDING_DSL_CONTEXT
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.PipelineVersionWithModel
@@ -51,6 +52,7 @@ import com.tencent.devops.common.pipeline.pojo.transfer.PreviewResponse
 import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_IS_NOT_PAC
 import com.tencent.devops.process.engine.pojo.PipelineVersionWithInfo
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineRepositoryVersionService
@@ -58,6 +60,7 @@ import com.tencent.devops.process.enums.PipelineGetVersionSource
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.PipelineDetail
 import com.tencent.devops.process.pojo.PipelineVersionReleaseRequest
+import com.tencent.devops.process.pojo.PipelineYamlBuildVersion
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
 import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
 import com.tencent.devops.process.pojo.pipeline.PrefetchReleaseResult
@@ -72,6 +75,7 @@ import com.tencent.devops.process.service.template.v2.PipelineTemplateResourceSe
 import com.tencent.devops.process.utils.PipelineVersionUtils
 import com.tencent.devops.process.yaml.PipelineYamlFacadeService
 import com.tencent.devops.process.yaml.transfer.PipelineTransferException
+import com.tencent.devops.scm.api.pojo.repository.git.GitScmServerRepository
 import jakarta.ws.rs.core.Response
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -534,7 +538,8 @@ class PipelineVersionFacadeService @Autowired constructor(
                 resource = yamlResource,
                 editPermission = editPermission,
                 archiveFlag = archiveFlag,
-                isEncryptParamsValue = isEncryptParamsValue
+                isEncryptParamsValue = isEncryptParamsValue,
+                channelCode = pipelineInfo.channelCode
             )
             Triple(true, response, null)
         } catch (e: PipelineTransferException) {
@@ -560,6 +565,8 @@ class PipelineVersionFacadeService @Autowired constructor(
             yamlInvalidMsg = msg,
             updater = resource.updater ?: resource.creator,
             updateTime = resource.updateTime?.timestampmilli(),
+            versionStatus = resource.status,
+            latestVersion = pipelineInfo.version,
             envHashId = setting.envHashId
         )
     }
@@ -579,7 +586,16 @@ class PipelineVersionFacadeService @Autowired constructor(
             errorCode = ProcessMessageCode.ERROR_NO_PIPELINE_VERSION_EXISTS_BY_ID,
             params = arrayOf(version.toString())
         )
-        return transferService.buildPreview(userId, projectId, pipelineId, resource)
+        val pipelineInfo = pipelineRepositoryService.getPipelineInfo(
+            projectId = projectId, pipelineId = pipelineId
+        )
+        return transferService.buildPreview(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            resource = resource,
+            channelCode = pipelineInfo?.channelCode ?: ChannelCode.BS
+        )
     }
 
     fun savePipelineDraft(
@@ -895,5 +911,148 @@ class PipelineVersionFacadeService @Autowired constructor(
             count = size.toLong(),
             records = pipelines
         )
+    }
+
+    fun getVersionByBranch(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        branch: String,
+        archiveFlag: Boolean? = false,
+        source: PipelineGetVersionSource? = PipelineGetVersionSource.VIEW
+    ): PipelineVersionWithModel {
+        // 流水线分支版本
+        val version = pipelineYamlFacadeService.getPipelineYamlVersion(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            branch = branch
+        )!!
+        return getVersion(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            version = version,
+            archiveFlag = archiveFlag,
+            source = source
+        ).copy(
+            versionName = branch
+        )
+    }
+
+    fun getVersionByBranch(
+        projectId: String,
+        pipelineId: String,
+        branch: String
+    ): PipelineResourceVersion? {
+        // 流水线分支版本
+        return pipelineYamlFacadeService.getPipelineYamlVersion(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            branch = branch
+        )?.let {
+            pipelineRepositoryService.getPipelineResourceVersion(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                version = it
+            )
+        }
+    }
+
+    fun listPacVersions(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        search: String?,
+        page: Int?,
+        pageSize: Int?
+    ): List<PipelineYamlBuildVersion> {
+        // 检查PAC信息
+        val pipelineYamlInfo = pipelineYamlFacadeService.getPipelineYamlInfo(
+            projectId = projectId,
+            pipelineId = pipelineId
+        ) ?: throw ErrorCodeException(
+            errorCode = ERROR_PIPELINE_IS_NOT_PAC,
+            params = arrayOf(pipelineId)
+        )
+        pipelinePermissionService.checkPipelinePermission(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            permission = AuthPermission.VIEW,
+            authResourceType = AuthResourceType.PIPELINE_DEFAULT
+        )
+        val list = mutableListOf<PipelineYamlBuildVersion>()
+        val finalPage = page ?: 1
+        val finalPageSize = pageSize ?: 20
+        // PAC 仓库信息
+        val repository = pipelineYamlFacadeService.getRepository(
+            projectId = projectId,
+            repoHashId = pipelineYamlInfo.repoHashId
+        )
+        // 仓库默认分支
+        val defaultBranchName = pipelineYamlFacadeService.getServiceRepository(
+            projectId = projectId,
+            repository = repository
+        ).let {
+            if (it !is GitScmServerRepository) {
+                throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.ERROR_NOT_SUPPORT_REPOSITORY_TYPE_ENABLE_PAC
+                )
+            }
+            it.defaultBranch
+        } ?: ""
+        val needBaseVersion = finalPage == 1 && search.isNullOrBlank()
+        // 首页需查询正式版本/默认分支
+        if (needBaseVersion) {
+            // 默认返回当前最新的正式版本（当流水线仅有分支版本时不添加）
+            pipelineRepositoryService.getPipelineResourceVersion(
+                projectId = projectId,
+                pipelineId = pipelineId
+            )?.takeIf {
+                // 检查对应版本号是否为正式版本
+                pipelineRepositoryService.getPipelineResourceVersion(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    version = it.version
+                )?.status == VersionStatus.RELEASED
+            }?.let {
+                list.add(
+                    PipelineYamlBuildVersion(
+                        name = it.versionName ?: "",
+                        version = it.version,
+                        versionStatus = VersionStatus.RELEASED
+                    )
+                )
+            }
+            // 追加默认分支
+            list.add(
+                PipelineYamlBuildVersion(
+                    name = defaultBranchName,
+                    versionStatus = VersionStatus.BRANCH,
+                    defaultBranch = true
+                )
+            )
+        }
+        // 仓库分支列表
+        pipelineYamlFacadeService.getServiceBranch(
+            projectId = projectId,
+            repository = repository,
+            page = finalPage,
+            pageSize = finalPageSize,
+            search = search?.takeIf { it.isNotBlank() }
+        )?.forEach {
+            if (it.name == defaultBranchName && needBaseVersion) {
+                return@forEach
+            }
+            list.add(
+                PipelineYamlBuildVersion(
+                    name = it.name,
+                    versionStatus = VersionStatus.BRANCH,
+                    defaultBranch = (it.name == defaultBranchName),
+                    sha = it.sha
+                )
+            )
+        }
+        return list
     }
 }

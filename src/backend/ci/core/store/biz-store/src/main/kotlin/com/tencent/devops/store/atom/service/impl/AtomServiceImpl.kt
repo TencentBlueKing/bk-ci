@@ -81,6 +81,7 @@ import com.tencent.devops.store.common.service.StoreIndexManageService
 import com.tencent.devops.store.common.service.StoreProjectService
 import com.tencent.devops.store.common.service.StoreUserService
 import com.tencent.devops.store.common.service.action.StoreDecorateFactory
+import com.tencent.devops.store.common.utils.PublicComponentCacheManager
 import com.tencent.devops.store.common.utils.StoreUtils
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.constant.StoreMessageCode.GET_INFO_NO_PERMISSION
@@ -151,6 +152,7 @@ import java.util.concurrent.Future
 import java.util.concurrent.SynchronousQueue
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
+import kotlin.collections.orEmpty
 
 /**
  * 插件业务逻辑类
@@ -1071,11 +1073,23 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                         )
                     }
                 }
+                // 更新标签信息
+                val labelIdList = atomUpdateRequest.serviceScopeConfigs
+                    ?.flatMap { it.labelIdList.orEmpty() }
+                    ?.distinct()
+                    ?.takeIf { it.isNotEmpty() }
+                if (labelIdList?.isNotEmpty() == true) {
+                    atomLabelRelDao.deleteByAtomId(context, id)
+                    atomLabelRelDao.batchAdd(context, userId, id, labelIdList)
+                }
                 if (atomUpdateRequest.defaultFlag) {
                     redisOperation.addSetValue(StoreUtils.getStorePublicFlagKey(StoreTypeEnum.ATOM.name), atomCode)
                 } else {
                     redisOperation.removeSetMember(StoreUtils.getStorePublicFlagKey(StoreTypeEnum.ATOM.name), atomCode)
                 }
+                // 清除公共组件集合缓存，立即生效
+                PublicComponentCacheManager.invalidateCache(StoreTypeEnum.ATOM.name)
+                // 更新插件运行时信息缓存
                 marketAtomCommonService.updateAtomRunInfoCache(
                     atomId = id,
                     atomName = atomUpdateRequest.name,
@@ -1548,5 +1562,9 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
             )
         }
         return Result(versionInfo)
+    }
+
+    override fun getAtomId(atomCode: String, version: String): String? {
+        return atomDao.getAtomIdByVersionWithCode(dslContext, atomCode, version)
     }
 }

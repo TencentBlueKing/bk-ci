@@ -187,6 +187,28 @@ class ImportService @Autowired constructor(
                 )
             )
         )
+        // 兜底防御，这里可能因为收到heartbeat的影响导致已经创建过node重新创建了
+        if (agentRecord.nodeId != null) {
+            LOG.info("Trying to import the agent($agentId) of project($projectId) by user($userId), exist node")
+            dslContext.transaction { configuration ->
+                val context = DSL.using(configuration)
+                nodeDao.updateNodeStatus(
+                    dslContext = context,
+                    ids = setOf(agentRecord.nodeId),
+                    status = NodeStatus.NORMAL
+                )
+                thirdPartyAgentDao.updateStatus(
+                    dslContext = context,
+                    id = agentRecord.id,
+                    nodeId = agentRecord.nodeId,
+                    projectId = projectId,
+                    status = AgentStatus.IMPORT_OK
+                )
+            }
+
+            return agentRecord.nodeId
+        }
+
         var nodeId = 0L
         LOG.info("Trying to import the agent($agentId) of project($projectId) by user($userId)")
         dslContext.transaction { configuration ->
@@ -210,7 +232,7 @@ class ImportService @Autowired constructor(
 
             val nodeStringId = if (agentRecord.agentType == AgentType.CREATE.name) {
                 createEnvService.getWorkspaceDisplayName(userId, projectId, agentRecord.createWorkspaceName)
-                    ?: agentRecord.createWorkspaceName ?: "CREATE_${agentRecord.ip}"
+                    ?: agentRecord.ip
             } else {
                 "BUILD_${HashUtil.encodeLongId(nodeId)}_${agentRecord.ip}"
             }

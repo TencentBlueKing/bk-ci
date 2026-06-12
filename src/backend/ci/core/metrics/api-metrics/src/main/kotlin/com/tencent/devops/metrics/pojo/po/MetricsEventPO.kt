@@ -37,6 +37,7 @@ data class MetricsEventPO(
         val pipelineId: String,
         val pipelineName: String,
         val buildId: String,
+        val buildNum: Int,
         val status: String,
         val eventType: MetricsEvent,
         // 层级维度
@@ -47,8 +48,10 @@ data class MetricsEventPO(
         val stageId: String? = null,
         val jobName: String? = null,
         val jobId: String? = null,
+        val jobIndex: String? = null,
         val stepName: String? = null,
         val stepId: String? = null,
+        val stepIndex: String? = null,
         val taskId: String? = null,
         val specialStep: String? = null,
         // 错误维度

@@ -731,6 +731,7 @@ class InitializeMatrixGroupStageCmd(
                         reviewUsers = e.reviewUsers.toMutableList()
                         desc = e.desc
                         params = e.params
+                        suggestRequired = e.suggestRequired
                     }
 
                     else -> {}

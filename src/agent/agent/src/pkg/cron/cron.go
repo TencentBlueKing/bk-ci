@@ -28,21 +28,16 @@
 package cron
 
 import (
-	"context"
 	"fmt"
 	"os"
 	"strings"
 	"time"
 
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/logs"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/config"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/dockercli"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/imagedebug"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/job_docker"
-	"github.com/docker/docker/api/types"
-	"github.com/docker/docker/api/types/container"
-	"github.com/docker/docker/client"
-
-	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/logs"
-
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/systemutil"
 )
@@ -172,10 +167,6 @@ func cleanLogFile(timeBeforeInHours int) {
 }
 
 func CleanDebugContainer() {
-	if !systemutil.IsLinux() {
-		return
-	}
-
 	defer func() {
 		if err := recover(); err != nil {
 			logs.Error("agent clean debug container panic: ", err)
@@ -195,28 +186,24 @@ func cleanDebugContainer() {
 	if !config.GAgentConfig.EnableDockerBuild {
 		return
 	}
-	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	runner := dockercli.NewRunner(systemutil.GetWorkDir(), func(format string, args ...interface{}) {
+		logs.Infof(format, args...)
+	})
+	conList, err := runner.ListContainers(nil, false)
 	if err != nil {
-		logs.WithError(err).Warn("cleanDebugContainer get docker lient error")
-		return
-	}
-	conList, err := cli.ContainerList(context.Background(), types.ContainerListOptions{})
-	if err != nil {
-		logs.WithError(err).Warn("cleanDebugContainer get docker container list error")
+		logs.WithError(err).Warn("cleanDebugContainer get container list error")
 		return
 	}
 
 	for _, c := range conList {
-		for _, n := range c.Names {
-			if strings.Contains(n, imagedebug.DebugContainerHeader+"b-") && time.Now().Sub(time.Unix(c.Created, 0)) > imagedebug.ImageDebugMaxHoldHour*time.Hour {
-				logs.Infof("cleanDebugContainer find debug container %s created %s than 24 hour will remove", c.ID, time.Unix(c.Created, 0).String())
-				containerStopTimeout := 0
-				if err := cli.ContainerStop(context.Background(), c.ID, container.StopOptions{Timeout: &containerStopTimeout}); err != nil {
-					logs.WithError(err).Warnf("cleanDebugContainer stop container %s error", c.ID)
-				}
-				if err = cli.ContainerRemove(context.Background(), c.ID, types.ContainerRemoveOptions{Force: true}); err != nil {
-					logs.WithError(err).Warnf("remove container %s error", c.ID)
-				}
+		if strings.Contains(c.Name, imagedebug.DebugContainerHeader+"b-") &&
+			dockercli.DebugContainerCreatedLongAgo(c.CreatedAt, imagedebug.ImageDebugMaxHoldHour*time.Hour) {
+			logs.Infof("cleanDebugContainer find debug container %s created %s than 24 hour will remove", c.ID, c.CreatedAt)
+			if err := runner.StopContainer(nil, c.ID); err != nil {
+				logs.WithError(err).Warnf("cleanDebugContainer stop container %s error", c.ID)
+			}
+			if err = runner.RemoveContainer(nil, c.ID); err != nil {
+				logs.WithError(err).Warnf("remove container %s error", c.ID)
 			}
 		}
 	}

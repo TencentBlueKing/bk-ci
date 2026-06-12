@@ -150,7 +150,7 @@ class NodeTagDao {
     fun fetchNodesTags(
         dslContext: DSLContext,
         projectId: String,
-        nodeIds: List<Long>
+        nodeIds: Set<Long>
     ): Map<Long, MutableList<NodeTag>> {
         val resM = mutableMapOf<Long, MutableMap<Long, NodeTag>>()
         dslContext.select(
@@ -190,7 +190,7 @@ class NodeTagDao {
     fun fetchNodesInternalTags(
         dslContext: DSLContext,
         projectId: String,
-        nodeIds: List<Long>
+        nodeIds: Set<Long>
     ): Map<Long, MutableList<NodeTag>> {
         val resM = mutableMapOf<Long, MutableMap<Long, NodeTag>>()
         dslContext.select(

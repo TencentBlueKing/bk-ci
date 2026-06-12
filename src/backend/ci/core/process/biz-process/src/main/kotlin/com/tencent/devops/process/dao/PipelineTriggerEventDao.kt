@@ -54,7 +54,6 @@ import com.tencent.devops.process.pojo.trigger.TriggerEventBody
 import com.tencent.devops.scm.api.pojo.webhook.Webhook
 import org.jooq.Condition
 import org.jooq.DSLContext
-import org.jooq.Result
 import org.jooq.impl.DSL.count
 import org.jooq.impl.DSL.countDistinct
 import org.jooq.impl.DSL.`when`
@@ -223,7 +222,7 @@ class PipelineTriggerEventDao {
                     eventSource = it.value5(),
                     eventType = it.value6(),
                     triggerUser = it.value7(),
-                    eventDesc = it.value8(),
+                    eventDesc = I18Variable(code = "", defaultMessage = it.value8()),
                     eventTime = it.value9().timestampmilli(),
                     status = it.value10(),
                     pipelineId = it.value11(),
@@ -269,17 +268,6 @@ class PipelineTriggerEventDao {
             .on(t1.EVENT_ID.eq(t2.EVENT_ID)).and(t1.PROJECT_ID.eq(t2.PROJECT_ID))
             .where(conditions)
             .fetchOne(0, Long::class.java)!!
-    }
-
-    fun listByEventIds(
-        dslContext: DSLContext,
-        eventIds: List<String>
-    ): Result<TPipelineTriggerEventRecord> {
-        return with(T_PIPELINE_TRIGGER_EVENT) {
-            dslContext.selectFrom(this)
-                .where(EVENT_ID.`in`(eventIds))
-                .fetch()
-        }
     }
 
     fun getEventIdsByEvent(
@@ -435,6 +423,7 @@ class PipelineTriggerEventDao {
 
     fun listRepoTriggerEventWithoutBody(
         dslContext: DSLContext,
+        projectId: String,
         eventIds: Set<Long>
     ): List<PipelineTriggerEventWithoutBody> {
         return with(T_PIPELINE_TRIGGER_EVENT) {
@@ -452,6 +441,7 @@ class PipelineTriggerEventDao {
                 CREATE_TIME
             ).from(this)
                 .where(EVENT_ID.`in`(eventIds))
+                .and(PROJECT_ID.eq(projectId))
                 .orderBy(CREATE_TIME.desc())
                 .fetch().map {
                     PipelineTriggerEventWithoutBody(

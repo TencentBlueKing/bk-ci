@@ -20,7 +20,7 @@
             :pagination="pagination"
             :default-sort="defaultSort"
             height="100%"
-            :key="`${isFlod}-${queryNodeHashId}`"
+            :key="`${isFlod}-${queryNodeHashId}-${isCreateResType}`"
             @row-click="handleRowClick"
             @page-change="handlePageChange"
             @page-limit-change="handlePageLimitChange"
@@ -395,9 +395,9 @@
                                         disablePermissionApi: true,
                                         permissionData: {
                                             projectId: projectId,
-                                            resourceType: NODE_RESOURCE_TYPE,
+                                            resourceType: currentResourceType,
                                             resourceCode: props.row.nodeHashId,
-                                            action: NODE_RESOURCE_ACTION.DELETE
+                                            action: currentResourceAction.DELETE
                                         }
                                     }"
                                     class="node-handle delete-node-text"
@@ -740,9 +740,6 @@
         },
         methods: {
             ...mapActions('environment', ['requestNodeTagList', 'requestGetCounts']),
-            handleExpandList () {
-                this.$emit('toggle-fold')
-            },
             calcOverPosTable () {
                 const tagMargin = 6
                 this.visibleLabelCountList = this.nodeList.reduce((acc, item, index) => {
@@ -857,18 +854,16 @@
                 }
             },
             toNodeDetail (node) {
-                if (this.isFlod) return
                 if (this.canShowDetail(node)) {
-                    this.$emit('show-detail', node.nodeHashId)
-                    // const currentNodeType = this.$route.params.nodeType || ALLNODE
-                    // localStorage.setItem(ENV_ACTIVE_NODE_TYPE, currentNodeType)
-                    // this.$router.push({
-                    //     name: 'nodeDetail',
-                    //     params: {
-                    //         projectId: this.projectId,
-                    //         nodeHashId: node.nodeHashId
-                    //     }
-                    // })
+                    const currentNodeType = this.$route.params.nodeType || ALLNODE
+                    localStorage.setItem(ENV_ACTIVE_NODE_TYPE, currentNodeType)
+                    this.$router.push({
+                        name: 'nodeDetail',
+                        params: {
+                            projectId: this.projectId,
+                            nodeHashId: node.nodeHashId
+                        }
+                    })
                 }
             },
             editNodeName (node) {

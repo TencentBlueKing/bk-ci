@@ -309,6 +309,7 @@ class PipelineTriggerEventService @Autowired constructor(
         // 事件信息
         val triggerEvent = pipelineTriggerEventDao.listRepoTriggerEventWithoutBody(
             dslContext = dslContext,
+            projectId = projectId,
             eventIds = eventIds
         )
         // 触发详情记录（总数，成功数）
@@ -324,7 +325,7 @@ class PipelineTriggerEventService @Autowired constructor(
                 projectId = it.projectId,
                 eventId = it.eventId,
                 repoHashId = it.eventSource,
-                eventDesc = getI18nEventDesc(it.eventDesc),
+                eventDesc = getEventDescVariable(it.eventDesc),
                 eventTime = it.createTime.timestampmilli(),
                 total = eventDetailsMap[it.eventId]?.total ?: 0,
                 success = eventDetailsMap[it.eventId]?.success ?: 0
@@ -553,13 +554,13 @@ class PipelineTriggerEventService @Autowired constructor(
     }
 
     /**
-     * 获取国际化构建事件描述
+     * 获取事件描述变量
      */
-    private fun getI18nEventDesc(eventDesc: String) = try {
-        JsonUtil.to(eventDesc, I18Variable::class.java).getCodeLanMessage()
+    private fun getEventDescVariable(eventDesc: String) = try {
+        JsonUtil.to(eventDesc, I18Variable::class.java)
     } catch (ignored: Exception) {
         logger.warn("Failed to resolve repo trigger event|sourceDesc[$eventDesc]", ignored)
-        eventDesc
+        I18Variable(code = "", defaultMessage = eventDesc)
     }
 
     private fun getI18nReason(reason: String?): String = getCodeLanMessage(
@@ -606,7 +607,7 @@ class PipelineTriggerEventService @Autowired constructor(
         eventParam: PipelineTriggerEventVo
     ): PipelineTriggerEventVo {
         return with(eventParam) {
-            eventDesc = getI18nEventDesc(eventDesc)
+            eventDesc = getEventDescVariable(eventDesc.defaultMessage ?: eventDesc.toJsonStr())
             buildNum = getBuildNumUrl()
             reason = getI18nReason(eventParam.reason)
             this

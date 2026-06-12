@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
@@ -45,6 +46,9 @@ import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_EVENT_URL
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_EVENT_TYPE
+import com.tencent.devops.environment.api.ServiceEnvironmentResource
+import com.tencent.devops.environment.pojo.NodeBaseInfo
+import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.process.bean.PipelineUrlBean
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_SUB_PIPELINE_NOT_ALLOWED_CIRCULAR_CALL
@@ -96,7 +100,8 @@ class SubPipelineStartUpService @Autowired constructor(
     private val pipelinePermissionService: PipelinePermissionService,
     private val pipelineUrlBean: PipelineUrlBean,
     private val templateFacadeService: TemplateFacadeService,
-    private val subPipelineRefService: SubPipelineRefService
+    private val subPipelineRefService: SubPipelineRefService,
+    private val client: Client
 ) {
 
     companion object {
@@ -129,11 +134,14 @@ class SubPipelineStartUpService @Autowired constructor(
         branch: String?
     ): Result<ProjectBuildId> {
         val fixProjectId = callProjectId.ifBlank { projectId }
+        // PAC子流水线相关的参数
+        val yamlParams = mutableMapOf<String, BuildParameters>()
         // 获取分支版本Model
         val subPipelineResource = getBranchVersionResource(
             projectId = fixProjectId,
             pipelineId = callPipelineId,
-            branch = branch
+            branch = branch,
+            yamlParams = yamlParams
         )
         // 通过 runVariables获取 userId 和 channelCode
         val runVariables = buildVariableService.getAllVariable(projectId, parentPipelineId, buildId)
@@ -164,6 +172,10 @@ class SubPipelineStartUpService @Autowired constructor(
         val startParams = mutableMapOf<String, String>()
         values.forEach {
             startParams[it.key] = parseVariable(it.value, runVariables)
+        }
+        // 子流水线启动时补充pac相关参数
+        yamlParams.map { (key, value) -> key to value.value.toString() }.forEach {
+            startParams.putIfAbsent(it.first, it.second)
         }
 
         val existPipelines = HashSet<String>()
@@ -216,7 +228,8 @@ class SubPipelineStartUpService @Autowired constructor(
             triggerUser = triggerUser,
             runMode = runMode,
             parentExecuteCount = executeCount,
-            pipelineResource = subPipelineResource
+            pipelineResource = subPipelineResource,
+            branch = branch
         )
         pipelineTaskService.updateSubBuildId(
             projectId = projectId,
@@ -252,7 +265,8 @@ class SubPipelineStartUpService @Autowired constructor(
         triggerUser: String? = null,
         runMode: String,
         parentExecuteCount: Int?,
-        pipelineResource: PipelineResourceVersion?
+        pipelineResource: PipelineResourceVersion?,
+        branch: String?
     ): BuildId {
         val readyToBuildPipelineInfo = getPipelineInfo(
             projectId = projectId,
@@ -270,9 +284,12 @@ class SubPipelineStartUpService @Autowired constructor(
         if (readyToBuildPipelineInfo.locked == true) {
             throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_PIPELINE_LOCK)
         }
-        if (readyToBuildPipelineInfo.latestVersionStatus?.isNotReleased() == true) throw ErrorCodeException(
-            errorCode = ProcessMessageCode.ERROR_NO_RELEASE_PIPELINE_VERSION
-        )
+        // 引用分支版本时，无需校验是否存在正式版本
+        if (branch.isNullOrBlank() && readyToBuildPipelineInfo.latestVersionStatus?.isNotReleased() == true) {
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_NO_RELEASE_PIPELINE_VERSION
+            )
+        }
         val parentPipelineInfo = getPipelineInfo(
             projectId = parentProjectId,
             pipelineId = parentPipelineId
@@ -535,6 +552,48 @@ class SubPipelineStartUpService @Autowired constructor(
         return Result(parameter)
     }
 
+    /**
+     * 获取流水线的手动启动参数，返回至前端渲染界面。
+     * @param projectId 流水线所在项目ID
+     * @param pipelineId 流水线ID
+     */
+    fun subStreamManualStartupNodeList(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        parentProjectId: String = "",
+        parentPipelineId: String = "",
+        nodeIp: String?,
+        displayName: String?,
+        nodeStatus: NodeStatus?,
+        createdUser: String?
+    ): Result<List<NodeBaseInfo>> {
+        val oauthUser = if (parentProjectId.isNotBlank() && parentPipelineId.isNotBlank()) {
+            pipelineRepositoryService.getPipelineOauthUser(
+                projectId = parentProjectId,
+                pipelineId = parentPipelineId
+            ) ?: userId
+        } else {
+            userId
+        }
+        val subPipelineSetting = pipelineRepositoryService.getSetting(projectId, pipelineId)
+        val list = subPipelineSetting?.envHashId?.let { env ->
+            client.get(ServiceEnvironmentResource::class).listNodesNew(
+                userId = oauthUser,
+                projectId = projectId,
+                envHashId = env,
+                nodeIp = nodeIp,
+                nodeStatus = nodeStatus,
+                displayName = displayName,
+                createdUser = createdUser,
+                page = 1,
+                pageSize = 100
+            ).data?.records
+        }
+
+        return Result(list ?: emptyList())
+    }
+
     fun getSubVar(projectId: String, buildId: String, taskId: String): Result<Map<String, String>> {
         val task = pipelineTaskService.getByTaskId(projectId = projectId, buildId = buildId, taskId = taskId)
             ?: return Result(emptyMap())
@@ -568,14 +627,22 @@ class SubPipelineStartUpService @Autowired constructor(
     private fun getBranchVersionResource(
         projectId: String,
         pipelineId: String,
-        branch: String?
+        branch: String?,
+        yamlParams: MutableMap<String, BuildParameters> = mutableMapOf()
     ): PipelineResourceVersion? {
         return if (!branch.isNullOrBlank()) {
-            val branchVersionResource = pipelineRepositoryService.getBranchVersionResource(
+            val branchVersionResource = pipelineBuildFacadeService.getPipelineYamlVersion(
                 projectId = projectId,
                 pipelineId = pipelineId,
-                branchName = branch
-            )
+                branchName = branch,
+                yamlParams = yamlParams
+            )?.let {
+                pipelineRepositoryService.getPipelineResourceVersion(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    version = it
+                )
+            }
             if (branchVersionResource == null) {
                 val pipelineInfo = getPipelineInfo(projectId, pipelineId)
                 throw ErrorCodeException(

@@ -92,12 +92,14 @@ class ServicePipelineTemplateV2ResourceImpl(
     }
 
     override fun getTemplateDetails(
+        userId: String,
         projectId: String,
         templateId: String,
         version: Long?
     ): Result<PipelineTemplateDetailsResponse> {
         return Result(
             pipelineTemplateFacadeService.getTemplateDetails(
+                userId = userId,
                 projectId = projectId,
                 templateId = templateId,
                 version = version
