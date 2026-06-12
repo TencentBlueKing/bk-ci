@@ -29,32 +29,124 @@ package com.tencent.devops.worker.common.service.impl
 
 import com.tencent.devops.common.api.enums.OSType
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.script.CommandLineUtils
 import com.tencent.devops.common.service.utils.CommonUtils
+import com.tencent.devops.worker.common.BK_ATOM_PYTHON_VENV_ENABLED
+import com.tencent.devops.worker.common.PYTHON_VENV_DIR
+import com.tencent.devops.worker.common.api.ApiFactory
+import com.tencent.devops.worker.common.api.atom.AtomArchiveSDKApi
+import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.service.AtomRunConditionHandleService
-import org.slf4j.LoggerFactory
 import java.io.File
+import org.slf4j.LoggerFactory
 
 class PythonAtomRunConditionHandleServiceImpl : AtomRunConditionHandleService {
 
     private val logger = LoggerFactory.getLogger(PythonAtomRunConditionHandleServiceImpl::class.java)
 
     override fun prepareRunEnv(
+        atomCode: String,
         osType: OSType,
         language: String,
         runtimeVersion: String,
-        workspace: File
-    ): Boolean {
-        return true
+        workspace: File,
+        atomTmpSpace: File?,
+        runtimeVariables: Map<String, String>
+    ): String? {
+        if (atomTmpSpace == null) {
+            logger.warn("prepareRunEnv atomCode:$atomCode, atomTmpSpace is null, skip venv creation")
+            return null
+        }
+        // 从插件配置的环境变量中判断是否启用虚拟环境
+        val venvEnabled = runtimeVariables[BK_ATOM_PYTHON_VENV_ENABLED]
+        if (venvEnabled?.toBoolean() != true) {
+            LoggerService.addWarnLine("prepareRunEnv atomCode:$atomCode, python venv is not enabled, skip")
+            return null
+        }
+        // 检查插件是否在 PYTHON_VENV 白名单中
+        val atomApi = ApiFactory.create(AtomArchiveSDKApi::class)
+        val isInWhitelist = atomApi.isAtomInWhitelist(
+            atomCode = atomCode,
+            whitelistType = "PYTHON_VENV"
+        ).data ?: false
+        if (!isInWhitelist) {
+            LoggerService.addWarnLine(
+                "prepareRunEnv atomCode:$atomCode is not in PYTHON_VENV whitelist, skip venv creation"
+            )
+            return null
+        }
+        // 根据环境中实际可用的Python命令确定使用哪个
+        // runtimeVersion 可能是 "python", "python3", "python3.11", "python2" 等
+        // 优先使用配置的版本，如果不可用则尝试其他候选命令
+        val (pythonCmd, pythonVersion) = when {
+            runtimeVersion.startsWith("python3") -> {
+                // 优先使用 python3，如果不可用则尝试 python
+                getPythonVersion("python3")?.let { "python3" to it }
+                    ?: getPythonVersion("python")?.let { "python" to it }
+                    ?: runtimeVersion to null
+            }
+            runtimeVersion.startsWith("python2") -> {
+                // 优先使用 python2，如果不可用则尝试 python
+                getPythonVersion("python2")?.let { "python2" to it }
+                    ?: getPythonVersion("python")?.let { "python" to it }
+                    ?: runtimeVersion to null
+            }
+            else -> {
+                // 默认情况，优先使用 python，如果不可用则尝试 python3
+                getPythonVersion("python")?.let { "python" to it }
+                    ?: getPythonVersion("python3")?.let { "python3" to it }
+                    ?: "python" to null
+            }
+        }
+        logger.info("prepareRunEnv pythonCmd:$pythonCmd, runtimeVersion:$runtimeVersion")
+        if (pythonVersion == null) {
+            logger.warn("prepareRunEnv all python commands are not available, fallback to system env")
+            LoggerService.addWarnLine("No available python command found, skip venv creation")
+            return null
+        }
+        val venvPath = File(atomTmpSpace, PYTHON_VENV_DIR)
+        val binPath = if (pythonVersion.contains("Python 3", ignoreCase = true)) {
+            createPython3Venv(pythonCmd = pythonCmd, venvPath = venvPath, osType = osType)
+        } else {
+            createPython2Venv(pythonCmd = pythonCmd, venvPath = venvPath, osType = osType)
+        }
+        if (binPath == null) {
+            logger.warn("prepareRunEnv create venv failed, fallback to system env")
+            LoggerService.addWarnLine("Failed to create python venv, fallback to system environment")
+            // 清理创建失败残留的虚拟环境目录
+            cleanupVenvDir(venvPath)
+        }
+        return binPath
     }
 
     override fun handleAtomTarget(
         target: String,
         osType: OSType,
-        postEntryParam: String?
+        postEntryParam: String?,
+        atomExecuteEnvPath: String?
     ): String {
-        var convertTarget = target
+        // 若虚拟环境路径存在，将启动命令拼接为虚拟环境内的绝对路径
+        var convertTarget = if (!atomExecuteEnvPath.isNullOrBlank()) {
+            // target 可能是 console_scripts 入口点名称（如 "demo"）或 Python 可执行文件名
+            // 无论哪种情况，都需要加虚拟环境路径，因为 venv 创建后入口点在 venv/bin 或 venv/Scripts 下
+            val parts = target.trim().split(Regex("\\s+"), limit = 2)
+            val executableName = parts[0]
+            val args = if (parts.size > 1) parts[1] else ""
+
+            val fullPath = "$atomExecuteEnvPath${File.separator}$executableName"
+            // Windows路径含反斜杠，用双引号包裹防止被shell错误解析
+            val quotedPath = if (osType == OSType.WINDOWS) "\"$fullPath\"" else fullPath
+
+            if (args.isBlank()) {
+                quotedPath
+            } else {
+                "$quotedPath $args"
+            }
+        } else {
+            target
+        }
         if (!postEntryParam.isNullOrBlank()) {
-            convertTarget = "$target --post_action=$postEntryParam"
+            convertTarget = "$convertTarget --post_action=$postEntryParam"
         }
         logger.info("handleAtomTarget convertTarget:$convertTarget")
         return convertTarget
@@ -64,16 +156,121 @@ class PythonAtomRunConditionHandleServiceImpl : AtomRunConditionHandleService {
         preCmd: String,
         osName: String,
         pkgName: String,
-        runtimeVersion: String?
+        runtimeVersion: String?,
+        atomExecuteEnvPath: String?
     ): String {
         val preCmds = CommonUtils.strToList(preCmd).toMutableList()
-        val pipType = if (runtimeVersion == "python3") {
-            "pip3"
+        val pipCmd = if (runtimeVersion?.startsWith("python3") == true) "pip3" else "pip"
+        // 若虚拟环境路径存在，使用绝对路径执行pip，Windows路径用双引号包裹
+        val fullPipCmd = if (!atomExecuteEnvPath.isNullOrBlank()) {
+            val fullPath = "$atomExecuteEnvPath${File.separator}$pipCmd"
+            if (osName == OSType.WINDOWS.name.lowercase()) "\"$fullPath\"" else fullPath
         } else {
-            "pip"
+            pipCmd
         }
-        preCmds.add(0, "$pipType --default-timeout=600 install $pkgName --upgrade")
+        preCmds.add(0, "$fullPipCmd --default-timeout=600 install $pkgName --upgrade")
         logger.info("handleAtomPreCmd convertPreCmd:$preCmds")
         return JsonUtil.toJson(preCmds, false)
+    }
+
+    /** Get python version string, return null if command is not available */
+    private fun getPythonVersion(pythonCmd: String): String? {
+        return try {
+            // python --version 在部分平台上输出到 stderr，用 2>&1 重定向到 stdout 确保能被捕获
+            CommandLineUtils.execute(
+                command = "$pythonCmd --version 2>&1",
+                workspace = null,
+                print2Logger = false
+            )?.trim()?.takeIf { it.isNotBlank() }
+        } catch (ignored: Throwable) {
+            logger.warn("getPythonVersion [$pythonCmd] failed: ${ignored.message}")
+            null
+        }
+    }
+
+    /** 使用python3 -m venv创建虚拟环境，成功返回bin路径，失败返回null */
+    private fun createPython3Venv(pythonCmd: String, venvPath: File, osType: OSType): String? {
+        return try {
+            val command = "$pythonCmd -m venv ${venvPath.absolutePath}"
+            logger.info("createPython3Venv command:$command")
+            LoggerService.addNormalLine("Creating python3 venv: $command")
+            CommandLineUtils.execute(
+                command = command,
+                workspace = venvPath.parentFile,
+                print2Logger = true
+            )
+            val binPath = getVenvBinPath(venvPath = venvPath, osType = osType)
+            logger.info("createPython3Venv success, binPath:$binPath")
+            LoggerService.addNormalLine("Python3 venv created successfully at: $binPath")
+            binPath
+        } catch (e: Throwable) {
+            logger.warn("createPython3Venv failed: ${e.message}", e)
+            null
+        }
+    }
+
+    /** 使用python2 -m virtualenv创建虚拟环境，成功返回bin路径，失败返回null */
+    private fun createPython2Venv(pythonCmd: String, venvPath: File, osType: OSType): String? {
+        return try {
+            // 检查virtualenv是否可用
+            if (!isVirtualenvAvailable(pythonCmd)) {
+                logger.info("virtualenv not found, installing...")
+                LoggerService.addNormalLine("Installing virtualenv...")
+                // 使用 $pythonCmd -m pip install 避免污染系统环境
+                CommandLineUtils.execute(
+                    command = "$pythonCmd -m pip install virtualenv --user",
+                    workspace = null,
+                    print2Logger = true
+                )
+            }
+            val command = "$pythonCmd -m virtualenv ${venvPath.absolutePath}"
+            logger.info("createPython2Venv command:$command")
+            LoggerService.addNormalLine("Creating python2 venv: $command")
+            CommandLineUtils.execute(
+                command = command,
+                workspace = venvPath.parentFile,
+                print2Logger = true
+            )
+            val binPath = getVenvBinPath(venvPath = venvPath, osType = osType)
+            logger.info("createPython2Venv success, binPath:$binPath")
+            LoggerService.addNormalLine("Python2 venv created successfully at: $binPath")
+            binPath
+        } catch (e: Throwable) {
+            logger.warn("createPython2Venv failed: ${e.message}", e)
+            null
+        }
+    }
+
+    /** 检查virtualenv模块是否可用 */
+    private fun isVirtualenvAvailable(pythonCmd: String): Boolean {
+        return try {
+            CommandLineUtils.execute(
+                command = "$pythonCmd -m virtualenv --version",
+                workspace = null,
+                print2Logger = true
+            )
+            true
+        } catch (ignored: Throwable) {
+            false
+        }
+    }
+
+    /** 根据操作系统获取虚拟环境bin目录路径 */
+    private fun getVenvBinPath(venvPath: File, osType: OSType): String {
+        val binDir = if (osType == OSType.WINDOWS) "Scripts" else "bin"
+        return File(venvPath, binDir).absolutePath
+    }
+
+    /** 清理创建失败残留的虚拟环境目录 */
+    private fun cleanupVenvDir(venvPath: File) {
+        try {
+            if (venvPath.exists()) {
+                venvPath.deleteRecursively()
+                logger.info("cleanupVenvDir success, path:${venvPath.absolutePath}")
+                LoggerService.addWarnLine("cleanupVenvDir success, path:${venvPath.absolutePath}")
+            }
+        } catch (e: Throwable) {
+            logger.warn("cleanupVenvDir failed, path:${venvPath.absolutePath}, error:${e.message}")
+        }
     }
 }

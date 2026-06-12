@@ -25,42 +25,36 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.worker.common.service.impl
+package com.tencent.devops.store.common.service
 
-import com.tencent.devops.common.api.enums.OSType
-import com.tencent.devops.worker.common.service.AtomRunConditionHandleService
-import java.io.File
+import com.fasterxml.jackson.core.type.TypeReference
+import com.tencent.devops.common.api.util.JsonUtil
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
 
-class CommonAtomRunConditionHandleServiceImpl : AtomRunConditionHandleService {
+@Service
+class AtomWhitelistConfigService @Autowired constructor(
+    private val businessConfigService: BusinessConfigService
+) {
+    private val logger = LoggerFactory.getLogger(AtomWhitelistConfigService::class.java)
 
-    override fun prepareRunEnv(
-        atomCode: String,
-        osType: OSType,
-        language: String,
-        runtimeVersion: String,
-        workspace: File,
-        atomTmpSpace: File?,
-        runtimeVariables: Map<String, String>
-    ): String? {
-        return null
-    }
-
-    override fun handleAtomTarget(
-        target: String,
-        osType: OSType,
-        postEntryParam: String?,
-        atomExecuteEnvPath: String?
-    ): String {
-        return target
-    }
-
-    override fun handleAtomPreCmd(
-        preCmd: String,
-        osName: String,
-        pkgName: String,
-        runtimeVersion: String?,
-        atomExecuteEnvPath: String?
-    ): String {
-        return preCmd
+    fun isAtomInWhitelist(atomCode: String, whitelistType: String): Boolean {
+        return try {
+            val configValue = businessConfigService.getConfigValue(
+                business = "ATOM",
+                feature = "ATOM_WHITELIST",
+                businessValue = whitelistType
+            )
+            val atomCodes = if (configValue != null) {
+                JsonUtil.to(configValue, object : TypeReference<List<String>>() {})
+            } else {
+                emptyList()
+            }
+            atomCodes.contains(atomCode)
+        } catch (ignored: Throwable) {
+            logger.warn("isAtomInWhitelist failed|atomCode=$atomCode|whitelistType=$whitelistType", ignored)
+            false
+        }
     }
 }
