@@ -1,7 +1,7 @@
 <template>
     <bk-dialog
         v-model="isShow"
-        :width="860"
+        :width="1080"
         :title="$t('environment.nodeInfo.importIMetaNode')"
         header-position="left"
         :close-icon="step === 'list'"
@@ -67,7 +67,7 @@
                     width="100"
                 />
                 <bk-table-column
-                    :label="$t('environment.status')"
+                    :label="$t('environment.IMetaStatus')"
                     width="130"
                 >
                     <template slot-scope="props">
@@ -75,6 +75,19 @@
                         <span style="margin-left: 2px;">
                             {{ $t(`environment.IMetaNodeStatus.${props.row.status}`) || props.row.status }}
                         </span>
+                    </template>
+                </bk-table-column>
+                <bk-table-column
+                    :label="$t('environment.envInfo.creator')"
+                    prop="createUser"
+                    width="100"
+                />
+                <bk-table-column
+                    :label="$t('environment.envInfo.creationTime')"
+                    prop="createTime"
+                >
+                    <template slot-scope="{ row }">
+                        {{ localConvertTime(row.createTime) }}
                     </template>
                 </bk-table-column>
             </bk-table>
@@ -138,7 +151,7 @@
 </template>
 
 <script>
-    import { mapActions } from 'vuex'
+    import { convertTime } from '@/utils/util'
     import StatusIcon from '@/components/status-icon.vue'
 
     export default {
@@ -253,6 +266,10 @@
                 this.step = 'list'
                 this.selectedNodes = []
                 this.pagination.current = 1
+            },
+            localConvertTime (timestamp) {
+                if (!timestamp) return ''
+                return convertTime(timestamp * 1000)
             }
         }
     }

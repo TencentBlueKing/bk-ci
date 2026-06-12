@@ -729,5 +729,6 @@
     },
     "IMetaNodeStatus": {
         "RUNNING": "Running"
-    }
+    },
+    "IMetaStatus": "Digital colleague status"
 }
