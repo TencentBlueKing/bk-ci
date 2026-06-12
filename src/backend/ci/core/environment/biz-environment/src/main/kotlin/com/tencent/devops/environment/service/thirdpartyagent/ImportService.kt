@@ -166,6 +166,77 @@ class ImportService @Autowired constructor(
         }
     }
 
+    fun preImport(projectId: String, agentId: Long, userId: String, displayName: String): Long{
+        Preconditions.checkTrue(
+            condition = environmentPermissionService.checkNodePermission(userId, projectId, AuthPermission.CREATE),
+            exception = PermissionForbiddenException(
+                message = I18nUtil.getCodeLanMessage(
+                    EnvironmentMessageCode.ERROR_NODE_NO_CREATE_PERMISSSION,
+                    language = I18nUtil.getLanguage(userId)
+                )
+            )
+        )
+        val agentRecord = thirdPartyAgentDao.getAgentByProject(dslContext, agentId, projectId)
+            ?: throw NotFoundException("The agent($agentId) is not exist")
+        var nodeId = 0L
+        LOG.info("Trying to import the agent($agentId) of project($projectId) by user($userId)")
+        dslContext.transaction { configuration ->
+            val context = DSL.using(configuration)
+
+            nodeId = nodeDao.addNode(
+                dslContext = context,
+                projectId = projectId,
+                ip = agentRecord.ip,
+                name = agentRecord.hostname,
+                osName = agentRecord.os.lowercase(),
+                status = NodeStatus.NOT_INSTALLED,
+                type = if (agentRecord.agentType == AgentType.CREATE.name) {
+                    NodeType.CREATE
+                } else {
+                    NodeType.THIRDPARTY
+                },
+                userId = userId,
+                agentVersion = null
+            )
+            nodeDao.insertNodeStringIdAndDisplayName(
+                dslContext = context,
+                id = nodeId,
+                nodeStringId = displayName,
+                displayName = displayName,
+                userId = userId
+            )
+            val count = thirdPartyAgentDao.updateStatus(
+                dslContext = context,
+                id = agentId,
+                nodeId = nodeId,
+                projectId = projectId,
+                status = AgentStatus.IMPORT_OK
+            )
+            if (count != 1) {
+                LOG.warn("Fail to update the agent($agentId) to OK status")
+                throw ErrorCodeException(
+                    errorCode = EnvironmentMessageCode.ERROR_NODE_NOT_EXISTS,
+                    params = arrayOf(agentId.toString())
+                )
+            }
+            environmentPermissionService.createNode(
+                userId = userId,
+                projectId = projectId,
+                nodeId = nodeId,
+                nodeName = "$displayName(${agentRecord.id})",
+                resourceType = if (agentRecord.agentType == AgentType.CREATE.name) {
+                    AuthResourceType.CREATIVE_STREAM_NODE
+                } else {
+                    AuthResourceType.ENVIRONMENT_ENV_NODE
+                }
+            )
+        }
+
+        // 导入后添加标签
+        nodeTagService.editInternalTags(projectId, agentId)
+        return nodeId
+    }
+
     private fun import(id: Long, projectId: String, agentId: String, userId: String, masterVersion: String?): Long? {
         val agentRecord = thirdPartyAgentDao.getAgentByProject(dslContext, id, projectId)
             ?: throw NotFoundException("The agent($agentId) is not exist")
