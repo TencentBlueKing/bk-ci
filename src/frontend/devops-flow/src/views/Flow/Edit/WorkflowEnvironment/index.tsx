@@ -1,7 +1,6 @@
-import { SvgIcon } from '@/components/SvgIcon'
 import { useAuthoringEnvironment } from '@/hooks/useAuthoringEnvironment'
 import { useFlowModel } from '@/hooks/useFlowModel'
-import { Button, Loading } from 'bkui-vue'
+import { Loading } from 'bkui-vue'
 import { defineComponent } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
@@ -18,8 +17,10 @@ export default defineComponent({
     // Use flowModel to update settings
     const { flowSetting, updateFlowSetting, loading } = useFlowModel()
 
-    const { envSelectList, nodeList, nodeListLoading, envListLoading, goEnvironment } =
-      useAuthoringEnvironment({ ...route.params, autoLoadEnvList: true })
+    const { envSelectList, nodeList, nodeListLoading, envListLoading } = useAuthoringEnvironment({
+      ...route.params,
+      autoLoadEnvList: true,
+    })
 
     // Handle user environment selection change
     const handleEnvChange = (envHashId: string) => {
@@ -36,6 +37,9 @@ export default defineComponent({
       <Loading loading={loading.value} class={[sharedStyles.tabContainer, sharedStyles.tabPadding, styles.workflowEnvironment]}>
         <AuthoringEnv
           isEdit
+          selectLabel={t('flow.content.selectEnvironment')}
+          selectRequired
+          showEnvironmentManagement
           modelValue={flowSetting.value?.envHashId}
           envList={envSelectList.value}
           envLoading={envListLoading.value}
@@ -43,10 +47,6 @@ export default defineComponent({
           nodeList={nodeList.value}
           onUpdate:modelValue={handleEnvChange}
         />
-        <Button text theme="primary" onClick={() => goEnvironment()}>
-          <SvgIcon class={styles.jumpIcon} name="jump" size={12} />
-          {t('flow.content.environmentManagement')}
-        </Button>
       </Loading>
     )
   },

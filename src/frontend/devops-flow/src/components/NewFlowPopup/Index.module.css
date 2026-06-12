@@ -70,21 +70,6 @@
   line-height: 22px;
 }
 
-.titleSet {
-  display: flex;
-  align-items: center;
-  font-size: var(--font-size-xs);
-  color: var(--color-primary);
-  font-weight: 500;
-  cursor: pointer;
-}
-
-.jumpIcon {
-  margin-right: 6px;
-  vertical-align: middle;
-  margin-top: 2px;
-}
-
 /* 选择模板 */
 .selectTemplate {
   height: 100%;
