@@ -20,6 +20,13 @@
                 </li>
             </template>
         </bk-log-search>
+        <progress-detail-panel
+            v-if="showTaskProgressDetail"
+            :build-id="buildId"
+            :task-id="taskProgressId"
+            :execute-count="taskProgressExecuteCount"
+            :task-status="taskProgressStatus"
+        />
         <bk-log
             class="bk-log"
             ref="scroll"
@@ -44,11 +51,13 @@
     import { hashID } from '@/utils/util.js'
     import { bkLog, bkLogSearch } from '@blueking/log'
     import { mapActions, mapState } from 'vuex'
+    import ProgressDetailPanel from '@/components/ProgressDetailPanel'
 
     export default {
         components: {
             bkLogSearch,
-            bkLog
+            bkLog,
+            ProgressDetailPanel
         },
 
         props: {
@@ -65,6 +74,18 @@
             },
             executeCount: {
                 type: Number
+            },
+            progressTaskId: {
+                type: String,
+                default: ''
+            },
+            progressTaskStatus: {
+                type: String,
+                default: ''
+            },
+            progressTaskExecuteCount: {
+                type: Number,
+                default: undefined
             },
             execDetail: {
                 type: Object,
@@ -149,7 +170,27 @@
                     editingElementPos: { elementIndex },
                     currentJob
                 } = this
-                return currentJob.elements[elementIndex]
+                return currentJob.elements?.[elementIndex] ?? {}
+            },
+
+            currentTaskStatus () {
+                return this.currentElement?.status ?? ''
+            },
+
+            taskProgressId () {
+                return this.progressTaskId || (this.type === 'pluginLog' ? this.id : '')
+            },
+
+            taskProgressStatus () {
+                return this.progressTaskStatus || this.currentTaskStatus
+            },
+
+            taskProgressExecuteCount () {
+                return this.progressTaskExecuteCount || this.postData.currentExe
+            },
+
+            showTaskProgressDetail () {
+                return !!this.taskProgressId
             }
         },
 
