@@ -552,8 +552,8 @@ class NodeService @Autowired constructor(
         thirdPartyAgentDao.getNotImportCreateAgent(dslContext, projectId).forEach {
             result.add(
                 NodeWithPermission(
-                    nodeHashId = HashUtil.encodeLongId(it.nodeId),
-                    nodeId = it.nodeId.toString(),
+                    nodeHashId = "",
+                    nodeId = "",
                     name = it.ip,
                     ip = it.ip,
                     nodeStatus = NodeStatus.NOT_INSTALLED.name,
@@ -563,10 +563,10 @@ class NodeService @Autowired constructor(
                     createdUser = it.createdUser,
                     operator = null,
                     bakOperator = null,
-                    canUse = canUseNodeIds.contains(it.nodeId),
-                    canEdit = canEditNodeIds.contains(it.nodeId),
-                    canDelete = canDeleteNodeIds.contains(it.nodeId),
-                    canView = canViewNodeIds.contains(it.nodeId),
+                    canUse = false,
+                    canEdit = false,
+                    canDelete = false,
+                    canView = false,
                     gateway = slaveGatewayService.getShowName(it.gateway),
                     displayName = it.ip,
                     createTime = if (null == it.createdTime) {
@@ -584,10 +584,10 @@ class NodeService @Autowired constructor(
                     bkHostId = null,
                     serverId = null,
                     size = null,
-                    envNames = nodeEnvsGroups[it.nodeId],
+                    envNames = null,
                     lastBuildTime = "",
-                    tags = tagMaps[it.nodeId],
-                    envEnableNode = nodeIdMaps[it.nodeId] ?: true,
+                    tags = null,
+                    envEnableNode = false,
                     createWorkspaceId = it.createWorkspaceName
                 )
             )
