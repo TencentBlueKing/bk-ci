@@ -75,18 +75,33 @@ class PythonAtomRunConditionHandleServiceImpl : AtomRunConditionHandleService {
             )
             return null
         }
-        // 根据runtimeVersion确定Python命令，支持python3.x场景
-        val pythonCmd = when {
-            runtimeVersion.startsWith("python3") -> runtimeVersion
-            runtimeVersion.startsWith("python2") -> runtimeVersion
-            else -> "python"
+        // 根据环境中实际可用的Python命令确定使用哪个
+        // runtimeVersion 可能是 "python", "python3", "python3.11", "python2" 等
+        // 优先使用配置的版本，如果不可用则尝试其他候选命令
+        val (pythonCmd, pythonVersion) = when {
+            runtimeVersion.startsWith("python3") -> {
+                // 优先使用 python3，如果不可用则尝试 python
+                getPythonVersion("python3")?.let { "python3" to it }
+                    ?: getPythonVersion("python")?.let { "python" to it }
+                    ?: runtimeVersion to null
+            }
+            runtimeVersion.startsWith("python2") -> {
+                // 优先使用 python2，如果不可用则尝试 python
+                getPythonVersion("python2")?.let { "python2" to it }
+                    ?: getPythonVersion("python")?.let { "python" to it }
+                    ?: runtimeVersion to null
+            }
+            else -> {
+                // 默认情况，优先使用 python，如果不可用则尝试 python3
+                getPythonVersion("python")?.let { "python" to it }
+                    ?: getPythonVersion("python3")?.let { "python3" to it }
+                    ?: "python" to null
+            }
         }
         logger.info("prepareRunEnv pythonCmd:$pythonCmd, runtimeVersion:$runtimeVersion")
-        // 验证Python命令是否可用，同时获取版本信息
-        val pythonVersion = getPythonVersion(pythonCmd)
         if (pythonVersion == null) {
-            logger.warn("prepareRunEnv python command[$pythonCmd] is not available, fallback to system env")
-            LoggerService.addWarnLine("Python command [$pythonCmd] is not available, skip venv creation")
+            logger.warn("prepareRunEnv all python commands are not available, fallback to system env")
+            LoggerService.addWarnLine("No available python command found, skip venv creation")
             return null
         }
         val venvPath = File(atomTmpSpace, PYTHON_VENV_DIR)
@@ -112,9 +127,21 @@ class PythonAtomRunConditionHandleServiceImpl : AtomRunConditionHandleService {
     ): String {
         // 若虚拟环境路径存在，将启动命令拼接为虚拟环境内的绝对路径
         var convertTarget = if (!atomExecuteEnvPath.isNullOrBlank()) {
-            val fullPath = "$atomExecuteEnvPath${File.separator}$target"
+            // target 可能是 console_scripts 入口点名称（如 "demo"）或 Python 可执行文件名
+            // 无论哪种情况，都需要加虚拟环境路径，因为 venv 创建后入口点在 venv/bin 或 venv/Scripts 下
+            val parts = target.trim().split(Regex("\\s+"), limit = 2)
+            val executableName = parts[0]
+            val args = if (parts.size > 1) parts[1] else ""
+
+            val fullPath = "$atomExecuteEnvPath${File.separator}$executableName"
             // Windows路径含反斜杠，用双引号包裹防止被shell错误解析
-            if (osType == OSType.WINDOWS) "\"$fullPath\"" else fullPath
+            val quotedPath = if (osType == OSType.WINDOWS) "\"$fullPath\"" else fullPath
+
+            if (args.isBlank()) {
+                quotedPath
+            } else {
+                "$quotedPath $args"
+            }
         } else {
             target
         }
@@ -149,11 +176,12 @@ class PythonAtomRunConditionHandleServiceImpl : AtomRunConditionHandleService {
     /** Get python version string, return null if command is not available */
     private fun getPythonVersion(pythonCmd: String): String? {
         return try {
+            // python --version 在部分平台上输出到 stderr，用 2>&1 重定向到 stdout 确保能被捕获
             CommandLineUtils.execute(
-                command = "$pythonCmd --version",
+                command = "$pythonCmd --version 2>&1",
                 workspace = null,
-                print2Logger = true
-            )
+                print2Logger = false
+            )?.trim()?.takeIf { it.isNotBlank() }
         } catch (ignored: Throwable) {
             logger.warn("getPythonVersion [$pythonCmd] failed: ${ignored.message}")
             null
@@ -188,8 +216,9 @@ class PythonAtomRunConditionHandleServiceImpl : AtomRunConditionHandleService {
             if (!isVirtualenvAvailable(pythonCmd)) {
                 logger.info("virtualenv not found, installing...")
                 LoggerService.addNormalLine("Installing virtualenv...")
+                // 使用 $pythonCmd -m pip install 避免污染系统环境
                 CommandLineUtils.execute(
-                    command = "pip install virtualenv",
+                    command = "$pythonCmd -m pip install virtualenv --user",
                     workspace = null,
                     print2Logger = true
                 )

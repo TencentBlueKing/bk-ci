@@ -75,16 +75,16 @@ class JavaAtomRunConditionHandleServiceImpl : AtomRunConditionHandleService {
         postEntryParam: String?,
         atomExecuteEnvPath: String?
     ): String {
-        val executePath = atomExecuteEnvPath
         logger.info(
-            "handleAtomTarget|target:$target,osType:$osType,postEntryParam:$postEntryParam,executePath:$executePath"
+            "handleAtomTarget|target:$target,osType:$osType," +
+                    "postEntryParam:$postEntryParam,atomExecuteEnvPath:$atomExecuteEnvPath"
         )
         var convertTarget = target
-        if (!executePath.isNullOrBlank()) {
+        if (!atomExecuteEnvPath.isNullOrBlank()) {
             convertTarget = if (target.startsWith("\$$JAVA_PATH_ENV")) {
-                target.replace("\$$JAVA_PATH_ENV", executePath)
+                target.replace("\$$JAVA_PATH_ENV", atomExecuteEnvPath)
             } else {
-                target.replace("java ", "$executePath ")
+                target.replace("java ", "$atomExecuteEnvPath ")
             }
         } else if (osType == OSType.WINDOWS) {
             convertTarget = target.replace("\$$JAVA_PATH_ENV", "%$JAVA_PATH_ENV%")
