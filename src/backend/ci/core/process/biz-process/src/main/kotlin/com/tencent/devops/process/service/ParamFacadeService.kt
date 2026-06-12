@@ -89,6 +89,8 @@ class ParamFacadeService @Autowired constructor(
                 filterParams.add(addSubPipelineProperties(userId, projectId, pipelineId, it))
             } else if (it.type == BuildFormPropertyType.REPO_REF) {
                 filterParams.add(addRepoRefs(projectId, it))
+            } else if (it.type == BuildFormPropertyType.FORM_LIST) {
+                filterParams.add(copyFormProperty(property = it, options = listOf()))
             } else {
                 filterParams.add(it)
             }
@@ -346,7 +348,8 @@ class ParamFacadeService @Autowired constructor(
             displayCondition = property.displayCondition,
             asInstanceInput = property.asInstanceInput,
             sensitive = property.sensitive,
-            constant = property.constant
+            constant = property.constant,
+            fields = property.fields
         )
     }
 

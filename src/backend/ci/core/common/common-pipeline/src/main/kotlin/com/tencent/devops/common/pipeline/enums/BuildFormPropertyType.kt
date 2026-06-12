@@ -44,7 +44,8 @@ enum class BuildFormPropertyType(val value: String) {
     SUB_PIPELINE("sub_pipeline"), // 子流水线
     CUSTOM_FILE("custom_file"), // 自定义仓库文件
     PASSWORD("password"),
-    TEMPORARY("do not storage in database");
+    TEMPORARY("do not storage in database"),
+    FORM_LIST("form_list"); // 自定义复杂参数
 
     override fun toString() = value
 }
