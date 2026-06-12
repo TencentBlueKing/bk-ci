@@ -22,6 +22,7 @@ import com.tencent.devops.environment.pojo.imate.ImateListItem
 import com.tencent.devops.environment.pojo.imate.ImateOriginEngine
 import com.tencent.devops.environment.pojo.imate.ImportImageNodeData
 import com.tencent.devops.environment.service.thirdpartyagent.BatchInstallAgentService
+import com.tencent.devops.environment.service.thirdpartyagent.ImportService
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.support.api.service.ServiceIMateResource
 import org.jooq.DSLContext
@@ -43,7 +44,8 @@ class TencentNodeService @Autowired constructor(
     private val nodeService: NodeService,
     private val environmentPermissionService: EnvironmentPermissionService,
     private val batchInstallAgentService: BatchInstallAgentService,
-    private val nodeDao: NodeDao
+    private val nodeDao: NodeDao,
+    private val importService: ImportService
 ) {
     @Value("\${environment.batch-install.aes-key}")
     private val batchInstallAesKey = ""
@@ -116,7 +118,7 @@ class TencentNodeService @Autowired constructor(
             }
             // 生成节点,如果用说明没导入成功，再次导入
             if (agentDao.getAgentByWorkspaceIdGlobal(dslContext, imate.deviceId, projectId) == null) {
-                batchInstallAgentService.genNewAgent(
+                val agentId = batchInstallAgentService.genNewAgent(
                     projectId = projectId,
                     userId = userId,
                     os = data.os,
@@ -125,6 +127,7 @@ class TencentNodeService @Autowired constructor(
                     createWorkspaceName = imate.deviceId,
                     agentProps = AgentProps.emptyBySource(AgentPropsSource.DEVCLOUD)
                 )
+                importService.preImport(projectId, agentId, userId, imate.name)
             }
             // 生成临时1小时TOKEN用来导入鉴权
             val tokenData = "${projectId};${imate.deviceId};$userId;${Instant.now().plusSeconds(3600).toEpochMilli()}"

@@ -53,5 +53,6 @@ data class ImportImageNodeData(
 )
 
 data class ImportImageNodeDataItem(
+    val name: String,
     val deviceId: String
 )
