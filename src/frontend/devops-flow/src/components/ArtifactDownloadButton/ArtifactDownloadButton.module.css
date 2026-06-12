@@ -1,0 +1,24 @@
+.signingTips {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  grid-gap: var(--spacing-xs);
+  font-weight: bold;
+  margin-bottom: var(--spacing-md);
+  word-break: break-all;
+}
+
+.signingTips svg {
+  color: var(--color-primary);
+}
+
+.artifactoryDownloadIconDisabled {
+  color: var(--color-text-tertiary);
+  cursor: not-allowed;
+  vertical-align: middle;
+}
+
+.signingDurationTips {
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-xs);
+}

@@ -28,6 +28,7 @@
 package com.tencent.devops.environment.pojo.thirdpartyagent
 
 import io.swagger.v3.oas.annotations.media.Schema
+import java.time.LocalDateTime
 
 @Schema(title = "Agent活动（上下线）")
 data class ThirdPartyAgentAction(
@@ -39,4 +40,14 @@ data class ThirdPartyAgentAction(
     val action: String,
     @get:Schema(title = "活动时间", required = true)
     val actionTime: Long
+)
+
+@Schema(title = "Agent离线时间段数据")
+data class OfflinePeriod(
+    @get:Schema(title = "离线开始时间", required = true)
+    val offlineTime: LocalDateTime,
+    @get:Schema(title = "上线时间（离线结束时间）", required = true)
+    val onlineTime: LocalDateTime,
+    @get:Schema(title = "持续时长（秒）", required = true)
+    val duration: Long
 )

@@ -104,7 +104,11 @@ data class PipelineSetting(
     @get:Schema(title = "创建时间", required = false)
     val createdTime: Long? = null,
     @get:Schema(title = "更新时间", required = false)
-    val updateTime: Long? = null
+    val updateTime: Long? = null,
+    @get:Schema(title = "环境hashId", required = false)
+    var envHashId: String? = null,
+    @get:Schema(title = "环境名称", required = false)
+    var envName: String? = null
 ) {
 
     companion object {

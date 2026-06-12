@@ -1,0 +1,66 @@
+.variableForm {
+  padding: var(--spacing-lg);
+}
+
+.formActions {
+  display: flex;
+  gap: var(--spacing-sm);
+}
+
+.optionsEditor {
+  width: 100%;
+}
+
+.optionItem {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-sm);
+}
+
+.optionInput {
+  flex: 1;
+}
+
+.optionItem i {
+  font-size: var(--font-size-md);
+  color: var(--color-text-tertiary);
+  cursor: pointer;
+  transition: color var(--transition-slow);
+}
+
+.optionItem i:hover {
+  color: var(--color-danger);
+}
+
+/* 复选框行布局 */
+.checkboxRow {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-lg);
+}
+
+.checkboxItem {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.separator {
+  width: 1px;
+  height: var(--spacing-lg);
+  background-color: var(--border-color);
+  flex-shrink: 0;
+}
+
+.infoIcon {
+  display: inline-flex;
+  align-items: center;
+  color: var(--color-text-light-gray);
+  cursor: pointer;
+  font-size: var(--font-size-sm);
+
+  &:hover {
+    color: var(--color-text-tertiary);
+  }
+}

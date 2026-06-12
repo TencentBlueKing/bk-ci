@@ -158,6 +158,7 @@ type AgentHeartbeatResponse struct {
 	Props                   AgentPropsResp    `json:"props"`
 	DockerParallelTaskCount int               `json:"dockerParallelTaskCount"`
 	Language                string            `json:"language"`
+	CreateMod               *bool             `json:"createMod"`
 }
 
 type AgentPropsResp struct {
