@@ -1303,7 +1303,7 @@ interface ApigwRemoteDevResource {
         summary = "分页批量获取THUMBNAIL的实例id列表",
         tags = ["v4_app_remotedev_batch_query_thumbnail_workspaces"]
     )
-    @GET
+    @POST
     @Path("/batch_query_thumbnail_workspaces")
     fun batchQueryThumbnailWorkspaces(
         @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
@@ -1326,11 +1326,19 @@ interface ApigwRemoteDevResource {
         page: Int,
         @Parameter(description = "每页多少条（最大1000）", required = true, example = "100")
         @QueryParam("pageSize")
-        pageSize: Int
+        pageSize: Int,
+        @Parameter(description = "项目ID（可选过滤条件，不传则不限定项目）", required = false)
+        @QueryParam("projectId")
+        projectId: String?,
+        @Parameter(
+            description = "工作空间名称列表（可选过滤条件，不传则不限定实例；最多1000个）",
+            required = false
+        )
+        workspaceNames: List<String>?
     ): Result<Page<String>>
 
     @Operation(
-        summary = "开启或关闭工作空间缩略图",
+        summary = "批量开启或关闭工作空间缩略图",
         tags = ["v4_app_remotedev_enable_workspace_thumbnail"]
     )
     @POST
@@ -1354,17 +1362,16 @@ interface ApigwRemoteDevResource {
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(
-            description = "工作空间名称",
-            required = true
-        )
-        @QueryParam("workspaceName")
-        workspaceName: String,
-        @Parameter(
             description = "是否启用：true=开启，false=关闭",
             required = true
         )
         @QueryParam("enable")
-        enable: Boolean
+        enable: Boolean,
+        @Parameter(
+            description = "工作空间名称列表（最多1000个）",
+            required = true
+        )
+        workspaceNames: List<String>
     ): Result<Boolean>
 
     @Operation(summary = "获取指定工作空间详情", tags = ["v4_app_remotedev_start_cloud_workspace_detail"])

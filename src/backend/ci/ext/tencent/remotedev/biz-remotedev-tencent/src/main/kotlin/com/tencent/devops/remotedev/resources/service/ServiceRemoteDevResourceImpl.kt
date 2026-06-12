@@ -1112,31 +1112,36 @@ class ServiceRemoteDevResourceImpl(
         userId: String,
         enable: Boolean,
         page: Int,
-        pageSize: Int
+        pageSize: Int,
+        projectId: String?,
+        workspaceNames: List<String>?
     ): Result<Page<String>> {
         logger.info(
-            "batchQueryThumbnailWorkspaces |$userId|enable=$enable|page=$page|pageSize=$pageSize"
+            "batchQueryThumbnailWorkspaces |$userId|enable=$enable|page=$page" +
+                "|pageSize=$pageSize|projectId=$projectId|workspaceNames.size=${workspaceNames?.size}"
         )
         return Result(
             workspaceRecordService.batchQueryThumbnailWorkspaces(
                 enable = enable,
                 page = page,
-                pageSize = pageSize
+                pageSize = pageSize,
+                projectId = projectId,
+                workspaceNames = workspaceNames
             )
         )
     }
 
     override fun enableWorkspaceThumbnail(
         userId: String,
-        workspaceName: String,
-        enable: Boolean
+        enable: Boolean,
+        workspaceNames: List<String>
     ): Result<Boolean> {
         logger.info(
-            "enableWorkspaceThumbnail |$userId|$workspaceName|enable=$enable"
+            "enableWorkspaceThumbnail |$userId|enable=$enable|workspaceNames.size=${workspaceNames.size}"
         )
         return Result(
             workspaceRecordService.enableThumbnail(
-                workspaceName = workspaceName,
+                workspaceNames = workspaceNames,
                 enable = enable
             )
         )
