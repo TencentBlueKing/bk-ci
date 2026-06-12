@@ -136,12 +136,17 @@
 }
 
 .nodeEmpty {
-  padding: 12px 0;
+  padding: 24px 0 28px;
 }
 
 .nodeEmpty :global(.bk-exception-img) {
-  width: 80px;
-  height: 64px;
+  width: 160px !important;
+  height: auto !important;
+  object-fit: contain !important;
+}
+
+.nodeEmpty :global(.bk-exception-footer) {
+  margin-top: -4px !important;
 }
 
 .noData {
