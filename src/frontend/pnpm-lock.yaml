@@ -10448,6 +10448,7 @@ packages:
   git-semver-tags@2.0.3:
     resolution: {integrity: sha512-tj4FD4ww2RX2ae//jSrXZzrocla9db5h0V7ikPl1P/WwoZar9epdUhwR7XHXSgc+ZkNq72BEEerqQuicoEQfzA==}
     engines: {node: '>=6.9.0'}
+    deprecated: This package is no longer maintained. For the JavaScript API, please use @conventional-changelog/git-client instead.
     hasBin: true
 
   git-up@4.0.5:
