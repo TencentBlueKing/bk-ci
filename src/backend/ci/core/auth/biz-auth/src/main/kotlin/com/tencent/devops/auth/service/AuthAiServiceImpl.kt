@@ -165,7 +165,6 @@ class AuthAiServiceImpl(
         val permissionSourceGroups = buildPermissionSourceGroups(
             projectId = projectId,
             memberId = memberId,
-            matchingGroupIds = matchingGroupIds,
             relatedResourceType = resourceType,
             relatedResourceCode = resourceCode,
             action = action
@@ -1639,18 +1638,13 @@ class AuthAiServiceImpl(
     private fun buildPermissionSourceGroups(
         projectId: String,
         memberId: String,
-        matchingGroupIds: List<Int>,
         relatedResourceType: String,
         relatedResourceCode: String,
         action: String
     ): List<PermissionSourceGroupVO> {
-        if (matchingGroupIds.isEmpty()) {
-            return emptyList()
-        }
         val matchedGroupDetails = permissionManageFacadeService.getMemberGroupsDetails(
             projectId = projectId,
             memberId = memberId,
-            iamGroupIds = matchingGroupIds,
             relatedResourceType = relatedResourceType,
             relatedResourceCode = relatedResourceCode,
             action = action,
