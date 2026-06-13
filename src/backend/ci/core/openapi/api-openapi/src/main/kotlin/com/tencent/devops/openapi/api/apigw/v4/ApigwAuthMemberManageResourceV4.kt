@@ -76,6 +76,45 @@ interface ApigwAuthMemberManageResourceV4 {
     ): Result<SQLPage<AuthResourceGroup>>
 
     @GET
+    @Path("/list_project_members")
+    @Operation(
+        summary = "根据条件查询项目成员",
+        tags = ["v4_app_list_project_members", "v4_user_list_project_members"]
+    )
+    fun listProjectMembers(
+        @Parameter(description = "应用Code(OpenAPI调用方标识)", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @Parameter(description = "网关类型,取值为apigw-user、apigw-app或apigw", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @Parameter(description = "操作人用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID(项目英文名)", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "成员类型(user-用户/department-部门)")
+        @QueryParam("memberType")
+        memberType: String?,
+        @Parameter(description = "成员名称(用户ID或部门名称,支持模糊匹配)")
+        @QueryParam("userName")
+        userName: String?,
+        @Parameter(description = "部门名称")
+        @QueryParam("deptName")
+        deptName: String?,
+        @Parameter(description = "是否包含已离职成员")
+        @QueryParam("departedFlag")
+        departedFlag: Boolean?,
+        @Parameter(description = "第几页", required = true)
+        @QueryParam("page")
+        page: Int,
+        @Parameter(description = "每页数量", required = true)
+        @QueryParam("pageSize")
+        pageSize: Int
+    ): Result<SQLPage<ResourceMemberInfo>>
+
+    @GET
     @Path("/groups/{groupId}/permission_detail")
     @Operation(
         summary = "查询用户组权限详情",
