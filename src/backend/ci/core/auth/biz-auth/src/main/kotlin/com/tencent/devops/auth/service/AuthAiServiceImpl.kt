@@ -1149,26 +1149,20 @@ class AuthAiServiceImpl(
             uniqueManagerGroupsQueryFlag = null
         )
         val totalGroupCount = groupCounts.sumOf { it.count }
-        val effectiveGroupIds = permissionResourceMemberService.getMemberGroupsInProject(projectId, memberId).toSet()
-        val inheritedGroups = if (effectiveGroupIds.isEmpty()) {
-            emptyList()
-        } else {
-            permissionManageFacadeService.getMemberGroupsDetails(
-                projectId = projectId,
-                memberId = memberId,
-                iamGroupIds = effectiveGroupIds.toList(),
-                operateChannel = OperateChannel.PERSONAL,
-                start = 0,
-                limit = MAX_EXPLANATION_GROUPS
-            ).records
-                .filter { it.joinedType != JoinedType.DIRECT }
-                .map(::toInheritedGroupSummary)
-                .sortedWith(
-                    compareByDescending<InheritedGroupSummaryVO> { it.joinedType == JoinedType.DEPARTMENT }
-                        .thenByDescending { levelSortOrder(it.managementLevel) }
-                        .thenBy { it.groupName }
-                )
-        }
+        val inheritedGroups = permissionManageFacadeService.getMemberGroupsDetails(
+            projectId = projectId,
+            memberId = memberId,
+            operateChannel = OperateChannel.PERSONAL,
+            start = 0,
+            limit = MAX_EXPLANATION_GROUPS
+        ).records
+            .filter { it.joinedType != JoinedType.DIRECT }
+            .map(::toInheritedGroupSummary)
+            .sortedWith(
+                compareByDescending<InheritedGroupSummaryVO> { it.joinedType == JoinedType.DEPARTMENT }
+                    .thenByDescending { levelSortOrder(it.managementLevel) }
+                    .thenBy { it.groupName }
+            )
         val resourceSummary = groupCounts.map { countVo ->
             ResourceSummaryVO(
                 resourceType = countVo.resourceType,
@@ -1653,10 +1647,6 @@ class AuthAiServiceImpl(
         if (matchingGroupIds.isEmpty()) {
             return emptyList()
         }
-        val effectiveGroupIds = permissionResourceMemberService.getMemberGroupsInProject(projectId, memberId).toSet()
-        if (effectiveGroupIds.isEmpty()) {
-            return emptyList()
-        }
         val matchedGroupDetails = permissionManageFacadeService.getMemberGroupsDetails(
             projectId = projectId,
             memberId = memberId,
@@ -1667,7 +1657,7 @@ class AuthAiServiceImpl(
             operateChannel = OperateChannel.PERSONAL,
             start = 0,
             limit = MAX_EXPLANATION_GROUPS
-        ).records.filter { it.groupId in effectiveGroupIds }
+        ).records
         if (matchedGroupDetails.isEmpty()) {
             return emptyList()
         }
