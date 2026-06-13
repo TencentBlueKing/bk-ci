@@ -2,6 +2,7 @@ package com.tencent.devops.openapi.resources.apigw.v4
 
 import com.tencent.devops.auth.api.service.ServiceAuthAiResource
 import com.tencent.devops.auth.api.service.ServiceAuthApplyResource
+import com.tencent.devops.auth.api.service.ServiceResourceMemberResource
 import com.tencent.devops.auth.pojo.AuthResourceGroup
 import com.tencent.devops.auth.pojo.AuthResourceGroupMember
 import com.tencent.devops.auth.pojo.ResourceMemberInfo
@@ -56,6 +57,30 @@ class ApigwAuthMemberManageResourceV4Impl @Autowired constructor(
             userId = userId,
             projectId = projectId,
             condition = condition.copy(projectCode = projectId)
+        )
+    }
+
+    override fun listProjectMembers(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        memberType: String?,
+        userName: String?,
+        deptName: String?,
+        departedFlag: Boolean?,
+        page: Int,
+        pageSize: Int
+    ): Result<SQLPage<ResourceMemberInfo>> {
+        logger.info("OPENAPI_AUTH_MEMBER_MANAGE_V4|$appCode|$userId|listProjectMembers|$projectId")
+        return client.get(ServiceResourceMemberResource::class).listProjectMembers(
+            projectCode = projectId,
+            memberType = memberType,
+            userName = userName,
+            deptName = deptName,
+            departedFlag = departedFlag,
+            page = page,
+            pageSize = pageSize
         )
     }
 
