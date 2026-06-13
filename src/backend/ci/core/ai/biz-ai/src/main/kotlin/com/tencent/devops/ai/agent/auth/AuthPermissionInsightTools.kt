@@ -27,7 +27,10 @@
 
 package com.tencent.devops.ai.agent.auth
 
+import com.tencent.devops.auth.pojo.enum.JoinedType
 import com.tencent.devops.auth.pojo.request.ai.GroupRecommendReq
+import com.tencent.devops.auth.pojo.vo.PermissionDiagnoseVO
+import com.tencent.devops.auth.pojo.vo.UserPermissionAnalysisVO
 import com.tencent.devops.common.client.Client
 import io.agentscope.core.tool.Tool
 import io.agentscope.core.tool.ToolParam
@@ -48,7 +51,7 @@ class AuthPermissionInsightTools(
     @Tool(
         name = "分析用户权限",
         description = "分析用户在项目中的权限概况，生成权限分析报告。" +
-                "返回：角色、各资源类型用户组数、过期统计、告警。" +
+                "返回：角色、各资源类型用户组数、过期统计、继承来源摘要、告警。" +
                 "管理员可查任意成员，普通用户只能查自己。"
     )
     fun analyzeUserPermissions(
@@ -64,7 +67,7 @@ class AuthPermissionInsightTools(
                 memberId = memberId
             )
             val vo = result.data ?: return@safeQuery "分析失败: ${result.message}"
-            toJson(vo)
+            renderUserPermissionAnalysis(memberId, vo)
         }
     }
 
@@ -131,8 +134,8 @@ class AuthPermissionInsightTools(
 
     @Tool(
         name = "权限诊断",
-        description = "诊断用户为什么没有某个权限。分析原因并给出解决建议。\n" +
-                "适用场景：用户反馈无权限时，快速定位问题原因。"
+        description = "诊断用户为什么有或没有某个权限。分析原因并给出解决建议。\n" +
+                "适用场景：解释权限来源，或用户反馈无权限时快速定位问题原因。"
     )
     fun diagnosePermission(
         @ToolParam(name = "projectId", description = "项目ID")
@@ -156,32 +159,7 @@ class AuthPermissionInsightTools(
                 action = action
             )
             val vo = result.data ?: return@safeQuery "诊断失败: ${result.message}"
-
-            val sb = StringBuilder()
-            sb.appendLine("=== 权限诊断结果 ===")
-            sb.appendLine("用户: $memberId")
-            sb.appendLine("资源: ${vo.resourceName} (${vo.resourceType})")
-            sb.appendLine("操作: ${vo.actionName} (${vo.action})")
-            sb.appendLine("当前状态: ${if (vo.hasPermission) "✓ 有权限" else "✗ 无权限"}")
-
-            if (!vo.hasPermission) {
-                if (!vo.missingReason.isNullOrBlank()) {
-                    sb.appendLine("\n缺失原因: ${vo.missingReason}")
-                }
-                if (vo.applicableGroups.isNotEmpty()) {
-                    sb.appendLine("\n可申请的用户组:")
-                    vo.applicableGroups.take(5).forEach { group ->
-                        sb.appendLine("- ${group.groupName} (ID: ${group.groupId})")
-                    }
-                }
-                if (vo.groupManagers.isNotEmpty()) {
-                    sb.appendLine("\n可联系管理员: ${vo.groupManagers.joinToString(", ")}")
-                }
-                if (!vo.suggestion.isNullOrBlank()) {
-                    sb.appendLine("\n建议: ${vo.suggestion}")
-                }
-            }
-            sb.toString()
+            renderPermissionDiagnosis(memberId, vo)
         }
     }
 
@@ -295,5 +273,111 @@ class AuthPermissionInsightTools(
 
             sb.toString()
         }
+    }
+}
+
+internal fun renderUserPermissionAnalysis(
+    memberId: String,
+    analysis: UserPermissionAnalysisVO
+): String {
+    val sb = StringBuilder()
+    sb.appendLine("=== 用户权限分析 ===")
+    sb.appendLine("用户: $memberId")
+    sb.appendLine("角色: ${analysis.roleDisplayName}")
+    sb.appendLine("用户组总数: ${analysis.totalGroupCount}")
+    sb.appendLine("过期用户组: ${analysis.expiredGroupCount}")
+    sb.appendLine("授权总数: ${analysis.totalAuthorizationCount}")
+    sb.appendLine("项目全量权限: ${if (analysis.hasAllPermissions) "是" else "否"}")
+
+    if (analysis.resourceSummary.isNotEmpty()) {
+        sb.appendLine("\n资源类型概况:")
+        analysis.resourceSummary.forEach { summary ->
+            sb.appendLine("- ${summary.resourceTypeName}: ${summary.groupCount} 个用户组")
+        }
+    }
+
+    if (analysis.inheritedGroups.isNotEmpty()) {
+        sb.appendLine("\n代表性的继承来源:")
+        analysis.inheritedGroups.forEach { group ->
+            val source = formatJoinSource(
+                joinedType = group.joinedType,
+                joinedMemberName = group.joinedMemberName,
+                joinedMemberId = group.joinedMemberId,
+                groupName = group.groupName
+            )
+            sb.appendLine("- $source (${group.managementLevel}: ${group.resourceName})")
+        }
+    }
+
+    if (analysis.warnings.isNotEmpty()) {
+        sb.appendLine("\n告警:")
+        analysis.warnings.forEach { warning ->
+            sb.appendLine("- $warning")
+        }
+    }
+    return sb.toString()
+}
+
+internal fun renderPermissionDiagnosis(
+    memberId: String,
+    diagnose: PermissionDiagnoseVO
+): String {
+    val sb = StringBuilder()
+    sb.appendLine("=== 权限诊断结果 ===")
+    sb.appendLine("用户: $memberId")
+    sb.appendLine("资源: ${diagnose.resourceName} (${diagnose.resourceType})")
+    sb.appendLine("操作: ${diagnose.actionName} (${diagnose.action})")
+    sb.appendLine("当前状态: ${if (diagnose.hasPermission) "✓ 有权限" else "✗ 无权限"}")
+
+    if (diagnose.hasPermission) {
+        if (diagnose.permissionSourceGroups.isNotEmpty()) {
+            sb.appendLine("\n权限来源:")
+            diagnose.permissionSourceGroups.forEach { group ->
+                val joinSource = formatJoinSource(
+                    joinedType = group.joinedType,
+                    joinedMemberName = group.joinedMemberName,
+                    joinedMemberId = group.joinedMemberId,
+                    groupName = group.groupName
+                )
+                val permissions = group.permissions.joinToString("、")
+                sb.appendLine("- $joinSource")
+                sb.appendLine("  范围: ${group.managementLevel} / ${group.managementScope}")
+                if (permissions.isNotBlank()) {
+                    sb.appendLine("  权限: $permissions")
+                }
+            }
+        }
+    } else {
+        if (!diagnose.missingReason.isNullOrBlank()) {
+            sb.appendLine("\n缺失原因: ${diagnose.missingReason}")
+        }
+        if (diagnose.applicableGroups.isNotEmpty()) {
+            sb.appendLine("\n可申请的用户组:")
+            diagnose.applicableGroups.take(5).forEach { group ->
+                sb.appendLine("- ${group.groupName} (ID: ${group.groupId})")
+            }
+        }
+        if (diagnose.groupManagers.isNotEmpty()) {
+            sb.appendLine("\n可联系管理员: ${diagnose.groupManagers.joinToString(", ")}")
+        }
+    }
+
+    if (!diagnose.suggestion.isNullOrBlank()) {
+        sb.appendLine("\n建议: ${diagnose.suggestion}")
+    }
+    return sb.toString()
+}
+
+private fun formatJoinSource(
+    joinedType: JoinedType,
+    joinedMemberName: String?,
+    joinedMemberId: String?,
+    groupName: String
+): String {
+    val sourceName = joinedMemberName ?: joinedMemberId
+    return when (joinedType) {
+        JoinedType.DEPARTMENT -> "通过组织 $sourceName 继承到用户组 $groupName"
+        JoinedType.TEMPLATE -> "通过用户组模板 $sourceName 继承到用户组 $groupName"
+        JoinedType.DIRECT -> "直接加入用户组 $groupName"
     }
 }
