@@ -25,7 +25,8 @@ class PipelineCopyBatchTaskHandler @Autowired constructor(
     private val pipelinePermissionService: PipelinePermissionService,
     private val pipelineCopyTaskCreateService: PipelineCopyTaskCreateService,
     private val pipelineCopyTaskAnalyzeService: PipelineCopyTaskAnalyzeService,
-    private val pipelineCopyTaskExecuteService: PipelineCopyTaskExecuteService
+    private val pipelineCopyTaskExecuteService: PipelineCopyTaskExecuteService,
+    private val pipelineCopyTaskRetryService: PipelineCopyTaskRetryService
 ) : PipelineBatchTaskHandler {
 
     override fun support(taskType: PipelineBatchTaskType): Boolean {
@@ -89,5 +90,62 @@ class PipelineCopyBatchTaskHandler @Autowired constructor(
 
     override fun handleExecuteEvent(event: PipelineBatchTaskExecuteEvent) {
         pipelineCopyTaskExecuteService.execute(event = event)
+    }
+
+    override fun retry(
+        userId: String,
+        projectId: String,
+        task: PipelineBatchTask
+    ) {
+        validateProjectManagerWhenRetry(
+            userId = userId,
+            projectId = projectId,
+            task = task
+        )
+        pipelineCopyTaskRetryService.retry(
+            projectId = projectId,
+            taskId = task.taskId
+        )
+    }
+
+    override fun retryPipeline(
+        userId: String,
+        projectId: String,
+        task: PipelineBatchTask,
+        pipelineId: String
+    ) {
+        validateProjectManagerWhenRetry(
+            userId = userId,
+            projectId = projectId,
+            task = task
+        )
+        pipelineCopyTaskRetryService.retryPipeline(
+            projectId = projectId,
+            taskId = task.taskId,
+            pipelineId = pipelineId
+        )
+    }
+
+    private fun validateProjectManagerWhenRetry(
+        userId: String,
+        projectId: String,
+        task: PipelineBatchTask
+    ) {
+        if (!pipelinePermissionService.checkProjectManager(userId = userId, projectId = projectId)) {
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_PERMISSION_NOT_PROJECT_MANAGER,
+                params = arrayOf(userId, projectId)
+            )
+        }
+        val param = PipelineCopyTaskUtils.parseParam(task) ?: throw ErrorCodeException(
+            errorCode = ProcessMessageCode.ERROR_PIPELINE_COPY_TASK_CONFIG_NOT_EXISTS,
+            params = arrayOf(task.taskId)
+        )
+        if (!pipelinePermissionService.checkProjectManager(userId = userId, projectId = param.targetProjectId)) {
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_PERMISSION_NOT_PROJECT_MANAGER,
+                params = arrayOf(userId, param.targetProjectId)
+            )
+        }
     }
 }

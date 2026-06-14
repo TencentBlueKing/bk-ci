@@ -30,6 +30,8 @@ data class PipelineCopyTaskResourceUpdate(
     val status: PipelineCopyTaskResourceStatus? = null,
     @get:Schema(description = "错误信息")
     val errorMessage: PipelineBatchTaskErrorMessage? = null,
+    @get:Schema(description = "是否清空错误信息")
+    val clearErrorMessage: Boolean = false,
     @get:Schema(description = "目标项目是否存在同名资源")
     val targetNameExists: Boolean? = null,
     @get:Schema(description = "目标ID是否存在")

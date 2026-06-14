@@ -201,6 +201,9 @@ class PipelineCopyTaskResourceDao {
             update.errorMessage?.let {
                 query.set(ERROR_MESSAGE, PipelineCopyTaskUtils.toErrorMessageJson(it))
             }
+            if (update.clearErrorMessage) {
+                query.setNull(ERROR_MESSAGE)
+            }
             update.targetNameExists?.let { query.set(TARGET_NAME_EXISTS, it) }
             update.targetIdExists?.let { query.set(TARGET_ID_EXISTS, it) }
             update.highRisk?.let { query.set(HIGH_RISK, it) }
@@ -237,6 +240,9 @@ class PipelineCopyTaskResourceDao {
                 resourceUpdate.status?.let { query.set(STATUS, it.name) }
                 resourceUpdate.errorMessage?.let {
                     query.set(ERROR_MESSAGE, PipelineCopyTaskUtils.toErrorMessageJson(it))
+                }
+                if (resourceUpdate.clearErrorMessage) {
+                    query.setNull(ERROR_MESSAGE)
                 }
                 resourceUpdate.targetNameExists?.let { query.set(TARGET_NAME_EXISTS, it) }
                 resourceUpdate.targetIdExists?.let { query.set(TARGET_ID_EXISTS, it) }

@@ -216,6 +216,12 @@ class PipelineBatchTaskDetailDao {
             update.errorMessage?.let {
                 query.set(ERROR_MESSAGE, PipelineCopyTaskUtils.toErrorMessageJson(it))
             }
+            if (update.clearErrorMessage) {
+                query.setNull(ERROR_MESSAGE)
+            }
+            if (update.clearErrorType) {
+                query.setNull(ERROR_TYPE)
+            }
             query.set(UPDATE_TIME, LocalDateTime.now())
                 .where(PROJECT_ID.eq(update.projectId))
                 .and(TASK_ID.eq(update.taskId))
@@ -239,6 +245,12 @@ class PipelineBatchTaskDetailDao {
                 update.errorType?.let { query.set(ERROR_TYPE, it.name) }
                 update.errorMessage?.let {
                     query.set(ERROR_MESSAGE, PipelineCopyTaskUtils.toErrorMessageJson(it))
+                }
+                if (update.clearErrorMessage) {
+                    query.setNull(ERROR_MESSAGE)
+                }
+                if (update.clearErrorType) {
+                    query.setNull(ERROR_TYPE)
                 }
                 query.set(UPDATE_TIME, LocalDateTime.now())
                     .where(PROJECT_ID.eq(update.projectId))

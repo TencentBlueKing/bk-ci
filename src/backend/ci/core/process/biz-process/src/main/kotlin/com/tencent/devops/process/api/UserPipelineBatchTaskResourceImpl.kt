@@ -185,7 +185,13 @@ class UserPipelineBatchTaskResourceImpl @Autowired constructor(
         projectId: String,
         taskId: String
     ): Result<Boolean> {
-        return Result(pipelineBatchTaskService.retry(projectId = projectId, taskId = taskId))
+        return Result(
+            pipelineBatchTaskService.retry(
+                userId = userId,
+                projectId = projectId,
+                taskId = taskId
+            )
+        )
     }
 
     override fun retryPipeline(
@@ -194,6 +200,13 @@ class UserPipelineBatchTaskResourceImpl @Autowired constructor(
         taskId: String,
         pipelineId: String
     ): Result<Boolean> {
-        TODO("Not yet implemented")
+        return Result(
+            pipelineBatchTaskService.retryPipeline(
+                userId = userId,
+                projectId = projectId,
+                taskId = taskId,
+                pipelineId = pipelineId
+            )
+        )
     }
 }

@@ -327,20 +327,56 @@ class PipelineBatchTaskService @Autowired constructor(
         ) == 1
     }
 
-    fun retry(projectId: String, taskId: String): Boolean {
-        val task = pipelineBatchTaskDao.get(
-            dslContext = dslContext,
+    fun retry(
+        userId: String,
+        projectId: String,
+        taskId: String
+    ): Boolean {
+        val task = getTask(projectId = projectId, taskId = taskId)
+        validateRetryableTaskStatus(task = task)
+        getHandler(taskType = task.taskType).retry(
+            userId = userId,
             projectId = projectId,
-            taskId = taskId
-        ) ?: return false
-        sampleEventDispatcher.dispatch(
-            PipelineBatchTaskExecuteEvent(
-                taskId = task.taskId,
-                taskType = task.taskType,
-                projectId = task.projectId
-            )
+            task = task
         )
         return true
+    }
+
+    fun retryPipeline(
+        userId: String,
+        projectId: String,
+        taskId: String,
+        pipelineId: String
+    ): Boolean {
+        val task = getTask(projectId = projectId, taskId = taskId)
+        validateRetryableTaskStatus(task = task)
+        val detail = getTaskDetail(
+            projectId = projectId,
+            taskId = taskId,
+            pipelineId = pipelineId
+        )
+        if (detail.status != PipelineBatchTaskDetailStatus.FAILED) {
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_PIPELINE_BATCH_TASK_DETAIL_CAN_NOT_RETRY,
+                params = arrayOf(pipelineId, detail.status.name)
+            )
+        }
+        getHandler(taskType = task.taskType).retryPipeline(
+            userId = userId,
+            projectId = projectId,
+            task = task,
+            pipelineId = pipelineId
+        )
+        return true
+    }
+
+    private fun validateRetryableTaskStatus(task: PipelineBatchTask) {
+        if (task.status !in RETRYABLE_TASK_STATUSES) {
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_PIPELINE_BATCH_TASK_STATUS_CAN_NOT_RETRY,
+                params = arrayOf(task.taskId, task.status.name)
+            )
+        }
     }
 
     private fun validateCreateRequest(request: PipelineBatchTaskCreateRequest) {
@@ -401,6 +437,11 @@ class PipelineBatchTaskService @Autowired constructor(
             PipelineBatchTaskDetailStatus.EXECUTING,
             PipelineBatchTaskDetailStatus.SUCCESS,
             PipelineBatchTaskDetailStatus.FAILED
+        )
+
+        private val RETRYABLE_TASK_STATUSES = setOf(
+            PipelineBatchTaskStatus.FAILED,
+            PipelineBatchTaskStatus.PARTIAL_FAILED
         )
     }
 }

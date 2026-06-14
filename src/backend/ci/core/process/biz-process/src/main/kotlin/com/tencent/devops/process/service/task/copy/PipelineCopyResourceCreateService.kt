@@ -18,11 +18,9 @@ import com.tencent.devops.environment.pojo.enums.EnvType
 import com.tencent.devops.environment.pojo.enums.NodeSource
 import com.tencent.devops.process.constant.PipelineViewType
 import com.tencent.devops.process.constant.ProcessMessageCode
-import com.tencent.devops.process.dao.PipelineCopyTaskResourceRelDao
 import com.tencent.devops.process.dao.label.PipelineGroupDao
 import com.tencent.devops.process.dao.label.PipelineLabelDao
 import com.tencent.devops.process.dao.label.PipelineViewDao
-import com.tencent.devops.process.dao.label.PipelineViewGroupDao
 import com.tencent.devops.process.pojo.classify.PipelineGroupCreate
 import com.tencent.devops.process.pojo.classify.PipelineLabelCreate
 import com.tencent.devops.process.pojo.classify.PipelineViewForm
@@ -68,9 +66,7 @@ class PipelineCopyResourceCreateService @Autowired constructor(
     private val pipelineLabelDao: PipelineLabelDao,
     private val pipelineGroupService: PipelineGroupService,
     private val pipelineViewDao: PipelineViewDao,
-    private val pipelineViewGroupDao: PipelineViewGroupDao,
     private val pipelineViewService: PipelineViewService,
-    private val pipelineCopyTaskResourceRelDao: PipelineCopyTaskResourceRelDao,
     private val pipelineDependencyReplaceService: PipelineDependencyReplaceService,
     private val pipelineInfoFacadeService: PipelineInfoFacadeService,
     private val pipelineTemplateRelatedService: PipelineTemplateRelatedService

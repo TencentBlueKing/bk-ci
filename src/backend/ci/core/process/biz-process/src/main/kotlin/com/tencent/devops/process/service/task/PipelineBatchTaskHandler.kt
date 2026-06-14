@@ -72,4 +72,23 @@ interface PipelineBatchTaskHandler {
         projectId: String,
         task: PipelineBatchTask
     ) = Unit
+
+    /**
+     * 重试失败任务
+     */
+    fun retry(
+        userId: String,
+        projectId: String,
+        task: PipelineBatchTask
+    )
+
+    /**
+     * 重试单个失败流水线
+     */
+    fun retryPipeline(
+        userId: String,
+        projectId: String,
+        task: PipelineBatchTask,
+        pipelineId: String
+    )
 }
