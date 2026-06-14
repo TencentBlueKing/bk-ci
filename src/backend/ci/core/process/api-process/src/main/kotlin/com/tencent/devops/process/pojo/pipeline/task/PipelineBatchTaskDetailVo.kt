@@ -39,7 +39,7 @@ data class PipelineBatchTaskDetailVo(
     @get:Schema(description = "错误类型名称")
     val errorTypeName: String? = null,
     @get:Schema(description = "错误信息")
-    val errorMessageText: String?,
+    val errorMessageText: Any?,
     @get:Schema(description = "开始时间")
     val startTime: Long?,
     @get:Schema(description = "结束时间")

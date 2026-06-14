@@ -12,9 +12,8 @@ data class PipelineBatchTaskDependencyFailed(
         const val classType = "dependencyFailed"
     }
 
-    override fun errorMessageText(): String {
-        val detailVo = details.map { it.toVo() }
-        return JsonUtil.toJson(detailVo)
+    override fun errorMessageText(): Any {
+        return details.map { it.toVo() }
     }
 
     private fun PipelineBatchTaskDependencyFailedGroup.toVo(): PipelineBatchTaskDependencyFailedGroupVo {
@@ -67,5 +66,5 @@ data class PipelineBatchTaskDependencyFailedResourceVo(
     @get:Schema(description = "资源名称", required = true)
     val resourceName: String,
     @get:Schema(description = "错误信息")
-    val errorMessageText: String? = null
+    val errorMessageText: Any? = null
 )

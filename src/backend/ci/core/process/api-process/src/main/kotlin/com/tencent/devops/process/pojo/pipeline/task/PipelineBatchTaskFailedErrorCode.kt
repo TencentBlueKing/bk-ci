@@ -12,7 +12,7 @@ data class PipelineBatchTaskFailedErrorCode(
         const val classType = "errorCode"
     }
 
-    override fun errorMessageText(): String {
+    override fun errorMessageText(): Any {
         return I18nUtil.getCodeLanMessage(
             messageCode = errorCode,
             params = params?.toTypedArray()

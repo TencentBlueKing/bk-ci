@@ -10,5 +10,5 @@ data class PipelineBatchTaskFailedMsg(
         const val classType = "msg"
     }
 
-    override fun errorMessageText(): String = msg
+    override fun errorMessageText(): Any = msg
 }
