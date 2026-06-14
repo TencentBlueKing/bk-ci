@@ -18,6 +18,7 @@ import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskCreateEven
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskCreateRequest
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskDetail
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskDetailStatusSummary
+import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskDetailVo
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskExecuteEvent
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskUpdate
 import org.jooq.DSLContext
@@ -138,7 +139,7 @@ class PipelineBatchTaskService @Autowired constructor(
         subPipeline: Boolean?,
         page: Int,
         pageSize: Int
-    ): SQLPage<PipelineBatchTaskDetail> {
+    ): SQLPage<PipelineBatchTaskDetailVo> {
         val (offset, limit) = PageUtil.convertPageSizeToSQLLimit(page = page, pageSize = pageSize)
         val count = pipelineBatchTaskDetailDao.count(
             dslContext = dslContext,
@@ -161,7 +162,9 @@ class PipelineBatchTaskService @Autowired constructor(
             subPipeline = subPipeline,
             offset = offset,
             limit = limit
-        )
+        ).map {
+            PipelineBatchTaskDetailVo(it)
+        }
         return SQLPage(count = count, records = records)
     }
 

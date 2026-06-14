@@ -1,5 +1,6 @@
 package com.tencent.devops.process.pojo.pipeline.enums
 
+import com.tencent.devops.common.web.utils.I18nUtil
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "流水线依赖资源类型")
@@ -32,5 +33,11 @@ enum class PipelineDependentResourceType {
     PIPELINE_LABEL,
 
     @Schema(title = "流水线模板")
-    PIPELINE_TEMPLATE
+    PIPELINE_TEMPLATE;
+
+    fun getI18nName(): String {
+        return I18nUtil.getCodeLanMessage(
+            messageCode = "pipelineDependentResourceType.$name"
+        )
+    }
 }

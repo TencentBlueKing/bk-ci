@@ -1,5 +1,6 @@
 package com.tencent.devops.process.pojo.pipeline.task
 
+import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo
 import io.swagger.v3.oas.annotations.media.Schema
@@ -24,4 +25,7 @@ import io.swagger.v3.oas.annotations.media.Schema
     )
 )
 @Schema(title = "流水线批量任务明细错误信息-基类")
-interface PipelineBatchTaskErrorMessage
+interface PipelineBatchTaskErrorMessage {
+    @JsonIgnore
+    fun errorMessageText(): String
+}

@@ -9,4 +9,6 @@ data class PipelineBatchTaskFailedMsg(
     companion object {
         const val classType = "msg"
     }
+
+    override fun errorMessageText(): String = msg
 }

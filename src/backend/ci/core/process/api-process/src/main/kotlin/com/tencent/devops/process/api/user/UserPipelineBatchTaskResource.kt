@@ -11,6 +11,7 @@ import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskDetailStat
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTask
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskStatus
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskType
+import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskDetailVo
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -142,7 +143,7 @@ interface UserPipelineBatchTaskResource {
         @QueryParam("pageSize")
         @DefaultValue("20")
         pageSize: Int
-    ): Result<SQLPage<PipelineBatchTaskDetail>>
+    ): Result<SQLPage<PipelineBatchTaskDetailVo>>
 
     @Operation(summary = "查询流水线批量任务明细状态汇总")
     @GET
