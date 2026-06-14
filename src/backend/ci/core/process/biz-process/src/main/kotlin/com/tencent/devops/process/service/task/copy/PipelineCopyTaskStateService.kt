@@ -3,6 +3,7 @@ package com.tencent.devops.process.service.task.copy
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.dao.PipelineBatchTaskDao
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskStatus
+import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskErrorMessage
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskUpdate
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
@@ -22,7 +23,7 @@ class PipelineCopyTaskStateService @Autowired constructor(
         taskId: String,
         status: PipelineBatchTaskStatus,
         taskSummary: String? = null,
-        errorMessage: String? = null,
+        errorMessage: PipelineBatchTaskErrorMessage? = null,
         clearErrorMessage: Boolean = false
     ) {
         val lock = PipelineCopyTaskLock(

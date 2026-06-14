@@ -22,6 +22,9 @@ enum class PipelineBatchTaskStatus {
     @Schema(description = "保存中")
     SAVING,
 
+    @Schema(description = "执行排队中")
+    EXECUTE_QUEUED,
+
     @Schema(description = "执行中")
     EXECUTING,
 

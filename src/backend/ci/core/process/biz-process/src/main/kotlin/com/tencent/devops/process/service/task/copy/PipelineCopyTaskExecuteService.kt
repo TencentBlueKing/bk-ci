@@ -9,6 +9,7 @@ import com.tencent.devops.process.dao.PipelineBatchTaskDetailDao
 import com.tencent.devops.process.dao.PipelineCopyTaskResourceDao
 import com.tencent.devops.process.dao.PipelineCopyTaskResourceRelDao
 import com.tencent.devops.process.pojo.pipeline.PipelineDependentResource
+import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskDetailErrorType
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskDetailStatus
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskStatus
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskType
@@ -18,6 +19,7 @@ import com.tencent.devops.process.pojo.pipeline.enums.PipelineDependentResourceT
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTask
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskDetail
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskDetailUpdate
+import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskErrorMessage
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskExecuteEvent
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskUpdate
 import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskResource
@@ -52,7 +54,7 @@ class PipelineCopyTaskExecuteService @Autowired constructor(
     private val pipelineTemplateRelatedService: PipelineTemplateRelatedService,
     private val pipelineTemplateGenerator: PipelineTemplateGenerator
 ) {
-    fun prepareExecute(
+    fun confirmExecute(
         projectId: String,
         taskId: String
     ) {
@@ -110,7 +112,7 @@ class PipelineCopyTaskExecuteService @Autowired constructor(
                 update = PipelineBatchTaskUpdate(
                     projectId = projectId,
                     taskId = taskId,
-                    status = PipelineBatchTaskStatus.EXECUTING,
+                    status = PipelineBatchTaskStatus.EXECUTE_QUEUED,
                     clearErrorMessage = true
                 )
             )
@@ -243,10 +245,16 @@ class PipelineCopyTaskExecuteService @Autowired constructor(
                 logger.warn("pipeline batch task type not match|$projectId|$taskId")
                 return null
             }
-            if (task.status != PipelineBatchTaskStatus.EXECUTING) {
+            if (task.status != PipelineBatchTaskStatus.EXECUTE_QUEUED) {
                 logger.warn("pipeline batch task status not match|$projectId|$taskId")
                 return null
             }
+            pipelineBatchTaskDao.updateStatus(
+                dslContext = dslContext,
+                projectId = projectId,
+                taskId = taskId,
+                status = PipelineBatchTaskStatus.EXECUTING
+            )
             return task
         } finally {
             lock.unlock()
@@ -284,7 +292,7 @@ class PipelineCopyTaskExecuteService @Autowired constructor(
         var status = PipelineCopyTaskResourceStatus.SUCCESS
         var targetResourceId: String? = null
         var targetResourceName: String? = null
-        var errorMessage: String? = null
+        var errorMessage: PipelineBatchTaskErrorMessage? = null
         try {
             when (val copyStrategy = validateCopyStrategy(resource = resource)) {
                 PipelineCopyStrategy.CREDENTIAL_REUSE_SAME_NAME -> {
@@ -401,7 +409,7 @@ class PipelineCopyTaskExecuteService @Autowired constructor(
         var status = PipelineCopyTaskResourceStatus.SUCCESS
         var targetResourceId: String? = null
         var targetResourceName: String? = null
-        var errorMessage: String? = null
+        var errorMessage: PipelineBatchTaskErrorMessage? = null
         try {
             val copyStrategy = validateCopyStrategy(resource = resource)
             when (resource.copyStrategy!!) {
@@ -492,7 +500,7 @@ class PipelineCopyTaskExecuteService @Autowired constructor(
         var status = PipelineCopyTaskResourceStatus.SUCCESS
         var targetResourceId: String? = null
         var targetResourceName: String? = null
-        var errorMessage: String? = null
+        var errorMessage: PipelineBatchTaskErrorMessage? = null
         try {
             when (val copyStrategy = validateCopyStrategy(resource)) {
                 PipelineCopyStrategy.BUILD_ENV_REUSE_SAME_NAME,
@@ -587,7 +595,7 @@ class PipelineCopyTaskExecuteService @Autowired constructor(
         var status = PipelineCopyTaskResourceStatus.SUCCESS
         var targetResourceId: String? = null
         var targetResourceName: String? = null
-        var errorMessage: String? = null
+        var errorMessage: PipelineBatchTaskErrorMessage? = null
         try {
             when (val copyStrategy = validateCopyStrategy(resource)) {
                 PipelineCopyStrategy.BUILD_NODE_REUSE_SAME_NAME,
@@ -679,7 +687,7 @@ class PipelineCopyTaskExecuteService @Autowired constructor(
         var status = PipelineCopyTaskResourceStatus.SUCCESS
         var targetResourceId: String? = null
         var targetResourceName: String? = null
-        var errorMessage: String? = null
+        var errorMessage: PipelineBatchTaskErrorMessage? = null
         try {
             when (val copyStrategy = validateCopyStrategy(resource)) {
                 PipelineCopyStrategy.PIPELINE_GROUP_AUTO_REUSE_OR_CREATE -> {
@@ -753,7 +761,7 @@ class PipelineCopyTaskExecuteService @Autowired constructor(
         var status = PipelineCopyTaskResourceStatus.SUCCESS
         var targetResourceId: String? = null
         var targetResourceName: String? = null
-        var errorMessage: String? = null
+        var errorMessage: PipelineBatchTaskErrorMessage? = null
         try {
             when (val copyStrategy = validateCopyStrategy(resource)) {
                 PipelineCopyStrategy.LABEL_AUTO_REUSE_OR_CREATE -> {
@@ -846,7 +854,7 @@ class PipelineCopyTaskExecuteService @Autowired constructor(
         var targetResourceId: String? = null
         var targetResourceName: String? = null
         var targetResourceProp: PipelineTemplateCopyResourceProp? = null
-        var errorMessage: String? = null
+        var errorMessage: PipelineBatchTaskErrorMessage? = null
         try {
             when (val copyStrategy = validateCopyStrategy(resource)) {
                 PipelineCopyStrategy.PIPELINE_TEMPLATE_REUSE_SAME_NAME -> {
@@ -1079,23 +1087,95 @@ class PipelineCopyTaskExecuteService @Autowired constructor(
         resource: PipelineCopyTaskResource?,
         resourceMap: MutableMap<String, PipelineCopyTaskResource>
     ) {
+        val pipelineResource = validatePipelineExecutionPreconditions(
+            projectId = projectId,
+            taskId = taskId,
+            detail = detail,
+            resource = resource,
+            resourceMap = resourceMap
+        ) ?: return
+
         updatePipelineDetailStatus(
             projectId = projectId,
             taskId = taskId,
             pipelineId = detail.pipelineId,
             status = PipelineBatchTaskDetailStatus.EXECUTING
         )
+
+        val resourceUpdate = copyPipelineResource(
+            userId = userId,
+            projectId = projectId,
+            taskId = taskId,
+            targetProjectId = targetProjectId,
+            resource = pipelineResource,
+            resourceMap = resourceMap
+        )
+
+        persistPipelineExecution(
+            projectId = projectId,
+            taskId = taskId,
+            pipelineId = detail.pipelineId,
+            resource = pipelineResource,
+            resourceUpdate = resourceUpdate,
+            resourceMap = resourceMap
+        )
+    }
+
+    private fun validatePipelineExecutionPreconditions(
+        projectId: String,
+        taskId: String,
+        detail: PipelineBatchTaskDetail,
+        resource: PipelineCopyTaskResource?,
+        resourceMap: Map<String, PipelineCopyTaskResource>
+    ): PipelineCopyTaskResource? {
+        if (resource == null) {
+            val exception = ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_PIPELINE_COPY_DEPENDENT_RESOURCE_NOT_EXISTS,
+                params = arrayOf(projectId, detail.pipelineName)
+            )
+            updatePipelineDetailStatus(
+                projectId = projectId,
+                taskId = taskId,
+                pipelineId = detail.pipelineId,
+                status = PipelineBatchTaskDetailStatus.FAILED,
+                errorType = PipelineBatchTaskDetailErrorType.DEPENDENCY_CREATE_FAILED,
+                errorMessage = PipelineCopyTaskUtils.getErrorMessage(exception)
+            )
+            return null
+        }
+        val failedResources = listPipelineDependentResources(
+            projectId = projectId,
+            taskId = taskId,
+            pipelineId = detail.pipelineId,
+            resourceMap = resourceMap
+        ).filter { it.status == PipelineCopyTaskResourceStatus.FAILED }
+        if (failedResources.isNotEmpty()) {
+            updatePipelineDetailStatus(
+                projectId = projectId,
+                taskId = taskId,
+                pipelineId = detail.pipelineId,
+                status = PipelineBatchTaskDetailStatus.FAILED,
+                errorType = PipelineBatchTaskDetailErrorType.DEPENDENCY_CREATE_FAILED,
+                errorMessage = PipelineCopyTaskUtils.buildDependencyFailedMessage(failedResources)
+            )
+            return null
+        }
+        return resource
+    }
+
+    private fun copyPipelineResource(
+        userId: String,
+        projectId: String,
+        taskId: String,
+        targetProjectId: String,
+        resource: PipelineCopyTaskResource,
+        resourceMap: MutableMap<String, PipelineCopyTaskResource>
+    ): PipelineCopyTaskResourceUpdate {
         var status = PipelineCopyTaskResourceStatus.SUCCESS
         var targetResourceId = resource.targetResourceId
         var targetResourceName = resource.targetResourceName
-        var errorMessage: String? = null
+        var errorMessage: PipelineBatchTaskErrorMessage? = null
         try {
-            if (resource == null) {
-                throw ErrorCodeException(
-                    errorCode = ProcessMessageCode.ERROR_PIPELINE_COPY_DEPENDENT_RESOURCE_NOT_EXISTS,
-                    params = arrayOf(projectId, detail.pipelineName)
-                )
-            }
             when (val copyStrategy = validateCopyStrategy(resource)) {
                 PipelineCopyStrategy.PIPELINE_CREATE_NEW_ID,
                 PipelineCopyStrategy.PIPELINE_REUSE_SOURCE_ID,
@@ -1128,7 +1208,7 @@ class PipelineCopyTaskExecuteService @Autowired constructor(
             status = PipelineCopyTaskResourceStatus.FAILED
             errorMessage = PipelineCopyTaskUtils.getErrorMessage(ignored)
         }
-        val resourceUpdate = PipelineCopyTaskResourceUpdate(
+        return PipelineCopyTaskResourceUpdate(
             projectId = projectId,
             taskId = taskId,
             resourceType = resource.resourceType,
@@ -1139,11 +1219,27 @@ class PipelineCopyTaskExecuteService @Autowired constructor(
             targetResourceName = targetResourceName,
             errorMessage = errorMessage
         )
-        val detailStatus = when (status) {
-            PipelineCopyTaskResourceStatus.SUCCESS -> PipelineBatchTaskDetailStatus.SUCCESS
-            PipelineCopyTaskResourceStatus.SKIP -> PipelineBatchTaskDetailStatus.SUCCESS
-            PipelineCopyTaskResourceStatus.FAILED -> PipelineBatchTaskDetailStatus.FAILED
+    }
+
+    private fun persistPipelineExecution(
+        projectId: String,
+        taskId: String,
+        pipelineId: String,
+        resource: PipelineCopyTaskResource,
+        resourceUpdate: PipelineCopyTaskResourceUpdate,
+        resourceMap: MutableMap<String, PipelineCopyTaskResource>
+    ) {
+        val updateStatus = resourceUpdate.status ?: return
+        val status = when (updateStatus) {
+            PipelineCopyTaskResourceStatus.SUCCESS,
+            PipelineCopyTaskResourceStatus.SKIP,
+            PipelineCopyTaskResourceStatus.FAILED -> updateStatus
             else -> return
+        }
+        val detailErrorType = if (status == PipelineCopyTaskResourceStatus.FAILED) {
+            PipelineBatchTaskDetailErrorType.PIPELINE_CREATE_FAILED
+        } else {
+            null
         }
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
@@ -1151,15 +1247,14 @@ class PipelineCopyTaskExecuteService @Autowired constructor(
                 dslContext = transactionContext,
                 update = resourceUpdate
             )
-            pipelineBatchTaskDetailDao.update(
-                dslContext = transactionContext,
-                update = PipelineBatchTaskDetailUpdate(
-                    projectId = projectId,
-                    taskId = taskId,
-                    pipelineId = detail.pipelineId,
-                    status = detailStatus,
-                    errorMessage = errorMessage
-                )
+            updatePipelineDetailStatus(
+                projectId = projectId,
+                taskId = taskId,
+                pipelineId = pipelineId,
+                resourceStatus = status,
+                errorType = detailErrorType,
+                errorMessage = resourceUpdate.errorMessage,
+                transactionContext = transactionContext
             )
         }
         val resourceKey = PipelineCopyTaskUtils.resourceKey(
@@ -1169,9 +1264,9 @@ class PipelineCopyTaskExecuteService @Autowired constructor(
         resourceMap[resourceKey] = resource.copy(
             status = status,
             targetResourceType = resource.resourceType,
-            targetResourceId = targetResourceId,
-            targetResourceName = targetResourceName,
-            errorMessage = errorMessage
+            targetResourceId = resourceUpdate.targetResourceId,
+            targetResourceName = resourceUpdate.targetResourceName,
+            errorMessage = resourceUpdate.errorMessage
         )
     }
 
@@ -1224,7 +1319,8 @@ class PipelineCopyTaskExecuteService @Autowired constructor(
         taskId: String,
         pipelineId: String,
         status: PipelineBatchTaskDetailStatus,
-        errorMessage: String? = null,
+        errorType: PipelineBatchTaskDetailErrorType? = null,
+        errorMessage: PipelineBatchTaskErrorMessage? = null,
         transactionContext: DSLContext = dslContext
     ) {
         pipelineBatchTaskDetailDao.update(
@@ -1235,6 +1331,7 @@ class PipelineCopyTaskExecuteService @Autowired constructor(
                 pipelineId = pipelineId,
                 status = status,
                 change = false,
+                errorType = errorType,
                 errorMessage = errorMessage
             )
         )
@@ -1245,7 +1342,8 @@ class PipelineCopyTaskExecuteService @Autowired constructor(
         taskId: String,
         pipelineId: String,
         resourceStatus: PipelineCopyTaskResourceStatus,
-        errorMessage: String?,
+        errorType: PipelineBatchTaskDetailErrorType? = null,
+        errorMessage: PipelineBatchTaskErrorMessage? = null,
         transactionContext: DSLContext = dslContext
     ) {
         val detailStatus = when (resourceStatus) {
@@ -1259,6 +1357,7 @@ class PipelineCopyTaskExecuteService @Autowired constructor(
             taskId = taskId,
             pipelineId = pipelineId,
             status = detailStatus,
+            errorType = errorType,
             errorMessage = errorMessage,
             transactionContext = transactionContext
         )

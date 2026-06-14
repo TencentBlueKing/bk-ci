@@ -17,7 +17,7 @@ data class PipelineBatchTaskUpdate(
     @get:Schema(description = "任务汇总信息")
     val taskSummary: String? = null,
     @get:Schema(description = "错误信息")
-    val errorMessage: String? = null,
+    val errorMessage: PipelineBatchTaskErrorMessage? = null,
     @get:Schema(description = "是否清空错误信息")
     val clearErrorMessage: Boolean = false,
     @get:Schema(description = "任务状态")

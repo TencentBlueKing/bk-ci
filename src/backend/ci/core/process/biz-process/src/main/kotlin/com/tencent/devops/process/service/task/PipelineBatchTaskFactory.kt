@@ -65,6 +65,7 @@ class PipelineBatchTaskFactory @Autowired constructor(
                 versionStatus = pipelineVersionStatusMap[pipelineId],
                 change = true,
                 status = status,
+                errorType = null,
                 errorMessage = null,
                 startTime = null,
                 endTime = null

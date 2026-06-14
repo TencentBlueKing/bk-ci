@@ -11,6 +11,7 @@ import com.tencent.devops.process.pojo.pipeline.enums.PipelineDependentResourceT
 import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyResourceProp
 import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskResource
 import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskResourceUpdate
+import com.tencent.devops.process.service.task.copy.PipelineCopyTaskUtils
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
@@ -64,7 +65,7 @@ class PipelineCopyTaskResourceDao {
                     resource.targetResourceName,
                     resource.targetResourceProp?.let { JsonUtil.toJson(it, formatted = false) },
                     resource.status.name,
-                    resource.errorMessage,
+                    PipelineCopyTaskUtils.toErrorMessageJson(resource.errorMessage),
                     resource.highRisk,
                     resource.targetNameExists,
                     resource.targetIdExists,
@@ -197,7 +198,9 @@ class PipelineCopyTaskResourceDao {
                 query.set(TARGET_RESOURCE_PROPERTIES, JsonUtil.toJson(it, formatted = false))
             }
             update.status?.let { query.set(STATUS, it.name) }
-            update.errorMessage?.let { query.set(ERROR_MESSAGE, it) }
+            update.errorMessage?.let {
+                query.set(ERROR_MESSAGE, PipelineCopyTaskUtils.toErrorMessageJson(it))
+            }
             update.targetNameExists?.let { query.set(TARGET_NAME_EXISTS, it) }
             update.targetIdExists?.let { query.set(TARGET_ID_EXISTS, it) }
             update.highRisk?.let { query.set(HIGH_RISK, it) }
@@ -232,7 +235,9 @@ class PipelineCopyTaskResourceDao {
                     query.set(TARGET_RESOURCE_PROPERTIES, JsonUtil.toJson(it, formatted = false))
                 }
                 resourceUpdate.status?.let { query.set(STATUS, it.name) }
-                resourceUpdate.errorMessage?.let { query.set(ERROR_MESSAGE, it) }
+                resourceUpdate.errorMessage?.let {
+                    query.set(ERROR_MESSAGE, PipelineCopyTaskUtils.toErrorMessageJson(it))
+                }
                 resourceUpdate.targetNameExists?.let { query.set(TARGET_NAME_EXISTS, it) }
                 resourceUpdate.targetIdExists?.let { query.set(TARGET_ID_EXISTS, it) }
                 resourceUpdate.highRisk?.let { query.set(HIGH_RISK, it) }
@@ -267,7 +272,7 @@ class PipelineCopyTaskResourceDao {
                 targetResourceName = targetResourceName,
                 targetResourceProp = toProperties(targetResourceProperties),
                 status = PipelineCopyTaskResourceStatus.valueOf(status),
-                errorMessage = errorMessage,
+                errorMessage = PipelineCopyTaskUtils.parseErrorMessage(errorMessage),
                 highRisk = highRisk,
                 targetNameExists = targetNameExists,
                 targetIdExists = targetIdExists,

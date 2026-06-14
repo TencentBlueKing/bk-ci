@@ -1,9 +1,7 @@
 package com.tencent.devops.process.service.task.copy
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.pojo.pipeline.PipelineDependentResource
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskStatus
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineCopyAction
@@ -11,6 +9,12 @@ import com.tencent.devops.process.pojo.pipeline.enums.PipelineCopyTaskResourceSt
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineDependentResourceType
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchCopyTaskParam
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTask
+import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskDependencyFailed
+import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskDependencyFailedGroup
+import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskDependencyFailedResource
+import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskErrorMessage
+import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskFailedErrorCode
+import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskFailedMsg
 import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskConfigRequest
 import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskResource
 import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskResourceUpdate
@@ -24,16 +28,50 @@ object PipelineCopyTaskUtils {
         return "${resourceType.name}_$resourceId"
     }
 
-    fun getErrorMessage(exception: Exception): String {
+    fun getErrorMessage(exception: Exception): PipelineBatchTaskErrorMessage {
         return when (exception) {
-            is ErrorCodeException -> I18nUtil.getCodeLanMessage(
-                messageCode = exception.errorCode,
-                params = exception.params
+            is ErrorCodeException -> PipelineBatchTaskFailedErrorCode(
+                errorCode = exception.errorCode,
+                params = exception.params?.toList()
             )
 
-            is RemoteServiceException -> exception.errorMessage
-            else -> exception.message
-        }?.takeIf { it.isNotBlank() } ?: exception.javaClass.simpleName
+            else -> PipelineBatchTaskFailedMsg(
+                msg = exception.message ?: "unknown error"
+            )
+        }
+    }
+
+    fun buildDependencyFailedMessage(
+        failedResources: List<PipelineCopyTaskResource>
+    ): PipelineBatchTaskDependencyFailed {
+        val details = failedResources.groupBy { it.resourceType }.map { (resourceType, resources) ->
+            PipelineBatchTaskDependencyFailedGroup(
+                resourceType = resourceType,
+                resources = resources.map { resource ->
+                    PipelineBatchTaskDependencyFailedResource(
+                        resourceId = resource.resourceId,
+                        resourceName = resource.resourceName,
+                        errorMessage = resource.errorMessage
+                    )
+                }
+            )
+        }
+        return PipelineBatchTaskDependencyFailed(details = details)
+    }
+
+    fun toErrorMessageJson(message: PipelineBatchTaskErrorMessage?): String? {
+        return message?.let { JsonUtil.toJson(it, false) }
+    }
+
+    fun parseErrorMessage(json: String?): PipelineBatchTaskErrorMessage? {
+        if (json.isNullOrBlank()) {
+            return null
+        }
+        return try {
+            JsonUtil.to(json, PipelineBatchTaskErrorMessage::class.java)
+        } catch (ignored: Exception) {
+            PipelineBatchTaskFailedMsg(json)
+        }
     }
 
     fun parseParam(task: PipelineBatchTask): PipelineBatchCopyTaskParam? {

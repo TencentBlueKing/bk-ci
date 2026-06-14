@@ -4,10 +4,11 @@ import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.model.process.Tables.T_PIPELINE_BATCH_TASK
 import com.tencent.devops.model.process.tables.records.TPipelineBatchTaskRecord
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTask
+import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskUpdate
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskStatus
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskStep
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskType
-import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskUpdate
+import com.tencent.devops.process.service.task.copy.PipelineCopyTaskUtils
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
@@ -170,7 +171,10 @@ class PipelineBatchTaskDao {
                 query.set(TASK_SUMMARY, update.taskSummary)
             }
             if (update.errorMessage != null) {
-                query.set(ERROR_MESSAGE, update.errorMessage)
+                query.set(
+                    ERROR_MESSAGE,
+                    PipelineCopyTaskUtils.toErrorMessageJson(update.errorMessage)
+                )
             }
             if (update.clearErrorMessage) {
                 query.setNull(ERROR_MESSAGE)
@@ -248,7 +252,7 @@ class PipelineBatchTaskDao {
                 taskType = PipelineBatchTaskType.valueOf(taskType),
                 taskParam = taskParam,
                 taskSummary = taskSummary,
-                errorMessage = errorMessage,
+                errorMessage = PipelineCopyTaskUtils.parseErrorMessage(errorMessage),
                 status = PipelineBatchTaskStatus.valueOf(status),
                 step = PipelineBatchTaskStep.valueOf(step),
                 totalCount = totalCount,

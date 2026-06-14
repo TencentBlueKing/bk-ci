@@ -12,5 +12,5 @@ data class PipelineCopyTaskExecuteProgress(
     @get:Schema(description = "已执行数量", required = true)
     val executedCount: Int,
     @get:Schema(description = "错误信息")
-    val errorMessage: String? = null
+    val errorMessage: PipelineBatchTaskErrorMessage? = null
 )

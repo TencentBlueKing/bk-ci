@@ -16,7 +16,6 @@ import com.tencent.devops.process.dao.PipelineCopyTaskResourceRelDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.pojo.PipelineInfoQueryCondition
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskDetailStatus
-import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskStatus
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskType
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineCopyAction
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineCopyTaskResourceStatus
@@ -278,7 +277,7 @@ class PipelineCopyTaskService @Autowired constructor(
         )
         checkProjectManager(userId = userId, projectId = projectId)
         checkProjectManager(userId = userId, projectId = param.targetProjectId)
-        pipelineCopyTaskExecuteService.prepareExecute(
+        pipelineCopyTaskExecuteService.confirmExecute(
             projectId = projectId,
             taskId = taskId
         )

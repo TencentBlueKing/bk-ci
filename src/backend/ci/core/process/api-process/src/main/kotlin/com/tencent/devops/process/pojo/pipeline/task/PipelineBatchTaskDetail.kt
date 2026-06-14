@@ -1,6 +1,7 @@
 package com.tencent.devops.process.pojo.pipeline.task
 
 import com.tencent.devops.common.pipeline.enums.VersionStatus
+import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskDetailErrorType
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskDetailStatus
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskType
 import io.swagger.v3.oas.annotations.media.Schema
@@ -33,8 +34,10 @@ data class PipelineBatchTaskDetail(
     val change: Boolean = true,
     @get:Schema(description = "明细状态", required = true)
     val status: PipelineBatchTaskDetailStatus,
+    @get:Schema(description = "错误类型")
+    val errorType: PipelineBatchTaskDetailErrorType? = null,
     @get:Schema(description = "错误信息")
-    val errorMessage: String?,
+    val errorMessage: PipelineBatchTaskErrorMessage?,
     @get:Schema(description = "开始时间")
     val startTime: Long?,
     @get:Schema(description = "结束时间")

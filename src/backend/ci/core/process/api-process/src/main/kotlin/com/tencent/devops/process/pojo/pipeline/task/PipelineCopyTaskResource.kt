@@ -37,7 +37,7 @@ data class PipelineCopyTaskResource(
     @get:Schema(description = "资源状态", required = true)
     val status: PipelineCopyTaskResourceStatus = PipelineCopyTaskResourceStatus.UNPROCESSED,
     @get:Schema(description = "错误信息")
-    val errorMessage: String? = null,
+    val errorMessage: PipelineBatchTaskErrorMessage? = null,
     @get:Schema(description = "是否高危资源", required = true)
     val highRisk: Boolean = false,
     @get:Schema(description = "目标项目是否存在同名资源", required = true)

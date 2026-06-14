@@ -5,11 +5,13 @@ import com.tencent.devops.common.api.util.toLocalDateTime
 import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.model.process.Tables.T_PIPELINE_BATCH_TASK_DETAIL
 import com.tencent.devops.model.process.tables.records.TPipelineBatchTaskDetailRecord
+import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskDetailErrorType
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskDetailStatus
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskType
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskDetail
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskDetailStatusSummary
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskDetailUpdate
+import com.tencent.devops.process.service.task.copy.PipelineCopyTaskUtils
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -44,6 +46,7 @@ class PipelineBatchTaskDetailDao {
                     CHANGE,
                     STATUS,
                     ERROR_MESSAGE,
+                    ERROR_TYPE,
                     START_TIME,
                     END_TIME
                 ).values(
@@ -60,7 +63,8 @@ class PipelineBatchTaskDetailDao {
                     detail.versionStatus?.name,
                     detail.change,
                     detail.status.name,
-                    detail.errorMessage,
+                    PipelineCopyTaskUtils.toErrorMessageJson(detail.errorMessage),
+                    detail.errorType?.name,
                     detail.startTime?.toLocalDateTime(),
                     detail.endTime?.toLocalDateTime()
                 )
@@ -208,7 +212,10 @@ class PipelineBatchTaskDetailDao {
             val query = dslContext.update(this)
             update.status?.let { query.set(STATUS, it.name) }
             update.change?.let { query.set(CHANGE, it) }
-            update.errorMessage?.let { query.set(ERROR_MESSAGE, it) }
+            update.errorType?.let { query.set(ERROR_TYPE, it.name) }
+            update.errorMessage?.let {
+                query.set(ERROR_MESSAGE, PipelineCopyTaskUtils.toErrorMessageJson(it))
+            }
             query.set(UPDATE_TIME, LocalDateTime.now())
                 .where(PROJECT_ID.eq(update.projectId))
                 .and(TASK_ID.eq(update.taskId))
@@ -229,7 +236,10 @@ class PipelineBatchTaskDetailDao {
                 val query = dslContext.update(this)
                 update.status?.let { query.set(STATUS, it.name) }
                 update.change?.let { query.set(CHANGE, it) }
-                update.errorMessage?.let { query.set(ERROR_MESSAGE, it) }
+                update.errorType?.let { query.set(ERROR_TYPE, it.name) }
+                update.errorMessage?.let {
+                    query.set(ERROR_MESSAGE, PipelineCopyTaskUtils.toErrorMessageJson(it))
+                }
                 query.set(UPDATE_TIME, LocalDateTime.now())
                     .where(PROJECT_ID.eq(update.projectId))
                     .and(TASK_ID.eq(update.taskId))
@@ -332,7 +342,8 @@ class PipelineBatchTaskDetailDao {
                 versionStatus = versionStatus?.let { VersionStatus.valueOf(it) },
                 change = change,
                 status = PipelineBatchTaskDetailStatus.valueOf(status),
-                errorMessage = errorMessage,
+                errorType = errorType?.let { PipelineBatchTaskDetailErrorType.valueOf(it) },
+                errorMessage = PipelineCopyTaskUtils.parseErrorMessage(errorMessage),
                 startTime = startTime?.timestampmilli(),
                 endTime = endTime?.timestampmilli(),
                 createTime = createTime.timestampmilli(),

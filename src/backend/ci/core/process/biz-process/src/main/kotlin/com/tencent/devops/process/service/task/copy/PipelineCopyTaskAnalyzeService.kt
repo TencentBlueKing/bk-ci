@@ -21,6 +21,7 @@ import com.tencent.devops.process.dao.template.PipelineTemplateInfoDao
 import com.tencent.devops.process.engine.cfg.PipelineIdGenerator
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.pojo.pipeline.PipelineDependentResource
+import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskDetailErrorType
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskDetailStatus
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskStatus
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskType
@@ -32,6 +33,7 @@ import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTask
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskAnalyzeEvent
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskDetail
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskDetailUpdate
+import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskErrorMessage
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskUpdate
 import com.tencent.devops.process.pojo.pipeline.task.PipelineConflictInfo
 import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskConfigRequest
@@ -639,6 +641,7 @@ class PipelineCopyTaskAnalyzeService @Autowired constructor(
                         pipelineId = detail.pipelineId,
                         status = PipelineBatchTaskDetailStatus.FAILED,
                         change = false,
+                        errorType = PipelineBatchTaskDetailErrorType.SYSTEM_ERROR,
                         errorMessage = PipelineCopyTaskUtils.getErrorMessage(ignore)
                     )
                 )
@@ -806,7 +809,7 @@ class PipelineCopyTaskAnalyzeService @Autowired constructor(
                         targetResourceName = copyTaskResource.targetResourceName,
                         targetResourceProperties = copyTaskResource.targetResourceProp,
                         status = copyTaskResource.status,
-                        errorMessage = copyTaskResource.errorMessage.orEmpty(),
+                        errorMessage = copyTaskResource.errorMessage,
                         targetNameExists = copyTaskResource.targetNameExists,
                         targetIdExists = copyTaskResource.targetIdExists,
                         highRisk = copyTaskResource.highRisk,
@@ -877,7 +880,7 @@ class PipelineCopyTaskAnalyzeService @Autowired constructor(
         var repositoryCopyResourceProperties: RepositoryCopyResourceProp? = null
         var sourceRepository: Repository? = null
         var targetRepository: Repository? = null
-        var errorMessage: String? = null
+        var errorMessage: PipelineBatchTaskErrorMessage? = null
         try {
             sourceRepository = client.get(ServiceRepositoryResource::class).get(
                 projectId = projectId,
@@ -1002,7 +1005,7 @@ class PipelineCopyTaskAnalyzeService @Autowired constructor(
         var status = PipelineCopyTaskResourceStatus.UNPROCESSED
         var targetNameExists = false
         var labelProp: PipelineLabelCopyResourceProp? = null
-        var errorMessage: String? = null
+        var errorMessage: PipelineBatchTaskErrorMessage? = null
         try {
             val sourceLabel = pipelineLabelDao.getById(
                 dslContext = dslContext,
@@ -1068,7 +1071,7 @@ class PipelineCopyTaskAnalyzeService @Autowired constructor(
         var status = PipelineCopyTaskResourceStatus.UNPROCESSED
         var targetNameExists = false
         var pipelineViewProp: PipelineViewCopyResourceProp? = null
-        var errorMessage: String? = null
+        var errorMessage: PipelineBatchTaskErrorMessage? = null
         try {
             val sourcePipelineGroup = pipelineViewDao.get(
                 dslContext = dslContext,
