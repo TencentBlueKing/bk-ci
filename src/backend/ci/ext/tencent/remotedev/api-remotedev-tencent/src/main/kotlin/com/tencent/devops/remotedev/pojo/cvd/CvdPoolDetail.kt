@@ -8,6 +8,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 data class CvdPoolDetail(
     @get:Schema(description = "资源池ID")
     val poolId: String,
+    @get:Schema(description = "资源池名称")
+    val poolName: String? = null,
     @get:Schema(description = "蓝盾项目ID")
     val bkProjectId: String? = null,
     @get:Schema(description = "网络区域")
@@ -25,5 +27,7 @@ data class CvdPoolDetail(
     @get:Schema(description = "实例列表")
     val instanceList: List<CvdPoolInstance>? = null,
     @get:Schema(description = "授权用户列表")
-    val userList: List<CvdPoolUser>? = null
+    val userList: List<CvdPoolUser>? = null,
+    @get:Schema(description = "磁盘列表")
+    val diskList: List<CvdDiskItem>? = null
 )
