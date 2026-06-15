@@ -1,0 +1,56 @@
+/**
+ * ApplyDialog Component Styles
+ * Uses CSS variables from /src/styles/variables.css
+ */
+
+.applyForm {
+  width: 98%;
+}
+
+.deadlineWrapper {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-sm);
+}
+
+.deadlineBtn {
+  min-width: 100px;
+}
+
+.isSelected {
+  color: var(--color-primary);
+  border-color: var(--color-primary);
+  background-color: var(--bg-active);
+}
+
+.customTimeSelect {
+  width: 110px;
+}
+
+.groupText {
+  display: flex;
+  align-items: center;
+  padding: 0 var(--spacing-sm);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
+}
+
+.expired {
+  padding-right: var(--spacing-sm);
+  color: var(--color-text-secondary);
+}
+
+.newExpired {
+  padding-left: var(--spacing-sm);
+  color: var(--color-success);
+}
+
+.arrowIcon {
+  color: var(--color-text-tertiary);
+}
+
+.dialogFooter {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--spacing-sm);
+}

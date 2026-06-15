@@ -52,7 +52,7 @@ interface ContainerBizPlugin<T : Container> {
         pipelineId: String,
         pipelineName: String,
         userId: String,
-        channelCode: ChannelCode = ChannelCode.BS
+        channelCode: ChannelCode = ChannelCode.getRequestChannelCode()
     )
 
     /**

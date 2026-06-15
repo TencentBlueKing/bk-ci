@@ -116,7 +116,8 @@
 
 <script>
     import KeyValueNormal from '@/components/atomFormField/KeyValueNormal'
-    import BkPipeline, { loadI18nMessages } from 'bkui-pipeline'
+    import BkPipeline, { loadI18nMessages } from 'bkui-pipeline/vue2'
+    import 'bkui-pipeline/dist/bk-pipeline.css'
     export default {
         components: {
             KeyValueNormal,
