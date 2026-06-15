@@ -318,6 +318,7 @@ internal fun renderUserPermissionAnalysis(
     return sb.toString()
 }
 
+@Suppress("NestedBlockDepth")
 internal fun renderPermissionDiagnosis(
     memberId: String,
     diagnose: PermissionDiagnoseVO

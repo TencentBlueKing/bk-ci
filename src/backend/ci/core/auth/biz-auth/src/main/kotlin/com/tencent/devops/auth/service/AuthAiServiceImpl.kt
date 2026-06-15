@@ -225,11 +225,7 @@ class AuthAiServiceImpl(
             missingReason = "用户未加入包含该权限的用户组",
             applicableGroups = applicableGroups,
             groupManagers = emptyList(),
-            suggestion = if (applicableGroups.isNotEmpty()) {
-                "建议申请加入「${applicableGroups.first().groupName}」用户组"
-            } else {
-                "暂无可申请的用户组，请联系项目管理员"
-            }
+            suggestion = buildDiagnosePermissionSuggestion(applicableGroups)
         )
     }
 
@@ -1220,7 +1216,7 @@ class AuthAiServiceImpl(
             authorizationSummary = authorizationSummary,
             totalAuthorizationCount = totalAuthorizationCount,
             hasAllPermissions = targetIsAdmin,
-            inheritedGroups = inheritedGroups.take(MAX_INHERITED_GROUPS_IN_ANALYSIS),
+            inheritedGroups = inheritedGroups,
             warnings = warnings
         )
     }
@@ -1440,8 +1436,7 @@ class AuthAiServiceImpl(
         MemberGroupJoinedDTO(id = it, memberType = MemberType.USER)
     }
 
-    private fun String.toResourceMemberInfo() =
-        ResourceMemberInfo(id = this, type = USER_TYPE)
+    private fun String.toResourceMemberInfo() = ResourceMemberInfo(id = this, type = USER_TYPE)
 
     private fun buildRecommendedCandidates(
         userId: String,
@@ -1715,6 +1710,28 @@ class AuthAiServiceImpl(
         else -> if (managementLevel.endsWith("组")) 1 else 0
     }
 
+    private fun buildDiagnosePermissionSuggestion(applicableGroups: List<ApplicableGroupVO>): String {
+        if (applicableGroups.isEmpty()) {
+            return "暂无可申请的用户组，请联系项目管理员"
+        }
+        if (applicableGroups.size == 1) {
+            return "建议申请加入「${applicableGroups.first().groupName}」用户组"
+        }
+        val recommendedGroups = applicableGroups.filter { group ->
+            group.tags.any { it.type == PermissionTagType.RECOMMEND }
+        }
+        return when {
+            recommendedGroups.size == 1 ->
+                "建议按最小权限原则申请加入「${recommendedGroups.first().groupName}」用户组"
+            recommendedGroups.isNotEmpty() -> {
+                val groupNames = recommendedGroups.take(3).joinToString("、") { "「${it.groupName}」" }
+                val suffix = if (recommendedGroups.size > 3) "等" else ""
+                "建议按最小权限原则，优先从以下资源级用户组中选择申请：$groupNames$suffix"
+            }
+            else -> "建议按最小权限原则开通，优先加入资源级别的用户组（详见可申请用户组列表）"
+        }
+    }
+
     private fun buildRecommendationTags(
         groupResourceType: String,
         requestedResourceType: String
@@ -1750,10 +1767,9 @@ class AuthAiServiceImpl(
     companion object {
         private val logger = LoggerFactory.getLogger(AuthAiServiceImpl::class.java)
         private const val DEFAULT_EXPIRED_DAYS = 365L
-        private const val MAX_CLONE_GROUPS = 500
-        private const val MAX_COMPARE_GROUPS = 500
-        private const val MAX_EXPLANATION_GROUPS = 500
-        private const val MAX_INHERITED_GROUPS_IN_ANALYSIS = 10
+        private const val MAX_CLONE_GROUPS = 1000
+        private const val MAX_COMPARE_GROUPS = 1000
+        private const val MAX_EXPLANATION_GROUPS = 1000
         private const val USER_TYPE = "user"
     }
 }
