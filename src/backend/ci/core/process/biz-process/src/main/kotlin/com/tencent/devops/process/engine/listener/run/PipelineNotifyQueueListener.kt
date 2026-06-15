@@ -1,5 +1,6 @@
 package com.tencent.devops.process.engine.listener.run
 
+import com.tencent.devops.common.api.context.ChannelContext
 import com.tencent.devops.common.event.listener.pipeline.PipelineEventListener
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
 import com.tencent.devops.common.pipeline.enums.BuildStatus
@@ -26,8 +27,11 @@ class PipelineNotifyQueueListener(
                     MDC.put(TraceTag.BIZID, TraceTag.buildBiz())
                 }
             }
+            // 恢复渠道上下文，确保后续Feign调用能正确传递渠道信息（如CREATIVE_STREAM）
+            ChannelContext.setChannel(event.channelCode)
             this.onPipelineShutdown(event)
         } finally {
+            ChannelContext.clear()
             MDC.remove(TraceTag.BIZID)
         }
     }

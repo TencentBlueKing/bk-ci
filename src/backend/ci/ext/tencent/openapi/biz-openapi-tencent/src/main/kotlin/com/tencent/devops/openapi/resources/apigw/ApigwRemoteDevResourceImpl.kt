@@ -796,6 +796,23 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
         return client.get(ServiceRemoteDevResource::class).tgitBindRemotedevProject(userId, data)
     }
 
+    override fun cdsWebhookEvent(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        type: String,
+        workspaceName: String?,
+        envId: String?
+    ): Result<Boolean> {
+        logger.info("cgsReportNotify ,type:$type,envId:$envId")
+        return client.get(ServiceRemoteDevResource::class).cdsWebhookEvent(
+            userId = userId,
+            type = type,
+            workspaceName = workspaceName,
+            envId = envId
+        )
+    }
+
     override fun openClawOn(userId: String): Result<WorkspaceRegistration?> {
         logger.info("openClawOn |$userId")
         return client.get(ServiceRemoteDevResource::class).openClawOn(userId)

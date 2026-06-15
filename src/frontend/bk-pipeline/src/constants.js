@@ -15,7 +15,7 @@ export const ATOM_CONTINUE_EVENT_NAME = 'atom-continue'
 export const ATOM_EXEC_EVENT_NAME = 'atom-exec'
 
 export const ATOM_ADD_EVENT_NAME = 'add-atom'
-
+export const APPEND_JOB = 'append-job'
 export const ADD_STAGE = 'add-stage'
 export const STAGE_CHECK = 'stage-check'
 export const STAGE_RETRY = 'stage-retry'

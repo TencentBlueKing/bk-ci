@@ -66,7 +66,7 @@
     import Logo from './Logo'
     import { STATUS_MAP } from './constants'
     export default {
-        name: 'stage-status',
+        name: 'StageStatus',
         components: {
             Logo
         },
@@ -139,7 +139,7 @@
     width: $serialSize;
     height: $serialSize;
     box-sizing: border-box;
-    
+
     > span {
         position: absolute;
         width: 100%;
@@ -162,7 +162,7 @@
         left: 15px;
         top: 15px;
     }
-    
+
     .slide-top-enter, .slide-top-leave-to {
         transform: translateY($serialSize);
     }

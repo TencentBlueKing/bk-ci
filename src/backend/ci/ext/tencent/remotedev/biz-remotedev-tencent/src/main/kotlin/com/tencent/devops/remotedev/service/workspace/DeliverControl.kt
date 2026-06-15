@@ -171,7 +171,8 @@ class DeliverControl @Autowired constructor(
                             )
                         ),
                         mountType = WorkspaceMountType.START,
-                        ownerType = workspace.ownerType
+                        ownerType = workspace.ownerType,
+                        oldOwner = existOwner.sharedUser
                     )
                     AsyncExecute.dispatch(
                         streamBridge = streamBridge,

@@ -199,7 +199,7 @@ class StreamJobBean(
                         branchs = streamTimer.branchs,
                         always = streamTimer.always,
                         eventId = streamTimer.eventId,
-                        channelCode = streamTimer.channelCode,
+                        timerChannelCode = streamTimer.channelCode,
                         originYaml = streamTimer.originYaml
                     )
                 )

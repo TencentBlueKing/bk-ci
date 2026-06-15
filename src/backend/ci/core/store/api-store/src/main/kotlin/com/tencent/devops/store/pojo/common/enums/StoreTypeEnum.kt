@@ -33,7 +33,8 @@ enum class StoreTypeEnum(val type: Int) {
     IMAGE(2), // 镜像
     IDE_ATOM(3), // IDE插件
     SERVICE(4), // 微扩展
-    DEVX(5); // 云开发
+    DEVX(5), // 云开发
+    TRIGGER_EVENT(6); // 触发事件
 
     companion object {
         fun getStoreType(type: Int): String {
@@ -44,6 +45,7 @@ enum class StoreTypeEnum(val type: Int) {
                 3 -> IDE_ATOM.name
                 4 -> SERVICE.name
                 5 -> DEVX.name
+                6 -> TRIGGER_EVENT.name
                 else -> ATOM.name
             }
         }

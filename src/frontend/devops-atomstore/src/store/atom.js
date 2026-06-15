@@ -166,8 +166,8 @@ export const actions = {
     /**
      * 流水线插件市场首页的数据
      */
-    requestAtomHome ({ commit }) {
-        return vue.$ajax.get(`${prefix}/user/market/atom/list/main?page=1&pageSize=8`)
+    requestAtomHome ({ commit }, { serviceScope }) {
+        return vue.$ajax.get(`${prefix}/user/market/atom/list/main?page=1&pageSize=8&serviceScope=${serviceScope}`)
     },
 
     /**
@@ -202,15 +202,15 @@ export const actions = {
     /**
      * 流水线插件详情
      */
-    requestAtom ({ commit }, atomCode) {
-        return vue.$ajax.get(`${prefix}/user/market/atom/${atomCode}`)
+    requestAtom ({ commit }, { atomCode, serviceScope }) {
+        return vue.$ajax.get(`${prefix}/user/market/atom/${atomCode}?serviceScope=${serviceScope}`)
     },
 
     /**
      * 流水线插件分类
      */
-    requestAtomClassify ({ commit }) {
-        return vue.$ajax.get(`${prefix}/user/pipeline/atom/classify`)
+    requestAtomClassify ({ commit }, { serviceScope }) {
+        return vue.$ajax.get(`${prefix}/user/pipeline/atom/classify?serviceScope=${serviceScope}`)
     },
 
     /**
@@ -332,15 +332,15 @@ export const actions = {
     /**
      * 流水线插件按分类
      */
-    requestAtomClassifys ({ commit }) {
-        return vue.$ajax.get(`${prefix}/user/market/atom/classifys`)
+    requestAtomClassifys ({ commit }, { serviceScope }) {
+        return vue.$ajax.get(`${prefix}/user/market/atom/classifys?serviceScope=${serviceScope}`)
     },
 
     /**
      * 流水线插件按功能
      */
-    requestAtomLables ({ commit }) {
-        return vue.$ajax.get(`${prefix}/user/market/atom/label/labels`)
+    requestAtomLables ({ commit }, { serviceScope}) {
+        return vue.$ajax.get(`${prefix}/user/market/atom/label/labels?serviceScope=${serviceScope}`)
     },
 
     /**

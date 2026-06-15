@@ -32,6 +32,7 @@ import com.tencent.devops.common.dispatch.sdk.listener.BuildListener
 import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
 import com.tencent.devops.common.pipeline.type.DispatchRouteKeySuffix
 import com.tencent.devops.common.pipeline.type.DispatchType
+import com.tencent.devops.common.pipeline.type.agent.CreateAgentIdDispatchType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentEnvDispatchType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentIDDispatchType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyDevCloudDispatchType
@@ -102,8 +103,9 @@ class ThirdPartyBuildListener @Autowired constructor(
 
     override fun consumerFilter(dispatchType: DispatchType): Boolean {
         return dispatchType is ThirdPartyAgentIDDispatchType ||
-            dispatchType is ThirdPartyAgentEnvDispatchType ||
-            dispatchType is ThirdPartyDevCloudDispatchType
+                dispatchType is ThirdPartyAgentEnvDispatchType ||
+                dispatchType is ThirdPartyDevCloudDispatchType ||
+                dispatchType is CreateAgentIdDispatchType
     }
 
     override fun getVmType(): JobQuotaVmType? {

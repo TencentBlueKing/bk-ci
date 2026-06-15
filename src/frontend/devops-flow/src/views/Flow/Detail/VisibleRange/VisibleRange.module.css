@@ -1,0 +1,88 @@
+.visibleRange {
+  height: 100%;
+  overflow: hidden;
+}
+
+/* 提示信息 */
+.noticeContent {
+  border-radius: var(--border-radius);
+  border: 1px solid var(--border-color);
+}
+
+.noticeTitle {
+  display: flex;
+  align-items: center;
+  height: 40px;
+  background-color: var(--bg-secondary);
+  padding: 0 var(--spacing-lg);
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+}
+
+.helpDocumentFill {
+  margin-right: 5px;
+  color: var(--color-primary);
+}
+
+.release {
+  white-space: break-spaces;
+  display: flex;
+  svg {
+    margin-top: 4px;
+  }
+}
+
+.releaseDesc {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
+}
+
+.noticeDesc {
+  padding: var(--spacing-lg);
+  line-height: var(--line-height-md);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
+}
+
+.noticeBold {
+  color: var(--color-primary);
+}
+
+/* 操作栏 */
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  margin-top: 30px;
+}
+
+.addIcon {
+  margin-right: var(--spacing-xs);
+  vertical-align: middle;
+}
+
+.searchInput {
+  flex: 0.6;
+}
+
+.searchIcon {
+    margin-right: var(--spacing-xs);
+    color: var(--color-text-disabled);
+}
+
+/* 表格容器 */
+.tableContainer {
+  height: calc(100% - 227px);
+  overflow: hidden;
+}
+
+/* 用户单元格样式 */
+.userCell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.userCell svg {
+  color: #979BA5;
+}

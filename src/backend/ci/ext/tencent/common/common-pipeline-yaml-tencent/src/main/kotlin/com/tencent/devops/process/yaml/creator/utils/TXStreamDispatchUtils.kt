@@ -43,7 +43,7 @@ import com.tencent.devops.common.ci.image.PoolType
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.VMBaseOS
 import com.tencent.devops.common.pipeline.type.DispatchType
-import com.tencent.devops.common.pipeline.type.agent.AgentType
+import com.tencent.devops.common.pipeline.type.agent.AgentDispatchType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentDockerInfo
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentEnvDispatchType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentIDDispatchType
@@ -133,7 +133,7 @@ object TXStreamDispatchUtils {
                     envProjectId = null,
                     envName = poolName,
                     workspace = workspace,
-                    agentType = AgentType.NAME,
+                    agentType = AgentDispatchType.NAME,
                     dockerInfo = null,
                     reusedInfo = null
                 )
@@ -163,7 +163,7 @@ object TXStreamDispatchUtils {
                 envProjectId = null,
                 envName = poolName,
                 workspace = workspace,
-                agentType = AgentType.NAME,
+                agentType = AgentDispatchType.NAME,
                 dockerInfo = dockerInfo,
                 reusedInfo = null
             )
@@ -233,7 +233,7 @@ object TXStreamDispatchUtils {
                     return ThirdPartyAgentIDDispatchType(
                         displayName = "",
                         workspace = "",
-                        agentType = AgentType.ID,
+                        agentType = AgentDispatchType.ID,
                         dockerInfo = null,
                         reusedInfo = null
                     )

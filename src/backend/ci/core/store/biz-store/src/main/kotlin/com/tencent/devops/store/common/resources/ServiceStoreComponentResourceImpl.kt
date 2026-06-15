@@ -37,12 +37,14 @@ import com.tencent.devops.store.common.service.StoreComponentQueryService
 import com.tencent.devops.store.pojo.common.InstallStoreReq
 import com.tencent.devops.store.pojo.common.MarketItem
 import com.tencent.devops.store.pojo.common.MarketMainItem
+import com.tencent.devops.store.pojo.common.StoreBaseInfo
 import com.tencent.devops.store.pojo.common.StoreDetailInfo
 import com.tencent.devops.store.pojo.common.StoreInfoQuery
 import com.tencent.devops.store.pojo.common.StorePackageInfoReq
 import com.tencent.devops.store.pojo.common.UnInstallReq
 import com.tencent.devops.store.pojo.common.enums.RdTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreSortTypeEnum
+import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.version.VersionInfo
 import org.springframework.beans.factory.annotation.Autowired
@@ -56,7 +58,7 @@ class ServiceStoreComponentResourceImpl @Autowired constructor(
     override fun installComponent(userId: String, installStoreReq: InstallStoreReq): Result<Boolean> {
         return storeComponentManageService.installComponent(
             userId = userId,
-            channelCode = ChannelCode.BS,
+            channelCode = ChannelCode.getRequestChannelCode(),
             installStoreReq = installStoreReq
         )
     }
@@ -199,5 +201,49 @@ class ServiceStoreComponentResourceImpl @Autowired constructor(
         storePackageInfoReqs: List<StorePackageInfoReq>
     ): Result<Boolean> {
         return Result(storeComponentManageService.updateComponentVersionSize(storeId, storePackageInfoReqs))
+    }
+
+    override fun getComponentBaseInfo(
+        userId: String,
+        storeType: String,
+        storeCode: String,
+        version: String?
+    ): Result<StoreBaseInfo?> {
+        return Result(
+            storeComponentQueryService.getComponentBaseInfo(
+                userId = userId,
+                storeType = storeType,
+                storeCode = storeCode,
+                version = version
+            )
+        )
+    }
+
+    override fun getComponentDataInfoByCode(
+        storeType: StoreTypeEnum,
+        storeCode: String,
+        version: String?,
+        status: StoreStatusEnum?
+    ): Result<StoreDetailInfo?> {
+        return Result(
+            storeComponentQueryService.getComponentDataInfoByCode(
+                storeType = storeType.name,
+                storeCode = storeCode,
+                version = version,
+                status = status
+            )
+        )
+    }
+
+    override fun getComponentBaseInfoByCodes(
+        storeType: StoreTypeEnum,
+        storeCodes: String?
+    ): Result<List<StoreBaseInfo>> {
+        return Result(
+            storeComponentQueryService.getComponentBaseInfoList(
+                storeType = storeType,
+                storeCodes = storeCodes?.split(",")?.toSet()
+            )
+        )
     }
 }

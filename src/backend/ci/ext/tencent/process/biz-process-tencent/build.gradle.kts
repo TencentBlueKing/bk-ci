@@ -53,6 +53,8 @@ dependencies {
     api(project(":ext:tencent:stream:api-stream-tencent"))
     api(project(":ext:tencent:misc:api-lambda-tencent"))
     api(project(":ext:tencent:common:common-kafka-tencent"))
+    api(project(":ext:tencent:remotedev:api-remotedev-tencent"))
+    api(project(":ext:tencent:environment:api-environment-tencent"))
     api("org.apache.poi:poi")
     api("org.apache.poi:poi-ooxml")
 }

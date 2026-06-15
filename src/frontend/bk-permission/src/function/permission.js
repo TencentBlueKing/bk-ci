@@ -402,7 +402,7 @@ export const handleNoPermissionV3 = (ui, params, h, data, ajaxPrefix = '') => {
       ),
       extCls: 'permission-dialog',
       width: 500,
-      dialogType: 'show',
+      confirmText: '',
     });
   };
   const showDialog = (data) => {
@@ -419,7 +419,6 @@ export const handleNoPermissionV3 = (ui, params, h, data, ajaxPrefix = '') => {
       footer: ()=> renderFooter(data),
       extCls: 'permission-dialog-v3',
       width: 640,
-      dialogType: 'show',
     });
   };
   if (data) {

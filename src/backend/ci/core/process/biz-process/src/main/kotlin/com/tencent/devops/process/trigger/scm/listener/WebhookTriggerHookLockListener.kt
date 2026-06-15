@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.trigger.scm.listener
 
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.process.engine.service.PipelineWebHookQueueService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -45,7 +46,8 @@ class WebhookTriggerHookLockListener @Autowired constructor(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 buildId = buildId!!.id,
-                variables = startParams ?: emptyMap()
+                variables = startParams ?: emptyMap(),
+                channelCode = pipelineInfo?.channelCode ?: ChannelCode.getRequestChannelCode()
             )
         }
     }

@@ -11,8 +11,10 @@ import com.tencent.devops.common.redis.concurrent.SimpleRateLimiter
 import com.tencent.devops.environment.constant.EnvironmentMessageCode
 import com.tencent.devops.environment.dao.thirdpartyagent.AgentBatchInstallTokenDao
 import com.tencent.devops.environment.dao.thirdpartyagent.ThirdPartyAgentDao
+import com.tencent.devops.environment.pojo.enums.AgentType
 import com.tencent.devops.environment.pojo.thirdpartyagent.TPAInstallType
 import com.tencent.devops.environment.service.AgentUrlService
+import com.tencent.devops.environment.service.CreateEnvService
 import com.tencent.devops.environment.service.slave.SlaveGatewayService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -34,7 +36,8 @@ class BatchInstallAgentService @Autowired constructor(
     private val agentUrlService: AgentUrlService,
     private val slaveGatewayService: SlaveGatewayService,
     private val downloadAgentInstallService: DownloadAgentInstallService,
-    private val simpleRateLimiter: SimpleRateLimiter
+    private val simpleRateLimiter: SimpleRateLimiter,
+    private val createEnvService: CreateEnvService
 ) {
     @Value("\${environment.batch-install.aes-key}")
     private val batchInstallAesKey = ""
@@ -47,7 +50,8 @@ class BatchInstallAgentService @Autowired constructor(
         loginName: String?,
         loginPassword: String?,
         installType: TPAInstallType?,
-        reInstallId: String?
+        reInstallId: String?,
+        agentType: AgentType?
     ): String {
         val now = LocalDateTime.now()
         val gateway = slaveGatewayService.getGateway(zoneName)
@@ -70,7 +74,8 @@ class BatchInstallAgentService @Autowired constructor(
                     AESUtil.encrypt(batchInstallAesKey, loginPassword)
                 },
                 installType = installType,
-                reInstallId = reInstallId
+                reInstallId = reInstallId,
+                agentType = agentType
             )
         }
 
@@ -100,7 +105,8 @@ class BatchInstallAgentService @Autowired constructor(
                     AESUtil.encrypt(batchInstallAesKey, loginPassword)
             },
             installType = installType,
-            reInstallId = reInstallId
+            reInstallId = reInstallId,
+            agentType = agentType
         )
     }
 
@@ -111,7 +117,8 @@ class BatchInstallAgentService @Autowired constructor(
         loginName: String?,
         loginPassword: String?,
         installType: TPAInstallType?,
-        reInstallId: String?
+        reInstallId: String?,
+        agentType: AgentType?
     ): Response {
         // 先校验是否可以创建
         val (projectId, userId, errorMsg) = verifyToken(token)
@@ -135,7 +142,9 @@ class BatchInstallAgentService @Autowired constructor(
                 projectId = projectId,
                 userId = userId,
                 os = os,
-                zoneName = zoneName
+                zoneName = zoneName,
+                agentType = agentType,
+                createWorkspaceName = null
             )
             HashUtil.encodeLongId(agentId)
         } else {
@@ -177,7 +186,9 @@ class BatchInstallAgentService @Autowired constructor(
         projectId: String,
         userId: String,
         os: OS,
-        zoneName: String?
+        zoneName: String?,
+        agentType: AgentType?,
+        createWorkspaceName: String?
     ): Long {
         val gateway = slaveGatewayService.getGateway(zoneName)
         val fileGateway = slaveGatewayService.getFileGateway(zoneName)
@@ -189,8 +200,26 @@ class BatchInstallAgentService @Autowired constructor(
             os = os,
             secretKey = SecurityUtil.encrypt(secretKey),
             gateway = gateway,
-            fileGateway = fileGateway
+            fileGateway = fileGateway,
+            agentType = agentType,
+            createWorkspaceName = createWorkspaceName
         )
+    }
+
+    fun genCreateAgentInstallScript(
+        userId: String,
+        projectId: String,
+        workspaceName: String,
+    ): String {
+        val agentId = genNewAgent(
+            projectId = projectId,
+            userId = userId,
+            os = OS.WINDOWS,
+            zoneName = createEnvService.getWorkspaceZoneName(projectId, workspaceName),
+            agentType = AgentType.CREATE,
+            createWorkspaceName = workspaceName
+        )
+        return HashUtil.encodeLongId(agentId)
     }
 
     companion object {

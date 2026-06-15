@@ -150,7 +150,7 @@
                         />
 
                         {{ $t('buildParams') }}
-                    
+
                         <span
                             @click.stop=""
                         >
@@ -781,10 +781,10 @@
                         projectId: this.projectId,
                         pipelineId: this.pipelineId
                     }
-                    
+
                     // 判断是否选择了正式版本（RELEASED）
                     const isReleasedVersion = branchInfo?.versionStatus === 'RELEASED'
-                    
+
                     // 如果有选择分支/版本，根据类型添加不同参数
                     if (branch && this.pacEnabled) {
                         if (isReleasedVersion) {
@@ -797,9 +797,9 @@
                     } else {
                         params.version = this.$route.params.version ?? this.pipelineInfo?.[this.isDebugPipeline ? 'version' : 'releaseVersion']
                     }
-                    
+
                     let pipelineRes
-                    
+
                     // 如果选择了分支/版本，根据类型使用不同接口
                     if (branch && this.pacEnabled) {
                         if (isReleasedVersion) {
@@ -845,7 +845,7 @@
                         this.branchVersion = null
                         this.isBranchVersion = false
                     }
-                    
+
                     this.pipelineModel = {
                         ...pipelineRes?.modelAndSetting?.model,
                         stages: pipelineRes?.modelAndSetting?.model.stages.slice(1)
@@ -1086,7 +1086,7 @@
                     acc[key] = true
                     return acc
                 }, {})
-                
+
                 this.paramList.forEach(param => {
                     param.isChanged = changedMap[param.id] ?? false
                 })
@@ -1097,7 +1097,7 @@
                 this.isApplySet = true
                 this.updateParams('value', this.paramsValues, this.versionParamValues)
             }
-            
+
         }
     }
 </script>
@@ -1313,14 +1313,14 @@ $header-height: 36px;
         background: #FFFFFF;
         box-shadow: 0 2px 4px 0 #1919290d;
         border-radius: 2px;
-        
+
         .exception-wrap-item {
             padding: 40px 0;
         }
-        
+
         .pac-error-content {
             text-align: center;
-            
+
             .pac-error-title {
                 font-size: 14px;
                 color: #63656E;
@@ -1329,12 +1329,12 @@ $header-height: 36px;
                     color: #3A84FF;
                 }
             }
-            
+
             .pac-error-detail {
                 font-size: 12px;
                 color: #979BA5;
                 margin-bottom: 8px;
-                
+
                 &:last-child {
                     margin-bottom: 0;
                 }

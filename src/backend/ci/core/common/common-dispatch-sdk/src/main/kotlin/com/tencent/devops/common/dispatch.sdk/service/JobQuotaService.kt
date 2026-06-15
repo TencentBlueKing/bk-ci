@@ -268,7 +268,7 @@ class JobQuotaService constructor(
         containerId: String,
         containerHashId: String?,
         executeCount: Int?,
-        channelCode: String,
+        channelCode: String?,
         vmType: JobQuotaVmType
     ): Boolean? {
         val effectiveExecuteCount = executeCount ?: DEFAULT_EXECUTE_COUNT

@@ -5,12 +5,14 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.web.annotation.BkApiPermission
 import com.tencent.devops.common.web.constant.BkApiHandleType
 import com.tencent.devops.remotedev.api.service.ServiceRemoteDevResource
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.config.async.AsyncExecute
+import com.tencent.devops.remotedev.listener.event.CdsWebhookEvent
 import com.tencent.devops.remotedev.pojo.CreateOpenClawData
 import com.tencent.devops.remotedev.pojo.CreateOpenClawDataResp
 import com.tencent.devops.remotedev.pojo.IWhiteList
@@ -118,6 +120,7 @@ import org.springframework.cloud.stream.function.StreamBridge
 @RestResource
 @Suppress("ALL")
 class ServiceRemoteDevResourceImpl(
+    private val dispatcher: SampleEventDispatcher,
     private val permissionService: PermissionService,
     private val workspaceService: WorkspaceService,
     private val desktopWorkspaceService: DesktopWorkspaceService,
@@ -974,6 +977,25 @@ class ServiceRemoteDevResourceImpl(
         data: TGitBindRemotedevData
     ): Result<Map<String, Boolean>> {
         return Result(tGitBindService.bindTGitProject(userId, data.tgitId, data.tgitUrl, data.projectIds))
+    }
+
+    override fun cdsWebhookEvent(
+        userId: String,
+        type: String,
+        workspaceName: String?,
+        envId: String?
+    ): Result<Boolean> {
+        if (workspaceName.isNullOrEmpty() && envId.isNullOrEmpty()) return Result(false)
+        val eventType = CdsWebhookEvent.Type.fromWebhook(type) ?: return Result(false)
+        dispatcher.dispatch(
+            CdsWebhookEvent(
+                userId = userId,
+                type = eventType,
+                envId = envId ?: "",
+                workspaceName = workspaceName
+            )
+        )
+        return Result(true)
     }
 
     override fun openClawOn(userId: String): Result<WorkspaceRegistration?> {

@@ -51,5 +51,7 @@ data class HeartbeatResponse(
     @get:Schema(title = "docker最大任务数量")
     val dockerParallelTaskCount: Int = -1,
     @get:Schema(title = "用户国际化语言")
-    val language: String
+    val language: String,
+    @get:Schema(title = "创作流模式")
+    val createMod: Boolean? = false
 )

@@ -47,7 +47,7 @@ class PreCITXInnerModelCreatorImpl : TXInnerModelCreator {
     @Value("\${prebuild.marketRun.atomVersion:#{null}}")
     private val runPlugInVersionData: String? = null
 
-    private val channelCode = ChannelCode.BS
+    private val channelCode = ChannelCode.getRequestChannelCode()
 
     override val marketRunTask: Boolean
         get() = marketRunTaskData

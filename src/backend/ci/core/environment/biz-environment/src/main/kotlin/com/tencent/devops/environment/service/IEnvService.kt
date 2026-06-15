@@ -31,11 +31,13 @@ import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.environment.pojo.EnvCreateInfo
 import com.tencent.devops.environment.pojo.EnvUpdateInfo
+import com.tencent.devops.environment.pojo.EnvVar
 import com.tencent.devops.environment.pojo.EnvWithNodeCount
 import com.tencent.devops.environment.pojo.EnvWithPermission
 import com.tencent.devops.environment.pojo.EnvironmentId
 import com.tencent.devops.environment.pojo.NodeBaseInfo
 import com.tencent.devops.environment.pojo.enums.EnvType
+import com.tencent.devops.environment.pojo.enums.NodeStatus
 
 interface IEnvService {
     fun checkName(projectId: String, envId: Long?, envName: String)
@@ -46,7 +48,8 @@ interface IEnvService {
         projectId: String,
         envName: String? = null,
         envType: EnvType? = null,
-        nodeHashId: String? = null
+        nodeHashId: String? = null,
+        createMode: Boolean? = null
     ): List<EnvWithPermission>
 
     fun listUsableServerEnvs(userId: String, projectId: String): List<EnvWithPermission>
@@ -59,6 +62,16 @@ interface IEnvService {
         envHashId: String,
         checkPermission: Boolean = true
     ): EnvWithPermission
+    fun getEnvEnvVar(
+        userId: String,
+        projectId: String,
+        envHashId: String,
+        envName: String?,
+        envValue: String?,
+        secure: Boolean?,
+        lastUpdateUser: String?,
+        checkPermission: Boolean = true
+    ): List<EnvVar>
 
     fun listRawEnvByHashIds(userId: String, projectId: String, envHashIds: List<String>): List<EnvWithPermission>
     fun listRawEnvByHashIdsAllType(envHashIds: List<String>): List<EnvWithPermission>
@@ -70,13 +83,22 @@ interface IEnvService {
         envHashIds: List<String>
     ): Map<String, List<NodeBaseInfo>>
 
-    fun listAllEnvNodes(userId: String, projectId: String, envHashIds: List<String>): List<NodeBaseInfo>
+    fun listAllEnvNodes(
+        userId: String,
+        projectId: String,
+        envHashIds: List<String>
+    ): List<NodeBaseInfo>
     fun listAllEnvNodesNew(
         userId: String,
         projectId: String,
         page: Int?,
         pageSize: Int?,
-        envHashIds: List<String>
+        envHashIds: List<String>?,
+        envName: String?,
+        nodeIp: String?,
+        displayName: String?,
+        createdUser: String?,
+        nodeStatus: NodeStatus?
     ): Page<NodeBaseInfo>
 
     fun addEnvNodes(userId: String, projectId: String, envHashId: String, nodeHashIds: List<String>)
