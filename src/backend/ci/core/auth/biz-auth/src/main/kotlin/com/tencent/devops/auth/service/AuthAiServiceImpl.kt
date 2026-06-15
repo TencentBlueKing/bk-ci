@@ -42,6 +42,7 @@ import com.tencent.devops.auth.pojo.dto.IamGroupIdsQueryConditionDTO
 import com.tencent.devops.auth.pojo.dto.MemberGroupJoinedDTO
 import com.tencent.devops.auth.pojo.dto.ResourceGroupPermissionDTO
 import com.tencent.devops.auth.pojo.enum.BatchOperateType
+import com.tencent.devops.auth.pojo.enum.JoinedType
 import com.tencent.devops.auth.pojo.enum.MemberType
 import com.tencent.devops.auth.pojo.enum.OperateChannel
 import com.tencent.devops.auth.pojo.enum.PermissionTagType
@@ -72,11 +73,13 @@ import com.tencent.devops.auth.pojo.vo.GroupCloneInfoVO
 import com.tencent.devops.auth.pojo.vo.GroupDetailsInfoVo
 import com.tencent.devops.auth.pojo.vo.GroupRecommendationVO
 import com.tencent.devops.auth.pojo.vo.HandoverCandidateVO
+import com.tencent.devops.auth.pojo.vo.InheritedGroupSummaryVO
 import com.tencent.devops.auth.pojo.vo.MemberExitCheckVO
 import com.tencent.devops.auth.pojo.vo.PermissionCloneResultVO
 import com.tencent.devops.auth.pojo.vo.PermissionCompareSummaryVO
 import com.tencent.devops.auth.pojo.vo.PermissionCompareVO
 import com.tencent.devops.auth.pojo.vo.PermissionDiagnoseVO
+import com.tencent.devops.auth.pojo.vo.PermissionSourceGroupVO
 import com.tencent.devops.auth.pojo.vo.PermissionTagVO
 import com.tencent.devops.auth.pojo.vo.ResolvedUserByNameVO
 import com.tencent.devops.auth.pojo.vo.ResourceGroupMatrixVO
@@ -152,8 +155,6 @@ class AuthAiServiceImpl(
             .firstOrNull { it.action == action }
         val actionName = actionInfo?.actionName ?: action
 
-        val memberGroups = permissionResourceMemberService.getMemberGroupsInProject(projectId, memberId).toSet()
-
         val matchingGroupIds = permissionResourceGroupPermissionService.listGroupsByPermissionConditions(
             projectCode = projectId,
             relatedResourceType = resourceType,
@@ -161,7 +162,14 @@ class AuthAiServiceImpl(
             action = action
         )
 
-        val hasPermission = matchingGroupIds.any { it in memberGroups }
+        val permissionSourceGroups = buildPermissionSourceGroups(
+            projectId = projectId,
+            memberId = memberId,
+            relatedResourceType = resourceType,
+            relatedResourceCode = resourceCode,
+            action = action
+        )
+        val hasPermission = permissionSourceGroups.isNotEmpty()
 
         if (hasPermission) {
             return PermissionDiagnoseVO(
@@ -171,7 +179,8 @@ class AuthAiServiceImpl(
                 resourceName = resourceName,
                 action = action,
                 actionName = actionName,
-                suggestion = "用户已拥有该权限"
+                permissionSourceGroups = permissionSourceGroups,
+                suggestion = "用户已拥有该权限，可按来源用户组继续核对继承链路"
             )
         }
 
@@ -216,11 +225,7 @@ class AuthAiServiceImpl(
             missingReason = "用户未加入包含该权限的用户组",
             applicableGroups = applicableGroups,
             groupManagers = emptyList(),
-            suggestion = if (applicableGroups.isNotEmpty()) {
-                "建议申请加入「${applicableGroups.first().groupName}」用户组"
-            } else {
-                "暂无可申请的用户组，请联系项目管理员"
-            }
+            suggestion = buildDiagnosePermissionSuggestion(applicableGroups)
         )
     }
 
@@ -1124,7 +1129,7 @@ class AuthAiServiceImpl(
         if (!isAdmin && userId != memberId) {
             throw PermissionForbiddenException("非管理员不能查看其他成员的权限分析")
         }
-        val channel = if (isAdmin) OperateChannel.MANAGER else OperateChannel.PERSONAL
+        val channel = OperateChannel.PERSONAL
         val targetIsAdmin = permissionProjectService.checkProjectManager(memberId, projectId)
         val groupCounts = permissionManageFacadeService.getMemberGroupsCount(
             projectCode = projectId,
@@ -1139,6 +1144,20 @@ class AuthAiServiceImpl(
             uniqueManagerGroupsQueryFlag = null
         )
         val totalGroupCount = groupCounts.sumOf { it.count }
+        val inheritedGroups = permissionManageFacadeService.getMemberGroupsDetails(
+            projectId = projectId,
+            memberId = memberId,
+            operateChannel = OperateChannel.PERSONAL,
+            start = 0,
+            limit = MAX_EXPLANATION_GROUPS
+        ).records
+            .filter { it.joinedType != JoinedType.DIRECT }
+            .map(::toInheritedGroupSummary)
+            .sortedWith(
+                compareByDescending<InheritedGroupSummaryVO> { it.joinedType == JoinedType.DEPARTMENT }
+                    .thenByDescending { levelSortOrder(it.managementLevel) }
+                    .thenBy { it.groupName }
+            )
         val resourceSummary = groupCounts.map { countVo ->
             ResourceSummaryVO(
                 resourceType = countVo.resourceType,
@@ -1180,6 +1199,14 @@ class AuthAiServiceImpl(
         if (expiredGroupCount > 0) {
             warnings.add("$expiredGroupCount 个用户组的权限已过期，可清理")
         }
+        val departmentInheritedCount = inheritedGroups.count { it.joinedType == JoinedType.DEPARTMENT }
+        if (departmentInheritedCount > 0) {
+            warnings.add("存在 $departmentInheritedCount 个通过组织继承的用户组，请重点核对高权限范围")
+        }
+        val templateInheritedCount = inheritedGroups.count { it.joinedType == JoinedType.TEMPLATE }
+        if (templateInheritedCount > 0) {
+            warnings.add("存在 $templateInheritedCount 个通过模板继承的用户组")
+        }
         return UserPermissionAnalysisVO(
             role = if (targetIsAdmin) "MANAGER" else "MEMBER",
             roleDisplayName = if (targetIsAdmin) "项目管理员" else "项目成员",
@@ -1189,6 +1216,7 @@ class AuthAiServiceImpl(
             authorizationSummary = authorizationSummary,
             totalAuthorizationCount = totalAuthorizationCount,
             hasAllPermissions = targetIsAdmin,
+            inheritedGroups = inheritedGroups,
             warnings = warnings
         )
     }
@@ -1408,8 +1436,7 @@ class AuthAiServiceImpl(
         MemberGroupJoinedDTO(id = it, memberType = MemberType.USER)
     }
 
-    private fun String.toResourceMemberInfo() =
-        ResourceMemberInfo(id = this, type = USER_TYPE)
+    private fun String.toResourceMemberInfo() = ResourceMemberInfo(id = this, type = USER_TYPE)
 
     private fun buildRecommendedCandidates(
         userId: String,
@@ -1603,6 +1630,71 @@ class AuthAiServiceImpl(
         }
     }
 
+    private fun buildPermissionSourceGroups(
+        projectId: String,
+        memberId: String,
+        relatedResourceType: String,
+        relatedResourceCode: String,
+        action: String
+    ): List<PermissionSourceGroupVO> {
+        val matchedGroupDetails = permissionManageFacadeService.getMemberGroupsDetails(
+            projectId = projectId,
+            memberId = memberId,
+            relatedResourceType = relatedResourceType,
+            relatedResourceCode = relatedResourceCode,
+            action = action,
+            operateChannel = OperateChannel.PERSONAL,
+            start = 0,
+            limit = MAX_EXPLANATION_GROUPS
+        ).records
+        if (matchedGroupDetails.isEmpty()) {
+            return emptyList()
+        }
+        val permissionsByGroup = authResourceGroupPermissionDao.listByGroupIds(
+            dslContext = dslContext,
+            projectCode = projectId,
+            iamGroupIds = matchedGroupDetails.map { it.groupId }
+        ).groupBy { it.iamGroupId }
+        return matchedGroupDetails.map { group ->
+            PermissionSourceGroupVO(
+                groupId = group.groupId,
+                groupName = group.groupName,
+                managementLevel = resolveManagementLevel(group.resourceType),
+                managementScope = group.resourceName,
+                joinedType = group.joinedType,
+                joinedMemberId = group.joinedMemberId,
+                joinedMemberName = group.joinedMemberName,
+                permissions = resolvePermissionNames(permissionsByGroup[group.groupId].orEmpty())
+            )
+        }.sortedWith(
+            compareByDescending<PermissionSourceGroupVO> { it.joinedType == JoinedType.DEPARTMENT }
+                .thenByDescending { levelSortOrder(it.managementLevel) }
+                .thenBy { it.groupName }
+        )
+    }
+
+    private fun resolvePermissionNames(
+        permissions: List<ResourceGroupPermissionDTO>
+    ): List<String> {
+        return permissions.map { permission ->
+            runCatching { rbacCommonService.getActionInfo(permission.action).actionName }
+                .getOrElse { permission.action }
+        }.distinct()
+    }
+
+    private fun toInheritedGroupSummary(group: GroupDetailsInfoVo): InheritedGroupSummaryVO {
+        return InheritedGroupSummaryVO(
+            groupId = group.groupId,
+            groupName = group.groupName,
+            resourceType = group.resourceType,
+            resourceName = group.resourceName,
+            managementLevel = resolveManagementLevel(group.resourceType),
+            joinedType = group.joinedType,
+            joinedMemberId = group.joinedMemberId,
+            joinedMemberName = group.joinedMemberName
+        )
+    }
+
     private fun resolveManagementLevel(resourceType: String): String = when {
         resourceType == "project" -> "项目"
         resourceType.endsWith("_group") ->
@@ -1616,6 +1708,28 @@ class AuthAiServiceImpl(
     private fun levelSortOrder(managementLevel: String): Int = when (managementLevel) {
         "项目" -> 2
         else -> if (managementLevel.endsWith("组")) 1 else 0
+    }
+
+    private fun buildDiagnosePermissionSuggestion(applicableGroups: List<ApplicableGroupVO>): String {
+        if (applicableGroups.isEmpty()) {
+            return "暂无可申请的用户组，请联系项目管理员"
+        }
+        if (applicableGroups.size == 1) {
+            return "建议申请加入「${applicableGroups.first().groupName}」用户组"
+        }
+        val recommendedGroups = applicableGroups.filter { group ->
+            group.tags.any { it.type == PermissionTagType.RECOMMEND }
+        }
+        return when {
+            recommendedGroups.size == 1 ->
+                "建议按最小权限原则申请加入「${recommendedGroups.first().groupName}」用户组"
+            recommendedGroups.isNotEmpty() -> {
+                val groupNames = recommendedGroups.take(3).joinToString("、") { "「${it.groupName}」" }
+                val suffix = if (recommendedGroups.size > 3) "等" else ""
+                "建议按最小权限原则，优先从以下资源级用户组中选择申请：$groupNames$suffix"
+            }
+            else -> "建议按最小权限原则开通，优先加入资源级别的用户组（详见可申请用户组列表）"
+        }
     }
 
     private fun buildRecommendationTags(
@@ -1653,8 +1767,9 @@ class AuthAiServiceImpl(
     companion object {
         private val logger = LoggerFactory.getLogger(AuthAiServiceImpl::class.java)
         private const val DEFAULT_EXPIRED_DAYS = 365L
-        private const val MAX_CLONE_GROUPS = 500
-        private const val MAX_COMPARE_GROUPS = 500
+        private const val MAX_CLONE_GROUPS = 1000
+        private const val MAX_COMPARE_GROUPS = 1000
+        private const val MAX_EXPLANATION_GROUPS = 1000
         private const val USER_TYPE = "user"
     }
 }
