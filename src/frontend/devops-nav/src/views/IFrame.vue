@@ -25,12 +25,12 @@
 </template>
 
 <script lang="ts">
+    import cookie from 'js-cookie'
     import Vue from 'vue'
     import { Component, Watch } from 'vue-property-decorator'
+    import { Getter, State } from 'vuex-class'
     import eventBus from '../utils/eventBus'
-    import { urlJoin, queryStringify, getServiceAliasByPath } from '../utils/util'
-    import { State, Getter } from 'vuex-class'
-    import cookie from 'js-cookie'
+    import { getServiceAliasByPath, queryStringify, urlJoin } from '../utils/util'
 
     Component.registerHooks([
         'beforeRouteEnter',
@@ -114,7 +114,7 @@
             const hash = this.$route.hash
             
             if (showProjectList) {
-                const reg = /^\/?\w+\/(([\w-]+)\/?)(\S*)\/?$/
+                const reg = /^\/?[\w\-]+\/(([\w\-]+)\/?)(\S*)\/?$/
                 const matchResult = path.match(reg)
                 const { projectId } = this.$route.params
                 const initPath = matchResult ? matchResult[3] : ''
@@ -128,7 +128,7 @@
                     this.src = urlJoin(this.currentPage.iframe_url, initPath) + '?' + queryStringify(query) + hash
                 }
             } else {
-                const reg = /^\/?\w+\/(\S*)\/?$/
+                const reg = /^\/?[\w\-]+\/(\S*)\/?$/
                 const initPath = path.match(reg) ? path.replace(reg, '$1') : ''
                 const query = Object.assign(
                     this.currentPage.link === '/permission/' ? {} : { project_code: cookie.get(X_DEVOPS_PROJECT_ID) },

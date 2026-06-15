@@ -307,7 +307,6 @@ class PipelineAtomReplaceCronService @Autowired constructor(
         } while (pipelineInfoRecords?.size == DEFAULT_PAGE_SIZE)
     }
 
-    @Suppress("UNCHECKED_CAST")
     private fun handlePipelineAtomReplace(
         projectId: String?,
         pipelineIdSet: Set<String>?,
@@ -502,7 +501,6 @@ class PipelineAtomReplaceCronService @Autowired constructor(
         }
     }
 
-    @Suppress("UNCHECKED_CAST")
     private fun replacePipelineAtomByItem(
         atomReplaceItem: TPipelineAtomReplaceItemRecord,
         toAtomInfo: PipelineAtom,
@@ -570,7 +568,6 @@ class PipelineAtomReplaceCronService @Autowired constructor(
         }
     }
 
-    @Suppress("UNCHECKED_CAST")
     private fun replacePipelineModelAtom(
         pipelineModelObj: Record,
         pipelineInfoMap: Map<String, TPipelineInfoRecord>,
@@ -634,7 +631,7 @@ class PipelineAtomReplaceCronService @Autowired constructor(
     @Suppress("UNCHECKED_CAST")
     private fun generateReplacePipelineModel(
         pipelineModel: Model,
-        channelCode: ChannelCode = ChannelCode.BS,
+        channelCode: ChannelCode = ChannelCode.getRequestChannelCode(),
         projectId: String,
         busId: String,
         fromAtomCode: String,
@@ -691,25 +688,27 @@ class PipelineAtomReplaceCronService @Autowired constructor(
                                 defaultMessage = message
                             )
                         }
-                        val toAtomJobType = toAtomInfo.jobType
                         val dataMap = generateAtomDataMap(toAtomInputParamMap, toAtomPropMap, element)
-                        if (toAtomJobType == JobTypeEnum.AGENT.name) {
-                            val marketBuildAtomElement = generateMarketBuildAtomElement(
-                                toAtomInfo = toAtomInfo,
-                                toAtomVersion = toAtomVersion,
-                                element = element,
-                                dataMap = dataMap
+                        val allJobTypes = JobTypeEnum.resolveAllFromFields(toAtomInfo.jobType, toAtomInfo.jobTypeMap)
+                        val isBuildEnv = allJobTypes.any { it.isBuildEnv() }
+                        if (isBuildEnv) {
+                            finalElements.add(
+                                generateMarketBuildAtomElement(
+                                    toAtomInfo = toAtomInfo,
+                                    toAtomVersion = toAtomVersion,
+                                    element = element,
+                                    dataMap = dataMap
+                                )
                             )
-                            finalElements.add(marketBuildAtomElement)
                         } else {
-                            val marketBuildLessAtomElement =
+                            finalElements.add(
                                 generateMarketBuildLessAtomElement(
                                     toAtomInfo = toAtomInfo,
                                     toAtomVersion = toAtomVersion,
                                     element = element,
                                     dataMap = dataMap
                                 )
-                            finalElements.add(marketBuildLessAtomElement)
+                            )
                         }
                     } else {
                         finalElements.add(element)
@@ -787,7 +786,6 @@ class PipelineAtomReplaceCronService @Autowired constructor(
         }
     }
 
-    @Suppress("UNCHECKED_CAST")
     private fun generateFromAtomNameSpace(element: Element): String? {
         return when (element) {
             is MarketBuildAtomElement -> {

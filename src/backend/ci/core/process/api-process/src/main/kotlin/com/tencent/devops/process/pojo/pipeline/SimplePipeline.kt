@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.pojo.pipeline
 
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "流水线模型-列表信息")
@@ -39,6 +40,8 @@ data class SimplePipeline(
     var pipelineName: String,
     @get:Schema(title = "流水线描述", required = false)
     var pipelineDesc: String?,
+    @get:Schema(title = "AI自动摘要", required = false)
+    var autoSummary: String? = null,
     @get:Schema(title = "流水线任务数量", required = true)
     val taskCount: Int,
     @get:Schema(title = "是否被删除了", required = false)
@@ -48,5 +51,7 @@ data class SimplePipeline(
     @get:Schema(title = "自增id", required = true)
     val id: Long?,
     @get:Schema(title = "创建人", required = false)
-    val createUser: String? = null
+    val createUser: String? = null,
+    @get:Schema(title = "渠道代码", required = true)
+    val channelCode: ChannelCode
 )
