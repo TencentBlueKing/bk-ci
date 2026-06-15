@@ -1715,7 +1715,7 @@ class EnvService @Autowired constructor(
                 } else {
                     EnvOperateName.DISABLE_NODE
                 },
-                operateContent = EnvOperateContent(content = data?.reason, resourceCount = 1),
+                operateContent = EnvOperateContent(content = data?.reason ?: "", resourceCount = 1),
                 operator = userId
             )
             Result(result)
