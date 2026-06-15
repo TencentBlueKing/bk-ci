@@ -28,6 +28,7 @@
 package com.tencent.devops.environment.permission
 
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.model.environment.tables.records.TEnvRecord
 import com.tencent.devops.model.environment.tables.records.TNodeRecord
 
@@ -62,28 +63,62 @@ interface EnvironmentPermissionService {
 
     fun deleteEnv(projectId: String, envId: Long)
 
-    fun listNodeByPermission(userId: String, projectId: String, permission: AuthPermission): Set<Long>
+    fun listNodeByPermission(
+        userId: String,
+        projectId: String,
+        permission: AuthPermission,
+        resourceType: AuthResourceType = AuthResourceType.ENVIRONMENT_ENV_NODE
+    ): Set<Long>
 
     fun listNodeByPermissions(
         userId: String,
         projectId: String,
-        permissions: Set<AuthPermission>
+        permissions: Set<AuthPermission>,
+        resourceType: AuthResourceType = AuthResourceType.ENVIRONMENT_ENV_NODE
     ): Map<AuthPermission, List<String>>
 
     fun listNodeByRbacPermission(
         userId: String,
         projectId: String,
         nodeRecordList: List<TNodeRecord>,
-        authPermission: AuthPermission
+        authPermission: AuthPermission,
+        resourceType: AuthResourceType = AuthResourceType.ENVIRONMENT_ENV_NODE
     ): List<TNodeRecord>
 
-    fun checkNodePermission(userId: String, projectId: String, nodeId: Long, permission: AuthPermission): Boolean
+    fun checkNodePermission(
+        userId: String,
+        projectId: String,
+        nodeId: Long,
+        permission: AuthPermission,
+        resourceType: AuthResourceType = AuthResourceType.ENVIRONMENT_ENV_NODE
+    ): Boolean
 
-    fun checkNodePermission(userId: String, projectId: String, permission: AuthPermission): Boolean
+    fun checkNodePermission(
+        userId: String,
+        projectId: String,
+        permission: AuthPermission,
+        resourceType: AuthResourceType = AuthResourceType.ENVIRONMENT_ENV_NODE
+    ): Boolean
 
-    fun createNode(userId: String, projectId: String, nodeId: Long, nodeName: String)
+    fun createNode(
+        userId: String,
+        projectId: String,
+        nodeId: Long,
+        nodeName: String,
+        resourceType: AuthResourceType = AuthResourceType.ENVIRONMENT_ENV_NODE
+    )
 
-    fun updateNode(userId: String, projectId: String, nodeId: Long, nodeName: String)
+    fun updateNode(
+        userId: String,
+        projectId: String,
+        nodeId: Long,
+        nodeName: String,
+        resourceType: AuthResourceType = AuthResourceType.ENVIRONMENT_ENV_NODE
+    )
 
-    fun deleteNode(projectId: String, nodeId: Long)
+    fun deleteNode(
+        projectId: String,
+        nodeId: Long,
+        resourceType: AuthResourceType = AuthResourceType.ENVIRONMENT_ENV_NODE
+    )
 }

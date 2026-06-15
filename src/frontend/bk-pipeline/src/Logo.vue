@@ -2,7 +2,7 @@
     <span
         style="font-size:0"
         v-bind="$attrs"
-        v-on="$listeners"
+        v-on="listeners"
     >
         <svg
             :width="size"
@@ -15,29 +15,30 @@
     </span>
 </template>
 
-<script>
-    export default {
-        name: 'svg-logo',
-        props: {
-            name: String,
-            size: {
-                type: [String, Number],
-                default: 18
-            },
-            title: {
-                type: String
-            }
+<script setup>
+    import { computed } from 'vue'
+    import { useListeners } from './hooks/useListeners'
+
+    const props = defineProps({
+        name: String,
+        size: {
+            type: [String, Number],
+            default: 18
         },
-        computed: {
-            svgHref () {
-                const defaultId = '#bk-pipeline-order'
-                if (typeof this.name !== 'string') {
-                    return defaultId
-                }
-                const id = `bk-pipeline-${this.name.toLowerCase()}`
-                return document.getElementById(id) ? `#${id}` : defaultId
-            }
-            
+        title: {
+            type: String
         }
-    }
+    })
+
+    // 使用统一的useListeners Hook处理事件监听器兼容性
+    const listeners = useListeners()
+
+    const svgHref = computed(() => {
+        const defaultId = '#bk-pipeline-order'
+        if (typeof props.name !== 'string') {
+            return defaultId
+        }
+        const id = `bk-pipeline-${props.name.toLowerCase()}`
+        return document.getElementById(id) ? `#${id}` : defaultId
+    })
 </script>

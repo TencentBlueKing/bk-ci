@@ -65,7 +65,7 @@ import com.tencent.devops.common.pipeline.pojo.element.agent.WindowsScriptElemen
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.common.pipeline.type.DispatchType
-import com.tencent.devops.common.pipeline.type.agent.AgentType
+import com.tencent.devops.common.pipeline.type.agent.AgentDispatchType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentEnvDispatchType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentIDDispatchType
 import com.tencent.devops.common.service.utils.SpringContextUtil
@@ -540,7 +540,7 @@ class PipelineLayout private constructor(
             return ThirdPartyAgentIDDispatchType(
                 displayName = agentId,
                 workspace = userLocalProjectInfo.workspace,
-                agentType = AgentType.ID,
+                agentType = AgentDispatchType.ID,
                 dockerInfo = null,
                 reusedInfo = null
             )
@@ -552,7 +552,7 @@ class PipelineLayout private constructor(
                 envName = job.runsOn.poolName,
                 envProjectId = null,
                 workspace = job.runsOn.workspace,
-                agentType = AgentType.NAME,
+                agentType = AgentDispatchType.NAME,
                 dockerInfo = null,
                 reusedInfo = null
             )

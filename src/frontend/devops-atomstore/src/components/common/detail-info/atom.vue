@@ -68,32 +68,38 @@
                 </h5>
                 <h5 class="detail-info">
                     <span> {{ $t('store.适用Job类型：') }} </span>
-                    <span>
-                        {{ detail.jobType|atomJobType }}
-                        <template v-if="detail.os && detail.os.length">
-                            (<i
-                                v-for="item in getJobList(detail.os)"
-                                :class="[item.icon, 'devops-icon']"
-                                :key="item"
-                                :title="item.name"
-                            ></i>)
-                        </template>
+                    <span class="detail-job-type">
+                        <span
+                            v-for="(config, index) in currentScopeDetail.jobTypeConfigs"
+                            :key="index"
+                        >
+                            <span :title="config.jobType | atomJobType">{{ config.jobType | atomJobType }}</span>
+                            <span v-if="showOsList && config.osList && config.osList.length">
+                                (<i
+                                    v-for="item in getJobList(config.osList)"
+                                    :class="[item.icon, 'devops-icon']"
+                                    :key="item.icon"
+                                    :title="item.name"
+                                ></i>)
+                            </span>
+                            <span v-if="index < currentScopeDetail.jobTypeConfigs.length - 1">、</span>
+                        </span>
                     </span>
                 </h5>
                 <h5 class="detail-info">
-                    <span> {{ $t('store.分类：') }} </span><span>{{ detail.classifyName || '-' }}</span>
+                    <span> {{ $t('store.分类：') }} </span><span>{{ currentScopeDetail.classifyName || '-' }}</span>
                 </h5>
             </div>
             <h5 class="detail-info detail-label">
                 <span> {{ $t('store.功能标签：') }} </span>
                 <p>
                     <bk-tag
-                        v-for="(label, index) in detail.labelList"
+                        v-for="(label, index) in currentScopeDetail.labelList"
                         :key="index"
                     >
                         {{ label.labelName }}
                     </bk-tag>
-                    <span v-if="!detail.labelList || detail.labelList.length <= 0 ">--</span>
+                    <span v-if="!currentScopeDetail.labelList || currentScopeDetail.labelList.length <= 0 ">--</span>
                 </p>
             </h5>
             <h5
@@ -248,6 +254,10 @@
                         return local.$t('store.编译环境')
                     case 'AGENT_LESS':
                         return local.$t('store.无编译环境')
+                    case 'CREATIVE_STREAM':
+                        return local.$t('store.创作环境')
+                    case 'CLOUD_TASK':
+                        return local.$t('store.云任务环境')
                 }
             }
         },
@@ -277,6 +287,33 @@
         },
 
         computed: {
+            // 根据路由类型筛选当前 serviceScope 的详情数据
+            currentScopeDetail () {
+                const type = this.$route.params.type
+                const serviceScopeMap = {
+                    atom: 'PIPELINE',
+                    creative: 'CREATIVE_STREAM'
+                }
+                const targetScope = serviceScopeMap[type]
+                const details = this.detail.serviceScopeDetails || []
+                const matched = details.find(item => item.serviceScope === targetScope) || {}
+                const jobTypeConfigs = matched.jobTypeConfigs && matched.jobTypeConfigs.length
+                    ? matched.jobTypeConfigs
+                    : [{ jobType: this.detail.jobType, osList: this.detail.os }]
+                return {
+                    jobTypeConfigs,
+                    classifyName: matched.classifyName || this.detail.classifyName,
+                    labelList: matched.labelList || this.detail.labelList || []
+                }
+            },
+
+            // creative 类型不展示 osList
+            showOsList () {
+                const type = this.$route.params.type
+                if (type === 'creative') return false
+                return true
+            },
+
             starWidth () {
                 if (this.detail.score >= 5) {
                     return '16px'
@@ -412,12 +449,13 @@
             },
 
             goToInstall () {
+                const currentType = this.$route.params.type
                 this.$router.push({
                     name: 'install',
                     query: {
                         name: this.detail.name,
                         code: this.detail.atomCode,
-                        type: 'atom',
+                        type: currentType || 'atom',
                         from: 'details'
                     }
                 })
@@ -450,6 +488,11 @@
         background: $white;
         box-shadow: 1px 2px 3px 0px rgba(0,0,0,0.05);
         padding: 32px;
+        .detail-job-type {
+            white-space: normal;
+            overflow: visible;
+            text-overflow: unset;
+        }
         .detail-pic {
             width: 130px;
             height: 130px;

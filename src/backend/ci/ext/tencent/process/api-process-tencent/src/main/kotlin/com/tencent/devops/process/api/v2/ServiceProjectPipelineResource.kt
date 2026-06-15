@@ -68,7 +68,7 @@ interface ServiceProjectPipelineResource {
         pageSize: Int = 20,
         @Parameter(description = "渠道号，默认为DS", required = false)
         @QueryParam("channelCode")
-        channelCode: ChannelCode? = ChannelCode.BS,
+        channelCode: ChannelCode? = ChannelCode.getRequestChannelCode(),
         @Parameter(description = "是否校验权限", required = false)
         @QueryParam("checkPermission")
         checkPermission: Boolean? = true,

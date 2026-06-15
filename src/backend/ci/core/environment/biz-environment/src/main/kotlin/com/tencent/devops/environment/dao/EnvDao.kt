@@ -30,6 +30,7 @@ package com.tencent.devops.environment.dao
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.environment.constant.EnvironmentMessageCode
+import com.tencent.devops.environment.pojo.enums.EnvNodeType
 import com.tencent.devops.environment.pojo.enums.EnvType
 import com.tencent.devops.model.environment.tables.TEnv
 import com.tencent.devops.model.environment.tables.records.TEnvRecord
@@ -75,6 +76,7 @@ class EnvDao {
         envName: String,
         envDesc: String,
         envType: String,
+        envNodeType: EnvNodeType,
         envVars: String
     ): Long {
         val now = LocalDateTime.now()
@@ -93,7 +95,8 @@ class EnvDao {
                     UPDATED_USER,
                     CREATED_TIME,
                     UPDATED_TIME,
-                    IS_DELETED
+                    IS_DELETED,
+                    ENV_NODE_TYPE
                 ).values(
                     projectId,
                     envName,
@@ -104,7 +107,8 @@ class EnvDao {
                     userId,
                     now,
                     now,
-                    false
+                    false,
+                    envNodeType.name
                 ).returning(ENV_ID).fetchOne()!!.envId
                 val hashId = HashUtil.encodeLongId(envId)
                 transactionContext.update(this)
@@ -141,7 +145,7 @@ class EnvDao {
         dslContext: DSLContext,
         projectId: String,
         envName: String? = null,
-        envType: EnvType? = null,
+        envTypeList: List<EnvType>? = null,
         envIds: Collection<Long>? = null
     ): List<TEnvRecord> {
         with(TEnv.T_ENV) {
@@ -149,7 +153,7 @@ class EnvDao {
                 .where(PROJECT_ID.eq(projectId))
                 .and(IS_DELETED.eq(false))
                 .let { if (envName != null) it.and(ENV_NAME.like("%$envName%")) else it }
-                .let { if (envType != null) it.and(ENV_TYPE.eq(envType.name)) else it }
+                .let { if (!envTypeList.isNullOrEmpty()) it.and(ENV_TYPE.`in`(envTypeList)) else it }
                 .let { if (envIds != null) it.and(ENV_ID.`in`(envIds)) else it }
                 .orderBy(ENV_ID.desc())
                 .fetch()
@@ -320,6 +324,37 @@ class EnvDao {
                 .where(ENV_ID.eq(id))
                 .and(ENV_HASH_ID.isNull)
                 .execute()
+        }
+    }
+
+    fun updateEnvNodeType(
+        dslContext: DSLContext,
+        envId: Long,
+        envNodeType: EnvNodeType
+    ) {
+        with(TEnv.T_ENV) {
+            dslContext.update(this)
+                .set(ENV_NODE_TYPE, envNodeType.name)
+                .where(ENV_ID.eq(envId))
+                .execute()
+        }
+    }
+
+    fun fetchEnvTypeCount(
+        dslContext: DSLContext,
+        projectId: String,
+        createEnv: Boolean
+    ): Map<String, Int> {
+        with(TEnv.T_ENV) {
+            val dsl = dslContext.select(ENV_TYPE, DSL.count(ENV_ID)).from(this).where(PROJECT_ID.eq(projectId))
+            if (createEnv) {
+                dsl.and(ENV_TYPE.eq(EnvType.CREATE.name))
+            } else {
+                dsl.and(ENV_TYPE.ne(EnvType.CREATE.name))
+            }
+            return dsl.groupBy(ENV_TYPE).fetch().associate {
+                it.value1() to it.value2()
+            }
         }
     }
 }

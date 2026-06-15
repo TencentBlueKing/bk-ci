@@ -47,12 +47,14 @@ class StreamLogPermissionService(
         authResourceType: AuthResourceType?
     ): Boolean {
         logger.info("StreamLogPermissionService user:$userId projectId: $projectCode ")
+        val finalAuthResourceType =
+            AuthResourceType.getAuthResourceTypeByChannel(authResourceType ?: AuthResourceType.PIPELINE_DEFAULT)
         return client.get(ServicePermissionAuthResource::class).validateUserResourcePermission(
             userId = userId,
             token = tokenCheckService.getSystemToken(),
             action = permission?.value ?: AuthPermission.VIEW.value,
             projectCode = projectCode,
-            resourceCode = authResourceType?.value ?: AuthResourceType.PIPELINE_DEFAULT.value
+            resourceCode = finalAuthResourceType.value
         ).data ?: false
     }
 
@@ -65,12 +67,14 @@ class StreamLogPermissionService(
     ): Boolean {
         val action = permission?.value ?: AuthPermission.VIEW.value
         logger.info("StreamLogPermissionService user:$userId projectId: $projectCode ")
+        val finalAuthResourceType =
+            AuthResourceType.getAuthResourceTypeByChannel(authResourceType ?: AuthResourceType.PIPELINE_DEFAULT)
         return client.get(ServicePermissionAuthResource::class).validateUserResourcePermission(
             userId = userId,
             token = tokenCheckService.getSystemToken(),
             action = action,
             projectCode = projectCode,
-            resourceCode = authResourceType?.value ?: AuthResourceType.PIPELINE_DEFAULT.value
+            resourceCode = finalAuthResourceType.value
         ).data ?: false
     }
 

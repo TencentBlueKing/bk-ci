@@ -75,7 +75,7 @@ class ApigwPipelineResourceImpl @Autowired constructor(private val client: Clien
             userId = userId,
             projectId = projectId,
             pipeline = pipeline,
-            channelCode = channelCode ?: ChannelCode.BS
+            channelCode = channelCode ?: ChannelCode.getRequestChannelCode()
         )
     }
 
@@ -94,7 +94,7 @@ class ApigwPipelineResourceImpl @Autowired constructor(private val client: Clien
             projectId = projectId,
             pipelineId = pipelineId,
             pipeline = pipeline,
-            channelCode = channelCode ?: ChannelCode.BS
+            channelCode = channelCode ?: ChannelCode.getRequestChannelCode()
         )
     }
 
@@ -110,7 +110,7 @@ class ApigwPipelineResourceImpl @Autowired constructor(private val client: Clien
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
-            channelCode = ChannelCode.BS
+            channelCode = ChannelCode.getRequestChannelCode()
         )
     }
 
@@ -126,7 +126,7 @@ class ApigwPipelineResourceImpl @Autowired constructor(private val client: Clien
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
-            channelCode = ChannelCode.BS,
+            channelCode = ChannelCode.getRequestChannelCode(),
             checkFlag = true
         )
     }
@@ -145,7 +145,7 @@ class ApigwPipelineResourceImpl @Autowired constructor(private val client: Clien
             projectId = projectId,
             page = page ?: 1,
             pageSize = ApigwParamUtil.standardSize(pageSize) ?: 20,
-            channelCode = ChannelCode.BS,
+            channelCode = ChannelCode.getRequestChannelCode(),
             checkPermission = true
         )
     }

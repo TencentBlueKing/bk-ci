@@ -157,8 +157,8 @@
   "指标说明": "Indicators Description",
   "指标中文名": "Indicators Chinese name",
   "说明：": "Usage: ",
-  "说明文案": "Reference by expression ${{ steps.<step-id>.outputs.<output-var-name> }}",
-  "触发器说明文案": "Accessed through the expression ${{ variable name }}",
+  "说明文案": "Reference by expression ${'{{'} steps.<step-id>.outputs.<output-var-name> {'}}'}",
+  "触发器说明文案": "Accessed through the expression ${'{{'} variable name {'}}'}",
   "点击申请成为协作者": "Click Apply to become a collaborator",
   "推荐使用": "Recommended",
   "YAML可用": "YAML is available",
@@ -811,5 +811,14 @@
   "添加可见对象": "Add Visible Object",
   "将添加X个可见范围": "Will add {0} visible ranges",
   "清空": "Clear",
-  "已添加": "Added"
+  "已添加": "Added",
+  "适用范畴：": "Applicable Scope:",
+  "请至少选择一个范畴": "Please select at least one category",
+  "请完善范畴配置信息": "Please complete the category configuration information",
+  "如发邮件通知等对运行环境无特殊要求的任务，无需运行在创作环境中。": "Tasks such as sending email notifications that do not have specific requirements for the runtime environment do not need to run in the creation environment.",
+  "CI流水线": "CI Pipeline",
+  "CP创作流": "CP Creation Flow",
+  "创作环境": "Creative Environment",
+  "云任务环境": "Cloud Task Environment",
+  "创作流插件": "Creation Flow Plugin"
 }

@@ -796,6 +796,23 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
         return client.get(ServiceRemoteDevResource::class).tgitBindRemotedevProject(userId, data)
     }
 
+    override fun cdsWebhookEvent(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        type: String,
+        workspaceName: String?,
+        envId: String?
+    ): Result<Boolean> {
+        logger.info("cgsReportNotify ,type:$type,envId:$envId")
+        return client.get(ServiceRemoteDevResource::class).cdsWebhookEvent(
+            userId = userId,
+            type = type,
+            workspaceName = workspaceName,
+            envId = envId
+        )
+    }
+
     override fun openClawOn(userId: String): Result<WorkspaceRegistration?> {
         logger.info("openClawOn |$userId")
         return client.get(ServiceRemoteDevResource::class).openClawOn(userId)
@@ -877,18 +894,23 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
         userId: String,
         enable: Boolean,
         page: Int,
-        pageSize: Int
+        pageSize: Int,
+        projectId: String?,
+        workspaceNames: List<String>?
     ): Result<Page<String>> {
         logger.info(
             "batchQueryThumbnailWorkspaces" +
-                " |$appCode|$userId|enable=$enable|page=$page|pageSize=$pageSize"
+                " |$appCode|$userId|enable=$enable|page=$page|pageSize=$pageSize" +
+                "|projectId=$projectId|workspaceNames.size=${workspaceNames?.size}"
         )
         return client.get(ServiceRemoteDevResource::class)
             .batchQueryThumbnailWorkspaces(
                 userId = userId,
                 enable = enable,
                 page = page,
-                pageSize = pageSize
+                pageSize = pageSize,
+                projectId = projectId,
+                workspaceNames = workspaceNames
             )
     }
 
@@ -896,18 +918,18 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
         appCode: String?,
         apigwType: String?,
         userId: String,
-        workspaceName: String,
-        enable: Boolean
+        enable: Boolean,
+        workspaceNames: List<String>
     ): Result<Boolean> {
         logger.info(
             "enableWorkspaceThumbnail" +
-                " |$appCode|$userId|$workspaceName|enable=$enable"
+                " |$appCode|$userId|enable=$enable|workspaceNames.size=${workspaceNames.size}"
         )
         return client.get(ServiceRemoteDevResource::class)
             .enableWorkspaceThumbnail(
                 userId = userId,
-                workspaceName = workspaceName,
-                enable = enable
+                enable = enable,
+                workspaceNames = workspaceNames
             )
     }
 

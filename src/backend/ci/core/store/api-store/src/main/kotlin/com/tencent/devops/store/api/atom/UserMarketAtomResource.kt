@@ -132,12 +132,19 @@ interface UserMarketAtomResource {
         @Parameter(description = "排序", required = false)
         @QueryParam("sortType")
         sortType: MarketAtomSortTypeEnum? = MarketAtomSortTypeEnum.CREATE_TIME,
+        @Parameter(description = "支持的服务范围", required = false)
+        @QueryParam("serviceScope")
+        @DefaultValue("PIPELINE")
+        serviceScope: ServiceScopeEnum? = ServiceScopeEnum.PIPELINE,
         @Parameter(description = "页码", required = false)
         @QueryParam("page")
-        page: Int?,
+        @DefaultValue("1")
+        page: Int? = 1,
         @Parameter(description = "每页数量", required = false)
         @QueryParam("pageSize")
-        pageSize: Int?
+        @BkField(patternStyle = BkStyleEnum.PAGE_SIZE_STYLE, required = false)
+        @DefaultValue("10")
+        pageSize: Int? = 10
     ): Result<MarketAtomResp>
 
     @Operation(summary = "根据用户获取插件工作台插件列表")
@@ -174,7 +181,10 @@ interface UserMarketAtomResource {
         userId: String,
         @Parameter(description = "atomId", required = true)
         @PathParam("atomId")
-        atomId: String
+        atomId: String,
+        @Parameter(description = "支持的服务范围", required = false)
+        @QueryParam("serviceScope")
+        serviceScope: ServiceScopeEnum?
     ): Result<AtomVersion?>
 
     @Operation(summary = "根据插件标识获取插件正式版本详情")
@@ -189,7 +199,10 @@ interface UserMarketAtomResource {
         userId: String,
         @Parameter(description = "atomCode", required = true)
         @PathParam("atomCode")
-        atomCode: String
+        atomCode: String,
+        @Parameter(description = "支持的服务范围", required = false)
+        @QueryParam("serviceScope")
+        serviceScope: ServiceScopeEnum?
     ): Result<AtomVersion?>
 
     @Operation(summary = "根据插件标识获取插件版本列表")

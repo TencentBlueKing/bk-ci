@@ -32,23 +32,24 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.atom.UserMarketAtomResource
+import com.tencent.devops.store.atom.service.MarketAtomService
+import com.tencent.devops.store.common.service.StoreProjectService
 import com.tencent.devops.store.pojo.atom.AtomDevLanguage
 import com.tencent.devops.store.pojo.atom.AtomOutput
 import com.tencent.devops.store.pojo.atom.AtomVersion
 import com.tencent.devops.store.pojo.atom.AtomVersionListItem
 import com.tencent.devops.store.pojo.atom.InstallAtomReq
+import com.tencent.devops.store.pojo.atom.MarketAtomListQuery
 import com.tencent.devops.store.pojo.atom.MarketAtomResp
-import com.tencent.devops.store.pojo.common.MarketMainItem
 import com.tencent.devops.store.pojo.atom.MyAtomResp
 import com.tencent.devops.store.pojo.atom.enums.AtomTypeEnum
 import com.tencent.devops.store.pojo.atom.enums.MarketAtomSortTypeEnum
 import com.tencent.devops.store.pojo.common.InstalledProjRespItem
+import com.tencent.devops.store.pojo.common.MarketMainItem
 import com.tencent.devops.store.pojo.common.StoreErrorCodeInfo
-import com.tencent.devops.store.pojo.common.version.StoreShowVersionInfo
-import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import com.tencent.devops.store.atom.service.MarketAtomService
-import com.tencent.devops.store.common.service.StoreProjectService
 import com.tencent.devops.store.pojo.common.enums.ServiceScopeEnum
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.pojo.common.version.StoreShowVersionInfo
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -84,24 +85,28 @@ class UserMarketAtomResourceImpl @Autowired constructor(
         recommendFlag: Boolean?,
         qualityFlag: Boolean?,
         sortType: MarketAtomSortTypeEnum?,
+        serviceScope: ServiceScopeEnum?,
         page: Int?,
         pageSize: Int?
     ): Result<MarketAtomResp> {
         return Result(
             marketAtomService.list(
-                userId = userId.trim(),
-                keyword = keyword?.trim(),
-                classifyCode = classifyCode?.trim(),
-                labelCode = labelCode?.trim(),
-                score = score,
-                rdType = rdType,
-                yamlFlag = yamlFlag,
-                recommendFlag = recommendFlag,
-                qualityFlag = qualityFlag,
-                sortType = sortType,
-                page = page,
-                pageSize = pageSize,
-                urlProtocolTrim = true
+                MarketAtomListQuery(
+                    userId = userId.trim(),
+                    keyword = keyword?.trim(),
+                    classifyCode = classifyCode?.trim(),
+                    labelCode = labelCode?.trim(),
+                    score = score,
+                    rdType = rdType,
+                    yamlFlag = yamlFlag,
+                    recommendFlag = recommendFlag,
+                    qualityFlag = qualityFlag,
+                    sortType = sortType,
+                    page = page,
+                    pageSize = pageSize,
+                    urlProtocolTrim = true,
+                    serviceScope = serviceScope
+                )
             )
         )
     }
@@ -115,12 +120,16 @@ class UserMarketAtomResourceImpl @Autowired constructor(
         return marketAtomService.getMyAtoms(userId, atomName, page, pageSize)
     }
 
-    override fun getAtomById(userId: String, atomId: String): Result<AtomVersion?> {
-        return marketAtomService.getAtomById(atomId, userId)
+    override fun getAtomById(userId: String, atomId: String, serviceScope: ServiceScopeEnum?): Result<AtomVersion?> {
+        return marketAtomService.getAtomById(atomId, userId, serviceScope)
     }
 
-    override fun getAtomByCode(userId: String, atomCode: String): Result<AtomVersion?> {
-        return marketAtomService.getAtomByCode(userId, atomCode)
+    override fun getAtomByCode(
+        userId: String,
+        atomCode: String,
+        serviceScope: ServiceScopeEnum?
+    ): Result<AtomVersion?> {
+        return marketAtomService.getAtomByCode(userId, atomCode, serviceScope)
     }
 
     override fun getAtomVersionsByCode(
@@ -133,7 +142,7 @@ class UserMarketAtomResourceImpl @Autowired constructor(
     }
 
     override fun installAtom(userId: String, installAtomReq: InstallAtomReq): Result<Boolean> {
-        return marketAtomService.installAtom(userId, ChannelCode.BS, installAtomReq)
+        return marketAtomService.installAtom(userId, ChannelCode.getRequestChannelCode(), installAtomReq)
     }
 
     override fun getInstalledProjects(

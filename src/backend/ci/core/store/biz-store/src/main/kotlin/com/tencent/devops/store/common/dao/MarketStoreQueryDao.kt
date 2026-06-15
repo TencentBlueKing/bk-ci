@@ -237,7 +237,8 @@ class MarketStoreQueryDao {
             tStoreBaseFeature.RD_TYPE,
             tStoreBaseFeature.PUBLIC_FLAG,
             tStoreBase.CREATE_TIME,
-            tStoreBase.BUS_NUM
+            tStoreBase.BUS_NUM,
+            tStoreBase.OWNER_STORE_CODE
         ).from(tStoreBase)
             .leftJoin(tStoreBaseFeature)
             .on(
@@ -305,6 +306,9 @@ class MarketStoreQueryDao {
         storeInfoQuery.categoryId?.let {
             baseStep.leftJoin(tStoreCategoryRel).on(tStoreBase.ID.eq(tStoreCategoryRel.STORE_ID))
             conditions.add(tStoreCategoryRel.CATEGORY_ID.eq(it))
+        }
+        if (!storeInfoQuery.ownerStoreCode.isNullOrBlank()) {
+            conditions.add(tStoreBase.OWNER_STORE_CODE.eq(storeInfoQuery.ownerStoreCode))
         }
         return conditions
     }

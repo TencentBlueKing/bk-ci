@@ -83,7 +83,7 @@ class BuildEngineCoreBuildConfiguration {
     @EventConsumer
     fun buildStartConsumer(
         @Autowired buildListener: PipelineBuildStartListener
-    ) = ScsConsumerBuilder.build<PipelineBuildStartEvent> { buildListener.run(it) }
+    ) = ScsConsumerBuilder.build<PipelineBuildStartEvent> { buildListener.execute(it) }
 
     /**
      * 构建结束队列--- 并发一般，与Stage一致
@@ -100,7 +100,7 @@ class BuildEngineCoreBuildConfiguration {
     @EventConsumer
     fun buildFinishConsumer(
         @Autowired buildListener: PipelineBuildFinishListener
-    ) = ScsConsumerBuilder.build<PipelineBuildFinishEvent> { buildListener.run(it) }
+    ) = ScsConsumerBuilder.build<PipelineBuildFinishEvent> { buildListener.execute(it) }
 
     /**
      * 构建取消队列--- 并发一般，与Stage一致
@@ -117,7 +117,7 @@ class BuildEngineCoreBuildConfiguration {
     @EventConsumer
     fun buildCancelConsumer(
         @Autowired buildListener: PipelineBuildCancelListener
-    ) = ScsConsumerBuilder.build<PipelineBuildCancelEvent> { buildListener.run(it) }
+    ) = ScsConsumerBuilder.build<PipelineBuildCancelEvent> { buildListener.execute(it) }
 
     /**
      * Stage构建队列---- 并发一般
@@ -134,7 +134,7 @@ class BuildEngineCoreBuildConfiguration {
     @EventConsumer
     fun stageBuildConsumer(
         @Autowired buildListener: PipelineStageBuildListener
-    ) = ScsConsumerBuilder.build<PipelineBuildStageEvent> { buildListener.run(it) }
+    ) = ScsConsumerBuilder.build<PipelineBuildStageEvent> { buildListener.execute(it) }
 
     /**
      * Job构建队列---- 并发一般
@@ -151,7 +151,7 @@ class BuildEngineCoreBuildConfiguration {
     @EventConsumer
     fun containerBuildConsumer(
         @Autowired buildListener: PipelineContainerBuildListener
-    ) = ScsConsumerBuilder.build<PipelineBuildContainerEvent> { buildListener.run(it) }
+    ) = ScsConsumerBuilder.build<PipelineBuildContainerEvent> { buildListener.execute(it) }
 
     /**
      * 任务队列---- 并发要大
@@ -168,7 +168,7 @@ class BuildEngineCoreBuildConfiguration {
     @EventConsumer
     fun taskBuildConsumer(
         @Autowired buildListener: PipelineAtomTaskBuildListener
-    ) = ScsConsumerBuilder.build<PipelineBuildAtomTaskEvent> { buildListener.run(it) }
+    ) = ScsConsumerBuilder.build<PipelineBuildAtomTaskEvent> { buildListener.execute(it) }
 
     /**
      * 流水线暂停操作队列
@@ -199,5 +199,5 @@ class BuildEngineCoreBuildConfiguration {
     @EventConsumer
     fun taskPauseConsumer(
         @Autowired buildListener: PipelineTaskPauseListener
-    ) = ScsConsumerBuilder.build<PipelineTaskPauseEvent> { buildListener.run(it) }
+    ) = ScsConsumerBuilder.build<PipelineTaskPauseEvent> { buildListener.execute(it) }
 }

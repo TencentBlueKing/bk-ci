@@ -98,7 +98,7 @@ class AppPipelineBuildTencentResourceImpl @Autowired constructor(
             buildIdReal = buildId
         }
 
-        val channelCode = if (projectId.startsWith("git_")) ChannelCode.GIT else ChannelCode.BS
+        val channelCode = if (projectId.startsWith("git_")) ChannelCode.GIT else ChannelCode.getRequestChannelCode()
         val data = appBuildService.getBuildDetail(userId, projectId, pipelineId, buildIdReal, channelCode)
         if (channelCode == ChannelCode.GIT) {
             bkTag.invokeByTag(gitCI) {

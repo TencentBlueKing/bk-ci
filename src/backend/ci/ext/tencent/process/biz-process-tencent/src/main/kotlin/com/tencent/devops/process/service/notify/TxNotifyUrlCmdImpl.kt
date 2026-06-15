@@ -30,7 +30,9 @@ package com.tencent.devops.process.service.notify
 import com.tencent.devops.artifactory.api.service.ServiceShortUrlResource
 import com.tencent.devops.artifactory.pojo.CreateShortUrlRequest
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.service.utils.HomeHostUtil
+import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.notify.command.BuildNotifyContext
 import com.tencent.devops.process.notify.command.impl.NotifyUrlBuildCmd
 import org.slf4j.LoggerFactory
@@ -39,15 +41,26 @@ import org.springframework.stereotype.Service
 
 @Service
 class TxNotifyUrlCmdImpl @Autowired constructor(
-    val client: Client
+    val client: Client,
+    private val pipelineRepositoryService: PipelineRepositoryService
 ) : NotifyUrlBuildCmd() {
     override fun canExecute(commandContext: BuildNotifyContext): Boolean {
         return true
     }
 
     override fun execute(commandContext: BuildNotifyContext) {
-        val detailUrl = detailUrl(commandContext.projectId, commandContext.pipelineId, commandContext.buildId)
-        val detailOuterUrl = detailOuterUrl(commandContext.projectId, commandContext.pipelineId, commandContext.buildId)
+        val projectId = commandContext.projectId
+        val pipelineId = commandContext.pipelineId
+        val buildId = commandContext.buildId
+        // 获取流水线渠道信息，用于生成对应渠道的 URL
+        val channelCode = try {
+            pipelineRepositoryService.getPipelineInfo(projectId, pipelineId)?.channelCode
+        } catch (ignore: Exception) {
+            logger.warn("$projectId|$pipelineId|get channelCode failed", ignore)
+            null
+        }
+        val detailUrl = detailUrl(projectId, pipelineId, buildId, channelCode)
+        val detailOuterUrl = detailOuterUrl(projectId, pipelineId, buildId)
         val detailShortOuterUrl = client.get(ServiceShortUrlResource::class).createShortUrl(
             CreateShortUrlRequest(url = detailOuterUrl, ttl = SHORT_URL_TTL)).data!!
 
@@ -59,15 +72,36 @@ class TxNotifyUrlCmdImpl @Autowired constructor(
         commandContext.notifyValue.putAll(urlMap)
     }
 
-    private fun detailUrl(projectId: String, pipelineId: String, processInstanceId: String) =
-        "${HomeHostUtil.innerServerHost()}/console/pipeline/$projectId/$pipelineId/detail/$processInstanceId"
+    companion object {
+        // 创作流渠道 URL 前缀
+        private const val CREATIVE_STREAM_PREFIX = "creative-stream"
+        // 流水线渠道 URL 前缀
+        private const val PIPELINE_PREFIX = "pipeline"
+        private const val SHORT_URL_TTL = 24 * 3600 * 30
+        val logger = LoggerFactory.getLogger(TxNotifyUrlCmdImpl::class.java)
+    }
+
+    /**
+     * 根据渠道生成构建详情 URL
+     * 流水线渠道: /console/pipeline/{projectId}/{pipelineId}/detail/{buildId}
+     * 创作流渠道: /console/creative-stream/{projectId}/flow/{pipelineId}/execute/{buildId}/execute-detail
+     */
+    private fun detailUrl(
+        projectId: String,
+        pipelineId: String,
+        processInstanceId: String,
+        channelCode: ChannelCode? = null
+    ): String {
+        val host = HomeHostUtil.innerServerHost()
+        return if (channelCode == ChannelCode.CREATIVE_STREAM) {
+            "$host/console/$CREATIVE_STREAM_PREFIX/$projectId/flow/$pipelineId" +
+                "/execute/$processInstanceId/execute-detail"
+        } else {
+            "$host/console/$PIPELINE_PREFIX/$projectId/$pipelineId/detail/$processInstanceId"
+        }
+    }
 
     private fun detailOuterUrl(projectId: String, pipelineId: String, processInstanceId: String) =
         "${HomeHostUtil.outerServerHost()}/app/download/devops_app_forward.html" +
             "?flag=buildArchive&projectId=$projectId&pipelineId=$pipelineId&buildId=$processInstanceId"
-
-    companion object {
-        private const val SHORT_URL_TTL = 24 * 3600 * 30
-        val logger = LoggerFactory.getLogger(TxNotifyUrlCmdImpl::class.java)
-    }
 }

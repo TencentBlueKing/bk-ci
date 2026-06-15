@@ -54,10 +54,10 @@ const tabPanels = computed(() => [
         name: 'baseInfo',
         title: '基础信息',
       },
-      ...(!isPersonalProject.value) ? [{
+      ...(!isPersonalProject.value ? [{
         name: 'permission',
         title: '权限',
-      }] : []
+      }] : [])
     ]
   },
   {

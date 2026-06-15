@@ -184,6 +184,7 @@ class ApigwBuildResourceV4Impl @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
+        imateSessionId: String?,
         values: Map<String, String>?,
         buildNo: Int?,
         branch: String?
@@ -197,6 +198,7 @@ class ApigwBuildResourceV4Impl @Autowired constructor(
             buildNo = buildNo,
             channelCode = apiGatewayUtil.getChannelCode(),
             startType = StartType.SERVICE,
+            imateSessionId = imateSessionId,
             branch = branch
         )
     }
@@ -410,7 +412,7 @@ class ApigwBuildResourceV4Impl @Autowired constructor(
             buildId = buildId,
             elementId = elementId,
             params = params,
-            channelCode = ChannelCode.BS,
+            channelCode = ChannelCode.getRequestChannelCode(),
             stepId = stepId
         )
     }

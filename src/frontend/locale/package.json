@@ -5,8 +5,8 @@
   "private": true,
   "author": "",
   "dependencies": {
-    "@tencent/bk-magic-vue": "2.5.10-beta.14",
     "axios": "1.15.2",
+    "@tencent/bk-magic-vue": "2.5.10-beta.14",
     "js-cookie": "^3.0.5",
     "vue-i18n": "8.26.1",
     "vue-i18n-bridge": "9.4.1"

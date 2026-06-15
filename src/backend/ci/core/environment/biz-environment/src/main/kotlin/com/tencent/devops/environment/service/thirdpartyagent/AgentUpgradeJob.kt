@@ -156,8 +156,11 @@ class AgentUpgradeJob @Autowired constructor(
                     减少全量加载构建机记录带来的内存压力
                  */
                 val recs = thirdPartyAgentDao.listByStatusGtId(
-                    dslContext = dslContext, startId = vo.id,
-                    status = okStatus, limit = limit
+                    dslContext = dslContext,
+                    startId = vo.id,
+                    status = okStatus,
+                    limit = limit,
+                    agentType = null
                 )
                 recs.ifEmpty {
                     vo.finish = true
@@ -209,7 +212,8 @@ class AgentUpgradeJob @Autowired constructor(
                 projects = priorityUpgradeProjects,
                 status = okStatus,
                 startId = vo.id,
-                limit = limit
+                limit = limit,
+                agentType = null
             )
             upImportOKAgents.ifEmpty {
                 vo.finish = true

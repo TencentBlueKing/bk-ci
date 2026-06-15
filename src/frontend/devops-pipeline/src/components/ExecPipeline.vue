@@ -298,11 +298,14 @@
     import MiniMap from '@/components/MiniMap'
     import { errorTypeMap } from '@/utils/pipelineConst'
     import { convertMillSec, convertTime } from '@/utils/util'
-    import BkPipeline, { loadI18nMessages } from 'bkui-pipeline'
+    import BkPipeline, { loadI18nMessages } from 'bkui-pipeline/vue2'
     import simplebar from 'simplebar-vue'
     import 'simplebar-vue/dist/simplebar.min.css'
+    import 'bkui-pipeline/dist/bk-pipeline.css'
+    
     import { mapActions, mapGetters, mapState } from 'vuex'
     import MacDebugDialog from '@/components/MacDebugDialog.vue'
+    
     export default {
         components: {
             simplebar,
@@ -591,7 +594,7 @@
             ...mapActions('pipelines', ['requestRetryPipeline']),
             handleRouteParams () {
                 const { reviewTaskId, reviewStageSeq } = this.$route.query
-    
+
                 if (reviewTaskId) {
                     const targetElement = this.curPipelineAllElements.find(element => element.id === reviewTaskId)
                     if (targetElement && targetElement.status === 'REVIEWING') {
