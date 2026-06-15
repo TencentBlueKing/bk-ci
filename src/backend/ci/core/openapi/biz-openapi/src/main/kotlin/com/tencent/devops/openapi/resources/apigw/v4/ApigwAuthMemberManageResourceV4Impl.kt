@@ -130,6 +130,43 @@ class ApigwAuthMemberManageResourceV4Impl @Autowired constructor(
         )
     }
 
+    override fun listProjectMembersByCondition(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        memberType: String?,
+        userName: String?,
+        deptName: String?,
+        groupName: String?,
+        minExpiredAt: Long?,
+        maxExpiredAt: Long?,
+        departedFlag: Boolean?,
+        resourceType: String?,
+        resourceCode: String?,
+        action: String?,
+        page: Int,
+        pageSize: Int
+    ): Result<SQLPage<ResourceMemberInfo>> {
+        logger.info("OPENAPI_AUTH_MEMBER_MANAGE_V4|$appCode|$userId|listProjectMembersByCondition|$projectId")
+        return client.get(ServiceAuthAiResource::class).listProjectMembersByCondition(
+            userId = userId,
+            projectId = projectId,
+            memberType = memberType,
+            userName = userName,
+            deptName = deptName,
+            groupName = groupName,
+            minExpiredAt = minExpiredAt,
+            maxExpiredAt = maxExpiredAt,
+            departedFlag = departedFlag,
+            resourceType = resourceType,
+            resourceCode = resourceCode,
+            action = action,
+            page = page,
+            pageSize = pageSize
+        )
+    }
+
     override fun getMemberGroupCount(
         appCode: String?,
         apigwType: String?,
