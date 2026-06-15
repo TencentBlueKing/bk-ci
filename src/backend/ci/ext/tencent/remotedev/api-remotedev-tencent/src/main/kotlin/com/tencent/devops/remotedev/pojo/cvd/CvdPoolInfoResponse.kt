@@ -8,6 +8,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 data class CvdPoolInfoResponse(
     @get:Schema(description = "资源池ID")
     val poolId: String,
+    @get:Schema(description = "资源池名称")
+    val poolName: String? = null,
     @get:Schema(description = "蓝盾项目ID")
     val bkProjectId: String? = null,
     @get:Schema(description = "网络区域")
