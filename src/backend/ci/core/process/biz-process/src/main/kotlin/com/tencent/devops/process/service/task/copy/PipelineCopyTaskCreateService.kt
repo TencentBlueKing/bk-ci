@@ -111,6 +111,7 @@ class PipelineCopyTaskCreateService @Autowired constructor(
                         projectId = projectId,
                         taskId = taskId,
                         status = PipelineBatchTaskStatus.DRAFT,
+                        totalCount = allDetails.size,
                         subPipelineCount = allDetails.count { it.subPipeline },
                         pacCount = allDetails.count { it.pac },
                         clearErrorMessage = true

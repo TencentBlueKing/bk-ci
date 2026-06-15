@@ -969,6 +969,11 @@ class NodeService @Autowired constructor(
                 nodeId,
                 "${NodeStringIdUtils.getNodeStringId(sourceNode)}(${sourceNode.nodeIp})"
             )
+            environmentPermissionService.copyNodeGroupMembers(
+                sourceProjectId = sourceProjectId,
+                targetProjectId = targetProjectId,
+                nodeId = nodeId
+            )
             environmentPermissionService.deleteNode(sourceProjectId, nodeId)
         }
         ActionAuditContext.current()

@@ -86,4 +86,10 @@ interface EnvironmentPermissionService {
     fun updateNode(userId: String, projectId: String, nodeId: Long, nodeName: String)
 
     fun deleteNode(projectId: String, nodeId: Long)
+
+    fun copyNodeGroupMembers(
+        sourceProjectId: String,
+        targetProjectId: String,
+        nodeId: Long
+    ) = Unit
 }

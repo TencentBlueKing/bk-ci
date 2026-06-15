@@ -182,6 +182,9 @@ class PipelineBatchTaskDao {
             if (update.status != null) {
                 query.set(STATUS, update.status!!.name)
             }
+            if (update.totalCount != null) {
+                query.set(TOTAL_COUNT, update.totalCount)
+            }
             if (update.subPipelineCount != null) {
                 query.set(SUB_PIPELINE_COUNT, update.subPipelineCount)
             }

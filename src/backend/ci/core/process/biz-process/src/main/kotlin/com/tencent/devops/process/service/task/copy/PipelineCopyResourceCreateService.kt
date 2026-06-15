@@ -225,13 +225,6 @@ class PipelineCopyResourceCreateService @Autowired constructor(
             resourceName = sourceNode.displayName ?: sourceNode.name,
             result = transferResult
         )
-        copyResourceGroupMembersSafely(
-            sourceProjectId = sourceProjectId,
-            targetProjectId = targetProjectId,
-            resourceType = AuthResourceType.ENVIRONMENT_ENV_NODE.value,
-            sourceResourceCode = sourceNode.nodeHashId,
-            targetResourceCode = sourceNode.nodeHashId
-        )
         return PipelineCopyResourceBasicInfo(
             resourceId = sourceNode.agentHashId!!,
             resourceName = sourceNode.displayName ?: sourceNode.name
@@ -264,13 +257,6 @@ class PipelineCopyResourceCreateService @Autowired constructor(
             targetProjectId = targetProjectId,
             resourceName = sourceNode.displayName ?: sourceNode.name,
             result = transferResult
-        )
-        copyResourceGroupMembersSafely(
-            sourceProjectId = sourceProjectId,
-            targetProjectId = targetProjectId,
-            resourceType = AuthResourceType.ENVIRONMENT_ENV_NODE.value,
-            sourceResourceCode = sourceNode.nodeHashId,
-            targetResourceCode = sourceNode.nodeHashId
         )
         return PipelineCopyResourceBasicInfo(
             // 构建节点,流水线使用的agentHashId

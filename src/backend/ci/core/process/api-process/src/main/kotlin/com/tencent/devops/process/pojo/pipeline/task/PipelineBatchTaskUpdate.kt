@@ -22,6 +22,8 @@ data class PipelineBatchTaskUpdate(
     val clearErrorMessage: Boolean = false,
     @get:Schema(description = "任务状态")
     val status: PipelineBatchTaskStatus? = null,
+    @get:Schema(description = "总数")
+    val totalCount: Int? = null,
     @get:Schema(description = "自动添加的子流水线数量")
     val subPipelineCount: Int? = null,
     @get:Schema(description = "PAC数量")
