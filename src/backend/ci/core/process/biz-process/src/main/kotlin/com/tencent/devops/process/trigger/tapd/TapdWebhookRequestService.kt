@@ -270,6 +270,7 @@ class TapdWebhookRequestService(
         )
     }
 
+    @SuppressWarnings("NestedBlockDepth")
     private fun getTapdObjectBaseInfo(
         eventType: TapdEventType,
         eventAction: TapdEventAction,
