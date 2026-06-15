@@ -71,7 +71,7 @@ class VariableTransfer {
         }
     }
 
-    fun convertVariable(it: BuildFormProperty): Variable {
+    fun convertVariable(it: BuildFormProperty, subField: Boolean = false): Variable {
         var props = when {
             // 字符串
             it.type == BuildFormPropertyType.STRING -> VariableProps(
@@ -170,7 +170,7 @@ class VariableTransfer {
             it.type == BuildFormPropertyType.FORM_LIST -> VariableProps(
                 type = VariablePropType.FORM_LIST.value,
                 fields = it.fields?.associate { form ->
-                    form.id to convertVariable(form)
+                    form.id to convertVariable(form, true)
                 }
             )
 
@@ -210,7 +210,7 @@ class VariableTransfer {
                 else -> it.defaultValue.toString()
             },
             readonly = if (const == true) null else it.readOnly.nullIfDefault(false),
-            allowModifyAtStartup = if (const != true) it.required.nullIfDefault(true) else null,
+            allowModifyAtStartup = if (const != true && !subField) it.required.nullIfDefault(true) else null,
             asInstanceInput = if (const != true && it.required) it.asInstanceInput.nullIfDefault(true) else null,
             const = const,
             sensitive = it.sensitive,
