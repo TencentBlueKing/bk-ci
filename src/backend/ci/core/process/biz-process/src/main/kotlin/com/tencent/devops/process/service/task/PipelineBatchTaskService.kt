@@ -19,6 +19,7 @@ import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskCreateRequ
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskDetail
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskDetailStatusSummary
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskDetailVo
+import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskStatusSummary
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskExecuteEvent
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskUpdate
 import org.jooq.DSLContext
@@ -71,6 +72,19 @@ class PipelineBatchTaskService @Autowired constructor(
             type = null,
             status = status,
             creator = null
+        )
+    }
+
+    fun statusSummary(
+        projectId: String,
+        type: PipelineBatchTaskType?,
+        creator: String?
+    ): List<PipelineBatchTaskStatusSummary> {
+        return pipelineBatchTaskDao.statusSummary(
+            dslContext = dslContext,
+            projectId = projectId,
+            type = type,
+            creator = creator
         )
     }
 

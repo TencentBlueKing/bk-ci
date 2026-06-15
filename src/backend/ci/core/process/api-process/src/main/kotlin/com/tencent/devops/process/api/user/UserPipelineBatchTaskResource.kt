@@ -12,6 +12,7 @@ import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTask
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskStatus
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskType
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskDetailVo
+import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskStatusSummary
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -77,6 +78,24 @@ interface UserPipelineBatchTaskResource {
         @QueryParam("status")
         status: PipelineBatchTaskStatus?
     ): Result<Long>
+
+    @Operation(summary = "查询流水线批量任务状态汇总")
+    @GET
+    @Path("/{projectId}/tasks/status/summary")
+    fun statusSummary(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "任务类型", required = false)
+        @QueryParam("type")
+        type: PipelineBatchTaskType?,
+        @Parameter(description = "创建人", required = false)
+        @QueryParam("creator")
+        creator: String?
+    ): Result<List<PipelineBatchTaskStatusSummary>>
 
     @Operation(summary = "创建流水线批量任务")
     @POST

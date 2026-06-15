@@ -4,6 +4,7 @@ import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.model.process.Tables.T_PIPELINE_BATCH_TASK
 import com.tencent.devops.model.process.tables.records.TPipelineBatchTaskRecord
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTask
+import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskStatusSummary
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskUpdate
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskStatus
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskStep
@@ -11,6 +12,7 @@ import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskType
 import com.tencent.devops.process.service.task.copy.PipelineCopyTaskUtils
 import org.jooq.Condition
 import org.jooq.DSLContext
+import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
@@ -126,6 +128,34 @@ class PipelineBatchTaskDao {
                     )
                 )
                 .fetchOne(0, Long::class.java) ?: 0L
+        }
+    }
+
+    fun statusSummary(
+        dslContext: DSLContext,
+        projectId: String,
+        type: PipelineBatchTaskType?,
+        creator: String?
+    ): List<PipelineBatchTaskStatusSummary> {
+        return with(T_PIPELINE_BATCH_TASK) {
+            dslContext.select(STATUS, DSL.count())
+                .from(this)
+                .where(
+                    buildConditions(
+                        projectId = projectId,
+                        type = type,
+                        status = null,
+                        creator = creator
+                    )
+                )
+                .groupBy(STATUS)
+                .fetch()
+                .map { record ->
+                    PipelineBatchTaskStatusSummary(
+                        status = PipelineBatchTaskStatus.valueOf(record.get(STATUS)),
+                        count = record.value2().toLong()
+                    )
+                }
         }
     }
 

@@ -12,6 +12,7 @@ import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTask
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskStatus
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskType
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskDetailVo
+import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskStatusSummary
 import com.tencent.devops.process.service.task.PipelineBatchTaskService
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -47,6 +48,21 @@ class UserPipelineBatchTaskResourceImpl @Autowired constructor(
         status: PipelineBatchTaskStatus?
     ): Result<Long> {
         return Result(pipelineBatchTaskService.count(projectId = projectId, status = status))
+    }
+
+    override fun statusSummary(
+        userId: String,
+        projectId: String,
+        type: PipelineBatchTaskType?,
+        creator: String?
+    ): Result<List<PipelineBatchTaskStatusSummary>> {
+        return Result(
+            pipelineBatchTaskService.statusSummary(
+                projectId = projectId,
+                type = type,
+                creator = creator
+            )
+        )
     }
 
     override fun create(
