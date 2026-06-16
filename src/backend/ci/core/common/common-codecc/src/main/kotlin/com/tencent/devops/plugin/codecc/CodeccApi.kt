@@ -38,12 +38,12 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.plugin.codecc.pojo.CodeccMeasureInfo
 import java.net.URLEncoder
+import jakarta.ws.rs.HttpMethod
 import okhttp3.Headers.Companion.toHeaders
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.slf4j.LoggerFactory
-import jakarta.ws.rs.HttpMethod
 import org.springframework.beans.factory.annotation.Value
 
 @Suppress("ALL")
@@ -55,6 +55,9 @@ class CodeccApi(
 
     @Value("\${codecc.openapi.token:#{null}}")
     private val codeccOpenApiToken: String = ""
+
+    @Value("\${codecc.opensource.tag:#{null}}")
+    private val codeccOpensourceTag: String = ""
 
     companion object {
         private val objectMapper = JsonUtil.getObjectMapper()
@@ -120,20 +123,11 @@ class CodeccApi(
         return execUrl
     }
 
-    fun installCheckerSet(
-        projectId: String,
-        userId: String,
-        type: String,
-        checkerSetId: String,
-        tag: String? = null
-    ): Result<Boolean> {
-        val headers = mutableMapOf(
+    fun installCheckerSet(projectId: String, userId: String, type: String, checkerSetId: String): Result<Boolean> {
+        val headers = mapOf(
             AUTH_HEADER_DEVOPS_PROJECT_ID to projectId,
             AUTH_HEADER_DEVOPS_USER_ID to userId
         )
-        if (!tag.isNullOrBlank()) {
-            headers[AUTH_HEADER_GATEWAY_TAG] = tag
-        }
         val body = mapOf(
             "type" to type,
             "projectId" to projectId
@@ -154,15 +148,17 @@ class CodeccApi(
     ): MutableMap<String, String> {
         val headers = mutableMapOf("repoId" to repoId)
         headers[CONTENT_TYPE] = CONTENT_TYPE_JSON
-        if (!buildId.isNullOrBlank()) headers["buildId"] = buildId
-        if (!tag.isNullOrBlank()) headers[AUTH_HEADER_GATEWAY_TAG] = tag
+        if (null != buildId) headers["buildId"] = buildId
+        if (!tag.isNullOrBlank()) {
+            headers[AUTH_HEADER_GATEWAY_TAG] = tag
+        }
         return headers
     }
 
     fun getCodeccMeasureInfo(repoId: String, buildId: String? = null, tag: String? = null): Result<CodeccMeasureInfo?> {
         val result = taskExecution(
             body = mapOf(),
-            headers = generateCodeccHeaders(repoId, buildId, tag),
+            headers = generateCodeccHeaders(repoId, buildId, tag ?: codeccOpensourceTag),
             path = "/ms/defect/api/service/defect/repo/measurement",
             method = HttpMethod.GET
         )
@@ -172,7 +168,7 @@ class CodeccApi(
     fun getCodeccTaskStatusInfo(repoId: String, buildId: String? = null, tag: String? = null): Result<Int> {
         val result = taskExecution(
             body = mapOf(),
-            headers = generateCodeccHeaders(repoId, buildId, tag),
+            headers = generateCodeccHeaders(repoId, buildId, tag ?: codeccOpensourceTag),
             path = "/ms/task/api/service/task/repo/status",
             method = HttpMethod.GET
         )
@@ -183,7 +179,7 @@ class CodeccApi(
         val result = taskExecution(
             body = mapOf(),
             path = "/ms/task/api/service/openScan/trigger/repo",
-            headers = generateCodeccHeaders(repoId, commitId, tag),
+            headers = generateCodeccHeaders(repoId, commitId, tag ?: codeccOpensourceTag),
             method = HttpMethod.POST
         )
         return objectMapper.readValue(result)
@@ -193,7 +189,7 @@ class CodeccApi(
         val result = taskExecution(
             body = mapOf("langs" to languages),
             path = "/ms/task/api/service/task/repo/create",
-            headers = generateCodeccHeaders(repoId, null, tag),
+            headers = generateCodeccHeaders(repoId, null, tag ?: codeccOpensourceTag),
             method = HttpMethod.POST
         )
         return objectMapper.readValue(result)
