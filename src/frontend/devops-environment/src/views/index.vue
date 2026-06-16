@@ -263,7 +263,8 @@
                     extPage: {
                         name: 'extPage',
                         params: {
-                            ...this.$route.params
+                            ...this.$route.params,
+                            ...(item && item.params)
                         }
                     }
                 }
