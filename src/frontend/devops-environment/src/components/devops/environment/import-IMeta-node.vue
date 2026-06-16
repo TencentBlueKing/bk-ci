@@ -213,11 +213,11 @@
             },
 
             handleSelect (selection) {
-                this.selectedNodes = selection.map(item => item.deviceId)
+                this.selectedNodes = selection.map(item => ({ deviceId: item.deviceId, name: item.name }))
             },
 
             handleSelectAll (selection) {
-                this.selectedNodes = selection.map(item => item.deviceId)
+                this.selectedNodes = selection.map(item => ({ deviceId: item.deviceId, name: item.name }))
             },
 
             getStatusType (status) {
@@ -235,7 +235,7 @@
                         params: {
                             zoneName: 'shenzhen',
                             os: 'LINUX',
-                            agentList: this.selectedNodes.map(deviceId => ({ deviceId }))
+                            agentList: this.selectedNodes.map(node => ({ deviceId: node.deviceId, name: node.name }))
                         }
                     })
                     if (res) {
