@@ -1,10 +1,27 @@
 packages:
-  - "devops-*"
   - "!devops-repo"
   - bk-pipeline
+  - bk-pipeline-vue2
   - bk-permission
   - locale
   - common-lib
+  - "devops-*"
+
+allowBuilds:
+  "@parcel/watcher": true
+  bufferutil: false
+  core-js: false
+  ejs: false
+  es5-ext: false
+  esbuild: true
+  fsevents: true
+  highlight.js: false
+  nx: true
+  utf-8-validate: false
+  vue-demi: true
+  vue-echarts: true
+  less: false
+  yorkie: false
 
 catalogs:
   vue2:

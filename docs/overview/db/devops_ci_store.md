@@ -2,7 +2,7 @@
 
 **数据库名：** devops_ci_store
 
-**文档版本：** 1.0.17
+**文档版本：** 1.0.20
 
 **文档描述：** devops_ci_store 的数据库文档
 | 表名                  | 说明       |
@@ -397,6 +397,7 @@
 |  6   | MODIFIER |   varchar   | 50 |   0    |    N     |  N   |   system    | 修改者  |
 |  7   | CREATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 创建时间  |
 |  8   | UPDATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 更新时间  |
+|  9   | PACKAGE_SIZE |   text   | 65535 |   0    |    Y     |  N   |       | 版本包大小  |
 
 **表名：** <a>T_BUILD_RESOURCE</a>
 
@@ -1535,6 +1536,7 @@
 |  6   | MODIFIER |   varchar   | 50 |   0    |    N     |  N   |   system    | 最近修改人  |
 |  7   | UPDATE_TIME |   datetime   | 23 |   0    |    N     |  N   |   CURRENT_TIMESTAMP(3)    | 修改时间  |
 |  8   | CREATE_TIME |   datetime   | 23 |   0    |    N     |  N   |   CURRENT_TIMESTAMP(3)    | 创建时间  |
+|  9   | PACKAGE_SIZE |   text   | 65535 |   0    |    Y     |  N   |       | 版本包大小  |
 
 **表名：** <a>T_TEMPLATE</a>
 

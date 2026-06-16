@@ -30,6 +30,7 @@ package com.tencent.devops.store.api.common
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.pojo.common.classify.Classify
 import com.tencent.devops.store.pojo.common.classify.ClassifyRequest
+import com.tencent.devops.store.pojo.common.enums.ServiceScopeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
@@ -82,7 +83,10 @@ interface OpClassifyResource {
     fun listAllClassifys(
         @Parameter(description = "类别", required = true)
         @PathParam("classifyType")
-        classifyType: StoreTypeEnum
+        classifyType: StoreTypeEnum,
+        @Parameter(description = "服务范围", required = false)
+        @QueryParam("serviceScope")
+        serviceScope: ServiceScopeEnum?
     ): Result<List<Classify>>
 
     @Operation(summary = "根据ID获取分类信息")

@@ -79,6 +79,9 @@ object StreamBinding {
 
     const val PIPELINE_TEMPLATE_MIGRATE = "engine.pipeline.template.migrate"
 
+    // AI摘要生成事件
+    const val PIPELINE_AI_SUMMARY = "engine.pipeline.ai.summary"
+
     // 监控相关的队列
     const val PIPELINE_BUILD_MONITOR = "engine.pipeline.listener.monitor"
     const val PIPELINE_BUILD_HEART_BEAT = "engine.pipeline.build.hb"
@@ -112,6 +115,9 @@ object StreamBinding {
 
     // 定时变更广播exchange ====================================
     const val PIPELINE_TIMER_CHANGE_FANOUT = "engine.pipeline.timer.change"
+
+    // 流水线构建历史数据清理 ====================================
+    const val PIPELINE_BUILD_HISTORY_DATA_CLEAR = "engine.pipeline.build.history.data.clear"
 
     // 流水线扩展交换器 ====================================
     const val PIPELINE_EXTENDS_FANOUT = "engine.pipeline.extends.fanout"
@@ -164,6 +170,12 @@ object StreamBinding {
 
     // scm webhook触发事件
     const val SCM_HOOK_BUILD_TRIGGER_EVENT = "engine.pipeline.scm.hook.trigger.event"
+
+    const val CDS_WEBHOOK_REQUEST_EVENT = "engine.pipeline.cds.webhook.event"
+
+    const val CDS_WEBHOOK_TRIGGER_EVENT = "engine.pipeline.cds.webhook.trigger.event"
+
+    const val GENERIC_WEBHOOK_REQUEST_EVENT = "engine.pipeline.generic.webhook.event"
 
     // 流水线构建check-run事件
     const val PIPELINE_BUILD_CHECK_RUN = "engine.pipeline.build.check.run"
@@ -242,4 +254,7 @@ object StreamBinding {
     const val PIPELINE_YAML_FILE_SCHEDULER = "pipeline.yaml.file.scheduler"
     // yaml文件执行事件
     const val PIPELINE_YAML_FILE_EXECUTOR = "pipeline.yaml.file.executor"
+
+    // AI智能体运行停止广播exchange ====================================
+    const val AI_RUN_STOP_FANOUT = "ai.run.stop.fanout"
 }

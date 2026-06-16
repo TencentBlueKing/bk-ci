@@ -82,6 +82,7 @@ import com.tencent.devops.process.pojo.pipeline.record.BuildRecordContainer
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordModel
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordStage
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordTask
+import com.tencent.devops.process.pojo.task.PipelineFailTaskDetail
 import com.tencent.devops.process.service.StageTagService
 import com.tencent.devops.process.service.record.PipelineRecordModelService
 import com.tencent.devops.process.util.BuildMsgUtils
@@ -714,8 +715,15 @@ class PipelineBuildRecordService @Autowired constructor(
                 startUser = recordModel.startUser,
                 executeCount = executeCount
             )
+            val allRecordStages = recordStageDao.getLatestRecords(
+                dslContext = context,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                executeCount = executeCount
+            )
             allStageStatus = fetchHistoryStageStatus(
-                recordStages = recordStages, buildStatus = buildStatus, errorMsg = errorMsg
+                recordStages = allRecordStages, buildStatus = buildStatus, errorMsg = errorMsg
             )
         }
         val model = getRecordModel(
@@ -799,5 +807,44 @@ class PipelineBuildRecordService @Autowired constructor(
             projectId = projectId,
             buildId = buildId
         )?.pipelineId
+    }
+
+    fun getBuildFailedTasks(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        executeCount: Int?
+    ): List<PipelineFailTaskDetail> {
+        val buildRecord = getBuildRecord(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            executeCount = executeCount
+        )
+        val errorInfoList = buildRecord?.errorInfoList?.takeIf { it.isNotEmpty() } ?: return listOf()
+        val stageIds = errorInfoList.mapNotNull { it.stageId }.toSet()
+        val containerIds = errorInfoList.mapNotNull { it.containerId }.toSet()
+        val stageNameMap = mutableMapOf<String, String>()
+        val containerNameMap = mutableMapOf<String, String>()
+        buildRecord.model.stages.forEach stageForeach@{ stage ->
+            val stageId = stage.id?.takeIf { it in stageIds } ?: return@stageForeach
+            stageNameMap[stageId] = stage.name ?: ""
+            stage.containers.forEach containerForeach@{ container ->
+                val containerId = container.id?.takeIf { it in containerIds } ?: return@containerForeach
+                containerNameMap[containerId] = container.name ?: ""
+            }
+        }
+        return errorInfoList.map {
+            PipelineFailTaskDetail(
+                stepId = it.stageId ?: "",
+                taskId = it.taskId,
+                taskName = it.taskName,
+                jobId = it.containerId ?: "",
+                jobName = containerNameMap[it.containerId],
+                stageName = stageNameMap[it.stageId],
+                errorMsg = it.errorMsg,
+                matrixFlag = it.matrixFlag ?: false
+            )
+        }
     }
 }

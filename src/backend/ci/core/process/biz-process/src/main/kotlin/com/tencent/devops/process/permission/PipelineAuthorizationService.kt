@@ -10,6 +10,7 @@ import com.tencent.devops.common.auth.api.pojo.ResourceAuthorizationHandoverResu
 import com.tencent.devops.common.auth.enums.ResourceAuthorizationHandoverStatus
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.service.PipelineVisibilityService
 import com.tencent.devops.process.service.SubPipelineCheckService
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -18,7 +19,8 @@ import org.springframework.stereotype.Service
 class PipelineAuthorizationService constructor(
     val pipelinePermissionService: PipelinePermissionService,
     val authAuthorizationApi: AuthAuthorizationApi,
-    val subPipelineCheckService: SubPipelineCheckService
+    val subPipelineCheckService: SubPipelineCheckService,
+    val pipelineVisibilityService: PipelineVisibilityService
 ) {
     fun addResourceAuthorization(
         projectId: String,
@@ -74,6 +76,11 @@ class PipelineAuthorizationService constructor(
             // 2.有子流水线的执行权限
             when {
                 hasHandoverToPermission && checkSubPipelinePermission.isEmpty() -> {
+                    pipelineVisibilityService.updateAuthUser(
+                        projectId = projectCode,
+                        pipelineId = resourceCode,
+                        authUser = handoverTo!!
+                    )
                     ResourceAuthorizationHandoverResult(ResourceAuthorizationHandoverStatus.SUCCESS)
                 }
 

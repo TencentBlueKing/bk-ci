@@ -60,6 +60,21 @@ func (e *GEnvVarsT) Size() int {
 	return len(e.envs)
 }
 
+var identityEnvKeys = map[string]struct{}{
+	"USERNAME":     {},
+	"USERDOMAIN":   {},
+	"USERPROFILE":  {},
+	"HOMEDRIVE":    {},
+	"HOMEPATH":     {},
+	"APPDATA":      {},
+	"LOCALAPPDATA": {},
+}
+
+func isIdentityEnvKey(key string) bool {
+	_, ok := identityEnvKeys[strings.ToUpper(key)]
+	return ok
+}
+
 // Envs 获取系统环境变量，代替 os.Environ()
 func Envs() []string {
 	envs := os.Environ()
@@ -75,6 +90,9 @@ func Envs() []string {
 		}
 	}
 	for key, value := range pollingEnvs {
+		if isIdentityEnvKey(key) {
+			continue
+		}
 		envMap[key] = value
 	}
 	resEnvs := make([]string, 0, len(envMap))

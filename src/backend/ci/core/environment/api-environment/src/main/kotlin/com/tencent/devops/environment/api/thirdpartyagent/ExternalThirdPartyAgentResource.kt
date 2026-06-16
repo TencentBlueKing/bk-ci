@@ -30,6 +30,7 @@ package com.tencent.devops.environment.api.thirdpartyagent
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.environment.constant.BATCH_TOKEN_HEADER
+import com.tencent.devops.environment.pojo.enums.AgentType
 import com.tencent.devops.environment.pojo.thirdpartyagent.TPAInstallType
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
@@ -93,6 +94,7 @@ interface ExternalThirdPartyAgentResource {
         arch: String?
     ): Response
 
+    @Deprecated("被批量安装脚本取代")
     @Operation(summary = "生成并下载新的批次安装所需要的文件")
     @GET
     @Path("/{agentHashId}/batch_zip")
@@ -101,7 +103,10 @@ interface ExternalThirdPartyAgentResource {
         @Parameter(description = "agentHashId 化身 install Key", required = true)
         @PathParam("agentHashId")
         @BkField(minLength = 3, maxLength = 32)
-        agentHashId: String
+        agentHashId: String,
+        @Parameter(description = "第三方机节点类型", required = false)
+        @QueryParam("agentType")
+        agentType: AgentType?
     ): Response
 
     @Operation(summary = "下载agent批量安装脚本")
@@ -129,6 +134,9 @@ interface ExternalThirdPartyAgentResource {
         installType: TPAInstallType?,
         @Parameter(description = "重装使用的AgentHashId", required = false)
         @QueryParam("reInstallId")
-        reInstallId: String?
+        reInstallId: String?,
+        @Parameter(description = "第三方机节点类型", required = false)
+        @QueryParam("agentType")
+        agentType: AgentType?
     ): Response
 }

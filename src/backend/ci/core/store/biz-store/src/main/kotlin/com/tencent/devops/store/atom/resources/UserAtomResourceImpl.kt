@@ -31,15 +31,18 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.atom.UserAtomResource
+import com.tencent.devops.store.atom.dao.AtomQueryParam
 import com.tencent.devops.store.atom.service.AtomPropService
+import com.tencent.devops.store.atom.service.AtomService
 import com.tencent.devops.store.pojo.atom.AtomBaseInfoUpdateRequest
 import com.tencent.devops.store.pojo.atom.AtomResp
 import com.tencent.devops.store.pojo.atom.AtomRespItem
 import com.tencent.devops.store.pojo.atom.InstalledAtom
 import com.tencent.devops.store.pojo.atom.PipelineAtom
+import com.tencent.devops.store.pojo.atom.enums.JobTypeEnum
 import com.tencent.devops.store.pojo.common.UnInstallReq
+import com.tencent.devops.store.pojo.common.enums.ServiceScopeEnum
 import com.tencent.devops.store.pojo.common.version.VersionInfo
-import com.tencent.devops.store.atom.service.AtomService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -52,20 +55,22 @@ class UserAtomResourceImpl @Autowired constructor(
         projectCode: String,
         atomCode: String,
         version: String,
-        queryOfflineFlag: Boolean?
+        queryOfflineFlag: Boolean?,
+        serviceScope: ServiceScopeEnum?
     ): Result<PipelineAtom?> {
         return atomService.getPipelineAtom(
             projectCode = projectCode,
             atomCode = atomCode,
             version = version,
-            queryOfflineFlag = queryOfflineFlag ?: true
+            queryOfflineFlag = queryOfflineFlag ?: true,
+            serviceScope = serviceScope
         )
     }
 
     override fun listAllPipelineAtoms(
         userId: String,
-        serviceScope: String?,
-        jobType: String?,
+        serviceScope: ServiceScopeEnum?,
+        jobType: JobTypeEnum?,
         os: String?,
         projectCode: String,
         category: String?,
@@ -79,20 +84,23 @@ class UserAtomResourceImpl @Autowired constructor(
         page: Int,
         pageSize: Int
     ): Result<AtomResp<AtomRespItem>?> {
-        return atomService.getPipelineAtoms(
-            userId = userId,
+        val queryParam = AtomQueryParam(
             serviceScope = serviceScope,
-            jobType = jobType,
+            jobType = jobType?.name,
             os = os,
             projectCode = projectCode,
             category = category,
             classifyId = classifyId,
             recommendFlag = recommendFlag,
             keyword = keyword,
-            queryProjectAtomFlag = queryProjectAtomFlag,
-            queryFitAgentBuildLessAtomFlag = queryFitAgentBuildLessAtomFlag,
             fitOsFlag = fitOsFlag,
-            installed = installed,
+            queryFitAgentBuildLessAtomFlag = queryFitAgentBuildLessAtomFlag,
+            queryProjectAtomFlag = queryProjectAtomFlag,
+            installed = installed
+        )
+        return atomService.getPipelineAtoms(
+            userId = userId,
+            queryParam = queryParam,
             page = page,
             pageSize = pageSize
         )
@@ -107,6 +115,7 @@ class UserAtomResourceImpl @Autowired constructor(
         projectCode: String,
         classifyCode: String?,
         name: String?,
+        serviceScope: ServiceScopeEnum?,
         page: Int,
         pageSize: Int
     ): Result<Page<InstalledAtom>> {
@@ -115,6 +124,7 @@ class UserAtomResourceImpl @Autowired constructor(
                 userId = userId,
                 projectCode = projectCode,
                 classifyCode = classifyCode,
+                serviceScope = serviceScope,
                 name = name,
                 page = page,
                 pageSize = pageSize

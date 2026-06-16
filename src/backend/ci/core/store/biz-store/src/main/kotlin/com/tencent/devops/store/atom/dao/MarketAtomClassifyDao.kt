@@ -66,6 +66,9 @@ class MarketAtomClassifyDao : AtomBaseDao() {
 
         // 构建插件可见性条件
         val atomVisibleConditions = setAtomVisibleCondition(tAtom)
+        serviceScope?.let {
+            atomVisibleConditions.add(buildServiceScopeCondition(tAtom, serviceScope))
+        }
 
         // 构建分类ID字段（根据serviceScope动态选择CLASSIFY_ID或CLASSIFY_ID_MAP）
         val classifyIdField = buildClassifyIdField(tAtom, serviceScope)

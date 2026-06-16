@@ -1,0 +1,78 @@
+.eventCard {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-md);
+  padding: var(--spacing-lg);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  margin-bottom: var(--spacing-sm);
+}
+
+.eventCardLoading {
+  opacity: 0.7;
+  cursor: wait;
+  pointer-events: none;
+}
+
+.eventIcon {
+  flex-shrink: 0;
+  border-radius: 50%;
+  max-width: 56px;
+  max-height: 56px;
+  padding: var(--spacing-md);
+  background: var(--bg-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-disabled);
+}
+
+.eventInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.eventName {
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  color: var(--color-text-primary);
+  margin-bottom: var(--spacing-xs);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.loadingSpin {
+  display: inline-flex;
+}
+
+.eventDesc {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+  margin-bottom: var(--spacing-sm);
+  max-width: 100%;
+  composes: text-ellipsis-2 from '@/styles/global.css';
+}
+
+.eventMeta {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-tertiary);
+}
+
+.eventRating {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.starIcon {
+  color: var(--color-warning);
+}
+
+.eventUsage {
+  color: var(--color-text-tertiary);
+}

@@ -52,12 +52,15 @@ class StreamPipelinePermissionServiceImpl @Autowired constructor(
         permission: AuthPermission,
         authResourceType: AuthResourceType?
     ): Boolean {
+        val finalAuthResourceType =
+            AuthResourceType.getAuthResourceTypeByChannel(authResourceType ?: AuthResourceType.PIPELINE_DEFAULT)
+
         return client.get(ServicePermissionAuthResource::class).validateUserResourcePermission(
             userId = userId,
-            token = checkTokenService.getSystemToken() ?: "",
+            token = checkTokenService.getSystemToken(),
             action = permission.value,
             projectCode = projectId,
-            resourceCode = authResourceType?.value ?: AuthResourceType.PIPELINE_DEFAULT.value
+            resourceCode = finalAuthResourceType.value
         ).data ?: false
     }
 

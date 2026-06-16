@@ -34,6 +34,7 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.auth.api.ActionId
+import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.environment.api.ServiceNodeResource
@@ -99,9 +100,15 @@ class ServiceNodeResourceImpl @Autowired constructor(
     override fun listByHashIds(
         userId: String,
         projectId: String,
-        nodeHashIds: List<String>
+        nodeHashIds: List<String>,
+        checkPermission: Boolean?
     ): Result<List<NodeWithPermission>> {
-        return Result(nodeService.listByHashIds(userId, projectId, nodeHashIds))
+        return Result(nodeService.listByHashIds(
+            userId = userId,
+            projectId = projectId,
+            hashIds = nodeHashIds,
+            checkPermission = checkPermission != false
+        ))
     }
 
     override fun getNodeStatus(
@@ -185,6 +192,7 @@ class ServiceNodeResourceImpl @Autowired constructor(
         latestBuildTimeEnd: Long?,
         sortType: String?,
         collation: String?,
+        createMode: Boolean?,
         data: NodeFetchReq?
     ): Result<Page<NodeWithPermission>> {
         return Result(
@@ -207,8 +215,18 @@ class ServiceNodeResourceImpl @Autowired constructor(
                 latestBuildTimeEnd = latestBuildTimeEnd,
                 sortType = sortType,
                 collation = collation,
+                createMode = createMode,
                 data = data
             )
         )
+    }
+
+    override fun checkNodePermission(
+        userId: String,
+        projectId: String,
+        nodeId: Long,
+        permission: AuthPermission
+    ): Result<Boolean> {
+        return Result(nodeService.checkNodePermission(userId, projectId, nodeId, permission))
     }
 }
