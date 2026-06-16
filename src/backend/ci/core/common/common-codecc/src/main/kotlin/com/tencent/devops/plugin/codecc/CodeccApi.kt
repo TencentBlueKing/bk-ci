@@ -120,11 +120,20 @@ class CodeccApi(
         return execUrl
     }
 
-    fun installCheckerSet(projectId: String, userId: String, type: String, checkerSetId: String): Result<Boolean> {
-        val headers = mapOf(
+    fun installCheckerSet(
+        projectId: String,
+        userId: String,
+        type: String,
+        checkerSetId: String,
+        tag: String? = null
+    ): Result<Boolean> {
+        val headers = mutableMapOf(
             AUTH_HEADER_DEVOPS_PROJECT_ID to projectId,
             AUTH_HEADER_DEVOPS_USER_ID to userId
         )
+        if (!tag.isNullOrBlank()) {
+            headers[AUTH_HEADER_GATEWAY_TAG] = tag
+        }
         val body = mapOf(
             "type" to type,
             "projectId" to projectId
@@ -140,49 +149,51 @@ class CodeccApi(
 
     private fun generateCodeccHeaders(
         repoId: String,
-        buildId: String?
+        buildId: String?,
+        tag: String? = null
     ): MutableMap<String, String> {
         val headers = mutableMapOf("repoId" to repoId)
         headers[CONTENT_TYPE] = CONTENT_TYPE_JSON
-        if (null != buildId) headers["buildId"] = buildId
+        if (!buildId.isNullOrBlank()) headers["buildId"] = buildId
+        if (!tag.isNullOrBlank()) headers[AUTH_HEADER_GATEWAY_TAG] = tag
         return headers
     }
 
-    fun getCodeccMeasureInfo(repoId: String, buildId: String? = null): Result<CodeccMeasureInfo?> {
+    fun getCodeccMeasureInfo(repoId: String, buildId: String? = null, tag: String? = null): Result<CodeccMeasureInfo?> {
         val result = taskExecution(
             body = mapOf(),
-            headers = generateCodeccHeaders(repoId, buildId),
+            headers = generateCodeccHeaders(repoId, buildId, tag),
             path = "/ms/defect/api/service/defect/repo/measurement",
             method = HttpMethod.GET
         )
         return objectMapper.readValue(result)
     }
 
-    fun getCodeccTaskStatusInfo(repoId: String, buildId: String? = null): Result<Int> {
+    fun getCodeccTaskStatusInfo(repoId: String, buildId: String? = null, tag: String? = null): Result<Int> {
         val result = taskExecution(
             body = mapOf(),
-            headers = generateCodeccHeaders(repoId, buildId),
+            headers = generateCodeccHeaders(repoId, buildId, tag),
             path = "/ms/task/api/service/task/repo/status",
             method = HttpMethod.GET
         )
         return objectMapper.readValue(result)
     }
 
-    fun startCodeccTask(repoId: String, commitId: String? = null): Result<String> {
+    fun startCodeccTask(repoId: String, commitId: String? = null, tag: String? = null): Result<String> {
         val result = taskExecution(
             body = mapOf(),
             path = "/ms/task/api/service/openScan/trigger/repo",
-            headers = generateCodeccHeaders(repoId, commitId),
+            headers = generateCodeccHeaders(repoId, commitId, tag),
             method = HttpMethod.POST
         )
         return objectMapper.readValue(result)
     }
 
-    fun createCodeccPipeline(repoId: String, languages: List<String>): Result<Boolean> {
+    fun createCodeccPipeline(repoId: String, languages: List<String>, tag: String? = null): Result<Boolean> {
         val result = taskExecution(
             body = mapOf("langs" to languages),
             path = "/ms/task/api/service/task/repo/create",
-            headers = generateCodeccHeaders(repoId, null),
+            headers = generateCodeccHeaders(repoId, null, tag),
             method = HttpMethod.POST
         )
         return objectMapper.readValue(result)
