@@ -305,6 +305,7 @@
             color: #3A84FF;
             font-size: 12px;
             cursor: pointer;
+            gap: 8px;
 
             &:hover {
                 color: #699df4;

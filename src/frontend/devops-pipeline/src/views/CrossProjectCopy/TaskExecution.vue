@@ -432,7 +432,7 @@
                     {
                         key: 'PIPELINE',
                         label: this.$t('pipeline'),
-                        icon: 'template-pipeline',
+                        icon: 'pipeline-result',
                         color: '#3764DC',
                         totalCount: 0
                     },
@@ -1047,11 +1047,11 @@
                         break
                     case 'BUILD_ENV':
                     case 'DEPLOY_ENV':
-                        url = `/console/environment/${projectId}/envDetail/${resourceId}`
+                        url = `/console/environment/${projectId}/pipeline/env/ALL/${resourceId}/node`
                         break
                     case 'BUILD_NODE':
                     case 'DEPLOY_NODE':
-                        url = `/console/environment/${projectId}/node/nodeDetail/${resourceId}`
+                        url = `/console/environment/${projectId}/pipeline/node/allNode?nodeHashId=${resourceId}`
                         break
                     case 'CREDENTIAL':
                         url = `/console/ticket/${projectId}`
@@ -1451,6 +1451,11 @@
                         flex: 1;
                         align-items: center;
                         gap: 8px;
+
+                        p {
+                            display: flex;
+                            align-items: center;
+                        }
 
                         .tab-label {
                             flex: 1;

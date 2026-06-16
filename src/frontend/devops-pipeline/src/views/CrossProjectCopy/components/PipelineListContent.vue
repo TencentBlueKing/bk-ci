@@ -143,13 +143,15 @@
     import SearchSelect from '@blueking/search-select'
     import CustomTabs from './CustomTabs.vue'
     import '@blueking/search-select/dist/styles/index.css'
+    import Logo from '@/components/Logo'
     import { PipelineBatchTaskDetailStatus, PipelineBatchTaskDetailErrorType } from '@/store/modules/crossProjectCopy/constants'
     
     export default {
         name: 'PipelineListContent',
         components: {
             CustomTabs,
-            SearchSelect
+            SearchSelect,
+            Logo
         },
         props: {
             statusSummary: {

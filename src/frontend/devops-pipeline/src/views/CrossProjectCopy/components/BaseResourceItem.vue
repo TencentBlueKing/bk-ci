@@ -232,7 +232,7 @@
                 this.pipelineDialogVisible = true
             },
             handleJump () {
-                const { resourceType, resourceId, resourceProperties } = this.item
+                const { resourceType, resourceId, resourceName } = this.item
                 const projectId = this.projectId
                 let url = ''
                 switch (resourceType) {
@@ -240,15 +240,15 @@
                         url = `/console/pipeline/${projectId}/template/${resourceId}`
                         break
                     case 'REPOSITORY':
-                        url = `/console/codelib/${projectId}/?id=${resourceId}&scmType=${resourceProperties.scmCode}`
+                        url = `/console/codelib/${projectId}/?id=${resourceId}&searchName=${resourceName}`
                         break
                     case 'BUILD_ENV':
                     case 'DEPLOY_ENV':
-                        url = `/console/environment/${projectId}/envDetail/${resourceId}`
+                        url = `/console/environment/${projectId}/pipeline/env/ALL/${resourceId}/node`
                         break
                     case 'BUILD_NODE':
                     case 'DEPLOY_NODE':
-                        url = `/console/environment/${projectId}/node/nodeDetail/${resourceId}`
+                        url = `/console/environment/${projectId}/pipeline/node/allNode?nodeHashId=${resourceId}`
                         break
                     case 'CREDENTIAL':
                         url = `/console/ticket/${projectId}`
