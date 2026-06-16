@@ -694,7 +694,9 @@
                     okText: this.$t('retry'),
                     cancelText: this.$t('cancel'),
                     confirmFn: () => {
-                        // 调接口后不阻塞，立即开始轮询刷新数据
+                        this.taskResult = ''
+
+                        // 调接口后不阻塞，延迟 3s 再开始轮询（让后端先处理）
                         this.retryFailedTaskDetail({
                             projectId: this.projectId,
                             taskId: this.taskId,
@@ -705,8 +707,9 @@
                             this.$bkMessage({ theme: 'error', message: error.message || error })
                         })
 
-                        // 立即开始轮询
-                        this.startRetryPolling()
+                        setTimeout(() => {
+                            this.startRetryPolling()
+                        }, 1000)
                     }
                 })
             },
@@ -725,7 +728,9 @@
                     okText: this.$t('retry'),
                     cancelText: this.$t('cancel'),
                     confirmFn: () => {
-                        // 调接口后不阻塞，立即开始轮询刷新数据
+                        this.taskResult = ''
+
+                        // 调接口后不阻塞，延迟 3s 再开始轮询（让后端先处理）
                         this.retryFailedTask({
                             projectId: this.projectId,
                             taskId: this.taskId
@@ -735,8 +740,9 @@
                             this.$bkMessage({ theme: 'error', message: error.message || error })
                         })
 
-                        // 立即开始轮询
-                        this.startRetryPolling()
+                        setTimeout(() => {
+                            this.startRetryPolling()
+                        }, 1000)
                     }
                 })
             },
@@ -1021,15 +1027,9 @@
                     this.fetchResourceData()
                 }
             },
-            /**
-             * 分页页码变化
-             */
             handlePageChange (page) {
                 this.pagination.current = page
             },
-            /**
-             * 分页每页条数变化
-             */
             handlePageLimitChange (limit) {
                 this.pagination.current = 1
                 this.pagination.limit = limit

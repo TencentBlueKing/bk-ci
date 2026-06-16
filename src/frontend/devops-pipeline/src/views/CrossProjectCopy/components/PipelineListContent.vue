@@ -474,6 +474,11 @@
 
     .error-item {
         margin-bottom: 8px;
+
+        p {
+            display: flex;
+            align-items: center;
+        }
     }
 
     .error-item-title {

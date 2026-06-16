@@ -242,7 +242,6 @@
             this.initialTargetResourceName = this.item.targetResourceName || ''
         },
         methods: {
-            // 处理策略变更
             handleChange (value) {
                 if (value === PipelineCopyStrategy.PIPELINE_AUTO_RESOLVE_CONFLICT) {
                     // 自动解决冲突：
@@ -267,11 +266,9 @@
                 }
                 this.$emit('strategy-change', value)
             },
-            // 这里待考量
             handleJump () {
                 window.open(`/console/pipeline/${this.projectId}/${this.item.resourceId}/history/pipeline`, '__blank')
             },
-            // 跳转到目标流水线
             handleJumpToTarget (pipelineId) {
                 if (!pipelineId) return
                 window.open(`/console/pipeline/${this.projectId}/${pipelineId}/history/pipeline`, '__blank')
