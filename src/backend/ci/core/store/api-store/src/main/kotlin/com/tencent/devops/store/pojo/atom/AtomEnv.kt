@@ -29,7 +29,6 @@ package com.tencent.devops.store.pojo.atom
 
 import com.tencent.devops.common.api.annotation.BkFieldI18n
 import com.tencent.devops.common.api.enums.I18nSourceEnum
-import com.tencent.devops.store.pojo.atom.enums.JobTypeEnum
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "插件执行环境信息")
@@ -76,8 +75,10 @@ data class AtomEnv(
     val shaContent: String? = null,
     @get:Schema(title = "插件执行前置命令", required = false)
     val preCmd: String? = null,
-    @get:Schema(title = "Job类型", required = false)
-    val jobType: JobTypeEnum? = null,
+    @get:Schema(title = "Job类型（PIPELINE 范围的纯字符串，如 AGENT）", required = false)
+    val jobType: String? = null,
+    @get:Schema(title = "多服务范围Job类型映射JSON", required = false)
+    val jobTypeMap: String? = null,
     @get:Schema(title = "插件post信息", required = false)
     val atomPostInfo: AtomPostInfo? = null,
     @get:Schema(title = "所属插件分类代码", required = false)
@@ -89,5 +90,7 @@ data class AtomEnv(
     @get:Schema(title = "插件运行结束后是否立即杀掉其进程", required = false)
     val finishKillFlag: Boolean? = null,
     @get:Schema(title = "插件是否需要鉴权（开源插件无需鉴权）", required = false)
-    val authFlag: Boolean? = null
+    val authFlag: Boolean? = null,
+    @get:Schema(title = "服务范围", required = false)
+    val serviceScope: List<String>? = null
 )

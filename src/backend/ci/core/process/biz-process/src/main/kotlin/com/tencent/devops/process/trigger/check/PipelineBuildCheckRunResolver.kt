@@ -183,6 +183,7 @@ class PipelineBuildCheckRunResolver @Autowired constructor(
 
     private fun supportChannel(channelCode: ChannelCode?) = listOf(
         ChannelCode.BS,
+        ChannelCode.CREATIVE_STREAM,
         ChannelCode.GONGFENGSCAN
     ).contains(channelCode)
 

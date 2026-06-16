@@ -292,7 +292,7 @@ interface ServicePipelineResource {
         @Parameter(description = "渠道号，默认为BS", required = false)
         @QueryParam("channelCode")
         @DefaultValue("BS")
-        channelCode: ChannelCode? = ChannelCode.BS,
+        channelCode: ChannelCode? = ChannelCode.getRequestChannelCode(),
         @Parameter(description = "流水线设置", required = true)
         setting: PipelineSetting
     ): Result<Boolean>
@@ -357,7 +357,7 @@ interface ServicePipelineResource {
         pageSize: Int? = null,
         @Parameter(description = "渠道号，默认为BS", required = false)
         @QueryParam("channelCode")
-        channelCode: ChannelCode? = ChannelCode.BS,
+        channelCode: ChannelCode? = ChannelCode.getRequestChannelCode(),
         @Parameter(description = "是否校验权限", required = false)
         @QueryParam("checkPermission")
         checkPermission: Boolean? = true,
@@ -382,7 +382,7 @@ interface ServicePipelineResource {
         pipelineId: String,
         @Parameter(description = "channel", required = false)
         @QueryParam("channelCode")
-        channelCode: ChannelCode? = ChannelCode.BS
+        channelCode: ChannelCode? = ChannelCode.getRequestChannelCode()
     ): Result<Pipeline?>
 
     @Operation(summary = "获取流水线完整状态")
@@ -544,7 +544,10 @@ interface ServicePipelineResource {
     fun getPipelineInfoByPipelineId(
         @Parameter(description = "流水线id列表", required = true)
         @PathParam("pipelineId")
-        pipelineId: String
+        pipelineId: String,
+        @Parameter(description = "项目ID", required = false)
+        @QueryParam("projectId")
+        projectId: String? = null
     ): Result<SimplePipeline?>?
 
     @Operation(summary = "根据项目ID获取流水线标签关系列表")
@@ -681,5 +684,27 @@ interface ServicePipelineResource {
         @Parameter(description = "开启true/锁定false", required = true)
         @QueryParam("enable")
         enable: Boolean
+    ): Result<Boolean>
+
+    @Operation(summary = "更新流水线AI自动摘要")
+    @PUT
+    @Path("/projects/{projectId}/pipelines/{pipelineId}/autoSummary")
+    @BkApiPermission([BkApiHandleType.API_NO_AUTH_CHECK])
+    fun updateAutoSummary(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @Parameter(description = "AI自动摘要内容", required = true)
+        @QueryParam("autoSummary")
+        autoSummary: String,
+        @Parameter(description = "流水线版本号（用于校验）", required = true)
+        @QueryParam("version")
+        version: Int
     ): Result<Boolean>
 }

@@ -58,6 +58,7 @@ import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.MessageUtil
+import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.archive.client.BkRepoClient
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_APP_TITLE
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_BUNDLE_IDENTIFIER
@@ -96,6 +97,7 @@ import jakarta.ws.rs.core.Response
 import java.net.URLEncoder
 import java.util.regex.Pattern
 import okhttp3.HttpUrl.Companion.toHttpUrl
+import okhttp3.Request
 import org.slf4j.LoggerFactory
 import org.springframework.util.DigestUtils
 
@@ -203,6 +205,23 @@ open class BkRepoDownloadService(
             path = argPath,
             ttl = ttl
         )
+
+        // 对IPA下载链接发起HEAD请求，校验合规状态
+        try {
+            val headRequest = Request.Builder().url(ipaExternalDownloadUrl.url).head().build()
+            OkhttpUtils.doShortHttp(headRequest).use { headResponse ->
+                if (headResponse.code == 451) {
+                    throw CustomException(
+                        Response.Status.UNAVAILABLE_FOR_LEGAL_REASONS,
+                        ""
+                    )
+                }
+            }
+        } catch (e: CustomException) {
+            throw e
+        } catch (e: Exception) {
+            logger.warn("HEAD request to check IPA download URL failed, continue normally", e)
+        }
 
         // 获取IPA属性
         val fileProperties = bkRepoClient.listMetadata(
@@ -790,7 +809,6 @@ open class BkRepoDownloadService(
                         targetProjectId,
                         targetPipelineId,
                         crossBuildNo ?: throw BadRequestException("Invalid Parameter buildNo"),
-                        ChannelCode.BS
                     ).data ?: throw BadRequestException(
                         I18nUtil.getCodeLanMessage(
                             messageCode = BUILD_NOT_EXIST,

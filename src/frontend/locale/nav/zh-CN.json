@@ -39,7 +39,8 @@
     "noOperateAccess": "没有操作权限",
     "noOperateAccessTip": "已驳回，没有操作权限",
     "creativeFlowOnlySupportPersonalProject": "创作流仅支持在个人项目下使用",
-    "switchToPersonalProject": "切换到个人项目"
+    "switchToPersonalProject": "切换到个人项目",
+    "personalProjectNotExist": "个人项目不存在，请先创建个人项目"
   },
   "projectManage": "项目管理",
   "myPermission": "我的权限",
@@ -283,5 +284,6 @@
   "支持将 CI 编译产物安装至移动设备，便于测试与体验。": "支持将 CI 编译产物安装至移动设备，便于测试与体验。",
   "桌面端制品库，支持预约下载与下载加速，支持 Windows 应用的版本体验。": "桌面端制品库，支持预约下载与下载加速，支持 Windows 应用的版本体验。",
   "点击下载": "点击下载",
-  "扫码下载": "扫码下载"
+  "扫码下载": "扫码下载",
+  "personalProjectCannotExit": "个人项目不允许退出"
 }

@@ -94,7 +94,7 @@ abstract class AbstractPipelinePermissionService constructor(
         return authPermissionApi.validateUserResourcePermission(
             user = userId,
             serviceCode = pipelineAuthServiceCode,
-            resourceType = authResourceType ?: resourceType,
+            resourceType = AuthResourceType.getAuthResourceTypeByChannel(authResourceType ?: resourceType),
             projectCode = projectId,
             resourceCode = pipelineId,
             permission = permission
@@ -111,7 +111,7 @@ abstract class AbstractPipelinePermissionService constructor(
         if (!authPermissionApi.validateUserResourcePermission(
                 user = userId,
                 serviceCode = pipelineAuthServiceCode,
-                resourceType = resourceType,
+                resourceType = AuthResourceType.getAuthResourceTypeByChannel(resourceType),
                 projectCode = projectId,
                 resourceCode = pipelineId,
                 permission = permission
@@ -142,7 +142,7 @@ abstract class AbstractPipelinePermissionService constructor(
         authPermissionApi.getUserResourceByPermission(
             user = userId,
             serviceCode = pipelineAuthServiceCode,
-            resourceType = resourceType,
+            resourceType = AuthResourceType.getAuthResourceTypeByChannel(resourceType),
             projectCode = projectId,
             permission = permission,
             supplier = supplierForFakePermission(projectId)
@@ -175,7 +175,7 @@ abstract class AbstractPipelinePermissionService constructor(
         authResourceApi.createResource(
             user = userId,
             serviceCode = pipelineAuthServiceCode,
-            resourceType = resourceType,
+            resourceType = AuthResourceType.getAuthResourceTypeByChannel(resourceType),
             projectCode = projectId,
             resourceCode = pipelineId,
             resourceName = pipelineName
@@ -191,7 +191,7 @@ abstract class AbstractPipelinePermissionService constructor(
     override fun modifyResource(projectId: String, pipelineId: String, pipelineName: String) {
         authResourceApi.modifyResource(
             serviceCode = pipelineAuthServiceCode,
-            resourceType = resourceType,
+            resourceType = AuthResourceType.getAuthResourceTypeByChannel(resourceType),
             projectCode = projectId,
             resourceCode = pipelineId,
             resourceName = pipelineName
@@ -207,7 +207,7 @@ abstract class AbstractPipelinePermissionService constructor(
         try {
             authResourceApi.deleteResource(
                 serviceCode = pipelineAuthServiceCode,
-                resourceType = resourceType,
+                resourceType = AuthResourceType.getAuthResourceTypeByChannel(resourceType),
                 projectCode = projectId,
                 resourceCode = pipelineId
             )

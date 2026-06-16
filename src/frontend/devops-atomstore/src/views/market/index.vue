@@ -5,7 +5,7 @@
             :type="filterData.pipeType"
         >
             <router-link
-                v-if="filterData.pipeType !== 'ide'"
+                v-if="filterData.pipeType !== 'ide' && filterData.pipeType !== 'creative'"
                 :to="{ name: `${filterData.pipeType || 'atom'}Work` }"
                 class="g-title-work"
             >
@@ -37,7 +37,7 @@
                         >
                             <icon
                                 class="title-icon"
-                                :name="`store-${storeType.type}`"
+                                :name="storeType.type === 'creative' ? 'logo-creative' : `store-${storeType.type}`"
                                 size="18"
                             />
                             <span>{{ storeType.des }}</span>
@@ -166,6 +166,7 @@
                 showToTop: false,
                 storeTypes: [
                     { type: 'atom', des: this.$t('store.流水线插件') },
+                    { type: 'creative', des: this.$t('store.创作流插件') },
                     { type: 'template', des: this.$t('store.流水线模板') },
                     { type: 'ide', des: this.$t('store.IDE插件') },
                     { type: 'image', des: this.$t('store.容器镜像') },
@@ -378,6 +379,7 @@
             getClassifys (val) {
                 const fun = {
                     atom: () => this.getAtomClassifys(),
+                    creative: () => this.getCreativeClassifys(),
                     template: () => this.getTemplateClassifys(),
                     ide: () => this.getIDEClassifys(),
                     image: () => this.getImageClassifys(),
@@ -409,7 +411,16 @@
             },
 
             getAtomClassifys () {
-                return Promise.all([this.requestAtomClassifys(), this.requestAtomLables()]).then(([classifys, lables]) => {
+                return Promise.all([this.requestAtomClassifys({ serviceScope: 'PIPELINE' }), this.requestAtomLables( { serviceScope: 'PIPELINE' })]).then(([classifys, lables]) => {
+                    const res = []
+                    if (classifys.length > 0) res.push({ name: 'classifyName', key: 'classifyCode', groupName: this.$t('store.按分类'), data: classifys })
+                    if (lables.length > 0) res.push({ name: 'labelName', key: 'labelCode', groupName: this.$t('store.按功能'), data: lables })
+                    return res
+                })
+            },
+
+            getCreativeClassifys () {
+                return Promise.all([this.requestAtomClassifys({ serviceScope: 'CREATIVE_STREAM' }), this.requestAtomLables( { serviceScope: 'CREATIVE_STREAM' })]).then(([classifys, lables]) => {
                     const res = []
                     if (classifys.length > 0) res.push({ name: 'classifyName', key: 'classifyCode', groupName: this.$t('store.按分类'), data: classifys })
                     if (lables.length > 0) res.push({ name: 'labelName', key: 'labelCode', groupName: this.$t('store.按功能'), data: lables })

@@ -2,7 +2,6 @@ package com.tencent.devops.process.notify.command.impl
 
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.notify.command.BuildNotifyContext
@@ -55,7 +54,7 @@ abstract class NotifyPipelineCmd @Autowired constructor(
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,
-            channelCode = ChannelCode.BS,
+            channelCode = pipelineInfo.channelCode,
             checkPermission = false
         )
         val failTask = getFailTaskName(detail)

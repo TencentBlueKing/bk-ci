@@ -322,6 +322,10 @@ class UserWorkspaceResourceImpl @Autowired constructor(
         return Result(true)
     }
 
+    override fun kickInstance(userId: String, workspaceName: String): Result<Boolean> {
+        return Result(workspaceService.kickInstance(userId = userId, workspaceName = workspaceName))
+    }
+
     override fun getCertExchangeCode(userId: String): Result<CertExchangeCodeResp> {
         return Result(
             workspaceService.getCertExchangeCode(

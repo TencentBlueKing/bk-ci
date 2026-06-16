@@ -260,7 +260,7 @@ class ThirdPartyAgentMonitorService @Autowired constructor(
             }
             // Agent发起领取超过x分钟没有启动，基本上存在问题需要重回队列以便被再次调度到
             if (outTime) {
-                thirdPartyAgentBuildDao.updateStatus(dslContext, record.id, PipelineTaskStatus.QUEUE)
+                thirdPartyAgentBuildDao.updateStatus(dslContext, record.id, PipelineTaskStatus.QUEUE, null)
                 val sb = StringBuilder()
                 sb.append(
                     I18nUtil.getCodeLanMessage(

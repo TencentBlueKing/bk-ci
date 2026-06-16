@@ -48,7 +48,8 @@ import org.slf4j.LoggerFactory
             params = exception.params,
             data = null,
             language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
-            defaultMessage = exception.defaultMessage
+            defaultMessage = exception.defaultMessage,
+            channel = exception.channel
         )
 
         return Response.status(exception.statusCode).type(MediaType.APPLICATION_JSON_TYPE)

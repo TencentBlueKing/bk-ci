@@ -386,7 +386,7 @@ class RbacPermissionResourceGroupSyncService @Autowired constructor(
                 )
                 logger.info(
                     "It take(${System.currentTimeMillis() - startEpoch})ms to sync " +
-                        "project group and members $projectCode"
+                            "project group and members $projectCode"
                 )
             } catch (ex: Exception) {
                 handleException(
@@ -492,9 +492,9 @@ class RbacPermissionResourceGroupSyncService @Autowired constructor(
                 if (projectGroupMap.contains(iamGroupInfo.id)) {
                     val projectGroup = projectGroupMap[iamGroupInfo.id]!!
                     val isGroupInfoChanged = projectGroup.groupName != iamGroupInfo.name ||
-                        projectGroup.description != iamGroupInfo.description ||
-                        projectGroup.iamTemplateId != templateId ||
-                        projectGroup.applyDisable != iamGroupInfo.applyDisable
+                            projectGroup.description != iamGroupInfo.description ||
+                            projectGroup.iamTemplateId != templateId ||
+                            projectGroup.applyDisable != iamGroupInfo.applyDisable
                     if (isGroupInfoChanged) {
                         toUpdateGroups.add(
                             projectGroup.copy(
@@ -657,7 +657,7 @@ class RbacPermissionResourceGroupSyncService @Autowired constructor(
                     } catch (ignore: Exception) {
                         logger.warn(
                             "sync resource group member failed!" +
-                                "|$projectCode|${authResourceGroup.relationId}|$ignore"
+                                    "|$projectCode|${authResourceGroup.relationId}|$ignore"
                         )
                     }
                 }
@@ -759,7 +759,9 @@ class RbacPermissionResourceGroupSyncService @Autowired constructor(
         toDeleteMembers.addAll(resourceGroupMemberMap.filterKeys { !iamGroupMemberMap.contains(it) }.values)
         iamGroupMemberList.forEach { iamGroupMember ->
             val expiredTime = DateTimeUtil.convertTimestampToLocalDateTime(iamGroupMember.expiredAt)
-            val joinedAt = DateTimeUtil.convertTimestampToLocalDateTime(iamGroupMember.createdAt)
+            val joinedAt = iamGroupMember.createdAt?.let {
+                DateTimeUtil.convertTimestampToLocalDateTime(it)
+            }
             if (resourceGroupMemberMap.contains(iamGroupMember.id)) {
                 val resourceGroupMember = resourceGroupMemberMap[iamGroupMember.id]!!
                 if (expiredTime != resourceGroupMember.expiredTime || joinedAt != resourceGroupMember.joinedAt) {
@@ -813,7 +815,9 @@ class RbacPermissionResourceGroupSyncService @Autowired constructor(
         toDeleteMembers.addAll(resourceGroupMemberMap.filterKeys { !iamGroupTemplateMap.contains(it) }.values)
         iamGroupTemplateList.forEach { iamGroupTemplate ->
             val expiredTime = DateTimeUtil.convertTimestampToLocalDateTime(iamGroupTemplate.expiredAt)
-            val joinedAt = DateTimeUtil.convertTimestampToLocalDateTime(iamGroupTemplate.createdAt)
+            val joinedAt = iamGroupTemplate.createdAt?.let {
+                DateTimeUtil.convertTimestampToLocalDateTime(it)
+            }
             if (resourceGroupMemberMap.contains(iamGroupTemplate.id)) {
                 val resourceGroupMember = resourceGroupMemberMap[iamGroupTemplate.id]!!
                 if (expiredTime != resourceGroupMember.expiredTime || joinedAt != resourceGroupMember.joinedAt) {

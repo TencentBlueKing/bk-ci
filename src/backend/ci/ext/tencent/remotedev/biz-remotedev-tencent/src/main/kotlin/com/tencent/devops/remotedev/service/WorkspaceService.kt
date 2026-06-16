@@ -130,6 +130,7 @@ import java.time.Duration
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.concurrent.TimeUnit
+import kotlin.math.max
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -138,7 +139,6 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import org.springframework.web.context.request.RequestContextHolder
 import org.springframework.web.context.request.ServletRequestAttributes
-import kotlin.math.max
 
 @Service
 @Suppress("ALL")
@@ -213,6 +213,7 @@ class WorkspaceService @Autowired constructor(
                 displayName = displayName
             )
         }
+
         return true
     }
 
@@ -249,7 +250,12 @@ class WorkspaceService @Autowired constructor(
             .addAttribute(TencentActionAuditContent.PROJECT_CODE_TEMPLATE, ws.projectId)
             .scopeId = ws.projectId
 
-        if (checkPermission && !permissionService.hasManagerOrViewerPermission(userId, ws.projectId, ws.workspaceName)) {
+        if (checkPermission && !permissionService.hasManagerOrViewerPermission(
+                userId,
+                ws.projectId,
+                ws.workspaceName
+            )
+        ) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
                 params = arrayOf("We're sorry but you don't have permission to modify $workspaceName property")
@@ -269,7 +275,7 @@ class WorkspaceService @Autowired constructor(
                 workspaceProperty = workspaceProperty
             )
         }
-        
+
         // 在事务外添加操作记录
         if (workspaceProperty.displayName != null) {
             workspaceOpHistoryDao.createWorkspaceHistory(
@@ -284,7 +290,7 @@ class WorkspaceService @Autowired constructor(
                 )
             )
         }
-        
+
         if (workspaceProperty.remark != null) {
             workspaceOpHistoryDao.createWorkspaceHistory(
                 dslContext = dslContext,
@@ -298,7 +304,7 @@ class WorkspaceService @Autowired constructor(
                 )
             )
         }
-        
+
         if (workspaceProperty.labels != null) {
             workspaceOpHistoryDao.createWorkspaceHistory(
                 dslContext = dslContext,
@@ -312,7 +318,7 @@ class WorkspaceService @Autowired constructor(
                 )
             )
         }
-        
+
         return true
     }
 
@@ -458,21 +464,21 @@ class WorkspaceService @Autowired constructor(
             notStatus = notStatus?.plus(WorkspaceStatus.DISTRIBUTING)?.plus(WorkspaceStatus.PREPARING)
                 ?: listOf(WorkspaceStatus.DISTRIBUTING, WorkspaceStatus.PREPARING)
         }
-        
+
         // 2. 获取工作空间列表（使用 getWorkspaceList 返回 Workspace 对象）
         val workspaces = getWorkspaceList(userId, page, pageSize, updatedSearch).records
-        
+
         // 3. 提取所有拥有者
         val owners = workspaces.mapNotNull { it.owner }.toSet()
-        
+
         // 4. 分离集团员工和太湖账户
         val corporateOwners = owners.filter { !it.endsWith("@tai") }.toSet()
         val taiOwners = owners.filter { it.endsWith("@tai") }.toSet()
-        
+
         // 5. 批量获取组织架构信息
         val corporateOrgMap = getCorporateUserOrganizations(corporateOwners)
         val taiOrgMap = getTaiUserOrganizations(taiOwners)
-        
+
         // 6. 合并组织架构映射
         val ownerToOrgMap = corporateOrgMap + taiOrgMap
 
@@ -496,14 +502,14 @@ class WorkspaceService @Autowired constructor(
                             workspaces = orgWorkspaces
                         )
                     }
-                
+
                 WorkspaceGroupByOrg(
                     projectId = projId ?: "",
                     projectName = projectNameMap[projId] ?: "",
                     organizations = orgGroups
                 )
             }
-        
+
         return grouped
     }
 
@@ -512,17 +518,17 @@ class WorkspaceService @Autowired constructor(
      */
     private fun getCorporateUserOrganizations(owners: Set<String>): Map<String, String> {
         if (owners.isEmpty()) return emptyMap()
-        
+
         return owners.mapNotNull { owner ->
             try {
                 val userInfo = client.get(ServiceDeptResource::class).getUserInfo(
                     userId = owner,
                     name = owner
                 ).data
-                
+
                 // 取 deptInfo 列表的最后一个元素
                 val lastDept = userInfo?.deptInfo?.lastOrNull()
-                
+
                 if (lastDept != null) {
                     owner to (lastDept.fullName ?: "未知部门")
                 } else {
@@ -541,7 +547,7 @@ class WorkspaceService @Autowired constructor(
      */
     private fun getTaiUserOrganizations(owners: Set<String>): Map<String, String> {
         if (owners.isEmpty()) return emptyMap()
-        
+
         // 所有太湖账户统一标记为"离岸合作伙伴"
         return owners.associateWith { "离岸合作伙伴" }
     }
@@ -1144,6 +1150,38 @@ class WorkspaceService @Autowired constructor(
         return workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName)
     }
 
+    fun kickInstance(
+        userId: String,
+        workspaceName: String
+    ): Boolean {
+        logger.info("$userId kick instance for workspace $workspaceName")
+        workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName)
+            ?: throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
+                params = arrayOf(workspaceName)
+            )
+        if (!permissionService.checkUserPermission(userId, workspaceName)) {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
+                params = arrayOf(
+                    "You don't have permission to access workspace $workspaceName"
+                )
+            )
+        }
+        val environmentUid = dispatchWorkspaceDao.getWorkspaceInfo(workspaceName, dslContext)?.environmentUid
+            ?: throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
+                params = arrayOf(workspaceName)
+            )
+        if (environmentUid.isBlank()) {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.BASE_ERROR.errorCode,
+                params = arrayOf("environmentUid is empty for workspace $workspaceName")
+            )
+        }
+        return startCloudClient.kickInstance(userId = userId, envId = environmentUid)
+    }
+
     @ActionAuditRecord(
         actionId = TencentActionId.CGS_VIEW,
         instance = AuditInstanceRecord(
@@ -1435,7 +1473,7 @@ class WorkspaceService @Autowired constructor(
             .setInstanceName(workspace.workspaceName)
         permissionService.checkViewerPermission(userId, workspace.workspaceName, workspace.projectId)
         ActionAuditContext.current().addAttribute(TencentActionAuditContent.PROJECT_CODE_TEMPLATE, workspace.projectId)
-        
+
         val resourceId = workspace.resourceId
         val owner = if (workspace.ownerType.projectUse()) {
             workspaceSharedDao.fetchWorkspaceSharedInfo(
