@@ -14,15 +14,18 @@ import com.tencent.devops.auth.pojo.enum.MemberType
 import com.tencent.devops.auth.pojo.enum.ProjectGroupMigrationStatus
 import com.tencent.devops.auth.provider.rbac.service.AuthResourceCodeConverter
 import com.tencent.devops.auth.provider.rbac.service.AuthResourceService
+import com.tencent.devops.auth.provider.rbac.service.RbacCommonService
 import com.tencent.devops.auth.provider.rbac.service.migrate.ProjectGroupMigrationService
 import com.tencent.devops.auth.service.DeptService
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupPermissionService
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupService
 import com.tencent.devops.auth.service.iam.PermissionResourceMemberService
+import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.AuthResourceType
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.slot
 import io.mockk.verify
 import org.jooq.DSLContext
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -35,6 +38,7 @@ class ProjectGroupMigrationServiceTest {
     private val dslContext = mockk<DSLContext>()
     private val iamConfiguration = mockk<IamConfiguration>()
     private val authResourceService = mockk<AuthResourceService>()
+    private val rbacCommonService = mockk<RbacCommonService>()
     private val authResourceCodeConverter = mockk<AuthResourceCodeConverter>()
     private val authResourceGroupDao = mockk<AuthResourceGroupDao>()
     private val authResourceGroupMemberDao = mockk<AuthResourceGroupMemberDao>()
@@ -48,6 +52,7 @@ class ProjectGroupMigrationServiceTest {
         dslContext = dslContext,
         iamConfiguration = iamConfiguration,
         authResourceService = authResourceService,
+        rbacCommonService = rbacCommonService,
         authResourceCodeConverter = authResourceCodeConverter,
         authResourceGroupDao = authResourceGroupDao,
         authResourceGroupMemberDao = authResourceGroupMemberDao,
@@ -61,6 +66,9 @@ class ProjectGroupMigrationServiceTest {
     @BeforeEach
     fun setUp() {
         every { iamConfiguration.systemId } returns "bk_ci"
+        every { rbacCommonService.getActionInfo(any()) } answers {
+            actionInfo(firstArg())
+        }
         every {
             authResourceCodeConverter.code2IamCode(any(), any(), any())
         } answers { thirdArg<String>() }
@@ -546,6 +554,107 @@ class ProjectGroupMigrationServiceTest {
     }
 
     @Test
+    fun `execute should rebuild single resource scope with live action metadata when snapshot type is stale`() {
+        val sourceGroup = projectGroup(
+            projectCode = "source",
+            groupCode = "executor",
+            groupName = "CodeCC 执行者",
+            relationId = 61
+        )
+        val targetGroup = projectGroup(
+            projectCode = "target",
+            groupCode = "executor",
+            groupName = "CodeCC 执行者",
+            relationId = 161
+        )
+        val targetRecord = mockk<com.tencent.devops.model.auth.tables.records.TAuthResourceGroupRecord>()
+        every {
+            authResourceGroupDao.getByResourceCode(
+                dslContext = dslContext,
+                projectCode = "source",
+                resourceType = AuthResourceType.PROJECT.value,
+                resourceCode = "source"
+            )
+        } returns listOf(sourceGroup)
+        every {
+            authResourceGroupDao.getByResourceCode(
+                dslContext = dslContext,
+                projectCode = "target",
+                resourceType = AuthResourceType.PROJECT.value,
+                resourceCode = "target"
+            )
+        } returns emptyList()
+        every {
+            authResourceGroupPermissionDao.listByGroupId(dslContext, "source", 61)
+        } returns listOf(
+            ResourceGroupPermissionDTO(
+                projectCode = "source",
+                resourceType = AuthResourceType.PROJECT.value,
+                resourceCode = "source",
+                iamResourceCode = "source",
+                groupCode = "executor",
+                iamGroupId = 61,
+                action = "codecc_task_list",
+                actionRelatedResourceType = AuthResourceType.PROJECT.value,
+                relatedResourceType = "codecc_task",
+                relatedResourceCode = "task-source-1",
+                relatedIamResourceCode = "task-source-1"
+            )
+        )
+        every {
+            authResourceGroupMemberDao.listResourceGroupMember(
+                dslContext = dslContext,
+                projectCode = "source",
+                iamGroupId = 61,
+                minExpiredTime = any()
+            )
+        } returns emptyList()
+        every {
+            authResourceService.listByResourceCodes("source", "codecc_task", listOf("task-source-1"))
+        } returns listOf(
+            resourceInfo("source", "codecc_task", "task-source-1", "CodeCC Task A")
+        )
+        every { authResourceService.count("target", "codecc_task", null) } returns 1L
+        every {
+            authResourceService.list("target", "codecc_task", null, 200, 0)
+        } returns listOf(
+            resourceInfo("target", "codecc_task", "task-target-1", "CodeCC Task A")
+        )
+        every {
+            permissionResourceGroupService.createEmptyProjectGroupWithCode("target", "executor", any())
+        } returns 161
+        every {
+            authResourceGroupDao.getByRelationId(dslContext, "target", "161")
+        } returns targetRecord
+        every { authResourceGroupDao.convert(targetRecord) } returns targetGroup
+        val singleScopeSlot = slot<String>()
+        every {
+            permissionResourceGroupPermissionService.grantGroupPermission(
+                authorizationScopesStr = capture(singleScopeSlot),
+                projectCode = "target",
+                projectName = "Target Project",
+                resourceType = AuthResourceType.PROJECT.value,
+                groupCode = "executor",
+                iamResourceCode = "target",
+                resourceName = "Target Project",
+                iamGroupId = 161,
+                registerMonitorPermission = false,
+                filterResourceTypes = emptyList(),
+                filterActions = emptyList()
+            )
+        } returns true
+
+        val result = service.migrate(
+            ProjectGroupMigrationDTO(sourceProjectCode = "source", targetProjectCode = "target")
+        )
+
+        assertEquals(ProjectGroupMigrationStatus.SUCCESS, result.status)
+        val scopeJson = com.fasterxml.jackson.databind.ObjectMapper().readTree(singleScopeSlot.captured)
+        assertEquals("codecc_task", scopeJson[0]["resources"][0]["type"].asText())
+        assertEquals("codecc_task", scopeJson[0]["resources"][0]["paths"][0][1]["type"].asText())
+    }
+
+    @Test
     fun `incremental should reuse target group and only grant missing permissions`() {
         val sourceGroup = projectGroup(
             projectCode = "source",
@@ -860,6 +969,30 @@ class ProjectGroupMigrationServiceTest {
             memberName = memberId,
             memberType = memberType,
             expiredTime = LocalDateTime.now().plusDays(7)
+        )
+    }
+
+    private fun actionInfo(action: String) = when (action) {
+        ActionId.PIPELINE_VIEW,
+        ActionId.PIPELINE_EDIT -> com.tencent.devops.auth.pojo.vo.ActionInfoVo(
+            action = action,
+            actionName = action,
+            resourceType = "pipeline",
+            relatedResourceType = "pipeline"
+        )
+
+        "codecc_task_list" -> com.tencent.devops.auth.pojo.vo.ActionInfoVo(
+            action = action,
+            actionName = action,
+            resourceType = "codecc_task",
+            relatedResourceType = "codecc_task"
+        )
+
+        else -> com.tencent.devops.auth.pojo.vo.ActionInfoVo(
+            action = action,
+            actionName = action,
+            resourceType = AuthResourceType.PROJECT.value,
+            relatedResourceType = AuthResourceType.PROJECT.value
         )
     }
 }

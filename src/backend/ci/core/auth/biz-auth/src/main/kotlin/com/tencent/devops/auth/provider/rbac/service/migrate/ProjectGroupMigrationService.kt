@@ -22,6 +22,7 @@ import com.tencent.devops.auth.pojo.enum.MemberType
 import com.tencent.devops.auth.pojo.enum.ProjectGroupMigrationStatus
 import com.tencent.devops.auth.provider.rbac.service.AuthResourceCodeConverter
 import com.tencent.devops.auth.provider.rbac.service.AuthResourceService
+import com.tencent.devops.auth.provider.rbac.service.RbacCommonService
 import com.tencent.devops.auth.service.DeptService
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupPermissionService
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupService
@@ -39,6 +40,7 @@ class ProjectGroupMigrationService(
     private val dslContext: DSLContext,
     private val iamConfiguration: IamConfiguration,
     private val authResourceService: AuthResourceService,
+    private val rbacCommonService: RbacCommonService,
     private val authResourceCodeConverter: AuthResourceCodeConverter,
     private val authResourceGroupDao: AuthResourceGroupDao,
     private val authResourceGroupMemberDao: AuthResourceGroupMemberDao,
@@ -651,7 +653,7 @@ class ProjectGroupMigrationService(
             successfulMappings.add(
                 ResolvedPermission(
                     action = permission.action,
-                    actionRelatedResourceType = permission.actionRelatedResourceType,
+                    actionRelatedResourceType = resolveActionRelatedResourceType(permission),
                     relatedResourceType = permission.relatedResourceType,
                     targetResource = targetResource
                 )
@@ -757,7 +759,7 @@ class ProjectGroupMigrationService(
                 successfulMappings.add(
                     ResolvedPermission(
                         action = permission.action,
-                        actionRelatedResourceType = permission.actionRelatedResourceType,
+                        actionRelatedResourceType = resolveActionRelatedResourceType(permission),
                         relatedResourceType = permission.relatedResourceType,
                         targetResource = targetResource
                     )
@@ -1122,12 +1124,26 @@ class ProjectGroupMigrationService(
             ).map {
                 TargetPermissionKey(
                     action = it.action,
-                    actionRelatedResourceType = it.actionRelatedResourceType,
+                    actionRelatedResourceType = resolveActionRelatedResourceType(it),
                     relatedResourceType = it.relatedResourceType,
                     relatedResourceCode = it.relatedResourceCode
                 )
             }.toSet()
         )
+    }
+
+    private fun resolveActionRelatedResourceType(permission: ResourceGroupPermissionDTO): String {
+        return runCatching {
+            rbacCommonService.getActionInfo(permission.action).relatedResourceType
+        }.getOrElse {
+            logger.warn(
+                "resolve action related resource type failed, fallback to snapshot value|{}|{}",
+                permission.action,
+                permission.actionRelatedResourceType,
+                it
+            )
+            permission.actionRelatedResourceType
+        }
     }
 
     private fun extractProjectActions(
