@@ -249,6 +249,54 @@ interface ServiceAuthAiResource {
     ): Result<SQLPage<ResourceMemberInfo>>
 
     @GET
+    @Path("/projects/{projectId}/members/by_condition")
+    @Operation(summary = "根据复杂条件获取项目全体成员")
+    fun listProjectMembersByCondition(
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        @Parameter(description = "用户ID", required = true)
+        userId: String,
+        @PathParam("projectId")
+        @Parameter(description = "项目ID", required = true)
+        projectId: String,
+        @QueryParam("memberType")
+        @Parameter(description = "成员类型(user/department)")
+        memberType: String? = null,
+        @QueryParam("userName")
+        @Parameter(description = "用户名搜索")
+        userName: String? = null,
+        @QueryParam("deptName")
+        @Parameter(description = "部门名称搜索")
+        deptName: String? = null,
+        @QueryParam("groupName")
+        @Parameter(description = "用户组名称搜索")
+        groupName: String? = null,
+        @QueryParam("minExpiredAt")
+        @Parameter(description = "最小过期时间戳(毫秒)")
+        minExpiredAt: Long? = null,
+        @QueryParam("maxExpiredAt")
+        @Parameter(description = "最大过期时间戳(毫秒)")
+        maxExpiredAt: Long? = null,
+        @QueryParam("departed")
+        @Parameter(description = "是否离职")
+        departedFlag: Boolean? = null,
+        @QueryParam("resourceType")
+        @Parameter(description = "资源类型")
+        resourceType: String? = null,
+        @QueryParam("resourceCode")
+        @Parameter(description = "资源Code")
+        resourceCode: String? = null,
+        @QueryParam("action")
+        @Parameter(description = "权限动作/操作标识")
+        action: String? = null,
+        @QueryParam("page")
+        @Parameter(description = "页码")
+        page: Int = 1,
+        @QueryParam("pageSize")
+        @Parameter(description = "每页条数")
+        pageSize: Int = 20
+    ): Result<SQLPage<ResourceMemberInfo>>
+
+    @GET
     @Path("/projects/{projectId}/members/groupCount")
     @Operation(summary = "获取成员用户组数量")
     fun getMemberGroupCount(

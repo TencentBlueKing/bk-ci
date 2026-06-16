@@ -155,7 +155,7 @@ abstract class AbstractScmApiService(
                 )
             }
 
-            httpStatus == HttpStatus.FORBIDDEN.value -> {
+            httpStatus == HttpStatus.FORBIDDEN.value || httpStatus == HttpStatus.UNAUTHORIZED.value -> {
                 when (val auth = authRepository.auth) {
                     is UserOauthTokenAuthCred -> {
                         ErrorCodeException(

@@ -154,6 +154,7 @@ CREATE TABLE IF NOT EXISTS `T_PROJECT` (
   `AUTH_SECRECY` int(10) DEFAULT b'0' COMMENT '项目性质,0-公开，1-保密,2-机密',
   `product_id` int(10) DEFAULT NULL comment '运营产品ID',
   `HIDDEN` bit(1) DEFAULT b'0' COMMENT '是否隐藏',
+  `project_scope` int(10) NOT NULL DEFAULT '0' COMMENT '项目组织形态：0-团队项目，1-个人项目',
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE KEY `project_name` (`project_name`) USING BTREE,
   UNIQUE KEY `project_id` (`project_id`) USING BTREE,
@@ -379,6 +380,7 @@ CREATE TABLE IF NOT EXISTS `T_PROJECT_APPROVAL` (
    `PROPERTIES` text null comment '项目其他配置',
    `KPI_CODE` varchar(64) DEFAULT NULL COMMENT 'KPI产品编码',
    `KPI_NAME` varchar(128) DEFAULT NULL COMMENT 'KPI产品名称',
+   `PROJECT_SCOPE` int(10) NOT NULL DEFAULT '0' COMMENT '项目组织形态：0-团队项目，1-个人项目',
    PRIMARY KEY (`ID`) USING BTREE,
    UNIQUE KEY `project_name` (`PROJECT_NAME`) USING BTREE,
    UNIQUE KEY `english_name` (`ENGLISH_NAME`) USING BTREE

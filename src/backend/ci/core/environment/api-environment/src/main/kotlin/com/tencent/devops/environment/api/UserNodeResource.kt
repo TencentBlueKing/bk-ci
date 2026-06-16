@@ -156,7 +156,10 @@ interface UserNodeResource {
         sortType: String?,
         @Parameter(description = "正序ASC/倒序DESC (默认倒序)", required = false)
         @QueryParam("collation")
-        collation: String?
+        collation: String?,
+        @Parameter(description = "是否是创作流模式", required = false)
+        @QueryParam("createMode")
+        createMode: Boolean?
     ): Result<Page<NodeWithPermission>>
 
     @Operation(summary = "获取项目节点列表")
@@ -193,7 +196,7 @@ interface UserNodeResource {
         @Parameter(description = "关键字", required = false)
         @QueryParam("keywords")
         keywords: String?,
-        @Parameter(description = "节点类型|用途 (构建: THIRDPARTY;部署: CMDB)", required = false)
+        @Parameter(description = "节点类型|用途 (构建: THIRDPARTY;部署: CMDB;创作流: CREATE)", required = false)
         @QueryParam("nodeType")
         nodeType: NodeType?,
         @Parameter(
@@ -230,6 +233,9 @@ interface UserNodeResource {
         @Parameter(description = "正序ASC/倒序DESC (默认倒序)", required = false)
         @QueryParam("collation")
         collation: String?,
+        @Parameter(description = "是否是创作流模式", required = false)
+        @QueryParam("createMode")
+        createMode: Boolean?,
         data: NodeFetchReq?
     ): Result<Page<NodeWithPermission>>
 
@@ -293,6 +299,9 @@ interface UserNodeResource {
         @Parameter(description = "正序ASC/倒序DESC (默认倒序)", required = false)
         @QueryParam("collation")
         collation: String?,
+        @Parameter(description = "是否是创作流模式", required = false)
+        @QueryParam("createMode")
+        createMode: Boolean?,
         data: NodeFetchReq?,
         @Context
         response: HttpServletResponse

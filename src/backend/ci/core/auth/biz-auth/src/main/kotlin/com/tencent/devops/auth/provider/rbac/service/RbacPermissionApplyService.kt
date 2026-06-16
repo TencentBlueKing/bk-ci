@@ -77,7 +77,7 @@ class RbacPermissionApplyService @Autowired constructor(
 
     private val authApplyRedirectUrl = "${config.devopsHostGateway}/console/permission/apply?" +
             "project_code=%s&projectName=%s&resourceType=%s&resourceName=%s" +
-            "&iamResourceCode=%s&action=%s&groupName=%s&groupId=%s&iamRelatedResourceType=%s"
+            "&iamResourceCode=%s&action=%s&groupName=%s&groupId=%s&iamRelatedResourceType=%s&redirect=true"
     private val pipelineDetailRedirectUri = "${config.devopsHostGateway}/console/pipeline/%s/%s/history"
     private val environmentDetailRedirectUri = "${config.devopsHostGateway}/console/environment/%s/envDetail/%s"
     private val codeccTaskDetailRedirectUri =
@@ -125,8 +125,11 @@ class RbacPermissionApplyService @Autowired constructor(
             else -> null
         }
         val resourceType = searchGroupInfo.resourceType
-        // 如果没有访问权限，不允许访问资源级别的组，只允许访问项目级别的组
-        if (!visitProjectPermission && searchGroupInfo.groupLevel == GroupLevel.OTHER) {
+        // 如果没有访问权限并且非跳转申请权限场景，不允许访问资源级别的组，只允许访问项目级别的组
+        if (!visitProjectPermission &&
+            searchGroupInfo.groupLevel == GroupLevel.OTHER &&
+            searchGroupInfo.redirect != true
+        ) {
             return ManagerRoleGroupVO(
                 count = 0,
                 results = emptyList()
@@ -301,7 +304,8 @@ class RbacPermissionApplyService @Autowired constructor(
                 resourceType = resourceType,
                 resourceTypeName = resourceTypeName,
                 resourceName = resourceName,
-                resourceCode = resourceCode
+                resourceCode = resourceCode,
+                applyDisable = gInfo.applyDisable,
             )
         }.sortedBy { it.resourceType }
     }

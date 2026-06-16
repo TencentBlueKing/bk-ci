@@ -551,6 +551,111 @@ paths:
         enableWebsocket: false
         isPublic: true
         matchSubpath: false
+  /v4/apigw-app/auth/project/{projectId}/member_insight/authorization/health_check:
+    get:
+      operationId: "v4_app_check_auth_health"
+      description: "项目授权健康检查:扫描授权风险"
+      tags:
+      - "V4应用态"
+      x-bk-apigateway-resource:
+        allowApplyPermission: true
+        authConfig:
+          appVerifiedRequired: true
+          resourcePermissionRequired: true
+          userVerifiedRequired: false
+        backend:
+          matchSubpath: false
+          method: "get"
+          name: "backend-1"
+          path: "/openapi/api/apigw-app/v4/auth/project/{projectId}/member_insight/authorization/health_check"
+          timeout: 30
+        enableWebsocket: false
+        isPublic: true
+        matchSubpath: false
+  /v4/apigw-app/auth/project/{projectId}/member_insight/compare:
+    get:
+      operationId: "v4_app_compare_auth_permissions"
+      description: "权限对比:比较两个用户的权限差异"
+      tags:
+      - "V4应用态"
+      x-bk-apigateway-resource:
+        allowApplyPermission: true
+        authConfig:
+          appVerifiedRequired: true
+          resourcePermissionRequired: true
+          userVerifiedRequired: false
+        backend:
+          matchSubpath: false
+          method: "get"
+          name: "backend-1"
+          path: "/openapi/api/apigw-app/v4/auth/project/{projectId}/member_insight/compare"
+          timeout: 30
+        enableWebsocket: false
+        isPublic: true
+        matchSubpath: false
+  /v4/apigw-app/auth/project/{projectId}/member_insight/diagnose:
+    get:
+      operationId: "v4_app_diagnose_auth_permission"
+      description: "权限诊断:分析成员为什么没有某权限"
+      tags:
+      - "V4应用态"
+      x-bk-apigateway-resource:
+        allowApplyPermission: true
+        authConfig:
+          appVerifiedRequired: true
+          resourcePermissionRequired: true
+          userVerifiedRequired: false
+        backend:
+          matchSubpath: false
+          method: "get"
+          name: "backend-1"
+          path: "/openapi/api/apigw-app/v4/auth/project/{projectId}/member_insight/diagnose"
+          timeout: 30
+        enableWebsocket: false
+        isPublic: true
+        matchSubpath: false
+  /v4/apigw-app/auth/project/{projectId}/member_insight/members/{memberId}/analysis:
+    get:
+      operationId: "v4_app_analyze_auth_member_permissions"
+      description: "成员权限分析报告"
+      tags:
+      - "V4应用态"
+      x-bk-apigateway-resource:
+        allowApplyPermission: true
+        authConfig:
+          appVerifiedRequired: true
+          resourcePermissionRequired: true
+          userVerifiedRequired: false
+        backend:
+          matchSubpath: false
+          method: "get"
+          name: "backend-1"
+          path: "/openapi/api/apigw-app/v4/auth/project/{projectId}/member_insight/members/{memberId}/analysis"
+          timeout: 30
+        enableWebsocket: false
+        isPublic: true
+        matchSubpath: false
+  /v4/apigw-app/auth/project/{projectId}/member_insight/resources/{resourceType}/{resourceCode}/permissions_matrix:
+    get:
+      operationId: "v4_app_get_auth_resource_permissions_matrix"
+      description: "资源权限矩阵"
+      tags:
+      - "V4应用态"
+      x-bk-apigateway-resource:
+        allowApplyPermission: true
+        authConfig:
+          appVerifiedRequired: true
+          resourcePermissionRequired: true
+          userVerifiedRequired: false
+        backend:
+          matchSubpath: false
+          method: "get"
+          name: "backend-1"
+          path: "/openapi/api/apigw-app/v4/auth/project/{projectId}/member_insight/resources/{resourceType}/{resourceCode}/permissions_matrix"
+          timeout: 30
+        enableWebsocket: false
+        isPublic: true
+        matchSubpath: false
   /v4/apigw-app/auth/project/{projectId}/member_manage/apply_to_join_group:
     post:
       operationId: "v4_app_apply_join_auth_group"
@@ -1009,6 +1114,69 @@ paths:
           method: "get"
           name: "backend-1"
           path: "/openapi/api/apigw-app/v4/auth/project/{projectId}/member_manage/members/{resourceType}/groups"
+          timeout: 30
+        enableWebsocket: false
+        isPublic: true
+        matchSubpath: false
+  /v4/apigw-app/auth/project/{projectId}/member_manage/members/{targetMemberId}/exit_check:
+    get:
+      operationId: "v4_app_check_auth_member_exit"
+      description: "检查成员退出/交接权限并推荐交接人"
+      tags:
+      - "V4应用态"
+      x-bk-apigateway-resource:
+        allowApplyPermission: true
+        authConfig:
+          appVerifiedRequired: true
+          resourcePermissionRequired: true
+          userVerifiedRequired: false
+        backend:
+          matchSubpath: false
+          method: "get"
+          name: "backend-1"
+          path: "/openapi/api/apigw-app/v4/auth/project/{projectId}/member_manage/members/{targetMemberId}/exit_check"
+          timeout: 30
+        enableWebsocket: false
+        isPublic: true
+        matchSubpath: false
+  /v4/apigw-app/auth/project/{projectId}/member_manage/permissions/clone:
+    post:
+      operationId: "v4_app_clone_auth_permissions"
+      description: "权限克隆:将来源用户的权限复制给目标用户"
+      tags:
+      - "V4应用态"
+      x-bk-apigateway-resource:
+        allowApplyPermission: true
+        authConfig:
+          appVerifiedRequired: true
+          resourcePermissionRequired: true
+          userVerifiedRequired: false
+        backend:
+          matchSubpath: false
+          method: "post"
+          name: "backend-1"
+          path: "/openapi/api/apigw-app/v4/auth/project/{projectId}/member_manage/permissions/clone"
+          timeout: 30
+        enableWebsocket: false
+        isPublic: true
+        matchSubpath: false
+  /v4/apigw-app/auth/project/{projectId}/member_manage/recommend_groups:
+    post:
+      operationId: "v4_app_recommend_auth_groups"
+      description: "智能推荐用户组"
+      tags:
+      - "V4应用态"
+      x-bk-apigateway-resource:
+        allowApplyPermission: true
+        authConfig:
+          appVerifiedRequired: true
+          resourcePermissionRequired: true
+          userVerifiedRequired: false
+        backend:
+          matchSubpath: false
+          method: "post"
+          name: "backend-1"
+          path: "/openapi/api/apigw-app/v4/auth/project/{projectId}/member_manage/recommend_groups"
           timeout: 30
         enableWebsocket: false
         isPublic: true
@@ -4847,6 +5015,111 @@ paths:
         enableWebsocket: false
         isPublic: true
         matchSubpath: false
+  /v4/apigw-user/auth/project/{projectId}/member_insight/authorization/health_check:
+    get:
+      operationId: "v4_user_check_auth_health"
+      description: "项目授权健康检查:扫描授权风险"
+      tags:
+      - "V4用户态"
+      x-bk-apigateway-resource:
+        allowApplyPermission: true
+        authConfig:
+          appVerifiedRequired: false
+          resourcePermissionRequired: false
+          userVerifiedRequired: true
+        backend:
+          matchSubpath: false
+          method: "get"
+          name: "backend-1"
+          path: "/openapi/api/apigw-user/v4/auth/project/{projectId}/member_insight/authorization/health_check"
+          timeout: 30
+        enableWebsocket: false
+        isPublic: true
+        matchSubpath: false
+  /v4/apigw-user/auth/project/{projectId}/member_insight/compare:
+    get:
+      operationId: "v4_user_compare_auth_permissions"
+      description: "权限对比:比较两个用户的权限差异"
+      tags:
+      - "V4用户态"
+      x-bk-apigateway-resource:
+        allowApplyPermission: true
+        authConfig:
+          appVerifiedRequired: false
+          resourcePermissionRequired: false
+          userVerifiedRequired: true
+        backend:
+          matchSubpath: false
+          method: "get"
+          name: "backend-1"
+          path: "/openapi/api/apigw-user/v4/auth/project/{projectId}/member_insight/compare"
+          timeout: 30
+        enableWebsocket: false
+        isPublic: true
+        matchSubpath: false
+  /v4/apigw-user/auth/project/{projectId}/member_insight/diagnose:
+    get:
+      operationId: "v4_user_diagnose_auth_permission"
+      description: "权限诊断:分析成员为什么没有某权限"
+      tags:
+      - "V4用户态"
+      x-bk-apigateway-resource:
+        allowApplyPermission: true
+        authConfig:
+          appVerifiedRequired: false
+          resourcePermissionRequired: false
+          userVerifiedRequired: true
+        backend:
+          matchSubpath: false
+          method: "get"
+          name: "backend-1"
+          path: "/openapi/api/apigw-user/v4/auth/project/{projectId}/member_insight/diagnose"
+          timeout: 30
+        enableWebsocket: false
+        isPublic: true
+        matchSubpath: false
+  /v4/apigw-user/auth/project/{projectId}/member_insight/members/{memberId}/analysis:
+    get:
+      operationId: "v4_user_analyze_auth_member_permissions"
+      description: "成员权限分析报告"
+      tags:
+      - "V4用户态"
+      x-bk-apigateway-resource:
+        allowApplyPermission: true
+        authConfig:
+          appVerifiedRequired: false
+          resourcePermissionRequired: false
+          userVerifiedRequired: true
+        backend:
+          matchSubpath: false
+          method: "get"
+          name: "backend-1"
+          path: "/openapi/api/apigw-user/v4/auth/project/{projectId}/member_insight/members/{memberId}/analysis"
+          timeout: 30
+        enableWebsocket: false
+        isPublic: true
+        matchSubpath: false
+  /v4/apigw-user/auth/project/{projectId}/member_insight/resources/{resourceType}/{resourceCode}/permissions_matrix:
+    get:
+      operationId: "v4_user_get_auth_resource_permissions_matrix"
+      description: "资源权限矩阵"
+      tags:
+      - "V4用户态"
+      x-bk-apigateway-resource:
+        allowApplyPermission: true
+        authConfig:
+          appVerifiedRequired: false
+          resourcePermissionRequired: false
+          userVerifiedRequired: true
+        backend:
+          matchSubpath: false
+          method: "get"
+          name: "backend-1"
+          path: "/openapi/api/apigw-user/v4/auth/project/{projectId}/member_insight/resources/{resourceType}/{resourceCode}/permissions_matrix"
+          timeout: 30
+        enableWebsocket: false
+        isPublic: true
+        matchSubpath: false
   /v4/apigw-user/auth/project/{projectId}/member_manage/apply_to_join_group:
     post:
       operationId: "v4_user_apply_join_auth_group"
@@ -5305,6 +5578,69 @@ paths:
           method: "get"
           name: "backend-1"
           path: "/openapi/api/apigw-user/v4/auth/project/{projectId}/member_manage/members/{resourceType}/groups"
+          timeout: 30
+        enableWebsocket: false
+        isPublic: true
+        matchSubpath: false
+  /v4/apigw-user/auth/project/{projectId}/member_manage/members/{targetMemberId}/exit_check:
+    get:
+      operationId: "v4_user_check_auth_member_exit"
+      description: "检查成员退出/交接权限并推荐交接人"
+      tags:
+      - "V4用户态"
+      x-bk-apigateway-resource:
+        allowApplyPermission: true
+        authConfig:
+          appVerifiedRequired: false
+          resourcePermissionRequired: false
+          userVerifiedRequired: true
+        backend:
+          matchSubpath: false
+          method: "get"
+          name: "backend-1"
+          path: "/openapi/api/apigw-user/v4/auth/project/{projectId}/member_manage/members/{targetMemberId}/exit_check"
+          timeout: 30
+        enableWebsocket: false
+        isPublic: true
+        matchSubpath: false
+  /v4/apigw-user/auth/project/{projectId}/member_manage/permissions/clone:
+    post:
+      operationId: "v4_user_clone_auth_permissions"
+      description: "权限克隆:将来源用户的权限复制给目标用户"
+      tags:
+      - "V4用户态"
+      x-bk-apigateway-resource:
+        allowApplyPermission: true
+        authConfig:
+          appVerifiedRequired: false
+          resourcePermissionRequired: false
+          userVerifiedRequired: true
+        backend:
+          matchSubpath: false
+          method: "post"
+          name: "backend-1"
+          path: "/openapi/api/apigw-user/v4/auth/project/{projectId}/member_manage/permissions/clone"
+          timeout: 30
+        enableWebsocket: false
+        isPublic: true
+        matchSubpath: false
+  /v4/apigw-user/auth/project/{projectId}/member_manage/recommend_groups:
+    post:
+      operationId: "v4_user_recommend_auth_groups"
+      description: "智能推荐用户组"
+      tags:
+      - "V4用户态"
+      x-bk-apigateway-resource:
+        allowApplyPermission: true
+        authConfig:
+          appVerifiedRequired: false
+          resourcePermissionRequired: false
+          userVerifiedRequired: true
+        backend:
+          matchSubpath: false
+          method: "post"
+          name: "backend-1"
+          path: "/openapi/api/apigw-user/v4/auth/project/{projectId}/member_manage/recommend_groups"
           timeout: 30
         enableWebsocket: false
         isPublic: true

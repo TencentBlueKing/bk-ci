@@ -121,7 +121,7 @@ class RepoPipelineRefService @Autowired constructor(
                 dslContext = dslContext,
                 projectId = projectId,
                 pipelineId = pipelineId
-            )?.channel ?: ChannelCode.BS.name
+            )?.channel ?: ChannelCode.getRequestChannelCode().name
         }
         try {
             analysisPipelineRefAndSave(

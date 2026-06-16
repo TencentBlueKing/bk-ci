@@ -28,6 +28,7 @@
 package com.tencent.devops.process.notify
 
 import com.tencent.devops.common.event.listener.EventListener
+import com.tencent.devops.common.api.context.ChannelContext
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildReviewReminderEvent
 import com.tencent.devops.process.service.ReviewReminderService
 import org.springframework.beans.factory.annotation.Autowired
@@ -44,6 +45,11 @@ class PipelineAtomTaskReminderListener @Autowired constructor(
 ) : EventListener<PipelineBuildReviewReminderEvent> {
 
     override fun execute(event: PipelineBuildReviewReminderEvent) {
-        reminderControl.handle(event)
+        try {
+            ChannelContext.setChannel(event.channelCode)
+            reminderControl.handle(event)
+        } finally {
+            ChannelContext.clear()
+        }
     }
 }

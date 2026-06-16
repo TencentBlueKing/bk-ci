@@ -150,7 +150,7 @@ class DefaultModelCheckPluginTest : TestBase() {
                         atomName = "手动触发",
                         version = "1.*",
                         initProjectCode = projectId,
-                        jobType = JobTypeEnum.AGENT,
+                        jobType = JobTypeEnum.AGENT.name,
                         buildLessRunFlag = false,
                         inputTypeInfos = null
                     )

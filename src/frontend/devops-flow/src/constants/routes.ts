@@ -1,0 +1,168 @@
+/**
+ * 路由名称常量
+ * 统一管理所有路由名称，便于维护和管理
+ */
+export const ROUTE_NAMES = {
+  // 主路由
+  ROOT: 'root',
+  FLOW_LIST: 'flowList',
+  TEMPLATE: 'template',
+
+  // Flow 详情相关路由
+  FLOW_DETAIL: 'flowDetail',
+  FLOW_DETAIL_EDIT: 'flowDetailEdit',
+
+  // Flow Edit 子路由
+  FLOW_EDIT_WORKFLOW_ORCHESTRATION: 'editWorkflowOrchestration',
+  FLOW_EDIT_WORKFLOW_ENVIRONMENT: 'editWorkflowEnvironment',
+  FLOW_EDIT_TRIGGER_EVENTS: 'editTriggerEvents',
+  FLOW_EDIT_NOTIFICATION_CONFIG: 'editNotificationConfig',
+  FLOW_EDIT_BASIC_SETTINGS: 'editBasicSettings',
+
+  // Flow Import Edit 子路由（导入后临时编辑，保存后才创建创作流）
+  FLOW_IMPORT_EDIT: 'importEdit',
+  FLOW_IMPORT_EDIT_WORKFLOW_ORCHESTRATION: 'importEditWorkflowOrchestration',
+  FLOW_IMPORT_EDIT_WORKFLOW_ENVIRONMENT: 'importEditWorkflowEnvironment',
+  FLOW_IMPORT_EDIT_TRIGGER_EVENTS: 'importEditTriggerEvents',
+  FLOW_IMPORT_EDIT_NOTIFICATION_CONFIG: 'importEditNotificationConfig',
+  FLOW_IMPORT_EDIT_BASIC_SETTINGS: 'importEditBasicSettings',
+
+  // Flow Detail 子路由
+  FLOW_DETAIL_EXECUTION_RECORD: 'executionRecord',
+  FLOW_DETAIL_TRIGGER_RECORD: 'triggerRecord',
+  FLOW_DETAIL_TRIGGER_EVENTS: 'triggerEvents',
+  FLOW_DETAIL_WORKFLOW_ORCHESTRATION: 'workflowOrchestration',
+  FLOW_DETAIL_WORKFLOW_ENVIRONMENT: 'workflowEnvironment',
+  FLOW_DETAIL_NOTIFICATION_CONFIG: 'notificationConfig',
+  FLOW_DETAIL_BASIC_SETTINGS: 'basicSettings',
+  FLOW_DETAIL_PERMISSION_SETTINGS: 'permissionSettings',
+  FLOW_DETAIL_PERMISSION_DELEGATION: 'permissionDelegation',
+  FLOW_DETAIL_OPERATION_LOG: 'operationLog',
+
+  // Flow Execution Detail 子路由
+  FLOW_DETAIL_EXECUTION_DETAIL: 'flowExecutionDetail',
+  FLOW_DETAIL_EXECUTION_DETAIL_TAB: 'flowExecutionDetailTab',
+  FLOW_DETAIL_ARTIFACTS: 'flowArtifacts',
+  FLOW_DETAIL_OUTPUTS: 'flowOutputs',
+  FLOW_DETAIL_START_PARAMS: 'flowStartParams',
+  FLOW_DETAIL_REPORTS: 'flowReports',
+
+  // Flow Preview (执行预览)
+  FLOW_PREVIEW: 'flowPreview',
+
+  //Flow Label Group (标签管理)
+  FLOW_LABEL_GROUP: 'flowLabelGroup',
+} as const
+
+/**
+ * Flow Edit Tab 常量
+ * 编辑页面的 tab 值，与详情页面的创作流配置分类保持一致
+ */
+export const FLOW_EDIT_TABS = {
+  WORKFLOW_ORCHESTRATION: ROUTE_NAMES.FLOW_EDIT_WORKFLOW_ORCHESTRATION,
+  WORKFLOW_ENVIRONMENT: ROUTE_NAMES.FLOW_EDIT_WORKFLOW_ENVIRONMENT,
+  TRIGGER_EVENTS: ROUTE_NAMES.FLOW_EDIT_TRIGGER_EVENTS,
+  NOTIFICATION_CONFIG: ROUTE_NAMES.FLOW_EDIT_NOTIFICATION_CONFIG,
+  BASIC_SETTINGS: ROUTE_NAMES.FLOW_EDIT_BASIC_SETTINGS,
+} as const
+
+/**
+ * Flow Import Edit Tab 常量
+ * 导入编辑页面的 tab 值，与普通编辑页 tab 一一对应
+ */
+export const FLOW_IMPORT_EDIT_TABS = {
+  WORKFLOW_ORCHESTRATION: ROUTE_NAMES.FLOW_IMPORT_EDIT_WORKFLOW_ORCHESTRATION,
+  WORKFLOW_ENVIRONMENT: ROUTE_NAMES.FLOW_IMPORT_EDIT_WORKFLOW_ENVIRONMENT,
+  TRIGGER_EVENTS: ROUTE_NAMES.FLOW_IMPORT_EDIT_TRIGGER_EVENTS,
+  NOTIFICATION_CONFIG: ROUTE_NAMES.FLOW_IMPORT_EDIT_NOTIFICATION_CONFIG,
+  BASIC_SETTINGS: ROUTE_NAMES.FLOW_IMPORT_EDIT_BASIC_SETTINGS,
+} as const
+
+/**
+ * 普通编辑 tab ↔ 导入编辑 tab 映射
+ */
+export const EDIT_TAB_TO_IMPORT_TAB: Record<string, string> = {
+  [FLOW_EDIT_TABS.WORKFLOW_ORCHESTRATION]: FLOW_IMPORT_EDIT_TABS.WORKFLOW_ORCHESTRATION,
+  [FLOW_EDIT_TABS.WORKFLOW_ENVIRONMENT]: FLOW_IMPORT_EDIT_TABS.WORKFLOW_ENVIRONMENT,
+  [FLOW_EDIT_TABS.TRIGGER_EVENTS]: FLOW_IMPORT_EDIT_TABS.TRIGGER_EVENTS,
+  [FLOW_EDIT_TABS.NOTIFICATION_CONFIG]: FLOW_IMPORT_EDIT_TABS.NOTIFICATION_CONFIG,
+  [FLOW_EDIT_TABS.BASIC_SETTINGS]: FLOW_IMPORT_EDIT_TABS.BASIC_SETTINGS,
+}
+
+export const IMPORT_TAB_TO_EDIT_TAB: Record<string, string> = Object.fromEntries(
+  Object.entries(EDIT_TAB_TO_IMPORT_TAB).map(([k, v]) => [v, k]),
+)
+
+/**
+ * Flow Detail Tab 常量
+ * 直接使用路由名称作为 tab 值，避免重复定义
+ */
+export const FLOW_DETAIL_TABS = {
+  EXECUTION_RECORD: ROUTE_NAMES.FLOW_DETAIL_EXECUTION_RECORD,
+  TRIGGER_RECORD: ROUTE_NAMES.FLOW_DETAIL_TRIGGER_RECORD,
+  TRIGGER_EVENTS: ROUTE_NAMES.FLOW_DETAIL_TRIGGER_EVENTS,
+  WORKFLOW_ORCHESTRATION: ROUTE_NAMES.FLOW_DETAIL_WORKFLOW_ORCHESTRATION,
+  WORKFLOW_ENVIRONMENT: ROUTE_NAMES.FLOW_DETAIL_WORKFLOW_ENVIRONMENT,
+  NOTIFICATION_CONFIG: ROUTE_NAMES.FLOW_DETAIL_NOTIFICATION_CONFIG,
+  BASIC_SETTINGS: ROUTE_NAMES.FLOW_DETAIL_BASIC_SETTINGS,
+  PERMISSION_SETTINGS: ROUTE_NAMES.FLOW_DETAIL_PERMISSION_SETTINGS,
+  PERMISSION_DELEGATION: ROUTE_NAMES.FLOW_DETAIL_PERMISSION_DELEGATION,
+  OPERATION_LOG: ROUTE_NAMES.FLOW_DETAIL_OPERATION_LOG,
+} as const
+
+/**
+ * 默认 tab
+ */
+export const DEFAULT_FLOW_EDIT_TAB = FLOW_EDIT_TABS.WORKFLOW_ORCHESTRATION
+export const DEFAULT_FLOW_DETAIL_TAB = FLOW_DETAIL_TABS.EXECUTION_RECORD
+
+/**
+ * 所有合法的 tab 值数组
+ */
+export const VALID_FLOW_EDIT_TABS = Object.values(FLOW_EDIT_TABS)
+export const VALID_FLOW_IMPORT_EDIT_TABS = Object.values(FLOW_IMPORT_EDIT_TABS)
+export const VALID_FLOW_DETAIL_TABS = Object.values(FLOW_DETAIL_TABS)
+
+/**
+ * 检查 tab 是否合法（普通编辑 or 导入编辑均视为合法）
+ */
+export function isValidFlowEditTab(
+  tab: string,
+): tab is (typeof FLOW_EDIT_TABS)[keyof typeof FLOW_EDIT_TABS] {
+  return (
+    VALID_FLOW_EDIT_TABS.includes(tab as (typeof FLOW_EDIT_TABS)[keyof typeof FLOW_EDIT_TABS])
+    || VALID_FLOW_IMPORT_EDIT_TABS.includes(tab as (typeof FLOW_IMPORT_EDIT_TABS)[keyof typeof FLOW_IMPORT_EDIT_TABS])
+  )
+}
+
+export function isValidFlowImportEditTab(
+  tab: string,
+): tab is (typeof FLOW_IMPORT_EDIT_TABS)[keyof typeof FLOW_IMPORT_EDIT_TABS] {
+  return VALID_FLOW_IMPORT_EDIT_TABS.includes(
+    tab as (typeof FLOW_IMPORT_EDIT_TABS)[keyof typeof FLOW_IMPORT_EDIT_TABS],
+  )
+}
+
+export function isValidFlowDetailTab(
+  tab: string,
+): tab is (typeof FLOW_DETAIL_TABS)[keyof typeof FLOW_DETAIL_TABS] {
+  return VALID_FLOW_DETAIL_TABS.includes(
+    tab as (typeof FLOW_DETAIL_TABS)[keyof typeof FLOW_DETAIL_TABS],
+  )
+}
+
+export function isValidFlowExecutionDetailTab(
+  tab: string,
+): tab is
+  | typeof ROUTE_NAMES.FLOW_DETAIL_EXECUTION_DETAIL_TAB
+  | typeof ROUTE_NAMES.FLOW_DETAIL_ARTIFACTS
+  | typeof ROUTE_NAMES.FLOW_DETAIL_OUTPUTS
+  | typeof ROUTE_NAMES.FLOW_DETAIL_START_PARAMS {
+  const validTabs = [
+    ROUTE_NAMES.FLOW_DETAIL_EXECUTION_DETAIL_TAB,
+    ROUTE_NAMES.FLOW_DETAIL_ARTIFACTS,
+    ROUTE_NAMES.FLOW_DETAIL_OUTPUTS,
+    ROUTE_NAMES.FLOW_DETAIL_START_PARAMS,
+  ]
+  return validTabs.includes(tab as (typeof validTabs)[number])
+}
