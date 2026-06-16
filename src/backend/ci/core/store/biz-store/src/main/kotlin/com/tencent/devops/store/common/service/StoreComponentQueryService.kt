@@ -35,13 +35,13 @@ import com.tencent.devops.store.pojo.common.MyStoreComponent
 import com.tencent.devops.store.pojo.common.QueryComponentsParam
 import com.tencent.devops.store.pojo.common.StoreDetailInfo
 import com.tencent.devops.store.pojo.common.StoreInfoQuery
-import com.tencent.devops.store.pojo.common.deploy.UserComponentDeployInfo
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import com.tencent.devops.store.pojo.common.version.StoreDeskVersionItem
+import com.tencent.devops.store.pojo.common.version.StoreComponentVersionItem
 import com.tencent.devops.store.pojo.common.version.StoreShowVersionInfo
 import com.tencent.devops.store.pojo.common.version.StoreVersionLogInfo
 import com.tencent.devops.store.pojo.common.version.StoreVersionSizeInfo
 import com.tencent.devops.store.pojo.common.version.VersionInfo
+import org.jooq.Record
 
 interface StoreComponentQueryService {
 
@@ -66,6 +66,7 @@ interface StoreComponentQueryService {
 
     /**
      * 根据组件标识获取组件版本列表
+     * @param storeStatusList 版本状态过滤列表，null表示不过滤(返回全部状态，兼容老逻辑)
      */
     @Suppress("LongParameterList")
     fun getComponentVersionsByCode(
@@ -74,8 +75,9 @@ interface StoreComponentQueryService {
         storeCode: String,
         page: Int,
         pageSize: Int,
-        checkPermissionFlag: Boolean = true
-    ): Page<StoreDeskVersionItem>
+        checkPermissionFlag: Boolean = true,
+        storeStatusList: List<String>? = null
+    ): Page<StoreComponentVersionItem>
 
     /**
      * 根据组件ID获取组件详情
@@ -114,15 +116,16 @@ interface StoreComponentQueryService {
     ): Page<MarketItem>
 
     /**
-     * 获取用户可拉取的组件部署信息列表
-     * 聚合返回：用户配置的应用名、版本列表(标注最新版本)、应用安装路径(组件级共享，可空)、
-     * 各版本的安装方式与安装参数(跟随版本)。下载链接由客户端按需调用
-     * UserArchiveComponentPkgResource#getComponentPkgDownloadUrl 获取。
+     * 将给定的组件记录富化为市场组件项(MarketItem)。
+     * 供需要复用市场富化逻辑(安装标识、Logo、统计、国际化等)、但自行控制取数与分页的场景使用(如部署信息聚合)。
      */
-    fun getUserComponentDeployInfos(
+    fun enrichMarketItems(
         userId: String,
-        storeInfoQuery: StoreInfoQuery
-    ): Page<UserComponentDeployInfo>
+        userDeptList: List<Int>,
+        storeInfoQuery: StoreInfoQuery,
+        storeInfos: List<Record>,
+        urlProtocolTrim: Boolean = false
+    ): List<MarketItem>
 
     /**
      * 根据组件标识获取组件回显版本信息

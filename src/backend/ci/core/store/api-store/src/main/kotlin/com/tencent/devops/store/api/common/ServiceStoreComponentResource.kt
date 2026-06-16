@@ -41,6 +41,7 @@ import com.tencent.devops.store.pojo.common.UnInstallReq
 import com.tencent.devops.store.pojo.common.deploy.UserComponentDeployInfo
 import com.tencent.devops.store.pojo.common.enums.RdTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreSortTypeEnum
+import com.tencent.devops.store.pojo.common.version.StoreComponentVersionItem
 import com.tencent.devops.store.pojo.common.version.VersionInfo
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
@@ -209,6 +210,41 @@ interface ServiceStoreComponentResource {
         @BkField(patternStyle = BkStyleEnum.PAGE_SIZE_STYLE)
         pageSize: Int = 10
     ): Result<Page<UserComponentDeployInfo>>
+
+    @Operation(summary = "根据组件标识获取组件版本列表")
+    @GET
+    @Path("/types/{storeType}/codes/{storeCode}/component/version/list")
+    @BkInterfaceI18n(
+        keyPrefixNames = ["{data.records[*].storeType}", "{data.records[*].storeCode}", "{data.records[*].version}",
+            "releaseInfo"]
+    )
+    fun getComponentVersionsByCode(
+        @Parameter(description = "userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "组件类型", required = true)
+        @PathParam("storeType")
+        @BkField(patternStyle = BkStyleEnum.CODE_STYLE)
+        storeType: String,
+        @Parameter(description = "组件代码", required = true)
+        @PathParam("storeCode")
+        @BkField(patternStyle = BkStyleEnum.CODE_STYLE)
+        storeCode: String,
+        @Parameter(description = "页码", required = true)
+        @QueryParam("page")
+        @BkField(patternStyle = BkStyleEnum.NUMBER_STYLE)
+        page: Int = 1,
+        @Parameter(description = "每页数量", required = true)
+        @QueryParam("pageSize")
+        @BkField(patternStyle = BkStyleEnum.PAGE_SIZE_STYLE)
+        pageSize: Int = 10,
+        @Parameter(
+            description = "是否只查可用版本(仅已发布状态)。true：仅RELEASED且不校验成员权限；未传或false：全部版本且校验成员权限",
+            required = false
+        )
+        @QueryParam("availableFlag")
+        availableFlag: Boolean? = null
+    ): Result<Page<StoreComponentVersionItem>>
 
     @Operation(summary = "根据组件ID获取组件详情")
     @GET

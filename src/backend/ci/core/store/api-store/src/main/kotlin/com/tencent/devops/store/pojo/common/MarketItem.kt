@@ -100,6 +100,9 @@ data class MarketItem(
     val hotFlag: Boolean? = null,
     @get:Schema(title = "是否需要更新", required = false)
     val updateFlag: Boolean? = null,
-    @get:Schema(title = "扩展字段集合", required = false)
+    @get:Schema(
+        title = "扩展字段集合(列表精简版：组件级特性如installPath/os + 版本级urlScheme)",
+        required = false
+    )
     val extData: Map<String, Any>? = null
 )

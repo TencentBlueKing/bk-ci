@@ -42,7 +42,7 @@ import com.tencent.devops.store.pojo.common.enums.StoreSortTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.media.StoreMediaInfo
 import com.tencent.devops.store.pojo.common.test.StoreTestItem
-import com.tencent.devops.store.pojo.common.version.StoreDeskVersionItem
+import com.tencent.devops.store.pojo.common.version.StoreComponentVersionItem
 import com.tencent.devops.store.pojo.common.version.StoreShowVersionInfo
 import com.tencent.devops.store.pojo.common.version.StoreVersionLogInfo
 import com.tencent.devops.store.pojo.common.version.StoreVersionSizeInfo
@@ -120,8 +120,14 @@ interface UserStoreComponentQueryResource {
         @Parameter(description = "每页数量", required = true)
         @QueryParam("pageSize")
         @BkField(patternStyle = BkStyleEnum.PAGE_SIZE_STYLE)
-        pageSize: Int = 10
-    ): Result<Page<StoreDeskVersionItem>>
+        pageSize: Int = 10,
+        @Parameter(
+            description = "是否只查可用版本(仅已发布状态)。true：仅RELEASED且不校验成员权限；未传或false：全部版本且校验成员权限",
+            required = false
+        )
+        @QueryParam("availableFlag")
+        availableFlag: Boolean? = null
+    ): Result<Page<StoreComponentVersionItem>>
 
     @Operation(summary = "根据组件ID获取组件详情")
     @GET
@@ -299,6 +305,9 @@ interface UserStoreComponentQueryResource {
         @QueryParam("keyword")
         @BkField(patternStyle = BkStyleEnum.COMMON_STYLE, required = false)
         keyword: String? = null,
+        @Parameter(description = "排序字段", required = false)
+        @QueryParam("sortType")
+        sortType: StoreSortTypeEnum? = StoreSortTypeEnum.CREATE_TIME,
         @Parameter(description = "页码", required = true)
         @QueryParam("page")
         @BkField(patternStyle = BkStyleEnum.NUMBER_STYLE)

@@ -25,34 +25,25 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.pojo.common.version
+package com.tencent.devops.store.common.utils
 
-import com.tencent.devops.common.api.annotation.BkFieldI18n
-import com.tencent.devops.common.api.enums.I18nSourceEnum
-import io.swagger.v3.oas.annotations.media.Schema
+import com.fasterxml.jackson.core.type.TypeReference
+import com.tencent.devops.common.api.util.JsonSchemaUtil
+import com.tencent.devops.common.api.util.JsonUtil
 
-@Schema(title = "工作台组件版本列表")
-data class StoreDeskVersionItem(
-    @get:Schema(title = "组件ID", required = true)
-    val storeId: String,
-    @get:Schema(title = "组件标识", required = true)
-    val storeCode: String,
-    @get:Schema(title = "组件类型", required = true)
-    val storeType: String,
-    @get:Schema(title = "组件名称", required = true)
-    @BkFieldI18n(source = I18nSourceEnum.DB)
-    val name: String,
-    @get:Schema(title = "版本号", required = true)
-    val version: String,
-    @get:Schema(title = "版本内容", required = false)
-    @BkFieldI18n(source = I18nSourceEnum.DB, keyPrefixName = "versionInfo")
-    val versionContent: String? = null,
-    @get:Schema(title = "状态", required = true)
-    val status: String,
-    @get:Schema(title = "创建人", required = true)
-    val creator: String,
-    @get:Schema(title = "创建时间", required = true)
-    val createTime: String,
-    @get:Schema(title = "扩展字段集合", required = false)
-    val extData: Map<String, Any>? = null
-)
+/**
+ * 组件扩展字段处理工具。
+ */
+object StoreExtFieldUtil {
+
+    /**
+     * 解析存储为 JSON 字符串的扩展字段值：JSON 数组/对象会被还原为 List/Map，普通字符串原样返回。
+     */
+    fun formatJson(str: String): Any {
+        return when {
+            JsonSchemaUtil.isJsonArray(str) -> JsonUtil.to(str, List::class.java)
+            JsonSchemaUtil.isJsonObject(str) -> JsonUtil.to(str, object : TypeReference<Map<String, Any>>() {})
+            else -> str
+        }
+    }
+}

@@ -99,6 +99,9 @@ data class StoreDetailInfo(
     val honorInfos: List<HonorInfo>? = null,
     @get:Schema(title = "指标信息列表", required = false)
     val indexInfos: List<StoreIndexInfo>? = null,
-    @get:Schema(title = "扩展字段集合", required = false)
+    @get:Schema(
+        title = "扩展字段集合(组件级+版本级合并，含installPath/installType/installParams/urlScheme等)",
+        required = false
+    )
     val extData: Map<String, Any>? = null
 )

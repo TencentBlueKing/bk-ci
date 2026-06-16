@@ -45,7 +45,7 @@ import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.publication.StoreApproveReleaseRequest
 import com.tencent.devops.store.pojo.common.publication.StoreDeleteRequest
 import com.tencent.devops.store.pojo.common.publication.StoreOfflineRequest
-import com.tencent.devops.store.pojo.common.version.StoreDeskVersionItem
+import com.tencent.devops.store.pojo.common.version.StoreComponentVersionItem
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -102,7 +102,7 @@ class OpStoreComponentResourceImpl @Autowired constructor(
         storeCode: String,
         page: Int,
         pageSize: Int
-    ): Result<Page<StoreDeskVersionItem>> {
+    ): Result<Page<StoreComponentVersionItem>> {
         return Result(
             storeComponentQueryService.getComponentVersionsByCode(
                 userId = userId,
