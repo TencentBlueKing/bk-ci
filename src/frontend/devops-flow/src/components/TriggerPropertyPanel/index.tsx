@@ -133,10 +133,12 @@ export default defineComponent({
 
     // CDS- 开头的为云桌面触发事件，需要包在 data 里
     // 代码库事件触发（如 codeGitWebHookTrigger）不需要 data 包装，平铺在 element 上
+    // 需要平铺的插件code ：'codeGitWebHookTrigger', 'codeSVNWebHookTrigger', 'codeGitlabWebHookTrigger', 'codeGithubWebHookTrigger'
+    const codeLists = ['codeGitWebHookTrigger', 'codeSVNWebHookTrigger', 'codeGitlabWebHookTrigger', 'codeGithubWebHookTrigger']
     const isCodeRepoTrigger = computed(() => {
       if (!localElement.value) return false
       const atomCode = localElement.value.atomCode || ''
-      return !atomCode.startsWith('CDS-')
+      return codeLists.includes(atomCode)
     })
 
     const triggerErrorFields = computed(() => {
