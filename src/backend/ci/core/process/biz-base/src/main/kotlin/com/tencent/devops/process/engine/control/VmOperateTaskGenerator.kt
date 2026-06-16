@@ -87,46 +87,47 @@ class VmOperateTaskGenerator {
 
         val taskParams = container.genTaskParams()
         taskParams["elements"] = emptyList<Element>() // elements在此无用，还可能因为过多导致存储溢出问题，清0
-        val atomCode: String
-        val taskType: String
-        val taskName: String
-        val taskAtom: String
-        var timeout: Long? = null
-        var timeoutVar: String? = null
-        if (container is VMBuildContainer) {
-            val buildType = container.dispatchType?.buildType()?.name ?: BuildType.DOCKER.name
-            val baseOS = container.baseOS.name
-            atomCode = "$START_VM_TASK_ATOM-$buildType-$baseOS"
-            taskType = EnvControlTaskType.VM.name
-            taskName = "Prepare_Job#${container.id!!}"
-            taskAtom = START_VM_TASK_ATOM
-            timeout = container.jobControlOption?.timeout?.toLong()
-            timeoutVar = container.jobControlOption?.timeoutVar
-        } else {
-            atomCode = START_NORMAL_TASK_ATOM
-            taskType = EnvControlTaskType.NORMAL.name
-            taskName = "Prepare_Job#${container.id!!}(N)"
-            taskAtom = START_NORMAL_TASK_ATOM
-            if (container is NormalContainer) {
-                timeout = container.jobControlOption?.timeout?.toLong()
-                timeoutVar = container.jobControlOption?.timeoutVar
+        val containerId = container.id!!
+        // 根据容器类型确定任务属性
+        val (atomCode, taskType, taskName, taskAtom) = when (container) {
+            is VMBuildContainer -> {
+                val buildType = container.dispatchType?.buildType()?.name ?: BuildType.DOCKER.name
+                val baseOS = container.baseOS?.name
+                arrayOf(
+                    "$START_VM_TASK_ATOM-$buildType-$baseOS",
+                    EnvControlTaskType.VM.name,
+                    "Prepare_Job#$containerId",
+                    START_VM_TASK_ATOM
+                )
             }
+            else -> arrayOf(
+                START_NORMAL_TASK_ATOM,
+                EnvControlTaskType.NORMAL.name,
+                "Prepare_Job#$containerId(N)",
+                START_NORMAL_TASK_ATOM
+            )
+        }
+        // 统一提取超时配置
+        val jobControlOption = when (container) {
+            is VMBuildContainer -> container.jobControlOption
+            is NormalContainer -> container.jobControlOption
+            else -> null
         }
         val additionalOptions = ElementAdditionalOptions(
             runCondition = RunCondition.PRE_TASK_FAILED_BUT_CANCEL,
-            timeout = timeout,
-            timeoutVar = timeoutVar
+            timeout = jobControlOption?.timeout?.toLong(),
+            timeoutVar = jobControlOption?.timeoutVar
         )
         return PipelineBuildTask(
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,
             stageId = stageId,
-            containerId = container.id!!,
+            containerId = containerId,
             containerHashId = container.containerHashId ?: "",
             containerType = container.getClassType(),
             taskSeq = taskSeq,
-            taskId = VMUtils.genStartVMTaskId(container.id!!),
+            taskId = VMUtils.genStartVMTaskId(containerId),
             taskName = taskName,
             taskType = taskType,
             taskAtom = taskAtom,

@@ -913,27 +913,36 @@ export function parseErrorMsg (msg) {
     }
 }
 
-export function showPipelineCheckMsg (showTooltips, message, h) {
+export function showPipelineCheckMsg (showTooltips, code, message, h) {
     const errorInfo = parseErrorMsg(message)
-    showTooltips({
-        theme: 'error',
-        delay: 0,
-        ellipsisLine: 0,
-        message: h('div', {
-            class: 'pipeline-save-error-list-box'
-        }, errorInfo.errors.map(item => h('div', {
-            class: 'pipeline-save-error-list-item'
-        }, [
-            h('p', {}, item.errorTitle),
-            h('ul', {
-                class: 'pipeline-save-error-list'
-            }, item.errorDetails.map(err => h('li', {
-                domProps: {
-                    innerHTML: err
-                }
-            })))
-        ])))
-    })
+    if (errorInfo['@type'] === 'errors') {
+        showTooltips({
+            theme: 'error',
+            delay: 0,
+            ellipsisLine: 0,
+            message: h('div', {
+                class: 'pipeline-save-error-list-box'
+            }, errorInfo.errors.map(item => h('div', {
+                class: 'pipeline-save-error-list-item'
+            }, [
+                h('p', {}, item.errorTitle),
+                h('ul', {
+                    class: 'pipeline-save-error-list'
+                }, item.errorDetails.map(err => h('li', {
+                    domProps: {
+                        innerHTML: err
+                    }
+                })))
+            ])))
+        })
+    } else {
+        showTooltips({
+            theme: 'error',
+            delay: 0,
+            ellipsisLine: 0,
+            message: errorInfo.message
+        })
+    }
 }
 
 export async function copyToClipboard (text) {

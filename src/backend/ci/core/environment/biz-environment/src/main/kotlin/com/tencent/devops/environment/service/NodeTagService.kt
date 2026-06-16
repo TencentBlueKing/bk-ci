@@ -14,6 +14,7 @@ import com.tencent.devops.common.audit.ActionAuditContent
 import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthProjectApi
+import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.ResourceTypeId
 import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.redis.RedisLock
@@ -35,6 +36,7 @@ import com.tencent.devops.environment.pojo.NodeTag
 import com.tencent.devops.environment.pojo.NodeTagCanUpdateType
 import com.tencent.devops.environment.pojo.NodeTagUpdateReq
 import com.tencent.devops.environment.pojo.UpdateNodeTag
+import com.tencent.devops.environment.pojo.enums.AgentType
 import com.tencent.devops.environment.pojo.enums.NodeType
 import com.tencent.devops.model.environment.tables.records.TEnvironmentThirdpartyAgentRecord
 import org.jooq.DSLContext
@@ -119,13 +121,20 @@ class NodeTagService @Autowired constructor(
     }
 
     fun fetchTagAndNodeCount(
-        projectId: String
+        projectId: String,
+        createMod: Boolean?
     ): List<NodeTag> {
         val tags = mutableListOf<NodeTag>().apply {
             addAll(nodeTagDao.fetchTagAndNode(dslContext, projectId))
             addAll((nodeTagDao.fetchInternalTag(dslContext).values))
         }
-        val nodeTags = nodeTagDao.fetchNodeTag(dslContext, projectId)
+        val nodeTags = nodeTagDao.fetchNodeTag(
+            dslContext, projectId, if (createMod == true) {
+                listOf(NodeType.CREATE.name)
+            } else {
+                NodeType.coreTypesName()
+            }
+        )
         val nodeTagsCountMap = mutableMapOf<Long, MutableMap<Long, Int>>()
         nodeTags.forEach {
             val m = nodeTagsCountMap.putIfAbsent(it.tagKeyId, mutableMapOf(it.tagValueId to 1)) ?: return@forEach
@@ -172,17 +181,29 @@ class NodeTagService @Autowired constructor(
         content = ActionAuditContent.ENV_NODE_TAG_EDIT_CONTENT
     )
     fun addNodeTag(userId: String, projectId: String, data: UpdateNodeTag) {
-        if (!environmentPermissionService.checkNodePermission(userId, projectId, data.nodeId, AuthPermission.EDIT)) {
+        val agentType = thirdPartyAgentDao.getAgentByNodeId(
+            dslContext = dslContext,
+            projectId = projectId,
+            nodeId = data.nodeId
+        )?.agentType
+        val nodeResourceType = if (agentType == AgentType.CREATE.name) {
+                AuthResourceType.CREATIVE_STREAM_NODE
+            } else {
+                AuthResourceType.ENVIRONMENT_ENV_NODE
+            }
+        if (!environmentPermissionService.checkNodePermission(
+                userId = userId,
+                projectId = projectId,
+                nodeId = data.nodeId,
+                permission = AuthPermission.EDIT,
+                resourceType = nodeResourceType
+            )) {
             throw PermissionForbiddenException(
                 message = I18nUtil.getCodeLanMessage(
                     ERROR_NODE_NO_EDIT_PERMISSSION,
                     language = I18nUtil.getLanguage(userId)
                 )
             )
-        }
-        // 只有第三方机器支持节点
-        if (nodeDao.get(dslContext, projectId, data.nodeId)?.nodeType != NodeType.THIRDPARTY.name) {
-            throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_NODE_TAG_ONLY_SUP_THIRD)
         }
         // 检查标签是否支持多个值同时添加
         val tagKeys = nodeTagKeyDao.fetchNodeKeyByIds(
@@ -228,10 +249,6 @@ class NodeTagService @Autowired constructor(
     fun batchAddNodeTag(userId: String, projectId: String, data: List<UpdateNodeTag>) {
         val nodeIds = data.map { it.nodeId }.toSet()
         val nodes = nodeDao.listByIds(dslContext, projectId, nodeIds).associateBy { it.nodeId }
-        // 只有第三方机器支持节点
-        if (nodes.values.any { it.nodeType != NodeType.THIRDPARTY.name }) {
-            throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_NODE_TAG_ONLY_SUP_THIRD)
-        }
         // 校验权限
         val hasRbacPermissionNodeIds =
             environmentPermissionService.listNodeByPermission(userId, projectId, AuthPermission.EDIT)
@@ -503,7 +520,7 @@ class NodeTagService @Autowired constructor(
         }
         projects.forEach { projectId ->
             logger.info("refreshInternalNodeTags|add project $projectId")
-            thirdPartyAgentDao.fetchByProjectId(dslContext, projectId).forEach { tpa ->
+            thirdPartyAgentDao.fetchByProjectId(dslContext, projectId, null).forEach { tpa ->
                 editNodeInternalTags(tags, tpa, projectId)
             }
         }

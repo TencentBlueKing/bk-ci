@@ -98,4 +98,13 @@ interface ServiceDeptResource {
         @Parameter(description = "用户名称", required = true)
         userId: String
     ): Result<BkUserInfo?>
+
+    @GET
+    @Path("/getUserDeptIds")
+    @Operation(summary = "获取用户部门ID集合")
+    fun getUserDeptIds(
+        @QueryParam("userId")
+        @Parameter(description = "用户名称", required = true)
+        userId: String
+    ): Result<Set<String>>
 }
