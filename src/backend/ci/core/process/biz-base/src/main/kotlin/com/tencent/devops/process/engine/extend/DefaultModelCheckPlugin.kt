@@ -128,7 +128,8 @@ open class DefaultModelCheckPlugin constructor(
         // 检查触发容器
         val paramsMap = checkTriggerContainer(
             trigger = trigger,
-            supportChineseVarName = pipelineDialect?.supportChineseVarName()
+            supportChineseVarName = pipelineDialect?.supportChineseVarName(),
+            isTemplate = isTemplate
         )
         val contextMap = PipelineVarUtil.fillVariableMap(paramsMap.mapValues { it.value.defaultValue.toString() })
         val elementCnt = mutableMapOf<String, Int>()
@@ -478,7 +479,8 @@ open class DefaultModelCheckPlugin constructor(
 
     open fun checkTriggerContainer(
         trigger: Stage,
-        supportChineseVarName: Boolean?
+        supportChineseVarName: Boolean?,
+        isTemplate: Boolean = false
     ): Map<String /* 流水线变量名 */, BuildFormProperty> {
         if (trigger.containers.size != 1) {
             logger.warn("The trigger stage contain more than one container (${trigger.containers.size})")
@@ -491,7 +493,8 @@ open class DefaultModelCheckPlugin constructor(
         )) as TriggerContainer
         return PipelineUtils.checkPipelineParams(
             params = triggerContainer.params,
-            supportChineseVarName = supportChineseVarName
+            supportChineseVarName = supportChineseVarName,
+            isTemplate = isTemplate
         )
     }
 
