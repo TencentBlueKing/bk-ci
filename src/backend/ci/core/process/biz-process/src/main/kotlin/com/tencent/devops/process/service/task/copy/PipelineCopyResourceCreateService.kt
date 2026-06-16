@@ -482,9 +482,7 @@ class PipelineCopyResourceCreateService @Autowired constructor(
             targetProjectId = targetProjectId,
             targetPipelineId = targetPipelineId,
             targetPipelineName = targetPipelineName,
-            replaceResourceMap = PipelineCopyTaskUtils.buildReplaceResourceMap(
-                resourceMap.values.toList()
-            )
+            resourceMap = resourceMap
         )
         // 校验插件是否在目标项目可见
         client.get(ServiceTemplateResource::class).validateModelComponentVisibleDept(

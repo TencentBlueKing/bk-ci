@@ -828,7 +828,9 @@ class PipelineCopyTaskExecuteService @Autowired constructor(
             projectId = projectId,
             taskId = taskId
         )
-        val replaceResourceMap = PipelineCopyTaskUtils.buildReplaceResourceMap(latestResources)
+        val resourceMap = latestResources.associateBy {
+            PipelineCopyTaskUtils.resourceKey(resourceType = it.resourceType, resourceId = it.resourceId)
+        }
         val updates = templateResources.map {
             executePipelineTemplate(
                 userId = userId,
@@ -836,7 +838,7 @@ class PipelineCopyTaskExecuteService @Autowired constructor(
                 taskId = taskId,
                 targetProjectId = targetProjectId,
                 resource = it,
-                replaceResourceMap = replaceResourceMap
+                resourceMap = resourceMap
             )
         }
         pipelineCopyTaskResourceDao.batchUpdate(dslContext = dslContext, updates = updates)
@@ -848,7 +850,7 @@ class PipelineCopyTaskExecuteService @Autowired constructor(
         taskId: String,
         targetProjectId: String,
         resource: PipelineCopyTaskResource,
-        replaceResourceMap: Map<String, PipelineDependentResource>
+        resourceMap: Map<String, PipelineCopyTaskResource>
     ): PipelineCopyTaskResourceUpdate {
         var status = PipelineCopyTaskResourceStatus.SUCCESS
         var targetResourceId: String? = null
@@ -872,7 +874,7 @@ class PipelineCopyTaskExecuteService @Autowired constructor(
                         resource = resource,
                         targetProjectId = targetProjectId,
                         targetTemplateId = targetTemplate.resourceId,
-                        replaceResourceMap = replaceResourceMap
+                        resourceMap = resourceMap
                     )
                 }
 
@@ -892,7 +894,7 @@ class PipelineCopyTaskExecuteService @Autowired constructor(
                         resource = resource,
                         targetProjectId = targetProjectId,
                         targetTemplateId = newTemplateId,
-                        replaceResourceMap = replaceResourceMap
+                        resourceMap = resourceMap
                     )
                 }
 
@@ -927,7 +929,7 @@ class PipelineCopyTaskExecuteService @Autowired constructor(
         resource: PipelineCopyTaskResource,
         targetProjectId: String,
         targetTemplateId: String,
-        replaceResourceMap: Map<String, PipelineDependentResource>
+        resourceMap: Map<String, PipelineCopyTaskResource>
     ): PipelineTemplateCopyResourceProp? {
         val sourceVersions = collectSourceTemplateVersions(
             projectId = projectId,
@@ -945,7 +947,7 @@ class PipelineCopyTaskExecuteService @Autowired constructor(
                 sourceTemplateVersion = sourceVersion,
                 targetProjectId = targetProjectId,
                 targetTemplateId = targetTemplateId,
-                replaceResourceMap = replaceResourceMap
+                resourceMap = resourceMap
             )
         }
         return PipelineTemplateCopyResourceProp(versionMappings = versionMappings)

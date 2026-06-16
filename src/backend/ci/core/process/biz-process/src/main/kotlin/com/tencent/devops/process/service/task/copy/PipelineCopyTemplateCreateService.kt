@@ -11,7 +11,7 @@ import com.tencent.devops.process.constant.PipelineTemplateConstant
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.enums.OperationLogType
 import com.tencent.devops.process.service.PipelineOperationLogService
-import com.tencent.devops.process.pojo.pipeline.PipelineDependentResource
+import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskResource
 import com.tencent.devops.process.pojo.pipeline.task.TemplateVersionMapping
 import com.tencent.devops.process.pojo.template.TemplateType
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateCommonCondition
@@ -54,7 +54,7 @@ class PipelineCopyTemplateCreateService @Autowired constructor(
         sourceTemplateVersion: Long,
         targetProjectId: String,
         targetTemplateId: String,
-        replaceResourceMap: Map<String, PipelineDependentResource>
+        resourceMap: Map<String, PipelineCopyTaskResource>
     ): TemplateVersionMapping {
         val sourceTemplateInfo = pipelineTemplateInfoService.getOrNull(
             projectId = sourceProjectId,
@@ -81,7 +81,7 @@ class PipelineCopyTemplateCreateService @Autowired constructor(
             targetProjectId = targetProjectId,
             targetTemplateId = targetTemplateId,
             targetTemplateName = sourceTemplateInfo.name,
-            replaceResourceMap = replaceResourceMap
+            resourceMap = resourceMap
         )
         client.get(ServiceTemplateResource::class).validateModelComponentVisibleDept(
             userId = userId,

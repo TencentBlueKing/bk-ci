@@ -43,6 +43,7 @@ import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.pojo.pipeline.PipelineDependentResource
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineDependentResourceType
+import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskResource
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateResource
 import com.tencent.devops.process.service.PipelineInfoFacadeService
 import com.tencent.devops.process.service.pipeline.PipelineSettingFacadeService
@@ -70,7 +71,7 @@ class PipelineDependencyReplaceService @Autowired constructor(
         targetProjectId: String,
         targetPipelineId: String,
         targetPipelineName: String,
-        replaceResourceMap: Map<String, PipelineDependentResource>
+        resourceMap: Map<String, PipelineCopyTaskResource>
     ): PipelineModelAndSetting {
         val pipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId = projectId, pipelineId = pipelineId)
             ?: throw ErrorCodeException(
@@ -99,7 +100,7 @@ class PipelineDependencyReplaceService @Autowired constructor(
             pipelineId = pipelineId,
             version = resource.settingVersion ?: 0
         )
-        val context = ReplaceContext(replaceResourceMap = replaceResourceMap)
+        val context = ReplaceContext(resourceMap = resourceMap)
         val replacedModel = model.copy(
             name = targetPipelineName,
             stages = replaceStages(
@@ -134,12 +135,7 @@ class PipelineDependencyReplaceService @Autowired constructor(
             ),
             labelNames = emptyList()
         )
-        if (context.missingResources.isNotEmpty()) {
-            throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ERROR_PIPELINE_COPY_RESOURCE_MIGRATE_FAILED,
-                params = arrayOf(formatMissingResources(context.missingResources))
-            )
-        }
+        validateReplaceContext(projectId = projectId, context = context)
         return PipelineModelAndSetting(model = replacedModel, setting = replaceSetting)
     }
 
@@ -152,7 +148,7 @@ class PipelineDependencyReplaceService @Autowired constructor(
         targetProjectId: String,
         targetTemplateId: String,
         targetTemplateName: String,
-        replaceResourceMap: Map<String, PipelineDependentResource>
+        resourceMap: Map<String, PipelineCopyTaskResource>
     ): PipelineModelAndSetting {
         val sourceModel = sourceTemplateResource.model
         if (sourceModel !is Model) {
@@ -167,7 +163,7 @@ class PipelineDependencyReplaceService @Autowired constructor(
             templateId = sourceTemplateId,
             settingVersion = sourceTemplateResource.settingVersion
         )
-        val context = ReplaceContext(replaceResourceMap = replaceResourceMap)
+        val context = ReplaceContext(resourceMap = resourceMap)
         val replacedModel = sourceModel.copy(
             name = targetTemplateName,
             stages = replaceStages(
@@ -185,12 +181,7 @@ class PipelineDependencyReplaceService @Autowired constructor(
                 context = context
             )
         )
-        if (context.missingResources.isNotEmpty()) {
-            throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ERROR_PIPELINE_COPY_RESOURCE_MIGRATE_FAILED,
-                params = arrayOf(formatMissingResources(context.missingResources))
-            )
-        }
+        validateReplaceContext(projectId = sourceProjectId, context = context)
         return PipelineModelAndSetting(model = replacedModel, setting = replaceSetting)
     }
 
@@ -199,7 +190,7 @@ class PipelineDependencyReplaceService @Autowired constructor(
         context: ReplaceContext
     ): List<String> {
         return labels.mapNotNull { labelId ->
-            context.getTargetResourceOptional(
+            context.getTargetResource(
                 resourceType = PipelineDependentResourceType.PIPELINE_LABEL,
                 resourceId = labelId
             )?.resourceId
@@ -211,7 +202,7 @@ class PipelineDependencyReplaceService @Autowired constructor(
         context: ReplaceContext
     ): List<String> {
         return staticViews.mapNotNull { viewId ->
-            context.getTargetResourceOptional(
+            context.getTargetResource(
                 resourceType = PipelineDependentResourceType.PIPELINE_GROUP,
                 resourceId = viewId
             )?.resourceId
@@ -225,10 +216,10 @@ class PipelineDependencyReplaceService @Autowired constructor(
         if (templateId.isNullOrBlank()) {
             return templateId
         }
-        return context.getTargetResourceOptional(
+        return context.getTargetResource(
             resourceType = PipelineDependentResourceType.PIPELINE_TEMPLATE,
             resourceId = templateId
-        )?.resourceId ?: templateId
+        )?.resourceId
     }
 
     private fun replaceTemplate(
@@ -702,7 +693,7 @@ class PipelineDependencyReplaceService @Autowired constructor(
         input: Map<*, *>,
         context: ReplaceContext
     ): Map<*, *>? {
-        val subProjectId = input["projectId"]?.toString()?.ifBlank { projectId } ?: projectId
+        val subProjectId = input[SUB_PIPELINE_PROJECT_ID]?.toString()?.ifBlank { projectId } ?: projectId
         val subPipelineTypeStr = input.getOrDefault("subPipelineType", SubPipelineType.ID.name)
         val subPipelineId = input[SUB_PIPELINE_EXEC_ID]?.toString()
         if (subProjectId != projectId ||
@@ -716,9 +707,13 @@ class PipelineDependencyReplaceService @Autowired constructor(
             resourceId = subPipelineId
         ) ?: return null
         return replaceInputField(
-            input = input,
-            fieldName = SUB_PIPELINE_EXEC_ID,
-            value = targetPipeline.resourceId
+            input = replaceInputField(
+                input = input,
+                fieldName = SUB_PIPELINE_EXEC_ID,
+                value = targetPipeline.resourceId
+            ),
+            fieldName = SUB_PIPELINE_PROJECT_ID,
+            value = targetPipeline.projectId
         )
     }
 
@@ -812,19 +807,47 @@ class PipelineDependencyReplaceService @Autowired constructor(
         }
     }
 
+    private fun validateReplaceContext(
+        projectId: String,
+        context: ReplaceContext
+    ) {
+        if (context.sourceMissingResources.isNotEmpty()) {
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_PIPELINE_COPY_SOURCE_RESOURCE_NOT_EXISTS,
+                params = arrayOf(projectId, formatMissingResources(context.sourceMissingResources))
+            )
+        }
+        if (context.missingResources.isNotEmpty()) {
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_PIPELINE_COPY_RESOURCE_MIGRATE_FAILED,
+                params = arrayOf(formatMissingResources(context.missingResources))
+            )
+        }
+    }
+
     private data class ReplaceContext(
-        val replaceResourceMap: Map<String, PipelineDependentResource>,
-        val missingResources: MutableSet<MissingReplaceResource> = mutableSetOf()
+        val resourceMap: Map<String, PipelineCopyTaskResource>,
+        val missingResources: MutableSet<MissingReplaceResource> = mutableSetOf(),
+        val sourceMissingResources: MutableSet<MissingReplaceResource> = mutableSetOf()
     ) {
         fun getTargetResource(
             resourceType: PipelineDependentResourceType,
             resourceId: String
         ): PipelineDependentResource? {
             val sourceResourceId = resourceId.takeIf { it.isNotBlank() } ?: return null
-            return getTargetResourceOptional(
+            val sourceResource = getSourceResource(
                 resourceType = resourceType,
-                resourceId = sourceResourceId
+                sourceResourceId = sourceResourceId
             ) ?: run {
+                sourceMissingResources.add(
+                    MissingReplaceResource(
+                        resourceType = resourceType,
+                        resourceId = sourceResourceId
+                    )
+                )
+                return null
+            }
+            return toTargetResource(sourceResource) ?: run {
                 missingResources.add(
                     MissingReplaceResource(
                         resourceType = resourceType,
@@ -835,12 +858,28 @@ class PipelineDependencyReplaceService @Autowired constructor(
             }
         }
 
-        fun getTargetResourceOptional(
+        private fun getSourceResource(
             resourceType: PipelineDependentResourceType,
-            resourceId: String
+            sourceResourceId: String
+        ): PipelineCopyTaskResource? {
+            return resourceMap[PipelineCopyTaskUtils.resourceKey(
+                resourceType = resourceType,
+                resourceId = sourceResourceId
+            )]
+        }
+
+        private fun toTargetResource(
+            sourceResource: PipelineCopyTaskResource
         ): PipelineDependentResource? {
-            val sourceResourceId = resourceId.takeIf { it.isNotBlank() } ?: return null
-            return replaceResourceMap["${resourceType}_$sourceResourceId"]
+            val targetProjectId = sourceResource.targetProjectId?.takeIf { it.isNotBlank() } ?: return null
+            val targetResourceId = sourceResource.targetResourceId?.takeIf { it.isNotBlank() } ?: return null
+            val targetResourceName = sourceResource.targetResourceName?.takeIf { it.isNotBlank() } ?: return null
+            return PipelineDependentResource(
+                projectId = targetProjectId,
+                resourceType = sourceResource.resourceType,
+                resourceId = targetResourceId,
+                resourceName = targetResourceName
+            )
         }
     }
 
@@ -852,6 +891,7 @@ class PipelineDependencyReplaceService @Autowired constructor(
     companion object {
         private const val INPUT = "input"
         private const val REPOSITORY_HASH_ID = "repositoryHashId"
+        private const val SUB_PIPELINE_PROJECT_ID = "projectId"
         private const val SUB_PIPELINE_EXEC_ID = "subPip"
         private const val ENV = "ENV"
         private const val JOB_SCRIPT_EXECUTION_ENV_TYPE = "envType"

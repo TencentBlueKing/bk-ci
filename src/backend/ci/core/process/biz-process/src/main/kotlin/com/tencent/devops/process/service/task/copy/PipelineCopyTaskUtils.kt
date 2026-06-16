@@ -2,7 +2,6 @@ package com.tencent.devops.process.service.task.copy
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.process.pojo.pipeline.PipelineDependentResource
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskStatus
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineCopyAction
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineCopyTaskResourceStatus
@@ -135,22 +134,5 @@ object PipelineCopyTaskUtils {
         return task.taskSummary?.takeIf { it.isNotBlank() }?.let {
             JsonUtil.to(it, PipelineCopyTaskSummary::class.java)
         } ?: PipelineCopyTaskSummary()
-    }
-
-    fun buildReplaceResourceMap(
-        resources: List<PipelineCopyTaskResource>
-    ): Map<String, PipelineDependentResource> {
-        return resources.mapNotNull { resource ->
-            val targetProjectId = resource.targetProjectId?.takeIf { it.isNotBlank() } ?: return@mapNotNull null
-            val targetResourceId = resource.targetResourceId?.takeIf { it.isNotBlank() } ?: return@mapNotNull null
-            val targetResourceName = resource.targetResourceName?.takeIf { it.isNotBlank() } ?: return@mapNotNull null
-            val key = resourceKey(resource.resourceType, resource.resourceId)
-            key to PipelineDependentResource(
-                projectId = targetProjectId,
-                resourceType = resource.resourceType,
-                resourceId = targetResourceId,
-                resourceName = targetResourceName
-            )
-        }.toMap()
     }
 }
