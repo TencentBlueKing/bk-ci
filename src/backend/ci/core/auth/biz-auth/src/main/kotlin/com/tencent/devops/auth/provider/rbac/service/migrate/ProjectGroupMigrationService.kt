@@ -1032,7 +1032,8 @@ class ProjectGroupMigrationService(
             authResourceGroupMemberDao.listResourceGroupMember(
                 dslContext = dslContext,
                 projectCode = group.projectCode,
-                iamGroupId = group.relationId
+                iamGroupId = group.relationId,
+                minExpiredTime = LocalDateTime.now()
             )
         } else {
             emptyList()

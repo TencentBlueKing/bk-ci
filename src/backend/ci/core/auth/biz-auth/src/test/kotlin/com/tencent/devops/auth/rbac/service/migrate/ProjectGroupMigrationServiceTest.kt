@@ -161,7 +161,8 @@ class ProjectGroupMigrationServiceTest {
             authResourceGroupMemberDao.listResourceGroupMember(
                 dslContext = dslContext,
                 projectCode = "source",
-                iamGroupId = 10
+                iamGroupId = 10,
+                minExpiredTime = any()
             )
         } returns emptyList()
         every {
@@ -246,7 +247,8 @@ class ProjectGroupMigrationServiceTest {
             authResourceGroupMemberDao.listResourceGroupMember(
                 dslContext = dslContext,
                 projectCode = "source",
-                iamGroupId = 11
+                iamGroupId = 11,
+                minExpiredTime = any()
             )
         } returns emptyList()
         every {
@@ -313,7 +315,8 @@ class ProjectGroupMigrationServiceTest {
             authResourceGroupMemberDao.listResourceGroupMember(
                 dslContext = dslContext,
                 projectCode = "source",
-                iamGroupId = 20
+                iamGroupId = 20,
+                minExpiredTime = any()
             )
         } returns listOf(
             member(memberId = "user1", memberType = MemberType.USER.type),
@@ -411,7 +414,8 @@ class ProjectGroupMigrationServiceTest {
             authResourceGroupMemberDao.listResourceGroupMember(
                 dslContext = dslContext,
                 projectCode = "source",
-                iamGroupId = 21
+                iamGroupId = 21,
+                minExpiredTime = any()
             )
         } returns emptyList()
         every {
@@ -489,7 +493,8 @@ class ProjectGroupMigrationServiceTest {
             authResourceGroupMemberDao.listResourceGroupMember(
                 dslContext = dslContext,
                 projectCode = "source",
-                iamGroupId = 31
+                iamGroupId = 31,
+                minExpiredTime = any()
             )
         } returns emptyList()
         every {
