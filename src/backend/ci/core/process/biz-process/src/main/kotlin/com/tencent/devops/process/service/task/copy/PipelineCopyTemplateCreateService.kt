@@ -10,7 +10,7 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.constant.PipelineTemplateConstant
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.enums.OperationLogType
-import com.tencent.devops.process.service.PipelineOperationLogService
+import com.tencent.devops.process.permission.template.PipelineTemplatePermissionService
 import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskResource
 import com.tencent.devops.process.pojo.pipeline.task.TemplateVersionMapping
 import com.tencent.devops.process.pojo.template.TemplateType
@@ -19,7 +19,7 @@ import com.tencent.devops.process.pojo.template.v2.PipelineTemplateInfoUpdateInf
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateInfoV2
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateResource
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateResourceCommonCondition
-import com.tencent.devops.process.permission.template.PipelineTemplatePermissionService
+import com.tencent.devops.process.service.PipelineOperationLogService
 import com.tencent.devops.process.service.template.v2.PipelineTemplateGenerator
 import com.tencent.devops.process.service.template.v2.PipelineTemplateInfoService
 import com.tencent.devops.process.service.template.v2.PipelineTemplateModelLock
@@ -72,6 +72,21 @@ class PipelineCopyTemplateCreateService @Autowired constructor(
             params = arrayOf(sourceProjectId, "$sourceTemplateId@$sourceTemplateVersion")
         )
         val sourceVersionName = sourceTemplateResource.versionName!!
+        pipelineTemplateResourceService.getOrNull(
+            commonCondition = PipelineTemplateResourceCommonCondition(
+                projectId = targetProjectId,
+                templateId = targetTemplateId,
+                versionName = sourceVersionName,
+                status = VersionStatus.RELEASED
+            )
+        )?.let {
+            return TemplateVersionMapping(
+                sourceVersion = sourceTemplateVersion,
+                sourceVersionName = sourceVersionName,
+                targetVersion = it.version,
+                targetVersionName = sourceVersionName
+            )
+        }
         val modelAndSetting = pipelineDependencyReplaceService.replaceTemplateResourceDependency(
             userId = userId,
             sourceProjectId = sourceProjectId,

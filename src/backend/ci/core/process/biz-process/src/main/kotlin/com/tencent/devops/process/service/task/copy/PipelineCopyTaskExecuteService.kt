@@ -8,7 +8,6 @@ import com.tencent.devops.process.dao.PipelineBatchTaskDao
 import com.tencent.devops.process.dao.PipelineBatchTaskDetailDao
 import com.tencent.devops.process.dao.PipelineCopyTaskResourceDao
 import com.tencent.devops.process.dao.PipelineCopyTaskResourceRelDao
-import com.tencent.devops.process.pojo.pipeline.PipelineDependentResource
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskDetailErrorType
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskDetailStatus
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskStatus
@@ -1292,15 +1291,6 @@ class PipelineCopyTaskExecuteService @Autowired constructor(
                 )
             ]
                 ?: throwDependencyFailed(relation.resourceType, relation.resourceId)
-        }
-    }
-
-    private fun validatePipelineDependencies(resources: List<PipelineCopyTaskResource>) {
-        val failedResource = resources.firstOrNull {
-            it.status == PipelineCopyTaskResourceStatus.FAILED
-        }
-        if (failedResource != null) {
-            throwDependencyFailed(failedResource.resourceType, failedResource.resourceName)
         }
     }
 

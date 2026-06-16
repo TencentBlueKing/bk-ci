@@ -772,12 +772,16 @@ class RbacPermissionResourceMemberService(
         val now = LocalDateTime.now()
         sourceGroups.forEach { sourceGroup ->
             try {
-                val targetIamGroupId = roleCodeToIamGroupId(
+                val targetIamGroupId = authResourceGroupDao.getByGroupCode(
+                    dslContext = dslContext,
                     projectCode = targetProjectCode,
                     resourceType = resourceType,
                     resourceCode = targetResourceCode,
-                    roleCode = sourceGroup.groupCode
-                )
+                    groupCode = sourceGroup.groupCode
+                )?.relationId ?: run {
+                    logger.warn("copy group failed|target project group ${sourceGroup.groupCode} not exist")
+                    return@forEach
+                }
                 val sourceMembers = authResourceGroupMemberDao.listResourceGroupMember(
                     dslContext = dslContext,
                     projectCode = sourceProjectCode,
