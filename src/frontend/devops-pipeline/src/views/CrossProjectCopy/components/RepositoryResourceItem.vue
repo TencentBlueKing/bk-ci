@@ -5,6 +5,7 @@
         :item="item"
         :header-title="item.resourceName"
         :strategies="strategyOptions"
+        :is-read-only="isReadOnly"
         @strategy-change="handleChange"
     >
         <template #header-extra>
@@ -62,6 +63,11 @@
                 type: Object,
                 required: true
             },
+            // 是否只读模式
+            isReadOnly: {
+                type: Boolean,
+                default: false
+            },
             // OAuth授权状态
             isOauth: {
                 type: Boolean,
@@ -105,7 +111,7 @@
                 this.$emit('strategy-change', value)
             },
             handleRefresh () {
-                this.$emit('refreshOauthAuthorize')
+                this.$emit('refresh-oauth-authorize', this.item)
             }
         }
     }

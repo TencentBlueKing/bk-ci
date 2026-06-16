@@ -70,7 +70,7 @@
             </bk-table-column>
             <bk-table-column
                 :label="$t('creator')"
-                prop="creator"
+                prop="pipelineCreator"
             ></bk-table-column>
             <bk-table-column
                 :label="$t('execStatus')"
@@ -81,12 +81,46 @@
                             <span :class="['status-text', `status-text--${row.status}`]">
                                 {{ getStatusText(row.status) }}
                             </span>
-                            <span
-                                v-if="row.status === PipelineBatchTaskDetailStatus.FAILED && row.failReason"
-                                class="fail-reason"
+                            <bk-popover
+                                placement="top"
+                                :tippy-options="{
+                                    theme: 'light'
+                                }"
+                                ext-cls="pipeline-error-popover"
+                                v-if="row.errorTypeName"
                             >
-                                {{ row.failReason }}
-                            </span>
+                                <span class="fail-reason">{{ row.errorTypeName }}</span>
+                                <div slot="content">
+                                    <template v-if="row.errorType !== PipelineBatchTaskDetailErrorType.DEPENDENCY_CREATE_FAILED">
+                                        <span>{{ row.errorMessageText }}</span>
+                                    </template>
+                                    <template v-else>
+                                        <div
+                                            v-for="(item, index) in row.errorMessageText"
+                                            :key="index"
+                                            class="error-item"
+                                        >
+                                            <span>{{ item.resourceTypeName }}</span>
+                                            <p
+                                                v-for="err in item.resources"
+                                                :key="err.resourceType"
+                                            >
+                                                <span class="error-item-title">{{ err.resourceName }}</span>
+                                                <a
+                                                    class="jump-icon"
+                                                    @click="handleJump(item.resourceType, err)"
+                                                >
+                                                    <Logo
+                                                        name="tiaozhuan"
+                                                        size="12"
+                                                    />
+                                                </a>
+                                                <span>{{ err.errorMessageText }}</span>
+                                            </p>
+                                        </div>
+                                    </template>
+                                </div>
+                            </bk-popover>
                         </div>
                         <bk-button
                             v-if="row.status === PipelineBatchTaskDetailStatus.FAILED"
@@ -109,7 +143,7 @@
     import SearchSelect from '@blueking/search-select'
     import CustomTabs from './CustomTabs.vue'
     import '@blueking/search-select/dist/styles/index.css'
-    import { PipelineBatchTaskDetailStatus } from '@/store/modules/crossProjectCopy/constants'
+    import { PipelineBatchTaskDetailStatus, PipelineBatchTaskDetailErrorType } from '@/store/modules/crossProjectCopy/constants'
     
     export default {
         name: 'PipelineListContent',
@@ -194,6 +228,7 @@
         },
         created () {
             this.PipelineBatchTaskDetailStatus = PipelineBatchTaskDetailStatus
+            this.PipelineBatchTaskDetailErrorType = PipelineBatchTaskDetailErrorType
             
             // 从query参数读取statusTab，如果指定了失败项则切换到失败项标签页
             const { statusTab } = this.$route.query
@@ -272,34 +307,11 @@
                     this.tableLoading = false
                 }
             },
-            async handleRetry (row) {
-                this.$bkInfo({
-                    width: 400,
-                    title: this.$t('confirmRetryFailedPipeline'),
-                    subTitle: `${this.$t('pipeline')}： ${row.pipelineName}`,
-                    okText: this.$t('retry'),
-                    cancelText: this.$t('cancel'),
-                    confirmLoading: true,
-                    confirmFn: async () => {
-                        try {
-                            await this.retryFailedTaskDetail({
-                                projectId: this.projectId,
-                                taskId: this.taskId,
-                                pipelineId: row.pipelineId
-                            })
-                            this.$bkMessage({
-                                theme: 'success',
-                                message: this.$t('subpage.retrySuc')
-                            })
-                            this.fetchPipelineList()
-                        } catch (error) {
-                            this.$bkMessage({
-                                theme: 'error',
-                                message: error.message || error
-                            })
-                        }
-                    }
-                })
+            handleJump (resourceType, err) {
+                this.$emit('jump', {...err, resourceType})
+            },
+            handleRetry (row) {
+                this.$emit('retry', row)
             }
         }
     }
@@ -436,16 +448,39 @@
                     border-color: #EA3636;
                 }
             }
-            
-            .fail-reason {
-                font-size: 12px;
-                color: #E71818;
-                background-color: #FFEBEB;
-                padding: 2px 8px;
-                border-radius: 2px;
-                margin-left: 24px;
-            }
+        }
+
+        .fail-reason {
+            cursor: pointer;
+            font-size: 12px;
+            color: #E71818;
+            background-color: #FFEBEB;
+            padding: 2px 8px;
+            border-radius: 2px;
+            margin-left: 24px;
         }
     }
+}
+</style>
+
+<style lang="scss">
+.pipeline-error-popover {
+
+    .error-type {
+        cursor: pointer;
+    }
+
+    .error-item {
+        margin-bottom: 8px;
+    }
+
+    .error-item-title {
+        color: #313238;
+    }
+
+    .jump-icon {
+        margin: 0 4px;
+    }
+
 }
 </style>

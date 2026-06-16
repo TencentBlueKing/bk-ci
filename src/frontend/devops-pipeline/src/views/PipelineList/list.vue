@@ -15,11 +15,11 @@
             class="main-content"
         >
             <bk-alert
-                v-if="showAlert"
+                v-if="showAlert && taskCount > 0"
                 type="warning"
             >
                 <div slot="title">
-                    {{ $t('taskingDecs', [1]) }}
+                    {{ $t('taskingDecs', [taskCount]) }}
                     <span
                         @click="handleAlertClose"
                         class="know-btn"
@@ -39,6 +39,7 @@
         PIPELINE_ASIDE_PANEL_TOGGLE,
         PIPELINE_GROUP_ASIDE_WIDTH_CACHE
     } from '@/store/constants'
+    import { mapActions } from 'vuex'
     import PatchManageList from './PatchManageList'
     import PipelineGroupAside from './PipelineGroupAside'
     import PipelineManageList from './PipelineManageList'
@@ -52,6 +53,7 @@
         data () {
             return {
                 showAlert: true,
+                taskCount: 0,
                 initialDivide: Number(localStorage.getItem(PIPELINE_GROUP_ASIDE_WIDTH_CACHE)) || 280
             }
         },
@@ -60,12 +62,33 @@
                 return this.$route.params.type === 'patch' ? PatchManageList : PipelineManageList
             }
         },
+        created () {
+            this.fetchTaskCount()
+        },
         mounted () {
             if (localStorage.getItem(PIPELINE_ASIDE_PANEL_TOGGLE) === 'true') {
                 this.$refs.resizeLayout.setCollapse(true)
             }
         },
         methods: {
+            ...mapActions('crossProjectCopy', [
+                'getTaskCount'
+            ]),
+            async fetchTaskCount () {
+                try {
+                    const projectId = this.$route.params.projectId
+                    const count = await this.getTaskCount({
+                        projectId,
+                        status: 'EXECUTING'
+                    })
+                    this.taskCount = count || 0
+                    if (this.taskCount > 0) {
+                        this.showAlert = true
+                    }
+                } catch (error) {
+                    console.error('获取任务数量失败', error)
+                }
+            },
             handleCollapseChange (val) {
                 localStorage.setItem(PIPELINE_ASIDE_PANEL_TOGGLE, JSON.stringify(val))
             },

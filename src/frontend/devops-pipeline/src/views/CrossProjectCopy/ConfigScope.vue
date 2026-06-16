@@ -17,10 +17,14 @@
             </div>
         </div>
         
-        <hr style="border: 0; border-top: 1px solid #DCDEE5; margin: 16px 0 24px;" />
+        <hr
+            v-if="!isReadOnly"
+            style="border: 0; border-top: 1px solid #DCDEE5; margin: 16px 0 24px;"
+        />
 
         <div v-bkloading="{ isLoading: isLoading, title: $t('analyzingPipeline'), zIndex: 10 }">
             <bk-form
+                v-if="!isReadOnly"
                 :model="configScopeData"
                 :rules="formRules"
                 ref="configForm"
@@ -38,7 +42,6 @@
                             v-model="configScopeData.targetProjectId"
                             @change="(value) => handleUpdate(value, 'targetProjectId')"
                             :placeholder="$t('pleaseSelect')"
-                            :disabled="isReadOnly"
                             searchable
                         >
                             <bk-option
@@ -59,8 +62,6 @@
                             v-model="configScopeData.taskName"
                             @change="(value) => handleUpdate(value, 'taskName')"
                             :placeholder="$t('enterTaskName')"
-                            :disabled="isReadOnly"
-                            :readonly="isReadOnly"
                         />
                     </bk-form-item>
                 </div>
@@ -79,10 +80,7 @@
                             class="pipeline-strategy-item"
                             :class="{ active: configScopeData.pipelineCopyStrategy === PipelineIdStrategy.PIPELINE_CREATE_NEW_ID }"
                         >
-                            <bk-radio
-                                :value="PipelineIdStrategy.PIPELINE_CREATE_NEW_ID"
-                                :disabled="isReadOnly"
-                            >
+                            <bk-radio :value="PipelineIdStrategy.PIPELINE_CREATE_NEW_ID">
                                 {{ $t('autoGenerateNewId') }}
                                 <span class="recommend">{{ $t('recommend') }}</span>
                             </bk-radio>
@@ -92,10 +90,7 @@
                             class="pipeline-strategy-item"
                             :class="{ active: configScopeData.pipelineCopyStrategy === PipelineIdStrategy.PIPELINE_REUSE_SOURCE_ID }"
                         >
-                            <bk-radio
-                                :value="PipelineIdStrategy.PIPELINE_REUSE_SOURCE_ID"
-                                :disabled="isReadOnly"
-                            >
+                            <bk-radio :value="PipelineIdStrategy.PIPELINE_REUSE_SOURCE_ID">
                                 {{ $t('keepSourceId') }}
                             </bk-radio>
                             <p>{{ $t('keepSourceIdDesc') }}</p>
@@ -249,7 +244,7 @@
                     </bk-table-column>
                     <bk-table-column
                         :label="$t('creator')"
-                        prop="creator"
+                        prop="pipelineCreator"
                     />
                     <bk-table-column
                         :label="$t('status')"
@@ -261,14 +256,14 @@
                             </span>
                         </template>
                     </bk-table-column>
-                    <bk-table-column
+                    <!-- <bk-table-column
                         v-if="!isReadOnly"
                         :label="$t('operation')"
                         width="180"
                     >
                         <template slot-scope="{ row }">
                             <div class="operation-cell">
-                                <!-- <bk-button
+                                <bk-button
                                     v-if="row.status === PipelineBatchTaskDetailStatus.EXCLUDED"
                                     text
                                     @click="handleRestore(row)"
@@ -281,7 +276,7 @@
                                     @click="handleExclude(row)"
                                 >
                                     {{ $t('exclude') }}
-                                </bk-button> -->
+                                </bk-button>
                                 <span
                                     v-if="row.pac"
                                     class="auto-action-text"
@@ -296,7 +291,7 @@
                                 </span>
                             </div>
                         </template>
-                    </bk-table-column>
+                    </bk-table-column> -->
                 </bk-table>
             </div>
         </div>
@@ -434,21 +429,19 @@
         watch: {
             // 监听父组件的 analyzingPipeline 状态
             // 当从非 false（null 或 true）变为 false 时，说明轮询完成，自动加载数据
-            async analyzingPipeline (newVal, oldVal) {
-                if (oldVal !== false && newVal === false) {
-                    await this.loadPipelineListWithLoading()
-                }
+            analyzingPipeline: {
+                async handler (newVal, oldVal) {
+                    if (oldVal !== false && newVal === false) {
+                        await this.loadPipelineListWithLoading()
+                    }
+                },
+                immediate: true
             }
         },
         created () {
             this.PipelineIdStrategy = PipelineIdStrategy
             this.PipelineBatchTaskDetailStatus = PipelineBatchTaskDetailStatus
             this.loadProjectList()
-            
-            // 如果已经不在分析中状态，主动加载流水线列表
-            if (!this.analyzingPipeline) {
-                this.loadPipelineListWithLoading()
-            }
         },
         methods: {
             ...mapActions('crossProjectCopy', [

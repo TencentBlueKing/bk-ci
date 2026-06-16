@@ -4,6 +4,7 @@
         :item="item"
         :header-title="item.resourceName"
         :strategies="strategyOptions"
+        :is-read-only="isReadOnly"
         @strategy-change="handleChange"
     />
 </template>
@@ -37,6 +38,11 @@
                 type: Object,
                 required: true
             },
+            // 是否只读模式
+            isReadOnly: {
+                type: Boolean,
+                default: false
+            }
         },
         computed: {
             strategyOptions () {

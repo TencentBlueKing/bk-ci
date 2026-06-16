@@ -12,9 +12,12 @@
             </div>
         </div>
 
-        <bk-alert type="warning">
+        <bk-alert
+            type="warning"
+            v-if="executingTaskCount"
+        >
             <div slot="title">
-                {{ $t('taskingAlert', [1]) }}
+                {{ $t('taskingAlert', [executingTaskCount]) }}
                 <span
                     @click="handleViewExecuting"
                     class="task-tips"
@@ -65,7 +68,7 @@
                         <div class="task-info">
                             <span
                                 class="task-link"
-                                @click="viewDetail(row)"
+                                @click="goDetail(row)"
                             >
                                 {{ row.taskName }}
                             </span>
@@ -155,7 +158,7 @@
                                 <bk-button
                                     text
                                     size="small"
-                                    @click="continueEdit(row)"
+                                    @click="goDetail(row)"
                                 >
                                     {{ $t('continueEdit') }}
                                 </bk-button>
@@ -171,7 +174,7 @@
                                 v-if="row.status !== 'DRAFT'"
                                 text
                                 size="small"
-                                @click="viewDetail(row)"
+                                @click="goDetail(row)"
                             >
                                 {{ $t('detail') }}
                             </bk-button>
@@ -218,21 +221,23 @@
                     current: 1,
                     count: 0,
                     limit: 10
-                }
-            }
-        },
-        computed: {
-            projectId () {
-                return this.$route.params.projectId
-            },
-            statusTabs () {
-                return [
+                },
+                statusTabs: [
                     { name: 'all', label: this.$t('allTask'), count: 0 },
                     { name: 'EXECUTING', label: this.$t('executing'), count: 0 },
                     { name: 'SUCCESS', label: this.$t('success'), count: 0 },
                     { name: 'FAILED', label: this.$t('failed'), count: 0 },
                     { name: 'DRAFT', label: this.$t('draft'), count: 0 }
                 ]
+            }
+        },
+        computed: {
+            projectId () {
+                return this.$route.params.projectId
+            },
+            executingTaskCount () {
+                const executingTab = this.statusTabs.find(tab => tab.name === 'EXECUTING')
+                return executingTab ? executingTab.count : 0
             },
             searchData () {
                 const usedIds = (this.searchValue || []).map(v => v.id)
@@ -269,10 +274,49 @@
             }
         },
         mounted () {
-            this.fetchTaskList()
+            this.initData()
         },
         methods: {
-            ...mapActions('crossProjectCopy', ['getTaskList', 'deleteTask']),
+            ...mapActions('crossProjectCopy', [
+                'getTaskList',
+                'deleteTask',
+                'getHistoryTaskStatusSummary'
+            ]),
+            initData () {
+                this.fetchTaskList()
+                this.getTaskStatusCount()
+            },
+            /**
+             * 获取任务状态统计数据
+             */
+            async getTaskStatusCount () {
+                try {
+                    const data = await this.getHistoryTaskStatusSummary({
+                        projectId: this.projectId
+                    })
+
+                    let allCount = 0
+                    if (data) {
+                        data.forEach(item => {
+                            const tab = this.statusTabs.find(tab => tab.name === item.status)
+                            if (tab) {
+                                tab.count = item.count
+                                allCount += item.count
+                            }
+                        })
+                    }
+
+                    const allTab = this.statusTabs.find(tab => tab.name === 'all')
+                    if (allTab) {
+                        allTab.count = allCount
+                    }
+                } catch (error) {
+                    this.$bkMessage({
+                        theme: 'error',
+                        message: error.message || error
+                    })
+                }
+            },
             formatTime (row, cell, value) {
                 return convertTime(value)
             },
@@ -412,29 +456,13 @@
                     }
                 })
             },
-            /**
-             * 继续编辑草稿
-             */
-            continueEdit (row) {
+            goDetail (row) {
                 this.$router.push({
                     name: 'crossProjectCopy',
                     params: {
                         projectId: this.projectId,
                         taskId: row.taskId,
                         tab: PipelineBatchTaskStep[row.step]
-                    }
-                })
-            },
-            /**
-             * 查看任务详情
-             */
-            viewDetail (row) {
-                this.$router.push({
-                    name: 'crossProjectCopy',
-                    params: {
-                        projectId: this.projectId,
-                        taskId: row.taskId,
-                        tab: PipelineBatchTaskStep.EXECUTE
                     }
                 })
             },

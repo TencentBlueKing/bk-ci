@@ -4,8 +4,9 @@ export const PipelineBatchTaskStatus = {
     DRAFT: 'DRAFT', // 草稿-允许页面编辑
     PIPELINE_ANALYZING: 'PIPELINE_ANALYZING', // 流水线分析中-持续轮询获取状态
     PIPELINE_RESOURCE_ANALYZING: 'PIPELINE_RESOURCE_ANALYZING', // 流水线资源分析中-持续轮询获取状态
-    // 以下表示页面仅查看
+    EXECUTE_QUEUED: 'EXECUTE_QUEUED', // 执行排队中
     EXECUTING: 'EXECUTING', // 执行中
+    // 以下表示页面仅查看
     SUCCESS: 'SUCCESS', // 成功
     FAILED: 'FAILED',   // 失败
     PARTIAL_FAILED: 'PARTIAL_FAILED',   // 部分失败
@@ -165,4 +166,10 @@ export const PipelineCopyStrategyMap = {
     // 流水线冲突
     [PipelineCopyStrategy.PIPELINE_AUTO_RESOLVE_CONFLICT]: '自动解决冲突',
     [PipelineCopyStrategy.PIPELINE_SKIP]: '跳过(本次不处理)'
+}
+
+export const PipelineBatchTaskDetailErrorType = {
+    DEPENDENCY_CREATE_FAILED: 'DEPENDENCY_CREATE_FAILED',   // 依赖创建错误
+    PIPELINE_CREATE_FAILED: 'PIPELINE_CREATE_FAILED',   // 流水线创建错误
+    SYSTEM_ERROR: 'SYSTEM_ERROR'   // 系统错误
 }

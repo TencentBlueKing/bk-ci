@@ -7,23 +7,60 @@
                 <span class="title-text">
                     {{ resourceTypeText }}：{{ data.resourceName }}
                 </span>
-                <Logo
-                    v-if="data.resourceLink"
-                    class="title-link"
-                    name="tiaozhuan"
-                    size="14"
-                />
+                <a @click="handleJump">
+                    <Logo
+                        class="title-link"
+                        name="tiaozhuan"
+                        size="14"
+                    />
+                </a>
                 <span
-                    v-if="data.statusText"
+                    v-if="data.copyAction === 'NEED_COMPLETION'"
                     class="status-tag"
-                >
-                    （{{ data.statusText }}）
-                </span>
+                >{{ $t('alreadyNewEmptyEnv') }}</span>
+                
+                <!-- <template v-else>
+                    <i18n
+                        v-if="data.resourceType === 'BUILD_ENV'"
+                        path="alreadyNewEnvAndTransferBuildNode"
+                        tag="span"
+                        class="status-tag"
+                    >
+                        <span style="color:#3A84FF">{{ data.count || 0 }}</span>
+                    </i18n>
+
+                    <i18n
+                        v-if="data.resourceType === 'BUILD_NODE'"
+                        path="alreadyTransferBuildNode"
+                        tag="span"
+                        class="status-tag"
+                    >
+                        <span style="color:#3A84FF">{{ data.count || 0 }}</span>
+                    </i18n>
+
+                    <i18n
+                        v-if="data.resourceType === 'DEPLOY_ENV'"
+                        path="alreadyNewEnvAndTransferDeployNode"
+                        tag="span"
+                        class="status-tag"
+                    >
+                        <span style="color:#3A84FF">{{ data.count || 0 }}</span>
+                    </i18n>
+
+                    <i18n
+                        v-if="data.resourceType === 'DEPLOY_NODE'"
+                        path="alreadyTransferDeployNode"
+                        tag="span"
+                        class="status-tag"
+                    >
+                        <span style="color:#3A84FF">{{ data.count || 0 }}</span>
+                    </i18n>
+                </template> -->
             </div>
             
             <!-- 处理策略 -->
             <div class="resource-info">
-                <p class="info-label">本次处理策略</p>
+                <p class="info-label">{{ $t('currentStrategy') }}</p>
                 <p class="info-value">{{ strategyText }}</p>
             </div>
         </div>
@@ -34,13 +71,13 @@
             :class="{ 'is-pending': data.status === 'UNPROCESSED' }"
         >
             <div
+                v-if="showDescription"
                 class="resour-item"
-                v-if="data.targetProjectId"
             >
                 <!-- 消息提示 -->
                 <p class="message-text">
-                    <span class="message-label">目标项目:</span>
-                    {{ data.targetProjectId }}
+                    <span class="message-label">{{ $t('targetProject') }}：</span>
+                    {{ descriptionText }}
                 </p>
                 <bk-checkbox
                     v-if="data.status === 'UNPROCESSED'"
@@ -76,7 +113,13 @@
 
 <script>
     import Logo from '@/components/Logo'
-    import { PipelineCopyResourceTypeMap, PipelineCopyStrategyMap, PipelineCopyResourceStatus } from '@/store/modules/crossProjectCopy/constants.js'
+    import {
+        PipelineCopyResourceTypeMap,
+        PipelineCopyStrategyMap,
+        PipelineCopyResourceStatus,
+        PipelineCopyAction,
+        PipelineCopyResourceType
+    } from '@/store/modules/crossProjectCopy/constants.js'
     export default {
         name: 'ResourceItemCard',
         components: {
@@ -100,6 +143,9 @@
             }
         },
         computed: {
+            projectId () {
+                return this.$route.params.projectId
+            },
             // 资源类型文本
             resourceTypeText () {
                 return PipelineCopyResourceTypeMap[this.data.resourceType] || this.data.resourceType
@@ -109,6 +155,46 @@
             strategyText () {
                 return PipelineCopyStrategyMap[this.data.copyStrategy] || this.data.copyStrategy || '-'
             },
+
+            descriptionText () {
+                const { resourceType, confirmed, copyAction } = this.data
+
+                // NEED_TRANSFER：资源转移
+                if (copyAction === PipelineCopyAction.NEED_TRANSFER) {
+                    const isNode = resourceType === PipelineCopyResourceType.DEPLOY_NODE
+                        || resourceType === PipelineCopyResourceType.BUILD_NODE
+                    const isEnv = resourceType === PipelineCopyResourceType.BUILD_ENV
+                        || resourceType === PipelineCopyResourceType.DEPLOY_ENV
+
+                    if (isNode) {
+                        return this.$t('updateBuildNodeAgent')
+                    }
+                    if (isEnv) {
+                        return this.$t('updateBuildMachineAgent')
+                    }
+                    return ''
+                }
+
+                // NEED_COMPLETION：资源补齐
+                if (copyAction === PipelineCopyAction.NEED_COMPLETION) {
+                    if (confirmed === false) {
+                        return this.$t('addNodeAndVerifyPipeline')
+                    }
+                    return this.$t('addedNodeSuggestVerifyPipeline')
+                }
+
+                return ''
+            },
+
+            showDescription () {
+                if (this.data.copyAction === PipelineCopyAction.NEED_COMPLETION) return true
+                if (this.data.copyAction === PipelineCopyAction.NEED_TRANSFER) {
+                    const rt = this.data.resourceType
+                    return rt === PipelineCopyResourceType.BUILD_NODE
+                        || rt === PipelineCopyResourceType.BUILD_ENV
+                }
+                return false
+            }
         },
         methods: {
             handleComplete (value) {
@@ -120,6 +206,24 @@
             },
             handleRefresh () {
                 this.$emit('refresh-check', this.data)
+            },
+            handleJump () {
+                const { resourceType, resourceId } = this.data
+                const projectId = this.projectId
+                let url = ''
+                switch (resourceType) {
+                    case 'BUILD_ENV':
+                    case 'DEPLOY_ENV':
+                        url = `/console/environment/${projectId}/envDetail/${resourceId}`
+                        break
+                    case 'BUILD_NODE':
+                    case 'DEPLOY_NODE':
+                        url = `/console/environment/${projectId}/node/nodeDetail/${resourceId}`
+                        break
+                }
+                if (url) {
+                    window.open(url, '_blank')
+                }
             }
         }
     }

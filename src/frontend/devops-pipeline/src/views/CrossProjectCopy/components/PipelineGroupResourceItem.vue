@@ -7,6 +7,7 @@
         :show-affected-count="false"
         :show-jump-icon="false"
         :strategies="strategyOptions"
+        :is-read-only="isReadOnly"
         @strategy-change="handleStrategyChange"
     >
         <template #extra-config>
@@ -181,6 +182,11 @@
             item: {
                 type: Object,
                 required: true
+            },
+            // 是否只读模式
+            isReadOnly: {
+                type: Boolean,
+                default: false
             }
         },
         data () {
@@ -240,7 +246,10 @@
                 return this.$route.params.taskId
             },
             isAutoReuse () {
-                return this.item.copyStrategy === PipelineCopyStrategy.PIPELINE_GROUP_AUTO_REUSE_OR_CREATE
+                const copyStrategy = this.isReadOnly
+                    ? this.item.resources?.[0]?.copyStrategy
+                    : this.item.copyStrategy
+                return copyStrategy === PipelineCopyStrategy.PIPELINE_GROUP_AUTO_REUSE_OR_CREATE
             },
             strategyOptions () {
                 return [
@@ -275,17 +284,7 @@
             'item.copyStrategy': {
                 handler (newVal) {
                     if (newVal === PipelineCopyStrategy.PIPELINE_GROUP_AUTO_REUSE_OR_CREATE) {
-                        // 默认选中每个分类的第一个分组
-                        this.$nextTick(() => {
-                            this.groupsData.forEach(category => {
-                                if (category.groups.length > 0 && !category.expandedGroupId) {
-                                    const firstGroup = category.groups[0]
-                                    category.expandedGroupId = firstGroup.resourceId
-                                    category.currentGroup = firstGroup
-                                    this.fetchPipelinesData(category)
-                                }
-                            })
-                        })
+                        this.autoSelectFirstGroup()
                     }
                 },
                 immediate: true
@@ -296,9 +295,30 @@
                     this.initGroupsData(newVal)
                 },
                 immediate: true
+            },
+            // 监听 isAutoReuse 变化（只读模式下需要自动选中第一条数据）
+            isAutoReuse: {
+                handler (newVal) {
+                    if (newVal && this.isReadOnly) {
+                        this.autoSelectFirstGroup()
+                    }
+                },
+                immediate: true
             }
         },
         methods: {
+            autoSelectFirstGroup () {
+                this.$nextTick(() => {
+                    this.groupsData.forEach(category => {
+                        if (category.groups.length > 0 && !category.expandedGroupId) {
+                            const firstGroup = category.groups[0]
+                            category.expandedGroupId = firstGroup.resourceId
+                            category.currentGroup = firstGroup
+                            this.fetchPipelinesData(category)
+                        }
+                    })
+                })
+            },
             getCurrentGroup (groupCategory) {
                 if (!groupCategory.expandedGroupId) return null
                 return groupCategory.groups.find(g => g.resourceId === groupCategory.expandedGroupId)

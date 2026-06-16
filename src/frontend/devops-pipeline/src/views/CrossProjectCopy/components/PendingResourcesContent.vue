@@ -15,7 +15,7 @@
                     v-for="item in resourceList"
                     :key="item.id"
                     :data="item"
-                    action-button-text="我已补齐"
+                    :action-button-text="$t('completedByMe')"
                     @handle-complete="handleComplete"
                 />
             </template>

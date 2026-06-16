@@ -52,13 +52,14 @@
                             :class="{ 'high-risk': taskData?.highRiskCount > 0 }"
                         >
                             {{ taskData?.highRiskCount || 0 }} {{ $t('execItem') }}
-                            <Logo
-                                v-if="taskData?.highRiskCount > 0"
-                                name="orientation"
-                                size="12"
-                                v-bk-tooltips="$t('newlist.view')"
-                                @click="handleViewHighRisk"
-                            />
+                            <span @click="handleViewHighRisk">
+                                <Logo
+                                    v-if="taskData?.highRiskCount > 0"
+                                    name="orientation"
+                                    size="12"
+                                    v-bk-tooltips="$t('newlist.view')"
+                                />
+                            </span>
                         </span>
                     </p>
                 </div>
@@ -195,22 +196,58 @@
                 </bk-table-column>
                 <bk-table-column
                     :label="$t('creator')"
-                    prop="creator"
+                    prop="pipelineCreator"
                     width="120"
                 ></bk-table-column>
                 <bk-table-column
+                    width="300"
                     :label="$t('execStatus')"
                 >
                     <template slot-scope="{ row }">
-                        <span :class="['status-text', `status-${row.status}`]">
+                        <span :class="['status-text', `status-text--${row.status}`]">
                             {{ getStatusText(row.status) }}
                         </span>
-                        <span
-                            v-if="row.status === PipelineBatchTaskDetailStatus.FAILED && row.failReason"
-                            class="fail-reason"
+                        <bk-popover
+                            placement="top"
+                            :tippy-options="{
+                                theme: 'light'
+                            }"
+                            always
+                            ext-cls="pipeline-error-popover"
+                            v-if="row.errorTypeName"
                         >
-                            {{ row.failReason }}
-                        </span>
+                            <span class="fail-reason">{{ row.errorTypeName }}</span>
+                            <div slot="content">
+                                <template v-if="row.errorType !== PipelineBatchTaskDetailErrorType.DEPENDENCY_CREATE_FAILED">
+                                    <span>{{ row.errorMessageText }}</span>
+                                </template>
+                                <template v-else>
+                                    <div
+                                        v-for="(item, index) in row.errorMessageText"
+                                        :key="index"
+                                        class="error-item"
+                                    >
+                                        <span>{{ item.resourceTypeName }}</span>
+                                        <p
+                                            v-for="err in item.resources"
+                                            :key="err.resourceType"
+                                        >
+                                            <span class="error-item-title">{{ err.resourceName }}</span>
+                                            <a
+                                                class="jump-icon"
+                                                @click="handleJump(item.resourceType, err)"
+                                            >
+                                                <Logo
+                                                    name="tiaozhuan"
+                                                    size="12"
+                                                />
+                                            </a>
+                                            <span>{{ err.errorMessageText }}</span>
+                                        </p>
+                                    </div>
+                                </template>
+                            </div>
+                        </bk-popover>
                     </template>
                 </bk-table-column>
             </bk-table>
@@ -222,7 +259,6 @@
             class="task-completed-section"
         >
             <!-- 第一部分:状态提示 -->
-
             <div
                 v-if="taskResult === 'partial'"
                 class="task-result-alert is-failed"
@@ -246,7 +282,7 @@
                 </div>
             </div>
             <div
-                v-else
+                v-if="taskResult === 'success'"
                 class="task-result-alert is-success"
             >
                 <i class="devops-icon icon-check-1 success-icon" />
@@ -272,11 +308,14 @@
                             <p>
                                 <Logo
                                     :name="tab.icon"
-                                    :color="tab.color"
+                                    :style="{ color: tab.color }"
                                     size="14"
                                     class="tab-icon"
                                 />
-                                <span class="tab-label">{{ tab.label }}</span>
+                                <span
+                                    class="tab-label"
+                                    :style="{ color: activeTab === tab.key ? tab.color : '#4D4F56' }"
+                                >{{ tab.label }}</span>
                             </p>
                         </div>
                         <div
@@ -304,6 +343,8 @@
                         :resource-data="activeTab !== 'PIPELINE' ? tabData[activeTab] : undefined"
                         :status-summary="pipelineStatusSummary"
                         @update-resource="handleUpdateResource"
+                        @retry="handleRetry"
+                        @jump="handleJump"
                     />
                 </div>
             </div>
@@ -351,6 +392,9 @@
                 pollingTimer: null,
                 // 轮询间隔(毫秒)
                 pollingInterval: 2000,
+                // 重试轮询相关
+                retryPollingTimer: null,
+                isRetryPolling: false,
                 progressInfo: {
                     totalCount: 0,
                     executedCount: 0
@@ -474,17 +518,13 @@
             'taskData.status': {
                 immediate: true,
                 handler (newStatus) {
-                    this.taskResult = (newStatus === PipelineBatchTaskStatus.FAILED || newStatus === PipelineBatchTaskStatus.PARTIAL_FAILED) ? 'partial' : 'success'
-                    
+                    this.updateTaskResult(newStatus)
+
                     if (newStatus === PipelineBatchTaskStatus.DRAFT) {
                         this.localExecutionStatus = 'pending'
                     } else if (newStatus === PipelineBatchTaskStatus.EXECUTING) {
                         this.localExecutionStatus = 'executing'
-                    } else if (
-                        newStatus === PipelineBatchTaskStatus.SUCCESS
-                        || newStatus === PipelineBatchTaskStatus.FAILED
-                        || newStatus === PipelineBatchTaskStatus.PARTIAL_FAILED
-                    ) {
+                    } else if (this.isTaskFinished(newStatus)) {
                         this.localExecutionStatus = 'completed'
                         this.fetchExecuteSummary()
                     }
@@ -526,9 +566,43 @@
                 'getTaskStatusSummary',
                 'listResourceDetails',
                 'getExecuteSummary',
+                'getCopyTaskDetail',
                 'confirmResource',
-                'retryFailedTask'
+                'retryFailedTask',
+                'retryFailedTaskDetail'
             ]),
+            /**
+             * 判断任务是否已完成
+             */
+            isTaskFinished (status) {
+                return (
+                    status === PipelineBatchTaskStatus.SUCCESS
+                    || status === PipelineBatchTaskStatus.FAILED
+                    || status === PipelineBatchTaskStatus.PARTIAL_FAILED
+                )
+            },
+            isTaskFailed (status) {
+                return (
+                    status === PipelineBatchTaskStatus.FAILED
+                    || status === PipelineBatchTaskStatus.PARTIAL_FAILED
+                )
+            },
+            isTaskSuccess (status) {
+                return status === PipelineBatchTaskStatus.SUCCESS
+            },
+
+            /**
+             * 更新任务结果展示状态
+             */
+            updateTaskResult (status) {
+                if (this.isTaskSuccess(status)) {
+                    this.taskResult = 'success'
+                } else if (this.isTaskFailed(status)) {
+                    this.taskResult = 'partial'
+                } else {
+                    this.taskResult = ''
+                }
+            },
             handlePrevStep () {
                 this.$emit('prev-step')
             },
@@ -609,6 +683,33 @@
             handleCancel () {
                 this.$emit('cancel')
             },
+            /**
+             * 处理单个流水线的重试
+             */
+            handleRetry (row) {
+                this.$bkInfo({
+                    width: 400,
+                    title: this.$t('confirmRetryFailedPipeline'),
+                    subTitle: `${this.$t('pipeline')}： ${row.pipelineName}`,
+                    okText: this.$t('retry'),
+                    cancelText: this.$t('cancel'),
+                    confirmFn: () => {
+                        // 调接口后不阻塞，立即开始轮询刷新数据
+                        this.retryFailedTaskDetail({
+                            projectId: this.projectId,
+                            taskId: this.taskId,
+                            pipelineId: row.pipelineId
+                        }).then(() => {
+                            this.$bkMessage({ theme: 'success', message: this.$t('subpage.retrySuc') })
+                        }).catch((error) => {
+                            this.$bkMessage({ theme: 'error', message: error.message || error })
+                        })
+
+                        // 立即开始轮询
+                        this.startRetryPolling()
+                    }
+                })
+            },
             handleRetryFailed () {
                 this.$bkInfo({
                     width: 400,
@@ -623,24 +724,19 @@
                     }, this.$t('currentFailedPipelineCount', [this.pipelineStatusSummary.failedCount])),
                     okText: this.$t('retry'),
                     cancelText: this.$t('cancel'),
-                    confirmLoading: true,
-                    confirmFn: async () => {
-                        try {
-                            await this.retryFailedTask({
-                                projectId: this.projectId,
-                                taskId: this.taskId
-                            })
-                            this.$bkMessage({
-                                theme: 'success',
-                                message: this.$t('retryTaskSubmitted')
-                            })
-                            this.fetchExecutionStatus()
-                        } catch (error) {
-                            this.$bkMessage({
-                                theme: 'error',
-                                message: error.message || error
-                            })
-                        }
+                    confirmFn: () => {
+                        // 调接口后不阻塞，立即开始轮询刷新数据
+                        this.retryFailedTask({
+                            projectId: this.projectId,
+                            taskId: this.taskId
+                        }).then(() => {
+                            this.$bkMessage({ theme: 'success', message: this.$t('retryTaskSubmitted') })
+                        }).catch((error) => {
+                            this.$bkMessage({ theme: 'error', message: error.message || error })
+                        })
+
+                        // 立即开始轮询
+                        this.startRetryPolling()
                     }
                 })
             },
@@ -695,6 +791,71 @@
                 }
             },
             /**
+             * 开始重试轮询（立即执行一次，之后每5s一次）
+             */
+            startRetryPolling () {
+                this.stopRetryPolling()
+                this.isRetryPolling = true
+                this.executeRetryPolling()
+            },
+            /**
+             * 执行重试轮询：刷新全部数据，根据 taskData.status 决定是否停止
+             * 轮询期间不通知父组件更新 taskData，避免页面跳转；轮询结束后再通知
+             */
+            async executeRetryPolling () {
+                if (!this.isRetryPolling) return
+
+                try {
+                    // 1. 更新 completedTabs 和 pipelineStatusSummary
+                    await this.fetchExecuteSummary()
+
+                    // 2. 获取 taskData
+                    const taskData = await this.getCopyTaskDetail({
+                        projectId: this.projectId,
+                        taskId: this.taskId
+                    })
+                    const status = taskData?.status
+                    this.updateTaskResult(status)
+
+                    // 3. 更新流水线表格数据
+                    if (this.$refs.tabComponent && typeof this.$refs.tabComponent.fetchPipelineList === 'function') {
+                        await this.$refs.tabComponent.fetchPipelineList()
+                    }
+
+                    // 4. 根据状态判断是否停止轮询
+                    if (this.isTaskFinished(status)) {
+                        this.stopRetryPolling()
+                        // 轮询结束，通知父组件更新 taskData
+                        this.$emit('update-task-data', taskData)
+                        return
+                    }
+
+                    // 5. 继续轮询
+                    this.retryPollingTimer = setTimeout(() => {
+                        this.executeRetryPolling()
+                    }, 5000)
+                } catch (error) {
+                    this.$bkMessage({
+                        theme: 'error',
+                        message: error.message || error
+                    })
+                    // 即使出错也继续轮询
+                    this.retryPollingTimer = setTimeout(() => {
+                        this.executeRetryPolling()
+                    }, 5000)
+                }
+            },
+            /**
+             * 停止重试轮询
+             */
+            stopRetryPolling () {
+                if (this.retryPollingTimer) {
+                    clearTimeout(this.retryPollingTimer)
+                    this.retryPollingTimer = null
+                }
+                this.isRetryPolling = false
+            },
+            /**
              * 获取执行状态
              */
             async fetchExecutionStatus () {
@@ -719,10 +880,10 @@
                     this.pagination.count = detailsData.count || 0
                     
                     const status = progressData.status
-                    if (status === PipelineBatchTaskStatus.SUCCESS || status === PipelineBatchTaskStatus.FAILED || status === PipelineBatchTaskStatus.PARTIAL_FAILED) {
+                    if (this.isTaskFinished(status)) {
                         this.stopPolling()
                         this.localExecutionStatus = 'completed'
-                        this.taskResult = (status === PipelineBatchTaskStatus.FAILED || status === PipelineBatchTaskStatus.PARTIAL_FAILED) ? 'partial' : 'success'
+                        this.updateTaskResult(status)
                         // 任务完成后获取执行汇总数据更新 completedTabs
                         this.fetchExecuteSummary()
                     }
@@ -745,20 +906,23 @@
                         taskId: this.taskId
                     })
                     
-                    this.completedTabs = this.completedTabs.map(tab => {
-                        if (tab.key === 'PIPELINE') return { ...tab, totalCount: data?.pipelineCount || 0 }
-                        if (tab.key === 'NEED_COMPLETION') return { ...tab, totalCount: data?.needCompletionCount || 0 }
-                        if (tab.key === 'NEED_TRANSFER') return { ...tab, totalCount: data?.needTransferCount || 0 }
-                        if (tab.key === 'AUTO_FINISH') return { ...tab, totalCount: data?.autoFinishCount || 0 }
-                        return tab
-                    })
+                    const countMap = {
+                        'PIPELINE': data?.pipelineCount,
+                        'NEED_COMPLETION': data?.needCompletionCount,
+                        'NEED_TRANSFER': data?.needTransferCount,
+                        'AUTO_FINISH': data?.autoFinishCount
+                    }
+                    this.completedTabs = this.completedTabs.map(tab => ({
+                        ...tab,
+                        totalCount: countMap[tab.key] ?? tab.totalCount
+                    }))
 
                     // 将汇总数据传递给父组件，用于右侧任务指引面板展示
                     this.$emit('update-execution-summary', {
-                        pipelineCount: data?.pipelineCount || 0,
-                        needCompletionCount: data?.needCompletionCount || 0,
-                        needTransferCount: data?.needTransferCount || 0,
-                        autoFinishCount: data?.autoFinishCount || 0
+                        pipelineCount: data?.pipelineCount ?? 0,
+                        needCompletionCount: data?.needCompletionCount ?? 0,
+                        needTransferCount: data?.needTransferCount ?? 0,
+                        autoFinishCount: data?.autoFinishCount ?? 0
                     })
 
                     await this.fetchTaskStatusSummary()
@@ -869,6 +1033,33 @@
             handlePageLimitChange (limit) {
                 this.pagination.current = 1
                 this.pagination.limit = limit
+            },
+            handleJump (item) {
+                const { resourceType, resourceId, resourceName } = item
+                const projectId = this.projectId
+                let url = ''
+                switch (resourceType) {
+                    case 'PIPELINE_TEMPLATE':
+                        url = `/console/pipeline/${projectId}/template/${resourceId}`
+                        break
+                    case 'REPOSITORY':
+                        url = `/console/codelib/${projectId}/?id=${resourceId}&searchName=${resourceName}`
+                        break
+                    case 'BUILD_ENV':
+                    case 'DEPLOY_ENV':
+                        url = `/console/environment/${projectId}/envDetail/${resourceId}`
+                        break
+                    case 'BUILD_NODE':
+                    case 'DEPLOY_NODE':
+                        url = `/console/environment/${projectId}/node/nodeDetail/${resourceId}`
+                        break
+                    case 'CREDENTIAL':
+                        url = `/console/ticket/${projectId}`
+                        break
+                }
+                if (url) {
+                    window.open(url, '_blank')
+                }
             }
         }
     }
@@ -1100,40 +1291,52 @@
                     flex-shrink: 0;
                 }
             }
-            
-            .status-badge {
+
+            .status-text {
                 display: inline-flex;
                 align-items: center;
-                gap: 4px;
+                gap: 8px;
                 font-size: 12px;
-                
-                &.status-pending {
-                    color: #979BA5;
-                    
-                    .icon-circle {
-                        font-size: 8px;
-                    }
+                color: #4D4F56;
+
+                &::before {
+                    content: '';
+                    display: inline-block;
+                    width: 8px;
+                    height: 8px;
+                    border-radius: 50%;
+                    border: 1px solid transparent;
                 }
-                
-                &.status-running {
-                    color: #3A84FF;
-                    
-                    .icon-spinner {
-                        font-size: 12px;
-                    }
+
+                &--WAIT_COPY::before {
+                    background-color: #FDF4E8;
+                    border-color: #F59500;
                 }
-                
-                &.status-success {
-                    color: #2DCB56;
-                    
-                    .icon-check-circle {
-                        font-size: 14px;
-                    }
+
+                &--EXCLUDED::before {
+                    background-color: #F5F7FA;
+                    border-color: #C4C6CC;
                 }
-                
-                &.status-failed {
-                    color: #EA3636;
+
+                &--SUCCESS::before {
+                    background-color: #DAF6E5;
+                    border-color: #2CAF5E;
                 }
+
+                &--FAILED::before {
+                    background-color: #FFEBEB;
+                    border-color: #EA3636;
+                }
+            }
+            
+            .fail-reason {
+                cursor: pointer;
+                font-size: 12px;
+                color: #E71818;
+                background-color: #FFEBEB;
+                padding: 2px 8px;
+                border-radius: 2px;
+                margin-left: 24px;
             }
         }
     }
@@ -1441,5 +1644,27 @@
             }
         }
     }
+}
+</style>
+
+<style lang="scss">
+.pipeline-error-popover {
+
+    .error-type {
+        cursor: pointer;
+    }
+
+    .error-item {
+        margin-bottom: 8px;
+    }
+
+    .error-item-title {
+        color: #313238;
+    }
+
+    .jump-icon {
+        margin: 0 4px;
+    }
+
 }
 </style>

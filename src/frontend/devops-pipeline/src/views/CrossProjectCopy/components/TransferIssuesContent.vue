@@ -15,7 +15,7 @@
                     v-for="item in resourceList"
                     :key="item.id"
                     :data="item"
-                    action-button-text="我已处理"
+                    :action-button-text="$t('alreadyHandled')"
                     @handle-complete="handleComplete"
                     @refresh-check="handleRefresh"
                 />

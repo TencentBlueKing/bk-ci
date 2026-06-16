@@ -1,7 +1,13 @@
 <template>
-    <div class="detail-item">
+    <div
+        class="detail-item"
+        :style="{ borderTop: isReadOnly ? 'none' : '1px solid #C4C6CC' }"
+    >
         <!-- Header 区域 -->
-        <div class="detail-item-header">
+        <div
+            class="detail-item-header"
+            v-if="!isLabelOrGroupReadOnly"
+        >
             <div>
                 <!-- 待处理状态：
                     1. 其他资源类型：item.status === 'UNPROCESSED'
@@ -45,7 +51,25 @@
         </div>
 
         <!-- 策略选择区域 -->
+
+        <!-- 只读模式：显示纯文本策略 -->
+        <div
+            v-if="isReadOnly"
+            class="strategy-readonly"
+            :style="{ borderBottom: !isLabelOrGroupReadOnly ? '1px solid #C4C6CC' : 'none' }"
+        >
+            <p>
+                <span class="readonly-label">{{ $t('currentStrategy') }}：</span>
+                <span class="readonly-value">{{ currentStrategyLabel }}</span>
+            </p>
+            <p v-if="item.copyStrategy === PipelineCopyStrategy.CREDENTIAL_REPLACE_TARGET && item.resourceType === 'CREDENTIAL'">
+                <span class="readonly-label">{{ $t('targetProjectCredential') }}：</span>
+                <span class="readonly-value">{{ item.targetResourceName }}</span>
+            </p>
+        </div>
+        <!-- 编辑模式：显示策略选择 -->
         <bk-radio-group
+            v-else
             class="strategy-group"
             :value="item.copyStrategy"
             @change="handleStrategyChange"
@@ -130,6 +154,7 @@
 <script>
     import Logo from '@/components/Logo'
     import PipelineTableContent from './PipelineTableContent.vue'
+    import { PipelineCopyStrategy } from '@/store/modules/crossProjectCopy/constants'
 
     export default {
         name: 'BaseResourceItem',
@@ -163,6 +188,11 @@
                 type: Array,
                 required: true
             },
+            // 是否只读模式
+            isReadOnly: {
+                type: Boolean,
+                default: false
+            }
         },
         data () {
             return {
@@ -175,7 +205,24 @@
             },
             taskId () {
                 return this.$route.params.taskId
+            },
+            // 是否是流水线标签或分组
+            isLabelOrGroupReadOnly () {
+                const isLabelOrGroup = ['PIPELINE_LABEL', 'PIPELINE_GROUP'].includes(this.item.resourceType)
+                return isLabelOrGroup
+            },
+            // 当前选中的策略中文名称
+            currentStrategyLabel () {
+                const copyStrategy = this.isLabelOrGroupReadOnly
+                    ? this.item.resources?.[0]?.copyStrategy
+                    : this.item.copyStrategy
+
+                const currentStrategy = this.strategies.find(s => s.value === copyStrategy)
+                return currentStrategy?.label || '--'
             }
+        },
+        created () {
+            this.PipelineCopyStrategy = PipelineCopyStrategy
         },
         methods: {
             handleStrategyChange (value) {
@@ -184,7 +231,6 @@
             handleShowPipelines () {
                 this.pipelineDialogVisible = true
             },
-            // 这里点击没跳转
             handleJump () {
                 const { resourceType, resourceId, resourceProperties } = this.item
                 const projectId = this.projectId
@@ -226,5 +272,26 @@
     }
     .pipeline-dialog-content {
         margin-top: 8px;
+    }
+
+    .strategy-readonly {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-top: 10px;
+        font-size: 12px;
+        background-color: #FAFBFD;
+        padding: 18px 24px;
+        p {
+            flex: 1;
+        }
+
+        .readonly-label {
+            color: #979BA5;
+        }
+
+        .readonly-value {
+            color: #313238;
+        }
     }
 </style>

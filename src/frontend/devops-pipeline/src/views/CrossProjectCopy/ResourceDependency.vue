@@ -13,7 +13,7 @@
             </div>
             <div class="header-actions">
                 <!-- <bk-button
-                    v-if="!isLoading && !isReadOnly"
+                    v-if="!isLoading"
                     text
                     @click="handleRecheck"
                 >
@@ -152,6 +152,8 @@
                         v-if="showTabsView"
                     >
                         <CustomTabs
+                            v-if="!isReadOnly"
+                            class="tabs-left"
                             :active-tab="activeTab"
                             :tabs="tabList"
                             @tab-change="activeTab = $event"
@@ -169,17 +171,12 @@
 
                     <!-- 资源详情列表 -->
                     <div class="detail-content">
-                        <!-- 只读模式遮罩 -->
-                        <div
-                            v-if="isReadOnly"
-                            class="readonly-mask"
-                        ></div>
-
                         <!-- 单策略资源类型（流水线标签、流水线分组）：只渲染一个策略选择组件 -->
                         <template v-if="isSingleStrategyResource && singleStrategyItem.resourceType">
                             <component
                                 :is="currentResourceComponent"
                                 :item="singleStrategyItem"
+                                :is-read-only="isReadOnly"
                                 @strategy-change="handleSingleStrategyChange"
                             />
                         </template>
@@ -190,6 +187,8 @@
                                 v-for="(item, index) in currentResourceList"
                                 :key="item.resourceId"
                                 :item="item"
+                                :is-read-only="isReadOnly"
+                                :is-last="index === currentResourceList.length - 1"
                                 :credential-options="credentialOptions"
                                 :is-oauth="getOAuthStatus(item)"
                                 :oauth-url="getOAuthUrl(item)"
@@ -1197,11 +1196,14 @@
                     height: 32px;
                     margin-bottom: 24px;
 
+                    .tabs-left {
+                        margin-right: 20%;
+                    }
+
                     .tabs-right {
                         display: flex;
                         justify-content: flex-end;
                         flex: 1;
-                        margin-left: 20%;
                     }
                 }
 

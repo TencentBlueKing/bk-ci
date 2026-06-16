@@ -11,12 +11,13 @@
             <div class="header-full">
                 <div class="header-full__top">
                     <div class="task-name">
-                        <Logo
-                            name="arrows-left"
-                            class="task-name__logo"
-                            size="18"
-                            @click="handleCancel"
-                        />
+                        <span @click="handleCancel">
+                            <Logo
+                                name="arrows-left"
+                                class="task-name__logo"
+                                size="18"
+                            />
+                        </span>
                         <span class="task-name__text">{{ taskName }}</span>
                         <span
                             v-if="taskStatusText"
@@ -112,6 +113,7 @@
                     @update-loading-state="handleUpdateLoadingState"
                     @update-validation-data="handleUpdateValidationData"
                     @update-execution-summary="handleUpdateExecutionSummary"
+                    @update-task-data="handleUpdateTaskData"
                     @prev-step="handlePrev"
                     @cancel="handleCancel"
                     ref="currentComponent"
@@ -126,7 +128,7 @@
                 <template v-if="currentStepIndex < 2">
                     <!-- 提交检查区域 -->
                     <div
-                        v-if="!loadingStatus"
+                        v-if="!loadingStatus && !isReadOnly"
                         class="sidebar-section submit-check-section"
                     >
                         <div class="section-header">
@@ -199,42 +201,44 @@
                                 <span class="summary-label">{{ $t('pipelineIdStrategy') }}</span>
                                 <span class="summary-value">{{ pipelineCopyStrategyText }}</span>
                             </div>
-                            <div class="summary-item">
-                                <span class="summary-label">{{ $t('unhandledResources') }}</span>
-                                <span
-                                    class="summary-value"
-                                    :class="{ 'is-warning': currentUnprocessedCount > 0 }"
-                                >
-                                    <span class="number-bold">{{ currentUnprocessedCount || '--' }}</span>
-                                </span>
-                            </div>
-                            <div class="summary-item">
-                                <span class="summary-label">{{ $t('highRiskOperations') }}</span>
-                                <span
-                                    class="summary-value"
-                                    :class="{ 'is-success': currentHighRiskCount === 0 }"
-                                >
+                            <template v-if="!isReadOnly">
+                                <div class="summary-item">
+                                    <span class="summary-label">{{ $t('unhandledResources') }}</span>
                                     <span
-                                        class="number-bold high-risk-number"
-                                        v-if="currentHighRiskCount !== 0"
-                                    >{{ currentHighRiskCount }}</span>
+                                        class="summary-value"
+                                        :class="{ 'is-warning': currentUnprocessedCount > 0 }"
+                                    >
+                                        <span class="number-bold">{{ currentUnprocessedCount }}</span>
+                                    </span>
+                                </div>
+                                <div class="summary-item">
+                                    <span class="summary-label">{{ $t('highRiskOperations') }}</span>
                                     <span
-                                        class="none-high-risk"
-                                        v-else
-                                    >{{ $t('none') }}</span>
-                                </span>
-                            </div>
-                            <div class="summary-item">
-                                <span class="summary-label">{{ $t('autoExecuteAfterCopy') }}</span>
-                                <span
-                                    class="summary-value"
-                                    v-if="taskData?.autoFinishCount"
-                                >
-                                    <span class="number-bold">{{ taskData?.autoFinishCount }}</span>
-                                    {{ $t('strip') }}
-                                </span>
-                                <span v-else>--</span>
-                            </div>
+                                        class="summary-value"
+                                        :class="{ 'is-success': currentHighRiskCount === 0 }"
+                                    >
+                                        <span
+                                            class="number-bold high-risk-number"
+                                            v-if="currentHighRiskCount !== 0"
+                                        >{{ currentHighRiskCount }}</span>
+                                        <span
+                                            class="none-high-risk"
+                                            v-else
+                                        >{{ $t('none') }}</span>
+                                    </span>
+                                </div>
+                                <div class="summary-item">
+                                    <span class="summary-label">{{ $t('autoExecuteAfterCopy') }}</span>
+                                    <span
+                                        class="summary-value"
+                                        v-if="taskData?.autoFinishCount"
+                                    >
+                                        <span class="number-bold">{{ taskData?.autoFinishCount }}</span>
+                                        {{ $t('strip') }}
+                                    </span>
+                                    <span v-else>--</span>
+                                </div>
+                            </template>
                         </div>
                     </div>
                 </template>
@@ -578,23 +582,13 @@
             activeTab () {
                 return this.steps[this.currentStepIndex].name
             },
-            // 未处理资源总数：优先使用实时校验数据，否则回退到初始 taskData
+            // 未处理资源总数
             currentUnprocessedCount () {
-                const { pendingDependencyResourceCount, pendingConflictCount } = this.resourceValidationData
-                const realtimeCount = pendingDependencyResourceCount + pendingConflictCount
-                // resourceValidationData 有更新时使用实时数据（初始值均为 0，需判断是否已接收过数据）
-                if (pendingDependencyResourceCount > 0 || pendingConflictCount > 0) {
-                    return realtimeCount
-                }
-                return this.taskData?.unprocessedCount ?? 0
+                return this.resourceValidationData.pendingDependencyResourceCount ?? 0
             },
-            // 高风险操作数量：优先使用实时校验数据，否则回退到初始 taskData
+            // 高风险操作数量
             currentHighRiskCount () {
-                const { highRiskOperationCount } = this.resourceValidationData
-                if (highRiskOperationCount > 0) {
-                    return highRiskOperationCount
-                }
-                return this.taskData?.highRiskCount ?? 0
+                return this.resourceValidationData.highRiskOperationCount ?? 0
             },
             currentTabComponent () {
                 return this.steps[this.currentStepIndex].component
@@ -760,7 +754,6 @@
                     handler: this.handleNext
                 })
                 
-                // 保存草稿按钮
                 buttons.push({
                     action: 'saveDraft',
                     theme: 'default',
@@ -768,7 +761,6 @@
                     handler: this.handleSaveDraft
                 })
                 
-                // 取消按钮
                 buttons.push({
                     action: 'cancel',
                     theme: 'default',
@@ -785,6 +777,8 @@
                 immediate: true,
                 handler (to, from) {
                     const newTab = to.params.tab
+                    // 仅当 params.tab 发生变化时执行
+                    if (from && newTab === from.params.tab) return
                     const index = this.steps.findIndex(t => t.name === newTab)
                     
                     if (index !== -1) {
@@ -793,7 +787,6 @@
                             this.initStepsCompleted(index)
                         }
                         
-                        // 先停止之前的轮询
                         this.stopPolling()
                         
                         this.$nextTick(() => {
@@ -869,11 +862,16 @@
              */
             initStepsCompleted (currentIndex) {
                 this.steps.forEach((step, index) => {
-                    step.completed = index <= currentIndex
+                    // 只读状态下，所有步骤都标记为已完成（因为流程已执行中或已完成）
+                    if (this.isReadOnly) {
+                        step.completed = true
+                    } else {
+                        step.completed = index <= currentIndex
+                    }
                 })
             },
             /**
-             * 轮询任务状态（通过 getCopyTaskDetail 接口获取任务详情及状态）
+             * 轮询任务状态（获取任务详情及状态）
              */
             async pollTaskStatus () {
                 if (!this.isPolling) return
@@ -897,6 +895,10 @@
                         }
                         this.stopPolling()
                         this.analyzingPipeline = false
+                        // 数据获取后，重新初始化步骤状态（确保 isReadOnly 正确）
+                        if (this.isReadOnly) {
+                            this.initStepsCompleted(this.currentStepIndex)
+                        }
                     }
                 } catch (error) {
                     this.stopPolling()
@@ -934,6 +936,13 @@
                     ...this.executionSummary,
                     ...data
                 }
+            },
+            /**
+             * 处理任务数据更新
+             */
+            handleUpdateTaskData (taskData) {
+                this.taskData = taskData
+                this.taskStatus = taskData.status
             },
             /**
              * 点击"查看资源"链接，通知子组件切换对应 tab
@@ -1134,6 +1143,19 @@
              */
             async handleStepClick (step, index) {
                 if (step.completed && index !== this.currentStepIndex) {
+                    // 只读状态下直接跳转，无需保存草稿
+                    if (this.isReadOnly) {
+                        this.$router.push({
+                            name: 'crossProjectCopy',
+                            params: {
+                                projectId: this.projectId,
+                                taskId: this.taskId,
+                                tab: step.name
+                            }
+                        })
+                        return
+                    }
+                    
                     const canNavigate = await this.saveDraftBeforeNavigate(index)
                     if (!canNavigate) {
                         return
@@ -1190,7 +1212,7 @@
                         params: { ...this.configScopeData }
                     })
                     if (res) {
-                        this.$bkMessage({ theme: 'success', message: this.$t('saveDraftSuccess') })
+                        this.$bkMessage({ theme: 'success', message: this.$t('saveDraftSuc') })
                     }
                     return !!res
                 } catch (error) {
@@ -1211,7 +1233,7 @@
                         params
                     })
                     if (res) {
-                        this.$bkMessage({ theme: 'success', message: this.$t('saveDraftSuccess') })
+                        this.$bkMessage({ theme: 'success', message: this.$t('saveDraftSuc') })
                     }
                     return !!res
                 } catch (error) {
@@ -1220,7 +1242,12 @@
                 }
             },
             handleCancel () {
-                this.$router.back()
+                this.$router.push({
+                    name: 'PipelineManageList',
+                    params: {
+                        projectId: this.projectId
+                    }
+                })
             },
             handleErrorClick (item) {
                 // 如果错误项不在当前步骤,先跳转到对应步骤

@@ -1,6 +1,9 @@
 <template>
     <!-- 流水线冲突 -->
-    <div class="detail-item">
+    <div
+        class="detail-item"
+        :style="{ marginBottom: isReadOnly ? '' : '12px', borderTop: isReadOnly ? '1px solid #C4C6CC' : '', borderBottom: (isReadOnly && isLast) ? '1px solid #C4C6CC' : '' }"
+    >
         <div class="detail-item-header conflict-header">
             <!-- 源流水线信息 -->
             <div>
@@ -27,9 +30,11 @@
             <!-- 目标流水线信息 -->
             <div class="target-content">
                 <Logo
+                    v-if="!isReadOnly || (isReadOnly && item.copyStrategy !== PipelineCopyStrategy.PIPELINE_SKIP)"
                     name="arrow-right"
                     size="14"
                     class="arrow-right"
+                    :style="{ color: !isReadOnly ? '#F59500' : '#C4C6CC' }"
                 />
                 <div class="target-pipelines">
                     <!-- nameConflict 目标流水线 -->
@@ -41,7 +46,7 @@
                             <span class="target-label">{{ $t('target') }}</span>
                             <div class="pipeline-info-content">
                                 <p>
-                                    <span class="target-name name-conflict">{{ nameConflictData.pipelineName }}</span>
+                                    <span class="target-name name-conflict">{{ item.copyStrategy === PipelineCopyStrategy.PIPELINE_AUTO_RESOLVE_CONFLICT ? item.targetResourceName : nameConflictData.pipelineName }}</span>
                                     <Logo
                                         v-if="!item.copyStrategy"
                                         name="tiaozhuan"
@@ -93,11 +98,20 @@
                             </div>
                         </div>
                     </div>
+                    <div
+                        v-if="isReadOnly && item.copyStrategy === PipelineCopyStrategy.PIPELINE_SKIP"
+                        class="read-only-skip"
+                    >
+                        {{ $t('skipThisPipeline') }}
+                    </div>
                 </div>
             </div>
 
             <!-- 冲突标签 -->
-            <div class="conflict-badges">
+            <div
+                v-if="!isReadOnly"
+                class="conflict-badges"
+            >
                 <span
                     v-if="nameConflictData"
                     class="conflict-badge name-conflict-badge"
@@ -115,6 +129,7 @@
 
         <!-- 冲突处理选择区域 -->
         <bk-radio-group
+            v-if="!isReadOnly"
             class="strategy-group"
             :value="item.copyStrategy"
             @change="handleChange"
@@ -127,10 +142,7 @@
                 <bk-radio :value="strategyValues.autoResolve">
                     {{ $t('autoResolveConflict') }}
                 </bk-radio>
-                <p
-                    class="strategy-desc"
-                    v-html="$t('autoResolveConflictDesc')"
-                ></p>
+                <p class="strategy-desc">{{ autoResolveDesc }}</p>
             </div>
 
             <!-- 跳过此流水线选项 -->
@@ -159,23 +171,33 @@
             item: {
                 type: Object,
                 required: true
+            },
+            // 是否只读模式
+            isReadOnly: {
+                type: Boolean,
+                default: false
+            },
+            // 是否为最后一个
+            isLast: {
+                type: Boolean,
+                default: false
             }
         },
         data () {
             return {
                 // 存储初始流水线名称，用于切换策略时恢复
-                initialPipelineName: ''
+                initialPipelineName: '',
+                // 存储 targetResourceName 的初始值
+                initialTargetResourceName: ''
             }
         },
         computed: {
             projectId () {
                 return this.$route.params.projectId
             },
-            // nameConflict 数据
             nameConflictData () {
                 return this.item.resourceProperties.nameConflict || null
             },
-            // idConflict 数据
             idConflictData () {
                 return this.item.resourceProperties.idConflict || null
             },
@@ -190,10 +212,21 @@
                     autoResolve: PipelineCopyStrategy.PIPELINE_AUTO_RESOLVE_CONFLICT,
                     skip: PipelineCopyStrategy.PIPELINE_SKIP
                 }
+            },
+            autoResolveDesc () {
+                const desc1 = this.$t('autoResolveConflictDesc1')
+                const desc2 = this.$t('autoResolveConflictDesc2')
+                if (this.nameConflictData && !this.idConflictData) {
+                    return `${desc1}。`
+                } else if (!this.nameConflictData && this.idConflictData) {
+                    return `${desc2}。`
+                } else if (this.nameConflictData && this.idConflictData) {
+                    return `${desc1}；${desc2}`
+                }
+                return ''
             }
         },
         watch: {
-            // 监听 nameConflictData，初始化 initialPipelineName
             nameConflictData: {
                 immediate: true,
                 handler (val) {
@@ -203,17 +236,27 @@
                 }
             }
         },
+        created () {
+            this.PipelineCopyStrategy = PipelineCopyStrategy
+            // 保存 targetResourceName 的初始值
+            this.initialTargetResourceName = this.item.targetResourceName || ''
+        },
         methods: {
             // 处理策略变更
             handleChange (value) {
                 if (value === PipelineCopyStrategy.PIPELINE_AUTO_RESOLVE_CONFLICT) {
-                    // 自动解决冲突：如果是名字冲突，生成带时间戳的新名字
+                    // 自动解决冲突：
                     if (this.nameConflictData) {
-                        const timestamp = getTimestamp()
-                        const newName = `${this.initialPipelineName}_${timestamp}`
-                        this.item.targetResourceName = newName
-                        // 直接修改源数据，同步更新展示的名称
-                        this.item.resourceProperties.nameConflict.pipelineName = newName
+                        if (this.initialTargetResourceName) {
+                            this.item.targetResourceName = this.initialTargetResourceName
+                            this.item.resourceProperties.nameConflict.pipelineName = this.initialTargetResourceName
+                        } else {
+                            const timestamp = getTimestamp()
+                            const newName = `${this.initialPipelineName}_${timestamp}`
+                            this.item.targetResourceName = newName
+
+                            this.item.resourceProperties.nameConflict.pipelineName = newName
+                        }
                     }
                 } else if (value === PipelineCopyStrategy.PIPELINE_SKIP) {
                     // 切换到跳过时，恢复初始名称
@@ -239,4 +282,8 @@
 
 <style lang="scss" scoped>
     @import '@/scss/resource-dependency';
+    .read-only-skip {
+        font-size: 12px;
+        color: #979BA5;
+    }
 </style>

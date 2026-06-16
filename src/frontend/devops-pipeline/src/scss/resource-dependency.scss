@@ -1,8 +1,6 @@
 // 跨项目复制-处理资源依赖通用样式
 .detail-item {
-    margin-bottom: 12px;
     padding: 12px 0 12px 16px;
-    border-top: 1px solid #C4C6CC;
 
     
     .jump-icon {
@@ -24,7 +22,6 @@
         display: flex;
         align-items: center;
         justify-content: space-between;
-        margin-bottom: 15px;
         margin-left: 8px;
         position: relative;
 
@@ -74,7 +71,6 @@
         }
 
         .arrow-right {
-            color: #F59500;
             text-align: right;
             margin: 6px 16px 4px 0;
             align-items: end;
@@ -179,6 +175,7 @@
     .strategy-group {
         display: flex;
         gap: 16px;
+        margin-top: 15px;
 
         .strategy-item {
             display: flex;

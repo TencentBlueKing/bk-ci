@@ -205,6 +205,22 @@ export default {
         return ajax.delete(`${PROCESS_API_URL_PREFIX}/user/pipeline/batch/task/${projectId}/tasks/${taskId}`).then(res => {
             return res.data
         })
+    },
+    /**
+     * 查询流水线批量任务数量
+     */
+    async getTaskCount ({ commit }, { projectId, status }) {
+        return ajax.get(`${PROCESS_API_URL_PREFIX}/user/pipeline/batch/task/${projectId}/tasks/count?status=${status}`).then(res => {
+            return res.data
+        })
+    },
+    /**
+     * 查询流水线批量任务状态汇总
+     */
+    async getHistoryTaskStatusSummary ({ commit }, { projectId }) {
+        return ajax.get(`${PROCESS_API_URL_PREFIX}/user/pipeline/batch/task/${projectId}/tasks/status/summary`).then(res => {
+            return res.data
+        })
     }
 
 }

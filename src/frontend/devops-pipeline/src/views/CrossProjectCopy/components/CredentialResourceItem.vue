@@ -5,12 +5,13 @@
         :item="item"
         :header-title="item.resourceName"
         :strategies="strategyOptions"
+        :is-read-only="isReadOnly"
         @strategy-change="handleChange"
     >
         <!-- 使用插槽添加额外的凭据选择配置 -->
         <template #extra-config>
             <div
-                v-if="isReplaceOther"
+                v-if="isReplaceOther && !isReadOnly"
                 class="credential-select-wrapper"
             >
                 <label class="credential-label">
@@ -49,6 +50,11 @@
             item: {
                 type: Object,
                 required: true
+            },
+            // 是否只读模式
+            isReadOnly: {
+                type: Boolean,
+                default: false
             },
             // 目标项目凭据选项列表
             credentialOptions: {
