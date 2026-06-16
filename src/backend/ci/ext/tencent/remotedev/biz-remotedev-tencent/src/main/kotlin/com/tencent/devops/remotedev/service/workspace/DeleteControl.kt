@@ -39,6 +39,7 @@ import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.common.service.utils.SpringContextUtil
+import com.tencent.devops.environment.api.thirdpartyagent.ServiceAgentResource
 import com.tencent.devops.remotedev.common.Constansts.ADMIN_NAME
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.dao.WorkspaceDao
@@ -115,9 +116,10 @@ class DeleteControl @Autowired constructor(
     fun deleteWorkspace(
         userId: String,
         workspaceName: String,
-        needPermission: Boolean = true
+        needPermission: Boolean = true,
+        delaySeconds: Int? = null
     ): Boolean {
-        logger.info("$userId delete workspace $workspaceName")
+        logger.info("$userId delete workspace $workspaceName with delaySeconds=$delaySeconds")
         val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName)
             ?: throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
@@ -154,7 +156,8 @@ class DeleteControl @Autowired constructor(
                     type = UpdateEventType.DELETE,
                     workspaceName = workspace.workspaceName,
                     mountType = workspace.workspaceMountType,
-                    appName = gameId.first
+                    appName = gameId.first,
+                    deleteDelaySeconds = delaySeconds
                 )
             )
 
@@ -452,6 +455,13 @@ class DeleteControl @Autowired constructor(
                     )
                 )
             }
+        }
+
+        // 删除是同时删除创作流节点
+        try {
+            client.get(ServiceAgentResource::class).deleteCreateNode(operator, workspace.projectId, workspaceName)
+        } catch (e: Exception) {
+            logger.warn("delete workspace $workspaceName create node error", e)
         }
 
         notifyControl.dispatchWebsocketPushEvent(

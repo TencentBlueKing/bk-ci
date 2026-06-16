@@ -37,12 +37,15 @@ import com.tencent.devops.store.api.atom.ServiceAtomResource
 import com.tencent.devops.store.api.atom.ServiceMarketAtomResource
 import com.tencent.devops.store.api.common.ServiceStoreStatisticResource
 import com.tencent.devops.store.pojo.atom.AtomPipeline
+import com.tencent.devops.store.pojo.atom.AtomResp
+import com.tencent.devops.store.pojo.atom.AtomRespItem
 import com.tencent.devops.store.pojo.atom.AtomVersion
 import com.tencent.devops.store.pojo.atom.InstallAtomReq
 import com.tencent.devops.store.pojo.atom.MarketAtomResp
 import com.tencent.devops.store.pojo.atom.PipelineAtom
 import com.tencent.devops.store.pojo.atom.enums.AtomTypeEnum
 import com.tencent.devops.store.pojo.atom.enums.MarketAtomSortTypeEnum
+import com.tencent.devops.store.pojo.common.enums.ServiceScopeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.statistic.StoreStatistic
 import org.slf4j.LoggerFactory
@@ -103,21 +106,37 @@ class ApigwAtomResourceV4Impl @Autowired constructor(private val client: Client)
         return client.get(ServiceMarketAtomResource::class).installAtom(userId, channelCode, installAtomReq)
     }
 
+    override fun getAtomYmlV2Info(
+        appCode: String?,
+        apigwType: String?,
+        atomCode: String,
+        userId: String,
+        defaultShowFlag: Boolean?
+    ): Result<String?> {
+        logger.info("OPENAPI_ATOM_V4|$appCode|$userId|getAtomYmlV2Info: $atomCode, $defaultShowFlag")
+        return client.get(ServiceMarketAtomResource::class).getAtomYmlV2Info(
+            atomCode = atomCode,
+            defaultShowFlag = defaultShowFlag
+        )
+    }
+
     override fun getAtomDetail(
         appCode: String?,
         apigwType: String?,
         atomCode: String,
         version: String,
-        userId: String
+        userId: String,
+        serviceScope: ServiceScopeEnum?
     ): Result<PipelineAtom?> {
         logger.info("OPENAPI_ATOM_V4|$appCode|$userId|getAtomDetail: $atomCode, $version")
-        return client.get(ServiceAtomResource::class).getAtomVersionInfo(atomCode, version)
+        return client.get(ServiceAtomResource::class).getAtomVersionInfo(atomCode, version, serviceScope)
     }
 
     override fun list(
         appCode: String?,
         apigwType: String?,
         userId: String,
+        serviceScope: ServiceScopeEnum?,
         keyword: String?,
         classifyCode: String?,
         labelCode: String?,
@@ -131,12 +150,13 @@ class ApigwAtomResourceV4Impl @Autowired constructor(private val client: Client)
         pageSize: Int?
     ): Result<MarketAtomResp> {
         logger.info(
-            "OPENAPI_ATOM_V4|$appCode|$userId|atom list: $keyword, $classifyCode," +
+            "OPENAPI_ATOM_V4|$appCode|$userId|atom list: $serviceScope, $keyword, $classifyCode," +
                 " $labelCode, $score, $rdType, $yamlFlag, $recommendFlag, $qualityFlag, " +
                 "$sortType, $page, $pageSize"
         )
         return client.get(ServiceAtomResource::class).list(
             userId = userId.trim(),
+            serviceScope = serviceScope,
             keyword = keyword?.trim(),
             classifyCode = classifyCode?.trim(),
             labelCode = labelCode?.trim(),
@@ -146,6 +166,47 @@ class ApigwAtomResourceV4Impl @Autowired constructor(private val client: Client)
             recommendFlag = recommendFlag,
             qualityFlag = qualityFlag,
             sortType = sortType,
+            page = page,
+            pageSize = pageSize
+        )
+    }
+
+    override fun listAllPipelineAtoms(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectCode: String,
+        serviceScope: String?,
+        jobType: String?,
+        os: String?,
+        category: String?,
+        classifyId: String?,
+        recommendFlag: Boolean?,
+        keyword: String?,
+        queryProjectAtomFlag: Boolean,
+        fitOsFlag: Boolean?,
+        queryFitAgentBuildLessAtomFlag: Boolean?,
+        page: Int,
+        pageSize: Int
+    ): Result<AtomResp<AtomRespItem>?> {
+        logger.info(
+            "OPENAPI_ATOM_V4|$appCode|$userId|listAllPipelineAtoms: $projectCode, $serviceScope," +
+                " $jobType, $os, $category, $classifyId, $recommendFlag, $keyword," +
+                " $queryProjectAtomFlag, $fitOsFlag, $queryFitAgentBuildLessAtomFlag, $page, $pageSize"
+        )
+        return client.get(ServiceAtomResource::class).listAllPipelineAtoms(
+            userId = userId.trim(),
+            serviceScope = serviceScope,
+            jobType = jobType,
+            os = os,
+            projectCode = projectCode,
+            category = category,
+            classifyId = classifyId,
+            recommendFlag = recommendFlag,
+            keyword = keyword?.trim(),
+            queryProjectAtomFlag = queryProjectAtomFlag,
+            fitOsFlag = fitOsFlag,
+            queryFitAgentBuildLessAtomFlag = queryFitAgentBuildLessAtomFlag,
             page = page,
             pageSize = pageSize
         )

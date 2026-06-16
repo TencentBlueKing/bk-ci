@@ -1,6 +1,6 @@
 package com.tencent.devops.common.pipeline.container
 
-import com.tencent.devops.common.pipeline.type.agent.AgentType
+import com.tencent.devops.common.pipeline.type.agent.AgentDispatchType
 import io.swagger.v3.oas.annotations.media.Schema
 
 /**
@@ -84,9 +84,9 @@ enum class AgentReuseMutexType {
     fun isAgentType() = (this == AGENT_ID || this == AGENT_NAME)
     fun needEngineLock() = isAgentType()
 
-    fun toAgentType(): AgentType? = when (this) {
-        AGENT_ID, AGENT_ENV_ID -> AgentType.ID
-        AGENT_NAME, AGENT_ENV_NAME -> AgentType.NAME
+    fun toAgentType(): AgentDispatchType? = when (this) {
+        AGENT_ID, AGENT_ENV_ID -> AgentDispatchType.ID
+        AGENT_NAME, AGENT_ENV_NAME -> AgentDispatchType.NAME
         else -> null
     }
 }

@@ -1,0 +1,95 @@
+/* 局部变量定义 - 用于当前模块的特定常量 */
+.basicSettings {
+  /* 布局常量 */
+  --basic-settings-max-width: 1200px;
+  --basic-settings-sub-form-width: 560px;
+  --basic-settings-section-margin-bottom: 32px;
+  --basic-settings-input-height: 32px;
+
+  /* 字体权重常量 */
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+}
+
+.basicSettings {
+  padding: var(--spacing-xxl);
+  max-width: var(--basic-settings-max-width);
+}
+
+.section {
+  margin-bottom: var(--basic-settings-section-margin-bottom);
+}
+
+.sectionTitle {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: var(--spacing-xs);
+  margin-bottom: var(--spacing-lg);
+}
+
+.concurrencySettings {
+  width: 100%;
+}
+
+.concurrencyHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--spacing-lg);
+}
+
+.concurrencyTitle {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+}
+
+.subForm {
+  margin-left: var(--spacing-xxl);
+  margin-top: var(--spacing-md);
+  padding: var(--spacing-lg);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-large);
+  background-color: var(--bg-tertiary);
+  width: var(--basic-settings-sub-form-width);
+}
+
+.subFormItem {
+  margin-bottom: var(--spacing-lg);
+}
+
+.subFormItem:last-child {
+  margin-bottom: 0;
+}
+
+.timeoutInputWrapper,
+.queueSizeInputWrapper {
+  display: flex;
+  align-items: center;
+  gap: 0;
+}
+
+.timeoutInputWrapper :global(.bk-input),
+.queueSizeInputWrapper :global(.bk-input) {
+  flex: 1;
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.unit {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
+  padding: 0 var(--spacing-md);
+  white-space: nowrap;
+  height: var(--basic-settings-input-height);
+  border: 1px solid var(--border-color);
+  border-left: none;
+  border-top-right-radius: var(--border-radius);
+  border-bottom-right-radius: var(--border-radius);
+  box-sizing: border-box;
+}

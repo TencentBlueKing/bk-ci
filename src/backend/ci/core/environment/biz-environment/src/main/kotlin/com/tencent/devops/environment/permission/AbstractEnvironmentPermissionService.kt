@@ -146,11 +146,16 @@ abstract class AbstractEnvironmentPermissionService constructor(
         )
     }
 
-    override fun listNodeByPermission(userId: String, projectId: String, permission: AuthPermission): Set<Long> {
+    override fun listNodeByPermission(
+        userId: String,
+        projectId: String,
+        permission: AuthPermission,
+        resourceType: AuthResourceType
+    ): Set<Long> {
         return authPermissionApi.getUserResourceByPermission(
             user = userId,
             serviceCode = environmentAuthServiceCode,
-            resourceType = nodeResourceType,
+            resourceType = resourceType,
             projectCode = projectId,
             permission = permission,
             supplier = supplierForNodeFakePermission(projectId)
@@ -160,12 +165,13 @@ abstract class AbstractEnvironmentPermissionService constructor(
     override fun listNodeByPermissions(
         userId: String,
         projectId: String,
-        permissions: Set<AuthPermission>
+        permissions: Set<AuthPermission>,
+        resourceType: AuthResourceType
     ): Map<AuthPermission, List<String>> {
         return authPermissionApi.getUserResourcesByPermissions(
             user = userId,
             serviceCode = environmentAuthServiceCode,
-            resourceType = nodeResourceType,
+            resourceType = resourceType,
             projectCode = projectId,
             permissions = permissions,
             supplier = supplierForNodeFakePermission(projectId)
@@ -176,7 +182,8 @@ abstract class AbstractEnvironmentPermissionService constructor(
         userId: String,
         projectId: String,
         nodeRecordList: List<TNodeRecord>,
-        authPermission: AuthPermission
+        authPermission: AuthPermission,
+        resourceType: AuthResourceType
     ): List<TNodeRecord> {
         return nodeRecordList
     }
@@ -185,56 +192,78 @@ abstract class AbstractEnvironmentPermissionService constructor(
         userId: String,
         projectId: String,
         nodeId: Long,
-        permission: AuthPermission
+        permission: AuthPermission,
+        resourceType: AuthResourceType
     ): Boolean {
         if (permission == AuthPermission.VIEW)
             return true
         return authPermissionApi.validateUserResourcePermission(
             user = userId,
             serviceCode = environmentAuthServiceCode,
-            resourceType = nodeResourceType,
+            resourceType = resourceType,
             projectCode = projectId,
             resourceCode = HashUtil.encodeLongId(nodeId),
             permission = permission
         )
     }
 
-    override fun checkNodePermission(userId: String, projectId: String, permission: AuthPermission): Boolean {
+    override fun checkNodePermission(
+        userId: String,
+        projectId: String,
+        permission: AuthPermission,
+        resourceType: AuthResourceType
+    ): Boolean {
         return authPermissionApi.validateUserResourcePermission(
             user = userId,
             serviceCode = environmentAuthServiceCode,
-            resourceType = nodeResourceType,
+            resourceType = resourceType,
             projectCode = projectId,
             resourceCode = "*",
             permission = permission
         )
     }
 
-    override fun createNode(userId: String, projectId: String, nodeId: Long, nodeName: String) {
+    override fun createNode(
+        userId: String,
+        projectId: String,
+        nodeId: Long,
+        nodeName: String,
+        resourceType: AuthResourceType
+    ) {
         authResourceApi.createResource(
             user = userId,
             serviceCode = environmentAuthServiceCode,
-            resourceType = nodeResourceType,
+            resourceType = resourceType,
             projectCode = projectId,
             resourceCode = HashUtil.encodeLongId(nodeId),
             resourceName = nodeName
         )
     }
 
-    override fun updateNode(userId: String, projectId: String, nodeId: Long, nodeName: String) {
+    override fun updateNode(
+        userId: String,
+        projectId: String,
+        nodeId: Long,
+        nodeName: String,
+        resourceType: AuthResourceType
+    ) {
         authResourceApi.modifyResource(
             serviceCode = environmentAuthServiceCode,
-            resourceType = nodeResourceType,
+            resourceType = resourceType,
             projectCode = projectId,
             resourceCode = HashUtil.encodeLongId(nodeId),
             resourceName = nodeName
         )
     }
 
-    override fun deleteNode(projectId: String, nodeId: Long) {
+    override fun deleteNode(
+        projectId: String,
+        nodeId: Long,
+        resourceType: AuthResourceType
+    ) {
         authResourceApi.deleteResource(
             serviceCode = environmentAuthServiceCode,
-            resourceType = nodeResourceType,
+            resourceType = resourceType,
             projectCode = projectId,
             resourceCode = HashUtil.encodeLongId(nodeId)
         )

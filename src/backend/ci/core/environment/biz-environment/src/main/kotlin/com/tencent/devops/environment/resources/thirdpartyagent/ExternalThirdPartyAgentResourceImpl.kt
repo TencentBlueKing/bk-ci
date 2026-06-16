@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.pojo.agent.AgentArchType
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.environment.api.thirdpartyagent.ExternalThirdPartyAgentResource
+import com.tencent.devops.environment.pojo.enums.AgentType
 import com.tencent.devops.environment.pojo.thirdpartyagent.TPAInstallType
 import com.tencent.devops.environment.service.thirdpartyagent.BatchInstallAgentService
 import com.tencent.devops.environment.service.thirdpartyagent.DownloadAgentInstallService
@@ -70,8 +71,8 @@ class ExternalThirdPartyAgentResourceImpl @Autowired constructor(
             }
         )
 
-    override fun downloadNewInstallAgentBatchFile(agentHashId: String): Response {
-        val newAgentId = importService.generateAgentByOtherAgentId(agentHashId)
+    override fun downloadNewInstallAgentBatchFile(agentHashId: String, agentType: AgentType?): Response {
+        val newAgentId = importService.generateAgentByOtherAgentId(agentHashId, agentType)
         return downloadAgentInstallService.downloadInstallAgentBatchFile(newAgentId)
     }
 
@@ -82,7 +83,8 @@ class ExternalThirdPartyAgentResourceImpl @Autowired constructor(
         loginName: String?,
         loginPassword: String?,
         installType: TPAInstallType?,
-        reInstallId: String?
+        reInstallId: String?,
+        agentType: AgentType?
     ): Response {
         return batchInstallAgentService.genAgentInstallScript(
             token = token,
@@ -91,7 +93,8 @@ class ExternalThirdPartyAgentResourceImpl @Autowired constructor(
             loginName = loginName,
             loginPassword = loginPassword,
             installType = installType,
-            reInstallId = reInstallId
+            reInstallId = reInstallId,
+            agentType = agentType
         )
     }
 }

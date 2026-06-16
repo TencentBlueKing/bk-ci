@@ -50,6 +50,7 @@ import (
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/utils/fileutil"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/config"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/constant"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/create"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/codesign"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/systemutil"
 )
@@ -139,6 +140,8 @@ func main() {
 	if err != nil {
 		logs.WithError(err).Error("run agent program error")
 	}
+
+	create.ReleaseMutex()
 }
 
 var (

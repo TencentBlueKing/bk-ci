@@ -31,7 +31,6 @@ import com.tencent.bk.audit.annotations.ActionAuditRecord
 import com.tencent.bk.audit.annotations.AuditInstanceRecord
 import com.tencent.bk.audit.context.ActionAuditContext
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.audit.TencentActionAuditContent
 import com.tencent.devops.common.auth.api.TencentActionId
 import com.tencent.devops.common.auth.api.TencentResourceTypeId
@@ -49,7 +48,6 @@ import com.tencent.devops.remotedev.pojo.WorkspaceMountType
 import com.tencent.devops.remotedev.pojo.WorkspaceResponse
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
-import com.tencent.devops.remotedev.pojo.common.RemoteDevNotifyType
 import com.tencent.devops.remotedev.pojo.event.RemoteDevUpdateEvent
 import com.tencent.devops.remotedev.pojo.event.UpdateEventType
 import com.tencent.devops.remotedev.pojo.exception.RetryMQException
@@ -60,16 +58,14 @@ import com.tencent.devops.remotedev.service.client.StartCloudClient
 import com.tencent.devops.remotedev.service.redis.RedisCallLimit
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_CALL_LIMIT_KEY_PREFIX
 import com.tencent.devops.remotedev.service.workspace.NotifyControl
-import com.tencent.devops.remotedev.service.workspace.NotifyControl.Companion.WINDOWS_GPU_RESTART_NOTIFY
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
-import java.util.Date
-import java.util.concurrent.TimeUnit
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.util.concurrent.TimeUnit
 
 @Service
 class RestartWorkspaceHandler @Autowired constructor(
@@ -237,19 +233,6 @@ class RestartWorkspaceHandler @Autowired constructor(
                         WorkspaceStatus.RUNNING.name
                     )
                 )
-
-                notifyControl.notify4User(
-                    userIds = owners,
-                    notifyType = mutableSetOf(RemoteDevNotifyType.EMAIL),
-                    bodyParams = mutableMapOf(
-                        "workspaceName" to workspace.workspaceName,
-                        "projectId" to workspace.projectId,
-                        "cgsId" to (workspace.hostIp ?: workspace.workspaceName),
-                        "displayName" to workspace.displayName,
-                        "time" to DateTimeUtil.formatDate(Date()),
-                        "notifyTemplateCode" to WINDOWS_GPU_RESTART_NOTIFY
-                    )
-                )
             }
             // 重装成功后做异步设置(L盘挂载)
             val ip = event.environmentIp
@@ -257,7 +240,8 @@ class RestartWorkspaceHandler @Autowired constructor(
                 workspaceCommon.makeDiskMount(
                     ip = it,
                     user = event.userId,
-                    owner = owners.firstOrNull()
+                    owner = owners.firstOrNull(),
+                    regionId = workspace.regionId
                 )
             }
         } else {

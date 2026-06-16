@@ -486,6 +486,15 @@
             :build-resource-type="buildResourceType"
             @choose="choose"
         ></image-selector>
+        <MacDebugDialog
+            ref="macDebugDialog"
+            :is-show="isShowDebug"
+            :pipeline-id="pipelineId"
+            :container-id="container.containerId"
+            :build-id="buildId"
+            :execute-count="container.executeCount"
+            @close="closeDebugDialog"
+        />
     </section>
 </template>
 
@@ -507,6 +516,7 @@
     import JobMutual from './JobMutual'
     import JobOption from './JobOption'
     import LinuxOsDockerImage from './LinuxOsDockerImage'
+    import MacDebugDialog from '../MacDebugDialog.vue'
 
     export default {
         name: 'container-content',
@@ -525,6 +535,7 @@
             ImageSelector,
             SelectInput,
             CustomEnvField,
+            MacDebugDialog,
             LinuxOsDockerImage
         },
         props: {
@@ -554,6 +565,7 @@
                 isLoadingWin: false,
                 windowsVersionList: [],
                 macOSHwSpecList: [],
+                isShowDebug: false,
                 isShowPerformance: false
             }
         },
@@ -1271,6 +1283,12 @@
                 const url = `${WEB_URL_PREFIX}/pipeline/${this.projectId}/dockerConsole/?pipelineId=${this.pipelineId}&dispatchType=${this.buildResourceType}&vmSeqId=${vmSeqId}${buildIdStr}`
                 tab.location = url
             },
+            openDebug () {
+                this.isShowDebug = true
+            },
+            closeDebugDialog () {
+                this.isShowDebug = false
+            },
             handleNfsSwitchChange (name, value) {
                 if (!value) {
                     this.handleContainerChange('buildEnv', {})
@@ -1309,7 +1327,7 @@
                     : `export ${env.name}=/data/soda/apps/${key}/${value}/${env.path}`
             },
             addThirdSlave () {
-                const url = `${WEB_URL_PREFIX}/environment/${this.projectId}/node/allNode?type=${this.container.baseOS}`
+                const url = `${WEB_URL_PREFIX}/environment/${this.projectId}/pipeline/node/allNode?type=${this.container.baseOS}`
                 window.open(url, '_blank')
             },
             changeShowPerformance (isShow = false) {

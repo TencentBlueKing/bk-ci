@@ -41,7 +41,7 @@ data class PipelineModelVersion(
     @get:Schema(title = "流水线模型", required = true)
     val model: String,
     @get:Schema(title = "流水线渠道", required = true)
-    val channelCode: ChannelCode = ChannelCode.BS,
+    val channelCode: ChannelCode = ChannelCode.getRequestChannelCode(),
     @get:Schema(title = "流水线模型版本", required = false)
     val version: Int? = null
 )

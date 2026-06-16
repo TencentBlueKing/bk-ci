@@ -20,6 +20,7 @@ CREATE TABLE IF NOT EXISTS `T_ENV` (
   `UPDATED_TIME` timestamp NULL DEFAULT NULL COMMENT '修改时间',
   `ENV_HASH_ID`  varchar(64) DEFAULT NULL COMMENT '环境哈希ID',
   `IS_DELETED` bit(1) NOT NULL COMMENT '是否删除',
+  `ENV_NODE_TYPE` varchar(32) NOT NULL DEFAULT 'NODE' COMMENT '环境节点类型（节点静态环境{NODE}|标签动态环境{TAG}',
   PRIMARY KEY (`ENV_ID`),
   KEY `PROJECT_ID` (`PROJECT_ID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='环境信息表';
@@ -85,9 +86,12 @@ CREATE TABLE IF NOT EXISTS `T_ENVIRONMENT_THIRDPARTY_AGENT` (
   `FILE_GATEWAY` varchar(256) DEFAULT '' COMMENT '文件网关路径',
   `AGENT_PROPS` text COMMENT 'agent config 配置项Json',
   `DOCKER_PARALLEL_TASK_COUNT` int(11) DEFAULT NULL COMMENT 'Docker构建机并行任务计数',
+  `AGENT_TYPE` varchar(36) DEFAULT 'BUILD' COMMENT '第三方构建机类型',
+  `CREATE_WORKSPACE_NAME` varchar(128) DEFAULT NULL COMMENT '云桌面工作空间名称',
   PRIMARY KEY (`ID`),
   KEY `idx_agent_node` (`NODE_ID`),
-  KEY `idx_agent_project` (`PROJECT_ID`)
+  KEY `idx_agent_project` (`PROJECT_ID`),
+  UNIQUE KEY `CREATE_WORKSPACE_NAME` (`CREATE_WORKSPACE_NAME`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='第三方构建机agent信息表';
 
 -- ----------------------------
@@ -105,6 +109,26 @@ CREATE TABLE IF NOT EXISTS `T_ENVIRONMENT_THIRDPARTY_AGENT_ACTION` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='';
 
 -- ----------------------------
+-- Table structure for T_ENVIRONMENT_THIRDPARTY_AGENT_OFFLINE_PERIOD
+-- ----------------------------
+
+CREATE TABLE IF NOT EXISTS `T_ENVIRONMENT_THIRDPARTY_AGENT_OFFLINE_PERIOD` (
+  `ID` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+  `AGENT_ID` bigint(20) NOT NULL COMMENT '构建机ID',
+  `PROJECT_ID` varchar(64) NOT NULL COMMENT '项目ID',
+  `OFFLINE_TIME` datetime NOT NULL COMMENT '下线时间',
+  `ONLINE_TIME` datetime DEFAULT NULL COMMENT '上线时间（NULL表示还未上线）',
+  `DURATION_SECONDS` bigint(20) DEFAULT NULL COMMENT '离线时长（秒）',
+  `CREATED_TIME` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `UPDATED_TIME` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  PRIMARY KEY (`ID`),
+  KEY `idx_agent_offline_time` (`AGENT_ID`, `OFFLINE_TIME`),
+  KEY `idx_project_time` (`PROJECT_ID`, `OFFLINE_TIME`),
+  KEY `idx_online_time` (`ONLINE_TIME`),
+  KEY `idx_duration` (`DURATION_SECONDS`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Agent离线时段统计表';
+
+-- ----------------------------
 -- Table structure for T_ENV_NODE
 -- ----------------------------
 
@@ -116,6 +140,19 @@ CREATE TABLE IF NOT EXISTS `T_ENV_NODE` (
   PRIMARY KEY (`ENV_ID`,`NODE_ID`),
   KEY `PROJECT_ID` (`PROJECT_ID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='环境-节点映射表';
+
+-- ----------------------------
+-- Table structure for T_ENV_TAG
+-- ----------------------------
+
+CREATE TABLE IF NOT EXISTS `T_ENV_TAG` (
+  `PROJECT_ID` varchar(64) NOT NULL COMMENT '项目ID',
+  `ENV_ID` bigint(20) NOT NULL COMMENT '环境ID',
+  `TAG_KEY_ID` bigint(20) NOT NULL COMMENT '标签名ID',
+  `TAG_VALUE_ID` bigint(20) NOT NULL COMMENT '标签值ID',
+  PRIMARY KEY (`PROJECT_ID`, `ENV_ID`, `TAG_VALUE_ID`),
+  KEY `IDX_TAG_KEY_ID` (`TAG_KEY_ID`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='环境-标签映射表';
 
 -- ----------------------------
 -- Table structure for T_NODE

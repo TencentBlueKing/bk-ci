@@ -47,6 +47,7 @@ data class PipelineAgentShutdownEvent(
     val dispatchType: DispatchType,
     val jobId: String? = null,
     val containerHashId: String? = null,
+    val jobTimeInterval: Long? = null,
     override var routeKeySuffix: String? = null,
     override var actionType: ActionType = ActionType.REFRESH,
     override var delayMills: Int = 0

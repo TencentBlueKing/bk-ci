@@ -974,6 +974,9 @@
                   "pool-name" : {
                     "type" : "string"
                   },
+                  "hw-spec" : {
+                    "type" : "string"
+                  },
                   "agent-selector" : {
                     "type" : "array",
                     "items" : {
@@ -1290,6 +1293,9 @@
                 "additionalProperties" : false,
                 "properties" : {
                   "pool-name" : {
+                    "type" : "string"
+                  },
+                  "hw-spec" : {
                     "type" : "string"
                   },
                   "agent-selector" : {

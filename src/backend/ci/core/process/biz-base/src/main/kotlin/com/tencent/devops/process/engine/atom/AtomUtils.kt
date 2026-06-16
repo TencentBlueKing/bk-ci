@@ -43,6 +43,7 @@ import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
@@ -63,6 +64,7 @@ import com.tencent.devops.store.pojo.atom.AtomRunInfo
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.atom.enums.JobTypeEnum
 import com.tencent.devops.store.pojo.common.StoreParam
+import com.tencent.devops.store.pojo.common.enums.ServiceScopeEnum
 import com.tencent.devops.store.pojo.common.version.StoreVersion
 import java.util.LinkedList
 
@@ -80,7 +82,7 @@ object AtomUtils {
     ): MutableMap<String, String> {
         val atoms = mutableMapOf<String, String>()
         val atomVersions = getAtomVersions(container)
-        if (atomVersions.isNullOrEmpty()) {
+        if (atomVersions.isEmpty()) {
             // 如果job容器内没有新插件，则直接返回
             return atoms
         }
@@ -107,12 +109,14 @@ object AtomUtils {
                     taskId = task.taskId
                 )
             }
-            // 判断插件是否有权限在该job环境下运行(需判断无编译环境插件是否可以在有编译环境下运行)
-            val jobRunFlag = when (atomRunInfo.jobType) {
-                // 无编译环境插件： 本身就在无编译环境下运行，或者允许无编译插件在编译环境下运行
-                JobTypeEnum.AGENT_LESS -> (container is NormalContainer || atomRunInfo.buildLessRunFlag == true)
-                // 编译环境插件：需要在编译环境下运行
-                JobTypeEnum.AGENT -> container is VMBuildContainer
+            val allJobTypes = JobTypeEnum.resolveAllFromFields(atomRunInfo.jobType, atomRunInfo.jobTypeMap)
+            val hasBuildEnvType = allJobTypes.any { it.isBuildEnv() }
+            val hasBuildLessType = allJobTypes.any { !it.isBuildEnv() }
+            val jobRunFlag = when {
+                allJobTypes.isEmpty() -> false
+                container is VMBuildContainer -> hasBuildEnvType ||
+                    (hasBuildLessType && atomRunInfo.buildLessRunFlag == true)
+                container is NormalContainer -> hasBuildLessType
                 else -> false
             }
             if (!jobRunFlag) {
@@ -241,34 +245,47 @@ object AtomUtils {
         atomInputParamList: MutableList<StoreParam>,
         inputTypeConfigMap: Map<String, Int>,
         client: Client
-    ): Boolean {
-        if (atomVersions.isEmpty()) {
-            return true
-        }
-        // 批量获取插件运行时信息
-        val atomRunInfoResult = client.get(ServiceMarketAtomEnvResource::class).batchGetAtomRunInfos(
+    ) {
+        if (atomVersions.isEmpty()) return
+        val atomRunInfoMap = client.get(ServiceMarketAtomEnvResource::class).batchGetAtomRunInfos(
             projectCode = projectCode,
             atomVersions = atomVersions
-        )
-        val atomRunInfoMap = atomRunInfoResult.data
+        ).data
         atomInputParamList.forEach { storeParam ->
-            val atomCode = storeParam.storeCode
-            val version = storeParam.version
-            val atomName = storeParam.storeName
-            val atomRunInfo = atomRunInfoMap?.get("$atomCode:$version")
-            if (atomRunInfo != null) {
-                validateAtomParam(
-                    atomParamDataMap = storeParam.inputParam,
-                    atomRunInfo = atomRunInfo,
-                    inputTypeConfigMap = inputTypeConfigMap,
-                    atomName = atomName
-                )
-            }
+            val atomRunInfo = atomRunInfoMap?.get("${storeParam.storeCode}:${storeParam.version}") ?: return@forEach
+            checkAtomServiceScopeForChannel(atomRunInfo, storeParam.storeName)
+            validateAtomParam(
+                atomParamDataMap = storeParam.inputParam,
+                atomRunInfo = atomRunInfo,
+                inputTypeConfigMap = inputTypeConfigMap,
+                atomName = storeParam.storeName
+            )
         }
-        return true
     }
 
-    @Suppress("UNCHECKED_CAST")
+    /**
+     * 检查插件在当前渠道下的服务范围是否允许使用，不满足时抛出 [ErrorCodeException]。
+     */
+    private fun checkAtomServiceScopeForChannel(atomRunInfo: AtomRunInfo, atomName: String) {
+        val serviceScope = atomRunInfo.serviceScope
+        if (serviceScope.isNullOrEmpty()) return
+        val channelCode = ChannelCode.getRequestChannelCode()
+        val requiredScope = when (channelCode) {
+            ChannelCode.CREATIVE_STREAM -> ServiceScopeEnum.CREATIVE_STREAM.name
+            else -> ServiceScopeEnum.PIPELINE.name
+        }
+        if (serviceScope.none { it.equals(requiredScope, ignoreCase = true) }) {
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_ATOM_RUN_BUILD_ENV_INVALID,
+                params = arrayOf(atomName),
+                defaultMessage = I18nUtil.getCodeLanMessage(
+                    messageCode = ProcessMessageCode.ERROR_ATOM_RUN_BUILD_ENV_INVALID,
+                    params = arrayOf(atomName)
+                ),
+            )
+        }
+    }
+
     private fun validateAtomParam(
         atomParamDataMap: Map<String, Any?>?,
         atomRunInfo: AtomRunInfo,

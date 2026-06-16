@@ -31,8 +31,10 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.VMBaseOS
 import com.tencent.devops.common.pipeline.type.DispatchType
+import com.tencent.devops.common.pipeline.type.agent.CreateAgentIdDispatchType
 import com.tencent.devops.common.pipeline.type.agent.Credential
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentDockerInfo
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentDockerInfoStoreImage
@@ -49,6 +51,7 @@ import com.tencent.devops.process.yaml.v3.models.image.PoolType
 import com.tencent.devops.process.yaml.v3.models.job.Job
 import com.tencent.devops.process.yaml.v3.models.job.RunsOn
 import com.tencent.devops.process.yaml.v3.utils.StreamDispatchUtils
+import com.tencent.devops.process.utils.NODE_AGENT_ID
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
@@ -69,8 +72,12 @@ class DispatchTransfer @Autowired(required = false) constructor(
 
     fun makeDispatchType(
         job: Job,
-        buildTemplateAcrossInfo: BuildTemplateAcrossInfo?
-    ): Pair<DispatchType, VMBaseOS> {
+        buildTemplateAcrossInfo: BuildTemplateAcrossInfo?,
+        channelCode: ChannelCode = ChannelCode.BS
+    ): Pair<DispatchType, VMBaseOS?> {
+        if (channelCode == ChannelCode.CREATIVE_STREAM) {
+            return Pair(CreateAgentIdDispatchType(value = "\${{variables.$NODE_AGENT_ID}}"), null)
+        }
         // linux构建机
         dispatcherLinux(job, buildTemplateAcrossInfo)?.let { return Pair(it, VMBaseOS.LINUX) }
         // 第三方构建机
@@ -92,6 +99,9 @@ class DispatchTransfer @Autowired(required = false) constructor(
         val dispatchType = job.dispatchType
         if (dispatchType == null) {
             logger.warn("job.dispatchType can not be null")
+            return null
+        }
+        if (dispatchType is CreateAgentIdDispatchType) {
             return null
         }
         val runsOn = dispatch2RunsOn(dispatchType) ?: throw PipelineTransferException(
@@ -212,9 +222,13 @@ class DispatchTransfer @Autowired(required = false) constructor(
         } else null
     }
 
-    fun dispatch2RunsOn(dispatcher: DispatchType) =
-        PoolType.SelfHosted.toRunsOn(dispatcher)
+    fun dispatch2RunsOn(dispatcher: DispatchType): RunsOn? {
+        if (dispatcher is CreateAgentIdDispatchType) {
+            return null
+        }
+        return PoolType.SelfHosted.toRunsOn(dispatcher)
             ?: PoolType.DockerOnVm.toRunsOn(dispatcher)
+    }
 
     private fun getBaseOs(job: Job): VMBaseOS {
         val poolName = job.runsOn.poolName

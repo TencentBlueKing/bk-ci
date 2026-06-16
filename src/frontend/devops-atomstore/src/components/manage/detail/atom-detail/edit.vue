@@ -20,49 +20,54 @@
                 ></bk-input>
             </bk-form-item>
             <bk-form-item
-                :label="$t('store.分类')"
-                :rules="[requireRule($t('store.分类'))]"
+                :label="$t('store.范畴')"
                 :required="true"
-                property="classifyCode"
                 error-display-type="normal"
+                class="category-content"
             >
-                <bk-select
-                    v-model="formData.classifyCode"
-                    searchable
-                    :clearable="false"
-                    @toggle="requestAtomClassify"
-                    :loading="isLoadingClassify"
+                <bk-checkbox-group
+                    v-model="categoryValue"
+                    ext-cls="category-checkbox-group"
                 >
-                    <bk-option
-                        v-for="(option, index) in sortList"
-                        :key="index"
-                        :id="option.classifyCode"
-                        :name="option.classifyName"
+                    <bk-checkbox
+                        :value="'PIPELINE'"
+                        style="height: 32px; line-height: 32px;"
                     >
-                    </bk-option>
-                </bk-select>
-            </bk-form-item>
-            <bk-form-item
-                :label="$t('store.功能标签')"
-                property="labelIdList"
-            >
-                <bk-select
-                    :placeholder="$t('store.请选择功能标签')"
-                    v-model="formData.labelIdList"
-                    show-select-all
-                    searchable
-                    multiple
-                    @toggle="requestAtomlabels"
-                    :loading="isLoadingLabel"
-                >
-                    <bk-option
-                        v-for="(option, index) in labelList"
-                        :key="index"
-                        :id="option.id"
-                        :name="option.labelName"
+                        {{ $t('store.CI流水线') }}
+                    </bk-checkbox>
+                    <category-config
+                        v-if="categoryValue.includes('PIPELINE')"
+                        ref="pipelineCategoryConfig"
+                        scope-type="pipeline"
+                        :category-data="pipelineCategory"
+                        :errors="{
+                            sortError: formErrors.pipelineSortError,
+                            jobError: formErrors.pipelineJobError,
+                            envError: formErrors.pipelineEnvError
+                        }"
+                        @classify-change="changeClassify"
+                        @job-type-change="changePipelineJobType"
+                        @os-change="changeOs"
+                    ></category-config>
+                    <bk-checkbox
+                        :value="'CREATIVE_STREAM'"
+                        style="height: 32px; line-height: 32px;"
                     >
-                    </bk-option>
-                </bk-select>
+                        {{ $t('store.CP创作流') }}
+                    </bk-checkbox>
+                    <category-config
+                        v-if="categoryValue.includes('CREATIVE_STREAM')"
+                        ref="creativeCategoryConfig"
+                        scope-type="creative"
+                        :category-data="creativeCategory"
+                        :errors="{
+                            sortError: formErrors.creativeSortError,
+                            jobError: formErrors.creativeJobError
+                        }"
+                        @classify-change="changeClassify"
+                        @job-type-change="changeCreativeJobType"
+                    ></category-config>
+                </bk-checkbox-group>
             </bk-form-item>
             <template v-if="userInfo.isProjectAdmin && VERSION_TYPE !== 'ee'">
                 <bk-form-item
@@ -179,12 +184,14 @@
 
 <script>
     import selectLogo from '@/components/common/selectLogo'
+    import categoryConfig from '@/components/category-config.vue'
     import { toolbars } from '@/utils/editor-options'
     import { mapGetters } from 'vuex'
 
     export default {
         components: {
-            selectLogo
+            selectLogo,
+            categoryConfig
         },
 
         props: {
@@ -194,11 +201,17 @@
         data () {
             return {
                 formData: JSON.parse(JSON.stringify(this.detail)),
-                sortList: [],
-                labelList: [],
+                pipelineCategory: this.initCategoryData('PIPELINE'),
+                creativeCategory: this.initCategoryData('CREATIVE_STREAM'),
+                categoryValue: this.getSelectedScopes(),
+                formErrors: {
+                    pipelineSortError: false,
+                    pipelineJobError: false,
+                    pipelineEnvError: false,
+                    creativeSortError: false,
+                    creativeJobError: false
+                },
                 isLoading: true,
-                isLoadingClassify: false,
-                isLoadingLabel: false,
                 isSaving: false,
                 toolbars,
                 nameRule: {
@@ -206,6 +219,10 @@
                     message: this.$t('store.由汉字、英文字母、数字、连字符、下划线或点组成，不超过40个字符'),
                     trigger: 'blur'
                 },
+                isOpenSource: [
+                    { title: this.$t('store.否'), label: this.$t('store.否'), value: 'PRIVATE'},
+                    { title: this.$t('store.是'), label: this.$t('store.是'), value: 'LOGIN_PUBLIC'},
+                ],
                 publishersList: []
             }
         },
@@ -234,9 +251,7 @@
 
         created () {
             this.hackData()
-            Promise.all([this.requestAtomlabels(true), this.requestAtomClassify(true), this.fetchPublishersList(this.detail.atomCode)]).finally(() => {
-                this.isLoading = false
-            })
+            this.fetchPublishersList(this.detail.atomCode)
         },
 
         methods: {
@@ -257,47 +272,212 @@
             },
 
             hackData () {
-                this.formData.labelIdList = this.formData.labelList.map(label => label.id)
+                this.formData.labelList = this.formData.labelList.map(label => label.id)
                 this.formData.description = this.formData.description || `#### ${this.$t('store.插件功能')}\n\n#### ${this.$t('store.适用场景')}\n\n#### ${this.$t('store["使用限制和受限解决方案[可选]"]')}\n\n#### ${this.$t('store.常见的失败原因和解决方案')}`
             },
 
+            getSelectedScopes () {
+                const scopes = []
+                if (this.detail.serviceScopeDetails && this.detail.serviceScopeDetails.length > 0) {
+                    this.detail.serviceScopeDetails.forEach(config => {
+                        scopes.push(config.serviceScope)
+                    })
+                    return scopes
+                }
+                // 默认返回 CI流水线
+                return ['PIPELINE']
+            },
+
+            initCategoryData (scope) {
+                const config = this.detail.serviceScopeDetails?.find(item => item.serviceScope === scope) || {}
+                
+                // 从 jobTypeConfigs 中提取 jobTypes 和 os
+                const jobTypes = config.jobTypeConfigs?.map(item => item.jobType) || (scope === 'PIPELINE' ? ['AGENT'] : ['CREATIVE_STREAM'])
+                let os = []
+                
+                // 如果是 PIPELINE，查找 AGENT 类型的 osList
+                if (scope === 'PIPELINE') {
+                    const agentConfig = config.jobTypeConfigs?.find(item => item.jobType === 'AGENT')
+                    os = agentConfig?.osList || []
+                }
+                
+                return {
+                    classifyCode: config.classifyCode || '',
+                    jobTypes,
+                    os,
+                    labelList: config.labelList?.map(label => label.id) || []
+                }
+            },
+
+            changeClassify () {
+                this.formErrors.pipelineSortError = false
+                this.formErrors.creativeSortError = false
+            },
+
+            changePipelineJobType () {
+                this.formErrors.pipelineJobError = false
+                this.formErrors.pipelineEnvError = false
+            },
+
+            changeCreativeJobType () {
+                this.formErrors.creativeJobError = false
+            },
+
+            changeOs (val) {
+                console.log(val,'--')
+                
+                this.formErrors.pipelineEnvError = false
+            },
+
+            validateCategory () {
+                // 重置所有错误状态
+                this.formErrors = {
+                    pipelineSortError: false,
+                    pipelineJobError: false,
+                    pipelineEnvError: false,
+                    creativeSortError: false,
+                    creativeJobError: false
+                }
+                
+                let hasError = false
+                
+                // 校验是否选择了至少一个范畴
+                if (!this.categoryValue || this.categoryValue.length === 0) {
+                    this.$bkMessage({ message: this.$t('store.请至少选择一个范畴'), theme: 'error' })
+                    return false
+                }
+                
+                // 校验每个选中的范畴
+                if (this.categoryValue.includes('PIPELINE')) {
+                    // 校验分类
+                    if (!this.pipelineCategory.classifyCode) {
+                        this.formErrors.pipelineSortError = true
+                        hasError = true
+                    }
+                    
+                    // 校验适用Job类型
+                    if (!this.pipelineCategory.jobTypes || this.pipelineCategory.jobTypes.length === 0) {
+                        this.formErrors.pipelineJobError = true
+                        hasError = true
+                    }
+                    
+                    // 如果选择了 AGENT 类型，校验操作系统
+                    if (this.pipelineCategory.jobTypes && this.pipelineCategory.jobTypes[0] === 'AGENT') {
+                        if (!this.pipelineCategory.os || this.pipelineCategory.os.length === 0) {
+                            this.formErrors.pipelineEnvError = true
+                            hasError = true
+                        }
+                    }
+                }
+                
+                if (this.categoryValue.includes('CREATIVE_STREAM')) {
+                    // 校验分类
+                    if (!this.creativeCategory.classifyCode) {
+                        this.formErrors.creativeSortError = true
+                        hasError = true
+                    }
+                    
+                    // 校验适用Job类型
+                    if (!this.creativeCategory.jobTypes || this.creativeCategory.jobTypes.length === 0) {
+                        this.formErrors.creativeJobError = true
+                        hasError = true
+                    }
+                }
+                
+                if (hasError) {
+                    this.$bkMessage({ message: this.$t('store.请完善范畴配置信息'), theme: 'error' })
+                    return false
+                }
+                
+                return true
+            },
+            
             save () {
                 this.$refs.atomEdit.validate().then(() => {
+                    // 校验范畴配置
+                    if (!this.validateCategory()) {
+                        return
+                    }
+                    
                     this.isSaving = true
-                    const { name, classifyCode, summary, description, logoUrl, iconData, publisher, labelIdList, privateReason } = this.formData
-                    this.formData.labelList = this.labelList.filter((label) => (this.formData.labelIdList.includes(label.id)))
+                    const { name, summary, description, logoUrl, iconData, publisher, privateReason } = this.formData
+                    
+                    // 构建 serviceScopeConfigs 数组
+                    const scopeConfigMap = {
+                        PIPELINE: {
+                            data: this.pipelineCategory,
+                        },
+                        CREATIVE_STREAM: {
+                            data: this.creativeCategory
+                        }
+                    }
+                    
+                    const serviceScopeConfigs = this.categoryValue
+                        .filter(scope => scopeConfigMap[scope])
+                        .map(scope => {
+                            const { data } = scopeConfigMap[scope]
+                            const config = {
+                                serviceScope: scope,
+                                classifyCode: data.classifyCode,
+                                labelIdList: (data.labelList || []).filter(id => id && id !== 'null' && id !== ' ')
+                            }
+                            
+                            // 构建 jobTypeConfigs
+                            const jobTypes = data.jobTypes || []
+                            config.jobTypeConfigs = jobTypes.map(jobType => {
+                                const jobTypeConfig = { jobType }
+                                // 如果是 PIPELINE 范畴且是 AGENT 类型，添加 osList
+                                if (scope === 'PIPELINE' && jobType === 'AGENT') {
+                                    jobTypeConfig.osList = data.os || []
+                                }
+                                return jobTypeConfig
+                            })
+                            
+                            return config
+                        })
+                    
                     const putData = {
                         atomCode: this.detail.atomCode,
-                        data: { name, classifyCode, summary, description, logoUrl, iconData, publisher, labelIdList, privateReason }
+                        data: {
+                            name,
+                            summary,
+                            description,
+                            logoUrl,
+                            iconData,
+                            publisher,
+                            privateReason,
+                            serviceScopeConfigs: serviceScopeConfigs.length > 0 ? serviceScopeConfigs : undefined
+                        }
                     }
                     this.$store.dispatch('store/modifyAtomDetail', putData).then(() => {
+                        const serviceScopeDetails = serviceScopeConfigs.map(config => {
+                            const refName = config.serviceScope === 'PIPELINE' ? 'pipelineCategoryConfig' : 'creativeCategoryConfig'
+                            const categoryRef = this.$refs[refName]
+                            const fullLabelList = categoryRef?.labelList || []
+                            const sortList = categoryRef?.sortList || []
+                            
+                            // 从 labelIdList（ID 数组）还原为 labelList（对象数组），保持与接口返回格式一致，以便正确回显
+                            const labelList = (config.labelIdList || [])
+                                .map(id => fullLabelList.find(label => label.id === id))
+                                .filter(Boolean)
+                            
+                            // 从 sortList 中查找 classifyName，保持与接口返回格式一致，以便正确回显
+                            const classifyItem = sortList.find(item => item.classifyCode === config.classifyCode)
+                            const classifyName = classifyItem?.classifyName || ''
+                            
+                            return { ...config, labelList, classifyName }
+                        })
+                        this.formData.serviceScopeDetails = serviceScopeDetails
                         this.$store.dispatch('store/clearDetail')
                         this.$store.dispatch('store/setDetail', this.formData)
-                        this.hasChange = false
-                        this.$router.back()
+                        this.$nextTick(() => {
+                            this.hasChange = false
+                            this.$router.back()
+                        })
                     }).catch((err) => this.$bkMessage({ message: err.message || err, theme: 'error' })).finally(() => (this.isSaving = false))
                 }, (validator) => {
                     this.$bkMessage({ message: validator.content || validator, theme: 'error' })
                 })
-            },
-
-            requestAtomlabels (isOpen) {
-                if (!isOpen) return
-                this.isLoadingLabel = true
-                return this.$store.dispatch('store/requestAtomLables').then((res) => (this.labelList = res || [])).catch((err) => {
-                    this.$bkMessage({ message: err.message || err, theme: 'error' })
-                }).finally(() => (this.isLoadingLabel = false))
-            },
-
-            requestAtomClassify (isOpen) {
-                if (!isOpen) return
-                this.isLoadingClassify = true
-                return this.$store.dispatch('store/requestAtomClassify').then((res) => {
-                    this.sortList = res
-                    this.sortList = this.sortList.filter(item => item.classifyCode !== 'trigger')
-                }).catch((err) => {
-                    this.$bkMessage({ message: err.message || err, theme: 'error' })
-                }).finally(() => (this.isLoadingClassify = false))
             },
 
             addImage (pos, file) {
@@ -343,8 +523,31 @@
                             publisherName: this.userName
                         })
                     }
-                }).catch(() => [])
+                }).catch(() => []).finally(() => this.isLoading = false)
             }
         }
     }
 </script>
+<style scoped lang="scss">
+    .category-content {
+        ::v-deep .bk-form-control {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .atom-item-content {
+            ::v-deep .bk-form-control {
+                display: flex;
+                flex-direction: row;
+            }
+        }
+        ::v-deep .bk-form-control.atom-os {
+            display: flex;
+            flex-direction: row;
+        }
+
+        ::v-deep .bk-select {
+            background-color: #fff;
+        }
+    }
+</style>

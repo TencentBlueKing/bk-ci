@@ -1,0 +1,85 @@
+.execMaterialRow {
+  display: grid;
+  grid-gap: 20px;
+  height: 38px;
+  grid-auto-flow: column;
+}
+
+.fitContent {
+  grid-auto-columns: minmax(auto, max-content) 36px;
+}
+
+.materialRowInfoSpans {
+  display: grid;
+  grid-auto-flow: column;
+  grid-gap: 20px;
+}
+
+.materialRowInfoSpans > span {
+  display: inline-flex;
+  min-width: auto;
+  align-items: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.materialRowInfoSpans > span > svg {
+  flex-shrink: 0;
+  margin-right: 6px;
+}
+
+.visibleMaterialRow {
+  border: 1px solid transparent;
+  padding-bottom: 0px;
+  align-items: center;
+}
+
+.execMoreMaterial {
+  display: inline-flex;
+  align-items: center;
+}
+
+.mrSourceTarget {
+  display: grid;
+  align-items: center;
+  grid-auto-flow: column;
+  grid-gap: 6px;
+}
+
+.mrSourceTarget .iconArrowsRight {
+  color: var(--color-text-disabled);
+  font-weight: 800;
+}
+
+.mrSourceTarget > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.materialSpanTooltipBox {
+  flex: 1;
+  overflow: hidden;
+  font-size: 0;
+}
+
+.materialSpanTooltipBox .bkTooltipRef {
+  width: 100%;
+}
+
+.materialSpan {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--font-size-xs);
+  cursor: pointer;
+}
+
+.materialSpan .bkLinkText {
+  font-size: var(--font-size-xs);
+}
+
+.materialUrl {
+  color: var(--color-primary);
+}

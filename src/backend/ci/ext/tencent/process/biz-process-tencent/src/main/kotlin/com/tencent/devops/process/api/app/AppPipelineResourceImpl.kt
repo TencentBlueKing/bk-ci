@@ -39,6 +39,7 @@ import com.tencent.devops.process.pojo.app.PipelinePage
 import com.tencent.devops.process.pojo.app.pipeline.AppPipeline
 import com.tencent.devops.process.pojo.app.pipeline.AppPipelineHistory
 import com.tencent.devops.process.pojo.app.pipeline.AppProject
+import com.tencent.devops.process.service.app.AppPipelineHistoryQueryReq
 import com.tencent.devops.process.service.app.AppPipelineService
 import com.tencent.devops.process.service.builds.PipelineBuildFacadeService
 import com.tencent.devops.process.service.label.PipelineGroupService
@@ -66,7 +67,7 @@ class AppPipelineResourceImpl @Autowired constructor(
                 userId,
                 page ?: -1,
                 pageSize ?: -1,
-                channelCode ?: ChannelCode.BS
+                channelCode ?: ChannelCode.getRequestChannelCode()
             )
         )
     }
@@ -85,7 +86,7 @@ class AppPipelineResourceImpl @Autowired constructor(
                 projectId,
                 page,
                 pageSize,
-                channelCode ?: ChannelCode.BS,
+                channelCode ?: ChannelCode.getRequestChannelCode(),
                 sortType ?: PipelineSortType.CREATE_TIME
             )
         )
@@ -102,24 +103,27 @@ class AppPipelineResourceImpl @Autowired constructor(
         debug: Boolean?,
         triggerAlias: List<String>?,
         triggerBranch: List<String>?,
-        triggerUser: List<String>?
+        triggerUser: List<String>?,
+        triggerEventTypes: List<String>?,
+        triggerNodeHashIds: List<String>?
     ): Result<Page<AppPipelineHistory>> {
-        return Result(
-            appPipelineService.listPipelineHistory(
-                userId = userId,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                page = page,
-                pageSize = pageSize,
-                channelCode = channelCode ?: ChannelCode.BS,
-                checkPermission = true,
-                materialBranch = materialBranch,
-                debug = debug,
-                triggerAlias = triggerAlias,
-                triggerBranch = triggerBranch,
-                triggerUser = triggerUser
-            )
+        val request = AppPipelineHistoryQueryReq(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            page = page,
+            pageSize = pageSize,
+            channelCode = channelCode ?: ChannelCode.getRequestChannelCode(),
+            checkPermission = true,
+            materialBranch = materialBranch,
+            debug = debug,
+            triggerAlias = triggerAlias,
+            triggerBranch = triggerBranch,
+            triggerUser = triggerUser,
+            triggerEventTypes = triggerEventTypes,
+            triggerNodeHashIds = triggerNodeHashIds
         )
+        return Result(appPipelineService.listPipelineHistory(request))
     }
 
     override fun getHistoryConditionBranch(

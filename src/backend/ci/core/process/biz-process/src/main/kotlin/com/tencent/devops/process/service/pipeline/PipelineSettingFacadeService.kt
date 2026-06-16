@@ -215,7 +215,7 @@ class PipelineSettingFacadeService @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
-        channelCode: ChannelCode = ChannelCode.BS,
+        channelCode: ChannelCode = ChannelCode.getRequestChannelCode(),
         version: Int = 0,
         checkPermission: Boolean = false,
         detailInfo: PipelineDetailInfo? = null,
@@ -276,6 +276,10 @@ class PipelineSettingFacadeService @Autowired constructor(
                 )
             )
         )
+    }
+
+    fun getDefaultSetting(userId: String): PipelineSetting {
+        return pipelineRepositoryService.createDefaultSetting(channelCode = ChannelCode.getRequestChannelCode())
     }
 
     fun getSettingInfo(projectId: String, pipelineId: String): PipelineSetting? {

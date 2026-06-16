@@ -1,0 +1,64 @@
+/**
+ * EditHeader styles
+ * Using CSS variables from /src/styles/variables.css
+ */
+
+.editHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 52px;
+  flex-shrink: 0;
+  padding: 0 var(--spacing-xl);
+  background-color: var(--bg-primary);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.headerLeft {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+}
+
+.flowName {
+  font-size: var(--font-size-md);
+  font-weight: 500;
+  color: var(--color-text-primary);
+}
+
+.importFlowName {
+  font-size: var(--font-size-md);
+  font-weight: 500;
+  color: var(--color-text-primary);
+  max-width: 300px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.headerRight {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+/* Version tag styles (similar to devops-pipeline EditHeader) */
+.versionTag {
+  display: flex;
+  align-items: center;
+  line-height: 1;
+  margin-left: var(--spacing-sm);
+}
+
+.versionTag :global(.bk-tag) {
+  margin: 0;
+  max-width: 222px;
+}
+
+.versionTagText {
+  display: block;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

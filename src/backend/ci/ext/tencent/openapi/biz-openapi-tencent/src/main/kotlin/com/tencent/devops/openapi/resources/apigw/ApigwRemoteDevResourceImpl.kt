@@ -8,10 +8,13 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.ApigwRemoteDevResource
 import com.tencent.devops.project.api.service.ServiceUserResource
 import com.tencent.devops.remotedev.api.service.ServiceRemoteDevResource
+import com.tencent.devops.remotedev.pojo.CreateOpenClawData
+import com.tencent.devops.remotedev.pojo.CreateOpenClawDataResp
 import com.tencent.devops.remotedev.pojo.IWhiteList
 import com.tencent.devops.remotedev.pojo.OperateCvmData
 import com.tencent.devops.remotedev.pojo.ProjectWorkspace
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
+import com.tencent.devops.remotedev.pojo.TaskStatusResp
 import com.tencent.devops.remotedev.pojo.UserOnePassword
 import com.tencent.devops.remotedev.pojo.WhiteListType
 import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
@@ -314,9 +317,15 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
         )
     }
 
-    override fun deleteProjectWorkspace(userId: String, projectId: String, workspaceName: String): Result<Boolean> {
-        logger.info("deleteProjectWorkspace $userId|$projectId|$workspaceName")
-        return client.get(ServiceRemoteDevResource::class).deleteProjectWorkspace(userId, projectId, workspaceName)
+    override fun deleteProjectWorkspace(
+        userId: String,
+        projectId: String,
+        workspaceName: String,
+        delaySeconds: Int?
+    ): Result<Boolean> {
+        logger.info("deleteProjectWorkspace $userId|$projectId|$workspaceName|$delaySeconds")
+        return client.get(ServiceRemoteDevResource::class)
+            .deleteProjectWorkspace(userId, projectId, workspaceName, delaySeconds)
     }
 
     override fun getProjectWorkspace(
@@ -787,6 +796,23 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
         return client.get(ServiceRemoteDevResource::class).tgitBindRemotedevProject(userId, data)
     }
 
+    override fun cdsWebhookEvent(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        type: String,
+        workspaceName: String?,
+        envId: String?
+    ): Result<Boolean> {
+        logger.info("cgsReportNotify ,type:$type,envId:$envId")
+        return client.get(ServiceRemoteDevResource::class).cdsWebhookEvent(
+            userId = userId,
+            type = type,
+            workspaceName = workspaceName,
+            envId = envId
+        )
+    }
+
     override fun openClawOn(userId: String): Result<WorkspaceRegistration?> {
         logger.info("openClawOn |$userId")
         return client.get(ServiceRemoteDevResource::class).openClawOn(userId)
@@ -868,18 +894,23 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
         userId: String,
         enable: Boolean,
         page: Int,
-        pageSize: Int
+        pageSize: Int,
+        projectId: String?,
+        workspaceNames: List<String>?
     ): Result<Page<String>> {
         logger.info(
             "batchQueryThumbnailWorkspaces" +
-                " |$appCode|$userId|enable=$enable|page=$page|pageSize=$pageSize"
+                " |$appCode|$userId|enable=$enable|page=$page|pageSize=$pageSize" +
+                "|projectId=$projectId|workspaceNames.size=${workspaceNames?.size}"
         )
         return client.get(ServiceRemoteDevResource::class)
             .batchQueryThumbnailWorkspaces(
                 userId = userId,
                 enable = enable,
                 page = page,
-                pageSize = pageSize
+                pageSize = pageSize,
+                projectId = projectId,
+                workspaceNames = workspaceNames
             )
     }
 
@@ -887,18 +918,18 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
         appCode: String?,
         apigwType: String?,
         userId: String,
-        workspaceName: String,
-        enable: Boolean
+        enable: Boolean,
+        workspaceNames: List<String>
     ): Result<Boolean> {
         logger.info(
             "enableWorkspaceThumbnail" +
-                " |$appCode|$userId|$workspaceName|enable=$enable"
+                " |$appCode|$userId|enable=$enable|workspaceNames.size=${workspaceNames.size}"
         )
         return client.get(ServiceRemoteDevResource::class)
             .enableWorkspaceThumbnail(
                 userId = userId,
-                workspaceName = workspaceName,
-                enable = enable
+                enable = enable,
+                workspaceNames = workspaceNames
             )
     }
 
@@ -914,6 +945,32 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
             userId = userId,
             workspaceName = workspaceName,
             envHashId = envHashId
+        )
+    }
+
+    override fun createOpenClaw(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        data: CreateOpenClawData
+    ): Result<CreateOpenClawDataResp> {
+        logger.info("createOpenClaw |$appCode|$userId|$data")
+        return client.get(ServiceRemoteDevResource::class).createOpenClaw(
+            userId = userId,
+            data = data
+        )
+    }
+
+    override fun openClawTaskStatus(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        taskId: String
+    ): Result<TaskStatusResp> {
+        logger.info("openClawTaskStatus |$appCode|$userId|$taskId")
+        return client.get(ServiceRemoteDevResource::class).openClawTaskStatus(
+            userId = userId,
+            taskId = taskId
         )
     }
 }

@@ -36,10 +36,10 @@
 
     @Component()
     export default class IframeView extends Vue {
-        isLoading: boolean = true;
-        initPath: string = '';
-        src: string = '';
-        leaving: boolean = false;
+        isLoading: boolean = true
+        initPath: string = ''
+        src: string = ''
+        leaving: boolean = false
 
         $refs: {
             iframeEle: HTMLIFrameElement;

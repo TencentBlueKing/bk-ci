@@ -111,6 +111,7 @@
                 const postData = { replyContent, replyToUser: this.replyToUser }
                 const funObj = {
                     atom: this.requestAtomReplyComment,
+                    creative: this.requestAtomReplyComment,
                     template: this.requestTemplateReplyComment,
                     ide: this.requestIDEReplyComment,
                     image: this.requestImageReplyComment,
