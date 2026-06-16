@@ -123,11 +123,21 @@ class CodeccApi(
         return execUrl
     }
 
-    fun installCheckerSet(projectId: String, userId: String, type: String, checkerSetId: String): Result<Boolean> {
-        val headers = mapOf(
+    fun installCheckerSet(
+        projectId: String,
+        userId: String,
+        type: String,
+        checkerSetId: String,
+        tag: String? = null
+    ): Result<Boolean> {
+        val headers = mutableMapOf(
             AUTH_HEADER_DEVOPS_PROJECT_ID to projectId,
             AUTH_HEADER_DEVOPS_USER_ID to userId
         )
+        val finalTag = tag ?: codeccOpensourceTag
+        if (finalTag.isNotBlank()) {
+            headers[AUTH_HEADER_GATEWAY_TAG] = finalTag
+        }
         val body = mapOf(
             "type" to type,
             "projectId" to projectId
