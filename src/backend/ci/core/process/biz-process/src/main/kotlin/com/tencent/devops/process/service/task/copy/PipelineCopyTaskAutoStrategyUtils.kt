@@ -42,13 +42,13 @@ object PipelineCopyTaskAutoStrategyUtils {
             PipelineDependentResourceType.BUILD_ENV -> if (targetNameExists) {
                 PipelineCopyStrategy.BUILD_ENV_REUSE_SAME_NAME
             } else {
-                PipelineCopyStrategy.BUILD_ENV_CREATE_WITHOUT_NODE
+                PipelineCopyStrategy.BUILD_ENV_CREATE_AND_REUSE_SAME_NAME_NODE
             }
 
             PipelineDependentResourceType.DEPLOY_ENV -> if (targetNameExists) {
                 PipelineCopyStrategy.DEPLOY_ENV_REUSE_SAME_NAME
             } else {
-                PipelineCopyStrategy.DEPLOY_ENV_CREATE_WITHOUT_NODE
+                PipelineCopyStrategy.DEPLOY_ENV_CREATE_AND_REUSE_SAME_NAME_NODE
             }
 
             PipelineDependentResourceType.CREDENTIAL -> if (targetNameExists) {
