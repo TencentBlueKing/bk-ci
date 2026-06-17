@@ -721,49 +721,64 @@ class PipelineDependencyReplaceService @Autowired constructor(
         input: Map<*, *>,
         context: ReplaceContext
     ): Map<*, *>? {
-        if (input[JOB_SCRIPT_EXECUTION_ENV_TYPE]?.toString() != ENV) {
-            return null
+        return when (input[JOB_SCRIPT_EXECUTION_ENV_TYPE]?.toString()) {
+            ENV -> replaceDeployResourceInput(
+                input = input,
+                fieldName = JOB_SCRIPT_EXECUTION_ENV_ID,
+                resourceType = PipelineDependentResourceType.DEPLOY_ENV,
+                context = context
+            )
+            NODE -> replaceDeployResourceInput(
+                input = input,
+                fieldName = JOB_SCRIPT_EXECUTION_NODE_ID,
+                resourceType = PipelineDependentResourceType.DEPLOY_NODE,
+                context = context
+            )
+            else -> null
         }
-        return replaceDeployEnvInput(
-            input = input,
-            fieldName = JOB_SCRIPT_EXECUTION_ENV_ID,
-            context = context
-        )
     }
 
     private fun replaceJobPushFileInput(
         input: Map<*, *>,
         context: ReplaceContext
     ): Map<*, *>? {
-        if (input[JOB_PUSH_FILE_TARGET_ENV_TYPE]?.toString() != ENV) {
-            return null
+        return when (input[JOB_PUSH_FILE_TARGET_ENV_TYPE]?.toString()) {
+            ENV -> replaceDeployResourceInput(
+                input = input,
+                fieldName = JOB_PUSH_FILE_TARGET_ENV_ID,
+                resourceType = PipelineDependentResourceType.DEPLOY_ENV,
+                context = context
+            )
+            NODE -> replaceDeployResourceInput(
+                input = input,
+                fieldName = JOB_PUSH_FILE_TARGET_NODE_ID,
+                resourceType = PipelineDependentResourceType.DEPLOY_NODE,
+                context = context
+            )
+            else -> null
         }
-        return replaceDeployEnvInput(
-            input = input,
-            fieldName = JOB_PUSH_FILE_TARGET_ENV_ID,
-            context = context
-        )
     }
 
-    private fun replaceDeployEnvInput(
+    private fun replaceDeployResourceInput(
         input: Map<*, *>,
         fieldName: String,
+        resourceType: PipelineDependentResourceType,
         context: ReplaceContext
     ): Map<*, *>? {
-        val envIds = input[fieldName]?.let {
+        val resourceIds = input[fieldName]?.let {
             JsonUtil.anyToOrNull(it, object : TypeReference<List<String>>() {})
         } ?: return null
-        val targetEnvs = envIds.map { envId ->
+        val targetResources = resourceIds.map { resourceId ->
             context.getTargetResource(
-                resourceType = PipelineDependentResourceType.DEPLOY_ENV,
-                resourceId = envId
+                resourceType = resourceType,
+                resourceId = resourceId
             ) ?: return null
         }
 
         return replaceInputField(
             input = input,
             fieldName = fieldName,
-            value = targetEnvs.map { targetEnv -> targetEnv.resourceId }
+            value = targetResources.map { targetResource -> targetResource.resourceId }
         )
     }
 
@@ -894,10 +909,13 @@ class PipelineDependencyReplaceService @Autowired constructor(
         private const val SUB_PIPELINE_PROJECT_ID = "projectId"
         private const val SUB_PIPELINE_EXEC_ID = "subPip"
         private const val ENV = "ENV"
+        private const val NODE = "NODE"
         private const val JOB_SCRIPT_EXECUTION_ENV_TYPE = "envType"
         private const val JOB_SCRIPT_EXECUTION_ENV_ID = "envId"
+        private const val JOB_SCRIPT_EXECUTION_NODE_ID = "nodeId"
         private const val JOB_PUSH_FILE_TARGET_ENV_TYPE = "targetEnvType"
         private const val JOB_PUSH_FILE_TARGET_ENV_ID = "targetEnvId"
+        private const val JOB_PUSH_FILE_TARGET_NODE_ID = "targetNodeId"
         private val REPO_CHECKOUT_ATOM_CODES = setOf(
             "gitCodeRepo", "PullFromGithub", "Gitlab", "atomtgit", "checkout", "svnCodeRepo"
         )

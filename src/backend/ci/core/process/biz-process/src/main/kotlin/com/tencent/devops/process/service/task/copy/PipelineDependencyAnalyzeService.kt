@@ -163,11 +163,12 @@ class PipelineDependencyAnalyzeService @Autowired constructor(
         if (viewIds.isEmpty()) {
             return emptySet()
         }
+        // 只需要项目级的视图, 不迁移个人项目视图
         val viewMap = pipelineViewDao.list(
             dslContext = dslContext,
             projectId = projectId,
             viewIds = viewIds
-        ).associateBy { it.id }
+        ).filter { it.isProject }.associateBy { it.id }
         return viewIds.map {
             PipelineDependentResource(
                 projectId = projectId,

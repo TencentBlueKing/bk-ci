@@ -169,13 +169,18 @@ class PipelineCopyResourceCreateService @Autowired constructor(
             errorCode = ProcessMessageCode.ERROR_PIPELINE_COPY_SOURCE_RESOURCE_NOT_EXISTS,
             params = arrayOf(sourceProjectId, repoName)
         )
-        val targetRepository = buildTargetRepository(
-            userId = userId,
+        // oauth代码库,还是应该使用原有的oauth授权身份
+        val (authType, targetRepository) = buildTargetRepository(
             repository = repository,
             resourceMap = resourceMap
         )
+        val createUserId = if (authType == RepoAuthType.OAUTH) {
+            repository.userName
+        } else {
+            userId
+        }
         val createResult = client.get(ServiceRepositoryResource::class).create(
-            userId = userId,
+            userId = createUserId,
             projectId = targetProjectId,
             repository = targetRepository
         )
@@ -556,22 +561,18 @@ class PipelineCopyResourceCreateService @Autowired constructor(
     }
 
     private fun buildTargetRepository(
-        userId: String,
         repository: Repository,
         resourceMap: MutableMap<String, PipelineCopyTaskResource>
-    ): Repository {
+    ): Pair<RepoAuthType, Repository> {
         val (authType, sourceCredentialId) = repository.getRepoAuthInfo()
-        if (authType.isNullOrBlank()) {
-            return repository
-        }
         return if (authType == RepoAuthType.OAUTH.name) {
-            repository.copyUserName(userId = userId)
+            Pair(RepoAuthType.OAUTH, repository)
         } else {
             val targetCredentialId = getTargetCredentialId(
                 sourceCredentialId = sourceCredentialId,
                 resourceMap = resourceMap
             )
-            repository.copyCredentialId(credentialId = targetCredentialId)
+            Pair(RepoAuthType.OAUTH, repository.copyCredentialId(credentialId = targetCredentialId))
         }
     }
 
@@ -603,20 +604,6 @@ class PipelineCopyResourceCreateService @Autowired constructor(
             ?: throwDependencyFailed(PipelineDependentResourceType.CREDENTIAL, sourceCredential)
         return credentialResource.targetResourceId?.takeIf { it.isNotBlank() }
             ?: throwDependencyFailed(PipelineDependentResourceType.CREDENTIAL, sourceCredential)
-    }
-
-    private fun Repository.copyUserName(userId: String): Repository {
-        return when (this) {
-            is CodeGitRepository -> copy(userName = userId, enablePac = false)
-            is CodeTGitRepository -> copy(userName = userId, enablePac = false)
-            is CodeGitlabRepository -> copy(userName = userId, enablePac = false)
-            is ScmGitRepository -> copy(userName = userId, enablePac = false)
-            is CodeSvnRepository -> copy(userName = userId, enablePac = false)
-            is ScmSvnRepository -> copy(userName = userId, enablePac = false)
-            is GithubRepository -> copy(userName = userId, enablePac = false)
-            is CodeP4Repository -> copy(userName = userId, enablePac = false)
-            else -> this
-        }
     }
 
     private fun Repository.copyCredentialId(credentialId: String): Repository {
