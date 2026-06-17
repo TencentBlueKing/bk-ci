@@ -80,6 +80,7 @@ class UserAtomResourceImpl @Autowired constructor(
         queryProjectAtomFlag: Boolean,
         fitOsFlag: Boolean?,
         queryFitAgentBuildLessAtomFlag: Boolean?,
+        installed: Boolean?,
         page: Int,
         pageSize: Int
     ): Result<AtomResp<AtomRespItem>?> {
@@ -94,7 +95,8 @@ class UserAtomResourceImpl @Autowired constructor(
             keyword = keyword,
             fitOsFlag = fitOsFlag,
             queryFitAgentBuildLessAtomFlag = queryFitAgentBuildLessAtomFlag,
-            queryProjectAtomFlag = queryProjectAtomFlag
+            queryProjectAtomFlag = queryProjectAtomFlag,
+            installed = installed
         )
         return atomService.getPipelineAtoms(
             userId = userId,
