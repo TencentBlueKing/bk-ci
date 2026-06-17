@@ -31,15 +31,15 @@ import com.tencent.devops.common.api.enums.OSType
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.worker.common.service.AtomRunConditionHandleService
-import org.slf4j.LoggerFactory
 import java.io.File
+import org.slf4j.LoggerFactory
 
 class GolangAtomRunConditionHandleServiceImpl : AtomRunConditionHandleService {
 
     private val logger = LoggerFactory.getLogger(GolangAtomRunConditionHandleServiceImpl::class.java)
 
     override fun prepareRunEnv(
-        atomCode: String,
+        atomCode: String?,
         osType: OSType,
         language: String,
         runtimeVersion: String,
