@@ -467,6 +467,44 @@ class PipelineCopyResourceCreateService @Autowired constructor(
         )
     }
 
+    fun createEnvAndRelateSameNameNodes(
+        userId: String,
+        sourceProjectId: String,
+        sourceEnvHashId: String,
+        targetProjectId: String
+    ): PipelineCopyResourceBasicInfo {
+        val sourceEnv = client.get(ServiceEnvironmentResource::class).get(
+            userId = userId,
+            projectId = sourceProjectId,
+            envHashId = sourceEnvHashId,
+            checkPermission = false
+        ).data ?: throw ErrorCodeException(
+            errorCode = ProcessMessageCode.ERROR_PIPELINE_COPY_SOURCE_RESOURCE_NOT_EXISTS,
+            params = arrayOf(sourceProjectId, sourceEnvHashId)
+        )
+        val envId = checkTargetResourceCreateResult(
+            targetProjectId = targetProjectId,
+            resourceName = sourceEnv.name,
+            result = client.get(ServiceEnvironmentResource::class).createEnvAndRelateSameNameNodes(
+                userId = userId,
+                projectId = sourceProjectId,
+                targetProjectId = targetProjectId,
+                sourceEnvHashId = sourceEnvHashId
+            )
+        )
+        copyResourceGroupMembersSafely(
+            sourceProjectId = sourceProjectId,
+            targetProjectId = targetProjectId,
+            resourceType = AuthResourceType.ENVIRONMENT_ENVIRONMENT.value,
+            sourceResourceCode = sourceEnvHashId,
+            targetResourceCode = envId.hashId
+        )
+        return PipelineCopyResourceBasicInfo(
+            resourceId = envId.hashId,
+            resourceName = sourceEnv.name
+        )
+    }
+
     fun createPipeline(
         userId: String,
         projectId: String,

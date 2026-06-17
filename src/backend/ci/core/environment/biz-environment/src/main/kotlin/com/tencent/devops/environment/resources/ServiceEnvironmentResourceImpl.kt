@@ -114,6 +114,20 @@ class ServiceEnvironmentResourceImpl @Autowired constructor(
         )
     )
 
+    override fun createEnvAndRelateSameNameNodes(
+        userId: String,
+        projectId: String,
+        targetProjectId: String,
+        sourceEnvHashId: String
+    ) = Result(
+        envService.createEnvAndRelateSameNameNodes(
+            userId = userId,
+            sourceProjectId = projectId,
+            targetProjectId = targetProjectId,
+            sourceEnvHashId = sourceEnvHashId
+        )
+    )
+
     @AuditEntry(actionId = ActionId.ENVIRONMENT_VIEW)
     override fun get(
         userId: String,

@@ -541,6 +541,18 @@ class PipelineCopyTaskExecuteService @Autowired constructor(
                     targetResourceName = targetResource.resourceName
                 }
 
+                PipelineCopyStrategy.BUILD_ENV_CREATE_AND_REUSE_SAME_NAME_NODE,
+                PipelineCopyStrategy.DEPLOY_ENV_CREATE_AND_REUSE_SAME_NAME_NODE -> {
+                    val targetResource = pipelineCopyResourceCreateService.createEnvAndRelateSameNameNodes(
+                        userId = userId,
+                        sourceProjectId = projectId,
+                        sourceEnvHashId = resource.resourceId,
+                        targetProjectId = targetProjectId
+                    )
+                    targetResourceId = targetResource.resourceId
+                    targetResourceName = targetResource.resourceName
+                }
+
                 else -> throwStrategyNotSupport(resource = resource, copyStrategy = copyStrategy)
             }
         } catch (ignored: Exception) {

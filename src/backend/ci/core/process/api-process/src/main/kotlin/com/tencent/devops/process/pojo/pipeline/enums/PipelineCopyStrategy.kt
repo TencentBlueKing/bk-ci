@@ -85,6 +85,13 @@ enum class PipelineCopyStrategy(
         true
     ),
 
+    @Schema(description = "新建构建环境并关联同名节点")
+    BUILD_ENV_CREATE_AND_REUSE_SAME_NAME_NODE(
+        PipelineDependentResourceType.BUILD_ENV,
+        PipelineCopyAction.AUTO_FINISH,
+        false
+    ),
+
     @Schema(description = "复用目标项目同名部署节点")
     DEPLOY_NODE_REUSE_SAME_NAME(
         PipelineDependentResourceType.DEPLOY_NODE,
@@ -118,6 +125,13 @@ enum class PipelineCopyStrategy(
         PipelineDependentResourceType.DEPLOY_ENV,
         PipelineCopyAction.NEED_TRANSFER,
         true
+    ),
+
+    @Schema(description = "新建部署环境并关联同名节点")
+    DEPLOY_ENV_CREATE_AND_REUSE_SAME_NAME_NODE(
+        PipelineDependentResourceType.DEPLOY_ENV,
+        PipelineCopyAction.AUTO_FINISH,
+        false
     ),
 
     @Schema(description = "复用目标项目同名凭证")

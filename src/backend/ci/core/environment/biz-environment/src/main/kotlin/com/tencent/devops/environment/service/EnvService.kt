@@ -1316,6 +1316,72 @@ class EnvService @Autowired constructor(
         return EnvironmentId(HashUtil.encodeLongId(targetEnvId))
     }
 
+    fun createEnvAndRelateSameNameNodes(
+        userId: String,
+        sourceProjectId: String,
+        targetProjectId: String,
+        sourceEnvHashId: String
+    ): EnvironmentId {
+        logger.info(
+            "create env and relate same name nodes start|userId=$userId|sourceProjectId=$sourceProjectId|" +
+                "targetProjectId=$targetProjectId|sourceEnvHashId=$sourceEnvHashId"
+        )
+        nodeService.checkProjectManager(userId, sourceProjectId)
+        nodeService.checkProjectManager(userId, targetProjectId)
+
+        val sourceEnvId = HashUtil.decodeIdToLong(sourceEnvHashId)
+        val sourceEnv = envDao.get(dslContext, sourceProjectId, sourceEnvId)
+        val targetEnvId = getOrCreateTargetEnv(
+            userId = userId,
+            targetProjectId = targetProjectId,
+            sourceEnv = sourceEnv
+        )
+        logger.info(
+            "create env success|userId=$userId|sourceProjectId=$sourceProjectId|" +
+                "targetProjectId=$targetProjectId|sourceEnvId=$sourceEnvId|targetEnvId=$targetEnvId"
+        )
+
+        val sourceEnvNodes = envNodeDao.list(dslContext, sourceProjectId, listOf(sourceEnvId))
+        val sourceNodeIds = sourceEnvNodes.map { it.nodeId }
+        if (sourceNodeIds.isEmpty()) {
+            return EnvironmentId(HashUtil.encodeLongId(targetEnvId))
+        }
+
+        val sourceNodeRecords = nodeDao.listByIds(dslContext, sourceProjectId, sourceNodeIds)
+        val targetEnvNodeIds = envNodeDao.list(dslContext, targetProjectId, listOf(targetEnvId))
+            .map { it.nodeId }
+            .toSet()
+        val needRelateNodeIds = mutableListOf<Long>()
+        sourceNodeRecords.forEach { sourceNode ->
+            val matchName = sourceNode.displayName?.takeIf { it.isNotBlank() } ?: sourceNode.nodeName
+            val targetNode = nodeDao.getByDisplayName(
+                dslContext = dslContext,
+                projectId = targetProjectId,
+                displayName = matchName,
+                nodeType = null
+            ).firstOrNull()
+            if (targetNode == null) {
+                logger.warn(
+                    "skip node, target same name node not found|sourceProjectId=$sourceProjectId|" +
+                        "targetProjectId=$targetProjectId|matchName=$matchName"
+                )
+                return@forEach
+            }
+            if (targetNode.nodeId !in targetEnvNodeIds) {
+                needRelateNodeIds.add(targetNode.nodeId)
+            }
+        }
+
+        if (needRelateNodeIds.isNotEmpty()) {
+            dslContext.transaction { configuration ->
+                val context = DSL.using(configuration)
+                envNodeDao.batchStoreEnvNode(context, needRelateNodeIds, targetEnvId, targetProjectId)
+            }
+        }
+
+        return EnvironmentId(HashUtil.encodeLongId(targetEnvId))
+    }
+
     private fun getOrCreateTargetEnv(
         userId: String,
         targetProjectId: String,
