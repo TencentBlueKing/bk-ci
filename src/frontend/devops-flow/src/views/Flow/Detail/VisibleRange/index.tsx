@@ -1,6 +1,6 @@
 import { computed, defineComponent, ref, onMounted, watch, onBeforeUnmount } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { Button, Table, Loading, Input, Tag, InfoBox } from 'bkui-vue'
+import { Alert, Button, Table, Loading, Input, Tag, InfoBox } from 'bkui-vue'
 import { Search } from 'bkui-vue/lib/icon'
 import { SvgIcon } from '@/components/SvgIcon'
 import EmptyTableStatus from '@/components/EmptyTable'
@@ -166,25 +166,18 @@ export default defineComponent({
       <div class={styles.visibleRange} style={ props.source === 'release' ? { padding: 0 } : { padding: '20px' }}>
         {/* 提示信息 */}
         {props.source === 'release' ? (
-          <bk-tag theme="info" type="stroke" style={{ height: '100%' }}>
+          <Alert theme="info" class={styles.releaseAlert}>
             {{
-              default: () => (
-                <p class={styles.release}>
-                  <SvgIcon name="info-line" size={14} />
-                  <p>
-                    <i18n-t
-                      tag="span"
-                      keypath="flow.visibleRange.visibleRangeDesc"
-                      class={styles.releaseDesc}
-                    >
-                      <span class={styles.noticeBold}>{t('flow.visibleRange.trigger')}</span>
-                    </i18n-t>
-                    <p class={styles.releaseDesc}>{t('flow.visibleRange.visibleRangeDescEg')}</p>
-                  </p>
-                </p>
+              title: () => (
+                <div class={styles.releaseDesc}>
+                  <i18n-t tag="p" keypath="flow.visibleRange.visibleRangeDesc">
+                    <span class={styles.noticeBold}>{t('flow.visibleRange.trigger')}</span>
+                  </i18n-t>
+                  <p>{t('flow.visibleRange.visibleRangeDescEg')}</p>
+                </div>
               ),
             }}
-          </bk-tag>
+          </Alert>
         ) : (
           <div class={styles.noticeContent}>
             <div class={styles.noticeTitle}>
@@ -205,7 +198,7 @@ export default defineComponent({
 
         {/* 操作栏 */}
         <div class={styles.toolbar}>
-          <Button theme="primary" onClick={handleAdd}>
+          <Button theme="primary" outline onClick={handleAdd}>
             <SvgIcon name="add-small" class={styles.addIcon} size={16} /> {t('flow.common.add')}
           </Button>
           <Input

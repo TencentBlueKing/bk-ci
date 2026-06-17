@@ -24,17 +24,22 @@
   color: var(--color-primary);
 }
 
-.release {
-  white-space: break-spaces;
-  display: flex;
-  svg {
-    margin-top: 4px;
-  }
+.releaseAlert {
+  margin-bottom: 16px;
+}
+
+.releaseAlert + .toolbar {
+  margin-top: 0;
 }
 
 .releaseDesc {
   color: var(--color-text-secondary);
   font-size: var(--font-size-xs);
+  line-height: var(--line-height-md);
+}
+
+.releaseDesc p {
+  margin: 0;
 }
 
 .noticeDesc {
