@@ -1066,12 +1066,19 @@ class ProjectGroupMigrationService(
 
     private fun listProjectGroups(projectCode: String): List<AuthResourceGroup> {
         // 明确限定迁移范围为挂在 project resource 下的项目级用户组。
+        // 列表页按 IAM groupId 升序展示，迁移时按源项目创建时间依次建组，
+        // 这样目标项目的新 groupId 顺序才能与源项目保持一致。
         return authResourceGroupDao.getByResourceCode(
             dslContext = dslContext,
             projectCode = projectCode,
             resourceType = AuthResourceType.PROJECT.value,
             resourceCode = projectCode
-        ).sortedBy { it.groupName }
+        ).sortedWith(
+            compareBy(
+                { it.createTime ?: LocalDateTime.MIN },
+                { it.relationId }
+            )
+        )
     }
 
     private fun calculateOverallStatus(

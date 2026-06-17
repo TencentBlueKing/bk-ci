@@ -27,6 +27,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
+import io.mockk.verifyOrder
 import org.jooq.DSLContext
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
@@ -475,6 +476,94 @@ class ProjectGroupMigrationServiceTest {
         }
         verify(exactly = 0) {
             permissionResourceGroupService.createEmptyProjectGroupWithCode("target", "custom", any())
+        }
+    }
+
+    @Test
+    fun `execute should migrate groups in source create time order`() {
+        val now = LocalDateTime.now()
+        val earlierGroup = projectGroup(
+            projectCode = "source",
+            groupCode = "custom",
+            groupName = "first-group",
+            relationId = 10,
+            createTime = now.minusDays(2)
+        )
+        val laterGroup = projectGroup(
+            projectCode = "source",
+            groupCode = "custom",
+            groupName = "second-group",
+            relationId = 20,
+            createTime = now.minusDays(1)
+        )
+        val targetGroupA = projectGroup(
+            projectCode = "target",
+            groupCode = "custom",
+            groupName = "first-group",
+            relationId = 110
+        )
+        val targetGroupB = projectGroup(
+            projectCode = "target",
+            groupCode = "custom",
+            groupName = "second-group",
+            relationId = 120
+        )
+        val targetRecordA = mockk<com.tencent.devops.model.auth.tables.records.TAuthResourceGroupRecord>()
+        val targetRecordB = mockk<com.tencent.devops.model.auth.tables.records.TAuthResourceGroupRecord>()
+        every {
+            authResourceGroupDao.getByResourceCode(
+                dslContext = dslContext,
+                projectCode = "source",
+                resourceType = AuthResourceType.PROJECT.value,
+                resourceCode = "source"
+            )
+        } returns listOf(laterGroup, earlierGroup)
+        every {
+            authResourceGroupDao.getByResourceCode(
+                dslContext = dslContext,
+                projectCode = "target",
+                resourceType = AuthResourceType.PROJECT.value,
+                resourceCode = "target"
+            )
+        } returns emptyList()
+        every {
+            authResourceGroupPermissionDao.listByGroupId(dslContext, "source", 10)
+        } returns emptyList()
+        every {
+            authResourceGroupPermissionDao.listByGroupId(dslContext, "source", 20)
+        } returns emptyList()
+        every {
+            authResourceGroupMemberDao.listResourceGroupMember(
+                dslContext = dslContext,
+                projectCode = "source",
+                iamGroupId = any(),
+                minExpiredTime = any()
+            )
+        } returns emptyList()
+        every {
+            permissionResourceGroupService.createGroup("target", match { it.groupName == "first-group" })
+        } returns 110
+        every {
+            permissionResourceGroupService.createGroup("target", match { it.groupName == "second-group" })
+        } returns 120
+        every {
+            authResourceGroupDao.getByRelationId(dslContext, "target", "110")
+        } returns targetRecordA
+        every {
+            authResourceGroupDao.getByRelationId(dslContext, "target", "120")
+        } returns targetRecordB
+        every { authResourceGroupDao.convert(targetRecordA) } returns targetGroupA
+        every { authResourceGroupDao.convert(targetRecordB) } returns targetGroupB
+
+        val result = service.migrate(
+            ProjectGroupMigrationDTO(sourceProjectCode = "source", targetProjectCode = "target")
+        )
+
+        assertEquals(ProjectGroupMigrationStatus.SUCCESS, result.status)
+        assertEquals(listOf("first-group", "second-group"), result.groupResults.map { it.sourceGroupName })
+        verifyOrder {
+            permissionResourceGroupService.createGroup("target", match { it.groupName == "first-group" })
+            permissionResourceGroupService.createGroup("target", match { it.groupName == "second-group" })
         }
     }
 
@@ -1036,7 +1125,8 @@ class ProjectGroupMigrationServiceTest {
         groupCode: String,
         groupName: String,
         defaultGroup: Boolean = false,
-        relationId: Int = 1
+        relationId: Int = 1,
+        createTime: LocalDateTime? = null
     ): AuthResourceGroup {
         return AuthResourceGroup(
             projectCode = projectCode,
@@ -1048,6 +1138,7 @@ class ProjectGroupMigrationServiceTest {
             groupName = groupName,
             defaultGroup = defaultGroup,
             relationId = relationId,
+            createTime = createTime,
             description = groupName
         )
     }
