@@ -454,31 +454,24 @@
                 loadingStatus: false,
                 // 分析中的 loading 状态（null: 未开始, true: 分析中, false: 分析完成）
                 analyzingPipeline: null,
-                // 保存草稿时的 loading 状态
                 savingDraft: false,
-                // 任务详情数据
                 taskData: null,
-                // 资源依赖步骤的校验数据
                 resourceValidationData: {
                     pendingDependencyResourceCount: 0,
                     highRiskOperationCount: 0,
                     pendingConflictCount: 0
                 },
-                // 高风险操作确认状态
                 highRiskConfirmed: false,
-                // 高风险提示弹窗
                 highRiskDialog: {
                     visible: false,
                     activeTab: ''
                 },
-                // 配置范围数据
                 configScopeData: {
                     targetProjectId: '',
                     taskName: '',
                     pipelineCopyStrategy: ''
                 },
                 resourceData: [],
-                // 任务执行汇总数据（由 TaskExecution 子组件传递过来）
                 executionSummary: {
                     pipelineCount: 0,
                     needCompletionCount: 0,
@@ -534,7 +527,6 @@
                 return targetProjectId
             },
             pipelineCopyStrategyText () {
-                // 优先取用户实时选择的策略，而非初始数据
                 const strategy = this.configScopeData.pipelineCopyStrategy || (this.taskData && this.taskData.pipelineCopyStrategy)
                 if (strategy === PipelineIdStrategy.PIPELINE_CREATE_NEW_ID) {
                     return this.$t('autoGenerateNewId')
@@ -555,7 +547,6 @@
                 }
                 return statusTextMap[this.taskStatus] || ''
             },
-            // 是否为只读状态（任务执行中或已完成）当任务状态为 EXECUTING、SUCCESS、FAILED、PARTIAL_FAILED 时，页面不允许编辑
             isReadOnly () {
                 const readOnlyStatuses = [
                     PipelineBatchTaskStatus.EXECUTING,
@@ -565,7 +556,6 @@
                 ]
                 return readOnlyStatuses.includes(this.taskStatus)
             },
-            // 任务是否已完成
             isTaskCompleted () {
                 const completedStatuses = [
                     PipelineBatchTaskStatus.SUCCESS,
@@ -574,7 +564,6 @@
                 ]
                 return completedStatuses.includes(this.taskStatus)
             },
-            // 当前步骤索引（从路由参数 tab 计算）
             currentStepIndex () {
                 const tab = this.$route.params.tab
                 const index = this.steps.findIndex(step => step.name === tab)
@@ -634,7 +623,6 @@
             errorValidationCount () {
                 return this.validationItems.filter(item => item.type === 'error').length
             },
-            // 计算底部操作栏的高度
             footerHeight () {
                 if (this.isReadOnly) return '0'
                 if (this.currentStepIndex === 2) return '24px'
@@ -773,7 +761,6 @@
             }
         },
         watch: {
-            // 监听完整路由变化
             '$route': {
                 immediate: true,
                 handler (to, from) {
@@ -841,17 +828,11 @@
                 'saveResourceDraft',
                 'prepareExecute'
             ]),
-            /**
-             * 开始轮询任务状态
-             */
             async startPolling () {
                 this.stopPolling()
                 this.isPolling = true
                 await this.pollTaskStatus()
             },
-            /**
-             * 停止轮询
-             */
             stopPolling () {
                 if (this.pollingTimer) {
                     clearTimeout(this.pollingTimer)
@@ -1183,9 +1164,9 @@
              */
             async saveDraftBeforeNavigate (targetIndex = this.currentStepIndex - 1) {
                 if (this.currentStepIndex === 1 && targetIndex < this.currentStepIndex) {
-                    this.savingDraft = true // 显示 loading
+                    this.savingDraft = true
                     const saveSuccess = await this.saveResourceDependencyDraft()
-                    this.savingDraft = false // 隐藏 loading
+                    this.savingDraft = false
                     
                     if (!saveSuccess) {
                         return false
@@ -1194,7 +1175,7 @@
                 return true
             },
             async handleSaveDraft () {
-                this.savingDraft = true // 显示 loading
+                this.savingDraft = true
                 try {
                     if (this.currentStepIndex === 0) {
                         await this.saveConfigScopeDraft()
@@ -1202,7 +1183,7 @@
                         await this.saveResourceDependencyDraft()
                     }
                 } finally {
-                    this.savingDraft = false // 隐藏 loading
+                    this.savingDraft = false
                 }
             },
             /**

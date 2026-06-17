@@ -39,7 +39,6 @@
             ResourceItemCard
         },
         props: {
-            // 接收父组件传递的资源数据
             resourceData: {
                 type: Array,
                 default: () => []
@@ -47,7 +46,6 @@
         },
         data () {
             return {
-                // 当前激活的状态tab
                 currentStatusTab: 'all',
                 // 资源列表数据 (原始数据)
                 allResources: [],
@@ -63,12 +61,11 @@
                 const processedCount = allCount - unprocessedCount
                 
                 return [
-                    { name: 'all', label: '全部', totalCount: allCount },
-                    { name: 'UNPROCESSED', label: '待处理', totalCount: unprocessedCount },
-                    { name: 'PROCESSED', label: '已处理', totalCount: processedCount }
+                    { name: 'all', label: this.$t('All'), totalCount: allCount },
+                    { name: 'UNPROCESSED', label: this.$t('pending'), totalCount: unprocessedCount },
+                    { name: 'PROCESSED', label: this.$t('processed'), totalCount: processedCount }
                 ]
             },
-            // 用于显示的 tabs (带格式化label)
             statusTabs () {
                 return this.tabs.map(tab => ({
                     ...tab,
@@ -77,7 +74,6 @@
             }
         },
         watch: {
-            // 监听 resourceData 变化
             resourceData: {
                 immediate: true,
                 handler (newData) {
@@ -89,7 +85,6 @@
             }
         },
         methods: {
-            // 过滤资源列表 (前端过滤)
             filterResourceList () {
                 if (this.currentStatusTab === 'all') {
                     this.resourceList = this.allResources
@@ -97,16 +92,11 @@
                     this.resourceList = this.allResources.filter(item => item.status === this.currentStatusTab)
                 }
             },
-            
-            // 状态tab切换
             handleStatusTabChange (tabName) {
                 this.currentStatusTab = tabName
                 this.filterResourceList()
             },
-            
-            // 我已补齐 - 通知父组件更新数据
             handleComplete (updatedData) {
-                // 触发事件通知父组件更新对应的 resourceData
                 this.$emit('update-resource', updatedData)
             }
         }

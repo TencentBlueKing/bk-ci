@@ -40,7 +40,6 @@
             ResourceItemCard
         },
         props: {
-            // 接收父组件传递的资源数据
             resourceData: {
                 type: Array,
                 default: () => []
@@ -48,7 +47,6 @@
         },
         data () {
             return {
-                // 当前激活的状态tab
                 currentStatusTab: 'all',
                 // 资源列表数据 (原始数据)
                 allResources: [],
@@ -57,19 +55,17 @@
             }
         },
         computed: {
-            // 动态计算tab数量
             tabs () {
                 const allCount = this.allResources.length
                 const unprocessedCount = this.allResources.filter(item => item.status === 'UNPROCESSED').length
                 const processedCount = allCount - unprocessedCount
                 
                 return [
-                    { name: 'all', label: '全部', totalCount: allCount },
-                    { name: 'UNPROCESSED', label: '待处理', totalCount: unprocessedCount },
-                    { name: 'PROCESSED', label: '已处理', totalCount: processedCount }
+                    { name: 'all', label: this.$t('All'), totalCount: allCount },
+                    { name: 'UNPROCESSED', label: this.$t('pending'), totalCount: unprocessedCount },
+                    { name: 'PROCESSED', label: this.$t('processed'), totalCount: processedCount }
                 ]
             },
-            // 用于显示的 tabs (带格式化label)
             statusTabs () {
                 return this.tabs.map(tab => ({
                     ...tab,
@@ -78,7 +74,6 @@
             }
         },
         watch: {
-            // 监听 resourceData 变化
             resourceData: {
                 immediate: true,
                 handler (newData) {

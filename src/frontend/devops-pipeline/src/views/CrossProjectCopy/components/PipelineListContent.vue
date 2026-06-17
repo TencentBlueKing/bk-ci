@@ -169,7 +169,6 @@
                 ],
                 searchValues: [],
                 pipelineTableData: [],
-                // 表格 loading 状态
                 tableLoading: false,
                 pagination: {
                     current: 1,
@@ -210,7 +209,6 @@
             }
         },
         watch: {
-            // 监听父组件传递的statusSummary数据，更新tabs的totalCount
             statusSummary: {
                 immediate: true,
                 handler (newVal) {

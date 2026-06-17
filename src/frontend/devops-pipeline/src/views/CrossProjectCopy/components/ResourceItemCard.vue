@@ -134,7 +134,7 @@
             },
             actionButtonText: {
                 type: String,
-                default: '我已处理'
+                default: ''
             }
         },
         data () {
@@ -145,13 +145,10 @@
             projectId () {
                 return this.$route.params.projectId
             },
-            // 资源类型文本
             resourceTypeText () {
                 const i18nKey = PipelineCopyResourceTypeI18nKey[this.data.resourceType]
                 return i18nKey ? this.$t(i18nKey) : this.data.resourceType
             },
-        
-            // 策略文本
             strategyText () {
                 const i18nKey = this.data.copyStrategy
                 return this.$t(i18nKey)

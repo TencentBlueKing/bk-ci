@@ -76,7 +76,6 @@
                                                 @tab-change="handleTabChange(groupCategory, $event)"
                                             />
                                             <div class="header-right">
-                                                <!-- 搜索框 -->
                                                 <bk-input
                                                     v-model="groupCategory.pipelineName"
                                                     :placeholder="$t('searchPipelineName')"
@@ -191,7 +190,6 @@
         },
         data () {
             return {
-                // 折叠面板激活项
                 activeCollapseNames: ['reusable', 'new'],
                 // 分组数据 UI 状态（groups 从 item.resources 获取）
                 groupsData: [
@@ -280,7 +278,6 @@
             }
         },
         watch: {
-            // 监听策略变化，自动加载分组数据
             'item.copyStrategy': {
                 handler (newVal) {
                     if (newVal === PipelineCopyStrategy.PIPELINE_GROUP_AUTO_REUSE_OR_CREATE) {
@@ -289,7 +286,6 @@
                 },
                 immediate: true
             },
-            // 监听接口数据变化，同步分组列表
             'item.resources': {
                 handler (newVal) {
                     this.initGroupsData(newVal)

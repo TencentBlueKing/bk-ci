@@ -383,20 +383,15 @@
                 localExecutionStatus: 'pending',
                 // 任务确认状态
                 taskConfirmed: false,
-                // 轮询定时器
                 pollingTimer: null,
-                // 轮询间隔(毫秒)
                 pollingInterval: 2000,
-                // 重试轮询相关
                 retryPollingTimer: null,
                 isRetryPolling: false,
                 progressInfo: {
                     totalCount: 0,
                     executedCount: 0
                 },
-                // 流水线列表
                 pipelineList: [],
-                // 表格 loading 状态
                 tableLoading: false,
                 pagination: {
                     current: 1,
@@ -405,15 +400,12 @@
                 },
                 // 任务执行结果: success-全部成功, partial-部分失败
                 taskResult: '',
-                // 当前激活的tab
                 activeTab: 'PIPELINE',
-                // 资源数据
                 tabData: {
                     NEED_COMPLETION: null,
                     NEED_TRANSFER: null,
                     AUTO_FINISH: null
                 },
-                // 流水线状态汇总数据
                 pipelineStatusSummary: {
                     successCount: 0,
                     failedCount: 0,
@@ -423,7 +415,6 @@
                 // 第一个高风险资源的类型
                 firstHighRiskResourceType: null,
                 tabsNeedResource: ['NEED_COMPLETION', 'NEED_TRANSFER', 'AUTO_FINISH'],
-                // 完成页tabs配置
                 completedTabs: [
                     {
                         key: 'PIPELINE',
@@ -465,21 +456,18 @@
             taskId () {
                 return this.$route.params.taskId
             },
-            // 流水线ID策略显示文本
             pipelineIdStrategyText () {
                 const strategy = this.taskData?.pipelineCopyStrategy
                 if (strategy === PipelineIdStrategy.PIPELINE_CREATE_NEW_ID) return this.$t('autoGenerateNewId')
                 if (strategy === PipelineIdStrategy.PIPELINE_REUSE_SOURCE_ID) return this.$t('keepSourceId')
                 return '--'
             },
-            // 进度百分比
             progressPercent () {
                 const total = this.progressInfo?.totalCount ?? 0
                 const executed = this.progressInfo?.executedCount ?? 0
                 if (total === 0) return 0
                 return Math.floor((executed / total) * 100)
             },
-            // 当前tab对应的组件
             currentTabComponent () {
                 const componentMap = {
                     PIPELINE: 'PipelineListContent',
@@ -551,8 +539,8 @@
             }
         },
         beforeDestroy () {
-            // 组件销毁前清理定时器
             this.stopPolling()
+            this.stopRetryPolling()
         },
         methods: {
             ...mapActions('crossProjectCopy', [
@@ -692,7 +680,6 @@
                     confirmFn: () => {
                         this.taskResult = ''
 
-                        // 调接口后不阻塞，延迟 3s 再开始轮询（让后端先处理）
                         this.retryFailedTaskDetail({
                             projectId: this.projectId,
                             taskId: this.taskId,
@@ -726,7 +713,6 @@
                     confirmFn: () => {
                         this.taskResult = ''
 
-                        // 调接口后不阻塞，延迟 3s 再开始轮询（让后端先处理）
                         this.retryFailedTask({
                             projectId: this.projectId,
                             taskId: this.taskId
@@ -886,7 +872,7 @@
                         this.stopPolling()
                         this.localExecutionStatus = 'completed'
                         this.updateTaskResult(status)
-                        // 任务完成后获取执行汇总数据更新 completedTabs
+                        // 任务完成后获取执行汇总数据更新
                         this.fetchExecuteSummary()
                     }
                 } catch (error) {

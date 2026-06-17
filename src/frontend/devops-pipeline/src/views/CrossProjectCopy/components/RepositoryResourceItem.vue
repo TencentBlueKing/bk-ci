@@ -58,7 +58,6 @@
             Logo
         },
         props: {
-            // 代码库数据项
             item: {
                 type: Object,
                 required: true

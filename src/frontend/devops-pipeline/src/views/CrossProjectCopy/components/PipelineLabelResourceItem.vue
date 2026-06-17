@@ -92,7 +92,6 @@
         },
         data () {
             return {
-                // 折叠面板激活项
                 activeCollapseNames: ['reusable', 'new'],
                 // 标签数据 UI 状态（labels 从 item.resources 获取）
                 labelsData: [
@@ -149,7 +148,6 @@
             }
         },
         watch: {
-            // 监听策略变化，自动加载标签数据
             'item.copyStrategy': {
                 handler (newVal) {
                     if (newVal === PipelineCopyStrategy.LABEL_AUTO_REUSE_OR_CREATE) {

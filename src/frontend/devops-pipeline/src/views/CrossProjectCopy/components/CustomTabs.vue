@@ -19,7 +19,6 @@
     export default {
         name: 'CustomTabs',
         props: {
-            // 当前激活的tab
             activeTab: {
                 type: String,
                 required: true

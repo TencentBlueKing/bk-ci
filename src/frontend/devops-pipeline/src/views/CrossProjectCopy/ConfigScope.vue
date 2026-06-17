@@ -339,28 +339,20 @@
         },
         data () {
             return {
-                // 当前激活的 Tab
                 activeTab: 'all',
-                // 搜索条件值（SearchSelect 的值结构）
                 searchValues: [],
                 searchSelectKey: 0,
-                // 内部 loading 状态（用于接口加载）
                 isLoadingData: false,
-                // 表格 loading 状态
                 tableLoading: false,
-                // 项目列表
                 projectList: [],
-                // 流水线列表
                 pipelineList: [],
                 // 状态汇总数据
                 statusSummary: [],
-                // 表格分页
                 tablePagination: {
                     current: 1,
                     limit: 10,
                     count: 0,
                 },
-                // 表单验证规则
                 formRules: {
                     targetProjectId: [
                         { required: true, message: this.$t('notSelectedTargetProject'), trigger: 'change' }
@@ -385,14 +377,12 @@
             isLoading () {
                 return this.analyzingPipeline || this.isLoadingData
             },
-            // Tab 列表
             tabList () {
                 const waitCopyItem = this.statusSummary.find(item => item.status === PipelineBatchTaskDetailStatus.WAIT_COPY)
                 const excludedItem = this.statusSummary.find(item => item.status === PipelineBatchTaskDetailStatus.EXCLUDED)
 
                 const pendingCount = waitCopyItem ? waitCopyItem.count : 0
                 const excludedCount = excludedItem ? excludedItem.count : 0
-                // 全部数量 = 待复制 + 已排除（或从statusSummary中计算全部）
                 const allCount = this.statusSummary.reduce((sum, item) => sum + (item.count || 0), 0)
 
                 return [
@@ -557,17 +547,11 @@
                 this.tablePagination.current = 1
                 this.loadPipelineList()
             },
-            /**
-             * 搜索框搜索
-             */
             handleSearch (value) {
                 this.searchValues = value || []
                 this.tablePagination.current = 1
                 this.loadPipelineList()
             },
-            /**
-             * 把 SearchSelect 的搜索条件转换为接口可用的参数
-             */
             getSearchParams () {
                 return (this.searchValues || []).reduce((acc, item) => {
                     if (item.id === 'type') {
@@ -689,7 +673,6 @@
             },
             /**
              * 校验指定字段
-             * @param {string} fieldName - 字段名称
              */
             validateField (fieldName) {
                 if (this.$refs.configForm && typeof this.$refs.configForm.validateField === 'function') {

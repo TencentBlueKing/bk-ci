@@ -104,12 +104,12 @@
             CustomTabs
         },
         props: {
-            // 资源数据项（必须包含 resourceType、resourceId、resourceName）
+            // 资源数据项
             item: {
                 type: Object,
                 required: true
             },
-            // 项目 ID（用于请求数据和跳转详情）
+            // 项目 ID
             projectId: {
                 type: String,
                 required: true
@@ -163,7 +163,6 @@
             this.fetchPipelinesData()
         },
         methods: {
-            // 获取数据
             async fetchPipelinesData () {
                 this.innerLoading = true
                 try {

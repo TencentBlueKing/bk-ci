@@ -358,7 +358,6 @@
                 },
                 setupLoading: false,
                 rechecking: false,
-                // 风险提示弹窗
                 riskWarningDialog: {
                     visible: false,
                     resourceName: '', // 记录资源名称
@@ -368,12 +367,9 @@
                 oauthUrlMap: {},
                 // 确认重新检查弹窗显示状态
                 isShowRecheckDialog: false,
-                // 目标项目的凭据列表
                 targetCredentialOptions: [],
-                // 资源数据加载状态
                 isLoadingData: false,
                 resourceData: [],
-                // 资源分类数据
                 resourceCategories: [
                     {
                         type: 'pipelineDependency',
@@ -444,7 +440,6 @@
                 const resources = this.resourceDataMap[PipelineCopyResourceType.PIPELINE]?.resources || []
                 return resources.filter(item => item.status === 'UNPROCESSED').length
             },
-            // 当前资源类型对应的组件
             currentResourceComponent () {
                 const componentMap = {
                     [PipelineCopyResourceType.PIPELINE_TEMPLATE]: 'TemplateResourceItem',
@@ -638,7 +633,6 @@
                 },
                 immediate: true
             },
-            // 监听高风险操作数量变化
             highRiskOperationCount: {
                 handler (newVal) {
                     this.$emit('update-validation-data', {
@@ -649,7 +643,6 @@
                 },
                 immediate: true
             },
-            // 监听冲突数量变化
             pendingConflictCount: {
                 handler (newVal) {
                     this.$emit('update-validation-data', {
@@ -660,7 +653,6 @@
                 },
                 immediate: true
             },
-            // 监听资源数据变化，自动同步到父组件
             resourceData: {
                 handler () {
                     this.syncResourceDataToParent()
@@ -730,11 +722,9 @@
                     })
                     
                     if (res?.status === 403) {
-                        // 授权失败，存储 oauthUrl
                         this.$set(this.oauthUrlMap, scmCode, res.url || '')
                         this.$set(this.oauthStatusMap, scmCode, false)
                     } else if (res?.status === 200) {
-                        // 授权成功
                         this.$set(this.oauthStatusMap, scmCode, true)
                         this.$set(this.oauthUrlMap, scmCode, '')
                     }
@@ -879,8 +869,6 @@
                 // 通知父组件更新重新检查状态
                 this.$emit('update-loading-state', true)
                 // TODO: 调用重新检查的 API
-                // this.rechecking = false
-                // this.$emit('update-loading-state', false)
             },
             handleCancelRecheck () {
                 this.isShowRecheckDialog = false

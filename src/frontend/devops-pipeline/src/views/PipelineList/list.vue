@@ -86,7 +86,10 @@
                         this.showAlert = true
                     }
                 } catch (error) {
-                    console.error('获取任务数量失败', error)
+                    this.$bkMessage({
+                        theme: 'error',
+                        message: error.message || error
+                    })
                 }
             },
             handleCollapseChange (val) {

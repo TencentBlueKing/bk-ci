@@ -32,7 +32,6 @@
                                 <Logo
                                     size="12"
                                     name="tiaozhuan"
-                                    style="border: 1px solid #000"
                                 />
                             </a>
                         </bk-tag>
@@ -53,7 +52,6 @@
             Logo
         },
         props: {
-            // 接收父组件传递的资源数据
             resourceData: {
                 type: Array,
                 default: () => []
@@ -61,7 +59,6 @@
         },
         data () {
             return {
-                // 折叠面板激活的项 (默认全部展开)
                 activeCollapseNames: []
             }
         },
