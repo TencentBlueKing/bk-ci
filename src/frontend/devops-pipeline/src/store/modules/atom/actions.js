@@ -634,6 +634,47 @@ export default {
         }
     },
 
+    /**
+     * 搜索模式专用：支持 installed 参数，分页加载已安装/未安装插件列表
+     */
+    fetchSearchAtoms: async ({ commit, getters }, {
+        projectCode,
+        category,
+        searchKey,
+        installed,
+        os,
+        page = 1,
+        pageSize = 100
+    }) => {
+        try {
+            const res = await request.get(`${STORE_API_URL_PREFIX}/user/pipeline/atom`, {
+                params: {
+                    page,
+                    pageSize,
+                    projectCode,
+                    jobType: undefined,
+                    category,
+                    classifyId: undefined,
+                    os: undefined,
+                    keyword: searchKey,
+                    queryProjectAtomFlag: false,
+                    fitOsFlag: false,
+                    installed
+                }
+            })
+            // 为当前页记录添加 disabled 属性
+            const curOs = os
+            const processedRecords = getters.getAtomDisabled(res.data.records || [], curOs, category)
+            return {
+                ...res.data,
+                records: processedRecords
+            }
+        } catch (e) {
+            rootCommit(commit, FETCH_ERROR, e)
+            throw e
+        }
+    },
+
     setAtomPageOver: ({ commit }) => {
         commit(SET_ATOM_PAGE_OVER, false)
     },
