@@ -116,8 +116,9 @@ class TencentNodeService @Autowired constructor(
                     )
                 )
             }
-            // 生成节点,如果用说明没导入成功，再次导入
-            if (agentDao.getAgentByWorkspaceIdGlobal(dslContext, imate.deviceId, projectId) == null) {
+            // 生成节点,如果有说明没导入成功，再次导入
+            val record = agentDao.getAgentByWorkspaceIdGlobal(dslContext, imate.deviceId, projectId)
+            if (record == null) {
                 val agentId = batchInstallAgentService.genNewAgent(
                     projectId = projectId,
                     userId = userId,
@@ -128,6 +129,8 @@ class TencentNodeService @Autowired constructor(
                     agentProps = AgentProps.emptyBySource(AgentPropsSource.DEVCLOUD)
                 )
                 importService.preImport(projectId, agentId, userId, imate.name)
+            }else{
+                importService.preImport(projectId, record.id, userId, imate.name)
             }
             // 生成临时1小时TOKEN用来导入鉴权
             val tokenData = "${projectId};${imate.deviceId};$userId;${Instant.now().plusSeconds(3600).toEpochMilli()}"
