@@ -66,5 +66,20 @@ data class TapdRule(
     val includeUsers: List<String>? = null,
     @get:Schema(title = "exclude-users")
     @JsonProperty("exclude-users")
-    val excludeUsers: List<String>? = null
+    val excludeUsers: List<String>? = null,
+    @get:Schema(title = "include-owners")
+    @JsonProperty("include-owners")
+    val includeOwners: List<String>? = null,
+    @get:Schema(title = "exclude-owners")
+    @JsonProperty("exclude-owners")
+    val excludeOwners: List<String>? = null,
+    @JsonProperty("labels")
+    @get:Schema(title = "labels")
+    var labels: List<String>? = null,
+    @get:Schema(title = "labels-ignore")
+    @JsonProperty("labels-ignore")
+    val labelsIgnore: List<String>? = null,
+    @get:Schema(title = "priorities")
+    @JsonProperty("priorities")
+    val priorities: List<String>? = null
 ) : Rule(id, name, enable)

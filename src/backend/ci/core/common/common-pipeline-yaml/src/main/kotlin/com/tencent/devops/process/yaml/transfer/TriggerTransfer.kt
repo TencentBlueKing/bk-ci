@@ -811,7 +811,12 @@ class TriggerTransfer @Autowired(required = false) constructor(
                     includeStoryAction = includeStoryAction,
                     includeBugAction = includeBugAction,
                     includeUsers = tapd.includeUsers,
-                    excludeUsers = tapd.excludeUsers
+                    excludeUsers = tapd.excludeUsers,
+                    includeLabels = tapd.labels?.join(),
+                    excludeLabels = tapd.labelsIgnore?.join(),
+                    includePriority = tapd.priorities?.join(),
+                    includeOwner = tapd.includeOwners,
+                    excludeOwner = tapd.excludeOwners
                 )
             )
         ).checkTriggerElementEnable(tapd.enable) as TapdWebHookTriggerElement

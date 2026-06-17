@@ -246,7 +246,12 @@ class ElementTransfer @Autowired(required = false) constructor(
             eventType = input.eventType?.value,
             includeActions = includeActions,
             includeUsers = input.includeUsers,
-            excludeUsers = input.excludeUsers
+            excludeUsers = input.excludeUsers,
+            includeOwners = input.includeOwner,
+            excludeOwners = input.excludeOwner,
+            labels = input.includeLabels?.split(","),
+            labelsIgnore = input.excludeLabels?.split(","),
+            priorities = input.includePriority?.split(",")
         )
     }
 
