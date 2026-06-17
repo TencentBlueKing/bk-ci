@@ -60,6 +60,9 @@ export default defineComponent({
       // System variables
       systemVariables,
       fetchSystemVariables,
+      // Trigger params
+      triggerParams,
+      fetchTriggerParams,
     } = useFlowVariables(props.flowId)
 
     // Edit mode state
@@ -126,9 +129,11 @@ export default defineComponent({
     const filteredPluginOutputVariables = computed(() =>
       getFilteredReadonlyVariableGroups(pluginOutputVariables.value),
     )
-    const filteredSystemVariableGroups = computed(() =>
-      getFilteredReadonlyVariableGroups(systemVariables.value),
-    )
+    const filteredSystemVariableGroups = computed(() => {
+      // Combine system variables and trigger params, then filter
+      const combinedList = [...systemVariables.value, ...triggerParams.value]
+      return getFilteredReadonlyVariableGroups(combinedList)
+    })
 
     // Get current category for adding variables
     const currentCategory = computed(() => currentAddingCategory.value)
@@ -215,6 +220,7 @@ export default defineComponent({
         fetchPluginOutputVariables()
       } else if (name === VariablePanelTab.SYSTEM) {
         fetchSystemVariables()
+        fetchTriggerParams()
       }
     }
 
