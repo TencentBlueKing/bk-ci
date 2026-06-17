@@ -120,11 +120,11 @@ object PipelineParamUtils {
         val paramValue = try {
             when (value) {
                 is String -> {
-                    JsonUtil.to(value, object : TypeReference<List<Map<String, String>>>() {})
+                    JsonUtil.to(value, object : TypeReference<List<Map<String, Any?>>>() {})
                 }
 
                 else -> {
-                    value as List<Map<String, String>>
+                    value as List<Map<String, Any?>>
                 }
             }
         } catch (ignored: Exception) {
@@ -136,7 +136,12 @@ object PipelineParamUtils {
         paramValue.forEachIndexed { index, map ->
             map.forEach { (subKey, subValue) ->
                 fillContextPrefix(
-                    param.copy(key = "$key.$index.$subKey", value = subValue ?: ""),
+                    param.copy(
+                        key = "$key.$index.$subKey",
+                        value = subValue?.let {
+                            JsonUtil.toJson(it, false)
+                        } ?: ""
+                    ),
                     originStartContexts
                 )
             }
