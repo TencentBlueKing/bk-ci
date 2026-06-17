@@ -51,6 +51,7 @@ import com.tencent.devops.common.audit.ActionAuditContent.PROJECT_ENABLE_OR_DISA
 import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthProjectApi
+import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.ResourceTypeId
 import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.client.Client
@@ -71,7 +72,6 @@ import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_NOT_EXISTS
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_NO_USE_PERMISSSION
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_NO_VIEW_PERMISSSION
-import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_SHARE_PROJECT_TYPE_ERROR
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_TAG_NO_EDIT_PERMISSSION
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_QUOTA_LIMIT
@@ -674,62 +674,6 @@ class EnvService @Autowired constructor(
             .filter { secure == null || it.secure == secure }
             .filter { lastUpdateUser.isNullOrBlank() || it.lastUpdateUser == lastUpdateUser }
             .sortedByDescending { it.lastUpdateTime }
-    }
-
-    @ActionAuditRecord(
-        actionId = ActionId.ENVIRONMENT_VIEW,
-        instance = AuditInstanceRecord(
-            resourceType = ResourceTypeId.ENVIRONMENT
-        ),
-        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
-        scopeId = "#projectId",
-        content = ActionAuditContent.ENVIRONMENT_VIEW_CONTENT
-    )
-    override fun getEnvironmentByName(
-        userId: String,
-        projectId: String,
-        envName: String,
-        checkPermission: Boolean
-    ): EnvWithPermission {
-        val env = envDao.getByEnvName(dslContext, projectId, envName)
-            ?: throw ErrorCodeException(errorCode = ERROR_ENV_NOT_EXISTS)
-        val envId = env.envId
-        if (checkPermission && !environmentPermissionService.checkEnvPermission(
-                userId = userId,
-                projectId = projectId,
-                envId = envId,
-                permission = AuthPermission.VIEW
-            )
-        ) {
-            throw PermissionForbiddenException(
-                message = I18nUtil.getCodeLanMessage(ERROR_ENV_NO_VIEW_PERMISSSION)
-            )
-        }
-        ActionAuditContext.current()
-            .setInstanceId(envId.toString())
-            .setInstanceName(env.envName)
-        val nodeCount = envNodeDao.count(dslContext, projectId, envId)
-        return EnvWithPermission(
-            envHashId = HashUtil.encodeLongId(env.envId),
-            name = env.envName,
-            desc = env.envDesc,
-            envType = if (env.envType == EnvType.TEST.name) EnvType.DEV.name else env.envType, // 兼容性代码
-            nodeCount = nodeCount,
-            envVars = jacksonObjectMapper().readValue(env.envVars),
-            createdUser = env.createdUser,
-            createdTime = env.createdTime.timestamp(),
-            updatedUser = env.updatedUser,
-            updatedTime = env.updatedTime.timestamp(),
-            canEdit = environmentPermissionService.checkEnvPermission(userId, projectId, envId, AuthPermission.EDIT),
-            canDelete = environmentPermissionService.checkEnvPermission(
-                userId,
-                projectId,
-                envId,
-                AuthPermission.DELETE
-            ),
-            canUse = null,
-            projectName = client.get(ServiceProjectResource::class).get(env.projectId).data?.projectName
-        )
     }
 
     override fun listRawEnvByHashIds(
@@ -1390,6 +1334,7 @@ class EnvService @Autowired constructor(
                 envName = sourceEnv.envName,
                 envDesc = sourceEnv.envDesc,
                 envType = sourceEnv.envType,
+                envNodeType = EnvNodeType.valueOf(sourceEnv.envNodeType),
                 envVars = sourceEnv.envVars
             )
             environmentPermissionService.createEnv(userId, targetProjectId, newEnvId, sourceEnv.envName)

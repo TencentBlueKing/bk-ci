@@ -134,12 +134,12 @@ class ServiceEnvironmentResourceImpl @Autowired constructor(
         projectId: String,
         envName: String,
         checkPermission: Boolean?
-    ): Result<EnvWithPermission> {
+    ): Result<EnvWithPermission?> {
         if (envName.isBlank()) {
             throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_ENV_NAME_NULL)
         }
 
-        return Result(envService.getEnvironmentByName(userId, projectId, envName, checkPermission ?: true))
+        return Result(envService.getByName(projectId, envName))
     }
 
     @AuditEntry(actionId = ActionId.ENVIRONMENT_DELETE)

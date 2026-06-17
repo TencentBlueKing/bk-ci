@@ -956,6 +956,10 @@ class RbacPermissionResourceMemberService(
         )?.relationId?.let { return it }
 
         TARGET_GROUP_CREATE_RETRY_INTERVAL_MILLIS.forEach { intervalMillis ->
+            logger.info(
+                "wait target project group created|" +
+                        "$targetProjectCode|$resourceType|$targetResourceCode|$groupCode|$intervalMillis"
+            )
             try {
                 Thread.sleep(intervalMillis)
             } catch (ignored: InterruptedException) {

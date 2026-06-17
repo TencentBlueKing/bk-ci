@@ -22,7 +22,7 @@ import com.tencent.devops.common.pipeline.pojo.element.agent.GithubElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.WebHookTriggerElement
-import com.tencent.devops.common.pipeline.type.agent.AgentType
+import com.tencent.devops.common.pipeline.type.agent.AgentDispatchType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentDockerInfo
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentEnvDispatchType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentIDDispatchType
@@ -641,7 +641,7 @@ class PipelineDependencyAnalyzeService @Autowired constructor(
         dispatchType: ThirdPartyAgentEnvDispatchType,
         variables: Map<String, String>
     ): PipelineDependentResourceRef? {
-        return if (dispatchType.agentType == AgentType.ID) {
+        return if (dispatchType.agentType == AgentDispatchType.ID) {
             PipelineDependentResourceRef(
                 projectId = projectId,
                 resourceType = PipelineDependentResourceType.BUILD_ENV,

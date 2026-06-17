@@ -157,7 +157,7 @@ interface ServiceEnvironmentResource {
         @QueryParam("checkPermission")
         @DefaultValue("true")
         checkPermission: Boolean? = true
-    ): Result<EnvWithPermission>
+    ): Result<EnvWithPermission?>
 
     @Operation(summary = "删除环境")
     @DELETE

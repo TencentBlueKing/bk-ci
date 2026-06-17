@@ -34,7 +34,7 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeScmGitWebHook
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeScmSvnWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeTGitWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.WebHookTriggerElement
-import com.tencent.devops.common.pipeline.type.agent.AgentType
+import com.tencent.devops.common.pipeline.type.agent.AgentDispatchType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentDispatch
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentDockerInfo
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentEnvDispatchType
@@ -373,7 +373,7 @@ class PipelineDependencyReplaceService @Autowired constructor(
         val dispatchType = container.dispatchType as? ThirdPartyAgentDispatch ?: return container
         val replacedDispatchType = when {
             dispatchType is ThirdPartyAgentEnvDispatchType &&
-                dispatchType.agentType == AgentType.ID -> replaceEnvDispatchType(
+                dispatchType.agentType == AgentDispatchType.ID -> replaceEnvDispatchType(
                 dispatchType = dispatchType,
                 context = context
             )
