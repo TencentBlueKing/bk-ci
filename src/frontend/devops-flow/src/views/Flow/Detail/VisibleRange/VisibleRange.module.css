@@ -26,6 +26,17 @@
 
 .releaseAlert {
   margin-bottom: 16px;
+  padding: 6px 8px;
+}
+
+.releaseAlert :global(.bk-alert-wraper) {
+  align-items: flex-start;
+}
+
+.releaseAlert :global(.bk-alert-icon-wraper) {
+  margin-right: 8px;
+  margin-top: 2px;
+  line-height: var(--line-height-md);
 }
 
 .releaseAlert + .toolbar {
