@@ -136,4 +136,11 @@ interface CredentialService {
         publicKey: String,
         padding: Boolean
     ): CredentialItemVo?
+
+    fun copyCredentials(
+        userId: String,
+        sourceProjectId: String,
+        targetProjectId: String,
+        credentialId: String?
+    )
 }

@@ -27,6 +27,7 @@
 
 package com.tencent.devops.ticket.resources
 
+import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.PageUtil
@@ -59,5 +60,24 @@ class OpCredentialResourceImpl @Autowired constructor(
         val limit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)
         val result = credentialService.userList(userId, projectId, credentialTypes, limit.offset, limit.limit, keyword)
         return Result(Page(pageNotNull, pageSizeNotNull, result.count, result.records))
+    }
+
+    override fun copy(
+        userId: String,
+        sourceProjectId: String,
+        targetProjectId: String,
+        credentialId: String?
+    ): Result<Boolean> {
+        if (userId.isBlank()) {
+            throw ParamBlankException("Invalid userId")
+        }
+        if (sourceProjectId.isBlank()) {
+            throw ParamBlankException("Invalid sourceProjectId")
+        }
+        if (targetProjectId.isBlank()) {
+            throw ParamBlankException("Invalid targetProjectId")
+        }
+        credentialService.copyCredentials(userId, sourceProjectId, targetProjectId, credentialId)
+        return Result(true)
     }
 }

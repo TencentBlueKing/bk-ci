@@ -1024,6 +1024,100 @@ class CredentialServiceImpl @Autowired constructor(
         return CredentialItemVo(publicKey = publicKey, credentialItem = credentialItem)
     }
 
+    override fun copyCredentials(
+        userId: String,
+        sourceProjectId: String,
+        targetProjectId: String,
+        credentialId: String?
+    ) {
+        val sourceRecords = if (credentialId.isNullOrBlank()) {
+            listSourceCredentialsByPage(sourceProjectId)
+        } else {
+            try {
+                listOf(credentialDao.get(dslContext, sourceProjectId, credentialId))
+            } catch (ignored: Exception) {
+                logger.warn("get source credential failed|$sourceProjectId|$credentialId", ignored)
+                emptyList()
+            }
+        }
+        sourceRecords.forEach { sourceRecord ->
+            copySingleCredential(userId, sourceProjectId, targetProjectId, sourceRecord)
+        }
+    }
+
+    private fun listSourceCredentialsByPage(sourceProjectId: String): List<TCredentialRecord> {
+        val result = mutableListOf<TCredentialRecord>()
+        val pageSize = 100
+        var offset = 0
+        val total = credentialDao.countByProject(dslContext, sourceProjectId)
+        while (offset < total) {
+            result.addAll(credentialDao.listByProject(dslContext, sourceProjectId, offset, pageSize))
+            offset += pageSize
+        }
+        return result
+    }
+
+    private fun copySingleCredential(
+        userId: String,
+        sourceProjectId: String,
+        targetProjectId: String,
+        sourceRecord: TCredentialRecord
+    ) {
+        val copiedCredentialId = sourceRecord.credentialId
+        try {
+            if (credentialDao.has(dslContext, targetProjectId, copiedCredentialId)) {
+                logger.warn(
+                    "credential already exists, skip copy|$sourceProjectId|$targetProjectId|$copiedCredentialId"
+                )
+                return
+            }
+            credentialDao.create(
+                dslContext = dslContext,
+                projectId = targetProjectId,
+                credentialUserId = sourceRecord.credentialUserId,
+                credentialId = copiedCredentialId,
+                credentialName = sourceRecord.credentialName ?: copiedCredentialId,
+                credentialType = sourceRecord.credentialType,
+                credentialV1 = sourceRecord.credentialV1,
+                credentialV2 = sourceRecord.credentialV2,
+                credentialV3 = sourceRecord.credentialV3,
+                credentialV4 = sourceRecord.credentialV4,
+                credentialRemark = sourceRecord.credentialRemark
+            )
+            try {
+                credentialPermissionService.createResource(
+                    userId = userId,
+                    projectId = targetProjectId,
+                    credentialId = copiedCredentialId,
+                    authGroupList = null
+                )
+            } catch (ignored: Exception) {
+                logger.warn(
+                    "create credential resource failed|$sourceProjectId|$targetProjectId|$copiedCredentialId",
+                    ignored
+                )
+            }
+            try {
+                credentialPermissionService.copyResourceGroupMembers(
+                    sourceProjectId = sourceProjectId,
+                    targetProjectId = targetProjectId,
+                    sourceCredentialId = copiedCredentialId,
+                    targetCredentialId = copiedCredentialId
+                )
+            } catch (ignored: Exception) {
+                logger.warn(
+                    "copy credential group members failed|$sourceProjectId|$targetProjectId|$copiedCredentialId",
+                    ignored
+                )
+            }
+        } catch (ignored: Exception) {
+            logger.warn(
+                "copy credential failed|$sourceProjectId|$targetProjectId|$copiedCredentialId",
+                ignored
+            )
+        }
+    }
+
     companion object {
         private val logger = LoggerFactory.getLogger(CredentialServiceImpl::class.java)
         private const val CREDENTIAL_ID_MAX_SIZE = 40

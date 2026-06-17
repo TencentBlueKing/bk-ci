@@ -772,14 +772,16 @@ class RbacPermissionResourceMemberService(
         val now = LocalDateTime.now()
         sourceGroups.forEach { sourceGroup ->
             try {
-                val targetIamGroupId = authResourceGroupDao.getByGroupCode(
-                    dslContext = dslContext,
-                    projectCode = targetProjectCode,
+                val targetIamGroupId = waitTargetIamGroupId(
+                    targetProjectCode = targetProjectCode,
                     resourceType = resourceType,
-                    resourceCode = targetResourceCode,
+                    targetResourceCode = targetResourceCode,
                     groupCode = sourceGroup.groupCode
-                )?.relationId ?: run {
-                    logger.warn("copy group failed|target project group ${sourceGroup.groupCode} not exist")
+                ) ?: run {
+                    logger.warn(
+                        "copy group failed|target project group not exist after retry|" +
+                            "$targetProjectCode|$resourceType|$targetResourceCode|${sourceGroup.groupCode}"
+                    )
                     return@forEach
                 }
                 val sourceMembers = authResourceGroupMemberDao.listResourceGroupMember(
@@ -809,6 +811,46 @@ class RbacPermissionResourceMemberService(
             }
         }
         return true
+    }
+
+    /**
+     * 等待目标项目组创建,因为用户组是异步创建的,所以轮询等待
+     */
+    private fun waitTargetIamGroupId(
+        targetProjectCode: String,
+        resourceType: String,
+        targetResourceCode: String,
+        groupCode: String
+    ): Int? {
+        authResourceGroupDao.getByGroupCode(
+            dslContext = dslContext,
+            projectCode = targetProjectCode,
+            resourceType = resourceType,
+            resourceCode = targetResourceCode,
+            groupCode = groupCode
+        )?.relationId?.let { return it }
+
+        TARGET_GROUP_CREATE_RETRY_INTERVAL_MILLIS.forEach { intervalMillis ->
+            try {
+                Thread.sleep(intervalMillis)
+            } catch (ignored: InterruptedException) {
+                Thread.currentThread().interrupt()
+                logger.warn(
+                    "wait target project group interrupted|" +
+                            "$targetProjectCode|$resourceType|$targetResourceCode|$groupCode",
+                    ignored
+                )
+                return null
+            }
+            authResourceGroupDao.getByGroupCode(
+                dslContext = dslContext,
+                projectCode = targetProjectCode,
+                resourceType = resourceType,
+                resourceCode = targetResourceCode,
+                groupCode = groupCode
+            )?.relationId?.let { return it }
+        }
+        return null
     }
 
     private fun getAllRoleGroupMembersV2(
@@ -843,6 +885,8 @@ class RbacPermissionResourceMemberService(
 
         // 自动续期默认180天
         private val AUTO_RENEWAL_EXPIRED_AT = TimeUnit.DAYS.toSeconds(180)
+
+        private val TARGET_GROUP_CREATE_RETRY_INTERVAL_MILLIS = listOf(200L, 500L, 1000L, 1500L, 2000L)
 
         private val executorService = Executors.newFixedThreadPool(30)
     }
