@@ -17,6 +17,7 @@ import com.tencent.devops.environment.dao.thirdpartyagent.ThirdPartyAgentDao
 import com.tencent.devops.environment.model.AgentProps
 import com.tencent.devops.environment.model.AgentPropsSource
 import com.tencent.devops.environment.permission.EnvironmentPermissionService
+import com.tencent.devops.environment.pojo.NodeAgentDetail
 import com.tencent.devops.environment.pojo.enums.AgentType
 import com.tencent.devops.environment.pojo.imate.ImateListItem
 import com.tencent.devops.environment.pojo.imate.ImateOriginEngine
@@ -73,10 +74,10 @@ class TencentNodeService @Autowired constructor(
                 ?.filter { ImateOriginEngine.teamType(it.clientType) }
                 ?: return emptyList()
         val installedAgents =
-            thirdPartyAgentDao.getAgentByWorkspaceName(dslContext, projectId, imateList.map { it.clientUuid }.toList())
+            agentDao.fetchAgentsByWorkspaceIdGlobal(dslContext, imateList.map { it.clientUuid }.toList(), null)
                 .filter { (it.status != AgentStatus.UN_IMPORT.status || it.status != AgentStatus.UN_IMPORT_OK.status) }
-                .map { it.createWorkspaceName }
-        return imateList.filter { it.clientUuid !in installedAgents }.map {
+                .associateBy { it.createWorkspaceName }
+        return imateList.map {
             ImateListItem(
                 name = it.botName,
                 deviceId = it.clientUuid,
@@ -86,7 +87,8 @@ class TencentNodeService @Autowired constructor(
                 engine = ImateOriginEngine.toEngine(it.clientType),
                 status = it.status,
                 createUser = it.username,
-                createTime = it.createdAt
+                createTime = it.createdAt,
+                installedProjectId = installedAgents[it.clientUuid]?.projectId
             )
         }
     }
@@ -129,7 +131,7 @@ class TencentNodeService @Autowired constructor(
                     agentProps = AgentProps.emptyBySource(AgentPropsSource.DEVCLOUD)
                 )
                 importService.preImport(projectId, agentId, userId, imate.name)
-            }else{
+            } else {
                 importService.preImport(projectId, record.id, userId, imate.name)
             }
             // 生成临时1小时TOKEN用来导入鉴权
@@ -144,6 +146,12 @@ class TencentNodeService @Autowired constructor(
             logger.info("batchImportImateNodes install plugin ${projectId}|${imate.deviceId}|$userId|$taskId")
         }
         return true
+    }
+
+    fun getNodeAgentDetail(userId: String, projectId: String, nodeHashId: String): NodeAgentDetail? {
+        return thirdPartyAgentDao.getAgentByNodeId(dslContext, HashUtil.decodeIdToLong(nodeHashId), projectId)?.let {
+            NodeAgentDetail(it.createWorkspaceName)
+        } ?: return null
     }
 
     // 因为现在没有团队imate同步到我们的方式，所以每天轮询

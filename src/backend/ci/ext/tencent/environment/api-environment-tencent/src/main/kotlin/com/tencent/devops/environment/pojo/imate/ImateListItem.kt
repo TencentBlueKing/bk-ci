@@ -10,7 +10,8 @@ data class ImateListItem(
     val engine: ImateItemEngine,
     val status: String?,
     val createTime: String?,
-    val createUser: String?
+    val createUser: String?,
+    val installedProjectId: String?
 )
 
 enum class ImateItemEngine {

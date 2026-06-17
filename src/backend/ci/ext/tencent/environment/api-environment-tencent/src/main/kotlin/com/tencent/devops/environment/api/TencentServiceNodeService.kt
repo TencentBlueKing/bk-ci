@@ -3,10 +3,12 @@
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.environment.pojo.NodeAgentDetail
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.ws.rs.Consumes
+import jakarta.ws.rs.GET
 import jakarta.ws.rs.HeaderParam
 import jakarta.ws.rs.POST
 import jakarta.ws.rs.Path
@@ -34,4 +36,18 @@ interface TencentServiceNodeService {
         @QueryParam("displayName")
         displayName: String
     ): Result<Boolean>
+
+    @Operation(summary = "根据节点 ID查询 agent 信息")
+    @GET
+    @Path("/get_node_agent_detail")
+    fun getNodeAgentDetail(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @QueryParam("projectId")
+        projectId: String,
+        @QueryParam("nodeHashId")
+        nodeHashId: String
+    ): Result<NodeAgentDetail?>
 }
