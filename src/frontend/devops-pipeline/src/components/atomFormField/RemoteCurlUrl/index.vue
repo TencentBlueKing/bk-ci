@@ -15,9 +15,9 @@
 <script>
     import RouteTips from '@/components/atomFormField/RouteTips'
     import { PROCESS_API_URL_PREFIX } from '@/store/constants'
-    import { isObject } from '@/utils/util'
     import { mapActions } from 'vuex'
     import atomFieldMixin from '../atomFieldMixin'
+    import { stringifyRemoteTriggerParams } from './remoteParams'
     export default {
         name: 'remote-curl-url',
         components: {
@@ -33,14 +33,7 @@
                 return `${location.origin}${API_URL_PREFIX}/${PROCESS_API_URL_PREFIX}`
             },
             stringifyParmas () {
-                const { params } = this.container
-                const paramMap = params.filter(param => param.required).reduce((map, param) => {
-                    map[param.id] = Array.isArray(param.defaultValue)
-                        ? param.defaultValue.map(item => isObject(item) ? JSON.stringify(item) : item).join(',')
-                        : param.defaultValue
-                    return map
-                }, {})
-                return JSON.stringify(paramMap).replace(/\"/g, '\\"')
+                return stringifyRemoteTriggerParams(this.container?.params)
             },
             isLoading () {
                 return !this.value
