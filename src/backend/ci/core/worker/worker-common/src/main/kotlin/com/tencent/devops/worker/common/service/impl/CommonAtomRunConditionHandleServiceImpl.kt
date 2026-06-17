@@ -34,7 +34,7 @@ import java.io.File
 class CommonAtomRunConditionHandleServiceImpl : AtomRunConditionHandleService {
 
     override fun prepareRunEnv(
-        atomCode: String,
+        atomCode: String?,
         osType: OSType,
         language: String,
         runtimeVersion: String,

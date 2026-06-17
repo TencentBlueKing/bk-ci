@@ -44,8 +44,12 @@ class PythonAtomRunConditionHandleServiceImpl : AtomRunConditionHandleService {
 
     private val logger = LoggerFactory.getLogger(PythonAtomRunConditionHandleServiceImpl::class.java)
 
+    companion object {
+        private const val PYTHON_VENV_WHITELIST_TYPE = "PYTHON_VENV"
+    }
+
     override fun prepareRunEnv(
-        atomCode: String,
+        atomCode: String?,
         osType: OSType,
         language: String,
         runtimeVersion: String,
@@ -53,70 +57,99 @@ class PythonAtomRunConditionHandleServiceImpl : AtomRunConditionHandleService {
         atomTmpSpace: File?,
         runtimeVariables: Map<String, String>
     ): String? {
-        if (atomTmpSpace == null) {
-            logger.warn("prepareRunEnv atomCode:$atomCode, atomTmpSpace is null, skip venv creation")
+        if (!validateInput(atomCode, atomTmpSpace)) {
             return null
         }
-        // 从插件配置的环境变量中判断是否启用虚拟环境
+        if (!isVenvEnabled(runtimeVariables)) {
+            return null
+        }
+        atomCode?.let {
+            if (!isInWhitelist(it)) {
+                return null
+            }
+        }
+        val (pythonCmd, pythonVersion) = resolvePythonCommand(runtimeVersion)
+        if (pythonVersion == null) {
+            logger.warn("prepareRunEnv all python commands are not available")
+            LoggerService.addWarnLine("No available python command found, skip venv creation")
+            return null
+        }
+        val venvPath = File(atomTmpSpace, PYTHON_VENV_DIR)
+        val binPath = createVenv(pythonCmd, pythonVersion, venvPath, osType)
+        if (binPath == null) {
+            cleanupVenvDir(venvPath)
+        }
+        return binPath
+    }
+
+    private fun validateInput(atomCode: String?, atomTmpSpace: File?): Boolean {
+        if (atomTmpSpace == null || atomCode == null) {
+            logger.warn("prepareRunEnv atomCode:$atomCode, atomTmpSpace is null, skip venv creation")
+            return false
+        }
+        return true
+    }
+
+    private fun isVenvEnabled(runtimeVariables: Map<String, String>): Boolean {
         val venvEnabled = runtimeVariables[BK_ATOM_PYTHON_VENV_ENABLED]
         if (venvEnabled?.toBoolean() != true) {
-            LoggerService.addWarnLine("prepareRunEnv atomCode:$atomCode, python venv is not enabled, skip")
-            return null
+            LoggerService.addWarnLine("prepareRunEnv python venv is not enabled, skip")
+            return false
         }
-        // 检查插件是否在 PYTHON_VENV 白名单中
+        return true
+    }
+
+    private fun isInWhitelist(atomCode: String): Boolean {
         val atomApi = ApiFactory.create(AtomArchiveSDKApi::class)
         val isInWhitelist = atomApi.isAtomInWhitelist(
             atomCode = atomCode,
-            whitelistType = "PYTHON_VENV"
+            whitelistType = PYTHON_VENV_WHITELIST_TYPE
         ).data ?: false
         if (!isInWhitelist) {
             LoggerService.addWarnLine(
                 "prepareRunEnv atomCode:$atomCode is not in PYTHON_VENV whitelist, skip venv creation"
             )
-            return null
+            return false
         }
-        // 根据环境中实际可用的Python命令确定使用哪个
-        // runtimeVersion 可能是 "python", "python3", "python3.11", "python2" 等
-        // 优先使用配置的版本，如果不可用则尝试其他候选命令
-        val (pythonCmd, pythonVersion) = when {
-            runtimeVersion.startsWith("python3") -> {
-                // 优先使用 python3，如果不可用则尝试 python
-                getPythonVersion("python3")?.let { "python3" to it }
-                    ?: getPythonVersion("python")?.let { "python" to it }
-                    ?: runtimeVersion to null
-            }
-            runtimeVersion.startsWith("python2") -> {
-                // 优先使用 python2，如果不可用则尝试 python
-                getPythonVersion("python2")?.let { "python2" to it }
-                    ?: getPythonVersion("python")?.let { "python" to it }
-                    ?: runtimeVersion to null
-            }
-            else -> {
-                // 默认情况，优先使用 python，如果不可用则尝试 python3
-                getPythonVersion("python")?.let { "python" to it }
-                    ?: getPythonVersion("python3")?.let { "python3" to it }
-                    ?: "python" to null
+        return true
+    }
+
+    private fun resolvePythonCommand(runtimeVersion: String): Pair<String, String?> {
+        return when {
+            runtimeVersion.startsWith("python3") -> findPythonFromCandidates("python3", "python")
+                ?: (runtimeVersion to null)
+            runtimeVersion.startsWith("python2") -> findPythonFromCandidates("python2", "python")
+                ?: (runtimeVersion to null)
+            else -> findPythonFromCandidates("python", "python3")
+                ?: ("python" to null)
+        }
+    }
+
+    private fun findPythonFromCandidates(vararg candidates: String): Pair<String, String>? {
+        for (candidate in candidates) {
+            getPythonVersion(candidate)?.let { version ->
+                return candidate to version
             }
         }
-        logger.info("prepareRunEnv pythonCmd:$pythonCmd, runtimeVersion:$runtimeVersion")
-        if (pythonVersion == null) {
-            logger.warn("prepareRunEnv all python commands are not available, fallback to system env")
-            LoggerService.addWarnLine("No available python command found, skip venv creation")
-            return null
-        }
-        val venvPath = File(atomTmpSpace, PYTHON_VENV_DIR)
-        val binPath = if (pythonVersion.contains("Python 3", ignoreCase = true)) {
-            createPython3Venv(pythonCmd = pythonCmd, venvPath = venvPath, osType = osType)
+        return null
+    }
+
+    private fun createVenv(
+        pythonCmd: String,
+        pythonVersion: String,
+        venvPath: File,
+        osType: OSType
+    ): String? {
+        logger.info("prepareRunEnv pythonCmd:$pythonCmd, runtimeVersion:$pythonVersion")
+        return if (isPython3Version(pythonVersion)) {
+            createPython3Venv(pythonCmd, venvPath, osType)
         } else {
-            createPython2Venv(pythonCmd = pythonCmd, venvPath = venvPath, osType = osType)
+            createPython2Venv(pythonCmd, venvPath, osType)
         }
-        if (binPath == null) {
-            logger.warn("prepareRunEnv create venv failed, fallback to system env")
-            LoggerService.addWarnLine("Failed to create python venv, fallback to system environment")
-            // 清理创建失败残留的虚拟环境目录
-            cleanupVenvDir(venvPath)
-        }
-        return binPath
+    }
+
+    private fun isPython3Version(pythonVersion: String): Boolean {
+        return pythonVersion.contains("Python 3", ignoreCase = true)
     }
 
     override fun handleAtomTarget(

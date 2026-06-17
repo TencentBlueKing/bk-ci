@@ -37,7 +37,7 @@ interface AtomRunConditionHandleService {
      * @param atomCode 插件代码
      */
     fun prepareRunEnv(
-        atomCode: String,
+        atomCode: String? = null,
         osType: OSType,
         language: String,
         runtimeVersion: String,
