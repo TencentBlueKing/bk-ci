@@ -35,6 +35,7 @@ import com.tencent.devops.store.api.common.ServiceStoreComponentResource
 import com.tencent.devops.store.common.service.StoreComponentManageService
 import com.tencent.devops.store.common.service.StoreComponentDeployService
 import com.tencent.devops.store.common.service.StoreComponentQueryService
+import com.tencent.devops.store.common.service.StoreMediaService
 import com.tencent.devops.store.pojo.common.InstallStoreReq
 import com.tencent.devops.store.pojo.common.MarketItem
 import com.tencent.devops.store.pojo.common.MarketMainItem
@@ -47,6 +48,7 @@ import com.tencent.devops.store.pojo.common.enums.RdTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreSortTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.pojo.common.media.StoreMediaInfo
 import com.tencent.devops.store.pojo.common.version.StoreComponentVersionItem
 import com.tencent.devops.store.pojo.common.version.VersionInfo
 import org.springframework.beans.factory.annotation.Autowired
@@ -55,7 +57,8 @@ import org.springframework.beans.factory.annotation.Autowired
 class ServiceStoreComponentResourceImpl @Autowired constructor(
     private val storeComponentQueryService: StoreComponentQueryService,
     private val storeComponentDeployService: StoreComponentDeployService,
-    private val storeComponentManageService: StoreComponentManageService
+    private val storeComponentManageService: StoreComponentManageService,
+    private val storeMediaService: StoreMediaService
 ) : ServiceStoreComponentResource {
 
     override fun installComponent(userId: String, installStoreReq: InstallStoreReq): Result<Boolean> {
@@ -252,5 +255,13 @@ class ServiceStoreComponentResourceImpl @Autowired constructor(
         storePackageInfoReqs: List<StorePackageInfoReq>
     ): Result<Boolean> {
         return Result(storeComponentManageService.updateComponentVersionSize(storeId, storePackageInfoReqs))
+    }
+
+    override fun getStoreMediaInfo(
+        userId: String,
+        storeType: StoreTypeEnum,
+        storeCode: String
+    ): Result<List<StoreMediaInfo>?> {
+        return storeMediaService.getByCode(storeCode, storeType)
     }
 }
