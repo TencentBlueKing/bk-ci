@@ -38,7 +38,8 @@ export const PipelineBatchTaskDetailStatus = {
     EXCLUDED: 'EXCLUDED',   // 已排除
     SUCCESS: 'SUCCESS',   // 成功
     FAILED: 'FAILED',   // 失败
-    WAIT_COPY: 'WAIT_COPY'   // 待复制
+    WAIT_COPY: 'WAIT_COPY',   // 待复制
+    EXECUTING: 'EXECUTING', // 执行中
 }
 
 // 流水线复制资源类型

@@ -469,7 +469,7 @@
             pipelineIdStrategyText () {
                 const strategy = this.taskData?.pipelineCopyStrategy
                 if (strategy === PipelineIdStrategy.PIPELINE_CREATE_NEW_ID) return this.$t('autoGenerateNewId')
-                if (strategy === PipelineIdStrategy.PIPELINE_REUSE_SOURCE_ID) return this.$t('reuseSourcePipelineId')
+                if (strategy === PipelineIdStrategy.PIPELINE_REUSE_SOURCE_ID) return this.$t('keepSourceId')
                 return '--'
             },
             // 进度百分比
@@ -1002,7 +1002,8 @@
                     [PipelineBatchTaskDetailStatus.EXCLUDED]: this.$t('excluded'),
                     [PipelineBatchTaskDetailStatus.SUCCESS]: this.$t('success'),
                     [PipelineBatchTaskDetailStatus.FAILED]: this.$t('failed'),
-                    [PipelineBatchTaskDetailStatus.WAIT_COPY]: this.$t('pendingCopy')
+                    [PipelineBatchTaskDetailStatus.WAIT_COPY]: this.$t('pendingCopy'),
+                    [PipelineBatchTaskDetailStatus.EXECUTING]: this.$t('executing')
                 }
                 return statusMap[status] || '-'
             },

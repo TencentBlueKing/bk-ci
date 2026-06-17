@@ -247,7 +247,8 @@
                     [PipelineBatchTaskDetailStatus.EXCLUDED]: this.$t('excluded'),
                     [PipelineBatchTaskDetailStatus.SUCCESS]: this.$t('success'),
                     [PipelineBatchTaskDetailStatus.FAILED]: this.$t('failed'),
-                    [PipelineBatchTaskDetailStatus.WAIT_COPY]: this.$t('pendingCopy')
+                    [PipelineBatchTaskDetailStatus.WAIT_COPY]: this.$t('pendingCopy'),
+                    [PipelineBatchTaskDetailStatus.EXECUTING]: this.$t('executing')
                 }
                 return statusMap[status] || '-'
             },
