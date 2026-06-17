@@ -825,6 +825,7 @@
                     item.resources.forEach(resource => {
                         resource.status = value ? 'PROCESSED' : 'UNPROCESSED'
                         resource.confirmed = value ? true : false
+                        resource.copyStrategy = value
                     })
                 }
                 

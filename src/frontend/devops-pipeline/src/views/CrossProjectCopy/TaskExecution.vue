@@ -353,6 +353,7 @@
     import {
         PipelineIdStrategy,
         PipelineBatchTaskStatus,
+        PipelineBatchTaskDetailStatus,
         PipelineCopyResourceType,
         PipelineCopyStrategy,
         PipelineBatchTaskStep,
@@ -523,10 +524,9 @@
             }
         },
         created () {
-            this.PipelineBatchTaskDetailStatus = PipelineBatchTaskStatus
             this.PipelineBatchTaskDetailErrorType = PipelineBatchTaskDetailErrorType
         },
-        mounted () {
+        async mounted () {
             const tabFromParams = this.$route.query.execTab
             if (tabFromParams && this.completedTabs.some(t => t.key === tabFromParams)) {
                 this.activeTab = tabFromParams
@@ -539,7 +539,7 @@
 
             // 有高风险时获取第一个高风险资源
             if (this.taskData?.highRiskCount > 0) {
-                this.fetchFirstHighRiskResource()
+                await this.fetchFirstHighRiskResource()
             }
             
             if (this.tabsNeedResource.includes(this.activeTab) && !this.tabData[this.activeTab]) {

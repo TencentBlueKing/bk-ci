@@ -1,8 +1,8 @@
 <template>
     <!-- 流水线标签 -->
     <BaseResourceItem
-        :key="item.copyStrategy"
-        :item="item"
+        :key="labelResourceItem.copyStrategy"
+        :item="labelResourceItem"
         :header-title="$t('processingStrategy')"
         :show-affected-count="false"
         :show-jump-icon="false"
@@ -114,6 +114,12 @@
             }
         },
         computed: {
+            labelResourceItem () {
+                return {
+                    ...this.item,
+                    copyStrategy: this.item.resources?.[0]?.copyStrategy
+                }
+            },
             projectId () {
                 return this.$route.params.projectId
             },
@@ -121,9 +127,7 @@
                 return this.$route.params.taskId
             },
             isAutoReuse () {
-                const copyStrategy = this.isReadOnly
-                    ? this.item.resources?.[0]?.copyStrategy
-                    : this.item.copyStrategy
+                const copyStrategy = this.labelResourceItem.copyStrategy
                 return copyStrategy === PipelineCopyStrategy.LABEL_AUTO_REUSE_OR_CREATE
             },
             strategyOptions () {
@@ -148,7 +152,7 @@
             }
         },
         watch: {
-            'item.copyStrategy': {
+            'labelResourceItem.copyStrategy': {
                 handler (newVal) {
                     if (newVal === PipelineCopyStrategy.LABEL_AUTO_REUSE_OR_CREATE) {
                         this.initLabelsData(this.item.resources)
@@ -172,6 +176,7 @@
                 return labelGroup.labels.find(l => l.resourceId === labelGroup.expandedLabelId)
             },
             handleStrategyChange (value) {
+                console.log("🚀 ~ value:", value)
                 this.$emit('strategy-change', value)
             },
             initLabelsData (resources) {

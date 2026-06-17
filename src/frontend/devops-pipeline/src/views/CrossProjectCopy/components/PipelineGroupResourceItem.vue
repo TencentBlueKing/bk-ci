@@ -1,8 +1,8 @@
 <template>
     <!-- 流水线分组 -->
     <BaseResourceItem
-        :key="item.copyStrategy"
-        :item="item"
+        :key="groupResourceItem.copyStrategy"
+        :item="groupResourceItem"
         :header-title="$t('processingStrategy')"
         :show-affected-count="false"
         :show-jump-icon="false"
@@ -237,6 +237,12 @@
             }
         },
         computed: {
+            groupResourceItem () {
+                return {
+                    ...this.item,
+                    copyStrategy: this.item.resources?.[0]?.copyStrategy
+                }
+            },
             projectId () {
                 return this.$route.params.projectId
             },
@@ -244,9 +250,7 @@
                 return this.$route.params.taskId
             },
             isAutoReuse () {
-                const copyStrategy = this.isReadOnly
-                    ? this.item.resources?.[0]?.copyStrategy
-                    : this.item.copyStrategy
+                const copyStrategy = this.groupResourceItem.copyStrategy
                 return copyStrategy === PipelineCopyStrategy.PIPELINE_GROUP_AUTO_REUSE_OR_CREATE
             },
             strategyOptions () {
@@ -278,7 +282,7 @@
             }
         },
         watch: {
-            'item.copyStrategy': {
+            'groupResourceItem.copyStrategy': {
                 handler (newVal) {
                     if (newVal === PipelineCopyStrategy.PIPELINE_GROUP_AUTO_REUSE_OR_CREATE) {
                         this.autoSelectFirstGroup()
