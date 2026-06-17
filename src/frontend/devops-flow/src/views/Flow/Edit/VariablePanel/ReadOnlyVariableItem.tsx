@@ -53,11 +53,14 @@ export default defineComponent({
       <div class={styles.variableItem}>
         <div class={styles.variableInfo}>
           <div class={styles.variableHeader}>
-            <span class={styles.variableId}>
+            <span
+              class={styles.variableId}
+              v-bk-tooltips={{ content: props.variable.desc, disabled: !props.variable.desc, allowHTML: true }}
+              {...(props.variable.desc ? { 'data-has-desc': '' } : {})}
+            >
               {props.variable.name ?? props.variable.id ?? '--'}
             </span>
           </div>
-          {props.variable.desc && <div class={styles.variableDesc}>{props.variable.desc}</div>}
         </div>
 
         <div class={styles.variableActions}>
