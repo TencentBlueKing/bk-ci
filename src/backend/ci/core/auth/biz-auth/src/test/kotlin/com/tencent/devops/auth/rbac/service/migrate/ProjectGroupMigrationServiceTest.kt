@@ -126,6 +126,182 @@ class ProjectGroupMigrationServiceTest {
     }
 
     @Test
+    fun `execute should migrate manager group members without recreating manager group`() {
+        val sourceManagerGroup = projectGroup(
+            projectCode = "source",
+            groupCode = "manager",
+            groupName = "管理员",
+            relationId = 1,
+            createTime = LocalDateTime.now().minusDays(10)
+        )
+        val sourceCustomGroup = projectGroup(
+            projectCode = "source",
+            groupCode = "custom",
+            groupName = "测试组",
+            relationId = 20,
+            createTime = LocalDateTime.now().minusDays(5)
+        )
+        val targetManagerGroup = projectGroup(
+            projectCode = "target",
+            groupCode = "manager",
+            groupName = "管理员",
+            relationId = 101,
+            createTime = LocalDateTime.now().minusDays(10)
+        )
+        val targetCustomGroup = projectGroup(
+            projectCode = "target",
+            groupCode = "custom",
+            groupName = "测试组",
+            relationId = 120
+        )
+        val targetRecord = mockk<com.tencent.devops.model.auth.tables.records.TAuthResourceGroupRecord>()
+        every {
+            authResourceGroupDao.getByResourceCode(
+                dslContext = dslContext,
+                projectCode = "source",
+                resourceType = AuthResourceType.PROJECT.value,
+                resourceCode = "source"
+            )
+        } returns listOf(sourceManagerGroup, sourceCustomGroup)
+        every {
+            authResourceGroupDao.getByResourceCode(
+                dslContext = dslContext,
+                projectCode = "target",
+                resourceType = AuthResourceType.PROJECT.value,
+                resourceCode = "target"
+            )
+        } returns listOf(targetManagerGroup)
+        every {
+            authResourceGroupPermissionDao.listByGroupId(dslContext, "source", 1)
+        } returns emptyList()
+        every {
+            authResourceGroupPermissionDao.listByGroupId(dslContext, "source", 20)
+        } returns emptyList()
+        every {
+            authResourceGroupMemberDao.listResourceGroupMember(
+                dslContext = dslContext,
+                projectCode = "source",
+                iamGroupId = 1,
+                minExpiredTime = any()
+            )
+        } returns listOf(member(memberId = "admin-user", memberType = MemberType.USER.type))
+        every {
+            authResourceGroupMemberDao.listResourceGroupMember(
+                dslContext = dslContext,
+                projectCode = "source",
+                iamGroupId = 20,
+                minExpiredTime = any()
+            )
+        } returns emptyList()
+        every {
+            permissionResourceGroupService.createGroup("target", any())
+        } returns 120
+        every {
+            authResourceGroupDao.getByRelationId(dslContext, "target", "120")
+        } returns targetRecord
+        every { authResourceGroupDao.convert(targetRecord) } returns targetCustomGroup
+        every {
+            permissionResourceMemberService.batchAddResourceGroupMembers(
+                projectCode = "target",
+                iamGroupId = 101,
+                expiredTime = any(),
+                members = listOf("admin-user"),
+                departments = emptyList()
+            )
+        } returns Result(true)
+        every { deptService.isUserDeparted("admin-user") } returns false
+
+        val result = service.migrate(
+            ProjectGroupMigrationDTO(sourceProjectCode = "source", targetProjectCode = "target")
+        )
+
+        assertEquals(ProjectGroupMigrationStatus.SUCCESS, result.status)
+        assertEquals(2, result.groupResults.size)
+        val managerResult = result.groupResults.first()
+        assertEquals("manager", managerResult.sourceGroupCode)
+        assertEquals(101, managerResult.targetGroupId)
+        assertEquals(1, managerResult.migratedMemberCount)
+        verify(exactly = 1) {
+            permissionResourceMemberService.batchAddResourceGroupMembers(
+                projectCode = "target",
+                iamGroupId = 101,
+                expiredTime = any(),
+                members = listOf("admin-user"),
+                departments = emptyList()
+            )
+        }
+        verify(exactly = 0) {
+            permissionResourceGroupService.deleteGroup(any(), "target", any(), 101)
+        }
+        verify(exactly = 0) {
+            permissionResourceGroupService.createEmptyProjectGroupWithCode("target", "manager", any())
+        }
+    }
+
+    @Test
+    fun `dry run should include manager group members`() {
+        val sourceManagerGroup = projectGroup(
+            projectCode = "source",
+            groupCode = "manager",
+            groupName = "管理员",
+            relationId = 1
+        )
+        val targetManagerGroup = projectGroup(
+            projectCode = "target",
+            groupCode = "manager",
+            groupName = "管理员",
+            relationId = 101
+        )
+        every {
+            authResourceGroupDao.getByResourceCode(
+                dslContext = dslContext,
+                projectCode = "source",
+                resourceType = AuthResourceType.PROJECT.value,
+                resourceCode = "source"
+            )
+        } returns listOf(sourceManagerGroup)
+        every {
+            authResourceGroupDao.getByResourceCode(
+                dslContext = dslContext,
+                projectCode = "target",
+                resourceType = AuthResourceType.PROJECT.value,
+                resourceCode = "target"
+            )
+        } returns listOf(targetManagerGroup)
+        every {
+            authResourceGroupPermissionDao.listByGroupId(dslContext, "source", 1)
+        } returns emptyList()
+        every {
+            authResourceGroupMemberDao.listResourceGroupMember(
+                dslContext = dslContext,
+                projectCode = "source",
+                iamGroupId = 1,
+                minExpiredTime = any()
+            )
+        } returns listOf(
+            member(memberId = "admin-user", memberType = MemberType.USER.type),
+            member(memberId = "admin-user-2", memberType = MemberType.USER.type)
+        )
+
+        val result = service.migrate(
+            ProjectGroupMigrationDTO(
+                sourceProjectCode = "source",
+                targetProjectCode = "target",
+                dryRun = true
+            )
+        )
+
+        assertEquals(ProjectGroupMigrationStatus.DRY_RUN, result.status)
+        val managerResult = result.groupResults.single()
+        assertEquals("manager", managerResult.sourceGroupCode)
+        assertEquals(101, managerResult.targetGroupId)
+        assertEquals(2, managerResult.migratedMemberCount)
+        verify(exactly = 0) {
+            permissionResourceMemberService.batchAddResourceGroupMembers(any(), any(), any(), any(), any())
+        }
+    }
+
+    @Test
     fun `dry run should map single resource scope by resource type and name`() {
         val sourceGroup = projectGroup(
             projectCode = "source",

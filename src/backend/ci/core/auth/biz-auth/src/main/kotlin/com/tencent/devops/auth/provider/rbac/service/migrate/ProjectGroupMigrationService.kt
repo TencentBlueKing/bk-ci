@@ -98,7 +98,9 @@ class ProjectGroupMigrationService(
         }
         val sourceGroups = listProjectGroups(migrationDTO.sourceProjectCode)
         val targetGroups = listProjectGroups(migrationDTO.targetProjectCode)
-        // 目标项目管理员组是唯一受保护对象：只保留、不删除、不覆盖。
+        val sourceManagerGroup = sourceGroups.find(::isProtectedManagerGroup)
+        val targetManagerGroup = targetGroups.find(::isProtectedManagerGroup)
+        // 目标项目管理员组是唯一受保护对象：只保留、不删除、不覆盖权限，但会迁移成员。
         val protectedTargetGroups = targetGroups.filter(::isProtectedManagerGroup).map { it.groupName }
         // deleteGroup() 会拒绝删除 defaultGroup=true 的组，这里先把非管理员但不可删除的组拦下来，
         // 避免迁移执行到一半才因为目标项目清理失败而留下部分变更。
@@ -116,7 +118,7 @@ class ProjectGroupMigrationService(
             )
         }
         val groupsToDelete = targetGroups.filterNot(::isProtectedManagerGroup)
-        // 源项目管理员组也不参与迁移，避免把 A 项目的管理员模型覆盖到 B。
+        // 管理员组不重建权限，只迁移成员；其余组按源项目快照完整迁移。
         val sourceSnapshots = sourceGroups.filterNot(::isProtectedManagerGroup).map { group ->
             snapshotGroup(group = group, includeMembers = migrationDTO.includeMembers)
         }
@@ -136,7 +138,10 @@ class ProjectGroupMigrationService(
                 migrationDTO = migrationDTO,
                 protectedTargetGroups = protectedTargetGroups,
                 groupsToDelete = groupsToDelete,
+                sourceGroups = sourceGroups,
                 sourceSnapshots = sourceSnapshots,
+                sourceManagerGroup = sourceManagerGroup,
+                targetManagerGroup = targetManagerGroup,
                 sourceResourceMap = sourceResourceMap,
                 targetResourceIndex = targetResourceIndex
             )
@@ -166,15 +171,25 @@ class ProjectGroupMigrationService(
                 )
             }
         }
-        val groupResults = sourceSnapshots.map { snapshot ->
-            // 每个组单独编排，失败信息按组聚合，方便后续补偿或人工核对。
-            executeGroupMigration(
-                snapshot = snapshot,
-                targetProject = targetProject,
-                sourceResourceMap = sourceResourceMap,
-                targetResourceIndex = targetResourceIndex
+        val groupResults = mergeGroupResults(
+            sourceGroups = sourceGroups,
+            nonManagerResults = sourceSnapshots.map { snapshot ->
+                // 每个组单独编排，失败信息按组聚合，方便后续补偿或人工核对。
+                executeGroupMigration(
+                    snapshot = snapshot,
+                    targetProject = targetProject,
+                    sourceResourceMap = sourceResourceMap,
+                    targetResourceIndex = targetResourceIndex
+                )
+            },
+            managerResult = buildManagerGroupMemberMigrationResult(
+                sourceManagerGroup = sourceManagerGroup,
+                targetManagerGroup = targetManagerGroup,
+                targetProjectCode = migrationDTO.targetProjectCode,
+                includeMembers = migrationDTO.includeMembers,
+                dryRun = false
             )
-        }
+        )
         val status = calculateOverallStatus(
             groupResults = groupResults,
             topLevelErrors = emptyList()
@@ -288,13 +303,16 @@ class ProjectGroupMigrationService(
         migrationDTO: ProjectGroupMigrationDTO,
         protectedTargetGroups: List<String>,
         groupsToDelete: List<AuthResourceGroup>,
+        sourceGroups: List<AuthResourceGroup>,
         sourceSnapshots: List<GroupSnapshot>,
+        sourceManagerGroup: AuthResourceGroup?,
+        targetManagerGroup: AuthResourceGroup?,
         sourceResourceMap: Map<ResourceKey, AuthResourceInfo>,
         targetResourceIndex: Map<String, Map<String, List<AuthResourceInfo>>>
     ): ProjectGroupMigrationResultDTO {
         // dry-run 的重点是把真实执行时的映射结果原样暴露出来：
         // 哪些组会被删、哪些组会被重建、哪些单资源权限会 success / skipped。
-        val groupResults = sourceSnapshots.map { snapshot ->
+        val nonManagerResults = sourceSnapshots.map { snapshot ->
             val mapping = buildSingleResourceScopePlan(
                 snapshot = snapshot,
                 targetProjectCode = migrationDTO.targetProjectCode,
@@ -321,6 +339,17 @@ class ProjectGroupMigrationService(
                 errors = mapping.errors
             )
         }
+        val groupResults = mergeGroupResults(
+            sourceGroups = sourceGroups,
+            nonManagerResults = nonManagerResults,
+            managerResult = buildManagerGroupMemberMigrationResult(
+                sourceManagerGroup = sourceManagerGroup,
+                targetManagerGroup = targetManagerGroup,
+                targetProjectCode = migrationDTO.targetProjectCode,
+                includeMembers = migrationDTO.includeMembers,
+                dryRun = true
+            )
+        )
         val errors = groupResults.flatMap { it.errors }
         return ProjectGroupMigrationResultDTO(
             sourceProjectCode = migrationDTO.sourceProjectCode,
@@ -1214,6 +1243,96 @@ class ProjectGroupMigrationService(
             status = ProjectGroupMigrationStatus.FAILED,
             errors = errors
         )
+    }
+
+    private fun buildManagerGroupMemberMigrationResult(
+        sourceManagerGroup: AuthResourceGroup?,
+        targetManagerGroup: AuthResourceGroup?,
+        targetProjectCode: String,
+        includeMembers: Boolean,
+        dryRun: Boolean
+    ): ProjectGroupMigrationGroupResultDTO? {
+        if (sourceManagerGroup == null) {
+            return null
+        }
+        val members = if (includeMembers) {
+            authResourceGroupMemberDao.listResourceGroupMember(
+                dslContext = dslContext,
+                projectCode = sourceManagerGroup.projectCode,
+                iamGroupId = sourceManagerGroup.relationId,
+                minExpiredTime = LocalDateTime.now()
+            )
+        } else {
+            emptyList()
+        }
+        if (targetManagerGroup == null) {
+            return ProjectGroupMigrationGroupResultDTO(
+                sourceGroupId = sourceManagerGroup.relationId,
+                sourceGroupName = sourceManagerGroup.groupName,
+                sourceGroupCode = sourceManagerGroup.groupCode,
+                status = ProjectGroupMigrationStatus.FAILED,
+                errors = listOf("target manager group not found")
+            )
+        }
+        if (!includeMembers || members.isEmpty()) {
+            return ProjectGroupMigrationGroupResultDTO(
+                sourceGroupId = sourceManagerGroup.relationId,
+                sourceGroupName = sourceManagerGroup.groupName,
+                sourceGroupCode = sourceManagerGroup.groupCode,
+                targetGroupId = targetManagerGroup.relationId,
+                targetGroupName = targetManagerGroup.groupName,
+                status = if (dryRun) {
+                    ProjectGroupMigrationStatus.DRY_RUN
+                } else {
+                    ProjectGroupMigrationStatus.SUCCESS
+                }
+            )
+        }
+        if (dryRun) {
+            return ProjectGroupMigrationGroupResultDTO(
+                sourceGroupId = sourceManagerGroup.relationId,
+                sourceGroupName = sourceManagerGroup.groupName,
+                sourceGroupCode = sourceManagerGroup.groupCode,
+                targetGroupId = targetManagerGroup.relationId,
+                targetGroupName = targetManagerGroup.groupName,
+                status = ProjectGroupMigrationStatus.DRY_RUN,
+                migratedMemberCount = members.size
+            )
+        }
+        val memberMigration = migrateMembers(
+            targetProjectCode = targetProjectCode,
+            targetGroupId = targetManagerGroup.relationId,
+            members = members
+        )
+        return ProjectGroupMigrationGroupResultDTO(
+            sourceGroupId = sourceManagerGroup.relationId,
+            sourceGroupName = sourceManagerGroup.groupName,
+            sourceGroupCode = sourceManagerGroup.groupCode,
+            targetGroupId = targetManagerGroup.relationId,
+            targetGroupName = targetManagerGroup.groupName,
+            status = calculateGroupStatus(
+                errors = memberMigration.errors,
+                details = memberMigration.details
+            ),
+            migratedMemberCount = memberMigration.migratedCount,
+            skippedMemberCount = memberMigration.skippedCount,
+            details = memberMigration.details,
+            errors = memberMigration.errors
+        )
+    }
+
+    private fun mergeGroupResults(
+        sourceGroups: List<AuthResourceGroup>,
+        nonManagerResults: List<ProjectGroupMigrationGroupResultDTO>,
+        managerResult: ProjectGroupMigrationGroupResultDTO?
+    ): List<ProjectGroupMigrationGroupResultDTO> {
+        val resultBySourceGroupId = nonManagerResults.associateBy { it.sourceGroupId }
+        return sourceGroups.mapNotNull { group ->
+            when {
+                isProtectedManagerGroup(group) -> managerResult
+                else -> resultBySourceGroupId[group.relationId]
+            }
+        }
     }
 
     private fun isProtectedManagerGroup(group: AuthResourceGroup): Boolean {
