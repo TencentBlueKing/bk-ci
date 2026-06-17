@@ -18,11 +18,13 @@
         [PipelineCopyResourceType.BUILD_ENV]: [
             { value: PipelineCopyStrategy.BUILD_ENV_REUSE_SAME_NAME, labelKey: 'reuseTargetBuildEnv', descKey: 'reuseTargetBuildEnvDesc', disabledTipKey: 'noSameNameEnv' },
             { value: PipelineCopyStrategy.BUILD_ENV_CREATE_WITHOUT_NODE, labelKey: 'createNewEnv', descKey: 'createNewEnvDesc' },
+            { value: PipelineCopyStrategy.BUILD_ENV_CREATE_AND_REUSE_SAME_NAME_NODE, labelKey: 'createNewEnvAndLink', descKey: 'createNewEnvAndLinkDesc' },
             { value: PipelineCopyStrategy.BUILD_ENV_CREATE_AND_MOVE_NODE, labelKey: 'createAndTransferNodes', descKey: 'createAndTransferNodesDesc', highRisk: true }
         ],
         [PipelineCopyResourceType.DEPLOY_ENV]: [
             { value: PipelineCopyStrategy.DEPLOY_ENV_REUSE_SAME_NAME, labelKey: 'reuseTargetBuildEnv', descKey: 'reuseTargetBuildEnvDesc', disabledTipKey: 'noSameNameEnv' },
             { value: PipelineCopyStrategy.DEPLOY_ENV_CREATE_WITHOUT_NODE, labelKey: 'createNewEnv', descKey: 'createNewEnvDesc' },
+            { value: PipelineCopyStrategy.DEPLOY_ENV_CREATE_AND_REUSE_SAME_NAME_NODE, labelKey: 'createNewEnvAndLink', descKey: 'createNewEnvAndLinkDesc' },
             { value: PipelineCopyStrategy.DEPLOY_ENV_CREATE_AND_MOVE_NODE, labelKey: 'createAndTransferNodes', descKey: 'createAndTransferNodesDesc', highRisk: true }
         ]
     }

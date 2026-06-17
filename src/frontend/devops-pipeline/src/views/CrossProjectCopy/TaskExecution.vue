@@ -350,7 +350,14 @@
 <script>
     import Logo from '@/components/Logo'
     import { mapActions } from 'vuex'
-    import { PipelineIdStrategy, PipelineBatchTaskStatus, PipelineCopyResourceType, PipelineCopyStrategy, PipelineBatchTaskStep, PipelineBatchTaskDetailStatus } from '@/store/modules/crossProjectCopy/constants'
+    import {
+        PipelineIdStrategy,
+        PipelineBatchTaskStatus,
+        PipelineCopyResourceType,
+        PipelineCopyStrategy,
+        PipelineBatchTaskStep,
+        PipelineBatchTaskDetailErrorType
+    } from '@/store/modules/crossProjectCopy/constants'
     import CustomTabs from './components/CustomTabs.vue'
     import PipelineListContent from './components/PipelineListContent.vue'
     import PendingResourcesContent from './components/PendingResourcesContent.vue'
@@ -517,6 +524,7 @@
         },
         created () {
             this.PipelineBatchTaskDetailStatus = PipelineBatchTaskStatus
+            this.PipelineBatchTaskDetailErrorType = PipelineBatchTaskDetailErrorType
         },
         mounted () {
             const tabFromParams = this.$route.query.execTab

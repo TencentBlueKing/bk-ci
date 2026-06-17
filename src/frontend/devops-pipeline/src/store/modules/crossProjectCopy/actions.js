@@ -1,7 +1,6 @@
 /**
  * 跨项目复制 Actions
  */
-
 import {
     PROCESS_API_URL_PREFIX,
     REPOSITORY_API_URL_PREFIX
@@ -10,7 +9,7 @@ import ajax from '@/utils/request'
 
 export default {
     /**
-     * 创建流水线批量任务√
+     * 创建流水线批量任务
      */
     async createBatchTask ({ commit }, { projectId, params }) {
         return ajax.post(`${PROCESS_API_URL_PREFIX}/user/pipeline/batch/task/${projectId}/tasks`, params).then(res => {
@@ -18,7 +17,7 @@ export default {
         })
     },
     /**
-     * 查询流水线批量任务明细状态汇总√
+     * 查询流水线批量任务明细状态汇总
      */
     async getTaskStatusSummary ({ commit }, { projectId, taskId }) {
         return ajax.get(`${PROCESS_API_URL_PREFIX}/user/pipeline/batch/task/${projectId}/tasks/${taskId}/details/status/summary?taskType=PIPELINE_COPY`).then(res => {
@@ -26,7 +25,7 @@ export default {
         })
     },
     /**
-     * 查询流水线批量任务明细√
+     * 查询流水线批量任务明细
      */
     async getTaskDetails ({ commit }, { projectId, taskId, params }) {
         const query = new URLSearchParams(params).toString()
@@ -35,7 +34,7 @@ export default {
         })
     },
     /**
-     * 获取流水线复制任务详情√
+     * 获取流水线复制任务详情
      */
     async getCopyTaskDetail ({ commit }, { projectId, taskId }) {
         return ajax.get(`${PROCESS_API_URL_PREFIX}/user/pipeline/copy/${projectId}/tasks/${taskId}`).then(res => {
@@ -43,7 +42,7 @@ export default {
         })
     },
     /**
-     * 排除流水线批量任务明细√
+     * 排除流水线批量任务明细
      */
     async excludeTaskDetail ({ commit }, { projectId, taskId, pipelineId }) {
         return ajax.post(`${PROCESS_API_URL_PREFIX}/user/pipeline/batch/task/${projectId}/tasks/${taskId}/pipelines/${pipelineId}/exclude`).then(res => {
@@ -51,7 +50,7 @@ export default {
         })
     },
     /**
-     * 恢复流水线批量任务明细√
+     * 恢复流水线批量任务明细
      */
     async restoreTaskDetail ({ commit }, { projectId, taskId, pipelineId }) {
         return ajax.post(`${PROCESS_API_URL_PREFIX}/user/pipeline/batch/task/${projectId}/tasks/${taskId}/pipelines/${pipelineId}/restore`).then(res => {
@@ -59,7 +58,7 @@ export default {
         })
     },
     /**
-     * 回复全部已排除的流水线批量任务明细√
+     * 回复全部已排除的流水线批量任务明细
      */
     async restoreAllExcludedTaskDetail ({ commit }, { projectId, taskId }) {
         return ajax.post(`${PROCESS_API_URL_PREFIX}/user/pipeline/batch/task/${projectId}/tasks/${taskId}/pipelines/restore`).then(res => {
@@ -67,7 +66,7 @@ export default {
         })
     },
     /**
-     * 分析流水线复制资源依赖√
+     * 分析流水线复制资源依赖
      */
     async analyzeResourceDepend ({ commit }, { projectId, taskId, params }) {
         return ajax.post(`${PROCESS_API_URL_PREFIX}/user/pipeline/copy/${projectId}/tasks/${taskId}/resources/depend/analysis`, params).then(res => {
@@ -75,7 +74,7 @@ export default {
         })
     },
     /**
-     * 保存流水线复制配置草稿√
+     * 保存流水线复制配置草稿
      */
     async saveConfigDraft ({ commit }, { projectId, taskId, params }) {
         return ajax.post(`${PROCESS_API_URL_PREFIX}/user/pipeline/copy/${projectId}/tasks/${taskId}/config/draft`, params).then(res => {
@@ -84,7 +83,7 @@ export default {
     },
 
     /**
-     * 列举流水线复制资源详情√
+     * 列举流水线复制资源详情
      */
     async listResourceDetails ({ commit }, { projectId, taskId, params }) {
         const query = new URLSearchParams(params).toString()
@@ -94,7 +93,7 @@ export default {
     },
 
     /**
-     * 获取项目列表√
+     * 获取项目列表
      */
     async getProjectList ({ commit }) {
         return ajax.get('/project/api/user/projects/').then(res => {
@@ -103,7 +102,7 @@ export default {
     },
 
     /**
-     * 获取目标项目有使用权限的凭据列表√
+     * 获取目标项目有使用权限的凭据列表
      */
     async getCredentialList ({ commit }, { projectId }) {
         return ajax.get(`/ticket/api/user/credentials/${projectId}/hasPermissionList?permission=USE&page=1&pageSize=10000`).then(res => {
@@ -117,7 +116,7 @@ export default {
         return ajax.get(`${REPOSITORY_API_URL_PREFIX}/user/repositories/oauth/userList?scmCode=${scmCode}`)
     },
     /**
-     * 保存流水线复制资源草稿√
+     * 保存流水线复制资源草稿
      */
     async saveResourceDraft ({ commit }, { projectId, taskId, params }) {
         return ajax.post(`${PROCESS_API_URL_PREFIX}/user/pipeline/copy/${projectId}/tasks/${taskId}/resources/draft`, params).then(res => {
@@ -125,7 +124,7 @@ export default {
         })
     },
     /**
-     * 准备执行流水线复制（下一步：任务执行）√
+     * 准备执行流水线复制（下一步：任务执行）
      */
     async prepareExecute ({ commit }, { projectId, taskId, params }) {
         return ajax.post(`${PROCESS_API_URL_PREFIX}/user/pipeline/copy/${projectId}/tasks/${taskId}/execute/prepare`, params).then(res => {
@@ -133,7 +132,7 @@ export default {
         })
     },
     /**
-     * 执行流水线复制√
+     * 执行流水线复制
      */
     async executeCopy ({ commit }, { projectId, taskId }) {
         return ajax.post(`${PROCESS_API_URL_PREFIX}/user/pipeline/copy/${projectId}/tasks/${taskId}/execute`).then(res => {
@@ -141,7 +140,7 @@ export default {
         })
     },
     /**
-     * 获取流水线复制执行进度√
+     * 获取流水线复制执行进度
      */
     async getExecuteProgress ({ commit }, { projectId, taskId }) {
         return ajax.get(`${PROCESS_API_URL_PREFIX}/user/pipeline/copy/${projectId}/tasks/${taskId}/execute/progress`).then(res => {
@@ -149,7 +148,7 @@ export default {
         })
     },
     /**
-     * 重试单个失败流水线批量任务明细√
+     * 重试单个失败流水线批量任务明细
      */
     async retryFailedTaskDetail ({ commit }, { projectId, taskId, pipelineId }) {
         return ajax.post(`${PROCESS_API_URL_PREFIX}/user/pipeline/batch/task/${projectId}/tasks/${taskId}/pipelines/${pipelineId}/retry`).then(res => {

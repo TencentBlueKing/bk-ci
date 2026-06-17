@@ -2336,6 +2336,8 @@
   "noSameNameNode": "同名ノードなし",
   "createNewEnv": "新しい環境を作成（ノードなし）",
   "createNewEnvDesc": "ターゲットプロジェクトに空の環境を作成します。コピー後、パイプラインを実行するには手動でノードを追加する必要があります。",
+  "createNewEnvAndLink": "新規環境を作成して同名ノードを関連付ける",
+  "createNewEnvAndLinkDesc": "新規環境を作成し、対象プロジェクト内で別名が同じノードを関連付けます。一致しないノードはコピー後に必要に応じて手動で補完できます。",
   "createAndTransferNodes": "新しい環境を作成しノードを転送",
   "createAndTransferNodesDesc": "ターゲットプロジェクトに環境を作成し、ソース環境のノードを転送します。転送後、ソースプロジェクトでは使用できなくなります。",
   "highRisk": "高リスク",

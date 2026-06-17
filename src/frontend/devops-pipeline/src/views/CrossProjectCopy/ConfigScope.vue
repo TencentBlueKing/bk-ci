@@ -77,23 +77,19 @@
                         @change="(value) => handleUpdate(value, 'pipelineCopyStrategy')"
                     >
                         <div
+                            v-for="item in pipelineIdStrategyOptions"
+                            :key="item.value"
                             class="pipeline-strategy-item"
-                            :class="{ active: configScopeData.pipelineCopyStrategy === PipelineIdStrategy.PIPELINE_CREATE_NEW_ID }"
+                            :class="{ active: configScopeData.pipelineCopyStrategy === item.value }"
                         >
-                            <bk-radio :value="PipelineIdStrategy.PIPELINE_CREATE_NEW_ID">
-                                {{ $t('autoGenerateNewId') }}
-                                <span class="recommend">{{ $t('recommend') }}</span>
+                            <bk-radio :value="item.value">
+                                {{ $t(item.label) }}
+                                <span
+                                    v-if="item.recommend"
+                                    class="recommend"
+                                >{{ $t('recommend') }}</span>
                             </bk-radio>
-                            <p>{{ $t('autoGenerateNewIdDesc') }}</p>
-                        </div>
-                        <div
-                            class="pipeline-strategy-item"
-                            :class="{ active: configScopeData.pipelineCopyStrategy === PipelineIdStrategy.PIPELINE_REUSE_SOURCE_ID }"
-                        >
-                            <bk-radio :value="PipelineIdStrategy.PIPELINE_REUSE_SOURCE_ID">
-                                {{ $t('keepSourceId') }}
-                            </bk-radio>
-                            <p>{{ $t('keepSourceIdDesc') }}</p>
+                            <p>{{ $t(item.desc) }}</p>
                         </div>
                     </bk-radio-group>
                 </bk-form-item>
@@ -376,6 +372,23 @@
             // 统一的 loading 状态 包括：父组件轮询阶段 + 子组件数据加载阶段
             isLoading () {
                 return this.analyzingPipeline || this.isLoadingData
+            },
+            // 流水线ID策略选项
+            pipelineIdStrategyOptions () {
+                return [
+                    {
+                        value: PipelineIdStrategy.PIPELINE_CREATE_NEW_ID,
+                        label: 'autoGenerateNewId',
+                        desc: 'autoGenerateNewIdDesc',
+                        recommend: true
+                    },
+                    {
+                        value: PipelineIdStrategy.PIPELINE_REUSE_SOURCE_ID,
+                        label: 'keepSourceId',
+                        desc: 'keepSourceIdDesc',
+                        recommend: false
+                    }
+                ]
             },
             tabList () {
                 const waitCopyItem = this.statusSummary.find(item => item.status === PipelineBatchTaskDetailStatus.WAIT_COPY)

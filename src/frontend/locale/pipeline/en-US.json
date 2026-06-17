@@ -2341,6 +2341,8 @@
   "noSameNameNode": "No node with the same name",
   "createNewEnv": "Create new environment (without nodes)",
   "createNewEnvDesc": "Create an empty environment in the target project; nodes need to be added manually after copying for the pipeline to run.",
+  "createNewEnvAndLink": "Create new environment and associate nodes with the same name",
+  "createNewEnvAndLinkDesc": "Create a new environment and associate nodes with the same alias in the target project; unmatched nodes can be manually replenished as needed after copying.",
   "createAndTransferNodes": "Create new environment and transfer nodes",
   "createAndTransferNodesDesc": "Create an environment in the target project and transfer nodes from the source environment; the source project cannot continue to use them after transfer.",
   "highRisk": "High risk",

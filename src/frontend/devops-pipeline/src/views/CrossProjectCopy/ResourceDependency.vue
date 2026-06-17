@@ -424,7 +424,7 @@
             // 统计待处理的依赖资源和归属资源数量（用于提交检查第一项）
             pendingDependencyResourceCount () {
                 return this.resourceData.reduce((count, data) => {
-                    if (data.resourceType === PipelineCopyResourceType.PIPELINE) return count // 冲突单独统计
+                    if (data.resourceType === PipelineCopyResourceType.PIPELINE) return count
                     return count + (data.resources || []).filter(item => item.status === 'UNPROCESSED').length
                 }, 0)
             },

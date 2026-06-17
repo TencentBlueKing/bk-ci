@@ -2338,6 +2338,8 @@
   "noSameNameNode": "无同名节点",
   "createNewEnv": "新建环境（不带节点）",
   "createNewEnvDesc": "在目标项目下创建空环境；复制后需手动加入节点，流水线才能运行。",
+  "createNewEnvAndLink": "新建环境并关联同名节点",
+  "createNewEnvAndLinkDesc": "新建环境并关联目标项目中别名相同的节点；未匹配节点复制后按需手动补齐。",
   "createAndTransferNodes": "新建环境并转移节点",
   "createAndTransferNodesDesc": "在目标项目创建环境，并转移源环境下的节点；转移后源项目无法继续使用。",
   "highRisk": "高风险",

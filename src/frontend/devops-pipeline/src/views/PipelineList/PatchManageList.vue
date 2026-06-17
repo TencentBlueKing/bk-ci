@@ -2,7 +2,7 @@
     <main class="pipeline-list-main">
         <h5 class="current-pipeline-group-name">
             <ArchiveViewName v-if="isArchiveView" />
-            <span v-else>{{ currentViewName }}3</span>
+            <span v-else>{{ currentViewName }}</span>
 
             <bk-button
                 theme="default"
