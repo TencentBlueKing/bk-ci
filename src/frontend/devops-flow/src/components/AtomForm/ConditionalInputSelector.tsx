@@ -1,5 +1,6 @@
 import { Select } from 'bkui-vue'
 import { computed, defineComponent, type PropType } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { COMPONENT_MAP } from './AtomForm'
 import styles from './ConditionalInputSelector.module.css'
 
@@ -61,9 +62,14 @@ export default defineComponent({
       type: Function,
       default: () => () => {},
     },
+    errorFields: {
+      type: Array as PropType<string[]>,
+      default: () => [],
+    },
   },
   emits: ['change', 'update:value'],
   setup(props, { emit }) {
+    const { t } = useI18n()
     const curComponent = computed(() => {
       return (
         props.list.find((i) => i.value === props.value) || {
@@ -113,6 +119,8 @@ export default defineComponent({
         childProps = filteredRest
       }
 
+      const hasChildError = required && key && props.errorFields.includes(key)
+
       return (
         <div class={styles.conditionalInputSelector}>
           <Select
@@ -132,16 +140,19 @@ export default defineComponent({
               />
             ))}
           </Select>
-          <ChildComponent
-            class={styles.inputSelector}
-            name={key}
-            value={childValue}
-            disabled={props.disabled}
-            required={required}
-            handleChange={props.handleChange}
-            atomValue={props.atomValue}
-            {...childProps}
-          />
+          <div class={[styles.inputSelectorWrapper, hasChildError && styles.childFieldError]}>
+            <ChildComponent
+              class={styles.inputSelector}
+              name={key}
+              value={childValue}
+              disabled={props.disabled}
+              required={required}
+              handleChange={props.handleChange}
+              atomValue={props.atomValue}
+              {...childProps}
+            />
+            {hasChildError && <p class={styles.fieldErrorMessage}>{t('flow.orchestration.fieldRequired')}</p>}
+          </div>
         </div>
       )
     }

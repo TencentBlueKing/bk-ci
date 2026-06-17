@@ -220,11 +220,13 @@ export const useTriggerRecordStore = defineStore('triggerRecord', () => {
       reTriggerLoadingId.value = null
       if (res) {
         Message({ theme: 'success', message: t('flow.triggerRecord.retrigger') + t('flow.common.success') })
-        fetchTriggerEventList(1, 24)
+        return true
       }
+      return false
    } catch (error) {
       console.error('触发失败:', error)
       reTriggerLoadingId.value = null
+      return false
    }
   }
 

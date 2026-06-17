@@ -1,4 +1,4 @@
-import type { TriggerRecordItem } from '@/api/triggerRecord'
+import type { TriggerRecordItem, QueryListFunction } from '@/api/triggerRecord'
 import { type StatusType } from '@/types/flow'
 import { useI18n } from 'vue-i18n'
 import { statusColorMap } from '@/utils/flowStatus'
@@ -69,9 +69,10 @@ export function useTriggerRecordData(styles: Styles) {
   /**
    * 生成timelineList的函数
    * @param list 列表数据
+   * @param queryList 刷新列表数据的方法
    * @returns 时间轴数据列表
    */
-  function generateTimelineList(list: TriggerRecordItem[]) {
+  function generateTimelineList(list: TriggerRecordItem[], queryList?: QueryListFunction) {
     const dateMap = list.reduce((acc, item) => {
       const date = formatDate(item.eventTime, 'YYYY-MM-DD')
       if (!acc.has(date)) {
@@ -149,7 +150,12 @@ export function useTriggerRecordData(styles: Styles) {
                   size: 'small',
                   theme: 'primary',
                   loading: reTriggerLoadingId.value === event.detailId,
-                  onClick: () => store.triggerEvent(event),
+                  onClick: async () => {
+                    const success = await store.triggerEvent(event)
+                    if (success && queryList) {
+                      queryList(1, undefined, true)
+                    }
+                  },
                 },
                 t('flow.triggerRecord.retrigger'),
               )),
