@@ -178,10 +178,18 @@ open class ScriptTask : ITask() {
             // 成功失败都写入全局变量
             val envs = ScriptEnvUtils.getEnv(buildId, workspace)
             val context = ScriptEnvUtils.getContext(buildId, workspace)
+            // 读取多行输出（format_multiple_lines），合并到 context
+            val multiLineContext = decodeMultipleLines(
+                lines = ScriptEnvUtils.getMultipleLines(buildId, workspace),
+                jobId = buildVariables.jobId,
+                stepId = buildTask.stepId
+            )
             failIfVariableInvalidCheckFlag = failIfVariableInvalidCheck(failIfVariableInvalid, envs) &&
-                failIfVariableInvalidCheck(failIfVariableInvalid, context)
+                failIfVariableInvalidCheck(failIfVariableInvalid, context) &&
+                failIfVariableInvalidCheck(failIfVariableInvalid, multiLineContext)
             addEnv(envs)
             addEnv(context)
+            addEnv(multiLineContext)
 
             // 增加操作系统类型的输出
             buildVariables.jobId?.let { addEnv(mapOf("jobs.$it.os" to AgentEnv.getOS().name)) }
@@ -257,6 +265,16 @@ open class ScriptTask : ITask() {
         buildVariables: BuildVariables
     ): List<BuildEnv> = buildVariables.buildEnvs
 
+    /**
+     * 解码 format_multiple_lines 写入的多行输出内容
+     * 格式: ::set-output name=KEY::VALUE (VALUE 中换行/回车/百分号经 URL 编码)
+     */
+    private fun decodeMultipleLines(
+        lines: List<String>,
+        jobId: String?,
+        stepId: String?
+    ): Map<String, String> = Companion.decodeMultipleLines(lines, jobId, stepId)
+
     private fun setGatewayValue(workspace: File, taskId: String, taskName: String) {
         try {
             val gatewayFile = File(workspace, ScriptEnvUtils.getQualityGatewayEnvFile())
@@ -290,5 +308,34 @@ open class ScriptTask : ITask() {
 
     companion object {
         private val logger = LoggerFactory.getLogger(ScriptTask::class.java)
+
+        /**
+         * 解码 format_multiple_lines 写入的多行输出内容
+         * 格式: ::set-output name=KEY::VALUE (VALUE 中换行/回车/百分号经 URL 编码)
+         */
+        fun decodeMultipleLines(
+            lines: List<String>,
+            jobId: String?,
+            stepId: String?
+        ): Map<String, String> {
+            if (lines.isEmpty() || jobId.isNullOrBlank() || stepId.isNullOrBlank()) return emptyMap()
+            val prefixOutput = "::set-output name="
+            val result = mutableMapOf<String, String>()
+            lines.forEach { line ->
+                if (line.startsWith(prefixOutput)) {
+                    val value = line.removePrefix(prefixOutput)
+                    val firstColonIndex = value.indexOf("::")
+                    if (firstColonIndex >= 0) {
+                        val key = value.substring(0, firstColonIndex)
+                        val outputValue = value.substring(firstColonIndex + 2)
+                            .replace("%25", "%")   // 必须先还原 %25，再还原 %0A/%0D
+                            .replace("%0A", "\n")
+                            .replace("%0D", "\r")
+                        result["jobs.$jobId.steps.$stepId.outputs.$key"] = outputValue
+                    }
+                }
+            }
+            return result
+        }
     }
 }
