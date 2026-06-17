@@ -248,7 +248,6 @@ class ProjectGroupMigrationService(
             projectCode = migrationDTO.targetProjectCode,
             snapshots = sourceSnapshots
         )
-        val targetGroupsByCode = targetGroups.associateBy { it.groupCode }
         if (migrationDTO.dryRun) {
             // 增量 dry-run 的重点是告诉调用方：
             // 1. 目标组是否已存在
@@ -257,7 +256,7 @@ class ProjectGroupMigrationService(
             return buildIncrementalDryRunResult(
                 migrationDTO = migrationDTO,
                 protectedTargetGroups = protectedTargetGroups,
-                targetGroupsByCode = targetGroupsByCode,
+                targetGroups = targetGroups,
                 sourceSnapshots = sourceSnapshots,
                 sourceResourceMap = sourceResourceMap,
                 targetResourceIndex = targetResourceIndex
@@ -267,7 +266,10 @@ class ProjectGroupMigrationService(
             executeIncrementalGroupMigration(
                 snapshot = snapshot,
                 targetProject = targetProject,
-                existingTargetGroup = targetGroupsByCode[snapshot.group.groupCode],
+                existingTargetGroup = findExistingTargetGroup(
+                    snapshot = snapshot,
+                    targetGroups = targetGroups
+                ),
                 sourceResourceMap = sourceResourceMap,
                 targetResourceIndex = targetResourceIndex
             )
@@ -335,7 +337,7 @@ class ProjectGroupMigrationService(
     private fun buildIncrementalDryRunResult(
         migrationDTO: ProjectGroupIncrementalMigrationDTO,
         protectedTargetGroups: List<String>,
-        targetGroupsByCode: Map<String, AuthResourceGroup>,
+        targetGroups: List<AuthResourceGroup>,
         sourceSnapshots: List<GroupSnapshot>,
         sourceResourceMap: Map<ResourceKey, AuthResourceInfo>,
         targetResourceIndex: Map<String, Map<String, List<AuthResourceInfo>>>
@@ -343,7 +345,10 @@ class ProjectGroupMigrationService(
         // 这里不再像全量接口那样关心“会删除哪些目标组”，
         // 而是聚焦“当前目标组已经补到了什么，还缺什么”。
         val groupResults = sourceSnapshots.map { snapshot ->
-            val existingTargetGroup = targetGroupsByCode[snapshot.group.groupCode]
+            val existingTargetGroup = findExistingTargetGroup(
+                snapshot = snapshot,
+                targetGroups = targetGroups
+            )
             val targetPermissionSnapshot = existingTargetGroup?.let {
                 buildTargetPermissionSnapshot(
                     projectCode = migrationDTO.targetProjectCode,
@@ -939,14 +944,25 @@ class ProjectGroupMigrationService(
         // 2. 不走按 groupCode 自动灌默认权限的模板建组链路
         // 所以这里单独创建一个“空 IAM 组 + 指定 groupCode 的本地组记录”，
         // 后续权限全部再按源项目快照回放。
-        val groupId = permissionResourceGroupService.createEmptyProjectGroupWithCode(
-            projectId = targetProjectCode,
-            groupCode = sourceGroup.groupCode,
-            groupAddDTO = GroupAddDTO(
-                groupName = sourceGroup.groupName,
-                groupDesc = sourceGroup.description ?: sourceGroup.groupName
-            )
+        //
+        // custom 组允许多个实例共享同一 groupCode，不能走 createEmptyProjectGroupWithCode 的
+        // groupCode 去重逻辑，否则会把多个自定义组错误合并到同一个目标组。
+        val groupAddDTO = GroupAddDTO(
+            groupName = sourceGroup.groupName,
+            groupDesc = sourceGroup.description ?: sourceGroup.groupName
         )
+        val groupId = if (isCustomGroup(sourceGroup)) {
+            permissionResourceGroupService.createGroup(
+                projectId = targetProjectCode,
+                groupAddDTO = groupAddDTO
+            )
+        } else {
+            permissionResourceGroupService.createEmptyProjectGroupWithCode(
+                projectId = targetProjectCode,
+                groupCode = sourceGroup.groupCode,
+                groupAddDTO = groupAddDTO
+            )
+        }
         val record = authResourceGroupDao.getByRelationId(
             dslContext = dslContext,
             projectCode = targetProjectCode,
@@ -1197,6 +1213,21 @@ class ProjectGroupMigrationService(
         return group.groupCode == BkAuthGroup.MANAGER.value
     }
 
+    private fun isCustomGroup(group: AuthResourceGroup): Boolean {
+        return group.groupCode == CUSTOM_GROUP_CODE
+    }
+
+    private fun findExistingTargetGroup(
+        snapshot: GroupSnapshot,
+        targetGroups: List<AuthResourceGroup>
+    ): AuthResourceGroup? {
+        return if (isCustomGroup(snapshot.group)) {
+            targetGroups.find { isCustomGroup(it) && it.groupName == snapshot.group.groupName }
+        } else {
+            targetGroups.find { it.groupCode == snapshot.group.groupCode }
+        }
+    }
+
     private data class GroupSnapshot(
         // 源组本身的信息，供目标项目重建组壳使用。
         val group: AuthResourceGroup,
@@ -1274,5 +1305,6 @@ class ProjectGroupMigrationService(
 
     companion object {
         private val logger = LoggerFactory.getLogger(ProjectGroupMigrationService::class.java)
+        private const val CUSTOM_GROUP_CODE = "custom"
     }
 }

@@ -331,7 +331,7 @@ class ProjectGroupMigrationServiceTest {
             member(memberId = "tpl1", memberType = MemberType.TEMPLATE.type)
         )
         every {
-            permissionResourceGroupService.createEmptyProjectGroupWithCode("target", "custom", any())
+            permissionResourceGroupService.createGroup("target", any())
         } returns 120
         every {
             authResourceGroupDao.getByRelationId(dslContext, "target", "120")
@@ -381,6 +381,100 @@ class ProjectGroupMigrationServiceTest {
                 expiredAt = any(),
                 iamGroupId = 120
             )
+        }
+    }
+
+    @Test
+    fun `execute should create separate target groups for each custom group`() {
+        val customGroupA = projectGroup(
+            projectCode = "source",
+            groupCode = "custom",
+            groupName = "65+gdfs",
+            relationId = 10
+        )
+        val customGroupB = projectGroup(
+            projectCode = "source",
+            groupCode = "custom",
+            groupName = "CI管理员",
+            relationId = 11
+        )
+        val targetGroupA = projectGroup(
+            projectCode = "target",
+            groupCode = "custom",
+            groupName = "65+gdfs",
+            relationId = 110
+        )
+        val targetGroupB = projectGroup(
+            projectCode = "target",
+            groupCode = "custom",
+            groupName = "CI管理员",
+            relationId = 111
+        )
+        val targetRecordA = mockk<com.tencent.devops.model.auth.tables.records.TAuthResourceGroupRecord>()
+        val targetRecordB = mockk<com.tencent.devops.model.auth.tables.records.TAuthResourceGroupRecord>()
+        every {
+            authResourceGroupDao.getByResourceCode(
+                dslContext = dslContext,
+                projectCode = "source",
+                resourceType = AuthResourceType.PROJECT.value,
+                resourceCode = "source"
+            )
+        } returns listOf(customGroupA, customGroupB)
+        every {
+            authResourceGroupDao.getByResourceCode(
+                dslContext = dslContext,
+                projectCode = "target",
+                resourceType = AuthResourceType.PROJECT.value,
+                resourceCode = "target"
+            )
+        } returns emptyList()
+        every {
+            authResourceGroupPermissionDao.listByGroupId(dslContext, "source", 10)
+        } returns emptyList()
+        every {
+            authResourceGroupPermissionDao.listByGroupId(dslContext, "source", 11)
+        } returns emptyList()
+        every {
+            authResourceGroupMemberDao.listResourceGroupMember(
+                dslContext = dslContext,
+                projectCode = "source",
+                iamGroupId = any(),
+                minExpiredTime = any()
+            )
+        } returns emptyList()
+        every {
+            permissionResourceGroupService.createGroup("target", match { it.groupName == "65+gdfs" })
+        } returns 110
+        every {
+            permissionResourceGroupService.createGroup("target", match { it.groupName == "CI管理员" })
+        } returns 111
+        every {
+            authResourceGroupDao.getByRelationId(dslContext, "target", "110")
+        } returns targetRecordA
+        every {
+            authResourceGroupDao.getByRelationId(dslContext, "target", "111")
+        } returns targetRecordB
+        every { authResourceGroupDao.convert(targetRecordA) } returns targetGroupA
+        every { authResourceGroupDao.convert(targetRecordB) } returns targetGroupB
+
+        val result = service.migrate(
+            ProjectGroupMigrationDTO(sourceProjectCode = "source", targetProjectCode = "target")
+        )
+
+        assertEquals(ProjectGroupMigrationStatus.SUCCESS, result.status)
+        assertEquals(2, result.groupResults.size)
+        assertEquals("65+gdfs", result.groupResults[0].targetGroupName)
+        assertEquals(110, result.groupResults[0].targetGroupId)
+        assertEquals("CI管理员", result.groupResults[1].targetGroupName)
+        assertEquals(111, result.groupResults[1].targetGroupId)
+        verify(exactly = 1) {
+            permissionResourceGroupService.createGroup("target", match { it.groupName == "65+gdfs" })
+        }
+        verify(exactly = 1) {
+            permissionResourceGroupService.createGroup("target", match { it.groupName == "CI管理员" })
+        }
+        verify(exactly = 0) {
+            permissionResourceGroupService.createEmptyProjectGroupWithCode("target", "custom", any())
         }
     }
 
