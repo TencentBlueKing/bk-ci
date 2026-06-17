@@ -799,8 +799,8 @@ class TriggerTransfer @Autowired(required = false) constructor(
      */
     private fun yaml2TriggerTapdElement(tapd: TapdRule): TapdWebHookTriggerElement {
         val eventType = tapd.eventType?.let { TapdEventType.parse(it) }
-        val includeStoryAction = tapd.includeActions?.takeIf { eventType == TapdEventType.STORY }
-        val includeBugAction = tapd.includeActions?.takeIf { eventType == TapdEventType.BUG }
+        val includeStoryAction = tapd.actions?.takeIf { eventType == TapdEventType.STORY }
+        val includeBugAction = tapd.actions?.takeIf { eventType == TapdEventType.BUG }
         return TapdWebHookTriggerElement(
             name = tapd.name ?: "TAPD事件触发",
             stepId = tapd.id,

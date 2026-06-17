@@ -59,8 +59,8 @@ data class TapdRule(
     @JsonProperty("event-type")
     val eventType: String?,
     @get:Schema(title = "include-actions")
-    @JsonProperty("include-actions")
-    val includeActions: List<String>? = null,
+    @JsonProperty("actions")
+    val actions: List<String>? = null,
     @get:Schema(title = "include-users")
     @JsonProperty("include-users")
     val includeUsers: List<String>? = null,
