@@ -17,6 +17,21 @@ class AgentDao {
         }
     }
 
+    fun fetchAgentsByWorkspaceIdGlobal(
+        dslContext: DSLContext,
+        workspaceIds: List<String>,
+        projectId: String?
+    ): List<TEnvironmentThirdpartyAgentRecord> {
+        with(TEnvironmentThirdpartyAgent.T_ENVIRONMENT_THIRDPARTY_AGENT) {
+            val dsl = dslContext.selectFrom(this)
+                .where(CREATE_WORKSPACE_NAME.`in`(workspaceIds))
+            if (projectId != null) {
+                return dsl.and(PROJECT_ID.eq(projectId)).fetch()
+            }
+            return dsl.fetch()
+        }
+    }
+
     fun deleteAgentByWorkspaceIdGlobal(dslContext: DSLContext, workspaceId: String) {
         with(TEnvironmentThirdpartyAgent.T_ENVIRONMENT_THIRDPARTY_AGENT) {
             dslContext.deleteFrom(this)
