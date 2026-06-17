@@ -644,12 +644,34 @@
                             {
                                 id: 'NOT_INSTALLED',
                                 name: this.$t('environment.nodeStatusMap.NOT_INSTALLED')
+                            },
+                            {
+                                id: 'NOT_IN_CC',
+                                name: this.$t('environment.nodeStatusMap.NOT_IN_CC')
+                            },
+                            {
+                                id: 'NOT_IN_CMDB',
+                                name: this.$t('environment.nodeStatusMap.NOT_IN_CMDB')
                             }
                         ]
                     },
                     {
                         name: this.$t('environment.nodeInfo.agentVersion'),
                         id: 'agentVersion'
+                    },
+                    {
+                        name: this.$t('environment.nodeInfo.operatorStatus'),
+                        id: 'operatorStatus',
+                        children: [
+                            {
+                                id: 'NORMAL',
+                                name: this.$t('environment.operatorStatus.NORMAL')
+                            },
+                            {
+                                id: 'OPERATOR_CHANGED',
+                                name: this.$t('environment.operatorStatus.OPERATOR_CHANGED')
+                            }
+                        ]
                     },
                     {
                         name: this.$t('environment.lastModifier'),
