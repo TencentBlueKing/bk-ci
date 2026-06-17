@@ -52,8 +52,8 @@ data class TapdRule(
     override val id: String? = null,
     override val name: String? = null,
     override val enable: Boolean? = true,
-    @get:Schema(title = "tapd-project-id")
-    @JsonProperty("tapd-project-id")
+    @get:Schema(title = "project-id")
+    @JsonProperty("project-id")
     val tapdProjectId: String,
     @get:Schema(title = "event-type")
     @JsonProperty("event-type")
