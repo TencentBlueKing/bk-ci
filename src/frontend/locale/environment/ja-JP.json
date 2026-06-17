@@ -725,5 +725,5 @@
     "IMetaNodeStatus": {
         "RUNNING": "実行中"
     },
-    "IMetaStatus": "デジタル同僚ステータス"
+    "IMetaStatus": "状態"
 }

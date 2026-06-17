@@ -725,5 +725,5 @@
     "IMetaNodeStatus": {
         "RUNNING": "运行中"
     },
-    "IMetaStatus": "数字同事状态"
+    "IMetaStatus": "状态"
 }
