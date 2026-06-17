@@ -874,6 +874,7 @@ class RbacPermissionResourceMemberService(
         )
     }
 
+    @Suppress("NestedBlockDepth")
     override fun copyResourceGroupMembers(
         sourceProjectCode: String,
         targetProjectCode: String,

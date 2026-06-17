@@ -804,7 +804,14 @@ class ProjectGroupMigrationServiceTest {
         assertEquals("qc", result.groupResults.single().sourceGroupCode)
         assertEquals("qc", targetGroup.groupCode)
         verify(exactly = 0) {
-            permissionResourceGroupService.createGroupAndPermissionsByGroupCode(any(), any(), any(), any(), any(), any())
+            permissionResourceGroupService.createGroupAndPermissionsByGroupCode(
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any()
+            )
         }
     }
 
@@ -872,7 +879,11 @@ class ProjectGroupMigrationServiceTest {
         } returns targetRecord
         every { authResourceGroupDao.convert(targetRecord) } returns targetGroup
         every {
-            permissionResourceGroupPermissionService.buildProjectPermissions("target", "Target Project", listOf("pipeline_view"))
+            permissionResourceGroupPermissionService.buildProjectPermissions(
+                "target",
+                "Target Project",
+                listOf("pipeline_view")
+            )
         } returns "project-scope"
         every {
             permissionResourceGroupPermissionService.grantGroupPermission(

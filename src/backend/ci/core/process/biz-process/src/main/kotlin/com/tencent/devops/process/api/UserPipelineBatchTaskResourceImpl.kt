@@ -4,13 +4,12 @@ import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.user.UserPipelineBatchTaskResource
-import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskCreateRequest
-import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskDetail
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskDetailStatus
-import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskDetailStatusSummary
-import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTask
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskStatus
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskType
+import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTask
+import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskCreateRequest
+import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskDetailStatusSummary
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskDetailVo
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskStatusSummary
 import com.tencent.devops.process.service.task.PipelineBatchTaskService

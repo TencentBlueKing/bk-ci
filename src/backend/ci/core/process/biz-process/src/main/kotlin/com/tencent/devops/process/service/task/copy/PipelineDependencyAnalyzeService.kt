@@ -466,6 +466,7 @@ class PipelineDependencyAnalyzeService @Autowired constructor(
         return RepositoryConfigUtils.buildConfig(repositoryId, repositoryType)
     }
 
+    @Suppress("NestedBlockDepth")
     private fun collectMarketElementRefs(
         projectId: String,
         stage: Stage,
