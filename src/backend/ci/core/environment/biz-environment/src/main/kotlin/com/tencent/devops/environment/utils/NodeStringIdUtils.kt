@@ -39,6 +39,7 @@ object NodeStringIdUtils {
             NodeType.CMDB.name -> "CMDB-${HashUtil.encodeLongId(it.nodeId)}-${it.nodeId}"
             NodeType.OTHER.name -> "OTHER-${HashUtil.encodeLongId(it.nodeId)}-${it.nodeId}"
             NodeType.THIRDPARTY.name -> "BUILD-${HashUtil.encodeLongId(it.nodeId)}-${it.nodeId}"
+            NodeType.CREATE.name -> "CREATE-${HashUtil.encodeLongId(it.nodeId)}-${it.nodeId}"
             else -> it.nodeStringId ?: ""
         }
     }
@@ -66,7 +67,10 @@ object NodeStringIdUtils {
             displayName = displayName,
             envEnableNode = null,
             nodeName = nodeRecord.nodeName,
-            lastModifyTime = (nodeRecord.lastModifyTime ?: nodeRecord.createdTime).timestampmilli()
+            lastModifyTime = (nodeRecord.lastModifyTime ?: nodeRecord.createdTime).timestampmilli(),
+            agentHashId = null,
+            agentId = null,
+            createWorkspaceId = null
         )
     }
 }

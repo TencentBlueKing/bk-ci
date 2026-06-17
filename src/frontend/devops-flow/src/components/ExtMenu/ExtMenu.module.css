@@ -1,0 +1,53 @@
+.moreTrigger {
+  display: flex;
+  cursor: pointer;
+  padding: var(--spacing-sm);
+  &:hover {
+    color: var(--color-primary);
+    background: #e6e6e7;
+    border-radius: 50%;
+  }
+}
+
+.dotMenuList {
+  margin: 0;
+  padding: 0;
+  min-width: 100px;
+  list-style: none;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+}
+
+.dotMenuItem {
+  display: block;
+  width: 100%;
+  height: 32px;
+  line-height: 32px;
+  font-size: var(--spacing-md);
+  padding: 0 20px;
+  color: #63656e;
+  background-color: var(--bg-primary);
+  text-align: center;
+  cursor: pointer;
+}
+
+.dotMenuItem:hover {
+  background-color: var(--bg-hover-active);
+  color: var(--color-primary);
+}
+
+.isDisable {
+  cursor: not-allowed;
+  color: var(--color-text-disabled);
+}
+
+.isDisable:hover {
+  color: var(--color-text-disabled) !important;
+}
+
+/* 去掉 Popover 下拉菜单的 padding */
+/* 使用全局样式覆盖所有可能的 Popover 内部容器 */
+:global(.ext-menu-popover) {
+  padding: 0 !important;
+}

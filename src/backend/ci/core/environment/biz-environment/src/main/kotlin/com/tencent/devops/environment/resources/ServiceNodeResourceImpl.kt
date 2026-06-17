@@ -110,9 +110,15 @@ class ServiceNodeResourceImpl @Autowired constructor(
     override fun listByHashIds(
         userId: String,
         projectId: String,
-        nodeHashIds: List<String>
+        nodeHashIds: List<String>,
+        checkPermission: Boolean?
     ): Result<List<NodeWithPermission>> {
-        return Result(nodeService.listByHashIds(userId, projectId, nodeHashIds))
+        return Result(nodeService.listByHashIds(
+            userId = userId,
+            projectId = projectId,
+            hashIds = nodeHashIds,
+            checkPermission = checkPermission != false
+        ))
     }
 
     override fun getNodeStatus(
@@ -214,6 +220,7 @@ class ServiceNodeResourceImpl @Autowired constructor(
         latestBuildTimeEnd: Long?,
         sortType: String?,
         collation: String?,
+        createMode: Boolean?,
         data: NodeFetchReq?
     ): Result<Page<NodeWithPermission>> {
         return Result(
@@ -236,6 +243,7 @@ class ServiceNodeResourceImpl @Autowired constructor(
                 latestBuildTimeEnd = latestBuildTimeEnd,
                 sortType = sortType,
                 collation = collation,
+                createMode = createMode,
                 data = data
             )
         )

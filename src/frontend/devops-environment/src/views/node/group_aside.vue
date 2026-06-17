@@ -1,5 +1,8 @@
 <template>
-    <div class="node-group-tree">
+    <div
+        class="node-group-tree"
+        v-bkloading="{ isLoading }"
+    >
         <div
             v-for="group in nodeGroup"
             :key="group.type"
@@ -241,18 +244,22 @@
 </template>
   
 <script>
-    import { NODE_RESOURCE_ACTION, NODE_RESOURCE_TYPE } from '@/utils/permission'
+    import {
+        NODE_RESOURCE_ACTION,
+        NODE_RESOURCE_TYPE,
+        CREATIVE_STREAM_NODE_RESOURCE_ACTION,
+        CREATIVE_NODE_RESOURCE_TYPE
+    } from '@/utils/permission'
     import { mapActions, mapState } from 'vuex'
-    import { ENV_ACTIVE_NODE_TYPE, ALLNODE } from '@/store/constants'
+    import { ENV_ACTIVE_NODE_TYPE, ALLNODE, SERVICE_RESOURCE_TYPE } from '@/store/constants'
 
     export default {
         name: 'NodeGroupTree',
         data () {
             return {
-                NODE_RESOURCE_TYPE,
-                NODE_RESOURCE_ACTION,
                 ENV_ACTIVE_NODE_TYPE,
                 ALLNODE,
+                SERVICE_RESOURCE_TYPE,
                 expandedGroupIds: [],
                 isAdd: false,
                 isShowTagChange: false,
@@ -265,7 +272,8 @@
                         canUpdate: 'TRUE',
                         tagValueName: ''
                     }]
-                }
+                },
+                isLoading: false
             }
         },
         computed: {
@@ -277,15 +285,17 @@
                 return window.innerHeight * 0.8 - 184
             },
             nodeGroup () {
-                const { CMDB = 0, THIRDPARTY = 0 } = this.nodeCount || {}
-                const totalCount = CMDB + THIRDPARTY
+                const { CMDB = 0, THIRDPARTY = 0, CREATE = 0 } = this.nodeCount || {}
+                const totalCount = this.isCreateResType ? CREATE : CMDB + THIRDPARTY
                 return [
                     {
                         type: 'node_type',
                         groups: [
                             { id: 'allNode', name: this.$t('environment.allNodes'), nodeCount: totalCount },
-                            { id: 'THIRDPARTY', name: this.$t('environment.selfHostedNodes'), nodeCount: THIRDPARTY },
-                            { id: 'CMDB', name: this.$t('environment.deploymentNode'), nodeCount: CMDB }
+                            ...(this.currentResType === SERVICE_RESOURCE_TYPE.PIPELINE ? [
+                                { id: 'THIRDPARTY', name: this.$t('environment.selfHostedNodes'), nodeCount: THIRDPARTY },
+                                { id: 'CMDB', name: this.$t('environment.deploymentNode'), nodeCount: CMDB }
+                            ] : [])
                         ]
                     },
                     {
@@ -307,6 +317,18 @@
                     return stored
                 }
                 return stored
+            },
+            currentResType () {
+                return this.$route.params.resType
+            },
+            isCreateResType () {
+                return this.currentResType === SERVICE_RESOURCE_TYPE.CREATE
+            },
+            currentResourceType () {
+                return this.isCreateResType ? CREATIVE_NODE_RESOURCE_TYPE : NODE_RESOURCE_TYPE
+            },
+            currentResourceAction () {
+                return this.isCreateResType ? CREATIVE_STREAM_NODE_RESOURCE_ACTION : NODE_RESOURCE_ACTION
             }
         },
         watch: {
@@ -330,15 +352,30 @@
                         this.refreshSidebarData()
                     }
                 }
+            },
+            isCreateResType: {
+                handler () {
+                    this.$router.replace({
+                        name: 'nodeList',
+                        params: {
+                            ...this.$route.params,
+                            nodeType: ALLNODE
+                        }
+                    })
+                    this.init()
+                }
             }
         },
-        async mounted () {
-            this.getNodeTypeCount()
-            await this.getTagTypeList()
-            this.setDefaultExpandedGroup()
+        mounted () {
+            this.init()
         },
         methods: {
             ...mapActions('environment', ['requestNodeTagList', 'requestGetCounts']),
+            async init () {
+                this.getNodeTypeCount()
+                await this.getTagTypeList()
+                this.setDefaultExpandedGroup()
+            },
             refreshSidebarData () {
                 this.getTagTypeList()
             },
@@ -386,7 +423,12 @@
                 ) || []
             },
             async getTagTypeList () {
-                await this.requestNodeTagList(this.projectId)
+                this.isLoading = true
+                await this.requestNodeTagList({
+                    projectId: this.projectId,
+                    createMode: this.isCreateResType
+                })
+                this.isLoading = false
                 const nodeType = this.$route.params.nodeType
                 const validNodeTypes = ['allNode', 'THIRDPARTY', 'CMDB']
                 const isValidNodeType = validNodeTypes.includes(nodeType) || this.getTagValues().includes(nodeType)
@@ -468,9 +510,9 @@
                                 e,
                                 {
                                     projectId: this.projectId,
-                                    resourceType: NODE_RESOURCE_TYPE,
+                                    resourceType: this.currentResourceType,
                                     resourceCode: this.projectId,
-                                    action: NODE_RESOURCE_ACTION.DELETE
+                                    action: this.currentResourceAction.DELETE
                                 }
                             )
                         }
@@ -631,8 +673,8 @@
     content: '';
     position: absolute;
     top: 0;
-    left: 16px;
-    right: 16px;
+    left: 0;
+    right: 0;
     height: 1px;
     border-top: 1px solid #DCDEE5;
   }
@@ -657,7 +699,8 @@
   }
 
   .node-list {
-    margin-bottom: 28px;
+    margin-bottom: 16px;
+    border-top: 1px solid #DCDEE5;
     color: #313238;
   }
 

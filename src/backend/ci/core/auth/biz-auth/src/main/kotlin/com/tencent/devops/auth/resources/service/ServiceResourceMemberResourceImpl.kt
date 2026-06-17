@@ -73,21 +73,19 @@ class ServiceResourceMemberResourceImpl(
         with(projectCreateUserInfo) {
             val now = System.currentTimeMillis() / 1000
             val fixExpiredTime = now + TimeUnit.DAYS.toSeconds(expiredTime ?: 365L)
-            return Result(
-                permissionResourceMemberService.batchAddResourceGroupMembers(
+            return permissionResourceMemberService.batchAddResourceGroupMembers(
+                projectCode = projectCode,
+                iamGroupId = getIamGroupId(
+                    groupId = groupId,
                     projectCode = projectCode,
-                    iamGroupId = getIamGroupId(
-                        groupId = groupId,
-                        projectCode = projectCode,
-                        roleName = roleName,
-                        roleId = roleId,
-                        resourceCode = resourceCode ?: projectCode,
-                        resourceType = resourceType ?: AuthResourceType.PROJECT.value
-                    ),
-                    expiredTime = fixExpiredTime,
-                    members = userIds,
-                    departments = deptIds
-                )
+                    roleName = roleName,
+                    roleId = roleId,
+                    resourceCode = resourceCode ?: projectCode,
+                    resourceType = resourceType ?: AuthResourceType.PROJECT.value
+                ),
+                expiredTime = fixExpiredTime,
+                members = userIds,
+                departments = deptIds
             )
         }
     }

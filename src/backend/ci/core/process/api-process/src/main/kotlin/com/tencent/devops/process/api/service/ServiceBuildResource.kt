@@ -28,6 +28,7 @@
 package com.tencent.devops.process.api.service
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_IMATE_SESSION_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.BuildHistoryPage
@@ -198,7 +199,10 @@ interface ServiceBuildResource {
         version: Int? = null,
         @Parameter(description = "渠道号，默认为BS", required = false)
         @QueryParam("channelCode")
-        channelCode: ChannelCode
+        channelCode: ChannelCode,
+        @Parameter(description = "分支版本, 仅PAC流水线有效", required = false)
+        @QueryParam("branch")
+        branch: String? = null
     ): Result<BuildManualStartupInfo>
 
     @Operation(summary = "搜索流水线参数")
@@ -554,7 +558,13 @@ interface ServiceBuildResource {
         triggerBranch: List<String>? = null,
         @Parameter(description = "触发人", required = false)
         @QueryParam("triggerUser")
-        triggerUser: List<String>? = null
+        triggerUser: List<String>? = null,
+        @Parameter(description = "触发事件", required = false)
+        @QueryParam("triggerEventTypes")
+        triggerEventTypes: List<String>? = null,
+        @Parameter(description = "触发节点HashId", required = false)
+        @QueryParam("triggerNodeHashIds")
+        triggerNodeHashIds: List<String>? = null
     ): Result<BuildHistoryPage<BuildHistory>>
 
     @Operation(summary = "获取流水线轻量构建历史")
@@ -689,7 +699,7 @@ interface ServiceBuildResource {
         buildId: String,
         @Parameter(description = "渠道号，默认为BS", required = false)
         @QueryParam("channelCode")
-        channelCode: ChannelCode = ChannelCode.BS
+        channelCode: ChannelCode = ChannelCode.getRequestChannelCode()
     ): Result<BuildHistoryVariables>
 
     @Operation(summary = "获取构建中的变量值")
@@ -711,7 +721,7 @@ interface ServiceBuildResource {
         buildId: String,
         @Parameter(description = "渠道号，默认为BS", required = false)
         @QueryParam("channelCode")
-        channelCode: ChannelCode = ChannelCode.BS,
+        channelCode: ChannelCode = ChannelCode.getRequestChannelCode(),
         @Parameter(description = "变量名列表", required = true)
         variableNames: List<String>
     ): Result<Map<String, String>>
@@ -730,7 +740,7 @@ interface ServiceBuildResource {
         buildId: Set<String>,
         @Parameter(description = "渠道号，默认为BS", required = true)
         @QueryParam("channelCode")
-        channelCode: ChannelCode = ChannelCode.BS,
+        channelCode: ChannelCode = ChannelCode.getRequestChannelCode(),
         @QueryParam("startBeginTime")
         startBeginTime: String? = null,
         @QueryParam("endBeginTime")
@@ -753,7 +763,7 @@ interface ServiceBuildResource {
         pipelineId: String,
         @Parameter(description = "渠道号，默认为BS", required = true)
         @QueryParam("channelCode")
-        channelCode: ChannelCode = ChannelCode.BS,
+        channelCode: ChannelCode = ChannelCode.getRequestChannelCode(),
         @QueryParam("startBeginTime")
         startBeginTime: String? = null,
         @QueryParam("endBeginTime")
@@ -782,7 +792,7 @@ interface ServiceBuildResource {
         @QueryParam("version")
         debugVersion: Int? = null,
         @QueryParam("channelCode")
-        channelCode: ChannelCode = ChannelCode.BS
+        channelCode: ChannelCode = ChannelCode.getRequestChannelCode()
     ): Result<List<String>>
 
     @Operation(summary = "根据流水线id获取最新执行信息")
@@ -858,10 +868,7 @@ interface ServiceBuildResource {
         pipelineId: String,
         @Parameter(description = "流水线buildNum", required = true)
         @PathParam("buildNum")
-        buildNum: String,
-        @Parameter(description = "渠道号，默认为BS", required = false)
-        @QueryParam("channelCode")
-        channelCode: ChannelCode?
+        buildNum: String
     ): Result<BuildHistory?>
 
     @Operation(summary = "手动触发启动阶段")
@@ -958,7 +965,13 @@ interface ServiceBuildResource {
         startType: StartType,
         @Parameter(description = "指定草稿版本（为调试构建）", required = false)
         @QueryParam("version")
-        version: Int? = null
+        version: Int? = null,
+        @Parameter(description = "iMate会话ID", required = false)
+        @HeaderParam(AUTH_HEADER_IMATE_SESSION_ID)
+        imateSessionId: String? = null,
+        @Parameter(description = "分支版本, 仅PAC流水线有效, 此参数和version同时存在时, 优先使用version参数", required = false)
+        @QueryParam("branch")
+        branch: String? = null
     ): Result<BuildId>
 
     @Operation(summary = "取消并发起新构建")

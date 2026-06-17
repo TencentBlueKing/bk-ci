@@ -148,7 +148,8 @@ class NodeDao {
         latestBuildTimeEnd: Long?,
         sortType: String?,
         collation: String?,
-        tagValueIds: Set<Long>?
+        tagValueIds: Set<Long>?,
+        nodeIds: List<Long>? = null
     ) {
         if (!keywords.isNullOrEmpty()) {
             query.and(NODE_IP.like("%$keywords%").or(DISPLAY_NAME.like("%$keywords%")))
@@ -192,6 +193,9 @@ class NodeDao {
         }
         if (!tagValueIds.isNullOrEmpty()) {
             query.and(TNodeTags.T_NODE_TAGS.TAG_VALUE_ID.`in`(tagValueIds))
+        }
+        if (!nodeIds.isNullOrEmpty()) {
+            query.and(NODE_ID.`in`(nodeIds))
         }
         when (sortType) {
             /*别名*/"displayName" -> query.orderBy(DISPLAY_NAME.transferOrder(collation))
@@ -237,7 +241,8 @@ class NodeDao {
         latestBuildTimeEnd: Long?,
         sortType: String?,
         collation: String?,
-        tagValueIds: Set<Long>?
+        tagValueIds: Set<Long>?,
+        nodeIds: List<Long>? = null
     ): Int {
         with(TNode.T_NODE) {
             val dsl = dslContext.selectCount().from(TNode.T_NODE)
@@ -261,8 +266,8 @@ class NodeDao {
                 latestBuildTimeEnd = latestBuildTimeEnd,
                 sortType = sortType,
                 collation = collation,
-                tagValueIds = tagValueIds
-
+                tagValueIds = tagValueIds,
+                nodeIds = nodeIds
             )
             return query.fetchOne(0, Int::class.java)!!
         }
@@ -309,12 +314,36 @@ class NodeDao {
         }
     }
 
-    fun listByIds(dslContext: DSLContext, projectId: String, nodeIds: Collection<Long>): List<TNodeRecord> {
+    fun listByIds(
+        dslContext: DSLContext,
+        projectId: String,
+        nodeIds: Collection<Long>,
+        nodeIp: String? = null,
+        displayName: String? = null,
+        createdUser: String? = null,
+        nodeStatus: NodeStatus? = null,
+        nodeType: NodeType? = null
+    ): List<TNodeRecord> {
         with(TNode.T_NODE) {
-            return dslContext.selectFrom(this)
+            val dsl = dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(NODE_ID.`in`(nodeIds))
-                .orderBy(NODE_ID.desc())
+            if (!nodeIp.isNullOrEmpty()) {
+                dsl.and(NODE_IP.like("%$nodeIp%"))
+            }
+            if (!displayName.isNullOrEmpty()) {
+                dsl.and(DISPLAY_NAME.like("%$displayName%"))
+            }
+            if (!createdUser.isNullOrEmpty()) {
+                dsl.and(CREATED_USER.like("%$createdUser%"))
+            }
+            if (nodeStatus != null) {
+                dsl.and(NODE_STATUS.eq(nodeStatus.name))
+            }
+            if (nodeType != null) {
+                dsl.and(NODE_TYPE.eq(nodeType.name))
+            }
+            return dsl.orderBy(NODE_ID.desc())
                 .fetch()
         }
     }
@@ -322,15 +351,31 @@ class NodeDao {
     fun listNodesByIdListWithPageLimit(
         dslContext: DSLContext,
         projectId: String,
+        nodeIp: String?,
+        displayName: String?,
+        createdUser: String?,
+        nodeStatus: NodeStatus?,
         limit: Int,
         offset: Int,
         nodeIds: Collection<Long>
     ): List<TNodeRecord> {
         with(TNode.T_NODE) {
-            return dslContext.selectFrom(this)
+            val dsl = dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(NODE_ID.`in`(nodeIds))
-                .orderBy(NODE_ID.desc())
+            if (!nodeIp.isNullOrEmpty()) {
+                dsl.and(NODE_IP.like("%$nodeIp%"))
+            }
+            if (!displayName.isNullOrEmpty()) {
+                dsl.and(DISPLAY_NAME.like("%$displayName%"))
+            }
+            if (!createdUser.isNullOrEmpty()) {
+                dsl.and(CREATED_USER.like("%$createdUser%"))
+            }
+            if (nodeStatus != null) {
+                dsl.and(NODE_STATUS.eq(nodeStatus.name))
+            }
+            return dsl.orderBy(NODE_ID.desc())
                 .limit(limit).offset(offset)
                 .fetch()
         }
@@ -419,7 +464,7 @@ class NodeDao {
         userId: String,
         agentVersion: String?
     ): Long
-            /** Node ID **/
+        /** Node ID **/
     {
         var nodeId = 0L
         with(TNode.T_NODE) {

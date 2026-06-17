@@ -85,6 +85,9 @@ object StreamBinding {
 
     const val PIPELINE_TEMPLATE_MIGRATE = "engine.pipeline.template.migrate"
 
+    // AI摘要生成事件
+    const val PIPELINE_AI_SUMMARY = "engine.pipeline.ai.summary"
+
     // 监控相关的队列
     const val PIPELINE_BUILD_MONITOR = "engine.pipeline.listener.monitor"
     const val PIPELINE_BUILD_HEART_BEAT = "engine.pipeline.build.hb"
@@ -173,6 +176,12 @@ object StreamBinding {
 
     // scm webhook触发事件
     const val SCM_HOOK_BUILD_TRIGGER_EVENT = "engine.pipeline.scm.hook.trigger.event"
+
+    const val CDS_WEBHOOK_REQUEST_EVENT = "engine.pipeline.cds.webhook.event"
+
+    const val CDS_WEBHOOK_TRIGGER_EVENT = "engine.pipeline.cds.webhook.trigger.event"
+
+    const val GENERIC_WEBHOOK_REQUEST_EVENT = "engine.pipeline.generic.webhook.event"
 
     // 流水线构建check-run事件
     const val PIPELINE_BUILD_CHECK_RUN = "engine.pipeline.build.check.run"

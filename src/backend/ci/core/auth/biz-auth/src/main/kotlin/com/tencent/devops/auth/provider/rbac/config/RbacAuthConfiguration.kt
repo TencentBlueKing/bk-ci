@@ -66,6 +66,7 @@ import com.tencent.devops.auth.provider.rbac.service.ItsmService
 import com.tencent.devops.auth.provider.rbac.service.PermissionGradeManagerService
 import com.tencent.devops.auth.provider.rbac.service.PermissionRoutingStrategy
 import com.tencent.devops.auth.provider.rbac.service.PermissionSubsetManagerService
+import com.tencent.devops.auth.provider.rbac.service.PersonalProjectService
 import com.tencent.devops.auth.provider.rbac.service.RbacCommonService
 import com.tencent.devops.auth.provider.rbac.service.RbacPermissionApplyService
 import com.tencent.devops.auth.provider.rbac.service.RbacPermissionAuthMonitorSpaceService
@@ -180,7 +181,9 @@ class RbacAuthConfiguration {
         traceEventDispatcher: TraceEventDispatcher,
         iamV2ManagerService: V2ManagerService,
         permissionAuthorizationService: PermissionAuthorizationService,
-        permissionResourceValidateService: PermissionResourceValidateService
+        permissionResourceValidateService: PermissionResourceValidateService,
+        personalProjectService: PersonalProjectService,
+        permissionResourceGroupService: PermissionResourceGroupService
     ) = RbacPermissionResourceService(
         authResourceService = authResourceService,
         permissionGradeManagerService = permissionGradeManagerService,
@@ -189,7 +192,9 @@ class RbacAuthConfiguration {
         traceEventDispatcher = traceEventDispatcher,
         iamV2ManagerService = iamV2ManagerService,
         permissionAuthorizationService = permissionAuthorizationService,
-        permissionResourceValidateService = permissionResourceValidateService
+        permissionResourceValidateService = permissionResourceValidateService,
+        personalProjectService = personalProjectService,
+        permissionResourceGroupService = permissionResourceGroupService
     )
 
     @Bean
@@ -321,7 +326,8 @@ class RbacAuthConfiguration {
         deptService: DeptService,
         rbacCommonService: RbacCommonService,
         authResourceSyncDao: AuthResourceSyncDao,
-        traceEventDispatcher: TraceEventDispatcher
+        traceEventDispatcher: TraceEventDispatcher,
+        client: Client
     ) = RbacPermissionResourceMemberService(
         authResourceService = authResourceService,
         iamV2ManagerService = iamV2ManagerService,
@@ -330,7 +336,8 @@ class RbacAuthConfiguration {
         dslContext = dslContext,
         deptService = deptService,
         traceEventDispatcher = traceEventDispatcher,
-        authResourceSyncDao = authResourceSyncDao
+        authResourceSyncDao = authResourceSyncDao,
+        client = client
     )
 
     @Bean

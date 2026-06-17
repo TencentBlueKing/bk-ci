@@ -1,5 +1,6 @@
 package com.tencent.devops.ai.properties
 
+import kotlin.random.Random
 import org.springframework.boot.context.properties.ConfigurationProperties
 
 /** LLM 模型连接配置属性（API URL、API Key、模型名称、HTTP 超时等）。 */
@@ -8,6 +9,12 @@ data class AiLlmProperties(
     val apiKey: String = "",
     val baseUrl: String = "",
     val modelName: String = "deepseek-chat",
+    /**
+     * 思考模式档位（混元 Hy3 / OpenAI o-series 等支持的 `reasoning_effort` 参数）。
+     * 留空时不向请求体注入该字段，避免对不支持的模型造成兼容问题。
+     * 常见取值：`no_think` / `low` / `medium` / `high`，具体以模型供应商文档为准。
+     */
+    val reasoningEffort: String? = null,
     /** 蓝鲸 API 网关 bk_app_code，非空时启用网关认证模式 */
     val bkAppCode: String = "",
     /** 蓝鲸 API 网关 bk_app_secret */
@@ -53,5 +60,131 @@ data class AiLlmProperties(
      */
     val maxBackoffSeconds: Long = 8,
     /** 退避倍数，默认 2.0（指数退避），与 OpenAI SDK 一致 */
-    val backoffMultiplier: Double = 2.0
-)
+    val backoffMultiplier: Double = 2.0,
+    /**
+     * 平台侧模型列表。
+     * 每个 override 只需填差异化字段（id / baseUrl / modelName / 凭证 / priority / enabled），
+     * 通用字段（HTTP 超时、重试、退避）从顶层继承；
+     * 留空时退回到顶层 baseUrl 表示的单模型 legacy 配置。
+     *
+     * 排序规则：按 priority 升序构成 failover 链；priority 相同的模型会在每次 resolve
+     * 平台模型链路时随机打散，避免同一优先级下的流量固定打到某一个模型。
+     */
+    val models: List<AiLlmModelOverride> = emptyList()
+) {
+    fun enabledPlatformModels(): List<AiLlmModelProperties> =
+        enabledPlatformModels(Random.Default)
+
+    internal fun enabledPlatformModels(
+        random: Random
+    ): List<AiLlmModelProperties> {
+        if (models.isNotEmpty()) {
+            return models
+                .asSequence()
+                .filter { it.enabled }
+                .groupBy { it.priority }
+                .toSortedMap()
+                .values
+                .flatMap { it.shuffled(random) }
+                .map { it.toEffective(this) }
+        }
+        if (baseUrl.isBlank()) {
+            return emptyList()
+        }
+        return listOf(
+            AiLlmModelProperties(
+                id = "default",
+                baseUrl = baseUrl,
+                modelName = modelName,
+                apiKey = apiKey,
+                reasoningEffort = reasoningEffort,
+                bkAppCode = bkAppCode,
+                bkAppSecret = bkAppSecret,
+                connectTimeoutSeconds = connectTimeoutSeconds,
+                readTimeoutSeconds = readTimeoutSeconds,
+                writeTimeoutSeconds = writeTimeoutSeconds,
+                executionTimeoutSeconds = executionTimeoutSeconds,
+                maxAttempts = maxAttempts,
+                initialBackoffSeconds = initialBackoffSeconds,
+                maxBackoffSeconds = maxBackoffSeconds,
+                backoffMultiplier = backoffMultiplier
+            )
+        )
+    }
+}
+
+/**
+ * 平台模型 yaml 绑定类型。
+ *
+ * 仅 [id] / [baseUrl] / [modelName] 必填；其余字段省略时从顶层 [AiLlmProperties] 继承默认值。
+ * 通过 [toEffective] 合并出下游使用的非空 [AiLlmModelProperties]。
+ */
+data class AiLlmModelOverride(
+    val id: String,
+    val baseUrl: String,
+    val modelName: String,
+    val apiKey: String? = null,
+    /**
+     * 思考模式档位。留空时继承顶层 [AiLlmProperties.reasoningEffort]，
+     * 顶层也未配置则不向请求体注入该字段。
+     */
+    val reasoningEffort: String? = null,
+    val bkAppCode: String? = null,
+    val bkAppSecret: String? = null,
+    val connectTimeoutSeconds: Long? = null,
+    val readTimeoutSeconds: Long? = null,
+    val writeTimeoutSeconds: Long? = null,
+    val executionTimeoutSeconds: Long? = null,
+    val maxAttempts: Int? = null,
+    val initialBackoffSeconds: Long? = null,
+    val maxBackoffSeconds: Long? = null,
+    val backoffMultiplier: Double? = null,
+    val priority: Int = 100,
+    val enabled: Boolean = true
+) {
+    fun toEffective(defaults: AiLlmProperties): AiLlmModelProperties = AiLlmModelProperties(
+        id = id,
+        baseUrl = baseUrl,
+        modelName = modelName,
+        apiKey = apiKey ?: defaults.apiKey,
+        reasoningEffort = reasoningEffort ?: defaults.reasoningEffort,
+        bkAppCode = bkAppCode ?: defaults.bkAppCode,
+        bkAppSecret = bkAppSecret ?: defaults.bkAppSecret,
+        connectTimeoutSeconds = connectTimeoutSeconds ?: defaults.connectTimeoutSeconds,
+        readTimeoutSeconds = readTimeoutSeconds ?: defaults.readTimeoutSeconds,
+        writeTimeoutSeconds = writeTimeoutSeconds ?: defaults.writeTimeoutSeconds,
+        executionTimeoutSeconds = executionTimeoutSeconds ?: defaults.executionTimeoutSeconds,
+        maxAttempts = maxAttempts ?: defaults.maxAttempts,
+        initialBackoffSeconds = initialBackoffSeconds ?: defaults.initialBackoffSeconds,
+        maxBackoffSeconds = maxBackoffSeconds ?: defaults.maxBackoffSeconds,
+        backoffMultiplier = backoffMultiplier ?: defaults.backoffMultiplier,
+        priority = priority,
+        enabled = enabled
+    )
+}
+
+data class AiLlmModelProperties(
+    val id: String,
+    val baseUrl: String,
+    val modelName: String,
+    val apiKey: String = "",
+    /**
+     * 思考模式档位。为 null 或空串时表示不传 `reasoning_effort` 参数，
+     * 兼容不支持该字段的模型。
+     */
+    val reasoningEffort: String? = null,
+    val bkAppCode: String = "",
+    val bkAppSecret: String = "",
+    val connectTimeoutSeconds: Long = 10,
+    val readTimeoutSeconds: Long = 90,
+    val writeTimeoutSeconds: Long = 30,
+    val executionTimeoutSeconds: Long = 60,
+    val maxAttempts: Int = 5,
+    val initialBackoffSeconds: Long = 1,
+    val maxBackoffSeconds: Long = 8,
+    val backoffMultiplier: Double = 2.0,
+    val priority: Int = 100,
+    val enabled: Boolean = true
+) {
+    fun useBkGateway(): Boolean = bkAppCode.isNotBlank()
+}

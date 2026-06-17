@@ -29,6 +29,7 @@ package com.tencent.devops.store.atom.resources
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.atom.ServiceAtomResource
+import com.tencent.devops.store.atom.dao.AtomQueryParam
 import com.tencent.devops.store.atom.service.AtomPropService
 import com.tencent.devops.store.atom.service.AtomService
 import com.tencent.devops.store.atom.service.MarketAtomClassifyService
@@ -36,12 +37,16 @@ import com.tencent.devops.store.atom.service.MarketAtomService
 import com.tencent.devops.store.pojo.atom.AtomClassifyInfo
 import com.tencent.devops.store.pojo.atom.AtomCodeVersionReqItem
 import com.tencent.devops.store.pojo.atom.AtomProp
+import com.tencent.devops.store.pojo.atom.AtomResp
+import com.tencent.devops.store.pojo.atom.AtomRespItem
 import com.tencent.devops.store.pojo.atom.AtomRunInfo
 import com.tencent.devops.store.pojo.atom.InstalledAtom
+import com.tencent.devops.store.pojo.atom.MarketAtomListQuery
 import com.tencent.devops.store.pojo.atom.MarketAtomResp
 import com.tencent.devops.store.pojo.atom.PipelineAtom
 import com.tencent.devops.store.pojo.atom.enums.AtomTypeEnum
 import com.tencent.devops.store.pojo.atom.enums.MarketAtomSortTypeEnum
+import com.tencent.devops.store.pojo.common.enums.ServiceScopeEnum
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -54,6 +59,7 @@ class ServiceAtomResourceImpl @Autowired constructor(
 
     override fun list(
         userId: String,
+        serviceScope: ServiceScopeEnum?,
         keyword: String?,
         classifyCode: String?,
         labelCode: String?,
@@ -68,19 +74,22 @@ class ServiceAtomResourceImpl @Autowired constructor(
     ): Result<MarketAtomResp> {
         return Result(
             marketAtomService.list(
-                userId = userId.trim(),
-                keyword = keyword?.trim(),
-                classifyCode = classifyCode?.trim(),
-                labelCode = labelCode?.trim(),
-                score = score,
-                rdType = rdType,
-                yamlFlag = yamlFlag,
-                recommendFlag = recommendFlag,
-                qualityFlag = qualityFlag,
-                sortType = sortType,
-                page = page,
-                pageSize = pageSize,
-                urlProtocolTrim = true
+                MarketAtomListQuery(
+                    userId = userId.trim(),
+                    keyword = keyword?.trim(),
+                    classifyCode = classifyCode?.trim(),
+                    labelCode = labelCode?.trim(),
+                    score = score,
+                    rdType = rdType,
+                    yamlFlag = yamlFlag,
+                    recommendFlag = recommendFlag,
+                    qualityFlag = qualityFlag,
+                    sortType = sortType,
+                    page = page,
+                    pageSize = pageSize,
+                    urlProtocolTrim = true,
+                    serviceScope = serviceScope
+                )
             )
         )
     }
@@ -91,8 +100,12 @@ class ServiceAtomResourceImpl @Autowired constructor(
         return Result(atomService.listInstalledAtomByProject(projectCode))
     }
 
-    override fun getAtomVersionInfo(atomCode: String, version: String): Result<PipelineAtom?> {
-        return atomService.getPipelineAtomDetail(atomCode = atomCode, version = version)
+    override fun getAtomVersionInfo(
+        atomCode: String,
+        version: String,
+        serviceScope: ServiceScopeEnum?
+    ): Result<PipelineAtom?> {
+        return atomService.getPipelineAtomDetail(atomCode = atomCode, version = version, serviceScope = serviceScope)
     }
 
     override fun getAtomInfos(
@@ -115,5 +128,41 @@ class ServiceAtomResourceImpl @Autowired constructor(
 
     override fun getAtomId(atomCode: String, version: String): Result<String?> {
         return Result(atomService.getAtomId(atomCode = atomCode, version = version))
+    }
+
+    override fun listAllPipelineAtoms(
+        userId: String,
+        serviceScope: String?,
+        jobType: String?,
+        os: String?,
+        projectCode: String,
+        category: String?,
+        classifyId: String?,
+        recommendFlag: Boolean?,
+        keyword: String?,
+        queryProjectAtomFlag: Boolean,
+        fitOsFlag: Boolean?,
+        queryFitAgentBuildLessAtomFlag: Boolean?,
+        page: Int,
+        pageSize: Int
+    ): Result<AtomResp<AtomRespItem>?> {
+        return atomService.serviceGetPipelineAtoms(
+            userId = userId,
+            AtomQueryParam(
+                serviceScope = serviceScope?.let { ServiceScopeEnum.valueOf(it) },
+                jobType = jobType,
+                os = os,
+                projectCode = projectCode,
+                category = category,
+                classifyId = classifyId,
+                recommendFlag = recommendFlag,
+                keyword = keyword,
+                queryProjectAtomFlag = queryProjectAtomFlag,
+                fitOsFlag = fitOsFlag,
+                queryFitAgentBuildLessAtomFlag = queryFitAgentBuildLessAtomFlag
+            ),
+            page = page,
+            pageSize = pageSize
+        )
     }
 }

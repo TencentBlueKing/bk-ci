@@ -187,6 +187,7 @@ interface UserPipelineResource {
         @PathParam("pipelineId")
         pipelineId: String,
         @Parameter(description = "流水线COPY", required = true)
+        @Valid
         pipeline: PipelineCopy
     ): Result<PipelineId>
 

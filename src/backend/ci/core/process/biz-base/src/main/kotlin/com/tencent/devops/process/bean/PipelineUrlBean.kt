@@ -27,6 +27,8 @@
 
 package com.tencent.devops.process.bean
 
+import com.tencent.devops.common.pipeline.enums.ChannelCode
+
 interface PipelineUrlBean {
 
     /**
@@ -39,13 +41,19 @@ interface PipelineUrlBean {
         buildId: String,
         position: String?,
         stageId: String?,
-        needShortUrl: Boolean = true
+        needShortUrl: Boolean = true,
+        channelCode: ChannelCode? = null
     ): String
 
     /**
      * 生成手机侧的构建详情访问链接
      */
-    fun genAppBuildDetailUrl(projectCode: String, pipelineId: String, buildId: String): String
+    fun genAppBuildDetailUrl(
+        projectCode: String,
+        pipelineId: String,
+        buildId: String,
+        channelCode: ChannelCode? = null
+    ): String
 
     /**
      * 生成构建stage审核/人工审核快捷访问链接
@@ -57,6 +65,7 @@ interface PipelineUrlBean {
         buildId: String,
         stageSeq: Int?,
         taskId: String?,
-        needShortUrl: Boolean = true
+        needShortUrl: Boolean = true,
+        channelCode: ChannelCode? = null
     ): String
 }

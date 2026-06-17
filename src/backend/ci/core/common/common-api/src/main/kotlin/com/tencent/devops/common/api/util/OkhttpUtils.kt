@@ -37,6 +37,7 @@ import java.io.FileOutputStream
 import java.io.UnsupportedEncodingException
 import java.net.HttpURLConnection
 import java.net.URLEncoder
+import java.net.UnknownHostException
 import java.security.cert.CertificateException
 import java.util.concurrent.TimeUnit
 import javax.net.ssl.SSLContext
@@ -440,5 +441,228 @@ object OkhttpUtils {
             // 处理无效URL格式的异常
             null
         }
+    }
+
+    /**
+     * 始终拒绝的 host 黑名单（L1）。
+     *
+     * 这些 host 在任何部署形态下都没有合法的 callback 用例：
+     * - `localhost` / `ip6-localhost`：回环到 bk-ci 自身后端，会暴露 actuator 等管理端点；
+     * - 各云厂商元数据服务别名：用于窃取 IAM 临时凭据；
+     * - `kubernetes.default*`：K8s API Server，永远不应作为业务 callback 接收方；
+     * 即便管理员显式开启了 `allow-internal-url`，下列 host 仍然会被拒绝。
+     */
+    private val ALWAYS_BLOCKED_HOSTS = setOf(
+        "metadata.google.internal",
+        "metadata",
+        "metadata.tencentyun.com",
+        "100.100.100.200",
+        "kubernetes.default.svc",
+        "kubernetes.default.svc.cluster.local",
+        "kubernetes.default",
+        "kubernetes",
+        "localhost",
+        "ip6-localhost",
+        "ip6-loopback"
+    )
+
+    /**
+     * 始终拒绝的 host 名前缀（L1）。
+     * 涵盖 169.254.0.0/16 链路本地网段（AWS/GCP/阿里云元数据服务均位于该网段）。
+     */
+    private val ALWAYS_BLOCKED_HOST_PREFIXES = listOf("169.254.")
+
+    /**
+     * 始终拒绝的 IP 类型（L1）：回环 / 任意本地 / 链路本地 / 组播。
+     * 这些类型的地址在任何 callback 场景下都没有合法用例。
+     */
+    fun isAlwaysBlockedAddress(ip: InetAddress): Boolean {
+        return ip.isLoopbackAddress ||
+                ip.isAnyLocalAddress ||
+                ip.isLinkLocalAddress ||
+                ip.isMulticastAddress
+    }
+
+    /**
+     * 判断 host 是否命中 L1 黑名单（始终拒绝，不受任何配置影响）。
+     */
+    fun isAlwaysBlockedHost(host: String): Boolean {
+        if (host.isBlank()) return true
+        val lowerHost = host.lowercase()
+        if (ALWAYS_BLOCKED_HOSTS.contains(lowerHost)) return true
+        if (ALWAYS_BLOCKED_HOST_PREFIXES.any { lowerHost.startsWith(it) }) return true
+        return try {
+            InetAddress.getAllByName(host).any { isAlwaysBlockedAddress(it) }
+        } catch (e: UnknownHostException) {
+            logger.warn("isAlwaysBlockedHost|cannot resolve host[$host]: ${e.message}")
+            // 解析不到的 host 视作不可达，由调用方按实际策略处理
+            false
+        }
+    }
+
+    /**
+     * 判断单个 [InetAddress] 是否为公网地址（既非 L1 也非站点本地 RFC1918）。
+     */
+    fun isPublicAddress(ip: InetAddress): Boolean {
+        return !isAlwaysBlockedAddress(ip) && !ip.isSiteLocalAddress
+    }
+
+    /**
+     * 校验给定的 URL 是否指向**严格意义上的公网**地址（最严格模式）。
+     *
+     * 规则：
+     * - URL 格式合法；
+     * - host 不命中 [isAlwaysBlockedHost]（L1 黑名单）；
+     * - host 解析出的全部 IP 均通过 [isPublicAddress]，即不允许 RFC1918 站点本地地址。
+     *
+     * 适用于公网部署 / SaaS 环境。私有云部署若需要回调到 RFC1918 内网，请放开
+     * `project.callback.allow-internal-url`，并在调用方分别使用 L1 检查 + [metadataSafeDns]。
+     *
+     * 注意：由于 DNS 解析可能在校验后被攻击者修改（DNS rebinding），调用方在执行实际 HTTP 请求时
+     * 仍需配合 [ssrfSafeDns] 或 [metadataSafeDns]，不能仅依赖入库时的校验。
+     */
+    fun isExternalUrl(url: String): Boolean {
+        return try {
+            val httpUrl = url.toHttpUrl()
+            isExternalHost(httpUrl.host)
+        } catch (e: IllegalArgumentException) {
+            logger.warn("isExternalUrl|invalid url[$url]: ${e.message}")
+            false
+        } catch (e: UnknownHostException) {
+            logger.warn("isExternalUrl|cannot resolve url[$url]: ${e.message}")
+            false
+        } catch (e: Exception) {
+            logger.warn("isExternalUrl|unexpected error for url[$url]: ${e.message}")
+            false
+        }
+    }
+
+    /**
+     * 校验 host 是否为公网地址（不含 RFC1918）。规则同 [isExternalUrl]。
+     */
+    fun isExternalHost(host: String): Boolean {
+        if (host.isBlank()) return false
+        if (isAlwaysBlockedHost(host)) return false
+        return try {
+            val addresses = InetAddress.getAllByName(host)
+            addresses.isNotEmpty() && addresses.all { isPublicAddress(it) }
+        } catch (e: UnknownHostException) {
+            logger.warn("isExternalHost|cannot resolve host[$host]: ${e.message}")
+            false
+        }
+    }
+
+    /**
+     * 兼容旧调用方：判断单个 [InetAddress] 是否为公网地址（含 RFC1918 在内的所有内网均拒绝）。
+     * @see isPublicAddress
+     */
+    @Deprecated("Use isPublicAddress instead", ReplaceWith("isPublicAddress(ip)"))
+    fun isExternalAddress(ip: InetAddress): Boolean = isPublicAddress(ip)
+
+    /**
+     * 元数据安全 DNS（L1 强制保护）。
+     *
+     * 在每次解析时拒绝 [isAlwaysBlockedHost] 命中的目标，包括：回环、任意本地、链路本地、组播，
+     * 以及云平台 / 容器编排元数据 host。**允许 RFC1918 站点本地地址**，适合私有云 / IDC 部署：
+     * 业务 callback 可继续指向 `10.x` / `192.168.x` 内的服务，但永远无法被劫持到本机或元数据服务。
+     *
+     * 该 DNS 也提供 DNS rebinding 防御：每次请求都会重新解析并校验，攻击者无法在入库后将 host
+     * 重绑定到回环或元数据地址。
+     */
+    fun metadataSafeDns(): Dns = object : Dns {
+        override fun lookup(hostname: String): List<InetAddress> {
+            val lowerHost = hostname.lowercase()
+            if (ALWAYS_BLOCKED_HOSTS.contains(lowerHost) ||
+                ALWAYS_BLOCKED_HOST_PREFIXES.any { lowerHost.startsWith(it) }
+            ) {
+                throw UnknownHostException(
+                    "host[$hostname] is blocked by SSRF protection (metadata/link-local host)"
+                )
+            }
+            val addresses = Dns.SYSTEM.lookup(hostname)
+            val blocked = addresses.filter { isAlwaysBlockedAddress(it) }
+            if (blocked.isNotEmpty()) {
+                throw UnknownHostException(
+                    "host[$hostname] is blocked by SSRF protection " +
+                            "(resolved to loopback/link-local/metadata: " +
+                            "${blocked.joinToString { it.hostAddress }})"
+                )
+            }
+            return addresses
+        }
+    }
+
+    /**
+     * 严格 SSRF DNS（L1 + L2，最严格）。
+     *
+     * 在 [metadataSafeDns] 的基础上，额外拒绝站点本地（RFC1918）地址。
+     * 仅适用于面向公网的部署或明确希望禁止内网回调的环境。
+     */
+    fun ssrfSafeDns(): Dns = object : Dns {
+        override fun lookup(hostname: String): List<InetAddress> {
+            val lowerHost = hostname.lowercase()
+            if (ALWAYS_BLOCKED_HOSTS.contains(lowerHost) ||
+                ALWAYS_BLOCKED_HOST_PREFIXES.any { lowerHost.startsWith(it) }
+            ) {
+                throw UnknownHostException(
+                    "host[$hostname] is blocked by SSRF protection (metadata/link-local host)"
+                )
+            }
+            val addresses = Dns.SYSTEM.lookup(hostname)
+            val internal = addresses.filter { !isPublicAddress(it) }
+            if (internal.isNotEmpty()) {
+                throw UnknownHostException(
+                    "host[$hostname] is blocked by SSRF protection " +
+                            "(resolved to internal addresses: ${internal.joinToString { it.hostAddress }})"
+                )
+            }
+            return addresses
+        }
+    }
+
+    /**
+     * 与 [okHttpClient] 配置一致，但所有出站请求均经过 [ssrfSafeDns]（L1 + L2）校验。
+     * 用于面向公网的部署，禁止任何内网回调。
+     */
+    val ssrfSafeOkHttpClient: OkHttpClient by lazy {
+        OkHttpClient.Builder()
+            .dns(ssrfSafeDns())
+            .connectTimeout(connectTimeout, TimeUnit.SECONDS)
+            .readTimeout(readTimeout, TimeUnit.SECONDS)
+            .writeTimeout(writeTimeout, TimeUnit.SECONDS)
+            .sslSocketFactory(sslSocketFactory(), trustAllCerts[0] as X509TrustManager)
+            .hostnameVerifier { _, _ -> true }
+            .build()
+    }
+
+    /**
+     * 与 [okHttpClient] 配置一致，但所有出站请求均经过 [metadataSafeDns]（仅 L1）校验。
+     * 适用于私有云 / IDC 部署：允许 RFC1918 内网回调，但仍然禁止回环 / 链路本地 / 元数据 host。
+     */
+    val metadataSafeOkHttpClient: OkHttpClient by lazy {
+        OkHttpClient.Builder()
+            .dns(metadataSafeDns())
+            .connectTimeout(connectTimeout, TimeUnit.SECONDS)
+            .readTimeout(readTimeout, TimeUnit.SECONDS)
+            .writeTimeout(writeTimeout, TimeUnit.SECONDS)
+            .sslSocketFactory(sslSocketFactory(), trustAllCerts[0] as X509TrustManager)
+            .hostnameVerifier { _, _ -> true }
+            .build()
+    }
+
+    /**
+     * 发起一次带 SSRF 校验（L1 + L2，含 DNS pinning）的 HTTP 调用。
+     * 当目标 host 解析到内网 / 元数据地址时，调用会以 [UnknownHostException] 失败。
+     */
+    fun doSsrfSafeHttp(request: Request): Response {
+        return doHttp(ssrfSafeOkHttpClient, request)
+    }
+
+    /**
+     * 发起一次仅带 L1 防护的 HTTP 调用（含 DNS pinning）：
+     * 拒绝回环 / 链路本地 / 元数据 host，但允许 RFC1918 内网。
+     */
+    fun doMetadataSafeHttp(request: Request): Response {
+        return doHttp(metadataSafeOkHttpClient, request)
     }
 }

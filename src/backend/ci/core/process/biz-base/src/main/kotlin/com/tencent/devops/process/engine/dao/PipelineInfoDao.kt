@@ -290,7 +290,7 @@ class PipelineInfoDao {
         projectCode: String,
         limit: Int,
         offset: Int,
-        channelCode: ChannelCode? = ChannelCode.BS
+        channelCode: ChannelCode? = ChannelCode.getRequestChannelCode()
     ): Result<TPipelineInfoRecord>? {
         return with(T_PIPELINE_INFO) {
             val conditions = mutableListOf<Condition>()
@@ -312,7 +312,7 @@ class PipelineInfoDao {
         dslContext: DSLContext,
         pipelineName: String?,
         projectCode: String,
-        channelCode: ChannelCode? = ChannelCode.BS
+        channelCode: ChannelCode? = ChannelCode.getRequestChannelCode()
     ): Int {
         return with(T_PIPELINE_INFO) {
             val conditions = mutableListOf<Condition>()
@@ -401,29 +401,39 @@ class PipelineInfoDao {
         }
     }
 
+    /**
+     * 统计满足条件的流水线数量
+     * @param dslContext JOOQ DSL上下文
+     * @param projectId 项目ID
+     * @param deleteFlag 删除标志筛选条件（可选）
+     * @param days 时间范围筛选条件（可选，统计最近days天内的流水线）
+     * @param filterByPipelineName 流水线名称筛选条件（可选）
+     * @param channelCode 渠道代码筛选条件（可选）
+     * @return 满足条件的流水线数量
+     */
     fun countPipeline(
         dslContext: DSLContext,
         projectId: String,
         deleteFlag: Boolean? = false,
         days: Long? = null,
-        filterByPipelineName: String?
+        filterByPipelineName: String? = null,
+        channelCode: ChannelCode? = null
     ): Int {
         with(T_PIPELINE_INFO) {
-            val conditions = mutableListOf<Condition>()
-            conditions.add(PROJECT_ID.eq(projectId))
-            if (deleteFlag != null) {
-                conditions.add(DELETE.eq(true))
+            // 构建查询条件
+            val conditions = mutableListOf<Condition>().apply {
+                add(PROJECT_ID.eq(projectId))
+                // 添加删除标志条件
+                deleteFlag?.let { add(DELETE.eq(it)) }
+                // 添加时间范围条件
+                days?.let { add(UPDATE_TIME.greaterOrEqual(LocalDateTime.now().minusDays(it))) }
+                // 添加流水线名称模糊匹配条件
+                filterByPipelineName?.let { add(PIPELINE_NAME.like("%$it%")) }
+                // 添加渠道代码条件
+                channelCode?.let { add(CHANNEL.eq(it.name)) }
             }
-            if (days != null) {
-                conditions.add(UPDATE_TIME.greaterOrEqual(LocalDateTime.now().minusDays(days)))
-            }
-            if (filterByPipelineName != null) {
-                conditions.add(PIPELINE_NAME.like("%$filterByPipelineName%"))
-            }
-            return dslContext
-                .selectCount().from(this)
-                .where(conditions)
-                .fetchOne()?.value1() ?: 0
+            // 执行计数查询
+            return dslContext.selectCount().from(this).where(conditions).fetchOne()?.value1() ?: 0
         }
     }
 
@@ -580,7 +590,6 @@ class PipelineInfoDao {
         return with(T_PIPELINE_INFO) {
             val query = dslContext.selectFrom(this)
                 .where(buildConditions(condition))
-                .orderBy(PIPELINE_NAME.asc(), PIPELINE_ID.asc())
             if (condition.limit != null && condition.offset != null) {
                 query.limit(condition.limit).offset(condition.offset)
             }
@@ -615,10 +624,22 @@ class PipelineInfoDao {
                     PIPELINE_NAME.like("%${condition.pipelineName}%")
                 )
             }
-            if (condition.locked != null) {
-                conditions.add(LOCKED.eq(condition.locked))
-            }
             conditions
+        }
+    }
+
+    fun searchPipelineIdsByName(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineName: String
+    ): Set<String> {
+        return with(T_PIPELINE_INFO) {
+            dslContext.select(PIPELINE_ID)
+                .from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(DELETE.eq(false))
+                .and(PIPELINE_NAME.like("%$pipelineName%"))
+                .fetch().map { it.value1() }.toSet()
         }
     }
 
@@ -709,7 +730,8 @@ class PipelineInfoDao {
                     latestVersionStatus = latestVersionStatus?.let {
                         VersionStatus.valueOf(it)
                     } ?: VersionStatus.RELEASED,
-                    locked = t.locked
+                    locked = t.locked,
+                    autoSummary = t.autoSummary
                 )
             }
         } else {
@@ -899,6 +921,29 @@ class PipelineInfoDao {
                 .and(LOCKED.eq(true))
                 .and(DELETE.eq(false))
                 .fetch(PIPELINE_ID, String::class.java)
+        }
+    }
+
+    /**
+     * 更新流水线AI自动摘要，带版本校验（乐观锁）
+     * 只有当前版本与传入版本一致时才更新
+     */
+    fun updateAutoSummary(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        autoSummary: String,
+        version: Int
+    ): Boolean {
+        return with(T_PIPELINE_INFO) {
+            dslContext.update(this)
+                .set(AUTO_SUMMARY, autoSummary)
+                .set(UPDATE_TIME, LocalDateTime.now())
+                .where(PROJECT_ID.eq(projectId))
+                .and(PIPELINE_ID.eq(pipelineId))
+                .and(VERSION.eq(version))
+                .and(DELETE.eq(false))
+                .execute() == 1
         }
     }
 

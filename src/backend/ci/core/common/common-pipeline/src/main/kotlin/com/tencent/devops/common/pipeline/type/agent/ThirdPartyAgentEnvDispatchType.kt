@@ -37,7 +37,7 @@ data class ThirdPartyAgentEnvDispatchType(
     override var workspace: String?,
     // 共享环境时必填，值为提供共享环境的项目id
     var envProjectId: String?,
-    override val agentType: AgentType = AgentType.NAME,
+    override val agentType: AgentDispatchType = AgentDispatchType.NAME,
     override val dockerInfo: ThirdPartyAgentDockerInfo?,
     override var reusedInfo: ReusedInfo?
 ) : ThirdPartyAgentDispatch(

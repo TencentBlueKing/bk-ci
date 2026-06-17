@@ -102,7 +102,20 @@ class ServiceMarketAtomResourceImpl @Autowired constructor(
         channelCode: ChannelCode?,
         installAtomReq: InstallAtomReq
     ): Result<Boolean> {
-        return marketAtomService.installAtom(userId, channelCode ?: ChannelCode.BS, installAtomReq)
+        return marketAtomService.installAtom(
+            userId = userId,
+            channelCode = channelCode ?: ChannelCode.getRequestChannelCode(),
+            installAtomReq = installAtomReq
+        )
+    }
+
+    override fun getAtomYmlV2Info(atomCode: String, defaultShowFlag: Boolean?): Result<String?> {
+        return Result(
+            marketAtomService.generateCiV2Yaml(
+                atomCode = atomCode,
+                defaultShowFlag = defaultShowFlag ?: false
+            )
+        )
     }
 
     override fun getPostAtoms(projectCode: String, atomItems: Set<AtomPostReqItem>): Result<AtomPostResp> {

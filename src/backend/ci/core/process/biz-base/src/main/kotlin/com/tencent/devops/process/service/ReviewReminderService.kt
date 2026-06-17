@@ -35,6 +35,7 @@ import com.tencent.devops.common.pipeline.pojo.element.agent.ManualReviewUserTas
 import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.process.bean.PipelineUrlBean
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildNotifyEvent
+import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineTaskService
 import com.tencent.devops.process.pojo.PipelineNotifyTemplateEnum
@@ -51,7 +52,8 @@ class ReviewReminderService @Autowired constructor(
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val pipelineRuntimeService: PipelineRuntimeService,
     private val pipelineTaskService: PipelineTaskService,
-    private val pipelineUrlBean: PipelineUrlBean
+    private val pipelineUrlBean: PipelineUrlBean,
+    private val pipelineRepositoryService: PipelineRepositoryService
 ) {
 
     companion object {
@@ -99,6 +101,14 @@ class ReviewReminderService @Autowired constructor(
 
         val param = JsonUtil.mapTo((buildTask.taskParams), ManualReviewUserTaskElement::class.java)
 
+        // 获取流水线渠道信息，用于生成对应渠道的 URL
+        val channelCode = try {
+            pipelineRepositoryService.getPipelineInfo(projectId, pipelineId)?.channelCode
+        } catch (ignore: Exception) {
+            LOG.warn("ReviewReminder|Failed to get channelCode for $projectId/$pipelineId", ignore)
+            null
+        }
+
         pipelineEventDispatcher.dispatch(
             PipelineBuildNotifyEvent(
                 notifyTemplateEnum = PipelineNotifyTemplateEnum
@@ -117,10 +127,12 @@ class ReviewReminderService @Autowired constructor(
                         buildId = buildId,
                         position = null,
                         stageId = null,
-                        needShortUrl = true
+                        needShortUrl = true,
+                        channelCode = channelCode
                     ),
                     "reviewAppUrl" to pipelineUrlBean.genAppBuildDetailUrl(
-                        projectCode = projectId, pipelineId = pipelineId, buildId = buildId
+                        projectCode = projectId, pipelineId = pipelineId,
+                        buildId = buildId, channelCode = channelCode
                     ),
                     // 企业微信组
                     NotifyUtils.WEWORK_GROUP_KEY to (weworkGroup.joinToString(separator = ","))

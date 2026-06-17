@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -322,7 +322,7 @@ class WelcomeGuideService @Autowired constructor(
         private val objectMapper = jacksonObjectMapper()
         private const val GUIDE_TYPE_CARD = "CARD"
         private const val GUIDE_TYPE_ACTION = "ACTION"
-        private const val DEFAULT_HOT_QUESTION_LIMIT = 5
+        private const val DEFAULT_HOT_QUESTION_LIMIT = 3
         private const val ROLE_ADMIN = "ADMIN"
         private const val ROLE_MEMBER = "MEMBER"
         private const val HOT_QUESTION_SOURCE_MANUAL = "MANUAL"

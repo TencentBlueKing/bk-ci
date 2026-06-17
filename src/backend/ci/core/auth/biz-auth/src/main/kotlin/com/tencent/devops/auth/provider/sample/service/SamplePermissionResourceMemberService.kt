@@ -5,6 +5,7 @@ import com.tencent.devops.auth.pojo.ResourceMemberInfo
 import com.tencent.devops.auth.pojo.vo.ResourceMemberCountVO
 import com.tencent.devops.auth.service.iam.PermissionResourceMemberService
 import com.tencent.devops.common.api.model.SQLPage
+import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroupAndUserList
 
@@ -32,7 +33,7 @@ class SamplePermissionResourceMemberService : PermissionResourceMemberService {
         expiredTime: Long,
         members: List<String>?,
         departments: List<String>?
-    ) = true
+    ) = Result(data = true)
 
     override fun batchDeleteResourceGroupMembers(
         projectCode: String,

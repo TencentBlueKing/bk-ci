@@ -67,7 +67,7 @@ class PipelineYamlFileService @Autowired constructor(
         path: String,
         ref: String,
         authRepository: AuthRepository
-    ): Content {
+    ): Content? {
         return scmProxyService.getFileContent(
             projectId = projectId,
             path = path,
