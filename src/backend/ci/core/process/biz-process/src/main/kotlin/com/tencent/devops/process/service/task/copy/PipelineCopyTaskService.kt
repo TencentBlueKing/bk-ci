@@ -29,6 +29,7 @@ import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTask
 import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskConfigRequest
 import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskExecuteProgress
 import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskExecuteSummary
+import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskAutoStrategyResult
 import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskResourceUpdate
 import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskSaveResourceRequest
 import org.jooq.DSLContext
@@ -209,7 +210,7 @@ class PipelineCopyTaskService @Autowired constructor(
         userId: String,
         projectId: String,
         taskId: String
-    ) {
+    ): PipelineCopyTaskAutoStrategyResult {
         val task = getTask(projectId = projectId, taskId = taskId)
         val param = PipelineCopyTaskUtils.parseParam(task) ?: throw ErrorCodeException(
             errorCode = ProcessMessageCode.ERROR_PIPELINE_COPY_TASK_CONFIG_NOT_EXISTS,
@@ -217,7 +218,7 @@ class PipelineCopyTaskService @Autowired constructor(
         )
         checkProjectManager(userId = userId, projectId = projectId)
         checkProjectManager(userId = userId, projectId = param.targetProjectId)
-        pipelineCopyTaskSaveService.autoSetResourceStrategy(
+        return pipelineCopyTaskSaveService.autoSetResourceStrategy(
             userId = userId,
             projectId = projectId,
             taskId = taskId

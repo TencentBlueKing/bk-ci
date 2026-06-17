@@ -16,6 +16,7 @@ import com.tencent.devops.process.pojo.pipeline.enums.PipelineDependentResourceT
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchCopyTaskParam
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTask
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskUpdate
+import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskAutoStrategyResult
 import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskConfigRequest
 import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskResourceUpdate
 import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskSaveResourceRequest
@@ -118,13 +119,13 @@ class PipelineCopyTaskSaveService @Autowired constructor(
         userId: String,
         projectId: String,
         taskId: String
-    ) {
+    ): PipelineCopyTaskAutoStrategyResult {
         val resources = pipelineCopyTaskResourceDao.list(
             dslContext = dslContext,
             projectId = projectId,
             taskId = taskId
         )
-        val request = PipelineCopyTaskAutoStrategyUtils.buildAutoResourceStrategyRequest(
+        val (request, result) = PipelineCopyTaskAutoStrategyUtils.buildAutoResourceStrategyResult(
             resources = resources
         )
         saveResourceDraft(
@@ -133,6 +134,7 @@ class PipelineCopyTaskSaveService @Autowired constructor(
             taskId = taskId,
             request = request
         )
+        return result
     }
 
     fun saveResourceDraft(

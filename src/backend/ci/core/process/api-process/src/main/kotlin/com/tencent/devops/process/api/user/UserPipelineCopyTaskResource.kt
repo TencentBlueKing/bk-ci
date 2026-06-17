@@ -11,6 +11,7 @@ import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyResourceGroup
 import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskConfigRequest
 import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskExecuteProgress
 import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskExecuteSummary
+import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskAutoStrategyResult
 import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTask
 import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskSaveResourceRequest
 import io.swagger.v3.oas.annotations.Operation
@@ -157,7 +158,7 @@ interface UserPipelineCopyTaskResource {
         @Parameter(description = "任务ID", required = true)
         @PathParam("taskId")
         taskId: String
-    ): Result<Boolean>
+    ): Result<PipelineCopyTaskAutoStrategyResult>
 
     @Operation(summary = "保存流水线复制资源草稿")
     @POST

@@ -2,6 +2,7 @@ package com.tencent.devops.process.service.task.copy
 
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineCopyStrategy
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineDependentResourceType
+import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskAutoStrategyResult
 import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskResource
 import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskSaveResource
 import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskSaveResourceRequest
@@ -17,10 +18,20 @@ object PipelineCopyTaskAutoStrategyUtils {
     ): PipelineCopyStrategy? {
         return when (resourceType) {
             PipelineDependentResourceType.PIPELINE,
-            PipelineDependentResourceType.BUILD_NODE,
-            PipelineDependentResourceType.DEPLOY_NODE,
             PipelineDependentResourceType.PIPELINE_LABEL,
             PipelineDependentResourceType.PIPELINE_GROUP -> null
+
+            PipelineDependentResourceType.BUILD_NODE -> if (targetNameExists) {
+                PipelineCopyStrategy.BUILD_NODE_REUSE_SAME_NAME
+            } else {
+                null
+            }
+
+            PipelineDependentResourceType.DEPLOY_NODE -> if (targetNameExists) {
+                PipelineCopyStrategy.DEPLOY_NODE_REUSE_SAME_NAME
+            } else {
+                null
+            }
 
             PipelineDependentResourceType.REPOSITORY -> if (targetNameExists) {
                 PipelineCopyStrategy.REPOSITORY_REUSE_SAME_NAME_PROTOCOL
@@ -54,9 +65,9 @@ object PipelineCopyTaskAutoStrategyUtils {
         }
     }
 
-    fun buildAutoResourceStrategyRequest(
+    fun buildAutoResourceStrategyResult(
         resources: List<PipelineCopyTaskResource>
-    ): PipelineCopyTaskSaveResourceRequest {
+    ): Pair<PipelineCopyTaskSaveResourceRequest, PipelineCopyTaskAutoStrategyResult> {
         val unprocessedResources = resources.filter { it.copyStrategy == null }
         val saveResources = unprocessedResources.mapNotNull { resource ->
             val copyStrategy = resolveAutoCopyStrategy(
@@ -70,24 +81,42 @@ object PipelineCopyTaskAutoStrategyUtils {
                 copyStrategy = copyStrategy
             )
         }
-        val hasUnprocessedLabel = unprocessedResources.any {
+        val unprocessedLabelCount = unprocessedResources.count {
             it.resourceType == PipelineDependentResourceType.PIPELINE_LABEL
         }
-        val hasUnprocessedGroup = unprocessedResources.any {
+        val unprocessedGroupCount = unprocessedResources.count {
             it.resourceType == PipelineDependentResourceType.PIPELINE_GROUP
         }
-        return PipelineCopyTaskSaveResourceRequest(
-            pipelineLabelCopyStrategy = if (hasUnprocessedLabel) {
-                PipelineCopyStrategy.LABEL_AUTO_REUSE_OR_CREATE
-            } else {
-                null
-            },
-            pipelineGroupCopyStrategy = if (hasUnprocessedGroup) {
-                PipelineCopyStrategy.PIPELINE_GROUP_AUTO_REUSE_OR_CREATE
-            } else {
-                null
-            },
+        var processedCount = saveResources.size
+        val pipelineLabelCopyStrategy = if (unprocessedLabelCount > 0) {
+            processedCount++
+            PipelineCopyStrategy.LABEL_AUTO_REUSE_OR_CREATE
+        } else {
+            null
+        }
+        val pipelineGroupCopyStrategy = if (unprocessedGroupCount > 0) {
+            processedCount++
+            PipelineCopyStrategy.PIPELINE_GROUP_AUTO_REUSE_OR_CREATE
+        } else {
+            null
+        }
+        val request = PipelineCopyTaskSaveResourceRequest(
+            pipelineLabelCopyStrategy = pipelineLabelCopyStrategy,
+            pipelineGroupCopyStrategy = pipelineGroupCopyStrategy,
             resources = saveResources
         )
+        val result = PipelineCopyTaskAutoStrategyResult(
+            processedCount = processedCount,
+            nodeNotSetCount = unprocessedResources.count {
+                (it.resourceType == PipelineDependentResourceType.BUILD_NODE ||
+                        it.resourceType == PipelineDependentResourceType.DEPLOY_NODE) &&
+                        !it.targetNameExists
+            },
+            pipelineConflictCount = unprocessedResources.count {
+                it.resourceType == PipelineDependentResourceType.PIPELINE &&
+                        (it.targetNameExists || it.targetIdExists)
+            }
+        )
+        return Pair(request, result)
     }
 }

@@ -11,6 +11,7 @@ import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyResourceGroup
 import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskConfigRequest
 import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskExecuteProgress
 import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskExecuteSummary
+import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskAutoStrategyResult
 import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTask
 import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskSaveResourceRequest
 import com.tencent.devops.process.service.task.copy.PipelineCopyTaskService
@@ -110,13 +111,14 @@ class UserPipelineCopyTaskResourceImpl @Autowired constructor(
         userId: String,
         projectId: String,
         taskId: String
-    ): Result<Boolean> {
-        pipelineCopyTaskService.autoSetResourceStrategy(
-            userId = userId,
-            projectId = projectId,
-            taskId = taskId
+    ): Result<PipelineCopyTaskAutoStrategyResult> {
+        return Result(
+            pipelineCopyTaskService.autoSetResourceStrategy(
+                userId = userId,
+                projectId = projectId,
+                taskId = taskId
+            )
         )
-        return Result(true)
     }
 
     override fun saveResourceDraft(
