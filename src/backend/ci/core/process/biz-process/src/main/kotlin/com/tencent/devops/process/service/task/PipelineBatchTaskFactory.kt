@@ -51,6 +51,7 @@ class PipelineBatchTaskFactory @Autowired constructor(
             .map { it.pipelineId }
             .toSet()
         return pipelineIds.map { pipelineId ->
+            val pac = pipelineEnablePacSet.contains(pipelineId)
             PipelineBatchTaskDetail(
                 taskId = taskId,
                 projectId = projectId,
@@ -58,13 +59,18 @@ class PipelineBatchTaskFactory @Autowired constructor(
                 pipelineId = pipelineId,
                 pipelineName = pipelineNameMap[pipelineId].orEmpty(),
                 pipelineCreator = pipelineCreatorMap[pipelineId].orEmpty(),
-                pac = pipelineEnablePacSet.contains(pipelineId),
+                pac = pac,
                 constraint = pipelineConstraintSet.contains(pipelineId),
                 subPipeline = subPipeline,
                 locked = pipelineLockedMap[pipelineId] ?: false,
                 versionStatus = pipelineVersionStatusMap[pipelineId],
                 change = true,
-                status = status,
+                // pac的流水线不参与批量任务
+                status = if (pac) {
+                    PipelineBatchTaskDetailStatus.EXCLUDED
+                } else {
+                    status
+                },
                 errorType = null,
                 errorMessage = null,
                 startTime = null,
