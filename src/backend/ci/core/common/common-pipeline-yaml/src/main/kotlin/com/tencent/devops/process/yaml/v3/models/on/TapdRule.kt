@@ -59,20 +59,20 @@ data class TapdRule(
     @JsonProperty("event-type")
     val eventType: String?,
     @get:Schema(title = "include-actions")
-    @JsonProperty("actions")
-    val actions: List<String>? = null,
-    @get:Schema(title = "include-users")
-    @JsonProperty("include-users")
-    val includeUsers: List<String>? = null,
-    @get:Schema(title = "exclude-users")
-    @JsonProperty("exclude-users")
-    val excludeUsers: List<String>? = null,
-    @get:Schema(title = "include-owners")
-    @JsonProperty("include-owners")
-    val includeOwners: List<String>? = null,
-    @get:Schema(title = "exclude-owners")
-    @JsonProperty("exclude-owners")
-    val excludeOwners: List<String>? = null,
+    @JsonProperty("action")
+    val action: List<String>? = null,
+    @get:Schema(title = "users")
+    @JsonProperty("users")
+    val users: List<String>? = null,
+    @get:Schema(title = "users-ignore")
+    @JsonProperty("users-ignore")
+    val usersIgnore: List<String>? = null,
+    @get:Schema(title = "owners")
+    @JsonProperty("owners")
+    val owners: List<String>? = null,
+    @get:Schema(title = "owners-ignore")
+    @JsonProperty("owners-ignore")
+    val ownersIgnore: List<String>? = null,
     @JsonProperty("labels")
     @get:Schema(title = "labels")
     var labels: List<String>? = null,
