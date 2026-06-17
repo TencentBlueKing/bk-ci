@@ -221,6 +221,14 @@ export default {
         return ajax.get(`${PROCESS_API_URL_PREFIX}/user/pipeline/batch/task/${projectId}/tasks/status/summary`).then(res => {
             return res.data
         })
+    },
+    /**
+     * 一键设置流水线复制资源策略
+     */
+    async setResourceStrategy ({ commit }, { projectId, taskId }) {
+        return ajax.post(`${PROCESS_API_URL_PREFIX}/user/pipeline/copy/${projectId}/tasks/${taskId}/resources/strategy/auto`).then(res => {
+            return res.data
+        })
     }
 
 }

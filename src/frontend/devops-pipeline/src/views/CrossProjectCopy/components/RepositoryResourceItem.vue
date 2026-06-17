@@ -18,7 +18,7 @@
 
         <template #extra-config>
             <div
-                v-if="isCreateNew && !isOauth"
+                v-if="isCreateNew && !isOauth && !isReadOnly"
                 class="auth-config-section"
             >
                 <span class="info-icon">
@@ -156,6 +156,7 @@
             height: 26px;
             border-radius: 2px;
             border: 1px solid #3A84FF;
+            color: #3A84FF;
             background:  #FFF;
             text-align: center;
             line-height: 26px;

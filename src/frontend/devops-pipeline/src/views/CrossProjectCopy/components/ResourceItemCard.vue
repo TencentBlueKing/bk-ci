@@ -114,11 +114,10 @@
 <script>
     import Logo from '@/components/Logo'
     import {
-        PipelineCopyResourceTypeMap,
-        PipelineCopyStrategyMap,
         PipelineCopyResourceStatus,
         PipelineCopyAction,
-        PipelineCopyResourceType
+        PipelineCopyResourceType,
+        PipelineCopyResourceTypeI18nKey
     } from '@/store/modules/crossProjectCopy/constants.js'
     export default {
         name: 'ResourceItemCard',
@@ -148,12 +147,14 @@
             },
             // 资源类型文本
             resourceTypeText () {
-                return PipelineCopyResourceTypeMap[this.data.resourceType] || this.data.resourceType
+                const i18nKey = PipelineCopyResourceTypeI18nKey[this.data.resourceType]
+                return i18nKey ? this.$t(i18nKey) : this.data.resourceType
             },
         
             // 策略文本
             strategyText () {
-                return PipelineCopyStrategyMap[this.data.copyStrategy] || this.data.copyStrategy || '-'
+                const i18nKey = this.data.copyStrategy
+                return this.$t(i18nKey)
             },
 
             descriptionText () {

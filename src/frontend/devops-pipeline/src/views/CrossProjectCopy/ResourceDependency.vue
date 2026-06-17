@@ -29,7 +29,7 @@
             class="resource-dependency__loading"
         >
             <!-- 推荐处理策略提示 -->
-            <!-- <div class="recommend-strategy">
+            <div class="recommend-strategy">
                 <Logo
                     name="recommend"
                     size="32"
@@ -47,17 +47,21 @@
                 </div>
                 <span
                     class="recommend-btn"
+                    v-bkloading="{ isLoading: setupLoading, size: 'small', color: 'rgba(255, 255, 255, 0)' }"
                     @click="handleSetStrategy"
                 >
-                    <Logo
-                        name="electricity"
-                        size="14"
-                    />
-                    {{ $t('oneClickSetup') }}
+                    <template v-if="!setupLoading">
+
+                        <Logo
+                            name="electricity"
+                            size="14"
+                        />
+                        {{ $t('oneClickSetup') }}
+                    </template>
                 </span>
-            </div> -->
+            </div>
             <!-- 处理策略完成提示 -->
-            <!-- <bk-tag
+            <bk-tag
                 v-if="showStrategyCompletedTag"
                 closable
                 class="strategy-completed-tag"
@@ -70,16 +74,16 @@
                         size="16px"
                     />
                     <p>
-                        <span> {{ $t('strategyCompleted', [12]) }}</span>
+                        <span> {{ $t('strategyCompleted', [strategyCompletedData.processedCount]) }}</span>
                         <i18n
                             path="strategyCompletedDesc"
                             tag="p"
                         >
-                            <span>{{ $t('repositoryNotAuthorized', [1]) }}{{ $t('nodeAuthorized', [2]) }}</span>
+                            <span v-if="strategyCompletedData.nodeNotSetCount > 0">{{ $t('nodeAuthorized', [strategyCompletedData.nodeNotSetCount]) }}</span>
                         </i18n>
                     </p>
                 </div>
-            </bk-tag> -->
+            </bk-tag>
 
             <!-- 主内容区域 -->
             <div
@@ -346,7 +350,13 @@
                 resourceName: '',
                 activeResourceType: '',
                 activeTab: 'all',
-                showStrategyCompletedTag: true,
+                showStrategyCompletedTag: false,
+                strategyCompletedData: {
+                    processedCount: 0,
+                    nodeNotSetCount: 0,
+                    pipelineConflictCount: 0
+                },
+                setupLoading: false,
                 rechecking: false,
                 // 风险提示弹窗
                 riskWarningDialog: {
@@ -665,7 +675,8 @@
         methods: {
             ...mapActions('crossProjectCopy', [
                 'listResourceDetails',
-                'getCredentialList'
+                'getCredentialList',
+                'setResourceStrategy'
             ]),
             ...mapActions('common', [
                 'isPACOAuth'
@@ -874,8 +885,33 @@
             handleCancelRecheck () {
                 this.isShowRecheckDialog = false
             },
-            handleSetStrategy () {
-                console.log('一键设置')
+            async handleSetStrategy () {
+                this.setupLoading = true
+                try {
+                    const data = await this.setResourceStrategy({
+                        projectId: this.$route.params.projectId,
+                        taskId: this.$route.params.taskId
+                    })
+                    
+                    this.showStrategyCompletedTag = true
+                    
+                    const { processedCount = 0, nodeNotSetCount = 0, pipelineConflictCount = 0 } = data || {}
+                    this.strategyCompletedData = {
+                        processedCount,
+                        nodeNotSetCount,
+                        pipelineConflictCount
+                    }
+                    
+                    // 调用资源详情接口刷新数据
+                    await this.loadResourceDependencies()
+                } catch (error) {
+                    this.$bkMessage({
+                        theme: 'error',
+                        message: error.message || error
+                    })
+                } finally {
+                    this.setupLoading = false
+                }
             },
             handleCloseStrategyTag () {
                 this.showStrategyCompletedTag = false
@@ -883,7 +919,6 @@
             handleSelectResourceType (type) {
                 this.activeResourceType = type
                 this.activeTab = 'all'
-                // 更新路由参数，便于通过路由跳转到对应资源
                 this.$router.replace({
                     query: {
                         ...this.$route.query,
@@ -1011,10 +1046,11 @@
 
             .recommend-btn {
                 display: flex;
-                height: 32px;
-                min-width: 64px;
-                padding: 0 16px;
+                height: 36px;
+                width: 112px;
+                padding: 5px 16px;
                 justify-content: center;
+                text-align: center;
                 align-items: center;
                 gap: 6px;
                 cursor: pointer;

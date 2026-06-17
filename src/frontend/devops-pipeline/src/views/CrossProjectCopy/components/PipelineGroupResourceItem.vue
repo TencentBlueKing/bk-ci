@@ -53,7 +53,7 @@
                                                 :title="group.resourceName"
                                             >{{ group.resourceName }}</span>
                                         </div>
-                                        <span class="pipeline-count">{{ group.pipelineCount }}</span>
+                                        <span class="pipeline-count">{{ group.pipelineReferCount }}</span>
                                     </div>
                                 </div>
 

@@ -104,17 +104,12 @@
                                             <p
                                                 v-for="err in item.resources"
                                                 :key="err.resourceType"
+                                                class="error-item-content"
                                             >
-                                                <span class="error-item-title">{{ err.resourceName }}</span>
-                                                <a
-                                                    class="jump-icon"
+                                                <span
+                                                    class="error-item-title"
                                                     @click="handleJump(item.resourceType, err)"
-                                                >
-                                                    <Logo
-                                                        name="tiaozhuan"
-                                                        size="12"
-                                                    />
-                                                </a>
+                                                >{{ err.resourceName }}：</span>
                                                 <span>{{ err.errorMessageText }}</span>
                                             </p>
                                         </div>
@@ -159,6 +154,7 @@
                 default: () => ({
                     successCount: 0,
                     failedCount: 0,
+                    waitCopyCount: 0,
                     totalCount: 0
                 })
             }
@@ -218,11 +214,11 @@
             statusSummary: {
                 immediate: true,
                 handler (newVal) {
-                    const { successCount = 0, failedCount = 0 } = newVal || {}
+                    const { successCount = 0, failedCount = 0, waitCopyCount = 0 } = newVal || {}
                     this.tabs = this.tabs.map(tab => {
                         if (tab.name === 'SUCCESS') return { ...tab, totalCount: successCount }
                         if (tab.name === 'FAILED') return { ...tab, totalCount: failedCount }
-                        if (tab.name === 'all') return { ...tab, totalCount: successCount + failedCount }
+                        if (tab.name === 'all') return { ...tab, totalCount: successCount + failedCount + waitCopyCount }
                         return tab
                     })
                 }
@@ -474,20 +470,18 @@
 
     .error-item {
         margin-bottom: 8px;
+    }
 
-        p {
-            display: flex;
-            align-items: center;
-        }
+    .error-item-content {
+        display: flex;
+        align-items: center;
+        line-height: 20px;
     }
 
     .error-item-title {
-        color: #313238;
+        color: #3A84FF;
+        cursor: pointer;
+        margin-right: 4px;
     }
-
-    .jump-icon {
-        margin: 0 4px;
-    }
-
 }
 </style>

@@ -41,7 +41,7 @@
                                     @click="toggleLabelExpand(labelGroup, label)"
                                 >
                                     <span class="label-name">{{ label.resourceName }}</span>
-                                    <span class="label-count">{{ label.pipelineCount }}</span>
+                                    <span class="label-count">{{ label.pipelineReferCount }}</span>
                                 </div>
                             </div>
 
@@ -285,7 +285,7 @@
             }
 
             .label-count {
-                margin-left: 4px;
+                margin-left: 8px;
                 padding: 0 6px;
                 color: #9a9ea8;
                 background: #f0f1f5;

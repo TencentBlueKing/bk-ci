@@ -440,6 +440,7 @@
         },
         data () {
             return {
+                fromSource: '',
                 // 吸顶相关
                 isSticky: false,
                 shouldEnableSticky: true,
@@ -807,6 +808,8 @@
             }
         },
         mounted () {
+            this.fromSource = sessionStorage.getItem('crossProjectCopyFrom')
+            
             this.$nextTick(() => {
                 this.checkContentHeight()
                 this.setupResizeObserver()
@@ -827,6 +830,8 @@
             }
 
             this.stopPolling()
+            
+            sessionStorage.removeItem('crossProjectCopyFrom')
         },
         methods: {
             ...mapActions('crossProjectCopy', [
@@ -1242,12 +1247,23 @@
                 }
             },
             handleCancel () {
-                this.$router.push({
-                    name: 'PipelineManageList',
-                    params: {
-                        projectId: this.projectId
-                    }
-                })
+                if (this.fromSource === 'batchHistoricalTask') {
+                    this.$router.push({
+                        name: 'batchHistoricalTask',
+                        params: {
+                            projectId: this.projectId
+                        }
+                    })
+                } else {
+                    this.$router.push({
+                        name: 'PipelineManageList',
+                        params: {
+                            projectId: this.projectId
+                        }
+                    })
+                }
+
+                sessionStorage.removeItem('crossProjectCopyFrom')
             },
             handleErrorClick (item) {
                 // 如果错误项不在当前步骤,先跳转到对应步骤

@@ -231,17 +231,12 @@
                                         <p
                                             v-for="err in item.resources"
                                             :key="err.resourceType"
+                                            class="error-item-content"
                                         >
-                                            <span class="error-item-title">{{ err.resourceName }}</span>
-                                            <a
-                                                class="jump-icon"
+                                            <span
+                                                class="error-item-title"
                                                 @click="handleJump(item.resourceType, err)"
-                                            >
-                                                <Logo
-                                                    name="tiaozhuan"
-                                                    size="12"
-                                                />
-                                            </a>
+                                            >{{ err.resourceName }}：</span>
                                             <span>{{ err.errorMessageText }}</span>
                                         </p>
                                     </div>
@@ -422,6 +417,7 @@
                 pipelineStatusSummary: {
                     successCount: 0,
                     failedCount: 0,
+                    waitCopyCount: 0,
                     totalCount: 0
                 },
                 // 第一个高风险资源的类型
@@ -944,21 +940,18 @@
              */
             async fetchTaskStatusSummary () {
                 try {
-                    const data = await this.getTaskStatusSummary({
+                    const statusList = await this.getTaskStatusSummary({
                         projectId: this.projectId,
                         taskId: this.taskId
                     })
-                    const statusList = data || []
-                    const successItem = statusList.find(item => item.status === 'SUCCESS')
-                    const failedItem = statusList.find(item => item.status === 'FAILED')
-                    const successCount = successItem?.count || 0
-                    const failedCount = failedItem?.count || 0
+                    const summary = { successCount: 0, failedCount: 0, waitCopyCount: 0, totalCount: 0 }
+        
+                    statusList.forEach(({ status, count }) => {
+                        summary[`${status.toLowerCase()}Count`] = count || 0
+                    })
                     
-                    this.pipelineStatusSummary = {
-                        successCount,
-                        failedCount,
-                        totalCount: successCount + failedCount
-                    }
+                    summary.totalCount = summary.successCount + summary.failedCount
+                    this.pipelineStatusSummary = summary
                 } catch (error) {
                     this.$bkMessage({
                         theme: 'error',
@@ -1038,6 +1031,7 @@
                 const { resourceType, resourceId, resourceName } = item
                 const projectId = this.projectId
                 let url = ''
+                
                 switch (resourceType) {
                     case 'PIPELINE_TEMPLATE':
                         url = `/console/pipeline/${projectId}/template/${resourceId}`
@@ -1055,6 +1049,11 @@
                         break
                     case 'CREDENTIAL':
                         url = `/console/ticket/${projectId}`
+                        break
+                    case 'PIPELINE':
+                    case 'PIPELINE_GROUP':
+                    case 'PIPELINE_LABEL':
+                        url = `/console/pipeline/${projectId}/${resourceId}/history/pipeline`
                         break
                 }
                 if (url) {
@@ -1663,13 +1662,16 @@
         margin-bottom: 8px;
     }
 
+    .error-item-content {
+        display: flex;
+        align-items: center;
+        line-height: 20px;
+    }
+
     .error-item-title {
-        color: #313238;
+        color: #3A84FF;
+        cursor: pointer;
+        margin-right: 4px;
     }
-
-    .jump-icon {
-        margin: 0 4px;
-    }
-
 }
 </style>

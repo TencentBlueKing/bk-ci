@@ -253,6 +253,11 @@
                     case 'CREDENTIAL':
                         url = `/console/ticket/${projectId}`
                         break
+                    case 'PIPELINE':
+                    case 'PIPELINE_GROUP':
+                    case 'PIPELINE_LABEL':
+                        url = `/console/pipeline/${projectId}/${resourceId}/history/pipeline`
+                        break
                 }
                 if (url) {
                     window.open(url, '_blank')

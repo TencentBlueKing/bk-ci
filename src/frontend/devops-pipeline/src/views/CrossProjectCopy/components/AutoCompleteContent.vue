@@ -24,12 +24,17 @@
                             class="group-item"
                         >
                             {{ item.resourceName }}
-                            <Logo
-                                v-if="item.type === 'link'"
-                                class="devops-icon"
-                                size="14"
-                                name="tiaozhuan"
-                            />
+                            <a
+                                v-if="item.resourceType !== 'PIPELINE_LABEL' && item.resourceType !== 'PIPELINE_GROUP'"
+                                @click="handleJump(item)"
+                                class="jump-icon"
+                            >
+                                <Logo
+                                    size="12"
+                                    name="tiaozhuan"
+                                    style="border: 1px solid #000"
+                                />
+                            </a>
                         </bk-tag>
                     </div>
                 </template>
@@ -40,7 +45,7 @@
 
 <script>
     import Logo from '@/components/Logo'
-    import { PipelineCopyResourceTypeMap } from '@/store/modules/crossProjectCopy/constants'
+    import { PipelineCopyResourceTypeI18nKey, ResourceTypeAutoTipsI18nKey } from '@/store/modules/crossProjectCopy/constants'
     
     export default {
         name: 'AutoCompleteContent',
@@ -61,44 +66,64 @@
             }
         },
         computed: {
-            // 分组数据,直接使用 resourceData
             groupsData () {
                 return this.resourceData || []
-            }
+            },
+            projectId () {
+                return this.$route.params.projectId
+            },
         },
         watch: {
-            // 监听 resourceData 变化,动态设置默认展开的面板
             resourceData: {
                 immediate: true,
                 handler (newData) {
                     if (newData && newData.length > 0) {
-                        // 默认展开所有分组
                         this.activeCollapseNames = newData.map(group => group.resourceType)
                     }
                 }
             }
         },
         methods: {
-            // 根据 resourceType 获取对应的标题 (使用 constants 中的映射)
             getGroupTitle (resourceType) {
-                return PipelineCopyResourceTypeMap[resourceType] || resourceType || '其他'
+                const i18nKey = PipelineCopyResourceTypeI18nKey[resourceType]
+                return this.$t(i18nKey)
             },
             
-            // 根据 resourceType 获取对应的完成动作描述
             getGroupSubtitle (resourceType) {
-                const subtitleMap = {
-                    'PIPELINE_TEMPLATE': '已自动复制为新模板',
-                    'REPOSITORY': '已自动关联代码库',
-                    'BUILD_ENV': '已自动新建环境',
-                    'BUILD_NODE': '已自动转移节点',
-                    'DEPLOY_ENV': '已自动新建环境',
-                    'DEPLOY_NODE': '已自动转移节点',
-                    'CREDENTIAL': '已自动复制为新凭据',
-                    'PIPELINE_LABEL': '已自动新建标签',
-                    'PIPELINE_GROUP': '已自动新建分组',
-                    'PIPELINE': '已自动完成'
+                const i18nKey = ResourceTypeAutoTipsI18nKey[resourceType]
+                return this.$t(i18nKey)
+            },
+            handleJump (item) {
+                const { resourceType, resourceId, resourceName } = item
+                const projectId = this.projectId
+                let url = ''
+                switch (resourceType) {
+                    case 'PIPELINE_TEMPLATE':
+                        url = `/console/pipeline/${projectId}/template/${resourceId}`
+                        break
+                    case 'REPOSITORY':
+                        url = `/console/codelib/${projectId}/?id=${resourceId}&searchName=${resourceName}`
+                        break
+                    case 'BUILD_ENV':
+                    case 'DEPLOY_ENV':
+                        url = `/console/environment/${projectId}/pipeline/env/ALL/${resourceId}/node`
+                        break
+                    case 'BUILD_NODE':
+                    case 'DEPLOY_NODE':
+                        url = `/console/environment/${projectId}/pipeline/node/allNode?nodeHashId=${resourceId}`
+                        break
+                    case 'CREDENTIAL':
+                        url = `/console/ticket/${projectId}`
+                        break
+                    case 'PIPELINE':
+                    case 'PIPELINE_GROUP':
+                    case 'PIPELINE_LABEL':
+                        url = `/console/pipeline/${projectId}/${resourceId}/history/pipeline`
+                        break
                 }
-                return subtitleMap[resourceType] || '已自动完成'
+                if (url) {
+                    window.open(url, '_blank')
+                }
             }
         }
     }
@@ -152,6 +177,12 @@
             color: #979BA5;
             margin-left: 16px;
         }
+    }
+    
+    .jump-icon svg {
+        margin-left: 4px;
+        vertical-align: middle;
+        cursor: pointer;
     }
 
     .group-split-layout {

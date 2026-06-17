@@ -117,55 +117,32 @@ export const PipelineCopyAction = {
     AUTO_FINISH: 'AUTO_FINISH',   // 自动完成
 }
 
-// 流水线复制资源类型显示映射
-export const PipelineCopyResourceTypeMap = {
-    PIPELINE_TEMPLATE: '流水线模板',
-    REPOSITORY: '代码库',
-    BUILD_ENV: '构建环境',
-    BUILD_NODE: '构建节点',
-    DEPLOY_ENV: '部署环境',
-    DEPLOY_NODE: '部署节点',
-    CREDENTIAL: '凭据',
-    PIPELINE_LABEL: '标签',
-    PIPELINE_GROUP: '流水线组',
-    PIPELINE: '流水线'
+// 流水线复制资源类型国际化key映射
+export const PipelineCopyResourceTypeI18nKey = {
+    PIPELINE_TEMPLATE: 'pipelineTemplate',
+    REPOSITORY: 'codeRepository',
+    BUILD_ENV: 'buildEnvironment',
+    BUILD_NODE: 'buildNode',
+    DEPLOY_ENV: 'deployEnvironment',
+    DEPLOY_NODE: 'deployNode',
+    CREDENTIAL: 'credential',
+    PIPELINE_LABEL: 'pipelineLabel',
+    PIPELINE_GROUP: 'pipelineGroupSource',
+    PIPELINE: 'pipelineConflict'
 }
 
-// 流水线复制资源处理策略显示映射
-export const PipelineCopyStrategyMap = {
-    // 流水线模板
-    [PipelineCopyStrategy.PIPELINE_TEMPLATE_REUSE_SAME_NAME]: '复用同名模板',
-    [PipelineCopyStrategy.PIPELINE_TEMPLATE_CREATE_NEW]: '复用源流水线ID',
-    // 代码库
-    [PipelineCopyStrategy.REPOSITORY_REUSE_SAME_NAME_PROTOCOL]: '复用同名同协议代码库',
-    [PipelineCopyStrategy.REPOSITORY_CREATE_NEW]: '创建新代码库',
-    // 构建环境
-    [PipelineCopyStrategy.BUILD_ENV_REUSE_SAME_NAME]: '复用同名环境',
-    [PipelineCopyStrategy.BUILD_ENV_CREATE_WITHOUT_NODE]: '新建环境(不带节点)',
-    [PipelineCopyStrategy.BUILD_ENV_CREATE_AND_MOVE_NODE]: '新建环境并转移节点',
-    // 构建节点
-    [PipelineCopyStrategy.BUILD_NODE_REUSE_SAME_NAME]: '复用同名构建节点',
-    [PipelineCopyStrategy.BUILD_NODE_MOVE_TO_TARGET_PROJECT]: '转移构建节点到目标项目',
-    // 部署环境
-    [PipelineCopyStrategy.DEPLOY_ENV_REUSE_SAME_NAME]: '复用同名部署环境',
-    [PipelineCopyStrategy.DEPLOY_ENV_CREATE_WITHOUT_NODE]: '新建部署环境(不带节点)',
-    [PipelineCopyStrategy.DEPLOY_ENV_CREATE_AND_MOVE_NODE]: '新建部署环境并转移节点',
-    // 部署节点
-    [PipelineCopyStrategy.DEPLOY_NODE_REUSE_SAME_NAME]: '复用同名部署节点',
-    [PipelineCopyStrategy.DEPLOY_NODE_MOVE_TO_TARGET_PROJECT]: '转移部署节点到目标项目',
-    // 凭证
-    [PipelineCopyStrategy.CREDENTIAL_REUSE_SAME_NAME]: '复用同名凭证',
-    [PipelineCopyStrategy.CREDENTIAL_REPLACE_TARGET]: '替换为目标项目其他凭证',
-    [PipelineCopyStrategy.CREDENTIAL_CREATE_NEW]: '创建新凭证',
-    // 流水线标签
-    [PipelineCopyStrategy.LABEL_AUTO_REUSE_OR_CREATE]: '自动复用或创建标签',
-    [PipelineCopyStrategy.LABEL_IGNORE]: '忽略标签',
-    // 流水线组
-    [PipelineCopyStrategy.PIPELINE_GROUP_AUTO_REUSE_OR_CREATE]: '自动复用或创建流水线组',
-    [PipelineCopyStrategy.PIPELINE_GROUP_IGNORE]: '忽略流水线组',
-    // 流水线冲突
-    [PipelineCopyStrategy.PIPELINE_AUTO_RESOLVE_CONFLICT]: '自动解决冲突',
-    [PipelineCopyStrategy.PIPELINE_SKIP]: '跳过(本次不处理)'
+// 流水线复制资源:自动完成autoTips国际化key映射
+export const ResourceTypeAutoTipsI18nKey = {
+    PIPELINE_TEMPLATE: 'templateAutoTips',
+    REPOSITORY: 'codeRepositoryAutoTips',
+    BUILD_ENV: 'envAutoTips',
+    BUILD_NODE: 'nodeAutoTips',
+    DEPLOY_ENV: 'envAutoTips',
+    DEPLOY_NODE: 'nodeAutoTips',
+    CREDENTIAL: 'credentialAutoTips',
+    PIPELINE_LABEL: 'pipelineLabelAutoTips',
+    PIPELINE_GROUP: 'pipelineGroupAutoTips',
+    PIPELINE: 'pipelineConflictAutoTips'
 }
 
 export const PipelineBatchTaskDetailErrorType = {

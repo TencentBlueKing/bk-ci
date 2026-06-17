@@ -15,7 +15,7 @@
                 <span class="header-name">{{ item.resourceName }}</span>
                 <a
                     class="jump-icon"
-                    @click="handleJump"
+                    @click="handleJump(item.resourceId)"
                 >
                     <Logo
                         name="tiaozhuan"
@@ -266,12 +266,8 @@
                 }
                 this.$emit('strategy-change', value)
             },
-            handleJump () {
-                window.open(`/console/pipeline/${this.projectId}/${this.item.resourceId}/history/pipeline`, '__blank')
-            },
-            handleJumpToTarget (pipelineId) {
-                if (!pipelineId) return
-                window.open(`/console/pipeline/${this.projectId}/${pipelineId}/history/pipeline`, '__blank')
+            handleJump (id) {
+                window.open(`/console/pipeline/${this.projectId}/${id}/history/pipeline`, '__blank')
             }
         }
     }

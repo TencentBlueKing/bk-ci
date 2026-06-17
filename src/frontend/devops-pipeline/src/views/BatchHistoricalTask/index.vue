@@ -98,7 +98,10 @@
                     :label="$t('execResult')"
                 >
                     <template slot-scope="{ row }">
-                        <div class="status-wrapper">
+                        <div
+                            class="status-wrapper"
+                            v-bk-tooltips="statusConfig"
+                        >
                             <p class="status-info">
                                 <Logo
                                     v-if="row.status === 'EXECUTING'"
@@ -131,11 +134,16 @@
                                 </span>
                                 <span v-if="!row.successCount && !row.failedCount">--</span>
                             </div>
+                            
                             <div
                                 v-else
                                 class="status-count"
                             >
                                 --
+                            </div>
+                            <div id="status-config">
+                                <p>{{ $t('success') }}: {{ row.successCount }}</p>
+                                <p>{{ $t('failed') }}: {{ row.failedCount }}</p>
                             </div>
                         </div>
                     </template>
@@ -151,6 +159,7 @@
                 />
                 <bk-table-column
                     :label="$t('operation')"
+                    width="260"
                 >
                     <template slot-scope="{ row }">
                         <div class="task-btns">
@@ -228,7 +237,12 @@
                     { name: 'SUCCESS', label: this.$t('success'), count: 0 },
                     { name: 'FAILED', label: this.$t('failed'), count: 0 },
                     { name: 'DRAFT', label: this.$t('draft'), count: 0 }
-                ]
+                ],
+                statusConfig: {
+                    allowHTML: true,
+                    content: '#status-config',
+                    placement: 'top',
+                }
             }
         },
         computed: {
@@ -457,6 +471,7 @@
                 })
             },
             goDetail (row) {
+                sessionStorage.setItem('crossProjectCopyFrom', 'batchHistoricalTask')
                 this.$router.push({
                     name: 'crossProjectCopy',
                     params: {
@@ -470,6 +485,7 @@
              * 查看重试记录
              */
             viewRetryRecord (row) {
+                sessionStorage.setItem('crossProjectCopyFrom', 'batchHistoricalTask')
                 this.$router.push({
                     name: 'crossProjectCopy',
                     params: {
@@ -623,6 +639,7 @@
             flex-direction: column;
             margin: 8px 0;
             gap: 4px;
+            width: fit-content;
 
             .status-info {
                 display: flex;
