@@ -230,7 +230,6 @@ class ReportService @Autowired constructor(
         return "$host/artifactory/api-html/user/reports/$projectId/$pipelineId/$buildId/$taskId/"
     }
 
-
     private fun sendEmail(receivers: Set<String>, title: String, html: String) {
         val emailNotifyMessage = EmailNotifyMessage()
         emailNotifyMessage.addAllReceivers(receivers)
