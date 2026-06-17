@@ -764,7 +764,26 @@
         "bkYamlPipelineDeleteVersionFailed": "Pipeline [{pipeline} | {version}] version deletion failed",
         "bkYamlPipelineDeleteFailed": "Pipeline [{pipeline}] deletion failed",
         "bkYamlPipelineCloseFailed": "Pipeline [{pipeline}] failed to update instantiation status",
-        "bkYamlInstancePullRequestClosed": "MR [{mr}] has been closed, changes not published to default branch"
+        "bkYamlInstancePullRequestClosed": "MR [{mr}] has been closed, changes not published to default branch",
+        "bkTapdStoryCreateEventDesc": "Story [{issue}] created by {user}",
+        "bkTapdStoryUpdateEventDesc": "Story [{issue}] updated by {user}",
+        "bkTapdStoryDeleteEventDesc": "Story [{issue}] deleted by {user}",
+        "bkTapdBugCreateEventDesc": "Bug [{issue}] created by {user}",
+        "bkTapdBugUpdateEventDesc": "Bug [{issue}] updated by {user}",
+        "bkTapdBugDeleteEventDesc": "Bug [{issue}] deleted by {user}",
+        "bkTapdStoryAddCommentEventDesc": "Comment added on Story [{issue}] by {user}",
+        "bkTapdStoryUpdateCommentEventDesc": "Comment updated on Story [{issue}] by {user}",
+        "bkTapdStoryDeleteCommentEventDesc": "Comment deleted on Story [{issue}] by {user}",
+        "bkTapdStoryStatusChangeEventDesc": "Status changed on Story [{issue}] by {user}",
+        "bkTapdStoryLinkEventDesc": "Story [{issue}] linked to other story by {user}",
+        "bkTapdStoryUnlinkEventDesc": "Story unlinked from Story [{issue}] by {user}",
+        "bkTapdBugAddCommentEventDesc": "Comment added on Bug [{issue}] by {user}",
+        "bkTapdBugUpdateCommentEventDesc": "Comment updated on Bug [{issue}] by {user}",
+        "bkTapdBugDeleteCommentEventDesc": "Comment deleted on Bug [{issue}] by {user}",
+        "bkTapdBugStatusChangeEventDesc": "Status changed on Bug [{issue}] by {user}",
+        "bkTapdStoryBugLinkEventDesc": "Story [{issue}] linked to other bug by {user}",
+        "bkTapdStoryBugUnlinkEventDesc": "Bug unlinked from Story [{issue}] by {user}",
+        "bkTapdGenericEventDesc": "TAPD {event} event [{issue}] action [{action}] triggered by {user}"
       }
     },
     "delegation": {

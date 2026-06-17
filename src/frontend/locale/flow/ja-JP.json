@@ -752,7 +752,26 @@
         "bkYamlPipelineDeleteVersionFailed": "パイプライン [{pipeline} | {version}] のバージョン削除に失敗しました",
         "bkYamlPipelineDeleteFailed": "パイプライン [{pipeline}] の削除に失敗しました",
         "bkYamlPipelineCloseFailed": "パイプライン [{pipeline}] のインスタンス化状態の更新に失敗しました",
-        "bkYamlInstancePullRequestClosed": "MR [{mr}] がクローズされました。変更はデフォルトブランチに公開されていません"
+        "bkYamlInstancePullRequestClosed": "MR [{mr}] がクローズされました。変更はデフォルトブランチに公開されていません",
+        "bkTapdStoryCreateEventDesc": "ストーリー [{issue}] が {user} により作成されました",
+        "bkTapdStoryUpdateEventDesc": "ストーリー [{issue}] が {user} により更新されました",
+        "bkTapdStoryDeleteEventDesc": "ストーリー [{issue}] が {user} により削除されました",
+        "bkTapdBugCreateEventDesc": "バグ [{issue}] が {user} により作成されました",
+        "bkTapdBugUpdateEventDesc": "バグ [{issue}] が {user} により更新されました",
+        "bkTapdBugDeleteEventDesc": "バグ [{issue}] が {user} により削除されました",
+        "bkTapdStoryAddCommentEventDesc": "ストーリー [{issue}] に {user} がコメントを追加しました",
+        "bkTapdStoryUpdateCommentEventDesc": "ストーリー [{issue}] のコメントが {user} により更新されました",
+        "bkTapdStoryDeleteCommentEventDesc": "ストーリー [{issue}] のコメントが {user} により削除されました",
+        "bkTapdStoryStatusChangeEventDesc": "ストーリー [{issue}] のステータスが {user} により変更されました",
+        "bkTapdStoryLinkEventDesc": "ストーリー [{issue}] が {user} により他のストーリーに関連付けられました",
+        "bkTapdStoryUnlinkEventDesc": "ストーリー [{issue}] のストーリー関連付けが {user} により解除されました",
+        "bkTapdBugAddCommentEventDesc": "バグ [{issue}] に {user} がコメントを追加しました",
+        "bkTapdBugUpdateCommentEventDesc": "バグ [{issue}] のコメントが {user} により更新されました",
+        "bkTapdBugDeleteCommentEventDesc": "バグ [{issue}] のコメントが {user} により削除されました",
+        "bkTapdBugStatusChangeEventDesc": "バグ [{issue}] のステータスが {user} により変更されました",
+        "bkTapdStoryBugLinkEventDesc": "ストーリー [{issue}] が {user} により他のバグに関連付けられました",
+        "bkTapdStoryBugUnlinkEventDesc": "ストーリー [{issue}] のバグ関連付けが {user} により解除されました",
+        "bkTapdGenericEventDesc": "TAPD {event} イベント [{issue}] のアクション [{action}] が {user} によりトリガーされました"
       }
     },
     "delegation": {

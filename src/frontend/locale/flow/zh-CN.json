@@ -761,7 +761,26 @@
         "bkYamlPipelineDeleteVersionFailed": "流水线 [{pipeline} | {version}] 版本删除失败",
         "bkYamlPipelineDeleteFailed": "流水线 [{pipeline}] 删除失败",
         "bkYamlPipelineCloseFailed": "流水线 [{pipeline}] 更新实例化状态失败",
-        "bkYamlInstancePullRequestClosed": "MR [{mr}]已关闭，变更未发布到默认分支"
+        "bkYamlInstancePullRequestClosed": "MR [{mr}]已关闭，变更未发布到默认分支",
+        "bkTapdStoryCreateEventDesc": "需求 [{issue}] 由 {user} 创建",
+        "bkTapdStoryUpdateEventDesc": "需求 [{issue}] 由 {user} 更新",
+        "bkTapdStoryDeleteEventDesc": "需求 [{issue}] 由 {user} 删除",
+        "bkTapdBugCreateEventDesc": "缺陷 [{issue}] 由 {user} 创建",
+        "bkTapdBugUpdateEventDesc": "缺陷 [{issue}] 由 {user} 更新",
+        "bkTapdBugDeleteEventDesc": "缺陷 [{issue}] 由 {user} 删除",
+        "bkTapdStoryAddCommentEventDesc": "需求 [{issue}] 由 {user} 新增评论",
+        "bkTapdStoryUpdateCommentEventDesc": "需求 [{issue}] 由 {user} 更新评论",
+        "bkTapdStoryDeleteCommentEventDesc": "需求 [{issue}] 由 {user} 删除评论",
+        "bkTapdStoryStatusChangeEventDesc": "需求 [{issue}] 由 {user} 变更状态",
+        "bkTapdStoryLinkEventDesc": "需求 [{issue}] 由 {user} 关联其他需求",
+        "bkTapdStoryUnlinkEventDesc": "需求 [{issue}] 由 {user} 解除需求关联",
+        "bkTapdBugAddCommentEventDesc": "缺陷 [{issue}] 由 {user} 新增评论",
+        "bkTapdBugUpdateCommentEventDesc": "缺陷 [{issue}] 由 {user} 更新评论",
+        "bkTapdBugDeleteCommentEventDesc": "缺陷 [{issue}] 由 {user} 删除评论",
+        "bkTapdBugStatusChangeEventDesc": "缺陷 [{issue}] 由 {user} 变更状态",
+        "bkTapdStoryBugLinkEventDesc": "需求 [{issue}] 由 {user} 关联其他缺陷",
+        "bkTapdStoryBugUnlinkEventDesc": "需求 [{issue}] 由 {user} 解除缺陷关联",
+        "bkTapdGenericEventDesc": "TAPD {event} 事件 [{issue}] 由 {user} 触发动作 [{action}]"
       }
     },
     "delegation": {
