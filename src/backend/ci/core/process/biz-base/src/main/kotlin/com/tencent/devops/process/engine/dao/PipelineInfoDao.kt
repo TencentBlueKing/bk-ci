@@ -624,6 +624,9 @@ class PipelineInfoDao {
                     PIPELINE_NAME.like("%${condition.pipelineName}%")
                 )
             }
+            if (condition.locked != null) {
+                conditions.add(LOCKED.eq(condition.locked))
+            }
             conditions
         }
     }
