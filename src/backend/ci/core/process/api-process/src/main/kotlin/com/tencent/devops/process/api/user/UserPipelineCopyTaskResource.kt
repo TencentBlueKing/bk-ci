@@ -144,6 +144,21 @@ interface UserPipelineCopyTaskResource {
         pageSize: Int
     ): Result<SQLPage<PipelineCopyPipelineInfo>>
 
+    @Operation(summary = "一键设置流水线复制资源策略")
+    @POST
+    @Path("/{taskId}/resources/strategy/auto")
+    fun autoSetResourceStrategy(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "任务ID", required = true)
+        @PathParam("taskId")
+        taskId: String
+    ): Result<Boolean>
+
     @Operation(summary = "保存流水线复制资源草稿")
     @POST
     @Path("/{taskId}/resources/draft")

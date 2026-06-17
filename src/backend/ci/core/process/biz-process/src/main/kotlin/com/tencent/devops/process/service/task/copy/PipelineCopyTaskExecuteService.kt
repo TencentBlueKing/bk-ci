@@ -11,6 +11,7 @@ import com.tencent.devops.process.dao.PipelineCopyTaskResourceRelDao
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskDetailErrorType
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskDetailStatus
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskStatus
+import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskStep
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskType
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineCopyStrategy
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineCopyTaskResourceStatus
@@ -111,6 +112,7 @@ class PipelineCopyTaskExecuteService @Autowired constructor(
                 update = PipelineBatchTaskUpdate(
                     projectId = projectId,
                     taskId = taskId,
+                    step = PipelineBatchTaskStep.EXECUTE,
                     status = PipelineBatchTaskStatus.EXECUTE_QUEUED,
                     clearErrorMessage = true
                 )

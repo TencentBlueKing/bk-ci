@@ -16,7 +16,6 @@ import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskFailedErro
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskFailedMsg
 import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskConfigRequest
 import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskResource
-import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskResourceUpdate
 import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskSummary
 
 object PipelineCopyTaskUtils {
@@ -103,29 +102,6 @@ object PipelineCopyTaskUtils {
             },
             autoFinishCount = resources.count {
                 it.copyAction == PipelineCopyAction.AUTO_FINISH
-            }
-        )
-    }
-
-    fun buildSummary(
-        resources: List<PipelineCopyTaskResource>,
-        updates: List<PipelineCopyTaskResourceUpdate>
-    ): PipelineCopyTaskSummary {
-        if (updates.isEmpty()) {
-            return buildSummary(resources)
-        }
-        val updateMap = updates.associateBy {
-            resourceKey(resourceType = it.resourceType, resourceId = it.resourceId)
-        }
-        return buildSummary(
-            resources.map { resource ->
-                val update = updateMap[resourceKey(resource.resourceType, resource.resourceId)]
-                    ?: return@map resource
-                resource.copy(
-                    status = update.status ?: resource.status,
-                    highRisk = update.highRisk ?: resource.highRisk,
-                    copyAction = update.copyAction ?: resource.copyAction
-                )
             }
         )
     }

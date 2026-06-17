@@ -24,6 +24,7 @@ import com.tencent.devops.process.pojo.pipeline.PipelineDependentResource
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskDetailErrorType
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskDetailStatus
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskStatus
+import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskStep
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskType
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineCopyStrategy
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineCopyTaskResourceStatus
@@ -136,6 +137,7 @@ class PipelineCopyTaskAnalyzeService @Autowired constructor(
                         taskId = taskId,
                         taskName = request.taskName,
                         taskParam = JsonUtil.toJson(param, formatted = false),
+                        step = PipelineBatchTaskStep.RESOURCE_DEPEND,
                         status = PipelineBatchTaskStatus.PIPELINE_RESOURCE_ANALYZING,
                         clearErrorMessage = true
                     )

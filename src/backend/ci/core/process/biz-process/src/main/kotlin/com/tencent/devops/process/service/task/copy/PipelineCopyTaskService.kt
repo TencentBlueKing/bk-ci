@@ -205,6 +205,25 @@ class PipelineCopyTaskService @Autowired constructor(
         return SQLPage(count = count, records = records)
     }
 
+    fun autoSetResourceStrategy(
+        userId: String,
+        projectId: String,
+        taskId: String
+    ) {
+        val task = getTask(projectId = projectId, taskId = taskId)
+        val param = PipelineCopyTaskUtils.parseParam(task) ?: throw ErrorCodeException(
+            errorCode = ProcessMessageCode.ERROR_PIPELINE_COPY_TASK_CONFIG_NOT_EXISTS,
+            params = arrayOf(taskId)
+        )
+        checkProjectManager(userId = userId, projectId = projectId)
+        checkProjectManager(userId = userId, projectId = param.targetProjectId)
+        pipelineCopyTaskSaveService.autoSetResourceStrategy(
+            userId = userId,
+            projectId = projectId,
+            taskId = taskId
+        )
+    }
+
     fun saveResourceDraft(
         userId: String,
         projectId: String,

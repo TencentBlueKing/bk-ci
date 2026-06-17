@@ -114,6 +114,27 @@ class PipelineCopyTaskSaveService @Autowired constructor(
         }
     }
 
+    fun autoSetResourceStrategy(
+        userId: String,
+        projectId: String,
+        taskId: String
+    ) {
+        val resources = pipelineCopyTaskResourceDao.list(
+            dslContext = dslContext,
+            projectId = projectId,
+            taskId = taskId
+        )
+        val request = PipelineCopyTaskAutoStrategyUtils.buildAutoResourceStrategyRequest(
+            resources = resources
+        )
+        saveResourceDraft(
+            userId = userId,
+            projectId = projectId,
+            taskId = taskId,
+            request = request
+        )
+    }
+
     fun saveResourceDraft(
         userId: String,
         projectId: String,
@@ -136,36 +157,41 @@ class PipelineCopyTaskSaveService @Autowired constructor(
                 taskId = taskId,
                 request = request
             )
+            dslContext.transaction { configuration ->
+                val transactionContext = DSL.using(configuration)
+                pipelineCopyTaskResourceDao.batchUpdate(
+                    dslContext = transactionContext, updates = resourceUpdates
+                )
+                pipelineBatchTaskDao.update(
+                    dslContext = transactionContext, update = PipelineBatchTaskUpdate(
+                        projectId = projectId,
+                        taskId = taskId,
+                        status = PipelineBatchTaskStatus.DRAFT,
+                        taskParam = JsonUtil.toJson(newParam, formatted = false),
+                        clearErrorMessage = true
+                    )
+                )
+            }
+            // 资源更新后, 重新计算任务摘要
             val resources = pipelineCopyTaskResourceDao.list(
                 dslContext = dslContext,
                 projectId = projectId,
                 taskId = taskId
             )
             val taskSummary = PipelineCopyTaskUtils.buildSummary(
-                resources = resources,
-                updates = resourceUpdates
+                resources = resources
             )
-            dslContext.transaction { configuration ->
-                val transactionContext = DSL.using(configuration)
-                pipelineCopyTaskResourceDao.batchUpdate(
-                    dslContext = transactionContext,
-                    updates = resourceUpdates
-                )
-                pipelineBatchTaskDao.update(
-                    dslContext = transactionContext,
-                    update = PipelineBatchTaskUpdate(
-                        projectId = projectId,
-                        taskId = taskId,
-                        status = PipelineBatchTaskStatus.DRAFT,
-                        taskParam = JsonUtil.toJson(newParam, formatted = false),
-                        taskSummary = JsonUtil.toJson(
-                            taskSummary,
-                            formatted = false
-                        ),
-                        clearErrorMessage = true
+            pipelineBatchTaskDao.update(
+                dslContext = dslContext,
+                update = PipelineBatchTaskUpdate(
+                    projectId = projectId,
+                    taskId = taskId,
+                    taskSummary = JsonUtil.toJson(
+                        taskSummary,
+                        formatted = false
                     )
                 )
-            }
+            )
         } catch (exception: Exception) {
             logger.error("Failed to save resource draft|$projectId|$taskId", exception)
             pipelineBatchTaskDao.updateStatus(

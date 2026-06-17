@@ -106,6 +106,19 @@ class UserPipelineCopyTaskResourceImpl @Autowired constructor(
         )
     }
 
+    override fun autoSetResourceStrategy(
+        userId: String,
+        projectId: String,
+        taskId: String
+    ): Result<Boolean> {
+        pipelineCopyTaskService.autoSetResourceStrategy(
+            userId = userId,
+            projectId = projectId,
+            taskId = taskId
+        )
+        return Result(true)
+    }
+
     override fun saveResourceDraft(
         userId: String,
         projectId: String,
