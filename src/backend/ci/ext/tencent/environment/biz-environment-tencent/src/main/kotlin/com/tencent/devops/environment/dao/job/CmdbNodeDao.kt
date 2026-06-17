@@ -242,6 +242,10 @@ class CmdbNodeDao @Autowired constructor(
         }
     }
 
+    /**
+     * 将不在蓝鲸CC中的serverId状态改为NOT_IN_CC，将hostId、cloudAreaId和agentVersion置为空
+     * 不在CC中的serverId列表来源：通过serverId查询CC，CC接口返回的结果集中不存在的serverId
+     */
     fun updateNodeNotInCCByServerId(dslContext: DSLContext, notInCCServerIdList: List<Long>) {
         val hostIdDefault: Long? = null
         val cloudAreaIdDefault: Long? = null

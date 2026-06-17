@@ -25,17 +25,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":ext:tencent:common:common-digest-tencent"))
-    api(project(":core:environment:biz-environment"))
-    api(project(":ext:tencent:common:common-devcloud"))
-    api(project(":core:notify:api-notify"))
-    api(project(":ext:tencent:scm:api-scm-tencent"))
-    api(project(":core:auth:api-auth"))
-    api(project(":ext:tencent:environment:api-environment-tencent"))
-    api(project(":ext:tencent:auth:sdk-auth-tencent"))
-    api(project(":ext:tencent:common:common-auth:common-auth-tencent"))
-    api(project(":ext:tencent:common:common-kafka-tencent"))
-    api(project(":core:project:api-project"))
-    testImplementation(project(":core:common:common-test"))
-}
+package com.tencent.devops.environment.exception
+
+/**
+ * 调用蓝鲸 CC（CMDB）Open API 出现业务级失败时抛出的异常。
+ */
+class CCApiException(
+    val url: String,
+    val code: Int? = null,
+    val codeName: String? = null,
+    val requestId: String? = null,
+    message: String? = null,
+    cause: Throwable? = null
+) : RuntimeException(
+    "Call CC API failed: url=$url, code=$code, codeName=$codeName, requestId=$requestId, message=$message",
+    cause
+)
