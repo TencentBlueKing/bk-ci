@@ -5,6 +5,14 @@ function shouldStringifyArray (value) {
     return value.some(item => isObject(item) || Array.isArray(item))
 }
 
+function escapeShellDoubleQuotedValue (value) {
+    return value
+        .replace(/\\/g, '\\\\')
+        .replace(/"/g, '\\"')
+        .replace(/\$/g, '\\$')
+        .replace(/`/g, '\\`')
+}
+
 export function serializeRemoteTriggerParamValue (value) {
     if (Array.isArray(value)) {
         return shouldStringifyArray(value)
@@ -32,5 +40,5 @@ export function serializeRemoteTriggerParamMap (params = []) {
 }
 
 export function stringifyRemoteTriggerParams (params = []) {
-    return JSON.stringify(serializeRemoteTriggerParamMap(params)).replace(/\"/g, '\\"')
+    return escapeShellDoubleQuotedValue(JSON.stringify(serializeRemoteTriggerParamMap(params)))
 }
