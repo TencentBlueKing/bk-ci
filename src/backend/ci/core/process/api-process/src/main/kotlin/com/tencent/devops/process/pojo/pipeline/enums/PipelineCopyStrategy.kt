@@ -64,6 +64,13 @@ enum class PipelineCopyStrategy(
         true
     ),
 
+    @Schema(description = "跳过,本次不处理")
+    BUILD_NODE_SKIP(
+        PipelineDependentResourceType.BUILD_NODE,
+        PipelineCopyAction.AUTO_FINISH,
+        false
+    ),
+
     @Schema(description = "复用目标项目同名构建环境")
     BUILD_ENV_REUSE_SAME_NAME(
         PipelineDependentResourceType.BUILD_ENV,
@@ -104,6 +111,13 @@ enum class PipelineCopyStrategy(
         PipelineDependentResourceType.DEPLOY_NODE,
         PipelineCopyAction.NEED_TRANSFER,
         true
+    ),
+
+    @Schema(description = "跳过,本次不处理")
+    DEPLOY_NODE_SKIP(
+        PipelineDependentResourceType.DEPLOY_NODE,
+        PipelineCopyAction.AUTO_FINISH,
+        false
     ),
 
     @Schema(description = "复用目标项目同名部署环境")

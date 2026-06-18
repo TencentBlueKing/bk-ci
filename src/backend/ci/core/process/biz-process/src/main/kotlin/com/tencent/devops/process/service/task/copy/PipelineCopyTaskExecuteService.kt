@@ -656,6 +656,11 @@ class PipelineCopyTaskExecuteService @Autowired constructor(
                     targetResourceName = targetResource.resourceName
                 }
 
+                PipelineCopyStrategy.BUILD_NODE_SKIP,
+                PipelineCopyStrategy.DEPLOY_NODE_SKIP -> {
+                    status = PipelineCopyTaskResourceStatus.SKIP
+                }
+
                 else -> throwStrategyNotSupport(resource = resource, copyStrategy = copyStrategy)
             }
         } catch (ignored: Exception) {
