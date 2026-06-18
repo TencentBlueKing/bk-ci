@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.service
 
+import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
@@ -72,7 +73,7 @@ class TxPipelineStartupPermissionExtServiceImpl @Autowired constructor(
 
         // 获取项目信息，仅团队项目（projectScope == 0）需要校验
         val projectVO = client.get(ServiceProjectResource::class).get(projectId).data
-        if (projectVO?.projectScope != 0) {
+        if (channelCode != ChannelCode.CREATIVE_STREAM || projectVO?.projectScope != 0) {
             return
         }
 
@@ -84,7 +85,7 @@ class TxPipelineStartupPermissionExtServiceImpl @Autowired constructor(
             logger.warn(
                 "workspaceName not found, skip permission check|$projectId|$pipelineId|agentHashId=$agentHashId"
             )
-            return
+            throw ErrorCodeException(errorCode = CommonMessageCode.ERROR_CLIENT_REST_ERROR)
         }
 
         val authorized = client.get(ServiceIMateResource::class)
