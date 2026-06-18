@@ -1,6 +1,7 @@
 ﻿package com.tencent.devops.environment.service
 
 import com.tencent.devops.common.api.enums.AgentStatus
+import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.util.AESUtil
@@ -26,6 +27,7 @@ import com.tencent.devops.environment.service.thirdpartyagent.BatchInstallAgentS
 import com.tencent.devops.environment.service.thirdpartyagent.ImportService
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.support.api.service.ServiceIMateResource
+import jakarta.ws.rs.core.Response
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -119,7 +121,7 @@ class TencentNodeService @Autowired constructor(
                 )
             }
             // 生成节点,如果有说明没导入成功，再次导入
-            val record = agentDao.getAgentByWorkspaceIdGlobal(dslContext, imate.deviceId, projectId)
+            val record = agentDao.getAgentByWorkspaceIdGlobal(dslContext, imate.deviceId, null)
             if (record == null) {
                 val agentId = batchInstallAgentService.genNewAgent(
                     projectId = projectId,
@@ -132,6 +134,13 @@ class TencentNodeService @Autowired constructor(
                 )
                 importService.preImport(projectId, agentId, userId, imate.name)
             } else {
+                // 防止在不同项目导入
+                if (projectId != record.projectId) {
+                    throw CustomException(
+                        status = Response.Status.BAD_REQUEST,
+                        message = "imported in ${record.projectId}"
+                    )
+                }
                 importService.preImport(projectId, record.id, userId, imate.name)
             }
             // 生成临时1小时TOKEN用来导入鉴权
@@ -148,10 +157,15 @@ class TencentNodeService @Autowired constructor(
         return true
     }
 
-    fun getNodeAgentDetail(userId: String, projectId: String, nodeHashId: String): NodeAgentDetail? {
-        return thirdPartyAgentDao.getAgentByNodeId(dslContext, HashUtil.decodeIdToLong(nodeHashId), projectId)?.let {
-            NodeAgentDetail(it.createWorkspaceName)
-        } ?: return null
+    fun getNodeAgentDetail(userId: String, projectId: String, agentHashId: String): NodeAgentDetail? {
+        val agent = thirdPartyAgentDao.getAgentByProject(dslContext, HashUtil.decodeIdToLong(agentHashId), projectId)
+            ?: return null
+        val node = nodeDao.get(dslContext, projectId, agent.nodeId) ?: return null
+        return NodeAgentDetail(
+            displayName = node.displayName,
+            ip = agent.ip,
+            workspaceName = agent.createWorkspaceName
+        )
     }
 
     // 因为现在没有团队imate同步到我们的方式，所以每天轮询

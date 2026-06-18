@@ -37,7 +37,7 @@ interface TencentServiceNodeService {
         displayName: String
     ): Result<Boolean>
 
-    @Operation(summary = "根据节点 ID查询 agent 信息")
+    @Operation(summary = "根据ID查询 agent 信息")
     @GET
     @Path("/get_node_agent_detail")
     fun getNodeAgentDetail(
@@ -47,7 +47,7 @@ interface TencentServiceNodeService {
         @Parameter(description = "项目ID", required = true)
         @QueryParam("projectId")
         projectId: String,
-        @QueryParam("nodeHashId")
-        nodeHashId: String
+        @QueryParam("agentHashId")
+        agentHashId: String
     ): Result<NodeAgentDetail?>
 }

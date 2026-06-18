@@ -20,7 +20,7 @@ class TencentServiceNodeServiceImpl @Autowired constructor(
         return Result(tencentNodeService.updateCreateNodeDisplay(userId, projectId, workspaceName, displayName))
     }
 
-    override fun getNodeAgentDetail(userId: String, projectId: String, nodeHashId: String): Result<NodeAgentDetail?> {
-        return Result(tencentNodeService.getNodeAgentDetail(userId, projectId, nodeHashId))
+    override fun getNodeAgentDetail(userId: String, projectId: String, agentHashId: String): Result<NodeAgentDetail?> {
+        return Result(tencentNodeService.getNodeAgentDetail(userId, projectId, agentHashId))
     }
 }
