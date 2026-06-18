@@ -38,6 +38,7 @@ import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.ticket.api.ServiceCredentialResource
 import com.tencent.devops.ticket.pojo.Credential
+import com.tencent.devops.ticket.pojo.CredentialBasicInfo
 import com.tencent.devops.ticket.pojo.CredentialCreate
 import com.tencent.devops.ticket.pojo.CredentialInfo
 import com.tencent.devops.ticket.pojo.CredentialItemVo
@@ -93,6 +94,20 @@ class ServiceCredentialResourceImpl @Autowired constructor(
                 padding = padding ?: false
             )
         )
+    }
+
+    @BkTimed(extraTags = ["operate", "get"])
+    override fun getBasicInfo(userId: String, projectId: String, credentialId: String): Result<CredentialBasicInfo> {
+        if (userId.isBlank()) {
+            throw ParamBlankException("Invalid userId")
+        }
+        if (projectId.isBlank()) {
+            throw ParamBlankException("Invalid projectId")
+        }
+        if (credentialId.isBlank()) {
+            throw ParamBlankException("Invalid credentialId")
+        }
+        return Result(credentialService.serviceGetBasicInfo(projectId = projectId, credentialId = credentialId))
     }
 
     override fun getCredentialItem(

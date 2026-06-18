@@ -163,6 +163,19 @@ class PipelineGroupDao {
         }
     }
 
+    fun getByName(
+        dslContext: DSLContext,
+        projectId: String,
+        name: String
+    ): TPipelineGroupRecord? {
+        with(TPipelineGroup.T_PIPELINE_GROUP) {
+            return dslContext.selectFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(NAME.eq(name))
+                .fetchAny()
+        }
+    }
+
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineGroupDao::class.java)
     }
