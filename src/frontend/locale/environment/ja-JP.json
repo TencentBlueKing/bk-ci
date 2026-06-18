@@ -298,7 +298,9 @@
         "importIMetaSuccessTip": "インポート後、作成Agentが非同期で自動インストールされます。リストで作成Agentのステータスを確認してください。インストールに失敗した場合は、「再インストール」してください。",
         "iGotIt": "承知しました",
         "totalNodes": "合計 {count} 個のノード",
-        "deleteIMetaNodeTips": "削除すると、システムは対応する作成Agentを自動的にアンインストールします"
+        "deleteIMetaNodeTips": "削除すると、システムは対応する作成Agentを自動的にアンインストールします",
+        "alreadyImported": "プロジェクト {project} に既にインポート済みで、重複インポートはサポートされていません",
+        "goToView": "チェック"
     },
     "nodeTypeMap": {
         "CC": "CC",

@@ -504,7 +504,7 @@
                                     {{ $t('environment.setTag') }}
                                 </span>
                                 <bk-button
-                                    v-if="!['TSTACK'].includes(props.row.nodeType) && !isCreateResType"
+                                    v-if="!['TSTACK'].includes(props.row.nodeType) && !isPersonalProject"
                                     text
                                     v-perm="{
                                         hasPermission: props.row.canDelete,
@@ -673,6 +673,7 @@
     } from '@/utils/permission'
     import { ENV_ACTIVE_NODE_TYPE, ALLNODE, SERVICE_RESOURCE_TYPE } from '@/store/constants'
     import { mapActions } from 'vuex'
+    import useEnvDetail from '@/hooks/useEnvDetail'
     const NODE_TABLE_COLUMN_CACHE = 'node_list_columns'
 
     export default {
@@ -680,6 +681,12 @@
             EmptyTableStatus,
             dropdownList,
             StatusIcon
+        },
+        setup () {
+            const { isPersonalProject } = useEnvDetail()
+            return {
+                isPersonalProject
+            }
         },
         props: {
             nodeList: {

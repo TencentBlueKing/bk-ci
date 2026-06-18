@@ -154,10 +154,12 @@
                     name: 'node',
                     label: proxy.$t('environment.node')
                 },
-                {
-                    name: 'schedulingStrategy',
-                    label: proxy.$t('environment.schedulingStrategy')
-                },
+                ...(currentEnv.value?.envType === ENV_TYPE_MAP.BUILD ? [
+                    {
+                        name: 'schedulingStrategy',
+                        label: proxy.$t('environment.schedulingStrategy')
+                    }
+                ]: []),
                 ...(currentEnv.value?.envType === ENV_TYPE_MAP.BUILD ? [
                     {
                         name: 'variable',

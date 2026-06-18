@@ -298,7 +298,9 @@
         "importIMetaSuccessTip": "After import, the creative Agent will be automatically installed asynchronously. Please observe the creative Agent status in the list. If installation fails, please \"Reinstall\".",
         "iGotIt": "I Got It",
         "totalNodes": "Total {count} nodes",
-        "deleteIMetaNodeTips": "When removing, the system will automatically uninstall the corresponding creative Agent"
+        "deleteIMetaNodeTips": "When removing, the system will automatically uninstall the corresponding creative Agent",
+        "alreadyImported": "Already imported to project {project}, duplicate import is not supported",
+        "goToView": "View"
     },
     "nodeTypeMap": {
         "CC": "CC",

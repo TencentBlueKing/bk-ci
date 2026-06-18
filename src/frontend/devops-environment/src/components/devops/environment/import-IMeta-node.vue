@@ -36,6 +36,7 @@
                 style="margin-top: 16px;"
             >
                 <bk-table-column
+                    :selectable="disabledRowSelect"
                     type="selection"
                     width="50"
                 />
@@ -43,8 +44,28 @@
                     :label="$t('environment.nodeInfo.name')"
                     prop="name"
                     width="120"
-                    show-overflow-tooltip
-                />
+                >
+                    <template slot-scope="props">
+                        <span
+                            v-bk-overflow-tips
+                            class="name-text"
+                        >
+                            {{ props.row.name }}
+                        </span>
+                        <div
+                            class="overlay"
+                            v-if="shouldShowOverlay(props.row)"
+                        >
+                            {{ $t('environment.nodeInfo.alreadyImported', { project: getProjectName(props.row.installedProjectId) }) }}
+                            <a
+                                class="overlay-view-link"
+                                @click="handleToView(props.row)"
+                            >
+                                {{ $t('environment.nodeInfo.goToView') }}
+                            </a>
+                        </div>
+                    </template>
+                </bk-table-column>
                 <bk-table-column
                     :label="$t('environment.nodeInfo.nodeId')"
                     prop="deviceId"
@@ -213,17 +234,36 @@
             },
 
             handleSelect (selection) {
-                this.selectedNodes = selection.map(item => ({ deviceId: item.deviceId, name: item.name }))
+                this.selectedNodes = selection.filter(item => !item.installedProjectId).map(item => ({ deviceId: item.deviceId, name: item.name }))
             },
 
             handleSelectAll (selection) {
-                this.selectedNodes = selection.map(item => ({ deviceId: item.deviceId, name: item.name }))
+                this.selectedNodes = selection.filter(item => !item.installedProjectId).map(item => ({ deviceId: item.deviceId, name: item.name }))
             },
 
             getStatusType (status) {
                 const successStatus = ['RUNNING', 'NORMAL']
                 if (successStatus.includes(status)) return 'success'
                 return 'error'
+            },
+
+            shouldShowOverlay (row) {
+                return !!row.installedProjectId
+            },
+
+            getProjectName (projectId) {
+                const projectList = this.$store.state.projectList || []
+                const project = projectList.find(item => item.projectCode === projectId)
+                return project ? project.projectName : projectId
+            },
+
+            handleToView (row) {
+                const url = `/console/environment/${row.installedProjectId}/creative-stream/node/allNode?keywords=${row.name}&page=1&pageSize=10`
+                window.open(url, '_blank')
+            },
+
+            disabledRowSelect (row) {
+                return !row.installedProjectId
             },
 
             async handleImport () {
@@ -339,6 +379,35 @@
                 margin-left: 8px;
             }
         }
+    }
+
+    .name-text {
+        display: inline-block;
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .overlay {
+        position: absolute;
+        left: -50px;
+        top: 42px;
+        transform: translateY(-42px);
+        width: 1040px;
+        height: 42px;
+        background: rgba(255, 232, 195, .7);
+        font-family: MicrosoftYaHei;
+        font-size: 12px;
+        color: #63656E;
+        text-align: center;
+        line-height: 42px;
+        z-index: 400;
+    }
+    .overlay-view-link {
+        color: #3A84FF;
+        cursor: pointer;
+        margin-left: 8px;
     }
 
     .success-page {

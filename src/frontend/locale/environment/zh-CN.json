@@ -298,7 +298,9 @@
         "importIMetaSuccessTip": "导入后将异步自动安装创作 Agent，请在列表观察创作 Agent 状态，若安装失败请「重装」。",
         "iGotIt": "我知道了",
         "totalNodes": "共 {count} 个节点",
-        "deleteIMetaNodeTips": "移除时，系统将自动卸载对应的创作Agent"
+        "deleteIMetaNodeTips": "移除时，系统将自动卸载对应的创作Agent",
+        "alreadyImported": "已导入到 {project} 项目，不支持重复导入",
+        "goToView": "去查看"
     },
     "nodeTypeMap": {
         "CC": "CC",
