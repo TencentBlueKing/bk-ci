@@ -27,17 +27,9 @@ object PipelineCopyTaskAutoStrategyUtils {
                 null
             }
 
-            PipelineDependentResourceType.DEPLOY_NODE -> if (targetNameExists) {
-                PipelineCopyStrategy.DEPLOY_NODE_REUSE_SAME_NAME
-            } else {
-                null
-            }
+            PipelineDependentResourceType.DEPLOY_NODE -> PipelineCopyStrategy.DEPLOY_NODE_REUSE_SAME_NAME
 
-            PipelineDependentResourceType.REPOSITORY -> if (targetNameExists) {
-                PipelineCopyStrategy.REPOSITORY_REUSE_SAME_NAME_PROTOCOL
-            } else {
-                PipelineCopyStrategy.REPOSITORY_CREATE_NEW
-            }
+            PipelineDependentResourceType.REPOSITORY -> PipelineCopyStrategy.REPOSITORY_REUSE_SAME_NAME_PROTOCOL
 
             PipelineDependentResourceType.BUILD_ENV -> if (targetNameExists) {
                 PipelineCopyStrategy.BUILD_ENV_REUSE_SAME_NAME
