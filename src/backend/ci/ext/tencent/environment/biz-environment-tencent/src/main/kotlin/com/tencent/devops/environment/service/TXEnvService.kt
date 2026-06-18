@@ -33,6 +33,7 @@ import com.tencent.bk.audit.annotations.AuditAttribute
 import com.tencent.bk.audit.annotations.AuditInstanceRecord
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.audit.ActionAuditContent
 import com.tencent.devops.common.auth.api.ActionId
@@ -57,10 +58,15 @@ import com.tencent.devops.environment.dao.thirdpartyagent.ThirdPartyAgentDao
 import com.tencent.devops.environment.permission.EnvironmentPermissionService
 import com.tencent.devops.environment.pojo.EnvCreateInfo
 import com.tencent.devops.environment.pojo.EnvironmentId
+import com.tencent.devops.environment.pojo.NodeBaseInfo
+import com.tencent.devops.environment.pojo.enums.NodeStatus
+import com.tencent.devops.environment.pojo.enums.NodeType
 import com.tencent.devops.environment.pojo.enums.TXEnvType
 import com.tencent.devops.environment.pojo.envOperate.EnvOperateOrigin
 import com.tencent.devops.environment.service.slave.SlaveGatewayService
+import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.remotedev.api.service.ServiceRemoteDevResource
+import com.tencent.devops.support.api.service.ServiceIMateResource
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Primary
@@ -247,5 +253,47 @@ class TXEnvService @Autowired constructor(
             )
         }
         super.deleteEnvNodes(userId, projectId, envHashId, nodeHashIds, envOperateOrigin)
+    }
+
+    override fun listAllEnvNodesNew(
+        userId: String,
+        projectId: String,
+        page: Int?,
+        pageSize: Int?,
+        envHashIds: List<String>?,
+        envName: String?,
+        nodeIp: String?,
+        displayName: String?,
+        createdUser: String?,
+        nodeStatus: NodeStatus?
+    ): Page<NodeBaseInfo> {
+        val result = super.listAllEnvNodesNew(
+            userId = userId,
+            projectId = projectId,
+            page = page,
+            pageSize = pageSize,
+            envHashIds = envHashIds,
+            envName = envName,
+            nodeIp = nodeIp,
+            displayName = displayName,
+            createdUser = createdUser,
+            nodeStatus = nodeStatus
+        )
+        // 团队云桌面过滤下不存在的龙虾
+        if (result.records.all { it.nodeType != NodeType.CREATE.name }) {
+            return result
+        }
+        if (client.get(ServiceProjectResource::class).get(projectId).data?.projectScope != 0) {
+            return result
+        }
+        val imateMap =
+            client.get(ServiceIMateResource::class).queryUserRobots(userId).data?.filter { it.username == userId }
+                ?.map { it.clientUuid }
+        return Page(
+            page = result.page,
+            pageSize = result.pageSize,
+            count = result.count,
+            records = result.records.filter { it.createWorkspaceId in (imateMap ?: emptyList()) }
+        )
     }
 }
