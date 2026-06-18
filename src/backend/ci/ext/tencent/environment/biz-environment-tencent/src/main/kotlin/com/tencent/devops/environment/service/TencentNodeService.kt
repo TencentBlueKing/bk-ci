@@ -157,10 +157,15 @@ class TencentNodeService @Autowired constructor(
         return true
     }
 
-    fun getNodeAgentDetail(userId: String, projectId: String, nodeHashId: String): NodeAgentDetail? {
-        return thirdPartyAgentDao.getAgentByNodeId(dslContext, HashUtil.decodeIdToLong(nodeHashId), projectId)?.let {
-            NodeAgentDetail(it.createWorkspaceName)
-        } ?: return null
+    fun getNodeAgentDetail(userId: String, projectId: String, agentHashId: String): NodeAgentDetail? {
+        val agent = thirdPartyAgentDao.getAgentByProject(dslContext, HashUtil.decodeIdToLong(agentHashId), projectId)
+            ?: return null
+        val node = nodeDao.get(dslContext, projectId, agent.nodeId) ?: return null
+        return NodeAgentDetail(
+            displayName = node.displayName,
+            ip = agent.ip,
+            workspaceName = agent.createWorkspaceName
+        )
     }
 
     // 因为现在没有团队imate同步到我们的方式，所以每天轮询
