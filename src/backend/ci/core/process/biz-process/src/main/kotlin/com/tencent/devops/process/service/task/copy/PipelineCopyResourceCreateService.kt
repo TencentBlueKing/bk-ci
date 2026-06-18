@@ -49,7 +49,6 @@ import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.store.api.template.ServiceTemplateResource
 import com.tencent.devops.ticket.api.ServiceCredentialResource
 import com.tencent.devops.ticket.pojo.CredentialCreate
-import jakarta.ws.rs.core.Response
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired

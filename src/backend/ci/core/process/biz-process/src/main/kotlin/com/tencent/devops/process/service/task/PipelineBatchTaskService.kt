@@ -19,8 +19,8 @@ import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskCreateRequ
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskDetail
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskDetailStatusSummary
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskDetailVo
-import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskStatusSummary
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskExecuteEvent
+import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskStatusSummary
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskUpdate
 import org.jooq.DSLContext
 import org.jooq.impl.DSL

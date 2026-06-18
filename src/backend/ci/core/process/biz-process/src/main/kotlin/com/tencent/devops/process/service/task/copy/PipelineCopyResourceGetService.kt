@@ -79,7 +79,7 @@ class PipelineCopyResourceGetService @Autowired constructor(
         }
     }
 
-    fun getNodeByName(
+    fun getBuildNodeByName(
         userId: String,
         projectId: String,
         nodeName: String,
@@ -96,6 +96,31 @@ class PipelineCopyResourceGetService @Autowired constructor(
                 nodeHashId = null,
                 nodeName = nodeName,
                 agentHashId = null
+            ).data?.let {
+                PipelineCopyResourceBasicInfo(
+                    resourceId = it.nodeHashId,
+                    resourceName = it.displayName ?: it.name
+                )
+            }
+        }
+    }
+
+    fun getDeployNodeByName(
+        userId: String,
+        projectId: String,
+        nodeName: String,
+        expectExists: Boolean?
+    ): PipelineCopyResourceBasicInfo? {
+        return getResource(
+            projectId = projectId,
+            resourceName = nodeName,
+            expectExists = expectExists
+        ) {
+            client.get(ServiceNodeResource::class).getRawNode(
+                userId = userId,
+                projectId = projectId,
+                nodeHashId = null,
+                nodeName = nodeName
             ).data?.let {
                 PipelineCopyResourceBasicInfo(
                     resourceId = it.nodeHashId,

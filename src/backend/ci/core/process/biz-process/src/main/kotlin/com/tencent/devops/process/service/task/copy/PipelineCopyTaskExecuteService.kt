@@ -611,9 +611,19 @@ class PipelineCopyTaskExecuteService @Autowired constructor(
         var errorMessage: PipelineBatchTaskErrorMessage? = null
         try {
             when (val copyStrategy = validateCopyStrategy(resource)) {
-                PipelineCopyStrategy.BUILD_NODE_REUSE_SAME_NAME,
+                PipelineCopyStrategy.BUILD_NODE_REUSE_SAME_NAME -> {
+                    val targetResource = pipelineCopyResourceGetService.getBuildNodeByName(
+                        userId = userId,
+                        projectId = targetProjectId,
+                        nodeName = resource.resourceName,
+                        expectExists = true
+                    )
+                    targetResourceId = targetResource!!.resourceId
+                    targetResourceName = targetResource.resourceName
+                }
+
                 PipelineCopyStrategy.DEPLOY_NODE_REUSE_SAME_NAME -> {
-                    val targetResource = pipelineCopyResourceGetService.getNodeByName(
+                    val targetResource = pipelineCopyResourceGetService.getDeployNodeByName(
                         userId = userId,
                         projectId = targetProjectId,
                         nodeName = resource.resourceName,
