@@ -76,10 +76,10 @@ interface OpCredentialResource {
         keyword: String?
     ): Result<Page<CredentialWithPermission>>
 
-    @Operation(summary = "复制凭据到目标项目")
-    @Path("/projects/{sourceProjectId}/copy")
+    @Operation(summary = "跨项目复制凭据")
+    @Path("/projects/{sourceProjectId}/copyAcrossProject")
     @POST
-    fun copy(
+    fun copyAcrossProject(
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
