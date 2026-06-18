@@ -255,8 +255,17 @@ class ImportService @Autowired constructor(
     private fun import(id: Long, projectId: String, agentId: String, userId: String, masterVersion: String?): Long? {
         val agentRecord = thirdPartyAgentDao.getAgentByProject(dslContext, id, projectId)
             ?: throw NotFoundException("The agent($agentId) is not exist")
-
+        val nodeRecord = agentRecord.nodeId?.let {
+            nodeDao.get(dslContext = dslContext, projectId = agentRecord.projectId, nodeId = it)
+        }
         if (agentRecord.status == AgentStatus.IMPORT_OK.status) { // 忽略重复导入
+            if (nodeRecord != null && nodeRecord.nodeStatus != NodeStatus.NORMAL.name) {
+                nodeDao.updateNodeStatus(
+                    dslContext = dslContext,
+                    ids = setOf(agentRecord.nodeId),
+                    status = NodeStatus.NORMAL
+                )
+            }
             return null
         }
 
@@ -275,7 +284,7 @@ class ImportService @Autowired constructor(
             )
         )
         // 兜底防御，这里可能因为收到heartbeat的影响导致已经创建过node重新创建了
-        if (agentRecord.nodeId != null) {
+        if (nodeRecord != null) {
             LOG.info("Trying to import the agent($agentId) of project($projectId) by user($userId), exist node")
             dslContext.transaction { configuration ->
                 val context = DSL.using(configuration)

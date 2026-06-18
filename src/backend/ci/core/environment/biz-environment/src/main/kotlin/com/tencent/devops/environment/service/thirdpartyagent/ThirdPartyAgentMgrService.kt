@@ -1482,7 +1482,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                 thirdPartyAgentDao.saveAgent(dslContext = context, agentRecode = agentRecord)
             }
 
-            if (nodeRecord.nodeStatus == NodeStatus.ABNORMAL.name) {
+            if (nodeRecord.nodeStatus != NodeStatus.NORMAL.name) {
                 nodeRecord.nodeStatus = NodeStatus.NORMAL.name
                 nodeChanged = true
             }
