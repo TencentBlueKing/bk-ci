@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.report.service
 
+import com.tencent.bkrepo.common.api.constant.HttpHeaders
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.archive.pojo.ReportListDTO
 import com.tencent.devops.common.archive.pojo.TaskReport
@@ -52,6 +53,8 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.nio.file.Paths
 import jakarta.ws.rs.core.Response
+import org.springframework.web.context.request.RequestContextHolder
+import org.springframework.web.context.request.ServletRequestAttributes
 
 @Suppress("ALL")
 @Service
@@ -215,8 +218,17 @@ class ReportService @Autowired constructor(
         )
     }
 
-    private fun getRootUrl(projectId: String, pipelineId: String, buildId: String, taskId: String): String =
-        "${HomeHostUtil.innerApiHost()}/artifactory/api-html/user/reports/$projectId/$pipelineId/$buildId/$taskId/"
+    private fun getRootUrl(projectId: String, pipelineId: String, buildId: String, taskId: String): String {
+        val request = (RequestContextHolder.currentRequestAttributes() as ServletRequestAttributes).request
+        val referer = request.getHeader(HttpHeaders.REFERER).orEmpty()
+        val devxApiHost = HomeHostUtil.devxApiHost()
+        val host = if (referer.contains(devxApiHost)) {
+            devxApiHost
+        } else {
+            HomeHostUtil.innerApiHost()
+        }
+        return "$host/artifactory/api-html/user/reports/$projectId/$pipelineId/$buildId/$taskId/"
+    }
 
     private fun sendEmail(receivers: Set<String>, title: String, html: String) {
         val emailNotifyMessage = EmailNotifyMessage()
