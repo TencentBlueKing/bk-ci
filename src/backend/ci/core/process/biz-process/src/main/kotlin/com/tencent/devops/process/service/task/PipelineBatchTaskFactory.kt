@@ -66,11 +66,7 @@ class PipelineBatchTaskFactory @Autowired constructor(
                 versionStatus = pipelineVersionStatusMap[pipelineId],
                 change = true,
                 // pac的流水线不参与批量任务
-                status = if (pac) {
-                    PipelineBatchTaskDetailStatus.EXCLUDED
-                } else {
-                    status
-                },
+                status = status,
                 errorType = null,
                 errorMessage = null,
                 startTime = null,

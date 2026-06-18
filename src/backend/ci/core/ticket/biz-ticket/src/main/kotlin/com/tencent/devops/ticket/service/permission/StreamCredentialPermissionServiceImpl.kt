@@ -135,15 +135,6 @@ class StreamCredentialPermissionServiceImpl @Autowired constructor(
         return
     }
 
-    override fun copyResourceGroupMembers(
-        sourceProjectId: String,
-        targetProjectId: String,
-        sourceCredentialId: String,
-        targetCredentialId: String
-    ) {
-        // Stream 权限模式无需复制成员
-    }
-
     companion object {
         val logger = LoggerFactory.getLogger(StreamCredentialPermissionServiceImpl::class.java)
     }
