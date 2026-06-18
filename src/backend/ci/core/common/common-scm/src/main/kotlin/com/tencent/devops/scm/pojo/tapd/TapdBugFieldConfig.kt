@@ -44,7 +44,6 @@ data class TapdBugFieldConfig(
     val priorityLabel: TapdBugField? = null
 )
 
-
 /**
  * TAPD 缺陷字段定义
  */

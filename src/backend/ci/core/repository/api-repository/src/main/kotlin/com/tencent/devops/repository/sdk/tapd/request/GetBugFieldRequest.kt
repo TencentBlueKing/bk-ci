@@ -31,7 +31,6 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import com.tencent.devops.repository.sdk.common.enums.HttpMethod
 import com.tencent.devops.repository.sdk.tapd.TapdRequest
 import com.tencent.devops.scm.pojo.tapd.TapdResult
-import com.tencent.devops.scm.pojo.tapd.BugResponse
 import com.tencent.devops.scm.pojo.tapd.TapdBugFieldConfig
 
 /**

@@ -37,6 +37,7 @@ import com.tencent.devops.common.pipeline.TemplateDescriptor
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.enums.BuildScriptType
 import com.tencent.devops.common.pipeline.enums.CharsetType
+import com.tencent.devops.common.pipeline.enums.TapdEventType
 import com.tencent.devops.common.pipeline.enums.TemplateRefType
 import com.tencent.devops.common.pipeline.pojo.TemplateVariable
 import com.tencent.devops.common.pipeline.pojo.element.Element
@@ -232,16 +233,25 @@ class ElementTransfer @Autowired(required = false) constructor(
 
     private fun tapd2YamlRule(element: TapdWebHookTriggerElement): TapdRule {
         val input = element.data.input
-        val includeActions = input.includeStoryAction ?: input.includeBugAction
+        val includeActions = if (input.eventType == TapdEventType.STORY) {
+            input.includeStoryAction
+        } else {
+            input.includeBugAction
+        }
         return TapdRule(
             id = element.stepId,
             name = element.name,
             enable = element.elementEnabled().nullIfDefault(true),
             tapdProjectId = input.tapdProjectId,
             eventType = input.eventType?.value,
-            includeActions = includeActions,
-            includeUsers = input.includeUsers,
-            excludeUsers = input.excludeUsers
+            action = includeActions,
+            users = input.includeUsers,
+            usersIgnore = input.excludeUsers,
+            owners = input.includeOwner,
+            ownersIgnore = input.excludeOwner,
+            labels = input.includeLabels?.split(","),
+            labelsIgnore = input.excludeLabels?.split(","),
+            priorities = input.includePriority?.split(",")
         )
     }
 

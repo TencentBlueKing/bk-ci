@@ -71,6 +71,7 @@ import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_BUG_URL_PATT
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_EVENT_SEPARATOR
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_BUG_ID
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_CHANGE_FIELDS
+import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_CURRENT_OWNER
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_CURRENT_USER
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_DESCRIPTION
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_ENTITY_ID
@@ -83,6 +84,7 @@ import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_NAME
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_NEW_PREFIX
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_OWNER
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_PARENT_ID
+import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_PRIORITY
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_PRIORITY_LABEL
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_REFERER
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_SOURCE_ID
@@ -165,7 +167,8 @@ class TapdWebhookRequestService(
         logger.info("Receive TapdWebhookRequestEvent|${JsonUtil.toJson(event, false)}")
         val (eventType, eventAction) = parseEvent(
             eventTypeRaw = event.eventType,
-            eventActionRaw = event.eventAction
+            eventActionRaw = event.eventAction,
+            body = event.body
         ) ?: return
         // 1. 通过 T_PIPELINE_EVENT_SUBSCRIPTION 查询订阅了该 (tapdProjectId + eventType) 的流水线
         val subscribers = listSubscribers(tapdProjectId = event.tapdProjectId, eventType = eventType)
@@ -232,7 +235,7 @@ class TapdWebhookRequestService(
             logger.warn("tapd replay missing event field|eventId=${sourceTriggerEvent.eventId}")
             return
         }
-        val (eventType, eventAction) = parseRawEvent(rawEvent) ?: return
+        val (eventType, eventAction) = parseRawEvent(rawEvent, body) ?: return
 
         val tapdProjectId = body[TAPD_KEY_WORKSPACE_ID] ?: sourceTriggerEvent.eventSource ?: ""
         val triggerUser = replayEvent.userId.ifBlank { body[TAPD_KEY_CURRENT_USER] ?: "" }
@@ -267,6 +270,7 @@ class TapdWebhookRequestService(
         )
     }
 
+    @SuppressWarnings("NestedBlockDepth")
     private fun getTapdObjectBaseInfo(
         eventType: TapdEventType,
         eventAction: TapdEventAction,
@@ -279,7 +283,7 @@ class TapdWebhookRequestService(
                 bugInfo?.let {
                     val map = mutableMapOf<String, String>()
                     // tapd bug priority 需要额外转化一下，hook里面是英文，但是界面显示又为中文
-                    if(!it.priorityLabel.isNullOrBlank()) {
+                    if (!it.priorityLabel.isNullOrBlank()) {
                         map[TAPD_KEY_PRIORITY_LABEL] = getBugFieldsInfo(workspaceId)
                                 ?.priorityLabel
                                 ?.options
@@ -290,9 +294,6 @@ class TapdWebhookRequestService(
                     map[TAPD_KEY_NAME] = it.title ?: ""
                     map
                 }
-
-
-                mapOf()
             }
 
             TapdEventType.STORY -> {
@@ -319,7 +320,8 @@ class TapdWebhookRequestService(
         TapdEventAction.BUG_UNLINK,
         TapdEventAction.STORY_LINK,
         TapdEventAction.STORY_UNLINK,
-        TapdEventAction.UPDATE
+        TapdEventAction.UPDATE,
+        TapdEventAction.STATUS_CHANGE
     ).contains(eventAction)
 
     private fun getStoryInfo(workspaceId: String, storyId: String) = tapdSupportService.getStoryInfo(
@@ -354,13 +356,13 @@ class TapdWebhookRequestService(
     /**
      * 解析 TAPD 原始事件字符串（例如 `story::create`）
      */
-    private fun parseRawEvent(rawEvent: String): Pair<TapdEventType, TapdEventAction>? {
+    private fun parseRawEvent(rawEvent: String, body: Map<String, Any?>): Pair<TapdEventType, TapdEventAction>? {
         val parts = rawEvent.split(TAPD_EVENT_SEPARATOR)
         if (parts.size != 2) {
             logger.warn("tapd replay invalid event format|event=$rawEvent")
             return null
         }
-        return parseEvent(eventTypeRaw = parts[0], eventActionRaw = parts[1])
+        return parseEvent(eventTypeRaw = parts[0], eventActionRaw = parts[1], body = body)
     }
 
     private fun resolveReplayPipelines(
@@ -386,7 +388,8 @@ class TapdWebhookRequestService(
 
     private fun parseEvent(
         eventTypeRaw: String,
-        eventActionRaw: String
+        eventActionRaw: String,
+        body: Map<String, Any?> = mapOf()
     ): Pair<TapdEventType, TapdEventAction>? {
         val eventType = TapdEventType.parse(eventTypeRaw) ?: run {
             logger.warn("Unsupported tapd event type|$eventTypeRaw")
@@ -396,7 +399,7 @@ class TapdWebhookRequestService(
             logger.warn("Unsupported tapd event action|$eventActionRaw")
             return null
         }
-        return convertEvent(eventType, eventAction)
+        return convertEvent(eventType, eventAction, body)
     }
 
     /**
@@ -493,9 +496,13 @@ class TapdWebhookRequestService(
                     eventAction = eventAction,
                     triggerUser = triggerUser,
                     startParams = startParams,
-                    triggerPriority = body.getHookField(TAPD_KEY_PRIORITY_LABEL, update),
-                    triggerLabels = body.getHookField(TAPD_KEY_LABEL, update),
-                    triggerOwner = body.getHookField(TAPD_KEY_OWNER, update),
+                    triggerPriority = body.getHookField(TAPD_KEY_PRIORITY_LABEL).ifBlank {
+                        body.getHookField(TAPD_KEY_PRIORITY)
+                    },
+                    triggerLabels = body.getHookField(TAPD_KEY_LABEL),
+                    triggerOwner = body.getHookField(TAPD_KEY_OWNER).ifBlank {
+                        body.getHookField(TAPD_KEY_CURRENT_OWNER)
+                    },
                     eventFrom = body.getHookField(TAPD_KEY_EVENT_FROM)
                 )
             )

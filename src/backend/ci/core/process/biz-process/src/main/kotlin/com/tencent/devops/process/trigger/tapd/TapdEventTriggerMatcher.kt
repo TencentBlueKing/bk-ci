@@ -111,7 +111,7 @@ class TapdEventTriggerMatcher {
             triggerOn = eventAction.value,
             included = when (input.eventType) {
                 TapdEventType.STORY -> input.includeStoryAction
-                TapdEventType.BUG -> input.includeStoryAction
+                TapdEventType.BUG -> input.includeBugAction
                 else -> listOf()
             }?.filter { it.isNotBlank() } ?: emptyList(),
             failedReason = I18Variable(

@@ -31,6 +31,7 @@ import com.fasterxml.jackson.annotation.JsonAnyGetter
 import com.fasterxml.jackson.annotation.JsonAnySetter
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.PropertyNamingStrategies
 import com.fasterxml.jackson.databind.annotation.JsonNaming
 import io.swagger.v3.oas.annotations.media.Schema
@@ -51,12 +52,14 @@ data class TapdBug(
     @get:Schema(description = "标签")
     val label: String? = null,
     @get:Schema(description = "优先级（自定义计划应用名称）")
+    @JsonProperty("priority_label")
     val priorityLabel: String? = null,
     @get:Schema(description = "严重程度")
     val severity: String? = null,
     @get:Schema(description = "状态")
     val status: String? = null,
     @get:Schema(description = "迭代 ID")
+    @JsonProperty("iteration_id")
     val iterationId: String? = null,
     @get:Schema(description = "模块")
     val module: String? = null,
@@ -65,22 +68,31 @@ data class TapdBug(
     @get:Schema(description = "发布计划 ID")
     val releaseId: String? = null,
     @get:Schema(description = "发现版本")
+    @JsonProperty("version_report")
     val versionReport: String? = null,
     @get:Schema(description = "验证版本")
+    @JsonProperty("version_test")
     val versionTest: String? = null,
     @get:Schema(description = "合入版本")
+    @JsonProperty("version_fix")
     val versionFix: String? = null,
     @get:Schema(description = "关闭版本")
+    @JsonProperty("version_close")
     val versionClose: String? = null,
     @get:Schema(description = "发现基线")
+    @JsonProperty("baseline_find")
     val baselineFind: String? = null,
     @get:Schema(description = "合入基线")
+    @JsonProperty("baseline_join")
     val baselineJoin: String? = null,
     @get:Schema(description = "验证基线")
+    @JsonProperty("baseline_test")
     val baselineTest: String? = null,
     @get:Schema(description = "关闭基线")
+    @JsonProperty("baseline_close")
     val baselineClose: String? = null,
     @get:Schema(description = "处理人")
+    @JsonProperty("current_owner")
     val currentOwner: String? = null,
     @get:Schema(description = "抄送人")
     val cc: String? = null,
@@ -107,14 +119,17 @@ data class TapdBug(
     @get:Schema(description = "创建时间，格式 yyyy-MM-dd HH:mm:ss")
     val created: String? = null,
     @get:Schema(description = "接受处理时间")
+    @JsonProperty("in_progress_time")
     val inProgressTime: String? = null,
     @get:Schema(description = "解决时间")
     val resolved: String? = null,
     @get:Schema(description = "验证时间")
+    @JsonProperty("verify_time")
     val verifyTime: String? = null,
     @get:Schema(description = "关闭时间")
     val closed: String? = null,
     @get:Schema(description = "拒绝时间")
+    @JsonProperty("reject_time")
     val rejectTime: String? = null,
     @get:Schema(description = "最后修改时间")
     val modified: String? = null,

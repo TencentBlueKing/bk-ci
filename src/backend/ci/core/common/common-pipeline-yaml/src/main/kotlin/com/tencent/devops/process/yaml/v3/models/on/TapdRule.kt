@@ -52,19 +52,34 @@ data class TapdRule(
     override val id: String? = null,
     override val name: String? = null,
     override val enable: Boolean? = true,
-    @get:Schema(title = "tapd-project-id")
-    @JsonProperty("tapd-project-id")
+    @get:Schema(title = "project-id")
+    @JsonProperty("project-id")
     val tapdProjectId: String,
     @get:Schema(title = "event-type")
     @JsonProperty("event-type")
     val eventType: String?,
     @get:Schema(title = "include-actions")
-    @JsonProperty("include-actions")
-    val includeActions: List<String>? = null,
-    @get:Schema(title = "include-users")
-    @JsonProperty("include-users")
-    val includeUsers: List<String>? = null,
-    @get:Schema(title = "exclude-users")
-    @JsonProperty("exclude-users")
-    val excludeUsers: List<String>? = null
+    @JsonProperty("action")
+    val action: List<String>? = null,
+    @get:Schema(title = "users")
+    @JsonProperty("users")
+    val users: List<String>? = null,
+    @get:Schema(title = "users-ignore")
+    @JsonProperty("users-ignore")
+    val usersIgnore: List<String>? = null,
+    @get:Schema(title = "owners")
+    @JsonProperty("owners")
+    val owners: List<String>? = null,
+    @get:Schema(title = "owners-ignore")
+    @JsonProperty("owners-ignore")
+    val ownersIgnore: List<String>? = null,
+    @JsonProperty("labels")
+    @get:Schema(title = "labels")
+    var labels: List<String>? = null,
+    @get:Schema(title = "labels-ignore")
+    @JsonProperty("labels-ignore")
+    val labelsIgnore: List<String>? = null,
+    @get:Schema(title = "priorities")
+    @JsonProperty("priorities")
+    val priorities: List<String>? = null
 ) : Rule(id, name, enable)

@@ -46,6 +46,8 @@ object TapdWebhookConstant {
 
     const val TAPD_KEY_OWNER = "owner"
 
+    const val TAPD_KEY_CURRENT_OWNER = "current_owner"
+
     const val TAPD_KEY_PRIORITY = "priority"
 
     const val TAPD_KEY_PARENT_ID = "parent_id"
