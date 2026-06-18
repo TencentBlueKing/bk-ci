@@ -301,11 +301,16 @@ class EnvService @Autowired constructor(
             projectId = projectId,
             envName = envName,
             envTypeList = if (createMode == true) {
-                listOf(EnvType.CREATE)
+                listOf(EnvType.CREATE.name)
             } else if (envType != null) {
-                listOf(envType)
+                listOf(envType.name)
             } else {
-                EnvType.noCreateMode()
+                null
+            },
+            noEnvTypeList = if (createMode != true && envType == null) {
+                listOf(EnvType.CREATE.name)
+            } else {
+                null
             },
             envIds = envIds
         )
@@ -1845,7 +1850,7 @@ class EnvService @Autowired constructor(
             dslContext = dslContext,
             projectId = projectId,
             envName = null,
-            envTypeList = listOf(EnvType.CREATE),
+            envTypeList = listOf(EnvType.CREATE.name),
             envIds = envIds
         ).map {
             EnvData(

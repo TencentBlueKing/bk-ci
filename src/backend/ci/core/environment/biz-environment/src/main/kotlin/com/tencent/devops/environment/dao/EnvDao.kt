@@ -145,7 +145,8 @@ class EnvDao {
         dslContext: DSLContext,
         projectId: String,
         envName: String? = null,
-        envTypeList: List<EnvType>? = null,
+        envTypeList: List<String>? = null,
+        noEnvTypeList: List<String>? = null,
         envIds: Collection<Long>? = null
     ): List<TEnvRecord> {
         with(TEnv.T_ENV) {
@@ -154,6 +155,7 @@ class EnvDao {
                 .and(IS_DELETED.eq(false))
                 .let { if (envName != null) it.and(ENV_NAME.like("%$envName%")) else it }
                 .let { if (!envTypeList.isNullOrEmpty()) it.and(ENV_TYPE.`in`(envTypeList)) else it }
+                .let { if (!noEnvTypeList.isNullOrEmpty()) it.and(ENV_ID.notIn(noEnvTypeList)) else it }
                 .let { if (envIds != null) it.and(ENV_ID.`in`(envIds)) else it }
                 .orderBy(ENV_ID.desc())
                 .fetch()
