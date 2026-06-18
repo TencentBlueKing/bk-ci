@@ -3,7 +3,6 @@ package com.tencent.devops.process.api.op
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.process.api.op.OpPipelineViewResource
 import com.tencent.devops.process.service.view.PipelineViewCopyService
 import com.tencent.devops.process.service.view.PipelineViewGroupService
 import com.tencent.devops.process.yaml.PipelineYamlViewService
