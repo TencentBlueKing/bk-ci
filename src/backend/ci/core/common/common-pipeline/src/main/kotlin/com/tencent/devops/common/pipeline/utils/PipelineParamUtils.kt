@@ -16,10 +16,13 @@ object PipelineParamUtils {
     /**
      * 解析默认值
      */
-    fun parseDefaultValue(param: BuildFormProperty): Map<String, String> {
+    fun parseDefaultValue(
+        param: BuildFormProperty,
+        inputParams: Map<String, String>? = null
+    ): Map<String, String> {
         val startParams = mutableMapOf<String, String>()
         val paramKey = param.id
-        val paramDefaultValue = param.defaultValue
+        val paramDefaultValue = inputParams?.get(param.id) ?: param.defaultValue
         val paramType = param.type
 
         when {

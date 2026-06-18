@@ -188,6 +188,12 @@ class VariableTransfer {
             props.required = it.valueNotEmpty
         }
 
+        // 下级属性required进行兼容处理
+        if (subField) {
+            props = props ?: VariableProps()
+            props.required = it.required
+        }
+
         if (it.desc.nullIfDefault("") != null) {
             props = props ?: VariableProps()
             props.description = it.desc
@@ -287,11 +293,19 @@ class VariableTransfer {
         }
     }
 
-    private fun convertBuildFormProperty(key: String, variable: Variable): BuildFormProperty {
+    private fun convertBuildFormProperty(
+        key: String,
+        variable: Variable,
+        subField: Boolean = false
+    ): BuildFormProperty {
         val type = VariablePropType.findType(variable.props?.type)?.toBuildFormPropertyType()
             ?: BuildFormPropertyType.STRING
         check(key, variable)
-        val allowModifyAtStartup = variable.allowModifyAtStartup ?: true
+        val allowModifyAtStartup = if (subField) {
+            variable.props?.required ?: false
+        } else {
+            variable.allowModifyAtStartup ?: true
+        }
         return BuildFormProperty(
             id = key,
             name = variable.props?.label,
@@ -340,7 +354,13 @@ class VariableTransfer {
             } else false,
             sensitive = variable.sensitive,
             fields = if (type == BuildFormPropertyType.FORM_LIST) {
-                variable.props?.fields?.map { child -> convertBuildFormProperty(child.key, child.value) }
+                variable.props?.fields?.map { child ->
+                    convertBuildFormProperty(
+                        key = child.key,
+                        variable = child.value,
+                        subField = true
+                    )
+                }
             } else {
                 null
             }
