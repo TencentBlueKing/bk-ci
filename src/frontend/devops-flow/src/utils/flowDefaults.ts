@@ -1,4 +1,5 @@
 import type { Container, Element, Stage } from '@/api/flowModel'
+import { getWindowAuthoringBaseOS } from '@/utils/project'
 import { randomLenString } from '@/utils/util'
 
 export enum AtomRunCondition {
@@ -68,7 +69,7 @@ export function createDefaultContainer(index: number, partial?: Partial<Containe
     maxQueueMinutes: 60,
     maxRunningMinutes: 480,
     buildEnv: {},
-    baseOS: 'WINDOWS',
+    baseOS: getWindowAuthoringBaseOS(),
     jobControlOption: {
       enable: true,
       prepareTimeout: 10,

@@ -38,6 +38,9 @@ import com.tencent.devops.remotedev.pojo.itsm.BKItsmCreateTicketRespData
 import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceDesktopNotifyData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyData
+import com.tencent.devops.remotedev.pojo.CreateOpenClawData
+import com.tencent.devops.remotedev.pojo.CreateOpenClawDataResp
+import com.tencent.devops.remotedev.pojo.TaskStatusResp
 import com.tencent.devops.remotedev.pojo.project.EnableRemotedevData
 import com.tencent.devops.remotedev.pojo.project.RemotedevProject
 import com.tencent.devops.remotedev.pojo.project.RemotedevProjectNew
@@ -1153,7 +1156,7 @@ interface ServiceRemoteDevResource {
     ): Result<Page<Workspace>>
 
     @Operation(summary = "分页批量获取THUMBNAIL的实例id列表")
-    @GET
+    @POST
     @Path("/batch_query_thumbnail_workspaces")
     fun batchQueryThumbnailWorkspaces(
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
@@ -1170,10 +1173,18 @@ interface ServiceRemoteDevResource {
         page: Int,
         @Parameter(description = "每页多少条（最大1000）", required = true, example = "100")
         @QueryParam("pageSize")
-        pageSize: Int
+        pageSize: Int,
+        @Parameter(description = "项目ID（可选过滤条件，不传则不限定项目）", required = false)
+        @QueryParam("projectId")
+        projectId: String?,
+        @Parameter(
+            description = "工作空间名称列表（可选过滤条件，不传则不限定实例；最多1000个）",
+            required = false
+        )
+        workspaceNames: List<String>?
     ): Result<Page<String>>
 
-    @Operation(summary = "开启或关闭工作空间缩略图")
+    @Operation(summary = "批量开启或关闭工作空间缩略图")
     @POST
     @Path("/enable_workspace_thumbnail")
     fun enableWorkspaceThumbnail(
@@ -1185,17 +1196,16 @@ interface ServiceRemoteDevResource {
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(
-            description = "工作空间名称",
-            required = true
-        )
-        @QueryParam("workspaceName")
-        workspaceName: String,
-        @Parameter(
             description = "是否启用：true=开启，false=关闭",
             required = true
         )
         @QueryParam("enable")
-        enable: Boolean
+        enable: Boolean,
+        @Parameter(
+            description = "工作空间名称列表（最多1000个）",
+            required = true
+        )
+        workspaceNames: List<String>
     ): Result<Boolean>
 
     @Operation(summary = "获取指定工作空间详情")
@@ -1212,4 +1222,25 @@ interface ServiceRemoteDevResource {
         @QueryParam("envHashId")
         envHashId: String?
     ): Result<WorkspaceStartCloudDetail?>
+
+    @Operation(summary = "分配龙虾云桌面")
+    @POST
+    @Path("/create_openclaw")
+    fun createOpenClaw(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        data: CreateOpenClawData
+    ): Result<CreateOpenClawDataResp>
+
+    @Operation(summary = "获取分配龙虾云桌面去任务状态")
+    @GET
+    @Path("/openclaw_task_status")
+    fun openClawTaskStatus(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @QueryParam("taskId")
+        taskId: String
+    ): Result<TaskStatusResp>
 }

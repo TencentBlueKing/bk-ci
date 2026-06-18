@@ -27,7 +27,6 @@
                 :data="renderList"
                 :max-height="542"
                 :pagination="pagination"
-                :max-height="542"
                 @page-change="pageChanged"
                 @page-limit-change="pageCountChanged"
                 :show-overflow-tooltip="true"

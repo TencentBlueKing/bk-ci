@@ -15,19 +15,7 @@
             <main>
                 <template v-if="hasProjectList">
                     <empty-tips
-                        v-if="!isPersonalProject && isCreativeFlowPage"
-                        :title="$t('accessDeny.creativeFlowOnlySupportPersonalProject')"
-                        :desc="$t('accessDeny.switchToPersonalProject')"
-                    >
-                        <bk-button
-                            theme="primary"
-                            @click="switchToPersonalProject"
-                        >
-                            {{ $t('accessDeny.switchProject') }}
-                        </bk-button>
-                    </empty-tips>
-                    <empty-tips
-                        v-else-if="!hasProject"
+                        v-if="!hasProject"
                         :title="$t('accessDeny.title')"
                         :desc="$t('accessDeny.desc')"
                     >
@@ -78,7 +66,7 @@
                         </bk-exception>
                     </section>
                 </template>
-                <router-view v-else-if="!hasProjectList || ((isOnlineProject || isApprovalingProject) && !(!isPersonalProject && isCreativeFlowPage))" />
+                <router-view v-else-if="!hasProjectList || (isOnlineProject || isApprovalingProject)" />
             </main>
         </template>
 
@@ -108,7 +96,6 @@
       @State projectList
       @State headerConfig
       @State currentPage
-      @State user
       @Getter showAnnounce
       @Getter enableProjectList
       @Getter disableProjectList
@@ -157,36 +144,11 @@
       get curProjectCode (): string {
           return this.$route.params.projectId
       }
-
-      get isPersonalProject (): boolean {
-          return this.curProject?.channelCode === 'PREBUILD'
-      }
-
-      get isCreativeFlowPage (): boolean {
-          return this.currentPage?.code === 'creative-stream'
-      }
-
+      
       switchProject () {
           this.iframeUtil.toggleProjectMenu(true)
       }
 
-      switchToPersonalProject () {
-        const projectId = `_${this.user?.username ?? ''}`
-        if (this.projectList.some(project => project.projectCode === projectId)) {
-          this.$router.push({
-            ...this.$route,
-            params: {
-              ...this.$route.params,
-              projectId: `_${this.user.username}`
-            }
-          })
-        } else {
-          this.$bkMessage({
-            theme: 'error',
-            message: this.$t('accessDeny.personalProjectNotExist')
-          })
-        }
-      }
 
       @Watch('hasProject', {
           immediate: true

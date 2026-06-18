@@ -20,7 +20,6 @@
             :max-height="521"
             :header-cell-style="{ background: '#fff' }"
             :pagination="pagination"
-            :max-height="521"
             @page-change="(page) => $emit('pageChanged', page)"
             @page-limit-change="(currentLimit, prevLimit) => $emit('pageLimitChanged', currentLimit, prevLimit)"
         >

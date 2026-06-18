@@ -48,7 +48,6 @@
                 </p> -->
             </span>
         </div>
-
         <router-view :container-width="containerWidth"></router-view>
     </div>
 </template>
@@ -146,11 +145,8 @@
             }
         },
         created () {
-            if (!this.$route.name) {
-                this.$router.push({
-                    name: 'envList'
-                })
-            }
+            // 初始化资源类型
+            this.initResType()
         },
         async mounted () {
             this.updateContainerWidth()
@@ -267,12 +263,14 @@
                     extPage: {
                         name: 'extPage',
                         params: {
-                            ...this.$route.params
+                            ...this.$route.params,
+                            ...(item && item.params)
                         }
                     }
                 }
                 this.$router.push({
-                    name: routeMap[name]
+                    name: routeMap[name].name,
+                    params: routeMap[name].params
                 })
             }
         }

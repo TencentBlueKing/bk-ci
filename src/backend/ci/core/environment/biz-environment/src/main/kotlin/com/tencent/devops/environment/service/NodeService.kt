@@ -78,6 +78,7 @@ import com.tencent.devops.environment.permission.EnvironmentPermissionService
 import com.tencent.devops.environment.pojo.NodeBaseInfo
 import com.tencent.devops.environment.pojo.NodeFetchReq
 import com.tencent.devops.environment.pojo.NodeWithPermission
+import com.tencent.devops.environment.pojo.enums.NodeOperatorStatus
 import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.environment.pojo.enums.NodeType
 import com.tencent.devops.environment.pojo.enums.OsType
@@ -210,6 +211,7 @@ class NodeService @Autowired constructor(
         keywords: String?,
         nodeType: NodeType?,
         nodeStatus: NodeStatus?,
+        operatorStatus: NodeOperatorStatus?,
         agentVersion: String?,
         osName: String?,
         latestBuildPipelineId: String?,
@@ -255,7 +257,8 @@ class NodeService @Autowired constructor(
                     latestBuildTimeEnd = latestBuildTimeEnd,
                     sortType = sortType,
                     collation = collation,
-                    tagValueIds = tagValues
+                    tagValueIds = tagValues,
+                    operatorStatus = operatorStatus
                 )
             } else {
                 nodeDao.listNodes(
@@ -302,7 +305,8 @@ class NodeService @Autowired constructor(
             sortType = sortType,
             collation = collation,
             tagValueIds = tagValues,
-            nodeIds = nodes.map { it.nodeId.toLong() }
+            nodeIds = nodes.map { it.nodeId.toLong() },
+            operatorStatus = operatorStatus
         ).toLong()
         if (-1 != page) {
             val nodesMap = nodes.associateBy { it.agentHashId }
@@ -383,6 +387,7 @@ class NodeService @Autowired constructor(
                 keywords = keywords,
                 nodeType = nodeType,
                 nodeStatus = nodeStatus,
+                operatorStatus = null,
                 agentVersion = agentVersion,
                 osName = osName,
                 latestBuildPipelineId = latestBuildPipelineId,
@@ -542,7 +547,8 @@ class NodeService @Autowired constructor(
                 },
                 tags = tagMaps[it.nodeId],
                 envEnableNode = nodeIdMaps[it.nodeId] ?: true,
-                createWorkspaceId = thirdPartyAgent?.createWorkspaceName
+                createWorkspaceId = thirdPartyAgent?.createWorkspaceName,
+                operatorStatus = NodeOperatorStatus.valOf(it.operatorStatus)?.name
             )
         }
     }
@@ -688,7 +694,8 @@ class NodeService @Autowired constructor(
                 osType = it.osType,
                 serverId = it.serverId,
                 envEnableNode = null,
-                createWorkspaceId = thirdPartyAgent?.createWorkspaceName
+                createWorkspaceId = thirdPartyAgent?.createWorkspaceName,
+                operatorStatus = NodeOperatorStatus.valOf(it.operatorStatus)?.name
             )
         }
     }
@@ -747,7 +754,8 @@ class NodeService @Autowired constructor(
                 osType = it.osType,
                 serverId = it.serverId,
                 envEnableNode = null,
-                createWorkspaceId = null
+                createWorkspaceId = null,
+                operatorStatus = NodeOperatorStatus.valOf(it.operatorStatus)?.name
             )
         }
     }
@@ -785,7 +793,7 @@ class NodeService @Autowired constructor(
                 val isOperator = userId == node.operator
                 val isBakOperator = node.bakOperator.split(";").contains(userId)
                 if (isOperator || isBakOperator) {
-                    nodeDao.updateCreatedUser(dslContext, nodeId, userId)
+                    nodeDao.updateCreatedUser(dslContext, nodeId, userId, NodeOperatorStatus.NORMAL)
                 } else {
                     throw ErrorCodeException(
                         errorCode = ERROR_NODE_NOT_CMDB_PRIMARY_BAK_OPERATOR,
@@ -828,9 +836,11 @@ class NodeService @Autowired constructor(
 
         val toChangeNodeIds = nodeList.map { it.nodeId }
         // 分批更新，以免单次where in 大列表
+        // createdUser变更后需重新计算operatorStatus，这里所有节点均为CMDB类型，
+        // 且userId已通过checkNodesImportPermission校验为operator或bakOperator之一，故状态为NORMAL
         val nodeIdsInBatch = toChangeNodeIds.chunked(2000)
         nodeIdsInBatch.forEach { it ->
-            nodeDao.batchUpdateNodeCreatedUser(dslContext, it, userId)
+            nodeDao.batchUpdateNodeCreatedUser(dslContext, it, userId, NodeOperatorStatus.NORMAL)
         }
 
         return nodeList.map { Pair(it.nodeHashId, it.displayName) }

@@ -244,8 +244,7 @@
                             </template>
                             <!-- 责任人已变更 -->
                             <template
-                                v-else-if="((props.row.nodeType === 'CC' && props.row.createdUser !== props.row.operator && props.row.createdUser !== props.row.bakOperator)
-                                    || (props.row.nodeType === 'CMDB' && props.row.createdUser !== props.row.operator && props.row.bakOperator?.split(';').indexOf(props.row.createdUser) === -1))"
+                                v-else-if="props.row.operatorStatus === 'OPERATOR_CHANGED'"
                             >
                                 <span class="prompt-operator">
                                     <i class="devops-icon icon-exclamation-circle"></i>
@@ -386,8 +385,7 @@
                                         }"
                                     >
                                         <bk-button
-                                            v-if="((props.row.nodeType === 'CC' && props.row.createdUser !== props.row.operator && !props.row.bakOperator.includes(props.row.createdUser))
-                                                || (props.row.nodeType === 'CMDB' && props.row.createdUser !== props.row.operator && props.row.bakOperator?.split(';').indexOf(props.row.createdUser) === -1))"
+                                            v-if="props.row.operatorStatus === 'OPERATOR_CHANGED'"
                                             class="mr5"
                                             :disabled="props.row.allOperator.split(';').indexOf(userInfo.username) === -1"
                                             text
@@ -445,7 +443,7 @@
                                     </bk-button>
                                     <!-- 未安装Agent -->
                                     <bk-button
-                                        v-if="props.row.nodeStatus === 'NOT_INSTALLED' || (props.row.nodeStatus === 'RUNNING' && props.row.agentStatus === 0)"
+                                        v-if="(props.row.nodeStatus === 'NOT_INSTALLED' || (props.row.nodeStatus === 'RUNNING' && props.row.agentStatus === 0) && !isCreateResType)"
                                         v-perm="{
                                             hasPermission: props.row.canEdit,
                                             disablePermissionApi: true,
@@ -468,7 +466,7 @@
                                 <template v-else>
                                     <!-- Agent异常 - 重装Agent -->
                                     <bk-button
-                                        v-if="props.row.nodeStatus === 'ABNORMAL'"
+                                        v-if="props.row.nodeStatus === 'ABNORMAL' && !isCreateResType"
                                         v-perm="{
                                             hasPermission: props.row.canEdit,
                                             disablePermissionApi: true,
@@ -893,6 +891,9 @@
         },
         methods: {
             ...mapActions('environment', ['requestNodeTagList', 'requestGetCounts']),
+            handleExpandList () {
+                this.$emit('toggle-fold')
+            },
             calcOverPosTable () {
                 const tagMargin = 6
                 this.visibleLabelCountList = this.nodeList.reduce((acc, item, index) => {
@@ -1005,16 +1006,18 @@
                 }
             },
             toNodeDetail (node) {
+                if (this.isFlod) return
                 if (this.canShowDetail(node)) {
-                    const currentNodeType = this.$route.params.nodeType || ALLNODE
-                    localStorage.setItem(ENV_ACTIVE_NODE_TYPE, currentNodeType)
-                    this.$router.push({
-                        name: 'nodeDetail',
-                        params: {
-                            projectId: this.projectId,
-                            nodeHashId: node.nodeHashId
-                        }
-                    })
+                    this.$emit('show-detail', node.nodeHashId)
+                    // const currentNodeType = this.$route.params.nodeType || ALLNODE
+                    // localStorage.setItem(ENV_ACTIVE_NODE_TYPE, currentNodeType)
+                    // this.$router.push({
+                    //     name: 'nodeDetail',
+                    //     params: {
+                    //         projectId: this.projectId,
+                    //         nodeHashId: node.nodeHashId
+                    //     }
+                    // })
                 }
             },
             editNodeName (node) {

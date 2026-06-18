@@ -629,14 +629,19 @@
                             // 回显 CREATIVE_STREAM 配置
                             const creativeConfig = serviceScopeDetails.find(item => item.serviceScope === 'CREATIVE_STREAM')
                             if (creativeConfig) {
-                                // 从 jobTypeConfigs 中提取 jobTypes
+                                // 从 jobTypeConfigs 中提取 jobTypes 和 os
                                 const jobTypes = creativeConfig.jobTypeConfigs?.map(config => config.jobType) || ['CREATIVE_STREAM']
                                 allInitJobTypes.push(...jobTypes)
+                                
+                                // 查找 CREATIVE_STREAM 类型的 osList
+                                const creativeStreamConfig = creativeConfig.jobTypeConfigs?.find(config => config.jobType === 'CREATIVE_STREAM')
+                                const os = creativeStreamConfig?.osList || []
                                 
                                 this.creativeCategory = {
                                     classifyCode: creativeConfig.classifyCode || '',
                                     classifyName: creativeConfig.classifyName || '',
                                     jobTypes,
+                                    os,
                                     // 将 labelList 从对象数组转换为 ID 数组
                                     labelList: creativeConfig.labelList?.map(label => label.id) || []
                                 }
@@ -921,8 +926,9 @@
                             const jobTypes = categoryData.jobTypes || []
                             config.jobTypeConfigs = jobTypes.map(jobType => {
                                 const jobTypeConfig = { jobType }
-                                // 如果是 PIPELINE 范畴且是 AGENT 类型，添加 osList
-                                if (scope === 'PIPELINE' && jobType === 'AGENT') {
+                                // 如果需要 osList：PIPELINE 的 AGENT 或 CREATIVE_STREAM 的 CREATIVE_STREAM
+                                if ((scope === 'PIPELINE' && jobType === 'AGENT')
+                                    || (scope === 'CREATIVE_STREAM' && jobType === 'CREATIVE_STREAM')) {
                                     jobTypeConfig.osList = categoryData.os || []
                                 }
                                 return jobTypeConfig

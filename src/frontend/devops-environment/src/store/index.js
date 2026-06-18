@@ -20,9 +20,9 @@
 import actions from './actions'
 import mutations from './mutations'
 // import { nodeTypeMap, nodeStatusMap } from './constants'
-
 const store = {
     namespaced: true,
+    model: {},
     state: {
         nodeDetails: {},
         nodeTypes: null,
@@ -41,8 +41,7 @@ const store = {
             const currentPageId = rootState.currentPage ? rootState.currentPage.id : ''
             return (rootGetters.getServiceHooks(currentPageId) || []).filter(hook => hook.htmlPath === 'ENVIRONMENT.ASIDE_NAV').map(hook => hook.itemId).join(',')
         },
-        getEnvList: (state) => state.envList,
-        selectionTagList: []
+        getEnvList: (state) => state.envList
     },
     mutations,
     actions

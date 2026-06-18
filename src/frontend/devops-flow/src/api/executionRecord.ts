@@ -6,6 +6,7 @@
 import type { StageStatusInfo } from '@/types/flow'
 import { statusIconMap } from '@/utils/flowStatus'
 import { get, post } from '@/utils/http'
+import { getNodeNameIpDisplayText } from '@/utils/nodeDisplay'
 import { convertMillSec, convertTime } from '@/utils/util'
 
 /**
@@ -48,6 +49,8 @@ export interface BuildRecord {
   endTime?: number
   totalTime?: number
   executeTime?: number
+  nodeName?: string
+  nodeIp?: string
   errorInfoList?: Array<{
     errorType?: number
     errorCode?: number
@@ -107,6 +110,7 @@ export interface ExecutionRecord {
   status: string
   stageStatus: StageStatusStep[]
   nodeName: string
+  nodeIp: string
   triggerAndUser: string
   triggerTime: string
   startTime: string
@@ -180,6 +184,10 @@ function convertBuildRecordToExecutionRecord(record: BuildRecord): ExecutionReco
   const errorInfoList: ErrorInfoItem[] = record.errorInfoList ?? []
   const errorCode = errorInfoList[0]?.errorCode?.toString() || ''
   const triggerAndUser = `${record.trigger}/${record.userId}`
+  const nodeDisplayText = getNodeNameIpDisplayText({
+    nodeName: record.nodeName,
+    nodeIp: record.nodeIp,
+  })
 
   return {
     id: record.id,
@@ -188,6 +196,7 @@ function convertBuildRecordToExecutionRecord(record: BuildRecord): ExecutionReco
     status: record.status || 'UNKNOWN',
     stageStatus,
     nodeName: record.nodeName || '',
+    nodeIp: nodeDisplayText,
     triggerAndUser,
     triggerTime: convertTime(record.queueTime || 0),
     startTime: convertTime(record.startTime || 0),

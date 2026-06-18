@@ -52,11 +52,12 @@ export const useAtomManager = (options: UseAtomManagerOptions) => {
   const generateCacheKey = (params: {
     classifyId?: string
     keyword?: string
+    os?: string
     jobType?: JobType
     queryProjectAtomFlag?: boolean
   }) => {
-    const { classifyId = '', keyword = '', jobType, queryProjectAtomFlag = true } = params
-    return `${category}_${classifyId}_${keyword}_${jobType}_${queryProjectAtomFlag}`
+    const { classifyId = '', keyword = '', os = '', jobType, queryProjectAtomFlag = true } = params
+    return `${category}_${classifyId}_${keyword}_${os}_${jobType}_${queryProjectAtomFlag}`
   }
 
   // 检查缓存是否有效
@@ -197,6 +198,7 @@ export const useAtomManager = (options: UseAtomManagerOptions) => {
     params: {
       classifyId?: string
       keyword?: string
+      os?: string
       jobType?: JobType
       queryProjectAtomFlag?: boolean
     } = {},
@@ -210,6 +212,7 @@ export const useAtomManager = (options: UseAtomManagerOptions) => {
     params: {
       classifyId?: string
       keyword?: string
+      os?: string
       jobType?: JobType
       queryProjectAtomFlag?: boolean
     } = {},
@@ -219,7 +222,13 @@ export const useAtomManager = (options: UseAtomManagerOptions) => {
   }
 
   // 清除指定缓存
-  const clearCache = (params?: { classifyId?: string; keyword?: string; jobType?: JobType; queryProjectAtomFlag?: boolean }) => {
+  const clearCache = (params?: {
+    classifyId?: string
+    keyword?: string
+    os?: string
+    jobType?: JobType
+    queryProjectAtomFlag?: boolean
+  }) => {
     if (params) {
       const cacheKey = generateCacheKey(params)
       delete atomCacheMap[cacheKey]
@@ -244,6 +253,7 @@ export const useAtomManager = (options: UseAtomManagerOptions) => {
     params: {
       classifyId?: string
       keyword?: string
+      os?: string
       jobType?: JobType
       queryProjectAtomFlag?: boolean
     } = {},

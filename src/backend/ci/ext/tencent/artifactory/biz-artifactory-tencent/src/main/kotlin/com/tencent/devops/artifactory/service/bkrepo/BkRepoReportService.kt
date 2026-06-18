@@ -27,12 +27,15 @@
 
 package com.tencent.devops.artifactory.service.bkrepo
 
+import com.tencent.bkrepo.common.api.constant.HttpHeaders
 import com.tencent.devops.artifactory.service.ReportService
 import com.tencent.devops.artifactory.util.PathUtils
 import com.tencent.devops.artifactory.util.RepoUtils
 import com.tencent.devops.common.archive.client.BkRepoClient
+import com.tencent.devops.common.service.utils.HomeHostUtil
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import org.springframework.web.context.request.RequestContextHolder
 import org.springframework.web.context.request.ServletRequestAttributes
@@ -42,6 +45,13 @@ import java.net.URLEncoder
 class BkRepoReportService @Autowired constructor(
     private val bkRepoClient: BkRepoClient
 ) : ReportService {
+
+    @Value("\${bkrepo.bkrepoDevxUrl}")
+    private var bkRepoDevxUrl: String? = null
+
+    @Value("\${devopsGateway.devx}")
+    private var devopsGatewayDevx: String? = null
+
     override fun get(
         userId: String,
         projectId: String,
@@ -54,14 +64,20 @@ class BkRepoReportService @Autowired constructor(
             "elementId: $elementId, path: $path")
         val normalizedPath = PathUtils.normalize(path)
         val realPath = "/$pipelineId/$buildId/$elementId/${normalizedPath.removePrefix("/")}"
-        val host = bkRepoClient.getRkRepoIdcHost()
+        val request = (RequestContextHolder.currentRequestAttributes() as ServletRequestAttributes).request
+        val referer = request.getHeader(HttpHeaders.REFERER).orEmpty()
+        val host = if (referer.contains(devopsGatewayDevx!!)) {
+            HomeHostUtil.getHost(bkRepoDevxUrl!!)
+        } else  {
+            bkRepoClient.getRkRepoIdcHost()
+        }
         val redirectUrlBuilder = StringBuilder()
         redirectUrlBuilder.append(
             "$host/web/generic/$projectId/${RepoUtils.REPORT_REPO}${
                 urlEncode(realPath).replace("%2F", "/")
             }?preview=true"
         )
-        val paramMap = (RequestContextHolder.getRequestAttributes() as ServletRequestAttributes).request.parameterMap
+        val paramMap = request.parameterMap
         paramMap.forEach { (key, value) ->
             value.forEach {
                 redirectUrlBuilder.append("&${urlEncode(key)}=${urlEncode(it)}")

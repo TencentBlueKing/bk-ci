@@ -759,7 +759,7 @@
         .empty-prompt {
             display: inline-block;
             margin-top: 116px;
-            color: $fontLigtherColor;
+            color: $fontLighterColor;
         }
 
         .show-node-dialog {
