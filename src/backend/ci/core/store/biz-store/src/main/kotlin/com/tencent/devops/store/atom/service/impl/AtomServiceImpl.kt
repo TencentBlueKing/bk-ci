@@ -129,8 +129,8 @@ import com.tencent.devops.store.pojo.common.KEY_RECOMMEND_FLAG
 import com.tencent.devops.store.pojo.common.KEY_SERVICE_SCOPE
 import com.tencent.devops.store.pojo.common.KEY_UPDATE_TIME
 import com.tencent.devops.store.common.dao.ClassifyDao
-import com.tencent.devops.store.pojo.atom.AtomUpgradeRequest
 import com.tencent.devops.store.pojo.atom.AtomGroupQueryParam
+import com.tencent.devops.store.pojo.atom.AtomUpgradeRequest
 import com.tencent.devops.store.pojo.common.UnInstallReq
 import com.tencent.devops.store.pojo.common.honor.HonorInfo
 import com.tencent.devops.store.pojo.common.index.StoreIndexInfo
@@ -1621,9 +1621,5 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
             atomGroupQueryParam = atomGroupQueryParam,
             atomCodes = atomCodes
         )
-    }
-
-    override fun exists(atomCode: String): Result<Boolean> {
-        return Result(atomDao.countByCode(dslContext, atomCode) > 0)
     }
 }

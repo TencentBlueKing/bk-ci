@@ -356,7 +356,7 @@ class PipelineBuildWebhookService @Autowired constructor(
                             buildId = buildId,
                             pipelineId = pipelineId,
                             projectId = projectId,
-                            channelCode = ChannelCode.BS
+                            channelCode = pipelineInfo.channelCode
                         ).data
                         builder.buildId(buildId)
                             .status(PipelineTriggerStatus.SUCCEED.name)

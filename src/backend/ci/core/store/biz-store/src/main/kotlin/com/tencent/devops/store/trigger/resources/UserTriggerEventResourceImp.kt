@@ -43,13 +43,11 @@ class UserTriggerEventResourceImp @Autowired constructor(
 
     override fun triggerDetail(
         userId: String,
-        projectId: String,
         atomCode: String,
         version: String
     ): Result<PipelineAtom?> {
         return Result(
             triggerEventService.triggerDetail(
-                projectId = projectId,
                 atomCode = atomCode,
                 version = version,
                 userId = userId,
