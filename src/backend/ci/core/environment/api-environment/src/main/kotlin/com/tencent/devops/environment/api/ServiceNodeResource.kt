@@ -34,6 +34,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.environment.pojo.NodeBaseInfo
 import com.tencent.devops.environment.pojo.NodeFetchReq
 import com.tencent.devops.environment.pojo.NodeWithPermission
+import com.tencent.devops.environment.pojo.enums.NodeOperatorStatus
 import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.environment.pojo.enums.NodeType
 import com.tencent.devops.common.auth.api.AuthPermission
@@ -120,6 +121,24 @@ interface ServiceNodeResource {
         nodeHashIds: List<String>
     ): Result<List<NodeBaseInfo>>
 
+    @Operation(summary = "根据hashId或别名获取节点信息(不校验权限)")
+    @GET
+    @Path("/projects/{projectId}/getRawNode")
+    fun getRawNode(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "节点 hashId (nodeHashId、nodeName 两个参数任选其一填入即可)", required = false)
+        @QueryParam("nodeHashId")
+        nodeHashId: String?,
+        @Parameter(description = "节点别名 (nodeHashId、nodeName 两个参数任选其一填入即可)", required = false)
+        @QueryParam("nodeName")
+        nodeName: String?
+    ): Result<NodeBaseInfo>
+
     @Operation(summary = "根据环境hashId获取项目节点列表(不校验权限)")
     @POST
     @Path("/projects/{projectId}/listRawByEnvHashIds")
@@ -187,6 +206,27 @@ interface ServiceNodeResource {
         nodeHashIds: List<String>
     ): Result<Boolean>
 
+    @Operation(summary = "迁移节点到目标项目")
+    @POST
+    @Path("/projects/{projectId}/transfer_node/{targetProjectId}/")
+    fun transferNode(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "源项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "目标项目ID", required = true)
+        @PathParam("targetProjectId")
+        targetProjectId: String,
+        @Parameter(description = "节点 hashId (nodeHashId、agentHashId 两个参数任选其一填入即可)", required = false)
+        @QueryParam("nodeHashId")
+        nodeHashId: String?,
+        @Parameter(description = "节点 agentId (nodeHashId、agentHashId 两个参数任选其一填入即可)", required = false)
+        @QueryParam("agentHashId")
+        agentHashId: String?
+    ): Result<Boolean>
+
     @Operation(summary = "删除节点")
     @DELETE
     @Path("/projects/{projectId}/delete_third_party_node")
@@ -236,7 +276,10 @@ interface ServiceNodeResource {
         @Parameter(description = "每页多少条", required = false)
         @QueryParam("pageSize")
         pageSize: Int? = 20,
-        @Parameter(description = "IP", required = false)
+        @Parameter(
+            description = "IP，支持多 IP 搜索：英文逗号分隔；单 IP 模糊匹配，多 IP 精确匹配（IN）",
+            required = false
+        )
         @QueryParam("nodeIp")
         nodeIp: String? = null,
         @Parameter(description = "别名", required = false)
@@ -254,9 +297,19 @@ interface ServiceNodeResource {
         @Parameter(description = "节点类型|用途 (构建: THIRDPARTY;部署: CMDB)", required = false)
         @QueryParam("nodeType")
         nodeType: NodeType? = null,
-        @Parameter(description = "Agent 状态", required = false)
+        @Parameter(
+            description = "Agent 状态，可选值：NORMAL / ABNORMAL / NOT_INSTALLED /" +
+                " NOT_IN_CC(部署节点才有) / NOT_IN_CMDB(部署节点才有)",
+            required = false
+        )
         @QueryParam("nodeStatus")
         nodeStatus: NodeStatus? = null,
+        @Parameter(
+            description = "操作人状态过滤；NORMAL=正常，OPERATOR_CHANGED=负责人已变更；不传表示不过滤",
+            required = false
+        )
+        @QueryParam("operatorStatus")
+        operatorStatus: NodeOperatorStatus? = null,
         @Parameter(description = "Agent 版本", required = false)
         @QueryParam("agentVersion")
         agentVersion: String? = null,

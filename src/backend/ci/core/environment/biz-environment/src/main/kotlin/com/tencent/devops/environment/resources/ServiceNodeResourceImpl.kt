@@ -41,6 +41,7 @@ import com.tencent.devops.environment.api.ServiceNodeResource
 import com.tencent.devops.environment.pojo.NodeBaseInfo
 import com.tencent.devops.environment.pojo.NodeFetchReq
 import com.tencent.devops.environment.pojo.NodeWithPermission
+import com.tencent.devops.environment.pojo.enums.NodeOperatorStatus
 import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.environment.pojo.enums.NodeType
 import com.tencent.devops.environment.service.EnvService
@@ -73,6 +74,16 @@ class ServiceNodeResourceImpl @Autowired constructor(
         }
 
         return Result(nodeService.listRawServerNodeByIds(userId, projectId, nodeHashIds))
+    }
+
+    @BkTimed(extraTags = ["operate", "getNode"])
+    override fun getRawNode(
+        userId: String,
+        projectId: String,
+        nodeHashId: String?,
+        nodeName: String?
+    ): Result<NodeBaseInfo> {
+        return Result(nodeService.getRawServerNode(userId, projectId, nodeHashId, nodeName))
     }
 
     @BkTimed(extraTags = ["operate", "getNode"])
@@ -145,6 +156,24 @@ class ServiceNodeResourceImpl @Autowired constructor(
         return Result(true)
     }
 
+    override fun transferNode(
+        userId: String,
+        projectId: String,
+        targetProjectId: String,
+        nodeHashId: String?,
+        agentHashId: String?
+    ): Result<Boolean> {
+        return Result(
+            nodeService.transferNode(
+                userId = userId,
+                sourceProjectId = projectId,
+                targetProjectId = targetProjectId,
+                nodeHashId = nodeHashId,
+                agentHashId = agentHashId
+            )
+        )
+    }
+
     @AuditEntry(actionId = ActionId.ENV_NODE_DELETE)
     override fun deleteThirdPartyNode(userId: String, projectId: String, agentId: String): Result<Boolean> {
         if (agentId.isEmpty()) return Result(false)
@@ -185,6 +214,7 @@ class ServiceNodeResourceImpl @Autowired constructor(
         keywords: String?,
         nodeType: NodeType?,
         nodeStatus: NodeStatus?,
+        operatorStatus: NodeOperatorStatus?,
         agentVersion: String?,
         osName: String?,
         latestBuildPipelineId: String?,
@@ -208,6 +238,7 @@ class ServiceNodeResourceImpl @Autowired constructor(
                 keywords = keywords,
                 nodeType = nodeType,
                 nodeStatus = nodeStatus,
+                operatorStatus = operatorStatus,
                 agentVersion = agentVersion,
                 osName = osName,
                 latestBuildPipelineId = latestBuildPipelineId,

@@ -260,4 +260,28 @@ interface ServiceResourceMemberResource {
         @Parameter(description = "批量交接成员请求实体", required = true)
         handoverMemberDTO: GroupMemberHandoverConditionReq
     ): Result<Boolean>
+
+    @POST
+    @Path("/{sourceProjectCode}/{resourceType}/{sourceResourceCode}/copy")
+    @Operation(summary = "复制资源组成员到目标项目同类资源")
+    fun copyResourceGroupMembers(
+        @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
+        @Parameter(description = "认证token", required = true)
+        token: String,
+        @PathParam("sourceProjectCode")
+        @Parameter(description = "源项目Code", required = true)
+        sourceProjectCode: String,
+        @PathParam("resourceType")
+        @Parameter(description = "资源类型", required = true)
+        resourceType: String,
+        @PathParam("sourceResourceCode")
+        @Parameter(description = "源资源code", required = true)
+        sourceResourceCode: String,
+        @QueryParam("targetProjectCode")
+        @Parameter(description = "目标项目Code", required = true)
+        targetProjectCode: String,
+        @QueryParam("targetResourceCode")
+        @Parameter(description = "目标资源code", required = true)
+        targetResourceCode: String
+    ): Result<Boolean>
 }

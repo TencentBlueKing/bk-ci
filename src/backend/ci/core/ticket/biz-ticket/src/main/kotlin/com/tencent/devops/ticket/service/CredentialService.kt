@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.ticket.pojo.Credential
+import com.tencent.devops.ticket.pojo.CredentialBasicInfo
 import com.tencent.devops.ticket.pojo.CredentialCreate
 import com.tencent.devops.ticket.pojo.CredentialInfo
 import com.tencent.devops.ticket.pojo.CredentialItemVo
@@ -118,6 +119,8 @@ interface CredentialService {
 
     fun serviceGet(projectId: String, credentialId: String): Credential
 
+    fun serviceGetBasicInfo(projectId: String, credentialId: String): CredentialBasicInfo
+
     /**
      * 修改凭证的服务接口
      */
@@ -133,4 +136,11 @@ interface CredentialService {
         publicKey: String,
         padding: Boolean
     ): CredentialItemVo?
+
+    fun copyCredentials(
+        userId: String,
+        sourceProjectId: String,
+        targetProjectId: String,
+        credentialId: String?
+    )
 }
