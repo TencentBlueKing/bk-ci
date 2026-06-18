@@ -77,6 +77,16 @@ class ServiceNodeResourceImpl @Autowired constructor(
     }
 
     @BkTimed(extraTags = ["operate", "getNode"])
+    override fun getRawNode(
+        userId: String,
+        projectId: String,
+        nodeHashId: String?,
+        nodeName: String?
+    ): Result<NodeBaseInfo> {
+        return Result(nodeService.getRawServerNode(userId, projectId, nodeHashId, nodeName))
+    }
+
+    @BkTimed(extraTags = ["operate", "getNode"])
     override fun listRawByEnvHashIds(
         userId: String,
         projectId: String,
@@ -144,6 +154,24 @@ class ServiceNodeResourceImpl @Autowired constructor(
     override fun deleteNodes(userId: String, projectId: String, nodeHashIds: List<String>): Result<Boolean> {
         nodeService.deleteNodes(userId, projectId, nodeHashIds.map { HashUtil.decodeIdToLong(it) })
         return Result(true)
+    }
+
+    override fun transferNode(
+        userId: String,
+        projectId: String,
+        targetProjectId: String,
+        nodeHashId: String?,
+        agentHashId: String?
+    ): Result<Boolean> {
+        return Result(
+            nodeService.transferNode(
+                userId = userId,
+                sourceProjectId = projectId,
+                targetProjectId = targetProjectId,
+                nodeHashId = nodeHashId,
+                agentHashId = agentHashId
+            )
+        )
     }
 
     @AuditEntry(actionId = ActionId.ENV_NODE_DELETE)

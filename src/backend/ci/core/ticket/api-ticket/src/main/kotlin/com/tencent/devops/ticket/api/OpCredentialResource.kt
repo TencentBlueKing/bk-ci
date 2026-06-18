@@ -38,6 +38,7 @@ import io.swagger.v3.oas.annotations.Parameter
 import jakarta.ws.rs.Consumes
 import jakarta.ws.rs.GET
 import jakarta.ws.rs.HeaderParam
+import jakarta.ws.rs.POST
 import jakarta.ws.rs.Path
 import jakarta.ws.rs.PathParam
 import jakarta.ws.rs.Produces
@@ -74,4 +75,22 @@ interface OpCredentialResource {
         @QueryParam("keyword")
         keyword: String?
     ): Result<Page<CredentialWithPermission>>
+
+    @Operation(summary = "复制凭据到目标项目")
+    @Path("/projects/{sourceProjectId}/copy")
+    @POST
+    fun copy(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "源项目ID", required = true)
+        @PathParam("sourceProjectId")
+        sourceProjectId: String,
+        @Parameter(description = "目标项目ID", required = true)
+        @QueryParam("targetProjectId")
+        targetProjectId: String,
+        @Parameter(description = "源凭据ID，为空则复制源项目下全部凭据", required = false)
+        @QueryParam("credentialId")
+        credentialId: String?
+    ): Result<Boolean>
 }
