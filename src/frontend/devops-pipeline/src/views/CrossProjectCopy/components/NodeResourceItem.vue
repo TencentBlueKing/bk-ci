@@ -17,11 +17,13 @@
     const STRATEGY_CONFIG = {
         [PipelineCopyResourceType.BUILD_NODE]: [
             { value: PipelineCopyStrategy.BUILD_NODE_REUSE_SAME_NAME, labelKey: 'reuseTargetBuildNode', descKey: 'reuseTargetBuildNodeDesc', disabledTipKey: 'noSameNameNode' },
-            { value: PipelineCopyStrategy.BUILD_NODE_MOVE_TO_TARGET_PROJECT, labelKey: 'transferToTargetProject', descKey: 'transferToTargetProjectDesc', highRisk: true }
+            { value: PipelineCopyStrategy.BUILD_NODE_MOVE_TO_TARGET_PROJECT, labelKey: 'transferToTargetProject', descKey: 'transferToTargetProjectDesc', highRisk: true },
+            { value: PipelineCopyStrategy.BUILD_NODE_SKIP, labelKey: 'skipThisNode', descKey: 'skipThisNodeDesc' }
         ],
         [PipelineCopyResourceType.DEPLOY_NODE]: [
             { value: PipelineCopyStrategy.DEPLOY_NODE_REUSE_SAME_NAME, labelKey: 'reuseTargetBuildNode', descKey: 'reuseTargetBuildNodeDesc', disabledTipKey: 'noSameNameNode' },
-            { value: PipelineCopyStrategy.DEPLOY_NODE_MOVE_TO_TARGET_PROJECT, labelKey: 'transferToTargetProject', descKey: 'transferToTargetProjectDesc', highRisk: true }
+            { value: PipelineCopyStrategy.DEPLOY_NODE_MOVE_TO_TARGET_PROJECT, labelKey: 'transferToTargetProject', descKey: 'transferToTargetProjectDesc', highRisk: true },
+            { value: PipelineCopyStrategy.DEPLOY_NODE_SKIP, labelKey: 'skipThisNode', descKey: 'skipThisNodeDesc' }
         ]
     }
 

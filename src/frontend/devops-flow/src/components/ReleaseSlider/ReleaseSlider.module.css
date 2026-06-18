@@ -36,21 +36,25 @@
 
 .releaseContent {
   flex: 1;
-  padding: 20px 24px;
+  padding: 24px;
   overflow-y: auto;
 }
 
 .visibleRangeText {
   width: 100%;
   border-top: 1px solid var(--border-color);
-  padding: 24px 0 12px;
-  margin-top: 24px;
+  padding: 12px 0;
+  margin: 24px 0 0;
 }
 
 .releaseForm {
   display: flex;
   flex-direction: column;
   gap: 16px;
+}
+
+.releaseForm :global(.bk-form-item) {
+  margin-bottom: 0;
 }
 
 .formItem {
