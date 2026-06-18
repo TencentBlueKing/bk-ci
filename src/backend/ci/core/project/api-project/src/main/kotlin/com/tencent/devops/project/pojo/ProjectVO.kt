@@ -90,6 +90,8 @@ data class ProjectVO(
     val secrecy: Boolean?,
     @get:Schema(title = "是否隐藏")
     val hidden: Boolean? = null,
+    @get:Schema(title = "项目组织形态", description = "0-团队项目，1-个人项目")
+    val projectScope: Int? = 0,
     @get:Schema(title = "是否启用图表激活")
     val helmChartEnabled: Boolean?,
     @get:Schema(title = "kind")

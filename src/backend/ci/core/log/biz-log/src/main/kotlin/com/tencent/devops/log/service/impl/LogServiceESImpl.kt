@@ -69,6 +69,7 @@ import org.elasticsearch.ElasticsearchStatusException
 import org.elasticsearch.action.admin.indices.open.OpenIndexRequest
 import org.elasticsearch.action.bulk.BulkRequest
 import org.elasticsearch.action.index.IndexRequest
+import org.elasticsearch.action.search.ClearScrollRequest
 import org.elasticsearch.action.search.SearchRequest
 import org.elasticsearch.action.search.SearchScrollRequest
 import org.elasticsearch.client.HttpAsyncResponseConsumerFactory.HeapBufferedResponseConsumerFactory
@@ -109,14 +110,35 @@ class LogServiceESImpl(
     companion object {
         private val logger = LoggerFactory.getLogger(LogServiceESImpl::class.java)
         private const val LONG_SEARCH_TIME: Long = 64000
-        private const val SHORT_SEARCH_TIME: Long = 32000
         private const val SEARCH_TIMEOUT_SECONDS = 60L
         private const val SEARCH_FRAGMENT_SIZE = 100000
         private const val INDEX_CACHE_MAX_SIZE = 100000L
         private const val INDEX_CACHE_EXPIRE_MINUTES = 30L
         private const val INDEX_LOCK_EXPIRE_SECONDS = 10L
         private const val INDEX_STORAGE_WARN_MILLIS = 1000
+        private const val DOC_ID_DELIMITER = "_"
     }
+
+    /**
+     * 用 buildId 作为 custom routing preference：
+     *  - ES 会基于该字符串做 hash，保证同一 buildId 的多次查询稳定命中同一副本，
+     *    彻底消除主副本与副本之间因复制延迟 / 段合并差异导致的"条数飘动"；
+     *  - 注意 ES 5.x 之后 custom preference 不能以 `_` 开头（会被识别为预设关键字），
+     *    且 `_local|customKey` 这种组合写法已不被支持，否则会触发 IllegalArgumentException。
+     */
+    private fun routingPreference(buildId: String): String =
+        if (buildId.startsWith("_")) "b_$buildId" else buildId
+
+    /**
+     * 统一日志排序：先按 timestamp，再按 lineNo。
+     * lineNo 由 indexService 全局自增 + 写入侧幂等 _id 共同保证
+     * `(buildId, executeCount, lineNo)` 唯一，所以 (timestamp, lineNo)
+     * 在单次构建维度下天然稳定，不需要额外 tiebreaker。
+     */
+    private fun applyDefaultSort(
+        source: SearchSourceBuilder,
+        order: SortOrder = SortOrder.ASC
+    ): SearchSourceBuilder = source.sort("timestamp", order).sort("lineNo", order)
 
     private val indexCache = Caffeine.newBuilder()
         .maximumSize(INDEX_CACHE_MAX_SIZE)
@@ -251,37 +273,35 @@ class LogServiceESImpl(
 
             val sortOrder = if (fromStart) SortOrder.ASC else SortOrder.DESC
             val searchRequest = SearchRequest(index)
+                .preference(routingPreference(buildId))
                 .source(
-                    SearchSourceBuilder()
-                        .query(query)
-                        .highlighter(
-                            HighlightBuilder().preTags("\u001b[31m").postTags("\u001b[0m")
-                                .field("message").fragmentSize(SEARCH_FRAGMENT_SIZE)
-                        )
-                        .docValueField("lineNo")
-                        .docValueField("timestamp")
-                        .size(num)
-                        .sort("timestamp", sortOrder)
-                        .sort("lineNo", sortOrder)
-                        .timeout(TimeValue.timeValueSeconds(SEARCH_TIMEOUT_SECONDS))
+                    applyDefaultSort(
+                        SearchSourceBuilder()
+                            .query(query)
+                            .highlighter(
+                                HighlightBuilder().preTags("\u001b[31m").postTags("\u001b[0m")
+                                    .field("message").fragmentSize(SEARCH_FRAGMENT_SIZE)
+                            )
+                            .docValueField("lineNo")
+                            .docValueField("timestamp")
+                            .size(num)
+                            .timeout(TimeValue.timeValueSeconds(SEARCH_TIMEOUT_SECONDS)),
+                        sortOrder
+                    )
                 )
             queryLogs.logs = searchByClient(buildId, searchRequest)
             if (!fromStart) {
                 queryLogs.logs.reverse()
             }
-            if (queryLogs.logs.isEmpty()) queryLogs.status = LogStatus.EMPTY.status
+//            if (queryLogs.logs.isEmpty()) queryLogs.status = LogStatus.EMPTY.status
         } catch (e: ElasticsearchStatusException) {
-            e.status()
-            val exString = e.toString()
-            if (exString.contains("index_closed_exception")) {
-                logger.warn("[$buildId] Can't search because of index_closed_exception", e)
-                queryLogs.status = LogStatus.CLOSED.status
-            }
+            handleSearchStatusException(buildId, "queryLogsBetweenLines", queryLogs, e)
         } catch (ignore: Exception) {
             logger.warn(
                 "Query more logs between lines failed because of ${ignore.javaClass}. buildId: $buildId",
                 ignore
             )
+            queryLogs.status = LogStatus.FAIL.status
         }
         return queryLogs
     }
@@ -375,14 +395,15 @@ class LogServiceESImpl(
 
         val scrollClient = logClient.hashClient(buildId)
         val searchRequest = SearchRequest(index)
+            .preference(routingPreference(buildId))
             .source(
-                SearchSourceBuilder()
-                    .query(query)
-                    .docValueField("lineNo")
-                    .docValueField("timestamp")
-                    .size(Constants.SCROLL_MAX_LINES)
-                    .sort("timestamp", SortOrder.ASC)
-                    .sort("lineNo", SortOrder.ASC)
+                applyDefaultSort(
+                    SearchSourceBuilder()
+                        .query(query)
+                        .docValueField("lineNo")
+                        .docValueField("timestamp")
+                        .size(Constants.SCROLL_MAX_LINES)
+                )
             ).scroll(TimeValue(LONG_SEARCH_TIME))
 
         var scrollResp = try {
@@ -394,34 +415,40 @@ class LogServiceESImpl(
         val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm:ss:SSS")
         // 一边读一边流式下载
         val fileStream = StreamingOutput { output ->
-            do {
-                val sb = StringBuilder()
-                scrollResp.hits.hits.forEach { searchHit ->
-                    val sourceMap = searchHit.sourceAsMap
+            var scrollId: String? = scrollResp.scrollId
+            try {
+                do {
+                    val sb = StringBuilder()
+                    scrollResp.hits.hits.forEach { searchHit ->
+                        val sourceMap = searchHit.sourceAsMap
 
-                    val logLine = LogLine(
-                        lineNo = sourceMap["lineNo"].toString().toLong(),
-                        timestamp = sourceMap["timestamp"].toString().toLong(),
-                        message = sourceMap["message"].toString().removePrefix("\u001b[31m")
-                            .removePrefix("\u001b[1m").replace(
-                                "\u001B[m",
-                                ""
-                            ).removeSuffix("\u001b[m"),
-                        priority = Constants.DEFAULT_PRIORITY_NOT_DELETED,
-                        containerHashId = sourceMap["containerHashId"]?.toString(),
-                        stepId = sourceMap["stepId"]?.toString()
+                        val logLine = LogLine(
+                            lineNo = sourceMap["lineNo"].toString().toLong(),
+                            timestamp = sourceMap["timestamp"].toString().toLong(),
+                            message = sourceMap["message"].toString().removePrefix("\u001b[31m")
+                                .removePrefix("\u001b[1m").replace(
+                                    "\u001B[m",
+                                    ""
+                                ).removeSuffix("\u001b[m"),
+                            priority = Constants.DEFAULT_PRIORITY_NOT_DELETED,
+                            containerHashId = sourceMap["containerHashId"]?.toString(),
+                            stepId = sourceMap["stepId"]?.toString()
+                        )
+                        val dateTime = sdf.format(Date(logLine.timestamp))
+                        val str = "$dateTime : ${logLine.message}" + System.lineSeparator()
+                        sb.append(str)
+                    }
+                    output.write(sb.toString().toByteArray())
+                    output.flush()
+                    scrollResp = scrollClient.restClient.scroll(
+                        SearchScrollRequest(scrollResp.scrollId).scroll(TimeValue(LONG_SEARCH_TIME)),
+                        RequestOptions.DEFAULT
                     )
-                    val dateTime = sdf.format(Date(logLine.timestamp))
-                    val str = "$dateTime : ${logLine.message}" + System.lineSeparator()
-                    sb.append(str)
-                }
-                output.write(sb.toString().toByteArray())
-                output.flush()
-                scrollResp = scrollClient.restClient.scroll(
-                    SearchScrollRequest(scrollResp.scrollId).scroll(TimeValue(LONG_SEARCH_TIME)),
-                    RequestOptions.DEFAULT
-                )
-            } while (scrollResp.hits.hits.isNotEmpty())
+                    scrollId = scrollResp.scrollId
+                } while (scrollResp.hits.hits.isNotEmpty())
+            } finally {
+                clearScrollQuietly(scrollClient, scrollId)
+            }
         }
 
         val resultName = fileName ?: "$pipelineId-$buildId-log"
@@ -547,16 +574,9 @@ class LogServiceESImpl(
                 jobId = jobId,
                 stepId = stepId
             )
-            if (queryLogs.logs.isEmpty()) queryLogs.status = LogStatus.EMPTY.status
+//            if (queryLogs.logs.isEmpty()) queryLogs.status = LogStatus.EMPTY.status
         } catch (e: ElasticsearchStatusException) {
-            val exString = e.toString()
-            if (exString.contains("index_closed_exception")) {
-                logger.warn("[$buildId] Can't search because of index_closed_exception", e)
-                queryLogs.status = LogStatus.CLOSED.status
-            } else if (exString.contains("Too Many Requests")) {
-                logger.warn("[$buildId] Too many query requests", e)
-                queryLogs.status = LogStatus.FAIL.status
-            }
+            handleSearchStatusException(buildId, "queryInitLogsPage", queryLogs, e)
         } catch (ignore: Throwable) {
             logger.warn("Query init logs failed because of ${ignore.javaClass}. buildId: $buildId", ignore)
             queryLogs.status = LogStatus.FAIL.status
@@ -635,32 +655,40 @@ class LogServiceESImpl(
 
         val scrollClient = logClient.hashClient(buildId)
         val searchRequest = SearchRequest(index)
+            .preference(routingPreference(buildId))
             .source(
-                SearchSourceBuilder()
-                    .query(query)
-                    .docValueField("lineNo")
-                    .docValueField("timestamp")
-                    .size(pageSize)
-                    .sort("timestamp", SortOrder.ASC)
-                    .sort("lineNo", SortOrder.ASC)
-                    .timeout(TimeValue.timeValueSeconds(SEARCH_TIMEOUT_SECONDS))
+                applyDefaultSort(
+                    SearchSourceBuilder()
+                        .query(query)
+                        .docValueField("lineNo")
+                        .docValueField("timestamp")
+                        .size(pageSize)
+                        .timeout(TimeValue.timeValueSeconds(SEARCH_TIMEOUT_SECONDS))
+                )
             )
             .scroll(TimeValue(LONG_SEARCH_TIME))
 
         var searchResponse = try {
-            logClient.hashClient(buildId).restClient.search(searchRequest, RequestOptions.DEFAULT)
+            scrollClient.restClient.search(searchRequest, RequestOptions.DEFAULT)
         } catch (ignore: IOException) {
-            logClient.hashClient(buildId).restClient.search(searchRequest, genLargeSearchOptions())
+            scrollClient.restClient.search(searchRequest, genLargeSearchOptions())
         }
-        do {
-            queryLogs.logs.addAll(parseResponse(searchResponse.hits))
-            searchResponse = scrollClient.restClient.scroll(
-                SearchScrollRequest(searchResponse.scrollId).scroll(TimeValue(LONG_SEARCH_TIME)),
-                RequestOptions.DEFAULT
-            )
-        } while (searchResponse.hits.hits.isNotEmpty())
+        var scrollId: String? = searchResponse.scrollId
+        try {
+            do {
+                queryLogs.logs.addAll(parseResponse(searchResponse.hits))
+                searchResponse = scrollClient.restClient.scroll(
+                    SearchScrollRequest(searchResponse.scrollId).scroll(TimeValue(LONG_SEARCH_TIME)),
+                    RequestOptions.DEFAULT
+                )
+                scrollId = searchResponse.scrollId
+            } while (searchResponse.hits.hits.isNotEmpty())
+        } finally {
+            // 显式释放 scroll context，避免在并发量大时堆积导致 ES "too many open scroll contexts"
+            clearScrollQuietly(scrollClient, scrollId)
+        }
 
-        if (queryLogs.logs.isEmpty()) queryLogs.status = LogStatus.EMPTY.status
+//        if (queryLogs.logs.isEmpty()) queryLogs.status = LogStatus.EMPTY.status
         return queryLogs
     }
 
@@ -688,20 +716,6 @@ class LogServiceESImpl(
         )
         if (index.isNullOrBlank()) return queryLogs
         try {
-            val logSize = getLogSize(
-                index = index,
-                buildId = buildId,
-                debug = debug,
-                logType = logType,
-                tag = tag,
-                subTag = subTag,
-                containerHashId = containerHashId,
-                executeCount = executeCount,
-                jobId = jobId,
-                stepId = stepId
-            )
-            if (logSize == 0L) return queryLogs
-            val start = if (logSize > size.toLong()) logSize - size.toLong() else 0L
             val query = getQuery(
                 buildId = buildId,
                 debug = debug,
@@ -712,31 +726,36 @@ class LogServiceESImpl(
                 executeCount = executeCount,
                 jobId = jobId,
                 stepId = stepId
-            ).must(QueryBuilders.rangeQuery("lineNo").gte(start))
+            )
+            // 直接 DESC 取最后 size 条，避免老逻辑"先 count 算 start 再 ASC 搜"的两步操作，
+            // 也规避了原本 scroll() 参数其实没用到、仅设置了 scroll TTL 的死代码
             val searchRequest = SearchRequest(index)
+                .preference(routingPreference(buildId))
                 .source(
-                    SearchSourceBuilder()
-                        .query(query)
-                        .docValueField("lineNo")
-                        .docValueField("timestamp")
-                        .size(size)
-                        .sort("timestamp", SortOrder.ASC)
-                        .sort("lineNo", SortOrder.ASC)
-                        .timeout(TimeValue.timeValueSeconds(SEARCH_TIMEOUT_SECONDS))
+                    applyDefaultSort(
+                        SearchSourceBuilder()
+                            .query(query)
+                            .docValueField("lineNo")
+                            .docValueField("timestamp")
+                            .size(size)
+                            .trackTotalHits(true)
+                            .timeout(TimeValue.timeValueSeconds(SEARCH_TIMEOUT_SECONDS)),
+                        SortOrder.DESC
+                    )
                 )
-                .scroll(TimeValue(SHORT_SEARCH_TIME))
-            queryLogs.logs = searchByClient(buildId, searchRequest)
-            queryLogs.hasMore = logSize > queryLogs.logs.size
+            val response = try {
+                logClient.hashClient(buildId).restClient.search(searchRequest, RequestOptions.DEFAULT)
+            } catch (ignore: IOException) {
+                logClient.hashClient(buildId).restClient.search(searchRequest, genLargeSearchOptions())
+            }
+            val logs = parseResponse(response.hits)
+            logs.reverse()
+            queryLogs.logs = logs
+            val totalHits = response.hits.totalHits?.value ?: logs.size.toLong()
+            queryLogs.hasMore = totalHits > logs.size
             return queryLogs
         } catch (e: ElasticsearchStatusException) {
-            val exString = e.toString()
-            if (exString.contains("index_closed_exception")) {
-                logger.warn("[$buildId] Can't search because of index_closed_exception", e)
-                queryLogs.status = LogStatus.CLOSED.status
-            } else if (exString.contains("Too Many Requests")) {
-                logger.warn("[$buildId] Too many query requests", e)
-                queryLogs.status = LogStatus.FAIL.status
-            }
+            handleSearchStatusException(buildId, "doGetEndLogs", queryLogs, e)
         } catch (ignore: Throwable) {
             logger.warn("Query end logs failed because of ${ignore.javaClass}. buildId: $buildId", ignore)
             queryLogs.status = LogStatus.FAIL.status
@@ -767,20 +786,6 @@ class LogServiceESImpl(
         )
         if (index.isNullOrBlank()) return queryLogs
         try {
-            val logSize = getLogSize(
-                index = index,
-                buildId = buildId,
-                debug = debug,
-                logType = logType,
-                tag = tag,
-                subTag = subTag,
-                containerHashId = containerHashId,
-                executeCount = executeCount,
-                jobId = jobId,
-                stepId = stepId
-            )
-            if (logSize == 0L) return queryLogs
-
             val startTime = System.currentTimeMillis()
             val boolQueryBuilder = getQuery(
                 buildId = buildId,
@@ -799,30 +804,34 @@ class LogServiceESImpl(
             )
             val sortOrder = if (reverse == true) SortOrder.DESC else SortOrder.ASC
 
+            // trackTotalHits 让本次 search 同时返回精确的命中总数，省掉额外的 count 请求，
+            // 也保证 hasMore 的判断和 logs 来自同一时刻、同一副本，结果完全一致。
             val searchRequest = SearchRequest(index)
+                .preference(routingPreference(buildId))
                 .source(
-                    SearchSourceBuilder()
-                        .query(boolQueryBuilder)
-                        .docValueField("lineNo")
-                        .docValueField("timestamp")
-                        .size(Constants.NORMAL_MAX_LINES)
-                        .sort("timestamp", sortOrder)
-                        .sort("lineNo", sortOrder)
-                        .timeout(TimeValue.timeValueSeconds(SEARCH_TIMEOUT_SECONDS))
+                    applyDefaultSort(
+                        SearchSourceBuilder()
+                            .query(boolQueryBuilder)
+                            .docValueField("lineNo")
+                            .docValueField("timestamp")
+                            .size(Constants.NORMAL_MAX_LINES)
+                            .trackTotalHits(true)
+                            .timeout(TimeValue.timeValueSeconds(SEARCH_TIMEOUT_SECONDS)),
+                        sortOrder
+                    )
                 )
-            queryLogs.logs = searchByClient(buildId, searchRequest)
-            logger.info("logs query time cost: ${System.currentTimeMillis() - startTime}")
-            if (queryLogs.logs.isEmpty()) queryLogs.status = LogStatus.EMPTY.status
-            queryLogs.hasMore = logSize > queryLogs.logs.size
-        } catch (e: ElasticsearchStatusException) {
-            val exString = e.toString()
-            if (exString.contains("index_closed_exception")) {
-                logger.warn("[$buildId] Can't search because of index_closed_exception", e)
-                queryLogs.status = LogStatus.CLOSED.status
-            } else if (exString.contains("Too Many Requests")) {
-                logger.warn("[$buildId] Too many query requests", e)
-                queryLogs.status = LogStatus.FAIL.status
+            val response = try {
+                logClient.hashClient(buildId).restClient.search(searchRequest, RequestOptions.DEFAULT)
+            } catch (ignore: IOException) {
+                logClient.hashClient(buildId).restClient.search(searchRequest, genLargeSearchOptions())
             }
+            queryLogs.logs = parseResponse(response.hits)
+            val totalHits = response.hits.totalHits?.value ?: queryLogs.logs.size.toLong()
+            logger.info("logs query time cost: ${System.currentTimeMillis() - startTime}")
+//            if (queryLogs.logs.isEmpty()) queryLogs.status = LogStatus.EMPTY.status
+            queryLogs.hasMore = totalHits > queryLogs.logs.size
+        } catch (e: ElasticsearchStatusException) {
+            handleSearchStatusException(buildId, "doQueryInitLogs", queryLogs, e)
         } catch (ignore: Throwable) {
             logger.warn("Query init logs failed because of ${ignore.javaClass}. buildId: $buildId", ignore)
             queryLogs.status = LogStatus.FAIL.status
@@ -854,20 +863,6 @@ class LogServiceESImpl(
         if (index.isNullOrBlank()) return queryLogs
         try {
             val startTime = System.currentTimeMillis()
-            val logSize = getLogSize(
-                index = index,
-                buildId = buildId,
-                debug = debug,
-                logType = logType,
-                tag = tag,
-                subTag = subTag,
-                containerHashId = containerHashId,
-                executeCount = executeCount,
-                start = start,
-                jobId = jobId,
-                stepId = stepId
-            )
-            if (logSize == 0L) return queryLogs
             val boolQueryBuilder = getQuery(
                 buildId = buildId,
                 debug = debug,
@@ -884,54 +879,40 @@ class LogServiceESImpl(
                 "[$index|$buildId|$tag|$subTag|$containerHashId|$executeCount] " +
                         "doQueryLogsAfterLine get the query builder: $boolQueryBuilder"
             )
-            val searchRequest = SearchRequest(index)
-                .source(
-                    SearchSourceBuilder()
-                        .query(boolQueryBuilder)
-                        .docValueField("lineNo")
-                        .docValueField("timestamp")
-                        .size(Constants.SCROLL_MAX_LINES)
-                        .sort("timestamp", SortOrder.ASC)
-                        .sort("lineNo", SortOrder.ASC)
-                )
-                .scroll(TimeValue(LONG_SEARCH_TIME))
-            val scrollClient = logClient.hashClient(buildId)
 
-            // 初始化请求
+            // after 是"从某个 lineNo 开始向后取一批日志，前端按 hasMore 自驱滚动"，
+            // 不需要服务端维持 scroll 上下文；改为单次 search + trackTotalHits，
+            // 避免 scroll 跨请求时副本切换 / 排序键并列 / scroll context 过期 / 失败被吞
+            // 等一系列导致"条数持续变化"的问题。
+            val searchRequest = SearchRequest(index)
+                .preference(routingPreference(buildId))
+                .source(
+                    applyDefaultSort(
+                        SearchSourceBuilder()
+                            .query(boolQueryBuilder)
+                            .docValueField("lineNo")
+                            .docValueField("timestamp")
+                            .size(Constants.NORMAL_MAX_LINES)
+                            .trackTotalHits(true)
+                            .timeout(TimeValue.timeValueSeconds(SEARCH_TIMEOUT_SECONDS))
+                    )
+                )
+
+            val client = logClient.hashClient(buildId)
             val searchResponse = try {
-                scrollClient.restClient.search(searchRequest, RequestOptions.DEFAULT)
+                client.restClient.search(searchRequest, RequestOptions.DEFAULT)
             } catch (ignore: IOException) {
-                scrollClient.restClient.search(searchRequest, genLargeSearchOptions())
+                client.restClient.search(searchRequest, genLargeSearchOptions())
             }
 
-            var scrollId = searchResponse.scrollId
-            var hits = searchResponse.hits
+            queryLogs.logs = parseResponse(searchResponse.hits)
+            // hasMore 直接取自本次响应的 totalHits，和 logs 同源，杜绝两次请求之间的飘移
+            val totalAfter = searchResponse.hits.totalHits?.value ?: queryLogs.logs.size.toLong()
+            queryLogs.hasMore = totalAfter > queryLogs.logs.size
 
-            // 开始滚动
-            var times = 1
-            do {
-                queryLogs.logs.addAll(parseResponse(hits))
-                times++
-                val scrollRequest = SearchScrollRequest(scrollId).scroll(TimeValue(LONG_SEARCH_TIME))
-                val searchScrollResponse = try {
-                    scrollClient.restClient.scroll(scrollRequest, RequestOptions.DEFAULT)
-                } catch (ignore: IOException) {
-                    scrollClient.restClient.scroll(scrollRequest, genLargeSearchOptions())
-                }
-                scrollId = searchScrollResponse.scrollId
-                hits = searchScrollResponse.hits
-            } while (hits.hits.isNotEmpty() && times <= Constants.SCROLL_MAX_TIMES)
-            queryLogs.hasMore = logSize > queryLogs.logs.size
             logger.info("logs query time cost: ${System.currentTimeMillis() - startTime}")
         } catch (e: ElasticsearchStatusException) {
-            val exString = e.toString()
-            if (exString.contains("index_closed_exception")) {
-                logger.warn("[$buildId] Can't search because of index_closed_exception", e)
-                queryLogs.status = LogStatus.CLOSED.status
-            } else if (exString.contains("Too Many Requests")) {
-                logger.warn("[$buildId] Too many query requests", e)
-                queryLogs.status = LogStatus.FAIL.status
-            }
+            handleSearchStatusException(buildId, "doQueryLogsAfterLine", queryLogs, e)
         } catch (ignore: Throwable) {
             logger.warn("Query after logs failed because of ${ignore.javaClass}. buildId: $buildId", ignore)
             queryLogs.status = LogStatus.FAIL.status
@@ -966,33 +947,6 @@ class LogServiceESImpl(
         if (index.isNullOrBlank()) return queryLogs
         try {
             val startTime = System.currentTimeMillis()
-            val logSize = getLogSize(
-                index = index,
-                buildId = buildId,
-                debug = debug,
-                logType = logType,
-                tag = tag,
-                subTag = subTag,
-                containerHashId = containerHashId,
-                executeCount = executeCount,
-                end = end,
-                jobId = jobId,
-                stepId = stepId
-            )
-            if (logSize == 0L) return queryLogs
-            val start = when {
-                end >= size -> {
-                    end - size
-                }
-
-                logSize >= size -> {
-                    logSize - size
-                }
-
-                else -> {
-                    0
-                }
-            }
             val boolQueryBuilder = getQuery(
                 buildId = buildId,
                 debug = debug,
@@ -1003,36 +957,43 @@ class LogServiceESImpl(
                 executeCount = executeCount,
                 jobId = jobId,
                 stepId = stepId
-            ).must(QueryBuilders.rangeQuery("lineNo").gte(start))
-                .must(QueryBuilders.rangeQuery("lineNo").lte(end))
+            ).must(QueryBuilders.rangeQuery("lineNo").lte(end))
             logger.info(
                 "[$index|$buildId|$tag|$subTag|$containerHashId|$executeCount] " +
                         "doQueryLogsBeforeLine get the query builder: $boolQueryBuilder"
             )
+
+            // 直接 DESC 排序拉最后 size 条，避免"先 count 再算 start 再 ASC search"两步操作，
+            // 也避免重复文档导致旧逻辑里的 start 计算误差。
             val searchRequest = SearchRequest(index)
+                .preference(routingPreference(buildId))
                 .source(
-                    SearchSourceBuilder()
-                        .query(boolQueryBuilder)
-                        .docValueField("lineNo")
-                        .docValueField("timestamp")
-                        .size(size)
-                        .sort("timestamp", SortOrder.ASC)
-                        .sort("lineNo", SortOrder.ASC)
-                        .timeout(TimeValue.timeValueSeconds(SEARCH_TIMEOUT_SECONDS))
+                    applyDefaultSort(
+                        SearchSourceBuilder()
+                            .query(boolQueryBuilder)
+                            .docValueField("lineNo")
+                            .docValueField("timestamp")
+                            .size(size)
+                            .trackTotalHits(true)
+                            .timeout(TimeValue.timeValueSeconds(SEARCH_TIMEOUT_SECONDS)),
+                        SortOrder.DESC
+                    )
                 )
 
-            queryLogs.logs = searchByClient(buildId, searchRequest)
-            queryLogs.hasMore = logSize > queryLogs.logs.size
+            val response = try {
+                logClient.hashClient(buildId).restClient.search(searchRequest, RequestOptions.DEFAULT)
+            } catch (ignore: IOException) {
+                logClient.hashClient(buildId).restClient.search(searchRequest, genLargeSearchOptions())
+            }
+            val logs = parseResponse(response.hits)
+            // DESC 拉取后翻转回 ASC，返回给前端的语义保持不变
+            logs.reverse()
+            queryLogs.logs = logs
+            val totalBefore = response.hits.totalHits?.value ?: logs.size.toLong()
+            queryLogs.hasMore = totalBefore > logs.size
             logger.info("logs query time cost: ${System.currentTimeMillis() - startTime}")
         } catch (e: ElasticsearchStatusException) {
-            val exString = e.toString()
-            if (exString.contains("index_closed_exception")) {
-                logger.warn("[$buildId] Can't search because of index_closed_exception", e)
-                queryLogs.status = LogStatus.CLOSED.status
-            } else if (exString.contains("Too Many Requests")) {
-                logger.warn("[$buildId] Too many query requests", e)
-                queryLogs.status = LogStatus.FAIL.status
-            }
+            handleSearchStatusException(buildId, "doQueryLogsBeforeLine", queryLogs, e)
         } catch (ignore: Throwable) {
             logger.warn("Query before logs failed because of ${ignore.javaClass}. buildId: $buildId", ignore)
             queryLogs.status = LogStatus.FAIL.status
@@ -1141,9 +1102,47 @@ class LogServiceESImpl(
         )
         if (start != null) query.must(QueryBuilders.rangeQuery("lineNo").gte(start))
         if (end != null) query.must(QueryBuilders.rangeQuery("lineNo").lte(end))
-        val countRequest = CountRequest(index).query(query)
+        val countRequest = CountRequest(index).query(query).preference(routingPreference(buildId))
         val countResponse = logClient.hashClient(buildId).restClient.count(countRequest, RequestOptions.DEFAULT)
         return countResponse.count
+    }
+
+    /**
+     * 统一处理 ES 查询异常，避免出现"已知关键字命中状态置位，未识别异常被静默吞掉"
+     * 导致前端拿到 SUCCEED + 空 logs 的假象。
+     */
+    private fun handleSearchStatusException(
+        buildId: String,
+        scenario: String,
+        queryLogs: QueryLogs,
+        e: ElasticsearchStatusException
+    ) {
+        val exString = e.toString()
+        when {
+            exString.contains("index_closed_exception") -> {
+                logger.warn("[$buildId] Can't search because of index_closed_exception", e)
+                queryLogs.status = LogStatus.CLOSED.status
+            }
+            exString.contains("Too Many Requests") -> {
+                logger.warn("[$buildId] Too many query requests", e)
+                queryLogs.status = LogStatus.FAIL.status
+            }
+            else -> {
+                logger.warn("[$buildId][$scenario] Query failed by ElasticsearchStatusException", e)
+                queryLogs.status = LogStatus.FAIL.status
+            }
+        }
+    }
+
+    private fun clearScrollQuietly(client: ESClient, scrollId: String?) {
+        if (scrollId.isNullOrBlank()) return
+        try {
+            val clearRequest = ClearScrollRequest()
+            clearRequest.addScrollId(scrollId)
+            client.restClient.clearScroll(clearRequest, RequestOptions.DEFAULT)
+        } catch (ignore: Exception) {
+            logger.warn("Failed to clear scroll context [$scrollId]", ignore)
+        }
     }
 
     private fun doAddMultiLines(logMessages: List<LogMessageWithLineNo>, buildId: String): Int {
@@ -1218,13 +1217,20 @@ class LogServiceESImpl(
     ): IndexRequest? {
         val builder = ESIndexUtils.getDocumentObject(buildId, logMessage)
         return try {
-            IndexRequest(index).source(builder)
+            // 使用确定性 _id 保证 bulk 重试时的写入幂等性，避免出现同 lineNo 的重复文档
+            IndexRequest(index)
+                .id(buildDocId(buildId, logMessage.executeCount, logMessage.lineNo))
+                .source(builder)
         } catch (e: IOException) {
             logger.error("[$buildId] Convert logMessage to es document failure", e)
             null
         } finally {
             builder.close()
         }
+    }
+
+    private fun buildDocId(buildId: String, executeCount: Int?, lineNo: Long): String {
+        return "$buildId$DOC_ID_DELIMITER${executeCount ?: 1}$DOC_ID_DELIMITER$lineNo"
     }
 
     private fun addLineNo(buildId: String, logMessages: List<LogMessage>): List<LogMessageWithLineNo> {

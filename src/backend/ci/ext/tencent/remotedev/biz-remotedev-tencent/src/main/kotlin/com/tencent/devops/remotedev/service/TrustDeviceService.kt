@@ -11,6 +11,8 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.remotedev.dao.TrustDeviceDao
 import com.tencent.devops.remotedev.pojo.TrustDeviceInfo
 import com.tencent.devops.remotedev.pojo.TrustDeviceInfoDetail
+import com.tencent.devops.remotedev.pojo.VerifyResult
+import com.tencent.devops.remotedev.pojo.VerifyResultType
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -31,13 +33,17 @@ class TrustDeviceService @Autowired constructor(
     @Value("\${remoteDev.trustDevice.expireDays:#{7}}")
     private val expireDays: Long = 7
 
-    fun checkTrustDevice(userId: String, deviceId: String, token: String): Boolean {
+    fun checkTrustDevice(userId: String, deviceId: String, token: String): VerifyResult {
         // 先判断是否过期
         if (!verifyToken(token)) {
-            return false
+            return VerifyResult(false, VerifyResultType.EXPIRED)
         }
         // 在判断是否一致
-        return trustDeviceDao.fetchAny(dslContext, userId, deviceId)?.token == token
+        return if (trustDeviceDao.fetchAny(dslContext, userId, deviceId)?.token == token) {
+            VerifyResult(true, null)
+        } else {
+            VerifyResult(false, VerifyResultType.INVALID)
+        }
     }
 
     fun getOrCreateToken(userId: String, deviceId: String, detail: TrustDeviceInfoDetail): String {

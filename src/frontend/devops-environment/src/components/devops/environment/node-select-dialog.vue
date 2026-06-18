@@ -1,234 +1,165 @@
 <template>
     <bk-dialog
         v-model="nodeSelectConf.isShow"
-        ext-cls="node-select-dialog-wrapper"
-        :width="1280"
+        :width="'900'"
+        :ext-cls="'node-select-wrapper'"
         :close-icon="false"
     >
         <div
-            class="node-select-content"
             v-bkloading="{
                 isLoading: loading.isLoading,
                 title: loading.title
             }"
         >
-            <section>
-                <div class="node-select-list-header">
-                    <p>
-                        {{ title }}
-                    </p>
-                    <div class="biz-ip-searcher-wrapper">
-                        <div
-                            class="biz-searcher"
-                            @click="focusSearch"
-                            ref="bizSearcher"
-                        >
-                            <ul
-                                class="search-key"
-                                ref="searchKey"
+            <div class="node-list-header">
+                <div class="title">
+                    {{ $t('environment.nodeInfo.selectNodeTip') }}
+                    <span class="selected-node-prompt">
+                        {{ $t('environment.nodeInfo.selectNodeTip') }}<span class="node-count"> {{ selectHandlercConf.curTotalCount }} </span>{{ $t('environment.nodes') }}
+                    </span>
+                    <span class="selected-node-prompt">
+                        {{ $t('environment.selected') }}<span class="node-count"> {{ selectHandlercConf.selectedNodeCount }} </span>{{ $t('environment.nodes') }}
+                    </span>
+                </div>
+                <div class="search-input-row">
+                    <div class="biz-search-input">
+                        <div class="biz-ip-searcher-wrapper">
+                            <div
+                                class="biz-searcher"
+                                @click="focusSearch"
+                                ref="bizSearcher"
                             >
-                                <li
-                                    class="key-node"
-                                    v-for="(entry, index) in searchKeyList"
-                                    :key="index"
+                                <ul
+                                    class="search-key"
+                                    ref="searchKey"
                                 >
-                                    <span>{{ entry }}</span>
-                                    <i
-                                        class="devops-icon icon-close"
-                                        @click="deleteKey(index)"
-                                    ></i>
-                                </li>
-                                <li class="input-item">
-                                    <input
-                                        type="text"
-                                        class="search-input"
-                                        ref="searchInput"
-                                        v-model="inputValue"
-                                        :style="inputStyle"
-                                        @blur="handleBlur"
-                                        @paste="paste"
-                                        @keyup="keyupHandler"
+                                    <li
+                                        class="key-node"
+                                        v-for="(entry, index) in searchKeyList"
+                                        :key="index"
                                     >
-                                </li>
-                            </ul>
-                        </div>
-                        <div class="actions">
-                            <i
-                                class="devops-icon icon-close"
-                                @click="deleteAllKey"
-                                v-if="searchKeyList.length"
-                            ></i>
-                            <i
-                                class="devops-icon icon-search"
-                                @click="searchNode"
-                            ></i>
-                        </div>
-                        <div
-                            class="ip-searcher-footer"
-                            v-if="isSearchFooter"
-                        >
-                            <p>{{ $t('environment.nodeInfo.searchNodePlaceholder') }}</p>
+                                        <span>{{ entry }}</span>
+                                        <i
+                                            class="devops-icon icon-close"
+                                            @click="deleteKey(index)"
+                                        ></i>
+                                    </li>
+                                    <li class="input-item">
+                                        <input
+                                            type="text"
+                                            class="search-input"
+                                            ref="searchInput"
+                                            v-model="inputValue"
+                                            :style="inputStyle"
+                                            @blur="handleBlur"
+                                            @paste="paste"
+                                            @keyup="keyupHandler"
+                                        >
+                                    </li>
+                                </ul>
+                            </div>
+                            <div class="actions">
+                                <i
+                                    class="devops-icon icon-close"
+                                    @click="deleteAllKey"
+                                    v-if="searchKeyList.length"
+                                ></i>
+                                <i
+                                    class="devops-icon icon-search"
+                                    @click="searchNode"
+                                ></i>
+                            </div>
+                            <div
+                                class="ip-searcher-footer"
+                                v-if="isSearchFooter"
+                            >
+                                <p>{{ $t('environment.nodeInfo.searchNodePlaceholder') }}</p>
+                            </div>
                         </div>
                     </div>
                 </div>
-                <div class="node-select-table">
-                    <bk-table
-                        :data="visibleRowList"
-                        :pagination="pagination"
-                        height="100%"
-                        :outer-border="false"
-                        @page-change="handlePageChange"
-                        @page-limit-change="handlePageLimitChange"
-                    >
-                        <bk-table-column
-                            width="60"
-                            :render-header="renderHeader"
+            </div>
+            <div class="node-table">
+                <div
+                    class="node-table-message"
+                    v-if="!selectHandlercConf.searchEmpty && rowList.length"
+                >
+                    <div class="table-node-head">
+                        <bk-checkbox
+                            :true-value="true"
+                            :false-value="false"
+                            v-model="selectHandlercConf.allNodeSelected"
+                            @change="toggleAllSelect"
+                        ></bk-checkbox>
+                        <div class="table-node-item node-item-ip">IP</div>
+                        <div class="table-node-item node-item-displayname">{{ $t('environment.nodeInfo.displayName') }}</div>
+                        <div class="table-node-item node-item-name">{{ $t('environment.nodeInfo.hostName') }}</div>
+                        <div class="table-node-item node-item-type">{{ `${$t('environment.nodeInfo.source')}/${$t('environment.nodeInfo.importer')}` }}</div>
+                        <div class="table-node-item node-item-status">{{ $t('environment.nodeInfo.cpuStatus') }}</div>
+                        <div class="table-node-item node-item-agstatus">
+                            <span>{{ $t('environment.nodeInfo.gateway') }}</span>
+                        </div>
+                    </div>
+                    <div class="table-node-body">
+                        <div
+                            class="table-node-row"
+                            v-for="(col, index) of rowList"
+                            :key="index"
+                            v-if="col.isDisplay"
                         >
-                            <template slot-scope="{ row }">
+                            <div class="table-node-item node-item-checkbox">
                                 <bk-checkbox
                                     :true-value="true"
                                     :false-value="false"
-                                    :disabled="row.isEixtEnvNode"
-                                    v-model="row.isChecked"
+                                    :disabled="col.isEixtEnvNode"
+                                    v-model="col.isChecked"
                                 ></bk-checkbox>
-                            </template>
-                        </bk-table-column>
-                        <bk-table-column
-                            label="IP"
-                            prop="ip"
-                            show-overflow-tooltip
-                        ></bk-table-column>
-                        <bk-table-column
-                            :label="$t('environment.nodeInfo.displayName')"
-                            prop="displayName"
-                            show-overflow-tooltip
-                            width="160"
-                        >
-                        </bk-table-column>
-                        <bk-table-column
-                            :label="$t('environment.nodeInfo.hostName')"
-                            prop="name"
-                            show-overflow-tooltip
-                        ></bk-table-column>
-                        <bk-table-column
-                            :label="`${$t('environment.nodeInfo.source')}/${$t('environment.nodeInfo.importer')}`"
-                            prop="createdUser"
-                            width="200"
-                            show-overflow-tooltip
-                        >
-                            <template slot-scope="{ row }">
-                                <div v-if="isShowOperateChange(row)">
-                                    <div
-                                        class="edit-operator"
-                                        v-if="isCurrentUser(row)"
-                                    >
-                                        <i class="devops-icon icon-exclamation-circle"></i>
-                                        <span @click="changeCreatedUser(row.nodeHashId)">
-                                            {{ $t('environment.nodeInfo.operatorModfied') }}
-                                        </span>
-                                    </div>
-                                    <div
-                                        class="prompt-operator"
-                                        v-else
-                                    >
-                                        <bk-popover placement="top">
-                                            <span><i class="devops-icon icon-exclamation-circle"></i>{{ $t('environment.nodeInfo.prohibited')
-                                            }}</span>
-                                            <template slot="content">
-                                                <p>
-                                                    {{ $t('environment.nodeInfo.currentImporter') }}
-                                                    <span>{{ row.createdUser }}</span>
-                                                </p>
-                                                <p>
-                                                    {{ $t('environment.nodeInfo.currentOperator') }}
-                                                    <span>{{ row.operator }}</span>
-                                                    <span v-if="row.nodeType === 'CC'">/{{ col.bakOperator }}</span>
-                                                </p>
-                                                <p>{{ $t('environment.nodeInfo.contactOperator') }}</p>
-                                            </template>
-                                        </bk-popover>
-                                    </div>
+                            </div>
+                            <div class="table-node-item node-item-ip">
+                                <span class="node-ip">{{ col.ip }}</span>
+                            </div>
+                            <div
+                                class="table-node-item node-item-name"
+                                :class="{ 'over-content': selectHandlercConf.curDisplayCount > 6 }"
+                            >
+                                <span class="node-name">{{ col.name }}</span>
+                            </div>
+                            <div class="table-node-item node-item-displayname">
+                                <span class="node-displayname">{{ col.displayName }}</span>
+                            </div>
+                            <div
+                                class="table-node-item node-item-type"
+                                :class="{ 'over-content': selectHandlercConf.curDisplayCount > 6 }"
+                            >
+                                <div>
+                                    <span class="node-name">{{ $t('environment.nodeTypeMap')[col.nodeType] }}</span>
+                                    <span>({{ col.createdUser }})</span>
                                 </div>
-                                <div v-else>
-                                    <span class="node-name">{{ $t('environment.nodeTypeMap')[row.nodeType] }}</span>
-                                    <span>({{ row.createdUser }})</span>
-                                </div>
-                            </template>
-                        </bk-table-column>
-                        <bk-table-column
-                            v-if="isDevxEnv"
-                            :label="$t('environment.nodeInfo.model')"
-                            prop="size"
-                        ></bk-table-column>
-                        <bk-table-column
-                            :label="$t('environment.status')"
-                            prop="nodeStatus"
-                        >
-                            <template slot-scope="{ row }">
-                                <StatusIcon
-                                    v-if="successStatus.includes(row.nodeStatus)"
-                                    status="success"
-                                />
-                                <StatusIcon
-                                    v-else-if="failStatus.includes(row.nodeStatus)"
-                                    status="error"
-                                />
-                                <StatusIcon
-                                    v-else-if="['NOT_INSTALLED'].includes(row.nodeStatus)"
-                                    status="normal"
-                                />
-                                {{ ['NOT_IN_CC', 'NOT_IN_CMDB'].includes(row.nodeStatus) ? '' : $t('environment.nodeStatusMap')[row.nodeStatus] }}
-                            </template>
-                        </bk-table-column>
-                        <!-- <bk-table-column :min-width="82"
-                            :label="$t(`environment.nodeInfo.${hasConstruct ? 'gateway' : 'gseAgentStatus'}`)">
-                            <template slot-scope="{ row }">
-                                <span v-if="['THIRDPARTY','DEVCLOUD'].includes(row.nodeType)">{{ row.gateway }}</span>
-                                <span v-else>
-                                    <span class="node-agstatus normal-status-node" v-if="row.nodeType === 'BCSVM'" :class="{
-                                        'refresh-status-node': !row.agentStatus,
-                                        'over-content': selectHandlerConf.curDisplayCount > 6
-                                    }">{{ row.agentStatus ? $t('environment.nodeInfo.normal') :
-                                        $t('environment.nodeInfo.refreshing') }}
-                                    </span>
-                                    <span class="node-agstatus normal-status-node" v-else :class="{
-                                        'abnormal-status-node': !row.agentStatus,
-                                        'over-content': selectHandlerConf.curDisplayCount > 6
-                                    }">{{ row.agentStatus ? $t('environment.nodeInfo.normal') :
-                                        $t('environment.nodeInfo.abnormal') }}
-                                    </span>
-                                </span>
-                            </template>
-                        </bk-table-column> -->
-                    </bk-table>
+                            </div>
+                            <div class="table-node-item node-item-status">
+                                <span
+                                    class="node-status"
+                                    :class="{ 'over-content': selectHandlercConf.curDisplayCount > 6 }"
+                                >{{ $t('environment.nodeStatusMap')[col.nodeStatus] }}</span>
+                            </div>
+                            <div
+                                class="table-node-item node-item-agstatus"
+                                :class="{ 'over-content': selectHandlercConf.curDisplayCount > 6 }"
+                                v-bk-overflow-tips="{ content: col.gateway }"
+                            >
+                                <span>{{ col.gateway }}</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-            </section>
-            <aside>
-                <p>
-                    {{ $t('结果预览') }}
-                </p>
-                {{ $t('environment.nodeInfo.selectNodeTip') }}
-                <span class="selected-node-prompt">
-                    {{ $t('environment.nodeInfo.total') }}
-                    <span> {{ visibleRowList.length }}</span>
-                    {{ $t('environment.nodes') }}
-                </span>
-                <span class="selected-node-prompt">
-                    {{ $t('environment.selected') }}
-                    <span class="environment-node-count"> {{ selectedNodeList.length }}</span>
-                    {{ $t('environment.nodes') }}
-                </span>
-                <ul class="preview-selected-ul">
-                    <li
-                        v-for="item in selectedNodeList"
-                        :key="item.ip"
-                        class="preview-selected-li"
-                    >
-                        <p>{{ item.ip }}</p>
-                        <p>{{ item.envNamesStr }}</p>
-                    </li>
-                </ul>
-            </aside>
+                <bk-exception
+                    v-if="selectHandlercConf.searchEmpty || !rowList.length"
+                    class="exception-wrap-item exception-part"
+                    search-empty
+                    :type="selectHandlercConf.searchEmpty ? 'search-empty' : 'empty'"
+                    scene="part"
+                />
+            </div>
         </div>
         <div slot="footer">
             <div class="footer-handler">
@@ -251,32 +182,22 @@
 </template>
 
 <script>
-    import StatusIcon from '@/components/status-icon.vue'
     export default {
-        components: {
-            StatusIcon
-        },
         props: {
-            title: {
-                type: String,
-                default: ''
-            },
-            isDevxEnv: Boolean,
             nodeSelectConf: Object,
             loading: Object,
             curUserInfo: Object,
-            selectHandlerConf: Object,
+            selectHandlercConf: Object,
             rowList: Array,
             confirmFn: Function,
             toggleAllSelect: Function,
             cancelFn: Function,
-            changeCreatedUser: Function,
             query: Function,
             searchInfo: {
                 type: Object,
                 default: {
                     data: [],
-                    onChange: () => { }
+                    onChange: () => {}
                 }
             }
         },
@@ -284,14 +205,7 @@
             return {
                 isSearchFooter: false,
                 inputValue: '',
-                searchKeyList: [],
-                pagination: {
-                    current: 1,
-                    count: 0,
-                    limit: 10
-                },
-                successStatus: ['NORMAL', 'BUILD_IMAGE_SUCCESS'],
-                failStatus: ['ABNORMAL', 'DELETED', 'LOST', 'BUILD_IMAGE_FAILED', 'UNKNOWN']
+                searchKeyList: []
             }
         },
         computed: {
@@ -303,22 +217,9 @@
             },
             hasConstruct () {
                 return this.rowList.some(row => {
-                    return ['THIRDPARTY', 'DEVCLOUD'].includes(row.nodeType) && row.isDisplay
+                    return row.nodeType === 'THIRDPARTY' && row.isDisplay
                 })
-            },
-            visibleRowList () {
-                const list = this.rowList.filter(row => row.isDisplay)
-                this.pagination.count = list.length
-                const { current, limit } = this.pagination
-                return list.splice(limit * (current - 1), limit * current)
-            },
-            selectedNodeList () {
-                return this.rowList.filter(item => item.isChecked).map(item => ({
-                    ...item,
-                    envNamesStr: (item.envNames ?? []).join(',') || '--'
-                }))
             }
-
         },
         watch: {
             'nodeSelectConf.isShow' (val) {
@@ -326,9 +227,6 @@
                     this.inputValue = ''
                     this.searchKeyList.splice(0, this.searchKeyList.length)
                 }
-            },
-            searchKeyList () {
-                this.searchNode()
             }
         },
         methods: {
@@ -343,22 +241,6 @@
                     bitLen++
                 }
                 return bitLen
-            },
-            isCurrentUser (row) {
-                const { curUserInfo } = this
-                return [row.operator, row.bakOperator].includes(curUserInfo.username)
-            },
-            isShowOperateChange (row) {
-                const CC = 'CC'
-                const CMDB = 'CMDB'
-                const ccOrcmdb = [CC, CMDB].includes(row.nodeType)
-                let bakOperator = []
-                if (row.nodeType === CMDB) {
-                    bakOperator = row.bakOperator.split(';')
-                } else if (row.nodeType === CC) {
-                    bakOperator = [row.bakOperator]
-                }
-                return ccOrcmdb && ![row.operator, ...bakOperator].includes(row.createdUser)
             },
             handleFocus () {
                 this.isSearchFooter = !this.isSearchFooter
@@ -432,299 +314,319 @@
             },
             deleteKey (index) {
                 this.searchKeyList.splice(index, 1)
-            },
-            
-            renderHeader () {
-                return <bk-checkbox
-                        true-value={true}
-                        false-value={false}
-                        v-model={this.selectHandlerConf.allNodeSelected}
-                        onChange={this.allSelectChange}
-                        />
-            },
-            allSelectChange (value) {
-                this.toggleAllSelect(value)
-            },
-            handlePageChange (page) {
-                this.pagination.current = page
-            },
-            handlePageLimitChange (limit) {
-                this.pagination.current = 1
-                this.pagination.limit = limit
             }
         }
     }
 </script>
 
 <style lang="scss">
-  @import './../../../scss/conf';
-  @import '@/scss/mixins/ellipsis';
+    @import './../../../scss/conf';
 
-  %flex {
-    display: flex;
-    align-items: center;
-  }
-  
-  .node-select-dialog-wrapper {
-
-    .bk-dialog-tool {
-        display: none;
-    }
-
-    .bk-dialog-body {
-      padding-left: 0;
-      padding-right: 0;
-      padding-bottom: 0;
-    }
-
-    .node-select-content {
+    %flex {
         display: flex;
-        height: calc(100vh / 2);
-        > section {
-            padding: 0 20px;
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-            .node-select-table {
-                flex: 1;
-                overflow: hidden;
-            }
+        align-items: center;
+    }
+
+    .node-select-wrapper {
+
+        .bk-dialog-tool {
+            display: none;
         }
-        > aside {
-            width: 360px;
-            flex-shrink: 0;
+
+        .bk-dialog-body {
+            padding-left: 0;
+            padding-right: 0;
+        }
+
+        .node-list-header {
             padding: 20px;
-            font-size: 12px;
-            background-color: #f5f7fa;
-            overflow: hidden;
-            > p {
-                text-align: left;
-                margin-bottom: 24px;
-            }
-            .selected-node-prompt {
-                .environment-node-count {
-                    color: #30D878;
+            height: 58px;
+            display: flex;
+            justify-content: space-between;
+
+            .title {
+                line-height: 16px;
+                color: $fontWeightColor;
+
+                .icon-info-circle {
+                    position: relative;
+                    top: 2px;
+                    margin-left: 4px;
                 }
             }
 
-            .preview-selected-ul {
-                margin: 12px 0;
-                overflow-y: auto;
-                height: calc(100% - 56px);
-                .preview-selected-li {
-                    @extend %flex;
-                    background-color: white;
-                    border-bottom: 1px solid #dde4eb;
-                    padding: 0 12px;
-                    flex-direction: column;
-                    align-items: start;
-                    > p {
-                        line-height: 22px;
-                        @include ellipsis(100%);
-                        &:nth-child(2) {
-                            color: $fontLighterColor;
+            .selected-node-prompt {
+                margin-left: 6px;
+                font-size: 12px;
+            }
+
+            .node-count {
+                color: $failColor;
+            }
+
+            .search-input-row {
+                position: absolute;
+                top: 10px;
+                right: 20px;
+            }
+
+            .search-tool-row {
+                position: relative;
+                top: -8px;
+            }
+
+            .biz-search-input {
+                position: relative;
+                display: inline-block;
+                width: 320px;
+            }
+
+            .biz-ip-searcher-wrapper {
+                position: relative;
+                width: 100%;
+                border: 1px solid #dde4eb;
+                background-color: #fff;
+                border-radius: 2px;
+
+                .search-key {
+                    height: 100%;
+                    line-height: 1;
+
+                    li {
+                        display: inline-block;
+                        margin: -1px 3px;
+                        cursor: pointer;
+                        position: relative;
+                        padding: 2px;
+                        border-radius: 2px;
+                        // height: 27px;
+                        line-height: 1;
+
+                        input {
+                            width: 20px;
+                            padding: 0;
+                            border: 0;
+                            -webkit-box-shadow: border-box;
+                            box-shadow: border-box;
+                            outline: none;
+                            max-width: 150px;
+                            height: 36px;
+                            margin: -3px 3px;
+                            margin-left: 0;
+                        }
+                    }
+
+                    .key-node {
+                        background: #ebf4ff;
+
+                        span {
+                            display: inline-block;
+                            background-color: #ebf4ff;
+                            color: #7b7d8a;
+                            font-size: 12px;
+                            border: none;
+                            vertical-align: middle;
+                            -webkit-box-sizing: border-box;
+                            box-sizing: border-box;
+                            overflow: hidden;
+                            border-radius: 2px;
+                            padding: 0 9px;
+                            min-height: 21px;
+                            line-height: 22px;
+                            word-break: break-all;
+                        }
+
+                        i {
+                            position: relative;
+                            top: 2px;
+                            right: 6px;
                         }
                     }
                 }
+
+                .biz-searcher::-webkit-scrollbar {
+                    display: none;
+                }
+
+                .actions {
+                    position: absolute;
+                    right: 10px;
+                    top: 2px;
+                    color: #c4ced8;
+                    z-index: 10;
+                    height: 36px;
+                    line-height: 36px;
+
+                    .devops-icon {
+                        cursor: pointer;
+                    }
+
+                    .icon-close {
+                        margin-right: 4px;
+                        font-size: 14px;
+                    }
+                }
+            }
+
+            .biz-searcher {
+                width: 80%;
+                height: 36px;
+                border-radius: 2px;
+                font-size: 12px;
+                position: relative;
+                z-index: 1;
+                background: #fff;
+                cursor: pointer;
+                white-space: nowrap;
+                margin: 0 5px;
+                overflow: hidden;
+                overflow-x: scroll;
+            }
+
+            .ip-searcher-footer {
+                padding-left: 8px;
+                position: relative;
+                left: -1px;
+                top: 2px;
+                width: 320px;
+                height: 36px;
+                line-height: 36px;
+                border: 1px solid #dde4eb;
+                border-top: none;
+                background-color: #fff;
+                color: #c3cdd7;
+                font-size: 12px;
+
+                p {
+                    text-align: left;
+                }
             }
         }
-    }
 
-    .node-select-list-header {
-      padding-bottom: 20px;
-      > p {
-        text-align: left;
-        font-size: 18px;
-        margin: 10px 0 20px 0;
-      }
-      .biz-ip-searcher-wrapper {
-        position: relative;
-        width: 100%;
-        border: 1px solid #dde4eb;
-        background-color: #fff;
-        border-radius: 2px;
+        .node-table {
+            height: 294px;
+            margin: 0;
+            border: none;
+            .table-node-item {
+                flex-shrink: 0;
+            }
+        }
 
-        .search-key {
-          height: 100%;
-          line-height: 1;
+        .table-node-body {
+            height: 252px;
+            overflow: auto;
+        }
 
-          li {
-            display: inline-block;
-            margin: -1px 3px;
+        .table-node-head,
+        .table-node-row {
+            padding: 0 20px;
+            @extend %flex;
+            height: 42px;
+            border-top: 1px solid $borderWeightColor;
+            color: #333C48;
+            font-size: 12px;
+        }
+
+        .table-node-row {
+            color: $fontWeightColor;
+            font-weight: normal;
             cursor: pointer;
-            position: relative;
-            padding: 2px;
-            border-radius: 2px;
-            // height: 27px;
-            line-height: 1;
-
-            input {
-              width: 20px;
-              padding: 0;
-              border: 0;
-              -webkit-box-shadow: border-box;
-              box-shadow: border-box;
-              outline: none;
-              height: 36px;
-              margin: -3px 3px;
-              margin-left: 0;
-            }
-          }
-
-          .key-node {
-            background: #ebf4ff;
-
-            span {
-              display: inline-block;
-              background-color: #ebf4ff;
-              color: #7b7d8a;
-              font-size: 12px;
-              border: none;
-              vertical-align: middle;
-              -webkit-box-sizing: border-box;
-              box-sizing: border-box;
-              overflow: hidden;
-              border-radius: 2px;
-              padding: 0 9px;
-              min-height: 21px;
-              line-height: 22px;
-              word-break: break-all;
-            }
-
-            i {
-              position: relative;
-              top: 2px;
-              right: 6px;
-            }
-          }
         }
 
-        .biz-searcher::-webkit-scrollbar {
-          display: none;
+        .node-item-name,
+        .node-item-displayname {
+            flex: 5;
         }
 
-        .actions {
-          position: absolute;
-          right: 10px;
-          top: 2px;
-          color: #c4ced8;
-          z-index: 10;
-          height: 36px;
-          line-height: 36px;
+        .node-item-ip,
+        .node-item-status,
+        .node-item-type,
+        .node-item-agstatus,
+        .node-item-operator {
+            flex: 2;
+        }
 
-          .devops-icon {
+        .node-item-type {
+            flex: 4;
+            width: 200px;
+        }
+        .node-item-agstatus {
+            flex: 1;
+            min-width: 82px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .prompt-operator,
+        .edit-operator {
+            padding-right: 10px;
+            color: #ffbf00;
+
+            .devops-icon {
+                margin-right: 6px;
+            }
+        }
+
+        .edit-operator {
             cursor: pointer;
-          }
-
-          .icon-close {
-            margin-right: 4px;
-            font-size: 14px;
-          }
         }
-      }
 
-      .biz-searcher {
-        width: 80%;
-        height: 36px;
-        border-radius: 2px;
-        font-size: 12px;
-        position: relative;
-        z-index: 1;
-        background: #fff;
-        cursor: pointer;
-        white-space: nowrap;
-        margin: 0 5px;
-        overflow: hidden;
-        overflow-x: scroll;
-      }
-
-      .ip-searcher-footer {
-        padding-left: 8px;
-        position: relative;
-        left: -1px;
-        top: 2px;
-        height: 36px;
-        line-height: 36px;
-        border-bottom: 1px solid #dde4eb;
-        border-left: 1px solid #dde4eb;
-        background-color: #fff;
-        color: #c3cdd7;
-        font-size: 12px;
-
-        p {
-          text-align: left;
+        .over-content {
+            padding-left: 6px;
         }
-      }
+
+        .bk-form-checkbox {
+            margin-right: 12px;
+        }
+
+        .node-bkOperator {
+            max-width: 130px;
+            text-align: left;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .checkbox-all {
+            padding-top: 0;
+
+            &:before {
+                content: '';
+                display: block;
+                width: 8px;
+                height: 8px;
+                position: relative;
+                top: 14px;
+                left: 5px;
+                background-color: $lineColor;
+            }
+        }
+
+        .all-checked {
+            &:before {
+                display: none;
+            }
+        }
+
+        .normal-status-node {
+            color: #30D878;
+        }
+
+        .abnormal-status-node {
+            color: $failColor;
+        }
+
+        .refresh-status-node {
+            color: $primaryColor;
+        }
+
+        .footer-handler {
+            // text-align: right;
+
+            .bk-button {
+                height: 32px;
+                line-height: 32px;
+            }
+        }
     }
-
-    .prompt-operator,
-    .edit-operator {
-      padding-right: 10px;
-      color: #ffbf00;
-
-      .devops-icon {
-        margin-right: 6px;
-      }
-    }
-
-    .edit-operator {
-      cursor: pointer;
-    }
-
-    .over-content {
-      padding-left: 6px;
-    }
-
-    .bk-form-checkbox {
-      margin-right: 12px;
-    }
-
-    .node-bkOperator {
-      @include ellipsis(130px);
-      text-align: left;
-    }
-
-    .checkbox-all {
-      padding-top: 0;
-
-      &:before {
-        content: '';
-        display: block;
-        width: 8px;
-        height: 8px;
-        position: relative;
-        top: 14px;
-        left: 5px;
-        background-color: $lineColor;
-      }
-    }
-
-    .all-checked {
-      &:before {
-        display: none;
-      }
-    }
-
-    .normal-status-node {
-      color: #30D878;
-    }
-
-    .abnormal-status-node {
-      color: $failColor;
-    }
-
-    .refresh-status-node {
-      color: $primaryColor;
-    }
-
-    .footer-handler {
-      // text-align: right;
-
-      .bk-button {
-        height: 32px;
-        line-height: 32px;
-      }
-    }
-  }
 </style>

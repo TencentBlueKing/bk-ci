@@ -53,7 +53,7 @@ class OpenApiBuildResourceImpl @Autowired constructor(private val client: Client
             projectId = projectId,
             pipelineId = pipelineId,
             values = values,
-            channelCode = ChannelCode.BS
+            channelCode = ChannelCode.getRequestChannelCode()
         )
     }
 
@@ -69,7 +69,7 @@ class OpenApiBuildResourceImpl @Autowired constructor(private val client: Client
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,
-            channelCode = ChannelCode.BS
+            channelCode = ChannelCode.getRequestChannelCode()
         )
     }
 

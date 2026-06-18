@@ -2,6 +2,8 @@ package imagedebug
 
 import (
 	"context"
+	"crypto/rand"
+	"encoding/hex"
 	"fmt"
 	"os"
 	"strings"
@@ -362,6 +364,14 @@ func parseDebugContainerEnv(_ *api.ImageDebug) []string {
 	}
 }
 
+func newDebugToken() (string, error) {
+	b := make([]byte, 32)
+	if _, err := rand.Read(b); err != nil {
+		return "", err
+	}
+	return hex.EncodeToString(b), nil
+}
+
 func CreateExecServer(
 	ctx context.Context,
 	debugInfo *api.ImageDebug,
@@ -371,6 +381,11 @@ func CreateExecServer(
 	port, err := NewPortAllocator().AllocateNodePort()
 	if err != nil {
 		imageDebugLogs.WithError(err).Error("allocator port error")
+		return err
+	}
+	token, err := newDebugToken()
+	if err != nil {
+		imageDebugLogs.WithError(err).Error("generate debug token error")
 		return err
 	}
 
@@ -383,7 +398,8 @@ func CreateExecServer(
 		Cmd:            []string{"/bin/bash"},
 		Tty:            true,
 		Ips:            []string{},
-		IsAuth:         false,
+		IsAuth:         true,
+		AuthToken:      token,
 		IsOneSeesion:   true,
 	}
 
@@ -424,11 +440,15 @@ func CreateExecServer(
 		User:        "root",
 		Cmd:         conf.Cmd,
 	})
+	if err != nil {
+		imageDebugLogs.WithError(err).Error("create debug exec error")
+		return err
+	}
 
-	url := fmt.Sprintf("ws://%s:%d/start_exec?exec_id=%s&container_id=%s", config.GAgentEnv.GetAgentIp(), conf.Port, exec.ID, containerId)
+	url := fmt.Sprintf("ws://%s:%d/start_exec?exec_id=%s&container_id=%s&token=%s", config.GAgentEnv.GetAgentIp(), conf.Port, exec.ID, containerId, token)
 
 	// 上报结束并附带 url
-	imageDebugLogs.Infof("ws url: %s", url)
+	imageDebugLogs.WithField("execId", exec.ID).Info("ws url created")
 	_, err = api.FinishDockerDebug(debugInfo, true, url, nil)
 	if err != nil {
 		imageDebugLogs.WithError(err).Error("post image debug url error")

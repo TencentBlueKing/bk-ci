@@ -42,6 +42,7 @@ import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.jooq.Condition
 import org.jooq.DSLContext
+import org.jooq.Field
 import org.jooq.Record
 import org.jooq.Record1
 import org.jooq.Record2
@@ -130,18 +131,34 @@ class MarketStoreQueryDao {
     ) {
         val isDownloadCountSort = sortType == StoreSortTypeEnum.DOWNLOAD_COUNT
         val needStatsJoin = isDownloadCountSort && score == null
+        val tStoreStatisticsTotal = TStoreStatisticsTotal.T_STORE_STATISTICS_TOTAL
         if (needStatsJoin) {
             val statsSubquery = buildStatsSubquery(dslContext, sortType, storeType)
             baseStep.leftJoin(statsSubquery)
                 .on(tStoreBase.STORE_CODE.eq(statsSubquery.field(KEY_STORE_CODE, String::class.java)))
+            val sortField = statsSubquery.field(sortType.name, Int::class.java)
+                ?: throw IllegalArgumentException("Invalid sort field")
+            baseStep.orderBy(sortField.desc())
+            return
         }
 
-        val sortField = if (isDownloadCountSort) {
-            DSL.field(sortType.name)
-        } else {
-            tStoreBase.field(sortType.name) ?: throw IllegalArgumentException("Invalid sort field")
-        }
+        val sortField = getStoreSortField(tStoreBase, tStoreStatisticsTotal, sortType)
         baseStep.orderBy(sortField.desc())
+    }
+
+    private fun getStoreSortField(
+        tStoreBase: TStoreBase,
+        tStoreStatisticsTotal: TStoreStatisticsTotal,
+        sortType: StoreSortTypeEnum
+    ): Field<*> {
+        return when (sortType) {
+            StoreSortTypeEnum.NAME -> tStoreBase.NAME
+            StoreSortTypeEnum.CREATE_TIME -> tStoreBase.CREATE_TIME
+            StoreSortTypeEnum.UPDATE_TIME -> tStoreBase.UPDATE_TIME
+            StoreSortTypeEnum.PUBLISHER -> tStoreBase.PUBLISHER
+            StoreSortTypeEnum.DOWNLOAD_COUNT -> tStoreStatisticsTotal.DOWNLOADS
+            StoreSortTypeEnum.UPGRADE -> throw IllegalArgumentException("Invalid sort field")
+        }
     }
 
     private fun buildStatsSubquery(
@@ -220,7 +237,8 @@ class MarketStoreQueryDao {
             tStoreBaseFeature.RD_TYPE,
             tStoreBaseFeature.PUBLIC_FLAG,
             tStoreBase.CREATE_TIME,
-            tStoreBase.BUS_NUM
+            tStoreBase.BUS_NUM,
+            tStoreBase.OWNER_STORE_CODE
         ).from(tStoreBase)
             .leftJoin(tStoreBaseFeature)
             .on(
@@ -288,6 +306,9 @@ class MarketStoreQueryDao {
         storeInfoQuery.categoryId?.let {
             baseStep.leftJoin(tStoreCategoryRel).on(tStoreBase.ID.eq(tStoreCategoryRel.STORE_ID))
             conditions.add(tStoreCategoryRel.CATEGORY_ID.eq(it))
+        }
+        if (!storeInfoQuery.ownerStoreCode.isNullOrBlank()) {
+            conditions.add(tStoreBase.OWNER_STORE_CODE.eq(storeInfoQuery.ownerStoreCode))
         }
         return conditions
     }

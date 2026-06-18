@@ -40,12 +40,13 @@ import com.tencent.devops.store.pojo.atom.AtomRespItem
 import com.tencent.devops.store.pojo.atom.InstalledAtom
 import com.tencent.devops.store.pojo.atom.PipelineAtom
 import com.tencent.devops.store.pojo.atom.enums.AtomCategoryEnum
+import com.tencent.devops.store.pojo.atom.enums.JobTypeEnum
 import com.tencent.devops.store.pojo.common.UnInstallReq
 import com.tencent.devops.store.pojo.common.enums.ServiceScopeEnum
 import com.tencent.devops.store.pojo.common.version.VersionInfo
-import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.ws.rs.Consumes
 import jakarta.ws.rs.DELETE
 import jakarta.ws.rs.DefaultValue
@@ -79,10 +80,10 @@ interface UserAtomResource {
         @Parameter(description = "支持的服务范围", required = false)
         @QueryParam("serviceScope")
         @DefaultValue("PIPELINE")
-        serviceScope: String? = ServiceScopeEnum.PIPELINE.name,
-        @Parameter(description = "job类型，AGENT： 编译环境，AGENT_LESS：无编译环境", required = false)
+        serviceScope: ServiceScopeEnum? = ServiceScopeEnum.PIPELINE,
+        @Parameter(description = "job类型", required = false)
         @QueryParam("jobType")
-        jobType: String?,
+        jobType: JobTypeEnum?,
         @Parameter(description = "操作系统（ALL/WINDOWS/LINUX/MACOS）", required = false)
         @QueryParam("os")
         os: String?,
@@ -110,6 +111,9 @@ interface UserAtomResource {
         @Parameter(description = "查询支持有编译环境下的无编译环境插件标识", required = false)
         @QueryParam("queryFitAgentBuildLessAtomFlag")
         queryFitAgentBuildLessAtomFlag: Boolean? = true,
+        @Parameter(description = "是否已安装（true:已安装/false:未安装/null:全部）", required = false)
+        @QueryParam("installed")
+        installed: Boolean? = null,
         @Parameter(description = "页码", required = true)
         @QueryParam("page")
         page: Int = 1,
@@ -137,7 +141,10 @@ interface UserAtomResource {
         version: String,
         @Parameter(description = "是否查询已下架版本", required = false)
         @QueryParam("queryOfflineFlag")
-        queryOfflineFlag: Boolean? = true
+        queryOfflineFlag: Boolean? = true,
+        @Parameter(description = "支持的服务范围", required = false)
+        @QueryParam("serviceScope")
+        serviceScope: ServiceScopeEnum? = null
     ): Result<PipelineAtom?>
 
     @Operation(summary = "根据插件插件代码获取对应的版本列表信息")
@@ -171,6 +178,9 @@ interface UserAtomResource {
         @Parameter(description = "名称", required = false)
         @QueryParam("name")
         name: String?,
+        @Parameter(description = "支持的服务范围", required = false)
+        @QueryParam("serviceScope")
+        serviceScope: ServiceScopeEnum? = ServiceScopeEnum.PIPELINE,
         @Parameter(description = "页码", required = true)
         @QueryParam("page")
         page: Int = 1,

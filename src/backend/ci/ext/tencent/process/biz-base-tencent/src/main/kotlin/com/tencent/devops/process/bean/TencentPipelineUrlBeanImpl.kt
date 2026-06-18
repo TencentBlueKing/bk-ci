@@ -30,6 +30,7 @@ package com.tencent.devops.process.bean
 import com.tencent.devops.artifactory.api.service.ServiceShortUrlResource
 import com.tencent.devops.artifactory.pojo.CreateShortUrlRequest
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.utils.HomeHostUtil
 
@@ -41,6 +42,40 @@ class TencentPipelineUrlBeanImpl constructor(
     companion object {
         private val logger = org.slf4j.LoggerFactory.getLogger(TencentPipelineUrlBeanImpl::class.java)
         private const val TTL = 24 * 3600 * 15
+        // 创作流渠道 URL 前缀
+        private const val CREATIVE_STREAM_PREFIX = "creative-stream"
+        // 流水线渠道 URL 前缀
+        private const val PIPELINE_PREFIX = "pipeline"
+    }
+
+    /**
+     * 根据渠道获取 URL 中的模块路径前缀
+     */
+    private fun getModulePrefix(channelCode: ChannelCode?): String {
+        return if (channelCode == ChannelCode.CREATIVE_STREAM) {
+            CREATIVE_STREAM_PREFIX
+        } else {
+            PIPELINE_PREFIX
+        }
+    }
+
+    /**
+     * 根据渠道生成构建详情路径
+     * 流水线渠道: /console/pipeline/{projectCode}/{pipelineId}/detail/{buildId}
+     * 创作流渠道: /console/creative-stream/{projectCode}/flow/{pipelineId}/execute/{buildId}/execute-detail
+     */
+    private fun genDetailPath(
+        projectCode: String,
+        pipelineId: String,
+        buildId: String,
+        channelCode: ChannelCode?
+    ): String {
+        val prefix = getModulePrefix(channelCode)
+        return if (channelCode == ChannelCode.CREATIVE_STREAM) {
+            "/console/$prefix/$projectCode/flow/$pipelineId/execute/$buildId/execute-detail"
+        } else {
+            "/console/$prefix/$projectCode/$pipelineId/detail/$buildId"
+        }
     }
 
     override fun genBuildDetailUrl(
@@ -49,11 +84,12 @@ class TencentPipelineUrlBeanImpl constructor(
         buildId: String,
         position: String?,
         stageId: String?,
-        needShortUrl: Boolean
+        needShortUrl: Boolean,
+        channelCode: ChannelCode?
     ): String {
         val devopsHostGateway = HomeHostUtil.getHost(commonConfig.devopsHostGateway!!)
-        logger.info("[$buildId]|genBuildDetailUrl| host=$devopsHostGateway")
-        val url = "$devopsHostGateway/console/pipeline/$projectCode/$pipelineId/detail/$buildId"
+        logger.info("[$buildId]|genBuildDetailUrl| host=$devopsHostGateway, channelCode=$channelCode")
+        val url = "$devopsHostGateway${genDetailPath(projectCode, pipelineId, buildId, channelCode)}"
         return try {
             if (needShortUrl) {
                 client.get(ServiceShortUrlResource::class).createShortUrl(CreateShortUrlRequest(url, TTL)).data!!
@@ -64,15 +100,19 @@ class TencentPipelineUrlBeanImpl constructor(
         }
     }
 
-    override fun genAppBuildDetailUrl(projectCode: String, pipelineId: String, buildId: String): String {
+    override fun genAppBuildDetailUrl(
+        projectCode: String,
+        pipelineId: String,
+        buildId: String,
+        channelCode: ChannelCode?
+    ): String {
         val devopsOuterHostGateWay = HomeHostUtil.getHost(commonConfig.devopsOuterHostGateWay!!)
-        logger.info("[$buildId]|genBuildDetailUrl| outHost=$devopsOuterHostGateWay")
-        val url = "$devopsOuterHostGateWay/app/download/devops_app_forward.html" +
-            "?flag=buildReport&projectId=$projectCode&pipelineId=$pipelineId&buildId=$buildId"
+        logger.info("[$buildId]|genAppBuildDetailUrl| outHost=$devopsOuterHostGateWay, channelCode=$channelCode")
+        val url = "$devopsOuterHostGateWay${genDetailPath(projectCode, pipelineId, buildId, channelCode)}"
         return try {
             client.get(ServiceShortUrlResource::class).createShortUrl(CreateShortUrlRequest(url, TTL)).data!!
         } catch (ignore: Throwable) {
-            logger.warn("[$buildId]|genBuildDetailUrl| failed with:", ignore)
+            logger.warn("[$buildId]|genAppBuildDetailUrl| failed with:", ignore)
             url
         }
     }
@@ -83,12 +123,13 @@ class TencentPipelineUrlBeanImpl constructor(
         buildId: String,
         stageSeq: Int?,
         taskId: String?,
-        needShortUrl: Boolean
+        needShortUrl: Boolean,
+        channelCode: ChannelCode?
     ): String {
-        val baseUrl = HomeHostUtil.getHost(commonConfig.devopsHostGateway!!) +
-            "/console/pipeline/$projectCode/$pipelineId/detail/$buildId"
+        val devopsHostGateway = HomeHostUtil.getHost(commonConfig.devopsHostGateway!!)
+        val baseUrl = "$devopsHostGateway${genDetailPath(projectCode, pipelineId, buildId, channelCode)}"
 
-        logger.info("[$buildId]|genBuildReviewUrl| baseUrl=$baseUrl")
+        logger.info("[$buildId]|genBuildReviewUrl| baseUrl=$baseUrl, channelCode=$channelCode")
         val queryParams = mutableListOf<String>()
         stageSeq?.let { queryParams.add("reviewStageSeq=$it") }
         taskId?.let { queryParams.add("reviewTaskId=$it") }
@@ -103,7 +144,7 @@ class TencentPipelineUrlBeanImpl constructor(
                 client.get(ServiceShortUrlResource::class).createShortUrl(CreateShortUrlRequest(url, TTL)).data!!
             } else url
         } catch (ignore: Throwable) {
-            logger.warn("[$buildId]|genBuildDetailUrl| failed with:", ignore)
+            logger.warn("[$buildId]|genBuildReviewUrl| failed with:", ignore)
             url
         }
     }

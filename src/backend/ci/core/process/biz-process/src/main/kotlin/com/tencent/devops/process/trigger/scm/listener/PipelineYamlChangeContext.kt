@@ -36,6 +36,8 @@ data class PipelineYamlChangeContext(
     val projectId: String,
     @get:Schema(title = "yaml文件路径")
     val filePath: String,
+    @get:Schema(title = "yaml文件重命名前的路径，仅 RENAME 场景有值")
+    val oldFilePath: String? = null,
     @get:Schema(title = "事件ID")
     val eventId: Long,
     @get:Schema(title = "流水线操作")

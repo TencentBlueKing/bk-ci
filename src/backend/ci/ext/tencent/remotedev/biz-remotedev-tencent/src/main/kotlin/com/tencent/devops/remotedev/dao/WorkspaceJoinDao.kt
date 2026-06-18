@@ -9,6 +9,7 @@ import com.tencent.devops.model.remotedev.tables.TWindowsResourceType
 import com.tencent.devops.model.remotedev.tables.TWindowsResourceZone
 import com.tencent.devops.model.remotedev.tables.TWorkspace
 import com.tencent.devops.model.remotedev.tables.TWorkspaceLabels
+import com.tencent.devops.model.remotedev.tables.TWorkspaceRecordTicket
 import com.tencent.devops.model.remotedev.tables.TWorkspaceShared
 import com.tencent.devops.model.remotedev.tables.TWorkspaceWindows
 import com.tencent.devops.remotedev.dao.WorkspaceDao.Companion.workspaceWithWindowsMapper
@@ -21,6 +22,7 @@ import com.tencent.devops.remotedev.pojo.WorkspaceShared
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
 import com.tencent.devops.remotedev.pojo.common.QueryType
+import com.tencent.devops.remotedev.pojo.record.WorkspaceRecordTicketType
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Field
@@ -89,7 +91,8 @@ class WorkspaceJoinDao {
     fun fetchAnyWindowsWorkspace(
         dslContext: DSLContext,
         workspaceName: String,
-        status: WorkspaceStatus? = null
+        status: WorkspaceStatus? = null,
+        checkField: List<Field<*>>? = null
     ): WorkspaceRecordWithWindows? {
         // 目前只有windows，如果后期增加横向扩展即可
         val dsl = genFetchProjectWorkspaceCond(
@@ -101,7 +104,7 @@ class WorkspaceJoinDao {
                 workspaceName = listOf(workspaceName),
                 workspaceSystemType = listOf(WorkspaceSystemType.WINDOWS_GPU)
             ),
-            checkField = windowsFullFields
+            checkField = checkField ?: windowsFullFields
         )
         return dsl.skipCheck()
             .fetchAny(workspaceWithWindowsMapper)
@@ -693,6 +696,83 @@ class WorkspaceJoinDao {
                 TWorkspaceShared.T_WORKSPACE_SHARED.ASSIGN_TYPE
                     .`in`(assignTypes)
             )
+    }
+
+    /**
+     * 分页查询指定 ENABLE 状态下 THUMBNAIL 类型的实例名称列表
+     * （仅返回未删除的实例，即 T_WORKSPACE.STATUS != DELETED.ordinal）
+     *
+     * @param projectId 可选项目 ID 过滤；为空字符串或 null 时不参与过滤
+     * @param workspaceNames 可选实例名列表过滤；为空集合或 null 时不参与过滤
+     */
+    fun fetchThumbnailWorkspaceNames(
+        dslContext: DSLContext,
+        enable: Boolean,
+        limit: Int,
+        offset: Int,
+        projectId: String? = null,
+        workspaceNames: List<String>? = null
+    ): List<String> {
+        val t1 = TWorkspaceRecordTicket.T_WORKSPACE_RECORD_TICKET
+        val t2 = TWorkspace.T_WORKSPACE
+        val extraConditions = buildThumbnailExtraConditions(
+            projectId = projectId,
+            workspaceNames = workspaceNames
+        )
+        val baseQuery = dslContext.select(t1.WORKSPACE_NAME)
+            .from(t1)
+            .innerJoin(t2).on(t1.WORKSPACE_NAME.eq(t2.NAME))
+            .where(t1.TYPE.eq(WorkspaceRecordTicketType.THUMBNAIL.name))
+            .and(t1.ENABLE.eq(ByteUtils.bool2Byte(enable)))
+            .and(t2.STATUS.notEqual(WorkspaceStatus.DELETED.ordinal))
+        return extraConditions
+            .fold(baseQuery) { acc, cond -> acc.and(cond) }
+            .orderBy(t1.WORKSPACE_NAME.asc())
+            .limit(limit).offset(offset)
+            .fetch(t1.WORKSPACE_NAME)
+    }
+
+    /**
+     * 统计指定 ENABLE 状态下 THUMBNAIL 类型的未删除实例总数
+     *
+     * @param projectId 可选项目 ID 过滤；为空字符串或 null 时不参与过滤
+     * @param workspaceNames 可选实例名列表过滤；为空集合或 null 时不参与过滤
+     */
+    fun countThumbnailWorkspaces(
+        dslContext: DSLContext,
+        enable: Boolean,
+        projectId: String? = null,
+        workspaceNames: List<String>? = null
+    ): Long {
+        val t1 = TWorkspaceRecordTicket.T_WORKSPACE_RECORD_TICKET
+        val t2 = TWorkspace.T_WORKSPACE
+        val extraConditions = buildThumbnailExtraConditions(
+            projectId = projectId,
+            workspaceNames = workspaceNames
+        )
+        val baseQuery = dslContext.selectCount()
+            .from(t1)
+            .innerJoin(t2).on(t1.WORKSPACE_NAME.eq(t2.NAME))
+            .where(t1.TYPE.eq(WorkspaceRecordTicketType.THUMBNAIL.name))
+            .and(t1.ENABLE.eq(ByteUtils.bool2Byte(enable)))
+            .and(t2.STATUS.notEqual(WorkspaceStatus.DELETED.ordinal))
+        return extraConditions
+            .fold(baseQuery) { acc, cond -> acc.and(cond) }
+            .fetchOne(0, Long::class.java) ?: 0L
+    }
+
+    private fun buildThumbnailExtraConditions(
+        projectId: String?,
+        workspaceNames: List<String>?
+    ): List<Condition> {
+        val t1 = TWorkspaceRecordTicket.T_WORKSPACE_RECORD_TICKET
+        val t2 = TWorkspace.T_WORKSPACE
+        return listOfNotNull(
+            projectId?.takeIf { it.isNotBlank() }
+                ?.let { t2.PROJECT_ID.eq(it) },
+            workspaceNames?.takeIf { it.isNotEmpty() }
+                ?.let { t1.WORKSPACE_NAME.`in`(it) }
+        )
     }
 
     companion object {

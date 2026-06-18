@@ -125,8 +125,10 @@
                 const res = await this.requestShareEnvProjectList({
                     projectId: this.projectId,
                     envHashId: this.envHashId,
-                    page: this.pagination.current,
-                    pageSize: this.pagination.limit
+                    params: {
+                        page: this.pagination.current,
+                        pageSize: this.pagination.limit
+                    }
                 })
                 const { records, count, page } = res
                 

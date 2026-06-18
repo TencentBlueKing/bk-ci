@@ -128,13 +128,14 @@
             async requestDetail () {
                 const code = this.$route.params.code
                 const methodUrl = {
-                    atom: this.requestAtom,
-                    template: this.requestTemplateDetail,
-                    image: this.requestImageDetailByCode,
-                    service: this.requestServiceDetailByCode,
-                    devx: this.getComponentDetail
+                    atom: () => this.requestAtom({atomCode: code,  serviceScope: 'PIPELINE'}),
+                    template: () => this.requestTemplateDetail(code),
+                    image: () => this.requestImageDetailByCode(code),
+                    service: () => this.requestServiceDetailByCode(code),
+                    devx: () => this.getComponentDetail(code)
                 }
-                const res = await methodUrl[this.type](code)
+                
+                const res = await methodUrl[this.type]()
                 
                 this.setDetail(res)
             },

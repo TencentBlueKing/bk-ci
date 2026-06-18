@@ -2,7 +2,6 @@
 import { ChatContainer, MessageRole } from '@blueking/chat-x'
 import { defineComponent, onMounted } from 'vue'
 import { useChat, useResources } from '../../composables'
-import { useStickyUserMessage } from '../../composables/useStickyUserMessage'
 import { ActivityMessage } from '../ActivityMessage'
 import { InterruptMessage } from '../InterruptMessage'
 import { StructuredMessageRender } from '../StructuredBlocks'
@@ -36,8 +35,6 @@ export default defineComponent({
       loadSession,
       renameSession,
     } = useChat(resources)
-
-    useStickyUserMessage(messages, chatLoading)
 
     onMounted(() => {
       initSession()

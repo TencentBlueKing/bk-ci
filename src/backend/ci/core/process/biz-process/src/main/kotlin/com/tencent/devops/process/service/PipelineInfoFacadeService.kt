@@ -103,7 +103,7 @@ import com.tencent.devops.process.pojo.classify.PipelineViewBulkAdd
 import com.tencent.devops.process.pojo.pipeline.DeletePipelineResult
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
 import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
-import com.tencent.devops.process.pojo.pipeline.PipelineYamlVo
+import com.tencent.devops.process.pojo.pipeline.PipelineYamlFileInfo
 import com.tencent.devops.process.pojo.template.TemplateType
 import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.service.pipeline.PipelineSettingFacadeService
@@ -465,7 +465,7 @@ class PipelineInfoFacadeService @Autowired constructor(
             projectId = projectId,
             model = model,
             setting = pipelineModelAndSetting.setting,
-            channelCode = ChannelCode.BS,
+            channelCode = ChannelCode.getRequestChannelCode(),
             checkPermission = true
         ).pipelineId
     }
@@ -502,7 +502,7 @@ class PipelineInfoFacadeService @Autowired constructor(
         useSubscriptionSettings: Boolean? = false,
         useConcurrencyGroup: Boolean? = false,
         description: String? = null,
-        yamlInfo: PipelineYamlVo? = null,
+        yamlFileInfo: PipelineYamlFileInfo? = null,
         pipelineDisable: Boolean? = null
     ): DeployPipelineResult {
         val watcher =
@@ -565,6 +565,15 @@ class PipelineInfoFacadeService @Autowired constructor(
                 )
             }
 
+            // 如果是渠道是创作流，环境hashId不能为空
+            if (channelCode == ChannelCode.CREATIVE_STREAM && setting?.envHashId.isNullOrBlank()) {
+                throw ErrorCodeException(
+                    statusCode = Response.Status.BAD_REQUEST.statusCode,
+                    errorCode = CommonMessageCode.ERROR_NEED_PARAM_,
+                    params = arrayOf(PipelineSetting::envHashId.name)
+                )
+            }
+
             // 检查用户是否有插件的使用权限
             if (model.srcTemplateId != null) {
                 watcher.start("store_template_perm")
@@ -589,7 +598,7 @@ class PipelineInfoFacadeService @Autowired constructor(
             // 检查用户流水线是否达到上限
             val projectVO = projectCacheService.getProject(projectId)
             if (projectVO?.pipelineLimit != null) {
-                val preCount = pipelineRepositoryService.countByProjectIds(setOf(projectId), ChannelCode.BS)
+                val preCount = pipelineRepositoryService.countByProjectIds(setOf(projectId), channelCode)
                 if (preCount >= projectVO.pipelineLimit!!) {
                     throw OperationException(
                         MessageUtil.getMessageByLocale(
@@ -637,7 +646,7 @@ class PipelineInfoFacadeService @Autowired constructor(
                     description = description,
                     yaml = yaml,
                     baseVersion = null,
-                    yamlInfo = yamlInfo,
+                    yamlFileInfo = yamlFileInfo,
                     pipelineDisable = pipelineDisable
                 )
                 pipelineId = result.pipelineId
@@ -754,7 +763,7 @@ class PipelineInfoFacadeService @Autowired constructor(
         isDefaultBranch: Boolean,
         description: String? = null,
         aspects: LinkedList<IPipelineTransferAspect>? = null,
-        yamlInfo: PipelineYamlVo? = null
+        yamlFileInfo: PipelineYamlFileInfo? = null
     ): DeployPipelineResult {
         val versionStatus = if (isDefaultBranch) {
             VersionStatus.RELEASED
@@ -790,12 +799,12 @@ class PipelineInfoFacadeService @Autowired constructor(
             projectId = projectId,
             model = newResource.model.copy(name = pipelineName),
             setting = newSetting,
-            channelCode = ChannelCode.BS,
+            channelCode = ChannelCode.getRequestChannelCode(),
             yaml = yamlWithVersion,
             versionStatus = versionStatus,
             branchName = branchName,
             description = description,
-            yamlInfo = yamlInfo,
+            yamlFileInfo = yamlFileInfo,
             pipelineDisable = newResource.setting.runLockType == PipelineRunLockType.LOCK
         )
     }
@@ -810,7 +819,7 @@ class PipelineInfoFacadeService @Autowired constructor(
         isDefaultBranch: Boolean,
         description: String? = null,
         aspects: LinkedList<IPipelineTransferAspect>? = null,
-        yamlInfo: PipelineYamlVo? = null
+        yamlFileInfo: PipelineYamlFileInfo? = null
     ): DeployPipelineResult {
         val versionStatus = if (isDefaultBranch) {
             VersionStatus.RELEASED
@@ -851,14 +860,14 @@ class PipelineInfoFacadeService @Autowired constructor(
             projectId = projectId,
             pipelineId = pipelineId,
             model = newResource.model.copy(name = pipelineName),
-            channelCode = ChannelCode.BS,
+            channelCode = ChannelCode.getRequestChannelCode(),
             checkTemplate = false,
             yaml = yamlWithVersion,
             savedSetting = savedSetting,
             versionStatus = versionStatus,
             branchName = branchName,
             description = description,
-            yamlInfo = yamlInfo,
+            yamlFileInfo = yamlFileInfo,
             pipelineDisable = newResource.setting.runLockType == PipelineRunLockType.LOCK
         )
     }
@@ -1198,7 +1207,7 @@ class PipelineInfoFacadeService @Autowired constructor(
         branchName: String? = null,
         description: String? = null,
         baseVersion: Int? = null,
-        yamlInfo: PipelineYamlVo? = null,
+        yamlFileInfo: PipelineYamlFileInfo? = null,
         pipelineDisable: Boolean? = null
     ): DeployPipelineResult {
         if (checkTemplate && templateService.isTemplatePipeline(projectId, pipelineId)) {
@@ -1316,7 +1325,7 @@ class PipelineInfoFacadeService @Autowired constructor(
                 description = description,
                 yaml = yaml,
                 baseVersion = baseVersion,
-                yamlInfo = yamlInfo,
+                yamlFileInfo = yamlFileInfo,
                 pipelineDisable = pipelineDisable
             )
             // 审计
@@ -1712,7 +1721,7 @@ class PipelineInfoFacadeService @Autowired constructor(
                     userId = userId,
                     projectId = projectId,
                     pipelineId = pipelineId,
-                    channelCode = channelCode ?: ChannelCode.BS
+                    channelCode = channelCode ?: ChannelCode.getRequestChannelCode()
                 )
                 modelCheckPlugin.beforeDeleteElementInExistsModel(existModel, null, param)
                 watcher.start("s_c_yaml_del")
@@ -1792,7 +1801,7 @@ class PipelineInfoFacadeService @Autowired constructor(
                 val pipelineExist = isPipelineExist(
                     projectId = it.projectId,
                     name = it.name,
-                    channelCode = ChannelCode.GIT,
+                    channelCode = ChannelCode.getRequestChannelCode(),
                     pipelineId = it.pipelineId
                 )
                 if (!pipelineExist) {

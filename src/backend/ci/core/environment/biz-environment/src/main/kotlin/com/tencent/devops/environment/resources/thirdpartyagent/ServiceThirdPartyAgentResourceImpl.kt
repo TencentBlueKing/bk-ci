@@ -39,8 +39,10 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.environment.api.thirdpartyagent.ServiceThirdPartyAgentResource
 import com.tencent.devops.environment.constant.EnvironmentMessageCode
 import com.tencent.devops.environment.pojo.AgentPipelineRefRequest
+import com.tencent.devops.environment.pojo.EnabledStrategiesWithTags
 import com.tencent.devops.environment.pojo.EnvVar
 import com.tencent.devops.environment.pojo.NodeTag
+import com.tencent.devops.environment.pojo.enums.AgentType
 import com.tencent.devops.environment.pojo.enums.NodeType
 import com.tencent.devops.environment.pojo.slave.SlaveGateway
 import com.tencent.devops.environment.pojo.thirdpartyagent.AgentBuildDetail
@@ -58,6 +60,7 @@ import com.tencent.devops.environment.pojo.thirdpartyagent.UpdateAgentInfo
 import com.tencent.devops.environment.pojo.thirdpartyagent.pipeline.PipelineCreate
 import com.tencent.devops.environment.pojo.thirdpartyagent.pipeline.PipelineResponse
 import com.tencent.devops.environment.pojo.thirdpartyagent.pipeline.PipelineSeqId
+import com.tencent.devops.environment.service.EnvDispatchStrategyService
 import com.tencent.devops.environment.service.NodeService
 import com.tencent.devops.environment.service.NodeTagService
 import com.tencent.devops.environment.service.slave.SlaveGatewayService
@@ -77,7 +80,8 @@ class ServiceThirdPartyAgentResourceImpl @Autowired constructor(
     private val slaveGatewayService: SlaveGatewayService,
     private val nodeService: NodeService,
     private val nodeTagService: NodeTagService,
-    private val agentService: ThirdPartAgentService
+    private val agentService: ThirdPartAgentService,
+    private val envDispatchStrategyService: EnvDispatchStrategyService
 ) : ServiceThirdPartyAgentResource {
     override fun getAgentById(projectId: String, agentId: String): AgentResult<ThirdPartyAgent?> {
         return thirdPartyAgentService.getAgent(projectId, agentId)
@@ -85,18 +89,18 @@ class ServiceThirdPartyAgentResourceImpl @Autowired constructor(
 
     @Deprecated("getAgentById")
     override fun getAgentByIdGlobal(projectId: String, agentId: String): AgentResult<ThirdPartyAgent?> {
-        return thirdPartyAgentService.getAgentGlobal(projectId, agentId)
+        return thirdPartyAgentService.getAgent(projectId, agentId)
     }
 
     override fun getAgentByDisplayName(projectId: String, displayName: String): AgentResult<ThirdPartyAgent?> {
         return thirdPartyAgentService.getAgentByDisplayName(projectId, displayName)
     }
 
-    override fun getAgentsByEnvId(projectId: String, envId: String) =
-        Result(thirdPartyAgentService.getAgentByEnvId(projectId, envId))
+    override fun getAgentsByEnvId(projectId: String, envId: String, userId: String?) =
+        Result(thirdPartyAgentService.getAgentByEnvId(projectId, envId, userId))
 
-    override fun getAgentsByEnvName(projectId: String, envName: String): Result<List<EnvNodeAgent>> {
-        val (_, res) = thirdPartyAgentService.getAgentByEnvName(projectId, envName)
+    override fun getAgentsByEnvName(projectId: String, envName: String, userId: String?): Result<List<EnvNodeAgent>> {
+        val (_, res) = thirdPartyAgentService.getAgentByEnvName(projectId, envName, userId)
         return Result(res)
     }
 
@@ -131,8 +135,13 @@ class ServiceThirdPartyAgentResourceImpl @Autowired constructor(
         return Result(thirdPartyAgentPipelineService.getPipelineResult(projectId, nodeId, seqId))
     }
 
-    override fun listAgents(userId: String, projectId: String, os: OS): Result<List<ThirdPartyAgentInfo>> {
-        return Result(thirdPartyAgentService.listAgents(userId, projectId, os))
+    override fun listAgents(
+        userId: String,
+        projectId: String,
+        os: OS,
+        agentType: AgentType?
+    ): Result<List<ThirdPartyAgentInfo>> {
+        return Result(thirdPartyAgentService.listAgents(userId, projectId, os, agentType))
     }
 
     override fun agentTaskStarted(
@@ -306,9 +315,10 @@ class ServiceThirdPartyAgentResourceImpl @Autowired constructor(
 
     override fun getAgentsByEnvNameWithId(
         projectId: String,
-        envName: String
-    ): Result<Pair<Long?, List<EnvNodeAgent>>> {
-        return Result(thirdPartyAgentService.getAgentByEnvName(projectId, envName))
+        envName: String,
+        userId: String?
+    ): Result<Pair<Long, List<EnvNodeAgent>>> {
+        return Result(thirdPartyAgentService.getAgentByEnvName(projectId, envName, userId))
     }
 
     override fun fetchAgentEnv(
@@ -351,9 +361,19 @@ class ServiceThirdPartyAgentResourceImpl @Autowired constructor(
         return Result(agentService.updateAgentInfo(userId, projectId, data))
     }
 
-    override fun fetchTag(userId: String, projectId: String): Result<List<NodeTag>> {
+    override fun fetchTag(userId: String, projectId: String, createMode: Boolean?): Result<List<NodeTag>> {
         return Result(
-            nodeTagService.fetchTagAndNodeCount(projectId)
+            nodeTagService.fetchTagAndNodeCount(projectId, createMode)
+        )
+    }
+
+    override fun getEnabledStrategiesWithTags(
+        projectId: String,
+        envId: Long,
+        nodeIds: Set<Long>
+    ): Result<EnabledStrategiesWithTags> {
+        return Result(
+            envDispatchStrategyService.getEnabledStrategiesWithTags(projectId, envId, nodeIds)
         )
     }
 }

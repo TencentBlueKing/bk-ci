@@ -120,7 +120,7 @@ class UserPipelineResourceImpl @Autowired constructor(
         checkParam(userId, projectId)
         return Result(
             data = pipelineInfoFacadeService.isPipelineExist(
-                projectId = projectId, name = pipelineName, channelCode = ChannelCode.BS
+                projectId = projectId, name = pipelineName, channelCode = ChannelCode.getRequestChannelCode()
             )
         )
     }
@@ -131,7 +131,8 @@ class UserPipelineResourceImpl @Autowired constructor(
         permission: Permission,
         excludePipelineId: String?,
         page: Int?,
-        pageSize: Int?
+        pageSize: Int?,
+        channelCode: ChannelCode?
     ): Result<Page<Pipeline>> {
         checkParam(userId, projectId)
         val result = pipelineListFacadeService.hasPermissionList(
@@ -141,7 +142,8 @@ class UserPipelineResourceImpl @Autowired constructor(
             excludePipelineId = excludePipelineId,
             filterByPipelineName = null,
             page = page,
-            pageSize = pageSize
+            pageSize = pageSize,
+            channelCode = channelCode
         )
         return Result(
             data = Page(
@@ -167,7 +169,7 @@ class UserPipelineResourceImpl @Autowired constructor(
                 userId = userId,
                 projectId = projectId,
                 model = pipeline,
-                channelCode = ChannelCode.BS,
+                channelCode = ChannelCode.getRequestChannelCode(),
                 useSubscriptionSettings = useTemplateSettings
             ).pipelineId
         )
@@ -230,7 +232,7 @@ class UserPipelineResourceImpl @Autowired constructor(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 pipelineCopy = pipeline,
-                channelCode = ChannelCode.BS
+                channelCode = ChannelCode.getRequestChannelCode()
             )
         )
         auditService.createAudit(
@@ -262,7 +264,7 @@ class UserPipelineResourceImpl @Autowired constructor(
             model = pipeline,
             yaml = null,
             versionStatus = VersionStatus.RELEASED,
-            channelCode = ChannelCode.BS
+            channelCode = ChannelCode.getRequestChannelCode()
         )
         auditService.createAudit(
             Audit(
@@ -298,7 +300,7 @@ class UserPipelineResourceImpl @Autowired constructor(
             pipelineId = pipelineId,
             model = modelAndSetting.model,
             setting = modelAndSetting.setting,
-            channelCode = ChannelCode.BS
+            channelCode = ChannelCode.getRequestChannelCode()
         )
         auditService.createAudit(
             Audit(
@@ -376,7 +378,7 @@ class UserPipelineResourceImpl @Autowired constructor(
             projectId = projectId,
             pipelineId = pipelineId,
             name = name.name,
-            channelCode = ChannelCode.BS
+            channelCode = ChannelCode.getRequestChannelCode()
         )
         return Result(true)
     }
@@ -394,7 +396,7 @@ class UserPipelineResourceImpl @Autowired constructor(
             projectId = projectId,
             pipelineId = pipelineId,
             includeDraft = includeDraft,
-            channelCode = ChannelCode.BS
+            channelCode = ChannelCode.getRequestChannelCode()
         )
         pipelineRecentUseService.record(userId, projectId, pipelineId)
         return Result(pipeline)
@@ -408,7 +410,7 @@ class UserPipelineResourceImpl @Autowired constructor(
                 userId = userId,
                 projectId = projectId,
                 pipelineId = pipelineId,
-                channelCode = ChannelCode.BS,
+                channelCode = ChannelCode.getRequestChannelCode(),
                 version = version
             )
         )
@@ -458,7 +460,7 @@ class UserPipelineResourceImpl @Autowired constructor(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
-            channelCode = ChannelCode.BS,
+            channelCode = ChannelCode.getRequestChannelCode(),
             archiveFlag = archiveFlag
         )
         auditService.createAudit(
@@ -545,7 +547,7 @@ class UserPipelineResourceImpl @Autowired constructor(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
-            channelCode = ChannelCode.BS
+            channelCode = ChannelCode.getRequestChannelCode()
         )
         auditService.createAudit(
             Audit(
@@ -577,7 +579,7 @@ class UserPipelineResourceImpl @Autowired constructor(
                 projectId = projectId,
                 page = page,
                 pageSize = pageSize,
-                sortType = sortType ?: PipelineSortType.CREATE_TIME, ChannelCode.BS,
+                sortType = sortType ?: PipelineSortType.CREATE_TIME, ChannelCode.getRequestChannelCode(),
                 collation = collation ?: PipelineCollation.DEFAULT,
                 filterByPipelineName = filterByPipelineName
             )
@@ -617,7 +619,7 @@ class UserPipelineResourceImpl @Autowired constructor(
                 page = page,
                 pageSize = pageSize,
                 sortType = sortType ?: PipelineSortType.CREATE_TIME,
-                channelCode = ChannelCode.BS,
+                channelCode = ChannelCode.getRequestChannelCode(),
                 viewId = viewId,
                 checkPermission = true,
                 filterByPipelineName = filterByPipelineName,
@@ -646,7 +648,8 @@ class UserPipelineResourceImpl @Autowired constructor(
                 projectId = projectId,
                 page = page,
                 pageSize = pageSize,
-                sortType = sortType ?: PipelineSortType.CREATE_TIME, ChannelCode.BS,
+                sortType = sortType ?: PipelineSortType.CREATE_TIME,
+                channelCode = ChannelCode.getRequestChannelCode(),
                 checkPermission = true,
                 filterByPipelineName = filterByPipelineName
             )

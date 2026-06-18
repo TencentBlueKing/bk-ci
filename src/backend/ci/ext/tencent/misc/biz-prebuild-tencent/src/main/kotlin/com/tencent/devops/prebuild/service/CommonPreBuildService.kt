@@ -18,7 +18,7 @@ open class CommonPreBuildService constructor(
     private val dslContext: DSLContext,
     private val prebuildProjectDao: PrebuildProjectDao
 ) {
-    protected val channelCode = ChannelCode.BS
+    protected val channelCode = ChannelCode.getRequestChannelCode()
 
     companion object {
         private val logger = LoggerFactory.getLogger(CommonPreBuildService::class.java)

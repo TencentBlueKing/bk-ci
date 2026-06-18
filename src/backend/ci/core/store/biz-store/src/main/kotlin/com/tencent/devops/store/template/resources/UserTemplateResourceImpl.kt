@@ -123,7 +123,7 @@ class UserTemplateResourceImpl @Autowired constructor(
     ): Result<Boolean> {
         val installResult = marketTemplateService.installTemplate(
             userId = userId,
-            channelCode = ChannelCode.BS,
+            channelCode = ChannelCode.getRequestChannelCode(),
             installTemplateReq = installTemplateReq
         )
         return Result(
@@ -139,7 +139,7 @@ class UserTemplateResourceImpl @Autowired constructor(
     ): Result<InstallTemplateResp> {
         return marketTemplateService.installTemplate(
             userId = userId,
-            channelCode = ChannelCode.BS,
+            channelCode = ChannelCode.getRequestChannelCode(),
             installTemplateReq = installTemplateReq
         )
     }
@@ -150,7 +150,7 @@ class UserTemplateResourceImpl @Autowired constructor(
     ): Result<InstallTemplateResp> {
         return marketTemplateService.installTemplateV2(
             userId = userId,
-            channelCode = ChannelCode.BS,
+            channelCode = ChannelCode.getRequestChannelCode(),
             installTemplateReq = installTemplateReq
         )
     }

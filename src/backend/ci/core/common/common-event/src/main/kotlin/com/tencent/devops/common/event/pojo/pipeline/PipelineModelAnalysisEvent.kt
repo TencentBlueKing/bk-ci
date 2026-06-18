@@ -38,7 +38,7 @@ data class PipelineModelAnalysisEvent(
     override val pipelineId: String,
     override val userId: String,
     val model: String,
-    val channelCode: String,
+    override var channelCode: String? = null,
     override var actionType: ActionType = ActionType.REFRESH,
     override var delayMills: Int = 0
 ) : IPipelineEvent(actionType, source, projectId, pipelineId, userId, delayMills)

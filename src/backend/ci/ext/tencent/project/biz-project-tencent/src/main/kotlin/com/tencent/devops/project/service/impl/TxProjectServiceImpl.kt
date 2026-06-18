@@ -187,7 +187,7 @@ class TxProjectServiceImpl @Autowired constructor(
         }
         if (!englishNames.contains(projectVO.englishName)) {
             logger.warn("The user don't have the permission to get the project $englishName")
-            return null
+            throw OperationException("The user don't have the permission to visit the project")
         }
         return projectVO
     }
@@ -557,7 +557,6 @@ class TxProjectServiceImpl @Autowired constructor(
                 )
             }
         }
-
     }
 
     /**
@@ -568,6 +567,15 @@ class TxProjectServiceImpl @Autowired constructor(
         // 如果 kpiCode 为空，跳过校验
         if (kpiCode.isNullOrBlank()) {
             return
+        }
+        if (bgId == IEG_BG_ID && kpiCode == COMMON_KPI_PRODUCT_ID.toString()) {
+            throw ErrorCodeException(
+                errorCode = ProjectMessageCode.ERROR_KPI_PRODUCT_COMMON_NOT_ALLOWED,
+                defaultMessage = MessageUtil.getMessageByLocale(
+                    messageCode = ProjectMessageCode.ERROR_KPI_PRODUCT_COMMON_NOT_ALLOWED,
+                    language = I18nUtil.getLanguage(userId)
+                )
+            )
         }
 
         // 获取 KPI 产品列表
@@ -624,6 +632,8 @@ class TxProjectServiceImpl @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(TxProjectServiceImpl::class.java)!!
+        private const val IEG_BG_ID = 956L
+        private const val COMMON_KPI_PRODUCT_ID = 9999
         private const val VALIDATION_ENABLED = "validate:product:bg:enable"
     }
 }

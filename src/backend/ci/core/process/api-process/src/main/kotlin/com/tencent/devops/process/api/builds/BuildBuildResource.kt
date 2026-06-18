@@ -28,17 +28,18 @@
 package com.tencent.devops.process.api.builds
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BUILD_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_EXECUTE_COUNT
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PIPELINE_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_VM_SEQ_ID
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
-import io.swagger.v3.oas.annotations.tags.Tag
+import com.tencent.devops.process.pojo.task.PipelineFailTaskDetail
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.ws.rs.Consumes
 import jakarta.ws.rs.GET
 import jakarta.ws.rs.HeaderParam
@@ -69,10 +70,7 @@ interface BuildBuildResource {
         buildNum: String,
         @Parameter(description = "查询方的当前构建ID，用户判断是否为调试记录", required = false)
         @QueryParam("buildId")
-        buildId: String?,
-        @Parameter(description = "渠道号，默认为BS", required = false)
-        @QueryParam("channelCode")
-        channelCode: ChannelCode?
+        buildId: String?
     ): Result<BuildHistory?>
 
     @Operation(summary = "获取流水线最近成功构建")
@@ -87,10 +85,7 @@ interface BuildBuildResource {
         pipelineId: String,
         @Parameter(description = "查询方的当前构建ID，用户判断是否为调试记录", required = false)
         @QueryParam("buildId")
-        buildId: String?,
-        @Parameter(description = "渠道号，默认为BS", required = false)
-        @QueryParam("channelCode")
-        channelCode: ChannelCode?
+        buildId: String?
     ): Result<BuildHistory?>
 
     @Operation(summary = "获取构建详情")
@@ -106,10 +101,7 @@ interface BuildBuildResource {
         pipelineId: String,
         @Parameter(description = "构建ID", required = true)
         @PathParam("buildId")
-        buildId: String,
-        @Parameter(description = "渠道号，默认为BS", required = false)
-        @QueryParam("channelCode")
-        channelCode: ChannelCode
+        buildId: String
     ): Result<ModelDetail>
 
     @Operation(summary = "获取子流水线变量")
@@ -160,4 +152,44 @@ interface BuildBuildResource {
         @BkField(required = true)
         vmSeqId: String
     ): Result<String?>
+
+    @Operation(summary = "获取指定构建任务的失败任务信息")
+    @GET
+    @Path("projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/failed/tasks")
+    fun getBuildFailedTasks(
+        @Parameter(description = "项目ID", required = true)
+        @BkField(required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "流水线ID", required = true)
+        @PathParam("pipelineId")
+        @BkField(required = true)
+        pipelineId: String,
+        @Parameter(description = "构建ID", required = true)
+        @PathParam("buildId")
+        @BkField(required = true)
+        buildId: String,
+        @Parameter(description = "当前流水线执行次数", required = false)
+        @HeaderParam(AUTH_HEADER_DEVOPS_EXECUTE_COUNT)
+        @BkField(required = false)
+        executeCount: Int?
+    ): Result<List<PipelineFailTaskDetail>>
+
+    @Operation(summary = "获取构建任务的原始参数(TASK_PARAMS)")
+    @GET
+    @Path("/{projectId}/{pipelineId}/{buildId}/tasks/{taskId}/taskParams")
+    fun getTaskParams(
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @Parameter(description = "构建ID", required = true)
+        @PathParam("buildId")
+        buildId: String,
+        @Parameter(description = "任务ID", required = true)
+        @PathParam("taskId")
+        taskId: String
+    ): Result<Map<String, Any>?>
 }

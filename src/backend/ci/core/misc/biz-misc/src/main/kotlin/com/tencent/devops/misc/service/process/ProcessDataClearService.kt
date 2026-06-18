@@ -28,7 +28,6 @@
 package com.tencent.devops.misc.service.process
 
 import com.tencent.devops.common.db.pojo.ARCHIVE_SHARDING_DSL_CONTEXT
-import com.tencent.devops.common.db.utils.JooqUtils
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.misc.dao.process.ProcessDao
 import com.tencent.devops.misc.dao.process.ProcessDataDeleteDao
@@ -67,34 +66,17 @@ class ProcessDataClearService @Autowired constructor(
         val finalDslContext = generateFinalDslContext(archiveFlag)
         val pipelineIds = arrayListOf(pipelineId)
         finalDslContext.transaction { t ->
+            // 所有 DAO 删除操作统一走事务上下文 context，保证流水线本体清理的原子性；
+            // 流水线维度的关联表清单内聚在 DAO 聚合方法里，新增表只需在 DAO 处补一行
             val context = DSL.using(t)
-            processDataDeleteDao.deletePipelineLabelPipeline(context, projectId, pipelineIds)
-            processDataDeleteDao.deletePipelineResource(context, projectId, pipelineIds)
-            processDataDeleteDao.deletePipelineResourceVersion(context, projectId, pipelineIds)
-            processDataDeleteDao.deleteTemplatePipeline(context, projectId, pipelineIds)
-            processDataDeleteDao.deletePipelineBuildSummary(context, projectId, pipelineIds)
-            processDataDeleteDao.deletePipelineBuildHistoryDebug(context, projectId, pipelineIds)
-            processDataDeleteDao.deletePipelineFavor(dslContext, projectId, pipelineId)
-            processDataDeleteDao.deletePipelineViewGroup(dslContext, projectId, pipelineId)
-            processDataDeleteDao.deletePipelineSetting(context, projectId, pipelineIds)
-            processDataDeleteDao.deletePipelineSettingVersion(context, projectId, pipelineIds)
+            processDataDeleteDao.deletePipelineRelatedData(
+                dslContext = context,
+                projectId = projectId,
+                pipelineIds = pipelineIds,
+                archiveFlag = archiveFlag,
+                broadcastTableDeleteFlag = true
+            )
             if (archiveFlag != true) {
-                processDataDeleteDao.deletePipelineModelTask(context, projectId, pipelineIds)
-                processDataDeleteDao.deletePipelineBuildContainer(dslContext, projectId, pipelineId)
-                processDataDeleteDao.deletePipelineBuildStage(dslContext, projectId, pipelineId)
-                processDataDeleteDao.deletePipelineRecentUse(dslContext, projectId, pipelineId)
-                processDataDeleteDao.deletePipelineTriggerDetail(dslContext, projectId, pipelineId)
-                processDataDeleteDao.deletePipelineAuditResource(dslContext, projectId, pipelineId)
-                processDataDeleteDao.deletePipelineTimerBranch(dslContext, projectId, pipelineId)
-                processDataDeleteDao.deletePipelineYamlInfo(dslContext, projectId, pipelineId)
-                processDataDeleteDao.deletePipelineYamlVersion(dslContext, projectId, pipelineId)
-                processDataDeleteDao.deletePipelineOperationLog(dslContext, projectId, pipelineId)
-                processDataDeleteDao.deletePipelineWebhookVersion(dslContext, projectId, pipelineId)
-                processDataDeleteDao.deletePipelineCallback(dslContext, projectId, pipelineId)
-                processDataDeleteDao.deletePipelineSubRef(dslContext, projectId, pipelineId)
-                processDataDeleteDao.deletePipelineRemoteAuth(dslContext, projectId, pipelineId)
-                processDataDeleteDao.deletePipelineWebhook(dslContext, projectId, pipelineId)
-                processDataDeleteDao.deletePipelineTimer(dslContext, projectId, pipelineId)
                 // 添加删除记录，插入要实现幂等
                 processDao.addPipelineDataClear(
                     dslContext = context,
@@ -102,7 +84,6 @@ class ProcessDataClearService @Autowired constructor(
                     pipelineId = pipelineId
                 )
             }
-            processDataDeleteDao.deletePipelineInfo(context, projectId, pipelineIds)
         }
         processRelatedPlatformDataClearService.cleanBuildData(projectId, pipelineId)
     }
@@ -120,16 +101,20 @@ class ProcessDataClearService @Autowired constructor(
      * 清除流水线基础构建数据
      * @param projectId 项目ID
      * @param buildId 构建ID
+     *
+     * 注意：这里刻意不包裹 dslContext.transaction。
+     *   1) 四张表都按 (PROJECT_ID, BUILD_ID) 维度删除，互相之间无跨表一致性要求；
+     *   2) 删除操作天然幂等，单步失败可以由下一轮 cron / 重试补救；
+     *   3) 包成长事务会让多张表的行锁/索引页锁在整段时间内持有，
+     *      与运行时构建写入路径（如 T_PIPELINE_BUILD_VAR / T_PIPELINE_BUILD_TASK）
+     *      共享同一索引页时极易引发热点等待。
      */
     fun clearBaseBuildData(projectId: String, buildId: String) {
         val buildIds = arrayListOf(buildId)
-        dslContext.transaction { t ->
-            val context = DSL.using(t)
-            processDataDeleteDao.deletePipelineBuildTask(context, projectId, buildIds)
-            processDataDeleteDao.deletePipelineBuildVar(context, projectId, buildIds)
-            processDataDeleteDao.deletePipelineBuildContainer(context, projectId, buildIds)
-            processDataDeleteDao.deletePipelineBuildStage(context, projectId, buildIds)
-        }
+        processDataDeleteDao.deletePipelineBuildTask(dslContext, projectId, buildIds)
+        processDataDeleteDao.deletePipelineBuildVar(dslContext, projectId, buildIds)
+        processDataDeleteDao.deletePipelineBuildContainer(dslContext, projectId, buildIds)
+        processDataDeleteDao.deletePipelineBuildStage(dslContext, projectId, buildIds)
     }
 
     /**
@@ -138,7 +123,16 @@ class ProcessDataClearService @Autowired constructor(
      * @param pipelineId 流水线ID
      * @param buildId 构建ID
      * @param archiveFlag 归档标识
+     *
+     * 事务策略：
+     *   1) deleteBuildRelatedData 涉及 10+ 张按 BUILD_ID 维度的关联表（detail / pause_value /
+     *      webhook_build_parameter / report / trigger_review / build_record_* 等），
+     *      互相之间无跨表一致性要求，单步失败可由下一轮清理补救，**不再纳入事务**；
+     *   2) 仅 deletePipelineBuildHistory + addBuildHisDataClear + updatePipelineVersionReferInfo
+     *      三步存在强一致诉求（历史记录是否删除、是否记账、版本引用计数三者必须一致），
+     *      保留一个最小的短事务包裹。
      */
+    @Suppress("LongMethod")
     fun clearOtherBuildData(
         projectId: String,
         pipelineId: String,
@@ -147,42 +141,31 @@ class ProcessDataClearService @Autowired constructor(
     ) {
         val finalDslContext = generateFinalDslContext(archiveFlag)
         val buildIds = arrayListOf(buildId)
-        finalDslContext.transaction { t ->
-            val context = DSL.using(t)
-            processDataDeleteDao.deletePipelineBuildRecordModel(context, projectId, buildIds)
-            processDataDeleteDao.deletePipelineBuildRecordStage(context, projectId, buildIds)
-            processDataDeleteDao.deletePipelineBuildRecordContainer(context, projectId, buildIds)
-            processDataDeleteDao.deletePipelineBuildRecordTask(context, projectId, buildIds)
-            processDataDeleteDao.deleteReport(
-                dslContext = context,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                buildIds = buildIds
-            )
-            if (archiveFlag == true) {
-                processDataDeleteDao.deletePipelineBuildHistory(context, projectId, buildIds)
-                // 归档库构建数据清理无需执行方法后的逻辑
-                return@transaction
-            }
-            processDataDeleteDao.deletePipelineBuildDetail(context, projectId, buildIds)
-            JooqUtils.retryWhenDeadLock {
-                processDataDeleteDao.deletePipelineBuildTemplateAcrossInfo(
-                    dslContext = context,
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    buildIds = buildIds
-                )
-            }
-            processDataDeleteDao.deletePipelineWebhookBuildParameter(context, projectId, buildIds)
-            val version = processDao.getPipelineVersionByBuildId(
-                dslContext = context,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                buildId = buildId
-            )
-            val pipelineVersionLock = version?.let { PipelineVersionLock(redisOperation, pipelineId, it) }
-            try {
-                pipelineVersionLock?.lock()
+        // 1) 按 BUILD_ID 维度的关联表删除：无跨表一致性，幂等，无事务直接逐条提交
+        processDataDeleteDao.deleteBuildRelatedData(
+            dslContext = finalDslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildIds = buildIds,
+            archiveFlag = archiveFlag
+        )
+        if (archiveFlag == true) {
+            // 归档场景：BuildHistory 直接删除即可，无版本引用计数维护
+            processDataDeleteDao.deletePipelineBuildHistory(finalDslContext, projectId, buildId)
+            return
+        }
+        val version = processDao.getPipelineVersionByBuildId(
+            dslContext = finalDslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId
+        )
+        val pipelineVersionLock = version?.let { PipelineVersionLock(redisOperation, pipelineId, it) }
+        try {
+            pipelineVersionLock?.lock()
+            // 2) 仅 BuildHistory 删除 + 删除记账 + 版本引用计数更新走短事务
+            finalDslContext.transaction { t ->
+                val context = DSL.using(t)
                 val deleteResult = processDataDeleteDao.deletePipelineBuildHistory(context, projectId, buildId)
                 if (deleteResult == 0) {
                     // 如果删除的记录数为0则无需执行后面的逻辑
@@ -231,9 +214,9 @@ class ProcessDataClearService @Autowired constructor(
                     referFlag = referFlag
                 )
                 logger.info("Update pipeline[$pipelineId] REFER_COUNT for version $version, new count: $referCount")
-            } finally {
-                pipelineVersionLock?.unlock()
             }
+        } finally {
+            pipelineVersionLock?.unlock()
         }
     }
 

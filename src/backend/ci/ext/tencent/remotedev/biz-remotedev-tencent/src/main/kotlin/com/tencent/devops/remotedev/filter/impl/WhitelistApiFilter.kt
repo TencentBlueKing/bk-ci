@@ -1,10 +1,8 @@
 package com.tencent.devops.remotedev.filter.impl
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
-import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RequestFilter
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.project.api.service.service.ServiceTxUserResource
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.filter.ApiFilter
 import com.tencent.devops.remotedev.service.redis.ConfigCacheService
@@ -19,8 +17,7 @@ import org.slf4j.LoggerFactory
 @PreMatching
 @RequestFilter
 class WhitelistApiFilter constructor(
-    private val cacheService: ConfigCacheService,
-    private val client: Client
+    private val cacheService: ConfigCacheService
 ) : ApiFilter {
     companion object {
         private val logger = LoggerFactory.getLogger(WhitelistApiFilter::class.java)
@@ -67,10 +64,10 @@ class WhitelistApiFilter constructor(
             return true
         }
         // 获取用户的信息，根据 bg 名称加白,先判断人名是否在白名单，不在的话再判断bg名称是否。
-        if (!cacheService.checkApiWhiteList(userId) && runCatching {
-                client.get(ServiceTxUserResource::class).get(userId)
-            }.onFailure { logger.warn("get $userId info error|${it.message}") }
-                .getOrNull()?.data?.bgName?.let { cacheService.checkApiWhiteList(it) } != true) {
+        if (!cacheService.checkApiWhiteList(userId) &&
+            cacheService.getUserBgName(userId).takeIf { it.isNotBlank() }
+                ?.let { cacheService.checkApiWhiteList(it) } != true
+        ) {
             logger.info("user($userId)wants to access the resource($path), but is blocked.")
             return false
         }

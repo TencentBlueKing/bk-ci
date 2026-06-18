@@ -38,7 +38,10 @@ class WhitelistCoffeeAIFilter constructor(
             )
             return true
         }
-        if (!cacheService.checkApiCoffeeAIWhiteList(userId)) {
+        if (!cacheService.checkApiCoffeeAIWhiteList(userId) &&
+            cacheService.getUserBgName(userId).takeIf { it.isNotBlank() }
+                ?.let { cacheService.checkApiCoffeeAIWhiteList(it) } != true
+        ) {
             logger.info("user($userId)wants to access the resource($path), but is blocked.")
             return false
         }

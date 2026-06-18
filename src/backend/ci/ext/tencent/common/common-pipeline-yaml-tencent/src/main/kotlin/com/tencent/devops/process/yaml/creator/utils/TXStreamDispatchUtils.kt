@@ -43,7 +43,7 @@ import com.tencent.devops.common.ci.image.PoolType
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.VMBaseOS
 import com.tencent.devops.common.pipeline.type.DispatchType
-import com.tencent.devops.common.pipeline.type.agent.AgentType
+import com.tencent.devops.common.pipeline.type.agent.AgentDispatchType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentDockerInfo
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentEnvDispatchType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentIDDispatchType
@@ -124,6 +124,7 @@ object TXStreamDispatchUtils {
         val poolName = EnvUtils.parseEnv(job.runsOn.poolName, context ?: mapOf())
         val workspace = EnvUtils.parseEnv(job.runsOn.workspace, context ?: mapOf())
         val xcode = EnvUtils.parseEnv(job.runsOn.xcode, context ?: mapOf())
+        val hwSpec = EnvUtils.parseEnv(job.runsOn.hwSpec, context ?: mapOf())
 
         // 第三方构建机
         if (job.runsOn.selfHosted == true) {
@@ -132,7 +133,7 @@ object TXStreamDispatchUtils {
                     envProjectId = null,
                     envName = poolName,
                     workspace = workspace,
-                    agentType = AgentType.NAME,
+                    agentType = AgentDispatchType.NAME,
                     dockerInfo = null,
                     reusedInfo = null
                 )
@@ -162,7 +163,7 @@ object TXStreamDispatchUtils {
                 envProjectId = null,
                 envName = poolName,
                 workspace = workspace,
-                agentType = AgentType.NAME,
+                agentType = AgentDispatchType.NAME,
                 dockerInfo = dockerInfo,
                 reusedInfo = null
             )
@@ -174,7 +175,8 @@ object TXStreamDispatchUtils {
             return MacOSDispatchType(
                 macOSEvn = "${poolName.removePrefix("macos-")}:$xcode",
                 systemVersion = poolName.removePrefix("macos-"),
-                xcodeVersion = xcode
+                xcodeVersion = xcode,
+                macOSHwSpec = hwSpec
             )
         }
 
@@ -231,7 +233,7 @@ object TXStreamDispatchUtils {
                     return ThirdPartyAgentIDDispatchType(
                         displayName = "",
                         workspace = "",
-                        agentType = AgentType.ID,
+                        agentType = AgentDispatchType.ID,
                         dockerInfo = null,
                         reusedInfo = null
                     )

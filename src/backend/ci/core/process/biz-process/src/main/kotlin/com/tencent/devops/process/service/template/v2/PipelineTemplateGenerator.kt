@@ -206,6 +206,10 @@ class PipelineTemplateGenerator @Autowired constructor(
         templateId: String,
         baseVersion: Long?
     ): PTemplateResourceOnlyVersion {
+        val latestReleaseResource = pipelineTemplateResourceService.getLatestReleasedResource(
+            projectId = projectId,
+            templateId = templateId
+        )
         val latestResource = pipelineTemplateResourceService.getLatestVersionResource(
             projectId = projectId,
             templateId = templateId
@@ -221,8 +225,8 @@ class PipelineTemplateGenerator @Autowired constructor(
             version = generateTemplateVersion(),
             number = latestResource.number + 1,
             settingVersion = latestResource.settingVersion + 1,
-            baseVersion = baseResource?.version ?: latestResource.version,
-            baseVersionName = baseResource?.versionName ?: latestResource.versionName
+            baseVersion = baseResource?.version ?: latestReleaseResource?.version,
+            baseVersionName = baseResource?.versionName ?: latestReleaseResource?.versionName
         )
     }
 
@@ -235,6 +239,10 @@ class PipelineTemplateGenerator @Autowired constructor(
         draftResource: PipelineTemplateResource? = null,
         branchName: String
     ): PTemplateResourceOnlyVersion {
+        val latestReleaseResource = pipelineTemplateResourceService.getLatestReleasedResource(
+            projectId = projectId,
+            templateId = templateId
+        )
         val latestResource = pipelineTemplateResourceService.getLatestVersionResource(
             projectId = projectId,
             templateId = templateId
@@ -260,9 +268,9 @@ class PipelineTemplateGenerator @Autowired constructor(
             number = number,
             versionName = branchName,
             settingVersion = settingVersion,
-            baseVersion = draftResource?.baseVersion ?: branchResource?.version ?: latestResource.version,
+            baseVersion = draftResource?.baseVersion ?: branchResource?.version ?: latestReleaseResource?.version,
             baseVersionName =
-                draftResource?.baseVersionName ?: branchResource?.versionName ?: latestResource.versionName
+                draftResource?.baseVersionName ?: branchResource?.versionName ?: latestReleaseResource?.versionName
         )
     }
 

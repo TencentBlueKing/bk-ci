@@ -48,6 +48,8 @@ import com.tencent.devops.common.webhook.pojo.code.WebHookParams
 import com.tencent.devops.common.webhook.service.code.loader.WebhookElementParamsRegistrar
 import com.tencent.devops.common.webhook.service.code.loader.WebhookStartParamsRegistrar
 import com.tencent.devops.common.webhook.service.code.pojo.WebhookMatchResult
+import com.tencent.devops.process.trigger.enums.MatchStatus
+import com.tencent.devops.process.trigger.pojo.WebhookAtomResponse
 import com.tencent.devops.process.trigger.scm.rule.WebhookRuleManager
 import com.tencent.devops.process.utils.PIPELINE_BUILD_MSG
 import com.tencent.devops.process.utils.PIPELINE_START_TASK_ID
@@ -192,27 +194,4 @@ class WebhookTriggerMatcher @Autowired constructor(
     companion object {
         const val PIPELINE_WEBHOOK_COMMIT_MESSAGE_LENGTH_MAX = 128
     }
-}
-
-data class WebhookAtomResponse(
-    val matchStatus: MatchStatus,
-    val outputVars: Map<String, Any> = emptyMap(),
-    val failedReason: String? = null
-)
-
-enum class MatchStatus {
-    // 匹配成功
-    SUCCESS,
-
-    // 插件不匹配
-    ELEMENT_NOT_MATCH,
-
-    // 代码库不匹配
-    REPOSITORY_NOT_MATCH,
-
-    // 事件类型不匹配
-    EVENT_TYPE_NOT_MATCH,
-
-    // 条件不匹配
-    CONDITION_NOT_MATCH;
 }
