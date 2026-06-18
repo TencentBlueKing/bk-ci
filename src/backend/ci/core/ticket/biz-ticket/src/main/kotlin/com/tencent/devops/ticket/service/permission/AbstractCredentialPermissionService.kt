@@ -144,13 +144,4 @@ abstract class AbstractCredentialPermissionService constructor(
             resourceCode = credentialId
         )
     }
-
-    override fun copyResourceGroupMembers(
-        sourceProjectId: String,
-        targetProjectId: String,
-        sourceCredentialId: String,
-        targetCredentialId: String
-    ) {
-        // Mock 权限模式无需复制成员
-    }
 }

@@ -35,13 +35,15 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.ticket.api.OpCredentialResource
 import com.tencent.devops.ticket.pojo.CredentialWithPermission
 import com.tencent.devops.ticket.pojo.enums.CredentialType
+import com.tencent.devops.ticket.service.CredentialCopyService
 import com.tencent.devops.ticket.service.CredentialService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 @Suppress("ALL")
 class OpCredentialResourceImpl @Autowired constructor(
-    private val credentialService: CredentialService
+    private val credentialService: CredentialService,
+    private val credentialCopyService: CredentialCopyService
 ) : OpCredentialResource {
 
     override fun list(
@@ -62,7 +64,7 @@ class OpCredentialResourceImpl @Autowired constructor(
         return Result(Page(pageNotNull, pageSizeNotNull, result.count, result.records))
     }
 
-    override fun copy(
+    override fun copyAcrossProject(
         userId: String,
         sourceProjectId: String,
         targetProjectId: String,
@@ -77,7 +79,7 @@ class OpCredentialResourceImpl @Autowired constructor(
         if (targetProjectId.isBlank()) {
             throw ParamBlankException("Invalid targetProjectId")
         }
-        credentialService.copyCredentials(userId, sourceProjectId, targetProjectId, credentialId)
+        credentialCopyService.copyAcrossProject(userId, sourceProjectId, targetProjectId, credentialId)
         return Result(true)
     }
 }

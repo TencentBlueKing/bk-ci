@@ -27,9 +27,11 @@
 
 package com.tencent.devops.environment.resources
 
+import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.environment.api.OpEnvironmentResource
+import com.tencent.devops.environment.service.EnvCopyService
 import com.tencent.devops.environment.service.NodeService
 import com.tencent.devops.environment.service.NodeTagService
 import org.springframework.beans.factory.annotation.Autowired
@@ -37,7 +39,8 @@ import org.springframework.beans.factory.annotation.Autowired
 @RestResource
 class OpEnvironmentResourceImpl @Autowired constructor(
     private val nodeService: NodeService,
-    private val nodeTagService: NodeTagService
+    private val nodeTagService: NodeTagService,
+    private val envCopyService: EnvCopyService
 ) : OpEnvironmentResource {
 
     override fun refreshGateway(oldToNewMap: Map<String, String>): Result<Boolean> {
@@ -50,5 +53,29 @@ class OpEnvironmentResourceImpl @Autowired constructor(
 
     override fun refreshNodeTag(projectId: String?) {
         nodeTagService.refreshInternalNodeTags(projectId)
+    }
+
+    override fun copyAcrossProject(
+        userId: String,
+        sourceProjectId: String,
+        targetProjectId: String,
+        envHashId: String?
+    ): Result<Boolean> {
+        if (userId.isBlank()) {
+            throw ParamBlankException("Invalid userId")
+        }
+        if (sourceProjectId.isBlank()) {
+            throw ParamBlankException("Invalid sourceProjectId")
+        }
+        if (targetProjectId.isBlank()) {
+            throw ParamBlankException("Invalid targetProjectId")
+        }
+        envCopyService.copyAcrossProject(
+            userId = userId,
+            sourceProjectId = sourceProjectId,
+            targetProjectId = targetProjectId,
+            envHashId = envHashId
+        )
+        return Result(true)
     }
 }
