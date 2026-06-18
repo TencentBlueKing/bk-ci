@@ -8,6 +8,7 @@ import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.environment.constant.EnvironmentMessageCode
+import com.tencent.devops.environment.dao.EnvDao
 import com.tencent.devops.environment.dao.EnvDispatchStrategyDao
 import com.tencent.devops.environment.dao.NodeTagKeyDao
 import com.tencent.devops.environment.pojo.DispatchEnvStrategyVO
@@ -15,6 +16,7 @@ import com.tencent.devops.environment.pojo.DispatchStrategyConfig
 import com.tencent.devops.environment.pojo.EnabledStrategiesWithTags
 import com.tencent.devops.environment.pojo.LabelSelector
 import com.tencent.devops.environment.pojo.LabelSelectorVO
+import com.tencent.devops.environment.pojo.enums.EnvType
 import com.tencent.devops.environment.pojo.enums.NodeRule
 import com.tencent.devops.environment.pojo.enums.StrategyScope
 import com.tencent.devops.environment.pojo.enums.StrategyType
@@ -33,6 +35,7 @@ class EnvDispatchStrategyService @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val envDispatchStrategyDao: EnvDispatchStrategyDao,
     private val nodeTagKeyDao: NodeTagKeyDao,
+    private val envDao: EnvDao,
     private val nodeTagService: NodeTagService,
     private val envOperateLogService: EnvOperateLogService
 ) {
@@ -71,6 +74,10 @@ class EnvDispatchStrategyService @Autowired constructor(
                     )
                 })
             }
+        }
+        // 初始化前确认下是不是构建环境，只有构建环境有
+        if (envDao.get(dslContext, projectId, envId).envType != EnvType.BUILD.name) {
+            return emptyList()
         }
         val lock = strategiesUpdateLock(projectId, envId)
         // 遇见的概率及其小，第一次初始化后就没了，而且是页面，所以用户刷新下就好
@@ -113,6 +120,10 @@ class EnvDispatchStrategyService @Autowired constructor(
         labelSelector: List<LabelSelector>?,
         envOperateOrigin: EnvOperateOrigin
     ): Long {
+        // 初始化前确认下是不是构建环境，只有构建环境有
+        if (envDao.get(dslContext, projectId, envId).envType != EnvType.BUILD.name) {
+            return -1
+        }
         val lock = strategiesUpdateLock(projectId, envId)
         if (!lock.tryLock()) {
             throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_ENV_STRATEGY_NOW_USING)
