@@ -135,7 +135,7 @@ class PipelineDependencyReplaceService @Autowired constructor(
             ),
             labelNames = emptyList()
         )
-        validateReplaceContext(projectId = projectId, context = context)
+        // validateReplaceContext(projectId = projectId, context = context)
         return PipelineModelAndSetting(model = replacedModel, setting = replaceSetting)
     }
 
@@ -181,7 +181,7 @@ class PipelineDependencyReplaceService @Autowired constructor(
                 context = context
             )
         )
-        validateReplaceContext(projectId = sourceProjectId, context = context)
+        // validateReplaceContext(projectId = sourceProjectId, context = context)
         return PipelineModelAndSetting(model = replacedModel, setting = replaceSetting)
     }
 

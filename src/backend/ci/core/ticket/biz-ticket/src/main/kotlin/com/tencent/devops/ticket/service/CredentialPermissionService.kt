@@ -91,11 +91,4 @@ interface CredentialPermissionService {
         projectId: String,
         credentialId: String
     )
-
-    fun copyResourceGroupMembers(
-        sourceProjectId: String,
-        targetProjectId: String,
-        sourceCredentialId: String,
-        targetCredentialId: String
-    )
 }
