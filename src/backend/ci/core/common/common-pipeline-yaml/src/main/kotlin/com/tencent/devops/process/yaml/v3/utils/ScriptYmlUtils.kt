@@ -1011,12 +1011,11 @@ object ScriptYmlUtils {
     /**
      * 解析 `on.tapd` 节点为 [TapdRule] 列表，支持单对象与数组两种 YAML 写法。
      */
-    private fun tapdRule(preTriggerOn: IPreTriggerOn): List<TapdRule>? {
+    private fun tapdRule(preTriggerOn: IPreTriggerOn): TapdRule? {
         val tapd = preTriggerOn.tapd ?: return null
         return kotlin.runCatching {
             when (tapd) {
-                is Map<*, *> -> listOf(JsonUtil.anyTo(tapd, object : TypeReference<TapdRule>() {}))
-                is List<*> -> JsonUtil.anyTo(tapd, object : TypeReference<List<TapdRule>>() {})
+                is Map<*, *> -> JsonUtil.anyTo(tapd, object : TypeReference<TapdRule>() {})
                 else -> null
             }
         }.getOrNull()
