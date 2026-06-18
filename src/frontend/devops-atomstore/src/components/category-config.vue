@@ -83,8 +83,7 @@
                 </div>
             </div>
         </div>
-        <!-- 仅 Pipeline AGENT 类型显示操作系统选择 -->
-        <template v-if="scopeType === 'pipeline' && categoryData.jobTypes && categoryData.jobTypes[0] === 'AGENT'">
+        <template v-if="showOsSelection">
             <bk-checkbox-group
                 v-model="categoryData.os"
                 class="bk-form-content atom-os"
@@ -190,6 +189,21 @@
             // 根据范畴类型返回对应的 Job 类型列表
             jobTypeList () {
                 return this.scopeType === 'pipeline' ? this.pipelineJobTypeList : this.creativeJobTypeList
+            },
+            // 是否显示操作系统选择
+            showOsSelection () {
+                if (!this.categoryData.jobTypes || this.categoryData.jobTypes.length === 0) {
+                    return false
+                }
+                // Pipeline 类型且选择了 AGENT
+                if (this.scopeType === 'pipeline' && this.categoryData.jobTypes[0] === 'AGENT') {
+                    return true
+                }
+                // Creative 类型所有 job 都显示操作系统选择
+                if (this.scopeType === 'creative') {
+                    return true
+                }
+                return false
             }
         },
         async created () {

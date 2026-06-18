@@ -415,6 +415,22 @@ interface UserWorkspaceResource {
         workspaceName: String
     ): Result<Boolean>
 
+    @Operation(summary = "剔除用户在某个实例的登录态")
+    @POST
+    @Path("/kick_instance")
+    fun kickInstance(
+        @Parameter(
+            description = "用户ID",
+            required = true,
+            example = AUTH_HEADER_USER_ID_DEFAULT_VALUE
+        )
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "工作空间名称", required = true)
+        @QueryParam("workspaceName")
+        workspaceName: String
+    ): Result<Boolean>
+
     @Operation(summary = "获取瘦终端内网证书交换验证码")
     @POST
     @Path("/cert_exchange_code")

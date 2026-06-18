@@ -104,6 +104,21 @@ class ThirdPartyAgentDao {
         }
     }
 
+    fun updateProjectIdByNodeId(
+        dslContext: DSLContext,
+        sourceProjectId: String,
+        targetProjectId: String,
+        nodeId: Long
+    ): Int {
+        with(TEnvironmentThirdpartyAgent.T_ENVIRONMENT_THIRDPARTY_AGENT) {
+            return dslContext.update(this)
+                .set(PROJECT_ID, targetProjectId)
+                .where(PROJECT_ID.eq(sourceProjectId))
+                .and(NODE_ID.eq(nodeId))
+                .execute()
+        }
+    }
+
     fun listUnimportAgent(
         dslContext: DSLContext,
         projectId: String,

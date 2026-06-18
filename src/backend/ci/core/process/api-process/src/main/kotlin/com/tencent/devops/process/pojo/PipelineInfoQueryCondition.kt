@@ -10,6 +10,8 @@ data class PipelineInfoQueryCondition(
     val pipelineIds: Set<String>? = null,
     @get:Schema(title = "流水线名称(模糊匹配)", required = false)
     val pipelineName: String? = null,
+    @get:Schema(title = "流水线是否禁用", required = false)
+    val locked: Boolean? = null,
     @get:Schema(title = "分页大小", required = false)
     val limit: Int? = null,
     @get:Schema(title = "分页偏移量", required = false)

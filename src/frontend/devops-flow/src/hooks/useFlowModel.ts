@@ -2,6 +2,7 @@ import type { AtomModal } from '@/api/atom'
 import type { Container, Element, FlowModel, FlowSettings, Stage } from '@/api/flowModel'
 import { useAtomStore } from '@/stores/atom'
 import { useFlowModelStore } from '@/stores/flowModel'
+import { useUIStore } from '@/stores/ui'
 import {
   diffAtomVersions,
   getAtomDefaultValue,
@@ -23,6 +24,7 @@ import { useEditingPos } from './useEditingPos'
 export function useFlowModel() {
   const store = useFlowModelStore()
   const atomStore = useAtomStore()
+  const uiStore = useUIStore()
 
   // 使用 storeToRefs 确保响应式
   const {
@@ -39,6 +41,7 @@ export function useFlowModel() {
     hasOrchestrationError,
     hasSettingsError,
   } = storeToRefs(store)
+  const { authoringBaseOS } = storeToRefs(uiStore)
 
   // 统一的位置/索引管理
   const {
@@ -329,6 +332,7 @@ export function useFlowModel() {
       containers: [
         createDefaultContainer(1, {
           name: 'Job1',
+          baseOS: authoringBaseOS.value,
           dispatchType: {
             buildType: 'CREATE_AGENT_ENV',
             value: '${{variables.BK_CI_NODE_AGENT_ID}}',
@@ -392,6 +396,7 @@ export function useFlowModel() {
       classType: containerType,
       ...(containerType === 'vmBuild'
         ? {
+            baseOS: authoringBaseOS.value,
             dispatchType: {
               buildType: 'CREATE_AGENT_ENV',
               value: '${{variables.BK_CI_NODE_AGENT_ID}}',

@@ -583,6 +583,10 @@
     "没有能导入的节点": "No nodes available for import",
     "未选择构建节点，不支持修改": "No build nodes selected, modification not supported",
     "未选择部署节点，不支持重置": "No deployment nodes selected, reset not supported",
+    "operatorStatus": {
+        "NORMAL": "Normal",
+        "OPERATOR_CHANGED": "Operator Changed"
+    },
     "searchEnvPlaceholder": "Search environment name, press Enter to search",
     "allEnv": "All Environments",
     "thirdPartyEnv": "Build Environment",
@@ -689,10 +693,6 @@
     "relatedCreativeFlow": "Related Creative Flow",
     "workspace": "Workspace",
     "enableTitle": "Start/Stop",
-    "operatorStatus": {
-        "NORMAL": "Normal",
-        "OPERATOR_CHANGED": "Operator Changed"
-    },
     "schedulingStrategy": "Scheduling strategy",
     "scheduling": {
         "alertTips": "When assigning nodes to a Job, search for available nodes in the environment according to the following scheduling strategy order. If no nodes are found after all strategies are executed, wait in queue; periodically search for available nodes again, queue timeout is based on Job settings.",

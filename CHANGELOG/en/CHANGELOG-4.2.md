@@ -1,4 +1,7 @@
 <!-- BEGIN MUNGE: GENERATED_TOC -->
+- [v4.2.0-rc.3](#v420-rc3)
+   - [Changelog since v4.2.0-rc.2](#changelog-since-v420-rc2)
+
 - [v4.2.0-rc.2](#v420-rc2)
    - [Changelog since v4.2.0-rc.1](#changelog-since-v420-rc1)
 
@@ -10,6 +13,64 @@
 
 
 <!-- NEW RELEASE NOTES ENTRY -->
+# v4.2.0-rc.3
+## 2026-06-08
+### Changelog since v4.2.0-rc.2
+#### New Features
+
+##### Pipeline
+- [New] feat: PAC pipelines support specifying branches [Link](http://github.com/TencentBlueKing/bk-ci/issues/12635)
+
+##### Environment Management
+- [New] feat: Refactor environment management [Link](http://github.com/TencentBlueKing/bk-ci/issues/12416)
+- [New] feat: Create environment/node management [Link](http://github.com/TencentBlueKing/bk-ci/issues/12389)
+
+##### Permission Center
+- [New] feat: Add AI companion APIs for permission member governance, issue #13019 [Link](http://github.com/TencentBlueKing/bk-ci/issues/13019)
+
+##### Project Management
+- [New] feat: Support personal projects [Link](http://github.com/TencentBlueKing/bk-ci/issues/12852)
+
+##### Others
+- [New] feat: Provide a build API for plugins to retrieve the raw configuration of the current step [Link](http://github.com/TencentBlueKing/bk-ci/issues/12953)
+- [New] feat: BK-CI intelligent assistant supports multi-channel LLM configuration, user model configuration, and failover [Link](http://github.com/TencentBlueKing/bk-ci/issues/12958)
+- [New] feat: Integrate CodeCC rule sets with the permission center [Link](http://github.com/TencentBlueKing/bk-ci/issues/12981)
+- [New] feat: Customize scheduling priority for third-party build machine clusters [Link](http://github.com/TencentBlueKing/bk-ci/issues/2680)
+- [New] feat: Optimize dependency package version upgrades [Link](http://github.com/TencentBlueKing/bk-ci/issues/12951)
+- [New] fix: Fix startup failure caused by missing interface implementation in the project module [Link](http://github.com/TencentBlueKing/bk-ci/issues/1285)
+
+#### Improvements
+
+##### Permission Center
+- [Improved] perf: Optimize permission application and handover scenarios [Link](http://github.com/TencentBlueKing/bk-ci/issues/13026)
+
+##### Others
+- [Improved] docs: Link the CodeCC repository [Link](http://github.com/TencentBlueKing/bk-ci/issues/13075)
+- [Improved] perf: Optimize gap lock handling for the T_PIPELINE_WEBHOOK_QUEUE table [Link](http://github.com/TencentBlueKing/bk-ci/issues/13052)
+- [Improved] perf: Optimize metrics data reporting [Link](http://github.com/TencentBlueKing/bk-ci/issues/13000)
+- [Improved] perf: Optimize copyright notices [Link](http://github.com/TencentBlueKing/bk-ci/issues/12988)
+- [Improved] perf: Optimize Skill documents with progressive disclosure to reduce context usage and unify structure [Link](http://github.com/TencentBlueKing/bk-ci/issues/12948)
+- [Improved] perf: Optimize the ZIP decompression utility [Link](http://github.com/TencentBlueKing/bk-ci/issues/12960)
+
+#### Bug Fixes
+
+##### Pipeline
+- [Fixed] bug: Incorrect latest template version when exporting templates [Link](http://github.com/TencentBlueKing/bk-ci/issues/13049)
+- [Fixed] bug: Remove constant parameters when validating required fields during template instantiation [Link](http://github.com/TencentBlueKing/bk-ci/issues/13039)
+- [Fixed] bug: Trigger event descriptions are assembled on the frontend [Link](http://github.com/TencentBlueKing/bk-ci/issues/12969)
+
+##### Credential Management
+- [Fixed] bug: Configure secrets using placeholders [Link](http://github.com/TencentBlueKing/bk-ci/issues/12971)
+
+##### Others
+- [Fixed] bug: Fix 401 error when publishing PAC without permission [Link](http://github.com/TencentBlueKing/bk-ci/issues/13020)
+- [Fixed] bug: Fix agent log singleton output task ID confusion and frontend after API issues [Link](http://github.com/TencentBlueKing/bk-ci/issues/12970)
+- [Fixed] bug: AI chat AG-UI stream occasionally missing RUN_FINISHED, causing frontend sessions to remain in running state [Link](http://github.com/TencentBlueKing/bk-ci/issues/12994)
+- [Fixed] bug: URLs were not converted to hyperlinks when pipeline build notifications with group messages were converted to Markdown [Link](http://github.com/TencentBlueKing/bk-ci/issues/13044)
+- [Fixed] bugfix: Fix some issues in the new third-party machine mode [Link](http://github.com/TencentBlueKing/bk-ci/issues/12945)
+- [Fixed] fix: Upgrade frontend dependency versions [Link](http://github.com/TencentBlueKing/bk-ci/issues/12965)
+- [Fixed] bug: Optimize the HTTP utility for callback calls [Link](http://github.com/TencentBlueKing/bk-ci/issues/12961)
+
 # v4.2.0-rc.2
 ## 2026-05-15
 ### Changelog since v4.2.0-rc.1

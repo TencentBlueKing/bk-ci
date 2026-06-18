@@ -173,7 +173,7 @@
                 }
             },
             fileNameByPlatform () {
-                const extList = ['*.apk', '*.ipa', '*.hap', '*.zip']
+                const extList = ['*.apk', '*.ipa', '*.hap', '*.zip', '*.tar']
                 // '*.msix', '*.exe'
                 try {
                     switch (this.platform) {
@@ -184,7 +184,7 @@
                         case platformMap.HAP:
                             return extList.slice(2, 3)
                         case platformMap.WIN:
-                            return extList.slice(3, 4)
+                            return extList.slice(3, 5)
                         default:
                             return extList
                     }
