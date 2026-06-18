@@ -211,6 +211,10 @@ class TriggerTransfer @Autowired(required = false) constructor(
                 }
             )
         }
+
+        triggerOn.tapd?.let {
+            elementQueue.add(yaml2TriggerTapdElement(it))
+        }
     }
 
     @Suppress("ComplexMethod")
@@ -786,10 +790,6 @@ class TriggerTransfer @Autowired(required = false) constructor(
                     } ?: ""
                 ).checkTriggerElementEnable(remote.enable == EnableType.TRUE.value)
             )
-        }
-
-        triggerOn.tapd?.forEach { tapd ->
-            elementQueue.add(yaml2TriggerTapdElement(tapd))
         }
     }
 

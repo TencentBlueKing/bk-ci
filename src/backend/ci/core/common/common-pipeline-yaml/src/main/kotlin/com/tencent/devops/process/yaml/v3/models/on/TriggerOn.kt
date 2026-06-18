@@ -82,7 +82,7 @@ data class TriggerOn(
     @get:Schema(title = "scm-code")
     var scmCode: String? = null,
     @get:Schema(title = "tapd")
-    var tapd: List<TapdRule>? = null
+    var tapd: TapdRule? = null
 ) {
     fun toPre(version: YamlVersion) = when (version) {
         YamlVersion.V2_0 -> toPreV2()
