@@ -37,6 +37,7 @@
                         {{ currentNode?.displayName || '--' }}
                     </span>
                     <i
+                        v-if="!isCreateResType"
                         class="bk-icon icon-edit-line name-edit-icon"
                         @click="handleStartEditName"
                     />
@@ -68,6 +69,7 @@
                     </span>
                 </span>
                 <a
+                    v-if="!isCreateResType"
                     class="reinstall-agent-btn"
                     @click="handleReinstallAgent"
                 >
@@ -114,6 +116,7 @@
     import TaskList from './components/TaskList.vue'
     import AgentOfflineRecords from './components/AgentOfflineRecords.vue'
     import StatusIcon from '@/components/status-icon.vue'
+    import { SERVICE_RESOURCE_TYPE } from '@/store/constants'
     
     export default {
         name: 'NodeDetail',
@@ -172,13 +175,13 @@
             })
             
             const nodeStatusDisplayName = computed(() => {
-                return proxy.$t('environment.nodeStatusMap')[currentNode.value?.status] || currentNode.value?.status || '--'
+                return proxy.$t('environment.nodeStatusMap')[currentNode.value?.nodeStatus] || currentNode.value?.nodeStatus || '--'
             })
             
             const nodeStatusClass = computed(() => {
                 const successStatus = ['NORMAL', 'BUILD_IMAGE_SUCCESS']
                 const failStatus = ['ABNORMAL', 'DELETED', 'LOST', 'BUILD_IMAGE_FAILED', 'UNKNOWN', 'RUNNING']
-                const status = currentNode.value?.status
+                const status = currentNode.value?.nodeStatus
                 
                 if (successStatus.includes(status)) {
                     return 'status-normal'
@@ -187,11 +190,11 @@
                 }
                 return ''
             })
-
+            
             // 判断 Agent 是否正常
             const isAgentNormal = computed(() => {
                 const successStatus = ['NORMAL', 'BUILD_IMAGE_SUCCESS']
-                return successStatus.includes(currentNode.value?.status)
+                return successStatus.includes(currentNode.value?.nodeStatus)
             })
             
             const panels = computed(() => [
@@ -212,6 +215,11 @@
                     label: proxy.$t('environment.offlineRecords')
                 }
             ])
+            
+            // 是否为创建资源类型模式
+            const isCreateResType = computed(() => {
+                return proxy.$route.params.resType === SERVICE_RESOURCE_TYPE.CREATE
+            })
             
             // 获取可用的 tab 名称列表
             const availableTabs = computed(() => panels.value.map(p => p.name))
@@ -378,6 +386,7 @@
                 isSavingName,
                 nameError,
                 nameInputRef,
+                isCreateResType,
                 handleStartEditName,
                 handleCancelEdit,
                 handleSaveName
@@ -405,7 +414,7 @@
         display: flex;
         align-items: center;
     }
-     .node-info-right {
+    .node-info-right {
         display: flex;
         align-items: center;
     }

@@ -107,7 +107,7 @@ class PipelineBuildRetryService @Autowired constructor(
         failedContainer: Boolean? = false, // 仅重试所有失败Job
         skipFailedTask: Boolean? = false, // 跳过失败插件，为true时需要传taskId值（值为stageId则表示跳过Stage下所有失败插件）
         isMobile: Boolean = false,
-        channelCode: ChannelCode? = ChannelCode.BS,
+        channelCode: ChannelCode? = ChannelCode.getRequestChannelCode(),
         checkPermission: Boolean? = true
     ): BuildId {
         if (checkPermission!!) {
@@ -238,7 +238,7 @@ class PipelineBuildRetryService @Autowired constructor(
                     pipeline = readyToBuildPipelineInfo,
                     startType = startType,
                     paramMap = paramMap,
-                    channelCode = channelCode ?: ChannelCode.BS,
+                    channelCode = channelCode ?: ChannelCode.getRequestChannelCode(),
                     isMobile = isMobile,
                     resource = resource,
                     buildInfo = buildInfo,
@@ -250,7 +250,7 @@ class PipelineBuildRetryService @Autowired constructor(
                     pipeline = readyToBuildPipelineInfo,
                     startType = startType,
                     pipelineParamMap = paramMap,
-                    channelCode = channelCode ?: ChannelCode.BS,
+                    channelCode = channelCode ?: ChannelCode.getRequestChannelCode(),
                     isMobile = isMobile,
                     resource = resource,
                     signPipelineVersion = buildInfo.version,

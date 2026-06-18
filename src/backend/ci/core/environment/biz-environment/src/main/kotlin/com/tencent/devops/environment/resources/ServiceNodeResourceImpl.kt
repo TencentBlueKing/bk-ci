@@ -41,6 +41,7 @@ import com.tencent.devops.environment.api.ServiceNodeResource
 import com.tencent.devops.environment.pojo.NodeBaseInfo
 import com.tencent.devops.environment.pojo.NodeFetchReq
 import com.tencent.devops.environment.pojo.NodeWithPermission
+import com.tencent.devops.environment.pojo.enums.NodeOperatorStatus
 import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.environment.pojo.enums.NodeType
 import com.tencent.devops.environment.service.EnvService
@@ -100,9 +101,15 @@ class ServiceNodeResourceImpl @Autowired constructor(
     override fun listByHashIds(
         userId: String,
         projectId: String,
-        nodeHashIds: List<String>
+        nodeHashIds: List<String>,
+        checkPermission: Boolean?
     ): Result<List<NodeWithPermission>> {
-        return Result(nodeService.listByHashIds(userId, projectId, nodeHashIds))
+        return Result(nodeService.listByHashIds(
+            userId = userId,
+            projectId = projectId,
+            hashIds = nodeHashIds,
+            checkPermission = checkPermission != false
+        ))
     }
 
     override fun getNodeStatus(
@@ -179,6 +186,7 @@ class ServiceNodeResourceImpl @Autowired constructor(
         keywords: String?,
         nodeType: NodeType?,
         nodeStatus: NodeStatus?,
+        operatorStatus: NodeOperatorStatus?,
         agentVersion: String?,
         osName: String?,
         latestBuildPipelineId: String?,
@@ -186,6 +194,7 @@ class ServiceNodeResourceImpl @Autowired constructor(
         latestBuildTimeEnd: Long?,
         sortType: String?,
         collation: String?,
+        createMode: Boolean?,
         data: NodeFetchReq?
     ): Result<Page<NodeWithPermission>> {
         return Result(
@@ -201,6 +210,7 @@ class ServiceNodeResourceImpl @Autowired constructor(
                 keywords = keywords,
                 nodeType = nodeType,
                 nodeStatus = nodeStatus,
+                operatorStatus = operatorStatus,
                 agentVersion = agentVersion,
                 osName = osName,
                 latestBuildPipelineId = latestBuildPipelineId,
@@ -208,6 +218,7 @@ class ServiceNodeResourceImpl @Autowired constructor(
                 latestBuildTimeEnd = latestBuildTimeEnd,
                 sortType = sortType,
                 collation = collation,
+                createMode = createMode,
                 data = data
             )
         )

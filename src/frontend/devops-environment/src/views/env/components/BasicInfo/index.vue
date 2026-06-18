@@ -19,7 +19,7 @@
                 <template v-if="editingField !== field.key">
                     {{ getFieldValue(field.key) || '--' }}
                     <i
-                        v-if="field.editable"
+                        v-if="field.editable && !envHashId.startsWith('-')"
                         class="bk-icon icon-edit-line edit-icon"
                         v-perm="{
                             permissionData: {
@@ -81,6 +81,7 @@
     } from '@/utils/permission'
     import useInstance from '@/hooks/useInstance'
     import useEnvDetail from '@/hooks/useEnvDetail'
+    import useEnvAside from '@/hooks/useEnvAside'
     import { convertTime } from '@/utils/util'
     
     export default {
@@ -94,6 +95,9 @@
                 fetchEnvDetail,
                 updateEnvDetail
             } = useEnvDetail()
+            const {
+                isCreateResType
+            } = useEnvAside()
             
             const isLoading = ref(false)
             const isSaving = ref(false)
@@ -111,11 +115,14 @@
                     type: 'input',
                     maxlength: 30
                 },
-                {
-                    key: 'envType',
-                    label: proxy.$t('environment.environmentType'),
-                    editable: false
-                },
+                ...(!isCreateResType.value ? [
+                    {
+                        key: 'envType',
+                        label: proxy.$t('environment.environmentType'),
+                        editable: false
+                    }
+                ] : []
+                ),
                 {
                     key: 'desc',
                     label: proxy.$t('environment.envInfo.envRemark'),
@@ -248,6 +255,7 @@
                 editInput,
                 envHashId,
                 projectId,
+                isCreateResType,
                 ENV_RESOURCE_ACTION,
                 ENV_RESOURCE_TYPE,
 

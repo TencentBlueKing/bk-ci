@@ -32,6 +32,7 @@ package com.tencent.devops.common.api.context
  * 支持HTTP请求、跨服务调用、MQ消息、异步调用等场景
  */
 object ChannelContext {
+
     private val channelThreadLocal = ThreadLocal<String?>()
 
     /**

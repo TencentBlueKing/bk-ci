@@ -289,7 +289,7 @@
                 return this.$route.params.projectId
             },
             nodeHashId () {
-                return this.$route.query.nodeHashId
+                return this.$route.params.nodeHashId
             },
             chartLoadingOption () {
                 return {
@@ -519,6 +519,7 @@
 <style lang="scss">
     @import './../../scss/conf';
     .node-overview-chart-wrapper {
+        margin-top: 20px;
         background-color: #FFF;
         border: 1px solid $borderWeightColor;
         font-size: 0;

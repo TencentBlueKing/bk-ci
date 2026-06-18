@@ -49,6 +49,7 @@ import com.tencent.devops.common.pipeline.pojo.element.atom.ElementBatchCheckPar
 import com.tencent.devops.common.pipeline.pojo.element.atom.ElementHolder
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
+import com.tencent.devops.common.pipeline.pojo.element.market.MarketEventAtomElement
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.common.pipeline.pojo.setting.Subscription
 import com.tencent.devops.process.constant.ProcessMessageCode
@@ -127,7 +128,8 @@ open class DefaultModelCheckPlugin constructor(
         // 检查触发容器
         val paramsMap = checkTriggerContainer(
             trigger = trigger,
-            supportChineseVarName = pipelineDialect?.supportChineseVarName()
+            supportChineseVarName = pipelineDialect?.supportChineseVarName(),
+            isTemplate = isTemplate
         )
         val contextMap = PipelineVarUtil.fillVariableMap(paramsMap.mapValues { it.value.defaultValue.toString() })
         val elementCnt = mutableMapOf<String, Int>()
@@ -302,7 +304,11 @@ open class DefaultModelCheckPlugin constructor(
                 checkJobControlNodeConcurrency(container)
             }
 
-            container.elements.forEachIndexed { elementIndex, element ->
+            container.elements.forEachIndexed elementCheck@{ elementIndex, element ->
+                // 触发器Container不校验market element
+                if (container is TriggerContainer && element is MarketEventAtomElement) {
+                    return@elementCheck
+                }
                 container.checkElement(
                     stage = this,
                     element = element,
@@ -473,7 +479,8 @@ open class DefaultModelCheckPlugin constructor(
 
     open fun checkTriggerContainer(
         trigger: Stage,
-        supportChineseVarName: Boolean?
+        supportChineseVarName: Boolean?,
+        isTemplate: Boolean = false
     ): Map<String /* 流水线变量名 */, BuildFormProperty> {
         if (trigger.containers.size != 1) {
             logger.warn("The trigger stage contain more than one container (${trigger.containers.size})")
@@ -486,7 +493,8 @@ open class DefaultModelCheckPlugin constructor(
         )) as TriggerContainer
         return PipelineUtils.checkPipelineParams(
             params = triggerContainer.params,
-            supportChineseVarName = supportChineseVarName
+            supportChineseVarName = supportChineseVarName,
+            isTemplate = isTemplate
         )
     }
 

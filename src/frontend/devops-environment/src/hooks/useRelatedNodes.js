@@ -1,6 +1,7 @@
 import { ref, computed } from 'vue'
 import useEnvDetail from './useEnvDetail'
 import useInstance from './useInstance'
+import useEnvAside from './useEnvAside'
 
 const RELATED_TYPE = {
     NODE: 'static',
@@ -16,6 +17,9 @@ export default function useRelatedNodes () {
     const {
         currentEnv
     } = useEnvDetail()
+    const {
+        isCreateResType
+    } = useEnvAside()
     const isLoading = ref(false)
     const relatedType = ref(RELATED_TYPE[currentEnv.value?.envNodeType] || RELATED_TYPE.NODE)
     const projectId = computed(() => proxy.$route.params.projectId)
@@ -33,7 +37,10 @@ export default function useRelatedNodes () {
     // 获取标签列表
     const fetchTagList = async () => {
         try {
-            const res = await proxy.$store.dispatch('environment/requestNodeTagList', projectId.value)
+            const res = await proxy.$store.dispatch('environment/requestNodeTagList', {
+                projectId: projectId.value,
+                createMode: isCreateResType.value
+            })
             // 保存原始数据
             tagList.value = res ?? []
             
@@ -64,7 +71,12 @@ export default function useRelatedNodes () {
             const res = await proxy.$store.dispatch('environment/requestNodeList', {
                 projectId: projectId.value,
                 envHashId: envHashId.value,
-                params,
+                params: {
+                    ...params,
+                    ...(isCreateResType.value ? {
+                        nodeType: 'CREATE'
+                    }: {})
+                },
                 tags
             })
             

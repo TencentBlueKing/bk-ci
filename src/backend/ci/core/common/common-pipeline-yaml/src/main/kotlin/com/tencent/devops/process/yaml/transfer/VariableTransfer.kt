@@ -337,7 +337,7 @@ class VariableTransfer {
             displayCondition = variable.ifCondition ?: emptyMap(),
             asInstanceInput = if (allowModifyAtStartup) {
                 variable.asInstanceInput ?: true
-            } else null,
+            } else false,
             sensitive = variable.sensitive,
             fields = if (type == BuildFormPropertyType.FORM_LIST) {
                 variable.props?.fields?.map { child -> convertBuildFormProperty(child.key, child.value) }

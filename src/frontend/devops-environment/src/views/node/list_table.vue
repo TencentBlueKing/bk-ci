@@ -20,7 +20,7 @@
             :pagination="pagination"
             :default-sort="defaultSort"
             height="100%"
-            :key="`${isFlod}-${queryNodeHashId}`"
+            :key="`${isFlod}-${queryNodeHashId}-${isCreateResType}`"
             @row-click="handleRowClick"
             @page-change="handlePageChange"
             @page-limit-change="handlePageLimitChange"
@@ -43,15 +43,15 @@
                                     disablePermissionApi: true,
                                     permissionData: {
                                         projectId: projectId,
-                                        resourceType: NODE_RESOURCE_TYPE,
+                                        resourceType: currentResourceType,
                                         resourceCode: props.row.nodeHashId,
-                                        action: NODE_RESOURCE_ACTION.VIEW
+                                        action: currentResourceAction.VIEW
                                     }
                                 } : {}"
                                 class="node-name"
                                 :class="{
                                     'pointer': canShowDetail(props.row),
-                                    'useless': !canShowDetail(props.row) || !props.row.canUse,
+                                    'useless': (!canShowDetail(props.row) || !props.row.canUse) && !isCreateResType,
                                     'unavailable': removedStatus.includes(props.row.nodeStatus)
                                 }"
                                 :title="props.row.displayName"
@@ -113,13 +113,13 @@
                                     disablePermissionApi: true,
                                     permissionData: {
                                         projectId: projectId,
-                                        resourceType: NODE_RESOURCE_TYPE,
+                                        resourceType: currentResourceType,
                                         resourceCode: props.row.nodeHashId,
-                                        action: NODE_RESOURCE_ACTION.VIEW
+                                        action: currentResourceAction.VIEW
                                     }
                                 } : {}"
                                 class="node-name"
-                                :class="{ 'pointer': canShowDetail(props.row), 'useless': !canShowDetail(props.row) || !props.row.canUse }"
+                                :class="{ 'pointer': canShowDetail(props.row), 'useless': (!canShowDetail(props.row) || !props.row.canUse) && !isCreateResType }"
                                 :title="props.row.displayName"
                                 @click="toNodeDetail(props.row)"
                             >
@@ -131,15 +131,15 @@
                                     disablePermissionApi: true,
                                     permissionData: {
                                         projectId: projectId,
-                                        resourceType: NODE_RESOURCE_TYPE,
+                                        resourceType: currentResourceType,
                                         resourceCode: props.row.nodeHashId,
-                                        action: NODE_RESOURCE_ACTION.EDIT
+                                        action: currentResourceAction.EDIT
                                     }
                                 }"
                             >
                                 <i
                                     class="devops-icon icon-edit"
-                                    v-if="!isEditNodeStatus"
+                                    v-if="showEditIcon"
                                     @click="editNodeName(props.row)"
                                 ></i>
                             </span>
@@ -362,9 +362,9 @@
                                         disablePermissionApi: true,
                                         permissionData: {
                                             projectId: projectId,
-                                            resourceType: NODE_RESOURCE_TYPE,
+                                            resourceType: currentResourceType,
                                             resourceCode: props.row.nodeHashId,
-                                            action: NODE_RESOURCE_ACTION.EDIT
+                                            action: currentResourceAction.EDIT
                                         }
                                     }"
                                     @click="installAgent(props.row)"
@@ -372,15 +372,15 @@
                                     {{ `${$t('environment.reinstallAgent')}` }}
                                 </span>
                                 <span
-                                    v-if="['THIRDPARTY'].includes(props.row.nodeType)"
+                                    v-if="['THIRDPARTY'].includes(props.row.nodeType) || isCreateResType"
                                     v-perm="{
                                         hasPermission: props.row.canEdit,
                                         disablePermissionApi: true,
                                         permissionData: {
                                             projectId: projectId,
-                                            resourceType: NODE_RESOURCE_TYPE,
+                                            resourceType: currentResourceType,
                                             resourceCode: props.row.nodeHashId,
-                                            action: NODE_RESOURCE_ACTION.EDIT
+                                            action: currentResourceAction.EDIT
                                         }
                                     }"
                                     class="node-handle delete-node-text"
@@ -389,15 +389,15 @@
                                     {{ $t('environment.setTag') }}
                                 </span>
                                 <span
-                                    v-if="!['TSTACK'].includes(props.row.nodeType)"
+                                    v-if="!['TSTACK'].includes(props.row.nodeType) && !isCreateResType"
                                     v-perm="{
                                         hasPermission: props.row.canDelete,
                                         disablePermissionApi: true,
                                         permissionData: {
                                             projectId: projectId,
-                                            resourceType: NODE_RESOURCE_TYPE,
+                                            resourceType: currentResourceType,
                                             resourceCode: props.row.nodeHashId,
-                                            action: NODE_RESOURCE_ACTION.DELETE
+                                            action: currentResourceAction.DELETE
                                         }
                                     }"
                                     class="node-handle delete-node-text"
@@ -521,7 +521,12 @@
 </template>
 
 <script>
-    import { NODE_RESOURCE_ACTION, NODE_RESOURCE_TYPE } from '@/utils/permission'
+    import {
+        NODE_RESOURCE_ACTION,
+        NODE_RESOURCE_TYPE,
+        CREATIVE_STREAM_NODE_RESOURCE_ACTION,
+        CREATIVE_NODE_RESOURCE_TYPE
+    } from '@/utils/permission'
     import EmptyTableStatus from '@/components/empty-table-status'
     import { mapActions } from 'vuex'
     const NODE_TABLE_COLUMN_CACHE = 'node_list_columns'
@@ -571,14 +576,98 @@
         },
         data () {
             return {
-                NODE_RESOURCE_TYPE,
-                NODE_RESOURCE_ACTION,
                 ENV_ACTIVE_NODE_TYPE,
                 ALLNODE,
                 curEditNodeDisplayName: '',
                 isEditNodeStatus: false,
                 tableSize: localStorage.getItem('node_table_size') || 'small',
-                tableColumn: [
+                rawSelectedTableColumn: JSON.parse(localStorage.getItem(NODE_TABLE_COLUMN_CACHE))?.columns || [
+                    { id: 'displayName' },
+                    { id: 'ip' },
+                    { id: 'label' },
+                    { id: 'os' },
+                    { id: 'nodeStatus' },
+                    { id: 'usage' },
+                    { id: 'createdUser' },
+                    { id: 'lastModifyBy' },
+                    { id: 'lastModifyTime' },
+                    { id: 'latestBuildPipeline' },
+                    { id: 'latestBuildTime' }
+                ],
+                isShowSetTagSlider: false,
+                runningStatus: ['CREATING', 'STARTING', 'STOPPING', 'RESTARTING', 'DELETING', 'BUILDING_IMAGE'],
+                successStatus: ['NORMAL', 'BUILD_IMAGE_SUCCESS'],
+                failStatus: ['ABNORMAL', 'DELETED', 'LOST', 'BUILD_IMAGE_FAILED', 'UNKNOWN', 'RUNNING'],
+                setTagForm: [
+                    { tagKeyId: '', tagValueId: '' }
+                ],
+                currentNodeId: null,
+                visibleLabelCountList: {},
+                removedStatus: ['NOT_IN_CC', 'NOT_IN_CMDB']
+            }
+        },
+        computed: {
+            projectId () {
+                return this.$route.params.projectId
+            },
+            allRenderColumnMap () {
+                return this.selectedTableColumn.reduce((result, item) => {
+                    result[item.id] = true
+                    return result
+                }, {})
+            },
+            selectedTableColumn () {
+                // 如果是 CreateResType，过滤掉 usage 和 latestBuildPipeline 字段
+                if (this.isCreateResType) {
+                    return this.rawSelectedTableColumn.filter(col => !['usage', 'latestBuildPipeline'].includes(col.id))
+                }
+                return this.rawSelectedTableColumn
+            },
+            usageMap () {
+                return {
+                    DEVCLOUD: this.$t('environment.build'),
+                    THIRDPARTY: this.$t('environment.build'),
+                    CC: this.$t('environment.deploy'),
+                    CMDB: this.$t('environment.deploy'),
+                    UNKNOWN: this.$t('environment.deploy'),
+                    OTHER: this.$t('environment.deploy')
+                }
+            },
+            tagKeyIdList () {
+                return this.nodeTagList
+            },
+            labelGroups () {
+                const res = this.nodeList.map((item, index) => {
+                    const { tags = [] } = item
+                    const visibleCount = this.visibleLabelCountList[index]
+                    
+                    if (visibleCount >= 1) {
+                        return {
+                            visibleLabels: tags.slice(0, visibleCount),
+                            hiddenLabels: tags.slice(visibleCount),
+                            showMore: tags.length - visibleCount
+                        }
+                    }
+
+                    return {
+                        visibleLabels: tags,
+                        hiddenLabels: [],
+                        showMore: tags?.length ?? 0
+                    }
+                })
+                return res
+            },
+            queryNodeHashId () {
+                return this.$route.query.nodeHashId
+            },
+            currentResType () {
+                return this.$route.params.resType
+            },
+            isCreateResType () {
+                return this.currentResType === SERVICE_RESOURCE_TYPE.CREATE
+            },
+            tableColumn () {
+                const columns = [
                     {
                         id: 'displayName',
                         label: this.$t('environment.nodeInfo.displayName'),
@@ -625,78 +714,21 @@
                         id: 'latestBuildTime',
                         label: this.$t('environment.nodeInfo.lastRunAs')
                     }
-                ],
-                selectedTableColumn: JSON.parse(localStorage.getItem(NODE_TABLE_COLUMN_CACHE))?.columns || [
-                    { id: 'displayName' },
-                    { id: 'ip' },
-                    { id: 'label' },
-                    { id: 'os' },
-                    { id: 'nodeStatus' },
-                    { id: 'usage' },
-                    { id: 'createdUser' },
-                    { id: 'lastModifyBy' },
-                    { id: 'lastModifyTime' },
-                    { id: 'latestBuildPipeline' },
-                    { id: 'latestBuildTime' }
-                ],
-                isShowSetTagSlider: false,
-                runningStatus: ['CREATING', 'STARTING', 'STOPPING', 'RESTARTING', 'DELETING', 'BUILDING_IMAGE'],
-                successStatus: ['NORMAL', 'BUILD_IMAGE_SUCCESS'],
-                failStatus: ['ABNORMAL', 'DELETED', 'LOST', 'BUILD_IMAGE_FAILED', 'UNKNOWN', 'RUNNING'],
-                setTagForm: [
-                    { tagKeyId: '', tagValueId: '' }
-                ],
-                currentNodeId: null,
-                visibleLabelCountList: {},
-                removedStatus: ['NOT_IN_CC', 'NOT_IN_CMDB']
-            }
-        },
-        computed: {
-            projectId () {
-                return this.$route.params.projectId
-            },
-            allRenderColumnMap () {
-                return this.selectedTableColumn.reduce((result, item) => {
-                    result[item.id] = true
-                    return result
-                }, {})
-            },
-            usageMap () {
-                return {
-                    DEVCLOUD: this.$t('environment.build'),
-                    THIRDPARTY: this.$t('environment.build'),
-                    CC: this.$t('environment.deploy'),
-                    CMDB: this.$t('environment.deploy'),
-                    UNKNOWN: this.$t('environment.deploy'),
-                    OTHER: this.$t('environment.deploy')
+                ]
+                // 如果是 CreateResType，过滤掉 usage 和 latestBuildPipeline 字段
+                if (this.isCreateResType) {
+                    return columns.filter(col => !['usage', 'latestBuildPipeline'].includes(col.id))
                 }
+                return columns
             },
-            tagKeyIdList () {
-                return this.nodeTagList
+            showEditIcon () {
+                return !this.isEditNodeStatus && !this.isCreateResType
             },
-            labelGroups () {
-                const res = this.nodeList.map((item, index) => {
-                    const { tags = [] } = item
-                    const visibleCount = this.visibleLabelCountList[index]
-                    
-                    if (visibleCount >= 1) {
-                        return {
-                            visibleLabels: tags.slice(0, visibleCount),
-                            hiddenLabels: tags.slice(visibleCount),
-                            showMore: tags.length - visibleCount
-                        }
-                    }
-
-                    return {
-                        visibleLabels: tags,
-                        hiddenLabels: [],
-                        showMore: tags?.length ?? 0
-                    }
-                })
-                return res
+            currentResourceType () {
+                return this.isCreateResType ? CREATIVE_NODE_RESOURCE_TYPE : NODE_RESOURCE_TYPE
             },
-            queryNodeHashId () {
-                return this.$route.query.nodeHashId
+            currentResourceAction () {
+                return this.isCreateResType ? CREATIVE_STREAM_NODE_RESOURCE_ACTION : NODE_RESOURCE_ACTION
             }
         },
         watch: {
@@ -708,9 +740,6 @@
         },
         methods: {
             ...mapActions('environment', ['requestNodeTagList', 'requestGetCounts']),
-            handleExpandList () {
-                this.$emit('toggle-fold')
-            },
             calcOverPosTable () {
                 const tagMargin = 6
                 this.visibleLabelCountList = this.nodeList.reduce((acc, item, index) => {
@@ -773,9 +802,9 @@
                             e,
                             {
                                 projectId: this.projectId,
-                                resourceType: NODE_RESOURCE_TYPE,
+                                resourceType: this.currentResourceType,
                                 resourceCode: node.nodeHashId,
-                                action: NODE_RESOURCE_ACTION.EDIT
+                                action: this.currentResourceAction.EDIT
                             }
                         )
                     } finally {
@@ -825,18 +854,16 @@
                 }
             },
             toNodeDetail (node) {
-                if (this.isFlod) return
                 if (this.canShowDetail(node)) {
-                    this.$emit('show-detail', node.nodeHashId)
-                    // const currentNodeType = this.$route.params.nodeType || ALLNODE
-                    // localStorage.setItem(ENV_ACTIVE_NODE_TYPE, currentNodeType)
-                    // this.$router.push({
-                    //     name: 'nodeDetail',
-                    //     params: {
-                    //         projectId: this.projectId,
-                    //         nodeHashId: node.nodeHashId
-                    //     }
-                    // })
+                    const currentNodeType = this.$route.params.nodeType || ALLNODE
+                    localStorage.setItem(ENV_ACTIVE_NODE_TYPE, currentNodeType)
+                    this.$router.push({
+                        name: 'nodeDetail',
+                        params: {
+                            projectId: this.projectId,
+                            nodeHashId: node.nodeHashId
+                        }
+                    })
                 }
             },
             editNodeName (node) {
@@ -891,9 +918,9 @@
                                 e,
                                 {
                                     projectId: this.projectId,
-                                    resourceType: NODE_RESOURCE_TYPE,
+                                    resourceType: this.currentResourceType,
                                     resourceCode: row.nodeHashId,
-                                    action: NODE_RESOURCE_ACTION.DELETE
+                                    action: this.currentResourceAction.DELETE
                                 }
                             )
                         } finally {
@@ -976,7 +1003,10 @@
                                 theme: 'success'
                             })
                             this.$emit('refresh')
-                            await this.requestNodeTagList(this.projectId)
+                            await this.requestNodeTagList({
+                                projectId: this.projectId,
+                                createMode: this.isCreateResType
+                            })
                         }
                     }
                 } catch (err) {
@@ -999,16 +1029,16 @@
             handleApplyPermission (node) {
                 this.handleNoPermission({
                     projectId: this.projectId,
-                    resourceType: NODE_RESOURCE_TYPE,
+                    resourceType: this.currentResourceType,
                     resourceCode: node.nodeHashId,
-                    action: NODE_RESOURCE_ACTION.USE
+                    action: this.currentResourceAction.USE
                 })
             },
             clearFilter () {
                 this.$emit('clear-filter')
             },
             handleSettingChange ({ fields, size }) {
-                this.selectedTableColumn = Object.freeze(fields)
+                this.rawSelectedTableColumn = Object.freeze(fields)
                 this.tableSize = size
                 localStorage.setItem(NODE_TABLE_COLUMN_CACHE, JSON.stringify({
                     columns: fields,
@@ -1016,7 +1046,7 @@
                 }))
             },
             canShowDetail (row) {
-                return row.nodeType === 'THIRDPARTY'
+                return row.nodeType === 'THIRDPARTY' || this.isCreateResType
             },
             tableRowClassName ({ row }) {
                 let className = 'node-item-row'

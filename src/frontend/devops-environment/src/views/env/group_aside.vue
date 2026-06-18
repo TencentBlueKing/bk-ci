@@ -28,7 +28,10 @@
             @enter="fetchEnvList"
             @clear="fetchEnvList"
         />
-        <div class="filer-type-menu">
+        <div
+            v-if="!isCreateResType"
+            class="filer-type-menu"
+        >
             <p class="title">{{ $t('environment.typeFilter') }}</p>
             <div class="type-list">
                 <span
@@ -49,7 +52,9 @@
                 </span>
             </div>
         </div>
-        <div class="env-list-menu">
+        <div
+            :class="['env-list-menu', { 'mt10': isCreateResType }]"
+        >
             <p class="title">{{ $t('environment.environmentList') }}</p>
             <div class="env-list">
                 <span
@@ -80,6 +85,7 @@
                         </span>
                     </span>
                     <bk-dropdown-menu
+                        v-if="!env.envHashId.startsWith('-')"
                         trigger="click"
                         ext-cls="env-operation-dropdown"
                         @show="handleDropdownShow(env.envHashId)"
@@ -102,6 +108,10 @@
                             </li>
                         </ul>
                     </bk-dropdown-menu>
+                    <span
+                        v-else
+                        class="env-operation-placeholder"
+                    ></span>
                 </span>
             </div>
         </div>
@@ -124,6 +134,7 @@
     import CreateEnvDialog from '@/components/CreateEnvDialog.vue'
     import useCreateEnv from '@/hooks/useCreateEnv'
     import useEnvAside from '@/hooks/useEnvAside'
+    import useEnvDetail from '@/hooks/useEnvDetail'
 
     export default {
         name: 'GroupAside',
@@ -144,8 +155,12 @@
                 totalEnvCount,
                 initData,
                 fetchEnvList,
-                deleteEnv
+                deleteEnv,
+                isCreateResType
             } = useEnvAside()
+            const {
+                setEnvDetailLoaded
+            } = useEnvDetail()
             const projectId = computed(() => proxy.$route.params.projectId)
             const envId = computed(() => proxy.$route.params?.envId)
             const envTypList = computed(() => ([
@@ -175,12 +190,13 @@
                 //     count: envCountData.value[ENV_TYPE_MAP.DEVX] ?? 0
                 // }
             ]))
-            const handleCreateEnvSuccess = (envId) => {
-                fetchEnvList()
+            const handleCreateEnvSuccess = async ({ hashId }) => {
+                await fetchEnvList()
                 proxy.$router.replace({
+                    name: 'envDetail',
                     params: {
                         ...proxy.$route.params,
-                        envId
+                        envId: hashId
                     }
                 })
             }
@@ -253,8 +269,26 @@
                 })
             }
 
+            const resType = computed(() => proxy.$route.params.resType)
+
             watch(() => projectId.value, async (newProjectId) => {
                 if (newProjectId) {
+                    await initData()
+                }
+            })
+
+            watch(() => resType.value, async (newResType, oldResType) => {
+                if (newResType && newResType !== oldResType) {
+                    await proxy.$router.replace({
+                        name: 'envDetail',
+                        params: {
+                            ...proxy.$route.params,
+                            envType: ENV_TYPE_MAP.ALL,
+                            envId: undefined,
+                            tabName: 'node'
+                        }
+                    })
+                    setEnvDetailLoaded(false)
                     await initData()
                 }
             })
@@ -274,6 +308,7 @@
                 initData,
                 fetchEnvList,
                 showCreateEnvDialog,
+                isCreateResType,
                 ENV_RESOURCE_ACTION,
                 ENV_RESOURCE_TYPE,
 
@@ -293,6 +328,7 @@
         padding: 16px;
         height: 100%;
         background-color: #FFFFFF;
+        border-top: 1px solid #DCDEE5;
         .add-env-btn {
             width: 100%;
             &:hover {
@@ -419,6 +455,10 @@
                 color: #3A84FF;
             }
         }
+        .env-operation-placeholder {
+            width: 24px;
+            height: 24px;
+            display: inline-block;
         }
         .env-name {
             flex: 1;
@@ -443,8 +483,7 @@
                 background: #FFFFFF;
             }
         }
-    
-    // 环境操作下拉菜单样式
+    }
     .env-operation-dropdown {
         .bk-dropdown-list {
             li {

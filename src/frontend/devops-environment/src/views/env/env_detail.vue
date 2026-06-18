@@ -12,8 +12,17 @@
                     {{ currentEnv?.name || '--' }}
                 </span>
                 <bk-tag>{{ envNodeTypeDisplayName }}</bk-tag>
-                <span class="env-type-tag">
+                <span
+                    v-if="!isCreateResType"
+                    class="env-type-tag"
+                >
                     {{ envTypeDisplayName }}
+                </span>
+                <span
+                    v-if="isCreateResType && currentEnv?.desc"
+                    class="env-desc"
+                >
+                    {{ currentEnv?.desc }}
                 </span>
             </header>
             <div
@@ -65,7 +74,7 @@
     import BuildTask from './components/BuildTask/index.vue'
     import DeployTask from './components/DeployTask/index.vue'
     import AuthManage from './components/Auth/index.vue'
-    import SchedulingStrategy from './components/SchedulingStrategy/index.vue'
+    import Settings from './components/Settings/index.vue'
     import emptyNode from '../empty_node'
 
     export default {
@@ -77,8 +86,8 @@
             SharedSettings,
             BuildTask,
             DeployTask,
-            emptyNode,
-            SchedulingStrategy
+            Settings,
+            emptyNode
         },
         setup () {
             const { proxy } = useInstance()
@@ -90,9 +99,16 @@
                 projectId
             } = useEnvDetail()
             const {
-                envList
+                envList,
+                isCreateResType
             } = useEnvAside()
-            
+
+            // 获取当前项目的 projectScope
+            const projectScope = computed(() => {
+                const projectList = proxy.$store.state.projectList || []
+                const curProject = projectList.find(p => p.projectCode === projectId.value)
+                return curProject?.projectScope
+            })
 
             const emptyInfo = ref({
                 title: proxy.$t('environment.envInfo.emptyEnv'),
@@ -111,8 +127,8 @@
                     sharedSettings: SharedSettings,
                     buildTask: BuildTask,
                     deployTask: DeployTask,
-                    auth: AuthManage,
-                    schedulingStrategy: SchedulingStrategy
+                    settings: Settings,
+                    auth: AuthManage
                 }
                 return comMap[tabActive.value]
             })
@@ -138,10 +154,6 @@
                     name: 'node',
                     label: proxy.$t('environment.node')
                 },
-                {
-                    name: 'schedulingStrategy',
-                    label: proxy.$t('environment.schedulingStrategy')
-                },
                 ...(currentEnv.value?.envType === ENV_TYPE_MAP.BUILD ? [
                     {
                         name: 'variable',
@@ -156,16 +168,24 @@
                     name: 'basicInfo',
                     label: proxy.$t('environment.basicInfo')
                 },
-                ...(currentEnv.value?.envType === ENV_TYPE_MAP.BUILD ? [
+                // ...(currentEnv.value?.envType === ENV_TYPE_MAP.CREATE && isCreateResType.value ? [
+                //     {
+                //         name: 'settings',
+                //         label: proxy.$t('environment.settings')
+                //     }
+                // ] : []),
+                ...(currentEnv.value?.envType === ENV_TYPE_MAP.BUILD || isCreateResType.value ? [
                     {
                         name: 'buildTask',
-                        label: proxy.$t('environment.nodeInfo.buildTask')
+                        label: currentEnv.value?.envType === ENV_TYPE_MAP.CREATE
+                            ? proxy.$t('environment.relatedCreativeFlow')
+                            : proxy.$t('environment.nodeInfo.buildTask')
                     }
                 ] : []),
-                {
+                ...(projectScope.value !== 1 ? [{
                     name: 'auth',
                     label: proxy.$t('environment.authManage')
-                }
+                }] : [])
             ])
             
             // 获取可用的 tab 名称列表
@@ -265,6 +285,7 @@
                 envDetailLoaded,
                 envTypeDisplayName,
                 envNodeTypeDisplayName,
+                isCreateResType,
                 handleCreateEnv
             }
         }
@@ -280,13 +301,15 @@
     background: #f5f7fa;
 }
 .env-info-header {
+    display: inline-flex;
+    align-items: center;
     height: 54px;
     line-height: 54px;
     background: #FAFBFD;
     padding: 0 24px;
     .env-name {
-        font-weight: 700;
         flex: 0 1 auto;
+        font-weight: 700;
         font-size: 14px;
         max-width: 300px;
         overflow: hidden;
@@ -305,6 +328,18 @@
         margin-left: 8px;
         border: 1px solid #979ba54d;
         border-radius: 2px;
+    }
+    .env-desc {
+        color: #979BA5;
+        font-size: 12px;
+        &::before {
+            content: '|';
+            display: inline-block;
+            width: 1px;
+            height: 16px;
+            color: #DCDEE5;
+            margin: 0 16px;
+        }
     }
 }
 .env-content-main {

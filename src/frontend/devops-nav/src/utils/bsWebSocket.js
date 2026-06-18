@@ -39,7 +39,7 @@ class BlueShieldWebSocket {
                     const vm = window.devops
                     const currentRoute = vm.$router.currentRoute
                     if (this.detectHasWebsocket(currentRoute) && !this.isConnecting) {
-                        if (currentRoute.path.indexOf('executeDetail') > -1) {
+                        if (currentRoute.path.indexOf('executeDetail') > -1 || currentRoute.path.indexOf('execute-detail') > -1) {
                             console.log('executeDetail page close reconnect', currentRoute.path)
                             this.connectCallBack.push(() => {
                                 this.handleMessage({

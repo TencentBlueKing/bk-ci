@@ -1,6 +1,5 @@
 <template>
     <div class="node-list-wrapper">
-        <router-view />
         <section
             class="sub-view-port"
             v-bkloading="{
@@ -12,13 +11,14 @@
                 <section class="filter-bar">
                     <div class="btn-part">
                         <bk-button
+                            v-if="!isCreateResType"
                             :key="projectId"
                             v-perm="{
                                 permissionData: {
                                     projectId: projectId,
-                                    resourceType: NODE_RESOURCE_TYPE,
+                                    resourceType: currentResourceType,
                                     resourceCode: projectId,
-                                    action: NODE_RESOURCE_ACTION.CREATE
+                                    action: currentResourceAction.CREATE
                                 }
                             }"
                             theme="primary"
@@ -61,13 +61,13 @@
                                         v-perm="{
                                             permissionData: {
                                                 projectId: projectId,
-                                                resourceType: NODE_RESOURCE_TYPE,
+                                                resourceType: currentResourceType,
                                                 resourceCode: projectId,
-                                                action: NODE_RESOURCE_ACTION.CREATE
+                                                action: item.action
                                             }
                                         }"
                                         @click="item.handler"
-                                        key="thirdPartyBuildMachine"
+                                        :key="item.key"
                                     >
                                         {{ $t(item.textKey) }}
                                     </a>
@@ -106,8 +106,7 @@
                             v-model="dateTimeRange"
                             :placeholder="$t('environment.selectRecentExecutionTimeRange')"
                             :type="'datetimerange'"
-                            @clear="handleClearDateRange"
-                            @pick-success="handleDateRangeChange"
+                            @change="handleDateRangeChange"
                         >
                         </bk-date-picker>
                     </div>
@@ -305,13 +304,18 @@
     import thirdConstruct from '@/components/devops/environment/third-construct-dialog'
     import { getQueryString } from '@/utils/util'
     import webSocketMessage from '@/utils/webSocketMessage.js'
-    import { NODE_RESOURCE_ACTION, NODE_RESOURCE_TYPE } from '@/utils/permission'
+    import {
+        NODE_RESOURCE_ACTION,
+        NODE_RESOURCE_TYPE,
+        CREATIVE_STREAM_NODE_RESOURCE_ACTION,
+        CREATIVE_NODE_RESOURCE_TYPE
+    } from '@/utils/permission'
     import SearchSelect from '@blueking/search-select'
     import '@blueking/search-select/dist/styles/index.css'
     import ListTable from './list_table.vue'
     import { mapState, mapActions } from 'vuex'
     const ENV_NODE_TABLE_LIMIT_CACHE = 'env_node_table_limit_cache'
-    import { ENV_ACTIVE_NODE_TYPE, ALLNODE } from '@/store/constants'
+    import { ENV_ACTIVE_NODE_TYPE, ALLNODE, SERVICE_RESOURCE_TYPE } from '@/store/constants'
     import CollapseLayout from '@/components/CollapseLayout'
     import useCollapseLayout from '@/hooks/useCollapseLayout'
     import useUrlQuery from '@/hooks/useUrlQuery'
@@ -320,54 +324,10 @@
         components: {
             ListTable,
             thirdConstruct,
-            SearchSelect,
-            CollapseLayout,
-            NodeDetail
-        },
-        setup () {
-            const { flod, toggleFlod: originalToggleFlod, setFlod } = useCollapseLayout('node_list', false)
-            const {
-                queryParams,
-                updateSearchValue,
-                updateTagSearchValue,
-                updateDateTimeRange,
-                updatePagination,
-                updateSort,
-                updateNodeHashId,
-                getRequestParams,
-                getTagRequestParams
-            } = useUrlQuery()
-            
-            // 包装 toggleFlod，在折叠时清除 nodeHashId
-            const toggleFlod = () => {
-                originalToggleFlod()
-                // 如果是展开状态（flod.value === true），则清除 nodeHashId
-                if (!flod.value) {
-                    updateNodeHashId(null)
-                }
-            }
-            
-            return {
-                flod,
-                toggleFlod,
-                setFlod,
-                queryParams,
-                updateSearchValue,
-                updateTagSearchValue,
-                updateDateTimeRange,
-                updatePagination,
-                updateSort,
-                updateNodeHashId,
-                getRequestParams,
-                getTagRequestParams
-            }
+            SearchSelect
         },
         data () {
-            const urlParams = this.queryParams
-            
             return {
-                NODE_RESOURCE_TYPE,
-                NODE_RESOURCE_ACTION,
                 ENV_ACTIVE_NODE_TYPE,
                 ALLNODE,
                 curEditNodeItem: '',
@@ -449,22 +409,18 @@
                         }
                     ]
                 },
-                searchValue: urlParams.searchValue || [],
-                paginationData: {
-                    current: urlParams.page || 1,
+                searchValue: [],
+                pagination: {
+                    current: 1,
                     count: 0,
-                    limit: urlParams.pageSize || Number(localStorage.getItem(ENV_NODE_TABLE_LIMIT_CACHE)) || 10,
-                    limitList: [10, 50, 100, 200],
-                    showTotalCount: true
+                    limit: Number(localStorage.getItem(ENV_NODE_TABLE_LIMIT_CACHE)) || 10,
+                    limitList: [10, 50, 100, 200]
                 },
                 requestParams: {},
-                // 将时间戳转换为 Date 对象给日期组件使用
-                dateTimeRange: urlParams.startTime && urlParams.endTime
-                    ? [new Date(Number(urlParams.startTime)), new Date(Number(urlParams.endTime))]
-                    : [],
+                dateTimeRange: [],
                 currentNodeType: '',
                 currentTags: [],
-                tagSearchValue: urlParams.tagSearchValue || [],
+                tagSearchValue: [],
                 isBatchDropdownShow: false,
                 selectedNodes: [],
                 reInstallId: '',
@@ -478,13 +434,6 @@
             ...mapState('environment', ['nodeTagList']),
             projectId () {
                 return this.$route.params.projectId
-            },
-            pagination () {
-                return {
-                    ...this.paginationData,
-                    small: this.flod,
-                    showLimit: !this.flod
-                }
             },
             userInfo () {
                 return window.userInfo
@@ -509,20 +458,23 @@
                         name: this.$t('environment.nodeInfo.os'),
                         id: 'osName'
                     },
-                    {
-                        name: this.$t('environment.nodeInfo.usage'),
-                        id: 'nodeType',
-                        children: [
-                            {
-                                id: 'CMDB',
-                                name: this.$t('environment.deploy')
-                            },
-                            {
-                                id: 'THIRDPARTY',
-                                name: this.$t('environment.build')
-                            }
-                        ]
-                    },
+                    ...(!this.isCreateResType ? [
+                        {
+                            name: this.$t('environment.nodeInfo.usage'),
+                            id: 'nodeType',
+                            children: [
+                                {
+                                    id: 'CMDB',
+                                    name: this.$t('environment.deploy')
+                                },
+                                {
+                                    id: 'THIRDPARTY',
+                                    name: this.$t('environment.build')
+                                }
+                            ]
+                        }
+                    ] : [])
+                    ,
                     {
                         name: this.$t('environment.nodeInfo.importer'),
                         id: 'createdUser'
@@ -553,20 +505,22 @@
                         name: this.$t('environment.lastModifier'),
                         id: 'lastModifiedUser'
                     },
-                    {
-                        name: this.$t('environment.nodeInfo.lastRunPipeline'),
-                        id: 'latestBuildPipelineId',
-                        remoteMethod:
-                            async (search) => {
-                                const res = await this.$store.dispatch('environment/getLatestBuildPipelineList', {
-                                    projectId: this.projectId
-                                })
-                                return res.records.map(item => ({
-                                    name: item.pipelineName,
-                                    id: item.pipelineId
-                                }))
-                            }
-                    }
+                    ...(!this.isCreateResType ? [
+                        {
+                            name: this.$t('environment.nodeInfo.lastRunPipeline'),
+                            id: 'latestBuildPipelineId',
+                            remoteMethod:
+                                async (search) => {
+                                    const res = await this.$store.dispatch('environment/getLatestBuildPipelineList', {
+                                        projectId: this.projectId
+                                    })
+                                    return res.records.map(item => ({
+                                        name: item.pipelineName,
+                                        id: item.pipelineId
+                                    }))
+                                }
+                        }
+                    ] : [])
                 ]
                 return data.filter(data => {
                     return !this.searchValue.find(val => val.id === data.id)
@@ -587,8 +541,7 @@
                 })
             },
             filterPlaceHolder () {
-                const str = this.filterData.filter((i, index) => index < 7).map(item => item.name).join(' / ')
-                return this.$t('environment.filterNodeBy', [str])
+                return this.filterData.map(item => item.name).join(' / ')
             },
             installModeAsService () {
                 return this.constructImportForm.installType === 'SERVICE'
@@ -598,27 +551,33 @@
                     {
                         key: 'thirdPartyBuildMachine',
                         textKey: 'environment.batchSetTag',
-                        handler: () => this.batchSetTag()
+                        handler: () => this.batchSetTag(),
+                        action: this.currentResourceAction.EDIT
                     },
                     {
                         key: 'bulkEditMaxConcurrency',
                         textKey: 'environment.bulkEditMaxConcurrency',
                         tooltips: this.$t('environment.未选择构建节点，不支持修改'),
                         disabled: this.selectedNodes.length && this.selectedNodes.every(i => i.nodeType !== 'THIRDPARTY'),
-                        handler: () => this.batchSetMaxConcurrency()
+                        handler: () => this.batchSetMaxConcurrency(),
+                        action: this.currentResourceAction.EDIT
                     },
-                    {
-                        key: 'bulkResetImportUser',
-                        textKey: 'environment.bulkResetImportUser',
-                        tooltips: this.$t('environment.未选择部署节点，不支持重置'),
-                        disabled: this.selectedNodes.length && this.selectedNodes.every(i => i.nodeType !== 'CMDB'),
-                        handler: () => this.batchResetImportUser()
-                    },
-                    {
-                        key: 'idcTestMachine',
-                        textKey: 'environment.batchDeleteNode',
-                        handler: () => this.batchDeleteNode()
-                    }
+                    ...(!this.isCreateResType ? [
+                        {
+                            key: 'bulkResetImportUser',
+                            textKey: 'environment.bulkResetImportUser',
+                            tooltips: this.$t('environment.未选择部署节点，不支持重置'),
+                            disabled: this.selectedNodes.length && this.selectedNodes.every(i => i.nodeType !== 'CMDB'),
+                            handler: () => this.batchResetImportUser(),
+                            action: this.currentResourceAction.EDIT
+                        },
+                        {
+                            key: 'idcTestMachine',
+                            textKey: 'environment.batchDeleteNode',
+                            handler: () => this.batchDeleteNode(),
+                            action: this.currentResourceAction.DELETE
+                        }
+                    ] : [])
                 ]
             },
             username (){
@@ -663,19 +622,20 @@
                     prop: sortType,
                     order: orderMap[collation] || 'ascending'
                 }
+            },
+            isCreateResType () {
+                return this.$route.params.resType === SERVICE_RESOURCE_TYPE.CREATE
+            },
+            currentResourceType () {
+                return this.isCreateResType ? CREATIVE_NODE_RESOURCE_TYPE : NODE_RESOURCE_TYPE
+            },
+            currentResourceAction () {
+                return this.isCreateResType ? CREATIVE_STREAM_NODE_RESOURCE_ACTION : NODE_RESOURCE_ACTION
             }
         },
         watch: {
             projectId: function () {
-                this.$router.push({
-                    name: 'envDetail',
-                    params: {
-                        resType: this.$route.params.resType,
-                        envType: 'ALL',
-                        envId: undefined,
-                        tabName: undefined
-                    }
-                })
+                this.$router.push({ name: 'envList' })
             },
             nodeTagList: {
                 immediate: true,
@@ -754,7 +714,7 @@
             searchValue (val) {
                 // 如果是 handleNodeTypeChange 触发的清空，跳过请求
                 if (this.isNodeTypeChanging) return
-
+                
                 if (val.length) {
                     val.forEach(i => {
                         if (i.values) {
@@ -763,14 +723,16 @@
                             this.requestParams[i.id] = i.id
                         }
                     })
-                    this.paginationData.current = 1
-                    this.updatePagination(1, this.paginationData.limit)
+                    this.pagination.current = 1
                 } else {
                     this.requestParams = {}
                 }
-                // 同步到 URL
-                this.updateSearchValue(val)
                 this.requestList(this.requestParams)
+            },
+            isCreateResType: {
+                handler (val) {
+                    this.init()
+                }
             }
         },
         created () {
@@ -961,18 +923,16 @@
                         }
                     })
                     this.currentTags = tags
-                    this.paginationData.current = 1
+                    this.pagination.current = 1
                 } else {
                     this.syncCurrentTags()
                 }
-                // 同步到 URL
-                this.updateTagSearchValue(val)
                 this.requestList(this.requestParams)
             },
             async handleNodeTypeChange () {
                 // 设置标志位，避免 searchValue watcher 触发额外请求
                 this.isNodeTypeChanging = true
-
+                
                 // 清除搜索和标签条件
                 this.searchValue = []
                 this.tagSearchValue = []
@@ -991,7 +951,7 @@
                 
                 // 重新请求数据
                 await this.requestList()
-
+                
                 // 重置标志位
                 this.isNodeTypeChanging = false
             },
@@ -999,7 +959,6 @@
             handleClearTagSearch () {
                 this.tagSearchValue = []
                 this.currentTags = []
-                this.updateTagSearchValue(null)
                 if (!this.currentNodeType && this.$route.params.nodeType !== ALLNODE) {
                     this.$router.push({ name: 'nodeList', params: { nodeType: ALLNODE } })
                 } else {
@@ -1017,12 +976,8 @@
 
                 try {
                     await this.syncCurrentTags()
-                    // 确保分页参数始终同步到 URL（包括首次加载）
-                    this.updatePagination(this.paginationData.current, this.paginationData.limit)
                     setTimeout(() => {
-                        // 首次加载时使用 URL 参数
-                        const urlRequestParams = this.getRequestParams()
-                        this.requestList(urlRequestParams)
+                        this.requestList()
                     }, 500)
                 } catch (err) {
                     this.$bkMessage({
@@ -1041,22 +996,21 @@
             async requestList (params = this.requestParams) {
                 try {
                     this.tableLoading = true
-                    
-                    // 获取标签参数（优先使用 URL 参数）
-                    const tagParams = this.getTagRequestParams()
-                    
                     const res = await this.$store.dispatch('environment/requestNodeList', {
                         projectId: this.projectId,
                         params: {
                             ...params,
                             ...(this.currentNodeType ? { nodeType: this.currentNodeType } : {}),
                             page: this.paginationData.current,
-                            pageSize: this.paginationData.limit
+                            pageSize: this.paginationData.limit,
+                            ...(this.isCreateResType ? {
+                                nodeType: 'CREATE'
+                            }: {})
                         },
-                        ...(tagParams.length ? { tags: tagParams } : this.currentTags.length ? { tags: this.currentTags } : {})
+                        ...(this.currentTags.length ? { tags: this.currentTags } : {})
                     })
 
-                    this.paginationData.count = res.count
+                    this.pagination.count = res.count
                     this.nodeList = res.records.map(i => {
                         return {
                             isEnableEdit: i.nodeHashId === this.curEditNodeItem,
@@ -1082,9 +1036,9 @@
             goToApplyPerm () {
                 this.handleNoPermission({
                     projectId: this.projectId,
-                    resourceType: NODE_RESOURCE_TYPE,
+                    resourceType: this.currentResourceType,
                     resourceCode: this.projectId,
-                    action: NODE_RESOURCE_ACTION.CREATE
+                    action: this.currentResourceAction.CREATE
                 })
             },
             dropdownIsShow (isShow) {
@@ -1297,18 +1251,14 @@
                 this.selectedNodes = selection
             },
             handlePageChange (page) {
-                this.paginationData.current = page
-                // 同步到 URL
-                this.updatePagination(page, this.paginationData.limit)
+                this.pagination.current = page
                 this.requestList(this.requestParams)
             },
             
             handlePageLimitChange (limit) {
                 localStorage.setItem(ENV_NODE_TABLE_LIMIT_CACHE, limit)
-                this.paginationData.current = 1
-                this.paginationData.limit = limit
-                // 同步到 URL
-                this.updatePagination(1, limit)
+                this.pagination.current = 1
+                this.pagination.limit = limit
                 this.requestList(this.requestParams)
             },
 
@@ -1317,11 +1267,9 @@
                     ascending: 'ASC',
                     descending: 'DESC'
                 }
-                this.paginationData.current = 1
+                this.pagination.current = 1
                 this.requestParams.sortType = prop
                 this.requestParams.collation = orderMap[order]
-                // 同步到 URL
-                this.updateSort(prop, orderMap[order])
                 this.requestList()
             },
         
@@ -1330,7 +1278,12 @@
                 this.searchValue = []
                 this.tagSearchValue = []
                 this.currentTags = []
-                this.$router.push({ name: 'nodeList', params: { nodeType: ALLNODE } })
+                // 如果是 CreateResType，保持当前 nodeType 不变
+                if (this.isCreateResType) {
+                    this.requestList()
+                } else {
+                    this.$router.push({ name: 'nodeList', params: { nodeType: ALLNODE } })
+                }
             },
 
             handleShowNodeDetail (nodeHashId) {
@@ -1350,19 +1303,9 @@
                     return ''
                 }
             },
-
-            handleClearDateRange () {
-                this.dateTimeRange = []
-                this.requestParams.latestBuildTimeStart = ''
-                this.requestParams.latestBuildTimeEnd = ''
-                this.paginationData.current = 1
-                this.updatePagination(1, this.paginationData.limit)
-                this.updateDateTimeRange('', '')
-                this.requestList()
-            },
-            handleDateRangeChange () {
-                const startTime = this.formatTime(this.dateTimeRange[0])
-                const endTime = this.formatTime(this.dateTimeRange[1])
+            handleDateRangeChange (value) {
+                const startTime = this.formatTime(value[0])
+                const endTime = this.formatTime(value[1])
                 if (startTime && endTime) {
                     this.requestParams.latestBuildTimeStart = startTime
                     this.requestParams.latestBuildTimeEnd = endTime
@@ -1370,9 +1313,7 @@
                     delete this.requestParams.latestBuildTimeStart
                     delete this.requestParams.latestBuildTimeEnd
                 }
-                this.paginationData.current = 1
-                // 同步到 URL
-                this.updateDateTimeRange(startTime, endTime)
+                this.pagination.current = 1
                 this.requestList()
             },
 
@@ -1417,11 +1358,7 @@
         overflow: hidden;
 
         .sub-view-port {
-            height: calc(100% - 100px);
             margin: 24px;
-            display: flex;
-            flex-direction: column;
-            min-height: 0;
         }
 
         .create-node-btn {

@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.service.template.v2
 
+import com.tencent.devops.common.api.context.ChannelContext
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
@@ -69,7 +70,9 @@ class PipelineTemplateInstanceListener @Autowired constructor(
 ) {
     fun handle(event: PipelineTemplateInstanceEvent) {
         logger.info("consume pipeline template instance event {}", event)
-        handleTemplateInstanceEvent(event)
+        ChannelContext.withChannel(event.channelCode.name) {
+            handleTemplateInstanceEvent(event)
+        }
     }
 
     private fun handleTemplateInstanceEvent(event: PipelineTemplateInstanceEvent) {

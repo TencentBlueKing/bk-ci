@@ -346,7 +346,7 @@ class SubPipelineCheckService @Autowired constructor(
                         I18nUtil.getCodeLanMessage(
                             messageCode = ProcessMessageCode.ERROR_NO_PIPELINE_VERSION_EXISTS_BY_BRANCH,
                             params = arrayOf(
-                                "${holder.stageIndex}-${holder.containerIndex}-${holder.elementIndex}",
+                                "${holder.stageIndex}-${holder.containerIndex + 1}-${holder.elementIndex + 1}",
                                 "/console/pipeline/$subProjectId/$subPipelineId",
                                 subPipelineName,
                                 subPipelineBranch

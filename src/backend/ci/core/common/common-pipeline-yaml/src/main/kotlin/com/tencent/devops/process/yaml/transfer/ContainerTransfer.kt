@@ -43,6 +43,7 @@ import com.tencent.devops.common.pipeline.enums.DependOnType
 import com.tencent.devops.common.pipeline.enums.JobRunCondition
 import com.tencent.devops.common.pipeline.option.JobControlOption
 import com.tencent.devops.common.pipeline.option.MatrixControlOption
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.transfer.IfType
 import com.tencent.devops.common.pipeline.pojo.transfer.PreStep
@@ -107,13 +108,15 @@ class ContainerTransfer @Autowired(required = false) constructor(
         finalStage: Boolean = false,
         jobEnable: Boolean = true,
         resources: Resources? = null,
-        buildTemplateAcrossInfo: BuildTemplateAcrossInfo?
+        buildTemplateAcrossInfo: BuildTemplateAcrossInfo?,
+        channelCode: ChannelCode = ChannelCode.BS
     ) {
         val buildEnv = if (job.runsOn.selfHosted == false) job.runsOn.needs?.ifEmpty { null } else null
         val (dispatchType, baseOS) = kotlin.runCatching {
             dispatchTransfer.makeDispatchType(
                 job = job,
-                buildTemplateAcrossInfo = buildTemplateAcrossInfo
+                buildTemplateAcrossInfo = buildTemplateAcrossInfo,
+                channelCode = channelCode
             )
         }.onFailure {
             if (it is OperationException) {
@@ -243,17 +246,23 @@ class ContainerTransfer @Autowired(required = false) constructor(
         userId: String,
         projectId: String,
         job: VMBuildContainer,
-        steps: List<PreStep>?
+        steps: List<PreStep>?,
+        channelCode: ChannelCode = ChannelCode.BS
     ): IPreJob {
-        return PreJob(
-            enable = job.containerEnabled().nullIfDefault(true),
-            name = job.name,
-            runsOn = dispatchTransfer.makeRunsOn(job)?.fix(
+        val runsOnValue = if (channelCode == ChannelCode.CREATIVE_STREAM) {
+            null
+        } else {
+            dispatchTransfer.makeRunsOn(job)?.fix(
                 jobId = job.jobId.toString(),
                 userId = userId,
                 projectId = projectId,
                 buildType = job.dispatchType?.buildType()
-            ),
+            )
+        }
+        return PreJob(
+            enable = job.containerEnabled().nullIfDefault(true),
+            name = job.name,
+            runsOn = runsOnValue,
             showRunsOn = job.showBuildResource.nullIfDefault(false),
             container = null,
             services = null,
