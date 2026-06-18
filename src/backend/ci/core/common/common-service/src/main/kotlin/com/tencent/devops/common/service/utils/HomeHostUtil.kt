@@ -63,6 +63,11 @@ object HomeHostUtil {
         return getHost(commonConfig.devopsOuteApiHostGateWay!!)
     }
 
+    fun devxApiHost(): String {
+        val commonConfig = SpringContextUtil.getBean(CommonConfig::class.java)
+        return getHost(commonConfig.devopsDevxApiHostGateway!!)
+    }
+
     fun shortUrlServerHost(): String {
         val commonConfig = SpringContextUtil.getBean(CommonConfig::class.java)
         return getHost(commonConfig.devopsShortUrlGateway!!)

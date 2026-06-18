@@ -57,6 +57,7 @@ import com.tencent.devops.ticket.constant.TicketMessageCode
 import com.tencent.devops.ticket.constant.TicketMessageCode.USER_NO_ENGINEERING_CREDENTIAL_OPERATE_PERMISSIONS
 import com.tencent.devops.ticket.dao.CredentialDao
 import com.tencent.devops.ticket.pojo.Credential
+import com.tencent.devops.ticket.pojo.CredentialBasicInfo
 import com.tencent.devops.ticket.pojo.CredentialCreate
 import com.tencent.devops.ticket.pojo.CredentialInfo
 import com.tencent.devops.ticket.pojo.CredentialItemVo
@@ -830,6 +831,32 @@ class CredentialServiceImpl @Autowired constructor(
         )
     }
 
+    @AuditEntry(actionId = ActionId.CREDENTIAL_VIEW)
+    @ActionAuditRecord(
+        actionId = ActionId.CREDENTIAL_VIEW,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.CREDENTIAL,
+            instanceNames = "#credentialId",
+            instanceIds = "#credentialId"
+        ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
+        content = ActionAuditContent.CREDENTIAL_VIEW_CONTENT
+    )
+    override fun serviceGetBasicInfo(projectId: String, credentialId: String): CredentialBasicInfo {
+        val record = credentialDao.get(dslContext, projectId, credentialId)
+
+        return CredentialBasicInfo(
+            credentialId = record.credentialId,
+            credentialName = record.credentialName ?: record.credentialId,
+            credentialType = CredentialType.valueOf(record.credentialType),
+            credentialRemark = record.credentialRemark,
+            updatedTime = record.updatedTime.timestamp(),
+            updateUser = record.updateUser,
+            createUser = record.credentialUserId
+        )
+    }
+
     private fun serviceAcrossGet(projectId: String, credentialId: String): Credential {
         val record = credentialDao.get(dslContext, projectId, credentialId).also {
             if (!it.allowAcrossProject) {
@@ -995,6 +1022,100 @@ class CredentialServiceImpl @Autowired constructor(
                 throw IllegalArgumentException("unsupported credentialType $credentialType")
         }
         return CredentialItemVo(publicKey = publicKey, credentialItem = credentialItem)
+    }
+
+    override fun copyCredentials(
+        userId: String,
+        sourceProjectId: String,
+        targetProjectId: String,
+        credentialId: String?
+    ) {
+        val sourceRecords = if (credentialId.isNullOrBlank()) {
+            listSourceCredentialsByPage(sourceProjectId)
+        } else {
+            try {
+                listOf(credentialDao.get(dslContext, sourceProjectId, credentialId))
+            } catch (ignored: Exception) {
+                logger.warn("get source credential failed|$sourceProjectId|$credentialId", ignored)
+                emptyList()
+            }
+        }
+        sourceRecords.forEach { sourceRecord ->
+            copySingleCredential(userId, sourceProjectId, targetProjectId, sourceRecord)
+        }
+    }
+
+    private fun listSourceCredentialsByPage(sourceProjectId: String): List<TCredentialRecord> {
+        val result = mutableListOf<TCredentialRecord>()
+        val pageSize = 100
+        var offset = 0
+        val total = credentialDao.countByProject(dslContext, sourceProjectId)
+        while (offset < total) {
+            result.addAll(credentialDao.listByProject(dslContext, sourceProjectId, offset, pageSize))
+            offset += pageSize
+        }
+        return result
+    }
+
+    private fun copySingleCredential(
+        userId: String,
+        sourceProjectId: String,
+        targetProjectId: String,
+        sourceRecord: TCredentialRecord
+    ) {
+        val copiedCredentialId = sourceRecord.credentialId
+        try {
+            if (credentialDao.has(dslContext, targetProjectId, copiedCredentialId)) {
+                logger.warn(
+                    "credential already exists, skip copy|$sourceProjectId|$targetProjectId|$copiedCredentialId"
+                )
+                return
+            }
+            credentialDao.create(
+                dslContext = dslContext,
+                projectId = targetProjectId,
+                credentialUserId = sourceRecord.credentialUserId,
+                credentialId = copiedCredentialId,
+                credentialName = sourceRecord.credentialName ?: copiedCredentialId,
+                credentialType = sourceRecord.credentialType,
+                credentialV1 = sourceRecord.credentialV1,
+                credentialV2 = sourceRecord.credentialV2,
+                credentialV3 = sourceRecord.credentialV3,
+                credentialV4 = sourceRecord.credentialV4,
+                credentialRemark = sourceRecord.credentialRemark
+            )
+            try {
+                credentialPermissionService.createResource(
+                    userId = userId,
+                    projectId = targetProjectId,
+                    credentialId = copiedCredentialId,
+                    authGroupList = null
+                )
+            } catch (ignored: Exception) {
+                logger.warn(
+                    "create credential resource failed|$sourceProjectId|$targetProjectId|$copiedCredentialId",
+                    ignored
+                )
+            }
+            try {
+                credentialPermissionService.copyResourceGroupMembers(
+                    sourceProjectId = sourceProjectId,
+                    targetProjectId = targetProjectId,
+                    sourceCredentialId = copiedCredentialId,
+                    targetCredentialId = copiedCredentialId
+                )
+            } catch (ignored: Exception) {
+                logger.warn(
+                    "copy credential group members failed|$sourceProjectId|$targetProjectId|$copiedCredentialId",
+                    ignored
+                )
+            }
+        } catch (ignored: Exception) {
+            logger.warn(
+                "copy credential failed|$sourceProjectId|$targetProjectId|$copiedCredentialId",
+                ignored
+            )
+        }
     }
 
     companion object {

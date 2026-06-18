@@ -35,8 +35,6 @@ import com.tencent.devops.environment.pojo.enums.NodeType
 import com.tencent.devops.model.environment.tables.TNode
 import com.tencent.devops.model.environment.tables.TNodeTags
 import com.tencent.devops.model.environment.tables.records.TNodeRecord
-import java.sql.Timestamp
-import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.jooq.Field
 import org.jooq.OrderField
@@ -46,6 +44,8 @@ import org.jooq.Result
 import org.jooq.SelectConditionStep
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
+import java.sql.Timestamp
+import java.time.LocalDateTime
 
 @Suppress("ALL")
 @Repository
@@ -55,6 +55,21 @@ class NodeDao {
             dslContext.update(this)
                 .set(AGENT_VERSION, agentVersion)
                 .where(NODE_ID.eq(nodeId))
+                .execute()
+        }
+    }
+
+    fun updateProjectId(
+        dslContext: DSLContext,
+        sourceProjectId: String,
+        targetProjectId: String,
+        nodeId: Long
+    ): Int {
+        return with(TNode.T_NODE) {
+            dslContext.update(this)
+                .set(PROJECT_ID, targetProjectId)
+                .where(PROJECT_ID.eq(sourceProjectId))
+                .and(NODE_ID.eq(nodeId))
                 .execute()
         }
     }

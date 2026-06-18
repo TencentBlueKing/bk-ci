@@ -121,6 +121,24 @@ interface ServiceNodeResource {
         nodeHashIds: List<String>
     ): Result<List<NodeBaseInfo>>
 
+    @Operation(summary = "根据hashId或别名获取节点信息(不校验权限)")
+    @GET
+    @Path("/projects/{projectId}/getRawNode")
+    fun getRawNode(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "节点 hashId (nodeHashId、nodeName 两个参数任选其一填入即可)", required = false)
+        @QueryParam("nodeHashId")
+        nodeHashId: String?,
+        @Parameter(description = "节点别名 (nodeHashId、nodeName 两个参数任选其一填入即可)", required = false)
+        @QueryParam("nodeName")
+        nodeName: String?
+    ): Result<NodeBaseInfo>
+
     @Operation(summary = "根据环境hashId获取项目节点列表(不校验权限)")
     @POST
     @Path("/projects/{projectId}/listRawByEnvHashIds")
@@ -186,6 +204,27 @@ interface ServiceNodeResource {
         projectId: String,
         @Parameter(description = "节点列表", required = true)
         nodeHashIds: List<String>
+    ): Result<Boolean>
+
+    @Operation(summary = "迁移节点到目标项目")
+    @POST
+    @Path("/projects/{projectId}/transfer_node/{targetProjectId}/")
+    fun transferNode(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "源项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "目标项目ID", required = true)
+        @PathParam("targetProjectId")
+        targetProjectId: String,
+        @Parameter(description = "节点 hashId (nodeHashId、agentHashId 两个参数任选其一填入即可)", required = false)
+        @QueryParam("nodeHashId")
+        nodeHashId: String?,
+        @Parameter(description = "节点 agentId (nodeHashId、agentHashId 两个参数任选其一填入即可)", required = false)
+        @QueryParam("agentHashId")
+        agentHashId: String?
     ): Result<Boolean>
 
     @Operation(summary = "删除节点")

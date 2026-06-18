@@ -100,6 +100,34 @@ class ServiceEnvironmentResourceImpl @Autowired constructor(
         return Result(envService.createEnvironment(userId, projectId, environment))
     }
 
+    override fun createEnvAndTransferNodes(
+        userId: String,
+        projectId: String,
+        targetProjectId: String,
+        sourceEnvHashId: String
+    ) = Result(
+        envService.createEnvAndTransferNodes(
+            userId = userId,
+            sourceProjectId = projectId,
+            targetProjectId = targetProjectId,
+            sourceEnvHashId = sourceEnvHashId
+        )
+    )
+
+    override fun createEnvAndRelateSameNameNodes(
+        userId: String,
+        projectId: String,
+        targetProjectId: String,
+        sourceEnvHashId: String
+    ) = Result(
+        envService.createEnvAndRelateSameNameNodes(
+            userId = userId,
+            sourceProjectId = projectId,
+            targetProjectId = targetProjectId,
+            sourceEnvHashId = sourceEnvHashId
+        )
+    )
+
     @AuditEntry(actionId = ActionId.ENVIRONMENT_VIEW)
     override fun get(
         userId: String,
@@ -112,6 +140,20 @@ class ServiceEnvironmentResourceImpl @Autowired constructor(
         }
 
         return Result(envService.getEnvironment(userId, projectId, envHashId, checkPermission ?: true))
+    }
+
+    @AuditEntry(actionId = ActionId.ENVIRONMENT_VIEW)
+    override fun getByName(
+        userId: String,
+        projectId: String,
+        envName: String,
+        checkPermission: Boolean?
+    ): Result<EnvWithPermission?> {
+        if (envName.isBlank()) {
+            throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_ENV_NAME_NULL)
+        }
+
+        return Result(envService.getByName(projectId, envName))
     }
 
     @AuditEntry(actionId = ActionId.ENVIRONMENT_DELETE)
