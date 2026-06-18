@@ -21,6 +21,7 @@ import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.dao.label.PipelineGroupDao
 import com.tencent.devops.process.dao.label.PipelineLabelDao
 import com.tencent.devops.process.dao.label.PipelineViewDao
+import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.pojo.classify.PipelineGroupCreate
 import com.tencent.devops.process.pojo.classify.PipelineLabelCreate
 import com.tencent.devops.process.pojo.classify.PipelineViewForm
@@ -48,6 +49,7 @@ import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.store.api.template.ServiceTemplateResource
 import com.tencent.devops.ticket.api.ServiceCredentialResource
 import com.tencent.devops.ticket.pojo.CredentialCreate
+import jakarta.ws.rs.core.Response
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -69,7 +71,8 @@ class PipelineCopyResourceCreateService @Autowired constructor(
     private val pipelineViewService: PipelineViewService,
     private val pipelineDependencyReplaceService: PipelineDependencyReplaceService,
     private val pipelineInfoFacadeService: PipelineInfoFacadeService,
-    private val pipelineTemplateRelatedService: PipelineTemplateRelatedService
+    private val pipelineTemplateRelatedService: PipelineTemplateRelatedService,
+    private val pipelineRepositoryService: PipelineRepositoryService
 ) {
     fun createCredential(
         userId: String,
@@ -534,8 +537,13 @@ class PipelineCopyResourceCreateService @Autowired constructor(
             model = modelAndSetting.model,
             projectCode = targetProjectId
         )
+        val pipelineOauthUser = pipelineRepositoryService.getPipelineOauthUser(
+            projectId = projectId,
+            pipelineId = sourcePipelineId
+        )
+        // 迁移时,流水线创建人使用权限代持人,如果权限代持人为空,则使用创建人
         pipelineInfoFacadeService.createPipeline(
-            userId = userId,
+            userId = pipelineOauthUser ?: userId,
             projectId = targetProjectId,
             model = modelAndSetting.model,
             channelCode = ChannelCode.BS,

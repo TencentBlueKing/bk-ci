@@ -738,8 +738,20 @@ class PipelineCopyTaskAnalyzeService @Autowired constructor(
                     taskResources[copyResourceKey] = envCopyTaskCopyResource
                 }
 
-                PipelineDependentResourceType.BUILD_NODE, PipelineDependentResourceType.DEPLOY_NODE -> {
-                    val nodeCopyTaskCopyResource = buildNodeCopyResource(
+                PipelineDependentResourceType.BUILD_NODE -> {
+                    val nodeCopyTaskCopyResource = buildBuildNodeCopyResource(
+                        userId = userId,
+                        projectId = projectId,
+                        taskId = taskId,
+                        targetProjectId = targetProjectId,
+                        resource = resource,
+                        pipelineReferCount = pipelineReferCount
+                    )
+                    taskResources[copyResourceKey] = nodeCopyTaskCopyResource
+                }
+
+                PipelineDependentResourceType.DEPLOY_NODE -> {
+                    val nodeCopyTaskCopyResource = buildDeployNodeCopyResource(
                         userId = userId,
                         projectId = projectId,
                         taskId = taskId,
@@ -961,7 +973,7 @@ class PipelineCopyTaskAnalyzeService @Autowired constructor(
         )
     }
 
-    private fun buildNodeCopyResource(
+    private fun buildBuildNodeCopyResource(
         userId: String,
         projectId: String,
         taskId: String,
@@ -977,6 +989,41 @@ class PipelineCopyTaskAnalyzeService @Autowired constructor(
                 nodeHashId = null,
                 nodeName = resource.resourceName,
                 agentHashId = null
+            ).data?.let {
+                targetNameExists = true
+            }
+        } catch (ignore: Exception) {
+            targetNameExists = false
+        }
+        return PipelineCopyTaskResource(
+            taskId = taskId,
+            projectId = projectId,
+            resourceType = resource.resourceType,
+            resourceId = resource.resourceId,
+            resourceName = resource.resourceName,
+            targetProjectId = targetProjectId,
+            targetResourceType = resource.resourceType,
+            status = PipelineCopyTaskResourceStatus.UNPROCESSED,
+            targetNameExists = targetNameExists,
+            pipelineReferCount = pipelineReferCount
+        )
+    }
+
+    private fun buildDeployNodeCopyResource(
+        userId: String,
+        projectId: String,
+        taskId: String,
+        targetProjectId: String,
+        resource: PipelineDependentResource,
+        pipelineReferCount: Int
+    ): PipelineCopyTaskResource {
+        var targetNameExists = false
+        try {
+            client.get(ServiceNodeResource::class).getRawNode(
+                userId = userId,
+                projectId = targetProjectId,
+                nodeHashId = null,
+                nodeName = resource.resourceName
             ).data?.let {
                 targetNameExists = true
             }
