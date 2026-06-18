@@ -98,7 +98,7 @@ class PipelineCopyResourceGetService @Autowired constructor(
                 agentHashId = null
             ).data?.let {
                 PipelineCopyResourceBasicInfo(
-                    resourceId = it.nodeHashId,
+                    resourceId = it.agentHashId!!,
                     resourceName = it.displayName ?: it.name
                 )
             }
@@ -172,7 +172,7 @@ class PipelineCopyResourceGetService @Autowired constructor(
                 isProject = true
             )?.let {
                 PipelineCopyResourceBasicInfo(
-                    resourceId = it.id.toString(),
+                    resourceId = HashUtil.encodeLongId(it.id),
                     resourceName = it.name
                 )
             }

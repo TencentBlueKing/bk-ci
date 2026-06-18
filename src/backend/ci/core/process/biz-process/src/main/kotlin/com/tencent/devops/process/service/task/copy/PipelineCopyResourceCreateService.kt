@@ -612,7 +612,7 @@ class PipelineCopyResourceCreateService @Autowired constructor(
     ): Pair<RepoAuthType, Repository> {
         val (authType, sourceCredentialId) = repository.getRepoAuthInfo()
         return if (authType == RepoAuthType.OAUTH.name) {
-            Pair(RepoAuthType.OAUTH, repository)
+            Pair(RepoAuthType.OAUTH, repository.disablePac())
         } else {
             val targetCredentialId = getTargetCredentialId(
                 sourceCredentialId = sourceCredentialId,
@@ -662,6 +662,20 @@ class PipelineCopyResourceCreateService @Autowired constructor(
             is ScmSvnRepository -> copy(credentialId = credentialId, enablePac = false)
             is GithubRepository -> copy(credentialId = credentialId, enablePac = false)
             is CodeP4Repository -> copy(credentialId = credentialId, enablePac = false)
+            else -> this
+        }
+    }
+
+    private fun Repository.disablePac(): Repository {
+        return when (this) {
+            is CodeGitRepository -> copy(enablePac = false)
+            is CodeTGitRepository -> copy(enablePac = false)
+            is CodeGitlabRepository -> copy(enablePac = false)
+            is ScmGitRepository -> copy(enablePac = false)
+            is CodeSvnRepository -> copy(enablePac = false)
+            is ScmSvnRepository -> copy(enablePac = false)
+            is GithubRepository -> copy(enablePac = false)
+            is CodeP4Repository -> copy(enablePac = false)
             else -> this
         }
     }
