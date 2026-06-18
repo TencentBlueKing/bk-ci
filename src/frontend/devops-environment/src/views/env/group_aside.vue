@@ -313,6 +313,7 @@
                 fetchEnvList,
                 showCreateEnvDialog,
                 isCreateResType,
+                fetchEnvCountAsType,
                 ENV_RESOURCE_ACTION,
                 ENV_RESOURCE_TYPE,
 
