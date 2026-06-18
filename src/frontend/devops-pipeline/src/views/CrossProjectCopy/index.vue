@@ -86,7 +86,12 @@
                 </div>
                 <div class="step-info">
                     <div class="step-title">{{ step.title }}</div>
-                    <div class="step-desc">{{ step.desc }}</div>
+                    <div
+                        class="step-desc"
+                        :title="step.desc"
+                    >
+                        {{ step.desc }}
+                    </div>
                 </div>
             </div>
         </div>
@@ -1438,7 +1443,6 @@
         padding: 16px 15%;
         gap: 16px;
         z-index: 99;
-        // transition: all 0.3s ease;
         transition: all 0.3s ease;
         
         &.is-sticky {
@@ -1454,6 +1458,7 @@
             position: relative;
             flex: 1;
             cursor: default;
+            overflow: hidden;
             border-bottom: 5px solid #DCDEE5;
             
             &.is-completed {
@@ -1490,15 +1495,22 @@
                 display: flex;
                 align-items: center;
                 margin-left: 8px;
-                flex-shrink: 0;
+                min-width: 0;
+                overflow: hidden;
 
                 .step-title {
                     color: #313238;
+                    white-space: nowrap;
+                    flex-shrink: 0;
                 }
                 .step-desc {
                     font-size: 12px;
                     color: #979BA5;
                     margin-left: 16px;
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    max-width: 100%;
                 }
             }
         }
