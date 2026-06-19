@@ -3,13 +3,15 @@ package com.tencent.devops.process.api.op
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.process.service.label.PipelineGroupCopyService
 import com.tencent.devops.process.service.pipeline.PipelineCopyService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class OpPipelineResourceImpl @Autowired constructor(
-    private val pipelineCopyService: PipelineCopyService
-) : OpPipelineResource {
+class OpPipelineCopyResourceImpl @Autowired constructor(
+    private val pipelineCopyService: PipelineCopyService,
+    private val pipelineGroupCopyService: PipelineGroupCopyService
+) : OpPipelineCopyResource {
 
     override fun copyAcrossProject(
         userId: String,
@@ -64,5 +66,29 @@ class OpPipelineResourceImpl @Autowired constructor(
                 targetPipelineId = resolvedTargetPipelineId
             )
         )
+    }
+
+    override fun copyLabelsAcrossProject(
+        userId: String,
+        sourceProjectId: String,
+        targetProjectId: String,
+        labelId: String?
+    ): Result<Boolean> {
+        if (userId.isBlank()) {
+            throw ParamBlankException("Invalid userId")
+        }
+        if (sourceProjectId.isBlank()) {
+            throw ParamBlankException("Invalid sourceProjectId")
+        }
+        if (targetProjectId.isBlank()) {
+            throw ParamBlankException("Invalid targetProjectId")
+        }
+        pipelineGroupCopyService.copyAcrossProject(
+            userId = userId,
+            sourceProjectId = sourceProjectId,
+            targetProjectId = targetProjectId,
+            labelId = labelId
+        )
+        return Result(true)
     }
 }

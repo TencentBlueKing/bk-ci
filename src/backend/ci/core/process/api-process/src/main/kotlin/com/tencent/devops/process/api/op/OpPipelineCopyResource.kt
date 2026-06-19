@@ -15,11 +15,11 @@ import jakarta.ws.rs.Produces
 import jakarta.ws.rs.QueryParam
 import jakarta.ws.rs.core.MediaType
 
-@Tag(name = "OP_PIPELINE", description = "OP-流水线资源")
-@Path("/op/pipelines")
+@Tag(name = "OP_PIPELINE_COPY", description = "OP-流水线复制")
+@Path("/op/pipelines/copy")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface OpPipelineResource {
+interface OpPipelineCopyResource {
 
     @Operation(summary = "跨项目复制流水线")
     @POST
@@ -58,5 +58,23 @@ interface OpPipelineResource {
         @Parameter(description = "目标流水线ID，为空则与源流水线ID相同", required = false)
         @QueryParam("targetPipelineId")
         targetPipelineId: String?
+    ): Result<Boolean>
+
+    @Operation(summary = "跨项目复制流水线标签")
+    @POST
+    @Path("/labels/projects/{sourceProjectId}/copyAcrossProject")
+    fun copyLabelsAcrossProject(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "源项目ID", required = true)
+        @PathParam("sourceProjectId")
+        sourceProjectId: String,
+        @Parameter(description = "目标项目ID", required = true)
+        @QueryParam("targetProjectId")
+        targetProjectId: String,
+        @Parameter(description = "源标签ID，为空则复制源项目下全部标签", required = false)
+        @QueryParam("labelId")
+        labelId: String?
     ): Result<Boolean>
 }
