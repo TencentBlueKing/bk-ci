@@ -32,6 +32,7 @@ import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskResource
 import com.tencent.devops.process.pojo.pipeline.task.PipelineTemplateCopyResourceProp
 import com.tencent.devops.process.service.PipelineInfoFacadeService
 import com.tencent.devops.process.service.label.PipelineGroupService
+import com.tencent.devops.process.service.pipeline.PipelineSettingFacadeService
 import com.tencent.devops.process.service.template.v2.PipelineTemplateRelatedService
 import com.tencent.devops.process.service.view.PipelineViewService
 import com.tencent.devops.process.utils.CredentialUtils
@@ -70,6 +71,7 @@ class PipelineCopyResourceCreateService @Autowired constructor(
     private val pipelineViewService: PipelineViewService,
     private val pipelineDependencyReplaceService: PipelineDependencyReplaceService,
     private val pipelineInfoFacadeService: PipelineInfoFacadeService,
+    private val pipelineSettingFacadeService: PipelineSettingFacadeService,
     private val pipelineTemplateRelatedService: PipelineTemplateRelatedService,
     private val pipelineRepositoryService: PipelineRepositoryService
 ) {
@@ -541,8 +543,9 @@ class PipelineCopyResourceCreateService @Autowired constructor(
             pipelineId = sourcePipelineId
         )
         // 迁移时,流水线创建人使用权限代持人,如果权限代持人为空,则使用创建人
+        val createUserId = pipelineOauthUser ?: userId
         pipelineInfoFacadeService.createPipeline(
-            userId = pipelineOauthUser ?: userId,
+            userId = createUserId,
             projectId = targetProjectId,
             model = modelAndSetting.model,
             channelCode = ChannelCode.BS,
@@ -555,6 +558,17 @@ class PipelineCopyResourceCreateService @Autowired constructor(
             fixPipelineId = targetPipelineId,
             fixTemplateVersion = templateVersion
         )
+        // 约束模板实例 createPipeline 不会写入 T_PIPELINE_SETTING, 需单独保存
+        if (modelAndSetting.model.instanceFromTemplate == true) {
+            pipelineSettingFacadeService.saveSetting(
+                userId = createUserId,
+                projectId = targetProjectId,
+                pipelineId = targetPipelineId,
+                setting = modelAndSetting.setting,
+                checkPermission = false,
+                updateLabels = false
+            )
+        }
         copyResourceGroupMembersSafely(
             sourceProjectId = projectId,
             targetProjectId = targetProjectId,

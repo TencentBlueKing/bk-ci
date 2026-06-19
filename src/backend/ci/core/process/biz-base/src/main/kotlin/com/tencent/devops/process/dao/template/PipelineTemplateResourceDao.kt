@@ -551,6 +551,8 @@ class PipelineTemplateResourceDao {
             description = this.description,
             creator = this.creator,
             updater = this.updater,
+            createdTime = this.createdTime.timestampmilli(),
+            updateTime = this.updateTime.timestampmilli(),
             releaseTime = this.releaseTime?.timestampmilli(),
             sortWeight = this.sortWeight,
             storeStatus = TemplateStatusEnum.valueOf(this.storeStatus)
