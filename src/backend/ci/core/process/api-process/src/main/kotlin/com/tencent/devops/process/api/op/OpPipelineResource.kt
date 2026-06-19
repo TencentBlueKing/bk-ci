@@ -52,8 +52,11 @@ interface OpPipelineResource {
         @Parameter(description = "目标项目ID", required = true)
         @QueryParam("targetProjectId")
         targetProjectId: String,
-        @Parameter(description = "流水线ID", required = true)
-        @QueryParam("pipelineId")
-        pipelineId: String
+        @Parameter(description = "源流水线ID", required = true)
+        @QueryParam("sourcePipelineId")
+        sourcePipelineId: String,
+        @Parameter(description = "目标流水线ID，为空则与源流水线ID相同", required = false)
+        @QueryParam("targetPipelineId")
+        targetPipelineId: String?
     ): Result<Boolean>
 }

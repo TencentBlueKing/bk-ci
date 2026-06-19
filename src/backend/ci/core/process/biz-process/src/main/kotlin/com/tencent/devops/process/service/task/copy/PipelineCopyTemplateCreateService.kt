@@ -72,19 +72,17 @@ class PipelineCopyTemplateCreateService @Autowired constructor(
             params = arrayOf(sourceProjectId, "$sourceTemplateId@$sourceTemplateVersion")
         )
         val sourceVersionName = sourceTemplateResource.versionName!!
-        pipelineTemplateResourceService.getOrNull(
-            commonCondition = PipelineTemplateResourceCommonCondition(
-                projectId = targetProjectId,
-                templateId = targetTemplateId,
-                versionName = sourceVersionName,
-                status = VersionStatus.RELEASED
-            )
-        )?.let {
+        findExistingTargetReleasedVersion(
+            targetProjectId = targetProjectId,
+            targetTemplateId = targetTemplateId,
+            sourceVersionName = sourceVersionName,
+            sourceVersionNum = sourceTemplateResource.versionNum
+        )?.let { existing ->
             return TemplateVersionMapping(
                 sourceVersion = sourceTemplateVersion,
                 sourceVersionName = sourceVersionName,
-                targetVersion = it.version,
-                targetVersionName = sourceVersionName
+                targetVersion = existing.version,
+                targetVersionName = existing.versionName ?: sourceVersionName
             )
         }
         val modelAndSetting = pipelineDependencyReplaceService.replaceTemplateResourceDependency(
@@ -131,6 +129,33 @@ class PipelineCopyTemplateCreateService @Autowired constructor(
             targetVersion = targetVersion,
             targetVersionName = sourceVersionName
         )
+    }
+
+    private fun findExistingTargetReleasedVersion(
+        targetProjectId: String,
+        targetTemplateId: String,
+        sourceVersionName: String,
+        sourceVersionNum: Int?
+    ): PipelineTemplateResource? {
+        pipelineTemplateResourceService.getOrNull(
+            commonCondition = PipelineTemplateResourceCommonCondition(
+                projectId = targetProjectId,
+                templateId = targetTemplateId,
+                versionName = sourceVersionName,
+                status = VersionStatus.RELEASED
+            )
+        )?.let { return it }
+        sourceVersionNum?.let { versionNum ->
+            return pipelineTemplateResourceService.getOrNull(
+                commonCondition = PipelineTemplateResourceCommonCondition(
+                    projectId = targetProjectId,
+                    templateId = targetTemplateId,
+                    versionNum = versionNum,
+                    status = VersionStatus.RELEASED
+                )
+            )
+        }
+        return null
     }
 
     private fun buildTargetTemplateResource(
@@ -181,8 +206,8 @@ class PipelineCopyTemplateCreateService @Autowired constructor(
             creator = sourceTemplateResource.creator,
             updater = sourceTemplateResource.updater,
             releaseTime = sourceTemplateResource.releaseTime,
-            createdTime = sourceTemplateResource.createdTime!!,
-            updateTime = sourceTemplateResource.updateTime!!
+            createdTime = sourceTemplateResource.createdTime,
+            updateTime = sourceTemplateResource.updateTime
         )
     }
 

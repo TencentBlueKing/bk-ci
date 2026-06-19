@@ -64,87 +64,92 @@ class PipelineCopyService @Autowired constructor(
         userId: String,
         sourceProjectId: String,
         targetProjectId: String,
-        pipelineId: String
+        sourcePipelineId: String,
+        targetPipelineId: String
     ): Boolean {
         try {
             val targetPipelineInfo = pipelineInfoDao.getPipelineInfo(
                 dslContext = dslContext,
                 projectId = targetProjectId,
-                pipelineId = pipelineId,
+                pipelineId = targetPipelineId,
                 delete = false
             ) ?: run {
                 logger.warn(
                     "fix constraint instance setting skip, target pipeline not found|" +
-                        "$sourceProjectId|$targetProjectId|$pipelineId"
+                        "$sourceProjectId|$targetProjectId|$sourcePipelineId|$targetPipelineId"
                 )
                 return false
             }
             if (pipelineSettingDao.getSetting(
                     dslContext = dslContext,
                     projectId = targetProjectId,
-                    pipelineId = pipelineId
+                    pipelineId = targetPipelineId
                 ) != null
             ) {
                 logger.info(
-                    "fix constraint instance setting skip, setting exists|$targetProjectId|$pipelineId"
+                    "fix constraint instance setting skip, setting exists|" +
+                        "$targetProjectId|$targetPipelineId"
                 )
                 return false
             }
             val sourceResource = pipelineRepositoryService.getPipelineResourceVersion(
                 projectId = sourceProjectId,
-                pipelineId = pipelineId
+                pipelineId = sourcePipelineId
             ) ?: run {
                 logger.warn(
                     "fix constraint instance setting skip, source pipeline not found|" +
-                        "$sourceProjectId|$pipelineId"
+                        "$sourceProjectId|$sourcePipelineId"
                 )
                 return false
             }
             if (sourceResource.model.instanceFromTemplate != true) {
                 logger.info(
-                    "fix constraint instance setting skip, not constraint instance|$sourceProjectId|$pipelineId"
+                    "fix constraint instance setting skip, not constraint instance|" +
+                        "$sourceProjectId|$sourcePipelineId"
                 )
                 return false
             }
             val sourceSetting = pipelineRepositoryService.getSettingByPipelineVersion(
                 projectId = sourceProjectId,
-                pipelineId = pipelineId,
+                pipelineId = sourcePipelineId,
                 pipelineVersion = sourceResource.version
             ) ?: pipelineRepositoryService.getSetting(
                 projectId = sourceProjectId,
-                pipelineId = pipelineId
+                pipelineId = sourcePipelineId
             ) ?: run {
                 logger.warn(
                     "fix constraint instance setting skip, source setting not found|" +
-                        "$sourceProjectId|$pipelineId"
+                        "$sourceProjectId|$sourcePipelineId"
                 )
                 return false
             }
             val targetSetting = copyPipelineSetting(
                 sourceSetting = sourceSetting,
                 targetProjectId = targetProjectId,
-                pipelineId = pipelineId,
+                pipelineId = targetPipelineId,
                 pipelineName = targetPipelineInfo.pipelineName
             )
             val createUserId = pipelineRepositoryService.getPipelineOauthUser(
                 projectId = sourceProjectId,
-                pipelineId = pipelineId
+                pipelineId = sourcePipelineId
             ) ?: userId
             pipelineSettingFacadeService.saveSetting(
                 userId = createUserId,
                 projectId = targetProjectId,
-                pipelineId = pipelineId,
+                pipelineId = targetPipelineId,
                 setting = targetSetting,
                 checkPermission = false,
                 updateLabels = false
             )
             logger.info(
-                "fix constraint instance setting success|$sourceProjectId|$targetProjectId|$pipelineId"
+                "fix constraint instance setting success|$sourceProjectId|$targetProjectId|" +
+                    "$sourcePipelineId|$targetPipelineId"
             )
             return true
         } catch (ignored: Exception) {
             logger.warn(
-                "fix constraint instance setting failed|$sourceProjectId|$targetProjectId|$pipelineId",
+                "fix constraint instance setting failed|$sourceProjectId|$targetProjectId|" +
+                    "$sourcePipelineId|$targetPipelineId",
                 ignored
             )
             return false

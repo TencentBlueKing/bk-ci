@@ -39,7 +39,8 @@ class OpPipelineResourceImpl @Autowired constructor(
         userId: String,
         sourceProjectId: String,
         targetProjectId: String,
-        pipelineId: String
+        sourcePipelineId: String,
+        targetPipelineId: String?
     ): Result<Boolean> {
         if (userId.isBlank()) {
             throw ParamBlankException("Invalid userId")
@@ -50,15 +51,17 @@ class OpPipelineResourceImpl @Autowired constructor(
         if (targetProjectId.isBlank()) {
             throw ParamBlankException("Invalid targetProjectId")
         }
-        if (pipelineId.isBlank()) {
-            throw ParamBlankException("Invalid pipelineId")
+        if (sourcePipelineId.isBlank()) {
+            throw ParamBlankException("Invalid sourcePipelineId")
         }
+        val resolvedTargetPipelineId = targetPipelineId?.takeIf { it.isNotBlank() } ?: sourcePipelineId
         return Result(
             pipelineCopyService.fixInstanceSetting(
                 userId = userId,
                 sourceProjectId = sourceProjectId,
                 targetProjectId = targetProjectId,
-                pipelineId = pipelineId
+                sourcePipelineId = sourcePipelineId,
+                targetPipelineId = resolvedTargetPipelineId
             )
         )
     }
