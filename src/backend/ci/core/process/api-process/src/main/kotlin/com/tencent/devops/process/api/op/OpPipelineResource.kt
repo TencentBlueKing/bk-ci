@@ -38,4 +38,22 @@ interface OpPipelineResource {
         @QueryParam("pipelineId")
         pipelineId: String?
     ): Result<Boolean>
+
+    @Operation(summary = "修复约束模板实例缺失的流水线设置(临时)")
+    @POST
+    @Path("/projects/{sourceProjectId}/fixInstanceSetting")
+    fun fixInstanceSetting(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "源项目ID", required = true)
+        @PathParam("sourceProjectId")
+        sourceProjectId: String,
+        @Parameter(description = "目标项目ID", required = true)
+        @QueryParam("targetProjectId")
+        targetProjectId: String,
+        @Parameter(description = "流水线ID", required = true)
+        @QueryParam("pipelineId")
+        pipelineId: String
+    ): Result<Boolean>
 }

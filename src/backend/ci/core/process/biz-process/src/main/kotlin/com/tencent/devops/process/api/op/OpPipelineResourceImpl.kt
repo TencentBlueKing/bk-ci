@@ -34,4 +34,32 @@ class OpPipelineResourceImpl @Autowired constructor(
         )
         return Result(true)
     }
+
+    override fun fixInstanceSetting(
+        userId: String,
+        sourceProjectId: String,
+        targetProjectId: String,
+        pipelineId: String
+    ): Result<Boolean> {
+        if (userId.isBlank()) {
+            throw ParamBlankException("Invalid userId")
+        }
+        if (sourceProjectId.isBlank()) {
+            throw ParamBlankException("Invalid sourceProjectId")
+        }
+        if (targetProjectId.isBlank()) {
+            throw ParamBlankException("Invalid targetProjectId")
+        }
+        if (pipelineId.isBlank()) {
+            throw ParamBlankException("Invalid pipelineId")
+        }
+        return Result(
+            pipelineCopyService.fixInstanceSetting(
+                userId = userId,
+                sourceProjectId = sourceProjectId,
+                targetProjectId = targetProjectId,
+                pipelineId = pipelineId
+            )
+        )
+    }
 }

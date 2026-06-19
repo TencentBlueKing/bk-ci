@@ -133,45 +133,6 @@ class PipelineCopyTemplateCreateService @Autowired constructor(
         )
     }
 
-    private fun validateTargetTemplateVersionConflict(
-        targetProjectId: String,
-        targetTemplateId: String,
-        sourceTemplateResource: PipelineTemplateResource,
-        sourceVersionName: String
-    ) {
-        val existingByVersionName = pipelineTemplateResourceService.getOrNull(
-            commonCondition = PipelineTemplateResourceCommonCondition(
-                projectId = targetProjectId,
-                templateId = targetTemplateId,
-                versionName = sourceVersionName,
-                status = VersionStatus.RELEASED
-            )
-        )
-        if (existingByVersionName != null) {
-            throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ERROR_PIPELINE_COPY_TARGET_TEMPLATE_VERSION_NAME_CONFLICT,
-                params = arrayOf(targetProjectId, targetTemplateId, sourceVersionName)
-            )
-        }
-        val existingByNumber = pipelineTemplateResourceService.getOrNull(
-            commonCondition = PipelineTemplateResourceCommonCondition(
-                projectId = targetProjectId,
-                templateId = targetTemplateId,
-                number = sourceTemplateResource.number
-            )
-        )
-        if (existingByNumber != null) {
-            throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ERROR_PIPELINE_COPY_TARGET_TEMPLATE_VERSION_NUMBER_CONFLICT,
-                params = arrayOf(
-                    targetProjectId,
-                    targetTemplateId,
-                    sourceTemplateResource.number.toString()
-                )
-            )
-        }
-    }
-
     private fun buildTargetTemplateResource(
         userId: String,
         sourceTemplateResource: PipelineTemplateResource,
@@ -217,9 +178,11 @@ class PipelineCopyTemplateCreateService @Autowired constructor(
             status = VersionStatus.RELEASED,
             description = sourceTemplateResource.description,
             sortWeight = PipelineTemplateConstant.OTHER_STATUS_VERSION_SORT_WIGHT,
-            creator = userId,
-            updater = userId,
-            releaseTime = sourceTemplateResource.releaseTime
+            creator = sourceTemplateResource.creator,
+            updater = sourceTemplateResource.updater,
+            releaseTime = sourceTemplateResource.releaseTime,
+            createdTime = sourceTemplateResource.createdTime!!,
+            updateTime = sourceTemplateResource.updateTime!!
         )
     }
 
@@ -238,12 +201,6 @@ class PipelineCopyTemplateCreateService @Autowired constructor(
         )
         try {
             lock.lock()
-            validateTargetTemplateVersionConflict(
-                targetProjectId = targetProjectId,
-                targetTemplateId = targetTemplateId,
-                sourceTemplateResource = sourceTemplateResource,
-                sourceVersionName = sourceTemplateResource.versionName!!
-            )
             dslContext.transaction { configuration ->
                 val transactionContext = DSL.using(configuration)
                 val existingTemplateInfo = pipelineTemplateInfoService.getOrNull(
@@ -330,8 +287,10 @@ class PipelineCopyTemplateCreateService @Autowired constructor(
                     releasedVersionName = targetTemplateResource.versionName,
                     releasedSettingVersion = targetTemplateResource.settingVersion,
                     latestVersionStatus = VersionStatus.RELEASED,
-                    creator = userId,
-                    updater = userId
+                    creator = sourceTemplateInfo.creator,
+                    updater = sourceTemplateInfo.updater,
+                    createdTime = sourceTemplateInfo.createdTime!!,
+                    updateTime = sourceTemplateInfo.updateTime!!
                 )
             )
             pipelineTemplatePermissionService.createResource(
@@ -344,7 +303,7 @@ class PipelineCopyTemplateCreateService @Autowired constructor(
                 targetProjectId = targetProjectId,
                 targetTemplateId = targetTemplateId,
                 existingTemplateInfo = existingTemplateInfo,
-                newVersionNumber = targetTemplateResource.number
+                newVersionNum = targetTemplateResource.versionNum!!
             )
         ) {
             pipelineTemplateInfoService.update(
@@ -376,7 +335,7 @@ class PipelineCopyTemplateCreateService @Autowired constructor(
         targetProjectId: String,
         targetTemplateId: String,
         existingTemplateInfo: PipelineTemplateInfoV2,
-        newVersionNumber: Int
+        newVersionNum: Int
     ): Boolean {
         if (existingTemplateInfo.releasedVersion == 0L) {
             return true
@@ -385,7 +344,10 @@ class PipelineCopyTemplateCreateService @Autowired constructor(
             projectId = targetProjectId,
             templateId = targetTemplateId,
             version = existingTemplateInfo.releasedVersion
-        ) ?: return true
-        return newVersionNumber >= releasedResource.number
+        )
+        if (releasedResource == null || releasedResource.versionNum == null) {
+            return true
+        }
+        return newVersionNum >= releasedResource.versionNum!!
     }
 }

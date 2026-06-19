@@ -9,6 +9,7 @@ import com.tencent.devops.common.pipeline.enums.PipelineInstanceTypeEnum
 import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.model.process.tables.records.TPipelineInfoRecord
+import com.tencent.devops.process.dao.PipelineSettingDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.service.PipelineInfoFacadeService
@@ -22,8 +23,10 @@ import org.springframework.stereotype.Service
 class PipelineCopyService @Autowired constructor(
     private val dslContext: DSLContext,
     private val pipelineInfoDao: PipelineInfoDao,
+    private val pipelineSettingDao: PipelineSettingDao,
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val pipelineInfoFacadeService: PipelineInfoFacadeService,
+    private val pipelineSettingFacadeService: PipelineSettingFacadeService,
     private val client: Client,
     private val clientTokenService: ClientTokenService
 ) {
@@ -55,6 +58,97 @@ class PipelineCopyService @Autowired constructor(
             return
         }
         copyAllPipelinesByPage(userId, sourceProjectId, targetProjectId)
+    }
+
+    fun fixInstanceSetting(
+        userId: String,
+        sourceProjectId: String,
+        targetProjectId: String,
+        pipelineId: String
+    ): Boolean {
+        try {
+            val targetPipelineInfo = pipelineInfoDao.getPipelineInfo(
+                dslContext = dslContext,
+                projectId = targetProjectId,
+                pipelineId = pipelineId,
+                delete = false
+            ) ?: run {
+                logger.warn(
+                    "fix constraint instance setting skip, target pipeline not found|" +
+                        "$sourceProjectId|$targetProjectId|$pipelineId"
+                )
+                return false
+            }
+            if (pipelineSettingDao.getSetting(
+                    dslContext = dslContext,
+                    projectId = targetProjectId,
+                    pipelineId = pipelineId
+                ) != null
+            ) {
+                logger.info(
+                    "fix constraint instance setting skip, setting exists|$targetProjectId|$pipelineId"
+                )
+                return false
+            }
+            val sourceResource = pipelineRepositoryService.getPipelineResourceVersion(
+                projectId = sourceProjectId,
+                pipelineId = pipelineId
+            ) ?: run {
+                logger.warn(
+                    "fix constraint instance setting skip, source pipeline not found|" +
+                        "$sourceProjectId|$pipelineId"
+                )
+                return false
+            }
+            if (sourceResource.model.instanceFromTemplate != true) {
+                logger.info(
+                    "fix constraint instance setting skip, not constraint instance|$sourceProjectId|$pipelineId"
+                )
+                return false
+            }
+            val sourceSetting = pipelineRepositoryService.getSettingByPipelineVersion(
+                projectId = sourceProjectId,
+                pipelineId = pipelineId,
+                pipelineVersion = sourceResource.version
+            ) ?: pipelineRepositoryService.getSetting(
+                projectId = sourceProjectId,
+                pipelineId = pipelineId
+            ) ?: run {
+                logger.warn(
+                    "fix constraint instance setting skip, source setting not found|" +
+                        "$sourceProjectId|$pipelineId"
+                )
+                return false
+            }
+            val targetSetting = copyPipelineSetting(
+                sourceSetting = sourceSetting,
+                targetProjectId = targetProjectId,
+                pipelineId = pipelineId,
+                pipelineName = targetPipelineInfo.pipelineName
+            )
+            val createUserId = pipelineRepositoryService.getPipelineOauthUser(
+                projectId = sourceProjectId,
+                pipelineId = pipelineId
+            ) ?: userId
+            pipelineSettingFacadeService.saveSetting(
+                userId = createUserId,
+                projectId = targetProjectId,
+                pipelineId = pipelineId,
+                setting = targetSetting,
+                checkPermission = false,
+                updateLabels = false
+            )
+            logger.info(
+                "fix constraint instance setting success|$sourceProjectId|$targetProjectId|$pipelineId"
+            )
+            return true
+        } catch (ignored: Exception) {
+            logger.warn(
+                "fix constraint instance setting failed|$sourceProjectId|$targetProjectId|$pipelineId",
+                ignored
+            )
+            return false
+        }
     }
 
     private fun copyAllPipelinesByPage(
