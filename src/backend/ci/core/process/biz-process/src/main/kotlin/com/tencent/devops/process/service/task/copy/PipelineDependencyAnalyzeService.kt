@@ -163,18 +163,17 @@ class PipelineDependencyAnalyzeService @Autowired constructor(
         if (viewIds.isEmpty()) {
             return emptySet()
         }
-        // 只需要项目级的视图, 不迁移个人项目视图
-        val viewMap = pipelineViewDao.list(
+        // 只需要项目级的组, 不迁移个人组
+        return pipelineViewDao.list(
             dslContext = dslContext,
             projectId = projectId,
             viewIds = viewIds
-        ).filter { it.isProject }.associateBy { it.id }
-        return viewIds.map {
+        ).filter { it.isProject }.map { view ->
             PipelineDependentResource(
                 projectId = projectId,
                 resourceType = PipelineDependentResourceType.PIPELINE_GROUP,
-                resourceId = HashUtil.encodeLongId(it),
-                resourceName = viewMap[it]?.name ?: it.toString()
+                resourceId = HashUtil.encodeLongId(view.id),
+                resourceName = view.name
             )
         }.toSet()
     }
@@ -935,7 +934,7 @@ class PipelineDependencyAnalyzeService @Autowired constructor(
         private val logger = LoggerFactory.getLogger(PipelineDependencyAnalyzeService::class.java)
 
         private val REPO_CHECKOUT_ATOM_CODES = setOf(
-            "gitCodeRepo", "PullFromGithub", "Gitlab", "atomtgit", "checkout", "svnCodeRepo"
+            "gitCodeRepo", "PullFromGithub", "Gitlab", "atomtgit", "checkout", "svnCodeRepo", "PerforceSync"
         )
         private const val JOB_PUSH_FILE_ATOM_CODE = "JobPushFile"
         private const val JOB_SCRIPT_EXECUTION_ATOM_CODE = "JobScriptExecutionA"
