@@ -328,7 +328,7 @@ class PipelineCopyTemplateCreateService @Autowired constructor(
                 targetProjectId = targetProjectId,
                 targetTemplateId = targetTemplateId,
                 existingTemplateInfo = existingTemplateInfo,
-                newVersionNum = targetTemplateResource.versionNum!!
+                newVersionNum = targetTemplateResource.versionNum
             )
         ) {
             pipelineTemplateInfoService.update(
@@ -360,8 +360,11 @@ class PipelineCopyTemplateCreateService @Autowired constructor(
         targetProjectId: String,
         targetTemplateId: String,
         existingTemplateInfo: PipelineTemplateInfoV2,
-        newVersionNum: Int
+        newVersionNum: Int?
     ): Boolean {
+        if (newVersionNum == null) {
+            return false
+        }
         if (existingTemplateInfo.releasedVersion == 0L) {
             return true
         }
