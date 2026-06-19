@@ -314,8 +314,8 @@ class PipelineCopyTemplateCreateService @Autowired constructor(
                     latestVersionStatus = VersionStatus.RELEASED,
                     creator = sourceTemplateInfo.creator,
                     updater = sourceTemplateInfo.updater,
-                    createdTime = sourceTemplateInfo.createdTime!!,
-                    updateTime = sourceTemplateInfo.updateTime!!
+                    createdTime = sourceTemplateInfo.createdTime,
+                    updateTime = sourceTemplateInfo.updateTime
                 )
             )
             pipelineTemplatePermissionService.createResource(
