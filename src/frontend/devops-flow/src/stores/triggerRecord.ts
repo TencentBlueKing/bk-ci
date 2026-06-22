@@ -151,6 +151,12 @@ export const useTriggerRecordStore = defineStore('triggerRecord', () => {
       }
 
       const response = await getTriggerRecords(params)
+      // 更新store中的triggerEventList数据
+      if (page === 1) {
+        triggerEventList.value = response?.records || []
+      } else {
+        triggerEventList.value = [...triggerEventList.value, ...(response?.records || [])]
+      }
       return {
         records: response?.records || [],
         count: response?.count || 0,

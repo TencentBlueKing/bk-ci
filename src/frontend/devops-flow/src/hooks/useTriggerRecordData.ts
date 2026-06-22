@@ -73,7 +73,10 @@ export function useTriggerRecordData(styles: Styles) {
    * @returns 时间轴数据列表
    */
   function generateTimelineList(list: TriggerRecordItem[], queryList?: QueryListFunction) {
-    const dateMap = list.reduce((acc, item) => {
+    // 直接使用InfiniteScroll传入的list数据，它是最新确认过的数据
+    const dataList = list
+    
+    const dateMap = dataList.reduce((acc, item) => {
       const date = formatDate(item.eventTime, 'YYYY-MM-DD')
       if (!acc.has(date)) {
         acc.set(date, [])
@@ -153,7 +156,9 @@ export function useTriggerRecordData(styles: Styles) {
                   onClick: async () => {
                     const success = await store.triggerEvent(event)
                     if (success && queryList) {
-                      queryList(1, undefined, true)
+                      // 延迟一段时间等待后端创建新的触发记录，然后再刷新列表
+                      await new Promise(resolve => setTimeout(resolve, 500))
+                      await queryList(1, undefined, true)
                     }
                   },
                 },

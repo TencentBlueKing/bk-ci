@@ -389,7 +389,7 @@
                                     {{ $t('environment.setTag') }}
                                 </span>
                                 <span
-                                    v-if="!['TSTACK'].includes(props.row.nodeType) && !isCreateResType"
+                                    v-if="!['TSTACK'].includes(props.row.nodeType) && !isPersonalProject"
                                     v-perm="{
                                         hasPermission: props.row.canDelete,
                                         disablePermissionApi: true,
@@ -521,20 +521,27 @@
 </template>
 
 <script>
+    import EmptyTableStatus from '@/components/empty-table-status'
     import {
         NODE_RESOURCE_ACTION,
         NODE_RESOURCE_TYPE,
         CREATIVE_STREAM_NODE_RESOURCE_ACTION,
         CREATIVE_NODE_RESOURCE_TYPE
     } from '@/utils/permission'
-    import EmptyTableStatus from '@/components/empty-table-status'
-    import { mapActions } from 'vuex'
-    const NODE_TABLE_COLUMN_CACHE = 'node_list_columns'
     import { ENV_ACTIVE_NODE_TYPE, ALLNODE, SERVICE_RESOURCE_TYPE } from '@/store/constants'
+    import { mapActions } from 'vuex'
+    import useEnvDetail from '@/hooks/useEnvDetail'
+    const NODE_TABLE_COLUMN_CACHE = 'node_list_columns'
 
     export default {
         components: {
             EmptyTableStatus
+        },
+        setup () {
+            const { isPersonalProject } = useEnvDetail()
+            return {
+                isPersonalProject
+            }
         },
         props: {
             nodeList: {

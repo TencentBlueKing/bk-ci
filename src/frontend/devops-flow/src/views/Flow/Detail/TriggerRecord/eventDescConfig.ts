@@ -117,6 +117,18 @@ const tgitReviewParams = mapParams({
   user: userParam(2),
 })
 
+// TAPD 事件参数：{0}=链接, {1}=对象ID, {2}=触发用户, {3}=事件类型(可选), {4}=动作(可选)
+const tapdItemParams = mapParams({
+  issue: linkParam(0, 1, '!'),
+  user: userParam(2)
+})
+const tapdGenericParams = mapParams({
+  issue: linkParam(0, 1, '!'),
+  user: userParam(2),
+  event: textParam(3),
+  action: textParam(4)
+})
+
 /** 事件 code → 参数映射 */
 export const EVENT_DESC_PARAM_MAPPERS: Record<string, ParamMapper> = {
   /* ===== TGit 事件 ===== */
@@ -290,6 +302,27 @@ export const EVENT_DESC_PARAM_MAPPERS: Record<string, ParamMapper> = {
   bkYamlPipelineDeleteFailed: mapParams({ pipeline: linkParam(0, 1) }),
   bkYamlPipelineCloseFailed: mapParams({ pipeline: linkParam(0, 1) }),
   bkYamlInstancePullRequestClosed: mapParams({ mr: linkParam(0, 1) }),
+
+  /* =====  TAPD 事件 流水线操作消息 ===== */
+  bkTapdStoryCreateEventDesc: tapdItemParams,
+  bkTapdStoryUpdateEventDesc: tapdItemParams,
+  bkTapdStoryDeleteEventDesc: tapdItemParams,
+  bkTapdBugCreateEventDesc: tapdItemParams,
+  bkTapdBugUpdateEventDesc: tapdItemParams,
+  bkTapdBugDeleteEventDesc: tapdItemParams,
+  bkTapdStoryAddCommentEventDesc: tapdItemParams,
+  bkTapdStoryUpdateCommentEventDesc: tapdItemParams,
+  bkTapdStoryDeleteCommentEventDesc: tapdItemParams,
+  bkTapdStoryStatusChangeEventDesc: tapdItemParams,
+  bkTapdStoryLinkEventDesc: tapdItemParams,
+  bkTapdStoryUnlinkEventDesc: tapdItemParams,
+  bkTapdBugAddCommentEventDesc: tapdItemParams,
+  bkTapdBugUpdateCommentEventDesc: tapdItemParams,
+  bkTapdBugDeleteCommentEventDesc: tapdItemParams,
+  bkTapdBugStatusChangeEventDesc: tapdItemParams,
+  bkTapdStoryBugLinkEventDesc: tapdItemParams,
+  bkTapdStoryBugUnlinkEventDesc: tapdItemParams,
+  bkTapdGenericEventDesc: tapdGenericParams
 }
 
 /**

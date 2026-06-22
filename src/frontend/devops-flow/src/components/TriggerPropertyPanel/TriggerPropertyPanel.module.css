@@ -145,6 +145,7 @@
   padding: var(--spacing-lg);
   background-color: var(--bg-secondary);
   align-items: start;
+  margin-bottom: 20px;
 }
 
 .stepIdAndVersionRow.disabled {

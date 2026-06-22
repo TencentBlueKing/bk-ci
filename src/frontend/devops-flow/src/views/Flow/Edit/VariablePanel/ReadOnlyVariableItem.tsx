@@ -36,7 +36,7 @@ export default defineComponent({
         const pluginVar = props.variable as PluginOutputVariable
         return `\${{ steps.${pluginVar.stepId}.outputs.${pluginVar.id} }}`
       }
-      return `\${{ ci.${props.variable.name ?? props.variable.id} }}`
+      return `\${{ ${props.variable.name ?? props.variable.id} }}`
     }
 
     // Handle copy reference

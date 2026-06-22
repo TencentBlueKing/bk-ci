@@ -403,7 +403,7 @@ export default defineComponent({
     }
 
     return () => (
-      <Sideslider isShow={props.visible} width={560} transfer onClosed={handleClose}>
+      <Sideslider isShow={props.visible} width={640} transfer onClosed={handleClose}>
         {{
           header: () => (
             <div class={styles.header}>
