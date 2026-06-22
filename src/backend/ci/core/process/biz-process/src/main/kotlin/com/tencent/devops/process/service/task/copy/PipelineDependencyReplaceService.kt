@@ -262,7 +262,7 @@ class PipelineDependencyReplaceService @Autowired constructor(
             when (container) {
                 is TriggerContainer -> {
                     container.copy(
-                        params = replaceParams(params = container.params, context = context),
+                        params = replaceParams(params = container.params, context = context).toMutableList(),
                         elements = replaceElements(
                             projectId = projectId,
                             elements = container.elements,
