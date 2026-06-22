@@ -64,6 +64,10 @@ class TxPipelineStartupPermissionExtServiceImpl @Autowired constructor(
         pipelineParamMap: Map<String, BuildParameters>,
         channelCode: ChannelCode
     ) {
+        // 仅对创作流的团队项目需要校验节点权限
+        if (channelCode != ChannelCode.CREATIVE_STREAM) {
+            return
+        }
 
         // 获取agent hashId
         val agentHashId = pipelineParamMap[NODE_AGENT_ID]?.value?.toString()
@@ -73,7 +77,7 @@ class TxPipelineStartupPermissionExtServiceImpl @Autowired constructor(
 
         // 获取项目信息，仅团队项目（projectScope == 0）需要校验
         val projectVO = client.get(ServiceProjectResource::class).get(projectId).data
-        if (channelCode != ChannelCode.CREATIVE_STREAM || projectVO?.projectScope != 0) {
+        if (projectVO?.projectScope != 0) {
             return
         }
 
