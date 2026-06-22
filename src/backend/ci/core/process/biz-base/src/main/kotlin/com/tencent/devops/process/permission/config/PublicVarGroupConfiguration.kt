@@ -32,9 +32,11 @@ import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.api.AuthResourceApi
 import com.tencent.devops.common.auth.code.PublicVarGroupAuthServiceCode
+import com.tencent.devops.process.permission.`var`.MockPublicVarGroupPermissionService
 import com.tencent.devops.process.permission.`var`.PublicVarGroupPermissionService
 import com.tencent.devops.process.permission.`var`.RbacPublicVarGroupPermissionService
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
 import org.springframework.context.annotation.Bean
@@ -60,4 +62,8 @@ class PublicVarGroupConfiguration {
         authProjectApi = authProjectApi,
         publicVarGroupAuthServiceCode = publicVarGroupAuthServiceCode
     )
+
+    @Bean
+    @ConditionalOnMissingBean(PublicVarGroupPermissionService::class)
+    fun mockPublicVarGroupPermissionService() = MockPublicVarGroupPermissionService()
 }
