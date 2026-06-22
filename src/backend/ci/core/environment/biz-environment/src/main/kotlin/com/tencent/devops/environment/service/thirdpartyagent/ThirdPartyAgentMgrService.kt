@@ -692,7 +692,8 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                 gateway = gateway,
                 fileGateway = fileGateway,
                 agentType = agentType,
-                createWorkspaceName = null
+                createWorkspaceName = null,
+                agentProps = null
             )
             thirdPartyAgentDao.getAgent(dslContext, id)!!
         } else {
@@ -1376,7 +1377,6 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
         secretKey: String,
         newHeartbeatInfo: NewHeartbeatInfo
     ): HeartbeatResponse {
-
         var online: Boolean? = null
 
         val agentId = HashUtil.decodeIdToLong(hash = agentHashId)
@@ -1401,7 +1401,15 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                 )
             }
 
-            val oldUserProps = getUserProps(projectId, agentId = agentId, record = agentRecord)
+            val oldProps = if (agentRecord.agentProps != null) {
+                try {
+                    JsonUtil.to(agentRecord.agentProps, AgentProps::class.java)
+                } catch (_: Exception) {
+                    null
+                }
+            } else {
+                null
+            }
 
             var agentChanged = false
             var nodeChanged = false
@@ -1451,19 +1459,18 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                 agentChanged = true
             }
             if (newHeartbeatInfo.props != null) {
-                val props = JsonUtil.toJson(
-                    AgentProps(
-                        arch = newHeartbeatInfo.props!!.arch,
-                        jdkVersion = newHeartbeatInfo.props!!.jdkVersion ?: listOf(),
-                        userProps = oldUserProps,
-                        dockerInitFileInfo = newHeartbeatInfo.props?.dockerInitFileInfo,
-                        exitError = newHeartbeatInfo.errorExitData,
-                        osVersion = newHeartbeatInfo.props?.osVersion
-                    ),
-                    false
+                val newHeartbeatInfoProps = newHeartbeatInfo.props!!
+                val newProps = AgentProps(
+                    arch = newHeartbeatInfoProps.arch,
+                    jdkVersion = newHeartbeatInfoProps.jdkVersion.orEmpty(),
+                    userProps = oldProps?.userProps,
+                    dockerInitFileInfo = newHeartbeatInfoProps.dockerInitFileInfo,
+                    exitError = newHeartbeatInfo.errorExitData,
+                    osVersion = newHeartbeatInfoProps.osVersion,
+                    source = oldProps?.source
                 )
-                if (props != agentRecord.agentProps) {
-                    agentRecord.agentProps = props
+                if (oldProps != newProps) {
+                    agentRecord.agentProps = JsonUtil.toJson(newProps, false)
                     agentChanged = true
                 }
             }
@@ -1475,7 +1482,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                 thirdPartyAgentDao.saveAgent(dslContext = context, agentRecode = agentRecord)
             }
 
-            if (nodeRecord.nodeStatus == NodeStatus.ABNORMAL.name) {
+            if (nodeRecord.nodeStatus != NodeStatus.NORMAL.name) {
                 nodeRecord.nodeStatus = NodeStatus.NORMAL.name
                 nodeChanged = true
             }
@@ -1497,7 +1504,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                 },
                 gateway = agentRecord.gateway,
                 fileGateway = agentRecord.fileGateway,
-                props = oldUserProps,
+                props = oldProps?.userProps ?: mapOf(),
                 dockerParallelTaskCount = agentRecord.dockerParallelTaskCount ?: 0,
                 language = commonConfig.devopsDefaultLocaleLanguage,
                 createMod = nodeRecord.nodeType == NodeType.CREATE.name
@@ -1560,34 +1567,6 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             val context = DSL.using(configuration)
             nodeDao.updateLastBuildTime(context, pipelineId, agent.nodeId, now)
             agentPipelineRefDao.updateLastBuildTime(context, projectId, pipelineId, vmSeqId, agentLongId, now)
-        }
-    }
-
-    private fun getUserProps(
-        projectId: String,
-        agentId: Long,
-        record: TEnvironmentThirdpartyAgentRecord
-    ): Map<String, Any> {
-        if (record.agentProps == null) {
-            return mapOf()
-        }
-        // 兼容曾经在数据库中的数据
-        val oldVersion = try {
-            JsonUtil.to(record.agentProps, object : TypeReference<Map<String, Any>>() {})
-        } catch (ignore: Exception) {
-            logger.warn("projectId: $projectId|agentId: $agentId|json to map props error", ignore)
-            return mapOf()
-        }
-
-        if (!oldVersion.containsKey("arch") && !oldVersion.containsKey("jdkVersion")) {
-            return oldVersion
-        }
-
-        return try {
-            JsonUtil.to(record.agentProps, AgentProps::class.java).userProps ?: mapOf()
-        } catch (ignore: Exception) {
-            logger.warn("projectId: $projectId|agentId: $agentId|json to props error", ignore)
-            mapOf()
         }
     }
 

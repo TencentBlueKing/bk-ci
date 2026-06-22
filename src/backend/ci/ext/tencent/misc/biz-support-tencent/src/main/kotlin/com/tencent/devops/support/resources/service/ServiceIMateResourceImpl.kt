@@ -32,6 +32,7 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.support.api.service.ServiceIMateResource
 import com.tencent.devops.support.model.imate.IMateAuthorizationInfo
 import com.tencent.devops.support.model.imate.IMateRobotInfo
+import com.tencent.devops.support.model.imate.IMateTaskResp
 import com.tencent.devops.support.model.imate.IMateVisibleTargetInfo
 import com.tencent.devops.support.services.IMateService
 import org.springframework.beans.factory.annotation.Autowired
@@ -51,5 +52,13 @@ class ServiceIMateResourceImpl @Autowired constructor(
 
     override fun checkAuthorization(username: String, clientUuid: String): Result<IMateAuthorizationInfo> {
         return iMateService.checkAuthorization(username, clientUuid)
+    }
+
+    override fun installLandunPlugin(
+        username: String,
+        clientUuid: String,
+        token: String
+    ): Result<IMateTaskResp?> {
+        return iMateService.installLandunPlugin(username, clientUuid, token)
     }
 }

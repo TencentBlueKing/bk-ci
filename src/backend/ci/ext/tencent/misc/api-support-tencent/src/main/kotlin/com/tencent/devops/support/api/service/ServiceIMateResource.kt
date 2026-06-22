@@ -31,12 +31,14 @@ import com.tencent.devops.common.api.annotation.ServiceInterface
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.support.model.imate.IMateAuthorizationInfo
 import com.tencent.devops.support.model.imate.IMateRobotInfo
+import com.tencent.devops.support.model.imate.IMateTaskResp
 import com.tencent.devops.support.model.imate.IMateVisibleTargetInfo
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.ws.rs.Consumes
 import jakarta.ws.rs.GET
+import jakarta.ws.rs.POST
 import jakarta.ws.rs.Path
 import jakarta.ws.rs.Produces
 import jakarta.ws.rs.QueryParam
@@ -81,4 +83,18 @@ interface ServiceIMateResource {
         @QueryParam("clientUuid")
         clientUuid: String
     ): Result<IMateAuthorizationInfo>
+
+    @Operation(summary = "imate安装蓝盾插件")
+    @POST
+    @Path("/robots/installLandunPlugin")
+    fun installLandunPlugin(
+        @Parameter(description = "用户名", required = true)
+        @QueryParam("username")
+        username: String,
+        @Parameter(description = "imate clientUuid", required = true)
+        @QueryParam("clientUuid")
+        clientUuid: String,
+        @Parameter(description = "安装agent需要用到的token", required = true)
+        token: String
+    ): Result<IMateTaskResp?>
 }
