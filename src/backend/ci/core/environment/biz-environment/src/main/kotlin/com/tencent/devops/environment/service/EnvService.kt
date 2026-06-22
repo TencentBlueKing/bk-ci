@@ -51,6 +51,7 @@ import com.tencent.devops.common.audit.ActionAuditContent.PROJECT_ENABLE_OR_DISA
 import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthProjectApi
+import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.ResourceTypeId
 import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.client.Client
@@ -71,7 +72,6 @@ import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_NOT_EXISTS
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_NO_USE_PERMISSSION
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_NO_VIEW_PERMISSSION
-import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_SHARE_PROJECT_TYPE_ERROR
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_TAG_NO_EDIT_PERMISSSION
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_QUOTA_LIMIT
@@ -1241,6 +1241,171 @@ class EnvService @Autowired constructor(
             envId = envId,
             nodeIds = nodeLongIds
         )
+    }
+
+    @ActionAuditRecord(
+        actionId = ActionId.ENVIRONMENT_TRANSFER,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.ENVIRONMENT
+        ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#sourceProjectId")],
+        scopeId = "#sourceProjectId",
+        content = ActionAuditContent.ENVIRONMENT_TRANSFER_CONTENT
+    )
+    fun createEnvAndTransferNodes(
+        userId: String,
+        sourceProjectId: String,
+        targetProjectId: String,
+        sourceEnvHashId: String
+    ): EnvironmentId {
+        logger.info(
+            "create env and transfer nodes start|userId=$userId|sourceProjectId=$sourceProjectId|" +
+                "targetProjectId=$targetProjectId|sourceEnvHashId=$sourceEnvHashId"
+        )
+        nodeService.checkProjectManager(userId, sourceProjectId)
+        nodeService.checkProjectManager(userId, targetProjectId)
+
+        val sourceEnvId = HashUtil.decodeIdToLong(sourceEnvHashId)
+        val sourceEnv = envDao.get(dslContext, sourceProjectId, sourceEnvId)
+        val targetEnvId = getOrCreateTargetEnv(
+            userId = userId,
+            targetProjectId = targetProjectId,
+            sourceEnv = sourceEnv
+        )
+        logger.info(
+            "create env success|userId=$userId|sourceProjectId=$sourceProjectId|" +
+                    "targetProjectId=$targetProjectId|sourceEnvId=$sourceEnvId|targetEnvId=$targetEnvId"
+        )
+
+        val sourceEnvNodes = envNodeDao.list(dslContext, sourceProjectId, listOf(sourceEnvId))
+        val sourceNodeIds = sourceEnvNodes.map { it.nodeId }
+        val targetProjectNodeIds = if (sourceNodeIds.isEmpty()) {
+            emptySet()
+        } else {
+            nodeDao.listByIds(dslContext, targetProjectId, sourceNodeIds).map { it.nodeId }.toSet()
+        }
+        sourceNodeIds.filterNot { it in targetProjectNodeIds }.forEach { nodeId ->
+            nodeService.transferNode(
+                userId = userId,
+                sourceProjectId = sourceProjectId,
+                targetProjectId = targetProjectId,
+                nodeHashId = HashUtil.encodeLongId(nodeId),
+                checkPermission = false
+            )
+        }
+
+        val targetEnvNodeIds = envNodeDao.list(dslContext, targetProjectId, listOf(targetEnvId))
+            .map { it.nodeId }
+            .toSet()
+        val needRelateNodeIds = sourceNodeIds.filterNot { it in targetEnvNodeIds }
+
+        dslContext.transaction { configuration ->
+            val context = DSL.using(configuration)
+            envNodeDao.batchStoreEnvNode(context, needRelateNodeIds, targetEnvId, targetProjectId)
+            envNodeDao.batchDeleteEnvNode(context, sourceProjectId, sourceEnvId, sourceNodeIds)
+        }
+
+        ActionAuditContext.current()
+            .setInstanceId(sourceEnvId.toString())
+            .setInstanceName(sourceEnv.envName)
+            .addExtendData("sourceProjectId", sourceProjectId)
+            .addExtendData("targetProjectId", targetProjectId)
+            .addExtendData("targetEnvId", targetEnvId.toString())
+            .addExtendData("nodeIds", sourceNodeIds.joinToString(","))
+
+        return EnvironmentId(HashUtil.encodeLongId(targetEnvId))
+    }
+
+    fun createEnvAndRelateSameNameNodes(
+        userId: String,
+        sourceProjectId: String,
+        targetProjectId: String,
+        sourceEnvHashId: String
+    ): EnvironmentId {
+        logger.info(
+            "create env and relate same name nodes start|userId=$userId|sourceProjectId=$sourceProjectId|" +
+                "targetProjectId=$targetProjectId|sourceEnvHashId=$sourceEnvHashId"
+        )
+        nodeService.checkProjectManager(userId, sourceProjectId)
+        nodeService.checkProjectManager(userId, targetProjectId)
+
+        val sourceEnvId = HashUtil.decodeIdToLong(sourceEnvHashId)
+        val sourceEnv = envDao.get(dslContext, sourceProjectId, sourceEnvId)
+        val targetEnvId = getOrCreateTargetEnv(
+            userId = userId,
+            targetProjectId = targetProjectId,
+            sourceEnv = sourceEnv
+        )
+        logger.info(
+            "create env success|userId=$userId|sourceProjectId=$sourceProjectId|" +
+                "targetProjectId=$targetProjectId|sourceEnvId=$sourceEnvId|targetEnvId=$targetEnvId"
+        )
+
+        val sourceEnvNodes = envNodeDao.list(dslContext, sourceProjectId, listOf(sourceEnvId))
+        val sourceNodeIds = sourceEnvNodes.map { it.nodeId }
+        if (sourceNodeIds.isEmpty()) {
+            return EnvironmentId(HashUtil.encodeLongId(targetEnvId))
+        }
+
+        val sourceNodeRecords = nodeDao.listByIds(dslContext, sourceProjectId, sourceNodeIds)
+        val targetEnvNodeIds = envNodeDao.list(dslContext, targetProjectId, listOf(targetEnvId))
+            .map { it.nodeId }
+            .toSet()
+        val needRelateNodeIds = mutableListOf<Long>()
+        sourceNodeRecords.forEach { sourceNode ->
+            val matchName = sourceNode.displayName?.takeIf { it.isNotBlank() } ?: sourceNode.nodeName
+            val targetNode = nodeDao.getByDisplayName(
+                dslContext = dslContext,
+                projectId = targetProjectId,
+                displayName = matchName,
+                nodeType = null
+            ).firstOrNull()
+            if (targetNode == null) {
+                logger.warn(
+                    "skip node, target same name node not found|sourceProjectId=$sourceProjectId|" +
+                        "targetProjectId=$targetProjectId|matchName=$matchName"
+                )
+                return@forEach
+            }
+            if (targetNode.nodeId !in targetEnvNodeIds) {
+                needRelateNodeIds.add(targetNode.nodeId)
+            }
+        }
+
+        if (needRelateNodeIds.isNotEmpty()) {
+            dslContext.transaction { configuration ->
+                val context = DSL.using(configuration)
+                envNodeDao.batchStoreEnvNode(context, needRelateNodeIds, targetEnvId, targetProjectId)
+            }
+        }
+
+        return EnvironmentId(HashUtil.encodeLongId(targetEnvId))
+    }
+
+    private fun getOrCreateTargetEnv(
+        userId: String,
+        targetProjectId: String,
+        sourceEnv: TEnvRecord
+    ): Long {
+        envDao.getByEnvName(dslContext, targetProjectId, sourceEnv.envName)?.let {
+            return it.envId
+        }
+        var newEnvId = 0L
+        dslContext.transaction { configuration ->
+            val context = DSL.using(configuration)
+            newEnvId = envDao.create(
+                dslContext = context,
+                userId = userId,
+                projectId = targetProjectId,
+                envName = sourceEnv.envName,
+                envDesc = sourceEnv.envDesc,
+                envType = sourceEnv.envType,
+                envNodeType = EnvNodeType.valueOf(sourceEnv.envNodeType),
+                envVars = sourceEnv.envVars
+            )
+            environmentPermissionService.createEnv(userId, targetProjectId, newEnvId, sourceEnv.envName)
+        }
+        return newEnvId
     }
 
     override fun listEnvironmentByLimit(projectId: String, offset: Int?, limit: Int?): Page<EnvWithPermission> {

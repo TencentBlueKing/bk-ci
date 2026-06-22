@@ -87,12 +87,13 @@ class AiMcpServerService @Autowired constructor(
     }
 
     fun listForUser(userId: String): List<AiMcpServerInfo> {
-        val merged = getMergedConfigs(userId)
+        /*val merged = getMergedConfigs(userId)
         logger.info(
             "[McpServer] List for user: userId={}, total={}",
             userId, merged.size
         )
-        return merged
+        return merged*/
+        return emptyList()
     }
 
     fun updateServer(

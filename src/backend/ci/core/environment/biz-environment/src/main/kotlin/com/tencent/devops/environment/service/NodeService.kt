@@ -32,6 +32,7 @@ import com.tencent.bk.audit.annotations.AuditAttribute
 import com.tencent.bk.audit.annotations.AuditInstanceRecord
 import com.tencent.bk.audit.context.ActionAuditContext
 import com.tencent.devops.common.api.constant.ALIAS
+import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.IMPORTER
 import com.tencent.devops.common.api.constant.LATEST_EXECUTE_PIPELINE
 import com.tencent.devops.common.api.constant.LATEST_EXECUTE_TIME
@@ -49,7 +50,9 @@ import com.tencent.devops.common.audit.ActionAuditContent
 import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
+import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.api.ResourceTypeId
+import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.dispatch.api.ServiceAgentResource
@@ -73,6 +76,7 @@ import com.tencent.devops.environment.dao.EnvNodeDao
 import com.tencent.devops.environment.dao.NodeDao
 import com.tencent.devops.environment.dao.NodeTagDao
 import com.tencent.devops.environment.dao.slave.SlaveGatewayDao
+import com.tencent.devops.environment.dao.thirdpartyagent.ThirdPartyAgentActionDao
 import com.tencent.devops.environment.dao.thirdpartyagent.ThirdPartyAgentDao
 import com.tencent.devops.environment.permission.EnvironmentPermissionService
 import com.tencent.devops.environment.pojo.NodeBaseInfo
@@ -90,16 +94,16 @@ import com.tencent.devops.environment.utils.NodeStringIdUtils
 import com.tencent.devops.environment.utils.NodeUtils
 import com.tencent.devops.model.environment.tables.records.TNodeRecord
 import jakarta.servlet.http.HttpServletResponse
-import java.time.format.DateTimeFormatter
-import java.util.concurrent.Executors
-import java.util.concurrent.LinkedBlockingQueue
-import java.util.concurrent.ThreadPoolExecutor
-import java.util.concurrent.TimeUnit
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.time.format.DateTimeFormatter
+import java.util.concurrent.Executors
+import java.util.concurrent.LinkedBlockingQueue
+import java.util.concurrent.ThreadPoolExecutor
+import java.util.concurrent.TimeUnit
 
 @Service
 @Suppress("ALL")
@@ -110,11 +114,14 @@ class NodeService @Autowired constructor(
     private val envDao: EnvDao,
     private val envNodeDao: EnvNodeDao,
     private val thirdPartyAgentDao: ThirdPartyAgentDao,
+    private val thirdPartyAgentActionDao: ThirdPartyAgentActionDao,
     private val slaveGatewayService: SlaveGatewayService,
     private val environmentPermissionService: EnvironmentPermissionService,
     private val slaveGatewayDao: SlaveGatewayDao,
     private val nodeTagDao: NodeTagDao,
-    private val nodeTagService: NodeTagService
+    private val nodeTagService: NodeTagService,
+    private val authProjectApi: AuthProjectApi,
+    private val pipelineAuthServiceCode: PipelineAuthServiceCode
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(NodeService::class.java)
@@ -766,6 +773,28 @@ class NodeService @Autowired constructor(
         return nodeRecords.map { NodeStringIdUtils.getNodeBaseInfo(it) }
     }
 
+    fun getRawServerNode(
+        userId: String,
+        projectId: String,
+        nodeHashId: String?,
+        nodeName: String?
+    ): NodeBaseInfo {
+        val hashId = when {
+            !nodeHashId.isNullOrBlank() -> nodeHashId
+            !nodeName.isNullOrBlank() -> nodeDao.getByDisplayName(dslContext, projectId, nodeName, null)
+                .firstOrNull()?.nodeHashId
+
+            else -> null
+        } ?: throw ErrorCodeException(
+            errorCode = ERROR_NODE_NAME_OR_ID_INVALID
+        )
+        return listRawServerNodeByIds(userId, projectId, listOf(hashId)).firstOrNull()
+            ?: throw ErrorCodeException(
+                errorCode = ERROR_NODE_NOT_EXISTS,
+                params = arrayOf(hashId)
+            )
+    }
+
     fun listRawServerNodeByIds(nodeHashIds: List<String>): List<NodeBaseInfo> {
         val nodeRecords =
             nodeDao.listServerNodesByIds(dslContext, nodeHashIds.map { HashUtil.decodeIdToLong(it) })
@@ -931,6 +960,108 @@ class NodeService @Autowired constructor(
                     )
                 )
             }
+        }
+    }
+
+    @ActionAuditRecord(
+        actionId = ActionId.ENV_NODE_TRANSFER,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.ENV_NODE
+        ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#sourceProjectId")],
+        scopeId = "#sourceProjectId",
+        content = ActionAuditContent.ENV_NODE_TRANSFER_CONTENT
+    )
+    fun transferNode(
+        userId: String,
+        sourceProjectId: String,
+        targetProjectId: String,
+        nodeHashId: String? = null,
+        agentHashId: String? = null,
+        checkPermission: Boolean = true
+    ): Boolean {
+        logger.info(
+            "transfer node start|userId=$userId|sourceProjectId=$sourceProjectId|" +
+                    "targetProjectId=$targetProjectId|nodeHashId=$nodeHashId|$agentHashId=$agentHashId"
+        )
+        val nodeId = when {
+            nodeHashId != null -> HashUtil.decodeIdToLong(nodeHashId)
+
+            agentHashId != null -> thirdPartyAgentDao.getAgent(
+                dslContext, HashUtil.decodeIdToLong(agentHashId)
+            )?.nodeId
+
+            else -> null
+        } ?: throw ErrorCodeException(
+            errorCode = ERROR_NODE_NAME_OR_ID_INVALID
+        )
+        if (checkPermission) {
+            checkProjectManager(userId, sourceProjectId)
+            checkProjectManager(userId, targetProjectId)
+        }
+        val sourceNode = nodeDao.get(dslContext, sourceProjectId, nodeId)
+        if (sourceNode == null) {
+            val targetNode = nodeDao.get(dslContext, targetProjectId, nodeId)
+            if (targetNode != null) {
+                logger.info(
+                    "transfer node skipped|userId=$userId|sourceProjectId=$sourceProjectId|" +
+                            "targetProjectId=$targetProjectId|nodeHashId=$nodeHashId"
+                )
+                return true
+            }
+            throw ErrorCodeException(
+                errorCode = ERROR_NODE_NOT_EXISTS,
+                params = arrayOf(HashUtil.encodeLongId(nodeId))
+            )
+        }
+        dslContext.transaction { configuration ->
+            val transactionContext = DSL.using(configuration)
+            nodeDao.updateProjectId(
+                dslContext = transactionContext,
+                sourceProjectId = sourceProjectId,
+                targetProjectId = targetProjectId,
+                nodeId = nodeId
+            )
+            if (sourceNode.nodeType == NodeType.THIRDPARTY.name) {
+                thirdPartyAgentDao.updateProjectIdByNodeId(
+                    dslContext = transactionContext,
+                    sourceProjectId = sourceProjectId,
+                    targetProjectId = targetProjectId,
+                    nodeId = nodeId
+                )
+            }
+
+            environmentPermissionService.createNode(
+                userId,
+                targetProjectId,
+                nodeId,
+                "${NodeStringIdUtils.getNodeStringId(sourceNode)}(${sourceNode.nodeIp})"
+            )
+            environmentPermissionService.copyNodeGroupMembers(
+                sourceProjectId = sourceProjectId,
+                targetProjectId = targetProjectId,
+                nodeId = nodeId
+            )
+            environmentPermissionService.deleteNode(sourceProjectId, nodeId)
+        }
+        ActionAuditContext.current()
+            .setInstanceId(sourceNode.nodeId.toString())
+            .setInstanceName(sourceNode.nodeName)
+            .addExtendData("sourceProjectId", sourceProjectId)
+            .addExtendData("targetProjectId", targetProjectId)
+        logger.info(
+            "transfer node success|userId=$userId|sourceProjectId=$sourceProjectId|" +
+                "targetProjectId=$targetProjectId|nodeHashId=$nodeHashId"
+        )
+        return true
+    }
+
+    fun checkProjectManager(userId: String, projectId: String) {
+        if (!authProjectApi.checkProjectManager(userId, pipelineAuthServiceCode, projectId)) {
+            throw ErrorCodeException(
+                errorCode = CommonMessageCode.ERROR_PERMISSION_NOT_PROJECT_MANAGER,
+                params = arrayOf(userId, projectId)
+            )
         }
     }
 
