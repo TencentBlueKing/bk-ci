@@ -1,0 +1,137 @@
+.triggerRecord {
+  height: 100%;
+  overflow: hidden;
+  padding: var(--spacing-xl);
+}
+
+/** header **/
+.triggerEventFilterBar {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+  align-items: center;
+}
+
+/* 搜索输入框 */
+.searchInput {
+  width: 100%;
+  min-width: 0;
+  flex: 1;
+}
+
+.searchInput :global(.bk-search-select-container .search-container) {
+  position: inherit;
+}
+
+/* 修复 search-select 组件获得焦点时的抖动问题 */
+.searchInput :global(.bk-search-select-container) {
+  /* 预留滚动条空间，避免滚动条出现时导致布局抖动 */
+  scrollbar-gutter: stable !important;
+  /* 确保宽度维持，即使没有 placeholder 也能保持宽度 */
+  width: 100% !important;
+  min-width: 200px !important;
+  /* 平滑过渡，包括高度变化，避免抖动 */
+  transition:
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast),
+    height var(--transition-normal) !important;
+  background-color: var(--bg-primary);
+}
+
+.triggerRecordScrollContainer {
+  display: flex;
+  height: calc(100% - 84px);
+  padding: 0 var(--spacing-md);
+  overflow-y: auto;
+  background-color: white;
+
+  :global(.bk-timeline-content) {
+    max-width: 100% !important;
+  }
+}
+
+.trigger-event-list {
+  display: grid;
+  grid-gap: 10px;
+  grid-auto-rows: 28px;
+  width: 100%;
+}
+
+.trigger-event-item {
+  display: grid;
+  grid-template-columns: 13px 2fr 1fr max-content;
+  grid-gap: 10px;
+  align-items: center;
+  background: #fafbfd;
+  border-radius: 2px;
+  padding: 0 10px;
+  font-size: 12px;
+}
+
+.trigger-event-desc {
+  display: flex;
+  align-items: center;
+  grid-gap: 10px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #4d4f56;
+
+  > p > span > a {
+    color: #3a84ff;
+    cursor: pointer;
+    text-decoration: none;
+    &:hover {
+      color: #699df4;
+    }
+  }
+}
+
+.trigger-event-reason {
+  display: flex;
+  align-items: center;
+  grid-gap: 10px;
+  overflow: hidden;
+  color: #4d4f56;
+
+  > em {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-style: normal;
+    > a {
+      color: #3a84ff;
+      cursor: pointer;
+      text-decoration: none;
+      &:hover {
+        color: #699df4;
+      }
+    }
+  }
+
+  > span {
+    flex-shrink: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+.trigger-event-item-indicator {
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  background: #979ba529;
+  position: relative;
+
+  > i {
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #979ba5;
+  }
+}

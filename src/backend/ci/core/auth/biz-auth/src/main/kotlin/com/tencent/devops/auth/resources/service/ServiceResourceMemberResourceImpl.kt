@@ -73,21 +73,19 @@ class ServiceResourceMemberResourceImpl(
         with(projectCreateUserInfo) {
             val now = System.currentTimeMillis() / 1000
             val fixExpiredTime = now + TimeUnit.DAYS.toSeconds(expiredTime ?: 365L)
-            return Result(
-                permissionResourceMemberService.batchAddResourceGroupMembers(
+            return permissionResourceMemberService.batchAddResourceGroupMembers(
+                projectCode = projectCode,
+                iamGroupId = getIamGroupId(
+                    groupId = groupId,
                     projectCode = projectCode,
-                    iamGroupId = getIamGroupId(
-                        groupId = groupId,
-                        projectCode = projectCode,
-                        roleName = roleName,
-                        roleId = roleId,
-                        resourceCode = resourceCode ?: projectCode,
-                        resourceType = resourceType ?: AuthResourceType.PROJECT.value
-                    ),
-                    expiredTime = fixExpiredTime,
-                    members = userIds,
-                    departments = deptIds
-                )
+                    roleName = roleName,
+                    roleId = roleId,
+                    resourceCode = resourceCode ?: projectCode,
+                    resourceType = resourceType ?: AuthResourceType.PROJECT.value
+                ),
+                expiredTime = fixExpiredTime,
+                members = userIds,
+                departments = deptIds
             )
         }
     }
@@ -260,6 +258,25 @@ class ServiceResourceMemberResourceImpl(
                 userId = userId,
                 projectCode = projectCode,
                 handoverMemberDTO = handoverMemberDTO
+            )
+        )
+    }
+
+    override fun copyResourceGroupMembers(
+        token: String,
+        sourceProjectCode: String,
+        resourceType: String,
+        sourceResourceCode: String,
+        targetProjectCode: String,
+        targetResourceCode: String
+    ): Result<Boolean> {
+        return Result(
+            permissionResourceMemberService.copyResourceGroupMembers(
+                sourceProjectCode = sourceProjectCode,
+                targetProjectCode = targetProjectCode,
+                resourceType = resourceType,
+                sourceResourceCode = sourceResourceCode,
+                targetResourceCode = targetResourceCode
             )
         )
     }

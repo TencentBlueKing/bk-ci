@@ -25,9 +25,10 @@ import org.slf4j.LoggerFactory
  * 两种模式（由 filterByTriggerParams 控制）：
  * - filterByTriggerParams = true（默认）：仅提取在 triggerContainer.params 中出现的变量；
  *   仍能识别上述四种形式，且每条 VarRefDetail 的 isDoubleBrace 区分单/双大括号。
- * - filterByTriggerParams = false：提取模型中所有 ${xxx}、${{xxx}} 花括号内内容，原封不动（仅允许去掉花括号内首尾空格），并区分单/双大括号。
- * - filterByTriggerParams = true：提取 ${xxx}、${{xxx}}、${variables.xxx}、${{variables.xxx}} 的 xxx（去掉空格和 variables.
- * 前缀），并区分单/双大括号。
+ * - filterByTriggerParams = false：提取模型中所有 ${xxx}、${{xxx}} 花括号内内容，原封不动（仅允许去掉花括号内首尾空格），并区
+ *   分单/双大括号。
+ * - filterByTriggerParams = true：提取 ${xxx}、${{xxx}}、${variables.xxx}、${{variables.xxx}} 的
+ *   xxx（去掉空格和 variables. 前缀），并区分单/双大括号。
  *
  * 主要功能：递归解析 List/Map/Stage/Container/Element 等，循环引用检测，字段缓存，支持流水线/模板资源。
  */
@@ -76,7 +77,7 @@ object ModelVarRefUtils {
      * 解析模型中的变量引用。
      * @param model 要解析的模型对象
      * @param projectId 项目ID
-     * @param filterByTriggerParams true：只返回在 triggerContainer.params 中的变量；花括号内去掉空格和 variables. 前缀得到 xxx.
+     * @param filterByTriggerParams true：只返回在 triggerContainer.params 中的变量；花括号内去掉空格和 variables. 前缀得到 xxx，并区分单/双大括号。
      *                             false：返回模型中所有 ${xxx}、${{xxx}}；花括号内内容原封不动，仅去掉首尾空格，并区分单/双大括号。
      * @return 变量引用详情列表
      */
@@ -977,8 +978,8 @@ object ModelVarRefUtils {
 
     /**
      * 从 customCondition 等条件字符串中提取变量匹配，并区分单/双大括号。
-     * @param rawExtract true：仅从 ${xxx}、${{xxx}} 提取花括号内内容（仅 trim）；
-     * false：含纯 variables.xxx 及去掉空格/variables. 前缀的 ${}/${{}} 提取。
+     * @param rawExtract true：仅从 ${xxx}、${{xxx}} 提取花括号内内容（仅 trim）；false：含纯 variables.xxx 及去掉
+     * 空格/variables. 前缀的 ${}/${{}} 提取。
      */
     private fun extractCustomConditionVariableMatches(text: String, rawExtract: Boolean = false): List<VarMatch> {
         if (text.isEmpty()) return emptyList()

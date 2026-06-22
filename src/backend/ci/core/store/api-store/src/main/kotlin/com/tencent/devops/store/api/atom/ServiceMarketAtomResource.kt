@@ -144,10 +144,22 @@ interface ServiceMarketAtomResource {
         userId: String,
         @Parameter(description = "渠道类型", required = false)
         @QueryParam("channelCode")
-        channelCode: ChannelCode? = ChannelCode.BS,
+        channelCode: ChannelCode? = ChannelCode.getRequestChannelCode(),
         @Parameter(description = "安装插件到项目请求报文体", required = true)
         installAtomReq: InstallAtomReq
     ): Result<Boolean>
+
+    @Operation(summary = "查看插件的yml 2.0信息")
+    @GET
+    @Path("/atoms/{atomCode}/yml/2.0/detail")
+    fun getAtomYmlV2Info(
+        @Parameter(description = "atomCode", required = true)
+        @PathParam("atomCode")
+        atomCode: String,
+        @Parameter(description = "是否展示系统自带的yml信息", required = false)
+        @QueryParam("defaultShowFlag")
+        defaultShowFlag: Boolean?
+    ): Result<String?>
 
     @Operation(summary = "获取带post属性的插件")
     @POST

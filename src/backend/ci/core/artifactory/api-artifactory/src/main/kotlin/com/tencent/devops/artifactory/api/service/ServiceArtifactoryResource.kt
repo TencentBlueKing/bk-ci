@@ -166,7 +166,10 @@ interface ServiceArtifactoryResource {
         ttl: Int,
         @Parameter(description = "是否直接对应下载链接(false情况下ipa会换成plist下载链接)", required = false)
         @QueryParam("directed")
-        directed: Boolean?
+        directed: Boolean?,
+        @Parameter(description = "授权下载的用户列表（仅这些用户可使用该链接下载，为空表示不限制）", required = false)
+        @QueryParam("authorizedUserList")
+        authorizedUserList: List<String>? = null
     ): Result<Url>
 
     @Operation(summary = "APP构件跳转链接")

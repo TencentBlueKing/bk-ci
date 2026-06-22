@@ -30,6 +30,9 @@ package com.tencent.devops.auth.service.iam
 
 import com.tencent.devops.auth.pojo.dto.MigrateResourceDTO
 import com.tencent.devops.auth.pojo.dto.PermissionHandoverDTO
+import com.tencent.devops.auth.pojo.dto.ProjectGroupIncrementalMigrationDTO
+import com.tencent.devops.auth.pojo.dto.ProjectGroupMigrationDTO
+import com.tencent.devops.auth.pojo.dto.ProjectGroupMigrationResultDTO
 import com.tencent.devops.common.auth.api.pojo.ProjectConditionDTO
 
 /**
@@ -75,6 +78,18 @@ interface PermissionMigrateService {
      * filterActions:listOf(project_api-operate,project_api-operate)
      */
     fun resetProjectPermissions(migrateResourceDTO: MigrateResourceDTO): Boolean
+
+    /**
+     * 全量迁移源项目的项目级用户组到目标项目。
+     */
+    fun migrateProjectGroups(migrationDTO: ProjectGroupMigrationDTO): ProjectGroupMigrationResultDTO
+
+    /**
+     * 增量补齐目标项目缺失的项目级/单资源权限，不删除现有组、不迁移成员。
+     */
+    fun migrateProjectGroupsIncremental(
+        migrationDTO: ProjectGroupIncrementalMigrationDTO
+    ): ProjectGroupMigrationResultDTO
 
     fun resetPermissionsWhenEnabledProject(projectCode: String): Boolean
 

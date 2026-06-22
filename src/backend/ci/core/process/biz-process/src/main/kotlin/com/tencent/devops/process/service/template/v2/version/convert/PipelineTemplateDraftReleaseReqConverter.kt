@@ -131,7 +131,7 @@ class PipelineTemplateDraftReleaseReqConverter @Autowired constructor(
                 yamlFileInfo = yamlInfo,
                 enablePac = enablePac,
                 targetAction = targetAction,
-                branchName = targetBranch
+                targetBranch = targetBranch
             )
         }
     }

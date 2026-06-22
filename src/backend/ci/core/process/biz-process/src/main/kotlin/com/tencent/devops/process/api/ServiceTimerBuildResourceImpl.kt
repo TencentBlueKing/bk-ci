@@ -40,6 +40,7 @@ class ServiceTimerBuildResourceImpl @Autowired constructor(
 ) : ServiceTimerBuildResource {
     override fun timerTrigger(
         userId: String,
+        channelCodeHeader: ChannelCode?,
         projectId: String,
         pipelineId: String,
         params: Map<String, String>,
@@ -51,7 +52,7 @@ class ServiceTimerBuildResourceImpl @Autowired constructor(
             projectId = projectId,
             pipelineId = pipelineId,
             parameters = params,
-            checkPermission = ChannelCode.isNeedAuth(channelCode)
+            checkPermission = ChannelCode.isNeedAuth(channelCodeHeader ?: channelCode)
         )
 
         return Result(buildId)

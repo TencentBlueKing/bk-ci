@@ -5,17 +5,21 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.enums.AgentAction
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.HashUtil
+import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.environment.constant.EnvironmentMessageCode
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_NO_EDIT_PERMISSSION
 import com.tencent.devops.environment.dao.NodeDao
+import com.tencent.devops.environment.dao.thirdpartyagent.TPAOfflinePeriodDao
 import com.tencent.devops.environment.dao.thirdpartyagent.ThirdPartyAgentActionDao
 import com.tencent.devops.environment.dao.thirdpartyagent.ThirdPartyAgentDao
 import com.tencent.devops.environment.permission.EnvironmentPermissionService
 import com.tencent.devops.environment.pojo.EnvVar
+import com.tencent.devops.environment.pojo.thirdpartyagent.OfflinePeriod
 import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartAgentUpdateType
 import com.tencent.devops.environment.pojo.thirdpartyagent.UpdateAgentInfo
 import com.tencent.devops.environment.utils.ThirdAgentActionAddLock
@@ -25,6 +29,7 @@ import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
 
 /**
  * 对第三方构建机一些自身数据操作
@@ -38,6 +43,7 @@ class ThirdPartAgentService @Autowired constructor(
     private val agentActionDao: ThirdPartyAgentActionDao,
     private val agentDao: ThirdPartyAgentDao,
     private val nodeDao: NodeDao,
+    private val tpaOfflinePeriodDao: TPAOfflinePeriodDao,
     private val environmentPermissionService: EnvironmentPermissionService
 ) {
     fun addAgentAction(
@@ -51,15 +57,40 @@ class ThirdPartAgentService @Autowired constructor(
         }
         try {
             lock.lock()
-            if (agentActionDao.getAgentLastAction(dslContext, projectId, agentId) == action.name) {
-                return
+            dslContext.transaction { configuration ->
+                val context = DSL.using(configuration)
+                // 1. 记录 action 到原表
+                if (agentActionDao.getAgentLastAction(context, projectId, agentId) == action.name) {
+                    return@transaction
+                }
+                agentActionDao.addAgentAction(
+                    dslContext = context,
+                    projectId = projectId,
+                    agentId = agentId,
+                    action = action.name
+                )
+                // 2. 更新离线时段表
+                when (action) {
+                    AgentAction.OFFLINE -> {
+                        // 插入新的离线记录
+                        tpaOfflinePeriodDao.insertOfflinePeriod(
+                            dslContext = context,
+                            agentId = agentId,
+                            projectId = projectId,
+                            offlineTime = LocalDateTime.now()
+                        )
+                    }
+
+                    AgentAction.ONLINE -> {
+                        // 更新最近一次未结束的离线记录
+                        tpaOfflinePeriodDao.updateOnlineTime(
+                            dslContext = context,
+                            agentId = agentId,
+                            onlineTime = LocalDateTime.now()
+                        )
+                    }
+                }
             }
-            agentActionDao.addAgentAction(
-                dslContext = dslContext,
-                projectId = projectId,
-                agentId = agentId,
-                action = action.name
-            )
         } finally {
             lock.unlock()
         }
@@ -283,6 +314,45 @@ class ThirdPartAgentService @Autowired constructor(
                 dockerParallelTaskCount = dockerParallelTaskCount
             )
         }
+    }
+
+    /**
+     * 查询 Agent 的离线时段列表
+     */
+    fun getAgentOfflinePeriods(
+        agentHashId: String,
+        page: Int?,
+        pageSize: Int?
+    ): Page<OfflinePeriod> {
+        val agentId = HashUtil.decodeIdToLong(agentHashId)
+        val pageNotNull = page ?: 0
+        val pageSizeNotNull = pageSize ?: 100
+        val sqlLimit =
+            if (pageSizeNotNull != -1) PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull) else null
+        val offset = sqlLimit?.offset ?: 0
+        val limit = sqlLimit?.limit ?: 100
+        val count = tpaOfflinePeriodDao.countOfflinePeriods(
+            dslContext = dslContext,
+            agentId = agentId
+        )
+        val records = tpaOfflinePeriodDao.listOfflinePeriods(
+            dslContext = dslContext,
+            agentId = agentId,
+            offset = offset,
+            limit = limit
+        )
+        return Page(
+            page = pageNotNull,
+            pageSize = pageSizeNotNull,
+            count = count,
+            records = records.map { record ->
+                OfflinePeriod(
+                    offlineTime = record.offlineTime,
+                    onlineTime = record.onlineTime,
+                    duration = record.durationSeconds
+                )
+            }
+        )
     }
 
     companion object {

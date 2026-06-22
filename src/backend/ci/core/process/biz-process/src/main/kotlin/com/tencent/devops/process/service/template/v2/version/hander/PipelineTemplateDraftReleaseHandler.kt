@@ -36,10 +36,6 @@ import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.pojo.pipeline.DeployTemplateResult
-import com.tencent.devops.process.pojo.pipeline.PipelineYamlFileReleaseReq
-import com.tencent.devops.process.pojo.pipeline.PipelineYamlFileReleaseReqSource
-import com.tencent.devops.process.pojo.pipeline.PipelineYamlFileReleaseResult
-import com.tencent.devops.process.pojo.template.v2.PTemplateResourceOnlyVersion
 import com.tencent.devops.process.pojo.`var`.dto.PublicVarGroupReferDTO
 import com.tencent.devops.process.service.template.v2.PipelineTemplateGenerator
 import com.tencent.devops.process.service.template.v2.PipelineTemplateModelLock
@@ -47,11 +43,10 @@ import com.tencent.devops.process.service.template.v2.PipelineTemplatePersistenc
 import com.tencent.devops.process.service.template.v2.PipelineTemplateResourceService
 import com.tencent.devops.process.service.template.v2.PipelineTemplateSettingService
 import com.tencent.devops.process.service.template.v2.version.PipelineTemplateVersionCreateContext
+import com.tencent.devops.process.yaml.PipelineYamlReleaseService
 import com.tencent.devops.process.service.`var`.PublicVarGroupReferManageService
-import com.tencent.devops.process.yaml.PipelineYamlFacadeService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.context.annotation.Lazy
 import org.springframework.stereotype.Service
 
 /**
@@ -64,7 +59,7 @@ class PipelineTemplateDraftReleaseHandler @Autowired constructor(
     private val pipelineTemplateResourceService: PipelineTemplateResourceService,
     private val pipelineTemplateSettingService: PipelineTemplateSettingService,
     private val redisOperation: RedisOperation,
-    @Lazy private val pipelineYamlFacadeService: PipelineYamlFacadeService,
+    private val pipelineYamlReleaseService: PipelineYamlReleaseService,
     private val publicVarGroupReferManageService: PublicVarGroupReferManageService
 ) : PipelineTemplateVersionCreateHandler {
     override fun support(context: PipelineTemplateVersionCreateContext) =
@@ -137,9 +132,12 @@ class PipelineTemplateDraftReleaseHandler @Autowired constructor(
             enablePac = enablePac,
             repoHashId = yamlFileInfo?.repoHashId,
             targetAction = targetAction,
-            targetBranch = branchName
+            targetBranch = targetBranch
         )
-        validateReleaseYamlFile(resourceOnlyVersion = resourceOnlyVersion)
+        pipelineYamlReleaseService.validateReleaseYamlFile(
+            context = this,
+            resourceOnlyVersion = resourceOnlyVersion
+        )
         if (versionStatus == VersionStatus.RELEASED) {
             pipelineTemplatePersistenceService.releaseDraft2ReleaseVersion(
                 context = this,
@@ -169,7 +167,10 @@ class PipelineTemplateDraftReleaseHandler @Autowired constructor(
         }
 
         // 发布yaml文件
-        val yamlFileReleaseResult = releaseYamlFile(resourceOnlyVersion = resourceOnlyVersion)
+        val yamlFileReleaseResult = pipelineYamlReleaseService.releaseYamlFile(
+            context = this,
+            resourceOnlyVersion = resourceOnlyVersion
+        )
         return DeployTemplateResult(
             projectId = projectId,
             userId = userId,
@@ -181,60 +182,6 @@ class PipelineTemplateDraftReleaseHandler @Autowired constructor(
             versionName = resourceOnlyVersion.versionName,
             targetUrl = yamlFileReleaseResult?.pullRequestUrl,
             versionAction = versionAction
-        )
-    }
-
-    private fun PipelineTemplateVersionCreateContext.releaseYamlFile(
-        resourceOnlyVersion: PTemplateResourceOnlyVersion
-    ): PipelineYamlFileReleaseResult? {
-        if (!enablePac) {
-            return null
-        }
-        val yamlFileReleaseReq = PipelineYamlFileReleaseReq(
-            userId = userId,
-            projectId = projectId,
-            pipelineId = templateId,
-            pipelineName = pipelineTemplateInfo.name,
-            version = resourceOnlyVersion.version.toInt(),
-            versionName = resourceOnlyVersion.versionName,
-            repoHashId = yamlFileInfo!!.repoHashId,
-            filePath = yamlFileInfo.filePath,
-            content = pTemplateResourceWithoutVersion.yaml!!,
-            commitMessage = pTemplateResourceWithoutVersion.description
-                ?: "update template ${pipelineTemplateInfo.name}",
-            targetAction = targetAction!!,
-            targetBranch = branchName,
-            source = PipelineYamlFileReleaseReqSource.TEMPLATE
-        )
-        return pipelineYamlFacadeService.releaseYamlFile(
-            yamlFileReleaseReq = yamlFileReleaseReq
-        )
-    }
-
-    private fun PipelineTemplateVersionCreateContext.validateReleaseYamlFile(
-        resourceOnlyVersion: PTemplateResourceOnlyVersion
-    ) {
-        if (!enablePac) {
-            return
-        }
-        val yamlFileReleaseReq = PipelineYamlFileReleaseReq(
-            userId = userId,
-            projectId = projectId,
-            pipelineId = templateId,
-            pipelineName = pipelineTemplateInfo.name,
-            version = resourceOnlyVersion.version.toInt(),
-            versionName = resourceOnlyVersion.versionName,
-            repoHashId = yamlFileInfo!!.repoHashId,
-            filePath = yamlFileInfo.filePath,
-            content = pTemplateResourceWithoutVersion.yaml!!,
-            commitMessage = pTemplateResourceWithoutVersion.description
-                ?: "update template ${pipelineTemplateInfo.name}",
-            targetAction = targetAction!!,
-            targetBranch = branchName,
-            source = PipelineYamlFileReleaseReqSource.TEMPLATE
-        )
-        pipelineYamlFacadeService.validateReleaseYamlFile(
-            yamlFileReleaseReq = yamlFileReleaseReq
         )
     }
 

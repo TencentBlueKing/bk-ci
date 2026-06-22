@@ -30,6 +30,7 @@ package com.tencent.devops.environment.utils
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.environment.pojo.NodeBaseInfo
+import com.tencent.devops.environment.pojo.enums.NodeOperatorStatus
 import com.tencent.devops.environment.pojo.enums.NodeType
 import com.tencent.devops.model.environment.tables.records.TNodeRecord
 
@@ -39,6 +40,7 @@ object NodeStringIdUtils {
             NodeType.CMDB.name -> "CMDB-${HashUtil.encodeLongId(it.nodeId)}-${it.nodeId}"
             NodeType.OTHER.name -> "OTHER-${HashUtil.encodeLongId(it.nodeId)}-${it.nodeId}"
             NodeType.THIRDPARTY.name -> "BUILD-${HashUtil.encodeLongId(it.nodeId)}-${it.nodeId}"
+            NodeType.CREATE.name -> "CREATE-${HashUtil.encodeLongId(it.nodeId)}-${it.nodeId}"
             else -> it.nodeStringId ?: ""
         }
     }
@@ -66,7 +68,11 @@ object NodeStringIdUtils {
             displayName = displayName,
             envEnableNode = null,
             nodeName = nodeRecord.nodeName,
-            lastModifyTime = (nodeRecord.lastModifyTime ?: nodeRecord.createdTime).timestampmilli()
+            lastModifyTime = (nodeRecord.lastModifyTime ?: nodeRecord.createdTime).timestampmilli(),
+            agentHashId = null,
+            agentId = null,
+            createWorkspaceId = null,
+            operatorStatus = NodeOperatorStatus.valOf(nodeRecord.operatorStatus)?.name
         )
     }
 }

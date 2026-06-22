@@ -63,7 +63,7 @@ class RunningJobsDao {
         dslContext: DSLContext,
         projectId: String,
         jobQuotaVmType: JobQuotaVmType,
-        channelCode: String = ChannelCode.BS.name
+        channelCode: String = ChannelCode.getRequestChannelCode().name
     ): Result<TDispatchRunningJobsRecord?> {
         with(TDispatchRunningJobs.T_DISPATCH_RUNNING_JOBS) {
             return dslContext.selectFrom(this)
@@ -78,7 +78,7 @@ class RunningJobsDao {
         dslContext: DSLContext,
         projectId: String,
         jobQuotaVmType: JobQuotaVmType,
-        channelCode: String = ChannelCode.BS.name
+        channelCode: String = ChannelCode.getRequestChannelCode().name
     ): Int {
         with(TDispatchRunningJobs.T_DISPATCH_RUNNING_JOBS) {
             return dslContext.selectCount().from(this)

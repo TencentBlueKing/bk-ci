@@ -35,6 +35,7 @@ import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.db.pojo.ARCHIVE_SHARDING_DSL_CONTEXT
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.PublicVarGroupReferenceTypeEnum
 import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
@@ -153,7 +154,8 @@ class PipelineTransferYamlService @Autowired constructor(
         data: TransferBody,
         aspects: LinkedList<IPipelineTransferAspect> = LinkedList(),
         editPermission: Boolean? = null,
-        archiveFlag: Boolean? = false
+        archiveFlag: Boolean? = false,
+        channelCode: ChannelCode = ChannelCode.BS
     ): TransferResponse {
         val watcher = Watcher(id = "yaml and model transfer watcher")
         // #8161 蓝盾PAC默认使用V3版本的YAML语言
@@ -185,6 +187,7 @@ class PipelineTransferYamlService @Autowired constructor(
                     templateId = null
                 )
             }
+            val resolvedChannelCode = pipelineInfo?.channelCode ?: channelCode
             when (actionType) {
                 FULL_MODEL2YAML -> {
                     return fullModel2Yaml(
@@ -193,7 +196,8 @@ class PipelineTransferYamlService @Autowired constructor(
                         userId = userId,
                         data = data,
                         pipelineInfo = pipelineInfo,
-                        defaultVersion = defaultVersion
+                        defaultVersion = defaultVersion,
+                        channelCode = resolvedChannelCode
                     )
                 }
 
@@ -204,7 +208,8 @@ class PipelineTransferYamlService @Autowired constructor(
                         data = data,
                         pipelineId = pipelineId,
                         projectId = projectId,
-                        userId = userId
+                        userId = userId,
+                        channelCode = resolvedChannelCode
                     )
                 }
 
@@ -248,7 +253,8 @@ class PipelineTransferYamlService @Autowired constructor(
         userId: String,
         data: TransferBody,
         pipelineInfo: PipelineInfo?,
-        defaultVersion: YamlVersion
+        defaultVersion: YamlVersion,
+        channelCode: ChannelCode = ChannelCode.BS
     ): TransferResponse {
         watcher.start("step_1|FULL_MODEL2YAML start")
         val invalidElement = mutableListOf<String>()
@@ -265,7 +271,8 @@ class PipelineTransferYamlService @Autowired constructor(
                 setting = data.modelAndSetting!!.setting,
                 pipelineInfo = pipelineInfo,
                 version = defaultVersion,
-                aspectWrapper = PipelineTransferAspectWrapper(aspects)
+                aspectWrapper = PipelineTransferAspectWrapper(aspects),
+                channelCode = channelCode
             )
         )
         if (invalidElement.isNotEmpty()) {
@@ -295,7 +302,8 @@ class PipelineTransferYamlService @Autowired constructor(
         data: TransferBody,
         pipelineId: String?,
         projectId: String,
-        userId: String
+        userId: String,
+        channelCode: ChannelCode = ChannelCode.BS
     ): TransferResponse {
         watcher.start("step_1|FULL_YAML2MODEL start")
         PipelineTransferAspectLoader.yaml2ModelAspects(aspects)
@@ -319,7 +327,8 @@ class PipelineTransferYamlService @Autowired constructor(
             pipelineInfo = pipelineInfo,
             yaml = pYml,
             yamlFileName = data.yamlFileName,
-            aspectWrapper = PipelineTransferAspectWrapper(aspects)
+            aspectWrapper = PipelineTransferAspectWrapper(aspects),
+            channelCode = pipelineInfo?.channelCode ?: channelCode
         )
         val model = modelTransfer.yaml2Model(input)
         pipelineInfo?.let {
@@ -470,7 +479,8 @@ class PipelineTransferYamlService @Autowired constructor(
         resource: PipelineResourceVersion,
         editPermission: Boolean? = null,
         archiveFlag: Boolean? = false,
-        isEncryptParamsValue: Boolean? = false
+        isEncryptParamsValue: Boolean? = false,
+        channelCode: ChannelCode = ChannelCode.BS
     ): PreviewResponse {
         val setting = pipelineSettingVersionService.getPipelineSetting(
             userId = userId,
@@ -496,7 +506,8 @@ class PipelineTransferYamlService @Autowired constructor(
                 actionType = FULL_MODEL2YAML,
                 data = TransferBody(modelAndSetting),
                 editPermission = editPermission,
-                archiveFlag = archiveFlag
+                archiveFlag = archiveFlag,
+                channelCode = channelCode
             ).yamlWithVersion?.yamlStr ?: return PreviewResponse("")
         } else {
             resource.yaml

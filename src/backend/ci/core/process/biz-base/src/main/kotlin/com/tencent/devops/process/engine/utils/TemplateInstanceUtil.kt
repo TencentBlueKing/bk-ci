@@ -740,9 +740,11 @@ object TemplateInstanceUtil {
         val defaultValueExceptions = mutableListOf<String>()
         instanceParams.forEach { instanceParam ->
             val inputParam = inputParams.find { it.id == instanceParam.id } ?: return@forEach
+            // 常量和推荐版本号因为历史原因,required的值可能不准,所以不校验
             if (
                 inputParam.required != instanceParam.required &&
-                instanceParam.id !in PipelineUtils.VERSION_PARAMS
+                instanceParam.id !in PipelineUtils.VERSION_PARAMS &&
+                instanceParam.constant != true
             ) {
                 requiredExceptions.add(instanceParam.id)
             }

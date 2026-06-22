@@ -1,9 +1,11 @@
 package com.tencent.devops.openapi.resources.apigw.v4
 
 import com.tencent.devops.auth.api.service.ServiceAuthAiResource
+import com.tencent.devops.auth.api.service.ServiceAuthApplyResource
 import com.tencent.devops.auth.pojo.AuthResourceGroup
 import com.tencent.devops.auth.pojo.AuthResourceGroupMember
 import com.tencent.devops.auth.pojo.ResourceMemberInfo
+import com.tencent.devops.auth.pojo.SearchGroupInfo
 import com.tencent.devops.auth.pojo.dto.IamGroupIdsQueryConditionDTO
 import com.tencent.devops.auth.pojo.dto.ResourceGroupPermissionDTO
 import com.tencent.devops.auth.pojo.enum.BatchOperateType
@@ -16,9 +18,15 @@ import com.tencent.devops.auth.pojo.request.ai.BatchHandoverMembersReq
 import com.tencent.devops.auth.pojo.request.ai.BatchOperateCheckReq
 import com.tencent.devops.auth.pojo.request.ai.BatchRemoveMembersReq
 import com.tencent.devops.auth.pojo.request.ai.BatchRenewalMembersReq
+import com.tencent.devops.auth.pojo.request.ai.GroupRecommendReq
+import com.tencent.devops.auth.pojo.enum.GroupLevel
 import com.tencent.devops.auth.pojo.vo.BatchOperateGroupMemberCheckVo
 import com.tencent.devops.auth.pojo.vo.GroupDetailsInfoVo
+import com.tencent.devops.auth.pojo.vo.GroupRecommendationVO
+import com.tencent.devops.auth.pojo.vo.ManagerRoleGroupVO
+import com.tencent.devops.auth.pojo.vo.MemberExitCheckVO
 import com.tencent.devops.auth.pojo.vo.MemberExitsProjectCheckVo
+import com.tencent.devops.auth.pojo.vo.PermissionCloneResultVO
 import com.tencent.devops.auth.pojo.vo.ResourceType2CountVo
 import com.tencent.devops.auth.pojo.vo.UserSearchResultVO
 import com.tencent.devops.common.api.model.SQLPage
@@ -117,6 +125,43 @@ class ApigwAuthMemberManageResourceV4Impl @Autowired constructor(
             memberType = memberType,
             userName = userName,
             departedFlag = departedFlag,
+            page = page,
+            pageSize = pageSize
+        )
+    }
+
+    override fun listProjectMembersByCondition(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        memberType: String?,
+        userName: String?,
+        deptName: String?,
+        groupName: String?,
+        minExpiredAt: Long?,
+        maxExpiredAt: Long?,
+        departedFlag: Boolean?,
+        resourceType: String?,
+        resourceCode: String?,
+        action: String?,
+        page: Int,
+        pageSize: Int
+    ): Result<SQLPage<ResourceMemberInfo>> {
+        logger.info("OPENAPI_AUTH_MEMBER_MANAGE_V4|$appCode|$userId|listProjectMembersByCondition|$projectId")
+        return client.get(ServiceAuthAiResource::class).listProjectMembersByCondition(
+            userId = userId,
+            projectId = projectId,
+            memberType = memberType,
+            userName = userName,
+            deptName = deptName,
+            groupName = groupName,
+            minExpiredAt = minExpiredAt,
+            maxExpiredAt = maxExpiredAt,
+            departedFlag = departedFlag,
+            resourceType = resourceType,
+            resourceCode = resourceCode,
+            action = action,
             page = page,
             pageSize = pageSize
         )
@@ -415,6 +460,42 @@ class ApigwAuthMemberManageResourceV4Impl @Autowired constructor(
         )
     }
 
+    override fun listGroupsForApply(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        groupLevel: String?,
+        actionId: String?,
+        resourceType: String?,
+        resourceCode: String?,
+        iamResourceCode: String?,
+        name: String?,
+        description: String?,
+        groupId: Int?,
+        page: Int,
+        pageSize: Int
+    ): Result<ManagerRoleGroupVO> {
+        logger.info("OPENAPI_AUTH_MEMBER_MANAGE_V4|$appCode|$userId|listGroupsForApply|$projectId")
+        val searchGroupInfo = SearchGroupInfo(
+            groupLevel = groupLevel?.let { GroupLevel.valueOf(it) },
+            actionId = actionId,
+            resourceType = resourceType,
+            resourceCode = resourceCode,
+            iamResourceCode = iamResourceCode,
+            name = name,
+            description = description,
+            groupId = groupId,
+            page = page,
+            pageSize = pageSize
+        )
+        return client.get(ServiceAuthApplyResource::class).listGroupsForApply(
+            userId = userId,
+            projectId = projectId,
+            searchGroupInfo = searchGroupInfo
+        )
+    }
+
     override fun searchUsers(
         appCode: String?,
         apigwType: String?,
@@ -429,6 +510,69 @@ class ApigwAuthMemberManageResourceV4Impl @Autowired constructor(
             keyword = keyword,
             projectId = queryProjectId,
             limit = limit
+        )
+    }
+
+    override fun recommendGroupsForGrant(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        request: GroupRecommendReq
+    ): Result<GroupRecommendationVO> {
+        logger.info("OPENAPI_AUTH_MEMBER_MANAGE_V4|$appCode|$userId|recommendGroupsForGrant|$projectId")
+        return client.get(ServiceAuthAiResource::class).recommendGroupsForGrant(
+            userId = userId,
+            projectId = projectId,
+            request = request
+        )
+    }
+
+    override fun checkMemberExitWithRecommendation(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        targetMemberId: String,
+        handoverTo: String?,
+        groupIds: String?,
+        recommendLimit: Int
+    ): Result<MemberExitCheckVO> {
+        logger.info(
+            "OPENAPI_AUTH_MEMBER_MANAGE_V4|$appCode|$userId|checkMemberExitWithRecommendation" +
+                "|$projectId|$targetMemberId"
+        )
+        return client.get(ServiceAuthAiResource::class).checkMemberExitWithRecommendation(
+            userId = userId,
+            projectId = projectId,
+            targetMemberId = targetMemberId,
+            handoverTo = handoverTo,
+            groupIds = groupIds,
+            recommendLimit = recommendLimit
+        )
+    }
+
+    override fun clonePermissions(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        sourceUserId: String,
+        targetUserId: String,
+        resourceTypes: String?,
+        dryRun: Boolean
+    ): Result<PermissionCloneResultVO> {
+        logger.info(
+            "OPENAPI_AUTH_MEMBER_MANAGE_V4|$appCode|$userId|clonePermissions" +
+                "|$projectId|$sourceUserId->$targetUserId|dryRun=$dryRun"
+        )
+        return client.get(ServiceAuthAiResource::class).clonePermissions(
+            userId = userId,
+            projectId = projectId,
+            sourceUserId = sourceUserId,
+            targetUserId = targetUserId,
+            resourceTypes = resourceTypes,
+            dryRun = dryRun
         )
     }
 

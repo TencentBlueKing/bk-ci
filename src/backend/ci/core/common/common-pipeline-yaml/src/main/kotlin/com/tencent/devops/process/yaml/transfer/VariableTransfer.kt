@@ -320,7 +320,7 @@ class VariableTransfer {
                     displayCondition = variable.ifCondition ?: emptyMap(),
                     asInstanceInput = if (allowModifyAtStartup) {
                         variable.asInstanceInput ?: true
-                    } else null,
+                    } else false,
                     sensitive = variable.sensitive
                 )
             )
