@@ -296,8 +296,12 @@ object BatScriptUtil {
 
         logger.info("The default charset is $charset")
 
-        file.writeText(command.toString(), charset)
-        logger.info("start to run windows script - ($command)")
+        val finalCommand = command.toString()
+        logger.info("[format_multiple_lines] Final bat script contains :format_multiple_lines label: ${finalCommand.contains(":format_multiple_lines")}")
+        logger.info("[format_multiple_lines] Final bat script contains ::set-output: ${finalCommand.contains("::set-output")}")
+        logger.info("[format_multiple_lines] Final bat script length: ${finalCommand.length}")
+        file.writeText(finalCommand, charset)
+        logger.info("start to run windows script - ($finalCommand)")
         return file
     }
 
