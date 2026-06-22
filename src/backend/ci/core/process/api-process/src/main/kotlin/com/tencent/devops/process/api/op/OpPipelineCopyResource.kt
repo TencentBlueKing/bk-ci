@@ -21,24 +21,6 @@ import jakarta.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface OpPipelineCopyResource {
 
-    @Operation(summary = "跨项目复制流水线")
-    @POST
-    @Path("/projects/{sourceProjectId}/copyAcrossProject")
-    fun copyAcrossProject(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @Parameter(description = "源项目ID", required = true)
-        @PathParam("sourceProjectId")
-        sourceProjectId: String,
-        @Parameter(description = "目标项目ID", required = true)
-        @QueryParam("targetProjectId")
-        targetProjectId: String,
-        @Parameter(description = "源流水线ID，为空则复制源项目下全部流水线", required = false)
-        @QueryParam("pipelineId")
-        pipelineId: String?
-    ): Result<Boolean>
-
     @Operation(summary = "修复约束模板实例缺失的流水线设置(临时)")
     @POST
     @Path("/projects/{sourceProjectId}/fixInstanceSetting")
@@ -76,5 +58,23 @@ interface OpPipelineCopyResource {
         @Parameter(description = "源标签ID，为空则复制源项目下全部标签", required = false)
         @QueryParam("labelId")
         labelId: String?
+    ): Result<Boolean>
+
+    @Operation(summary = "跨项目复制流水线组")
+    @POST
+    @Path("/views/projects/{sourceProjectId}/copyAcrossProject")
+    fun copyViewsAcrossProject(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "源项目ID", required = true)
+        @PathParam("sourceProjectId")
+        sourceProjectId: String,
+        @Parameter(description = "目标项目ID", required = true)
+        @QueryParam("targetProjectId")
+        targetProjectId: String,
+        @Parameter(description = "源流水线组名称，为空则复制源项目下全部流水线组", required = false)
+        @QueryParam("viewName")
+        viewName: String?
     ): Result<Boolean>
 }
