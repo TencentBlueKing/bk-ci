@@ -38,6 +38,7 @@ import com.tencent.devops.common.db.pojo.ARCHIVE_SHARDING_DSL_CONTEXT
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.PublicVarGroupReferenceTypeEnum
+import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
 import com.tencent.devops.common.pipeline.pojo.TemplateModelAndSetting
 import com.tencent.devops.common.pipeline.pojo.element.Element
@@ -341,7 +342,8 @@ class PipelineTransferYamlService @Autowired constructor(
                     referType = PublicVarGroupReferenceTypeEnum.PIPELINE,
                     referName = model.name,
                     referVersion = pipelineInfo.version,
-                    referVersionName = pipelineInfo.versionName
+                    referVersionName = pipelineInfo.versionName,
+                    draftFlag = pipelineInfo.latestVersionStatus == VersionStatus.COMMITTING
                 )
             )
         }
