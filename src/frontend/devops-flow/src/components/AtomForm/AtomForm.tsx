@@ -32,6 +32,7 @@ const TipsSimple = defineAsyncComponent(() => import('./TipsSimple'))
 const ConditionalInputSelector = defineAsyncComponent(() => import('./ConditionalInputSelector'))
 const DevopsSelect = defineAsyncComponent(() => import('./DevopsSelect'))
 const DynamicParameterSimple = defineAsyncComponent(() => import('./DynamicParameterSimple'))
+const Tips = defineAsyncComponent(() => import('./Tips'))
 
 const SELF_ERROR_COMPONENTS = new Set(['timer-cron-tab'])
 
@@ -67,6 +68,7 @@ export const COMPONENT_MAP: Record<string, any> = {
   'enum-button': EnumButton,
   'composite-input': CompositeInput,
   'tips-simple': TipsSimple,
+  'tips': Tips,
   'conditional-input-selector': ConditionalInputSelector,
   'devops-select': DevopsSelect,
   'dynamic-parameter-simple': DynamicParameterSimple,

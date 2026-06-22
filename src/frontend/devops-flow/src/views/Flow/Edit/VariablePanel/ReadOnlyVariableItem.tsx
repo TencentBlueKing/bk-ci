@@ -44,7 +44,6 @@ export default defineComponent({
       event.stopPropagation()
       const reference = getReference()
       navigator.clipboard.writeText(reference).then(() => {
-        Message({ theme: 'success', message: t('flow.variable.copySuccess') })
         emit('copy', reference)
       })
     }
