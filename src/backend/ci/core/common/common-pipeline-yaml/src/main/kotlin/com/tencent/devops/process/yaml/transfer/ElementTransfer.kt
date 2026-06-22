@@ -218,7 +218,7 @@ class ElementTransfer @Autowired(required = false) constructor(
         if (schedules.isNotEmpty()) {
             triggerOn.value.schedules = schedules
         }
-        if (tapds.isNotEmpty()){
+        if (tapds.isNotEmpty()) {
             triggerOn.value.tapd = tapds
         }
         if (triggerOn.isInitialized()) {
