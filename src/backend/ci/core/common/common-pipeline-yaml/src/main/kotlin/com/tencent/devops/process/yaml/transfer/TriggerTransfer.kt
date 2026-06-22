@@ -213,7 +213,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
         }
 
         triggerOn.tapd?.let {
-            elementQueue.add(yaml2TriggerTapdElement(it))
+            elementQueue.addAll(it.map { trigger -> yaml2TriggerTapdElement(trigger) })
         }
     }
 
