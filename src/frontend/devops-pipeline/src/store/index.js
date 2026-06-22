@@ -29,6 +29,7 @@ import atom from './modules/atom'
 import common from './modules/common/'
 import pipelines from './modules/pipelines/'
 import templates from './modules/templates/'
+import crossProjectCopy from './modules/crossProjectCopy/'
 
 import { CODE_MODE, UI_MODE } from '@/utils/pipelineConst'
 
@@ -57,7 +58,8 @@ export default new Vuex.Store({
         atom,
         pipelines,
         common,
-        templates
+        templates,
+        crossProjectCopy
     },
     // 公共 store
     state: {

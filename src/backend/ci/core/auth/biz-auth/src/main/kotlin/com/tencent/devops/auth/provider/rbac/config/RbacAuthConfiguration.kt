@@ -88,6 +88,7 @@ import com.tencent.devops.auth.provider.rbac.service.RoutingStrategyService
 import com.tencent.devops.auth.provider.rbac.service.migrate.MigrateCreatorFixServiceImpl
 import com.tencent.devops.auth.provider.rbac.service.migrate.MigrateIamApiService
 import com.tencent.devops.auth.provider.rbac.service.migrate.MigratePermissionHandoverService
+import com.tencent.devops.auth.provider.rbac.service.migrate.ProjectGroupMigrationService
 import com.tencent.devops.auth.provider.rbac.service.migrate.MigrateResourceAuthorizationService
 import com.tencent.devops.auth.provider.rbac.service.migrate.MigrateResourceCodeConverter
 import com.tencent.devops.auth.provider.rbac.service.migrate.MigrateResourceGroupService
@@ -551,6 +552,35 @@ class RbacAuthConfiguration {
     )
 
     @Bean
+    fun projectGroupMigrationService(
+        dslContext: DSLContext,
+        iamConfiguration: IamConfiguration,
+        authResourceService: AuthResourceService,
+        rbacCommonService: RbacCommonService,
+        authResourceCodeConverter: AuthResourceCodeConverter,
+        authResourceGroupDao: AuthResourceGroupDao,
+        authResourceGroupMemberDao: AuthResourceGroupMemberDao,
+        authResourceGroupPermissionDao: AuthResourceGroupPermissionDao,
+        permissionResourceGroupService: PermissionResourceGroupService,
+        permissionResourceGroupPermissionService: PermissionResourceGroupPermissionService,
+        permissionResourceMemberService: PermissionResourceMemberService,
+        deptService: DeptService
+    ) = ProjectGroupMigrationService(
+        dslContext = dslContext,
+        iamConfiguration = iamConfiguration,
+        authResourceService = authResourceService,
+        rbacCommonService = rbacCommonService,
+        authResourceCodeConverter = authResourceCodeConverter,
+        authResourceGroupDao = authResourceGroupDao,
+        authResourceGroupMemberDao = authResourceGroupMemberDao,
+        authResourceGroupPermissionDao = authResourceGroupPermissionDao,
+        permissionResourceGroupService = permissionResourceGroupService,
+        permissionResourceGroupPermissionService = permissionResourceGroupPermissionService,
+        permissionResourceMemberService = permissionResourceMemberService,
+        deptService = deptService
+    )
+
+    @Bean
     fun migrateIamApiService() = MigrateIamApiService()
 
     @Bean
@@ -665,6 +695,7 @@ class RbacAuthConfiguration {
         permissionResourceMemberService: RbacPermissionResourceMemberService,
         migrateResourceAuthorizationService: MigrateResourceAuthorizationService,
         migrateResourceGroupService: MigrateResourceGroupService,
+        projectGroupMigrationService: ProjectGroupMigrationService,
         syncDataTaskDao: AuthSyncDataTaskDao,
         rbacCommonService: RbacCommonService,
         authResourceGroupMemberDao: AuthResourceGroupMemberDao,
@@ -686,6 +717,7 @@ class RbacAuthConfiguration {
         permissionResourceMemberService = permissionResourceMemberService,
         migrateResourceAuthorizationService = migrateResourceAuthorizationService,
         migrateResourceGroupService = migrateResourceGroupService,
+        projectGroupMigrationService = projectGroupMigrationService,
         syncDataTaskDao = syncDataTaskDao,
         rbacCommonService = rbacCommonService,
         authResourceGroupMemberDao = authResourceGroupMemberDao,

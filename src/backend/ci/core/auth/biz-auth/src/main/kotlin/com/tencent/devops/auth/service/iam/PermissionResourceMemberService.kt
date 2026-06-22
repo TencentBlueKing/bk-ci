@@ -117,4 +117,12 @@ interface PermissionResourceMemberService {
         projectCode: String,
         memberId: String
     ): List<Int>
+
+    fun copyResourceGroupMembers(
+        sourceProjectCode: String,
+        targetProjectCode: String,
+        resourceType: String,
+        sourceResourceCode: String,
+        targetResourceCode: String
+    ): Boolean
 }
