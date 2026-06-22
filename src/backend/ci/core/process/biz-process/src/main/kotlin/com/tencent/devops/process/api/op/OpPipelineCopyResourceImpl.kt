@@ -3,39 +3,13 @@ package com.tencent.devops.process.api.op
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.process.service.label.PipelineGroupCopyService
 import com.tencent.devops.process.service.pipeline.PipelineCopyService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class OpPipelineCopyResourceImpl @Autowired constructor(
-    private val pipelineCopyService: PipelineCopyService,
-    private val pipelineGroupCopyService: PipelineGroupCopyService
+    private val pipelineCopyService: PipelineCopyService
 ) : OpPipelineCopyResource {
-
-    override fun copyAcrossProject(
-        userId: String,
-        sourceProjectId: String,
-        targetProjectId: String,
-        pipelineId: String?
-    ): Result<Boolean> {
-        if (userId.isBlank()) {
-            throw ParamBlankException("Invalid userId")
-        }
-        if (sourceProjectId.isBlank()) {
-            throw ParamBlankException("Invalid sourceProjectId")
-        }
-        if (targetProjectId.isBlank()) {
-            throw ParamBlankException("Invalid targetProjectId")
-        }
-        pipelineCopyService.copyAcrossProject(
-            userId = userId,
-            sourceProjectId = sourceProjectId,
-            targetProjectId = targetProjectId,
-            pipelineId = pipelineId
-        )
-        return Result(true)
-    }
 
     override fun fixInstanceSetting(
         userId: String,
@@ -83,11 +57,35 @@ class OpPipelineCopyResourceImpl @Autowired constructor(
         if (targetProjectId.isBlank()) {
             throw ParamBlankException("Invalid targetProjectId")
         }
-        pipelineGroupCopyService.copyAcrossProject(
+        pipelineCopyService.copyLabelsAcrossProject(
             userId = userId,
             sourceProjectId = sourceProjectId,
             targetProjectId = targetProjectId,
             labelId = labelId
+        )
+        return Result(true)
+    }
+
+    override fun copyViewsAcrossProject(
+        userId: String,
+        sourceProjectId: String,
+        targetProjectId: String,
+        viewName: String?
+    ): Result<Boolean> {
+        if (userId.isBlank()) {
+            throw ParamBlankException("Invalid userId")
+        }
+        if (sourceProjectId.isBlank()) {
+            throw ParamBlankException("Invalid sourceProjectId")
+        }
+        if (targetProjectId.isBlank()) {
+            throw ParamBlankException("Invalid targetProjectId")
+        }
+        pipelineCopyService.copyViewsAcrossProject(
+            userId = userId,
+            sourceProjectId = sourceProjectId,
+            targetProjectId = targetProjectId,
+            viewName = viewName
         )
         return Result(true)
     }

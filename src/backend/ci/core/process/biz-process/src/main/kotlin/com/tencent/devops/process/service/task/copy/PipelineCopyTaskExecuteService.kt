@@ -1056,10 +1056,6 @@ class PipelineCopyTaskExecuteService @Autowired constructor(
         details.forEach { detail ->
             dfs(detail.pipelineId)
         }
-        logger.info(
-            "pipeline copy execution order|$projectId|$taskId|" +
-                ordered.joinToString(",") { it.pipelineId }
-        )
         return ordered
     }
 
@@ -1117,38 +1113,53 @@ class PipelineCopyTaskExecuteService @Autowired constructor(
         resource: PipelineCopyTaskResource?,
         resourceMap: MutableMap<String, PipelineCopyTaskResource>
     ) {
-        val pipelineResource = validatePipelineExecutionPreconditions(
-            projectId = projectId,
-            taskId = taskId,
-            detail = detail,
-            resource = resource,
-            resourceMap = resourceMap
-        ) ?: return
+        try {
+            val pipelineResource = validatePipelineExecutionPreconditions(
+                projectId = projectId,
+                taskId = taskId,
+                detail = detail,
+                resource = resource,
+                resourceMap = resourceMap
+            ) ?: return
 
-        updatePipelineDetailStatus(
-            projectId = projectId,
-            taskId = taskId,
-            pipelineId = detail.pipelineId,
-            status = PipelineBatchTaskDetailStatus.EXECUTING
-        )
+            updatePipelineDetailStatus(
+                projectId = projectId,
+                taskId = taskId,
+                pipelineId = detail.pipelineId,
+                status = PipelineBatchTaskDetailStatus.EXECUTING
+            )
 
-        val resourceUpdate = copyPipelineResource(
-            userId = userId,
-            projectId = projectId,
-            taskId = taskId,
-            targetProjectId = targetProjectId,
-            resource = pipelineResource,
-            resourceMap = resourceMap
-        )
+            val resourceUpdate = copyPipelineResource(
+                userId = userId,
+                projectId = projectId,
+                taskId = taskId,
+                targetProjectId = targetProjectId,
+                resource = pipelineResource,
+                resourceMap = resourceMap
+            )
 
-        persistPipelineExecution(
-            projectId = projectId,
-            taskId = taskId,
-            pipelineId = detail.pipelineId,
-            resource = pipelineResource,
-            resourceUpdate = resourceUpdate,
-            resourceMap = resourceMap
-        )
+            persistPipelineExecution(
+                projectId = projectId,
+                taskId = taskId,
+                pipelineId = detail.pipelineId,
+                resource = pipelineResource,
+                resourceUpdate = resourceUpdate,
+                resourceMap = resourceMap
+            )
+        } catch (ignored: Exception) {
+            logger.error(
+                "execute pipeline failed|$projectId|$taskId|${detail.pipelineId}|${detail.pipelineName}",
+                ignored
+            )
+            updatePipelineDetailStatus(
+                projectId = projectId,
+                taskId = taskId,
+                pipelineId = detail.pipelineId,
+                status = PipelineBatchTaskDetailStatus.FAILED,
+                errorType = PipelineBatchTaskDetailErrorType.SYSTEM_ERROR,
+                errorMessage = PipelineCopyTaskUtils.getErrorMessage(ignored)
+            )
+        }
     }
 
     private fun validatePipelineExecutionPreconditions(
@@ -1312,14 +1323,18 @@ class PipelineCopyTaskExecuteService @Autowired constructor(
             taskId = taskId,
             pipelineIds = setOf(pipelineId)
         )
-        return relations.map { relation ->
-            resourceMap[
-                PipelineCopyTaskUtils.resourceKey(
-                    resourceType = relation.resourceType,
-                    resourceId = relation.resourceId
+        return relations.mapNotNull { relation ->
+            val resourceKey = PipelineCopyTaskUtils.resourceKey(
+                resourceType = relation.resourceType,
+                resourceId = relation.resourceId
+            )
+            resourceMap[resourceKey] ?: run {
+                logger.warn(
+                    "pipeline copy dependent resource not found|$projectId|$taskId|" +
+                        "$pipelineId|${relation.resourceType.name}|${relation.resourceId}"
                 )
-            ]
-                ?: throwDependencyFailed(relation.resourceType, relation.resourceId)
+                null
+            }
         }
     }
 
@@ -1381,16 +1396,6 @@ class PipelineCopyTaskExecuteService @Autowired constructor(
             errorType = errorType,
             errorMessage = errorMessage,
             transactionContext = transactionContext
-        )
-    }
-
-    private fun throwDependencyFailed(
-        resourceType: PipelineDependentResourceType,
-        resourceName: String
-    ): Nothing {
-        throw ErrorCodeException(
-            errorCode = ProcessMessageCode.ERROR_PIPELINE_COPY_DEPENDENT_RESOURCE_FAILED,
-            params = arrayOf("${resourceType.name}:$resourceName")
         )
     }
 

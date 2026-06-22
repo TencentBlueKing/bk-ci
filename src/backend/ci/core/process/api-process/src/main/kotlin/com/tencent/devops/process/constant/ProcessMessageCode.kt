@@ -478,6 +478,9 @@ object ProcessMessageCode {
     // 模型变量引用表达式不合规：仅允许双大括号${{xxx}}，且前缀须为 variables./stages./jobs./steps.。不合规项（含位置 positionPath）：{0}
     const val ERROR_PIPELINE_MODEL_VAR_REF_INVALID = "2101376"
 
+    // 构建执行相关错误码（2101500-2101599）
+    const val ERROR_PIPELINE_START_NODE_NO_PERMISSION = "2101500" // 用户[{0}]没有节点[{1}]的操作权限，无法启动流水线
+
     // 批量任务
     const val ERROR_PIPELINE_BATCH_TASK_NOT_EXISTS = "2101650" // 流水线批量任务{0}不存在
     const val ERROR_PIPELINE_BATCH_TASK_STATUS_CAN_NOT_DELETE = "2101651" // 流水线批量任务{0}当前状态为{1}，不能删除

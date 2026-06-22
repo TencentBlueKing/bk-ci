@@ -301,11 +301,16 @@ class EnvService @Autowired constructor(
             projectId = projectId,
             envName = envName,
             envTypeList = if (createMode == true) {
-                listOf(EnvType.CREATE)
+                listOf(EnvType.CREATE.name)
             } else if (envType != null) {
-                listOf(envType)
+                listOf(envType.name)
             } else {
-                EnvType.noCreateMode()
+                null
+            },
+            noEnvTypeList = if (createMode != true && envType == null) {
+                listOf(EnvType.CREATE.name)
+            } else {
+                null
             },
             envIds = envIds
         )
@@ -1194,7 +1199,7 @@ class EnvService @Autowired constructor(
 
         // 验证节点类型
         val existEnvNodeIds = envNodeDao.list(dslContext, projectId, listOf(envId)).map { it.nodeId }
-        val toAddNodeIds = nodeLongIds.subtract(existEnvNodeIds)
+        val toAddNodeIds = nodeLongIds.subtract(existEnvNodeIds.toSet())
         val existNodesMap = existNodes.associateBy { it.nodeId }
         val serverNodeTypes = listOf(NodeType.CMDB.name)
         val buildNodeType = listOf(NodeType.DEVCLOUD.name, NodeType.THIRDPARTY.name)
@@ -1231,7 +1236,7 @@ class EnvService @Autowired constructor(
             operateName = EnvOperateName.ADD_NODE,
             operateContent = EnvOperateContent(
                 content = null,
-                resourceCount = existNodeIds.size
+                resourceCount = toAddNodeIds.size
             ),
             operator = userId
         )
@@ -1616,7 +1621,7 @@ class EnvService @Autowired constructor(
             projectId = projectId,
             envId = envId,
             operateOrigin = envOperateOrigin,
-            operateName = EnvOperateName.UPDATE_ENV_VAR,
+            operateName = EnvOperateName.UPDATE_SHARE_SETTING,
             operateContent = EnvOperateContent(
                 content = JsonUtil.toJson(sharedProjects.map { it.projectId }, false),
                 resourceCount = null
@@ -1766,7 +1771,13 @@ class EnvService @Autowired constructor(
         scopeId = "#projectId",
         content = ActionAuditContent.ENVIRONMENT_OF_SHARE_DELETE_CONTENT
     )
-    fun deleteShareEnvBySharedProj(userId: String, projectId: String, envHashId: String, sharedProjectId: String) {
+    fun deleteShareEnvBySharedProj(
+        userId: String,
+        projectId: String,
+        envHashId: String,
+        sharedProjectId: String,
+        operateOrigin: EnvOperateOrigin
+    ) {
         val envId = HashUtil.decodeIdToLong(envHashId)
         val envInfo = envDao.getOrNull(dslContext, projectId, envId) ?: return
         if (!environmentPermissionService.checkEnvPermission(userId, projectId, envId, AuthPermission.DELETE)) {
@@ -1778,6 +1789,14 @@ class EnvService @Autowired constructor(
             .setInstanceId(envId.toString())
             .setInstanceName(envInfo.envName)
         envShareProjectDao.deleteBySharedProj(dslContext, envId, projectId, sharedProjectId)
+        envOperateLogService.addOperateLog(
+            projectId = projectId,
+            envId = envId,
+            operateOrigin = operateOrigin,
+            operateName = EnvOperateName.DELETE_SHARE_SETTING,
+            operateContent = EnvOperateContent(content = null, resourceCount = 1),
+            operator = userId
+        )
     }
 
     @ActionAuditRecord(
@@ -1910,6 +1929,7 @@ class EnvService @Autowired constructor(
             return emptyList()
         }
         val result = mutableListOf<EnvNode>()
+        // 查询所有环境，创作流环境特有值先查
         if (rEnvIds.remove(AllCreateNodeEnv.ENV_ID)) {
             val createNodes = thirdPartyAgentDao.fetchCreateAgent(dslContext, projectId)
             createNodes.forEach {
@@ -1918,9 +1938,9 @@ class EnvService @Autowired constructor(
         }
         val envs = envDao.list(dslContext, projectId, envIds = rEnvIds)
         val envMap = envs.associateBy { it.envId }
-        // 环境需要根据环境类型区分
-        val fetchFun = fun(data: Map<Long, MutableList<Long>>) {
-            data.forEach { envId, nodeIds ->
+        // 环境需要根据环境类型区分动态和静态，然后统一过滤，动态环境默认全都是启动节点
+        val fetchFun = fun(data: Map<Long, List<Long>>, enableData: Map<Long, Boolean>?) {
+            data.forEach { (envId, nodeIds) ->
                 val envId = envId
                 val realNodeIds = nodeDao.listByIds(
                     dslContext = dslContext,
@@ -1932,28 +1952,31 @@ class EnvService @Autowired constructor(
                         EnvType.CREATE.name -> NodeType.CREATE
                         else -> null
                     }
-                ).map { node -> EnvNode(envId, node.nodeId, true) }
+                ).map { node -> EnvNode(envId, node.nodeId, enableData?.get(node.nodeId) ?: true) }
                 result.addAll(realNodeIds)
             }
         }
+        // 动态环境
         fetchFun(
             envTagDao.batchEnvTagNode(
                 dslContext = dslContext,
                 projectId = projectId,
                 envIds = envs.filter { it.envNodeType == EnvNodeType.TAG.name }.map { it.envId }.toSet()
-            )
+            ), null
         )
-        // 环境需要根据环境类型区分
+        // 静态环境
         val envNodeRecords = envNodeDao.list(
             dslContext = dslContext,
             projectId = projectId,
             envIds = envs.filter { it.envNodeType == EnvNodeType.NODE.name }.map { it.envId }.toList()
         )
         val envNodeRecordMap = mutableMapOf<Long, MutableList<Long>>()
+        val enableData = mutableMapOf<Long, Boolean>()
         envNodeRecords.forEach {
             envNodeRecordMap.putIfAbsent(it.envId, mutableListOf(it.nodeId))?.add(it.nodeId)
+            enableData[it.nodeId] = it.enableNode
         }
-        fetchFun(envNodeRecordMap)
+        fetchFun(envNodeRecordMap, enableData)
         return result
     }
 
@@ -2010,7 +2033,7 @@ class EnvService @Autowired constructor(
             dslContext = dslContext,
             projectId = projectId,
             envName = null,
-            envTypeList = listOf(EnvType.CREATE),
+            envTypeList = listOf(EnvType.CREATE.name),
             envIds = envIds
         ).map {
             EnvData(

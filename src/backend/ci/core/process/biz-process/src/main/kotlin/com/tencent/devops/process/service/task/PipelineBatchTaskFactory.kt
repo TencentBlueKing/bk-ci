@@ -4,9 +4,9 @@ import com.tencent.devops.common.pipeline.enums.PipelineInstanceTypeEnum
 import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.process.dao.yaml.PipelineYamlInfoDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
+import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskDetailStatus
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskType
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskDetail
-import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskDetailStatus
 import com.tencent.devops.process.service.template.v2.PipelineTemplateRelatedService
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
@@ -34,6 +34,7 @@ class PipelineBatchTaskFactory @Autowired constructor(
             pipelineIds = pipelineIds.toSet()
         )
         val pipelineNameMap = pipelineInfos.associate { it.pipelineId to it.pipelineName }
+        val existingPipelineIds = pipelineIds.filter { pipelineNameMap.containsKey(it) }
         val pipelineCreatorMap = pipelineInfos.associate { it.pipelineId to it.creator }
         val pipelineLockedMap = pipelineInfos.associate { it.pipelineId to (it.locked ?: false) }
         val pipelineVersionStatusMap = pipelineInfos.associate {
@@ -42,15 +43,15 @@ class PipelineBatchTaskFactory @Autowired constructor(
         val pipelineEnablePacSet = pipelineYamlInfoDao.listByPipelineIds(
             dslContext = dslContext,
             projectId = projectId,
-            pipelineIds = pipelineIds
+            pipelineIds = existingPipelineIds
         ).map { it.pipelineId }.toSet()
         val pipelineConstraintSet = pipelineTemplateRelatedService.listByPipelineIds(
             projectId = projectId,
-            pipelineIds = pipelineIds.toSet()
+            pipelineIds = existingPipelineIds.toSet()
         ).filter { it.instanceType == PipelineInstanceTypeEnum.CONSTRAINT }
             .map { it.pipelineId }
             .toSet()
-        return pipelineIds.map { pipelineId ->
+        return existingPipelineIds.map { pipelineId ->
             val pac = pipelineEnablePacSet.contains(pipelineId)
             PipelineBatchTaskDetail(
                 taskId = taskId,
