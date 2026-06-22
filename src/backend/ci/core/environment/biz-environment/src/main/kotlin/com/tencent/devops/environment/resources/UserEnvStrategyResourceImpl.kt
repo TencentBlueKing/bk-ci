@@ -13,6 +13,7 @@ import com.tencent.devops.environment.pojo.DispatchEnvStrategyCreateReq
 import com.tencent.devops.environment.pojo.DispatchEnvStrategyReorderReq
 import com.tencent.devops.environment.pojo.DispatchEnvStrategyUpdateReq
 import com.tencent.devops.environment.pojo.DispatchEnvStrategyVO
+import com.tencent.devops.environment.pojo.envOperate.EnvOperateOrigin
 import com.tencent.devops.environment.service.EnvDispatchStrategyService
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -44,10 +45,14 @@ class UserEnvStrategyResourceImpl @Autowired constructor(
         val envId = HashUtil.decodeIdToLong(envHashId)
         checkEnvEditPermission(userId, projectId, envId)
         val id = envDispatchStrategyService.createCustomStrategy(
-            projectId = projectId, envId = envId, userId = userId,
-            strategyName = request.strategyName, scope = request.scope,
+            projectId = projectId,
+            envId = envId,
+            userId = userId,
+            strategyName = request.strategyName,
+            scope = request.scope,
             nodeRule = request.nodeRule,
-            labelSelector = request.labelSelector
+            labelSelector = request.labelSelector,
+            envOperateOrigin = EnvOperateOrigin.WEB
         )
         return Result(id)
     }
@@ -63,11 +68,14 @@ class UserEnvStrategyResourceImpl @Autowired constructor(
         checkEnvEditPermission(userId, projectId, envId)
         envDispatchStrategyService.updateStrategy(
             projectId = projectId,
-            id = strategyId, userId = userId,
-            strategyName = request.strategyName, scope = request.scope,
+            id = strategyId,
+            userId = userId,
+            strategyName = request.strategyName,
+            scope = request.scope,
             nodeRule = request.nodeRule,
             labelSelector = request.labelSelector,
-            enabled = request.enabled
+            enabled = request.enabled,
+            envOperateOrigin = EnvOperateOrigin.WEB
         )
         return Result(true)
     }
@@ -80,7 +88,13 @@ class UserEnvStrategyResourceImpl @Autowired constructor(
     ): Result<Boolean> {
         val envId = HashUtil.decodeIdToLong(envHashId)
         checkEnvEditPermission(userId, projectId, envId)
-        envDispatchStrategyService.deleteStrategy(projectId, envId, strategyId)
+        envDispatchStrategyService.deleteStrategy(
+            userId = userId,
+            projectId = projectId,
+            envId = envId,
+            id = strategyId,
+            envOperateOrigin = EnvOperateOrigin.WEB
+        )
         return Result(true)
     }
 
@@ -92,7 +106,13 @@ class UserEnvStrategyResourceImpl @Autowired constructor(
     ): Result<Boolean> {
         val envId = HashUtil.decodeIdToLong(envHashId)
         checkEnvEditPermission(userId, projectId, envId)
-        envDispatchStrategyService.batchDeleteStrategy(projectId, envId, strategyIds)
+        envDispatchStrategyService.batchDeleteStrategy(
+            userId = userId,
+            projectId = projectId,
+            envId = envId,
+            ids = strategyIds,
+            envOperateOrigin = EnvOperateOrigin.WEB
+        )
         return Result(true)
     }
 
@@ -104,7 +124,13 @@ class UserEnvStrategyResourceImpl @Autowired constructor(
     ): Result<Boolean> {
         val envId = HashUtil.decodeIdToLong(envHashId)
         checkEnvEditPermission(userId, projectId, envId)
-        envDispatchStrategyService.reorderStrategies(projectId, envId, request.orderedIds)
+        envDispatchStrategyService.reorderStrategies(
+            userId = userId,
+            projectId = projectId,
+            envId = envId,
+            orderedIds = request.orderedIds,
+            envOperateOrigin = EnvOperateOrigin.WEB
+        )
         return Result(true)
     }
 
