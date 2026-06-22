@@ -38,9 +38,20 @@
       <img v-else-if="atom.logoUrl" :src="atom.logoUrl" :class="logoCls" />
       <Logo v-else :class="logoCls" :name="svgAtomIcon" size="18" />
       <p class="atom-name">
-        <span :title="atom.name" :class="skipSpanCls">
-          {{ atom.atomCode ? atom.name : t("pendingAtom") }}
+        <span
+          :title="atomDisplayName"
+          :class="[skipSpanCls, 'atom-name-text']"
+        >
+          {{ atomDisplayName }}
         </span>
+        <Logo
+          v-if="showSubPipelineAccess"
+          name="tiaozhuan"
+          class="sub-pipeline-jump-icon"
+          size="16"
+          :title="t('viewSubPipeline')"
+          @click.stop="handleSubPipelineAccess"
+        />
       </p>
       <template v-if="isExecuting">
         <span class="atom-execounter">{{ execTime }}</span>
@@ -76,22 +87,8 @@
           <span>{{ t("stop") }}</span>
         </span>
       </template>
-      <span class="atom-operate-area">
-        <span v-if="atom.canRetry && !isBusy" @click.stop="skipOrRetry(false)">
-          {{ t("retry") }}
-        </span>
-        <span v-if="atom.canSkip && !isBusy" @click.stop="skipOrRetry(true)">
-          {{ t("SKIP") }}
-        </span>
-        <bk-popover v-if="
-          !isSkip &&
-          !isWaiting &&
-          atom.timeCost &&
-          !atom.canSkip &&
-          !atom.canRetry &&
-          !isExecuting &&
-          !reactiveData.editable
-        " :delay="[300, 0]" placement="top" :disabled="!atom.timeCost.executeCost">
+      <span v-if="showExecuteTime" class="atom-operate-area">
+        <bk-popover :delay="[300, 0]" placement="top" :disabled="!atom.timeCost.executeCost">
           <span class="atom-execute-time">
             {{ formatTime }}
           </span>
@@ -100,6 +97,14 @@
           </template>
         </bk-popover>
       </span>
+      <hover-slide-btn
+        v-if="atomOperateList.length"
+        :actions="atomOperateList"
+        :icon-size="9"
+        :badge-size="12"
+        :action-width="52"
+        @action-click="handleAtomOperateClick"
+      />
 
       <Logo v-if="reactiveData.editable && !atom.isError" name="clipboard" class="copy" size="14" :title="t('copyAtom')"
         @click.stop="copyAtom" />
@@ -125,6 +130,7 @@
 
 <script setup>
 import { ref, computed, inject, watch, onMounted, onBeforeUnmount } from "vue";
+import HoverSlideBtn from "./HoverSlideBtn";
 import Logo from "./Logo";
 import StatusIcon from "./StatusIcon";
 import {
@@ -138,6 +144,7 @@ import {
   QUALITY_IN_ATOM_CODE,
   QUALITY_OUT_ATOM_CODE,
   STATUS_MAP,
+  SUB_PIPELINE_ACCESS_EVENT_NAME,
 } from "./constants";
 import { t } from "./locale";
 import {
@@ -317,6 +324,21 @@ const isQualityGateAtom = computed(() => {
   return isQualityGate(props.atom);
 });
 
+const SUB_PIPELINE_ACCESS_STATUSES = [STATUS_MAP.SUCCEED, STATUS_MAP.FAILED];
+
+const isSubPipelineAtom = computed(() => {
+  return props.atom.atomCode === "SubPipelineExec";
+});
+
+const showSubPipelineAccess = computed(() => {
+  return (
+    reactiveData.isExecDetail
+    && !reactiveData.editable
+    && isSubPipelineAtom.value
+    && SUB_PIPELINE_ACCESS_STATUSES.includes(props.atom.asyncStatus || props.atom.status)
+  );
+});
+
 const isLastQualityAtom = computed(() => {
   return props.atom.atomCode === QUALITY_OUT_ATOM_CODE && props.isLastAtom;
 });
@@ -353,7 +375,7 @@ const atomCls = computed(() => {
     [qualityStatus.value]: isQualityGateAtom.value && !!qualityStatus.value,
     [atomStatusCls.value]: !!atomStatusCls.value,
     "quality-atom": isQualityGateAtom.value,
-    "is-sub-pipeline-atom": props.atom.atomCode === "SubPipelineExec",
+    "is-sub-pipeline-atom": isSubPipelineAtom.value,
     "is-error": props.atom.isError,
     "is-intercept": isQualityCheckAtom.value,
     "template-compare-atom": props.atom.templateModify,
@@ -379,6 +401,47 @@ const pauseReviewerStr = computed(() => {
     Array.isArray(props.atom.pauseReviewers) &&
     props.atom.pauseReviewers.join(";")
   );
+});
+
+const atomDisplayName = computed(() => {
+  return props.atom.atomCode ? props.atom.name : t("pendingAtom");
+});
+
+const showExecuteTime = computed(() => {
+  return (
+    !isSkip.value &&
+    !props.isWaiting &&
+    !!props.atom.timeCost &&
+    !isBusy.value &&
+    !isExecuting.value &&
+    !reactiveData.editable
+  );
+});
+
+const atomOperateList = computed(() => {
+  if (isBusy.value) return [];
+  return [
+    {
+      key: "retry",
+      label: t("retry"),
+      icon: "refresh-line",
+      color: "#E1ECFF",
+      textColor: "#3A84FF",
+      hoverTextColor: "#699DF4",
+      skip: false,
+      visible: props.atom.canRetry,
+    },
+    {
+      key: "skip",
+      label: t("SKIP"),
+      icon: "cc-skip",
+      color: "#DAF6E5",
+      textColor: "#2CAF5E",
+      hoverTextColor: "#65C389",
+      skip: true,
+      visible: props.atom.canSkip,
+    },
+  ].filter((action) => action.visible);
 });
 
 const formatTime = computed(() => {
@@ -463,6 +526,12 @@ const handleAtomClick = () => {
   });
 };
 
+const handleSubPipelineAccess = () => {
+  eventBus.$emit(SUB_PIPELINE_ACCESS_EVENT_NAME, {
+    atom: props.atom
+  });
+};
+
 const copyAtom = () => {
   const { id, stepId, ...restAttr } = props.atom;
   emit(COPY_EVENT_NAME, {
@@ -496,6 +565,10 @@ const handleAtomSkipChange = (value) => {
   });
 };
 
+const handleAtomOperateClick = (action) => {
+  skipOrRetry(action.skip);
+};
+
 const asyncEvent = (...args) => {
   return new Promise((resolve, reject) => {
     eventBus.$emit(
@@ -504,7 +577,10 @@ const asyncEvent = (...args) => {
         isBusy.value = false;
         resolve();
       },
-      reject
+      (error) => {
+        isBusy.value = false;
+        reject(error);
+      }
     );
   });
 };
@@ -621,10 +697,15 @@ onBeforeUnmount(() => {
 
   .atom-progress {
     display: inline-flex;
+    flex: 0 0 $serialSize;
     width: 42px;
     height: 42px;
     align-items: center;
     justify-content: center;
+  }
+
+  >.stage-status {
+    flex: 0 0 $serialSize;
   }
 
   .active-atom-location-icon {
@@ -714,6 +795,7 @@ onBeforeUnmount(() => {
   }
 
   .atom-icon {
+    flex-shrink: 0;
     text-align: center;
     margin: 0 14.5px;
     font-size: 18px;
@@ -785,13 +867,31 @@ onBeforeUnmount(() => {
   }
 
   >.atom-name {
-    flex: 1;
-    color: $fontWeightColor;
-    @include ellipsis();
+    display: inline-flex;
+    flex: 1 1 auto;
+    align-items: center;
+    width: auto;
+    min-width: 0;
     max-width: 188px;
-    margin-right: 2px;
+    overflow: hidden;
+    margin-right: 8px;
+    color: $fontWeightColor;
 
-    span:hover {
+    .atom-name-text {
+      flex: 0 1 auto;
+      min-width: 0;
+      @include ellipsis(100%);
+    }
+
+    .sub-pipeline-jump-icon {
+      flex: 0 0 auto;
+      margin-left: 8px;
+      color: $primaryColor;
+      cursor: pointer;
+    }
+
+    .atom-name-text:hover,
+    .sub-pipeline-jump-icon:hover {
       color: $primaryColor;
     }
   }
@@ -804,12 +904,21 @@ onBeforeUnmount(() => {
   .atom-execounter {
     color: $primaryColor;
     font-size: 12px;
+    flex-shrink: 0;
+    margin-right: 8px;
+  }
+
+  .spin-icon {
+    margin-right: 8px;
   }
 
   .atom-operate-area {
+    display: inline-flex;
+    align-items: center;
     margin: 0 8px 0 0;
     color: $primaryColor;
     font-size: 12px;
+    gap: 4px;
   }
 
   .atom-reviewing-tips {
@@ -931,7 +1040,7 @@ onBeforeUnmount(() => {
     background-color: white;
 
     .atom-name:hover {
-      span {
+      .atom-name-text {
         color: $fontWeightColor;
       }
 

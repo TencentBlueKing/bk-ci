@@ -121,6 +121,7 @@
                         @atom-continue="handleContinue"
                         @atom-exec="handleExec"
                         @debug-container="debugDocker"
+                        @sub-pipeline-access="handleSubPipelineAccess"
                     />
                 </div>
             </simplebar>
@@ -294,6 +295,21 @@
     import 'simplebar-vue/dist/simplebar.min.css'
     import 'bkui-pipeline/dist/bk-pipeline.css'
     import { mapActions, mapState, mapGetters } from 'vuex'
+
+    const getStaticValue = (value) => {
+        const str = value === undefined || value === null ? '' : String(value).trim()
+        return str && !/[${}]/.test(str) ? str : ''
+    }
+
+    const getSubPipelineAccessUrl = (atom) => {
+        const subPipelineId = getStaticValue(atom?.subPipelineId)
+        const subProjectId = getStaticValue(atom?.subProjectId)
+        const subBuildId = getStaticValue(atom?.subBuildId)
+        if (!subProjectId || !subPipelineId.startsWith('p-') || !subBuildId.startsWith('b-')) {
+            return ''
+        }
+        return `${WEB_URL_PREFIX}/pipeline/${subProjectId}/${subPipelineId}/detail/${subBuildId}`
+    }
     
     export default {
         components: {
@@ -960,10 +976,18 @@
                 const { projectId, pipelineId, buildNo: buildId } = this.$route.params
                 const buildResourceType = container.dispatchType?.buildType
                 const buildIdStr = buildId ? `&buildId=${buildId}` : ''
-
                 const tab = window.open('about:blank')
                 const url = `${WEB_URL_PREFIX}/pipeline/${projectId}/dockerConsole/?pipelineId=${pipelineId}&dispatchType=${buildResourceType}&vmSeqId=${vmSeqId}${buildIdStr}`
                 tab.location = url
+            },
+            handleSubPipelineAccess ({ atom }) {
+                const url = getSubPipelineAccessUrl(atom)
+                if (!url) return
+
+                const tab = window.open('about:blank')
+                if (tab) {
+                    tab.location = url
+                }
             },
             expandAllMatrix () {
                 try {
