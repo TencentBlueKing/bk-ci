@@ -80,7 +80,7 @@ interface PublicVarGroupPermissionService {
      * @param userId 用户ID
      * @param projectId 项目ID
      * @param groupCode 变量组ID
-     * @param groupName 变量组名称
+     * @param name 变量组名称
      */
     fun createResource(
         userId: String,
