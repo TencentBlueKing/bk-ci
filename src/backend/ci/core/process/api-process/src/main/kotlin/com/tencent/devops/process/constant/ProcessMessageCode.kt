@@ -502,6 +502,9 @@ object ProcessMessageCode {
     const val ERROR_NOT_FOUND_PIPELINE_VERSION_EXISTS_BY_BRANCH = "2101381"
     const val ERROR_PIPELINE_IS_NOT_PAC = "2101389" // [{0}]不是PAC流水线
 
+    // 构建执行相关错误码（2101500-2101599）
+    const val ERROR_PIPELINE_START_NODE_NO_PERMISSION = "2101500" // 用户[{0}]没有节点[{1}]的操作权限，无法启动流水线
+
     // 批量任务
     const val ERROR_PIPELINE_BATCH_TASK_NOT_EXISTS = "2101650" // 流水线批量任务{0}不存在
     const val ERROR_PIPELINE_BATCH_TASK_STATUS_CAN_NOT_DELETE = "2101651" // 流水线批量任务{0}当前状态为{1}，不能删除

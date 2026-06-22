@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
+import com.tencent.devops.environment.model.AgentProps
 import com.tencent.devops.environment.pojo.EnvVar
 import com.tencent.devops.environment.pojo.enums.AgentType
 import com.tencent.devops.model.environment.tables.TEnvironmentThirdpartyAgent
@@ -60,7 +61,8 @@ class ThirdPartyAgentDao {
         ip: String? = null,
         status: AgentStatus = AgentStatus.UN_IMPORT,
         agentType: AgentType?,
-        createWorkspaceName: String?
+        createWorkspaceName: String?,
+        agentProps: AgentProps?
     ): Long {
         with(TEnvironmentThirdpartyAgent.T_ENVIRONMENT_THIRDPARTY_AGENT) {
             return dslContext.insertInto(
@@ -75,7 +77,8 @@ class ThirdPartyAgentDao {
                 FILE_GATEWAY,
                 IP,
                 AGENT_TYPE,
-                CREATE_WORKSPACE_NAME
+                CREATE_WORKSPACE_NAME,
+                AGENT_PROPS,
             ).values(
                 projectId,
                 os.name,
@@ -87,7 +90,8 @@ class ThirdPartyAgentDao {
                 fileGateway ?: "",
                 ip ?: "",
                 agentType?.name ?: AgentType.BUILD.name,
-                createWorkspaceName
+                createWorkspaceName,
+                agentProps?.let { JsonUtil.toJson(agentProps, false) }
             )
                 .returning(ID)
                 .fetchOne()!!.id
@@ -594,6 +598,16 @@ class ThirdPartyAgentDao {
     fun countByMasterVersion(dslContext: DSLContext, version: String): Long {
         with(TEnvironmentThirdpartyAgent.T_ENVIRONMENT_THIRDPARTY_AGENT) {
             return dslContext.selectCount().from(this).where(MASTER_VERSION.eq(version)).fetchOne(0, Long::class.java)!!
+        }
+    }
+
+    fun getNotImportCreateAgent(
+        dslContext: DSLContext,
+        projectId: String
+    ): List<TEnvironmentThirdpartyAgentRecord> {
+        with(TEnvironmentThirdpartyAgent.T_ENVIRONMENT_THIRDPARTY_AGENT) {
+            return dslContext.selectFrom(this).where(PROJECT_ID.eq(projectId)).and(CREATE_WORKSPACE_NAME.isNotNull)
+                .and(NODE_ID.isNull).fetch()
         }
     }
 }
