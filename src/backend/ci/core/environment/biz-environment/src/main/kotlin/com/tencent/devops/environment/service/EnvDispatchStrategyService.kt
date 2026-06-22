@@ -293,7 +293,7 @@ class EnvDispatchStrategyService @Autowired constructor(
                 projectId = projectId,
                 envId = existing.envId,
                 operateOrigin = envOperateOrigin,
-                operateName = EnvOperateName.UPDATE_DISPATCH_STRATEGY,
+                operateName = EnvOperateName.DELETE_DISPATCH_STRATEGY,
                 operateContent = EnvOperateContent(
                     content = existing.strategyName,
                     resourceCount = 1
@@ -363,7 +363,7 @@ class EnvDispatchStrategyService @Autowired constructor(
                 projectId = projectId,
                 envId = envId,
                 operateOrigin = envOperateOrigin,
-                operateName = EnvOperateName.UPDATE_DISPATCH_STRATEGY,
+                operateName = EnvOperateName.UPDATE_DISPATCH_STRATEGY_ORDER,
                 operateContent = EnvOperateContent(
                     content = null,
                     resourceCount = updates.size
