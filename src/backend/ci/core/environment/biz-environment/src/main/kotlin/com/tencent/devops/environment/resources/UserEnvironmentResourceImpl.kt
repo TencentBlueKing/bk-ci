@@ -375,7 +375,7 @@ class UserEnvironmentResourceImpl @Autowired constructor(
         sharedProjectId: String
     ): Result<Boolean> {
         checkParam(userId, projectId, envHashId)
-        envService.deleteShareEnvBySharedProj(userId, projectId, envHashId, sharedProjectId)
+        envService.deleteShareEnvBySharedProj(userId, projectId, envHashId, sharedProjectId, EnvOperateOrigin.WEB)
         return Result(true)
     }
 

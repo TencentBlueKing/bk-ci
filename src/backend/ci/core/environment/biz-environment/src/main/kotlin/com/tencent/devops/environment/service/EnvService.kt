@@ -1199,7 +1199,7 @@ class EnvService @Autowired constructor(
 
         // 验证节点类型
         val existEnvNodeIds = envNodeDao.list(dslContext, projectId, listOf(envId)).map { it.nodeId }
-        val toAddNodeIds = nodeLongIds.subtract(existEnvNodeIds)
+        val toAddNodeIds = nodeLongIds.subtract(existEnvNodeIds.toSet())
         val existNodesMap = existNodes.associateBy { it.nodeId }
         val serverNodeTypes = listOf(NodeType.CMDB.name)
         val buildNodeType = listOf(NodeType.DEVCLOUD.name, NodeType.THIRDPARTY.name)
@@ -1236,7 +1236,7 @@ class EnvService @Autowired constructor(
             operateName = EnvOperateName.ADD_NODE,
             operateContent = EnvOperateContent(
                 content = null,
-                resourceCount = existNodeIds.size
+                resourceCount = toAddNodeIds.size
             ),
             operator = userId
         )
@@ -1606,7 +1606,13 @@ class EnvService @Autowired constructor(
         scopeId = "#projectId",
         content = ActionAuditContent.ENVIRONMENT_OF_SHARE_DELETE_CONTENT
     )
-    fun deleteShareEnvBySharedProj(userId: String, projectId: String, envHashId: String, sharedProjectId: String) {
+    fun deleteShareEnvBySharedProj(
+        userId: String,
+        projectId: String,
+        envHashId: String,
+        sharedProjectId: String,
+        operateOrigin: EnvOperateOrigin
+    ) {
         val envId = HashUtil.decodeIdToLong(envHashId)
         val envInfo = envDao.getOrNull(dslContext, projectId, envId) ?: return
         if (!environmentPermissionService.checkEnvPermission(userId, projectId, envId, AuthPermission.DELETE)) {
@@ -1618,6 +1624,14 @@ class EnvService @Autowired constructor(
             .setInstanceId(envId.toString())
             .setInstanceName(envInfo.envName)
         envShareProjectDao.deleteBySharedProj(dslContext, envId, projectId, sharedProjectId)
+        envOperateLogService.addOperateLog(
+            projectId = projectId,
+            envId = envId,
+            operateOrigin = operateOrigin,
+            operateName = EnvOperateName.DELETE_SHARE_SETTING,
+            operateContent = EnvOperateContent(content = null, resourceCount = 1),
+            operator = userId
+        )
     }
 
     @ActionAuditRecord(

@@ -24,6 +24,9 @@ enum class EnvOperateName {
     @Schema(title = "更新环境共享设置")
     UPDATE_SHARE_SETTING,
 
+    @Schema(title = "删除环境共享设置")
+    DELETE_SHARE_SETTING,
+
     @Schema(title = "更新使用者")
     UPDATE_USER,
 
