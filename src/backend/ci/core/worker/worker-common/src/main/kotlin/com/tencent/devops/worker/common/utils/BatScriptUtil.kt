@@ -71,8 +71,6 @@ object BatScriptUtil {
         "    powershell -NoProfile -Command ^\r\n" +
         "        \"\$c=\$env:RAW;\" ^\r\n" +
         "        \"\$c=\$c -replace '%%','%25';\" ^\r\n" +
-        "        \"\$c=\$c -replace \`r\`n,'%0A';\" ^\r\n" +
-        "        \"\$c=\$c -replace \`r,'%0D';\" ^\r\n" +
         "        \"\$c=\$c -replace '\\\\n','%0A';\" ^\r\n" +
         "        \"\$c=\$c -replace '\\\\r','%0D';\" ^\r\n" +
         "        \"Add-Content -Path '##multiLineFile##' -Value \$c\"\r\n" +
