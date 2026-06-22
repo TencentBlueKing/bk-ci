@@ -179,11 +179,29 @@ open class ScriptTask : ITask() {
             val envs = ScriptEnvUtils.getEnv(buildId, workspace)
             val context = ScriptEnvUtils.getContext(buildId, workspace)
             // 读取多行输出（format_multiple_lines），合并到 context
+            val multiLineFile = ScriptEnvUtils.getMultipleLineFile(buildId)
+            val multiLineFullPath = File(workspace, multiLineFile)
+            val multiLineExists = multiLineFullPath.exists()
+            val multiLineSize = if (multiLineExists) multiLineFullPath.length() else -1
+            LoggerService.addDebugLine(
+                "[multiLine] file: $multiLineFile, exists: $multiLineExists, size: $multiLineSize"
+            )
+            val multiLineRaw = ScriptEnvUtils.getMultipleLines(buildId, workspace)
+            LoggerService.addDebugLine("[multiLine] raw lines count: ${multiLineRaw.size}")
+            if (multiLineRaw.isNotEmpty()) {
+                LoggerService.addDebugLine("[multiLine] first line: ${multiLineRaw.first()}")
+            }
             val multiLineContext = decodeMultipleLines(
-                lines = ScriptEnvUtils.getMultipleLines(buildId, workspace),
+                lines = multiLineRaw,
                 jobId = buildVariables.jobId,
                 stepId = buildTask.stepId
             )
+            LoggerService.addDebugLine("[multiLine] decoded context size: ${multiLineContext.size}")
+            if (multiLineContext.isNotEmpty()) {
+                multiLineContext.forEach { (k, v) ->
+                    LoggerService.addDebugLine("[multiLine] decoded: $k => ${v.take(100)}")
+                }
+            }
             failIfVariableInvalidCheckFlag = failIfVariableInvalidCheck(failIfVariableInvalid, envs) &&
                 failIfVariableInvalidCheck(failIfVariableInvalid, context) &&
                 failIfVariableInvalidCheck(failIfVariableInvalid, multiLineContext)
