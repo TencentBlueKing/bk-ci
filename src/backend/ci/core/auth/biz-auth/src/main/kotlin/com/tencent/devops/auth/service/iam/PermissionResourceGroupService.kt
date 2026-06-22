@@ -75,6 +75,12 @@ interface PermissionResourceGroupService {
         groupAddDTO: GroupAddDTO
     ): Int
 
+    fun createEmptyProjectGroupWithCode(
+        projectId: String,
+        groupCode: String,
+        groupAddDTO: GroupAddDTO
+    ): Int
+
     fun renameGroup(
         userId: String,
         projectId: String,

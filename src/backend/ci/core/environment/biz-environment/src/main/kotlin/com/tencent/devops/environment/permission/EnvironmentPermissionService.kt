@@ -121,4 +121,10 @@ interface EnvironmentPermissionService {
         nodeId: Long,
         resourceType: AuthResourceType = AuthResourceType.ENVIRONMENT_ENV_NODE
     )
+
+    fun copyNodeGroupMembers(
+        sourceProjectId: String,
+        targetProjectId: String,
+        nodeId: Long
+    ) = Unit
 }

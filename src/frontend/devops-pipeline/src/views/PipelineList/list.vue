@@ -10,10 +10,27 @@
         @after-resize="afterResize"
     >
         <pipeline-group-aside slot="aside" />
-        <Component
-            :is="ListRightComponent"
+        <div
             slot="main"
-        />
+            class="main-content"
+        >
+            <bk-alert
+                v-if="showAlert && taskCount > 0"
+                type="warning"
+            >
+                <div slot="title">
+                    {{ $t('taskingDecs', [taskCount]) }}
+                    <span
+                        @click="handleAlertClose"
+                        class="know-btn"
+                    >{{ $t('IKnow') }}</span>
+                </div>
+            </bk-alert>
+            <Component
+                :is="ListRightComponent"
+                ref="listComponent"
+            />
+        </div>
     </bk-resize-layout>
 </template>
 
@@ -22,6 +39,7 @@
         PIPELINE_ASIDE_PANEL_TOGGLE,
         PIPELINE_GROUP_ASIDE_WIDTH_CACHE
     } from '@/store/constants'
+    import { mapActions } from 'vuex'
     import PatchManageList from './PatchManageList'
     import PipelineGroupAside from './PipelineGroupAside'
     import PipelineManageList from './PipelineManageList'
@@ -34,6 +52,8 @@
         },
         data () {
             return {
+                showAlert: true,
+                taskCount: 0,
                 initialDivide: Number(localStorage.getItem(PIPELINE_GROUP_ASIDE_WIDTH_CACHE)) || 280
             }
         },
@@ -42,17 +62,49 @@
                 return this.$route.params.type === 'patch' ? PatchManageList : PipelineManageList
             }
         },
+        created () {
+            this.fetchTaskCount()
+        },
         mounted () {
             if (localStorage.getItem(PIPELINE_ASIDE_PANEL_TOGGLE) === 'true') {
                 this.$refs.resizeLayout.setCollapse(true)
             }
         },
         methods: {
+            ...mapActions('crossProjectCopy', [
+                'getTaskCount'
+            ]),
+            async fetchTaskCount () {
+                try {
+                    const projectId = this.$route.params.projectId
+                    const count = await this.getTaskCount({
+                        projectId,
+                        status: 'EXECUTING'
+                    })
+                    this.taskCount = count || 0
+                    if (this.taskCount > 0) {
+                        this.showAlert = true
+                    }
+                } catch (error) {
+                    this.$bkMessage({
+                        theme: 'error',
+                        message: error.message || error
+                    })
+                }
+            },
             handleCollapseChange (val) {
                 localStorage.setItem(PIPELINE_ASIDE_PANEL_TOGGLE, JSON.stringify(val))
             },
             afterResize (width) {
                 localStorage.setItem(PIPELINE_GROUP_ASIDE_WIDTH_CACHE, JSON.stringify(width))
+            },
+            handleAlertClose () {
+                this.showAlert = false
+                this.$nextTick(() => {
+                    if (this.$refs.listComponent && typeof this.$refs.listComponent.updateTableHeight === 'function') {
+                        this.$refs.listComponent.updateTableHeight()
+                    }
+                })
             }
         }
     }
@@ -70,12 +122,24 @@
             display: flex;
             align-items: center;
         }
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            overflow: hidden;
+            height: 100%;
+
+            .know-btn {
+                color: #3A84FF;
+                cursor: pointer;
+                margin-left: 8px;
+            }
+        }
         .pipeline-list-main {
             display: flex;
             flex-direction: column;
             flex: 1;
             padding: 24px;
-            overflow: hidden;
             height: 100%;
             .pipeline-list-box {
                 flex: 1;
@@ -85,10 +149,11 @@
             .current-pipeline-group-name {
                 display: flex;
                 align-items: center;
+                justify-content: space-between;
                 font-size: 14px;
                 line-height: 26px;
                 margin: 0 0 16px 0;
-                > :first-child {
+                p > :first-child {
                     margin: 0 8px 0 0;
                 }
                 > span {
@@ -98,6 +163,9 @@
                 h5 {
                     color: #313238;
                     font-weight: normal;
+                }
+                .historical-task {
+                    font-weight: 400;
                 }
             }
             .pipeline-list-main-header {
