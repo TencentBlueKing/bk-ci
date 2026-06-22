@@ -139,4 +139,16 @@ interface ExternalThirdPartyAgentResource {
         @QueryParam("agentType")
         agentType: AgentType?
     ): Response
+
+    @Operation(summary = "根据设备获取创作流节点安装脚本，给虾插件用的")
+    @GET
+    @Path("/genCreateNodeInstallScript")
+    fun genCreateNodeInstallScript(
+        @QueryParam("token")
+        token: String,
+        @QueryParam("deviceId")
+        deviceId: String,
+        @QueryParam("userId")
+        userId: String
+    ): Response
 }

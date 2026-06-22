@@ -1094,7 +1094,10 @@ class NodeService @Autowired constructor(
                 )
             )
         }
-        checkDisplayName(projectId, nodeId, displayName)
+        // 创作流节点不校验别名重复
+        if (nodeInDb.nodeType != NodeType.CREATE.name) {
+            checkDisplayName(projectId, nodeId, displayName)
+        }
         ActionAuditContext.current()
             .setInstanceId(nodeInDb.nodeId.toString())
             .setOriginInstance(nodeInDb.displayName)
