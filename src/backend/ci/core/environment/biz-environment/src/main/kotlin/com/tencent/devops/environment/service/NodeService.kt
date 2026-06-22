@@ -290,19 +290,14 @@ class NodeService @Autowired constructor(
             nodeRecordList = nodeRecordList,
             resourceType = nodeResourceType
         )
-        // 计算总数时需限定在"当前用户对该项目有 LIST 权限的节点"范围内，避免 count 与列表语义不一致；
-        // CREATIVE_STREAM_NODE 场景沿用 formatNodeWithPermissions 的处理：不按 LIST 权限过滤，故传 null。
-        val authorizedNodeIds = if (nodeResourceType == AuthResourceType.CREATIVE_STREAM_NODE) {
-            null
-        } else {
-            environmentPermissionService.listNodeByPermission(
-                userId = userId,
-                projectId = projectId,
-                permission = AuthPermission.LIST,
-                resourceType = nodeResourceType
-            ).toList()
-        }
-        val count = if (authorizedNodeIds != null && authorizedNodeIds.isEmpty()) {
+        // 查出项目下所有有权限的节点id
+        val authorizedNodeIds = environmentPermissionService.listNodeByPermission(
+            userId = userId,
+            projectId = projectId,
+            permission = AuthPermission.LIST,
+            resourceType = nodeResourceType
+        ).toList()
+        val count = if (authorizedNodeIds.isEmpty()) {
             0L
         } else {
             nodeDao.countForAuthWithSearchCondition(
