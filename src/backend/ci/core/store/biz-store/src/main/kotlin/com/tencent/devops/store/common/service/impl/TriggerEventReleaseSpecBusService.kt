@@ -20,6 +20,7 @@ import com.tencent.devops.common.api.constant.TEST
 import com.tencent.devops.common.api.constant.UNDO
 import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.pipeline.pojo.element.market.MarketEventAtomElement
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.store.atom.service.AtomService
 import com.tencent.devops.store.common.service.StoreCommonService
@@ -219,7 +220,7 @@ class TriggerEventReleaseSpecBusService @Autowired constructor(
         storeType: StoreTypeEnum,
         storeCreateRequest: StoreCreateRequest
     ) {
-        logger.info("doStoreCreatePostBus")
+        logger.info("doStoreCreatePostBus|$userId|$storeType|$storeCode")
         with(storeCreateRequest) {
             // 将触发事件信息保存到T_ATOM表中，后续查询创作流触发事件直接走T_ATOM表
             atomService.savePipelineAtom(
@@ -235,7 +236,7 @@ class TriggerEventReleaseSpecBusService @Autowired constructor(
         storeType: StoreTypeEnum,
         storeUpdateRequest: StoreUpdateRequest
     ) {
-        logger.info("doStoreUpdatePostBus")
+        logger.info("doStoreUpdatePostBus|$userId|$storeType|$storeCode")
         with(storeUpdateRequest) {
             // 将触发事件信息保存到T_ATOM表中，后续查询创作流触发事件直接走T_ATOM表
             atomService.upgradeAtom(
@@ -296,7 +297,8 @@ class TriggerEventReleaseSpecBusService @Autowired constructor(
         props = baseInfo.extBaseInfo?.get(KEY_ATOM_FORM)?.toString(),
         weight = null,
         data = null,
-        ownerStoreCode = baseInfo.ownerStoreCode
+        ownerStoreCode = baseInfo.ownerStoreCode,
+        targetClassType = MarketEventAtomElement.classType
     )
 
     /**
@@ -318,7 +320,8 @@ class TriggerEventReleaseSpecBusService @Autowired constructor(
         weight = null,
         data = null,
         version = baseInfo.versionInfo.version,
-        ownerStoreCode = baseInfo.ownerStoreCode
+        ownerStoreCode = baseInfo.ownerStoreCode,
+        targetClassType = MarketEventAtomElement.classType
     )
 
     companion object {

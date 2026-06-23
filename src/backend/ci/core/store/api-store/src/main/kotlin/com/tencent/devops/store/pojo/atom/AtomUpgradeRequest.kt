@@ -69,5 +69,7 @@ data class AtomUpgradeRequest(
     @get:Schema(title = "归属应用标识", required = false)
     val ownerStoreCode: String? = null,
     @get:Schema(title = "LOGO", required = false)
-    val logoUrl: String? = null
+    val logoUrl: String? = null,
+    @get:Schema(title = "目标类型", required = false)
+    val targetClassType: String? = null
 )
