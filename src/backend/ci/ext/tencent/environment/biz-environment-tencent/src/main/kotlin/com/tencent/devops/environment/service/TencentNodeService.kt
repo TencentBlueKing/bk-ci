@@ -11,6 +11,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.environment.config.async.AsyncExecute
 import com.tencent.devops.environment.constant.EnvironmentMessageCode
 import com.tencent.devops.environment.dao.AgentDao
 import com.tencent.devops.environment.dao.NodeDao
@@ -18,8 +19,10 @@ import com.tencent.devops.environment.dao.thirdpartyagent.ThirdPartyAgentDao
 import com.tencent.devops.environment.model.AgentProps
 import com.tencent.devops.environment.model.AgentPropsSource
 import com.tencent.devops.environment.permission.EnvironmentPermissionService
+import com.tencent.devops.environment.pojo.AsyncInstallImateData
 import com.tencent.devops.environment.pojo.NodeAgentDetail
 import com.tencent.devops.environment.pojo.enums.AgentType
+import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.environment.pojo.imate.ImateListItem
 import com.tencent.devops.environment.pojo.imate.ImateOriginEngine
 import com.tencent.devops.environment.pojo.imate.ImportImageNodeData
@@ -32,10 +35,12 @@ import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.cloud.stream.function.StreamBridge
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import java.time.Instant
 import java.util.Base64
+import java.util.concurrent.TimeUnit
 
 @Service
 class TencentNodeService @Autowired constructor(
@@ -48,7 +53,8 @@ class TencentNodeService @Autowired constructor(
     private val environmentPermissionService: EnvironmentPermissionService,
     private val batchInstallAgentService: BatchInstallAgentService,
     private val nodeDao: NodeDao,
-    private val importService: ImportService
+    private val importService: ImportService,
+    private val streamBridge: StreamBridge
 ) {
     @Value("\${environment.batch-install.aes-key}")
     private val batchInstallAesKey = ""
@@ -123,8 +129,9 @@ class TencentNodeService @Autowired constructor(
             }
             // 生成节点,如果有说明没导入成功，再次导入
             val record = agentDao.getAgentByWorkspaceIdGlobal(dslContext, imate.deviceId, null)
+            var agentId = record?.id
             if (record == null) {
-                val agentId = batchInstallAgentService.genNewAgent(
+                agentId = batchInstallAgentService.genNewAgent(
                     projectId = projectId,
                     userId = userId,
                     os = data.os,
@@ -153,9 +160,35 @@ class TencentNodeService @Autowired constructor(
                 clientUuid = imate.deviceId,
                 token = token
             )
+            // 生成异步任务监听超时，默认10分钟
+            if (agentId != null) {
+                AsyncExecute.dispatch(
+                    streamBridge = streamBridge,
+                    data = AsyncInstallImateData(
+                        projectId = projectId,
+                        agentId = agentId
+                    ),
+                    delayMills = (TimeUnit.MINUTES.toMillis(
+                        redisOperation.get(INSTALL_IMATE_TIMEOUT_KEY, false)?.toLongOrNull() ?: 10
+                    )).toInt(),
+                )
+            }
             logger.info("batchImportImateNodes install plugin ${projectId}|${imate.deviceId}|$userId|$taskId")
         }
         return true
+    }
+
+    fun importImateCallBack(data: AsyncInstallImateData) {
+        try {
+            val record = thirdPartyAgentDao.getAgentByProject(dslContext, data.agentId, data.projectId) ?: return
+            if (record.status != AgentStatus.UN_IMPORT.status) {
+                return
+            }
+            // 为导入成功则设为失败，只改node，方便用户看到，agent不改，方便可能的重新导入
+            nodeDao.updateNodeStatus(dslContext, setOf(record.nodeId), NodeStatus.ABNORMAL)
+        } catch (e: Throwable) {
+            logger.error("importImateCallBack error", e)
+        }
     }
 
     fun getNodeAgentDetail(userId: String, projectId: String, agentHashId: String): NodeAgentDetail? {
@@ -275,6 +308,7 @@ class TencentNodeService @Autowired constructor(
 
 
     companion object {
+        private const val INSTALL_IMATE_TIMEOUT_KEY = "environment:install_imate_timeout_key"
         private const val CHECK_IMATE_PROPS_KEY = "environment:check_imate_props_key"
         private val logger = LoggerFactory.getLogger(TencentNodeService::class.java)
     }
