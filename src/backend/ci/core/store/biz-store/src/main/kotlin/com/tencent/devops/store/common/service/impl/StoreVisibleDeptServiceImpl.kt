@@ -158,8 +158,8 @@ class StoreVisibleDeptServiceImpl @Autowired constructor(
     override fun addVisibleDept(
         userId: String,
         storeCode: String,
-        storeType: StoreTypeEnum,
         deptInfos: List<DeptInfo>?,
+        storeType: StoreTypeEnum,
         projectInfos: List<StoreVisibleProjectInfo>?
     ): Result<Boolean> {
         logger.info(
@@ -283,8 +283,8 @@ class StoreVisibleDeptServiceImpl @Autowired constructor(
     override fun deleteVisibleDept(
         userId: String,
         storeCode: String,
-        storeType: StoreTypeEnum,
         deptIds: String?,
+        storeType: StoreTypeEnum,
         storeVisibleDeptDeleteReq: StoreVisibleDeptDeleteReq?
     ): Result<Boolean> {
         logger.info(

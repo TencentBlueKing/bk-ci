@@ -67,8 +67,8 @@ interface StoreVisibleDeptService {
     fun addVisibleDept(
         userId: String,
         storeCode: String,
-        storeType: StoreTypeEnum,
         deptInfos: List<DeptInfo>? = null,
+        storeType: StoreTypeEnum,
         projectInfos: List<StoreVisibleProjectInfo>? = null
     ): Result<Boolean>
 
@@ -79,8 +79,8 @@ interface StoreVisibleDeptService {
     fun deleteVisibleDept(
         userId: String,
         storeCode: String,
-        storeType: StoreTypeEnum,
         deptIds: String? = null,
+        storeType: StoreTypeEnum,
         storeVisibleDeptDeleteReq: StoreVisibleDeptDeleteReq? = null
     ): Result<Boolean>
 
