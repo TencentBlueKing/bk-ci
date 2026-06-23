@@ -5,6 +5,7 @@ import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.model.process.tables.records.TPipelineLabelRecord
 import com.tencent.devops.model.process.tables.records.TPipelineViewRecord
@@ -20,6 +21,7 @@ import com.tencent.devops.process.pojo.classify.PipelineLabelCreate
 import com.tencent.devops.process.pojo.classify.PipelineViewForm
 import com.tencent.devops.process.pojo.classify.enums.Logic
 import com.tencent.devops.process.service.label.PipelineGroupService
+import com.tencent.devops.process.service.task.copy.PipelineDependencyReplaceService
 import com.tencent.devops.process.service.view.PipelineViewService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -38,6 +40,7 @@ class PipelineCopyService @Autowired constructor(
     private val pipelineGroupService: PipelineGroupService,
     private val pipelineViewDao: PipelineViewDao,
     private val pipelineViewService: PipelineViewService,
+    private val pipelineDependencyReplaceService: PipelineDependencyReplaceService,
     private val client: Client,
     private val clientTokenService: ClientTokenService
 ) {
@@ -189,6 +192,88 @@ class PipelineCopyService @Autowired constructor(
             return
         }
         copyAllViewsByPage(userId, sourceProjectId, targetProjectId)
+    }
+
+    fun fixSubPipelineProject(
+        userId: String,
+        projectId: String,
+        pipelineIds: List<String>,
+        sourceSubProjectId: String,
+        targetSubProjectId: String
+    ) {
+        pipelineIds.forEach { pipelineId ->
+            try {
+                fixSingleSubPipelineProject(
+                    userId = userId,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    sourceSubProjectId = sourceSubProjectId,
+                    targetSubProjectId = targetSubProjectId
+                )
+            } catch (ignored: Exception) {
+                logger.warn(
+                    "fix sub pipeline project failed|$projectId|$pipelineId|" +
+                        "$sourceSubProjectId|$targetSubProjectId",
+                    ignored
+                )
+            }
+        }
+    }
+
+    private fun fixSingleSubPipelineProject(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        sourceSubProjectId: String,
+        targetSubProjectId: String
+    ) {
+        val pipelineInfo = pipelineInfoDao.getPipelineInfo(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            delete = false
+        ) ?: run {
+            logger.warn("fix sub pipeline project skip, pipeline not found|$projectId|$pipelineId")
+            return
+        }
+        val resource = pipelineRepositoryService.getPipelineResourceVersion(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            version = null,
+            includeDraft = true
+        ) ?: run {
+            logger.warn("fix sub pipeline project skip, pipeline model not found|$projectId|$pipelineId")
+            return
+        }
+        val (fixedModel, changed) = pipelineDependencyReplaceService.fixSubPipelineProjectInModel(
+            model = resource.model,
+            projectId = projectId,
+            sourceSubProjectId = sourceSubProjectId,
+            targetSubProjectId = targetSubProjectId
+        )
+        if (!changed) {
+            logger.info(
+                "fix sub pipeline project skip, no change|$projectId|$pipelineId|" +
+                    "$sourceSubProjectId|$targetSubProjectId"
+            )
+            return
+        }
+        val pipelineOauthUser = pipelineRepositoryService.getPipelineOauthUser(
+            projectId = projectId,
+            pipelineId = pipelineId
+        )
+        pipelineRepositoryService.deployPipeline(
+            model = fixedModel,
+            projectId = projectId,
+            signPipelineId = pipelineId,
+            userId = pipelineOauthUser ?: userId,
+            channelCode = ChannelCode.valueOf(pipelineInfo.channel),
+            create = false
+        )
+        logger.info(
+            "fix sub pipeline project success|$projectId|$pipelineId|" +
+                "$sourceSubProjectId|$targetSubProjectId"
+        )
     }
 
     private fun copyPipelineSetting(

@@ -3,6 +3,7 @@ package com.tencent.devops.process.api.op
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.process.pojo.pipeline.FixSubPipelineProjectRequest
 import com.tencent.devops.process.service.pipeline.PipelineCopyService
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -86,6 +87,36 @@ class OpPipelineCopyResourceImpl @Autowired constructor(
             sourceProjectId = sourceProjectId,
             targetProjectId = targetProjectId,
             viewName = viewName
+        )
+        return Result(true)
+    }
+
+    override fun fixSubPipelineProject(
+        userId: String,
+        projectId: String,
+        request: FixSubPipelineProjectRequest
+    ): Result<Boolean> {
+        if (userId.isBlank()) {
+            throw ParamBlankException("Invalid userId")
+        }
+        if (projectId.isBlank()) {
+            throw ParamBlankException("Invalid projectId")
+        }
+        if (request.pipelineIds.isEmpty()) {
+            throw ParamBlankException("Invalid pipelineIds")
+        }
+        if (request.sourceSubProjectId.isBlank()) {
+            throw ParamBlankException("Invalid sourceSubProjectId")
+        }
+        if (request.targetSubProjectId.isBlank()) {
+            throw ParamBlankException("Invalid targetSubProjectId")
+        }
+        pipelineCopyService.fixSubPipelineProject(
+            userId = userId,
+            projectId = projectId,
+            pipelineIds = request.pipelineIds,
+            sourceSubProjectId = request.sourceSubProjectId,
+            targetSubProjectId = request.targetSubProjectId
         )
         return Result(true)
     }
