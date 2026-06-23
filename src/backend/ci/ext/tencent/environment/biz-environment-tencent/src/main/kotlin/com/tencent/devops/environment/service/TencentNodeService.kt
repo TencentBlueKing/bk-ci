@@ -28,6 +28,7 @@ import com.tencent.devops.environment.pojo.imate.ImateOriginEngine
 import com.tencent.devops.environment.pojo.imate.ImportImageNodeData
 import com.tencent.devops.environment.service.thirdpartyagent.BatchInstallAgentService
 import com.tencent.devops.environment.service.thirdpartyagent.ImportService
+import com.tencent.devops.model.environment.tables.records.TNodeRecord
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.support.api.service.ServiceIMateResource
 import jakarta.ws.rs.core.Response
@@ -180,12 +181,18 @@ class TencentNodeService @Autowired constructor(
 
     fun importImateCallBack(data: AsyncInstallImateData) {
         try {
-            val record = thirdPartyAgentDao.getAgentByProject(dslContext, data.agentId, data.projectId) ?: return
-            if (record.status != AgentStatus.UN_IMPORT.status) {
+            val record = thirdPartyAgentDao.getAgentByProject(dslContext, data.agentId, data.projectId) ?: run {
+                logger.warn("importImateCallBack no find agent")
                 return
             }
-            // 为导入成功则设为失败，只改node，方便用户看到，agent不改，方便可能的重新导入
-            nodeDao.updateNodeStatus(dslContext, setOf(record.nodeId), NodeStatus.ABNORMAL)
+            var nodeRecord: TNodeRecord? = null
+            if (record.nodeId != null) {
+                nodeRecord = nodeDao.get(dslContext, data.projectId, record.nodeId)
+            }
+            if (record.status == AgentStatus.UN_IMPORT.status || nodeRecord?.nodeStatus == NodeStatus.CREATING.name) {
+                // 为导入成功则设为失败，只改node，方便用户看到，agent不改，方便可能的重新导入
+                nodeDao.updateNodeStatus(dslContext, setOf(record.nodeId), NodeStatus.ABNORMAL)
+            }
         } catch (e: Throwable) {
             logger.error("importImateCallBack error", e)
         }
