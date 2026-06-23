@@ -321,20 +321,18 @@ open class ScriptTask : ITask() {
             if (lines.isEmpty() || jobId.isNullOrBlank() || stepId.isNullOrBlank()) return emptyMap()
             val prefixOutput = "::set-output name="
             val result = mutableMapOf<String, String>()
-            lines.forEach { line ->
-                if (line.startsWith(prefixOutput)) {
-                    val value = line.removePrefix(prefixOutput)
-                    val firstColonIndex = value.indexOf("::")
-                    if (firstColonIndex >= 0) {
-                        val key = value.substring(0, firstColonIndex)
-                        if (key.isBlank()) return@forEach
-                        val outputValue = value.substring(firstColonIndex + 2)
-                            .replace("%25", "%")   // 必须先还原 %25，再还原 %0A/%0D
-                            .replace("%0A", "\n")
-                            .replace("%0D", "\r")
-                        result["jobs.$jobId.steps.$stepId.outputs.$key"] = outputValue
-                    }
-                }
+            for (line in lines) {
+                if (!line.startsWith(prefixOutput)) continue
+                val value = line.removePrefix(prefixOutput)
+                val firstColonIndex = value.indexOf("::")
+                if (firstColonIndex < 0) continue
+                val key = value.substring(0, firstColonIndex)
+                if (key.isBlank()) continue
+                val outputValue = value.substring(firstColonIndex + 2)
+                    .replace("%25", "%") // 必须先还原 %25，再还原 %0A/%0D
+                    .replace("%0A", "\n")
+                    .replace("%0D", "\r")
+                result["jobs.$jobId.steps.$stepId.outputs.$key"] = outputValue
             }
             return result
         }
