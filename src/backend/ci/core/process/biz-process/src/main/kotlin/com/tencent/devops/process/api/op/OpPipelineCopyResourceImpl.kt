@@ -3,6 +3,8 @@ package com.tencent.devops.process.api.op
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.process.pojo.pipeline.FixPipelineSubPipelineProjectRequest
+import com.tencent.devops.process.pojo.pipeline.FixTemplateSubPipelineProjectRequest
 import com.tencent.devops.process.service.pipeline.PipelineCopyService
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -88,5 +90,74 @@ class OpPipelineCopyResourceImpl @Autowired constructor(
             viewName = viewName
         )
         return Result(true)
+    }
+
+    override fun fixPipelineSubPipelineProject(
+        userId: String,
+        projectId: String,
+        request: FixPipelineSubPipelineProjectRequest
+    ): Result<Boolean> {
+        validateSubPipelineProjectFixRequest(
+            userId = userId,
+            projectId = projectId,
+            resourceIds = request.pipelineIds,
+            sourceSubProjectId = request.sourceSubProjectId,
+            targetSubProjectId = request.targetSubProjectId,
+            resourceIdsFieldName = "pipelineIds"
+        )
+        pipelineCopyService.fixPipelineSubPipelineProject(
+            projectId = projectId,
+            pipelineIds = request.pipelineIds,
+            sourceSubProjectId = request.sourceSubProjectId,
+            targetSubProjectId = request.targetSubProjectId
+        )
+        return Result(true)
+    }
+
+    override fun fixTemplateSubPipelineProject(
+        userId: String,
+        projectId: String,
+        request: FixTemplateSubPipelineProjectRequest
+    ): Result<Boolean> {
+        validateSubPipelineProjectFixRequest(
+            userId = userId,
+            projectId = projectId,
+            resourceIds = request.templateIds,
+            sourceSubProjectId = request.sourceSubProjectId,
+            targetSubProjectId = request.targetSubProjectId,
+            resourceIdsFieldName = "templateIds"
+        )
+        pipelineCopyService.fixTemplateSubPipelineProject(
+            projectId = projectId,
+            templateIds = request.templateIds,
+            sourceSubProjectId = request.sourceSubProjectId,
+            targetSubProjectId = request.targetSubProjectId
+        )
+        return Result(true)
+    }
+
+    private fun validateSubPipelineProjectFixRequest(
+        userId: String,
+        projectId: String,
+        resourceIds: List<String>,
+        sourceSubProjectId: String,
+        targetSubProjectId: String,
+        resourceIdsFieldName: String
+    ) {
+        if (userId.isBlank()) {
+            throw ParamBlankException("Invalid userId")
+        }
+        if (projectId.isBlank()) {
+            throw ParamBlankException("Invalid projectId")
+        }
+        if (resourceIds.isEmpty()) {
+            throw ParamBlankException("Invalid $resourceIdsFieldName")
+        }
+        if (sourceSubProjectId.isBlank()) {
+            throw ParamBlankException("Invalid sourceSubProjectId")
+        }
+        if (targetSubProjectId.isBlank()) {
+            throw ParamBlankException("Invalid targetSubProjectId")
+        }
     }
 }
