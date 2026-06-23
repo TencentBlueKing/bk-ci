@@ -11,6 +11,10 @@
 package com.tencent.devops.artifactory.api.builds
 
 import com.tencent.devops.artifactory.pojo.artifact.ArtifactMetadataRequest
+import com.tencent.devops.common.api.auth.AUTH_HEADER_BUILD_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_PIPELINE_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_PROJECT_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
@@ -37,22 +41,18 @@ interface BuildArtifactResource {
     @Path("/report")
     fun reportArtifactMetadata(
         @Parameter(description = "用户名", required = true)
-        @HeaderParam("X-DEVOPS-USER-ID")
+        @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-
         @Parameter(description = "项目ID", required = true)
-        @HeaderParam("X-DEVOPS-PROJECT-ID")
+        @HeaderParam(AUTH_HEADER_PROJECT_ID)
         projectId: String,
-
         @Parameter(description = "流水线ID", required = true)
-        @HeaderParam("X-DEVOPS-PIPELINE-ID")
+        @HeaderParam(AUTH_HEADER_PIPELINE_ID)
         pipelineId: String,
-
         @Parameter(description = "构建ID", required = true)
-        @HeaderParam("X-DEVOPS-BUILD-ID")
+        @HeaderParam(AUTH_HEADER_BUILD_ID)
         buildId: String,
-
         @Parameter(description = "产出物元数据请求体", required = true)
         request: ArtifactMetadataRequest
-    ): Result<Long>
+    ): Result<Boolean>
 }

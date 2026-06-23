@@ -1,12 +1,3 @@
-/*
- * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
- *
- * Copyright (C) 2019 Tencent.  All rights reserved.
- *
- * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
- *
- * A copy of the MIT License is included in this file.
- */
 package com.tencent.devops.artifactory.api.service
 
 import com.tencent.devops.artifactory.pojo.artifact.PipelineArtifactInfo
@@ -20,6 +11,7 @@ import jakarta.ws.rs.HeaderParam
 import jakarta.ws.rs.Path
 import jakarta.ws.rs.PathParam
 import jakarta.ws.rs.Produces
+import jakarta.ws.rs.QueryParam
 
 @Tag(name = "SERVICE_ARTIFACTORY_METADATA", description = "SERVICE-产出物元数据")
 @Path("/service/artifactories/metadata")
@@ -28,7 +20,7 @@ interface ServiceArtifactMetadataResource {
 
     @Operation(summary = "查询产出物元数据")
     @GET
-    @Path("/projects/{projectId}/artifacts/{artifactType}/{artifactName}/versions/{artifactVersion}")
+    @Path("/projects/{projectId}/artifacts/{artifactType}")
     fun getArtifactInfo(
         @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -37,15 +29,16 @@ interface ServiceArtifactMetadataResource {
         @PathParam("projectId")
         projectId: String,
         @Parameter(description = "流水线ID（可选）", required = false)
+        @QueryParam("pipelineId")
         pipelineId: String?,
         @Parameter(description = "产出物类型：FILE/IMAGE/REPORT/PACKAGE等", required = true)
         @PathParam("artifactType")
         artifactType: String,
-        @Parameter(description = "产出物名称，如文件名、镜像名", required = true)
-        @PathParam("artifactName")
-        artifactName: String,
-        @Parameter(description = "产出物版本，如镜像Tag、包版本", required = true)
-        @PathParam("artifactVersion")
-        artifactVersion: String
+        @Parameter(description = "产出物名称，如文件名、镜像名（可选）", required = false)
+        @QueryParam("artifactName")
+        artifactName: String?,
+        @Parameter(description = "产出物版本，如镜像Tag、包版本（可选）", required = false)
+        @QueryParam("artifactVersion")
+        artifactVersion: String?
     ): Result<PipelineArtifactInfo?>
 }

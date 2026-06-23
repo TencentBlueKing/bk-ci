@@ -1,13 +1,3 @@
-/*
- * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
- *
- * Copyright (C) 2019 Tencent.  All rights reserved.
- *
- * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
- *
- * A copy of the MIT License is included in this file.
- */
-
 package com.tencent.devops.artifactory.resources
 
 import com.tencent.devops.artifactory.api.builds.BuildArtifactResource
@@ -16,17 +6,14 @@ import com.tencent.devops.artifactory.service.artifact.PipelineArtifactInfoServi
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
 
 /**
  * 构建产出物元数据上报 API 实现
  */
-@Service
 @RestResource
-@Suppress("ALL")
-class BuildArtifactResourceImpl @Autowired constructor(
-    private val pipelineArtifactInfoService: PipelineArtifactInfoService
+class BuildArtifactResourceImpl(
+    private val pipelineArtifactInfoService: PipelineArtifactInfoService,
+//    private val pipelinePermissionService: PipelinePermissionService
 ) : BuildArtifactResource {
 
     companion object {
@@ -39,21 +26,33 @@ class BuildArtifactResourceImpl @Autowired constructor(
         pipelineId: String,
         buildId: String,
         request: ArtifactMetadataRequest
-    ): Result<Long> {
+    ): Result<Boolean> {
         logger.info(
-            "Report artifact metadata: userId=$userId, projectId=$projectId, pipelineId=$pipelineId, " +
-                "buildId=$buildId, artifactType=${request.artifactType}, artifactName=${request.artifactName}"
+            "BuildArtifact|$userId|reportArtifactMetadata|$projectId|$pipelineId|$buildId|" +
+                    "${request.artifactType}|${request.artifactName}|${request.artifactVersion}"
         )
-
-        val id = pipelineArtifactInfoService.saveArtifactInfo(
-            userId = userId,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            buildId = buildId,
-            request = request
-        )
-
-        logger.info("Report artifact metadata success, id=$id")
-        return Result(id)
+//        if (!pipelinePermissionService.checkPipelinePermission(
+//                userId = userId,
+//                projectId = projectId,
+//                pipelineId = pipelineId,
+//                permission = AuthPermission.EXECUTE
+//            )
+//        ) {
+//            logger.warn("BuildArtifact|$userId|no permission|$projectId|$pipelineId")
+//            return Result(status = 403, message = "No permission to access pipeline $pipelineId")
+//        }
+        return kotlin.runCatching {
+            pipelineArtifactInfoService.saveArtifactInfo(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                request = request
+            )
+            Result(true)
+        }.getOrElse { e ->
+            logger.error("Failed to save artifact info: ${e.message}", e)
+            Result(status = 500, message = e.message ?: "Failed to save artifact info")
+        }
     }
 }

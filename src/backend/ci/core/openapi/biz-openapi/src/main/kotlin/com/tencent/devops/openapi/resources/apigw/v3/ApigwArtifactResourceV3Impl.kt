@@ -14,13 +14,13 @@ import com.tencent.devops.artifactory.api.service.ServiceArtifactMetadataResourc
 import com.tencent.devops.artifactory.pojo.artifact.PipelineArtifactInfo
 import com.tencent.devops.auth.api.service.ServicePermissionAuthResource
 import com.tencent.devops.auth.api.service.ServiceProjectAuthResource
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BK_TOKEN
-import com.tencent.devops.common.api.auth.AuthResourceType
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.openapi.api.apigw.v3.ApigwArtifactResourceV3
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -48,8 +48,8 @@ class ApigwArtifactResourceV3Impl @Autowired constructor(
         projectId: String,
         pipelineId: String?,
         artifactType: String,
-        artifactName: String,
-        artifactVersion: String
+        artifactName: String?,
+        artifactVersion: String?
     ): Result<PipelineArtifactInfo?> {
         logger.info(
             "OPENAPI_ARTIFACT_V3|$userId|getArtifactInfo|$projectId|$pipelineId|$artifactType|$artifactName|$artifactVersion"
@@ -92,7 +92,7 @@ class ApigwArtifactResourceV3Impl @Autowired constructor(
 
         logger.info(
             "OPENAPI_ARTIFACT_V3|$userId|getArtifactInfo|$projectId|$pipelineId|$artifactType|$artifactName|$artifactVersion|" +
-                "found=${artifactInfo != null}"
+                    "found=${artifactInfo != null}"
         )
 
         return Result(artifactInfo)
@@ -100,7 +100,6 @@ class ApigwArtifactResourceV3Impl @Autowired constructor(
 
     /**
      * 校验流水线查看权限
-     * 调用 auth 模块的 validateUserResourcePermissionByRelation 接口
      */
     private fun checkPipelineViewPermission(
         userId: String,
@@ -115,7 +114,7 @@ class ApigwArtifactResourceV3Impl @Autowired constructor(
                     token = token,
                     projectCode = projectId,
                     resourceCode = pipelineId,
-                    resourceType = AuthResourceType.PIPELINE.name,
+                    resourceType = AuthResourceType.PIPELINE_DEFAULT.name,
                     action = AuthPermission.VIEW.name
                 ).data ?: false
         } catch (e: Exception) {

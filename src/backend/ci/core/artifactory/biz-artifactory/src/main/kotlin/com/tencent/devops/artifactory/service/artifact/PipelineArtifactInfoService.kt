@@ -1,19 +1,12 @@
-/*
- * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
- *
- * Copyright (C) 2019 Tencent.  All rights reserved.
- *
- * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
- *
- * A copy of the MIT License is included in this file.
- */
-
 package com.tencent.devops.artifactory.service.artifact
 
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.model.artifactory.tables.records.TPipelineArtifactInfoRecord
 import com.tencent.devops.artifactory.dao.PipelineArtifactInfoDao
 import com.tencent.devops.artifactory.pojo.artifact.ArtifactMetadataRequest
 import com.tencent.devops.artifactory.pojo.artifact.PipelineArtifactInfo
-import com.tencent.devops.model.artifactory.tables.records.TPipelineArtifactInfoRecord
+import com.tencent.devops.project.api.service.ServiceAllocIdResource
+import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -25,68 +18,69 @@ import org.springframework.stereotype.Service
 @Suppress("ALL")
 class PipelineArtifactInfoService(
     private val dslContext: DSLContext,
+    private val client: Client,
     private val pipelineArtifactInfoDao: PipelineArtifactInfoDao
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineArtifactInfoService::class.java)
+        private const val PIPELINE_ARTIFACT_INFO_BIZ_ID = "T_PIPELINE_ARTIFACT_INFO"
     }
 
-    /**
-     * 保存产出物元数据
-     */
     fun saveArtifactInfo(
         userId: String,
         projectId: String,
         pipelineId: String,
         buildId: String,
         request: ArtifactMetadataRequest
-    ): Long {
+    ) {
         logger.info(
             "Save artifact info: projectId=$projectId, pipelineId=$pipelineId, buildId=$buildId, " +
-                "artifactType=${request.artifactType}, artifactName=${request.artifactName}, " +
-                "artifactVersion=${request.artifactVersion}"
+                    "artifactType=${request.artifactType}, artifactName=${request.artifactName}, " +
+                    "artifactVersion=${request.artifactVersion}"
         )
 
-        val id = pipelineArtifactInfoDao.create(
+        val id =
+            client.get(ServiceAllocIdResource::class).generateSegmentId(PIPELINE_ARTIFACT_INFO_BIZ_ID).data ?: 0
+        val now = LocalDateTime.now()
+        pipelineArtifactInfoDao.create(
             dslContext = dslContext,
-            artifactInfo = mapOf(
-                "projectId" to projectId,
-                "pipelineId" to pipelineId,
-                "pipelineName" to request.pipelineName,
-                "buildId" to buildId,
-                "buildNum" to request.buildNum,
-                "stageId" to (request.stageId ?: ""),
-                "containerId" to (request.containerId ?: ""),
-                "taskId" to (request.taskId ?: ""),
-                "executeCount" to (request.executeCount ?: 1),
-                "artifactType" to request.artifactType,
-                "artifactName" to request.artifactName,
-                "artifactVersion" to (request.artifactVersion ?: ""),
-                "artifactUri" to request.artifactUri,
-                "artifactRepoUrl" to request.artifactRepoUrl,
-                "artifactDigest" to request.artifactDigest,
-                "artifactSize" to request.artifactSize,
-                "codeRepoUrl" to request.codeRepoUrl,
-                "commitId" to (request.commitId ?: ""),
-                "extraInfo" to request.extraInfo,
-                "creator" to userId,
-                "modifier" to userId
+            artifactInfo = PipelineArtifactInfo(
+                id = id,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                pipelineName = request.pipelineName,
+                buildId = buildId,
+                buildNum = request.buildNum,
+                stageId = request.stageId,
+                containerId = request.containerId,
+                taskId = request.taskId,
+                executeCount = request.executeCount,
+                artifactType = request.artifactType,
+                artifactName = request.artifactName,
+                artifactVersion = request.artifactVersion ?: "",
+                artifactUri = request.artifactUri,
+                artifactRepoUrl = request.artifactRepoUrl,
+                artifactDigest = request.artifactDigest,
+                artifactSize = request.artifactSize,
+                codeRepoUrl = request.codeRepoUrl,
+                commitId = request.commitId,
+                extraInfo = request.extraInfo,
+                creator = userId,
+                modifier = userId,
+                createTime = now,
+                updateTime = now
             )
         )
 
-        logger.info("Saved artifact info successfully, id=$id")
-        return id
+        logger.info("Saved artifact info successfully")
     }
 
-    /**
-     * 查询产出物元数据
-     */
     fun getArtifactInfo(
         projectId: String,
         pipelineId: String?,
         artifactType: String,
-        artifactName: String,
-        artifactVersion: String
+        artifactName: String?,
+        artifactVersion: String?
     ): PipelineArtifactInfo? {
         val record = pipelineArtifactInfoDao.getByArtifact(
             dslContext = dslContext,
@@ -97,12 +91,9 @@ class PipelineArtifactInfoService(
             artifactVersion = artifactVersion
         ) ?: return null
 
-        return convertToPipelineArtifactInfo(record)
+        return convertToRecord(record)
     }
 
-    /**
-     * 查询构建的产出物列表
-     */
     fun listArtifactsByBuild(
         projectId: String,
         pipelineId: String,
@@ -113,40 +104,10 @@ class PipelineArtifactInfoService(
             pipelineId = pipelineId,
             buildId = buildId
         )
-
-        return records.mapNotNull { convertToPipelineArtifactInfo(it) }
+        return records.mapNotNull { convertToRecord(it) }
     }
 
-    /**
-     * 清理产出物元数据（按构建 ID 列表）
-     */
-    fun cleanupByBuildIds(buildIds: List<String>): Int {
-        if (buildIds.isEmpty()) {
-            return 0
-        }
-        logger.info("Cleanup artifact info by buildIds, count=${buildIds.size}")
-        return pipelineArtifactInfoDao.deleteByBuildIds(dslContext, buildIds)
-    }
-
-    /**
-     * 清理产出物元数据（按项目和时间）
-     */
-    fun cleanupByProjectAndTime(projectId: String, beforeTime: java.time.LocalDateTime): Int {
-        logger.info("Cleanup artifact info: projectId=$projectId, beforeTime=$beforeTime")
-        return pipelineArtifactInfoDao.deleteByProjectAndTime(dslContext, projectId, beforeTime)
-    }
-
-    /**
-     * 统计项目的产出物数量
-     */
-    fun countByProject(projectId: String): Long {
-        return pipelineArtifactInfoDao.countByProject(dslContext, projectId)
-    }
-
-    /**
-     * 将数据库记录转换为实体类
-     */
-    private fun convertToPipelineArtifactInfo(record: TPipelineArtifactInfoRecord): PipelineArtifactInfo? {
+    private fun convertToRecord(record: TPipelineArtifactInfoRecord): PipelineArtifactInfo? {
         return try {
             PipelineArtifactInfo(
                 id = record.id,

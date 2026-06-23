@@ -42,6 +42,7 @@ import jakarta.ws.rs.HeaderParam
 import jakarta.ws.rs.Path
 import jakarta.ws.rs.PathParam
 import jakarta.ws.rs.Produces
+import jakarta.ws.rs.QueryParam
 import jakarta.ws.rs.core.MediaType
 
 /**
@@ -71,10 +72,10 @@ interface ApigwArtifactResourceV3 {
      */
     @Operation(
         summary = "查询产出物元数据",
-        description = "根据项目ID、流水线ID（可选）、产出物类型、产出物名称和版本查询元数据，包含代码库地址和Commit ID"
+        description = "根据项目ID、产出物类型等条件查询元数据，包含代码库地址和Commit ID"
     )
     @GET
-    @Path("/{artifactType}/{artifactName}/versions/{artifactVersion}")
+    @Path("/{artifactType}")
     fun getArtifactInfo(
         @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -89,15 +90,16 @@ interface ApigwArtifactResourceV3 {
         @PathParam("projectId")
         projectId: String,
         @Parameter(description = "流水线ID（可选）", required = false)
+        @QueryParam("pipelineId")
         pipelineId: String?,
         @Parameter(description = "产出物类型：FILE/IMAGE/REPORT/PACKAGE等", required = true)
         @PathParam("artifactType")
         artifactType: String,
-        @Parameter(description = "产出物名称，如文件名、镜像名", required = true)
-        @PathParam("artifactName")
-        artifactName: String,
-        @Parameter(description = "产出物版本，如镜像Tag、包版本", required = true)
-        @PathParam("artifactVersion")
-        artifactVersion: String
+        @Parameter(description = "产出物名称，如文件名、镜像名（可选）", required = false)
+        @QueryParam("artifactName")
+        artifactName: String?,
+        @Parameter(description = "产出物版本，如镜像Tag、包版本（可选）", required = false)
+        @QueryParam("artifactVersion")
+        artifactVersion: String?
     ): Result<PipelineArtifactInfo?>
 }

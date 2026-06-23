@@ -11,10 +11,10 @@
 package com.tencent.devops.artifactory.resources
 
 import com.tencent.devops.artifactory.api.service.ServiceArtifactMetadataResource
-import com.tencent.devops.artifactory.pojo.artifact.PipelineArtifactInfo
-import com.tencent.devops.artifactory.service.artifact.PipelineArtifactInfoService
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.artifactory.pojo.artifact.PipelineArtifactInfo
+import com.tencent.devops.artifactory.service.artifact.PipelineArtifactInfoService
 
 @RestResource
 class ServiceArtifactMetadataResourceImpl(
@@ -25,8 +25,8 @@ class ServiceArtifactMetadataResourceImpl(
         projectId: String,
         pipelineId: String?,
         artifactType: String,
-        artifactName: String,
-        artifactVersion: String
+        artifactName: String?,
+        artifactVersion: String?
     ): Result<PipelineArtifactInfo?> {
         val artifactInfo = pipelineArtifactInfoService.getArtifactInfo(
             projectId = projectId,

@@ -29,132 +29,89 @@ package com.tencent.devops.artifactory.dao
 
 import com.tencent.devops.model.artifactory.tables.TPipelineArtifactInfo
 import com.tencent.devops.model.artifactory.tables.records.TPipelineArtifactInfoRecord
+import com.tencent.devops.artifactory.pojo.artifact.PipelineArtifactInfo
 import org.jooq.Condition
 import org.jooq.DSLContext
-import org.jooq.Field
 import org.jooq.Result
-import org.jooq.Select
 import org.springframework.stereotype.Repository
 
-/**
- * 流水线产出物元数据 DAO
- */
-@Repository
 @Suppress("ALL")
+@Repository
 class PipelineArtifactInfoDao {
 
-    private companion object {
-        val TABLE = TPipelineArtifactInfo.T_PIPELINE_ARTIFACT_INFO
-    }
-
-    /**
-     * 保存产出物元数据
-     */
     fun create(
         dslContext: DSLContext,
-        artifactInfo: Map<String, Any?>
-    ): Long {
-        val record = dslContext.insertInto(
-            TABLE,
-            TABLE.PROJECT_ID,
-            TABLE.PIPELINE_ID,
-            TABLE.PIPELINE_NAME,
-            TABLE.BUILD_ID,
-            TABLE.BUILD_NUM,
-            TABLE.STAGE_ID,
-            TABLE.CONTAINER_ID,
-            TABLE.TASK_ID,
-            TABLE.EXECUTE_COUNT,
-            TABLE.ARTIFACT_TYPE,
-            TABLE.ARTIFACT_NAME,
-            TABLE.ARTIFACT_VERSION,
-            TABLE.ARTIFACT_URI,
-            TABLE.ARTIFACT_REPO_URL,
-            TABLE.ARTIFACT_DIGEST,
-            TABLE.ARTIFACT_SIZE,
-            TABLE.CODE_REPO_URL,
-            TABLE.COMMIT_ID,
-            TABLE.EXTRA_INFO,
-            TABLE.CREATOR,
-            TABLE.MODIFIER
-        )
-            .values(
-                artifactInfo["projectId"] as String,
-                artifactInfo["pipelineId"] as String,
-                artifactInfo["pipelineName"] as? String,
-                artifactInfo["buildId"] as String,
-                artifactInfo["buildNum"] as? Int,
-                artifactInfo["stageId"] as? String ?: "",
-                artifactInfo["containerId"] as? String ?: "",
-                artifactInfo["taskId"] as? String ?: "",
-                artifactInfo["executeCount"] as? Int ?: 1,
-                artifactInfo["artifactType"] as String,
-                artifactInfo["artifactName"] as String,
-                artifactInfo["artifactVersion"] as? String ?: "",
-                artifactInfo["artifactUri"] as? String,
-                artifactInfo["artifactRepoUrl"] as? String,
-                artifactInfo["artifactDigest"] as? String,
-                artifactInfo["artifactSize"] as? Long,
-                artifactInfo["codeRepoUrl"] as? String,
-                artifactInfo["commitId"] as? String ?: "",
-                artifactInfo["extraInfo"] as? String,
-                artifactInfo["creator"] as? String ?: "system",
-                artifactInfo["modifier"] as? String ?: "system"
-            )
-            .returning(TABLE.ID)
-            .fetchOne()
-
-        return record?.value1() ?: 0L
+        artifactInfo: PipelineArtifactInfo
+    ): Int {
+        with(TPipelineArtifactInfo.T_PIPELINE_ARTIFACT_INFO) {
+            val record = dslContext.newRecord(this).apply {
+                id = artifactInfo.id
+                projectId = artifactInfo.projectId
+                pipelineId = artifactInfo.pipelineId
+                pipelineName = artifactInfo.pipelineName
+                buildId = artifactInfo.buildId
+                buildNum = artifactInfo.buildNum
+                stageId = artifactInfo.stageId
+                containerId = artifactInfo.containerId
+                taskId = artifactInfo.taskId
+                executeCount = artifactInfo.executeCount
+                artifactType = artifactInfo.artifactType
+                artifactName = artifactInfo.artifactName
+                artifactVersion = artifactInfo.artifactVersion
+                artifactUri = artifactInfo.artifactUri
+                artifactRepoUrl = artifactInfo.artifactRepoUrl
+                artifactDigest = artifactInfo.artifactDigest
+                artifactSize = artifactInfo.artifactSize
+                codeRepoUrl = artifactInfo.codeRepoUrl
+                commitId = artifactInfo.commitId
+                extraInfo = artifactInfo.extraInfo
+                creator = artifactInfo.creator
+                modifier = artifactInfo.modifier
+            }
+            return record.store()
+        }
     }
 
-    /**
-     * 根据产出物信息查询元数据
-     */
     fun getByArtifact(
         dslContext: DSLContext,
         projectId: String,
         pipelineId: String?,
         artifactType: String,
-        artifactName: String,
-        artifactVersion: String
+        artifactName: String?,
+        artifactVersion: String?
     ): TPipelineArtifactInfoRecord? {
-        return with(TABLE) {
+        with(TPipelineArtifactInfo.T_PIPELINE_ARTIFACT_INFO) {
             val conditions = mutableListOf<Condition>(
                 PROJECT_ID.eq(projectId),
-                ARTIFACT_TYPE.eq(artifactType),
-                ARTIFACT_NAME.eq(artifactName),
-                ARTIFACT_VERSION.eq(artifactVersion)
+                ARTIFACT_TYPE.eq(artifactType)
             )
             if (!pipelineId.isNullOrBlank()) {
                 conditions.add(PIPELINE_ID.eq(pipelineId))
             }
-            dslContext.selectFrom(this)
+            if (!artifactName.isNullOrBlank()) {
+                conditions.add(ARTIFACT_NAME.eq(artifactName))
+            }
+            if (!artifactVersion.isNullOrBlank()) {
+                conditions.add(ARTIFACT_VERSION.eq(artifactVersion))
+            }
+            return dslContext.selectFrom(this)
                 .where(conditions)
                 .fetchAny()
         }
     }
 
-    /**
-     * 根据构建信息查询产出物列表
-     */
     fun listByBuild(
         dslContext: DSLContext,
         pipelineId: String,
         buildId: String
     ): Result<TPipelineArtifactInfoRecord> {
-        return with(TABLE) {
-            dslContext.selectFrom(this)
-                .where(
-                    PIPELINE_ID.eq(pipelineId)
-                        .and(BUILD_ID.eq(buildId))
-                )
+        with(TPipelineArtifactInfo.T_PIPELINE_ARTIFACT_INFO) {
+            return dslContext.selectFrom(this)
+                .where(PIPELINE_ID.eq(pipelineId).and(BUILD_ID.eq(buildId)))
                 .fetch()
         }
     }
 
-    /**
-     * 根据构建 ID 列表删除元数据（数据清理用）
-     */
     fun deleteByBuildIds(
         dslContext: DSLContext,
         buildIds: List<String>
@@ -162,61 +119,10 @@ class PipelineArtifactInfoDao {
         if (buildIds.isEmpty()) {
             return 0
         }
-        return with(TABLE) {
-            dslContext.deleteFrom(this)
+        with(TPipelineArtifactInfo.T_PIPELINE_ARTIFACT_INFO) {
+            return dslContext.deleteFrom(this)
                 .where(BUILD_ID.`in`(buildIds))
                 .execute()
-        }
-    }
-
-    /**
-     * 根据项目和时间范围删除元数据（数据清理用）
-     */
-    fun deleteByProjectAndTime(
-        dslContext: DSLContext,
-        projectId: String,
-        beforeTime: java.time.LocalDateTime
-    ): Int {
-        return with(TABLE) {
-            dslContext.deleteFrom(this)
-                .where(
-                    PROJECT_ID.eq(projectId)
-                        .and(CREATE_TIME.lessOrEqual(beforeTime))
-                )
-                .execute()
-        }
-    }
-
-    /**
-     * 统计项目的产出物数量
-     */
-    fun countByProject(
-        dslContext: DSLContext,
-        projectId: String
-    ): Long {
-        return with(TABLE) {
-            dslContext.selectCount()
-                .from(this)
-                .where(PROJECT_ID.eq(projectId))
-                .fetchOne(0, Long::class.java) ?: 0L
-        }
-    }
-
-    /**
-     * 分页查询项目的产出物
-     */
-    fun listByProject(
-        dslContext: DSLContext,
-        projectId: String,
-        page: Int,
-        pageSize: Int
-    ): Result<TPipelineArtifactInfoRecord> {
-        return with(TABLE) {
-            dslContext.selectFrom(this)
-                .where(PROJECT_ID.eq(projectId))
-                .orderBy(CREATE_TIME.desc())
-                .limit((page - 1) * pageSize, pageSize)
-                .fetch()
         }
     }
 }
