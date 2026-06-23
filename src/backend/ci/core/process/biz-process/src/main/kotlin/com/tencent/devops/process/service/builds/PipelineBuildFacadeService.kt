@@ -3083,7 +3083,8 @@ class PipelineBuildFacadeService(
         userId: String,
         version: Int?,
         isTemplate: Boolean?,
-        subModel: Model? = null
+        subModel: Model? = null,
+        channelCode: ChannelCode? = null
     ): List<PipelineBuildParamFormProp> {
         val model: Model = if (isTemplate == true) {
             // 模板触发器
@@ -3121,7 +3122,8 @@ class PipelineBuildFacadeService(
             debug = false,
             checkPermission = true,
             triggerParams = triggerContainer.params,
-            isTemplate = isTemplate
+            isTemplate = isTemplate,
+            channelCode = channelCode ?: ChannelCode.getRequestChannelCode()
         ).toMutableList()
         // 推荐版本号需额外处理
         handleVersionParam(properties, triggerContainer.buildNo)

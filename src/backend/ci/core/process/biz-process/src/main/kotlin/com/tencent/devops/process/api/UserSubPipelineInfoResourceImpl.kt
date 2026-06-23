@@ -29,6 +29,7 @@ package com.tencent.devops.process.api
 
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.environment.pojo.NodeBaseInfo
 import com.tencent.devops.environment.pojo.enums.NodeStatus
@@ -46,6 +47,7 @@ class UserSubPipelineInfoResourceImpl @Autowired constructor (
         userId: String,
         projectId: String,
         pipelineId: String,
+        channelCode: ChannelCode?,
         includeConst: Boolean?,
         includeNotRequired: Boolean?,
         subBranch: String?
@@ -58,6 +60,7 @@ class UserSubPipelineInfoResourceImpl @Autowired constructor (
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
+            channelCode = channelCode,
             includeConst = includeConst,
             includeNotRequired = includeNotRequired,
             branch = subBranch

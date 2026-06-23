@@ -521,6 +521,7 @@ class SubPipelineStartUpService @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
+        channelCode: ChannelCode? = null,
         includeConst: Boolean?,
         includeNotRequired: Boolean?,
         parentProjectId: String = "",
@@ -542,6 +543,7 @@ class SubPipelineStartUpService @Autowired constructor(
         val parameter = pipelineBuildFacadeService.getBuildParamFormProp(
             projectId = projectId,
             pipelineId = pipelineId,
+            channelCode = channelCode,
             includeConst = includeConst,
             includeNotRequired = includeNotRequired,
             userId = oauthUser,
