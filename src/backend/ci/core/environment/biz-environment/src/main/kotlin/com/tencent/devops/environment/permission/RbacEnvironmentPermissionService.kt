@@ -29,6 +29,7 @@ package com.tencent.devops.environment.permission
 
 import com.tencent.bk.sdk.iam.util.AuthCacheUtil
 import com.tencent.devops.auth.api.service.ServicePermissionAuthResource
+import com.tencent.devops.auth.api.service.ServiceResourceMemberResource
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
@@ -314,6 +315,29 @@ class RbacEnvironmentPermissionService(
             resourceType = resourceType.value,
             resourceCode = HashUtil.encodeLongId(nodeId)
         )
+    }
+
+    override fun copyNodeGroupMembers(
+        sourceProjectId: String,
+        targetProjectId: String,
+        nodeId: Long
+    ) {
+        val nodeHashId = HashUtil.encodeLongId(nodeId)
+        try {
+            client.get(ServiceResourceMemberResource::class).copyResourceGroupMembers(
+                token = tokenCheckService.getSystemToken() ?: "",
+                sourceProjectCode = sourceProjectId,
+                resourceType = nodeResourceType,
+                sourceResourceCode = nodeHashId,
+                targetProjectCode = targetProjectId,
+                targetResourceCode = nodeHashId
+            )
+        } catch (ignored: Exception) {
+            logger.warn(
+                "copy node group members failed|$sourceProjectId|$targetProjectId|$nodeHashId",
+                ignored
+            )
+        }
     }
 
     private fun buildNodeAction(

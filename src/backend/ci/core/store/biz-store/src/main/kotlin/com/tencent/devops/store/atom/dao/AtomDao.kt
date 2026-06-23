@@ -130,6 +130,7 @@ data class AtomQueryParam(
     val fitOsFlag: Boolean?,
     val queryFitAgentBuildLessAtomFlag: Boolean?,
     val queryProjectAtomFlag: Boolean = true,
+    val installed: Boolean? = null,
     val ownerStoreCode: String? = null
 )
 
@@ -814,9 +815,11 @@ class AtomDao : AtomBaseDao() {
         tAtomFeature: TAtomFeature,
         param: AtomQueryParam
     ): AtomConditionSet {
-        val effectiveProjectCode = if (param.queryProjectAtomFlag) param.projectCode else null
-        val includeTestAtom =
-            !param.projectCode.isNullOrBlank() && (param.queryProjectAtomFlag || !param.keyword.isNullOrBlank())
+        val effectiveProjectCode = if (param.queryProjectAtomFlag && param.installed == null) {
+            param.projectCode
+        } else null
+        val includeTestAtom = param.installed != false &&
+                !param.projectCode.isNullOrBlank() && (param.queryProjectAtomFlag || !param.keyword.isNullOrBlank())
         val defaultConditions = buildDefaultConditions(
             tAtom = tAtom,
             tAtomFeature = tAtomFeature,
@@ -830,6 +833,18 @@ class AtomDao : AtomBaseDao() {
             effectiveProjectCode = effectiveProjectCode
         )
         var testUnionConditions: MutableList<Condition>? = null
+
+        if (!param.projectCode.isNullOrBlank()) {
+            val projectInstalledCondition = buildProjectInstalledCondition(
+                tAtom = tAtom,
+                tStoreProjectRel = tStoreProjectRel,
+                projectCode = param.projectCode
+            )
+            when {
+                param.installed == true -> normalConditions.add(projectInstalledCondition)
+                param.installed == false -> normalConditions.add(DSL.not(projectInstalledCondition))
+            }
+        }
 
         if (includeTestAtom) {
             // 先查出测试中/审核中的 atomCode 列表（一般只有个位数），避免在主查询中嵌套 NOT IN 子查询
@@ -869,10 +884,10 @@ class AtomDao : AtomBaseDao() {
         }
 
         return AtomConditionSet(
-            defaultConditions = defaultConditions,
+            defaultConditions = if (param.installed == false) mutableListOf(DSL.falseCondition()) else defaultConditions,
             normalConditions = normalConditions,
-            testConditions = testUnionConditions,
-            includeTestAtom = includeTestAtom
+            testConditions = if (param.installed == false) null else testUnionConditions,
+            includeTestAtom = param.installed != false && includeTestAtom
         )
     }
 

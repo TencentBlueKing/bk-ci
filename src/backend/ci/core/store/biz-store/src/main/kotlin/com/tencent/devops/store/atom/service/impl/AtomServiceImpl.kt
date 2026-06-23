@@ -371,6 +371,8 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         watch.start("buildResponse")
         val respContext = AtomRespContext(
             queryProjectAtomFlag = queryProjectAtomFlag,
+            projectCode = projectCode,
+            installed = queryParam.installed,
             userId = userId,
             serviceScope = queryParam.serviceScope,
             jobType = queryParam.jobType,
@@ -390,10 +392,10 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         watch.stop()
 
         logger.info("serviceGetPipelineAtoms|$userId|$projectCode" +
-            "|atoms=${pipelineAtoms?.size}|total=$totalSize" +
-            "|${watch.taskInfo.joinToString("|") { "${it.taskName}=${it.timeMillis}ms" }}" +
-            "|totalCost=${watch.totalTimeMillis}ms" +
-            "|poolActive=${auxiliaryExecutor.activeCount}/${auxiliaryExecutor.poolSize}")
+                "|atoms=${pipelineAtoms?.size}|total=$totalSize" +
+                "|${watch.taskInfo.joinToString("|") { "${it.taskName}=${it.timeMillis}ms" }}" +
+                "|totalCost=${watch.totalTimeMillis}ms" +
+                "|poolActive=${auxiliaryExecutor.activeCount}/${auxiliaryExecutor.poolSize}")
 
         val effectivePage = page ?: 1
         val effectivePageSize = pageSize ?: dataList.size.coerceAtLeast(1)
@@ -406,6 +408,8 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
      */
     private data class AtomRespContext(
         val queryProjectAtomFlag: Boolean,
+        val projectCode: String,
+        val installed: Boolean?,
         val userId: String,
         val serviceScope: ServiceScopeEnum?,
         val jobType: String?,
@@ -502,7 +506,11 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
             uninstallFlag = atomPipelineCnt?.let { it < 1 },
             labelList = ctx.atomLabelInfoMap?.get(atomId),
             installFlag = installFlag,
-            installed = if (ctx.queryProjectAtomFlag) true else ctx.installedAtomList?.contains(atomCode),
+            installed = when {
+                ctx.installed != null && ctx.projectCode.isNotBlank() -> ctx.installed
+                ctx.queryProjectAtomFlag -> true
+                else -> ctx.installedAtomList?.contains(atomCode)
+            },
             honorInfos = ctx.atomHonorInfoMap[atomCode],
             indexInfos = ctx.atomIndexInfosMap[atomCode],
             hotFlag = record[KEY_HOT_FLAG] as? Boolean ?: false
