@@ -50,6 +50,7 @@ import com.tencent.devops.process.service.pipeline.PipelineSettingFacadeService
 import com.tencent.devops.process.service.template.v2.PipelineTemplateSettingService
 import com.tencent.devops.process.utils.PipelineVarUtil
 import jakarta.ws.rs.core.Response
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -827,15 +828,15 @@ class PipelineDependencyReplaceService @Autowired constructor(
         context: ReplaceContext
     ) {
         if (context.sourceMissingResources.isNotEmpty()) {
-            throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ERROR_PIPELINE_COPY_SOURCE_RESOURCE_NOT_EXISTS,
-                params = arrayOf(projectId, formatMissingResources(context.sourceMissingResources))
+            logger.warn(
+                "pipeline copy replace source resource not found|$projectId|" +
+                    formatMissingResources(context.sourceMissingResources)
             )
         }
         if (context.missingResources.isNotEmpty()) {
-            throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ERROR_PIPELINE_COPY_RESOURCE_MIGRATE_FAILED,
-                params = arrayOf(formatMissingResources(context.missingResources))
+            logger.warn(
+                "pipeline copy replace target resource migrate failed|$projectId|" +
+                    formatMissingResources(context.missingResources)
             )
         }
     }
@@ -904,6 +905,7 @@ class PipelineDependencyReplaceService @Autowired constructor(
     )
 
     companion object {
+        private val logger = LoggerFactory.getLogger(PipelineDependencyReplaceService::class.java)
         private const val INPUT = "input"
         private const val REPOSITORY_HASH_ID = "repositoryHashId"
         private const val SUB_PIPELINE_PROJECT_ID = "projectId"
@@ -917,7 +919,7 @@ class PipelineDependencyReplaceService @Autowired constructor(
         private const val JOB_PUSH_FILE_TARGET_ENV_ID = "targetEnvId"
         private const val JOB_PUSH_FILE_TARGET_NODE_ID = "targetNodeId"
         private val REPO_CHECKOUT_ATOM_CODES = setOf(
-            "gitCodeRepo", "PullFromGithub", "Gitlab", "atomtgit", "checkout", "svnCodeRepo"
+            "gitCodeRepo", "PullFromGithub", "Gitlab", "atomtgit", "checkout", "svnCodeRepo", "PerforceSync"
         )
         private const val SUB_PIPELINE_EXEC_ATOM_CODE = "SubPipelineExec"
         private const val JOB_PUSH_FILE_ATOM_CODE = "JobPushFile"

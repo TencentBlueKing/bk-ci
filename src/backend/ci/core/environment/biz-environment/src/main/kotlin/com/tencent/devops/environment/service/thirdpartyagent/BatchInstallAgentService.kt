@@ -11,6 +11,8 @@ import com.tencent.devops.common.redis.concurrent.SimpleRateLimiter
 import com.tencent.devops.environment.constant.EnvironmentMessageCode
 import com.tencent.devops.environment.dao.thirdpartyagent.AgentBatchInstallTokenDao
 import com.tencent.devops.environment.dao.thirdpartyagent.ThirdPartyAgentDao
+import com.tencent.devops.environment.model.AgentProps
+import com.tencent.devops.environment.model.AgentPropsSource
 import com.tencent.devops.environment.pojo.enums.AgentType
 import com.tencent.devops.environment.pojo.thirdpartyagent.TPAInstallType
 import com.tencent.devops.environment.service.AgentUrlService
@@ -102,7 +104,7 @@ class BatchInstallAgentService @Autowired constructor(
             loginPassword = if (loginPassword.isNullOrBlank()) {
                 null
             } else {
-                    AESUtil.encrypt(batchInstallAesKey, loginPassword)
+                AESUtil.encrypt(batchInstallAesKey, loginPassword)
             },
             installType = installType,
             reInstallId = reInstallId,
@@ -144,7 +146,8 @@ class BatchInstallAgentService @Autowired constructor(
                 os = os,
                 zoneName = zoneName,
                 agentType = agentType,
-                createWorkspaceName = null
+                createWorkspaceName = null,
+                agentProps = null
             )
             HashUtil.encodeLongId(agentId)
         } else {
@@ -182,13 +185,14 @@ class BatchInstallAgentService @Autowired constructor(
         return Triple(decodeSub[0], decodeSub[1], null)
     }
 
-    private fun genNewAgent(
+    fun genNewAgent(
         projectId: String,
         userId: String,
         os: OS,
         zoneName: String?,
         agentType: AgentType?,
-        createWorkspaceName: String?
+        createWorkspaceName: String?,
+        agentProps: AgentProps?
     ): Long {
         val gateway = slaveGatewayService.getGateway(zoneName)
         val fileGateway = slaveGatewayService.getFileGateway(zoneName)
@@ -202,22 +206,25 @@ class BatchInstallAgentService @Autowired constructor(
             gateway = gateway,
             fileGateway = fileGateway,
             agentType = agentType,
-            createWorkspaceName = createWorkspaceName
+            createWorkspaceName = createWorkspaceName,
+            agentProps = agentProps
         )
     }
 
-    fun genCreateAgentInstallScript(
+    fun genCreateAgentId(
         userId: String,
         projectId: String,
         workspaceName: String,
+        os: OS
     ): String {
         val agentId = genNewAgent(
             projectId = projectId,
             userId = userId,
-            os = OS.WINDOWS,
+            os = os,
             zoneName = createEnvService.getWorkspaceZoneName(projectId, workspaceName),
             agentType = AgentType.CREATE,
-            createWorkspaceName = workspaceName
+            createWorkspaceName = workspaceName,
+            agentProps = AgentProps.emptyBySource(AgentPropsSource.REMOTEDEV)
         )
         return HashUtil.encodeLongId(agentId)
     }

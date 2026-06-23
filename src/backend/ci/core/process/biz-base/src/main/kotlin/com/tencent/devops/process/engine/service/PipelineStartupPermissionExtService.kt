@@ -25,70 +25,31 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.ticket.service
+package com.tencent.devops.process.engine.service
 
-import com.tencent.devops.common.auth.api.AuthPermission
-import com.tencent.devops.common.auth.api.AuthResourceType
-import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
+import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.pipeline.pojo.BuildParameters
 
-interface CredentialPermissionService {
-
-    companion object {
-        val CredentialResourceType = AuthResourceType.TICKET_CREDENTIAL
-    }
+/**
+ * 流水线启动权限扩展校验
+ *
+ * 用于在流水线启动前，基于启动参数与启动人做额外的权限校验。
+ */
+interface PipelineStartupPermissionExtService {
 
     /**
-     * 是否有权限
+     * 校验启动人对本次启动的操作权限，校验不通过时应抛出异常以阻断启动。
+     *
+     * @param userId 启动人
+     * @param projectId 项目ID
+     * @param pipelineId 流水线ID
+     * @param pipelineParamMap 解析后的流水线启动参数
      */
-    fun validatePermission(
+    fun checkStartupPermission(
         userId: String,
         projectId: String,
-        authPermission: AuthPermission,
-        message: String
-    )
-
-    fun validatePermission(
-        userId: String,
-        projectId: String,
-        resourceCode: String,
-        authPermission: AuthPermission,
-        message: String
-    )
-
-    fun validatePermission(
-        userId: String,
-        projectId: String,
-        authPermission: AuthPermission
-    ): Boolean
-
-    fun validatePermission(
-        userId: String,
-        projectId: String,
-        resourceCode: String,
-        authPermission: AuthPermission
-    ): Boolean
-
-    fun filterCredential(
-        userId: String,
-        projectId: String,
-        authPermission: AuthPermission
-    ): List<String>
-
-    fun filterCredentials(
-        userId: String,
-        projectId: String,
-        authPermissions: Set<AuthPermission>
-    ): Map<AuthPermission, List<String>>
-
-    fun createResource(
-        userId: String,
-        projectId: String,
-        credentialId: String,
-        authGroupList: List<BkAuthGroup>? = null
-    )
-
-    fun deleteResource(
-        projectId: String,
-        credentialId: String
+        pipelineId: String,
+        pipelineParamMap: Map<String, BuildParameters>,
+        channelCode: ChannelCode
     )
 }

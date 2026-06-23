@@ -7,6 +7,7 @@ import com.tencent.devops.common.pipeline.pojo.transfer.ResourcesPools
 import com.tencent.devops.common.pipeline.type.agent.AgentDispatchType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentDispatch
 import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.utils.PipelineVarUtil
 import com.tencent.devops.process.yaml.v3.models.PreTemplateScriptBuildYamlV3Parser
 import com.tencent.devops.process.yaml.v3.models.job.Job
 import com.tencent.devops.process.yaml.v3.models.job.PreJob
@@ -119,6 +120,10 @@ object PipelineTransferAspectLoader {
                     }
 
                     map.forEach { (k, v) ->
+                        // 保存时不校验变量
+                        if (PipelineVarUtil.isVar(v)) {
+                            return@forEach
+                        }
                         if (!visited.contains(k) && dfs(k)) {
                             throw ErrorCodeException(
                                 errorCode = ProcessMessageCode.ERROR_AGENT_REUSE_MUTEX_DEP_NULL_NODE,

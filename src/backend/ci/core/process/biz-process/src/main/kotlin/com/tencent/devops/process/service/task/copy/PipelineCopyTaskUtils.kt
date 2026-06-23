@@ -1,6 +1,7 @@
 package com.tencent.devops.process.service.task.copy
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskStatus
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineCopyAction
@@ -28,6 +29,10 @@ object PipelineCopyTaskUtils {
 
     fun getErrorMessage(exception: Exception): PipelineBatchTaskErrorMessage {
         return when (exception) {
+            is PermissionForbiddenException -> PipelineBatchTaskFailedMsg(
+                msg = exception.message ?: "unknown error"
+            )
+
             is ErrorCodeException -> PipelineBatchTaskFailedErrorCode(
                 errorCode = exception.errorCode,
                 params = exception.params?.toList()

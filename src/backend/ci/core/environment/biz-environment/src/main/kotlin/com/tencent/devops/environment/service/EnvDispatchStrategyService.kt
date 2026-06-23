@@ -3,10 +3,12 @@ package com.tencent.devops.environment.service
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.environment.constant.EnvironmentMessageCode
+import com.tencent.devops.environment.dao.EnvDao
 import com.tencent.devops.environment.dao.EnvDispatchStrategyDao
 import com.tencent.devops.environment.dao.NodeTagKeyDao
 import com.tencent.devops.environment.pojo.DispatchEnvStrategyVO
@@ -14,9 +16,13 @@ import com.tencent.devops.environment.pojo.DispatchStrategyConfig
 import com.tencent.devops.environment.pojo.EnabledStrategiesWithTags
 import com.tencent.devops.environment.pojo.LabelSelector
 import com.tencent.devops.environment.pojo.LabelSelectorVO
+import com.tencent.devops.environment.pojo.enums.EnvType
 import com.tencent.devops.environment.pojo.enums.NodeRule
 import com.tencent.devops.environment.pojo.enums.StrategyScope
 import com.tencent.devops.environment.pojo.enums.StrategyType
+import com.tencent.devops.environment.pojo.envOperate.EnvOperateContent
+import com.tencent.devops.environment.pojo.envOperate.EnvOperateName
+import com.tencent.devops.environment.pojo.envOperate.EnvOperateOrigin
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
@@ -29,7 +35,9 @@ class EnvDispatchStrategyService @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val envDispatchStrategyDao: EnvDispatchStrategyDao,
     private val nodeTagKeyDao: NodeTagKeyDao,
-    private val nodeTagService: NodeTagService
+    private val envDao: EnvDao,
+    private val nodeTagService: NodeTagService,
+    private val envOperateLogService: EnvOperateLogService
 ) {
     @Value("\${environment.strategy.count:10}")
     private val globalStrategyCount: Int = 10
@@ -66,6 +74,10 @@ class EnvDispatchStrategyService @Autowired constructor(
                     )
                 })
             }
+        }
+        // 初始化前确认下是不是构建环境，只有构建环境有
+        if (envDao.get(dslContext, projectId, envId).envType != EnvType.BUILD.name) {
+            return emptyList()
         }
         val lock = strategiesUpdateLock(projectId, envId)
         // 遇见的概率及其小，第一次初始化后就没了，而且是页面，所以用户刷新下就好
@@ -105,8 +117,13 @@ class EnvDispatchStrategyService @Autowired constructor(
         strategyName: String?,
         scope: StrategyScope,
         nodeRule: NodeRule?,
-        labelSelector: List<LabelSelector>?
+        labelSelector: List<LabelSelector>?,
+        envOperateOrigin: EnvOperateOrigin
     ): Long {
+        // 初始化前确认下是不是构建环境，只有构建环境有
+        if (envDao.get(dslContext, projectId, envId).envType != EnvType.BUILD.name) {
+            return -1
+        }
         val lock = strategiesUpdateLock(projectId, envId)
         if (!lock.tryLock()) {
             throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_ENV_STRATEGY_NOW_USING)
@@ -167,7 +184,19 @@ class EnvDispatchStrategyService @Autowired constructor(
                 createdUser = userId,
                 updatedUser = userId
             )
-            return envDispatchStrategyDao.create(dslContext, config)
+            val result = envDispatchStrategyDao.create(dslContext, config)
+            envOperateLogService.addOperateLog(
+                projectId = projectId,
+                envId = envId,
+                operateOrigin = envOperateOrigin,
+                operateName = EnvOperateName.ADD_DISPATCH_STRATEGY,
+                operateContent = EnvOperateContent(
+                    content = strategyName,
+                    resourceCount = 1
+                ),
+                operator = userId
+            )
+            return result
         } finally {
             lock.unlock()
         }
@@ -181,7 +210,8 @@ class EnvDispatchStrategyService @Autowired constructor(
         scope: StrategyScope? = null,
         nodeRule: NodeRule? = null,
         labelSelector: List<LabelSelector>? = null,
-        enabled: Boolean? = null
+        enabled: Boolean? = null,
+        envOperateOrigin: EnvOperateOrigin
     ) {
         val existing = envDispatchStrategyDao.getById(dslContext, id)
             ?: throw InvalidParamException("Strategy not found: $id")
@@ -219,11 +249,35 @@ class EnvDispatchStrategyService @Autowired constructor(
             enforceProtection(existing.projectId, existing.envId)
         }
         envDispatchStrategyDao.update(
-            dslContext, id, strategyName, scope, nodeRule, labelSelector, enabled, userId
+            dslContext = dslContext,
+            id = id,
+            strategyName = strategyName,
+            scope = scope,
+            nodeRule = nodeRule,
+            labelSelector = labelSelector,
+            enabled = enabled,
+            updatedUser = userId
+        )
+        envOperateLogService.addOperateLog(
+            projectId = projectId,
+            envId = existing.envId,
+            operateOrigin = envOperateOrigin,
+            operateName = EnvOperateName.UPDATE_DISPATCH_STRATEGY,
+            operateContent = EnvOperateContent(
+                content = strategyName,
+                resourceCount = 1
+            ),
+            operator = userId
         )
     }
 
-    fun deleteStrategy(projectId: String, envId: Long, id: Long) {
+    fun deleteStrategy(
+        userId: String,
+        projectId: String,
+        envId: Long,
+        id: Long,
+        envOperateOrigin: EnvOperateOrigin
+    ) {
         val lock = strategiesUpdateLock(projectId, envId)
         if (!lock.tryLock()) {
             throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_ENV_STRATEGY_NOW_USING)
@@ -235,12 +289,29 @@ class EnvDispatchStrategyService @Autowired constructor(
                 throw InvalidParamException("Cannot delete default strategy")
             }
             envDispatchStrategyDao.delete(dslContext, id)
+            envOperateLogService.addOperateLog(
+                projectId = projectId,
+                envId = existing.envId,
+                operateOrigin = envOperateOrigin,
+                operateName = EnvOperateName.DELETE_DISPATCH_STRATEGY,
+                operateContent = EnvOperateContent(
+                    content = existing.strategyName,
+                    resourceCount = 1
+                ),
+                operator = userId
+            )
         } finally {
             lock.unlock()
         }
     }
 
-    fun batchDeleteStrategy(projectId: String, envId: Long, ids: Set<Long>) {
+    fun batchDeleteStrategy(
+        userId: String,
+        projectId: String,
+        envId: Long,
+        ids: Set<Long>,
+        envOperateOrigin: EnvOperateOrigin
+    ) {
         if (ids.isEmpty()) return
         val lock = strategiesUpdateLock(projectId, envId)
         if (!lock.tryLock()) {
@@ -253,12 +324,29 @@ class EnvDispatchStrategyService @Autowired constructor(
                 throw InvalidParamException("Cannot delete default strategy")
             }
             envDispatchStrategyDao.batchDelete(dslContext, ids)
+            envOperateLogService.addOperateLog(
+                projectId = projectId,
+                envId = envId,
+                operateOrigin = envOperateOrigin,
+                operateName = EnvOperateName.UPDATE_DISPATCH_STRATEGY,
+                operateContent = EnvOperateContent(
+                    content = JsonUtil.toJson(existing.map { it.strategyName }, false),
+                    resourceCount = ids.size
+                ),
+                operator = userId
+            )
         } finally {
             lock.unlock()
         }
     }
 
-    fun reorderStrategies(projectId: String, envId: Long, orderedIds: List<Long>) {
+    fun reorderStrategies(
+        userId: String,
+        projectId: String,
+        envId: Long,
+        orderedIds: List<Long>,
+        envOperateOrigin: EnvOperateOrigin
+    ) {
         val lock = strategiesUpdateLock(projectId, envId)
         if (!lock.tryLock()) {
             throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_ENV_STRATEGY_NOW_USING)
@@ -271,6 +359,17 @@ class EnvDispatchStrategyService @Autowired constructor(
             }
             val updates = orderedIds.mapIndexed { index, id -> Pair(id, index) }
             envDispatchStrategyDao.batchUpdatePriority(dslContext, updates)
+            envOperateLogService.addOperateLog(
+                projectId = projectId,
+                envId = envId,
+                operateOrigin = envOperateOrigin,
+                operateName = EnvOperateName.UPDATE_DISPATCH_STRATEGY_ORDER,
+                operateContent = EnvOperateContent(
+                    content = null,
+                    resourceCount = updates.size
+                ),
+                operator = userId
+            )
         } finally {
             lock.unlock()
         }
