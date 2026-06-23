@@ -55,6 +55,7 @@
                 :toolbars="toolbars"
                 :external-link="false"
                 :box-shadow="false"
+                :autofocus="false"
                 preview-background="#fff"
                 :language="$i18n.locale === 'en-US' ? 'en' : $i18n.locale"
                 @change="handleVersionContentChange"

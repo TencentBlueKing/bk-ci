@@ -89,6 +89,7 @@
                 :toolbars="toolbars"
                 :external-link="false"
                 :box-shadow="false"
+                :autofocus="false"
                 preview-background="#fff"
                 :language="$i18n.locale === 'en-US' ? 'en' : $i18n.locale"
                 @change="handleDescriptionChange"
@@ -132,17 +133,13 @@
 
     async function fetchClassifyList () {
         try {
-            try {
-                if (classifyLoading.value || classifyList.value.length > 0) return
-                classifyLoading.value = true
-                classifyList.value = await $store.dispatch('store/fetchClassifyList')
-            } catch (error) {
-                classifyList.value = []
-            } finally {
-                classifyLoading.value = false
-            }
+            if (classifyLoading.value || classifyList.value.length > 0) return
+            classifyLoading.value = true
+            classifyList.value = await $store.dispatch('store/fetchClassifyList')
         } catch (error) {
-            console.error(error)
+            classifyList.value = []
+        } finally {
+            classifyLoading.value = false
         }
     }
     
