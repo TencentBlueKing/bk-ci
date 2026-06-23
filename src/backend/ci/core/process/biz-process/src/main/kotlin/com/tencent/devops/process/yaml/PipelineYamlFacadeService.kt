@@ -373,7 +373,7 @@ class PipelineYamlFacadeService @Autowired constructor(
             authRepository = AuthRepository(repository)
         ).data
     } catch (ignored: RemoteServiceException) {
-        throw when (ignored.errorCode) {
+        throw when (ignored.httpStatus) {
             // 目标仓库被删除
             HTTP_404 -> ErrorCodeException(
                 errorCode = ProcessMessageCode.ERROR_GIT_PROJECT_NOT_FOUND_OR_NOT_PERMISSION,

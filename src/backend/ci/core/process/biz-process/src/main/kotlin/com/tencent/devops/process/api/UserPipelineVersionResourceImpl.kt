@@ -592,6 +592,34 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
         )
     }
 
+    override fun getVersionByBranchName(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        branch: String,
+        archiveFlag: Boolean?,
+        source: PipelineGetVersionSource?
+    ): Result<PipelineVersionWithModel> {
+        val userPipelinePermissionCheckStrategy =
+            UserPipelinePermissionCheckStrategyFactory.createUserPipelinePermissionCheckStrategy(archiveFlag)
+        UserPipelinePermissionCheckContext(userPipelinePermissionCheckStrategy).checkUserPipelinePermission(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            permission = AuthPermission.VIEW
+        )
+        return Result(
+            pipelineVersionFacadeService.getVersionByBranch(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                branch = branch,
+                archiveFlag = archiveFlag,
+                source = source
+            )
+        )
+    }
+
     override fun listPacVersions(
         userId: String,
         projectId: String,

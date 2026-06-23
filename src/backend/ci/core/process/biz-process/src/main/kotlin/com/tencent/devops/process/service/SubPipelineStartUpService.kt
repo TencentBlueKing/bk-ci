@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
@@ -45,6 +46,9 @@ import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_EVENT_URL
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_EVENT_TYPE
+import com.tencent.devops.environment.api.ServiceEnvironmentResource
+import com.tencent.devops.environment.pojo.NodeBaseInfo
+import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.process.bean.PipelineUrlBean
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_SUB_PIPELINE_NOT_ALLOWED_CIRCULAR_CALL
@@ -96,7 +100,8 @@ class SubPipelineStartUpService @Autowired constructor(
     private val pipelinePermissionService: PipelinePermissionService,
     private val pipelineUrlBean: PipelineUrlBean,
     private val templateFacadeService: TemplateFacadeService,
-    private val subPipelineRefService: SubPipelineRefService
+    private val subPipelineRefService: SubPipelineRefService,
+    private val client: Client
 ) {
 
     companion object {
@@ -545,6 +550,48 @@ class SubPipelineStartUpService @Autowired constructor(
             subModel = subPipelineResource?.model
         )
         return Result(parameter)
+    }
+
+    /**
+     * 获取流水线的手动启动参数，返回至前端渲染界面。
+     * @param projectId 流水线所在项目ID
+     * @param pipelineId 流水线ID
+     */
+    fun subStreamManualStartupNodeList(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        parentProjectId: String = "",
+        parentPipelineId: String = "",
+        nodeIp: String?,
+        displayName: String?,
+        nodeStatus: NodeStatus?,
+        createdUser: String?
+    ): Result<List<NodeBaseInfo>> {
+        val oauthUser = if (parentProjectId.isNotBlank() && parentPipelineId.isNotBlank()) {
+            pipelineRepositoryService.getPipelineOauthUser(
+                projectId = parentProjectId,
+                pipelineId = parentPipelineId
+            ) ?: userId
+        } else {
+            userId
+        }
+        val subPipelineSetting = pipelineRepositoryService.getSetting(projectId, pipelineId)
+        val list = subPipelineSetting?.envHashId?.let { env ->
+            client.get(ServiceEnvironmentResource::class).listNodesNew(
+                userId = oauthUser,
+                projectId = projectId,
+                envHashId = env,
+                nodeIp = nodeIp,
+                nodeStatus = nodeStatus,
+                displayName = displayName,
+                createdUser = createdUser,
+                page = 1,
+                pageSize = 100
+            ).data?.records
+        }
+
+        return Result(list ?: emptyList())
     }
 
     fun getSubVar(projectId: String, buildId: String, taskId: String): Result<Map<String, String>> {

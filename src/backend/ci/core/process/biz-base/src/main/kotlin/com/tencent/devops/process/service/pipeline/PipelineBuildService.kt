@@ -47,6 +47,7 @@ import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.environment.api.thirdpartyagent.ServiceThirdPartyAgentResource
 import com.tencent.devops.process.bean.PipelineUrlBean
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_CATEGORY
+import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_IMATE_SESSION_ID
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.cfg.BuildIdGenerator
 import com.tencent.devops.process.engine.interceptor.InterceptData
@@ -334,6 +335,7 @@ class PipelineBuildService(
         initMaterialParams(ctx)
         initAuthorizerParam(ctx)
         initNodeAgentParams(ctx)
+        initImateSessionParam(ctx)
         initTraceParams(ctx.pipelineParamMap)
     }
 
@@ -485,6 +487,17 @@ class PipelineBuildService(
                     key = NODE_ENV_HASH_ID, value = envHashId, readOnly = true
                 )
             }
+        }
+    }
+
+    /**
+     * 初始化 iMate 会话上下文（由触发源 header 透传，构建运行时只读）
+     */
+    private fun initImateSessionParam(ctx: InitParamContext) {
+        ctx.startValues?.get(CI_IMATE_SESSION_ID)?.takeIf(String::isNotBlank)?.let { sessionId ->
+            ctx.pipelineParamMap[CI_IMATE_SESSION_ID] = BuildParameters(
+                key = CI_IMATE_SESSION_ID, value = sessionId, readOnly = true
+            )
         }
     }
 

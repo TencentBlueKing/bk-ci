@@ -1202,7 +1202,7 @@ export default {
      * @param {String} branch 分支名
      */
     async fetchPacBranchPipeline (_, { projectId, pipelineId, branch }) {
-        const res = await request.get(`/${PROCESS_API_URL_PREFIX}/user/version/projects/${projectId}/pipelines/${pipelineId}/branches/${encodeURIComponent(branch)}`)
+        const res = await request.get(`/${PROCESS_API_URL_PREFIX}/user/version/projects/${projectId}/pipelines/${pipelineId}/getVersionByBranch?branch=${encodeURIComponent(branch)}`)
         return res.data
     }
 }
