@@ -3,7 +3,7 @@ package com.tencent.devops.repository.sdk.tapd.request
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.tencent.devops.repository.sdk.common.enums.HttpMethod
 import com.tencent.devops.repository.sdk.tapd.TapdRequest
-import com.tencent.devops.repository.sdk.tapd.TapdResult
+import com.tencent.devops.scm.pojo.tapd.TapdResult
 import com.tencent.devops.repository.sdk.tapd.response.ShardIdResponse
 
 data class ShardIdRequest(

@@ -53,6 +53,7 @@ import jakarta.ws.rs.core.Response
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.util.regex.Pattern
 
 /**
  * 流水线依赖资源替换
@@ -184,6 +185,198 @@ class PipelineDependencyReplaceService @Autowired constructor(
         )
         validateReplaceContext(projectId = sourceProjectId, context = context)
         return PipelineModelAndSetting(model = replacedModel, setting = replaceSetting)
+    }
+
+    fun fixSubPipelineProjectInModel(
+        model: Model,
+        projectId: String,
+        sourceSubProjectId: String,
+        targetSubProjectId: String
+    ): Pair<Model, Boolean> {
+        val changedRef = booleanArrayOf(false)
+        val fixedStages = fixSubPipelineProjectStages(
+            projectId = projectId,
+            stages = model.stages,
+            sourceSubProjectId = sourceSubProjectId,
+            targetSubProjectId = targetSubProjectId,
+            changedRef = changedRef
+        )
+        if (!changedRef[0]) {
+            return model to false
+        }
+        return model.copy(stages = fixedStages) to true
+    }
+
+    private fun fixSubPipelineProjectStages(
+        projectId: String,
+        stages: List<Stage>,
+        sourceSubProjectId: String,
+        targetSubProjectId: String,
+        changedRef: BooleanArray
+    ): List<Stage> {
+        return stages.map { stage ->
+            stage.copy(
+                containers = fixSubPipelineProjectContainers(
+                    projectId = projectId,
+                    containers = stage.containers,
+                    sourceSubProjectId = sourceSubProjectId,
+                    targetSubProjectId = targetSubProjectId,
+                    changedRef = changedRef
+                )
+            )
+        }
+    }
+
+    private fun fixSubPipelineProjectContainers(
+        projectId: String,
+        containers: List<Container>,
+        sourceSubProjectId: String,
+        targetSubProjectId: String,
+        changedRef: BooleanArray
+    ): List<Container> {
+        return containers.map { container ->
+            when (container) {
+                is VMBuildContainer -> {
+                    container.copy(
+                        elements = fixSubPipelineProjectElements(
+                            projectId = projectId,
+                            elements = container.elements,
+                            sourceSubProjectId = sourceSubProjectId,
+                            targetSubProjectId = targetSubProjectId,
+                            changedRef = changedRef
+                        )
+                    )
+                }
+
+                is NormalContainer -> {
+                    container.copy(
+                        elements = fixSubPipelineProjectElements(
+                            projectId = projectId,
+                            elements = container.elements,
+                            sourceSubProjectId = sourceSubProjectId,
+                            targetSubProjectId = targetSubProjectId,
+                            changedRef = changedRef
+                        )
+                    )
+                }
+
+                else -> container
+            }
+        }
+    }
+
+    private fun fixSubPipelineProjectElements(
+        projectId: String,
+        elements: List<Element>,
+        sourceSubProjectId: String,
+        targetSubProjectId: String,
+        changedRef: BooleanArray
+    ): List<Element> {
+        return elements.map { element ->
+            when (element) {
+                is MarketBuildAtomElement -> {
+                    fixSubPipelineExecBuildAtomElement(
+                        projectId = projectId,
+                        element = element,
+                        sourceSubProjectId = sourceSubProjectId,
+                        targetSubProjectId = targetSubProjectId,
+                        changedRef = changedRef
+                    )
+                }
+
+                is MarketBuildLessAtomElement -> {
+                    fixSubPipelineExecBuildLessAtomElement(
+                        projectId = projectId,
+                        element = element,
+                        sourceSubProjectId = sourceSubProjectId,
+                        targetSubProjectId = targetSubProjectId,
+                        changedRef = changedRef
+                    )
+                }
+
+                else -> element
+            }
+        }
+    }
+
+    private fun fixSubPipelineExecBuildAtomElement(
+        projectId: String,
+        element: MarketBuildAtomElement,
+        sourceSubProjectId: String,
+        targetSubProjectId: String,
+        changedRef: BooleanArray
+    ): MarketBuildAtomElement {
+        if (element.getAtomCode() != SUB_PIPELINE_EXEC_ATOM_CODE) {
+            return element
+        }
+        val input = element.data[INPUT]
+        if (input !is Map<*, *>) {
+            return element
+        }
+        val replacedInput = fixSubPipelineExecInputProjectId(
+            projectId = projectId,
+            input = input,
+            sourceSubProjectId = sourceSubProjectId,
+            targetSubProjectId = targetSubProjectId
+        ) ?: return element
+        changedRef[0] = true
+        return element.copy(data = replaceInput(data = element.data, input = replacedInput))
+    }
+
+    private fun fixSubPipelineExecBuildLessAtomElement(
+        projectId: String,
+        element: MarketBuildLessAtomElement,
+        sourceSubProjectId: String,
+        targetSubProjectId: String,
+        changedRef: BooleanArray
+    ): MarketBuildLessAtomElement {
+        if (element.getAtomCode() != SUB_PIPELINE_EXEC_ATOM_CODE) {
+            return element
+        }
+        val input = element.data[INPUT]
+        if (input !is Map<*, *>) {
+            return element
+        }
+        val replacedInput = fixSubPipelineExecInputProjectId(
+            projectId = projectId,
+            input = input,
+            sourceSubProjectId = sourceSubProjectId,
+            targetSubProjectId = targetSubProjectId
+        ) ?: return element
+        changedRef[0] = true
+        return element.copy(data = replaceInput(data = element.data, input = replacedInput))
+    }
+
+    private fun fixSubPipelineExecInputProjectId(
+        projectId: String,
+        input: Map<*, *>,
+        sourceSubProjectId: String,
+        targetSubProjectId: String
+    ): Map<*, *>? {
+        val subProjectId = input[SUB_PIPELINE_PROJECT_ID]?.toString()?.ifBlank { projectId } ?: projectId
+        if (subProjectId != sourceSubProjectId) {
+            return null
+        }
+        val subPipelineTypeStr = input.getOrDefault("subPipelineType", SubPipelineType.ID.name).toString()
+        val subPipelineId = input[SUB_PIPELINE_EXEC_ID]?.toString()
+        val subPipelineName = input[SUB_PIPELINE_NAME]?.toString()
+        val shouldFix = when (subPipelineTypeStr) {
+            SubPipelineType.ID.name -> !subPipelineId.isNullOrBlank()
+            SubPipelineType.NAME.name -> {
+                !subPipelineName.isNullOrBlank() &&
+                    PIPELINE_ID_PATTERN.matcher(subPipelineName).matches()
+            }
+
+            else -> false
+        }
+        if (!shouldFix) {
+            return null
+        }
+        return replaceInputField(
+            input = input,
+            fieldName = SUB_PIPELINE_PROJECT_ID,
+            value = targetSubProjectId
+        )
     }
 
     private fun replaceLabels(
@@ -695,27 +888,53 @@ class PipelineDependencyReplaceService @Autowired constructor(
         context: ReplaceContext
     ): Map<*, *>? {
         val subProjectId = input[SUB_PIPELINE_PROJECT_ID]?.toString()?.ifBlank { projectId } ?: projectId
-        val subPipelineTypeStr = input.getOrDefault("subPipelineType", SubPipelineType.ID.name)
-        val subPipelineId = input[SUB_PIPELINE_EXEC_ID]?.toString()
-        if (subProjectId != projectId ||
-            subPipelineTypeStr != SubPipelineType.ID.name ||
-            subPipelineId.isNullOrBlank()
-        ) {
+        if (subProjectId != projectId) {
             return null
         }
+        val subPipelineTypeStr = input.getOrDefault("subPipelineType", SubPipelineType.ID.name).toString()
+        val subPipelineId = input[SUB_PIPELINE_EXEC_ID]?.toString()
+        val subPipelineName = input[SUB_PIPELINE_NAME]?.toString()
+        val sourcePipelineId = when (subPipelineTypeStr) {
+            SubPipelineType.ID.name -> subPipelineId?.takeIf { it.isNotBlank() }
+            SubPipelineType.NAME.name -> {
+                subPipelineName?.takeIf {
+                    it.isNotBlank() && PIPELINE_ID_PATTERN.matcher(it).matches()
+                }
+            }
+
+            else -> null
+        } ?: return null
         val targetPipeline = context.getTargetResource(
             resourceType = PipelineDependentResourceType.PIPELINE,
-            resourceId = subPipelineId
+            resourceId = sourcePipelineId
         ) ?: return null
-        return replaceInputField(
-            input = replaceInputField(
-                input = input,
-                fieldName = SUB_PIPELINE_EXEC_ID,
-                value = targetPipeline.resourceId
-            ),
-            fieldName = SUB_PIPELINE_PROJECT_ID,
-            value = targetPipeline.projectId
-        )
+        return when (subPipelineTypeStr) {
+            SubPipelineType.ID.name -> {
+                replaceInputField(
+                    input = replaceInputField(
+                        input = input,
+                        fieldName = SUB_PIPELINE_EXEC_ID,
+                        value = targetPipeline.resourceId
+                    ),
+                    fieldName = SUB_PIPELINE_PROJECT_ID,
+                    value = targetPipeline.projectId
+                )
+            }
+
+            SubPipelineType.NAME.name -> {
+                replaceInputField(
+                    input = replaceInputField(
+                        input = input,
+                        fieldName = SUB_PIPELINE_NAME,
+                        value = targetPipeline.resourceId
+                    ),
+                    fieldName = SUB_PIPELINE_PROJECT_ID,
+                    value = targetPipeline.projectId
+                )
+            }
+
+            else -> null
+        }
     }
 
     private fun replaceJobScriptExecutionInput(
@@ -910,6 +1129,8 @@ class PipelineDependencyReplaceService @Autowired constructor(
         private const val REPOSITORY_HASH_ID = "repositoryHashId"
         private const val SUB_PIPELINE_PROJECT_ID = "projectId"
         private const val SUB_PIPELINE_EXEC_ID = "subPip"
+        private const val SUB_PIPELINE_NAME = "subPipelineName"
+        private val PIPELINE_ID_PATTERN = Pattern.compile("(p-)?[a-f\\d]{32}")
         private const val ENV = "ENV"
         private const val NODE = "NODE"
         private const val JOB_SCRIPT_EXECUTION_ENV_TYPE = "envType"

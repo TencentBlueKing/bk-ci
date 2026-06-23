@@ -341,6 +341,23 @@ class PipelineCopyTaskSaveService @Autowired constructor(
                     )
                 }
 
+                // 跳过,直接使用源资源ID和资源名,保证子流水线插件替换时能替换
+                PipelineCopyStrategy.PIPELINE_SKIP -> {
+                    PipelineCopyTaskResourceUpdate(
+                        projectId = projectId,
+                        taskId = taskId,
+                        resourceType = resource.resourceType,
+                        resourceId = resource.resourceId,
+                        targetResourceType = resource.resourceType,
+                        targetResourceId = resource.resourceId,
+                        targetResourceName = resource.resourceName,
+                        status = PipelineCopyTaskResourceStatus.SKIP,
+                        copyStrategy = copyStrategy,
+                        copyAction = copyStrategy.copyAction,
+                        highRisk = copyStrategy.highRisk
+                    )
+                }
+
                 PipelineCopyStrategy.REPOSITORY_REUSE_SAME_NAME_PROTOCOL,
                 PipelineCopyStrategy.BUILD_NODE_REUSE_SAME_NAME,
                 PipelineCopyStrategy.BUILD_ENV_REUSE_SAME_NAME,
