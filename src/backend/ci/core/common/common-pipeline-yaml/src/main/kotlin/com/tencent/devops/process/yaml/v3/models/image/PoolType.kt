@@ -29,7 +29,7 @@ package com.tencent.devops.process.yaml.v3.models.image
 
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.pipeline.type.DispatchType
-import com.tencent.devops.common.pipeline.type.agent.AgentType
+import com.tencent.devops.common.pipeline.type.agent.AgentDispatchType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentDockerInfo
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentEnvDispatchType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentIDDispatchType
@@ -98,7 +98,7 @@ enum class PoolType {
                 !pool.lockResourceWith.isNullOrBlank() -> ThirdPartyAgentIDDispatchType(
                     displayName = pool.lockResourceWith,
                     workspace = pool.workspace,
-                    agentType = AgentType.REUSE_JOB_ID,
+                    agentType = AgentDispatchType.REUSE_JOB_ID,
                     dockerInfo = pool.dockerInfo,
                     reusedInfo = null
                 )
@@ -107,7 +107,7 @@ enum class PoolType {
                     envProjectId = pool.envProjectId,
                     envName = pool.envName,
                     workspace = pool.workspace,
-                    agentType = AgentType.NAME,
+                    agentType = AgentDispatchType.NAME,
                     dockerInfo = pool.dockerInfo,
                     reusedInfo = null
                 )
@@ -115,7 +115,7 @@ enum class PoolType {
                 else -> ThirdPartyAgentIDDispatchType(
                     displayName = pool.agentName!!,
                     workspace = pool.workspace,
-                    agentType = AgentType.NAME,
+                    agentType = AgentDispatchType.NAME,
                     dockerInfo = pool.dockerInfo,
                     reusedInfo = null
                 )
@@ -151,17 +151,17 @@ enum class PoolType {
         private fun getPoolType(dispatcher: DispatchType): JobRunsOnPoolType? = when (dispatcher) {
             is ThirdPartyAgentEnvDispatchType -> {
                 when (dispatcher.agentType) {
-                    AgentType.NAME -> JobRunsOnPoolType.ENV_NAME
-                    AgentType.ID -> JobRunsOnPoolType.ENV_ID
-                    AgentType.REUSE_JOB_ID -> JobRunsOnPoolType.AGENT_REUSE_JOB
+                    AgentDispatchType.NAME -> JobRunsOnPoolType.ENV_NAME
+                    AgentDispatchType.ID -> JobRunsOnPoolType.ENV_ID
+                    AgentDispatchType.REUSE_JOB_ID -> JobRunsOnPoolType.AGENT_REUSE_JOB
                 }
             }
 
             is ThirdPartyAgentIDDispatchType -> {
                 when (dispatcher.agentType) {
-                    AgentType.NAME -> JobRunsOnPoolType.AGENT_NAME
-                    AgentType.ID -> JobRunsOnPoolType.AGENT_ID
-                    AgentType.REUSE_JOB_ID -> JobRunsOnPoolType.AGENT_REUSE_JOB
+                    AgentDispatchType.NAME -> JobRunsOnPoolType.AGENT_NAME
+                    AgentDispatchType.ID -> JobRunsOnPoolType.AGENT_ID
+                    AgentDispatchType.REUSE_JOB_ID -> JobRunsOnPoolType.AGENT_REUSE_JOB
                 }
             }
 
@@ -187,10 +187,10 @@ enum class PoolType {
 
         private fun getLockResourceWith(dispatcher: DispatchType): String? = when {
             dispatcher is ThirdPartyAgentEnvDispatchType &&
-                dispatcher.agentType == AgentType.REUSE_JOB_ID -> dispatcher.value
+                dispatcher.agentType == AgentDispatchType.REUSE_JOB_ID -> dispatcher.value
 
             dispatcher is ThirdPartyAgentIDDispatchType &&
-                dispatcher.agentType == AgentType.REUSE_JOB_ID -> dispatcher.value
+                dispatcher.agentType == AgentDispatchType.REUSE_JOB_ID -> dispatcher.value
 
             else -> null
         }

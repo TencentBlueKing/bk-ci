@@ -43,7 +43,7 @@ export function transformObj (obj: ObjectMap): ObjectMap {
 }
 
 export function getServiceLogoByPath (link: string): string {
-    return link.replace(/\/?(devops\/)?(\w+)\S*$/, '$2')
+    return link.replace(/\/?(devops\/)?([\w\-]+)\S*$/, '$2')
 }
 
 export function urlJoin (...args): string {
@@ -62,7 +62,7 @@ export function updateRecentVisitServiceList (path: string): void {
     try {
         const recentVisitService: string | null = localStorage.getItem('recentVisitService')
         const recentVisitServiceList = recentVisitService ? JSON.parse(recentVisitService) : []
-        const serviceReg: RegExp = /^\/(console\/)?(\w+)\/?/
+        const serviceReg: RegExp = /^\/(console\/)?([\w\-]+)\/?/
         const serviceMatch: object | null = path.match(serviceReg)
         const serviceKey: string = serviceMatch ? serviceMatch[2] : ''
 

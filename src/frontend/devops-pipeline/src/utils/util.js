@@ -958,4 +958,14 @@ export async function copyToClipboard (text) {
     }
 }
 
+/**
+ * 获取时间戳字符串，格式：yyyyMMddHHmm
+ * @returns {String}
+ */
+export function getTimestamp () {
+    const now = new Date()
+    const prezero = (num) => num < 10 ? '0' + num : num
+    return `${now.getFullYear()}${prezero(now.getMonth() + 1)}${prezero(now.getDate())}${prezero(now.getHours())}${prezero(now.getMinutes())}`
+}
+
 export const COMMON_PARAM_PREFIX = 'COMMON_PARAM_'

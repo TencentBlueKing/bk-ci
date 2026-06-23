@@ -874,6 +874,115 @@ class RbacPermissionResourceMemberService(
         )
     }
 
+    @Suppress("NestedBlockDepth")
+    override fun copyResourceGroupMembers(
+        sourceProjectCode: String,
+        targetProjectCode: String,
+        resourceType: String,
+        sourceResourceCode: String,
+        targetResourceCode: String
+    ): Boolean {
+        logger.info(
+            "[RBAC-IAM] copy resource group members|$sourceProjectCode|$targetProjectCode|" +
+                "$resourceType|$sourceResourceCode|$targetResourceCode"
+        )
+        val sourceGroups = authResourceGroupDao.listByResourceCode(
+            dslContext = dslContext,
+            projectCode = sourceProjectCode,
+            resourceType = resourceType,
+            resourceCode = sourceResourceCode
+        )
+        if (sourceGroups.isEmpty()) {
+            return true
+        }
+        val now = LocalDateTime.now()
+        sourceGroups.forEach { sourceGroup ->
+            try {
+                val targetIamGroupId = waitTargetIamGroupId(
+                    targetProjectCode = targetProjectCode,
+                    resourceType = resourceType,
+                    targetResourceCode = targetResourceCode,
+                    groupCode = sourceGroup.groupCode
+                ) ?: run {
+                    logger.warn(
+                        "copy group failed|target project group not exist after retry|" +
+                            "$targetProjectCode|$resourceType|$targetResourceCode|${sourceGroup.groupCode}"
+                    )
+                    return@forEach
+                }
+                val sourceMembers = authResourceGroupMemberDao.listResourceGroupMember(
+                    dslContext = dslContext,
+                    projectCode = sourceProjectCode,
+                    iamGroupId = sourceGroup.relationId.toInt(),
+                    minExpiredTime = now
+                )
+                sourceMembers.forEach { member ->
+                    try {
+                        addGroupMember(
+                            projectCode = targetProjectCode,
+                            memberId = member.memberId,
+                            memberType = member.memberType,
+                            expiredAt = member.expiredTime.timestamp(),
+                            iamGroupId = targetIamGroupId
+                        )
+                    } catch (ignored: Exception) {
+                        logger.warn(
+                            "copy single member failed|${sourceGroup.groupCode}|${member.memberId}",
+                            ignored
+                        )
+                    }
+                }
+            } catch (ignored: Exception) {
+                logger.warn("copy group failed|${sourceGroup.groupCode}", ignored)
+            }
+        }
+        return true
+    }
+
+    /**
+     * 等待目标项目组创建,因为用户组是异步创建的,所以轮询等待
+     */
+    private fun waitTargetIamGroupId(
+        targetProjectCode: String,
+        resourceType: String,
+        targetResourceCode: String,
+        groupCode: String
+    ): Int? {
+        authResourceGroupDao.getByGroupCode(
+            dslContext = dslContext,
+            projectCode = targetProjectCode,
+            resourceType = resourceType,
+            resourceCode = targetResourceCode,
+            groupCode = groupCode
+        )?.relationId?.let { return it }
+
+        TARGET_GROUP_CREATE_RETRY_INTERVAL_MILLIS.forEach { intervalMillis ->
+            logger.info(
+                "wait target project group created|" +
+                        "$targetProjectCode|$resourceType|$targetResourceCode|$groupCode|$intervalMillis"
+            )
+            try {
+                Thread.sleep(intervalMillis)
+            } catch (ignored: InterruptedException) {
+                Thread.currentThread().interrupt()
+                logger.warn(
+                    "wait target project group interrupted|" +
+                            "$targetProjectCode|$resourceType|$targetResourceCode|$groupCode",
+                    ignored
+                )
+                return null
+            }
+            authResourceGroupDao.getByGroupCode(
+                dslContext = dslContext,
+                projectCode = targetProjectCode,
+                resourceType = resourceType,
+                resourceCode = targetResourceCode,
+                groupCode = groupCode
+            )?.relationId?.let { return it }
+        }
+        return null
+    }
+
     private fun getAllRoleGroupMembersV2(
         iamGroupId: Int
     ): List<RoleGroupMemberInfo> {
@@ -906,5 +1015,7 @@ class RbacPermissionResourceMemberService(
 
         // 自动续期默认180天
         private val AUTO_RENEWAL_EXPIRED_AT = TimeUnit.DAYS.toSeconds(180)
+
+        private val TARGET_GROUP_CREATE_RETRY_INTERVAL_MILLIS = listOf(200L, 500L, 1000L, 1500L, 2000L)
     }
 }

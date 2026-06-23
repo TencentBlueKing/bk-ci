@@ -27,22 +27,32 @@
 
 package com.tencent.devops.process.websocket.page
 
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.websocket.page.IPath
 import com.tencent.devops.common.websocket.pojo.BuildPageInfo
 
 abstract class RecordPageBuild : IPath {
+
+    /**
+     * 解析渠道（MQ 等链路可能丢失请求头，优先从流水线信息/缓存获取）。
+     */
+    protected abstract fun getChannel(buildPageInfo: BuildPageInfo): ChannelCode
+
     override fun buildPage(buildPageInfo: BuildPageInfo): String {
-        val defaultPage = if (buildPageInfo.executeCount != null) {
-            "/console/pipeline/${buildPageInfo.projectId}/${buildPageInfo.pipelineId}" +
-                "/detail/${buildPageInfo.buildId}/executeDetail/${buildPageInfo.executeCount}"
-        } else {
-            "/console/pipeline/${buildPageInfo.projectId}/${buildPageInfo.pipelineId}" +
-                "/detail/${buildPageInfo.buildId}/executeDetail"
-        }
-        if (!extRecordPage(buildPageInfo).isNullOrEmpty()) {
-            return extRecordPage(buildPageInfo)!!
-        }
-        return defaultPage
+        val channel = getChannel(buildPageInfo)
+        PagePathStrategies.recordStrategies
+            .firstOrNull { it.supports(channel) }
+            ?.build(buildPageInfo)
+            ?.let { return it }
+        extRecordPage(buildPageInfo)?.takeIf { it.isNotBlank() }?.let { return it }
+        return defaultRecordPath(buildPageInfo)
+    }
+
+    private fun defaultRecordPath(info: BuildPageInfo): String = if (info.executeCount != null) {
+        "/console/pipeline/${info.projectId}/${info.pipelineId}/detail/${info.buildId}/executeDetail/" +
+                "${info.executeCount}"
+    } else {
+        "/console/pipeline/${info.projectId}/${info.pipelineId}/detail/${info.buildId}/executeDetail"
     }
 
     abstract fun extRecordPage(buildPageInfo: BuildPageInfo): String?

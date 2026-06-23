@@ -45,5 +45,7 @@ open class IPipelineEvent(
     override var delayMills: Int,
     override var retryTime: Int = 1,
     open var traceId: String? = MDC.get(TraceTag.BIZID),
-    open val routeKeySuffix: String? = null
+    open val routeKeySuffix: String? = null,
+    // 渠道标识，用于MQ消费线程中恢复ChannelContext，确保MessageUtil的渠道关键字替换能正常工作
+    open var channelCode: String? = null
 ) : IEvent(delayMills, retryTime)
