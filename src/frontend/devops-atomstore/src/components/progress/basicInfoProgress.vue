@@ -39,6 +39,21 @@
             </div>
         </div>
 
+        <!-- 安装信息 -->
+        <div class="info-card">
+            <p class="card-title">{{ $t('store.安装信息') }}</p>
+            <div class="card-content network-policy">
+                <div class="info-item">
+                    <span class="label">{{ $t('store.安装类型') }}</span>
+                    <span class="value">{{ $t(`store.${appDetail?.extData?.installType}`) || '--' }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="label">{{ $t('store.安装参数') }}</span>
+                    <span class="value">{{ appDetail?.extData?.installParams || '--' }}</span>
+                </div>
+            </div>
+        </div>
+
         <!-- 版本信息 -->
         <div class="info-card">
             <p class="card-title">{{ $t('store.版本信息') }}</p>

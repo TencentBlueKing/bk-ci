@@ -964,5 +964,12 @@
   "CP创作流": "CP Creation Flow",
   "创作环境": "Creative Environment",
   "云任务环境": "Cloud Task Environment",
-  "创作流插件": "Creation Flow Plugin"
+  "创作流插件": "Creation Flow Plugin",
+  "安装路径": "Installation Path",
+  "安装信息": "Installation Information",
+  "安装类型": "Installation Type",
+  "SILENT": "Silent Installation",
+  "GRAPHICAL": "GUI Installation",
+  "ARCHIVE": "Archive Installation",
+  "安装参数": "Installation Parameters"
 }

@@ -1,7 +1,7 @@
 <template>
     <bk-sideslider
         :is-show.sync="props.isShow"
-        :width="640"
+        :width="720"
         :title="$t('store.注册应用')"
         quick-close
         :before-close="handleClose"
@@ -10,7 +10,7 @@
             <bk-form
                 ref="formRef"
                 :model="application"
-                :label-width="110"
+                :label-width="120"
                 class="operation-app-form"
             >
                 <bk-form-item
@@ -167,6 +167,17 @@
                     </bk-form-item>
                 </template>
 
+                <bk-form-item
+                    :label="$t('store.安装路径')"
+                    property="baseInfo.baseFeatureInfo.extBaseFeatureInfo.installPath"
+                    error-display-type="normal"
+                >
+                    <bk-input
+                        v-model="application.baseInfo.baseFeatureInfo.extBaseFeatureInfo.installPath"
+                        clearable
+                    />
+                </bk-form-item>
+
                 <bk-form-item>
                     <bk-button
                         theme="primary"
@@ -268,7 +279,8 @@
                         authType: 'OAUTH',
                         codeSource: 'GIT',
                         repositoryHttpUrl: '',
-                        buildDir: ''
+                        buildDir: '',
+                        installPath: '',
                     }
                 }
             }
@@ -365,15 +377,21 @@
         const extBaseFeatureInfo = baseFeatureInfo.extBaseFeatureInfo
 
         if (baseFeatureInfo) {
-            if (extBaseFeatureInfo?.repositoryHttpUrl) {
-                const repositoryId = repositoryList.value.find(item => item.httpUrl === extBaseFeatureInfo.repositoryHttpUrl)?.id
-                extBaseFeatureInfo.repositoryId = repositoryId
-            }
-            if (baseFeatureInfo?.extBaseFeatureInfo.sourceType === 'SELF_UPLOAD') {
-                delete baseFeatureInfo.extBaseFeatureInfo
-            } else if (extBaseFeatureInfo?.frameworkCode === 'NODEJS_FRAMEWORK') {
-                delete extBaseFeatureInfo.repositoryHttpUrl
-                delete extBaseFeatureInfo.repositoryId
+            if (extBaseFeatureInfo?.sourceType === 'SELF_UPLOAD') {
+                const { installPath } = extBaseFeatureInfo
+                baseFeatureInfo.extBaseFeatureInfo = { sourceType: 'SELF_UPLOAD' }
+                if (installPath) {
+                    baseFeatureInfo.extBaseFeatureInfo.installPath = installPath
+                }
+            } else if (extBaseFeatureInfo?.sourceType === 'OFFICIAL_HOSTING') {
+                if (extBaseFeatureInfo?.repositoryHttpUrl) {
+                    const repositoryId = repositoryList.value.find(item => item.httpUrl === extBaseFeatureInfo.repositoryHttpUrl)?.id
+                    extBaseFeatureInfo.repositoryId = repositoryId
+                }
+                if (extBaseFeatureInfo?.frameworkCode === 'NODEJS_FRAMEWORK') {
+                    delete extBaseFeatureInfo.repositoryHttpUrl
+                    delete extBaseFeatureInfo.repositoryId
+                }
             }
         }
 

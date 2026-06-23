@@ -33,6 +33,38 @@
                     </bk-form-item>
                 </div>
 
+                <div class="network-strategy">
+                    <p class="section-title">{{ $t('store.安装信息') }}</p>
+                    <bk-form-item
+                        :label="$t('store.安装类型')"
+                        property="installType"
+                        required
+                        error-display-type="normal"
+                    >
+                        <bk-radio-group v-model="installInfos.installType">
+                            <bk-radio-button value="SILENT">
+                                {{ $t('store.SILENT') }}
+                            </bk-radio-button>
+                            <bk-radio-button value="GRAPHICAL">
+                                {{ $t('store.GRAPHICAL') }}
+                            </bk-radio-button>
+                            <bk-radio-button value="ARCHIVE">
+                                {{ $t('store.ARCHIVE') }}
+                            </bk-radio-button>
+                        </bk-radio-group>
+                    </bk-form-item>
+                    <bk-form-item
+                        :label="$t('store.安装参数')"
+                        property="installParams"
+                        error-display-type="normal"
+                    >
+                        <bk-input
+                            v-model="installInfos.installParams"
+                            :clearable="true"
+                        />
+                    </bk-form-item>
+                </div>
+
                 <div class="version-info">
                     <p class="section-title">{{ $t('store.版本信息') }}</p>
                     <VersionInfoWidget
@@ -133,6 +165,11 @@
         needVisitedSiteInfos: [],
     })
 
+    const installInfos = ref({
+        installType: 'SILENT',
+        installParams: '',
+    })
+
     const versionInfo = ref({
         publisher: '',
         releaseType: ReleaseTypeEnum.NEW,
@@ -147,6 +184,7 @@
         ...basicInfo.value,
         ...versionInfo.value,
         ...netPolicyInfo.value,
+        ...installInfos.value,
         urlScheme: urlScheme.value,
         hasPackage: hasPackage.value,
     }))
@@ -290,8 +328,12 @@
             Object.assign(netPolicyInfo.value, {
                 maxPeakBandwidth: latestVersionDetail.value.extData?.netPolicyInfo?.maxPeakBandwidth ?? 0,
                 minPeakBandwidth: latestVersionDetail.value.extData?.netPolicyInfo?.minPeakBandwidth ?? 0,
-                needVisitedSiteInfos:
-        latestVersionDetail.value.extData?.netPolicyInfo?.needVisitedSiteInfos ?? [],
+                needVisitedSiteInfos: latestVersionDetail.value.extData?.netPolicyInfo?.needVisitedSiteInfos ?? [],
+            })
+
+            Object.assign(installInfos.value, {
+                installType: latestVersionDetail.value.extData?.installType ?? 'SILENT',
+                installParams: latestVersionDetail.value.extData?.installParams ?? '',
             })
 
             urlScheme.value = latestVersionDetail.value.extData?.urlScheme ?? ''
@@ -315,9 +357,6 @@
         }
 
         try {
-            console.log(netPolicyInfo.value, '网络策略提交的数据')
-            console.log(basicInfo.value, '基础信息提交的数据')
-            console.log(versionInfo.value, '版本信息提交的数据')
             isLoading.value = true
             const valid = await formRef.value?.validate()
             if (valid) {
@@ -331,6 +370,7 @@
                         extBaseInfo: {
                             urlScheme: urlScheme.value,
                             netPolicyInfo: netPolicyInfo.value,
+                            ...installInfos.value,
                         },
                     },
                 })

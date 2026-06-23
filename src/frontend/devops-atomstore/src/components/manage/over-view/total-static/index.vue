@@ -49,19 +49,8 @@
 
         methods: {
             initData () {
-                const methodGenerator = {
-                    atom: this.getAtomData,
-                    service: this.getServiceData,
-                    devx: this.getDEVXData
-                }
-
-                if (!Object.prototype.hasOwnProperty.call(methodGenerator, this.type) || typeof methodGenerator[this.type] !== 'function') {
-                    this.$bkMessage({ message: this.$t('store.typeError'), theme: 'error' })
-                    return
-                }
                 this.isLoading = true
-                const currentMethod = methodGenerator[this.type]
-                currentMethod().catch((err) => {
+                this.getStatisticData().catch((err) => {
                     this.$bkMessage({ message: err.message || err, theme: 'error' })
                 }).finally(() => {
                     this.isLoading = false
@@ -74,51 +63,60 @@
                 }
             },
 
-            getAtomData () {
-                return this.$store.dispatch('store/requestAtomStatistic', {
-                    storeCode: this.detail.atomCode,
-                    storeType: 'ATOM'
-                }).then((res) => {
-                    this.statisticList = [
-                        { name: 'install-num', label: this.$t('store.安装量'), value: res.downloads },
-                        {
-                            name: 'pipeline-count',
-                            label: this.$t('store.流水线个数'),
-                            value: res.pipelineCnt,
-                            linkName: 'statisticPipeline'
-                        },
-                        { name: 'comment-num', label: this.$t('store.评论数'), value: res.commentCnt },
-                        { name: 'rate', label: this.$t('store.评分'), value: res.score || '--' },
-                        { name: 'icon-success-rate', label: this.$t('store.成功率'), value: ![undefined, null].includes(res.successRate) ? `${res.successRate}%` : '--', tips: this.$t('store.最近三个月内的执行成功率') }
-                    ]
-                })
-            },
+            getStatisticData () {
+                const configMap = {
+                    atom: {
+                        storeCode: this.detail.atomCode,
+                        storeType: 'ATOM',
+                        extraItems: [
+                            {
+                                name: 'pipeline-count',
+                                label: this.$t('store.流水线个数'),
+                                value: 'pipelineCnt',
+                                linkName: 'statisticPipeline'
+                            },
+                            { name: 'icon-success-rate', label: this.$t('store.成功率'), value: (res) => ![undefined, null].includes(res.successRate) ? `${res.successRate}%` : '--', tips: this.$t('store.最近三个月内的执行成功率') }
+                        ]
+                    },
+                    service: {
+                        storeCode: this.detail.serviceCode,
+                        storeType: 'SERVICE',
+                        extraItems: [
+                            { name: 'rate', label: this.$t('store.星级'), value: (res) => res.score || '--' }
+                        ]
+                    },
+                    devx: {
+                        storeCode: this.detail.storeCode,
+                        storeType: 'DEVX',
+                        extraItems: [
+                            { name: 'install-num', label: this.$t('store.装机量'), value: 'downloads' }
+                        ]
+                    }
+                }
 
-            getServiceData () {
-                return this.$store.dispatch('store/requestAtomStatistic', {
-                    storeCode: this.detail.serviceCode,
-                    storeType: 'SERVICE'
-                }).then((res) => {
-                    this.statisticList = [
-                        { name: 'install-num', label: this.$t('store.安装量'), value: res.downloads },
-                        { name: 'comment-num', label: this.$t('store.评论数'), value: res.commentCnt },
-                        { name: 'rate', label: this.$t('store.星级'), value: res.score || '--' }
-                    ]
-                })
-            },
+                const config = configMap[this.type]
 
-            getDEVXData () {
+                const baseItems = [
+                    { name: 'install-num', label: this.$t('store.安装量'), value: 'downloads' },
+                    { name: 'comment-num', label: this.$t('store.评论数'), value: 'commentCnt' },
+                    { name: 'rate', label: this.$t('store.评分'), value: (res) => res.score || '--' }
+                ]
+
+                const statisticConfig = [...baseItems, ...config.extraItems]
+
                 return this.$store.dispatch('store/requestAtomStatistic', {
-                    storeCode: this.detail.storeCode,
-                    storeType: 'DEVX'
+                    storeCode: config.storeCode,
+                    storeType: config.storeType
                 }).then((res) => {
-                    this.statisticList = [
-                        { name: 'install-num', label: this.$t('store.装机量'), value: res.downloads },
-                        { name: 'comment-num', label: this.$t('store.评论数'), value: res.commentCnt },
-                        { name: 'rate', label: this.$t('store.评分'), value: res.score || '--' },
-                    ]
+                    this.statisticList = statisticConfig.map(item => ({
+                        name: item.name,
+                        label: item.label,
+                        value: typeof item.value === 'function' ? item.value(res) : (res[item.value] || '--'),
+                        ...(item.linkName && { linkName: item.linkName }),
+                        ...(item.tips && { tips: item.tips })
+                    }))
                 })
-            },
+            }
         }
     }
 </script>

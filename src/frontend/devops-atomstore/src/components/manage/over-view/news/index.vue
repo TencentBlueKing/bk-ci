@@ -74,15 +74,15 @@
                     pageSize: this.limit
                 }).then((res) => {
                     const records = res.records || []
-                    this.list = [...this.list, ...records.map(this.formatVersionItem)]
-                    this.loadEnd = res.count <= this.list.length
+                    this.list = [...this.list, ...records.map(item => this.formatVersionItem(item))]
+                    this.loadEnd =res.count >= 0 ? res.count <= this.list.length : true
                 })
             },
 
             getImageData () {
                 return this.$store.dispatch('store/requestVersionLog', this.detail.serviceCode).then((res) => {
                     const records = res.records || []
-                    this.list = records.map(this.formatVersionItem)
+                    this.list = records.map(item => this.formatVersionItem(item))
                 })
             },
 
@@ -94,7 +94,7 @@
                 }).then((res) => {
                     const records = res.records || []
                     this.list = [...this.list, ...records.map(item => this.formatVersionItem(item))]
-                    this.loadEnd = res.count <= this.list.length
+                    this.loadEnd = res.count >= 0 ? res.count <= this.list.length : true
                 })
             },
             scrollLoadMore (event) {

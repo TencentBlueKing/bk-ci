@@ -121,12 +121,20 @@
                                     <span>{{ detail.extData?.urlScheme || '--' }}</span>
                                 </li>
                                 <li class="detail-item">
+                                    <span class="detail-label">{{ $t('store.安装类型') }}：</span>
+                                    <span>{{ $t(`store.${detail?.extData?.installType}`) || '--' }}</span>
+                                </li>
+                                <li class="detail-item">
+                                    <span class="detail-label">{{ $t('store.安装参数') }}：</span>
+                                    <span>{{ detail?.extData?.installParams || '--' }}</span>
+                                </li>
+                                <li class="detail-item">
                                     <span class="detail-label">{{ $t('store.发布者') }}：</span>
                                     <span>{{ detail.versionInfo?.publisher || '--' }}</span>
                                 </li>
                                 <li class="detail-item">
                                     <span class="detail-label">{{ $t('store.发布类型') }}：</span>
-                                    <span>{{ detail.versionInfo?.releaseType ? $t(detail.versionInfo.releaseType) : '--' }}</span>
+                                    <span>{{ detail.versionInfo?.releaseType ? $t(`store.${detail.versionInfo.releaseType}`) : '--' }}</span>
                                 </li>
                                 <li class="detail-item">
                                     <span class="detail-label">{{ $t('store.版本') }}：</span>

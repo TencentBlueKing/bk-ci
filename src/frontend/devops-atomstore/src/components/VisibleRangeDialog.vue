@@ -202,11 +202,15 @@
                 this.emitUpdate()
             },
 
-            emitUpdate () {
-                const deptInfos = this.selectedList.map((item) => ({
+            getDeptInfos () {
+                return this.selectedList.map((item) => ({
                     deptId: item.id,
                     deptName: item.displayName,
                 }))
+            },
+
+            emitUpdate () {
+                const deptInfos = this.getDeptInfos()
                 this.$emit('update', { deptInfos })
             },
 
@@ -256,11 +260,7 @@
                     return
                 }
                 
-                const deptInfos = this.selectedList.map((item) => ({
-                    deptId: item.id,
-                    deptName: item.displayName,
-                }))
-
+                const deptInfos = this.getDeptInfos()
                 this.$emit('saveHandle', { deptInfos })
             },
             handleCancel () {
