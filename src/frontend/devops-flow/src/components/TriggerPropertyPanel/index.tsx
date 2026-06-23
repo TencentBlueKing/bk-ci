@@ -131,6 +131,16 @@ export default defineComponent({
     const hasAtomFormConfig = computed(() => Object.keys(atomPropsModel.value || {}).length > 0)
     const isDisabled = computed(() => isLoadingModal.value || props.readonly)
 
+    // CDS- 开头的为云桌面触发事件，需要包在 data 里
+    // 代码库事件触发（如 codeGitWebHookTrigger）不需要 data 包装，平铺在 element 上
+    // 需要平铺的插件code ：'codeGitWebHookTrigger', 'codeSVNWebHookTrigger', 'codeGitlabWebHookTrigger', 'codeGithubWebHookTrigger'
+    const codeLists = ['codeGitWebHookTrigger', 'codeSVNWebHookTrigger', 'codeGitlabWebHookTrigger', 'codeGithubWebHookTrigger']
+    const isCodeRepoTrigger = computed(() => {
+      if (!localElement.value) return false
+      const atomCode = localElement.value.atomCode || ''
+      return codeLists.includes(atomCode)
+    })
+
     const triggerErrorFields = computed(() => {
       if (!localElement.value) return []
       return validateAtomElement(
@@ -155,8 +165,49 @@ export default defineComponent({
       const inputModel = (modalProps as Record<string, any>).input || modalProps
       const outputModel = (modalProps as Record<string, any>).output || {}
 
-      if (Object.keys(localElement.value.data.input).length === 0) {
-        localElement.value.data.input = getAtomDefaultValue(inputModel)
+      // 收集 inputModel 中所有插件字段名
+      const collectFieldKeys = (model: Record<string, any>): string[] => {
+        const keys: string[] = []
+        const collectFromItem = (key: string, prop: any) => {
+          if (prop?.type === 'group' && Array.isArray(prop.children)) {
+            // group 自身的 key 也是字段
+            if (key) keys.push(key)
+            prop.children.forEach((child: any) => collectFromItem(child?.key, child))
+            return
+          }
+          if (key) keys.push(key)
+          if (Array.isArray(prop.list)) {
+            prop.list.forEach((item: any) => item?.key && keys.push(item.key))
+          }
+        }
+        Object.entries(model).forEach(([key, prop]) => collectFromItem(key, prop))
+        return keys
+      }
+      const fieldKeys = collectFieldKeys(inputModel)
+
+      if (isCodeRepoTrigger.value) {
+        // 代码库事件触发：从 element 顶层提取插件字段到 data.input（仅当 data.input 为空时）
+        if (Object.keys(localElement.value.data.input).length === 0) {
+          const elementAny = localElement.value as any
+          fieldKeys.forEach((key) => {
+            if (key in elementAny) {
+              localElement.value!.data!.input[key] = elementAny[key]
+              delete elementAny[key]
+            }
+          })
+        }
+        // 用 modal 默认值填充字段
+        const defaults = getAtomDefaultValue(inputModel)
+        Object.entries(defaults).forEach(([key, value]) => {
+          if (!(key in localElement.value!.data!.input)) {
+            localElement.value!.data!.input[key] = value
+          }
+        })
+      } else {
+        // 云桌面事件：使用原有逻辑
+        if (Object.keys(localElement.value.data.input).length === 0) {
+          localElement.value.data.input = getAtomDefaultValue(inputModel)
+        }
       }
 
       const currentOutput = localElement.value.data.output
@@ -233,6 +284,13 @@ export default defineComponent({
 
       const elementToSave = JSON.parse(JSON.stringify(localElement.value))
       delete elementToSave.isError
+
+      // 代码库事件触发：将 data.input 平铺到 element 上，删除 data
+      if (isCodeRepoTrigger.value && elementToSave.data?.input) {
+        Object.assign(elementToSave, elementToSave.data.input)
+        delete elementToSave.data
+      }
+
       emit('save', elementToSave)
       handleClose()
     }
@@ -345,7 +403,7 @@ export default defineComponent({
     }
 
     return () => (
-      <Sideslider isShow={props.visible} width={560} transfer onClosed={handleClose}>
+      <Sideslider isShow={props.visible} width={640} transfer onClosed={handleClose}>
         {{
           header: () => (
             <div class={styles.header}>

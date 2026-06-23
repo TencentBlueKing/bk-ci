@@ -127,7 +127,7 @@
   width: 100%;
   gap: var(--spacing-sm);
   padding: var(--spacing-lg) 0;
-  border-top: 1px solid var(--border-color);
+  /* border-top: 1px solid var(--border-color); */
   background-color: var(--bg-default);
 }
 
@@ -145,6 +145,7 @@
   padding: var(--spacing-lg);
   background-color: var(--bg-secondary);
   align-items: start;
+  margin-bottom: 20px;
 }
 
 .stepIdAndVersionRow.disabled {
