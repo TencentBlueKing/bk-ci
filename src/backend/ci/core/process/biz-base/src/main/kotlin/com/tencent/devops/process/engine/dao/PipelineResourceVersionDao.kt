@@ -612,7 +612,6 @@ class PipelineResourceVersionDao {
         with(T_PIPELINE_RESOURCE_VERSION) {
             return dslContext.update(this)
                 .set(MODEL, JsonUtil.toJson(model, formatted = false))
-                .set(UPDATE_TIME, LocalDateTime.now())
                 .where(PROJECT_ID.eq(projectId))
                 .and(PIPELINE_ID.eq(pipelineId))
                 .and(VERSION.eq(version))
