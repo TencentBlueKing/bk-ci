@@ -36,6 +36,7 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitlabWebHook
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeP4WebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeSVNWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeTGitWebHookTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.TapdWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.WebHookTriggerElement
 import com.tencent.devops.process.engine.service.PipelineWebhookService
 import com.tencent.devops.process.plugin.ElementBizPlugin
@@ -125,5 +126,14 @@ class CodeP4WebHookTriggerElementBizPlugin constructor(
 
     override fun elementClass(): Class<CodeP4WebHookTriggerElement> {
         return CodeP4WebHookTriggerElement::class.java
+    }
+}
+
+@ElementBiz
+class CodeTapdWebHookTriggerElementBizPlugin constructor(
+    pipelineWebhookService: PipelineWebhookService
+) : WebHookTriggerElementBizPlugin<TapdWebHookTriggerElement>(pipelineWebhookService) {
+    override fun elementClass(): Class<TapdWebHookTriggerElement> {
+        return TapdWebHookTriggerElement::class.java
     }
 }

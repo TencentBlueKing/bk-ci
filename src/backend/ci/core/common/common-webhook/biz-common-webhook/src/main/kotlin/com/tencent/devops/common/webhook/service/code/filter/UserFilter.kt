@@ -37,7 +37,8 @@ class UserFilter(
     // 包含过滤失败原因
     private val includedFailedReason: String = "",
     // 排除过滤失败原因
-    private val excludedFailedReason: String = ""
+    private val excludedFailedReason: String = "",
+    private val filterName: String = "user"
 ) : WebhookFilter {
 
     companion object {
@@ -47,7 +48,7 @@ class UserFilter(
     override fun doFilter(response: WebhookFilterResponse): Boolean {
         logger.info(
             "$pipelineId|triggerOnUser:$triggerOnUser|includedUsers:$includedUsers" +
-                "|excludedUsers:$excludedUsers|user filter"
+                "|excludedUsers:$excludedUsers|$filterName filter"
         )
         return hasNoUserSpecs() || (isUserNotExcluded(response) && isUserIncluded(response))
     }

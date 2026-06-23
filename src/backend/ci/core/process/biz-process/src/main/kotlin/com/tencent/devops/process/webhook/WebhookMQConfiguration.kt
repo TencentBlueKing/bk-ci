@@ -35,10 +35,14 @@ import com.tencent.devops.process.trigger.event.CdsWebhookRequestEvent
 import com.tencent.devops.process.trigger.event.CdsWebhookTriggerEvent
 import com.tencent.devops.process.trigger.event.ScmWebhookRequestEvent
 import com.tencent.devops.process.trigger.event.ScmWebhookTriggerEvent
+import com.tencent.devops.process.trigger.event.TapdWebhookRequestEvent
+import com.tencent.devops.process.trigger.event.TapdWebhookTriggerEvent
 import com.tencent.devops.process.trigger.market.MarketEventRequestService
 import com.tencent.devops.process.trigger.market.MarketEventTriggerBuildService
 import com.tencent.devops.process.trigger.scm.ScmWebhookTriggerBuildService
 import com.tencent.devops.process.trigger.scm.WebhookManager
+import com.tencent.devops.process.trigger.tapd.TapdEventTriggerBuildService
+import com.tencent.devops.process.trigger.tapd.TapdWebhookRequestService
 import com.tencent.devops.process.webhook.listener.WebhookEventListener
 import com.tencent.devops.process.webhook.pojo.event.commit.GitWebhookEvent
 import com.tencent.devops.process.webhook.pojo.event.commit.GithubWebhookEvent
@@ -145,5 +149,19 @@ class WebhookMQConfiguration @Autowired constructor() {
         @Autowired marketEventTriggerBuildService: MarketEventTriggerBuildService
     ) = ScsConsumerBuilder.build<GenericWebhookTriggerEvent> {
         marketEventTriggerBuildService.genericWebhookTrigger(it)
+    }
+
+    @EventConsumer
+    fun tapdWebhookRequestEventConsumer(
+        @Autowired tapdWebhookRequestService: TapdWebhookRequestService
+    ) = ScsConsumerBuilder.build<TapdWebhookRequestEvent> {
+        tapdWebhookRequestService.handleRequest(it)
+    }
+
+    @EventConsumer
+    fun tapdWebhookTriggerEventConsumer(
+        @Autowired tapdEventTriggerBuildService: TapdEventTriggerBuildService
+    ) = ScsConsumerBuilder.build<TapdWebhookTriggerEvent> {
+        tapdEventTriggerBuildService.tapdWebhookTrigger(it)
     }
 }
