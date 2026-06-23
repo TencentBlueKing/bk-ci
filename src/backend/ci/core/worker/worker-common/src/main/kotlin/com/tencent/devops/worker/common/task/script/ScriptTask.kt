@@ -179,29 +179,11 @@ open class ScriptTask : ITask() {
             val envs = ScriptEnvUtils.getEnv(buildId, workspace)
             val context = ScriptEnvUtils.getContext(buildId, workspace)
             // 读取多行输出（format_multiple_lines），合并到 context
-            val multiLineFile = ScriptEnvUtils.getMultipleLineFile(buildId)
-            val multiLineFullPath = File(workspace, multiLineFile)
-            val multiLineExists = multiLineFullPath.exists()
-            val multiLineSize = if (multiLineExists) multiLineFullPath.length() else -1
-            LoggerService.addDebugLine(
-                "[multiLine] file: $multiLineFile, exists: $multiLineExists, size: $multiLineSize"
-            )
-            val multiLineRaw = ScriptEnvUtils.getMultipleLines(buildId, workspace)
-            LoggerService.addDebugLine("[multiLine] raw lines count: ${multiLineRaw.size}")
-            if (multiLineRaw.isNotEmpty()) {
-                LoggerService.addDebugLine("[multiLine] first line: ${multiLineRaw.first()}")
-            }
             val multiLineContext = decodeMultipleLines(
-                lines = multiLineRaw,
+                lines = ScriptEnvUtils.getMultipleLines(buildId, workspace),
                 jobId = buildVariables.jobId,
                 stepId = buildTask.stepId
             )
-            LoggerService.addDebugLine("[multiLine] decoded context size: ${multiLineContext.size}")
-            if (multiLineContext.isNotEmpty()) {
-                multiLineContext.forEach { (k, v) ->
-                    LoggerService.addDebugLine("[multiLine] decoded: $k => ${v.take(100)}")
-                }
-            }
             failIfVariableInvalidCheckFlag = failIfVariableInvalidCheck(failIfVariableInvalid, envs) &&
                 failIfVariableInvalidCheck(failIfVariableInvalid, context) &&
                 failIfVariableInvalidCheck(failIfVariableInvalid, multiLineContext)
@@ -345,6 +327,7 @@ open class ScriptTask : ITask() {
                     val firstColonIndex = value.indexOf("::")
                     if (firstColonIndex >= 0) {
                         val key = value.substring(0, firstColonIndex)
+                        if (key.isBlank()) return@forEach
                         val outputValue = value.substring(firstColonIndex + 2)
                             .replace("%25", "%")   // 必须先还原 %25，再还原 %0A/%0D
                             .replace("%0A", "\n")
