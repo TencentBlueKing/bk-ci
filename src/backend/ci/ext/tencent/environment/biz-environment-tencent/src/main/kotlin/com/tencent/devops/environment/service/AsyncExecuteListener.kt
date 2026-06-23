@@ -2,7 +2,6 @@
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.environment.config.async.AsyncExecuteEvent
 import com.tencent.devops.environment.config.async.AsyncExecuteEventType
 import com.tencent.devops.environment.pojo.AsyncInstallImateData
