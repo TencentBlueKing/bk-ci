@@ -205,7 +205,7 @@ abstract class AtomBaseDao {
             .fetch()
     }
 
-    fun cleanLatestFlagById(dslContext: DSLContext, atomId: String ) {
+    fun cleanLatestFlagById(dslContext: DSLContext, atomId: String) {
         with(TAtom.T_ATOM) {
             dslContext.update(this)
                     .set(LATEST_FLAG, false)
