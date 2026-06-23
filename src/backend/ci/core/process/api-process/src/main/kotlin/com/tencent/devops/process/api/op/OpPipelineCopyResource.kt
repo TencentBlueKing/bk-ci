@@ -3,6 +3,8 @@ package com.tencent.devops.process.api.op
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.process.pojo.pipeline.FixPipelineSubPipelineProjectRequest
+import com.tencent.devops.process.pojo.pipeline.FixTemplateSubPipelineProjectRequest
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -58,6 +60,34 @@ interface OpPipelineCopyResource {
         @Parameter(description = "源标签ID，为空则复制源项目下全部标签", required = false)
         @QueryParam("labelId")
         labelId: String?
+    ): Result<Boolean>
+
+    @Operation(summary = "修复流水线子流水线插件项目ID(临时)")
+    @POST
+    @Path("/projects/{projectId}/fixPipelineSubPipelineProject")
+    fun fixPipelineSubPipelineProject(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "修复流水线子流水线插件项目ID请求体", required = true)
+        request: FixPipelineSubPipelineProjectRequest
+    ): Result<Boolean>
+
+    @Operation(summary = "修复模板子流水线插件项目ID(临时)")
+    @POST
+    @Path("/projects/{projectId}/fixTemplateSubPipelineProject")
+    fun fixTemplateSubPipelineProject(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "修复模板子流水线插件项目ID请求体", required = true)
+        request: FixTemplateSubPipelineProjectRequest
     ): Result<Boolean>
 
     @Operation(summary = "跨项目复制流水线组")
