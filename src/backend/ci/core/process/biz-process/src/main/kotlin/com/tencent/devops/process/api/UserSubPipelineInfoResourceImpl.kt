@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.api
 
+import com.tencent.devops.common.api.context.ChannelContext
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.enums.ChannelCode
@@ -56,15 +57,17 @@ class UserSubPipelineInfoResourceImpl @Autowired constructor (
         if (pipelineId.isBlank() || projectId.isBlank()) {
             return Result(ArrayList())
         }
-        return subPipeService.subPipelineManualStartupInfo(
-            userId = userId,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            channelCode = channelCode,
-            includeConst = includeConst,
-            includeNotRequired = includeNotRequired,
-            branch = subBranch
-        )
+        // query 传了渠道则以其为准设置渠道上下文，统一作用于权限校验、i18n、下游服务透传等
+        return ChannelContext.withChannel(channelCode?.name ?: ChannelContext.getChannel()) {
+            subPipeService.subPipelineManualStartupInfo(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                includeConst = includeConst,
+                includeNotRequired = includeNotRequired,
+                branch = subBranch
+            )
+        }
     }
 
     override fun subStreamManualStartupNodeList(
