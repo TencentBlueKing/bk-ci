@@ -29,7 +29,6 @@ package com.tencent.devops.store.atom.resources
 
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.atom.UserAtomResource
 import com.tencent.devops.store.atom.dao.AtomQueryParam
@@ -87,11 +86,7 @@ class UserAtomResourceImpl @Autowired constructor(
         ownerStoreCode: String?
     ): Result<AtomResp<AtomRespItem>?> {
         val queryParam = AtomQueryParam(
-            serviceScope = serviceScope ?: run {
-                if (ChannelCode.getRequestChannelCode() == ChannelCode.CREATIVE_STREAM) {
-                    ServiceScopeEnum.CREATIVE_STREAM
-                } else null
-            },
+            serviceScope = serviceScope,
             jobType = jobType?.name,
             os = os,
             projectCode = projectCode,
