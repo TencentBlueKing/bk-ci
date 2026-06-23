@@ -191,7 +191,7 @@ class TencentNodeService @Autowired constructor(
             }
             if (record.status == AgentStatus.UN_IMPORT.status || nodeRecord?.nodeStatus == NodeStatus.CREATING.name) {
                 // 为导入成功则设为失败，只改node，方便用户看到，agent不改，方便可能的重新导入
-                nodeDao.updateNodeStatus(dslContext, setOf(record.nodeId), NodeStatus.ABNORMAL)
+                nodeDao.updateNodeStatus(dslContext, setOf(record.nodeId), NodeStatus.NOT_INSTALLED)
             }
         } catch (e: Throwable) {
             logger.error("importImateCallBack error", e)
