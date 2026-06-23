@@ -90,7 +90,7 @@ class RepoPipelineRefService @Autowired constructor(
         )
         // 代码库拉取插件
         private val repoCheckoutAtomCodes =
-            setOf("gitCodeRepo", "PullFromGithub", "Gitlab", "atomtgit", "checkout", "svnCodeRepo")
+            setOf("gitCodeRepo", "PullFromGithub", "Gitlab", "atomtgit", "checkout", "svnCodeRepo", "PerforceSync")
 
         private val removeElementProperties = setOf("name", "id", "status")
     }

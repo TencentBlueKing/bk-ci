@@ -1,6 +1,6 @@
 <template>
     <div
-        v-if="pacEnabled"
+        v-if="pacEnabled && !isDebug"
         class="pac-branch-selector"
     >
         <div class="branch-selector-wrapper">
@@ -119,6 +119,7 @@
             const projectId = computed(() => proxy.$route.params.projectId)
             const pipelineId = computed(() => proxy.$route.params.pipelineId)
             const pacEnabled = computed(() => proxy.$store.getters['atom/pacEnabled'])
+            const isDebug = computed(() => Object.prototype.hasOwnProperty.call(proxy.$route.query, 'debug'))
 
             // 当前选中的分支对象
             const currentBranch = computed(() => {
@@ -137,7 +138,7 @@
 
             // 获取分支列表
             const fetchBranchList = async (page = 1) => {
-                if (!pipelineId.value) return
+                if (!pipelineId.value || !pacEnabled.value || isDebug.value) return
 
                 if (page > 1 && !hasNext.value) return
 
@@ -254,7 +255,7 @@
 
             // 监听 pipelineId 变化，重新获取分支列表
             watch(pipelineId, (newVal) => {
-                if (newVal) {
+                if (newVal && pacEnabled.value) {
                     selectedBranch.value = ''
                     hasNext.value = true
                     currentPage.value = 1
@@ -268,7 +269,7 @@
                 const cachedBranch = sessionStorage.getItem(cacheKey)
                 initialVersionName.value = cachedBranch || proxy.$route.query.versionName || ''
                 
-                if (pipelineId.value) {
+                if (pipelineId.value && pacEnabled.value) {
                     fetchBranchList(1)
                 }
             })
@@ -281,6 +282,7 @@
                 isLoading,
                 pacEnabled,
                 pipelineId,
+                isDebug,
                 bottomLoadingOptions,
                 handleSearch,
                 handleBranchChange,

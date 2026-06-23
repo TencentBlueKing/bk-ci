@@ -76,6 +76,12 @@ class SamplePermissionResourceGroupService : PermissionResourceGroupService {
         groupAddDTO: GroupAddDTO
     ): Int = 0
 
+    override fun createEmptyProjectGroupWithCode(
+        projectId: String,
+        groupCode: String,
+        groupAddDTO: GroupAddDTO
+    ): Int = 0
+
     override fun renameGroup(
         userId: String,
         projectId: String,

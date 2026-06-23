@@ -80,12 +80,17 @@ const app = createApp({
 
     const uiStore = useUIStore()
 
+    const syncProjectList = (projectList: unknown) => {
+      uiStore.setProjectList(projectList)
+    }
+
     // 等待路由初始化完成后，从路由获取 projectId
     router.isReady().then(() => {
       const initProjectId = router.currentRoute.value.params.projectId as string | undefined
       if (initProjectId && !uiStore.currentProjectId) {
         uiStore.setCurrentProjectId(initProjectId)
       }
+      syncProjectList((window as unknown as { $projectList?: unknown }).$projectList)
     })
 
     // 路由变化时同步更新 store 中的 projectId
@@ -99,7 +104,7 @@ const app = createApp({
     // 蓝盾选择项目时切换
     window.addEventListener('change::$currentProjectId', (e: Event) => {
       const data = (e as CustomEvent).detail
-      const newProjectId = data.currentProjectId
+      const newProjectId = data?.currentProjectId
 
       if (!newProjectId) return
 
@@ -120,6 +125,11 @@ const app = createApp({
           },
         })
       }
+    })
+
+    window.addEventListener('change::$projectList', (e: Event) => {
+      const data = (e as CustomEvent).detail
+      syncProjectList(data?.projectList)
     })
 
     window.addEventListener('order::backHome', () => {

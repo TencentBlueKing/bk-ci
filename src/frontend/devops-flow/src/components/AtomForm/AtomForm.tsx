@@ -25,6 +25,8 @@ const AtomDatePicker = defineAsyncComponent(() => import('./AtomDatePicker'))
 const CronTab = defineAsyncComponent(() => import('./CronTab'))
 const SubParameter = defineAsyncComponent(() => import('./SubParameter'))
 const SelectInput = defineAsyncComponent(() => import('./SelectInput'))
+const DevopsSelect = defineAsyncComponent(() => import('./DevopsSelect'))
+const DynamicParameterSimple = defineAsyncComponent(() => import('./DynamicParameterSimple'))
 
 const SELF_ERROR_COMPONENTS = new Set(['timer-cron-tab'])
 
@@ -57,6 +59,8 @@ const COMPONENT_MAP: Record<string, any> = {
   'sub-parameter': SubParameter,
   'request-selector': Selector,
   'select-input': SelectInput,
+  'devops-select': DevopsSelect,
+  'dynamic-parameter-simple': DynamicParameterSimple,
 }
 
 // Display mode types
@@ -124,7 +128,33 @@ export default defineComponent({
   emits: ['change', 'fieldError'],
   setup(props, { emit }) {
     const { t } = useI18n()
+    // 折叠面板的展开状态（受控）
     const expandedGroups = ref<string[]>([])
+
+    // 初始化分组展开状态：依据配置 isExpanded 决定默认展开的分组。
+    // 仅在分组集合发生变化时执行（如切换插件/版本），不会在编辑字段触发的重渲染时重置，
+    // 因此用户在分组内的交互不会导致分组意外收起。
+    watch(
+      () => props.atomPropsModel?.inputGroups,
+      (groups) => {
+        if (!Array.isArray(groups) || groups.length === 0) {
+          expandedGroups.value = []
+          return
+        }
+        const known = new Set(groups.map((g) => g.name))
+        const defaultExpanded = groups.filter((g) => g && g.isExpanded).map((g) => g.name)
+        // 保留用户已展开/收起的状态，仅对新出现的分组应用默认值
+        const preserved = expandedGroups.value.filter((name) => known.has(name))
+        expandedGroups.value = Array.from(new Set([...preserved, ...defaultExpanded]))
+      },
+      { immediate: true, deep: true },
+    )
+
+    // 受控更新展开状态，保证 modelValue 始终反映真实状态
+    const handleGroupToggle = (val: unknown) => {
+      expandedGroups.value = Array.isArray(val) ? val.map(String) : []
+    }
+
     const fieldErrors = ref<Set<string>>(new Set())
     const reportFieldError: ReportFieldErrorFn = (name, hasError) => {
       const next = new Set(fieldErrors.value)
@@ -269,16 +299,6 @@ export default defineComponent({
 
       return entries
     })
-
-    watch(
-      paramsGroupEntries,
-      (entries) => {
-        expandedGroups.value = entries
-          .filter((entry) => entry.isInputGroup && entry.isExpanded)
-          .map((entry) => entry.key)
-      },
-      { immediate: true },
-    )
 
     // 渲染单个表单字段（默认模式）
     const renderFormField = (key: string, obj: any) => {
@@ -486,12 +506,10 @@ export default defineComponent({
           {hasGroups.value && (
             <Collapse
               modelValue={expandedGroups.value}
+              onUpdate:modelValue={handleGroupToggle}
               class={styles.groupCollapse}
               useBlockTheme
               headerIconAlign="left"
-              onChange={(value: unknown) => {
-                expandedGroups.value = Array.isArray(value) ? value.map(String) : []
-              }}
             >
               {renderAccordionEntries()}
             </Collapse>

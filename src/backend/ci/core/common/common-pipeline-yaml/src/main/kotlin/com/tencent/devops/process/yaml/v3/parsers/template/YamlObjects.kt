@@ -92,7 +92,7 @@ object YamlObjects {
             props = props,
             ifCondition = transNullValue<Map<String, String>>(fromPath, "if", "if", variable),
             sensitive = getNullValue("sensitive", variable)?.toBoolean(),
-            asInstanceInput = getNullValue("asInstanceInput", variable)?.toBoolean()
+            asInstanceInput = getNullValue("as-instance-input", variable)?.toBoolean()
         )
 
         // 只有列表需要判断

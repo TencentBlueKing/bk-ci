@@ -360,6 +360,8 @@ class RbacPermissionManageFacadeServiceImpl(
 
                 else -> JoinedType.DIRECT
             },
+            joinedMemberId = authResourceGroupMember.memberId,
+            joinedMemberName = authResourceGroupMember.memberName,
             operator = "",
             beingHandedOver = groupsBeingHandover.map { it.itemId.toInt() }.contains(groupId),
             flowNo = groupsBeingHandover.firstOrNull { it.itemId.toInt() == groupId }?.flowNo,

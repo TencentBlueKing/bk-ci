@@ -43,6 +43,7 @@ import com.tencent.devops.environment.pojo.NodeBaseInfo
 import com.tencent.devops.environment.pojo.SharedProjectInfoWrap
 import com.tencent.devops.environment.pojo.enums.EnvType
 import com.tencent.devops.environment.pojo.enums.NodeStatus
+import com.tencent.devops.environment.pojo.envOperate.EnableNodeEnvData
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -103,6 +104,42 @@ interface ServiceEnvironmentResource {
         environment: EnvCreateInfo
     ): Result<EnvironmentId>
 
+    @Operation(summary = "创建环境并迁移节点到目标项目")
+    @POST
+    @Path("/projects/{projectId}/transfer_env/{targetProjectId}/{sourceEnvHashId}")
+    fun createEnvAndTransferNodes(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "源项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "目标项目ID", required = true)
+        @PathParam("targetProjectId")
+        targetProjectId: String,
+        @Parameter(description = "源环境 hashId", required = true)
+        @PathParam("sourceEnvHashId")
+        sourceEnvHashId: String
+    ): Result<EnvironmentId>
+
+    @Operation(summary = "创建环境并关联目标项目同名节点")
+    @POST
+    @Path("/projects/{projectId}/relate_env/{targetProjectId}/{sourceEnvHashId}")
+    fun createEnvAndRelateSameNameNodes(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "源项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "目标项目ID", required = true)
+        @PathParam("targetProjectId")
+        targetProjectId: String,
+        @Parameter(description = "源环境 hashId", required = true)
+        @PathParam("sourceEnvHashId")
+        sourceEnvHashId: String
+    ): Result<EnvironmentId>
+
     @Operation(summary = "获取环境信息")
     @GET
     @Path("/projects/{projectId}/envs/{envHashId}")
@@ -121,6 +158,25 @@ interface ServiceEnvironmentResource {
         @DefaultValue("true")
         checkPermission: Boolean? = true
     ): Result<EnvWithPermission>
+
+    @Operation(summary = "根据环境名称获取环境信息")
+    @GET
+    @Path("/projects/{projectId}/envs/name")
+    fun getByName(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "环境名称", required = true)
+        @QueryParam("envName")
+        envName: String,
+        @Parameter(description = "是否校验权限", required = false)
+        @QueryParam("checkPermission")
+        @DefaultValue("true")
+        checkPermission: Boolean? = true
+    ): Result<EnvWithPermission?>
 
     @Operation(summary = "删除环境")
     @DELETE
@@ -335,7 +391,8 @@ interface ServiceEnvironmentResource {
         @Parameter(description = "启动或者停用", required = true)
         @QueryParam("enableNode")
         @BkField(patternStyle = BkStyleEnum.BOOLEAN_STYLE, required = true)
-        enableNode: Boolean
+        enableNode: Boolean,
+        data: EnableNodeEnvData? = null
     ): Result<Boolean>
 
     @Operation(summary = "根据工作空间ID,获取所有拥有这个节点的环境(创作流)")

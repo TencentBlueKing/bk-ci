@@ -395,9 +395,9 @@
                                         disablePermissionApi: true,
                                         permissionData: {
                                             projectId: projectId,
-                                            resourceType: NODE_RESOURCE_TYPE,
+                                            resourceType: currentResourceType,
                                             resourceCode: props.row.nodeHashId,
-                                            action: NODE_RESOURCE_ACTION.DELETE
+                                            action: currentResourceAction.DELETE
                                         }
                                     }"
                                     class="node-handle delete-node-text"
