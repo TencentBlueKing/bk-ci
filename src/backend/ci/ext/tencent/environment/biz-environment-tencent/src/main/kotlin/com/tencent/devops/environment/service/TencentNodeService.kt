@@ -77,7 +77,8 @@ class TencentNodeService @Autowired constructor(
                 ?: return emptyList()
         val installedAgents =
             agentDao.fetchAgentsByWorkspaceIdGlobal(dslContext, imateList.map { it.clientUuid }.toList(), null)
-                .filter { (it.status != AgentStatus.UN_IMPORT.status || it.status != AgentStatus.UN_IMPORT_OK.status) }
+                // 已经导入的或者其他项目有的也不能导入
+                .filter { (it.status == AgentStatus.IMPORT_OK.status || projectId != it.projectId) }
                 .associateBy { it.createWorkspaceName }
         return imateList.map {
             ImateListItem(
