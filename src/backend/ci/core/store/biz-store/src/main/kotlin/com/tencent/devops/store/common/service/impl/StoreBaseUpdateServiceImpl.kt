@@ -275,20 +275,6 @@ class StoreBaseUpdateServiceImpl @Autowired constructor(
         }
     }
 
-    override fun handlePostUpdateBus(storeUpdateRequest: StoreUpdateRequest) {
-        val storeBaseCreateRequest = storeUpdateRequest.baseInfo
-        val storeType = storeBaseCreateRequest.storeType
-        val bkStoreContext = storeUpdateRequest.bkStoreContext
-        val userId = bkStoreContext[AUTH_HEADER_USER_ID]?.toString() ?: AUTH_HEADER_USER_ID_DEFAULT_VALUE
-        val storeCode = storeBaseCreateRequest.storeCode
-        getStoreSpecBusService(storeType).doStoreUpdatePostBus(
-            userId = userId,
-            storeCode = storeCode,
-            storeType = storeType,
-            storeUpdateRequest = storeUpdateRequest
-        )
-    }
-
     private fun handleExistingBusNum(
         maxBusNum: Long,
         majorVersion: Int,

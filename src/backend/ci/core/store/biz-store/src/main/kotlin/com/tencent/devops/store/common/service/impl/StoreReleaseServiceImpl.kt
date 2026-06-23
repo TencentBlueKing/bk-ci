@@ -55,7 +55,6 @@ import com.tencent.devops.store.common.handler.StoreUpdateDataPersistHandler
 import com.tencent.devops.store.common.handler.StoreUpdateHandlerChain
 import com.tencent.devops.store.common.handler.StoreUpdateParamCheckHandler
 import com.tencent.devops.store.common.handler.StoreUpdateParamI18nConvertHandler
-import com.tencent.devops.store.common.handler.StoreUpdatePostBusHandler
 import com.tencent.devops.store.common.handler.StoreUpdatePreBusHandler
 import com.tencent.devops.store.common.handler.StoreUpdateRunPipelineHandler
 import com.tencent.devops.store.common.lock.StoreCodeLock
@@ -123,8 +122,7 @@ class StoreReleaseServiceImpl @Autowired constructor(
     private val storeUpdateDataPersistHandler: StoreUpdateDataPersistHandler,
     private val storeUpdateRunPipelineHandler: StoreUpdateRunPipelineHandler,
     private val storeInnerPipelineConfig: StoreInnerPipelineConfig,
-    private val storeCreatePostBusHandler: StoreCreatePostBusHandler,
-    private val storeUpdatePostBusHandler: StoreUpdatePostBusHandler
+    private val storeCreatePostBusHandler: StoreCreatePostBusHandler
 ) : StoreReleaseService {
 
     private val logger = LoggerFactory.getLogger(StoreReleaseServiceImpl::class.java)
@@ -167,8 +165,7 @@ class StoreReleaseServiceImpl @Autowired constructor(
             storeUpdateParamCheckHandler, // 参数检查处理
             storeUpdatePreBusHandler, // 前置业务处理
             storeUpdateDataPersistHandler, // 数据持久化处理
-            storeUpdateRunPipelineHandler, // 运行内置流水线
-            storeUpdatePostBusHandler // 后置业务处理
+            storeUpdateRunPipelineHandler // 运行内置流水线
         )
         val bkStoreContext = storeUpdateRequest.bkStoreContext
         bkStoreContext[AUTH_HEADER_USER_ID] = userId

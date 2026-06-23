@@ -40,7 +40,6 @@ import com.tencent.devops.store.pojo.atom.AtomUpdateRequest
 import com.tencent.devops.store.pojo.atom.InstalledAtom
 import com.tencent.devops.store.pojo.atom.PipelineAtom
 import com.tencent.devops.store.pojo.atom.AtomGroupQueryParam
-import com.tencent.devops.store.pojo.atom.AtomUpgradeRequest
 import com.tencent.devops.store.pojo.common.UnInstallReq
 import com.tencent.devops.store.pojo.common.enums.ServiceScopeEnum
 import com.tencent.devops.store.pojo.common.version.VersionInfo
@@ -207,11 +206,6 @@ interface AtomService {
      * 根据插件版本号和插件code精确查找插件id(非like匹配)
      */
     fun getAtomId(atomCode: String, version: String): String?
-
-    /**
-     * 升级插件
-     */
-    fun upgradeAtom(userId: String, atomRequest: AtomUpgradeRequest): Result<Boolean>
 
     /**
      * 统计插件分组信息

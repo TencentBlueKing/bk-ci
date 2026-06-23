@@ -213,7 +213,6 @@ class TriggerEventService @Autowired constructor(
     }
 
     companion object {
-        const val TRIGGER_CLASSIFY_ID = "e1bea5430f574f9ea3e0312dc7de9efa"
         const val SERVICE_SCOPE_PIPELINE = "PIPELINE"
     }
 }

@@ -130,7 +130,6 @@ import com.tencent.devops.store.pojo.common.KEY_SERVICE_SCOPE
 import com.tencent.devops.store.pojo.common.KEY_UPDATE_TIME
 import com.tencent.devops.store.common.dao.ClassifyDao
 import com.tencent.devops.store.pojo.atom.AtomGroupQueryParam
-import com.tencent.devops.store.pojo.atom.AtomUpgradeRequest
 import com.tencent.devops.store.pojo.common.UnInstallReq
 import com.tencent.devops.store.pojo.common.honor.HonorInfo
 import com.tencent.devops.store.pojo.common.index.StoreIndexInfo
@@ -930,7 +929,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
      * 添加插件信息
      */
     override fun savePipelineAtom(userId: String, atomRequest: AtomCreateRequest): Result<Boolean> {
-        val id = atomRequest.id?.takeIf { it.isNotBlank() } ?: UUIDUtil.generate()
+        val id = UUIDUtil.generate()
         logger.info("savePipelineAtom userId=$userId|atomRequest=$atomRequest")
         // 判断插件代码是否存在
         val atomCode = atomRequest.atomCode
@@ -964,8 +963,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                 data = false,
                 language = I18nUtil.getLanguage(userId)
             )
-        // 通用触发事件信息保存到T_ATOM表时，需要额外指定classType
-        val classType = atomRequest.targetClassType ?: handleClassType(atomRequest.os)
+        val classType = handleClassType(atomRequest.os)
         atomRequest.os.sort() // 给操作系统排序
         atomDao.addAtomFromOp(dslContext, userId, id, classType, atomRequest)
         return Result(true)
@@ -1569,36 +1567,6 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
 
     override fun getAtomId(atomCode: String, version: String): String? {
         return atomDao.getAtomIdByVersionWithCode(dslContext, atomCode, version)
-    }
-
-    override fun upgradeAtom(userId: String, atomRequest: AtomUpgradeRequest): Result<Boolean> {
-        val id = atomRequest.id?.takeIf { it.isNotBlank() } ?: UUIDUtil.generate()
-        logger.info("upgradeAtom userId=$userId|atomRequest=$atomRequest")
-        // 校验插件分类是否合法
-        classifyService.getClassify(atomRequest.classifyId).data
-            ?: return I18nUtil.generateResponseDataObject(
-                messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
-                params = arrayOf(atomRequest.classifyId),
-                data = false,
-                language = I18nUtil.getLanguage(userId)
-            )
-        val classType = atomRequest.targetClassType ?: handleClassType(atomRequest.os)
-        atomRequest.os.sort() // 给操作系统排序
-        dslContext.transaction { t ->
-            val context = DSL.using(t)
-            // 获取历史最新
-            atomDao.getLatestAtomByCode(context, atomRequest.atomCode)?.let {
-                atomDao.cleanLatestFlagById(context, it.id)
-            }
-            atomDao.upgradeAtom(
-                dslContext = context,
-                userId = userId,
-                id = id,
-                classType = classType,
-                atomRequest = atomRequest
-            )
-        }
-        return Result(true)
     }
 
     override fun getAtomGroupCount(

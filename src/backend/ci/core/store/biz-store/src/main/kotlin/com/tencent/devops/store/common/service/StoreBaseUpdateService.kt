@@ -62,12 +62,4 @@ interface StoreBaseUpdateService {
     fun doStoreUpdateDataPersistent(
         storeUpdateRequest: StoreUpdateRequest
     )
-
-    /**
-     * 执行更新组件请求后置业务
-     * @param storeUpdateRequest 更新组件请求报文
-     */
-    fun handlePostUpdateBus(
-        storeUpdateRequest: StoreUpdateRequest
-    )
 }

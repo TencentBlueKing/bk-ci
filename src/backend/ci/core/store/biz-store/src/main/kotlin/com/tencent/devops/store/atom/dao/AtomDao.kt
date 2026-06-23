@@ -57,7 +57,6 @@ import com.tencent.devops.store.pojo.atom.AtomBaseInfoUpdateRequest
 import com.tencent.devops.store.pojo.atom.AtomCreateRequest
 import com.tencent.devops.store.pojo.atom.AtomFeatureUpdateRequest
 import com.tencent.devops.store.pojo.atom.AtomUpdateRequest
-import com.tencent.devops.store.pojo.atom.AtomUpgradeRequest
 import com.tencent.devops.store.pojo.atom.enums.AtomCategoryEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomTypeEnum
@@ -202,9 +201,7 @@ class AtomDao : AtomBaseDao() {
                 PROPS,
                 DATA,
                 CREATOR,
-                MODIFIER,
-                OWNER_STORE_CODE,
-                LOGO_URL
+                MODIFIER
             )
                 .values(
                     id,
@@ -236,9 +233,7 @@ class AtomDao : AtomBaseDao() {
                     atomRequest.props,
                     atomRequest.data,
                     userId,
-                    userId,
-                    atomRequest.ownerStoreCode,
-                    atomRequest.logoUrl
+                    userId
                 )
                 .execute()
         }
@@ -984,9 +979,6 @@ class AtomDao : AtomBaseDao() {
         if (!param.keyword.isNullOrEmpty()) {
             conditions.add(tAtom.NAME.contains(param.keyword).or(tAtom.SUMMARY.contains(param.keyword)))
         }
-        if (!param.ownerStoreCode.isNullOrEmpty()) {
-            conditions.add(tAtom.OWNER_STORE_CODE.eq(param.ownerStoreCode))
-        }
         conditions.add(tAtom.DELETE_FLAG.eq(false))
         return conditions
     }
@@ -1589,84 +1581,6 @@ class AtomDao : AtomBaseDao() {
             dslContext.select(ID).from(this)
                 .where(ATOM_CODE.eq(atomCode).and(VERSION.eq(version)))
                 .fetchOne()?.get(ID)
-        }
-    }
-
-    fun upgradeAtom(
-        dslContext: DSLContext,
-        userId: String,
-        id: String,
-        classType: String,
-        atomRequest: AtomUpgradeRequest
-    ) {
-        with(TAtom.T_ATOM) {
-            val osMapJson = if (atomRequest.os.isNotEmpty() && atomRequest.jobType.isBuildEnv()) {
-                JsonUtil.toJson(mapOf(atomRequest.jobType.name to atomRequest.os), formatted = false)
-            } else null
-            dslContext.insertInto(
-                this,
-                ID,
-                NAME,
-                ATOM_CODE,
-                CLASS_TYPE,
-                SERVICE_SCOPE,
-                JOB_TYPE,
-                JOB_TYPE_MAP,
-                OS,
-                OS_MAP,
-                CLASSIFY_ID,
-                CLASSIFY_ID_MAP,
-                DOCS_LINK,
-                ATOM_TYPE,
-                ATOM_STATUS,
-                VERSION,
-                DEFAULT_FLAG,
-                LATEST_FLAG,
-                CATEGROY,
-                BUILD_LESS_RUN_FLAG,
-                WEIGHT,
-                PROPS,
-                DATA,
-                CREATOR,
-                MODIFIER,
-                OWNER_STORE_CODE,
-                LOGO_URL
-            )
-                    .values(
-                        id,
-                        atomRequest.name,
-                        atomRequest.atomCode,
-                        classType,
-                        JsonUtil.toJson(atomRequest.serviceScope, formatted = false),
-                        atomRequest.jobType.name,
-                        JsonUtil.toJson(
-                            mapOf(ServiceScopeEnum.PIPELINE.name to listOf(atomRequest.jobType.name)),
-                            formatted = false
-                        ),
-                        JsonUtil.toJson(atomRequest.os, formatted = false),
-                        osMapJson,
-                        atomRequest.classifyId,
-                        JsonUtil.toJson(
-                            mapOf(ServiceScopeEnum.PIPELINE.name to atomRequest.classifyId),
-                            formatted = false
-                        ),
-                        atomRequest.docsLink,
-                        atomRequest.atomType.type.toByte(),
-                        AtomStatusEnum.RELEASED.status.toByte(),
-                        atomRequest.version,
-                        atomRequest.defaultFlag,
-                        true,
-                        atomRequest.category.category.toByte(),
-                        atomRequest.buildLessRunFlag,
-                        atomRequest.weight,
-                        atomRequest.props,
-                        atomRequest.data,
-                        userId,
-                        userId,
-                        atomRequest.ownerStoreCode,
-                        atomRequest.logoUrl
-                    )
-                    .execute()
         }
     }
 
