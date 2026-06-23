@@ -53,6 +53,7 @@ import com.tencent.devops.process.pojo.trigger.PipelineTriggerFailedMatchElement
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerReason
 import com.tencent.devops.process.pojo.trigger.ScmWebhookEventBody
 import com.tencent.devops.process.pojo.webhook.WebhookStartPipelineRequest
+import com.tencent.devops.process.service.CreateStreamTriggerSupportService
 import com.tencent.devops.process.service.pipeline.PipelineYamlVersionResolver
 import com.tencent.devops.process.trigger.PipelineTriggerEventService
 import com.tencent.devops.process.trigger.PipelineTriggerMeasureService
@@ -83,7 +84,8 @@ class ScmWebhookTriggerBuildService @Autowired constructor(
     private val pipelineTriggerMeasureService: PipelineTriggerMeasureService,
     private val client: Client,
     private val simpleRateLimiter: SimpleRateLimiter,
-    private val sampleEventDispatcher: SampleEventDispatcher
+    private val sampleEventDispatcher: SampleEventDispatcher,
+    private val creativeStreamTriggerSupportService: CreateStreamTriggerSupportService
 ) {
     @Value("\${scm.webhook.trigger.max.count:$SCM_WEBHOOK_TRIGGER_MAX_COUNT_DEFAULT}")
     private val scmWebhookTriggerMaxCount: Int = SCM_WEBHOOK_TRIGGER_MAX_COUNT_DEFAULT
@@ -321,6 +323,10 @@ class ScmWebhookTriggerBuildService @Autowired constructor(
             projectId = projectId,
             pipelineId = pipelineId
         ) ?: pipelineInfo.lastModifyUser
+        val externalWebhookStartParams = creativeStreamTriggerSupportService.externalWebhookStartParams(
+            pipelineInfo = pipelineInfo,
+            userId = userId
+        ).mapValues { BuildParameters(key = it.key, value = it.value) }
         val buildId = client.getGateway(ServiceWebhookBuildResource::class).webhookStartPipeline(
             userId = userId,
             projectId = projectId,
@@ -334,7 +340,9 @@ class ScmWebhookTriggerBuildService @Autowired constructor(
                     pipelineId = pipelineId,
                     triggerContainer = resource.model.getTriggerContainer(),
                     startParams = startParams
-                ),
+                ).apply {
+                    this.putAll(externalWebhookStartParams)
+                },
                 channelCode = pipelineInfo.channelCode,
                 resource = resource,
                 signPipelineVersion = resource.version,
