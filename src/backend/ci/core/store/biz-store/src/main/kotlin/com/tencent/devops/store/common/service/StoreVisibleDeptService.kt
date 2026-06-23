@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.pojo.common.visible.UserStoreDeptInfoRequest
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.visible.DeptInfo
+import com.tencent.devops.store.pojo.common.visible.StoreVisibleDeptDeleteReq
 import com.tencent.devops.store.pojo.common.visible.StoreVisibleDeptResp
 import com.tencent.devops.store.pojo.common.visible.StoreVisibleProjectInfo
 
@@ -66,21 +67,21 @@ interface StoreVisibleDeptService {
     fun addVisibleDept(
         userId: String,
         storeCode: String,
-        deptInfos: List<DeptInfo>? = null,
         storeType: StoreTypeEnum,
+        deptInfos: List<DeptInfo>? = null,
         projectInfos: List<StoreVisibleProjectInfo>? = null
     ): Result<Boolean>
 
     /**
      * 删除store组件可见范围
-     * deptIds 与 projectCodes 均使用","分隔，至少需要传入其中一个
+     * deptIds 使用","分隔
      */
     fun deleteVisibleDept(
         userId: String,
         storeCode: String,
-        deptIds: String? = null,
         storeType: StoreTypeEnum,
-        projectCodes: String? = null
+        deptIds: String? = null,
+        storeVisibleDeptDeleteReq: StoreVisibleDeptDeleteReq? = null
     ): Result<Boolean>
 
     /**

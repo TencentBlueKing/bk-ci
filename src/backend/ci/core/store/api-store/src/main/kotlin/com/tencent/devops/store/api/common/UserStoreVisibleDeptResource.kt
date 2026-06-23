@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.common.web.constant.BkStyleEnum
 import com.tencent.devops.store.pojo.common.enums.DeptStatusEnum
+import com.tencent.devops.store.pojo.common.visible.StoreVisibleDeptDeleteReq
 import com.tencent.devops.store.pojo.common.visible.StoreVisibleDeptReq
 import com.tencent.devops.store.pojo.common.visible.StoreVisibleDeptResp
 import io.swagger.v3.oas.annotations.Operation
@@ -105,8 +106,7 @@ interface UserStoreVisibleDeptResource {
         @Parameter(description = "机构Id集合，用\",\"分隔进行拼接（如1,2,3）", required = false)
         @QueryParam("deptIds")
         deptIds: String? = null,
-        @Parameter(description = "项目编码集合，用\",\"分隔进行拼接（如p1,p2,p3）", required = false)
-        @QueryParam("projectCodes")
-        projectCodes: String? = null
+        @Parameter(description = "组件可见范围删除请求报文体", required = false)
+        storeVisibleDeptDeleteReq: StoreVisibleDeptDeleteReq? = null
     ): Result<Boolean>
 }

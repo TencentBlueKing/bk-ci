@@ -43,6 +43,7 @@ import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.pojo.common.enums.DeptStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.visible.DeptInfo
+import com.tencent.devops.store.pojo.common.visible.StoreVisibleDeptDeleteReq
 import com.tencent.devops.store.pojo.common.visible.StoreVisibleDeptResp
 import com.tencent.devops.store.pojo.common.visible.StoreVisibleProjectInfo
 import com.tencent.devops.store.pojo.common.visible.UserStoreDeptInfoRequest
@@ -157,8 +158,8 @@ class StoreVisibleDeptServiceImpl @Autowired constructor(
     override fun addVisibleDept(
         userId: String,
         storeCode: String,
-        deptInfos: List<DeptInfo>?,
         storeType: StoreTypeEnum,
+        deptInfos: List<DeptInfo>?,
         projectInfos: List<StoreVisibleProjectInfo>?
     ): Result<Boolean> {
         logger.info(
@@ -282,13 +283,13 @@ class StoreVisibleDeptServiceImpl @Autowired constructor(
     override fun deleteVisibleDept(
         userId: String,
         storeCode: String,
-        deptIds: String?,
         storeType: StoreTypeEnum,
-        projectCodes: String?
+        deptIds: String?,
+        storeVisibleDeptDeleteReq: StoreVisibleDeptDeleteReq?
     ): Result<Boolean> {
         logger.info(
             "deleteVisibleDept userId:$userId,storeCode:$storeCode,deptIds:$deptIds," +
-                "storeType:$storeType,projectCodes:$projectCodes"
+                "storeType:$storeType,storeVisibleDeptDeleteReq:$storeVisibleDeptDeleteReq"
         )
         // 判断用户是否有权限删除可见范围
         if (!storeMemberDao.isStoreAdmin(
@@ -314,16 +315,14 @@ class StoreVisibleDeptServiceImpl @Autowired constructor(
                 )
             }
         }
-        if (!projectCodes.isNullOrBlank()) {
-            val projectCodeList = projectCodes.split(",").filter { it.isNotBlank() }.map { it.trim() }
-            if (projectCodeList.isNotEmpty()) {
-                storeVisibleProjectRelDao.batchDelete(
-                    dslContext = dslContext,
-                    storeCode = storeCode,
-                    storeType = storeType.type.toByte(),
-                    projectCodeList = projectCodeList
-                )
-            }
+        val projectCodes = storeVisibleDeptDeleteReq?.projectCodes
+        if (!projectCodes.isNullOrEmpty()) {
+            storeVisibleProjectRelDao.batchDelete(
+                dslContext = dslContext,
+                storeCode = storeCode,
+                storeType = storeType.type.toByte(),
+                projectCodeList = projectCodes
+            )
         }
         return Result(true)
     }
