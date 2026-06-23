@@ -1655,4 +1655,41 @@ CREATE TABLE IF NOT EXISTS `T_PIPELINE_COPY_TASK_RESOURCE_REL` (
 ) ENGINE = InnoDB
     DEFAULT CHARSET = utf8mb4 COMMENT ='流水线复制任务资源关系表';
 
+-- ----------------------------
+-- Table structure for T_PIPELINE_ARTIFACT_INFO
+-- ----------------------------
+
+CREATE TABLE IF NOT EXISTS `T_PIPELINE_ARTIFACT_INFO` (
+  `ID`                bigint(20)   NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+  `PROJECT_ID`        varchar(64)  NOT NULL COMMENT '蓝盾项目ID',
+  `PIPELINE_ID`       varchar(34)  NOT NULL COMMENT '流水线ID',
+  `PIPELINE_NAME`     varchar(255) DEFAULT NULL COMMENT '流水线名称',
+  `BUILD_ID`          varchar(34)  NOT NULL COMMENT '构建ID',
+  `BUILD_NUM`         int(20)      DEFAULT '0' COMMENT '构建号',
+  `STAGE_ID`          varchar(34)  NOT NULL DEFAULT '' COMMENT '阶段ID',
+  `CONTAINER_ID`      varchar(34)  NOT NULL DEFAULT '' COMMENT '构建容器ID',
+  `TASK_ID`           varchar(34)  NOT NULL DEFAULT '' COMMENT '任务ID',
+  `EXECUTE_COUNT`     int(11)      NOT NULL DEFAULT '1' COMMENT '执行次数',
+  `ARTIFACT_TYPE`     varchar(32)  NOT NULL COMMENT '产出物类型：FILE/IMAGE/REPORT/PACKAGE等',
+  `ARTIFACT_NAME`     varchar(256) NOT NULL COMMENT '产出物名称，如文件名、镜像名',
+  `ARTIFACT_VERSION`  varchar(128) NOT NULL DEFAULT '' COMMENT '产出物版本，如镜像Tag、包版本',
+  `ARTIFACT_URI`      varchar(1024) DEFAULT NULL COMMENT '产出物唯一资源标识，如文件路径、镜像完整地址',
+  `ARTIFACT_REPO_URL` varchar(512)  DEFAULT NULL COMMENT '产出物仓库地址，如制品库地址、镜像Registry',
+  `ARTIFACT_DIGEST`   varchar(128)  DEFAULT NULL COMMENT '产出物摘要，如sha256、镜像digest',
+  `ARTIFACT_SIZE`     bigint(20)    DEFAULT NULL COMMENT '产出物大小，单位字节',
+  `CODE_REPO_URL`     varchar(512)  DEFAULT NULL COMMENT '代码库地址',
+  `COMMIT_ID`         varchar(64)  NOT NULL DEFAULT '' COMMENT '代码提交ID',
+  `EXTRA_INFO`        text          DEFAULT NULL COMMENT '扩展元数据，JSON格式',
+  `CREATOR`           varchar(50)  NOT NULL DEFAULT 'system' COMMENT '创建人',
+  `MODIFIER`          varchar(50)  NOT NULL DEFAULT 'system' COMMENT '修改人',
+  `CREATE_TIME`       DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `UPDATE_TIME`       DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  PRIMARY KEY (`ID`),
+  KEY `INX_TPAI_PROJECT_TYPE_NAME_VERSION` (`PROJECT_ID`, `ARTIFACT_TYPE`, `ARTIFACT_NAME`, `ARTIFACT_VERSION`),
+  KEY `INX_TPAI_PIPELINE_BUILD` (`PIPELINE_ID`, `BUILD_ID`),
+  KEY `INX_TPAI_PROJECT_CREATE_TIME` (`PROJECT_ID`, `CREATE_TIME`),
+  KEY `INX_TPAI_TASK_EXECUTE` (`PROJECT_ID`, `BUILD_ID`, `TASK_ID`, `EXECUTE_COUNT`),
+  KEY `INX_TPAI_COMMIT_ID` (`COMMIT_ID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='流水线产出物基础元数据信息表';
+
 SET FOREIGN_KEY_CHECKS = 1;
