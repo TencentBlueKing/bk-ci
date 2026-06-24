@@ -27,11 +27,13 @@
 
 package com.tencent.devops.openapi.resources.apigw.v3
 
+import com.tencent.devops.artifactory.api.service.ServiceArtifactMetadataResource
 import com.tencent.devops.artifactory.api.service.ServiceArtifactoryResource
 import com.tencent.devops.artifactory.api.service.ServiceLogFileResource
 import com.tencent.devops.artifactory.pojo.FileInfo
 import com.tencent.devops.artifactory.pojo.SearchProps
 import com.tencent.devops.artifactory.pojo.Url
+import com.tencent.devops.artifactory.pojo.artifact.PipelineArtifactInfo
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
@@ -111,6 +113,38 @@ class ApigwArtifactoryResourceV3Impl @Autowired constructor(
             elementId = elementId,
             executeCount = executeCount
         )
+    }
+
+    override fun getArtifactInfo(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        pipelineId: String?,
+        artifactType: String,
+        artifactName: String?,
+        artifactVersion: String?
+    ): Result<PipelineArtifactInfo?> {
+        logger.info(
+            "OPENAPI_ARTIFACTORY_V3|$userId|getArtifactInfo|$projectId|$pipelineId|$artifactType|$artifactName|$artifactVersion"
+        )
+
+        val artifactInfo = client.get(ServiceArtifactMetadataResource::class)
+            .getArtifactInfo(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                artifactType = artifactType,
+                artifactName = artifactName,
+                artifactVersion = artifactVersion
+            ).data
+
+        logger.info(
+            "OPENAPI_ARTIFACTORY_V3|$userId|getArtifactInfo|$projectId|$pipelineId|$artifactType|$artifactName|$artifactVersion|" +
+                    "found=${artifactInfo != null}"
+        )
+
+        return Result(artifactInfo)
     }
 
     companion object {
