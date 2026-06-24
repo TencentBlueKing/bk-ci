@@ -39,10 +39,6 @@ class ApigwArtifactResourceV3Impl @Autowired constructor(
         artifactName: String?,
         artifactVersion: String?
     ): Result<PipelineArtifactInfo?> {
-        logger.info(
-            "OPENAPI_ARTIFACT_V3|$userId|getArtifactInfo|$projectId|$pipelineId|$artifactType|$artifactName|$artifactVersion"
-        )
-
         val artifactInfo = client.get(ServiceArtifactMetadataResource::class)
             .getArtifactInfo(
                 userId = userId,
@@ -52,12 +48,6 @@ class ApigwArtifactResourceV3Impl @Autowired constructor(
                 artifactName = artifactName,
                 artifactVersion = artifactVersion
             ).data
-
-        logger.info(
-            "OPENAPI_ARTIFACT_V3|$userId|getArtifactInfo|$projectId|$pipelineId|$artifactType|$artifactName|$artifactVersion|" +
-                    "found=${artifactInfo != null}"
-        )
-
         return Result(artifactInfo)
     }
 }
