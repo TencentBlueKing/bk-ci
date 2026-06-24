@@ -25,27 +25,20 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.misc.service.artifactory
+package com.tencent.devops.misc.dao.artifactory
 
-import com.tencent.devops.misc.dao.artifactory.TxArtifactoryDataClearDao
-import com.tencent.devops.misc.dao.artifactory.TxPipelineArtifactInfoDao
+import com.tencent.devops.model.artifactory.tables.TPipelineArtifactInfo
 import org.jooq.DSLContext
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
+import org.springframework.stereotype.Repository
 
-@Service
-class TxArtifactoryDataClearServiceImpl @Autowired constructor(
-    dslContext: DSLContext
-) : ArtifactoryDataClearService(dslContext) {
+@Repository
+class TxPipelineArtifactInfoDao {
 
-    @Autowired
-    private lateinit var txArtifactoryDataClearDao: TxArtifactoryDataClearDao
-
-    @Autowired
-    private lateinit var txPipelineArtifactInfoDao: TxPipelineArtifactInfoDao
-
-    override fun deleteTableData(dslContext: DSLContext, buildId: String) {
-        txArtifactoryDataClearDao.deleteArtifacetoryInfoByBuildId(dslContext, buildId)
-        txPipelineArtifactInfoDao.deleteByBuildId(dslContext, buildId)
+    fun deleteByBuildId(dslContext: DSLContext, buildId: String) {
+        with(TPipelineArtifactInfo.T_PIPELINE_ARTIFACT_INFO) {
+            dslContext.deleteFrom(this)
+                .where(BUILD_ID.eq(buildId))
+                .execute()
+        }
     }
 }
