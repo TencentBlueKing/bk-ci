@@ -686,6 +686,12 @@
                 isPersonalProject
             }
         },
+        setup () {
+            const { isPersonalProject } = useEnvDetail()
+            return {
+                isPersonalProject
+            }
+        },
         props: {
             nodeList: {
                 type: Array,

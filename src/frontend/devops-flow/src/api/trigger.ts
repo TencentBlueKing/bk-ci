@@ -103,8 +103,9 @@ export function fetchTriggerList(
  */
 export function fetchTriggerModal(
   ownerStoreCode: string,
+  projectId: string,
   atomCode: string,
   version: string,
 ): Promise<TriggerModal> {
-  return get<TriggerModal>(`${STORE_API_URL_PREFIX}/user/market/trigger/${atomCode}/${version}`)
+  return get<TriggerModal>(`${STORE_API_URL_PREFIX}/user/pipeline/atom/${projectId}/${atomCode}/${version}?queryOfflineFlag=false`)
 }

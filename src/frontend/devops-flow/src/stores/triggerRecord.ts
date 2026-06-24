@@ -151,6 +151,12 @@ export const useTriggerRecordStore = defineStore('triggerRecord', () => {
       }
 
       const response = await getTriggerRecords(params)
+      // 更新store中的triggerEventList数据
+      if (page === 1) {
+        triggerEventList.value = response?.records || []
+      } else {
+        triggerEventList.value = [...triggerEventList.value, ...(response?.records || [])]
+      }
       return {
         records: response?.records || [],
         count: response?.count || 0,
@@ -220,11 +226,13 @@ export const useTriggerRecordStore = defineStore('triggerRecord', () => {
       reTriggerLoadingId.value = null
       if (res) {
         Message({ theme: 'success', message: t('flow.triggerRecord.retrigger') + t('flow.common.success') })
-        fetchTriggerEventList(1, 24)
+        return true
       }
+      return false
    } catch (error) {
       console.error('触发失败:', error)
       reTriggerLoadingId.value = null
+      return false
    }
   }
 

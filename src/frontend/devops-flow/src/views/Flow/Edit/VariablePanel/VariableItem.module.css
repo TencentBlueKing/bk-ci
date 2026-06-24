@@ -32,6 +32,11 @@
     font-weight: 600;
     color: var(--color-text-primary);
     font-family: 'Monaco', 'Menlo', 'Consolas', monospace;
+    cursor: default;
+
+    &[data-has-desc] {
+      border-bottom: 1px dashed #979BA5;
+    }
   }
 
   .variableType {

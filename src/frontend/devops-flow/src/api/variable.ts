@@ -25,6 +25,26 @@ export async function getSystemVariables(): Promise<ReadOnlyVariableGroup[]> {
 }
 
 /**
+ * Get trigger params (variables from trigger plugins)
+ * Reference: devops-pipeline/src/store/modules/atom/actions.js requestTriggerParams
+ * @param atomCodeList Array of atom codes from trigger container elements
+ */
+export async function getTriggerParams(
+  atomCodeList: string[],
+): Promise<ReadOnlyVariableGroup[]> {
+  try {
+    const data = await post<ReadOnlyVariableGroup[]>(
+      `${PROCESS_API_URL_PREFIX}/user/buildParam/trigger`,
+      atomCodeList,
+    )
+    return data || []
+  } catch (error) {
+    console.error('Failed to get trigger params:', error)
+    return []
+  }
+}
+
+/**
  * Update flow model's trigger stage container params with variables
  * @param model Flow model
  * @param variables Flow variables
