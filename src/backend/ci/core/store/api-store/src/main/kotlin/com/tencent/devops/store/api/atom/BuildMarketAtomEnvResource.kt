@@ -91,4 +91,16 @@ interface BuildMarketAtomEnvResource {
         @Parameter(description = "插件市场工作台-更新插件执行环境信息请求报文体", required = true)
         atomEnvRequest: AtomEnvRequest
     ): Result<Boolean>
+
+    @Operation(summary = "判断插件是否在指定类型的白名单中")
+    @GET
+    @Path("/whitelist/types/{whitelistType}/codes/{atomCode}/check")
+    fun isAtomInWhitelist(
+        @Parameter(description = "白名单类型", required = true)
+        @PathParam("whitelistType")
+        whitelistType: String,
+        @Parameter(description = "插件代码", required = true)
+        @PathParam("atomCode")
+        atomCode: String
+    ): Result<Boolean>
 }
