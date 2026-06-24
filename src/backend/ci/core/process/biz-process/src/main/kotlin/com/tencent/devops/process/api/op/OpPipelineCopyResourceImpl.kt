@@ -106,6 +106,7 @@ class OpPipelineCopyResourceImpl @Autowired constructor(
             resourceIdsFieldName = "pipelineIds"
         )
         pipelineCopyService.fixPipelineSubPipelineProject(
+            userId = userId,
             projectId = projectId,
             pipelineIds = request.pipelineIds,
             sourceSubProjectId = request.sourceSubProjectId,

@@ -52,7 +52,8 @@ class PipelineCopyService @Autowired constructor(
     private val pipelineTemplateResourceDao: PipelineTemplateResourceDao,
     private val pipelineDependencyReplaceService: PipelineDependencyReplaceService,
     private val client: Client,
-    private val clientTokenService: ClientTokenService
+    private val clientTokenService: ClientTokenService,
+    private val subPipelineUpgradeService: SubPipelineUpgradeService
 ) {
 
     fun fixInstanceSetting(
@@ -205,6 +206,7 @@ class PipelineCopyService @Autowired constructor(
     }
 
     fun fixPipelineSubPipelineProject(
+        userId: String,
         projectId: String,
         pipelineIds: List<String>,
         sourceSubProjectId: String,
@@ -213,6 +215,7 @@ class PipelineCopyService @Autowired constructor(
         pipelineIds.forEach { pipelineId ->
             try {
                 fixSinglePipelineSubPipelineProject(
+                    userId = userId,
                     projectId = projectId,
                     pipelineId = pipelineId,
                     sourceSubProjectId = sourceSubProjectId,
@@ -253,6 +256,7 @@ class PipelineCopyService @Autowired constructor(
     }
 
     private fun fixSinglePipelineSubPipelineProject(
+        userId: String,
         projectId: String,
         pipelineId: String,
         sourceSubProjectId: String,
@@ -272,6 +276,7 @@ class PipelineCopyService @Autowired constructor(
             return
         }
         fixPipelineReleaseResource(
+            userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
             sourceSubProjectId = sourceSubProjectId,
@@ -287,6 +292,7 @@ class PipelineCopyService @Autowired constructor(
     }
 
     private fun fixPipelineReleaseResource(
+        userId: String,
         projectId: String,
         pipelineId: String,
         sourceSubProjectId: String,
@@ -324,6 +330,11 @@ class PipelineCopyService @Autowired constructor(
         logger.info(
             "fix pipeline sub pipeline project release resource success|$projectId|$pipelineId|" +
                 "${releaseResource.version}|$sourceSubProjectId|$targetSubProjectId"
+        )
+        subPipelineUpgradeService.updateSubPipelineRef(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId
         )
     }
 
