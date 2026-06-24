@@ -27,5 +27,4 @@
 
 dependencies {
     api(project(":core:misc:biz-misc"))
-    api(project(":core:artifactory:biz-artifactory"))
 }
