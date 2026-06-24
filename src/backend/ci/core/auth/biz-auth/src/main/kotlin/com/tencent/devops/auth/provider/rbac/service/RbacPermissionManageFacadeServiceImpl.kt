@@ -1964,7 +1964,7 @@ class RbacPermissionManageFacadeServiceImpl(
                         projectCode = projectCode,
                         memberIds = userIds,
                         memberType = MemberType.DEPARTMENT.type
-                    )
+                    ).distinctBy { it.name }
                 }
             }
             return emptyList()
@@ -2318,7 +2318,7 @@ class RbacPermissionManageFacadeServiceImpl(
             projectCode = projectCode,
             memberIds = userDeptIds,
             memberType = MemberType.DEPARTMENT.type
-        ).map { it.name }
+        ).map { it.name }.distinct()
         var managers = emptyList<String>()
         if (userDepartmentsInProject.isNotEmpty()) {
             managers = permissionResourceMemberService.getResourceGroupMembers(
