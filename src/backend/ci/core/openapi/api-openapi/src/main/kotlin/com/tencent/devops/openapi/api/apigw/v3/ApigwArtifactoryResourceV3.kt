@@ -147,7 +147,7 @@ interface ApigwArtifactoryResourceV3 {
         description = "根据项目ID、产出物类型等条件查询元数据，包含代码库地址和Commit ID"
     )
     @GET
-    @Path("/{artifactType}")
+    @Path("/metadata/{artifactType}")
     fun getArtifactInfo(
         @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
