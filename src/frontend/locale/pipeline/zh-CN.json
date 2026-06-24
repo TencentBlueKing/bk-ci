@@ -2354,6 +2354,8 @@
   "reuseTargetBuildNodeDesc": "使用目标项目下同名（别名相同）的节点。",
   "transferToTargetProject": "转移到目标项目",
   "transferToTargetProjectDesc": "将节点归属改为目标项目；转移后源项目无法继续使用。",
+  "skipThisNode": "跳过此节点，本次不复制",
+  "skipThisNodeDesc": "本次不处理此节点，目标流水线将保留源节点引用。",
   "noSameNameNode": "无同名节点",
   "createNewEnv": "新建环境（不带节点）",
   "createNewEnvDesc": "在目标项目下创建空环境；复制后需手动加入节点，流水线才能运行。",

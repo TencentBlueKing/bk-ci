@@ -2357,6 +2357,8 @@
   "reuseTargetBuildNodeDesc": "Use the node with the same name (same alias) in the target project.",
   "transferToTargetProject": "Transfer to target project",
   "transferToTargetProjectDesc": "Change the node ownership to the target project; the source project cannot continue to use it after transfer.",
+  "skipThisNode": "Skip this node, do not copy this time",
+  "skipThisNodeDesc": "This node will not be processed this time; the target pipeline will keep the source node reference.",
   "noSameNameNode": "No node with the same name",
   "createNewEnv": "Create new environment (without nodes)",
   "createNewEnvDesc": "Create an empty environment in the target project; nodes need to be added manually after copying for the pipeline to run.",

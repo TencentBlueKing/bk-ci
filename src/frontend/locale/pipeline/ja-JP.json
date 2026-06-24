@@ -2352,6 +2352,8 @@
   "reuseTargetBuildNodeDesc": "ターゲットプロジェクトで同名（エイリアスが同じ）のノードを使用します。",
   "transferToTargetProject": "ターゲットプロジェクトに転送",
   "transferToTargetProjectDesc": "ノードの所有権をターゲットプロジェクトに変更します。転送後、ソースプロジェクトでは使用できなくなります。",
+  "skipThisNode": "このノードをスキップ、今回はコピーしない",
+  "skipThisNodeDesc": "今回はこのノードを処理しません。ターゲットパイプラインはソースノードの参照を保持します。",
   "noSameNameNode": "同名ノードなし",
   "createNewEnv": "新しい環境を作成（ノードなし）",
   "createNewEnvDesc": "ターゲットプロジェクトに空の環境を作成します。コピー後、パイプラインを実行するには手動でノードを追加する必要があります。",
