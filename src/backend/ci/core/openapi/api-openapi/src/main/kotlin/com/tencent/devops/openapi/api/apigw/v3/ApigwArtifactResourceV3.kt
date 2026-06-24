@@ -54,7 +54,6 @@ import jakarta.ws.rs.core.MediaType
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @BkApigwApi(version = "v3")
-@Suppress("ALL")
 interface ApigwArtifactResourceV3 {
 
     /**
