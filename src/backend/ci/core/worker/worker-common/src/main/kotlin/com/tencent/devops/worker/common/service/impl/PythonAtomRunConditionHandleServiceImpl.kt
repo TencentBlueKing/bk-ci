@@ -68,14 +68,14 @@ class PythonAtomRunConditionHandleServiceImpl : AtomRunConditionHandleService {
                 return null
             }
         }
-        val (pythonCmd, pythonVersion) = resolvePythonCommand(runtimeVersion)
-        if (pythonVersion == null) {
+        val resolved = resolvePythonCommand(runtimeVersion)
+        if (resolved == null) {
             logger.warn("prepareRunEnv all python commands are not available")
             LoggerService.addWarnLine("No available python command found, skip venv creation")
             return null
         }
         val venvPath = File(atomTmpSpace, PYTHON_VENV_DIR)
-        val binPath = createVenv(pythonCmd, pythonVersion, venvPath, osType)
+        val binPath = createVenv(resolved.command, resolved.majorVersion, venvPath, osType)
         if (binPath == null) {
             cleanupVenvDir(venvPath)
         }
@@ -114,21 +114,45 @@ class PythonAtomRunConditionHandleServiceImpl : AtomRunConditionHandleService {
         return true
     }
 
-    private fun resolvePythonCommand(runtimeVersion: String): Pair<String, String?> {
+    /**
+     * 解析结果：选中的可用命令 + 主版本号 + 实际版本（仅日志/校验用）
+     */
+    private data class ResolvedPython(
+        val command: String,
+        val majorVersion: Int,
+        val actualVersion: String
+    )
+
+    /** 从 runtimeVersion 推导目标主版本号，不依赖 --version 文本解析 */
+    private fun resolveMajorVersion(runtimeVersion: String): Int {
         return when {
-            runtimeVersion.startsWith("python3") -> findPythonFromCandidates("python3", "python")
-                ?: (runtimeVersion to null)
-            runtimeVersion.startsWith("python2") -> findPythonFromCandidates("python2", "python")
-                ?: (runtimeVersion to null)
-            else -> findPythonFromCandidates("python", "python3")
-                ?: ("python" to null)
+            runtimeVersion.startsWith("python3") -> 3
+            runtimeVersion.startsWith("python2") -> 2
+            runtimeVersion.startsWith("3") -> 3
+            runtimeVersion.startsWith("2") -> 2
+            else -> 3 // 兜底默认为 Python 3
         }
     }
 
-    private fun findPythonFromCandidates(vararg candidates: String): Pair<String, String>? {
+    private fun resolvePythonCommand(runtimeVersion: String): ResolvedPython? {
+        val command = when {
+            runtimeVersion.startsWith("python3") -> findAvailableCommand("python3", "python")
+            runtimeVersion.startsWith("python2") -> findAvailableCommand("python2", "python")
+            else -> findAvailableCommand("python", "python3")
+        } ?: return null
+        val actualVersion = getPythonVersion(command) ?: return null
+        return ResolvedPython(
+            command = command,
+            majorVersion = resolveMajorVersion(runtimeVersion),
+            actualVersion = actualVersion
+        )
+    }
+
+    /** 从候选命令中找第一个可用的，若都不存在返回 null */
+    private fun findAvailableCommand(vararg candidates: String): String? {
         for (candidate in candidates) {
-            getPythonVersion(candidate)?.let { version ->
-                return candidate to version
+            if (getPythonVersion(candidate) != null) {
+                return candidate
             }
         }
         return null
@@ -136,20 +160,16 @@ class PythonAtomRunConditionHandleServiceImpl : AtomRunConditionHandleService {
 
     private fun createVenv(
         pythonCmd: String,
-        pythonVersion: String,
+        majorVersion: Int,
         venvPath: File,
         osType: OSType
     ): String? {
-        logger.info("prepareRunEnv pythonCmd:$pythonCmd, runtimeVersion:$pythonVersion")
-        return if (isPython3Version(pythonVersion)) {
+        logger.info("prepareRunEnv pythonCmd:$pythonCmd, majorVersion:$majorVersion")
+        return if (majorVersion >= 3) {
             createPython3Venv(pythonCmd, venvPath, osType)
         } else {
             createPython2Venv(pythonCmd, venvPath, osType)
         }
-    }
-
-    private fun isPython3Version(pythonVersion: String): Boolean {
-        return pythonVersion.contains("Python 3", ignoreCase = true)
     }
 
     override fun handleAtomTarget(
@@ -194,14 +214,7 @@ class PythonAtomRunConditionHandleServiceImpl : AtomRunConditionHandleService {
     ): String {
         val preCmds = CommonUtils.strToList(preCmd).toMutableList()
         val pipCmd = if (runtimeVersion?.startsWith("python3") == true) "pip3" else "pip"
-        // 若虚拟环境路径存在，使用绝对路径执行pip，Windows路径用双引号包裹
-        val fullPipCmd = if (!atomExecuteEnvPath.isNullOrBlank()) {
-            val fullPath = "$atomExecuteEnvPath${File.separator}$pipCmd"
-            if (osName == OSType.WINDOWS.name.lowercase()) "\"$fullPath\"" else fullPath
-        } else {
-            pipCmd
-        }
-        preCmds.add(0, "$fullPipCmd --default-timeout=600 install $pkgName --upgrade")
+        preCmds.add(0, "$pipCmd --default-timeout=600 install $pkgName --upgrade")
         logger.info("handleAtomPreCmd convertPreCmd:$preCmds")
         return JsonUtil.toJson(preCmds, false)
     }
@@ -214,7 +227,7 @@ class PythonAtomRunConditionHandleServiceImpl : AtomRunConditionHandleService {
                 command = "$pythonCmd --version 2>&1",
                 workspace = null,
                 print2Logger = false
-            )?.trim()?.takeIf { it.isNotBlank() }
+            ).trim().takeIf { it.isNotBlank() }
         } catch (ignored: Throwable) {
             logger.warn("getPythonVersion [$pythonCmd] failed: ${ignored.message}")
             null
