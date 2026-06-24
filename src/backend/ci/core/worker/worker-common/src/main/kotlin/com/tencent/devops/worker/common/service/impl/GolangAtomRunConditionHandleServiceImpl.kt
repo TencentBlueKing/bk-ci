@@ -68,8 +68,7 @@ class GolangAtomRunConditionHandleServiceImpl : AtomRunConditionHandleService {
         preCmd: String,
         osName: String,
         pkgName: String,
-        runtimeVersion: String?,
-        atomExecuteEnvPath: String?
+        runtimeVersion: String?
     ): String {
         val preCmds = CommonUtils.strToList(preCmd).toMutableList()
         if (osName != OSType.WINDOWS.name.lowercase()) {

@@ -209,8 +209,7 @@ class PythonAtomRunConditionHandleServiceImpl : AtomRunConditionHandleService {
         preCmd: String,
         osName: String,
         pkgName: String,
-        runtimeVersion: String?,
-        atomExecuteEnvPath: String?
+        runtimeVersion: String?
     ): String {
         val preCmds = CommonUtils.strToList(preCmd).toMutableList()
         val pipCmd = if (runtimeVersion?.startsWith("python3") == true) "pip3" else "pip"

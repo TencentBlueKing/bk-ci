@@ -68,7 +68,6 @@ interface AtomRunConditionHandleService {
         preCmd: String,
         osName: String,
         pkgName: String,
-        runtimeVersion: String? = null,
-        atomExecuteEnvPath: String? = null
+        runtimeVersion: String? = null
     ): String
 }

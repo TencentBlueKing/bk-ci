@@ -101,8 +101,7 @@ class JavaAtomRunConditionHandleServiceImpl : AtomRunConditionHandleService {
         preCmd: String,
         osName: String,
         pkgName: String,
-        runtimeVersion: String?,
-        atomExecuteEnvPath: String?
+        runtimeVersion: String?
     ): String {
         return preCmd
     }
