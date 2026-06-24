@@ -53,6 +53,7 @@ import com.tencent.devops.process.service.template.TemplateCommonService
 import com.tencent.devops.process.service.template.TemplateFacadeService
 import com.tencent.devops.process.service.template.TemplatePACService
 import com.tencent.devops.process.service.template.TemplateSettingService
+import com.tencent.devops.process.service.template.v2.PipelineTemplateCompatibilityAdapter
 import com.tencent.devops.process.utils.PIPELINE_SETTING_MAX_QUEUE_SIZE_MAX
 import com.tencent.devops.process.utils.PIPELINE_SETTING_MAX_QUEUE_SIZE_MIN
 import com.tencent.devops.process.utils.PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_MAX
@@ -68,23 +69,38 @@ class UserPTemplateResourceImpl @Autowired constructor(
     private val templateFacadeService: TemplateFacadeService,
     private val templatePACService: TemplatePACService,
     private val templateSettingService: TemplateSettingService,
-    private val templateCommonService: TemplateCommonService
+    private val templateCommonService: TemplateCommonService,
+    private val pipelineTemplateCompatibilityAdapter: PipelineTemplateCompatibilityAdapter
 ) : UserPTemplateResource {
 
     @AuditEntry(actionId = ActionId.PIPELINE_TEMPLATE_CREATE)
     override fun createTemplate(userId: String, projectId: String, template: Model): Result<TemplateId> {
-        return Result(TemplateId(templateFacadeService.createTemplate(projectId, userId, template)))
+        return Result(
+            TemplateId(
+                pipelineTemplateCompatibilityAdapter.createTemplate(
+                    projectId = projectId,
+                    userId = userId,
+                    template = template
+                )
+            )
+        )
     }
 
     @AuditEntry(actionId = ActionId.PIPELINE_TEMPLATE_DELETE)
     override fun deleteTemplate(userId: String, projectId: String, templateId: String): Result<Boolean> {
-        return Result(templateFacadeService.deleteTemplate(projectId, userId, templateId))
+        return Result(
+            pipelineTemplateCompatibilityAdapter.deleteTemplate(
+                projectId = projectId,
+                userId = userId,
+                templateId = templateId
+            )
+        )
     }
 
     @AuditEntry(actionId = ActionId.PIPELINE_TEMPLATE_DELETE)
     override fun deleteTemplate(userId: String, projectId: String, templateId: String, version: Long): Result<Boolean> {
         return Result(
-            templateFacadeService.deleteTemplate(
+            pipelineTemplateCompatibilityAdapter.deleteVersion(
                 projectId = projectId,
                 userId = userId,
                 templateId = templateId,
@@ -118,7 +134,15 @@ class UserPTemplateResourceImpl @Autowired constructor(
         versionName: String,
         template: Model
     ): Result<Boolean> {
-        return Result(templateFacadeService.updateTemplate(projectId, userId, templateId, versionName, template) > 0)
+        return Result(
+            pipelineTemplateCompatibilityAdapter.updateTemplate(
+                projectId = projectId,
+                userId = userId,
+                templateId = templateId,
+                versionName = versionName,
+                template = template
+            ) > 0
+        )
     }
 
     override fun listTemplate(

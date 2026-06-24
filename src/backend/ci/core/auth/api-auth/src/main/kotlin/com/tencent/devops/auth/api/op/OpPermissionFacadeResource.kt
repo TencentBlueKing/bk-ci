@@ -1,11 +1,13 @@
 package com.tencent.devops.auth.api.op
 
 import com.tencent.devops.auth.pojo.request.CustomGroupCreateReq
+import com.tencent.devops.auth.pojo.vo.PipelineViewWithoutDownloadGroupVO
 import com.tencent.devops.common.api.pojo.Result
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.ws.rs.Consumes
+import jakarta.ws.rs.GET
 import jakarta.ws.rs.POST
 import jakarta.ws.rs.Path
 import jakarta.ws.rs.PathParam
@@ -42,4 +44,13 @@ interface OpPermissionFacadeResource {
         @Parameter(description = "操作列表", required = true)
         actions: List<String>
     ): Result<Boolean>
+
+    @GET
+    @Path("/projectGroups/pipelineViewWithoutDownload/")
+    @Operation(summary = "查询仅有流水线查看权限且没有下载权限的项目级用户组")
+    fun listProjectGroupsWithPipelineViewButNoDownload(
+        @Parameter(description = "项目ID列表，可选；为空时扫描所有启用项目", required = false)
+        @QueryParam("projectCodes")
+        projectCodes: List<String>? = null
+    ): Result<List<PipelineViewWithoutDownloadGroupVO>>
 }

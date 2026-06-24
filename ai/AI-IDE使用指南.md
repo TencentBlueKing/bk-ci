@@ -1,6 +1,13 @@
-# AI IDE 使用指南
+﻿# AI IDE 使用指南
 
 本项目提供了 AI 编码助手的配置文件，支持主流 AI IDE 工具。
+
+## 治理原则
+
+`ai/` 是 BK-CI AI Harness 的权威源，`rules/` 和 `skills/` 的设计原则见 `HARNESS.md`。
+
+`.cursor/`、`.codebuddy/`、`.claude/` 等目录是编辑器适配层。同步配置时应以 `ai/` 为准，避免同名
+rule 或 skill 在不同编辑器目录中长期分叉。
 
 ## 支持的 AI IDE
 
@@ -26,15 +33,15 @@ your-project/
 
 ### Cursor
 
-将 `rules/` 复制到项目根目录的 `.cursor/` 下：
+将 `rules/` 和 `skills/` 复制到项目根目录的 `.cursor/` 下：
 
 ```
 your-project/
 ├── .cursor/
-│   └── rules/           # 编码规范规则 (.mdc 文件)
+│   ├── rules/           # 编码规范规则 (.mdc 文件)
+│   └── skills/          # 项目技能文档（按需加载）
 ├── .cursorrules         # 项目全局规则文件（自动加载）
 ```
-> 注：Cursor暂不支持skill功能。
 
 
 ### Claude Code
@@ -57,7 +64,7 @@ your-project/
 |----------|-----------|--------|--------------------------|
 | 编码规则     | `.codebuddy/rules/*.mdc` | `.cursor/rules/*.mdc` | `CLAUDE.md` 或 `.claude/rules` |
 | 项目级全局配置  | `CODEBUDDY.md` | `.cursorrules` | `CLAUDE.md`              |
-| 自定义技能 | `.codebuddy/skills/` | - | `.claude/skills/`      |
+| 自定义技能 | `.codebuddy/skills/` | `.cursor/skills/` | `.claude/skills/`      |
 | 个人本地覆盖配置     | - | - | `CLAUDE.local.md`        |
 
 ## 目录说明
@@ -66,6 +73,20 @@ your-project/
 |------|------|
 | `rules/` | 编码规范规则，AI 会自动遵循这些规则生成代码 |
 | `skills/` | 项目架构和开发指南，AI 可按需加载理解项目上下文 |
+
+## 推荐默认用法
+
+日常 AI 编码不要默认进入完整 OpenSpec 或多 Agent 流程，先按以下路径分流：
+
+1. 单模块、小范围、低风险任务：读取目标模块 skill 后，可按复杂度选择执行方式；简单任务直接实现，
+   需要先澄清范围、影响面或方案时，则先进入 Plan Mode。
+2. 影响面不清或跨模块任务：先使用 `lightweight-ai-workflow` 做 impact checklist。
+3. 已有 OpenSpec 变更目录，或涉及接口、数据结构、数据库、权限、兼容性、迁移、回滚时：先走
+   OpenSpec 文档同步。
+4. 需求大、范围模糊、跨端或连续返工时：再升级多 Agent。
+
+新增或调整规则、技能时，先修改 `ai/` 下的权威源，再同步到 `.cursor/`、`.codebuddy/` 或 `.claude/`
+等编辑器适配目录。
 
 ## 注意事项
 

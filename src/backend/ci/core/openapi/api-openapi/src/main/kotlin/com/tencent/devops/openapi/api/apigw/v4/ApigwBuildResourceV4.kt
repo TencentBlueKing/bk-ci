@@ -30,9 +30,11 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE
+import com.tencent.devops.common.api.auth.AUTH_HEADER_IMATE_SESSION_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.BuildHistoryPage
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.StartType
@@ -40,6 +42,7 @@ import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildFormValue
 import com.tencent.devops.common.pipeline.pojo.StageReviewRequest
 import com.tencent.devops.common.web.annotation.BkField
+import com.tencent.devops.common.web.constant.BkStyleEnum
 import com.tencent.devops.openapi.BkApigwApi
 import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.process.pojo.BuildHistoryRemark
@@ -47,8 +50,10 @@ import com.tencent.devops.process.pojo.BuildHistoryWithVars
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.BuildManualStartupInfo
 import com.tencent.devops.process.pojo.BuildTaskPauseInfo
+import com.tencent.devops.process.pojo.LightBuildHistory
 import com.tencent.devops.process.pojo.ReviewParam
 import com.tencent.devops.process.pojo.pipeline.ModelRecord
+import com.tencent.devops.process.pojo.task.PipelineFailTaskDetail
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.media.ExampleObject
@@ -90,6 +95,9 @@ interface ApigwBuildResourceV4 {
         @Parameter(description = "流水线ID", required = true)
         @QueryParam("pipelineId")
         pipelineId: String,
+        @Parameter(description = "iMate会话ID", required = false)
+        @HeaderParam(AUTH_HEADER_IMATE_SESSION_ID)
+        imateSessionId: String?,
         @Parameter(
             description = "启动参数：map<变量名(string),变量值(string)>", required = false,
             examples = [
@@ -112,7 +120,10 @@ interface ApigwBuildResourceV4 {
         values: Map<String, String>?,
         @Parameter(description = "手动指定构建版本参数", required = false)
         @QueryParam("buildNo")
-        buildNo: Int? = null
+        buildNo: Int? = null,
+        @Parameter(description = "分支版本, 仅PAC流水线有效", required = false)
+        @QueryParam("branch")
+        branch: String? = null
     ): Result<BuildId>
 
     @Operation(summary = "停止构建", tags = ["v4_app_build_stop", "v4_user_build_stop"])
@@ -337,6 +348,61 @@ interface ApigwBuildResourceV4 {
         triggerBranch: List<String>? = null
     ): Result<BuildHistoryPage<BuildHistory>>
 
+    @Operation(summary = "获取流水线轻量构建历史", tags = ["v4_user_build_list_simple", "v4_app_build_list_simple"])
+    @GET
+    @Path("/build_histories/simple")
+    fun getLightHistoryBuild(
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @Parameter(description = "apigwType", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID(项目英文名)", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "流水线ID", required = true)
+        @QueryParam("pipelineId")
+        pipelineId: String,
+        @Parameter(description = "第几页", required = true, example = "1")
+        @QueryParam("page")
+        page: Int,
+        @Parameter(description = "每页条数(默认20, 最大100)", required = true, example = "20")
+        @QueryParam("pageSize")
+        @BkField(patternStyle = BkStyleEnum.PAGE_SIZE_STYLE)
+        pageSize: Int,
+        @Parameter(description = "状态", required = false)
+        @QueryParam("status")
+        status: List<BuildStatus>?,
+        @Parameter(description = "开始于-流水线的执行开始时间(格式：yyyy-MM-dd HH:mm:ss)", required = false)
+        @QueryParam("startTimeFrom")
+        startTimeFrom: String?,
+        @Parameter(description = "开始于-流水线的执行结束时间(格式：yyyy-MM-dd HH:mm:ss)", required = false)
+        @QueryParam("startTimeTo")
+        startTimeTo: String?,
+        @Parameter(description = "结束于-流水线的执行开始时间(格式：yyyy-MM-dd HH:mm:ss)", required = false)
+        @QueryParam("endTimeFrom")
+        endTimeFrom: String?,
+        @Parameter(description = "结束于-流水线的执行结束时间(格式：yyyy-MM-dd HH:mm:ss)", required = false)
+        @QueryParam("endTimeTo")
+        endTimeTo: String?,
+        @Parameter(description = "构件号起始", required = false)
+        @QueryParam("buildNoStart")
+        buildNoStart: Int?,
+        @Parameter(description = "构件号结束", required = false)
+        @QueryParam("buildNoEnd")
+        buildNoEnd: Int?,
+        @Parameter(
+            description = "利用updateTime进行排序，true为降序，false为升序，null时以Build number 降序",
+            required = false, example = "null"
+        )
+        @QueryParam("updateTimeDesc")
+        updateTimeDesc: Boolean? = null
+    ): Result<Page<LightBuildHistory>>
+
     @Operation(summary = "获取流水线手动启动参数", tags = ["v4_app_build_startInfo", "v4_user_build_startInfo"])
     @GET
     @Path("/build_manual_startup_info")
@@ -358,7 +424,10 @@ interface ApigwBuildResourceV4 {
         pipelineId: String,
         @Parameter(description = "指定草稿版本（为调试构建）", required = false)
         @QueryParam("version")
-        debugVersion: Int?
+        debugVersion: Int?,
+        @Parameter(description = "分支版本, 仅PAC流水线有效", required = false)
+        @QueryParam("branch")
+        branch: String? = null
     ): Result<BuildManualStartupInfo>
 
     @Operation(summary = "构建详情", tags = ["v4_app_build_detail", "v4_user_build_detail"])
@@ -599,4 +668,31 @@ interface ApigwBuildResourceV4 {
         @Parameter(description = "要操作的构建ID列表[最大50个]", required = true)
         buildIds: Set<String>
     ): Result<Boolean>
+
+    @Operation(summary = "获取指定构建的失败任务信息", tags = ["v4_app_build_failed_tasks", "v4_user_build_failed_tasks"])
+    @GET
+    @Path("/build_failed_tasks")
+    fun getBuildFailedTasks(
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @Parameter(description = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID(项目英文名)", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "流水线ID", required = false)
+        @QueryParam("pipelineId")
+        pipelineId: String?,
+        @Parameter(description = "构建ID", required = true)
+        @QueryParam("buildId")
+        buildId: String,
+        @Parameter(description = "执行次数", required = false)
+        @QueryParam("executeCount")
+        executeCount: Int?
+    ): Result<List<PipelineFailTaskDetail>>
 }

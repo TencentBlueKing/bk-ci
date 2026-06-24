@@ -61,8 +61,10 @@ import com.tencent.bkrepo.repository.pojo.share.ShareRecordCreateRequest
 import com.tencent.bkrepo.repository.pojo.share.ShareRecordInfo
 import com.tencent.bkrepo.repository.pojo.token.TemporaryTokenCreateRequest
 import com.tencent.bkrepo.repository.pojo.token.TokenType
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_CHANNEL
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_IAM_TOKEN
+import com.tencent.devops.common.api.context.ChannelContext
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.OkhttpUtils
@@ -77,6 +79,7 @@ import com.tencent.devops.common.archive.pojo.BkRepoFile
 import com.tencent.devops.common.archive.pojo.PackageVersionInfo
 import com.tencent.devops.common.archive.pojo.ProjectMetadata
 import com.tencent.devops.common.archive.pojo.QueryData
+import com.tencent.devops.common.archive.pojo.QueryNodeInfo
 import com.tencent.devops.common.archive.pojo.RepoCreateRequest
 import com.tencent.devops.common.archive.pojo.defender.ApkDefenderRequest
 import com.tencent.devops.common.archive.pojo.defender.ApkDefenderTasks
@@ -96,6 +99,14 @@ import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import io.opentelemetry.api.trace.Span
 import jakarta.ws.rs.NotFoundException
+import java.io.File
+import java.io.IOException
+import java.io.InputStream
+import java.io.OutputStream
+import java.net.URLEncoder
+import java.nio.file.FileSystems
+import java.nio.file.Paths
+import java.util.UUID
 import okhttp3.Credentials
 import okhttp3.Headers.Companion.toHeaders
 import okhttp3.MediaType
@@ -109,14 +120,6 @@ import org.slf4j.LoggerFactory
 import org.springframework.data.domain.Sort.Direction
 import org.springframework.stereotype.Component
 import org.springframework.util.FileCopyUtils
-import java.io.File
-import java.io.IOException
-import java.io.InputStream
-import java.io.OutputStream
-import java.net.URLEncoder
-import java.nio.file.FileSystems
-import java.nio.file.Paths
-import java.util.UUID
 
 @Component
 class BkRepoClient constructor(
@@ -177,6 +180,19 @@ class BkRepoClient constructor(
             .put(objectMapper.writeValueAsString(requestData).toRequestBody(JSON_MEDIA_TYPE))
             .build()
         doRequest(request).resolveResponse<Response<Void>>(ERROR_PROJECT_EXISTED)
+        return true
+    }
+
+    fun updateProjectShareEnabled(userId: String, projectId: String, enabled: Boolean): Boolean {
+        logger.info("updateProjectShareEnabled, userId: $userId, projectId: $projectId, enabled: $enabled")
+        val url = "${getGatewayUrl()}/bkrepo/api/service/repository/api/project/$projectId/share/enabled" +
+            "?enabled=$enabled"
+        val request = Request.Builder()
+            .url(url)
+            .headers(getCommonHeaders(userId, projectId).toHeaders())
+            .put("".toRequestBody(JSON_MEDIA_TYPE))
+            .build()
+        doRequest(request).resolveResponse<Response<Void>>()
         return true
     }
 
@@ -241,7 +257,8 @@ class BkRepoClient constructor(
             .headers(getCommonHeaders(userId, projectId).toHeaders())
             .get()
             .build()
-        return doRequest(request).resolveResponse<Response<Map<String, String>>>()!!.data!!
+        return doRequest(request).resolveResponse<Response<Map<String, Any>>>()!!.data!!
+            .mapValues { it.value.toString() }
     }
 
     @Deprecated(message = "api已废弃", replaceWith = ReplaceWith("listFilePage"))
@@ -430,10 +447,12 @@ class BkRepoClient constructor(
     fun deleteNode(userName: String, projectId: String, repoName: String, path: String, authorization: String) {
         logger.info("delete,  projectId: $projectId, repoName: $repoName, path: $path")
         val url = "${getGatewayUrl()}/bkrepo/api/service/repository/api/node/delete/$projectId/$repoName/$path"
+        val headers = getCommonHeaders(userName, projectId).apply {
+            put("Authorization", authorization)
+        }
         val request = Request.Builder()
             .url(url)
-            .header("Authorization", authorization)
-            .headers(getCommonHeaders(userName, projectId).toHeaders())
+            .headers(headers.toHeaders())
             .delete()
             .build()
         doRequest(request).resolveResponse<Response<Void>>()
@@ -486,12 +505,9 @@ class BkRepoClient constructor(
             destFullPath = toPath,
             overwrite = true
         )
-        val devopsToken = EnvironmentUtil.gatewayDevopsToken()
         val request = Request.Builder()
             .url(url)
-            .header(BK_REPO_UID, userId)
-            .header(AUTH_HEADER_DEVOPS_PROJECT_ID, fromProject)
-            .let { if (null == devopsToken) it else it.header("X-DEVOPS-TOKEN", devopsToken) }
+            .headers(getCommonHeaders(userId, fromProject).toHeaders())
             .post(objectMapper.writeValueAsString(requestData).toRequestBody(JSON_MEDIA_TYPE)).build()
         doRequest(request).resolveResponse<Response<Void>>()
     }
@@ -535,7 +551,8 @@ class BkRepoClient constructor(
             .headers(getCommonHeaders(userId, projectId).toHeaders())
             .get()
             .build()
-        return doRequest(request).resolveResponse<Response<NodeDetail>>()!!.data
+        val nodeDetail = doRequest(request).resolveResponse<Response<NodeDetail>>()!!.data ?: return null
+        return nodeDetail.copy(md5 = ignoreFakeChecksum(nodeDetail.md5), sha256 = ignoreFakeChecksum(nodeDetail.sha256))
     }
 
     fun matchBkRepoFile(
@@ -1191,7 +1208,11 @@ class BkRepoClient constructor(
             .headers(getCommonHeaders(userId, projectId).toHeaders())
             .post(requestBody.toRequestBody(JSON_MEDIA_TYPE))
             .build()
-        return doRequest(request).resolveResponse<Response<QueryData>>()!!.data!!
+        val queryData = doRequest(request).resolveResponse<Response<QueryData>>()!!.data!!
+        val records = queryData.records.map {
+            it.copy(md5 = ignoreFakeChecksum(it.md5), sha256 = ignoreFakeChecksum(it.sha256))
+        }
+        return queryData.copy(records = records)
     }
 
     fun listArtifactQualityMetadataLabels(
@@ -1280,6 +1301,7 @@ class BkRepoClient constructor(
         devopsToken?.let { headers[DEVOPS_TOKEN] = it }
         val traceHeader = getTraceHeader()
         traceHeader?.let { headers[BK_REPO_TRACE] = it }
+        ChannelContext.getChannel()?.takeIf { it.isNotBlank() }?.let { headers[AUTH_HEADER_DEVOPS_CHANNEL] = it }
         return headers
     }
 
@@ -1303,6 +1325,13 @@ class BkRepoClient constructor(
         }
     }
 
+    private fun ignoreFakeChecksum(checksum: String?): String {
+        if (checksum == null || checksum.toLongOrNull() == 0L) {
+            return ""
+        }
+        return checksum
+    }
+
     private inline fun <reified T> okhttp3.Response.resolveResponse(allowCode: Int? = null): T? {
         this.use {
             val responseContent = this.body!!.string()
@@ -1321,6 +1350,24 @@ class BkRepoClient constructor(
             }
             throw RemoteServiceException(responseData.message ?: responseData.code.toString(), this.code)
         }
+    }
+
+    fun getStoreComponentPkgSize(
+        userId: String,
+        projectId: String,
+        repoName: String,
+        fullPath: String
+    ): Long? {
+        // 对路径每一段做 URL encode，保留 / 分隔符，避免中文/空格/#/? 等字符引起的问题
+        val encodedPath = fullPath.split("/")
+            .joinToString("/") { if (it.isEmpty()) it else URLEncoder.encode(it, "UTF-8") }
+        val url = "${getGatewayUrl()}/bkrepo/api/service/repository/api/node/detail/$projectId/$repoName/$encodedPath"
+        val request = Request.Builder()
+            .url(url)
+            .headers(getCommonHeaders(userId, projectId).toHeaders())
+            .get()
+            .build()
+        return doRequest(request).resolveResponse<Response<QueryNodeInfo>>()?.data?.size
     }
 
     companion object {

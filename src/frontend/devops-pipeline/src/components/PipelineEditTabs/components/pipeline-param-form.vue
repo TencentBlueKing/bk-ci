@@ -134,6 +134,17 @@
                         :handle-change="(name, value) => handleUpdateParam(name, value)"
                     />
                 </div>
+                <div class="param-checkbox-row">
+                    <atom-checkbox
+                        name="sensitive"
+                        :disabled="disabled"
+                        :text="$t('editPage.sensitive')"
+                        :desc="sensitiveTips"
+                        :custom-tip="true"
+                        :value="param.sensitive"
+                        :handle-change="(name, value) => handleUpdateParam(name, value)"
+                    />
+                </div>
             </template>
             <Accordion
                 show-content
@@ -242,6 +253,9 @@
             typeLabel () {
                 return this.paramType === 'constant' ? this.$t('newui.pipelineParam.constType') : this.$t('editPage.paramsType')
             },
+            sensitiveTips () {
+                return Array(4).fill(0).map((_, i) => this.$t(`editPage.sensitiveTips${i + 1}`))
+            },
             paramsList () {
                 const list = PARAM_LIST.map(item => {
                     return {
@@ -311,12 +325,15 @@
         },
         methods: {
             handleParamTypeChange (key, value) {
+                const newParam = deepCopy(DEFAULT_PARAM[value])
                 this.param = {
-                    ...deepCopy(DEFAULT_PARAM[value]),
+                    ...newParam,
                     id: this.param.id,
                     name: this.param.name,
                     constant: this.paramType === 'constant'
                 }
+                // 切换类型时，同步更新 initParamItem，确保 defaultValue 等字段使用新类型的默认值
+                this.initParamItem = deepCopy(this.param)
                 this.resetEditItem(this.param)
             },
             handleUpdateParam (key, value) {

@@ -56,6 +56,8 @@ data class BuildFormProperty(
     val category: String? = null,
     @get:Schema(title = "展示条件", required = false)
     var displayCondition: Map<String, String>? = null,
+    @get:Schema(title = "是否为敏感字段", required = false)
+    var sensitive: Boolean? = null,
 
     // 针对 SVN_TAG 新增字段
     @get:Schema(title = "repoHashId", required = false)

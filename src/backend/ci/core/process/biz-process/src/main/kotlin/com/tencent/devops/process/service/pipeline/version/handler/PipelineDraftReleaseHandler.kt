@@ -29,7 +29,6 @@ package com.tencent.devops.process.service.pipeline.version.handler
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.enums.PipelineVersionAction
 import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.redis.RedisOperation
@@ -41,16 +40,16 @@ import com.tencent.devops.process.pojo.PipelineVersionReleaseRequest
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
 import com.tencent.devops.process.pojo.pipeline.PipelineResourceOnlyVersion
 import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
+import com.tencent.devops.process.pojo.pipeline.PipelineYamlFileReleaseReqSource
 import com.tencent.devops.process.service.pipeline.version.PipelineVersionCreateContext
 import com.tencent.devops.process.service.pipeline.version.PipelineVersionGenerator
 import com.tencent.devops.process.service.pipeline.version.PipelineVersionPersistenceService
-import com.tencent.devops.process.yaml.PipelineYamlCommonService
-import com.tencent.devops.process.yaml.PipelineYamlFacadeService
+import com.tencent.devops.process.yaml.PipelineYamlReleaseService
+import com.tencent.devops.process.yaml.PipelineYamlService
 import jakarta.ws.rs.core.Response
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.context.annotation.Lazy
 import org.springframework.stereotype.Service
 
 /**
@@ -64,17 +63,16 @@ class PipelineDraftReleaseHandler @Autowired constructor(
     private val dslContext: DSLContext,
     private val pipelineResourceVersionDao: PipelineResourceVersionDao,
     private val pipelineResourceDao: PipelineResourceDao,
-    @Lazy
-    private val pipelineYamlFacadeService: PipelineYamlFacadeService,
-    private val pipelineYamlCommonService: PipelineYamlCommonService
+    private val pipelineYamlService: PipelineYamlService,
+    private val pipelineYamlReleaseService: PipelineYamlReleaseService
 ) : PipelineVersionCreateHandler {
     override fun support(context: PipelineVersionCreateContext): Boolean {
         return context.versionAction == PipelineVersionAction.RELEASE_DRAFT
     }
 
     override fun handle(context: PipelineVersionCreateContext): DeployPipelineResult {
-        logger.info("draft version released with context={}", JsonUtil.toJson(context, false))
         with(context) {
+            logger.info("handle pipeline draft to release version|$projectId|$pipelineId|$version")
             if (enablePac) {
                 if (targetAction == null) {
                     throw ErrorCodeException(
@@ -120,14 +118,14 @@ class PipelineDraftReleaseHandler @Autowired constructor(
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_RELEASE_MUST_DRAFT_VERSION
             )
         }
-        val resourceOnlyVersion = pipelineVersionGenerator.generateDratReleaseVersion(
+        val resourceOnlyVersion = pipelineVersionGenerator.generateDraftReleaseVersion(
             projectId = projectId,
             pipelineId = pipelineId,
             draftResource = draftResource,
             enablePac = enablePac,
             repoHashId = yamlFileInfo?.repoHashId,
             targetAction = targetAction,
-            targetBranch = branchName
+            targetBranch = targetBranch
         )
         val releaseResource = pipelineResourceDao.getReleaseVersionResource(
             dslContext = dslContext, projectId = projectId, pipelineId = pipelineId
@@ -151,19 +149,10 @@ class PipelineDraftReleaseHandler @Autowired constructor(
                 updateBuildNo = true
             }
         }
-        // 检查推送参数
-        enablePac.takeIf { it }?.let {
-            pipelineYamlCommonService.checkPushParam(
-                projectId = projectId,
-                pipelineId = pipelineId,
-                content = pipelineResourceWithoutVersion.yaml!!,
-                repoHashId = yamlFileInfo!!.repoHashId,
-                filePath = yamlFileInfo.filePath,
-                targetAction = targetAction!!,
-                versionName = resourceOnlyVersion.versionName,
-                targetBranch = targetBranch
-            )
-        }
+        pipelineYamlReleaseService.validateReleaseYamlFile(
+            context = this,
+            resourceOnlyVersion = resourceOnlyVersion
+        )
         if (pipelineResourceWithoutVersion.status == VersionStatus.RELEASED) {
             pipelineVersionPersistenceService.releaseDraft2ReleaseVersion(
                 context = this,
@@ -177,14 +166,13 @@ class PipelineDraftReleaseHandler @Autowired constructor(
         }
 
         // 推送文件
-        val yamlFileReleaseResult = enablePac.takeIf { it }?.let {
-            pipelineVersionPersistenceService.releaseYamlFile(
-                context = this,
-                resourceOnlyVersion = resourceOnlyVersion
-            )
-        }
+        val yamlFileReleaseResult = pipelineYamlReleaseService.releaseYamlFile(
+            context = this,
+            resourceOnlyVersion = resourceOnlyVersion,
+            source = PipelineYamlFileReleaseReqSource.PIPELINE
+        )
 
-        val yamlInfo = pipelineYamlFacadeService.getPipelineYamlInfo(
+        val yamlInfo = pipelineYamlService.getPipelineYamlVo(
             projectId = projectId,
             pipelineId = pipelineId,
             version = resourceOnlyVersion.version

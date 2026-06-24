@@ -3,12 +3,14 @@ package com.tencent.devops.process.permission
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.auth.api.AuthAuthorizationApi
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.ResourceAuthorizationDTO
 import com.tencent.devops.common.auth.api.pojo.ResourceAuthorizationHandoverDTO
 import com.tencent.devops.common.auth.api.pojo.ResourceAuthorizationHandoverResult
 import com.tencent.devops.common.auth.enums.ResourceAuthorizationHandoverStatus
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.service.PipelineVisibilityService
 import com.tencent.devops.process.service.SubPipelineCheckService
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -17,12 +19,19 @@ import org.springframework.stereotype.Service
 class PipelineAuthorizationService constructor(
     val pipelinePermissionService: PipelinePermissionService,
     val authAuthorizationApi: AuthAuthorizationApi,
-    val subPipelineCheckService: SubPipelineCheckService
+    val subPipelineCheckService: SubPipelineCheckService,
+    val pipelineVisibilityService: PipelineVisibilityService
 ) {
     fun addResourceAuthorization(
         projectId: String,
         resourceAuthorizationList: List<ResourceAuthorizationDTO>
     ) {
+
+        resourceAuthorizationList.forEach {
+            it.resourceType = AuthResourceType.getAuthResourceTypeByChannel(
+                AuthResourceType.PIPELINE_DEFAULT
+            ).value
+        }
         authAuthorizationApi.addResourceAuthorization(
             projectId = projectId,
             resourceAuthorizationList = resourceAuthorizationList
@@ -48,22 +57,30 @@ class PipelineAuthorizationService constructor(
         resourceAuthorizationHandoverDTO: ResourceAuthorizationHandoverDTO
     ): ResourceAuthorizationHandoverResult {
         return with(resourceAuthorizationHandoverDTO) {
+            val authResourceType = AuthResourceType.get(resourceType)
             val hasHandoverToPermission = pipelinePermissionService.checkPipelinePermission(
                 userId = handoverTo!!,
                 projectId = projectCode,
                 pipelineId = resourceCode,
-                permission = AuthPermission.EXECUTE
+                permission = AuthPermission.EXECUTE,
+                authResourceType = authResourceType
             )
             val checkSubPipelinePermission = subPipelineCheckService.checkSubPipelinePermission(
-                projectId = projectCode,
-                pipelineId = resourceCode,
-                userId = handoverTo!!,
-                permission = AuthPermission.EXECUTE
-            )
+                    projectId = projectCode,
+                    pipelineId = resourceCode,
+                    userId = handoverTo!!,
+                    permission = AuthPermission.EXECUTE,
+                    authResourceType = authResourceType
+                )
             // 1.当前流水线的执行权限
             // 2.有子流水线的执行权限
             when {
                 hasHandoverToPermission && checkSubPipelinePermission.isEmpty() -> {
+                    pipelineVisibilityService.updateAuthUser(
+                        projectId = projectCode,
+                        pipelineId = resourceCode,
+                        authUser = handoverTo!!
+                    )
                     ResourceAuthorizationHandoverResult(ResourceAuthorizationHandoverStatus.SUCCESS)
                 }
 

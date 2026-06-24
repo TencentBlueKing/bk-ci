@@ -373,6 +373,47 @@ class RbacPermissionResourceGroupService @Autowired constructor(
         return iamGroupId
     }
 
+    override fun createEmptyProjectGroupWithCode(
+        projectId: String,
+        groupCode: String,
+        groupAddDTO: GroupAddDTO
+    ): Int {
+        logger.info("create empty project group with code|$projectId|$groupCode|$groupAddDTO")
+        val projectInfo = authResourceService.get(
+            projectCode = projectId,
+            resourceType = AuthResourceType.PROJECT.value,
+            resourceCode = projectId
+        )
+        authResourceGroupDao.get(
+            dslContext = dslContext,
+            projectCode = projectId,
+            resourceType = AuthResourceType.PROJECT.value,
+            resourceCode = projectId,
+            groupCode = groupCode
+        )?.let {
+            return it.relationId.toInt()
+        }
+        val iamGroupId = createGroupToIam(
+            managerId = projectInfo.relationId.toInt(),
+            resourceType = AuthResourceType.PROJECT.value,
+            groupName = groupAddDTO.groupName,
+            description = groupAddDTO.groupDesc
+        )
+        authResourceGroupDao.create(
+            dslContext = dslContext,
+            projectCode = projectId,
+            resourceType = AuthResourceType.PROJECT.value,
+            resourceCode = projectId,
+            resourceName = projectInfo.resourceName,
+            iamResourceCode = projectId,
+            groupCode = groupCode,
+            groupName = groupAddDTO.groupName,
+            defaultGroup = false,
+            relationId = iamGroupId.toString()
+        )
+        return iamGroupId
+    }
+
     private fun createGroupToIam(
         resourceType: String,
         managerId: Int,
@@ -714,9 +755,7 @@ class RbacPermissionResourceGroupService @Autowired constructor(
             projectCode = projectCode,
             resourceType = resourceType,
             resourceCode = resourceCode
-        ).filter {
-            it.groupCode != DefaultGroupType.MANAGER.value
-        }
+        )
         records.forEach {
             logger.info("delete subset manage default group|$managerId|${it.relationId}")
             iamV2ManagerService.deleteRoleGroupV2(it.relationId)

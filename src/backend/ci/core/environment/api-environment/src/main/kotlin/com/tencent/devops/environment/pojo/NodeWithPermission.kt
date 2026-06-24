@@ -99,5 +99,15 @@ data class NodeWithPermission(
     @get:Schema(title = "最近构建信息")
     var latestBuildDetail: AgentBuildDetail? = null,
     @get:Schema(title = "节点标签信息")
-    val tags: List<NodeTag>? = null
+    val tags: List<NodeTag>? = null,
+    @get:Schema(title = "当前环境是否启用这个 node")
+    val envEnableNode: Boolean?,
+    @get:Schema(title = "创作环境，工作空间id", required = false)
+    val createWorkspaceId: String?,
+    @get:Schema(
+        title = "操作人状态：NORMAL 表示操作人正常 / OPERATOR_CHANGED 表示负责人已变更（禁止使用）；可为NULL，为NULL表示未计算。" +
+            "只有nodeType为CMDB的时候，此字段不为空。判断CMDB节点是否责任人变更，条件为 " +
+            "nodeType==CMDB && operatorStatus==OPERATOR_CHANGED"
+    )
+    val operatorStatus: String? = null
 )

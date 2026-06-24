@@ -81,6 +81,7 @@ data class Variable(
     @get:Schema(title = "默认为实例入参,只有模版才有值,流水线没有值", required = false)
     var asInstanceInput: Boolean? = null,
     val const: Boolean? = null,
+    val sensitive: Boolean? = null,
     val props: VariableProps? = null,
     @JsonProperty("if")
     val ifCondition: Map<String, String>? = null

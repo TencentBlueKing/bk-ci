@@ -77,6 +77,9 @@ class PipelineTemplateCopyCreateReqConverter @Autowired constructor(
     ): PipelineTemplateVersionCreateContext {
         request as PipelineTemplateCopyCreateReq
         with(request) {
+            logger.info(
+                "Start to convert copy request|$projectId|$templateId|$templateId|$version"
+            )
             val srcTemplateInfo = pipelineTemplateInfoService.get(
                 projectId = projectId,
                 templateId = srcTemplateId

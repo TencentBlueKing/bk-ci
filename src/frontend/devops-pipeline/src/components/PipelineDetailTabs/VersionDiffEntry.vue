@@ -1,6 +1,7 @@
 <template>
     <span class="version-diff-entry-wrapper">
         <bk-button
+            v-if="type === 'button'"
             :text="text"
             :outline="outline"
             :theme="theme"
@@ -13,6 +14,18 @@
                 {{ isTemplate ? $t('template.diff') : $t('diff') }}
             </slot>
         </bk-button>
+        <span
+            v-else
+            class="diff-icon-button"
+            @click="initDiff"
+        >
+            <logo
+                class="diff-icon"
+                name="diff"
+                size="14"
+            />
+            {{ $t('preview.viewDiff') }}
+        </span>
         <bk-dialog
             render-directive="if"
             v-model="showVersionDiffDialog"
@@ -112,11 +125,13 @@
 <script>
     import VersionSelector from '@/components/PipelineDetailTabs/VersionSelector'
     import YamlDiff from '@/components/YamlDiff'
+    import Logo from '@/components/Logo'
     import { mapActions, mapGetters } from 'vuex'
     export default {
         components: {
             YamlDiff,
-            VersionSelector
+            VersionSelector,
+            Logo
         },
         props: {
             text: {
@@ -156,7 +171,11 @@
                 type: Boolean,
                 default: false
             },
-            type: String,
+            type: {
+                // button, icon 用于展示按钮形态
+                type: String,
+                default: 'button'
+            },
             pipelineId: String,
             templateId: String,
             archiveFlag: Boolean,
@@ -220,7 +239,8 @@
                         ...this.$route.params,
                         ...(isTemplate ? {templateId: this.uniqueId} : {}),
                         version,
-                        archiveFlag: this.archiveFlag
+                        archiveFlag: this.archiveFlag,
+                        source: 'COMPARE'
                     })
                     if (res?.yamlSupported) {
                         return res.yamlPreview.yaml
@@ -235,32 +255,48 @@
                     return ''
                 }
             },
-            async initDiff () {
+            async initDiff (version) {
                 this.activeVersion = this.version
                 this.currentVersion = this.latestVersion
                 this.showVersionDiffDialog = true
 
                 this.isLoadYaml = true
                 if (this.instanceCompareWithTemplate) {
-                    const { templateVersionName, instanceName, baseVersionYaml, comparedVersionYaml } = await this.compareYamlWithTemplate({
-                        projectId: this.$route.params.projectId,
-                        templateId: this.$route.params.templateId,
-                        pipelineId: this.pipelineId,
-                        templateVersion: this.latestVersion,
-                        pipelineVersion: this.activeVersion,
-                        useTemplateSettings: this.useTemplateSettings
-                    })
-                    this.activeYaml = baseVersionYaml
-                    this.currentYaml = comparedVersionYaml
-                    this.instanceName = instanceName
-                    this.templateVersionName = templateVersionName
+                    try {
+                        const { templateVersionName, instanceName, baseVersionYaml, comparedVersionYaml } = await this.compareYamlWithTemplate({
+                            projectId: this.$route.params.projectId,
+                            templateId: this.$route.params.templateId,
+                            pipelineId: this.pipelineId,
+                            templateVersion: ['string', 'number'].includes(typeof version) ? version : this.latestVersion,
+                            pipelineVersion: this.activeVersion,
+                            useTemplateSettings: this.useTemplateSettings
+                        })
+                        this.activeYaml = baseVersionYaml
+                        this.currentYaml = comparedVersionYaml
+                        this.instanceName = instanceName
+                        this.templateVersionName = templateVersionName
+                    } catch (error) {
+                        this.$bkMessage({
+                            theme: 'error',
+                            message: error.message,
+                            zIndex: 3000
+                        })
+                    }
                 } else {
-                    const [activeYaml, currentYaml] = await Promise.all([
-                        this.fetchPipelineYaml(this.activeVersion),
-                        this.fetchPipelineYaml(this.currentVersion)
-                    ])
-                    this.activeYaml = activeYaml
-                    this.currentYaml = currentYaml
+                    try {
+                        const [activeYaml, currentYaml] = await Promise.all([
+                            this.fetchPipelineYaml(this.activeVersion),
+                            this.fetchPipelineYaml(this.currentVersion)
+                        ])
+                        this.activeYaml = activeYaml
+                        this.currentYaml = currentYaml
+                    } catch (error) {
+                        this.$bkMessage({
+                            theme: 'error',
+                            message: error.message,
+                            zIndex: 3000
+                        })
+                    }
                 }
                 this.isLoadYaml = false
             },
@@ -273,7 +309,10 @@
                 }
             },
             async diffCurrentVersion (version, old) {
-                if (version !== this.currentVersion) {
+                if (version === this.currentVersion) return
+                if (this.instanceCompareWithTemplate) {
+                    this.initDiff(version)
+                } else {
                     this.currentVersion = version
                     this.isLoadYaml = true
                     this.currentYaml = await this.fetchPipelineYaml(this.currentVersion)
@@ -350,6 +389,16 @@
                     }
                 }
             }
+        }
+    }
+    .diff-icon-button {
+        display: flex;
+        align-items: center;
+        cursor: pointer;
+        color: #3A84FF;
+        .diff-icon {
+            color: #3A84FF;
+            margin-right: 2px;
         }
     }
 </style>

@@ -28,6 +28,7 @@ package com.tencent.devops.store.common.service.impl
 
 import com.tencent.devops.store.common.dao.StoreBaseQueryDao
 import com.tencent.devops.store.common.service.AbstractClassifyService
+import com.tencent.devops.store.pojo.common.enums.ServiceScopeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.jooq.DSLContext
@@ -45,7 +46,11 @@ class StoreComponentClassifyServiceImpl : AbstractClassifyService() {
     @Autowired
     private lateinit var storeBaseQueryDao: StoreBaseQueryDao
 
-    override fun getDeleteClassifyFlag(classifyId: String, storeType: StoreTypeEnum): Boolean {
+    override fun getDeleteClassifyFlag(
+        classifyId: String,
+        storeType: StoreTypeEnum,
+        serviceScope: ServiceScopeEnum?
+    ): Boolean {
         // 允许删除分类是条件：1、该分类下的组件都不处于上架状态 2、该分类下的组件如果处于已下架状态但已经没人在用
         var flag = false
         val releaseNum = storeBaseQueryDao.countByCondition(
@@ -59,7 +64,7 @@ class StoreComponentClassifyServiceImpl : AbstractClassifyService() {
                 dslContext = dslContext,
                 storeType = storeType,
                 status = StoreStatusEnum.UNDERCARRIAGING,
-                classifyId = classifyId
+                classifyId = classifyId,
             )
             val undercarriagedNum = storeBaseQueryDao.countByCondition(
                 dslContext = dslContext,

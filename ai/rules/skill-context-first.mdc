@@ -1,106 +1,73 @@
----
-description: 
+﻿---
+description: 先读相关 skill，再搜索或修改代码
 alwaysApply: true
 enabled: true
 updatedAt: 2025-12-11T04:00:12.840Z
-provider: 
+provider:
 ---
 
 # Skill 上下文优先规则
 
-## 核心原则
+在搜索代码、启动子代理或修改代码前，先读相关 skill，避免盲搜和误判模块边界。
 
-**在进行任何代码变更之前，必须先阅读相关的 skill 文档，确保有足够的上下文理解后再进行修改。**
+## 执行顺序
 
-## 执行流程
+1. 先识别用户需求属于哪个模块或领域。
+2. 如果用户要求制定 AI 流程、判断是否需要 OpenSpec / 多 Agent，或任务影响面不清，先读
+   `lightweight-ai-workflow` 做分流。
+3. 默认只读 `1` 个目标模块 skill 的主 `SKILL.md`，先吸收：
+   - 适用场景
+   - 不适用场景
+   - 快速指导
+   - 高信号规则
+   - 关键陷阱
+4. 如果任务明显涉及通用后端分层、语言规范、测试或 API 设计，最多再补 `1` 个横切 skill，例如：
+   - `backend-microservice-development`
+   - `kotlin-backend-conventions`
+   - `unit-testing`
+   - `api-interface-design`
+5. 只有当问题跨模块、链路归属不清、需要架构判断，或主 skill 仍无法判断落点时，才读取
+   `00-bkci-global-architecture`。
+6. 只有当主 `SKILL.md` 明确指向某个 `reference/`，或当前问题已经超出主 skill 能回答的范围时，
+   才继续读取它的 `reference/`。
+7. 完成以上步骤后，再搜索代码、启动子代理或修改实现。
 
-1. **阅读全局架构** - 首先阅读 `00-bkci-global-architecture` 了解模块间关系
-2. **识别变更模块** - 根据用户请求确定涉及的模块/服务
-3. **阅读相关 skill** - 使用 `use_skill` 工具加载对应的架构指南
-4. **理解上下文** - 确认模块的设计模式、代码规范、依赖关系
-5. **执行变更** - 在充分理解的基础上进行代码修改
+## 默认读取预算
 
-## 入口文档（优先阅读）
+- 默认预算：`1` 个模块主 skill + 最多 `1` 个横切 skill
+- `lightweight-ai-workflow` 只在流程分流、影响面不清或验证闭环不清时读取
+- `00-bkci-global-architecture` 不是默认入口，只在模块归属不清或链路判断需要时读取
+- `reference/` 不是默认入口，只在主 skill 不足且有明确理由时读取
+- 不要因为“保险起见”连续读取多个横切 skill 或多个 `reference/`
+- 如果任务已经能在当前预算内判断落点，就停止继续扩展上下文
 
-| Skill | 说明 |
-|-------|------|
-| `00-bkci-global-architecture` | **全局架构指南** - 以流水线为核心的模块协作全景图，包含完整的执行流程、模块依赖、数据流向 |
+## 何时强制先读 skill
 
-> **重要**: 对于不熟悉的模块或跨模块变更，应先阅读 `00-bkci-global-architecture` 建立全局视图，再深入具体模块。
+- 修改任何 `.kt`、`.java`、`.go`、`.vue`、`.ts` 文件前
+- 广泛搜索代码前
+- 启动代码探索类子代理前
+- 涉及陌生模块、跨模块链路或架构判断时
 
-## Skill 与模块对应关系
+## 常用路由
 
-| 模块/领域 | 对应 Skill |
-|-----------|------------|
-| **全局架构** | `00-bkci-global-architecture` |
-| 后端微服务开发 | `01-backend-microservice-development` |
-| API 接口设计 | `02-api-interface-design` |
-| 单元测试 | `03-unit-testing` |
-| 前端 Vue 开发 | `04-frontend-vue-development` |
-| Go Agent 开发 | `05-go-agent-development` |
-| 数据库脚本 | `06-database-script-management`, `44-database-design` |
-| Git 提交 | `07-git-commit-specification` |
-| 事件驱动 | `08-event-driven-architecture` |
-| 责任链模式 | `09-chain-of-responsibility-pattern` |
-| 分布式锁 | `10-distributed-lock` |
-| 服务间调用 | `11-service-communication` |
-| 性能监控 | `12-performance-monitoring` |
-| 重试机制 | `13-retry-mechanism` |
-| 国际化/日志 | `14-i18n-and-logging` |
-| 参数校验 | `15-parameter-validation` |
-| 定时任务 | `16-scheduled-tasks` |
-| AOP 切面 | `17-aop-aspect-programming` |
-| 条件配置 | `18-conditional-configuration` |
-| JWT 安全 | `19-jwt-security` |
-| 审计日志 | `20-audit-logging` |
-| 表达式解析 | `21-expression-parser` |
-| 数据库分片 | `23-database-sharding` |
-| OAuth2 认证 | `24-oauth2-authentication` |
-| 流水线变量 | `26-pipeline-variable-extension` |
-| 设计模式 | `27-design-patterns` |
-| 流水线模型 | `28-pipeline-model-architecture` |
-| Process 模块 | `29-process-module-architecture` 系列 |
-| Auth 模块 | `30-auth-module-architecture` |
-| Project 模块 | `31-project-module-architecture` |
-| Repository 模块 | `32-repository-module-architecture` |
-| Store 模块 | `33-store-module-architecture` |
-| Artifactory 模块 | `34-artifactory-module-architecture` |
-| Dispatch 模块 | `35-dispatch-module-architecture` |
-| Environment 模块 | `36-environment-module-architecture` |
-| Ticket 模块 | `37-ticket-module-architecture` |
-| Notify 模块 | `39-notify-module-architecture` |
-| OpenAPI 模块 | `41-openapi-module-architecture` |
-| Worker 模块 | `42-worker-module-architecture` |
-| Agent 模块 | `43-agent-module-architecture` |
-| 数据库设计 | `44-database-design` |
-
-## 示例场景
-
-### 场景1：修改流水线调度逻辑
-```
-1. 先阅读 `29-process-module-architecture` 了解 Process 模块架构
-2. 阅读 `29-3-process-engine-control` 了解引擎控制层
-3. 阅读 `08-event-driven-architecture` 了解事件驱动机制
-4. 再进行代码修改
-```
-
-### 场景2：新增数据库表
-```
-1. 先阅读 `44-database-design` 了解表设计规范
-2. 阅读 `06-database-script-management` 了解脚本管理规范
-3. 再编写 DDL 脚本
-```
-
-### 场景3：开发新插件
-```
-1. 先阅读 `33-store-module-architecture` 了解研发商店架构
-2. 阅读 `42-worker-module-architecture` 了解插件执行机制
-3. 再进行插件开发
-```
+- 后端开发：`backend-microservice-development`
+- AI 任务分流 / 影响面 / 验证闭环：`lightweight-ai-workflow`
+- Kotlin / Spring Boot：`kotlin-backend-conventions`、`springboot-backend-conventions`
+- API 设计：`api-interface-design`
+- 单元测试：`unit-testing`
+- 前端 Vue：`frontend-vue-development`
+- 流水线模型 / Process：`pipeline-model-architecture`、`process-module-architecture`
+- 变量 / YAML / 模板：`pipeline-variable-management`、`yaml-pipeline-transfer`、`pipeline-template-module`
+- 插件 / Worker / Agent / Dispatch：`pipeline-plugin-development`、`worker-module-architecture`、`agent-module-architecture`、`dispatch-module-architecture`
+- 权限：`auth-module-architecture`、`permission-model-change-guide`
+- 数据库：`database-design`
+- 支撑模块：`supporting-modules-architecture`
 
 ## 注意事项
 
-- **跨模块变更必须先读 `00-bkci-global-architecture`** 了解模块间协作关系
-- 如果涉及多个模块，需阅读所有相关 skill
-- 如果 skill 内容与实际代码有出入，以实际代码为准并提醒更新 skill
-- 复杂变更建议先阅读 skill 后再制定变更计划
+- 不要引用已废弃或不存在的旧 skill 名称。
+- skill 如果和实际代码不一致，以代码为准，并顺手更新 skill。
+- 不要把全局架构 skill 当成详细设计文档；它只负责导航和归属判断。
+- 本 rule 只负责上下文路由，不承载模块知识；模块细节应放在对应 `SKILL.md` 或 `reference/`。
+- 如果需要调整 rule、skill、reference 或编辑器适配目录的边界，先参考 `ai/HARNESS.md`。
+- 对单模块、小范围修复任务，优先把 token 用在代码与验证上，而不是额外阅读更多 skill。

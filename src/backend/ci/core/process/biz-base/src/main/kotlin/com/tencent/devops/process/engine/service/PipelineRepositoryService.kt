@@ -61,8 +61,8 @@ import com.tencent.devops.common.pipeline.extend.ModelCheckPlugin
 import com.tencent.devops.common.pipeline.option.MatrixControlOption
 import com.tencent.devops.common.pipeline.pojo.BuildNo
 import com.tencent.devops.common.pipeline.pojo.MatrixPipelineInfo
-import com.tencent.devops.common.pipeline.pojo.ModelIdDuplicateChecker
 import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
+import com.tencent.devops.common.pipeline.pojo.element.market.MarketEventAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
@@ -117,11 +117,13 @@ import com.tencent.devops.process.pojo.PipelineSortType
 import com.tencent.devops.process.pojo.pipeline.DeletePipelineResult
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
 import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
-import com.tencent.devops.process.pojo.pipeline.PipelineYamlVo
+import com.tencent.devops.process.pojo.pipeline.PipelineYamlFileInfo
 import com.tencent.devops.process.pojo.pipeline.TemplateInfo
 import com.tencent.devops.process.pojo.setting.PipelineModelVersion
 import com.tencent.devops.process.service.PipelineAsCodeService
 import com.tencent.devops.process.service.PipelineOperationLogService
+import com.tencent.devops.process.service.PipelineVisibilityService
+import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.service.pipeline.PipelineSettingVersionService
 import com.tencent.devops.process.service.pipeline.PipelineTransferYamlService
 import com.tencent.devops.process.utils.PIPELINE_MATRIX_CON_RUNNING_SIZE_MAX
@@ -134,6 +136,7 @@ import com.tencent.devops.process.utils.PipelineVarUtil
 import com.tencent.devops.process.utils.PipelineVersionUtils
 import com.tencent.devops.process.yaml.utils.NotifyTemplateUtils
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
+import com.tencent.devops.store.pojo.common.BK_STORE_CREATIVE_STREAM_MANUAL_TRIGGER
 import jakarta.ws.rs.core.Response
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -184,7 +187,9 @@ class PipelineRepositoryService constructor(
     private val pipelineCallbackDao: PipelineCallbackDao,
     private val subPipelineTaskService: SubPipelineTaskService,
     private val pipelineInfoService: PipelineInfoService,
-    private val pipelineTemplateInfoDao: PipelineTemplateInfoDao
+    private val pipelineTemplateInfoDao: PipelineTemplateInfoDao,
+    private val pipelineGroupService: PipelineGroupService,
+    private val pipelineVisibilityService: PipelineVisibilityService
 ) {
 
     companion object {
@@ -194,7 +199,8 @@ class PipelineRepositoryService constructor(
 
         @Suppress("ALL")
         fun PipelineSetting.checkParam() {
-            if (maxPipelineResNum < 1) {
+            val maxResNum = maxPipelineResNum
+            if (maxResNum != null && maxResNum < 1) {
                 throw InvalidParamException(
                     message = I18nUtil.getCodeLanMessage(ProcessMessageCode.PIPELINE_ORCHESTRATIONS_NUMBER_ILLEGAL),
                     params = arrayOf("maxPipelineResNum")
@@ -235,9 +241,10 @@ class PipelineRepositoryService constructor(
         }
     }
 
-    @Value("\${project.callback.secretParam.aes-key:project_callback_aes_key}")
+    @Value("\${project.callback.aes-key}")
     private val aesKey = ""
 
+    @SuppressWarnings("NestedBlockDepth")
     fun deployPipeline(
         model: Model,
         projectId: String,
@@ -255,7 +262,7 @@ class PipelineRepositoryService constructor(
         versionStatus: VersionStatus? = VersionStatus.RELEASED,
         branchName: String? = null,
         description: String? = null,
-        yamlInfo: PipelineYamlVo? = null,
+        yamlFileInfo: PipelineYamlFileInfo? = null,
         pipelineDisable: Boolean? = null
     ): DeployPipelineResult {
 
@@ -279,7 +286,7 @@ class PipelineRepositoryService constructor(
             create = create,
             versionStatus = versionStatus,
             channelCode = channelCode,
-            yamlInfo = yamlInfo,
+            yamlFileInfo = yamlFileInfo,
             pipelineDialect = pipelineDialect
         )
         val triggerContainer = model.getTriggerContainer()
@@ -291,9 +298,21 @@ class PipelineRepositoryService constructor(
         var canElementSkip = false
         run lit@{
             triggerContainer.elements.forEach {
-                if (it is ManualTriggerElement && it.elementEnabled()) {
+                val targetElement = it is ManualTriggerElement || if (channelCode == ChannelCode.CREATIVE_STREAM) {
+                    it is MarketEventAtomElement && it.atomCode == BK_STORE_CREATIVE_STREAM_MANUAL_TRIGGER
+                } else {
+                    false
+                }
+                if (targetElement && it.elementEnabled()) {
                     canManualStartup = true
-                    canElementSkip = it.canElementSkip ?: false
+                    canElementSkip = when (it) {
+                        is ManualTriggerElement -> it.canElementSkip ?: false
+                        is MarketEventAtomElement -> {
+                            val input = it.data["input"] as Map<String, Any>? ?: emptyMap()
+                            input["canElementSkip"] as? Boolean ?: false
+                        }
+                        else -> false
+                    }
                     return@lit
                 }
             }
@@ -374,7 +393,7 @@ class PipelineRepositoryService constructor(
         create: Boolean = true,
         versionStatus: VersionStatus? = VersionStatus.RELEASED,
         channelCode: ChannelCode,
-        yamlInfo: PipelineYamlVo? = null,
+        yamlFileInfo: PipelineYamlFileInfo? = null,
         pipelineDialect: IPipelineDialect? = null
     ): List<PipelineModelTask> {
         val metaSize = modelCheckPlugin.checkModelIntegrity(
@@ -387,12 +406,14 @@ class PipelineRepositoryService constructor(
         )
         // 去重id
         val distinctIdSet = HashSet<String>(metaSize, 1F /* loadFactor */)
-        val jobIdDuplicateChecker = ModelIdDuplicateChecker()
 
         // 初始化ID 该构建环境下的ID,旧流水引擎数据无法转换为String，仍然是序号的方式
         val modelTasks = ArrayList<PipelineModelTask>(metaSize)
         // 初始化ID 该构建环境下的ID,旧流水引擎数据无法转换为String，仍然是序号的方式
         val containerSeqId = AtomicInteger(0)
+        // 跨 stage 共享的 jobId 生成器种子和已使用的 jobId 集合，确保整个 model 范围内 jobId 唯一
+        val randomSeed = AtomicInteger(1)
+        val jobIdSet = mutableSetOf<String>()
         model.stages.forEachIndexed { index, s ->
             s.id = VMUtils.genStageId(index + 1)
             // #4531 对存量的stage审核数据做兼容处理
@@ -411,8 +432,7 @@ class PipelineRepositoryService constructor(
                     create = create,
                     distIds = distinctIdSet,
                     versionStatus = versionStatus,
-                    yamlInfo = yamlInfo,
-                    jobIdDuplicateChecker = jobIdDuplicateChecker
+                    yamlFileInfo = yamlFileInfo
                 )
             } else {
                 initOtherContainer(
@@ -427,17 +447,12 @@ class PipelineRepositoryService constructor(
                     create = create,
                     distIds = distinctIdSet,
                     versionStatus = versionStatus,
-                    yamlInfo = yamlInfo,
+                    yamlFileInfo = yamlFileInfo,
                     stageIndex = index,
-                    jobIdDuplicateChecker = jobIdDuplicateChecker
+                    randomSeed = randomSeed,
+                    jobIdSet = jobIdSet
                 )
             }
-        }
-        if (jobIdDuplicateChecker.duplicateIdSet.isNotEmpty()) {
-            throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ERROR_JOB_ID_DUPLICATE,
-                params = arrayOf(jobIdDuplicateChecker.duplicateIdSet.joinToString(","))
-            )
         }
         return modelTasks
     }
@@ -454,8 +469,7 @@ class PipelineRepositoryService constructor(
         create: Boolean,
         distIds: HashSet<String>,
         versionStatus: VersionStatus? = VersionStatus.RELEASED,
-        yamlInfo: PipelineYamlVo?,
-        jobIdDuplicateChecker: ModelIdDuplicateChecker
+        yamlFileInfo: PipelineYamlFileInfo?
     ) {
         if (stage.containers.size != 1) {
             logger.warn("The trigger stage contain more than one container (${stage.containers.size})")
@@ -477,9 +491,6 @@ class PipelineRepositoryService constructor(
             c.containerHashId = modelContainerIdGenerator.getNextId()
         }
         distIds.add(c.containerHashId!!)
-        if (!c.jobId.isNullOrBlank()) {
-            jobIdDuplicateChecker.addId(c.jobId!!)
-        }
 
         // 清理无用的options
         c.params = PipelineUtils.cleanOptions(c.params)
@@ -500,7 +511,7 @@ class PipelineRepositoryService constructor(
                     channelCode = channelCode,
                     create = create,
                     container = c,
-                    yamlInfo = yamlInfo
+                    yamlFileInfo = yamlFileInfo
                 )
             }
 
@@ -536,9 +547,10 @@ class PipelineRepositoryService constructor(
         create: Boolean,
         distIds: HashSet<String>,
         versionStatus: VersionStatus? = VersionStatus.RELEASED,
-        yamlInfo: PipelineYamlVo?,
+        yamlFileInfo: PipelineYamlFileInfo?,
         stageIndex: Int,
-        jobIdDuplicateChecker: ModelIdDuplicateChecker
+        randomSeed: AtomicInteger,
+        jobIdSet: MutableSet<String>
     ) {
         if (stage.containers.isEmpty()) {
             throw ErrorCodeException(
@@ -548,8 +560,6 @@ class PipelineRepositoryService constructor(
                 )
             )
         }
-        var randomSeed = 1
-        val jobIdSet = mutableSetOf<String>()
         stage.containers.forEachIndexed { containerIndex, c ->
 
             if (c is TriggerContainer) {
@@ -572,7 +582,7 @@ class PipelineRepositoryService constructor(
 
             var taskSeq = 0
             c.id = containerSeqId.incrementAndGet().toString()
-            if (c.jobId.isNullOrBlank()) c.jobId = VMUtils.getContainerJobId(randomSeed++, jobIdSet)
+            if (c.jobId.isNullOrBlank()) c.jobId = VMUtils.getContainerJobId(randomSeed.getAndIncrement(), jobIdSet)
             c.jobId?.let { jobIdSet.add(it) }
             try {
                 when {
@@ -603,9 +613,6 @@ class PipelineRepositoryService constructor(
                 c.containerHashId = modelContainerIdGenerator.getNextId()
             }
             distIds.add(c.containerHashId!!)
-            if (!c.jobId.isNullOrBlank()) {
-                jobIdDuplicateChecker.addId(c.jobId!!)
-            }
             c.elements.forEach { e ->
                 if (e.id.isNullOrBlank() || distIds.contains(e.id)) {
                     e.id = modelTaskIdGenerator.getNextId()
@@ -623,7 +630,7 @@ class PipelineRepositoryService constructor(
                         channelCode = channelCode,
                         create = create,
                         container = c,
-                        yamlInfo = yamlInfo
+                        yamlFileInfo = yamlFileInfo
                     )
                 }
 
@@ -671,23 +678,29 @@ class PipelineRepositoryService constructor(
     }
 
     /**
-     * 初始化默认的流水线setting
+     * 根据 channelCode 计算 maxPipelineResNum
+     * 如果 channelCode 在特定渠道列表中，返回特定渠道的最大保留数，否则返回默认最大保留数
      */
-    fun createDefaultSetting(
-        projectId: String,
-        pipelineId: String,
-        pipelineName: String,
-        channelCode: ChannelCode
-    ): PipelineSetting {
-        // 空白流水线设置初始化
-        val maxPipelineResNum = if (
-            channelCode.name in versionConfigure.specChannels.split(",")
-        ) {
+    private fun calculateMaxPipelineResNum(channelCode: ChannelCode): Int {
+        return if (channelCode.name in versionConfigure.specChannels.split(",")) {
             versionConfigure.specChannelMaxKeepNum
         } else {
             versionConfigure.maxKeepNum
         }
-        val notifyTypes = if (channelCode == ChannelCode.BS) {
+    }
+
+    /**
+     * 初始化默认的流水线setting
+     */
+    fun createDefaultSetting(
+        projectId: String = "",
+        pipelineId: String = "",
+        pipelineName: String = "",
+        channelCode: ChannelCode
+    ): PipelineSetting {
+        // 空白流水线设置初始化
+        val maxPipelineResNum = calculateMaxPipelineResNum(channelCode)
+            val notifyTypes = if (channelCode == ChannelCode.BS || channelCode == ChannelCode.CREATIVE_STREAM) {
             pipelineInfoExtService.failNotifyChannel()
         } else {
             ""
@@ -895,6 +908,15 @@ class PipelineRepositoryService constructor(
                     channel = channelCode.name,
                     modelTasks = modelTasks.toList()
                 )
+                // 创作流,可见性默认添加创建者
+                if (channelCode == ChannelCode.CREATIVE_STREAM) {
+                    pipelineVisibilityService.initVisibility(
+                        transactionContext = transactionContext,
+                        userId = userId,
+                        projectId = projectId,
+                        pipelineId = pipelineId
+                    )
+                }
             }
         } finally {
             lock.unlock()
@@ -1739,6 +1761,7 @@ class PipelineRepositoryService constructor(
                     templatePipelineDao.delete(transactionContext, projectId, pipelineId)
                     pipelineYamlInfoDao.deleteByPipelineId(transactionContext, projectId, pipelineId)
                     pipelineYamlVersionDao.deleteByPipelineId(transactionContext, projectId, pipelineId)
+                    pipelineVisibilityService.deleteByPipelineId(transactionContext, projectId, pipelineId)
                 } else {
                     // 删除前改名，防止名称占用
                     val deleteTime = org.joda.time.LocalDateTime.now().toString("yyMMddHHmmSS")
@@ -1824,7 +1847,7 @@ class PipelineRepositoryService constructor(
     fun isPipelineExist(
         projectId: String,
         pipelineName: String,
-        channelCode: ChannelCode = ChannelCode.BS,
+        channelCode: ChannelCode = ChannelCode.getRequestChannelCode(),
         excludePipelineId: String?
     ): Boolean {
         return pipelineInfoDao.isNameExist(dslContext, projectId, pipelineName, channelCode, excludePipelineId)
@@ -1877,6 +1900,27 @@ class PipelineRepositoryService constructor(
 
     fun getSetting(projectId: String, pipelineId: String): PipelineSetting? {
         return pipelineSettingDao.getSetting(dslContext, projectId, pipelineId)
+    }
+
+    /**
+     * settingVersion表中labels字段可能为空(如实例化流水线),需要单独再查询
+     */
+    fun getSettingWithLabels(userId: String, projectId: String, pipelineId: String): PipelineSetting? {
+        val labels = ArrayList<String>()
+        val labelNames = ArrayList<String>()
+        pipelineGroupService.getGroups(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId
+        ).forEach {
+            labels.addAll(it.labels)
+            labelNames.addAll(it.labelNames)
+        }
+        return pipelineSettingDao.getSetting(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId
+        )?.copy(labels = labels, labelNames = labelNames)
     }
 
     fun getSettingByPipelineVersion(
@@ -1936,6 +1980,21 @@ class PipelineRepositoryService constructor(
         }
     }
 
+    /**
+     * 处理 maxPipelineResNum 为空的情况
+     * 如果 maxPipelineResNum 为空，根据 channelCode 和 versionConfigure 计算默认值
+     */
+    private fun processMaxPipelineResNumIfNull(
+        setting: PipelineSetting,
+        channelCode: ChannelCode
+    ): PipelineSetting {
+        if (setting.maxPipelineResNum != null) {
+            return setting
+        }
+        val maxPipelineResNum = calculateMaxPipelineResNum(channelCode)
+        return setting.copy(maxPipelineResNum = maxPipelineResNum)
+    }
+
     private fun transactionSaveSetting(
         context: DSLContext?,
         setting: PipelineSetting,
@@ -1957,30 +2016,47 @@ class PipelineRepositoryService constructor(
             if (old?.pipelineName != null) {
                 oldName = old.pipelineName
             }
-            if (!isTemplate && versionStatus.isReleasing()) pipelineInfoDao.update(
+            // 获取 channelCode 并处理 maxPipelineResNum 为空的情况
+            val pipelineInfo = pipelineInfoDao.getPipelineInfo(
                 dslContext = transactionContext,
                 projectId = setting.projectId,
                 pipelineId = setting.pipelineId,
+                channelCode = null
+            )
+            val channelCode = pipelineInfo?.channel?.let {
+                try {
+                    ChannelCode.valueOf(it)
+                } catch (e: IllegalArgumentException) {
+                    logger.warn("Invalid channel code: $it, using default channel code")
+                    ChannelCode.getRequestChannelCode()
+                }
+            } ?: ChannelCode.getRequestChannelCode()
+            val processedSetting = processMaxPipelineResNumIfNull(setting, channelCode)
+            if (!isTemplate && versionStatus.isReleasing()) pipelineInfoDao.update(
+                dslContext = transactionContext,
+                projectId = processedSetting.projectId,
+                pipelineId = processedSetting.pipelineId,
                 userId = userId,
-                pipelineName = setting.pipelineName,
-                pipelineDesc = setting.desc,
+                pipelineName = processedSetting.pipelineName,
+                pipelineDesc = processedSetting.desc,
                 updateLastModifyUser = updateLastModifyUser,
                 // 单独修改流水线配置不影响版本状态
                 latestVersionStatus = null
             )
             if (version > 0) { // #671 兼容无版本要求的修改入口，比如改名，或者只读流水线的修改操作, version=0
-                if (old?.maxPipelineResNum != null) {
+                val oldMaxPipelineResNum = old?.maxPipelineResNum
+                if (oldMaxPipelineResNum != null) {
                     pipelineSettingVersionDao.deleteEarlyVersion(
                         dslContext = transactionContext,
-                        projectId = setting.projectId,
-                        pipelineId = setting.pipelineId,
+                        projectId = processedSetting.projectId,
+                        pipelineId = processedSetting.pipelineId,
                         currentVersion = version,
-                        maxPipelineResNum = old.maxPipelineResNum
+                        maxPipelineResNum = oldMaxPipelineResNum
                     )
                 }
                 pipelineSettingVersionDao.saveSetting(
                     dslContext = transactionContext,
-                    setting = setting,
+                    setting = processedSetting,
                     version = version,
                     isTemplate = isTemplate,
                     id = client.get(ServiceAllocIdResource::class).generateSegmentId(
@@ -1990,7 +2066,7 @@ class PipelineRepositoryService constructor(
             }
             if (versionStatus.isReleasing()) {
                 pipelineSettingDao.saveSetting(
-                    transactionContext, setting, isTemplate
+                    transactionContext, processedSetting, isTemplate
                 )
             }
         }
@@ -2219,6 +2295,7 @@ class PipelineRepositoryService constructor(
             // 2、update settingName
             pipelineSettingDao.updateSettingName(
                 dslContext = transactionContext,
+                projectId = projectId,
                 pipelineIdList = listOf(pipelineId),
                 name = modelName
             )
@@ -2460,11 +2537,14 @@ class PipelineRepositoryService constructor(
     /**
      * 根据model获取触发参数，兼容级联参数
      */
-    fun getTriggerParams(triggerContainer: TriggerContainer): Map<String, String> {
+    fun getTriggerParams(
+        triggerContainer: TriggerContainer,
+        inputParams: Map<String, String>? = null
+    ): Map<String, String> {
         val startParams = mutableMapOf<String, String>()
         triggerContainer.params.forEach { param ->
             val paramKey = param.id
-            val paramDefaultValue = param.defaultValue
+            val paramDefaultValue = inputParams?.get(param.id) ?: param.defaultValue
             val paramType = param.type
             if (CascadePropertyUtils.supportCascadeParam(paramType)) {
                 CascadePropertyUtils.parseDefaultValue(

@@ -29,7 +29,6 @@ package com.tencent.devops.misc.service.quality
 
 import com.tencent.devops.misc.dao.quality.QualityDataClearDao
 import org.jooq.DSLContext
-import org.jooq.impl.DSL
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -42,12 +41,13 @@ class QualityDataClearService @Autowired constructor(
     /**
      * 清除质量红线构建数据
      * @param buildId 构建ID
+     *
+     * 两张表均按 BUILD_ID 维度删除，互相之间无跨表一致性约束，
+     * 单步失败可由下一轮 cron / 重试补救。故不再使用事务包裹，
+     * 避免长事务持锁影响质量红线运行。
      */
     fun clearBuildData(buildId: String) {
-        dslContext.transaction { t ->
-            val context = DSL.using(t)
-            qualityDataClearDao.deleteQualityHisDetailMetadataByBuildId(context, buildId)
-            qualityDataClearDao.deleteQualityHisOriginMetadataByBuildId(context, buildId)
-        }
+        qualityDataClearDao.deleteQualityHisDetailMetadataByBuildId(dslContext, buildId)
+        qualityDataClearDao.deleteQualityHisOriginMetadataByBuildId(dslContext, buildId)
     }
 }

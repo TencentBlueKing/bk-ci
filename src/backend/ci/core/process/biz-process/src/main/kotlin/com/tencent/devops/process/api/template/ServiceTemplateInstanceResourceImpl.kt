@@ -39,12 +39,14 @@ import com.tencent.devops.process.pojo.template.TemplateInstanceParams
 import com.tencent.devops.process.pojo.template.TemplateInstanceUpdate
 import com.tencent.devops.process.pojo.template.TemplateOperationRet
 import com.tencent.devops.process.service.template.TemplateFacadeService
+import com.tencent.devops.process.service.template.v2.PipelineTemplateCompatibilityAdapter
 import org.springframework.beans.factory.annotation.Autowired
 
 @Suppress("ALL")
 @RestResource
 class ServiceTemplateInstanceResourceImpl @Autowired constructor(
-    private val templateFacadeService: TemplateFacadeService
+    private val templateFacadeService: TemplateFacadeService,
+    private val pipelineTemplateCompatibilityAdapter: PipelineTemplateCompatibilityAdapter
 ) : ServiceTemplateInstanceResource {
 
     @AuditEntry(actionId = ActionId.PIPELINE_CREATE)
@@ -56,7 +58,7 @@ class ServiceTemplateInstanceResourceImpl @Autowired constructor(
         useTemplateSettings: Boolean,
         instances: List<TemplateInstanceCreate>
     ): TemplateOperationRet {
-        return templateFacadeService.createTemplateInstances(
+        return pipelineTemplateCompatibilityAdapter.createTemplateInstances(
             projectId = projectId,
             userId = userId,
             templateId = templateId,
@@ -86,7 +88,7 @@ class ServiceTemplateInstanceResourceImpl @Autowired constructor(
         useTemplateSettings: Boolean,
         instances: List<TemplateInstanceUpdate>
     ): TemplateOperationRet {
-        return templateFacadeService.updateTemplateInstances(
+        return pipelineTemplateCompatibilityAdapter.updateTemplateInstances(
             projectId = projectId,
             userId = userId,
             templateId = templateId,
@@ -105,7 +107,7 @@ class ServiceTemplateInstanceResourceImpl @Autowired constructor(
         useTemplateSettings: Boolean,
         instances: List<TemplateInstanceUpdate>
     ): TemplateOperationRet {
-        return templateFacadeService.updateTemplateInstances(
+        return pipelineTemplateCompatibilityAdapter.updateTemplateInstances(
             projectId = projectId,
             userId = userId,
             templateId = templateId,
@@ -126,7 +128,7 @@ class ServiceTemplateInstanceResourceImpl @Autowired constructor(
         desc: Boolean?
     ): Result<TemplateInstancePage> {
         return Result(
-            templateFacadeService.listTemplateInstancesInPage(
+            pipelineTemplateCompatibilityAdapter.listTemplateInstances(
                 projectId = projectId,
                 userId = userId,
                 templateId = templateId,

@@ -431,6 +431,21 @@ class TemplateDao {
         }
     }
 
+    /**
+     * 获取项目下所有模板ID列表
+     */
+    fun listTemplateIds(
+        dslContext: DSLContext,
+        projectId: String
+    ): List<String> {
+        with(TTemplate.T_TEMPLATE) {
+            return dslContext.selectDistinct(ID)
+                .from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .fetch(ID, String::class.java)
+        }
+    }
+
     fun countTemplate(
         dslContext: DSLContext,
         projectId: String? = null,

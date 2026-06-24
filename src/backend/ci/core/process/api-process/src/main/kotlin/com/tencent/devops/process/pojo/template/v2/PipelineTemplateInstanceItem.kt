@@ -34,6 +34,14 @@ data class PipelineTemplateInstanceItem(
     val errorMessage: String?,
     @get:Schema(title = "重置实例推荐版本为基准值", required = false)
     val resetBuildNo: Boolean? = false,
+    @get:Schema(title = "更新前流水线版本", required = false)
+    val beforePipelineVersion: Int? = null,
+    @get:Schema(title = "更新后流水线版本", required = false)
+    val afterPipelineVersion: Int? = null,
+    @get:Schema(title = "更新前模板版本", required = false)
+    val beforeTemplateVersion: Long? = null,
+    @get:Schema(title = "更新后模板版本", required = false)
+    val afterTemplateVersion: Long? = null,
     @get:Schema(title = "创建者", required = true)
     val creator: String,
     @get:Schema(title = "修改者", required = true)

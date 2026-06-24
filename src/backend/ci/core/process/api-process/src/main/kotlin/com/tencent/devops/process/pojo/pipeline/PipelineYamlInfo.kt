@@ -48,5 +48,7 @@ data class PipelineYamlInfo(
     @get:Schema(title = "默认分支")
     val defaultBranch: String?,
     @get:Schema(title = "资源类型")
-    val resourceType: YamlResourceType
+    val resourceType: YamlResourceType,
+    @get:Schema(title = "重命名前的文件路径，用于保留原流水线时追溯")
+    val oldFilePath: String? = null
 )

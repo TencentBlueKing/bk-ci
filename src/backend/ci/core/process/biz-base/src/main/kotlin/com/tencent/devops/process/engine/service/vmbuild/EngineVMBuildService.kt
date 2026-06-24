@@ -106,6 +106,7 @@ import com.tencent.devops.process.service.PipelineAsCodeService
 import com.tencent.devops.process.service.PipelineContextService
 import com.tencent.devops.process.service.ProjectCacheService
 import com.tencent.devops.process.util.TaskUtils
+import com.tencent.devops.process.utils.NODE_OS
 import com.tencent.devops.process.utils.PIPELINE_BUILD_REMARK
 import com.tencent.devops.process.utils.PIPELINE_DIALECT
 import com.tencent.devops.process.utils.PIPELINE_ELEMENT_ID
@@ -202,7 +203,10 @@ class EngineVMBuildService @Autowired(required = false) constructor(
         // var表中获取环境变量，并对老版本变量进行兼容
         val pipelineId = buildInfo.pipelineId
         val variables = buildVariableService.getAllVariable(projectId, buildInfo.pipelineId, buildId)
-        val variablesWithType = buildVariableService.getAllVariableWithType(projectId, buildId).toMutableList()
+        val variablesWithType = buildVariableService.getAllVariableWithType(
+            projectId = projectId,
+            buildId = buildId
+        ).toMutableList()
         val model = containerBuildRecordService.getRecordModel(
             projectId = projectId,
             pipelineId = pipelineId,
@@ -370,7 +374,10 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                     onlyExpression = dialect.supportUseExpression(),
                     contextPair = contextPair
                 ),
-                os = container.baseOS.name.lowercase()
+                os = ContainerUtils.getContainerOs(
+                    modelOs = container.baseOS?.name,
+                    nodeOs = variables[NODE_OS]
+                )
             ).data?.let { self -> envList.add(self) }
         }
 
@@ -876,7 +883,10 @@ class EngineVMBuildService @Autowired(required = false) constructor(
             try {
                 buildVariableService.batchUpdateVariable(
                     projectId = projectId,
-                    pipelineId = buildInfo.pipelineId, buildId = buildId, variables = result.buildResult
+                    pipelineId = buildInfo.pipelineId,
+                    buildId = buildId,
+                    variables = result.buildResult,
+                    sensitiveKeys = result.sensitiveKeys
                 )
                 LOG.info("ENGINE|$buildId|BCT_ADD_VAR_DONE|$projectId")
                 writeRemark(result.buildResult, projectId, buildInfo.pipelineId, buildId, buildInfo.startUser)

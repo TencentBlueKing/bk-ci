@@ -444,9 +444,94 @@ object ProcessMessageCode {
     const val ERROR_BUILD_PARAM_COMBINATION_NAME_EXIST = "2101336" // 入参值组合名已存在
     const val ERROR_JOB_ID_DUPLICATE = "2101337" // Job ID在流水线下需全局唯一，存在重复ID[$0]的Job，保存失败!
     const val ERROR_STEP_ID_DUPLICATE = "2101338" // Step ID在Job下需全局唯一，Job[$0]下存在重复ID[$1]的Step，保存失败!
-    // 存量的实例化版本，不支持一键回滚
+    // 历史原因导致当前约束流水线无法确定对应的模版版本,不支持一键回滚
     const val ERROR_PIPELINE_LEGACY_INSTANCE_CANNOT_ROLLBACK = "2101339"
     const val USER_NO_CANCEL_BUILD_PERMISSION = "2101340" // 用户{0}无权取消构建{1},仅限触发人或拥有流水线管理权限的用户可取消
+    const val ERROR_INSTANCE_PARAM_PROP_EXCEPTION = "2101341" // 实例化的参数[{0}]属性[{1}]异常,请联系助手分析
+    const val ERROR_INSTANCE_PARAM_COUNT_EXCEPTION = "2101342" // 实例化参数数量和模版的参数数量不同,请联系助手分析
+    // 历史原因导致当前约束流水线无法确定对应的模版版本,不能直接开启PAC,请到模版实例列表界面升级流水线,明确引用的模版版本后再开启PAC。
+    const val ERROR_PIPELINE_LEGACY_INSTANCE_CANNOT_ENABLE_PAC = "2101343"
+    // 触发事件缓存过期已清理。若需重放，请到代码库操作。
+    const val ERROR_TRIGGER_EVENT_EXPIRED = "2101361"
+    const val ERROR_TEMPLATE_MIGRATING = "2101362" // 模板迁移中，不能操作
+    // 非约束流水线不能保存为约束模式
+    const val ERROR_NON_CONSTRAINED_PIPELINE_CANNOT_SAVE_AS_CONSTRAINED = "2101363"
+    // 实例化异常：流水线其他变量[{0}]默认值被改成模版默认值,请联系助手分析
+    const val ERROR_TEMPLATE_INSTANCE_OPTIONAL_PARAM_OVERRIDDEN = "2101364"
+    // YAML文件[{0}]已绑定其他流水线[{1}]，不能重命名
+    const val ERROR_PAC_YAML_FILE_BINDTO_OTHER_PIPELINE = "2101365"
+    // 分支版本[{0}]不存在, 目标分支不存在或流水线引用的Yaml文件[{1}]在分支[{0}]不存在或已被删除
+    const val ERROR_PIPELINE_REF_YAML_FILE_NOT_FOUND = "2101378"
+    // 分支版本[{0}]不存在, 请检查分支版本是否被成功创建
+    const val ERROR_NOT_FOUND_PIPELINE_VERSION_EXISTS_BY_BRANCH = "2101379"
+    const val ERROR_PIPELINE_IS_NOT_PAC = "2101389" // [{0}]不是PAC流水线
+
+    // 回调URL[{0}]指向内网/元数据地址，禁止使用以防止SSRF攻击
+    const val ERROR_CALLBACK_URL_INTERNAL_HOST = "2101366"
+
+    const val BUILD_MSG_TRIGGER_EVENT = "2101368" // 通用事件触发
+    // 流水线{0}的权限代持人不存在
+    const val ERROR_PIPELINE_AUTH_USER_NOT_EXISTS = "2101369"
+    // 用户({0})不在流水线({1})的可见范围内
+    const val ERROR_PIPELINE_USER_NOT_VISIBLE = "2101370"
+
+    // 模型变量引用表达式不合规：仅允许双大括号${{xxx}}，且前缀须为 variables./stages./jobs./steps.。不合规项（含位置 positionPath）：{0}
+    const val ERROR_PIPELINE_MODEL_VAR_REF_INVALID = "2101376"
+
+    // 构建执行相关错误码（2101500-2101599）
+    const val ERROR_PIPELINE_START_NODE_NO_PERMISSION = "2101500" // 用户[{0}]没有节点[{1}]的操作权限，无法启动流水线
+
+    // 批量任务
+    const val ERROR_PIPELINE_BATCH_TASK_NOT_EXISTS = "2101650" // 流水线批量任务{0}不存在
+    const val ERROR_PIPELINE_BATCH_TASK_STATUS_CAN_NOT_DELETE = "2101651" // 流水线批量任务{0}当前状态为{1}，不能删除
+    const val ERROR_PIPELINE_BATCH_TASK_DETAIL_NOT_EXISTS = "2101652" // 流水线批量任务明细{0}不存在
+    // 流水线批量任务明细{0}当前状态为{1}，不能排除
+    const val ERROR_PIPELINE_BATCH_TASK_DETAIL_CAN_NOT_EXCLUDE = "2101653"
+    // 流水线批量任务明细{0}当前状态为{1}，不能恢复
+    const val ERROR_PIPELINE_BATCH_TASK_DETAIL_CAN_NOT_RESTORE = "2101654"
+    const val ERROR_PIPELINE_BATCH_TASK_STATUS_CAN_NOT_EXECUTE = "2101655" // 流水线批量任务{0}当前状态为{1}，不能执行
+    const val ERROR_PIPELINE_BATCH_TASK_STATUS_CAN_NOT_SAVE_CONFIG = "2101656" // 流水线批量任务{0}当前状态为{1}，不能保存配置
+    const val ERROR_PIPELINE_BATCH_TASK_TYPE_NOT_MATCH = "2101657" // 流水线批量任务{0}类型为{1}，不是{2}
+    const val ERROR_PIPELINE_COPY_RESOURCE_NOT_ALL_PROCESSED = "2101658" // 流水线复制任务{0}还有{1}个资源未处理，不能执行
+    const val ERROR_PIPELINE_COPY_TASK_CONFIG_NOT_EXISTS = "2101659" // 流水线复制任务{0}没有配置，不能保存资源
+    const val ERROR_PIPELINE_COPY_RESOURCE_STRATEGY_EMPTY = "2101660" // 流水线复制任务{0}以下资源还没有处理：{1}
+    // 目标项目{0}不存在资源：{1}
+    const val ERROR_PIPELINE_COPY_TARGET_RESOURCE_NOT_EXISTS = "2101661"
+    // 资源类型{0}，资源名称:{1},使用复制策略{2}时，目标资源不能为空
+    const val ERROR_PIPELINE_COPY_TARGET_RESOURCE_EMPTY = "2101662"
+    // 目标项目{0}已存在资源：{1}
+    const val ERROR_PIPELINE_COPY_TARGET_RESOURCE_EXISTS = "2101663"
+    // 资源类型{0},资源名称{1}，不支持复制策略{2}
+    const val ERROR_PIPELINE_COPY_RESOURCE_STRATEGY_NOT_SUPPORT = "2101664"
+    // 资源类型{0}，资源名称{1}的复制策略不能为空
+    const val ERROR_PIPELINE_COPY_RESOURCE_STRATEGY_CAN_NOT_EMPTY = "2101665"
+    // 源项目{0}不存在资源：{1}
+    const val ERROR_PIPELINE_COPY_SOURCE_RESOURCE_NOT_EXISTS = "2101666"
+    // 目标项目{0}创建资源{1}失败：{2}
+    const val ERROR_PIPELINE_COPY_TARGET_RESOURCE_CREATE_FAILED = "2101667"
+    // 流水线依赖资源迁移失败，以下资源未生成目标映射：{0}
+    const val ERROR_PIPELINE_COPY_RESOURCE_MIGRATE_FAILED = "2101668"
+    // 流水线依赖资源失败：{0}
+    const val ERROR_PIPELINE_COPY_DEPENDENT_RESOURCE_FAILED = "2101669"
+    // 流水线复制任务{0}依赖资源不存在：{1}
+    const val ERROR_PIPELINE_COPY_DEPENDENT_RESOURCE_NOT_EXISTS = "2101670"
+    // 资源类型{0}, 资源名{1}，目标项目不存在同名资源，不能选择资源复用策略
+    const val ERROR_PIPELINE_COPY_REUSE_RESOURCE_NOT_EXISTS = "2101671"
+    // 资源类型{0}不支持复制策略{1}
+    const val ERROR_PIPELINE_COPY_RESOURCE_TYPE_STRATEGY_NOT_SUPPORT = "2101672"
+    // 资源类型{0}，资源ID{1}当前状态为{2}，不能确认
+    const val ERROR_PIPELINE_COPY_RESOURCE_STATUS_CAN_NOT_CONFIRM = "2101673"
+    // 资源类型{0}，资源ID{1}自动完成，不需要确认
+    const val ERROR_PIPELINE_COPY_RESOURCE_AUTO_FINISH_CAN_NOT_CONFIRM = "2101674"
+    const val ERROR_PIPELINE_BATCH_TASK_NAME_DUPLICATE = "2101675" // 流水线批量任务名称[{0}]已存在，不允许重复
+    // 目标项目{0}模板{1}已存在版本名称{2}，不能复制
+    const val ERROR_PIPELINE_COPY_TARGET_TEMPLATE_VERSION_NAME_CONFLICT = "2101676"
+    // 目标项目{0}模板{1}已存在版本排序号{2}，不能复制
+    const val ERROR_PIPELINE_COPY_TARGET_TEMPLATE_VERSION_NUMBER_CONFLICT = "2101677"
+    const val ERROR_PIPELINE_BATCH_TASK_STATUS_CAN_NOT_ANALYZE = "2101678" // 流水线批量任务{0}当前状态为{1}，不能分析
+    const val ERROR_PIPELINE_BATCH_TASK_STATUS_CAN_NOT_RETRY = "2101679" // 流水线批量任务{0}当前状态为{1}，不能重试
+    const val ERROR_PIPELINE_BATCH_TASK_DETAIL_CAN_NOT_RETRY = "2101680" // 流水线批量任务明细{0}当前状态为{1}，不能重试
+    const val ERROR_PIPELINE_BATCH_TASK_NOTHING_TO_RETRY = "2101681" // 流水线批量任务{0}没有可重试的失败项
 
     const val BK_SUCCESSFULLY_DISTRIBUTED = "bkSuccessfullyDistributed" // 跨项目构件分发成功，共分发了{0}个文件
     const val BK_SUCCESSFULLY_FAILED = "bkSuccessfullyFailed" // 跨项目构件分发失败，
@@ -676,6 +761,9 @@ object ProcessMessageCode {
     // [<a href={0}>{1}</a>]更新成功,版本:{2}
     const val BK_YAML_PIPELINE_UPDATE_SUCCESS = "bkYamlPipelineUpdateSuccess"
 
+    // [<a href={0}>{1}</a>|{2}]重命名成功,{3} → {4}
+    const val BK_YAML_PIPELINE_RENAME_SUCCESS = "bkYamlPipelineRenameSuccess"
+
     // [<a href={0}>{1}</a>]删除版本成功,版本:{2}
     const val BK_YAML_PIPELINE_DELETE_VERSION_SUCCESS = "bkYamlPipelineDeleteVersionSuccess"
 
@@ -687,6 +775,9 @@ object ProcessMessageCode {
 
     // [<a href={0}>{1}</a>]更新失败
     const val BK_YAML_PIPELINE_UPDATE_FAILED = "bkYamlPipelineUpdateFailed"
+
+    // [<a href={0}>{1}</a>]重命名失败,{2} → {3}
+    const val BK_YAML_PIPELINE_RENAME_FAILED = "bkYamlPipelineRenameFailed"
 
     // [<a href={0}>{1}</a>]更新失败
     const val BK_YAML_PIPELINE_DEPENDENCY_UPGRADE_FAILED = "bkYamlPipelineDependencyUpgradeFailed"
@@ -711,4 +802,33 @@ object ProcessMessageCode {
 
     // 公共模板名称
     const val BK_PUBLIC_PIPELINE_TEMPLATE_NAME = "bkPublicPipelineTemplateName"
+
+    // 回滚自模板实例化任务，基于版本[xxx]
+    const val BK_ROLLBACK_FROM_TEMPLATE_INSTANCE_BASED_ON_VERSION = "bkRollbackFromTemplateInstanceBasedOnVersion"
+
+    // 创作流节点标签
+    const val BK_CREATIVE_STREAM_NODE_LABEL = "bkCreativeStreamNodeLabel"
+
+    // 创作流节点描述
+    const val BK_CREATIVE_STREAM_NODE_DESC = "bkCreativeStreamNodeDesc"
+
+    // 云桌面触发事件描述
+    const val BK_REMOTE_DEV_TRIGGER_DESC = "bkRemoteDevTriggerDesc"
+
+    // 触发事件配置不存在或已下架, 请联系管理员处理
+    const val BK_TRIGGER_EVENT_CONFIG_NOT_FOUND_DESC = "bkTriggerEventConfigNotFoundDesc"
+
+    // 字段不匹配
+    const val BK_FIELD_CONDITION_NOT_MATCH = "bkFieldConditionNotMatch"
+    // 字段被排除
+    const val BK_FIELD_CONDITION_EXCLUDE = "bkFieldConditionExclude"
+
+    // 创作流启动节点为空
+    const val BK_CREATIVE_STREAM_START_TASK_IS_EMPTY = "bkCreativeStreamStartTaskIsEmpty"
+
+    // 定时触发未指定创作节点
+    const val BK_CREATIVE_STREAM_TIMER_TRIGGER_NODE_IS_EMPTY = "bkCreativeStreamTimerTriggerNodeIsEmpty"
+
+    // [{0}]创作环境下的创作节点为空
+    const val BK_CREATIVE_STREAM_ENV_NODE_IS_EMPTY = "bkCreativeStreamEnvNodeIsEmpty"
 }

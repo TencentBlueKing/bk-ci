@@ -27,7 +27,6 @@
 
 package com.tencent.devops.project.api.op
 
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ACCESS_TOKEN
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.project.pojo.OpProjectGraySetRequest
@@ -76,9 +75,6 @@ interface OPProjectResource {
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(description = "PAAS_CC Token", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
-        accessToken: String,
         @Parameter(description = "项目信息请求实体", required = true)
         projectInfoRequest: OpProjectUpdateInfoRequest
     ): Result<Int>
@@ -230,5 +226,22 @@ interface OPProjectResource {
     fun setDisableWhenInactiveFlag(
         @Parameter(description = "项目ID列表", required = true)
         projectCodes: List<String>
+    ): Result<Boolean>
+
+    @PUT
+    @Path("/hidden")
+    @Operation(summary = "设置项目隐藏状态")
+    fun setHidden(
+        @Parameter(
+            description = "是否隐藏",
+            required = true
+        )
+        @QueryParam("hidden")
+        hidden: Boolean,
+        @Parameter(
+            description = "项目英文名列表",
+            required = true
+        )
+        englishNames: List<String>
     ): Result<Boolean>
 }

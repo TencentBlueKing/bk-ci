@@ -1,0 +1,24 @@
+/**
+ * PermissionSettings Page Styles
+ * Uses CSS variables from /src/styles/variables.css
+ */
+
+.permissionSettings {
+  width: 100%;
+  height: 100%;
+  background-color: var(--bg-primary);
+  overflow: auto;
+  padding: var(--spacing-xl) * -1;
+}
+
+.permissionSettings h3 {
+  margin-bottom: 16px;
+  color: #313238;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.permissionSettings p {
+  color: #63656e;
+  font-size: 14px;
+}

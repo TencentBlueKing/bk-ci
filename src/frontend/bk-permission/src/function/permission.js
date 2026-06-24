@@ -215,7 +215,12 @@ export const handleNoPermissionV2 = (ui, params, h, data = undefined, ajaxPrefix
     showDialog(data);
   } else {
     ajax
-      .get(`${ajaxPrefix}/ms/auth/api/user/auth/apply/getRedirectInformation`, { params })
+      .get(`${ajaxPrefix}/ms/auth/api/user/auth/apply/getRedirectInformation`, {
+        params: {
+          ...params,
+          redirect: true
+        }
+       })
       .then((res = {}) => {
         const data = res.data ? res.data : res;
         showDialog(data);
@@ -397,7 +402,7 @@ export const handleNoPermissionV3 = (ui, params, h, data, ajaxPrefix = '') => {
       ),
       extCls: 'permission-dialog',
       width: 500,
-      dialogType: 'show',
+      confirmText: '',
     });
   };
   const showDialog = (data) => {
@@ -414,14 +419,18 @@ export const handleNoPermissionV3 = (ui, params, h, data, ajaxPrefix = '') => {
       footer: ()=> renderFooter(data),
       extCls: 'permission-dialog-v3',
       width: 640,
-      dialogType: 'show',
     });
   };
   if (data) {
     showDialog(data);
   } else {
     ajax
-      .get(`${ajaxPrefix}/ms/auth/api/user/auth/apply/getRedirectInformation`, { params })
+      .get(`${ajaxPrefix}/ms/auth/api/user/auth/apply/getRedirectInformation`, {
+        params: {
+          ...params,
+          redirect: true
+        }
+      })
       .then((res = {}) => {
         const data = res.data ? res.data : res;
         showDialog(data);

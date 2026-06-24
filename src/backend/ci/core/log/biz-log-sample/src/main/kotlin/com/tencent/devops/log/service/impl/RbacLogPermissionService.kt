@@ -20,7 +20,8 @@ class RbacLogPermissionService @Autowired constructor(
         permission: AuthPermission?,
         authResourceType: AuthResourceType?
     ): Boolean {
-        val finalAuthResourceType = authResourceType ?: AuthResourceType.PIPELINE_DEFAULT
+        val finalAuthResourceType =
+            AuthResourceType.getAuthResourceTypeByChannel(authResourceType ?: AuthResourceType.PIPELINE_DEFAULT)
         return client.get(ServicePermissionAuthResource::class).validateUserResourcePermission(
             userId = userId,
             token = tokenCheckService.getSystemToken(),
@@ -39,7 +40,8 @@ class RbacLogPermissionService @Autowired constructor(
         permission: AuthPermission?,
         authResourceType: AuthResourceType?
     ): Boolean {
-        val finalAuthResourceType = authResourceType ?: AuthResourceType.PIPELINE_DEFAULT
+        val finalAuthResourceType =
+            AuthResourceType.getAuthResourceTypeByChannel(authResourceType ?: AuthResourceType.PIPELINE_DEFAULT)
         return client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
             userId = userId,
             token = tokenCheckService.getSystemToken(),

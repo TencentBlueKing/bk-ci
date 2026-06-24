@@ -1,0 +1,51 @@
+package com.tencent.devops.process.service.task.copy
+
+import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.process.dao.PipelineBatchTaskDao
+import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskStatus
+import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskErrorMessage
+import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskUpdate
+import org.jooq.DSLContext
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
+
+/**
+ * 复制任务状态服务
+ */
+@Service
+class PipelineCopyTaskStateService @Autowired constructor(
+    private val dslContext: DSLContext,
+    private val redisOperation: RedisOperation,
+    private val pipelineBatchTaskDao: PipelineBatchTaskDao
+) {
+    fun updateTaskStatusWithLock(
+        projectId: String,
+        taskId: String,
+        status: PipelineBatchTaskStatus,
+        taskSummary: String? = null,
+        errorMessage: PipelineBatchTaskErrorMessage? = null,
+        clearErrorMessage: Boolean = false
+    ) {
+        val lock = PipelineCopyTaskLock(
+            redisOperation = redisOperation,
+            projectId = projectId,
+            taskId = taskId
+        )
+        try {
+            lock.lock()
+            pipelineBatchTaskDao.update(
+                dslContext = dslContext,
+                update = PipelineBatchTaskUpdate(
+                    projectId = projectId,
+                    taskId = taskId,
+                    taskSummary = taskSummary,
+                    status = status,
+                    errorMessage = errorMessage,
+                    clearErrorMessage = clearErrorMessage
+                )
+            )
+        } finally {
+            lock.unlock()
+        }
+    }
+}

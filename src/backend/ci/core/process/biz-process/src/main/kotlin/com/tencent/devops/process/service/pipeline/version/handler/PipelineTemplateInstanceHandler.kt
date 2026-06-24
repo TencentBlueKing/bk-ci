@@ -29,16 +29,19 @@ package com.tencent.devops.process.service.pipeline.version.handler
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.PipelineVersionAction
 import com.tencent.devops.common.pipeline.enums.VersionStatus
+import com.tencent.devops.common.pipeline.pojo.element.trigger.RemoteTriggerElement
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.engine.control.lock.PipelineModelLock
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
+import com.tencent.devops.process.pojo.pipeline.PipelineYamlFileReleaseReqSource
+import com.tencent.devops.process.service.PipelineRemoteAuthService
 import com.tencent.devops.process.service.pipeline.version.PipelineVersionCreateContext
 import com.tencent.devops.process.service.pipeline.version.PipelineVersionGenerator
 import com.tencent.devops.process.service.pipeline.version.PipelineVersionPersistenceService
-import com.tencent.devops.process.yaml.PipelineYamlCommonService
+import com.tencent.devops.process.yaml.PipelineYamlReleaseService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -48,14 +51,19 @@ class PipelineTemplateInstanceHandler @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val pipelineVersionGenerator: PipelineVersionGenerator,
     private val pipelineVersionPersistenceService: PipelineVersionPersistenceService,
-    private val pipelineYamlCommonService: PipelineYamlCommonService
+    private val pipelineYamlReleaseService: PipelineYamlReleaseService,
+    private val pipelineRemoteAuthService: PipelineRemoteAuthService
 ) : PipelineVersionCreateHandler {
     override fun support(context: PipelineVersionCreateContext) =
         context.versionAction == PipelineVersionAction.TEMPLATE_INSTANCE
 
     override fun handle(context: PipelineVersionCreateContext): DeployPipelineResult {
-        logger.info("template instance with context={}", JsonUtil.toJson(context, false))
         with(context) {
+            logger.info(
+                "handle template instance|" +
+                        "$projectId|$pipelineId|$version|" +
+                        "${templateInstanceBasicInfo?.templateId}|${templateInstanceBasicInfo?.templateVersion}"
+            )
             if (templateInstanceBasicInfo == null) {
                 throw ErrorCodeException(
                     errorCode = CommonMessageCode.PARAMETER_IS_NULL,
@@ -112,26 +120,24 @@ class PipelineTemplateInstanceHandler @Autowired constructor(
             )
         }
 
-        // 检查推送参数
-        enablePac.takeIf { it }?.let {
-            pipelineYamlCommonService.checkPushParam(
-                projectId = projectId,
-                pipelineId = pipelineId,
-                content = pipelineResourceWithoutVersion.yaml!!,
-                repoHashId = yamlFileInfo!!.repoHashId,
-                filePath = yamlFileInfo.filePath,
-                targetAction = targetAction!!,
-                versionName = resourceOnlyVersion.versionName,
-                targetBranch = targetBranch
-            )
-        }
-
+        pipelineYamlReleaseService.validateReleaseYamlFile(
+            context = this,
+            resourceOnlyVersion = resourceOnlyVersion
+        )
         when {
             pipelineInfo == null -> {
                 pipelineVersionPersistenceService.initializePipeline(
                     context = this,
                     resourceOnlyVersion = resourceOnlyVersion
                 )
+                if (pipelineResourceWithoutVersion.status == VersionStatus.RELEASED) {
+                    addRemoteAuth(
+                        userId = userId,
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        model = pipelineResourceWithoutVersion.model
+                    )
+                }
             }
 
             pipelineResourceWithoutVersion.status == VersionStatus.RELEASED -> {
@@ -150,12 +156,11 @@ class PipelineTemplateInstanceHandler @Autowired constructor(
         }
 
         // 推送文件
-        val yamlFileReleaseResult = enablePac.takeIf { it }?.let {
-            pipelineVersionPersistenceService.releaseYamlFile(
-                context = this,
-                resourceOnlyVersion = resourceOnlyVersion
-            )
-        }
+        val yamlFileReleaseResult = pipelineYamlReleaseService.releaseYamlFile(
+            context = this,
+            resourceOnlyVersion = resourceOnlyVersion,
+            source = PipelineYamlFileReleaseReqSource.TEMPLATE_INSTANCE
+        )
 
         return DeployPipelineResult(
             pipelineId = pipelineId,
@@ -168,6 +173,27 @@ class PipelineTemplateInstanceHandler @Autowired constructor(
         )
     }
 
+    /**
+     * 初始化远程触发token
+     */
+    fun addRemoteAuth(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        model: Model
+    ) {
+        val elementList = model.stages[0].containers[0].elements
+        var isAddRemoteAuth = false
+        elementList.forEach {
+            if (it is RemoteTriggerElement) {
+                isAddRemoteAuth = true
+            }
+        }
+        if (isAddRemoteAuth) {
+            logger.info("template Model has RemoteTriggerElement project[$projectId] pipeline[$pipelineId]")
+            pipelineRemoteAuthService.generateAuth(pipelineId, projectId, userId)
+        }
+    }
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineTemplateInstanceHandler::class.java)
     }

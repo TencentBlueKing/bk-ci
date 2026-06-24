@@ -2,10 +2,10 @@ package com.tencent.devops.auth.provider.sample.service
 
 import com.tencent.bk.sdk.iam.dto.manager.ManagerMember
 import com.tencent.devops.auth.pojo.ResourceMemberInfo
-import com.tencent.devops.auth.pojo.dto.GroupMemberRenewalDTO
 import com.tencent.devops.auth.pojo.vo.ResourceMemberCountVO
 import com.tencent.devops.auth.service.iam.PermissionResourceMemberService
 import com.tencent.devops.common.api.model.SQLPage
+import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroupAndUserList
 
@@ -33,7 +33,7 @@ class SamplePermissionResourceMemberService : PermissionResourceMemberService {
         expiredTime: Long,
         members: List<String>?,
         departments: List<String>?
-    ) = true
+    ) = Result(data = true)
 
     override fun batchDeleteResourceGroupMembers(
         projectCode: String,
@@ -59,9 +59,8 @@ class SamplePermissionResourceMemberService : PermissionResourceMemberService {
     override fun renewalGroupMember(
         userId: String,
         projectCode: String,
-        resourceType: String,
-        groupId: Int,
-        memberRenewalDTO: GroupMemberRenewalDTO
+        groupIds: List<Int>,
+        expiredAt: Long
     ): Boolean = true
 
     override fun renewalIamGroupMembers(
@@ -111,4 +110,17 @@ class SamplePermissionResourceMemberService : PermissionResourceMemberService {
     override fun addDepartedFlagToMembers(
         records: List<ResourceMemberInfo>
     ): List<ResourceMemberInfo> = emptyList()
+
+    override fun getMemberGroupsInProject(
+        projectCode: String,
+        memberId: String
+    ): List<Int> = emptyList()
+
+    override fun copyResourceGroupMembers(
+        sourceProjectCode: String,
+        targetProjectCode: String,
+        resourceType: String,
+        sourceResourceCode: String,
+        targetResourceCode: String
+    ): Boolean = true
 }

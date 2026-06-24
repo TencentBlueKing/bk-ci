@@ -1,0 +1,225 @@
+/*
+ * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ *
+ * Copyright (C) 2019 Tencent.  All rights reserved.
+ *
+ * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
+ *
+ * A copy of the MIT License is included in this file.
+ *
+ *
+ * Terms of the MIT License:
+ * ---------------------------------------------------
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
+ * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+ * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
+package fileutil
+
+import (
+	"archive/zip"
+	"crypto/md5"
+	"encoding/hex"
+	"errors"
+	"fmt"
+	"io"
+	"os"
+	"path/filepath"
+	"strconv"
+	"strings"
+)
+
+func Exists(file string) bool {
+	// 使用 Lstat 而非 Stat，不跟随符号链接，
+	// 避免攻击者将目标文件替换为符号链接后绕过存在性检查。
+	_, err := os.Lstat(file)
+	return !(err != nil && os.IsNotExist(err))
+}
+
+func TryRemoveFile(file string) error {
+	return os.Remove(file)
+}
+
+func SetExecutable(file string) error {
+	// 使用 Lstat 获取文件自身的权限位，不跟随符号链接，
+	// 防止对符号链接目标（可能是系统文件）意外添加执行权限。
+	fileInfo, err := os.Lstat(file)
+	if err != nil {
+		return err
+	}
+	return os.Chmod(file, fileInfo.Mode()|0111)
+}
+
+func GetFileMd5(file string) (string, error) {
+	if !Exists(file) {
+		return "", nil
+	}
+
+	pFile, err := os.Open(file)
+	defer pFile.Close()
+	if err != nil {
+		return "", err
+	}
+
+	md5h := md5.New()
+	io.Copy(md5h, pFile)
+	return hex.EncodeToString(md5h.Sum(nil)), nil
+}
+
+func CopyFile(src string, dst string, overwrite bool) (written int64, err error) {
+	srcStat, err := os.Stat(src)
+	if err != nil {
+		return 0, err
+	}
+	if srcStat.IsDir() {
+		return 0, errors.New("src is a directory")
+	}
+
+	dstStat, err := os.Stat(dst)
+	if !(err != nil && os.IsNotExist(err)) {
+		if !overwrite {
+			return 0, errors.New("dst file exists")
+		}
+		if dstStat.IsDir() {
+			return 0, errors.New("dst is a directory")
+		}
+		if err = os.Remove(dst); err != nil {
+			return 0, err
+		}
+	}
+
+	srcFile, err := os.Open(src)
+	if err != nil {
+		return 0, err
+	}
+	defer srcFile.Close()
+
+	dstFile, err := os.Create(dst)
+	if err != nil {
+		return 0, err
+	}
+	defer dstFile.Close()
+
+	types, err := io.Copy(dstFile, srcFile)
+	return types, err
+}
+
+func GetString(file string) (string, error) {
+	fileStr, err := os.ReadFile(file)
+	if err != nil {
+		return "", err
+	}
+
+	return string(fileStr), nil
+}
+
+func GetPid(file string) (int, error) {
+	pidStr, err := GetString(file)
+	if err != nil && !os.IsNotExist(err) {
+		return 0, err
+	}
+
+	pid, err := strconv.Atoi(pidStr)
+	return pid, nil
+}
+
+func WriteString(file, str string) error {
+	f, err := os.OpenFile(file, os.O_WRONLY|os.O_CREATE, os.ModePerm)
+	if os.IsNotExist(err) {
+		f, err = os.Create(file)
+	}
+	if err != nil {
+		return err
+	}
+
+	if err = f.Truncate(0); err != nil {
+		return err
+	}
+
+	if _, err = f.WriteString(str); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func Unzip(archive, target string) error {
+	reader, err := zip.OpenReader(archive)
+	if err != nil {
+		return err
+	}
+	defer func() { _ = reader.Close() }()
+
+	if err := os.MkdirAll(target, os.ModePerm); err != nil {
+		return err
+	}
+
+	// 获取目标目录的绝对路径，用于 Zip Slip 防护
+	absTarget, err := filepath.Abs(target)
+	if err != nil {
+		return err
+	}
+	absTarget = filepath.Clean(absTarget) + string(os.PathSeparator)
+
+	for _, file := range reader.File {
+		path := filepath.Join(target, file.Name)
+
+		// Zip Slip 防护：确保解压路径不会逃逸到目标目录之外
+		absPath, err := filepath.Abs(path)
+		if err != nil {
+			return err
+		}
+		if !strings.HasPrefix(absPath, absTarget) {
+			return fmt.Errorf("illegal file path in archive: %s", file.Name)
+		}
+
+		if file.FileInfo().IsDir() {
+			if err := os.MkdirAll(path, os.ModePerm); err != nil {
+				return err
+			}
+			continue
+		}
+
+		err2 := unzipFile(file, path)
+		if err2 != nil {
+			return err2
+		}
+	}
+
+	return nil
+}
+
+func unzipFile(file *zip.File, path string) error {
+	fileReader, err := file.Open()
+	if err != nil {
+		return err
+	}
+	defer func() { _ = fileReader.Close() }()
+
+	if err := os.MkdirAll(filepath.Dir(path), os.ModePerm); err != nil {
+		return err
+	}
+
+	targetFile, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, os.ModePerm)
+	if err != nil {
+		return err
+	}
+
+	defer func() { _ = targetFile.Close() }()
+
+	if _, err := io.Copy(targetFile, fileReader); err != nil {
+		return err
+	}
+	return nil
+}

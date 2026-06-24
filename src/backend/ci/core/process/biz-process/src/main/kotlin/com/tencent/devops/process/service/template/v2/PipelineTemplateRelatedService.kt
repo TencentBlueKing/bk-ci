@@ -9,6 +9,7 @@ import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.dao.template.PipelineTemplateRelatedDao
 import com.tencent.devops.process.dao.template.PipelineTemplateResourceDao
 import com.tencent.devops.process.engine.dao.template.TemplateDao
+import com.tencent.devops.process.pojo.enums.TemplateSortTypeEnum
 import com.tencent.devops.process.pojo.template.TemplatePipelineStatus
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateRelated
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateRelatedCommonCondition
@@ -87,6 +88,19 @@ class PipelineTemplateRelatedService @Autowired constructor(
         )
     }
 
+    fun listByPipelineIds(
+        projectId: String,
+        pipelineIds: Set<String>
+    ): List<PipelineTemplateRelated> {
+        return pipelineTemplateRelatedDao.list(
+            dslContext = dslContext,
+            condition = PipelineTemplateRelatedCommonCondition(
+                projectId = projectId,
+                pipelineIds = pipelineIds.toList()
+            )
+        )
+    }
+
     fun listSimple(
         projectId: String,
         templateId: String,
@@ -97,7 +111,9 @@ class PipelineTemplateRelatedService @Autowired constructor(
         pipelineIds: List<String>?,
         instanceTypeEnum: PipelineInstanceTypeEnum,
         limit: Int,
-        offset: Int
+        offset: Int,
+        sortType: TemplateSortTypeEnum? = null,
+        sortDesc: Boolean = true
     ): List<PipelineTemplateRelatedSimple> {
         return pipelineTemplateRelatedDao.listSimple(
             dslContext = dslContext,
@@ -110,7 +126,9 @@ class PipelineTemplateRelatedService @Autowired constructor(
             pipelineIds = pipelineIds,
             instanceTypeEnum = instanceTypeEnum,
             limit = limit,
-            offset = offset
+            offset = offset,
+            sortType = sortType,
+            sortDesc = sortDesc
         )
     }
 
@@ -135,6 +153,18 @@ class PipelineTemplateRelatedService @Autowired constructor(
             pipelineIds = pipelineIds,
             instanceTypeEnum = instanceTypeEnum
         )
+    }
+
+    fun listTemplateIdsWithInstance2Upgrade(
+        projectId: String,
+        templateIds: Set<String>
+    ): Set<String> {
+        return pipelineTemplateRelatedDao
+            .listTemplateIdsWithInstance2Upgrade(
+                dslContext = dslContext,
+                projectId = projectId,
+                templateIds = templateIds
+            )
     }
 
     fun update(

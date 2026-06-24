@@ -90,7 +90,7 @@ class RepoPipelineRefService @Autowired constructor(
         )
         // 代码库拉取插件
         private val repoCheckoutAtomCodes =
-            setOf("gitCodeRepo", "PullFromGithub", "Gitlab", "atomtgit", "checkout", "svnCodeRepo")
+            setOf("gitCodeRepo", "PullFromGithub", "Gitlab", "atomtgit", "checkout", "svnCodeRepo", "PerforceSync")
 
         private val removeElementProperties = setOf("name", "id", "status")
     }
@@ -121,7 +121,7 @@ class RepoPipelineRefService @Autowired constructor(
                 dslContext = dslContext,
                 projectId = projectId,
                 pipelineId = pipelineId
-            )?.channel ?: ChannelCode.BS.name
+            )?.channel ?: ChannelCode.getRequestChannelCode().name
         }
         try {
             analysisPipelineRefAndSave(

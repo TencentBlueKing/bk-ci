@@ -31,27 +31,32 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.BuildHistoryPage
 import com.tencent.devops.common.api.pojo.IdValue
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.pipeline.enums.BuildConditionType
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.pipeline.pojo.StageReviewRequest
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.web.annotation.BkField
+import com.tencent.devops.common.web.constant.BkStyleEnum
 import com.tencent.devops.process.enums.HistorySearchType
 import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.process.pojo.BuildHistoryRemark
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.BuildManualStartupInfo
+import com.tencent.devops.process.pojo.BuildReplayResult
 import com.tencent.devops.process.pojo.BuildStageProgressInfo
 import com.tencent.devops.process.pojo.BuildVersionDiff
 import com.tencent.devops.process.pojo.ReviewParam
 import com.tencent.devops.process.pojo.pipeline.BuildRecordInfo
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import com.tencent.devops.process.pojo.pipeline.ModelRecord
+import com.tencent.devops.process.pojo.task.PipelineContainerBuild
+import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
-import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.ws.rs.Consumes
 import jakarta.ws.rs.DELETE
 import jakarta.ws.rs.GET
@@ -88,7 +93,10 @@ interface UserBuildResource {
         pipelineId: String,
         @Parameter(description = "指定草稿版本（为调试构建）", required = false)
         @QueryParam("version")
-        version: Int?
+        version: Int?,
+        @Parameter(description = "指定分支版本（仅PAC流水线有效，若已指定version，则优先使用version）", required = false)
+        @QueryParam("branch")
+        branch: String? = null
     ): Result<BuildManualStartupInfo>
 
     @Operation(summary = "获取流水线构建参数")
@@ -137,7 +145,10 @@ interface UserBuildResource {
         triggerReviewers: List<String>? = null,
         @Parameter(description = "指定草稿版本（为调试构建）", required = false)
         @QueryParam("version")
-        version: Int? = null
+        version: Int? = null,
+        @Parameter(description = "指定分支版本（仅PAC流水线有效，若已指定version，则优先使用version）", required = false)
+        @QueryParam("branch")
+        branch: String? = null
     ): Result<BuildId>
 
     @Operation(summary = "重试流水线-重试或者跳过失败插件")
@@ -474,9 +485,15 @@ interface UserBuildResource {
         @Parameter(description = "触发分支", required = false)
         @QueryParam("triggerBranch")
         triggerBranch: List<String>?,
-        @Parameter(description = "触发方式", required = false)
+        @Parameter(description = "触发用户", required = false)
         @QueryParam("triggerUser")
-        triggerUser: List<String>?
+        triggerUser: List<String>?,
+        @Parameter(description = "触发事件", required = false)
+        @QueryParam("triggerEventTypes")
+        triggerEventTypes: List<String>?,
+        @Parameter(description = "触发节点HashId", required = false)
+        @QueryParam("triggerNodeHashIds")
+        triggerNodeHashIds: List<String>?
     ): Result<BuildHistoryPage<BuildHistory>>
 
     @Operation(summary = "修改流水线备注")
@@ -531,6 +548,37 @@ interface UserBuildResource {
         @PathParam("pipelineId")
         pipelineId: String
     ): Result<List<IdValue>>
+
+    @Operation(summary = "获取流水线构建历史中的查询条件")
+    @GET
+    @Path("/projects/{projectId}/pipelines/{pipelineId}/history/conditions")
+    fun getHistoryConditions(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @Parameter(description = "构建条件类型", required = true)
+        @QueryParam("conditionType")
+        conditionType: BuildConditionType,
+        @Parameter(description = "第几页", required = true, example = "1")
+        @QueryParam("page")
+        page: Int = 1,
+        @Parameter(description = "每页多少条", required = true, example = "20")
+        @QueryParam("pageSize")
+        @BkField(patternStyle = BkStyleEnum.PAGE_SIZE_STYLE)
+        pageSize: Int = 20,
+        @Parameter(description = "查询关键字", required = false)
+        @QueryParam("keyword")
+        keyword: String? = null,
+        @Parameter(description = "是否指定查询调试数据", required = false)
+        @QueryParam("debug")
+        debug: Boolean? = null
+    ): Result<Page<IdValue>>
 
     @Operation(summary = "获取流水线构建中的查询条件-代码库")
     @GET
@@ -725,7 +773,7 @@ interface UserBuildResource {
         @Parameter(description = "强制触发", required = false)
         @QueryParam("forceTrigger")
         forceTrigger: Boolean? = false
-    ): Result<BuildId>
+    ): Result<BuildReplayResult>
 
     @Operation(summary = "获取构建版本差异")
     @POST
@@ -744,4 +792,46 @@ interface UserBuildResource {
         @PathParam("buildId")
         buildId: String
     ): Result<BuildVersionDiff?>
+
+    @Operation(summary = "指定构建任务的回放状态")
+    @GET
+    @Path("/{projectId}/{pipelineId}/{buildId}/replay/status")
+    fun replayStatus(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @Parameter(description = "构建ID", required = true)
+        @PathParam("buildId")
+        buildId: String
+    ): Result<BuildReplayResult>
+
+    @Operation(summary = "获取指定流水线和job的构建历史")
+    @GET
+    @Path("/{projectId}/{pipelineId}/containers/{containerId}/history")
+    fun getPipelineContainerBuilds(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @Parameter(description = "任务ID", required = true)
+        @PathParam("containerId")
+        containerId: String,
+        @Parameter(description = "页数", required = true)
+        @QueryParam("page")
+        page: Int?,
+        @Parameter(description = "每页数量", required = true)
+        @QueryParam("pageSize")
+        pageSize: Int?
+    ): Result<Page<PipelineContainerBuild?>>
 }

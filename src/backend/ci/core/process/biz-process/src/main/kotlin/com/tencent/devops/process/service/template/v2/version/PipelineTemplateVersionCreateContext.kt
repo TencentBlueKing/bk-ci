@@ -50,8 +50,6 @@ data class PipelineTemplateVersionCreateContext(
     @get:Schema(title = "模版版本,发布时才有值", required = true)
     val version: Long? = null,
 
-    @get:Schema(title = "v1版本名称", required = true)
-    val v1VersionName: String? = null,
     @get:Schema(title = "自定义版本名称,如果没有传,则用系统默认", required = true)
     val customVersionName: String? = null,
     @get:Schema(title = "模版版本变更动作", required = true)
@@ -72,6 +70,8 @@ data class PipelineTemplateVersionCreateContext(
     val yamlFileInfo: PipelineYamlFileInfo? = null,
     @get:Schema(title = "发布操作", required = false)
     val targetAction: CodeTargetAction? = null,
+    @get:Schema(title = "当targetAction==COMMIT_TO_BRANCH,指定的分支", required = false)
+    val targetBranch: String? = null,
     @get:Schema(title = "分支名,发布时指定的分支或者代码库推送的分支", required = false)
     val branchName: String? = null,
 

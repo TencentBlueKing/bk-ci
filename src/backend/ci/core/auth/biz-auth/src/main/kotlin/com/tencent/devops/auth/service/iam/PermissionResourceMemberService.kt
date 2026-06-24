@@ -2,9 +2,9 @@ package com.tencent.devops.auth.service.iam
 
 import com.tencent.bk.sdk.iam.dto.manager.ManagerMember
 import com.tencent.devops.auth.pojo.ResourceMemberInfo
-import com.tencent.devops.auth.pojo.dto.GroupMemberRenewalDTO
 import com.tencent.devops.auth.pojo.vo.ResourceMemberCountVO
 import com.tencent.devops.common.api.model.SQLPage
+import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroupAndUserList
 
@@ -73,9 +73,8 @@ interface PermissionResourceMemberService {
     fun renewalGroupMember(
         userId: String,
         projectCode: String,
-        resourceType: String,
-        groupId: Int,
-        memberRenewalDTO: GroupMemberRenewalDTO
+        groupIds: List<Int>,
+        expiredAt: Long
     ): Boolean
 
     fun renewalIamGroupMembers(
@@ -105,5 +104,24 @@ interface PermissionResourceMemberService {
         expiredTime: Long,
         members: List<String>? = emptyList(),
         departments: List<String>? = emptyList()
+    ): Result<Boolean>
+
+    /**
+     * 获取用户在项目下加入的用户组列表（未过期）
+     * @param projectCode 项目Code
+     * @param memberId 用户ID
+     * @return 用户组ID列表
+     */
+    fun getMemberGroupsInProject(
+        projectCode: String,
+        memberId: String
+    ): List<Int>
+
+    fun copyResourceGroupMembers(
+        sourceProjectCode: String,
+        targetProjectCode: String,
+        resourceType: String,
+        sourceResourceCode: String,
+        targetResourceCode: String
     ): Boolean
 }

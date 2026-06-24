@@ -1,0 +1,98 @@
+# OpenSpec 变更状态
+
+changeId: add-scc-i18n
+title: 添加 SCC 任务和扫描方案的国际化支持
+status: implementation_completed
+createdAt: 2025-12-05T17:03:00+08:00
+updatedAt: 2025-12-05T17:15:00+08:00
+
+# 提案信息
+proposal:
+  type: enhancement
+  category: i18n
+  scope: auth
+  priority: medium
+  risk: low
+  
+# 语言版本
+languages:
+  - zh_CN  # 简体中文
+  - en_US  # 英文
+  
+# 文档清单
+documents:
+  - name: proposal.md
+    language: en_US
+    status: completed
+  - name: proposal.zh.md
+    language: zh_CN
+    status: completed
+  - name: tasks.md
+    language: en_US
+    status: completed
+  - name: tasks.zh.md
+    language: zh_CN
+    status: completed
+  - name: specs/i18n-auth/spec.md
+    language: en_US
+    status: completed
+  - name: specs/i18n-auth/spec.zh.md
+    language: zh_CN
+    status: completed
+  - name: README.md
+    language: bilingual
+    status: completed
+
+# 变更统计
+changes:
+  files_affected: 3
+  lines_added: 36
+  lines_removed: 0
+  i18n_entries: 36
+  
+# 受影响的资源
+affected_resources:
+  - scc_scan_schema  # SCC 扫描方案
+  - scc_task         # SCC 任务
+  
+# 受影响的操作
+affected_actions:
+  scc_scan_schema:
+    - create
+    - list
+  scc_task:
+    - create
+    - delete
+    - edit
+    - enable
+    - execute
+    - list
+    - manage
+    - manage-defect
+    - view
+    - view-defect
+
+# 审批人员
+reviewers:
+  - role: product_owner
+    approved: false
+    comment: ""
+  - role: tech_lead
+    approved: false
+    comment: ""
+  - role: i18n_specialist
+    approved: false
+    comment: ""
+    
+# 实施状态
+implementation:
+  started: true
+  completed: true
+  merged: false
+  
+# 验证状态
+validation:
+  format_check: passed
+  encoding_check: passed
+  translation_quality: passed
+  functional_test: pending

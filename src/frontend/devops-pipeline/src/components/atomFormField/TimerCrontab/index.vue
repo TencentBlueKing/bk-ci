@@ -26,7 +26,7 @@
         props: {
             value: {
                 type: String,
-                default: ['* * * * *']
+                default: ['0 0 1 * *']
             },
             name: {
                 type: String,
@@ -142,8 +142,13 @@
         },
         methods: {
             handleChangeCron (value) {
+                if (!value) {
+                    this.hasInternalError = true
+                    this.handleChange(this.name, 'error')
+                    return
+                }
                 this.hasInternalError = false
-                this.handleChange(this.name, !!value ? [value] : [])
+                this.handleChange(this.name, [value])
             },
             handleError () {
                 if (!this.internalValue && Array.isArray(this.value) && this.value.length > 0) {

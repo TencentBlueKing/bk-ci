@@ -40,6 +40,7 @@ import com.tencent.devops.process.service.template.v2.PipelineTemplateCommonServ
 import com.tencent.devops.process.service.template.v2.PipelineTemplateGenerator
 import com.tencent.devops.process.service.template.v2.PipelineTemplateModelInitializer
 import com.tencent.devops.process.service.template.v2.version.PipelineTemplateVersionCreateContext
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -66,6 +67,9 @@ class PipelineTemplateCustomCreateReqConverter @Autowired constructor(
     ): PipelineTemplateVersionCreateContext {
         request as PipelineTemplateCustomCreateReq
         with(request) {
+            logger.info(
+                "Start to convert custom create request|$projectId|$templateId|$templateId|$version"
+            )
             pipelineTemplateCommonService.checkTemplateBasicInfo(
                 projectId = projectId,
                 name = name
@@ -130,5 +134,9 @@ class PipelineTemplateCustomCreateReqConverter @Autowired constructor(
                 pTemplateSettingWithoutVersion = templateSettingWithoutVersion
             )
         }
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(PipelineTemplateCustomCreateReqConverter::class.java)
     }
 }

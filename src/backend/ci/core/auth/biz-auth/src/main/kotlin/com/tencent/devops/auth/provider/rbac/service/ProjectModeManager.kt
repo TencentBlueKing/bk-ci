@@ -95,7 +95,7 @@ class ProjectModeManager(private val redisOperation: RedisOperation) {
      */
     fun setDefaultMode(mode: RoutingMode): Boolean {
         return try {
-            redisOperation.set(DEFAULT_MODE_KEY, mode.name)
+            redisOperation.set(DEFAULT_MODE_KEY, mode.name, expired = false)
             logger.info("Successfully set default mode to '{}'", mode.name)
             true
         } catch (e: Exception) {

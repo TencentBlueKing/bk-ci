@@ -38,17 +38,23 @@ import com.tencent.devops.common.webhook.pojo.WebhookRequest
 import com.tencent.devops.common.webhook.pojo.code.github.GithubCheckRunEvent
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.dao.PipelineTriggerEventDao
-import com.tencent.devops.process.trigger.WebhookTriggerService
+import com.tencent.devops.process.engine.dao.PipelineInfoDao
+import com.tencent.devops.process.pojo.trigger.PipelineTriggerEvent
+import com.tencent.devops.process.pojo.trigger.PipelineTriggerType
+import com.tencent.devops.process.pojo.trigger.ScmWebhookEventBody
+import com.tencent.devops.process.trigger.WebhookTriggerBuildService
 import com.tencent.devops.process.trigger.event.ScmWebhookRequestEvent
 import com.tencent.devops.process.trigger.scm.WebhookGrayCompareService
 import com.tencent.devops.process.trigger.scm.WebhookGrayService
 import com.tencent.devops.process.trigger.scm.WebhookManager
+import com.tencent.devops.process.trigger.market.MarketEventRequestService
+import com.tencent.devops.process.trigger.tapd.TapdWebhookRequestService
 import com.tencent.devops.process.webhook.pojo.event.commit.ReplayWebhookEvent
-import com.tencent.devops.process.yaml.PipelineYamlFacadeService
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.repository.api.ServiceRepositoryWebhookResource
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.RepositoryWebhookRequest
+import com.tencent.devops.repository.pojo.webhook.WebhookParseRequest
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
@@ -59,14 +65,16 @@ import java.time.LocalDateTime
 class WebhookRequestService(
     private val client: Client,
     private val webhookEventFactory: WebhookEventFactory,
-    private val webhookTriggerService: WebhookTriggerService,
+    private val webhookTriggerBuildService: WebhookTriggerBuildService,
     private val dslContext: DSLContext,
     private val pipelineTriggerEventDao: PipelineTriggerEventDao,
-    private val pipelineYamlFacadeService: PipelineYamlFacadeService,
     private val grayService: WebhookGrayService,
     private val simpleDispatcher: SampleEventDispatcher,
     private val webhookGrayCompareService: WebhookGrayCompareService,
-    private val webhookManager: WebhookManager
+    private val webhookManager: WebhookManager,
+    private val pipelineInfoDao: PipelineInfoDao,
+    private val marketEventRequestService: MarketEventRequestService,
+    private val tapdWebhookRequestService: TapdWebhookRequestService
 ) {
 
     companion object {
@@ -107,7 +115,7 @@ class WebhookRequestService(
         // 如果整个仓库都开启灰度，则全部走新逻辑
         val grayRepo = grayService.isGrayRepo(scmType.name, repoName)
         // 如果pac开启灰度,也走新逻辑,会在新逻辑中判断旧的触发会不会运行
-        val pacGrayRepo = grayService.isPacGrayRepo(scmType.name, repoName)
+        val pacGrayRepo = grayService.isPacGrayRepo(scmType, matcher.getExternalId())
         try {
             // 有一方为灰度, 则不保存request信息, 后续由灰度逻辑统一保存
             // @see com.tencent.devops.process.trigger.scm.WebhookManager.handleRequestEvent
@@ -132,50 +140,67 @@ class WebhookRequestService(
             }
         }
         if (grayRepo) {
-            handleGrayRequest(scmType.name, repoName, request)
+            handleGrayRequest(
+                scmCode = scmType.name,
+                repoName = repoName,
+                request = request,
+                eventTime = eventTime
+            )
         } else {
-            webhookTriggerService.trigger(
+            if (pacGrayRepo) {
+                handleGrayRequest(
+                    scmCode = scmType.name,
+                    repoName = repoName,
+                    request = request,
+                    eventTime = eventTime
+                )
+            }
+            webhookTriggerBuildService.trigger(
                 scmType = scmType,
                 matcher = matcher,
                 requestId = requestId,
                 eventTime = eventTime
             )
         }
+    }
 
+    /**
+     * 处理回放事件
+     */
+    fun handleReplay(replayEvent: ReplayWebhookEvent) {
+        val triggerEvent = pipelineTriggerEventDao.getTriggerEvent(
+            dslContext = dslContext,
+            projectId = replayEvent.projectId,
+            eventId = replayEvent.eventId
+        ) ?: run {
+            logger.info("replay trigger event not found|${replayEvent.eventId}")
+            return
+        }
         when {
-            // 如果是灰度仓库,同时也是pac灰度仓库,无需重复触发
-            grayRepo && pacGrayRepo -> {
-                logger.info("The $scmType repo $repoName is gray repo and pac gray repo")
-                return
+            replayEvent.scmType != null -> {
+                handleRepoReplayEvent(replayEvent, triggerEvent)
             }
 
-            pacGrayRepo -> {
-                handleGrayRequest(scmType.name, repoName, request)
+            replayEvent.triggerType == PipelineTriggerType.TAPD.name -> {
+                tapdWebhookRequestService.replay(
+                    replayEvent = replayEvent,
+                    sourceTriggerEvent = triggerEvent
+                )
             }
 
             else -> {
-                pipelineYamlFacadeService.trigger(
-                    eventObject = event,
-                    scmType = scmType,
-                    requestId = requestId,
-                    eventTime = eventTime
-                )
+                handleStoreEvent(replayEvent, triggerEvent)
             }
         }
     }
 
-    fun handleReplay(replayEvent: ReplayWebhookEvent) {
+    /**
+     * 回放代码库相关的触发事件
+     */
+    fun handleRepoReplayEvent(replayEvent: ReplayWebhookEvent, triggerEvent: PipelineTriggerEvent) {
         with(replayEvent) {
-            val triggerEvent = pipelineTriggerEventDao.getTriggerEvent(
-                dslContext = dslContext,
-                projectId = projectId,
-                eventId = eventId
-            ) ?: run {
-                logger.info("replay trigger event not found|$eventId")
-                return
-            }
-            val repoWebhookRequest = client.get(ServiceRepositoryWebhookResource::class).getWebhookRequest(
-                requestId = replayRequestId
+            val webhookRequest = client.get(ServiceRepositoryWebhookResource::class).getWebhookRequest(
+                requestId = triggerEvent.requestId
             ).data ?: run {
                 logger.info("replay webhook request not found|$replayRequestId")
                 return
@@ -186,41 +211,69 @@ class WebhookRequestService(
                     repoHashId = it
                 )
             } ?: return
-            // 新代码源灰度流量控制
-            if (supportScmWebhook(repository)) {
+            val grayRepo = grayService.isGrayRepo(repository.scmCode, repository.projectName)
+            if (grayRepo) {
                 logger.info("The current replay event will execute the new trigger logic")
-                // 读取当前回放操作依赖的trigger event
-                pipelineTriggerEventDao.getEventByRequestId(
+                val webhook = client.get(ServiceRepositoryWebhookResource::class).webhookParseByRepo(
+                    scmCode = repository.scmCode,
+                    projectId = projectId,
+                    repoHashId = repository.repoHashId!!,
+                    request = WebhookParseRequest(
+                        requestId = triggerEvent.requestId,
+                        headers = webhookRequest.requestHeader,
+                        queryParams = webhookRequest.requestParam,
+                        body = webhookRequest.requestBody
+                    )
+                ).data ?: run {
+                    logger.info("replay webhook request body is null|$replayRequestId")
+                    return
+                }
+                val eventBody = ScmWebhookEventBody(
+                    headers = webhookRequest.requestHeader,
+                    queryParams = webhookRequest.requestParam,
+                    webhook = webhook
+                )
+                pipelineTriggerEventDao.updateEventBody(
                     dslContext = dslContext,
                     projectId = projectId,
-                    requestId = replayRequestId,
-                    eventSource = repository.repoHashId!!
-                )?.let {
-                    webhookManager.fireEvent(
-                        eventId = triggerEvent.eventId!!,
-                        repository = repository,
-                        webhook = it.eventBody!!,
-                        replayPipelineId = pipelineId,
-                        sourceWebhook = repoWebhookRequest.requestBody
-                    )
-                }
+                    eventId = eventId,
+                    eventBody = eventBody
+                )
+                webhookManager.fireEvent(
+                    eventId = triggerEvent.eventId!!,
+                    eventTime = java.time.LocalDateTime.now(),
+                    repository = repository,
+                    webhook = webhook,
+                    replayPipelineId = pipelineId
+                )
             } else {
                 val webhookRequest = WebhookRequest(
-                    headers = repoWebhookRequest.requestHeader,
-                    body = repoWebhookRequest.requestBody
+                    headers = webhookRequest.requestHeader,
+                    body = webhookRequest.requestBody
                 )
-                val event = webhookEventFactory.parseEvent(scmType = scmType, request = webhookRequest) ?: run {
+                val event = webhookEventFactory.parseEvent(scmType = scmType!!, request = webhookRequest) ?: run {
                     logger.warn("Failed to parse webhook event")
                     return
                 }
                 val matcher = webhookEventFactory.createScmWebHookMatcher(scmType = scmType, event = event)
 
-                webhookTriggerService.replay(
+                webhookTriggerBuildService.replay(
                     replayEvent = replayEvent,
                     triggerEvent = triggerEvent,
                     matcher = matcher
                 )
             }
+        }
+    }
+
+    /**
+     * 回放研发商店注册的触发事件
+     * 注：目前此处仅对接远程桌面相关事件
+     */
+    fun handleStoreEvent(replayEvent: ReplayWebhookEvent, triggerEvent: PipelineTriggerEvent) {
+        with(replayEvent) {
+            // 使用MarketEventRequestService的公共方法处理事件分发逻辑
+            marketEventRequestService.dispatchCdsTriggerEvent(triggerEvent, pipelineId = replayEvent.pipelineId)
         }
     }
 
@@ -238,12 +291,19 @@ class WebhookRequestService(
             logger.info("the buildInfo of github check run is error")
             return
         }
+        val (userId, projectId, pipelineId, buildId) = buildInfo
+        val channelCode = pipelineInfoDao.getPipelineInfo(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            delete = null
+        )?.channel?.let { ChannelCode.valueOf(it) } ?: ChannelCode.getRequestChannelCode()
         client.get(ServiceBuildResource::class).retry(
-            userId = buildInfo[0],
-            projectId = buildInfo[1],
-            pipelineId = buildInfo[2],
-            buildId = buildInfo[3],
-            channelCode = ChannelCode.BS
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            channelCode = channelCode
         )
     }
 
@@ -253,7 +313,8 @@ class WebhookRequestService(
     private fun handleGrayRequest(
         scmCode: String,
         repoName: String,
-        request: WebhookRequest
+        request: WebhookRequest,
+        eventTime: LocalDateTime
     ) {
         logger.info("The scm hook is gray, repoName: $repoName, scmType: $scmCode")
         val headers = request.headers
@@ -268,7 +329,8 @@ class WebhookRequestService(
                     headers = headers,
                     queryParams = queryParams,
                     body = request.body
-                )
+                ),
+                eventTime = eventTime
             )
         )
     }
@@ -293,6 +355,6 @@ class WebhookRequestService(
         val supportRepo = listOf(ScmType.SCM_GIT, ScmType.SCM_SVN)
             .contains(repository.getScmType())
         val grayRepo = grayService.isGrayRepo(repository.scmCode, repository.projectName)
-        return supportRepo && grayRepo
+        return supportRepo || grayRepo
     }
 }

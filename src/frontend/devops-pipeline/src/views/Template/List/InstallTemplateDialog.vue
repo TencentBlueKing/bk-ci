@@ -121,12 +121,9 @@
     async function importTemplateFromStore () {
         try {
             toggleLoading(true)
-            const res = await proxy.$store?.dispatch('templates/importTemplateFromStore', {
-                projectId: projectId.value,
-                params: {
-                    marketTemplateId: storeTemplateInfo.value.code,
-                    marketTemplateProjectId: storeTemplateInfo.value.srcProjectId
-                }
+            const res = await proxy.$store?.dispatch('pipelines/installPipelineTemplate', {
+                templateCode: storeTemplateInfo.value.code,
+                projectCodeList: [projectId.value]
             })
 
             return res

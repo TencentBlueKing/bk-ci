@@ -49,6 +49,7 @@ import com.tencent.devops.common.pipeline.pojo.element.atom.ElementBatchCheckPar
 import com.tencent.devops.common.pipeline.pojo.element.atom.ElementHolder
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
+import com.tencent.devops.common.pipeline.pojo.element.market.MarketEventAtomElement
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.common.pipeline.pojo.setting.Subscription
 import com.tencent.devops.process.constant.ProcessMessageCode
@@ -127,7 +128,8 @@ open class DefaultModelCheckPlugin constructor(
         // 检查触发容器
         val paramsMap = checkTriggerContainer(
             trigger = trigger,
-            supportChineseVarName = pipelineDialect?.supportChineseVarName()
+            supportChineseVarName = pipelineDialect?.supportChineseVarName(),
+            isTemplate = isTemplate
         )
         val contextMap = PipelineVarUtil.fillVariableMap(paramsMap.mapValues { it.value.defaultValue.toString() })
         val elementCnt = mutableMapOf<String, Int>()
@@ -181,7 +183,8 @@ open class DefaultModelCheckPlugin constructor(
                 atomVersions = atomVersions,
                 contextMap = contextMap,
                 atomInputParamList = atomInputParamList,
-                elementHolders = elementHolders
+                elementHolders = elementHolders,
+                stageIndex = nowPosition
             )
             if (!projectId.isNullOrEmpty() && atomVersions.isNotEmpty()) {
                 AtomUtils.checkModelAtoms(
@@ -262,10 +265,11 @@ open class DefaultModelCheckPlugin constructor(
         atomVersions: MutableSet<StoreVersion>,
         contextMap: Map<String, String>,
         atomInputParamList: MutableList<StoreParam>,
-        elementHolders: MutableMap<String, MutableList<ElementHolder>>
+        elementHolders: MutableMap<String, MutableList<ElementHolder>>,
+        stageIndex: Int
     ): Int /* MetaSize*/ {
         var metaSize = 0
-        containers.forEach { container ->
+        containers.forEachIndexed { containerIndex, container ->
 
             checkMutexGroup(container = container, contextMap = contextMap)
 
@@ -300,15 +304,22 @@ open class DefaultModelCheckPlugin constructor(
                 checkJobControlNodeConcurrency(container)
             }
 
-            container.elements.forEach { e ->
+            container.elements.forEachIndexed elementCheck@{ elementIndex, element ->
+                // 触发器Container不校验market element
+                if (container is TriggerContainer && element is MarketEventAtomElement) {
+                    return@elementCheck
+                }
                 container.checkElement(
                     stage = this,
-                    element = e,
+                    element = element,
                     elementCnt = elementCnt,
                     atomVersions = atomVersions,
                     atomInputParamList = atomInputParamList,
                     contextMap = contextMap,
-                    elementHolders = elementHolders
+                    elementHolders = elementHolders,
+                    stageIndex = stageIndex,
+                    containerIndex = containerIndex,
+                    elementIndex = elementIndex
                 )
             }
         }
@@ -322,12 +333,22 @@ open class DefaultModelCheckPlugin constructor(
         atomVersions: MutableSet<StoreVersion>,
         atomInputParamList: MutableList<StoreParam>,
         contextMap: Map<String, String>,
-        elementHolders: MutableMap<String, MutableList<ElementHolder>>
+        elementHolders: MutableMap<String, MutableList<ElementHolder>>,
+        stageIndex: Int,
+        containerIndex: Int,
+        elementIndex: Int
     ) {
         val eCnt = elementCnt.computeIfPresent(element.getAtomCode()) { _, oldValue -> oldValue + 1 }
             ?: elementCnt.computeIfAbsent(element.getAtomCode()) { 1 } // 第一次时出现1次
         elementHolders.getOrPut(element.getAtomCode()) { mutableListOf() }.add(
-            ElementHolder(stage = stage, container = this, element = element)
+            ElementHolder(
+                stage = stage,
+                container = this,
+                element = element,
+                stageIndex = stageIndex,
+                containerIndex = containerIndex,
+                elementIndex = elementIndex
+            )
         )
         ElementBizRegistrar.getPlugin(element)?.check(element = element, appearedCnt = eCnt)
         addAtomInputDataInfo(element, atomVersions, atomInputParamList)
@@ -458,7 +479,8 @@ open class DefaultModelCheckPlugin constructor(
 
     open fun checkTriggerContainer(
         trigger: Stage,
-        supportChineseVarName: Boolean?
+        supportChineseVarName: Boolean?,
+        isTemplate: Boolean = false
     ): Map<String /* 流水线变量名 */, BuildFormProperty> {
         if (trigger.containers.size != 1) {
             logger.warn("The trigger stage contain more than one container (${trigger.containers.size})")
@@ -469,11 +491,11 @@ open class DefaultModelCheckPlugin constructor(
         val triggerContainer = (trigger.containers.getOrNull(0) ?: throw ErrorCodeException(
             errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NEED_JOB
         )) as TriggerContainer
-        return if (supportChineseVarName != false) {
-            triggerContainer.params.associateBy { it.id }
-        } else {
-            PipelineUtils.checkPipelineParams(triggerContainer.params)
-        }
+        return PipelineUtils.checkPipelineParams(
+            params = triggerContainer.params,
+            supportChineseVarName = supportChineseVarName,
+            isTemplate = isTemplate
+        )
     }
 
     companion object {

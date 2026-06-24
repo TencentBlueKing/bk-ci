@@ -16,6 +16,7 @@ import com.tencent.devops.repository.pojo.webhook.WebhookParseRequest
 import com.tencent.devops.repository.service.code.CodeRepositoryManager
 import com.tencent.devops.repository.service.hub.ScmWebhookApiService
 import com.tencent.devops.scm.api.pojo.HookRequest
+import com.tencent.devops.scm.api.pojo.webhook.Webhook
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -45,20 +46,19 @@ class RepositoryWebhookService @Autowired constructor(
         logger.info(
             "webhook parse result|scmCode:$scmCode|id:${serverRepo.id}|fullName:${serverRepo.fullName}"
         )
-        if (serverRepo.fullName.isNullOrBlank()) {
+        if (serverRepo.fullName.isBlank()) {
             throw ErrorCodeException(
                 errorCode = ERROR_WEBHOOK_SERVER_REPO_FULL_NAME_IS_EMPTY
             )
         }
-        val repoExternalId = serverRepo.id?.toString()
+        val repoExternalId = serverRepo.id.toString()
         val condition = RepoCondition(projectName = serverRepo.fullName, gitProjectId = repoExternalId)
-        val repositories =
-            codeRepositoryManager.listByCondition(
-                scmCode = scmCode,
-                repoCondition = condition,
-                offset = 0,
-                limit = 500
-            ) ?: emptyList()
+        val repositories = codeRepositoryManager.listByCondition(
+            scmCode = scmCode,
+            repoCondition = condition,
+            offset = 0,
+            limit = 500
+        ) ?: emptyList()
 
         // 循环查找有权限的代码库,调用接口扩展webhook数据
         var enWebhook = webhook
@@ -97,13 +97,33 @@ class RepositoryWebhookService @Autowired constructor(
         // 所有代码库都尝试失败,则返回原始数据
         if (allExpired) {
             logger.info(
-                "all repository auth attempts failed, return original webhook data|scmCode:$scmCode|id:${serverRepo.id}|" +
-                        "fullName:${serverRepo.fullName}"
+                "all repository auth attempts failed, return original webhook data|" +
+                        "$scmCode|${serverRepo.id}|${serverRepo.fullName}"
             )
         }
         return WebhookData(
             webhook = enWebhook,
             repositories = repositories
+        )
+    }
+
+    fun webhookParseByRepo(
+        scmCode: String,
+        projectId: String,
+        repoHashId: String,
+        request: WebhookParseRequest
+    ): Webhook? {
+        val hookRequest = with(request) {
+            HookRequest(headers, body, queryParams)
+        }
+        val webhook = webhookApiService.webhookParse(scmCode = scmCode, request = hookRequest) ?: run {
+            logger.warn("Unsupported webhook request $scmCode [${JsonUtil.toJson(request, false)}]")
+            return null
+        }
+        return webhookApiService.webhookEnrich(
+            projectId = projectId,
+            repoHashId = repoHashId,
+            webhook = webhook
         )
     }
 

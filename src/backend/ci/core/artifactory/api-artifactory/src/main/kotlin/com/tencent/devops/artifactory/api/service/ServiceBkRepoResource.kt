@@ -73,4 +73,19 @@ interface ServiceBkRepoResource {
         @QueryParam("enabled")
         enabled: Boolean
     ): Result<Boolean>
+
+    @Operation(summary = "更新项目共享制品开关")
+    @Path("/{projectId}/share/enabled")
+    @POST
+    fun updateShareEnabled(
+        @Parameter(description = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "是否允许共享制品", required = true)
+        @QueryParam("enabled")
+        enabled: Boolean
+    ): Result<Boolean>
 }

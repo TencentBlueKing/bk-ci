@@ -98,11 +98,12 @@ const actions = {
      *
      * @return {Promise} promise 对象
      */
-    requestExecPipeline ({ commit, state, dispatch }, { projectId, pipelineId, version, params }) {
+    requestExecPipeline ({ commit, state, dispatch }, { projectId, pipelineId, version, branch, params }) {
         const url = `${prefix}${projectId}/${pipelineId}`
-        const query = {
-            version
-        }
+        // PAC 分支模式使用 branch 参数，其他情况使用 version 参数
+        const query = branch
+            ? { branch }
+            : { version }
         if (params.buildNo && typeof params.buildNo.currentBuildNo !== 'undefined') {
             Object.assign(query, {
                 buildNo: params.buildNo.currentBuildNo
@@ -304,6 +305,21 @@ const actions = {
      */
     requestRePlayPipeline ({ commit, state, dispatch }, { projectId, pipelineId, buildId, forceTrigger = false }) {
         return ajax.post(`${prefix}${projectId}/${pipelineId}/${buildId}/replayByBuild?forceTrigger=${forceTrigger}`).then(response => {
+            return response.data
+        }).catch(e => {
+            return e
+        })
+    },
+    requestPipelineRePlayStatus ({ commit, state, dispatch }, { projectId, pipelineId, buildId }) {
+        return ajax.get(`${prefix}${projectId}/${pipelineId}/${buildId}/replay/status`).then(response => {
+            return response.data
+        }).catch(e => {
+            return e
+        })
+    },
+
+    requestRePlayEventDetail ({ commit, state, dispatch }, { projectId, eventId }) {
+        return ajax.get(`${PROCESS_API_URL_PREFIX}/user/trigger/event/${projectId}/${eventId}/listEventDetail`).then(response => {
             return response.data
         }).catch(e => {
             return e

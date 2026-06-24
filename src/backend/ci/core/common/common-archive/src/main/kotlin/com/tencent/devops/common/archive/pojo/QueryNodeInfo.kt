@@ -42,6 +42,7 @@ data class QueryNodeInfo(
     var size: Long,
     var sha256: String? = null,
     var md5: String? = null,
+    var crc64ecma: String? = null,
     var projectId: String,
     var repoName: String,
     var metadata: Map<String, Any>?,

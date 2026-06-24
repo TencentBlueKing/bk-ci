@@ -35,11 +35,14 @@ import com.tencent.devops.store.pojo.image.request.MarketImageUpdateRequest
 import com.tencent.devops.store.pojo.image.request.OfflineMarketImageReq
 import com.tencent.devops.store.pojo.image.response.ImageAgentTypeInfo
 import com.tencent.devops.store.image.service.ImageReleaseService
+import com.tencent.devops.store.image.service.MarketImageService
+import com.tencent.devops.store.pojo.common.version.StoreShowVersionInfo
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class UserImageReleaseResourceImpl @Autowired constructor(
-    private val imageReleaseService: ImageReleaseService
+    private val imageReleaseService: ImageReleaseService,
+    private val marketImageService: MarketImageService
 ) : UserImageReleaseResource {
 
     override fun offlineMarketImage(
@@ -89,5 +92,9 @@ class UserImageReleaseResourceImpl @Autowired constructor(
 
     override fun getImageAgentTypes(userId: String): Result<List<ImageAgentTypeInfo>> {
         return Result(imageReleaseService.getImageAgentTypes(userId))
+    }
+
+    override fun getImageShowVersionInfo(userId: String, imageCode: String): Result<StoreShowVersionInfo> {
+        return marketImageService.getImageShowVersionInfo(userId, imageCode)
     }
 }

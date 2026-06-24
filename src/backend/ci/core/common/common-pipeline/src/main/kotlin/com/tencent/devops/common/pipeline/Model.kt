@@ -29,6 +29,7 @@ package com.tencent.devops.common.pipeline
 
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.constant.HIDDEN_SYMBOL
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.Stage
@@ -39,6 +40,7 @@ import com.tencent.devops.common.pipeline.event.PipelineCallbackEvent
 import com.tencent.devops.common.pipeline.event.ProjectPipelineCallBack
 import com.tencent.devops.common.pipeline.pojo.TemplateInstanceField
 import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
+import com.tencent.devops.common.pipeline.pojo.element.market.MarketEventAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.common.pipeline.pojo.time.BuildRecordTimeCost
 import com.tencent.devops.common.pipeline.pojo.transfer.Resources
@@ -66,6 +68,8 @@ data class Model(
     var srcTemplateId: String? = null,
     @get:Schema(title = "当前模板的ID", required = false)
     var templateId: String? = null,
+    @get:Schema(title = "流水线ID", required = false)
+    var pipelineId: String? = null,
     @get:Schema(title = "提示", required = false)
     var tips: String? = null,
     @get:Schema(title = "流水线事件回调", required = false)
@@ -78,7 +82,7 @@ data class Model(
     val resources: Resources? = null,
     @get:Schema(title = "实例化模版信息", required = true)
     var template: TemplateInstanceDescriptor? = null,
-    @get:Schema(title = "流水线覆盖模版的字段", required = false)
+    @get:Schema(title = "实例化流水线自定义的参数、触发器和设置", required = false)
     var overrideTemplateField: TemplateInstanceField? = null
 ) : ITemplateModel {
     @get:Schema(title = "提交时流水线最新版本号", required = false)
@@ -236,8 +240,18 @@ data class Model(
     @JsonIgnore
     fun getTriggerContainer() = stages[0].containers[0] as TriggerContainer
 
+    fun encryptParamsValue() {
+        (stages[0].containers[0] as TriggerContainer).params.forEach {
+            if (it.sensitive == true) {
+                it.value = HIDDEN_SYMBOL
+                it.defaultValue = HIDDEN_SYMBOL
+            }
+        }
+    }
+
     companion object {
         const val classType = "model"
+
         fun defaultModel(
             pipelineName: String = "",
             userId: String? = null
@@ -262,6 +276,46 @@ data class Model(
                                     ).apply {
                                         additionalOptions = ElementAdditionalOptions(enable = true)
                                     },
+                                )
+                            )
+                        )
+                    )
+                ),
+                pipelineCreator = userId
+            )
+        }
+
+        fun creativeStreamDefaultModel(
+            pipelineName: String = "",
+            userId: String? = null
+        ): Model {
+            return Model(
+                name = pipelineName,
+                desc = "",
+                stages = listOf(
+                    Stage(
+                        id = "stage-1",
+                        containers = listOf(
+                            TriggerContainer(
+                                id = "0",
+                                name = I18nUtil.getCodeLanMessage(
+                                    messageCode = CommonMessageCode.BK_BUILD_TRIGGER
+                                ),
+                                elements = listOf(
+                                    MarketEventAtomElement(
+                                        name = I18nUtil.getCodeLanMessage(
+                                            messageCode = CommonMessageCode.BK_MANUAL_TRIGGER
+                                        ),
+                                        id = "T-1-1-1",
+                                        atomCode = "CREATIVE_STREAM_MANUAL_TRIGGER",
+                                        version = "1.*",
+                                        data = mapOf(
+                                            "input" to mapOf(
+                                                "canElementSkip" to true,
+                                                "useLatestParameters" to true
+                                            )
+                                        )
+                                    )
                                 )
                             )
                         )

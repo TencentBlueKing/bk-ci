@@ -108,6 +108,12 @@ object WebhookI18nConstants {
     // 用户被排除
     const val USER_IGNORED = "bkRepoTriggerUserIgnored"
 
+    // 当前处理人不匹配
+    const val OWNER_NOT_MATCH = "bkRepoTriggerOwnerNotMatch"
+
+    // 当前处理人被排除
+    const val OWNER_IGNORED = "bkRepoTriggerOwnerIgnored"
+
     // 路径不匹配
     const val PATH_NOT_MATCH = "bkRepoTriggerPathNotMatch"
 
@@ -158,4 +164,86 @@ object WebhookI18nConstants {
 
     // 代码库开启PAC事件描述
     const val ENABLE_PAC_EVENT_DESC = "bkRepoEnablePacEventDesc"
+
+    // Git Tag操作类型不匹配
+    const val TAG_ACTION_NOT_MATCH = "bkRepoTriggerTagActionNotMatch"
+
+    // Git MR Label不匹配
+    const val MR_LABEL_NOT_MATCH = "bkRepoTriggerMrLabelNotMatch"
+
+    // Git MR Label被排除
+    const val MR_LABEL_IGNORED = "bkRepoTriggerMrLabelIgnored"
+
+    // TAPD 触发事件描述: 需求 [<a href="{0}">!{1}</a>] 由 {2} 创建
+    const val BK_TAPD_STORY_CREATE_EVENT_DESC = "bkTapdStoryCreateEventDesc"
+
+    // TAPD 触发事件描述: 需求 [<a href="{0}">!{1}</a>] 由 {2} 更新
+    const val BK_TAPD_STORY_UPDATE_EVENT_DESC = "bkTapdStoryUpdateEventDesc"
+
+    // TAPD 触发事件描述: 需求 [<a href="{0}">!{1}</a>] 由 {2} 删除
+    const val BK_TAPD_STORY_DELETE_EVENT_DESC = "bkTapdStoryDeleteEventDesc"
+
+    // TAPD 触发事件描述: 缺陷 [<a href="{0}">!{1}</a>] 由 {2} 创建
+    const val BK_TAPD_BUG_CREATE_EVENT_DESC = "bkTapdBugCreateEventDesc"
+
+    // TAPD 触发事件描述: 缺陷 [<a href="{0}">!{1}</a>] 由 {2} 更新
+    const val BK_TAPD_BUG_UPDATE_EVENT_DESC = "bkTapdBugUpdateEventDesc"
+
+    // TAPD 触发事件描述: 缺陷 [<a href="{0}">!{1}</a>] 由 {2} 删除
+    const val BK_TAPD_BUG_DELETE_EVENT_DESC = "bkTapdBugDeleteEventDesc"
+
+    // TAPD 触发事件描述: 需求 [<a href="{0}">!{1}</a>] 由 {2} 新增评论
+    const val BK_TAPD_STORY_ADD_COMMENT_EVENT_DESC = "bkTapdStoryAddCommentEventDesc"
+
+    // TAPD 触发事件描述: 需求 [<a href="{0}">!{1}</a>] 由 {2} 更新评论
+    const val BK_TAPD_STORY_UPDATE_COMMENT_EVENT_DESC = "bkTapdStoryUpdateCommentEventDesc"
+
+    // TAPD 触发事件描述: 需求 [<a href="{0}">!{1}</a>] 由 {2} 删除评论
+    const val BK_TAPD_STORY_DELETE_COMMENT_EVENT_DESC = "bkTapdStoryDeleteCommentEventDesc"
+
+    // TAPD 触发事件描述: 需求 [<a href="{0}">!{1}</a>] 由 {2} 变更状态
+    const val BK_TAPD_STORY_STATUS_CHANGE_EVENT_DESC = "bkTapdStoryStatusChangeEventDesc"
+
+    // TAPD 触发事件描述: 需求 [<a href="{0}">!{1}</a>] 由 {2} 关联需求
+    const val BK_TAPD_STORY_LINK_EVENT_DESC = "bkTapdStoryLinkEventDesc"
+
+    // TAPD 触发事件描述: 需求 [<a href="{0}">!{1}</a>] 由 {2} 解除需求关联
+    const val BK_TAPD_STORY_UNLINK_EVENT_DESC = "bkTapdStoryUnlinkEventDesc"
+
+    // TAPD 触发事件描述: 需求 [<a href="{0}">!{1}</a>] 由 {2} 关联缺陷
+    const val BK_TAPD_STORY_BUG_LINK_EVENT_DESC = "bkTapdStoryBugLinkEventDesc"
+
+    // TAPD 触发事件描述: 需求 [<a href="{0}">!{1}</a>] 由 {2} 解除缺陷关联
+    const val BK_TAPD_STORY_BUG_UNLINK_EVENT_DESC = "bkTapdStoryBugUnlinkEventDesc"
+
+    // TAPD 触发事件描述: 缺陷 [<a href="{0}">!{1}</a>] 由 {2} 新增评论
+    const val BK_TAPD_BUG_ADD_COMMENT_EVENT_DESC = "bkTapdBugAddCommentEventDesc"
+
+    // TAPD 触发事件描述: 缺陷 [<a href="{0}">!{1}</a>] 由 {2} 更新评论
+    const val BK_TAPD_BUG_UPDATE_COMMENT_EVENT_DESC = "bkTapdBugUpdateCommentEventDesc"
+
+    // TAPD 触发事件描述: 缺陷 [<a href="{0}">!{1}</a>] 由 {2} 删除评论
+    const val BK_TAPD_BUG_DELETE_COMMENT_EVENT_DESC = "bkTapdBugDeleteCommentEventDesc"
+
+    // TAPD 触发事件描述: 缺陷 [<a href="{0}">!{1}</a>] 由 {2} 变更状态
+    const val BK_TAPD_BUG_STATUS_CHANGE_EVENT_DESC = "bkTapdBugStatusChangeEventDesc"
+
+    // TAPD 触发事件描述（通用兜底）：TAPD {3} 事件 [!{1}] 由 {2} 触发动作 [{4}]
+    // 占位符: {0}=详情页URL（可能为空）, {1}=对象ID, {2}=触发用户, {3}=事件类型, {4}=事件动作
+    const val BK_TAPD_GENERIC_EVENT_DESC = "bkTapdGenericEventDesc"
+
+    // 通用: 事件动作不匹配
+    const val BK_TRIGGER_ACTION_NOT_MATCH = "bkTriggerActionNotMatch"
+
+    // 通用: 触发来源不匹配
+    const val BK_RIGGER_EVENT_FROM_NOT_MATCH = "bkRiggerEventFromNotMatch"
+
+    // 通用: label不匹配
+    const val BK_TRIGGER_LABEL_NOT_MATCH = "bkTriggerLabelNotMatch"
+
+    // 通用: label被排除
+    const val BK_TRIGGER_LABEL_IGNORED = "bkTriggerLabelIgnored"
+
+    // 通用: 优先级不匹配
+    const val BK_TRIGGER_PRIORITY_NOT_MATCH = "bkTriggerPriorityNotMatch"
 }

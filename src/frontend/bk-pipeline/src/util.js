@@ -1,24 +1,85 @@
-import { v4 as uuidv4 } from 'uuid'
-import Vue from 'vue'
+import { v4 as uuidv4 } from "uuid";
 import {
-    NORMAL_CONTAINER_TYPE,
-    STATUS_MAP,
-    TRIGGER_CONTAINER_TYPE,
-    VM_CONTAINER_TYPE
-} from './constants'
+  NORMAL_CONTAINER_TYPE,
+  STATUS_MAP,
+  TRIGGER_CONTAINER_TYPE,
+  VM_CONTAINER_TYPE,
+} from "./constants";
 
-export const eventBus = new Vue()
+// Vue 2.7 和 Vue 3 兼容的导入
+// 在 ES 模块环境中，不直接导入 Vue，而是通过运行时检测
+let Vue = null;
+try {
+  // 尝试从全局获取 Vue（UMD 环境）
+  if (typeof window !== "undefined" && window.Vue) {
+    Vue = window.Vue;
+  } else if (typeof global !== "undefined" && global.Vue) {
+    Vue = global.Vue;
+  }
+} catch (e) {
+  // 忽略错误
+}
+
+// Vue 2.7 和 Vue 3 兼容的事件总线
+// Vue 2.7: 使用 new Vue() 作为事件总线
+// Vue 3: 检测 Vue 版本，如果不可用则使用简单的事件发射器
+let eventBus;
+try {
+  // Vue 2.7 支持 new Vue()
+  if (Vue && typeof Vue === "function" && Vue.prototype && Vue.prototype.$on) {
+    eventBus = new Vue();
+  } else {
+    // Vue 3 或无法创建 Vue 实例时，使用简单的事件发射器
+    eventBus = createEventEmitter();
+  }
+} catch (e) {
+  // 如果 new Vue() 失败，使用简单的事件发射器
+  eventBus = createEventEmitter();
+}
+
+// 简单的事件发射器实现（Vue 3 兼容）
+function createEventEmitter() {
+  const events = {};
+  return {
+    $on(event, callback) {
+      if (!events[event]) {
+        events[event] = [];
+      }
+      events[event].push(callback);
+    },
+    $off(event, callback) {
+      if (!events[event]) return;
+      if (callback) {
+        events[event] = events[event].filter((cb) => cb !== callback);
+      } else {
+        delete events[event];
+      }
+    },
+    $emit(event, ...args) {
+      if (events[event]) {
+        events[event].forEach((callback) => callback(...args));
+      }
+    },
+  };
+}
+
+// 导出事件总线（Vue 2.7 和 Vue 3 兼容）
+export { eventBus };
 
 /**
  *
  * @param {obj} 判断是否为DOM节点
  * @returns boolean
  */
-const isDOMElement = obj => {
-    return (
-        typeof HTMLElement === 'object' ? obj instanceof HTMLElement : obj && typeof obj === 'object' && obj !== null && obj.nodeType === 1 && typeof obj.nodeName === 'string'
-    )
-}
+const isDOMElement = (obj) => {
+  return typeof HTMLElement === "object"
+    ? obj instanceof HTMLElement
+    : obj &&
+        typeof obj === "object" &&
+        obj !== null &&
+        obj.nodeType === 1 &&
+        typeof obj.nodeName === "string";
+};
 
 /**
  *
@@ -27,50 +88,54 @@ const isDOMElement = obj => {
  * @returns
  */
 const getDOMRect = (selector, parent) => {
-    const target = isDOMElement(selector) ? selector : parent ? parent.querySelector(selector) : document.querySelector(selector)
+  const target = isDOMElement(selector)
+    ? selector
+    : parent
+      ? parent.querySelector(selector)
+      : document.querySelector(selector);
 
-    if (!target) {
-        return {}
-    }
+  if (!target) {
+    return {};
+  }
 
-    const style = window.getComputedStyle(target)
+  const style = window.getComputedStyle(target);
 
-    return {
-        width: style.width,
-        height: style.height,
-        marginTop: style.marginTop,
-        marginBottom: style.marginBottom,
-        marginLeft: style.marginLeft,
-        marginRight: style.marginRight
-    }
-}
+  return {
+    width: style.width,
+    height: style.height,
+    marginTop: style.marginTop,
+    marginBottom: style.marginBottom,
+    marginLeft: style.marginLeft,
+    marginRight: style.marginRight,
+  };
+};
 
 /**
  * @param {String} selector
  * @param {DOM element} parent
  */
 export const getOuterHeight = (selector, parent) => {
-    const { marginTop, height, marginBottom } = getDOMRect(selector, parent)
-    return parseFloat(marginTop) + parseFloat(height) + parseFloat(marginBottom)
-}
+  const { marginTop, height, marginBottom } = getDOMRect(selector, parent);
+  return parseFloat(marginTop) + parseFloat(height) + parseFloat(marginBottom);
+};
 
 export const hashID = (len = 32) => {
-    const uuid = uuidv4().replace(/-/g, '')
-    return uuid.substring(0, len)
-}
+  const uuid = uuidv4().replace(/-/g, "");
+  return uuid.substring(0, len);
+};
 
 export const randomString = (len) => {
-    const chars = 'ABCDEFGHJKLMNPQRSTWXYZabcdefhijklmnprstwxyz_0123456789'
-    let tempStr = ''
-    for (let i = 0; i < len; ++i) {
-        const tempLen = i === 0 ? chars.length - 10 : chars.length
-        tempStr += chars.charAt(Math.floor(Math.random() * tempLen))
-    }
-    return tempStr
-}
+  const chars = "ABCDEFGHJKLMNPQRSTWXYZabcdefhijklmnprstwxyz_0123456789";
+  let tempStr = "";
+  for (let i = 0; i < len; ++i) {
+    const tempLen = i === 0 ? chars.length - 10 : chars.length;
+    tempStr += chars.charAt(Math.floor(Math.random() * tempLen));
+  }
+  return tempStr;
+};
 
-export function pad (n) {
-    return ('00' + n).slice(-2)
+export function pad(n) {
+  return ("00" + n).slice(-2);
 }
 
 /**
@@ -78,148 +143,166 @@ export function pad (n) {
  *  @param {Number} ms - 时间的毫秒形式
  *  @return {String}
  */
-export function convertMStoString (ms) {
-    const _1hour = 36e5
-    const _1min = 6e4
-    const _1day = 8.64e7
-    const _1sec = 1000
-    const day = Math.floor(ms / _1day)
-    const hour = Math.floor((ms % _1day) / _1hour)
-    const min = Math.floor((ms % _1hour) / _1min)
-    const sec = Math.floor((ms % _1min) / _1sec)
-    
-    switch (true) {
-        case day > 0:
-            return `${day} ${pad(hour)}:${pad(min)}:${pad(sec)}`
-        case hour > 0:
-            return `${pad(hour)}:${pad(min)}:${pad(sec)}`
-        default:
-            return `${pad(min)}:${pad(sec)}`
-    }
+export function convertMStoString(ms) {
+  if (ms < 0) {
+    return "--";
+  }
+  const _1hour = 36e5;
+  const _1min = 6e4;
+  const _1day = 8.64e7;
+  const _1sec = 1000;
+  const day = Math.floor(ms / _1day);
+  const hour = Math.floor((ms % _1day) / _1hour);
+  const min = Math.floor((ms % _1hour) / _1min);
+  const sec = Math.floor((ms % _1min) / _1sec);
+
+  switch (true) {
+    case day > 0:
+      return `${day} ${pad(hour)}:${pad(min)}:${pad(sec)}`;
+    case hour > 0:
+      return `${pad(hour)}:${pad(min)}:${pad(sec)}`;
+    default:
+      return `${pad(min)}:${pad(sec)}`;
+  }
 }
 
-export function checkContainerType (typeName) {
-    return (container) => container?.['@type'] === typeName
+export function checkContainerType(typeName) {
+  return (container) => container?.["@type"] === typeName;
 }
 
 /**
  * 判断是否为触发器
  * @param {*} containerType contatiner类型
  */
-export const isTriggerContainer = checkContainerType(TRIGGER_CONTAINER_TYPE)
+export const isTriggerContainer = checkContainerType(TRIGGER_CONTAINER_TYPE);
 
 /**
  * 判断是否为构建环境
  * @param {*} containerType contatiner类型
  */
-export const isVmContainer = checkContainerType(VM_CONTAINER_TYPE)
+export const isVmContainer = checkContainerType(VM_CONTAINER_TYPE);
 
 /**
  * 判断是否为无编译环境
  * @param {*} containerType contatiner类型
  */
-export const isNormalContainer = checkContainerType(NORMAL_CONTAINER_TYPE)
+export const isNormalContainer = checkContainerType(NORMAL_CONTAINER_TYPE);
 
-export function getDependOnDesc (job) {
-    try {
-        const { status, jobControlOption = {} } = job
-        const { dependOnType, dependOnId, dependOnName } = jobControlOption
-        if (status !== STATUS_MAP.DEPENDENT_WAITING) return ''
-        let val = ''
-        if (dependOnType === 'ID') {
-            val = dependOnId || []
-        } else if (dependOnType) {
-            val = dependOnName || ''
-        }
-        return val
-    } catch (e) {
-        return ''
+export function getDependOnDesc(job) {
+  try {
+    const { status, jobControlOption = {} } = job;
+    const { dependOnType, dependOnId, dependOnName } = jobControlOption;
+    if (status !== STATUS_MAP.DEPENDENT_WAITING) return "";
+    let val = "";
+    if (dependOnType === "ID") {
+      val = dependOnId || [];
+    } else if (dependOnType) {
+      val = dependOnName || "";
     }
+    return val;
+  } catch (e) {
+    return "";
+  }
 }
 
-export function isObject (o) {
-    return o !== null && typeof o === 'object' && !Array.isArray(o)
+export function isObject(o) {
+  return o !== null && typeof o === "object" && !Array.isArray(o);
 }
 
-export function getStatusCls (status) {
-    switch (status) {
-        case STATUS_MAP.QUEUE:
-        case STATUS_MAP.QUEUE_CACHE:
-        case STATUS_MAP.RUNNING:
-        case STATUS_MAP.REVIEWING:
-        case STATUS_MAP.PREPARE_ENV:
-        case STATUS_MAP.LOOP_WAITING:
-        case STATUS_MAP.DEPENDENT_WAITING:
-        case STATUS_MAP.CALL_WAITING:
-            return 'DOING'
-        case STATUS_MAP.UNEXEC:
-        case STATUS_MAP.DISABLED:
-        case STATUS_MAP.WAITING:
-            return 'NORMAL'
-        case STATUS_MAP.CANCELED:
-        case STATUS_MAP.REVIEW_ABORT:
-        case STATUS_MAP.TRY_FINALLY:
-        case STATUS_MAP.SKIP:
-            return 'WARNING'
-        case STATUS_MAP.FAILED:
-        case STATUS_MAP.TERMINATE:
-        case STATUS_MAP.HEARTBEAT_TIMEOUT:
-        case STATUS_MAP.QUALITY_CHECK_FAIL:
-        case STATUS_MAP.QUEUE_TIMEOUT:
-        case STATUS_MAP.EXEC_TIMEOUT:
-            return 'FAILED'
-        case STATUS_MAP.SUCCEED:
-        case STATUS_MAP.REVIEW_PROCESSED:
-        case STATUS_MAP.STAGE_SUCCESS:
-            return 'SUCCESS'
-        case STATUS_MAP.PAUSE:
-            return 'PAUSE'
-        default:
-            return ''
-    }
+export function getStatusCls(status) {
+  switch (status) {
+    case STATUS_MAP.QUEUE:
+    case STATUS_MAP.QUEUE_CACHE:
+    case STATUS_MAP.RUNNING:
+    case STATUS_MAP.REVIEWING:
+    case STATUS_MAP.PREPARE_ENV:
+    case STATUS_MAP.LOOP_WAITING:
+    case STATUS_MAP.DEPENDENT_WAITING:
+    case STATUS_MAP.CALL_WAITING:
+      return "DOING";
+    case STATUS_MAP.UNEXEC:
+    case STATUS_MAP.DISABLED:
+    case STATUS_MAP.WAITING:
+      return "NORMAL";
+    case STATUS_MAP.CANCELED:
+    case STATUS_MAP.REVIEW_ABORT:
+    case STATUS_MAP.TRY_FINALLY:
+    case STATUS_MAP.SKIP:
+      return "WARNING";
+    case STATUS_MAP.FAILED:
+    case STATUS_MAP.TERMINATE:
+    case STATUS_MAP.HEARTBEAT_TIMEOUT:
+    case STATUS_MAP.QUALITY_CHECK_FAIL:
+    case STATUS_MAP.QUEUE_TIMEOUT:
+    case STATUS_MAP.EXEC_TIMEOUT:
+      return "FAILED";
+    case STATUS_MAP.SUCCEED:
+    case STATUS_MAP.REVIEW_PROCESSED:
+    case STATUS_MAP.STAGE_SUCCESS:
+      return "SUCCESS";
+    case STATUS_MAP.PAUSE:
+      return "PAUSE";
+    default:
+      return "";
+  }
 }
 
-export function areDeeplyEqual (obj1, obj2) {
-    const stack = [[obj1, obj2]]
-    let current, left, right
+export function areDeeplyEqual(obj1, obj2) {
+  const stack = [[obj1, obj2]];
+  let current, left, right;
 
-    while (stack.length > 0) {
-        current = stack.pop()
-        left = current[0]
-        right = current[1]
+  while (stack.length > 0) {
+    current = stack.pop();
+    left = current[0];
+    right = current[1];
 
-        if (left === right) {
-            continue
-        }
-
-        if (typeof left !== 'object' || left === null
-            || typeof right !== 'object' || right === null) {
-            return false
-        }
-
-        const ignoreKeys = ['isError', 'id', 'pipelineCreator', 'containerHashId', 'containerId', 'executeCount']
-        // 排除 isError 字段
-        const leftKeys = Object.keys(left).filter(key => !ignoreKeys.includes(key))
-        const rightKeys = Object.keys(right).filter(key => !ignoreKeys.includes(key))
-        if (leftKeys.length !== rightKeys.length) {
-            return false
-        }
-
-        for (let i = 0; i < leftKeys.length; i++) {
-            const key = leftKeys[i]
-            if (!Object.hasOwnProperty.call(right, key)) {
-                return false
-            }
-            if (left[key] === right[key]) {
-                continue
-            }
-            if (typeof left[key] === 'object' && typeof right[key] === 'object') {
-                stack.push([left[key], right[key]])
-            } else {
-                return false
-            }
-        }
+    if (left === right) {
+      continue;
     }
 
-    return true
+    if (
+      typeof left !== "object" ||
+      left === null ||
+      typeof right !== "object" ||
+      right === null
+    ) {
+      return false;
+    }
+
+    const ignoreKeys = [
+      "isError",
+      "id",
+      "pipelineCreator",
+      "containerHashId",
+      "containerId",
+      "executeCount",
+    ];
+    // 排除 isError 字段
+    const leftKeys = Object.keys(left).filter(
+      (key) => !ignoreKeys.includes(key)
+    );
+    const rightKeys = Object.keys(right).filter(
+      (key) => !ignoreKeys.includes(key)
+    );
+    if (leftKeys.length !== rightKeys.length) {
+      return false;
+    }
+
+    for (let i = 0; i < leftKeys.length; i++) {
+      const key = leftKeys[i];
+      if (!Object.hasOwnProperty.call(right, key)) {
+        return false;
+      }
+      if (left[key] === right[key]) {
+        continue;
+      }
+      if (typeof left[key] === "object" && typeof right[key] === "object") {
+        stack.push([left[key], right[key]]);
+      } else {
+        return false;
+      }
+    }
+  }
+
+  return true;
 }

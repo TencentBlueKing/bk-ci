@@ -75,6 +75,7 @@ import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_MIL
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_OWNER
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_STATE
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_TITLE
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_LABELS
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_MILESTONE
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_MILESTONE_ID
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_REVIEWERS
@@ -91,6 +92,7 @@ import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_REVIEW_ST
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_WEBHOOK_REPO_ALIAS_NAME
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_WEBHOOK_REPO_TYPE
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_REPO_NAME
+import com.tencent.devops.common.webhook.pojo.code.PIPELINE_TRIGGER_EVENT_TYPE
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_BLOCK
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_BRANCH
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_EVENT_TYPE
@@ -248,6 +250,7 @@ object PipelineVarUtil {
         "ci.mr_desc" to PIPELINE_GIT_MR_DESC,
         "ci.mr_proposer" to PIPELINE_GIT_MR_PROPOSER,
         "ci.mr_action" to PIPELINE_GIT_MR_ACTION,
+        "ci.mr_labels" to BK_REPO_GIT_WEBHOOK_MR_LABELS,
         "ci.issue_title" to BK_REPO_GIT_WEBHOOK_ISSUE_TITLE,
         "ci.issue_id" to BK_REPO_GIT_WEBHOOK_ISSUE_ID,
         "ci.issue_iid" to BK_REPO_GIT_WEBHOOK_ISSUE_IID,
@@ -272,6 +275,7 @@ object PipelineVarUtil {
         "ci.repo_alias_name" to BK_REPO_WEBHOOK_REPO_ALIAS_NAME,
         "ci.build_msg" to PIPELINE_BUILD_MSG,
         "ci.event" to PIPELINE_WEBHOOK_EVENT_TYPE,
+        "ci.event_type" to PIPELINE_TRIGGER_EVENT_TYPE,
         "ci.milestone_name" to BK_REPO_GIT_WEBHOOK_MR_MILESTONE,
         "ci.milestone_id" to BK_REPO_GIT_WEBHOOK_MR_MILESTONE_ID,
         "ci.note_type" to BK_REPO_GIT_WEBHOOK_NOTE_NOTEABLE_TYPE,
@@ -279,7 +283,8 @@ object PipelineVarUtil {
         "ci.create_time" to BK_REPO_GIT_WEBHOOK_NOTE_CREATED_AT,
         "ci.modify_time" to BK_REPO_GIT_WEBHOOK_NOTE_UPDATED_AT,
         "ci.review_type" to BK_REPO_GIT_WEBHOOK_REVIEW_REVIEWABLE_TYPE,
-        "ci.build-no" to BUILD_NO,
+        "ci.build-no" to BUILD_NO, // 旧语法，仅保留映射关系，但前端界面不展示此变量
+        "ci.build_no" to BUILD_NO,
         "ci.pipeline_creator" to PIPELINE_CREATE_USER,
         "ci.pipeline_modifier" to PIPELINE_UPDATE_USER,
         "ci.pipeline_version" to PIPELINE_VERSION,

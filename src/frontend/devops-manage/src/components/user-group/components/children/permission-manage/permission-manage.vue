@@ -10,12 +10,13 @@
       @create-group="handleCreateGroup"
       @close-manage="handleCloseManage"
       @change-group-detail-tab="handleChangeGroupDetailTab"
-    />
-    <iam-iframe
-      v-if="path && !isAllMember"
-      :path="path"
-    />
-    <ManageAll v-else />
+    >
+      <iam-iframe
+        v-if="path && !isAllMember"
+        :path="path"
+      />
+      <ManageAll v-else />
+    </group-aside>
   </section>
 </template>
 
@@ -93,8 +94,8 @@ export default {
 
 <style lang="scss" scoped>
 .permission-manage {
-    display: flex;
     height: 100%;
+    width: 100%;
     box-shadow: 0 2px 2px 0 #00000026;
 }
 </style>
