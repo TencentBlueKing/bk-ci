@@ -593,6 +593,9 @@
             }
         },
         watch: {
+            isLoading (val) {
+                this.$emit('update-loading-state', val)
+            },
             analyzingPipeline:{
                 async  handler (newVal, oldVal) {
                     if (oldVal !== false && newVal === false) {

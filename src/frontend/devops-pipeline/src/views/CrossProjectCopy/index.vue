@@ -702,7 +702,7 @@
                 }
                 
                 // 下一步按钮（只在前两步显示）
-                let isDisabled = false
+                let isDisabled = this.loadingStatus
                 let tooltip = ''
                 
                 // 第一步：检查必填项
@@ -751,6 +751,7 @@
                 buttons.push({
                     action: 'saveDraft',
                     theme: 'default',
+                    disabled: this.loadingStatus,
                     text: this.$t('saveDraft'),
                     handler: this.handleSaveDraft
                 })
@@ -758,6 +759,7 @@
                 buttons.push({
                     action: 'cancel',
                     theme: 'default',
+                    disabled: this.loadingStatus,
                     text: this.$t('cancel'),
                     handler: this.handleCancel
                 })
@@ -1125,7 +1127,6 @@
                             tab: prevStep.name
                         }
                     })
-                    this.analyzingPipeline = null
                 }
             },
             /**
