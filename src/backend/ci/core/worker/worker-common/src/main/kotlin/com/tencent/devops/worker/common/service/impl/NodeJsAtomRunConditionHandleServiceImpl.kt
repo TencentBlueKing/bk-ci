@@ -150,8 +150,7 @@ class NodeJsAtomRunConditionHandleServiceImpl : AtomRunConditionHandleService {
         preCmd: String,
         osName: String,
         pkgName: String,
-        runtimeVersion: String?,
-        atomExecuteEnvPath: String?
+        runtimeVersion: String?
     ): String {
         val preCmds = CommonUtils.strToList(preCmd).toMutableList()
         preCmds.add(0, "tar -xzf $pkgName")
