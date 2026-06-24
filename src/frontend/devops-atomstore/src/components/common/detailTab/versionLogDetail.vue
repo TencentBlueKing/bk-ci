@@ -83,7 +83,9 @@
                 const storeTypeMap = {
                     atom: 'ATOM',
                     template: 'TEMPLATE',
-                    image: 'IMAGE'
+                    image: 'IMAGE',
+                    ide: 'IDE_ATOM',
+                    service: 'SERVICE'
                 }
                 return storeTypeMap[this.type]
             }
