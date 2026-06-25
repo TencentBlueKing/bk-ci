@@ -244,14 +244,14 @@ class ModelUtilsTest {
         resetElement(e2, failStatus)
         // 设置了手动重试，不允许跳过
         e1.additionalOptions = elementAdditionalOptions(manualRetry = true)
-        // 设置允许重试，并且前面有失败的也运行，将不会有任何跳过或重试的按钮
+        // e2 是“失败时才运行”的插件，自身不放开重试/跳过；但不再影响前序失败插件 e1 的按钮
         e2.additionalOptions = elementAdditionalOptions(
             runCondition = RunCondition.PRE_TASK_FAILED_BUT_CANCEL,
             manualRetry = true
         )
         ModelUtils.refreshCanRetry(model)
-        assertEquals(false, e1.canRetry ?: false) // e1是 受到e2 的永远不会出现 重试或跳过
-        assertEquals(false, e1.canSkip ?: false) // 第一个是 失败自动跳过, 永远不会出现 重试或跳过
+        assertEquals(true, e1.canRetry) // e1 普通失败插件 manualRetry=true，可重试，不再被 e2 清空
+        assertEquals(false, e1.canSkip ?: false) // 普通失败插件不放开跳过
         assertEquals(false, e2.canSkip ?: false)
         assertEquals(false, e2.canRetry ?: false)
 
