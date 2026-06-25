@@ -178,20 +178,15 @@ class ApigwArtifactoryResourceV4Impl @Autowired constructor(
             "OPENAPI_ARTIFACTORY_V4|$userId|getArtifactInfo|$projectId|$pipelineId|$artifactType|$artifactName|$artifactVersion"
         )
 
-        val artifactInfo = kotlin.runCatching {
-            client.get(ServiceArtifactMetadataResource::class)
-                .getArtifactInfo(
-                    userId = userId,
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    artifactType = artifactType,
-                    artifactName = artifactName,
-                    artifactVersion = artifactVersion
-                ).data
-        }.getOrElse { e ->
-            logger.warn("Failed to get artifact info: ${e.message}")
-            null
-        }
+        val artifactInfo = client.get(ServiceArtifactMetadataResource::class)
+            .getArtifactInfo(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                artifactType = artifactType,
+                artifactName = artifactName,
+                artifactVersion = artifactVersion
+            ).data
 
         logger.info(
             "OPENAPI_ARTIFACTORY_V4|$userId|getArtifactInfo|$projectId|$pipelineId|$artifactType|$artifactName|$artifactVersion|" +
