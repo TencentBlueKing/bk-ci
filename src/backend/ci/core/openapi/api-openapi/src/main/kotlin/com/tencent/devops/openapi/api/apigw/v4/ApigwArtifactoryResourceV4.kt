@@ -210,7 +210,8 @@ interface ApigwArtifactoryResourceV4 {
 
     @Operation(
         summary = "查询产出物元数据",
-        description = "根据项目ID、产出物类型等条件查询元数据，包含代码库地址和Commit ID"
+        description = "根据项目ID、产出物类型等条件查询元数据，包含代码库地址和Commit ID",
+        tags = ["v4_app_artifactory_metadata", "v4_user_artifactory_metadata"]
     )
     @GET
     @Path("/metadata/{artifactType}")
