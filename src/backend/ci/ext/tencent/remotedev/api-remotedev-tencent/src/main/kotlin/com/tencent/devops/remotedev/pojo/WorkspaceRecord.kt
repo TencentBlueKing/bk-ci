@@ -49,6 +49,7 @@ interface WorkspaceRecordInf {
     val lastStatusUpdateTime: LocalDateTime?
     val workspaceMountType: WorkspaceMountType
     val ownerType: WorkspaceOwnerType
+    val workspaceKind: WorkspaceKind
     val remark: String?
     val labels: List<String>?
     val bakWorkspaceName: String?
@@ -93,6 +94,8 @@ data class WorkspaceRecord(
     override val workspaceSystemType: WorkspaceSystemType,
     @get:Schema(title = "工作空间归属")
     override val ownerType: WorkspaceOwnerType,
+    @get:Schema(title = "云桌面实例类型")
+    override val workspaceKind: WorkspaceKind,
     @get:Schema(title = "工作空间备注")
     override val remark: String?,
     @get:Schema(title = "标签")
@@ -145,6 +148,8 @@ data class WorkspaceRecordWithWindows(
     override val workspaceSystemType: WorkspaceSystemType,
     @get:Schema(title = "工作空间归属")
     override val ownerType: WorkspaceOwnerType,
+    @get:Schema(title = "云桌面实例类型")
+    override val workspaceKind: WorkspaceKind,
     @get:Schema(title = "工作空间备注")
     override val remark: String?,
     @get:Schema(title = "标签")

@@ -27,36 +27,41 @@
 
 package com.tencent.devops.remotedev.pojo
 
-import io.swagger.v3.oas.annotations.media.Schema
+import com.fasterxml.jackson.annotation.JsonCreator
+import com.fasterxml.jackson.annotation.JsonValue
 
-@Schema(title = "windows 工作空间信息-创建")
-data class WindowsWorkspaceCreate(
-    @get:Schema(title = "云桌面 配置")
-    val windowsType: String,
-    @get:Schema(title = "云桌面 地域")
-    val windowsZone: String,
-    @get:Schema(title = "基础镜像Id")
-    val baseImageId: Int = 0,
-    @get:Schema(title = "创建实例的数量")
-    val count: Int = 1,
-    @get:Schema(title = "自定义镜像路径")
-    val imageCosFile: String = "",
-    @get:Schema(title = "指定工作空间，优先级比count高。")
-    val assignNames: List<String> = emptyList(),
-    @get:Schema(title = "如需指定工作空间owner，需要和assignNames/count对应。且值不为空")
-    val assignOwners: List<String> = emptyList(),
-    @get:Schema(title = "指定数据盘大小")
-    val pvcs: List<Pvc> = emptyList(),
-    @get:Schema(title = "创建时指定污点")
-    val specifyTaints: String? = null,
-    @get:Schema(title = "云桌面类型")
-    val ownerType: WorkspaceOwnerType? = null,
-    @get:Schema(title = "云桌面实例类型，支持 cvd-personal / cvd-team")
-    val workspaceKind: WorkspaceKind? = null
-)
+enum class WorkspaceKind(
+    @get:JsonValue
+    val value: String
+) {
+    CVD_PERSONAL("cvd-personal"),
+    CVD_TEAM("cvd-team");
 
-@Schema(title = "自定义数据盘信息")
-data class Pvc(
-    val pvcClass: String? = null,
-    val pvcSize: String? = null
-)
+    companion object {
+        @JvmStatic
+        @JsonCreator(mode = JsonCreator.Mode.DELEGATING)
+        fun parse(value: String): WorkspaceKind {
+            return values().find { it.value == value }
+                ?: throw IllegalArgumentException("Unsupported workspaceKind: $value")
+        }
+
+        /**
+         * JAX-RS 对枚举类型的 @QueryParam 转换会优先使用 fromString（存在时），
+         * 否则按枚举名匹配。这里委托到 parse 以保证按对外值 cvd-personal/cvd-team 解析。
+         */
+        @JvmStatic
+        fun fromString(value: String): WorkspaceKind = parse(value)
+
+        fun fromDb(value: String?, ownerType: WorkspaceOwnerType): WorkspaceKind {
+            return if (value.isNullOrBlank()) {
+                defaultByOwnerType(ownerType)
+            } else {
+                parse(value)
+            }
+        }
+
+        fun defaultByOwnerType(ownerType: WorkspaceOwnerType): WorkspaceKind {
+            return if (ownerType.personalUse()) CVD_PERSONAL else CVD_TEAM
+        }
+    }
+}

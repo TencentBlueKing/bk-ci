@@ -93,6 +93,7 @@ import com.tencent.devops.remotedev.pojo.WorkspaceAction
 import com.tencent.devops.remotedev.pojo.WorkspaceDetail
 import com.tencent.devops.remotedev.pojo.WorkspaceEnv
 import com.tencent.devops.remotedev.pojo.WorkspaceGroupByOrg
+import com.tencent.devops.remotedev.pojo.WorkspaceKind
 import com.tencent.devops.remotedev.pojo.WorkspaceMountType
 import com.tencent.devops.remotedev.pojo.WorkspaceOpHistory
 import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
@@ -730,6 +731,7 @@ class WorkspaceService @Autowired constructor(
                     },
                     currentLoginUsers = loginInfo?.loginUsers ?: emptyList(),
                     ownerType = it.ownerType,
+                    workspaceKind = it.workspaceKind,
                     expertSupportList = expertMap?.get(it.workspaceName),
                     macAddress = allWindows[it.workspaceName]?.macAddress,
                     remark = it.remark,
@@ -1050,6 +1052,7 @@ class WorkspaceService @Autowired constructor(
                     workspaceMountType = it.workspaceMountType,
                     workspaceSystemType = it.workspaceSystemType,
                     ownerType = it.ownerType,
+                    workspaceKind = it.workspaceKind,
                     assignType = sharedWorkspace[it.workspaceName]?.find { shared -> shared.sharedUser == userId }?.type
                         ?: WorkspaceShared.AssignType.OWNER,
                     winConfigId = allWindows[it.workspaceName]?.winConfigId,
@@ -1633,6 +1636,23 @@ class WorkspaceService @Autowired constructor(
             workspaceName = workspaceName,
             old = old,
             new = new
+        )
+    }
+
+    fun updateWorkspaceKind(
+        operator: String,
+        workspaceNames: List<String>,
+        workspaceKind: WorkspaceKind
+    ) {
+        val normalizedNames = workspaceNames
+            .map { it.trim() }
+            .filter { it.isNotBlank() }
+            .distinct()
+        logger.info("updateWorkspaceKind|operator|$operator|workspaceKind|${workspaceKind.value}|$normalizedNames")
+        workspaceDao.updateWorkspaceKind(
+            dslContext = dslContext,
+            workspaceNames = normalizedNames,
+            workspaceKind = workspaceKind
         )
     }
 

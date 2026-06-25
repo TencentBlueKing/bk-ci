@@ -49,6 +49,7 @@ interface IWorkspace {
     var currentLoginUsers: List<String>
     var bakWorkspaceName: String?
     val ownerType: WorkspaceOwnerType
+    val workspaceKind: WorkspaceKind
 }
 
 @Schema(title = "工作空间信息")
@@ -91,6 +92,8 @@ data class Workspace(
     override var bakWorkspaceName: String? = null,
     @get:Schema(title = "工作空间归属")
     override val ownerType: WorkspaceOwnerType,
+    @get:Schema(title = "云桌面实例类型")
+    override val workspaceKind: WorkspaceKind,
     @get:Schema(title = "windows 地域配置")
     val zoneConfig: WindowsResourceZoneConfig? = null,
     @get:Schema(title = "镜像id")
