@@ -134,7 +134,7 @@ class PipelineYamlResourceService @Autowired constructor(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
-            channelCode = ChannelCode.BS
+            channelCode = ChannelCode.getRequestChannelCode()
         )
     }
 

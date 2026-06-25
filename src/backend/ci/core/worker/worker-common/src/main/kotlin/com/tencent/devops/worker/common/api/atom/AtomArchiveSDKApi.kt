@@ -120,6 +120,17 @@ interface AtomArchiveSDKApi : WorkerRestApiSDK {
     ): Result<StorePkgRunEnvInfo?>
 
     /**
+     * 检查插件是否在指定类型的白名单中
+     * @param atomCode 插件代码
+     * @param whitelistType 白名单类型
+     * @return Result<Boolean> true-在白名单中且启用, false-不在白名单中或未启用
+     */
+    fun isAtomInWhitelist(
+        atomCode: String,
+        whitelistType: String
+    ): Result<Boolean>
+
+    /**
      * 更新插件版本日志文件大小
      */
     fun updateAtomVersionPkgSize(

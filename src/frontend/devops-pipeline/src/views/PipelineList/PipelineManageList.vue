@@ -17,15 +17,26 @@
         </div>
         <template v-else>
             <h5 class="current-pipeline-group-name">
-                <bk-tag
-                    v-bk-tooltips="pipelineGroupType.tips"
-                    v-if="pipelineGroupType"
-                    type="stroke"
+                <p>
+                    <bk-tag
+                        v-bk-tooltips="pipelineGroupType.tips"
+                        v-if="pipelineGroupType"
+                        type="stroke"
+                    >
+                        {{ pipelineGroupType.label }}
+                    </bk-tag>
+                    <ArchiveViewName v-if="isArchiveView" />
+                    <span v-else>{{ currentViewName }}</span>
+                </p>
+
+                <bk-button
+                    theme="default"
+                    v-if="!isArchiveView"
+                    class="historical-task"
+                    @click="goHistoricalTask"
                 >
-                    {{ pipelineGroupType.label }}
-                </bk-tag>
-                <ArchiveViewName v-if="isArchiveView" />
-                <span v-else>{{ currentViewName }}</span>
+                    {{ $t('historicalTask') }}
+                </bk-button>
             </h5>
             <header class="pipeline-list-main-header">
                 <div class="pipeline-list-main-header-left-area">
@@ -536,6 +547,14 @@
                 this.filters = {
                     filterByPipelineName
                 }
+            },
+            goHistoricalTask () {
+                this.$router.push({
+                    name: 'batchHistoricalTask',
+                    params: {
+                        projectId: this.$route.params.projectId
+                    }
+                })
             }
         }
     }

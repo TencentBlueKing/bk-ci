@@ -103,5 +103,49 @@ data class StoreDetailInfo(
         title = "扩展字段集合(组件级+版本级合并，含installPath/installType/installParams/urlScheme等)",
         required = false
     )
-    val extData: Map<String, Any>? = null
-)
+    val extData: Map<String, Any>? = null,
+    @get:Schema(title = "归属应用标识", required = false)
+    val ownerStoreCode: String? = null
+) {
+    // 补充代码
+    constructor(
+        storeId: String,
+        storeType: String,
+        storeCode: String,
+        name: String,
+        description: String?,
+        extData: Map<String, Any>?,
+        ownerStoreCode: String?
+    ): this(
+        storeId = storeId,
+        storeCode = storeCode,
+        storeType = storeType,
+        name = name,
+        version = "",
+        status = "",
+        classify = null,
+        logoUrl = null,
+        versionInfo = null,
+        downloads = 0,
+        score = null,
+        summary = null,
+        description = description,
+        testProjectCode = null,
+        initProjectCode = null,
+        categoryList = null,
+        labelList = null,
+        latestFlag = false,
+        installFlag = false,
+        publicFlag = false,
+        recommendFlag = false,
+        certificationFlag = false,
+        type = null,
+        rdType = null,
+        userCommentInfo = StoreUserCommentInfo(commentFlag = false, commentId = null),
+        editFlag = null,
+        honorInfos = null,
+        indexInfos = null,
+        extData = extData,
+        ownerStoreCode = ownerStoreCode
+    )
+}

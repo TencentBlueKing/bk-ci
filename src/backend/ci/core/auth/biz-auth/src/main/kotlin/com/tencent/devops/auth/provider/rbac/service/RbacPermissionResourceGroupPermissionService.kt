@@ -246,7 +246,12 @@ class RbacPermissionResourceGroupPermissionService(
         projectName: String,
         actions: List<String>
     ): String {
-        val resourceType2Actions = actions.groupBy { it.substringBeforeLast("_") }
+        // 项目级授权的资源类型必须以 action 元数据为准。
+        // 不能靠 action id 前缀猜，比如 cert_create 的前缀是 cert，
+        // 但它实际挂载的 relatedResourceType 是 project。
+        val resourceType2Actions = actions.groupBy {
+            rbacCommonService.getActionInfo(it).relatedResourceType
+        }
         val authorizationScopes = resourceType2Actions.map { (resourceType, actions) ->
             val projectPath = ManagerPath().apply {
                 system = systemId

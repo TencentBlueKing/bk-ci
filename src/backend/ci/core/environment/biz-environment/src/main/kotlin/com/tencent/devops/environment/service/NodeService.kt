@@ -32,6 +32,7 @@ import com.tencent.bk.audit.annotations.AuditAttribute
 import com.tencent.bk.audit.annotations.AuditInstanceRecord
 import com.tencent.bk.audit.context.ActionAuditContext
 import com.tencent.devops.common.api.constant.ALIAS
+import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.IMPORTER
 import com.tencent.devops.common.api.constant.LATEST_EXECUTE_PIPELINE
 import com.tencent.devops.common.api.constant.LATEST_EXECUTE_TIME
@@ -48,7 +49,10 @@ import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.audit.ActionAuditContent
 import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.AuthResourceType
+import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.api.ResourceTypeId
+import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.dispatch.api.ServiceAgentResource
@@ -62,7 +66,6 @@ import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_NOT_EXISTS
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_NO_EDIT_PERMISSSION
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_NO_IMPORT_PERMISSION_NODES
-import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_NOT_CMDB_PRIMARY_BAK_OPERATOR
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_TYPE_TO_CHANGE_CREATOR_ONLY_SUPPORT_CMDB
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.NODE_USAGE_BUILD
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.NODE_USAGE_DEPLOYMENT
@@ -73,11 +76,13 @@ import com.tencent.devops.environment.dao.EnvNodeDao
 import com.tencent.devops.environment.dao.NodeDao
 import com.tencent.devops.environment.dao.NodeTagDao
 import com.tencent.devops.environment.dao.slave.SlaveGatewayDao
+import com.tencent.devops.environment.dao.thirdpartyagent.ThirdPartyAgentActionDao
 import com.tencent.devops.environment.dao.thirdpartyagent.ThirdPartyAgentDao
 import com.tencent.devops.environment.permission.EnvironmentPermissionService
 import com.tencent.devops.environment.pojo.NodeBaseInfo
 import com.tencent.devops.environment.pojo.NodeFetchReq
 import com.tencent.devops.environment.pojo.NodeWithPermission
+import com.tencent.devops.environment.pojo.enums.NodeOperatorStatus
 import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.environment.pojo.enums.NodeType
 import com.tencent.devops.environment.pojo.enums.OsType
@@ -89,16 +94,16 @@ import com.tencent.devops.environment.utils.NodeStringIdUtils
 import com.tencent.devops.environment.utils.NodeUtils
 import com.tencent.devops.model.environment.tables.records.TNodeRecord
 import jakarta.servlet.http.HttpServletResponse
-import java.time.format.DateTimeFormatter
-import java.util.concurrent.Executors
-import java.util.concurrent.LinkedBlockingQueue
-import java.util.concurrent.ThreadPoolExecutor
-import java.util.concurrent.TimeUnit
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.time.format.DateTimeFormatter
+import java.util.concurrent.Executors
+import java.util.concurrent.LinkedBlockingQueue
+import java.util.concurrent.ThreadPoolExecutor
+import java.util.concurrent.TimeUnit
 
 @Service
 @Suppress("ALL")
@@ -109,11 +114,14 @@ class NodeService @Autowired constructor(
     private val envDao: EnvDao,
     private val envNodeDao: EnvNodeDao,
     private val thirdPartyAgentDao: ThirdPartyAgentDao,
+    private val thirdPartyAgentActionDao: ThirdPartyAgentActionDao,
     private val slaveGatewayService: SlaveGatewayService,
     private val environmentPermissionService: EnvironmentPermissionService,
     private val slaveGatewayDao: SlaveGatewayDao,
     private val nodeTagDao: NodeTagDao,
-    private val nodeTagService: NodeTagService
+    private val nodeTagService: NodeTagService,
+    private val authProjectApi: AuthProjectApi,
+    private val pipelineAuthServiceCode: PipelineAuthServiceCode
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(NodeService::class.java)
@@ -210,6 +218,7 @@ class NodeService @Autowired constructor(
         keywords: String?,
         nodeType: NodeType?,
         nodeStatus: NodeStatus?,
+        operatorStatus: NodeOperatorStatus?,
         agentVersion: String?,
         osName: String?,
         latestBuildPipelineId: String?,
@@ -217,6 +226,7 @@ class NodeService @Autowired constructor(
         latestBuildTimeEnd: Long?,
         sortType: String?,
         collation: String?,
+        createMode: Boolean?,
         data: NodeFetchReq?
     ): Page<NodeWithPermission> {
         val tagValues = if (data?.tags.isNullOrEmpty()) {
@@ -241,7 +251,11 @@ class NodeService @Autowired constructor(
                     createdUser = createdUser,
                     lastModifiedUser = lastModifiedUser,
                     keywords = keywords,
-                    nodeType = nodeType,
+                    nodeType = if (createMode == true) {
+                        NodeType.CREATE
+                    } else {
+                        nodeType
+                    },
                     nodeStatus = nodeStatus,
                     agentVersion = agentVersion,
                     osName = osName,
@@ -250,34 +264,68 @@ class NodeService @Autowired constructor(
                     latestBuildTimeEnd = latestBuildTimeEnd,
                     sortType = sortType,
                     collation = collation,
-                    tagValueIds = tagValues
+                    tagValueIds = tagValues,
+                    operatorStatus = operatorStatus
                 )
             } else {
-                nodeDao.listNodes(dslContext = dslContext, projectId = projectId, nodeType = nodeType)
+                nodeDao.listNodes(
+                    dslContext = dslContext, projectId = projectId, nodeType = if (createMode == true) {
+                    NodeType.CREATE
+                } else {
+                    nodeType
+                }
+                )
             }
         if (nodeRecordList.isEmpty()) {
             return Page(1, 0, 0, emptyList())
         }
-        val count = nodeDao.countForAuthWithSearchCondition(
-            dslContext = dslContext,
+        val nodeResourceType = if (nodeType == NodeType.CREATE) {
+            AuthResourceType.CREATIVE_STREAM_NODE
+        } else {
+            AuthResourceType.ENVIRONMENT_ENV_NODE
+        }
+        val nodes = formatNodeWithPermissions(
+            userId = userId,
             projectId = projectId,
-            nodeIp = nodeIp,
-            displayName = displayName,
-            createdUser = createdUser,
-            lastModifiedUser = lastModifiedUser,
-            keywords = keywords,
-            nodeType = nodeType,
-            nodeStatus = nodeStatus,
-            agentVersion = agentVersion,
-            osName = osName,
-            latestBuildPipelineId = latestBuildPipelineId,
-            latestBuildTimeStart = latestBuildTimeStart,
-            latestBuildTimeEnd = latestBuildTimeEnd,
-            sortType = sortType,
-            collation = collation,
-            tagValueIds = tagValues
-        ).toLong()
-        val nodes = formatNodeWithPermissions(userId, projectId, nodeRecordList)
+            nodeRecordList = nodeRecordList,
+            resourceType = nodeResourceType
+        )
+        // 查出项目下所有有权限的节点id
+        val authorizedNodeIds = environmentPermissionService.listNodeByPermission(
+            userId = userId,
+            projectId = projectId,
+            permission = AuthPermission.LIST,
+            resourceType = nodeResourceType
+        ).toList()
+        val count = if (authorizedNodeIds.isEmpty()) {
+            0L
+        } else {
+            nodeDao.countForAuthWithSearchCondition(
+                dslContext = dslContext,
+                projectId = projectId,
+                nodeIp = nodeIp,
+                displayName = displayName,
+                createdUser = createdUser,
+                lastModifiedUser = lastModifiedUser,
+                keywords = keywords,
+                nodeType = if (createMode == true) {
+                    NodeType.CREATE
+                } else {
+                    nodeType
+                },
+                nodeStatus = nodeStatus,
+                agentVersion = agentVersion,
+                osName = osName,
+                latestBuildPipelineId = latestBuildPipelineId,
+                latestBuildTimeStart = latestBuildTimeStart,
+                latestBuildTimeEnd = latestBuildTimeEnd,
+                sortType = sortType,
+                collation = collation,
+                tagValueIds = tagValues,
+                nodeIds = authorizedNodeIds,
+                operatorStatus = operatorStatus
+            ).toLong()
+        }
         if (-1 != page) {
             val nodesMap = nodes.associateBy { it.agentHashId }
             val agentIds = nodesMap.keys.mapNotNull { it }
@@ -336,6 +384,7 @@ class NodeService @Autowired constructor(
         latestBuildTimeEnd: Long?,
         sortType: String?,
         collation: String?,
+        createMode: Boolean?,
         data: NodeFetchReq?,
         response: HttpServletResponse
     ) {
@@ -356,6 +405,7 @@ class NodeService @Autowired constructor(
                 keywords = keywords,
                 nodeType = nodeType,
                 nodeStatus = nodeStatus,
+                operatorStatus = null,
                 agentVersion = agentVersion,
                 osName = osName,
                 latestBuildPipelineId = latestBuildPipelineId,
@@ -363,6 +413,7 @@ class NodeService @Autowired constructor(
                 latestBuildTimeEnd = latestBuildTimeEnd,
                 sortType = sortType,
                 collation = collation,
+                createMode = createMode,
                 data = data
             )
             count = res.count
@@ -407,51 +458,51 @@ class NodeService @Autowired constructor(
     fun formatNodeWithPermissions(
         userId: String,
         projectId: String,
-        nodeRecordList: List<TNodeRecord>
+        nodeRecordList: List<TNodeRecord>,
+        resourceType: AuthResourceType = AuthResourceType.ENVIRONMENT_ENV_NODE
     ): List<NodeWithPermission> {
         val nodeListResult = environmentPermissionService.listNodeByRbacPermission(
             userId = userId,
             projectId = projectId,
             nodeRecordList = nodeRecordList,
-            authPermission = AuthPermission.LIST
+            authPermission = AuthPermission.LIST,
+            resourceType = resourceType
         )
         if (nodeListResult.isEmpty()) return emptyList()
+
+        val isCreativeStreamNode = resourceType == AuthResourceType.CREATIVE_STREAM_NODE
+        val queryPermissions = if (isCreativeStreamNode) {
+            setOf(AuthPermission.VIEW, AuthPermission.EDIT)
+        } else {
+            setOf(AuthPermission.VIEW, AuthPermission.USE, AuthPermission.EDIT, AuthPermission.DELETE)
+        }
         val permissionMap = environmentPermissionService.listNodeByPermissions(
             userId = userId,
             projectId = projectId,
-            permissions = setOf(AuthPermission.USE, AuthPermission.EDIT, AuthPermission.DELETE)
+            permissions = queryPermissions,
+            resourceType = resourceType
         )
-        val canViewNodeIds = environmentPermissionService.listNodeByRbacPermission(
-            userId = userId,
-            projectId = projectId,
-            nodeRecordList = nodeListResult,
-            authPermission = AuthPermission.VIEW
-        ).map { it.nodeId }
 
-        val canUseNodeIds = permissionMap.takeIf { it.containsKey(AuthPermission.USE) }.run {
-            permissionMap[AuthPermission.USE]?.map { HashUtil.decodeIdToLong(it) } ?: emptyList()
-        }
-
-        val canEditNodeIds = permissionMap.takeIf { it.containsKey(AuthPermission.EDIT) }.run {
-            permissionMap[AuthPermission.EDIT]?.map { HashUtil.decodeIdToLong(it) } ?: emptyList()
-        }
-        val canDeleteNodeIds = permissionMap.takeIf { it.containsKey(AuthPermission.DELETE) }.run {
-            permissionMap[AuthPermission.DELETE]?.map { HashUtil.decodeIdToLong(it) } ?: emptyList()
-        }
-        val thirdPartyAgentNodeIds = nodeListResult.filter { it.nodeType == NodeType.THIRDPARTY.name }.map { it.nodeId }
+        val canViewNodeIds = permissionMap[AuthPermission.VIEW]
+            ?.map { HashUtil.decodeIdToLong(it) } ?: emptyList()
+        val canUseNodeIds = permissionMap[AuthPermission.USE]
+            ?.map { HashUtil.decodeIdToLong(it) } ?: emptyList()
+        val canEditNodeIds = permissionMap[AuthPermission.EDIT]
+            ?.map { HashUtil.decodeIdToLong(it) } ?: emptyList()
+        val canDeleteNodeIds = permissionMap[AuthPermission.DELETE]
+            ?.map { HashUtil.decodeIdToLong(it) } ?: emptyList()
+        val thirdPartyAgentNodeIds = nodeListResult.filter {
+            it.nodeType == NodeType.THIRDPARTY.name
+        }.map { it.nodeId }
         val thirdPartyAgentMap = if (thirdPartyAgentNodeIds.isNotEmpty()) {
             thirdPartyAgentDao.getAgentsByNodeIds(dslContext, thirdPartyAgentNodeIds, projectId)
                 .associateBy { it.nodeId }
         } else {
             emptyMap()
         }
-        val tagMaps = if (thirdPartyAgentNodeIds.isNotEmpty()) {
-            nodeTagService.fetchNodeTags(projectId, thirdPartyAgentNodeIds.toSet())
-        } else {
-            emptyMap()
-        }
-
-        val nodeEnvs = envNodeDao.listNodeIds(dslContext, projectId, nodeListResult.map { it.nodeId })
+        val nodeIds = nodeListResult.map { it.nodeId }
+        val tagMaps = nodeTagService.fetchNodeTags(projectId, nodeIds.toSet())
+        val nodeEnvs = envNodeDao.listNodeIds(dslContext, projectId, nodeIds)
         val envInfos = envDao.listServerEnvByIdsAllType(
             dslContext, nodeEnvs.map { it.envId }.toSet()
         ).associateBy { it.envId }
@@ -513,7 +564,9 @@ class NodeService @Autowired constructor(
                     DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(it.lastBuildTime)
                 },
                 tags = tagMaps[it.nodeId],
-                envEnableNode = nodeIdMaps[it.nodeId] ?: true
+                envEnableNode = nodeIdMaps[it.nodeId] ?: true,
+                createWorkspaceId = thirdPartyAgent?.createWorkspaceName,
+                operatorStatus = NodeOperatorStatus.valOf(it.operatorStatus)?.name
             )
         }
     }
@@ -543,53 +596,79 @@ class NodeService @Autowired constructor(
         )
     }
 
-    fun listByHashIds(userId: String, projectId: String, hashIds: List<String>): List<NodeWithPermission> {
+    fun listByHashIds(
+        userId: String,
+        projectId: String,
+        hashIds: List<String>,
+        checkPermission: Boolean = true
+    ): List<NodeWithPermission> {
         val nodeIds = hashIds.map { HashUtil.decodeIdToLong(it) }
         val nodeRecordList = nodeDao.listAllByIds(dslContext, projectId, nodeIds)
         if (nodeRecordList.isEmpty()) {
             return emptyList()
         }
 
-        val permissionMap = environmentPermissionService.listNodeByPermissions(
-            userId, projectId,
-            permissions = setOf(AuthPermission.USE, AuthPermission.EDIT, AuthPermission.DELETE)
-        )
+        val allNodeIds = nodeRecordList.map { it.nodeId }
+        val (nodesToReturn, canViewNodeIds, canUseNodeIds, canEditNodeIds, canDeleteNodeIds) = if (checkPermission) {
+            val permissionMap = environmentPermissionService.listNodeByPermissions(
+                userId, projectId,
+                permissions = setOf(AuthPermission.USE, AuthPermission.EDIT, AuthPermission.DELETE)
+            )
 
-        val canViewNodeIds = environmentPermissionService.listNodeByRbacPermission(
-            userId = userId,
-            projectId = projectId,
-            nodeRecordList = nodeRecordList,
-            authPermission = AuthPermission.VIEW
-        ).map { it.nodeId }
+            val canViewNodeIds = environmentPermissionService.listNodeByRbacPermission(
+                userId = userId,
+                projectId = projectId,
+                nodeRecordList = nodeRecordList,
+                authPermission = AuthPermission.VIEW
+            ).map { it.nodeId }
 
-        val canUseNodeIds = if (permissionMap.containsKey(AuthPermission.USE)) {
-            permissionMap[AuthPermission.USE]?.map { HashUtil.decodeIdToLong(it) } ?: emptyList()
+            val canUseNodeIds = if (permissionMap.containsKey(AuthPermission.USE)) {
+                permissionMap[AuthPermission.USE]?.map { HashUtil.decodeIdToLong(it) } ?: emptyList()
+            } else {
+                emptyList()
+            }
+            val canEditNodeIds = if (permissionMap.containsKey(AuthPermission.EDIT)) {
+                permissionMap[AuthPermission.EDIT]?.map { HashUtil.decodeIdToLong(it) } ?: emptyList()
+            } else {
+                emptyList()
+            }
+            val canDeleteNodeIds = if (permissionMap.containsKey(AuthPermission.DELETE)) {
+                permissionMap[AuthPermission.DELETE]?.map { HashUtil.decodeIdToLong(it) } ?: emptyList()
+            } else {
+                emptyList()
+            }
+            val nodeListResult = environmentPermissionService.listNodeByRbacPermission(
+                userId = userId,
+                projectId = projectId,
+                nodeRecordList = nodeRecordList,
+                authPermission = AuthPermission.LIST
+            )
+            if (nodeListResult.isEmpty()) return emptyList()
+            NodeListWithPermission(
+                nodesToReturn = nodeListResult,
+                canViewNodeIds = canViewNodeIds,
+                canUseNodeIds = canUseNodeIds,
+                canEditNodeIds = canEditNodeIds,
+                canDeleteNodeIds = canDeleteNodeIds
+            )
         } else {
-            emptyList()
+            NodeListWithPermission(
+                nodesToReturn = nodeRecordList,
+                canViewNodeIds = allNodeIds,
+                canUseNodeIds = allNodeIds,
+                canEditNodeIds = allNodeIds,
+                canDeleteNodeIds = allNodeIds
+            )
         }
-        val canEditNodeIds = if (permissionMap.containsKey(AuthPermission.EDIT)) {
-            permissionMap[AuthPermission.EDIT]?.map { HashUtil.decodeIdToLong(it) } ?: emptyList()
-        } else {
-            emptyList()
-        }
-        val canDeleteNodeIds = if (permissionMap.containsKey(AuthPermission.DELETE)) {
-            permissionMap[AuthPermission.DELETE]?.map { HashUtil.decodeIdToLong(it) } ?: emptyList()
-        } else {
-            emptyList()
-        }
-        val nodeListResult = environmentPermissionService.listNodeByRbacPermission(
-            userId = userId,
-            projectId = projectId,
-            nodeRecordList = nodeRecordList,
-            authPermission = AuthPermission.LIST
-        )
-        if (nodeListResult.isEmpty()) return emptyList()
-        val thirdPartyAgentNodeIds = nodeRecordList.filter { it.nodeType == NodeType.THIRDPARTY.name }.map { it.nodeId }
+
+        val thirdPartyAgentNodeIds = nodeRecordList.filter {
+            it.nodeType == NodeType.THIRDPARTY.name || it.nodeType == NodeType.CREATE.name
+        }.map { it.nodeId }
         if (thirdPartyAgentNodeIds.isEmpty()) return emptyList()
         val thirdPartyAgentMap =
             thirdPartyAgentDao.getAgentsByNodeIds(dslContext, thirdPartyAgentNodeIds, projectId)
                 .associateBy { it.nodeId }
-        return nodeListResult.map {
+        return nodesToReturn.map {
             val thirdPartyAgent = thirdPartyAgentMap[it.nodeId]
             val gatewayShowName = if (thirdPartyAgent != null) {
                 slaveGatewayService.getShowName(thirdPartyAgent.gateway)
@@ -632,7 +711,9 @@ class NodeService @Autowired constructor(
                 taskId = null,
                 osType = it.osType,
                 serverId = it.serverId,
-                envEnableNode = null
+                envEnableNode = null,
+                createWorkspaceId = thirdPartyAgent?.createWorkspaceName,
+                operatorStatus = NodeOperatorStatus.valOf(it.operatorStatus)?.name
             )
         }
     }
@@ -690,7 +771,9 @@ class NodeService @Autowired constructor(
                 taskId = null,
                 osType = it.osType,
                 serverId = it.serverId,
-                envEnableNode = null
+                envEnableNode = null,
+                createWorkspaceId = null,
+                operatorStatus = NodeOperatorStatus.valOf(it.operatorStatus)?.name
             )
         }
     }
@@ -699,6 +782,28 @@ class NodeService @Autowired constructor(
         val nodeRecords =
             nodeDao.listServerNodesByIds(dslContext, projectId, nodeHashIds.map { HashUtil.decodeIdToLong(it) })
         return nodeRecords.map { NodeStringIdUtils.getNodeBaseInfo(it) }
+    }
+
+    fun getRawServerNode(
+        userId: String,
+        projectId: String,
+        nodeHashId: String?,
+        nodeName: String?
+    ): NodeBaseInfo {
+        val hashId = when {
+            !nodeHashId.isNullOrBlank() -> nodeHashId
+            !nodeName.isNullOrBlank() -> nodeDao.getByDisplayName(dslContext, projectId, nodeName, null)
+                .firstOrNull()?.nodeHashId
+
+            else -> null
+        } ?: throw ErrorCodeException(
+            errorCode = ERROR_NODE_NAME_OR_ID_INVALID
+        )
+        return listRawServerNodeByIds(userId, projectId, listOf(hashId)).firstOrNull()
+            ?: throw ErrorCodeException(
+                errorCode = ERROR_NODE_NOT_EXISTS,
+                params = arrayOf(hashId)
+            )
     }
 
     fun listRawServerNodeByIds(nodeHashIds: List<String>): List<NodeBaseInfo> {
@@ -728,7 +833,7 @@ class NodeService @Autowired constructor(
                 val isOperator = userId == node.operator
                 val isBakOperator = node.bakOperator.split(";").contains(userId)
                 if (isOperator || isBakOperator) {
-                    nodeDao.updateCreatedUser(dslContext, nodeId, userId)
+                    nodeDao.updateCreatedUser(dslContext, nodeId, userId, NodeOperatorStatus.NORMAL)
                 } else {
                     throw ErrorCodeException(
                         errorCode = ERROR_NODE_NOT_CMDB_PRIMARY_BAK_OPERATOR,
@@ -771,9 +876,11 @@ class NodeService @Autowired constructor(
 
         val toChangeNodeIds = nodeList.map { it.nodeId }
         // 分批更新，以免单次where in 大列表
+        // createdUser变更后需重新计算operatorStatus，这里所有节点均为CMDB类型，
+        // 且userId已通过checkNodesImportPermission校验为operator或bakOperator之一，故状态为NORMAL
         val nodeIdsInBatch = toChangeNodeIds.chunked(2000)
         nodeIdsInBatch.forEach { it ->
-            nodeDao.batchUpdateNodeCreatedUser(dslContext, it, userId)
+            nodeDao.batchUpdateNodeCreatedUser(dslContext, it, userId, NodeOperatorStatus.NORMAL)
         }
 
         return nodeList.map { Pair(it.nodeHashId, it.displayName) }
@@ -867,6 +974,108 @@ class NodeService @Autowired constructor(
         }
     }
 
+    @ActionAuditRecord(
+        actionId = ActionId.ENV_NODE_TRANSFER,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.ENV_NODE
+        ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#sourceProjectId")],
+        scopeId = "#sourceProjectId",
+        content = ActionAuditContent.ENV_NODE_TRANSFER_CONTENT
+    )
+    fun transferNode(
+        userId: String,
+        sourceProjectId: String,
+        targetProjectId: String,
+        nodeHashId: String? = null,
+        agentHashId: String? = null,
+        checkPermission: Boolean = true
+    ): Boolean {
+        logger.info(
+            "transfer node start|userId=$userId|sourceProjectId=$sourceProjectId|" +
+                    "targetProjectId=$targetProjectId|nodeHashId=$nodeHashId|$agentHashId=$agentHashId"
+        )
+        val nodeId = when {
+            nodeHashId != null -> HashUtil.decodeIdToLong(nodeHashId)
+
+            agentHashId != null -> thirdPartyAgentDao.getAgent(
+                dslContext, HashUtil.decodeIdToLong(agentHashId)
+            )?.nodeId
+
+            else -> null
+        } ?: throw ErrorCodeException(
+            errorCode = ERROR_NODE_NAME_OR_ID_INVALID
+        )
+        if (checkPermission) {
+            checkProjectManager(userId, sourceProjectId)
+            checkProjectManager(userId, targetProjectId)
+        }
+        val sourceNode = nodeDao.get(dslContext, sourceProjectId, nodeId)
+        if (sourceNode == null) {
+            val targetNode = nodeDao.get(dslContext, targetProjectId, nodeId)
+            if (targetNode != null) {
+                logger.info(
+                    "transfer node skipped|userId=$userId|sourceProjectId=$sourceProjectId|" +
+                            "targetProjectId=$targetProjectId|nodeHashId=$nodeHashId"
+                )
+                return true
+            }
+            throw ErrorCodeException(
+                errorCode = ERROR_NODE_NOT_EXISTS,
+                params = arrayOf(HashUtil.encodeLongId(nodeId))
+            )
+        }
+        dslContext.transaction { configuration ->
+            val transactionContext = DSL.using(configuration)
+            nodeDao.updateProjectId(
+                dslContext = transactionContext,
+                sourceProjectId = sourceProjectId,
+                targetProjectId = targetProjectId,
+                nodeId = nodeId
+            )
+            if (sourceNode.nodeType == NodeType.THIRDPARTY.name) {
+                thirdPartyAgentDao.updateProjectIdByNodeId(
+                    dslContext = transactionContext,
+                    sourceProjectId = sourceProjectId,
+                    targetProjectId = targetProjectId,
+                    nodeId = nodeId
+                )
+            }
+
+            environmentPermissionService.createNode(
+                userId,
+                targetProjectId,
+                nodeId,
+                "${NodeStringIdUtils.getNodeStringId(sourceNode)}(${sourceNode.nodeIp})"
+            )
+            environmentPermissionService.copyNodeGroupMembers(
+                sourceProjectId = sourceProjectId,
+                targetProjectId = targetProjectId,
+                nodeId = nodeId
+            )
+            environmentPermissionService.deleteNode(sourceProjectId, nodeId)
+        }
+        ActionAuditContext.current()
+            .setInstanceId(sourceNode.nodeId.toString())
+            .setInstanceName(sourceNode.nodeName)
+            .addExtendData("sourceProjectId", sourceProjectId)
+            .addExtendData("targetProjectId", targetProjectId)
+        logger.info(
+            "transfer node success|userId=$userId|sourceProjectId=$sourceProjectId|" +
+                "targetProjectId=$targetProjectId|nodeHashId=$nodeHashId"
+        )
+        return true
+    }
+
+    fun checkProjectManager(userId: String, projectId: String) {
+        if (!authProjectApi.checkProjectManager(userId, pipelineAuthServiceCode, projectId)) {
+            throw ErrorCodeException(
+                errorCode = CommonMessageCode.ERROR_PERMISSION_NOT_PROJECT_MANAGER,
+                params = arrayOf(userId, projectId)
+            )
+        }
+    }
+
     private fun checkDisplayName(projectId: String, nodeId: Long?, displayName: String) {
         if (nodeDao.isDisplayNameExist(dslContext, projectId, nodeId, displayName)) {
             throw ErrorCodeException(errorCode = ERROR_NODE_NAME_DUPLICATE, params = arrayOf(displayName))
@@ -896,7 +1105,10 @@ class NodeService @Autowired constructor(
                 )
             )
         }
-        checkDisplayName(projectId, nodeId, displayName)
+        // 创作流节点不校验别名重复
+        if (nodeInDb.nodeType != NodeType.CREATE.name) {
+            checkDisplayName(projectId, nodeId, displayName)
+        }
         ActionAuditContext.current()
             .setInstanceId(nodeInDb.nodeId.toString())
             .setOriginInstance(nodeInDb.displayName)
@@ -1026,7 +1238,8 @@ class NodeService @Autowired constructor(
                 taskId = null,
                 osType = it.osType,
                 serverId = it.serverId,
-                envEnableNode = null
+                envEnableNode = null,
+                createWorkspaceId = null
             )
         }
     }
@@ -1117,3 +1330,11 @@ class NodeService @Autowired constructor(
         logger.info("addhashid time cost: ${System.currentTimeMillis() - startTime}")
     }
 }
+
+private data class NodeListWithPermission(
+    val nodesToReturn: List<TNodeRecord>,
+    val canViewNodeIds: List<Long>,
+    val canUseNodeIds: List<Long>,
+    val canEditNodeIds: List<Long>,
+    val canDeleteNodeIds: List<Long>
+)

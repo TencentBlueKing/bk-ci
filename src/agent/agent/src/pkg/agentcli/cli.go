@@ -57,7 +57,7 @@ func Run(workDir string, args []string) {
 	case "reinstall":
 		err = handleReinstall(workDir, args[1:])
 	case "status":
-		err = handleStatus(workDir)
+		err = handleStatus(workDir, args[1:])
 	case "monitor":
 		err = handleMonitor(workDir, args[1:])
 	default:
@@ -145,7 +145,14 @@ func DebugFileExists(workDir string) bool {
 
 // ── Output helpers ───────────────────────────────────────────────────────
 
-func printStep(m string) { fmt.Printf("[BK-CI] %s\n", m) }
+func printStep(m string) {
+	line := fmt.Sprintf("[BK-CI] %s", m)
+	addStatusTextLine(line)
+	addStatusReportStep(m)
+	if statusShouldPrintText() {
+		fmt.Println(line)
+	}
+}
 
 func printWarn(m string) { fmt.Printf("[BK-CI][WARN] %s\n", m) }
 
@@ -161,14 +168,193 @@ func printDivider() {
 	printStep("============================================")
 }
 
+type statusOutputMode string
+
+const (
+	statusOutputText     statusOutputMode = "text"
+	statusOutputJSON     statusOutputMode = "json"
+	statusOutputMarkdown statusOutputMode = "markdown"
+)
+
+type statusReport struct {
+	Title       string          `json:"title"`
+	GeneratedAt string          `json:"generatedAt"`
+	Summary     string          `json:"summary"`
+	HasIssue    bool            `json:"hasIssue"`
+	Sections    []statusSection `json:"sections"`
+	TextLines   []string        `json:"textLines,omitempty"`
+}
+
+type statusSection struct {
+	Title    string           `json:"title"`
+	Items    []statusLineItem `json:"items,omitempty"`
+	Messages []string         `json:"messages,omitempty"`
+}
+
+type statusLineItem struct {
+	Label string `json:"label"`
+	Value string `json:"value"`
+}
+
+type statusOutputState struct {
+	mode   statusOutputMode
+	report *statusReport
+}
+
 type statusSummaryState struct {
 	hasIssue bool
 }
 
 var currentStatusSummary *statusSummaryState
+var currentStatusOutput *statusOutputState
+
+func parseStatusOutputMode(args []string) (statusOutputMode, error) {
+	fs := flag.NewFlagSet("status", flag.ContinueOnError)
+	fs.SetOutput(io.Discard)
+	jsonOutput := fs.Bool("json", false, "")
+	markdownOutput := fs.Bool("markdown", false, "")
+	if err := fs.Parse(args); err != nil {
+		return statusOutputText, err
+	}
+	if fs.NArg() > 0 {
+		return statusOutputText, cliErrorf("unknown status argument: %s", "未知 status 参数: %s", fs.Arg(0))
+	}
+	if *jsonOutput && *markdownOutput {
+		return statusOutputText, cliErrorf("--json and --markdown cannot be used together", "--json 和 --markdown 不能同时使用")
+	}
+	if *jsonOutput {
+		return statusOutputJSON, nil
+	}
+	if *markdownOutput {
+		return statusOutputMarkdown, nil
+	}
+	return statusOutputText, nil
+}
 
 func beginStatusSummary() {
 	currentStatusSummary = &statusSummaryState{}
+}
+
+func beginStatusReport(title string, mode statusOutputMode) {
+	currentStatusOutput = &statusOutputState{
+		mode: mode,
+		report: &statusReport{
+			Title:       title,
+			GeneratedAt: time.Now().Format(time.RFC3339),
+		},
+	}
+}
+
+func collectStatusReport(title string, collect func()) *statusReport {
+	beginStatusSummary()
+	beginStatusReport(title, statusOutputJSON)
+	collect()
+	report := currentStatusOutput.report
+	currentStatusOutput = nil
+	currentStatusSummary = nil
+	return report
+}
+
+func outputStatusReport(report *statusReport, mode statusOutputMode) error {
+	if report == nil {
+		return nil
+	}
+	switch mode {
+	case statusOutputJSON:
+		enc := json.NewEncoder(os.Stdout)
+		enc.SetIndent("", "  ")
+		return enc.Encode(report)
+	case statusOutputMarkdown:
+		printStatusMarkdown(report)
+	default:
+		printStatusText(report)
+	}
+	return nil
+}
+
+func finishStatusReport() error {
+	if currentStatusOutput == nil || currentStatusOutput.report == nil {
+		return nil
+	}
+	defer func() {
+		currentStatusOutput = nil
+		currentStatusSummary = nil
+	}()
+
+	return outputStatusReport(currentStatusOutput.report, currentStatusOutput.mode)
+}
+
+func statusShouldPrintText() bool {
+	return currentStatusOutput == nil || currentStatusOutput.mode == statusOutputText
+}
+
+func addStatusTextLine(line string) {
+	if currentStatusOutput != nil && currentStatusOutput.report != nil {
+		currentStatusOutput.report.TextLines = append(currentStatusOutput.report.TextLines, line)
+	}
+}
+
+func statusBlankLine() {
+	addStatusTextLine("")
+	if statusShouldPrintText() {
+		fmt.Println()
+	}
+}
+
+func statusTextLine(line string) {
+	addStatusTextLine(line)
+	if currentStatusOutput != nil {
+		currentStatusOutput.addMessage(line)
+	}
+	if statusShouldPrintText() {
+		fmt.Println(line)
+	}
+}
+
+func addStatusReportStep(step string) {
+	if currentStatusOutput == nil {
+		return
+	}
+	currentStatusOutput.addSection(step)
+}
+
+func addStatusReportLine(label, value string) {
+	if currentStatusOutput == nil {
+		return
+	}
+	currentStatusOutput.addLine(label, value)
+}
+
+func (s *statusOutputState) addSection(title string) {
+	title = strings.TrimSpace(title)
+	if title == "" || title == s.report.Title || isStatusSeparator(title) {
+		return
+	}
+	if len(s.report.Sections) > 0 && s.report.Sections[len(s.report.Sections)-1].Title == title {
+		return
+	}
+	s.report.Sections = append(s.report.Sections, statusSection{Title: title})
+}
+
+func (s *statusOutputState) addLine(label, value string) {
+	if len(s.report.Sections) == 0 {
+		s.addSection(msg("General", "基本信息"))
+	}
+	idx := len(s.report.Sections) - 1
+	s.report.Sections[idx].Items = append(s.report.Sections[idx].Items, statusLineItem{Label: label, Value: value})
+}
+
+func (s *statusOutputState) addMessage(message string) {
+	if len(s.report.Sections) == 0 {
+		s.addSection(msg("General", "基本信息"))
+	}
+	idx := len(s.report.Sections) - 1
+	s.report.Sections[idx].Messages = append(s.report.Sections[idx].Messages, message)
+}
+
+func isStatusSeparator(s string) bool {
+	trimmed := strings.Trim(s, "=-")
+	return trimmed == ""
 }
 
 func trackStatusLine(label, value string) {
@@ -188,7 +374,54 @@ func printStatusSummaryLine() {
 	if currentStatusSummary.hasIssue {
 		summary = msg("Abnormal ✗", "异常 ✗")
 	}
-	fmt.Printf("  %-24s %s\n", msg("Summary", "汇总")+":", summary)
+	if currentStatusOutput != nil && currentStatusOutput.report != nil {
+		currentStatusOutput.report.Summary = summary
+		currentStatusOutput.report.HasIssue = currentStatusSummary.hasIssue
+	}
+	line := fmt.Sprintf("  %-24s %s", msg("Summary", "汇总")+":", summary)
+	addStatusTextLine(line)
+	if statusShouldPrintText() {
+		fmt.Println(line)
+	}
+}
+
+func printStatusText(report *statusReport) {
+	for _, line := range report.TextLines {
+		fmt.Println(line)
+	}
+}
+
+func printStatusMarkdown(report *statusReport) {
+	fmt.Printf("# %s\n\n", markdownEscape(report.Title))
+	fmt.Printf("- Generated at: %s\n", markdownEscape(report.GeneratedAt))
+	fmt.Printf("- Summary: %s\n\n", markdownEscape(report.Summary))
+	for _, section := range report.Sections {
+		if len(section.Items) == 0 && len(section.Messages) == 0 {
+			continue
+		}
+		fmt.Printf("## %s\n\n", markdownEscape(section.Title))
+		if len(section.Items) > 0 {
+			fmt.Println("| Item | Value |")
+			fmt.Println("| --- | --- |")
+			for _, item := range section.Items {
+				fmt.Printf("| %s | %s |\n", markdownEscape(item.Label), markdownEscape(item.Value))
+			}
+			fmt.Println()
+		}
+		for _, message := range section.Messages {
+			fmt.Printf("    %s\n", message)
+		}
+		if len(section.Messages) > 0 {
+			fmt.Println()
+		}
+	}
+}
+
+func markdownEscape(s string) string {
+	s = strings.ReplaceAll(s, "|", "\\|")
+	s = strings.ReplaceAll(s, "\r\n", "<br>")
+	s = strings.ReplaceAll(s, "\n", "<br>")
+	return s
 }
 
 func statusValueHasIssue(label, value string) bool {
@@ -400,7 +633,7 @@ func unzipFile(src, dest string) error {
 // checkPropertiesFile validates .agent.properties, replicating the checks
 // performed by the agent process in config.LoadAgentConfig().
 func checkPropertiesFile(workDir string) {
-	fmt.Println()
+	statusBlankLine()
 	printStep(msg("Configuration (.agent.properties)", "配置文件 (.agent.properties)"))
 	printStep("--------------------------------------------")
 

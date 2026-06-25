@@ -49,6 +49,7 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitlabWebHook
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeP4WebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeSVNWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeTGitWebHookTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.TapdWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.time.BuildRecordTimeCost
 import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
 import com.tencent.devops.common.pipeline.utils.ModelUtils
@@ -386,6 +387,12 @@ class PipelineBuildRecordService @Autowired constructor(
                             params = arrayOf("SVN")
                         )
                     }
+                    is TapdWebHookTriggerElement -> {
+                        I18nUtil.getCodeLanMessage(
+                            messageCode = BK_EVENT,
+                            params = arrayOf("TAPD")
+                        )
+                    }
                     else -> null
                 }
             } ?: I18nUtil.getCodeLanMessage(messageCode = BK_WAREHOUSE_EVENTS)
@@ -715,8 +722,15 @@ class PipelineBuildRecordService @Autowired constructor(
                 startUser = recordModel.startUser,
                 executeCount = executeCount
             )
+            val allRecordStages = recordStageDao.getLatestRecords(
+                dslContext = context,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                executeCount = executeCount
+            )
             allStageStatus = fetchHistoryStageStatus(
-                recordStages = recordStages, buildStatus = buildStatus, errorMsg = errorMsg
+                recordStages = allRecordStages, buildStatus = buildStatus, errorMsg = errorMsg
             )
         }
         val model = getRecordModel(

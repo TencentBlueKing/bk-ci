@@ -862,6 +862,82 @@
             },
             "scm-code" : {
               "type" : "string"
+            },
+            "tapd" : {
+              "anyOf" : [ {
+                "type" : "array",
+                "items" : {
+                  "type" : "string"
+                }
+              }, {
+                "type" : "object",
+                "additionalProperties" : false,
+                "properties" : {
+                  "id" : {
+                    "type" : "string"
+                  },
+                  "name" : {
+                    "type" : "string"
+                  },
+                  "enable" : {
+                    "type" : "boolean"
+                  },
+                  "project-id" : {
+                    "type" : "string"
+                  },
+                  "event-type" : {
+                    "type" : "string"
+                  },
+                  "action" : {
+                    "type" : "array",
+                    "items" : {
+                      "type" : "string"
+                    }
+                  },
+                  "users" : {
+                    "type" : "array",
+                    "items" : {
+                      "type" : "string"
+                    }
+                  },
+                  "users-ignore" : {
+                    "type" : "array",
+                    "items" : {
+                      "type" : "string"
+                    }
+                  },
+                  "owners" : {
+                    "type" : "array",
+                    "items" : {
+                      "type" : "string"
+                    }
+                  },
+                  "owners-ignore" : {
+                    "type" : "array",
+                    "items" : {
+                      "type" : "string"
+                    }
+                  },
+                  "priorities" : {
+                    "type" : "array",
+                    "items" : {
+                      "type" : "string"
+                    }
+                  },
+                  "labels" : {
+                    "type" : "array",
+                    "items" : {
+                      "type" : "string"
+                    }
+                  },
+                  "labels-ignore" : {
+                    "type" : "array",
+                    "items" : {
+                      "type" : "string"
+                    }
+                  }
+                }
+              } ]
             }
           }
         }
@@ -1705,6 +1781,82 @@
           },
           "scm-code" : {
             "type" : "string"
+          },
+          "tapd" : {
+            "anyOf" : [ {
+              "type" : "array",
+              "items" : {
+                "type" : "string"
+              }
+            }, {
+              "type" : "object",
+              "additionalProperties" : false,
+              "properties" : {
+                "id" : {
+                  "type" : "string"
+                },
+                "name" : {
+                  "type" : "string"
+                },
+                "enable" : {
+                  "type" : "boolean"
+                },
+                "project-id" : {
+                  "type" : "string"
+                },
+                "event-type" : {
+                  "type" : "string"
+                },
+                "action" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string"
+                  }
+                },
+                "users" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string"
+                  }
+                },
+                "users-ignore" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string"
+                  }
+                },
+                "owners" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string"
+                  }
+                },
+                "owners-ignore" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string"
+                  }
+                },
+                "priorities" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string"
+                  }
+                },
+                "labels" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string"
+                  }
+                },
+                "labels-ignore" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string"
+                  }
+                }
+              }
+            } ]
           }
         }
       } ]
@@ -2633,6 +2785,25 @@
     },
     "cancel-policy" : {
       "enum" : [ "BROAD", "RESTRICTED" ]
+    },
+    "runs-on" : {
+      "oneOf" : [ {
+        "type" : "string",
+        "description" : "创作流运行环境，默认为 self 指代我的创作节点，也可按 name 指定"
+      }, {
+        "type" : "object",
+        "additionalProperties" : false,
+        "properties" : {
+          "pool-name" : {
+            "type" : "string",
+            "description" : "按名称指定创作流运行环境"
+          },
+          "pool-id" : {
+            "type" : "string",
+            "description" : "按 ID 指定创作流运行环境"
+          }
+        }
+      } ]
     }
   },
   "definitions" : {

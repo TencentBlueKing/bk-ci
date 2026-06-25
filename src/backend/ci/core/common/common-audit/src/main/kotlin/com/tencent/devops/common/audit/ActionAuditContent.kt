@@ -89,6 +89,7 @@ object ActionAuditContent {
     const val ENVIRONMENT_OF_SHARE_DELETE_CONTENT = "delete share environment $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
     const val ENVIRONMENT_LIST_CONTENT = "list environment $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
     const val ENVIRONMENT_USE_CONTENT = "use environment $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
+    const val ENVIRONMENT_TRANSFER_CONTENT = "transfer environment $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
     const val ENVIRONMENT_ENABLE_OR_DISABLE_NODE = "{{$PROJECT_ENABLE_OR_DISABLE_TEMPLATE}} env node $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
 
     // 环境节点
@@ -98,6 +99,7 @@ object ActionAuditContent {
     const val ENV_NODE_DELETE_CONTENT = "delete environment node $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
     const val ENV_NODE_LIST_CONTENT = "list environment node $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
     const val ENV_NODE_USE_CONTENT = "use environment node $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
+    const val ENV_NODE_TRANSFER_CONTENT = "transfer environment node $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
 
     // 环境节点标签
     const val ENV_NODE_TAG_CREATE_CONTENT = "create environment tag $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"

@@ -35,6 +35,7 @@ import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomTypeEnum
 import com.tencent.devops.store.pojo.atom.enums.OpSortTypeEnum
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
+import com.tencent.devops.store.pojo.common.enums.ServiceScopeEnum
 import java.io.InputStream
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 
@@ -47,7 +48,7 @@ interface OpAtomService {
         atomName: String?,
         atomCode: String?,
         atomType: AtomTypeEnum?,
-        serviceScope: String?,
+        serviceScope: ServiceScopeEnum?,
         os: String?,
         category: String?,
         classifyId: String?,

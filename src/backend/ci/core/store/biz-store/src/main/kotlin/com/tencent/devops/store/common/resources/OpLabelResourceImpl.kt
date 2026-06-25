@@ -34,6 +34,7 @@ import com.tencent.devops.store.pojo.common.label.Label
 import com.tencent.devops.store.pojo.common.label.LabelRequest
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.common.service.LabelService
+import com.tencent.devops.store.pojo.common.enums.ServiceScopeEnum
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -48,8 +49,11 @@ class OpLabelResourceImpl @Autowired constructor(private val labelService: Label
         return labelService.updateLabel(id, labelRequest, labelType.type.toByte())
     }
 
-    override fun listAllLabels(labelType: StoreTypeEnum): Result<List<Label>?> {
-        return labelService.getAllLabel(labelType.type.toByte())
+    override fun listAllLabels(
+        labelType: StoreTypeEnum,
+        serviceScope: ServiceScopeEnum?
+    ): Result<List<Label>?> {
+        return labelService.getAllLabel(labelType.type.toByte(), serviceScope)
     }
 
     override fun getLabelById(id: String): Result<Label?> {

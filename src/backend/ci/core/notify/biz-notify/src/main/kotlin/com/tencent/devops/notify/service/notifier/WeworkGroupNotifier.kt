@@ -2,12 +2,13 @@ package com.tencent.devops.notify.service.notifier
 
 import com.tencent.devops.common.notify.enums.NotifyType
 import com.tencent.devops.common.notify.utils.NotifyUtils
+import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.wechatwork.WechatWorkRobotService
 import com.tencent.devops.common.wechatwork.WechatWorkService
 import com.tencent.devops.model.notify.tables.records.TCommonNotifyMessageTemplateRecord
 import com.tencent.devops.notify.dao.NotifyMessageTemplateDao
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
-
+import java.util.regex.Pattern
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -19,11 +20,13 @@ class WeworkGroupNotifier @Autowired constructor(
     private val wechatWorkService: WechatWorkService,
     private val wechatWorkRobotService: WechatWorkRobotService,
     private val notifyMessageTemplateDao: NotifyMessageTemplateDao,
-    private val dslContext: DSLContext
+    private val dslContext: DSLContext,
+    private val commonConfig: CommonConfig
 ) : INotifier {
     @Value("\${wework.domain}")
     private val userUseDomain: Boolean = true
 
+    private val chatPatten = "^[A-Za-z0-9_-]+\$" // 数字和字母组成的群chatId正则表达式
     override fun type(): NotifyType = NotifyType.WEWORK_GROUP
     override fun send(
         request: SendNotifyMessageTemplateRequest,
@@ -60,22 +63,20 @@ class WeworkGroupNotifier @Autowired constructor(
             logger.warn("no rtx or wework group template found for ${commonNotifyMessageTemplateRecord.id}")
             return
         }
-        val title = NotifierUtils.replaceContentParams(
-            request.titleParams,
-            rtxTplRecord?.title ?: weworkGroupTplRecord?.title ?: ""
-        )
-        // 替换内容里的动态参数
-        val body = NotifierUtils.replaceContentParams(
-            request.bodyParams,
-            if (request.markdownContent == true) {
-                rtxTplRecord?.bodyMd ?: rtxTplRecord?.body
-                    ?: weworkGroupTplRecord?.body ?: ""
-            } else {
-                rtxTplRecord?.body ?: weworkGroupTplRecord?.body ?: ""
-            }
-        )
+        // 先对 DB 原始模板做渠道关键字替换（如 CREATIVE_STREAM 渠道将「流水线」替换为「创作流」），再替换占位符
+        val language = commonConfig.devopsDefaultLocaleLanguage
+        val title = rtxTplRecord?.title ?: weworkGroupTplRecord?.title ?: ""
+        val rawTitle = NotifierUtils.replaceNotifyKeywordByChannel(title, language)
+        val body = if (request.markdownContent == true) {
+            rtxTplRecord?.bodyMd ?: rtxTplRecord?.body ?: weworkGroupTplRecord?.body ?: ""
+        } else {
+            rtxTplRecord?.body ?: weworkGroupTplRecord?.body ?: ""
+        }
+        val rawBody = NotifierUtils.replaceNotifyKeywordByChannel(body, language)
+        val finalTitle = NotifierUtils.replaceContentParams(request.titleParams, rawTitle)
+        val finalBody = NotifierUtils.replaceContentParams(request.bodyParams, rawBody)
 
-        val content = title + "\n\n" + body
+        val content = finalTitle + "\n\n" + finalBody
         val mentionUsers = if (request.mentionReceivers == true) {
             request.receivers.toList()
         } else {
@@ -89,7 +90,7 @@ class WeworkGroupNotifier @Autowired constructor(
                     markerDownFlag = request.markdownContent ?: false,
                     mentionUsers = mentionUsers
                 )
-            } else if (CHAT_PATTERN.matches(it)) { // 机器人逻辑
+            } else if (Pattern.matches(chatPatten, it)) { // 机器人逻辑
                 wechatWorkRobotService.sendByRobot(
                     chatId = it,
                     content = content,
@@ -102,6 +103,5 @@ class WeworkGroupNotifier @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(WeworkGroupNotifier::class.java)
-        private val CHAT_PATTERN = Regex("^[A-Za-z0-9_-]+$")
     }
 }

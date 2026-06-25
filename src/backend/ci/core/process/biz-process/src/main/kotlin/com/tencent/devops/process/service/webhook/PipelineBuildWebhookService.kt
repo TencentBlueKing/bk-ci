@@ -41,7 +41,6 @@ import com.tencent.devops.common.event.pojo.measure.ProjectUserOperateMetricsEve
 import com.tencent.devops.common.event.pojo.measure.UserOperateCounterData
 import com.tencent.devops.common.log.pojo.message.LogMessage
 import com.tencent.devops.common.log.utils.BuildLogPrinter
-import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
@@ -79,6 +78,7 @@ import com.tencent.devops.process.pojo.trigger.PipelineTriggerFailedMsg
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerReason
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerStatus
 import com.tencent.devops.process.pojo.webhook.WebhookTriggerPipeline
+import com.tencent.devops.process.service.CreateStreamTriggerSupportService
 import com.tencent.devops.process.service.builds.PipelineBuildCommitService
 import com.tencent.devops.process.service.pipeline.PipelineBuildService
 import com.tencent.devops.process.trigger.PipelineTriggerEventService
@@ -111,7 +111,8 @@ class PipelineBuildWebhookService @Autowired constructor(
     private val measureEventDispatcher: SampleEventDispatcher,
     private val pipelineYamlService: PipelineYamlService,
     private val pipelinePermissionService: PipelinePermissionService,
-    private val pipelineTriggerMeasureService: PipelineTriggerMeasureService
+    private val pipelineTriggerMeasureService: PipelineTriggerMeasureService,
+    private val creativeStreamTriggerSupportService: CreateStreamTriggerSupportService
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineBuildWebhookService::class.java)
@@ -312,6 +313,11 @@ class PipelineBuildWebhookService @Autowired constructor(
                         projectId = projectId,
                         pipelineId = pipelineId
                     )
+                    // 创作流相关参数，触发成功时才去校验创作流运行环境，避免重复查询创作流环境信息
+                    val externalStartParams = creativeStreamTriggerSupportService.externalWebhookStartParams(
+                        pipelineInfo = pipelineInfo,
+                        userId = userId
+                    )
                     val webhookCommit = WebhookCommit(
                         userId = userId,
                         pipelineId = pipelineId,
@@ -324,7 +330,7 @@ class PipelineBuildWebhookService @Autowired constructor(
                             variables = variables,
                             params = webHookParams,
                             matchResult = matchResult
-                        ),
+                        ).plus(externalStartParams),
                         repositoryConfig = repositoryConfig,
                         repoName = matcher.getRepoName(),
                         commitId = matcher.getRevision(),
@@ -341,14 +347,15 @@ class PipelineBuildWebhookService @Autowired constructor(
                             pipelineId = pipelineId,
                             buildId = buildId,
                             matcher = matcher,
-                            repo = repo
+                            repo = repo,
+                            channelCode = pipelineInfo.channelCode
                         )
                         val buildDetail = client.getGateway(ServiceBuildResource::class).getBuildDetail(
                             userId = userId,
                             buildId = buildId,
                             pipelineId = pipelineId,
                             projectId = projectId,
-                            channelCode = ChannelCode.BS
+                            channelCode = pipelineInfo.channelCode
                         ).data
                         builder.buildId(buildId)
                             .status(PipelineTriggerStatus.SUCCEED.name)
@@ -602,13 +609,14 @@ class PipelineBuildWebhookService @Autowired constructor(
         }
 
         val startEpoch = System.currentTimeMillis()
+        val channelCode = pipelineInfo.channelCode
         try {
             val buildId = pipelineBuildService.startPipeline(
                 userId = userId,
                 pipeline = pipelineInfo,
                 startType = StartType.WEB_HOOK,
                 pipelineParamMap = HashMap(pipelineParamMap),
-                channelCode = pipelineInfo.channelCode,
+                channelCode = channelCode,
                 isMobile = false,
                 resource = resource,
                 signPipelineVersion = version,
@@ -618,7 +626,8 @@ class PipelineBuildWebhookService @Autowired constructor(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 buildId = buildId.id,
-                variables = webhookCommit.params
+                variables = webhookCommit.params,
+                channelCode = channelCode
             )
             // #2958 webhook触发在触发原子上输出变量
             buildLogPrinter.addLines(
