@@ -12,8 +12,7 @@ import org.slf4j.LoggerFactory
  */
 @RestResource
 class BuildArtifactResourceImpl(
-    private val pipelineArtifactInfoService: PipelineArtifactInfoService,
-//    private val pipelinePermissionService: PipelinePermissionService
+    private val pipelineArtifactInfoService: PipelineArtifactInfoService
 ) : BuildArtifactResource {
 
     companion object {
@@ -31,16 +30,6 @@ class BuildArtifactResourceImpl(
             "BuildArtifact|$userId|reportArtifactMetadata|$projectId|$pipelineId|$buildId|" +
                     "${request.artifactType}|${request.artifactName}|${request.artifactVersion}"
         )
-//        if (!pipelinePermissionService.checkPipelinePermission(
-//                userId = userId,
-//                projectId = projectId,
-//                pipelineId = pipelineId,
-//                permission = AuthPermission.EXECUTE
-//            )
-//        ) {
-//            logger.warn("BuildArtifact|$userId|no permission|$projectId|$pipelineId")
-//            return Result(status = 403, message = "No permission to access pipeline $pipelineId")
-//        }
         return kotlin.runCatching {
             pipelineArtifactInfoService.saveArtifactInfo(
                 userId = userId,
