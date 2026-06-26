@@ -116,7 +116,7 @@ class EnvOperateLogDao {
         with(TEnvOperateLog.T_ENV_OPERATE_LOG) {
             val dsl = dslContext.selectFrom(this).where(PROJECT_ID.eq(projectId)).and(ENV_ID.eq(envId))
             operator?.let { dsl.and(CREATED_USER.eq(operator)) }
-            return dsl.limit(limit).offset(offset).fetch(mapper)
+            return dsl.orderBy(ID.desc()).limit(limit).offset(offset).fetch(mapper)
         }
     }
 
