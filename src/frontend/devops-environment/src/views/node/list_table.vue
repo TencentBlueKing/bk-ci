@@ -505,7 +505,8 @@
                                     v-if="!['TSTACK'].includes(props.row.nodeType) && !isPersonalProject"
                                     text
                                     v-perm="{
-                                        hasPermission: props.row.canDelete,
+                                        // 团队项目创作流节点，使用canEdit判断删除权限
+                                        hasPermission: !isPersonalProject && isCreateResType ? props.row.canEdit : props.row.canDelete,
                                         disablePermissionApi: true,
                                         permissionData: {
                                             projectId: projectId,
