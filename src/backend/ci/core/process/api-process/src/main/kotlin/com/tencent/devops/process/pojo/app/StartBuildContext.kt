@@ -196,9 +196,12 @@ data class StartBuildContext(
                 false
             }
 
-            // 单插件失败重试（非跳过失败插件）时，被重试插件之后、同Job内的后续插件也需要重新排队执行，
-            // 以便引擎重新评估其运行条件（如 PRE_TASK_FAILED_ONLY 等），避免重试后下游插件因不重跑而被遗漏
-            !skipFailedTask && isAfterRetryTaskInSameContainer(container, taskId) -> {
+            // 单插件失败重试/跳过时，被操作插件之后、同Job内的后续插件也需要重新排队，
+            // 以便引擎重新评估其运行条件（如 PRE_TASK_FAILED_ONLY 等）：
+            // 重试场景——被重试插件重跑后，下游按最新结果重新判定；
+            // 跳过场景——被跳过插件置为SKIP（不再算失败）后，下游同样需要据此重新判定，
+            // 否则仅因上游失败才执行过的下游插件（如失败通知）会保留旧的失败态，导致跳过后Job仍为失败。
+            isAfterRetryTaskInSameContainer(container, taskId) -> {
                 false
             }
 
@@ -209,8 +212,8 @@ data class StartBuildContext(
     }
 
     /**
-     * 判断[taskId]对应的插件是否与要重试的插件[retryStartTaskId]处于同一个[container]，
-     * 且执行顺序排在其之后。用于单插件失败重试时一并重跑后续插件，从而重新评估运行条件。
+     * 判断[taskId]对应的插件是否与被重试/跳过的插件[retryStartTaskId]处于同一个[container]，
+     * 且执行顺序排在其之后。用于单插件失败重试/跳过时一并重排后续插件，从而重新评估运行条件。
      * post-action 任务交由原有 post 重试逻辑处理，这里不纳入，避免误重跑前序插件的 post。
      */
     private fun isAfterRetryTaskInSameContainer(container: Container, taskId: String?): Boolean {
