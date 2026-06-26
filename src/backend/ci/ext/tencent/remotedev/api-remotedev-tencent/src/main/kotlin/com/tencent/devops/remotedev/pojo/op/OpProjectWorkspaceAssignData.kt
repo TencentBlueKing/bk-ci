@@ -1,5 +1,6 @@
 package com.tencent.devops.remotedev.pojo.op
 
+import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
 import io.swagger.v3.oas.annotations.Parameter
 
@@ -17,7 +18,9 @@ data class OpProjectWorkspaceAssignData(
     @Parameter(description = "云桌面盘符")
     val localDriver: String?,
     @Parameter(description = "分配类型")
-    val type: WorkspaceOwnerType = WorkspaceOwnerType.PROJECT
+    val type: WorkspaceOwnerType = WorkspaceOwnerType.PROJECT,
+    @Parameter(description = "分配系统")
+    val os: OS?
 ) {
     fun check() {
         if (cgsIds.isNullOrEmpty() && ips.isNullOrEmpty()) {

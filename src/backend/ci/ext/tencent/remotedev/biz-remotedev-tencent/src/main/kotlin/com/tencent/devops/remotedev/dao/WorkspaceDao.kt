@@ -109,7 +109,8 @@ class WorkspaceDao {
                 WORKSPACE_KIND,
                 PROJECT_NAME,
                 BUSINESS_LINE_NAME,
-                BAK_NAME
+                BAK_NAME,
+                OS
             )
                 .values(
                     workspace.projectId,
@@ -129,7 +130,8 @@ class WorkspaceDao {
                     workspace.workspaceKind.value,
                     organization.projectName,
                     organization.businessLineName ?: "",
-                    workspace.bakWorkspaceName
+                    workspace.bakWorkspaceName,
+                    workspace.os?.name ?: com.tencent.devops.common.api.pojo.OS.WINDOWS.name
                 )
                 .returning(ID)
                 .fetchOne()!!.id

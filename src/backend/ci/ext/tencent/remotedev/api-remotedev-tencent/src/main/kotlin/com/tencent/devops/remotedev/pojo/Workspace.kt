@@ -27,6 +27,7 @@
 
 package com.tencent.devops.remotedev.pojo
 
+import com.tencent.devops.common.api.pojo.OS
 import io.swagger.v3.oas.annotations.media.Schema
 
 interface IWorkspace {
@@ -103,5 +104,7 @@ data class Workspace(
     @get:Schema(title = "windows资源配置id")
     val winConfigId: Int? = null,
     @get:Schema(title = "区域")
-    val zoneId: String? = null
+    val zoneId: String? = null,
+    @get:Schema(title = "系统")
+    val os: OS? = null
 ) : IWorkspace
