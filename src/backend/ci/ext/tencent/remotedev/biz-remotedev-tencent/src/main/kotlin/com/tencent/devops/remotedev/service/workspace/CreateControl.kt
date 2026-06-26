@@ -150,7 +150,7 @@ class CreateControl @Autowired constructor(
         cgsId: String?,
         workspaceCreate: WindowsWorkspaceCreate,
         zoneType: WindowsResourceZoneConfigType?,
-        os: OS
+        os: OS?
     ) {
         logger.info("start async create workspace |$pmUserId|$projectId|$cgsId|$workspaceCreate|$zoneType")
         val windowsConfig = windowsResourceConfigService.getTypeConfig(workspaceCreate.windowsType)
@@ -243,7 +243,7 @@ class CreateControl @Autowired constructor(
         organization: WorkspaceOrganization,
         ownerType: WorkspaceOwnerType,
         workspaceKind: WorkspaceKind,
-        os: OS
+        os: OS?
     ): Boolean {
         // 自定义镜像检查是否有相对的显卡
         // 非自定义镜像先检查池子里是否有已经生产出来的可以直接用，没有再去看显卡
@@ -381,7 +381,7 @@ class CreateControl @Autowired constructor(
         ownerType: WorkspaceOwnerType,
         workspaceKind: WorkspaceKind,
         quotaType: QuotaType,
-        os: OS
+        os: OS?
     ) {
         val mountType = WorkspaceMountType.START
         val systemType = WorkspaceSystemType.WINDOWS_GPU
@@ -457,8 +457,7 @@ class CreateControl @Autowired constructor(
         userId: String,
         workspaceCreate: WindowsWorkspaceCreate,
         projectId: String?,
-        zoneType: WindowsResourceZoneConfigType?,
-        os: OS
+        zoneType: WindowsResourceZoneConfigType?
     ): Boolean {
         logger.info("create workspace from devcloud |$userId|$workspaceCreate|$projectId")
         if (projectId != null) {
@@ -468,10 +467,10 @@ class CreateControl @Autowired constructor(
                 cgsId = null,
                 workspaceCreate = workspaceCreate,
                 zoneType = zoneType,
-                os = os
+                os = workspaceCreate.os
             )
         } else {
-            loadWorkspaceWithPersonalWindows(userId = userId, workspaceCreate = workspaceCreate, os = os)
+            loadWorkspaceWithPersonalWindows(userId = userId, workspaceCreate = workspaceCreate)
         }
         return true
     }
@@ -909,8 +908,7 @@ class CreateControl @Autowired constructor(
                         baseImageId = 0,
                         count = 1
                     ),
-                    cgsId = cgs.cgsId,
-                    os = data.os ?: OS.WINDOWS
+                    cgsId = cgs.cgsId
                 )
             }
             Thread.sleep(200)
@@ -987,8 +985,7 @@ class CreateControl @Autowired constructor(
     fun loadWorkspaceWithPersonalWindows(
         userId: String,
         workspaceCreate: WindowsWorkspaceCreate,
-        cgsId: String? = null,
-        os: OS
+        cgsId: String? = null
     ) {
         logger.info("loadWorkspaceWithPersonalWindows|$userId|$workspaceCreate|$cgsId")
         val windowsConfig = windowsResourceConfigService.getTypeConfig(workspaceCreate.windowsType)
@@ -1049,7 +1046,7 @@ class CreateControl @Autowired constructor(
             ),
             ownerType = WorkspaceOwnerType.PERSONAL,
             workspaceKind = workspaceCreate.workspaceKind ?: WorkspaceKind.CVD_PERSONAL,
-            os = os
+            os = workspaceCreate.os
         )
     }
 

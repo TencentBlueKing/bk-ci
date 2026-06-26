@@ -27,6 +27,7 @@
 
 package com.tencent.devops.remotedev.pojo
 
+import com.tencent.devops.common.api.pojo.OS
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "windows 工作空间信息-创建")
@@ -52,7 +53,9 @@ data class WindowsWorkspaceCreate(
     @get:Schema(title = "云桌面类型")
     val ownerType: WorkspaceOwnerType? = null,
     @get:Schema(title = "云桌面实例类型，支持 cvd-personal / cvd-team")
-    val workspaceKind: WorkspaceKind? = null
+    val workspaceKind: WorkspaceKind? = null,
+    @get:Schema(title = "云桌面系统")
+    val os: OS? = null
 )
 
 @Schema(title = "自定义数据盘信息")
