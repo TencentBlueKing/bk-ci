@@ -100,7 +100,11 @@ object AtomOsMapUtil {
             result.putAll(parsed)
         }
 
-        if (!result.containsKey(JobTypeEnum.AGENT.name) && !osValue.isNullOrBlank()) {
+        // OS 字段仅作为「无 OS_MAP」旧记录的 fallback。
+        // 当 OS_MAP 存在时其为权威的完整映射：编译环境 jobType（含 AGENT）的 OS 在写入时已同步进 OS_MAP，
+        // 此时 OS 字段中残留的值可能是历史遗留脏数据，不能再据此还原 jobType 的 OS，
+        // 否则会误判为「OS 范围发生变化」的不兼容变更。
+        if (osMapValue.isNullOrBlank() && !result.containsKey(JobTypeEnum.AGENT.name) && !osValue.isNullOrBlank()) {
             val osList = parseOsListJson(osValue)
             if (osList.isNotEmpty()) {
                 val key = jobTypeValue?.takeIf { it.isNotBlank() } ?: JobTypeEnum.AGENT.name
