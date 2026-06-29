@@ -9,7 +9,7 @@ import {
   VariableCategory,
   validateVariableId,
 } from '@/types/variable'
-import { Button, Checkbox, Form, Input, Popover, Radio, Select } from 'bkui-vue'
+import { Button, Checkbox, Form, Input, Popover, Radio, Select, Message } from 'bkui-vue'
 import { computed, defineComponent, ref, watch, type PropType } from 'vue'
 import { useI18n } from 'vue-i18n'
 import OptionsEditor from './OptionsEditor'
@@ -50,6 +50,7 @@ export default defineComponent({
   setup(props, { emit }) {
     const { t } = useI18n()
     const formRef = ref()
+    const optionsEditorRef = ref()
     const formData = ref<Param>(getInitialFormData())
 
     // Is editing mode
@@ -184,6 +185,16 @@ export default defineComponent({
     const handleSave = async () => {
       try {
         await formRef.value.validate()
+
+        // 验证选项编辑器（如果存在）
+        if (optionsEditorRef.value) {
+          const isOptionsValid = optionsEditorRef.value.validate()
+          if (!isOptionsValid) {
+            Message({ theme: 'error', message: t('flow.variable.optionsValidationFailed') })
+            return
+          }
+        }
+
         const data = { ...formData.value }
         if (!data.required) {
           data.valueNotEmpty = false
@@ -298,6 +309,7 @@ export default defineComponent({
           {showOptionsEditor.value && (
             <FormItem label={t('flow.variable.optionSource')}>
               <OptionsEditor
+                ref={optionsEditorRef}
                 options={(formData.value.options || []) as ParamOption[]}
                 payload={
                   (formData.value as Param & { payload?: OptionsApiConfig }).payload || {

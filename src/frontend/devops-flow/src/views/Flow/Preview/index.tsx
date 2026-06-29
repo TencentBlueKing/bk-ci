@@ -5,7 +5,7 @@ import { usePreview, type ParamType } from '@/hooks/usePreview'
 import { ParamType as VariableParamType } from '@/types/variable'
 import 'bkui-pipeline/dist/bk-pipeline.css'
 import BkPipeline, { type PipelineModel } from 'bkui-pipeline/vue3'
-import { Alert, Checkbox, Exception, Input, Loading, Select } from 'bkui-vue'
+import { Alert, Checkbox, Exception, Input, Loading, Radio, Select } from 'bkui-vue'
 import { defineComponent } from 'vue'
 import { useI18n } from 'vue-i18n'
 import DynamicSelect from './DynamicSelect'
@@ -71,6 +71,20 @@ export default defineComponent({
     // ----------------------------------------
 
     /**
+     * Normalize value to correct type for the param
+     * - MULTIPLE: ensure value is string[] (API may return comma-separated string)
+     * - ENUM/BOOLEAN: ensure correct type
+     */
+    const normalizeValue = (param: StartupProperty, rawValue: unknown): unknown => {
+      if (param.type === VariableParamType.MULTIPLE) {
+        if (Array.isArray(rawValue)) return rawValue as string[]
+        if (typeof rawValue === 'string' && rawValue) return rawValue.split(',')
+        return []
+      }
+      return rawValue
+    }
+
+    /**
      * Render grouped param form item (two columns layout)
      */
     const renderGroupedParamFormItem = (
@@ -79,7 +93,8 @@ export default defineComponent({
       values: Record<string, unknown>,
       disabled = false,
     ) => {
-      const value = values[param.id]
+      const rawValue = values[param.id]
+      const value = normalizeValue(param, rawValue)
       const isInvalid = invalidParams.value.has(param.id)
 
       return (
@@ -92,11 +107,14 @@ export default defineComponent({
           </div>
           <div class={styles.paramInputWrapper}>
             {param.type === VariableParamType.BOOLEAN ? (
-              <Checkbox
+              <Radio.Group
                 modelValue={value === 'true' || value === true}
                 disabled={disabled || param.readOnly}
                 onChange={(val: boolean) => handleParamChange(type, param.id, val)}
-              />
+              >
+                <Radio label={true}>true</Radio>
+                <Radio label={false}>false</Radio>
+              </Radio.Group>
             ) : param.type === VariableParamType.ENUM && (param.payload?.url || param.options?.length) ? (
               <DynamicSelect
                 param={param}
@@ -118,6 +136,15 @@ export default defineComponent({
                   onChange={(val: string) => handleParamChange(type, param.id, val)}
                 />
               </div>
+            ) : param.type === VariableParamType.MULTIPLE ? (
+              <DynamicSelect
+                param={param}
+                modelValue={value as string[]}
+                disabled={disabled}
+                isInvalid={isInvalid}
+                multiple={true}
+                onChange={(val: string[]) => handleParamChange(type, param.id, val)}
+              />
             ) : (
               <Input
                 modelValue={value as string}
@@ -141,7 +168,8 @@ export default defineComponent({
       values: Record<string, unknown>,
       disabled = false,
     ) => {
-      const value = values[param.id]
+      const rawValue = values[param.id]
+      const value = normalizeValue(param, rawValue)
       const isInvalid = invalidParams.value.has(param.id)
 
       return (
@@ -155,11 +183,14 @@ export default defineComponent({
           </div>
           <div class={[styles.paramValue, param.isChanged && styles.paramValueChanged]}>
             {param.type === VariableParamType.BOOLEAN ? (
-              <Checkbox
+              <Radio.Group
                 modelValue={value === 'true' || value === true}
                 disabled={disabled || param.readOnly}
                 onChange={(val: boolean) => handleParamChange(type, param.id, val)}
-              />
+              >
+                <Radio label={true}>true</Radio>
+                <Radio label={false}>false</Radio>
+              </Radio.Group>
             ) : param.type === VariableParamType.ENUM && (param.payload?.url || param.options?.length) ? (
               <DynamicSelect
                 param={param}
@@ -176,6 +207,15 @@ export default defineComponent({
                 rows={3}
                 class={isInvalid ? styles.inputInvalid : ''}
                 onChange={(val: string) => handleParamChange(type, param.id, val)}
+              />
+            ) : param.type === VariableParamType.MULTIPLE ? (
+              <DynamicSelect
+                param={param}
+                modelValue={value as string[]}
+                disabled={disabled}
+                isInvalid={isInvalid}
+                multiple={true}
+                onChange={(val: string[]) => handleParamChange(type, param.id, val)}
               />
             ) : (
               <Input
