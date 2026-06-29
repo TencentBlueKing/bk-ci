@@ -193,7 +193,7 @@
             const { proxy } = useInstance()
             const routeName = proxy.$route.name
             const { envHashId } = useEnvDetail()
-            const { nodeHashId } = useNodeDetail()
+            const { nodeHashId, currentNode } = useNodeDetail()
             const {
                 fetchJobTaskList,
                 fetchPipelineBuildHistory,
