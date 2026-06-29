@@ -870,6 +870,77 @@
                   "type" : "string"
                 }
               }, {
+                "type" : "array",
+                "items" : {
+                  "type" : "object",
+                  "additionalProperties" : false,
+                  "properties" : {
+                    "id" : {
+                      "type" : "string"
+                    },
+                    "name" : {
+                      "type" : "string"
+                    },
+                    "enable" : {
+                      "type" : "boolean"
+                    },
+                    "project-id" : {
+                      "type" : "string"
+                    },
+                    "event-type" : {
+                      "type" : "string"
+                    },
+                    "action" : {
+                      "type" : "array",
+                      "items" : {
+                        "type" : "string"
+                      }
+                    },
+                    "users" : {
+                      "type" : "array",
+                      "items" : {
+                        "type" : "string"
+                      }
+                    },
+                    "users-ignore" : {
+                      "type" : "array",
+                      "items" : {
+                        "type" : "string"
+                      }
+                    },
+                    "owners" : {
+                      "type" : "array",
+                      "items" : {
+                        "type" : "string"
+                      }
+                    },
+                    "owners-ignore" : {
+                      "type" : "array",
+                      "items" : {
+                        "type" : "string"
+                      }
+                    },
+                    "priorities" : {
+                      "type" : "array",
+                      "items" : {
+                        "type" : "string"
+                      }
+                    },
+                    "labels" : {
+                      "type" : "array",
+                      "items" : {
+                        "type" : "string"
+                      }
+                    },
+                    "labels-ignore" : {
+                      "type" : "array",
+                      "items" : {
+                        "type" : "string"
+                      }
+                    }
+                  }
+                }
+              }, {
                 "type" : "object",
                 "additionalProperties" : false,
                 "properties" : {
@@ -1787,6 +1858,77 @@
               "type" : "array",
               "items" : {
                 "type" : "string"
+              }
+            }, {
+              "type" : "array",
+              "items" : {
+                "type" : "object",
+                "additionalProperties" : false,
+                "properties" : {
+                  "id" : {
+                    "type" : "string"
+                  },
+                  "name" : {
+                    "type" : "string"
+                  },
+                  "enable" : {
+                    "type" : "boolean"
+                  },
+                  "project-id" : {
+                    "type" : "string"
+                  },
+                  "event-type" : {
+                    "type" : "string"
+                  },
+                  "action" : {
+                    "type" : "array",
+                    "items" : {
+                      "type" : "string"
+                    }
+                  },
+                  "users" : {
+                    "type" : "array",
+                    "items" : {
+                      "type" : "string"
+                    }
+                  },
+                  "users-ignore" : {
+                    "type" : "array",
+                    "items" : {
+                      "type" : "string"
+                    }
+                  },
+                  "owners" : {
+                    "type" : "array",
+                    "items" : {
+                      "type" : "string"
+                    }
+                  },
+                  "owners-ignore" : {
+                    "type" : "array",
+                    "items" : {
+                      "type" : "string"
+                    }
+                  },
+                  "priorities" : {
+                    "type" : "array",
+                    "items" : {
+                      "type" : "string"
+                    }
+                  },
+                  "labels" : {
+                    "type" : "array",
+                    "items" : {
+                      "type" : "string"
+                    }
+                  },
+                  "labels-ignore" : {
+                    "type" : "array",
+                    "items" : {
+                      "type" : "string"
+                    }
+                  }
+                }
               }
             }, {
               "type" : "object",
