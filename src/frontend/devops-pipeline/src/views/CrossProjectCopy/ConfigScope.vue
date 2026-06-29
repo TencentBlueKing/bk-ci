@@ -439,6 +439,9 @@
                     }
                 },
                 immediate: true
+            },
+            isLoading (val) {
+                this.$emit('update-loading-state', val)
             }
         },
         created () {
