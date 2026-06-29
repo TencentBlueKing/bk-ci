@@ -270,11 +270,13 @@
                 return optionValid
             },
             async handleSaveVar () {
+                // 对象列表类型：校验必填字段
+                const formListValid = this.$refs.pipelineParamFormRef?.validateFormList?.() ?? true
                 // 单选、复选类型， 需要先校验options
                 const optionValid = await this.validParamOptions()
                 this.$validator.validate('pipelineParam.*').then((result) => {
                     const {isInvalid, ...param} = this.sliderEditItem
-                    if (result && optionValid) {
+                    if (result && optionValid && formListValid) {
                         if (this.editIndex > -1) {
                             this.globalParams[this.editIndex] = param
                         } else {
