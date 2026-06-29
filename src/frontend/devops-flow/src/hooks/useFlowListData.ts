@@ -239,7 +239,7 @@ export function useFlowListData(styles?: Styles) {
       viewId: groupId || (route.params.groupId as string),
       ...flatSearchParams.value,
     }
-    await store.fetchFlowList(params)
+    await store.fetchFlowList(params, isRecycleBin.value)
   }
 
   /**
