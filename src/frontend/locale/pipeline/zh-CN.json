@@ -276,7 +276,8 @@
     "restoreSuc": "恢复成功",
     "emptyTitle": "暂无可恢复的流水线",
     "emptyDesc": "30天内被删除的流水线可在此页面恢复",
-    "restoreSearchTips": "流水线名称"
+    "restoreSearchTips": "流水线名称",
+    "recycleBinCleanTips": "未开启 PAC 的流水线，30天后将自动清理；已开启 PAC 的流水线，当触发过此流水线的分支上均已删除对应的YAML文件[ci/xxx.yml]时，将自动清理。"
   },
   "atomManage": {
     "installedAtom": "已安装插件",

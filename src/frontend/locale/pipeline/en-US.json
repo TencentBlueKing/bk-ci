@@ -277,7 +277,8 @@
     "restoreSuc": "Restored successfully",
     "emptyTitle": "No pipeline can be restored",
     "emptyDesc": "You can restore the pipeline deleted in last a month",
-    "restoreSearchTips": "Enter pipeline name to search"
+    "restoreSearchTips": "Enter pipeline name to search",
+    "recycleBinCleanTips": "Pipelines with PAC disabled will be automatically cleaned after 30 days. Pipelines with PAC enabled will be automatically cleaned when the corresponding YAML file [ci/xxx.yml] has been deleted from every branch that has triggered this pipeline."
   },
   "atomManage": {
     "installedAtom": "Installed Plugins",

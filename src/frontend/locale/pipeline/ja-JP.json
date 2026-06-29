@@ -276,7 +276,8 @@
     "restoreSuc": "復元に成功しました",
     "emptyTitle": "現在復元可能なパイプラインはありません",
     "emptyDesc": "30日以内に削除されたパイプラインはこのページで復元できます",
-    "restoreSearchTips": "パイプライン名"
+    "restoreSearchTips": "パイプライン名",
+    "recycleBinCleanTips": "PAC が有効化されていないパイプラインは30日後に自動的にクリーンアップされます。PAC が有効化されているパイプラインは、このパイプラインを実行したすべてのブランチで対応する YAML ファイル [ci/xxx.yml] が削除されたときに自動的にクリーンアップされます。"
   },
   "atomManage": {
     "installedAtom": "インストール済みプラグイン",
