@@ -40,6 +40,7 @@ import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.dao.PipelineTriggerEventDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerEvent
+import com.tencent.devops.process.pojo.trigger.PipelineTriggerType
 import com.tencent.devops.process.pojo.trigger.ScmWebhookEventBody
 import com.tencent.devops.process.trigger.WebhookTriggerBuildService
 import com.tencent.devops.process.trigger.event.ScmWebhookRequestEvent
@@ -47,6 +48,7 @@ import com.tencent.devops.process.trigger.scm.WebhookGrayCompareService
 import com.tencent.devops.process.trigger.scm.WebhookGrayService
 import com.tencent.devops.process.trigger.scm.WebhookManager
 import com.tencent.devops.process.trigger.market.MarketEventRequestService
+import com.tencent.devops.process.trigger.tapd.TapdWebhookRequestService
 import com.tencent.devops.process.webhook.pojo.event.commit.ReplayWebhookEvent
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.repository.api.ServiceRepositoryWebhookResource
@@ -71,7 +73,8 @@ class WebhookRequestService(
     private val webhookGrayCompareService: WebhookGrayCompareService,
     private val webhookManager: WebhookManager,
     private val pipelineInfoDao: PipelineInfoDao,
-    private val marketEventRequestService: MarketEventRequestService
+    private val marketEventRequestService: MarketEventRequestService,
+    private val tapdWebhookRequestService: TapdWebhookRequestService
 ) {
 
     companion object {
@@ -176,6 +179,13 @@ class WebhookRequestService(
         when {
             replayEvent.scmType != null -> {
                 handleRepoReplayEvent(replayEvent, triggerEvent)
+            }
+
+            replayEvent.triggerType == PipelineTriggerType.TAPD.name -> {
+                tapdWebhookRequestService.replay(
+                    replayEvent = replayEvent,
+                    sourceTriggerEvent = triggerEvent
+                )
             }
 
             else -> {

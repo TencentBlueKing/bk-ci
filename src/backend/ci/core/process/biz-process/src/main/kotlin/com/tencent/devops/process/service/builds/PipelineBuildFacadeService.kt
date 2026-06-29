@@ -3121,7 +3121,8 @@ class PipelineBuildFacadeService(
             debug = false,
             checkPermission = true,
             triggerParams = triggerContainer.params,
-            isTemplate = isTemplate
+            isTemplate = isTemplate,
+            channelCode = ChannelCode.getRequestChannelCode()
         ).toMutableList()
         // 推荐版本号需额外处理
         handleVersionParam(properties, triggerContainer.buildNo)

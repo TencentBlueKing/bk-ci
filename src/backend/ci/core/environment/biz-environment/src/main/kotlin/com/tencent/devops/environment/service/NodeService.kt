@@ -290,31 +290,42 @@ class NodeService @Autowired constructor(
             nodeRecordList = nodeRecordList,
             resourceType = nodeResourceType
         )
-        val count = nodeDao.countForAuthWithSearchCondition(
-            dslContext = dslContext,
+        // 查出项目下所有有权限的节点id
+        val authorizedNodeIds = environmentPermissionService.listNodeByPermission(
+            userId = userId,
             projectId = projectId,
-            nodeIp = nodeIp,
-            displayName = displayName,
-            createdUser = createdUser,
-            lastModifiedUser = lastModifiedUser,
-            keywords = keywords,
-            nodeType = if (createMode == true) {
-                NodeType.CREATE
-            } else {
-                nodeType
-            },
-            nodeStatus = nodeStatus,
-            agentVersion = agentVersion,
-            osName = osName,
-            latestBuildPipelineId = latestBuildPipelineId,
-            latestBuildTimeStart = latestBuildTimeStart,
-            latestBuildTimeEnd = latestBuildTimeEnd,
-            sortType = sortType,
-            collation = collation,
-            tagValueIds = tagValues,
-            nodeIds = nodes.map { it.nodeId.toLong() },
-            operatorStatus = operatorStatus
-        ).toLong()
+            permission = AuthPermission.LIST,
+            resourceType = nodeResourceType
+        ).toList()
+        val count = if (authorizedNodeIds.isEmpty()) {
+            0L
+        } else {
+            nodeDao.countForAuthWithSearchCondition(
+                dslContext = dslContext,
+                projectId = projectId,
+                nodeIp = nodeIp,
+                displayName = displayName,
+                createdUser = createdUser,
+                lastModifiedUser = lastModifiedUser,
+                keywords = keywords,
+                nodeType = if (createMode == true) {
+                    NodeType.CREATE
+                } else {
+                    nodeType
+                },
+                nodeStatus = nodeStatus,
+                agentVersion = agentVersion,
+                osName = osName,
+                latestBuildPipelineId = latestBuildPipelineId,
+                latestBuildTimeStart = latestBuildTimeStart,
+                latestBuildTimeEnd = latestBuildTimeEnd,
+                sortType = sortType,
+                collation = collation,
+                tagValueIds = tagValues,
+                nodeIds = authorizedNodeIds,
+                operatorStatus = operatorStatus
+            ).toLong()
+        }
         if (-1 != page) {
             val nodesMap = nodes.associateBy { it.agentHashId }
             val agentIds = nodesMap.keys.mapNotNull { it }

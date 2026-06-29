@@ -386,7 +386,7 @@ data class StartBuildContext(
                 return null
             }
             val (webhookEventType, refId) = when {
-                channelCode == ChannelCode.CREATIVE_STREAM -> {
+                channelCode == ChannelCode.CREATIVE_STREAM && startType == StartType.TRIGGER_EVENT.name -> {
                     params[PIPELINE_TRIGGER_EVENT_TYPE] to params[CI_NODE_ID]
                 }
 
