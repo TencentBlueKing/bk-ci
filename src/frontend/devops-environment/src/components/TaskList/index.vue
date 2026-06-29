@@ -450,7 +450,7 @@
                         ...timeRangeParams.value,
                         ...(routeName === 'envDetail'
                             ? { envId: envHashId.value }
-                            : { agentId: nodeHashId.value }
+                            : { agentId: currentNode.value?.agentId }
                         ),
                         page: pagination.value.current,
                         pageSize: pagination.value.limit
