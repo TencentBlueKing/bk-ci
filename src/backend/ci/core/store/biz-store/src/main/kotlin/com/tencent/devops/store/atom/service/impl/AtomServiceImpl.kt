@@ -963,15 +963,32 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                 language = I18nUtil.getLanguage(userId)
             )
         }
-        // 校验插件分类是否合法
-        classifyService.getClassify(atomRequest.classifyId).data
-            ?: return I18nUtil.generateResponseDataObject(
-                messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
-                params = arrayOf(atomRequest.classifyId),
-                data = false,
-                language = I18nUtil.getLanguage(userId)
-            )
-        val classType = handleClassType(atomRequest.os)
+        // 校验插件分类是否合法：优先校验 serviceScopeConfigs，兼容旧 classifyId
+        val configs = atomRequest.serviceScopeConfigs
+        if (!configs.isNullOrEmpty()) {
+            configs.forEach { config ->
+                classifyDao.getClassifyByCode(
+                    dslContext = dslContext,
+                    classifyCode = config.classifyCode,
+                    type = StoreTypeEnum.ATOM,
+                    serviceScope = config.serviceScope
+                ) ?: return I18nUtil.generateResponseDataObject(
+                    messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                    params = arrayOf("${config.serviceScope.name}:${config.classifyCode}"),
+                    data = false,
+                    language = I18nUtil.getLanguage(userId)
+                )
+            }
+        } else {
+            classifyService.getClassify(atomRequest.classifyId).data
+                ?: return I18nUtil.generateResponseDataObject(
+                    messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                    params = arrayOf(atomRequest.classifyId),
+                    data = false,
+                    language = I18nUtil.getLanguage(userId)
+                )
+        }
+        val classType = handleClassType(atomRequest.os, atomRequest.serviceScopeConfigs)
         atomRequest.os.sort() // 给操作系统排序
         atomDao.addAtomFromOp(dslContext, userId, id, classType, atomRequest)
         return Result(true)

@@ -532,7 +532,8 @@ object TriggerBuildParamUtils {
             CI_EVENT_FROM,
             CI_EVENT_ID,
             CI_TAPD_TITLE,
-            CI_NOTE_COMMENT
+            CI_NOTE_COMMENT,
+            CI_EVENT_URL
         )
         TRIGGER_BUILD_PARAM_NAME_MAP[TapdWebHookTriggerElement.classType] = mutableMapOf("common" to params)
     }

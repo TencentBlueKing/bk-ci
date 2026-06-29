@@ -482,7 +482,9 @@ class PipelineBuildService(
      * 初始化节点/Agent 相关参数
      */
     private fun initNodeAgentParams(ctx: InitParamContext) {
-        ctx.startValues?.get(NODE_AGENT_ID)?.takeIf(String::isNotBlank)?.let { agentId ->
+        val agentIdValue = ctx.startValues?.get(NODE_AGENT_ID)
+            ?: ctx.pipelineParamMap[NODE_AGENT_ID]?.value?.toString()
+        agentIdValue?.takeIf(String::isNotBlank)?.let { agentId ->
             val agentInfo = client.get(ServiceThirdPartyAgentResource::class)
                 .getAgentById(ctx.pipeline.projectId, agentId).data
             val paramMap = ctx.pipelineParamMap
