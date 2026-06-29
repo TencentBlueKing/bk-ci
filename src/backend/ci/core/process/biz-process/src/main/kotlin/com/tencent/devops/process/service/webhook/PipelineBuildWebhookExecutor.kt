@@ -15,16 +15,16 @@ import java.util.concurrent.TimeUnit
 /**
  * 旧版 Webhook 触发使用的线程池封装
  *
- * - 池大小和队列大小通过配置 `scm.webhook.trigger.pool.size` / `scm.webhook.trigger.queue.size` 控制
+ * - 池大小和队列大小通过配置 `scm.webhook.trigger.pool-size` / `scm.webhook.trigger.queue-size` 控制
  * - 队列满时使用 CallerRunsPolicy，由调用线程兜底执行，避免触发任务被丢弃
  */
 @Component
 class PipelineBuildWebhookExecutor {
 
-    @Value("\${scm.webhook.trigger.pool.size:32}")
+    @Value("\${scm.webhook.trigger.pool-size:32}")
     private var poolSize: Int = 32
 
-    @Value("\${scm.webhook.trigger.queue.size:512}")
+    @Value("\${scm.webhook.trigger.queue-size:512}")
     private var queueSize: Int = 512
 
     private val executor: ThreadPoolExecutor by lazy {
