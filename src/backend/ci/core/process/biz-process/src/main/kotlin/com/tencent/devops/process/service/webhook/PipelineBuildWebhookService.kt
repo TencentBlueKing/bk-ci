@@ -126,14 +126,14 @@ class PipelineBuildWebhookService @Autowired constructor(
         private const val WEBHOOK_COMMIT_TRIGGER = "webhook_commit_trigger"
     }
 
-    @Value("\${scm.webhook.trigger.max-count:100}")
-    private var scmWebhookTriggerMaxCount: Int = 100
+    @Value("\${scm.webhook.trigger.max-count:10}")
+    private var scmWebhookTriggerMaxCount: Int = 10
 
     @Value("\${scm.webhook.trigger.rate-limit-wait-ms:100}")
     private var rateLimitWaitIntervalMills: Long = 100L
 
-    @Value("\${scm.webhook.trigger.rate-limit-max-wait-ms:600000}")
-    private var rateLimitMaxWaitMills: Long = 600000L
+    @Value("\${scm.webhook.trigger.rate-limit-max-wait-ms:180000}")
+    private var rateLimitMaxWaitMills: Long = 180000L
 
     fun dispatchTriggerPipelines(
         matcher: ScmWebhookMatcher,
