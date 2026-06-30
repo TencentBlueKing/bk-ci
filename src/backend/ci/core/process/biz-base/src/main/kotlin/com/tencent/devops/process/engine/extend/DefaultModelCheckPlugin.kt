@@ -304,11 +304,7 @@ open class DefaultModelCheckPlugin constructor(
                 checkJobControlNodeConcurrency(container)
             }
 
-            container.elements.forEachIndexed elementCheck@{ elementIndex, element ->
-                // 触发器Container不校验market element
-                if (container is TriggerContainer && element is MarketEventAtomElement) {
-                    return@elementCheck
-                }
+            container.elements.forEachIndexed { elementIndex, element ->
                 container.checkElement(
                     stage = this,
                     element = element,
@@ -338,6 +334,18 @@ open class DefaultModelCheckPlugin constructor(
         containerIndex: Int,
         elementIndex: Int
     ) {
+        // 触发器Container的插件只做服务范围(创作流/流水线)校验
+        if (this is TriggerContainer) {
+            addAtomInputDataInfo(
+                e = element,
+                atomVersions = atomVersions,
+                atomCheckParams = atomCheckParams,
+                containerEnvType = AtomUtils.AtomContainerEnvType.UNKNOWN,
+                stageName = stage.name ?: stage.id ?: "",
+                jobName = this.name
+            )
+            return
+        }
         val eCnt = elementCnt.computeIfPresent(element.getAtomCode()) { _, oldValue -> oldValue + 1 }
             ?: elementCnt.computeIfAbsent(element.getAtomCode()) { 1 } // 第一次时出现1次
         elementHolders.getOrPut(element.getAtomCode()) { mutableListOf() }.add(
@@ -463,6 +471,10 @@ open class DefaultModelCheckPlugin constructor(
             }
 
             is MarketBuildLessAtomElement -> {
+                e.data[KEY_INPUT]
+            }
+
+            is MarketEventAtomElement -> {
                 e.data[KEY_INPUT]
             }
 
