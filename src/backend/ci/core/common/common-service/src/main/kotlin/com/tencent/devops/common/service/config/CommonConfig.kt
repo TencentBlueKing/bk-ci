@@ -156,4 +156,10 @@ class CommonConfig {
      */
     @Value("\${devopsGateway.codeccHostGateway:#{null}}")
     val codeccHostGateway: String? = null
+
+    /**
+     * 子路径部署时的对外路径前缀，如 /bkci；根路径部署时为空字符串
+     */
+    @Value("\${bkci.publicPath:}")
+    val devopsPublicPath: String = ""
 }
