@@ -49,7 +49,6 @@ import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.pipeline.pojo.element.trigger.WebHookTriggerElement
 import com.tencent.devops.common.pipeline.utils.CascadePropertyUtils
 import com.tencent.devops.common.pipeline.utils.PIPELINE_PAC_REPO_HASH_ID
-import com.tencent.devops.common.redis.concurrent.SimpleRateLimiter
 import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.web.utils.I18nUtil
@@ -98,6 +97,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.time.LocalDate
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.Semaphore
 
 @Suppress("ALL")
 @Service
@@ -118,7 +118,6 @@ class PipelineBuildWebhookService @Autowired constructor(
     private val pipelinePermissionService: PipelinePermissionService,
     private val pipelineTriggerMeasureService: PipelineTriggerMeasureService,
     private val creativeStreamTriggerSupportService: CreateStreamTriggerSupportService,
-    private val simpleRateLimiter: SimpleRateLimiter,
     private val webhookTriggerExecutor: PipelineBuildWebhookExecutor
 ) {
     companion object {
@@ -126,14 +125,15 @@ class PipelineBuildWebhookService @Autowired constructor(
         private const val WEBHOOK_COMMIT_TRIGGER = "webhook_commit_trigger"
     }
 
-    @Value("\${scm.webhook.trigger.max-count:10}")
-    private var scmWebhookTriggerMaxCount: Int = 10
-
-    @Value("\${scm.webhook.trigger.rate-limit-wait-ms:100}")
-    private var rateLimitWaitIntervalMills: Long = 100L
-
-    @Value("\${scm.webhook.trigger.rate-limit-max-wait-ms:180000}")
-    private var rateLimitMaxWaitMills: Long = 180000L
+    /**
+     * 单次 Webhook 事件内允许并行触发的流水线数量上限
+     *
+     * 落地为 dispatchTriggerPipelines 内部的本地信号量，避免一次 Webhook
+     * 因触发的流水线过多而占满整个 [PipelineBuildWebhookExecutor] 线程池，
+     * 影响其他 Webhook 事件的处理
+     */
+    @Value("\${scm.webhook.trigger.max-concurrent-per-request:8}")
+    private var maxConcurrentPerRequest: Int = 8
 
     fun dispatchTriggerPipelines(
         matcher: ScmWebhookMatcher,
@@ -159,19 +159,29 @@ class PipelineBuildWebhookService @Autowired constructor(
                         "${matcher.getRepoName()}|${triggerPipelines.size} pipelines triggered"
                 )
             }
+            // 本次 Webhook 事件内的并发闸门：单次 dispatch 最多 maxConcurrentPerRequest 条流水线并行触发
+            // 使用 fair 模式保证 FIFO，避免某些流水线长时间饥饿
+            val perRequestLimiter = Semaphore(maxConcurrentPerRequest, true)
             watcher.start("dispatch trigger pipelines")
+            // 主线程在 acquire 阻塞：限制提交到线程池的并发数 = maxConcurrentPerRequest，避免单个事件吃满线程池
+            // 等待者只可能是本次 dispatch 内已提交的同伴，无超时是为了保证所有流水线都能被触发
             val futures = triggerPipelines.map { subscriber ->
-                webhookTriggerExecutor.submit {
+                val waitStart = System.currentTimeMillis()
+                perRequestLimiter.acquire()
+                val waitConcurrentMills = System.currentTimeMillis() - waitStart
+                webhookTriggerExecutor.submit<WebhookTriggerPipelineStat> {
                     EventCacheUtil.bindSharedEventCache(sharedEventCache)
                     try {
                         triggerSinglePipeline(
                             subscriber = subscriber,
                             matcher = matcher,
                             triggerEvent = triggerEvent,
-                            repoEventIdMap = repoEventIdMap
+                            repoEventIdMap = repoEventIdMap,
+                            waitConcurrentMills = waitConcurrentMills
                         )
                     } finally {
                         EventCacheUtil.remove()
+                        perRequestLimiter.release()
                     }
                 }
             }
@@ -182,7 +192,7 @@ class PipelineBuildWebhookService @Autowired constructor(
                 logger.info(
                     "old Webhook trigger max pipeline cost|" +
                         "${matcher.getRepoName()}|${maxStat.projectId}|${maxStat.pipelineId}|" +
-                        "${maxStat.totalCostMills}|waitRateLimit=${maxStat.waitRateLimitMills}"
+                        "${maxStat.totalCostMills}|waitConcurrent=${maxStat.waitConcurrentMills}"
                 )
             }
             /* #3131,当对mr的commit check有强依赖，但是蓝盾与git的commit check交互存在一定的时延，可以增加双重锁。
@@ -209,7 +219,8 @@ class PipelineBuildWebhookService @Autowired constructor(
         subscriber: WebhookTriggerPipeline,
         matcher: ScmWebhookMatcher,
         triggerEvent: PipelineTriggerEvent,
-        repoEventIdMap: ConcurrentHashMap<String, Long>
+        repoEventIdMap: ConcurrentHashMap<String, Long>,
+        waitConcurrentMills: Long
     ): WebhookTriggerPipelineStat {
         val pipelineWatcher = Watcher(
             "old WebhookTrigger|${subscriber.projectId}|${subscriber.pipelineId}"
@@ -217,22 +228,7 @@ class PipelineBuildWebhookService @Autowired constructor(
         var status = PipelineTriggerReason.TRIGGER_SUCCESS
         val projectId = subscriber.projectId
         val pipelineId = subscriber.pipelineId
-        val lockKey = "WebhookTriggerRateLimit:$projectId"
-        var acquired = false
-        val waitRateLimitMills = acquireProjectRateLimit(lockKey)
         try {
-            acquired = waitRateLimitMills >= 0
-            if (!acquired) {
-                status = PipelineTriggerReason.TRIGGER_FAILED
-                logger.warn("webhook trigger rate limit wait timeout|$lockKey|$pipelineId")
-                return WebhookTriggerPipelineStat(
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    status = status,
-                    totalCostMills = System.currentTimeMillis() - triggerEvent.createTime.timestampmilli(),
-                    waitRateLimitMills = waitRateLimitMills
-                )
-            }
             try {
                 logger.info("pipelineId is $pipelineId")
                 val builder = PipelineTriggerDetailBuilder()
@@ -283,28 +279,11 @@ class PipelineBuildWebhookService @Autowired constructor(
                 pipelineId = pipelineId,
                 status = status,
                 totalCostMills = totalCostMills,
-                waitRateLimitMills = waitRateLimitMills
+                waitConcurrentMills = waitConcurrentMills
             )
         } finally {
-            if (acquired) {
-                simpleRateLimiter.release(lockKey = lockKey)
-            }
             LogUtils.printCostTimeWE(pipelineWatcher)
         }
-    }
-
-    /**
-     * 等待获取单项目触发并发额度，返回等待耗时；超时返回 -1
-     */
-    private fun acquireProjectRateLimit(lockKey: String): Long {
-        val waitStart = System.currentTimeMillis()
-        while (System.currentTimeMillis() - waitStart < rateLimitMaxWaitMills) {
-            if (simpleRateLimiter.acquire(scmWebhookTriggerMaxCount, lockKey = lockKey)) {
-                return System.currentTimeMillis() - waitStart
-            }
-            Thread.sleep(rateLimitWaitIntervalMills)
-        }
-        return -1L
     }
 
     private fun saveTriggerEvent(
@@ -830,6 +809,6 @@ class PipelineBuildWebhookService @Autowired constructor(
         val pipelineId: String,
         val status: PipelineTriggerReason,
         val totalCostMills: Long,
-        val waitRateLimitMills: Long
+        val waitConcurrentMills: Long
     )
 }
