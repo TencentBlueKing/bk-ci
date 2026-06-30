@@ -72,4 +72,33 @@ object HomeHostUtil {
         val commonConfig = SpringContextUtil.getBean(CommonConfig::class.java)
         return commonConfig.codeccHostGateway ?: getHost(commonConfig.devopsHostGateway!!)
     }
+
+    /**
+     * 获取子路径部署前缀，如 /bkci；根路径部署时返回空字符串
+     */
+    fun publicPathPrefix(): String {
+        val commonConfig = SpringContextUtil.getBean(CommonConfig::class.java)
+        return normalizePublicPath(commonConfig.devopsPublicPath)
+    }
+
+    /**
+     * 为相对路径拼接子路径前缀，path 应以 / 开头，如 /console/pipeline/...
+     */
+    fun withPublicPath(path: String): String {
+        val prefix = publicPathPrefix()
+        val normalizedPath = if (path.startsWith("/")) path else "/$path"
+        return if (prefix.isEmpty()) normalizedPath else "$prefix$normalizedPath"
+    }
+
+    /**
+     * 规范化子路径前缀：去除首尾空白与尾部斜杠，未配置或仅占位符时返回空字符串
+     */
+    fun normalizePublicPath(publicPath: String?): String {
+        val prefix = publicPath?.trim().orEmpty()
+        if (prefix.isEmpty() || prefix == "/" || prefix.startsWith("__")) {
+            return ""
+        }
+        val normalized = if (prefix.startsWith("/")) prefix else "/$prefix"
+        return normalized.trimEnd('/')
+    }
 }
