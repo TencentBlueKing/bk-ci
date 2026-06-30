@@ -109,7 +109,6 @@ class StageTransfer @Autowired(required = false) constructor(
         // 第一个stage，触发类
         val triggerElementList = mutableListOf<Element>()
         elementTransfer.yaml2Triggers(yamlInput, triggerElementList)
-
         val triggerContainer = TriggerContainer(
             id = "0",
             name = I18nUtil.getCodeLanMessage(CommonMessageCode.BK_BUILD_TRIGGER),
@@ -118,7 +117,7 @@ class StageTransfer @Autowired(required = false) constructor(
             startEpoch = null,
             systemElapsed = null,
             elementElapsed = null,
-            params = variableTransfer.makeVariableFromYaml(makeVariables(yamlInput.yaml))
+            params = variableTransfer.makeVariableFromYaml(makeVariables(yamlInput.yaml)).toMutableList()
         )
         with(yamlInput.yaml.recommendedVersion) {
             if (this != null && this.enabled) {
