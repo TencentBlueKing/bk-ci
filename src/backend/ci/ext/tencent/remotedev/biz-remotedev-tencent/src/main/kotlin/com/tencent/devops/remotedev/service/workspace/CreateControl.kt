@@ -149,8 +149,7 @@ class CreateControl @Autowired constructor(
         projectId: String,
         cgsId: String?,
         workspaceCreate: WindowsWorkspaceCreate,
-        zoneType: WindowsResourceZoneConfigType?,
-        os: OS?
+        zoneType: WindowsResourceZoneConfigType?
     ) {
         logger.info("start async create workspace |$pmUserId|$projectId|$cgsId|$workspaceCreate|$zoneType")
         val windowsConfig = windowsResourceConfigService.getTypeConfig(workspaceCreate.windowsType)
@@ -228,7 +227,7 @@ class CreateControl @Autowired constructor(
             ),
             ownerType = workspaceOwnerType,
             workspaceKind = workspaceCreate.workspaceKind ?: WorkspaceKind.defaultByOwnerType(workspaceOwnerType),
-            os = os
+            os = workspaceCreate.os
         )
     }
 
@@ -466,8 +465,7 @@ class CreateControl @Autowired constructor(
                 projectId = projectId,
                 cgsId = null,
                 workspaceCreate = workspaceCreate,
-                zoneType = zoneType,
-                os = workspaceCreate.os
+                zoneType = zoneType
             )
         } else {
             loadWorkspaceWithPersonalWindows(userId = userId, workspaceCreate = workspaceCreate)
@@ -892,10 +890,10 @@ class CreateControl @Autowired constructor(
                         windowsZone = windowsZone.zoneShortName,
                         baseImageId = 0,
                         count = 1,
-                        assignOwners = assignOwner?.let { listOf(it) } ?: emptyList()
+                        assignOwners = assignOwner?.let { listOf(it) } ?: emptyList(),
+                        os = data.os
                     ),
-                    zoneType = windowsZone.type,
-                    os = data.os ?: OS.WINDOWS
+                    zoneType = windowsZone.type
                 )
             }
 
@@ -906,7 +904,8 @@ class CreateControl @Autowired constructor(
                         windowsType = windowsResourceConfigId.size,
                         windowsZone = windowsZone.zoneShortName,
                         baseImageId = 0,
-                        count = 1
+                        count = 1,
+                        os = data.os
                     ),
                     cgsId = cgs.cgsId
                 )
