@@ -101,6 +101,7 @@ import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.auth.api.ResourceTypeId
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.api.pojo.ResetAllResourceAuthorizationReq
 import com.tencent.devops.model.auth.tables.records.TAuthResourceGroupRecord
@@ -1244,7 +1245,21 @@ class AuthAiServiceImpl(
             relatedResourceType = resourceType,
             relatedResourceCode = resourceCode
         )
-        val iamGroupIds = permissionManageFacadeService.listIamGroupIdsByConditions(condition)
+        val scopedPermissions = if (resourceType == ResourceTypeId.PIPELINE_GROUP) {
+            authResourceGroupPermissionDao.listByRelatedResource(
+                dslContext = dslContext,
+                projectCode = projectId,
+                relatedResourceType = resourceType,
+                relatedResourceCode = resourceCode
+            )
+        } else {
+            emptyList()
+        }
+        val iamGroupIds = if (resourceType == ResourceTypeId.PIPELINE_GROUP) {
+            scopedPermissions.map { it.iamGroupId }.distinct()
+        } else {
+            permissionManageFacadeService.listIamGroupIdsByConditions(condition)
+        }
         if (iamGroupIds.isEmpty()) {
             return ResourcePermissionsMatrixVO(
                 resourceName = resource.resourceName,
@@ -1269,12 +1284,15 @@ class AuthAiServiceImpl(
         } else {
             allGroups
         }
-        val filteredGroupIds = filtered.map { it.relationId }
-        val permissionsByGroup = authResourceGroupPermissionDao.listByGroupIds(
-            dslContext = dslContext,
-            projectCode = projectId,
-            iamGroupIds = filteredGroupIds
-        ).groupBy { it.iamGroupId }
+        val permissionsByGroup = if (resourceType == ResourceTypeId.PIPELINE_GROUP) {
+            scopedPermissions.groupBy { it.iamGroupId }
+        } else {
+            authResourceGroupPermissionDao.listByGroupIds(
+                dslContext = dslContext,
+                projectCode = projectId,
+                iamGroupIds = filtered.map { it.relationId }
+            ).groupBy { it.iamGroupId }
+        }
         val groups = filtered.map { group ->
             val groupPermissions = permissionsByGroup[group.relationId] ?: emptyList()
             val permissions = groupPermissions.map { perm ->
