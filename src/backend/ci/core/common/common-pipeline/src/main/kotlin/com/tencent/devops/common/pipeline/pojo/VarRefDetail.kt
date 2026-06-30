@@ -4,6 +4,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "变量引用详情")
 data class VarRefDetail(
+    @get:Schema(title = "主键ID")
+    var id: Long = 0,
     @get:Schema(title = "项目ID", required = true)
     val projectId: String,
     @get:Schema(title = "变量名称", required = true)

@@ -53,7 +53,7 @@ data class TriggerContainer(
     @Deprecated("即将被timeCost代替")
     override var elementElapsed: Long? = null,
     @get:Schema(title = "参数化构建", required = false)
-    var params: List<BuildFormProperty> = listOf(),
+    var params: MutableList<BuildFormProperty> = mutableListOf(),
     @get:Schema(title = "模板参数构建", required = false)
     var templateParams: List<BuildFormProperty>? = null,
     @get:Schema(title = "构建版本号", required = false)
