@@ -16,13 +16,13 @@ import java.util.concurrent.TimeUnit
  * 旧版 Webhook 触发使用的线程池封装
  *
  * - 池大小和队列大小通过配置 `scm.webhook.trigger.pool-size` / `scm.webhook.trigger.queue-size` 控制
- * - 队列满时使用 CallerRunsPolicy，由调用线程兜底执行，避免触发任务被丢弃
+ * - 队列满时使用 [LoggingCallerRunsPolicy]，由调用线程兜底执行并打 warn 日志，避免触发任务被静默丢弃
  */
 @Component
 class PipelineBuildWebhookExecutor {
 
     @Value("\${scm.webhook.trigger.pool-size:32}")
-    private var poolSize: Int = 32
+    private var poolSize: Int = 64
 
     @Value("\${scm.webhook.trigger.queue-size:512}")
     private var queueSize: Int = 512
@@ -33,8 +33,32 @@ class PipelineBuildWebhookExecutor {
             maximumPoolSize = poolSize,
             threadNamePrefix = "old-webhook-trigger-%d",
             queue = LinkedBlockingQueue(queueSize),
-            handler = ThreadPoolExecutor.CallerRunsPolicy()
+            handler = LoggingCallerRunsPolicy()
         )
+    }
+
+    /**
+     * 在触发 CallerRunsPolicy 兜底执行前打 warn 日志，便于监控线程池打满的情况。
+     * 行为与 [ThreadPoolExecutor.CallerRunsPolicy] 一致：
+     * - 线程池未 shutdown：交由调用线程亲自执行
+     * - 线程池已 shutdown：任务被丢弃
+     */
+    private class LoggingCallerRunsPolicy : ThreadPoolExecutor.CallerRunsPolicy() {
+        override fun rejectedExecution(r: Runnable, executor: ThreadPoolExecutor) {
+            if (executor.isShutdown) {
+                logger.warn(
+                    "webhook-trigger pool shutdown, task discarded|" +
+                        "active(${executor.activeCount})|queue(${executor.queue.size})"
+                )
+            } else {
+                logger.warn(
+                    "webhook-trigger pool exhausted, fallback to caller-runs|" +
+                        "max(${executor.maximumPoolSize})|active(${executor.activeCount})|" +
+                        "queue(${executor.queue.size})|complete(${executor.completedTaskCount})"
+                )
+            }
+            super.rejectedExecution(r, executor)
+        }
     }
 
     fun <T> submit(task: Callable<T>): Future<T> = executor.submit(task)

@@ -132,8 +132,8 @@ class PipelineBuildWebhookService @Autowired constructor(
      * 因触发的流水线过多而占满整个 [PipelineBuildWebhookExecutor] 线程池，
      * 影响其他 Webhook 事件的处理
      */
-    @Value("\${scm.webhook.trigger.max-concurrent-per-request:8}")
-    private var maxConcurrentPerRequest: Int = 8
+    @Value("\${scm.webhook.trigger.max-concurrent-per-request:16}")
+    private var maxConcurrentPerRequest: Int = 16
 
     fun dispatchTriggerPipelines(
         matcher: ScmWebhookMatcher,
@@ -166,18 +166,15 @@ class PipelineBuildWebhookService @Autowired constructor(
             // 主线程在 acquire 阻塞：限制提交到线程池的并发数 = maxConcurrentPerRequest，避免单个事件吃满线程池
             // 等待者只可能是本次 dispatch 内已提交的同伴，无超时是为了保证所有流水线都能被触发
             val futures = triggerPipelines.map { subscriber ->
-                val waitStart = System.currentTimeMillis()
                 perRequestLimiter.acquire()
-                val waitConcurrentMills = System.currentTimeMillis() - waitStart
-                webhookTriggerExecutor.submit<WebhookTriggerPipelineStat> {
+                webhookTriggerExecutor.submit {
                     EventCacheUtil.bindSharedEventCache(sharedEventCache)
                     try {
                         triggerSinglePipeline(
                             subscriber = subscriber,
                             matcher = matcher,
                             triggerEvent = triggerEvent,
-                            repoEventIdMap = repoEventIdMap,
-                            waitConcurrentMills = waitConcurrentMills
+                            repoEventIdMap = repoEventIdMap
                         )
                     } finally {
                         EventCacheUtil.remove()
@@ -185,16 +182,8 @@ class PipelineBuildWebhookService @Autowired constructor(
                     }
                 }
             }
-            val stats = futures.map { it.get() }
+            futures.forEach { it.get() }
             watcher.stop()
-            val maxStat = stats.maxByOrNull { it.totalCostMills }
-            if (maxStat != null) {
-                logger.info(
-                    "old Webhook trigger max pipeline cost|" +
-                        "${matcher.getRepoName()}|${maxStat.projectId}|${maxStat.pipelineId}|" +
-                        "${maxStat.totalCostMills}|waitConcurrent=${maxStat.waitConcurrentMills}"
-                )
-            }
             /* #3131,当对mr的commit check有强依赖，但是蓝盾与git的commit check交互存在一定的时延，可以增加双重锁。
                 git发起mr时锁住mr,称为webhook锁，由蓝盾主动发起解锁，解锁有三种情况：
                 1. 仓库没有配置蓝盾的流水线，需要解锁
@@ -219,9 +208,8 @@ class PipelineBuildWebhookService @Autowired constructor(
         subscriber: WebhookTriggerPipeline,
         matcher: ScmWebhookMatcher,
         triggerEvent: PipelineTriggerEvent,
-        repoEventIdMap: ConcurrentHashMap<String, Long>,
-        waitConcurrentMills: Long
-    ): WebhookTriggerPipelineStat {
+        repoEventIdMap: ConcurrentHashMap<String, Long>
+    ) {
         val pipelineWatcher = Watcher(
             "old WebhookTrigger|${subscriber.projectId}|${subscriber.pipelineId}"
         )
@@ -273,13 +261,6 @@ class PipelineBuildWebhookService @Autowired constructor(
                     .and(MeasureConstant.TAG_SCM_WEBHOOK_SCM_CODE, triggerEvent.triggerType)
                     .toList(),
                 timeConsumingMills = totalCostMills
-            )
-            return WebhookTriggerPipelineStat(
-                projectId = projectId,
-                pipelineId = pipelineId,
-                status = status,
-                totalCostMills = totalCostMills,
-                waitConcurrentMills = waitConcurrentMills
             )
         } finally {
             LogUtils.printCostTimeWE(pipelineWatcher)
@@ -804,11 +785,4 @@ class PipelineBuildWebhookService @Autowired constructor(
         return variables
     }
 
-    private data class WebhookTriggerPipelineStat(
-        val projectId: String,
-        val pipelineId: String,
-        val status: PipelineTriggerReason,
-        val totalCostMills: Long,
-        val waitConcurrentMills: Long
-    )
 }
