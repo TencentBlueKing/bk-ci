@@ -77,10 +77,20 @@ class ScriptTaskTest {
 
     @Test
     fun decodeMultipleLinesDecodeOrderTest() {
-        /*%25 必须先于 %0A 解码，避免 %0A 中的 % 被误转义*/
+        /*解码顺序: %0D/%0A 先于 %25，避免 %25 还原出的 % 与后续 0A 拼出假的 %0A*/
         val result = decode(listOf("::set-output name=RESULT::percent%253A"))
         Assertions.assertEquals(
             mapOf("jobs.$jobId.steps.$stepId.outputs.RESULT" to "percent%3A"),
+            result
+        )
+    }
+
+    @Test
+    fun decodeMultipleLinesDecodeOrderEdgeCaseTest() {
+        /*%250A 应还原为字面 %0A 而非换行符 — %25 最后解码确保不会拼出假的 %0A*/
+        val result = decode(listOf("::set-output name=RESULT::name%250Avalue"))
+        Assertions.assertEquals(
+            mapOf("jobs.$jobId.steps.$stepId.outputs.RESULT" to "name%0Avalue"),
             result
         )
     }

@@ -73,7 +73,7 @@ object BatScriptUtil {
         "        \"\$c=\$c -replace '%%','%25';\" ^\r\n" +
         "        \"\$c=\$c -replace '\\\\n','%0A';\" ^\r\n" +
         "        \"\$c=\$c -replace '\\\\r','%0D';\" ^\r\n" +
-        "        \"Add-Content -Path '##multiLineFile##' -Value \$c\"\r\n" +
+        "        \"Add-Content -Path '##multiLineFile##' -Value \$c -Encoding UTF8\"\r\n" +
         "    endlocal\r\n" +
         "    goto:eof\r\n"
 

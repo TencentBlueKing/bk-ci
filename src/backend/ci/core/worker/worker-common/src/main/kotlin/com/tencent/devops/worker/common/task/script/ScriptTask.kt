@@ -327,11 +327,17 @@ open class ScriptTask : ITask() {
                 val firstColonIndex = value.indexOf("::")
                 if (firstColonIndex < 0) continue
                 val key = value.substring(0, firstColonIndex)
-                if (key.isBlank()) continue
+                if (key.isBlank() || !key.matches(Regex("^[a-zA-Z_][a-zA-Z0-9_]*\$"))) continue
+                /*
+                 * 解码顺序必须与编码逆序：
+                 * 编码: % → %25(先)  \n → %0A  \r → %0D(后)
+                 * 解码: %0D → \r(先)  %0A → \n  %25 → %(后)
+                 * %25 必须最后还原，否则 %25 后面的 "0A" 会拼出假的 %0A 导致数据损坏
+                 */
                 val outputValue = value.substring(firstColonIndex + 2)
-                    .replace("%25", "%") // 必须先还原 %25，再还原 %0A/%0D
-                    .replace("%0A", "\n")
                     .replace("%0D", "\r")
+                    .replace("%0A", "\n")
+                    .replace("%25", "%")
                 result["jobs.$jobId.steps.$stepId.outputs.$key"] = outputValue
             }
             return result
