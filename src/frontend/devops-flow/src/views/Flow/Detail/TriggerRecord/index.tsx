@@ -56,7 +56,7 @@ export default defineComponent({
               list: TriggerRecordItem[]
               queryList: QueryListFunction
             }) => {
-              const timelineList = generateTimelineList(list)
+              const timelineList = generateTimelineList(list, queryList)
               return (
                 <>
                   <header class={styles.triggerEventFilterBar}>

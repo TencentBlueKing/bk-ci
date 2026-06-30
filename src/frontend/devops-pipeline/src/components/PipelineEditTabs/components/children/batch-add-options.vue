@@ -81,6 +81,9 @@
             handleBatchInput () {
                 this.submitBatchAdd(this.batchInput)
                 this.batchInput = ''
+            },
+            hasPendingInput () {
+                return !!this.batchInput.trim()
             }
         }
     }

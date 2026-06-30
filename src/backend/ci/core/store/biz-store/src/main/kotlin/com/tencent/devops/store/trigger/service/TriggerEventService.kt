@@ -1,14 +1,16 @@
 package com.tencent.devops.store.trigger.service
 
 import com.fasterxml.jackson.core.type.TypeReference
+import com.tencent.devops.common.api.enums.FrontendTypeEnum
 import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.api.enums.FrontendTypeEnum
 import com.tencent.devops.common.pipeline.pojo.atom.form.AtomForm
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketEventAtomElement
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.store.atom.service.AtomService
 import com.tencent.devops.store.common.service.StoreComponentQueryService
+import com.tencent.devops.store.pojo.atom.AtomGroupQueryParam
 import com.tencent.devops.store.pojo.atom.AtomResp
 import com.tencent.devops.store.pojo.atom.AtomRespItem
 import com.tencent.devops.store.pojo.atom.PipelineAtom
@@ -16,8 +18,8 @@ import com.tencent.devops.store.pojo.atom.enums.AtomCategoryEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomTypeEnum
 import com.tencent.devops.store.pojo.common.BK_STORE_ALL_TRIGGER
 import com.tencent.devops.store.pojo.common.KEY_ATOM_FORM
-import com.tencent.devops.store.pojo.common.QueryGroupParam
 import com.tencent.devops.store.pojo.common.StoreInfoQuery
+import com.tencent.devops.store.pojo.common.enums.ServiceScopeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreGroupByEnum
 import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
@@ -27,7 +29,8 @@ import org.springframework.stereotype.Service
 
 @Service
 class TriggerEventService @Autowired constructor(
-    private val storeComponentQueryService: StoreComponentQueryService
+    private val storeComponentQueryService: StoreComponentQueryService,
+    private val atomService: AtomService
 ) {
     fun previewEvent(userId: String, storeId: String): AtomForm? {
         val detailInfo = storeComponentQueryService.getComponentDetailInfoById(
@@ -43,11 +46,12 @@ class TriggerEventService @Autowired constructor(
 
     fun listOwnerStoreCodes(userId: String): List<TriggerGroupInfo> {
         // 按照归属应用分组
-        val componentGroupCount = storeComponentQueryService.getComponentGroupCount(
+        val componentGroupCount = atomService.getAtomGroupCount(
             userId = userId,
-            queryGroupParam = QueryGroupParam(
-                storeType = StoreTypeEnum.TRIGGER_EVENT,
-                groupBy = StoreGroupByEnum.OWNER_STORE_CODE
+            atomGroupQueryParam = AtomGroupQueryParam(
+                groupBy = StoreGroupByEnum.OWNER_STORE_CODE,
+                category = AtomCategoryEnum.TRIGGER,
+                serviceScope = ServiceScopeEnum.CREATIVE_STREAM
             )
         )
         // 触发事件总数

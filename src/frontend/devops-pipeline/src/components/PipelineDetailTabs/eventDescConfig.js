@@ -37,6 +37,17 @@ const tgitReviewParams = mapParams({
     review: linkParam(0, 1),
     user: userParam(2)
 })
+// TAPD 事件参数：{0}=链接, {1}=对象ID, {2}=触发用户, {3}=事件类型(可选), {4}=动作(可选)
+const tapdItemParams = mapParams({
+    issue: linkParam(0, 1, '!'),
+    user: userParam(2)
+})
+const tapdGenericParams = mapParams({
+    issue: linkParam(0, 1, '!'),
+    user: userParam(2),
+    event: textParam(3),
+    action: textParam(4)
+})
 
 /**
  * 事件描述 i18n key -> 参数映射表
@@ -238,7 +249,27 @@ export const EVENT_DESC_PARAM_MAPPERS = {
     }),
     bkYamlInstancePullRequestClosed: mapParams({
         mr: linkParam(0, 1)
-    })
+    }),
+    // TAPD 事件
+    bkTapdStoryCreateEventDesc: tapdItemParams,
+    bkTapdStoryUpdateEventDesc: tapdItemParams,
+    bkTapdStoryDeleteEventDesc: tapdItemParams,
+    bkTapdBugCreateEventDesc: tapdItemParams,
+    bkTapdBugUpdateEventDesc: tapdItemParams,
+    bkTapdBugDeleteEventDesc: tapdItemParams,
+    bkTapdStoryAddCommentEventDesc: tapdItemParams,
+    bkTapdStoryUpdateCommentEventDesc: tapdItemParams,
+    bkTapdStoryDeleteCommentEventDesc: tapdItemParams,
+    bkTapdStoryStatusChangeEventDesc: tapdItemParams,
+    bkTapdStoryLinkEventDesc: tapdItemParams,
+    bkTapdStoryUnlinkEventDesc: tapdItemParams,
+    bkTapdBugAddCommentEventDesc: tapdItemParams,
+    bkTapdBugUpdateCommentEventDesc: tapdItemParams,
+    bkTapdBugDeleteCommentEventDesc: tapdItemParams,
+    bkTapdBugStatusChangeEventDesc: tapdItemParams,
+    bkTapdStoryBugLinkEventDesc: tapdItemParams,
+    bkTapdStoryBugUnlinkEventDesc: tapdItemParams,
+    bkTapdGenericEventDesc: tapdGenericParams
 }
 
 /**

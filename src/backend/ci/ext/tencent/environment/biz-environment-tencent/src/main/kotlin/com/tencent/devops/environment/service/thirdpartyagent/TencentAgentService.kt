@@ -59,10 +59,10 @@ class TencentAgentService @Autowired constructor(
     )
     fun deleteCreateNode(
         userId: String,
-        projectId: String,
+        projectId: String?,
         workspaceName: String
     ): Boolean {
-        val record = agentDao.getAgentByWorkspaceIdGlobal(dslContext, workspaceName) ?: return true
+        val record = agentDao.getAgentByWorkspaceIdGlobal(dslContext, workspaceName, projectId) ?: return true
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
             nodeDao.batchDeleteNode(context, record.projectId, listOf(record.nodeId))

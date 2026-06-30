@@ -33,23 +33,22 @@ import com.tencent.devops.worker.common.JAVA_PATH_ENV
 import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.service.AtomRunConditionHandleService
-import org.slf4j.LoggerFactory
 import java.io.File
+import org.slf4j.LoggerFactory
 
 class JavaAtomRunConditionHandleServiceImpl : AtomRunConditionHandleService {
-
-    companion object {
-        private const val BK_CI_JAVA_ATOM_EXECUTE_ENV_PATH = "BK_CI_JAVA_ATOM_EXECUTE_ENV_PATH"
-    }
 
     private val logger = LoggerFactory.getLogger(JavaAtomRunConditionHandleServiceImpl::class.java)
 
     override fun prepareRunEnv(
+        atomCode: String?,
         osType: OSType,
         language: String,
         runtimeVersion: String,
-        workspace: File
-    ): Boolean {
+        workspace: File,
+        atomTmpSpace: File?,
+        runtimeVariables: Map<String, String>
+    ): String? {
         val runtimeJdkVersion = AgentEnv.getRuntimeJdkVersion()
         val runtimeJdkPath = AgentEnv.getRuntimeJdkPath()
         // 这里首先使用的是插件配置的jdk版本，如果构建机没有该jdk环境，那么打印日志提示并使用worker的jdk版本执行
@@ -66,25 +65,25 @@ class JavaAtomRunConditionHandleServiceImpl : AtomRunConditionHandleService {
                 javaPath = atomJdkPath
             }
         }
-        System.setProperty(BK_CI_JAVA_ATOM_EXECUTE_ENV_PATH, javaPath)
-        return true
+        return javaPath
     }
 
     override fun handleAtomTarget(
         target: String,
         osType: OSType,
-        postEntryParam: String?
+        postEntryParam: String?,
+        atomExecuteEnvPath: String?
     ): String {
-        val executePath = System.getProperty(BK_CI_JAVA_ATOM_EXECUTE_ENV_PATH)
         logger.info(
-            "handleAtomTarget|target:$target,osType:$osType,postEntryParam:$postEntryParam,executePath:$executePath"
+            "handleAtomTarget|target:$target,osType:$osType," +
+                    "postEntryParam:$postEntryParam,atomExecuteEnvPath:$atomExecuteEnvPath"
         )
         var convertTarget = target
-        if (!executePath.isNullOrBlank()) {
+        if (!atomExecuteEnvPath.isNullOrBlank()) {
             convertTarget = if (target.startsWith("\$$JAVA_PATH_ENV")) {
-                target.replace("\$$JAVA_PATH_ENV", executePath)
+                target.replace("\$$JAVA_PATH_ENV", atomExecuteEnvPath)
             } else {
-                target.replace("java ", "$executePath ")
+                target.replace("java ", "$atomExecuteEnvPath ")
             }
         } else if (osType == OSType.WINDOWS) {
             convertTarget = target.replace("\$$JAVA_PATH_ENV", "%$JAVA_PATH_ENV%")

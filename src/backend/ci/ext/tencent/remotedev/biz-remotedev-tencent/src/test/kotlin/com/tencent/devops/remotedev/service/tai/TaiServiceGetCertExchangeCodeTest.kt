@@ -45,7 +45,10 @@ class TaiServiceGetCertExchangeCodeTest {
         val expectedResp = CertExchangeCodeResp(
             code = 0,
             msg = "get code success",
-            data = CertExchangeCodeData(code = "382916")
+            data = CertExchangeCodeData(
+                code = "382916",
+                secret = "test-secret-value"
+            )
         )
         val responseBody = jacksonObjectMapper().writeValueAsString(expectedResp)
 
@@ -60,6 +63,26 @@ class TaiServiceGetCertExchangeCodeTest {
         assertEquals("get code success", result.msg)
         assertNotNull(result.data)
         assertEquals("382916", result.data!!.code)
+        assertEquals("test-secret-value", result.data!!.secret)
+    }
+
+    @Test
+    fun `getCertExchangeCode should return null secret when absent in response`() {
+        val responseBody = """
+            {"code":0,"msg":"get code success","data":{"code":"382916"}}
+        """.trimIndent()
+
+        every { OkhttpUtils.doHttp(any()) } returns buildOkResponse(responseBody)
+
+        val result = taiService.getCertExchangeCode(
+            userId = "testuser",
+            req = CertExchangeCodeReq(username = "testuser")
+        )
+
+        assertEquals(0, result.code)
+        assertNotNull(result.data)
+        assertEquals("382916", result.data!!.code)
+        assertEquals(null, result.data!!.secret)
     }
 
     @Test

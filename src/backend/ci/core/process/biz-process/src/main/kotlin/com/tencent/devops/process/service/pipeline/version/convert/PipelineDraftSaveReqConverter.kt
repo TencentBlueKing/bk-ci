@@ -108,7 +108,9 @@ class PipelineDraftSaveReqConverter(
                 if (modelAndSetting == null) {
                     throw IllegalArgumentException("modelAndSetting can not be null")
                 }
-                val newModel = createPipelineModel(projectId = projectId, pipelineId = pipelineId)
+                val newModel = createPipelineModel(projectId = projectId, pipelineId = pipelineId).apply {
+                    name = modelAndSetting!!.setting.pipelineName
+                }
                 val newModelAndSetting = PipelineModelAndSetting(
                     model = newModel,
                     setting = modelAndSetting!!.setting

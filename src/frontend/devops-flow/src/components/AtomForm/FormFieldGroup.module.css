@@ -1,0 +1,67 @@
+/* FormFieldGroup 样式 - v2 分组字段组件 */
+/* 使用项目 CSS 变量，参考 /src/styles/variables.css */
+
+.formFieldGroup {
+  margin-bottom: var(--spacing-sm);
+}
+
+.topDivider {
+  height: 1px;
+  width: 100%;
+  margin: var(--spacing-xxl) 0;
+  border-top: 1px solid var(--border-color);
+}
+
+.groupHeader {
+  display: flex;
+  align-items: center;
+  margin-bottom: var(--spacing-sm);
+}
+
+.groupLabel {
+  display: inline-block;
+  min-height: var(--line-height-xl);
+  line-height: var(--line-height-xl);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+}
+
+.infoIcon {
+  font-size: var(--icon-size-sm);
+  color: var(--color-text-disabled);
+  margin-left: 6px;
+  cursor: pointer;
+
+  &:hover {
+    color: var(--color-text-tertiary);
+  }
+}
+
+.labelDivider {
+  display: inline-block;
+  border-left: 1px solid var(--border-color);
+  width: 1px;
+  height: 20px;
+  line-height: 20px;
+  position: relative;
+  top: 0;
+  margin: 0 10px;
+}
+
+.groupContent {
+  padding: var(--spacing-base) var(--spacing-xl);
+  background-color: var(--bg-secondary);
+  border-radius: var(--border-radius);
+}
+
+.docsLink {
+  margin-left: auto;
+  line-height: var(--line-height-xl);
+  cursor: pointer;
+  color: var(--color-primary);
+  font-size: var(--font-size-xs);
+
+  &:hover {
+    color: var(--color-primary-hover);
+  }
+}

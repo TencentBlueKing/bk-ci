@@ -38,7 +38,6 @@ import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.ws.rs.Consumes
 import jakarta.ws.rs.GET
 import jakarta.ws.rs.HeaderParam
-import jakarta.ws.rs.POST
 import jakarta.ws.rs.Path
 import jakarta.ws.rs.PathParam
 import jakarta.ws.rs.Produces
@@ -142,7 +141,7 @@ interface ExternalThirdPartyAgentResource {
     ): Response
 
     @Operation(summary = "根据设备获取创作流节点安装脚本，给虾插件用的")
-    @POST
+    @GET
     @Path("/genCreateNodeInstallScript")
     fun genCreateNodeInstallScript(
         @QueryParam("token")

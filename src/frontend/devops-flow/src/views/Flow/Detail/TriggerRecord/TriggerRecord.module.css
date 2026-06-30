@@ -77,13 +77,19 @@
   white-space: nowrap;
   color: #4d4f56;
 
-  > p > span > a {
+  a {
     color: #3a84ff;
     cursor: pointer;
     text-decoration: none;
     &:hover {
       color: #699df4;
     }
+  }
+
+  .trigger-user {
+    color: #313238;
+    font-weight: 500;
+    margin: 0 2px;
   }
 }
 

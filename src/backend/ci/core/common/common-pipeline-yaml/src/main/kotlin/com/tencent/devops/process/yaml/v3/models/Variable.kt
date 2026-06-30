@@ -127,7 +127,8 @@ data class VariableProps(
     @get:Schema(title = "文件元数据", required = false)
     @JsonProperty("metadata")
     val properties: Map<String, String>? = null,
-    val payload: Any? = null
+    val payload: Any? = null,
+    val fields: Map<String, Variable>? = null
 ) {
     fun empty(): Boolean {
         return label == null && (type == null || type == VariablePropType.VUEX_INPUT.value) && options == null &&
@@ -205,7 +206,8 @@ enum class VariablePropType(val value: String) {
     ARTIFACTORY("artifactory"),
     SUB_PIPELINE("sub-pipeline"),
     CUSTOM_FILE("custom-file"),
-    TIPS("tips");
+    TIPS("tips"),
+    FORM_LIST("form-list");
 
     fun toBuildFormPropertyType() = when (this) {
         VUEX_INPUT -> BuildFormPropertyType.STRING
@@ -221,6 +223,7 @@ enum class VariablePropType(val value: String) {
         SUB_PIPELINE -> BuildFormPropertyType.SUB_PIPELINE
         CUSTOM_FILE -> BuildFormPropertyType.CUSTOM_FILE
         REPO_REF -> BuildFormPropertyType.REPO_REF
+        FORM_LIST -> BuildFormPropertyType.FORM_LIST
         else -> BuildFormPropertyType.STRING
     }
 

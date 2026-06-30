@@ -41,16 +41,22 @@ export default defineComponent({
       type: Object as PropType<Record<string, unknown>>,
       default: () => ({}),
     },
+    multiSelect: {
+      type: Boolean,
+      default: false
+    }
   },
   emits: ['change', 'update:value'],
-  setup(props, { emit }) {
+  setup(props, { emit, attrs }) {
     const { t } = useI18n()
-    // Use data source hook for API data fetching
-    const { list, isLoading, refreshList, isApiMode, selectConf } = useDataSource({
+    const mergedConf: SelectDataConf = {
+      ...(attrs as SelectDataConf),
       ...props.optionsConf,
       options: props.list ?? props.optionsConf.options,
       atomValue: props.atomValue,
-    })
+      multiSelect: props.multiSelect,
+    }
+    const { list, isLoading, refreshList, isApiMode, selectConf } = useDataSource(mergedConf)
 
     // Placeholder with loading state
     const displayPlaceholder = computed(() =>

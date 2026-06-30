@@ -40,6 +40,7 @@ import com.tencent.devops.store.pojo.atom.AtomRespItem
 import com.tencent.devops.store.pojo.atom.InstalledAtom
 import com.tencent.devops.store.pojo.atom.PipelineAtom
 import com.tencent.devops.store.pojo.atom.enums.JobTypeEnum
+import com.tencent.devops.store.pojo.common.BK_STORE_ALL_TRIGGER
 import com.tencent.devops.store.pojo.common.UnInstallReq
 import com.tencent.devops.store.pojo.common.enums.ServiceScopeEnum
 import com.tencent.devops.store.pojo.common.version.VersionInfo
@@ -82,7 +83,8 @@ class UserAtomResourceImpl @Autowired constructor(
         queryFitAgentBuildLessAtomFlag: Boolean?,
         installed: Boolean?,
         page: Int,
-        pageSize: Int
+        pageSize: Int,
+        ownerStoreCode: String?
     ): Result<AtomResp<AtomRespItem>?> {
         val queryParam = AtomQueryParam(
             serviceScope = serviceScope,
@@ -96,7 +98,8 @@ class UserAtomResourceImpl @Autowired constructor(
             fitOsFlag = fitOsFlag,
             queryFitAgentBuildLessAtomFlag = queryFitAgentBuildLessAtomFlag,
             queryProjectAtomFlag = queryProjectAtomFlag,
-            installed = installed
+            installed = installed,
+            ownerStoreCode = ownerStoreCode.takeIf { !it.isNullOrBlank() && it != BK_STORE_ALL_TRIGGER }
         )
         return atomService.getPipelineAtoms(
             userId = userId,

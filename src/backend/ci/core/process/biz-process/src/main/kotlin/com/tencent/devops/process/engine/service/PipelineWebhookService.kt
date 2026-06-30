@@ -41,6 +41,7 @@ import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.pipeline.pojo.element.Element
+import com.tencent.devops.common.pipeline.pojo.element.trigger.TapdWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.WebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.pipeline.utils.PIPELINE_PAC_REPO_HASH_ID
@@ -130,7 +131,10 @@ class PipelineWebhookService @Autowired constructor(
         pipelineYamlService.getPipelineYamlInfo(projectId = projectId, pipelineId = pipelineId)?.let {
             variables[PIPELINE_PAC_REPO_HASH_ID] = it.repoHashId
         }
-        val elements = triggerContainer.elements.filterIsInstance<WebHookTriggerElement>()
+        val elements = triggerContainer.elements.filterIsInstance<WebHookTriggerElement>().filter {
+            // TAPD 触发无需注册webhook
+            it !is TapdWebHookTriggerElement
+        }
         val failedElementNames = mutableListOf<String>()
         elements.forEach { element ->
             try {

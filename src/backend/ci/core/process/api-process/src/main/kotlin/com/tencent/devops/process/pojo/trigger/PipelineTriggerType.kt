@@ -75,7 +75,11 @@ enum class PipelineTriggerType {
 
     // 远程触发
     @Schema(title = "事件触发")
-    TRIGGER_EVENT;
+    TRIGGER_EVENT,
+
+    // TAPD触发
+    @Schema(title = "TAPD事件触发")
+    TAPD;
 
     fun toScmType(): ScmType? {
         return toScmType(name)
@@ -135,6 +139,7 @@ enum class PipelineTriggerType {
          * 创作流触发方式
          */
         fun creativeStreamTriggerTypes() = listOf(
+            TAPD,
             MANUAL,
             TIME_TRIGGER,
             TRIGGER_EVENT

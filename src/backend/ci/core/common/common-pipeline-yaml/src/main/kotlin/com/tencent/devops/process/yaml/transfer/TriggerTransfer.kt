@@ -50,9 +50,13 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeTGitWebHookTr
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeTGitWebHookTriggerInput
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.RemoteTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.TapdWebHookTriggerData
+import com.tencent.devops.common.pipeline.pojo.element.trigger.TapdWebHookTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.TapdWebHookTriggerInput
 import com.tencent.devops.common.pipeline.pojo.element.trigger.TimerTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.PathFilterType
+import com.tencent.devops.common.pipeline.enums.TapdEventType
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitMrEventAction
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitPushActionType
 import com.tencent.devops.process.yaml.transfer.VariableDefault.nullIfDefault
@@ -68,6 +72,7 @@ import com.tencent.devops.process.yaml.v3.models.on.NoteRule
 import com.tencent.devops.process.yaml.v3.models.on.PushRule
 import com.tencent.devops.process.yaml.v3.models.on.ReviewRule
 import com.tencent.devops.process.yaml.v3.models.on.TagRule
+import com.tencent.devops.process.yaml.v3.models.on.TapdRule
 import com.tencent.devops.process.yaml.v3.models.on.TriggerOn
 import com.tencent.devops.scm.api.enums.EventAction
 import org.slf4j.LoggerFactory
@@ -205,6 +210,10 @@ class TriggerTransfer @Autowired(required = false) constructor(
                     version = "2.*"
                 }
             )
+        }
+
+        triggerOn.tapd?.let {
+            elementQueue.addAll(it.map { trigger -> yaml2TriggerTapdElement(trigger) })
         }
     }
 
@@ -782,6 +791,35 @@ class TriggerTransfer @Autowired(required = false) constructor(
                 ).checkTriggerElementEnable(remote.enable == EnableType.TRUE.value)
             )
         }
+    }
+
+    /**
+     * 将 YAML [TapdRule] 转为 [TapdWebHookTriggerElement]。
+     * 仅当 eventType 为 STORY/BUG 时分别填充对应的 includeAction 字段。
+     */
+    private fun yaml2TriggerTapdElement(tapd: TapdRule): TapdWebHookTriggerElement {
+        val eventType = tapd.eventType?.let { TapdEventType.parse(it) }
+        val includeStoryAction = tapd.action?.takeIf { eventType == TapdEventType.STORY }
+        val includeBugAction = tapd.action?.takeIf { eventType == TapdEventType.BUG }
+        return TapdWebHookTriggerElement(
+            name = tapd.name ?: "TAPD事件触发",
+            stepId = tapd.id,
+            data = TapdWebHookTriggerData(
+                input = TapdWebHookTriggerInput(
+                    tapdProjectId = tapd.tapdProjectId,
+                    eventType = eventType,
+                    includeStoryAction = includeStoryAction,
+                    includeBugAction = includeBugAction,
+                    includeUsers = tapd.users,
+                    excludeUsers = tapd.usersIgnore,
+                    includeLabels = tapd.labels?.join(),
+                    excludeLabels = tapd.labelsIgnore?.join(),
+                    includePriority = tapd.priorities?.join(),
+                    includeOwner = tapd.owners,
+                    excludeOwner = tapd.ownersIgnore
+                )
+            )
+        ).checkTriggerElementEnable(tapd.enable) as TapdWebHookTriggerElement
     }
 
     @Suppress("ComplexMethod")

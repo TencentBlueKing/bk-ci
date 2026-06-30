@@ -74,7 +74,9 @@ data class PreTriggerOnV3(
     override var shelveCommit: Any? = null,
     @JsonProperty("shelve-submit")
     @get:Schema(title = "shelve-submit")
-    override var shelveSubmit: Any? = null
+    override var shelveSubmit: Any? = null,
+    @get:Schema(title = "tapd")
+    override val tapd: Any? = null
 ) : IPreTriggerOn {
     override fun yamlVersion() = YamlVersion.V3_0
 }

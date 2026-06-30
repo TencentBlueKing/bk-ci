@@ -1,6 +1,13 @@
-import { fetchAtomVersionList, type AtomVersion } from '@/api/atom'
 import {
-  fetchTriggerList,
+  fetchAtomClassify,
+  fetchAtoms,
+  fetchAtomVersionList,
+  JobCategory,
+  type AtomClassify,
+  type AtomItem,
+  type AtomVersion,
+} from '@/api/atom'
+import {
   fetchTriggerModal,
   fetchTriggerTypes,
   type TriggerBaseItem,
@@ -8,6 +15,7 @@ import {
   type TriggerType,
 } from '@/api/trigger'
 import { computed, reactive, ref } from 'vue'
+import { useRoute } from 'vue-router'
 
 interface TriggerListCache {
   data: TriggerBaseItem[]
@@ -42,6 +50,9 @@ interface TriggerVersionCache {
  * 提供触发器分类和触发器列表的缓存管理
  */
 export const useTriggerManager = () => {
+  const route = useRoute()
+  const projectCode = computed(() => (route?.params?.projectId as string) || '')
+
   // 全局状态
   const typeList = ref<TriggerType[]>([])
   const isLoadingTypes = ref(false)
@@ -49,8 +60,43 @@ export const useTriggerManager = () => {
   const modalCacheMap = reactive<TriggerModalCache>({})
   const versionCacheMap = reactive<TriggerVersionCache>({})
 
+  // 触发器分类缓存（用于获取 classifyId）
+  const triggerClassify = ref<AtomClassify | null>(null)
+  const triggerClassifyPromise = ref<Promise<AtomClassify | null> | null>(null)
+
   // 缓存过期时间（10分钟）
   const CACHE_EXPIRE_TIME = 10 * 60 * 1000
+
+  /**
+   * 获取触发器分类（classifyCode === 'trigger'）
+   */
+  const fetchTriggerClassify = async (): Promise<AtomClassify | null> => {
+    if (triggerClassify.value) {
+      return triggerClassify.value
+    }
+    if (triggerClassifyPromise.value) {
+      return triggerClassifyPromise.value
+    }
+
+    triggerClassifyPromise.value = (async () => {
+      try {
+        const list = await fetchAtomClassify({
+          category: JobCategory.TRIGGER,
+          serviceScope: 'PIPELINE'
+        })
+        const target = (list || []).find((item) => item.classifyCode === 'trigger') || null
+        triggerClassify.value = target
+        return target
+      } catch (error) {
+        console.error('Failed to fetch trigger classify:', error)
+        return null
+      } finally {
+        triggerClassifyPromise.value = null
+      }
+    })()
+
+    return triggerClassifyPromise.value
+  }
 
   // 生成缓存键
   const generateCacheKey = (params: { ownerStoreCode?: string; keyword?: string }) => {
@@ -151,14 +197,38 @@ export const useTriggerManager = () => {
     cache.loading = true
 
     try {
-      const result = await fetchTriggerList({
+      // 1. 先获取 trigger 分类的 classifyId
+      const classify = await fetchTriggerClassify()
+      const classifyId = classify?.id || ''
+
+      // 2. 调用插件接口获取触发器列表
+      const result = await fetchAtoms({
+        projectCode: projectCode.value,
+        category: JobCategory.TRIGGER,
+        classifyId,
         ownerStoreCode: ownerStoreCode || undefined,
         keyword: keyword || undefined,
+        queryProjectAtomFlag: false,
         page,
         pageSize,
       })
 
-      const records = result.records || []
+      const records: TriggerBaseItem[] = (result.records || []).map((item: AtomItem) => ({
+        atomCode: item.atomCode,
+        name: item.name,
+        summary: item.summary,
+        logoUrl: item.logoUrl,
+        version: item.version,
+        defaultVersion: item.defaultVersion,
+        publisher: item.publisher,
+        score: item.score,
+        recentExecuteNum: item.recentExecuteNum,
+        hotFlag: item.hotFlag,
+        recommendFlag: item.recommendFlag,
+        installed: item.installed,
+        defaultFlag: item.defaultFlag,
+        ownerStoreCode: (item as any).ownerStoreCode || ownerStoreCode || '',
+      }))
       const hasMore = records.length >= pageSize
 
       if (page === 1 || forceRefresh) {
@@ -232,7 +302,7 @@ export const useTriggerManager = () => {
     cache.loading = true
 
     try {
-      const result = await fetchTriggerModal(ownerStoreCode, atomCode, version)
+      const result = await fetchTriggerModal(ownerStoreCode, projectCode.value, atomCode, version)
       cache.data = result
       cache.timestamp = Date.now()
       return result
@@ -353,6 +423,7 @@ export const useTriggerManager = () => {
 
     // 方法
     fetchTypeList,
+    fetchTriggerClassify,
     fetchList,
     fetchModal,
     fetchVersionList,

@@ -86,7 +86,12 @@
                 </div>
                 <div class="step-info">
                     <div class="step-title">{{ step.title }}</div>
-                    <div class="step-desc">{{ step.desc }}</div>
+                    <div
+                        class="step-desc"
+                        :title="step.desc"
+                    >
+                        {{ step.desc }}
+                    </div>
                 </div>
             </div>
         </div>
@@ -697,7 +702,7 @@
                 }
                 
                 // 下一步按钮（只在前两步显示）
-                let isDisabled = false
+                let isDisabled = this.loadingStatus
                 let tooltip = ''
                 
                 // 第一步：检查必填项
@@ -746,6 +751,7 @@
                 buttons.push({
                     action: 'saveDraft',
                     theme: 'default',
+                    disabled: this.loadingStatus,
                     text: this.$t('saveDraft'),
                     handler: this.handleSaveDraft
                 })
@@ -753,6 +759,7 @@
                 buttons.push({
                     action: 'cancel',
                     theme: 'default',
+                    disabled: this.loadingStatus,
                     text: this.$t('cancel'),
                     handler: this.handleCancel
                 })
@@ -1120,7 +1127,6 @@
                             tab: prevStep.name
                         }
                     })
-                    this.analyzingPipeline = null
                 }
             },
             /**
@@ -1438,7 +1444,6 @@
         padding: 16px 15%;
         gap: 16px;
         z-index: 99;
-        // transition: all 0.3s ease;
         transition: all 0.3s ease;
         
         &.is-sticky {
@@ -1454,6 +1459,7 @@
             position: relative;
             flex: 1;
             cursor: default;
+            overflow: hidden;
             border-bottom: 5px solid #DCDEE5;
             
             &.is-completed {
@@ -1490,15 +1496,22 @@
                 display: flex;
                 align-items: center;
                 margin-left: 8px;
-                flex-shrink: 0;
+                min-width: 0;
+                overflow: hidden;
 
                 .step-title {
                     color: #313238;
+                    white-space: nowrap;
+                    flex-shrink: 0;
                 }
                 .step-desc {
                     font-size: 12px;
                     color: #979BA5;
                     margin-left: 16px;
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    max-width: 100%;
                 }
             }
         }

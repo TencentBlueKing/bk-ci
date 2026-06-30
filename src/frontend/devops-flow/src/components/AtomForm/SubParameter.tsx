@@ -125,6 +125,33 @@ export default defineComponent({
       return [lackParam ? '' : newUrl, queryKey]
     }
 
+    // The final request URL derived from param config and atomValue.
+    // Returns '' when required path params are missing.
+    // For list mode (no request needed), returns a fixed signature.
+    const reqUrl = computed<string>(() => {
+      const param = props.param
+      if (param?.paramType === 'list' && Array.isArray(param.list)) {
+        return 'list'
+      }
+
+      if (!param?.url) return ''
+
+      const [url] = generateReqUrl(param.url, {
+        ...props.atomValue,
+        projectId: route.params.projectId,
+        pipelineId: route.params.flowId,
+      })
+      if (!url) return ''
+
+      let finalUrl = url
+      const urlQuery = param.urlQuery || {}
+      Object.keys(urlQuery).forEach((key, index) => {
+        const value = props.atomValue[key] ?? urlQuery[key]
+        finalUrl += `${index <= 0 ? '?' : '&'}${key}=${value}`
+      })
+      return finalUrl
+    })
+
     // Fetch parameters list from API
     const getParametersList = async () => {
       const param = props.param
@@ -134,22 +161,9 @@ export default defineComponent({
         return
       }
 
-      if (!param?.url) return
+      const finalUrl = reqUrl.value
+      if (!finalUrl) return
 
-      const [url] = generateReqUrl(param.url, {
-        ...props.atomValue,
-        projectId: route.params.projectId,
-        pipelineId: route.params.flowId,
-      })
-      if (!url) return
-
-      // Build URL with query parameters
-      let finalUrl = url
-      const urlQuery = param.urlQuery || {}
-      Object.keys(urlQuery).forEach((key, index) => {
-        const value = props.atomValue[key] ?? urlQuery[key]
-        finalUrl += `${index <= 0 ? '?' : '&'}${key}=${value}`
-      })
       isLoading.value = true
       try {
         const response = await get<any>(finalUrl)
@@ -233,21 +247,18 @@ export default defineComponent({
       },
     )
 
-    // Watch for atomValue changes that affect the parameters list
+    // Watch the resolved request URL: it only changes when atomValue fields
+    // that actually affect the request change. Using a string source avoids
+    // the deep-watch pitfall where newVal and oldVal share the same reference.
     watch(
-      () => props.atomValue,
-      (newVal, oldVal) => {
-        if (oldVal !== undefined) {
-          const subPipChanged = newVal?.subPip !== oldVal?.subPip
-          const subBranchChanged = newVal?.subBranch !== oldVal?.subBranch
-          if (subPipChanged || subBranchChanged) {
-            parameters.value = []
-            getParametersList()
-            initData()
-          }
+      reqUrl,
+      (newUrl, oldUrl) => {
+        if (oldUrl !== undefined && newUrl !== oldUrl) {
+          parameters.value = []
+          getParametersList()
+          initData()
         }
       },
-      { deep: true },
     )
 
     onMounted(() => {

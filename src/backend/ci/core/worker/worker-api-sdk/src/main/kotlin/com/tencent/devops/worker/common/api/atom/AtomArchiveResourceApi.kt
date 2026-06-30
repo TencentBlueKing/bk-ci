@@ -68,6 +68,7 @@ import java.net.URLEncoder
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
+import okhttp3.RequestBody.Companion.toRequestBody
 
 class AtomArchiveResourceApi : AbstractBuildResourceApi(), AtomArchiveSDKApi {
 
@@ -327,16 +328,36 @@ class AtomArchiveResourceApi : AbstractBuildResourceApi(), AtomArchiveSDKApi {
         return objectMapper.readValue(responseContent)
     }
 
+    /**
+     * 检查插件是否在指定类型的白名单中
+     * HTTP 异常时返回 Result(false) fail-close 不放行
+     */
+    override fun isAtomInWhitelist(
+        atomCode: String,
+        whitelistType: String
+    ): Result<Boolean> {
+        return try {
+            val path = "/ms/store/api/build/market/atom/env/whitelist/types/$whitelistType/codes/$atomCode/check"
+            val request = buildGet(path)
+            val responseContent = request(request, "atom whitelist check fail")
+            objectMapper.readValue(responseContent)
+        } catch (e: Throwable) {
+            logger.warn("isAtomInWhitelist fail|atomCode=$atomCode|type=$whitelistType", e)
+            Result(false)
+        }
+    }
+
     override fun updateAtomVersionPkgSize(
         atomId: String,
         storePackageInfoReqs: List<StorePackageInfoReq>
     ): Result<Boolean> {
-        val path = "/ms/store/api/service/store/components/storeIds/$atomId/version/info/update"
+        if (storePackageInfoReqs.isEmpty()) {
+            logger.info("updateAtomVersionPkgSize|storePackageInfoReqs is empty, skip")
+            return Result(true)
+        }
+        val path = "/ms/store/api/build/store/storeIds/$atomId/version/info/update"
         val jsonBody = objectMapper.writeValueAsString(storePackageInfoReqs)
-        val body = RequestBody.create(
-            "application/json; charset=utf-8".toMediaTypeOrNull(),
-            jsonBody
-        )
+        val body = jsonBody.toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull())
         val request = buildPut(path, body)
         val responseContent = request(
             request,

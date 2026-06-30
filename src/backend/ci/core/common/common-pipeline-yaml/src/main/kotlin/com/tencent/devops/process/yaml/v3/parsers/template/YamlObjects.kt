@@ -81,10 +81,19 @@ object YamlObjects {
         }
         val type = props?.type
         val va = Variable(
-            value = if (type == VariablePropType.REPO_REF.value) {
-                variable["value"] ?: mapOf<String, String>()
-            } else {
-                variable["value"]?.toString()
+            value = when (type) {
+                VariablePropType.REPO_REF.value -> {
+                    variable["value"] ?: mapOf<String, String>()
+                }
+
+                VariablePropType.FORM_LIST.value -> {
+                    variable["value"] ?: listOf<Map<String, String>>()
+                }
+
+                else -> {
+
+                    variable["value"]?.toString()
+                }
             },
             readonly = getNullValue("readonly", variable)?.toBoolean(),
             const = getNullValue("const", variable)?.toBoolean(),
@@ -150,7 +159,8 @@ object YamlObjects {
                 key = "metadata",
                 map = propsMap
             ),
-            payload = propsMap["payload"]
+            payload = propsMap["payload"],
+            fields = JsonUtil.anyToOrNull(propsMap["fields"], object : TypeReference<Map<String, Variable>>() {})
         )
 
         return po

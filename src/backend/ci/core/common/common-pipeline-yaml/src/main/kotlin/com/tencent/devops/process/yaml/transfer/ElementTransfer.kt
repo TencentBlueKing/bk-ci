@@ -37,6 +37,7 @@ import com.tencent.devops.common.pipeline.TemplateDescriptor
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.enums.BuildScriptType
 import com.tencent.devops.common.pipeline.enums.CharsetType
+import com.tencent.devops.common.pipeline.enums.TapdEventType
 import com.tencent.devops.common.pipeline.enums.TemplateRefType
 import com.tencent.devops.common.pipeline.pojo.TemplateVariable
 import com.tencent.devops.common.pipeline.pojo.element.Element
@@ -57,6 +58,7 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeScmSvnWebHook
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeTGitWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.RemoteTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.TapdWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.TimerTriggerElement
 import com.tencent.devops.common.pipeline.pojo.transfer.IfType
 import com.tencent.devops.common.pipeline.pojo.transfer.PreStep
@@ -79,6 +81,7 @@ import com.tencent.devops.process.yaml.v3.models.on.EnableType
 import com.tencent.devops.process.yaml.v3.models.on.ManualRule
 import com.tencent.devops.process.yaml.v3.models.on.RemoteRule
 import com.tencent.devops.process.yaml.v3.models.on.SchedulesRule
+import com.tencent.devops.process.yaml.v3.models.on.TapdRule
 import com.tencent.devops.process.yaml.v3.models.on.TriggerOn
 import com.tencent.devops.process.yaml.v3.models.step.PreCheckoutStep
 import com.tencent.devops.process.yaml.v3.models.step.PreManualReviewUserTaskElement
@@ -125,6 +128,7 @@ class ElementTransfer @Autowired(required = false) constructor(
     fun baseTriggers2yaml(elements: List<Element>, aspectWrapper: PipelineTransferAspectWrapper): TriggerOn? {
         val triggerOn = lazy { TriggerOn() }
         val schedules = mutableListOf<SchedulesRule>()
+        val tapds = mutableListOf<TapdRule>()
         triggerOn.value.manual = ManualRule(
             enable = false
         )
@@ -205,10 +209,17 @@ class ElementTransfer @Autowired(required = false) constructor(
                 } else {
                     RemoteRule(id = element.stepId, name = element.name, enable = EnableType.FALSE.value)
                 }
+                return@forEach
+            }
+            if (element is TapdWebHookTriggerElement) {
+                tapds.add(tapd2YamlRule(element))
             }
         }
         if (schedules.isNotEmpty()) {
             triggerOn.value.schedules = schedules
+        }
+        if (tapds.isNotEmpty()) {
+            triggerOn.value.tapd = tapds
         }
         if (triggerOn.isInitialized()) {
             aspectWrapper.setYamlTriggerOn(
@@ -218,6 +229,30 @@ class ElementTransfer @Autowired(required = false) constructor(
             return triggerOn.value
         }
         return null
+    }
+
+    private fun tapd2YamlRule(element: TapdWebHookTriggerElement): TapdRule {
+        val input = element.data.input
+        val includeActions = if (input.eventType == TapdEventType.STORY) {
+            input.includeStoryAction
+        } else {
+            input.includeBugAction
+        }
+        return TapdRule(
+            id = element.stepId,
+            name = element.name,
+            enable = element.elementEnabled().nullIfDefault(true),
+            tapdProjectId = input.tapdProjectId,
+            eventType = input.eventType?.value,
+            action = includeActions,
+            users = input.includeUsers.nonEmptyOrNull(),
+            usersIgnore = input.excludeUsers.nonEmptyOrNull(),
+            owners = input.includeOwner.nonEmptyOrNull(),
+            ownersIgnore = input.excludeOwner.nonEmptyOrNull(),
+            labels = input.includeLabels?.takeIf { it.isNotBlank() }?.split(","),
+            labelsIgnore = input.excludeLabels?.takeIf { it.isNotBlank() }?.split(","),
+            priorities = input.includePriority?.takeIf { it.isNotBlank() }?.split(",")
+        )
     }
 
     fun scmTriggers2Yaml(
@@ -712,4 +747,6 @@ class ElementTransfer @Autowired(required = false) constructor(
     protected fun makeServiceElementList(job: Job): MutableList<Element> {
         return mutableListOf()
     }
+
+    private fun List<String>?.nonEmptyOrNull() = this?.ifEmpty { null }
 }

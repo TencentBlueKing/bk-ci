@@ -30,6 +30,7 @@ package com.tencent.devops.process.api.user
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.environment.pojo.NodeBaseInfo
 import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.process.pojo.pipeline.PipelineBuildParamFormProp
@@ -62,6 +63,9 @@ interface UserSubPipelineInfoResource {
         @Parameter(description = "流水线ID", required = false, example = "")
         @QueryParam("subPip")
         pipelineId: String,
+        @Parameter(description = "渠道代码", required = false)
+        @QueryParam("channelCode")
+        channelCode: ChannelCode?,
         @Parameter(description = "是否包含常量", required = false, example = "")
         @QueryParam("includeConst")
         includeConst: Boolean? = true,

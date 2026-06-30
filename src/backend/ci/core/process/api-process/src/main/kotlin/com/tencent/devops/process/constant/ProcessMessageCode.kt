@@ -850,6 +850,12 @@ object ProcessMessageCode {
     // 创作流启动节点为空
     const val BK_CREATIVE_STREAM_START_TASK_IS_EMPTY = "bkCreativeStreamStartTaskIsEmpty"
 
+    // 定时触发未指定创作节点
+    const val BK_CREATIVE_STREAM_TIMER_TRIGGER_NODE_IS_EMPTY = "bkCreativeStreamTimerTriggerNodeIsEmpty"
+
+    // [{0}]创作环境下的创作节点为空
+    const val BK_CREATIVE_STREAM_ENV_NODE_IS_EMPTY = "bkCreativeStreamEnvNodeIsEmpty"
+
     const val DYNAMIC_VERSION = -1
 
     // 公共变量组锁相关常量

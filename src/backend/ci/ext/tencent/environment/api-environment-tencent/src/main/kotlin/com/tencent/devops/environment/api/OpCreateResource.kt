@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.ws.rs.Consumes
+import jakarta.ws.rs.GET
 import jakarta.ws.rs.HeaderParam
 import jakarta.ws.rs.POST
 import jakarta.ws.rs.Path
@@ -27,5 +28,14 @@ interface OpCreateResource {
         @Parameter(description = "工作空间名称", required = true)
         @QueryParam("workspaceName")
         workspaceName: String
+    )
+
+    @Operation(summary = "刷新创作流节点别名")
+    @GET
+    @Path("/refresh_create_node_display_name")
+    fun refreshCreateNodeDisplayName(
+        @Parameter(description = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String
     )
 }

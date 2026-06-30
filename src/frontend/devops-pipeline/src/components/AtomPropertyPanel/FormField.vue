@@ -1,11 +1,11 @@
 <script setup>
-    import { computed, defineProps } from 'vue'
     import Logo from '@/components/Logo'
     import NamingConventionTip from '@/components/namingConventionTip.vue'
-    import UseInstance from '@/hook/useInstance'
-    import ToggleRequiredParamPopover from '@/components/ToggleRequiredParamPopover.vue'
     import ToggleFollowTemplatePopover from '@/components/ToggleFollowTemplatePopover.vue'
+    import ToggleRequiredParamPopover from '@/components/ToggleRequiredParamPopover.vue'
+    import UseInstance from '@/hook/useInstance'
     import { COMMON_PARAM_PREFIX } from '@/utils/util'
+    import { computed, defineProps } from 'vue'
 
     const props = defineProps({
         label: {

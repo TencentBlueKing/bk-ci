@@ -40,8 +40,8 @@
 </template>
 
 <script>
-    import ToggleRequiredParamPopover from '@/components/ToggleRequiredParamPopover.vue'
     import ToggleFollowTemplatePopover from '@/components/ToggleFollowTemplatePopover.vue'
+    import ToggleRequiredParamPopover from '@/components/ToggleRequiredParamPopover.vue'
     export default {
         name: 'RenderSortCategoryParams',
         components: {

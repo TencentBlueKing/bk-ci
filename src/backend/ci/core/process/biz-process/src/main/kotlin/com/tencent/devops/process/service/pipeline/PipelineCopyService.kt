@@ -5,6 +5,8 @@ import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
+import com.tencent.devops.common.pipeline.Model
+import com.tencent.devops.common.pipeline.template.ITemplateModel
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.model.process.tables.records.TPipelineLabelRecord
 import com.tencent.devops.model.process.tables.records.TPipelineViewRecord
@@ -13,13 +15,20 @@ import com.tencent.devops.process.dao.PipelineSettingDao
 import com.tencent.devops.process.dao.label.PipelineGroupDao
 import com.tencent.devops.process.dao.label.PipelineLabelDao
 import com.tencent.devops.process.dao.label.PipelineViewDao
+import com.tencent.devops.process.dao.template.PipelineTemplateResourceDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
+import com.tencent.devops.process.engine.dao.PipelineResourceDao
+import com.tencent.devops.process.engine.dao.PipelineResourceVersionDao
+import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.pojo.classify.PipelineGroupCreate
 import com.tencent.devops.process.pojo.classify.PipelineLabelCreate
 import com.tencent.devops.process.pojo.classify.PipelineViewForm
 import com.tencent.devops.process.pojo.classify.enums.Logic
+import com.tencent.devops.process.pojo.template.v2.PipelineTemplateResourceCommonCondition
+import com.tencent.devops.process.pojo.template.v2.PipelineTemplateResourceUpdateInfo
 import com.tencent.devops.process.service.label.PipelineGroupService
+import com.tencent.devops.process.service.task.copy.PipelineDependencyReplaceService
 import com.tencent.devops.process.service.view.PipelineViewService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -38,8 +47,13 @@ class PipelineCopyService @Autowired constructor(
     private val pipelineGroupService: PipelineGroupService,
     private val pipelineViewDao: PipelineViewDao,
     private val pipelineViewService: PipelineViewService,
+    private val pipelineResourceDao: PipelineResourceDao,
+    private val pipelineResourceVersionDao: PipelineResourceVersionDao,
+    private val pipelineTemplateResourceDao: PipelineTemplateResourceDao,
+    private val pipelineDependencyReplaceService: PipelineDependencyReplaceService,
     private val client: Client,
-    private val clientTokenService: ClientTokenService
+    private val clientTokenService: ClientTokenService,
+    private val subPipelineUpgradeService: SubPipelineUpgradeService
 ) {
 
     fun fixInstanceSetting(
@@ -189,6 +203,311 @@ class PipelineCopyService @Autowired constructor(
             return
         }
         copyAllViewsByPage(userId, sourceProjectId, targetProjectId)
+    }
+
+    fun fixPipelineSubPipelineProject(
+        userId: String,
+        projectId: String,
+        pipelineIds: List<String>,
+        sourceSubProjectId: String,
+        targetSubProjectId: String
+    ) {
+        pipelineIds.forEach { pipelineId ->
+            try {
+                fixSinglePipelineSubPipelineProject(
+                    userId = userId,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    sourceSubProjectId = sourceSubProjectId,
+                    targetSubProjectId = targetSubProjectId
+                )
+            } catch (ignored: Exception) {
+                logger.warn(
+                    "fix pipeline sub pipeline project failed|$projectId|$pipelineId|" +
+                        "$sourceSubProjectId|$targetSubProjectId",
+                    ignored
+                )
+            }
+        }
+    }
+
+    fun fixTemplateSubPipelineProject(
+        projectId: String,
+        templateIds: List<String>,
+        sourceSubProjectId: String,
+        targetSubProjectId: String
+    ) {
+        templateIds.forEach { templateId ->
+            try {
+                fixSingleTemplateSubPipelineProject(
+                    projectId = projectId,
+                    templateId = templateId,
+                    sourceSubProjectId = sourceSubProjectId,
+                    targetSubProjectId = targetSubProjectId
+                )
+            } catch (ignored: Exception) {
+                logger.warn(
+                    "fix template sub pipeline project failed|$projectId|$templateId|" +
+                        "$sourceSubProjectId|$targetSubProjectId",
+                    ignored
+                )
+            }
+        }
+    }
+
+    private fun fixSinglePipelineSubPipelineProject(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        sourceSubProjectId: String,
+        targetSubProjectId: String
+    ) {
+        val pipelineInfoRecord = pipelineInfoDao.getPipelineInfo(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            delete = false
+        ) ?: run {
+            logger.warn("fix pipeline sub pipeline project skip, pipeline not found|$projectId|$pipelineId")
+            return
+        }
+        val pipelineInfo = pipelineInfoDao.convert(pipelineInfoRecord, null) ?: run {
+            logger.warn("fix pipeline sub pipeline project skip, pipeline info invalid|$projectId|$pipelineId")
+            return
+        }
+        fixPipelineReleaseResource(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            sourceSubProjectId = sourceSubProjectId,
+            targetSubProjectId = targetSubProjectId
+        )
+        fixPipelineVersionResources(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            pipelineInfo = pipelineInfo,
+            sourceSubProjectId = sourceSubProjectId,
+            targetSubProjectId = targetSubProjectId
+        )
+    }
+
+    private fun fixPipelineReleaseResource(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        sourceSubProjectId: String,
+        targetSubProjectId: String
+    ) {
+        val releaseResource = pipelineResourceDao.getReleaseVersionResource(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId
+        ) ?: run {
+            logger.warn(
+                "fix pipeline sub pipeline project skip, release resource not found|$projectId|$pipelineId"
+            )
+            return
+        }
+        val (fixedModel, changed) = pipelineDependencyReplaceService.fixSubPipelineProjectInModel(
+            model = releaseResource.model,
+            projectId = projectId,
+            sourceSubProjectId = sourceSubProjectId,
+            targetSubProjectId = targetSubProjectId
+        )
+        if (!changed) {
+            logger.info(
+                "fix pipeline sub pipeline project skip, release resource no change|$projectId|$pipelineId"
+            )
+            return
+        }
+        pipelineResourceDao.updateModel(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            version = releaseResource.version,
+            model = fixedModel
+        )
+        logger.info(
+            "fix pipeline sub pipeline project release resource success|$projectId|$pipelineId|" +
+                "${releaseResource.version}|$sourceSubProjectId|$targetSubProjectId"
+        )
+        subPipelineUpgradeService.updateSubPipelineRef(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId
+        )
+    }
+
+    private fun fixPipelineVersionResources(
+        projectId: String,
+        pipelineId: String,
+        pipelineInfo: PipelineInfo,
+        sourceSubProjectId: String,
+        targetSubProjectId: String
+    ) {
+        val pageSize = 100
+        var offset = 0
+        while (true) {
+            val versionList = pipelineResourceVersionDao.listPipelineVersion(
+                dslContext = dslContext,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                pipelineInfo = pipelineInfo,
+                includeDraft = true,
+                offset = offset,
+                limit = pageSize
+            )
+            if (versionList.isEmpty()) {
+                break
+            }
+            versionList.forEach { versionSimple ->
+                try {
+                    fixSinglePipelineVersionResource(
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        version = versionSimple.version,
+                        sourceSubProjectId = sourceSubProjectId,
+                        targetSubProjectId = targetSubProjectId
+                    )
+                } catch (ignored: Exception) {
+                    logger.warn(
+                        "fix pipeline sub pipeline project version failed|$projectId|$pipelineId|" +
+                            "${versionSimple.version}|$sourceSubProjectId|$targetSubProjectId",
+                        ignored
+                    )
+                }
+            }
+            if (versionList.size < pageSize) {
+                break
+            }
+            offset += pageSize
+        }
+    }
+
+    private fun fixSinglePipelineVersionResource(
+        projectId: String,
+        pipelineId: String,
+        version: Int,
+        sourceSubProjectId: String,
+        targetSubProjectId: String
+    ) {
+        val versionResource = pipelineResourceVersionDao.getVersionResource(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            version = version,
+            includeDraft = true
+        ) ?: run {
+            logger.warn(
+                "fix pipeline sub pipeline project skip, version resource not found|" +
+                    "$projectId|$pipelineId|$version"
+            )
+            return
+        }
+        val (fixedModel, changed) = pipelineDependencyReplaceService.fixSubPipelineProjectInModel(
+            model = versionResource.model,
+            projectId = projectId,
+            sourceSubProjectId = sourceSubProjectId,
+            targetSubProjectId = targetSubProjectId
+        )
+        if (!changed) {
+            logger.info(
+                "fix pipeline sub pipeline project skip, version resource no change|" +
+                    "$projectId|$pipelineId|$version"
+            )
+            return
+        }
+        pipelineResourceVersionDao.updateModel(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            version = version,
+            model = fixedModel
+        )
+        logger.info(
+            "fix pipeline sub pipeline project version resource success|$projectId|$pipelineId|$version|" +
+                "$sourceSubProjectId|$targetSubProjectId"
+        )
+    }
+
+    private fun fixSingleTemplateSubPipelineProject(
+        projectId: String,
+        templateId: String,
+        sourceSubProjectId: String,
+        targetSubProjectId: String
+    ) {
+        val templateResources = pipelineTemplateResourceDao.list(
+            dslContext = dslContext,
+            commonCondition = PipelineTemplateResourceCommonCondition(
+                projectId = projectId,
+                templateId = templateId
+            )
+        )
+        if (templateResources.isEmpty()) {
+            logger.warn("fix template sub pipeline project skip, template resource not found|$projectId|$templateId")
+            return
+        }
+        templateResources.forEach { templateResource ->
+            try {
+                fixSingleTemplateResource(
+                    projectId = projectId,
+                    templateId = templateId,
+                    templateResourceVersion = templateResource.version,
+                    model = templateResource.model,
+                    sourceSubProjectId = sourceSubProjectId,
+                    targetSubProjectId = targetSubProjectId
+                )
+            } catch (ignored: Exception) {
+                logger.warn(
+                    "fix template sub pipeline project version failed|$projectId|$templateId|" +
+                        "${templateResource.version}|$sourceSubProjectId|$targetSubProjectId",
+                    ignored
+                )
+            }
+        }
+    }
+
+    private fun fixSingleTemplateResource(
+        projectId: String,
+        templateId: String,
+        templateResourceVersion: Long,
+        model: ITemplateModel,
+        sourceSubProjectId: String,
+        targetSubProjectId: String
+    ) {
+        if (model !is Model) {
+            logger.info(
+                "fix template sub pipeline project skip, unsupported template model type|" +
+                    "$projectId|$templateId|$templateResourceVersion|${model.javaClass.simpleName}"
+            )
+            return
+        }
+        val (fixedModel, changed) = pipelineDependencyReplaceService.fixSubPipelineProjectInModel(
+            model = model,
+            projectId = projectId,
+            sourceSubProjectId = sourceSubProjectId,
+            targetSubProjectId = targetSubProjectId
+        )
+        if (!changed) {
+            logger.info(
+                "fix template sub pipeline project skip, template resource no change|" +
+                    "$projectId|$templateId|$templateResourceVersion"
+            )
+            return
+        }
+        pipelineTemplateResourceDao.update(
+            dslContext = dslContext,
+            record = PipelineTemplateResourceUpdateInfo(model = fixedModel),
+            commonCondition = PipelineTemplateResourceCommonCondition(
+                projectId = projectId,
+                templateId = templateId,
+                version = templateResourceVersion
+            )
+        )
+        logger.info(
+            "fix template sub pipeline project success|$projectId|$templateId|$templateResourceVersion|" +
+                "$sourceSubProjectId|$targetSubProjectId"
+        )
     }
 
     private fun copyPipelineSetting(

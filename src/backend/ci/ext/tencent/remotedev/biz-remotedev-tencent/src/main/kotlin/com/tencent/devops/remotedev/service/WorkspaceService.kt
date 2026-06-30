@@ -52,6 +52,7 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.web.service.ServiceLocaleResource
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.environment.api.TencentServiceNodeService
 import com.tencent.devops.environment.api.devx.ServiceDEVXResource
 import com.tencent.devops.environment.pojo.EnvWithNodeCount
 import com.tencent.devops.model.remotedev.tables.TWorkspace
@@ -289,6 +290,18 @@ class WorkspaceService @Autowired constructor(
                     workspaceProperty.displayName
                 )
             )
+            // 同步修改构建节点名称
+            try {
+                client.get(TencentServiceNodeService::class).updateCreateNodeDisplay(
+                    projectId = ws.projectId,
+                    displayName = workspaceProperty.displayName!!,
+                    userId = userId,
+                    workspaceName = ws.workspaceName
+
+                )
+            }catch (e: Exception) {
+                logger.error("modifyWorkspaceProperty update create node error", e)
+            }
         }
 
         if (workspaceProperty.remark != null) {

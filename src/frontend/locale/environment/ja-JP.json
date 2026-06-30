@@ -285,7 +285,22 @@
         },
         "switchRunningAccount": "実行アカウントを自動切り替え",
         "switchAccountTips": "デフォルトではシステムユーザー'system'で実行されます。ユーザー環境変数などのユーザー関連データを使用する必要がある場合は、実行アカウントを切り替える必要があります。アカウントとパスワードを指定して自動切り替えするか、指定しないでインストール完了後に手動で切り替えることができます",
-        "operatorStatus": "責任者ステータス"
+        "operatorStatus": "責任者ステータス",
+        "importIMetaNode": "iMetaノードをインポート",
+        "importIMetaTip1": "共有iMetaノードをインポートし、標準化されたオフィス自動化フローを再利用して、繰り返し操作を削減します。",
+        "importIMetaTip2": "1. 単一の共有ノードは、1つのBlueShieldプロジェクトにのみインポートできます。",
+        "importIMetaTip3": "2. フローをトリガーする際、システムは自動的にトリガー者の権限を検証します。",
+        "searchIMetaPlaceholder": "名前/IP/ステータス",
+        "name": "名前",
+        "nodeId": "ID",
+        "engine": "エンジン",
+        "importIMetaSuccess": "{count}個のノードをインポートしました！",
+        "importIMetaSuccessTip": "インポート後、作成Agentが非同期で自動インストールされます。リストで作成Agentのステータスを確認してください。インストールに失敗した場合は、「再インストール」してください。",
+        "iGotIt": "承知しました",
+        "totalNodes": "合計 {count} 個のノード",
+        "deleteIMetaNodeTips": "削除すると、システムは対応する作成Agentを自動的にアンインストールします",
+        "alreadyImported": "プロジェクト {project} に既にインポート済みで、重複インポートはサポートされていません",
+        "goToView": "チェック"
     },
     "nodeTypeMap": {
         "CC": "CC",
@@ -708,5 +723,9 @@
         "atLeastOneCondition": "少なくとも1つの条件を選択する必要があります",
         "fetchFailed": "スケジュール戦略リストの取得に失敗しました",
         "atLeastOneEnabled": "スケジュール戦略は少なくとも1つ有効にする必要があります"
-    }
+    },
+    "IMetaNodeStatus": {
+        "RUNNING": "実行中"
+    },
+    "IMetaStatus": "状態"
 }

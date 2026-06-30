@@ -132,7 +132,21 @@ const customeRules = {
     },
     objectRequired: {
         validate: function (value, args) {
-            return Object.values(value).every(val => !!val)
+            const isEmpty = (val) => {
+                if (Array.isArray(val)) return val.length === 0
+                if (val === false || val === 0) return false
+                if (val && typeof val === 'object') {
+                    return Object.values(val).every(item => isEmpty(item))
+                }
+                return val === undefined || val === null || String(val).trim() === ''
+            }
+            if (Array.isArray(value)) {
+                return value.length > 0 && value.every(row => !isEmpty(row))
+            }
+            if (value && typeof value === 'object') {
+                return Object.values(value).every(val => !isEmpty(val))
+            }
+            return !isEmpty(value)
         }
     },
     // cron 表达式数组校验规则 - 检查是否为空数组

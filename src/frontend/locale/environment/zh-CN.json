@@ -285,7 +285,22 @@
         },
         "switchRunningAccount": "自动切换运行账户",
         "switchAccountTips": "默认以系统用户 system 运行，若需使用用户环境变量等和用户相关的数据，需切换运行账户。可指定账号密码自动切换，或者不指定，待安装完成后手动切换",
-        "operatorStatus": "责任人状态"
+        "operatorStatus": "责任人状态",
+        "importIMetaNode": "导入数字同事节点",
+        "importIMetaTip1": "导入共享数字同事节点，复用标准化的办公自动流程，减少重复操作。",
+        "importIMetaTip2": "1. 单个共享节点仅支持导入至一个蓝盾项目。",
+        "importIMetaTip3": "2. 触发流程时，系统会自动校验触发人权限。",
+        "searchIMetaPlaceholder": "名称/IP/状态",
+        "name": "名称",
+        "nodeId": "ID",
+        "engine": "工作引擎",
+        "importIMetaSuccess": "成功导入 {count} 个节点！",
+        "importIMetaSuccessTip": "导入后将异步自动安装创作 Agent，请在列表观察创作 Agent 状态，若安装失败请「重装」。",
+        "iGotIt": "我知道了",
+        "totalNodes": "共 {count} 个节点",
+        "deleteIMetaNodeTips": "移除时，系统将自动卸载对应的创作Agent",
+        "alreadyImported": "已导入到 {project} 项目，不支持重复导入",
+        "goToView": "去查看"
     },
     "nodeTypeMap": {
         "CC": "CC",
@@ -708,5 +723,9 @@
         "atLeastOneCondition": "至少选择一个条件",
         "fetchFailed": "获取调度策略列表失败",
         "atLeastOneEnabled": "调度策略至少启用一个策略"
-    }
+    },
+    "IMetaNodeStatus": {
+        "RUNNING": "运行中"
+    },
+    "IMetaStatus": "状态"
 }

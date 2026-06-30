@@ -38,8 +38,8 @@ import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.task.ITask
 import com.tencent.devops.worker.common.task.TaskClassType
 import com.tencent.devops.worker.common.task.market.AtomRunConditionFactory
-import org.slf4j.LoggerFactory
 import java.io.File
+import org.slf4j.LoggerFactory
 
 @TaskClassType(classTypes = [AtomRunEnvPrepareElement.classType])
 class AtomRunEnvPrepareTask : ITask() {
@@ -58,13 +58,12 @@ class AtomRunEnvPrepareTask : ITask() {
         if (!runtimeVersion.isNullOrBlank()) {
             val atomRunConditionHandleService = AtomRunConditionFactory.createAtomRunConditionHandleService(language)
             // 准备插件运行环境
-            atomRunConditionHandleService.prepareRunEnv(
+            val atomExecutePath = atomRunConditionHandleService.prepareRunEnv(
                 osType = AgentEnv.getOS(),
                 language = language,
                 runtimeVersion = runtimeVersion,
                 workspace = workspace
             )
-            val atomExecutePath = System.getProperty(BK_CI_ATOM_EXECUTE_ENV_PATH)
             atomExecutePath?.let {
                 // 把插件执行环境路径加入环境变量
                 addEnv(BK_CI_ATOM_EXECUTE_ENV_PATH, atomExecutePath)

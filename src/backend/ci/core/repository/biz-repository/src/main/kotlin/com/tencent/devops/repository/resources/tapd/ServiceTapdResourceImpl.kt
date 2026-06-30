@@ -31,15 +31,32 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.repository.api.tapd.ServiceTapdResource
 import com.tencent.devops.repository.sdk.tapd.request.StatusMapRequest
+import com.tencent.devops.scm.pojo.tapd.TapdBug
+import com.tencent.devops.scm.pojo.tapd.TapdStory
+import com.tencent.devops.repository.sdk.tapd.service.ITapdItemService
 import com.tencent.devops.repository.sdk.tapd.service.ITapdWorkflowService
+import com.tencent.devops.scm.pojo.tapd.TapdBugFieldConfig
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ServiceTapdResourceImpl @Autowired constructor(
-    private val tapdWorkflowService: ITapdWorkflowService
+    private val tapdWorkflowService: ITapdWorkflowService,
+    private val tapdItemService: ITapdItemService
 ) : ServiceTapdResource {
 
     override fun getWorkflowStatusMap(request: StatusMapRequest): Result<Map<String, String>> {
         return Result(tapdWorkflowService.getWorkflowStatusMap(request = request).data!!)
+    }
+
+    override fun getStoryInfo(workspaceId: String, storyId: String): Result<TapdStory?> {
+        return Result(tapdItemService.getStoryInfo(workspaceId = workspaceId, storyId = storyId))
+    }
+
+    override fun getBugInfo(workspaceId: String, bugId: String): Result<TapdBug?> {
+        return Result(tapdItemService.getBugInfo(workspaceId = workspaceId, bugId = bugId))
+    }
+
+    override fun getBugFieldsInfo(workspaceId: String): Result<TapdBugFieldConfig?> {
+        return Result(tapdItemService.getBugFieldsInfo(workspaceId = workspaceId))
     }
 }

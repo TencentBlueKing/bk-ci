@@ -30,6 +30,7 @@ package com.tencent.devops.process.api
 import com.tencent.bk.audit.annotations.AuditEntry
 import com.tencent.bk.audit.annotations.AuditRequestBody
 import com.tencent.devops.common.api.constant.CommonMessageCode.USER_NOT_PERMISSIONS_OPERATE_PIPELINE
+import com.tencent.devops.common.api.context.ChannelContext
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.exception.ParamBlankException
@@ -135,16 +136,18 @@ class UserPipelineResourceImpl @Autowired constructor(
         channelCode: ChannelCode?
     ): Result<Page<Pipeline>> {
         checkParam(userId, projectId)
-        val result = pipelineListFacadeService.hasPermissionList(
-            userId = userId,
-            projectId = projectId,
-            permission = permission,
-            excludePipelineId = excludePipelineId,
-            filterByPipelineName = null,
-            page = page,
-            pageSize = pageSize,
-            channelCode = channelCode
-        )
+        // query 传了渠道则以其为准设置渠道上下文，统一作用于权限校验、i18n、下游服务透传等
+        val result = ChannelContext.withChannel(channelCode?.name ?: ChannelContext.getChannel()) {
+            pipelineListFacadeService.hasPermissionList(
+                userId = userId,
+                projectId = projectId,
+                permission = permission,
+                excludePipelineId = excludePipelineId,
+                filterByPipelineName = null,
+                page = page,
+                pageSize = pageSize
+            )
+        }
         return Result(
             data = Page(
                 page = page ?: 0,

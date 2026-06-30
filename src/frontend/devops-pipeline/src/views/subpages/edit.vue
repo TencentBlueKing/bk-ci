@@ -250,6 +250,14 @@
                 this.getInterceptAtom()
                 if (val && val.instanceFromTemplate) this.requestMatchTemplateRules(val.templateId)
             },
+            currentTab (val, oldVal) {
+                // 切换 tab 时关闭属性面板，避免触发器等面板的全局状态泄漏到其他 tab 导致出现空白的待选择插件面板
+                if (val !== oldVal) {
+                    this.togglePropertyPanel({
+                        isShow: false
+                    })
+                }
+            },
             'pipelineInfo.permissions.canEdit': {
                 handler (val) {
                     if (typeof val === 'boolean') {

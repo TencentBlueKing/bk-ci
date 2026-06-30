@@ -7,7 +7,7 @@
                 :key="index"
                 class="review-params"
             >
-                <template v-if="!isCheakboxParam(param.valueType)">
+                <template v-if="!isCheckboxParam(param.valueType)">
                     <bk-input
                         disabled
                         :value="getParamKey(param)"
@@ -21,7 +21,7 @@
                     :form="param"
                     :disabled="disabled"
                     :class="['review-param-item', {
-                        'checkbox-name': isCheakboxParam(param.valueType)
+                        'checkbox-name': isCheckboxParam(param.valueType)
                     }]"
                 ></param-value>
                 <i
@@ -30,7 +30,7 @@
                     v-if="param.desc"
                 ></i>
                 <span
-                    v-if="isCheakboxParam(param.valueType)"
+                    v-if="isCheckboxParam(param.valueType)"
                     :class="{ 'review-param-gap': true, 'param-require': param.required }"
                 ></span>
             </li>
@@ -40,8 +40,8 @@
 </template>
 
 <script>
+    import { isCheckboxParam } from '@/store/modules/atom/paramsConfig'
     import paramValue from './param-value'
-    import { isCheakboxParam } from '@/store/modules/atom/paramsConfig'
 
     export default {
         components: {
@@ -77,7 +77,7 @@
         },
 
         methods: {
-            isCheakboxParam,
+            isCheckboxParam,
             updateParams () {
                 const params = this.showReviewGroup.params && this.showReviewGroup.params.length ? this.showReviewGroup.params : this.reviewParams
                 this.params = params || []

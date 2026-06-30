@@ -20,7 +20,7 @@
 import {
     ALL_PIPELINE_VIEW_ID
 } from '@/store/constants'
-import { isBooleanParam, isFileParam } from '@/store/modules/atom/paramsConfig'
+import { BOOLEAN, CHECKBOX, MULTIPLE, isBooleanParam, isFileParam, isFormListParam } from '@/store/modules/atom/paramsConfig'
 import {
     ALL_TEMPLATE_VIEW_ID,
     TEMPLATE_VIEW_ID_CACHE
@@ -47,6 +47,134 @@ export function isShallowEqual (obj1, obj2) {
     }
 
     return obj1Keys.every(key => obj1[key] === obj2[key])
+}
+
+/**
+ * 比较两个流水线参数值是否相等
+ * - 原始类型：直接 ===
+ * - 普通对象（如 REPO_REF.defaultValue）：浅比较
+ * - 数组（如 FORM_LIST.defaultValue）：稳定序列化后比较，避免对象 key 顺序导致的误判
+ * - 其余情况：!==
+ */
+export function isParamValueEqual (a, b) {
+    if (a === b) return true
+    const normalizedA = normalizeJsonArrayValue(a)
+    const normalizedB = normalizeJsonArrayValue(b)
+    if (Array.isArray(normalizedA) && Array.isArray(normalizedB)) {
+        return stableSerialize(normalizedA) === stableSerialize(normalizedB)
+    }
+    if (isObject(a) && isObject(b)) {
+        return isShallowEqual(a, b)
+    }
+    return false
+}
+
+function normalizeJsonArrayValue (value) {
+    if (Array.isArray(value)) return value
+    if (typeof value === 'string' && value.trim().startsWith('[')) {
+        try {
+            const parsed = JSON.parse(value)
+            return Array.isArray(parsed) ? parsed : value
+        } catch (e) {
+            return value
+        }
+    }
+    return value
+}
+
+export function stableSerialize (value) {
+    if (Array.isArray(value)) {
+        return `[${value.map(item => stableSerialize(item)).join(',')}]`
+    }
+    if (isObject(value)) {
+        return `{${Object.keys(value).sort().map(key => `${JSON.stringify(key)}:${stableSerialize(value[key])}`).join(',')}}`
+    }
+    return JSON.stringify(value)
+}
+
+export function parseFormListValue (value) {
+    if (Array.isArray(value)) return value
+    if (typeof value === 'string' && value.trim() !== '') {
+        try {
+            const parsed = JSON.parse(value)
+            return Array.isArray(parsed) ? parsed : []
+        } catch (e) {
+            return []
+        }
+    }
+    return []
+}
+
+export function getFormListDefaultRow (fields = [], defaultValue = []) {
+    const defaultItem = parseFormListValue(defaultValue)[0] || {}
+    return getValidFormListFields(fields).reduce((acc, field) => {
+        const fieldValue = Object.prototype.hasOwnProperty.call(defaultItem, field.id)
+            ? defaultItem[field.id]
+            : getFormListFieldDefaultValue(field)
+        acc[field.id] = normalizeFormListFieldValue(field, fieldValue)
+        return acc
+    }, {})
+}
+
+export function normalizeFormListValue (value, fields = [], options = {}) {
+    const { filterDefaultRows = true } = options
+    const validFields = getValidFormListFields(fields)
+    const normalizedList = parseFormListValue(value)
+        .filter(item => isObject(item))
+        .map(item => {
+            if (!validFields.length) {
+                return Object.keys(item).sort().reduce((acc, key) => {
+                    acc[key] = item[key]
+                    return acc
+                }, {})
+            }
+            return normalizeFormListRow(item, validFields)
+        })
+    return filterDefaultRows
+        ? normalizedList.filter(item => validFields.length === 0 || !isDefaultFormListRow(item, validFields))
+        : normalizedList
+}
+
+function getValidFormListFields (fields = []) {
+    return (fields || []).filter(field => field && field.id)
+}
+
+function normalizeFormListRow (item, fields) {
+    return fields.reduce((acc, field) => {
+        const fieldValue = Object.prototype.hasOwnProperty.call(item, field.id)
+            ? item[field.id]
+            : getFormListFieldDefaultValue(field)
+        acc[field.id] = normalizeFormListFieldValue(field, fieldValue)
+        return acc
+    }, {})
+}
+
+export function getFormListFieldDefaultValue (field) {
+    if (field.defaultValue !== undefined) return field.defaultValue
+    if (field.type === BOOLEAN || field.type === CHECKBOX) return false
+    if (field.type === MULTIPLE) return []
+    return ''
+}
+
+function normalizeFormListFieldValue (field, value) {
+    if (field.type === BOOLEAN || field.type === CHECKBOX) {
+        if (Array.isArray(value)) return value.filter(Boolean)
+        return value === true || value === 'true'
+    }
+    if (field.type === MULTIPLE) {
+        if (Array.isArray(value)) return value.filter(item => item !== '')
+        if (typeof value === 'string') return value.split(',').filter(item => item !== '')
+        return []
+    }
+    return value ?? ''
+}
+
+function isDefaultFormListRow (row, fields) {
+    return fields.every(field => {
+        const value = row[field.id]
+        const defaultValue = normalizeFormListFieldValue(field, getFormListFieldDefaultValue(field))
+        return stableSerialize(value) === stableSerialize(defaultValue)
+    })
 }
 
 export function isInArray (ele, array) {
@@ -656,6 +784,10 @@ export function getParamsValuesMap (params = [], valueKey = 'defaultValue', init
                 directory: initValues[param.id] ?? param[valueKey],
                 latestRandomStringInPath: (valueKey === 'defaultValue' ? param.randomStringInPath : param.latestRandomStringInPath) || ''
             }
+        } else if (isFormListParam(param.type)) {
+            values[param.id] = normalizeFormListValue(initValues[param.id] ?? param[valueKey], param.fields, {
+                filterDefaultRows: false
+            })
         } else {
             const val = initValues[param.id] ?? param[valueKey]
             if (isBooleanParam(param.type)) {
