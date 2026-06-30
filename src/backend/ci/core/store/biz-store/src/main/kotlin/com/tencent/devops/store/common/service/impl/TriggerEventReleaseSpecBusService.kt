@@ -21,6 +21,7 @@ import com.tencent.devops.common.api.constant.UNDO
 import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.store.atom.service.AtomService
 import com.tencent.devops.store.common.service.StoreCommonService
 import com.tencent.devops.store.common.service.StoreComponentQueryService
 import com.tencent.devops.store.common.service.StoreReleaseSpecBusService
@@ -47,7 +48,8 @@ import org.springframework.stereotype.Service
 @SuppressWarnings("TooManyFunctions")
 class TriggerEventReleaseSpecBusService @Autowired constructor(
     private val storeCommonService: StoreCommonService,
-    private val storeComponentQueryService: StoreComponentQueryService
+    private val storeComponentQueryService: StoreComponentQueryService,
+    private val atomService: AtomService
 ) : StoreReleaseSpecBusService {
     override fun doStoreCreatePreBus(storeCreateRequest: StoreCreateRequest) {
         logger.info("doStoreCreatePreBus")

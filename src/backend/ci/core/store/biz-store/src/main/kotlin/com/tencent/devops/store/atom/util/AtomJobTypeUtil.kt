@@ -107,8 +107,11 @@ object AtomJobTypeUtil {
             }
         }
 
-        // JOB_TYPE 是纯字符串，直接作为 PIPELINE 的 fallback
-        if (!jobTypeValue.isNullOrBlank() && !result.containsKey(PIPELINE)) {
+        // JOB_TYPE 仅作为「无 JOB_TYPE_MAP」旧记录的 PIPELINE fallback。
+        // 当 JOB_TYPE_MAP 存在时其为权威的完整映射：若其中已不含 PIPELINE，说明该插件当前已不再
+        // 支持 PIPELINE 范围，此时 JOB_TYPE 中残留的值（如历史遗留的 "AGENT"）属于脏数据，
+        // 不能据此还原出一个并不存在的 PIPELINE jobType，否则会误判为「jobType 被移除」的不兼容变更。
+        if (jobTypeMapValue.isNullOrBlank() && !jobTypeValue.isNullOrBlank() && !result.containsKey(PIPELINE)) {
             result.getOrPut(PIPELINE) { mutableListOf() }.addIfAbsent(jobTypeValue)
         }
 

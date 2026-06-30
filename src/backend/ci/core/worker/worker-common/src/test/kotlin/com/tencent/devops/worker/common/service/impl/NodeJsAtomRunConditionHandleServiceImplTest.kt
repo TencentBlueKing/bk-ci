@@ -160,8 +160,9 @@ internal class NodeJsAtomRunConditionHandleServiceImplTest {
                 )
             } returns Result(normalPkgRunEnvInfo)
             val workspace = Files.createTempDirectory(UUIDUtil.generate()).toFile()
-            Assertions.assertTrue(
+            Assertions.assertNotNull(
                 self.prepareRunEnv(
+                    atomCode = "",
                     osType = osType,
                     language = "nodejs",
                     runtimeVersion = "16.*",
@@ -188,6 +189,7 @@ internal class NodeJsAtomRunConditionHandleServiceImplTest {
             val workspace = Files.createTempDirectory(UUIDUtil.generate()).toFile()
             try {
                 self.prepareRunEnv(
+                    atomCode = "",
                     osType = osType,
                     language = "nodejs",
                     runtimeVersion = "16.*",

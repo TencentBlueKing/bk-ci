@@ -583,7 +583,8 @@ class ModelTransfer @Autowired constructor(
                             (triggerV3.first() as PreTriggerOnV3).copy(
                                 manual = baseTrigger.manual,
                                 schedules = baseTrigger.schedules,
-                                remote = baseTrigger.remote
+                                remote = baseTrigger.remote,
+                                tapd = baseTrigger.tapd
                             )
                         )
                         // 队列首插入基础触发器

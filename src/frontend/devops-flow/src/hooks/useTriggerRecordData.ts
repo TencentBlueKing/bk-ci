@@ -1,4 +1,4 @@
-import type { TriggerRecordItem } from '@/api/triggerRecord'
+import type { TriggerRecordItem, QueryListFunction } from '@/api/triggerRecord'
 import { type StatusType } from '@/types/flow'
 import { useI18n } from 'vue-i18n'
 import { statusColorMap } from '@/utils/flowStatus'
@@ -8,6 +8,12 @@ import { overflowTitle } from 'bkui-vue/lib/directives'
 import { storeToRefs } from 'pinia'
 import { computed, h, withDirectives } from 'vue'
 import { useTriggerRecordStore } from '../stores/triggerRecord'
+import EventDesc from '@/views/Flow/Detail/TriggerRecord/EventDesc'
+import {
+  BUILD_NUM_LINK_REG,
+  safeUrl,
+  toText,
+} from '@/views/Flow/Detail/TriggerRecord/eventDescConfig'
 
 export interface Styles {
   iconStarBtn: string
@@ -35,12 +41,42 @@ export function useTriggerRecordData(styles: Styles) {
   }
 
   /**
+   * 渲染 buildNum：后端历史会下发 `<a href="..." target="_blank">xxx</a>` 这样的 HTML 串，
+   * 这里通过 BUILD_NUM_LINK_REG 解析出 href/text，再用 safeUrl 校验后用 vnode 渲染，
+   * 避免 v-html / innerHTML 导致的 XSS 风险。校验失败则降级为纯文本。
+   */
+  function renderBuildNum(buildNum: string) {
+    const match = toText(buildNum).match(BUILD_NUM_LINK_REG)
+    if (match) {
+      const href = safeUrl(match[1])
+      if (href) {
+        return h(
+          'a',
+          {
+            class: 'text-link',
+            href,
+            target: '_blank',
+            rel: 'noopener noreferrer',
+          },
+          match[2],
+        )
+      }
+      return match[2]
+    }
+    return buildNum
+  }
+
+  /**
    * 生成timelineList的函数
    * @param list 列表数据
+   * @param queryList 刷新列表数据的方法
    * @returns 时间轴数据列表
    */
-  function generateTimelineList(list: TriggerRecordItem[]) {
-    const dateMap = list.reduce((acc, item) => {
+  function generateTimelineList(list: TriggerRecordItem[], queryList?: QueryListFunction) {
+    // 直接使用InfiniteScroll传入的list数据，它是最新确认过的数据
+    const dataList = list
+    
+    const dateMap = dataList.reduce((acc, item) => {
       const date = formatDate(item.eventTime, 'YYYY-MM-DD')
       if (!acc.has(date)) {
         acc.set(date, [])
@@ -81,7 +117,7 @@ export function useTriggerRecordData(styles: Styles) {
                 { class: styles['trigger-event-desc'] },
                 withDirectives(
                   h('p', { class: 'text-ellipsis' }, [
-                    h('span', { innerHTML: event.eventDesc }),
+                    h(EventDesc, { eventDesc: event.eventDesc }),
                     h('span', convertTime(event.eventTime)),
                   ]),
                   [[overflowTitle, { type: 'tips' }]],
@@ -95,7 +131,7 @@ export function useTriggerRecordData(styles: Styles) {
                 [
                   event.reason && h('span', event.reason),
                   event.reason && ' | ',
-                  event.buildNum && h('em', { innerHTML: event.buildNum }),
+                  event.buildNum && h('em', renderBuildNum(event.buildNum)),
                   !event.buildNum &&
                     Array.isArray(event.reasonDetailList) &&
                     h(
@@ -117,7 +153,14 @@ export function useTriggerRecordData(styles: Styles) {
                   size: 'small',
                   theme: 'primary',
                   loading: reTriggerLoadingId.value === event.detailId,
-                  onClick: () => store.triggerEvent(event),
+                  onClick: async () => {
+                    const success = await store.triggerEvent(event)
+                    if (success && queryList) {
+                      // 延迟一段时间等待后端创建新的触发记录，然后再刷新列表
+                      await new Promise(resolve => setTimeout(resolve, 500))
+                      await queryList(1, undefined, true)
+                    }
+                  },
                 },
                 t('flow.triggerRecord.retrigger'),
               )),

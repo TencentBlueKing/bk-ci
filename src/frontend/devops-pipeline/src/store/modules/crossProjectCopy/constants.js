@@ -72,6 +72,7 @@ export const PipelineCopyStrategy = {
     // 构建节点
     BUILD_NODE_REUSE_SAME_NAME: 'BUILD_NODE_REUSE_SAME_NAME',   // 复用目标项目同名构建节点
     BUILD_NODE_MOVE_TO_TARGET_PROJECT: 'BUILD_NODE_MOVE_TO_TARGET_PROJECT',   // 转移构建节点到目标项目
+    BUILD_NODE_SKIP: 'BUILD_NODE_SKIP',   // 跳过,本次不处理
     // 部署环境
     DEPLOY_ENV_REUSE_SAME_NAME: 'DEPLOY_ENV_REUSE_SAME_NAME',   // 复用目标项目同名部署环境
     DEPLOY_ENV_CREATE_WITHOUT_NODE: 'DEPLOY_ENV_CREATE_WITHOUT_NODE',   // 新建部署环境不带节点
@@ -80,6 +81,7 @@ export const PipelineCopyStrategy = {
     // 部署节点
     DEPLOY_NODE_REUSE_SAME_NAME: 'DEPLOY_NODE_REUSE_SAME_NAME',   // 复用目标项目同名部署节点
     DEPLOY_NODE_MOVE_TO_TARGET_PROJECT: 'DEPLOY_NODE_MOVE_TO_TARGET_PROJECT',   // 转移部署节点到目标项目
+    DEPLOY_NODE_SKIP: 'DEPLOY_NODE_SKIP',   // 跳过,本次不处理
     // 凭证
     CREDENTIAL_REUSE_SAME_NAME: 'CREDENTIAL_REUSE_SAME_NAME',   // 复用目标项目同名凭证
     CREDENTIAL_REPLACE_TARGET: 'CREDENTIAL_REPLACE_TARGET',   // 替换为目标项目其他凭证

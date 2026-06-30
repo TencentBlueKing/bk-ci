@@ -44,9 +44,9 @@ data class AtomUpdateRequest(
     @get:Schema(title = "服务范围", required = true)
     @Deprecated("使用 serviceScopeConfigs 替代")
     val serviceScope: List<String> = emptyList(),
-    @get:Schema(title = "适用Job类型，AGENT： 编译环境，AGENT_LESS：无编译环境", required = true)
+    @get:Schema(title = "适用Job类型，AGENT： 编译环境，AGENT_LESS：无编译环境", required = false)
     @Deprecated("使用 serviceScopeConfigs 替代")
-    val jobType: JobTypeEnum = JobTypeEnum.AGENT,
+    val jobType: JobTypeEnum? = null,
     @get:Schema(title = "支持的操作系统", required = true)
     val os: MutableList<String>,
     @get:Schema(title = "所属分类ID", required = true)

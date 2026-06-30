@@ -112,6 +112,17 @@ export function validateAtomElement(
         if (prop.required && isValueEmpty(atomValue[key])) {
           errors.push(key)
         }
+
+        // 校验 list 中子项含 key + required 的子字段（如 conditional-input-selector 等组件）
+        if (Array.isArray(prop.list)) {
+          const currentValue = atomValue[key]
+          if (!isValueEmpty(currentValue)) {
+            const matchedItem = prop.list.find((item: any) => item.value === currentValue)
+            if (matchedItem?.required && matchedItem.key && isValueEmpty(atomValue[matchedItem.key])) {
+              errors.push(matchedItem.key)
+            }
+          }
+        }
       }
     }
   }
