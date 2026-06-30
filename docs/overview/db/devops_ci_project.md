@@ -2,7 +2,7 @@
 
 **数据库名：** devops_ci_project
 
-**文档版本：** 1.0.19
+**文档版本：** 1.0.20
 
 **文档描述：** devops_ci_project 的数据库文档
 | 表名                  | 说明       |
@@ -239,6 +239,7 @@
 |  49   | AUTH_SECRECY |   int   | 10 |   0    |    Y     |  N   |   0    | 项目性质,0-公开，1-保密,2-机密  |
 |  50   | product_id |   int   | 10 |   0    |    Y     |  N   |       | 运营产品 ID  |
 |  51   | HIDDEN |   bit   | 1 |   0    |    Y     |  N   |   b'0'    | 是否隐藏  |
+|  52   | project_scope |   int   | 10 |   0    |    N     |  N   |   0    | 项目组织形态：0-团队项目，1-个人项目  |
 
 **表名：** <a>T_PROJECT_APPROVAL</a>
 
@@ -278,6 +279,7 @@
 |  28   | PROPERTIES |   text   | 65535 |   0    |    Y     |  N   |       | 项目其他配置  |
 |  29   | KPI_CODE |   varchar   | 64 |   0    |    Y     |  N   |       | KPI 产品编码  |
 |  30   | KPI_NAME |   varchar   | 128 |   0    |    Y     |  N   |       | KPI 产品名称  |
+|  31   | PROJECT_SCOPE |   int   | 10 |   0    |    N     |  N   |   0    | 项目组织形态：0-团队项目，1-个人项目  |
 
 **表名：** <a>T_PROJECT_DATA_MIGRATE_HISTORY</a>
 

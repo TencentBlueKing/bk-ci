@@ -1,6 +1,6 @@
 <template>
     <div
-        v-if="pacEnabled"
+        v-if="pacEnabled && !isDebug"
         class="pac-branch-selector"
     >
         <div class="branch-selector-wrapper">
@@ -119,6 +119,7 @@
             const projectId = computed(() => proxy.$route.params.projectId)
             const pipelineId = computed(() => proxy.$route.params.pipelineId)
             const pacEnabled = computed(() => proxy.$store.getters['atom/pacEnabled'])
+            const isDebug = computed(() => Object.prototype.hasOwnProperty.call(proxy.$route.query, 'debug'))
 
             // 当前选中的分支对象
             const currentBranch = computed(() => {
@@ -137,7 +138,7 @@
 
             // 获取分支列表
             const fetchBranchList = async (page = 1) => {
-                if (!pipelineId.value || !pacEnabled.value) return
+                if (!pipelineId.value || !pacEnabled.value || isDebug.value) return
 
                 if (page > 1 && !hasNext.value) return
 
@@ -281,6 +282,7 @@
                 isLoading,
                 pacEnabled,
                 pipelineId,
+                isDebug,
                 bottomLoadingOptions,
                 handleSearch,
                 handleBranchChange,

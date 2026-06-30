@@ -81,7 +81,8 @@ pipeline:
   version:
     max_keep_num: 50
     spec_channels: "AM,CODECC,GCLOUD,GIT,GONGFENGSCAN,CODECC_EE"
-    spec_channel_max_keep_num: 2    
+    spec_channel_max_keep_num: 2
+
 scm:
   external:
     tGit:
@@ -122,3 +123,10 @@ project:
     #   * 元数据 host：metadata.google.internal、kubernetes.default、metadata.tencentyun.com 等
     #   * 任意本地 0.0.0.0、组播
     allow-internal-url: false
+
+
+publicVarGroup:
+  urlTemplates:
+    base: "/console/pipeline"  # 基础路径
+    pipeline: "/history/pipeline/%s"   # 用于流水线
+    template: "/template/%s/%s/pipeline" # 用于模板

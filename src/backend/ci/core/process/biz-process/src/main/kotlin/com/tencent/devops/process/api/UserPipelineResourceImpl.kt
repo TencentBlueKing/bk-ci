@@ -131,7 +131,8 @@ class UserPipelineResourceImpl @Autowired constructor(
         permission: Permission,
         excludePipelineId: String?,
         page: Int?,
-        pageSize: Int?
+        pageSize: Int?,
+        channelCode: ChannelCode?
     ): Result<Page<Pipeline>> {
         checkParam(userId, projectId)
         val result = pipelineListFacadeService.hasPermissionList(
@@ -141,7 +142,8 @@ class UserPipelineResourceImpl @Autowired constructor(
             excludePipelineId = excludePipelineId,
             filterByPipelineName = null,
             page = page,
-            pageSize = pageSize
+            pageSize = pageSize,
+            channelCode = channelCode
         )
         return Result(
             data = Page(

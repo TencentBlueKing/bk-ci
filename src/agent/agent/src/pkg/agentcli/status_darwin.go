@@ -85,59 +85,65 @@ func formatLaunchdStatus(s launchdStatus, plistExists bool) string {
 	return msg("loaded, not running", "已加载, 未运行") + " ✗"
 }
 
-func handleStatus(workDir string) error {
-	beginStatusSummary()
-	printDivider()
-	printStep(msg("BK-CI Agent Status", "BK-CI Agent 状态"))
-	printDivider()
-
-	serviceName, _ := getServiceName(workDir)
-	installMode := readInstallMode(workDir)
-
-	statusLine(msg("Platform", "平台"), "macOS")
-	statusLine(msg("Work directory", "工作目录"), workDir)
-	statusLine(msg("Service name", "服务名"), serviceName)
-	statusLine(msg("Current user", "当前用户"), currentUser())
-	statusLine(msg("Install mode", "安装模式"), installMode)
-
-	domain := launchdDomain(installMode)
-	plistType := "LaunchAgents"
-	if installMode == modeDaemon {
-		plistType = "LaunchDaemons"
+func handleStatus(workDir string, args []string) error {
+	mode, err := parseStatusOutputMode(args)
+	if err != nil {
+		return err
 	}
-	statusLine(msg("Run mode", "运行模式"), msgf("%s (domain: %s)", "%s (域: %s)", plistType, domain))
+	title := msg("BK-CI Agent Status", "BK-CI Agent 状态")
+	report := collectStatusReport(title, func() {
+		printDivider()
+		printStep(title)
+		printDivider()
 
-	if serviceName != "" {
-		pp := plistPath(serviceName, installMode)
-		_, plistErr := os.Stat(pp)
-		plistExists := plistErr == nil
+		serviceName, _ := getServiceName(workDir)
+		installMode := readInstallMode(workDir)
 
-		if plistExists {
-			statusLine(msg("Plist", "Plist 文件"), pp+" ✓")
-		} else {
-			statusLine(msg("Plist", "Plist 文件"), msg("not found", "未找到")+" ✗")
+		statusLine(msg("Platform", "平台"), "macOS")
+		statusLine(msg("Work directory", "工作目录"), workDir)
+		statusLine(msg("Service name", "服务名"), serviceName)
+		statusLine(msg("Current user", "当前用户"), currentUser())
+		statusLine(msg("Install mode", "安装模式"), installMode)
+
+		domain := launchdDomain(installMode)
+		plistType := "LaunchAgents"
+		if installMode == modeDaemon {
+			plistType = "LaunchDaemons"
+		}
+		statusLine(msg("Run mode", "运行模式"), msgf("%s (domain: %s)", "%s (域: %s)", plistType, domain))
+
+		if serviceName != "" {
+			pp := plistPath(serviceName, installMode)
+			_, plistErr := os.Stat(pp)
+			plistExists := plistErr == nil
+
+			if plistExists {
+				statusLine(msg("Plist", "Plist 文件"), pp+" ✓")
+			} else {
+				statusLine(msg("Plist", "Plist 文件"), msg("not found", "未找到")+" ✗")
+			}
+
+			ls := queryLaunchdStatus(serviceName)
+			statusLine(msg("launchd state", "launchd 状态"), formatLaunchdStatus(ls, plistExists))
 		}
 
-		ls := queryLaunchdStatus(serviceName)
-		statusLine(msg("launchd state", "launchd 状态"), formatLaunchdStatus(ls, plistExists))
-	}
+		daemonPid := readPid(filepath.Join(workDir, "runtime", "daemon.pid"))
+		agentPid := readPid(filepath.Join(workDir, "runtime", "agent.pid"))
+		statusLine(msg("Daemon PID", "守护进程 PID"), pidStatus(daemonPid))
+		statusLine(msg("Agent PID", "Agent PID"), pidStatus(agentPid))
 
-	daemonPid := readPid(filepath.Join(workDir, "runtime", "daemon.pid"))
-	agentPid := readPid(filepath.Join(workDir, "runtime", "agent.pid"))
-	statusLine(msg("Daemon PID", "守护进程 PID"), pidStatus(daemonPid))
-	statusLine(msg("Agent PID", "Agent PID"), pidStatus(agentPid))
+		checkPropertiesFile(workDir)
 
-	checkPropertiesFile(workDir)
+		statusLine("JDK 17", dirStatus(filepath.Join(workDir, "jdk17")))
+		statusLine("JDK 8", dirStatus(filepath.Join(workDir, "jdk")))
+		statusLine("worker-agent.jar", fileStatus(filepath.Join(workDir, "worker-agent.jar")))
 
-	statusLine("JDK 17", dirStatus(filepath.Join(workDir, "jdk17")))
-	statusLine("JDK 8", dirStatus(filepath.Join(workDir, "jdk")))
-	statusLine("worker-agent.jar", fileStatus(filepath.Join(workDir, "worker-agent.jar")))
+		printHealthChecks(workDir)
+		statusBlankLine()
+		printStatusSummaryLine()
+	})
 
-	printHealthChecks(workDir)
-	fmt.Println()
-	printStatusSummaryLine()
-
-	return nil
+	return outputStatusReport(report, mode)
 }
 
 func currentUser() string {
@@ -191,5 +197,10 @@ func fileStatus(path string) string {
 
 func statusLine(label, value string) {
 	trackStatusLine(label, value)
-	fmt.Printf("  %-24s %s\n", label+":", value)
+	addStatusReportLine(label, value)
+	line := fmt.Sprintf("  %-24s %s", label+":", value)
+	addStatusTextLine(line)
+	if statusShouldPrintText() {
+		fmt.Println(line)
+	}
 }

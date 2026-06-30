@@ -49,6 +49,12 @@ object StreamBinding {
 
     const val PIPELINE_RESTORE = "engine.pipeline.restore"
 
+    const val PIPELINE_BATCH_TASK_CREATE = "engine.pipeline.task.create"
+
+    const val PIPELINE_BATCH_TASK_ANALYZE = "engine.pipeline.task.analyze"
+
+    const val PIPELINE_BATCH_TASK_EXECUTE = "engine.pipeline.task.execute"
+
     const val PIPELINE_TIMER = "engine.pipeline.timer"
 
     const val PIPELINE_BUILD_START = "engine.pipeline.build.start"
@@ -257,4 +263,7 @@ object StreamBinding {
 
     // AI智能体运行停止广播exchange ====================================
     const val AI_RUN_STOP_FANOUT = "ai.run.stop.fanout"
+
+    // 变量引用事件监听器
+    const val MODEL_VAR_REFERENCE_FANOUT = "model.var.reference.fanout"
 }

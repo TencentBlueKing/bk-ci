@@ -126,7 +126,8 @@ class ImportService @Autowired constructor(
                 gateway = gateway,
                 fileGateway = fileGateway,
                 agentType = agentType,
-                createWorkspaceName = null
+                createWorkspaceName = null,
+                agentProps = null
             )
 
             return HashUtil.encodeLongId(id)
@@ -165,11 +166,106 @@ class ImportService @Autowired constructor(
         }
     }
 
+    fun preImport(projectId: String, agentId: Long, userId: String, displayName: String): Long {
+        Preconditions.checkTrue(
+            condition = environmentPermissionService.checkNodePermission(userId, projectId, AuthPermission.CREATE),
+            exception = PermissionForbiddenException(
+                message = I18nUtil.getCodeLanMessage(
+                    EnvironmentMessageCode.ERROR_NODE_NO_CREATE_PERMISSSION,
+                    language = I18nUtil.getLanguage(userId)
+                )
+            )
+        )
+        val agentRecord = thirdPartyAgentDao.getAgentByProject(dslContext, agentId, projectId)
+            ?: throw NotFoundException("The agent($agentId) is not exist")
+        // 如果存在可能是重复导入
+        if (agentRecord.nodeId != null) {
+            dslContext.transaction { configuration ->
+                val context = DSL.using(configuration)
+                nodeDao.updateNodeStatus(dslContext, setOf(agentRecord.nodeId), NodeStatus.CREATING)
+                nodeDao.insertNodeStringIdAndDisplayName(
+                    dslContext = context,
+                    id = agentRecord.nodeId,
+                    nodeStringId = displayName,
+                    displayName = displayName,
+                    userId = userId
+                )
+            }
+            return agentRecord.nodeId
+        }
+        var nodeId = 0L
+        LOG.info("Trying to import the agent($agentId) of project($projectId) by user($userId)")
+        dslContext.transaction { configuration ->
+            val context = DSL.using(configuration)
+
+            nodeId = nodeDao.addNode(
+                dslContext = context,
+                projectId = projectId,
+                ip = agentRecord.ip,
+                name = agentRecord.hostname,
+                osName = agentRecord.os.lowercase(),
+                status = NodeStatus.CREATING,
+                type = if (agentRecord.agentType == AgentType.CREATE.name) {
+                    NodeType.CREATE
+                } else {
+                    NodeType.THIRDPARTY
+                },
+                userId = userId,
+                agentVersion = null
+            )
+            nodeDao.insertNodeStringIdAndDisplayName(
+                dslContext = context,
+                id = nodeId,
+                nodeStringId = displayName,
+                displayName = displayName,
+                userId = userId
+            )
+            val count = thirdPartyAgentDao.updateStatus(
+                dslContext = context,
+                id = agentId,
+                nodeId = nodeId,
+                projectId = projectId,
+                status = AgentStatus.UN_IMPORT
+            )
+            if (count != 1) {
+                LOG.warn("Fail to update the agent($agentId) to OK status")
+                throw ErrorCodeException(
+                    errorCode = EnvironmentMessageCode.ERROR_NODE_NOT_EXISTS,
+                    params = arrayOf(agentId.toString())
+                )
+            }
+            environmentPermissionService.createNode(
+                userId = userId,
+                projectId = projectId,
+                nodeId = nodeId,
+                nodeName = "$displayName(${agentRecord.id})",
+                resourceType = if (agentRecord.agentType == AgentType.CREATE.name) {
+                    AuthResourceType.CREATIVE_STREAM_NODE
+                } else {
+                    AuthResourceType.ENVIRONMENT_ENV_NODE
+                }
+            )
+        }
+
+        // 导入后添加标签
+        nodeTagService.editInternalTags(projectId, agentId)
+        return nodeId
+    }
+
     private fun import(id: Long, projectId: String, agentId: String, userId: String, masterVersion: String?): Long? {
         val agentRecord = thirdPartyAgentDao.getAgentByProject(dslContext, id, projectId)
             ?: throw NotFoundException("The agent($agentId) is not exist")
-
+        val nodeRecord = agentRecord.nodeId?.let {
+            nodeDao.get(dslContext = dslContext, projectId = agentRecord.projectId, nodeId = it)
+        }
         if (agentRecord.status == AgentStatus.IMPORT_OK.status) { // 忽略重复导入
+            if (nodeRecord != null && nodeRecord.nodeStatus != NodeStatus.NORMAL.name) {
+                nodeDao.updateNodeStatus(
+                    dslContext = dslContext,
+                    ids = setOf(agentRecord.nodeId),
+                    status = NodeStatus.NORMAL
+                )
+            }
             return null
         }
 
@@ -188,7 +284,7 @@ class ImportService @Autowired constructor(
             )
         )
         // 兜底防御，这里可能因为收到heartbeat的影响导致已经创建过node重新创建了
-        if (agentRecord.nodeId != null) {
+        if (nodeRecord != null) {
             LOG.info("Trying to import the agent($agentId) of project($projectId) by user($userId), exist node")
             dslContext.transaction { configuration ->
                 val context = DSL.using(configuration)
@@ -232,7 +328,7 @@ class ImportService @Autowired constructor(
 
             val nodeStringId = if (agentRecord.agentType == AgentType.CREATE.name) {
                 createEnvService.getWorkspaceDisplayName(userId, projectId, agentRecord.createWorkspaceName)
-                    ?: agentRecord.ip
+                    ?: agentRecord.createWorkspaceName ?: agentRecord.ip
             } else {
                 "BUILD_${HashUtil.encodeLongId(nodeId)}_${agentRecord.ip}"
             }

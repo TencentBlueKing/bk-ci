@@ -34,8 +34,8 @@ import com.tencent.devops.process.pojo.template.TemplateMigrateByPercentageReque
 import com.tencent.devops.process.pojo.template.TemplateMigrateByPercentageResult
 import com.tencent.devops.process.pojo.template.TemplateOperationRet
 import com.tencent.devops.process.pojo.template.v2.FixBadParamsItem
-import com.tencent.devops.process.service.template.v2.PipelineTemplateMigrateService
 import com.tencent.devops.process.service.template.v2.PipelineTemplateInstanceService
+import com.tencent.devops.process.service.template.v2.PipelineTemplateMigrateService
 
 @RestResource
 class OpPipelineTemplateResourceImpl(

@@ -53,5 +53,6 @@ data class CreateNodeModel(
     var hostId: Long?,
     var cloudAreaId: Long?,
     var osType: String?,
-    val serverId: Long?
+    val serverId: Long?,
+    var operatorStatus: Byte? = null
 )

@@ -46,8 +46,8 @@ import com.tencent.devops.process.utils.MAJORVERSION
 import com.tencent.devops.process.utils.MINORVERSION
 import com.tencent.devops.process.utils.PIPELINE_VARIABLES_STRING_LENGTH_MAX
 import jakarta.ws.rs.core.Response
-import org.slf4j.LoggerFactory
 import java.util.regex.Pattern
+import org.slf4j.LoggerFactory
 
 object PipelineUtils {
 
@@ -70,7 +70,8 @@ object PipelineUtils {
 
     fun checkPipelineParams(
         params: List<BuildFormProperty>,
-        supportChineseVarName: Boolean? = false
+        supportChineseVarName: Boolean? = false,
+        isTemplate: Boolean = false
     ): MutableMap<String, BuildFormProperty> {
         val map = mutableMapOf<String, BuildFormProperty>()
         params.forEach { param ->
@@ -94,14 +95,12 @@ object PipelineUtils {
                 // 常量一定不作为入参，且只读不可覆盖
                 param.required = false
                 param.readOnly = true
-                // 只有模版asInstanceInput才有值,流水线应该都为null
-                if (param.asInstanceInput != null) {
-                    param.asInstanceInput = false
-                }
             }
-            // 其他变量,不能作为入参
-            if (!param.required && param.asInstanceInput != null) {
-                param.asInstanceInput = false
+            // 只有模版asInstanceInput才有值,流水线应该都为null
+            param.asInstanceInput = when {
+                !isTemplate -> null
+                !param.required -> false
+                else -> param.asInstanceInput ?: false
             }
             map[param.id] = param
         }
@@ -208,6 +207,7 @@ object PipelineUtils {
                 stages.add(stage)
             }
         }
+        model.pipelineId = null
         return model.copy(stages = stages)
     }
 
@@ -262,8 +262,8 @@ object PipelineUtils {
      * 当参数类型为GIT/SNV分支、代码库、子流水线时,流水线保存、模板保存和模板实例化时,需要清空options参数,减少model大小.
      * options需在运行时实时计算
      */
-    fun cleanOptions(params: List<BuildFormProperty>): List<BuildFormProperty> {
-        return params.map { cleanOptions(it) }
+    fun cleanOptions(params: List<BuildFormProperty>): MutableList<BuildFormProperty> {
+        return params.map { cleanOptions(it) }.toMutableList()
     }
 
     fun cleanOptions(param: BuildFormProperty): BuildFormProperty {
