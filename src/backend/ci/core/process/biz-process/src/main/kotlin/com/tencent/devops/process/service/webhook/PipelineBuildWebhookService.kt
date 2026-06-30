@@ -784,5 +784,4 @@ class PipelineBuildWebhookService @Autowired constructor(
         }
         return variables
     }
-
 }
