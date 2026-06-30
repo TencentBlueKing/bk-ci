@@ -150,7 +150,8 @@ object ProcessMessageCode {
     const val MODEL_ATOMCODE_NOT_EXSIT = "2101059" // 流水线内包含插件市场不存在的插件
     const val QUERY_USER_INFO_FAIL = "2101060" // 获取用户信息失败
     const val PROJECT_NOT_EXIST = "2101061" // 项目不存在
-    const val ERROR_ATOM_RUN_BUILD_ENV_INVALID = "2101062" // 流水线: 插件[{0}]不能在该环境下运行
+    // 流水线: Stage[{0}]的Job[{1}]下的插件[{2}]与该Job的运行环境不匹配，不能运行
+    const val ERROR_ATOM_RUN_BUILD_ENV_INVALID = "2101062"
     const val ERROR_TEMPLATE_PIPELINE_IS_INSTANCING = "2101063" // 流水线: 模板下的流水线实例{0}正在更新中，请稍后再试
     const val ERROR_FINALLY_STAGE = "2101064" // 流水线: 每个Model只能包含一个FinallyStage，并且处于最后位置
     const val ERROR_FINALLY_STAGE_JOB_CONDITION = "2101065" // 流水线: finally stage下的[{0}]Job运行条件配置错误: {1}

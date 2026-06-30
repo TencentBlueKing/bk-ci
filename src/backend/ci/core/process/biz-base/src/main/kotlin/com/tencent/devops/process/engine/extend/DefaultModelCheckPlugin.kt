@@ -175,14 +175,14 @@ open class DefaultModelCheckPlugin constructor(
             }
 
             val atomVersions = mutableSetOf<StoreVersion>()
-            val atomInputParamList = mutableListOf<StoreParam>()
+            val atomCheckParams = mutableListOf<AtomUtils.AtomCheckParam>()
 
             metaSize += stage.checkJob(
                 containerCnt = containerCnt,
                 elementCnt = elementCnt,
                 atomVersions = atomVersions,
                 contextMap = contextMap,
-                atomInputParamList = atomInputParamList,
+                atomCheckParams = atomCheckParams,
                 elementHolders = elementHolders,
                 stageIndex = nowPosition
             )
@@ -190,7 +190,7 @@ open class DefaultModelCheckPlugin constructor(
                 AtomUtils.checkModelAtoms(
                     projectCode = projectId,
                     atomVersions = atomVersions,
-                    atomInputParamList = atomInputParamList,
+                    atomCheckParams = atomCheckParams,
                     inputTypeConfigMap = AtomUtils.getInputTypeConfigMap(taskCommonSettingConfig),
                     client = client
                 )
@@ -264,7 +264,7 @@ open class DefaultModelCheckPlugin constructor(
         elementCnt: MutableMap<String, Int>,
         atomVersions: MutableSet<StoreVersion>,
         contextMap: Map<String, String>,
-        atomInputParamList: MutableList<StoreParam>,
+        atomCheckParams: MutableList<AtomUtils.AtomCheckParam>,
         elementHolders: MutableMap<String, MutableList<ElementHolder>>,
         stageIndex: Int
     ): Int /* MetaSize*/ {
@@ -314,7 +314,7 @@ open class DefaultModelCheckPlugin constructor(
                     element = element,
                     elementCnt = elementCnt,
                     atomVersions = atomVersions,
-                    atomInputParamList = atomInputParamList,
+                    atomCheckParams = atomCheckParams,
                     contextMap = contextMap,
                     elementHolders = elementHolders,
                     stageIndex = stageIndex,
@@ -331,7 +331,7 @@ open class DefaultModelCheckPlugin constructor(
         element: Element,
         elementCnt: MutableMap<String, Int>,
         atomVersions: MutableSet<StoreVersion>,
-        atomInputParamList: MutableList<StoreParam>,
+        atomCheckParams: MutableList<AtomUtils.AtomCheckParam>,
         contextMap: Map<String, String>,
         elementHolders: MutableMap<String, MutableList<ElementHolder>>,
         stageIndex: Int,
@@ -351,7 +351,21 @@ open class DefaultModelCheckPlugin constructor(
             )
         )
         ElementBizRegistrar.getPlugin(element)?.check(element = element, appearedCnt = eCnt)
-        addAtomInputDataInfo(element, atomVersions, atomInputParamList)
+        // 被禁用的 Stage / Job 运行时不会被调度，故保存时跳过其构建环境匹配校验(置为 UNKNOWN)，
+        // 保证保存校验不严于运行时，避免禁用节点中的历史插件阻断保存；服务范围/参数校验仍照常执行。
+        val containerEnvType = if (stage.stageEnabled() && containerEnabled()) {
+            AtomUtils.resolveContainerEnvType(this)
+        } else {
+            AtomUtils.AtomContainerEnvType.UNKNOWN
+        }
+        addAtomInputDataInfo(
+            e = element,
+            atomVersions = atomVersions,
+            atomCheckParams = atomCheckParams,
+            containerEnvType = containerEnvType,
+            stageName = stage.name ?: stage.id ?: "",
+            jobName = this.name
+        )
 
         checkElementTimeoutVar(container = this, element = element, contextMap = contextMap)
 
@@ -424,7 +438,10 @@ open class DefaultModelCheckPlugin constructor(
     private fun addAtomInputDataInfo(
         e: Element,
         atomVersions: MutableSet<StoreVersion>,
-        atomInputParamList: MutableList<StoreParam>
+        atomCheckParams: MutableList<AtomUtils.AtomCheckParam>,
+        containerEnvType: AtomUtils.AtomContainerEnvType,
+        stageName: String,
+        jobName: String
     ) {
         var version = e.version
         if (version.isBlank()) {
@@ -466,12 +483,17 @@ open class DefaultModelCheckPlugin constructor(
             }
         } as? Map<String, Any?>
         if (atomInputDataMap != null) {
-            atomInputParamList.add(
-                StoreParam(
-                    storeCode = atomCode,
-                    storeName = e.name,
-                    version = version,
-                    inputParam = atomInputDataMap
+            atomCheckParams.add(
+                AtomUtils.AtomCheckParam(
+                    storeParam = StoreParam(
+                        storeCode = atomCode,
+                        storeName = e.name,
+                        version = version,
+                        inputParam = atomInputDataMap
+                    ),
+                    containerEnvType = containerEnvType,
+                    stageName = stageName,
+                    jobName = jobName
                 )
             )
         }

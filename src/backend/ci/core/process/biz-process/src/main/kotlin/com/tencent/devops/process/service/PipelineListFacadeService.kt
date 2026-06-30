@@ -1799,14 +1799,16 @@ class PipelineListFacadeService @Autowired constructor(
             limit = slqLimit.limit,
             sortType = sortType,
             collation = collation,
-            filterByPipelineName = filterByPipelineName
+            filterByPipelineName = filterByPipelineName,
+            channelCode = channelCode
         )
         val count = pipelineInfoDao.countPipeline(
             dslContext = dslContext,
             projectId = projectId,
             deleteFlag = true,
             days = deletedPipelineStoreDays.toLong(),
-            filterByPipelineName = filterByPipelineName
+            filterByPipelineName = filterByPipelineName,
+            channelCode = channelCode
         )
         // 加上流水线组
         val pipelineViewNameMap =
