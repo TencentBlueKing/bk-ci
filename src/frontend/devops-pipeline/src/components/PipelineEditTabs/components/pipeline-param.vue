@@ -275,6 +275,32 @@
                 this.$validator.validate('pipelineParam.*').then((result) => {
                     const {isInvalid, ...param} = this.sliderEditItem
                     if (result && optionValid) {
+                        // 检查 options 中是否存在重复项，有重复则不允许保存
+                        if (param.options && param.options.length) {
+                            const keyMap = new Map()
+                            const valueMap = new Map()
+                            for (let i = 0; i < param.options.length; i++) {
+                                const opt = param.options[i]
+                                if (opt.key && keyMap.has(opt.key)) {
+                                    this.$bkMessage({
+                                        theme: 'error',
+                                        message: this.$t('editPage.noRepeatTips', ['value']),
+                                        limit: 1
+                                    })
+                                    return
+                                }
+                                if (opt.key) keyMap.set(opt.key, i)
+                                if (opt.value && valueMap.has(opt.value)) {
+                                    this.$bkMessage({
+                                        theme: 'error',
+                                        message: this.$t('editPage.noRepeatTips', ['name']),
+                                        limit: 1
+                                    })
+                                    return
+                                }
+                                if (opt.value) valueMap.set(opt.value, i)
+                            }
+                        }
                         if (this.editIndex > -1) {
                             this.globalParams[this.editIndex] = param
                         } else {

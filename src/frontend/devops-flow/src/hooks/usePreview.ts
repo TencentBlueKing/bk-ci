@@ -396,8 +396,13 @@ export const usePreview = (options: UsePreviewOptions = {}): UsePreviewReturn =>
     store.paramList.forEach((param) => {
       if (param.valueNotEmpty) {
         const value = store.paramsValues[param.id]
-        // Check if value is empty (undefined, null, empty string)
-        if (value === undefined || value === null || value === '') {
+        // Check if value is empty (undefined, null, empty string, or empty array for MULTIPLE type)
+        const isEmpty =
+          value === undefined ||
+          value === null ||
+          value === '' ||
+          (Array.isArray(value) && value.length === 0)
+        if (isEmpty) {
           emptyRequiredParams.push(param.id)
         }
       }
@@ -408,7 +413,13 @@ export const usePreview = (options: UsePreviewOptions = {}): UsePreviewReturn =>
       store.versionParamList.forEach((param) => {
         if (param.valueNotEmpty) {
           const value = store.versionParamValues[param.id]
-          if (value === undefined || value === null || value === '') {
+          // Check if value is empty (undefined, null, empty string, or empty array for MULTIPLE type)
+          const isEmpty =
+            value === undefined ||
+            value === null ||
+            value === '' ||
+            (Array.isArray(value) && value.length === 0)
+          if (isEmpty) {
             emptyRequiredParams.push(param.id)
           }
         }

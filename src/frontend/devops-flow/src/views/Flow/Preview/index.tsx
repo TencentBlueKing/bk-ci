@@ -6,7 +6,8 @@ import { ParamType as VariableParamType } from '@/types/variable'
 import 'bkui-pipeline/dist/bk-pipeline.css'
 import BkPipeline, { type PipelineModel } from 'bkui-pipeline/vue3'
 import { Alert, Checkbox, Exception, Input, Loading, Radio, Select } from 'bkui-vue'
-import { defineComponent } from 'vue'
+import { defineComponent, reactive, nextTick } from 'vue'
+import type { ComponentPublicInstance } from 'vue'
 import { useI18n } from 'vue-i18n'
 import DynamicSelect from './DynamicSelect'
 import styles from './Preview.module.css'
@@ -66,6 +67,18 @@ export default defineComponent({
       handleExecute,
     } = usePreview()
 
+    // 用于存储每个参数标签的溢出状态
+    const overflowStates = reactive<Record<string, boolean>>({})
+
+    // 检查元素是否溢出
+    const checkOverflow = (el: Element | ComponentPublicInstance | null, paramId: string) => {
+      if (el && el instanceof HTMLElement) {
+        nextTick(() => {
+          overflowStates[paramId] = el.scrollWidth > el.clientWidth
+        })
+      }
+    }
+
     // ----------------------------------------
     // Render Functions (Pure View Logic)
     // ----------------------------------------
@@ -100,8 +113,17 @@ export default defineComponent({
       return (
         <div class={[styles.paramFormItemHalf, isInvalid && styles.paramInvalid]} key={param.id}>
           <div class={styles.paramLabel}>
-            <span class={styles.paramLabelText}>
+            <span
+              ref={(el) => checkOverflow(el, param.id)}
+              class={styles.paramLabelText}
+              v-bk-tooltips={{
+                content: param.name ? `${param.id} (${param.name})` : param.id,
+                disabled: !overflowStates[param.id],
+                placement: 'top',
+              }}
+            >
               {param.id}
+              {param.name && <span>({param.name})</span>}
               {param.valueNotEmpty && <span class={styles.requiredMark}>*</span>}
             </span>
           </div>
@@ -175,10 +197,18 @@ export default defineComponent({
       return (
         <div class={[styles.paramFormItem, isInvalid && styles.paramInvalid]} key={param.id}>
           <div class={styles.paramLabel}>
-            <div class={styles.paramLabelText}>
+            <span
+              ref={(el) => checkOverflow(el, param.id)}
+              class={styles.paramLabelText}
+              v-bk-tooltips={{
+                content: param.label || param.id,
+                disabled: !overflowStates[param.id],
+                placement: 'top',
+              }}
+            >
               {param.label || param.id}
               {param.valueNotEmpty && <span class={styles.requiredMark}>*</span>}
-            </div>
+            </span>
             {param.desc && <div class={styles.paramDesc}>{param.desc}</div>}
           </div>
           <div class={[styles.paramValue, param.isChanged && styles.paramValueChanged]}>
