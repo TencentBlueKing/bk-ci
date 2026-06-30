@@ -167,12 +167,30 @@ class PublicVarGroupService @Autowired constructor(
             }
             // 数据库事务成功后，如果是新建变量组（首次创建），注册到权限中心
             if (isCreate) {
-                publicVarGroupPermissionService.createResource(
-                    userId = userId,
-                    projectId = projectId,
-                    groupCode = groupName,
-                    name = groupName
-                )
+                try {
+                    publicVarGroupPermissionService.createResource(
+                        userId = userId,
+                        projectId = projectId,
+                        groupCode = groupName,
+                        name = groupName
+                    )
+                } catch (e: Exception) {
+                    logger.warn(
+                        "Failed to register auth resource for [$projectId|$groupName], rolling back DB records", e
+                    )
+                    // 补偿：回滚 DB 中刚创建的变量组数据
+                    dslContext.transaction { configuration ->
+                        val ctx = DSL.using(configuration)
+                        publicVarGroupDao.deleteByGroupName(ctx, projectId, groupName)
+                        publicVarDao.deleteByGroupName(ctx, projectId, groupName)
+                        publicVarGroupVersionSummaryDao.deleteByGroupName(ctx, projectId, groupName)
+                        publicVarVersionSummaryDao.deleteByGroupName(ctx, projectId, groupName)
+                    }
+                    throw ErrorCodeException(
+                        errorCode = ProcessMessageCode.ERROR_PUBLIC_VAR_GROUP_ADD_FAILED,
+                        params = arrayOf(groupName)
+                    )
+                }
             }
         } catch (e: ErrorCodeException) {
             throw e
@@ -437,6 +455,12 @@ class PublicVarGroupService @Autowired constructor(
                 )
             }
 
+            // 先从权限中心删除变量组资源（避免 DB 删除成功但权限中心删除失败导致孤儿资源）
+            publicVarGroupPermissionService.deleteResource(
+                projectId = projectId,
+                groupName = groupName
+            )
+
             dslContext.transaction { configuration ->
                 val context = DSL.using(configuration)
                 publicVarGroupDao.deleteByGroupName(dslContext = context, projectId = projectId, groupName = groupName)
@@ -459,12 +483,6 @@ class PublicVarGroupService @Autowired constructor(
                     groupName = groupName
                 )
             }
-
-            // 从权限中心删除变量组资源
-            publicVarGroupPermissionService.deleteResource(
-                projectId = projectId,
-                groupName = groupName
-            )
 
             return true
         } catch (e: ErrorCodeException) {
