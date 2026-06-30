@@ -209,8 +209,8 @@ interface ApigwArtifactoryResourceV4 {
     ): Result<Page<FileInfo>>
 
     @Operation(
-        summary = "查询产出物元数据",
-        description = "根据项目ID、产出物类型等条件查询元数据，包含代码库地址和Commit ID",
+        summary = "查询制品元数据",
+        description = "根据项目ID、制品类型等条件查询元数据，包含代码库地址和Commit ID",
         tags = ["v4_app_artifactory_metadata", "v4_user_artifactory_metadata"]
     )
     @GET
@@ -231,13 +231,13 @@ interface ApigwArtifactoryResourceV4 {
         @Parameter(description = "流水线ID（可选）", required = false)
         @QueryParam("pipelineId")
         pipelineId: String?,
-        @Parameter(description = "产出物类型：FILE/IMAGE/REPORT/PACKAGE等", required = true)
+        @Parameter(description = "制品类型：FILE/IMAGE/REPORT/PACKAGE等", required = true)
         @PathParam("artifactType")
         artifactType: String,
-        @Parameter(description = "产出物名称，如文件名、镜像名（可选）", required = false)
+        @Parameter(description = "制品名称，如文件名、镜像名（可选）", required = false)
         @QueryParam("artifactName")
         artifactName: String?,
-        @Parameter(description = "产出物版本，如镜像Tag、包版本（可选）", required = false)
+        @Parameter(description = "制品版本，如镜像Tag、包版本（可选）", required = false)
         @QueryParam("artifactVersion")
         artifactVersion: String?
     ): Result<PipelineArtifactInfo?>
