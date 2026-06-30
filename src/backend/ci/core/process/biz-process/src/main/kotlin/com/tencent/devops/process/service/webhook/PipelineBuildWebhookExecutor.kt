@@ -21,11 +21,24 @@ import java.util.concurrent.TimeUnit
 @Component
 class PipelineBuildWebhookExecutor {
 
-    @Value("\${scm.webhook.trigger.pool-size:32}")
-    private var poolSize: Int = 64
+    /**
+     * 线程池大小，建议按以下公式配置：
+     *
+     *   pool-size = min(DB 连接池预算, MQ 消费者数 × max-concurrent-per-request)
+     *
+     * - 上限来自 DB 连接池预算，避免本服务把连接池打满（瞬时连接占用 ≈ pool-size）
+     * - 下限来自 MQ 消费者数 × max-concurrent-per-request，保证并发触发真正能跑满
+     *
+     * 默认 10：按最小部署形态的 MQ 消费者数 × max-concurrent-per-request 默认值估算，
+     * 保证默认配置下单 webhook 内并发能跑满，且瞬时连接占用可控；
+     * 若实际 MQ 消费者数或 max-concurrent-per-request 更大，必须按上述公式显式覆盖，
+     * 否则单 webhook 内并发会退化为串行。
+     */
+    @Value("\${scm.webhook.trigger.pool-size:10}")
+    private var poolSize: Int = 10
 
-    @Value("\${scm.webhook.trigger.queue-size:512}")
-    private var queueSize: Int = 512
+    @Value("\${scm.webhook.trigger.queue-size:128}")
+    private var queueSize: Int = 128
 
     private val executor: ThreadPoolExecutor by lazy {
         ThreadPoolUtil.getThreadPoolExecutor(

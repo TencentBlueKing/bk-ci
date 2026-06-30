@@ -132,8 +132,8 @@ class PipelineBuildWebhookService @Autowired constructor(
      * 因触发的流水线过多而占满整个 [PipelineBuildWebhookExecutor] 线程池，
      * 影响其他 Webhook 事件的处理
      */
-    @Value("\${scm.webhook.trigger.max-concurrent-per-request:16}")
-    private var maxConcurrentPerRequest: Int = 16
+    @Value("\${scm.webhook.trigger.max-concurrent-per-request:2}")
+    private var maxConcurrentPerRequest: Int = 2
 
     fun dispatchTriggerPipelines(
         matcher: ScmWebhookMatcher,
