@@ -102,7 +102,8 @@ class UserProjectWorkspaceResourceImpl @Autowired constructor(
             projectId = projectId,
             cgsId = null,
             workspaceCreate = workspace,
-            zoneType = WindowsResourceZoneConfigType.DEFAULT
+            zoneType = WindowsResourceZoneConfigType.DEFAULT,
+            os = workspace.os
         )
         return Result(true)
     }
