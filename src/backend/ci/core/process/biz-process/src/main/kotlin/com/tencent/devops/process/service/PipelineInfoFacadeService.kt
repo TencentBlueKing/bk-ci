@@ -974,7 +974,8 @@ class PipelineInfoFacadeService @Autowired constructor(
             if (result.modelAndSetting == null) {
                 logger.warn("TRANSFER_YAML|$projectId|$userId|$isDefaultBranch|yml=\n$yaml")
                 throw ErrorCodeException(
-                    errorCode = ProcessMessageCode.ERROR_OCCURRED_IN_TRANSFER
+                    errorCode = ProcessMessageCode.ERROR_OCCURRED_IN_TRANSFER,
+                    params = arrayOf("modelAndSetting is null")
                 )
             }
             Pair(result.modelAndSetting!!, result.yamlWithVersion!!)
@@ -982,7 +983,8 @@ class PipelineInfoFacadeService @Autowired constructor(
             if (ignore is ErrorCodeException) throw ignore
             logger.warn("TRANSFER_YAML|$projectId|$userId|$branchName|$isDefaultBranch|yml=\n$yaml", ignore)
             throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ERROR_OCCURRED_IN_TRANSFER
+                errorCode = ProcessMessageCode.ERROR_OCCURRED_IN_TRANSFER,
+                params = arrayOf(ignore.message ?: "")
             )
         }
     }
