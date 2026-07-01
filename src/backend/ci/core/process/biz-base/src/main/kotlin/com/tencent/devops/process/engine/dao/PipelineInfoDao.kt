@@ -347,7 +347,8 @@ class PipelineInfoDao {
         limit: Int? = null,
         sortType: PipelineSortType,
         collation: PipelineCollation,
-        filterByPipelineName: String?
+        filterByPipelineName: String?,
+        channelCode: ChannelCode? = null
     ): Result<TPipelineInfoRecord>? {
         with(T_PIPELINE_INFO) {
             val conditions = mutableListOf<Condition>()
@@ -360,6 +361,9 @@ class PipelineInfoDao {
             }
             if (filterByPipelineName != null) {
                 conditions.add(PIPELINE_NAME.like("%$filterByPipelineName%"))
+            }
+            channelCode?.let {
+                conditions.add(CHANNEL.eq(channelCode.name))
             }
             return dslContext
                 .selectFrom(this)

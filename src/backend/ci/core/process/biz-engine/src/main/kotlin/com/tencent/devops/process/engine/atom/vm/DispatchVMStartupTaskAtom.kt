@@ -228,13 +228,14 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
         ) ?: throw ErrorCodeException(
             errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID, params = arrayOf(buildId)
         )
-        val container = containerBuildRecordService.getRecordModel(
+        val recordModel = containerBuildRecordService.getRecordModel(
             projectId = projectId,
             pipelineId = pipelineId,
             version = buildRecordContainer.resourceVersion,
             buildId = buildId,
             executeCount = executeCount
-        )?.getContainer(vmSeqId) ?: throw BuildTaskException(
+        )
+        val container = recordModel?.getContainer(vmSeqId) ?: throw BuildTaskException(
             errorType = ErrorType.SYSTEM,
             errorCode = ERROR_PIPELINE_NODEL_CONTAINER_NOT_EXISTS.toInt(),
             errorMsg = MessageUtil.getMessageByLocale(
@@ -246,6 +247,7 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
             buildId = buildId,
             taskId = taskId
         )
+        val stageName = recordModel.getStage(task.stageId)?.name ?: ""
 
         // 这个任务是在构建子流程启动的，所以必须使用根流程进程ID
         // 注意区分buildId和vmSeqId，BuildId是一次构建整体的ID，
@@ -261,7 +263,8 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
             container = container,
             ignoreEnvAgentIds = ignoreEnvAgentIds,
             pipelineAuthorizer = pipelineAuthorizer,
-            os = os
+            os = os,
+            stageName = stageName
         )
         logger.info("[$buildId]|STARTUP_VM|VM=$os-$vmNames($vmSeqId)|Dispatch startup")
         return AtomResponse(BuildStatus.RUNNING)
@@ -275,7 +278,8 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
         container: Container,
         ignoreEnvAgentIds: Set<String>?,
         pipelineAuthorizer: String? = "",
-        os: String
+        os: String,
+        stageName: String = ""
     ) {
 
         // 读取插件市场中的插件信息，写入待构建处理
@@ -283,7 +287,9 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
             container = container,
             task = task,
             client = client,
-            buildLogPrinter = buildLogPrinter
+            buildLogPrinter = buildLogPrinter,
+            channelCode = pipelineInfo.channelCode,
+            stageName = stageName
         )
 
         val dispatchType = dispatchTypeBuilder.getDispatchType(task, param)
