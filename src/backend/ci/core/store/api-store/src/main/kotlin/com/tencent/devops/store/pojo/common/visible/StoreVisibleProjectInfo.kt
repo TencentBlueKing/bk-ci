@@ -34,5 +34,7 @@ data class StoreVisibleProjectInfo(
     @get:Schema(title = "项目编码", required = true)
     val projectCode: String,
     @get:Schema(title = "项目名称", required = false)
-    var projectName: String? = null
+    var projectName: String? = null,
+    @get:Schema(title = "项目审核状态(APPROVING：待审核 APPROVED：审核通过 REJECT：审核驳回)", required = false)
+    var status: String? = "APPROVED"
 )
