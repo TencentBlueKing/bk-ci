@@ -296,19 +296,16 @@
     import 'bkui-pipeline/dist/bk-pipeline.css'
     import { mapActions, mapState, mapGetters } from 'vuex'
 
-    const getStaticValue = (value) => {
-        const str = value === undefined || value === null ? '' : String(value).trim()
-        return str && !/[${}]/.test(str) ? str : ''
-    }
-
     const getSubPipelineAccessUrl = (atom) => {
-        const subPipelineId = getStaticValue(atom?.subPipelineId)
-        const subProjectId = getStaticValue(atom?.subProjectId)
-        const subBuildId = getStaticValue(atom?.subBuildId)
-        if (!subProjectId || !subPipelineId.startsWith('p-') || !subBuildId.startsWith('b-')) {
+        const {
+            projectId,
+            pipelineId,
+            buildId
+        } = atom?.subPipelineBuildInfo ?? {}
+        if (!projectId || !pipelineId || !buildId) {
             return ''
         }
-        return `${WEB_URL_PREFIX}/pipeline/${subProjectId}/${subPipelineId}/detail/${subBuildId}`
+        return `${WEB_URL_PREFIX}/pipeline/${projectId}/${pipelineId}/detail/${buildId}`
     }
     
     export default {
