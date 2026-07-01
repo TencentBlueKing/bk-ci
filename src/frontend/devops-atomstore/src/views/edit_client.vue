@@ -23,7 +23,6 @@
                     <bk-form-item
                         label="Scheme"
                         property="urlScheme"
-                        required
                         error-display-type="normal"
                     >
                         <bk-input
@@ -232,14 +231,14 @@
                 trigger: 'change',
             },
         ],
-        urlScheme: [
-            {
-                required: true,
-                validator: (val) => /^scheme:\/\//i.test(val),
-                message: $t('必须以 scheme:// 开头'),
-                trigger: 'blur',
-            },
-        ],
+        // urlScheme: [
+        //     {
+        //         required: true,
+        //         validator: (val) => /^scheme:\/\//i.test(val),
+        //         message: $t('必须以 scheme:// 开头'),
+        //         trigger: 'blur',
+        //     },
+        // ],
         publisher: [
             {
                 required: true,

@@ -971,5 +971,11 @@
   "SILENT": "Silent Installation",
   "GRAPHICAL": "GUI Installation",
   "ARCHIVE": "Archive Installation",
-  "安装参数": "Installation Parameters"
+  "安装参数": "Installation Parameters",
+  "按组织架构": "By Organization Structure",
+  "按项目": "By Project",
+  "请选择可见范围": "Please select the visible range",
+  "共X个": "Total {0}",
+  "项目": "Project",
+  "组织": "Organization"
 }
