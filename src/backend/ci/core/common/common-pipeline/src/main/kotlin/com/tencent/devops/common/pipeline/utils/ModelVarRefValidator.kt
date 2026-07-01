@@ -38,7 +38,8 @@ import java.util.regex.Pattern
  *
  * 规范：
  * - 单花括号：表达式内容不得以 [allowedPrefixes] 中任一前缀开头；
- * - 双花括号：表达式内容只允许以 [allowedPrefixes] 中任一前缀开头。
+ * - 双花括号：表达式内容须以 [allowedPrefixes] 中任一前缀开头，或为使用上述上下文的合法表达式函数
+ *   （见 [ConstrainedExpressionValidator]，与 [com.tencent.devops.common.expression.expression.ExpressionConstants] 对齐）。
  * 渠道：仅当 ChannelCode 为 CREATIVE_STREAM 时执行规范性校验；报错信息逻辑收敛在本类内。
  */
 object ModelVarRefValidator {
@@ -74,13 +75,17 @@ object ModelVarRefValidator {
     /**
      * 判断单条引用是否合规：
      * - 单花括号：varName 不得以 allowedPrefixes 中任一前缀开头；
-     * - 双花括号：varName 必须以 allowedPrefixes 中任一前缀开头。
+     * - 双花括号：varName 必须以 allowedPrefixes 中任一前缀开头，或为合规的表达式函数调用。
      */
     @JvmStatic
     fun isValidRef(ref: VarRefDetail, allowedPrefixes: List<String> = DEFAULT_ALLOWED_PREFIXES): Boolean {
         val name = ref.varName.trim()
         val startsWithAllowed = allowedPrefixes.any { name.startsWith(it) }
-        return ref.isDoubleBrace == startsWithAllowed
+        return if (ref.isDoubleBrace) {
+            startsWithAllowed || ConstrainedExpressionValidator.isValidDoubleBraceExpression(name, allowedPrefixes)
+        } else {
+            !startsWithAllowed
+        }
     }
 
     /**
