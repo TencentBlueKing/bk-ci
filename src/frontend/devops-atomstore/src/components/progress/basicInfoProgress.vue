@@ -40,7 +40,7 @@
         </div>
 
         <!-- 安装信息 -->
-        <div class="info-card">
+        <!-- <div class="info-card">
             <p class="card-title">{{ $t('store.安装信息') }}</p>
             <div class="card-content network-policy">
                 <div class="info-item">
@@ -52,7 +52,7 @@
                     <span class="value">{{ appDetail?.extData?.installParams || '--' }}</span>
                 </div>
             </div>
-        </div>
+        </div> -->
 
         <!-- 版本信息 -->
         <div class="info-card">
