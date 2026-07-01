@@ -111,7 +111,13 @@ data class BuildFormProperty(
     )
     var asInstanceInput: Boolean? = null,
     @get:Schema(title = "复杂参数列表[仅type==CUSTOM_PARAM有效]", required = false)
-    var fields: List<BuildFormProperty>? = null
+    var fields: List<BuildFormProperty>? = null,
+    @get:Schema(title = "所属公共变量组名称", required = false)
+    var varGroupName: String? = null,
+    @get:Schema(title = "所属公共变量组版本", required = false)
+    var varGroupVersion: Int? = null,
+    @get:Schema(title = "是否已移除", required = false)
+    var removeFlag: Boolean = false
 )
 
 @Schema(title = "构建模型-自定义路径拆分的版本控制信息")
