@@ -179,6 +179,65 @@ class StartBuildContextTest : TestBase() {
     }
 
     @Test
+    fun needSkipTaskWhenRetryRerunDownstream() {
+        // 单插件失败重试（skipFailedTask=false）：被重试插件之后、同Job内的后续插件需要一并重排（不跳过）
+        val stages = genStages(stageSize = 2, jobSize = 2, elementSize = 3, needFinally = false)
+        val stage = stages[1]
+        val container = stage.containers[0]
+        val parallelContainer = stage.containers[1] // 同stage的并行Job
+        // 指定要重试的插件为容器中间那个
+        params[PIPELINE_RETRY_START_TASK_ID] = container.elements[1].id!!
+        val context = initDefaultStartBuildContext()
+
+        // 被重试插件本身：不跳过
+        Assertions.assertEquals(
+            false, context.needSkipTaskWhenRetry(stage, container, container.elements[1].id)
+        )
+        // 被重试插件之前的插件：保持原逻辑，跳过
+        Assertions.assertEquals(
+            true, context.needSkipTaskWhenRetry(stage, container, container.elements[0].id)
+        )
+        // 被重试插件之后的插件：新逻辑，需要重排（不跳过），以便重新评估运行条件
+        Assertions.assertEquals(
+            false, context.needSkipTaskWhenRetry(stage, container, container.elements[2].id)
+        )
+        // 其它并行Job的插件：不受影响，仍跳过
+        Assertions.assertEquals(
+            true, context.needSkipTaskWhenRetry(stage, parallelContainer, parallelContainer.elements[0].id)
+        )
+    }
+
+    @Test
+    fun needSkipTaskWhenSkipRerunDownstream() {
+        // 单插件跳过（skipFailedTask=true）：与重试对称，被跳过插件之后、同Job内的后续插件需要一并重排（不跳过）
+        params[PIPELINE_SKIP_FAILED_TASK] = true.toString()
+        val stages = genStages(stageSize = 2, jobSize = 2, elementSize = 3, needFinally = false)
+        val stage = stages[1]
+        val container = stage.containers[0]
+        val parallelContainer = stage.containers[1]
+        // 指定要跳过的插件为容器中间那个
+        params[PIPELINE_RETRY_START_TASK_ID] = container.elements[1].id!!
+        val context = initDefaultStartBuildContext()
+
+        // 被跳过插件本身：不属于"重试时跳过"（其SKIP由inSkipStage处理）
+        Assertions.assertEquals(
+            false, context.needSkipTaskWhenRetry(stage, container, container.elements[1].id)
+        )
+        // 被跳过插件之前的插件：保持原逻辑，跳过
+        Assertions.assertEquals(
+            true, context.needSkipTaskWhenRetry(stage, container, container.elements[0].id)
+        )
+        // 被跳过插件之后的插件：新逻辑，需要重排（不跳过），据此重新评估运行条件
+        Assertions.assertEquals(
+            false, context.needSkipTaskWhenRetry(stage, container, container.elements[2].id)
+        )
+        // 其它并行Job的插件：不受影响，仍跳过
+        Assertions.assertEquals(
+            true, context.needSkipTaskWhenRetry(stage, parallelContainer, parallelContainer.elements[0].id)
+        )
+    }
+
+    @Test
     fun inSkipStage() {
         // 跳过Stage-2下所有失败插件
         params[PIPELINE_RETRY_START_TASK_ID] = "stage-2"

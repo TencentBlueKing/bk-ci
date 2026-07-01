@@ -134,6 +134,21 @@ class AuthResourceGroupPermissionDao {
         }
     }
 
+    fun listByRelatedResource(
+        dslContext: DSLContext,
+        projectCode: String,
+        relatedResourceType: String,
+        relatedResourceCode: String
+    ): List<ResourceGroupPermissionDTO> {
+        return with(TAuthResourceGroupPermission.T_AUTH_RESOURCE_GROUP_PERMISSION) {
+            dslContext.selectFrom(this)
+                .where(PROJECT_CODE.eq(projectCode))
+                .and(RELATED_RESOURCE_TYPE.eq(relatedResourceType))
+                .and(RELATED_RESOURCE_CODE.eq(relatedResourceCode))
+                .fetch().map { it.convert() }
+        }
+    }
+
     fun listGroupsWithPermissions(
         dslContext: DSLContext,
         projectCode: String
