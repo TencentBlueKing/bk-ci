@@ -16,6 +16,5 @@ data class CertExchangeCodeResp(
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class CertExchangeCodeData(
-    val code: String,
-    val secret: String? = null
+    val code: String
 )
