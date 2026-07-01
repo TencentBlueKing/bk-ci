@@ -131,13 +131,12 @@ object ModelUtils {
     }
 
     private fun refreshContainer(container: Container) {
-        val failElements = mutableListOf<Element>()
         container.elements.forEach { e ->
-            refreshElement(element = e, failElements = failElements)
+            refreshElement(element = e)
         }
     }
 
-    private fun refreshElement(element: Element, failElements: MutableList<Element>) {
+    private fun refreshElement(element: Element) {
 
         val additionalOptions = element.additionalOptions
         if (additionalOptions == null || !additionalOptions.enable) {
@@ -163,17 +162,9 @@ object ModelUtils {
             additionalOptions.runCondition == RunCondition.PRE_TASK_FAILED_BUT_CANCEL ||
             additionalOptions.runCondition == RunCondition.PRE_TASK_FAILED_EVEN_CANCEL
         ) {
-            // 前面有失败的插件时也要运行的插件，将前面的失败插件置为不可重试和跳过
+            // “失败时才运行”的插件自身不放开重试/跳过；但不再影响前序失败插件的重试/跳过按钮
             element.canRetry = null
             element.canSkip = null
-            failElements.forEach { // 只为了减少传输数据，置空不会被序列化出字段
-                it.canSkip = null
-                it.canRetry = null
-            }
-        }
-
-        if (element.canRetry == true) { // 先记录可重试的执行失败插件
-            failElements.add(element)
         }
     }
 

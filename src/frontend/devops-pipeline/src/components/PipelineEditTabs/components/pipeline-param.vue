@@ -106,6 +106,10 @@
     import { allVersionKeyList } from '@/utils/pipelineConst'
     import { deepCopy, navConfirm } from '@/utils/util'
     import ParamGroup from './children/param-group'
+    import {
+        getInvalidDisplayConditionDependentInfos,
+        hasDisplayConditionOperatorSupportChanged
+    } from './displayConditionUtils'
     import PipelineParamForm from './pipeline-param-form'
 
     export default {
@@ -272,6 +276,9 @@
             async handleSaveVar () {
                 // 单选、复选类型， 需要先校验options
                 const optionValid = await this.validParamOptions()
+                if (optionValid && !this.validDisplayConditionOperator()) {
+                    return
+                }
                 this.$validator.validate('pipelineParam.*').then((result) => {
                     const {isInvalid, ...param} = this.sliderEditItem
                     if (result && optionValid) {
@@ -283,6 +290,99 @@
                         this.updateContainerParams('params', [...this.globalParams, ...this.versions])
                         this.hideSlider(false)
                     }
+                })
+            },
+            validDisplayConditionOperator () {
+                if (this.editIndex < 0) return true
+
+                const prevParam = this.globalParams[this.editIndex]
+                const nextParam = this.sliderEditItem
+                if (!hasDisplayConditionOperatorSupportChanged(prevParam, nextParam)) {
+                    return true
+                }
+
+                const invalidList = getInvalidDisplayConditionDependentInfos(this.globalParams, nextParam)
+                if (!invalidList.length) return true
+
+                const paramName = nextParam.name || nextParam.id
+                this.showDisplayConditionOperatorInvalidDialog(paramName, invalidList)
+                return false
+            },
+            showDisplayConditionOperatorInvalidDialog (paramName, invalidList) {
+                const h = this.$createElement
+                this.$bkInfo({
+                    type: 'warning',
+                    width: 640,
+                    title: this.$t('editPage.displayConditionOperatorInvalidTitle'),
+                    okText: this.$t('confirm'),
+                    cancelText: this.$t('cancel'),
+                    extCls: 'display-condition-invalid-dialog',
+                    subHeader: h('div', {
+                        class: 'display-condition-invalid-content'
+                    }, [
+                        h('div', {
+                            class: 'display-condition-invalid-summary'
+                        }, [
+                            h('p', this.$t('editPage.displayConditionOperatorInvalidDesc', [paramName])),
+                            h('p', this.$t('editPage.displayConditionOperatorInvalidActionTips'))
+                        ]),
+                        h('div', {
+                            class: 'display-condition-invalid-list-title'
+                        }, this.$t('editPage.displayConditionOperatorInvalidListTitle', [invalidList.length])),
+                        h('bk-table', {
+                            class: 'display-condition-invalid-table',
+                            props: {
+                                data: invalidList,
+                                maxHeight: 220,
+                                outerBorder: true,
+                                size: 'small'
+                            }
+                        }, [
+                            h('bk-table-column', {
+                                props: {
+                                    label: this.$t('newui.pipelineParam.varName'),
+                                    minWidth: 180
+                                },
+                                scopedSlots: {
+                                    default: ({ row }) => h('div', {
+                                        class: 'display-condition-invalid-variable'
+                                    }, [
+                                        h('span', {
+                                            class: 'display-condition-invalid-name'
+                                        }, row.varName || '--'),
+                                        row.category
+                                            ? h('span', {
+                                                class: 'display-condition-invalid-category'
+                                            }, `${this.$t('editPage.displayConditionGroupLabel')}：${row.category}`)
+                                            : null
+                                    ])
+                                }
+                            }),
+                            h('bk-table-column', {
+                                props: {
+                                    label: this.$t('newui.pipelineParam.varAlias'),
+                                    minWidth: 150,
+                                    showOverflowTooltip: true
+                                },
+                                scopedSlots: {
+                                    default: ({ row }) => h('span', row.varAlias || '--')
+                                }
+                            }),
+                            h('bk-table-column', {
+                                props: {
+                                    label: this.$t('editPage.displayConditionOperatorLabel'),
+                                    width: 96
+                                },
+                                scopedSlots: {
+                                    default: ({ row }) => h('bk-tag', {
+                                        props: {
+                                            theme: 'info'
+                                        }
+                                    }, row.operator || '--')
+                                }
+                            })
+                        ])
+                    ])
                 })
             },
             updateEditItem (name, value) {
@@ -430,6 +530,68 @@
                     }
                 }
             }
+        }
+    }
+    .bk-dialog-wrapper.display-condition-invalid-dialog {
+        .bk-dialog-type-header {
+            padding-bottom: 8px;
+        }
+        .bk-dialog-type-sub-header {
+            padding: 0 32px 24px;
+            .header {
+                line-height: 20px;
+            }
+        }
+        .bk-dialog-type-sub-header,
+        .bk-dialog-type-sub-header .header {
+            text-align: left;
+        }
+        .bk-dialog-footer {
+            padding: 0 32px 24px;
+            text-align: right;
+        }
+        .display-condition-invalid-content {
+            color: #63656E;
+            font-size: 12px;
+            line-height: 20px;
+        }
+        .display-condition-invalid-summary {
+            padding: 10px 12px;
+            background: #FFF4E2;
+            border: 1px solid #FFE8C3;
+            border-radius: 4px;
+            p {
+                margin: 0;
+            }
+            p + p {
+                margin-top: 4px;
+            }
+        }
+        .display-condition-invalid-list-title {
+            margin: 14px 0 8px;
+            color: #313238;
+            font-size: 13px;
+            font-weight: 600;
+        }
+        .display-condition-invalid-table {
+            line-height: 20px;
+        }
+        .display-condition-invalid-variable {
+            min-width: 0;
+        }
+        .display-condition-invalid-name {
+            display: block;
+            color: #313238;
+            font-weight: 600;
+            line-height: 20px;
+            word-break: break-all;
+        }
+        .display-condition-invalid-category {
+            display: block;
+            margin-top: 2px;
+            color: #979BA5;
+            line-height: 18px;
+            word-break: break-all;
         }
     }
 </style>
