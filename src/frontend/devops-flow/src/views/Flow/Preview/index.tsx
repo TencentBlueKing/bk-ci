@@ -85,14 +85,15 @@ export default defineComponent({
 
     /**
      * Normalize value to correct type for the param
-     * - MULTIPLE: ensure value is string[] (API may return comma-separated string)
+     * - MULTIPLE: ensure value is comma-separated string (UI Select needs array, store as string)
      * - ENUM/BOOLEAN: ensure correct type
      */
     const normalizeValue = (param: StartupProperty, rawValue: unknown): unknown => {
       if (param.type === VariableParamType.MULTIPLE) {
-        if (Array.isArray(rawValue)) return rawValue as string[]
-        if (typeof rawValue === 'string' && rawValue) return rawValue.split(',')
-        return []
+        // 将值规范化为逗号分隔的字符串
+        if (Array.isArray(rawValue)) return (rawValue as string[]).join(',')
+        if (typeof rawValue === 'string') return rawValue
+        return ''
       }
       return rawValue
     }
@@ -161,11 +162,11 @@ export default defineComponent({
             ) : param.type === VariableParamType.MULTIPLE ? (
               <DynamicSelect
                 param={param}
-                modelValue={value as string[]}
+                modelValue={typeof value === 'string' ? value.split(',').filter(Boolean) : []}
                 disabled={disabled}
                 isInvalid={isInvalid}
                 multiple={true}
-                onChange={(val: string[]) => handleParamChange(type, param.id, val)}
+                onChange={(val: string[]) => handleParamChange(type, param.id, val.join(','))}
               />
             ) : (
               <Input
@@ -241,11 +242,11 @@ export default defineComponent({
             ) : param.type === VariableParamType.MULTIPLE ? (
               <DynamicSelect
                 param={param}
-                modelValue={value as string[]}
+                modelValue={typeof value === 'string' ? value.split(',').filter(Boolean) : []}
                 disabled={disabled}
                 isInvalid={isInvalid}
                 multiple={true}
-                onChange={(val: string[]) => handleParamChange(type, param.id, val)}
+                onChange={(val: string[]) => handleParamChange(type, param.id, val.join(','))}
               />
             ) : (
               <Input

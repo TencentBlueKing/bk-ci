@@ -6,6 +6,7 @@ import type { ComputedRef, Ref } from 'vue'
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
+import { ParamType as VariableParamType } from '@/types/variable'
 
 // ============================================
 // 1. Type Definitions
@@ -386,6 +387,23 @@ export const usePreview = (options: UsePreviewOptions = {}): UsePreviewReturn =>
   }
 
   /**
+   * Check if param value is empty based on param type
+   */
+  const isParamValueEmpty = (param: StartupProperty, value: unknown): boolean => {
+    // Common empty checks
+    if (value === undefined || value === null || value === '') {
+      return true
+    }
+    
+    // For MULTIPLE type, check if comma-separated string is empty
+    if (param.type === VariableParamType.MULTIPLE) {
+      return typeof value === 'string' && value.split(',').filter(Boolean).length === 0
+    }
+    
+    return false
+  }
+
+  /**
    * Validate required params before execution
    * Returns empty array if valid, otherwise returns list of empty required param ids
    */
@@ -396,13 +414,7 @@ export const usePreview = (options: UsePreviewOptions = {}): UsePreviewReturn =>
     store.paramList.forEach((param) => {
       if (param.valueNotEmpty) {
         const value = store.paramsValues[param.id]
-        // Check if value is empty (undefined, null, empty string, or empty array for MULTIPLE type)
-        const isEmpty =
-          value === undefined ||
-          value === null ||
-          value === '' ||
-          (Array.isArray(value) && value.length === 0)
-        if (isEmpty) {
+        if (isParamValueEmpty(param, value)) {
           emptyRequiredParams.push(param.id)
         }
       }
@@ -413,13 +425,7 @@ export const usePreview = (options: UsePreviewOptions = {}): UsePreviewReturn =>
       store.versionParamList.forEach((param) => {
         if (param.valueNotEmpty) {
           const value = store.versionParamValues[param.id]
-          // Check if value is empty (undefined, null, empty string, or empty array for MULTIPLE type)
-          const isEmpty =
-            value === undefined ||
-            value === null ||
-            value === '' ||
-            (Array.isArray(value) && value.length === 0)
-          if (isEmpty) {
+          if (isParamValueEmpty(param, value)) {
             emptyRequiredParams.push(param.id)
           }
         }
