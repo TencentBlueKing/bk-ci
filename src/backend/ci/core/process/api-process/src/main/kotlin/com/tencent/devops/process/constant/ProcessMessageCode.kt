@@ -476,7 +476,7 @@ object ProcessMessageCode {
     // 用户({0})不在流水线({1})的可见范围内
     const val ERROR_PIPELINE_USER_NOT_VISIBLE = "2101370"
 
-    // 模型变量引用表达式不合规：仅允许双大括号${{xxx}}，且前缀须为 variables./stages./jobs./steps.。不合规项（含位置 positionPath）：{0}
+    // 模型变量引用表达式不合规：单花括号不得以 context 前缀开头；双花括号须以前缀开头或为合法表达式函数。不合规项：{0}
     const val ERROR_PIPELINE_MODEL_VAR_REF_INVALID = "2101376"
 
     // 构建执行相关错误码（2101500-2101599）
