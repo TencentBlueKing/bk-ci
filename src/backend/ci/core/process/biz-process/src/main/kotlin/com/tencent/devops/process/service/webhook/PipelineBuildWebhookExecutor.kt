@@ -78,11 +78,22 @@ class PipelineBuildWebhookExecutor {
 
     @PreDestroy
     fun destroy() {
-        // 当线程池内还有线程执行时，阻塞服务的退出
+        // 当线程池内还有线程执行时，阻塞服务的退出，但设置最大等待上限，避免 Pod 无法优雅退出
         logger.warn("Start destroy threadPool")
         executor.shutdown()
-        while (!executor.awaitTermination(EXECUTOR_DESTROY_AWAIT_SECOND, TimeUnit.SECONDS)) {
-            logger.warn("ThreadPool: old-webhook-trigger still has tasks.")
+        var waited = 0L
+        while (waited < EXECUTOR_DESTROY_MAX_WAIT_SECOND &&
+            !executor.awaitTermination(EXECUTOR_DESTROY_AWAIT_SECOND, TimeUnit.SECONDS)
+        ) {
+            waited += EXECUTOR_DESTROY_AWAIT_SECOND
+            logger.warn(
+                "ThreadPool: old-webhook-trigger still has tasks|" +
+                    "waited=${waited}s|max=${EXECUTOR_DESTROY_MAX_WAIT_SECOND}s"
+            )
+        }
+        if (!executor.isTerminated) {
+            logger.warn("ThreadPool: old-webhook-trigger force shutdown after ${waited}s")
+            executor.shutdownNow()
         }
         logger.warn("Finish destroy threadPool")
     }
@@ -98,6 +109,7 @@ class PipelineBuildWebhookExecutor {
 
     companion object {
         private const val EXECUTOR_DESTROY_AWAIT_SECOND = 5L
+        private const val EXECUTOR_DESTROY_MAX_WAIT_SECOND = 30L
         private val logger = LoggerFactory.getLogger(PipelineBuildWebhookExecutor::class.java)
     }
 }

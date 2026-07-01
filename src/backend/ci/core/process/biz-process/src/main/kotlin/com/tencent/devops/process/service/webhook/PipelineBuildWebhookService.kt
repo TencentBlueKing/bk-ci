@@ -56,6 +56,7 @@ import com.tencent.devops.common.webhook.pojo.code.PIPELINE_START_WEBHOOK_USER_I
 import com.tencent.devops.common.webhook.service.code.loader.WebhookElementParamsRegistrar
 import com.tencent.devops.common.webhook.service.code.loader.WebhookStartParamsRegistrar
 import com.tencent.devops.common.webhook.service.code.matcher.ScmWebhookMatcher
+import com.tencent.devops.common.webhook.service.code.pojo.EventRepositoryCache
 import com.tencent.devops.common.webhook.util.EventCacheUtil
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServiceScmWebhookResource
@@ -98,6 +99,8 @@ import org.springframework.stereotype.Service
 import java.time.LocalDate
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.Semaphore
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.TimeoutException
 
 @Suppress("ALL")
 @Service
@@ -123,6 +126,9 @@ class PipelineBuildWebhookService @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineBuildWebhookService::class.java)
         private const val WEBHOOK_COMMIT_TRIGGER = "webhook_commit_trigger"
+
+        // 单条流水线触发超时上限，防止 MQ 消费线程被卡死的 worker 永久阻塞
+        private const val TRIGGER_TIMEOUT_MINUTES = 3L
     }
 
     /**
@@ -143,9 +149,10 @@ class PipelineBuildWebhookService @Autowired constructor(
         val watcher = Watcher(
             "old WebhookDispatch|${matcher.getRepoName()}|${triggerPipelines.size}"
         )
+        // 主线程只持有共享 Map，不绑定 ThreadLocal，避免 CallerRunsPolicy 场景污染主线程状态
+        val sharedEventCache = ConcurrentHashMap<String, EventRepositoryCache>()
         try {
             logger.info("dispatch pipeline webhook subscriber|repo(${matcher.getRepoName()})")
-            val sharedEventCache = EventCacheUtil.initEventCache()
             if (triggerPipelines.isEmpty()) {
                 gitWebhookUnlockDispatcher.dispatchUnlockHookLockEvent(matcher)
                 return false
@@ -182,7 +189,19 @@ class PipelineBuildWebhookService @Autowired constructor(
                     }
                 }
             }
-            futures.forEach { it.get() }
+            // 单条触发加超时兜底，防止 worker 被下游卡死时 MQ 消费线程永久阻塞
+            futures.forEach { future ->
+                try {
+                    future.get(TRIGGER_TIMEOUT_MINUTES, TimeUnit.MINUTES)
+                } catch (e: TimeoutException) {
+                    logger.warn(
+                        "webhook trigger timeout|repo(${matcher.getRepoName()})|" +
+                            "timeout=${TRIGGER_TIMEOUT_MINUTES}min",
+                        e
+                    )
+                    future.cancel(true)
+                }
+            }
             watcher.stop()
             /* #3131,当对mr的commit check有强依赖，但是蓝盾与git的commit check交互存在一定的时延，可以增加双重锁。
                 git发起mr时锁住mr,称为webhook锁，由蓝盾主动发起解锁，解锁有三种情况：
@@ -197,10 +216,9 @@ class PipelineBuildWebhookService @Autowired constructor(
             LogUtils.printCostTimeWE(watcher)
             if (logger.isDebugEnabled) {
                 logger.debug(
-                    "webhook event repository cache: ${JsonUtil.toJson(EventCacheUtil.getAll(), false)}"
+                    "webhook event repository cache: ${JsonUtil.toJson(sharedEventCache, false)}"
                 )
             }
-            EventCacheUtil.remove()
         }
     }
 
