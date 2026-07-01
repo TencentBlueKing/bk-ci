@@ -8,7 +8,8 @@ data class CreateCvmData(
     val machineType: String,
     val projectId: String?,
     val userId: String?,
-    val zoneId: String
+    val zoneId: String,
+    val os: String? = null
 )
 
 data class CreateCvmResp(
