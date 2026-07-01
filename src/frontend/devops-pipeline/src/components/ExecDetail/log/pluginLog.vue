@@ -178,7 +178,7 @@
             },
 
             taskProgressId () {
-                return this.progressTaskId || (this.type === 'pluginLog' ? this.id : '')
+                return this.progressTaskId
             },
 
             taskProgressStatus () {
@@ -190,7 +190,7 @@
             },
 
             showTaskProgressDetail () {
-                return !!this.taskProgressId
+                return !!this.progressTaskId
             }
         },
 
