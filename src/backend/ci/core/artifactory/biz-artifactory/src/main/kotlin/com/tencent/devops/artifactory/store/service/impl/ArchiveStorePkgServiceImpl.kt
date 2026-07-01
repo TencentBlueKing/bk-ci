@@ -42,7 +42,7 @@ import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.ZipUtil
 import com.tencent.devops.store.api.common.ServiceStoreArchiveResource
-import com.tencent.devops.store.api.common.ServiceStoreComponentResource
+import com.tencent.devops.store.api.common.ServiceStoreComponentVersionResource
 import com.tencent.devops.store.api.common.ServiceStoreResource
 import com.tencent.devops.store.pojo.common.CONFIG_YML_NAME
 import com.tencent.devops.store.pojo.common.QueryComponentPkgEnvInfoParam
@@ -395,7 +395,7 @@ abstract class ArchiveStorePkgServiceImpl : ArchiveStorePkgService {
         val queryCacheFlag = if (storeStatus != null) {
             storeStatus !in StoreStatusEnum.getTestStatusList()
         } else {
-            val status = client.get(ServiceStoreComponentResource::class).getStoreUpgradeStatusInfo(
+            val status = client.get(ServiceStoreComponentVersionResource::class).getStoreUpgradeStatusInfo(
                 userId = userId,
                 storeCode = storeCode,
                 storeType = storeType.name,

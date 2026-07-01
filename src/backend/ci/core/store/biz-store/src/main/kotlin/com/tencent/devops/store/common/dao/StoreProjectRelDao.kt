@@ -639,6 +639,66 @@ class StoreProjectRelDao {
         }
     }
 
+    /**
+     * 根据项目和实例ID集合批量获取组件安装记录
+     * 通用查询，兼容各storeType；instanceIds为空时返回项目下该类型的全部安装记录
+     * @param storeProjectType 关联类型，默认COMMON(项目安装记录)；为null时不限制(INIT/COMMON/TEST全部)
+     * @param page 页码，与pageSize同时传入时才分页，否则返回全部
+     */
+    fun listInstalledComponents(
+        dslContext: DSLContext,
+        projectCode: String,
+        storeType: Byte,
+        instanceIds: Collection<String>? = null,
+        storeProjectType: StoreProjectTypeEnum? = StoreProjectTypeEnum.COMMON,
+        page: Int? = null,
+        pageSize: Int? = null
+    ): Result<TStoreProjectRelRecord> {
+        with(TStoreProjectRel.T_STORE_PROJECT_REL) {
+            val conditions = buildInstalledComponentsCondition(projectCode, storeType, instanceIds, storeProjectType)
+            val baseStep = dslContext.selectFrom(this)
+                .where(conditions)
+                .orderBy(CREATE_TIME.desc())
+            return if (page != null && pageSize != null) {
+                baseStep.limit((page - 1) * pageSize, pageSize).fetch()
+            } else {
+                baseStep.fetch()
+            }
+        }
+    }
+
+    /**
+     * 统计项目下满足条件的组件安装记录数量
+     */
+    fun countInstalledComponents(
+        dslContext: DSLContext,
+        projectCode: String,
+        storeType: Byte,
+        instanceIds: Collection<String>? = null,
+        storeProjectType: StoreProjectTypeEnum? = StoreProjectTypeEnum.COMMON
+    ): Long {
+        with(TStoreProjectRel.T_STORE_PROJECT_REL) {
+            val conditions = buildInstalledComponentsCondition(projectCode, storeType, instanceIds, storeProjectType)
+            return dslContext.selectCount().from(this).where(conditions).fetchOne(0, Long::class.java)!!
+        }
+    }
+
+    private fun TStoreProjectRel.buildInstalledComponentsCondition(
+        projectCode: String,
+        storeType: Byte,
+        instanceIds: Collection<String>?,
+        storeProjectType: StoreProjectTypeEnum?
+    ): MutableList<Condition> {
+        val conditions = mutableListOf<Condition>()
+        conditions.add(PROJECT_CODE.eq(projectCode))
+        conditions.add(STORE_TYPE.eq(storeType))
+        storeProjectType?.let { conditions.add(TYPE.eq(it.type.toByte())) }
+        if (!instanceIds.isNullOrEmpty()) {
+            conditions.add(INSTANCE_ID.`in`(instanceIds))
+        }
+        return conditions
+    }
+
     fun getUserTestProjectRelByStoreCode(
         dslContext: DSLContext,
         storeCode: String,

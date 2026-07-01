@@ -37,7 +37,7 @@ import com.tencent.devops.store.common.dao.StoreBaseExtQueryDao
 import com.tencent.devops.store.common.dao.StoreBaseFeatureExtQueryDao
 import com.tencent.devops.store.common.dao.StoreBaseQueryDao
 import com.tencent.devops.store.common.service.StoreComponentDeployService
-import com.tencent.devops.store.common.service.StoreComponentQueryService
+import com.tencent.devops.store.common.service.StoreComponentMarketQueryService
 import com.tencent.devops.store.common.service.StoreProjectService
 import com.tencent.devops.store.common.service.StoreTotalStatisticService
 import com.tencent.devops.store.common.service.StoreUserService
@@ -67,7 +67,7 @@ class StoreComponentDeployServiceImpl @Autowired constructor(
     private val storeBaseFeatureExtQueryDao: StoreBaseFeatureExtQueryDao,
     private val marketStoreQueryDao: MarketStoreQueryDao,
     private val storeTotalStatisticService: StoreTotalStatisticService,
-    private val storeComponentQueryService: StoreComponentQueryService
+    private val storeComponentMarketQueryService: StoreComponentMarketQueryService
 ) : StoreComponentDeployService {
 
     override fun getUserComponentDeployInfos(
@@ -348,7 +348,7 @@ class StoreComponentDeployServiceImpl @Autowired constructor(
         val featureExtByCode = buildFeatureExtMap(pageCodes, storeTypeEnum)
         // 可见组件复用市场富化(仅传本页记录，逐条富化被限制在一页内)；纯调试组件由DAO直接构造
         val marketItemByCode = if (pageData.pageVisibleRecords.isNotEmpty()) {
-            storeComponentQueryService.enrichMarketItems(
+            storeComponentMarketQueryService.enrichMarketItems(
                 userId = userId,
                 userDeptList = userDeptList,
                 storeInfoQuery = storeInfoQuery,

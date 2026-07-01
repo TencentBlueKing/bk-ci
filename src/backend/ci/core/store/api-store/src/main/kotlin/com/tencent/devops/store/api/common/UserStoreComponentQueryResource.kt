@@ -35,23 +35,13 @@ import com.tencent.devops.common.web.constant.BkStyleEnum
 import com.tencent.devops.store.pojo.common.MarketItem
 import com.tencent.devops.store.pojo.common.MarketMainItem
 import com.tencent.devops.store.pojo.common.MyStoreComponent
-import com.tencent.devops.store.pojo.common.StoreDetailInfo
 import com.tencent.devops.store.pojo.common.deploy.UserComponentDeployInfo
 import com.tencent.devops.store.pojo.common.enums.RdTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreSortTypeEnum
-import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import com.tencent.devops.store.pojo.common.media.StoreMediaInfo
-import com.tencent.devops.store.pojo.common.test.StoreTestItem
-import com.tencent.devops.store.pojo.common.version.StoreComponentVersionItem
-import com.tencent.devops.store.pojo.common.version.StoreShowVersionInfo
-import com.tencent.devops.store.pojo.common.version.StoreVersionLogInfo
-import com.tencent.devops.store.pojo.common.version.StoreVersionSizeInfo
-import com.tencent.devops.store.pojo.common.version.VersionInfo
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.ws.rs.Consumes
-import jakarta.ws.rs.DefaultValue
 import jakarta.ws.rs.GET
 import jakarta.ws.rs.HeaderParam
 import jakarta.ws.rs.Path
@@ -93,81 +83,6 @@ interface UserStoreComponentQueryResource {
         @BkField(patternStyle = BkStyleEnum.PAGE_SIZE_STYLE)
         pageSize: Int = 10
     ): Result<Page<MyStoreComponent>?>
-
-    @Operation(summary = "根据组件标识获取组件版本列表")
-    @GET
-    @Path("/desk/types/{storeType}/codes/{storeCode}/component/version/list")
-    @BkInterfaceI18n(
-        keyPrefixNames = ["{data.records[*].storeType}", "{data.records[*].storeCode}", "{data.records[*].version}",
-            "releaseInfo"]
-    )
-    fun getComponentVersionsByCode(
-        @Parameter(description = "userId", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @Parameter(description = "组件类型", required = true)
-        @PathParam("storeType")
-        @BkField(patternStyle = BkStyleEnum.CODE_STYLE)
-        storeType: String,
-        @Parameter(description = "组件代码", required = true)
-        @PathParam("storeCode")
-        @BkField(patternStyle = BkStyleEnum.CODE_STYLE)
-        storeCode: String,
-        @Parameter(description = "页码", required = true)
-        @QueryParam("page")
-        @BkField(patternStyle = BkStyleEnum.NUMBER_STYLE)
-        page: Int = 1,
-        @Parameter(description = "每页数量", required = true)
-        @QueryParam("pageSize")
-        @BkField(patternStyle = BkStyleEnum.PAGE_SIZE_STYLE)
-        pageSize: Int = 10,
-        @Parameter(
-            description = "是否只查可用版本(仅已发布状态)。true：仅RELEASED且不校验成员权限；未传或false：全部版本且校验成员权限",
-            required = false
-        )
-        @QueryParam("availableFlag")
-        availableFlag: Boolean? = null
-    ): Result<Page<StoreComponentVersionItem>>
-
-    @Operation(summary = "根据组件ID获取组件详情")
-    @GET
-    @Path("/types/{storeType}/ids/{storeId}/component/detail")
-    @BkInterfaceI18n(
-        keyPrefixNames = ["{data.storeType}", "{data.storeCode}", "{data.version}", "releaseInfo"]
-    )
-    fun getComponentDetailInfoById(
-        @Parameter(description = "userId", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @Parameter(description = "组件类型", required = true)
-        @PathParam("storeType")
-        @BkField(patternStyle = BkStyleEnum.CODE_STYLE)
-        storeType: String,
-        @Parameter(description = "组件ID", required = true)
-        @PathParam("storeId")
-        @BkField(patternStyle = BkStyleEnum.ID_STYLE, required = false)
-        storeId: String
-    ): Result<StoreDetailInfo?>
-
-    @Operation(summary = "根据组件代码获取组件详情")
-    @GET
-    @Path("/types/{storeType}/codes/{storeCode}/component/detail")
-    @BkInterfaceI18n(
-        keyPrefixNames = ["{data.storeType}", "{data.storeCode}", "{data.version}", "releaseInfo"]
-    )
-    fun getComponentDetailInfoByCode(
-        @Parameter(description = "userId", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @Parameter(description = "组件类型", required = true)
-        @PathParam("storeType")
-        @BkField(patternStyle = BkStyleEnum.CODE_STYLE)
-        storeType: String,
-        @Parameter(description = "组件代码", required = true)
-        @PathParam("storeCode")
-        @BkField(patternStyle = BkStyleEnum.CODE_STYLE)
-        storeCode: String
-    ): Result<StoreDetailInfo?>
 
     @Operation(summary = "获取研发商店首页组件的数据")
     @Path("/types/{storeType}/component/main/page/list")
@@ -317,132 +232,4 @@ interface UserStoreComponentQueryResource {
         @BkField(patternStyle = BkStyleEnum.PAGE_SIZE_STYLE)
         pageSize: Int = 10
     ): Result<Page<UserComponentDeployInfo>>
-
-    @Operation(summary = "根据组件标识获取组件回显版本信息")
-    @GET
-    @Path("/types/{storeType}/codes/{storeCode}/component/showVersionInfo")
-    fun getComponentShowVersionInfo(
-        @Parameter(description = "userId", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @Parameter(description = "组件类型", required = true)
-        @PathParam("storeType")
-        @BkField(patternStyle = BkStyleEnum.CODE_STYLE)
-        storeType: String,
-        @Parameter(description = "组件代码", required = true)
-        @PathParam("storeCode")
-        @BkField(patternStyle = BkStyleEnum.CODE_STYLE)
-        storeCode: String
-    ): Result<StoreShowVersionInfo>
-
-    @Operation(summary = "获取组件测试信息")
-    @GET
-    @Path("/types/{storeType}/codes/{storeCode}/component/test/info/get")
-    fun getStoreTestInfo(
-        @Parameter(description = "userId", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @Parameter(description = "组件类型", required = true)
-        @PathParam("storeType")
-        @BkField(patternStyle = BkStyleEnum.CODE_STYLE)
-        storeType: StoreTypeEnum,
-        @Parameter(description = "组件代码", required = true)
-        @PathParam("storeCode")
-        @BkField(patternStyle = BkStyleEnum.CODE_STYLE)
-        storeCode: String
-    ): Result<Set<StoreTestItem>>
-
-    @Operation(summary = "获取组件媒体信息")
-    @Path("/types/{storeType}/codes/{storeCode}/component/media/info/get")
-    @GET
-    fun getStoreMediaInfo(
-        @Parameter(description = "userId", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @Parameter(description = "组件类型", required = true)
-        @PathParam("storeType")
-        @BkField(patternStyle = BkStyleEnum.CODE_STYLE)
-        storeType: StoreTypeEnum,
-        @Parameter(description = "组件代码", required = true)
-        @PathParam("storeCode")
-        @BkField(patternStyle = BkStyleEnum.CODE_STYLE)
-        storeCode: String
-    ): Result<List<StoreMediaInfo>?>
-
-    @Operation(summary = "获取组件升级版本信息")
-    @Path("/types/{storeType}/codes/{storeCode}/component/upgrade/version/info/get")
-    @GET
-    fun getStoreUpgradeVersionInfo(
-        @Parameter(description = "userId", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @Parameter(description = "组件类型", required = true)
-        @PathParam("storeType")
-        @BkField(patternStyle = BkStyleEnum.CODE_STYLE)
-        storeType: String,
-        @Parameter(description = "组件代码", required = true)
-        @PathParam("storeCode")
-        @BkField(patternStyle = BkStyleEnum.CODE_STYLE)
-        storeCode: String,
-        @Parameter(description = "项目代码", required = true)
-        @QueryParam("projectCode")
-        @DefaultValue("")
-        projectCode: String = "",
-        @Parameter(description = "实例ID", required = false)
-        @QueryParam("instanceId")
-        instanceId: String? = null,
-        @Parameter(description = "操作系统名称", required = false)
-        @QueryParam("osName")
-        osName: String? = null,
-        @Parameter(description = "操作系统架构", required = false)
-        @QueryParam("osArch")
-        osArch: String? = null
-    ): Result<VersionInfo?>
-
-    @Operation(summary = "根据组件Code获取组件版本日志")
-    @GET
-    @Path("/types/{storeType}/codes/{storeCode}/version/logs/get")
-    fun getStoreVersionLogs(
-        @Parameter(description = "userId", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @Parameter(description = "组件代码", required = true)
-        @PathParam("storeCode")
-        storeCode: String,
-        @Parameter(description = "组件类型", required = true)
-        @PathParam("storeType")
-        storeType: StoreTypeEnum,
-        @Parameter(description = "页码", required = true)
-        @QueryParam("page")
-        @DefaultValue("1")
-        page: Int,
-        @Parameter(description = "每页数量", required = true)
-        @QueryParam("pageSize")
-        @BkField(patternStyle = BkStyleEnum.PAGE_SIZE_STYLE)
-        pageSize: Int
-    ): Result<Page<StoreVersionLogInfo>>
-
-    @Operation(summary = "根据组件版本号获取组件大小")
-    @GET
-    @Path("/types/{storeType}/codes/{storeCode}/version/size/get")
-    fun getStoreVersionSize(
-        @Parameter(description = "userId", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @Parameter(description = "组件代码", required = true)
-        @PathParam("storeCode")
-        storeCode: String,
-        @Parameter(description = "组件类型", required = true)
-        @PathParam("storeType")
-        storeType: StoreTypeEnum,
-        @Parameter(description = "版本号", required = true)
-        @QueryParam("version")
-        version: String,
-        @Parameter(description = "操作系统名称", required = false)
-        @QueryParam("osName")
-        osName: String? = null,
-        @Parameter(description = "操作系统架构", required = false)
-        @QueryParam("osArch")
-        osArch: String? = null
-    ): Result<StoreVersionSizeInfo>
 }
