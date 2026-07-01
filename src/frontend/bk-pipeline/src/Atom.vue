@@ -47,7 +47,10 @@
         <Logo
           v-if="showSubPipelineAccess"
           name="tiaozhuan"
-          class="sub-pipeline-jump-icon"
+          :class="{
+            'sub-pipeline-jump-icon': true,
+            'sub-pipeline-jump-icon-disabled': !hasSubPipelineAccessInfo,
+          }"
           size="16"
           :title="t('viewSubPipeline')"
           @click.stop="handleSubPipelineAccess"
@@ -339,6 +342,15 @@ const showSubPipelineAccess = computed(() => {
   );
 });
 
+const hasSubPipelineAccessInfo = computed(() => {
+  const {
+    projectId,
+    pipelineId,
+    buildId
+  } = props.atom?.subPipelineBuildInfo ?? {};
+  return !!(projectId && pipelineId && buildId);
+});
+
 const isLastQualityAtom = computed(() => {
   return props.atom.atomCode === QUALITY_OUT_ATOM_CODE && props.isLastAtom;
 });
@@ -527,6 +539,7 @@ const handleAtomClick = () => {
 };
 
 const handleSubPipelineAccess = () => {
+  if (!hasSubPipelineAccessInfo.value) return;
   eventBus.$emit(SUB_PIPELINE_ACCESS_EVENT_NAME, {
     atom: props.atom
   });
@@ -888,10 +901,15 @@ onBeforeUnmount(() => {
       margin-left: 8px;
       color: $primaryColor;
       cursor: pointer;
+
+      &.sub-pipeline-jump-icon-disabled {
+        color: $fontLighterColor;
+        cursor: not-allowed;
+      }
     }
 
     .atom-name-text:hover,
-    .sub-pipeline-jump-icon:hover {
+    .sub-pipeline-jump-icon:not(.sub-pipeline-jump-icon-disabled):hover {
       color: $primaryColor;
     }
   }
