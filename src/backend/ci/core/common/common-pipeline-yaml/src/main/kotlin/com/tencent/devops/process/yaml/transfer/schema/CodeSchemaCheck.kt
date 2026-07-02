@@ -9,6 +9,7 @@ import com.github.benmanes.caffeine.cache.Caffeine
 import com.networknt.schema.JsonSchema
 import com.networknt.schema.JsonSchemaFactory
 import com.networknt.schema.SpecVersion
+import com.networknt.schema.ValidationMessage
 import com.tencent.devops.common.api.constant.CommonMessageCode.YAML_NOT_VALID
 import com.tencent.devops.common.api.util.ReflectUtil
 import com.tencent.devops.common.redis.RedisOperation
@@ -166,14 +167,56 @@ class CodeSchemaCheck @Autowired constructor(
     }
 
     private fun JsonSchema.check(yaml: JsonNode) {
-        validate(yaml).let {
-            if (!it.isNullOrEmpty()) {
-                throw PipelineTransferException(
-                    YAML_NOT_VALID,
-                    arrayOf(it.toString())
-                )
+        val messages = validate(yaml)
+        if (messages.isNullOrEmpty()) return
+        // 原始报错（含 schema 内部路径等技术细节）保留到服务端日志，便于排查
+        logger.warn("YAML_SCHEMA_INVALID|rawMessages=$messages")
+        val friendly = messages.joinToString(separator = "\n") { formatValidationMessage(it) }
+        throw PipelineTransferException(
+            YAML_NOT_VALID,
+            arrayOf(friendly)
+        )
+    }
+
+    /**
+     * Convert a JSON Schema validation error to a user-friendly description,
+     * hiding the internal schema structure path.
+     * Common keywords are mapped in the when branches below;
+     * unrecognized keywords fall back to the library's built-in message.
+     */
+    private fun formatValidationMessage(msg: ValidationMessage): String {
+        val path = msg.instanceLocation?.toString()?.ifBlank { "$" } ?: "$"
+        val firstArg = msg.arguments?.firstOrNull()?.toString().orEmpty()
+        return when (msg.type) {
+            "required" -> "[$path] Missing required field [$firstArg]"
+            "additionalProperties" -> "[$path] Unsupported field [$firstArg]"
+            "not" -> {
+                val forbidden = extractForbiddenFields(msg.message)
+                if (forbidden.isNotBlank()) {
+                    "[$path] Field [$forbidden] is not allowed in this context, " +
+                        "please check whether it is placed in the wrong section"
+                } else {
+                    "[$path] This configuration is not allowed in the current context, " +
+                        "please check whether the fields match the current section"
+                }
             }
+            "enum" -> "[$path] Value is not in the allowed set [${msg.arguments?.joinToString(", ").orEmpty()}]"
+            "type" -> "[$path] Wrong field type, expected [$firstArg]"
+            "pattern" -> "[$path] Value does not match the required pattern [$firstArg]"
+            "minLength", "maxLength" -> "[$path] Length constraint violated (${msg.type}=$firstArg)"
+            "minimum", "maximum" -> "[$path] Numeric constraint violated (${msg.type}=$firstArg)"
+            else -> "[$path] ${msg.message}"
         }
+    }
+
+    /**
+     * Try to extract the forbidden field list from the raw message of the `not` keyword.
+     * Typical form: `must not be valid to the schema "xxx" : {"required":["variables"]}`
+     */
+    private fun extractForbiddenFields(message: String?): String {
+        if (message.isNullOrBlank()) return ""
+        val regex = """"required"\s*:\s*\[([^]]*)]""".toRegex()
+        return regex.find(message)?.groupValues?.get(1)?.replace("\"", "").orEmpty()
     }
 
     private fun JsonNode.version(): String? {
