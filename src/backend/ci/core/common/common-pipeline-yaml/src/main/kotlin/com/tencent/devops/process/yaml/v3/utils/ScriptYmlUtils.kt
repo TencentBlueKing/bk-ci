@@ -395,11 +395,15 @@ object ScriptYmlUtils {
             ExtendsTriggerConfig(
                 disabled = YamlObjects.getNullValue("disabled", config)?.toBooleanStrictOrNull(),
                 cron = YamlObjects.getNullValue("cron", config),
-                variables = YamlObjects.transValue<Map<String, Any>?>(
-                    path = "Extends.template.trigger-conf.${it.key}",
-                    type = "variables",
-                    value = YamlObjects.getNullValue("variables", config)
-                )
+                variables = if (config["variables"] == null) {
+                    null
+                } else {
+                    YamlObjects.transValue<Map<String, Any>>(
+                        path = "Extends.template.trigger-conf.${it.key}",
+                        type = "variables",
+                        value = config["variables"]
+                    )
+                }
             )
         }
     }
