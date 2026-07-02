@@ -96,6 +96,53 @@ class PublicVarGroupReferCountService @Autowired constructor(
             logger.info("No reference found for referId: $referId$versionInfo, skip deletion")
             return
         }
+        batchRemoveReferInfoInternal(
+            transactionContext = null,
+            projectId = projectId,
+            referId = referId,
+            referType = referType,
+            referInfosToDelete = referInfosToDelete,
+            referVersion = referVersion
+        )
+    }
+
+    /**
+     * 批量删除引用并更新引用计数（复用外部事务）
+     * 当 transactionContext 不为 null 时，所有 DB 操作使用该 context，不另开事务，
+     * 确保引用清理与调用方（如 deletePipeline）在同一事务内，要么全成功要么全回滚。
+     * @param transactionContext 外部事务的 DSLContext，null 表示自行管理事务（兼容原逻辑）
+     */
+    fun batchRemoveReferInfo(
+        transactionContext: DSLContext,
+        projectId: String,
+        referId: String,
+        referType: PublicVarGroupReferenceTypeEnum,
+        referInfosToDelete: List<ResourcePublicVarGroupReferPO>,
+        referVersion: Int? = null
+    ) {
+        if (referInfosToDelete.isEmpty()) {
+            val versionInfo = if (referVersion != null) ", referVersion: $referVersion" else ""
+            logger.info("No reference found for referId: $referId$versionInfo, skip deletion")
+            return
+        }
+        batchRemoveReferInfoInternal(
+            transactionContext = transactionContext,
+            projectId = projectId,
+            referId = referId,
+            referType = referType,
+            referInfosToDelete = referInfosToDelete,
+            referVersion = referVersion
+        )
+    }
+
+    private fun batchRemoveReferInfoInternal(
+        transactionContext: DSLContext?,
+        projectId: String,
+        referId: String,
+        referType: PublicVarGroupReferenceTypeEnum,
+        referInfosToDelete: List<ResourcePublicVarGroupReferPO>,
+        referVersion: Int?
+    ) {
 
         // 按 (projectId, groupName) 分组
         val groupedReferInfos = referInfosToDelete.groupBy {
@@ -111,8 +158,9 @@ class PublicVarGroupReferCountService @Autowired constructor(
         sortedGroups.forEach { (key, groupReferInfos) ->
             val (groupProjectId, groupName) = key
             // 注意：外层（PublicVarGroupReferManageService）已经提供了锁保护，这里不需要再加锁
-            // 在同一个事务中完成单个变量组的引用删除和计数更新
-            executeWithTransaction { context ->
+            // 若 transactionContext 不为 null，复用外部事务（如 deletePipeline 事务）；
+            // 否则每个变量组在独立事务中处理（故障隔离，避免无关变量组被牵连回滚）
+            val runInGroupTransaction: (DSLContext) -> Unit = run@{ context ->
                 // 1. 删除当前变量组的变量引用记录（按 groupName 隔离）
                 publicVarReferInfoDao.deleteByReferIdAndGroup(
                     dslContext = context,
@@ -171,11 +219,17 @@ class PublicVarGroupReferCountService @Autowired constructor(
                         } else {
                             logger.info(
                                 "Skip decrement referCount in batchRemove: " +
-                                        "referId=$referId still refers to groupName=$groupName, version=$version"
+                                    "referId=$referId still refers to groupName=$groupName, version=$version"
                             )
                         }
                     }
                 }
+            }
+
+            if (transactionContext != null) {
+                runInGroupTransaction(transactionContext)
+            } else {
+                executeWithTransaction { context -> runInGroupTransaction(context) }
             }
         }
     }
