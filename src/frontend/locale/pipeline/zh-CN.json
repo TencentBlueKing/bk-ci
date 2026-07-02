@@ -204,6 +204,7 @@
     "groups": "用户组"
   },
   "execDetail": {
+    "progress": "进度",
     "log": "日志",
     "setting": "配置",
     "execTime": "重试次数",
@@ -2003,6 +2004,25 @@
   "eventID": "事件ID",
   "runningSteps": "正在运行的步骤：",
   "completeness": "完成度：",
+  "progressDetail": {
+    "title": "进度明细",
+    "refresh": "刷新",
+    "totalProgress": "总进度",
+    "subtasks": "子任务进度",
+    "timeline": "阶段时间线",
+    "currentProgress": "当前进度",
+    "completed": "已完成",
+    "duration": "耗时",
+    "running": "进行中",
+    "loadFailed": "进度明细加载失败",
+    "empty": "暂无进度明细",
+    "status": {
+      "succeeded": "完成",
+      "failed": "失败",
+      "running": "进行中",
+      "pending": "等待"
+    }
+  },
   "pacDesc": "Pipeline as Code 模式，简称 PAC 模式。开启并将流水线文件提交到代码库后，可通过维护代码库文件的方式来维护流水线。",
   "delegationPermission": "权限代持",
   "delegation": {

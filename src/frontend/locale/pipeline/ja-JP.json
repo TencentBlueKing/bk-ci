@@ -204,6 +204,7 @@
     "groups": "ユーザーグループ"
   },
   "execDetail": {
+    "progress": "進捗",
     "log": "ログ",
     "setting": "設定",
     "execTime": "再試行回数",
@@ -2000,6 +2001,25 @@
   "eventID": "イベントID",
   "runningSteps": "実行中のステップ：",
   "completeness": "完了度：",
+  "progressDetail": {
+    "title": "進捗詳細",
+    "refresh": "更新",
+    "totalProgress": "総進捗",
+    "subtasks": "サブタスク進捗",
+    "timeline": "ステージタイムライン",
+    "currentProgress": "現在の進捗",
+    "completed": "完了",
+    "duration": "所要時間",
+    "running": "実行中",
+    "loadFailed": "進捗詳細の読み込みに失敗しました",
+    "empty": "進捗詳細はありません",
+    "status": {
+      "succeeded": "完了",
+      "failed": "失敗",
+      "running": "実行中",
+      "pending": "待機中"
+    }
+  },
   "pacDesc": "Pipeline as Codeモード（略してPACモード）。有効にしてパイプラインファイルをコードリポジトリに提交すると、コードリポジトリのファイルを維持する方式でパイプラインを維持できます。",
   "delegationPermission": "権限代行",
   "delegation": {
