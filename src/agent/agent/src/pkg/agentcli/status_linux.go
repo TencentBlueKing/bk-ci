@@ -13,76 +13,82 @@ import (
 	"syscall"
 )
 
-func handleStatus(workDir string) error {
-	beginStatusSummary()
-	printDivider()
-	printStep(msg("BK-CI Agent Status", "BK-CI Agent 状态"))
-	printDivider()
-
-	serviceName, _ := getServiceName(workDir)
-	installMode := readInstallMode(workDir)
-
-	statusLine(msg("Platform", "平台"), "Linux")
-	statusLine(msg("Work directory", "工作目录"), workDir)
-	statusLine(msg("Service name", "服务名"), serviceName)
-	statusLine(msg("Current user", "当前用户"), currentUser())
-	statusLine(msg("Install mode", "安装模式"), installMode)
-
-	// Run mode
-	switch installMode {
-	case modeService:
-		statusLine(msg("Run mode", "运行模式"), msg("root + systemd (service)", "root + systemd (系统服务)"))
-	case modeUser:
-		statusLine(msg("Run mode", "运行模式"), msg("user systemd (survives logout with linger)", "用户级 systemd (启用 linger 后注销仍运行)"))
-	default:
-		if isRoot() {
-			statusLine(msg("Run mode", "运行模式"), msg("root + direct", "root + 直接启动"))
-		} else {
-			statusLine(msg("Run mode", "运行模式"), msg("non-root + direct", "非 root + 直接启动"))
-		}
+func handleStatus(workDir string, args []string) error {
+	mode, err := parseStatusOutputMode(args)
+	if err != nil {
+		return err
 	}
+	title := msg("BK-CI Agent Status", "BK-CI Agent 状态")
+	report := collectStatusReport(title, func() {
+		printDivider()
+		printStep(title)
+		printDivider()
 
-	// Service status
-	switch installMode {
-	case modeService:
-		if serviceName != "" && hasSystemdUnit(serviceName) {
-			printSystemdStatus(serviceName, false)
-		} else {
-			statusLine(msg("Service state", "服务状态"), msg("not registered", "未注册"))
-		}
-	case modeUser:
-		if serviceName != "" && hasUserSystemdUnit(serviceName) {
-			printSystemdStatus(serviceName, true)
-			if hasLinger() {
-				statusLine("Linger", msg("enabled (survives logout) ✓", "已启用 (注销后仍运行) ✓"))
+		serviceName, _ := getServiceName(workDir)
+		installMode := readInstallMode(workDir)
+
+		statusLine(msg("Platform", "平台"), "Linux")
+		statusLine(msg("Work directory", "工作目录"), workDir)
+		statusLine(msg("Service name", "服务名"), serviceName)
+		statusLine(msg("Current user", "当前用户"), currentUser())
+		statusLine(msg("Install mode", "安装模式"), installMode)
+
+		// Run mode
+		switch installMode {
+		case modeService:
+			statusLine(msg("Run mode", "运行模式"), msg("root + systemd (service)", "root + systemd (系统服务)"))
+		case modeUser:
+			statusLine(msg("Run mode", "运行模式"), msg("user systemd (survives logout with linger)", "用户级 systemd (启用 linger 后注销仍运行)"))
+		default:
+			if isRoot() {
+				statusLine(msg("Run mode", "运行模式"), msg("root + direct", "root + 直接启动"))
 			} else {
-				statusLine("Linger", msg("disabled (service stops on logout) ✗", "未启用 (注销后服务将停止) ✗"))
+				statusLine(msg("Run mode", "运行模式"), msg("non-root + direct", "非 root + 直接启动"))
 			}
-		} else {
-			statusLine(msg("Service state", "服务状态"), msg("not registered", "未注册"))
 		}
-	default:
-		statusLine(msg("Service state", "服务状态"), msg("direct mode (no service)", "直接启动模式 (无服务)"))
-	}
 
-	// Process status
-	daemonPid := readPid(filepath.Join(workDir, "runtime", "daemon.pid"))
-	agentPid := readPid(filepath.Join(workDir, "runtime", "agent.pid"))
-	statusLine(msg("Daemon PID", "守护进程 PID"), pidStatus(daemonPid))
-	statusLine(msg("Agent PID", "Agent PID"), pidStatus(agentPid))
+		// Service status
+		switch installMode {
+		case modeService:
+			if serviceName != "" && hasSystemdUnit(serviceName) {
+				printSystemdStatus(serviceName, false)
+			} else {
+				statusLine(msg("Service state", "服务状态"), msg("not registered", "未注册"))
+			}
+		case modeUser:
+			if serviceName != "" && hasUserSystemdUnit(serviceName) {
+				printSystemdStatus(serviceName, true)
+				if hasLinger() {
+					statusLine("Linger", msg("enabled (survives logout) ✓", "已启用 (注销后仍运行) ✓"))
+				} else {
+					statusLine("Linger", msg("disabled (service stops on logout) ✗", "未启用 (注销后服务将停止) ✗"))
+				}
+			} else {
+				statusLine(msg("Service state", "服务状态"), msg("not registered", "未注册"))
+			}
+		default:
+			statusLine(msg("Service state", "服务状态"), msg("direct mode (no service)", "直接启动模式 (无服务)"))
+		}
 
-	checkPropertiesFile(workDir)
+		// Process status
+		daemonPid := readPid(filepath.Join(workDir, "runtime", "daemon.pid"))
+		agentPid := readPid(filepath.Join(workDir, "runtime", "agent.pid"))
+		statusLine(msg("Daemon PID", "守护进程 PID"), pidStatus(daemonPid))
+		statusLine(msg("Agent PID", "Agent PID"), pidStatus(agentPid))
 
-	// JDK
-	statusLine("JDK 17", dirStatus(filepath.Join(workDir, "jdk17")))
-	statusLine("JDK 8", dirStatus(filepath.Join(workDir, "jdk")))
-	statusLine("worker-agent.jar", fileStatus(filepath.Join(workDir, "worker-agent.jar")))
+		checkPropertiesFile(workDir)
 
-	printHealthChecks(workDir)
-	fmt.Println()
-	printStatusSummaryLine()
+		// JDK
+		statusLine("JDK 17", dirStatus(filepath.Join(workDir, "jdk17")))
+		statusLine("JDK 8", dirStatus(filepath.Join(workDir, "jdk")))
+		statusLine("worker-agent.jar", fileStatus(filepath.Join(workDir, "worker-agent.jar")))
 
-	return nil
+		printHealthChecks(workDir)
+		statusBlankLine()
+		printStatusSummaryLine()
+	})
+
+	return outputStatusReport(report, mode)
 }
 
 func printSystemdStatus(serviceName string, userMode bool) {
@@ -185,5 +191,10 @@ func fileStatus(path string) string {
 
 func statusLine(label, value string) {
 	trackStatusLine(label, value)
-	fmt.Printf("  %-24s %s\n", label+":", value)
+	addStatusReportLine(label, value)
+	line := fmt.Sprintf("  %-24s %s", label+":", value)
+	addStatusTextLine(line)
+	if statusShouldPrintText() {
+		fmt.Println(line)
+	}
 }

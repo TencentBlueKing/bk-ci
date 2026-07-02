@@ -113,6 +113,12 @@
                 },
                 {
                   "id": "codecc_rule_set_list"
+                },
+                {
+                  "id": "codecc_rule_set_edit"
+                },
+                {
+                  "id": "codecc_rule_set_manage"
                 }
               ]
             },

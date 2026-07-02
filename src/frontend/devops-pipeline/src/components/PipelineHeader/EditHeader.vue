@@ -530,11 +530,12 @@
             margin-bottom: 12px;
         }
         .pipeline-save-error-list {
+            max-height: 480px;
+            overflow: auto;
             > li {
                 line-height: 26px;
                 a {
                     color: $primaryColor;
-                    margin-left: 10px;
                     text-align: right;
                 }
             }

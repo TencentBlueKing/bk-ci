@@ -189,6 +189,7 @@ object CommonMessageCode {
     const val ERROR_ARCHIVE_PAC_PIPELINE_YAML_EXIST = "2100139" // 已开启PAC模式的流水线[{0}]进行归档需将默认分支上的yaml文件删除
     const val ERROR_USER_NOT_EXIST_IN_PROJECT = "2100140" // 项目{0}中不存在用户{1}
     const val ERROR_QUERY_COUNT_RANGE = "2100142" // 查询条数需要在{}到{}之间
+    const val ERROR_PERMISSION_NOT_PROJECT_MANAGER = "2100143" // 用户{0}非项目{1}管理员
 
     const val BK_CONTAINER_TIMED_OUT = "bkContainerTimedOut" // 创建容器超时
     const val BK_CREATION_FAILED_EXCEPTION_INFORMATION = "bkCreationFailedExceptionInformation" // 创建失败，异常信息

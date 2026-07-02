@@ -28,6 +28,7 @@
 package com.tencent.devops.common.api.util
 
 import com.tencent.devops.common.api.annotation.BkFieldI18n
+import com.tencent.devops.common.api.context.ChannelContext
 import com.tencent.devops.common.api.pojo.FieldLocaleInfo
 import com.tencent.devops.common.api.pojo.I18nFieldInfo
 import java.lang.reflect.Field
@@ -43,13 +44,27 @@ object MessageUtil {
     private val logger = LoggerFactory.getLogger(MessageUtil::class.java)
     private const val DEFAULT_BASE_NAME = "i18n/message"
 
+    /** 流水线/创作流 关键字在国际化资源中的 key，用于根据渠道替换描述中的称谓（与 ChannelCode.CREATIVE_STREAM 渠道配合） */
+    private const val PIPELINE_KEYWORD_PIPELINE = "pipelineKeyword.pipeline"
+    private const val PIPELINE_KEYWORD_CREATIVE_STREAM = "pipelineKeyword.creativeStream"
+    private const val CHANNEL_CREATIVE_STREAM = "CREATIVE_STREAM"
+
     /**
      * 根据语言环境获取对应的描述信息
+     * 当请求渠道为 CREATIVE_STREAM时，会将描述中的「流水线」关键字替换为「创作流」
+     * （替换文案来自 pipelineKeyword.pipeline / pipelineKeyword.creativeStream 的国际化）。
+     *
+     * 渠道来源：优先使用参数 [channel]；若为 null 则使用 [ChannelContext.getChannel()]。
+     * - HTTP 请求：由 Filter 设置 Context，一般无需传 [channel]。
+     * - 异步线程/MQ/转发等：Context 可能为空，调用方应传入 [channel]（如 event.channelCode.name）
+     *   或在入口处使用 [ChannelContext.withChannel]包裹。
+     *
      * @param messageCode 消息标识
      * @param language 语言信息
      * @param params 替换描述信息占位符的参数数组
      * @param baseName 基础资源名称
      * @param defaultMessage 默认信息
+     * @param channel 可选，渠道标识（与 ChannelCode.name 一致）。为 null 时从 ChannelContext 读取，用于异步/MQ 等无请求上下文的场景
      * @return 描述信息
      */
     fun getMessageByLocale(
@@ -58,7 +73,8 @@ object MessageUtil {
         params: Array<String>? = null,
         baseName: String = DEFAULT_BASE_NAME,
         defaultMessage: String? = null,
-        checkUrlDecoder: Boolean = false
+        checkUrlDecoder: Boolean = false,
+        channel: String? = null
     ): String {
         var message: String? = null
         try {
@@ -68,13 +84,12 @@ object MessageUtil {
             } else {
                 Locale(language)
             }
-            // 根据locale和baseName生成resourceBundle对象
             val resourceBundle = ResourceBundle.getBundle(baseName, localeObj)
-            // 通过resourceBundle获取对应语言的描述信息
             message = resourceBundle.getString(messageCode)
-            if (null != params) {
+            // 请求渠道为创作流时，将描述中的「流水线」替换为「创作流」
+            message = replaceKeywordByChannel(resourceBundle, message, messageCode, channel)
+            if (!message.isNullOrBlank() && !params.isNullOrEmpty()) {
                 val mf = MessageFormat(message)
-                // 根据参数动态替换状态码描述里的占位符
                 message = mf.format(params)
             }
         } catch (ignored: Throwable) {
@@ -82,6 +97,91 @@ object MessageUtil {
         }
         val res = message ?: defaultMessage ?: ""
         return if (checkUrlDecoder) URLDecoder.decode(res, Charsets.UTF_8.name()) else res
+    }
+
+    /**
+     * 根据请求渠道替换普通文本消息中的关键字（公开方法）。
+     *
+     * 与 [getMessageByLocale] 中内置的关键字替换不同，本方法用于非国际化资源场景——
+     * 例如 notify 模块从 DB 模板获取的通知标题和正文。
+     * 渠道取值：优先使用 [channel]；若为 null 则从 [ChannelContext.getChannel()] 获取。
+     *
+     * @param message 待处理的文本，可能为 null 或空白
+     * @param language 语言标识（如 zh_CN），用于从国际化资源中获取关键字本地化文本
+     * @param channel 可选，渠道标识（与 ChannelCode.name 一致）；为 null 时从 ChannelContext 读取
+     * @return 替换后的文本；若渠道不匹配、消息为空或发生异常，则原样返回
+     */
+    fun replaceKeywordByChannel(
+        message: String?,
+        language: String,
+        channel: String? = null
+    ): String? {
+        val effectiveChannel = channel ?: ChannelContext.getChannel()
+        if (effectiveChannel != CHANNEL_CREATIVE_STREAM || message.isNullOrBlank()) {
+            return message
+        }
+        return try {
+            val parts = language.split("_")
+            val localeObj = if (parts.size > 1) Locale(parts[0], parts[1]) else Locale(language)
+            val resourceBundle = ResourceBundle.getBundle(DEFAULT_BASE_NAME, localeObj)
+            val pipelineKeyword = resourceBundle.getString(PIPELINE_KEYWORD_PIPELINE)
+            val creativeStreamKeyword = resourceBundle.getString(PIPELINE_KEYWORD_CREATIVE_STREAM)
+            if (pipelineKeyword.isNotBlank() && creativeStreamKeyword.isNotBlank() &&
+                message.contains(pipelineKeyword)
+            ) {
+                message.replace(pipelineKeyword, creativeStreamKeyword)
+            } else {
+                message
+            }
+        } catch (ignored: Throwable) {
+            logger.warn("Replace pipeline keyword by channel skip: message=$message", ignored)
+            message
+        }
+    }
+
+    /**
+     * 根据请求渠道替换消息中的关键字（内部方法，接收 ResourceBundle）。
+     *
+     * 背景：蓝盾平台存在多个接入渠道（详见 ChannelCode），其中 CREATIVE_STREAM（创作流）渠道
+     * 需要将国际化消息中出现的「流水线」字样统一替换为「创作流」，以适配该渠道的产品术语。
+     *
+     * 渠道取值：优先使用 [channelOverride]；为 null 时使用 [ChannelContext.getChannel()]。
+     * 异步/MQ 等场景下 Context 常为空，调用 [getMessageByLocale] 时建议传入 [channel] 或入口处使用 [ChannelContext.withChannel]。
+     *
+     * @param resourceBundle 当前语言环境对应的国际化资源包，包含关键字的本地化文本
+     * @param message 待处理的国际化消息文本，可能为 null 或空白
+     * @param messageCode 消息编码，仅用于异常时的日志记录，方便定位问题
+     * @param channelOverride 可选，渠道标识（与 ChannelCode.name 一致）；为 null 时从 ChannelContext 读取
+     * @return 替换后的消息文本；若渠道不匹配、消息为空、或替换过程中发生异常，则原样返回
+     */
+    private fun replaceKeywordByChannel(
+        resourceBundle: ResourceBundle,
+        message: String?,
+        messageCode: String,
+        channelOverride: String? = null
+    ): String? {
+        val effectiveChannel = channelOverride ?: ChannelContext.getChannel()
+        if (effectiveChannel != CHANNEL_CREATIVE_STREAM || message.isNullOrBlank()) {
+            return message
+        }
+        return try {
+            // 从国际化资源包中分别获取「流水线」和「创作流」对应当前语言的本地化文本
+            val pipelineKeyword = resourceBundle.getString(PIPELINE_KEYWORD_PIPELINE)
+            val creativeStreamKeyword = resourceBundle.getString(PIPELINE_KEYWORD_CREATIVE_STREAM)
+            // 仅当两个关键字均非空白且消息中确实包含「流水线」关键字时，才执行替换
+            if (pipelineKeyword.isNotBlank() && creativeStreamKeyword.isNotBlank() &&
+                message.contains(pipelineKeyword)
+            ) {
+                message.replace(pipelineKeyword, creativeStreamKeyword)
+            } else {
+                // 关键字为空或消息中不包含目标关键字，无需替换，原样返回
+                message
+            }
+        } catch (ignored: Throwable) {
+            // 资源包中可能不存在对应 key（MissingResourceException）等异常情况，返回原消息
+            logger.warn("Replace pipeline keyword by channel skip: messageCode=$messageCode", ignored)
+            message
+        }
     }
 
     /**

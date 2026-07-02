@@ -30,6 +30,7 @@ package com.tencent.devops.environment.permission
 import com.tencent.devops.auth.api.service.ServicePermissionAuthResource
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.environment.dao.EnvDao
@@ -108,19 +109,26 @@ class StreamEnvironmentPermissionServiceImp @Autowired constructor(
         return
     }
 
-    override fun listNodeByPermission(userId: String, projectId: String, permission: AuthPermission): Set<Long> {
+    override fun listNodeByPermission(
+        userId: String,
+        projectId: String,
+        permission: AuthPermission,
+        resourceType: AuthResourceType
+    ): Set<Long> {
         if (!checkPermission(userId, projectId)) {
             return emptySet()
         }
-        return getAllNodeInstance(projectId).map { HashUtil.decodeIdToLong(it) }.toSet()
+        return getAllNodeInstance(projectId).map {
+            HashUtil.decodeIdToLong(it)
+        }.toSet()
     }
 
     override fun listNodeByPermissions(
         userId: String,
         projectId: String,
-        permissions: Set<AuthPermission>
+        permissions: Set<AuthPermission>,
+        resourceType: AuthResourceType
     ): Map<AuthPermission, List<String>> {
-        // 后续如果产品侧调整, view不按操作类校验,此处需要调整为对应的AuthPermission
         if (!checkPermission(userId, projectId)) {
             return emptyMap()
         }
@@ -136,7 +144,8 @@ class StreamEnvironmentPermissionServiceImp @Autowired constructor(
         userId: String,
         projectId: String,
         nodeRecordList: List<TNodeRecord>,
-        authPermission: AuthPermission
+        authPermission: AuthPermission,
+        resourceType: AuthResourceType
     ): List<TNodeRecord> {
         return nodeRecordList
     }
@@ -145,26 +154,48 @@ class StreamEnvironmentPermissionServiceImp @Autowired constructor(
         userId: String,
         projectId: String,
         nodeId: Long,
-        permission: AuthPermission
+        permission: AuthPermission,
+        resourceType: AuthResourceType
     ): Boolean {
         if (permission == AuthPermission.VIEW)
             return true
         return checkPermission(userId, projectId)
     }
 
-    override fun checkNodePermission(userId: String, projectId: String, permission: AuthPermission): Boolean {
+    override fun checkNodePermission(
+        userId: String,
+        projectId: String,
+        permission: AuthPermission,
+        resourceType: AuthResourceType
+    ): Boolean {
         return checkPermission(userId, projectId)
     }
 
-    override fun createNode(userId: String, projectId: String, nodeId: Long, nodeName: String) {
+    override fun createNode(
+        userId: String,
+        projectId: String,
+        nodeId: Long,
+        nodeName: String,
+        resourceType: AuthResourceType
+    ) {
         return
     }
 
-    override fun updateNode(userId: String, projectId: String, nodeId: Long, nodeName: String) {
+    override fun updateNode(
+        userId: String,
+        projectId: String,
+        nodeId: Long,
+        nodeName: String,
+        resourceType: AuthResourceType
+    ) {
         return
     }
 
-    override fun deleteNode(projectId: String, nodeId: Long) {
+    override fun deleteNode(
+        projectId: String,
+        nodeId: Long,
+        resourceType: AuthResourceType
+    ) {
         return
     }
 

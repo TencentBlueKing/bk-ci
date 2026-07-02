@@ -1,0 +1,8 @@
+.statusIcon {
+  display: flex;
+  font-size: 22px;
+  width: 22px;
+  height: 22px;
+  align-items: center;
+  justify-content: center;
+}

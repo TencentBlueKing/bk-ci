@@ -1,6 +1,7 @@
 <template>
     <span class="version-diff-entry-wrapper">
         <bk-button
+            v-if="type === 'button'"
             :text="text"
             :outline="outline"
             :theme="theme"
@@ -13,6 +14,18 @@
                 {{ isTemplate ? $t('template.diff') : $t('diff') }}
             </slot>
         </bk-button>
+        <span
+            v-else
+            class="diff-icon-button"
+            @click="initDiff"
+        >
+            <logo
+                class="diff-icon"
+                name="diff"
+                size="14"
+            />
+            {{ $t('preview.viewDiff') }}
+        </span>
         <bk-dialog
             render-directive="if"
             v-model="showVersionDiffDialog"
@@ -118,13 +131,15 @@
 <script>
     import VersionSelector from '@/components/PipelineDetailTabs/VersionSelector'
     import YamlDiff from '@/components/YamlDiff'
+    import Logo from '@/components/Logo'
     import { mapActions, mapGetters } from 'vuex'
     import { DRAFT_STATUS } from '@/utils/pipelineConst'
     import dayjs from 'dayjs'
     export default {
         components: {
             YamlDiff,
-            VersionSelector
+            VersionSelector,
+            Logo
         },
         props: {
             text: {
@@ -168,7 +183,11 @@
                 type: Boolean,
                 default: false
             },
-            type: String,
+            type: {
+                // button, icon 用于展示按钮形态
+                type: String,
+                default: 'button'
+            },
             pipelineId: String,
             templateId: String,
             archiveFlag: Boolean,
@@ -463,5 +482,15 @@
         font-size: 10px;
         color: #3FC362;
         border-radius: 2px;
+    }
+    .diff-icon-button {
+        display: flex;
+        align-items: center;
+        cursor: pointer;
+        color: #3A84FF;
+        .diff-icon {
+            color: #3A84FF;
+            margin-right: 2px;
+        }
     }
 </style>

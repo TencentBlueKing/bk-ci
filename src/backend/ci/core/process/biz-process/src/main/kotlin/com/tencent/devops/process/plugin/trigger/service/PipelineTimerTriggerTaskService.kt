@@ -27,17 +27,22 @@
 
 package com.tencent.devops.process.plugin.trigger.service
 
+import com.cronutils.mapper.CronMapper
+import com.cronutils.model.CronType
+import com.cronutils.model.definition.CronDefinitionBuilder
+import com.cronutils.parser.CronParser
 import com.tencent.bkrepo.common.api.exception.NotFoundException
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.enums.TriggerRepositoryType
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.pojo.element.trigger.TimerTriggerElement
 import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.plugin.trigger.util.CronExpressionUtils
-import com.tencent.devops.process.pojo.pipeline.PipelineYamlVo
+import com.tencent.devops.process.pojo.pipeline.PipelineYamlFileInfo
 import com.tencent.devops.process.utils.PIPELINE_TIMER_DISABLE
 import com.tencent.devops.process.yaml.PipelineYamlFacadeService
 import com.tencent.devops.repository.api.ServiceRepositoryResource
@@ -97,11 +102,11 @@ open class PipelineTimerTriggerTaskService @Autowired constructor(
         projectId: String,
         element: TimerTriggerElement,
         params: Map<String, String>,
-        yamlInfo: PipelineYamlVo?
+        yamlFileInfo: PipelineYamlFileInfo?
     ): Repository? {
         return when {
             element.repositoryType == TriggerRepositoryType.SELF -> {
-                if (yamlInfo == null || yamlInfo.repoHashId.isBlank()) {
+                if (yamlFileInfo == null || yamlFileInfo.repoHashId.isBlank()) {
                     throw ErrorCodeException(
                         errorCode = ProcessMessageCode.ERROR_TIMER_TRIGGER_NEED_ENABLE_PAC
                     )
@@ -109,7 +114,7 @@ open class PipelineTimerTriggerTaskService @Autowired constructor(
                 try {
                     client.get(ServiceRepositoryResource::class).get(
                         projectId = projectId,
-                        repositoryId = yamlInfo.repoHashId,
+                        repositoryId = yamlFileInfo.repoHashId,
                         repositoryType = RepositoryType.ID
                     ).data
                 } catch (ignored: NotFoundException) {
@@ -161,8 +166,36 @@ open class PipelineTimerTriggerTaskService @Autowired constructor(
             projectId = projectId,
             element = element,
             params = params,
-            yamlInfo = pipelineYamlVo
+            yamlFileInfo = pipelineYamlVo?.let { PipelineYamlFileInfo(it) }
         )
+    }
+
+    // 转化定时任务表达式
+    fun convertAdvanceExpression(advanceExpression: List<String>?, params: Map<String, String>): Set<String> {
+        val expressions = mutableSetOf<String>()
+        if (!advanceExpression.isNullOrEmpty()) {
+            advanceExpression.forEach { expression ->
+                EnvUtils.parseEnv(command = expression, data = params)
+                        .split("\n")
+                        .forEach { expr ->
+                            expressions.add(convertExpression(expr))
+                        }
+            }
+        }
+        return expressions
+    }
+
+    fun convertExpression(expression: String): String {
+        val unixDefinition = CronDefinitionBuilder.instanceDefinitionFor(CronType.UNIX)
+        val parser = CronParser(unixDefinition)
+        return try {
+            val qaurtzCron = parser.parse(expression)
+            val mapper = CronMapper.fromUnixToQuartz()
+            mapper.map(qaurtzCron).asString()
+        } catch (ignore: IllegalArgumentException) {
+            // The old cron, just return it
+            expression
+        }
     }
 
     companion object {

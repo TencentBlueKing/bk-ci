@@ -11,12 +11,17 @@ import com.tencent.devops.common.redis.concurrent.SimpleRateLimiter
 import com.tencent.devops.environment.constant.EnvironmentMessageCode
 import com.tencent.devops.environment.dao.thirdpartyagent.AgentBatchInstallTokenDao
 import com.tencent.devops.environment.dao.thirdpartyagent.ThirdPartyAgentDao
+import com.tencent.devops.environment.model.AgentProps
+import com.tencent.devops.environment.model.AgentPropsSource
+import com.tencent.devops.environment.pojo.enums.AgentType
 import com.tencent.devops.environment.pojo.thirdpartyagent.TPAInstallType
 import com.tencent.devops.environment.service.AgentUrlService
+import com.tencent.devops.environment.service.CreateEnvService
 import com.tencent.devops.environment.service.slave.SlaveGatewayService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 import java.time.ZoneOffset
@@ -33,8 +38,12 @@ class BatchInstallAgentService @Autowired constructor(
     private val agentUrlService: AgentUrlService,
     private val slaveGatewayService: SlaveGatewayService,
     private val downloadAgentInstallService: DownloadAgentInstallService,
-    private val simpleRateLimiter: SimpleRateLimiter
+    private val simpleRateLimiter: SimpleRateLimiter,
+    private val createEnvService: CreateEnvService
 ) {
+    @Value("\${environment.batch-install.aes-key}")
+    private val batchInstallAesKey = ""
+
     fun genInstallLink(
         projectId: String,
         userId: String,
@@ -43,7 +52,8 @@ class BatchInstallAgentService @Autowired constructor(
         loginName: String?,
         loginPassword: String?,
         installType: TPAInstallType?,
-        reInstallId: String?
+        reInstallId: String?,
+        agentType: AgentType?
     ): String {
         val now = LocalDateTime.now()
         val gateway = slaveGatewayService.getGateway(zoneName)
@@ -63,17 +73,18 @@ class BatchInstallAgentService @Autowired constructor(
                 loginPassword = if (loginPassword.isNullOrBlank()) {
                     null
                 } else {
-                    AESUtil.encrypt(ASE_SECRET, loginPassword)
+                    AESUtil.encrypt(batchInstallAesKey, loginPassword)
                 },
                 installType = installType,
-                reInstallId = reInstallId
+                reInstallId = reInstallId,
+                agentType = agentType
             )
         }
 
         // 没有或者过期则重新生成，过期时间默认为3天后
         val tokenData = "$projectId;$userId;${now.toInstant(ZoneOffset.of("+8")).toEpochMilli()}"
         logger.debug("genInstallLink token data $tokenData")
-        val token = AESUtil.encrypt(ASE_SECRET, tokenData)
+        val token = AESUtil.encrypt(batchInstallAesKey, tokenData)
         val expireTime = now.plusDays(3)
         agentBatchInstallTokenDao.createOrUpdateToken(
             dslContext = dslContext,
@@ -93,10 +104,11 @@ class BatchInstallAgentService @Autowired constructor(
             loginPassword = if (loginPassword.isNullOrBlank()) {
                 null
             } else {
-                AESUtil.encrypt(ASE_SECRET, loginPassword)
+                AESUtil.encrypt(batchInstallAesKey, loginPassword)
             },
             installType = installType,
-            reInstallId = reInstallId
+            reInstallId = reInstallId,
+            agentType = agentType
         )
     }
 
@@ -107,7 +119,8 @@ class BatchInstallAgentService @Autowired constructor(
         loginName: String?,
         loginPassword: String?,
         installType: TPAInstallType?,
-        reInstallId: String?
+        reInstallId: String?,
+        agentType: AgentType?
     ): Response {
         // 先校验是否可以创建
         val (projectId, userId, errorMsg) = verifyToken(token)
@@ -131,7 +144,10 @@ class BatchInstallAgentService @Autowired constructor(
                 projectId = projectId,
                 userId = userId,
                 os = os,
-                zoneName = zoneName
+                zoneName = zoneName,
+                agentType = agentType,
+                createWorkspaceName = null,
+                agentProps = null
             )
             HashUtil.encodeLongId(agentId)
         } else {
@@ -141,7 +157,7 @@ class BatchInstallAgentService @Autowired constructor(
         val decodePassword = if (loginPassword.isNullOrBlank()) {
             null
         } else {
-            AESUtil.decrypt(ASE_SECRET, loginPassword)
+            AESUtil.decrypt(batchInstallAesKey, loginPassword)
         }
 
         // 生成安装脚本
@@ -154,7 +170,7 @@ class BatchInstallAgentService @Autowired constructor(
     }
 
     private fun verifyToken(token: String): Triple<String, String, String?> {
-        val decodeSub = AESUtil.decrypt(ASE_SECRET, token).split(";")
+        val decodeSub = AESUtil.decrypt(batchInstallAesKey, token).split(";")
         if (decodeSub.size < 3) {
             return Triple("", "", "token verify error")
         }
@@ -169,11 +185,14 @@ class BatchInstallAgentService @Autowired constructor(
         return Triple(decodeSub[0], decodeSub[1], null)
     }
 
-    private fun genNewAgent(
+    fun genNewAgent(
         projectId: String,
         userId: String,
         os: OS,
-        zoneName: String?
+        zoneName: String?,
+        agentType: AgentType?,
+        createWorkspaceName: String?,
+        agentProps: AgentProps?
     ): Long {
         val gateway = slaveGatewayService.getGateway(zoneName)
         val fileGateway = slaveGatewayService.getFileGateway(zoneName)
@@ -185,12 +204,32 @@ class BatchInstallAgentService @Autowired constructor(
             os = os,
             secretKey = SecurityUtil.encrypt(secretKey),
             gateway = gateway,
-            fileGateway = fileGateway
+            fileGateway = fileGateway,
+            agentType = agentType,
+            createWorkspaceName = createWorkspaceName,
+            agentProps = agentProps
         )
     }
 
+    fun genCreateAgentId(
+        userId: String,
+        projectId: String,
+        workspaceName: String,
+        os: OS
+    ): String {
+        val agentId = genNewAgent(
+            projectId = projectId,
+            userId = userId,
+            os = os,
+            zoneName = createEnvService.getWorkspaceZoneName(projectId, workspaceName),
+            agentType = AgentType.CREATE,
+            createWorkspaceName = workspaceName,
+            agentProps = AgentProps.emptyBySource(AgentPropsSource.REMOTEDEV)
+        )
+        return HashUtil.encodeLongId(agentId)
+    }
+
     companion object {
-        private const val ASE_SECRET = "6fQyK-&Ht49zlBwhB8TW*xAJ/JZz0ZreVcDVCSj+5bY="
         private val logger = LoggerFactory.getLogger(BatchInstallAgentService::class.java)
     }
 }

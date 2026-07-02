@@ -28,6 +28,7 @@
 
 package com.tencent.devops.process.webhook
 
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.BuildEnvParameters
 import com.tencent.devops.common.pipeline.pojo.BuildParameterGroup
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitWebHookTriggerElement
@@ -36,6 +37,7 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitlabWebHook
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeP4WebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeSVNWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeTGitWebHookTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.TapdWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_ACTION
@@ -50,12 +52,15 @@ import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_BUILD_MSG
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_BUILD_NO
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_BUILD_NUM
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_BUILD_START_TYPE
+import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_CATEGORY
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_COMMIT_AUTHOR
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_COMMIT_MESSAGE
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_CREATE_REF
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_CREATE_REF_TYPE
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_CREATE_TIME
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_EVENT
+import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_EVENT_FROM
+import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_EVENT_ID
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_EVENT_URL
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_FAILED_TASKNAMES
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_FAILED_TASKS
@@ -79,6 +84,9 @@ import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_MR_PROPOSER
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_MR_REVIEWERS
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_MR_TITLE
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_MR_URL
+import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_NODE_ID
+import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_NODE_IP
+import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_NODE_NAME
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_NOTE_AUTHOR
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_NOTE_COMMENT
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_NOTE_ID
@@ -108,7 +116,14 @@ import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_SHA
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_SHA_SHORT
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_TAG_DESC
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_TAG_FROM
+import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_TAPD_ID
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_TAPD_ISSUES
+import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_TAPD_LINK_ID
+import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_TAPD_LINK_TYPE
+import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_TAPD_PARENT_ID
+import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_TAPD_PRIORITY_ID
+import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_TAPD_TITLE
+import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_TAPD_WORKSPACE_ID
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_WORKSPACE
 import com.tencent.devops.process.constant.PipelineBuildParamKey.JOB_CONTAINER_NETWORK
 import com.tencent.devops.process.constant.PipelineBuildParamKey.JOB_CONTAINER_NODE_ALIAS
@@ -149,11 +164,15 @@ object TriggerBuildParamUtils {
         svnWebhookTrigger()
         // p4事件触发参数
         p4WebhookTrigger()
+        // tapd事件触发
+        tapdWebhookTrigger()
     }
 
     fun getBasicParamName() = I18nUtil.getCodeLanMessage("$TRIGGER_BUILD_PARAM_PREFIX.basic")
 
-    fun getBasicBuildParams(): List<BuildEnvParameters> {
+    fun getBasicBuildParams(
+        channelCode: ChannelCode?
+    ): List<BuildEnvParameters> {
         return listOf(
             CI_ACTOR,
             CI_BUILD_MSG,
@@ -171,15 +190,36 @@ object TriggerBuildParamUtils {
             CI_WORKSPACE,
             CI_FAILED_TASKNAMES,
             CI_FAILED_TASKS,
-            CI_REMARK
-        ).sortedBy {
+            CI_REMARK,
+            CI_CATEGORY
+        ).let {
+            if (channelCode == ChannelCode.CREATIVE_STREAM) {
+                it.plus(getCreativeStreamBasicBuildParams())
+            } else {
+                it
+            }
+        }.sortedBy {
             it
         }.map {
             BuildEnvParameters(
                 name = it,
-                desc = I18nUtil.getCodeLanMessage(it)
+                // 根据渠道对描述信息需进行调整
+                desc = I18nUtil.getCodeLanMessage("$channelCode.$it").ifBlank {
+                    I18nUtil.getCodeLanMessage(it)
+                },
             )
         }
+    }
+
+    /**
+     * 创作流基础参数
+     */
+    private fun getCreativeStreamBasicBuildParams(): List<String> {
+        return listOf(
+            CI_NODE_ID,
+            CI_NODE_NAME,
+            CI_NODE_IP
+        )
     }
 
     fun getStepParamName() = I18nUtil.getCodeLanMessage("$TRIGGER_BUILD_PARAM_PREFIX.step")
@@ -476,6 +516,26 @@ object TriggerBuildParamUtils {
             CI_REPO_URL
         )
         TRIGGER_BUILD_PARAM_NAME_MAP[CodeP4WebHookTriggerElement.classType] = mutableMapOf("common" to params)
+    }
+
+    /**
+     * tapd事件触发变量名列表
+     */
+    private fun tapdWebhookTrigger() {
+        val params = listOf(
+            CI_TAPD_WORKSPACE_ID,
+            CI_TAPD_ID,
+            CI_TAPD_PARENT_ID,
+            CI_TAPD_PRIORITY_ID,
+            CI_TAPD_LINK_ID,
+            CI_TAPD_LINK_TYPE,
+            CI_EVENT_FROM,
+            CI_EVENT_ID,
+            CI_TAPD_TITLE,
+            CI_NOTE_COMMENT,
+            CI_EVENT_URL
+        )
+        TRIGGER_BUILD_PARAM_NAME_MAP[TapdWebHookTriggerElement.classType] = mutableMapOf("common" to params)
     }
 
     /**
