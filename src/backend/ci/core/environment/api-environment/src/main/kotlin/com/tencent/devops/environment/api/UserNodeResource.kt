@@ -34,6 +34,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.environment.pojo.DisplayName
 import com.tencent.devops.environment.pojo.NodeFetchReq
 import com.tencent.devops.environment.pojo.NodeWithPermission
+import com.tencent.devops.environment.pojo.enums.NodeOperatorStatus
 import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.environment.pojo.enums.NodeType
 import io.swagger.v3.oas.annotations.Operation
@@ -111,7 +112,10 @@ interface UserNodeResource {
         @Parameter(description = "每页多少条", required = false)
         @QueryParam("pageSize")
         pageSize: Int? = 20,
-        @Parameter(description = "IP", required = false)
+        @Parameter(
+            description = "IP，支持多 IP 搜索：英文逗号分隔；单 IP 模糊匹配，多 IP 精确匹配（IN）",
+            required = false
+        )
         @QueryParam("nodeIp")
         nodeIp: String?,
         @Parameter(description = "别名", required = false)
@@ -152,7 +156,10 @@ interface UserNodeResource {
         sortType: String?,
         @Parameter(description = "正序ASC/倒序DESC (默认倒序)", required = false)
         @QueryParam("collation")
-        collation: String?
+        collation: String?,
+        @Parameter(description = "是否是创作流模式", required = false)
+        @QueryParam("createMode")
+        createMode: Boolean?
     ): Result<Page<NodeWithPermission>>
 
     @Operation(summary = "获取项目节点列表")
@@ -171,7 +178,10 @@ interface UserNodeResource {
         @Parameter(description = "每页多少条", required = false)
         @QueryParam("pageSize")
         pageSize: Int? = 20,
-        @Parameter(description = "IP", required = false)
+        @Parameter(
+            description = "IP，支持多 IP 搜索：英文逗号分隔；单 IP 模糊匹配，多 IP 精确匹配（IN）",
+            required = false
+        )
         @QueryParam("nodeIp")
         nodeIp: String?,
         @Parameter(description = "别名", required = false)
@@ -186,12 +196,22 @@ interface UserNodeResource {
         @Parameter(description = "关键字", required = false)
         @QueryParam("keywords")
         keywords: String?,
-        @Parameter(description = "节点类型|用途 (构建: THIRDPARTY;部署: CMDB)", required = false)
+        @Parameter(description = "节点类型|用途 (构建: THIRDPARTY;部署: CMDB;创作流: CREATE)", required = false)
         @QueryParam("nodeType")
         nodeType: NodeType?,
-        @Parameter(description = "Agent 状态", required = false)
+        @Parameter(
+            description = "Agent 状态，可选值：NORMAL / ABNORMAL / NOT_INSTALLED /" +
+                " NOT_IN_CC(部署节点才有) / NOT_IN_CMDB(部署节点才有)",
+            required = false
+        )
         @QueryParam("nodeStatus")
         nodeStatus: NodeStatus?,
+        @Parameter(
+            description = "操作人状态过滤；NORMAL=正常，OPERATOR_CHANGED=负责人已变更；不传表示不过滤",
+            required = false
+        )
+        @QueryParam("operatorStatus")
+        operatorStatus: NodeOperatorStatus?,
         @Parameter(description = "Agent 版本", required = false)
         @QueryParam("agentVersion")
         agentVersion: String?,
@@ -213,6 +233,9 @@ interface UserNodeResource {
         @Parameter(description = "正序ASC/倒序DESC (默认倒序)", required = false)
         @QueryParam("collation")
         collation: String?,
+        @Parameter(description = "是否是创作流模式", required = false)
+        @QueryParam("createMode")
+        createMode: Boolean?,
         data: NodeFetchReq?
     ): Result<Page<NodeWithPermission>>
 
@@ -231,7 +254,10 @@ interface UserNodeResource {
         @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "IP", required = false)
+        @Parameter(
+            description = "IP，支持多 IP 搜索：英文逗号分隔；单 IP 模糊匹配，多 IP 精确匹配（IN）",
+            required = false
+        )
         @QueryParam("nodeIp")
         nodeIp: String?,
         @Parameter(description = "别名", required = false)
@@ -273,6 +299,9 @@ interface UserNodeResource {
         @Parameter(description = "正序ASC/倒序DESC (默认倒序)", required = false)
         @QueryParam("collation")
         collation: String?,
+        @Parameter(description = "是否是创作流模式", required = false)
+        @QueryParam("createMode")
+        createMode: Boolean?,
         data: NodeFetchReq?,
         @Context
         response: HttpServletResponse

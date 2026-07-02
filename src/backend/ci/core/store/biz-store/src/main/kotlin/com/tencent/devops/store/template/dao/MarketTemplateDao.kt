@@ -49,6 +49,7 @@ import com.tencent.devops.store.pojo.template.enums.TemplateRdTypeEnum
 import com.tencent.devops.store.pojo.template.enums.TemplateStatusEnum
 import org.jooq.Condition
 import org.jooq.DSLContext
+import org.jooq.Field
 import org.jooq.Record
 import org.jooq.Result
 import org.jooq.SelectJoinStep
@@ -258,25 +259,37 @@ class MarketTemplateDao {
                     .on(tt.TEMPLATE_CODE.eq(t.field(tStoreStatisticsTotal.STORE_CODE.name, String::class.java)))
             }
 
-            val realSortType = if (sortType == MarketTemplateSortTypeEnum.DOWNLOAD_COUNT) {
-                DSL.field(MarketTemplateSortTypeEnum.getSortType(sortType.name))
-            } else {
-                tt.field(MarketTemplateSortTypeEnum.getSortType(sortType.name))
-            }
+            val realSortType = getMarketTemplateSortField(tt, sortType)
 
             if (desc != null && desc) {
-                baseStep.where(conditions).orderBy(realSortType!!.desc())
+                baseStep.where(conditions).orderBy(realSortType.desc())
             } else {
-                baseStep.where(conditions).orderBy(realSortType!!.asc())
+                baseStep.where(conditions).orderBy(realSortType.asc())
             }
         } else {
             baseStep.where(conditions)
-                .orderBy(tt.field(MarketTemplateSortTypeEnum.getSortType(MarketTemplateSortTypeEnum.NAME.name)))
+                .orderBy(tt.TEMPLATE_NAME)
         }
         return if (null != page && null != pageSize) {
             baseStep.limit((page - 1) * pageSize, pageSize).fetch()
         } else {
             baseStep.fetch()
+        }
+    }
+
+    private fun getMarketTemplateSortField(
+        tt: TTemplate,
+        sortType: MarketTemplateSortTypeEnum
+    ): Field<*> {
+        return when (sortType) {
+            MarketTemplateSortTypeEnum.NAME -> tt.TEMPLATE_NAME
+            MarketTemplateSortTypeEnum.CREATE_TIME -> tt.CREATE_TIME
+            MarketTemplateSortTypeEnum.UPDATE_TIME -> tt.UPDATE_TIME
+            MarketTemplateSortTypeEnum.PUBLISHER -> tt.PUBLISHER
+            MarketTemplateSortTypeEnum.DOWNLOAD_COUNT -> DSL.field(
+                DSL.name(MarketTemplateSortTypeEnum.DOWNLOAD_COUNT.name),
+                Int::class.java
+            )
         }
     }
 

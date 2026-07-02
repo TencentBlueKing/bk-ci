@@ -273,6 +273,24 @@ spring:
       - index: 70
         name: T_PIPELINE_BUILD_PARAM_COMBINATION_DETAIL
         databaseShardingStrategy: SHARDING
+      - index: 71
+        name: T_PIPELINE_EVENT_SUBSCRIPTION
+        broadcastFlag: true
+      - index: 72
+        name: T_PIPELINE_VISIBILITY
+        databaseShardingStrategy: SHARDING
+      - index: 73
+        name: T_PIPELINE_BATCH_TASK
+        databaseShardingStrategy: SHARDING
+      - index: 74
+        name: T_PIPELINE_BATCH_TASK_DETAIL
+        databaseShardingStrategy: SHARDING
+      - index: 75
+        name: T_PIPELINE_COPY_TASK_RESOURCE
+        databaseShardingStrategy: SHARDING
+      - index: 76
+        name: T_PIPELINE_COPY_TASK_RESOURCE_REL
+        databaseShardingStrategy: SHARDING
 
 endpoints:
   metrics:
@@ -306,6 +324,7 @@ devopsGateway:
   fileDevnetGateway: __BK_REPO_PRIVATE_URL__     # not used yet. keep it same as `host' property.
   fileIdcGateway: __BK_REPO_PRIVATE_URL__     # not used yet. keep it same as `host' property.
   whiteProxy: __BK_CI_PRIVATE_URL__
+  devxApi: __BK_CI_PRIVATE_URL__ # not used yet. keep it same as `host' property.
 
 # certificate server 配置
 certificate:

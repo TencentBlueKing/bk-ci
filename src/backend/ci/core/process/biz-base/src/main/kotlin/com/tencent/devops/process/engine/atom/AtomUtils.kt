@@ -43,6 +43,7 @@ import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
@@ -63,6 +64,7 @@ import com.tencent.devops.store.pojo.atom.AtomRunInfo
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.atom.enums.JobTypeEnum
 import com.tencent.devops.store.pojo.common.StoreParam
+import com.tencent.devops.store.pojo.common.enums.ServiceScopeEnum
 import com.tencent.devops.store.pojo.common.version.StoreVersion
 import java.util.LinkedList
 
@@ -76,11 +78,13 @@ object AtomUtils {
         container: Container,
         task: PipelineBuildTask,
         client: Client,
-        buildLogPrinter: BuildLogPrinter
+        buildLogPrinter: BuildLogPrinter,
+        channelCode: ChannelCode = ChannelCode.BS,
+        stageName: String = ""
     ): MutableMap<String, String> {
         val atoms = mutableMapOf<String, String>()
         val atomVersions = getAtomVersions(container)
-        if (atomVersions.isNullOrEmpty()) {
+        if (atomVersions.isEmpty()) {
             // 如果job容器内没有新插件，则直接返回
             return atoms
         }
@@ -107,25 +111,14 @@ object AtomUtils {
                     taskId = task.taskId
                 )
             }
-            // 判断插件是否有权限在该job环境下运行(需判断无编译环境插件是否可以在有编译环境下运行)
-            val jobRunFlag = when (atomRunInfo.jobType) {
-                // 无编译环境插件： 本身就在无编译环境下运行，或者允许无编译插件在编译环境下运行
-                JobTypeEnum.AGENT_LESS -> (container is NormalContainer || atomRunInfo.buildLessRunFlag == true)
-                // 编译环境插件：需要在编译环境下运行
-                JobTypeEnum.AGENT -> container is VMBuildContainer
-                else -> false
-            }
-            if (!jobRunFlag) {
-                throw BuildTaskException(
-                    errorType = ErrorType.USER,
-                    errorCode = ProcessMessageCode.ERROR_ATOM_RUN_BUILD_ENV_INVALID.toInt(),
-                    errorMsg = I18nUtil.getCodeLanMessage(
-                        messageCode = ProcessMessageCode.ERROR_ATOM_RUN_BUILD_ENV_INVALID,
-                        params = arrayOf(element.name)
-                    ),
-                    pipelineId = task.pipelineId,
-                    buildId = task.buildId,
-                    taskId = task.taskId
+            // 服务范围校验(创作流/流水线) + 构建环境匹配校验，均属于「插件与该 Job 运行环境不匹配」
+            if (!isAtomServiceScopeAllowed(atomRunInfo = atomRunInfo, channelCode = channelCode) ||
+                !isAtomJobTypeMatchContainer(atomRunInfo = atomRunInfo, container = container)) {
+                throw buildAtomRunInvalidException(
+                    task = task,
+                    stageName = stageName,
+                    jobName = container.name,
+                    atomName = element.name
                 )
             }
 
@@ -238,37 +231,145 @@ object AtomUtils {
     fun checkModelAtoms(
         projectCode: String,
         atomVersions: Set<StoreVersion>,
-        atomInputParamList: MutableList<StoreParam>,
+        atomCheckParams: List<AtomCheckParam>,
         inputTypeConfigMap: Map<String, Int>,
         client: Client
-    ): Boolean {
-        if (atomVersions.isEmpty()) {
-            return true
-        }
-        // 批量获取插件运行时信息
-        val atomRunInfoResult = client.get(ServiceMarketAtomEnvResource::class).batchGetAtomRunInfos(
+    ) {
+        if (atomVersions.isEmpty()) return
+        // 复用同一次批量查询结果，服务范围/构建环境/参数三类校验共享，避免额外远程调用
+        val atomRunInfoMap = client.get(ServiceMarketAtomEnvResource::class).batchGetAtomRunInfos(
             projectCode = projectCode,
             atomVersions = atomVersions
-        )
-        val atomRunInfoMap = atomRunInfoResult.data
-        atomInputParamList.forEach { storeParam ->
-            val atomCode = storeParam.storeCode
-            val version = storeParam.version
-            val atomName = storeParam.storeName
-            val atomRunInfo = atomRunInfoMap?.get("$atomCode:$version")
-            if (atomRunInfo != null) {
-                validateAtomParam(
-                    atomParamDataMap = storeParam.inputParam,
-                    atomRunInfo = atomRunInfo,
-                    inputTypeConfigMap = inputTypeConfigMap,
-                    atomName = atomName
-                )
+        ).data
+        // 保存/校验阶段：渠道取自请求上下文
+        val channelCode = ChannelCode.getRequestChannelCode()
+        atomCheckParams.forEach { checkParam ->
+            val storeParam = checkParam.storeParam
+            val atomRunInfo = atomRunInfoMap?.get("${storeParam.storeCode}:${storeParam.version}") ?: return@forEach
+            // 服务范围校验：只允许保存支持当前渠道(创作流/流水线)服务范围的插件
+            // 构建环境匹配校验：插件 jobType 需与其所在容器(有/无构建环境)匹配
+            if (!isAtomServiceScopeAllowed(atomRunInfo = atomRunInfo, channelCode = channelCode) ||
+                !isAtomJobTypeMatch(atomRunInfo = atomRunInfo, containerEnvType = checkParam.containerEnvType)) {
+                throw atomCheckException(checkParam)
             }
+            validateAtomParam(
+                atomParamDataMap = storeParam.inputParam,
+                atomRunInfo = atomRunInfo,
+                inputTypeConfigMap = inputTypeConfigMap,
+                atomName = storeParam.storeName
+            )
         }
-        return true
     }
 
-    @Suppress("UNCHECKED_CAST")
+    /**
+     * 构造保存阶段插件校验失败异常，提示中明确指出不满足运行环境要求的 Stage / Job 及插件名。
+     */
+    private fun atomCheckException(checkParam: AtomCheckParam): ErrorCodeException {
+        val messageCode = ProcessMessageCode.ERROR_ATOM_RUN_BUILD_ENV_INVALID
+        val params = arrayOf(checkParam.stageName, checkParam.jobName, checkParam.storeParam.storeName)
+        return ErrorCodeException(
+            errorCode = messageCode,
+            params = params,
+            defaultMessage = I18nUtil.getCodeLanMessage(messageCode = messageCode, params = params)
+        )
+    }
+
+    /**
+     * 渠道(ChannelCode)到插件服务范围(ServiceScopeEnum)的映射关系。
+     *
+     * 这是「渠道-服务范围」唯一的扩展点：未来新增需要做服务范围隔离的渠道时，
+     * 只需在此处补充对应分支即可，调用方无需改动。
+     */
+    private fun resolveRequiredServiceScope(channelCode: ChannelCode): ServiceScopeEnum = when (channelCode) {
+        ChannelCode.CREATIVE_STREAM -> ServiceScopeEnum.CREATIVE_STREAM
+        else -> ServiceScopeEnum.PIPELINE
+    }
+
+    /**
+     * 判断插件是否允许在指定渠道(创作流/流水线)下运行。
+     *
+     * 当插件未声明服务范围([AtomRunInfo.serviceScope] 为空)时默认放行，以保证存量插件逻辑不受影响；
+     * 仅当插件显式声明了服务范围且不包含当前渠道所需范围时才拒绝运行。
+     */
+    private fun isAtomServiceScopeAllowed(atomRunInfo: AtomRunInfo, channelCode: ChannelCode): Boolean {
+        val serviceScope = atomRunInfo.serviceScope
+        if (serviceScope.isNullOrEmpty()) return true
+        val requiredScope = resolveRequiredServiceScope(channelCode).name
+        return serviceScope.any { it.equals(requiredScope, ignoreCase = true) }
+    }
+
+    /**
+     * Job 容器的构建环境类型，作为 jobType 匹配校验的抽象输入，
+     * 使「校验逻辑」与「具体 Container 类型」解耦，运行时/保存时可复用同一套判断。
+     */
+    enum class AtomContainerEnvType {
+        BUILD_ENV, // 有编译环境（对应 VMBuildContainer）
+        BUILD_LESS, // 无编译环境（对应 NormalContainer）
+        UNKNOWN // 其它容器（如触发器），不参与 jobType 匹配校验
+    }
+
+    /**
+     * 保存阶段单个插件的校验上下文：插件参数 + 其所在 Stage/Job 名称 + 容器构建环境类型，
+     * 其中 Stage/Job 名称用于在校验失败时给出「具体哪个 Job」的精确提示。
+     */
+    data class AtomCheckParam(
+        val storeParam: StoreParam,
+        val containerEnvType: AtomContainerEnvType,
+        val stageName: String,
+        val jobName: String
+    )
+
+    fun resolveContainerEnvType(container: Container): AtomContainerEnvType = when (container) {
+        is VMBuildContainer -> AtomContainerEnvType.BUILD_ENV
+        is NormalContainer -> AtomContainerEnvType.BUILD_LESS
+        else -> AtomContainerEnvType.UNKNOWN
+    }
+
+    /**
+     * 判断插件的 jobType 是否与给定的构建环境类型匹配。
+     * - [AtomContainerEnvType.BUILD_ENV]：编译环境插件可运行；无构建环境插件需开启 buildLessRunFlag 才可运行。
+     * - [AtomContainerEnvType.BUILD_LESS]：仅无编译环境插件可运行。
+     * - [AtomContainerEnvType.UNKNOWN]：不做匹配校验，默认放行（保持历史逻辑）。
+     */
+    private fun isAtomJobTypeMatch(atomRunInfo: AtomRunInfo, containerEnvType: AtomContainerEnvType): Boolean {
+        if (containerEnvType == AtomContainerEnvType.UNKNOWN) return true
+        val allJobTypes = JobTypeEnum.resolveAllFromFields(atomRunInfo.jobType, atomRunInfo.jobTypeMap)
+        if (allJobTypes.isEmpty()) return false
+        val hasBuildEnvType = allJobTypes.any { it.isBuildEnv() }
+        val hasBuildLessType = allJobTypes.any { !it.isBuildEnv() }
+        return when (containerEnvType) {
+            AtomContainerEnvType.BUILD_ENV ->
+                hasBuildEnvType || (hasBuildLessType && atomRunInfo.buildLessRunFlag == true)
+            AtomContainerEnvType.BUILD_LESS -> hasBuildLessType
+            else -> true
+        }
+    }
+
+    /**
+     * 判断插件的 jobType 是否与当前 Job 容器匹配。
+     */
+    private fun isAtomJobTypeMatchContainer(atomRunInfo: AtomRunInfo, container: Container): Boolean =
+        isAtomJobTypeMatch(atomRunInfo = atomRunInfo, containerEnvType = resolveContainerEnvType(container))
+
+    private fun buildAtomRunInvalidException(
+        task: PipelineBuildTask,
+        stageName: String,
+        jobName: String,
+        atomName: String,
+        messageCode: String = ProcessMessageCode.ERROR_ATOM_RUN_BUILD_ENV_INVALID
+    ): BuildTaskException {
+        // stageName 为空时回退到 stageId，保证提示中的 Stage 位不为空
+        val params = arrayOf(stageName.ifBlank { task.stageId }, jobName, atomName)
+        return BuildTaskException(
+            errorType = ErrorType.USER,
+            errorCode = messageCode.toInt(),
+            errorMsg = I18nUtil.getCodeLanMessage(messageCode = messageCode, params = params),
+            pipelineId = task.pipelineId,
+            buildId = task.buildId,
+            taskId = task.taskId
+        )
+    }
+
     private fun validateAtomParam(
         atomParamDataMap: Map<String, Any?>?,
         atomRunInfo: AtomRunInfo,

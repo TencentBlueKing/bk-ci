@@ -2,7 +2,7 @@
 
 **数据库名：** devops_ci_environment
 
-**文档版本：** 1.0.17
+**文档版本：** 1.0.20
 
 **文档描述：** devops_ci_environment 的数据库文档
 | 表名                  | 说明       |
@@ -17,6 +17,7 @@
 | T_ENVIRONMENT_THIRDPARTY_AGENT | 第三方构建机 agent 信息表 |
 | T_ENVIRONMENT_THIRDPARTY_AGENT_ACTION |  |
 | T_ENVIRONMENT_THIRDPARTY_ENABLE_PROJECTS |  |
+| T_ENV_DISPATCH_STRATEGY | 环境调度策略表 |
 | T_ENV_NODE | 环境-节点映射表 |
 | T_ENV_SHARE_PROJECT |  |
 | T_NODE | 节点信息表 |
@@ -198,6 +199,30 @@
 |  2   | ENALBE |   bit   | 1 |   0    |    Y     |  N   |       | 是否启用  |
 |  3   | CREATED_TIME |   datetime   | 19 |   0    |    N     |  N   |       | 创建时间  |
 |  4   | UPDATED_TIME |   datetime   | 19 |   0    |    N     |  N   |       | 更新时间  |
+
+**表名：** <a>T_ENV_DISPATCH_STRATEGY</a>
+
+**说明：** 环境调度策略表
+
+**数据列：**
+
+| 序号 | 名称 | 数据类型 |  长度  | 小数位 | 允许空值 | 主键 | 默认值 | 说明 |
+| :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+|  1   | ID |   bigint   | 20 |   0    |    N     |  Y   |       | 主键 ID  |
+|  2   | PROJECT_ID |   varchar   | 64 |   0    |    N     |  N   |       | 项目 ID  |
+|  3   | ENV_ID |   bigint   | 20 |   0    |    N     |  N   |       | 环境 ID  |
+|  4   | STRATEGY_TYPE |   varchar   | 32 |   0    |    N     |  N   |       | 策略类型：DEFAULT-默认策略,CUSTOM-自定义策略  |
+|  5   | DEFAULT_STRATEGY_CODE |   varchar   | 64 |   0    |    Y     |  N   |       | 默认策略标识，自定义策略为 NULL  |
+|  6   | STRATEGY_NAME |   varchar   | 128 |   0    |    Y     |  N   |       | 策略名称  |
+|  7   | SCOPE |   varchar   | 32 |   0    |    N     |  N   |       | Agent 范围：PRE_BUILD-最近使用,ALL-全部节点  |
+|  8   | NODE_RULE |   varchar   | 32 |   0    |    Y     |  N   |       | 节点规则：IDLE-空闲节点,AVAILABLE-可用节点  |
+|  9   | LABEL_SELECTOR |   text   | 65535 |   0    |    Y     |  N   |       | 标签选择器 JSON  |
+|  10   | ENABLED |   bit   | 1 |   0    |    N     |  N   |   b'1'    | 是否启用  |
+|  11   | PRIORITY |   int   | 10 |   0    |    N     |  N   |   0    | 优先级，数字越小越优先  |
+|  12   | CREATED_USER |   varchar   | 64 |   0    |    N     |  N   |       | 创建者  |
+|  13   | UPDATED_USER |   varchar   | 64 |   0    |    N     |  N   |       | 修改者  |
+|  14   | CREATED_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 创建时间  |
+|  15   | UPDATED_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 更新时间  |
 
 **表名：** <a>T_ENV_NODE</a>
 

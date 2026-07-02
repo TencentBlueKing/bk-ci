@@ -42,6 +42,7 @@ object PipelineBuildParamKey {
     const val CI_MILESTONE_NAME = "ci.milestone_name"
     const val CI_MILESTONE_ID = "ci.milestone_id"
     const val CI_TAPD_ISSUES = "ci.mr_tapd_issues"
+    const val CI_MR_LABELS = "ci.mr_labels"
 
     // GIT TAG参数
     const val CI_COMMIT_AUTHOR = "ci.commit_author"
@@ -78,7 +79,7 @@ object PipelineBuildParamKey {
     const val CI_CREATE_REF_TYPE = "ci.create_type"
 
     // 流水线基础变量
-    const val CI_BUILD_NO = "ci.build-no"
+    const val CI_BUILD_NO = "ci.build_no"
     const val CI_BUILD_NUM = "ci.build_num"
     const val CI_PIPELINE_CREATOR = "ci.pipeline_creator"
     const val CI_PIPELINE_MODIFIER = "ci.pipeline_modifier"
@@ -113,4 +114,27 @@ object PipelineBuildParamKey {
     const val JOB_INDEX = "job.index"
     const val JOB_STATUS_TEMPLATE = "jobs.<job-id>.status"
     const val JOB_OUTCOME_TEMPLATE = "jobs.<job-id>.outcome"
+
+    // 流水线标识， 可选值为 PIPELINE、CREATIVE_STREAM
+    const val CI_CATEGORY = "ci.category"
+    // 创作节点相关信息
+    // 云桌面ID
+    const val CI_NODE_ID = "ci.node_id"
+    // 云桌面名称
+    const val CI_NODE_NAME = "ci.node_name"
+    // 云桌面IP
+    const val CI_NODE_IP = "ci.node_ip"
+
+    // TAPD 变量
+    const val CI_TAPD_WORKSPACE_ID = "ci.tapd_workspace_id"
+    const val CI_TAPD_ID = "ci.tapd_id"
+    const val CI_TAPD_PARENT_ID = "ci.tapd_parent_id"
+    const val CI_TAPD_PRIORITY_ID = "ci.tapd_priority"
+    const val CI_TAPD_LINK_ID = "ci.tapd_link_id"
+    const val CI_TAPD_LINK_TYPE = "ci.tapd_link_type"
+    const val CI_EVENT_FROM = "ci.event_from"
+    const val CI_EVENT_ID = "ci.event_id"
+    const val CI_TAPD_TITLE = "ci.tapd_title"
+    // IMATE会话ID
+    const val CI_IMATE_SESSION_ID = "ci.imate_session_id"
 }

@@ -34,6 +34,7 @@ import com.tencent.devops.store.pojo.common.publication.StoreProcessInfo
 import com.tencent.devops.store.pojo.common.publication.StoreCreateRequest
 import com.tencent.devops.store.pojo.common.publication.StoreCreateResponse
 import com.tencent.devops.store.pojo.common.publication.StoreOfflineRequest
+import com.tencent.devops.store.pojo.common.publication.StoreReleaseRequest
 import com.tencent.devops.store.pojo.common.publication.StoreUpdateRequest
 import com.tencent.devops.store.pojo.common.publication.StoreUpdateResponse
 import io.swagger.v3.oas.annotations.Operation
@@ -165,5 +166,16 @@ interface UserStoreReleaseResource {
         @Parameter(description = "组件Id", required = true)
         @PathParam("storeId")
         storeId: String
+    ): Result<Boolean>
+
+    @Operation(summary = "平台管理-发布组件")
+    @PUT
+    @Path("/components/{storeId}/release")
+    fun release(
+        @Parameter(description = "userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "填写信息请求报文体", required = true)
+        storeReleaseRequest: StoreReleaseRequest
     ): Result<Boolean>
 }

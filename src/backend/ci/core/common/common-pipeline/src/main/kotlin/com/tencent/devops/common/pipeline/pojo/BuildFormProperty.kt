@@ -109,7 +109,9 @@ data class BuildFormProperty(
         title = "在新增实例、以及新增变量时作用，控制实例化页面「实例入参」按钮, 当required:true时,值才生效",
         required = false
     )
-    var asInstanceInput: Boolean? = null
+    var asInstanceInput: Boolean? = null,
+    @get:Schema(title = "复杂参数列表[仅type==CUSTOM_PARAM有效]", required = false)
+    var fields: List<BuildFormProperty>? = null
 )
 
 @Schema(title = "构建模型-自定义路径拆分的版本控制信息")

@@ -157,9 +157,12 @@
                 <article slot="content">
                     <SubParameter
                         :title="$t('editPage.displayCondition')"
+                        :desc="$t('editPage.displayConditionTips')"
                         name="displayCondition"
                         :disabled="disabled"
                         :param="displayConditionList"
+                        :add-btn-text="$t('editPage.addDisplayCondition')"
+                        :operator-list="displayConditionOperatorList"
                         v-bind="displayConditionSetting"
                         :handle-change="handleUpdateDisplayCondition"
                     />
@@ -179,15 +182,28 @@
     import VuexTextarea from '@/components/atomFormField/VuexTextarea'
     import FormField from '@/components/AtomPropertyPanel/FormField'
     import validMixins from '@/components/validMixins'
-    import { deepCopy } from '@/utils/util'
+    import { deepCopy, isObject } from '@/utils/util'
+    import { mapState } from 'vuex'
     import ParamValueOption from './children/param-value-option'
-
     import {
         CONST_TYPE_LIST,
         DEFAULT_PARAM,
         PARAM_LIST,
         STRING
     } from '@/store/modules/atom/paramsConfig'
+
+    const DEFAULT_DISPLAY_CONDITION_OPERATOR = '=='
+    const DISPLAY_CONDITION_OPERATORS = [
+        { id: DEFAULT_DISPLAY_CONDITION_OPERATOR, name: DEFAULT_DISPLAY_CONDITION_OPERATOR },
+        { id: '>=', name: '>=' },
+        { id: '<=', name: '<=' },
+        { id: '>', name: '>' },
+        { id: '<', name: '<' },
+        { id: 'IN', name: 'in' },
+        { id: 'CONTAINS', name: 'Contains' },
+        { id: 'STARTS_WITH', name: 'StartWith' },
+        { id: 'ENDS_WITH', name: 'EndWith' }
+    ]
 
     export default {
         components: {
@@ -312,6 +328,9 @@
                     }
                 }
             },
+            displayConditionOperatorList () {
+                return DISPLAY_CONDITION_OPERATORS
+            },
             templateId () {
                 return this.$route.params.templateId
             },
@@ -364,10 +383,32 @@
             },
             handleUpdateDisplayCondition (key, value) {
                 const displayCondition = JSON.parse(value).reduce((acc, cur) => {
-                    acc[cur.key] = cur.value
+                    if (cur.key) {
+                        acc[cur.key] = this.formatDisplayConditionValue(cur)
+                    }
                     return acc
                 }, {})
                 this.handleUpdateParam(key, displayCondition)
+            },
+            validateFormList () {
+                const paramValueOption = this.$refs.paramValueOptionRef
+                if (paramValueOption && typeof paramValueOption.validateFormList === 'function') {
+                    return paramValueOption.validateFormList()
+                }
+                return true
+            },
+            formatDisplayConditionValue (condition) {
+                const operator = condition.operator || DEFAULT_DISPLAY_CONDITION_OPERATOR
+                const value = isObject(condition.value)
+                    ? JSON.stringify(condition.value)
+                    : condition.value
+                if (operator === DEFAULT_DISPLAY_CONDITION_OPERATOR) {
+                    return value
+                }
+                return JSON.stringify({
+                    operator,
+                    value
+                })
             }
         }
     }

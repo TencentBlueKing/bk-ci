@@ -116,6 +116,7 @@
     import InstallTemplateDialog from './InstallTemplateDialog'
     import TemplateTable from './TemplateTable'
     import UpgradeFromStoreDialog from './UpgradeFromStoreDialog.vue'
+    import { refreshTemplateCount } from '../useTemplateCountRefresh'
 
     const {
         copyTemp,
@@ -404,7 +405,7 @@
                         },
                         {
                             text: item.srcTemplateId ? t('uninstall') : t('delete'),
-                            handler: () => deleteTemplate(item, fetchTableData),
+                            handler: () => deleteTemplate(item, refreshTemplateList),
                             hasPermission: item.canDelete,
                             disablePermissionApi: true,
                             isShow: true,
@@ -451,6 +452,10 @@
     function handleClear () {
         searchValue.value = []
         fetchTableData()
+    }
+    async function refreshTemplateList () {
+        await fetchTableData()
+        refreshTemplateCount()
     }
     function handleConfirmCreate (createData) {
         pagination.value.current = 1

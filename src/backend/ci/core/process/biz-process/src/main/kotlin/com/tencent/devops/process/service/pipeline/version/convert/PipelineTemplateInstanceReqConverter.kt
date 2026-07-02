@@ -30,6 +30,7 @@ package com.tencent.devops.process.service.pipeline.version.convert
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.BranchVersionAction
 import com.tencent.devops.common.pipeline.enums.ChannelCode
@@ -62,7 +63,10 @@ import com.tencent.devops.process.service.template.v2.PipelineTemplateInfoServic
 import com.tencent.devops.process.service.template.v2.PipelineTemplateResourceService
 import com.tencent.devops.process.service.template.v2.PipelineTemplateSettingService
 import com.tencent.devops.process.engine.utils.PipelineUtils
+import com.tencent.devops.process.pojo.template.TemplateType
+import com.tencent.devops.process.service.template.v2.PipelineTemplateRelatedService
 import com.tencent.devops.process.yaml.PipelineYamlService
+import com.tencent.devops.store.api.template.ServiceTemplateResource
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -85,7 +89,9 @@ class PipelineTemplateInstanceReqConverter(
     private val pipelineYamlService: PipelineYamlService,
     private val pipelineAsCodeService: PipelineAsCodeService,
     private val pipelineInfoService: PipelineInfoService,
-    private val templatePipelineDao: TemplatePipelineDao
+    private val templatePipelineDao: TemplatePipelineDao,
+    private val pipelineTemplateRelatedService: PipelineTemplateRelatedService,
+    private val client: Client
 ) : PipelineVersionCreateReqConverter {
     override fun support(request: PipelineVersionCreateReq) = request is PipelineTemplateInstanceReq
 
@@ -153,11 +159,25 @@ class PipelineTemplateInstanceReqConverter(
             // 异步创建实例化,在请求时会创建线ID,所以不能根据pipelineId为空判断是否是创建流水线
             val pipelineInfo = pipelineInfoService.getPipelineInfo(projectId = projectId, pipelineId = newPipelineId)
 
+            // 如果修改流水线,不能把非约束的流水线改成约束的流水线
+            if (pipelineInfo != null) {
+                val pipelineTemplateRelated = pipelineTemplateRelatedService.get(
+                    projectId = projectId, pipelineId = newPipelineId
+                )
+                if (pipelineTemplateRelated == null ||
+                    pipelineTemplateRelated.instanceType != PipelineInstanceTypeEnum.CONSTRAINT
+                ) {
+                    throw ErrorCodeException(
+                        errorCode = ProcessMessageCode.ERROR_NON_CONSTRAINED_PIPELINE_CANNOT_SAVE_AS_CONSTRAINED
+                    )
+                }
+            }
+
             // 生成流水线基本信息
             val pipelineBasicInfo = pipelineResourceFactory.createPipelineBasicInfo(
                 projectId = projectId,
                 pipelineId = newPipelineId,
-                channelCode = ChannelCode.BS,
+                channelCode = ChannelCode.getRequestChannelCode(),
                 pipelineName = pipelineName,
                 pipelineDesc = null,
                 pipelineDisable = pipelineInfo?.locked
@@ -180,6 +200,20 @@ class PipelineTemplateInstanceReqConverter(
                 throw ErrorCodeException(
                     errorCode = ProcessMessageCode.ERROR_TEMPLATE_INSTANCE_NEED_PIPELINE_TYPE,
                 )
+            }
+            if (templateInfo.mode == TemplateType.CONSTRAINT && templateInfo.srcTemplateId != null) {
+                // 安装的研发商店模板需校验模板下组件可见范围
+                val validateRet = client.get(ServiceTemplateResource::class).validateUserTemplateComponentVisibleDept(
+                    userId = userId,
+                    templateCode = templateInfo.srcTemplateId!!,
+                    projectCode = projectId
+                )
+                if (validateRet.isNotOk()) {
+                    throw ErrorCodeException(
+                        errorCode = validateRet.status.toString(),
+                        defaultMessage = validateRet.message
+                    )
+                }
             }
             val templateResource = pipelineTemplateResourceService.get(
                 projectId = projectId,
@@ -242,6 +276,7 @@ class PipelineTemplateInstanceReqConverter(
                 overrideTemplateField = overrideTemplateField
             )
             val pipelineSettingWithoutVersion = getPipelineSetting(
+                userId = userId,
                 projectId = projectId,
                 pipelineId = newPipelineId,
                 templateSettingVersion = templateResource.settingVersion,
@@ -294,6 +329,12 @@ class PipelineTemplateInstanceReqConverter(
                 projectId = projectId,
                 asCodeSettings = pipelineSettingWithoutVersion.pipelineAsCodeSettings
             )
+            val yamlFileInfo = enablePac.takeIf { it }?.let {
+                PipelineYamlFileInfo(
+                    repoHashId = repoHashId!!,
+                    filePath = filePath!!,
+                )
+            }
             val pipelineModelBasicInfo = pipelineResourceFactory.createPipelineModelBasicInfo(
                 model = instanceModel,
                 projectId = projectId,
@@ -301,7 +342,8 @@ class PipelineTemplateInstanceReqConverter(
                 userId = userId,
                 create = pipelineId == null,
                 versionStatus = versionStatus,
-                channelCode = ChannelCode.BS,
+                channelCode = ChannelCode.getRequestChannelCode(),
+                yamlFileInfo = yamlFileInfo,
                 pipelineDialect = pipelineDialect
             )
 
@@ -360,12 +402,7 @@ class PipelineTemplateInstanceReqConverter(
                 templateInstanceBasicInfo = templateInstanceBasicInfo,
                 resetBuildNo = resetBuildNo,
                 enablePac = enablePac,
-                yamlFileInfo = enablePac.takeIf { it }?.let {
-                    PipelineYamlFileInfo(
-                        repoHashId = repoHashId!!,
-                        filePath = filePath!!,
-                    )
-                },
+                yamlFileInfo = yamlFileInfo,
                 targetAction = targetAction,
                 targetBranch = targetBranch,
                 branchName = branchName
@@ -374,12 +411,14 @@ class PipelineTemplateInstanceReqConverter(
     }
 
     private fun PipelineTemplateInstanceReq.getPipelineSetting(
+        userId: String,
         projectId: String,
         pipelineId: String,
         templateSettingVersion: Int,
         enablePac: Boolean
     ): PipelineSetting {
-        val templateSetting = pipelineTemplateSettingService.get(
+        val templateSetting = pipelineTemplateSettingService.getWithLabels(
+            userId = userId,
             projectId = projectId,
             templateId = templateId,
             settingVersion = templateSettingVersion
@@ -390,7 +429,8 @@ class PipelineTemplateInstanceReqConverter(
                 pipelineName = pipelineName
             )
         } else {
-            pipelineRepositoryService.getSetting(
+            pipelineRepositoryService.getSettingWithLabels(
+                userId = userId,
                 projectId = projectId,
                 pipelineId = pipelineId
             )?.let {
@@ -405,7 +445,7 @@ class PipelineTemplateInstanceReqConverter(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 pipelineName = pipelineName,
-                channelCode = ChannelCode.BS
+                channelCode = ChannelCode.getRequestChannelCode()
             )
         }
         val pacSetting = enablePac.takeIf { it }?.let {

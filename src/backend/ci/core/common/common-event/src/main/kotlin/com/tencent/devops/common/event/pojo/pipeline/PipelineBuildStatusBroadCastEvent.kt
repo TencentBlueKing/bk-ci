@@ -80,8 +80,12 @@ data class PipelineBuildStatusBroadCastEvent(
         val stageSeq: Int,
         @Schema(title = "作业名称")
         val jobName: String,
+        @Schema(title = "job位置，如 2-1")
+        val jobIndex: String,
         @Schema(title = "步骤名称")
         val stepName: String,
+        @Schema(title = "step位置，如 2-1-3")
+        val stepIndex: String,
         @Schema(title = "特殊步骤")
         val specialStep: String,
         @Schema(title = "触发方式")

@@ -28,6 +28,7 @@
 package com.tencent.devops.store.api.common
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.store.pojo.common.enums.ServiceScopeEnum
 import com.tencent.devops.store.pojo.common.label.Label
 import com.tencent.devops.store.pojo.common.label.LabelRequest
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
@@ -82,7 +83,10 @@ interface OpLabelResource {
     fun listAllLabels(
         @Parameter(description = "类别", required = true)
         @PathParam("labelType")
-        labelType: StoreTypeEnum
+        labelType: StoreTypeEnum,
+        @Parameter(description = "服务范围", required = false)
+        @QueryParam("serviceScope")
+        serviceScope: ServiceScopeEnum?
     ): Result<List<Label>?>
 
     @Operation(summary = "根据ID获取标签信息")

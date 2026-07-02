@@ -12,13 +12,17 @@ data class SearchGroupInfo(
     @get:Schema(title = "资源类型筛选")
     val resourceType: String? = null,
     @get:Schema(title = "资源实例筛选")
-    val iamResourceCode: String? = null,
+    val resourceCode: String? = null,
+    @get:Schema(title = "资源实例筛选")
+    var iamResourceCode: String? = null,
     @get:Schema(title = "用户组名称")
     val name: String? = null,
     @get:Schema(title = "用户组描述")
     val description: String? = null,
     @get:Schema(title = "用户组id")
     val groupId: Int? = null,
+    @get:Schema(title = "是否为跳转场景")
+    val redirect: Boolean? = null,
     @get:Schema(title = "page")
     val page: Int,
     @get:Schema(title = "pageSize")

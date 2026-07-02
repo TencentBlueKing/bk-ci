@@ -112,6 +112,12 @@ allprojects {
             }
             dependency("com.perforce:p4java:${Versions.p4}")
             dependency("io.mockk:mockk:${Versions.mockk}")
+            dependencySet("io.agentscope:${Versions.AgentScope}") {
+                entry("agentscope")
+                entry("agentscope-agui-spring-boot-starter")
+                entry("agentscope-extensions-autocontext-memory")
+                entry("agentscope-extensions-session-mysql")
+            }
             dependencySet("io.github.resilience4j:${Versions.Resilience4j}") {
                 entry("resilience4j-circuitbreaker")
                 entry("resilience4j-core")
@@ -138,6 +144,7 @@ allprojects {
             // spring-boot 3.4.0 引入的snakeyaml 2.3版本有BUG
             // https://bitbucket.org/snakeyaml/snakeyaml/issues/1100/parsing-big-yaml-with-emoji-doesnt-work
             dependency("org.yaml:snakeyaml:2.4")
+            dependency("com.jayway.jsonpath:json-path:${Versions.jsonPath}")
         }
     }
 

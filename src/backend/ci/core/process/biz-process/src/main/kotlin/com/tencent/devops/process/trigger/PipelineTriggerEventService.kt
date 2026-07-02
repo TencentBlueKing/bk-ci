@@ -29,16 +29,21 @@
 package com.tencent.devops.process.trigger
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.context.ChannelContext
+import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.pojo.I18Variable
+import com.tencent.devops.common.api.pojo.IdValue
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.web.utils.I18nUtil.getCodeLanMessage
@@ -62,6 +67,8 @@ import com.tencent.devops.process.webhook.pojo.event.commit.ReplayWebhookEvent
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import com.tencent.devops.repository.api.ServiceRepositoryPermissionResource
 import com.tencent.devops.repository.api.ServiceRepositoryWebhookResource
+import com.tencent.devops.store.api.common.ServiceStoreComponentResource
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -87,7 +94,9 @@ class PipelineTriggerEventService @Autowired constructor(
         private const val PIPELINE_TRIGGER_EVENT_BIZ_ID = "PIPELINE_TRIGGER_EVENT"
         private const val PIPELINE_TRIGGER_DETAIL_BIZ_ID = "PIPELINE_TRIGGER_DETAIL"
         // 构建链接
-        const val PIPELINE_BUILD_URL_PATTERN = "<a href=\"{0}\" target=\"_blank\">#{1}</a>"
+        private const val PIPELINE_BUILD_URL_PATTERN = "<a href=\"{0}\" target=\"_blank\">#{1}</a>"
+        private const val CREATIVE_STREAM_CONSOLE_PATH = "/console/creative-stream/{0}/flow/{1}/execute/{2}/execute-detail"
+        private const val PIPELINE_CONSOLE_PATH = "/console/pipeline/{0}/{1}/detail/{2}/executeDetail"
     }
 
     fun getDetailId(): Long {
@@ -298,8 +307,9 @@ class PipelineTriggerEventService @Autowired constructor(
             eventIds to count
         }
         // 事件信息
-        val triggerEvent = pipelineTriggerEventDao.listRepoTriggerEvent(
+        val triggerEvent = pipelineTriggerEventDao.listRepoTriggerEventWithoutBody(
             dslContext = dslContext,
+            projectId = projectId,
             eventIds = eventIds
         )
         // 触发详情记录（总数，成功数）
@@ -315,7 +325,7 @@ class PipelineTriggerEventService @Autowired constructor(
                 projectId = it.projectId,
                 eventId = it.eventId,
                 repoHashId = it.eventSource,
-                eventDesc = getI18nEventDesc(it.eventDesc),
+                eventDesc = getEventDescVariable(it.eventDesc),
                 eventTime = it.createTime.timestampmilli(),
                 total = eventDetailsMap[it.eventId]?.total ?: 0,
                 success = eventDetailsMap[it.eventId]?.success ?: 0
@@ -416,7 +426,8 @@ class PipelineTriggerEventService @Autowired constructor(
             errorCode = ProcessMessageCode.ERROR_TRIGGER_EVENT_NOT_FOUND,
             params = arrayOf(eventId.toString())
         )
-        val scmType = PipelineTriggerType.toScmType(triggerEvent.triggerType) ?: throw ErrorCodeException(
+        // :TODO 回放操作需支持创作流触发事件
+        val triggerType = PipelineTriggerType.parse(triggerEvent.triggerType) ?: throw ErrorCodeException(
             errorCode = ProcessMessageCode.ERROR_TRIGGER_TYPE_REPLAY_NOT_SUPPORT,
             params = arrayOf(triggerEvent.triggerType)
         )
@@ -426,14 +437,25 @@ class PipelineTriggerEventService @Autowired constructor(
             repositoryHashId = triggerEvent.eventSource!!,
             permission = AuthPermission.USE
         )
-        val webhookRequest = client.get(ServiceRepositoryWebhookResource::class).getWebhookRequest(
-            requestId = triggerEvent.requestId
-        ).data ?: throw ErrorCodeException(
-            errorCode = ProcessMessageCode.ERROR_WEBHOOK_REQUEST_NOT_FOUND
-        )
         // 保存重放事件
         val requestId = MDC.get(TraceTag.BIZID)
         val replayEventId = getEventId()
+        // 代码库事件回放需校验[源webhook数据]是否存
+        if (triggerType.toScmType() != null) {
+            val webhookRequest = client.get(ServiceRepositoryWebhookResource::class).getWebhookRequest(
+                requestId = triggerEvent.requestId
+            ).data ?: throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_WEBHOOK_REQUEST_NOT_FOUND
+            )
+
+            // 保存重放的webhook请求
+            client.get(ServiceRepositoryWebhookResource::class).saveWebhookRequest(
+                repositoryWebhookRequest = webhookRequest.copy(
+                    requestId = requestId,
+                    createTime = LocalDateTime.now()
+                )
+            )
+        }
         // 如果重试的事件也由重试产生,则应该记录最开始的请求ID
         val replayRequestId = triggerEvent.replayRequestId ?: triggerEvent.requestId
         val replayTriggerEvent = with(triggerEvent) {
@@ -441,7 +463,7 @@ class PipelineTriggerEventService @Autowired constructor(
                 requestId = requestId,
                 projectId = projectId,
                 eventId = replayEventId,
-                triggerType = triggerType,
+                triggerType = triggerType.name,
                 eventSource = eventSource,
                 eventType = eventType,
                 triggerUser = userId,
@@ -451,19 +473,13 @@ class PipelineTriggerEventService @Autowired constructor(
                 ).toJsonStr(),
                 replayRequestId = replayRequestId,
                 requestParams = requestParams,
-                createTime = LocalDateTime.now()
+                createTime = LocalDateTime.now(),
+                eventBody = triggerEvent.eventBody
             )
         }
         pipelineTriggerEventDao.save(
             dslContext = dslContext,
             triggerEvent = replayTriggerEvent
-        )
-        // 保存重放的webhook请求
-        client.get(ServiceRepositoryWebhookResource::class).saveWebhookRequest(
-            repositoryWebhookRequest = webhookRequest.copy(
-                requestId = requestId,
-                createTime = LocalDateTime.now()
-            )
         )
         CodeWebhookEventDispatcher.dispatchReplayEvent(
             streamBridge = streamBridge,
@@ -472,7 +488,8 @@ class PipelineTriggerEventService @Autowired constructor(
                 projectId = projectId,
                 eventId = replayEventId,
                 replayRequestId = replayRequestId,
-                scmType = scmType,
+                scmType = triggerType.toScmType(),
+                triggerType = triggerType.name,
                 pipelineId = pipelineId
             )
         )
@@ -505,14 +522,46 @@ class PipelineTriggerEventService @Autowired constructor(
         buildId = buildId
     )
 
+    fun listEventType(
+        userId: String,
+        scmType: ScmType?,
+        channelCode: String?
+    ): List<IdValue> {
+        return when (channelCode) {
+            ChannelCode.CREATIVE_STREAM.name -> {
+                client.get(ServiceStoreComponentResource::class).getComponentBaseInfoByCodes(
+                    storeType = StoreTypeEnum.TRIGGER_EVENT,
+                    storeCodes = null
+                ).data?.map {
+                    IdValue(
+                        id = it.storeCode,
+                        value = it.storeName
+                    )
+                }
+            }
+            else -> {
+                CodeEventType.getEventsByScmType(scmType).map {
+                    IdValue(
+                        id = it.name,
+                        value = I18nUtil.getCodeLanMessage(
+                            messageCode = "${CodeEventType.MESSAGE_CODE_PREFIX}_${it.name}",
+                            defaultMessage = it.name,
+                            language = I18nUtil.getLanguage(userId)
+                        )
+                    )
+                }
+            }
+        } ?: listOf()
+    }
+
     /**
-     * 获取国际化构建事件描述
+     * 获取事件描述变量
      */
-    private fun getI18nEventDesc(eventDesc: String) = try {
-        JsonUtil.to(eventDesc, I18Variable::class.java).getCodeLanMessage()
+    private fun getEventDescVariable(eventDesc: String) = try {
+        JsonUtil.to(eventDesc, I18Variable::class.java)
     } catch (ignored: Exception) {
         logger.warn("Failed to resolve repo trigger event|sourceDesc[$eventDesc]", ignored)
-        eventDesc
+        I18Variable(code = "", defaultMessage = eventDesc)
     }
 
     private fun getI18nReason(reason: String?): String = getCodeLanMessage(
@@ -531,7 +580,11 @@ class PipelineTriggerEventService @Autowired constructor(
         return if (status == PipelineTriggerStatus.SUCCEED.name) {
             when {
                 !buildId.isNullOrBlank() -> {
-                    val linkUrl = "/console/pipeline/$projectId/$pipelineId/detail/$buildId/executeDetail"
+                    val linkUrl = if (ChannelContext.getChannel() == ChannelCode.CREATIVE_STREAM.name) {
+                        MessageFormat.format(CREATIVE_STREAM_CONSOLE_PATH, projectId, pipelineId, buildId)
+                    } else {
+                        MessageFormat.format(PIPELINE_CONSOLE_PATH, projectId, pipelineId, buildId)
+                    }
                     MessageFormat.format(PIPELINE_BUILD_URL_PATTERN, linkUrl, buildNum)
                 }
 
@@ -555,7 +608,7 @@ class PipelineTriggerEventService @Autowired constructor(
         eventParam: PipelineTriggerEventVo
     ): PipelineTriggerEventVo {
         return with(eventParam) {
-            eventDesc = getI18nEventDesc(eventDesc)
+            eventDesc = getEventDescVariable(eventDesc.defaultMessage ?: eventDesc.toJsonStr())
             buildNum = getBuildNumUrl()
             reason = getI18nReason(eventParam.reason)
             this

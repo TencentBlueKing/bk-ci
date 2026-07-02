@@ -142,14 +142,6 @@ class PipelineGroupDao {
         }
     }
 
-    fun get(dslContext: DSLContext, id: Long): TPipelineGroupRecord? {
-        with(TPipelineGroup.T_PIPELINE_GROUP) {
-            return dslContext.selectFrom(this)
-                .where(ID.eq(id))
-                .fetchOne()
-        }
-    }
-
     fun listByIds(dslContext: DSLContext, projectId: String, ids: Set<Long>): Result<TPipelineGroupRecord> {
         with(TPipelineGroup.T_PIPELINE_GROUP) {
             return dslContext.selectFrom(this)
@@ -168,6 +160,19 @@ class PipelineGroupDao {
             return dslContext.selectFrom(this)
                 .where(ID.eq(groupId).and(PROJECT_ID.eq(projectId)))
                 .fetchOne()
+        }
+    }
+
+    fun getByName(
+        dslContext: DSLContext,
+        projectId: String,
+        name: String
+    ): TPipelineGroupRecord? {
+        with(TPipelineGroup.T_PIPELINE_GROUP) {
+            return dslContext.selectFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(NAME.eq(name))
+                .fetchAny()
         }
     }
 
