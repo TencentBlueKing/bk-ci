@@ -120,6 +120,27 @@ class PublicVarGroupReferManageService @Autowired constructor(
         referId: String,
         referType: PublicVarGroupReferenceTypeEnum
     ) {
+        deletePublicVerGroupRefByReferId(
+            transactionContext = null,
+            projectId = projectId,
+            referId = referId,
+            referType = referType
+        )
+    }
+
+    /**
+     * 根据引用ID删除变量组引用（复用外部事务）
+     * 当 transactionContext 不为 null 时，引用清理的 DB 操作使用该 context，与调用方在同一事务内，
+     * 要么全成功要么全回滚，彻底避免孤儿引用记录。
+     * 注意：分布式锁仍在事务外获取/释放，锁保护范围不涉及 DB 写事务本身。
+     * @param transactionContext 外部事务的 DSLContext，null 表示自行管理事务
+     */
+    fun deletePublicVerGroupRefByReferId(
+        transactionContext: DSLContext?,
+        projectId: String,
+        referId: String,
+        referType: PublicVarGroupReferenceTypeEnum
+    ) {
         // 使用分布式锁保护整个删除流程
         val lock = createReferLock(
             projectId = projectId,
@@ -129,8 +150,10 @@ class PublicVarGroupReferManageService @Autowired constructor(
         lock.lock()
         try {
             // 查询要删除的引用记录（在锁保护下查询，确保数据一致性）
+            // 查询使用传入的 transactionContext（若有），确保读到的是事务内的最新视图
+            val queryContext = transactionContext ?: dslContext
             val referInfosToDelete = publicVarGroupReferInfoDao.listVarGroupReferInfoByReferId(
-                dslContext = dslContext,
+                dslContext = queryContext,
                 projectId = projectId,
                 referId = referId,
                 referType = referType
@@ -142,12 +165,23 @@ class PublicVarGroupReferManageService @Autowired constructor(
             }
 
             // 删除变量组引用和变量引用记录（在锁保护下执行，确保原子性）
-            publicVarGroupReferCountService.batchRemoveReferInfo(
-                projectId = projectId,
-                referId = referId,
-                referType = referType,
-                referInfosToDelete = referInfosToDelete
-            )
+            if (transactionContext != null) {
+                // 复用外部事务
+                publicVarGroupReferCountService.batchRemoveReferInfo(
+                    transactionContext = transactionContext,
+                    projectId = projectId,
+                    referId = referId,
+                    referType = referType,
+                    referInfosToDelete = referInfosToDelete
+                )
+            } else {
+                publicVarGroupReferCountService.batchRemoveReferInfo(
+                    projectId = projectId,
+                    referId = referId,
+                    referType = referType,
+                    referInfosToDelete = referInfosToDelete
+                )
+            }
         } catch (t: Throwable) {
             logger.warn("Failed to delete refer info for referId: $referId", t)
             throw ErrorCodeException(errorCode = ERROR_PIPELINE_COMMON_VAR_GROUP_REFER_UPDATE_FAILED)
@@ -255,19 +289,49 @@ class PublicVarGroupReferManageService @Autowired constructor(
     }
 
     /**
+     * 校验变量组引用的合法性（供调用方在事务前调用）
+     * 包含三项校验：
+     * 1. 参数ID重复检查（validateParamIds）
+     * 2. 从 model 解析 publicVarGroups（handlePublicVarInfo，幂等）
+     * 3. 变量组存在性校验（validatePublicVarGroupsExist）
+     * 调用方应在事务前调用本方法，事务后调用 [handleVarGroupReferBus] 只做纯写入，
+     * 避免事务提交后校验失败导致引用缺失（B-1 残留风险优化）。
+     * handleVarGroupReferBus 内部的 handlePublicVarInfo 是幂等的，前置调用后不会重复处理。
+     */
+    fun validateVarGroupReferences(
+        model: Model,
+        projectId: String
+    ) {
+        val params = model.getTriggerContainer().params
+        if (params.isNotEmpty()) {
+            validateParamIds(params)
+        }
+        model.handlePublicVarInfo()
+        val publicVarGroups = model.publicVarGroups
+        publicVarGroups?.let { validatePublicVarGroupsExist(projectId, it) }
+    }
+
+    /**
      * 处理变量组引用业务逻辑
      * 使用分布式锁保护，确保同一引用的操作串行化，避免并发修改导致的引用计数错误
      * draftFlag=true 时更新引用计数（草稿代表用户最新意图）
      * draftFlag=false 时仅写入引用关联记录，不操作计数（release/分支版本内容与草稿一致）
+     * 注意：校验逻辑（参数ID重复、变量组存在性）已提取到 [validateVarGroupReferences]，
+     * 调用方应在事务前调用校验，事务后调用本方法只做纯写入，避免事务提交后校验失败导致引用缺失。
      */
     fun handleVarGroupReferBus(
         publicVarGroupReferDTO: PublicVarGroupReferDTO
     ) {
         val model = publicVarGroupReferDTO.model
         val params = model.getTriggerContainer().params
-        // 检查参数ID是否存在重复（仅在params非空时校验）
-        if (params.isNotEmpty()) {
-            validateParamIds(params)
+
+        // 兜底校验：若调用方未在事务前调用 validateVarGroupReferences（publicVarGroups 仍为 null），
+        // 则在此处执行校验。已前置校验的路径（如 createPipeline/updatePipeline）会跳过，避免重复。
+        val needFallbackValidation = model.publicVarGroups == null
+        if (needFallbackValidation) {
+            if (params.isNotEmpty()) {
+                validateParamIds(params)
+            }
         }
 
         // 使用版本级别的分布式锁保护整个操作流程，避免并发修改导致的引用计数错误
@@ -301,9 +365,13 @@ class PublicVarGroupReferManageService @Autowired constructor(
                 )
                 return
             }
+            // handlePublicVarInfo 幂等：若调用方已通过 validateVarGroupReferences 填充过 publicVarGroups，此处直接 return
             model.handlePublicVarInfo()
             val publicVarGroups = model.publicVarGroups
-            publicVarGroups?.let { validatePublicVarGroupsExist(publicVarGroupReferDTO.projectId, it) }
+            // 兜底校验：未前置校验的路径在此补充变量组存在性校验
+            if (needFallbackValidation) {
+                publicVarGroups?.let { validatePublicVarGroupsExist(publicVarGroupReferDTO.projectId, it) }
+            }
             // 提取并处理动态变量组
             val pipelinePublicVarGroupReferPOs = processDynamicVarGroups(
                 publicVarGroupReferDTO = publicVarGroupReferDTO,
