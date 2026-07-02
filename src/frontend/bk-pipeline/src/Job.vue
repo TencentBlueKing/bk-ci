@@ -209,7 +209,7 @@ export default {
         isMacOSNonVMware() {
             const { dispatchType } = this.container || {}
             return dispatchType?.buildType === "MACOS"
-                && typeof dispatchType?.macOSHwSpec === "string"
+                && dispatchType?.macOSHwSpec
                 && dispatchType.macOSHwSpec !== "VMware"
         },
         showDebugBtn() {
