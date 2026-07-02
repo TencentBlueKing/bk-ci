@@ -79,7 +79,8 @@ export default defineComponent({
       // 创建新的触发事件元素
       const newElement = createDefaultElement(nextIndex, {
         ...trigger,
-        '@type': 'marketEvent',
+        // CDS- 开头的为云桌面触发事件
+        '@type': trigger?.atomCode?.startsWith('CDS-') ? 'marketEvent' : trigger.atomCode,
       })
 
       openTriggerPanel(newElement, nextIndex, true)

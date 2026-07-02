@@ -31,6 +31,7 @@ export const ARTIFACTORY = 'ARTIFACTORY'
 export const SUB_PIPELINE = 'SUB_PIPELINE'
 export const CUSTOM_FILE = 'CUSTOM_FILE'
 export const REPO_REF = 'REPO_REF'
+export const FORM_LIST = 'FORM_LIST'
 
 function paramType (typeConst) {
     return type => type === typeConst
@@ -259,6 +260,22 @@ export const DEFAULT_PARAM = {
         category: '',
         displayCondition: {},
         asInstanceInput: true
+    },
+    [FORM_LIST]: {
+        id: '',
+        name: '',
+        defaultValue: [],
+        defalutValueLabel: 'defaultValue',
+        defaultValueLabelTips: 'defaultValueDesc',
+        desc: '',
+        type: FORM_LIST,
+        typeDesc: 'formList',
+        required: true,
+        readOnly: false,
+        category: '',
+        displayCondition: {},
+        asInstanceInput: true,
+        fields: []
     }
 }
 
@@ -342,7 +359,8 @@ export const ParamComponentMap = {
     [ARTIFACTORY]: 'Selector',
     [SUB_PIPELINE]: 'Selector',
     [CUSTOM_FILE]: 'FileParamInput',
-    [REPO_REF]: 'CascadeRequestSelector'
+    [REPO_REF]: 'CascadeRequestSelector',
+    [FORM_LIST]: 'FormListParamInput'
 }
 
 export const BOOLEAN_LIST = [
@@ -415,12 +433,30 @@ export function isRemoteType (param) {
     return param?.payload?.type === 'remote'
 }
 
+// FORM_LIST 子字段可选的字段类型；nameKey 是 storeMap 命名空间下的 i18n key
+export const FORM_LIST_FIELD_TYPE_LIST = [
+    STRING,
+    TEXTAREA,
+    ENUM,
+    BOOLEAN,
+    MULTIPLE
+].map(id => ({
+    id,
+    nameKey: DEFAULT_PARAM[id].typeDesc
+}))
+
+const FORM_LIST_SELECTOR_TYPES = [ENUM, MULTIPLE, CHECKBOX]
+
+export function isFormListSelectorFieldType (type) {
+    return FORM_LIST_SELECTOR_TYPES.includes(type)
+}
+
 export const isStringParam = paramType(STRING)
 export const isTextareaParam = paramType(TEXTAREA)
 export const isBooleanParam = paramType(BOOLEAN)
 export const isEnumParam = paramType(ENUM)
 export const isMultipleParam = paramType(MULTIPLE)
-export const isCheakboxParam = paramType(CHECKBOX)
+export const isCheckboxParam = paramType(CHECKBOX)
 export const isSvnParam = paramType(SVN_TAG)
 export const isGitParam = paramType(GIT_REF)
 export const isRepoParam = paramType(REPO_REF)
@@ -429,6 +465,7 @@ export const isBuildResourceParam = paramType(CONTAINER_TYPE)
 export const isArtifactoryParam = paramType(ARTIFACTORY)
 export const isSubPipelineParam = paramType(SUB_PIPELINE)
 export const isFileParam = paramType(CUSTOM_FILE)
+export const isFormListParam = paramType(FORM_LIST)
 
 export const getParamsGroupByLabel = (list) => {
     // 将参数列表按照分组进行分组,未分组的参数放到一个分组里

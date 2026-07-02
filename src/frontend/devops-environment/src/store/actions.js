@@ -703,6 +703,22 @@ const actions = {
         return vue.$ajax.post(`${strategyPrefix}/projects/${projectId}/envs/${envHashId}/strategies/reorder`, params).then(response => {
             return response
         })
+    },
+
+    /**
+     * 获取当前用户可关联的imate列表（前端分页）
+     * GET /api/user/environment/tencent/node/get_user_imate_list?projectId=xxx
+     */
+    getUserImateList (_, { projectId }) {
+        return vue.$ajax.get(`${prefix}/user/environment/tencent/node/get_user_imate_list?projectId=${projectId}`)
+    },
+
+    /**
+     * 批量导入imate节点
+     * POST /api/user/environment/tencent/node/batch_import_imate_nodes?projectId=xxx
+     */
+    batchImportImateNodes (_, { projectId, params }) {
+        return vue.$ajax.post(`${prefix}/user/environment/tencent/node/batch_import_imate_nodes?projectId=${projectId}`, params)
     }
 }
 

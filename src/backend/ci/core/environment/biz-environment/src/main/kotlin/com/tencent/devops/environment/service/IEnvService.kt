@@ -38,11 +38,19 @@ import com.tencent.devops.environment.pojo.EnvironmentId
 import com.tencent.devops.environment.pojo.NodeBaseInfo
 import com.tencent.devops.environment.pojo.enums.EnvType
 import com.tencent.devops.environment.pojo.enums.NodeStatus
+import com.tencent.devops.environment.pojo.envOperate.EnvOperateOrigin
 
 interface IEnvService {
     fun checkName(projectId: String, envId: Long?, envName: String)
     fun createEnvironment(userId: String, projectId: String, envCreateInfo: EnvCreateInfo): EnvironmentId
-    fun updateEnvironment(userId: String, projectId: String, envHashId: String, envUpdateInfo: EnvUpdateInfo)
+    fun updateEnvironment(
+        userId: String,
+        projectId: String,
+        envHashId: String,
+        envUpdateInfo: EnvUpdateInfo,
+        envOperateOrigin: EnvOperateOrigin
+    )
+
     fun listEnvironment(
         userId: String,
         projectId: String,
@@ -62,6 +70,7 @@ interface IEnvService {
         envHashId: String,
         checkPermission: Boolean = true
     ): EnvWithPermission
+
     fun getEnvEnvVar(
         userId: String,
         projectId: String,
@@ -88,6 +97,7 @@ interface IEnvService {
         projectId: String,
         envHashIds: List<String>
     ): List<NodeBaseInfo>
+
     fun listAllEnvNodesNew(
         userId: String,
         projectId: String,
@@ -101,7 +111,21 @@ interface IEnvService {
         nodeStatus: NodeStatus?
     ): Page<NodeBaseInfo>
 
-    fun addEnvNodes(userId: String, projectId: String, envHashId: String, nodeHashIds: List<String>)
-    fun deleteEnvNodes(userId: String, projectId: String, envHashId: String, nodeHashIds: List<String>)
+    fun addEnvNodes(
+        userId: String,
+        projectId: String,
+        envHashId: String,
+        nodeHashIds: List<String>,
+        envOperateOrigin: EnvOperateOrigin
+    )
+
+    fun deleteEnvNodes(
+        userId: String,
+        projectId: String,
+        envHashId: String,
+        nodeHashIds: List<String>,
+        envOperateOrigin: EnvOperateOrigin
+    )
+
     fun searchByName(projectId: String, envName: String, limit: Int, offset: Int): Page<EnvWithPermission>
 }

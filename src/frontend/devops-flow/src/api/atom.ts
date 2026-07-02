@@ -65,6 +65,7 @@ export interface FetchAtomsParams {
   fitOsFlag?: boolean
   page?: number
   pageSize?: number
+  ownerStoreCode?: string
 }
 
 export interface FetchAtomsResponse {
@@ -89,11 +90,17 @@ export function fetchAtoms(params: FetchAtomsParams): Promise<FetchAtomsResponse
 /**
  * 获取插件分类列表
  */
-export function fetchAtomClassify(params: { category: JobCategory }): Promise<AtomClassify[]> {
+export function fetchAtomClassify({
+  category,
+  serviceScope = 'CREATIVE_STREAM',
+}: {
+  category: JobCategory
+  serviceScope?: string
+}): Promise<AtomClassify[]> {
   return get<AtomClassify[]>(`${STORE_API_URL_PREFIX}/user/pipeline/atom/classify`, {
     params: {
-      ...params,
-      serviceScope: 'CREATIVE_STREAM',
+      category,
+      serviceScope,
     },
   })
 }
