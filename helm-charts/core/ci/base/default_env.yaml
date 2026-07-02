@@ -56,6 +56,7 @@ bkCiBuildDataClearSwitch: false
 bkCiOpenapiApiAuth: false
 bkCiMqDefaultBinder: core-rabbit
 bkCiJwtEnable: false
+bkCiJwtKid: devops
 bkCiNotifyUserBlackListCacheSize: 50000
 bkCiPlatformManager: admin
 bkCiRabbitQuorumEnable: false
