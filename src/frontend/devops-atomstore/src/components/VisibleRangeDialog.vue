@@ -211,7 +211,7 @@
 
             emitUpdate () {
                 const deptInfos = this.getDeptInfos()
-                this.$emit('update', { deptInfos })
+                this.$emit('update', deptInfos)
             },
 
             async loadNodes (node) {
