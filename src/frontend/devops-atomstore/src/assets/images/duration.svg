@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="56px" height="56px" viewBox="0 0 56 56" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>Icon/活跃时长</title>
+    <g id="Icon/活跃时长" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="编组" transform="translate(12.000000, 12.000000)">
+            <circle id="椭圆形" stroke="#000000" stroke-width="2" fill="#FFFFFF" cx="16" cy="16" r="15"></circle>
+            <circle id="椭圆形" fill="#FFFFFF" cx="25" cy="27" r="9"></circle>
+            <polyline id="路径-5" stroke="#3A84FF" stroke-width="2" stroke-linecap="round" points="19.3922524 27.5228278 22.296953 27.5228278 24 30.1269949 27.0583441 23.9906584 28.1185264 27.0588267 30.9006477 27.0588267"></polyline>
+        </g>
+        <rect id="矩形" fill="#000000" x="26" y="19" width="2" height="10"></rect>
+        <rect id="矩形" fill="#000000" x="26" y="28" width="10" height="2"></rect>
+    </g>
+</svg>

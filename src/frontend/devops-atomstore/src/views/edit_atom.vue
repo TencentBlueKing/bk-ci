@@ -1018,7 +1018,7 @@
         height: 100%;
         .edit-atom-content {
             padding: 20px 0 40px;
-            height: calc(100% - 5.6vh);
+            height: calc(100% - 70px);
             overflow: auto;
             display: flex;
             background-color: #fff;
