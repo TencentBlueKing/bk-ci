@@ -139,7 +139,7 @@
                 }"
                 :disabled="loading"
                 key="edit"
-                @click="goEdit"
+                @click="handleEdit"
             >
                 {{ $t("edit") }}
             </bk-button>
@@ -222,6 +222,20 @@
                 :id="pipelineId"
             />
         </aside>
+        <DraftConfirmDialog
+            v-model="isShowConfirmDialog"
+            :has-draft="hasDraft"
+            :draft-status="draftStatus"
+            :draft-save-info="draftSaveInfo"
+            :draft-hint-title="draftHintTitle"
+            :version="execDetai?.curVersion"
+            :version-name="pipelineInfo?.versionName"
+            :draft-version="pipelineInfo?.version"
+            :click-action-type="'edit'"
+            @confirm="confirmEdit"
+            @edit-draft="goEditDraft"
+            @cancel="closeDialog"
+        />
     </div>
     <i
         v-else
@@ -236,10 +250,12 @@
         RESOURCE_ACTION,
         RESOURCE_TYPE
     } from '@/utils/permission'
-    import { TEMP_PARAM_SET_ID } from '@/utils/pipelineConst'
+    import { TEMP_PARAM_SET_ID, DRAFT_STATUS, VERSION_STATUS_ENUM } from '@/utils/pipelineConst'
     import { mapActions, mapGetters, mapState } from 'vuex'
     import PipelineBreadCrumb from './PipelineBreadCrumb'
     import ReleaseButton from './ReleaseButton'
+    import DraftConfirmDialog from './DraftConfirmDialog.vue'
+    import useDraftStatus from '@/hook/useDraftStatus'
     const PIPELINE_REPLAY_STATUS = {
         REPLAYING: 'REPLAYING',
         REPLAY_SUCCESS: 'REPLAY_SUCCESS',
@@ -249,18 +265,29 @@
     export default {
         components: {
             PipelineBreadCrumb,
+            DraftConfirmDialog,
             ReleaseButton
+        },
+        setup () {
+            const { fetchLatestDraftStatus } = useDraftStatus()
+            return {
+                fetchLatestDraftStatus
+            }
         },
         data () {
             return {
                 loading: false,
                 reuseParamsLoading: false,
                 timesNum: 1,
+                isShowConfirmDialog: false,
+                draftStatus: DRAFT_STATUS.NORMAL,
+                draftSaveInfo: null,
                 canReplay: true
             }
         },
         computed: {
-            ...mapState('atom', ['execDetail', 'pipelineInfo', 'saveStatus']),
+            ...mapState('atom', ['execDetail', 'pipelineInfo', 'saveStatus', 'execInfo']),
+            ...mapState('common', ['hasDraft']),
             ...mapGetters({
                 isCurPipelineLocked: 'atom/isCurPipelineLocked'
             }),
@@ -298,6 +325,24 @@
             isDebugExec () {
                 return this.execDetail?.debug ?? false
             },
+            isActiveBranchVersion (){
+                return this.execInfo?.status === VERSION_STATUS_ENUM.BRANCH
+            },
+            draftHintTitle () {
+                switch (true) {
+                    case this.hasDraft && this.isActiveBranchVersion:
+                        return this.$t('template.templateCoverWarning')
+                    case this.hasDraft:
+                        return this.$t('hasDraft')
+                    default:
+                        // 分支版本
+                        if (this.isActiveBranchVersion) {
+                            return this.$t('createBranchDraftTips', [this.pipelineInfo?.versionName])
+                        }
+                        // 基线版本落后状态
+                        return this.$t('pipelineUpdated')
+                }
+            },
             archiveFlag () {
                 return this.$route.query.archiveFlag
             }
@@ -325,6 +370,8 @@
                     'requestTerminatePipeline',
                     'requestRePlayPipeline',
                     'requestPipelineRePlayStatus',
+                    'rollbackPipelineVersion',
+                    'requestPipelineSummary',
                     'requestRePlayEventDetail'
                 ]
             ),
@@ -471,9 +518,72 @@
                     }
                 })
             },
-            goEdit () {
+            async handleEdit () {
+                try {
+                    const result = await this.fetchLatestDraftStatus({
+                        projectId: this.projectId,
+                        id: this.pipelineId,
+                        actionType: 'EDIT',
+                        isTemplate: false,
+                        pipelineInfo: this.pipelineInfo
+                    })
+                    
+                    this.draftStatus = result.status
+                    this.draftSaveInfo = result.draftSaveInfo
+                    
+                    // 状态为NORMAL时，直接编辑
+                    if (this.draftStatus === DRAFT_STATUS.NORMAL) {
+                        this.goEdit()
+                        return
+                    }
+                    // 有草稿冲突/分支版本/基线落后，弹窗确认
+                    this.isShowConfirmDialog = true
+                } catch (error) {
+                    this.$bkMessage({
+                        theme: 'error',
+                        message: error.message || error
+                    })
+                }
+            },
+            async confirmEdit () {
+                try {
+                    this.loading = true
+                    const res = await this.rollbackPipelineVersion({
+                        ...this.$route.params,
+                        version: this.pipelineInfo?.releaseVersion
+                    })
+                    await this.requestPipelineSummary(this.$route.params)
+                    
+                    if (res.version) {
+                        this.goEdit(res.version)
+                    }
+                } catch (error) {
+                    this.$bkMessage({
+                        theme: 'error',
+                        message: error.message || error
+                    })
+                } finally {
+                    this.loading = false
+                }
+            },
+            goEditDraft (version) {
                 this.$router.push({
-                    name: 'pipelinesEdit'
+                    name: 'pipelinesEdit',
+                    params: {
+                        ...this.$route.params,
+                        version
+                    }
+                })
+            },
+            closeDialog () {
+                this.draftSaveInfo = null
+                this.draftStatus = DRAFT_STATUS.NORMAL
+                this.isShowConfirmDialog = false
+            },
+            goEdit (version) {
+                this.$router.push({
+                    name: 'pipelinesEdit',
+                    version
                 })
             },
 

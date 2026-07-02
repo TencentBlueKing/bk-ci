@@ -66,6 +66,7 @@ import {
     SET_PIPELINE_EDITING,
     SET_PIPELINE_EXEC_DETAIL,
     SET_PIPELINE_INFO,
+    SET_EXEC_INFO,
     SET_PIPELINE_WITHOUT_TRIGGER,
     SET_PIPELINE_YAML,
     SET_PIPELINE_YAML_HIGHLIGHT_MAP,
@@ -92,6 +93,8 @@ import {
     UPDATE_STAGE,
     UPDATE_STORESTATUS,
     UPDATE_TEMPLATE_CONSTRAINT,
+    SAVE_PIPELINE_SNAPSHOT,
+    CLEAR_PIPELINE_SNAPSHOT,
     UPDATE_WHOLE_ATOM_INPUT
 } from './constants'
 
@@ -185,7 +188,12 @@ export default {
         })
     },
     [UPDATE_PIPELINE_SETTING_MUNTATION]: (state, { setting, param }) => {
-        Object.assign(setting, param)
+        // 使用 Vue.set 或解构赋值确保响应式更新
+        Object.keys(param).forEach(key => {
+            if (setting[key] !== param[key]) {
+                Vue.set(setting, key, param[key])
+            }
+        })
         return state
     },
     [SET_EDIT_FROM]: (state, editfromImport = false) => {
@@ -542,4 +550,16 @@ export default {
             storeStatus
         })
     },
+    [SAVE_PIPELINE_SNAPSHOT]: (state, { snapshot }) => {
+        Vue.set(state, 'originalPipelineSnapshot', snapshot)
+        return state
+    },
+    [SET_EXEC_INFO]: (state, infoData) => {
+        Vue.set(state, 'execInfo', infoData)
+        return state
+    },
+    [CLEAR_PIPELINE_SNAPSHOT]: (state) => {
+        Vue.set(state, 'originalPipelineSnapshot', null)
+        return state
+    }
 }
