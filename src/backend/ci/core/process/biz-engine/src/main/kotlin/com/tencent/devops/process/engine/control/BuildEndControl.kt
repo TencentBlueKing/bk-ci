@@ -221,6 +221,7 @@ class BuildEndControl @Autowired constructor(
                 buildId = buildId,
                 likeStr = "%${AgentReuseMutex.CONTEXT_KEY_SUFFIX}"
             ).forEach { agentId ->
+                LOG.info("ENGINE|$buildId|$source|BUILD_FINISH|$pipelineId|UNLOCK_REUSE_LOCK|$agentId")
                 RedisLockByValue(
                     redisOperation = redisOperation,
                     lockKey = AgentReuseMutex.genAgentReuseMutexLockKey(projectId, agentId),

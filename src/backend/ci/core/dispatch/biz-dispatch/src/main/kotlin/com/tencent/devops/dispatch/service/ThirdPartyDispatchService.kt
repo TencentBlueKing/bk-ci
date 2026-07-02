@@ -44,6 +44,7 @@ import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentDispatch
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentEnvDispatchType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentIDDispatchType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyDevCloudDispatchType
+import com.tencent.devops.common.redis.RedisLockByValue
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.dispatch.constants.AGENT_REUSE_MUTEX_WAIT_REUSED_ENV
@@ -51,6 +52,7 @@ import com.tencent.devops.dispatch.constants.BK_AGENT_IS_BUSY
 import com.tencent.devops.dispatch.constants.BK_ENV_BUSY
 import com.tencent.devops.dispatch.constants.BK_ENV_NODE_DISABLE
 import com.tencent.devops.dispatch.constants.BK_ENV_WORKER_ERROR_IGNORE
+import com.tencent.devops.dispatch.constants.BK_ENV_WORKER_ERROR_IGNORE_UNLOCK
 import com.tencent.devops.dispatch.constants.BK_NO_AGENT_AVAILABLE
 import com.tencent.devops.dispatch.constants.BK_QUEUE_TIMEOUT_MINUTES
 import com.tencent.devops.dispatch.constants.BK_THIRD_JOB_ENV_CURR
@@ -229,9 +231,9 @@ class ThirdPartyDispatchService @Autowired constructor(
                     dispatchMessage = dispatchMessage,
                     dispatchType = ThirdPartyAgentIDDispatchType(
                         displayName = originDispatchType.value,
-                        workspace = null,
+                        workspace = originDispatchType.workspace,
                         agentType = AgentDispatchType.ID,
-                        dockerInfo = null,
+                        dockerInfo = originDispatchType.dockerInfo,
                         reusedInfo = null
                     ),
                     envId = originDispatchType.envHashId?.let {
@@ -496,6 +498,25 @@ class ThirdPartyDispatchService @Autowired constructor(
             dispatchMessage.event.ignoreEnvAgentIds?.forEach {
                 val a = agentMap[it]
                 commonUtil.logWithAgentUrl(data, BK_ENV_WORKER_ERROR_IGNORE, arrayOf(it), a?.nodeId, a?.agentId)
+                // 这里要解开下复用锁，如果有的话，因为上一次失败的调度是上了锁的
+                if (data.dispatchType.hasReuseMutex()) {
+                    val lockKey = AgentReuseMutex.genAgentReuseMutexLockKey(data.projectId, it)
+                    val lock = RedisLockByValue(
+                        redisOperation = redisOperation,
+                        lockKey = lockKey,
+                        lockValue = data.buildId,
+                        expiredTimeInSeconds = AgentReuseMutex.AGENT_LOCK_TIMEOUT
+                    )
+                    if (lock.unlock()) {
+                        commonUtil.logWithAgentUrl(
+                            data = data,
+                            messageCode = BK_ENV_WORKER_ERROR_IGNORE_UNLOCK,
+                            param = arrayOf(it),
+                            nodeHashId = a?.nodeId,
+                            agentHashId = a?.agentId
+                        )
+                    }
+                }
             }
             jobEnvActiveAgents = activeAgents.filter { it.agentId !in dispatchMessage.event.ignoreEnvAgentIds!! }
             if (jobEnvActiveAgents.isEmpty()) {
