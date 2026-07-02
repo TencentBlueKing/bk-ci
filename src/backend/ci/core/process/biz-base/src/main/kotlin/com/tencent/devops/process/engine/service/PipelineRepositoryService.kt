@@ -2109,7 +2109,8 @@ class PipelineRepositoryService constructor(
         limit: Int? = null,
         sortType: PipelineSortType,
         collation: PipelineCollation,
-        filterByPipelineName: String?
+        filterByPipelineName: String?,
+        channelCode: ChannelCode? = null
     ): List<PipelineInfo> {
         val result = pipelineInfoDao.listPipelinesByProject(
             dslContext = dslContext,
@@ -2120,7 +2121,8 @@ class PipelineRepositoryService constructor(
             limit = limit,
             sortType = sortType,
             collation = collation,
-            filterByPipelineName = filterByPipelineName
+            filterByPipelineName = filterByPipelineName,
+            channelCode = channelCode
         )
         val list = mutableListOf<PipelineInfo>()
         result?.forEach {
