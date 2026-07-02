@@ -767,8 +767,7 @@ class PipelineRepositoryService constructor(
         val id = client.get(ServiceAllocIdResource::class).generateSegmentId("PIPELINE_INFO").data
         val lock = PipelineModelLock(redisOperation, pipelineId)
         var versionName: String? = null
-        // 事务前校验变量组引用合法性，避免事务提交后校验失败导致引用缺失。
-        // validateVarGroupReferences 会填充 model.publicVarGroups（幂等），handleVarGroupReferBus 内部不会重复处理。
+        // 事务前校验，避免事务提交后校验失败导致引用缺失。
         publicVarGroupReferManageService.validateVarGroupReferences(model = model, projectId = projectId)
         try {
             lock.lock()
@@ -933,9 +932,8 @@ class PipelineRepositoryService constructor(
             lock.unlock()
         }
 
-        // [B-1修复] 将变量组引用关系写入移到事务提交后执行，避免事务回滚时产生孤儿引用记录。
-        // handleVarGroupReferBus 内部使用注入的根 dslContext（自动提交），不参与外层 jOOQ 事务，
-        // 若在事务内调用且事务后续步骤失败回滚，引用记录已提交无法回滚，导致指向不存在流水线的孤儿引用。
+        // 引用关系写入在事务提交后执行，避免事务回滚产生孤儿引用。
+        // draftFlag 控制引用计数写入：RELEASED/COMMITTING 需更新计数，BRANCH 与草稿一致不更新。
         publicVarGroupReferManageService.handleVarGroupReferBus(
             PublicVarGroupReferDTO(
                 userId = userId,
@@ -945,7 +943,8 @@ class PipelineRepositoryService constructor(
                 referType = PublicVarGroupReferenceTypeEnum.PIPELINE,
                 referName = model.name,
                 referVersion = 1,
-                referVersionName = versionName ?: ""
+                referVersionName = versionName ?: "",
+                draftFlag = versionStatus == VersionStatus.RELEASED || versionStatus == VersionStatus.COMMITTING
             )
         )
 
@@ -1014,8 +1013,7 @@ class PipelineRepositoryService constructor(
         var branchAction: BranchVersionAction? = null
         var versionNum: Int? = null
         var updateBuildNo = false
-        // [B-1优化] 事务前校验变量组引用合法性，避免事务提交后校验失败导致引用缺失。
-        // validateVarGroupReferences 会填充 model.publicVarGroups（幂等），handleVarGroupReferBus 内部不会重复处理。
+        // 事务前校验，避免事务提交后校验失败导致引用缺失（B-1）。
         publicVarGroupReferManageService.validateVarGroupReferences(model = model, projectId = projectId)
         try {
             lock.lock()
@@ -1318,9 +1316,8 @@ class PipelineRepositoryService constructor(
             lock.unlock()
         }
 
-        // [B-1修复] 将变量组引用关系写入移到事务提交后执行，避免事务回滚时产生孤儿引用记录。
-        // handleVarGroupReferBus 内部使用注入的根 dslContext（自动提交），不参与外层 jOOQ 事务，
-        // 若在事务内调用且事务后续步骤失败回滚，引用记录已提交无法回滚，导致指向不存在流水线的孤儿引用。
+        // 引用关系写入在事务提交后执行，避免事务回滚产生孤儿引用。
+        // draftFlag: RELEASED 更新计数，BRANCH 与草稿一致不更新；草稿保存走 DraftSaveHandler。
         publicVarGroupReferManageService.handleVarGroupReferBus(
             PublicVarGroupReferDTO(
                 userId = userId,
@@ -1330,7 +1327,8 @@ class PipelineRepositoryService constructor(
                 referType = PublicVarGroupReferenceTypeEnum.PIPELINE,
                 referName = model.name,
                 referVersion = version,
-                referVersionName = versionName
+                referVersionName = versionName,
+                draftFlag = versionStatus?.fix() == VersionStatus.RELEASED
             )
         )
 
@@ -1872,10 +1870,7 @@ class PipelineRepositoryService constructor(
                         )
                     )
                 }
-                // [B-2修复] 引用记录清理移入事务内，复用 transactionContext，
-                // 与流水线删除同生共死：事务提交则引用清理生效，事务回滚则引用清理一并回滚，
-                // 彻底避免孤儿引用记录导致 referCount 虚高。
-                // 分布式锁在事务外获取/释放（createReferLock），不阻塞事务内的 DB 操作。
+                // 引用清理复用 transactionContext，与流水线删除同事务，避免孤儿引用（B-2）。
                 publicVarGroupReferManageService.deletePublicVerGroupRefByReferId(
                     transactionContext = transactionContext,
                     referId = pipelineId,
