@@ -114,6 +114,11 @@ export default defineComponent({
         }))
     })
 
+    // 指定工作空间仅对创作任务 Job（vmBuild）生效，存储在 dispatchType.workspace
+    const showWorkspace = computed(
+      () => formData.value?.['@type'] === 'vmBuild' && !!formData.value?.dispatchType,
+    )
+
     // Condition display computed properties
     const jobCtrl = computed(() => formData.value?.jobControlOption)
     const showCustomVariables = computed(() =>
@@ -360,6 +365,17 @@ export default defineComponent({
                       />
                       <p class={sharedStyles.fieldDesc}>{t('flow.orchestration.jobTimeoutDesc')}</p>
                     </FormItem>
+
+                    {/* Specify workspace (创作任务 only) */}
+                    {showWorkspace.value && (
+                      <FormItem label={t('flow.orchestration.jobWorkspace')}>
+                        <Input
+                          v-model={formData.value!.dispatchType!.workspace}
+                          placeholder={t('flow.orchestration.jobWorkspacePlaceholder')}
+                          disabled={!props.editable}
+                        />
+                      </FormItem>
+                    )}
 
                     {/* Run condition */}
                     <FormItem label={t('flow.orchestration.whenToRunJob')} required>
