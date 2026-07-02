@@ -554,10 +554,21 @@ class StoreBaseQueryDao {
         return conditions
     }
 
-    fun countByCode(dslContext: DSLContext, storeCode: String, storeType: StoreTypeEnum): Int {
+    fun countByCode(
+        dslContext: DSLContext,
+        storeCode: String,
+        storeType: StoreTypeEnum,
+        storeStatusList: List<String>? = null
+    ): Int {
         with(TStoreBase.T_STORE_BASE) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(STORE_CODE.eq(storeCode))
+            conditions.add(STORE_TYPE.eq(storeType.type.toByte()))
+            if (!storeStatusList.isNullOrEmpty()) {
+                conditions.add(STATUS.`in`(storeStatusList))
+            }
             return dslContext.selectCount().from(this)
-                .where(STORE_CODE.eq(storeCode).and(STORE_TYPE.eq(storeType.type.toByte())))
+                .where(conditions)
                 .fetchOne(0, Int::class.java)!!
         }
     }
@@ -567,12 +578,18 @@ class StoreBaseQueryDao {
         storeCode: String,
         storeType: StoreTypeEnum,
         page: Int? = null,
-        pageSize: Int? = null
+        pageSize: Int? = null,
+        storeStatusList: List<String>? = null
     ): Result<TStoreBaseRecord> {
         return with(TStoreBase.T_STORE_BASE) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(STORE_CODE.eq(storeCode))
+            conditions.add(STORE_TYPE.eq(storeType.type.toByte()))
+            if (!storeStatusList.isNullOrEmpty()) {
+                conditions.add(STATUS.`in`(storeStatusList))
+            }
             val baseStep = dslContext.selectFrom(this)
-                .where(STORE_CODE.eq(storeCode))
-                .and(STORE_TYPE.eq(storeType.type.toByte()))
+                .where(conditions)
                 .orderBy(CREATE_TIME.desc())
             if (null != page && null != pageSize) {
                 baseStep.limit((page - 1) * pageSize, pageSize).fetch()
