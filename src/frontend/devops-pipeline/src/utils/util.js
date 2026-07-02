@@ -470,7 +470,15 @@ export const deepCopy = obj => {
 
 export const deepClone = obj => {
     if (typeof structuredClone === 'function') {
-        return structuredClone(obj)
+        try {
+            return structuredClone(obj)
+        } catch (e) {
+            // 非结构化克隆错误继续抛出，避免隐藏其他问题
+            if (e && e.name !== 'DataCloneError') {
+                throw e
+            }
+            // DataCloneError 时降级为 JSON 方式深拷贝（函数等不可序列化字段会被丢弃）
+        }
     }
     return JSON.parse(JSON.stringify(obj))
 }
