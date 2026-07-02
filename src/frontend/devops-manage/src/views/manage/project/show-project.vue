@@ -41,8 +41,6 @@ const exceptionObj = ref({
 const showFailedEnableDialog = ref(false);
 const showDisableProjectDialog = ref(false);
 const activeTab = ref('projectSettings');
-// KPI代码字段显示控制
-const showKpiCode = ref(false)
 const isPersonalProject = computed(() => projectData.value.projectScope === 1)
 const tabPanels = computed(() => [
   {
@@ -82,36 +80,6 @@ const tabPanels = computed(() => [
 
 const projectList: any[] = [];
 
-// 检查是否需要显示KPI代码字段
-const checkKpiCodeVisibility = async () => {
-  try {
-    // 收集组织信息参数
-    const orgParams = getOrganizationParams()
-    
-    // 如果没有组织信息，不显示KPI字段
-    if (Object.keys(orgParams).length === 0) {
-      showKpiCode.value = false
-      return
-    }
-    
-    // 调用接口检查是否需要货币化
-    const needMonetization = await http.checkNeedMonetization(orgParams)
-    showKpiCode.value = Boolean(needMonetization)
-  } catch (err: any) {
-    showKpiCode.value = false
-  }
-}
-
-// 获取组织信息参数
-const getOrganizationParams = () => {
-  const params: any = {}
-  
-  if (projectData.value.bgId) params.bgId = projectData.value.bgId
-  if (projectData.value.businessLineId) params.businessLineId = projectData.value.businessLineId
-  if (projectData.value.deptId) params.deptId = projectData.value.deptId
-  if (projectData.value.centerId) params.centerId = projectData.value.centerId
-  return params
-}
 const fetchProjectData = async () => {
   isLoading.value = true;
   await http
@@ -133,9 +101,6 @@ const fetchProjectData = async () => {
       if ([1, 3, 4].includes(projectData.value.approvalStatus)) {
         fetchApprovalInfo();
       }
-      
-      // 检查KPI代码显示状态
-      checkKpiCodeVisibility()
     })
     .catch((err) => {
       showException.value = true;
@@ -564,9 +529,8 @@ onMounted(async () => {
                             <span>{{ projectData.afterProductName || projectData.afterProductId }}</span>
                           </div>
                         </bk-form-item>
-                        <bk-form-item :label="t('KPI代码')" property="bg" v-if="showKpiCode">
+                        <bk-form-item :label="t('KPI代码')" property="bg" v-if="projectData.kpiName">
                           <span>{{ projectData.kpiName || projectData.kpiCode }}</span>
-                          {{ projectData.afterKpiCode }}
                           <div class="diff-content" v-if="projectData.afterKpiName">
                             <p class="update-title">
                               {{ t('本次更新：') }}
