@@ -229,9 +229,9 @@ class ThirdPartyDispatchService @Autowired constructor(
                     dispatchMessage = dispatchMessage,
                     dispatchType = ThirdPartyAgentIDDispatchType(
                         displayName = originDispatchType.value,
-                        workspace = null,
+                        workspace = originDispatchType.workspace,
                         agentType = AgentDispatchType.ID,
-                        dockerInfo = null,
+                        dockerInfo = originDispatchType.dockerInfo,
                         reusedInfo = null
                     ),
                     envId = originDispatchType.envHashId?.let {
