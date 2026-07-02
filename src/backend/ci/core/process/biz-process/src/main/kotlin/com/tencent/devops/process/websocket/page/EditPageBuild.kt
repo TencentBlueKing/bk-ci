@@ -27,10 +27,11 @@
 
 package com.tencent.devops.process.websocket.page
 
+import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.websocket.page.IPath
 import com.tencent.devops.common.websocket.pojo.BuildPageInfo
 
 class EditPageBuild : IPath {
     override fun buildPage(buildPageInfo: BuildPageInfo): String =
-        "/console/pipeline/${buildPageInfo.projectId}/${buildPageInfo.pipelineId}/edit"
+        HomeHostUtil.withPublicPath("/console/pipeline/${buildPageInfo.projectId}/${buildPageInfo.pipelineId}/edit")
 }

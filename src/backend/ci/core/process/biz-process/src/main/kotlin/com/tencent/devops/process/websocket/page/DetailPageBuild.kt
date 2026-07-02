@@ -27,13 +27,16 @@
 
 package com.tencent.devops.process.websocket.page
 
+import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.websocket.page.IPath
 import com.tencent.devops.common.websocket.pojo.BuildPageInfo
 
 abstract class DetailPageBuild : IPath {
     override fun buildPage(buildPageInfo: BuildPageInfo): String {
-        val defaultPage = "/console/pipeline/${buildPageInfo.projectId}/${buildPageInfo.pipelineId}" +
-            "/detail/${buildPageInfo.buildId}"
+        val defaultPage = HomeHostUtil.withPublicPath(
+            "/console/pipeline/${buildPageInfo.projectId}/${buildPageInfo.pipelineId}" +
+                "/detail/${buildPageInfo.buildId}"
+        )
         if (!extDetailPage(buildPageInfo).isNullOrEmpty()) {
             return extDetailPage(buildPageInfo)!!
         }

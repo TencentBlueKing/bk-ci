@@ -44,6 +44,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.gray.Gray
+import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.project.tables.records.TServiceRecord
@@ -107,7 +108,7 @@ abstract class AbsUserProjectServiceServiceImpl @Autowired constructor(
                     collected = favoriteDao.countFavorite(dslContext, userId, tServiceRecord.id) > 0,
                     weigHt = tServiceRecord.weight ?: 0,
                     logoUrl = tServiceRecord.logoUrl,
-                    webSocket = tServiceRecord.webSocket,
+                    webSocket = addPublicPathToWebSocket(tServiceRecord.webSocket),
                     clusterType = tServiceRecord.clusterType,
                     docUrl = tServiceRecord.docUrl ?: ""
                 )
@@ -167,7 +168,7 @@ abstract class AbsUserProjectServiceServiceImpl @Autowired constructor(
             grayJsUrl = tServiceRecord.grayJsUrl,
             projectIdType = tServiceRecord.projectIdType,
             logoUrl = tServiceRecord.logoUrl,
-            webSocket = tServiceRecord.webSocket,
+            webSocket = addPublicPathToWebSocket(tServiceRecord.webSocket),
             weight = tServiceRecord.weight,
             createdUser = tServiceRecord.createdUser ?: "",
             createdTime = DateTimeUtil.toDateTime(tServiceRecord.createdTime),
@@ -277,7 +278,7 @@ abstract class AbsUserProjectServiceServiceImpl @Autowired constructor(
                         collected = favor,
                         weigHt = it.weight ?: 0,
                         logoUrl = it.logoUrl,
-                        webSocket = it.webSocket,
+                        webSocket = addPublicPathToWebSocket(it.webSocket),
                         newWindow = it.newWindow,
                         newWindowUrl = it.newWindowurl,
                         clusterType = it.clusterType,
@@ -427,5 +428,27 @@ abstract class AbsUserProjectServiceServiceImpl @Autowired constructor(
         // 平台管理界面
         const val SERVICE_ENGLISH_NAME_PLATFORM = "Platform"
         const val SERVICE_ITEM_STATUS_OK = "ok"
+
+        /**
+         * 对 webSocket 字段中的正则路径加上子路径前缀。
+         * webSocket 的配置项用逗号分隔，如：
+         * ^\/console\/pipeline\/[^\/]+\/list(\/)?(allPipeline|myPipeline|collect)?$,^\/console\/...$
+         * 如果路径是以 ^\/console 开头，则在 ^\/ 和 console 之间加上子路径（如 ^\/bkci\/console）
+         */
+        fun addPublicPathToWebSocket(webSocket: String?): String? {
+            if (webSocket.isNullOrBlank()) return webSocket
+            val publicPath = HomeHostUtil.publicPathPrefix()
+            if (publicPath.isEmpty()) return webSocket
+            // 与库里正则的转义风格保持一致：子路径内部的 / 也转义为 \/（如 /bk/ci -> bk\/ci）
+            val publicPathRegex = publicPath.removePrefix("/").replace("/", "\\/")
+            return webSocket.split(",").joinToString(",") { regex ->
+                // 已带子路径前缀的（如 ^\/bkci\/console...）会以 ^\/$publicPathRegex 开头，直接跳过
+                if (regex.trimStart().startsWith("^\\/console")) {
+                    regex.replaceFirst("^\\/console", "^\\/$publicPathRegex\\/console")
+                } else {
+                    regex
+                }
+            }
+        }
     }
 }
