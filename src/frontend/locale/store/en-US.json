@@ -316,6 +316,7 @@
   "请选择": "Please select",
   "该 {0} 已安装至以下项目：": "The {0} Installed to the following project: ",
   "安装": "Install",
+  "插件正在发布测试，不可安装": "Plugin is being released for testing and cannot be installed",
   "已安装": "Installed",
   "请选择项目：": "Please select project:",
   "新建项目": "Add project",

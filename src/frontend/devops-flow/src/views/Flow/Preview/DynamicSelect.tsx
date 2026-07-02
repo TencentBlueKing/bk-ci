@@ -19,7 +19,7 @@ export default defineComponent({
       required: true,
     },
     modelValue: {
-      type: [String, Number, Boolean],
+      type: [String, Number, Boolean, Array] as PropType<string | number | boolean | string[]>,
       default: '',
     },
     disabled: {
@@ -27,6 +27,10 @@ export default defineComponent({
       default: false,
     },
     isInvalid: {
+      type: Boolean,
+      default: false,
+    },
+    multiple: {
       type: Boolean,
       default: false,
     },
@@ -92,12 +96,13 @@ export default defineComponent({
 
     /**
      * Load static options from param.options
+     * 接口返回的格式是 { key, value }，不是 { id, name }
      */
     const loadStaticOptions = () => {
       const staticOptions = props.param.options || []
       options.value = staticOptions.map((opt) => ({
-        value: opt.id,
-        label: opt.name,
+        value: opt.key,
+        label: opt.value,
       }))
     }
 
@@ -126,7 +131,7 @@ export default defineComponent({
       initOptions()
     })
 
-    const handleChange = (val: string | number) => {
+    const handleChange = (val: string | number | string[]) => {
       emit('update:modelValue', val)
       emit('change', val)
     }
@@ -137,6 +142,7 @@ export default defineComponent({
         clearable={false}
         disabled={props.disabled || props.param.readOnly}
         loading={isLoading.value}
+        multiple={props.multiple}
         class={[styles.fullWidthSelect, props.isInvalid && styles.inputInvalid]}
         onChange={handleChange}
       >
