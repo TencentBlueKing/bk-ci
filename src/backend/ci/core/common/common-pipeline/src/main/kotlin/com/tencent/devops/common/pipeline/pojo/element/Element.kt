@@ -161,7 +161,12 @@ abstract class Element(
     open var classifyName: String? = null,
     @get:Schema(title = "任务运行进度", required = false)
     open var progressRate: Double? = null,
-    var asyncStatus: String? = null
+    var asyncStatus: String? = null,
+    @get:Schema(
+        title = "子流水线构建信息（仅运行构建时有用的中间参数，不要在编排保存阶段设置值）",
+        required = false
+    )
+    open var subPipelineBuildInfo: SubPipelineBuildInfo? = null
 ) {
 
     open fun getAtomCode() = getClassType()
