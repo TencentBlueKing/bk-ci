@@ -39,6 +39,7 @@ import com.tencent.devops.common.pipeline.pojo.PublicVarGroupRef
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_COMMON_VAR_GROUP_CONFLICT
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_COMMON_VAR_GROUP_NOT_EXIST
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_COMMON_VAR_GROUP_REFER_UPDATE_FAILED
 import com.tencent.devops.process.constant.ProcessMessageCode.PUBLIC_VAR_GROUP_LOCK_EXPIRED_TIME_IN_SECONDS
@@ -308,7 +309,55 @@ class PublicVarGroupReferManageService @Autowired constructor(
         }
         model.handlePublicVarInfo()
         val publicVarGroups = model.publicVarGroups
-        publicVarGroups?.let { validatePublicVarGroupsExist(projectId, it) }
+        publicVarGroups?.let {
+            validatePublicVarGroupsExist(projectId, it)
+            // 变量名冲突检测：不同变量组包含同名变量时，构建启动时才会报错，前移到保存阶段 fail-fast。
+            validateVarNameConflict(projectId, it)
+        }
+    }
+
+    /**
+     * 检测引用的多个变量组之间是否存在同名变量冲突
+     * 动态版本（version=null）按最新版本查询变量名。
+     */
+    private fun validateVarNameConflict(
+        projectId: String,
+        publicVarGroups: List<PublicVarGroupRef>
+    ) {
+        if (publicVarGroups.size <= 1) return
+
+        // 批量查询变量组记录，解析动态版本的实际版本号
+        val groupNameVersionPairs = publicVarGroups.map { it.groupName to it.version }
+        val groupRecords = publicVarGroupDao.batchGetRecordsByGroupNameAndVersion(
+            dslContext = dslContext,
+            projectId = projectId,
+            groupNameVersionPairs = groupNameVersionPairs
+        )
+        if (groupRecords.isEmpty()) return
+
+        // 批量查询所有变量组中的变量名
+        val allVarPOs = publicVarDao.batchListVarsByGroupNameAndVersion(
+            dslContext = dslContext,
+            projectId = projectId,
+            groupNameVersionList = groupRecords.map { it.groupName to it.version }
+        )
+
+        // 按变量组分组，检测跨组同名冲突
+        val varsByGroup = allVarPOs.groupBy { it.groupName }
+        val seenVarNames = mutableMapOf<String, String>() // varName -> groupName
+        publicVarGroups.forEach { ref ->
+            val varNames = varsByGroup[ref.groupName] ?: return@forEach
+            varNames.forEach { varPO ->
+                val firstGroup = seenVarNames[varPO.varName]
+                if (firstGroup != null && firstGroup != ref.groupName) {
+                    throw ErrorCodeException(
+                        errorCode = ERROR_PIPELINE_COMMON_VAR_GROUP_CONFLICT,
+                        params = arrayOf("$firstGroup & ${ref.groupName}", varPO.varName)
+                    )
+                }
+                seenVarNames[varPO.varName] = ref.groupName
+            }
+        }
     }
 
     /**
