@@ -80,7 +80,7 @@ class ServiceStoreComponentBaseResourceImpl @Autowired constructor(
     override fun getComponentDataInfoByCode(
         storeType: StoreTypeEnum,
         storeCode: String,
-        version: String?,
+        version: String,
         status: StoreStatusEnum?
     ): Result<StoreDetailInfo?> {
         return Result(

@@ -124,7 +124,7 @@ interface ServiceStoreComponentBaseResource {
         storeCode: String,
         @Parameter(description = "组件版本", required = true)
         @PathParam("version")
-        version: String? = null,
+        version: String,
         @Parameter(description = "版本状态", required = false)
         @QueryParam("status")
         status: StoreStatusEnum? = null
@@ -133,6 +133,9 @@ interface ServiceStoreComponentBaseResource {
     @Operation(summary = "根据组件code和版本号获取组件详情")
     @POST
     @Path("/types/{storeType}/codes/base/info")
+    @BkInterfaceI18n(
+        keyPrefixNames = ["{data[*].storeType}", "{data[*].storeCode}", "{data[*].version}", "releaseInfo"]
+    )
     fun getComponentBaseInfoByCodes(
         @Parameter(description = "组件类型", required = true)
         @PathParam("storeType")

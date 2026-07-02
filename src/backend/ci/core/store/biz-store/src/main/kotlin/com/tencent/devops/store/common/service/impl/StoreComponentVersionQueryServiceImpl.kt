@@ -341,9 +341,9 @@ class StoreComponentVersionQueryServiceImpl @Autowired constructor(
             osName = osName,
             osArch = osArch
         )?.firstOrNull()
-        return envRecord?.updateTime.let { packageTime ->
+        return envRecord?.updateTime?.let { packageTime ->
             installedTime < packageTime
-        }
+        } ?: false
     }
 
     private fun createVersionInfo(versionValue: String, versionName: String = versionValue) =
