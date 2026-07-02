@@ -105,6 +105,9 @@ class PublicVarGroupService @Autowired constructor(
         // 正则表达式常量
         private val GROUP_NAME_REGEX = Regex("^[a-zA-Z][a-zA-Z0-9_]{2,31}$")
         private val VAR_NAME_REGEX = Regex("^[a-zA-Z_][a-zA-Z0-9_]{0,63}$")
+        // 权限中心删除重试配置
+        private const val IAM_DELETE_MAX_RETRY = 3
+        private const val IAM_DELETE_RETRY_INTERVAL_MS = 500L
     }
 
     fun addGroup(publicVarGroupDTO: PublicVarGroupDTO): String {
@@ -455,12 +458,9 @@ class PublicVarGroupService @Autowired constructor(
                 )
             }
 
-            // 先从权限中心删除变量组资源（避免 DB 删除成功但权限中心删除失败导致孤儿资源）
-            publicVarGroupPermissionService.deleteResource(
-                projectId = projectId,
-                groupName = groupName
-            )
-
+            // 先执行 DB 事务删除，再删权限中心。
+            // 权限中心是外部系统无法参与 DB 事务，调整顺序避免"DB 失败但权限已删"的僵尸资源。
+            // 权限中心删除失败不阻断主流程——DB 已删，权限残留不影响功能（最坏情况是重新创建同名组时报已存在）。
             dslContext.transaction { configuration ->
                 val context = DSL.using(configuration)
                 publicVarGroupDao.deleteByGroupName(dslContext = context, projectId = projectId, groupName = groupName)
@@ -484,6 +484,10 @@ class PublicVarGroupService @Autowired constructor(
                 )
             }
 
+            // DB 删除成功后，删除权限中心资源。
+            // 同步重试覆盖瞬时网络抖动；重试耗尽仍失败则日志告警，不阻断主流程。
+            deleteIamResourceWithRetry(projectId, groupName)
+
             return true
         } catch (e: ErrorCodeException) {
             logger.warn("Failed to delete variable group $groupName", e)
@@ -496,6 +500,37 @@ class PublicVarGroupService @Autowired constructor(
             )
         } finally {
             redisLock.unlock()
+        }
+    }
+
+    /**
+     * 删除权限中心资源（带同步重试）
+     * 瞬时网络抖动自动恢复；重试耗尽仍失败则日志告警，不抛异常不阻断主流程。
+     */
+    private fun deleteIamResourceWithRetry(projectId: String, groupName: String) {
+        repeat(IAM_DELETE_MAX_RETRY) { attempt ->
+            try {
+                publicVarGroupPermissionService.deleteResource(
+                    projectId = projectId,
+                    groupName = groupName
+                )
+                return
+            } catch (e: Throwable) {
+                if (attempt < IAM_DELETE_MAX_RETRY - 1) {
+                    logger.warn(
+                        "IAM delete failed (attempt ${attempt + 1}/$IAM_DELETE_MAX_RETRY), retrying. " +
+                            "projectId=$projectId, groupName=$groupName",
+                        e
+                    )
+                    Thread.sleep(IAM_DELETE_RETRY_INTERVAL_MS)
+                } else {
+                    logger.error(
+                        "IAM delete failed after $IAM_DELETE_MAX_RETRY attempts, manual cleanup needed. " +
+                            "projectId=$projectId, groupName=$groupName",
+                        e
+                    )
+                }
+            }
         }
     }
 
