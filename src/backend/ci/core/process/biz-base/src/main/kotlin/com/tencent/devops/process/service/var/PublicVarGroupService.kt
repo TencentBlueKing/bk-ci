@@ -28,6 +28,9 @@
 package com.tencent.devops.process.service.`var`
 
 import com.fasterxml.jackson.core.type.TypeReference
+import com.fasterxml.jackson.databind.JsonMappingException
+import com.fasterxml.jackson.databind.exc.MismatchedInputException
+import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException
 import com.tencent.devops.common.api.constant.CommonMessageCode.ERROR_INVALID_PARAM_
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Page
@@ -123,7 +126,11 @@ class PublicVarGroupService @Autowired constructor(
         try {
             publicVarService.checkGroupPublicVar(publicVarGroupDTO.publicVarGroup.publicVars)
             val id = client.get(ServiceAllocIdResource::class)
-                .generateSegmentId("T_RESOURCE_PUBLIC_VAR_GROUP").data ?: 0
+                .generateSegmentId("T_RESOURCE_PUBLIC_VAR_GROUP").data
+                ?: throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.ERROR_PUBLIC_VAR_GROUP_ADD_FAILED,
+                    params = arrayOf("ID allocation service unavailable")
+                )
             var isCreate = false
             // 先完成数据库事务操作
             dslContext.transaction { configuration ->
@@ -738,34 +745,26 @@ class PublicVarGroupService @Autowired constructor(
     }
 
     /**
-     * 根据异常构建用户友好的错误消息
+     * 根据 Jackson 反序列化异常构建用户友好的错误消息
+     * 通过异常类型判断替代字符串匹配，避免 Jackson 版本差异导致误判。
      */
     private fun buildErrorMsg(e: Throwable): String {
-        return when {
-            e.message?.contains("Unrecognized field") == true -> {
-                val fieldName = e.message!!.substringAfter("Unrecognized field \"").substringBefore("\"")
+        return when (e) {
+            // 未知字段：YAML 中存在目标类未定义的字段
+            is UnrecognizedPropertyException -> {
+                val fieldName = e.propertyName
                 I18nUtil.getCodeLanMessage(
                     messageCode = ERROR_PUBLIC_VAR_GROUP_YAML_UNKNOWN_FIELD,
                     params = arrayOf(fieldName)
                 )
             }
-
-            e.message?.contains("Cannot deserialize") == true -> {
+            // 反序列化失败：类型不匹配、格式错误等
+            is MismatchedInputException -> {
                 I18nUtil.getCodeLanMessage(ERROR_PUBLIC_VAR_GROUP_YAML_DESERIALIZE_ERROR)
             }
-
-            e.message?.contains("missing") == true -> {
-                val missingField = e.message!!.let { msg ->
-                    when {
-                        msg.contains("Missing required creator property") ->
-                            msg.substringAfter("Missing required creator property '")
-                                .substringBefore("\'")
-                        msg.contains("missing property") ->
-                            msg.substringAfter("missing property '")
-                                .substringBefore("\'")
-                        else -> null
-                    }
-                }
+            // JSON 映射错误基类：包含缺失必填字段（MissingKotlinParameterException 是其子类）
+            is JsonMappingException -> {
+                val missingField = e.path.lastOrNull()?.fieldName
                 if (missingField != null) {
                     I18nUtil.getCodeLanMessage(
                         messageCode = ERROR_PUBLIC_VAR_GROUP_YAML_MISSING_FIELD,
@@ -775,7 +774,6 @@ class PublicVarGroupService @Autowired constructor(
                     I18nUtil.getCodeLanMessage(ERROR_PUBLIC_VAR_GROUP_YAML_MISSING_FIELD)
                 }
             }
-
             else -> e.message ?: I18nUtil.getCodeLanMessage(ERROR_PUBLIC_VAR_GROUP_YAML_FORMAT_ERROR)
         }
     }
@@ -836,8 +834,10 @@ class PublicVarGroupService @Autowired constructor(
             }
 
             // 批量查询变量组记录，避免 N+1 查询
-            // version 为 null 时表示动态最新版本，用 DYNAMIC_VERSION 作为 key 占位
-            val groupNameVersionPairs = referInfos.map { it.groupName to it.version }
+            // referInfo.version 为 -1(DYNAMIC_VERSION) 时表示动态最新版本，需转为 null 让 DAO 走 LATEST_FLAG=true 查询
+            val groupNameVersionPairs = referInfos.map {
+                it.groupName to (if (it.version == DYNAMIC_VERSION) null else it.version)
+            }
             val groupRecordMap = publicVarGroupDao.batchGetRecordsByGroupNameAndVersion(
                 dslContext = dslContext,
                 projectId = projectId,
@@ -849,8 +849,7 @@ class PublicVarGroupService @Autowired constructor(
 
             // 转换为PipelinePublicVarGroupDO列表
             val pipelineVarGroups = referInfos.mapNotNull { referInfo ->
-                val keyVersion = referInfo.version
-                val groupRecord = groupRecordMap[referInfo.groupName to keyVersion] ?: return@mapNotNull null
+                val groupRecord = groupRecordMap[referInfo.groupName to referInfo.version] ?: return@mapNotNull null
                 PipelineRefPublicVarGroupDO(
                     groupName = groupRecord.groupName,
                     varCount = groupRecord.varCount,

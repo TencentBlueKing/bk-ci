@@ -189,7 +189,8 @@ data class Model(
             instanceFromTemplate = instanceFromTemplate,
             pipelineCreator = pipelineCreator,
             srcTemplateId = null,
-            templateId = templateId
+            templateId = templateId,
+            publicVarGroups = publicVarGroups
         )
     }
 

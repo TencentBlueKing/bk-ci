@@ -891,7 +891,7 @@ class PublicVarGroupReferManageService @Autowired constructor(
     }
 
     /**
-     * 验证变量组是否存在
+     * 验证变量组是否存在（含固定版本存在性校验，M-4）
      */
     private fun validatePublicVarGroupsExist(
         projectId: String,
@@ -913,6 +913,27 @@ class PublicVarGroupReferManageService @Autowired constructor(
                 errorCode = ERROR_PIPELINE_COMMON_VAR_GROUP_NOT_EXIST,
                 params = arrayOf(notExistGroups.joinToString(", "))
             )
+        }
+
+        // 校验固定版本引用的版本是否存在（M-4）
+        val fixedVersionRefs = publicVarGroups.filter { it.version != null }
+        if (fixedVersionRefs.isNotEmpty()) {
+            val groupNameVersionPairs = fixedVersionRefs.map { it.groupName to it.version }
+            val existingRecords = publicVarGroupDao.batchGetRecordsByGroupNameAndVersion(
+                dslContext = dslContext,
+                projectId = projectId,
+                groupNameVersionPairs = groupNameVersionPairs
+            ).map { it.groupName to it.version }.toSet()
+
+            val notExistVersions = fixedVersionRefs.filter { ref ->
+                (ref.groupName to ref.version) !in existingRecords
+            }
+            if (notExistVersions.isNotEmpty()) {
+                throw ErrorCodeException(
+                    errorCode = ERROR_PIPELINE_COMMON_VAR_GROUP_NOT_EXIST,
+                    params = arrayOf(notExistVersions.joinToString(", ") { "${it.groupName}@v${it.version}" })
+                )
+            }
         }
     }
 
