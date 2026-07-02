@@ -27,11 +27,13 @@
 
 package com.tencent.devops.openapi.resources.apigw.v4
 
+import com.tencent.devops.artifactory.api.service.ServiceArtifactMetadataResource
 import com.tencent.devops.artifactory.api.service.ServiceArtifactoryResource
 import com.tencent.devops.artifactory.api.service.ServiceLogFileResource
 import com.tencent.devops.artifactory.pojo.FileInfo
 import com.tencent.devops.artifactory.pojo.SearchProps
 import com.tencent.devops.artifactory.pojo.Url
+import com.tencent.devops.artifactory.pojo.artifact.PipelineArtifactInfo
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Page
@@ -160,6 +162,29 @@ class ApigwArtifactoryResourceV4Impl @Autowired constructor(
             pageSize = pageSize,
             modifiedTimeDesc = modifiedTimeDesc
         )
+    }
+
+    override fun getArtifactInfo(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        pipelineId: String?,
+        artifactType: String,
+        artifactName: String?,
+        artifactVersion: String?
+    ): Result<PipelineArtifactInfo?> {
+
+        val artifactInfo = client.get(ServiceArtifactMetadataResource::class)
+            .getArtifactInfo(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                artifactType = artifactType,
+                artifactName = artifactName,
+                artifactVersion = artifactVersion
+            ).data
+        return Result(artifactInfo)
     }
 
     private fun checkPipelineId(projectId: String, pipelineId: String?, buildId: String): String {
