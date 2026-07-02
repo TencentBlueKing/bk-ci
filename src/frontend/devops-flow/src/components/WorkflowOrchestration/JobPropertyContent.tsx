@@ -366,17 +366,6 @@ export default defineComponent({
                       <p class={sharedStyles.fieldDesc}>{t('flow.orchestration.jobTimeoutDesc')}</p>
                     </FormItem>
 
-                    {/* Specify workspace (创作任务 only) */}
-                    {showWorkspace.value && (
-                      <FormItem label={t('flow.orchestration.jobWorkspace')}>
-                        <Input
-                          v-model={formData.value!.dispatchType!.workspace}
-                          placeholder={t('flow.orchestration.jobWorkspacePlaceholder')}
-                          disabled={!props.editable}
-                        />
-                      </FormItem>
-                    )}
-
                     {/* Run condition */}
                     <FormItem label={t('flow.orchestration.whenToRunJob')} required>
                       <Select
@@ -558,6 +547,19 @@ export default defineComponent({
                     />
                   </FormItem>
                 </div>
+              </div>
+            )}
+
+            {/* Specify workspace (创作任务 only) — sibling above Matrix */}
+            {showWorkspace.value && (
+              <div class={sharedStyles.flowControlSection}>
+                <FormItem label={t('flow.orchestration.jobWorkspace')}>
+                  <Input
+                    v-model={formData.value!.dispatchType!.workspace}
+                    placeholder={t('flow.orchestration.jobWorkspacePlaceholder')}
+                    disabled={!props.editable}
+                  />
+                </FormItem>
               </div>
             )}
 
