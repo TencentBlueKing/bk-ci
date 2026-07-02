@@ -267,10 +267,16 @@ object CommandLineUtils {
         val prefixOutput = "::set-output name="
         if (Pattern.matches(pattenOutput, tmpLine)) {
             val value = tmpLine.removeSurrounding("\"").removePrefix(prefixOutput)
-            val keyValue = value.split("::")
-            val keyPrefix = "jobs.$jobId.steps.$stepId.outputs."
-            if (keyValue.size >= 2) {
-                val res = "$keyPrefix${keyValue[0]}=${value.removePrefix("${keyValue[0]}::")}\n"
+
+            // 只分割第一个 ::，避免值中的 :: 被误分割
+            // 注意：多行内容通过 format_multiple_lines → multiLine.log 独立通道处理，此处不做多行解码
+            val firstColonIndex = value.indexOf("::")
+            if (firstColonIndex >= 0) {
+                val key = value.substring(0, firstColonIndex)
+                val outputValue = value.substring(firstColonIndex + 2)
+
+                val keyPrefix = "jobs.$jobId.steps.$stepId.outputs."
+                val res = "$keyPrefix$key=$outputValue\n"
                 File(workspace, resultLogFile).appendText(res)
                 return res
             }

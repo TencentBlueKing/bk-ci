@@ -93,6 +93,30 @@ class CommandLineUtilsTest {
     }
 
     @Test
+    fun appendOutputToFileMultiLineTest() {
+        val jobId = "job_xx"
+        val stepId = "step_xx"
+        fun func(str: String) = CommandLineUtils.appendOutputToFile(
+            tmpLine = str,
+            workspace = File(System.getProperty("java.io.tmpdir")),
+            resultLogFile = "appendOutputToFileMultiLineTest",
+            jobId = jobId,
+            stepId = stepId
+        )
+        /*多行内容测试 - Pattern.matches 默认不匹配跨行，::set-output 多行值走 multiLine.log 独立通道*/
+        Assertions.assertEquals(
+            null,
+            func("::set-output name=RESULT::line1\nline2\nline3")
+        )
+
+        /*值中包含 :: 的情况 - 只分割第一个 ::*/
+        Assertions.assertEquals(
+            "jobs.$jobId.steps.$stepId.outputs.RESULT=key1::value1\n",
+            func("::set-output name=RESULT::key1::value1")
+        )
+    }
+
+    @Test
     fun appendGateToFileTest() {
         fun func(str: String) = CommandLineUtils.appendGateToFile(
             str, File(System.getProperty("java.io.tmpdir")), "appendGateToFileTest"

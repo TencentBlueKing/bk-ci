@@ -65,6 +65,18 @@ object BatScriptUtil {
         "    echo %~1 >>%file_save_dir%\r\n" +
         "    goto:eof\r\n"
 
+    private const val formatMultipleLines = ":format_multiple_lines\r\n" +
+        "    setlocal enabledelayedexpansion\r\n" +
+        "    set RAW=%~1\r\n" +
+        "    powershell -NoProfile -Command ^\r\n" +
+        "        \"\$c=\$env:RAW;\" ^\r\n" +
+        "        \"\$c=\$c -replace '%%','%25';\" ^\r\n" +
+        "        \"\$c=\$c -replace '\\\\n','%0A';\" ^\r\n" +
+        "        \"\$c=\$c -replace '\\\\r','%0D';\" ^\r\n" +
+        "        \"Add-Content -Path '##multiLineFile##' -Value \$c -Encoding UTF8\"\r\n" +
+        "    endlocal\r\n" +
+        "    goto:eof\r\n"
+
     private val logger = LoggerFactory.getLogger(BatScriptUtil::class.java)
 
     // 2021-06-11 batchScript需要过滤掉上下文产生的变量，防止注入到环境变量中
@@ -264,6 +276,12 @@ object BatScriptUtil {
                     newValue = File(dir, ScriptEnvUtils.getQualityGatewayEnvFile()).canonicalPath
                 )
             )
+            .append(
+                formatMultipleLines.replace(
+                    oldValue = "##multiLineFile##",
+                    newValue = File(dir, ScriptEnvUtils.getMultipleLineFile(buildId)).absolutePath
+                )
+            )
             /*taskEnvSet模块，挪到batch脚本尾部，能避免一些batch的bug*/
             .append(":taskEnvSet\r\n")
             .append(set)
@@ -278,8 +296,9 @@ object BatScriptUtil {
 
         logger.info("The default charset is $charset")
 
-        file.writeText(command.toString(), charset)
-        logger.info("start to run windows script - ($command)")
+        val finalCommand = command.toString()
+        file.writeText(finalCommand, charset)
+        logger.info("start to run windows script - ($finalCommand)")
         return file
     }
 
