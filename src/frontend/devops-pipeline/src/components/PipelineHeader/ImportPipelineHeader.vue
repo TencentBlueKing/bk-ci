@@ -27,6 +27,7 @@
     import {
         RESOURCE_ACTION
     } from '@/utils/permission'
+    import { normalizePipelineModel } from '@/utils/normalizePipelineModel'
     import { TEMPLATE_TYPE } from '@/utils/pipelineConst'
     import {
         showPipelineCheckMsg
@@ -165,6 +166,7 @@
                     }
                     // 清除流水线参数渲染过程中添加的key
                     this.formatParams(pipeline)
+                    normalizePipelineModel(model)
                     const params = this.isTemplate
                         ? {
                             projectId,
