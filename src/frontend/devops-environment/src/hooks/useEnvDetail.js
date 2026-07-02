@@ -12,6 +12,12 @@ export default function useEnvDetail () {
     const projectId = computed(() => proxy.$route.params?.projectId)
     const envList = computed(() => proxy.$store.getters['environment/getEnvList'] || [])
     const isBuiltInEnv = computed(() => envHashId.value?.startsWith('-'))
+    const isPersonalProject = computed(() => {
+        // 个人项目
+        const projectList = proxy.$store.state.projectList || []
+        const curProject = projectList.find(p => p.projectCode === projectId.value)
+        return curProject?.projectScope === 1 ?? false
+    })
     
     // 获取环境节点列表
     const fetchEnvNodeList = async (params) => {
@@ -95,14 +101,15 @@ export default function useEnvDetail () {
     }
 
     // 启用/停用节点
-    const toggleEnableNode = async (nodeHashId, enableNode) => {
+    const toggleEnableNode = async (nodeHashId, enableNode, reason) => {
         if (!envHashId.value) return
         try {
             const res = await proxy.$store.dispatch('environment/enableNode', {
                 projectId: projectId.value,
                 envHashId: envHashId.value,
                 nodeHashId,
-                enableNode
+                enableNode,
+                reason
             })
             return res
         } catch (e) {
@@ -133,6 +140,85 @@ export default function useEnvDetail () {
         envDetailLoaded.value = value
     }
 
+    // 操作日志列表
+    const operateLogList = ref([])
+    const operateLogPagination = ref({
+        count: 0,
+        page: 1,
+        pageSize: 10,
+        totalPages: 0
+    })
+    const fetchOperateLogList = async (params = {}) => {
+        if (!envHashId.value) return
+        try {
+            const res = await proxy.$store.dispatch('environment/requestOperateLogList', {
+                params: {
+                    projectId: projectId.value,
+                    envHashId: envHashId.value,
+                    page: params.page || 1,
+                    pageSize: params.pageSize || 10,
+                    ...(params.operator ? { operator: params.operator } : {})
+                }
+            })
+            operateLogList.value = res?.records || []
+            operateLogPagination.value = {
+                count: res?.count || 0,
+                page: res?.page || 1,
+                pageSize: res?.pageSize || 10,
+                totalPages: res?.totalPages || 0
+            }
+            return res
+        } catch (e) {
+            throw e
+        }
+    }
+
+    // 项目成员列表
+    const projectMemberList = ref([])
+    const memberPage = ref(1)
+    const memberPageSize = ref(15)
+    const memberHasMore = ref(true)
+    const memberLoading = ref(false)
+
+    const fetchProjectMembers = async (isLoadMore = false) => {
+        if (!projectId.value) return
+        if (memberLoading.value) return
+        if (isLoadMore && !memberHasMore.value) return
+
+        memberLoading.value = true
+        try {
+            if (!isLoadMore) {
+                memberPage.value = 1
+                memberHasMore.value = true
+            }
+            const res = await proxy.$store.dispatch('environment/requestProjectMembers', {
+                projectId: projectId.value,
+                page: memberPage.value,
+                pageSize: memberPageSize.value
+            })
+            const rawRecords = res.records || []
+            const records = rawRecords.filter(item => !item.departed)
+            if (isLoadMore) {
+                projectMemberList.value = [...projectMemberList.value, ...records]
+            } else {
+                projectMemberList.value = records
+            }
+            // 使用未过滤的记录数与总记录数比较，避免因过滤departed导致判断错误
+            const totalLoaded = isLoadMore
+                ? (memberPage.value - 1) * memberPageSize.value + rawRecords.length
+                : rawRecords.length
+            memberHasMore.value = totalLoaded < (res.count || 0)
+            if (memberHasMore.value) {
+                memberPage.value += 1
+            }
+            return res
+        } catch (e) {
+            throw e
+        } finally {
+            memberLoading.value = false
+        }
+    }
+
     return {
         // data
         currentEnv,
@@ -144,6 +230,12 @@ export default function useEnvDetail () {
         envDetailLoaded,
         envList,
         isBuiltInEnv,
+        isPersonalProject,
+        operateLogList,
+        operateLogPagination,
+        projectMemberList,
+        memberHasMore,
+        memberLoading,
 
         // function
         fetchEnvNodeList,
@@ -153,6 +245,8 @@ export default function useEnvDetail () {
         updateEnvDetail,
         fetchEnvRelatedProject,
         toggleEnableNode,
-        setEnvDetailLoaded
+        setEnvDetailLoaded,
+        fetchOperateLogList,
+        fetchProjectMembers
     }
 }
