@@ -82,18 +82,6 @@ const tabPanels = computed(() => [
 
 const projectList: any[] = [];
 
-const getInitKpiData = () => {
-  // 如果kpiCode和kpiName为空，那么默认为选中的产品
-  if (!projectData.value.kpiName && !projectData.value.kpiCode) {
-    const selectedProduct = operationalList.value.find((i: any) => i?.ProductId === projectData.value.productId);
-
-    if (selectedProduct?.icosProductCode && selectedProduct?.icosProductName) {
-      projectData.value.kpiCode = selectedProduct.icosProductCode ?? '';
-      projectData.value.kpiName = selectedProduct.icosProductName ?? '';
-    }
-  }
-}
-
 // 检查是否需要显示KPI代码字段
 const checkKpiCodeVisibility = async () => {
   try {
@@ -325,7 +313,6 @@ const handleCancelUpdate = () => {
       });
       await fetchProjectData();
       projectDiffData.value = {};
-      getInitKpiData()
     }
   };
 
@@ -480,7 +467,6 @@ onMounted(async () => {
   await getUserInfo();
   await fetchProjectData();
   await fetchOperationalList(projectData.value.bgName);
-  getInitKpiData()
 });
 </script>
 

@@ -193,7 +193,7 @@
             const { proxy } = useInstance()
             const routeName = proxy.$route.name
             const { envHashId } = useEnvDetail()
-            const { nodeHashId } = useNodeDetail()
+            const { nodeHashId, currentNode } = useNodeDetail()
             const {
                 fetchJobTaskList,
                 fetchPipelineBuildHistory,
@@ -450,7 +450,7 @@
                         ...timeRangeParams.value,
                         ...(routeName === 'envDetail'
                             ? { envId: envHashId.value }
-                            : { agentId: nodeHashId.value }
+                            : { agentId: currentNode.value?.agentId }
                         ),
                         page: pagination.value.current,
                         pageSize: pagination.value.limit
