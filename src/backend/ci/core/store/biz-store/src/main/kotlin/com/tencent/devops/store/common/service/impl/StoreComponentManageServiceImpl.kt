@@ -210,6 +210,12 @@ class StoreComponentManageServiceImpl : StoreComponentManageService {
         if (latestComponent != null && newestComponentRecord.id != latestComponent.id) {
             storeIds.add(latestComponent.id)
         }
+        // 校验部署相关扩展字段(安装路径/安装方式/安装参数)的合法性与安全性
+        StoreReleaseUtils.validateDeployExtInfo(
+            storeType = storeTypeEnum,
+            extBaseInfo = storeBaseInfoUpdateRequest.extBaseInfo,
+            extBaseFeatureInfo = storeBaseInfoUpdateRequest.baseFeatureInfo?.extBaseFeatureInfo
+        )
         val (storeBaseFeatureDataPO, storeBaseFeatureExtDataPOs) = StoreReleaseUtils.generateStoreBaseFeaturePO(
             baseFeatureInfo = storeBaseInfoUpdateRequest.baseFeatureInfo,
             storeCode = storeCode,
