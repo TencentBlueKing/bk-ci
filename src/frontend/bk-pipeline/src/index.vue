@@ -53,6 +53,7 @@ import {
   DELETE_EVENT_NAME,
   STAGE_CHECK,
   STAGE_RETRY,
+  SUB_PIPELINE_ACCESS_EVENT_NAME,
 } from "./constants";
 import Stage from "./Stage";
 import { eventBus, hashID, isTriggerContainer } from "./util";
@@ -73,6 +74,7 @@ const emit = defineEmits([
   STAGE_RETRY,
   DEBUG_CONTAINER,
   APPEND_JOB,
+  SUB_PIPELINE_ACCESS_EVENT_NAME,
 ]);
 
 const customEvents = [
@@ -88,6 +90,7 @@ const customEvents = [
   STAGE_RETRY,
   DEBUG_CONTAINER,
   APPEND_JOB,
+  SUB_PIPELINE_ACCESS_EVENT_NAME,
 ];
 
 const props = defineProps({
@@ -160,7 +163,7 @@ const keys = [
   "canSkipElement",
   "cancelUserId",
   "isExpandAllMatrix",
-  "isCreativeStream"
+  "isCreativeStream",
 ];
 
 keys.forEach((key) => {

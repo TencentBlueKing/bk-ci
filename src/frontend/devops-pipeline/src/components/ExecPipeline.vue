@@ -121,6 +121,7 @@
                         @atom-continue="handleContinue"
                         @atom-exec="handleExec"
                         @debug-container="debugDocker"
+                        @sub-pipeline-access="handleSubPipelineAccess"
                     />
                 </div>
             </simplebar>
@@ -294,6 +295,18 @@
     import 'simplebar-vue/dist/simplebar.min.css'
     import 'bkui-pipeline/dist/bk-pipeline.css'
     import { mapActions, mapState, mapGetters } from 'vuex'
+
+    const getSubPipelineAccessUrl = (atom) => {
+        const {
+            projectId,
+            pipelineId,
+            buildId
+        } = atom?.subPipelineBuildInfo ?? {}
+        if (!projectId || !pipelineId || !buildId) {
+            return ''
+        }
+        return `${WEB_URL_PREFIX}/pipeline/${projectId}/${pipelineId}/detail/${buildId}`
+    }
     
     export default {
         components: {
@@ -960,10 +973,18 @@
                 const { projectId, pipelineId, buildNo: buildId } = this.$route.params
                 const buildResourceType = container.dispatchType?.buildType
                 const buildIdStr = buildId ? `&buildId=${buildId}` : ''
-
                 const tab = window.open('about:blank')
                 const url = `${WEB_URL_PREFIX}/pipeline/${projectId}/dockerConsole/?pipelineId=${pipelineId}&dispatchType=${buildResourceType}&vmSeqId=${vmSeqId}${buildIdStr}`
                 tab.location = url
+            },
+            handleSubPipelineAccess ({ atom }) {
+                const url = getSubPipelineAccessUrl(atom)
+                if (!url) return
+
+                const tab = window.open('about:blank')
+                if (tab) {
+                    tab.location = url
+                }
             },
             expandAllMatrix () {
                 try {
