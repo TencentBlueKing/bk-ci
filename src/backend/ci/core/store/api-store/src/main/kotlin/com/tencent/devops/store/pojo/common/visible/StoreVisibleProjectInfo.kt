@@ -29,14 +29,12 @@ package com.tencent.devops.store.pojo.common.visible
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(title = "组件可见范围请求报文体")
-data class StoreVisibleDeptReq(
-    @get:Schema(title = "组件类型", required = true)
-    val storeType: String,
-    @get:Schema(title = "组件代码", required = true)
-    val storeCode: String,
-    @get:Schema(title = "机构列表", required = false)
-    val deptInfos: List<DeptInfo>? = null,
-    @get:Schema(title = "项目可见范围列表", required = false)
-    val projectInfos: List<StoreVisibleProjectInfo>? = null
+@Schema(title = "组件项目可见范围信息报文体")
+data class StoreVisibleProjectInfo(
+    @get:Schema(title = "项目编码", required = true)
+    val projectCode: String,
+    @get:Schema(title = "项目名称", required = false)
+    var projectName: String? = null,
+    @get:Schema(title = "项目审核状态(APPROVING：待审核 APPROVED：审核通过 REJECT：审核驳回)", required = false)
+    var status: String? = "APPROVED"
 )
