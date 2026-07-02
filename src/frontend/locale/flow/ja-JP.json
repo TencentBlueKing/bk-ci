@@ -488,6 +488,8 @@
       "inputDependentJobId": "依存するジョブIDを入力",
       "jobTimeout": "ジョブタイムアウト（分）",
       "jobTimeoutPlaceholder": "タイムアウトを入力してください",
+      "jobWorkspace": "ワークスペースを指定",
+      "jobWorkspacePlaceholder": "未入力の場合は [Agentインストールディレクトリ]/workspace/[パイプラインID]/src がデフォルトになります",
       "viewDocumentation": "ドキュメントを表示",
       "selectPlaceholder": "選択してください",
       "strategy": "戦略",
