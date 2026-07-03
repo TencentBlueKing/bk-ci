@@ -28,6 +28,7 @@
 package com.tencent.devops.process.dao.`var`
 
 import com.tencent.devops.common.pipeline.enums.PublicVarGroupReferenceTypeEnum
+import com.tencent.devops.model.process.tables.TResourcePublicVarGroupReferInfo
 import com.tencent.devops.model.process.tables.TResourcePublicVarReferInfo
 import com.tencent.devops.process.pojo.`var`.po.ResourcePublicVarReferPO
 import java.time.LocalDateTime
@@ -549,13 +550,9 @@ class PublicVarReferInfoDao {
     }
 
     /**
-     * 查询指定变量组下有实际变量引用的不同 referId 列表
-     * @param dslContext 数据库上下文
-     * @param projectId 项目ID
-     * @param groupName 变量组名
-     * @param referType 引用类型（可选）
-     * @param varName 变量名（可选）
-     * @return 有实际变量引用的 referId 列表
+     * 查询指定变量组下当前最新版本有实际变量引用的 referId 列表。
+     * 因此 INNER JOIN [TResourcePublicVarGroupReferInfo] 按五元组关联并过滤 LATEST_FLAG=true，
+     * 避免历史版本引用残留导致误返回已卸载该变量的资源。
      */
     fun listReferIdsWithActualVarRefer(
         dslContext: DSLContext,
@@ -564,20 +561,24 @@ class PublicVarReferInfoDao {
         referType: PublicVarGroupReferenceTypeEnum? = null,
         varName: String? = null
     ): List<String> {
-        with(TResourcePublicVarReferInfo.T_RESOURCE_PUBLIC_VAR_REFER_INFO) {
-            val conditions = mutableListOf(
-                PROJECT_ID.eq(projectId),
-                GROUP_NAME.eq(groupName)
-            )
-            referType?.let { conditions.add(REFER_TYPE.eq(it.name)) }
-            varName?.let { conditions.add(VAR_NAME.eq(it)) }
+        val v = TResourcePublicVarReferInfo.T_RESOURCE_PUBLIC_VAR_REFER_INFO
+        val g = TResourcePublicVarGroupReferInfo.T_RESOURCE_PUBLIC_VAR_GROUP_REFER_INFO
 
-            return dslContext.selectDistinct(REFER_ID)
-                .from(this)
-                .where(conditions)
-                .fetch()
-                .map { it.value1() }
-        }
+        var query = dslContext.selectDistinct(v.REFER_ID)
+            .from(v)
+            .innerJoin(g)
+            .on(v.PROJECT_ID.eq(g.PROJECT_ID))
+            .and(v.REFER_ID.eq(g.REFER_ID))
+            .and(v.REFER_TYPE.eq(g.REFER_TYPE))
+            .and(v.GROUP_NAME.eq(g.GROUP_NAME))
+            .and(v.REFER_VERSION.eq(g.REFER_VERSION))
+            .and(g.LATEST_FLAG.eq(true))
+            .where(v.PROJECT_ID.eq(projectId))
+            .and(v.GROUP_NAME.eq(groupName))
+        referType?.let { query = query.and(v.REFER_TYPE.eq(it.name)) }
+        varName?.let { query = query.and(v.VAR_NAME.eq(it)) }
+
+        return query.fetch().map { it.value1() }
     }
 
     /**

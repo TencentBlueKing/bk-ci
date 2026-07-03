@@ -545,17 +545,15 @@ class PublicVarGroupReferManageService @Autowired constructor(
         val addedGroups = currentGroupNameSet - previousGroupNames
         addedGroups.forEach { groupName ->
             val currentInfo = currentReferPOs.firstOrNull { it.groupName == groupName } ?: return@forEach
-            // 检查是否已经在 updateReferenceCountsAfterSave 中 increment 过
-            // 如果当前 referVersion 是新建的（historicalReferInfos 为空），且之前版本无引用
-            // updateReferenceCountsAfterSave 不会 increment（因为它只对比当前版本的历史）
-            // 所以这里需要 increment
-            val alreadyReferred = publicVarGroupReferInfoDao.existsReferForGroup(
+            // 限定 referVersion 检查是否已引用，避免跨版本误判
+            val alreadyReferred = publicVarGroupReferInfoDao.existsReferForGroupInVersion(
                 dslContext = dslContext,
                 projectId = projectId,
                 referId = referId,
                 referType = referType,
                 groupName = groupName,
-                version = currentInfo.version
+                version = currentInfo.version,
+                referVersion = referVersion
             )
             if (!alreadyReferred) {
                 publicVarGroupReferCountService.incrementReferCount(
