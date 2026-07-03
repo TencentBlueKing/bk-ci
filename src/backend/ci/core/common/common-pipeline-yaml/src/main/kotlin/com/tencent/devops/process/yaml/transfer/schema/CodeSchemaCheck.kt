@@ -190,13 +190,13 @@ class CodeSchemaCheck @Autowired constructor(
         val firstArg = msg.arguments?.firstOrNull()?.toString().orEmpty()
         return when (msg.type) {
             "required" -> i18n(CommonMessageCode.YAML_SCHEMA_REQUIRED, path, firstArg)
-            "additionalProperties" -> i18n(CommonMessageCode.YAML_SCHEMA_ADDITIONAL_PROPERTIES, path, firstArg)
+            "additionalProperties" -> i18n(CommonMessageCode.YAML_SCHEMA_UNSUPPORTED_FIELD, path, firstArg)
             "not" -> {
                 val forbidden = extractForbiddenFields(msg.message)
                 if (forbidden.isNotBlank()) {
-                    i18n(CommonMessageCode.YAML_SCHEMA_NOT_FIELD_FORBIDDEN, path, forbidden)
+                    i18n(CommonMessageCode.YAML_SCHEMA_UNSUPPORTED_FIELD, path, forbidden)
                 } else {
-                    i18n(CommonMessageCode.YAML_SCHEMA_NOT_GENERIC, path)
+                    i18n(CommonMessageCode.YAML_SCHEMA_UNSUPPORTED_CONFIG, path)
                 }
             }
             "enum" -> i18n(
