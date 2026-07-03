@@ -456,6 +456,7 @@ class BuildTools(
         name = "获取构建日志",
         description = "获取构建日志。强烈建议传入 tag 参数（即 elementId，格式 e-xxxxxxxx）定位到具体插件，" +
                 "避免返回全量日志导致内容过大。" +
+                "本工具主要用于在「分析构建失败」之后做二次深入，除非用户明确要求原始日志，否则不要作为报错分析的第一步。" +
                 "默认从日志尾部（最新内容，报错通常在此）开始取，返回文本最多约 20000 字符（超出会截断）。" +
                 "排查报错时建议配合 logType=ERROR 只看错误行；如需从头查看完整过程可将 fromTail 设为 false。" +
                 "如果日志内容不完整或包含「Please download logs to view.」标记，" +
@@ -635,8 +636,8 @@ class BuildTools(
     @Tool(
         name = "分析构建失败",
         description = "一键排查构建失败原因：自动定位失败插件并抓取其错误日志（默认日志尾部 + ERROR 级别优先）。" +
-                "buildId 不传时默认分析该流水线最新一次构建。这是排查构建报错的首选工具，" +
-                "可减少多次手动调用；如需更细粒度可再用「获取构建详情」「获取构建日志」深入。"
+                "buildId 不传时默认分析该流水线最新一次构建。" +
+                "这是分析流水线报错的默认首选工具；除非用户明确要求原始日志，否则应先调用本工具，再决定是否继续深入查询日志。"
     )
     fun analyzeBuildFailure(
         @ToolParam(name = "projectId", description = "项目ID")
@@ -684,7 +685,7 @@ class BuildTools(
             }
 
             val analyzed = detail.failedElements.take(MAX_FAILED_ELEMENTS_TO_ANALYZE).map { fe ->
-                linkedMapOf<String, Any?>(
+                linkedMapOf(
                     "stageName" to fe.stageName,
                     "jobName" to fe.containerName,
                     "jobId" to fe.jobId,
@@ -695,6 +696,7 @@ class BuildTools(
                     "errorType" to fe.errorType,
                     "errorCode" to fe.errorCode,
                     "errorMsg" to fe.errorMsg,
+                    "element" to fe.element,
                     "errorLog" to fetchFailureLog(projectId, pipelineId, actualBuildId, fe.elementId, fe.jobId)
                 )
             }
