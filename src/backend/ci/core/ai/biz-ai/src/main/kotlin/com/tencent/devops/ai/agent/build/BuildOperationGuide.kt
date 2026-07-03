@@ -50,11 +50,15 @@ internal fun buildOperationGuideMarkdown(): String = """
 2. **优先使用上下文**: 如果系统提示词中已提供 projectId/pipelineId/buildId 且不是"未知"，直接使用无需让用户重复提供
 3. **用中文回复**: 清晰展示查询结果，结构化呈现关键信息
 4. **名称转ID**: 用户可能使用名称而非ID。项目名称 → 调用 resolveProjectId 获取 projectId；流水线名称 → 调用「搜索流水线」获取 pipelineId
-5. **排查报错首选一键工具**: 用户问"为什么失败/报错/挂了"时，优先调用「分析构建失败」，
+5. **排查报错默认必须先走一键工具**: 用户问"为什么失败/报错/挂了/帮我分析这个构建问题"时，
+   默认必须先调用「分析构建失败」，不要一上来直接调用「获取构建日志」。
    它会自动定位失败插件并抓取错误日志（尾部 + ERROR 级别优先）；buildId 不传默认分析最新一次构建。
-   仅在需要更细粒度时，再用「获取构建详情」「获取构建日志」手动深入。
-6. **日志查询必须定位**: 手动查日志时务必传入 tag（elementId）参数，避免获取全量日志；
-   日志默认从尾部（最新内容，报错通常在此）返回，排查报错建议配合 logType=ERROR。
+   只有在以下情况才允许跳过它直接查日志：
+   - 用户明确要求“只看原始日志/完整日志”
+   - 「分析构建失败」返回的信息不足以判断，需要对某个失败插件继续深挖
+   - 用户已经明确给出 elementId，并要求继续查看该插件日志
+6. **日志查询是二次深入工具，不是默认起手式**: 手动查日志时务必传入 tag（elementId）参数，
+   避免获取全量日志；日志默认从尾部（最新内容，报错通常在此）返回，排查报错建议配合 logType=ERROR。
 7. **状态与详情分离**: 「获取流水线状态」返回 process 服务的原始状态信息（不含 build detail 的完整 model）；
    需要定位失败插件时，使用「获取构建详情」查看 AI 简化详情中的 failedElements
 8. **必要时可查 iWiki**: 遇到不熟悉的错误码、插件配置问题、平台限制说明等情况时，
@@ -143,9 +147,13 @@ internal fun buildOperationGuideMarkdown(): String = """
 1. 直接调用「分析构建失败(projectId, pipelineId, buildId?)」
    - buildId 不传时自动分析最新一次构建
    - 返回：构建状态、stageSummary、失败插件列表（含 errorType/errorCode/errorMsg）
-     以及每个失败插件的错误日志（已优先取尾部 + ERROR 级别）
-2. 基于返回的 errorMsg 与 errorLog 直接给出错误原因和修复建议
-3. 遇到不熟悉的错误码/插件配置/平台限制，调用 iWiki MCP 补充检索
+     以及每个失败插件的完整 element 配置与错误日志（已优先取尾部 + ERROR 级别）
+2. 除非用户明确说“只看原始日志”，否则不要跳过第 1 步直接调用「获取构建日志」
+3. 先基于返回的 errorMsg、element 配置与 errorLog 直接给出错误原因和修复建议
+4. 如果仅看失败插件本身仍不足以判断根因，可继续调用「获取流水线编排(projectId, pipelineId, version?)」
+   - 适用场景：需要查看上下游任务关系、变量传递、前置插件产物、条件控制、并行/Stage 编排、版本差异
+   - version 优先使用本次构建对应版本；不确定时可先用默认最新版本辅助判断
+5. 遇到不熟悉的错误码/插件配置/平台限制，调用 iWiki MCP 补充检索
    - `getSpaceInfoByKey(space_key="DevOps")` → `aiSearchDocument(space_id=<数字ID>, query="关键词")`
    - 未命中再 `searchDocument`，需要全文再 `getDocument`
 ```
@@ -153,14 +161,17 @@ internal fun buildOperationGuideMarkdown(): String = """
 **手动兜底路径（需要更细粒度时）**
 
 ```
-1. 「获取构建详情」拿 AI 简化详情，从 failedElements 读取 elementId 与 errorType/errorCode/errorMsg
+1. 只有在「分析构建失败」信息不足时，才进入手动兜底路径
+2. 「获取构建详情」拿 AI 简化详情，从 failedElements 读取 elementId 与 errorType/errorCode/errorMsg
    - failedElements 若因内容过长被截断，改用 stageSummary 中的 failedElementIds 兜底定位
-2. 以 elementId 作为 tag 调用「获取构建日志」（默认取尾部，排查报错建议 logType=ERROR）
+3. 以 elementId 作为 tag 调用「获取构建日志」（默认取尾部，排查报错建议 logType=ERROR）
    - 示例：获取构建日志(projectId, pipelineId, buildId, tag="e-abc12345", logType="ERROR")
-3. 分析日志并给出结论
+4. 如需查看完整上下文，再调用「获取流水线编排(projectId, pipelineId, version?)」辅助判断
+5. 分析日志、插件配置与流水线编排后给出结论
 ```
 
-**注意**：手动查日志时不要不传 tag，否则返回全量日志既慢又可能被截断；
+**注意**：除非用户明确要求原始日志，否则不要把「获取构建日志」当作报错分析的第一步。
+手动查日志时不要不传 tag，否则返回全量日志既慢又可能被截断；
 必须先定位失败插件的 elementId 再查询。「获取流水线状态」只能判断失败阶段、不能定位到插件。
 
 ## 日志熔断提醒
