@@ -37,12 +37,12 @@ import com.tencent.devops.process.pojo.`var`.VarGroupVersionChangeInfo
 import com.tencent.devops.process.pojo.`var`.po.PublicVarGroupVersionSummaryPO
 import com.tencent.devops.process.pojo.`var`.po.ResourcePublicVarGroupReferPO
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
+import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.time.LocalDateTime
 
 @Service
 class PublicVarGroupReferCountService @Autowired constructor(
@@ -358,16 +358,17 @@ class PublicVarGroupReferCountService @Autowired constructor(
                             "hasAdd=${changeInfo.referInfoToAdd != null}"
                 )
 
-                // 1. 在 INSERT 之前检查是否需要 increment（仅非 skipCountUpdate 时）
+                // 1. INSERT 前检查是否需要 increment，限定 referVersion 避免跨版本误判
                 val shouldIncrement = if (skipCountUpdate) false else {
                     changeInfo.referInfoToAdd?.let { addInfo ->
-                        val alreadyReferred = publicVarGroupReferInfoDao.existsReferForGroup(
+                        val alreadyReferred = publicVarGroupReferInfoDao.existsReferForGroupInVersion(
                             dslContext = dslCtx,
                             projectId = projectId,
                             referId = changeInfo.referId,
                             referType = changeInfo.referType,
                             groupName = changeInfo.groupName,
-                            version = addInfo.version
+                            version = addInfo.version,
+                            referVersion = changeInfo.referVersion
                         )
                         if (alreadyReferred) {
                             logger.info(
