@@ -33,4 +33,5 @@ dependencies {
     api(project(":core:ai:biz-ai"))
     api(project(":ext:tencent:ai:api-ai-tencent"))
     api(project(":ext:tencent:ai:model-ai-tencent"))
+    api(project(":ext:tencent:common:common-pipeline-tencent"))
 }
