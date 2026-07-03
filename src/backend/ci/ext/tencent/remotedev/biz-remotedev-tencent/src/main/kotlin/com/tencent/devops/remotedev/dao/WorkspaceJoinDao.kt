@@ -263,6 +263,10 @@ class WorkspaceJoinDao {
                 }
             }
 
+            search.workspaceKind?.ifEmpty { null }?.let { kinds ->
+                conditions.add(WORKSPACE_KIND.`in`(kinds.map { it.value }))
+            }
+
             search.coffeeAi?.let { coffeeAi ->
                 conditions.add(COFFEE_AI.eq(ByteUtils.bool2Byte(coffeeAi)))
             }
