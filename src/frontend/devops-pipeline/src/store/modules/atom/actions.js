@@ -637,7 +637,7 @@ export default {
     /**
      * 搜索模式专用：支持 installed 参数，分页加载已安装/未安装插件列表
      */
-    fetchSearchAtoms: async ({ commit, getters }, {
+    fetchSearchAtoms: async ({ commit, state, getters }, {
         projectCode,
         category,
         searchKey,
@@ -665,6 +665,13 @@ export default {
             // 为当前页记录添加 disabled 属性
             const curOs = os
             const processedRecords = getters.getAtomDisabled(res.data.records || [], curOs, category)
+            // 将搜索结果合并进 atomMap，保证选中搜索到的插件时能取到 defaultVersion 等信息
+            const [curAtomCodeList, curAtomMap] = getMapByKey(processedRecords, 'atomCode')
+            commit(SET_ATOMS, {
+                atomCodeList: [...new Set([...state.atomCodeList, ...curAtomCodeList])],
+                atomMap: Object.assign({}, state.atomMap, curAtomMap),
+                atomList: state.atomList
+            })
             return {
                 ...res.data,
                 records: processedRecords

@@ -488,6 +488,8 @@
       "inputDependentJobId": "Enter dependent Job ID",
       "jobTimeout": "Job Execution Timeout (minutes)",
       "jobTimeoutPlaceholder": "Please enter timeout",
+      "jobWorkspace": "Workspace",
+      "jobWorkspacePlaceholder": "Defaults to [Agent install dir]/workspace/[pipeline ID]/src if empty",
       "viewDocumentation": "View Guide and Examples",
       "selectPlaceholder": "Please select",
       "strategy": "Strategy",
