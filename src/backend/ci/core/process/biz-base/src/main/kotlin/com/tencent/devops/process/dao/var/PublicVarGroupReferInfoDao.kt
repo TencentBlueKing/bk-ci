@@ -328,6 +328,18 @@ class PublicVarGroupReferInfoDao {
     }
 
     /**
+     * 根据变量组名删除所有引用记录（防御性清理）
+     */
+    fun deleteByGroupName(dslContext: DSLContext, projectId: String, groupName: String) {
+        with(TResourcePublicVarGroupReferInfo.T_RESOURCE_PUBLIC_VAR_GROUP_REFER_INFO) {
+            dslContext.deleteFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(GROUP_NAME.eq(groupName))
+                .execute()
+        }
+    }
+
+    /**
      * 批量保存变量组引用信息（支持更新）
      * @param dslContext 数据库上下文
      * @param resourcePublicVarGroupReferPOS 变量组引用PO列表

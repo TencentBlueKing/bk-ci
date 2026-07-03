@@ -59,6 +59,7 @@ import com.tencent.devops.process.dao.`var`.PublicVarGroupDao
 import com.tencent.devops.process.dao.`var`.PublicVarGroupReferInfoDao
 import com.tencent.devops.process.dao.`var`.PublicVarGroupReleaseRecordDao
 import com.tencent.devops.process.dao.`var`.PublicVarGroupVersionSummaryDao
+import com.tencent.devops.process.dao.`var`.PublicVarReferInfoDao
 import com.tencent.devops.process.dao.`var`.PublicVarVersionSummaryDao
 import com.tencent.devops.process.permission.`var`.PublicVarGroupPermissionService
 import com.tencent.devops.process.pojo.`var`.PublicVarGroupPermissions
@@ -98,6 +99,7 @@ class PublicVarGroupService @Autowired constructor(
     private val publicVarDao: PublicVarDao,
     private val pipelinePublicVarGroupReleaseRecordDao: PublicVarGroupReleaseRecordDao,
     private val publicVarGroupReferInfoDao: PublicVarGroupReferInfoDao,
+    private val publicVarReferInfoDao: PublicVarReferInfoDao,
     private val publicVarGroupReleaseRecordService: PublicVarGroupReleaseRecordService,
     private val publicVarGroupPermissionService: PublicVarGroupPermissionService,
     private val publicVarGroupVersionSummaryDao: PublicVarGroupVersionSummaryDao,
@@ -117,6 +119,9 @@ class PublicVarGroupService @Autowired constructor(
         val projectId = publicVarGroupDTO.projectId
         val userId = publicVarGroupDTO.userId
         val groupName = publicVarGroupDTO.publicVarGroup.groupName
+        if (groupName.isBlank() || !GROUP_NAME_REGEX.matches(groupName)) {
+            throw ErrorCodeException(errorCode = ERROR_PUBLIC_VAR_GROUP_YAML_NAME_FORMAT)
+        }
         val redisLock = RedisLock(
             redisOperation = redisOperation,
             lockKey = "${ProcessMessageCode.PUBLIC_VAR_GROUP_ADD_LOCK_KEY}_${projectId}_$groupName",
@@ -189,12 +194,19 @@ class PublicVarGroupService @Autowired constructor(
                         "Failed to register auth resource for [$projectId|$groupName], rolling back DB records", e
                     )
                     // 补偿：回滚 DB 中刚创建的变量组数据
-                    dslContext.transaction { configuration ->
-                        val ctx = DSL.using(configuration)
-                        publicVarGroupDao.deleteByGroupName(ctx, projectId, groupName)
-                        publicVarDao.deleteByGroupName(ctx, projectId, groupName)
-                        publicVarGroupVersionSummaryDao.deleteByGroupName(ctx, projectId, groupName)
-                        publicVarVersionSummaryDao.deleteByGroupName(ctx, projectId, groupName)
+                    try {
+                        dslContext.transaction { configuration ->
+                            val ctx = DSL.using(configuration)
+                            publicVarGroupDao.deleteByGroupName(ctx, projectId, groupName)
+                            publicVarDao.deleteByGroupName(ctx, projectId, groupName)
+                            publicVarGroupVersionSummaryDao.deleteByGroupName(ctx, projectId, groupName)
+                            publicVarVersionSummaryDao.deleteByGroupName(ctx, projectId, groupName)
+                        }
+                    } catch (compensationEx: Throwable) {
+                        logger.warn(
+                            "Compensation rollback failed for [$projectId|$groupName], manual cleanup required.",
+                            compensationEx
+                        )
                     }
                     throw ErrorCodeException(
                         errorCode = ProcessMessageCode.ERROR_PUBLIC_VAR_GROUP_ADD_FAILED,
@@ -488,6 +500,13 @@ class PublicVarGroupService @Autowired constructor(
                     dslContext = context,
                     projectId = projectId,
                     groupName = groupName
+                )
+                // 防御性清理引用记录（正常情况 referCount=0 时无数据，防止历史脏数据残留）
+                publicVarGroupReferInfoDao.deleteByGroupName(
+                    dslContext = context, projectId = projectId, groupName = groupName
+                )
+                publicVarReferInfoDao.deleteByGroupName(
+                    dslContext = context, projectId = projectId, groupName = groupName
                 )
             }
 
