@@ -162,6 +162,24 @@ interface ServicePipelineVersionResource {
         version: Int
     ): Result<PipelineVersionWithModel>
 
+    @Operation(summary = "获取流水线编排，版本为空时返回最新正式版本")
+    @GET
+    @Path("/projects/{projectId}/pipelines/{pipelineId}/versionModel")
+    fun getVersionModel(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @Parameter(description = "流水线编排版本，不传则默认最新正式版本", required = false)
+        @QueryParam("version")
+        version: Int?
+    ): Result<PipelineVersionWithModel>
+
     @Operation(summary = "触发前配置")
     @GET
     @Path("/projects/{projectId}/pipelines/{pipelineId}/previewCode")

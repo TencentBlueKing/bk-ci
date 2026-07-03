@@ -86,6 +86,18 @@ interface OpAiBuildAgentToolsResource {
         @QueryParam("pipelineId") pipelineId: String
     ): Result<String>
 
+    @Operation(summary = "[Pipeline] getPipelineModel")
+    @POST
+    @Path("/pipeline/get-pipeline-model")
+    fun getPipelineModel(
+        @Parameter(description = "操作人用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @QueryParam("projectId") projectId: String,
+        @QueryParam("pipelineId") pipelineId: String,
+        @QueryParam("version") version: Int?
+    ): Result<String>
+
     // endregion
 
     // region Build operate
@@ -166,6 +178,18 @@ interface OpAiBuildAgentToolsResource {
         @QueryParam("projectId") projectId: String,
         @QueryParam("pipelineId") pipelineId: String,
         @QueryParam("buildId") buildId: String
+    ): Result<String>
+
+    @Operation(summary = "[Build] analyzeBuildFailure")
+    @POST
+    @Path("/build/analyze-build-failure")
+    fun analyzeBuildFailure(
+        @Parameter(description = "操作人用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @QueryParam("projectId") projectId: String,
+        @QueryParam("pipelineId") pipelineId: String,
+        @QueryParam("buildId") buildId: String?
     ): Result<String>
 
     @Operation(summary = "[Build] getBuildStatus")

@@ -62,6 +62,15 @@ class OpAiBuildAgentToolsResourceImpl @Autowired constructor(
         return Result(buildTools(userId).getPipelineStatus(projectId, pipelineId))
     }
 
+    override fun getPipelineModel(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        version: Int?
+    ): Result<String> {
+        return Result(buildTools(userId).getPipelineModel(projectId, pipelineId, version))
+    }
+
     override fun getManualStartupInfo(userId: String, projectId: String, pipelineId: String): Result<String> {
         return Result(buildTools(userId).getManualStartupInfo(projectId, pipelineId))
     }
@@ -121,6 +130,15 @@ class OpAiBuildAgentToolsResourceImpl @Autowired constructor(
         buildId: String
     ): Result<String> {
         return Result(buildTools(userId).getBuildDetail(projectId, pipelineId, buildId))
+    }
+
+    override fun analyzeBuildFailure(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String?
+    ): Result<String> {
+        return Result(buildTools(userId).analyzeBuildFailure(projectId, pipelineId, buildId))
     }
 
     override fun getBuildStatus(
