@@ -27,7 +27,6 @@
 
 package com.tencent.devops.store.common.dao
 
-import com.tencent.bk.audit.constants.AuditAttributeNames.INSTANCE_NAME
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.model.store.tables.TStoreMember
 import com.tencent.devops.model.store.tables.TStoreProjectRel
@@ -35,13 +34,13 @@ import com.tencent.devops.model.store.tables.records.TStoreProjectRelRecord
 import com.tencent.devops.store.pojo.common.StoreProjectInfo
 import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import java.time.LocalDateTime
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record1
 import org.jooq.Record2
 import org.jooq.Result
 import org.springframework.stereotype.Repository
+import java.time.LocalDateTime
 
 @Suppress("ALL")
 @Repository
@@ -655,7 +654,12 @@ class StoreProjectRelDao {
         pageSize: Int? = null
     ): Result<TStoreProjectRelRecord> {
         with(TStoreProjectRel.T_STORE_PROJECT_REL) {
-            val conditions = buildInstalledComponentsCondition(projectCode, storeType, instanceIds, storeProjectType)
+            val conditions = buildInstalledComponentsCondition(
+                projectCode = projectCode,
+                storeType = storeType,
+                instanceIds = instanceIds,
+                storeProjectType = storeProjectType
+            )
             val baseStep = dslContext.selectFrom(this)
                 .where(conditions)
                 .orderBy(CREATE_TIME.desc())
