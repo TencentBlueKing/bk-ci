@@ -29,6 +29,7 @@ package com.tencent.devops.remotedev.dao
 
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.model.SQLLimit
+import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.db.utils.fetchCountFix
 import com.tencent.devops.common.db.utils.skipCheck
@@ -690,6 +691,7 @@ class WorkspaceDao {
                     workspaceSystemType = WorkspaceSystemType.parse(systemType),
                     ownerType = parsedOwnerType,
                     workspaceKind = WorkspaceKind.fromDb(workspaceKind, parsedOwnerType),
+                    os = OS.parse(os),
                     remark = remark,
                     labels = labels?.let { self ->
                         JsonUtil.getObjectMapper().readValue(self) as List<String>
@@ -745,6 +747,7 @@ class WorkspaceDao {
                     record.getOrNull(TWorkspace.T_WORKSPACE.WORKSPACE_KIND) as String?,
                     parsedOwnerType
                 ),
+                os = OS.parse(record.getOrNull(TWorkspace.T_WORKSPACE.OS) as String?),
                 remark = record.getOrNull(TWorkspace.T_WORKSPACE.REMARK) as String?,
                 hostIp = record.getOrNull(TWorkspaceWindows.T_WORKSPACE_WINDOWS.HOST_IP) as String?,
                 macAddress = record.getOrNull(TWorkspaceWindows.T_WORKSPACE_WINDOWS.MAC_ADDRESS) as String?,
