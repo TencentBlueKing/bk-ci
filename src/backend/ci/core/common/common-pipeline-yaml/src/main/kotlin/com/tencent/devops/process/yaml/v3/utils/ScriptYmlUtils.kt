@@ -388,10 +388,10 @@ object ScriptYmlUtils {
         if (triggerConfig == null) {
             return null
         }
-        val map = YamlObjects.transValue<Map<String, Any?>>("Extends.template", "trigger-conf", triggerConfig)
+        val map = YamlObjects.transValue<Map<String, Any?>>("extends.template", "trigger-conf", triggerConfig)
         return map.mapValues {
             val config =
-                YamlObjects.transValue<Map<String, Any?>>("Extends.template.trigger-conf", it.key, it.value)
+                YamlObjects.transValue<Map<String, Any?>>("extends.template.trigger-conf", it.key, it.value)
             ExtendsTriggerConfig(
                 disabled = YamlObjects.getNullValue("disabled", config)?.toBooleanStrictOrNull(),
                 cron = YamlObjects.getNullValue("cron", config),
@@ -399,7 +399,7 @@ object ScriptYmlUtils {
                     null
                 } else {
                     YamlObjects.transValue<Map<String, Any>>(
-                        path = "Extends.template.trigger-conf.${it.key}",
+                        path = "extends.template.trigger-conf.${it.key}",
                         type = "variables",
                         value = config["variables"]
                     )
@@ -419,13 +419,13 @@ object ScriptYmlUtils {
         if (variables == null) {
             return null
         }
-        val map = YamlObjects.transValue<Map<String, Any?>>("Extends.template", "variables", variables)
+        val map = YamlObjects.transValue<Map<String, Any?>>("extends.template", "variables", variables)
         return map.mapValues {
             when (it.value) {
                 is String -> PreTemplateVariable(it.value as String)
                 else -> {
                     val variable =
-                        YamlObjects.transValue<Map<String, Any?>>("Extends.template.variables", it.key, it.value)
+                        YamlObjects.transValue<Map<String, Any?>>("extends.template.variables", it.key, it.value)
                     PreTemplateVariable(
                         value = YamlObjects.getNotNullValueAny("value", it.key, variable),
                         allowModifyAtStartup = YamlObjects.getNullValue("allow-modify-at-startup", variable)
