@@ -345,7 +345,10 @@ class ModelTransfer @Autowired constructor(
                 VariableTemplate(it.groupName, it.versionName)
             }
         }
-        variableTransfer.makeVariableFromModel(modelInput.model.getTriggerContainer())?.let { variables.putAll(it) }
+        // 模板实例化流水线：仅输出公共变量组引用，不输出模板参数变量
+        if (modelInput.model.template == null) {
+            variableTransfer.makeVariableFromModel(modelInput.model.getTriggerContainer())?.let { variables.putAll(it) }
+        }
         yaml.variables = if (variables.isEmpty()) null else variables
         yaml.extends = makeExtend(modelInput.model)
         yaml.finally = makeFinally(modelInput)?.ifEmpty { null }

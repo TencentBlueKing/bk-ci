@@ -170,8 +170,8 @@ data class PreScriptBuildYamlParser(
     private fun parseVariable(map: Map<*, *>): Variable {
         return Variable(
             value = map["value"],
-            readonly = map["readonly"] as? Boolean,
-            allowModifyAtStartup = map["allow-modify-at-startup"] as? Boolean,
+            readonly = map["readonly"] as? Boolean ?: false,
+            allowModifyAtStartup = map["allow-modify-at-startup"] as? Boolean ?: true,
             const = map["const"] as? Boolean,
             props = map["props"] as? VariableProps
         )

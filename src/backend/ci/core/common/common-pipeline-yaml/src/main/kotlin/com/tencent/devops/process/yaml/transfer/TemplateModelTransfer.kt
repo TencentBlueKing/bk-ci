@@ -230,7 +230,10 @@ class TemplateModelTransfer @Autowired constructor(
                 VariableTemplate(it.groupName, it.versionName)
             }
         }
-        variableTransfer.makeVariableFromModel(triggerContainer)?.let { variables.putAll(it) }
+        // 模板实例化流水线：仅输出公共变量组引用，不输出模板参数变量
+        if ((modelInput.model as? Model)?.template == null) {
+            variableTransfer.makeVariableFromModel(triggerContainer)?.let { variables.putAll(it) }
+        }
         return variables.ifEmpty { null }
     }
 
