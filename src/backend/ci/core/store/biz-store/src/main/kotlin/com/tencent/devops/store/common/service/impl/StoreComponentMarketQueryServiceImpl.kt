@@ -44,6 +44,8 @@ import com.tencent.devops.common.web.utils.BkApiUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.store.tables.TStoreBase
 import com.tencent.devops.model.store.tables.TStoreBaseFeature
+import com.tencent.devops.model.store.tables.records.TStoreBaseExtRecord
+import com.tencent.devops.model.store.tables.records.TStoreBaseFeatureExtRecord
 import com.tencent.devops.store.common.dao.MarketStoreQueryDao
 import com.tencent.devops.store.common.dao.StoreBaseExtQueryDao
 import com.tencent.devops.store.common.dao.StoreBaseFeatureExtQueryDao
@@ -73,10 +75,14 @@ import com.tencent.devops.store.pojo.common.MarketMainItem
 import com.tencent.devops.store.pojo.common.MarketMainItemLabel
 import com.tencent.devops.store.pojo.common.QueryGroupParam
 import com.tencent.devops.store.pojo.common.StoreInfoQuery
+import com.tencent.devops.store.pojo.common.category.Category
 import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreSortTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.pojo.common.honor.HonorInfo
+import com.tencent.devops.store.pojo.common.index.StoreIndexInfo
+import com.tencent.devops.store.pojo.common.statistic.StoreStatistic
 import java.time.LocalDateTime
 import java.util.concurrent.Callable
 import java.util.concurrent.Executors
@@ -87,7 +93,6 @@ import org.jooq.Record
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
-@Suppress("TooManyFunctions", "LargeClass")
 @Service
 class StoreComponentMarketQueryServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
@@ -502,7 +507,6 @@ class StoreComponentMarketQueryServiceImpl @Autowired constructor(
     ): List<MarketItem> {
         val watcher = Watcher(id = "handleMarketItem|$userId|$userDeptList|$storeInfoQuery")
         try {
-            val results = mutableListOf<MarketItem>()
             val storeCodeList = mutableListOf<String>()
             val storeIds = mutableListOf<String>()
             val storeTypeEnum = StoreTypeEnum.valueOf(storeInfoQuery.storeType)
@@ -573,104 +577,148 @@ class StoreComponentMarketQueryServiceImpl @Autowired constructor(
                 storeBaseExtQueryDao.getBaseExtByIds(dslContext, storeIds).groupBy { it.storeId }
             }
             watcher.start("handleStoreInfos")
-            storeInfos.forEach { record ->
-                val storeId = record[tStoreBase.ID]
-                val storeCode = record[tStoreBase.STORE_CODE]
-                val statistic = storeStatisticData[storeCode]
-                val version = record[tStoreBase.VERSION]
-                val status = record[tStoreBase.STATUS]
-                val ownerStoreCode = record[tStoreBase.OWNER_STORE_CODE]
-                // 组件是否已安装
-                val installed = storeInfoQuery.installed ?: run {
-                    projectCode?.let { installedInfoMap?.contains(storeCode) }
-                }
-                // 是否可更新
-                val installedVersion = installedInfoMap?.get(storeCode)
-                val updateFlag = storeInfoQuery.updateFlag ?: run {
-                    // 当已安装版本不存在时或处于测试状态直接返回true，避免后续无效计算
-                    if (installedVersion == null || status in StoreStatusEnum.getTestStatusList()) true
-                    else {
-                        val currentBusNum = record[tStoreBase.BUS_NUM] ?: 0
-                        val installedBusNum = getStoreBusNum(storeTypeEnum, storeCode, installedVersion) ?: 0
-                        currentBusNum > installedBusNum
-                    }
-                }
-                // 组件级共享扩展(installPath/os/yamlFlag等)与版本级扩展，均取自循环外的批量结果
-                val featureExtRecords = featureExtRecordsByCode[storeCode].orEmpty()
-                val versionExtRecords = versionExtRecordsById[storeId].orEmpty()
-                val osList = featureExtRecords.firstOrNull { it.fieldName == KEY_OS }?.fieldValue
-                    ?.let { JsonUtil.to(it, object : TypeReference<List<String>>() {}) }
-                // 无构建环境组件是否可以在有构建环境运行
-                val buildLessRunFlag = versionExtRecords
-                    .firstOrNull { it.fieldName == KEY_BUILD_LESS_RUN_FLAG }?.fieldValue?.toBoolean()
-                // 组件级共享扩展：所有版本共享(如 installPath、os、yamlFlag 等)
-                val featureExtData = if (featureExtRecords.isNotEmpty()) {
-                    featureExtRecords.associate { it.fieldName to StoreExtFieldUtil.formatJson(it.fieldValue) }
-                } else {
-                    null
-                }
-                // 版本级扩展：列表保持精简，仅取 urlScheme；
-                // installType/installParams 等安装明细由详情接口(StoreDetailInfo)/部署接口按需提供
-                val urlScheme = versionExtRecords.firstOrNull { it.fieldName == KEY_URL_SCHEME }?.fieldValue
-                val versionExtData = if (!urlScheme.isNullOrBlank()) mapOf(KEY_URL_SCHEME to urlScheme) else null
-                // 向后兼容：保持 extData 为组件级+版本级合并，旧客户端仍可读取
-                val mergedExt = mutableMapOf<String, Any>()
-                featureExtData?.let { mergedExt.putAll(it) }
-                versionExtData?.let { mergedExt.putAll(it) }
-                val extData: Map<String, Any>? = mergedExt.ifEmpty { null }
-                val publicFlag = record[tStoreBaseFeature.PUBLIC_FLAG] ?: false
-                val marketItem = MarketItem(
-                    id = storeId,
-                    name = record[tStoreBase.NAME],
-                    code = storeCode,
-                    version = version,
-                    status = status,
-                    type = StoreTypeEnum.getStoreType(record[tStoreBase.STORE_TYPE].toInt()),
-                    rdType = record[tStoreBaseFeature.RD_TYPE],
-                    classifyCode = classifyMap[record[tStoreBase.CLASSIFY_ID] as String],
-                    category =
-                    categoryInfoMap[record[tStoreBase.ID]]?.joinToString(",") { it.categoryCode },
-                    logoUrl = record[tStoreBase.LOGO_URL]?.let { convertLogoUrl(it, urlProtocolTrim) },
-                    publisher = record[tStoreBase.PUBLISHER],
-                    os = osList,
-                    downloads = statistic?.downloads ?: 0,
-                    score = statistic?.score ?: 0.toDouble(),
-                    summary = record[tStoreBase.SUMMARY],
-                    flag = storeCommonService.generateInstallFlag(
-                        defaultFlag = publicFlag,
-                        members = memberData?.get(storeCode),
-                        userId = userId,
-                        visibleList = storeVisibleData?.get(storeCode),
-                        userDeptList = userDeptList
-                    ),
-                    publicFlag = publicFlag,
-                    buildLessRunFlag = buildLessRunFlag,
-                    docsLink = record[tStoreBase.DOCS_LINK],
-                    modifier = record[tStoreBase.MODIFIER],
-                    updateTime = DateTimeUtil.toDateTime(record[tStoreBase.UPDATE_TIME] as LocalDateTime),
-                    recommendFlag = record[tStoreBaseFeature.RECOMMEND_FLAG],
-                    yamlFlag = featureExtData?.get(KEY_YAML_FLAG) as? Boolean,
-                    installed = installed,
-                    updateFlag = updateFlag,
-                    honorInfos = storeHonorInfoMap[storeCode],
-                    indexInfos = storeIndexInfosMap[storeCode],
-                    recentExecuteNum = statistic?.recentExecuteNum,
-                    hotFlag = statistic?.hotFlag,
-                    extData = extData,
-                    ownerStoreName = if (ownerStoreCode.isNullOrBlank()) {
-                        null
-                    } else {
-                        ownerStoreInfos[ownerStoreCode]
-                    },
-                    ownerStoreCode = ownerStoreCode
-                )
-                results.add(marketItem)
-            }
-            return results
+            val ctx = MarketItemCtx(
+                tStoreBase = tStoreBase,
+                tStoreBaseFeature = tStoreBaseFeature,
+                storeTypeEnum = storeTypeEnum,
+                projectCode = projectCode,
+                userId = userId,
+                userDeptList = userDeptList,
+                urlProtocolTrim = urlProtocolTrim,
+                storeInfoQuery = storeInfoQuery,
+                storeStatisticData = storeStatisticData,
+                storeVisibleData = storeVisibleData,
+                memberData = memberData,
+                installedInfoMap = installedInfoMap,
+                classifyMap = classifyMap,
+                storeHonorInfoMap = storeHonorInfoMap,
+                storeIndexInfosMap = storeIndexInfosMap,
+                categoryInfoMap = categoryInfoMap,
+                ownerStoreInfos = ownerStoreInfos,
+                featureExtRecordsByCode = featureExtRecordsByCode,
+                versionExtRecordsById = versionExtRecordsById
+            )
+            return storeInfos.map { record -> buildMarketItem(record, ctx) }
         } finally {
             watcher.stop()
             LogUtils.printCostTimeWE(watcher)
         }
+    }
+
+    private class MarketItemCtx(
+        val tStoreBase: TStoreBase,
+        val tStoreBaseFeature: TStoreBaseFeature,
+        val storeTypeEnum: StoreTypeEnum,
+        val projectCode: String?,
+        val userId: String,
+        val userDeptList: List<Int>,
+        val urlProtocolTrim: Boolean,
+        val storeInfoQuery: StoreInfoQuery,
+        val storeStatisticData: HashMap<String, StoreStatistic>,
+        val storeVisibleData: HashMap<String, MutableList<Int>>?,
+        val memberData: HashMap<String, MutableList<String>>?,
+        val installedInfoMap: Map<String, String?>?,
+        val classifyMap: Map<String, String>,
+        val storeHonorInfoMap: Map<String, List<HonorInfo>>,
+        val storeIndexInfosMap: Map<String, List<StoreIndexInfo>>,
+        val categoryInfoMap: Map<String, List<Category>>,
+        val ownerStoreInfos: Map<String, String>,
+        val featureExtRecordsByCode: Map<String, List<TStoreBaseFeatureExtRecord>>,
+        val versionExtRecordsById: Map<String, List<TStoreBaseExtRecord>>
+    )
+
+    @Suppress("LongMethod", "ComplexMethod")
+    private fun buildMarketItem(record: Record, ctx: MarketItemCtx): MarketItem {
+        val storeId = record[ctx.tStoreBase.ID]
+        val storeCode = record[ctx.tStoreBase.STORE_CODE]
+        val statistic = ctx.storeStatisticData[storeCode]
+        val version = record[ctx.tStoreBase.VERSION]
+        val status = record[ctx.tStoreBase.STATUS]
+        val ownerStoreCode = record[ctx.tStoreBase.OWNER_STORE_CODE]
+        // 组件是否已安装
+        val installed = ctx.storeInfoQuery.installed ?: run {
+            ctx.projectCode?.let { ctx.installedInfoMap?.contains(storeCode) }
+        }
+        // 是否可更新
+        val installedVersion = ctx.installedInfoMap?.get(storeCode)
+        val updateFlag = ctx.storeInfoQuery.updateFlag ?: run {
+            // 当已安装版本不存在时或处于测试状态直接返回true，避免后续无效计算
+            if (installedVersion == null || status in StoreStatusEnum.getTestStatusList()) true
+            else {
+                val currentBusNum = record[ctx.tStoreBase.BUS_NUM] ?: 0
+                val installedBusNum = getStoreBusNum(ctx.storeTypeEnum, storeCode, installedVersion) ?: 0
+                currentBusNum > installedBusNum
+            }
+        }
+        // 组件级共享扩展(installPath/os/yamlFlag等)与版本级扩展，均取自循环外的批量结果
+        val featureExtRecords = ctx.featureExtRecordsByCode[storeCode].orEmpty()
+        val versionExtRecords = ctx.versionExtRecordsById[storeId].orEmpty()
+        val osList = featureExtRecords.firstOrNull { it.fieldName == KEY_OS }?.fieldValue
+            ?.let { JsonUtil.to(it, object : TypeReference<List<String>>() {}) }
+        // 无构建环境组件是否可以在有构建环境运行
+        val buildLessRunFlag = versionExtRecords
+            .firstOrNull { it.fieldName == KEY_BUILD_LESS_RUN_FLAG }?.fieldValue?.toBoolean()
+        // 组件级共享扩展：所有版本共享(如 installPath、os、yamlFlag 等)
+        val featureExtData = if (featureExtRecords.isNotEmpty()) {
+            featureExtRecords.associate { it.fieldName to StoreExtFieldUtil.formatJson(it.fieldValue) }
+        } else {
+            null
+        }
+        // 版本级扩展：列表保持精简，仅取 urlScheme；
+        // installType/installParams 等安装明细由详情接口(StoreDetailInfo)/部署接口按需提供
+        val urlScheme = versionExtRecords.firstOrNull { it.fieldName == KEY_URL_SCHEME }?.fieldValue
+        val versionExtData = if (!urlScheme.isNullOrBlank()) mapOf(KEY_URL_SCHEME to urlScheme) else null
+        // 向后兼容：保持 extData 为组件级+版本级合并，旧客户端仍可读取
+        val mergedExt = mutableMapOf<String, Any>()
+        featureExtData?.let { mergedExt.putAll(it) }
+        versionExtData?.let { mergedExt.putAll(it) }
+        val extData: Map<String, Any>? = mergedExt.ifEmpty { null }
+        val publicFlag = record[ctx.tStoreBaseFeature.PUBLIC_FLAG] ?: false
+        return MarketItem(
+            id = storeId,
+            name = record[ctx.tStoreBase.NAME],
+            code = storeCode,
+            version = version,
+            status = status,
+            type = StoreTypeEnum.getStoreType(record[ctx.tStoreBase.STORE_TYPE].toInt()),
+            rdType = record[ctx.tStoreBaseFeature.RD_TYPE],
+            classifyCode = ctx.classifyMap[record[ctx.tStoreBase.CLASSIFY_ID] as String],
+            category =
+            ctx.categoryInfoMap[record[ctx.tStoreBase.ID]]?.joinToString(",") { it.categoryCode },
+            logoUrl = record[ctx.tStoreBase.LOGO_URL]?.let { convertLogoUrl(it, ctx.urlProtocolTrim) },
+            publisher = record[ctx.tStoreBase.PUBLISHER],
+            os = osList,
+            downloads = statistic?.downloads ?: 0,
+            score = statistic?.score ?: 0.toDouble(),
+            summary = record[ctx.tStoreBase.SUMMARY],
+            flag = storeCommonService.generateInstallFlag(
+                defaultFlag = publicFlag,
+                members = ctx.memberData?.get(storeCode),
+                userId = ctx.userId,
+                visibleList = ctx.storeVisibleData?.get(storeCode),
+                userDeptList = ctx.userDeptList
+            ),
+            publicFlag = publicFlag,
+            buildLessRunFlag = buildLessRunFlag,
+            docsLink = record[ctx.tStoreBase.DOCS_LINK],
+            modifier = record[ctx.tStoreBase.MODIFIER],
+            updateTime = DateTimeUtil.toDateTime(record[ctx.tStoreBase.UPDATE_TIME] as LocalDateTime),
+            recommendFlag = record[ctx.tStoreBaseFeature.RECOMMEND_FLAG],
+            yamlFlag = featureExtData?.get(KEY_YAML_FLAG) as? Boolean,
+            installed = installed,
+            updateFlag = updateFlag,
+            honorInfos = ctx.storeHonorInfoMap[storeCode],
+            indexInfos = ctx.storeIndexInfosMap[storeCode],
+            recentExecuteNum = statistic?.recentExecuteNum,
+            hotFlag = statistic?.hotFlag,
+            extData = extData,
+            ownerStoreName = if (ownerStoreCode.isNullOrBlank()) {
+                null
+            } else {
+                ctx.ownerStoreInfos[ownerStoreCode]
+            },
+            ownerStoreCode = ownerStoreCode
+        )
     }
 
     private fun convertLogoUrl(url: String, urlProtocolTrim: Boolean): String? {
