@@ -191,6 +191,17 @@ object CommonMessageCode {
     const val ERROR_QUERY_COUNT_RANGE = "2100142" // 查询条数需要在{}到{}之间
     const val ERROR_PERMISSION_NOT_PROJECT_MANAGER = "2100143" // 用户{0}非项目{1}管理员
 
+    // YAML JSON Schema 校验错误的友好化描述
+    const val YAML_SCHEMA_REQUIRED = "2100144" // [{0}] 缺少必填字段 [{1}]
+    const val YAML_SCHEMA_ADDITIONAL_PROPERTIES = "2100145" // [{0}] 存在不支持的字段 [{1}]
+    const val YAML_SCHEMA_NOT_FIELD_FORBIDDEN = "2100146" // [{0}] 当前上下文下不允许配置字段 [{1}]
+    const val YAML_SCHEMA_NOT_GENERIC = "2100147" // [{0}] 当前上下文下不允许出现该配置
+    const val YAML_SCHEMA_ENUM = "2100148" // [{0}] 取值不在允许范围 [{1}]
+    const val YAML_SCHEMA_TYPE = "2100149" // [{0}] 字段类型错误，期望类型 [{1}]
+    const val YAML_SCHEMA_PATTERN = "2100150" // [{0}] 值格式不符合规则 [{1}]
+    const val YAML_SCHEMA_LENGTH = "2100151" // [{0}] 长度不符合要求 ({1}={2})
+    const val YAML_SCHEMA_RANGE = "2100152" // [{0}] 数值不符合要求 ({1}={2})
+
     const val BK_CONTAINER_TIMED_OUT = "bkContainerTimedOut" // 创建容器超时
     const val BK_CREATION_FAILED_EXCEPTION_INFORMATION = "bkCreationFailedExceptionInformation" // 创建失败，异常信息
 

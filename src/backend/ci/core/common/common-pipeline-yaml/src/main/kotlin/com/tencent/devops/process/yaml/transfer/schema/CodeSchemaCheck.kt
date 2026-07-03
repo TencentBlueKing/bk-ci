@@ -10,9 +10,11 @@ import com.networknt.schema.JsonSchema
 import com.networknt.schema.JsonSchemaFactory
 import com.networknt.schema.SpecVersion
 import com.networknt.schema.ValidationMessage
+import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.CommonMessageCode.YAML_NOT_VALID
 import com.tencent.devops.common.api.util.ReflectUtil
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.yaml.pojo.YamlVersion
 import com.tencent.devops.process.yaml.transfer.PipelineTransferException
 import com.tencent.devops.process.yaml.transfer.TransferMapper
@@ -179,34 +181,40 @@ class CodeSchemaCheck @Autowired constructor(
     }
 
     /**
-     * Convert a JSON Schema validation error to a user-friendly description,
-     * hiding the internal schema structure path.
-     * Common keywords are mapped in the when branches below;
-     * unrecognized keywords fall back to the library's built-in message.
+     * Convert a JSON Schema validation error to a user-friendly, i18n-aware description,
+     * hiding the internal schema structure path. Common keywords are mapped to dedicated
+     * message codes; unrecognized keywords fall back to the library's built-in message.
      */
     private fun formatValidationMessage(msg: ValidationMessage): String {
         val path = msg.instanceLocation?.toString()?.ifBlank { "$" } ?: "$"
         val firstArg = msg.arguments?.firstOrNull()?.toString().orEmpty()
         return when (msg.type) {
-            "required" -> "[$path] Missing required field [$firstArg]"
-            "additionalProperties" -> "[$path] Unsupported field [$firstArg]"
+            "required" -> i18n(CommonMessageCode.YAML_SCHEMA_REQUIRED, path, firstArg)
+            "additionalProperties" -> i18n(CommonMessageCode.YAML_SCHEMA_ADDITIONAL_PROPERTIES, path, firstArg)
             "not" -> {
                 val forbidden = extractForbiddenFields(msg.message)
                 if (forbidden.isNotBlank()) {
-                    "[$path] Field [$forbidden] is not allowed in this context, " +
-                        "please check whether it is placed in the wrong section"
+                    i18n(CommonMessageCode.YAML_SCHEMA_NOT_FIELD_FORBIDDEN, path, forbidden)
                 } else {
-                    "[$path] This configuration is not allowed in the current context, " +
-                        "please check whether the fields match the current section"
+                    i18n(CommonMessageCode.YAML_SCHEMA_NOT_GENERIC, path)
                 }
             }
-            "enum" -> "[$path] Value is not in the allowed set [${msg.arguments?.joinToString(", ").orEmpty()}]"
-            "type" -> "[$path] Wrong field type, expected [$firstArg]"
-            "pattern" -> "[$path] Value does not match the required pattern [$firstArg]"
-            "minLength", "maxLength" -> "[$path] Length constraint violated (${msg.type}=$firstArg)"
-            "minimum", "maximum" -> "[$path] Numeric constraint violated (${msg.type}=$firstArg)"
+            "enum" -> i18n(
+                CommonMessageCode.YAML_SCHEMA_ENUM, path, msg.arguments?.joinToString(", ").orEmpty()
+            )
+            "type" -> i18n(CommonMessageCode.YAML_SCHEMA_TYPE, path, firstArg)
+            "pattern" -> i18n(CommonMessageCode.YAML_SCHEMA_PATTERN, path, firstArg)
+            "minLength", "maxLength" -> i18n(CommonMessageCode.YAML_SCHEMA_LENGTH, path, msg.type, firstArg)
+            "minimum", "maximum" -> i18n(CommonMessageCode.YAML_SCHEMA_RANGE, path, msg.type, firstArg)
             else -> "[$path] ${msg.message}"
         }
+    }
+
+    private fun i18n(messageCode: String, vararg params: String): String {
+        return I18nUtil.getCodeLanMessage(
+            messageCode = messageCode,
+            params = arrayOf(*params)
+        )
     }
 
     /**
