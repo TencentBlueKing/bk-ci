@@ -160,13 +160,9 @@ class StoreComponentVersionQueryServiceImpl @Autowired constructor(
             errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
             params = arrayOf(storeCode)
         )
-        // 获取回显版本号
+        // 获取回显版本号(record 已是最新组件记录，回显版本即其版本号)
         val cancelFlag = record.status == StoreStatusEnum.GROUNDING_SUSPENSION.name
-        val showVersion = if (cancelFlag) {
-            record.version
-        } else {
-            storeBaseQueryDao.getNewestComponentByCode(dslContext, storeCode, storeTypeEnum)?.version
-        }
+        val showVersion = record.version
         val releaseType = if (record.status == StoreStatusEnum.INIT.name) {
             null
         } else {

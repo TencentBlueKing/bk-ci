@@ -244,18 +244,17 @@ class StoreComponentDetailQueryServiceImpl @Autowired constructor(
         storeCode: String,
         storeType: StoreTypeEnum
     ): Map<String, Any> {
-        val baseExtRecords = storeBaseExtQueryDao.getBaseExtByIds(dslContext, listOf(storeId))
-        var extData = baseExtRecords.associateBy({ it.fieldName }, { StoreExtFieldUtil.formatJson(it.fieldValue) })
-        val baseFeatureExtRecords = storeBaseFeatureExtQueryDao.queryStoreBaseFeatureExt(
+        // 版本级扩展：跟随版本(如 installType、installParams、urlScheme 等)
+        val versionExtData = storeBaseExtQueryDao.getBaseExtByIds(dslContext, listOf(storeId))
+            .associateBy({ it.fieldName }, { StoreExtFieldUtil.formatJson(it.fieldValue) })
+        // 组件级共享扩展：所有版本共享(如 installPath、os、yamlFlag 等)
+        val featureExtData = storeBaseFeatureExtQueryDao.queryStoreBaseFeatureExt(
             dslContext = dslContext,
             storeCode = storeCode,
             storeType = storeType
-        )
-        extData = extData.plus(
-            baseFeatureExtRecords.associateBy({ it.fieldName },
-                { StoreExtFieldUtil.formatJson(it.fieldValue) })
-        )
-        return extData
+        ).associateBy({ it.fieldName }, { StoreExtFieldUtil.formatJson(it.fieldValue) })
+        // 与 getComponentDetailInfoById 保持一致：字段名冲突时版本级覆盖组件级
+        return featureExtData.plus(versionExtData)
     }
 
     private fun getComponent(
