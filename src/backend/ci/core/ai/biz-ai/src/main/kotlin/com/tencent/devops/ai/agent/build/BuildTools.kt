@@ -38,6 +38,7 @@ import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.log.api.ServiceLogResource
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
+import com.tencent.devops.process.api.service.ServicePipelineVersionResource
 import io.agentscope.core.tool.Tool
 import io.agentscope.core.tool.ToolParam
 import org.slf4j.Logger
@@ -56,6 +57,7 @@ class BuildTools(
     override val logger: Logger = LoggerFactory.getLogger(BuildTools::class.java)
 
     private fun pipelineResource() = service(ServicePipelineResource::class)
+    private fun versionResource() = service(ServicePipelineVersionResource::class)
     private fun buildResource() = service(ServiceBuildResource::class)
     private fun logResource() = service(ServiceLogResource::class)
 
@@ -141,6 +143,40 @@ class BuildTools(
             )
             val pipeline = result.data ?: return@safeQuery "未找到流水线 $pipelineId"
             toJson(pipeline)
+        }
+    }
+
+    @Tool(
+        name = "获取流水线编排",
+        description = "获取流水线的编排 Model，包括阶段、任务、参数等。" +
+                "支持按指定版本号查询；version 不传时默认返回最新正式版本。"
+    )
+    fun getPipelineModel(
+        @ToolParam(name = "projectId", description = "项目ID")
+        projectId: String,
+        @ToolParam(name = "pipelineId", description = "流水线ID")
+        pipelineId: String,
+        @ToolParam(name = "version", description = "流水线版本号（可选，不传默认最新）", required = false)
+        version: Int? = null
+    ): String {
+        return safeQuery("BuildArtifactTool", "getPipelineModel") {
+            val result = versionResource().getVersionModel(
+                userId = getOperatorUserId(),
+                projectId = projectId,
+                pipelineId = pipelineId,
+                version = version
+            )
+            val data = result.data ?: return@safeQuery "未找到流水线 $pipelineId 的编排信息"
+            toJson(
+                mapOf(
+                    "pipelineId" to pipelineId,
+                    "version" to data.version,
+                    "versionName" to data.versionName,
+                    "latestVersion" to data.latestVersion,
+                    "model" to data.modelAndSetting.model,
+                    "setting" to data.modelAndSetting.setting
+                )
+            )
         }
     }
 
@@ -420,7 +456,8 @@ class BuildTools(
         name = "获取构建日志",
         description = "获取构建日志。强烈建议传入 tag 参数（即 elementId，格式 e-xxxxxxxx）定位到具体插件，" +
                 "避免返回全量日志导致内容过大。" +
-                "工具会自动继续拉取后续日志片段，但返回文本最多约 20000 字符（超出会截断）。" +
+                "默认从日志尾部（最新内容，报错通常在此）开始取，返回文本最多约 20000 字符（超出会截断）。" +
+                "排查报错时建议配合 logType=ERROR 只看错误行；如需从头查看完整过程可将 fromTail 设为 false。" +
                 "如果日志内容不完整或包含「Please download logs to view.」标记，" +
                 "说明日志触发了熔断，应提醒用户到蓝盾页面下载完整日志。"
     )
@@ -446,7 +483,13 @@ class BuildTools(
         )
         logType: String? = null,
         @ToolParam(name = "jobId", description = "对应 jobId（可选）", required = false)
-        jobId: String? = null
+        jobId: String? = null,
+        @ToolParam(
+            name = "fromTail",
+            description = "是否从日志尾部（最新内容）开始取，默认 true；排查报错保持 true，从头看完整过程传 false",
+            required = false
+        )
+        fromTail: Boolean? = true
     ): String {
         return safeQuery("BuildArtifactTool", "getBuildLogs") {
             val actualLogType = if (logType.isNullOrBlank()) {
@@ -456,6 +499,7 @@ class BuildTools(
                     ?: return@safeQuery "logType 无效，支持的值为 WARN、ERROR、DEBUG、LOG"
             }
             val debug = actualLogType == LogType.DEBUG
+            val tailMode = fromTail != false
             val result = logResource().getInitLogs(
                 userId = getOperatorUserId(),
                 projectId = projectId,
@@ -467,7 +511,8 @@ class BuildTools(
                 containerHashId = null,
                 executeCount = null,
                 jobId = jobId,
-                stepId = stepId
+                stepId = stepId,
+                reverse = tailMode
             )
             val initLogs = result.data ?: return@safeQuery "获取日志失败"
             val mergedLogs = initLogs.logs.toMutableList()
@@ -477,8 +522,10 @@ class BuildTools(
             var fetchTimes = 0
             var truncatedByLineCap = false
 
+            // 尾部模式下 getInitLogs(reverse=true) 已返回最新窗口，无需再正序向后翻页；
+            // 只有从头查看完整过程时才继续用 getAfterLogs 拉取后续片段。
             while (
-                hasMore && mergedLogs.size < MAX_MERGED_LOG_LINES &&
+                !tailMode && hasMore && mergedLogs.size < MAX_MERGED_LOG_LINES &&
                 fetchTimes < MAX_LOG_FETCH_TIMES &&
                 estimatedRenderedCharCount(mergedLogs) < MAX_LOG_CONTENT_CHARS
             ) {
@@ -533,7 +580,11 @@ class BuildTools(
                 )
             }
 
-            val logsForRender = takeLogsForCharBudget(mergedLogs, MAX_LOG_CONTENT_CHARS)
+            val logsForRender = if (tailMode) {
+                takeLogsFromTailForCharBudget(mergedLogs, MAX_LOG_CONTENT_CHARS)
+            } else {
+                takeLogsForCharBudget(mergedLogs, MAX_LOG_CONTENT_CHARS)
+            }
             val renderedContent = renderLogs(logsForRender)
             val truncatedByChars = logsForRender.size < mergedLogs.size
             val contentTruncated = estimatedRenderedCharCount(logsForRender) > MAX_LOG_CONTENT_CHARS
@@ -541,6 +592,9 @@ class BuildTools(
             val effectiveHasMore =
                 hasMore || truncatedByChars || truncatedByLineCap || contentTruncated || hitFetchCap
             val notices = buildList {
+                if (tailMode) {
+                    add("已优先返回日志尾部（最新内容），报错信息通常在此；如需从头查看完整过程可将 fromTail 设为 false。")
+                }
                 if (tag.isNullOrBlank()) {
                     add("未指定 tag，返回的可能是较大范围日志。建议先用构建详情定位失败插件的 elementId 后重试。")
                 }
@@ -576,6 +630,126 @@ class BuildTools(
                 queryMessage = queryMessage
             )
         }
+    }
+
+    @Tool(
+        name = "分析构建失败",
+        description = "一键排查构建失败原因：自动定位失败插件并抓取其错误日志（默认日志尾部 + ERROR 级别优先）。" +
+                "buildId 不传时默认分析该流水线最新一次构建。这是排查构建报错的首选工具，" +
+                "可减少多次手动调用；如需更细粒度可再用「获取构建详情」「获取构建日志」深入。"
+    )
+    fun analyzeBuildFailure(
+        @ToolParam(name = "projectId", description = "项目ID")
+        projectId: String,
+        @ToolParam(name = "pipelineId", description = "流水线ID")
+        pipelineId: String,
+        @ToolParam(name = "buildId", description = "构建ID（可选，不传默认分析最新一次构建）", required = false)
+        buildId: String? = null
+    ): String {
+        return safeQuery("BuildArtifactTool", "analyzeBuildFailure") {
+            val actualBuildId = buildId?.takeIf { it.isNotBlank() } ?: run {
+                val history = buildResource().getHistoryBuild(
+                    userId = getOperatorUserId(),
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    page = 1,
+                    pageSize = 1,
+                    channelCode = ChannelCode.BS
+                ).data
+                history?.records?.firstOrNull()?.id
+                    ?: return@safeQuery "未找到流水线 $pipelineId 的构建记录"
+            }
+            val detail = buildResource().getBuildDetailSimple(
+                userId = getOperatorUserId(),
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = actualBuildId,
+                channelCode = ChannelCode.BS
+            ).data ?: return@safeQuery "未找到构建 $actualBuildId"
+
+            val summary = linkedMapOf<String, Any?>(
+                "buildId" to actualBuildId,
+                "buildNum" to detail.buildNum,
+                "status" to detail.status,
+                "failedElementCount" to detail.failedElementCount,
+                "stageSummary" to detail.stageSummary,
+                "detailUrl" to buildBuildDetailUrl(projectId, pipelineId, actualBuildId)
+            )
+
+            if (detail.failedElements.isEmpty()) {
+                summary["message"] =
+                    "未发现失败插件。可能构建未失败，或失败发生在触发/环境准备阶段，请结合 stageSummary 判断。"
+                summary["notices"] = detail.notices
+                return@safeQuery toJson(summary)
+            }
+
+            val analyzed = detail.failedElements.take(MAX_FAILED_ELEMENTS_TO_ANALYZE).map { fe ->
+                linkedMapOf<String, Any?>(
+                    "stageName" to fe.stageName,
+                    "jobName" to fe.containerName,
+                    "jobId" to fe.jobId,
+                    "elementId" to fe.elementId,
+                    "elementName" to fe.elementName,
+                    "stepId" to fe.stepId,
+                    "status" to fe.status,
+                    "errorType" to fe.errorType,
+                    "errorCode" to fe.errorCode,
+                    "errorMsg" to fe.errorMsg,
+                    "errorLog" to fetchFailureLog(projectId, pipelineId, actualBuildId, fe.elementId, fe.jobId)
+                )
+            }
+            summary["analyzedElementCount"] = analyzed.size
+            summary["failedElements"] = analyzed
+            if (detail.failedElements.size > analyzed.size) {
+                summary["notices"] = listOf(
+                    "失败插件较多，仅分析前 ${analyzed.size} 个；如需其余插件日志请指定 elementId 单独查询。"
+                )
+            }
+            toJson(summary)
+        }
+    }
+
+    /**
+     * 抓取单个失败插件的错误日志：优先 ERROR 级别的尾部日志，为空时回退全量尾部日志。
+     * 返回「获取构建日志」的结构化结果（已解析为 Map，避免二次编码）。
+     */
+    private fun fetchFailureLog(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        elementId: String?,
+        jobId: String?
+    ): Any {
+        if (elementId.isNullOrBlank()) {
+            return "该失败插件缺少 elementId，无法定位日志，请结合构建详情人工排查。"
+        }
+        val errorLogJson = getBuildLogs(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            tag = elementId,
+            stepId = null,
+            logType = "ERROR",
+            jobId = jobId,
+            fromTail = true
+        )
+        val errorLog = runCatching { JsonUtil.toMutableMap(errorLogJson) }.getOrNull()
+        val errorContent = errorLog?.get("content") as? String
+        if (!errorContent.isNullOrBlank()) {
+            return errorLog
+        }
+        // ERROR 级别无内容时回退到全量日志尾部
+        val fallbackJson = getBuildLogs(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            tag = elementId,
+            stepId = null,
+            logType = null,
+            jobId = jobId,
+            fromTail = true
+        )
+        return runCatching { JsonUtil.toMutableMap(fallbackJson) }.getOrDefault(fallbackJson)
     }
 
     private fun appendLogs(target: MutableList<LogLine>, logs: List<LogLine>) {
@@ -638,6 +812,32 @@ class BuildTools(
         return selected
     }
 
+    /**
+     * 在字符预算内保留日志的“尾部”（最新内容），返回结果仍按行号升序。
+     * 排查报错时报错栈通常在末尾，超预算时应丢弃头部而非尾部。
+     */
+    private fun takeLogsFromTailForCharBudget(logs: List<LogLine>, maxChars: Int): List<LogLine> {
+        if (logs.isEmpty()) {
+            return emptyList()
+        }
+        val selected = ArrayDeque<LogLine>()
+        var total = 0
+        for (index in logs.indices.reversed()) {
+            val log = logs[index]
+            val lineChars = LOG_LINE_PREFIX_OVERHEAD + log.lineNo.toString().length + log.message.length
+            val addChars = if (selected.isEmpty()) lineChars else lineChars + 1
+            if (total + addChars > maxChars) {
+                if (selected.isEmpty()) {
+                    selected.addFirst(log)
+                }
+                break
+            }
+            selected.addFirst(log)
+            total += addChars
+        }
+        return selected.toList()
+    }
+
     private fun containsDownloadHint(logs: List<LogLine>, queryMessage: String?): Boolean {
         if (queryMessage?.contains(LOG_DOWNLOAD_HINT, ignoreCase = true) == true) {
             return true
@@ -693,9 +893,14 @@ class BuildTools(
         return "${HomeHostUtil.innerServerHost()}/console/pipeline/$projectId/$pipelineId/history"
     }
 
+    private fun buildBuildDetailUrl(projectId: String, pipelineId: String, buildId: String): String {
+        return "${HomeHostUtil.innerServerHost()}/console/pipeline/$projectId/$pipelineId/detail/$buildId"
+    }
+
     companion object {
         private const val DEFAULT_PAGE_SIZE = 10
         private const val MAX_PAGE_SIZE = 50
+        private const val MAX_FAILED_ELEMENTS_TO_ANALYZE = 3
         private const val MAX_LOG_FETCH_TIMES = 5
         private const val MAX_MERGED_LOG_LINES = 10_000
         private const val MAX_LOG_CONTENT_CHARS = 20_000
