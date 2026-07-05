@@ -38,8 +38,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 @Event(StreamBinding.TAPD_WEBHOOK_REQUEST_EVENT)
 @Schema(title = "TAPD webhook 请求事件")
 data class TapdWebhookRequestEvent(
-    @get:Schema(description = "TAPD 项目ID")
-    val tapdProjectId: String,
+    @get:Schema(description = "TAPD workspaceId")
+    val workspaceId: String,
     @get:Schema(description = "事件类型")
     val eventType: String,
     @get:Schema(description = "事件动作")

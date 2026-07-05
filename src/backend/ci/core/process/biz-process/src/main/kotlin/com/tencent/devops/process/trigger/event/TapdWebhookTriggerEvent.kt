@@ -46,8 +46,8 @@ data class TapdWebhookTriggerEvent(
     val pipelineId: String,
     @get:Schema(description = "事件ID")
     val eventId: Long,
-    @get:Schema(description = "TAPD 项目ID（workspace_id）")
-    val tapdProjectId: String,
+    @get:Schema(description = "TAPD workspaceId")
+    val workspaceId: String,
     @get:Schema(description = "事件类型")
     val eventType: TapdEventType,
     @get:Schema(description = "事件动作")
