@@ -17,6 +17,7 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.yaml.pojo.YamlVersion
 import com.tencent.devops.process.yaml.transfer.PipelineTransferException
+import com.tencent.devops.process.yaml.transfer.PipelineTransferValidateDetail
 import com.tencent.devops.process.yaml.transfer.TransferMapper
 import com.tencent.devops.process.yaml.v2.enums.TemplateType
 import java.io.FileNotFoundException
@@ -173,48 +174,71 @@ class CodeSchemaCheck @Autowired constructor(
         if (messages.isNullOrEmpty()) return
         // 原始报错（含 schema 内部路径等技术细节）保留到服务端日志，便于排查
         logger.warn("YAML_SCHEMA_INVALID|rawMessages=$messages")
-        val friendly = messages.joinToString(separator = "\n") { formatValidationMessage(it) }
+        val details = messages.map { toValidateDetail(it) }
+        val friendly = details.joinToString(separator = "\n") { detail ->
+            I18nUtil.getCodeLanMessage(
+                messageCode = detail.messageCode,
+                params = detail.params?.toTypedArray()
+            )
+        }
         throw PipelineTransferException(
-            YAML_NOT_VALID,
-            arrayOf(friendly)
+            errorCode = YAML_NOT_VALID,
+            params = arrayOf(friendly),
+            validateDetails = details
         )
     }
 
-    /**
-     * Convert a JSON Schema validation error to a user-friendly, i18n-aware description,
-     * hiding the internal schema structure path. Common keywords are mapped to dedicated
-     * message codes; unrecognized keywords fall back to the library's built-in message.
-     */
-    private fun formatValidationMessage(msg: ValidationMessage): String {
+    private fun toValidateDetail(msg: ValidationMessage): PipelineTransferValidateDetail {
         val path = msg.instanceLocation?.toString()?.ifBlank { "$" } ?: "$"
         val firstArg = msg.arguments?.firstOrNull()?.toString().orEmpty()
         return when (msg.type) {
-            "required" -> i18n(CommonMessageCode.YAML_SCHEMA_REQUIRED, path, firstArg)
-            "additionalProperties" -> i18n(CommonMessageCode.YAML_SCHEMA_UNSUPPORTED_FIELD, path, firstArg)
+            "required" -> PipelineTransferValidateDetail(
+                messageCode = CommonMessageCode.YAML_SCHEMA_REQUIRED,
+                params = listOf(path, firstArg)
+            )
+            "additionalProperties" -> PipelineTransferValidateDetail(
+                messageCode = CommonMessageCode.YAML_SCHEMA_UNSUPPORTED_FIELD,
+                params = listOf(path, firstArg)
+            )
             "not" -> {
                 val forbidden = extractForbiddenFields(msg.message)
                 if (forbidden.isNotBlank()) {
-                    i18n(CommonMessageCode.YAML_SCHEMA_UNSUPPORTED_FIELD, path, forbidden)
+                    PipelineTransferValidateDetail(
+                        messageCode = CommonMessageCode.YAML_SCHEMA_UNSUPPORTED_FIELD,
+                        params = listOf(path, forbidden)
+                    )
                 } else {
-                    i18n(CommonMessageCode.YAML_SCHEMA_UNSUPPORTED_CONFIG, path)
+                    PipelineTransferValidateDetail(
+                        messageCode = CommonMessageCode.YAML_SCHEMA_UNSUPPORTED_CONFIG,
+                        params = listOf(path)
+                    )
                 }
             }
-            "enum" -> i18n(
-                CommonMessageCode.YAML_SCHEMA_ENUM, path, msg.arguments?.joinToString(", ").orEmpty()
+            "enum" -> PipelineTransferValidateDetail(
+                messageCode = CommonMessageCode.YAML_SCHEMA_ENUM,
+                params = listOf(path, msg.arguments?.joinToString(", ").orEmpty())
             )
-            "type" -> i18n(CommonMessageCode.YAML_SCHEMA_TYPE, path, firstArg)
-            "pattern" -> i18n(CommonMessageCode.YAML_SCHEMA_PATTERN, path, firstArg)
-            "minLength", "maxLength" -> i18n(CommonMessageCode.YAML_SCHEMA_LENGTH, path, msg.type, firstArg)
-            "minimum", "maximum" -> i18n(CommonMessageCode.YAML_SCHEMA_RANGE, path, msg.type, firstArg)
-            else -> "[$path] ${msg.message}"
+            "type" -> PipelineTransferValidateDetail(
+                messageCode = CommonMessageCode.YAML_SCHEMA_TYPE,
+                params = listOf(path, firstArg)
+            )
+            "pattern" -> PipelineTransferValidateDetail(
+                messageCode = CommonMessageCode.YAML_SCHEMA_PATTERN,
+                params = listOf(path, firstArg)
+            )
+            "minLength", "maxLength" -> PipelineTransferValidateDetail(
+                messageCode = CommonMessageCode.YAML_SCHEMA_LENGTH,
+                params = listOf(path, msg.type, firstArg)
+            )
+            "minimum", "maximum" -> PipelineTransferValidateDetail(
+                messageCode = CommonMessageCode.YAML_SCHEMA_RANGE,
+                params = listOf(path, msg.type, firstArg)
+            )
+            else -> PipelineTransferValidateDetail(
+                messageCode = CommonMessageCode.YAML_SCHEMA_UNSUPPORTED_CONFIG,
+                params = listOf("$path ${msg.message}")
+            )
         }
-    }
-
-    private fun i18n(messageCode: String, vararg params: String): String {
-        return I18nUtil.getCodeLanMessage(
-            messageCode = messageCode,
-            params = arrayOf(*params)
-        )
     }
 
     /**
