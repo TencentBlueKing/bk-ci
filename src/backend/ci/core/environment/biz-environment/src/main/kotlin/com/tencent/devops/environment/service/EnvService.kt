@@ -1982,7 +1982,7 @@ class EnvService @Autowired constructor(
 
     fun fetchAllNodeEnvList(
         userId: String,
-        projectId: String,
+        projectId: String?,
         workspaceName: String,
         noCheckPerm: Boolean
     ): List<EnvData> {
@@ -1995,27 +1995,28 @@ class EnvService @Autowired constructor(
             logger.warn("fetchAllNodeEnvList no find $projectId|$workspaceName agent")
             return emptyList()
         }
+        val realProjectId = projectId ?: agent.projectId
         val agentHashId = HashUtil.encodeLongId(agent.id)
-        val envNodeList = envNodeDao.listNodeIds(dslContext, projectId, listOf(agent.nodeId)).map { it.envId }
-        val tagEnvList = envTagDao.fetchTagEnvByNodeId(dslContext, projectId, agent.nodeId)
+        val envNodeList = envNodeDao.listNodeIds(dslContext, realProjectId, listOf(agent.nodeId)).map { it.envId }
+        val tagEnvList = envTagDao.fetchTagEnvByNodeId(dslContext, realProjectId, agent.nodeId)
         val result = mutableListOf<EnvData>()
         // 校验管理员权限看能否用所有构建节点
-        if (authProjectApi.checkProjectManager(userId, pipelineAuthServiceCode, projectId)) {
+        if (authProjectApi.checkProjectManager(userId, pipelineAuthServiceCode, realProjectId)) {
             result.add(EnvData(AllCreateNodeEnv.hashId(), AllCreateNodeEnv.name(), agentHashId))
         }
         if (envNodeList.isEmpty() && tagEnvList.isEmpty()) {
-            logger.info("fetchAllNodeEnvList $projectId|$workspaceName no env list")
+            logger.info("fetchAllNodeEnvList $realProjectId|$workspaceName no env list")
             return result
         }
         var permissionEnvList: List<Long>? = null
         if (!noCheckPerm) {
             permissionEnvList = environmentPermissionService.listEnvByPermissions(
                 userId,
-                projectId,
+                realProjectId,
                 setOf(AuthPermission.USE)
             )[AuthPermission.USE]?.map { HashUtil.decodeIdToLong(it) }
             if (permissionEnvList.isNullOrEmpty()) {
-                logger.info("fetchAllNodeEnvList $projectId|$workspaceName no permission use env")
+                logger.info("fetchAllNodeEnvList $realProjectId|$workspaceName no permission use env")
                 return result
             }
         }
@@ -2028,10 +2029,10 @@ class EnvService @Autowired constructor(
                 it
             }
         }
-        logger.debug("fetchAllNodeEnvList $projectId|$workspaceName can use $envIds")
+        logger.debug("fetchAllNodeEnvList $realProjectId|$workspaceName can use $envIds")
         return envDao.list(
             dslContext = dslContext,
-            projectId = projectId,
+            projectId = realProjectId,
             envName = null,
             envTypeList = listOf(EnvType.CREATE.name),
             envIds = envIds

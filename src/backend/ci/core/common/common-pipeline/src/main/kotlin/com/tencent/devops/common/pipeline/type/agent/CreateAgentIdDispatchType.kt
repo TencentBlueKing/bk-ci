@@ -33,7 +33,9 @@ import com.tencent.devops.common.pipeline.type.DispatchType
 
 data class CreateAgentIdDispatchType(
     override var value: String,
-    var envHashId: String? = "\${{variables.BK_CI_NODE_ENV_HASH_ID}}"
+    var envHashId: String? = "\${{variables.BK_CI_NODE_ENV_HASH_ID}}",
+    var workspace: String?,
+    val dockerInfo: ThirdPartyAgentDockerInfo?,
 ) : DispatchType(value) {
     override fun cleanDataBeforeSave() {
         this.value = this.value.trim()
@@ -41,6 +43,10 @@ data class CreateAgentIdDispatchType(
 
     override fun replaceField(variables: Map<String, String>) {
         envHashId = EnvUtils.parseEnv(envHashId, variables)
+        if (!workspace.isNullOrBlank()) {
+            workspace = EnvUtils.parseEnv(workspace!!, variables)
+        }
+        dockerInfo?.replaceField(variables)
     }
 
     override fun buildType() = BuildType.valueOf(BuildType.CREATE_AGENT_ID.name)

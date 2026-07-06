@@ -157,6 +157,11 @@ class PipelineDraftReleaseHandler @Autowired constructor(
             context = this,
             resourceOnlyVersion = resourceOnlyVersion
         )
+        // 事务前校验，避免 releaseDraft2ReleaseVersion 内部事务提交后校验失败导致引用缺失。
+        publicVarGroupReferManageService.validateVarGroupReferences(
+            model = pipelineResourceWithoutVersion.model,
+            projectId = projectId
+        )
         if (pipelineResourceWithoutVersion.status == VersionStatus.RELEASED) {
             pipelineVersionPersistenceService.releaseDraft2ReleaseVersion(
                 context = this,

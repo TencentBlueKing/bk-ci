@@ -39,8 +39,9 @@ class MarketEventRequestService constructor(
         logger.info("Receive CdsWebhookRequestEvent from MQ [${JsonUtil.toJson(event, false)}]")
         with(event) {
             // 1. 获取事件源: 通过项目ID+workspaceName获取环境列表
+            // 云桌面和agent项目ID可能不一致，这里查询时不使用事件的项目ID
             val envList = creativeStreamService.fetchAllNodeEnvList(
-                projectId = projectId,
+                projectId = null,
                 workspaceName = workspaceName,
                 userId = userId
             )

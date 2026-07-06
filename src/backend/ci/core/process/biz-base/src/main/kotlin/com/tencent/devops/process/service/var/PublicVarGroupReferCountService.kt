@@ -37,12 +37,12 @@ import com.tencent.devops.process.pojo.`var`.VarGroupVersionChangeInfo
 import com.tencent.devops.process.pojo.`var`.po.PublicVarGroupVersionSummaryPO
 import com.tencent.devops.process.pojo.`var`.po.ResourcePublicVarGroupReferPO
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
+import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.time.LocalDateTime
 
 @Service
 class PublicVarGroupReferCountService @Autowired constructor(
@@ -96,7 +96,53 @@ class PublicVarGroupReferCountService @Autowired constructor(
             logger.info("No reference found for referId: $referId$versionInfo, skip deletion")
             return
         }
+        batchRemoveReferInfoInternal(
+            transactionContext = null,
+            projectId = projectId,
+            referId = referId,
+            referType = referType,
+            referInfosToDelete = referInfosToDelete,
+            referVersion = referVersion
+        )
+    }
 
+    /**
+     * 批量删除引用并更新引用计数（复用外部事务）
+     * 当 transactionContext 不为 null 时，所有 DB 操作使用该 context，不另开事务，
+     * 确保引用清理与调用方（如 deletePipeline）在同一事务内，要么全成功要么全回滚。
+     * @param transactionContext 外部事务的 DSLContext，null 表示自行管理事务（兼容原逻辑）
+     */
+    fun batchRemoveReferInfo(
+        transactionContext: DSLContext,
+        projectId: String,
+        referId: String,
+        referType: PublicVarGroupReferenceTypeEnum,
+        referInfosToDelete: List<ResourcePublicVarGroupReferPO>,
+        referVersion: Int? = null
+    ) {
+        if (referInfosToDelete.isEmpty()) {
+            val versionInfo = if (referVersion != null) ", referVersion: $referVersion" else ""
+            logger.info("No reference found for referId: $referId$versionInfo, skip deletion")
+            return
+        }
+        batchRemoveReferInfoInternal(
+            transactionContext = transactionContext,
+            projectId = projectId,
+            referId = referId,
+            referType = referType,
+            referInfosToDelete = referInfosToDelete,
+            referVersion = referVersion
+        )
+    }
+
+    private fun batchRemoveReferInfoInternal(
+        transactionContext: DSLContext?,
+        projectId: String,
+        referId: String,
+        referType: PublicVarGroupReferenceTypeEnum,
+        referInfosToDelete: List<ResourcePublicVarGroupReferPO>,
+        referVersion: Int?
+    ) {
         // 按 (projectId, groupName) 分组
         val groupedReferInfos = referInfosToDelete.groupBy {
             Pair(projectId, it.groupName)
@@ -111,70 +157,110 @@ class PublicVarGroupReferCountService @Autowired constructor(
         sortedGroups.forEach { (key, groupReferInfos) ->
             val (groupProjectId, groupName) = key
             // 注意：外层（PublicVarGroupReferManageService）已经提供了锁保护，这里不需要再加锁
-            // 在同一个事务中完成单个变量组的引用删除和计数更新
-            executeWithTransaction { context ->
-                // 1. 删除当前变量组的变量引用记录（按 groupName 隔离）
-                publicVarReferInfoDao.deleteByReferIdAndGroup(
-                    dslContext = context,
+            // 若 transactionContext 不为 null，复用外部事务（如 deletePipeline 事务）；
+            // 否则每个变量组在独立事务中处理（故障隔离，避免无关变量组被牵连回滚）
+            if (transactionContext != null) {
+                removeReferInfoForGroup(
+                    context = transactionContext,
                     projectId = projectId,
                     referId = referId,
                     referType = referType,
+                    groupProjectId = groupProjectId,
                     groupName = groupName,
+                    groupReferInfos = groupReferInfos,
                     referVersion = referVersion
                 )
+            } else {
+                executeWithTransaction { context ->
+                    removeReferInfoForGroup(
+                        context = context,
+                        projectId = projectId,
+                        referId = referId,
+                        referType = referType,
+                        groupProjectId = groupProjectId,
+                        groupName = groupName,
+                        groupReferInfos = groupReferInfos,
+                        referVersion = referVersion
+                    )
+                }
+            }
+        }
+    }
 
-                // 2. 删除当前变量组的引用记录（按 groupName 隔离）
-                publicVarGroupReferInfoDao.deleteByReferIdAndGroup(
-                    dslContext = context,
-                    projectId = projectId,
-                    referId = referId,
-                    referType = referType,
+    /**
+     * 对单个变量组执行删除引用记录及更新引用计数。
+     * 注意：外层（PublicVarGroupReferManageService）已经提供了锁保护，这里不需要再加锁。
+     */
+    private fun removeReferInfoForGroup(
+        context: DSLContext,
+        projectId: String,
+        referId: String,
+        referType: PublicVarGroupReferenceTypeEnum,
+        groupProjectId: String,
+        groupName: String,
+        groupReferInfos: List<ResourcePublicVarGroupReferPO>,
+        referVersion: Int?
+    ) {
+        // 1. 删除当前变量组的变量引用记录（按 groupName 隔离）
+        publicVarReferInfoDao.deleteByReferIdAndGroup(
+            dslContext = context,
+            projectId = projectId,
+            referId = referId,
+            referType = referType,
+            groupName = groupName,
+            referVersion = referVersion
+        )
+
+        // 2. 删除当前变量组的引用记录（按 groupName 隔离）
+        publicVarGroupReferInfoDao.deleteByReferIdAndGroup(
+            dslContext = context,
+            projectId = projectId,
+            referId = referId,
+            referType = referType,
+            groupName = groupName,
+            referVersion = referVersion
+        )
+
+        // 3. 按版本分组，更新引用计数
+        // 注意：同一个 referId 的不同 referVersion 引用同一个 groupName + version 时，
+        // 只应计为 1 个引用。
+        val versionGrouped = groupReferInfos.groupBy { it.version }
+        if (referVersion == null) {
+            // 删除所有版本的引用——每个 version 只需要减 1（一个 referId 只算 1 个引用）
+            versionGrouped.keys.forEach { version ->
+                decrementReferCount(
+                    context = context,
+                    projectId = groupProjectId,
                     groupName = groupName,
-                    referVersion = referVersion
+                    version = version,
+                    countChange = 1
                 )
-
-                // 3. 按版本分组，更新引用计数
-                // 注意：同一个 referId 的不同 referVersion 引用同一个 groupName + version 时，
-                // 只应计为 1 个引用。
-                val versionGrouped = groupReferInfos.groupBy { it.version }
-                if (referVersion == null) {
-                    // 删除所有版本的引用——每个 version 只需要减 1（一个 referId 只算 1 个引用）
-                    versionGrouped.keys.forEach { version ->
-                        decrementReferCount(
-                            context = context,
-                            projectId = groupProjectId,
-                            groupName = groupName,
-                            version = version,
-                            countChange = 1
-                        )
-                    }
+            }
+        } else {
+            // 删除指定 referVersion 的引用——需要检查该 referId 是否仍然引用同一 groupName + version
+            versionGrouped.forEach { (version, _) ->
+                val stillReferred = publicVarGroupReferInfoDao
+                    .existsReferForGroup(
+                        dslContext = context,
+                        projectId = projectId,
+                        referId = referId,
+                        referType = referType,
+                        groupName = groupName,
+                        version = version
+                    )
+                if (!stillReferred) {
+                    decrementReferCount(
+                        context = context,
+                        projectId = groupProjectId,
+                        groupName = groupName,
+                        version = version,
+                        countChange = 1
+                    )
                 } else {
-                    // 删除指定 referVersion 的引用——需要检查该 referId 是否仍然引用同一 groupName + version
-                    versionGrouped.forEach { (version, _) ->
-                        val stillReferred = publicVarGroupReferInfoDao
-                            .existsReferForGroup(
-                                dslContext = context,
-                                projectId = projectId,
-                                referId = referId,
-                                referType = referType,
-                                groupName = groupName,
-                                version = version
-                            )
-                        if (!stillReferred) {
-                            decrementReferCount(
-                                context = context,
-                                projectId = groupProjectId,
-                                groupName = groupName,
-                                version = version,
-                                countChange = 1
-                            )
-                        } else {
-                            logger.info(
-                                "Skip decrement referCount in batchRemove: " +
-                                        "referId=$referId still refers to groupName=$groupName, version=$version"
-                            )
-                        }
-                    }
+                    logger.info(
+                        "Skip decrement referCount in batchRemove: " +
+                            "referId=$referId still refers to groupName=$groupName, version=$version"
+                    )
                 }
             }
         }
@@ -304,16 +390,17 @@ class PublicVarGroupReferCountService @Autowired constructor(
                             "hasAdd=${changeInfo.referInfoToAdd != null}"
                 )
 
-                // 1. 在 INSERT 之前检查是否需要 increment（仅非 skipCountUpdate 时）
+                // 1. INSERT 前检查是否需要 increment，限定 referVersion 避免跨版本误判
                 val shouldIncrement = if (skipCountUpdate) false else {
                     changeInfo.referInfoToAdd?.let { addInfo ->
-                        val alreadyReferred = publicVarGroupReferInfoDao.existsReferForGroup(
+                        val alreadyReferred = publicVarGroupReferInfoDao.existsReferForGroupInVersion(
                             dslContext = dslCtx,
                             projectId = projectId,
                             referId = changeInfo.referId,
                             referType = changeInfo.referType,
                             groupName = changeInfo.groupName,
-                            version = addInfo.version
+                            version = addInfo.version,
+                            referVersion = changeInfo.referVersion
                         )
                         if (alreadyReferred) {
                             logger.info(

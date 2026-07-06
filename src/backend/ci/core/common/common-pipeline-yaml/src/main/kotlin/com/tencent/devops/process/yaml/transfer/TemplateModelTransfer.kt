@@ -90,6 +90,10 @@ class TemplateModelTransfer @Autowired constructor(
                     instanceFromTemplate = false,
                     pipelineCreator = yamlInput.userId
                 )
+                model.projectId = yamlInput.projectCode
+                model.publicVarGroups = yamlInput.yaml.formatVariableTemplates().map {
+                    PublicVarGroupRef.create(groupName = it.name, versionName = it.version)
+                }
 
                 // 蓝盾引擎会将stageId从1开始顺序强制重写，因此在生成model时保持一致
                 var stageIndex = 1
@@ -230,7 +234,10 @@ class TemplateModelTransfer @Autowired constructor(
                 VariableTemplate(it.groupName, it.versionName)
             }
         }
-        variableTransfer.makeVariableFromModel(triggerContainer)?.let { variables.putAll(it) }
+        // 模板实例化流水线：仅输出公共变量组引用，不输出模板参数变量
+        if ((modelInput.model as? Model)?.template == null) {
+            variableTransfer.makeVariableFromModel(triggerContainer)?.let { variables.putAll(it) }
+        }
         return variables.ifEmpty { null }
     }
 

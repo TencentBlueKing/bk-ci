@@ -14,6 +14,19 @@
             },
             maxlength: {
                 type: Number
+            },
+            height: {
+                type: [Number, String],
+                default: ''
+            }
+        },
+        computed: {
+            customStyle () {
+                if (this.height === '' || this.height === null || this.height === undefined) {
+                    return {}
+                }
+                const height = typeof this.height === 'number' ? `${this.height}px` : this.height
+                return { height }
             }
         },
         methods: {
@@ -31,13 +44,14 @@
             }
         },
         render (h) {
-            const { value, readOnlyCheck, readOnly, handleInput, name, handleBlur, title, clickUnfold, hoverUnfold, placeholder, disabled, maxlength } = this
+            const { value, readOnlyCheck, readOnly, handleInput, name, handleBlur, title, clickUnfold, hoverUnfold, placeholder, disabled, maxlength, customStyle } = this
             return (
                 <textarea
                     placeholder={placeholder}
                     title={title}
                     onBlur={handleBlur}
                     onInput={handleInput}
+                    style={customStyle}
                     class={['bk-form-textarea pointer-events-auto', clickUnfold ? 'textarea-styles' : '', hoverUnfold && readOnly ? 'hover-textarea-styles' : '']}
                     name={name}
                     disabled={(readOnlyCheck && readOnly) || disabled}

@@ -27,8 +27,14 @@
 
 package com.tencent.devops.store.common.utils
 
+import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.UUIDUtil
+import com.tencent.devops.store.pojo.common.KEY_INSTALL_PARAMS
+import com.tencent.devops.store.pojo.common.KEY_INSTALL_PATH
+import com.tencent.devops.store.pojo.common.KEY_INSTALL_TYPE
+import com.tencent.devops.store.pojo.common.enums.StoreInstallTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.publication.StoreBaseEnvDataPO
 import com.tencent.devops.store.pojo.common.publication.StoreBaseEnvExtDataPO
@@ -39,6 +45,79 @@ import com.tencent.devops.store.pojo.common.publication.StoreBaseFeatureExtDataP
 import com.tencent.devops.store.pojo.common.publication.StoreBaseFeatureRequest
 
 object StoreReleaseUtils {
+
+    private const val MAX_INSTALL_PATH_LENGTH = 512
+    private const val MAX_INSTALL_PARAMS_LENGTH = 1024
+
+    // 安装路径中禁止出现的字符：控制字符、换行、以及Windows路径非法字符
+    private val INSTALL_PATH_ILLEGAL_REGEX = Regex("[\\u0000-\\u001f<>|*?\"]")
+
+    // 安装参数中禁止出现的字符/片段：防止命令拼接注入(客户端会用其拼接安装命令执行)
+    private val INSTALL_PARAMS_ILLEGAL_REGEX = Regex("[\\u0000-\\u001f`;&|<>\\n\\r]|\\$\\(|\\$\\{")
+
+    /**
+     * 校验组件部署相关扩展字段(安装路径/安装方式/安装参数)。
+     * 仅对 DEVX 类型的组件进行校验，其他类型组件跳过。
+     * @param extBaseInfo 版本级扩展信息(含安装方式installType、安装参数installParams)
+     * @param extBaseFeatureInfo 组件级共享扩展信息(含安装路径installPath)
+     * @param storeType 组件类型
+     */
+    fun validateDeployExtInfo(
+        extBaseInfo: Map<String, Any>?,
+        extBaseFeatureInfo: Map<String, Any>?,
+        storeType: StoreTypeEnum
+    ) {
+        // 仅 DEVX 类型组件需要校验部署扩展字段
+        if (storeType != StoreTypeEnum.DEVX) return
+        // 安装方式：枚举校验
+        extBaseInfo?.get(KEY_INSTALL_TYPE)?.let { value ->
+            val installType = value as? String
+            if (installType.isNullOrBlank() || StoreInstallTypeEnum.getStoreInstallType(installType) == null) {
+                throw ErrorCodeException(
+                    errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                    params = arrayOf(KEY_INSTALL_TYPE, value.toString())
+                )
+            }
+        }
+        // 安装参数：长度与危险字符校验
+        extBaseInfo?.get(KEY_INSTALL_PARAMS)?.let { value ->
+            val installParams = value as? String
+            if (installParams != null) {
+                validateSecurityField(
+                    fieldName = KEY_INSTALL_PARAMS,
+                    fieldValue = installParams,
+                    maxLength = MAX_INSTALL_PARAMS_LENGTH,
+                    illegalRegex = INSTALL_PARAMS_ILLEGAL_REGEX
+                )
+            }
+        }
+        // 安装路径：长度与危险字符校验
+        extBaseFeatureInfo?.get(KEY_INSTALL_PATH)?.let { value ->
+            val installPath = value as? String
+            if (installPath != null) {
+                validateSecurityField(
+                    fieldName = KEY_INSTALL_PATH,
+                    fieldValue = installPath,
+                    maxLength = MAX_INSTALL_PATH_LENGTH,
+                    illegalRegex = INSTALL_PATH_ILLEGAL_REGEX
+                )
+            }
+        }
+    }
+
+    private fun validateSecurityField(
+        fieldName: String,
+        fieldValue: String,
+        maxLength: Int,
+        illegalRegex: Regex
+    ) {
+        if (fieldValue.length > maxLength || illegalRegex.containsMatchIn(fieldValue)) {
+            throw ErrorCodeException(
+                errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                params = arrayOf(fieldName, fieldValue)
+            )
+        }
+    }
 
     fun generateStoreBaseEnvPO(
         baseEnvInfos: List<StoreBaseEnvRequest>?,

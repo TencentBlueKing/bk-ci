@@ -28,6 +28,9 @@
 package com.tencent.devops.process.service.`var`
 
 import com.fasterxml.jackson.core.type.TypeReference
+import com.fasterxml.jackson.databind.JsonMappingException
+import com.fasterxml.jackson.databind.exc.MismatchedInputException
+import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException
 import com.tencent.devops.common.api.constant.CommonMessageCode.ERROR_INVALID_PARAM_
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Page
@@ -56,6 +59,7 @@ import com.tencent.devops.process.dao.`var`.PublicVarGroupDao
 import com.tencent.devops.process.dao.`var`.PublicVarGroupReferInfoDao
 import com.tencent.devops.process.dao.`var`.PublicVarGroupReleaseRecordDao
 import com.tencent.devops.process.dao.`var`.PublicVarGroupVersionSummaryDao
+import com.tencent.devops.process.dao.`var`.PublicVarReferInfoDao
 import com.tencent.devops.process.dao.`var`.PublicVarVersionSummaryDao
 import com.tencent.devops.process.permission.`var`.PublicVarGroupPermissionService
 import com.tencent.devops.process.pojo.`var`.PublicVarGroupPermissions
@@ -95,6 +99,7 @@ class PublicVarGroupService @Autowired constructor(
     private val publicVarDao: PublicVarDao,
     private val pipelinePublicVarGroupReleaseRecordDao: PublicVarGroupReleaseRecordDao,
     private val publicVarGroupReferInfoDao: PublicVarGroupReferInfoDao,
+    private val publicVarReferInfoDao: PublicVarReferInfoDao,
     private val publicVarGroupReleaseRecordService: PublicVarGroupReleaseRecordService,
     private val publicVarGroupPermissionService: PublicVarGroupPermissionService,
     private val publicVarGroupVersionSummaryDao: PublicVarGroupVersionSummaryDao,
@@ -105,12 +110,18 @@ class PublicVarGroupService @Autowired constructor(
         // 正则表达式常量
         private val GROUP_NAME_REGEX = Regex("^[a-zA-Z][a-zA-Z0-9_]{2,31}$")
         private val VAR_NAME_REGEX = Regex("^[a-zA-Z_][a-zA-Z0-9_]{0,63}$")
+        // 权限中心删除重试配置
+        private const val IAM_DELETE_MAX_RETRY = 3
+        private const val IAM_DELETE_RETRY_INTERVAL_MS = 500L
     }
 
     fun addGroup(publicVarGroupDTO: PublicVarGroupDTO): String {
         val projectId = publicVarGroupDTO.projectId
         val userId = publicVarGroupDTO.userId
         val groupName = publicVarGroupDTO.publicVarGroup.groupName
+        if (groupName.isBlank() || !GROUP_NAME_REGEX.matches(groupName)) {
+            throw ErrorCodeException(errorCode = ERROR_PUBLIC_VAR_GROUP_YAML_NAME_FORMAT)
+        }
         val redisLock = RedisLock(
             redisOperation = redisOperation,
             lockKey = "${ProcessMessageCode.PUBLIC_VAR_GROUP_ADD_LOCK_KEY}_${projectId}_$groupName",
@@ -120,7 +131,11 @@ class PublicVarGroupService @Autowired constructor(
         try {
             publicVarService.checkGroupPublicVar(publicVarGroupDTO.publicVarGroup.publicVars)
             val id = client.get(ServiceAllocIdResource::class)
-                .generateSegmentId("T_RESOURCE_PUBLIC_VAR_GROUP").data ?: 0
+                .generateSegmentId("T_RESOURCE_PUBLIC_VAR_GROUP").data
+                ?: throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.ERROR_PUBLIC_VAR_GROUP_ADD_FAILED,
+                    params = arrayOf("ID allocation service unavailable")
+                )
             var isCreate = false
             // 先完成数据库事务操作
             dslContext.transaction { configuration ->
@@ -179,12 +194,19 @@ class PublicVarGroupService @Autowired constructor(
                         "Failed to register auth resource for [$projectId|$groupName], rolling back DB records", e
                     )
                     // 补偿：回滚 DB 中刚创建的变量组数据
-                    dslContext.transaction { configuration ->
-                        val ctx = DSL.using(configuration)
-                        publicVarGroupDao.deleteByGroupName(ctx, projectId, groupName)
-                        publicVarDao.deleteByGroupName(ctx, projectId, groupName)
-                        publicVarGroupVersionSummaryDao.deleteByGroupName(ctx, projectId, groupName)
-                        publicVarVersionSummaryDao.deleteByGroupName(ctx, projectId, groupName)
+                    try {
+                        dslContext.transaction { configuration ->
+                            val ctx = DSL.using(configuration)
+                            publicVarGroupDao.deleteByGroupName(ctx, projectId, groupName)
+                            publicVarDao.deleteByGroupName(ctx, projectId, groupName)
+                            publicVarGroupVersionSummaryDao.deleteByGroupName(ctx, projectId, groupName)
+                            publicVarVersionSummaryDao.deleteByGroupName(ctx, projectId, groupName)
+                        }
+                    } catch (compensationEx: Throwable) {
+                        logger.warn(
+                            "Compensation rollback failed for [$projectId|$groupName], manual cleanup required.",
+                            compensationEx
+                        )
                     }
                     throw ErrorCodeException(
                         errorCode = ProcessMessageCode.ERROR_PUBLIC_VAR_GROUP_ADD_FAILED,
@@ -455,12 +477,9 @@ class PublicVarGroupService @Autowired constructor(
                 )
             }
 
-            // 先从权限中心删除变量组资源（避免 DB 删除成功但权限中心删除失败导致孤儿资源）
-            publicVarGroupPermissionService.deleteResource(
-                projectId = projectId,
-                groupName = groupName
-            )
-
+            // 先执行 DB 事务删除，再删权限中心。
+            // 权限中心是外部系统无法参与 DB 事务，调整顺序避免"DB 失败但权限已删"的僵尸资源。
+            // 权限中心删除失败不阻断主流程——DB 已删，权限残留不影响功能（最坏情况是重新创建同名组时报已存在）。
             dslContext.transaction { configuration ->
                 val context = DSL.using(configuration)
                 publicVarGroupDao.deleteByGroupName(dslContext = context, projectId = projectId, groupName = groupName)
@@ -482,7 +501,18 @@ class PublicVarGroupService @Autowired constructor(
                     projectId = projectId,
                     groupName = groupName
                 )
+                // 防御性清理引用记录（正常情况 referCount=0 时无数据，防止历史脏数据残留）
+                publicVarGroupReferInfoDao.deleteByGroupName(
+                    dslContext = context, projectId = projectId, groupName = groupName
+                )
+                publicVarReferInfoDao.deleteByGroupName(
+                    dslContext = context, projectId = projectId, groupName = groupName
+                )
             }
+
+            // DB 删除成功后，删除权限中心资源。
+            // 同步重试覆盖瞬时网络抖动；重试耗尽仍失败则日志告警，不阻断主流程。
+            deleteIamResourceWithRetry(projectId, groupName)
 
             return true
         } catch (e: ErrorCodeException) {
@@ -496,6 +526,37 @@ class PublicVarGroupService @Autowired constructor(
             )
         } finally {
             redisLock.unlock()
+        }
+    }
+
+    /**
+     * 删除权限中心资源（带同步重试）
+     * 瞬时网络抖动自动恢复；重试耗尽仍失败则日志告警，不抛异常不阻断主流程。
+     */
+    private fun deleteIamResourceWithRetry(projectId: String, groupName: String) {
+        repeat(IAM_DELETE_MAX_RETRY) { attempt ->
+            try {
+                publicVarGroupPermissionService.deleteResource(
+                    projectId = projectId,
+                    groupName = groupName
+                )
+                return
+            } catch (e: Throwable) {
+                if (attempt < IAM_DELETE_MAX_RETRY - 1) {
+                    logger.warn(
+                        "IAM delete failed (attempt ${attempt + 1}/$IAM_DELETE_MAX_RETRY), retrying. " +
+                            "projectId=$projectId, groupName=$groupName",
+                        e
+                    )
+                    Thread.sleep(IAM_DELETE_RETRY_INTERVAL_MS)
+                } else {
+                    logger.error(
+                        "IAM delete failed after $IAM_DELETE_MAX_RETRY attempts, manual cleanup needed. " +
+                            "projectId=$projectId, groupName=$groupName",
+                        e
+                    )
+                }
+            }
         }
     }
 
@@ -703,34 +764,26 @@ class PublicVarGroupService @Autowired constructor(
     }
 
     /**
-     * 根据异常构建用户友好的错误消息
+     * 根据 Jackson 反序列化异常构建用户友好的错误消息
+     * 通过异常类型判断替代字符串匹配，避免 Jackson 版本差异导致误判。
      */
     private fun buildErrorMsg(e: Throwable): String {
-        return when {
-            e.message?.contains("Unrecognized field") == true -> {
-                val fieldName = e.message!!.substringAfter("Unrecognized field \"").substringBefore("\"")
+        return when (e) {
+            // 未知字段：YAML 中存在目标类未定义的字段
+            is UnrecognizedPropertyException -> {
+                val fieldName = e.propertyName
                 I18nUtil.getCodeLanMessage(
                     messageCode = ERROR_PUBLIC_VAR_GROUP_YAML_UNKNOWN_FIELD,
                     params = arrayOf(fieldName)
                 )
             }
-
-            e.message?.contains("Cannot deserialize") == true -> {
+            // 反序列化失败：类型不匹配、格式错误等
+            is MismatchedInputException -> {
                 I18nUtil.getCodeLanMessage(ERROR_PUBLIC_VAR_GROUP_YAML_DESERIALIZE_ERROR)
             }
-
-            e.message?.contains("missing") == true -> {
-                val missingField = e.message!!.let { msg ->
-                    when {
-                        msg.contains("Missing required creator property") ->
-                            msg.substringAfter("Missing required creator property '")
-                                .substringBefore("\'")
-                        msg.contains("missing property") ->
-                            msg.substringAfter("missing property '")
-                                .substringBefore("\'")
-                        else -> null
-                    }
-                }
+            // JSON 映射错误基类：包含缺失必填字段（MissingKotlinParameterException 是其子类）
+            is JsonMappingException -> {
+                val missingField = e.path.lastOrNull()?.fieldName
                 if (missingField != null) {
                     I18nUtil.getCodeLanMessage(
                         messageCode = ERROR_PUBLIC_VAR_GROUP_YAML_MISSING_FIELD,
@@ -740,7 +793,6 @@ class PublicVarGroupService @Autowired constructor(
                     I18nUtil.getCodeLanMessage(ERROR_PUBLIC_VAR_GROUP_YAML_MISSING_FIELD)
                 }
             }
-
             else -> e.message ?: I18nUtil.getCodeLanMessage(ERROR_PUBLIC_VAR_GROUP_YAML_FORMAT_ERROR)
         }
     }
@@ -801,8 +853,10 @@ class PublicVarGroupService @Autowired constructor(
             }
 
             // 批量查询变量组记录，避免 N+1 查询
-            // version 为 null 时表示动态最新版本，用 DYNAMIC_VERSION 作为 key 占位
-            val groupNameVersionPairs = referInfos.map { it.groupName to it.version }
+            // referInfo.version 为 -1(DYNAMIC_VERSION) 时表示动态最新版本，需转为 null 让 DAO 走 LATEST_FLAG=true 查询
+            val groupNameVersionPairs = referInfos.map {
+                it.groupName to (if (it.version == DYNAMIC_VERSION) null else it.version)
+            }
             val groupRecordMap = publicVarGroupDao.batchGetRecordsByGroupNameAndVersion(
                 dslContext = dslContext,
                 projectId = projectId,
@@ -814,8 +868,7 @@ class PublicVarGroupService @Autowired constructor(
 
             // 转换为PipelinePublicVarGroupDO列表
             val pipelineVarGroups = referInfos.mapNotNull { referInfo ->
-                val keyVersion = referInfo.version
-                val groupRecord = groupRecordMap[referInfo.groupName to keyVersion] ?: return@mapNotNull null
+                val groupRecord = groupRecordMap[referInfo.groupName to referInfo.version] ?: return@mapNotNull null
                 PipelineRefPublicVarGroupDO(
                     groupName = groupRecord.groupName,
                     varCount = groupRecord.varCount,

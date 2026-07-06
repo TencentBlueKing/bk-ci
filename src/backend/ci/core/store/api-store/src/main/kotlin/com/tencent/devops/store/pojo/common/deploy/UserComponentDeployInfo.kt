@@ -25,34 +25,49 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.pojo.common.version
+package com.tencent.devops.store.pojo.common.deploy
 
 import com.tencent.devops.common.api.annotation.BkFieldI18n
 import com.tencent.devops.common.api.enums.I18nSourceEnum
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(title = "工作台组件版本列表")
-data class StoreDeskVersionItem(
+@Schema(title = "用户可拉取组件部署信息")
+data class UserComponentDeployInfo(
     @get:Schema(title = "组件ID", required = true)
     val storeId: String,
     @get:Schema(title = "组件标识", required = true)
     val storeCode: String,
     @get:Schema(title = "组件类型", required = true)
     val storeType: String,
-    @get:Schema(title = "组件名称", required = true)
+    @get:Schema(title = "用户配置的应用名", required = true)
     @BkFieldI18n(source = I18nSourceEnum.DB)
     val name: String,
+    @get:Schema(title = "是否有权限安装该应用", required = true)
+    val installFlag: Boolean,
+    @get:Schema(title = "最新版本号", required = true)
+    val latestVersion: String,
+    @get:Schema(
+        title = "组件级共享扩展字段集合(所有版本共享，如DEVX组件的安装路径installPath，可空)",
+        required = false
+    )
+    val extData: Map<String, Any>? = null,
+    @get:Schema(title = "版本信息列表", required = true)
+    val versionInfos: List<ComponentDeployVersionInfo>
+)
+
+@Schema(title = "组件部署版本信息")
+data class ComponentDeployVersionInfo(
+    @get:Schema(title = "组件ID", required = true)
+    val storeId: String,
     @get:Schema(title = "版本号", required = true)
     val version: String,
-    @get:Schema(title = "版本内容", required = false)
-    @BkFieldI18n(source = I18nSourceEnum.DB, keyPrefixName = "versionInfo")
-    val versionContent: String? = null,
-    @get:Schema(title = "状态", required = true)
-    val status: String,
-    @get:Schema(title = "创建人", required = true)
-    val creator: String,
-    @get:Schema(title = "创建时间", required = true)
-    val createTime: String,
-    @get:Schema(title = "扩展字段集合", required = false)
+    @get:Schema(title = "是否为最新版本", required = true)
+    val latestFlag: Boolean,
+    @get:Schema(title = "组件状态", required = false)
+    val status: String? = null,
+    @get:Schema(
+        title = "版本级扩展字段集合(跟随版本，如DEVX组件的安装方式installType、安装参数installParams)",
+        required = false
+    )
     val extData: Map<String, Any>? = null
 )

@@ -23,7 +23,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.store.atom.service.AtomService
 import com.tencent.devops.store.common.service.StoreCommonService
-import com.tencent.devops.store.common.service.StoreComponentQueryService
+import com.tencent.devops.store.common.service.StoreComponentBaseInfoQueryService
 import com.tencent.devops.store.common.service.StoreReleaseSpecBusService
 import com.tencent.devops.store.constant.StoreMessageCode.OWNER_STORE_CODE_NOT_NULL
 import com.tencent.devops.store.constant.StoreMessageCode.TRIGGER_EVENT_CONFIG_EXIST
@@ -48,7 +48,7 @@ import org.springframework.stereotype.Service
 @SuppressWarnings("TooManyFunctions")
 class TriggerEventReleaseSpecBusService @Autowired constructor(
     private val storeCommonService: StoreCommonService,
-    private val storeComponentQueryService: StoreComponentQueryService,
+    private val storeComponentBaseInfoQueryService: StoreComponentBaseInfoQueryService,
     private val atomService: AtomService
 ) : StoreReleaseSpecBusService {
     override fun doStoreCreatePreBus(storeCreateRequest: StoreCreateRequest) {
@@ -62,7 +62,7 @@ class TriggerEventReleaseSpecBusService @Autowired constructor(
             )
         }
         // 校验唯一性（ownerStoreCode + storeCode）
-        storeComponentQueryService.getComponentBaseInfo(
+        storeComponentBaseInfoQueryService.getComponentBaseInfo(
             storeType = baseInfo.storeType,
             storeCode = baseInfo.storeCode,
             ownerStoreCode = baseInfo.ownerStoreCode

@@ -114,6 +114,7 @@
             <div class="bk-form-content template-item-content">
                 <bk-select
                     :placeholder="$t('store.请选择功能标签')"
+                    show-overflow-tooltips
                     v-model="categoryData.labelList"
                     @selected="handleClassifyChange"
                     show-select-all
@@ -275,6 +276,7 @@
     // 标签样式
     .bk-label {
         width: 110px;
+        flex-shrink: 0;
     }
     
     // 表单内容区域样式
@@ -310,6 +312,7 @@
     }
 
     ::v-deep .bk-select {
+        max-width: 946px;
         background-color: #fff;
     }
 

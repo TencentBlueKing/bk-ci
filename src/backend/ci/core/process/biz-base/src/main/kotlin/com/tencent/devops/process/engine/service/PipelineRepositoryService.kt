@@ -767,6 +767,8 @@ class PipelineRepositoryService constructor(
         val id = client.get(ServiceAllocIdResource::class).generateSegmentId("PIPELINE_INFO").data
         val lock = PipelineModelLock(redisOperation, pipelineId)
         var versionName: String? = null
+        // 事务前校验，避免事务提交后校验失败导致引用缺失。
+        publicVarGroupReferManageService.validateVarGroupReferences(model = model, projectId = projectId)
         try {
             lock.lock()
             dslContext.transaction { configuration ->
@@ -896,18 +898,6 @@ class PipelineRepositoryService constructor(
                     } else null,
                     description = description
                 )
-                publicVarGroupReferManageService.handleVarGroupReferBus(
-                    PublicVarGroupReferDTO(
-                        userId = userId,
-                        projectId = projectId,
-                        model = model,
-                        referId = pipelineId,
-                        referType = PublicVarGroupReferenceTypeEnum.PIPELINE,
-                        referName = model.name,
-                        referVersion = 1,
-                        referVersionName = versionName ?: ""
-                    )
-                )
                 // 初始化流水线构建统计表
                 pipelineBuildSummaryDao.create(dslContext, projectId, pipelineId, buildNo)
                 pipelineModelTaskDao.batchSave(transactionContext, modelTasks)
@@ -941,6 +931,22 @@ class PipelineRepositoryService constructor(
         } finally {
             lock.unlock()
         }
+
+        // 引用关系写入在事务提交后执行，避免事务回滚产生孤儿引用。
+        // draftFlag 控制引用计数写入：RELEASED/COMMITTING 需更新计数，BRANCH 与草稿一致不更新。
+        publicVarGroupReferManageService.handleVarGroupReferBus(
+            PublicVarGroupReferDTO(
+                userId = userId,
+                projectId = projectId,
+                model = model,
+                referId = pipelineId,
+                referType = PublicVarGroupReferenceTypeEnum.PIPELINE,
+                referName = model.name,
+                referVersion = 1,
+                referVersionName = versionName ?: "",
+                draftFlag = versionStatus == VersionStatus.RELEASED || versionStatus == VersionStatus.COMMITTING
+            )
+        )
 
         pipelineEventDispatcher.dispatch(
             PipelineCreateEvent(
@@ -1007,6 +1013,8 @@ class PipelineRepositoryService constructor(
         var branchAction: BranchVersionAction? = null
         var versionNum: Int? = null
         var updateBuildNo = false
+        // 事务前校验，避免事务提交后校验失败导致引用缺失（B-1）。
+        publicVarGroupReferManageService.validateVarGroupReferences(model = model, projectId = projectId)
         try {
             lock.lock()
             dslContext.transaction { configuration ->
@@ -1292,18 +1300,6 @@ class PipelineRepositoryService constructor(
                     baseVersion = realBaseVersion ?: (version - 1)
                 )
                 watcher.start("deleteEarlyVersion")
-                publicVarGroupReferManageService.handleVarGroupReferBus(
-                    PublicVarGroupReferDTO(
-                        userId = userId,
-                        projectId = projectId,
-                        model = model,
-                        referId = pipelineId,
-                        referType = PublicVarGroupReferenceTypeEnum.PIPELINE,
-                        referName = model.name,
-                        referVersion = version,
-                        referVersionName = versionName
-                    )
-                )
                 setting?.maxPipelineResNum?.let {
                     pipelineResourceVersionDao.deleteEarlyVersion(
                         dslContext = transactionContext,
@@ -1319,6 +1315,22 @@ class PipelineRepositoryService constructor(
             LogUtils.printCostTimeWE(watcher)
             lock.unlock()
         }
+
+        // 引用关系写入在事务提交后执行，避免事务回滚产生孤儿引用。
+        // draftFlag: RELEASED 更新计数，BRANCH 与草稿一致不更新；草稿保存走 DraftSaveHandler。
+        publicVarGroupReferManageService.handleVarGroupReferBus(
+            PublicVarGroupReferDTO(
+                userId = userId,
+                projectId = projectId,
+                model = model,
+                referId = pipelineId,
+                referType = PublicVarGroupReferenceTypeEnum.PIPELINE,
+                referName = model.name,
+                referVersion = version,
+                referVersionName = versionName,
+                draftFlag = versionStatus?.fix() == VersionStatus.RELEASED
+            )
+        )
 
         // TODO 暂时只有正式发布的版本需要推送，等草稿历史出来后调整消费者再全推送
         if (versionStatus?.fix() == VersionStatus.RELEASED) pipelineEventDispatcher.dispatch(
@@ -1858,13 +1870,15 @@ class PipelineRepositoryService constructor(
                         )
                     )
                 }
+                // 引用清理复用 transactionContext，与流水线删除同事务，避免孤儿引用（B-2）。
+                publicVarGroupReferManageService.deletePublicVerGroupRefByReferId(
+                    transactionContext = transactionContext,
+                    referId = pipelineId,
+                    projectId = projectId,
+                    referType = PublicVarGroupReferenceTypeEnum.PIPELINE
+                )
             }
 
-            publicVarGroupReferManageService.deletePublicVerGroupRefByReferId(
-                referId = pipelineId,
-                projectId = projectId,
-                referType = PublicVarGroupReferenceTypeEnum.PIPELINE
-            )
             templatePipelineDao.get(
                 dslContext = dslContext,
                 projectId = projectId,
@@ -2146,7 +2160,8 @@ class PipelineRepositoryService constructor(
         limit: Int? = null,
         sortType: PipelineSortType,
         collation: PipelineCollation,
-        filterByPipelineName: String?
+        filterByPipelineName: String?,
+        channelCode: ChannelCode? = null
     ): List<PipelineInfo> {
         val result = pipelineInfoDao.listPipelinesByProject(
             dslContext = dslContext,
@@ -2157,7 +2172,8 @@ class PipelineRepositoryService constructor(
             limit = limit,
             sortType = sortType,
             collation = collation,
-            filterByPipelineName = filterByPipelineName
+            filterByPipelineName = filterByPipelineName,
+            channelCode = channelCode
         )
         val list = mutableListOf<PipelineInfo>()
         result?.forEach {
