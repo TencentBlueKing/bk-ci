@@ -136,83 +136,20 @@ class PublicVarGroupService @Autowired constructor(
                     errorCode = ProcessMessageCode.ERROR_PUBLIC_VAR_GROUP_ADD_FAILED,
                     params = arrayOf("ID allocation service unavailable")
                 )
-            var isCreate = false
-            // 先完成数据库事务操作
-            dslContext.transaction { configuration ->
-                val context = DSL.using(configuration)
-                val version = publicVarGroupDao.getLatestVersionByGroupName(context, projectId, groupName) ?: 0
-                // 通过数据库查询判断操作类型：version为0表示新增，否则为升级版本
-                isCreate = (version == 0)
-                val newVersion = version + 1
-                val publicVarGroupPO = PublicVarGroupPO(
-                    id = id,
-                    projectId = projectId,
-                    groupName = groupName,
-                    version = newVersion,
-                    versionName = "v$newVersion",
-                    latestFlag = true,
-                    varCount = publicVarGroupDTO.publicVarGroup.publicVars.size,
-                    desc = publicVarGroupDTO.publicVarGroup.desc,
-                    creator = userId,
-                    modifier = userId,
-                    createTime = LocalDateTime.now(),
-                    updateTime = LocalDateTime.now()
-                )
-                if (version != 0) {
-                    // 更新旧版本的 latest 标志
-                    publicVarGroupDao.updateLatestFlag(
-                        dslContext = context,
-                        projectId = projectId,
-                        groupName = groupName,
-                        latestFlag = false
-                    )
-                }
-                publicVarGroupDao.save(context, publicVarGroupPO)
-                publicVarService.addGroupPublicVar(
-                    context = context,
-                    publicVarDTO = PublicVarDTO(
-                        projectId = projectId,
-                        userId = userId,
-                        groupName = groupName,
-                        version = publicVarGroupPO.version,
-                        versionDesc = publicVarGroupDTO.publicVarGroup.versionDesc ?: "",
-                        publicVars = publicVarGroupDTO.publicVarGroup.publicVars
-                    )
-                )
-            }
+            val isCreate = createOrUpgradeGroupRecord(
+                id = id,
+                projectId = projectId,
+                userId = userId,
+                groupName = groupName,
+                publicVarGroupDTO = publicVarGroupDTO
+            )
             // 数据库事务成功后，如果是新建变量组（首次创建），注册到权限中心
             if (isCreate) {
-                try {
-                    publicVarGroupPermissionService.createResource(
-                        userId = userId,
-                        projectId = projectId,
-                        groupCode = groupName,
-                        name = groupName
-                    )
-                } catch (e: Exception) {
-                    logger.warn(
-                        "Failed to register auth resource for [$projectId|$groupName], rolling back DB records", e
-                    )
-                    // 补偿：回滚 DB 中刚创建的变量组数据
-                    try {
-                        dslContext.transaction { configuration ->
-                            val ctx = DSL.using(configuration)
-                            publicVarGroupDao.deleteByGroupName(ctx, projectId, groupName)
-                            publicVarDao.deleteByGroupName(ctx, projectId, groupName)
-                            publicVarGroupVersionSummaryDao.deleteByGroupName(ctx, projectId, groupName)
-                            publicVarVersionSummaryDao.deleteByGroupName(ctx, projectId, groupName)
-                        }
-                    } catch (compensationEx: Throwable) {
-                        logger.warn(
-                            "Compensation rollback failed for [$projectId|$groupName], manual cleanup required.",
-                            compensationEx
-                        )
-                    }
-                    throw ErrorCodeException(
-                        errorCode = ProcessMessageCode.ERROR_PUBLIC_VAR_GROUP_ADD_FAILED,
-                        params = arrayOf(groupName)
-                    )
-                }
+                registerToIamOrRollback(
+                    userId = userId,
+                    projectId = projectId,
+                    groupName = groupName
+                )
             }
         } catch (e: ErrorCodeException) {
             throw e
@@ -226,6 +163,100 @@ class PublicVarGroupService @Autowired constructor(
             redisLock.unlock()
         }
         return publicVarGroupDTO.publicVarGroup.groupName
+    }
+
+    /**
+     * 在事务中创建或升级变量组记录，返回是否为新建（首次创建）。
+     */
+    private fun createOrUpgradeGroupRecord(
+        id: Long,
+        projectId: String,
+        userId: String,
+        groupName: String,
+        publicVarGroupDTO: PublicVarGroupDTO
+    ): Boolean {
+        var isCreate = false
+        dslContext.transaction { configuration ->
+            val context = DSL.using(configuration)
+            val version = publicVarGroupDao.getLatestVersionByGroupName(context, projectId, groupName) ?: 0
+            isCreate = (version == 0)
+            val newVersion = version + 1
+            val publicVarGroupPO = PublicVarGroupPO(
+                id = id,
+                projectId = projectId,
+                groupName = groupName,
+                version = newVersion,
+                versionName = "v$newVersion",
+                latestFlag = true,
+                varCount = publicVarGroupDTO.publicVarGroup.publicVars.size,
+                desc = publicVarGroupDTO.publicVarGroup.desc,
+                creator = userId,
+                modifier = userId,
+                createTime = LocalDateTime.now(),
+                updateTime = LocalDateTime.now()
+            )
+            if (version != 0) {
+                publicVarGroupDao.updateLatestFlag(
+                    dslContext = context,
+                    projectId = projectId,
+                    groupName = groupName,
+                    latestFlag = false
+                )
+            }
+            publicVarGroupDao.save(context, publicVarGroupPO)
+            publicVarService.addGroupPublicVar(
+                context = context,
+                publicVarDTO = PublicVarDTO(
+                    projectId = projectId,
+                    userId = userId,
+                    groupName = groupName,
+                    version = publicVarGroupPO.version,
+                    versionDesc = publicVarGroupDTO.publicVarGroup.versionDesc ?: "",
+                    publicVars = publicVarGroupDTO.publicVarGroup.publicVars
+                )
+            )
+        }
+        return isCreate
+    }
+
+    /**
+     * 注册变量组到权限中心，失败时补偿回滚 DB 记录。
+     */
+    private fun registerToIamOrRollback(
+        userId: String,
+        projectId: String,
+        groupName: String
+    ) {
+        try {
+            publicVarGroupPermissionService.createResource(
+                userId = userId,
+                projectId = projectId,
+                groupCode = groupName,
+                name = groupName
+            )
+        } catch (e: Exception) {
+            logger.warn(
+                "Failed to register auth resource for [$projectId|$groupName], rolling back DB records", e
+            )
+            try {
+                dslContext.transaction { configuration ->
+                    val ctx = DSL.using(configuration)
+                    publicVarGroupDao.deleteByGroupName(ctx, projectId, groupName)
+                    publicVarDao.deleteByGroupName(ctx, projectId, groupName)
+                    publicVarGroupVersionSummaryDao.deleteByGroupName(ctx, projectId, groupName)
+                    publicVarVersionSummaryDao.deleteByGroupName(ctx, projectId, groupName)
+                }
+            } catch (compensationEx: Throwable) {
+                logger.warn(
+                    "Compensation rollback failed for [$projectId|$groupName], manual cleanup required.",
+                    compensationEx
+                )
+            }
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_PUBLIC_VAR_GROUP_ADD_FAILED,
+                params = arrayOf(groupName)
+            )
+        }
     }
 
     fun getPipelineGroupsVar(projectId: String, groupName: String, version: Int? = null): PublicVarGroupVO {

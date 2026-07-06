@@ -402,42 +402,11 @@ class PublicVarGroupReferManageService @Autowired constructor(
                 params = params
             )
             // YAML template 场景：publicVarGroups 中的组在 params 中没有对应项，补充 PO 使关联和计数能正常更新
-            val coveredGroupNames = pipelinePublicVarGroupReferPOs.map { it.groupName }.toSet()
-            val missingGroups = publicVarGroups?.filter { it.groupName !in coveredGroupNames } ?: emptyList()
-            val additionalPOs = if (missingGroups.isNotEmpty()) {
-                val segmentIds = client.get(ServiceAllocIdResource::class)
-                    .batchGenerateSegmentId("T_RESOURCE_PUBLIC_VAR_GROUP_REFER_INFO", missingGroups.size).data
-                    ?: throw ErrorCodeException(
-                        errorCode = ProcessMessageCode.ERROR_PUBLIC_VAR_GROUP_ADD_FAILED,
-                        params = arrayOf("ID allocation service unavailable")
-                    )
-                val now = LocalDateTime.now()
-                missingGroups.mapIndexed { index, ref ->
-                    ResourcePublicVarGroupReferPO(
-                        id = segmentIds[index] ?: throw ErrorCodeException(
-                            errorCode = ProcessMessageCode.ERROR_PUBLIC_VAR_GROUP_ADD_FAILED,
-                            params = arrayOf("ID allocation service unavailable")
-                        ),
-                        projectId = publicVarGroupReferDTO.projectId,
-                        groupName = ref.groupName,
-                        version = ref.version ?: DYNAMIC_VERSION,
-                        referId = publicVarGroupReferDTO.referId,
-                        referType = publicVarGroupReferDTO.referType,
-                        referName = publicVarGroupReferDTO.referName,
-                        referVersion = publicVarGroupReferDTO.referVersion,
-                        referVersionName = publicVarGroupReferDTO.referVersionName,
-                        positionInfo = emptyList(),
-                        creator = publicVarGroupReferDTO.userId,
-                        modifier = publicVarGroupReferDTO.userId,
-                        createTime = now,
-                        updateTime = now,
-                        latestFlag = true
-                    )
-                }
-            } else {
-                emptyList()
-            }
-            val allReferPOs = pipelinePublicVarGroupReferPOs + additionalPOs
+            val allReferPOs = pipelinePublicVarGroupReferPOs + buildAdditionalReferPOs(
+                publicVarGroupReferDTO = publicVarGroupReferDTO,
+                publicVarGroups = publicVarGroups,
+                pipelinePublicVarGroupReferPOs = pipelinePublicVarGroupReferPOs
+            )
             updateReferenceCountsAfterSave(
                 projectId = publicVarGroupReferDTO.projectId,
                 historicalReferInfos = historicalReferInfos,
@@ -474,6 +443,54 @@ class PublicVarGroupReferManageService @Autowired constructor(
                 resourceVersionName = publicVarGroupReferDTO.referVersionName
             )
         )
+    }
+
+    /**
+     * YAML template 场景：publicVarGroups 中的组在 params 中没有对应项，
+     * 构建补充 PO 使关联和计数能正常更新。
+     */
+    private fun buildAdditionalReferPOs(
+        publicVarGroupReferDTO: PublicVarGroupReferDTO,
+        publicVarGroups: List<PublicVarGroupRef>?,
+        pipelinePublicVarGroupReferPOs: List<ResourcePublicVarGroupReferPO>
+    ): List<ResourcePublicVarGroupReferPO> {
+        if (publicVarGroups.isNullOrEmpty()) {
+            return emptyList()
+        }
+        val coveredGroupNames = pipelinePublicVarGroupReferPOs.map { it.groupName }.toSet()
+        val missingGroups = publicVarGroups.filter { it.groupName !in coveredGroupNames }
+        if (missingGroups.isEmpty()) {
+            return emptyList()
+        }
+        val segmentIds = client.get(ServiceAllocIdResource::class)
+            .batchGenerateSegmentId("T_RESOURCE_PUBLIC_VAR_GROUP_REFER_INFO", missingGroups.size).data
+            ?: throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_PUBLIC_VAR_GROUP_ADD_FAILED,
+                params = arrayOf("ID allocation service unavailable")
+            )
+        val now = LocalDateTime.now()
+        return missingGroups.mapIndexed { index, ref ->
+            ResourcePublicVarGroupReferPO(
+                id = segmentIds[index] ?: throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.ERROR_PUBLIC_VAR_GROUP_ADD_FAILED,
+                    params = arrayOf("ID allocation service unavailable")
+                ),
+                projectId = publicVarGroupReferDTO.projectId,
+                groupName = ref.groupName,
+                version = ref.version ?: DYNAMIC_VERSION,
+                referId = publicVarGroupReferDTO.referId,
+                referType = publicVarGroupReferDTO.referType,
+                referName = publicVarGroupReferDTO.referName,
+                referVersion = publicVarGroupReferDTO.referVersion,
+                referVersionName = publicVarGroupReferDTO.referVersionName,
+                positionInfo = emptyList(),
+                creator = publicVarGroupReferDTO.userId,
+                modifier = publicVarGroupReferDTO.userId,
+                createTime = now,
+                updateTime = now,
+                latestFlag = true
+            )
+        }
     }
 
     /**
