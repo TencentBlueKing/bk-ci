@@ -262,6 +262,25 @@ class ServiceResourceMemberResourceImpl(
         )
     }
 
+    override fun copyResourceGroupMembers(
+        token: String,
+        sourceProjectCode: String,
+        resourceType: String,
+        sourceResourceCode: String,
+        targetProjectCode: String,
+        targetResourceCode: String
+    ): Result<Boolean> {
+        return Result(
+            permissionResourceMemberService.copyResourceGroupMembers(
+                sourceProjectCode = sourceProjectCode,
+                targetProjectCode = targetProjectCode,
+                resourceType = resourceType,
+                sourceResourceCode = sourceResourceCode,
+                targetResourceCode = targetResourceCode
+            )
+        )
+    }
+
     private fun getIamGroupId(
         groupId: Int?,
         projectCode: String,

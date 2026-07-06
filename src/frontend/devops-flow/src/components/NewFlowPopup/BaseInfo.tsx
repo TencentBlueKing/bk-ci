@@ -1,5 +1,4 @@
 import AuthoringEnv from '@/components/AuthoringEnv'
-import { SvgIcon } from '@/components/SvgIcon'
 import useAuthoringEnvironment from '@/hooks/useAuthoringEnvironment'
 import { Form, Input } from 'bkui-vue'
 import { defineComponent, ref, watch } from 'vue'
@@ -24,10 +23,9 @@ export default defineComponent({
     const formRef = ref()
     const baseInfoData = ref({ ...props.modelValue })
 
-    const { envSelectList, envListLoading, nodeList, nodeListLoading, goEnvironment } =
-      useAuthoringEnvironment({
-        autoLoadEnvList: true,
-      })
+    const { envSelectList, envListLoading, nodeList, nodeListLoading } = useAuthoringEnvironment({
+      autoLoadEnvList: true,
+    })
 
     expose({
       formRef,
@@ -47,10 +45,6 @@ export default defineComponent({
     function updateAuthoringEnv(env: string) {
       baseInfoData.value.envHashId = env
       handleChange()
-    }
-
-    function goToEnvironment() {
-      goEnvironment(baseInfoData.value.envHashId)
     }
 
     return () => (
@@ -78,13 +72,7 @@ export default defineComponent({
           </Form.FormItem>
         </div>
         <div class={styles.baseItem}>
-          <p class={styles.baseTitle}>
-            <span>{t('flow.content.creationEnvironment')}</span>
-            <span class={styles.titleSet} onClick={goToEnvironment}>
-              <SvgIcon name="jump" size={12} class={styles.jumpIcon} />
-              {t('flow.content.environmentManagement')}
-            </span>
-          </p>
+          <p class={styles.baseTitle}>{t('flow.content.creationEnvironment')}</p>
           <Form.FormItem property="envHashId" required>
             {{
               error: () => t('flow.content.environmentRequired'),
@@ -92,6 +80,9 @@ export default defineComponent({
                 <>
                   <AuthoringEnv
                     isEdit={true}
+                    selectLabel={t('flow.content.selectEnvironment')}
+                    selectRequired={true}
+                    showEnvironmentManagement={true}
                     envLoading={envListLoading.value}
                     modelValue={baseInfoData.value.envHashId}
                     onUpdate:modelValue={updateAuthoringEnv}

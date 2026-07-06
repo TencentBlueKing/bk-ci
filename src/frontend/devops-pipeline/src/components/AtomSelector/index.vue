@@ -72,12 +72,13 @@
                     class="search-result"
                     ref="searchResult"
                     v-bkloading="{ isLoading: fetchingAtomList }"
+                    @scroll="handleSearchScroll"
                 >
                     <h3
                         v-if="installArr.length"
                         class="search-title"
                     >
-                        {{ $t('newlist.installed') }}（{{ installArr.length }}）
+                        {{ $t('newlist.installed') }}（{{ searchAtomState.installed.count }}）
                     </h3>
                     <atom-card
                         v-for="atom in installArr"
@@ -98,7 +99,7 @@
                         v-if="uninstallArr.length"
                         class="search-title gap-border"
                     >
-                        {{ $t('editPage.notInstall') }}（{{ uninstallArr.length }}）
+                        {{ $t('editPage.notInstall') }}（{{ searchAtomState.uninstalled.count }}）
                     </h3>
                     <atom-card
                         v-for="atom in uninstallArr"
@@ -117,7 +118,7 @@
                     ></atom-card>
                     <div
                         class="empty-atom-list"
-                        v-if="curTabList.length <= 0 && !fetchingAtomList"
+                        v-if="(!searchKey && curTabList.length <= 0 && !fetchingAtomList) || (searchKey && searchAtomState.installed.count + searchAtomState.uninstalled.count <= 0 && !isSearchLoading)"
                     >
                         <empty-tips type="no-result"></empty-tips>
                     </div>
@@ -131,6 +132,7 @@
     import { mapActions, mapGetters, mapState } from 'vuex'
     import EmptyTips from '../common/empty'
     import atomCard from './atomCard'
+    import { FETCHING_ATOM_LIST } from '@/store/modules/atom/constants'
 
     const RD_STORE_CODE = 'rdStore'
 
@@ -164,7 +166,26 @@
                 curTabList: [],
                 installArr: [],
                 uninstallArr: [],
-                isThrottled: false
+                isThrottled: false,
+                searchAtomState: {
+                    installed: {
+                        page: 1,
+                        pageSize: 100,
+                        totalPages: 0,
+                        count: 0,
+                        loading: false,
+                        isOver: false
+                    },
+                    uninstalled: {
+                        page: 1,
+                        pageSize: 100,
+                        totalPages: 0,
+                        count: 0,
+                        loading: false,
+                        isOver: false
+                    }
+                },
+                searchScrollTimer: null
             }
         },
 
@@ -270,17 +291,13 @@
                             atom.existed = uniqueAtomMap[atom.atomCode]
                         })
                     }
-
-                    if (this.searchKey) {
-                        this.uninstallArr = val.filter(item => !item.defaultFlag && !item.installed)
-                        this.installArr = val.filter(item => item.defaultFlag || item.installed)
-                    }
                 },
                 immediate: true
             },
 
             fetchingAtomList: {
                 handler () {
+                    if (this.searchKey) return
                     // 如果获取完可用插件, 就请求一页不可用插件数据
                     if (this.isCommendAtomPageOver) {
                         this.fetchAtomList()
@@ -298,13 +315,18 @@
                 'fetchAtoms',
                 'fetchClassify',
                 'setAtomPageOver',
-                'clearAtomData'
+                'clearAtomData',
+                'fetchSearchAtoms'
             ]),
 
             /**
              * 获取插件列表数据
              */
             fetchAtomList () {
+                if (this.searchKey) {
+                    this.fetchSearchAtomList()
+                    return
+                }
                 if (!this.fetchingAtomMoreLoading && !this.isThrottled && !this.isAtomPageOver) {
                     this.isThrottled = true
                     this.timer = setTimeout(async () => {
@@ -333,6 +355,82 @@
                 }
             },
 
+            /**
+             * 搜索模式：按顺序加载已安装/未安装插件列表
+             */
+            async fetchSearchAtomList () {
+                // 确定当前应加载的类型：已安装优先
+                let type = 'installed'
+                if (this.searchAtomState.installed.isOver) {
+                    type = 'uninstalled'
+                }
+                const state = this.searchAtomState[type]
+                if (state.loading || state.isOver) return
+
+                state.loading = true
+                try {
+                    const res = await this.fetchSearchAtoms({
+                        projectCode: this.projectCode,
+                        category: this.category,
+                        searchKey: this.searchKey,
+                        os: this.baseOS,
+                        installed: type === 'installed',
+                        page: state.page,
+                        pageSize: state.pageSize
+                    })
+                    const records = res.records || []
+                    if (type === 'installed') {
+                        this.installArr.push(...records)
+                    } else {
+                        this.uninstallArr.push(...records)
+                    }
+                    // 更新分页状态
+                    state.totalPages = res.totalPages || 0
+                    state.count = res.count || 0
+                    state.page++
+                    if (state.page > state.totalPages) {
+                        state.isOver = true
+                        // 如果已安装结束，自动开始加载未安装
+                        if (type === 'installed' && !this.searchAtomState.uninstalled.isOver) {
+                            state.loading = false
+                            this.fetchSearchAtomList()
+                            return
+                        }
+                    }
+                } catch (e) {
+                    console.error('fetchSearchAtomList error', e)
+                } finally {
+                    this.$store.commit(`atom/${FETCHING_ATOM_LIST}`, false)
+                    state.loading = false
+                }
+            },
+
+            /**
+             * 重置搜索分页状态
+             */
+            resetSearchAtomState () {
+                this.installArr = []
+                this.uninstallArr = []
+                this.searchAtomState = {
+                    installed: {
+                        page: 1,
+                        pageSize: 100,
+                        totalPages: 0,
+                        count: 0,
+                        loading: false,
+                        isOver: false
+                    },
+                    uninstalled: {
+                        page: 1,
+                        pageSize: 100,
+                        totalPages: 0,
+                        count: 0,
+                        loading: false,
+                        isOver: false
+                    }
+                }
+            },
+
             getClassifyCls (classifyCode) {
                 return `classify-${classifyCode}-cls`
             },
@@ -347,6 +445,7 @@
                 if (this.fetchingAtomList) return
                 this.searchKey = value.trim()
                 this.freshRequestAtomData()
+                this.resetSearchAtomState()
                 this.fetchAtomList()
             },
 
@@ -371,6 +470,7 @@
                 input.curValue = ''
                 this.searchKey = ''
                 this.freshRequestAtomData()
+                this.resetSearchAtomState()
                 if (refetch) {
                     this.fetchAtomList()
                 }
@@ -382,12 +482,12 @@
             },
 
             freshAtomList () {
-                if (this.fetchingAtomList) return
                 if (this.searchKey) {
-                    this.$refs.searchResult.scrollTo(0, 0)
+                    this.$refs.searchResult && this.$refs.searchResult.scrollTo(0, 0)
+                    this.resetSearchAtomState()
                 } else {
                     const curDom = this.$refs.atomListDom.find(item => item.name === this.classifyCode)
-                    !this.searchKey && curDom.$el.scrollTo(0, 0)
+                    curDom && curDom.$el.scrollTo(0, 0)
                 }
                 this.freshRequestAtomData()
                 this.fetchAtomList()
@@ -400,10 +500,34 @@
             },
 
             installAtomSuccess (atom) {
-                const curAtom = this.curTabList.find(item => item.atomCode === atom.atomCode)
-                this.installArr.push(curAtom)
-                this.uninstallArr = this.uninstallArr.filter(item => item.atomCode !== atom.atomCode)
-            }
+                if (this.searchKey) {
+                    // 搜索模式下，从未安装移到已安装
+                    const idx = this.uninstallArr.findIndex(item => item.atomCode === atom.atomCode)
+                    if (idx > -1) {
+                        const [installedAtom] = this.uninstallArr.splice(idx, 1)
+                        installedAtom.installed = true
+                        this.installArr.push(installedAtom)
+                    }
+                } else {
+                    const curAtom = this.curTabList.find(item => item.atomCode === atom.atomCode)
+                    this.installArr.push(curAtom)
+                    this.uninstallArr = this.uninstallArr.filter(item => item.atomCode !== atom.atomCode)
+                }
+            },
+
+            /**
+             * 搜索区域滚动防抖处理，触底时加载下一页
+             */
+            handleSearchScroll (e) {
+                if (this.searchScrollTimer) clearTimeout(this.searchScrollTimer)
+                this.searchScrollTimer = setTimeout(() => {
+                    const target = e.target
+                    const bottomDis = target.scrollHeight - target.clientHeight - target.scrollTop
+                    if (bottomDis <= 600) {
+                        this.fetchAtomList()
+                    }
+                }, 200)
+            },
         }
     }
 </script>

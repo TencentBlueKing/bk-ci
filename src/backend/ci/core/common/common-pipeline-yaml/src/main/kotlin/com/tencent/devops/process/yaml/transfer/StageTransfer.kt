@@ -123,9 +123,10 @@ class StageTransfer @Autowired(required = false) constructor(
         with(yamlInput.yaml.recommendedVersion) {
             if (this != null && this.enabled) {
                 triggerContainer.buildNo = BuildNo(
-                    this.buildNo.initialValue,
-                    RecommendedVersion.Strategy.parse(this.buildNo.strategy).toBuildNoType(),
-                    this.allowModifyAtStartup
+                    buildNo = this.buildNo.initialValue,
+                    buildNoType = RecommendedVersion.Strategy.parse(this.buildNo.strategy).toBuildNoType(),
+                    required = this.allowModifyAtStartup,
+                    asInstanceInput = this.asInstanceInput
                 )
             }
         }

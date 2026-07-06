@@ -3,7 +3,9 @@ import type { Container, Element } from '@/api/flowModel'
 import { SvgIcon } from '@/components/SvgIcon'
 import { useAtomManager, RD_STORE_CODE } from '@/hooks/useAtomManager'
 import { useAtomVersion } from '@/hooks/useAtomVersion'
+import { useUIStore } from '@/stores/ui'
 import { Exception, Input, Loading, Message, Tab } from 'bkui-vue'
+import { storeToRefs } from 'pinia'
 import { Transition, computed, defineComponent, ref, watch, type PropType } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
@@ -47,6 +49,8 @@ export default defineComponent({
     const atomVersion = useAtomVersion({
       projectCode: projectCode.value,
     })
+    const uiStore = useUIStore()
+    const { authoringBaseOS } = storeToRefs(uiStore)
 
     // ========== Refs ==========
     const searchKey = ref('')
@@ -61,6 +65,12 @@ export default defineComponent({
     const hasMore = ref(true)
 
     // ========== Computed ==========
+
+    const isCloudJob = computed(() => props.container?.['@type'] === 'normal')
+
+    const jobType = computed(() => (isCloudJob.value ? JobType.CLOUD_TASK : JobType.CREATIVE_STREAM))
+
+    const atomListOs = computed(() => (isCloudJob.value ? undefined : authoringBaseOS.value))
 
     const currentAtomCode = computed(() => {
       if (props.atom) {
@@ -120,6 +130,8 @@ export default defineComponent({
       atomManager.isLoadingAtoms({
         classifyId: classifyId.value,
         keyword: searchKey.value,
+        jobType: jobType.value,
+        os: atomListOs.value,
         queryProjectAtomFlag: queryProjectAtomFlag.value,
       }),
     )
@@ -148,6 +160,12 @@ export default defineComponent({
 
     watch(classifyCode, () => {
       loadAtomList(true)
+    })
+
+    watch(atomListOs, () => {
+      if (props.visible) {
+        loadAtomList(true)
+      }
     })
 
     watch(searchKey, () => {
@@ -245,12 +263,11 @@ export default defineComponent({
       if (!hasMore.value) return
 
       try {
-        const isCloudJob = props.container?.['@type'] === 'normal'
         const result = await atomManager.fetchAtomList({
           classifyId: classifyId.value,
           keyword: searchKey.value,
-          jobType: isCloudJob ? JobType.CLOUD_TASK : JobType.CREATIVE_STREAM,
-          os: isCloudJob ? undefined : 'WINDOWS',
+          jobType: jobType.value,
+          os: atomListOs.value,
           queryProjectAtomFlag: queryProjectAtomFlag.value,
           page: currentPage.value,
           pageSize: 20,

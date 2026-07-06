@@ -16,89 +16,95 @@ import (
 	"golang.org/x/sys/windows/registry"
 )
 
-func handleStatus(workDir string) error {
-	beginStatusSummary()
-	printDivider()
-	printStep(msg("BK-CI Agent Status", "BK-CI Agent 状态"))
-	printDivider()
+func handleStatus(workDir string, args []string) error {
+	mode, err := parseStatusOutputMode(args)
+	if err != nil {
+		return err
+	}
+	title := msg("BK-CI Agent Status", "BK-CI Agent 状态")
+	report := collectStatusReport(title, func() {
+		printDivider()
+		printStep(title)
+		printDivider()
 
-	serviceName, _ := getServiceName(workDir)
-	statusLine(msg("Platform", "平台"), "Windows")
-	statusLine(msg("Work directory", "工作目录"), workDir)
-	statusLine(msg("Service name", "服务名"), serviceName)
-	statusLine(msg("Current user", "当前用户"), os.Getenv("USERNAME"))
+		serviceName, _ := getServiceName(workDir)
+		statusLine(msg("Platform", "平台"), "Windows")
+		statusLine(msg("Work directory", "工作目录"), workDir)
+		statusLine(msg("Service name", "服务名"), serviceName)
+		statusLine(msg("Current user", "当前用户"), os.Getenv("USERNAME"))
 
-	// Install type
-	installType := readInstallTypeFile(workDir)
-	runMode := detectRunMode(serviceName, installType)
-	statusLine(msg("Install type", "安装类型"), installType)
-	statusLine(msg("Run mode", "运行模式"), runMode)
+		// Install type
+		installType := readInstallTypeFile(workDir)
+		runMode := detectRunMode(serviceName, installType)
+		statusLine(msg("Install type", "安装类型"), installType)
+		statusLine(msg("Run mode", "运行模式"), runMode)
 
-	// Service status
-	if serviceName != "" && serviceExists(serviceName) {
-		if serviceRunning(serviceName) {
-			statusLine(msg("Service state", "服务状态"), msg("running", "运行中")+" ✓")
+		// Service status
+		if serviceName != "" && serviceExists(serviceName) {
+			if serviceRunning(serviceName) {
+				statusLine(msg("Service state", "服务状态"), msg("running", "运行中")+" ✓")
+			} else {
+				statusLine(msg("Service state", "服务状态"), msg("stopped", "已停止")+" ✗")
+			}
+			statusLine(msg("Auto start", "开机启动"), queryServiceStartType(serviceName))
 		} else {
-			statusLine(msg("Service state", "服务状态"), msg("stopped", "已停止")+" ✗")
+			statusLine(msg("Service state", "服务状态"), msg("not registered", "未注册"))
 		}
-		statusLine(msg("Auto start", "开机启动"), queryServiceStartType(serviceName))
-	} else {
-		statusLine(msg("Service state", "服务状态"), msg("not registered", "未注册"))
-	}
 
-	// Scheduled task (legacy)
-	hasSchtask := false
-	if serviceName != "" {
-		err := exec.Command("schtasks", "/query", "/tn", serviceName).Run()
-		hasSchtask = err == nil
-	}
-	if hasSchtask {
-		statusLine(msg("Scheduled task", "计划任务"), msg("exists (legacy)", "存在 (旧版)")+" ⚠")
-	}
+		// Scheduled task (legacy)
+		hasSchtask := false
+		if serviceName != "" {
+			err := exec.Command("schtasks", "/query", "/tn", serviceName).Run()
+			hasSchtask = err == nil
+		}
+		if hasSchtask {
+			statusLine(msg("Scheduled task", "计划任务"), msg("exists (legacy)", "存在 (旧版)")+" ⚠")
+		}
 
-	// Process status
-	daemonPid := readPid(filepath.Join(workDir, "runtime", "daemon.pid"))
-	agentPid := readPid(filepath.Join(workDir, "runtime", "agent.pid"))
-	statusLine(msg("Daemon PID", "守护进程 PID"), pidStatus(daemonPid))
-	statusLine(msg("Agent PID", "Agent PID"), pidStatus(agentPid))
+		// Process status
+		daemonPid := readPid(filepath.Join(workDir, "runtime", "daemon.pid"))
+		agentPid := readPid(filepath.Join(workDir, "runtime", "agent.pid"))
+		statusLine(msg("Daemon PID", "守护进程 PID"), pidStatus(daemonPid))
+		statusLine(msg("Agent PID", "Agent PID"), pidStatus(agentPid))
 
-	// Session mode details
-	fmt.Println()
-	printStep(msg("Session Mode Details", "会话模式详情"))
-	printStep("--------------------------------------------")
+		// Session mode details
+		statusBlankLine()
+		printStep(msg("Session Mode Details", "会话模式详情"))
+		printStep("--------------------------------------------")
 
-	autoLogon := checkAutoLogonEnabled()
-	autoLogonUser := readAutoLogonUser()
+		autoLogon := checkAutoLogonEnabled()
+		autoLogonUser := readAutoLogonUser()
 
-	if autoLogon {
-		statusLine(msg("Windows auto-logon", "Windows 自动登录"),
-			msgf("enabled (user: %s)", "已启用 (用户: %s)", autoLogonUser)+" ✓")
-	} else {
-		statusLine(msg("Windows auto-logon", "Windows 自动登录"), msg("disabled", "未启用"))
-	}
+		if autoLogon {
+			statusLine(msg("Windows auto-logon", "Windows 自动登录"),
+				msgf("enabled (user: %s)", "已启用 (用户: %s)", autoLogonUser)+" ✓")
+		} else {
+			statusLine(msg("Windows auto-logon", "Windows 自动登录"), msg("disabled", "未启用"))
+		}
 
-	hasAutoLogonPass := checkLsaSecretExists("DefaultPassword")
-	if hasAutoLogonPass {
-		statusLine(msg("Auto-logon password", "自动登录密码"), msg("stored in LSA Secret", "已加密存储于 LSA Secret")+" ✓")
-	} else if autoLogon {
-		statusLine(msg("Auto-logon password", "自动登录密码"), msg("missing!", "缺失!")+" ✗")
-	}
+		hasAutoLogonPass := checkLsaSecretExists("DefaultPassword")
+		if hasAutoLogonPass {
+			statusLine(msg("Auto-logon password", "自动登录密码"), msg("stored in LSA Secret", "已加密存储于 LSA Secret")+" ✓")
+		} else if autoLogon {
+			statusLine(msg("Auto-logon password", "自动登录密码"), msg("missing!", "缺失!")+" ✗")
+		}
 
-	checkPropertiesFile(workDir)
+		checkPropertiesFile(workDir)
 
-	// Dependencies
-	fmt.Println()
-	printStep(msg("Dependencies", "依赖组件"))
-	printStep("--------------------------------------------")
-	statusLine("JDK 17", dirStatus(filepath.Join(workDir, "jdk17")))
-	statusLine("JDK 8", dirStatus(filepath.Join(workDir, "jdk")))
-	statusLine("worker-agent.jar", fileStatus(filepath.Join(workDir, "worker-agent.jar")))
+		// Dependencies
+		statusBlankLine()
+		printStep(msg("Dependencies", "依赖组件"))
+		printStep("--------------------------------------------")
+		statusLine("JDK 17", dirStatus(filepath.Join(workDir, "jdk17")))
+		statusLine("JDK 8", dirStatus(filepath.Join(workDir, "jdk")))
+		statusLine("worker-agent.jar", fileStatus(filepath.Join(workDir, "worker-agent.jar")))
 
-	printHealthChecks(workDir)
-	fmt.Println()
-	printStatusSummaryLine()
+		printHealthChecks(workDir)
+		statusBlankLine()
+		printStatusSummaryLine()
+	})
 
-	return nil
+	return outputStatusReport(report, mode)
 }
 
 func readInstallTypeFile(workDir string) string {
@@ -253,7 +259,12 @@ func fileStatus(path string) string {
 
 func statusLine(label, value string) {
 	trackStatusLine(label, value)
-	fmt.Printf("  %-24s %s\n", label+":", value)
+	addStatusReportLine(label, value)
+	line := fmt.Sprintf("  %-24s %s", label+":", value)
+	addStatusTextLine(line)
+	if statusShouldPrintText() {
+		fmt.Println(line)
+	}
 }
 
 func queryServiceStartType(serviceName string) string {

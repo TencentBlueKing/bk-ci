@@ -254,9 +254,6 @@ export const useFlowModelStore = defineStore('flowModel', () => {
         delete stage.isError
         stage.containers?.forEach((container: any) => {
           delete container.isError
-          if (container.baseOS) {
-            delete container.baseOS
-          }
           container.elements?.forEach((element: any) => {
             delete element.isError
             ATOM_PROP_RUNTIME_KEYS.forEach((key) => delete element[key])

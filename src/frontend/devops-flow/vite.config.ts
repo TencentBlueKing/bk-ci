@@ -96,9 +96,13 @@ export default defineConfig(({ mode }) => {
     optimizeDeps: {
       exclude: ['bkui-pipeline'],
     },
+    css: {
+      preprocessorMaxWorkers: 0,
+    },
     build: {
       outDir: path.resolve(__dirname, `../frontend/${PUBLIC_PATH}`),
       emptyOutDir: true,
+    
       rollupOptions: {
         output: {
           manualChunks: undefined,

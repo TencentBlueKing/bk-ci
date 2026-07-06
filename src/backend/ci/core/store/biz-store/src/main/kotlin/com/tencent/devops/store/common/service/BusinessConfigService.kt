@@ -109,4 +109,14 @@ class BusinessConfigService @Autowired constructor(
     fun deleteBusinessConfigById(id: Int): Int {
         return businessConfigDao.delete(dslContext, id)
     }
+
+    fun getConfigValue(business: String, feature: String, businessValue: String): String? {
+        val record = businessConfigDao.get(
+            dslContext = dslContext,
+            business = business,
+            feature = feature,
+            businessValue = businessValue
+        )
+        return record?.configValue
+    }
 }

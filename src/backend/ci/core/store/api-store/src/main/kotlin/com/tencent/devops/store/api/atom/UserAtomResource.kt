@@ -111,13 +111,19 @@ interface UserAtomResource {
         @Parameter(description = "查询支持有编译环境下的无编译环境插件标识", required = false)
         @QueryParam("queryFitAgentBuildLessAtomFlag")
         queryFitAgentBuildLessAtomFlag: Boolean? = true,
+        @Parameter(description = "是否已安装（true:已安装/false:未安装/null:全部）", required = false)
+        @QueryParam("installed")
+        installed: Boolean? = null,
         @Parameter(description = "页码", required = true)
         @QueryParam("page")
         page: Int = 1,
         @Parameter(description = "每页数量", required = true)
         @QueryParam("pageSize")
         @BkField(patternStyle = BkStyleEnum.PAGE_SIZE_STYLE)
-        pageSize: Int = 10
+        pageSize: Int = 10,
+        @Parameter(description = "归属应用标识", required = true)
+        @QueryParam("ownerStoreCode")
+        ownerStoreCode: String?
     ): Result<AtomResp<AtomRespItem>?>
 
     @Operation(summary = "根据插件代码和版本号获取流水线插件详细信息")

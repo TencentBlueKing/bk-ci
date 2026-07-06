@@ -30,6 +30,7 @@ package com.tencent.devops.environment.utils
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.environment.pojo.NodeBaseInfo
+import com.tencent.devops.environment.pojo.enums.NodeOperatorStatus
 import com.tencent.devops.environment.pojo.enums.NodeType
 import com.tencent.devops.model.environment.tables.records.TNodeRecord
 
@@ -70,7 +71,8 @@ object NodeStringIdUtils {
             lastModifyTime = (nodeRecord.lastModifyTime ?: nodeRecord.createdTime).timestampmilli(),
             agentHashId = null,
             agentId = null,
-            createWorkspaceId = null
+            createWorkspaceId = null,
+            operatorStatus = NodeOperatorStatus.valOf(nodeRecord.operatorStatus)?.name
         )
     }
 }

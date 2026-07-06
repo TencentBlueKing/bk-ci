@@ -1,0 +1,188 @@
+package com.tencent.devops.process.dao
+
+import com.tencent.devops.common.api.util.timestampmilli
+import com.tencent.devops.model.process.Tables.T_PIPELINE_COPY_TASK_RESOURCE_REL
+import com.tencent.devops.model.process.tables.records.TPipelineCopyTaskResourceRelRecord
+import com.tencent.devops.process.pojo.pipeline.enums.PipelineDependentResourceType
+import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskResourceRel
+import org.jooq.Condition
+import org.jooq.DSLContext
+import org.springframework.stereotype.Repository
+
+@Repository
+class PipelineCopyTaskResourceRelDao {
+
+    fun batchCreate(
+        dslContext: DSLContext,
+        relations: List<PipelineCopyTaskResourceRel>
+    ) {
+        if (relations.isEmpty()) {
+            return
+        }
+        val queries = with(T_PIPELINE_COPY_TASK_RESOURCE_REL) {
+            relations.map { relation ->
+                dslContext.insertInto(
+                    this,
+                    TASK_ID,
+                    PROJECT_ID,
+                    PIPELINE_ID,
+                    PIPELINE_NAME,
+                    RESOURCE_TYPE,
+                    RESOURCE_ID,
+                    RESOURCE_NAME
+                ).values(
+                    relation.taskId,
+                    relation.projectId,
+                    relation.pipelineId,
+                    relation.pipelineName,
+                    relation.resourceType.name,
+                    relation.resourceId,
+                    relation.resourceName
+                ).onDuplicateKeyIgnore()
+            }
+        }
+        dslContext.batch(queries).execute()
+    }
+
+    fun list(
+        dslContext: DSLContext,
+        projectId: String,
+        taskId: String,
+        pipelineIds: Set<String>? = null,
+        resourceIds: Set<String>? = null,
+        resourceType: PipelineDependentResourceType? = null,
+        resourceName: String? = null,
+        pipelineName: String? = null
+    ): List<PipelineCopyTaskResourceRel> {
+        return with(T_PIPELINE_COPY_TASK_RESOURCE_REL) {
+            dslContext.selectFrom(this)
+                .where(
+                    buildConditions(
+                        projectId = projectId,
+                        taskId = taskId,
+                        pipelineIds = pipelineIds,
+                        resourceIds = resourceIds,
+                        resourceType = resourceType,
+                        resourceName = resourceName,
+                        pipelineName = pipelineName
+                    )
+                )
+                .orderBy(PIPELINE_NAME.asc(), PIPELINE_ID.asc())
+                .fetch()
+                .map(::convert)
+        }
+    }
+
+    fun listResourcePipelineIds(
+        dslContext: DSLContext,
+        projectId: String,
+        taskId: String,
+        resourceType: PipelineDependentResourceType,
+        resourceId: String
+    ): Set<String> {
+        return with(T_PIPELINE_COPY_TASK_RESOURCE_REL) {
+            dslContext.select(PIPELINE_ID)
+                .from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(TASK_ID.eq(taskId))
+                .and(RESOURCE_TYPE.eq(resourceType.name))
+                .and(RESOURCE_ID.eq(resourceId))
+                .groupBy(PIPELINE_ID)
+                .orderBy(PIPELINE_ID.asc())
+                .fetch(PIPELINE_ID)
+                .toSet()
+        }
+    }
+
+    fun deleteByTaskId(
+        dslContext: DSLContext,
+        projectId: String,
+        taskId: String
+    ): Int {
+        return with(T_PIPELINE_COPY_TASK_RESOURCE_REL) {
+            dslContext.deleteFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(TASK_ID.eq(taskId))
+                .execute()
+        }
+    }
+
+    fun deleteByPipelineIds(
+        dslContext: DSLContext,
+        projectId: String,
+        taskId: String,
+        pipelineIds: Set<String>
+    ): Int {
+        return with(T_PIPELINE_COPY_TASK_RESOURCE_REL) {
+            dslContext.deleteFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(TASK_ID.eq(taskId))
+                .and(PIPELINE_ID.`in`(pipelineIds))
+                .execute()
+        }
+    }
+
+    fun deleteByPipelineIdExcludePipelineResource(
+        dslContext: DSLContext,
+        projectId: String,
+        taskId: String,
+        pipelineId: String
+    ): Int {
+        return with(T_PIPELINE_COPY_TASK_RESOURCE_REL) {
+            dslContext.deleteFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(TASK_ID.eq(taskId))
+                .and(PIPELINE_ID.eq(pipelineId))
+                .and(RESOURCE_TYPE.ne(PipelineDependentResourceType.PIPELINE.name))
+                .execute()
+        }
+    }
+
+    private fun convert(record: TPipelineCopyTaskResourceRelRecord): PipelineCopyTaskResourceRel {
+        return with(record) {
+            PipelineCopyTaskResourceRel(
+                taskId = taskId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                pipelineName = pipelineName,
+                resourceType = PipelineDependentResourceType.valueOf(resourceType),
+                resourceId = resourceId,
+                resourceName = resourceName,
+                createTime = createTime.timestampmilli(),
+                updateTime = updateTime.timestampmilli()
+            )
+        }
+    }
+
+    private fun buildConditions(
+        projectId: String,
+        taskId: String,
+        pipelineIds: Set<String>?,
+        resourceIds: Set<String>?,
+        resourceType: PipelineDependentResourceType?,
+        resourceName: String?,
+        pipelineName: String?
+    ): List<Condition> {
+        return with(T_PIPELINE_COPY_TASK_RESOURCE_REL) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(PROJECT_ID.eq(projectId))
+            conditions.add(TASK_ID.eq(taskId))
+            if (!pipelineIds.isNullOrEmpty()) {
+                conditions.add(PIPELINE_ID.`in`(pipelineIds))
+            }
+            if (!resourceIds.isNullOrEmpty()) {
+                conditions.add(RESOURCE_ID.`in`(resourceIds))
+            }
+            if (resourceType != null) {
+                conditions.add(RESOURCE_TYPE.eq(resourceType.name))
+            }
+            if (!resourceName.isNullOrBlank()) {
+                conditions.add(RESOURCE_NAME.like("%$resourceName%"))
+            }
+            if (!pipelineName.isNullOrBlank()) {
+                conditions.add(PIPELINE_NAME.like("%$pipelineName%"))
+            }
+            conditions
+        }
+    }
+}
