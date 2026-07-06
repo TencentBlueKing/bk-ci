@@ -56,6 +56,27 @@ class StoreVisibleProjectRelDao {
     }
 
     /**
+     * 批量获取在指定项目下可见的组件编码集合。
+     * 用于列表接口计算安装/可用标识(flag)时，判断组件是否因"按项目授权"而对当前项目可见。
+     */
+    fun listStoreCodesByProject(
+        dslContext: DSLContext,
+        storeType: Byte,
+        projectCode: String,
+        storeCodes: Collection<String>
+    ): Set<String> {
+        if (storeCodes.isEmpty()) return emptySet()
+        with(TStoreProjectVisibleRel.T_STORE_PROJECT_VISIBLE_REL) {
+            return dslContext.select(STORE_CODE)
+                .from(this)
+                .where(STORE_TYPE.eq(storeType))
+                .and(PROJECT_CODE.eq(projectCode))
+                .and(STORE_CODE.`in`(storeCodes))
+                .fetchSet(STORE_CODE)
+        }
+    }
+
+    /**
      * 批量设置组件的项目可见范围（幂等，存在则更新项目名称）
      */
     fun batchAdd(

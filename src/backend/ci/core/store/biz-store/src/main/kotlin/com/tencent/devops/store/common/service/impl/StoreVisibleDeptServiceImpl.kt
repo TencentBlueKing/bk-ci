@@ -246,25 +246,26 @@ class StoreVisibleDeptServiceImpl @Autowired constructor(
     private fun validateVisibleProjects(userId: String, projectCodes: List<String>): Map<String, String> {
         if (projectCodes.isEmpty()) return emptyMap()
         val serviceProjectResource = client.get(ServiceProjectResource::class)
-        // 批量获取存在的项目名称，既用于回显也用于校验项目ID是否存在
+        // 批量获取存在的项目名称，既用于回显也用于校验项目ID是否存在。
+        // 注意：下游服务调用异常与"项目不存在"是两回事，调用失败时抛系统繁忙错误，避免误报为"项目不存在/无权限"
         val projectNameMap = try {
-            serviceProjectResource.getNameByCode(projectCodes.joinToString(",")).data
+            serviceProjectResource.getNameByCode(projectCodes.joinToString(",")).data.orEmpty()
         } catch (ignored: Throwable) {
             logger.warn("validateVisibleProjects getNameByCode error, projectCodes:$projectCodes", ignored)
-            null
-        } ?: emptyMap()
+            throw ErrorCodeException(errorCode = CommonMessageCode.SYSTEM_ERROR)
+        }
         val invalidProjectCodes = projectCodes.filter { projectCode ->
             // 项目不存在直接判定为非法
             if (!projectNameMap.containsKey(projectCode)) {
                 return@filter true
             }
-            // 校验用户是否拥有该项目的权限
+            // 校验用户是否拥有该项目的权限；权限服务调用失败同样抛系统繁忙错误，避免误报为"无权限"
             val hasPermission = try {
                 serviceProjectResource
                     .verifyUserProjectPermission(projectCode = projectCode, userId = userId).data ?: false
             } catch (ignored: Throwable) {
                 logger.warn("validateVisibleProjects verifyPermission error, $userId|$projectCode", ignored)
-                false
+                throw ErrorCodeException(errorCode = CommonMessageCode.SYSTEM_ERROR)
             }
             !hasPermission
         }
@@ -305,7 +306,7 @@ class StoreVisibleDeptServiceImpl @Autowired constructor(
             )
         }
         if (!deptIds.isNullOrBlank()) {
-            val deptIdIntList = deptIds.split(",").filter { it.isNotBlank() }.map { it.trim().toInt() }
+            val deptIdIntList = deptIds.split(",").mapNotNull { it.trim().toIntOrNull() }
             if (deptIdIntList.isNotEmpty()) {
                 storeDeptRelDao.batchDelete(
                     dslContext = dslContext,

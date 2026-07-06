@@ -39,7 +39,6 @@ import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.ws.rs.Consumes
-import jakarta.ws.rs.DELETE
 import jakarta.ws.rs.DefaultValue
 import jakarta.ws.rs.GET
 import jakarta.ws.rs.HeaderParam
@@ -89,7 +88,7 @@ interface UserStoreVisibleDeptResource {
     ): Result<StoreVisibleDeptResp?>
 
     @Operation(summary = "删除组件可见范围")
-    @DELETE
+    @POST
     @Path("/types/{storeType}/codes/{storeCode}/delete")
     fun deleteVisibleDept(
         @Parameter(description = "userId", required = true)

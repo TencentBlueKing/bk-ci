@@ -64,6 +64,7 @@ import com.tencent.devops.store.common.dao.StoreBaseQueryDao
 import com.tencent.devops.store.common.dao.StoreMemberDao
 import com.tencent.devops.store.common.dao.StoreProjectRelDao
 import com.tencent.devops.store.common.dao.StoreVersionLogDao
+import com.tencent.devops.store.common.dao.StoreVisibleProjectRelDao
 import com.tencent.devops.store.common.service.AbstractStoreComponentPkgSizeHandleService
 import com.tencent.devops.store.common.service.CategoryService
 import com.tencent.devops.store.common.service.ClassifyService
@@ -155,6 +156,9 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
 
     @Autowired
     lateinit var storeVersionLogDao: StoreVersionLogDao
+
+    @Autowired
+    lateinit var storeVisibleProjectRelDao: StoreVisibleProjectRelDao
 
     @Autowired
     lateinit var storeBaseExtQueryDao: StoreBaseExtQueryDao
@@ -1321,6 +1325,17 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
         watcher.start("generateStoreVisibleData")
         val storeVisibleData =
             storeCommonService.generateStoreVisibleData(storeCodeList, storeTypeEnum)
+        // 用于计算安装/可用标识(flag)，避免"因项目授权可见但flag=false导致看得到却装不了"。
+        val projectVisibleStoreCodes = if (projectCode != null && storeCodeList.isNotEmpty()) {
+            storeVisibleProjectRelDao.listStoreCodesByProject(
+                dslContext = dslContext,
+                storeType = storeTypeEnum.type.toByte(),
+                projectCode = projectCode,
+                storeCodes = storeCodeList
+            )
+        } else {
+            emptySet()
+        }
         // 获取组件统计信息
         watcher.start("getStatisticByCodeList")
         val storeStatisticData = storeTotalStatisticService.getStatisticByCodeList(
@@ -1414,7 +1429,7 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
                     userId = userId,
                     visibleList = storeVisibleData?.get(storeCode),
                     userDeptList = userDeptList
-                ),
+                ) || storeCode in projectVisibleStoreCodes,
                 publicFlag = publicFlag,
                 buildLessRunFlag = buildLessRunFlag,
                 docsLink = record[tStoreBase.DOCS_LINK],

@@ -65,6 +65,7 @@ import com.tencent.devops.store.common.dao.StoreStatisticDailyDao
 import com.tencent.devops.store.common.dao.StoreStatisticDao
 import com.tencent.devops.store.common.dao.StoreStatisticTotalDao
 import com.tencent.devops.store.common.dao.StoreVersionLogDao
+import com.tencent.devops.store.common.dao.StoreVisibleProjectRelDao
 import com.tencent.devops.store.common.service.StoreCommonService
 import com.tencent.devops.store.utils.VersionUtils
 import com.tencent.devops.store.constant.StoreMessageCode
@@ -177,6 +178,9 @@ abstract class StoreCommonServiceImpl : StoreCommonService {
 
     @Autowired
     lateinit var storeVersionLogDao: StoreVersionLogDao
+
+    @Autowired
+    lateinit var storeVisibleProjectRelDao: StoreVisibleProjectRelDao
 
     @Autowired
     lateinit var client: Client
@@ -366,6 +370,7 @@ abstract class StoreCommonServiceImpl : StoreCommonService {
         storeCommentPraiseDao.deleteStoreCommentPraise(context, storeCode, storeType)
         storeCommentReplyDao.deleteStoreCommentReply(context, storeCode, storeType)
         storeDeptRelDao.deleteByStoreCode(context, storeCode, storeType)
+        storeVisibleProjectRelDao.deleteByStoreCode(context, storeCode, storeType)
         storeEnvVarDao.deleteEnvVar(context, storeCode, storeType)
         storeMediaInfoDao.deleteByStoreCode(context, storeCode, storeType)
         storeMemberDao.deleteAll(context, storeCode, storeType)
