@@ -381,6 +381,98 @@ class PipelineProgressRateServiceTest {
     }
 
     @Test
+    fun calculateStageProgressRateSortsTasksByJobAndTaskSeq() {
+        every { pipelineRuntimeService.getBuildInfo(PROJECT_ID, BUILD_ID) } returns buildInfo()
+        every {
+            buildRecordTaskDao.getLatestNormalRecords(
+                dslContext = dslContext,
+                projectId = PROJECT_ID,
+                buildId = BUILD_ID,
+                executeCount = 1,
+                matrixContainerIds = emptyList(),
+                stageId = STAGE_ID
+            )
+        } returns listOf(
+            buildRecordTask(
+                taskId = "task-2",
+                containerId = "container-1",
+                status = BuildStatus.SUCCEED,
+                taskVar = mutableMapOf(),
+                taskSeq = 2
+            ),
+            buildRecordTask(
+                taskId = "task-1",
+                containerId = "container-1",
+                status = BuildStatus.SUCCEED,
+                taskVar = mutableMapOf(),
+                taskSeq = 1
+            ),
+            buildRecordTask(
+                taskId = "task-3",
+                containerId = "container-2",
+                status = BuildStatus.RUNNING,
+                taskVar = mutableMapOf("progressRate" to 0.5),
+                taskSeq = 1
+            )
+        )
+        every { pipelineTaskService.getAllBuildTask(PROJECT_ID, BUILD_ID) } returns listOf(
+            buildTask(
+                taskId = "task-1",
+                taskName = "步骤1",
+                containerId = "container-1",
+                status = BuildStatus.SUCCEED,
+                taskSeq = 1
+            ),
+            buildTask(
+                taskId = "task-2",
+                taskName = "步骤2",
+                containerId = "container-1",
+                status = BuildStatus.SUCCEED,
+                taskSeq = 2
+            ),
+            buildTask(
+                taskId = "task-3",
+                taskName = "步骤3",
+                containerId = "container-2",
+                taskSeq = 1
+            )
+        )
+        every {
+            buildRecordService.getContainerOrderInStage(
+                projectId = PROJECT_ID,
+                pipelineId = PIPELINE_ID,
+                buildId = BUILD_ID,
+                executeCount = 1,
+                stageId = STAGE_ID,
+                containerId = "container-1"
+            )
+        } returns 0
+        every {
+            buildRecordService.getContainerOrderInStage(
+                projectId = PROJECT_ID,
+                pipelineId = PIPELINE_ID,
+                buildId = BUILD_ID,
+                executeCount = 1,
+                stageId = STAGE_ID,
+                containerId = "container-2"
+            )
+        } returns 1
+
+        val result = service.calculateStageProgressRate(
+            projectId = PROJECT_ID,
+            pipelineId = PIPELINE_ID,
+            buildId = BUILD_ID,
+            stageId = STAGE_ID
+        )
+
+        Assertions.assertEquals(listOf("步骤1", "步骤2", "步骤3"), result.taskProgressList?.map { it.taskName })
+        Assertions.assertEquals(
+            listOf("0-1-1", "0-1-2", "0-2-1"),
+            result.taskProgressList?.map { it.taskExecutionOrder }
+        )
+    }
+
+    @Test
     fun calculateStageProgressRateReturnsCompletedTaskWithProgressDetailWhenNoRunningTask() {
         val progressDetail = BuildTaskProgressDetail(
             progress = BuildTaskProgressSummary(value = 0.75)
@@ -466,6 +558,7 @@ class PipelineProgressRateServiceTest {
         containerId: String,
         status: BuildStatus,
         taskVar: MutableMap<String, Any>,
+        taskSeq: Int = 1,
         endTime: LocalDateTime? = null
     ) = BuildRecordTask(
         buildId = BUILD_ID,
@@ -475,7 +568,7 @@ class PipelineProgressRateServiceTest {
         stageId = STAGE_ID,
         containerId = containerId,
         taskId = taskId,
-        taskSeq = 1,
+        taskSeq = taskSeq,
         executeCount = 1,
         taskVar = taskVar,
         classType = "linuxScript",
@@ -489,7 +582,8 @@ class PipelineProgressRateServiceTest {
         taskId: String = TASK_ID,
         taskName: String = "编译",
         containerId: String = "container-2",
-        status: BuildStatus = BuildStatus.RUNNING
+        status: BuildStatus = BuildStatus.RUNNING,
+        taskSeq: Int = 1
     ) = PipelineBuildTask(
         projectId = PROJECT_ID,
         pipelineId = PIPELINE_ID,
@@ -498,7 +592,7 @@ class PipelineProgressRateServiceTest {
         containerId = containerId,
         containerHashId = "container-hash",
         containerType = "VM",
-        taskSeq = 1,
+        taskSeq = taskSeq,
         taskId = taskId,
         taskName = taskName,
         taskType = "linuxScript",

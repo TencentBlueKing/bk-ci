@@ -16,7 +16,6 @@ import com.tencent.devops.process.pojo.BuildTaskProgressInfo
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordTask
 import java.math.BigDecimal
 import java.math.RoundingMode
-import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -118,12 +117,7 @@ class PipelineProgressRateService constructor(
         val runningTaskProgresses = runningTasks.map(::toTaskProgress)
         val runningTaskTotalProgressRate = runningTaskProgresses.sumOf { it.progressRate }
         val stageProgressRate = (finishedTasks.size + runningTaskTotalProgressRate) / stageTasks.size
-        val completedTaskProgresses = finishedTasks
-            .map(::toCompletedTaskProgress)
-            .sortedWith(
-                compareByDescending<RunningTaskProgress> { it.record.endTime ?: LocalDateTime.MIN }
-                    .thenByDescending { it.record.taskSeq }
-            )
+        val completedTaskProgresses = finishedTasks.map(::toCompletedTaskProgress)
         val taskProgressesForList = if (runningTaskProgresses.isNotEmpty()) {
             runningTaskProgresses + completedTaskProgresses
         } else {
@@ -191,24 +185,41 @@ class PipelineProgressRateService constructor(
             taskIds = taskProgresses.map { it.record.taskId }
         )
         val jobExecutionOrderCache = mutableMapOf<String, String>()
-        return taskProgresses.map {
+        return taskProgresses
+            .sortedWith(
+                compareBy<RunningTaskProgress> {
+                    jobExecutionOrderCache.getOrPut(it.record.containerId) {
+                        getJobExecutionOrder(
+                            projectId = projectId,
+                            pipelineId = pipelineId,
+                            buildId = buildId,
+                            executeCount = executeCount,
+                            stageId = stageId,
+                            containerId = it.record.containerId
+                        )
+                    }
+                }.thenBy { it.record.taskSeq }
+            )
+            .map {
             val taskName = taskNameMap[it.record.taskId]
+            val jobExecutionOrder = jobExecutionOrderCache.getOrPut(it.record.containerId) {
+                getJobExecutionOrder(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    buildId = buildId,
+                    executeCount = executeCount,
+                    stageId = stageId,
+                    containerId = it.record.containerId
+                )
+            }
             BuildTaskProgressInfo(
                 taskProgressRete = it.progressRate,
                 taskName = taskName,
-                jobExecutionOrder = jobExecutionOrderCache.getOrPut(it.record.containerId) {
-                    getJobExecutionOrder(
-                        projectId = projectId,
-                        pipelineId = pipelineId,
-                        buildId = buildId,
-                        executeCount = executeCount,
-                        stageId = stageId,
-                        containerId = it.record.containerId
-                    )
-                },
+                jobExecutionOrder = jobExecutionOrder,
+                taskExecutionOrder = "$jobExecutionOrder-${it.record.taskSeq}",
                 progressDetail = it.progressDetail?.withDefaultTitles(taskName)
             )
-        }.sortedBy { it.jobExecutionOrder }
+        }
     }
 
     private fun getJobExecutionOrder(
