@@ -478,6 +478,7 @@
       "jobId": "Job ID",
       "jobIdPlaceholder": "请输入 Job ID",
       "jobIdRequired": "Job ID 不能为空",
+      "jobIdDuplicateError": "Job ID 在当前流程中重复",
       "matrixJob": "矩阵 (Matrix Job)",
       "mutexGroup": "互斥组",
       "enableJob": "启用本 Job",

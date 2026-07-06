@@ -479,6 +479,7 @@
       "jobId": "Job ID",
       "jobIdPlaceholder": "Please enter Job ID",
       "jobIdRequired": "Job ID cannot be empty",
+      "jobIdDuplicateError": "Job ID is duplicated within the current flow",
       "matrixJob": "Matrix Job",
       "mutexGroup": "Mutex Group",
       "enableJob": "Enable this Job",

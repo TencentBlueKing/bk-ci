@@ -479,6 +479,7 @@
       "jobId": "ジョブID",
       "jobIdPlaceholder": "ジョブIDを入力してください",
       "jobIdRequired": "ジョブIDは必須です",
+      "jobIdDuplicateError": "ジョブIDが現在のフロー内で重複しています",
       "matrixJob": "マトリックスジョブ",
       "mutexGroup": "排他グループ",
       "enableJob": "このジョブを有効にする",
