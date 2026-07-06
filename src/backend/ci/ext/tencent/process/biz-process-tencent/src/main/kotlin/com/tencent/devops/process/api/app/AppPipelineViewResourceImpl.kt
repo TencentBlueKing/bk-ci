@@ -100,8 +100,7 @@ class AppPipelineViewResourceImpl @Autowired constructor(
         filterByPipelineName: String?,
         filterByCreator: String?,
         filterByLabels: String?,
-        viewId: String,
-        filterInvalid: Boolean?
+        viewId: String
     ): Result<Pagination<Pipeline>> {
         val channelCode = if (projectId.startsWith("git_")) ChannelCode.GIT else ChannelCode.getRequestChannelCode()
 
@@ -121,8 +120,7 @@ class AppPipelineViewResourceImpl @Autowired constructor(
             viewId = finalViewId,
             checkPermission = true,
             filterByPipelineName = if (channelCode == ChannelCode.GIT) null else filterByPipelineName,
-            filterByCreator = filterByCreator, filterByLabels = filterByLabels,
-            filterInvalid = filterInvalid ?: true
+            filterByCreator = filterByCreator, filterByLabels = filterByLabels
         )
 
         // gitci 返回值兼容
