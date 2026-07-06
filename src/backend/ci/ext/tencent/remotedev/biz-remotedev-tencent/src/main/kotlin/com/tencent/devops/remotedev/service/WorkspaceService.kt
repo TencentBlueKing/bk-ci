@@ -741,7 +741,8 @@ class WorkspaceService @Autowired constructor(
                     recordEnabled = !allWindows[it.workspaceName]?.enableRecordUser.isNullOrBlank(),
                     vmName = allWindows[it.workspaceName]?.vmName,
                     nodeIp = cdsInfo[detail?.hostIp]?.node ?: "",
-                    regionId = detail?.regionId?.toString()
+                    regionId = detail?.regionId?.toString(),
+                    os = it.os
                 )
             )
         }
@@ -1058,7 +1059,8 @@ class WorkspaceService @Autowired constructor(
                     winConfigId = allWindows[it.workspaceName]?.winConfigId,
                     winConfig = allWindows[it.workspaceName]?.let { i -> allConfig[i.winConfigId.toLong()] },
                     zoneConfig = zone,
-                    currentLoginUsers = loginInfo?.loginUsers ?: emptyList()
+                    currentLoginUsers = loginInfo?.loginUsers ?: emptyList(),
+                    os = it.os
                 )
             }
         )

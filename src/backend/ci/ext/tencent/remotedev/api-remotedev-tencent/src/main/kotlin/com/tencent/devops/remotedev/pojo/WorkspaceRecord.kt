@@ -27,6 +27,7 @@
 
 package com.tencent.devops.remotedev.pojo
 
+import com.tencent.devops.common.api.pojo.OS
 import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDateTime
 
@@ -50,6 +51,7 @@ interface WorkspaceRecordInf {
     val workspaceMountType: WorkspaceMountType
     val ownerType: WorkspaceOwnerType
     val workspaceKind: WorkspaceKind
+    val os: OS?
     val remark: String?
     val labels: List<String>?
     val bakWorkspaceName: String?
@@ -96,6 +98,8 @@ data class WorkspaceRecord(
     override val ownerType: WorkspaceOwnerType,
     @get:Schema(title = "云桌面实例类型")
     override val workspaceKind: WorkspaceKind,
+    @get:Schema(title = "系统")
+    override val os: OS? = null,
     @get:Schema(title = "工作空间备注")
     override val remark: String?,
     @get:Schema(title = "标签")
@@ -150,6 +154,8 @@ data class WorkspaceRecordWithWindows(
     override val ownerType: WorkspaceOwnerType,
     @get:Schema(title = "云桌面实例类型")
     override val workspaceKind: WorkspaceKind,
+    @get:Schema(title = "系统")
+    override val os: OS? = null,
     @get:Schema(title = "工作空间备注")
     override val remark: String?,
     @get:Schema(title = "标签")
