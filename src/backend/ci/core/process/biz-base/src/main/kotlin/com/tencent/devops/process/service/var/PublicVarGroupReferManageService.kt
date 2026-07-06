@@ -1140,7 +1140,7 @@ class PublicVarGroupReferManageService @Autowired constructor(
         groupVars.forEach { varPO ->
             val buildFormProperty = JsonUtil.to(varPO.buildFormProperty, BuildFormProperty::class.java)
             buildFormProperty.varGroupName = groupName
-            buildFormProperty.varGroupVersion = if (varPO.version != -1) version else null
+            buildFormProperty.varGroupVersion = version
             params.add(buildFormProperty)
         }
         return params
