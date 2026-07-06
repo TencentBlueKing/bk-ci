@@ -90,6 +90,9 @@ class TemplateModelTransfer @Autowired constructor(
                     instanceFromTemplate = false,
                     pipelineCreator = yamlInput.userId
                 )
+                model.publicVarGroups = yamlInput.yaml.formatVariableTemplates().map {
+                    PublicVarGroupRef.create(groupName = it.name, versionName = it.version)
+                }
 
                 // 蓝盾引擎会将stageId从1开始顺序强制重写，因此在生成model时保持一致
                 var stageIndex = 1
