@@ -133,20 +133,21 @@ export default defineComponent({
       if (param?.paramType === 'list' && Array.isArray(param.list)) {
         return 'list'
       }
-
+      
       if (!param?.url) return ''
-
-      const [url] = generateReqUrl(param.url, {
+      const urlQueryParams = {
         ...props.atomValue,
         projectId: route.params.projectId,
         pipelineId: route.params.flowId,
-      })
+        buildId: route.params.buildNo,
+      }
+      const [url] = generateReqUrl(param.url, urlQueryParams)
       if (!url) return ''
 
       let finalUrl = url
       const urlQuery = param.urlQuery || {}
       Object.keys(urlQuery).forEach((key, index) => {
-        const value = props.atomValue[key] ?? urlQuery[key]
+        const value = urlQueryParams[key as keyof typeof urlQueryParams] ?? urlQuery[key] ?? ''
         finalUrl += `${index <= 0 ? '?' : '&'}${key}=${value}`
       })
       return finalUrl

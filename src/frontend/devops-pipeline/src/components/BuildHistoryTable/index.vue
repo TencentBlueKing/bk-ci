@@ -678,7 +678,6 @@
     import qrcode from '@/components/devops/qrcode'
     import ArtifactQuality from '@/components/ExecDetail/artifactQuality'
     import VersionDiffDialog from './VersionDiffDialog'
-    import ArtifactDownloadButton from '@/components/ArtifactDownloadButton'
     import { PROCESS_API_URL_PREFIX } from '@/store/constants'
     import {
         BUILD_HISTORY_TABLE_COLUMNS_MAP,
@@ -708,8 +707,7 @@
             TableColumnSetting,
             ArtifactQuality,
             EmptyException,
-            VersionDiffDialog,
-            ArtifactDownloadButton
+            VersionDiffDialog
         },
         props: {
             showLog: {
