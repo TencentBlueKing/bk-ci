@@ -36,6 +36,7 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeSVNWebHookTri
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeTGitWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.RemoteTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.TapdWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.TimerTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
 import org.slf4j.LoggerFactory
@@ -115,6 +116,7 @@ enum class StartType {
                         CodeType.GITLAB.name -> CodeGitlabWebHookTriggerElement.classType
                         CodeType.GITHUB.name -> CodeGithubWebHookTriggerElement.classType
                         CodeType.TGIT.name -> CodeTGitWebHookTriggerElement.classType
+                        CodeType.TAPD.name -> TapdWebHookTriggerElement.classType
                         else -> RemoteTriggerElement.classType
                     }
                 }

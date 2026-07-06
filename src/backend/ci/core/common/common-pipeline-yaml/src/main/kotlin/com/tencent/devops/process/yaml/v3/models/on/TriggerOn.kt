@@ -81,8 +81,14 @@ data class TriggerOn(
     @JsonProperty("scm-code")
     @get:Schema(title = "scm-code")
     var scmCode: String? = null,
-    @get:Schema(title = "tapd")
-    var tapd: List<TapdRule>? = null
+    // 以下三个字段为 TAPD 触发（type == "tapd"）的顶层配置，与代码库触发的 push/tag/mr 平级。
+    @JsonProperty("workspace-id")
+    @get:Schema(title = "workspace-id")
+    var workspaceId: String? = null,
+    @get:Schema(title = "story")
+    var story: TapdRule? = null,
+    @get:Schema(title = "bug")
+    var bug: TapdRule? = null
 ) {
     fun toPre(version: YamlVersion) = when (version) {
         YamlVersion.V2_0 -> toPreV2()
@@ -108,7 +114,8 @@ data class TriggerOn(
         changeSubmit = changeSubmit,
         shelveCommit = shelveCommit,
         shelveSubmit = shelveSubmit,
-        tapd = tapd
+        story = story,
+        bug = bug
     )
 
     private fun toPreV3() = PreTriggerOnV3(
@@ -134,7 +141,9 @@ data class TriggerOn(
         shelveCommit = shelveCommit,
         shelveSubmit = shelveSubmit,
         scmCode = scmCode,
-        tapd = tapd
+        workspaceId = workspaceId,
+        story = story,
+        bug = bug
     )
 
     private fun simpleManual() = when {
@@ -164,7 +173,11 @@ interface IPreTriggerOn : YamlVersionParser {
     val changeContent: Any?
     val shelveCommit: Any?
     val shelveSubmit: Any?
-    val tapd: Any?
+    // 以下三个字段为 TAPD 触发（type == "tapd"）的顶层配置，与代码库触发的 push/tag/mr 平级。
+    @get:Schema(title = "story")
+    val story: Any?
+    @get:Schema(title = "bug")
+    val bug: Any?
 }
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -202,8 +215,10 @@ data class PreTriggerOn(
     @JsonProperty("shelve-submit")
     @get:Schema(title = "shelve-submit")
     override var shelveSubmit: Any? = null,
-    @get:Schema(title = "tapd")
-    override val tapd: Any? = null
+    @get:Schema(title = "story")
+    override val story: Any?,
+    @get:Schema(title = "bug")
+    override val bug: Any?
 ) : IPreTriggerOn {
     override fun yamlVersion() = YamlVersion.V2_0
 }
