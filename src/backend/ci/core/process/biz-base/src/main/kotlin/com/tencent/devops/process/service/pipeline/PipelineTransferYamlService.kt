@@ -35,8 +35,8 @@ import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.db.pojo.ARCHIVE_SHARDING_DSL_CONTEXT
-import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.Model
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.PublicVarGroupReferenceTypeEnum
 import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
@@ -418,6 +418,13 @@ class PipelineTransferYamlService @Autowired constructor(
             templateType = Model::class.java
         )
         val model = templateModelTransfer.yaml2TemplateModel(input)
+        if (model is Model) {
+            publicVarGroupReferManageService.addPublicVarGroupsToParams(
+                model = model,
+                projectId = projectId,
+                userId = userId
+            )
+        }
         val setting = modelTransfer.yaml2Setting(input)
 
         logger.info(watcher.toString())

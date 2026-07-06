@@ -90,6 +90,7 @@ class TemplateModelTransfer @Autowired constructor(
                     instanceFromTemplate = false,
                     pipelineCreator = yamlInput.userId
                 )
+                model.projectId = yamlInput.projectCode
                 model.publicVarGroups = yamlInput.yaml.formatVariableTemplates().map {
                     PublicVarGroupRef.create(groupName = it.name, versionName = it.version)
                 }

@@ -1139,7 +1139,45 @@ class PublicVarGroupReferManageService @Autowired constructor(
             // 查询这些变量组的变量并添加到params末尾
             groupsToAdd.forEach { publicVarGroup ->
                 addVarGroupToParams(
-                    publicVarGroupReferDTO = publicVarGroupReferDTO,
+                    projectId = publicVarGroupReferDTO.projectId,
+                    publicVarGroup = publicVarGroup,
+                    params = params
+                )
+            }
+        }
+    }
+
+    /**
+     * 仅将公共变量组成员解析写回 TriggerContainer.params，不记录引用关系。
+     * 适用于模板 YAML 转 Model 等无有效 referId 的场景。
+     * 引用关系记录需在模板保存（持有 templateId）时单独处理。
+     */
+    fun addPublicVarGroupsToParams(
+        model: Model,
+        projectId: String,
+        userId: String
+    ) {
+        val publicVarGroups = model.publicVarGroups
+        if (publicVarGroups.isNullOrEmpty()) {
+            logger.info("addPublicVarGroupsToParams: no public var groups found, skip handling")
+            return
+        }
+
+        val params = model.getTriggerContainer().params
+        // 查出params中已存在的变量组名称
+        val existingGroupNames = params
+            .mapNotNull { it.varGroupName }
+            .toSet()
+
+        // 对比publicVarGroups，找出params中不存在的变量组
+        val groupsToAdd = publicVarGroups.filter { publicVarGroup ->
+            !existingGroupNames.contains(publicVarGroup.groupName)
+        }
+        if (groupsToAdd.isNotEmpty()) {
+            logger.info("addPublicVarGroupsToParams: adding groups $groupsToAdd for project $projectId by user $userId")
+            groupsToAdd.forEach { publicVarGroup ->
+                addVarGroupToParams(
+                    projectId = projectId,
                     publicVarGroup = publicVarGroup,
                     params = params
                 )
@@ -1151,7 +1189,7 @@ class PublicVarGroupReferManageService @Autowired constructor(
      * 添加变量组到参数列表
      */
     private fun addVarGroupToParams(
-        publicVarGroupReferDTO: PublicVarGroupReferDTO,
+        projectId: String,
         publicVarGroup: PublicVarGroupRef,
         params: MutableList<BuildFormProperty>
     ): MutableList<BuildFormProperty> {
@@ -1162,7 +1200,7 @@ class PublicVarGroupReferManageService @Autowired constructor(
         // 使用当前项目ID查询变量组信息
         val varGroupRecord = publicVarGroupDao.getRecordByGroupName(
             dslContext = dslContext,
-            projectId = publicVarGroupReferDTO.projectId,
+            projectId = projectId,
             groupName = groupName,
             version = version,
             versionName = versionName
@@ -1174,7 +1212,7 @@ class PublicVarGroupReferManageService @Autowired constructor(
         // 使用当前项目ID查询变量组中的变量
         val groupVars = publicVarDao.listVarByGroupName(
             dslContext = dslContext,
-            projectId = publicVarGroupReferDTO.projectId,
+            projectId = projectId,
             groupName = groupName,
             version = varGroupRecord.version
         )
