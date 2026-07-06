@@ -128,7 +128,8 @@ class WorkspaceDao {
                     workspace.workspaceMountType.name,
                     workspace.workspaceSystemType.name,
                     workspace.ownerType.name,
-                    workspace.workspaceKind.value,
+                    (workspace.workspaceKind
+                        ?: WorkspaceKind.defaultByOwnerType(workspace.ownerType)).value,
                     organization.projectName,
                     organization.businessLineName ?: "",
                     workspace.bakWorkspaceName,
