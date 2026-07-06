@@ -141,7 +141,7 @@
         watch
     } from 'vue'
     import { PROCESS_API_URL_PREFIX } from '@/store/constants'
-    import { convertMStoString } from '@/utils/util'
+    import { convertMStoString, convertTime } from '@/utils/util'
 
     export default defineComponent({
         name: 'ProgressDetailPanel',
@@ -281,7 +281,7 @@
                 if (!time) return '--'
                 const date = new Date(time)
                 if (Number.isNaN(date.getTime())) return time
-                return date.toLocaleString()
+                return convertTime(date.getTime())
             }
 
             const formatDurationValue = (duration) => {
