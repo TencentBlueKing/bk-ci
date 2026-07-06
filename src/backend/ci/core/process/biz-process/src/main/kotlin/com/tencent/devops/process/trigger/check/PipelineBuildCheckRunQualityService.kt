@@ -7,6 +7,7 @@ import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.quality.pojo.enums.QualityOperation
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_TYPE
 import com.tencent.devops.plugin.codecc.CodeccUtils
 import com.tencent.devops.plugin.codecc.CodeccUtils.BK_CI_CODECC_REPORT_URL
 import com.tencent.devops.plugin.codecc.CodeccUtils.BK_CI_CODECC_TASK_ID
@@ -81,9 +82,10 @@ class PipelineBuildCheckRunQualityService @Autowired constructor(
             eventStatus,
             DateTimeUtil.formatMilliTime(System.currentTimeMillis() - startTime),
             StartType.toReadableString(
-                triggerType,
-                null,
-                I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                type = triggerType,
+                channelCode = null,
+                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
+                webhookType = variables[PIPELINE_WEBHOOK_TYPE]
             ),
             pipelineName,
             detailUrl,

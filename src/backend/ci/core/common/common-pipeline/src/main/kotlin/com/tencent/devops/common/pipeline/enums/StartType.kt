@@ -51,12 +51,24 @@ enum class StartType {
     TRIGGER_EVENT;
 
     companion object {
-        fun toReadableString(type: String, channelCode: ChannelCode?, language: String): String {
+        fun toReadableString(
+            type: String,
+            channelCode: ChannelCode?,
+            language: String,
+            webhookType: String? = null
+        ): String {
             var params: Array<String>? = null
             val name = when (type) {
                 StartType.MANUAL.name -> MANUAL.name
                 StartType.TIME_TRIGGER.name -> TIME_TRIGGER.name
-                StartType.WEB_HOOK.name -> WEB_HOOK.name
+                StartType.WEB_HOOK.name -> {
+                    // 针对非代码库类型的 Webhook（如 TAPD）区分展示文案，避免统一显示为"代码变更"
+                    if (webhookType == CodeType.TAPD.name) {
+                        "${WEB_HOOK.name}_${CodeType.TAPD.name}"
+                    } else {
+                        WEB_HOOK.name
+                    }
+                }
                 StartType.REMOTE.name -> REMOTE.name
                 StartType.SERVICE.name -> {
                     if (channelCode != null) {
