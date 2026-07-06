@@ -1173,7 +1173,7 @@ class PipelineTemplateMigrateService(
                     param
                 }
             }
-            triggerContainer.params = fixedParams
+            triggerContainer.params = fixedParams.toMutableList()
             pipelineTemplateResourceService.update(
                 record = PipelineTemplateResourceUpdateInfo(
                     params = fixedParams,
