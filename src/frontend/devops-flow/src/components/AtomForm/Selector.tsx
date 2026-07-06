@@ -54,10 +54,19 @@ export default defineComponent({
   emits: ['change', 'update:value'],
   setup(props, { emit, attrs }) {
     const { t } = useI18n()
+    const staticOptions = computed(() => {
+      // whether list or options is provided, use the static list, due to the list and options has default value [], which is not empty array
+      if (Array.isArray(props.list) && props.list.length > 0) {
+        return props.list
+      }
+      if (Array.isArray(props.options) && props.options.length > 0) {
+        return props.options
+      }
+    })
     const mergedConf: SelectDataConf = {
       ...(attrs as SelectDataConf),
       ...props.optionsConf,
-      options: props.list ?? props.options ?? props.optionsConf.options,
+      options: staticOptions.value ?? props.optionsConf.options,
       atomValue: props.atomValue,
       multiSelect: props.multiSelect,
     }
