@@ -71,7 +71,7 @@
                             :key="index"
                             class="stage-progress-step"
                         >
-                            [{{ task.jobExecutionOrder }}] {{ task.taskName }}: {{ formatPercent(task.taskProgressRete) }}
+                            [{{ task.taskExecutionOrder }}] {{ task.taskName }}: {{ formatPercent(task.taskProgressRete) }}
                         </p>
                     </template>
                     <template v-if="currentProgress.hasDetail">
