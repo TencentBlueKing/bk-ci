@@ -46,11 +46,13 @@ import org.jooq.Field
 import org.jooq.Record
 import org.jooq.Record1
 import org.jooq.Record2
+import org.jooq.Record5
 import org.jooq.Result
 import org.jooq.SelectConditionStep
 import org.jooq.SelectJoinStep
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
+import java.time.LocalDateTime
 
 @Repository
 class MarketStoreQueryDao {
@@ -117,6 +119,66 @@ class MarketStoreQueryDao {
         )
         val offset = (storeInfoQuery.page - 1) * storeInfoQuery.pageSize
         return baseStep.limit(offset, storeInfoQuery.pageSize)
+            .skipCheck()
+            .fetch()
+    }
+
+    /**
+     * 轻量查询：返回满足可见范围条件的组件排序字段(storeCode, name, publisher, createTime, updateTime)，
+     * 用于"可见组件 + 纯调试组件"统一排序时的排序键来源。复用 [applyConditionFilter] 保证可见范围口径与 [list] 完全一致，
+     * 仅投影排序所需的少量列以降低 IO(下载量等统计型排序键由统计服务单独提供)。
+     */
+    fun listStoreSortKeys(
+        dslContext: DSLContext,
+        userDeptList: List<Int>,
+        storeInfoQuery: StoreInfoQuery
+    ): Result<Record5<String, String, String, LocalDateTime, LocalDateTime>> {
+        val tStoreBase = TStoreBase.T_STORE_BASE
+        val tStoreBaseFeature = TStoreBaseFeature.T_STORE_BASE_FEATURE
+        val tStoreDeptRel = TStoreDeptRel.T_STORE_DEPT_REL
+        val baseStep = dslContext.selectDistinct(
+            tStoreBase.STORE_CODE,
+            tStoreBase.NAME,
+            tStoreBase.PUBLISHER,
+            tStoreBase.CREATE_TIME,
+            tStoreBase.UPDATE_TIME
+        )
+            .from(tStoreBase)
+            .leftJoin(tStoreBaseFeature)
+            .on(
+                tStoreBase.STORE_CODE.eq(tStoreBaseFeature.STORE_CODE)
+                    .and(tStoreBase.STORE_TYPE.eq(tStoreBaseFeature.STORE_TYPE))
+            )
+        applyConditionFilter(
+            dslContext = dslContext,
+            baseStep = baseStep,
+            tStoreBase = tStoreBase,
+            tStoreDeptRel = tStoreDeptRel,
+            userDeptList = userDeptList,
+            storeInfoQuery = storeInfoQuery
+        )
+        return baseStep.skipCheck().fetch()
+    }
+
+    /**
+     * 按组件代码批量回查已发布版本的明细记录(与 [list] 返回结构一致，可直接用于富化)。
+     * 用于"统一排序分页"后仅对当前页命中的可见组件回查明细，避免对全量组件富化。
+     */
+    fun listReleasedByStoreCodes(
+        dslContext: DSLContext,
+        storeType: StoreTypeEnum,
+        storeCodes: Collection<String>
+    ): Result<out Record> {
+        val tStoreBase = TStoreBase.T_STORE_BASE
+        val tStoreBaseFeature = TStoreBaseFeature.T_STORE_BASE_FEATURE
+        return createBaseStep(dslContext)
+            .where(
+                tStoreBase.STORE_TYPE.eq(storeType.type.toByte())
+                    .and(tStoreBase.STORE_CODE.`in`(storeCodes))
+                    .and(tStoreBase.STATUS.eq(StoreStatusEnum.RELEASED.name))
+                    .and(tStoreBase.LATEST_FLAG.eq(true))
+                    .and(tStoreBaseFeature.SHOW_FLAG.eq(true))
+            )
             .skipCheck()
             .fetch()
     }
