@@ -376,7 +376,12 @@ class EnvService @Autowired constructor(
         val tagNodeCount = envTagDao.batchEnvTagNodeCount(
             dslContext = dslContext,
             envIds = envRecordList.filter { it.envNodeType == EnvNodeType.TAG.name }.map { it.envId }.toSet(),
-            projectId = projectId
+            projectId = projectId,
+            nodeType = if (createMode == true) {
+                setOf(NodeType.CREATE.name)
+            } else {
+                setOf(NodeType.THIRDPARTY.name)
+            }
         )
         val nodeCountMap = envNodeDao.batchCount(
             dslContext = dslContext,
@@ -427,7 +432,8 @@ class EnvService @Autowired constructor(
         val tagNodeCount = envTagDao.batchEnvTagNodeCount(
             dslContext = dslContext,
             envIds = envRecordList.filter { it.envNodeType == EnvNodeType.TAG.name }.map { it.envId }.toSet(),
-            projectId = projectId
+            projectId = projectId,
+            nodeType = setOf(NodeType.CMDB.name)
         )
         val nodeCountMap = envNodeDao.batchCount(
             dslContext = dslContext,
