@@ -102,6 +102,7 @@ export default defineConfig(({ mode }) => {
     build: {
       outDir: path.resolve(__dirname, `../frontend/${PUBLIC_PATH}`),
       emptyOutDir: true,
+    
       rollupOptions: {
         output: {
           manualChunks: undefined,

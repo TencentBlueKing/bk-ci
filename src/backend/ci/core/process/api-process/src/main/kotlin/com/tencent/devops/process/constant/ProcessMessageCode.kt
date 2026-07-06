@@ -150,7 +150,8 @@ object ProcessMessageCode {
     const val MODEL_ATOMCODE_NOT_EXSIT = "2101059" // 流水线内包含插件市场不存在的插件
     const val QUERY_USER_INFO_FAIL = "2101060" // 获取用户信息失败
     const val PROJECT_NOT_EXIST = "2101061" // 项目不存在
-    const val ERROR_ATOM_RUN_BUILD_ENV_INVALID = "2101062" // 流水线: 插件[{0}]不能在该环境下运行
+    // 流水线: Stage[{0}]的Job[{1}]下的插件[{2}]与该Job的运行环境不匹配，不能运行
+    const val ERROR_ATOM_RUN_BUILD_ENV_INVALID = "2101062"
     const val ERROR_TEMPLATE_PIPELINE_IS_INSTANCING = "2101063" // 流水线: 模板下的流水线实例{0}正在更新中，请稍后再试
     const val ERROR_FINALLY_STAGE = "2101064" // 流水线: 每个Model只能包含一个FinallyStage，并且处于最后位置
     const val ERROR_FINALLY_STAGE_JOB_CONDITION = "2101065" // 流水线: finally stage下的[{0}]Job运行条件配置错误: {1}
@@ -479,20 +480,14 @@ object ProcessMessageCode {
     const val ERROR_PIPELINE_COMMON_VAR_GROUP_REFER_COUNT_UPDATE_FAILED = "2101364" // 变量组引用计数更新失败
     const val ERROR_PIPELINE_COMMON_VAR_GROUP_REFER_QUERY_FAILED = "2101365" // 变量组引用信息查询失败
     const val ERROR_PUBLIC_VAR_GROUP_ADD_FAILED = "2101366" // 添加公共变量组({0})失败
-    const val ERROR_CALLBACK_URL_INTERNAL_HOST = "2101376" // 回调URL[{0}]指向内网/元数据地址，禁止使用以防止SSRF攻击
     const val ERROR_PUBLIC_VAR_GROUP_DELETE_FAILED = "2101367" // 删除公共变量组({0})失败
     const val ERROR_PUBLIC_VAR_GROUP_GET_VARIABLES_FAILED = "2101368" // 获取公共变量组({0})的变量失败
-    const val BUILD_MSG_TRIGGER_EVENT = "2101382" // 通用事件触发
     const val ERROR_PUBLIC_VAR_GROUP_LIST_PIPELINE_VARIABLES_FAILED = "2101369" // 获取流水线变量失败(项目:{0}, 引用ID:{1})
-    const val ERROR_PIPELINE_AUTH_USER_NOT_EXISTS = "2101383" // 流水线{0}的权限代持人不存在
     const val ERROR_PUBLIC_VAR_GROUP_LIST_PROJECT_VAR_GROUP_FAILED = "2101370" // 获取项目({0})的公共变量组信息失败
-    const val ERROR_PIPELINE_USER_NOT_VISIBLE = "2101384" // 用户({0})不在流水线({1})的可见范围内
     const val ERROR_PUBLIC_VAR_GROUP_REFER_LOCK_ACQUIRE_FAILED = "2101371" // 获取公共变量组引用锁失败，请稍后重试
     const val ERROR_PUBLIC_VAR_GROUP_YAML_MISSING_FIELD = "2101372" // 公共变量组YAML缺少必填字段 {0}
     const val ERROR_PUBLIC_VAR_GROUP_YAML_FORMAT_ERROR = "2101373" // 公共变量组YAML格式错误
     const val ERROR_PUBLIC_VAR_GROUP_IS_EXIST = "2101374" // 流水线公共变量组({0})已存在
-    // 模型变量引用表达式不合规：仅允许双大括号${{xxx}}，且前缀须为 variables./stages./jobs./steps.。不合规项（含位置 positionPath）：{0}
-    const val ERROR_PIPELINE_MODEL_VAR_REF_INVALID = "2101375"
     const val ERROR_TEMPLATE_INSTANCE_OPTIONAL_PARAM_OVERRIDDEN = "2101378" // 实例化异常：流水线其他变量[{0}]默认值被改成模版默认值,请联系助手分析
     // YAML文件[{0}]已绑定其他流水线[{1}]，不能重命名
     const val ERROR_PAC_YAML_FILE_BINDTO_OTHER_PIPELINE = "2101379"
@@ -502,8 +497,21 @@ object ProcessMessageCode {
     const val ERROR_NOT_FOUND_PIPELINE_VERSION_EXISTS_BY_BRANCH = "2101381"
     const val ERROR_PIPELINE_IS_NOT_PAC = "2101389" // [{0}]不是PAC流水线
 
+    // 回调URL[{0}]指向内网/元数据地址，禁止使用以防止SSRF攻击
+    const val ERROR_CALLBACK_URL_INTERNAL_HOST = "2101366"
+
+    const val BUILD_MSG_TRIGGER_EVENT = "2101368" // 通用事件触发
+    // 流水线{0}的权限代持人不存在
+    const val ERROR_PIPELINE_AUTH_USER_NOT_EXISTS = "2101369"
+    // 用户({0})不在流水线({1})的可见范围内
+    const val ERROR_PIPELINE_USER_NOT_VISIBLE = "2101370"
+
+    // 模型变量引用表达式不合规：单花括号不得以 context 前缀开头；双花括号须以前缀开头或为合法表达式函数。不合规项：{0}
+    const val ERROR_PIPELINE_MODEL_VAR_REF_INVALID = "2101376"
+
     // 构建执行相关错误码（2101500-2101599）
     const val ERROR_PIPELINE_START_NODE_NO_PERMISSION = "2101500" // 用户[{0}]没有节点[{1}]的操作权限，无法启动流水线
+    const val ERROR_PIPELINE_VERSION_RECYCLED = "2101501" // 流水线版本[{0}]已被回收，无法启动构建，请使用最新版本重试
 
     // 批量任务
     const val ERROR_PIPELINE_BATCH_TASK_NOT_EXISTS = "2101650" // 流水线批量任务{0}不存在

@@ -48,7 +48,7 @@ class CreateStreamTriggerSupportService constructor(
      * 获取节点列表
      */
     fun fetchAllNodeEnvList(
-        projectId: String,
+        projectId: String?,
         workspaceName: String,
         userId: String
     ): List<EnvData> {
