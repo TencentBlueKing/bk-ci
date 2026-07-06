@@ -74,6 +74,14 @@ class TencentTapdItemService @Autowired constructor(
         workspaceId = workspaceId
     ).data
 
+    override fun getWorkspaceInfo(
+        workspaceId: String
+    ) = client.getScm(ServiceTapdResource::class).getWorkspaceInfo(
+        apiUrl = tapdProperties.apiUrl,
+        authorToken = buildAuthorToken(),
+        workspaceId = workspaceId
+    ).data
+
     /**
      * 基于 TAPD 应用的 clientId/clientSecret 构造 Basic Authorization 头
      */
