@@ -1884,7 +1884,8 @@
     background: #fff;
 }
 .stage-progress-task-item {
-    display: block;
+    display: flex;
+    align-items: center;
     width: 100%;
     height: 36px;
     padding: 0 16px;
@@ -1892,10 +1893,14 @@
     font-size: 12px;
     color: $fontWeightColor;
     cursor: pointer;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
     box-sizing: border-box;
+    span {
+        flex: 1;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
     &:hover,
     &.active {
         background: $primaryLightColor;
