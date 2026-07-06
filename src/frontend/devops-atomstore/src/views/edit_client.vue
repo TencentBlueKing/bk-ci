@@ -32,7 +32,7 @@
                     </bk-form-item>
                 </div>
 
-                <!-- <div class="network-strategy">
+                <div class="network-strategy">
                     <p class="section-title">{{ $t('store.安装信息') }}</p>
                     <bk-form-item
                         :label="$t('store.安装类型')"
@@ -62,7 +62,7 @@
                             :clearable="true"
                         />
                     </bk-form-item>
-                </div> -->
+                </div>
 
                 <div class="version-info">
                     <p class="section-title">{{ $t('store.版本信息') }}</p>
@@ -164,10 +164,10 @@
         needVisitedSiteInfos: [],
     })
 
-    // const installInfos = ref({
-    //     installType: 'SILENT',
-    //     installParams: '',
-    // })
+    const installInfos = ref({
+        installType: 'SILENT',
+        installParams: '',
+    })
 
     const versionInfo = ref({
         publisher: '',
@@ -183,7 +183,7 @@
         ...basicInfo.value,
         ...versionInfo.value,
         ...netPolicyInfo.value,
-        // ...installInfos.value,
+        ...installInfos.value,
         urlScheme: urlScheme.value,
         hasPackage: hasPackage.value,
     }))
@@ -330,10 +330,10 @@
                 needVisitedSiteInfos: latestVersionDetail.value.extData?.netPolicyInfo?.needVisitedSiteInfos ?? [],
             })
 
-            // Object.assign(installInfos.value, {
-            //     installType: latestVersionDetail.value.extData?.installType ?? 'SILENT',
-            //     installParams: latestVersionDetail.value.extData?.installParams ?? '',
-            // })
+            Object.assign(installInfos.value, {
+                installType: latestVersionDetail.value.extData?.installType ?? 'SILENT',
+                installParams: latestVersionDetail.value.extData?.installParams ?? '',
+            })
 
             urlScheme.value = latestVersionDetail.value.extData?.urlScheme ?? ''
         } catch (error) {
@@ -369,7 +369,7 @@
                         extBaseInfo: {
                             urlScheme: urlScheme.value,
                             netPolicyInfo: netPolicyInfo.value,
-                            // ...installInfos.value,
+                            ...installInfos.value,
                         },
                     },
                 })

@@ -959,7 +959,6 @@
                     return this.$store.dispatch('store/editAtom', {
                         projectCode: this.atomForm.projectCode,
                         params: params,
-                        initProject: this.atomForm.initProjectCode
                     }).then((res) => {
                         this.$bkMessage({ message: this.$t('store.提交成功'), theme: 'success' })
                         if (res) this.toPublishProgress(this.$route.name === 'shelfAtom' ? 'shelf' : 'upgrade', res)
