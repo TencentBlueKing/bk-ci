@@ -498,16 +498,16 @@ object ProcessMessageCode {
     const val ERROR_PIPELINE_IS_NOT_PAC = "2101389" // [{0}]不是PAC流水线
 
     // 回调URL[{0}]指向内网/元数据地址，禁止使用以防止SSRF攻击
-    const val ERROR_CALLBACK_URL_INTERNAL_HOST = "2101366"
+    const val ERROR_CALLBACK_URL_INTERNAL_HOST = "2101376"
 
-    const val BUILD_MSG_TRIGGER_EVENT = "2101368" // 通用事件触发
+    const val BUILD_MSG_TRIGGER_EVENT = "2101382" // 通用事件触发
     // 流水线{0}的权限代持人不存在
-    const val ERROR_PIPELINE_AUTH_USER_NOT_EXISTS = "2101369"
+    const val ERROR_PIPELINE_AUTH_USER_NOT_EXISTS = "2101383"
     // 用户({0})不在流水线({1})的可见范围内
-    const val ERROR_PIPELINE_USER_NOT_VISIBLE = "2101370"
+    const val ERROR_PIPELINE_USER_NOT_VISIBLE = "2101384"
 
     // 模型变量引用表达式不合规：单花括号不得以 context 前缀开头；双花括号须以前缀开头或为合法表达式函数。不合规项：{0}
-    const val ERROR_PIPELINE_MODEL_VAR_REF_INVALID = "2101376"
+    const val ERROR_PIPELINE_MODEL_VAR_REF_INVALID = "2101377"
 
     // 构建执行相关错误码（2101500-2101599）
     const val ERROR_PIPELINE_START_NODE_NO_PERMISSION = "2101500" // 用户[{0}]没有节点[{1}]的操作权限，无法启动流水线
