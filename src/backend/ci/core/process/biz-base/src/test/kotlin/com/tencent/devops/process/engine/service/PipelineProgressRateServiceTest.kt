@@ -114,7 +114,25 @@ class PipelineProgressRateServiceTest {
                 mutableMapOf("progressRate" to 0.1, "progressDetail" to progressDetail)
             )
         )
-        every { pipelineTaskService.getAllBuildTask(PROJECT_ID, BUILD_ID) } returns listOf(buildTask())
+        every { pipelineTaskService.getAllBuildTask(PROJECT_ID, BUILD_ID) } returns listOf(
+            buildTask(
+                taskId = "success-task",
+                taskName = "已完成步骤",
+                containerId = "container-1",
+                status = BuildStatus.SUCCEED
+            ),
+            buildTask()
+        )
+        every {
+            buildRecordService.getContainerOrderInStage(
+                projectId = PROJECT_ID,
+                pipelineId = PIPELINE_ID,
+                buildId = BUILD_ID,
+                executeCount = 1,
+                stageId = STAGE_ID,
+                containerId = "container-1"
+            )
+        } returns 0
         every {
             buildRecordService.getContainerOrderInStage(
                 projectId = PROJECT_ID,
@@ -140,9 +158,226 @@ class PipelineProgressRateServiceTest {
         }
 
         Assertions.assertEquals(0.8334, result.stageProgressRete)
-        Assertions.assertEquals(0.6667, result.taskProgressList?.first()?.taskProgressRete)
-        Assertions.assertEquals("编译进度", result.taskProgressList?.first()?.progressDetail?.progress?.title)
-        Assertions.assertEquals("编译阶段时间线", result.taskProgressList?.first()?.progressDetail?.timeline?.title)
+        Assertions.assertEquals(2, result.taskProgressList?.size)
+        val runningTaskProgress = result.taskProgressList?.first { it.taskName == "编译" }
+        Assertions.assertEquals(0.6667, runningTaskProgress?.taskProgressRete)
+        Assertions.assertEquals("编译进度", runningTaskProgress?.progressDetail?.progress?.title)
+        Assertions.assertEquals("编译阶段时间线", runningTaskProgress?.progressDetail?.timeline?.title)
+    }
+
+    @Test
+    fun calculateStageProgressRateIncludesCompletedTasksWithProgressDetailWhenRunningTaskExists() {
+        val completedProgressDetail = BuildTaskProgressDetail(
+            progress = BuildTaskProgressSummary(value = 1.0)
+        )
+        val runningProgressDetail = BuildTaskProgressDetail(
+            progress = BuildTaskProgressSummary(value = 0.3758)
+        )
+        every { pipelineRuntimeService.getBuildInfo(PROJECT_ID, BUILD_ID) } returns buildInfo()
+        every {
+            buildRecordTaskDao.getLatestNormalRecords(
+                dslContext = dslContext,
+                projectId = PROJECT_ID,
+                buildId = BUILD_ID,
+                executeCount = 1,
+                matrixContainerIds = emptyList(),
+                stageId = STAGE_ID
+            )
+        } returns listOf(
+            buildRecordTask(
+                taskId = "task-completed",
+                containerId = "container-1",
+                status = BuildStatus.SUCCEED,
+                taskVar = mutableMapOf("progressRate" to 1.0, "progressDetail" to completedProgressDetail),
+                endTime = LocalDateTime.of(2026, 4, 1, 10, 30)
+            ),
+            buildRecordTask(
+                taskId = TASK_ID,
+                containerId = "container-2",
+                status = BuildStatus.RUNNING,
+                taskVar = mutableMapOf("progressRate" to 0.1, "progressDetail" to runningProgressDetail)
+            )
+        )
+        every { pipelineTaskService.getAllBuildTask(PROJECT_ID, BUILD_ID) } returns listOf(
+            buildTask(taskId = "task-completed", taskName = "已完成步骤", containerId = "container-1"),
+            buildTask()
+        )
+        every {
+            buildRecordService.getContainerOrderInStage(
+                projectId = PROJECT_ID,
+                pipelineId = PIPELINE_ID,
+                buildId = BUILD_ID,
+                executeCount = 1,
+                stageId = STAGE_ID,
+                containerId = "container-1"
+            )
+        } returns 0
+        every {
+            buildRecordService.getContainerOrderInStage(
+                projectId = PROJECT_ID,
+                pipelineId = PIPELINE_ID,
+                buildId = BUILD_ID,
+                executeCount = 1,
+                stageId = STAGE_ID,
+                containerId = "container-2"
+            )
+        } returns 1
+
+        val result = service.calculateStageProgressRate(
+            projectId = PROJECT_ID,
+            pipelineId = PIPELINE_ID,
+            buildId = BUILD_ID,
+            stageId = STAGE_ID
+        )
+
+        Assertions.assertEquals(0.6879, result.stageProgressRete)
+        Assertions.assertEquals(2, result.taskProgressList?.size)
+        Assertions.assertEquals(listOf("已完成步骤", "编译"), result.taskProgressList?.map { it.taskName })
+        Assertions.assertEquals(
+            listOf(1.0, 0.3758),
+            result.taskProgressList?.map { it.taskProgressRete }
+        )
+    }
+
+    @Test
+    fun calculateStageProgressRateIncludesCompletedTasksWithoutProgressDetailAsCompleted() {
+        every { pipelineRuntimeService.getBuildInfo(PROJECT_ID, BUILD_ID) } returns buildInfo()
+        every {
+            buildRecordTaskDao.getLatestNormalRecords(
+                dslContext = dslContext,
+                projectId = PROJECT_ID,
+                buildId = BUILD_ID,
+                executeCount = 1,
+                matrixContainerIds = emptyList(),
+                stageId = STAGE_ID
+            )
+        } returns listOf(
+            buildRecordTask(
+                taskId = "task-completed",
+                containerId = "container-1",
+                status = BuildStatus.SUCCEED,
+                taskVar = mutableMapOf(),
+                endTime = LocalDateTime.of(2026, 4, 1, 10, 30)
+            ),
+            buildRecordTask(
+                taskId = TASK_ID,
+                containerId = "container-2",
+                status = BuildStatus.RUNNING,
+                taskVar = mutableMapOf("progressRate" to 0.3758)
+            )
+        )
+        every { pipelineTaskService.getAllBuildTask(PROJECT_ID, BUILD_ID) } returns listOf(
+            buildTask(taskId = "task-completed", taskName = "已完成步骤", containerId = "container-1"),
+            buildTask()
+        )
+        every {
+            buildRecordService.getContainerOrderInStage(
+                projectId = PROJECT_ID,
+                pipelineId = PIPELINE_ID,
+                buildId = BUILD_ID,
+                executeCount = 1,
+                stageId = STAGE_ID,
+                containerId = "container-1"
+            )
+        } returns 0
+        every {
+            buildRecordService.getContainerOrderInStage(
+                projectId = PROJECT_ID,
+                pipelineId = PIPELINE_ID,
+                buildId = BUILD_ID,
+                executeCount = 1,
+                stageId = STAGE_ID,
+                containerId = "container-2"
+            )
+        } returns 1
+
+        val result = service.calculateStageProgressRate(
+            projectId = PROJECT_ID,
+            pipelineId = PIPELINE_ID,
+            buildId = BUILD_ID,
+            stageId = STAGE_ID
+        )
+
+        Assertions.assertEquals(0.6879, result.stageProgressRete)
+        Assertions.assertEquals(2, result.taskProgressList?.size)
+        Assertions.assertEquals(listOf("已完成步骤", "编译"), result.taskProgressList?.map { it.taskName })
+        Assertions.assertEquals(
+            listOf(1.0, 0.3758),
+            result.taskProgressList?.map { it.taskProgressRete }
+        )
+    }
+
+    @Test
+    fun calculateStageProgressRateIncludesFailedTasksAsCompleted() {
+        every { pipelineRuntimeService.getBuildInfo(PROJECT_ID, BUILD_ID) } returns buildInfo()
+        every {
+            buildRecordTaskDao.getLatestNormalRecords(
+                dslContext = dslContext,
+                projectId = PROJECT_ID,
+                buildId = BUILD_ID,
+                executeCount = 1,
+                matrixContainerIds = emptyList(),
+                stageId = STAGE_ID
+            )
+        } returns listOf(
+            buildRecordTask(
+                taskId = "task-failed",
+                containerId = "container-1",
+                status = BuildStatus.FAILED,
+                taskVar = mutableMapOf(),
+                endTime = LocalDateTime.of(2026, 4, 1, 10, 30)
+            ),
+            buildRecordTask(
+                taskId = TASK_ID,
+                containerId = "container-2",
+                status = BuildStatus.RUNNING,
+                taskVar = mutableMapOf("progressRate" to 0.3758)
+            )
+        )
+        every { pipelineTaskService.getAllBuildTask(PROJECT_ID, BUILD_ID) } returns listOf(
+            buildTask(
+                taskId = "task-failed",
+                taskName = "失败步骤",
+                containerId = "container-1",
+                status = BuildStatus.FAILED
+            ),
+            buildTask()
+        )
+        every {
+            buildRecordService.getContainerOrderInStage(
+                projectId = PROJECT_ID,
+                pipelineId = PIPELINE_ID,
+                buildId = BUILD_ID,
+                executeCount = 1,
+                stageId = STAGE_ID,
+                containerId = "container-1"
+            )
+        } returns 0
+        every {
+            buildRecordService.getContainerOrderInStage(
+                projectId = PROJECT_ID,
+                pipelineId = PIPELINE_ID,
+                buildId = BUILD_ID,
+                executeCount = 1,
+                stageId = STAGE_ID,
+                containerId = "container-2"
+            )
+        } returns 1
+
+        val result = service.calculateStageProgressRate(
+            projectId = PROJECT_ID,
+            pipelineId = PIPELINE_ID,
+            buildId = BUILD_ID,
+            stageId = STAGE_ID
+        )
+
+        Assertions.assertEquals(0.6879, result.stageProgressRete)
+        Assertions.assertEquals(2, result.taskProgressList?.size)
+        Assertions.assertEquals(listOf("失败步骤", "编译"), result.taskProgressList?.map { it.taskName })
+        Assertions.assertEquals(
+            listOf(1.0, 0.3758),
+            result.taskProgressList?.map { it.taskProgressRete }
+        )
     }
 
     @Test
@@ -250,20 +485,25 @@ class PipelineProgressRateServiceTest {
         timestamps = emptyMap<BuildTimestampType, BuildRecordTimeStamp>()
     )
 
-    private fun buildTask() = PipelineBuildTask(
+    private fun buildTask(
+        taskId: String = TASK_ID,
+        taskName: String = "编译",
+        containerId: String = "container-2",
+        status: BuildStatus = BuildStatus.RUNNING
+    ) = PipelineBuildTask(
         projectId = PROJECT_ID,
         pipelineId = PIPELINE_ID,
         buildId = BUILD_ID,
         stageId = STAGE_ID,
-        containerId = "container-2",
+        containerId = containerId,
         containerHashId = "container-hash",
         containerType = "VM",
         taskSeq = 1,
-        taskId = TASK_ID,
-        taskName = "编译",
+        taskId = taskId,
+        taskName = taskName,
         taskType = "linuxScript",
         taskAtom = "script",
-        status = BuildStatus.RUNNING,
+        status = status,
         taskParams = mutableMapOf(),
         additionalOptions = null,
         starter = "user",

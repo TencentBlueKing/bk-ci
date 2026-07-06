@@ -105,8 +105,9 @@ class PipelineProgressRateService constructor(
             stageId = stageId,
             matrixContainerIds = emptyList()
         )
-        val completedTasks = stageTasks.filter {
-            BuildStatus.parse(it.status).isSuccess()
+        val finishedTasks = stageTasks.filter {
+            val taskStatus = BuildStatus.parse(it.status)
+            taskStatus.isSuccess() || taskStatus.isFailure()
         }
         val runningTasks = stageTasks.filter {
             BuildStatus.parse(it.status).isRunning()
@@ -116,17 +117,17 @@ class PipelineProgressRateService constructor(
         }
         val runningTaskProgresses = runningTasks.map(::toTaskProgress)
         val runningTaskTotalProgressRate = runningTaskProgresses.sumOf { it.progressRate }
-        val stageProgressRate = (completedTasks.size + runningTaskTotalProgressRate) / stageTasks.size
+        val stageProgressRate = (finishedTasks.size + runningTaskTotalProgressRate) / stageTasks.size
+        val completedTaskProgresses = finishedTasks
+            .map(::toCompletedTaskProgress)
+            .sortedWith(
+                compareByDescending<RunningTaskProgress> { it.record.endTime ?: LocalDateTime.MIN }
+                    .thenByDescending { it.record.taskSeq }
+            )
         val taskProgressesForList = if (runningTaskProgresses.isNotEmpty()) {
-            runningTaskProgresses
+            runningTaskProgresses + completedTaskProgresses
         } else {
-            completedTasks
-                .map(::toTaskProgress)
-                .filter { it.progressDetail != null }
-                .sortedWith(
-                    compareByDescending<RunningTaskProgress> { it.record.endTime ?: LocalDateTime.MIN }
-                        .thenByDescending { it.record.taskSeq }
-                )
+            completedTaskProgresses
         }
         val taskProgressList = buildTaskProgressList(
             taskProgresses = taskProgressesForList,
@@ -237,6 +238,15 @@ class PipelineProgressRateService constructor(
             progressRate = getProgressRate(record.taskVar, progressDetail),
             progressDetail = progressDetail
         )
+    }
+
+    private fun toCompletedTaskProgress(record: BuildRecordTask): RunningTaskProgress {
+        val taskProgress = toTaskProgress(record)
+        return if (taskProgress.progressRate > 0.0 || taskProgress.progressDetail != null) {
+            taskProgress
+        } else {
+            taskProgress.copy(progressRate = 1.0)
+        }
     }
 
     private fun getTaskNameMap(
