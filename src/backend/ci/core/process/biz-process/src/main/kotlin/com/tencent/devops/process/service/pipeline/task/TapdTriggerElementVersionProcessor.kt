@@ -96,7 +96,7 @@ class TapdTriggerElementVersionProcessor @Autowired constructor(
             projectId = projectId,
             pipelineId = pipelineId,
             taskId = taskId,
-            eventCode = eventType,
+            eventCode = TapdWebHookTriggerElement.classType,
             eventSource = workspaceId,
             eventType = eventType,
             channelCode = context.pipelineBasicInfo.channelCode,
