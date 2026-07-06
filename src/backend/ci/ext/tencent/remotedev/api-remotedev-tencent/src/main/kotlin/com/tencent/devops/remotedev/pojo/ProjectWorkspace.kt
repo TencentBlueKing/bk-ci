@@ -73,7 +73,7 @@ data class ProjectWorkspace(
     @get:Schema(title = "工作空间归属")
     override val ownerType: WorkspaceOwnerType,
     @get:Schema(title = "云桌面实例类型")
-    override val workspaceKind: WorkspaceKind,
+    override val workspaceKind: WorkspaceKind? = null,
     @get:Schema(title = "windows 地域配置")
     val zoneConfig: WindowsResourceZoneConfig? = null,
     @get:Schema(title = "专家协助")
