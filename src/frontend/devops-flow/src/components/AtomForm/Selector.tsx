@@ -19,6 +19,11 @@ export default defineComponent({
       type: Array as PropType<Array<{ id: string | number; name: string; disabled?: boolean }>>,
       default: () => [],
     },
+    // Static list (backward compatible)
+    options: {
+      type: Array as PropType<Array<{ id: string | number; name: string; disabled?: boolean }>>,
+      default: () => [],
+    },
     // API request URL
     optionsConf: {
       type: Object as PropType<SelectDataConf>,
@@ -52,7 +57,7 @@ export default defineComponent({
     const mergedConf: SelectDataConf = {
       ...(attrs as SelectDataConf),
       ...props.optionsConf,
-      options: props.list ?? props.optionsConf.options,
+      options: props.list ?? props.options ?? props.optionsConf.options,
       atomValue: props.atomValue,
       multiSelect: props.multiSelect,
     }
