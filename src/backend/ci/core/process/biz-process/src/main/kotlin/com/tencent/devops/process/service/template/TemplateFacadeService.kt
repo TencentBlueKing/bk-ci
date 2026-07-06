@@ -2626,6 +2626,7 @@ class TemplateFacadeService @Autowired constructor(
         val defaultStageTagId = stageTagService.getDefaultStageTag().data?.id
         val defaultTagIds = defaultStageTagId?.let { listOf(it) }
         model.handlePublicVarInfo()
+        publicVarGroupReferManageService.validateVarGroupReferences(model = model, projectId = projectId)
         publicVarGroupReferManageService.handleVarGroupReferBus(
             PublicVarGroupReferDTO(
                 userId = userId,

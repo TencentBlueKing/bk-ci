@@ -39,6 +39,7 @@ import com.tencent.devops.common.pipeline.pojo.PublicVarGroupRef
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.constant.ProcessMessageCode.DYNAMIC_VERSION
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_COMMON_VAR_GROUP_CONFLICT
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_COMMON_VAR_GROUP_NOT_EXIST
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_COMMON_VAR_GROUP_REFER_UPDATE_FAILED
@@ -376,15 +377,20 @@ class PublicVarGroupReferManageService @Autowired constructor(
                 referVersion = publicVarGroupReferDTO.referVersion
             )
             // 无引用且无历史引用：处理跨版本计数后直接返回
+            // 注意：YAML template 场景下 params 可能为空但 model.publicVarGroups 非空，
+            // 需调用 handlePublicVarInfo 后再判断
             if (params.isEmpty() && historicalReferInfos.isEmpty()) {
-                if (publicVarGroupReferDTO.draftFlag) {
-                    handleDraftReferCountUpdate(publicVarGroupReferDTO, emptyList(), emptyList())
+                model.handlePublicVarInfo()
+                if (model.publicVarGroups.isNullOrEmpty()) {
+                    if (publicVarGroupReferDTO.draftFlag) {
+                        handleDraftReferCountUpdate(publicVarGroupReferDTO, emptyList(), emptyList())
+                    }
+                    syncLatestFlagForAllGroups(
+                        publicVarGroupReferDTO = publicVarGroupReferDTO,
+                        currentGroupNames = emptySet()
+                    )
+                    return
                 }
-                syncLatestFlagForAllGroups(
-                    publicVarGroupReferDTO = publicVarGroupReferDTO,
-                    currentGroupNames = emptySet()
-                )
-                return
             }
             model.handlePublicVarInfo()
             val publicVarGroups = model.publicVarGroups
@@ -395,18 +401,55 @@ class PublicVarGroupReferManageService @Autowired constructor(
                 publicVarGroupReferDTO = publicVarGroupReferDTO,
                 params = params
             )
+            // YAML template 场景：publicVarGroups 中的组在 params 中没有对应项，补充 PO 使关联和计数能正常更新
+            val coveredGroupNames = pipelinePublicVarGroupReferPOs.map { it.groupName }.toSet()
+            val missingGroups = publicVarGroups?.filter { it.groupName !in coveredGroupNames } ?: emptyList()
+            val additionalPOs = if (missingGroups.isNotEmpty()) {
+                val segmentIds = client.get(ServiceAllocIdResource::class)
+                    .batchGenerateSegmentId("T_RESOURCE_PUBLIC_VAR_GROUP_REFER_INFO", missingGroups.size).data
+                    ?: throw ErrorCodeException(
+                        errorCode = ProcessMessageCode.ERROR_PUBLIC_VAR_GROUP_ADD_FAILED,
+                        params = arrayOf("ID allocation service unavailable")
+                    )
+                val now = LocalDateTime.now()
+                missingGroups.mapIndexed { index, ref ->
+                    ResourcePublicVarGroupReferPO(
+                        id = segmentIds[index] ?: throw ErrorCodeException(
+                            errorCode = ProcessMessageCode.ERROR_PUBLIC_VAR_GROUP_ADD_FAILED,
+                            params = arrayOf("ID allocation service unavailable")
+                        ),
+                        projectId = publicVarGroupReferDTO.projectId,
+                        groupName = ref.groupName,
+                        version = ref.version ?: DYNAMIC_VERSION,
+                        referId = publicVarGroupReferDTO.referId,
+                        referType = publicVarGroupReferDTO.referType,
+                        referName = publicVarGroupReferDTO.referName,
+                        referVersion = publicVarGroupReferDTO.referVersion,
+                        referVersionName = publicVarGroupReferDTO.referVersionName,
+                        positionInfo = emptyList(),
+                        creator = publicVarGroupReferDTO.userId,
+                        modifier = publicVarGroupReferDTO.userId,
+                        createTime = now,
+                        updateTime = now,
+                        latestFlag = true
+                    )
+                }
+            } else {
+                emptyList()
+            }
+            val allReferPOs = pipelinePublicVarGroupReferPOs + additionalPOs
             updateReferenceCountsAfterSave(
                 projectId = publicVarGroupReferDTO.projectId,
                 historicalReferInfos = historicalReferInfos,
                 publicVarGroupNames = publicVarGroups?.map { it.groupName } ?: emptyList(),
-                resourcePublicVarGroupReferPOS = pipelinePublicVarGroupReferPOs,
+                resourcePublicVarGroupReferPOS = allReferPOs,
                 skipCountUpdate = !publicVarGroupReferDTO.draftFlag
             )
             if (publicVarGroupReferDTO.draftFlag) {
                 handleDraftReferCountUpdate(
                     publicVarGroupReferDTO = publicVarGroupReferDTO,
                     currentGroupNames = publicVarGroups?.map { it.groupName } ?: emptyList(),
-                    currentReferPOs = pipelinePublicVarGroupReferPOs
+                    currentReferPOs = allReferPOs
                 )
             }
             // 同步 LATEST_FLAG：当前引用的 ∪ 历史引用的，保证卸载的组也能被置 false

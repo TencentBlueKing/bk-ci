@@ -113,6 +113,7 @@ class PipelineTemplateDraftSaveHandler @Autowired constructor(
             }
         }
         (pTemplateResourceWithoutVersion.model as? Model)?.let {
+            publicVarGroupReferManageService.validateVarGroupReferences(model = it, projectId = projectId)
             publicVarGroupReferManageService.handleVarGroupReferBus(
                 PublicVarGroupReferDTO(
                     userId = userId,

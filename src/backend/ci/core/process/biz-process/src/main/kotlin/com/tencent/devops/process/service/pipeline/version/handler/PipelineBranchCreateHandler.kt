@@ -117,6 +117,9 @@ class PipelineBranchCreateHandler @Autowired constructor(
             )
             resourceOnlyVersion
         }
+        publicVarGroupReferManageService.validateVarGroupReferences(
+            model = pipelineResourceWithoutVersion.model, projectId = projectId
+        )
         publicVarGroupReferManageService.handleVarGroupReferBus(
             PublicVarGroupReferDTO(
                 userId = userId,

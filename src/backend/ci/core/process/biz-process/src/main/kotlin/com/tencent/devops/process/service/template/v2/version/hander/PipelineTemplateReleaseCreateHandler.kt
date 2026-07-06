@@ -103,6 +103,7 @@ class PipelineTemplateReleaseCreateHandler @Autowired constructor(
 
         // 同步变量组引用关系
         (pTemplateResourceWithoutVersion.model as? Model)?.let {
+            publicVarGroupReferManageService.validateVarGroupReferences(model = it, projectId = projectId)
             publicVarGroupReferManageService.handleVarGroupReferBus(
                 PublicVarGroupReferDTO(
                     userId = userId,
