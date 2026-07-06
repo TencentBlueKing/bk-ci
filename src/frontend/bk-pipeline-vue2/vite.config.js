@@ -70,8 +70,12 @@ export default defineConfig({
                     'bkui-vue': 'bkuiVue',
                     'vue-draggable-plus': 'VueDraggablePlus'
                 },
+                // 不同 Vite/Rollup 版本对库 CSS 的默认命名不一致
+                // (Vite5 => style.css, Vite6+ => <pkgName>.css)，这里统一固定输出名，
+                // 与 bk-pipeline 的 package.json exports 里 ./dist/vue2/bk-pipeline.css 对齐。
                 assetFileNames: (assetInfo) => {
-                    if (assetInfo.name === 'style.css') return 'bk-pipeline.css'
+                    const name = assetInfo.name || (assetInfo.names && assetInfo.names[0]) || ''
+                    if (name.endsWith('.css')) return 'bk-pipeline.css'
                     return assetInfo.name
                 }
             }

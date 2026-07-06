@@ -2,7 +2,8 @@ package com.tencent.devops.openapi.api.apigw.desktop
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
@@ -10,10 +11,11 @@ import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.common.web.constant.BkStyleEnum
 import com.tencent.devops.openapi.api.apigw.pojo.StoreDailyStatisticInfo
 import com.tencent.devops.store.pojo.common.InstallStoreReq
+import com.tencent.devops.store.pojo.common.InstalledComponentInfo
 import com.tencent.devops.store.pojo.common.MarketItem
 import com.tencent.devops.store.pojo.common.MarketMainItem
-import com.tencent.devops.store.pojo.common.StoreDetailInfo
 import com.tencent.devops.store.pojo.common.UnInstallReq
+import com.tencent.devops.store.pojo.common.deploy.UserComponentDeployInfo
 import com.tencent.devops.store.pojo.common.enums.RdTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreSortTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
@@ -150,10 +152,10 @@ interface ApigwDeskTopStoreComponentResource {
         pageSize: Int = 10
     ): Result<Page<MarketItem>>
 
-    @Operation(summary = "根据组件ID获取组件详情", tags = ["v4_app_desktop_store_component_detail"])
+    @Operation(summary = "获取用户可拉取的组件部署信息列表", tags = ["v4_app_desktop_store_component_deploy_list"])
+    @Path("/types/{storeType}/component/deploy/list")
     @GET
-    @Path("/types/{storeType}/ids/{storeId}/component/detail")
-    fun getComponentDetailInfoById(
+    fun getUserComponentDeployInfos(
         @Parameter(description = "appCode", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
@@ -167,11 +169,58 @@ interface ApigwDeskTopStoreComponentResource {
         @PathParam("storeType")
         @BkField(patternStyle = BkStyleEnum.CODE_STYLE)
         storeType: String,
-        @Parameter(description = "组件ID", required = true)
-        @PathParam("storeId")
-        @BkField(patternStyle = BkStyleEnum.ID_STYLE, required = false)
-        storeId: String
-    ): Result<StoreDetailInfo?>
+        @Parameter(description = "项目代码", required = false)
+        @QueryParam("projectCode")
+        projectCode: String? = null,
+        @Parameter(description = "实例ID", required = false)
+        @QueryParam("instanceId")
+        instanceId: String? = null,
+        @Parameter(description = "搜索关键字", required = false)
+        @QueryParam("keyword")
+        @BkField(patternStyle = BkStyleEnum.COMMON_STYLE, required = false)
+        keyword: String? = null,
+        @Parameter(description = "页码", required = true)
+        @QueryParam("page")
+        @BkField(patternStyle = BkStyleEnum.NUMBER_STYLE)
+        page: Int = 1,
+        @Parameter(description = "每页数量", required = true)
+        @QueryParam("pageSize")
+        @BkField(patternStyle = BkStyleEnum.PAGE_SIZE_STYLE)
+        pageSize: Int = 10
+    ): Result<Page<UserComponentDeployInfo>>
+
+    @Operation(summary = "根据项目和实例ID集合分页获取组件安装记录", tags = ["v4_app_desktop_store_installed_component_list"])
+    @GET
+    @Path("/projects/{projectCode}/types/{storeType}/installed/components/list")
+    fun getInstalledComponents(
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @Parameter(description = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @Parameter(description = "项目代码", required = true)
+        @PathParam("projectCode")
+        projectCode: String,
+        @Parameter(description = "组件类型", required = true)
+        @PathParam("storeType")
+        storeType: StoreTypeEnum,
+        @Parameter(
+            description = "实例ID集合，支持多个(一次查询数量最大值默认为10)",
+            required = false
+        )
+        @QueryParam("instanceIds")
+        instanceIds: Set<String>? = null,
+        @Parameter(description = "页码", required = false)
+        @QueryParam("page")
+        page: Int = 1,
+        @Parameter(description = "每页数量", required = false)
+        @QueryParam("pageSize")
+        pageSize: Int = 10
+    ): Result<Page<InstalledComponentInfo>>
 
     @Operation(summary = "安装组件到项目", tags = ["v4_app_desktop_store_component_install"])
     @POST
@@ -218,42 +267,7 @@ interface ApigwDeskTopStoreComponentResource {
         unInstallReq: UnInstallReq
     ): Result<Boolean>
 
-    @Operation(summary = "获取组件包文件下载链接", tags = ["v4_app_store_component_downloadUrl_get"])
-    @GET
-    @Path("/types/{storeType}/codes/{storeCode}/versions/{version}/pkg/download/url/get")
-    fun getComponentPkgDownloadUrl(
-        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
-        appCode: String?,
-        @Parameter(description = "apigw Type", required = true)
-        @PathParam("apigwType")
-        apigwType: String?,
-        @Parameter(description = "用户Id", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @Parameter(description = "项目代码", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
-        projectCode: String,
-        @Parameter(description = "组件类型", required = true)
-        @PathParam("storeType")
-        @BkField(patternStyle = BkStyleEnum.CODE_STYLE)
-        storeType: StoreTypeEnum,
-        @Parameter(description = "组件标识", required = true)
-        @PathParam("storeCode")
-        @BkField(patternStyle = BkStyleEnum.CODE_STYLE)
-        storeCode: String,
-        @Parameter(description = "组件版本号", required = true)
-        @PathParam("version")
-        version: String,
-        @Parameter(description = "操作系统名称", required = false)
-        @QueryParam("osName")
-        osName: String? = null,
-        @Parameter(description = "操作系统架构", required = false)
-        @QueryParam("osArch")
-        osArch: String? = null
-    ): Result<String>
-
-    @Operation(summary = "更新store组件的每日统计信息")
+    @Operation(summary = "更新store组件的每日统计信息", tags = ["v4_app_desktop_store_component_daily_info_update"])
     @PUT
     @Path("/types/{storeType}/codes/{storeCode}/daily/info/update")
     fun updateDailyStatisticInfo(

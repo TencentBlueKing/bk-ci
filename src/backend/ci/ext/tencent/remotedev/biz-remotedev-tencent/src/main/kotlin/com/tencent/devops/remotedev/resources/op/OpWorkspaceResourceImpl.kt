@@ -9,6 +9,7 @@ import com.tencent.devops.remotedev.api.op.OpWorkspaceResource
 import com.tencent.devops.remotedev.dispatch.kubernetes.interfaces.ServiceStartCloudInterface
 import com.tencent.devops.remotedev.pojo.ShareWorkspace
 import com.tencent.devops.remotedev.pojo.WorkspaceAction
+import com.tencent.devops.remotedev.pojo.WorkspaceKind
 import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
 import com.tencent.devops.remotedev.pojo.WorkspaceShared
 import com.tencent.devops.remotedev.pojo.WorkspaceSharedOpUse
@@ -142,6 +143,19 @@ class OpWorkspaceResourceImpl @Autowired constructor(
         workspaceNames.forEach {
             workspaceRecordService.saveWorkspaceRecordTicket(it, WorkspaceRecordTicketType.parse(type))
         }
+        return Result(true)
+    }
+
+    override fun updateWorkspaceKind(
+        userId: String,
+        workspaceNames: List<String>,
+        workspaceKind: WorkspaceKind
+    ): Result<Boolean> {
+        workspaceService.updateWorkspaceKind(
+            operator = userId,
+            workspaceNames = workspaceNames,
+            workspaceKind = workspaceKind
+        )
         return Result(true)
     }
 

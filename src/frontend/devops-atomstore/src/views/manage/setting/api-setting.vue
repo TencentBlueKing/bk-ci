@@ -197,7 +197,13 @@
         computed: {
             ...mapGetters('store', {
                 detail: 'getDetail'
-            })
+            }),
+            type () {
+                return this.$route.params.type?.toUpperCase()
+            },
+            code () {
+                return this.type === 'DEVX' ? this.detail.storeCode : this.detail.atomCode
+            }
         },
 
         created () {
@@ -220,7 +226,7 @@
                     page: this.pagination.count,
                     pageSize: this.pagination.limit
                 }
-                api.requestSensitiveApiList('ATOM', this.detail.atomCode, params).then((res) => {
+                api.requestSensitiveApiList(this.type, this.code, params).then((res) => {
                     this.apiList = res.records || []
                 }).catch(err => this.$bkMessage({ message: err.message || err, theme: 'error' })).finally(() => {
                     this.isLoading = false
@@ -264,7 +270,7 @@
             saveApi () {
                 this.$refs.apiForm.validate().then(() => {
                     this.isSaving = true
-                    api.requestApplySensitiveApi('ATOM', this.detail.atomCode, this.apiObj).then(() => {
+                    api.requestApplySensitiveApi(this.type, this.code, this.apiObj).then(() => {
                         this.apiObj = {
                             apiNameList: [],
                             applyDesc: '',
@@ -293,7 +299,7 @@
 
             handleCancelApply (row) {
                 this.isCanceling = true
-                api.requestCancelSensitiveApi('ATOM', this.detail.atomCode, row.id).then((res) => {
+                api.requestCancelSensitiveApi(this.type, this.code, row.id).then((res) => {
                     return this.getApiList()
                 }).catch((err) => {
                     this.$bkMessage({ message: (err.message || err), theme: 'error' })
@@ -306,7 +312,7 @@
                 window.changeFlag = false
                 this.showAdd = true
                 this.isLoadingUnApprovalApiList = true
-                api.requestUnApprovalApiList('ATOM', this.detail.atomCode, { language: this.detail.language }).then((res) => {
+                api.requestUnApprovalApiList(this.type, this.code, { language: this.detail.language ?? 'Java' }).then((res) => {
                     this.unApprovalApiList = res || []
                 }).catch((err) => {
                     this.$bkMessage({ message: (err.message || err), theme: 'error' })

@@ -32,8 +32,10 @@ import com.tencent.devops.common.util.ThreadPoolUtil
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.common.OpStoreComponentResource
 import com.tencent.devops.store.common.service.OpStoreComponentService
+import com.tencent.devops.store.common.service.StoreComponentDetailQueryService
 import com.tencent.devops.store.common.service.StoreComponentManageService
-import com.tencent.devops.store.common.service.StoreComponentQueryService
+import com.tencent.devops.store.common.service.StoreComponentVersionQueryService
+import com.tencent.devops.store.common.service.StoreComponentWorkbenchService
 import com.tencent.devops.store.common.service.StoreReleaseService
 import com.tencent.devops.store.pojo.common.InstalledPkgFileShaContentRequest
 import com.tencent.devops.store.pojo.common.MyStoreComponent
@@ -45,13 +47,15 @@ import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.publication.StoreApproveReleaseRequest
 import com.tencent.devops.store.pojo.common.publication.StoreDeleteRequest
 import com.tencent.devops.store.pojo.common.publication.StoreOfflineRequest
-import com.tencent.devops.store.pojo.common.version.StoreDeskVersionItem
+import com.tencent.devops.store.pojo.common.version.StoreComponentVersionItem
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class OpStoreComponentResourceImpl @Autowired constructor(
     private val opStoreComponentService: OpStoreComponentService,
-    private val storeComponentQueryService: StoreComponentQueryService,
+    private val storeComponentWorkbenchService: StoreComponentWorkbenchService,
+    private val storeComponentVersionQueryService: StoreComponentVersionQueryService,
+    private val storeComponentDetailQueryService: StoreComponentDetailQueryService,
     private val storeComponentManageService: StoreComponentManageService,
     private val storeReleaseService: StoreReleaseService
 ) : OpStoreComponentResource {
@@ -78,7 +82,7 @@ class OpStoreComponentResourceImpl @Autowired constructor(
         pageSize: Int
     ): Result<Page<MyStoreComponent>?> {
         return Result(
-            storeComponentQueryService.listComponents(
+            storeComponentWorkbenchService.listComponents(
                 userId = userId,
                 queryComponentsParam = QueryComponentsParam(
                     storeType = storeType,
@@ -102,9 +106,9 @@ class OpStoreComponentResourceImpl @Autowired constructor(
         storeCode: String,
         page: Int,
         pageSize: Int
-    ): Result<Page<StoreDeskVersionItem>> {
+    ): Result<Page<StoreComponentVersionItem>> {
         return Result(
-            storeComponentQueryService.getComponentVersionsByCode(
+            storeComponentVersionQueryService.getComponentVersionsByCode(
                 userId = userId,
                 storeType = storeType,
                 storeCode = storeCode,
@@ -121,7 +125,7 @@ class OpStoreComponentResourceImpl @Autowired constructor(
         storeId: String
     ): Result<StoreDetailInfo?> {
         return Result(
-            storeComponentQueryService.getComponentDetailInfoById(
+            storeComponentDetailQueryService.getComponentDetailInfoById(
                 userId = userId,
                 storeType = StoreTypeEnum.valueOf(storeType),
                 storeId = storeId

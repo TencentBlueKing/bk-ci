@@ -107,6 +107,7 @@
                 <h3> {{ $t('store.恭喜，已安装成功！') }} </h3>
                 <div class="handle-btn">
                     <bk-button
+                        v-if="type !== 'creative'"
                         class="bk-button bk-primary"
                         size="small"
                         @click="backConsole"

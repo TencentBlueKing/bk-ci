@@ -358,7 +358,7 @@ class ServiceEnvironmentResourceImpl @Autowired constructor(
 
     override fun fetchAllNodeEnvList(
         userId: String,
-        projectId: String,
+        projectId: String?,
         workspaceName: String,
         noCheckPerm: Boolean
     ): Result<List<EnvData>> {

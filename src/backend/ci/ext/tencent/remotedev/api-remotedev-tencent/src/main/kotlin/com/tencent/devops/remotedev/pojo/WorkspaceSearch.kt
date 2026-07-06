@@ -67,6 +67,8 @@ data class WorkspaceSearch(
     val onFuzzyMatch: Boolean = true,
     @get:Schema(title = "是否匹配owner类型")
     val workspaceOwnerType: List<WorkspaceOwnerType>? = null,
+    @get:Schema(title = "云桌面实例类型")
+    val workspaceKind: List<WorkspaceKind>? = null,
     @get:Schema(title = "逻辑区域")
     val logicalArea: List<WindowsResourceZoneConfigType>? = null,
     @get:Schema(title = "节点HashId")

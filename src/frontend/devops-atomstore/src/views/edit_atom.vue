@@ -959,7 +959,6 @@
                     return this.$store.dispatch('store/editAtom', {
                         projectCode: this.atomForm.projectCode,
                         params: params,
-                        initProject: this.atomForm.initProjectCode
                     }).then((res) => {
                         this.$bkMessage({ message: this.$t('store.提交成功'), theme: 'success' })
                         if (res) this.toPublishProgress(this.$route.name === 'shelfAtom' ? 'shelf' : 'upgrade', res)
@@ -1018,7 +1017,7 @@
         height: 100%;
         .edit-atom-content {
             padding: 20px 0 40px;
-            height: calc(100% - 5.6vh);
+            height: calc(100% - 70px);
             overflow: auto;
             display: flex;
             background-color: #fff;

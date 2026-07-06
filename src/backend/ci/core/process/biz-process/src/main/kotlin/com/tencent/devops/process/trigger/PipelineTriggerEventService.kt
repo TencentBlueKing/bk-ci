@@ -67,7 +67,7 @@ import com.tencent.devops.process.webhook.pojo.event.commit.ReplayWebhookEvent
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import com.tencent.devops.repository.api.ServiceRepositoryPermissionResource
 import com.tencent.devops.repository.api.ServiceRepositoryWebhookResource
-import com.tencent.devops.store.api.common.ServiceStoreComponentResource
+import com.tencent.devops.store.api.common.ServiceStoreComponentBaseResource
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -529,7 +529,7 @@ class PipelineTriggerEventService @Autowired constructor(
     ): List<IdValue> {
         return when (channelCode) {
             ChannelCode.CREATIVE_STREAM.name -> {
-                client.get(ServiceStoreComponentResource::class).getComponentBaseInfoByCodes(
+                client.get(ServiceStoreComponentBaseResource::class).getComponentBaseInfoByCodes(
                     storeType = StoreTypeEnum.TRIGGER_EVENT,
                     storeCodes = null
                 ).data?.map {

@@ -108,11 +108,15 @@ interface UserStoreCommentResource {
 
     @Operation(summary = "新增组件评论")
     @POST
-    @Path("/ids/{storeId}/codes/{storeCode}/add")
+    @Path("/types/{storeType}/ids/{storeId}/codes/{storeCode}/add")
     fun addStoreComment(
         @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
+        @Parameter(description = "组件类型", required = true)
+        @PathParam("storeType")
+        @BkField(patternStyle = BkStyleEnum.CODE_STYLE)
+        storeType: String,
         @Parameter(description = "组件ID", required = true)
         @PathParam("storeId")
         storeId: String,

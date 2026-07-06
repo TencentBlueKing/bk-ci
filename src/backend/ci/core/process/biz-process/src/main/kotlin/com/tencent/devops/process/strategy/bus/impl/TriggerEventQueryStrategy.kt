@@ -36,7 +36,7 @@ import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.process.Tables.T_PIPELINE_BUILD_HISTORY
-import com.tencent.devops.store.api.common.ServiceStoreComponentResource
+import com.tencent.devops.store.api.common.ServiceStoreComponentBaseResource
 import com.tencent.devops.store.pojo.common.StoreBaseInfo
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.jooq.Field
@@ -93,7 +93,7 @@ class TriggerEventQueryStrategy @Autowired constructor(
     private fun computeDisplayName(value: String, userId: String): String {
         // 首先尝试从接口获取组件名称
         val componentName = try {
-            val result: Result<StoreBaseInfo?> = client.get(ServiceStoreComponentResource::class)
+            val result: Result<StoreBaseInfo?> = client.get(ServiceStoreComponentBaseResource::class)
                 .getComponentBaseInfo(
                     userId = userId,
                     storeType = StoreTypeEnum.TRIGGER_EVENT.name,

@@ -6,6 +6,7 @@ import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.dao.WorkspaceOpHistoryDao
 import com.tencent.devops.remotedev.pojo.OpHistoryCopyWriting
 import com.tencent.devops.remotedev.pojo.WorkspaceAction
+import com.tencent.devops.remotedev.pojo.WorkspaceKind
 import com.tencent.devops.remotedev.pojo.WorkspaceMountType
 import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
 import com.tencent.devops.remotedev.pojo.WorkspaceRecord
@@ -80,6 +81,7 @@ class WorkspaceRecordServiceAgreeRecordTest {
             workspaceMountType = WorkspaceMountType.DEVCLOUD,
             workspaceSystemType = WorkspaceSystemType.WINDOWS_GPU,
             ownerType = ownerType,
+            workspaceKind = WorkspaceKind.defaultByOwnerType(ownerType),
             remark = null,
             labels = null,
             ip = null

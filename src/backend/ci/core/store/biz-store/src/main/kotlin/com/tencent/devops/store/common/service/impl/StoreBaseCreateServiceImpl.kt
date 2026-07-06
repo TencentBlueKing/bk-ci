@@ -145,6 +145,12 @@ class StoreBaseCreateServiceImpl @Autowired constructor(
             logoUrl = storeBaseCreateRequest.logoUrl,
             summary = storeBaseCreateRequest.summary ?: ""
         )
+        // 校验部署相关扩展字段(安装路径/安装方式/安装参数)的合法性与安全性
+        StoreReleaseUtils.validateDeployExtInfo(
+            storeType = storeType,
+            extBaseInfo = storeBaseCreateRequest.extBaseInfo,
+            extBaseFeatureInfo = storeBaseCreateRequest.baseFeatureInfo?.extBaseFeatureInfo
+        )
         val storeBaseExtDataPOs = StoreReleaseUtils.generateStoreBaseExtDataPO(
             extBaseInfo = storeBaseCreateRequest.extBaseInfo,
             storeId = storeId,

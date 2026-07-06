@@ -166,6 +166,7 @@ export interface Element {
 export interface DispatchType {
   buildType: string
   value: string
+  workspace?: string
   performanceUid?: string
   persistence?: boolean
   imageType?: string

@@ -34,6 +34,7 @@ import com.tencent.bk.audit.context.ActionAuditContext
 import com.tencent.devops.common.api.constant.HTTP_400
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.RemoteServiceException
+import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.audit.TencentActionAuditContent
@@ -71,6 +72,7 @@ import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfigType
 import com.tencent.devops.remotedev.pojo.WindowsWorkspaceCreate
 import com.tencent.devops.remotedev.pojo.Workspace
 import com.tencent.devops.remotedev.pojo.WorkspaceAction
+import com.tencent.devops.remotedev.pojo.WorkspaceKind
 import com.tencent.devops.remotedev.pojo.WorkspaceMountType
 import com.tencent.devops.remotedev.pojo.WorkspaceOrganization
 import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
@@ -203,6 +205,10 @@ class CreateControl @Autowired constructor(
             createCount = createCount
         )
 
+        val workspaceOwnerType = when {
+            workspaceCreate.ownerType?.projectUse() == true -> workspaceCreate.ownerType!!
+            else -> WorkspaceOwnerType.PROJECT
+        }
         prepareWindowsCreate(
             creator = pmUserId,
             projectId = projectId,
@@ -219,10 +225,9 @@ class CreateControl @Autowired constructor(
                 projectName = projectInfo.projectName,
                 businessLineName = projectInfo.businessLineName
             ),
-            ownerType = when {
-                workspaceCreate.ownerType?.projectUse() == true -> workspaceCreate.ownerType!!
-                else -> WorkspaceOwnerType.PROJECT
-            }
+            ownerType = workspaceOwnerType,
+            workspaceKind = workspaceCreate.workspaceKind ?: WorkspaceKind.defaultByOwnerType(workspaceOwnerType),
+            os = workspaceCreate.os
         )
     }
 
@@ -235,7 +240,9 @@ class CreateControl @Autowired constructor(
         cgsId: String?,
         windowsConfig: WindowsResourceTypeConfig,
         organization: WorkspaceOrganization,
-        ownerType: WorkspaceOwnerType
+        ownerType: WorkspaceOwnerType,
+        workspaceKind: WorkspaceKind,
+        os: OS?
     ): Boolean {
         // 自定义镜像检查是否有相对的显卡
         // 非自定义镜像先检查池子里是否有已经生产出来的可以直接用，没有再去看显卡
@@ -303,7 +310,9 @@ class CreateControl @Autowired constructor(
                         gameId = gameId.second,
                         cgsId = cgsId,
                         ownerType = ownerType,
-                        quotaType = QuotaType.parse(zoneType)
+                        workspaceKind = workspaceKind,
+                        quotaType = QuotaType.parse(zoneType),
+                        os = os
                     )
                 }
                 return true
@@ -347,7 +356,9 @@ class CreateControl @Autowired constructor(
                 gameId = gameId.second,
                 cgsId = cgsId,
                 ownerType = ownerType,
-                quotaType = QuotaType.parse(zoneType)
+                workspaceKind = workspaceKind,
+                quotaType = QuotaType.parse(zoneType),
+                os = os
             )
         }
         return false
@@ -367,13 +378,15 @@ class CreateControl @Autowired constructor(
         gameId: Long,
         cgsId: String?,
         ownerType: WorkspaceOwnerType,
-        quotaType: QuotaType
+        workspaceKind: WorkspaceKind,
+        quotaType: QuotaType,
+        os: OS?
     ) {
         val mountType = WorkspaceMountType.START
         val systemType = WorkspaceSystemType.WINDOWS_GPU
         logger.info(
             "doCreateWorkspace|$i|$workspaceName|$workspaceCreate|$projectId|$creator|$owner|" +
-                "$windowsConfig|$organization|$zoneId|$appName|$gameId|$cgsId|$ownerType|$quotaType"
+                    "$windowsConfig|$organization|$zoneId|$appName|$gameId|$cgsId|$ownerType|$quotaType"
         )
         if (!owner.isNullOrBlank()) {
             workspaceSharedDao.batchCreate(
@@ -391,9 +404,11 @@ class CreateControl @Autowired constructor(
             workspaceMountType = mountType,
             workspaceSystemType = systemType,
             ownerType = ownerType,
+            workspaceKind = workspaceKind,
             winConfigId = windowsConfig.id?.toInt(),
             imageId = workspaceCreate.imageCosFile,
-            zoneId = zoneId
+            zoneId = zoneId,
+            os = os
         )
 
         workspaceDao.createWorkspace(
@@ -668,6 +683,7 @@ class CreateControl @Autowired constructor(
             copy != null -> copy.ownerType
             else -> checkNotNull(ownerType)
         }
+        val workspaceKind = copy?.workspaceKind ?: WorkspaceKind.defaultByOwnerType(checkOwnerType)
         val gameId = workspaceCommon.getGameIdAndAppId(projectId, checkOwnerType)
         val workspaceName = if (bak) checkNotNull(oldWorkspaceName) else generateWorkspaceName()
         val mountType = WorkspaceMountType.START
@@ -686,6 +702,7 @@ class CreateControl @Autowired constructor(
             workspaceMountType = mountType,
             workspaceSystemType = systemType,
             ownerType = checkOwnerType,
+            workspaceKind = workspaceKind,
             winConfigId = windowsConfig.id?.toInt(),
             zoneId = vm.zoneId,
             imageId = copy?.imageId ?: ""
@@ -873,7 +890,8 @@ class CreateControl @Autowired constructor(
                         windowsZone = windowsZone.zoneShortName,
                         baseImageId = 0,
                         count = 1,
-                        assignOwners = assignOwner?.let { listOf(it) } ?: emptyList()
+                        assignOwners = assignOwner?.let { listOf(it) } ?: emptyList(),
+                        os = data.os
                     ),
                     zoneType = windowsZone.type
                 )
@@ -886,7 +904,8 @@ class CreateControl @Autowired constructor(
                         windowsType = windowsResourceConfigId.size,
                         windowsZone = windowsZone.zoneShortName,
                         baseImageId = 0,
-                        count = 1
+                        count = 1,
+                        os = data.os
                     ),
                     cgsId = cgs.cgsId
                 )
@@ -1024,7 +1043,9 @@ class CreateControl @Autowired constructor(
                 projectName = projectId,
                 businessLineName = userInfo?.businessLineName
             ),
-            ownerType = WorkspaceOwnerType.PERSONAL
+            ownerType = WorkspaceOwnerType.PERSONAL,
+            workspaceKind = workspaceCreate.workspaceKind ?: WorkspaceKind.CVD_PERSONAL,
+            os = workspaceCreate.os
         )
     }
 
@@ -1077,7 +1098,7 @@ class CreateControl @Autowired constructor(
     private fun startCloudResourceCountCheck(type: String) =
         workspaceCommon.realtimeStartCloudResourceList().filter {
             it.status == 11 &&
-                it.machineType == type
+                    it.machineType == type
         }
 
     private fun generateWorkspaceName(): String {

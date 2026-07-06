@@ -179,26 +179,44 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
                     historyBuildQueryFlag = historyBuildQueryFlag
                 )
             } else {
-                // 去缓存中获取插件运行时信息
+                // 去缓存中获取插件运行时信息，命中且非旧结构时直接复用，否则回退 DB（并在 DB 查询中刷新缓存）
                 val atomRunInfoKey = StoreUtils.getStoreRunInfoKey(StoreTypeEnum.ATOM.name, atomCode)
-                val atomRunInfoJson = redisOperation.hget(atomRunInfoKey, version)
-                if (!atomRunInfoJson.isNullOrEmpty()) {
-                    val atomRunInfo = JsonUtil.to(atomRunInfoJson, AtomRunInfo::class.java)
-                    atomRunInfoMap[atomRunInfoName] = atomRunInfo
-                } else {
-                    atomRunInfoMap[atomRunInfoName] = queryAtomRunInfoFromDb(
+                val cachedAtomRunInfo = redisOperation.hget(atomRunInfoKey, version)
+                    ?.takeIf { it.isNotEmpty() }
+                    ?.let { JsonUtil.to(it, AtomRunInfo::class.java) }
+                    ?.takeUnless { legacy ->
+                        isLegacyAtomRunInfoCache(legacy).also { isLegacy ->
+                            if (isLegacy) {
+                                logger.info(
+                                    "atomRunInfo cache is legacy(missing jobType/jobTypeMap/serviceScope), " +
+                                            "fallback to db: atomCode=$atomCode, version=$version"
+                                )
+                            }
+                        }
+                    }
+                atomRunInfoMap[atomRunInfoName] = cachedAtomRunInfo ?: queryAtomRunInfoFromDb(
                     projectCode = projectCode,
                     atomCode = atomCode,
                     atomName = atomName,
                     version = version,
                     testFlag = testFlag,
                     historyBuildQueryFlag = historyBuildQueryFlag
-                    )
-                }
+                )
             }
         }
         return atomRunInfoMap
     }
+
+    /**
+     * 判断缓存中的插件运行时信息是否为旧版本代码写入的过期结构，命中任一条件即需回退 DB 重建缓存：
+     * 1. jobType 与 jobTypeMap 同时为空：缺少构建环境匹配（isAtomJobTypeMatch）所需字段，
+     *    会被误判为「与 Job 运行环境不匹配」；
+     * 2. serviceScope 为空：插件在 DB 中一定声明了服务范围，缓存中为空说明是旧结构，
+     *    会导致服务范围校验（isAtomServiceScopeAllowed）因「空即放行」而绕过渠道隔离。
+     */
+    private fun isLegacyAtomRunInfoCache(atomRunInfo: AtomRunInfo): Boolean =
+        atomRunInfo.serviceScope.isNullOrEmpty() ||
+            (atomRunInfo.jobType.isNullOrBlank() && atomRunInfo.jobTypeMap.isNullOrBlank())
 
     private fun handleAtomVersions(
         atomVersions: Set<StoreVersion>,

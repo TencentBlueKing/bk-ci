@@ -165,13 +165,14 @@ class DispatchBuildLessDockerStartupTaskAtom @Autowired constructor(
         ) ?: throw ErrorCodeException(
             errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID, params = arrayOf(buildId)
         )
-        val container = containerBuildRecordService.getRecordModel(
+        val recordModel = containerBuildRecordService.getRecordModel(
             projectId = projectId,
             pipelineId = pipelineId,
             version = buildRecordContainer.resourceVersion,
             buildId = buildId,
             executeCount = executeCount
-        )?.getContainer(vmSeqId) ?: throw BuildTaskException(
+        )
+        val container = recordModel?.getContainer(vmSeqId) ?: throw BuildTaskException(
             errorType = ErrorType.SYSTEM,
             errorCode = ERROR_PIPELINE_NODEL_CONTAINER_NOT_EXISTS.toInt(),
             errorMsg = I18nUtil.getCodeLanMessage(
@@ -181,6 +182,7 @@ class DispatchBuildLessDockerStartupTaskAtom @Autowired constructor(
             buildId = buildId,
             taskId = taskId
         )
+        val stageName = recordModel.getStage(task.stageId)?.name ?: ""
 
         containerBuildRecordService.containerPreparing(
             projectId = projectId,
@@ -189,7 +191,7 @@ class DispatchBuildLessDockerStartupTaskAtom @Autowired constructor(
             containerId = vmSeqId,
             executeCount = executeCount
         )
-        dispatch(container = container, task = task, pipelineInfo = pipelineInfo, param = param)
+        dispatch(container = container, task = task, pipelineInfo = pipelineInfo, param = param, stageName = stageName)
 
         logger.info("[$buildId]|STARTUP_DOCKER|($vmSeqId)|Dispatch startup")
         return AtomResponse(BuildStatus.CALL_WAITING)
@@ -199,14 +201,17 @@ class DispatchBuildLessDockerStartupTaskAtom @Autowired constructor(
         container: Container,
         task: PipelineBuildTask,
         pipelineInfo: PipelineInfo,
-        param: NormalContainer
+        param: NormalContainer,
+        stageName: String = ""
     ) {
         // 读取原子市场中的原子信息，写入待构建处理
         val atoms = AtomUtils.parseContainerMarketAtom(
             container = container,
             task = task,
             client = client,
-            buildLogPrinter = buildLogPrinter
+            buildLogPrinter = buildLogPrinter,
+            channelCode = pipelineInfo.channelCode,
+            stageName = stageName
         )
 
         pipelineEventDispatcher.dispatch(

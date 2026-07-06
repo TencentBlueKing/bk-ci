@@ -54,13 +54,14 @@
                 return this.$route.params.type
             },
             itemName () {
-                return this.detail?.[`${this.type}Name`] ?? this.$route.params.code
+                const detailName = this.type === TYPE_ENUM.devx ?this.detail?.name : this.detail?.[`${this.type}Name`]
+                return detailName ?? this.$route.params.code
             },
             panels () {
                 return [
-                    ...([TYPE_ENUM.atom, TYPE_ENUM.service].includes(this.type) ? [{ label: this.$t('store.概览'), name: 'statisticData' }] : []),
-                    { label: this.$t('store.发布管理'), name: 'releaseManage' },
-                    ...(this.type === TYPE_ENUM.atom ? [{ label: this.$t('store.协作审批'), name: 'approval' }] : []),
+                    ...([TYPE_ENUM.atom, TYPE_ENUM.service, TYPE_ENUM.devx].includes(this.type) ? [{ label: this.$t('store.概览'), name: 'statisticData' }] : []),
+                    ...(this.type !== TYPE_ENUM.image ? [{ label: this.$t('store.发布管理'), name: 'releaseManage' }] : []),
+                    ...([TYPE_ENUM.atom, TYPE_ENUM.devx].includes(this.type) ? [{ label: this.$t('store.协作审批'), name: 'approval' }] : []),
                     ...(this.type !== TYPE_ENUM.template ? [{ label: this.$t('store.基本信息'), name: 'show' }] : []),
                     { label: this.$t('store.基本设置'), name: 'setting' }
                 ]
@@ -71,7 +72,8 @@
                     template: this.$t('store.流水线模板'),
                     image: this.$t('store.容器镜像'),
                     atom: this.$t('store.流水线插件'),
-                    service: this.$t('store.微扩展')
+                    service: this.$t('store.微扩展'),
+                    devx: this.$t('store.云研发')
                 }
                 return [
                     { name: this.$t('store.工作台') },
@@ -94,6 +96,7 @@
                 'requestServiceDetailByCode',
                 'setDetail',
                 'clearDetail',
+                'getComponentDetail',
                 'updateUserInfo'
             ]),
             
@@ -125,11 +128,13 @@
             async requestDetail () {
                 const code = this.$route.params.code
                 const methodUrl = {
-                    atom: () => this.requestAtom({atomCode: code,  serviceScope: 'PIPELINE'}),
+                    atom: () => this.requestAtom({atomCode: code, serviceScope: 'PIPELINE'}),
                     template: () => this.requestTemplateDetail(code),
                     image: () => this.requestImageDetailByCode(code),
-                    service: () => this.requestServiceDetailByCode(code)
+                    service: () => this.requestServiceDetailByCode(code),
+                    devx: () => this.getComponentDetail(code)
                 }
+                
                 const res = await methodUrl[this.type]()
                 
                 this.setDetail(res)
