@@ -345,7 +345,7 @@ class PublicVarGroupReferManageService @Autowired constructor(
 
     /**
      * 处理变量组引用写入（引用记录 + 计数 + LATEST_FLAG）
-     * draftFlag=true 时更新引用计数；draftFlag=false 时仅写引用记录（release/branch 版本内容与草稿一致）。
+     * updateCount=true 时更新引用计数；updateCount=false 时仅写引用记录（release/branch 版本内容与草稿一致）。
      * 校验逻辑已提取到 [validateVarGroupReferences]，调用方应事务前校验、事务后调本方法。
      * 未前置校验的调用方由 needFallbackValidation 兜底。
      */
@@ -379,18 +379,8 @@ class PublicVarGroupReferManageService @Autowired constructor(
             // 无引用且无历史引用：处理跨版本计数后直接返回
             // 注意：YAML template 场景下 params 可能为空但 model.publicVarGroups 非空，
             // 需调用 handlePublicVarInfo 后再判断
-            if (params.isEmpty() && historicalReferInfos.isEmpty()) {
-                model.handlePublicVarInfo()
-                if (model.publicVarGroups.isNullOrEmpty()) {
-                    if (publicVarGroupReferDTO.draftFlag) {
-                        handleDraftReferCountUpdate(publicVarGroupReferDTO, emptyList(), emptyList())
-                    }
-                    syncLatestFlagForAllGroups(
-                        publicVarGroupReferDTO = publicVarGroupReferDTO,
-                        currentGroupNames = emptySet()
-                    )
-                    return
-                }
+            if (handleEmptyReferEarlyReturn(publicVarGroupReferDTO, model, params, historicalReferInfos)) {
+                return
             }
             model.handlePublicVarInfo()
             val publicVarGroups = model.publicVarGroups
@@ -412,9 +402,9 @@ class PublicVarGroupReferManageService @Autowired constructor(
                 historicalReferInfos = historicalReferInfos,
                 publicVarGroupNames = publicVarGroups?.map { it.groupName } ?: emptyList(),
                 resourcePublicVarGroupReferPOS = allReferPOs,
-                skipCountUpdate = !publicVarGroupReferDTO.draftFlag
+                skipCountUpdate = !publicVarGroupReferDTO.updateCount
             )
-            if (publicVarGroupReferDTO.draftFlag) {
+            if (publicVarGroupReferDTO.updateCount) {
                 handleDraftReferCountUpdate(
                     publicVarGroupReferDTO = publicVarGroupReferDTO,
                     currentGroupNames = publicVarGroups?.map { it.groupName } ?: emptyList(),
@@ -429,7 +419,7 @@ class PublicVarGroupReferManageService @Autowired constructor(
                 currentGroupNames = currentGroupNames,
                 involvedGroupNames = currentGroupNames + historicalGroupNames
             )
-            logger.info("handleVarGroupReferBus completed, draftFlag=${publicVarGroupReferDTO.draftFlag}")
+            logger.info("handleVarGroupReferBus completed, updateCount=${publicVarGroupReferDTO.updateCount}")
         } finally {
             lock.unlock()
         }
@@ -443,6 +433,34 @@ class PublicVarGroupReferManageService @Autowired constructor(
                 resourceVersionName = publicVarGroupReferDTO.referVersionName
             )
         )
+    }
+
+    /**
+     * params 和历史引用均为空时的早期返回处理：
+     * 调用 handlePublicVarInfo 后若 publicVarGroups 为空，则执行草稿计数和 latest flag 同步后直接返回。
+     * @return true 表示已处理并应 return，false 表示需继续后续流程
+     */
+    private fun handleEmptyReferEarlyReturn(
+        publicVarGroupReferDTO: PublicVarGroupReferDTO,
+        model: Model,
+        params: MutableList<BuildFormProperty>,
+        historicalReferInfos: List<ResourcePublicVarGroupReferPO>
+    ): Boolean {
+        if (params.isNotEmpty() || historicalReferInfos.isNotEmpty()) {
+            return false
+        }
+        model.handlePublicVarInfo()
+        if (model.publicVarGroups.isNullOrEmpty()) {
+            if (publicVarGroupReferDTO.updateCount) {
+                handleDraftReferCountUpdate(publicVarGroupReferDTO, emptyList(), emptyList())
+            }
+            syncLatestFlagForAllGroups(
+                publicVarGroupReferDTO = publicVarGroupReferDTO,
+                currentGroupNames = emptySet()
+            )
+            return true
+        }
+        return false
     }
 
     /**

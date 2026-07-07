@@ -92,6 +92,10 @@ class PipelineTemplateDraftSaveHandler @Autowired constructor(
             projectId = projectId,
             templateId = templateId
         )
+        // 在持久化之前校验公共变量组引用
+        (pTemplateResourceWithoutVersion.model as? Model)?.let {
+            publicVarGroupReferManageService.validateVarGroupReferences(model = it, projectId = projectId)
+        }
         val pTemplateResourceOnlyVersion = if (templateInfo == null) {
             val resourceOnlyVersion = pipelineTemplateGenerator.getDefaultVersion(
                 versionStatus = pTemplateResourceWithoutVersion.status
@@ -113,7 +117,6 @@ class PipelineTemplateDraftSaveHandler @Autowired constructor(
             }
         }
         (pTemplateResourceWithoutVersion.model as? Model)?.let {
-            publicVarGroupReferManageService.validateVarGroupReferences(model = it, projectId = projectId)
             publicVarGroupReferManageService.handleVarGroupReferBus(
                 PublicVarGroupReferDTO(
                     userId = userId,
@@ -124,7 +127,7 @@ class PipelineTemplateDraftSaveHandler @Autowired constructor(
                     referName = pipelineTemplateInfo.name,
                     referVersion = pTemplateResourceOnlyVersion.version.toInt(),
                     referVersionName = pTemplateResourceOnlyVersion.versionName ?: "",
-                    draftFlag = true
+                    updateCount = true
                 )
             )
         }
@@ -197,6 +200,6 @@ class PipelineTemplateDraftSaveHandler @Autowired constructor(
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(PipelineTemplateDraftReleaseHandler::class.java)
+        private val logger = LoggerFactory.getLogger(PipelineTemplateDraftSaveHandler::class.java)
     }
 }

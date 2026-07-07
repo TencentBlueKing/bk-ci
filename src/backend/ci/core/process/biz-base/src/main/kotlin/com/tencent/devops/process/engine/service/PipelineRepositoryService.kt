@@ -933,7 +933,7 @@ class PipelineRepositoryService constructor(
         }
 
         // 引用关系写入在事务提交后执行，避免事务回滚产生孤儿引用。
-        // draftFlag 控制引用计数写入：RELEASED/COMMITTING 需更新计数，BRANCH 与草稿一致不更新。
+        // updateCount 控制引用计数写入：RELEASED/COMMITTING 需更新计数，BRANCH 与草稿一致不更新。
         publicVarGroupReferManageService.handleVarGroupReferBus(
             PublicVarGroupReferDTO(
                 userId = userId,
@@ -944,7 +944,7 @@ class PipelineRepositoryService constructor(
                 referName = model.name,
                 referVersion = 1,
                 referVersionName = versionName ?: "",
-                draftFlag = versionStatus == VersionStatus.RELEASED || versionStatus == VersionStatus.COMMITTING
+                updateCount = versionStatus == VersionStatus.RELEASED || versionStatus == VersionStatus.COMMITTING
             )
         )
 
@@ -1317,7 +1317,7 @@ class PipelineRepositoryService constructor(
         }
 
         // 引用关系写入在事务提交后执行，避免事务回滚产生孤儿引用。
-        // draftFlag: RELEASED 更新计数，BRANCH 与草稿一致不更新；草稿保存走 DraftSaveHandler。
+        // updateCount: RELEASED 更新计数，BRANCH 与草稿一致不更新；草稿保存走 DraftSaveHandler。
         publicVarGroupReferManageService.handleVarGroupReferBus(
             PublicVarGroupReferDTO(
                 userId = userId,
@@ -1328,7 +1328,7 @@ class PipelineRepositoryService constructor(
                 referName = model.name,
                 referVersion = version,
                 referVersionName = versionName,
-                draftFlag = versionStatus?.fix() == VersionStatus.RELEASED
+                updateCount = versionStatus?.fix() == VersionStatus.RELEASED
             )
         )
 
