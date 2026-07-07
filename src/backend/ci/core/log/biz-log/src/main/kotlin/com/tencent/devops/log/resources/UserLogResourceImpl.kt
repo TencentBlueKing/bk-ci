@@ -30,6 +30,7 @@ package com.tencent.devops.log.resources
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.log.pojo.QueryLogStatus
 import com.tencent.devops.common.log.pojo.QueryLogs
+import com.tencent.devops.common.log.pojo.QueryLogsText
 import com.tencent.devops.common.log.pojo.enums.LogType
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.log.api.UserLogResource
@@ -179,7 +180,7 @@ class UserLogResourceImpl @Autowired constructor(
         jobId: String?,
         executeCount: Int?,
         archiveFlag: Boolean?
-    ): Result<QueryLogs> {
+    ): Result<QueryLogsText> {
         val latestLogs = buildLogQueryService.getLatestLogs(
             userId = userId,
             projectId = projectId,
@@ -196,7 +197,7 @@ class UserLogResourceImpl @Autowired constructor(
             stepId = null,
             archiveFlag = archiveFlag
         )
-        recordListLogCount(latestLogs.data?.logs?.size ?: 0)
+        recordListLogCount(countLogLines(latestLogs.data))
         return latestLogs
     }
 
@@ -214,7 +215,7 @@ class UserLogResourceImpl @Autowired constructor(
         jobId: String?,
         executeCount: Int?,
         archiveFlag: Boolean?
-    ): Result<QueryLogs> {
+    ): Result<QueryLogsText> {
         val middleLogs = buildLogQueryService.getMiddleLogs(
             userId = userId,
             projectId = projectId,
@@ -232,7 +233,7 @@ class UserLogResourceImpl @Autowired constructor(
             stepId = null,
             archiveFlag = archiveFlag
         )
-        recordListLogCount(middleLogs.data?.logs?.size ?: 0)
+        recordListLogCount(countLogLines(middleLogs.data))
         return middleLogs
     }
 
@@ -283,6 +284,16 @@ class UserLogResourceImpl @Autowired constructor(
             stepId = null,
             archiveFlag = archiveFlag
         )
+    }
+
+    /**
+     * 记录日志列表函数
+     */
+    private fun countLogLines(queryLogsText: QueryLogsText?): Int {
+        if (queryLogsText == null || queryLogsText.startLineNo <= 0L) {
+            return 0
+        }
+        return (queryLogsText.endLineNo - queryLogsText.startLineNo + 1).toInt().coerceAtLeast(0)
     }
 
     /**

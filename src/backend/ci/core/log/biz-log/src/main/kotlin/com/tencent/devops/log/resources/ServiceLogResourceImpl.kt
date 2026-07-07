@@ -33,6 +33,7 @@ import com.tencent.devops.common.log.pojo.QueryLogStatus
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.log.api.ServiceLogResource
 import com.tencent.devops.common.log.pojo.QueryLogs
+import com.tencent.devops.common.log.pojo.QueryLogsText
 import com.tencent.devops.common.log.pojo.enums.LogType
 import com.tencent.devops.log.service.BuildLogQueryService
 import org.springframework.beans.factory.annotation.Autowired
@@ -177,7 +178,7 @@ class ServiceLogResourceImpl @Autowired constructor(
         stepId: String?,
         archiveFlag: Boolean?,
         checkPermissionFlag: Boolean
-    ): Result<QueryLogs> {
+    ): Result<QueryLogsText> {
         return buildLogQueryService.getLatestLogs(
             userId = userId,
             projectId = projectId,
@@ -214,7 +215,7 @@ class ServiceLogResourceImpl @Autowired constructor(
         stepId: String?,
         archiveFlag: Boolean?,
         checkPermissionFlag: Boolean
-    ): Result<QueryLogs> {
+    ): Result<QueryLogsText> {
         return buildLogQueryService.getMiddleLogs(
             userId = userId,
             projectId = projectId,

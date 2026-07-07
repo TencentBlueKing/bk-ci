@@ -27,6 +27,7 @@
 
 package com.tencent.devops.log.service
 
+import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.AuthPermission
@@ -35,6 +36,7 @@ import com.tencent.devops.common.log.pojo.PageQueryLogs
 import com.tencent.devops.common.log.pojo.QueryLogLineNum
 import com.tencent.devops.common.log.pojo.QueryLogStatus
 import com.tencent.devops.common.log.pojo.QueryLogs
+import com.tencent.devops.common.log.pojo.QueryLogsText
 import com.tencent.devops.common.log.constant.Constants
 import com.tencent.devops.common.log.pojo.enums.LogStatus
 import com.tencent.devops.common.log.pojo.enums.LogType
@@ -228,7 +230,7 @@ class BuildLogQueryService @Autowired constructor(
         stepId: String?,
         archiveFlag: Boolean? = null,
         checkPermissionFlag: Boolean = true
-    ): Result<QueryLogs> {
+    ): Result<QueryLogsText> {
         if (checkPermissionFlag) {
             validateAuth(
                 userId = userId,
@@ -261,7 +263,7 @@ class BuildLogQueryService @Autowired constructor(
         } finally {
             logStorageBean.query(System.currentTimeMillis() - startEpoch, success)
         }
-        return Result(queryLogs)
+        return Result(QueryLogsText.from(queryLogs))
     }
 
     fun getMiddleLogs(
@@ -281,7 +283,8 @@ class BuildLogQueryService @Autowired constructor(
         stepId: String?,
         archiveFlag: Boolean? = null,
         checkPermissionFlag: Boolean = true
-    ): Result<QueryLogs> {
+    ): Result<QueryLogsText> {
+        validateMiddleLogRange(start = start, end = end)
         if (checkPermissionFlag) {
             validateAuth(
                 userId = userId,
@@ -295,7 +298,7 @@ class BuildLogQueryService @Autowired constructor(
         val startEpoch = System.currentTimeMillis()
         var success = false
         val queryLogs = try {
-            val num = (end - start + 1).toInt().coerceIn(1, Constants.NORMAL_MAX_LINES)
+            val num = (end - start + 1).toInt()
             val result = logService.queryLogsBetweenLines(
                 buildId = buildId,
                 num = num,
@@ -317,7 +320,7 @@ class BuildLogQueryService @Autowired constructor(
         } finally {
             logStorageBean.query(System.currentTimeMillis() - startEpoch, success)
         }
-        return Result(queryLogs)
+        return Result(QueryLogsText.from(queryLogs))
     }
 
     fun getAfterLogs(
@@ -622,6 +625,25 @@ class BuildLogQueryService @Autowired constructor(
             logStorageBean.query(System.currentTimeMillis() - startEpoch, success)
         }
         return Result(queryLogs)
+    }
+
+    @Suppress("ThrowsCount")
+    private fun validateMiddleLogRange(start: Long, end: Long) {
+        if (start < 1 || end < 1) {
+            throw InvalidParamException("Invalid line number: start and end must be greater than 0")
+        }
+        if (start > end) {
+            throw InvalidParamException(
+                "Invalid line number range: start($start) must be less than or equal to end($end)"
+            )
+        }
+        val rangeSize = end - start + 1
+        if (rangeSize > Constants.NORMAL_MAX_LINES) {
+            throw InvalidParamException(
+                "The line number range size($rangeSize) exceeds the maximum limit " +
+                    "(${Constants.NORMAL_MAX_LINES}), please reduce the range between start and end"
+            )
+        }
     }
 
     @Suppress("ThrowsCount")
