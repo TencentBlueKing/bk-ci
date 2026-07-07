@@ -542,11 +542,11 @@ class PipelineProgressRateServiceTest {
 
         Assertions.assertEquals(listOf("步骤1", "步骤2", "步骤3"), result.taskProgressList?.map { it.taskName })
         Assertions.assertEquals(
-            listOf("1-1-1", "1-1-2", "1-2-1"),
+            listOf("0-1-1", "0-1-2", "0-2-1"),
             result.taskProgressList?.map { it.taskExecutionOrder }
         )
         Assertions.assertEquals(
-            listOf("1-1", "1-1", "1-2"),
+            listOf("0-1", "0-1", "0-2"),
             result.taskProgressList?.map { it.jobExecutionOrder }
         )
     }
