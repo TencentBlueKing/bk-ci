@@ -42,7 +42,7 @@ class PipelineProgressRateService constructor(
         val task2ProgressDetail = jobHeartbeatRequest?.task2ProgressDetail.orEmpty()
         logger.info(
             "report progress rate:$projectId|$buildId|$executeCount|" +
-                "rateSize=${task2ProgressRate.size}|detailSize=${task2ProgressDetail.size}"
+                    "rateSize=${task2ProgressRate.size}|detailSize=${task2ProgressDetail.size}"
         )
         if (task2ProgressRate.isEmpty() && task2ProgressDetail.isEmpty()) return
         val pipelineId = pipelineBuildDao.getBuildInfo(
@@ -74,7 +74,7 @@ class PipelineProgressRateService constructor(
             } catch (ignored: Exception) {
                 logger.warn(
                     "report progress rate failed|projectId=$projectId|buildId=$buildId|" +
-                        "taskId=$taskId|executeCount=$executeCount",
+                            "taskId=$taskId|executeCount=$executeCount",
                     ignored
                 )
             }
@@ -205,26 +205,26 @@ class PipelineProgressRateService constructor(
                 }.thenBy { it.record.taskSeq }
             )
             .map {
-            val taskName = taskNameMap[it.record.taskId]
-            val jobExecutionOrder = jobExecutionOrderCache.getOrPut(it.record.containerId) {
-                getJobExecutionOrder(
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    buildId = buildId,
-                    executeCount = executeCount,
-                    stageId = stageId,
-                    containerId = it.record.containerId
+                val taskName = taskNameMap[it.record.taskId]
+                val jobExecutionOrder = jobExecutionOrderCache.getOrPut(it.record.containerId) {
+                    getJobExecutionOrder(
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        buildId = buildId,
+                        executeCount = executeCount,
+                        stageId = stageId,
+                        containerId = it.record.containerId
+                    )
+                }
+                val taskExecutionOrder = "$jobExecutionOrder-${it.record.taskSeq}"
+                BuildTaskProgressInfo(
+                    taskProgressRete = it.progressRate,
+                    taskName = taskName,
+                    jobExecutionOrder = jobExecutionOrder,
+                    taskExecutionOrder = taskExecutionOrder,
+                    progressDetail = it.progressDetail?.withDefaultTitles(taskName)
                 )
             }
-            val taskExecutionOrder = "$jobExecutionOrder-${it.record.taskSeq}"
-            BuildTaskProgressInfo(
-                taskProgressRete = it.progressRate,
-                taskName = taskName,
-                jobExecutionOrder = jobExecutionOrder,
-                taskExecutionOrder = taskExecutionOrder,
-                progressDetail = it.progressDetail?.withDefaultTitles(taskName)
-            )
-        }
     }
 
     private fun getJobExecutionOrder(
@@ -235,7 +235,7 @@ class PipelineProgressRateService constructor(
         stageId: String,
         containerId: String
     ): String {
-        val stageOrder = stageId.replace("stage-", "").toInt()
+        val stageOrder = stageId.replace("stage-", "").toInt() - 1
         val jobOrder = buildRecordService.getContainerOrderInStage(
             projectId = projectId,
             pipelineId = pipelineId,
