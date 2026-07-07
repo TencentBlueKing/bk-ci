@@ -28,6 +28,7 @@
 package com.tencent.devops.store.atom.resources
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.atom.BuildMarketAtomEnvResource
 import com.tencent.devops.store.atom.service.MarketAtomEnvService
@@ -49,7 +50,8 @@ class BuildMarketAtomEnvResourceImpl @Autowired constructor(
         atomStatus: Byte?,
         osName: String?,
         osArch: String?,
-        convertOsFlag: Boolean?
+        convertOsFlag: Boolean?,
+        channelCode: ChannelCode?
     ): Result<AtomEnv?> {
         return marketAtomEnvService.getMarketAtomEnvInfo(
             projectCode = projectCode,
@@ -58,7 +60,8 @@ class BuildMarketAtomEnvResourceImpl @Autowired constructor(
             atomStatus = atomStatus,
             osName = osName,
             osArch = osArch,
-            convertOsFlag = convertOsFlag
+            convertOsFlag = convertOsFlag,
+            channelCode = channelCode
         )
     }
 

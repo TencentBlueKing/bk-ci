@@ -75,6 +75,7 @@ import com.tencent.devops.process.utils.PIPELINE_ATOM_NAME
 import com.tencent.devops.process.utils.PIPELINE_ATOM_TIMEOUT
 import com.tencent.devops.process.utils.PIPELINE_ATOM_VERSION
 import com.tencent.devops.process.utils.PIPELINE_DIALECT
+import com.tencent.devops.process.utils.PIPELINE_START_CHANNEL
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
 import com.tencent.devops.process.utils.PIPELINE_STEP_ID
 import com.tencent.devops.process.utils.PIPELINE_TASK_NAME
@@ -174,7 +175,9 @@ open class MarketAtomTask : ITask() {
             atomCode = atomCode,
             atomVersion = atomVersion,
             osName = AgentEnv.getOS().name,
-            osArch = System.getProperty("os.arch")
+            osArch = System.getProperty("os.arch"),
+            // 传递当次构建的渠道，供服务端判断是否为创作流以转换文档链接
+            channelCode = buildVariables.variables[PIPELINE_START_CHANNEL]
         )
         logger.info("atomEnvResult is:$atomEnvResult")
         val atomData =
