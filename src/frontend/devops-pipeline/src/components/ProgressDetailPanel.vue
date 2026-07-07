@@ -179,7 +179,8 @@
                 default: null
             }
         },
-        setup (props) {
+        emits: ['toggle'],
+        setup (props, { emit }) {
             const { proxy } = getCurrentInstance()
             const loading = ref(false)
             const refreshing = ref(false)
@@ -231,6 +232,8 @@
                 const detail = progressData.value?.progressDetail
                 return !!(detail?.progress || detail?.subtasks?.items?.length || detail?.timeline?.items?.length)
             })
+
+            const emitToggle = () => emit('toggle', hasProgressDetail.value)
 
             const visible = computed(() => loading.value || hasProgressDetail.value || props.showEmpty || props.showHeader)
             const progressInfo = computed(() => progressData.value?.progressDetail?.progress ?? null)
@@ -401,11 +404,13 @@
                     progressData.value = props.detailData
                     loading.value = false
                     refreshing.value = false
+                    emitToggle()
                     return
                 }
                 if (!props.taskId) {
                     loading.value = false
                     refreshing.value = false
+                    emitToggle()
                     return
                 }
                 loading.value = showLoading
@@ -435,6 +440,7 @@
                     if (currentRequestId === requestId.value) {
                         loading.value = false
                         refreshing.value = false
+                        emitToggle()
                         scheduleRefresh()
                     }
                 }
@@ -459,6 +465,7 @@
                 progressData.value = data
                 loading.value = false
                 refreshing.value = false
+                emitToggle()
             })
             watch(() => props.taskStatus, () => scheduleRefresh())
 

@@ -16,7 +16,7 @@
                     v-if="tab.show"
                     :key="tab.name"
                     :class="{ active: currentTab === tab.name }"
-                    @click="currentTab = tab.name"
+                    @click="selectTab(tab.name)"
                 >{{ $t(`execDetail.${tab.name}`) }}</span>
             </template>
         </span>
@@ -94,8 +94,9 @@
         data () {
             return {
                 currentTab: null,
+                userSelectedTab: false,
                 tabList: [
-                    { name: 'progress', show: true },
+                    { name: 'progress', show: false },
                     { name: 'log', show: true },
                     { name: 'artifactory', show: false, completeLoading: false },
                     { name: 'setting', show: true },
@@ -191,7 +192,7 @@
                 const stageName = `stage ${this.editingElementPos.stageIndex + 1}`
                 return [buildNum, stageName].filter(Boolean).join(' - ')
             },
-            defaultTab () {
+            isRunningStatus () {
                 const progressFirstStatus = [
                     'RUNNING',
                     'QUEUE',
@@ -200,7 +201,13 @@
                     'LOOP_WAITING',
                     'CALL_WAITING'
                 ]
-                return progressFirstStatus.includes(this.currentElement.status) ? 'progress' : 'log'
+                return progressFirstStatus.includes(this.currentElement.status)
+            },
+            hasProgressTab () {
+                return !!this.tabList.find(tab => tab.name === 'progress')?.show
+            },
+            defaultTab () {
+                return (this.isRunningStatus && this.hasProgressTab) ? 'progress' : 'log'
             },
             sortedTabList () {
                 const mapping = {
@@ -234,8 +241,9 @@
 
         watch: {
             'currentElement.id': function () {
+                this.userSelectedTab = false
                 this.tabList = [
-                    { name: 'progress', show: true },
+                    { name: 'progress', show: false },
                     { name: 'log', show: true },
                     { name: 'artifactory', show: true, completeLoading: false },
                     { name: 'setting', show: true },
@@ -246,9 +254,18 @@
         },
 
         methods: {
+            selectTab (name) {
+                this.userSelectedTab = true
+                this.currentTab = name
+            },
+
             toggleTab (key, show = false) {
-                const tab = this.sortedTabList.find(tab => tab.name === key)
+                const tab = this.tabList.find(tab => tab.name === key)
+                if (!tab) return
                 tab.show = show
+                if (key === 'progress' && show && this.isRunningStatus && !this.userSelectedTab) {
+                    this.currentTab = 'progress'
+                }
             },
 
             completeLoading (key) {
