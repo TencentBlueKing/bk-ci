@@ -333,6 +333,10 @@ class PipelineTransferYamlService @Autowired constructor(
         )
         val model = modelTransfer.yaml2Model(input)
         pipelineInfo?.let {
+            publicVarGroupReferManageService.validateVarGroupReferences(
+                model = model,
+                projectId = projectId
+            )
             publicVarGroupReferManageService.handleVarGroupReferByVersionName(
                 PublicVarGroupReferDTO(
                     userId = userId,

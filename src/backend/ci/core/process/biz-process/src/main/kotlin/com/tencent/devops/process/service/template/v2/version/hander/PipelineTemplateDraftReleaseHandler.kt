@@ -134,6 +134,10 @@ class PipelineTemplateDraftReleaseHandler @Autowired constructor(
             targetAction = targetAction,
             targetBranch = targetBranch
         )
+        // 在所有持久化之前校验公共变量组引用
+        (pTemplateResourceWithoutVersion.model as? Model)?.let {
+            publicVarGroupReferManageService.validateVarGroupReferences(model = it, projectId = projectId)
+        }
         pipelineYamlReleaseService.validateReleaseYamlFile(
             context = this,
             resourceOnlyVersion = resourceOnlyVersion
@@ -150,9 +154,8 @@ class PipelineTemplateDraftReleaseHandler @Autowired constructor(
             )
         }
 
-        // 同步变量组引用关系
+        // 同步变量组引用关系（校验已通过）
         (pTemplateResourceWithoutVersion.model as? Model)?.let {
-            publicVarGroupReferManageService.validateVarGroupReferences(model = it, projectId = projectId)
             publicVarGroupReferManageService.handleVarGroupReferBus(
                 PublicVarGroupReferDTO(
                     userId = userId,
