@@ -35,6 +35,7 @@ import com.tencent.devops.common.log.pojo.PageQueryLogs
 import com.tencent.devops.common.log.pojo.QueryLogLineNum
 import com.tencent.devops.common.log.pojo.QueryLogStatus
 import com.tencent.devops.common.log.pojo.QueryLogs
+import com.tencent.devops.common.log.constant.Constants
 import com.tencent.devops.common.log.pojo.enums.LogStatus
 import com.tencent.devops.common.log.pojo.enums.LogType
 import com.tencent.devops.log.jmx.LogStorageBean
@@ -191,6 +192,114 @@ class BuildLogQueryService @Autowired constructor(
                 buildId = buildId,
                 num = num,
                 fromStart = fromStart ?: true,
+                start = start,
+                end = end,
+                debug = debug ?: false,
+                logType = logType,
+                tag = tag,
+                subTag = subTag,
+                containerHashId = containerHashId,
+                executeCount = executeCount,
+                jobId = jobId,
+                stepId = stepId
+            )
+            result.timeUsed = System.currentTimeMillis() - startEpoch
+            success = logStatusSuccess(result.status)
+            result
+        } finally {
+            logStorageBean.query(System.currentTimeMillis() - startEpoch, success)
+        }
+        return Result(queryLogs)
+    }
+
+    fun getLatestLogs(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        debug: Boolean?,
+        logType: LogType?,
+        size: Int?,
+        tag: String?,
+        containerHashId: String?,
+        executeCount: Int?,
+        subTag: String? = null,
+        jobId: String?,
+        stepId: String?,
+        archiveFlag: Boolean? = null,
+        checkPermissionFlag: Boolean = true
+    ): Result<QueryLogs> {
+        if (checkPermissionFlag) {
+            validateAuth(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                permission = AuthPermission.VIEW,
+                archiveFlag = archiveFlag
+            )
+        }
+        val startEpoch = System.currentTimeMillis()
+        var success = false
+        val queryLogs = try {
+            val result = logService.getBottomLogs(
+                pipelineId = pipelineId,
+                buildId = buildId,
+                debug = debug ?: false,
+                logType = logType,
+                tag = tag,
+                subTag = subTag,
+                containerHashId = containerHashId,
+                executeCount = executeCount,
+                size = size,
+                jobId = jobId,
+                stepId = stepId
+            )
+            result.timeUsed = System.currentTimeMillis() - startEpoch
+            success = logStatusSuccess(result.status)
+            result
+        } finally {
+            logStorageBean.query(System.currentTimeMillis() - startEpoch, success)
+        }
+        return Result(queryLogs)
+    }
+
+    fun getMiddleLogs(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        start: Long,
+        end: Long,
+        debug: Boolean?,
+        logType: LogType?,
+        tag: String?,
+        containerHashId: String?,
+        executeCount: Int?,
+        subTag: String? = null,
+        jobId: String?,
+        stepId: String?,
+        archiveFlag: Boolean? = null,
+        checkPermissionFlag: Boolean = true
+    ): Result<QueryLogs> {
+        if (checkPermissionFlag) {
+            validateAuth(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                permission = AuthPermission.VIEW,
+                archiveFlag = archiveFlag
+            )
+        }
+        val startEpoch = System.currentTimeMillis()
+        var success = false
+        val queryLogs = try {
+            val num = (end - start + 1).toInt().coerceIn(1, Constants.NORMAL_MAX_LINES)
+            val result = logService.queryLogsBetweenLines(
+                buildId = buildId,
+                num = num,
+                fromStart = true,
                 start = start,
                 end = end,
                 debug = debug ?: false,

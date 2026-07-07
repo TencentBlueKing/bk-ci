@@ -161,6 +161,80 @@ class ServiceLogResourceImpl @Autowired constructor(
         )
     }
 
+    override fun getLatestLogs(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        debug: Boolean?,
+        logType: LogType?,
+        size: Int?,
+        tag: String?,
+        subTag: String?,
+        containerHashId: String?,
+        executeCount: Int?,
+        jobId: String?,
+        stepId: String?,
+        archiveFlag: Boolean?,
+        checkPermissionFlag: Boolean
+    ): Result<QueryLogs> {
+        return buildLogQueryService.getLatestLogs(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            debug = debug,
+            logType = logType,
+            size = size ?: defaultNum,
+            tag = tag,
+            subTag = subTag,
+            containerHashId = containerHashId,
+            executeCount = executeCount,
+            jobId = jobId,
+            stepId = stepId,
+            archiveFlag = archiveFlag,
+            checkPermissionFlag = checkPermissionFlag
+        )
+    }
+
+    override fun getMiddleLogs(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        start: Long,
+        end: Long,
+        debug: Boolean?,
+        logType: LogType?,
+        tag: String?,
+        subTag: String?,
+        containerHashId: String?,
+        executeCount: Int?,
+        jobId: String?,
+        stepId: String?,
+        archiveFlag: Boolean?,
+        checkPermissionFlag: Boolean
+    ): Result<QueryLogs> {
+        return buildLogQueryService.getMiddleLogs(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            start = start,
+            end = end,
+            debug = debug,
+            logType = logType,
+            tag = tag,
+            subTag = subTag,
+            containerHashId = containerHashId,
+            executeCount = executeCount,
+            jobId = jobId,
+            stepId = stepId,
+            archiveFlag = archiveFlag,
+            checkPermissionFlag = checkPermissionFlag
+        )
+    }
+
     override fun downloadLogs(
         userId: String,
         projectId: String,
