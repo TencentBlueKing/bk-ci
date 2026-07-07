@@ -49,8 +49,8 @@ data class PublicVarGroupReferDTO(
     val referVersion: Int,
     @get:Schema(title = "关联组件版本名称")
     val referVersionName: String? = null,
-    @get:Schema(title = "是否为草稿版本（仅草稿版本更新引用计数和展示）")
-    val draftFlag: Boolean = false
+    @get:Schema(title = "是否更新计数")
+    val updateCount: Boolean = false
 ) {
     override fun toString(): String {
         return "PublicVarGroupReferDTO(userId='$userId', projectId='$projectId', " +

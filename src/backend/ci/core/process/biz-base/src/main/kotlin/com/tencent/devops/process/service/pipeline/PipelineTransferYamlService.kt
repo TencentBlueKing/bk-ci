@@ -347,7 +347,7 @@ class PipelineTransferYamlService @Autowired constructor(
                     referName = model.name,
                     referVersion = pipelineInfo.version,
                     referVersionName = pipelineInfo.versionName,
-                    draftFlag = pipelineInfo.latestVersionStatus == VersionStatus.COMMITTING
+                    updateCount = pipelineInfo.latestVersionStatus == VersionStatus.COMMITTING
                 )
             )
         }

@@ -345,7 +345,7 @@ class PublicVarGroupReferManageService @Autowired constructor(
 
     /**
      * 处理变量组引用写入（引用记录 + 计数 + LATEST_FLAG）
-     * draftFlag=true 时更新引用计数；draftFlag=false 时仅写引用记录（release/branch 版本内容与草稿一致）。
+     * updateCount=true 时更新引用计数；updateCount=false 时仅写引用记录（release/branch 版本内容与草稿一致）。
      * 校验逻辑已提取到 [validateVarGroupReferences]，调用方应事务前校验、事务后调本方法。
      * 未前置校验的调用方由 needFallbackValidation 兜底。
      */
@@ -402,9 +402,9 @@ class PublicVarGroupReferManageService @Autowired constructor(
                 historicalReferInfos = historicalReferInfos,
                 publicVarGroupNames = publicVarGroups?.map { it.groupName } ?: emptyList(),
                 resourcePublicVarGroupReferPOS = allReferPOs,
-                skipCountUpdate = !publicVarGroupReferDTO.draftFlag
+                skipCountUpdate = !publicVarGroupReferDTO.updateCount
             )
-            if (publicVarGroupReferDTO.draftFlag) {
+            if (publicVarGroupReferDTO.updateCount) {
                 handleDraftReferCountUpdate(
                     publicVarGroupReferDTO = publicVarGroupReferDTO,
                     currentGroupNames = publicVarGroups?.map { it.groupName } ?: emptyList(),
@@ -419,7 +419,7 @@ class PublicVarGroupReferManageService @Autowired constructor(
                 currentGroupNames = currentGroupNames,
                 involvedGroupNames = currentGroupNames + historicalGroupNames
             )
-            logger.info("handleVarGroupReferBus completed, draftFlag=${publicVarGroupReferDTO.draftFlag}")
+            logger.info("handleVarGroupReferBus completed, updateCount=${publicVarGroupReferDTO.updateCount}")
         } finally {
             lock.unlock()
         }
@@ -451,7 +451,7 @@ class PublicVarGroupReferManageService @Autowired constructor(
         }
         model.handlePublicVarInfo()
         if (model.publicVarGroups.isNullOrEmpty()) {
-            if (publicVarGroupReferDTO.draftFlag) {
+            if (publicVarGroupReferDTO.updateCount) {
                 handleDraftReferCountUpdate(publicVarGroupReferDTO, emptyList(), emptyList())
             }
             syncLatestFlagForAllGroups(

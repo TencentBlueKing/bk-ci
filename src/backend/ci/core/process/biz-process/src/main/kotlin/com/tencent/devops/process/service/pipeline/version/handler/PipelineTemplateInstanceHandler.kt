@@ -174,7 +174,8 @@ class PipelineTemplateInstanceHandler @Autowired constructor(
                 referType = PublicVarGroupReferenceTypeEnum.PIPELINE,
                 referName = pipelineSettingWithoutVersion.pipelineName,
                 referVersion = resourceOnlyVersion.version,
-                referVersionName = resourceOnlyVersion.versionName
+                referVersionName = resourceOnlyVersion.versionName,
+                updateCount = true
             )
         )
 
