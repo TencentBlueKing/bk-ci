@@ -161,6 +161,10 @@ class PipelineTemplateInstanceHandler @Autowired constructor(
         }
 
         // 同步变量组引用关系
+        publicVarGroupReferManageService.validateVarGroupReferences(
+            model = pipelineResourceWithoutVersion.model,
+            projectId = projectId
+        )
         publicVarGroupReferManageService.handleVarGroupReferBus(
             PublicVarGroupReferDTO(
                 userId = userId,

@@ -147,6 +147,6 @@ class PipelineTemplateReleaseCreateHandler @Autowired constructor(
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(PipelineTemplateDraftReleaseHandler::class.java)
+        private val logger = LoggerFactory.getLogger(PipelineTemplateReleaseCreateHandler::class.java)
     }
 }
