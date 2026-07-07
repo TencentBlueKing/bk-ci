@@ -275,7 +275,7 @@ export const actions = {
     deleteVisibilitiesList ({ commit }, { storeCode, deptIds, projectCodes }) {
         const queryStr = deptIds ? `?deptIds=${deptIds}` : ''
         const data = projectCodes ? { projectCodes } : {}
-        return vue.$ajax.delete(`${prefix}/user/store/visibilities/types/${STORE_TYPE}/codes/${storeCode}/delete${queryStr}`, { data })
+        return vue.$ajax.post(`${prefix}/user/store/visibilities/types/${STORE_TYPE}/codes/${storeCode}/delete${queryStr}`, data)
     },
 
     /**

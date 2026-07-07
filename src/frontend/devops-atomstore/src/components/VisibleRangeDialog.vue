@@ -648,48 +648,50 @@
     color: #4289ff;
     cursor: pointer;
   }
-    .grouped {
-        padding: 0 20px;
-        .selected-content {
-            width: 419px;
-            padding: 0;
-        }
-        .item-header {
+  .grouped {
+    padding: 0 20px;
+    height: calc(100% - 64px);
+    overflow: auto;
+    .selected-content {
+        width: 419px;
+        padding: 0;
+    }
+    .item-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        .group-header {
             display: flex;
-            justify-content: space-between;
             align-items: center;
-            .group-header {
-                display: flex;
-                align-items: center;
-                font-size: 12px;
-            }
-        }
-        .group-delete {
-            width: 14px;
-            height: 14px;
-        }
-        .selected-item {
-            padding: 5px 16px;
-            margin-bottom: 4px;
-            div {
-                display: flex;
-                flex-direction: column;
-                align-items: start;
-            }
-            .item-name {
-                font-size: 13px;
-                color: #313238;
-                line-height: 1.4;
-            }
-            .item-sub {
-                font-size: 12px;
-                color: #979ba5;
-                margin-top: 4px;
-                text-align: left;
-                line-height: 1.4;
-            }
+            font-size: 12px;
         }
     }
+    .group-delete {
+        width: 14px;
+        height: 14px;
+    }
+    .selected-item {
+        padding: 5px 16px;
+        margin-bottom: 4px;
+        div {
+            display: flex;
+            flex-direction: column;
+            align-items: start;
+        }
+        .item-name {
+            font-size: 13px;
+            color: #313238;
+            line-height: 1.4;
+        }
+        .item-sub {
+            font-size: 12px;
+            color: #979ba5;
+            margin-top: 4px;
+            text-align: left;
+            line-height: 1.4;
+        }
+    }
+  }
   .bk-dialog-wrapper .bk-dialog-body {
     padding: 0;
     height: 688px;
