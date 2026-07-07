@@ -114,10 +114,14 @@ class PipelineProgressRateService constructor(
         if (stageTasks.isEmpty()) {
             return BuildStageProgressInfo(stageProgressRete = 0.0, taskProgressList = emptyList())
         }
-        val runningTaskProgresses = runningTasks.map(::toTaskProgress)
+        val runningTaskProgresses = runningTasks
+            .filter { hasReportedProgress(it.taskVar) }
+            .map(::toTaskProgress)
         val runningTaskTotalProgressRate = runningTaskProgresses.sumOf { it.progressRate }
         val stageProgressRate = (finishedTasks.size + runningTaskTotalProgressRate) / stageTasks.size
-        val completedTaskProgresses = finishedTasks.map(::toCompletedTaskProgress)
+        val completedTaskProgresses = finishedTasks
+            .filter { hasReportedProgress(it.taskVar) }
+            .map(::toTaskProgress)
         val taskProgressesForList = if (runningTaskProgresses.isNotEmpty()) {
             runningTaskProgresses + completedTaskProgresses
         } else {
@@ -212,11 +216,12 @@ class PipelineProgressRateService constructor(
                     containerId = it.record.containerId
                 )
             }
+            val taskExecutionOrder = "$jobExecutionOrder-${it.record.taskSeq}"
             BuildTaskProgressInfo(
                 taskProgressRete = it.progressRate,
                 taskName = taskName,
                 jobExecutionOrder = jobExecutionOrder,
-                taskExecutionOrder = "$jobExecutionOrder-${it.record.taskSeq}",
+                taskExecutionOrder = taskExecutionOrder,
                 progressDetail = it.progressDetail?.withDefaultTitles(taskName)
             )
         }
@@ -230,7 +235,7 @@ class PipelineProgressRateService constructor(
         stageId: String,
         containerId: String
     ): String {
-        val stageOrder = stageId.replace("stage-", "").toInt() - 1
+        val stageOrder = stageId.replace("stage-", "").toInt()
         val jobOrder = buildRecordService.getContainerOrderInStage(
             projectId = projectId,
             pipelineId = pipelineId,
@@ -251,15 +256,6 @@ class PipelineProgressRateService constructor(
         )
     }
 
-    private fun toCompletedTaskProgress(record: BuildRecordTask): RunningTaskProgress {
-        val taskProgress = toTaskProgress(record)
-        return if (taskProgress.progressRate > 0.0 || taskProgress.progressDetail != null) {
-            taskProgress
-        } else {
-            taskProgress.copy(progressRate = 1.0)
-        }
-    }
-
     private fun getTaskNameMap(
         projectId: String,
         buildId: String,
@@ -272,6 +268,10 @@ class PipelineProgressRateService constructor(
         return pipelineTaskService.getAllBuildTask(projectId, buildId)
             .filter { it.taskId in taskIdSet }
             .associate { it.taskId to it.taskName }
+    }
+
+    private fun hasReportedProgress(taskVar: Map<String, Any>): Boolean {
+        return taskVar.containsKey(PROGRESS_RATE_PLACEHOLDER) || taskVar.containsKey(PROGRESS_DETAIL_PLACEHOLDER)
     }
 
     private fun getProgressRate(

@@ -158,7 +158,7 @@ class PipelineProgressRateServiceTest {
         }
 
         Assertions.assertEquals(0.8334, result.stageProgressRete)
-        Assertions.assertEquals(2, result.taskProgressList?.size)
+        Assertions.assertEquals(1, result.taskProgressList?.size)
         val runningTaskProgress = result.taskProgressList?.first { it.taskName == "编译" }
         Assertions.assertEquals(0.6667, runningTaskProgress?.taskProgressRete)
         Assertions.assertEquals("编译进度", runningTaskProgress?.progressDetail?.progress?.title)
@@ -240,7 +240,7 @@ class PipelineProgressRateServiceTest {
     }
 
     @Test
-    fun calculateStageProgressRateIncludesCompletedTasksWithoutProgressDetailAsCompleted() {
+    fun calculateStageProgressRateSkipsCompletedTasksWithoutProgressDetail() {
         every { pipelineRuntimeService.getBuildInfo(PROJECT_ID, BUILD_ID) } returns buildInfo()
         every {
             buildRecordTaskDao.getLatestNormalRecords(
@@ -299,12 +299,9 @@ class PipelineProgressRateServiceTest {
         )
 
         Assertions.assertEquals(0.6879, result.stageProgressRete)
-        Assertions.assertEquals(2, result.taskProgressList?.size)
-        Assertions.assertEquals(listOf("已完成步骤", "编译"), result.taskProgressList?.map { it.taskName })
-        Assertions.assertEquals(
-            listOf(1.0, 0.3758),
-            result.taskProgressList?.map { it.taskProgressRete }
-        )
+        Assertions.assertEquals(1, result.taskProgressList?.size)
+        Assertions.assertEquals(listOf("编译"), result.taskProgressList?.map { it.taskName })
+        Assertions.assertEquals(listOf(0.3758), result.taskProgressList?.map { it.taskProgressRete })
     }
 
     @Test
@@ -372,12 +369,70 @@ class PipelineProgressRateServiceTest {
         )
 
         Assertions.assertEquals(0.6879, result.stageProgressRete)
-        Assertions.assertEquals(2, result.taskProgressList?.size)
-        Assertions.assertEquals(listOf("失败步骤", "编译"), result.taskProgressList?.map { it.taskName })
-        Assertions.assertEquals(
-            listOf(1.0, 0.3758),
-            result.taskProgressList?.map { it.taskProgressRete }
+        Assertions.assertEquals(1, result.taskProgressList?.size)
+        Assertions.assertEquals(listOf("编译"), result.taskProgressList?.map { it.taskName })
+        Assertions.assertEquals(listOf(0.3758), result.taskProgressList?.map { it.taskProgressRete })
+    }
+
+    @Test
+    fun calculateStageProgressRateSkipsRunningTasksWithoutProgressDetail() {
+        every { pipelineRuntimeService.getBuildInfo(PROJECT_ID, BUILD_ID) } returns buildInfo()
+        every {
+            buildRecordTaskDao.getLatestNormalRecords(
+                dslContext = dslContext,
+                projectId = PROJECT_ID,
+                buildId = BUILD_ID,
+                executeCount = 1,
+                matrixContainerIds = emptyList(),
+                stageId = STAGE_ID
+            )
+        } returns listOf(
+            buildRecordTask(
+                taskId = "task-running-without-progress",
+                containerId = "container-1",
+                status = BuildStatus.RUNNING,
+                taskVar = mutableMapOf(),
+                taskSeq = 1
+            ),
+            buildRecordTask(
+                taskId = TASK_ID,
+                containerId = "container-2",
+                status = BuildStatus.RUNNING,
+                taskVar = mutableMapOf("progressRate" to 0.3758),
+                taskSeq = 1
+            )
         )
+        every { pipelineTaskService.getAllBuildTask(PROJECT_ID, BUILD_ID) } returns listOf(
+            buildTask(
+                taskId = "task-running-without-progress",
+                taskName = "未上报步骤",
+                containerId = "container-1",
+                status = BuildStatus.RUNNING
+            ),
+            buildTask()
+        )
+        every {
+            buildRecordService.getContainerOrderInStage(
+                projectId = PROJECT_ID,
+                pipelineId = PIPELINE_ID,
+                buildId = BUILD_ID,
+                executeCount = 1,
+                stageId = STAGE_ID,
+                containerId = "container-2"
+            )
+        } returns 1
+
+        val result = service.calculateStageProgressRate(
+            projectId = PROJECT_ID,
+            pipelineId = PIPELINE_ID,
+            buildId = BUILD_ID,
+            stageId = STAGE_ID
+        )
+
+        Assertions.assertEquals(0.1879, result.stageProgressRete)
+        Assertions.assertEquals(1, result.taskProgressList?.size)
+        Assertions.assertEquals(listOf("编译"), result.taskProgressList?.map { it.taskName })
+        Assertions.assertEquals(listOf(0.3758), result.taskProgressList?.map { it.taskProgressRete })
     }
 
     @Test
@@ -397,14 +452,14 @@ class PipelineProgressRateServiceTest {
                 taskId = "task-2",
                 containerId = "container-1",
                 status = BuildStatus.SUCCEED,
-                taskVar = mutableMapOf(),
+                taskVar = mutableMapOf("progressRate" to 0.8),
                 taskSeq = 2
             ),
             buildRecordTask(
                 taskId = "task-1",
                 containerId = "container-1",
                 status = BuildStatus.SUCCEED,
-                taskVar = mutableMapOf(),
+                taskVar = mutableMapOf("progressRate" to 0.4),
                 taskSeq = 1
             ),
             buildRecordTask(
@@ -467,8 +522,12 @@ class PipelineProgressRateServiceTest {
 
         Assertions.assertEquals(listOf("步骤1", "步骤2", "步骤3"), result.taskProgressList?.map { it.taskName })
         Assertions.assertEquals(
-            listOf("0-1-1", "0-1-2", "0-2-1"),
+            listOf("1-1-1", "1-1-2", "1-2-1"),
             result.taskProgressList?.map { it.taskExecutionOrder }
+        )
+        Assertions.assertEquals(
+            listOf("1-1", "1-1", "1-2"),
+            result.taskProgressList?.map { it.jobExecutionOrder }
         )
     }
 
