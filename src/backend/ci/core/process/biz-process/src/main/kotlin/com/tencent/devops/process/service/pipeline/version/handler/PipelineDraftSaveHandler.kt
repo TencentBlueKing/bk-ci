@@ -124,7 +124,7 @@ class PipelineDraftSaveHandler @Autowired constructor(
                 referName = pipelineBasicInfo.pipelineName,
                 referVersion = resourceOnlyVersion.version,
                 referVersionName = resourceOnlyVersion.versionName,
-                draftFlag = true
+                updateCount = true
             )
         )
 
