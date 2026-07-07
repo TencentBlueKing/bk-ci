@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.log.pojo.QueryLogLineNum
 import com.tencent.devops.common.log.pojo.QueryLogStatus
 import com.tencent.devops.common.log.pojo.QueryLogs
+import com.tencent.devops.common.log.pojo.QueryLogsText
 import com.tencent.devops.common.log.pojo.enums.LogType
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
@@ -268,7 +269,7 @@ interface ServiceLogResource {
         @DefaultValue("true")
         @QueryParam("checkPermissionFlag")
         checkPermissionFlag: Boolean = true
-    ): Result<QueryLogs>
+    ): Result<QueryLogsText>
 
     @Operation(summary = "获取两个行号之间的所有日志")
     @GET
@@ -289,7 +290,7 @@ interface ServiceLogResource {
         @Parameter(description = "起始行号", required = true)
         @QueryParam("start")
         start: Long,
-        @Parameter(description = "结尾行号", required = true)
+        @Parameter(description = "结尾行号，与起始行号区间最多包含10000行", required = true)
         @QueryParam("end")
         end: Long,
         @Parameter(description = "是否包含调试日志", required = false)
@@ -323,7 +324,7 @@ interface ServiceLogResource {
         @DefaultValue("true")
         @QueryParam("checkPermissionFlag")
         checkPermissionFlag: Boolean = true
-    ): Result<QueryLogs>
+    ): Result<QueryLogsText>
 
     @Operation(summary = "下载日志接口")
     @GET

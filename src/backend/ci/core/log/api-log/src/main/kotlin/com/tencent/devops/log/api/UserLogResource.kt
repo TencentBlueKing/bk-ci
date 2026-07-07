@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.log.pojo.QueryLogStatus
 import com.tencent.devops.common.log.pojo.QueryLogs
+import com.tencent.devops.common.log.pojo.QueryLogsText
 import com.tencent.devops.common.log.pojo.enums.LogType
 import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
@@ -229,7 +230,7 @@ interface UserLogResource {
         @Parameter(description = "是否查询归档数据", required = false)
         @QueryParam("archiveFlag")
         archiveFlag: Boolean? = false
-    ): Result<QueryLogs>
+    ): Result<QueryLogsText>
 
     @Operation(summary = "获取两个行号之间的所有日志")
     @GET
@@ -250,7 +251,7 @@ interface UserLogResource {
         @Parameter(description = "起始行号", required = true)
         @QueryParam("start")
         start: Long,
-        @Parameter(description = "结尾行号", required = true)
+        @Parameter(description = "结尾行号，与起始行号区间最多包含10000行", required = true)
         @QueryParam("end")
         end: Long,
         @Parameter(description = "是否包含调试日志", required = false)
@@ -274,7 +275,7 @@ interface UserLogResource {
         @Parameter(description = "是否查询归档数据", required = false)
         @QueryParam("archiveFlag")
         archiveFlag: Boolean? = false
-    ): Result<QueryLogs>
+    ): Result<QueryLogsText>
 
     @Operation(summary = "下载日志接口")
     @GET
