@@ -285,14 +285,19 @@ class PipelineProgressRateService constructor(
 
     private fun getProgressDetail(taskVar: Map<String, Any>): BuildTaskProgressDetail? {
         val progressDetail = taskVar[PROGRESS_DETAIL_PLACEHOLDER] ?: return null
-        return when (progressDetail) {
+        val parsed = when (progressDetail) {
             is BuildTaskProgressDetail -> progressDetail
             is String -> JsonUtil.toOrNull(progressDetail, BuildTaskProgressDetail::class.java)
             else -> JsonUtil.toOrNull(
                 JsonUtil.toJson(progressDetail, formatted = false),
                 BuildTaskProgressDetail::class.java
             )
-        }?.let { BuildTaskProgressDetailValidator.normalize(it) }
+        } ?: return null
+        // 读路径遇到脏数据/历史数据/字段口径变更时降级为空，避免单条非法明细击穿整个进度查询接口
+        return runCatching { BuildTaskProgressDetailValidator.normalize(parsed) }.getOrElse {
+            logger.warn("normalize progress detail failed, fallback to null|detail=$progressDetail", it)
+            null
+        }
     }
 
     private fun BuildTaskProgressDetail.withDefaultTitles(taskName: String?): BuildTaskProgressDetail {
