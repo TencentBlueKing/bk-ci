@@ -66,9 +66,10 @@ import com.tencent.devops.store.common.dao.StoreStatisticDao
 import com.tencent.devops.store.common.dao.StoreStatisticTotalDao
 import com.tencent.devops.store.common.dao.StoreVersionLogDao
 import com.tencent.devops.store.common.service.StoreCommonService
-import com.tencent.devops.store.utils.VersionUtils
+import com.tencent.devops.store.common.utils.StoreUtils
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
+import com.tencent.devops.store.pojo.common.enums.ServiceScopeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.publication.ReleaseProcessItem
@@ -77,6 +78,7 @@ import com.tencent.devops.store.pojo.common.publication.StoreProcessInfo
 import com.tencent.devops.store.pojo.common.version.StoreShowVersionInfo
 import com.tencent.devops.store.pojo.common.version.StoreShowVersionItem
 import com.tencent.devops.store.pojo.common.version.VersionModel
+import com.tencent.devops.store.utils.VersionUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -338,20 +340,35 @@ abstract class StoreCommonServiceImpl : StoreCommonService {
     /**
      * 获取store组件详情页地址
      */
-    override fun getStoreDetailUrl(storeType: StoreTypeEnum, storeCode: String): String {
+    override fun getStoreDetailUrl(
+        storeType: StoreTypeEnum,
+        storeCode: String,
+        serviceScope: ServiceScopeEnum?
+    ): String {
         return when (storeType) {
-            StoreTypeEnum.ATOM -> getStoreDetailUrl(storeDetailUrlConfig.atomDetailBaseUrl, storeCode)
-            StoreTypeEnum.TEMPLATE -> getStoreDetailUrl(storeDetailUrlConfig.templateDetailBaseUrl, storeCode)
-            StoreTypeEnum.IMAGE -> getStoreDetailUrl(storeDetailUrlConfig.imageDetailBaseUrl, storeCode)
-            StoreTypeEnum.IDE_ATOM -> getStoreDetailUrl(storeDetailUrlConfig.ideAtomDetailBaseUrl, storeCode)
-            StoreTypeEnum.SERVICE -> getStoreDetailUrl(storeDetailUrlConfig.serviceDetailBaseUrl, storeCode)
+            StoreTypeEnum.ATOM -> getStoreDetailUrl(
+                storeDetailUrlPrefix = storeDetailUrlConfig.atomDetailBaseUrl,
+                storeType = storeType,
+                storeCode = storeCode,
+                serviceScope = serviceScope
+            )
+            StoreTypeEnum.TEMPLATE -> getStoreDetailUrl(storeDetailUrlConfig.templateDetailBaseUrl, storeType, storeCode)
+            StoreTypeEnum.IMAGE -> getStoreDetailUrl(storeDetailUrlConfig.imageDetailBaseUrl, storeType, storeCode)
+            StoreTypeEnum.IDE_ATOM -> getStoreDetailUrl(storeDetailUrlConfig.ideAtomDetailBaseUrl, storeType, storeCode)
+            StoreTypeEnum.SERVICE -> getStoreDetailUrl(storeDetailUrlConfig.serviceDetailBaseUrl, storeType, storeCode)
             else -> "${storeDetailUrlConfig.storeDetailBaseUrl}/${storeType.name.lowercase()}/$storeCode"
         }
     }
 
-    private fun getStoreDetailUrl(storeDetailUrlPrefix: String?, storeCode: String): String {
+    private fun getStoreDetailUrl(
+        storeDetailUrlPrefix: String?,
+        storeType: StoreTypeEnum,
+        storeCode: String,
+        serviceScope: ServiceScopeEnum? = null
+    ): String {
         return if (!storeDetailUrlPrefix.isNullOrBlank()) {
-            "$storeDetailUrlPrefix$storeCode"
+            val url = "$storeDetailUrlPrefix$storeCode"
+            StoreUtils.transformDocsLink(url, storeType, serviceScope) ?: url
         } else {
             ""
         }

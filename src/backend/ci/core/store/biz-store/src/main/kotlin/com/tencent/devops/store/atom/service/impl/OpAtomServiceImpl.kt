@@ -47,7 +47,7 @@ import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
 import com.tencent.devops.store.atom.dao.AtomDao
 import com.tencent.devops.store.atom.util.AtomServiceScopeUtil
-import com.tencent.devops.store.atom.util.AtomUtil
+import com.tencent.devops.store.common.utils.StoreUtils
 import com.tencent.devops.store.util.ServiceScopeUtil
 import com.tencent.devops.store.atom.dao.MarketAtomDao
 import com.tencent.devops.store.atom.dao.MarketAtomFeatureDao
@@ -66,7 +66,6 @@ import com.tencent.devops.store.common.service.StoreWebsocketService
 import com.tencent.devops.store.common.service.action.StoreDecorateFactory
 import com.tencent.devops.store.common.utils.PublicComponentCacheManager
 import com.tencent.devops.store.common.utils.StoreFileAnalysisUtil
-import com.tencent.devops.store.common.utils.StoreUtils
 import com.tencent.devops.store.utils.VersionUtils
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.constant.StoreMessageCode.USER_UPLOAD_FILE_PATH_ERROR
@@ -264,7 +263,7 @@ class OpAtomServiceImpl @Autowired constructor(
             classifyId = classify?.id,
             classifyCode = classify?.classifyCode,
             classifyName = classify?.classifyName,
-            docsLink = AtomUtil.transformDocsLink(atomRecord.docsLink, requestServiceScope),
+            docsLink = StoreUtils.transformDocsLink(atomRecord.docsLink, StoreTypeEnum.ATOM, requestServiceScope),
             category = AtomCategoryEnum.getAtomCategory(atomRecord.categroy.toInt()),
             atomType = AtomTypeEnum.getAtomType(atomRecord.atomType.toInt()),
             atomStatus = AtomStatusEnum.getAtomStatus(atomRecord.atomStatus.toInt()),

@@ -34,6 +34,7 @@ import com.tencent.devops.common.web.constant.BkStyleEnum
 import com.tencent.devops.store.pojo.common.comment.StoreCommentInfo
 import com.tencent.devops.store.pojo.common.comment.StoreCommentRequest
 import com.tencent.devops.store.pojo.common.comment.StoreCommentScoreInfo
+import com.tencent.devops.store.pojo.common.enums.ServiceScopeEnum
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -124,6 +125,9 @@ interface UserStoreCommentResource {
         @PathParam("storeCode")
         @BkField(patternStyle = BkStyleEnum.CODE_STYLE)
         storeCode: String,
+        @Parameter(description = "服务范围", required = false)
+        @QueryParam("serviceScope")
+        serviceScope: ServiceScopeEnum?,
         @Parameter(description = "评论信息请求报文体", required = true)
         storeCommentRequest: StoreCommentRequest
     ): Result<StoreCommentInfo?>
