@@ -57,6 +57,7 @@ import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.web.service.ServiceI18nMessageResource
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.api.service.ServiceMeasurePipelineResource
+import com.tencent.devops.store.atom.util.AtomUtil
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
 import com.tencent.devops.store.atom.dao.AtomDao
@@ -484,7 +485,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
             classifyName = classifyLanName,
             category = AtomCategoryEnum.getAtomCategory((record[KEY_CATEGORY] as? Byte)?.toInt() ?: 0),
             summary = record[KEY_SUMMARY] as? String,
-            docsLink = record[KEY_DOCSLINK] as? String,
+            docsLink = AtomUtil.transformDocsLink(record[KEY_DOCSLINK] as? String, ctx.serviceScope),
             atomType = AtomTypeEnum.getAtomType((record[KEY_ATOM_TYPE] as? Byte)?.toInt() ?: 0),
             atomStatus = AtomStatusEnum.getAtomStatus((record[KEY_ATOM_STATUS] as? Byte)?.toInt() ?: 0),
             description = description?.let {
@@ -832,7 +833,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                     classifyId = atomClassify?.id,
                     classifyCode = atomClassify?.classifyCode,
                     classifyName = atomClassify?.classifyName,
-                    docsLink = pipelineAtomRecord.docsLink,
+                    docsLink = AtomUtil.transformDocsLink(pipelineAtomRecord.docsLink, serviceScope),
                     category = AtomCategoryEnum.getAtomCategory(pipelineAtomRecord.categroy.toInt()),
                     atomType = AtomTypeEnum.getAtomType(pipelineAtomRecord.atomType.toInt()),
                     atomStatus = AtomStatusEnum.getAtomStatus(pipelineAtomRecord.atomStatus.toInt()),

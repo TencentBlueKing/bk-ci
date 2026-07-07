@@ -47,6 +47,7 @@ import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
 import com.tencent.devops.store.atom.dao.AtomDao
 import com.tencent.devops.store.atom.util.AtomServiceScopeUtil
+import com.tencent.devops.store.atom.util.AtomUtil
 import com.tencent.devops.store.util.ServiceScopeUtil
 import com.tencent.devops.store.atom.dao.MarketAtomDao
 import com.tencent.devops.store.atom.dao.MarketAtomFeatureDao
@@ -170,7 +171,7 @@ class OpAtomServiceImpl @Autowired constructor(
             page = page,
             pageSize = pageSize
         ).map {
-            generatePipelineAtom(it)
+            generatePipelineAtom(it, serviceScope)
         }
         // 处理分页逻辑
         val totalSize = atomDao.getOpPipelineAtomCount(
@@ -199,13 +200,13 @@ class OpAtomServiceImpl @Autowired constructor(
     /**
      * 根据id获取插件信息
      */
-    override fun getPipelineAtom(id: String): Result<Atom?> {
+    override fun getPipelineAtom(id: String, serviceScope: ServiceScopeEnum?): Result<Atom?> {
         val pipelineAtomRecord = atomDao.getPipelineAtom(dslContext, id)
         return Result(
             if (pipelineAtomRecord == null) {
                 null
             } else {
-                generatePipelineAtom(pipelineAtomRecord)
+                generatePipelineAtom(pipelineAtomRecord, serviceScope)
             }
         )
     }
@@ -228,13 +229,13 @@ class OpAtomServiceImpl @Autowired constructor(
     /**
      * 生成插件对象
      */
-    private fun generatePipelineAtom(it: TAtomRecord): Atom {
+    private fun generatePipelineAtom(it: TAtomRecord, requestServiceScope: ServiceScopeEnum? = null): Atom {
         val classify = classifyService.getClassify(it.classifyId).data
-        return convert(it, classify)
+        return convert(it, classify, requestServiceScope)
     }
 
     @Suppress("UNCHECKED_CAST")
-    private fun convert(atomRecord: TAtomRecord, classify: Classify?): Atom {
+    private fun convert(atomRecord: TAtomRecord, classify: Classify?, requestServiceScope: ServiceScopeEnum?): Atom {
         val atomFeature = atomFeatureDao.getAtomFeature(dslContext, atomRecord.atomCode)
         // 构建服务范围详情
         val serviceScopeDetails = atomServiceScopeUtil.buildServiceScopeDetails(
@@ -263,7 +264,7 @@ class OpAtomServiceImpl @Autowired constructor(
             classifyId = classify?.id,
             classifyCode = classify?.classifyCode,
             classifyName = classify?.classifyName,
-            docsLink = atomRecord.docsLink,
+            docsLink = AtomUtil.transformDocsLink(atomRecord.docsLink, requestServiceScope),
             category = AtomCategoryEnum.getAtomCategory(atomRecord.categroy.toInt()),
             atomType = AtomTypeEnum.getAtomType(atomRecord.atomType.toInt()),
             atomStatus = AtomStatusEnum.getAtomStatus(atomRecord.atomStatus.toInt()),

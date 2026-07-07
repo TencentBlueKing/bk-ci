@@ -52,6 +52,7 @@ import com.tencent.devops.model.store.tables.TAtomFeature
 import com.tencent.devops.model.store.tables.TAtomVersionLog
 import com.tencent.devops.model.store.tables.TClassify
 import com.tencent.devops.process.api.service.ServiceMeasurePipelineResource
+import com.tencent.devops.store.atom.util.AtomUtil
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
@@ -387,7 +388,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
             flag = flag,
             publicFlag = defaultFlag,
             buildLessRunFlag = record[tAtom.BUILD_LESS_RUN_FLAG] ?: false,
-            docsLink = record[tAtom.DOCS_LINK] ?: "",
+            docsLink = AtomUtil.transformDocsLink(record[tAtom.DOCS_LINK], query.serviceScope) ?: "",
             modifier = record[tAtom.MODIFIER] as String,
             updateTime = DateTimeUtil.toDateTime(record[tAtom.UPDATE_TIME] as LocalDateTime),
             recommendFlag = record[tAtomFeature.RECOMMEND_FLAG],
@@ -707,7 +708,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                 classifyCode = record[tClassify.CLASSIFY_CODE],
                 classifyName = classifyLanName,
                 category = AtomCategoryEnum.getAtomCategory((record[tAtom.CATEGROY] as Byte).toInt()),
-                docsLink = record[tAtom.DOCS_LINK],
+                docsLink = AtomUtil.transformDocsLink(record[tAtom.DOCS_LINK], serviceScope),
                 htmlTemplateVersion = htmlTemplateVersion,
                 atomType = AtomTypeEnum.getAtomType((record[tAtom.ATOM_TYPE] as Byte).toInt()),
                 jobType = record[tAtom.JOB_TYPE],
