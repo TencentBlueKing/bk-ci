@@ -207,4 +207,4 @@ const val USE_REPO_COMMITS_FOR_RELEASE_NOTES = "useRepoCommitsForReleaseNotes"
 const val BK_STORE_CLOUD_DESKTOP_TRIGGER = "storeCloudDesktopTrigger" // 云桌面应用触发器
 const val BK_STORE_COMMON_TRIGGER = "storeCommonTrigger" // 通用触发器
 const val BK_STORE_ALL_TRIGGER = "storeAllTrigger" // 全部触发器
-const val BK_STORE_CREATIVE_STREAM_WEMATE_MESSAGE_REMINDER_TRIGGER = "WEMATE_MESSAGE_REMINDER" // wemtate消息提醒触发器
+const val BK_STORE_CREATIVE_STREAM_IMATE_MESSAGE_REMINDER_TRIGGER = "IMATE_MESSAGE_REMINDER" // imtate消息提醒触发器
