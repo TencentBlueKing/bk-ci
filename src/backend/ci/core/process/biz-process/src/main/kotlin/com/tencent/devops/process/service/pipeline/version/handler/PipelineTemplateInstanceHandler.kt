@@ -125,6 +125,11 @@ class PipelineTemplateInstanceHandler @Autowired constructor(
             )
         }
 
+        // 在持久化之前校验公共变量组引用，极端场景下变量组可能在校验后被删除
+        publicVarGroupReferManageService.validateVarGroupReferences(
+            model = pipelineResourceWithoutVersion.model,
+            projectId = projectId
+        )
         pipelineYamlReleaseService.validateReleaseYamlFile(
             context = this,
             resourceOnlyVersion = resourceOnlyVersion
@@ -160,11 +165,7 @@ class PipelineTemplateInstanceHandler @Autowired constructor(
             }
         }
 
-        // 同步变量组引用关系
-        publicVarGroupReferManageService.validateVarGroupReferences(
-            model = pipelineResourceWithoutVersion.model,
-            projectId = projectId
-        )
+        // 同步变量组引用关系（校验已通过）
         publicVarGroupReferManageService.handleVarGroupReferBus(
             PublicVarGroupReferDTO(
                 userId = userId,
