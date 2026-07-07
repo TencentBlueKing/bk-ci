@@ -9,12 +9,14 @@ import com.tencent.devops.common.pipeline.pojo.progress.BuildTaskProgressSummary
 import com.tencent.devops.common.pipeline.pojo.progress.BuildTaskProgressTimeline
 import com.tencent.devops.common.pipeline.pojo.progress.BuildTaskProgressTimelineItem
 import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
+import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.process.dao.record.BuildRecordTaskDao
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.pojo.BuildInfo
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.service.record.ContainerBuildRecordService
 import com.tencent.devops.process.engine.service.record.TaskBuildRecordService
+import com.tencent.devops.process.pojo.pipeline.record.BuildRecordContainer
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordTask
 import io.mockk.every
 import io.mockk.just
@@ -453,14 +455,14 @@ class PipelineProgressRateServiceTest {
                 containerId = "container-1",
                 status = BuildStatus.SUCCEED,
                 taskVar = mutableMapOf("progressRate" to 0.8),
-                taskSeq = 2
+                taskSeq = 3
             ),
             buildRecordTask(
                 taskId = "task-1",
                 containerId = "container-1",
                 status = BuildStatus.SUCCEED,
                 taskVar = mutableMapOf("progressRate" to 0.4),
-                taskSeq = 1
+                taskSeq = 2
             ),
             buildRecordTask(
                 taskId = "task-3",
@@ -512,6 +514,24 @@ class PipelineProgressRateServiceTest {
                 containerId = "container-2"
             )
         } returns 1
+        every {
+            buildRecordService.getLatestRecord(
+                projectId = PROJECT_ID,
+                pipelineId = PIPELINE_ID,
+                buildId = BUILD_ID,
+                containerId = "container-1",
+                executeCount = 1
+            )
+        } returns buildRecordContainer(containerId = "container-1", startVMTaskSeq = 1)
+        every {
+            buildRecordService.getLatestRecord(
+                projectId = PROJECT_ID,
+                pipelineId = PIPELINE_ID,
+                buildId = BUILD_ID,
+                containerId = "container-2",
+                executeCount = 1
+            )
+        } returns buildRecordContainer(containerId = "container-2", startVMTaskSeq = null)
 
         val result = service.calculateStageProgressRate(
             projectId = PROJECT_ID,
@@ -635,6 +655,25 @@ class PipelineProgressRateServiceTest {
         status = status.name,
         endTime = endTime,
         timestamps = emptyMap<BuildTimestampType, BuildRecordTimeStamp>()
+    )
+
+    private fun buildRecordContainer(
+        containerId: String,
+        startVMTaskSeq: Int?
+    ) = BuildRecordContainer(
+        buildId = BUILD_ID,
+        projectId = PROJECT_ID,
+        pipelineId = PIPELINE_ID,
+        resourceVersion = 1,
+        stageId = STAGE_ID,
+        containerId = containerId,
+        executeCount = 1,
+        containerVar = mutableMapOf<String, Any>().apply {
+            startVMTaskSeq?.let { this[Container::startVMTaskSeq.name] = it }
+        },
+        containerType = "VM",
+        status = BuildStatus.RUNNING.name,
+        timestamps = emptyMap()
     )
 
     private fun buildTask(

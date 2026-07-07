@@ -2,6 +2,7 @@ package com.tencent.devops.process.engine.service
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.pojo.JobHeartbeatRequest
 import com.tencent.devops.common.pipeline.pojo.progress.BuildTaskProgressDetail
@@ -189,6 +190,7 @@ class PipelineProgressRateService constructor(
             taskIds = taskProgresses.map { it.record.taskId }
         )
         val jobExecutionOrderCache = mutableMapOf<String, String>()
+        val startVMTaskSeqCache = mutableMapOf<String, Int?>()
         return taskProgresses
             .sortedWith(
                 compareBy<RunningTaskProgress> {
@@ -216,7 +218,17 @@ class PipelineProgressRateService constructor(
                         containerId = it.record.containerId
                     )
                 }
-                val taskExecutionOrder = "$jobExecutionOrder-${it.record.taskSeq}"
+                val taskExecutionOrder = "$jobExecutionOrder-${
+                    getVisibleTaskSeq(
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        buildId = buildId,
+                        executeCount = executeCount,
+                        containerId = it.record.containerId,
+                        rawTaskSeq = it.record.taskSeq,
+                        startVMTaskSeqCache = startVMTaskSeqCache
+                    )
+                }"
                 BuildTaskProgressInfo(
                     taskProgressRete = it.progressRate,
                     taskName = taskName,
@@ -227,6 +239,33 @@ class PipelineProgressRateService constructor(
             }
     }
 
+    private fun getVisibleTaskSeq(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        executeCount: Int,
+        containerId: String,
+        rawTaskSeq: Int,
+        startVMTaskSeqCache: MutableMap<String, Int?>
+    ): Int {
+        val startVMTaskSeq = startVMTaskSeqCache.getOrPut(containerId) {
+            runCatching {
+                buildRecordService.getLatestRecord(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    buildId = buildId,
+                    containerId = containerId,
+                    executeCount = executeCount
+                )?.containerVar?.get(Container::startVMTaskSeq.name)?.toString()?.toIntOrNull()
+            }.getOrNull()
+        }
+        return if (startVMTaskSeq != null && startVMTaskSeq > 0 && rawTaskSeq > startVMTaskSeq) {
+            rawTaskSeq - 1
+        } else {
+            rawTaskSeq
+        }
+    }
+
     private fun getJobExecutionOrder(
         projectId: String,
         pipelineId: String,
@@ -235,7 +274,7 @@ class PipelineProgressRateService constructor(
         stageId: String,
         containerId: String
     ): String {
-        val stageOrder = stageId.replace("stage-", "").toInt() - 1
+        val stageOrder = stageId.replace("stage-", "").toInt()
         val jobOrder = buildRecordService.getContainerOrderInStage(
             projectId = projectId,
             pipelineId = pipelineId,
