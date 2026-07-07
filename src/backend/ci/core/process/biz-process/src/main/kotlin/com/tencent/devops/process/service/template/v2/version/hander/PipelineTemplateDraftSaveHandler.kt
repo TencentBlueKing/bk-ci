@@ -127,7 +127,7 @@ class PipelineTemplateDraftSaveHandler @Autowired constructor(
                     referName = pipelineTemplateInfo.name,
                     referVersion = pTemplateResourceOnlyVersion.version.toInt(),
                     referVersionName = pTemplateResourceOnlyVersion.versionName ?: "",
-                    draftFlag = true
+                    updateCount = true
                 )
             )
         }
