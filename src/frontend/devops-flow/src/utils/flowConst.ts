@@ -77,7 +77,7 @@ export const templateTypeEnum = {
 }
 
 export const TRIGGER_TYPE = {
-  MANUAL: 'CREATIVE_STREAM_MANUAL_TRIGGER',
+  MANUAL: 'manualTrigger',
   TIMER: 'timerTrigger',
   CODE_GIT_WEBHOOK: 'codeGitWebHookTrigger',
   REMOTE: 'remoteTrigger',

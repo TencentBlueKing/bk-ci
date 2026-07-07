@@ -48,6 +48,7 @@ export default defineComponent({
   },
   emits: ['mouseEnter', 'click'],
   setup(props, { emit }) {
+    const isTAPD = computed(() => props.material?.webhookEventType === 'TAPD')
     const scmType = computed(() =>
       props.isWebhook ? `CODE_${props.material?.codeType}` : props.material?.scmType,
     )
@@ -56,6 +57,7 @@ export default defineComponent({
         props.material?.webhookEventType,
       )
     })
+    
     const isSVN = computed(() => scmType.value === 'CODE_SVN')
     const materialInfoKeys = computed<string[]>(() => {
       if (!props.isWebhook) {
@@ -83,6 +85,8 @@ export default defineComponent({
           return ['webhookAliasName', 'webhookCommitId']
         case 'PARENT_PIPELINE':
           return ['parentPipelineName', 'parentBuildNum']
+        case 'TAPD':
+          return ['webhookAliasName', 'materialId']
         default:
           return props.material?.materialId
             ? ['materialName', 'materialId']
@@ -95,7 +99,7 @@ export default defineComponent({
         aliasName: scmIcon,
         branchName: 'branch',
         newCommitId: 'commit',
-        webhookAliasName: scmIcon,
+        webhookAliasName: isTAPD.value ? 'codeTapdWebHookTrigger' : scmIcon,
         webhookBranch: 'branch',
         webhookCommitId: 'commit',
         webhookSourceBranch: 'branch',
@@ -138,6 +142,10 @@ export default defineComponent({
       }
     }
 
+    const showMaterialLink = (field: string) => {
+      return ['materialId'].includes(field)
+    }
+
     const includeLink = (field: string) => {
       return (
         [
@@ -171,7 +179,7 @@ export default defineComponent({
     }
 
     const handleToLink = (field: string) => {
-      if (field === 'materialId') {
+      if (showMaterialLink(field)) {
         window.open(getLink(field), '_blink')
       }
     }
@@ -225,7 +233,7 @@ export default defineComponent({
                       <span
                         class={[
                           styles.materialSpan,
-                          field === 'materialId' ? styles.materialUrl : '',
+                          showMaterialLink(field) ? styles.materialUrl : '',
                         ]}
                         onClick={() => handleToLink(field)}
                       >
