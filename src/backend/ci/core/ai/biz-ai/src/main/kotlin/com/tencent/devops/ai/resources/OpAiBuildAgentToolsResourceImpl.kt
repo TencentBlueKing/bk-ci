@@ -167,13 +167,42 @@ class OpAiBuildAgentToolsResourceImpl @Autowired constructor(
         tag: String?,
         stepId: String?,
         logType: String?,
-        jobId: String?
+        jobId: String?,
+        size: Int?
     ): Result<String> {
         return Result(
             buildTools(userId).getBuildLogs(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 buildId = buildId,
+                tag = tag,
+                stepId = stepId,
+                logType = logType,
+                jobId = jobId,
+                size = size
+            )
+        )
+    }
+
+    override fun getMiddleBuildLogs(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        start: Long,
+        end: Long,
+        tag: String?,
+        stepId: String?,
+        logType: String?,
+        jobId: String?
+    ): Result<String> {
+        return Result(
+            buildTools(userId).getMiddleBuildLogs(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                start = start,
+                end = end,
                 tag = tag,
                 stepId = stepId,
                 logType = logType,

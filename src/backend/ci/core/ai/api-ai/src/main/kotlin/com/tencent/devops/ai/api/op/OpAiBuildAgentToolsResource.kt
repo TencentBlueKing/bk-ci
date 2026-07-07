@@ -233,6 +233,25 @@ interface OpAiBuildAgentToolsResource {
         @QueryParam("tag") tag: String?,
         @QueryParam("stepId") stepId: String?,
         @QueryParam("logType") logType: String?,
+        @QueryParam("jobId") jobId: String?,
+        @QueryParam("size") size: Int?
+    ): Result<String>
+
+    @Operation(summary = "[Log] getMiddleBuildLogs")
+    @POST
+    @Path("/log/get-middle-build-logs")
+    fun getMiddleBuildLogs(
+        @Parameter(description = "操作人用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @QueryParam("projectId") projectId: String,
+        @QueryParam("pipelineId") pipelineId: String,
+        @QueryParam("buildId") buildId: String,
+        @QueryParam("start") start: Long,
+        @QueryParam("end") end: Long,
+        @QueryParam("tag") tag: String?,
+        @QueryParam("stepId") stepId: String?,
+        @QueryParam("logType") logType: String?,
         @QueryParam("jobId") jobId: String?
     ): Result<String>
 
