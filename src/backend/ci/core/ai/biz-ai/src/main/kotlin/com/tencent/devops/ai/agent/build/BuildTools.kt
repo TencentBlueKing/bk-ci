@@ -30,7 +30,7 @@ package com.tencent.devops.ai.agent.build
 import com.tencent.devops.ai.agent.BaseTools
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.log.pojo.LogLine
+import com.tencent.devops.common.log.pojo.QueryLogsText
 import com.tencent.devops.common.log.pojo.enums.LogType
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
@@ -454,13 +454,11 @@ class BuildTools(
 
     @Tool(
         name = "获取构建日志",
-        description = "获取构建日志。强烈建议传入 tag 参数（即 elementId，格式 e-xxxxxxxx）定位到具体插件，" +
-                "避免返回全量日志导致内容过大。" +
-                "本工具主要用于在「分析构建失败」之后做二次深入，除非用户明确要求原始日志，否则不要作为报错分析的第一步。" +
-                "默认从日志尾部（最新内容，报错通常在此）开始取，返回文本最多约 20000 字符（超出会截断）。" +
-                "排查报错时建议配合 logType=ERROR 只看错误行；如需从头查看完整过程可将 fromTail 设为 false。" +
-                "如果日志内容不完整或包含「Please download logs to view.」标记，" +
-                "说明日志触发了熔断，应提醒用户到蓝盾页面下载完整日志。"
+        description = "获取构建最新日志窗口，专用于 AI 构建报错分析。" +
+                "内部调用日志服务 latest 接口，只返回当前查询条件下行号最大的 N 条日志。" +
+                "强烈建议传入 tag 参数（即 elementId，格式 e-xxxxxxxx）定位到具体插件，避免查询全量日志。" +
+                "排查报错时可传 logType=ERROR 获取错误日志，同时也应获取 logType 为空的普通日志作为上下文。" +
+                "如果最新窗口不足以判断根因，请根据返回的 lineRange 调用「获取指定行号范围构建日志」继续向前滚动。"
     )
     fun getBuildLogs(
         @ToolParam(name = "projectId", description = "项目ID")
@@ -486,11 +484,11 @@ class BuildTools(
         @ToolParam(name = "jobId", description = "对应 jobId（可选）", required = false)
         jobId: String? = null,
         @ToolParam(
-            name = "fromTail",
-            description = "是否从日志尾部（最新内容）开始取，默认 true；排查报错保持 true，从头看完整过程传 false",
+            name = "size",
+            description = "返回最新日志条数，默认 500，最大 10000",
             required = false
         )
-        fromTail: Boolean? = true
+        size: Int? = null
     ): String {
         return safeQuery("BuildArtifactTool", "getBuildLogs") {
             val actualLogType = if (logType.isNullOrBlank()) {
@@ -500,144 +498,121 @@ class BuildTools(
                     ?: return@safeQuery "logType 无效，支持的值为 WARN、ERROR、DEBUG、LOG"
             }
             val debug = actualLogType == LogType.DEBUG
-            val tailMode = fromTail != false
-            val result = logResource().getInitLogs(
+            val actualSize = (size ?: DEFAULT_LOG_SIZE).coerceIn(1, MAX_LOG_LINES)
+            val result = logResource().getLatestLogs(
                 userId = getOperatorUserId(),
                 projectId = projectId,
                 pipelineId = pipelineId,
                 buildId = buildId,
                 debug = debug,
                 logType = actualLogType,
+                size = actualSize,
                 tag = tag,
+                subTag = null,
                 containerHashId = null,
                 executeCount = null,
                 jobId = jobId,
                 stepId = stepId,
-                reverse = tailMode
+                archiveFlag = null
             )
-            val initLogs = result.data ?: return@safeQuery "获取日志失败"
-            val mergedLogs = initLogs.logs.toMutableList()
-            var hasMore = initLogs.hasMore == true
-            var finished = initLogs.finished
-            var queryMessage = initLogs.message
-            var fetchTimes = 0
-            var truncatedByLineCap = false
-
-            // 尾部模式下 getInitLogs(reverse=true) 已返回最新窗口，无需再正序向后翻页；
-            // 只有从头查看完整过程时才继续用 getAfterLogs 拉取后续片段。
-            while (
-                !tailMode && hasMore && mergedLogs.size < MAX_MERGED_LOG_LINES &&
-                fetchTimes < MAX_LOG_FETCH_TIMES &&
-                estimatedRenderedCharCount(mergedLogs) < MAX_LOG_CONTENT_CHARS
-            ) {
-                val lastLineNo = mergedLogs.lastOrNull()?.lineNo ?: break
-                val moreResult = logResource().getAfterLogs(
-                    userId = getOperatorUserId(),
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    buildId = buildId,
-                    start = lastLineNo,
-                    debug = debug,
-                    logType = actualLogType,
-                    tag = tag,
-                    containerHashId = null,
-                    executeCount = null,
-                    jobId = jobId,
-                    stepId = stepId
-                )
-                val moreLogs = moreResult.data ?: break
-                val newLogs = moreLogs.logs.filter { it.lineNo > lastLineNo }
-                if (newLogs.isEmpty()) {
-                    hasMore = false
-                    break
-                }
-                val remainingCapacity = (MAX_MERGED_LOG_LINES - mergedLogs.size).coerceAtLeast(0)
-                val acceptedLogs = newLogs.take(remainingCapacity)
-                truncatedByLineCap = truncatedByLineCap || newLogs.size > acceptedLogs.size
-                appendLogs(mergedLogs, acceptedLogs)
-                hasMore = moreLogs.hasMore == true
-                finished = moreLogs.finished
-                if (!moreLogs.message.isNullOrBlank()) {
-                    queryMessage = moreLogs.message
-                }
-                fetchTimes++
-            }
-
-            if (mergedLogs.isEmpty()) {
-                return@safeQuery buildLogResult(
-                    buildId = buildId,
-                    tag = tag,
-                    jobId = jobId,
-                    stepId = stepId,
-                    logType = actualLogType?.name,
-                    finished = finished,
-                    hasMore = hasMore,
-                    fetchedLineCount = 0,
-                    fetchedPages = fetchTimes + 1,
-                    content = "",
-                    notices = listOf("未查询到日志内容，请检查 tag、jobId、stepId 是否正确。"),
-                    lineRange = null,
-                    queryMessage = queryMessage
-                )
-            }
-
-            val logsForRender = if (tailMode) {
-                takeLogsFromTailForCharBudget(mergedLogs, MAX_LOG_CONTENT_CHARS)
-            } else {
-                takeLogsForCharBudget(mergedLogs, MAX_LOG_CONTENT_CHARS)
-            }
-            val renderedContent = renderLogs(logsForRender)
-            val truncatedByChars = logsForRender.size < mergedLogs.size
-            val contentTruncated = estimatedRenderedCharCount(logsForRender) > MAX_LOG_CONTENT_CHARS
-            val hitFetchCap = fetchTimes >= MAX_LOG_FETCH_TIMES && hasMore
-            val effectiveHasMore =
-                hasMore || truncatedByChars || truncatedByLineCap || contentTruncated || hitFetchCap
-            val notices = buildList {
-                if (tailMode) {
-                    add("已优先返回日志尾部（最新内容），报错信息通常在此；如需从头查看完整过程可将 fromTail 设为 false。")
-                }
-                if (tag.isNullOrBlank()) {
-                    add("未指定 tag，返回的可能是较大范围日志。建议先用构建详情定位失败插件的 elementId 后重试。")
-                }
-                if (truncatedByLineCap) {
-                    add("日志行数过多，为避免内存压力，当前最多合并前 $MAX_MERGED_LOG_LINES 行再继续截断。")
-                }
-                if (contentTruncated) {
-                    add("日志文本过长，content 已按最多 $MAX_LOG_CONTENT_CHARS 字符截断用于分析。")
-                }
-                if (effectiveHasMore) {
-                    add("日志仍有后续内容未拉取完，如需更多上下文请继续缩小范围或到页面查看完整日志。")
-                }
-                if (containsDownloadHint(mergedLogs, queryMessage)) {
-                    add("日志已触发熔断，请到蓝盾页面下载完整日志查看。")
-                }
-            }
-
-            buildLogResult(
+            val latestLogs = result.data ?: return@safeQuery "获取日志失败"
+            buildTextLogResult(
                 buildId = buildId,
                 tag = tag,
                 jobId = jobId,
                 stepId = stepId,
                 logType = actualLogType?.name,
-                finished = finished,
-                hasMore = effectiveHasMore,
-                fetchedLineCount = logsForRender.size,
-                fetchedPages = fetchTimes + 1,
-                content = renderedContent,
-                notices = notices,
-                lineRange = logsForRender.firstOrNull()?.let { firstLog ->
-                    "${firstLog.lineNo}-${logsForRender.last().lineNo}"
-                },
-                queryMessage = queryMessage
+                logsText = latestLogs,
+                notices = buildLatestLogNotices(
+                    logsText = latestLogs,
+                    tag = tag,
+                    content = latestLogs.content
+                )
+            )
+        }
+    }
+
+    @Tool(
+        name = "获取指定行号范围构建日志",
+        description = "按行号范围获取构建日志，专用于 AI 在 latest 最新窗口不足时继续滚动拉取上下文。" +
+                "内部调用日志服务 middle 接口，start/end 区间最多 10000 行。" +
+                "应根据「获取构建日志」返回的 lineRange 或可疑行号继续向前/向后取窗口。"
+    )
+    fun getMiddleBuildLogs(
+        @ToolParam(name = "projectId", description = "项目ID")
+        projectId: String,
+        @ToolParam(name = "pipelineId", description = "流水线ID")
+        pipelineId: String,
+        @ToolParam(name = "buildId", description = "构建ID")
+        buildId: String,
+        @ToolParam(name = "start", description = "起始行号，必须大于 0")
+        start: Long,
+        @ToolParam(name = "end", description = "结束行号，必须大于等于 start，区间最多 10000 行")
+        end: Long,
+        @ToolParam(
+            name = "tag",
+            description = "对应 elementId（格式 e-xxxxxxxx），用于定位具体插件的日志（强烈建议提供）",
+            required = false
+        )
+        tag: String? = null,
+        @ToolParam(name = "stepId", description = "对应 stepId（可选）", required = false)
+        stepId: String? = null,
+        @ToolParam(
+            name = "logType",
+            description = "日志级别过滤（可选），支持 WARN/ERROR/DEBUG/LOG",
+            required = false
+        )
+        logType: String? = null,
+        @ToolParam(name = "jobId", description = "对应 jobId（可选）", required = false)
+        jobId: String? = null
+    ): String {
+        return safeQuery("BuildArtifactTool", "getMiddleBuildLogs") {
+            val actualLogType = if (logType.isNullOrBlank()) {
+                null
+            } else {
+                parseLogType(logType)
+                    ?: return@safeQuery "logType 无效，支持的值为 WARN、ERROR、DEBUG、LOG"
+            }
+            val debug = actualLogType == LogType.DEBUG
+            val result = logResource().getMiddleLogs(
+                userId = getOperatorUserId(),
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                start = start,
+                end = end,
+                debug = debug,
+                logType = actualLogType,
+                tag = tag,
+                subTag = null,
+                containerHashId = null,
+                executeCount = null,
+                jobId = jobId,
+                stepId = stepId,
+                archiveFlag = null
+            )
+            val middleLogs = result.data ?: return@safeQuery "获取指定范围日志失败"
+            buildTextLogResult(
+                buildId = buildId,
+                tag = tag,
+                jobId = jobId,
+                stepId = stepId,
+                logType = actualLogType?.name,
+                logsText = middleLogs,
+                notices = buildMiddleLogNotices(
+                    logsText = middleLogs,
+                    tag = tag,
+                    content = middleLogs.content
+                )
             )
         }
     }
 
     @Tool(
         name = "分析构建失败",
-        description = "一键排查构建失败原因：自动定位失败插件并抓取其错误日志（默认日志尾部 + ERROR 级别优先）。" +
+        description = "一键排查构建失败原因：自动定位失败插件，并抓取 latest 错误日志和 latest 普通日志。" +
                 "buildId 不传时默认分析该流水线最新一次构建。" +
-                "这是分析流水线报错的默认首选工具；除非用户明确要求原始日志，否则应先调用本工具，再决定是否继续深入查询日志。"
+                "这是分析流水线报错的默认首选工具；若日志不足以判断根因，再调用 middle 范围日志工具继续滚动。"
     )
     fun analyzeBuildFailure(
         @ToolParam(name = "projectId", description = "项目ID")
@@ -712,8 +687,8 @@ class BuildTools(
     }
 
     /**
-     * 抓取单个失败插件的错误日志：优先 ERROR 级别的尾部日志，为空时回退全量尾部日志。
-     * 返回「获取构建日志」的结构化结果（已解析为 Map，避免二次编码）。
+     * 抓取单个失败插件的 AI 日志上下文：ERROR 最新日志和普通最新日志都返回。
+     * 如果仍无法判断根因，由返回结果提示 AI 继续调用 middle 范围日志工具滚动拉取更多上下文。
      */
     private fun fetchFailureLog(
         projectId: String,
@@ -733,15 +708,9 @@ class BuildTools(
             stepId = null,
             logType = "ERROR",
             jobId = jobId,
-            fromTail = true
+            size = FAILURE_LOG_SIZE
         )
-        val errorLog = runCatching { JsonUtil.toMutableMap(errorLogJson) }.getOrNull()
-        val errorContent = errorLog?.get("content") as? String
-        if (!errorContent.isNullOrBlank()) {
-            return errorLog
-        }
-        // ERROR 级别无内容时回退到全量日志尾部
-        val fallbackJson = getBuildLogs(
+        val latestLogJson = getBuildLogs(
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,
@@ -749,26 +718,19 @@ class BuildTools(
             stepId = null,
             logType = null,
             jobId = jobId,
-            fromTail = true
+            size = FAILURE_LOG_SIZE
         )
-        return runCatching { JsonUtil.toMutableMap(fallbackJson) }.getOrDefault(fallbackJson)
-    }
-
-    private fun appendLogs(target: MutableList<LogLine>, logs: List<LogLine>) {
-        logs.forEach { log ->
-            if (target.size >= MAX_MERGED_LOG_LINES) {
-                return
-            }
-            if (target.none { it.lineNo == log.lineNo }) {
-                target.add(log)
-            }
+        val errorLog = runCatching { JsonUtil.toMutableMap(errorLogJson) }.getOrElse {
+            linkedMapOf<String, Any?>("raw" to errorLogJson)
         }
-    }
-
-    private fun renderLogs(logs: List<LogLine>): String {
-        return logs.joinToString(separator = "\n") { log ->
-            "[${log.lineNo}] ${log.message}"
-        }.let(::truncateLogContent)
+        val latestLog = runCatching { JsonUtil.toMutableMap(latestLogJson) }.getOrElse {
+            linkedMapOf<String, Any?>("raw" to latestLogJson)
+        }
+        return linkedMapOf(
+            "errorLatestLog" to errorLog,
+            "latestLog" to latestLog,
+            "nextActions" to buildMiddleLogNextActions(errorLog, latestLog)
+        )
     }
 
     private fun truncateLogContent(content: String): String {
@@ -779,72 +741,9 @@ class BuildTools(
                 "\n...(日志内容过长，已截断，仅保留前 $MAX_LOG_CONTENT_CHARS 个字符)"
     }
 
-    private fun estimatedRenderedCharCount(logs: List<LogLine>): Int {
-        if (logs.isEmpty()) {
-            return 0
-        }
-        var total = 0
-        logs.forEachIndexed { index, log ->
-            total += LOG_LINE_PREFIX_OVERHEAD + log.lineNo.toString().length + log.message.length
-            if (index > 0) {
-                total += 1
-            }
-        }
-        return total
-    }
-
-    private fun takeLogsForCharBudget(logs: List<LogLine>, maxChars: Int): List<LogLine> {
-        if (logs.isEmpty()) {
-            return emptyList()
-        }
-        val selected = ArrayList<LogLine>(minOf(logs.size, 256))
-        var total = 0
-        logs.forEachIndexed { index, log ->
-            val lineChars = LOG_LINE_PREFIX_OVERHEAD + log.lineNo.toString().length + log.message.length
-            val addChars = if (index == 0) lineChars else lineChars + 1
-            if (total + addChars > maxChars) {
-                if (selected.isEmpty()) {
-                    selected.add(log)
-                }
-                return selected
-            }
-            selected.add(log)
-            total += addChars
-        }
-        return selected
-    }
-
-    /**
-     * 在字符预算内保留日志的“尾部”（最新内容），返回结果仍按行号升序。
-     * 排查报错时报错栈通常在末尾，超预算时应丢弃头部而非尾部。
-     */
-    private fun takeLogsFromTailForCharBudget(logs: List<LogLine>, maxChars: Int): List<LogLine> {
-        if (logs.isEmpty()) {
-            return emptyList()
-        }
-        val selected = ArrayDeque<LogLine>()
-        var total = 0
-        for (index in logs.indices.reversed()) {
-            val log = logs[index]
-            val lineChars = LOG_LINE_PREFIX_OVERHEAD + log.lineNo.toString().length + log.message.length
-            val addChars = if (selected.isEmpty()) lineChars else lineChars + 1
-            if (total + addChars > maxChars) {
-                if (selected.isEmpty()) {
-                    selected.addFirst(log)
-                }
-                break
-            }
-            selected.addFirst(log)
-            total += addChars
-        }
-        return selected.toList()
-    }
-
-    private fun containsDownloadHint(logs: List<LogLine>, queryMessage: String?): Boolean {
-        if (queryMessage?.contains(LOG_DOWNLOAD_HINT, ignoreCase = true) == true) {
-            return true
-        }
-        return logs.any { it.message.contains(LOG_DOWNLOAD_HINT, ignoreCase = true) }
+    private fun containsDownloadHint(content: String, queryMessage: String?): Boolean {
+        return queryMessage?.contains(LOG_DOWNLOAD_HINT, ignoreCase = true) == true ||
+            content.contains(LOG_DOWNLOAD_HINT, ignoreCase = true)
     }
 
     private fun parseLogType(logType: String?): LogType? {
@@ -858,37 +757,106 @@ class BuildTools(
         }
     }
 
-    private fun buildLogResult(
+    private fun buildTextLogResult(
         buildId: String,
         tag: String?,
         jobId: String?,
         stepId: String?,
         logType: String?,
-        finished: Boolean,
-        hasMore: Boolean,
-        fetchedLineCount: Int,
-        fetchedPages: Int,
-        content: String,
-        notices: List<String>,
-        lineRange: String?,
-        queryMessage: String?
+        logsText: QueryLogsText,
+        notices: List<String>
     ): String {
+        val content = truncateLogContent(logsText.content)
+        val lineRange = buildLineRange(logsText)
         val result = linkedMapOf<String, Any?>(
             "buildId" to buildId,
             "tag" to tag,
             "jobId" to jobId,
             "stepId" to stepId,
             "logType" to logType,
-            "finished" to finished,
-            "hasMore" to hasMore,
-            "fetchedPages" to fetchedPages,
-            "fetchedLineCount" to fetchedLineCount,
+            "finished" to logsText.finished,
+            "hasMore" to (logsText.hasMore == true),
+            "fetchedPages" to 1,
+            "fetchedLineCount" to countContentLines(logsText.content),
             "lineRange" to lineRange,
             "notices" to notices,
-            "queryMessage" to queryMessage,
+            "nextActions" to buildMiddleLogNextActions(lineRange),
+            "queryMessage" to logsText.message,
+            "timeUsed" to logsText.timeUsed,
+            "status" to logsText.status,
             "content" to content
         )
         return JsonUtil.toJson(result)
+    }
+
+    private fun buildLatestLogNotices(
+        logsText: QueryLogsText,
+        tag: String?,
+        content: String
+    ): List<String> = buildList {
+        add("已通过日志服务 latest 接口返回当前条件下最新日志窗口，适合 AI 优先分析构建报错。")
+        if (tag.isNullOrBlank()) {
+            add("未指定 tag，返回的可能是较大范围日志。建议先用构建详情定位失败插件的 elementId 后重试。")
+        }
+        if (logsText.hasMore == true || logsText.startLineNo > 1L) {
+            add("如果最新窗口不足以判断根因，请调用「获取指定行号范围构建日志」按 lineRange 继续向前滚动。")
+        }
+        if (containsDownloadHint(content, logsText.message)) {
+            add("日志已触发熔断，请到蓝盾页面下载完整日志查看。")
+        }
+    }
+
+    private fun buildMiddleLogNotices(
+        logsText: QueryLogsText,
+        tag: String?,
+        content: String
+    ): List<String> = buildList {
+        add("已通过日志服务 middle 接口返回指定行号范围日志。")
+        if (tag.isNullOrBlank()) {
+            add("未指定 tag，返回的可能是较大范围日志。建议优先指定失败插件 elementId。")
+        }
+        if (logsText.hasMore == true) {
+            add("该范围外仍可能存在更多日志，可继续调整 start/end 滚动拉取。")
+        }
+        if (containsDownloadHint(content, logsText.message)) {
+            add("日志已触发熔断，请到蓝盾页面下载完整日志查看。")
+        }
+    }
+
+    private fun buildMiddleLogNextActions(vararg logMaps: Map<String, Any?>): List<String> {
+        val ranges = logMaps.mapNotNull { it["lineRange"] as? String }.filter { it.isNotBlank() }
+        val primaryRange = ranges.firstOrNull()
+        return buildMiddleLogNextActions(primaryRange)
+    }
+
+    private fun buildMiddleLogNextActions(lineRange: String?): List<String> {
+        val range = lineRange?.takeIf { it.isNotBlank() } ?: return listOf(
+            "如果 latest 日志不足以判断根因，请先扩大 size 或结合失败插件 elementId 调用 middle 范围日志工具。"
+        )
+        val startLine = range.substringBefore("-").toLongOrNull()
+        val beforeStart = startLine?.minus(MIDDLE_LOG_SCROLL_SIZE)?.coerceAtLeast(1L)
+        return if (startLine != null && beforeStart != null && beforeStart < startLine) {
+            listOf(
+                "如果 latest 日志不足以判断根因，请调用「获取指定行号范围构建日志」继续向前滚动。",
+                "建议窗口：start=$beforeStart, end=${startLine - 1}，并保持相同 tag/jobId/logType 条件。"
+            )
+        } else {
+            listOf("如果 latest 日志不足以判断根因，请围绕可疑行号调用 middle 范围日志工具扩展上下文。")
+        }
+    }
+
+    private fun buildLineRange(logsText: QueryLogsText): String? {
+        if (logsText.startLineNo <= 0L || logsText.endLineNo <= 0L) {
+            return null
+        }
+        return "${logsText.startLineNo}-${logsText.endLineNo}"
+    }
+
+    private fun countContentLines(content: String): Int {
+        if (content.isBlank()) {
+            return 0
+        }
+        return content.lineSequence().count()
     }
 
     private fun buildPipelineDetailUrl(projectId: String, pipelineId: String): String {
@@ -903,10 +871,11 @@ class BuildTools(
         private const val DEFAULT_PAGE_SIZE = 10
         private const val MAX_PAGE_SIZE = 50
         private const val MAX_FAILED_ELEMENTS_TO_ANALYZE = 3
-        private const val MAX_LOG_FETCH_TIMES = 5
-        private const val MAX_MERGED_LOG_LINES = 10_000
+        private const val DEFAULT_LOG_SIZE = 500
+        private const val FAILURE_LOG_SIZE = 500
+        private const val MAX_LOG_LINES = 10_000
         private const val MAX_LOG_CONTENT_CHARS = 20_000
-        private const val LOG_LINE_PREFIX_OVERHEAD = 3
+        private const val MIDDLE_LOG_SCROLL_SIZE = 500L
         private const val LOG_DOWNLOAD_HINT = "Please download logs to view."
     }
 }
