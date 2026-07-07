@@ -274,7 +274,7 @@ class PipelineProgressRateService constructor(
         stageId: String,
         containerId: String
     ): String {
-        val stageOrder = stageId.replace("stage-", "").toInt()
+        val stageOrder = stageId.replace("stage-", "").toInt() - 1
         val jobOrder = buildRecordService.getContainerOrderInStage(
             projectId = projectId,
             pipelineId = pipelineId,
