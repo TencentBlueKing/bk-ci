@@ -237,9 +237,11 @@
                         <div class="table-node-item node-item-status">
                             <!-- 已从 CMDB 、蓝鲸CC 移除 -->
                             <template v-if="removedStatus.includes(props.row.nodeStatus) && deploymentNodes.includes(props.row.nodeType)">
-                                <i class="bk-icon node-removed-icon icon-close error"></i>
-                                <span class="node-removed-message">
-                                    {{ removedMessage[props.row.nodeStatus] }}
+                                <span>
+                                    <i class="bk-icon node-removed-icon icon-close error"></i>
+                                    <span class="node-removed-message">
+                                        {{ removedMessage[props.row.nodeStatus] }}
+                                    </span>
                                 </span>
                             </template>
                             <!-- 责任人已变更 -->
@@ -1369,6 +1371,11 @@
             height: 100%;
             margin-bottom: 2px;
         }
+    }
+    .node-item-status {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
     }
 
     .node-item-row {
