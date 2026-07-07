@@ -66,7 +66,6 @@ import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_ENV_
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_ENV_NO_DEL_PERMISSSION
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_ENV_NO_EDIT_PERMISSSION
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_ENV_NO_VIEW_PERMISSSION
-import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_INSUFFICIENT_PERMISSIONS
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_NAME_DUPLICATE
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_NAME_INVALID_CHARACTER
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_NOT_EXISTS
@@ -376,7 +375,12 @@ class EnvService @Autowired constructor(
         val tagNodeCount = envTagDao.batchEnvTagNodeCount(
             dslContext = dslContext,
             envIds = envRecordList.filter { it.envNodeType == EnvNodeType.TAG.name }.map { it.envId }.toSet(),
-            projectId = projectId
+            projectId = projectId,
+            nodeType = if (createMode == true) {
+                setOf(NodeType.CREATE.name)
+            } else {
+                setOf(NodeType.THIRDPARTY.name)
+            }
         )
         val nodeCountMap = envNodeDao.batchCount(
             dslContext = dslContext,
@@ -427,7 +431,8 @@ class EnvService @Autowired constructor(
         val tagNodeCount = envTagDao.batchEnvTagNodeCount(
             dslContext = dslContext,
             envIds = envRecordList.filter { it.envNodeType == EnvNodeType.TAG.name }.map { it.envId }.toSet(),
-            projectId = projectId
+            projectId = projectId,
+            nodeType = setOf(NodeType.CMDB.name)
         )
         val nodeCountMap = envNodeDao.batchCount(
             dslContext = dslContext,
@@ -606,7 +611,7 @@ class EnvService @Autowired constructor(
         if (envHashId == AllCreateNodeEnv.hashId()) {
             if (!authProjectApi.checkProjectManager(userId, pipelineAuthServiceCode, projectId)) {
                 throw ErrorCodeException(
-                    errorCode = ERROR_NODE_INSUFFICIENT_PERMISSIONS,
+                    errorCode = ERROR_ENV_NO_VIEW_PERMISSSION,
                     params = arrayOf(envHashId)
                 )
             }
@@ -833,7 +838,7 @@ class EnvService @Autowired constructor(
         val invalidEnvIds = envIds.filterNot { canViewEnvIdList.contains(it) }
         if (invalidEnvIds.isNotEmpty()) {
             throw ErrorCodeException(
-                errorCode = ERROR_NODE_INSUFFICIENT_PERMISSIONS,
+                errorCode = ERROR_ENV_NO_VIEW_PERMISSSION,
                 params = arrayOf(invalidEnvIds.joinToString(","))
             )
         }
@@ -912,13 +917,30 @@ class EnvService @Autowired constructor(
         } else {
             emptyList()
         }
+        // 先校验环境是否存在
+        val existEnvIds = envDao.list(
+            dslContext = dslContext,
+            projectId = projectId,
+            envName = null,
+            envTypeList = null,
+            noEnvTypeList = null,
+            envIds = envIds.filter { it != AllCreateNodeEnv.ENV_ID }
+        ).map { it.envId }
+        val notExistEnvs = envIds.filterNot { existEnvIds.contains(it) }.toMutableList()
+        notExistEnvs.remove(AllCreateNodeEnv.ENV_ID)
+        if (notExistEnvs.isNotEmpty()) {
+            throw ErrorCodeException(
+                errorCode = ERROR_ENV_NOT_EXISTS,
+                params = arrayOf(notExistEnvs.joinToString(","))
+            )
+        }
         val canViewEnvIdList = environmentPermissionService.listEnvByViewPermission(userId, projectId)
         val invalidEnvIds = envIds.filterNot { canViewEnvIdList.contains(it) }.toMutableList()
         // 去掉内置环境
         invalidEnvIds.remove(AllCreateNodeEnv.ENV_ID)
         if (invalidEnvIds.isNotEmpty()) {
             throw ErrorCodeException(
-                errorCode = ERROR_NODE_INSUFFICIENT_PERMISSIONS,
+                errorCode = ERROR_ENV_NO_VIEW_PERMISSSION,
                 params = arrayOf(invalidEnvIds.joinToString(","))
             )
         }
@@ -930,7 +952,7 @@ class EnvService @Autowired constructor(
             )
         ) {
             throw ErrorCodeException(
-                errorCode = ERROR_NODE_INSUFFICIENT_PERMISSIONS,
+                errorCode = ERROR_ENV_NO_VIEW_PERMISSSION,
                 params = arrayOf(invalidEnvIds.joinToString(","))
             )
         }
@@ -1306,7 +1328,7 @@ class EnvService @Autowired constructor(
     ): EnvironmentId {
         logger.info(
             "create env and transfer nodes start|userId=$userId|sourceProjectId=$sourceProjectId|" +
-                "targetProjectId=$targetProjectId|sourceEnvHashId=$sourceEnvHashId"
+                    "targetProjectId=$targetProjectId|sourceEnvHashId=$sourceEnvHashId"
         )
         nodeService.checkProjectManager(userId, sourceProjectId)
         nodeService.checkProjectManager(userId, targetProjectId)
@@ -1370,7 +1392,7 @@ class EnvService @Autowired constructor(
     ): EnvironmentId {
         logger.info(
             "create env and relate same name nodes start|userId=$userId|sourceProjectId=$sourceProjectId|" +
-                "targetProjectId=$targetProjectId|sourceEnvHashId=$sourceEnvHashId"
+                    "targetProjectId=$targetProjectId|sourceEnvHashId=$sourceEnvHashId"
         )
         nodeService.checkProjectManager(userId, sourceProjectId)
         nodeService.checkProjectManager(userId, targetProjectId)
@@ -1384,7 +1406,7 @@ class EnvService @Autowired constructor(
         )
         logger.info(
             "create env success|userId=$userId|sourceProjectId=$sourceProjectId|" +
-                "targetProjectId=$targetProjectId|sourceEnvId=$sourceEnvId|targetEnvId=$targetEnvId"
+                    "targetProjectId=$targetProjectId|sourceEnvId=$sourceEnvId|targetEnvId=$targetEnvId"
         )
 
         val sourceEnvNodes = envNodeDao.list(dslContext, sourceProjectId, listOf(sourceEnvId))
@@ -1409,7 +1431,7 @@ class EnvService @Autowired constructor(
             if (targetNode == null) {
                 logger.warn(
                     "skip node, target same name node not found|sourceProjectId=$sourceProjectId|" +
-                        "targetProjectId=$targetProjectId|matchName=$matchName"
+                            "targetProjectId=$targetProjectId|matchName=$matchName"
                 )
                 return@forEach
             }
