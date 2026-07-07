@@ -47,7 +47,6 @@ import com.tencent.devops.store.atom.factory.AtomBusHandleFactory
 import com.tencent.devops.store.atom.service.AtomService
 import com.tencent.devops.store.atom.service.MarketAtomCommonService
 import com.tencent.devops.store.atom.service.MarketAtomEnvService
-import com.tencent.devops.store.atom.util.AtomUtil
 import com.tencent.devops.store.common.configuration.StoreInnerPipelineConfig
 import com.tencent.devops.store.common.dao.ClassifyDao
 import com.tencent.devops.store.common.dao.StoreProjectRelDao
@@ -432,8 +431,9 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
             publicFlag = atomBaseInfoRecord[tAtom.DEFAULT_FLAG] as Boolean,
             summary = atomBaseInfoRecord[tAtom.SUMMARY],
             // 仅当当次构建为创作流渠道时，才将文档链接转换为创作流对应的地址
-            docsLink = AtomUtil.transformDocsLink(
+            docsLink = StoreUtils.transformDocsLink(
                 atomBaseInfoRecord[tAtom.DOCS_LINK],
+                StoreTypeEnum.ATOM,
                 if (channelCode == ChannelCode.CREATIVE_STREAM) ServiceScopeEnum.CREATIVE_STREAM else null
             ),
             props = atomBaseInfoRecord[tAtom.PROPS]?.let {
