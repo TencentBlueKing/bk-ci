@@ -14,20 +14,19 @@ import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.CommonMessageCode.YAML_NOT_VALID
 import com.tencent.devops.common.api.util.ReflectUtil
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.yaml.pojo.YamlVersion
 import com.tencent.devops.process.yaml.transfer.PipelineTransferException
 import com.tencent.devops.process.yaml.transfer.PipelineTransferValidateDetail
 import com.tencent.devops.process.yaml.transfer.TransferMapper
 import com.tencent.devops.process.yaml.v2.enums.TemplateType
-import java.io.FileNotFoundException
-import java.nio.charset.Charset
-import java.util.concurrent.TimeUnit
-import java.util.function.Supplier
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.core.io.ClassPathResource
 import org.springframework.stereotype.Component
+import java.io.FileNotFoundException
+import java.nio.charset.Charset
+import java.util.concurrent.TimeUnit
+import java.util.function.Supplier
 
 @Component
 class CodeSchemaCheck @Autowired constructor(
@@ -175,15 +174,9 @@ class CodeSchemaCheck @Autowired constructor(
         // 原始报错（含 schema 内部路径等技术细节）保留到服务端日志，便于排查
         logger.warn("YAML_SCHEMA_INVALID|rawMessages=$messages")
         val details = messages.map { toValidateDetail(it) }
-        val friendly = details.joinToString(separator = "\n") { detail ->
-            I18nUtil.getCodeLanMessage(
-                messageCode = detail.messageCode,
-                params = detail.params?.toTypedArray()
-            )
-        }
         throw PipelineTransferException(
             errorCode = YAML_NOT_VALID,
-            params = arrayOf(friendly),
+            params = arrayOf(messages.toString()),
             validateDetails = details
         )
     }
