@@ -6,6 +6,9 @@ import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.JobHeartbeatRequest
 import com.tencent.devops.common.pipeline.pojo.progress.BuildTaskProgressDetail
 import com.tencent.devops.common.pipeline.pojo.progress.BuildTaskProgressSummary
+import com.tencent.devops.common.pipeline.pojo.progress.BuildTaskSubtaskProgressGroup
+import com.tencent.devops.common.pipeline.pojo.progress.BuildTaskSubtaskProgressItem
+import com.tencent.devops.common.pipeline.pojo.progress.BuildTaskProgressStatus
 import com.tencent.devops.common.pipeline.pojo.progress.BuildTaskProgressTimeline
 import com.tencent.devops.common.pipeline.pojo.progress.BuildTaskProgressTimelineItem
 import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
@@ -86,8 +89,19 @@ class PipelineProgressRateServiceTest {
     @Test
     fun calculateStageProgressRatePrefersDetailAndFillsDefaultTitle() {
         val progressDetail = BuildTaskProgressDetail(
-            progress = BuildTaskProgressSummary(value = 0.66666),
+            progress = BuildTaskProgressSummary(title = "", value = 0.66666),
+            subtasks = BuildTaskSubtaskProgressGroup(
+                title = "",
+                items = listOf(
+                    BuildTaskSubtaskProgressItem(
+                        name = "prepare",
+                        progress = 0.5,
+                        status = BuildTaskProgressStatus.RUNNING
+                    )
+                )
+            ),
             timeline = BuildTaskProgressTimeline(
+                title = "",
                 items = listOf(
                     BuildTaskProgressTimelineItem(
                         name = "prepare",
@@ -163,8 +177,9 @@ class PipelineProgressRateServiceTest {
         Assertions.assertEquals(1, result.taskProgressList?.size)
         val runningTaskProgress = result.taskProgressList?.first { it.taskName == "编译" }
         Assertions.assertEquals(0.6667, runningTaskProgress?.taskProgressRete)
-        Assertions.assertEquals("编译进度", runningTaskProgress?.progressDetail?.progress?.title)
-        Assertions.assertEquals("编译阶段时间线", runningTaskProgress?.progressDetail?.timeline?.title)
+        Assertions.assertEquals("编译", runningTaskProgress?.progressDetail?.progress?.title)
+        Assertions.assertEquals("子任务进度", runningTaskProgress?.progressDetail?.subtasks?.title)
+        Assertions.assertEquals("编译", runningTaskProgress?.progressDetail?.timeline?.title)
     }
 
     @Test

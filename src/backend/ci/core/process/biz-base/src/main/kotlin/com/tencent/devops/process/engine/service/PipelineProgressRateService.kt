@@ -344,9 +344,9 @@ class PipelineProgressRateService constructor(
         val subtaskGroup = subtasks
         val progressTimeline = timeline
         return copy(
-            progress = progress.copy(title = progress.title ?: "${titlePrefix}进度"),
-            subtasks = subtaskGroup?.copy(title = subtaskGroup.title ?: "子任务进度"),
-            timeline = progressTimeline?.copy(title = progressTimeline.title ?: "${titlePrefix}阶段时间线")
+            progress = progress.copy(title = progress.title?.takeIf { it.isNotBlank() } ?: titlePrefix),
+            subtasks = subtaskGroup?.copy(title = subtaskGroup.title?.takeIf { it.isNotBlank() } ?: "子任务进度"),
+            timeline = progressTimeline?.copy(title = progressTimeline.title?.takeIf { it.isNotBlank() } ?: titlePrefix)
         )
     }
 
