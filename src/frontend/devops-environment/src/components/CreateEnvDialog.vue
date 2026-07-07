@@ -142,12 +142,12 @@
                 }
             }
 
-            function onSuccess (envId) {
+            function onSuccess (envId, envType) {
                 proxy.$bkMessage({
                     theme: 'success',
                     message: proxy.$t('environment.successfullyAdded')
                 })
-                proxy.$emit('success', envId)
+                proxy.$emit('success', envId, envType)
             }
             function onError (err) {
                 proxy.$bkMessage({

@@ -41,7 +41,7 @@ import com.tencent.devops.store.pojo.common.enums.StoreSortTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.publication.StoreApproveReleaseRequest
 import com.tencent.devops.store.pojo.common.publication.StoreOfflineRequest
-import com.tencent.devops.store.pojo.common.version.StoreDeskVersionItem
+import com.tencent.devops.store.pojo.common.version.StoreComponentVersionItem
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -151,7 +151,7 @@ interface OpStoreComponentResource {
         @QueryParam("pageSize")
         @BkField(patternStyle = BkStyleEnum.PAGE_SIZE_STYLE)
         pageSize: Int = 10
-    ): Result<Page<StoreDeskVersionItem>>
+    ): Result<Page<StoreComponentVersionItem>>
 
     @Operation(summary = "根据组件ID获取组件详情")
     @GET

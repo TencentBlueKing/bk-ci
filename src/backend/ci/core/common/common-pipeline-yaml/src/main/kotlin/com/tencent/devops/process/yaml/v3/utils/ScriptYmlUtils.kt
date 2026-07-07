@@ -100,6 +100,7 @@ import com.tencent.devops.process.yaml.v3.models.on.RemoteRule
 import com.tencent.devops.process.yaml.v3.models.on.ReviewRule
 import com.tencent.devops.process.yaml.v3.models.on.SchedulesRule
 import com.tencent.devops.process.yaml.v3.models.on.TagRule
+import com.tencent.devops.process.yaml.v3.models.on.TapdRule
 import com.tencent.devops.process.yaml.v3.models.on.TriggerOn
 import com.tencent.devops.process.yaml.v3.models.stage.IPreStage
 import com.tencent.devops.process.yaml.v3.models.stage.IStage
@@ -804,7 +805,8 @@ object ScriptYmlUtils {
             changeSubmit = p4EventRule(preTriggerOn.changeSubmit),
             changeContent = p4EventRule(preTriggerOn.changeContent),
             shelveCommit = p4EventRule(preTriggerOn.shelveCommit),
-            shelveSubmit = p4EventRule(preTriggerOn.shelveSubmit)
+            shelveSubmit = p4EventRule(preTriggerOn.shelveSubmit),
+            tapd = tapdRule(preTriggerOn)
         )
 
         if (preTriggerOn is PreTriggerOnV3) {
@@ -1004,6 +1006,20 @@ object ScriptYmlUtils {
             }
         }
         return null
+    }
+
+    /**
+     * 解析 `on.tapd` 节点为 [TapdRule] 列表，支持单对象与数组两种 YAML 写法。
+     */
+    private fun tapdRule(preTriggerOn: IPreTriggerOn): List<TapdRule>? {
+        val tapd = preTriggerOn.tapd ?: return null
+        return kotlin.runCatching {
+            when (tapd) {
+                is Map<*, *> -> listOf(JsonUtil.anyTo(tapd, object : TypeReference<TapdRule>() {}))
+                is List<*> -> JsonUtil.anyTo(tapd, object : TypeReference<List<TapdRule>>() {})
+                else -> null
+            }
+        }.getOrNull()
     }
 
     private fun initScheduleCron(rule: SchedulesRule) {

@@ -71,8 +71,8 @@ import com.tencent.devops.common.pipeline.pojo.setting.Subscription
 import com.tencent.devops.common.pipeline.pojo.transfer.TransferActionType
 import com.tencent.devops.common.pipeline.pojo.transfer.TransferBody
 import com.tencent.devops.common.pipeline.pojo.transfer.YamlWithVersion
-import com.tencent.devops.common.pipeline.utils.CascadePropertyUtils
 import com.tencent.devops.common.pipeline.utils.MatrixYamlCheckUtils
+import com.tencent.devops.common.pipeline.utils.PipelineParamUtils
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.service.utils.LogUtils
@@ -2109,7 +2109,8 @@ class PipelineRepositoryService constructor(
         limit: Int? = null,
         sortType: PipelineSortType,
         collation: PipelineCollation,
-        filterByPipelineName: String?
+        filterByPipelineName: String?,
+        channelCode: ChannelCode? = null
     ): List<PipelineInfo> {
         val result = pipelineInfoDao.listPipelinesByProject(
             dslContext = dslContext,
@@ -2120,7 +2121,8 @@ class PipelineRepositoryService constructor(
             limit = limit,
             sortType = sortType,
             collation = collation,
-            filterByPipelineName = filterByPipelineName
+            filterByPipelineName = filterByPipelineName,
+            channelCode = channelCode
         )
         val list = mutableListOf<PipelineInfo>()
         result?.forEach {
@@ -2474,7 +2476,7 @@ class PipelineRepositoryService constructor(
         return try {
             client.get(ServiceAuthAuthorizationResource::class).getResourceAuthorization(
                 projectId = projectId,
-                resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
+                resourceType = AuthResourceType.getAuthResourceTypeByChannel(AuthResourceType.PIPELINE_DEFAULT).value,
                 resourceCode = pipelineId
             ).data
         } catch (ignored: Exception) {
@@ -2542,21 +2544,8 @@ class PipelineRepositoryService constructor(
         inputParams: Map<String, String>? = null
     ): Map<String, String> {
         val startParams = mutableMapOf<String, String>()
-        triggerContainer.params.forEach { param ->
-            val paramKey = param.id
-            val paramDefaultValue = inputParams?.get(param.id) ?: param.defaultValue
-            val paramType = param.type
-            if (CascadePropertyUtils.supportCascadeParam(paramType)) {
-                CascadePropertyUtils.parseDefaultValue(
-                    key = paramKey,
-                    defaultValue = paramDefaultValue,
-                    type = paramType
-                ).forEach {
-                    startParams["$paramKey.${it.key}"] = it.value
-                }
-            } else {
-                startParams[paramKey] = paramDefaultValue.toString()
-            }
+        triggerContainer.params.forEach {
+            startParams.putAll(PipelineParamUtils.parseDefaultValue(it, inputParams))
         }
         // 填充前缀
         return PipelineVarUtil.fillVariableMap(startParams)

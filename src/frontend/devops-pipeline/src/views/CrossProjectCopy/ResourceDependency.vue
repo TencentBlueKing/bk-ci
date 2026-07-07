@@ -29,7 +29,10 @@
             class="resource-dependency__loading"
         >
             <!-- 推荐处理策略提示 -->
-            <div class="recommend-strategy">
+            <div
+                class="recommend-strategy"
+                v-if="!isReadOnly"
+            >
                 <Logo
                     name="recommend"
                     size="32"
@@ -74,12 +77,19 @@
                         size="16px"
                     />
                     <p>
-                        <span> {{ $t('strategyCompleted', [strategyCompletedData.processedCount]) }}</span>
+                        <span>
+                            {{ $t('strategyCompleted') }}
+                            <b>{{ strategyCompletedData.processedCount }}</b>
+                            {{ $t('strategyCompleted1') }}
+                        </span>
                         <i18n
                             path="strategyCompletedDesc"
                             tag="p"
                         >
-                            <span v-if="strategyCompletedData.nodeNotSetCount > 0">{{ $t('nodeAuthorized', [strategyCompletedData.nodeNotSetCount]) }}</span>
+                            <span v-if="strategyCompletedData.nodeNotSetCount > 0">
+                                <b>{{ strategyCompletedData.nodeNotSetCount }}</b>
+                                {{ $t('nodeAuthorized') }}
+                            </span>
                         </i18n>
                     </p>
                 </div>
@@ -583,6 +593,9 @@
             }
         },
         watch: {
+            isLoading (val) {
+                this.$emit('update-loading-state', val)
+            },
             analyzingPipeline:{
                 async  handler (newVal, oldVal) {
                     if (oldVal !== false && newVal === false) {

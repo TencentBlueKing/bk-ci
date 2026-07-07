@@ -36,7 +36,7 @@ export default defineComponent({
     }
 
     return () => (
-      <CheckboxGroup modelValue={props.value} disabled={props.disabled} onChange={handleChange}>
+      <CheckboxGroup modelValue={props.value} disabled={props.disabled} onChange={handleChange} class={styles.checkboxGroup}>
         {props.list.map((item) => (
           <Checkbox
             key={item.id}

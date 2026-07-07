@@ -80,7 +80,9 @@ data class TriggerOn(
     var shelveSubmit: PushRule? = null,
     @JsonProperty("scm-code")
     @get:Schema(title = "scm-code")
-    var scmCode: String? = null
+    var scmCode: String? = null,
+    @get:Schema(title = "tapd")
+    var tapd: List<TapdRule>? = null
 ) {
     fun toPre(version: YamlVersion) = when (version) {
         YamlVersion.V2_0 -> toPreV2()
@@ -105,7 +107,8 @@ data class TriggerOn(
         changeContent = changeContent,
         changeSubmit = changeSubmit,
         shelveCommit = shelveCommit,
-        shelveSubmit = shelveSubmit
+        shelveSubmit = shelveSubmit,
+        tapd = tapd
     )
 
     private fun toPreV3() = PreTriggerOnV3(
@@ -130,7 +133,8 @@ data class TriggerOn(
         changeSubmit = changeSubmit,
         shelveCommit = shelveCommit,
         shelveSubmit = shelveSubmit,
-        scmCode = scmCode
+        scmCode = scmCode,
+        tapd = tapd
     )
 
     private fun simpleManual() = when {
@@ -160,6 +164,7 @@ interface IPreTriggerOn : YamlVersionParser {
     val changeContent: Any?
     val shelveCommit: Any?
     val shelveSubmit: Any?
+    val tapd: Any?
 }
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -196,7 +201,9 @@ data class PreTriggerOn(
     override var shelveCommit: Any? = null,
     @JsonProperty("shelve-submit")
     @get:Schema(title = "shelve-submit")
-    override var shelveSubmit: Any? = null
+    override var shelveSubmit: Any? = null,
+    @get:Schema(title = "tapd")
+    override val tapd: Any? = null
 ) : IPreTriggerOn {
     override fun yamlVersion() = YamlVersion.V2_0
 }

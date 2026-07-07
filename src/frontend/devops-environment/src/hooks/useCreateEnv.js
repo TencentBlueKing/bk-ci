@@ -38,7 +38,8 @@ export default function useCreateEnv (onSuccess, onError) {
             })
             
             closeCreateEnvDialog()
-            onSuccess?.(res)
+            onSuccess?.(res, envParams.value.envType)
+
         } catch (err) {
             console.error(err)
             onError?.(err)

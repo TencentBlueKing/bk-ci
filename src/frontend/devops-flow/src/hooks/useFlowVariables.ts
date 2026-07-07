@@ -1,5 +1,5 @@
 import type { Element, Param } from '@/api/flowModel'
-import { getPluginOutputVariables, getSystemVariables, updateFlowModelParams } from '@/api/variable'
+import { getPluginOutputVariables, getSystemVariables, getTriggerParams, updateFlowModelParams } from '@/api/variable'
 import { useFlowModelStore } from '@/stores/flowModel'
 import type { ReadOnlyVariableGroup } from '@/types/variable'
 import { storeToRefs } from 'pinia'
@@ -61,6 +61,28 @@ export function useFlowVariables(flowId: string) {
   // System variables
   const systemVariables = ref<ReadOnlyVariableGroup[]>([])
   const systemVariablesLoading = ref(false)
+
+  // Trigger params
+  const noParamsTrigger = ['manualTrigger', 'remoteTrigger', 'timerTrigger']
+  const triggerParams = ref<ReadOnlyVariableGroup[]>([])
+  const triggerParamsLoading = ref(false)
+
+  // Atom code list from trigger container elements (excluding noParamsTrigger types)
+  const atomCodeList = computed<string[]>(() => {
+    if (!flowModel.value || !flowModel.value.stages || flowModel.value.stages.length === 0) {
+      return []
+    }
+    const triggerStage = flowModel.value.stages[0]
+    if (!triggerStage || !triggerStage.containers || triggerStage.containers.length === 0) {
+      return []
+    }
+    const triggerContainer = triggerStage.containers[0]
+    if (!triggerContainer || !triggerContainer.elements) {
+      return []
+    }
+    const triggerList = (triggerContainer.elements || []).map((item) => item.atomCode).filter((item): item is string => !!item)
+    return triggerList.filter((item) => !noParamsTrigger.includes(item))
+  })
 
   onMounted(() => {
     if (flowId) {
@@ -218,6 +240,28 @@ export function useFlowVariables(flowId: string) {
     }
   }
 
+  /**
+   * Fetch trigger params from API
+   * Reference: devops-pipeline/src/components/PipelineEditTabs/components/system-var.vue
+   * Gets variables from trigger plugins (e.g. codeRepoTrigger, codeGitlabTrigger)
+   */
+  const fetchTriggerParams = async () => {
+    if (atomCodeList.value.length === 0) {
+      triggerParams.value = []
+      return
+    }
+
+    triggerParamsLoading.value = true
+    try {
+      triggerParams.value = await getTriggerParams(atomCodeList.value)
+    } catch (error) {
+      console.error('Failed to fetch trigger params:', error)
+      triggerParams.value = []
+    } finally {
+      triggerParamsLoading.value = false
+    }
+  }
+
   return {
     // Flow variables
     variables,
@@ -238,5 +282,11 @@ export function useFlowVariables(flowId: string) {
     systemVariables,
     systemVariablesLoading,
     fetchSystemVariables,
+
+    // Trigger params
+    triggerParams,
+    triggerParamsLoading,
+    atomCodeList,
+    fetchTriggerParams,
   }
 }

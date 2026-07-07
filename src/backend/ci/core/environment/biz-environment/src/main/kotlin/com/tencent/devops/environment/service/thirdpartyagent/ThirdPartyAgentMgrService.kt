@@ -1311,7 +1311,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
         // 更新node表信息
         val nodeRecord = nodeDao.get(dslContext, projectId, agentRecord.nodeId) ?: return status
         var nodeChanged = false
-        if (nodeRecord.nodeStatus == NodeStatus.ABNORMAL.name) {
+        if (nodeRecord.nodeStatus != NodeStatus.NORMAL.name) {
             nodeChanged = true
             nodeRecord.nodeStatus = NodeStatus.NORMAL.name
         }

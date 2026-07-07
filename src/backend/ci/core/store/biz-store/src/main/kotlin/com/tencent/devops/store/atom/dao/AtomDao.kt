@@ -90,9 +90,11 @@ import com.tencent.devops.store.pojo.common.KEY_PUBLISHER
 import com.tencent.devops.store.pojo.common.KEY_RECENT_EXECUTE_NUM
 import com.tencent.devops.store.pojo.common.KEY_RECOMMEND_FLAG
 import com.tencent.devops.store.pojo.common.KEY_SERVICE_SCOPE
+import com.tencent.devops.store.pojo.atom.AtomGroupQueryParam
 import com.tencent.devops.store.pojo.common.KEY_UPDATE_TIME
 import com.tencent.devops.store.pojo.common.ServiceScopeConfig
 import com.tencent.devops.store.pojo.common.enums.ServiceScopeEnum
+import com.tencent.devops.store.pojo.common.enums.StoreGroupByEnum
 import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.util.ServiceScopeUtil
@@ -128,7 +130,8 @@ data class AtomQueryParam(
     val fitOsFlag: Boolean?,
     val queryFitAgentBuildLessAtomFlag: Boolean?,
     val queryProjectAtomFlag: Boolean = true,
-    val installed: Boolean? = null
+    val installed: Boolean? = null,
+    val ownerStoreCode: String? = null
 )
 
 /**
@@ -171,9 +174,52 @@ class AtomDao : AtomBaseDao() {
         atomRequest: AtomCreateRequest
     ) {
         with(TAtom.T_ATOM) {
-            val osMapJson = if (atomRequest.os.isNotEmpty() && atomRequest.jobType.isBuildEnv()) {
-                JsonUtil.toJson(mapOf(atomRequest.jobType.name to atomRequest.os), formatted = false)
+            // 优先使用 serviceScopeConfigs（多服务范围）解析出权威的字段值；
+            // 缺省时回退到旧的单服务范围字段（serviceScope + jobType + classifyId），jobType 按历史默认 AGENT 处理。
+            val configs = atomRequest.serviceScopeConfigs
+            val resolved = if (!configs.isNullOrEmpty()) resolveServiceScopeFields(dslContext, configs) else null
+            val legacyJobType = atomRequest.jobType ?: JobTypeEnum.AGENT
+
+            val serviceScopeJson = resolved?.serviceScopeJson
+                ?: JsonUtil.toJson(atomRequest.serviceScope, formatted = false)
+            val jobTypeValue = if (resolved != null) {
+                resolved.jobTypeResult.pipelineJobType
+            } else {
+                legacyJobType.name
+            }
+            val jobTypeMapJson = if (resolved != null) {
+                resolved.jobTypeResult.jobTypeMapJson
+            } else {
+                JsonUtil.toJson(
+                    mapOf(ServiceScopeEnum.PIPELINE.name to listOf(legacyJobType.name)),
+                    formatted = false
+                )
+            }
+            val osJson = if (resolved != null) {
+                JsonUtil.toJson(resolved.osWriteResult.pipelineOs, formatted = false)
+            } else {
+                JsonUtil.toJson(atomRequest.os, formatted = false)
+            }
+            val osMapJson = if (resolved != null) {
+                resolved.osWriteResult.osMapJson
+            } else if (atomRequest.os.isNotEmpty() && legacyJobType.isBuildEnv()) {
+                JsonUtil.toJson(mapOf(legacyJobType.name to atomRequest.os), formatted = false)
             } else null
+            val classifyIdValue = if (resolved != null) {
+                resolved.classifyIdMap[ServiceScopeEnum.PIPELINE.name]
+                    ?: resolved.classifyIdMap.values.firstOrNull()
+                    ?: atomRequest.classifyId
+            } else {
+                atomRequest.classifyId
+            }
+            val classifyIdMapJson = if (resolved != null && resolved.classifyIdMap.isNotEmpty()) {
+                JsonUtil.toJson(resolved.classifyIdMap, formatted = false)
+            } else {
+                JsonUtil.toJson(
+                    mapOf(ServiceScopeEnum.PIPELINE.name to atomRequest.classifyId),
+                    formatted = false
+                )
+            }
             dslContext.insertInto(
                 this,
                 ID,
@@ -206,19 +252,13 @@ class AtomDao : AtomBaseDao() {
                     atomRequest.name,
                     atomRequest.atomCode,
                     classType,
-                    JsonUtil.toJson(atomRequest.serviceScope, formatted = false),
-                    atomRequest.jobType.name,
-                    JsonUtil.toJson(
-                        mapOf(ServiceScopeEnum.PIPELINE.name to listOf(atomRequest.jobType.name)),
-                        formatted = false
-                    ),
-                    JsonUtil.toJson(atomRequest.os, formatted = false),
+                    serviceScopeJson,
+                    jobTypeValue,
+                    jobTypeMapJson,
+                    osJson,
                     osMapJson,
-                    atomRequest.classifyId,
-                    JsonUtil.toJson(
-                        mapOf(ServiceScopeEnum.PIPELINE.name to atomRequest.classifyId),
-                        formatted = false
-                    ),
+                    classifyIdValue,
+                    classifyIdMapJson,
                     atomRequest.docsLink,
                     atomRequest.atomType.type.toByte(),
                     AtomStatusEnum.RELEASED.status.toByte(),
@@ -991,6 +1031,9 @@ class AtomDao : AtomBaseDao() {
         if (!param.keyword.isNullOrEmpty()) {
             conditions.add(tAtom.NAME.contains(param.keyword).or(tAtom.SUMMARY.contains(param.keyword)))
         }
+        if (!param.ownerStoreCode.isNullOrEmpty()) {
+            conditions.add(tAtom.OWNER_STORE_CODE.eq(param.ownerStoreCode))
+        }
         conditions.add(tAtom.DELETE_FLAG.eq(false))
         return conditions
     }
@@ -1134,8 +1177,10 @@ class AtomDao : AtomBaseDao() {
             if (!configs.isNullOrEmpty()) {
                 applyResolvedServiceScopeFields(baseStep, resolveServiceScopeFields(dslContext, configs))
             } else {
+                // 旧的单服务范围路径（无 serviceScopeConfigs）：jobType 缺省时按历史默认 AGENT 处理
+                val legacyJobType = (atomUpdateRequest.jobType ?: JobTypeEnum.AGENT).name
                 baseStep.set(SERVICE_SCOPE, JsonUtil.toJson(atomUpdateRequest.serviceScope, formatted = false))
-                baseStep.set(JOB_TYPE, atomUpdateRequest.jobType.name)
+                baseStep.set(JOB_TYPE, legacyJobType)
                 baseStep.set(CLASSIFY_ID, atomUpdateRequest.classifyId)
                 baseStep.set(
                     CLASSIFY_ID_MAP,
@@ -1152,7 +1197,7 @@ class AtomDao : AtomBaseDao() {
                         "JSON_SET(COALESCE({0}, '{{}}'), '$.PIPELINE', JSON_ARRAY({1}))",
                         String::class.java,
                         JOB_TYPE_MAP,
-                        DSL.inline(atomUpdateRequest.jobType.name)
+                        DSL.inline(legacyJobType)
                     )
                 )
             }
@@ -1632,8 +1677,14 @@ class AtomDao : AtomBaseDao() {
             step.set(CLASSIFY_ID_MAP, JsonUtil.toJson(resolved.classifyIdMap, formatted = false))
             resolved.classifyIdMap[ServiceScopeEnum.PIPELINE.name]?.let { step.set(CLASSIFY_ID, it) }
         }
-        resolved.jobTypeResult.pipelineJobType?.let { step.set(JOB_TYPE, it) }
-        resolved.jobTypeResult.jobTypeMapJson?.let { step.set(JOB_TYPE_MAP, it) }
+        if (resolved.jobTypeResult.jobTypeMapJson != null) {
+            // configs 为权威的完整映射：显式写入 JOB_TYPE（可能为 null，用于清除历史遗留的脏值，
+            // 避免出现 JOB_TYPE 与 JOB_TYPE_MAP 不一致进而误判为不兼容升级）和 JOB_TYPE_MAP。
+            step.set(JOB_TYPE, resolved.jobTypeResult.pipelineJobType)
+            step.set(JOB_TYPE_MAP, resolved.jobTypeResult.jobTypeMapJson)
+        } else {
+            resolved.jobTypeResult.pipelineJobType?.let { step.set(JOB_TYPE, it) }
+        }
         step.set(OS, JsonUtil.toJson(resolved.osWriteResult.pipelineOs, formatted = false))
         step.set(OS_MAP, resolved.osWriteResult.osMapJson)
     }
@@ -1680,5 +1731,42 @@ class AtomDao : AtomBaseDao() {
                 )
             )
         )
+    }
+
+    /**
+     * 分组统计插件数量
+     */
+    fun getAtomGroupCount(
+        dslContext: DSLContext,
+        atomGroupQueryParam: AtomGroupQueryParam,
+        atomCodes: Set<String>
+    ): List<Pair<String, Int>> {
+        return with(TAtom.T_ATOM) {
+            val conditions = mutableListOf<Condition>(
+                ATOM_CODE.`in`(atomCodes)
+            )
+            val groupField = when (atomGroupQueryParam.groupBy) {
+                StoreGroupByEnum.OWNER_STORE_CODE -> {
+                    conditions.add(
+                        OWNER_STORE_CODE.isNotNull
+                    )
+                    OWNER_STORE_CODE
+                }
+                StoreGroupByEnum.STORE_CODE -> {
+                    ATOM_CODE
+                }
+                else -> {
+                    ATOM_TYPE.cast(String::class.java)
+                }
+            }
+            dslContext.select(groupField, DSL.countDistinct(ATOM_CODE))
+                .from(this)
+                .where(conditions)
+                .groupBy(groupField)
+                .fetch()
+                .map {
+                    Pair(it.value1() as String, it.value2())
+                }
+        }
     }
 }

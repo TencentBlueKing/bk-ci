@@ -419,8 +419,7 @@ class PipelineListFacadeService @Autowired constructor(
         excludePipelineId: String?,
         filterByPipelineName: String?,
         page: Int?,
-        pageSize: Int?,
-        channelCode: ChannelCode? = null
+        pageSize: Int?
     ): SQLPage<Pipeline> {
         val authPermission = when (permission) {
             Permission.DEPLOY -> AuthPermission.DEPLOY
@@ -447,7 +446,7 @@ class PipelineListFacadeService @Autowired constructor(
             }
             val buildPipelineRecords = pipelineRuntimeService.getBuildPipelineRecords(
                 projectId = projectId,
-                channelCode = channelCode ?: ChannelCode.getRequestChannelCode(),
+                channelCode = ChannelCode.getRequestChannelCode(),
                 pipelineIds = hasPermissionList,
                 pipelineFilterParamList = pipelineFilterParams(
                     projectId, filterByPipelineName, null, null
@@ -1800,14 +1799,16 @@ class PipelineListFacadeService @Autowired constructor(
             limit = slqLimit.limit,
             sortType = sortType,
             collation = collation,
-            filterByPipelineName = filterByPipelineName
+            filterByPipelineName = filterByPipelineName,
+            channelCode = channelCode
         )
         val count = pipelineInfoDao.countPipeline(
             dslContext = dslContext,
             projectId = projectId,
             deleteFlag = true,
             days = deletedPipelineStoreDays.toLong(),
-            filterByPipelineName = filterByPipelineName
+            filterByPipelineName = filterByPipelineName,
+            channelCode = channelCode
         )
         // 加上流水线组
         val pipelineViewNameMap =
