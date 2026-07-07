@@ -29,6 +29,7 @@ const atomWork = () => import(/* webpackChunkName: 'workList' */ '@/views/workLi
 const templateWork = () => import(/* webpackChunkName: 'workList' */ '@/views/workList/template.vue') // 工作台
 const imageWork = () => import(/* webpackChunkName: 'workList' */ '@/views/workList/image.vue') // 工作台
 const serviceWork = () => import(/* webpackChunkName: 'workList' */ '@/views/workList/service.vue') // 工作台
+const devxWork = () => import(/* webpackChunkName: 'workList' */ '@/views/workList/client.vue') // 工作台
 
 const install = () => import(/* webpackChunkName: 'install' */ '@/views/install.vue') // 研发商店安装页面
 const manage = () => import(/* webpackChunkName: 'manage' */ '@/views/manage/index.vue') // 研发商店管理页面
@@ -48,6 +49,9 @@ const upgradeTemplate = () => import(/* webpackChunkName: 'upgradeTemplate' */ '
 
 const editImage = () => import(/* webpackChunkName: 'editImage' */ '@/views/edit_image.vue') // 上架镜像
 const imageProgress = () => import(/* webpackChunkName: 'imageProgress' */ '@/views/imageProgress.vue') // 镜像进度
+
+const addVersion = () => import(/* webpackChunkName: 'addVersion' */ '@/views/edit_client.vue') // 云研发
+const progressDetail = () => import(/* webpackChunkName: 'progressDetail' */ '@/views/clientProgress.vue') // 云研发进度
 
 const serviceProgress = () => import(/* webpackChunkName: 'serviceProgress' */ '@/views/serviceProgress.vue') // 微扩展进度
 const editService = () => import(/* webpackChunkName: 'editService' */ '@/views/edit_service.vue') // 微扩展上架页面
@@ -98,6 +102,20 @@ const routes = [
                             logo: 'store',
                             header: 'store',
                             to: 'atomHome'
+                        },
+                        beforeEnter: (to, from, next) => {
+                            // 将 devx 类型转换为 atom
+                            if (to.query.pipeType === 'devx') {
+                                next({
+                                    ...to,
+                                    query: {
+                                        ...to.query,
+                                        pipeType: 'atom'
+                                    }
+                                })
+                            } else {
+                                next()
+                            }
                         }
                     }
                 ]
@@ -148,6 +166,11 @@ const routes = [
                         path: 'service',
                         name: 'serviceWork',
                         component: serviceWork
+                    },
+                    {
+                        path: 'devx',
+                        name: 'devxWork',
+                        component: devxWork
                     }
                 ]
             },
@@ -294,6 +317,29 @@ const routes = [
                 component: serviceProgress,
                 meta: {
                     title: 'serviceProgress',
+                    logo: 'store',
+                    header: 'store',
+                    to: 'atomHome'
+                }
+            },
+            {
+                path: ':storeCode/addVersion/:storeId',
+                name: 'addReleaseVersion',
+                component: addVersion,
+                meta: {
+                    hideInMenu: true,
+                    title: 'addReleaseVersion',
+                    logo: 'store',
+                    header: 'store',
+                    to: 'atomHome'
+                }
+            },
+            {
+                path: ':storeCode/progressDetail/:storeId',
+                name: 'progressDetail',
+                component: progressDetail,
+                meta: {
+                    title: 'progressDetail',
                     logo: 'store',
                     header: 'store',
                     to: 'atomHome'

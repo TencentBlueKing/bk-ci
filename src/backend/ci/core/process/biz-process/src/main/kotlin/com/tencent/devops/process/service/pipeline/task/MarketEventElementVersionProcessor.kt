@@ -18,7 +18,7 @@ import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
 import com.tencent.devops.process.pojo.trigger.PipelineEventSubscription
 import com.tencent.devops.process.service.pipeline.version.PipelineVersionCreateContext
 import com.tencent.devops.process.service.pipeline.version.processor.TriggerContainerVersionPostProcessor
-import com.tencent.devops.store.api.common.ServiceStoreComponentResource
+import com.tencent.devops.store.api.common.ServiceStoreComponentBaseResource
 import com.tencent.devops.store.pojo.common.BK_STORE_COMMON_TRIGGER
 import com.tencent.devops.store.pojo.common.BK_STORE_CREATIVE_STREAM_TIMER_TRIGGER
 import com.tencent.devops.store.pojo.common.KEY_ADVANCE_EXPRESSION
@@ -175,7 +175,7 @@ class MarketEventElementVersionProcessor @Autowired constructor(
         atomCode: String,
         version: String
     ) = try {
-        client.get(ServiceStoreComponentResource::class).getComponentDataInfoByCode(
+        client.get(ServiceStoreComponentBaseResource::class).getComponentDataInfoByCode(
             storeType = StoreTypeEnum.TRIGGER_EVENT,
             storeCode = atomCode,
             version = version

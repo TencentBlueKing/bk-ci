@@ -9,7 +9,10 @@ import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAto
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketEventAtomElement
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.store.atom.service.AtomService
-import com.tencent.devops.store.common.service.StoreComponentQueryService
+import com.tencent.devops.store.common.service.StoreComponentBaseInfoQueryService
+import com.tencent.devops.store.common.service.StoreComponentDetailQueryService
+import com.tencent.devops.store.common.service.StoreComponentMarketQueryService
+import com.tencent.devops.store.common.service.StoreComponentVersionQueryService
 import com.tencent.devops.store.pojo.atom.AtomGroupQueryParam
 import com.tencent.devops.store.pojo.atom.AtomResp
 import com.tencent.devops.store.pojo.atom.AtomRespItem
@@ -29,11 +32,14 @@ import org.springframework.stereotype.Service
 
 @Service
 class TriggerEventService @Autowired constructor(
-    private val storeComponentQueryService: StoreComponentQueryService,
+    private val storeComponentDetailQueryService: StoreComponentDetailQueryService,
+    private val storeComponentVersionQueryService: StoreComponentVersionQueryService,
+    private val storeComponentMarketQueryService: StoreComponentMarketQueryService,
+    private val storeComponentBaseInfoQueryService: StoreComponentBaseInfoQueryService,
     private val atomService: AtomService
 ) {
     fun previewEvent(userId: String, storeId: String): AtomForm? {
-        val detailInfo = storeComponentQueryService.getComponentDetailInfoById(
+        val detailInfo = storeComponentDetailQueryService.getComponentDetailInfoById(
             userId = userId,
             storeId = storeId,
             storeType = StoreTypeEnum.TRIGGER_EVENT
@@ -61,7 +67,7 @@ class TriggerEventService @Autowired constructor(
         }
         val ownerAppCodes = componentGroupCount.map { it.first }.toSet()
         // 查询归属应用信息
-        val ownerAppInfos = storeComponentQueryService.getComponentBaseInfoList(
+        val ownerAppInfos = storeComponentBaseInfoQueryService.getComponentBaseInfoList(
             storeType = StoreTypeEnum.DEVX,
             storeCodes = ownerAppCodes
         ).associate { it.storeCode to it.storeName }
@@ -89,7 +95,7 @@ class TriggerEventService @Autowired constructor(
         page: Int,
         pageSize: Int
     ): AtomResp<AtomRespItem>? {
-        return storeComponentQueryService.queryComponents(
+        return storeComponentMarketQueryService.queryComponents(
             userId = userId,
             storeInfoQuery = StoreInfoQuery(
                 storeType = StoreTypeEnum.TRIGGER_EVENT.name,
@@ -161,7 +167,7 @@ class TriggerEventService @Autowired constructor(
         version: String,
         ownerStoreCode: String?
     ): PipelineAtom? {
-        return storeComponentQueryService.getComponentDetailInfoByCode(
+        return storeComponentDetailQueryService.getComponentDetailInfoByCode(
             userId = userId,
             storeType = StoreTypeEnum.TRIGGER_EVENT.name,
             storeCode = atomCode,
@@ -178,7 +184,7 @@ class TriggerEventService @Autowired constructor(
                 creator = userId,
                 createTime = 0,
                 updateTime = 0,
-                versionList = storeComponentQueryService.getComponentVersionList(
+                versionList = storeComponentVersionQueryService.getComponentVersionList(
                     userId = userId,
                     storeType = StoreTypeEnum.TRIGGER_EVENT,
                     storeCode = atomCode,

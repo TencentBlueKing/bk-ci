@@ -405,6 +405,18 @@ class NodeTagService @Autowired constructor(
             )
         }
         try {
+            // 检验是否重名
+            if (nodeTagKeyDao.fetchNodeKey(
+                    dslContext = dslContext,
+                    projectId = projectId,
+                    keyName = data.tagKeyName
+                ) != null || getInternalKeys().values.contains(data.tagKeyName)
+            ) {
+                throw ErrorCodeException(
+                    errorCode = EnvironmentMessageCode.ERROR_NODE_TAG_EXIST,
+                    params = arrayOf(data.tagKeyName)
+                )
+            }
             // 获取老的节点标签
             val tags = nodeTagDao.fetchTag(dslContext, projectId, data.tagKeyId) ?: run {
                 // 为空说明之前的标签已经被删除了，直接修改即可，理论上不会出现，先返回

@@ -44,10 +44,9 @@ class TaiServiceGetCertExchangeCodeTest {
     fun `getCertExchangeCode should return code on success`() {
         val expectedResp = CertExchangeCodeResp(
             code = 0,
-            msg = "get code success",
+            msg = "get secret success",
             data = CertExchangeCodeData(
-                code = "382916",
-                secret = "test-secret-value"
+                code = "c1s-H1zb0AR1SlB7A5h5NA8itTrnhK_GI3LpXm4sYMk"
             )
         )
         val responseBody = jacksonObjectMapper().writeValueAsString(expectedResp)
@@ -60,29 +59,9 @@ class TaiServiceGetCertExchangeCodeTest {
         )
 
         assertEquals(0, result.code)
-        assertEquals("get code success", result.msg)
+        assertEquals("get secret success", result.msg)
         assertNotNull(result.data)
-        assertEquals("382916", result.data!!.code)
-        assertEquals("test-secret-value", result.data!!.secret)
-    }
-
-    @Test
-    fun `getCertExchangeCode should return null secret when absent in response`() {
-        val responseBody = """
-            {"code":0,"msg":"get code success","data":{"code":"382916"}}
-        """.trimIndent()
-
-        every { OkhttpUtils.doHttp(any()) } returns buildOkResponse(responseBody)
-
-        val result = taiService.getCertExchangeCode(
-            userId = "testuser",
-            req = CertExchangeCodeReq(username = "testuser")
-        )
-
-        assertEquals(0, result.code)
-        assertNotNull(result.data)
-        assertEquals("382916", result.data!!.code)
-        assertEquals(null, result.data!!.secret)
+        assertEquals("c1s-H1zb0AR1SlB7A5h5NA8itTrnhK_GI3LpXm4sYMk", result.data!!.code)
     }
 
     @Test
@@ -121,7 +100,7 @@ class TaiServiceGetCertExchangeCodeTest {
             .code(200)
             .message("OK")
             .protocol(Protocol.HTTP_1_1)
-            .request(Request.Builder().url("https://test.tai.example.com/qrcode/backend/get").build())
+            .request(Request.Builder().url("https://test.tai.example.com/qrcode/backend/getSecret").build())
             .body(body.toResponseBody(null))
             .build()
     }
@@ -131,7 +110,7 @@ class TaiServiceGetCertExchangeCodeTest {
             .code(code)
             .message(message)
             .protocol(Protocol.HTTP_1_1)
-            .request(Request.Builder().url("https://test.tai.example.com/qrcode/backend/get").build())
+            .request(Request.Builder().url("https://test.tai.example.com/qrcode/backend/getSecret").build())
             .body("".toResponseBody(null))
             .build()
     }

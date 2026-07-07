@@ -404,7 +404,7 @@ interface ServiceEnvironmentResource {
         userId: String,
         @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
-        projectId: String,
+        projectId: String?,
         @QueryParam("workspaceName")
         workspaceName: String,
         @QueryParam("noCheckPerm")
