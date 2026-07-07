@@ -2,8 +2,7 @@ package com.tencent.devops.ai.agent.build
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.log.pojo.LogLine
-import com.tencent.devops.common.log.pojo.QueryLogs
+import com.tencent.devops.common.log.pojo.QueryLogsText
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.test.BkCiAbstractTest
@@ -67,29 +66,31 @@ class BuildToolsTest : BkCiAbstractTest() {
     fun `getBuildLogs should return truncated content for oversized single line`() {
         val logResource = client.mockGet(ServiceLogResource::class)
         every {
-            logResource.getInitLogs(
+            logResource.getLatestLogs(
                 userId = "tester",
                 projectId = "demo-project",
                 pipelineId = "p-1",
                 buildId = "b-1",
                 debug = false,
                 logType = null,
+                size = 500,
                 tag = "e-1",
+                subTag = null,
                 containerHashId = null,
                 executeCount = null,
-                subTag = null,
                 jobId = null,
                 stepId = null,
-                archiveFlag = false,
-                checkPermissionFlag = true,
-                reverse = false
+                archiveFlag = null,
+                checkPermissionFlag = true
             )
         } returns Result(
-            QueryLogs(
+            QueryLogsText(
                 buildId = "b-1",
                 finished = true,
                 hasMore = false,
-                logs = mutableListOf(logLine(1L, "x".repeat(20_100)))
+                startLineNo = 1L,
+                endLineNo = 1L,
+                content = "x".repeat(20_100)
             )
         )
 
@@ -104,130 +105,42 @@ class BuildToolsTest : BkCiAbstractTest() {
         )
 
         assertEquals("1-1", json["lineRange"].asText())
-        assertTrue(json["content"].asText().startsWith("[1] "))
+        assertTrue(json["content"].asText().startsWith("x".repeat(512)))
         assertTrue(json["content"].asText().contains("...(日志内容过长，已截断"))
-        assertTrue(json["hasMore"].asBoolean())
+        assertFalse(json["hasMore"].asBoolean())
     }
 
     @Test
-    fun `getBuildLogs should not force hasMore when fetch cap reached on final page`() {
+    fun `getBuildLogs should preserve latest flags and expose next actions`() {
         val logResource = client.mockGet(ServiceLogResource::class)
         every {
-            logResource.getInitLogs(
+            logResource.getLatestLogs(
                 userId = "tester",
                 projectId = "demo-project",
                 pipelineId = "p-1",
                 buildId = "b-1",
                 debug = false,
                 logType = null,
+                size = 500,
                 tag = "e-1",
+                subTag = null,
                 containerHashId = null,
                 executeCount = null,
-                subTag = null,
                 jobId = null,
                 stepId = null,
-                archiveFlag = false,
-                checkPermissionFlag = true,
-                reverse = false
+                archiveFlag = null,
+                checkPermissionFlag = true
             )
         } returns Result(
-            QueryLogs(
+            QueryLogsText(
                 buildId = "b-1",
-                finished = false,
+                finished = true,
                 hasMore = true,
-                logs = mutableListOf(logLine(1L))
+                startLineNo = 101L,
+                endLineNo = 120L,
+                content = "line-101\nline-120"
             )
         )
-        every {
-            logResource.getAfterLogs(
-                userId = "tester",
-                projectId = "demo-project",
-                pipelineId = "p-1",
-                buildId = "b-1",
-                start = 1L,
-                debug = false,
-                logType = null,
-                tag = "e-1",
-                containerHashId = null,
-                executeCount = null,
-                jobId = null,
-                stepId = null,
-                archiveFlag = false,
-                checkPermissionFlag = true
-            )
-        } returns Result(queryAfterLogs(start = 1L, hasMore = true, finished = false))
-        every {
-            logResource.getAfterLogs(
-                userId = "tester",
-                projectId = "demo-project",
-                pipelineId = "p-1",
-                buildId = "b-1",
-                start = 2L,
-                debug = false,
-                logType = null,
-                tag = "e-1",
-                containerHashId = null,
-                executeCount = null,
-                jobId = null,
-                stepId = null,
-                archiveFlag = false,
-                checkPermissionFlag = true
-            )
-        } returns Result(queryAfterLogs(start = 2L, hasMore = true, finished = false))
-        every {
-            logResource.getAfterLogs(
-                userId = "tester",
-                projectId = "demo-project",
-                pipelineId = "p-1",
-                buildId = "b-1",
-                start = 3L,
-                debug = false,
-                logType = null,
-                tag = "e-1",
-                containerHashId = null,
-                executeCount = null,
-                jobId = null,
-                stepId = null,
-                archiveFlag = false,
-                checkPermissionFlag = true
-            )
-        } returns Result(queryAfterLogs(start = 3L, hasMore = true, finished = false))
-        every {
-            logResource.getAfterLogs(
-                userId = "tester",
-                projectId = "demo-project",
-                pipelineId = "p-1",
-                buildId = "b-1",
-                start = 4L,
-                debug = false,
-                logType = null,
-                tag = "e-1",
-                containerHashId = null,
-                executeCount = null,
-                jobId = null,
-                stepId = null,
-                archiveFlag = false,
-                checkPermissionFlag = true
-            )
-        } returns Result(queryAfterLogs(start = 4L, hasMore = true, finished = false))
-        every {
-            logResource.getAfterLogs(
-                userId = "tester",
-                projectId = "demo-project",
-                pipelineId = "p-1",
-                buildId = "b-1",
-                start = 5L,
-                debug = false,
-                logType = null,
-                tag = "e-1",
-                containerHashId = null,
-                executeCount = null,
-                jobId = null,
-                stepId = null,
-                archiveFlag = false,
-                checkPermissionFlag = true
-            )
-        } returns Result(queryAfterLogs(start = 5L, hasMore = false, finished = true))
 
         val tools = BuildTools(client = client, userIdSupplier = { "tester" })
         val json = JsonUtil.getObjectMapper(false).readTree(
@@ -239,43 +152,60 @@ class BuildToolsTest : BkCiAbstractTest() {
             )
         )
 
-        assertFalse(json["hasMore"].asBoolean())
+        assertTrue(json["hasMore"].asBoolean())
         assertTrue(json["finished"].asBoolean())
-        assertEquals(6, json["fetchedPages"].asInt())
-        assertEquals("1-6", json["lineRange"].asText())
+        assertEquals(1, json["fetchedPages"].asInt())
+        assertEquals("101-120", json["lineRange"].asText())
+        assertTrue(json["nextActions"][0].asText().contains("获取指定行号范围构建日志"))
     }
 
     @Test
-    fun `appendLogs should cap merged lines at max limit`() {
-        val tools = BuildTools(client = client, userIdSupplier = { "tester" })
-        val target = (1L..9_999L).map { logLine(it) }.toMutableList()
-        val extraLogs = (10_000L..12_000L).map { logLine(it) }
-
-        tools.invokePrivate<Unit>("appendLogs", target, extraLogs)
-
-        assertEquals(10_000, target.size)
-        assertEquals(10_000L, target.last().lineNo)
-    }
-
-    private fun queryAfterLogs(start: Long, hasMore: Boolean, finished: Boolean): QueryLogs {
-        return QueryLogs(
-            buildId = "b-1",
-            finished = finished,
-            hasMore = hasMore,
-            logs = mutableListOf(
-                logLine(start),
-                logLine(start + 1)
+    fun `getMiddleBuildLogs should preserve requested range semantics`() {
+        val logResource = client.mockGet(ServiceLogResource::class)
+        every {
+            logResource.getMiddleLogs(
+                userId = "tester",
+                projectId = "demo-project",
+                pipelineId = "p-1",
+                buildId = "b-1",
+                start = 1L,
+                end = 6L,
+                debug = false,
+                logType = null,
+                tag = "e-1",
+                subTag = null,
+                containerHashId = null,
+                executeCount = null,
+                jobId = null,
+                stepId = null,
+                archiveFlag = null,
+                checkPermissionFlag = true
+            )
+        } returns Result(
+            QueryLogsText(
+                buildId = "b-1",
+                finished = false,
+                hasMore = true,
+                startLineNo = 1L,
+                endLineNo = 6L,
+                content = "line-1\nline-2\nline-3\nline-4\nline-5\nline-6"
             )
         )
-    }
 
-    private fun logLine(lineNo: Long, message: String = "line-$lineNo"): LogLine {
-        return LogLine(
-            lineNo = lineNo,
-            timestamp = lineNo,
-            message = message,
-            containerHashId = null,
-            stepId = null
+        val tools = BuildTools(client = client, userIdSupplier = { "tester" })
+        val json = JsonUtil.getObjectMapper(false).readTree(
+            tools.getMiddleBuildLogs(
+                projectId = "demo-project",
+                pipelineId = "p-1",
+                buildId = "b-1",
+                start = 1L,
+                end = 6L,
+                tag = "e-1"
+            )
         )
+
+        assertEquals("1-6", json["lineRange"].asText())
+        assertTrue(json["hasMore"].asBoolean())
+        assertTrue(json["notices"][0].asText().contains("middle"))
     }
 }
