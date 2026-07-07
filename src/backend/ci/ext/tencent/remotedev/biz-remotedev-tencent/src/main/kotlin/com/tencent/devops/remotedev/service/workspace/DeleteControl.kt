@@ -457,9 +457,9 @@ class DeleteControl @Autowired constructor(
             }
         }
 
-        // 删除是同时删除创作流节点
+        // 删除时同时删除创作流节点，云桌面项目可能和创作流不一样，不传项目ID
         try {
-            client.get(ServiceAgentResource::class).deleteCreateNode(operator, workspace.projectId, workspaceName)
+            client.get(ServiceAgentResource::class).deleteCreateNode(operator, null, workspaceName)
         } catch (e: Exception) {
             logger.warn("delete workspace $workspaceName create node error", e)
         }
