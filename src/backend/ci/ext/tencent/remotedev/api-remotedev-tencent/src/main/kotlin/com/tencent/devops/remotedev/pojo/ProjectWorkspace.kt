@@ -28,6 +28,7 @@
 package com.tencent.devops.remotedev.pojo
 
 import com.fasterxml.jackson.annotation.JsonProperty
+import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.remotedev.pojo.expert.FetchSupportResp
 import io.swagger.v3.oas.annotations.media.Schema
 
@@ -71,6 +72,8 @@ data class ProjectWorkspace(
     override var bakWorkspaceName: String? = null,
     @get:Schema(title = "工作空间归属")
     override val ownerType: WorkspaceOwnerType,
+    @get:Schema(title = "云桌面实例类型")
+    override val workspaceKind: WorkspaceKind? = null,
     @get:Schema(title = "windows 地域配置")
     val zoneConfig: WindowsResourceZoneConfig? = null,
     @get:Schema(title = "专家协助")
@@ -93,5 +96,7 @@ data class ProjectWorkspace(
     val nodeIp: String? = null,
     @get:Schema(title = "云区域Id")
     @get:JsonProperty("regionId")
-    val regionId: String? = null
+    val regionId: String? = null,
+    @get:Schema(title = "系统")
+    val os: OS? = null
 ) : IWorkspace
