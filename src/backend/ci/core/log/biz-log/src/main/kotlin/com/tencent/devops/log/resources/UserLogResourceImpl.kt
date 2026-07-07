@@ -166,6 +166,76 @@ class UserLogResourceImpl @Autowired constructor(
         return afterLogs
     }
 
+    override fun getLatestLogs(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        debug: Boolean?,
+        logType: LogType?,
+        size: Int?,
+        tag: String?,
+        subTag: String?,
+        jobId: String?,
+        executeCount: Int?,
+        archiveFlag: Boolean?
+    ): Result<QueryLogs> {
+        val latestLogs = buildLogQueryService.getLatestLogs(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            debug = debug,
+            logType = logType,
+            size = size ?: defaultNum,
+            tag = tag,
+            subTag = subTag,
+            containerHashId = jobId,
+            executeCount = executeCount,
+            jobId = null,
+            stepId = null,
+            archiveFlag = archiveFlag
+        )
+        recordListLogCount(latestLogs.data?.logs?.size ?: 0)
+        return latestLogs
+    }
+
+    override fun getMiddleLogs(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        start: Long,
+        end: Long,
+        debug: Boolean?,
+        logType: LogType?,
+        tag: String?,
+        subTag: String?,
+        jobId: String?,
+        executeCount: Int?,
+        archiveFlag: Boolean?
+    ): Result<QueryLogs> {
+        val middleLogs = buildLogQueryService.getMiddleLogs(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            start = start,
+            end = end,
+            debug = debug,
+            logType = logType,
+            tag = tag,
+            subTag = subTag,
+            containerHashId = jobId,
+            executeCount = executeCount,
+            jobId = null,
+            stepId = null,
+            archiveFlag = archiveFlag
+        )
+        recordListLogCount(middleLogs.data?.logs?.size ?: 0)
+        return middleLogs
+    }
+
     override fun downloadLogs(
         userId: String,
         projectId: String,
