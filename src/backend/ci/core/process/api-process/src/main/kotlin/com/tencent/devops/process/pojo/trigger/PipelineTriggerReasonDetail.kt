@@ -50,8 +50,8 @@ import io.swagger.v3.oas.annotations.media.Schema
         value = PipelineTriggerDetailCombination::class, name = PipelineTriggerDetailCombination.classType
     ),
     JsonSubTypes.Type(
-        value = PipelineTriggerDetailPipelineTransfer::class,
-        name = PipelineTriggerDetailPipelineTransfer.classType
+        value = PipelineTransferFailed::class,
+        name = PipelineTransferFailed.classType
     )
 )
 @Schema(title = "流水线触发事件原因详情-基类")

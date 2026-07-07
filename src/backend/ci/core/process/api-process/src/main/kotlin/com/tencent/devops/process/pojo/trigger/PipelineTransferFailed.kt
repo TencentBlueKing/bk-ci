@@ -4,7 +4,7 @@ import com.tencent.devops.common.web.utils.I18nUtil
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "流水线触发事件原因详情-流水线转换失败明细")
-data class PipelineTriggerDetailPipelineTransfer(
+data class PipelineTransferFailed(
     @get:Schema(title = "外层错误码（如 YAML_NOT_VALID）")
     val errorCode: String,
     @get:Schema(title = "外层错误码参数")

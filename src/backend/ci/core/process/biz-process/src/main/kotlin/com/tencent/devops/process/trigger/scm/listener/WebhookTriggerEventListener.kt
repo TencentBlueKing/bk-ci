@@ -44,7 +44,7 @@ import com.tencent.devops.process.pojo.pipeline.enums.YamlFileType
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerDetail
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerDetailCombination
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerDetailMessageCode
-import com.tencent.devops.process.pojo.trigger.PipelineTriggerDetailPipelineTransfer
+import com.tencent.devops.process.pojo.trigger.PipelineTransferFailed
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerFailedErrorCode
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerFailedMatch
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerFailedMsg
@@ -143,7 +143,7 @@ class WebhookTriggerEventListener(
     override fun onChangeError(context: PipelineYamlChangeContext, exception: java.lang.Exception) {
         val exceptionReasonDetail: PipelineTriggerReasonDetail = when {
             exception is PipelineTransferException && !exception.validateDetails.isNullOrEmpty() ->
-                PipelineTriggerDetailPipelineTransfer(
+                PipelineTransferFailed(
                     errorCode = exception.errorCode,
                     // 明细已由 validateDetails 独立承载并按语言渲染，
                     // 此处 params 传空占位符以避免落库时重复保存明细文本
