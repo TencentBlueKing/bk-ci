@@ -87,6 +87,10 @@ class PipelineTemplateReleaseCreateHandler @Autowired constructor(
             projectId = projectId,
             templateId = templateId
         )
+        // 在持久化之前校验公共变量组引用
+        (pTemplateResourceWithoutVersion.model as? Model)?.let {
+            publicVarGroupReferManageService.validateVarGroupReferences(model = it, projectId = projectId)
+        }
         val resourceOnlyVersion = if (templateInfo == null) {
             val resourceOnlyVersion = pipelineTemplateGenerator.getDefaultVersion(
                 versionStatus = pTemplateResourceWithoutVersion.status,
@@ -101,9 +105,8 @@ class PipelineTemplateReleaseCreateHandler @Autowired constructor(
             createReleaseVersion()
         }
 
-        // 同步变量组引用关系
+        // 同步变量组引用关系（校验已通过）
         (pTemplateResourceWithoutVersion.model as? Model)?.let {
-            publicVarGroupReferManageService.validateVarGroupReferences(model = it, projectId = projectId)
             publicVarGroupReferManageService.handleVarGroupReferBus(
                 PublicVarGroupReferDTO(
                     userId = userId,
@@ -113,7 +116,8 @@ class PipelineTemplateReleaseCreateHandler @Autowired constructor(
                     referType = PublicVarGroupReferenceTypeEnum.TEMPLATE,
                     referName = pipelineTemplateInfo.name,
                     referVersion = resourceOnlyVersion.version.toInt(),
-                    referVersionName = resourceOnlyVersion.versionName ?: ""
+                    referVersionName = resourceOnlyVersion.versionName ?: "",
+                    updateCount = true
                 )
             )
         }
