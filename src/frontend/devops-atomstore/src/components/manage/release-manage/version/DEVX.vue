@@ -120,14 +120,14 @@
                                     <span class="detail-label">Scheme：</span>
                                     <span>{{ detail.extData?.urlScheme || '--' }}</span>
                                 </li>
-                                <li class="detail-item">
+                                <!-- <li class="detail-item">
                                     <span class="detail-label">{{ $t('store.安装类型') }}：</span>
                                     <span>{{ $t(`store.${detail?.extData?.installType}`) || '--' }}</span>
                                 </li>
                                 <li class="detail-item">
                                     <span class="detail-label">{{ $t('store.安装参数') }}：</span>
                                     <span>{{ detail?.extData?.installParams || '--' }}</span>
-                                </li>
+                                </li> -->
                                 <li class="detail-item">
                                     <span class="detail-label">{{ $t('store.发布者') }}：</span>
                                     <span>{{ detail.versionInfo?.publisher || '--' }}</span>

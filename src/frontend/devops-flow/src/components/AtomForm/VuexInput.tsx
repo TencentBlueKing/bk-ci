@@ -31,10 +31,14 @@ export default defineComponent({
   },
   emits: ['change', 'update:value'],
   setup(props, { emit }) {
-    const handleChange = (value: string | number) => {
+    const handleInput = (value: string | number) => {
       emit('update:value', value)
       emit('change', value)
       props.handleChange(props.name, value)
+    }
+
+    const handleBlur = (event: FocusEvent) => {
+      emit('change', props.value)
     }
 
     return () => (
@@ -44,7 +48,8 @@ export default defineComponent({
         type={props.type as any}
         placeholder={props.placeholder}
         disabled={props.disabled}
-        onChange={handleChange}
+        onInput={handleInput}
+        onBlur={handleBlur}
       />
     )
   },

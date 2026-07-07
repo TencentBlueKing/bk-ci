@@ -602,6 +602,23 @@ class PipelineResourceVersionDao {
         }
     }
 
+    fun updateModel(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        version: Int,
+        model: Model
+    ): Int {
+        with(T_PIPELINE_RESOURCE_VERSION) {
+            return dslContext.update(this)
+                .set(MODEL, JsonUtil.toJson(model, formatted = false))
+                .where(PROJECT_ID.eq(projectId))
+                .and(PIPELINE_ID.eq(pipelineId))
+                .and(VERSION.eq(version))
+                .execute()
+        }
+    }
+
     fun updateBranchVersion(
         dslContext: DSLContext,
         userId: String,

@@ -52,6 +52,7 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.web.service.ServiceLocaleResource
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.environment.api.TencentServiceNodeService
 import com.tencent.devops.environment.api.devx.ServiceDEVXResource
 import com.tencent.devops.environment.pojo.EnvWithNodeCount
 import com.tencent.devops.model.remotedev.tables.TWorkspace
@@ -92,6 +93,7 @@ import com.tencent.devops.remotedev.pojo.WorkspaceAction
 import com.tencent.devops.remotedev.pojo.WorkspaceDetail
 import com.tencent.devops.remotedev.pojo.WorkspaceEnv
 import com.tencent.devops.remotedev.pojo.WorkspaceGroupByOrg
+import com.tencent.devops.remotedev.pojo.WorkspaceKind
 import com.tencent.devops.remotedev.pojo.WorkspaceMountType
 import com.tencent.devops.remotedev.pojo.WorkspaceOpHistory
 import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
@@ -289,6 +291,18 @@ class WorkspaceService @Autowired constructor(
                     workspaceProperty.displayName
                 )
             )
+            // 同步修改构建节点名称
+            try {
+                client.get(TencentServiceNodeService::class).updateCreateNodeDisplay(
+                    projectId = ws.projectId,
+                    displayName = workspaceProperty.displayName!!,
+                    userId = userId,
+                    workspaceName = ws.workspaceName
+
+                )
+            }catch (e: Exception) {
+                logger.error("modifyWorkspaceProperty update create node error", e)
+            }
         }
 
         if (workspaceProperty.remark != null) {
@@ -717,6 +731,7 @@ class WorkspaceService @Autowired constructor(
                     },
                     currentLoginUsers = loginInfo?.loginUsers ?: emptyList(),
                     ownerType = it.ownerType,
+                    workspaceKind = it.workspaceKind,
                     expertSupportList = expertMap?.get(it.workspaceName),
                     macAddress = allWindows[it.workspaceName]?.macAddress,
                     remark = it.remark,
@@ -726,7 +741,8 @@ class WorkspaceService @Autowired constructor(
                     recordEnabled = !allWindows[it.workspaceName]?.enableRecordUser.isNullOrBlank(),
                     vmName = allWindows[it.workspaceName]?.vmName,
                     nodeIp = cdsInfo[detail?.hostIp]?.node ?: "",
-                    regionId = detail?.regionId?.toString()
+                    regionId = detail?.regionId?.toString(),
+                    os = it.os
                 )
             )
         }
@@ -1037,12 +1053,14 @@ class WorkspaceService @Autowired constructor(
                     workspaceMountType = it.workspaceMountType,
                     workspaceSystemType = it.workspaceSystemType,
                     ownerType = it.ownerType,
+                    workspaceKind = it.workspaceKind,
                     assignType = sharedWorkspace[it.workspaceName]?.find { shared -> shared.sharedUser == userId }?.type
                         ?: WorkspaceShared.AssignType.OWNER,
                     winConfigId = allWindows[it.workspaceName]?.winConfigId,
                     winConfig = allWindows[it.workspaceName]?.let { i -> allConfig[i.winConfigId.toLong()] },
                     zoneConfig = zone,
-                    currentLoginUsers = loginInfo?.loginUsers ?: emptyList()
+                    currentLoginUsers = loginInfo?.loginUsers ?: emptyList(),
+                    os = it.os
                 )
             }
         )
@@ -1620,6 +1638,23 @@ class WorkspaceService @Autowired constructor(
             workspaceName = workspaceName,
             old = old,
             new = new
+        )
+    }
+
+    fun updateWorkspaceKind(
+        operator: String,
+        workspaceNames: List<String>,
+        workspaceKind: WorkspaceKind
+    ) {
+        val normalizedNames = workspaceNames
+            .map { it.trim() }
+            .filter { it.isNotBlank() }
+            .distinct()
+        logger.info("updateWorkspaceKind|operator|$operator|workspaceKind|${workspaceKind.value}|$normalizedNames")
+        workspaceDao.updateWorkspaceKind(
+            dslContext = dslContext,
+            workspaceNames = normalizedNames,
+            workspaceKind = workspaceKind
         )
     }
 

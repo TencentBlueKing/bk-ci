@@ -76,7 +76,7 @@ class DispatchTransfer @Autowired(required = false) constructor(
         channelCode: ChannelCode = ChannelCode.BS
     ): Pair<DispatchType, VMBaseOS?> {
         if (channelCode == ChannelCode.CREATIVE_STREAM) {
-            return Pair(CreateAgentIdDispatchType(value = "\${{variables.$NODE_AGENT_ID}}"), null)
+            return Pair(dispatcherCreateAgent(job, buildTemplateAcrossInfo), getBaseOs(job))
         }
         // linux构建机
         dispatcherLinux(job, buildTemplateAcrossInfo)?.let { return Pair(it, VMBaseOS.LINUX) }
@@ -185,6 +185,20 @@ class DispatchTransfer @Autowired(required = false) constructor(
             )
         }
         return null
+    }
+
+    // 创作流目前底层仍是第三方构建机，所以这里使用第三方构建机的样式转一手
+    fun dispatcherCreateAgent(
+        job: Job,
+        buildTemplateAcrossInfo: BuildTemplateAcrossInfo?
+    ): DispatchType {
+        return with(job.runsOn) {
+            CreateAgentIdDispatchType(
+                value = "\${{variables.$NODE_AGENT_ID}}",
+                workspace = workspace,
+                dockerInfo = getDockerInfo(job, buildTemplateAcrossInfo),
+            )
+        }
     }
 
     private fun getDockerInfo(

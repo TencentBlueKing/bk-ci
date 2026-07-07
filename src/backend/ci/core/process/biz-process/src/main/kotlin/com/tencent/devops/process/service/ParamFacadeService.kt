@@ -94,6 +94,8 @@ class ParamFacadeService @Autowired constructor(
                     )
                 it.type == BuildFormPropertyType.REPO_REF ->
                     addRepoRefs(projectId, it)
+                it.type == BuildFormPropertyType.FORM_LIST ->
+                    copyFormProperty(property = it, options = listOf())
                 else -> it
             }
         }
@@ -349,7 +351,8 @@ class ParamFacadeService @Autowired constructor(
             displayCondition = property.displayCondition,
             asInstanceInput = property.asInstanceInput,
             sensitive = property.sensitive,
-            constant = property.constant
+            constant = property.constant,
+            fields = property.fields
         )
     }
 

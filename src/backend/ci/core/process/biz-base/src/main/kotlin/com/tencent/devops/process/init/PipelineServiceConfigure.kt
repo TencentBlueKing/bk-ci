@@ -30,6 +30,8 @@ package com.tencent.devops.process.init
 import com.tencent.devops.process.engine.service.PipelineBuildExtService
 import com.tencent.devops.process.engine.service.PipelineInfoExtService
 import com.tencent.devops.process.engine.service.PipelinePauseExtService
+import com.tencent.devops.process.engine.service.PipelineStartupPermissionExtService
+import com.tencent.devops.process.service.DefaultPipelineStartupPermissionExtServiceImpl
 import com.tencent.devops.process.service.PipelineBuildExtServiceImpl
 import com.tencent.devops.process.service.PipelineContextService
 import com.tencent.devops.process.service.PipelineInfoExtServiceImpl
@@ -59,4 +61,8 @@ class PipelineServiceConfigure {
     @Bean
     @ConditionalOnMissingBean(PipelineInfoExtService::class)
     fun pipelineInfoExtService() = PipelineInfoExtServiceImpl()
+
+    @Bean
+    @ConditionalOnMissingBean(PipelineStartupPermissionExtService::class)
+    fun pipelineStartupPermissionExtService() = DefaultPipelineStartupPermissionExtServiceImpl()
 }

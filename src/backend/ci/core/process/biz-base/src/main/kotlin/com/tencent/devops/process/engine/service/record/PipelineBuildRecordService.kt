@@ -49,6 +49,7 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitlabWebHook
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeP4WebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeSVNWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeTGitWebHookTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.TapdWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.time.BuildRecordTimeCost
 import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
 import com.tencent.devops.common.pipeline.utils.ModelUtils
@@ -384,6 +385,12 @@ class PipelineBuildRecordService @Autowired constructor(
                         I18nUtil.getCodeLanMessage(
                             messageCode = BK_EVENT,
                             params = arrayOf("SVN")
+                        )
+                    }
+                    is TapdWebHookTriggerElement -> {
+                        I18nUtil.getCodeLanMessage(
+                            messageCode = BK_EVENT,
+                            params = arrayOf("TAPD")
                         )
                     }
                     else -> null
