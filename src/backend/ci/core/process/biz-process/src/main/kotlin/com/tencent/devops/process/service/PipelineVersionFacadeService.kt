@@ -384,7 +384,7 @@ class PipelineVersionFacadeService @Autowired constructor(
         request: TemplateInstanceCreateRequest
     ): DeployPipelineResult {
         val templateModel = if (request.emptyTemplate == true) {
-            initializeModel(userId, request.pipelineName)
+            Model.defaultModel(request.pipelineName, userId)
         } else {
             val templateResource = if (request.templateVersion != null) {
                 pipelineTemplateResourceService.get(
@@ -440,18 +440,6 @@ class PipelineVersionFacadeService @Autowired constructor(
             useSubscriptionSettings = request.useSubscriptionSettings,
             useConcurrencyGroup = request.useConcurrencyGroup
         )
-    }
-
-    private fun initializeModel(
-        userId: String,
-        pipelineName: String
-    ): Model {
-        val isCreativeStream = ChannelCode.getRequestChannelCode() == ChannelCode.CREATIVE_STREAM
-        return if (isCreativeStream) {
-            Model.creativeStreamDefaultModel(pipelineName, userId)
-        } else {
-            Model.defaultModel(pipelineName, userId)
-        }
     }
 
     fun getVersion(
