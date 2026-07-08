@@ -4,6 +4,7 @@ import com.tencent.devops.environment.pojo.NodeTag
 import com.tencent.devops.environment.pojo.NodeTagAddOrDeleteTagItem
 import com.tencent.devops.environment.pojo.NodeTagValue
 import com.tencent.devops.model.environment.tables.TEnvTag
+import com.tencent.devops.model.environment.tables.TNode
 import com.tencent.devops.model.environment.tables.TNodeTagKey
 import com.tencent.devops.model.environment.tables.TNodeTagValues
 import com.tencent.devops.model.environment.tables.TNodeTags
@@ -45,7 +46,8 @@ class EnvTagDao {
     fun batchEnvTagNodeCount(
         dslContext: DSLContext,
         envIds: Set<Long>,
-        projectId: String
+        projectId: String,
+        nodeType: Set<String>
     ): Map<Long, Int> {
         val resultMap = mutableMapOf<Long, Int>()
         if (envIds.isEmpty()) {
@@ -54,24 +56,24 @@ class EnvTagDao {
         with(TEnvTag.T_ENV_TAG) {
             dslContext.select(
                 ENV_ID,
-                DSL.count(TNodeTags.T_NODE_TAGS.NODE_ID).`as`("node_count")
+                DSL.countDistinct(TNode.T_NODE.NODE_ID).`as`("node_count")
             ).from(this)
                 .leftJoin(TNodeTags.T_NODE_TAGS)
                 .on(TAG_VALUE_ID.eq(TNodeTags.T_NODE_TAGS.TAG_VALUE_ID))
+                .leftJoin(TNode.T_NODE)
+                .on(
+                    TNode.T_NODE.NODE_ID.eq(TNodeTags.T_NODE_TAGS.NODE_ID)
+                        .and(TNode.T_NODE.NODE_TYPE.`in`(nodeType))
+                )
                 .where(PROJECT_ID.eq(projectId))
                 .and(ENV_ID.`in`(envIds))
-                .groupBy(TAG_VALUE_ID)
+                .groupBy(ENV_ID)
                 .fetch()
                 .forEach {
-                    val envId = it[ENV_ID]
-                    val nodeCount = it["node_count"] as Int
-                    if (resultMap.containsKey(it[ENV_ID])) {
-                        resultMap[envId] = (resultMap[envId] ?: 0) + nodeCount
-                    } else {
-                        resultMap[envId] = nodeCount
-                    }
+                    resultMap[it[ENV_ID]] = it["node_count"] as Int
                 }
         }
+
         return resultMap
     }
 
