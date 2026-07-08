@@ -81,7 +81,6 @@ interface UserStoreCommentResource {
         storeType: String,
         @Parameter(description = "组件代码", required = true)
         @PathParam("storeCode")
-        @BkField(patternStyle = BkStyleEnum.CODE_STYLE)
         storeCode: String,
         @Parameter(description = "页码", required = true)
         @QueryParam("page")
@@ -103,7 +102,6 @@ interface UserStoreCommentResource {
         storeType: String,
         @Parameter(description = "组件代码", required = true)
         @PathParam("storeCode")
-        @BkField(patternStyle = BkStyleEnum.CODE_STYLE)
         storeCode: String
     ): Result<StoreCommentScoreInfo>
 
@@ -123,7 +121,6 @@ interface UserStoreCommentResource {
         storeId: String,
         @Parameter(description = "组件代码", required = true)
         @PathParam("storeCode")
-        @BkField(patternStyle = BkStyleEnum.CODE_STYLE)
         storeCode: String,
         @Parameter(description = "服务范围", required = false)
         @QueryParam("serviceScope")
