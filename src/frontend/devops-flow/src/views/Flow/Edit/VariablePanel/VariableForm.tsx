@@ -222,7 +222,11 @@ export default defineComponent({
     return () => (
       <div class={styles.variableForm}>
         <Form ref={formRef} model={formData.value} rules={rules} form-type="vertical">
-          <FormItem label={t('flow.variable.id')} property="id" required>
+          <FormItem
+            label={isConstant.value ? t('flow.variable.constantId') : t('flow.variable.id')}
+            property="id"
+            required
+          >
             <Input
               v-model={formData.value.id}
               placeholder={
