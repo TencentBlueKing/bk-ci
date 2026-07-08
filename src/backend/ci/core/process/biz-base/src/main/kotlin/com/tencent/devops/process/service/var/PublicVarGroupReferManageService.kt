@@ -45,6 +45,7 @@ import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_COM
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_COMMON_VAR_GROUP_REFER_UPDATE_FAILED
 import com.tencent.devops.process.constant.ProcessMessageCode.PUBLIC_VAR_GROUP_LOCK_EXPIRED_TIME_IN_SECONDS
 import com.tencent.devops.process.constant.ProcessMessageCode.PUBLIC_VAR_GROUP_REFER_LOCK_KEY_PREFIX
+import com.tencent.devops.process.dao.VarRefDetailDao
 import com.tencent.devops.process.dao.`var`.PublicVarDao
 import com.tencent.devops.process.dao.`var`.PublicVarGroupDao
 import com.tencent.devops.process.dao.`var`.PublicVarGroupReferInfoDao
@@ -75,6 +76,7 @@ class PublicVarGroupReferManageService @Autowired constructor(
     private val publicVarDao: PublicVarDao,
     private val sampleEventDispatcher: SampleEventDispatcher,
     private val publicVarGroupReferCountService: PublicVarGroupReferCountService,
+    private val varRefDetailDao: VarRefDetailDao,
     private val redisOperation: RedisOperation
 ) {
 
@@ -175,6 +177,14 @@ class PublicVarGroupReferManageService @Autowired constructor(
                     referInfosToDelete = referInfosToDelete
                 )
             }
+            // 清理变量引用详情记录
+            val cleanupContext = transactionContext ?: dslContext
+            varRefDetailDao.deleteByResourceId(
+                dslContext = cleanupContext,
+                projectId = projectId,
+                resourceId = referId,
+                resourceType = referType.name
+            )
         } catch (t: Throwable) {
             logger.warn("Failed to delete refer info for referId: $referId", t)
             throw ErrorCodeException(errorCode = ERROR_PIPELINE_COMMON_VAR_GROUP_REFER_UPDATE_FAILED)
