@@ -748,7 +748,8 @@ class PipelineVersionGenerator constructor(
                 channelCode = channelCode
             )
             if (result.modelAndSetting == null) {
-                logger.warn("TRANSFER_YAML|$projectId|$userId|yml=\n$yaml")
+                logger.warn("TRANSFER_YAML|$projectId|$userId|modelAndSetting is null")
+                logger.warn("TRANSFER_YAML|$projectId|$userId|yml=\n${truncateForLog(yaml)}")
                 throw ErrorCodeException(
                     errorCode = ProcessMessageCode.ERROR_OCCURRED_IN_TRANSFER,
                     params = arrayOf("modelAndSetting is null")
@@ -757,7 +758,9 @@ class PipelineVersionGenerator constructor(
             Pair(result.modelAndSetting!!, result.yamlWithVersion)
         } catch (ignore: Throwable) {
             if (ignore is ErrorCodeException) throw ignore
-            logger.warn("TRANSFER_YAML|$projectId|$userId|yml=\n$yaml", ignore)
+            // yaml不在这里输出,主要是因为yaml太长,会导致日志平台截断,导致关键定位信息（如异常栈）搜不到
+            logger.warn("TRANSFER_YAML|$projectId|$userId|transfer failed", ignore)
+            logger.warn("TRANSFER_YAML|$projectId|$userId|yml=\n${truncateForLog(yaml)}")
             throw ErrorCodeException(
                 errorCode = ProcessMessageCode.ERROR_OCCURRED_IN_TRANSFER,
                 params = arrayOf(ignore.message ?: "")
@@ -802,10 +805,25 @@ class PipelineVersionGenerator constructor(
         }
     }
 
+    /**
+     * 对超长文本做截断，避免长 yaml 把日志撑爆被日志平台按长度截掉，
+     * 导致关键定位信息（如异常栈）搜不到。保留头尾各一半，中间省略部分标注省略字符数。
+     */
+    private fun truncateForLog(text: String, maxLen: Int = MAX_YAML_LOG_LENGTH): String {
+        if (text.length <= maxLen) return text
+        val headLen = maxLen / 2
+        val tailLen = maxLen - headLen
+        val omitted = text.length - maxLen
+        return text.substring(0, headLen) +
+            "\n...[truncated $omitted chars of ${text.length} total]...\n" +
+            text.substring(text.length - tailLen)
+    }
+
     companion object {
         const val INIT_VERSION = 1
         private const val PAC_TEMPLATE_INSTANCE_BRANCH_PREFIX = "bk-ci-template-instance-"
         private const val PAC_BRANCH_PREFIX = "bk-ci-pipeline-"
+        private const val MAX_YAML_LOG_LENGTH = 8000
         private val logger = LoggerFactory.getLogger(PipelineVersionGenerator::class.java)
     }
 }
