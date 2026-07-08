@@ -65,7 +65,9 @@ class ModelHandleServiceImpl @Autowired constructor(
             // 使用 ModelVarRefUtils 解析变量引用
             val varRefDetails = ModelVarRefUtils.parseModelVarReferences(
                 model = modelInfo,
-                projectId = projectId
+                projectId = projectId,
+                resourceId = resourceId,
+                resourceType = resourceType
             )
             varRefDetails.forEach { varRefDetail ->
                 varRefDetail.referVersion = resourceVersion
@@ -127,6 +129,11 @@ class ModelHandleServiceImpl @Autowired constructor(
             model = modelString?.let { JsonUtil.to(it, ITemplateModel::class.java) } as? Model
 
             if (model != null) {
+                // 模板 Model 的 JSON 中不含 templateId，需从 context 回填
+                when (resourceType) {
+                    PublicVarGroupReferenceTypeEnum.PIPELINE.name -> model.pipelineId = resourceId
+                    PublicVarGroupReferenceTypeEnum.TEMPLATE.name -> model.templateId = resourceId
+                }
                 if (retryCount > 0) {
                     logger.info("Successfully got resource model after $retryCount retries: $resourceId")
                 }
