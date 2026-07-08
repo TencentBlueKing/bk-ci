@@ -28,6 +28,7 @@
 package com.tencent.devops.store.api.atom
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.store.pojo.atom.AtomEnv
 import com.tencent.devops.store.pojo.atom.AtomEnvRequest
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -72,7 +73,10 @@ interface BuildMarketAtomEnvResource {
         osArch: String? = null,
         @Parameter(description = "是否需要转换操作系统相关信息", required = false)
         @QueryParam("convertOsFlag")
-        convertOsFlag: Boolean? = null
+        convertOsFlag: Boolean? = null,
+        @Parameter(description = "当次构建的渠道代码", required = false)
+        @QueryParam("channelCode")
+        channelCode: ChannelCode? = null
     ): Result<AtomEnv?>
 
     @Operation(summary = "插件工作台-更新插件执行环境信息")

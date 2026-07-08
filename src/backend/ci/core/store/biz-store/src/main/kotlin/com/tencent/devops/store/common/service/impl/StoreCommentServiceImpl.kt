@@ -53,6 +53,7 @@ import com.tencent.devops.store.pojo.common.STORE_COMMENT_NOTIFY_TEMPLATE
 import com.tencent.devops.store.pojo.common.comment.StoreCommentInfo
 import com.tencent.devops.store.pojo.common.comment.StoreCommentRequest
 import com.tencent.devops.store.pojo.common.comment.StoreUserCommentInfo
+import com.tencent.devops.store.pojo.common.enums.ServiceScopeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -173,9 +174,10 @@ class StoreCommentServiceImpl @Autowired constructor(
         storeId: String,
         storeCode: String,
         storeCommentRequest: StoreCommentRequest,
-        storeType: StoreTypeEnum
+        storeType: StoreTypeEnum,
+        serviceScope: ServiceScopeEnum?
     ): Result<StoreCommentInfo?> {
-        logger.info("addStoreComment params:[$userId|$storeId|$storeCode|$storeCommentRequest|$storeType")
+        logger.info("addStoreComment params:[$userId|$storeId|$storeCode|$storeCommentRequest|$storeType|$serviceScope")
         val score = storeCommentRequest.score
         // 校验评分是否合法
         if (!validateScore(score)) return I18nUtil.generateResponseDataObject(
@@ -224,7 +226,14 @@ class StoreCommentServiceImpl @Autowired constructor(
             )
             storeTotalStatisticService.updateStoreTotalStatisticByCode(storeCode, storeType.type.toByte())
         }
-        sendNotifyMessage(storeCode, storeType, storeId, userId, storeCommentRequest)
+        sendNotifyMessage(
+            storeCode = storeCode,
+            storeType = storeType,
+            storeId = storeId,
+            userId = userId,
+            storeCommentRequest = storeCommentRequest,
+            serviceScope = serviceScope
+        )
         return getStoreComment(userId, commentId)
     }
 
@@ -233,7 +242,8 @@ class StoreCommentServiceImpl @Autowired constructor(
         storeType: StoreTypeEnum,
         storeId: String,
         userId: String,
-        storeCommentRequest: StoreCommentRequest
+        storeCommentRequest: StoreCommentRequest,
+        serviceScope: ServiceScopeEnum?
     ) {
         // 通知插件管理员和开发人员、平台管理员
         val memberRecordList = storeMemberDao.list(dslContext, storeCode, null, storeType.type.toByte())
@@ -249,7 +259,7 @@ class StoreCommentServiceImpl @Autowired constructor(
         if (receivers.contains("system")) {
             receivers.toMutableSet().remove("system")
         }
-        val url = storeCommonService.getStoreDetailUrl(storeType, storeCode)
+        val url = storeCommonService.getStoreDetailUrl(storeType, storeCode, serviceScope)
         val storeName = storeCommonService.getStoreNameById(storeId, storeType)
         val bodyParams = mapOf(
             "userId" to userId,
@@ -344,7 +354,8 @@ class StoreCommentServiceImpl @Autowired constructor(
             storeType = storeType!!,
             storeId = storeCommentRecord.storeId,
             userId = userId,
-            storeCommentRequest = storeCommentRequest
+            storeCommentRequest = storeCommentRequest,
+            serviceScope = null
         )
         return Result(true)
     }
