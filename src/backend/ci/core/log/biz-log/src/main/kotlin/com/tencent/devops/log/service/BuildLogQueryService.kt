@@ -27,6 +27,7 @@
 
 package com.tencent.devops.log.service
 
+import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.AuthPermission
@@ -35,6 +36,8 @@ import com.tencent.devops.common.log.pojo.PageQueryLogs
 import com.tencent.devops.common.log.pojo.QueryLogLineNum
 import com.tencent.devops.common.log.pojo.QueryLogStatus
 import com.tencent.devops.common.log.pojo.QueryLogs
+import com.tencent.devops.common.log.pojo.QueryLogsText
+import com.tencent.devops.common.log.constant.Constants
 import com.tencent.devops.common.log.pojo.enums.LogStatus
 import com.tencent.devops.common.log.pojo.enums.LogType
 import com.tencent.devops.log.jmx.LogStorageBean
@@ -209,6 +212,115 @@ class BuildLogQueryService @Autowired constructor(
             logStorageBean.query(System.currentTimeMillis() - startEpoch, success)
         }
         return Result(queryLogs)
+    }
+
+    fun getLatestLogs(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        debug: Boolean?,
+        logType: LogType?,
+        size: Int?,
+        tag: String?,
+        containerHashId: String?,
+        executeCount: Int?,
+        subTag: String? = null,
+        jobId: String?,
+        stepId: String?,
+        archiveFlag: Boolean? = null,
+        checkPermissionFlag: Boolean = true
+    ): Result<QueryLogsText> {
+        if (checkPermissionFlag) {
+            validateAuth(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                permission = AuthPermission.VIEW,
+                archiveFlag = archiveFlag
+            )
+        }
+        val startEpoch = System.currentTimeMillis()
+        var success = false
+        val queryLogs = try {
+            val result = logService.getBottomLogs(
+                pipelineId = pipelineId,
+                buildId = buildId,
+                debug = debug ?: false,
+                logType = logType,
+                tag = tag,
+                subTag = subTag,
+                containerHashId = containerHashId,
+                executeCount = executeCount,
+                size = size,
+                jobId = jobId,
+                stepId = stepId
+            )
+            result.timeUsed = System.currentTimeMillis() - startEpoch
+            success = logStatusSuccess(result.status)
+            result
+        } finally {
+            logStorageBean.query(System.currentTimeMillis() - startEpoch, success)
+        }
+        return Result(QueryLogsText.from(queryLogs))
+    }
+
+    fun getMiddleLogs(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        start: Long,
+        end: Long,
+        debug: Boolean?,
+        logType: LogType?,
+        tag: String?,
+        containerHashId: String?,
+        executeCount: Int?,
+        subTag: String? = null,
+        jobId: String?,
+        stepId: String?,
+        archiveFlag: Boolean? = null,
+        checkPermissionFlag: Boolean = true
+    ): Result<QueryLogsText> {
+        validateMiddleLogRange(start = start, end = end)
+        if (checkPermissionFlag) {
+            validateAuth(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                permission = AuthPermission.VIEW,
+                archiveFlag = archiveFlag
+            )
+        }
+        val startEpoch = System.currentTimeMillis()
+        var success = false
+        val queryLogs = try {
+            val num = (end - start + 1).toInt()
+            val result = logService.queryLogsBetweenLines(
+                buildId = buildId,
+                num = num,
+                fromStart = true,
+                start = start,
+                end = end,
+                debug = debug ?: false,
+                logType = logType,
+                tag = tag,
+                subTag = subTag,
+                containerHashId = containerHashId,
+                executeCount = executeCount,
+                jobId = jobId,
+                stepId = stepId
+            )
+            result.timeUsed = System.currentTimeMillis() - startEpoch
+            success = logStatusSuccess(result.status)
+            result
+        } finally {
+            logStorageBean.query(System.currentTimeMillis() - startEpoch, success)
+        }
+        return Result(QueryLogsText.from(queryLogs))
     }
 
     fun getAfterLogs(
@@ -513,6 +625,25 @@ class BuildLogQueryService @Autowired constructor(
             logStorageBean.query(System.currentTimeMillis() - startEpoch, success)
         }
         return Result(queryLogs)
+    }
+
+    @Suppress("ThrowsCount")
+    private fun validateMiddleLogRange(start: Long, end: Long) {
+        if (start < 1 || end < 1) {
+            throw InvalidParamException("Invalid line number: start and end must be greater than 0")
+        }
+        if (start > end) {
+            throw InvalidParamException(
+                "Invalid line number range: start($start) must be less than or equal to end($end)"
+            )
+        }
+        val rangeSize = end - start + 1
+        if (rangeSize > Constants.NORMAL_MAX_LINES) {
+            throw InvalidParamException(
+                "The line number range size($rangeSize) exceeds the maximum limit " +
+                    "(${Constants.NORMAL_MAX_LINES}), please reduce the range between start and end"
+            )
+        }
     }
 
     @Suppress("ThrowsCount")

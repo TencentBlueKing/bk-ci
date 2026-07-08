@@ -211,6 +211,39 @@ class ServicePipelineVersionResourceImpl @Autowired constructor(
         )
     }
 
+    override fun getVersionModel(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        version: Int?
+    ): Result<PipelineVersionWithModel> {
+        val permission = AuthPermission.VIEW
+        pipelinePermissionService.validPipelinePermission(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            permission = permission,
+            message = MessageUtil.getMessageByLocale(
+                CommonMessageCode.USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
+                I18nUtil.getLanguage(userId),
+                arrayOf(
+                    userId,
+                    projectId,
+                    permission.getI18n(I18nUtil.getLanguage(userId)),
+                    pipelineId
+                )
+            )
+        )
+        return Result(
+            pipelineVersionFacadeService.getVersion(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                version = version
+            )
+        )
+    }
+
     override fun previewCode(
         userId: String,
         projectId: String,
