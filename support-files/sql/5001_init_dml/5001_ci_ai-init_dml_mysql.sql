@@ -676,3 +676,241 @@ Job 间依赖 `jobControlOption`：`dependOnType`（`ID` 按 jobId / `NAME` 按 
     `BIND_AGENT` = VALUES(`BIND_AGENT`),
     `ENABLED` = VALUES(`ENABLED`),
     `UPDATED_TIME` = NOW(3);
+
+-- ==========================================
+-- 系统级技能：流水线构建诊断（绑定 build_agent = BuildSubAgentDefinition.toolName()）
+-- ==========================================
+INSERT INTO `T_AI_SKILL` (
+    `ID`, `SCOPE`, `USER_ID`, `SKILL_NAME`, `DESCRIPTION`,
+    `SKILL_CONTENT`, `RESOURCES`, `BIND_AGENT`, `ENABLED`
+) VALUES (
+    'sys-pipeline-build-diagnosis',
+    'SYSTEM',
+    NULL,
+    'pipeline-build-diagnosis',
+    '诊断 BK-CI 流水线构建失败/超时/卡住/变慢，做失败根因定位、构建历史稳定性判定、构建对比、卡住检测、子流水线递归追踪与结构化诊断报告。用户问“为什么失败/报错/挂了/卡住了/为什么这次慢/最近稳不稳/这次和上次差在哪”时使用。',
+    '# 流水线构建诊断
+
+## 适用场景
+
+- 用户问“这条流水线为什么失败/报错/挂了”，要定位根因
+- 用户问“构建卡住了/超时了/为什么这次特别慢”
+- 用户问“最近这条流水线稳不稳/成功率如何/老在哪一步失败”
+- 用户问“这次失败和上次成功差在哪”，需要构建对比
+- 失败涉及子流水线，需要递归追踪到真正出错的那一层
+
+## 不适用场景
+
+- 只是解释流水线编排“在定义什么”（用「流水线编排解释」技能）
+- 触发/停止/重试构建等写操作的执行流程
+- 修改流水线配置或插件代码
+
+## 快速指导
+
+1. 先用「获取构建状态」拿到构建状态，再按诊断决策树分流。
+2. 失败排障默认先走一键工具「分析构建失败」，它会定位失败插件并带回错误信息与 latest 日志。
+3. 拿到 errorCode / errorMsg 后先对照下方附录二的根因模式库与蓝盾错误码表判断。
+4. latest 日志窗口不足时，按返回的 lineRange 用「获取指定行号范围构建日志」滚动拉取。
+5. “为什么这次失败/变慢”优先做构建对比：对比最近一次成功构建的参数、Stage 耗时与新增错误。
+6. 失败涉及子流水线（subPipelineCall）时，取子构建 buildId 递归诊断，别停在父流水线。
+7. 诊断结束按附录一的报告模板结构化输出：失败定位 + 根因 + 历史判定 + 修复建议。
+
+## 诊断决策树
+
+```
+获取构建状态
+├─ FAILED   → 分析构建失败 + 日志滚动 + 根因模式匹配 + 历史判定（偶发/持续）+ 报告
+├─ RUNNING  → 卡住检测（当前耗时 vs 历史平均，≥2x 疑似卡住）+ 当前 Stage
+├─ CANCELED → 构建历史 + 谁在何时取消
+└─ SUCCEED  → 用户觉得慢时做耗时瓶颈分析 + 与历史对比
+```
+
+## 高信号规则
+
+- 根因结论必须落到具体 Stage/Job/插件与 errorCode/errorMsg，不要停在“构建失败了”
+- 区分**偶发失败**（成功率高、非连续）与**持续失败**（连续多次、同一处），修复建议不同
+- 环境/资源类错误（Agent 异常、超时、磁盘、网络）优先建议重试或联系平台，而非改代码
+- errorType（USER/THIRD_PARTY/PLUGIN/SYSTEM）能快速区分是用户问题还是平台/插件问题
+- 卡住判定用启发式：当前运行时长 ≥ 历史平均 2 倍才提示疑似卡住，避免误报
+
+## 关键陷阱
+
+- 一上来就拉全量日志（慢且可能被截断），而不是先「分析构建失败」定位失败插件
+- 只看 ERROR 日志漏掉上下文，应同时看普通日志
+- 子流水线失败只报父流水线错误码，不递归到真正出错的子构建
+- 把偶发的环境抖动当成代码缺陷，给错修复方向
+- 忽略构建对比里的参数差异（分支/版本/开关变了才导致这次失败）
+
+---
+
+# 附录一：构建诊断流程手册
+
+工具均为构建子智能体的中文名：分析构建失败、获取构建状态、获取构建历史、获取构建详情、
+获取构建变量、获取构建日志、获取指定行号范围构建日志、获取流水线状态、编排三级递进。
+
+## 决策树分流
+
+先用「获取构建状态」拿到 status，再分流：FAILED 走失败根因诊断；RUNNING 走卡住检测；
+CANCELED 查「获取构建历史」说明取消时间/触发人；SUCCEED 在用户觉得慢时做耗时瓶颈分析 + 历史对比。
+
+## 一、失败根因诊断（FAILED）
+
+1. 调「分析构建失败(projectId, pipelineId, buildId?)」（buildId 不传＝最新一次构建），
+   返回构建状态、stageSummary、失败插件列表（errorType/errorCode/errorMsg）、
+   每个失败插件的完整 element 配置、latest 错误日志与 latest 普通日志。
+2. 先用 errorCode/errorMsg 对照附录二的模式库与错误码表判断根因方向。
+3. latest 日志不足时，按返回的 lineRange/nextActions 调「获取指定行号范围构建日志」滚动拉取：
+   通常先向前滚 start = 当前 startLineNo - 500、end = 当前 startLineNo - 1；
+   保持相同 tag/jobId/logType，必要时分别拉 ERROR 与普通日志。
+4. 需要理解失败插件在编排中的位置或上下游依赖时，按编排三级递进查看，可结合「流水线编排解释」技能。
+5. 结合“构建历史判定”判断偶发还是持续，最后按报告模板输出。
+
+## 二、构建历史判定（偶发 vs 持续）
+
+调「获取构建历史」拉最近 N 次记录，自行汇总成功率、连续失败次数、常见失败落点。判定口径：
+偶发失败（成功率高、非连续、失败点分散）多为环境抖动，建议先重试；
+持续失败（连续多次、集中同一处）多为代码/配置缺陷，按根因修复；首次失败无历史参照，直接分析当前根因。
+
+## 三、卡住检测（RUNNING）
+
+1. 「获取构建状态」拿当前已运行时长与当前 Stage。
+2. 「获取构建历史」估算历史平均耗时。
+3. 启发式：当前耗时 / 历史平均 ≥ 2.0 才提示“疑似卡住”，并指出卡在哪个 Stage；未达 2x 如实说明仍在正常范围。
+4. 「获取流水线状态」只能到 Stage 级，无法定位到具体插件。
+
+## 四、耗时分析（SUCCEED 但觉得慢 / 变慢排查）
+
+从「获取构建详情」或「获取构建状态」拿各 Stage/Job 耗时，按耗时降序排出瓶颈，
+与最近一次基准构建对比看是整体变慢还是某段突增，给方向性建议（并发/缓存/拆分/插件替换），不越界改配置。
+
+## 五、诊断报告模板
+
+```markdown
+## 构建诊断报告
+
+**流水线**：{pipelineName}
+**构建号**：#{buildNum}
+**状态**：{status}
+**耗时**：{duration}
+**触发链**：{父流水线} -> {当前流水线}
+
+### 失败定位
+- Stage：{stageName}
+- Job/插件：{jobName} / {taskName}
+- 错误码：{errorCode}（errorType：{errorType}）
+
+### 日志分析
+{关键错误行}
+
+### 根因分析
+{对照模式库/错误码得到的根因}
+
+### 子流水线追踪
+{递归诊断到的真正出错子构建，如有}
+
+### 构建历史
+最近 N 次：成功率 X%，连续失败 Y 次；判定：{偶发/持续/首次}
+
+### 修复建议
+{具体、可操作的修复方案}
+```
+
+保持结论优先、证据在后；无法确认的部分明确标注“需进一步确认”。
+
+## 六、构建对比（为什么这次失败/变慢）
+
+没有专用 diff 工具，用现有工具手动对比：基准 good 用「获取构建历史」找最近一次成功构建；
+问题 bad 为当前构建；分别「获取构建变量」对比分支/版本/开关类参数（忽略 BK_CI_ 前缀系统变量）；
+分别取各 Stage 耗时找耗时突增段；列出 bad 相对 good 新增的失败插件/错误码。结论优先解释“变了什么”。
+
+## 七、子流水线递归
+
+失败涉及 subPipelineCall 时不要停在父流水线：从失败插件输出或「获取构建详情」拿子流水线 pipelineId/buildId，
+对子构建递归「分析构建失败」下钻到真正出错那层；报告用触发链呈现父 -> 子 -> ...；递归深度建议 ≤ 3 层。
+
+---
+
+# 附录二：失败根因模式库与蓝盾错误码
+
+基于日志内容和错误码做模式匹配，快速定位根因。
+
+## 依赖安装失败
+
+- npm 网络类（network/ETIMEDOUT/ECONNREFUSED）：registry 不可达，检查网络与 npm 配置
+- npm 404：包不存在或私有 registry 配错，确认包名、检查 .npmrc
+- npm ERESOLVE：依赖版本冲突，--legacy-peer-deps 或修复版本
+- yarn/pnpm lockfile 异常：清缓存重试 / 提交 lockfile
+
+## 编译/构建错误
+
+- TypeScript 编译错误（error TS 开头）：按错误码定位文件修类型
+- ESLint 不通过：修 lint 或调规则
+- Module not found / Cannot resolve：检查 import 路径与 alias
+- JavaScript heap out of memory：增大 --max-old-space-size
+- Segmentation fault：检查 Node 版本、重建 node_modules
+
+## 测试失败
+
+- 用例失败（FAIL ...test）：看 expect 与 received 差异
+- 测试超时（Timeout exceeded）：增大 timeout 或排查异步
+- 测试上下文 Cannot find module：检查 jest/vitest 配置
+
+## 部署/发布失败
+
+- Permission denied / 403：权限不足，检查部署账号权限
+- Connection refused / No route to host：目标不可达，检查网络与目标服务
+- No space left / disk space：磁盘不足，清理构建机
+- docker pull failed：镜像拉取失败，检查仓库地址与凭证
+
+## 环境/配置问题
+
+- env not set / undefined variable：环境变量缺失，在流水线变量中配置
+- certificate expired / SSL：证书过期，更新或临时跳过验证
+- command not found：构建工具缺失，检查构建镜像
+
+## 子流水线失败
+
+- subPipeline FAILED：子流水线内部失败，取子构建 buildId 递归分析
+- Waiting for sub-pipeline timeout：子流水线超时，排查卡住环节
+
+## 蓝盾平台级错误码
+
+| 错误码 | 含义 | 修复建议 |
+|---|---|---|
+| 2103003 | 第三方构建机状态异常 | 重试；持续失败联系 DevOps 检查 Agent |
+| 2103004 | 构建机启动超时 | 重试；检查 Agent 负载 |
+| 2199002 | 子流水线运行失败 | 递归分析子流水线 |
+| 2199001 | 子流水线启动失败 | 检查子流水线 ID 和权限 |
+| 2101001 | 流水线已被锁定 | 等待或联系锁定者解除 |
+| 2101002 | 流水线并发数达上限 | 等待队列排空或增加并发配额 |
+| 2101003 | 流水线已被禁用 | 联系管理员启用 |
+| 2104001 | 构建超时 | 优化构建速度或增大超时配置 |
+| 2104002 | 排队超时 | 检查 Agent 池是否充足 |
+| 2128001 | 人工审核超时 | 联系审批人操作 |
+| 2128002 | 人工审核驳回 | 查看驳回原因，修复后重试 |
+
+## 脚本与商店插件通用错误
+
+- Script command execution failed with exit code(N)：脚本插件非零退出码，查该 task 日志
+- Market atom execution exit with StackTrace：商店插件内部异常，查 StackTrace
+
+## errorType 快速区分
+
+- USER：用户代码/配置问题，按日志修复
+- THIRD_PARTY：第三方（构建机/外部服务）问题，多为环境抖动，优先重试
+- PLUGIN：插件自身异常，查插件日志/StackTrace，必要时联系插件作者
+- SYSTEM：平台系统异常，重试或联系 DevOps 平台
+
+遇到不在本清单的错误码或特征，先如实描述可确认信息，再用 iWiki 检索蓝盾官方文档补充，不要臆测根因。',
+    NULL,
+    'build_agent',
+    b'1'
+) ON DUPLICATE KEY UPDATE
+    `SCOPE` = VALUES(`SCOPE`),
+    `SKILL_NAME` = VALUES(`SKILL_NAME`),
+    `DESCRIPTION` = VALUES(`DESCRIPTION`),
+    `SKILL_CONTENT` = VALUES(`SKILL_CONTENT`),
+    `RESOURCES` = VALUES(`RESOURCES`),
+    `BIND_AGENT` = VALUES(`BIND_AGENT`),
+    `ENABLED` = VALUES(`ENABLED`),
+    `UPDATED_TIME` = NOW(3);
