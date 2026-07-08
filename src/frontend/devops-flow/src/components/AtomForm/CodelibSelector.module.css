@@ -1,0 +1,52 @@
+.codelibSelector {
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.groupBox {
+  position: relative;
+  width: 110px;
+  flex-shrink: 0;
+}
+
+.inputSelector {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  /* 左移 1px，让两个组件相邻的边框重叠为一条线，避免出现 2px 粗边 */
+  margin-left: -1px;
+}
+
+/*
+ * bkui-vue 的 Select 会把 .bk-input(inline-flex) 嵌在块级 .bk-select-trigger 内，
+ * inline 元素会产生基线间隙，使选择框比同级的普通 Input 高出几像素，导致错位。
+ * 这里将相关 .bk-input 统一为块级 flex 且固定 32px，保证左右两侧高度一致、水平对齐。
+ */
+.groupBox :global(.bk-input),
+.inputSelector :global(.bk-input),
+.inputSelector:global(.bk-input) {
+  display: flex;
+  height: 32px;
+}
+
+/* 拍平左侧选择框右侧圆角 */
+.groupBox :global(.bk-input) {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+/* 拍平右侧输入/选择框左侧圆角（兼容 Input 根节点与 Select 内部的 .bk-input） */
+.inputSelector :global(.bk-input),
+.inputSelector:global(.bk-input) {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}
+
+/* hover / focus 时提升层级，保证高亮边框完整显示，不被相邻边框遮挡 */
+.groupBox:hover,
+.groupBox:focus-within,
+.inputSelector:hover,
+.inputSelector:focus-within {
+  z-index: 1;
+}

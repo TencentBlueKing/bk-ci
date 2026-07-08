@@ -451,6 +451,13 @@
       "resolvedUrl": "实际请求地址",
       "waitingForVariables": "等待变量值..."
     },
+    "codelibSelector": {
+      "selectRepo": "选择代码库",
+      "enterAlias": "输入别名",
+      "monitorPac": "监听PAC",
+      "enterRepoAlias": "请输入代码库别名",
+      "pacRepoNotSet": "将自动监听所属PAC代码库，无需设置"
+    },
     "orchestration": {
       "clickToAddStage": "点击添加第一个Stage",
       "noFlowStageTips": "暂无创作流 Stage",
