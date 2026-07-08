@@ -52,14 +52,15 @@ class CreateStreamTriggerSupportService constructor(
         workspaceName: String,
         userId: String
     ): List<EnvData> {
-        logger.info("fetch all node env list|$projectId|$workspaceName")
         return try {
-            client.get(ServiceEnvironmentResource::class).fetchAllNodeEnvListByWorkspace(
+            val result = client.get(ServiceEnvironmentResource::class).fetchAllNodeEnvListByWorkspace(
                 projectId = projectId,
                 workspaceName = workspaceName,
                 userId = userId,
                 noCheckPerm = true
             ).data
+            logger.info("fetch all node env list|$projectId|$workspaceName")
+            result
         } catch (ignored: Exception) {
             logger.warn("get env list failed|$projectId|$workspaceName", ignored)
             null
