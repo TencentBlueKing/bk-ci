@@ -78,6 +78,7 @@
     import AdvancedSetting from './components/AdvancedSetting/index.vue'
     import SharedSettings from './components/SharedSetting/index.vue'
     import SchedulingStrategy from './components/SchedulingStrategy/index.vue'
+    import OperateLog from './components/OperateLog/index.vue'
 
     export default {
         name: 'EnvDetail',
@@ -91,7 +92,8 @@
             Settings,
             emptyNode,
             AdvancedSetting,
-            SchedulingStrategy
+            SchedulingStrategy,
+            OperateLog
         },
         setup () {
             const { proxy } = useInstance()
@@ -128,7 +130,8 @@
                     settings: Settings,
                     auth: AuthManage,
                     advancedSetting: AdvancedSetting,
-                    schedulingStrategy: SchedulingStrategy
+                    schedulingStrategy: SchedulingStrategy,
+                    operateLog: OperateLog
                 }
                 return comMap[tabActive.value]
             })
@@ -197,7 +200,11 @@
                 ...(!isPersonalProject.value ? [{
                     name: 'auth',
                     label: proxy.$t('environment.authManage')
-                }] : [])
+                }] : []),
+                {
+                    name: 'operateLog',
+                    label: proxy.$t('environment.operateLog')
+                }
             ])
             
             // 获取可用的 tab 名称列表
