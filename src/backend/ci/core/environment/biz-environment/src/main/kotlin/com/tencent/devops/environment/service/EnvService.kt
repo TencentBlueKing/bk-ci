@@ -2014,7 +2014,9 @@ class EnvService @Autowired constructor(
             workspaceNames = listOf(workspaceName)
         ).firstOrNull()
         if (agent == null) {
-            logger.warn("fetchAllNodeEnvList no find $projectId|$workspaceName agent")
+            return emptyList()
+        }
+        if (agent.nodeId == null) {
             return emptyList()
         }
         val realProjectId = projectId ?: agent.projectId
@@ -2024,10 +2026,14 @@ class EnvService @Autowired constructor(
         val result = mutableListOf<EnvData>()
         // 校验管理员权限看能否用所有构建节点
         if (authProjectApi.checkProjectManager(userId, pipelineAuthServiceCode, realProjectId)) {
-            result.add(EnvData(AllCreateNodeEnv.hashId(), AllCreateNodeEnv.name(), agentHashId))
+            result.add(EnvData(
+                hashId = AllCreateNodeEnv.hashId(),
+                name = AllCreateNodeEnv.name(),
+                agentHashId = agentHashId,
+                projectId = agent.projectId
+            ))
         }
         if (envNodeList.isEmpty() && tagEnvList.isEmpty()) {
-            logger.info("fetchAllNodeEnvList $realProjectId|$workspaceName no env list")
             return result
         }
         var permissionEnvList: List<Long>? = null
@@ -2062,7 +2068,8 @@ class EnvService @Autowired constructor(
             EnvData(
                 hashId = HashUtil.encodeLongId(it.envId),
                 name = it.envName,
-                agentHashId = agentHashId
+                agentHashId = agentHashId,
+                projectId = it.projectId
             )
         }
     }
