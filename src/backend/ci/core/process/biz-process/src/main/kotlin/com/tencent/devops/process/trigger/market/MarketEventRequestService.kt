@@ -163,7 +163,7 @@ class MarketEventRequestService constructor(
             sampleEventDispatcher.dispatch(
                 CdsWebhookTriggerEvent(
                     userId = userId,
-                    projectId = projectId,
+                    projectId = subscriber.projectId,
                     pipelineId = subscriber.pipelineId,
                     workspaceName = workspaceName,
                     cdsIp = cdsIp,
