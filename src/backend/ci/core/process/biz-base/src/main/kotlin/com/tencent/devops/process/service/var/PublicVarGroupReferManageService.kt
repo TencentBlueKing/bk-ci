@@ -300,7 +300,7 @@ class PublicVarGroupReferManageService @Autowired constructor(
         model: Model,
         projectId: String
     ) {
-        val params = model.getTriggerContainer().params
+        val params = model.getTriggerParams()
         if (params.isNotEmpty()) {
             validateParamIds(params)
         }
@@ -363,7 +363,7 @@ class PublicVarGroupReferManageService @Autowired constructor(
         publicVarGroupReferDTO: PublicVarGroupReferDTO
     ) {
         val model = publicVarGroupReferDTO.model
-        val params = model.getTriggerContainer().params
+        val params = model.getTriggerParams()
 
         // 兜底校验：未前置调 validateVarGroupReferences 的调用方走这里
         val needFallbackValidation = model.publicVarGroups == null
