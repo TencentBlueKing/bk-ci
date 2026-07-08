@@ -39,6 +39,8 @@ import com.tencent.devops.log.api.ServiceLogResource
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.api.service.ServicePipelineVersionResource
+import com.tencent.devops.process.pojo.pipeline.findPipelineNodeDetails
+import com.tencent.devops.process.pojo.pipeline.toPipelineModelSummary
 import io.agentscope.core.tool.Tool
 import io.agentscope.core.tool.ToolParam
 import org.slf4j.Logger
@@ -177,6 +179,118 @@ class BuildTools(
                     "setting" to data.modelAndSetting.setting
                 )
             )
+        }
+    }
+
+    @Tool(
+        name = "获取流水线编排摘要",
+        description = "返回 AI 友好的轻量编排摘要，仅保留 stage/job/step 的定位信息与基础元数据。" +
+                "默认包含插件列表，但不会返回完整 setting 或完整插件对象。" +
+                "适合作为查看流水线编排的默认首选工具。"
+    )
+    fun getPipelineModelSummary(
+        @ToolParam(name = "projectId", description = "项目ID")
+        projectId: String,
+        @ToolParam(name = "pipelineId", description = "流水线ID")
+        pipelineId: String,
+        @ToolParam(name = "version", description = "流水线版本号（可选，不传默认最新）", required = false)
+        version: Int? = null,
+        @ToolParam(
+            name = "includeElements",
+            description = "是否展开插件列表，默认 true；若只看 stage/job 层级可设为 false",
+            required = false
+        )
+        includeElements: Boolean? = true
+    ): String {
+        return safeQuery("BuildArtifactTool", "getPipelineModelSummary") {
+            val data = fetchPipelineVersionWithModel(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                version = version
+            ) ?: return@safeQuery "未找到流水线 $pipelineId 的编排信息"
+            toJson(data.toPipelineModelSummary(includeElements = includeElements != false))
+        }
+    }
+
+    @Tool(
+        name = "获取流水线编排节点详情",
+        description = "按 stageId/containerHashId/containerId/jobId/elementId/stepId 精准定位编排中的单个节点，" +
+                "返回节点父链路径与轻量详情。定位优先级：elementId > stepId > containerHashId > containerId > jobId > stageId。"
+    )
+    fun getPipelineNodeDetail(
+        @ToolParam(name = "projectId", description = "项目ID")
+        projectId: String,
+        @ToolParam(name = "pipelineId", description = "流水线ID")
+        pipelineId: String,
+        @ToolParam(name = "version", description = "流水线版本号（可选，不传默认最新）", required = false)
+        version: Int? = null,
+        @ToolParam(name = "stageId", description = "阶段ID或用户自定义阶段ID", required = false)
+        stageId: String? = null,
+        @ToolParam(name = "containerHashId", description = "Job 的稳定 Hash ID", required = false)
+        containerHashId: String? = null,
+        @ToolParam(name = "containerId", description = "Job 的容器ID（同 vmSeqId）", required = false)
+        containerId: String? = null,
+        @ToolParam(name = "jobId", description = "用户自定义 Job ID", required = false)
+        jobId: String? = null,
+        @ToolParam(name = "elementId", description = "插件ID（推荐，等同日志 tag）", required = false)
+        elementId: String? = null,
+        @ToolParam(name = "stepId", description = "用户自定义 Step ID", required = false)
+        stepId: String? = null
+    ): String {
+        return safeQuery("BuildArtifactTool", "getPipelineNodeDetail") {
+            if (
+                stageId.isNullOrBlank() &&
+                containerHashId.isNullOrBlank() &&
+                containerId.isNullOrBlank() &&
+                jobId.isNullOrBlank() &&
+                elementId.isNullOrBlank() &&
+                stepId.isNullOrBlank()
+            ) {
+                return@safeQuery "请至少提供 stageId、containerHashId、containerId、jobId、elementId、stepId 中的一个。"
+            }
+            val data = fetchPipelineVersionWithModel(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                version = version
+            ) ?: return@safeQuery "未找到流水线 $pipelineId 的编排信息"
+            val matches = data.findPipelineNodeDetails(
+                stageId = stageId,
+                containerHashId = containerHashId,
+                containerId = containerId,
+                jobId = jobId,
+                elementId = elementId,
+                stepId = stepId
+            )
+            when {
+                matches.isEmpty() -> {
+                    "未找到符合条件的编排节点，请确认 version 与定位键是否正确。"
+                }
+
+                matches.size == 1 -> {
+                    toJson(matches.single())
+                }
+
+                else -> {
+                    toJson(
+                        mapOf(
+                            "message" to "匹配到多个编排节点，请补充更精确的定位键后重试。",
+                            "matchedBy" to resolveNodeLocatorKey(
+                                stageId = stageId,
+                                containerHashId = containerHashId,
+                                containerId = containerId,
+                                jobId = jobId,
+                                elementId = elementId,
+                                stepId = stepId
+                            ),
+                            "matchedCount" to matches.size,
+                            "candidates" to matches.take(MAX_NODE_MATCH_CANDIDATES).map { it.path },
+                            "notices" to listOf(
+                                "优先使用 elementId 或 containerHashId，可避免重名或重复 stepId/jobId 带来的歧义。"
+                            )
+                        )
+                    )
+                }
+            }
         }
     }
 
@@ -867,9 +981,37 @@ class BuildTools(
         return "${HomeHostUtil.innerServerHost()}/console/pipeline/$projectId/$pipelineId/detail/$buildId"
     }
 
+    private fun fetchPipelineVersionWithModel(projectId: String, pipelineId: String, version: Int?) =
+        versionResource().getVersionModel(
+            userId = getOperatorUserId(),
+            projectId = projectId,
+            pipelineId = pipelineId,
+            version = version
+        ).data
+
+    private fun resolveNodeLocatorKey(
+        stageId: String?,
+        containerHashId: String?,
+        containerId: String?,
+        jobId: String?,
+        elementId: String?,
+        stepId: String?
+    ): String {
+        return when {
+            !elementId.isNullOrBlank() -> "elementId"
+            !stepId.isNullOrBlank() -> "stepId"
+            !containerHashId.isNullOrBlank() -> "containerHashId"
+            !containerId.isNullOrBlank() -> "containerId"
+            !jobId.isNullOrBlank() -> "jobId"
+            !stageId.isNullOrBlank() -> "stageId"
+            else -> "unknown"
+        }
+    }
+
     companion object {
         private const val DEFAULT_PAGE_SIZE = 10
         private const val MAX_PAGE_SIZE = 50
+        private const val MAX_NODE_MATCH_CANDIDATES = 20
         private const val MAX_FAILED_ELEMENTS_TO_ANALYZE = 3
         private const val DEFAULT_LOG_SIZE = 500
         private const val FAILURE_LOG_SIZE = 500

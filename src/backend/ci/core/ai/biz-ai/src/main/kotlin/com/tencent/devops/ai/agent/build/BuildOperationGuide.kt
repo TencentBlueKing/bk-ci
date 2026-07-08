@@ -63,7 +63,10 @@ internal fun buildOperationGuideMarkdown(): String = """
    如果 latest 不足以判断根因，必须根据返回的 lineRange 调用「获取指定行号范围构建日志」继续滚动拉取。
 7. **状态与详情分离**: 「获取流水线状态」返回 process 服务的原始状态信息（不含 build detail 的完整 model）；
    需要定位失败插件时，使用「获取构建详情」查看 AI 简化详情中的 failedElements
-8. **必要时可查 iWiki**: 遇到不熟悉的错误码、插件配置问题、平台限制说明等情况时，
+8. **查看编排默认先走轻量工具**: 需要理解流水线结构时，默认先调用「获取流水线编排摘要」；
+   若已拿到 stageId/containerHashId/elementId 等定位键，再调用「获取流水线编排节点详情」；
+   只有在需要完整 setting、完整插件对象或复杂全链路分析时，才调用「获取流水线编排」全量兜底。
+9. **必要时可查 iWiki**: 遇到不熟悉的错误码、插件配置问题、平台限制说明等情况时，
    可直接调用 iWiki MCP 工具辅助排查。
 
 ## URL / ID 解析规则
@@ -81,6 +84,8 @@ internal fun buildOperationGuideMarkdown(): String = """
 | 搜索流水线 | `搜索流水线(projectId, keyword?, page?, pageSize?)` |
 | 查看流水线基本信息 | `获取流水线信息(projectId, pipelineId)` |
 | 查看流水线当前状态（原始状态信息） | `获取流水线状态(projectId, pipelineId)` |
+| 查看流水线轻量编排摘要（默认首选） | `获取流水线编排摘要(projectId, pipelineId, version?, includeElements?)` |
+| 查看指定 Stage/Job/插件 的轻量详情 | `获取流水线编排节点详情(projectId, pipelineId, version?, stageId?, containerHashId?, containerId?, jobId?, elementId?, stepId?)` |
 | 查看流水线编排（Model，可指定版本） | `获取流水线编排(projectId, pipelineId, version?)` |
 
 ### 构建操作（写操作需确认）
@@ -157,10 +162,13 @@ internal fun buildOperationGuideMarkdown(): String = """
    「获取指定行号范围构建日志」继续滚动拉取更多上下文
    - 通常先向前滚动：start = 当前 startLineNo - 500，end = 当前 startLineNo - 1
    - 保持相同 tag/jobId/logType 条件，必要时分别拉 ERROR 日志和普通日志
-5. 如果仅看失败插件本身仍不足以判断根因，可继续调用「获取流水线编排(projectId, pipelineId, version?)」
-   - 适用场景：需要查看上下游任务关系、变量传递、前置插件产物、条件控制、并行/Stage 编排、版本差异
-   - version 优先使用本次构建对应版本；不确定时可先用默认最新版本辅助判断
-6. 遇到不熟悉的错误码/插件配置/平台限制，调用 iWiki MCP 补充检索
+5. 如果仅看失败插件本身仍不足以判断根因，先调用「获取流水线编排摘要(projectId, pipelineId, version?, includeElements?)」
+   - 适用场景：快速查看 stage/job/step 结构、定位 elementId 所在 Job、判断是否需要继续深挖
+6. 若已经拿到 elementId、containerHashId、jobId、stageId 等定位键，再调用
+   「获取流水线编排节点详情(projectId, pipelineId, version?, ...)」查看单个节点轻量详情
+7. 只有在轻量摘要和节点详情仍不足以判断时，才调用「获取流水线编排(projectId, pipelineId, version?)」
+   - 适用场景：需要查看完整 setting、完整插件对象、变量传递、模板展开、复杂并行/Stage 编排或版本差异
+8. 遇到不熟悉的错误码/插件配置/平台限制，调用 iWiki MCP 补充检索
    - `getSpaceInfoByKey(space_key="DevOps")` → `aiSearchDocument(space_id=<数字ID>, query="关键词")`
    - 未命中再 `searchDocument`，需要全文再 `getDocument`
 ```
@@ -175,8 +183,9 @@ internal fun buildOperationGuideMarkdown(): String = """
    - 示例：获取构建日志(projectId, pipelineId, buildId, tag="e-abc12345", logType="ERROR")
    - 同时建议再调用一次 logType 为空的普通日志，避免只看 ERROR 漏掉上下文
 4. 如果 latest 窗口不足，根据 lineRange 调用「获取指定行号范围构建日志」继续向前或围绕可疑行号滚动拉取
-5. 如需查看完整上下文，再调用「获取流水线编排(projectId, pipelineId, version?)」辅助判断
-6. 分析日志、插件配置与流水线编排后给出结论
+5. 如需查看编排，默认先调用「获取流水线编排摘要」，必要时再用「获取流水线编排节点详情」精确钻取
+6. 只有在轻量工具仍不足时，再调用「获取流水线编排(projectId, pipelineId, version?)」查看完整上下文
+7. 分析日志、插件配置与流水线编排后给出结论
 ```
 
 **注意**：除非用户明确要求原始日志，否则不要把「获取构建日志」当作报错分析的第一步。
