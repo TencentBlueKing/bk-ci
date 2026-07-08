@@ -31,17 +31,18 @@ import com.fasterxml.jackson.core.type.TypeReference
 import com.github.benmanes.caffeine.cache.Cache
 import com.github.benmanes.caffeine.cache.Caffeine
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import java.util.concurrent.TimeUnit
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.util.concurrent.TimeUnit
 
 @Service
-class AtomWhitelistConfigService @Autowired constructor(
+class StoreWhitelistConfigService @Autowired constructor(
     private val businessConfigService: BusinessConfigService
 ) {
     companion object {
-        private val logger = LoggerFactory.getLogger(AtomWhitelistConfigService::class.java)
+        private val logger = LoggerFactory.getLogger(StoreWhitelistConfigService::class.java)
     }
 
     private val whitelistCache: Cache<String, List<String>> = Caffeine.newBuilder()
@@ -49,13 +50,13 @@ class AtomWhitelistConfigService @Autowired constructor(
         .expireAfterWrite(5, TimeUnit.MINUTES)
         .build()
 
-    fun isAtomInWhitelist(atomCode: String, whitelistType: String): Boolean {
+    fun isInWhitelist(storeType: StoreTypeEnum, whitelistType: String, code: String): Boolean {
         return try {
-            val atomCodes = whitelistCache.get(whitelistType) { key ->
+            val codes = whitelistCache.get("${storeType.name}_$whitelistType") { key ->
                 val configValue = businessConfigService.getConfigValue(
-                    business = "ATOM",
-                    feature = "ATOM_WHITELIST",
-                    businessValue = key
+                    business = storeType.name,
+                    feature = "${storeType.name}_WHITELIST",
+                    businessValue = whitelistType
                 )
                 if (configValue != null) {
                     JsonUtil.to(configValue, object : TypeReference<List<String>>() {})
@@ -63,9 +64,12 @@ class AtomWhitelistConfigService @Autowired constructor(
                     emptyList()
                 }
             }
-            atomCodes.contains(atomCode)
-        } catch (ignored: Throwable) {
-            logger.warn("isAtomInWhitelist failed|atomCode=$atomCode|whitelistType=$whitelistType", ignored)
+            codes.contains(code)
+        } catch (ignored: Exception) {
+            logger.warn(
+                "isInWhitelist failed|storeType=$storeType|whitelistType=$whitelistType|code=$code",
+                ignored
+            )
             false
         }
     }
