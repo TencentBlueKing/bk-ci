@@ -34,6 +34,7 @@ import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.TapdEventAction
 import com.tencent.devops.common.pipeline.enums.TapdEventType
+import com.tencent.devops.common.pipeline.pojo.element.trigger.TapdWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_EVENT_URL
 import com.tencent.devops.common.service.trace.TraceTag
@@ -453,7 +454,7 @@ class TapdWebhookRequestService(
     ): List<PipelineEventSubscriber> {
         return pipelineEventSubscriptionDao.listEventSubscriber(
             dslContext = dslContext,
-            eventCode = eventType.value,
+            eventCode = TapdWebHookTriggerElement.classType,
             eventSource = workspaceId,
             eventType = eventType.value
         )
