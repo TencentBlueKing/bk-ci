@@ -157,7 +157,7 @@ class ServicePipelineResourceImpl @Autowired constructor(
         )
         auditService.createAudit(
             Audit(
-                resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
+                resourceType = AuthResourceType.getAuthResourceTypeByChannel(AuthResourceType.PIPELINE_DEFAULT).value,
                 resourceId = pipelineId,
                 resourceName = pipeline.name,
                 userId = userId,
@@ -191,7 +191,7 @@ class ServicePipelineResourceImpl @Autowired constructor(
         )
         auditService.createAudit(
             Audit(
-                resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
+                resourceType = AuthResourceType.getAuthResourceTypeByChannel(AuthResourceType.PIPELINE_DEFAULT).value,
                 resourceId = pid.id,
                 resourceName = pipeline.name,
                 userId = userId,
@@ -224,7 +224,7 @@ class ServicePipelineResourceImpl @Autowired constructor(
         )
         auditService.createAudit(
             Audit(
-                resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
+                resourceType = AuthResourceType.getAuthResourceTypeByChannel(AuthResourceType.PIPELINE_DEFAULT).value,
                 resourceId = pipelineId.id,
                 resourceName = modelAndSetting.model.name,
                 userId = userId,
@@ -260,7 +260,7 @@ class ServicePipelineResourceImpl @Autowired constructor(
 
         auditService.createAudit(
             Audit(
-                resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
+                resourceType = AuthResourceType.getAuthResourceTypeByChannel(AuthResourceType.PIPELINE_DEFAULT).value,
                 resourceId = pipelineId,
                 resourceName = modelAndSetting.model.name,
                 userId = userId,
@@ -384,7 +384,7 @@ class ServicePipelineResourceImpl @Autowired constructor(
         )
         auditService.createAudit(
             Audit(
-                resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
+                resourceType = AuthResourceType.getAuthResourceTypeByChannel(AuthResourceType.PIPELINE_DEFAULT).value,
                 resourceId = pipelineId,
                 resourceName = setting.pipelineName,
                 userId = userId,
@@ -524,7 +524,7 @@ class ServicePipelineResourceImpl @Autowired constructor(
 
         auditService.createAudit(
             Audit(
-                resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
+                resourceType = AuthResourceType.getAuthResourceTypeByChannel(AuthResourceType.PIPELINE_DEFAULT).value,
                 resourceId = pipelineId,
                 resourceName = restorePipeline.pipelineName,
                 userId = userId,
