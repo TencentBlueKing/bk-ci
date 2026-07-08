@@ -28,8 +28,11 @@ package com.tencent.devops.openapi.api.apigw.v4
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.project.api.pojo.ProjectProductInfo
 import com.tencent.devops.project.pojo.OperationalProductVO
+import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.Result
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
@@ -48,6 +51,24 @@ import jakarta.ws.rs.core.MediaType
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ApigwTXProjectResourceV4 {
+
+    @GET
+    @Path("/personal/")
+    @Operation(summary = "获取或创建用户个人项目，不存在时自动创建", tags = ["v4_app_get_or_create_personal_project"])
+    fun getOrCreatePersonalProject(
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @Parameter(description = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @Parameter(description = "项目描述", required = false)
+        @QueryParam("description")
+        description: String?
+    ): Result<ProjectVO>
 
     @Operation(summary = "获取项目运营产品相关信息", tags = ["v4_app_list_project_product_infos"])
     @Path("/listProjectProductInfos/")

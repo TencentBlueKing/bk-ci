@@ -6,6 +6,7 @@ import com.tencent.devops.openapi.api.apigw.v4.ApigwTXProjectResourceV4
 import com.tencent.devops.project.api.pojo.ProjectProductInfo
 import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
 import com.tencent.devops.project.pojo.OperationalProductVO
+import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.Result
 import org.slf4j.LoggerFactory
 
@@ -13,6 +14,16 @@ import org.slf4j.LoggerFactory
 class ApigwTXProjectResourceV4Impl constructor(
     val client: Client
 ) : ApigwTXProjectResourceV4 {
+    override fun getOrCreatePersonalProject(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        description: String?
+    ): Result<ProjectVO> {
+        logger.info("OPENAPI_TX_PROJECT_V4|$appCode|$apigwType|get_or_create_personal_project|$userId")
+        return client.get(ServiceTxProjectResource::class).getOrCreatePersonalProject(userId, description)
+    }
+
     override fun listProjectProductInfos(
         appCode: String?,
         apigwType: String?,
