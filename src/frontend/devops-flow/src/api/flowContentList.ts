@@ -83,6 +83,10 @@ export interface ContentTableItem {
   lastBuildFinishCount?: number
   startType?: TriggerType
   trigger?: string
+  webhookAliasName?: string
+  webhookMessage?: string
+  webhookRepoUrl?: string
+  webhookType?: string
   delete: boolean
   latestVersionStatus?: VersionStatus
   permissions?: FlowPermissions
