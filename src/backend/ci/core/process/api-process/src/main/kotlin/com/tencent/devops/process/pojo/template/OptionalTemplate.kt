@@ -68,7 +68,7 @@ data class OptionalTemplateList(
                 templateTypeDesc = TemplateType.PUBLIC.value,
                 category = emptyList(),
                 logoUrl = "",
-                stages =  Model.defaultModel().stages,
+                stages = Model.defaultModel().stages,
                 cloneTemplateSettingExist = CloneTemplateSettingExist(
                     notifySettingExist = false,
                     concurrencySettingExist = false,
