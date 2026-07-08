@@ -209,7 +209,7 @@ class PublicVarReferInfoService @Autowired constructor(
         )
 
         // 获取流水线变量名集合(用于排除与公共变量重名的情况)
-        val pipelineVarNames = model.getTriggerContainer().params
+        val pipelineVarNames = model.getTriggerParams()
             .filter { it.varGroupName.isNullOrBlank() }
             .map { it.id }
             .toSet()

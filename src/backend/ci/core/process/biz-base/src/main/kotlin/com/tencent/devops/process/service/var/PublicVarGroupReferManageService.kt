@@ -660,7 +660,7 @@ class PublicVarGroupReferManageService @Autowired constructor(
         referVersion: Int,
         model: Model
     ) {
-        val params = model.getTriggerContainer().params
+        val params = model.getTriggerParams()
         logger.info(
             "handleCrossProjectVarGroup: projectId=$projectId, referId=$referId, " +
             "referType=$referType, referVersion=$referVersion"
@@ -1159,7 +1159,7 @@ class PublicVarGroupReferManageService @Autowired constructor(
             return
         }
 
-        val params = model.getTriggerContainer().params
+        val params = model.getTriggerParams()
         // 查出params中已存在的变量组名称
         val existingGroupNames = params
             .mapNotNull { it.varGroupName }
@@ -1198,7 +1198,7 @@ class PublicVarGroupReferManageService @Autowired constructor(
             return
         }
 
-        val params = model.getTriggerContainer().params
+        val params = model.getTriggerParams()
         // 查出params中已存在的变量组名称
         val existingGroupNames = params
             .mapNotNull { it.varGroupName }
