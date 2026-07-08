@@ -161,7 +161,7 @@ class PipelineSettingFacadeService @Autowired constructor(
         if (pipelineName.name != pipelineName.oldName) {
             auditService.createAudit(
                 Audit(
-                    resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
+                    resourceType = AuthResourceType.getAuthResourceTypeByChannel(AuthResourceType.PIPELINE_DEFAULT).value,
                     resourceId = setting.pipelineId,
                     resourceName = pipelineName.name,
                     userId = userId,
