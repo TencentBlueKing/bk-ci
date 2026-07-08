@@ -28,7 +28,7 @@ export default defineComponent({
   components: {
     SvgIcon,
   },
-  emits: ['edit', 'delete', 'copy'],
+  emits: ['edit', 'delete', 'copy', 'moveToTop'],
   setup(props, { emit }) {
     const { t } = useI18n()
 
@@ -49,15 +49,14 @@ export default defineComponent({
       event.stopPropagation() // 阻止事件冒泡
       const reference = `$\{{variables.${props.variable.id}}}`
       navigator.clipboard.writeText(reference).then(() => {
-        Message({ theme: 'success', message: 'Variable reference copied to clipboard' })
         emit('copy', reference)
       })
     }
 
-    // Handle edit button click
-    const handleEditClick = (event: Event) => {
+    // Handle move to top button click - 将变量移到当前列表的第一个位置
+    const handleMoveToTop = (event: Event) => {
       event.stopPropagation() // 阻止事件冒泡
-      handleEdit()
+      emit('moveToTop', props.variable.id)
     }
 
     // Get value display
@@ -103,13 +102,13 @@ export default defineComponent({
             <span class={styles.actionItem} onClick={handleCopy}>
               <SvgIcon name="copy" />
             </span>
-            <span class={styles.actionItem} onClick={handleEditClick}>
+            <span class={styles.actionItem} onClick={handleMoveToTop}>
               <SvgIcon name="arrows-up" size={18} />
             </span>
             <PopConfirm
               title={t('flow.variable.deleteConfirm')}
               trigger="click"
-              content={t('flow.variable.deleteConfirmContent', { name: props.variable.name })}
+              content={t('flow.variable.deleteConfirmContent', { name: props.variable.id })}
               onConfirm={handleDelete}
             >
               <span class={styles.actionItem}>

@@ -5,8 +5,9 @@ import { usePreview, type ParamType } from '@/hooks/usePreview'
 import { ParamType as VariableParamType } from '@/types/variable'
 import 'bkui-pipeline/dist/bk-pipeline.css'
 import BkPipeline, { type PipelineModel } from 'bkui-pipeline/vue3'
-import { Alert, Checkbox, Exception, Input, Loading, Select } from 'bkui-vue'
-import { defineComponent } from 'vue'
+import { Alert, Checkbox, Exception, Input, Loading, Radio, Select } from 'bkui-vue'
+import { defineComponent, reactive, nextTick } from 'vue'
+import type { ComponentPublicInstance } from 'vue'
 import { useI18n } from 'vue-i18n'
 import DynamicSelect from './DynamicSelect'
 import styles from './Preview.module.css'
@@ -66,9 +67,36 @@ export default defineComponent({
       handleExecute,
     } = usePreview()
 
+    // 用于存储每个参数标签的溢出状态
+    const overflowStates = reactive<Record<string, boolean>>({})
+
+    // 检查元素是否溢出
+    const checkOverflow = (el: Element | ComponentPublicInstance | null, paramId: string) => {
+      if (el && el instanceof HTMLElement) {
+        nextTick(() => {
+          overflowStates[paramId] = el.scrollWidth > el.clientWidth
+        })
+      }
+    }
+
     // ----------------------------------------
     // Render Functions (Pure View Logic)
     // ----------------------------------------
+
+    /**
+     * Normalize value to correct type for the param
+     * - MULTIPLE: ensure value is comma-separated string (UI Select needs array, store as string)
+     * - ENUM/BOOLEAN: ensure correct type
+     */
+    const normalizeValue = (param: StartupProperty, rawValue: unknown): unknown => {
+      if (param.type === VariableParamType.MULTIPLE) {
+        // 将值规范化为逗号分隔的字符串
+        if (Array.isArray(rawValue)) return (rawValue as string[]).join(',')
+        if (typeof rawValue === 'string') return rawValue
+        return ''
+      }
+      return rawValue
+    }
 
     /**
      * Render grouped param form item (two columns layout)
@@ -79,24 +107,37 @@ export default defineComponent({
       values: Record<string, unknown>,
       disabled = false,
     ) => {
-      const value = values[param.id]
+      const rawValue = values[param.id]
+      const value = normalizeValue(param, rawValue)
       const isInvalid = invalidParams.value.has(param.id)
 
       return (
         <div class={[styles.paramFormItemHalf, isInvalid && styles.paramInvalid]} key={param.id}>
           <div class={styles.paramLabel}>
-            <span class={styles.paramLabelText}>
+            <span
+              ref={(el) => checkOverflow(el, param.id)}
+              class={styles.paramLabelText}
+              v-bk-tooltips={{
+                content: param.name ? `${param.id} (${param.name})` : param.id,
+                disabled: !overflowStates[param.id],
+                placement: 'top',
+              }}
+            >
               {param.id}
+              {param.name && <span>({param.name})</span>}
               {param.valueNotEmpty && <span class={styles.requiredMark}>*</span>}
             </span>
           </div>
           <div class={styles.paramInputWrapper}>
             {param.type === VariableParamType.BOOLEAN ? (
-              <Checkbox
+              <Radio.Group
                 modelValue={value === 'true' || value === true}
                 disabled={disabled || param.readOnly}
                 onChange={(val: boolean) => handleParamChange(type, param.id, val)}
-              />
+              >
+                <Radio label={true}>true</Radio>
+                <Radio label={false}>false</Radio>
+              </Radio.Group>
             ) : param.type === VariableParamType.ENUM && (param.payload?.url || param.options?.length) ? (
               <DynamicSelect
                 param={param}
@@ -118,6 +159,15 @@ export default defineComponent({
                   onChange={(val: string) => handleParamChange(type, param.id, val)}
                 />
               </div>
+            ) : param.type === VariableParamType.MULTIPLE ? (
+              <DynamicSelect
+                param={param}
+                modelValue={typeof value === 'string' ? value.split(',').filter(Boolean) : []}
+                disabled={disabled}
+                isInvalid={isInvalid}
+                multiple={true}
+                onChange={(val: string[]) => handleParamChange(type, param.id, val.join(','))}
+              />
             ) : (
               <Input
                 modelValue={value as string}
@@ -141,25 +191,37 @@ export default defineComponent({
       values: Record<string, unknown>,
       disabled = false,
     ) => {
-      const value = values[param.id]
+      const rawValue = values[param.id]
+      const value = normalizeValue(param, rawValue)
       const isInvalid = invalidParams.value.has(param.id)
 
       return (
         <div class={[styles.paramFormItem, isInvalid && styles.paramInvalid]} key={param.id}>
           <div class={styles.paramLabel}>
-            <div class={styles.paramLabelText}>
+            <span
+              ref={(el) => checkOverflow(el, param.id)}
+              class={styles.paramLabelText}
+              v-bk-tooltips={{
+                content: param.label || param.id,
+                disabled: !overflowStates[param.id],
+                placement: 'top',
+              }}
+            >
               {param.label || param.id}
               {param.valueNotEmpty && <span class={styles.requiredMark}>*</span>}
-            </div>
+            </span>
             {param.desc && <div class={styles.paramDesc}>{param.desc}</div>}
           </div>
           <div class={[styles.paramValue, param.isChanged && styles.paramValueChanged]}>
             {param.type === VariableParamType.BOOLEAN ? (
-              <Checkbox
+              <Radio.Group
                 modelValue={value === 'true' || value === true}
                 disabled={disabled || param.readOnly}
                 onChange={(val: boolean) => handleParamChange(type, param.id, val)}
-              />
+              >
+                <Radio label={true}>true</Radio>
+                <Radio label={false}>false</Radio>
+              </Radio.Group>
             ) : param.type === VariableParamType.ENUM && (param.payload?.url || param.options?.length) ? (
               <DynamicSelect
                 param={param}
@@ -176,6 +238,15 @@ export default defineComponent({
                 rows={3}
                 class={isInvalid ? styles.inputInvalid : ''}
                 onChange={(val: string) => handleParamChange(type, param.id, val)}
+              />
+            ) : param.type === VariableParamType.MULTIPLE ? (
+              <DynamicSelect
+                param={param}
+                modelValue={typeof value === 'string' ? value.split(',').filter(Boolean) : []}
+                disabled={disabled}
+                isInvalid={isInvalid}
+                multiple={true}
+                onChange={(val: string[]) => handleParamChange(type, param.id, val.join(','))}
               />
             ) : (
               <Input

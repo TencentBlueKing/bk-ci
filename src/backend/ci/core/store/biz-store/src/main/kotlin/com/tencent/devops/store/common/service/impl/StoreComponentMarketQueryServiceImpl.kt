@@ -51,6 +51,7 @@ import com.tencent.devops.store.common.dao.StoreBaseExtQueryDao
 import com.tencent.devops.store.common.dao.StoreBaseFeatureExtQueryDao
 import com.tencent.devops.store.common.dao.StoreBaseFeatureQueryDao
 import com.tencent.devops.store.common.dao.StoreBaseQueryDao
+import com.tencent.devops.store.common.dao.StoreVisibleProjectRelDao
 import com.tencent.devops.store.common.service.CategoryService
 import com.tencent.devops.store.common.service.ClassifyService
 import com.tencent.devops.store.common.service.StoreCommonService
@@ -101,6 +102,7 @@ class StoreComponentMarketQueryServiceImpl @Autowired constructor(
     private val storeBaseFeatureQueryDao: StoreBaseFeatureQueryDao,
     private val storeBaseExtQueryDao: StoreBaseExtQueryDao,
     private val storeBaseFeatureExtQueryDao: StoreBaseFeatureExtQueryDao,
+    private val storeVisibleProjectRelDao: StoreVisibleProjectRelDao,
     private val storeUserService: StoreUserService,
     private val classifyService: ClassifyService,
     private val storeProjectService: StoreProjectService,
@@ -577,6 +579,17 @@ class StoreComponentMarketQueryServiceImpl @Autowired constructor(
                 storeBaseExtQueryDao.getBaseExtByIds(dslContext, storeIds).groupBy { it.storeId }
             }
             watcher.start("handleStoreInfos")
+            // 用于计算安装/可用标识(flag)，避免"因项目授权可见但flag=false导致看得到却装不了"。
+            val projectVisibleStoreCodes = if (projectCode != null && storeCodeList.isNotEmpty()) {
+                storeVisibleProjectRelDao.listStoreCodesByProject(
+                    dslContext = dslContext,
+                    storeType = storeTypeEnum.type.toByte(),
+                    projectCode = projectCode,
+                    storeCodes = storeCodeList
+                )
+            } else {
+                emptySet()
+            }
             val ctx = MarketItemCtx(
                 tStoreBase = tStoreBase,
                 tStoreBaseFeature = tStoreBaseFeature,
@@ -586,6 +599,7 @@ class StoreComponentMarketQueryServiceImpl @Autowired constructor(
                 userDeptList = userDeptList,
                 urlProtocolTrim = urlProtocolTrim,
                 storeInfoQuery = storeInfoQuery,
+                projectVisibleStoreCodes = projectVisibleStoreCodes,
                 storeStatisticData = storeStatisticData,
                 storeVisibleData = storeVisibleData,
                 memberData = memberData,
@@ -614,6 +628,7 @@ class StoreComponentMarketQueryServiceImpl @Autowired constructor(
         val userDeptList: List<Int>,
         val urlProtocolTrim: Boolean,
         val storeInfoQuery: StoreInfoQuery,
+        val projectVisibleStoreCodes: Set<String>,
         val storeStatisticData: HashMap<String, StoreStatistic>,
         val storeVisibleData: HashMap<String, MutableList<Int>>?,
         val memberData: HashMap<String, MutableList<String>>?,
@@ -697,7 +712,7 @@ class StoreComponentMarketQueryServiceImpl @Autowired constructor(
                 userId = ctx.userId,
                 visibleList = ctx.storeVisibleData?.get(storeCode),
                 userDeptList = ctx.userDeptList
-            ),
+            ) || storeCode in ctx.projectVisibleStoreCodes,
             publicFlag = publicFlag,
             buildLessRunFlag = buildLessRunFlag,
             docsLink = record[ctx.tStoreBase.DOCS_LINK],
