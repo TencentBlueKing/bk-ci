@@ -15,16 +15,16 @@ import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.api.service.ServicePipelineVersionResource
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
+import com.tencent.devops.process.engine.service.SubPipelineRefService
 import com.tencent.devops.process.engine.service.SubPipelineTaskService
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.pipeline.SubPipelineIdAndName
 import com.tencent.devops.process.pojo.pipeline.SubPipelineRef
-import com.tencent.devops.process.engine.service.SubPipelineRefService
+import jakarta.ws.rs.core.Response
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.context.annotation.Lazy
 import org.springframework.stereotype.Service
-import java.util.HashMap
-import jakarta.ws.rs.core.Response
 
 /**
  * 子流水线合法性检查服务
@@ -35,6 +35,7 @@ class SubPipelineCheckService @Autowired constructor(
     private val pipelinePermissionService: PipelinePermissionService,
     private val subPipelineRefService: SubPipelineRefService,
     private val subPipelineTaskService: SubPipelineTaskService,
+    @Lazy
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val client: Client
 ) {
