@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.pojo.common.comment.StoreCommentInfo
 import com.tencent.devops.store.pojo.common.comment.StoreCommentRequest
 import com.tencent.devops.store.pojo.common.comment.StoreUserCommentInfo
+import com.tencent.devops.store.pojo.common.enums.ServiceScopeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 
 /**
@@ -65,7 +66,8 @@ interface StoreCommentService {
         storeId: String,
         storeCode: String,
         storeCommentRequest: StoreCommentRequest,
-        storeType: StoreTypeEnum
+        storeType: StoreTypeEnum,
+        serviceScope: ServiceScopeEnum? = null
     ): Result<StoreCommentInfo?>
 
     /**
