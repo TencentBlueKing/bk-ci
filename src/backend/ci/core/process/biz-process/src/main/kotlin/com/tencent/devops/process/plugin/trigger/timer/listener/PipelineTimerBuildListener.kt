@@ -37,7 +37,7 @@ import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatch
 import com.tencent.devops.common.event.listener.pipeline.PipelineEventListener
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.element.trigger.TimerTriggerElement
-import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.TimerAgentType
+import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.TimerNodeType
 import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.webhook.enums.WebhookI18nConstants.TIMING_START_EVENT_DESC
@@ -193,9 +193,9 @@ class PipelineTimerBuildListener @Autowired constructor(
             pipelineId = pipelineId,
             taskId = taskId
         ) as? TimerTriggerElement ?: return
-        when (triggerElement.agentType) {
-            TimerAgentType.AGENT_LIST -> {
-                val agentHashIdList = triggerElement.agentHashIdList ?: listOf()
+        when (triggerElement.nodeType) {
+            TimerNodeType.NODE_LIST -> {
+                val agentHashIdList = triggerElement.nodes ?: listOf()
                 if (agentHashIdList.isEmpty()) {
                     saveTriggerEvent(
                         projectId = projectId,
@@ -223,7 +223,7 @@ class PipelineTimerBuildListener @Autowired constructor(
                     )
                 }
             }
-            TimerAgentType.ENV_ALL, null -> {
+            TimerNodeType.ENV_ALL, null -> {
                 val envHashId = pipelineRepositoryService.getSetting(
                     projectId = projectId,
                     pipelineId = pipelineId
