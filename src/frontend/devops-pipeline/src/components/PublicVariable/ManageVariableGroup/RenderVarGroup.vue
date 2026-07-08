@@ -166,7 +166,7 @@
             const variableList = await proxy.$store.dispatch('publicVar/getResourceVarReferenceInfo', {
                 referId: proxy.$route.params.pipelineId ?? proxy.$route.params.templateId,
                 params: {
-                    referType: proxy.$route.name === 'pipelinesEdit' ? 'PIPELINE' : 'TEMPLATE',
+                    referType: ['pipelinesEdit', 'pipelinesHistory'].includes(proxy.$route.name) ? 'PIPELINE' : 'TEMPLATE',
                     referVersion: proxy.$route.params.version || proxy.$store.state.atom?.pipelineInfo?.version,
                     groupName: props.data.groupName
                 }
