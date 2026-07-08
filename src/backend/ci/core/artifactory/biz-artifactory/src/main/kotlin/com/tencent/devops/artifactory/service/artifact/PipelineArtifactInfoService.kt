@@ -1,10 +1,10 @@
 package com.tencent.devops.artifactory.service.artifact
 
-import com.tencent.devops.common.client.Client
-import com.tencent.devops.model.artifactory.tables.records.TPipelineArtifactInfoRecord
 import com.tencent.devops.artifactory.dao.PipelineArtifactInfoDao
 import com.tencent.devops.artifactory.pojo.artifact.ArtifactMetadataRequest
 import com.tencent.devops.artifactory.pojo.artifact.PipelineArtifactInfo
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.model.artifactory.tables.records.TPipelineArtifactInfoRecord
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import java.time.LocalDateTime
 import org.jooq.DSLContext
@@ -101,43 +101,39 @@ class PipelineArtifactInfoService(
     ): List<PipelineArtifactInfo> {
         val records = pipelineArtifactInfoDao.listByBuild(
             dslContext = dslContext,
+            projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId
         )
-        return records.mapNotNull { convertToRecord(it) }
+        return records.map { convertToRecord(it) }
     }
 
-    private fun convertToRecord(record: TPipelineArtifactInfoRecord): PipelineArtifactInfo? {
-        return try {
-            PipelineArtifactInfo(
-                id = record.id,
-                projectId = record.projectId,
-                pipelineId = record.pipelineId,
-                pipelineName = record.pipelineName,
-                buildId = record.buildId,
-                buildNum = record.buildNum,
-                stageId = record.stageId,
-                containerId = record.containerId,
-                taskId = record.taskId,
-                executeCount = record.executeCount,
-                artifactType = record.artifactType,
-                artifactName = record.artifactName,
-                artifactVersion = record.artifactVersion,
-                artifactUri = record.artifactUri,
-                artifactRepoUrl = record.artifactRepoUrl,
-                artifactDigest = record.artifactDigest,
-                artifactSize = record.artifactSize,
-                codeRepoUrl = record.codeRepoUrl,
-                commitId = record.commitId,
-                extraInfo = record.extraInfo,
-                creator = record.creator,
-                modifier = record.modifier,
-                createTime = record.createTime,
-                updateTime = record.updateTime
-            )
-        } catch (e: Exception) {
-            logger.warn("Failed to convert record to PipelineArtifactInfo: ${e.message}")
-            null
-        }
+    private fun convertToRecord(record: TPipelineArtifactInfoRecord): PipelineArtifactInfo {
+        return PipelineArtifactInfo(
+            id = record.id,
+            projectId = record.projectId,
+            pipelineId = record.pipelineId,
+            pipelineName = record.pipelineName,
+            buildId = record.buildId,
+            buildNum = record.buildNum,
+            stageId = record.stageId,
+            containerId = record.containerId,
+            taskId = record.taskId,
+            executeCount = record.executeCount,
+            artifactType = record.artifactType,
+            artifactName = record.artifactName,
+            artifactVersion = record.artifactVersion,
+            artifactUri = record.artifactUri,
+            artifactRepoUrl = record.artifactRepoUrl,
+            artifactDigest = record.artifactDigest,
+            artifactSize = record.artifactSize,
+            codeRepoUrl = record.codeRepoUrl,
+            commitId = record.commitId,
+            extraInfo = record.extraInfo,
+            creator = record.creator,
+            modifier = record.modifier,
+            createTime = record.createTime,
+            updateTime = record.updateTime
+        )
     }
 }

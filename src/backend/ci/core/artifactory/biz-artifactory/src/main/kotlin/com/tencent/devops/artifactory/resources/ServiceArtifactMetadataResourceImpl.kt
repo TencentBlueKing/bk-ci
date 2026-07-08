@@ -16,6 +16,7 @@ import com.tencent.devops.artifactory.service.artifact.PipelineArtifactInfoServi
 import com.tencent.devops.auth.api.service.ServicePermissionAuthResource
 import com.tencent.devops.auth.api.service.ServiceProjectAuthResource
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.client.Client
@@ -50,7 +51,9 @@ class ServiceArtifactMetadataResourceImpl(
         }
         if (!hasPermission) {
             logger.warn("Service artifact metadata: $userId has no permission to access $projectId/$pipelineId")
-            return Result(null)
+            throw PermissionForbiddenException(
+                message = "User $userId has no permission to access artifact metadata in project $projectId"
+            )
         }
 
         val artifactInfo = pipelineArtifactInfoService.getArtifactInfo(
