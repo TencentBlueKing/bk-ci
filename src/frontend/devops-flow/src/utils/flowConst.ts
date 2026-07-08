@@ -81,6 +81,7 @@ export const TRIGGER_TYPE = {
   TIMER: 'timerTrigger',
   CODE_GIT_WEBHOOK: 'codeGitWebHookTrigger',
   REMOTE: 'remoteTrigger',
+  TAPD: 'codeTapdWebHookTrigger',
 } as const
 
 export type TriggerType = (typeof TRIGGER_TYPE)[keyof typeof TRIGGER_TYPE]
