@@ -37,7 +37,7 @@ export default defineComponent({
       () => (props.atomValue.repositoryType as RepositoryType) || 'ID',
     )
 
-    const codeRepoUrl = `/${REPOSITORY_API_URL_PREFIX}/user/repositories/{projectId}/hasPermissionList?permission=USE&page=1&pageSize=1000`
+    const codeRepoUrl = `${REPOSITORY_API_URL_PREFIX}/user/repositories/{projectId}/hasPermissionList?permission=USE&page=1&pageSize=1000`
 
     const codelibConfigList = computed(() => [
       { value: 'ID', label: t('flow.codelibSelector.selectRepo') },
