@@ -98,6 +98,37 @@ interface OpAiBuildAgentToolsResource {
         @QueryParam("version") version: Int?
     ): Result<String>
 
+    @Operation(summary = "[Pipeline] getPipelineModelSummary")
+    @POST
+    @Path("/pipeline/get-pipeline-model-summary")
+    fun getPipelineModelSummary(
+        @Parameter(description = "操作人用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @QueryParam("projectId") projectId: String,
+        @QueryParam("pipelineId") pipelineId: String,
+        @QueryParam("version") version: Int?,
+        @QueryParam("includeElements") includeElements: Boolean?
+    ): Result<String>
+
+    @Operation(summary = "[Pipeline] getPipelineNodeDetail")
+    @POST
+    @Path("/pipeline/get-pipeline-node-detail")
+    fun getPipelineNodeDetail(
+        @Parameter(description = "操作人用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @QueryParam("projectId") projectId: String,
+        @QueryParam("pipelineId") pipelineId: String,
+        @QueryParam("version") version: Int?,
+        @QueryParam("stageId") stageId: String?,
+        @QueryParam("containerHashId") containerHashId: String?,
+        @QueryParam("containerId") containerId: String?,
+        @QueryParam("jobId") jobId: String?,
+        @QueryParam("elementId") elementId: String?,
+        @QueryParam("stepId") stepId: String?
+    ): Result<String>
+
     // endregion
 
     // region Build operate

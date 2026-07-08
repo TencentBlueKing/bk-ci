@@ -71,6 +71,43 @@ class OpAiBuildAgentToolsResourceImpl @Autowired constructor(
         return Result(buildTools(userId).getPipelineModel(projectId, pipelineId, version))
     }
 
+    override fun getPipelineModelSummary(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        version: Int?,
+        includeElements: Boolean?
+    ): Result<String> {
+        return Result(buildTools(userId).getPipelineModelSummary(projectId, pipelineId, version, includeElements))
+    }
+
+    override fun getPipelineNodeDetail(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        version: Int?,
+        stageId: String?,
+        containerHashId: String?,
+        containerId: String?,
+        jobId: String?,
+        elementId: String?,
+        stepId: String?
+    ): Result<String> {
+        return Result(
+            buildTools(userId).getPipelineNodeDetail(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                version = version,
+                stageId = stageId,
+                containerHashId = containerHashId,
+                containerId = containerId,
+                jobId = jobId,
+                elementId = elementId,
+                stepId = stepId
+            )
+        )
+    }
+
     override fun getManualStartupInfo(userId: String, projectId: String, pipelineId: String): Result<String> {
         return Result(buildTools(userId).getManualStartupInfo(projectId, pipelineId))
     }

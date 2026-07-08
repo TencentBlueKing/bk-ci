@@ -2,16 +2,27 @@ package com.tencent.devops.ai.agent.build
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.pipeline.Model
+import com.tencent.devops.common.pipeline.PipelineVersionWithModel
 import com.tencent.devops.common.log.pojo.QueryLogsText
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.pipeline.enums.BuildScriptType
+import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
+import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
+import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxScriptElement
+import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
+import com.tencent.devops.common.pipeline.container.NormalContainer
+import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.test.BkCiAbstractTest
 import com.tencent.devops.log.api.ServiceLogResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
+import com.tencent.devops.process.api.service.ServicePipelineVersionResource
 import com.tencent.devops.process.pojo.Pipeline
 import io.mockk.every
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
@@ -160,6 +171,62 @@ class BuildToolsTest : BkCiAbstractTest() {
     }
 
     @Test
+    fun `getPipelineModelSummary should return lightweight hierarchy`() {
+        val versionResource = client.mockGet(ServicePipelineVersionResource::class)
+        every {
+            versionResource.getVersionModel(
+                userId = "tester",
+                projectId = "demo-project",
+                pipelineId = "p-1",
+                version = null
+            )
+        } returns Result(mockPipelineVersionWithModel())
+
+        val tools = BuildTools(client = client, userIdSupplier = { "tester" })
+        val json = JsonUtil.getObjectMapper(false).readTree(
+            tools.getPipelineModelSummary(
+                projectId = "demo-project",
+                pipelineId = "p-1",
+                includeElements = false
+            )
+        )
+
+        assertEquals("demo-pipeline", json["data"]["pipelineName"].asText())
+        assertEquals(1, json["data"]["stageCount"].asInt())
+        assertEquals(1, json["data"]["containerCount"].asInt())
+        assertEquals(1, json["data"]["elementCount"].asInt())
+        assertFalse(json["data"]["stages"][0]["containers"][0].has("element"))
+        assertNull(json["data"]["stages"][0]["containers"][0]["elements"])
+    }
+
+    @Test
+    fun `getPipelineNodeDetail should report ambiguity when jobId matches multiple containers`() {
+        val versionResource = client.mockGet(ServicePipelineVersionResource::class)
+        every {
+            versionResource.getVersionModel(
+                userId = "tester",
+                projectId = "demo-project",
+                pipelineId = "p-1",
+                version = null
+            )
+        } returns Result(mockPipelineVersionWithModel(duplicateJobId = true))
+
+        val tools = BuildTools(client = client, userIdSupplier = { "tester" })
+        val json = JsonUtil.getObjectMapper(false).readTree(
+            tools.getPipelineNodeDetail(
+                projectId = "demo-project",
+                pipelineId = "p-1",
+                jobId = "dup-job"
+            )
+        )
+
+        assertEquals(2, json["matchedCount"].asInt())
+        assertEquals("jobId", json["matchedBy"].asText())
+        assertTrue(json["message"].asText().contains("多个编排节点"))
+        assertEquals("job-a", json["candidates"][0]["container"]["containerName"].asText())
+    }
+
+    @Test
     fun `getMiddleBuildLogs should preserve requested range semantics`() {
         val logResource = client.mockGet(ServiceLogResource::class)
         every {
@@ -207,5 +274,71 @@ class BuildToolsTest : BkCiAbstractTest() {
         assertEquals("1-6", json["lineRange"].asText())
         assertTrue(json["hasMore"].asBoolean())
         assertTrue(json["notices"][0].asText().contains("middle"))
+    }
+
+    private fun mockPipelineVersionWithModel(duplicateJobId: Boolean = false): PipelineVersionWithModel {
+        val element = LinuxScriptElement(
+            name = "failed-script",
+            id = "e-1",
+            status = BuildStatus.FAILED.name,
+            stepId = "step-1",
+            scriptType = BuildScriptType.SHELL,
+            script = "echo hello\nexit 1",
+            continueNoneZero = false,
+            additionalOptions = ElementAdditionalOptions(enable = true)
+        )
+        val firstContainer = NormalContainer(
+            id = "c-1",
+            containerId = "c-1",
+            containerHashId = "hash-1",
+            name = "job-a",
+            jobId = if (duplicateJobId) "dup-job" else "job-a",
+            status = BuildStatus.FAILED.name,
+            elements = listOf(element)
+        )
+        val secondContainer = if (duplicateJobId) {
+            NormalContainer(
+                id = "c-2",
+                containerId = "c-2",
+                containerHashId = "hash-2",
+                name = "job-b",
+                jobId = "dup-job",
+                status = BuildStatus.SUCCEED.name,
+                elements = emptyList()
+            )
+        } else {
+            null
+        }
+        return PipelineVersionWithModel(
+            version = 3,
+            versionName = "v3",
+            baseVersion = 2,
+            baseVersionName = "v2",
+            modelAndSetting = PipelineModelAndSetting(
+                model = Model(
+                    name = "demo-pipeline",
+                    desc = null,
+                    stages = listOf(
+                        Stage(
+                            id = "stage-1",
+                            name = "build-stage",
+                            stageIdForUser = "build",
+                            status = BuildStatus.FAILED.name,
+                            containers = listOfNotNull(firstContainer, secondContainer)
+                        )
+                    ),
+                    pipelineId = "p-1"
+                ),
+                setting = PipelineSetting(pipelineAsCodeSettings = null)
+            ),
+            yamlPreview = null,
+            canDebug = true,
+            description = null,
+            yamlSupported = true,
+            yamlInvalidMsg = null,
+            updater = "tester",
+            updateTime = 1L,
+            latestVersion = 5
+        )
     }
 }
