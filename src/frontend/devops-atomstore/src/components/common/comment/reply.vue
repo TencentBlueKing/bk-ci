@@ -66,18 +66,6 @@
 
         data () {
             return {
-                funObj: {
-                    expandReplys: {
-                        atom: (id) => this.requestAtomReplyList(id),
-                        template: (id) => this.requestTemplateReplyList(id),
-                        image: (id) => this.requestImageReplyList(id)
-                    },
-                    priase: {
-                        atom: (id) => this.requestAtomPraiseComment(id),
-                        template: (id) => this.requestTemplatePraiseComment(id),
-                        image: (id) => this.requestImagePraiseComment(id)
-                    }
-                },
                 hadShowMore: false
             }
         },
@@ -102,12 +90,8 @@
             ...mapActions('store', [
                 'setCommentReplay',
                 'setCommentPraise',
-                'requestAtomReplyList',
-                'requestAtomPraiseComment',
-                'requestTemplatePraiseComment',
-                'requestTemplateReplyList',
-                'requestImageReplyList',
-                'requestImagePraiseComment',
+                'requestReplyList',
+                'requestPraiseComment',
                 'clearCommentReply'
             ]),
 
@@ -131,34 +115,31 @@
                 this.$emit('replyComment', toUser)
             },
 
+            // 构建评论请求参数
+            getCommentParams () {
+                const type = this.$route.params.type
+                const id = this.commentData.commentId
+                return {
+                    id,
+                }
+            },
+
             expandReplys () {
                 if (this.isReply) return Promise.resolve()
 
-                const type = this.$route.params.type
-                const id = this.commentData.commentId
+                const data = this.getCommentParams()
 
-                if (!Object.keys(this.funObj.expandReplys).includes(type) || typeof this.funObj.expandReplys[type] !== 'function') {
-                    this.$bkMessage({ message: this.$t('store.typeError'), theme: 'error' })
-                    return Promise.reject(new Error(this.$t('store.typeError')))
-                }
-
-                return this.funObj.expandReplys[type](id).then((res) => {
-                    this.setCommentReplay({ id, newList: res, isAdd: false })
+                return this.requestReplyList(data).then((res) => {
+                    this.setCommentReplay({ id: data.id, newList: res, isAdd: false })
                     this.hadShowMore = true
                 }).catch(err => this.$bkMessage({ message: (err.message || err), theme: 'error' }))
             },
 
             priase () {
-                const type = this.$route.params.type
-                const id = this.commentData.commentId
+                const data = this.getCommentParams()
 
-                if (!Object.keys(this.funObj.priase).includes(type) || typeof this.funObj.priase[type] !== 'function') {
-                    this.$bkMessage({ message: this.$t('store.typeError'), theme: 'error' })
-                    return
-                }
-
-                this.funObj.priase[type](id).then((count) => {
-                    this.setCommentPraise({ id, count })
+                this.requestPraiseComment(data).then((count) => {
+                    this.setCommentPraise({ id: data.id, count })
                 }).catch(err => this.$bkMessage({ message: (err.message || err), theme: 'error' }))
             }
         }
