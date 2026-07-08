@@ -46,7 +46,7 @@ class MarketEventRequestService constructor(
                 userId = userId
             )
             if (envList.isEmpty()) {
-                logger.warn("target env list is empty|$projectId|$workspaceName")
+                logger.warn("target env list is empty|$workspaceName")
                 return
             }
             // 云桌面信息
@@ -61,6 +61,9 @@ class MarketEventRequestService constructor(
             ).toJsonStr()
             val requestId = MDC.get(TraceTag.BIZID)
             envList.forEach { env ->
+                // 这里可能存在事件触发的项目ID（云桌面所在项目ID）和创作流项目ID不一致的情况
+                // 所以优先使用创作流环境所在的项目ID
+                val realProjectId = env.projectId
                 val eventId = pipelineTriggerEventService.getEventId()
                 val eventBody = GenericWebhookEventBody(
                     headers = mapOf(
@@ -74,7 +77,7 @@ class MarketEventRequestService constructor(
                     queryParams = mapOf()
                 )
                 val triggerEvent = PipelineTriggerEvent(
-                    projectId = projectId,
+                    projectId = realProjectId,
                     eventId = eventId,
                     triggerType = StartType.TRIGGER_EVENT.name,
                     eventSource = env.hashId,
