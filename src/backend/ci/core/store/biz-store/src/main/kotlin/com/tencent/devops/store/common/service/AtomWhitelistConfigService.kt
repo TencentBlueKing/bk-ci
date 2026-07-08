@@ -28,28 +28,40 @@
 package com.tencent.devops.store.common.service
 
 import com.fasterxml.jackson.core.type.TypeReference
+import com.github.benmanes.caffeine.cache.Cache
+import com.github.benmanes.caffeine.cache.Caffeine
 import com.tencent.devops.common.api.util.JsonUtil
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.util.concurrent.TimeUnit
 
 @Service
 class AtomWhitelistConfigService @Autowired constructor(
     private val businessConfigService: BusinessConfigService
 ) {
-    private val logger = LoggerFactory.getLogger(AtomWhitelistConfigService::class.java)
+    companion object {
+        private val logger = LoggerFactory.getLogger(AtomWhitelistConfigService::class.java)
+    }
+
+    private val whitelistCache: Cache<String, List<String>> = Caffeine.newBuilder()
+        .maximumSize(100)
+        .expireAfterWrite(5, TimeUnit.MINUTES)
+        .build()
 
     fun isAtomInWhitelist(atomCode: String, whitelistType: String): Boolean {
         return try {
-            val configValue = businessConfigService.getConfigValue(
-                business = "ATOM",
-                feature = "ATOM_WHITELIST",
-                businessValue = whitelistType
-            )
-            val atomCodes = if (configValue != null) {
-                JsonUtil.to(configValue, object : TypeReference<List<String>>() {})
-            } else {
-                emptyList()
+            val atomCodes = whitelistCache.get(whitelistType) { key ->
+                val configValue = businessConfigService.getConfigValue(
+                    business = "ATOM",
+                    feature = "ATOM_WHITELIST",
+                    businessValue = key
+                )
+                if (configValue != null) {
+                    JsonUtil.to(configValue, object : TypeReference<List<String>>() {})
+                } else {
+                    emptyList()
+                }
             }
             atomCodes.contains(atomCode)
         } catch (ignored: Throwable) {
