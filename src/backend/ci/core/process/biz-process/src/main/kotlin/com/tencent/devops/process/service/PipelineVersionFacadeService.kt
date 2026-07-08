@@ -458,7 +458,7 @@ class PipelineVersionFacadeService @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
-        version: Int,
+        version: Int?,
         archiveFlag: Boolean? = false,
         source: PipelineGetVersionSource? = PipelineGetVersionSource.VIEW
     ): PipelineVersionWithModel {
@@ -484,7 +484,7 @@ class PipelineVersionFacadeService @Autowired constructor(
             archiveFlag = archiveFlag
         ) ?: throw ErrorCodeException(
             errorCode = ProcessMessageCode.ERROR_NO_PIPELINE_VERSION_EXISTS_BY_ID,
-            params = arrayOf(version.toString())
+            params = arrayOf(version?.toString() ?: pipelineInfo.version.toString())
         )
         val setting = pipelineSettingFacadeService.userGetSetting(
             userId = userId,
