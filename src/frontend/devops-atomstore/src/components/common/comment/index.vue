@@ -68,11 +68,7 @@
 
         methods: {
             ...mapActions('store', [
-                'requestAtomReplyComment',
-                'requestTemplateReplyComment',
-                'requestIDEReplyComment',
-                'requestImageReplyComment',
-                'requestServiceReplyComment',
+                'requestReplyComment',
                 'setCommentReplay',
                 'clearCommentReply'
             ]),
@@ -109,20 +105,13 @@
                 const id = this.comment.data.commentId
                 const type = this.$route.params.type
                 const postData = { replyContent, replyToUser: this.replyToUser }
-                const funObj = {
-                    atom: this.requestAtomReplyComment,
-                    creative: this.requestAtomReplyComment,
-                    template: this.requestTemplateReplyComment,
-                    ide: this.requestIDEReplyComment,
-                    image: this.requestImageReplyComment,
-                    service: this.requestServiceReplyComment
-                }
 
-                if (!Object.keys(funObj).includes(type) || typeof funObj[type] !== 'function') {
-                    this.$bkMessage({ message: this.$t('store.typeError'), theme: 'error' })
-                    return
+                const params = {
+                    id,
+                    ...(type === 'creative' ? { serviceScope: 'CREATIVE_STREAM' } : {}),
+                    postData
                 }
-                funObj[type]({ id, postData }).then((res) => {
+                this.requestReplyComment(params).then((res) => {
                     this.setCommentReplay({ id, newList: [res], isAdd: true })
                     this.reply = ''
                 }).catch(err => this.$bkMessage({ message: (err.message || err), theme: 'error' }))
