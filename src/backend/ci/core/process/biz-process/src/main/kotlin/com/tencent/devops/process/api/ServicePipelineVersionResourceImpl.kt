@@ -252,7 +252,7 @@ class ServicePipelineVersionResourceImpl @Autowired constructor(
         )
         auditService.createAudit(
             Audit(
-                resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
+                resourceType = AuthResourceType.getAuthResourceTypeByChannel(AuthResourceType.PIPELINE_DEFAULT).value,
                 resourceId = result.pipelineId,
                 resourceName = result.pipelineName,
                 userId = userId,
