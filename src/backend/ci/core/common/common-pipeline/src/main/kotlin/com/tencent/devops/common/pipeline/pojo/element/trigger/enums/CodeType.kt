@@ -37,7 +37,9 @@ enum class CodeType {
     // 通用git触发器
     SCM_GIT,
     // 通用svn触发器
-    SCM_SVN;
+    SCM_SVN,
+    // TAPD 事件触发（story / bug）
+    TAPD;
 
     companion object {
         fun convert(codeType: String?) = values().find { it.name == codeType }

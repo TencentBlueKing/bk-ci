@@ -810,12 +810,14 @@ object ScriptYmlUtils {
             changeContent = p4EventRule(preTriggerOn.changeContent),
             shelveCommit = p4EventRule(preTriggerOn.shelveCommit),
             shelveSubmit = p4EventRule(preTriggerOn.shelveSubmit),
-            tapd = tapdRule(preTriggerOn)
+            story = tapdEventRule(preTriggerOn.story),
+            bug = tapdEventRule(preTriggerOn.bug)
         )
 
         if (preTriggerOn is PreTriggerOnV3) {
             res.repoName = preTriggerOn.repoName
             res.scmCode = preTriggerOn.scmCode
+            res.workspaceId = preTriggerOn.workspaceId
         }
 
         return res
@@ -1013,16 +1015,18 @@ object ScriptYmlUtils {
     }
 
     /**
-     * 解析 `on.tapd` 节点为 [TapdRule] 列表，支持单对象与数组两种 YAML 写法。
+     * 将 `on.story` / `on.bug` 承载的 Any（YAML 解析产物，通常为 Map）反序列化为 [TapdRule]。
+     *
+     * 与 `p4EventRule` 类似，YAML 中每个事件（story / bug）以子对象形式书写，
+     * 由 [TapdRule] 承载 action / users / labels / priorities 等过滤条件。
      */
-    private fun tapdRule(preTriggerOn: IPreTriggerOn): List<TapdRule>? {
-        val tapd = preTriggerOn.tapd ?: return null
+    private fun tapdEventRule(rule: Any?): TapdRule? {
+        if (rule == null) return null
         return kotlin.runCatching {
-            when (tapd) {
-                is Map<*, *> -> listOf(JsonUtil.anyTo(tapd, object : TypeReference<TapdRule>() {}))
-                is List<*> -> JsonUtil.anyTo(tapd, object : TypeReference<List<TapdRule>>() {})
-                else -> null
-            }
+            YamlUtil.getObjectMapper().readValue(
+                JsonUtil.toJson(rule),
+                TapdRule::class.java
+            )
         }.getOrNull()
     }
 
