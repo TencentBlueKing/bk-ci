@@ -30,7 +30,6 @@ package com.tencent.devops.store.common.service.impl
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.enums.FrontendTypeEnum
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.store.common.dao.StoreBaseExtQueryDao
 import com.tencent.devops.store.common.dao.StoreBaseFeatureExtQueryDao
 import com.tencent.devops.store.common.dao.StoreBaseFeatureQueryDao
@@ -49,7 +48,6 @@ import com.tencent.devops.store.common.service.StoreUserService
 import com.tencent.devops.store.common.service.action.StoreDecorateFactory
 import com.tencent.devops.store.common.utils.StoreExtFieldUtil
 import com.tencent.devops.store.common.utils.StoreUtils
-import com.tencent.devops.store.pojo.common.BK_STORE_CREATIVE_STREAM_MANUAL_TRIGGER
 import com.tencent.devops.store.pojo.common.KEY_HTML_TEMPLATE_VERSION
 import com.tencent.devops.store.pojo.common.StoreDetailInfo
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
@@ -195,12 +193,7 @@ class StoreComponentDetailQueryServiceImpl @Autowired constructor(
     ): StoreDetailInfo? {
         return getComponent(
             version = version,
-            storeCode = if (storeCode == ManualTriggerElement.classType) {
-                // 兼容手动触发器
-                BK_STORE_CREATIVE_STREAM_MANUAL_TRIGGER
-            } else {
-                storeCode
-            },
+            storeCode = storeCode,
             storeType = storeType,
             ownerStoreCode = ownerStoreCode
         )?.let {
