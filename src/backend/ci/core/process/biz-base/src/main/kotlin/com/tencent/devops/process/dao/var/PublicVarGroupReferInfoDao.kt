@@ -36,6 +36,7 @@ import com.tencent.devops.process.pojo.`var`.po.PublicVarPositionPO
 import com.tencent.devops.process.pojo.`var`.po.ResourcePublicVarGroupReferPO
 import org.jooq.DSLContext
 import org.jooq.Select
+import com.tencent.devops.process.constant.ProcessMessageCode.DYNAMIC_VERSION
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
 
@@ -608,5 +609,88 @@ class PublicVarGroupReferInfoDao {
             .offset(offset)
             .fetch()
             .map { convertResourcePublicVarGroupReferPO(it.into(trpvgri.recordType)) }
+    }
+
+    /**
+     * 批量获取变量组的当前有效引用总数（LATEST_FLAG=true，按 REFER_ID 去重）
+     */
+    fun batchGetTotalReferCountByLatest(
+        dslContext: DSLContext,
+        projectId: String,
+        groupNames: List<String>
+    ): Map<String, Int> {
+        if (groupNames.isEmpty()) return emptyMap()
+        with(TResourcePublicVarGroupReferInfo.T_RESOURCE_PUBLIC_VAR_GROUP_REFER_INFO) {
+            return dslContext.select(GROUP_NAME, DSL.countDistinct(REFER_ID))
+                .from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(GROUP_NAME.`in`(groupNames))
+                .and(LATEST_FLAG.eq(true))
+                .groupBy(GROUP_NAME)
+                .fetch()
+                .associate { it.value1() to it.value2() }
+        }
+    }
+
+    /**
+     * 批量获取变量组的当前有效动态版本引用数（LATEST_FLAG=true 且 VERSION=-1）
+     */
+    fun batchGetDynamicVersionReferCountByLatest(
+        dslContext: DSLContext,
+        projectId: String,
+        groupNames: List<String>
+    ): Map<String, Int> {
+        if (groupNames.isEmpty()) return emptyMap()
+        with(TResourcePublicVarGroupReferInfo.T_RESOURCE_PUBLIC_VAR_GROUP_REFER_INFO) {
+            return dslContext.select(GROUP_NAME, DSL.countDistinct(REFER_ID))
+                .from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(GROUP_NAME.`in`(groupNames))
+                .and(VERSION.eq(DYNAMIC_VERSION))
+                .and(LATEST_FLAG.eq(true))
+                .groupBy(GROUP_NAME)
+                .fetch()
+                .associate { it.value1() to it.value2() }
+        }
+    }
+
+    /**
+     * 批量获取变量组的当前有效固定版本引用总数（LATEST_FLAG=true 且 VERSION<>-1）
+     */
+    fun batchGetFixedVersionReferCountByLatest(
+        dslContext: DSLContext,
+        projectId: String,
+        groupNames: List<String>
+    ): Map<String, Int> {
+        if (groupNames.isEmpty()) return emptyMap()
+        with(TResourcePublicVarGroupReferInfo.T_RESOURCE_PUBLIC_VAR_GROUP_REFER_INFO) {
+            return dslContext.select(GROUP_NAME, DSL.countDistinct(REFER_ID))
+                .from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(GROUP_NAME.`in`(groupNames))
+                .and(VERSION.ne(DYNAMIC_VERSION))
+                .and(LATEST_FLAG.eq(true))
+                .groupBy(GROUP_NAME)
+                .fetch()
+                .associate { it.value1() to it.value2() }
+        }
+    }
+
+    /**
+     * 获取变量组当前有效引用总数（LATEST_FLAG=true，用于删除保护）
+     */
+    fun getTotalReferCountByLatest(
+        dslContext: DSLContext,
+        projectId: String,
+        groupName: String
+    ): Int {
+        with(TResourcePublicVarGroupReferInfo.T_RESOURCE_PUBLIC_VAR_GROUP_REFER_INFO) {
+            return dslContext.select(DSL.countDistinct(REFER_ID))
+                .from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(GROUP_NAME.eq(groupName))
+                .and(LATEST_FLAG.eq(true))
+                .fetchOne(0, Int::class.java) ?: 0
+        }
     }
 }
