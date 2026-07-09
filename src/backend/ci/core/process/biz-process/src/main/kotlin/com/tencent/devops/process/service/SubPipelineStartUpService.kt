@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.service
 
+import com.tencent.devops.common.api.context.ChannelContext
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.pojo.Result
@@ -365,7 +366,10 @@ class SubPipelineStartUpService @Autowired constructor(
                 pipelineId = pipelineId
             ) ?: readyToBuildPipelineInfo.lastModifyUser
             // 校验父流水线授权人是否有子流水线执行权限
-            checkPermission(userId = oauthUser, projectId = projectId, pipelineId = pipelineId)
+            // 以子流水线自身渠道恢复上下文,确保权限校验命中子流水线在权限中心的正确资源类型
+            ChannelContext.withChannel(readyToBuildPipelineInfo.channelCode.name) {
+                checkPermission(userId = oauthUser, projectId = projectId, pipelineId = pipelineId)
+            }
             // 子流水线的调用不受频率限制
             val subBuildId = pipelineBuildService.startPipeline(
                 userId = oauthUser,

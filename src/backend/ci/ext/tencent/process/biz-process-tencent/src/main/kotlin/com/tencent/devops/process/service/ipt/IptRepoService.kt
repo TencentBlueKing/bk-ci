@@ -83,7 +83,7 @@ class IptRepoService @Autowired constructor(
         val result = authPermissionApi.validateUserResourcePermission(
             user = userId,
             serviceCode = BSPipelineAuthServiceCode(),
-            resourceType = AuthResourceType.PIPELINE_DEFAULT,
+            resourceType = AuthResourceType.getAuthResourceTypeByChannel(AuthResourceType.PIPELINE_DEFAULT),
             projectCode = projectId,
             permission = AuthPermission.DOWNLOAD,
             resourceCode = pipelineId

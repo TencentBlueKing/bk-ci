@@ -176,12 +176,17 @@
                 min-width="80"
             >
                 <template slot-scope="{ row }">
-                    <bk-switcher
-                        v-model="row.envEnableNode"
-                        size="small"
-                        theme="primary"
-                        @change="(value) => handleToggleEnableNode(row, value)"
-                    />
+                    <div class="switcher-wrapper">
+                        <bk-switcher
+                            v-model="row.envEnableNode"
+                            size="small"
+                            theme="primary"
+                        />
+                        <div
+                            class="switcher-container"
+                            @click="handleSwitcherClick(row)"
+                        />
+                    </div>
                 </template>
             </bk-table-column>
             <bk-table-column
@@ -209,6 +214,44 @@
                 </template>
             </bk-table-column>
         </bk-table>
+        <bk-dialog
+            v-model="toggleDialogVisible"
+            :title="toggleDialogTitle"
+            width="500"
+            :mask-close="false"
+            header-position="center"
+            :show-footer="false"
+        >
+            <div class="toggle-enable-dialog-content">
+                <div class="toggle-enable-label">
+                    {{ $t('environment.reasonLabel') }}
+                    <span class="required">*</span>
+                </div>
+                <bk-input
+                    ref="toggleReasonInput"
+                    type="textarea"
+                    :maxlength="200"
+                    :placeholder="toggleReasonPlaceholder"
+                    v-model="toggleReason"
+                    @focus="handleReasonFocus"
+                />
+            </div>
+            
+            <div class="toggle-enable-dialog-footer">
+                <bk-button
+                    :theme="toggleCurrentValue ? 'primary' : 'danger'"
+                    :loading="toggleDialogLoading"
+                    @click="handleToggleDialogConfirm"
+                >
+                    {{ toggleConfirmText }}
+                </bk-button>
+                <bk-button
+                    @click="handleToggleDialogCancel"
+                >
+                    {{ $t('environment.cancel') }}
+                </bk-button>
+            </div>
+        </bk-dialog>
         <related-nodes-dialog
             :current-node-list="envNodeList"
             @save-success="handleRelateSuccess"
@@ -437,10 +480,71 @@
                 })
             }
 
-            // 启用/停用节点
-            const handleToggleEnableNode = async (row, value) => {
+            // 启用/停用节点 - 弹框确认
+            const toggleDialogVisible = ref(false)
+            const toggleReason = ref('')
+            const toggleDialogLoading = ref(false)
+            const toggleCurrentRow = ref(null)
+            const toggleCurrentValue = ref(null)
+            const toggleDialogTitle = computed(() => {
+                return toggleCurrentValue.value
+                    ? proxy.$t('environment.confirmEnableNode')
+                    : proxy.$t('environment.confirmDisableNode')
+            })
+            const toggleConfirmText = computed(() => {
+                return toggleCurrentValue.value
+                    ? proxy.$t('environment.enableBtn')
+                    : proxy.$t('environment.disableBtn')
+            })
+            const toggleReasonPlaceholder = computed(() => {
+                return toggleCurrentValue.value
+                    ? proxy.$t('environment.enableNodeDefaultReason')
+                    : proxy.$t('environment.disableNodeDefaultReason')
+            })
+
+            // switcher 点击事件 - 弹出确认框
+            const handleSwitcherClick = (row) => {
+                // 记录原始状态（操作前的值）
+                const originalValue = row.envEnableNode
+                toggleCurrentRow.value = row
+                // 判断操作类型：原值为启用(true) → 要停用，原值为停用(false) → 要启用
+                toggleCurrentValue.value = !originalValue
+                // 清空输入框，通过 placeholder 提示默认原因
+                toggleReason.value = ''
+                toggleDialogVisible.value = true
+                // focus 输入框
+                nextTick(() => {
+                    const inputRef = proxy.$refs.toggleReasonInput
+                    if (inputRef) {
+                        inputRef.focus()
+                    }
+                })
+            }
+
+            // 输入框 focus 时自动填入默认值
+            const handleReasonFocus = () => {
+                if (!toggleReason.value) {
+                    toggleReason.value = toggleCurrentValue.value
+                        ? proxy.$t('environment.enableNodeDefaultReason')
+                        : proxy.$t('environment.disableNodeDefaultReason')
+                }
+            }
+
+            // 确认启用/停用
+            const handleToggleDialogConfirm = async () => {
+                if (!toggleReason.value.trim()) {
+                    proxy.$bkMessage({
+                        message: proxy.$t('environment.reasonRequired'),
+                        theme: 'warning'
+                    })
+                    return
+                }
+                const row = toggleCurrentRow.value
+                const value = toggleCurrentValue.value
                 try {
-                    await toggleEnableNode(row.nodeHashId, value)
+                    toggleDialogLoading.value = true
+                    await toggleEnableNode(row.nodeHashId, value, toggleReason.value.trim())
+                    row.envEnableNode = value
                     proxy.$bkMessage({
                         message: value ? proxy.$t('environment.enableSuccess') : proxy.$t('environment.disableSuccess'),
                         theme: 'success'
@@ -448,7 +552,18 @@
                     fetchData()
                 } catch (err) {
                     console.error('启用/停用节点失败:', err)
+                } finally {
+                    toggleDialogLoading.value = false
+                    toggleDialogVisible.value = false
                 }
+            }
+
+            // 取消启用/停用
+            const handleToggleDialogCancel = () => {
+                toggleDialogVisible.value = false
+                toggleReason.value = ''
+                toggleCurrentRow.value = null
+                toggleCurrentValue.value = null
             }
 
             const handlePageChange = (page) => {
@@ -511,8 +626,17 @@
                 handleSelectionChange,
                 handleBatchRemove,
                 handleRemoveNode,
-                handleToggleEnableNode,
-                handleToNodeDetail
+                handleSwitcherClick,
+                handleReasonFocus,
+                handleToggleDialogConfirm,
+                handleToggleDialogCancel,
+                handleToNodeDetail,
+                toggleDialogVisible,
+                toggleReason,
+                toggleDialogLoading,
+                toggleDialogTitle,
+                toggleConfirmText,
+                toggleReasonPlaceholder
             }
         }
     }
@@ -570,6 +694,21 @@
     .abnormal-status-node {
         color: $failColor;
     }
+
+    .switcher-wrapper {
+        position: relative;
+        display: inline-block;
+
+        .switcher-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+            z-index: 1;
+        }
+    }
 }
 </style>
 <style lang="scss">
@@ -579,5 +718,23 @@
             white-space: pre-wrap !important;
         }
     }
+}
+.toggle-enable-dialog-content {
+    padding: 20px;
+    background-color: #f5f7fa;
+    .toggle-enable-label {
+        font-size: 14px;
+        color: #63656e;
+        margin-bottom: 8px;
+        .required {
+            color: #ea3636;
+        }
+    }
+}
+.toggle-enable-dialog-footer {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 20px;
 }
 </style>

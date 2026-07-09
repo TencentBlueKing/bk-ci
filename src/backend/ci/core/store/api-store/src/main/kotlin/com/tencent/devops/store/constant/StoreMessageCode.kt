@@ -177,4 +177,6 @@ object StoreMessageCode {
     const val OFFSET_REASON_IS_NOT_ALLOW_NULL = "2120940" // 下架原因不允许为空
     const val OWNER_STORE_CODE_NOT_NULL = "2120941" // 归属应用标识不能为空
     const val TRIGGER_EVENT_CONFIG_EXIST = "2120942" // 应用[{0}]下已存在[{1}]触发事件配置
+    // 研发商店：项目[{0}]不存在或你没有该项目的权限，请填写你有权限的项目
+    const val USER_STORE_VISIBLE_PROJECT_INVALID = "2120943"
 }

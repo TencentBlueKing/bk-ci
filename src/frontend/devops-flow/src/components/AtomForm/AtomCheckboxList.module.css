@@ -6,5 +6,6 @@
 .checkboxItem {
   margin-right: 15px;
   margin-bottom: 8px;
+  font-size: var(--font-size-xs);
   margin-left: 0px !important;
 }

@@ -146,7 +146,10 @@ interface OpAtomResource {
     fun getPipelineAtomById(
         @Parameter(description = "流水线插件ID", required = true)
         @QueryParam("id")
-        id: String
+        id: String,
+        @Parameter(description = "支持的服务范围", required = false)
+        @QueryParam("serviceScope")
+        serviceScope: ServiceScopeEnum?
     ): Result<Atom?>
 
     @Operation(summary = "根据ID获取流水线插件信息")

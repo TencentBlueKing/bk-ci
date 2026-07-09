@@ -191,6 +191,8 @@ export const EditHeader = defineComponent({
             query: route.query,
           })
         }
+        // 保存成功后重新加载 flowModel，确保 yamlContent 同步更新
+        await flowModel.loadFlow(projectId.value, flowId.value, route.params.version as string, true)
         await refreshFlowInfo()
       } catch (error: any) {
         console.error('Failed to save flow:', error)

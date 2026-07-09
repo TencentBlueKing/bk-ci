@@ -31,7 +31,9 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.pojo.common.visible.UserStoreDeptInfoRequest
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.visible.DeptInfo
+import com.tencent.devops.store.pojo.common.visible.StoreVisibleDeptDeleteReq
 import com.tencent.devops.store.pojo.common.visible.StoreVisibleDeptResp
+import com.tencent.devops.store.pojo.common.visible.StoreVisibleProjectInfo
 
 /**
  * store组件可见范围逻辑类
@@ -59,22 +61,27 @@ interface StoreVisibleDeptService {
 
     /**
      * 设置store组件可见范围
+     * 可同时设置按组织架构（deptInfos）以及按项目（projectInfos）的可见范围；
+     * 其中 projectInfos 仅对支持按项目授权的组件类型（如DEVX）生效，且保存前会校验项目ID的合法性。
      */
     fun addVisibleDept(
         userId: String,
         storeCode: String,
-        deptInfos: List<DeptInfo>,
-        storeType: StoreTypeEnum
+        deptInfos: List<DeptInfo>? = null,
+        storeType: StoreTypeEnum,
+        projectInfos: List<StoreVisibleProjectInfo>? = null
     ): Result<Boolean>
 
     /**
      * 删除store组件可见范围
+     * deptIds 使用","分隔
      */
     fun deleteVisibleDept(
         userId: String,
         storeCode: String,
-        deptIds: String,
-        storeType: StoreTypeEnum
+        deptIds: String? = null,
+        storeType: StoreTypeEnum,
+        storeVisibleDeptDeleteReq: StoreVisibleDeptDeleteReq? = null
     ): Result<Boolean>
 
     /**

@@ -104,6 +104,13 @@ class BuildDetailSimpleTest {
         assertEquals("s-1", json["failedElements"][0]["stageId"].asText())
         assertEquals("job-1", json["failedElements"][0]["jobId"].asText())
         assertEquals("build-stage", json["failedElements"][0]["stageName"].asText())
+        assertEquals("e-1", json["failedElements"][0]["elementId"].asText())
+        assertEquals("failed-script", json["failedElements"][0]["elementName"].asText())
+        assertEquals("step-1", json["failedElements"][0]["stepId"].asText())
+        assertEquals("FAILED", json["failedElements"][0]["status"].asText())
+        assertEquals("USER", json["failedElements"][0]["errorType"].asText())
+        assertEquals(1001, json["failedElements"][0]["errorCode"].asInt())
+        assertEquals("boom", json["failedElements"][0]["errorMsg"].asText())
         assertEquals("exit 1", json["failedElements"][0]["element"]["script"].asText())
     }
 }

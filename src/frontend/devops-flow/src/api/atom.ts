@@ -88,6 +88,49 @@ export function fetchAtoms(params: FetchAtomsParams): Promise<FetchAtomsResponse
 }
 
 /**
+ * 搜索模式专用：支持 installed 参数，分页加载已安装/未安装插件列表
+ */
+export interface FetchSearchAtomsParams {
+  projectCode: string
+  category: JobCategory
+  searchKey: string
+  installed?: boolean
+  os?: string
+  page?: number
+  pageSize?: number
+}
+
+export interface FetchSearchAtomsResponse {
+  records: AtomItem[]
+  count: number
+  page: number
+  pageSize: number
+  totalPages: number
+}
+
+/**
+ * 搜索插件列表（搜索模式专用）
+ */
+export function fetchSearchAtoms(params: FetchSearchAtomsParams): Promise<FetchSearchAtomsResponse> {
+  return get<FetchSearchAtomsResponse>(`${STORE_API_URL_PREFIX}/user/pipeline/atom`, {
+    params: {
+      serviceScope: 'CREATIVE_STREAM',
+      page: params.page,
+      pageSize: params.pageSize,
+      projectCode: params.projectCode,
+      jobType: undefined,
+      category: params.category,
+      classifyId: undefined,
+      os: undefined,
+      keyword: params.searchKey,
+      queryProjectAtomFlag: false,
+      fitOsFlag: false,
+      installed: params.installed,
+    },
+  })
+}
+
+/**
  * 获取插件分类列表
  */
 export function fetchAtomClassify({

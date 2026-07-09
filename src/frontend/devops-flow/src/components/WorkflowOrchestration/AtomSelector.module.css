@@ -9,6 +9,9 @@
   border: 1px solid var(--border-color);
   border-radius: var(--border-radius-large);
   box-shadow: var(--shadow-md);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .atomSelectorPopup::before {
@@ -278,9 +281,15 @@
   text-align: right;
 }
 
+/* 搜索结果包装容器 */
+.searchResultWrapper {
+  height: calc(100% - 70px);
+  overflow: hidden;
+}
+
 /* 搜索结果 */
 .searchResult {
-  height: calc(100% - 70px);
+  height: 100%;
   overflow-y: auto;
   margin: 0 11px 0 21px;
   padding-right: 10px;

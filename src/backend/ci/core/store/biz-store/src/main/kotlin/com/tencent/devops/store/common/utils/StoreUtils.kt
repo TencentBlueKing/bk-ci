@@ -36,6 +36,7 @@ import com.tencent.devops.store.common.service.impl.DefaultComponentVersionServi
 import com.tencent.devops.store.pojo.common.STORE_NORMAL_PROJECT_RUN_INFO_KEY_PREFIX
 import com.tencent.devops.store.pojo.common.STORE_PUBLIC_FLAG_KEY_PREFIX
 import com.tencent.devops.store.pojo.common.enums.PackageSourceTypeEnum
+import com.tencent.devops.store.pojo.common.enums.ServiceScopeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 
@@ -176,6 +177,15 @@ object StoreUtils {
         } else {
             // 获取默认的成员bean对象
             SpringContextUtil.getBean(DefaultComponentVersionService::class.java)
+        }
+    }
+
+    fun transformDocsLink(docsLink: String?, storeType: StoreTypeEnum, serviceScope: ServiceScopeEnum?): String? {
+        return if (!docsLink.isNullOrBlank() && storeType == StoreTypeEnum.ATOM &&
+            serviceScope == ServiceScopeEnum.CREATIVE_STREAM) {
+            docsLink.replace("/atom/", "/creative/")
+        } else {
+            docsLink
         }
     }
 }
