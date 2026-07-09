@@ -419,7 +419,7 @@ class PublicVarGroupReferQueryService @Autowired constructor(
 
             logger.info(
                 "Query var refer info: project=$projectId, group=$groupName, var=$varName, " +
-                "referType=${queryReq.referType?.name}, referIdCount=${referIdsWithActualVar.size}"
+                        "referType=${queryReq.referType?.name}, referIdCount=${referIdsWithActualVar.size}"
             )
 
             if (referIdsWithActualVar.isEmpty()) {
