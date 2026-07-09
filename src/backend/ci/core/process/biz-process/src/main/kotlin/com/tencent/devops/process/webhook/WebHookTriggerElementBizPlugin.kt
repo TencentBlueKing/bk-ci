@@ -127,4 +127,3 @@ class CodeP4WebHookTriggerElementBizPlugin constructor(
         return CodeP4WebHookTriggerElement::class.java
     }
 }
-

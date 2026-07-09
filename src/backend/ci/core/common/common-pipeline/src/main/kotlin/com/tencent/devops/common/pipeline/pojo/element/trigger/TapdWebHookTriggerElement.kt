@@ -74,8 +74,9 @@ data class TapdWebHookTriggerData(
 
 @Schema(title = "TAPD事件触发数据")
 data class TapdWebHookTriggerInput(
+    // 需要兼容老数据,应该是不能为空的
     @get:Schema(title = "TAPD workspaceId，关联触发的 TAPD 项目", required = true)
-    val workspaceId: String,
+    val workspaceId: String? = "",
     @get:Schema(title = "事件类型 (story/bug)", required = true)
     val eventType: TapdEventType?,
     @get:Schema(

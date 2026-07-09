@@ -62,7 +62,6 @@ import com.tencent.devops.common.pipeline.option.MatrixControlOption
 import com.tencent.devops.common.pipeline.pojo.BuildNo
 import com.tencent.devops.common.pipeline.pojo.MatrixPipelineInfo
 import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
-import com.tencent.devops.common.pipeline.pojo.element.market.MarketEventAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
@@ -136,7 +135,6 @@ import com.tencent.devops.process.utils.PipelineVarUtil
 import com.tencent.devops.process.utils.PipelineVersionUtils
 import com.tencent.devops.process.yaml.utils.NotifyTemplateUtils
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
-import com.tencent.devops.store.pojo.common.BK_STORE_CREATIVE_STREAM_MANUAL_TRIGGER
 import jakarta.ws.rs.core.Response
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -298,21 +296,9 @@ class PipelineRepositoryService constructor(
         var canElementSkip = false
         run lit@{
             triggerContainer.elements.forEach {
-                val targetElement = it is ManualTriggerElement || if (channelCode == ChannelCode.CREATIVE_STREAM) {
-                    it is MarketEventAtomElement && it.atomCode == BK_STORE_CREATIVE_STREAM_MANUAL_TRIGGER
-                } else {
-                    false
-                }
-                if (targetElement && it.elementEnabled()) {
+                if (it is ManualTriggerElement && it.elementEnabled()) {
                     canManualStartup = true
-                    canElementSkip = when (it) {
-                        is ManualTriggerElement -> it.canElementSkip ?: false
-                        is MarketEventAtomElement -> {
-                            val input = it.data["input"] as Map<String, Any>? ?: emptyMap()
-                            input["canElementSkip"] as? Boolean ?: false
-                        }
-                        else -> false
-                    }
+                    canElementSkip = it.canElementSkip ?: false
                     return@lit
                 }
             }

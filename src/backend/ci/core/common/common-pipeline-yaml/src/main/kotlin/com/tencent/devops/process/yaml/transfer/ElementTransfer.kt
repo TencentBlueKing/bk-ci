@@ -259,6 +259,11 @@ class ElementTransfer @Autowired(required = false) constructor(
     ) {
         val input = element.data.input
         val eventType = input.eventType ?: return
+        val workspaceId = input.workspaceId
+        if (workspaceId.isNullOrEmpty()) {
+            logger.warn("TapdWebHookTriggerElement workspaceId is empty")
+            return
+        }
         val includeActions = when (eventType) {
             TapdEventType.STORY -> input.includeStoryAction
             TapdEventType.BUG -> input.includeBugAction
@@ -277,8 +282,8 @@ class ElementTransfer @Autowired(required = false) constructor(
             labelsIgnore = input.excludeLabels?.takeIf { it.isNotBlank() }?.split(","),
             priorities = input.includePriority?.takeIf { it.isNotBlank() }?.split(",")
         )
-        val current = acc[input.workspaceId] ?: TriggerOn(workspaceId = input.workspaceId)
-        acc[input.workspaceId] = when (eventType) {
+        val current = acc[workspaceId] ?: TriggerOn(workspaceId = workspaceId)
+        acc[workspaceId] = when (eventType) {
             TapdEventType.STORY -> current.copy(story = rule)
             TapdEventType.BUG -> current.copy(bug = rule)
             else -> current
