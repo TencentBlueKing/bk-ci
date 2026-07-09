@@ -465,7 +465,8 @@ data class StartBuildContext(
                     params[PIPELINE_GIT_EVENT_URL]
                 },
                 materialId = params[BK_CI_MATERIAL_ID],
-                materialName = params[BK_CI_MATERIAL_NAME]
+                materialName = params[BK_CI_MATERIAL_NAME],
+                channelCode = channelCode.name
             )
         }
 

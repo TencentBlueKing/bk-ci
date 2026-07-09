@@ -77,7 +77,7 @@ class TapdEventTriggerBuildService @Autowired constructor(
             doTrigger(event, context)
         } catch (ignored: Exception) {
             logger.warn(
-                "failed to trigger by tapd webhook|${event.projectId}|${event.pipelineId}|${event.tapdProjectId}",
+                "failed to trigger by tapd webhook|${event.projectId}|${event.pipelineId}|${event.workspaceId}",
                 ignored
             )
             webhookTriggerManager.fireError(context, ignored)
