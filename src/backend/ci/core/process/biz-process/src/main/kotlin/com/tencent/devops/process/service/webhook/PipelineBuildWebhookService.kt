@@ -50,6 +50,7 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.WebHookTriggerEle
 import com.tencent.devops.common.pipeline.utils.CascadePropertyUtils
 import com.tencent.devops.common.pipeline.utils.PIPELINE_PAC_REPO_HASH_ID
 import com.tencent.devops.common.service.prometheus.BkTimed
+import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_START_WEBHOOK_USER_ID
@@ -93,6 +94,7 @@ import com.tencent.devops.repository.api.ServiceRepositoryResource
 import io.micrometer.core.instrument.Tags
 import jakarta.ws.rs.core.Response
 import org.slf4j.LoggerFactory
+import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
@@ -151,6 +153,7 @@ class PipelineBuildWebhookService @Autowired constructor(
         )
         // 主线程只持有共享 Map，不绑定 ThreadLocal，避免 CallerRunsPolicy 场景污染主线程状态
         val sharedEventCache = ConcurrentHashMap<String, EventRepositoryCache>()
+        val traceId = MDC.get(TraceTag.BIZID)
         try {
             logger.info("dispatch pipeline webhook subscriber|repo(${matcher.getRepoName()})")
             if (triggerPipelines.isEmpty()) {
@@ -175,6 +178,7 @@ class PipelineBuildWebhookService @Autowired constructor(
             val futures = triggerPipelines.map { subscriber ->
                 perRequestLimiter.acquire()
                 webhookTriggerExecutor.submit {
+                    MDC.put(TraceTag.BIZID, traceId)
                     EventCacheUtil.bindSharedEventCache(sharedEventCache)
                     try {
                         triggerSinglePipeline(
