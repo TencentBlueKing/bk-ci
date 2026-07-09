@@ -25,6 +25,10 @@ interface MaterialInfoKey {
   [key: string]: string | undefined
 }
 
+const tapdIconTypeMap: Record<string, string> = {
+  story: 'intercept-history',
+  bug: 'bug'
+}
 export default defineComponent({
   name: 'MaterialItem',
   props: {
@@ -48,7 +52,8 @@ export default defineComponent({
   },
   emits: ['mouseEnter', 'click'],
   setup(props, { emit }) {
-    const isTAPD = computed(() => props.material?.webhookEventType === 'TAPD')
+    const isSubFlow = computed(() => props.material?.channelCode === 'CREATIVE_STREAM')
+    const isTAPD = computed(() => props.material?.webhookType === 'TAPD')
     const scmType = computed(() =>
       props.isWebhook ? `CODE_${props.material?.codeType}` : props.material?.scmType,
     )
@@ -60,6 +65,15 @@ export default defineComponent({
     
     const isSVN = computed(() => scmType.value === 'CODE_SVN')
     const materialInfoKeys = computed<string[]>(() => {
+      if (isSubFlow.value) {
+        return [
+          'parentPipelineName',
+          'parentBuildNum',
+        ]
+      }
+      if (isTAPD.value) {
+        return ['webhookAliasName', 'materialName']
+      }
       if (!props.isWebhook) {
         return ['aliasName', ...(isSVN.value ? [] : ['branchName']), 'newCommitId']
       }
@@ -85,8 +99,6 @@ export default defineComponent({
           return ['webhookAliasName', 'webhookCommitId']
         case 'PARENT_PIPELINE':
           return ['parentPipelineName', 'parentBuildNum']
-        case 'TAPD':
-          return ['webhookAliasName', 'materialId']
         default:
           return props.material?.materialId
             ? ['materialName', 'materialId']
@@ -109,10 +121,10 @@ export default defineComponent({
         issueIid: 'webhook-issue',
         reviewId: 'webhook-review',
         webhookSourceTarget: 'branch',
-        parentPipelineName: 'pipeline',
+        parentPipelineName: isSubFlow.value ? 'sub-flow' : 'pipeline',
         parentBuildNum: 'sharp',
-        materialName: scmIcon,
-        materialId: 'link',
+        materialName: isTAPD.value ? tapdIconTypeMap[props.material.webhookEventType] : scmIcon,
+        materialId: 'link'
       }
     })
     const materialInfoValueMap = computed<Record<string, string>>(() => {
@@ -147,6 +159,9 @@ export default defineComponent({
     }
 
     const includeLink = (field: string) => {
+      if (isTAPD.value) {
+        return ['materialName'].includes(field)
+      }
       return (
         [
           'newCommitId',
