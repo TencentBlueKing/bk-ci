@@ -4,6 +4,9 @@ package com.tencent.devops.process.constant
  * TAPD webhook相关常量
  */
 object TapdWebhookConstant {
+    // webhook 密钥字段名（TAPD 侧配置后会随 body 一起下发）
+    const val TAPD_KEY_SECRET = "secret"
+
     // 事件标识字段名，例如 story::create / bug::update
     const val TAPD_KEY_EVENT = "event"
 

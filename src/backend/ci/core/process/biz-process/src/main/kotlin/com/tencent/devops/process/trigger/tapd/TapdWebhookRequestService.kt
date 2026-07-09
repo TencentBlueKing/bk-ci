@@ -37,7 +37,6 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.TapdWebHookTrigge
 import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_EVENT_SEPARATOR
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_CHANGE_FIELDS
-import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_CURRENT_OWNER
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_CURRENT_USER
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_ENTITY_ID
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_EVENT
