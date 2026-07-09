@@ -30,12 +30,15 @@ package com.tencent.devops.process.yaml.v3.models
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonProperty
+import com.fasterxml.jackson.annotation.JsonSetter
 import com.tencent.devops.common.pipeline.pojo.transfer.IPreStep
 import com.tencent.devops.common.pipeline.pojo.transfer.Resources
 import com.tencent.devops.process.yaml.pojo.YamlVersion
 import com.tencent.devops.process.yaml.v3.models.job.IPreJob
 import com.tencent.devops.process.yaml.v3.models.on.PreTriggerOnV3
 import com.tencent.devops.process.yaml.v3.models.stage.IPreStage
+import com.tencent.devops.process.yaml.v3.parsers.template.Constants.TEMPLATE_KEY
+import org.slf4j.LoggerFactory
 
 /**
  * model
@@ -51,6 +54,7 @@ data class PreScriptBuildYamlV3Parser(
     @JsonProperty("on")
     var triggerOn: List<PreTriggerOnV3>?,
     override var variables: Map<String, Variable>? = null,
+    override var variableTemplates: List<VariableTemplate>? = null,
     override var stages: List<IPreStage>? = null,
     override var jobs: LinkedHashMap<String, IPreJob>? = null,
     override var steps: List<IPreStep>? = null,
@@ -67,4 +71,76 @@ data class PreScriptBuildYamlV3Parser(
     override val cancelPolicy: String? = null
 ) : PreScriptBuildYamlIParser {
     override fun yamlVersion() = YamlVersion.V3_0
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(PreScriptBuildYamlV3Parser::class.java)
+    }
+
+    @JsonSetter("variables")
+    fun setVariables(raw: Any?) {
+        when (raw) {
+            null -> {
+                this.variables = null
+                this.variableTemplates = null
+            }
+            is Map<*, *> -> {
+                val templateList = raw[TEMPLATE_KEY] as? List<Map<String, String>>
+                if (raw["template"] != null && templateList == null) {
+                    logger.warn(
+                        "variables.template type conversion failed, " +
+                            "expected List<Map<String, String>>, actual type: ${raw["template"]?.javaClass?.name}"
+                    )
+                }
+                this.variableTemplates = templateList
+                    ?.filter { !it["name"].isNullOrBlank() }?.map {
+                        VariableTemplate(name = it["name"]!!, version = it["version"])
+                    }
+                val regularVariables = raw.filterKeys { key ->
+                    if (key == null) {
+                        logger.warn("null key found in variables, ignored")
+                        false
+                    } else {
+                        key != "template"
+                    }
+                }.mapKeys { entry ->
+                    entry.key.toString()
+                }
+
+                if (regularVariables.isNotEmpty()) {
+                    this.variables = regularVariables.mapValues { parseVariableValue(value = it.value) }
+                } else {
+                    this.variables = null
+                }
+            }
+            else -> {
+                logger.warn(
+                    "unsupported variables type, " +
+                        "expected Map<String, Any>, actual type: ${raw.javaClass.name}, value: $raw"
+                )
+                this.variables = null
+                this.variableTemplates = null
+            }
+        }
+    }
+
+    private fun parseVariableValue(value: Any?): Variable {
+        return when (value) {
+            null -> {
+                logger.warn("variable value is null, creating empty variable")
+                Variable(value = null)
+            }
+            is Map<*, *> -> parseVariable(map = value)
+            else -> Variable(value = value)
+        }
+    }
+
+    private fun parseVariable(map: Map<*, *>): Variable {
+        return Variable(
+            value = map["value"],
+            readonly = map["readonly"] as? Boolean ?: false,
+            allowModifyAtStartup = map["allow-modify-at-startup"] as? Boolean ?: true,
+            const = map["const"] as? Boolean,
+            props = map["props"] as? VariableProps
+        )
+    }
 }
