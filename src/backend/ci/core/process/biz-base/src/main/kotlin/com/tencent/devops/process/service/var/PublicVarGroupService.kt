@@ -349,9 +349,9 @@ class PublicVarGroupService @Autowired constructor(
             emptyMap()
         }
 
-        // 批量查询所有版本的引用数量（按 referId 去重）
+        // 批量查询当前有效引用数量
         val referCountMap = if (groupNameList.isNotEmpty()) {
-            publicVarGroupVersionSummaryDao.batchGetTotalReferCount(
+            publicVarGroupReferInfoDao.batchGetTotalReferCountByLatest(
                 dslContext = dslContext,
                 projectId = projectId,
                 groupNames = groupNameList
@@ -360,9 +360,9 @@ class PublicVarGroupService @Autowired constructor(
             emptyMap()
         }
 
-        // 批量查询动态版本的引用数量
+        // 批量查询当前有效动态版本的引用数量
         val dynamicVersionReferCountMap = if (groupNameList.isNotEmpty()) {
-            publicVarGroupVersionSummaryDao.batchGetDynamicVersionReferCount(
+            publicVarGroupReferInfoDao.batchGetDynamicVersionReferCountByLatest(
                 dslContext = dslContext,
                 projectId = projectId,
                 groupNames = groupNameList
@@ -371,9 +371,9 @@ class PublicVarGroupService @Autowired constructor(
             emptyMap()
         }
 
-        // 批量查询固定版本的引用数量
+        // 批量查询当前有效固定版本的引用数量
         val fixedVersionReferCountMap = if (groupNameList.isNotEmpty()) {
-            publicVarGroupVersionSummaryDao.batchGetFixedVersionReferCount(
+            publicVarGroupReferInfoDao.batchGetFixedVersionReferCountByLatest(
                 dslContext = dslContext,
                 projectId = projectId,
                 groupNames = groupNameList
@@ -494,8 +494,8 @@ class PublicVarGroupService @Autowired constructor(
                 params = arrayOf(groupName)
             )
 
-            // 检查变量组是否被引用（从Summary表获取引用总数）
-            val referCount = publicVarGroupVersionSummaryDao.getTotalReferCount(
+            // 检查变量组是否被引用
+            val referCount = publicVarGroupReferInfoDao.getTotalReferCountByLatest(
                 dslContext = dslContext,
                 projectId = projectId,
                 groupName = groupName
