@@ -75,7 +75,7 @@ class TapdEventTriggerMatcher {
         val input = element.data.input
         val taskId = element.id ?: ""
         // 1. 项目过滤
-        if (input.workspaceId.isBlank() || input.workspaceId != event.workspaceId) {
+        if (input.workspaceId!!.isBlank() || input.workspaceId != event.workspaceId) {
             return WebhookAtomResponse(MatchStatus.REPOSITORY_NOT_MATCH)
         }
         // 2. 事件类型过滤
