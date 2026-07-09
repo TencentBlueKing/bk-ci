@@ -65,6 +65,15 @@ object TapdWebhookConstant {
 
     const val TAPD_KEY_DESCRIPTION = "description"
 
+    // 派生字段：TAPD 项目名称（由 TapdWebhookRequestService 塞入 body，供构建端组装启动参数使用）
+    const val TAPD_KEY_WORKSPACE_NAME = "workspace_name"
+
+    // 派生字段：工单详情页链接（由 TapdWebhookRequestService 塞入 body，供构建端组装启动参数使用）
+    const val TAPD_KEY_OBJECT_URL = "object_url"
+
+    // 派生字段：事件对象ID（不同事件动作下从不同 body 字段派生，供构建端组装启动参数使用）
+    const val TAPD_KEY_OBJECT_ID = "object_id"
+
     // 需求详情：{tapdHost}/tapd_fe/{workspaceId}/story/detail/{id}
     const val TAPD_STORY_URL_PATTERN = "%s/tapd_fe/%s/story/detail/%s"
 

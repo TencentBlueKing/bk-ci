@@ -53,15 +53,5 @@ data class TapdWebhookTriggerEvent(
     @get:Schema(description = "事件动作")
     val eventAction: TapdEventAction,
     @get:Schema(description = "触发用户")
-    val triggerUser: String,
-    @get:Schema(description = "触发标签")
-    val triggerLabels: String?,
-    @get:Schema(description = "触发优先级")
-    val triggerPriority: String?,
-    @get:Schema(description = "当前处理人")
-    val triggerOwner: String?,
-    @get:Schema(description = "事件来源")
-    val eventFrom: String?,
-    @get:Schema(description = "流水线启动参数")
-    val startParams: Map<String, String>
+    val triggerUser: String
 ) : IEvent()
