@@ -259,6 +259,10 @@ class ElementTransfer @Autowired(required = false) constructor(
     ) {
         val input = element.data.input
         val eventType = input.eventType ?: return
+        if (input.workspaceId.isEmpty()) {
+            logger.warn("TapdWebHookTriggerElement workspaceId is empty")
+            return
+        }
         val includeActions = when (eventType) {
             TapdEventType.STORY -> input.includeStoryAction
             TapdEventType.BUG -> input.includeBugAction
