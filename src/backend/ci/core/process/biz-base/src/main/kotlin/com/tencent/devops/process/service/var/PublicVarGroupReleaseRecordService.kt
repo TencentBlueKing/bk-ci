@@ -88,18 +88,19 @@ class PublicVarGroupReleaseRecordService @Autowired constructor(
         val oldVersion = oldVarPOs.firstOrNull()?.version
         val newVersion = newVarPOs.firstOrNull()?.version
 
-        // 转换PO到DO
         val oldVarDOs = convertPOToDO(
             varPOs = oldVarPOs,
             projectId = projectId,
             groupName = groupName,
-            version = oldVersion
+            version = oldVersion,
+            queryVersion = oldVersion
         )
         val newVarDOs = convertPOToDO(
             varPOs = newVarPOs,
             projectId = projectId,
             groupName = groupName,
-            version = newVersion
+            version = newVersion,
+            queryVersion = newVersion
         )
 
         // 生成变更记录
