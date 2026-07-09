@@ -347,7 +347,8 @@ class SubPipelineStartUpService @Autowired constructor(
                         buildId = parentBuildId,
                         position = null,
                         stageId = null,
-                        needShortUrl = false
+                        needShortUrl = false,
+                        channelCode = parentPipelineInfo.channelCode
                     )
                 )
             // 给触发材料展示时使用
