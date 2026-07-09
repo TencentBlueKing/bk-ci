@@ -104,6 +104,18 @@ class ESAutoConfiguration : DisposableBean {
     @Value("\${log.elasticsearch.socketTimeout:#{null}}")
     private val socketTimeout: Int? = null
 
+    @Value("\${log.elasticsearch.connectTimeout:#{null}}")
+    private val connectTimeout: Int? = null
+
+    @Value("\${log.elasticsearch.connectionRequestTimeout:#{null}}")
+    private val connectionRequestTimeout: Int? = null
+
+    @Value("\${log.elasticsearch.maxConnectNum:#{null}}")
+    private val maxConnectNum: Int? = null
+
+    @Value("\${log.elasticsearch.maxConnectPerRoute:#{null}}")
+    private val maxConnectPerRoute: Int? = null
+
     private var client: RestHighLevelClient? = null
 
     @Bean
@@ -125,10 +137,10 @@ class ESAutoConfiguration : DisposableBean {
         val indexShardsPerNode = shardsPerNode ?: 1 // 每个节点分片数
         val socketTimeout = socketTimeout ?: 30000 // 等待连接响应超时
         val tcpKeepAliveSeconds = 30000 // 探活连接时长
-        val connectTimeOut = 1000 // 请求连接超时
-        val connectionRequestTimeOut = 500 // 获取连接的超时时间
-        val maxConnectNum = 100 // 最大连接数
-        val maxConnectPerRoute = 30 // 最大路由连接数
+        val connectTimeOut = connectTimeout ?: 1000 // 请求连接超时
+        val connectionRequestTimeOut = connectionRequestTimeout ?: 30000 // 获取连接的超时时间
+        val maxConnectNum = maxConnectNum ?: 200 // 最大连接数
+        val maxConnectPerRoute = maxConnectPerRoute ?: 100 // 最大路由连接数
         val requestTimeout = if (socketTimeout > 0) { // ES响应超时，取主动超时的一半
             socketTimeout / 2
         } else {

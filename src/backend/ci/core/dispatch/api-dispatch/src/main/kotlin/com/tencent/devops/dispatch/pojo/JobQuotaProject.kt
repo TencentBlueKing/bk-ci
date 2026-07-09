@@ -38,7 +38,7 @@ data class JobQuotaProject(
     @get:Schema(title = "构建机类型", required = true)
     val vmType: JobQuotaVmType,
     @get:Schema(title = "构建来源，默认BS", required = true)
-    val channelCode: String = ChannelCode.BS.name,
+    val channelCode: String = ChannelCode.getRequestChannelCode().name,
     @get:Schema(title = "项目最大并发JOB数， 默认50", required = false)
     val runningJobMax: Int,
     @get:Schema(title = "项目单JOB最大执行时间，默认8小时", required = false)

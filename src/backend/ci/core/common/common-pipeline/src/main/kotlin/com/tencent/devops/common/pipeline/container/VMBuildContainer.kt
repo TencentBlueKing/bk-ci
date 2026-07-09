@@ -56,8 +56,8 @@ data class VMBuildContainer(
     @get:Schema(title = "插件执行耗时", required = false, readOnly = true)
     @Deprecated("即将被timeCost代替")
     override var elementElapsed: Long? = null,
-    @get:Schema(title = "VM基础操作系统", required = true)
-    val baseOS: VMBaseOS,
+    @get:Schema(title = "VM基础操作系统", required = false)
+    var baseOS: VMBaseOS? = null,
     @get:Schema(title = "预指定VM名称列表", required = true)
     val vmNames: Set<String> = setOf(),
     @get:Schema(title = "排队最长时间(分钟)", required = true)

@@ -1,0 +1,154 @@
+.permissionDelegation {
+  height: 100%;
+  overflow: hidden;
+  padding: var(--spacing-xl);
+}
+
+.delegationPermission {
+  padding: var(--spacing-xl);
+  font-size: var(--font-size-xs);
+}
+
+.contentWarpper {
+  border-radius: var(--border-radius);
+  border: 1px solid var(--border-color);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  height: 40px;
+  background-color: var(--bg-secondary);
+  padding: 0 var(--spacing-lg);
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+}
+
+.helpDocumentFill {
+  margin-right: 5px;
+  color: var(--color-primary);
+}
+
+.content {
+  padding: 20px var(--spacing-lg);
+  line-height: var(--line-height-md);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
+}
+
+.tips2 {
+  margin-top: 10px;
+}
+
+.tips4 {
+  margin-top: 20px;
+}
+
+.highlight {
+  color: var(--color-warning);
+  font-weight: 700;
+}
+
+.resetRow {
+  position: relative;
+  top: -4px;
+}
+
+.notPermission {
+  color: var(--color-text-disabled);
+  text-decoration: line-through;
+  margin-right: 5px;
+}
+
+.panelContent {
+  display: grid;
+  grid-gap: var(--spacing-lg);
+  grid-template-rows: minmax(18px, auto);
+  margin-top: 30px;
+}
+
+.panelContent p {
+  display: grid;
+  grid-auto-flow: column;
+  grid-template-columns: 120px 1fr;
+  align-items: flex-start;
+  grid-gap: 10px;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+}
+
+.panelContent p > label {
+  text-align: right;
+  line-height: 18px;
+  color: var(--color-text-tertiary);
+}
+
+.blockRowLabel {
+  text-align: right;
+  line-height: 18px;
+  color: var(--color-text-tertiary);
+}
+
+.blockRowValue {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.name {
+  color: var(--color-text-secondary);
+}
+
+.mr10 {
+  margin-right: 10px;
+}
+
+.refreshAuth {
+  display: flex;
+  align-items: center;
+  margin-left: 14px;
+  cursor: pointer;
+  color: var(--color-primary);
+}
+
+.refreshIcon {
+  margin-right: 2px;
+}
+
+.resetAuthDialog {
+  text-align: center;
+}
+
+.resetDialogTitle {
+  font-size: var(--font-size-xl);
+  color: var(--color-text-primary);
+  margin-bottom: 20px;
+}
+
+.resetDialogTips {
+  text-align: left;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
+  padding: 10px 20px;
+  background: var(--bg-secondary);
+}
+
+.highlight {
+  color: #ff9c01;
+}
+
+.resetFailedItem {
+  text-align: left;
+  max-height: 400px;
+  overflow: auto;
+  width: 100%;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
+  padding: 10px 20px;
+  background: var(--bg-secondary);
+  margin-top: 20px;
+}
+
+.resetFailedItem a {
+  color: var(--color-primary);
+}

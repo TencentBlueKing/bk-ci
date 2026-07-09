@@ -1,5 +1,6 @@
 package com.tencent.devops.process.trigger.scm.rule
 
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.webhook.pojo.code.WebHookParams
 import com.tencent.devops.common.webhook.service.code.GitScmService
 import com.tencent.devops.common.webhook.service.code.filter.WebhookFilterResponse
@@ -10,6 +11,7 @@ import com.tencent.devops.process.trigger.scm.condition.BranchCondition
 import com.tencent.devops.process.trigger.scm.condition.BranchFilterType
 import com.tencent.devops.process.trigger.scm.condition.KeyWordType
 import com.tencent.devops.process.trigger.scm.condition.KeywordCondition
+import com.tencent.devops.process.trigger.scm.condition.LabelCondition
 import com.tencent.devops.process.trigger.scm.condition.PathCondition
 import com.tencent.devops.process.trigger.scm.condition.ThirdCondition
 import com.tencent.devops.process.trigger.scm.condition.UserCondition
@@ -24,6 +26,7 @@ import org.springframework.stereotype.Service
 
 @Service
 class PullRequestHookRule @Autowired constructor(
+    private val client: Client,
     private val gitScmService: GitScmService,
     // stream没有这个配置
     @Autowired(required = false)
@@ -48,7 +51,8 @@ class PullRequestHookRule @Autowired constructor(
                 sourceBranch = pullRequest.sourceRef.name,
                 changes = WebhookRuleUtils.getChangeFiles(changes ?: listOf()),
                 title = pullRequest.title,
-                lastCommitMsg = commit.message ?: ""
+                lastCommitMsg = commit.message ?: "",
+                labels = pullRequest.labels ?: listOf()
             )
         }
         val context = WebhookConditionContext(
@@ -66,7 +70,8 @@ class PullRequestHookRule @Autowired constructor(
             BranchCondition(BranchFilterType.SOURCE_BRANCH),
             PathCondition(),
             UserCondition(),
-            ThirdCondition(webhook, gitScmService, callbackCircuitBreakerRegistry)
+            LabelCondition(),
+            ThirdCondition(client, gitScmService, callbackCircuitBreakerRegistry)
         )
         return WebhookConditionChain(conditions).match(context)
     }

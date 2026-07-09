@@ -20,6 +20,13 @@ object ActionId {
     const val PIPELINE_SHARE = "pipeline_share"
     const val PIPELINE_DOWNLOAD = "pipeline_download"
 
+    // 创作流
+    const val CREATIVE_STREAM_EXECUTE = "creative_stream_execute"
+
+    // 创作流节点
+    const val CREATIVE_STREAM_NODE_VIEW = "creative_stream_node_view"
+    const val CREATIVE_STREAM_NODE_EDIT = "creative_stream_node_edit"
+
     // 流水线组
     const val PIPELINE_GROUP_CREATE = "pipeline_group_create"
     const val PIPELINE_GROUP_EDIT = "pipeline_group_edit"
@@ -57,6 +64,7 @@ object ActionId {
     const val ENVIRONMENT_DELETE = "environment_delete"
     const val ENVIRONMENT_LIST = "environment_list"
     const val ENVIRONMENT_USE = "environment_use"
+    const val ENVIRONMENT_TRANSFER = "environment_transfer"
 
     // 环境节点
     const val ENV_NODE_CREATE = "env_node_create"
@@ -65,6 +73,7 @@ object ActionId {
     const val ENV_NODE_DELETE = "env_node_delete"
     const val ENV_NODE_LIST = "env_node_list"
     const val ENV_NODE_USE = "env_node_use"
+    const val ENV_NODE_TRANSFER = "env_node_transfer"
 
     // 环境节点标签
     const val ENV_NODE_TAG_CREATE = "env_node_tag_create"

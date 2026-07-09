@@ -37,6 +37,9 @@ import com.tencent.devops.auth.dao.AuthResourceGroupMemberDao
 import com.tencent.devops.auth.dao.AuthSyncDataTaskDao
 import com.tencent.devops.auth.pojo.dto.MigrateResourceDTO
 import com.tencent.devops.auth.pojo.dto.PermissionHandoverDTO
+import com.tencent.devops.auth.pojo.dto.ProjectGroupIncrementalMigrationDTO
+import com.tencent.devops.auth.pojo.dto.ProjectGroupMigrationDTO
+import com.tencent.devops.auth.pojo.dto.ProjectGroupMigrationResultDTO
 import com.tencent.devops.auth.pojo.enum.AuthMigrateStatus
 import com.tencent.devops.auth.pojo.enum.AuthSyncDataType
 import com.tencent.devops.auth.pojo.enum.MemberType
@@ -98,6 +101,7 @@ class RbacPermissionMigrateService(
     private val permissionResourceMemberService: PermissionResourceMemberService,
     private val migrateResourceAuthorizationService: MigrateResourceAuthorizationService,
     private val migrateResourceGroupService: MigrateResourceGroupService,
+    private val projectGroupMigrationService: ProjectGroupMigrationService,
     private val syncDataTaskDao: AuthSyncDataTaskDao,
     private val rbacCommonService: RbacCommonService,
     private val authResourceGroupMemberDao: AuthResourceGroupMemberDao,
@@ -218,6 +222,18 @@ class RbacPermissionMigrateService(
         return true
     }
 
+    override fun migrateProjectGroups(
+        migrationDTO: ProjectGroupMigrationDTO
+    ): ProjectGroupMigrationResultDTO {
+        return projectGroupMigrationService.migrate(migrationDTO)
+    }
+
+    override fun migrateProjectGroupsIncremental(
+        migrationDTO: ProjectGroupIncrementalMigrationDTO
+    ): ProjectGroupMigrationResultDTO {
+        return projectGroupMigrationService.migrateIncremental(migrationDTO)
+    }
+
     /**
      * 根据参数组合确定重置类型
      */
@@ -291,7 +307,7 @@ class RbacPermissionMigrateService(
             migrateResourceService.resetOtherProjectLevelGroupPermissions(
                 projectCode = projectCode,
                 projectName = projectInfo.resourceName,
-                registerMonitorPermission = false,
+                registerMonitorPermission = true,
                 filterResourceTypes = filterResourceTypes,
                 filterActions = filterActions
             )

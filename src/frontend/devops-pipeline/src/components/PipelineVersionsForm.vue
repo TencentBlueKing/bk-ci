@@ -100,6 +100,7 @@
                     <bk-checkbox
                         v-if="isInstance && !isInitInstance"
                         class="instance_reset"
+                        :disabled="disabled || isFollowTemplate"
                         :value="resetBuildNo"
                         @change="handleCheckChange"
                     >

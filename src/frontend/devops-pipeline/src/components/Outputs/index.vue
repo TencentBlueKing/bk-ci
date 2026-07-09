@@ -591,6 +591,9 @@
             currentTab: function () {
                 this.keyWord = ''
                 this.artifactValue = []
+                // 切换 tab 时重置当前选中的输出
+                this.activeOutput = ''
+                this.activeOutputDetail = null
                 this.$nextTick(this.init)
             },
             '$route.params.buildNo' () {

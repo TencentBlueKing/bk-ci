@@ -9,6 +9,7 @@ import com.tencent.devops.common.pipeline.pojo.setting.BuildCancelPolicy
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.common.pipeline.pojo.setting.Subscription
+import com.tencent.devops.common.pipeline.utils.PIPELINE_RES_NUM_MIN
 import com.tencent.devops.model.process.tables.TPipelineTemplateSettingVersion
 import com.tencent.devops.model.process.tables.records.TPipelineTemplateSettingVersionRecord
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateSettingCommonCondition
@@ -277,6 +278,7 @@ class PipelineTemplateSettingDao {
                 JsonUtil.to(self, PipelineAsCodeSettings::class.java)
             },
             buildCancelPolicy = BuildCancelPolicy.parse(this.buildCancelPolicy),
+            maxPipelineResNum = PIPELINE_RES_NUM_MIN,
             creator = creator,
             updater = updater
         )

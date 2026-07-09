@@ -274,14 +274,18 @@
                 this.aliasName = query.searchName || JSON.parse(localStorage.getItem(CODE_REPOSITORY_SEARCH_VAL)) || ''
                 this.startPage = page
                 this.defaultPagesize = Number(limit)
-                if (id) {
+                
+                // 如果 URL 带有 searchName 和 reason 参数，需要自动展开详情页
+                const hasSearchNameAndReason = query.searchName && query.reason
+                
+                if (id || hasSearchNameAndReason) {
                     this.isListFlod = true
-                    this.curRepoId = id
+                    this.curRepoId = id || query.id
                     this.$router.push({
                         query: {
                             ...this.$route.query,
-                            scmType,
-                            id,
+                            scmType: scmType || query.scmType,
+                            id: id || query.id,
                             page,
                             limit
                         }

@@ -1,0 +1,11 @@
+/**
+ * IamIframe Component Styles
+ * Uses CSS variables from /src/styles/variables.css
+ */
+
+.iamIframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+  background-color: var(--bg-primary);
+}

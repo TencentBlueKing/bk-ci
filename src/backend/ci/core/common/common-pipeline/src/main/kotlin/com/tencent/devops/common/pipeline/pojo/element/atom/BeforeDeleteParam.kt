@@ -33,5 +33,5 @@ open class BeforeDeleteParam(
     open val userId: String,
     open val projectId: String,
     open val pipelineId: String,
-    open val channelCode: ChannelCode = ChannelCode.BS
+    open val channelCode: ChannelCode = ChannelCode.getRequestChannelCode()
 )

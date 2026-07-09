@@ -33,6 +33,7 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeTGitWebHookTr
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
 import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
+import com.tencent.devops.common.webhook.enums.code.tgit.TGitPushOperationKind
 import com.tencent.devops.common.webhook.pojo.code.WebHookParams
 import com.tencent.devops.common.webhook.util.WebhookUtils
 import org.springframework.stereotype.Service
@@ -102,9 +103,20 @@ class TGitWebhookElementParams : ScmWebhookElementParams<CodeTGitWebHookTriggerE
                     )
                 }
 
+                // tag 事件默认监听创建和删除动作
+                eventType == CodeEventType.TAG_PUSH && params.includeTagAction == null -> {
+                    params.includeTagAction = WebhookUtils.joinToString(
+                        listOf(
+                            TGitPushOperationKind.CREAT.value,
+                            TGitPushOperationKind.DELETE.value
+                        )
+                    )
+                }
+
                 else -> {
                     params.includeMrAction = joinToString(includeMrAction)
                     params.includePushAction = joinToString(includePushAction)
+                    params.includeTagAction = joinToString(includeTagAction)
                 }
             }
             params.eventType = eventType
@@ -127,6 +139,8 @@ class TGitWebhookElementParams : ScmWebhookElementParams<CodeTGitWebHookTriggerE
             params.includeIssueAction = joinToString(includeIssueAction)
             params.includeNoteComment = includeNoteComment
             params.includeNoteTypes = joinToString(includeNoteTypes)
+            params.includeLabels = EnvUtils.parseEnv(includeLabels ?: "", variables)
+            params.excludeLabels = EnvUtils.parseEnv(excludeLabels ?: "", variables)
             return params
         }
     }

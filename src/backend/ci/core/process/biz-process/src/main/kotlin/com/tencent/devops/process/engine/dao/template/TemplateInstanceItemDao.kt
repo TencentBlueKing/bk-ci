@@ -166,6 +166,18 @@ class TemplateInstanceItemDao {
         }
     }
 
+    fun getTemplateInstanceItem(
+        dslContext: DSLContext,
+        projectId: String,
+        itemId: String
+    ): PipelineTemplateInstanceItem? {
+        with(TTemplateInstanceItem.T_TEMPLATE_INSTANCE_ITEM) {
+            return dslContext.selectFrom(this)
+                .where(PROJECT_ID.eq(projectId).and(ID.eq(itemId)))
+                .fetchOne()?.convert()
+        }
+    }
+
     fun getTemplateInstanceItemList(
         dslContext: DSLContext,
         status: String,
@@ -335,6 +347,10 @@ class TemplateInstanceItemDao {
                 .apply {
                     record.status?.let { set(STATUS, it.name) }
                     record.errorMessage?.let { set(ERROR_MESSAGE, it) }
+                    record.beforePipelineVersion?.let { set(BEFORE_PIPELINE_VERSION, it) }
+                    record.afterPipelineVersion?.let { set(AFTER_PIPELINE_VERSION, it) }
+                    record.beforeTemplateVersion?.let { set(BEFORE_TEMPLATE_VERSION, it) }
+                    record.afterTemplateVersion?.let { set(AFTER_TEMPLATE_VERSION, it) }
                 }
                 .set(UPDATE_TIME, now)
                 .where(buildQueryCondition(condition))
@@ -386,6 +402,10 @@ class TemplateInstanceItemDao {
             filePath = filePath,
             errorMessage = errorMessage,
             resetBuildNo = resetBuildNo,
+            beforePipelineVersion = beforePipelineVersion,
+            afterPipelineVersion = afterPipelineVersion,
+            beforeTemplateVersion = beforeTemplateVersion,
+            afterTemplateVersion = afterTemplateVersion,
             creator = creator,
             modifier = modifier,
             createTime = createTime.timestampmilli(),

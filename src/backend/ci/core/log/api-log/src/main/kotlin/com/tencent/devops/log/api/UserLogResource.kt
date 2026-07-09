@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.log.pojo.QueryLogStatus
 import com.tencent.devops.common.log.pojo.QueryLogs
+import com.tencent.devops.common.log.pojo.QueryLogsText
 import com.tencent.devops.common.log.pojo.enums.LogType
 import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
@@ -188,6 +189,93 @@ interface UserLogResource {
         @QueryParam("archiveFlag")
         archiveFlag: Boolean? = false
     ): Result<QueryLogs>
+
+    @Operation(summary = "获取当前查询条件下行号最大的N条日志")
+    @GET
+    @Path("/{projectId}/{pipelineId}/{buildId}/latest")
+    fun getLatestLogs(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @Parameter(description = "构建ID", required = true)
+        @PathParam("buildId")
+        buildId: String,
+        @Parameter(description = "是否包含调试日志", required = false)
+        @QueryParam("debug")
+        debug: Boolean? = false,
+        @Parameter(description = "过滤日志级别", required = false)
+        @QueryParam("logType")
+        logType: LogType? = null,
+        @Parameter(description = "返回日志条数", required = false)
+        @QueryParam("size")
+        size: Int? = 100,
+        @Parameter(description = "对应elementId", required = false)
+        @QueryParam("tag")
+        tag: String?,
+        @Parameter(description = "指定subTag", required = false)
+        @QueryParam("subTag")
+        subTag: String?,
+        @Parameter(description = "对应jobId", required = false)
+        @QueryParam("jobId")
+        jobId: String?,
+        @Parameter(description = "执行次数", required = false)
+        @QueryParam("executeCount")
+        executeCount: Int?,
+        @Parameter(description = "是否查询归档数据", required = false)
+        @QueryParam("archiveFlag")
+        archiveFlag: Boolean? = false
+    ): Result<QueryLogsText>
+
+    @Operation(summary = "获取两个行号之间的所有日志")
+    @GET
+    @Path("/{projectId}/{pipelineId}/{buildId}/middle")
+    fun getMiddleLogs(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @Parameter(description = "构建ID", required = true)
+        @PathParam("buildId")
+        buildId: String,
+        @Parameter(description = "起始行号", required = true)
+        @QueryParam("start")
+        start: Long,
+        @Parameter(description = "结尾行号，与起始行号区间最多包含10000行", required = true)
+        @QueryParam("end")
+        end: Long,
+        @Parameter(description = "是否包含调试日志", required = false)
+        @QueryParam("debug")
+        debug: Boolean? = false,
+        @Parameter(description = "过滤日志级别", required = false)
+        @QueryParam("logType")
+        logType: LogType? = null,
+        @Parameter(description = "对应elementId", required = false)
+        @QueryParam("tag")
+        tag: String?,
+        @Parameter(description = "指定subTag", required = false)
+        @QueryParam("subTag")
+        subTag: String?,
+        @Parameter(description = "对应jobId", required = false)
+        @QueryParam("jobId")
+        jobId: String?,
+        @Parameter(description = "执行次数", required = false)
+        @QueryParam("executeCount")
+        executeCount: Int?,
+        @Parameter(description = "是否查询归档数据", required = false)
+        @QueryParam("archiveFlag")
+        archiveFlag: Boolean? = false
+    ): Result<QueryLogsText>
 
     @Operation(summary = "下载日志接口")
     @GET

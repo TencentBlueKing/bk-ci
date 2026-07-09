@@ -34,7 +34,7 @@ import com.tencent.devops.project.pojo.Result
 @Suppress("ALL")
 interface OpProjectService {
 
-    fun updateProjectFromOp(userId: String, accessToken: String, projectInfoRequest: OpProjectUpdateInfoRequest): Int
+    fun updateProjectFromOp(userId: String, projectInfoRequest: OpProjectUpdateInfoRequest): Int
 
     fun synProject(projectCode: String, isRefresh: Boolean? = true): Result<Boolean>
 

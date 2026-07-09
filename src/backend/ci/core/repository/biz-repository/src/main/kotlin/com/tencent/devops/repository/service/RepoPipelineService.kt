@@ -191,6 +191,7 @@ class RepoPipelineService @Autowired constructor(
     ): SQLPage<RepoPipelineRefVo> {
         val repositoryId = HashUtil.decodeOtherIdToLong((repositoryHashId))
         // 仅展示蓝盾平台流水线关联的数据
+        val channelCode = ChannelCode.getRequestChannelCode().name
         val count = repoPipelineRefDao.countByRepo(
             dslContext = dslContext,
             projectId = projectId,
@@ -198,7 +199,7 @@ class RepoPipelineService @Autowired constructor(
             eventType = eventType,
             triggerConditionMd5 = triggerConditionMd5,
             taskRepoType = taskRepoType,
-            channel = ChannelCode.BS.name
+            channel = channelCode
         )
         val records = repoPipelineRefDao.listByRepo(
             dslContext = dslContext,
@@ -206,7 +207,7 @@ class RepoPipelineService @Autowired constructor(
             repositoryId = repositoryId,
             eventType = eventType,
             triggerConditionMd5 = triggerConditionMd5,
-            channel = ChannelCode.BS.name,
+            channel = channelCode,
             taskRepoType = taskRepoType,
             limit = limit,
             offset = offset

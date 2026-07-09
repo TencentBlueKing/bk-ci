@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.engine.service
 
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.auth.api.pojo.ProjectConditionDTO
@@ -36,6 +37,7 @@ import com.tencent.devops.common.db.pojo.ARCHIVE_SHARDING_DSL_CONTEXT
 import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.CommonUtils
+import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.control.lock.PipelineModelLock
 import com.tencent.devops.process.engine.control.lock.PipelineVersionLock
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
@@ -91,7 +93,6 @@ class PipelineRepositoryVersionService(
                     version = resourceVersion
                 )
             }
-
             // 更新流水线版本关联构建记录信息
             pipelineResourceVersionDao.updatePipelineVersionReferInfo(
                 dslContext = dslContext,
@@ -116,6 +117,11 @@ class PipelineRepositoryVersionService(
             pipelineVersionLock.lock()
             // #8161 软删除数据，前端无法查询到该版本
             val resource = pipelineResourceVersionDao.getVersionResource(dslContext, projectId, pipelineId, version)
+            if (resource?.referFlag == true) {
+                throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.ERROR_PIPELINE_CAN_NOT_DELETE_WHEN_HAVE_BUILD_RECORD,
+                )
+            }
             pipelineOperationLogService.addOperationLog(
                 userId = userId,
                 projectId = projectId,

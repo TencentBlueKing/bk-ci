@@ -30,17 +30,21 @@ package com.tencent.devops.dispatch.dao
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentDockerInfoDispatch
+import com.tencent.devops.dispatch.pojo.thirdpartyagent.TPAPipelineBuild
 import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
 import com.tencent.devops.dispatch.pojo.thirdpartyagent.AgentBuildInfo
 import com.tencent.devops.dispatch.pojo.thirdpartyagent.BuildJobType
 import com.tencent.devops.model.dispatch.tables.TDispatchThirdpartyAgentBuild
 import com.tencent.devops.model.dispatch.tables.records.TDispatchThirdpartyAgentBuildRecord
-import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.jooq.JSON
 import org.jooq.Result
 import org.jooq.impl.DSL
+import org.jooq.impl.DSL.field
 import org.springframework.stereotype.Repository
+import java.time.Instant
+import java.time.LocalDateTime
+import java.time.ZoneId
 
 @Repository
 @Suppress("ALL")
@@ -105,7 +109,9 @@ class ThirdPartyAgentBuildDao {
         containerHashId: String?,
         envId: Long?,
         ignoreEnvAgentIds: Set<String>?,
-        jobId: String?
+        jobId: String?,
+        startUser: String?,
+        stageId: String?
     ): Int {
         with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
             val now = LocalDateTime.now()
@@ -125,6 +131,14 @@ class ThirdPartyAgentBuildDao {
                     .set(VM_SEQ_ID, vmSeqId)
                     .set(WORKSPACE, thirdPartyAgentWorkspace)
                     .set(UPDATED_TIME, now)
+                    .set(
+                        TIME_INTERVAL, field(
+                            "TIMESTAMPDIFF(SECOND, {0}, {1})",
+                            Long::class.java,
+                            CREATED_TIME,
+                            now
+                        )
+                    )
                     .set(STATUS, PipelineTaskStatus.QUEUE.status)
                     .set(AGENT_IP, agentIp)
                     .set(NODE_ID, nodeId)
@@ -141,6 +155,8 @@ class ThirdPartyAgentBuildDao {
                     .set(ENV_ID, envId)
                     .set(IGNORE_ENV_AGENT_IDS, ignoreEnvAgentIdsJson)
                     .set(JOB_ID, jobId)
+                    .set(START_USER, startUser)
+                    .set(STAGE_ID, stageId)
                     .where(ID.eq(preRecord.id)).execute()
             }
             return dslContext.insertInto(
@@ -164,7 +180,9 @@ class ThirdPartyAgentBuildDao {
                 CONTAINER_HASH_ID,
                 ENV_ID,
                 IGNORE_ENV_AGENT_IDS,
-                JOB_ID
+                JOB_ID,
+                START_USER,
+                STAGE_ID
             ).values(
                 projectId,
                 agentId,
@@ -189,7 +207,9 @@ class ThirdPartyAgentBuildDao {
                 containerHashId,
                 envId,
                 ignoreEnvAgentIdsJson,
-                jobId
+                jobId,
+                startUser,
+                stageId
             ).execute()
         }
     }
@@ -202,9 +222,18 @@ class ThirdPartyAgentBuildDao {
         ids: Set<Long>
     ): Int {
         with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
+            val now = LocalDateTime.now()
             return dslContext.update(this)
                 .set(STATUS, PipelineTaskStatus.FAILURE.status)
-                .set(UPDATED_TIME, LocalDateTime.now())
+                .set(UPDATED_TIME, now)
+                .set(
+                    TIME_INTERVAL, field(
+                        "TIMESTAMPDIFF(SECOND, {0}, {1})",
+                        Long::class.java,
+                        CREATED_TIME,
+                        now
+                    )
+                )
                 .where(ID.`in`(ids))
                 .execute()
         }
@@ -241,13 +270,25 @@ class ThirdPartyAgentBuildDao {
         }
     }
 
-    fun updateStatus(dslContext: DSLContext, id: Long, status: PipelineTaskStatus): Int {
+    fun updateStatus(dslContext: DSLContext, id: Long, status: PipelineTaskStatus, timeInterval: Long?): Int {
         with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
-            return dslContext.update(this)
+            val now = LocalDateTime.now()
+            val dsl = dslContext.update(this)
                 .set(STATUS, status.status)
-                .set(UPDATED_TIME, LocalDateTime.now())
-                .where(ID.eq(id))
-                .execute()
+                .set(UPDATED_TIME, now)
+            if (timeInterval != null) {
+                dsl.set(TIME_INTERVAL, timeInterval)
+            } else {
+                dsl.set(
+                    TIME_INTERVAL, timeInterval ?: field(
+                        "TIMESTAMPDIFF(SECOND, {0}, {1})",
+                        Long::class.java,
+                        CREATED_TIME,
+                        now
+                    )
+                )
+            }
+            return dsl.where(ID.eq(id)).execute()
         }
     }
 
@@ -443,6 +484,260 @@ class ThirdPartyAgentBuildDao {
                 .fetch().map {
                     it[AGENT_ID] to (it["COUNT"] as Int)
                 }.toMap()
+        }
+    }
+
+    fun countAgentBuildPipelineJob(
+        dslContext: DSLContext,
+        projectId: String,
+        agentId: String?,
+        envId: Long?,
+        startTime: Long?,
+        endTime: Long?,
+        pipelineId: String?,
+        jobId: String?,
+        creator: String?
+    ): Pair<Long, Long> {
+        if (agentId.isNullOrBlank() && envId == null) {
+            return Pair(0L, 0L)
+        }
+        with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
+            val dsl = dslContext.select(
+                DSL.countDistinct(PIPELINE_ID).`as`("PIPELINE_COUNT"),
+                DSL.countDistinct(PIPELINE_ID, JOB_ID).`as`("JOB_COUNT")
+            ).from(this)
+                .where(PROJECT_ID.eq(projectId))
+
+            if (!agentId.isNullOrBlank()) {
+                dsl.and(AGENT_ID.eq(agentId))
+            }
+            if (envId != null) {
+                dsl.and(ENV_ID.eq(envId))
+            }
+            if (startTime != null) {
+                dsl.and(
+                    CREATED_TIME.ge(
+                        LocalDateTime.ofInstant(Instant.ofEpochSecond(startTime), ZoneId.systemDefault())
+                    )
+                )
+            }
+            if (endTime != null) {
+                dsl.and(
+                    CREATED_TIME.le(
+                        LocalDateTime.ofInstant(Instant.ofEpochSecond(endTime), ZoneId.systemDefault())
+                    )
+                )
+            }
+            if (!pipelineId.isNullOrBlank()) {
+                dsl.and(PIPELINE_ID.eq(pipelineId))
+            }
+            if (!jobId.isNullOrBlank()) {
+                dsl.and(JOB_ID.eq(jobId))
+            }
+            if (!creator.isNullOrBlank()) {
+                dsl.and(START_USER.eq(creator))
+            }
+
+            val result = dsl.and(JOB_ID.isNotNull).fetchOne()
+            return Pair(
+                result?.get("PIPELINE_COUNT", Long::class.java) ?: 0L,
+                result?.get("JOB_COUNT", Long::class.java) ?: 0L
+            )
+        }
+    }
+
+    fun fetchAgentBuildPipelineJob(
+        dslContext: DSLContext,
+        projectId: String,
+        agentId: String?,
+        envId: Long?,
+        limit: Int,
+        offset: Int,
+        startTime: Long?,
+        endTime: Long?,
+        pipelineId: String?,
+        jobId: String?,
+        creator: String?
+    ): List<TPAPipelineBuild> {
+        if (agentId.isNullOrBlank() && envId == null) {
+            return emptyList()
+        }
+        with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
+            val dsl = dslContext.select(
+                PIPELINE_ID,
+                PIPELINE_NAME,
+                JOB_ID,
+                TASK_NAME,
+                DSL.count().`as`("BUILD_COUNT"),
+                DSL.max(CREATED_TIME).`as`("LAST_BUILD_TIME"),
+                DSL.avg(TIME_INTERVAL).`as`("AVG_TIME_INTERVAL"),
+                DSL.field(
+                    "SUBSTRING_INDEX(GROUP_CONCAT({0} ORDER BY {1} DESC SEPARATOR ','), ',', 1)",
+                    Long::class.java,
+                    VM_SEQ_ID,
+                    ID
+                ).`as`("LAST_VM_SEQ_ID"),
+                DSL.field(
+                    "SUBSTRING_INDEX(GROUP_CONCAT({0} ORDER BY {1} DESC SEPARATOR ','), ',', 1)",
+                    String::class.java,
+                    STAGE_ID,
+                    ID
+                ).`as`("STAGE_ID"),
+            ).from(this).where(PROJECT_ID.eq(projectId))
+            if (!agentId.isNullOrBlank()) {
+                dsl.and(AGENT_ID.eq(agentId))
+            }
+            if (envId != null) {
+                dsl.and(ENV_ID.eq(envId))
+            }
+            // 新增条件查询
+            if (startTime != null) {
+                dsl.and(
+                    CREATED_TIME.ge(
+                        LocalDateTime.ofInstant(
+                            Instant.ofEpochSecond(startTime),
+                            ZoneId.systemDefault()
+                        )
+                    )
+                )
+            }
+            if (endTime != null) {
+                dsl.and(
+                    CREATED_TIME.le(
+                        LocalDateTime.ofInstant(
+                            Instant.ofEpochSecond(endTime),
+                            ZoneId.systemDefault()
+                        )
+                    )
+                )
+            }
+            if (!pipelineId.isNullOrBlank()) {
+                dsl.and(PIPELINE_ID.eq(pipelineId))
+            }
+            if (!jobId.isNullOrBlank()) {
+                dsl.and(JOB_ID.eq(jobId))
+            }
+            if (!creator.isNullOrBlank()) {
+                dsl.and(START_USER.eq(creator))
+            }
+            return dsl.and(JOB_ID.isNotNull)
+                .groupBy(PIPELINE_ID, JOB_ID)
+                .orderBy(ID.desc())
+                .limit(limit)
+                .offset(offset)
+                .fetch()
+                .map {
+                    TPAPipelineBuild(
+                        pipelineId = it.value1(),
+                        pipelineName = it.value2(),
+                        jobId = it.value3(),
+                        jobName = it.value4(),
+                        buildCount = it.value5() as Int,
+                        lastBuildTime = it.value6(),
+                        avgTimeInterval = it.value7()?.toLong(),
+                        lastContainerId = it.value8(),
+                        stageId = it.value9()
+                    )
+                }
+        }
+    }
+
+    fun fetchPipelineIdAndName(
+        dslContext: DSLContext,
+        projectId: String,
+        agentId: String?,
+        envId: Long?,
+        pipelineName: String?
+    ): List<Pair<String, String>> {
+        with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
+            val dsl = dslContext.select(
+                PIPELINE_ID,
+                PIPELINE_NAME
+            ).from(this).where(PROJECT_ID.eq(projectId))
+            if (!agentId.isNullOrBlank()) {
+                dsl.and(AGENT_ID.eq(agentId))
+            }
+            if (envId != null) {
+                dsl.and(ENV_ID.eq(envId))
+            }
+            if (!pipelineName.isNullOrBlank()) {
+                dsl.and(PIPELINE_NAME.like("%$pipelineName%"))
+            }
+            return dsl.and(JOB_ID.isNotNull)
+                .groupBy(PIPELINE_ID)
+                .orderBy(ID.desc())
+                .fetch()
+                .map {
+                    Pair(
+                        it.value1(),
+                        it.value2()
+                    )
+                }
+        }
+    }
+
+    fun fetchJobIdAndName(
+        dslContext: DSLContext,
+        projectId: String,
+        agentId: String?,
+        envId: Long?,
+        jobName: String?
+    ): List<Pair<String, String>> {
+        with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
+            val dsl = dslContext.select(
+                JOB_ID,
+                TASK_NAME
+            ).from(this).where(PROJECT_ID.eq(projectId))
+            if (!agentId.isNullOrBlank()) {
+                dsl.and(AGENT_ID.eq(agentId))
+            }
+            if (envId != null) {
+                dsl.and(ENV_ID.eq(envId))
+            }
+            if (!jobName.isNullOrBlank()) {
+                dsl.and(TASK_NAME.like("%$jobName%"))
+            }
+            return dsl.and(JOB_ID.isNotNull)
+                .groupBy(JOB_ID)
+                .orderBy(ID.desc())
+                .fetch()
+                .map {
+                    Pair(
+                        it.value1(),
+                        it.value2()
+                    )
+                }
+        }
+    }
+
+    fun fetchCreator(
+        dslContext: DSLContext,
+        projectId: String,
+        agentId: String?,
+        envId: Long?,
+        creator: String?
+    ): List<String> {
+        with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
+            val dsl = dslContext.selectDistinct(
+                START_USER
+            ).from(this).where(PROJECT_ID.eq(projectId))
+            if (!agentId.isNullOrBlank()) {
+                dsl.and(AGENT_ID.eq(agentId))
+            }
+            if (envId != null) {
+                dsl.and(ENV_ID.eq(envId))
+            }
+            if (!creator.isNullOrBlank()) {
+                dsl.and(START_USER.like("%$creator%"))
+            }
+            return dsl.and(JOB_ID.isNotNull)
+                .and(START_USER.isNotNull)
+                .groupBy(START_USER)
+                .orderBy(ID.desc())
+                .fetch()
+                .map {
+                    it.value1()
+                }
         }
     }
 }

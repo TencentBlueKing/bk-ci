@@ -37,6 +37,7 @@ import com.tencent.devops.process.service.template.v2.PipelineTemplateInfoServic
 import com.tencent.devops.process.service.template.v2.PipelineTemplateResourceService
 import com.tencent.devops.process.service.template.v2.PipelineTemplateSettingService
 import com.tencent.devops.process.service.template.v2.version.PipelineTemplateVersionCreateContext
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -61,6 +62,9 @@ class PipelineTemplateDraftRollbackReqConverter @Autowired constructor(
         version: Long?,
         request: PipelineTemplateVersionReq
     ): PipelineTemplateVersionCreateContext {
+        logger.info(
+            "Start to convert draft rollback request|$projectId|$templateId|$templateId|$version"
+        )
         if (templateId == null) {
             throw IllegalArgumentException("templateId is null")
         }
@@ -97,5 +101,9 @@ class PipelineTemplateDraftRollbackReqConverter @Autowired constructor(
             pTemplateResourceWithoutVersion = pTemplateResourceWithoutVersion,
             pTemplateSettingWithoutVersion = baseSetting
         )
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(PipelineTemplateDraftRollbackReqConverter::class.java)
     }
 }

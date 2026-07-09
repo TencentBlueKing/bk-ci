@@ -38,15 +38,15 @@
                     paramId: 'key',
                     paramValue: 'value',
                     initRequest: initRequest,
-                    options: cascadeProps.children.options,
+                    options: cascadeProps?.children?.options,
                     name: childrenKey,
                     value: value[childrenKey],
                     searchUrl: childrenSearchUrl,
-                    replaceKey: cascadeProps.children.replaceKey,
+                    replaceKey: cascadeProps?.children?.replaceKey,
                     disabled: disabled || (readOnly && readOnlyCheck),
                     placeholder: placeholder,
                     handleChange: (name, value) => handleUpdateChildrenValue(name, value),
-                    key: cascadeProps.children.options.length
+                    key: cascadeProps?.children?.options.length
                 }
             )"
         />
@@ -125,10 +125,10 @@
         },
         computed: {
             parentKey () {
-                return this.cascadeProps.id || ''
+                return this?.cascadeProps?.id || ''
             },
             childrenKey () {
-                return this.cascadeProps.children.id || ''
+                return this?.cascadeProps?.children?.id || ''
             },
             popoverOptions () {
                 return {
@@ -160,11 +160,12 @@
                     'display-key': this.displayKey,
                     'show-select-all': this.showSelectAll
                 }
-                if (this.cascadeProps.searchUrl) props['remote-method'] = this.remoteMethod
+                if (this.cascadeProps?.searchUrl) props['remote-method'] = this.remoteMethod
                 return props
             },
 
             childrenSearchUrl () {
+                if (!this.value[this.parentKey]) return ''
                 return this.cascadeProps?.children?.searchUrl?.replace('{parentValue}', this.value[this.parentKey])
             }
         },
@@ -181,7 +182,7 @@
                     key: this.value[this.parentKey],
                     value: this.value[this.parentKey]
                 })
-                this.cascadeProps.children.options.push({
+                this.cascadeProps?.children?.options.push({
                     key: this.value[this.childrenKey],
                     value: this.value[this.childrenKey]
                 })
@@ -211,8 +212,8 @@
                     clearTimeout(this.remoteMethod.timeId)
                     this.remoteMethod.timeId = setTimeout(async () => {
                         try {
-                            const regExp = new RegExp(this.cascadeProps.replaceKey, 'g')
-                            const url = this.cascadeProps.searchUrl.replace(regExp, name)
+                            const regExp = new RegExp(this.cascadeProps?.replaceKey, 'g')
+                            const url = this.cascadeProps?.searchUrl.replace(regExp, name)
                             const data = await this.$ajax.get(url)
                             this.listData = this.getResponseData(data)
                             resolve()
@@ -226,8 +227,8 @@
 
             async toggleVisible (value) {
                 if (!value) return
-                const regExp = new RegExp(this.cascadeProps.replaceKey, 'g')
-                const url = this.cascadeProps.searchUrl.replace(regExp, '')
+                const regExp = new RegExp(this.cascadeProps?.replaceKey, 'g')
+                const url = this.cascadeProps?.searchUrl.replace(regExp, '')
                 const data = await this.$ajax.get(url)
                 this.listData = this.getResponseData(data)
             },

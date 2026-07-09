@@ -54,6 +54,17 @@ interface StoreNotifyService {
     ): Result<Boolean>
 
     /**
+     * 使用模板发送消息到指定企业微信群
+     */
+    fun sendNotifyMessageToWeworkGroup(
+        userId: String,
+        templateCode: String,
+        weworkGroupIds: Set<String>,
+        titleParams: Map<String, String>? = null,
+        bodyParams: Map<String, String>? = null
+    ): Result<Boolean>
+
+    /**
      * 发送组件发布审核结果通知消息
      * @param storeId 组件ID
      * @param auditType 审核类型

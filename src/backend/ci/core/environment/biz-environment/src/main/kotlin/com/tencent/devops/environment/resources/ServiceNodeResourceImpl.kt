@@ -34,12 +34,14 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.auth.api.ActionId
+import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.environment.api.ServiceNodeResource
 import com.tencent.devops.environment.pojo.NodeBaseInfo
 import com.tencent.devops.environment.pojo.NodeFetchReq
 import com.tencent.devops.environment.pojo.NodeWithPermission
+import com.tencent.devops.environment.pojo.enums.NodeOperatorStatus
 import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.environment.pojo.enums.NodeType
 import com.tencent.devops.environment.service.EnvService
@@ -75,6 +77,16 @@ class ServiceNodeResourceImpl @Autowired constructor(
     }
 
     @BkTimed(extraTags = ["operate", "getNode"])
+    override fun getRawNode(
+        userId: String,
+        projectId: String,
+        nodeHashId: String?,
+        nodeName: String?
+    ): Result<NodeBaseInfo> {
+        return Result(nodeService.getRawServerNode(userId, projectId, nodeHashId, nodeName))
+    }
+
+    @BkTimed(extraTags = ["operate", "getNode"])
     override fun listRawByEnvHashIds(
         userId: String,
         projectId: String,
@@ -99,9 +111,15 @@ class ServiceNodeResourceImpl @Autowired constructor(
     override fun listByHashIds(
         userId: String,
         projectId: String,
-        nodeHashIds: List<String>
+        nodeHashIds: List<String>,
+        checkPermission: Boolean?
     ): Result<List<NodeWithPermission>> {
-        return Result(nodeService.listByHashIds(userId, projectId, nodeHashIds))
+        return Result(nodeService.listByHashIds(
+            userId = userId,
+            projectId = projectId,
+            hashIds = nodeHashIds,
+            checkPermission = checkPermission != false
+        ))
     }
 
     override fun getNodeStatus(
@@ -136,6 +154,24 @@ class ServiceNodeResourceImpl @Autowired constructor(
     override fun deleteNodes(userId: String, projectId: String, nodeHashIds: List<String>): Result<Boolean> {
         nodeService.deleteNodes(userId, projectId, nodeHashIds.map { HashUtil.decodeIdToLong(it) })
         return Result(true)
+    }
+
+    override fun transferNode(
+        userId: String,
+        projectId: String,
+        targetProjectId: String,
+        nodeHashId: String?,
+        agentHashId: String?
+    ): Result<Boolean> {
+        return Result(
+            nodeService.transferNode(
+                userId = userId,
+                sourceProjectId = projectId,
+                targetProjectId = targetProjectId,
+                nodeHashId = nodeHashId,
+                agentHashId = agentHashId
+            )
+        )
     }
 
     @AuditEntry(actionId = ActionId.ENV_NODE_DELETE)
@@ -178,6 +214,7 @@ class ServiceNodeResourceImpl @Autowired constructor(
         keywords: String?,
         nodeType: NodeType?,
         nodeStatus: NodeStatus?,
+        operatorStatus: NodeOperatorStatus?,
         agentVersion: String?,
         osName: String?,
         latestBuildPipelineId: String?,
@@ -185,6 +222,7 @@ class ServiceNodeResourceImpl @Autowired constructor(
         latestBuildTimeEnd: Long?,
         sortType: String?,
         collation: String?,
+        createMode: Boolean?,
         data: NodeFetchReq?
     ): Result<Page<NodeWithPermission>> {
         return Result(
@@ -200,6 +238,7 @@ class ServiceNodeResourceImpl @Autowired constructor(
                 keywords = keywords,
                 nodeType = nodeType,
                 nodeStatus = nodeStatus,
+                operatorStatus = operatorStatus,
                 agentVersion = agentVersion,
                 osName = osName,
                 latestBuildPipelineId = latestBuildPipelineId,
@@ -207,8 +246,18 @@ class ServiceNodeResourceImpl @Autowired constructor(
                 latestBuildTimeEnd = latestBuildTimeEnd,
                 sortType = sortType,
                 collation = collation,
+                createMode = createMode,
                 data = data
             )
         )
+    }
+
+    override fun checkNodePermission(
+        userId: String,
+        projectId: String,
+        nodeId: Long,
+        permission: AuthPermission
+    ): Result<Boolean> {
+        return Result(nodeService.checkNodePermission(userId, projectId, nodeId, permission))
     }
 }

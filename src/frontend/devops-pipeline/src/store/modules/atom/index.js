@@ -90,6 +90,7 @@ export default {
         isElementModified: false,
         isGetPluginHeadTab: false,
         paramSets: [],
+        tempParamSet: null,
         storeStatus: ''
     },
     mutations,

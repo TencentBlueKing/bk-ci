@@ -20,6 +20,7 @@
 import Vue from 'vue'
 
 const prefix = 'environment/api'
+const authPrefix = 'auth/api'
 const vue = new Vue()
 
 const actions = {
@@ -92,9 +93,9 @@ const actions = {
     /**
      * 节点标签列表
      */
-    async requestNodeTagList ({ commit }, projectId) {
+    async requestNodeTagList ({ commit }, { projectId, createMode }) {
         try {
-            const res = await vue.$ajax.get(`${prefix}/user/nodetag/fetchTag?projectId=${projectId}`)
+            const res = await vue.$ajax.get(`${prefix}/user/nodetag/fetchTag?projectId=${projectId}&createMode=${createMode}`)
             commit('setNodeTagList', res || [])
             return res
         } catch (err) {
@@ -133,14 +134,6 @@ const actions = {
     },
     batchEditTag ({ commit }, { projectId, params }) {
         return vue.$ajax.post(`${prefix}/user/nodetag/batchEditTag?projectId=${projectId}`, params).then(response => {
-            return response
-        })
-    },
-    /**
-     * 环境的节点列表
-     */
-    requestEnvNodeList ({ commit }, { projectId, envHashId }) {
-        return vue.$ajax.post(`${prefix}/user/environment/${projectId}/${envHashId}/listNodes`).then(response => {
             return response
         })
     },
@@ -334,8 +327,8 @@ const actions = {
     removeProjectShare (_, { projectId, envHashId, sharedProjectId }) {
         return vue.$ajax.delete(`${prefix}/user/environment/${projectId}/${envHashId}/${sharedProjectId}/sharedProject`)
     },
-    enableNode (_, { projectId, envHashId, nodeHashId, enableNode }) {
-        return vue.$ajax.put(`${prefix}/user/environment/${projectId}/${envHashId}/enableNode/${nodeHashId}?enableNode=${enableNode}`)
+    enableNode (_, { projectId, envHashId, nodeHashId, enableNode, reason }) {
+        return vue.$ajax.put(`${prefix}/user/environment/${projectId}/${envHashId}/enableNode/${nodeHashId}?enableNode=${enableNode}`, { reason })
     },
     /**
     * 设置docker构建并发数
@@ -370,6 +363,33 @@ const actions = {
             return response
         })
     },
+    /**
+     * 获取操作日志列表
+     * GET /api/user/environment/{projectId}/operateLog/list
+     * @param {string} projectId - 项目ID
+     * @param {Object} params - 查询参数
+     * @param {string} params.envHashId - 环境HashID
+     * @param {string} params.operator - 操作人（可选）
+     * @param {number} params.page - 页码
+     * @param {number} params.pageSize - 每页条数
+     */
+    requestOperateLogList (_, { params }) {
+        const queryString = new URLSearchParams(params).toString()
+        return vue.$ajax.get(`${prefix}/user/environment//operateLog?${queryString}`).then(response => {
+            return response
+        })
+    },
+
+    /**
+     * 获取项目成员列表
+     * GET /api/user/auth/resource/member/{projectId}/listProjectMembers?memberType=user
+     * @param {string} projectId - 项目ID
+     */
+    requestProjectMembers (_, { projectId, page, pageSize }) {
+        return vue.$ajax.get(`${authPrefix}/user/auth/resource/member/${projectId}/listProjectMembers?memberType=user&page=${page}&pageSize=${pageSize}`).then(response => {
+            return response
+        })
+    }
 }
 
 export default actions

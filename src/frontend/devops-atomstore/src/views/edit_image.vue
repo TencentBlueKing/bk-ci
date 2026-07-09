@@ -299,7 +299,13 @@
                             >
                                 {{ $t('store.兼容式功能更新') }}
                             </bk-radio>
-                            <bk-radio value="COMPATIBILITY_FIX"> {{ $t('store.兼容式问题修正') }} </bk-radio>
+                            <bk-radio
+                                value="COMPATIBILITY_FIX"
+                                class="mr12"
+                            >
+                                {{ $t('store.兼容式问题修正') }}
+                            </bk-radio>
+                            <bk-radio value="HIS_VERSION_UPGRADE">{{ $t('store.历史大版本下的小版本更新') }}</bk-radio>
                         </template>
                     </bk-radio-group>
                 </bk-form-item>
@@ -308,13 +314,22 @@
                     property="version"
                     class="lh30"
                     :required="true"
+                    :rules="[requireRule]"
+                    ref="version"
+                    error-display-type="normal"
                 >
-                    <span>{{ $t('store.semverType', [form.version]) }}</span>
-                    <span
-                        class="version-modify"
-                        @click="form.releaseType = 'COMPATIBILITY_FIX'"
-                        v-if="form.releaseType === 'CANCEL_RE_RELEASE'"
-                    > {{ $t('store.修改') }} </span>
+                    <bk-input
+                        v-model="form.version"
+                        v-if="form.releaseType === 'HIS_VERSION_UPGRADE'"
+                    ></bk-input>
+                    <template v-else>
+                        <span>{{ $t('store.semverType', [form.version]) }}</span>
+                        <span
+                            class="version-modify"
+                            @click="form.releaseType = 'COMPATIBILITY_FIX'"
+                            v-if="form.releaseType === 'CANCEL_RE_RELEASE'"
+                        > {{ $t('store.修改') }} </span>
+                    </template>
                 </bk-form-item>
                 <bk-form-item
                     :label="$t('store.发布者')"
@@ -417,6 +432,7 @@
                     category: '',
                     agentTypeScope: []
                 },
+                showVersionList: [],
                 docsLink: this.BKCI_DOCS.IMAGE_GUIDE_DOC,
                 ticketList: [],
                 classifys: [],
@@ -454,22 +470,7 @@
         watch: {
             'form.releaseType': {
                 handler (val) {
-                    switch (val) {
-                        case 'NEW':
-                            this.form.version = '1.0.0'
-                            break
-                        case 'INCOMPATIBILITY_UPGRADE':
-                            this.form.version = this.originVersion.replace(/(.+)\.(.+)\.(.+)/, (a, b, c, d) => (`${+b + 1}.0.0`))
-                            break
-                        case 'COMPATIBILITY_UPGRADE':
-                            this.form.version = this.originVersion.replace(/(.+)\.(.+)\.(.+)/, (a, b, c, d) => (`${b}.${+c + 1}.0`))
-                            break
-                        case 'COMPATIBILITY_FIX':
-                            this.form.version = this.originVersion.replace(/(.+)\.(.+)\.(.+)/, (a, b, c, d) => (`${b}.${c}.${+d + 1}`))
-                            break
-                        default:
-                            break
-                    }
+                    this.setVersionByReleaseType(val)
                 },
                 immediate: true
             }
@@ -489,8 +490,21 @@
                 'requestImageTagList',
                 'requestTicketList',
                 'requestReleaseImage',
+                'getImageVersionInfo',
                 'fetchAgentTypes'
             ]),
+
+            // 根据 releaseType 设置对应的版本号
+            setVersionByReleaseType (releaseType) {
+                if (!releaseType) return
+                
+                const versionItem = this.showVersionList?.find(item => item.releaseType === releaseType)
+                if (versionItem) {
+                    this.form.version = versionItem.version
+                } else {
+                    this.form.version = ''
+                }
+            },
 
             changeShowAgentType (option) {
                 const settings = option.settings || {}
@@ -509,7 +523,28 @@
                     this.requestReleaseImage(this.form).then((imageId) => {
                         this.$bkMessage({ message: this.$t('store.提交成功'), theme: 'success' })
                         this.$router.push({ name: 'imageProgress', params: { imageId } })
-                    }).catch((err) => this.$bkMessage({ message: err.message || err, theme: 'error' })).finally(() => {
+                    }).catch((err) => {
+                        if (err.httpStatus === 200 && err.code === 2120302) {
+                            const h = this.$createElement
+                            const subHeader = h('p', {
+                                style: {
+                                    textDecoration: 'none',
+                                    cursor: 'pointer',
+                                    whiteSpace: 'normal',
+                                    textAlign: 'left',
+                                    lineHeight: '24px'
+                                }
+                            }, err.message || err)
+                            this.$bkInfo({
+                                type: 'error',
+                                title: this.$t('store.提交失败'),
+                                showFooter: false,
+                                subHeader
+                            })
+                        } else {
+                            this.$bkMessage({ message: err.message || err, theme: 'error' })
+                        }
+                    }).finally(() => {
                         this.isLoading = false
                     })
                 }).catch((validate) => {
@@ -562,6 +597,11 @@
                             this.form.releaseType = 'COMPATIBILITY_FIX'
                             break
                     }
+
+                    this.getImageVersionInfo(this.form.imageCode).then(versionInfo => {
+                        this.showVersionList = versionInfo?.showVersionList || []
+                        this.setVersionByReleaseType(this.form.releaseType)
+                    }).catch((err) => this.$bkMessage({ message: err.message || err, theme: 'error' }))
 
                     return Promise.all([
                         this.requestImageClassifys(),

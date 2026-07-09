@@ -332,7 +332,7 @@
             copyAsTemplateInstance (pipeline) {
                 const pipelineName = (pipeline.pipelineName + '_copy').substring(0, 128)
                 const { templateId, pipelineId, projectId, templateVersion } = pipeline
-                window.top.location.href = `${location.origin}/console/pipeline/${projectId}/template/${templateId}/${templateVersion}/instance/create/?pipelineName=${pipelineName}&pipelineId=${pipelineId}`
+                window.top.location.href = `${location.origin}/console/pipeline/${projectId}/template/${templateId}/${templateVersion}/instance/copy/?pipelineName=${pipelineName}&pipelineId=${pipelineId}`
             },
             afterRemovePipeline () {
                 this.$router.push({

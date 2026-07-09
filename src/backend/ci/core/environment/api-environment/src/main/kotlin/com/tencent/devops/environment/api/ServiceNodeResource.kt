@@ -34,8 +34,10 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.environment.pojo.NodeBaseInfo
 import com.tencent.devops.environment.pojo.NodeFetchReq
 import com.tencent.devops.environment.pojo.NodeWithPermission
+import com.tencent.devops.environment.pojo.enums.NodeOperatorStatus
 import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.environment.pojo.enums.NodeType
+import com.tencent.devops.common.auth.api.AuthPermission
 import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
@@ -78,7 +80,10 @@ interface ServiceNodeResource {
         @PathParam("projectId")
         projectId: String,
         @Parameter(description = "节点 hashIds", required = true)
-        nodeHashIds: List<String>
+        nodeHashIds: List<String>,
+        @Parameter(description = "是否校验权限，默认 true 校验权限")
+        @QueryParam("checkPermission")
+        checkPermission: Boolean? = true
     ): Result<List<NodeWithPermission>>
 
     @Operation(summary = "获取项目节点详情")
@@ -115,6 +120,24 @@ interface ServiceNodeResource {
         @Parameter(description = "节点 hashIds", required = true)
         nodeHashIds: List<String>
     ): Result<List<NodeBaseInfo>>
+
+    @Operation(summary = "根据hashId或别名获取节点信息(不校验权限)")
+    @GET
+    @Path("/projects/{projectId}/getRawNode")
+    fun getRawNode(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "节点 hashId (nodeHashId、nodeName 两个参数任选其一填入即可)", required = false)
+        @QueryParam("nodeHashId")
+        nodeHashId: String?,
+        @Parameter(description = "节点别名 (nodeHashId、nodeName 两个参数任选其一填入即可)", required = false)
+        @QueryParam("nodeName")
+        nodeName: String?
+    ): Result<NodeBaseInfo>
 
     @Operation(summary = "根据环境hashId获取项目节点列表(不校验权限)")
     @POST
@@ -183,6 +206,27 @@ interface ServiceNodeResource {
         nodeHashIds: List<String>
     ): Result<Boolean>
 
+    @Operation(summary = "迁移节点到目标项目")
+    @POST
+    @Path("/projects/{projectId}/transfer_node/{targetProjectId}/")
+    fun transferNode(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "源项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "目标项目ID", required = true)
+        @PathParam("targetProjectId")
+        targetProjectId: String,
+        @Parameter(description = "节点 hashId (nodeHashId、agentHashId 两个参数任选其一填入即可)", required = false)
+        @QueryParam("nodeHashId")
+        nodeHashId: String?,
+        @Parameter(description = "节点 agentId (nodeHashId、agentHashId 两个参数任选其一填入即可)", required = false)
+        @QueryParam("agentHashId")
+        agentHashId: String?
+    ): Result<Boolean>
+
     @Operation(summary = "删除节点")
     @DELETE
     @Path("/projects/{projectId}/delete_third_party_node")
@@ -232,48 +276,82 @@ interface ServiceNodeResource {
         @Parameter(description = "每页多少条", required = false)
         @QueryParam("pageSize")
         pageSize: Int? = 20,
-        @Parameter(description = "IP", required = false)
+        @Parameter(
+            description = "IP，支持多 IP 搜索：英文逗号分隔；单 IP 模糊匹配，多 IP 精确匹配（IN）",
+            required = false
+        )
         @QueryParam("nodeIp")
-        nodeIp: String?,
+        nodeIp: String? = null,
         @Parameter(description = "别名", required = false)
         @QueryParam("displayName")
-        displayName: String?,
+        displayName: String? = null,
         @Parameter(description = "创建人", required = false)
         @QueryParam("createdUser")
-        createdUser: String?,
+        createdUser: String? = null,
         @Parameter(description = "最后修改人", required = false)
         @QueryParam("lastModifiedUser")
-        lastModifiedUser: String?,
+        lastModifiedUser: String? = null,
         @Parameter(description = "关键字", required = false)
         @QueryParam("keywords")
-        keywords: String?,
+        keywords: String? = null,
         @Parameter(description = "节点类型|用途 (构建: THIRDPARTY;部署: CMDB)", required = false)
         @QueryParam("nodeType")
-        nodeType: NodeType?,
-        @Parameter(description = "Agent 状态", required = false)
+        nodeType: NodeType? = null,
+        @Parameter(
+            description = "Agent 状态，可选值：NORMAL / ABNORMAL / NOT_INSTALLED /" +
+                " NOT_IN_CC(部署节点才有) / NOT_IN_CMDB(部署节点才有)",
+            required = false
+        )
         @QueryParam("nodeStatus")
-        nodeStatus: NodeStatus?,
+        nodeStatus: NodeStatus? = null,
+        @Parameter(
+            description = "操作人状态过滤；NORMAL=正常，OPERATOR_CHANGED=负责人已变更；不传表示不过滤",
+            required = false
+        )
+        @QueryParam("operatorStatus")
+        operatorStatus: NodeOperatorStatus? = null,
         @Parameter(description = "Agent 版本", required = false)
         @QueryParam("agentVersion")
-        agentVersion: String?,
+        agentVersion: String? = null,
         @Parameter(description = "操作系统", required = false)
         @QueryParam("osName")
-        osName: String?,
+        osName: String? = null,
         @Parameter(description = "最近执行流水线", required = false)
         @QueryParam("latestBuildPipelineId")
-        latestBuildPipelineId: String?,
+        latestBuildPipelineId: String? = null,
         @Parameter(description = "最近构建执行时间 (开始)", required = false)
         @QueryParam("latestBuildTimeStart")
-        latestBuildTimeStart: Long?,
+        latestBuildTimeStart: Long? = null,
         @Parameter(description = "最近构建执行时间 (结束)", required = false)
         @QueryParam("latestBuildTimeEnd")
-        latestBuildTimeEnd: Long?,
+        latestBuildTimeEnd: Long? = null,
         @Parameter(description = "排序字段", required = false)
         @QueryParam("sortType")
-        sortType: String?,
+        sortType: String? = null,
         @Parameter(description = "正序ASC/倒序DESC (默认倒序)", required = false)
         @QueryParam("collation")
-        collation: String?,
-        data: NodeFetchReq?
+        collation: String? = null,
+        @Parameter(description = "是否是创作流模式", required = false)
+        @QueryParam("createMode")
+        createMode: Boolean? = null,
+        data: NodeFetchReq? = null
     ): Result<Page<NodeWithPermission>>
+
+    @Operation(summary = "校验用户对节点的权限")
+    @GET
+    @Path("/projects/{projectId}/checkNodePermission")
+    fun checkNodePermission(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "节点Id", required = true)
+        @QueryParam("nodeId")
+        nodeId: Long,
+        @Parameter(description = "权限类型", required = true)
+        @QueryParam("permission")
+        permission: AuthPermission
+    ): Result<Boolean>
 }

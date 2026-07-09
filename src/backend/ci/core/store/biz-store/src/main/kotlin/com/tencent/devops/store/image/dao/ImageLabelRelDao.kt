@@ -34,39 +34,28 @@ import com.tencent.devops.store.pojo.common.KEY_LABEL_CODE
 import com.tencent.devops.store.pojo.common.KEY_LABEL_ID
 import com.tencent.devops.store.pojo.common.KEY_LABEL_NAME
 import com.tencent.devops.store.pojo.common.KEY_LABEL_TYPE
+import com.tencent.devops.store.pojo.common.KEY_SERVICE_SCOPE
 import com.tencent.devops.store.pojo.common.KEY_UPDATE_TIME
 import org.jooq.DSLContext
-import org.jooq.Record1
-import org.jooq.Record6
+import org.jooq.Record
 import org.jooq.Result
 import org.springframework.stereotype.Repository
-import java.time.LocalDateTime
 
 @Suppress("ALL")
 @Repository
 class ImageLabelRelDao {
 
-    fun getImageIdsByLabelIds(
-        dslContext: DSLContext,
-        labelIds: Set<String>
-    ): Result<Record1<String>>? {
-        with(TImageLabelRel.T_IMAGE_LABEL_REL) {
-            return dslContext.select(IMAGE_ID).from(this)
-                .where(LABEL_ID.`in`(labelIds))
-                .fetch()
-        }
-    }
-
     fun getLabelsByImageId(
         dslContext: DSLContext,
         imageId: String
-    ): Result<Record6<String, String, String, Byte, LocalDateTime, LocalDateTime>>? {
+    ): Result<out Record> {
         val tLabel = TLabel.T_LABEL
         val tImageLabelRel = TImageLabelRel.T_IMAGE_LABEL_REL
         return dslContext.select(
             tLabel.ID.`as`(KEY_LABEL_ID),
             tLabel.LABEL_CODE.`as`(KEY_LABEL_CODE),
             tLabel.LABEL_NAME.`as`(KEY_LABEL_NAME),
+            tLabel.SERVICE_SCOPE.`as`(KEY_SERVICE_SCOPE),
             tLabel.TYPE.`as`(KEY_LABEL_TYPE),
             tLabel.CREATE_TIME.`as`(KEY_CREATE_TIME),
             tLabel.UPDATE_TIME.`as`(KEY_UPDATE_TIME)

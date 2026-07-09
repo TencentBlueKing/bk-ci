@@ -91,6 +91,8 @@
     } from '@/store/modules/atom/paramsConfig'
     import { COMMON_PARAM_PREFIX, isObject, isShallowEqual } from '@/utils/util'
 
+    const DEFAULT_DISPLAY_CONDITION_OPERATOR = '=='
+
     export default {
         components: {
             renderSortCategoryParams,
@@ -100,6 +102,10 @@
             disabled: {
                 type: Boolean,
                 default: false
+            },
+            allPipelineParamValues: {
+                type: Object,
+                default: null
             },
             paramValues: {
                 type: Object,
@@ -172,7 +178,7 @@
             paramList () {
                 return this.params.map(param => {
                     let restParam = {}
-                    if (param.type !== STRING || param.type !== TEXTAREA) {
+                    if (param.type !== STRING && param.type !== TEXTAREA) {
                         if (isRemoteType(param)) {
                             const isMultiple = param.type === 'MULTIPLE'
                             const val = (isMultiple && typeof this.paramValues?.[param.id] === 'string') ? this.paramValues[param.id].split(',').filter(i => i !== '') : this.paramValues?.[param.id]
@@ -186,7 +192,7 @@
                                 multiSelect: isMultiple,
                                 value: isMultiple && !Array.isArray(val) ? [] : val,
                                 allIdString: true,
-                                paramValues: this.paramValues,
+                                paramValues: this.allPipelineParamValues || this.paramValues,
                                 affected,
                                 affectedChanged,
                                 affectTips: affectedChanged && Object.keys(affected).length > 0 ? this.$t('relyChanged', [Object.keys(affected).join('/')]) : ''
@@ -260,7 +266,12 @@
                                 : {}
                         ),
                         // eslint-disable-next-line
-                        show: Object.keys(param.displayCondition ?? {}).every((key) => this.isEqual(this.paramValues[key], param.displayCondition[key])),
+                        show: Object.keys(param.displayCondition ?? {}).every((key) => {
+                            return this.isDisplayConditionMatched(
+                                (this.allPipelineParamValues ?? this.paramValues)[key],
+                                param.displayCondition[key]
+                            )
+                        }),
                         
                     }
                 })
@@ -287,6 +298,109 @@
                 } catch (error) {
                     return false
                 }
+            },
+            isDisplayConditionMatched (actualValue, conditionValue) {
+                const condition = this.parseDisplayCondition(conditionValue)
+                switch (condition.operator) {
+                    case '>=':
+                        return this.compareNumber(actualValue, condition.value, (a, b) => a >= b)
+                    case '<=':
+                        return this.compareNumber(actualValue, condition.value, (a, b) => a <= b)
+                    case '>':
+                        return this.compareNumber(actualValue, condition.value, (a, b) => a > b)
+                    case '<':
+                        return this.compareNumber(actualValue, condition.value, (a, b) => a < b)
+                    case 'IN':
+                        return this.hasIntersection(actualValue, condition.value)
+                    case 'CONTAINS':
+                        return this.containsValue(actualValue, condition.value)
+                    case 'STARTS_WITH':
+                        return String(actualValue ?? '').startsWith(String(condition.value ?? ''))
+                    case 'ENDS_WITH':
+                        return String(actualValue ?? '').endsWith(String(condition.value ?? ''))
+                    case DEFAULT_DISPLAY_CONDITION_OPERATOR:
+                    default:
+                        return this.isEqual(actualValue, condition.value)
+                }
+            },
+            parseDisplayCondition (conditionValue) {
+                try {
+                    const condition = typeof conditionValue === 'string'
+                        ? JSON.parse(conditionValue)
+                        : conditionValue
+                    if (isObject(condition) && condition.operator) {
+                        return {
+                            operator: this.normalizeDisplayConditionOperator(condition.operator),
+                            value: condition.value ?? ''
+                        }
+                    }
+                } catch (error) {
+                    // 兼容旧版 displayCondition: { key: value }
+                }
+                return {
+                    operator: DEFAULT_DISPLAY_CONDITION_OPERATOR,
+                    value: conditionValue
+                }
+            },
+            normalizeDisplayConditionOperator (operator) {
+                const operatorMap = {
+                    STARTWITH: 'STARTS_WITH',
+                    ENDWITH: 'ENDS_WITH'
+                }
+                const value = String(operator || DEFAULT_DISPLAY_CONDITION_OPERATOR).trim().toUpperCase()
+                return operatorMap[value] || value
+            },
+            compareNumber (actualValue, conditionValue, matcher) {
+                if (
+                    typeof actualValue === 'undefined'
+                    || actualValue === null
+                    || actualValue === ''
+                    || typeof conditionValue === 'undefined'
+                    || conditionValue === null
+                    || conditionValue === ''
+                ) {
+                    return false
+                }
+                const actualNumber = Number(actualValue)
+                const conditionNumber = Number(conditionValue)
+                if (Number.isNaN(actualNumber) || Number.isNaN(conditionNumber)) {
+                    return false
+                }
+                return matcher(actualNumber, conditionNumber)
+            },
+            hasIntersection (actualValue, conditionValue) {
+                const actualList = this.toValueList(actualValue)
+                const conditionList = this.toValueList(conditionValue)
+                return conditionList.some(value => actualList.includes(value))
+            },
+            containsValue (actualValue, conditionValue) {
+                const actualList = this.toValueList(actualValue)
+                const conditionList = this.toValueList(conditionValue)
+                if (actualList.length > 1 || Array.isArray(actualValue)) {
+                    return conditionList.some(value => actualList.includes(value))
+                }
+                return conditionList.some(value => String(actualValue ?? '').includes(value))
+            },
+            toValueList (value) {
+                if (Array.isArray(value)) {
+                    return value.map(item => String(item))
+                }
+                if (isObject(value)) {
+                    return this.toValueList(value.value)
+                }
+                if (typeof value === 'undefined' || value === null || value === '') {
+                    return []
+                }
+                const stringValue = String(value)
+                try {
+                    const parsedValue = JSON.parse(stringValue)
+                    if (Array.isArray(parsedValue) || isObject(parsedValue)) {
+                        return this.toValueList(parsedValue)
+                    }
+                } catch (error) {
+                    // 普通字符串按逗号分隔，兼容 MULTIPLE 变量值
+                }
+                return stringValue.split(',').filter(item => item !== '')
             },
             getParamComponentType (param) {
                 if (isRemoteType(param)) {
@@ -363,7 +477,7 @@
                 return false
             },
             async validateAll () {
-                const refsList = this.sortCategory ? this.$refs.categoryRenderParam : this.$refs.renderParam
+                const refsList = this.sortCategory ? (this.$refs.categoryRenderParam ?? []) : (this.$refs.renderParam ?? [])
                 for (let i = 0; i < refsList.length; i++) {
                     const ref = refsList[i]
                     const res = await ref.$validator?.validateAll?.()

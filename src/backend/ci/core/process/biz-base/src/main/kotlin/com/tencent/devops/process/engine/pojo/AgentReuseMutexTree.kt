@@ -8,7 +8,7 @@ import com.tencent.devops.common.pipeline.container.AgentReuseMutexType
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.EnvControlTaskType
-import com.tencent.devops.common.pipeline.type.agent.AgentType
+import com.tencent.devops.common.pipeline.type.agent.AgentDispatchType
 import com.tencent.devops.common.pipeline.type.agent.ReusedInfo
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentDispatch
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentEnvDispatchType
@@ -142,7 +142,7 @@ data class AgentReuseMutexTree(
     ): AgentReuseMutexType? {
         return when (dispatchType) {
             is ThirdPartyAgentIDDispatchType -> {
-                if (dispatchType.agentType == AgentType.ID) {
+                if (dispatchType.agentType == AgentDispatchType.ID) {
                     AgentReuseMutexType.AGENT_ID
                 } else {
                     AgentReuseMutexType.AGENT_NAME
@@ -150,7 +150,7 @@ data class AgentReuseMutexTree(
             }
 
             is ThirdPartyAgentEnvDispatchType -> {
-                if (dispatchType.agentType == AgentType.ID) {
+                if (dispatchType.agentType == AgentDispatchType.ID) {
                     AgentReuseMutexType.AGENT_ENV_ID
                 } else {
                     AgentReuseMutexType.AGENT_ENV_NAME

@@ -1,0 +1,85 @@
+.codeModeEditor {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+  gap: var(--spacing-md);
+}
+
+.toolbar {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: flex-start;
+  gap: var(--spacing-sm);
+}
+
+.editorWrapper {
+  flex: 1;
+  min-height: 0;
+  position: relative;
+}
+
+.panelFooter {
+  display: flex;
+  gap: var(--spacing-sm);
+  justify-content: flex-start;
+  width: 100%;
+}
+
+.previewPopup {
+  position: absolute;
+  right: 660px;
+  top: 64px;
+  width: 600px;
+  height: calc(100% - 80px);
+  background: white;
+  z-index: 10000;
+  border: 1px solid var(--color-border-default, #dcdee5);
+  border-radius: 4px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 2px 8px 0 rgba(0, 0, 0, 0.1);
+}
+
+.previewPopup::before {
+  content: '';
+  display: block;
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background: white;
+  border: 1px solid var(--color-border-default, #dcdee5);
+  border-left-color: white;
+  border-bottom-color: white;
+  transform: rotate(45deg);
+  right: -6px;
+  top: 136px;
+}
+
+.previewHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-shrink: 0;
+  margin-bottom: 12px;
+  font-size: 14px;
+  color: var(--color-text-primary, #313238);
+}
+
+.previewClose {
+  cursor: pointer;
+  font-size: 18px;
+  color: var(--color-text-secondary, #63656e);
+}
+
+.previewClose:hover {
+  color: var(--color-text-primary, #313238);
+}
+
+.previewContent {
+  flex: 1;
+  overflow: hidden;
+}

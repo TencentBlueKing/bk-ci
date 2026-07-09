@@ -28,10 +28,12 @@
 package com.tencent.devops.process.api.service
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_IMATE_SESSION_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.BuildHistoryPage
 import com.tencent.devops.common.api.pojo.ErrorType
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.pojo.SimpleResult
 import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
@@ -45,6 +47,7 @@ import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
 import com.tencent.devops.common.web.annotation.BkApiPermission
 import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.common.web.constant.BkApiHandleType
+import com.tencent.devops.common.web.constant.BkStyleEnum
 import com.tencent.devops.process.engine.pojo.BuildInfo
 import com.tencent.devops.process.pojo.BuildBasicInfo
 import com.tencent.devops.process.pojo.BuildHistory
@@ -54,12 +57,15 @@ import com.tencent.devops.process.pojo.BuildHistoryWithVars
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.BuildManualStartupInfo
 import com.tencent.devops.process.pojo.BuildTaskPauseInfo
+import com.tencent.devops.process.pojo.LightBuildHistory
 import com.tencent.devops.process.pojo.ReviewParam
 import com.tencent.devops.process.pojo.StageQualityRequest
 import com.tencent.devops.process.pojo.VmInfo
+import com.tencent.devops.process.pojo.pipeline.BuildDetailSimple
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import com.tencent.devops.process.pojo.pipeline.ModelRecord
 import com.tencent.devops.process.pojo.pipeline.PipelineLatestBuild
+import com.tencent.devops.process.pojo.task.PipelineFailTaskDetail
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -193,7 +199,10 @@ interface ServiceBuildResource {
         version: Int? = null,
         @Parameter(description = "渠道号，默认为BS", required = false)
         @QueryParam("channelCode")
-        channelCode: ChannelCode
+        channelCode: ChannelCode,
+        @Parameter(description = "分支版本, 仅PAC流水线有效", required = false)
+        @QueryParam("branch")
+        branch: String? = null
     ): Result<BuildManualStartupInfo>
 
     @Operation(summary = "搜索流水线参数")
@@ -398,6 +407,27 @@ interface ServiceBuildResource {
         channelCode: ChannelCode
     ): Result<ModelDetail>
 
+    @Operation(summary = "获取构建简化详情")
+    @GET
+    @Path("/{projectId}/{pipelineId}/{buildId}/detail/simple")
+    fun getBuildDetailSimple(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @Parameter(description = "构建ID", required = true)
+        @PathParam("buildId")
+        buildId: String,
+        @Parameter(description = "渠道号，默认为BS", required = false)
+        @QueryParam("channelCode")
+        channelCode: ChannelCode
+    ): Result<BuildDetailSimple>
+
     @Operation(summary = "根据执行次数获取构建详情")
     @GET
     @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/record")
@@ -528,8 +558,63 @@ interface ServiceBuildResource {
         triggerBranch: List<String>? = null,
         @Parameter(description = "触发人", required = false)
         @QueryParam("triggerUser")
-        triggerUser: List<String>? = null
+        triggerUser: List<String>? = null,
+        @Parameter(description = "触发事件", required = false)
+        @QueryParam("triggerEventTypes")
+        triggerEventTypes: List<String>? = null,
+        @Parameter(description = "触发节点HashId", required = false)
+        @QueryParam("triggerNodeHashIds")
+        triggerNodeHashIds: List<String>? = null
     ): Result<BuildHistoryPage<BuildHistory>>
+
+    @Operation(summary = "获取流水线轻量构建历史")
+    @GET
+    @Path("/{projectId}/{pipelineId}/history/simple")
+    fun getLightHistoryBuild(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @Parameter(description = "第几页", required = true, example = "1")
+        @QueryParam("page")
+        page: Int,
+        @Parameter(description = "每页多少条", required = true, example = "20")
+        @QueryParam("pageSize")
+        @BkField(patternStyle = BkStyleEnum.PAGE_SIZE_STYLE)
+        pageSize: Int,
+        @Parameter(description = "状态", required = false)
+        @QueryParam("status")
+        status: List<BuildStatus>? = null,
+        @Parameter(description = "开始于-开始时间(格式：yyyy-MM-dd HH:mm:ss)", required = false)
+        @QueryParam("startTimeFrom")
+        startTimeFrom: String? = null,
+        @Parameter(description = "开始于-结束时间(格式：yyyy-MM-dd HH:mm:ss)", required = false)
+        @QueryParam("startTimeTo")
+        startTimeTo: String? = null,
+        @Parameter(description = "结束于-开始时间(格式：yyyy-MM-dd HH:mm:ss)", required = false)
+        @QueryParam("endTimeFrom")
+        endTimeFrom: String? = null,
+        @Parameter(description = "结束于-结束时间(格式：yyyy-MM-dd HH:mm:ss)", required = false)
+        @QueryParam("endTimeTo")
+        endTimeTo: String? = null,
+        @Parameter(description = "构件号起始", required = false)
+        @QueryParam("buildNoStart")
+        buildNoStart: Int? = null,
+        @Parameter(description = "构件号结束", required = false)
+        @QueryParam("buildNoEnd")
+        buildNoEnd: Int? = null,
+        @Parameter(
+            description = "利用updateTime进行排序，true为降序，false为升序，null时以Build number 降序",
+            required = false, example = "null"
+        )
+        @QueryParam("updateTimeDesc")
+        updateTimeDesc: Boolean? = null
+    ): Result<Page<LightBuildHistory>>
 
     @Operation(summary = "获取构建详情")
     @GET
@@ -614,7 +699,7 @@ interface ServiceBuildResource {
         buildId: String,
         @Parameter(description = "渠道号，默认为BS", required = false)
         @QueryParam("channelCode")
-        channelCode: ChannelCode = ChannelCode.BS
+        channelCode: ChannelCode = ChannelCode.getRequestChannelCode()
     ): Result<BuildHistoryVariables>
 
     @Operation(summary = "获取构建中的变量值")
@@ -636,7 +721,7 @@ interface ServiceBuildResource {
         buildId: String,
         @Parameter(description = "渠道号，默认为BS", required = false)
         @QueryParam("channelCode")
-        channelCode: ChannelCode = ChannelCode.BS,
+        channelCode: ChannelCode = ChannelCode.getRequestChannelCode(),
         @Parameter(description = "变量名列表", required = true)
         variableNames: List<String>
     ): Result<Map<String, String>>
@@ -655,7 +740,7 @@ interface ServiceBuildResource {
         buildId: Set<String>,
         @Parameter(description = "渠道号，默认为BS", required = true)
         @QueryParam("channelCode")
-        channelCode: ChannelCode = ChannelCode.BS,
+        channelCode: ChannelCode = ChannelCode.getRequestChannelCode(),
         @QueryParam("startBeginTime")
         startBeginTime: String? = null,
         @QueryParam("endBeginTime")
@@ -678,7 +763,7 @@ interface ServiceBuildResource {
         pipelineId: String,
         @Parameter(description = "渠道号，默认为BS", required = true)
         @QueryParam("channelCode")
-        channelCode: ChannelCode = ChannelCode.BS,
+        channelCode: ChannelCode = ChannelCode.getRequestChannelCode(),
         @QueryParam("startBeginTime")
         startBeginTime: String? = null,
         @QueryParam("endBeginTime")
@@ -707,7 +792,7 @@ interface ServiceBuildResource {
         @QueryParam("version")
         debugVersion: Int? = null,
         @QueryParam("channelCode")
-        channelCode: ChannelCode = ChannelCode.BS
+        channelCode: ChannelCode = ChannelCode.getRequestChannelCode()
     ): Result<List<String>>
 
     @Operation(summary = "根据流水线id获取最新执行信息")
@@ -783,10 +868,7 @@ interface ServiceBuildResource {
         pipelineId: String,
         @Parameter(description = "流水线buildNum", required = true)
         @PathParam("buildNum")
-        buildNum: String,
-        @Parameter(description = "渠道号，默认为BS", required = false)
-        @QueryParam("channelCode")
-        channelCode: ChannelCode?
+        buildNum: String
     ): Result<BuildHistory?>
 
     @Operation(summary = "手动触发启动阶段")
@@ -883,7 +965,13 @@ interface ServiceBuildResource {
         startType: StartType,
         @Parameter(description = "指定草稿版本（为调试构建）", required = false)
         @QueryParam("version")
-        version: Int? = null
+        version: Int? = null,
+        @Parameter(description = "iMate会话ID", required = false)
+        @HeaderParam(AUTH_HEADER_IMATE_SESSION_ID)
+        imateSessionId: String? = null,
+        @Parameter(description = "分支版本, 仅PAC流水线有效, 此参数和version同时存在时, 优先使用version参数", required = false)
+        @QueryParam("branch")
+        branch: String? = null
     ): Result<BuildId>
 
     @Operation(summary = "取消并发起新构建")
@@ -997,4 +1085,26 @@ interface ServiceBuildResource {
         @BkField(required = false)
         debug: Boolean?
     ): Result<BuildInfo?>
+
+    @Operation(summary = "获取指定构建任务的失败任务信息")
+    @GET
+    @Path("projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/failed/tasks")
+    fun getBuildFailedTasks(
+        @Parameter(description = "项目ID", required = true)
+        @BkField(required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "流水线ID", required = true)
+        @PathParam("pipelineId")
+        @BkField(required = true)
+        pipelineId: String,
+        @Parameter(description = "构建ID", required = true)
+        @PathParam("buildId")
+        @BkField(required = true)
+        buildId: String,
+        @Parameter(description = "执行次数", required = false)
+        @QueryParam("executeCount")
+        @BkField(required = false)
+        executeCount: Int?
+    ): Result<List<PipelineFailTaskDetail>>
 }

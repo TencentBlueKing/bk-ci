@@ -27,7 +27,6 @@
 
 package com.tencent.devops.store.common.dao
 
-import com.tencent.bk.audit.constants.AuditAttributeNames.INSTANCE_NAME
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.model.store.tables.TStoreMember
 import com.tencent.devops.model.store.tables.TStoreProjectRel
@@ -35,13 +34,13 @@ import com.tencent.devops.model.store.tables.records.TStoreProjectRelRecord
 import com.tencent.devops.store.pojo.common.StoreProjectInfo
 import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import java.time.LocalDateTime
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record1
 import org.jooq.Record2
 import org.jooq.Result
 import org.springframework.stereotype.Repository
+import java.time.LocalDateTime
 
 @Suppress("ALL")
 @Repository
@@ -637,6 +636,71 @@ class StoreProjectRelDao {
                 .where(conditions)
                 .fetch()
         }
+    }
+
+    /**
+     * 根据项目和实例ID集合批量获取组件安装记录
+     * 通用查询，兼容各storeType；instanceIds为空时返回项目下该类型的全部安装记录
+     * @param storeProjectType 关联类型，默认COMMON(项目安装记录)；为null时不限制(INIT/COMMON/TEST全部)
+     * @param page 页码，与pageSize同时传入时才分页，否则返回全部
+     */
+    fun listInstalledComponents(
+        dslContext: DSLContext,
+        projectCode: String,
+        storeType: Byte,
+        instanceIds: Collection<String>? = null,
+        storeProjectType: StoreProjectTypeEnum? = StoreProjectTypeEnum.COMMON,
+        page: Int? = null,
+        pageSize: Int? = null
+    ): Result<TStoreProjectRelRecord> {
+        with(TStoreProjectRel.T_STORE_PROJECT_REL) {
+            val conditions = buildInstalledComponentsCondition(
+                projectCode = projectCode,
+                storeType = storeType,
+                instanceIds = instanceIds,
+                storeProjectType = storeProjectType
+            )
+            val baseStep = dslContext.selectFrom(this)
+                .where(conditions)
+                .orderBy(CREATE_TIME.desc())
+            return if (page != null && pageSize != null) {
+                baseStep.limit((page - 1) * pageSize, pageSize).fetch()
+            } else {
+                baseStep.fetch()
+            }
+        }
+    }
+
+    /**
+     * 统计项目下满足条件的组件安装记录数量
+     */
+    fun countInstalledComponents(
+        dslContext: DSLContext,
+        projectCode: String,
+        storeType: Byte,
+        instanceIds: Collection<String>? = null,
+        storeProjectType: StoreProjectTypeEnum? = StoreProjectTypeEnum.COMMON
+    ): Long {
+        with(TStoreProjectRel.T_STORE_PROJECT_REL) {
+            val conditions = buildInstalledComponentsCondition(projectCode, storeType, instanceIds, storeProjectType)
+            return dslContext.selectCount().from(this).where(conditions).fetchOne(0, Long::class.java)!!
+        }
+    }
+
+    private fun TStoreProjectRel.buildInstalledComponentsCondition(
+        projectCode: String,
+        storeType: Byte,
+        instanceIds: Collection<String>?,
+        storeProjectType: StoreProjectTypeEnum?
+    ): MutableList<Condition> {
+        val conditions = mutableListOf<Condition>()
+        conditions.add(PROJECT_CODE.eq(projectCode))
+        conditions.add(STORE_TYPE.eq(storeType))
+        storeProjectType?.let { conditions.add(TYPE.eq(it.type.toByte())) }
+        if (!instanceIds.isNullOrEmpty()) {
+            conditions.add(INSTANCE_ID.`in`(instanceIds))
+        }
+        return conditions
     }
 
     fun getUserTestProjectRelByStoreCode(

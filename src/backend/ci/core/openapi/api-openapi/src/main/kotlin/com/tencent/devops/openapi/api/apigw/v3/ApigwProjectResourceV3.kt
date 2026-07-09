@@ -26,7 +26,6 @@
  */
 package com.tencent.devops.openapi.api.apigw.v3
 
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ACCESS_TOKEN
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
@@ -73,10 +72,7 @@ interface ApigwProjectResourceV3 {
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
         @Parameter(description = "项目信息", required = true)
-        projectCreateInfo: ProjectCreateInfo,
-        @Parameter(description = "access_token")
-        @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
-        accessToken: String?
+        projectCreateInfo: ProjectCreateInfo
     ): Result<Boolean>
 
     @PUT
@@ -96,10 +92,7 @@ interface ApigwProjectResourceV3 {
         @PathParam("projectId")
         projectId: String,
         @Parameter(description = "项目信息", required = true)
-        projectUpdateInfo: ProjectUpdateInfo,
-        @Parameter(description = "access_token")
-        @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
-        accessToken: String?
+        projectUpdateInfo: ProjectUpdateInfo
     ): Result<Boolean>
 
     @GET
@@ -117,10 +110,7 @@ interface ApigwProjectResourceV3 {
         userId: String,
         @Parameter(description = "项目ID英文名标识", required = true)
         @PathParam("projectId")
-        projectId: String,
-        @Parameter(description = "access_token")
-        @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
-        accessToken: String?
+        projectId: String
     ): Result<ProjectVO?>
 
     @GET
@@ -135,10 +125,7 @@ interface ApigwProjectResourceV3 {
         apigwType: String?,
         @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
-        userId: String,
-        @Parameter(description = "access_token")
-        @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
-        accessToken: String?
+        userId: String
     ): Result<List<ProjectVO>>
 
     @GET

@@ -44,6 +44,7 @@ import com.tencent.devops.common.pipeline.pojo.transfer.YamlWithVersion
 import com.tencent.devops.common.pipeline.template.PipelineTemplateType
 import com.tencent.devops.process.engine.service.PipelineInfoExtService
 import com.tencent.devops.process.service.pipeline.PipelineTransferYamlService
+import com.tencent.devops.process.yaml.PipelineYamlCommonService
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -63,6 +64,7 @@ class PipelineTemplateGeneratorTest {
     private val resourceService: PipelineTemplateResourceService = mockk()
     private val settingService: PipelineTemplateSettingService = mockk()
     private val pipelineInfoExtService: PipelineInfoExtService = mockk()
+    private val pipelineYamlCommonService: PipelineYamlCommonService = mockk()
 
     private lateinit var generator: PipelineTemplateGenerator
 
@@ -76,7 +78,8 @@ class PipelineTemplateGeneratorTest {
             transferService = transferService,
             pipelineTemplateResourceService = resourceService,
             pipelineTemplateSettingService = settingService,
-            pipelineInfoExtService = pipelineInfoExtService
+            pipelineInfoExtService = pipelineInfoExtService,
+            pipelineYamlCommonService = pipelineYamlCommonService
         )
     }
 

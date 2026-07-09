@@ -36,6 +36,10 @@ const (
 	DevopsAgentEnableNewConsole = "DEVOPS_AGENT_ENABLE_NEW_CONSOLE"
 	// DevopsAgentEnableExitGroup 启动Agent杀掉构建进程组的兜底逻辑
 	DevopsAgentEnableExitGroup = "DEVOPS_AGENT_ENABLE_EXIT_GROUP"
+	// DevopsAgentDockerCapAdd 启动docker时的capadd参数，为空则不添加
+	DevopsAgentDockerCapAdd = "DEVOPS_AGENT_DOCKER_CAP_ADD"
+	// DevopsAgentContainerRuntime 容器运行时命令，默认 docker，可切换为 podman
+	DevopsAgentContainerRuntime = "DEVOPS_AGENT_CONTAINER_RUNTIME"
 
 	// CommonFileModePerm 公共文件权限
 	CommonFileModePerm os.FileMode = 0644
@@ -45,4 +49,15 @@ const (
 
 	// DevopsAgentTimeoutExitTime 设置一个次数，达到超时次数 Agent 进程退出
 	DevopsAgentTimeoutExitTime = "DEVOPS_AGENT_TIMEOUT_EXIT_TIME"
+
+	// DevopsAgentCloseFdInherit 如果设为true 则启动构建进程时关闭 fd 继承
+	// (Setpgid + stdin/stdout/stderr → /dev/null + ExtraFiles 清空)，
+	// Windows 使用 NoInheritHandles，防止 daemon 管道泄漏到构建进程
+	DevopsAgentCloseFdInherit = "DEVOPS_AGENT_CLOSE_FD_INHERIT"
+
+	// DevopsAgentEnableMCP 如果设为true 则随 agent 主进程启动 MCP Server 协程，
+	// 通过 Streamable HTTP (127.0.0.1) 暴露 agent 信息给外部 AI 工具，
+	// 端口号持久化到 .agent.properties 的 devops.mcp.server.port，
+	// 支持通过后台心跳环境变量动态启停
+	DevopsAgentEnableMCP = "DEVOPS_AGENT_ENABLE_MCP"
 )

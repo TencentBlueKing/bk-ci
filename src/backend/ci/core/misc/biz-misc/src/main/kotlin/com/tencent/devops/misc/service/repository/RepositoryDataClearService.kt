@@ -29,7 +29,6 @@ package com.tencent.devops.misc.service.repository
 
 import com.tencent.devops.misc.dao.repository.RepositoryDataClearDao
 import org.jooq.DSLContext
-import org.jooq.impl.DSL
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -44,9 +43,6 @@ class RepositoryDataClearService @Autowired constructor(
      * @param buildId 构建ID
      */
     fun clearBuildData(buildId: String) {
-        dslContext.transaction { t ->
-            val context = DSL.using(t)
-            repositoryDataClearDao.deleteCommitByBuildId(context, buildId)
-        }
+        repositoryDataClearDao.deleteCommitByBuildId(dslContext, buildId)
     }
 }

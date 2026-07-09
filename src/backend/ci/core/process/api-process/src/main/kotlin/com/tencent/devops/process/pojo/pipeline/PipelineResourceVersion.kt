@@ -106,7 +106,7 @@ data class PipelineResourceVersion(
         status = pipelineResourceWithoutVersion.status,
         branchAction = pipelineResourceWithoutVersion.branchAction,
         description = pipelineResourceWithoutVersion.description,
-        baseVersion = pipelineResourceWithoutVersion.baseVersion ?: pipelineResourceOnlyVersion.baseVersion,
+        baseVersion = pipelineResourceOnlyVersion.baseVersion
     )
 
     fun toSimple() = PipelineVersionSimple(

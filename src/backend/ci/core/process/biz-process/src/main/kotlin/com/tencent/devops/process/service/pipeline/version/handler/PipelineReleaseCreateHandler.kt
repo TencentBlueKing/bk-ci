@@ -28,7 +28,6 @@
 package com.tencent.devops.process.service.pipeline.version.handler
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.enums.PipelineVersionAction
 import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.redis.RedisOperation
@@ -56,8 +55,8 @@ class PipelineReleaseCreateHandler @Autowired constructor(
     }
 
     override fun handle(context: PipelineVersionCreateContext): DeployPipelineResult {
-        logger.info("create released version with context={}", JsonUtil.toJson(context, false))
         with(context) {
+            logger.info("handle pipeline released version|$projectId|$pipelineId|$version")
             if (pipelineResourceWithoutVersion.status != VersionStatus.RELEASED) {
                 throw ErrorCodeException(
                     errorCode = ProcessMessageCode.ERROR_STATUS_NOT_MATCHED,

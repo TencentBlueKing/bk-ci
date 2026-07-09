@@ -251,5 +251,7 @@ class PermissionSubsetManagerService @Autowired constructor(
             resourceType = resourceType,
             resourceCode = resourceCode
         )
+        // 删除二级管理员本身
+        deleteSubsetManager(subsetManagerId.toString())
     }
 }

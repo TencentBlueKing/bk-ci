@@ -53,7 +53,7 @@ class ServiceTemplateResourceImpl @Autowired constructor(
         // 可见与可安装鉴权在marketTemplateService中实现
         val installResult = marketTemplateService.installTemplate(
             userId = userId,
-            channelCode = ChannelCode.BS,
+            channelCode = ChannelCode.getRequestChannelCode(),
             installTemplateReq = installTemplateReq
         )
         return Result(

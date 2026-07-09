@@ -110,14 +110,15 @@ class PipelineRemoteAuthService @Autowired constructor(
                 I18nUtil.getCodeLanMessage(ERROR_NO_MATCHING_PIPELINE)
             )
         }
+        val pipelineInfo = pipelineReportService.getPipelineInfo(
+            projectId = pipeline.projectId,
+            pipelineId = pipeline.pipelineId
+        )
         // 获取授权人
         var userId = pipelineReportService.getPipelineOauthUser(
             pipelineId = pipeline.pipelineId,
             projectId = pipeline.projectId
-        ) ?: pipelineReportService.getPipelineInfo(
-            projectId = pipeline.projectId,
-            pipelineId = pipeline.pipelineId
-        )?.lastModifyUser
+        ) ?: pipelineInfo?.lastModifyUser
 
         if (userId.isNullOrBlank()) {
             logger.info("Fail to get the userId of the pipeline, use ${pipeline.createUser}")
@@ -143,7 +144,7 @@ class PipelineRemoteAuthService @Autowired constructor(
                 projectId = pipeline.projectId,
                 pipelineId = pipeline.pipelineId,
                 values = vals.toMap(),
-                channelCode = ChannelCode.BS,
+                channelCode = pipelineInfo?.channelCode ?: ChannelCode.getRequestChannelCode(),
                 startType = StartType.REMOTE,
                 buildNo = null
             ).data!!

@@ -45,9 +45,22 @@ func AtomicWriteFile(filename string, reader io.Reader, mode os.FileMode) error 
 	}
 	tempName := tempFile.Name()
 
+	// 任何失败路径都清理临时文件
+	success := false
+	defer func() {
+		if !success {
+			tempFile.Close()
+			os.Remove(tempName)
+		}
+	}()
+
 	if _, err := io.Copy(tempFile, reader); err != nil {
-		tempFile.Close() // return value is ignored as we are already on error path
 		exitcode.CheckOsIoError(filename, err)
+		return err
+	}
+
+	// fsync 强制落盘，防止系统崩溃时数据丢失
+	if err := tempFile.Sync(); err != nil {
 		return err
 	}
 
@@ -59,5 +72,10 @@ func AtomicWriteFile(filename string, reader io.Reader, mode os.FileMode) error 
 		return err
 	}
 
-	return fs.RenameWithFallback(tempName, filename)
+	if err := fs.RenameWithFallback(tempName, filename); err != nil {
+		return err
+	}
+
+	success = true
+	return nil
 }
