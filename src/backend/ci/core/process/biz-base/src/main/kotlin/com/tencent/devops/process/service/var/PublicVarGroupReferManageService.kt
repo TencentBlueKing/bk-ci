@@ -1147,6 +1147,14 @@ class PublicVarGroupReferManageService @Autowired constructor(
                 referInfosToDelete = referInfosToDelete,
                 referVersion = referVersion
             )
+            // 清理变量引用详情记录（T_VAR_REF_DETAIL），避免模板分支版本 inactive 后留孤儿数据
+            varRefDetailDao.deleteByResourceId(
+                dslContext = dslContext,
+                projectId = projectId,
+                resourceId = referId,
+                resourceType = referType.name,
+                referVersion = referVersion
+            )
         } catch (t: Throwable) {
             logger.warn("Failed to delete refer info for referId: $referId with version: $referVersion", t)
             throw ErrorCodeException(errorCode = ERROR_PIPELINE_COMMON_VAR_GROUP_REFER_UPDATE_FAILED)
