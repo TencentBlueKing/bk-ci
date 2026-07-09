@@ -70,7 +70,7 @@
 }
 
 .section {
-  padding: 0 var(--spacing-lg);
+  padding: 0 var(--spacing-xxxl);
   background-color: var(--bg-white);
 }
 
@@ -126,8 +126,7 @@
   display: flex;
   width: 100%;
   gap: var(--spacing-sm);
-  padding: var(--spacing-lg) 0;
-  /* border-top: 1px solid var(--border-color); */
+  padding: var(--spacing-lg) 6px;
   background-color: var(--bg-default);
 }
 
@@ -145,7 +144,7 @@
   padding: var(--spacing-lg);
   background-color: var(--bg-secondary);
   align-items: start;
-  margin-bottom: 20px;
+  margin-bottom: var(--spacing-xl);
 }
 
 .stepIdAndVersionRow.disabled {
