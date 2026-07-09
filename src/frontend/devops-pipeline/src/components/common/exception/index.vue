@@ -18,6 +18,7 @@
                 </bk-button>
             </i18n>
         </template>
+        <slot name="sub-content"></slot>
     </bk-exception>
 </template>
 
