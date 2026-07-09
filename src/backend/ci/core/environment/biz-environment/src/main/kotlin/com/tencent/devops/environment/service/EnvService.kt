@@ -2026,12 +2026,14 @@ class EnvService @Autowired constructor(
         val result = mutableListOf<EnvData>()
         // 校验管理员权限看能否用所有构建节点
         if (authProjectApi.checkProjectManager(userId, pipelineAuthServiceCode, realProjectId)) {
-            result.add(EnvData(
-                hashId = AllCreateNodeEnv.hashId(),
-                name = AllCreateNodeEnv.name(),
-                agentHashId = agentHashId,
-                projectId = agent.projectId
-            ))
+            result.add(
+                EnvData(
+                    hashId = AllCreateNodeEnv.hashId(),
+                    name = AllCreateNodeEnv.name(),
+                    agentHashId = agentHashId,
+                    projectId = agent.projectId
+                )
+            )
         }
         if (envNodeList.isEmpty() && tagEnvList.isEmpty()) {
             return result
@@ -2058,20 +2060,22 @@ class EnvService @Autowired constructor(
             }
         }
         logger.debug("fetchAllNodeEnvList $realProjectId|$workspaceName can use $envIds")
-        return envDao.list(
-            dslContext = dslContext,
-            projectId = realProjectId,
-            envName = null,
-            envTypeList = listOf(EnvType.CREATE.name),
-            envIds = envIds
-        ).map {
-            EnvData(
-                hashId = HashUtil.encodeLongId(it.envId),
-                name = it.envName,
-                agentHashId = agentHashId,
-                projectId = it.projectId
-            )
-        }
+        result.addAll(
+            envDao.list(
+                dslContext = dslContext,
+                projectId = realProjectId,
+                envName = null,
+                envTypeList = listOf(EnvType.CREATE.name),
+                envIds = envIds
+            ).map {
+                EnvData(
+                    hashId = HashUtil.encodeLongId(it.envId),
+                    name = it.envName,
+                    agentHashId = agentHashId,
+                    projectId = it.projectId
+                )
+            })
+        return result
     }
 
     // 查询节点所属的环境
