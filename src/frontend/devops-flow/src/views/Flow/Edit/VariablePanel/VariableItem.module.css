@@ -20,6 +20,12 @@
   flex: 1;
   min-width: 0;
   padding: var(--spacing-sm);
+  &:hover {
+    .valueText {
+      width: 70%;
+      transition: all var(--transition-normal) ease;
+    }
+  }
 
   .variableHeader {
     display: flex;
@@ -31,7 +37,6 @@
     font-size: 11px;
     font-weight: 600;
     color: var(--color-text-primary);
-    font-family: 'Monaco', 'Menlo', 'Consolas', monospace;
     cursor: default;
 
     &[data-has-desc] {
@@ -53,6 +58,8 @@
     color: var(--color-text-secondary);
     margin-bottom: 1px;
     font-weight: 500;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .variableDesc {
@@ -69,15 +76,16 @@
     display: flex;
     align-items: center;
     gap: 3px;
+   
   }
 
   .valueLabel {
     color: var(--color-text-secondary);
+    flex-shrink: 0;
   }
 
   .valueText {
     color: var(--color-text-primary);
-    font-family: 'Monaco', 'Menlo', 'Consolas', monospace;
     font-weight: 500;
     overflow: hidden;
     text-overflow: ellipsis;

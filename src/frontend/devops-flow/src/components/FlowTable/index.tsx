@@ -578,10 +578,13 @@ export const FlowTable = defineComponent({
           : [
             {
               label: t('flow.content.name'),
-              field: 'name',
+              field: 'pipelineName',
               fixed: 'left',
               minWidth: 192,
               sort: sortConfig(FLOW_SORT_FILED.flowName),
+              render: ({ row }: { row: ContentTableItem }) => (
+                <span>{(row as Record<string, any>).pipelineName || (row as Record<string, any>).name || '--'}</span>
+              ),
             },
             {
               label: t('flow.content.createTime'),

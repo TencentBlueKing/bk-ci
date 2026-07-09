@@ -30,7 +30,6 @@ package com.tencent.devops.process.service.pipeline.version.processor
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.pojo.pipeline.PipelineAiSummaryEvent
-import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
@@ -58,12 +57,9 @@ class PipelineAiSummaryVersionPostProcessor constructor(
             if (pipelineResourceVersion.status != VersionStatus.RELEASED) {
                 return
             }
-            if (pipelineBasicInfo.channelCode != ChannelCode.CREATIVE_STREAM) {
-                return
-            }
 
             logger.info(
-                "Dispatching AI summary event for CREATIVE_STREAM pipeline[$pipelineId] " +
+                "Dispatching AI summary event for pipeline[$pipelineId] " +
                     "project[$projectId] version[${pipelineResourceVersion.version}]"
             )
 
