@@ -272,8 +272,10 @@ export const actions = {
     /**
      * 删除可见范围
      */
-    deleteVisibilitiesList ({ commit }, { storeCode, deptIds }) {
-        return vue.$ajax.delete(`${prefix}/user/store/visibilities/types/${STORE_TYPE}/codes/${storeCode}/delete?deptIds=${deptIds}`)
+    deleteVisibilitiesList ({ commit }, { storeCode, deptIds, projectCodes }) {
+        const queryStr = deptIds ? `?deptIds=${deptIds}` : ''
+        const data = projectCodes ? { projectCodes } : {}
+        return vue.$ajax.post(`${prefix}/user/store/visibilities/types/${STORE_TYPE}/codes/${storeCode}/delete${queryStr}`, data)
     },
 
     /**

@@ -137,24 +137,6 @@
                 pageSize: 10,
                 pageIndex: 1,
                 isLoading: true,
-                methodsGenerator: {
-                    comment: {
-                        atom: (postData) => this.requestAtomComments(postData),
-                        creative: (postData) => this.requestAtomComments(postData),
-                        template: (postData) => this.requestTemplateComments(postData),
-                        ide: (postData) => this.requestIDEComments(postData),
-                        image: (postData) => this.requestImageComments(postData),
-                        service: (postData) => this.requestServiceComments(postData)
-                    },
-                    scoreDetail: {
-                        atom: () => this.requestAtomScoreDetail(this.detailCode),
-                        creative: () => this.requestAtomScoreDetail(this.detailCode),
-                        template: () => this.requestTemplateScoreDetail(this.detailCode),
-                        ide: () => this.requestIDEScoreDetail(this.detailCode),
-                        image: () => this.requestImageScoreDetail(this.detailCode),
-                        service: () => this.requestServiceScoreDetail(this.detailCode)
-                    }
-                }
             }
         },
 
@@ -167,6 +149,17 @@
 
             type () {
                 return this.$route.params.type
+            },
+            storeType () {
+                const storeTypeMap = {
+                    atom: 'ATOM',
+                    creative: 'ATOM',
+                    template: 'TEMPLATE',
+                    image: 'IMAGE',
+                    ide: 'IDE_ATOM',
+                    service: 'SERVICE'
+                }
+                return storeTypeMap[this.type]
             },
             mavenLang () {
                 return this.$i18n.locale === 'en-US' ? 'en' : this.$i18n.locale
@@ -181,16 +174,8 @@
             ...mapActions('store', [
                 'setDetail',
                 'setCommentList',
-                'requestAtomComments',
-                'requestAtomScoreDetail',
-                'requestTemplateComments',
-                'requestTemplateScoreDetail',
-                'requestIDEComments',
-                'requestIDEScoreDetail',
-                'requestImageComments',
-                'requestImageScoreDetail',
-                'requestServiceComments',
-                'requestServiceScoreDetail'
+                'requestComments',
+                'requestScoreDetail',
             ]),
 
             getSummaryScore () {
@@ -204,15 +189,13 @@
 
             getComments (isAdd = false) {
                 const postData = {
+                    storeType: this.storeType,
                     code: this.detailCode,
+                    ...(this.type === 'creative' ? { serviceScope: 'CREATIVE_STREAM' } : {}),
                     page: this.pageIndex,
                     pageSize: this.pageSize
                 }
-                if (!Object.keys(this.methodsGenerator.comment).includes(this.type) || typeof this.methodsGenerator.comment[this.type] !== 'function') {
-                    return Promise.reject(new Error(this.$t('store.typeError')))
-                }
-                const getCommentsMethod = this.methodsGenerator.comment[this.type]
-                return getCommentsMethod(postData).then((res) => {
+                return this.requestComments(postData).then((res) => {
                     const count = res.count || 0
                     const apiList = res.records || []
                     const commentList = isAdd ? this.commentList : []
@@ -227,11 +210,12 @@
             },
 
             getScoreDetail () {
-                if (!Object.keys(this.methodsGenerator.scoreDetail).includes(this.type) || typeof this.methodsGenerator.scoreDetail[this.type] !== 'function') {
-                    return Promise.reject(new Error(this.$t('store.typeError')))
+                const postData = {
+                    storeType: this.storeType,
+                    code: this.detailCode,
+                    ...(this.type === 'creative' ? { serviceScope: 'CREATIVE_STREAM' } : {})
                 }
-                const getScoreDetailMethod = this.methodsGenerator.scoreDetail[this.type]
-                return getScoreDetailMethod().then((res) => {
+                return this.requestScoreDetail(postData).then((res) => {
                     const itemList = [
                         { score: 5, num: 0 },
                         { score: 4, num: 0 },
