@@ -65,12 +65,6 @@ export default defineComponent({
     
     const isSVN = computed(() => scmType.value === 'CODE_SVN')
     const materialInfoKeys = computed<string[]>(() => {
-      if (isSubFlow.value) {
-        return [
-          'parentPipelineName',
-          'parentBuildNum',
-        ]
-      }
       if (isTAPD.value) {
         return ['webhookAliasName', 'materialName']
       }
