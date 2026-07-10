@@ -46,7 +46,9 @@ data class WindowsResourceZoneConfig(
     @get:Schema(title = "描述")
     val description: String,
     @get:Schema(title = "类型")
-    val type: WindowsResourceZoneConfigType
+    val type: WindowsResourceZoneConfigType,
+    @get:Schema(title = "资源提供商，如 IEG_BKCI/CSIG/TEG_DEVCLOUD")
+    val provider: String? = null
 )
 
 @JsonDeserialize(using = WindowsResourceZoneConfigTypeDeserializer::class)
