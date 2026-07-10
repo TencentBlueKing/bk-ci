@@ -394,7 +394,6 @@
     import Logo from '@/components/Logo'
     import FormField from '@/components/AtomPropertyPanel/FormField'
     import ConstraintWraper from '@/components/ConstraintWraper.vue'
-    import Logo from '@/components/Logo'
     import EnumInput from '@/components/atomFormField/EnumInput'
     import FileParamInput from '@/components/atomFormField/FileParamInput'
     import FormListParamInput from '@/components/atomFormField/FormListParamInput'
@@ -759,6 +758,7 @@
                     return false
                 }
                 return true
+            },
             handleProperties (key, value, index) {
                 const properties = {}
                 value.forEach((val) => {
