@@ -3,6 +3,7 @@ package com.tencent.devops.process.service
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.ModelHandleService
+import com.tencent.devops.common.pipeline.ModelPublicVarExpansion
 import com.tencent.devops.common.pipeline.ModelPublicVarHandleContext
 import com.tencent.devops.common.pipeline.ModelVarReferenceHandleContext
 import com.tencent.devops.common.pipeline.enums.PublicVarGroupReferenceTypeEnum
@@ -126,7 +127,10 @@ class ModelHandleServiceImpl @Autowired constructor(
                 else -> null
             }
 
-            model = modelString?.let { JsonUtil.to(it, ITemplateModel::class.java) } as? Model
+            // 变量引用分析仅需存储态 model（随后会调用 handlePublicVarInfo 归一化），无需展开公共变量
+            model = modelString?.let {
+                ModelPublicVarExpansion.withoutExpansion { JsonUtil.to(it, ITemplateModel::class.java) }
+            } as? Model
 
             if (model != null) {
                 // 模板 Model 的 JSON 中不含 templateId，需从 context 回填
