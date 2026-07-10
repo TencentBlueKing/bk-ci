@@ -563,14 +563,16 @@ class ModelTransfer @Autowired constructor(
                         })
                     }
                 }
+                tapdTrigger.forEach { pre ->
+                    (pre as? PreTriggerOnV3)?.type = TriggerType.TAPD.alis
+                    triggerV3.add(pre)
+                }
                 if (baseTrigger != null) {
                     when (triggerV3.size) {
                         // 只带基础触发器
-                        0 -> {
-                            trigger.add(baseTrigger)
-                        }
+                        0 -> return listOf(baseTrigger)
                         // 融合一个git触发器 + 基础触发器
-                        1 -> trigger.add(
+                        1 -> return listOf(
                             (triggerV3.first() as PreTriggerOnV3).copy(
                                 manual = baseTrigger.manual,
                                 schedules = baseTrigger.schedules,
@@ -578,19 +580,10 @@ class ModelTransfer @Autowired constructor(
                             )
                         )
                         // 队列首插入基础触发器
-                        else -> {
-                            trigger.add(0, baseTrigger)
-                            trigger.addAll(triggerV3)
-                        }
+                        else -> trigger.add(0, baseTrigger)
                     }
-                } else {
-                    trigger.addAll(triggerV3)
                 }
-                // TAPD 触发条目追加在末尾（每条 = 一个 workspace），补上 type = "tapd"
-                tapdTrigger.forEach { pre ->
-                    (pre as? PreTriggerOnV3)?.type = TriggerType.TAPD.alis
-                    trigger.add(pre)
-                }
+                trigger.addAll(triggerV3)
                 return trigger
             }
         }
