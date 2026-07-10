@@ -204,6 +204,12 @@ class StoreBaseUpdateServiceImpl @Autowired constructor(
         bkStoreContext[KEY_STORE_ID] = storeId
         val status = getStoreSpecBusService(storeType).getStoreUpdateStatus()
         val extBaseInfo = storeBaseUpdateRequest.extBaseInfo
+        // 校验部署相关扩展字段(安装路径/安装方式/安装参数)的合法性与安全性
+        StoreReleaseUtils.validateDeployExtInfo(
+            storeType = storeType,
+            extBaseInfo = extBaseInfo,
+            extBaseFeatureInfo = storeBaseUpdateRequest.baseFeatureInfo?.extBaseFeatureInfo
+        )
         val storeBaseDataPO = StoreBaseDataPO(
             id = storeId,
             storeCode = storeCode,

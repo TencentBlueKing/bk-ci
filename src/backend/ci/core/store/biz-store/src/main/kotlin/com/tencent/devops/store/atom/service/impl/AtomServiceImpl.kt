@@ -60,16 +60,15 @@ import com.tencent.devops.process.api.service.ServiceMeasurePipelineResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
 import com.tencent.devops.store.atom.dao.AtomDao
-import com.tencent.devops.store.atom.dao.AtomQueryParam
 import com.tencent.devops.store.atom.dao.AtomLabelRelDao
+import com.tencent.devops.store.atom.dao.AtomQueryParam
 import com.tencent.devops.store.atom.dao.MarketAtomFeatureDao
 import com.tencent.devops.store.atom.service.AtomLabelService
 import com.tencent.devops.store.atom.service.AtomService
 import com.tencent.devops.store.atom.service.MarketAtomCommonService
 import com.tencent.devops.store.atom.util.AtomOsMapUtil
 import com.tencent.devops.store.atom.util.AtomServiceScopeUtil
-import com.tencent.devops.store.pojo.common.ServiceScopeConfig
-import com.tencent.devops.store.util.ServiceScopeUtil
+import com.tencent.devops.store.common.dao.ClassifyDao
 import com.tencent.devops.store.common.dao.ReasonRelDao
 import com.tencent.devops.store.common.dao.StoreMemberDao
 import com.tencent.devops.store.common.dao.StoreProjectRelDao
@@ -90,6 +89,7 @@ import com.tencent.devops.store.pojo.atom.AtomBaseInfoUpdateRequest
 import com.tencent.devops.store.pojo.atom.AtomCodeVersionReqItem
 import com.tencent.devops.store.pojo.atom.AtomCreateRequest
 import com.tencent.devops.store.pojo.atom.AtomFeatureRequest
+import com.tencent.devops.store.pojo.atom.AtomGroupQueryParam
 import com.tencent.devops.store.pojo.atom.AtomResp
 import com.tencent.devops.store.pojo.atom.AtomRespItem
 import com.tencent.devops.store.pojo.atom.AtomRunInfo
@@ -128,17 +128,17 @@ import com.tencent.devops.store.pojo.common.KEY_RECENT_EXECUTE_NUM
 import com.tencent.devops.store.pojo.common.KEY_RECOMMEND_FLAG
 import com.tencent.devops.store.pojo.common.KEY_SERVICE_SCOPE
 import com.tencent.devops.store.pojo.common.KEY_UPDATE_TIME
-import com.tencent.devops.store.common.dao.ClassifyDao
-import com.tencent.devops.store.pojo.atom.AtomGroupQueryParam
+import com.tencent.devops.store.pojo.common.ServiceScopeConfig
 import com.tencent.devops.store.pojo.common.UnInstallReq
-import com.tencent.devops.store.pojo.common.honor.HonorInfo
-import com.tencent.devops.store.pojo.common.index.StoreIndexInfo
-import com.tencent.devops.store.pojo.common.label.Label
 import com.tencent.devops.store.pojo.common.enums.ReasonTypeEnum
 import com.tencent.devops.store.pojo.common.enums.ServiceScopeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.pojo.common.honor.HonorInfo
+import com.tencent.devops.store.pojo.common.index.StoreIndexInfo
+import com.tencent.devops.store.pojo.common.label.Label
 import com.tencent.devops.store.pojo.common.version.VersionInfo
+import com.tencent.devops.store.util.ServiceScopeUtil
 import com.tencent.devops.store.utils.VersionUtils
 import org.apache.commons.collections4.ListUtils
 import org.jooq.DSLContext
@@ -153,7 +153,6 @@ import java.util.concurrent.Future
 import java.util.concurrent.SynchronousQueue
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
-import kotlin.collections.orEmpty
 
 /**
  * 插件业务逻辑类
@@ -484,7 +483,11 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
             classifyName = classifyLanName,
             category = AtomCategoryEnum.getAtomCategory((record[KEY_CATEGORY] as? Byte)?.toInt() ?: 0),
             summary = record[KEY_SUMMARY] as? String,
-            docsLink = record[KEY_DOCSLINK] as? String,
+            docsLink = StoreUtils.transformDocsLink(
+                docsLink = record[KEY_DOCSLINK] as? String,
+                storeType = StoreTypeEnum.ATOM,
+                serviceScope = ctx.serviceScope
+            ),
             atomType = AtomTypeEnum.getAtomType((record[KEY_ATOM_TYPE] as? Byte)?.toInt() ?: 0),
             atomStatus = AtomStatusEnum.getAtomStatus((record[KEY_ATOM_STATUS] as? Byte)?.toInt() ?: 0),
             description = description?.let {
@@ -832,7 +835,11 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                     classifyId = atomClassify?.id,
                     classifyCode = atomClassify?.classifyCode,
                     classifyName = atomClassify?.classifyName,
-                    docsLink = pipelineAtomRecord.docsLink,
+                    docsLink = StoreUtils.transformDocsLink(
+                        docsLink = pipelineAtomRecord.docsLink,
+                        storeType = StoreTypeEnum.ATOM,
+                        serviceScope = serviceScope
+                    ),
                     category = AtomCategoryEnum.getAtomCategory(pipelineAtomRecord.categroy.toInt()),
                     atomType = AtomTypeEnum.getAtomType(pipelineAtomRecord.atomType.toInt()),
                     atomStatus = AtomStatusEnum.getAtomStatus(pipelineAtomRecord.atomStatus.toInt()),

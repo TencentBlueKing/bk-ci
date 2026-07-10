@@ -121,6 +121,7 @@
                         @atom-continue="handleContinue"
                         @atom-exec="handleExec"
                         @debug-container="debugDocker"
+                        @sub-pipeline-access="handleSubPipelineAccess"
                     />
                 </div>
             </simplebar>
@@ -304,7 +305,19 @@
     import 'bkui-pipeline/dist/bk-pipeline.css'
     
     import { mapActions, mapGetters, mapState } from 'vuex'
-    import MacDebugDialog from '@/components/MacDebugDialog.vue'
+    import MacDebugDialog from '@/components/MacDebugDialog.vue'    
+
+    const getSubPipelineAccessUrl = (atom) => {
+        const {
+            projectId,
+            pipelineId,
+            buildId
+        } = atom?.subPipelineBuildInfo ?? {}
+        if (!projectId || !pipelineId || !buildId) {
+            return ''
+        }
+        return `${WEB_URL_PREFIX}/pipeline/${projectId}/${pipelineId}/detail/${buildId}`
+    }
     
     export default {
         components: {
@@ -1027,6 +1040,15 @@
     
                     const tab = window.open('about:blank')
                     const url = `${WEB_URL_PREFIX}/pipeline/${projectId}/dockerConsole/?pipelineId=${pipelineId}&dispatchType=${buildResourceType}&vmSeqId=${vmSeqId}${buildIdStr}`
+                    tab.location = url
+                }
+            },
+            handleSubPipelineAccess ({ atom }) {
+                const url = getSubPipelineAccessUrl(atom)
+                if (!url) return
+
+                const tab = window.open('about:blank')
+                if (tab) {
                     tab.location = url
                 }
             },

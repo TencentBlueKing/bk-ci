@@ -75,6 +75,28 @@ class StoreBaseFeatureExtQueryDao {
         }
     }
 
+    /**
+     * 批量查询多个组件的特性扩展信息(组件级共享扩展)，避免逐个组件单查导致的 N+1。
+     */
+    fun batchQueryStoreBaseFeatureExt(
+        dslContext: DSLContext,
+        storeCodes: Collection<String>,
+        storeType: StoreTypeEnum,
+        fieldNames: Set<String>? = null
+    ): Result<TStoreBaseFeatureExtRecord> {
+        with(TStoreBaseFeatureExt.T_STORE_BASE_FEATURE_EXT) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(STORE_TYPE.eq(storeType.type.toByte()))
+            conditions.add(STORE_CODE.`in`(storeCodes))
+            if (!fieldNames.isNullOrEmpty()) {
+                conditions.add(FIELD_NAME.`in`(fieldNames))
+            }
+            return dslContext.selectFrom(this)
+                .where(conditions)
+                .fetch()
+        }
+    }
+
     fun queryStoreCodeByFieldName(
         dslContext: DSLContext,
         fieldName: String,

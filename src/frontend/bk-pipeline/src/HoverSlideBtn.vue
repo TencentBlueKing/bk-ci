@@ -13,6 +13,7 @@
                 :key="action.key"
                 class="hover-slide-btn__action"
                 :style="getActionStyle(action)"
+                :title="action.title || action.label"
                 @click.stop="handleActionClick(action)"
             >
                 <Logo
@@ -47,6 +48,8 @@
 
 <script>
     import Logo from './Logo'
+
+    const toCssSize = value => typeof value === 'number' ? `${value}px` : value
 
     export default {
         name: 'HoverSlideBtn',
@@ -94,17 +97,13 @@
                 return this.actions.length > 0
             },
             btnStyle () {
-                const w = typeof this.width === 'number' ? `${this.width}px` : this.width
-                const h = typeof this.height === 'number' ? `${this.height}px` : this.height
-                const bs = typeof this.badgeSize === 'number' ? `${this.badgeSize}px` : this.badgeSize
-                const aw = typeof this.actionWidth === 'number' ? `${this.actionWidth}px` : this.actionWidth
                 return {
                     '--slide-btn-color': this.color,
                     '--slide-btn-text-color': this.textColor,
-                    '--slide-btn-width': w,
-                    '--slide-btn-height': h,
-                    '--slide-btn-badge-size': bs,
-                    '--slide-btn-action-width': aw
+                    '--slide-btn-width': toCssSize(this.width),
+                    '--slide-btn-height': toCssSize(this.height),
+                    '--slide-btn-badge-size': toCssSize(this.badgeSize),
+                    '--slide-btn-action-width': toCssSize(this.actionWidth)
                 }
             }
         },
@@ -113,7 +112,8 @@
                 return {
                     '--slide-btn-action-color': action.color,
                     '--slide-btn-action-text-color': action.textColor,
-                    '--slide-btn-action-hover-color': action.hoverTextColor
+                    '--slide-btn-action-hover-color': action.hoverTextColor,
+                    '--slide-btn-action-width': toCssSize(action.width || this.actionWidth)
                 }
             },
             handleActionClick (action) {

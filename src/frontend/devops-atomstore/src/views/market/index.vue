@@ -5,8 +5,8 @@
             :type="filterData.pipeType"
         >
             <router-link
-                v-if="filterData.pipeType !== 'ide' && filterData.pipeType !== 'creative'"
-                :to="{ name: `${filterData.pipeType || 'atom'}Work` }"
+                v-if="filterData.pipeType !== 'ide'"
+                :to="{ name: `${filterData.pipeType === 'creative' ? 'atom' : filterData.pipeType || 'atom'}Work` }"
                 class="g-title-work"
             >
                 {{ $t('store.工作台') }}

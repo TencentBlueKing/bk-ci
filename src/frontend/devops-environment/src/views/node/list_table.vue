@@ -237,9 +237,11 @@
                         <div class="table-node-item node-item-status">
                             <!-- 已从 CMDB 、蓝鲸CC 移除 -->
                             <template v-if="removedStatus.includes(props.row.nodeStatus) && deploymentNodes.includes(props.row.nodeType)">
-                                <i class="bk-icon node-removed-icon icon-close error"></i>
-                                <span class="node-removed-message">
-                                    {{ removedMessage[props.row.nodeStatus] }}
+                                <span>
+                                    <i class="bk-icon node-removed-icon icon-close error"></i>
+                                    <span class="node-removed-message">
+                                        {{ removedMessage[props.row.nodeStatus] }}
+                                    </span>
                                 </span>
                             </template>
                             <!-- 责任人已变更 -->
@@ -505,7 +507,8 @@
                                     v-if="!['TSTACK'].includes(props.row.nodeType) && !isPersonalProject"
                                     text
                                     v-perm="{
-                                        hasPermission: props.row.canDelete,
+                                        // 团队项目创作流节点，使用canEdit判断删除权限
+                                        hasPermission: !isPersonalProject && isCreateResType ? props.row.canEdit : props.row.canDelete,
                                         disablePermissionApi: true,
                                         permissionData: {
                                             projectId: projectId,
@@ -1374,6 +1377,11 @@
             height: 100%;
             margin-bottom: 2px;
         }
+    }
+    .node-item-status {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
     }
 
     .node-item-row {

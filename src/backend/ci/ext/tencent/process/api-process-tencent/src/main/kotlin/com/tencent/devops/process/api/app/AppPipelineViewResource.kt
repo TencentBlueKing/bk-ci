@@ -126,10 +126,7 @@ interface AppPipelineViewResource {
         filterByLabels: String?,
         @Parameter(description = "用户视图ID", required = false)
         @QueryParam("viewId")
-        viewId: String,
-        @Parameter(description = "是否过滤没权限流水线", required = false)
-        @QueryParam("filterInvalid")
-        filterInvalid: Boolean?
+        viewId: String
     ): Result<Pagination<Pipeline>>
 
     @Operation(summary = "获取视图设置")

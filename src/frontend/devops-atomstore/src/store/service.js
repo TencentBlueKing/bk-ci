@@ -322,62 +322,6 @@ export const actions = {
         })
     },
 
-    /**
-     * 评论列表
-     */
-    requestServiceComments ({ commit }, { code, page, pageSize }) {
-        return vue.$ajax.get(`${prefix}/user/market/service/comment/serviceCodes/${code}/comments?page=${page}&pageSize=${pageSize}`)
-    },
-
-    /**
-     * 评分详情
-     */
-    requestServiceScoreDetail ({ commit }, code) {
-        return vue.$ajax.get(`${prefix}/user/market/service/comment/score/serviceCodes/${code}`)
-    },
-
-    /**
-     * 添加评论回复
-     */
-    requestServiceReplyComment ({ commit }, { id, postData }) {
-        return vue.$ajax.post(`${prefix}/user/market/service/comment/reply/comments/${id}/reply`, postData)
-    },
-
-    /**
-     * 评论点赞
-     */
-    requestServicePraiseComment ({ commit }, commentId) {
-        return vue.$ajax.put(`${prefix}/user/market/service/comment/praise/${commentId}`)
-    },
-
-    /**
-     * 获取评论回复列表
-     */
-    requestServiceReplyList ({ commit }, commentId) {
-        return vue.$ajax.get(`${prefix}/user/market/service/comment/reply/comments/${commentId}/replys`)
-    },
-
-    /**
-     * 新增评论
-     */
-    requestAddServiceComment ({ commit }, { id, code, postData }) {
-        return vue.$ajax.post(`${prefix}/user/market/service/comment/serviceIds/${id}/serviceCodes/${code}/comment`, postData)
-    },
-
-    /**
-     * 根据ID修改评论
-     */
-    requestServiceModifyComment ({ commit }, data) {
-        return vue.$ajax.put(`${prefix}/user/market/service/comment/comments/${data.id}`, data.postData)
-    },
-
-    /**
-     * 根据ID获取评论
-     */
-    requestServiceUserComment ({ commit }, id) {
-        return vue.$ajax.get(`${prefix}/user/market/service/comment/comments/${id}`)
-    },
-
     updateCurrentService ({ commit }, res) {
         commit(UPDATE_CURRENT_SERVICE, res)
     },

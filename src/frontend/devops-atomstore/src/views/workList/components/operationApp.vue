@@ -167,7 +167,7 @@
                     </bk-form-item>
                 </template>
 
-                <!-- <bk-form-item
+                <bk-form-item
                     :label="$t('store.安装路径')"
                     property="baseInfo.baseFeatureInfo.extBaseFeatureInfo.installPath"
                     error-display-type="normal"
@@ -176,7 +176,7 @@
                         v-model="application.baseInfo.baseFeatureInfo.extBaseFeatureInfo.installPath"
                         clearable
                     />
-                </bk-form-item> -->
+                </bk-form-item>
 
                 <bk-form-item>
                     <bk-button
@@ -280,7 +280,7 @@
                         codeSource: 'GIT',
                         repositoryHttpUrl: '',
                         buildDir: '',
-                        // installPath: '',
+                        installPath: '',
                     }
                 }
             }
@@ -378,11 +378,11 @@
 
         if (baseFeatureInfo) {
             if (extBaseFeatureInfo?.sourceType === 'SELF_UPLOAD') {
-                // const { installPath } = extBaseFeatureInfo
+                const { installPath } = extBaseFeatureInfo
                 baseFeatureInfo.extBaseFeatureInfo = { sourceType: 'SELF_UPLOAD' }
-                // if (installPath) {
-                //     baseFeatureInfo.extBaseFeatureInfo.installPath = installPath
-                // }
+                if (installPath) {
+                    baseFeatureInfo.extBaseFeatureInfo.installPath = installPath
+                }
             } else if (extBaseFeatureInfo?.sourceType === 'OFFICIAL_HOSTING') {
                 if (extBaseFeatureInfo?.repositoryHttpUrl) {
                     const repositoryId = repositoryList.value.find(item => item.httpUrl === extBaseFeatureInfo.repositoryHttpUrl)?.id
