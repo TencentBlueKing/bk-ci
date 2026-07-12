@@ -23,5 +23,8 @@ enum class PipelineDraftStatus {
     BRANCH,
 
     @Schema(title = "正式版本落后", description = "当前页面很旧,但已经有新版本发布")
-    RELEASE_OUTDATED
+    RELEASE_OUTDATED,
+
+    @Schema(title = "版本已删除", description = "当前版本已被删除")
+    DELETED
 }

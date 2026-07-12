@@ -39,6 +39,7 @@ import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.pipeline.enums.CodeTargetAction
 import com.tencent.devops.common.pipeline.enums.PipelineStorageType
+import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.permission.PipelinePermissionService
@@ -724,9 +725,10 @@ class UserPipelineTemplateV2ResourceImpl(
         projectId: String,
         templateId: String,
         actionType: PipelineDraftActionType,
-        version: Long?,
-        baseDraftVersion: Int?,
-        releaseVersion: Long?
+        version: Long,
+        versionStatus: VersionStatus,
+        releaseVersion: Long,
+        baseDraftVersion: Int?
     ): Result<PipelineTemplateDraftStatusResult> {
         permissionService.checkPipelineTemplatePermissionWithMessage(
             userId = userId,
@@ -741,8 +743,9 @@ class UserPipelineTemplateV2ResourceImpl(
                 templateId = templateId,
                 actionType = actionType,
                 version = version,
-                baseDraftVersion = baseDraftVersion,
-                releaseVersion = releaseVersion
+                versionStatus = versionStatus,
+                releaseVersion = releaseVersion,
+                baseDraftVersion = baseDraftVersion
             )
         )
     }

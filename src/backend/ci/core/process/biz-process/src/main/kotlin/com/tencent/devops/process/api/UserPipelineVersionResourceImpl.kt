@@ -38,6 +38,7 @@ import com.tencent.devops.common.pipeline.PipelineVersionWithModel
 import com.tencent.devops.common.pipeline.PipelineVersionWithModelRequest
 import com.tencent.devops.common.pipeline.enums.CodeTargetAction
 import com.tencent.devops.common.pipeline.enums.PipelineStorageType
+import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.pipeline.pojo.BuildNoUpdateReq
 import com.tencent.devops.common.pipeline.pojo.TemplateInstanceCreateRequest
 import com.tencent.devops.common.pipeline.pojo.transfer.PreviewResponse
@@ -541,9 +542,10 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
         projectId: String,
         pipelineId: String,
         actionType: PipelineDraftActionType,
-        version: Int?,
-        baseDraftVersion: Int?,
-        releaseVersion: Int?
+        version: Int,
+        versionStatus: VersionStatus,
+        releaseVersion: Int,
+        baseDraftVersion: Int?
     ): Result<PipelineDraftStatusResult> {
         checkParam(userId, projectId)
         pipelinePermissionService.checkPipelinePermission(
@@ -559,8 +561,9 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
                 pipelineId = pipelineId,
                 actionType = actionType,
                 version = version,
-                baseDraftVersion = baseDraftVersion,
-                releaseVersion = releaseVersion
+                versionStatus = versionStatus,
+                releaseVersion = releaseVersion,
+                baseDraftVersion = baseDraftVersion
             )
         )
     }

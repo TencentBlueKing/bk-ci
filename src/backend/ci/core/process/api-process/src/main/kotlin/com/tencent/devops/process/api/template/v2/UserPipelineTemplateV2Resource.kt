@@ -8,6 +8,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.pipeline.enums.CodeTargetAction
 import com.tencent.devops.common.pipeline.enums.PipelineStorageType
+import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.process.pojo.PipelineOperationDetail
 import com.tencent.devops.process.pojo.PipelineTemplateVersionSimple
 import com.tencent.devops.process.pojo.pipeline.DeployTemplateResult
@@ -626,15 +627,18 @@ interface UserPipelineTemplateV2Resource {
         @Parameter(description = "操作类型", required = true)
         @QueryParam("actionType")
         actionType: PipelineDraftActionType,
-        @Parameter(description = "模版版本", required = false)
+        @Parameter(description = "前端当前操作的模版版本", required = true)
         @QueryParam("version")
-        version: Long?,
-        @Parameter(description = "来源的草稿版本", required = false)
-        @QueryParam("baseDraftVersion")
-        baseDraftVersion: Int?,
-        @Parameter(description = "前端当前编辑基线版本", required = false)
+        version: Long,
+        @Parameter(description = "前端持有该 version 时的状态（COMMITTING / RELEASED / BRANCH 等）", required = true)
+        @QueryParam("versionStatus")
+        versionStatus: VersionStatus,
+        @Parameter(description = "前端当前编辑基线版本", required = true)
         @QueryParam("releaseVersion")
-        releaseVersion: Long?
+        releaseVersion: Long,
+        @Parameter(description = "来源的草稿版本, 当 actionType 为 SAVE 或 RELEASE 时需要传入", required = false)
+        @QueryParam("baseDraftVersion")
+        baseDraftVersion: Int?
     ): Result<PipelineTemplateDraftStatusResult>
 
     @Operation(summary = "获取流水线草稿版本列表")
