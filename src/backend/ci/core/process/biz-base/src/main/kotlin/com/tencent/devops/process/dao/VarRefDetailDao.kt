@@ -42,9 +42,7 @@ class VarRefDetailDao {
         dslContext: DSLContext,
         varRefDetails: List<VarRefDetail>
     ) {
-        if (varRefDetails.isEmpty()) {
-            return
-        }
+        if (varRefDetails.isEmpty()) return
 
         with(TVarRefDetail.T_VAR_REF_DETAIL) {
             val records = varRefDetails.map { detail ->
@@ -79,9 +77,6 @@ class VarRefDetailDao {
                     detail.creator,
                     detail.modifier
                 )
-                .onDuplicateKeyUpdate()
-                .set(POSITION_PATH, detail.positionPath)
-                .set(MODIFIER, detail.modifier)
             }
             dslContext.batch(records).execute()
         }
