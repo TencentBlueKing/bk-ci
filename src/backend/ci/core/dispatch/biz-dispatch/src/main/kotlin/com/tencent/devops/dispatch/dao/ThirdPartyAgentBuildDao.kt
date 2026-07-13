@@ -360,6 +360,37 @@ class ThirdPartyAgentBuildDao {
         }
     }
 
+    fun listAgentBuildsByProject(
+        dslContext: DSLContext,
+        projectId: String,
+        agentId: String?,
+        envId: Long?,
+        pipelineId: String?,
+        jobId: String?,
+        offset: Int,
+        limit: Int
+    ): List<TDispatchThirdpartyAgentBuildRecord> {
+        with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
+            return dslContext.selectFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .let {
+                    if (agentId != null) it.and(AGENT_ID.eq(agentId)) else it
+                }
+                .let {
+                    if (envId != null) it.and(ENV_ID.eq(envId)) else it
+                }
+                .let {
+                    if (pipelineId != null) it.and(PIPELINE_ID.eq(pipelineId)) else it
+                }
+                .let {
+                    if (jobId != null) it.and(JOB_ID.eq(jobId)) else it
+                }
+                .orderBy(CREATED_TIME.desc())
+                .limit(offset, limit)
+                .fetch()
+        }
+    }
+
     fun listLatestBuildPipelines(
         dslContext: DSLContext,
         agentIds: List<String>
@@ -414,6 +445,33 @@ class ThirdPartyAgentBuildDao {
                 .where(AGENT_ID.eq(agentId))
                 .let {
                     if (status != null) it.and(STATUS.eq(PipelineTaskStatus.parse(status).status)) else it
+                }
+                .let {
+                    if (pipelineId != null) it.and(PIPELINE_ID.eq(pipelineId)) else it
+                }
+                .let {
+                    if (jobId != null) it.and(JOB_ID.eq(jobId)) else it
+                }
+                .fetchOne(0, Long::class.java)!!
+        }
+    }
+
+    fun countAgentBuildsProject(
+        dslContext: DSLContext,
+        projectId: String,
+        agentId: String?,
+        envId: Long?,
+        pipelineId: String?,
+        jobId: String?
+    ): Long {
+        with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
+            return dslContext.selectCount().from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .let {
+                    if (agentId != null) it.and(AGENT_ID.eq(agentId)) else it
+                }
+                .let {
+                    if (envId != null) it.and(ENV_ID.eq(envId)) else it
                 }
                 .let {
                     if (pipelineId != null) it.and(PIPELINE_ID.eq(pipelineId)) else it

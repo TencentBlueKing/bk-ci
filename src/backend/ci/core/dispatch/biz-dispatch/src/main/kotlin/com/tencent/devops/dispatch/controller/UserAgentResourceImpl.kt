@@ -159,30 +159,36 @@ class UserAgentResourceImpl @Autowired constructor(
     override fun fetchAgentBuildsByJob(
         userId: String,
         projectId: String,
-        agentId: String,
+        agentId: String?,
+        envId: String?,
         pipelineId: String,
         jobId: String,
         page: Int?,
         pageSize: Int?
     ): Result<Page<AgentPipelineContainerBuild>> {
-        val hasNodePermission = client.get(ServiceNodeResource::class).checkAgentPermission(
-            userId = userId,
-            projectId = projectId,
-            agentHashId = agentId,
-            permission = AuthPermission.VIEW
-        ).data
-        if (hasNodePermission == null || !hasNodePermission) {
-            throw ErrorCodeException(
-                errorCode = "${ErrorCodeEnum.NO_NODE_PERMISSION.errorCode}",
-                defaultMessage = "No node permission.",
-                params = arrayOf(agentId)
-            )
+        val envRId = if (envId.isNullOrBlank()) null else HashUtil.decodeIdToLong(envId)
+        if (agentId != null) {
+            // TODO: 未来补齐env
+            val hasNodePermission = client.get(ServiceNodeResource::class).checkAgentPermission(
+                userId = userId,
+                projectId = projectId,
+                agentHashId = agentId,
+                permission = AuthPermission.VIEW
+            ).data
+            if (hasNodePermission == null || !hasNodePermission) {
+                throw ErrorCodeException(
+                    errorCode = "${ErrorCodeEnum.NO_NODE_PERMISSION.errorCode}",
+                    defaultMessage = "No node permission.",
+                    params = arrayOf(agentId)
+                )
+            }
         }
         return Result(
             thirdPartyAgentService.fetchAgentBuildsByJob(
                 userId = userId,
                 projectId = projectId,
                 agentId = agentId,
+                envId = envRId,
                 pipelineId = pipelineId,
                 jobId = jobId,
                 page = page,
