@@ -230,9 +230,20 @@ export default defineComponent({
                 ) : null}
 
                 <Button onClick={handleEdit}>{t('flow.content.edit')}</Button>
-                <Button theme="primary" onClick={handleExecute}>
-                  {t('flow.execute.exec')}
-                </Button>
+                <span
+                  v-bk-tooltips={{
+                    content: isCurPipelineLocked.value ? t('flow.content.pipelineLockTips') : '',
+                    disabled: !isCurPipelineLocked.value,
+                  }}
+                >
+                  <Button
+                    theme="primary"
+                    disabled={isCurPipelineLocked.value}
+                    onClick={handleExecute}
+                  >
+                    {t('flow.execute.exec')}
+                  </Button>
+                </span>
               </>
             ),
           }}

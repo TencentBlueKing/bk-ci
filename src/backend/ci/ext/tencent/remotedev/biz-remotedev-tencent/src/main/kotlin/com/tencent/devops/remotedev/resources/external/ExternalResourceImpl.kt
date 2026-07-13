@@ -27,22 +27,16 @@
 
 package com.tencent.devops.remotedev.resources.external
 
-import com.tencent.devops.common.api.constant.SYSTEM
 import com.tencent.devops.common.api.model.SQLLimit
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.remotedev.api.external.ExternalResource
-import com.tencent.devops.remotedev.pojo.WhiteList
-import com.tencent.devops.remotedev.pojo.WhiteListType
 import com.tencent.devops.remotedev.pojo.WorkspaceSearch
 import com.tencent.devops.remotedev.pojo.common.QueryType
 import com.tencent.devops.remotedev.pojo.software.SoftwareCallbackRes
-import com.tencent.devops.remotedev.service.WhiteListService
-import com.tencent.devops.remotedev.service.WhiteListService.Companion.CONFIG_CDS_DOMAIN_WORKSPACE_KEY_PREFIX
 import com.tencent.devops.remotedev.service.WorkspaceService
-import com.tencent.devops.remotedev.service.redis.ConfigCacheService
 import com.tencent.devops.remotedev.service.software.SoftwareManageService
 import java.time.LocalDateTime
 import org.slf4j.LoggerFactory
@@ -52,8 +46,6 @@ import org.springframework.beans.factory.annotation.Value
 @RestResource
 class ExternalResourceImpl @Autowired constructor(
     private val softwareManageService: SoftwareManageService,
-    private val configCacheService: ConfigCacheService,
-    private val whiteListService: WhiteListService,
     private val workspaceService: WorkspaceService
 ) : ExternalResource {
 
@@ -92,52 +84,26 @@ class ExternalResourceImpl @Autowired constructor(
         domain: String,
         sslMode: String?
     ): Result<Boolean> {
-        logger.info("cdsMeshEnableAndDomain|enable=$enable|domain=$domain|ip=$ip|sslMode=$sslMode|ts=$ts|token=$token")
-        
+        logger.info(
+            "cdsMeshEnableAndDomain|enable=$enable|domain=$domain|ip=$ip|" +
+                "sslMode=$sslMode|ts=$ts|token=$token"
+        )
+
         // 验证请求
         if (!validateRequest(ts, token, ip)) {
             return Result(false)
         }
-        
+
         // 查询工作空间
         val workspace = findWorkspaceByIp(ip) ?: run {
             logger.warn("no workspace found|ip=$ip")
             return Result(false)
         }
-        
-        // 处理网络配置 - 使用 Pair 模式匹配
-        val isEnabled = enable.toBooleanStrictOrNull() == true
-        val useSslMode = sslMode?.toBooleanStrictOrNull() == true
-        
-        when (isEnabled to useSslMode) {
-            true to true -> {
-                // 情况1: 启用 SSL 模式
-                deleteWhiteList(workspace.workspaceName, WhiteListType.CDS_MESH_WORKSPACE)
-                createWhiteList(workspace.workspaceName, WhiteListType.CDS_SSL_WORKSPACE)
-            }
-            true to false -> {
-                // 情况2: 启用 Mesh 模式
-                deleteWhiteList(workspace.workspaceName, WhiteListType.CDS_SSL_WORKSPACE)
-                createWhiteList(workspace.workspaceName, WhiteListType.CDS_MESH_WORKSPACE)
-            }
-            false to true -> {
-                // 情况3: 禁用 SSL 模式
-                deleteWhiteList(workspace.workspaceName, WhiteListType.CDS_SSL_WORKSPACE)
-            }
-            false to false -> {
-                // 情况4: 禁用 Mesh 模式
-                deleteWhiteList(workspace.workspaceName, WhiteListType.CDS_MESH_WORKSPACE)
-            }
-        }
-        
-        // 处理域名配置 - 使用 Kotlin 惯用法
-        domain.takeIf { it.isNotBlank() }?.let {
-            configCacheService.opInsertOrUpdateConfig(
-                CONFIG_CDS_DOMAIN_WORKSPACE_KEY_PREFIX + workspace.workspaceName,
-                it
-            )
-        }
-        
+
+        logger.info(
+            "cdsMeshEnableAndDomain skipped because CDS has switched to SSL and default domain|" +
+                "workspaceName=${workspace.workspaceName}"
+        )
         return Result(true)
     }
 
@@ -166,24 +132,4 @@ class ExternalResourceImpl @Autowired constructor(
         queryType = QueryType.OP,
         search = WorkspaceSearch(sips = listOf(ip), onFuzzyMatch = false)
     ).firstOrNull()
-
-    /**
-     * 创建或更新白名单
-     */
-    private fun createWhiteList(workspaceName: String, type: WhiteListType) {
-        whiteListService.opCreateOrUpdateWhiteList(
-            SYSTEM,
-            WhiteList(workspaceName, type, SYSTEM)
-        )
-    }
-
-    /**
-     * 删除白名单
-     */
-    private fun deleteWhiteList(workspaceName: String, type: WhiteListType) {
-        whiteListService.opDeleteWhiteList(
-            SYSTEM,
-            WhiteList(workspaceName, type, SYSTEM)
-        )
-    }
 }

@@ -356,7 +356,7 @@ class ServiceEnvironmentResourceImpl @Autowired constructor(
         }
     }
 
-    override fun fetchAllNodeEnvList(
+    override fun fetchAllNodeEnvListByWorkspace(
         userId: String,
         projectId: String?,
         workspaceName: String,

@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.service.webhook
 
+import com.tencent.devops.common.api.context.ChannelContext
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
@@ -308,11 +309,15 @@ class PipelineBuildWebhookService @Autowired constructor(
             val matchResult = matcher.isMatch(projectId, pipelineId, repo, webHookParams)
             if (matchResult.isMatch) {
                 try {
-                    checkPermission(
-                        userId = userId,
-                        projectId = projectId,
-                        pipelineId = pipelineId
-                    )
+                    // webhook由外部事件经MQ触发,当前线程无渠道上下文,以流水线自身渠道恢复,
+                    // 确保创作流等渠道的权限校验能命中正确的权限中心资源类型
+                    ChannelContext.withChannel(pipelineInfo.channelCode.name) {
+                        checkPermission(
+                            userId = userId,
+                            projectId = projectId,
+                            pipelineId = pipelineId
+                        )
+                    }
                     // 创作流相关参数，触发成功时才去校验创作流运行环境，避免重复查询创作流环境信息
                     val externalStartParams = creativeStreamTriggerSupportService.externalWebhookStartParams(
                         pipelineInfo = pipelineInfo,

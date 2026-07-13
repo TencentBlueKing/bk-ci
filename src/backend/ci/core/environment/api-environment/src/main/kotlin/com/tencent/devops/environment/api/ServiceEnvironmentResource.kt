@@ -397,13 +397,13 @@ interface ServiceEnvironmentResource {
 
     @Operation(summary = "根据工作空间ID,获取所有拥有这个节点的环境(创作流)")
     @GET
-    @Path("/{projectId}/fetchAllNodeEnvList")
-    fun fetchAllNodeEnvList(
+    @Path("/fetchAllNodeEnvListByWorkspace")
+    fun fetchAllNodeEnvListByWorkspace(
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "项目ID", required = true)
-        @PathParam("projectId")
+        @QueryParam("projectId")
         projectId: String?,
         @QueryParam("workspaceName")
         workspaceName: String,

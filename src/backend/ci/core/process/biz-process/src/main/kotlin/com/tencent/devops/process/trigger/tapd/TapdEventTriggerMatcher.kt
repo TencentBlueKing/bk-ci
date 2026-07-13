@@ -29,9 +29,9 @@ package com.tencent.devops.process.trigger.tapd
 
 import com.tencent.devops.common.api.pojo.I18Variable
 import com.tencent.devops.common.api.util.EnvUtils
+import com.tencent.devops.common.pipeline.enums.TapdEventType
 import com.tencent.devops.common.pipeline.pojo.element.trigger.TapdWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.TapdWebHookTriggerInput
-import com.tencent.devops.common.pipeline.enums.TapdEventType
 import com.tencent.devops.common.webhook.enums.WebhookI18nConstants
 import com.tencent.devops.common.webhook.enums.WebhookI18nConstants.BK_RIGGER_EVENT_FROM_NOT_MATCH
 import com.tencent.devops.common.webhook.enums.WebhookI18nConstants.BK_TRIGGER_ACTION_NOT_MATCH
@@ -45,13 +45,23 @@ import com.tencent.devops.common.webhook.service.code.filter.ListContainsFilter
 import com.tencent.devops.common.webhook.service.code.filter.UserFilter
 import com.tencent.devops.common.webhook.service.code.filter.WebhookFilterResponse
 import com.tencent.devops.common.webhook.util.WebhookUtils
+import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_CURRENT_OWNER
+import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_EVENT_FROM
+import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_LABEL
+import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_OWNER
+import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_PRIORITY
+import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_PRIORITY_LABEL
 import com.tencent.devops.process.trigger.enums.MatchStatus
 import com.tencent.devops.process.trigger.event.TapdWebhookTriggerEvent
 import com.tencent.devops.process.trigger.pojo.WebhookAtomResponse
+import com.tencent.devops.process.trigger.tapd.TapdWebhookUtils.getHookField
 import org.springframework.stereotype.Service
 
 /**
  * TAPD 触发器匹配器
+ *
+ * 匹配所需的过滤字段（label / priority / owner / eventFrom）从 body 中即时派生，
+ * 因此不依赖 [TapdWebhookTriggerEvent] 承载这些冗余字段。
  */
 @Service
 class TapdEventTriggerMatcher {
@@ -59,12 +69,13 @@ class TapdEventTriggerMatcher {
     fun matches(
         element: TapdWebHookTriggerElement,
         event: TapdWebhookTriggerEvent,
+        body: Map<String, String>,
         variables: Map<String, String>
     ): WebhookAtomResponse {
         val input = element.data.input
         val taskId = element.id ?: ""
         // 1. 项目过滤
-        if (input.tapdProjectId.isBlank() || input.tapdProjectId != event.tapdProjectId) {
+        if (input.workspaceId!!.isBlank() || input.workspaceId != event.workspaceId) {
             return WebhookAtomResponse(MatchStatus.REPOSITORY_NOT_MATCH)
         }
         // 2. 事件类型过滤
@@ -76,6 +87,7 @@ class TapdEventTriggerMatcher {
             input = input,
             taskId = taskId,
             event = event,
+            body = body,
             variables = variables
         ).forEach {
             val filterResponse = WebhookFilterResponse()
@@ -89,16 +101,28 @@ class TapdEventTriggerMatcher {
         return WebhookAtomResponse(matchStatus = MatchStatus.SUCCESS)
     }
 
+    @Suppress("LongParameterList", "LongMethod")
     private fun getEventFilters(
         input: TapdWebHookTriggerInput,
         taskId: String,
         event: TapdWebhookTriggerEvent,
+        body: Map<String, String>,
         variables: Map<String, String>
     ) = with(event) {
+        // 从 body 中派生过滤所需的字段（原先由 TapdWebhookTriggerEvent 承载）
+        val triggerEventFrom = body.getHookField(TAPD_KEY_EVENT_FROM)
+        val triggerLabels = body.getHookField(TAPD_KEY_LABEL)
+        val triggerPriority = body.getHookField(TAPD_KEY_PRIORITY_LABEL).ifBlank {
+            body.getHookField(TAPD_KEY_PRIORITY)
+        }
+        val triggerOwner = body.getHookField(TAPD_KEY_OWNER).ifBlank {
+            body.getHookField(TAPD_KEY_CURRENT_OWNER)
+        }
+
         val eventFromFilter = ContainsFilter(
             pipelineId = taskId,
             filterName = "tapdEventForm",
-            triggerOn = event.eventFrom ?: "web",
+            triggerOn = triggerEventFrom.ifBlank { "web" },
             included = input.includeEventFrom ?: emptyList(),
             failedReason = I18Variable(
                 code = BK_RIGGER_EVENT_FROM_NOT_MATCH,
@@ -138,7 +162,7 @@ class TapdEventTriggerMatcher {
         val labelFilter = ListContainsFilter(
             pipelineId = taskId,
             filterName = "tapdLabel",
-            triggerOn = event.triggerLabels?.split("|")?.toSet() ?: setOf(),
+            triggerOn = triggerLabels.split("|").filter { it.isNotBlank() }.toSet(),
             included = WebhookUtils.convert(input.includeLabels).parseEnv(variables),
             excluded = WebhookUtils.convert(input.excludeLabels).parseEnv(variables),
             includeFailedReason = { item ->
@@ -158,7 +182,7 @@ class TapdEventTriggerMatcher {
         val priorityFilter = ContainsFilter(
             pipelineId = taskId,
             filterName = "tapdPriorityFilter",
-            triggerOn = event.triggerPriority ?: "",
+            triggerOn = triggerPriority,
             included = WebhookUtils.convert(input.includePriority).parseEnv(variables),
             failedReason = I18Variable(
                 code = BK_TRIGGER_PRIORITY_NOT_MATCH,
@@ -166,7 +190,7 @@ class TapdEventTriggerMatcher {
             ).toJsonStr()
         )
         // 当前处理人过滤
-        val finalTriggerOwner = (triggerOwner ?: "").split(";").firstOrNull() ?: ""
+        val finalTriggerOwner = triggerOwner.split(";").firstOrNull() ?: ""
         val ownerFilter = UserFilter(
             filterName = "tapdOwner",
             pipelineId = taskId,
@@ -175,11 +199,11 @@ class TapdEventTriggerMatcher {
             excludedUsers = input.excludeOwner?.parseEnv(variables) ?: listOf(),
             includedFailedReason = I18Variable(
                 code = OWNER_NOT_MATCH,
-                params = listOf(finalTriggerOwner ?: "")
+                params = listOf(finalTriggerOwner)
             ).toJsonStr(),
             excludedFailedReason = I18Variable(
                 code = OWNER_IGNORED,
-                params = listOf(finalTriggerOwner ?: "")
+                params = listOf(finalTriggerOwner)
             ).toJsonStr()
         )
         listOf(

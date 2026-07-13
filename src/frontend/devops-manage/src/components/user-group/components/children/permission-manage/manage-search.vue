@@ -59,6 +59,7 @@
       v-model="searchValue"
       :data="searchData"
       unique-select
+      filter
       class="multi-search"
       value-behavior="need-key"
       :placeholder="filterTips"
@@ -280,7 +281,7 @@ async function getMenuList (item, keyword) {
 
 <style lang="scss" scoped>
 .search-select {
-  margin-right: 10px;
+  flex: 1;
 }
 
 .search-expired {
@@ -301,6 +302,5 @@ async function getMenuList (item, keyword) {
 
 .multi-search {
   width: 50%;
-  margin-left: 10px;
 }
 </style>

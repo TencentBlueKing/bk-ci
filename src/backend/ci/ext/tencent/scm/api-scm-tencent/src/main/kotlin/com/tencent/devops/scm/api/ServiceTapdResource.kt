@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.scm.pojo.tapd.TapdBug
 import com.tencent.devops.scm.pojo.tapd.TapdBugFieldConfig
 import com.tencent.devops.scm.pojo.tapd.TapdStory
+import com.tencent.devops.scm.pojo.tapd.TapdWorkspace
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -96,4 +97,19 @@ interface ServiceTapdResource {
         @QueryParam("workspaceId")
         workspaceId: String
     ): Result<TapdBugFieldConfig?>
+
+    @Operation(summary = "查询 TAPD 项目信息")
+    @GET
+    @Path("/workspaces")
+    fun getWorkspaceInfo(
+        @Parameter(description = "TAPD api 地址", required = true)
+        @QueryParam("apiUrl")
+        apiUrl: String,
+        @Parameter(description = "TAPD 鉴权 token（已构造好的 Authorization header 值）", required = true)
+        @QueryParam("authorToken")
+        authorToken: String,
+        @Parameter(description = "TAPD 项目 ID", required = true)
+        @QueryParam("workspaceId")
+        workspaceId: String
+    ): Result<TapdWorkspace?>
 }

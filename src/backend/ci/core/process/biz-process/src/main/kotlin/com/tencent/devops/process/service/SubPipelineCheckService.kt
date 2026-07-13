@@ -1,5 +1,6 @@
 package com.tencent.devops.process.service
 
+import com.tencent.devops.common.api.context.ChannelContext
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.auth.api.AuthPermission
@@ -13,16 +14,17 @@ import com.tencent.devops.common.pipeline.pojo.element.atom.SubPipelineType
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.api.service.ServicePipelineVersionResource
 import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.engine.service.PipelineRepositoryService
+import com.tencent.devops.process.engine.service.SubPipelineRefService
 import com.tencent.devops.process.engine.service.SubPipelineTaskService
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.pipeline.SubPipelineIdAndName
 import com.tencent.devops.process.pojo.pipeline.SubPipelineRef
-import com.tencent.devops.process.engine.service.SubPipelineRefService
+import jakarta.ws.rs.core.Response
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.context.annotation.Lazy
 import org.springframework.stereotype.Service
-import java.util.HashMap
-import jakarta.ws.rs.core.Response
 
 /**
  * 子流水线合法性检查服务
@@ -33,6 +35,8 @@ class SubPipelineCheckService @Autowired constructor(
     private val pipelinePermissionService: PipelinePermissionService,
     private val subPipelineRefService: SubPipelineRefService,
     private val subPipelineTaskService: SubPipelineTaskService,
+    @Lazy
+    private val pipelineRepositoryService: PipelineRepositoryService,
     private val client: Client
 ) {
 
@@ -147,13 +151,27 @@ class SubPipelineCheckService @Autowired constructor(
             val subPipelineId = subPipeline.pipelineId
             val subPipelineName = subPipeline.pipelineName
             // 校验流水线修改人是否有子流水线执行权限
-            val checkPermission = pipelinePermissionService.checkPipelinePermission(
-                userId = userId,
-                projectId = subPipeline.projectId,
-                pipelineId = subPipeline.pipelineId,
-                permission = permission,
-                authResourceType = authResourceType
-            )
+            // 按子流水线自身渠道校验(如创作流调用子创作流/子流水线),命中权限中心正确资源类型;
+            // 查不到子流水线信息时回退到入参渠道逻辑
+            val subChannelCode = pipelineRepositoryService.getPipelineInfo(subProjectId, subPipelineId)?.channelCode
+            val checkPermission = if (subChannelCode != null) {
+                ChannelContext.withChannel(subChannelCode.name) {
+                    pipelinePermissionService.checkPipelinePermission(
+                        userId = userId,
+                        projectId = subProjectId,
+                        pipelineId = subPipelineId,
+                        permission = permission
+                    )
+                }
+            } else {
+                pipelinePermissionService.checkPipelinePermission(
+                    userId = userId,
+                    projectId = subProjectId,
+                    pipelineId = subPipelineId,
+                    permission = permission,
+                    authResourceType = authResourceType
+                )
+            }
             val pipelinePermissionUrl = "/console/pipeline/$subProjectId/$subPipelineId/history"
             if (!checkPermission) {
                 elements.forEach { elementHolder ->

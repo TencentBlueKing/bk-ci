@@ -84,7 +84,8 @@ class AtomArchiveResourceApi : AbstractBuildResourceApi(), AtomArchiveSDKApi {
         atomStatus: Byte?,
         osName: String?,
         osArch: String?,
-        convertOsFlag: Boolean?
+        convertOsFlag: Boolean?,
+        channelCode: String?
     ): Result<AtomEnv> {
         var path = "/ms/store/api/build/market/atom/env/$projectCode/$atomCode/$atomVersion"
         val queryParamSb = StringBuilder()
@@ -92,6 +93,7 @@ class AtomArchiveResourceApi : AbstractBuildResourceApi(), AtomArchiveSDKApi {
         osName?.let { queryParamSb.append("osName=$osName&") }
         osArch?.let { queryParamSb.append("osArch=$osArch&") }
         convertOsFlag?.let { queryParamSb.append("convertOsFlag=$convertOsFlag&") }
+        channelCode?.let { queryParamSb.append("channelCode=$channelCode&") }
         if (queryParamSb.isNotBlank()) {
             path = "$path?${queryParamSb.removeSuffix("&")}"
         }

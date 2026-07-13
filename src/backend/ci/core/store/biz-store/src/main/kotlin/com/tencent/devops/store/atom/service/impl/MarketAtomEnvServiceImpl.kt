@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestampmilli
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.web.utils.I18nUtil
@@ -62,6 +63,7 @@ import com.tencent.devops.store.pojo.common.ATOM_POST_ENTRY_PARAM
 import com.tencent.devops.store.pojo.common.ATOM_POST_FLAG
 import com.tencent.devops.store.pojo.common.ATOM_POST_NORMAL_PROJECT_FLAG_KEY_PREFIX
 import com.tencent.devops.store.pojo.common.ATOM_POST_VERSION_TEST_FLAG_KEY_PREFIX
+import com.tencent.devops.store.pojo.common.enums.ServiceScopeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.version.StoreVersion
 import com.tencent.devops.store.util.ServiceScopeUtil
@@ -300,7 +302,8 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
         atomStatus: Byte?,
         osName: String?,
         osArch: String?,
-        convertOsFlag: Boolean?
+        convertOsFlag: Boolean?,
+        channelCode: ChannelCode?
     ): Result<AtomEnv?> {
         return doGetMarketAtomEnvInfo(
             projectCode = projectCode,
@@ -310,7 +313,8 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
             osName = osName,
             osArch = osArch,
             convertOsFlag = convertOsFlag,
-            historyBuildQueryFlag = false
+            historyBuildQueryFlag = false,
+            channelCode = channelCode
         )
     }
 
@@ -322,7 +326,8 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
         osName: String? = null,
         osArch: String? = null,
         convertOsFlag: Boolean? = null,
-        historyBuildQueryFlag: Boolean
+        historyBuildQueryFlag: Boolean,
+        channelCode: ChannelCode? = null
     ): Result<AtomEnv?> {
         logger.info(
             "getMarketAtomEnvInfo $projectCode,$atomCode,$version,$atomStatus," +
@@ -425,7 +430,12 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
             version = atomBaseInfoRecord[tAtom.VERSION],
             publicFlag = atomBaseInfoRecord[tAtom.DEFAULT_FLAG] as Boolean,
             summary = atomBaseInfoRecord[tAtom.SUMMARY],
-            docsLink = atomBaseInfoRecord[tAtom.DOCS_LINK],
+            // 仅当当次构建为创作流渠道时，才将文档链接转换为创作流对应的地址
+            docsLink = StoreUtils.transformDocsLink(
+                atomBaseInfoRecord[tAtom.DOCS_LINK],
+                StoreTypeEnum.ATOM,
+                if (channelCode == ChannelCode.CREATIVE_STREAM) ServiceScopeEnum.CREATIVE_STREAM else null
+            ),
             props = atomBaseInfoRecord[tAtom.PROPS]?.let {
                 storeI18nMessageService.parseJsonStrI18nInfo(
                     jsonStr = it,

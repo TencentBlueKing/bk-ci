@@ -27,10 +27,14 @@
 
 package com.tencent.devops.process.yaml.parsers.utils
 
+import com.fasterxml.jackson.core.type.TypeReference
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.process.yaml.v2.models.PreScriptBuildYaml
 import com.tencent.devops.process.yaml.v2.models.PreTemplateScriptBuildYaml
 import com.tencent.devops.process.yaml.v2.utils.ScriptYmlUtils
+import com.tencent.devops.process.yaml.v3.models.PreTemplateScriptBuildYamlV3Parser
+import com.tencent.devops.process.yaml.v3.models.on.PreTriggerOnV3
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 import org.springframework.core.io.ClassPathResource
@@ -109,5 +113,50 @@ class ScriptYmlUtilsTest {
             newValue = newValue.replace(matcher.group(), realValue!!)
         }
         return newValue
+    }
+
+    @Test
+    fun formatTriggerOnTapd() {
+        val classPathResource = ClassPathResource("TapdTrigger.yml")
+        val inputStream: InputStream = classPathResource.inputStream
+        val isReader = InputStreamReader(inputStream)
+
+        val reader = BufferedReader(isReader)
+        val sb = StringBuffer()
+        var str: String?
+        while (reader.readLine().also { str = it } != null) {
+            sb.append(str).append("\n")
+        }
+
+        val preYaml = YamlUtil.getObjectMapper().readValue(
+            sb.toString(),
+            PreTemplateScriptBuildYamlV3Parser::class.java
+        )
+
+        val triggerList = JsonUtil.anyTo(
+            preYaml.triggerOn,
+            object : TypeReference<List<PreTriggerOnV3>>() {}
+        )
+        val tapdPre = triggerList.first { it.type == "tapd" }
+
+        Assertions.assertEquals("tapd", tapdPre.type)
+        Assertions.assertEquals("12345", tapdPre.workspaceId)
+
+        val triggerOn = com.tencent.devops.process.yaml.v3.utils.ScriptYmlUtils
+            .formatTriggerOn(tapdPre)
+
+        Assertions.assertEquals("12345", triggerOn.workspaceId)
+
+        Assertions.assertNotNull(triggerOn.story)
+        Assertions.assertEquals("trigger_story", triggerOn.story?.id)
+        Assertions.assertEquals(listOf("create", "update"), triggerOn.story?.action)
+        Assertions.assertEquals(listOf("u1"), triggerOn.story?.users)
+        Assertions.assertEquals(listOf("o1"), triggerOn.story?.owners)
+        Assertions.assertEquals(listOf("label1", "label2"), triggerOn.story?.labels)
+        Assertions.assertEquals(listOf("high"), triggerOn.story?.priorities)
+
+        Assertions.assertNotNull(triggerOn.bug)
+        Assertions.assertEquals("trigger_bug", triggerOn.bug?.id)
+        Assertions.assertEquals(listOf("create"), triggerOn.bug?.action)
     }
 }

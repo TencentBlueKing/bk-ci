@@ -95,8 +95,8 @@ class OpAtomResourceImpl @Autowired constructor(
         )
     }
 
-    override fun getPipelineAtomById(id: String): Result<Atom?> {
-        return opAtomService.getPipelineAtom(id)
+    override fun getPipelineAtomById(id: String, serviceScope: ServiceScopeEnum?): Result<Atom?> {
+        return opAtomService.getPipelineAtom(id, serviceScope)
     }
 
     override fun deletePipelineAtomById(id: String): Result<Boolean> {

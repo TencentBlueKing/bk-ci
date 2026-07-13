@@ -285,6 +285,41 @@ export default defineComponent({
       }
     }
 
+    // Handle move variable to top - 将变量移到当前分组的第一个位置
+    const handleMoveToTop = (variableId: string) => {
+      // 获取所有变量并按 order 排序
+      const allVars = [...variables.value].sort((a, b) => (a.order ?? Infinity) - (b.order ?? Infinity))
+
+      // 找到要移动的变量
+      const variable = allVars.find(v => v.id === variableId)
+      if (!variable) return
+
+      // 获取变量所在的分组名称
+      const groupName = variable.category || ''
+
+      // 找到同一分组中第一个变量在数组中的索引
+      const preEleIndex = allVars.findIndex(v => (v.category || '') === groupName)
+
+      // 找到要移动的变量在数组中的索引
+      const index = allVars.findIndex(v => v.id === variableId)
+
+      // 检查是否已经在分组顶部
+      if (index === preEleIndex) return
+
+      // 从当前位置移除变量
+      allVars.splice(index, 1)
+
+      // 插入到分组的第一个位置
+      allVars.splice(preEleIndex, 0, variable)
+
+      // 更新所有变量的 order 值
+      allVars.forEach((v, idx) => {
+        v.order = idx
+      })
+
+      updateParams(allVars)
+    }
+
     // Handle copy variable reference
     const handleCopyReference = (reference: string) => {
       Message({ theme: 'success', message: t('flow.variable.copySuccess') })
@@ -384,6 +419,7 @@ export default defineComponent({
                     onEdit={handleEditVariable}
                     onDelete={handleDeleteVariable}
                     onCopy={handleCopyReference}
+                    onMoveToTop={handleMoveToTop}
                   />
                 ))}
               </VueDraggable>

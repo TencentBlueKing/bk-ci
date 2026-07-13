@@ -29,13 +29,15 @@ package com.tencent.devops.common.pipeline.pojo.element.trigger
 
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.enums.TapdEventType
-import com.tencent.devops.common.pipeline.pojo.element.ElementProp
-import com.tencent.devops.common.pipeline.utils.TriggerElementPropUtils.staffInput
-import com.tencent.devops.common.pipeline.utils.TriggerElementPropUtils.vuexInput
+import com.tencent.devops.common.pipeline.pojo.element.Element
 import io.swagger.v3.oas.annotations.media.Schema
 
 /**
  * TAPD 事件触发器
+ *
+ * 注意：TAPD 触发器不属于代码库 Webhook 触发器体系，因此不继承 [WebHookTriggerElement]，
+ * 而是直接继承 [Element]。TAPD 事件通过独立的 TapdEventTriggerBuildService 进行匹配与触发，
+ * 不参与 WebhookElementParamsRegistrar/WebhookStartParamsRegistrar 的注册与查找。
  */
 @Schema(title = "TAPD事件触发", description = TapdWebHookTriggerElement.classType)
 data class TapdWebHookTriggerElement(
@@ -49,7 +51,7 @@ data class TapdWebHookTriggerElement(
     override var stepId: String? = null,
     @get:Schema(title = "数据", required = true)
     val data: TapdWebHookTriggerData
-) : WebHookTriggerElement(name, id, status) {
+) : Element(name, id, status) {
     companion object {
         const val classType = "codeTapdWebHookTrigger"
     }
@@ -63,33 +65,6 @@ data class TapdWebHookTriggerElement(
             super.findFirstTaskIdByStartType(startType)
         }
     }
-
-    /**
-     * 增加条件这里也要补充上,不然代码库触发器列表展示会不对
-     * 当前 TAPD 触发器仅保留用户过滤
-     */
-    override fun triggerCondition(): List<ElementProp> {
-        with(data.input) {
-            val props = listOf(
-                vuexInput(name = "eventType", value = eventType?.value),
-                vuexInput(
-                    name = "includeAction",
-                    value = when (eventType) {
-                        TapdEventType.STORY ->
-                            joinToString(includeStoryAction)
-
-                        TapdEventType.BUG ->
-                            joinToString(includeBugAction)
-
-                        else -> ""
-                    }
-                ),
-                staffInput(name = "includeUsers", value = includeUsers),
-                staffInput(name = "excludeUsers", value = excludeUsers)
-            )
-            return props.filterNotNull()
-        }
-    }
 }
 
 data class TapdWebHookTriggerData(
@@ -99,8 +74,9 @@ data class TapdWebHookTriggerData(
 
 @Schema(title = "TAPD事件触发数据")
 data class TapdWebHookTriggerInput(
-    @get:Schema(title = "TAPD项目ID（workspace_id），关联触发的 TAPD 项目", required = true)
-    val tapdProjectId: String,
+    // 需要兼容老数据,应该是不能为空的
+    @get:Schema(title = "TAPD workspaceId，关联触发的 TAPD 项目", required = true)
+    val workspaceId: String? = "",
     @get:Schema(title = "事件类型 (story/bug)", required = true)
     val eventType: TapdEventType?,
     @get:Schema(

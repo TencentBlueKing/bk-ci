@@ -63,6 +63,15 @@ export default defineComponent({
     const isSelectingAtom = ref(false)
     const atomList = ref<AtomItem[]>([])
     const hasMore = ref(true)
+    
+    // 搜索模式状态
+    const searchInstalledList = ref<AtomItem[]>([])
+    const searchUninstalledList = ref<AtomItem[]>([])
+    const searchInstalledHasMore = ref(true)
+    const searchUninstalledHasMore = ref(true)
+    const searchInstalledPage = ref(1)
+    const searchUninstalledPage = ref(1)
+    const isSearchMode = ref(false)
 
     // ========== Computed ==========
 
@@ -82,6 +91,11 @@ export default defineComponent({
     })
 
     const curTabList = computed(() => {
+      // 搜索模式下使用搜索列表
+      if (isSearchMode.value) {
+        return [...searchInstalledList.value, ...searchUninstalledList.value]
+      }
+
       let list = atomList.value
 
       // 按搜索关键词过滤
@@ -97,13 +111,19 @@ export default defineComponent({
       return list
     })
 
-    const installArr = computed(() =>
-      curTabList.value.filter((atom) => atom.installed || atom.defaultFlag),
-    )
+    const installArr = computed(() => {
+      if (isSearchMode.value) {
+        return searchInstalledList.value
+      }
+      return curTabList.value.filter((atom) => atom.installed || atom.defaultFlag)
+    })
 
-    const uninstallArr = computed(() =>
-      curTabList.value.filter((atom) => !atom.installed && !atom.defaultFlag),
-    )
+    const uninstallArr = computed(() => {
+      if (isSearchMode.value) {
+        return searchUninstalledList.value
+      }
+      return curTabList.value.filter((atom) => !atom.installed && !atom.defaultFlag)
+    })
 
     const classifyList = computed(() => {
       return atomManager.classifyOptions.value.map((item) => item.classifyCode)
@@ -168,9 +188,28 @@ export default defineComponent({
       }
     })
 
+    // 搜索防抖
+    const loadSearchAtomListWithDebounce = (() => {
+      let timer: ReturnType<typeof setTimeout> | null = null
+      return (reset: boolean) => {
+        if (timer) clearTimeout(timer)
+        timer = setTimeout(() => {
+          loadSearchAtomList(reset)
+        }, 300)
+      }
+    })()
+
     watch(searchKey, () => {
       if (searchKey.value) {
-        loadAtomList(true)
+        isSearchMode.value = true
+        // 重置搜索状态（包括页码）
+        searchInstalledList.value = []
+        searchUninstalledList.value = []
+        searchInstalledPage.value = 1
+        searchUninstalledPage.value = 1
+        searchInstalledHasMore.value = true
+        searchUninstalledHasMore.value = true
+        loadSearchAtomListWithDebounce(true)
       }
     })
 
@@ -179,16 +218,51 @@ export default defineComponent({
       emit('update:visible', false)
       searchKey.value = ''
       activeAtomCode.value = ''
+      isSearchMode.value = false
+      // 重置搜索状态
+      searchInstalledList.value = []
+      searchUninstalledList.value = []
+      searchInstalledPage.value = 1
+      searchUninstalledPage.value = 1
+      searchInstalledHasMore.value = true
+      searchUninstalledHasMore.value = true
     }
 
     function handleSearch(value: string) {
-      searchKey.value = value.trim()
-      loadAtomList(true)
+      const trimmedValue = value.trim()
+      searchKey.value = trimmedValue
+      
+      // 如果没有搜索关键词，退出搜索模式
+      if (!trimmedValue) {
+        isSearchMode.value = false
+        loadAtomList(true)
+        return
+      }
+      
+      // 按回车时立即执行搜索（不需要防抖，因为是用户主动触发）
+      isSearchMode.value = true
+      // 重置搜索状态
+      searchInstalledList.value = []
+      searchUninstalledList.value = []
+      searchInstalledPage.value = 1
+      searchUninstalledPage.value = 1
+      searchInstalledHasMore.value = true
+      searchUninstalledHasMore.value = true
+      // 开始加载搜索结果
+      loadSearchAtomList(true)
     }
 
     function handleClear(str: string) {
       if (str === '') {
         searchKey.value = ''
+        isSearchMode.value = false
+        // 重置搜索状态
+        searchInstalledList.value = []
+        searchUninstalledList.value = []
+        searchInstalledPage.value = 1
+        searchUninstalledPage.value = 1
+        searchInstalledHasMore.value = true
+        searchUninstalledHasMore.value = true
         loadAtomList(true)
       }
     }
@@ -241,14 +315,19 @@ export default defineComponent({
 
     function handleScrollLoadMore(event: Event) {
       const target = event.target as HTMLElement
-      if (!target || isThrottled.value || !hasMore.value) return
+      if (!target || isThrottled.value) return
 
       const bottomDis = target.scrollHeight - target.clientHeight - target.scrollTop
       if (bottomDis <= 600) {
         isThrottled.value = true
         setTimeout(() => {
           isThrottled.value = false
-          loadAtomList(false)
+          // 根据当前模式调用不同的加载函数
+          if (isSearchMode.value) {
+            loadSearchAtomList(false)
+          } else {
+            loadAtomList(false)
+          }
         }, 100)
       }
     }
@@ -286,9 +365,64 @@ export default defineComponent({
       }
     }
 
+    // 搜索模式：加载搜索结果（已安装/未安装）
+    async function loadSearchAtomList(reset = false) {
+      // 先加载已安装的插件
+      if (reset || searchInstalledHasMore.value) {
+        try {
+          const result = await atomManager.fetchSearchAtomList({
+            searchKey: searchKey.value,
+            installed: true,
+            os: atomListOs.value,
+            page: searchInstalledPage.value,
+            pageSize: 100,
+          })
+          if (result.records && result.records.length > 0) {
+            if (reset) {
+              searchInstalledList.value = result.records
+            } else {
+              searchInstalledList.value = [...searchInstalledList.value, ...result.records]
+            }
+            searchInstalledHasMore.value = result.hasMore
+            searchInstalledPage.value = result.page + 1
+          }
+        } catch (error) {
+          console.error('Failed to load installed search atoms:', error)
+        }
+      }
+
+      // 然后加载未安装的插件
+      if (reset || searchUninstalledHasMore.value) {
+        try {
+          const result = await atomManager.fetchSearchAtomList({
+            searchKey: searchKey.value,
+            installed: false,
+            os: atomListOs.value,
+            page: searchUninstalledPage.value,
+            pageSize: 100,
+          })
+          if (result.records && result.records.length > 0) {
+            if (reset) {
+              searchUninstalledList.value = result.records
+            } else {
+              searchUninstalledList.value = [...searchUninstalledList.value, ...result.records]
+            }
+            searchUninstalledHasMore.value = result.hasMore
+            searchUninstalledPage.value = result.page + 1
+          }
+        } catch (error) {
+          console.error('Failed to load uninstalled search atoms:', error)
+        }
+      }
+    }
+
     async function refreshAtomList() {
       if (isLoadingAtoms.value) return
-      await loadAtomList(true, true)
+      if (isSearchMode.value) {
+        await loadSearchAtomList(true)
+      } else {
+        await loadAtomList(true, true)
+      }
     }
 
     function handleClearWrapper() {
@@ -358,12 +492,12 @@ export default defineComponent({
                 ))}
               </Tab>
             ) : (
-              <Loading loading={isLoadingAtoms.value}>
-                <section
-                  ref={searchResultRef}
-                  class={styles.searchResult}
-                  onScroll={handleScrollLoadMore}
-                >
+              <div class={styles.searchResultWrapper}>
+                  <section
+                    ref={searchResultRef}
+                    class={styles.searchResult}
+                    onScroll={handleScrollLoadMore}
+                  >
                   {installArr.value.length > 0 && (
                     <>
                       <h3 class={styles.searchTitle}>
@@ -414,8 +548,8 @@ export default defineComponent({
                       <Exception type="search-empty" />
                     </div>
                   )}
-                </section>
-              </Loading>
+                  </section>
+              </div>
             )}
           </div>
         )}

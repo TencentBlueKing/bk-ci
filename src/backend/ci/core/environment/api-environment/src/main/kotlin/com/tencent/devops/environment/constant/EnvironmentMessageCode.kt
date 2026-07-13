@@ -47,7 +47,7 @@ package com.tencent.devops.environment.constant
  */
 object EnvironmentMessageCode {
     const val ERROR_ENV_NOT_EXISTS = "2105000" // 环境管理：[{0}] 环境不存在
-    const val ERROR_NODE_INSUFFICIENT_PERMISSIONS = "2105001" // 环境管理：环境权限不足 [{0}]
+    const val ERROR_NODE_INSUFFICIENT_PERMISSIONS = "2105001" // 环境管理：节点权限不足 [{0}]
     const val ERROR_NODE_NOT_EXISTS = "2105002" // 环境管理：[{0}] 节点不存在
     const val ERROR_NODE_NAME_DUPLICATE = "2105003" // 环境管理：环境名称已存在: [{0}]
     const val ERROR_ENV_BUILD_2_DEPLOY_DENY = "2105004" // 环境管理：构建环境不能修改为部署环境

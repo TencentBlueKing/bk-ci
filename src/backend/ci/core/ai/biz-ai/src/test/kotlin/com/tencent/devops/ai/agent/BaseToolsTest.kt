@@ -92,6 +92,13 @@ class BaseToolsTest : BkCiAbstractTest() {
                             containerName = "job-1",
                             containerHashId = "hash-1",
                             jobId = "job-1",
+                            elementId = "e-1",
+                            elementName = "plugin-1",
+                            stepId = "step-1",
+                            status = "FAILED",
+                            errorType = "USER",
+                            errorCode = 2199011,
+                            errorMsg = "script exit 1",
                             element = LinuxScriptElement(
                                 id = "e-1",
                                 name = "plugin-1",

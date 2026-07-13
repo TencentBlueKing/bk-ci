@@ -50,7 +50,8 @@ interface AtomArchiveSDKApi : WorkerRestApiSDK {
         atomStatus: Byte? = null,
         osName: String? = null,
         osArch: String? = null,
-        convertOsFlag: Boolean? = true
+        convertOsFlag: Boolean? = true,
+        channelCode: String? = null
     ): Result<AtomEnv>
 
     /**

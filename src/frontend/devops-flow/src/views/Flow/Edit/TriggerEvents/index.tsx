@@ -235,6 +235,7 @@ export default defineComponent({
                 content: () => (
                   <TriggerEventSelector
                     projectCode={projectCode.value}
+                    existingTriggerAtomCodes={triggerElements.value.map(el => el.atomCode).filter(Boolean) as string[]}
                     onSelect={handleSelectEvent}
                   />
                 ),

@@ -90,7 +90,7 @@ class AiSkillService @Autowired constructor(
             "[Skill] List for user: userId={}, total={}",
             userId, merged.size
         )
-        return merged
+        return emptyList()
     }
 
     fun updateSkill(

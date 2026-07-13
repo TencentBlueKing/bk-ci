@@ -207,12 +207,13 @@
     header-align="center"
     :show-footer="false"
     class="remove-dialog"
+    render-directive="if"
     :is-show="showDeptListPermissionDialog"
     @closed="handleRemoveClosed"
   >
     <template #header>
-      <img src="@/css/svg/warninfo.svg" class="manage-icon-tips">
-      <h2 v-if="!isBatchOperate" class="dialog-header"> {{t('成功移除XX', [`${removeUserDeptListMap.removeUsers[0].id}(${removeUserDeptListMap.removeUsers[0].name})`])}}</h2>
+      <img src="@/css/svg/warninfo.svg" class="manage-icon-tips">666
+      <h2 v-if="!isBatchOperate" class="dialog-header"> {{t('成功移除XX', [`${removeUserDeptListMap.removeUsers?.[0].id}(${removeUserDeptListMap.removeUsers?.[0].name})`])}}</h2>
       <h2 v-else class="dialog-header"> {{t('X个组织/用户已成功移出本项目', [removeUserDeptListMap.removeUsers.length])}}</h2>
     </template>
     <template #default>
@@ -220,7 +221,7 @@
         tag="p"
         keypath="用户XXX已从项目下移除，但其所属的如下组织架构在项目下拥有权限，此用户依然可以进入项目进行操作："
       >
-        <span v-for="(item, index) in removeUserDeptListMap.removeUsers">
+        <span v-for="(item, index) in removeUserDeptListMap.removeUsers" :key="item.id">
           {{ `${item.id} (${item.name})` }}
           <span v-if="index < removeUserDeptListMap.removeUsers.length - 1">, </span>
         </span>
@@ -922,6 +923,8 @@ function goBack() {
 
   .manage-search {
     display: flex;
+    justify-content: space-between;
+    gap: 10px;
     width: 100%;
     height: 64px;
     background: #FFFFFF;

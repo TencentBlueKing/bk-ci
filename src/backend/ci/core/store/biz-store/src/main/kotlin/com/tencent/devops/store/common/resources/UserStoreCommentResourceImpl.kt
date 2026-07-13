@@ -36,6 +36,7 @@ import com.tencent.devops.store.common.service.StoreStatisticService
 import com.tencent.devops.store.pojo.common.comment.StoreCommentInfo
 import com.tencent.devops.store.pojo.common.comment.StoreCommentRequest
 import com.tencent.devops.store.pojo.common.comment.StoreCommentScoreInfo
+import com.tencent.devops.store.pojo.common.enums.ServiceScopeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -74,6 +75,7 @@ class UserStoreCommentResourceImpl @Autowired constructor(
         storeType: String,
         storeId: String,
         storeCode: String,
+        serviceScope: ServiceScopeEnum?,
         storeCommentRequest: StoreCommentRequest
     ): Result<StoreCommentInfo?> {
         return storeCommentService.addStoreComment(
@@ -81,7 +83,8 @@ class UserStoreCommentResourceImpl @Autowired constructor(
             storeId = storeId,
             storeCode = storeCode,
             storeCommentRequest = storeCommentRequest,
-            storeType = StoreTypeEnum.valueOf(storeType)
+            storeType = StoreTypeEnum.valueOf(storeType),
+            serviceScope = serviceScope
         )
     }
 

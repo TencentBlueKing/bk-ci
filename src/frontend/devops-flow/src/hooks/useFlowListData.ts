@@ -239,7 +239,7 @@ export function useFlowListData(styles?: Styles) {
       viewId: groupId || (route.params.groupId as string),
       ...flatSearchParams.value,
     }
-    await store.fetchFlowList(params)
+    await store.fetchFlowList(params, isRecycleBin.value)
   }
 
   /**
@@ -502,10 +502,15 @@ export function useFlowListData(styles?: Styles) {
       theme: 'primary',
       confirmText: t('flow.common.confirm'),
       onConfirm: async () => {
-        // TODO 恢复创作流
         try {
           const res = await store.restoreFlow(row.pipelineId)
-          Message({ theme: 'error', message: t(`flow.restore.${res ? 'restoreSuc' : 'restoreFail'}`) })
+          if (res) {
+            Message({ theme: 'success', message: t('flow.restore.restoreSuc') })
+            loadContentData()
+            loadAllData()
+          } else {
+            Message({ theme: 'error', message: t('flow.restore.restoreFail') })
+          }
         } catch (error: any) {
           Message({ theme: 'error', message: error?.message || error })
         }

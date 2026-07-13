@@ -64,7 +64,7 @@ interface ExternalResource {
         softwareList: SoftwareCallbackRes
     ): Result<Boolean>
 
-    @Operation(summary = "单向网络开关-单个实例级别开启。多次调用时为覆盖关系")
+    @Operation(summary = "兼容 CDS 网络配置回调。当前固定使用 SSL 和默认域名配置，不再更新单实例配置")
     @POST
     @Path("/cds_mesh_enable_and_domain")
     fun cdsMeshEnableAndDomain(
@@ -79,7 +79,7 @@ interface ExternalResource {
         enable: String,
         @QueryParam("domain")
         domain: String,
-        @Parameter(description = "SSL模式：true表示使用SSL模式，为空表示使用默认Mesh模式")
+        @Parameter(description = "兼容参数，当前忽略")
         @QueryParam("sslMode")
         sslMode: String? = null
     ): Result<Boolean>

@@ -112,6 +112,11 @@ export interface AppendJobEventPayload {
   [key: string]: any;
 }
 
+export interface SubPipelineAccessEventPayload {
+  atom: any;
+  [key: string]: any;
+}
+
 /**
  * BkPipeline Component Events
  */
@@ -199,6 +204,12 @@ export interface BkPipelineEvents {
    * @param payload - Append job event payload
    */
   "append-job": (payload: AppendJobEventPayload) => void;
+
+  /**
+   * Emitted when sub pipeline access is triggered
+   * @param payload - Sub pipeline access event payload
+   */
+  "sub-pipeline-access": (payload: SubPipelineAccessEventPayload) => void;
 }
 
 /**
@@ -289,6 +300,7 @@ export interface BkPipelineProps {
   onStageRetry?: BkPipelineEvents["stage-retry"];
   onDebugContainer?: BkPipelineEvents["debug-container"];
   onAppendJob?: BkPipelineEvents["append-job"];
+  onSubPipelineAccess?: BkPipelineEvents["sub-pipeline-access"];
 }
 
 /**

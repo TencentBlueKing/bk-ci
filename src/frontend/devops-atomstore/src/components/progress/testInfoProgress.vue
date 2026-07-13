@@ -166,7 +166,7 @@
         tagTestList.value.forEach(tag => {
             const matchedTest = allTestList.value.find(test => test.workspaceName === tag.instanceId)
             if (matchedTest) {
-                tag.instanceName = matchedTest.displayName
+                tag.instanceName = matchedTest.displayName || matchedTest.workspaceName
             }
         })
         tagTestList.value = tagTestList.value.filter(tag => {
@@ -182,7 +182,7 @@
                 tagTestList.value.push({
                     projectCode: test.projectId,
                     instanceId: test.workspaceName,
-                    instanceName: test.displayName
+                    instanceName: test.displayName || test.workspaceName
                 })
             }
         })
@@ -224,6 +224,7 @@
         font-size: 14px;
         color: #222;
         height: 32px;
+        line-height: 32px;
         border-radius: 2px;
     }
 }

@@ -14,16 +14,16 @@
                 <span class="section-label">{{ $t('store.可见范围') }}</span>
                 <div class="section-content">
                     <div
-                        v-if="tagTestList.length"
+                        v-if="rangeSelectData.length"
                         class="tag-list"
                     >
                         <bk-tag
-                            v-for="item in tagTestList"
-                            :key="item.deptId"
+                            v-for="item in rangeSelectData"
+                            :key="item.rangeType + '_' + item.id"
                             :closable="!isEdit"
-                            @close="handleTagClose(item.deptId)"
+                            @close="handleTagClose(item)"
                         >
-                            {{ item.deptName }}
+                            {{ item.name }}
                         </bk-tag>
                     </div>
                     
@@ -141,8 +141,9 @@
 
         <visible-range-dialog
             :show-dialog="isShowDialog"
-            :select-data="tagTestList"
+            :select-data="dialogSelectData"
             :is-loading="isDialogLoading"
+            route-type="devx"
             @saveHandle="handleConfirm"
             @cancelHandle="handleCancel"
             @update="handleUpdate"
@@ -181,9 +182,9 @@
     const isDialogLoading = ref(false)
     const isLoading = ref(false)
     const errMessage = ref(false)
-    
-    const tagTestList = ref([])
-    const initTagList = ref('')
+
+    const rangeSelectData = ref([])
+    const initRangeList = ref('')  // 可见范围初始化状态
     const filesList = ref([])
     const videoList = ref([])
     const pictureList = ref([])
@@ -192,23 +193,53 @@
     const storeCode = computed(() => $route.params.storeCode || props.appDetail?.storeCode)
     const storeId = computed(() => $route.params.storeId || props.appDetail?.storeId)
     const uploadUrl = '/ms/misc/api/user/file/upload'
-    
+
     const mediaInfoList = computed(() => [...videoList.value, ...pictureList.value])
+
     const isEditing = computed(() =>
-        initTagList.value !== tagTestList.value.map(item => item.deptId).toString()
+        initRangeList.value !== rangeSelectData.value.map(item => `${item.rangeType}_${item.id}`).toString()
         || initMediaInfoList.value !== mediaInfoList.value.map(item => item.mediaUrl).toString()
     )
 
+    const dialogSelectData = computed(() => ({
+        deptInfos: getDeptInfos(),
+        projectInfos: getProjectInfos()
+    }))
+
     const init = () => {
-        tagTestList.value = []
+        rangeSelectData.value = []
+        initRangeList.value = ''
         filesList.value = []
         videoList.value = []
         pictureList.value = []
     }
 
+
+    const getDeptInfos = () => rangeSelectData.value
+        .filter(item => item.rangeType === 'dept')
+        .map(({ id, name }) => ({ deptId: id, deptName: name }))
+
+    const getProjectInfos = () => rangeSelectData.value
+        .filter(item => item.rangeType === 'project')
+        .map(({ id, name }) => ({ projectCode: id, projectName: name }))
+
+    const updateRangeSelectData = (params) => {
+        rangeSelectData.value = [
+            ...(params.deptInfos || []).map(item => ({
+                rangeType: 'dept',
+                id: item.deptId,
+                name: item.deptName
+            })),
+            ...(params.projectInfos || []).map(item => ({
+                rangeType: 'project',
+                id: item.projectCode,
+                name: item.projectName
+            }))
+        ]
+    }
     const getInformation = async () => {
         if (!storeCode.value) return
-        
+
         try {
             isLoading.value = true
             const deptStatusInfos = 'APPROVING,APPROVED'
@@ -220,7 +251,18 @@
                 $store.dispatch('store/mediaInfoGet', storeCode.value)
             ])
 
-            tagTestList.value = visibilitieSInfo.deptInfos || []
+            rangeSelectData.value = [
+                ...(visibilitieSInfo.deptInfos || []).map(item => ({
+                    rangeType: 'dept',
+                    id: item.deptId,
+                    name: item.deptName
+                })),
+                ...(visibilitieSInfo.projectInfos || []).map(item => ({
+                    rangeType: 'project',
+                    id: item.projectCode,
+                    name: item.projectName
+                }))
+            ]
 
             if (mediaInfo && Array.isArray(mediaInfo)) {
                 mediaInfo.forEach(({ mediaUrl, mediaType }) => {
@@ -232,8 +274,8 @@
                     }
                 })
             }
-            
-            initTagList.value = tagTestList.value.map(item => item.deptId).toString()
+
+            initRangeList.value = rangeSelectData.value.map(item => `${item.rangeType}_${item.id}`).toString()
             initMediaInfoList.value = mediaInfo?.map(item => item.mediaUrl).toString() || ''
         } catch (error) {
             console.error('获取信息失败:', error)
@@ -248,8 +290,8 @@
         }
     }
 
-    const handleTagClose = (deptId) => {
-        tagTestList.value = tagTestList.value.filter(item => item.deptId !== deptId)
+    const handleTagClose = (item) => {
+        rangeSelectData.value = rangeSelectData.value.filter(data => !(data.rangeType === item.rangeType && data.id === item.id))
     }
 
     const goStep = async (status) => {
@@ -269,7 +311,8 @@
             
             if (status === 'next') {
                 const params = {
-                    deptInfoList: tagTestList.value,
+                    deptInfos: getDeptInfos(),
+                    projectInfos: getProjectInfos(),
                     mediaInfoList: mediaInfoList.value.map(({ loading, tempId, ...rest }) => rest)
                 }
                 await $store.dispatch('store/progressInfoEdit', {
@@ -289,17 +332,12 @@
     }
 
     const handleConfirm = (params) => {
-        const deptInfos = params.deptInfos || []
-        deptInfos.forEach(newItem => {
-            if (!tagTestList.value.some(existingItem => existingItem.deptId == newItem.deptId)) {
-                tagTestList.value.push(newItem)
-            }
-        })
+        updateRangeSelectData(params)
         isShowDialog.value = false
     }
 
-    const handleUpdate = (deptInfos) => {
-        tagTestList.value = deptInfos
+    const handleUpdate = (params) => {
+        updateRangeSelectData(params)
     }
 
     const handleCancel = () => {

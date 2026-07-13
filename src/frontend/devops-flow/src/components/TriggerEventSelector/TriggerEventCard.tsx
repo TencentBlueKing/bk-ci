@@ -19,6 +19,10 @@ export default defineComponent({
       type: Boolean,
       default: false,
     },
+    disabled: {
+      type: Boolean,
+      default: false,
+    },
   },
   emits: ['click'],
   setup(props, { emit }) {
@@ -39,14 +43,18 @@ export default defineComponent({
     }
 
     const handleClick = () => {
-      if (!props.loading) {
+      if (!props.loading && !props.disabled) {
         emit('click')
       }
     }
 
     return () => (
       <div
-        class={[styles.eventCard, props.loading && styles.eventCardLoading]}
+        class={[
+          styles.eventCard,
+          props.loading && styles.eventCardLoading,
+          props.disabled && styles.eventCardDisabled,
+        ]}
         onClick={handleClick}
       >
         <div class={styles.eventIcon}>

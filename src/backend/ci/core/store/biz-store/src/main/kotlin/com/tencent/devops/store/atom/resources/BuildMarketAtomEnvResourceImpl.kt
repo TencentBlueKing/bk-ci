@@ -28,18 +28,20 @@
 package com.tencent.devops.store.atom.resources
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.atom.BuildMarketAtomEnvResource
 import com.tencent.devops.store.atom.service.MarketAtomEnvService
-import com.tencent.devops.store.common.service.AtomWhitelistConfigService
+import com.tencent.devops.store.common.service.StoreWhitelistConfigService
 import com.tencent.devops.store.pojo.atom.AtomEnv
 import com.tencent.devops.store.pojo.atom.AtomEnvRequest
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class BuildMarketAtomEnvResourceImpl @Autowired constructor(
     private val marketAtomEnvService: MarketAtomEnvService,
-    private val atomWhitelistConfigService: AtomWhitelistConfigService
+    private val storeWhitelistConfigService: StoreWhitelistConfigService
 ) : BuildMarketAtomEnvResource {
 
     override fun getAtomEnv(
@@ -49,7 +51,8 @@ class BuildMarketAtomEnvResourceImpl @Autowired constructor(
         atomStatus: Byte?,
         osName: String?,
         osArch: String?,
-        convertOsFlag: Boolean?
+        convertOsFlag: Boolean?,
+        channelCode: ChannelCode?
     ): Result<AtomEnv?> {
         return marketAtomEnvService.getMarketAtomEnvInfo(
             projectCode = projectCode,
@@ -58,7 +61,8 @@ class BuildMarketAtomEnvResourceImpl @Autowired constructor(
             atomStatus = atomStatus,
             osName = osName,
             osArch = osArch,
-            convertOsFlag = convertOsFlag
+            convertOsFlag = convertOsFlag,
+            channelCode = channelCode
         )
     }
 
@@ -72,6 +76,10 @@ class BuildMarketAtomEnvResourceImpl @Autowired constructor(
     }
 
     override fun isAtomInWhitelist(whitelistType: String, atomCode: String): Result<Boolean> {
-        return Result(atomWhitelistConfigService.isAtomInWhitelist(atomCode, whitelistType))
+        return Result(storeWhitelistConfigService.isInWhitelist(
+            storeType = StoreTypeEnum.ATOM,
+            code = atomCode,
+            whitelistType = whitelistType
+        ))
     }
 }

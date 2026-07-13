@@ -62,7 +62,7 @@ interface OpAtomService {
     /**
      * 根据id获取插件信息
      */
-    fun getPipelineAtom(id: String): Result<Atom?>
+    fun getPipelineAtom(id: String, serviceScope: ServiceScopeEnum?): Result<Atom?>
 
     /**
      * 根据插件代码和版本号获取插件信息

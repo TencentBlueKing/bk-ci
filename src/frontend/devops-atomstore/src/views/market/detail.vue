@@ -10,7 +10,7 @@
             <router-link
                 :to="{ name: 'atomWork' }"
                 class="g-title-work"
-                v-if="type !== 'ide' && type !== 'creative'"
+                v-if="type !== 'ide'"
             >
                 {{ $t('store.工作台') }}
             </router-link>

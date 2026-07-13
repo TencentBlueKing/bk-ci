@@ -68,11 +68,7 @@ data class OptionalTemplateList(
                 templateTypeDesc = TemplateType.PUBLIC.value,
                 category = emptyList(),
                 logoUrl = "",
-                stages = if (isCreativeStream) {
-                    Model.creativeStreamDefaultModel().stages
-                } else {
-                    Model.defaultModel().stages
-                },
+                stages = Model.defaultModel().stages,
                 cloneTemplateSettingExist = CloneTemplateSettingExist(
                     notifySettingExist = false,
                     concurrencySettingExist = false,

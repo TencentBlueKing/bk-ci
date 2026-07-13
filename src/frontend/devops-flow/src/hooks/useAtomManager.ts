@@ -1,6 +1,7 @@
 import {
   fetchAtomClassify,
   fetchAtoms,
+  fetchSearchAtoms,
   JobCategory,
   JobType,
   type AtomClassify,
@@ -193,6 +194,55 @@ export const useAtomManager = (options: UseAtomManagerOptions) => {
     }
   }
 
+  // 搜索模式：分页加载已安装/未安装插件列表（不需要缓存）
+  const fetchSearchAtomList = async (params: {
+    searchKey: string
+    installed?: boolean
+    os?: string
+    page?: number
+    pageSize?: number
+  }): Promise<{
+    records: AtomItem[]
+    hasMore: boolean
+    page: number
+    totalPages: number
+    count: number
+  }> => {
+    const { searchKey, installed = true, os, page = 1, pageSize = 100 } = params
+    
+    try {
+      const result = await fetchSearchAtoms({
+        projectCode: projectCode.value,
+        category: JobCategory.TASK,
+        searchKey,
+        installed,
+        os,
+        page,
+        pageSize,
+      })
+      
+      const records = result.records || []
+      const hasMore = page < result.totalPages
+      
+      return {
+        records,
+        hasMore,
+        page,
+        totalPages: result.totalPages,
+        count: result.count,
+      }
+    } catch (error) {
+      console.error('Failed to fetch search atoms:', error)
+      return {
+        records: [],
+        hasMore: false,
+        page,
+        totalPages: 0,
+        count: 0,
+      }
+    }
+  }
+
   // 获取缓存的插件列表
   const getCachedAtomList = (
     params: {
@@ -276,6 +326,7 @@ export const useAtomManager = (options: UseAtomManagerOptions) => {
     // 方法
     fetchClassifyList,
     fetchAtomList,
+    fetchSearchAtomList,
     getCachedAtomList,
     isLoadingAtoms,
     clearCache,

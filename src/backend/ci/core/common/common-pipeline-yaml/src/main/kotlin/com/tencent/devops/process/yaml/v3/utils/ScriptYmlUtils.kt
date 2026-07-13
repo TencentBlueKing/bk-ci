@@ -388,18 +388,22 @@ object ScriptYmlUtils {
         if (triggerConfig == null) {
             return null
         }
-        val map = YamlObjects.transValue<Map<String, Any?>>("Extends.template", "trigger-conf", triggerConfig)
+        val map = YamlObjects.transValue<Map<String, Any?>>("extends.template", "trigger-conf", triggerConfig)
         return map.mapValues {
             val config =
-                YamlObjects.transValue<Map<String, Any?>>("Extends.template.trigger-conf", it.key, it.value)
+                YamlObjects.transValue<Map<String, Any?>>("extends.template.trigger-conf", it.key, it.value)
             ExtendsTriggerConfig(
                 disabled = YamlObjects.getNullValue("disabled", config)?.toBooleanStrictOrNull(),
                 cron = YamlObjects.getNullValue("cron", config),
-                variables = YamlObjects.transValue<Map<String, Any>?>(
-                    path = "Extends.template.trigger-conf.${it.key}",
-                    type = "variables",
-                    value = YamlObjects.getNullValue("variables", config)
-                )
+                variables = if (config["variables"] == null) {
+                    null
+                } else {
+                    YamlObjects.transValue<Map<String, Any>>(
+                        path = "extends.template.trigger-conf.${it.key}",
+                        type = "variables",
+                        value = config["variables"]
+                    )
+                }
             )
         }
     }
@@ -415,15 +419,15 @@ object ScriptYmlUtils {
         if (variables == null) {
             return null
         }
-        val map = YamlObjects.transValue<Map<String, Any?>>("Extends.template", "variables", variables)
+        val map = YamlObjects.transValue<Map<String, Any?>>("extends.template", "variables", variables)
         return map.mapValues {
             when (it.value) {
                 is String -> PreTemplateVariable(it.value as String)
                 else -> {
                     val variable =
-                        YamlObjects.transValue<Map<String, Any?>>("Extends.template.variables", it.key, it.value)
+                        YamlObjects.transValue<Map<String, Any?>>("extends.template.variables", it.key, it.value)
                     PreTemplateVariable(
-                        value = YamlObjects.getNotNullValueAny("value", it.key, variable),
+                        value = YamlObjects.getNullValue("value", variable),
                         allowModifyAtStartup = YamlObjects.getNullValue("allow-modify-at-startup", variable)
                             ?.toBoolean() ?: true
                     )
@@ -806,12 +810,14 @@ object ScriptYmlUtils {
             changeContent = p4EventRule(preTriggerOn.changeContent),
             shelveCommit = p4EventRule(preTriggerOn.shelveCommit),
             shelveSubmit = p4EventRule(preTriggerOn.shelveSubmit),
-            tapd = tapdRule(preTriggerOn)
+            story = tapdEventRule(preTriggerOn.story),
+            bug = tapdEventRule(preTriggerOn.bug)
         )
 
         if (preTriggerOn is PreTriggerOnV3) {
             res.repoName = preTriggerOn.repoName
             res.scmCode = preTriggerOn.scmCode
+            res.workspaceId = preTriggerOn.workspaceId
         }
 
         return res
@@ -1009,16 +1015,18 @@ object ScriptYmlUtils {
     }
 
     /**
-     * 解析 `on.tapd` 节点为 [TapdRule] 列表，支持单对象与数组两种 YAML 写法。
+     * 将 `on.story` / `on.bug` 承载的 Any（YAML 解析产物，通常为 Map）反序列化为 [TapdRule]。
+     *
+     * 与 `p4EventRule` 类似，YAML 中每个事件（story / bug）以子对象形式书写，
+     * 由 [TapdRule] 承载 action / users / labels / priorities 等过滤条件。
      */
-    private fun tapdRule(preTriggerOn: IPreTriggerOn): List<TapdRule>? {
-        val tapd = preTriggerOn.tapd ?: return null
+    private fun tapdEventRule(rule: Any?): TapdRule? {
+        if (rule == null) return null
         return kotlin.runCatching {
-            when (tapd) {
-                is Map<*, *> -> listOf(JsonUtil.anyTo(tapd, object : TypeReference<TapdRule>() {}))
-                is List<*> -> JsonUtil.anyTo(tapd, object : TypeReference<List<TapdRule>>() {})
-                else -> null
-            }
+            YamlUtil.getObjectMapper().readValue(
+                JsonUtil.toJson(rule),
+                TapdRule::class.java
+            )
         }.getOrNull()
     }
 
