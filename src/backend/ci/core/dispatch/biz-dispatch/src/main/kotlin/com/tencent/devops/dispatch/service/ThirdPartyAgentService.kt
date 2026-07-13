@@ -50,7 +50,6 @@ import com.tencent.devops.common.event.enums.PipelineBuildStatusBroadCastEventTy
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCastEvent
 import com.tencent.devops.common.notify.enums.NotifyType
 import com.tencent.devops.common.pipeline.enums.BuildStatus
-import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentDockerInfoDispatch
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.HomeHostUtil
@@ -526,7 +525,8 @@ class ThirdPartyAgentService @Autowired constructor(
     fun fetchAgentBuildsByJob(
         userId: String,
         projectId: String,
-        agentId: String,
+        agentId: String?,
+        envId: Long?,
         pipelineId: String,
         jobId: String,
         page: Int?,
@@ -538,19 +538,21 @@ class ThirdPartyAgentService @Autowired constructor(
         val offset = sqlLimit.offset
         val limit = sqlLimit.limit
 
-        val agentBuildCount = thirdPartyAgentBuildDao.countAgentBuilds(
+        val agentBuildCount = thirdPartyAgentBuildDao.countAgentBuildsProject(
             dslContext = dslContext,
+            projectId = projectId,
             agentId = agentId,
+            envId = envId,
             pipelineId = pipelineId,
-            jobId = jobId,
-            status = null
+            jobId = jobId
         )
-        val agentBuilds = thirdPartyAgentBuildDao.listAgentBuilds(
+        val agentBuilds = thirdPartyAgentBuildDao.listAgentBuildsByProject(
             dslContext = dslContext,
+            projectId = projectId,
             agentId = agentId,
+            envId = envId,
             pipelineId = pipelineId,
             jobId = jobId,
-            status = null,
             offset = offset,
             limit = limit
         ).associateBy { it.buildId }

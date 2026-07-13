@@ -10,13 +10,11 @@ import jakarta.ws.rs.Consumes
 import jakarta.ws.rs.GET
 import jakarta.ws.rs.Path
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.dispatch.pojo.thirdpartyagent.AgentBuildInfo
 import com.tencent.devops.dispatch.pojo.thirdpartyagent.AgentPipelineContainerBuild
 import com.tencent.devops.dispatch.pojo.thirdpartyagent.JobIdAndName
 import com.tencent.devops.dispatch.pojo.thirdpartyagent.PipelineIdAndName
 import com.tencent.devops.dispatch.pojo.thirdpartyagent.TPAPipelineBuildCountResp
 import jakarta.ws.rs.HeaderParam
-import jakarta.ws.rs.PathParam
 import jakarta.ws.rs.Produces
 import jakarta.ws.rs.QueryParam
 import jakarta.ws.rs.core.MediaType
@@ -140,9 +138,12 @@ interface UserAgentResource {
         @Parameter(description = "项目ID", required = true)
         @QueryParam("projectId")
         projectId: String,
-        @Parameter(description = "agent Hash ID", required = true)
-        @PathParam("agentId")
-        agentId: String,
+        @Parameter(description = "agent Hash ID", required = false)
+        @QueryParam("agentId")
+        agentId: String?,
+        @Parameter(description = "env Hash ID", required = false)
+        @QueryParam("envId")
+        envId: String?,
         @Parameter(description = "筛选此pipelineId", required = false)
         @QueryParam("pipelineId")
         pipelineId: String,
