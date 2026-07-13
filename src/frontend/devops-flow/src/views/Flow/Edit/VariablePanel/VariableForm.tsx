@@ -9,7 +9,7 @@ import {
   VariableCategory,
   validateVariableId,
 } from '@/types/variable'
-import { Button, Checkbox, Form, Input, Popover, Radio, Select } from 'bkui-vue'
+import { Button, Checkbox, Form, Input, Popover, Radio, Select, Message } from 'bkui-vue'
 import { computed, defineComponent, ref, watch, type PropType } from 'vue'
 import { useI18n } from 'vue-i18n'
 import OptionsEditor from './OptionsEditor'
@@ -50,6 +50,7 @@ export default defineComponent({
   setup(props, { emit }) {
     const { t } = useI18n()
     const formRef = ref()
+    const optionsEditorRef = ref()
     const formData = ref<Param>(getInitialFormData())
 
     // Is editing mode
@@ -127,12 +128,19 @@ export default defineComponent({
     // Initialize form data
     function getInitialFormData(): Param & { payload?: OptionsApiConfig } {
       if (props.variable) {
-        return {
+        const initialData = {
           ...props.variable,
           payload: (props.variable as Param & { payload?: OptionsApiConfig }).payload || {
             type: OptionsSourceType.LIST,
           },
         }
+        // 多选类型：确保 defaultvalue 是字符串格式
+        if (initialData.type === ParamType.MULTIPLE) {
+          if (Array.isArray(initialData.defaultValue)) {
+            initialData.defaultValue = (initialData.defaultValue as string[]).join(',')
+          }
+        }
+        return initialData
       }
       const defaultData = DEFAULT_VARIABLE_VALUES[ParamType.STRING]
       return {
@@ -184,10 +192,26 @@ export default defineComponent({
     const handleSave = async () => {
       try {
         await formRef.value.validate()
+
+        // 验证选项编辑器（如果存在）
+        if (optionsEditorRef.value) {
+          const isOptionsValid = optionsEditorRef.value.validate()
+          if (!isOptionsValid) {
+            Message({ theme: 'error', message: t('flow.variable.optionsValidationFailed') })
+            return
+          }
+        }
+
         const data = { ...formData.value }
         if (!data.required) {
           data.valueNotEmpty = false
         }
+        
+        // 多选类型：将默认值从数组转换为逗号分隔的字符串
+        if (data.type === ParamType.MULTIPLE && Array.isArray(data.defaultValue)) {
+          data.defaultValue = (data.defaultValue as string[]).join(',')
+        }
+        
         emit('save', data)
       } catch (error) {
         console.error('Form validation failed:', error)
@@ -276,7 +300,22 @@ export default defineComponent({
               />
             ) : isType(ParamType.ENUM) || isType(ParamType.MULTIPLE) ? (
               <Select
-                v-model={formData.value.defaultValue}
+                modelValue={isType(ParamType.MULTIPLE) 
+                  ? (typeof formData.value.defaultValue === 'string' 
+                      ? formData.value.defaultValue.split(',').filter(Boolean) 
+                      : Array.isArray(formData.value.defaultValue)
+                        ? formData.value.defaultValue as string[]
+                        : []
+                    )
+                  : formData.value.defaultValue as string
+                }
+                onChange={(val: string | string[]) => {
+                  if (isType(ParamType.MULTIPLE)) {
+                    formData.value.defaultValue = (val as string[]).join(',')
+                  } else {
+                    formData.value.defaultValue = val as string
+                  }
+                }}
                 multiple={isType(ParamType.MULTIPLE)}
                 disabled={!props.editable}
               >
@@ -298,6 +337,7 @@ export default defineComponent({
           {showOptionsEditor.value && (
             <FormItem label={t('flow.variable.optionSource')}>
               <OptionsEditor
+                ref={optionsEditorRef}
                 options={(formData.value.options || []) as ParamOption[]}
                 payload={
                   (formData.value as Param & { payload?: OptionsApiConfig }).payload || {

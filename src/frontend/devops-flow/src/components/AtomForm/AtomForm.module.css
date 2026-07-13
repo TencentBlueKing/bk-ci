@@ -23,6 +23,14 @@
   border-color: var(--color-danger) !important;
 }
 
+.atomForm :global(.bk-form-item .bk-form-label) {
+  font-size: var(--font-size-xs);
+  min-height: var(--line-height-xl);
+  line-height: var(--line-height-xl);
+  margin-bottom: 0;
+}
+
+
 /* 修复 bkui-vue FormItem 组件 label 换行时必填标识错位的问题 */
 /* bkui-vue 的必填标识使用 ::after 伪元素，默认 position: absolute; top: 0 */
 /* 当 label 文本换行时，星号会固定在容器顶部导致错位 */

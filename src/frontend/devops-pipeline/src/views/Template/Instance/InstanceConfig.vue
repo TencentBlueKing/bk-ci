@@ -1525,7 +1525,7 @@
     
     // 根据参数更新情况自动展开面板
     function autoExpandPanels () {
-        const newActiveName = new Set([1]) // 默认展开第一个面板
+        const newActiveName = new Set(activeName.value) // 保留用户手动展开/收起的状态
         
         // 检查流水线构建参数是否有更新（面板1）
         const hasParamsUpdate = paramsList.value.some(p =>

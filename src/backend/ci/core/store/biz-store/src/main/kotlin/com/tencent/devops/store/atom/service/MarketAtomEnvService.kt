@@ -28,6 +28,7 @@
 package com.tencent.devops.store.atom.service
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.store.pojo.atom.AtomEnv
 import com.tencent.devops.store.pojo.atom.AtomEnvRequest
 import com.tencent.devops.store.pojo.atom.AtomRunInfo
@@ -60,7 +61,8 @@ interface MarketAtomEnvService {
         atomStatus: Byte? = null,
         osName: String? = null,
         osArch: String? = null,
-        convertOsFlag: Boolean? = null
+        convertOsFlag: Boolean? = null,
+        channelCode: ChannelCode? = null
     ): Result<AtomEnv?>
 
     /**

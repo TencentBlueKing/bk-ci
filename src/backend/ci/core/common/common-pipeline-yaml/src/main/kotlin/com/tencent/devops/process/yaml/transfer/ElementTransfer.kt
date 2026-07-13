@@ -117,6 +117,7 @@ class ElementTransfer @Autowired(required = false) constructor(
                 TriggerType.CODE_GITLAB -> triggerTransfer.yaml2TriggerGitlab(it.second, elements)
                 TriggerType.SCM_GIT -> triggerTransfer.yaml2TriggerScmGit(it.second, elements)
                 TriggerType.SCM_SVN -> triggerTransfer.yaml2TriggerScmSvn(it.second, elements)
+                TriggerType.TAPD -> triggerTransfer.yaml2TriggerTapd(it.second, elements)
             }
             yamlInput.aspectWrapper.setModelElement4Model(
                 elements.last(),
@@ -128,7 +129,6 @@ class ElementTransfer @Autowired(required = false) constructor(
     fun baseTriggers2yaml(elements: List<Element>, aspectWrapper: PipelineTransferAspectWrapper): TriggerOn? {
         val triggerOn = lazy { TriggerOn() }
         val schedules = mutableListOf<SchedulesRule>()
-        val tapds = mutableListOf<TapdRule>()
         triggerOn.value.manual = ManualRule(
             enable = false
         )
@@ -211,15 +211,9 @@ class ElementTransfer @Autowired(required = false) constructor(
                 }
                 return@forEach
             }
-            if (element is TapdWebHookTriggerElement) {
-                tapds.add(tapd2YamlRule(element))
-            }
         }
         if (schedules.isNotEmpty()) {
             triggerOn.value.schedules = schedules
-        }
-        if (tapds.isNotEmpty()) {
-            triggerOn.value.tapd = tapds
         }
         if (triggerOn.isInitialized()) {
             aspectWrapper.setYamlTriggerOn(
@@ -231,19 +225,54 @@ class ElementTransfer @Autowired(required = false) constructor(
         return null
     }
 
-    private fun tapd2YamlRule(element: TapdWebHookTriggerElement): TapdRule {
-        val input = element.data.input
-        val includeActions = if (input.eventType == TapdEventType.STORY) {
-            input.includeStoryAction
-        } else {
-            input.includeBugAction
+    /**
+     * 将流水线中的 [TapdWebHookTriggerElement] 按 workspaceId 聚合，生成一批
+     * `on:` 顶层的 TAPD 触发条目（每个 workspace 一条 [TriggerOn]，顶层含
+     * `workspaceId + story + bug`）。
+     *
+     * 与 `scmTriggers2Yaml` 对齐：调用方拿到 `List<TriggerOn>` 后 `toPre(V3_0)`
+     * 会得到 `PreTriggerOnV3(type = "tapd", workspace-id = ..., story = ..., bug = ...)`。
+     */
+    fun tapdTriggers2Yaml(
+        elements: List<Element>,
+        aspectWrapper: PipelineTransferAspectWrapper
+    ): List<TriggerOn> {
+        // 用 LinkedHashMap 保证 YAML 输出中 workspace 顺序稳定
+        val tapdByWorkspace = mutableMapOf<String, TriggerOn>()
+        elements.filterIsInstance<TapdWebHookTriggerElement>().forEach { element ->
+            aspectWrapper.setModelElement4Model(element, PipelineTransferAspectWrapper.AspectType.BEFORE)
+            mergeTapdElement(element, tapdByWorkspace)
         }
-        return TapdRule(
+        return tapdByWorkspace.values.toList()
+    }
+
+    /**
+     * 将同一 workspace 下的 story / bug 触发元素合并到同一个 [TriggerOn] 的
+     * `story` / `bug` 字段。
+     *
+     * 若同一 workspace 下的同一事件类型出现多个触发元素，后者会覆盖前者，
+     * 与 YAML 侧「一个 workspace 只允许配置一个 story / 一个 bug」的语义保持一致。
+     */
+    private fun mergeTapdElement(
+        element: TapdWebHookTriggerElement,
+        acc: MutableMap<String, TriggerOn>
+    ) {
+        val input = element.data.input
+        val eventType = input.eventType ?: return
+        val workspaceId = input.workspaceId
+        if (workspaceId.isNullOrEmpty()) {
+            logger.warn("TapdWebHookTriggerElement workspaceId is empty")
+            return
+        }
+        val includeActions = when (eventType) {
+            TapdEventType.STORY -> input.includeStoryAction
+            TapdEventType.BUG -> input.includeBugAction
+            else -> null
+        }
+        val rule = TapdRule(
             id = element.stepId,
             name = element.name,
             enable = element.elementEnabled().nullIfDefault(true),
-            tapdProjectId = input.tapdProjectId,
-            eventType = input.eventType?.value,
             action = includeActions,
             users = input.includeUsers.nonEmptyOrNull(),
             usersIgnore = input.excludeUsers.nonEmptyOrNull(),
@@ -253,6 +282,12 @@ class ElementTransfer @Autowired(required = false) constructor(
             labelsIgnore = input.excludeLabels?.takeIf { it.isNotBlank() }?.split(","),
             priorities = input.includePriority?.takeIf { it.isNotBlank() }?.split(",")
         )
+        val current = acc[workspaceId] ?: TriggerOn(workspaceId = workspaceId)
+        acc[workspaceId] = when (eventType) {
+            TapdEventType.STORY -> current.copy(story = rule)
+            TapdEventType.BUG -> current.copy(bug = rule)
+            else -> current
+        }
     }
 
     fun scmTriggers2Yaml(

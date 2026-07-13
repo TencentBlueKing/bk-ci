@@ -35,6 +35,8 @@ data class StoreVisibleDeptReq(
     val storeType: String,
     @get:Schema(title = "组件代码", required = true)
     val storeCode: String,
-    @get:Schema(title = "机构列表", required = true)
-    val deptInfos: List<DeptInfo>
+    @get:Schema(title = "机构列表", required = false)
+    val deptInfos: List<DeptInfo>? = null,
+    @get:Schema(title = "项目可见范围列表", required = false)
+    val projectInfos: List<StoreVisibleProjectInfo>? = null
 )
