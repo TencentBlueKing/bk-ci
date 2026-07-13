@@ -28,8 +28,6 @@ class WhiteListService @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(WorkspaceService::class.java)
         private const val CONFIG_CDS_DOMAIN_DEFAULT_KEY = "remotedev:cdsDomainDefault"
-        private const val CONFIG_CDS_DOMAIN_PROJECT_KEY_PREFIX = "remotedev:cdsDomainProject:"
-        const val CONFIG_CDS_DOMAIN_WORKSPACE_KEY_PREFIX = "remotedev:cdsDomainWorkspace:"
         private const val taiUser = "@tai"
     }
 
@@ -150,32 +148,17 @@ class WhiteListService @Autowired constructor(
         return limit + get
     }
 
+    @Suppress("UNUSED_PARAMETER")
     fun checkInCdsMeshWhiteList(
         projectId: String,
         workspaceName: String
     ): Int {
-        // 检查是否启用 SSL 模式
-        if (whiteListDao.get(dslContext, workspaceName, WhiteListType.CDS_SSL_WORKSPACE) != null) {
-            return CdsMeshStatus.SSL.value
-        }
-
-        if (whiteListDao.get(dslContext, workspaceName, WhiteListType.NOT_CDS_MESH_WORKSPACE) != null) {
-            return CdsMeshStatus.DISABLED.value
-        }
-        if (whiteListDao.get(dslContext, projectId, WhiteListType.CDS_MESH_PROJECT) != null) {
-            return CdsMeshStatus.MESH.value
-        }
-        if (whiteListDao.get(dslContext, workspaceName, WhiteListType.CDS_MESH_WORKSPACE) != null) {
-            return CdsMeshStatus.MESH.value
-        }
-
-        return CdsMeshStatus.DISABLED.value
+        return CdsMeshStatus.SSL.value
     }
 
+    @Suppress("UNUSED_PARAMETER")
     fun getCdsDomain(projectId: String, workspaceName: String): String? {
-        return cacheService.get(CONFIG_CDS_DOMAIN_WORKSPACE_KEY_PREFIX + workspaceName)
-            ?: cacheService.get(CONFIG_CDS_DOMAIN_PROJECT_KEY_PREFIX + projectId)
-            ?: cacheService.get(CONFIG_CDS_DOMAIN_DEFAULT_KEY)
+        return cacheService.get(CONFIG_CDS_DOMAIN_DEFAULT_KEY)
     }
 
     fun addGPUWhiteListUser(

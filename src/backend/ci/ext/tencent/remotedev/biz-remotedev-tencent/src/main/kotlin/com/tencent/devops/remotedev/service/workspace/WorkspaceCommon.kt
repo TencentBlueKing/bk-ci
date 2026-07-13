@@ -72,6 +72,7 @@ import com.tencent.devops.remotedev.pojo.async.AsyncPipelineEvent
 import com.tencent.devops.remotedev.pojo.common.RemoteDevNotifyType
 import com.tencent.devops.remotedev.pojo.kubernetes.EnvStatusEnum
 import com.tencent.devops.remotedev.pojo.kubernetes.WorkspaceInfo
+import com.tencent.devops.remotedev.pojo.remotedev.AvailableResource
 import com.tencent.devops.remotedev.pojo.remotedev.EnvironmentResourceData
 import com.tencent.devops.remotedev.pojo.remotedev.FetchWinPoolData
 import com.tencent.devops.remotedev.resources.op.AssignWorkspacePipelineInfo
@@ -460,6 +461,15 @@ class WorkspaceCommon @Autowired constructor(
                 .realtimeStartCloudResourceList().data
         }.onFailure {
             logger.warn("Error syncing start cloud resource list: ${it.message}")
+        }.getOrNull() ?: emptyList()
+    }
+
+    fun availableResource(provider: String): List<AvailableResource> {
+        return kotlin.runCatching {
+            SpringContextUtil.getBean(ServiceStartCloudInterface::class.java)
+                .getAvailableResource(provider).data
+        }.onFailure {
+            logger.warn("Error get available resource by provider $provider: ${it.message}")
         }.getOrNull() ?: emptyList()
     }
 

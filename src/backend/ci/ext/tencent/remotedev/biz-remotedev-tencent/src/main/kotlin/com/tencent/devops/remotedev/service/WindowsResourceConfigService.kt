@@ -162,19 +162,25 @@ class WindowsResourceConfigService @Autowired constructor(
         val zoneShortName = lazy { getAllZoneShortNameByType(zoneType) }
         val internal = quotaType?.getInternal() ?: zoneType.getInternal()
         if (searchCustom != true && specifyTaints == null) {
-            workspaceCommon.realtimeStartCloudResourceList().forEach {
-                if (CommonUtil.zoneIdCheck(
-                        quotaType = quotaType,
-                        zoneType = zoneType,
-                        zoneId = it.zoneId,
-                        zoneShortName = zoneShortName,
-                        spec = spec
-                    )
-                ) return@forEach
-                val key = it.zoneId.replace(Regex("\\d+"), "")
-                val map = res.getOrPut(key) { mutableMapOf() }
-                if (it.status == 11 && it.locked != true && it.internal == internal) {
-                    map[it.machineType] = (map[it.machineType] ?: 0) + 1
+            // 按专区取 provider（去重），直接调用 CDS 空闲资源接口获取已聚合的可用数
+            val providers = windowsResourceZoneDao.fetchAll(
+                dslContext = dslContext,
+                withUnavailable = true,
+                type = zoneType
+            ).mapNotNull { zone -> zone.provider?.takeIf { it.isNotBlank() } }.distinct()
+            providers.forEach { provider ->
+                workspaceCommon.availableResource(provider).forEach {
+                    if (CommonUtil.zoneIdCheck(
+                            quotaType = quotaType,
+                            zoneType = zoneType,
+                            zoneId = it.zoneId,
+                            zoneShortName = zoneShortName,
+                            spec = spec
+                        )
+                    ) return@forEach
+                    val key = it.zoneId.replace(Regex("\\d+"), "")
+                    val map = res.getOrPut(key) { mutableMapOf() }
+                    map[it.machineType] = (map[it.machineType] ?: 0) + it.availableCount
                 }
             }
         }
