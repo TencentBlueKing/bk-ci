@@ -50,6 +50,7 @@ import com.tencent.devops.common.event.enums.PipelineBuildStatusBroadCastEventTy
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCastEvent
 import com.tencent.devops.common.notify.enums.NotifyType
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentDockerInfoDispatch
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.HomeHostUtil
@@ -59,6 +60,7 @@ import com.tencent.devops.dispatch.exception.ErrorCodeEnum
 import com.tencent.devops.dispatch.pojo.ThirdPartyAgentDispatchData
 import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
 import com.tencent.devops.dispatch.pojo.thirdpartyagent.AgentBuildInfo
+import com.tencent.devops.dispatch.pojo.thirdpartyagent.AgentPipelineContainerBuild
 import com.tencent.devops.dispatch.pojo.thirdpartyagent.BuildJobType
 import com.tencent.devops.dispatch.pojo.thirdpartyagent.JobIdAndName
 import com.tencent.devops.dispatch.pojo.thirdpartyagent.PipelineIdAndName
@@ -95,6 +97,8 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.dao.DeadlockLoserDataAccessException
 import org.springframework.stereotype.Service
+import java.time.Instant
+import java.time.ZoneId
 
 @Service
 @Suppress("ALL")
@@ -489,13 +493,15 @@ class ThirdPartyAgentService @Autowired constructor(
             dslContext = dslContext,
             agentId = agentId,
             status = status,
-            pipelineId = pipelineId
+            pipelineId = pipelineId,
+            jobId = null
         )
         val agentBuilds = thirdPartyAgentBuildDao.listAgentBuilds(
             dslContext = dslContext,
             agentId = agentId,
             status = status,
             pipelineId = pipelineId,
+            jobId = null,
             offset = offset,
             limit = limit
         ).map {
@@ -515,6 +521,65 @@ class ThirdPartyAgentService @Autowired constructor(
             )
         }
         return Page(pageNotNull, pageSizeNotNull, agentBuildCount, agentBuilds)
+    }
+
+    fun fetchAgentBuildsByJob(
+        userId: String,
+        projectId: String,
+        agentId: String,
+        pipelineId: String,
+        jobId: String,
+        page: Int?,
+        pageSize: Int?
+    ): Page<AgentPipelineContainerBuild> {
+        val pageNotNull = page ?: 0
+        val pageSizeNotNull = pageSize ?: PageUtil.MAX_PAGE_SIZE
+        val sqlLimit = PageUtil.convertPageSizeToSQLMAXLimit(pageNotNull, pageSizeNotNull)
+        val offset = sqlLimit.offset
+        val limit = sqlLimit.limit
+
+        val agentBuildCount = thirdPartyAgentBuildDao.countAgentBuilds(
+            dslContext = dslContext,
+            agentId = agentId,
+            pipelineId = pipelineId,
+            jobId = jobId,
+            status = null
+        )
+        val agentBuilds = thirdPartyAgentBuildDao.listAgentBuilds(
+            dslContext = dslContext,
+            agentId = agentId,
+            pipelineId = pipelineId,
+            jobId = jobId,
+            status = null,
+            offset = offset,
+            limit = limit
+        ).associateBy { it.buildId }
+        val builds = client.get(ServiceBuildResource::class).batchGetBuildStatus(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildIdSet = agentBuilds.keys
+        ).data
+        return Page(pageNotNull, pageSizeNotNull, agentBuildCount, builds?.map {
+            AgentPipelineContainerBuild(
+                buildId = it.id,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                containerId = (agentBuilds[it.id]?.vmSeqId ?: 0).toString(),
+                executeCount = it.executeCount ?: 1,
+                status = it.status,
+                startTime = Instant.ofEpochMilli(it.startTime)
+                    .atZone(ZoneId.systemDefault())
+                    .toLocalDateTime(),
+                endTime = it.endTime?.let { ed ->
+                    Instant.ofEpochMilli(ed)
+                        .atZone(ZoneId.systemDefault())
+                        .toLocalDateTime()
+                },
+                buildNum = it.buildNum ?: 0,
+                creator = it.userId
+            )
+        } ?: emptyList())
     }
 
     fun listLatestBuildPipelines(agentIds: List<String>): List<AgentBuildInfo> {
