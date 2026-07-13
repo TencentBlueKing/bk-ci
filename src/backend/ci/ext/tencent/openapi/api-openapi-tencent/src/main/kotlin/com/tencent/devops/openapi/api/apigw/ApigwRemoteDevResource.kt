@@ -1117,7 +1117,7 @@ interface ApigwRemoteDevResource {
         data: ListImagesData
     ): Result<ListImagesResp?>
 
-    @Operation(summary = "获取镜像列表-项目", tags = ["v4_app_remotedev_get_images_projectId"])
+    @Operation(summary = "获取镜像列表-项目", tags = ["v4_app_remotedev_get_images_project"])
     @POST
     @Path("/images_project")
     fun fetchImagesProject(
