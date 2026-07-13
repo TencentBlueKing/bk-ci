@@ -43,18 +43,12 @@ class BuildArtifactoryResourceImpl @Autowired constructor(
     }
 
     override fun show(
+        userId: String,
         projectId: String,
         pipelineId: String,
         artifactoryType: ArtifactoryType,
         path: String
     ): Result<FileDetail> {
-        // pref:流水线相关的文件操作人调整为流水线的权限代持人 #11016
-        val userId = client.get(ServiceAuthAuthorizationResource::class).getResourceAuthorization(
-            projectId = projectId,
-            resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
-            resourceCode = pipelineId
-        ).data?.handoverFrom ?: client.get(ServicePipelineResource::class)
-            .getPipelineInfo(projectId, pipelineId, null).data!!.lastModifyUser
         return Result(archiveFileService.show(
             userId = userId,
             projectId = projectId,
