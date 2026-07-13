@@ -29,6 +29,8 @@ import com.tencent.devops.remotedev.pojo.WorkspaceShared.AssignType
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.record.ThumbnailEncryptedTicketResp
 import com.tencent.devops.remotedev.pojo.record.UserWorkspaceRecordPermissionInfo
+import com.tencent.devops.remotedev.pojo.record.WorkspaceLiveResolution
+import com.tencent.devops.remotedev.pojo.record.WorkspaceLiveResp
 import com.tencent.devops.remotedev.pojo.record.WorkspaceRecordMetadata
 import com.tencent.devops.remotedev.pojo.record.WorkspaceRecordTicketType
 import com.tencent.devops.remotedev.service.client.MediaMod
@@ -38,6 +40,7 @@ import com.tencent.devops.remotedev.service.client.NodeSearchRule
 import com.tencent.devops.remotedev.service.client.NodeSearchRulesItem
 import com.tencent.devops.remotedev.service.client.NodeSearchSort
 import com.tencent.devops.remotedev.service.client.RemotedevBkRepoClient
+import com.tencent.devops.remotedev.service.cvd.CvdService
 import com.tencent.devops.remotedev.service.redis.ConfigCacheService
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REMOTEDEV_WORKSPACE_USER_APPROVAL_EXPIRED_DAYS
@@ -71,7 +74,8 @@ class WorkspaceRecordService @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val workspaceSharedDao: WorkspaceSharedDao,
     private val workspaceOpHistoryDao: WorkspaceOpHistoryDao,
-    private val workspaceCommon: WorkspaceCommon
+    private val workspaceCommon: WorkspaceCommon,
+    private val cvdService: CvdService
 ) {
 
     private val objectMapper = ObjectMapper()
@@ -163,12 +167,14 @@ class WorkspaceRecordService @Autowired constructor(
                 ?: return Pair(false, null)
         }
 
-        // cafeAI场景默认启动直播
-        val liveEnable = recordInfo.coffeeAIEnable || featureSwitchService.isEnabled(
+        val liveEnable = featureSwitchService.isEnabled(
             projectId = projectId,
             userId = userId,
             workspaceName = recordInfo.workspaceName,
             featureType = FeatureSwitchType.LIVE_STREAMING
+        ) || featureSwitchService.isProjectEnabled(
+            projectId = projectId,
+            featureTypeList = listOf(FeatureSwitchType.LIVE_STREAMING_DEVCLOUD)
         )
 
         if (recordInfo.enableUser.isNullOrBlank()) {
@@ -236,14 +242,24 @@ class WorkspaceRecordService @Autowired constructor(
             )
         }
 
+        // DEVCLOUD的交由他们管理
+        if (featureSwitchService.isProjectEnabled(
+                projectId,
+                listOf(FeatureSwitchType.LIVE_STREAMING_DEVCLOUD)
+            )
+        ) {
+            try {
+                return cvdService.inspectAuth(workspace.workspaceName, userId, projectId)
+            } catch (e: Exception) {
+                logger.warn("checkViewLive devcloud inspectAuth error", e)
+                return false
+            }
+        }
+
         val workspaceInfo = workspaceSharedDao.fetchWorkspaceSharedInfo(
             dslContext = dslContext,
             workspaceName = workspace.workspaceName,
         )
-
-        if (workspace.coffeeAi == true) {
-            return workspaceInfo.any { it.type == AssignType.OWNER && it.sharedUser == userId }
-        }
 
         return workspaceInfo.any {
             (it.type == AssignType.OWNER && it.sharedUser == userId) ||
@@ -387,8 +403,8 @@ class WorkspaceRecordService @Autowired constructor(
         val data = resp.records.map {
             WorkspaceRecordMetadata(
                 link = bkRepoConfig.getRegionConfig(region).webUrl +
-                    "/web/media/api/user/stream/$projectId/${genRepoName(workspaceName)}${it.fullPath}" +
-                    "?skToken=$token",
+                        "/web/media/api/user/stream/$projectId/${genRepoName(workspaceName)}${it.fullPath}" +
+                        "?skToken=$token",
                 startTime = it.metadata?.mediaStartTime,
                 stopTime = it.metadata?.mediaStopTime,
                 fileSize = it.size,
@@ -452,6 +468,31 @@ class WorkspaceRecordService @Autowired constructor(
             throw OperationException("Type verification failed.")
         }
         return BkCryptoUtil.decryptSm4OrAes(aesKey, record.cert)
+    }
+
+    fun getWorkspaceLiveInfo(
+        userId: String,
+        projectId: String,
+        workspaceName: String,
+        resolution: WorkspaceLiveResolution?
+    ): WorkspaceLiveResp {
+        permissionService.checkUserManager(userId, projectId)
+        val record = workspaceWindowsDao.fetchAnyWorkspaceWindowsInfo(
+            dslContext = dslContext,
+            workspaceName = workspaceName
+        ) ?: throw ErrorCodeException(
+            errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
+            params = arrayOf(workspaceName)
+        )
+        val region = genRegion(record.hostIp)
+        val url = remotedevBkRepoClient.getRepoRtc(
+            region = region,
+            projectId = projectId,
+            repoName = genRepoName(workspaceName),
+            userId = userId,
+            resolution = resolution ?: WorkspaceLiveResolution.R1080P
+        )
+        return WorkspaceLiveResp(url)
     }
 
     /**
@@ -626,7 +667,7 @@ class WorkspaceRecordService @Autowired constructor(
                 errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
                 params = arrayOf(
                     "You don't have permission to " +
-                        "access workspace $workspaceName"
+                            "access workspace $workspaceName"
                 )
             )
         }

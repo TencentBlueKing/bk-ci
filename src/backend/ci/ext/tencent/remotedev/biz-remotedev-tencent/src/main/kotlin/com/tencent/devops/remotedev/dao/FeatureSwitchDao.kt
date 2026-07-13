@@ -127,7 +127,20 @@ class FeatureSwitchDao {
                     WORKSPACE_NAME.eq(workspaceName)
                         .or(WORKSPACE_NAME.eq(""))
                 )
-                .limit(1)
+                .fetchAny() != null
+        }
+    }
+
+    fun isProjectEnabled(
+        dslContext: DSLContext,
+        projectId: String,
+        featureTypeList: List<FeatureSwitchType>
+    ): Boolean {
+        with(TFeatureSwitch.T_FEATURE_SWITCH) {
+            return dslContext.selectFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(ENABLED.eq(true))
+                .and(FEATURE_TYPE.`in`(featureTypeList.map { it.name }))
                 .fetchAny() != null
         }
     }
