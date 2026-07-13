@@ -359,11 +359,13 @@ class NodeTagService @Autowired constructor(
         }
         val lock = RedisLock(redisOperation, genUpdateNodeTagLockKey(projectId, data.tagKeyId), 5)
         // 检验是否重名
-        if (nodeTagKeyDao.fetchNodeKey(
-                dslContext = dslContext,
-                projectId = projectId,
-                keyName = data.tagKeyName
-            ) != null || nodeTagKeyDao.fetchAllInternalKeys(dslContext).map { it.keyName }.toSet()
+        val oldRecord = nodeTagKeyDao.fetchNodeKey(
+            dslContext = dslContext,
+            projectId = projectId,
+            keyName = data.tagKeyName
+        )
+        if ((oldRecord != null && oldRecord.id != data.tagKeyId) || nodeTagKeyDao.fetchAllInternalKeys(dslContext)
+                .map { it.keyName }.toSet()
                 .contains(data.tagKeyName)
         ) {
             throw ErrorCodeException(
