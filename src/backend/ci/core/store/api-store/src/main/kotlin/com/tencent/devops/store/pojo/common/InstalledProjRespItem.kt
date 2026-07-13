@@ -37,6 +37,6 @@ data class InstalledProjRespItem(
     val projectName: String?,
     @get:Schema(title = "安装人")
     val creator: String,
-    @get:Schema(title = "安装时间")
-    val createTime: String
+    @get:Schema(title = "安装时间（毫秒时间戳）")
+    val createTime: Long
 )

@@ -7,6 +7,8 @@ interface User {
     chineseName?: string
     phone?: string
     email?: string
+    /** IANA timezone from BlueKing user management */
+    timeZone?: string
 }
 
 interface ObjectMap {

@@ -64,10 +64,10 @@ data class MyAtomRespItem(
     val creator: String,
     @get:Schema(title = "修改人", required = true)
     val modifier: String,
-    @get:Schema(title = "创建时间", required = true)
-    val createTime: String,
-    @get:Schema(title = "创建时间", required = true)
-    val updateTime: String,
+    @get:Schema(title = "创建时间（毫秒时间戳）", required = true)
+    val createTime: Long,
+    @get:Schema(title = "创建时间（毫秒时间戳）", required = true)
+    val updateTime: Long,
     @get:Schema(title = "处于流程中的插件版本信息", required = false)
     val processingVersionInfos: List<AtomBaseInfo>? = null
 )

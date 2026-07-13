@@ -305,7 +305,8 @@ class TenantAuthDeptServiceImpl : DeptService {
                 name = data.bk_username,
                 displayName = data.display_name,
                 type = ManagerScopesEnum.USER,
-                deptInfo = emptyList()
+                deptInfo = emptyList(),
+                timeZone = data.time_zone.ifBlank { null }
             )
         }
     }

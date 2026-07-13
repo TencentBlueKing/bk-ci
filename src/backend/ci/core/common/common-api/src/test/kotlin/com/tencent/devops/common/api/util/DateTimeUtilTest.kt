@@ -62,8 +62,45 @@ class DateTimeUtilTest {
     @Test
     fun convertLocalDateTimeToTimestampTest() {
         val date = LocalDateTime.of(2020, 7, 6, 1, 59, 59)
-        val expected: Long = 1593971999
+        val expected = date.atZone(java.time.ZoneId.systemDefault()).toEpochSecond()
         Assertions.assertEquals(expected, DateTimeUtil.convertLocalDateTimeToTimestamp(date))
+    }
+
+    @Test
+    fun convertLocalDateTimeToTimestampMilliTest() {
+        val date = LocalDateTime.of(2020, 7, 6, 1, 59, 59)
+        val expected = date.atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli()
+        Assertions.assertEquals(expected, DateTimeUtil.convertLocalDateTimeToTimestampMilli(date))
+    }
+
+    @Test
+    fun calendarDateRangeToLocalDateTimeTest() {
+        val (start, end) = DateTimeUtil.calendarDateRangeToLocalDateTime(
+            startDate = "2020-07-06",
+            endDate = "2020-07-06",
+            timeZone = "UTC"
+        )
+        Assertions.assertEquals(
+            LocalDateTime.ofInstant(
+                java.time.LocalDate.of(2020, 7, 6).atStartOfDay(java.time.ZoneId.of("UTC")).toInstant(),
+                java.time.ZoneId.systemDefault()
+            ),
+            start
+        )
+        Assertions.assertEquals(
+            LocalDateTime.ofInstant(
+                java.time.LocalDate.of(2020, 7, 7).atStartOfDay(java.time.ZoneId.of("UTC")).toInstant(),
+                java.time.ZoneId.systemDefault()
+            ),
+            end
+        )
+    }
+
+    @Test
+    fun formatEpochMilliWithTimeZoneTest() {
+        val epoch = 1594005599000L // 2020-07-06 01:59:59 UTC
+        val formatted = DateTimeUtil.formatEpochMilli(epoch, "UTC", DateTimeUtil.YYYY_MM_DD_HH_MM_SS)
+        Assertions.assertEquals("2020-07-06 01:59:59", formatted)
     }
 
     @Test

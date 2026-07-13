@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.constant.DEVOPS
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.store.tables.records.TStoreMemberRecord
@@ -442,8 +443,8 @@ abstract class StoreMemberServiceImpl : StoreMemberService {
             type = StoreMemberTypeEnum.getAtomMemberType((memberRecord.type as Byte).toInt()),
             creator = memberRecord.creator as String,
             modifier = memberRecord.modifier as String,
-            createTime = DateTimeUtil.toDateTime(memberRecord.createTime),
-            updateTime = DateTimeUtil.toDateTime(memberRecord.updateTime)
+            createTime = memberRecord.createTime.timestampmilli(),
+            updateTime = memberRecord.updateTime.timestampmilli()
         )
     }
 }

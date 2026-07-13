@@ -28,6 +28,7 @@
 package com.tencent.devops.project.dao
 
 import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.model.project.tables.TActivity
 import com.tencent.devops.model.project.tables.records.TActivityRecord
@@ -113,7 +114,7 @@ class ActivityDao {
                         link = it.link,
                         type = it.type,
                         status = it.status,
-                        creator = it.creator, createTime = DateTimeUtil.toDateTime(it.createTime)
+                        creator = it.creator, createTime = it.createTime?.timestampmilli()
                     )
                 } ?: ArrayList<OPActivityVO>()
         }

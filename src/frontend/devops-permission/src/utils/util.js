@@ -8,12 +8,7 @@ function prezero (num) {
     return num
 }
 
-export function convertTime (ms) {
-    if (!ms) return '--'
-    const time = new Date(ms)
-
-    return `${time.getFullYear()}-${prezero(time.getMonth() + 1)}-${prezero(time.getDate())} ${prezero(time.getHours())}:${prezero(time.getMinutes())}:${prezero(time.getSeconds())}`
-}
+export { convertTime, formatByUserTz, getUserTimeZone } from '../../../common-lib/time'
 
 export function deepEqual(obj1, obj2) {
     if (obj1 === obj2) return true;

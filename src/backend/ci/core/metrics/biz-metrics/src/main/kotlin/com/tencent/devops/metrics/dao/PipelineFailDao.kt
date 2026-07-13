@@ -221,6 +221,7 @@ class PipelineFailDao constructor(private val metricsConfig: MetricsConfig) {
     ): MutableList<Condition> {
         val conditions = mutableListOf<Condition>()
         conditions.add(this.PROJECT_ID.eq(projectId))
+        // STATISTICS_TIME 为日历日桶，startTime/endTime 按日历日标签匹配（非绝对时刻换算）
         val startDateTime =
             DateTimeUtil.stringToLocalDate(baseQuery.startTime!!)!!.atStartOfDay()
         val endDateTime =

@@ -61,10 +61,10 @@ data class ImageVersion(
     @get:Schema(title = "修改人", required = true)
     val modifier: String,
 
-    @get:Schema(title = "创建时间", required = true)
+    @get:Schema(title = "创建时间（毫秒时间戳）", required = true)
     val createTime: Long,
 
-    @get:Schema(title = "修改时间", required = true)
+    @get:Schema(title = "修改时间（毫秒时间戳）", required = true)
     val updateTime: Long
 
 )

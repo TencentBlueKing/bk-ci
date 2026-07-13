@@ -55,7 +55,8 @@ class UserProjectUserResourceImpl @Autowired constructor(
             ProjectUser(
                 chineseName = staff.chineseName,
                 avatarUrl = "",
-                username = staff.username
+                username = staff.username,
+                timeZone = staff.timeZone
             )
         )
     }

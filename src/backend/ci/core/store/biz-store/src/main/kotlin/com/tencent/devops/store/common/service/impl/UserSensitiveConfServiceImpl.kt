@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.security.util.BkCryptoUtil
@@ -244,8 +245,8 @@ class UserSensitiveConfServiceImpl @Autowired constructor(
                     fieldDesc = record.fieldDesc,
                     creator = record.creator,
                     modifier = record.modifier,
-                    createTime = DateTimeUtil.toDateTime(record.createTime),
-                    updateTime = DateTimeUtil.toDateTime(record.updateTime)
+                    createTime = record.createTime.timestampmilli(),
+                    updateTime = record.updateTime.timestampmilli()
                 )
             } else {
                 null
@@ -286,8 +287,8 @@ class UserSensitiveConfServiceImpl @Autowired constructor(
                     fieldDesc = it.fieldDesc,
                     creator = it.creator,
                     modifier = it.modifier,
-                    createTime = DateTimeUtil.toDateTime(it.createTime),
-                    updateTime = DateTimeUtil.toDateTime(it.updateTime)
+                    createTime = it.createTime.timestampmilli(),
+                    updateTime = it.updateTime.timestampmilli()
                 )
             )
         }

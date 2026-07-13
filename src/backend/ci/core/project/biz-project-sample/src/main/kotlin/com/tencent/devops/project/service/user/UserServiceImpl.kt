@@ -7,7 +7,6 @@
  *
  * A copy of the MIT License is included in this file.
  *
- *
  * Terms of the MIT License:
  * ---------------------------------------------------
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
@@ -27,12 +26,19 @@
 
 package com.tencent.devops.project.service.user
 
+import com.tencent.devops.auth.api.service.ServiceDeptResource
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.project.pojo.user.UserVO
 import com.tencent.devops.project.service.UserService
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.time.ZoneId
 
 @Service
-class UserServiceImpl : UserService {
+class UserServiceImpl @Autowired constructor(
+    private val client: Client
+) : UserService {
 
     override fun getStaffInfo(userId: String, bkToken: String?): UserVO {
         return UserVO(
@@ -40,7 +46,29 @@ class UserServiceImpl : UserService {
             avatarUrl = "",
             username = userId,
             bkpaasUserId = userId,
-            permissions = "admin"
+            permissions = "admin",
+            timeZone = resolveUserTimeZone(userId)
         )
+    }
+
+    private fun resolveUserTimeZone(userId: String): String {
+        return try {
+            val timeZone = client.get(ServiceDeptResource::class)
+                .getUserInfo(userId = userId, tenantId = null, name = userId)
+                .data
+                ?.timeZone
+            if (!timeZone.isNullOrBlank()) {
+                timeZone
+            } else {
+                ZoneId.systemDefault().id
+            }
+        } catch (ignored: Exception) {
+            logger.debug("resolve user timeZone failed for {}, fallback to systemDefault", userId, ignored)
+            ZoneId.systemDefault().id
+        }
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(UserServiceImpl::class.java)
     }
 }

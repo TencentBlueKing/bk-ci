@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.constant.KEY_VERSION
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.AESUtil
 import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.I18nUtil
@@ -166,8 +167,8 @@ class StoreEnvVarServiceImpl @Autowired constructor(
             version = envVarOne[KEY_VERSION] as Int,
             creator = envVarOne[KEY_CREATOR] as String,
             modifier = envVarOne[KEY_MODIFIER] as String,
-            createTime = DateTimeUtil.toDateTime(envVarOne[KEY_CREATE_TIME] as LocalDateTime),
-            updateTime = DateTimeUtil.toDateTime(envVarOne[KEY_UPDATE_TIME] as LocalDateTime)
+            createTime = (envVarOne[KEY_CREATE_TIME] as LocalDateTime).timestampmilli(),
+            updateTime = (envVarOne[KEY_UPDATE_TIME] as LocalDateTime).timestampmilli()
         )
         if (storeEnvVarRequest.scope != maxVersionData.scope && storeEnvVarDao.queryEnvironmentVariable(
                 dslContext = dslContext,
@@ -327,8 +328,8 @@ class StoreEnvVarServiceImpl @Autowired constructor(
                         version = it[KEY_VERSION] as Int,
                         creator = it[KEY_CREATOR] as String,
                         modifier = it[KEY_MODIFIER] as String,
-                        createTime = DateTimeUtil.toDateTime(it[KEY_CREATE_TIME] as LocalDateTime),
-                        updateTime = DateTimeUtil.toDateTime(it[KEY_UPDATE_TIME] as LocalDateTime)
+                        createTime = (it[KEY_CREATE_TIME] as LocalDateTime).timestampmilli(),
+                        updateTime = (it[KEY_UPDATE_TIME] as LocalDateTime).timestampmilli()
                     )
                 )
             }
@@ -377,7 +378,7 @@ class StoreEnvVarServiceImpl @Autowired constructor(
                                 aesMock
                             } else nowStoreEnvRecord.varValue,
                             modifier = nowStoreEnvRecord.modifier,
-                            updateTime = DateTimeUtil.toDateTime(nowStoreEnvRecord.updateTime)
+                            updateTime = nowStoreEnvRecord.updateTime.timestampmilli()
                         )
                     )
                 }
