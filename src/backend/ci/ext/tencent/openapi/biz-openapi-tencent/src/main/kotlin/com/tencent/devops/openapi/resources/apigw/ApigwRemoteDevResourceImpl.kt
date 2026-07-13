@@ -7,9 +7,11 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.ApigwRemoteDevResource
 import com.tencent.devops.project.api.service.ServiceUserResource
+import com.tencent.devops.remotedev.api.service.ServiceRemoteDevRecordResource
 import com.tencent.devops.remotedev.api.service.ServiceRemoteDevResource
 import com.tencent.devops.remotedev.pojo.CreateOpenClawData
 import com.tencent.devops.remotedev.pojo.CreateOpenClawDataResp
+import com.tencent.devops.remotedev.pojo.FeatureSwitchType
 import com.tencent.devops.remotedev.pojo.IWhiteList
 import com.tencent.devops.remotedev.pojo.OperateCvmData
 import com.tencent.devops.remotedev.pojo.ProjectWorkspace
@@ -54,6 +56,8 @@ import com.tencent.devops.remotedev.pojo.record.CheckWorkspaceRecordData
 import com.tencent.devops.remotedev.pojo.record.FetchMetaDataParam
 import com.tencent.devops.remotedev.pojo.record.ThumbnailEncryptedTicketResp
 import com.tencent.devops.remotedev.pojo.record.UserWorkspaceRecordPermissionInfo
+import com.tencent.devops.remotedev.pojo.record.WorkspaceLiveResolution
+import com.tencent.devops.remotedev.pojo.record.WorkspaceLiveResp
 import com.tencent.devops.remotedev.pojo.record.WorkspaceRecordMetadata
 import com.tencent.devops.remotedev.pojo.remotedev.CreateCvmData
 import com.tencent.devops.remotedev.pojo.remotedev.CreateCvmResp
@@ -512,7 +516,7 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
         enable: Boolean
     ): Result<Boolean> {
         logger.info("enableWorkspaceRecord |$userId|$projectId|$workspaceName|$enable")
-        return client.get(ServiceRemoteDevResource::class).enableWorkspaceRecord(
+        return client.get(ServiceRemoteDevRecordResource::class).enableWorkspaceRecord(
             userId = userId,
             projectId = projectId,
             workspaceName = workspaceName,
@@ -528,7 +532,7 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
         envUid: String?
     ): Result<CheckWorkspaceRecordData> {
         logger.info("checkWorkspaceEnableAddress |$userId|$appId|$ip|$mediaGary|$envUid")
-        return client.get(ServiceRemoteDevResource::class).checkWorkspaceEnableAddress(
+        return client.get(ServiceRemoteDevRecordResource::class).checkWorkspaceEnableAddress(
             userId = userId,
             appId = appId,
             ip = ip,
@@ -634,7 +638,7 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
         workspaceName: String
     ): Result<UserWorkspaceRecordPermissionInfo> {
         logger.info("getUserWorkspaceRecordPermission $appCode|$userId|$workspaceName")
-        return client.get(ServiceRemoteDevResource::class).getUserWorkspaceRecordPermission(
+        return client.get(ServiceRemoteDevRecordResource::class).getUserWorkspaceRecordPermission(
             userId = userId,
             workspaceName = workspaceName
         )
@@ -647,7 +651,7 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
         workspaceName: String
     ): Result<Boolean> {
         logger.info("updateUserWorkspaceRecordPermission $appCode|$userId|$workspaceName")
-        return client.get(ServiceRemoteDevResource::class).updateUserWorkspaceRecordPermission(
+        return client.get(ServiceRemoteDevRecordResource::class).updateUserWorkspaceRecordPermission(
             userId = userId,
             workspaceName = workspaceName
         )
@@ -659,7 +663,7 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
         data: FetchMetaDataParam
     ): Result<Page<WorkspaceRecordMetadata>> {
         logger.info("getViewRecordMetadata $appCode|$data")
-        return client.get(ServiceRemoteDevResource::class).getViewRecordMetadata(data)
+        return client.get(ServiceRemoteDevRecordResource::class).getViewRecordMetadata(data)
     }
 
     override fun getWorkspaceTimeline(
@@ -679,7 +683,7 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
 
     override fun getWorkspaceRecordTicket(userId: String, workspaceName: String, token: String): Result<String> {
         logger.info("getWorkspaceRecordTicket |$userId|$workspaceName|$token")
-        return client.get(ServiceRemoteDevResource::class).getWorkspaceRecordTicket(userId, workspaceName, token)
+        return client.get(ServiceRemoteDevRecordResource::class).getWorkspaceRecordTicket(userId, workspaceName, token)
     }
 
     override fun getThumbnailEncryptedTicket(
@@ -824,7 +828,7 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
         workspaceName: String
     ): Result<Boolean> {
         logger.info("checkViewLive |$userId|$projectId|$workspaceName")
-        return client.get(ServiceRemoteDevResource::class)
+        return client.get(ServiceRemoteDevRecordResource::class)
             .checkViewLive(userId, projectId, workspaceName)
     }
 
@@ -846,7 +850,7 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
     ): Result<Map<String, String>> {
         logger.info(
             "refreshInstanceStatus" +
-                " |$userId|$projectId|${instanceIds.size}"
+                    " |$userId|$projectId|${instanceIds.size}"
         )
         return client.get(ServiceRemoteDevResource::class)
             .refreshWorkspaceStatus(
@@ -861,7 +865,7 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
     ): Result<List<WeSecProjectWorkspace>> {
         logger.info(
             "batchGetSimpleWorkspaces" +
-                " |$userId|$projectId|${workspaceNames.size}"
+                    " |$userId|$projectId|${workspaceNames.size}"
         )
         return client.get(ServiceRemoteDevResource::class)
             .batchGetSimpleWorkspaces(
@@ -877,7 +881,7 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
     ): Result<Page<Workspace>> {
         logger.info(
             "searchUserWorkspaces" +
-                " |$userId|$page|$pageSize"
+                    " |$userId|$page|$pageSize"
         )
         return client.get(ServiceRemoteDevResource::class)
             .searchUserWorkspaces(
@@ -900,8 +904,8 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
     ): Result<Page<String>> {
         logger.info(
             "batchQueryThumbnailWorkspaces" +
-                " |$appCode|$userId|enable=$enable|page=$page|pageSize=$pageSize" +
-                "|projectId=$projectId|workspaceNames.size=${workspaceNames?.size}"
+                    " |$appCode|$userId|enable=$enable|page=$page|pageSize=$pageSize" +
+                    "|projectId=$projectId|workspaceNames.size=${workspaceNames?.size}"
         )
         return client.get(ServiceRemoteDevResource::class)
             .batchQueryThumbnailWorkspaces(
@@ -923,7 +927,7 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
     ): Result<Boolean> {
         logger.info(
             "enableWorkspaceThumbnail" +
-                " |$appCode|$userId|enable=$enable|workspaceNames.size=${workspaceNames.size}"
+                    " |$appCode|$userId|enable=$enable|workspaceNames.size=${workspaceNames.size}"
         )
         return client.get(ServiceRemoteDevResource::class)
             .enableWorkspaceThumbnail(
@@ -971,6 +975,39 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
         return client.get(ServiceRemoteDevResource::class).openClawTaskStatus(
             userId = userId,
             taskId = taskId
+        )
+    }
+
+    override fun getWorkspaceLiveInfo(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        workspaceName: String,
+        resolution: WorkspaceLiveResolution?
+    ): Result<WorkspaceLiveResp> {
+        logger.info("getWorkspaceLiveInfo |$appCode|$userId|$projectId|$workspaceName|$resolution")
+        return client.get(ServiceRemoteDevRecordResource::class).getWorkspaceLiveInfo(
+            userId = userId,
+            projectId = projectId,
+            workspaceName = workspaceName,
+            resolution = resolution
+        )
+    }
+
+    override fun enableLive(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        enable: Boolean
+    ): Result<Boolean> {
+        logger.info("enableLive |$appCode|$userId|$projectId|$enable")
+        return client.get(ServiceRemoteDevRecordResource::class).enableLive(
+            userId = userId,
+            projectId = projectId,
+            enable = enable,
+            switchType = FeatureSwitchType.LIVE_STREAMING_DEVCLOUD
         )
     }
 }
