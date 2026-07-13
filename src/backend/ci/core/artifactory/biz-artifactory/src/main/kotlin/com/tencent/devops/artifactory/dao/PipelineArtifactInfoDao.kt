@@ -27,9 +27,9 @@
 
 package com.tencent.devops.artifactory.dao
 
+import com.tencent.devops.artifactory.pojo.artifact.PipelineArtifactInfo
 import com.tencent.devops.model.artifactory.tables.TPipelineArtifactInfo
 import com.tencent.devops.model.artifactory.tables.records.TPipelineArtifactInfoRecord
-import com.tencent.devops.artifactory.pojo.artifact.PipelineArtifactInfo
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Result
@@ -67,8 +67,23 @@ class PipelineArtifactInfoDao {
                 extraInfo = artifactInfo.extraInfo
                 creator = artifactInfo.creator
                 modifier = artifactInfo.modifier
+                createTime = artifactInfo.createTime
+                updateTime = artifactInfo.updateTime
             }
-            return record.store()
+            return dslContext.insertInto(this)
+                .set(record)
+                .onDuplicateKeyUpdate()
+                .set(EXECUTE_COUNT, artifactInfo.executeCount)
+                .set(ARTIFACT_DIGEST, artifactInfo.artifactDigest)
+                .set(COMMIT_ID, artifactInfo.commitId)
+                .set(CODE_REPO_URL, artifactInfo.codeRepoUrl)
+                .set(ARTIFACT_URI, artifactInfo.artifactUri)
+                .set(ARTIFACT_REPO_URL, artifactInfo.artifactRepoUrl)
+                .set(ARTIFACT_SIZE, artifactInfo.artifactSize)
+                .set(EXTRA_INFO, artifactInfo.extraInfo)
+                .set(UPDATE_TIME, artifactInfo.updateTime)
+                .set(MODIFIER, artifactInfo.modifier)
+                .execute()
         }
     }
 
@@ -96,33 +111,25 @@ class PipelineArtifactInfoDao {
             }
             return dslContext.selectFrom(this)
                 .where(conditions)
-                .fetchAny()
+                .orderBy(CREATE_TIME.desc())
+                .limit(1)
+                .fetchOne()
         }
     }
 
     fun listByBuild(
         dslContext: DSLContext,
+        projectId: String,
         pipelineId: String,
         buildId: String
     ): Result<TPipelineArtifactInfoRecord> {
         with(TPipelineArtifactInfo.T_PIPELINE_ARTIFACT_INFO) {
             return dslContext.selectFrom(this)
-                .where(PIPELINE_ID.eq(pipelineId).and(BUILD_ID.eq(buildId)))
+                .where(PROJECT_ID.eq(projectId)
+                    .and(PIPELINE_ID.eq(pipelineId))
+                    .and(BUILD_ID.eq(buildId)))
                 .fetch()
         }
     }
 
-    fun deleteByBuildIds(
-        dslContext: DSLContext,
-        buildIds: List<String>
-    ): Int {
-        if (buildIds.isEmpty()) {
-            return 0
-        }
-        with(TPipelineArtifactInfo.T_PIPELINE_ARTIFACT_INFO) {
-            return dslContext.deleteFrom(this)
-                .where(BUILD_ID.`in`(buildIds))
-                .execute()
-        }
-    }
 }
