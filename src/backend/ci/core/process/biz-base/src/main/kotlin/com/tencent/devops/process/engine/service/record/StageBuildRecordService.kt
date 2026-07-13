@@ -148,7 +148,7 @@ class StageBuildRecordService(
         buildStatus: BuildStatus,
         reviewers: List<String>? = null
     ): List<BuildStageStatus> {
-        val recordStages = recordStageDao.getRecords(
+        val recordStages = recordStageDao.getLatestRecords(
             dslContext = dslContext,
             projectId = projectId,
             pipelineId = pipelineId,

@@ -94,6 +94,8 @@ dispatch:
 environment:
   agent-package: __BK_CI_HOME__/agent-package
   agentCollectorOn: __BK_CI_ENVIRONMENT_AGENT_COLLECTOR_ON__
+  batch-install:
+    aes-key: __BK_CI_ENVIRONMENT_BATCH_INSTALL_AES_KEY__
 
 influxdb:
   server: __BK_CI_INFLUXDB_ADDR__
@@ -338,7 +340,7 @@ logo:
 
 aes:
   # 部署前修改好，后续升级如果再修改，会导致历史数据读取不了，所以如果修改需要先解密重新入库
-  aesKey: "J%k^yO{?vt}3tXpG"
+  aesKey: __BK_CI_STORE_AES_KEY__
   aesMock: "******"
 
 statistics:
@@ -348,12 +350,12 @@ statistics:
 
 cert:
   # 部署前修改好，后续升级如果再修改，会导致历史数据读取不了，所以如果修改需要先解密重新入库
-  aes-key: "gHi(xG9Af)jEvCx&"
+  aes-key: __BK_CI_TICKET_CERT_AES_KEY__
 
 credential:
   mixer: "******"
   # 部署前修改好，后续升级如果再修改，会导致历史数据读取不了，所以如果修改需要先解密重新入库
-  aes-key: "G/I%yP{?ST}2TXPg"
+  aes-key: __BK_CI_TICKET_CREDENTIAL_AES_KEY__
 
 #### websocket
 
@@ -410,6 +412,10 @@ pipeline:
     max_keep_num: 50
     spec_channels: "AM,CODECC,GCLOUD,GIT,GONGFENGSCAN,CODECC_EE"
     spec_channel_max_keep_num: 2
+
+project:
+  callback:
+    aes-key: __BK_CI_PROCESS_CALLBACK_AES_KEY__
 
 notify:
   weworkChannel: __BK_CI_NOTIFY_WEWORK_SEND_CHANNEL__  #发送企业微信的通道: weworkAgent 企业微信应用,blueking 蓝鲸消息通道, weworkRobot 企业微信机器人(待开放)

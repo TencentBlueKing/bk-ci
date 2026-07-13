@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestampmilli
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.web.utils.I18nUtil
@@ -57,20 +58,21 @@ import com.tencent.devops.store.pojo.atom.AtomEnvRequest
 import com.tencent.devops.store.pojo.atom.AtomPostInfo
 import com.tencent.devops.store.pojo.atom.AtomRunInfo
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
-import com.tencent.devops.store.pojo.atom.enums.JobTypeEnum
 import com.tencent.devops.store.pojo.common.ATOM_POST_CONDITION
 import com.tencent.devops.store.pojo.common.ATOM_POST_ENTRY_PARAM
 import com.tencent.devops.store.pojo.common.ATOM_POST_FLAG
 import com.tencent.devops.store.pojo.common.ATOM_POST_NORMAL_PROJECT_FLAG_KEY_PREFIX
 import com.tencent.devops.store.pojo.common.ATOM_POST_VERSION_TEST_FLAG_KEY_PREFIX
+import com.tencent.devops.store.pojo.common.enums.ServiceScopeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.version.StoreVersion
+import com.tencent.devops.store.util.ServiceScopeUtil
 import com.tencent.devops.store.utils.VersionUtils
-import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
 
 /**
  * 插件执行环境逻辑类
@@ -179,26 +181,44 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
                     historyBuildQueryFlag = historyBuildQueryFlag
                 )
             } else {
-                // 去缓存中获取插件运行时信息
+                // 去缓存中获取插件运行时信息，命中且非旧结构时直接复用，否则回退 DB（并在 DB 查询中刷新缓存）
                 val atomRunInfoKey = StoreUtils.getStoreRunInfoKey(StoreTypeEnum.ATOM.name, atomCode)
-                val atomRunInfoJson = redisOperation.hget(atomRunInfoKey, version)
-                if (!atomRunInfoJson.isNullOrEmpty()) {
-                    val atomRunInfo = JsonUtil.to(atomRunInfoJson, AtomRunInfo::class.java)
-                    atomRunInfoMap[atomRunInfoName] = atomRunInfo
-                } else {
-                    atomRunInfoMap[atomRunInfoName] = queryAtomRunInfoFromDb(
+                val cachedAtomRunInfo = redisOperation.hget(atomRunInfoKey, version)
+                    ?.takeIf { it.isNotEmpty() }
+                    ?.let { JsonUtil.to(it, AtomRunInfo::class.java) }
+                    ?.takeUnless { legacy ->
+                        isLegacyAtomRunInfoCache(legacy).also { isLegacy ->
+                            if (isLegacy) {
+                                logger.info(
+                                    "atomRunInfo cache is legacy(missing jobType/jobTypeMap/serviceScope), " +
+                                            "fallback to db: atomCode=$atomCode, version=$version"
+                                )
+                            }
+                        }
+                    }
+                atomRunInfoMap[atomRunInfoName] = cachedAtomRunInfo ?: queryAtomRunInfoFromDb(
                     projectCode = projectCode,
                     atomCode = atomCode,
                     atomName = atomName,
                     version = version,
                     testFlag = testFlag,
                     historyBuildQueryFlag = historyBuildQueryFlag
-                    )
-                }
+                )
             }
         }
         return atomRunInfoMap
     }
+
+    /**
+     * 判断缓存中的插件运行时信息是否为旧版本代码写入的过期结构，命中任一条件即需回退 DB 重建缓存：
+     * 1. jobType 与 jobTypeMap 同时为空：缺少构建环境匹配（isAtomJobTypeMatch）所需字段，
+     *    会被误判为「与 Job 运行环境不匹配」；
+     * 2. serviceScope 为空：插件在 DB 中一定声明了服务范围，缓存中为空说明是旧结构，
+     *    会导致服务范围校验（isAtomServiceScopeAllowed）因「空即放行」而绕过渠道隔离。
+     */
+    private fun isLegacyAtomRunInfoCache(atomRunInfo: AtomRunInfo): Boolean =
+        atomRunInfo.serviceScope.isNullOrEmpty() ||
+            (atomRunInfo.jobType.isNullOrBlank() && atomRunInfo.jobTypeMap.isNullOrBlank())
 
     private fun handleAtomVersions(
         atomVersions: Set<StoreVersion>,
@@ -254,12 +274,15 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
             atomCode = atomCode,
             atomName = atomEnv.atomName,
             version = atomEnv.version,
+            atomStatus = AtomStatusEnum.getAtomStatus(atomEnv.atomStatus)?.status?.toByte(),
             initProjectCode = atomEnv.projectCode ?: "",
             jobType = atomEnv.jobType,
+            jobTypeMap = atomEnv.jobTypeMap,
             buildLessRunFlag = atomEnv.buildLessRunFlag,
             inputTypeInfos = marketAtomCommonService.generateInputTypeInfos(atomEnv.props),
             sensitiveParams = sensitiveParams?.joinToString(","),
-            canPauseBeforeRun = props?.let { marketAtomCommonService.getAtomCanPauseBeforeRun(props) }
+            canPauseBeforeRun = props?.let { marketAtomCommonService.getAtomCanPauseBeforeRun(props) },
+            serviceScope = atomEnv.serviceScope
         )
         if (!testFlag && !historyBuildQueryFlag) {
             // 将db中的环境信息写入缓存
@@ -279,7 +302,8 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
         atomStatus: Byte?,
         osName: String?,
         osArch: String?,
-        convertOsFlag: Boolean?
+        convertOsFlag: Boolean?,
+        channelCode: ChannelCode?
     ): Result<AtomEnv?> {
         return doGetMarketAtomEnvInfo(
             projectCode = projectCode,
@@ -289,7 +313,8 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
             osName = osName,
             osArch = osArch,
             convertOsFlag = convertOsFlag,
-            historyBuildQueryFlag = false
+            historyBuildQueryFlag = false,
+            channelCode = channelCode
         )
     }
 
@@ -301,7 +326,8 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
         osName: String? = null,
         osArch: String? = null,
         convertOsFlag: Boolean? = null,
-        historyBuildQueryFlag: Boolean
+        historyBuildQueryFlag: Boolean,
+        channelCode: ChannelCode? = null
     ): Result<AtomEnv?> {
         logger.info(
             "getMarketAtomEnvInfo $projectCode,$atomCode,$version,$atomStatus," +
@@ -392,6 +418,7 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
         )
         logger.info("$atomCode initProjectCode is :$initProjectCode")
         val jobType = atomBaseInfoRecord[tAtom.JOB_TYPE]
+        val jobTypeMap = atomBaseInfoRecord[tAtom.JOB_TYPE_MAP]
         val classifyId = atomBaseInfoRecord[tAtom.CLASSIFY_ID]
         val classifyRecord = classifyDao.getClassify(dslContext, classifyId)
         val atomEnv = AtomEnv(
@@ -403,7 +430,12 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
             version = atomBaseInfoRecord[tAtom.VERSION],
             publicFlag = atomBaseInfoRecord[tAtom.DEFAULT_FLAG] as Boolean,
             summary = atomBaseInfoRecord[tAtom.SUMMARY],
-            docsLink = atomBaseInfoRecord[tAtom.DOCS_LINK],
+            // 仅当当次构建为创作流渠道时，才将文档链接转换为创作流对应的地址
+            docsLink = StoreUtils.transformDocsLink(
+                atomBaseInfoRecord[tAtom.DOCS_LINK],
+                StoreTypeEnum.ATOM,
+                if (channelCode == ChannelCode.CREATIVE_STREAM) ServiceScopeEnum.CREATIVE_STREAM else null
+            ),
             props = atomBaseInfoRecord[tAtom.PROPS]?.let {
                 storeI18nMessageService.parseJsonStrI18nInfo(
                     jsonStr = it,
@@ -424,13 +456,15 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
             target = atomEnvInfoRecord?.target,
             shaContent = atomEnvInfoRecord?.shaContent,
             preCmd = atomEnvInfoRecord?.preCmd,
-            jobType = if (jobType == null) null else JobTypeEnum.valueOf(jobType),
+            jobType = jobType,
+            jobTypeMap = jobTypeMap,
             atomPostInfo = atomPostInfo,
             classifyCode = classifyRecord?.classifyCode,
             classifyName = classifyRecord?.classifyName,
             runtimeVersion = atomEnvInfoRecord?.runtimeVersion,
             finishKillFlag = atomEnvInfoRecord?.finishKillFlag,
-            authFlag = atomBaseInfoRecord[tAtom.VISIBILITY_LEVEL] != VisibilityLevelEnum.LOGIN_PUBLIC.level
+            authFlag = atomBaseInfoRecord[tAtom.VISIBILITY_LEVEL] != VisibilityLevelEnum.LOGIN_PUBLIC.level,
+            serviceScope = ServiceScopeUtil.parseServiceScopes(atomBaseInfoRecord[tAtom.SERVICE_SCOPE]).ifEmpty { null }
         )
         return Result(atomEnv)
     }

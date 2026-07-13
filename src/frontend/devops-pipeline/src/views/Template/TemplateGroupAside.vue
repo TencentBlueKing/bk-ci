@@ -37,7 +37,8 @@
         // STEP_TEMPLATE_VIEW_ID,
         TEMPLATE_VIEW_ID_CACHE
     } from '@/store/modules/templates/constants'
-    import { computed, onMounted, ref } from 'vue'
+    import { computed, onMounted, ref, watch } from 'vue'
+    import { templateCountRefreshVersion } from './useTemplateCountRefresh'
 
     const { proxy } = UseInstance()
     const countMap = ref({})
@@ -107,6 +108,9 @@
         })
     }
     onMounted(() => {
+        getType2Count()
+    })
+    watch(() => templateCountRefreshVersion.value, () => {
         getType2Count()
     })
 </script>

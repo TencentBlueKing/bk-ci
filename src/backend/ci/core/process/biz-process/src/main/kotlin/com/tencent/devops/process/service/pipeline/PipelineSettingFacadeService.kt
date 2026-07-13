@@ -161,7 +161,7 @@ class PipelineSettingFacadeService @Autowired constructor(
         if (pipelineName.name != pipelineName.oldName) {
             auditService.createAudit(
                 Audit(
-                    resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
+                    resourceType = AuthResourceType.getAuthResourceTypeByChannel(AuthResourceType.PIPELINE_DEFAULT).value,
                     resourceId = setting.pipelineId,
                     resourceName = pipelineName.name,
                     userId = userId,
@@ -215,7 +215,7 @@ class PipelineSettingFacadeService @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
-        channelCode: ChannelCode = ChannelCode.BS,
+        channelCode: ChannelCode = ChannelCode.getRequestChannelCode(),
         version: Int = 0,
         checkPermission: Boolean = false,
         detailInfo: PipelineDetailInfo? = null,
@@ -276,6 +276,10 @@ class PipelineSettingFacadeService @Autowired constructor(
                 )
             )
         )
+    }
+
+    fun getDefaultSetting(userId: String): PipelineSetting {
+        return pipelineRepositoryService.createDefaultSetting(channelCode = ChannelCode.getRequestChannelCode())
     }
 
     fun getSettingInfo(projectId: String, pipelineId: String): PipelineSetting? {

@@ -27,6 +27,7 @@
 
 package com.tencent.devops.repository.resources
 
+import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.repository.api.OPRepositoryResource
@@ -128,6 +129,32 @@ class OPRepositoryResourceImpl @Autowired constructor(
                     repoHashId = repoHashId
                 )
             }
+        )
+        return Result(true)
+    }
+
+    override fun copyAcrossProject(
+        userId: String,
+        sourceProjectId: String,
+        targetProjectId: String,
+        repoHashId: String?,
+        repositoryName: String?
+    ): Result<Boolean> {
+        if (userId.isBlank()) {
+            throw ParamBlankException("Invalid userId")
+        }
+        if (sourceProjectId.isBlank()) {
+            throw ParamBlankException("Invalid sourceProjectId")
+        }
+        if (targetProjectId.isBlank()) {
+            throw ParamBlankException("Invalid targetProjectId")
+        }
+        opRepositoryService.copyAcrossProject(
+            userId = userId,
+            sourceProjectId = sourceProjectId,
+            targetProjectId = targetProjectId,
+            repoHashId = repoHashId,
+            repositoryName = repositoryName
         )
         return Result(true)
     }

@@ -50,9 +50,13 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeTGitWebHookTr
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeTGitWebHookTriggerInput
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.RemoteTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.TapdWebHookTriggerData
+import com.tencent.devops.common.pipeline.pojo.element.trigger.TapdWebHookTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.TapdWebHookTriggerInput
 import com.tencent.devops.common.pipeline.pojo.element.trigger.TimerTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.PathFilterType
+import com.tencent.devops.common.pipeline.enums.TapdEventType
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitMrEventAction
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitPushActionType
 import com.tencent.devops.process.yaml.transfer.VariableDefault.nullIfDefault
@@ -68,6 +72,7 @@ import com.tencent.devops.process.yaml.v3.models.on.NoteRule
 import com.tencent.devops.process.yaml.v3.models.on.PushRule
 import com.tencent.devops.process.yaml.v3.models.on.ReviewRule
 import com.tencent.devops.process.yaml.v3.models.on.TagRule
+import com.tencent.devops.process.yaml.v3.models.on.TapdRule
 import com.tencent.devops.process.yaml.v3.models.on.TriggerOn
 import com.tencent.devops.scm.api.enums.EventAction
 import org.slf4j.LoggerFactory
@@ -782,6 +787,62 @@ class TriggerTransfer @Autowired(required = false) constructor(
                 ).checkTriggerElementEnable(remote.enable == EnableType.TRUE.value)
             )
         }
+    }
+
+    /**
+     * 将 `on:` 条目中的 TAPD 触发转换为对应 [TapdWebHookTriggerElement]。
+     *
+     * 与代码库触发的 `yaml2TriggerGit` 平级：一个 [TriggerOn] 承载一个 workspace 的
+     * story / bug 配置（通过 `type: tapd` 区分）；story / bug 各自最多生成一个触发元素。
+     */
+    fun yaml2TriggerTapd(triggerOn: TriggerOn, elementQueue: MutableList<Element>) {
+        val workspaceId = triggerOn.workspaceId ?: return
+        triggerOn.story?.let { story ->
+            elementQueue.add(
+                buildTapdElement(
+                    workspaceId = workspaceId,
+                    eventType = TapdEventType.STORY,
+                    rule = story
+                )
+            )
+        }
+        triggerOn.bug?.let { bug ->
+            elementQueue.add(
+                buildTapdElement(
+                    workspaceId = workspaceId,
+                    eventType = TapdEventType.BUG,
+                    rule = bug
+                )
+            )
+        }
+    }
+
+    private fun buildTapdElement(
+        workspaceId: String,
+        eventType: TapdEventType,
+        rule: TapdRule
+    ): TapdWebHookTriggerElement {
+        val includeStoryAction = rule.action?.takeIf { eventType == TapdEventType.STORY }
+        val includeBugAction = rule.action?.takeIf { eventType == TapdEventType.BUG }
+        return TapdWebHookTriggerElement(
+            name = rule.name ?: "TAPD事件触发",
+            stepId = rule.id,
+            data = TapdWebHookTriggerData(
+                input = TapdWebHookTriggerInput(
+                    workspaceId = workspaceId,
+                    eventType = eventType,
+                    includeStoryAction = includeStoryAction,
+                    includeBugAction = includeBugAction,
+                    includeUsers = rule.users,
+                    excludeUsers = rule.usersIgnore,
+                    includeLabels = rule.labels?.join(),
+                    excludeLabels = rule.labelsIgnore?.join(),
+                    includePriority = rule.priorities?.join(),
+                    includeOwner = rule.owners,
+                    excludeOwner = rule.ownersIgnore
+                )
+            )
+        ).checkTriggerElementEnable(rule.enable) as TapdWebHookTriggerElement
     }
 
     @Suppress("ComplexMethod")

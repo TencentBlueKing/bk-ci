@@ -41,6 +41,7 @@ import com.tencent.devops.environment.pojo.NodeBaseInfo
 import com.tencent.devops.environment.pojo.NodeFetchReq
 import com.tencent.devops.environment.pojo.NodeWithPermission
 import com.tencent.devops.environment.pojo.SharedProjectInfoWrap
+import com.tencent.devops.environment.pojo.enums.EnvType
 import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.environment.pojo.enums.NodeType
 import com.tencent.devops.environment.pojo.thirdpartyagent.AgentPipelineRef
@@ -52,6 +53,27 @@ import org.springframework.beans.factory.annotation.Autowired
 class ApigwEnvironmentResourceV4Impl @Autowired constructor(
     private val client: Client
 ) : ApigwEnvironmentResourceV4 {
+    override fun listEnvs(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        envName: String?,
+        envType: EnvType?,
+        nodeHashId: String?,
+        createMode: Boolean?
+    ): Result<List<EnvWithPermission>> {
+        logger.info("OPENAPI_ENVIRONMENT_V4|$userId|list envs|$projectId")
+        return client.get(ServiceEnvironmentResource::class).list(
+            userId = userId,
+            projectId = projectId,
+            envName = envName,
+            envType = envType,
+            nodeHashId = nodeHashId,
+            createMode = createMode
+        )
+    }
+
     override fun listUsableServerCMDBNodes(
         appCode: String?,
         apigwType: String?,
@@ -117,6 +139,33 @@ class ApigwEnvironmentResourceV4Impl @Autowired constructor(
     ): Result<Boolean> {
         logger.info("OPENAPI_ENVIRONMENT_V4|$userId|delete nodes|$projectId|$nodeHashIds")
         return client.get(ServiceNodeResource::class).deleteNodes(userId, projectId, nodeHashIds)
+    }
+
+    override fun listNodesNew(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        nodeIp: String?,
+        displayName: String?,
+        createdUser: String?,
+        nodeStatus: NodeStatus?,
+        page: Int?,
+        pageSize: Int?,
+        envHashId: String
+    ): Result<Page<NodeBaseInfo>> {
+        logger.info("OPENAPI_ENVIRONMENT_V4|$userId|list nodes new|$projectId|$envHashId|$page|$pageSize")
+        return client.get(ServiceEnvironmentResource::class).listNodesNew(
+            userId = userId,
+            projectId = projectId,
+            nodeIp = nodeIp,
+            displayName = displayName,
+            createdUser = createdUser,
+            nodeStatus = nodeStatus,
+            page = page,
+            pageSize = pageSize,
+            envHashId = envHashId
+        )
     }
 
     override fun listUsableServerEnvs(
@@ -241,11 +290,12 @@ class ApigwEnvironmentResourceV4Impl @Autowired constructor(
         latestBuildTimeEnd: Long?,
         sortType: String?,
         collation: String?,
+        createMode: Boolean?,
         data: NodeFetchReq?
     ): Result<Page<NodeWithPermission>> {
         logger.info("OPENAPI_ENVIRONMENT_V4|$userId|fetch nodes|$projectId|$page|$pageSize|$nodeIp|$displayName|" +
             "$createdUser|$lastModifiedUser|$keywords|$nodeType|$nodeStatus|$agentVersion|$osName|" +
-            "$latestBuildPipelineId|$latestBuildTimeStart|$latestBuildTimeEnd|$sortType|$collation|$data")
+            "$latestBuildPipelineId|$latestBuildTimeStart|$latestBuildTimeEnd|$sortType|$collation|$createMode|$data")
         return client.get(ServiceNodeResource::class).fetchNodes(
             userId = userId,
             projectId = projectId,
@@ -265,6 +315,7 @@ class ApigwEnvironmentResourceV4Impl @Autowired constructor(
             latestBuildTimeEnd = latestBuildTimeEnd,
             sortType = sortType,
             collation = collation,
+            createMode = createMode,
             data = data
         )
     }

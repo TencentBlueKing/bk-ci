@@ -29,14 +29,12 @@ package com.tencent.devops.repository.service.code
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.HashUtil
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.ResourceAuthorizationDTO
 import com.tencent.devops.common.auth.api.pojo.ResourceAuthorizationHandoverDTO
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.repository.tables.records.TRepositoryRecord
-import com.tencent.devops.repository.constant.RepositoryMessageCode
 import com.tencent.devops.repository.constant.RepositoryMessageCode.GITHUB_INVALID
 import com.tencent.devops.repository.dao.RepositoryDao
 import com.tencent.devops.repository.dao.RepositoryGithubDao
@@ -50,7 +48,6 @@ import com.tencent.devops.repository.sdk.github.service.GithubRepositoryService
 import com.tencent.devops.repository.service.github.GithubTokenService
 import com.tencent.devops.repository.service.permission.RepositoryAuthorizationService
 import com.tencent.devops.scm.pojo.GitFileInfo
-import com.tencent.devops.scm.utils.code.git.GitUtils
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -110,16 +107,6 @@ class CodeGithubRepositoryService @Autowired constructor(
                 I18nUtil.getCodeLanMessage(
                     messageCode = GITHUB_INVALID,
                     language = I18nUtil.getLanguage(userId)
-                )
-            )
-        }
-        // 不得切换代码库
-        if (GitUtils.diffRepoUrl(record.url, repository.url)) {
-            logger.warn("can not switch repo url|sourceUrl[${record.url}]|targetUrl[${repository.url}]")
-            throw OperationException(
-                MessageUtil.getMessageByLocale(
-                    RepositoryMessageCode.CAN_NOT_SWITCH_REPO_URL,
-                    I18nUtil.getLanguage(userId)
                 )
             )
         }

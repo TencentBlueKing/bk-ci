@@ -19,6 +19,7 @@ import com.tencent.devops.auth.pojo.request.ai.BatchHandoverMembersReq
 import com.tencent.devops.auth.pojo.request.ai.BatchOperateCheckReq
 import com.tencent.devops.auth.pojo.request.ai.BatchRemoveMembersReq
 import com.tencent.devops.auth.pojo.request.ai.BatchRenewalMembersReq
+import com.tencent.devops.auth.pojo.request.ProjectMembersQueryConditionReq
 import com.tencent.devops.auth.pojo.request.ai.GroupRecommendReq
 import com.tencent.devops.auth.pojo.vo.ActionInfoVo
 import com.tencent.devops.auth.pojo.vo.AuthorizationHealthVO
@@ -183,6 +184,44 @@ ServiceAuthAiResourceImpl(
         )
     }
 
+    @BkManagerCheck
+    override fun listProjectMembersByCondition(
+        userId: String,
+        projectId: String,
+        memberType: String?,
+        userName: String?,
+        deptName: String?,
+        groupName: String?,
+        minExpiredAt: Long?,
+        maxExpiredAt: Long?,
+        departedFlag: Boolean?,
+        resourceType: String?,
+        resourceCode: String?,
+        action: String?,
+        page: Int,
+        pageSize: Int
+    ): Result<SQLPage<ResourceMemberInfo>> {
+        return Result(
+            permissionManageFacadeService.listProjectMembersByComplexConditions(
+                conditionReq = ProjectMembersQueryConditionReq(
+                    projectCode = projectId,
+                    memberType = memberType,
+                    userName = userName,
+                    deptName = deptName,
+                    groupName = groupName,
+                    minExpiredAt = minExpiredAt,
+                    maxExpiredAt = maxExpiredAt,
+                    departedFlag = departedFlag,
+                    relatedResourceType = resourceType,
+                    relatedResourceCode = resourceCode,
+                    action = action,
+                    page = page,
+                    pageSize = pageSize
+                )
+            )
+        )
+    }
+
     @BkProjectMemberCheck
     override fun getMemberGroupCount(
         userId: String,
@@ -252,14 +291,12 @@ ServiceAuthAiResourceImpl(
         val expiredTime = now + TimeUnit.DAYS.toSeconds(
             createInfo.expiredTime ?: DEFAULT_EXPIRED_DAYS
         )
-        return Result(
-            permissionResourceMemberService.batchAddResourceGroupMembers(
-                projectCode = projectId,
-                iamGroupId = createInfo.groupId!!,
-                expiredTime = expiredTime,
-                members = createInfo.userIds,
-                departments = createInfo.deptIds
-            )
+        return permissionResourceMemberService.batchAddResourceGroupMembers(
+            projectCode = projectId,
+            iamGroupId = createInfo.groupId!!,
+            expiredTime = expiredTime,
+            members = createInfo.userIds,
+            departments = createInfo.deptIds
         )
     }
 

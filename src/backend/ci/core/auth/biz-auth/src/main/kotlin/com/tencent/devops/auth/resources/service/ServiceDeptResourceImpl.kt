@@ -59,4 +59,8 @@ class ServiceDeptResourceImpl @Autowired constructor(
     override fun getLeader(userId: String): Result<BkUserInfo?> {
         return Result(deptService.getLeader(userId))
     }
+
+    override fun getUserDeptIds(userId: String): Result<Set<String>> {
+        return Result(deptService.getUserDeptInfo(userId))
+    }
 }

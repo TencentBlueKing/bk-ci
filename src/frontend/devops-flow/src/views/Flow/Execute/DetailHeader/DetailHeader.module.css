@@ -1,0 +1,38 @@
+.replayTrigger {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--color-text-disabled);
+  height: 32px;
+  font-size: var(--font-size-sm);
+  border-radius: var(--border-radius);
+  padding: 0 15px;
+  color: var(--color-text-secondary);
+}
+
+.replayTrigger:hover:not(.replayTriggerDisabled) {
+  cursor: pointer;
+  border-color: var(--color-text-tertiary);
+}
+
+.replayTriggerDisabled {
+  cursor: not-allowed;
+  color: var(--border-color);
+}
+
+.replayInfoWrap {
+  display: inline-flex;
+  margin-left: 5px;
+}
+
+.replayInfoWrap:hover .infoIcon {
+  color: var(--color-primary);
+}
+
+.spin {
+  margin-right: 5px;
+}
+
+.replayTrigger .infoIcon {
+  font-size: var(--font-size-xs);
+}

@@ -221,6 +221,7 @@ class BuildEndControl @Autowired constructor(
                 buildId = buildId,
                 likeStr = "%${AgentReuseMutex.CONTEXT_KEY_SUFFIX}"
             ).forEach { agentId ->
+                LOG.info("ENGINE|$buildId|$source|BUILD_FINISH|$pipelineId|UNLOCK_REUSE_LOCK|$agentId")
                 RedisLockByValue(
                     redisOperation = redisOperation,
                     lockKey = AgentReuseMutex.genAgentReuseMutexLockKey(projectId, agentId),
@@ -250,7 +251,7 @@ class BuildEndControl @Autowired constructor(
         buildDurationTime(buildInfo.startTime ?: 0L)
         callBackParentPipeline(buildInfo)
 
-        // 广播结束事件
+        // 广播结束事件（将构建的渠道信息注入事件，确保下游MQ消费者能正确恢复ChannelContext）
         pipelineEventDispatcher.dispatch(
             PipelineBuildFinishBroadCastEvent(
                 source = "build_finish_$buildId", projectId = projectId, pipelineId = pipelineId,
@@ -259,7 +260,7 @@ class BuildEndControl @Autowired constructor(
                 errorInfoList = if (buildInfo.errorInfoList != null) {
                     JsonUtil.toJson(buildInfo.errorInfoList!!)
                 } else null
-            ),
+            ).apply { channelCode = buildInfo.channelCode.name },
             // build 结束
             PipelineBuildStatusBroadCastEvent(
                 source = source,
@@ -513,7 +514,7 @@ class BuildEndControl @Autowired constructor(
                     actionType = ActionType.START,
                     executeCount = nextBuild.executeCount,
                     buildNoType = buildNoTypeStr?.let { BuildNoType.valueOf(it) }
-                )
+                ).apply { this.channelCode = this@startNextBuild.channelCode }
             )
         }
     }

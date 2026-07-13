@@ -83,6 +83,7 @@ class PipelineResourceFactory @Autowired constructor(
         )
     }
 
+    @Suppress("NestedBlockDepth")
     fun createPipelineModelBasicInfo(
         userId: String,
         projectId: String,

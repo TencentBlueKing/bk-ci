@@ -31,31 +31,23 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.common.UserStoreComponentQueryResource
-import com.tencent.devops.store.common.service.StoreComponentQueryService
-import com.tencent.devops.store.common.service.StoreMediaService
-import com.tencent.devops.store.common.service.StoreProjectService
+import com.tencent.devops.store.common.service.StoreComponentDeployService
+import com.tencent.devops.store.common.service.StoreComponentMarketQueryService
+import com.tencent.devops.store.common.service.StoreComponentWorkbenchService
 import com.tencent.devops.store.pojo.common.MarketItem
 import com.tencent.devops.store.pojo.common.MarketMainItem
 import com.tencent.devops.store.pojo.common.MyStoreComponent
-import com.tencent.devops.store.pojo.common.StoreDetailInfo
 import com.tencent.devops.store.pojo.common.StoreInfoQuery
+import com.tencent.devops.store.pojo.common.deploy.UserComponentDeployInfo
 import com.tencent.devops.store.pojo.common.enums.RdTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreSortTypeEnum
-import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import com.tencent.devops.store.pojo.common.media.StoreMediaInfo
-import com.tencent.devops.store.pojo.common.test.StoreTestItem
-import com.tencent.devops.store.pojo.common.version.StoreDeskVersionItem
-import com.tencent.devops.store.pojo.common.version.StoreShowVersionInfo
-import com.tencent.devops.store.pojo.common.version.StoreVersionLogInfo
-import com.tencent.devops.store.pojo.common.version.StoreVersionSizeInfo
-import com.tencent.devops.store.pojo.common.version.VersionInfo
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class UserStoreComponentQueryResourceImpl @Autowired constructor(
-    private val storeComponentQueryService: StoreComponentQueryService,
-    private val storeProjectService: StoreProjectService,
-    private val storeMediaService: StoreMediaService
+    private val storeComponentWorkbenchService: StoreComponentWorkbenchService,
+    private val storeComponentMarketQueryService: StoreComponentMarketQueryService,
+    private val storeComponentDeployService: StoreComponentDeployService
 ) : UserStoreComponentQueryResource {
 
     override fun getMyComponents(
@@ -66,58 +58,12 @@ class UserStoreComponentQueryResourceImpl @Autowired constructor(
         pageSize: Int
     ): Result<Page<MyStoreComponent>?> {
         return Result(
-            storeComponentQueryService.getMyComponents(
+            storeComponentWorkbenchService.getMyComponents(
                 userId = userId,
                 storeType = storeType,
                 name = name,
                 page = page,
                 pageSize = pageSize
-            )
-        )
-    }
-
-    override fun getComponentVersionsByCode(
-        userId: String,
-        storeType: String,
-        storeCode: String,
-        page: Int,
-        pageSize: Int
-    ): Result<Page<StoreDeskVersionItem>> {
-        return Result(
-            storeComponentQueryService.getComponentVersionsByCode(
-                userId = userId,
-                storeCode = storeCode,
-                storeType = storeType,
-                page = page,
-                pageSize = pageSize
-            )
-        )
-    }
-
-    override fun getComponentDetailInfoById(
-        userId: String,
-        storeType: String,
-        storeId: String
-    ): Result<StoreDetailInfo?> {
-        return Result(
-            storeComponentQueryService.getComponentDetailInfoById(
-                userId = userId,
-                storeId = storeId,
-                storeType = StoreTypeEnum.valueOf(storeType)
-            )
-        )
-    }
-
-    override fun getComponentDetailInfoByCode(
-        userId: String,
-        storeType: String,
-        storeCode: String
-    ): Result<StoreDetailInfo?> {
-        return Result(
-            storeComponentQueryService.getComponentDetailInfoByCode(
-                userId = userId,
-                storeCode = storeCode,
-                storeType = storeType
             )
         )
     }
@@ -130,7 +76,7 @@ class UserStoreComponentQueryResourceImpl @Autowired constructor(
         page: Int,
         pageSize: Int
     ): Result<List<MarketMainItem>> {
-        return storeComponentQueryService.getMainPageComponents(
+        return storeComponentMarketQueryService.getMainPageComponents(
             userId = userId,
             storeInfoQuery = StoreInfoQuery(
                 storeType = storeType,
@@ -165,7 +111,7 @@ class UserStoreComponentQueryResourceImpl @Autowired constructor(
         pageSize: Int
     ): Result<Page<MarketItem>> {
         return Result(
-            storeComponentQueryService.queryComponents(
+            storeComponentMarketQueryService.queryComponents(
                 userId = userId,
                 storeInfoQuery = StoreInfoQuery(
                     storeType = storeType,
@@ -191,90 +137,31 @@ class UserStoreComponentQueryResourceImpl @Autowired constructor(
         )
     }
 
-    override fun getComponentShowVersionInfo(
+    override fun getUserComponentDeployInfos(
         userId: String,
         storeType: String,
-        storeCode: String
-    ): Result<StoreShowVersionInfo> {
-        return Result(
-            storeComponentQueryService.getComponentShowVersionInfo(
-                userId = userId,
-                storeCode = storeCode,
-                storeType = storeType
-            )
-        )
-    }
-
-    override fun getStoreTestInfo(
-        userId: String,
-        storeType: StoreTypeEnum,
-        storeCode: String
-    ): Result<Set<StoreTestItem>> {
-        return Result(
-            storeProjectService.getStoreTestInfo(userId = userId, storeType = storeType, storeCode = storeCode)
-        )
-    }
-
-    override fun getStoreMediaInfo(
-        userId: String,
-        storeType: StoreTypeEnum,
-        storeCode: String
-    ): Result<List<StoreMediaInfo>?> {
-        return storeMediaService.getByCode(storeCode, storeType)
-    }
-
-    override fun getStoreUpgradeVersionInfo(
-        userId: String,
-        storeType: String,
-        storeCode: String,
-        projectCode: String,
+        projectCode: String?,
         instanceId: String?,
-        osName: String?,
-        osArch: String?
-    ): Result<VersionInfo?> {
-        return Result(
-            storeComponentQueryService.getComponentUpgradeVersionInfo(
-                userId = userId,
-                storeCode = storeCode,
-                storeType = storeType,
-                projectCode = projectCode,
-                instanceId = instanceId,
-                osName = osName,
-                osArch = osArch
-            )
-        )
-    }
-
-    override fun getStoreVersionLogs(
-        userId: String,
-        storeCode: String,
-        storeType: StoreTypeEnum,
+        keyword: String?,
+        sortType: StoreSortTypeEnum?,
         page: Int,
         pageSize: Int
-    ): Result<Page<StoreVersionLogInfo>> {
-        return storeComponentQueryService.getStoreVersionLogs(
-            storeCode = storeCode,
-            storeType = storeType,
-            page = page,
-            pageSize = pageSize
-        )
-    }
-
-    override fun getStoreVersionSize(
-        userId: String,
-        storeCode: String,
-        storeType: StoreTypeEnum,
-        version: String,
-        osName: String?,
-        osArch: String?
-    ): Result<StoreVersionSizeInfo> {
+    ): Result<Page<UserComponentDeployInfo>> {
         return Result(
-            storeComponentQueryService.getStoreVersionSize(
-                storeCode = storeCode,
-                storeType = storeType,
-                version = version,
-                osName = osName,
-                osArch = osArch
+            storeComponentDeployService.getUserComponentDeployInfos(
+                userId = userId,
+                storeInfoQuery = StoreInfoQuery(
+                    storeType = storeType,
+                    projectCode = projectCode,
+                    instanceId = instanceId,
+                    keyword = keyword,
+                    sortType = sortType ?: StoreSortTypeEnum.CREATE_TIME,
+                    // 应用列表按可见范围(用户组织架构+组件可见范围)查询，不受项目/实例已安装情况影响；
+                    // queryProjectComponentFlag=true会走"项目/实例已安装组件"过滤逻辑，与本接口语义不符，故置为false。
+                    queryProjectComponentFlag = false,
+                    page = page,
+                    pageSize = pageSize
+                )
             )
         )
     }

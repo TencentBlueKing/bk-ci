@@ -65,6 +65,24 @@ BEGIN
 
     IF NOT EXISTS(SELECT 1
                   FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_PIPELINE_BUILD_HISTORY_DEBUG'
+                    AND COLUMN_NAME = 'TRIGGER_EVENT_TYPE') THEN
+    ALTER TABLE T_PIPELINE_BUILD_HISTORY_DEBUG
+        ADD`TRIGGER_EVENT_TYPE` VARCHAR(64) DEFAULT NULL comment '触发事件标识';
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_PIPELINE_BUILD_HISTORY'
+                    AND COLUMN_NAME = 'TRIGGER_EVENT_TYPE') THEN
+    ALTER TABLE T_PIPELINE_BUILD_HISTORY
+        ADD`TRIGGER_EVENT_TYPE` VARCHAR(64) DEFAULT NULL comment '触发事件标识';
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
                       WHERE TABLE_SCHEMA = db
                         AND TABLE_NAME = 'T_PIPELINE_RESOURCE_VERSION'
                         AND COLUMN_NAME = 'DRAFT_VERSION') THEN

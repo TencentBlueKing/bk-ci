@@ -158,7 +158,7 @@ class PipelineMigrationTask constructor(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 buildId = buildId,
-                channelCode = ChannelCode.getChannel(channel) ?: ChannelCode.BS,
+                channelCode = ChannelCode.getChannel(channel) ?: ChannelCode.getRequestChannelCode(),
                 terminateFlag = true
             )
             if (shutdownResult.isNotOk()) {

@@ -38,11 +38,13 @@ import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.container.AgentReuseMutex
 import com.tencent.devops.common.pipeline.enums.VMBaseOS
-import com.tencent.devops.common.pipeline.type.agent.AgentType
+import com.tencent.devops.common.pipeline.type.agent.AgentDispatchType
+import com.tencent.devops.common.pipeline.type.agent.CreateAgentIdDispatchType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentDispatch
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentEnvDispatchType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentIDDispatchType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyDevCloudDispatchType
+import com.tencent.devops.common.redis.RedisLockByValue
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.dispatch.constants.AGENT_REUSE_MUTEX_WAIT_REUSED_ENV
@@ -50,6 +52,7 @@ import com.tencent.devops.dispatch.constants.BK_AGENT_IS_BUSY
 import com.tencent.devops.dispatch.constants.BK_ENV_BUSY
 import com.tencent.devops.dispatch.constants.BK_ENV_NODE_DISABLE
 import com.tencent.devops.dispatch.constants.BK_ENV_WORKER_ERROR_IGNORE
+import com.tencent.devops.dispatch.constants.BK_ENV_WORKER_ERROR_IGNORE_UNLOCK
 import com.tencent.devops.dispatch.constants.BK_NO_AGENT_AVAILABLE
 import com.tencent.devops.dispatch.constants.BK_QUEUE_TIMEOUT_MINUTES
 import com.tencent.devops.dispatch.constants.BK_THIRD_JOB_ENV_CURR
@@ -63,6 +66,7 @@ import com.tencent.devops.dispatch.utils.DispatchStrategyExecutor
 import com.tencent.devops.dispatch.utils.TPACommonUtil
 import com.tencent.devops.dispatch.utils.ThirdPartyAgentEnvLock
 import com.tencent.devops.environment.api.thirdpartyagent.ServiceThirdPartyAgentResource
+import com.tencent.devops.environment.pojo.AllCreateNodeEnv
 import com.tencent.devops.environment.pojo.thirdpartyagent.EnvNodeAgent
 import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgent
 import com.tencent.devops.process.api.service.ServiceVarResource
@@ -138,7 +142,11 @@ class ThirdPartyDispatchService @Autowired constructor(
                 // 2、先后顺序未知，但是客观上被复用对象先跑完了，就按照绝对复用处理
                 buildByAgentId(
                     dispatchMessage,
-                    dispatchType.copy(displayName = agentId, agentType = AgentType.REUSE_JOB_ID, reusedInfo = null)
+                    dispatchType.copy(
+                        displayName = agentId,
+                        agentType = AgentDispatchType.REUSE_JOB_ID,
+                        reusedInfo = null
+                    )
                 )
             }
 
@@ -195,7 +203,7 @@ class ThirdPartyDispatchService @Autowired constructor(
                     ThirdPartyAgentIDDispatchType(
                         displayName = agentId,
                         workspace = dispatchType.workspace,
-                        agentType = AgentType.REUSE_JOB_ID,
+                        agentType = AgentDispatchType.REUSE_JOB_ID,
                         dockerInfo = dispatchType.dockerInfo,
                         reusedInfo = null
                     )
@@ -217,6 +225,27 @@ class ThirdPartyDispatchService @Autowired constructor(
                 )
             }
 
+            is CreateAgentIdDispatchType -> {
+                val originDispatchType = dispatchMessage.event.dispatchType as CreateAgentIdDispatchType
+                buildByAgentId(
+                    dispatchMessage = dispatchMessage,
+                    dispatchType = ThirdPartyAgentIDDispatchType(
+                        displayName = originDispatchType.value,
+                        workspace = originDispatchType.workspace,
+                        agentType = AgentDispatchType.ID,
+                        dockerInfo = originDispatchType.dockerInfo,
+                        reusedInfo = null
+                    ),
+                    envId = originDispatchType.envHashId?.let {
+                        if (it == AllCreateNodeEnv.hashId()) {
+                            AllCreateNodeEnv.ENV_ID
+                        } else {
+                            HashUtil.decodeIdToLong(it)
+                        }
+                    }
+                )
+            }
+
             else -> {
                 throw InvalidParamException("Unknown agent type - ${dispatchMessage.event.dispatchType}")
             }
@@ -225,7 +254,8 @@ class ThirdPartyDispatchService @Autowired constructor(
 
     private fun buildByAgentId(
         dispatchMessage: DispatchMessage,
-        dispatchType: ThirdPartyAgentIDDispatchType
+        dispatchType: ThirdPartyAgentIDDispatchType,
+        envId: Long? = null
     ) {
         dispatchMessage.event.dispatchQueueStartTimeMilliSecond = LocalDateTime.now().timestampmilli()
         val agentResult = if (dispatchType.idType()) {
@@ -266,7 +296,7 @@ class ThirdPartyDispatchService @Autowired constructor(
             )
         }
 
-        if (!agentInQueue(dispatchMessage, dispatchType, agent = agentResult.data!!, envId = null)) {
+        if (!agentInQueue(dispatchMessage, dispatchType, agent = agentResult.data!!, envId = envId)) {
             logDebug(
                 dispatchMessage.event,
                 I18nUtil.getCodeLanMessage(
@@ -316,14 +346,16 @@ class ThirdPartyDispatchService @Autowired constructor(
                     .getAgentsByEnvId(
                         projectId = dispatchMessage.event.projectId,
                         envId = dispatchType.envProjectId.takeIf { !it.isNullOrBlank() }
-                            ?.let { "$it@${dispatchType.envName}" } ?: dispatchType.envName
+                            ?.let { "$it@${dispatchType.envName}" } ?: dispatchType.envName,
+                        userId = dispatchMessage.event.userId
                     )
             } else {
                 client.get(ServiceThirdPartyAgentResource::class)
                     .getAgentsByEnvNameWithId(
                         projectId = dispatchMessage.event.projectId,
                         envName = dispatchType.envProjectId.takeIf { !it.isNullOrBlank() }
-                            ?.let { "$it@${dispatchType.envName}" } ?: dispatchType.envName
+                            ?.let { "$it@${dispatchType.envName}" } ?: dispatchType.envName,
+                        userId = dispatchMessage.event.userId
                     )
             }
         } catch (e: Exception) {
@@ -466,6 +498,25 @@ class ThirdPartyDispatchService @Autowired constructor(
             dispatchMessage.event.ignoreEnvAgentIds?.forEach {
                 val a = agentMap[it]
                 commonUtil.logWithAgentUrl(data, BK_ENV_WORKER_ERROR_IGNORE, arrayOf(it), a?.nodeId, a?.agentId)
+                // 这里要解开下复用锁，如果有的话，因为上一次失败的调度是上了锁的
+                if (data.dispatchType.hasReuseMutex()) {
+                    val lockKey = AgentReuseMutex.genAgentReuseMutexLockKey(data.projectId, it)
+                    val lock = RedisLockByValue(
+                        redisOperation = redisOperation,
+                        lockKey = lockKey,
+                        lockValue = data.buildId,
+                        expiredTimeInSeconds = AgentReuseMutex.AGENT_LOCK_TIMEOUT
+                    )
+                    if (lock.unlock()) {
+                        commonUtil.logWithAgentUrl(
+                            data = data,
+                            messageCode = BK_ENV_WORKER_ERROR_IGNORE_UNLOCK,
+                            param = arrayOf(it),
+                            nodeHashId = a?.nodeId,
+                            agentHashId = a?.agentId
+                        )
+                    }
+                }
             }
             jobEnvActiveAgents = activeAgents.filter { it.agentId !in dispatchMessage.event.ignoreEnvAgentIds!! }
             if (jobEnvActiveAgents.isEmpty()) {
@@ -771,7 +822,13 @@ class ThirdPartyDispatchService @Autowired constructor(
 
     fun finishBuild(event: PipelineAgentShutdownEvent) {
         tpaQueueService.finishQueue(event.buildId, event.vmSeqId)
-        thirdPartyAgentBuildService.finishBuild(event.buildId, event.vmSeqId, event.buildResult, event.executeCount)
+        thirdPartyAgentBuildService.finishBuild(
+            buildId = event.buildId,
+            vmSeqId = event.vmSeqId,
+            buildResult = event.buildResult,
+            executeCount = event.executeCount,
+            timeInterval = event.jobTimeInterval
+        )
     }
 
     companion object {

@@ -34,3 +34,10 @@ data class EnvironmentId(
     @get:Schema(title = "环境哈希ID", required = true)
     val hashId: String
 )
+
+data class EnvData(
+    val hashId: String,
+    val name: String,
+    val agentHashId: String,
+    val projectId: String
+)

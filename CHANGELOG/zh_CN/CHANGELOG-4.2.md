@@ -1,4 +1,7 @@
 <!-- BEGIN MUNGE: GENERATED_TOC -->
+- [v4.2.0-rc.3](#v420-rc3)
+   - [Changelog since v4.2.0-rc.2](#changelog-since-v420-rc2)
+
 - [v4.2.0-rc.2](#v420-rc2)
    - [Changelog since v4.2.0-rc.1](#changelog-since-v420-rc1)
 
@@ -10,6 +13,64 @@
 
 
 <!-- NEW RELEASE NOTES ENTRY -->
+# v4.2.0-rc.3
+## 2026-06-08
+### Changelog since v4.2.0-rc.2
+#### 新增
+
+##### 流水线
+- [新增] feat：PAC流水线支持指定分支 [链接](http://github.com/TencentBlueKing/bk-ci/issues/12635)
+
+##### 环境管理
+- [新增] feat: 环境管理重构 [链接](http://github.com/TencentBlueKing/bk-ci/issues/12416)
+- [新增] feat：创作环境/节点管理 [链接](http://github.com/TencentBlueKing/bk-ci/issues/12389)
+
+##### 权限中心
+- [新增] feat：新增权限成员治理ai配套接口 #13019 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13019)
+
+##### 项目管理
+- [新增] feat：支持个人项目 [链接](http://github.com/TencentBlueKing/bk-ci/issues/12852)
+
+##### 其他
+- [新增] feat：提供 build 接口支持插件获取当前步骤的原始配置 [链接](http://github.com/TencentBlueKing/bk-ci/issues/12953)
+- [新增] feat: 蓝盾智能助手支持多渠道大模型配置、用户模型配置与故障切换 [链接](http://github.com/TencentBlueKing/bk-ci/issues/12958)
+- [新增] feat：codecc规则集接入权限中心 [链接](http://github.com/TencentBlueKing/bk-ci/issues/12981)
+- [新增] feat: 自定义第三方构建机集群调度优先级 [链接](http://github.com/TencentBlueKing/bk-ci/issues/2680)
+- [新增] feat: 依赖包版本升级优化 [链接](http://github.com/TencentBlueKing/bk-ci/issues/12951)
+- [新增] project模块缺少接口实现类造成启动失败修复 [链接](http://github.com/TencentBlueKing/bk-ci/issues/1285)
+
+#### 优化
+
+##### 权限中心
+- [优化] pref：权限申请权限/权限交接场景优化 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13026)
+
+##### 其他
+- [优化] docs: 关联CodeCC代码库 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13075)
+- [优化] pref: T_PIPELINE_WEBHOOK_QUEUE表间隙锁处理优化 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13052)
+- [优化] pref:metrics数据上报优化 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13000)
+- [优化] pref：优化版权声明 [链接](http://github.com/TencentBlueKing/bk-ci/issues/12988)
+- [优化] pref：优化 Skill 文档，采用渐进式披露，降低上下文占用并统一结构 [链接](http://github.com/TencentBlueKing/bk-ci/issues/12948)
+- [优化] pref:zip解压工具优化 [链接](http://github.com/TencentBlueKing/bk-ci/issues/12960)
+
+#### 修复
+
+##### 流水线
+- [修复] bug: 模版导出时,获取最新模版版本错误 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13049)
+- [修复] bug: 模版实例化校验required合法性去掉常量参数 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13039)
+- [修复] bug: 触发事件描述由前端组装 [链接](http://github.com/TencentBlueKing/bk-ci/issues/12969)
+
+##### 凭证管理
+- [修复] bug: 密钥使用占位符配置 [链接](http://github.com/TencentBlueKing/bk-ci/issues/12971)
+
+##### 其他
+- [修复] bug: 修复pac发布没有权限时报401错误 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13020)
+- [修复] bug: 解决agent日志单例输出任务ID错乱和前端after接口问题 [链接](http://github.com/TencentBlueKing/bk-ci/issues/12970)
+- [修复] bug：AI 对话 AG-UI 流偶发缺失 RUN_FINISHED，导致前端会话长期停留运行中 [链接](http://github.com/TencentBlueKing/bk-ci/issues/12994)
+- [修复] bug：流水线构建信息通知勾选群消息转为Markdown格式时url链接未转换超链接 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13044)
+- [修复] bugfix: 第三方机新模式部分问题修复 [链接](http://github.com/TencentBlueKing/bk-ci/issues/12945)
+- [修复] fix: 升级前端依赖版本 [链接](http://github.com/TencentBlueKing/bk-ci/issues/12965)
+- [修复] bug: 优化callback调用http工具 [链接](http://github.com/TencentBlueKing/bk-ci/issues/12961)
+
 # v4.2.0-rc.2
 ## 2026-05-15
 ### Changelog since v4.2.0-rc.1

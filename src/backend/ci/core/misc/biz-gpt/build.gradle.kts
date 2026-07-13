@@ -31,6 +31,7 @@ dependencies {
     api(project(":core:common:common-web"))
     api(project(":core:common:common-service"))
     api(project(":core:common:common-client"))
+    api(project(":core:common:common-event"))
     api(project(":core:misc:api-gpt"))
     api(project(":core:process:api-process"))
     api(project(":core:common:common-pipeline"))

@@ -185,7 +185,7 @@ class JobStatisticsScheduler @Autowired constructor(
             runningJobs.filterNotNull().forEach {
                 val isRunning = client.get(ServicePipelineResource::class).isRunning(projectId = it.projectId,
                     buildId = it.buildId,
-                    channelCode = ChannelCode.BS).data
+                    channelCode = ChannelCode.valueOf(it.channelCode)).data
                     ?: false
                 if (!isRunning) {
                     runningJobsDao.delete(

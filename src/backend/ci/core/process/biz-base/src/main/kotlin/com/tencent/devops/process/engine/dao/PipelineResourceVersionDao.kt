@@ -577,13 +577,14 @@ class PipelineResourceVersionDao {
         versions: List<Int>,
         referCount: Int? = null,
         referFlag: Boolean? = null
-    ) {
+    ): Int {
         with(T_PIPELINE_RESOURCE_VERSION) {
             val baseStep = dslContext.update(this)
                 .set(UPDATE_TIME, DSL.field(UPDATE_TIME.name, LocalDateTime::class.java))
             referCount?.let { baseStep.set(REFER_COUNT, referCount) }
             referFlag?.let { baseStep.set(REFER_FLAG, referFlag) }
-            baseStep.where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)).and(VERSION.`in`(versions)))
+            return baseStep
+                .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)).and(VERSION.`in`(versions)))
                 .execute()
         }
     }
@@ -601,6 +602,23 @@ class PipelineResourceVersionDao {
                 .set(SETTING_VERSION, settingVersion)
                 .set(UPDATER, userId)
                 .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)).and(VERSION.eq(version)))
+                .execute()
+        }
+    }
+
+    fun updateModel(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        version: Int,
+        model: Model
+    ): Int {
+        with(T_PIPELINE_RESOURCE_VERSION) {
+            return dslContext.update(this)
+                .set(MODEL, JsonUtil.toJson(model, formatted = false))
+                .where(PROJECT_ID.eq(projectId))
+                .and(PIPELINE_ID.eq(pipelineId))
+                .and(VERSION.eq(version))
                 .execute()
         }
     }

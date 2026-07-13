@@ -34,11 +34,11 @@ import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateInElem
 import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateOutElement
 import com.tencent.devops.model.process.tables.TAuditResource
 import com.tencent.devops.model.process.tables.TPipelineBuildContainer
-import com.tencent.devops.model.process.tables.TPipelineBuildParamCombination
-import com.tencent.devops.model.process.tables.TPipelineBuildParamCombinationDetail
 import com.tencent.devops.model.process.tables.TPipelineBuildDetail
 import com.tencent.devops.model.process.tables.TPipelineBuildHistory
 import com.tencent.devops.model.process.tables.TPipelineBuildHistoryDebug
+import com.tencent.devops.model.process.tables.TPipelineBuildParamCombination
+import com.tencent.devops.model.process.tables.TPipelineBuildParamCombinationDetail
 import com.tencent.devops.model.process.tables.TPipelineBuildRecordContainer
 import com.tencent.devops.model.process.tables.TPipelineBuildRecordModel
 import com.tencent.devops.model.process.tables.TPipelineBuildRecordStage
@@ -74,12 +74,12 @@ import com.tencent.devops.model.process.tables.TPipelineTriggerEvent
 import com.tencent.devops.model.process.tables.TPipelineTriggerReview
 import com.tencent.devops.model.process.tables.TPipelineView
 import com.tencent.devops.model.process.tables.TPipelineViewGroup
+import com.tencent.devops.model.process.tables.TPipelineVisibility
 import com.tencent.devops.model.process.tables.TPipelineViewTop
 import com.tencent.devops.model.process.tables.TPipelineViewUserLastView
 import com.tencent.devops.model.process.tables.TPipelineViewUserSettings
 import com.tencent.devops.model.process.tables.TPipelineWebhook
 import com.tencent.devops.model.process.tables.TPipelineWebhookBuildParameter
-import com.tencent.devops.model.process.tables.TPipelineWebhookQueue
 import com.tencent.devops.model.process.tables.TPipelineWebhookVersion
 import com.tencent.devops.model.process.tables.TPipelineYamlBranchFile
 import com.tencent.devops.model.process.tables.TPipelineYamlInfo
@@ -121,8 +121,9 @@ class ProcessDataDeleteDao {
         if (archiveFlag != true) {
             deletePipelineBuildDetail(dslContext, projectId, buildIds)
             deletePipelinePauseValue(dslContext, projectId, buildIds)
+            // T_PIPELINE_WEBHOOK_QUEUE该表小、并发 INSERT 多，IN(...) 形式的 DELETE 在唯一索引上会等价于一长串等值不命中查询
+            // 并加 gap 锁，与同 route 的并发 INSERT 在 insert intention lock 上互相阻塞，引发雪崩；故不在清理逻辑删除
             deletePipelineWebhookBuildParameter(dslContext, projectId, buildIds)
-            deletePipelineWebhookQueue(dslContext, projectId, buildIds)
             JooqUtils.retryWhenDeadLock {
                 deletePipelineBuildTemplateAcrossInfo(dslContext, projectId, pipelineId, buildIds)
             }
@@ -194,6 +195,7 @@ class ProcessDataDeleteDao {
                 deletePipelineSubRef(dslContext, projectId, pipelineId)
                 deletePipelineBuildParamCombinationDetail(dslContext, projectId, pipelineId)
                 deletePipelineBuildParamCombination(dslContext, projectId, pipelineId)
+                deletePipelineVisibility(dslContext, projectId, pipelineId)
                 deletePipelineResourceDraftVersion(dslContext, projectId, pipelineId)
                 deletePipelineSettingDraftVersion(dslContext, projectId, pipelineId)
                 if (broadcastTableDeleteFlag) {
@@ -432,14 +434,6 @@ class ProcessDataDeleteDao {
         with(TPipelineViewUserSettings.T_PIPELINE_VIEW_USER_SETTINGS) {
             dslContext.deleteFrom(this)
                 .where(PROJECT_ID.eq(projectId))
-                .execute()
-        }
-    }
-
-    fun deletePipelineWebhookQueue(dslContext: DSLContext, projectId: String, buildIds: List<String>) {
-        with(TPipelineWebhookQueue.T_PIPELINE_WEBHOOK_QUEUE) {
-            dslContext.deleteFrom(this)
-                .where(PROJECT_ID.eq(projectId).and(BUILD_ID.`in`(buildIds)))
                 .execute()
         }
     }
@@ -742,6 +736,14 @@ class ProcessDataDeleteDao {
 
     fun deletePipelineBuildParamCombinationDetail(dslContext: DSLContext, projectId: String, pipelineId: String) {
         with(TPipelineBuildParamCombinationDetail.T_PIPELINE_BUILD_PARAM_COMBINATION_DETAIL) {
+            dslContext.deleteFrom(this)
+                .where(PROJECT_ID.eq(projectId).and(PIPELINE_ID.eq(pipelineId)))
+                .execute()
+        }
+    }
+
+    fun deletePipelineVisibility(dslContext: DSLContext, projectId: String, pipelineId: String) {
+        with(TPipelineVisibility.T_PIPELINE_VISIBILITY) {
             dslContext.deleteFrom(this)
                 .where(PROJECT_ID.eq(projectId).and(PIPELINE_ID.eq(pipelineId)))
                 .execute()

@@ -43,6 +43,7 @@ const val PIPELINE_START_SERVICE_USER_ID = "BK_CI_START_SERVICE_USER_ID" // "pip
 const val PIPELINE_START_MANUAL_USER_ID = "BK_CI_START_MANUAL_USER_ID" // "pipeline.start.manual.user.id"
 const val PIPELINE_START_TIME_TRIGGER_USER_ID = "BK_CI_START_TIME_TRIGGER_USER_ID"
 const val PIPELINE_START_REMOTE_USER_ID = "BK_CI_START_REMOTE_USER_ID"
+const val PIPELINE_START_TRIGGER_EVENT_USER_ID = "BK_CI_START_TRIGGER_EVENT_USER_ID"
 const val PIPELINE_START_REMOTE_CLIENT_IP = "BK_CI_START_REMOTE_CLIENT_IP"
 const val PIPELINE_START_TYPE = "BK_CI_START_TYPE" // "pipeline.start.type"
 const val PIPELINE_START_CHANNEL = "BK_CI_START_CHANNEL" // "pipeline.start.channel"
@@ -238,6 +239,14 @@ const val PIPELINE_TIME_END = "BK_CI_BUILD_END_TIME" // "pipeline.time.end"
 
 const val PIPELINE_BUILD_MSG = "BK_CI_BUILD_MSG"
 
+const val NODE_AGENT_ID = "BK_CI_NODE_AGENT_ID"
+
+const val NODE_OS = "BK_CI_NODE_OS"
+
+const val NODE_HASH_ID = "BK_CI_NODE_HASH_ID"
+
+const val NODE_ENV_HASH_ID = "BK_CI_NODE_ENV_HASH_ID"
+
 /**
  * 保存流水线编排的最大个数
  */
@@ -260,3 +269,5 @@ const val KEY_TASK = "task"
 const val KEY_TASK_ATOM = "taskAtom"
 
 const val BK_EMPTY_PIPELINE = "bkEmptyPipeline"
+
+const val BK_EMPTY_CREATIVE_STREAM = "bkEmptyCreativeStream"

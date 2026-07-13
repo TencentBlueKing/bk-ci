@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.enums.FrontendTypeEnum
 import com.tencent.devops.common.api.enums.I18nSourceEnum
 import com.tencent.devops.store.pojo.common.label.Label
 import com.tencent.devops.store.pojo.common.version.VersionInfo
+import com.tencent.devops.store.pojo.common.ServiceScopeDetail
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "流水线-流水线插件信息")
@@ -56,8 +57,10 @@ data class PipelineAtom(
     val summary: String?,
     @get:Schema(title = "服务范围", required = false)
     val serviceScope: List<String>?,
-    @get:Schema(title = "适用Job类型，AGENT： 编译环境，AGENT_LESS：无编译环境", required = false)
+    @get:Schema(title = "Job类型（PIPELINE 范围的纯字符串，如 AGENT）", required = false)
     val jobType: String?,
+    @get:Schema(title = "多服务范围Job类型映射JSON", required = false)
+    val jobTypeMap: String? = null,
     @get:Schema(title = "支持的操作系统", required = false)
     val os: List<String>?,
     @get:Schema(title = "所属插件分类Id", required = false)
@@ -106,5 +109,7 @@ data class PipelineAtom(
     @get:Schema(title = "插件创建时间", required = true)
     val createTime: Long,
     @get:Schema(title = "插件最后修改时间", required = true)
-    val updateTime: Long
+    val updateTime: Long,
+    @get:Schema(title = "服务范围详情列表（返回所有服务范围的详情）", required = false)
+    val serviceScopeDetails: List<ServiceScopeDetail>? = null
 )

@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -151,6 +151,11 @@ internal fun authSubAgentOperationGuideMarkdown(): String = """
 - 查询资源权限优先用 `getResourcePermissionsMatrix`
 - 查询成员有哪些权限、过期权限、执行权限时，优先用 `getAllMemberGroups`
 - 用户反馈“为什么没有权限”时，用 `diagnosePermission`
+- 用户追问“为什么他有这个权限”时，也优先用 `diagnosePermission`，明确说明
+  “加入来源 -> 用户组 -> 权限范围 -> 动作”的继承链
+- “范围型权限”优先查用户组来源，“具体资源权限”再用 `diagnosePermission`
+- 如果发现是通过部门/组织继承的权限，必须直接说明具体部门/组织和命中的用户组，
+  不要只回答“用户已拥有该权限”
 
 ### 授权、申请与续期
 

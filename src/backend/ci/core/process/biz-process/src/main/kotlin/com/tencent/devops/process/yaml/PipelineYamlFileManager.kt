@@ -46,6 +46,7 @@ import com.tencent.devops.common.webhook.enums.WebhookI18nConstants.ENABLE_PAC_E
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PAC_DEFAULT_BRANCH_FILE_DELETED
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS
+import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_REF_YAML_FILE_NOT_FOUND
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlDiff
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlFileReleaseReq
@@ -192,7 +193,7 @@ class PipelineYamlFileManager @Autowired constructor(
             checkParam()
             logger.info(
                 "[PAC_PIPELINE]|create or update yaml pipeline|$eventId|" +
-                    "$projectId|$repoHashId|$filePath|$ref|${commit!!.commitId}|$blobId"
+                    "$projectId|$repoHashId|$filePath|$ref|${commit?.commitId}|$blobId"
             )
             val lock = PipelineYamlTriggerLock(
                 redisOperation = redisOperation,
@@ -214,7 +215,7 @@ class PipelineYamlFileManager @Autowired constructor(
             } catch (ignored: Exception) {
                 logger.error(
                     "[PAC_PIPELINE]|Failed to create or update yaml pipeline|$eventId|" +
-                            "$projectId$repoHashId|$filePath|$ref|${commit.commitId}|$blobId",
+                            "$projectId$repoHashId|$filePath|$ref|${commit?.commitId}|$blobId",
                     ignored
                 )
                 webhookTriggerManager.fireChangeError(context = context, exception = ignored)
@@ -379,9 +380,9 @@ class PipelineYamlFileManager @Autowired constructor(
                 pipelineYamlResourceManager.completePullRequest(
                     projectId = projectId,
                     pipelineId = pipelineYamlInfo.pipelineId,
-                    pullRequestId = pullRequestId,
-                    pullRequestUrl = pullRequestUrl,
-                    pullRequestNumber = pullRequestNumber,
+                    pullRequestId = pullRequestId ?: 0L,
+                    pullRequestUrl = pullRequestUrl ?: "",
+                    pullRequestNumber = pullRequestNumber ?: 0,
                     merged = merged,
                     isTemplate = isTemplate
                 )
@@ -493,7 +494,7 @@ class PipelineYamlFileManager @Autowired constructor(
                     pullRequestId = pullRequest?.id,
                 )
             } catch (ignored: RemoteServiceException) {
-                throw when (ignored.errorCode) {
+                throw when (ignored.httpStatus) {
                     // 目标仓库被删除
                     HTTP_404 -> ErrorCodeException(
                         errorCode = ProcessMessageCode.ERROR_GIT_PROJECT_NOT_FOUND_OR_NOT_PERMISSION,
@@ -502,7 +503,7 @@ class PipelineYamlFileManager @Autowired constructor(
 
                     HTTP_401, HTTP_403 -> ErrorCodeException(
                         errorCode = ProcessMessageCode.ERROR_USER_NO_PUSH_PERMISSION,
-                        params = arrayOf(repository.userName, repository.projectName)
+                        params = arrayOf(userId, repository.projectName)
                     )
 
                     else -> ignored
@@ -665,6 +666,9 @@ class PipelineYamlFileManager @Autowired constructor(
             path = filePath,
             ref = commit!!.commitId,
             authRepository = authRepository!!
+        ) ?: throw ErrorCodeException(
+            errorCode = ProcessMessageCode.ERROR_PIPELINE_REF_TEMPLATE_YAML_FILE_NOT_FOUND,
+            params = arrayOf(filePath, commit.commitId)
         )
         val resourceType = GitActionCommon.getYamlResourceType(
             filePath = filePath,
@@ -686,8 +690,8 @@ class PipelineYamlFileManager @Autowired constructor(
             defaultBranch = defaultBranch,
             blobId = content.blobId!!,
             ref = ref,
-            commitId = commit.commitId,
-            commitTime = commit.commitTime,
+            commitId = commit?.commitId ?: "",
+            commitTime = commit?.commitTime?:LocalDateTime.now(),
             pipelineId = pipelineId,
             status = if (ref == defaultBranch) {
                 PipelineYamlStatus.OK.name
@@ -718,8 +722,8 @@ class PipelineYamlFileManager @Autowired constructor(
             repoHashId = repoHashId,
             filePath = filePath,
             ref = ref,
-            commitId = commit!!.commitId,
-            blobId = blobId!!,
+            commitId = commit?.commitId ?: "",
+            blobId = blobId ?: "",
             defaultBranch = defaultBranch
         )
         return if (needCreateVersion) {
@@ -882,6 +886,9 @@ class PipelineYamlFileManager @Autowired constructor(
             path = filePath,
             ref = commit!!.commitId,
             authRepository = authRepository!!
+        ) ?: throw ErrorCodeException(
+            errorCode = ERROR_PIPELINE_REF_YAML_FILE_NOT_FOUND,
+            params = arrayOf(filePath, commit.commitId)
         )
         val deployPipelineResult = pipelineYamlResourceManager.updateYamlPipeline(
             userId = authUser,
@@ -899,8 +906,8 @@ class PipelineYamlFileManager @Autowired constructor(
             repoHashId = repoHashId,
             filePath = filePath,
             blobId = content.blobId,
-            commitId = commit.commitId,
-            commitTime = commit.commitTime,
+            commitId = commit?.commitId ?: "",
+            commitTime = commit?.commitTime ?: LocalDateTime.now(),
             ref = ref,
             defaultBranch = defaultBranch,
             pipelineId = deployPipelineResult.pipelineId,
@@ -1265,6 +1272,9 @@ class PipelineYamlFileManager @Autowired constructor(
             path = filePath,
             ref = commitId,
             authRepository = authRepository!!
+        ) ?: throw ErrorCodeException(
+            errorCode = ProcessMessageCode.ERROR_PIPELINE_REF_TEMPLATE_YAML_FILE_NOT_FOUND,
+            params = arrayOf(filePath, commitId)
         )
         val deployPipelineResult = pipelineYamlResourceManager.updateYamlPipeline(
             userId = authUser,

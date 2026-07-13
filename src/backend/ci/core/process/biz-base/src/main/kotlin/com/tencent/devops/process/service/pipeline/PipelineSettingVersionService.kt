@@ -72,7 +72,7 @@ class PipelineSettingVersionService @Autowired constructor(
         pipelineId: String,
         userId: String?,
         detailInfo: PipelineDetailInfo?,
-        channelCode: ChannelCode = ChannelCode.BS,
+        channelCode: ChannelCode = ChannelCode.getRequestChannelCode(),
         version: Int,
         archiveFlag: Boolean? = false
     ): PipelineSetting {
@@ -263,6 +263,7 @@ class PipelineSettingVersionService @Autowired constructor(
         settingInfo.pipelineAsCodeSettings = settingVersion.pipelineAsCodeSettings
         settingInfo.failIfVariableInvalid = settingVersion.failIfVariableInvalid
         settingInfo.buildCancelPolicy = settingVersion.buildCancelPolicy ?: settingInfo.buildCancelPolicy
+        settingInfo.envHashId = settingVersion.envHashId
         if (settingInfo.labels.isNotEmpty() && settingInfo.labels != labels && userId != null) {
             labelNames.clear()
             pipelineGroupService.getGroups(userId, projectId).forEach { group ->
