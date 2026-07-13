@@ -252,4 +252,15 @@ class TencentBuildArtifactoryResourceImpl @Autowired constructor(
         }?.handoverFrom ?: client.get(ServicePipelineResource::class)
             .getPipelineInfo(projectId, pipelineId, null).data!!.lastModifyUser
     }
+
+    override fun show(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        artifactoryType: ArtifactoryType,
+        path: String
+    ): Result<FileDetail> {
+        checkParam(projectId, path)
+        return Result(bkRepoService.show(userId, projectId, artifactoryType, path))
+    }
 }
