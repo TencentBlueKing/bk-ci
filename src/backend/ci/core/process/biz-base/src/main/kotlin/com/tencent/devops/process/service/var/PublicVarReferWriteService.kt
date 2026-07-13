@@ -58,20 +58,6 @@ class PublicVarReferWriteService @Autowired constructor(
     }
 
     /**
-     * 批量新增引用记录（自管理事务版本）
-     * @param referInfos 引用信息列表
-     */
-    fun batchAddRefer(referInfos: List<ResourcePublicVarReferPO>) {
-        if (referInfos.isEmpty()) {
-            return
-        }
-        dslContext.transaction { configuration ->
-            val context = DSL.using(configuration)
-            doBatchAddRefer(context, referInfos)
-        }
-    }
-
-    /**
      * 批量新增引用记录（使用外部事务上下文）
      * 在外部事务中执行，不再自行开启新事务，确保与引用关系变更在同一事务中完成。
      * @param context 外部事务的数据库上下文
