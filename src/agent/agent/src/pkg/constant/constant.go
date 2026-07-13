@@ -62,5 +62,5 @@ const (
 	DevopsAgentEnableMCP = "DEVOPS_AGENT_ENABLE_MCP"
 
 	// docker不挂载工作空间的默认关键字
-	DockerNoMount = "__NO_NOUNT__"
+	DockerNoMount = "__NO_MOUNT__"
 )
