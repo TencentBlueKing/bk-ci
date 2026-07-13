@@ -2,6 +2,7 @@ package com.tencent.devops.artifactory.resources
 
 import com.tencent.devops.artifactory.api.builds.BuildArtifactoryResource
 import com.tencent.devops.artifactory.pojo.Count
+import com.tencent.devops.artifactory.pojo.FileDetail
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.artifactory.service.ArchiveFileService
 import com.tencent.devops.auth.api.service.ServiceAuthAuthorizationResource
@@ -39,5 +40,26 @@ class BuildArtifactoryResourceImpl @Autowired constructor(
             targetProjectId = targetProjectId
         )
         return Result(count)
+    }
+
+    override fun show(
+        projectId: String,
+        pipelineId: String,
+        artifactoryType: ArtifactoryType,
+        path: String
+    ): Result<FileDetail> {
+        // pref:流水线相关的文件操作人调整为流水线的权限代持人 #11016
+        val userId = client.get(ServiceAuthAuthorizationResource::class).getResourceAuthorization(
+            projectId = projectId,
+            resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
+            resourceCode = pipelineId
+        ).data?.handoverFrom ?: client.get(ServicePipelineResource::class)
+            .getPipelineInfo(projectId, pipelineId, null).data!!.lastModifyUser
+        return Result(archiveFileService.show(
+            userId = userId,
+            projectId = projectId,
+            artifactoryType = artifactoryType,
+            path = path
+        ))
     }
 }
