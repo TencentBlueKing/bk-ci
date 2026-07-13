@@ -139,8 +139,18 @@ internal fun buildOperationGuideMarkdown(): String = """
 3. latest 窗口不足以判断根因时，按返回的 lineRange/nextActions 调「获取指定行号范围构建日志」滚动拉取
    - 通常先向前滚：start = 当前 startLineNo - 500，end = 当前 startLineNo - 1
    - 保持相同 tag/jobId/logType，必要时分别拉 ERROR 与普通日志
-4. 仅看失败插件仍不够时，按「查编排走三级递进」查看结构，定位 elementId 所在 Job 或上下游依赖
-5. 失败根因判定、历史稳定性、构建对比、卡住检测、子流水线递归与诊断报告，
+4. 若失败插件是子流水线插件（如 atomCode=SubPipelineExec / classType=subPipelineCall，或错误信息为“子流水线运行失败”）：
+   - 先检查当前错误日志/插件日志中是否已经直接出现子流水线的 projectId、pipelineId、buildId、buildNum、
+     详情链接，尤其优先识别这些高信号内容：
+     `sub_pipeline_buildId=`、`sub_pipeline_id=`、`sub_pipeline_build_num=`、`sub_project_id=`、
+     `sub_pipeline_url=`、`查看子流水线执行详情`、`start pipeline, ... subPipelineId: ...,`
+   - **如果日志里已经有明确的子流水线 buildId/pipelineId（哪怕只是从 output/url/链接里提取出来），就直接用这些信息继续分析子构建，不要再调用「定位子流水线构建」**
+   - 只有当日志里没有明确子构建标识时，才调用「定位子流水线构建(projectId, pipelineId, buildId, parentTaskId, parentExecuteCount)」
+   - 日志里同时出现多组子流水线标识时，优先采用最终输出区（如 `sub_pipeline_buildId` / `sub_pipeline_url`）或最后一次
+     `查看子流水线执行详情` 链接中的 buildId，避免误取启动前的旧信息
+   - 无论哪条路径，都**禁止**默认取子流水线“最新构建”代替本次失败实例
+5. 仅看失败插件仍不够时，按「查编排走三级递进」查看结构，定位 elementId 所在 Job 或上下游依赖
+6. 失败根因判定、历史稳定性、构建对比、卡住检测、子流水线递归与诊断报告，
    均按「流水线构建诊断」技能的方法论执行；技能未覆盖的错误码/配置再查 iWiki 补充
 ```
 
@@ -150,7 +160,12 @@ internal fun buildOperationGuideMarkdown(): String = """
    - failedElements 被截断时改用 stageSummary.failedElementIds 兜底定位
 2. 以 elementId 作 tag 调「获取构建日志」（latest 窗口），建议 ERROR 与普通日志各拉一次
 3. 窗口不足则按 lineRange 调「获取指定行号范围构建日志」继续滚动
-4. 需要编排上下文时按「查编排走三级递进」查看
+4. 若判定为子流水线插件失败：
+   - 日志里已明确给出子流水线 buildId/pipelineId/buildNum/链接时，直接使用这些信息递归分析子构建
+   - 同样优先识别 `sub_pipeline_buildId`、`sub_pipeline_id`、`sub_pipeline_build_num`、
+     `sub_pipeline_url` 与 `查看子流水线执行详情` 这些固定模式
+   - 只有日志里没有明确子构建标识时，才调用「定位子流水线构建」
+5. 需要编排上下文时按「查编排走三级递进」查看
 ```
 
 **注意**：除非用户明确要"原始/完整日志"，否则不要把「获取构建日志」当报错分析第一步；

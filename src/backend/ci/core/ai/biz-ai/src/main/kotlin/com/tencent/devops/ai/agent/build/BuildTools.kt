@@ -487,6 +487,45 @@ class BuildTools(
     }
 
     @Tool(
+        name = "定位子流水线构建",
+        description = "当父构建因「子流水线运行失败」报错时，精确定位本次父构建触发的子流水线构建实例。" +
+                "从父构建插件在 T_PIPELINE_BUILD_RECORD_TASK 的 TASK_VAR.subPipelineBuildInfo 中读取子构建信息。" +
+                "禁止使用子流水线最新构建代替。返回 matchType：RECORD_TASK（精确）或 NONE（未找到）。"
+    )
+    fun locateSubPipelineBuild(
+        @ToolParam(name = "projectId", description = "父构建项目ID")
+        projectId: String,
+        @ToolParam(name = "pipelineId", description = "父流水线ID")
+        pipelineId: String,
+        @ToolParam(name = "buildId", description = "父构建ID")
+        buildId: String,
+        @ToolParam(
+            name = "parentTaskId",
+            description = "父构建失败插件的 elementId（格式 e-xxxxxxxx），即子流水线插件任务ID"
+        )
+        parentTaskId: String,
+        @ToolParam(
+            name = "parentExecuteCount",
+            description = "父构建失败插件的 executeCount，来自 failedElements 中 element.executeCount"
+        )
+        parentExecuteCount: Int
+    ): String {
+        return safeQuery("BuildArtifactTool", "locateSubPipelineBuild") {
+            val result = buildResource().locateSubPipelineBuild(
+                userId = getOperatorUserId(),
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                parentTaskId = parentTaskId,
+                parentExecuteCount = parentExecuteCount,
+                channelCode = ChannelCode.BS
+            )
+            val data = result.data ?: return@safeQuery "定位子流水线构建失败: ${result.message}"
+            toJson(data)
+        }
+    }
+
+    @Tool(
         name = "获取构建详情",
         description = "获取构建的 AI 简化详情。返回顶层摘要信息，以及 failedElements 列表。" +
                 "failedElements 的每一项都包含 stageId、stageName、containerId、containerName、containerHashId、jobId，" +
