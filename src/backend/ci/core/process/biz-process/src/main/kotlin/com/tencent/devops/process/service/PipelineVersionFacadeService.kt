@@ -481,7 +481,7 @@ class PipelineVersionFacadeService @Autowired constructor(
             pipelineId = pipelineId,
             permission = AuthPermission.EDIT
         )
-        val resource = if (draftVersion != null) {
+        val resource = if (version != null && draftVersion != null) {
             pipelineRepositoryService.getPipelineResourceByDraftVersion(
                 projectId = projectId,
                 pipelineId = pipelineId,
@@ -501,7 +501,7 @@ class PipelineVersionFacadeService @Autowired constructor(
             errorCode = ProcessMessageCode.ERROR_NO_PIPELINE_VERSION_EXISTS_BY_ID,
             params = arrayOf(version?.toString() ?: pipelineInfo.version.toString())
         )
-        val setting = if (draftVersion != null) {
+        val setting = if (version != null && draftVersion != null) {
             pipelineSettingFacadeService.getPipelineSettingByDraftVersion(
                 projectId = projectId,
                 pipelineId = pipelineId,
