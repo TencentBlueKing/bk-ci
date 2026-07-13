@@ -52,29 +52,6 @@ class PublicVarGroupVersionSummaryDao {
         )
     }
 
-    fun save(
-        dslContext: DSLContext,
-        po: PublicVarGroupVersionSummaryPO
-    ) {
-        with(TResourcePublicVarGroupVersionSummary.T_RESOURCE_PUBLIC_VAR_GROUP_VERSION_SUMMARY) {
-            dslContext.insertInto(this)
-                .set(ID, po.id)
-                .set(PROJECT_ID, po.projectId)
-                .set(GROUP_NAME, po.groupName)
-                .set(VERSION, po.version)
-                .set(REFER_COUNT, po.referCount)
-                .set(CREATOR, po.creator)
-                .set(MODIFIER, po.modifier)
-                .set(CREATE_TIME, po.createTime)
-                .set(UPDATE_TIME, po.updateTime)
-                .onDuplicateKeyUpdate()
-                .set(REFER_COUNT, po.referCount)
-                .set(MODIFIER, po.modifier)
-                .set(UPDATE_TIME, po.updateTime)
-                .execute()
-        }
-    }
-
     /**
      * 插入新记录或在唯一键冲突时增量累加引用计数（原子操作）
      * 使用 INSERT ... ON DUPLICATE KEY UPDATE REFER_COUNT = REFER_COUNT + countChange
@@ -101,68 +78,6 @@ class PublicVarGroupVersionSummaryDao {
                 .set(REFER_COUNT, REFER_COUNT.plus(po.referCount))
                 .set(MODIFIER, po.modifier)
                 .set(UPDATE_TIME, po.updateTime)
-                .execute()
-        }
-    }
-
-    /**
-     * 根据项目ID、变量组名和版本号查询记录
-     */
-    fun getByGroupNameAndVersion(
-        dslContext: DSLContext,
-        projectId: String,
-        groupName: String,
-        version: Int
-    ): PublicVarGroupVersionSummaryPO? {
-        with(TResourcePublicVarGroupVersionSummary.T_RESOURCE_PUBLIC_VAR_GROUP_VERSION_SUMMARY) {
-            return dslContext.selectFrom(this)
-                .where(PROJECT_ID.eq(projectId))
-                .and(GROUP_NAME.eq(groupName))
-                .and(VERSION.eq(version))
-                .fetchOne()?.let { mapRecordToPO(it) }
-        }
-    }
-
-    /**
-     * 获取变量组所有版本的引用计数总和（固定版本 + 动态版本）
-     * @param dslContext 数据库上下文
-     * @param projectId 项目ID
-     * @param groupName 变量组名称
-     * @return 引用计数总和
-     */
-    fun getTotalReferCount(
-        dslContext: DSLContext,
-        projectId: String,
-        groupName: String
-    ): Int {
-        with(TResourcePublicVarGroupVersionSummary.T_RESOURCE_PUBLIC_VAR_GROUP_VERSION_SUMMARY) {
-            return dslContext.select(REFER_COUNT.sum())
-                .from(this)
-                .where(PROJECT_ID.eq(projectId))
-                .and(GROUP_NAME.eq(groupName))
-                .fetchOne(0, Int::class.java) ?: 0
-        }
-    }
-
-    /**
-     * 更新引用计数
-     */
-    fun updateReferCount(
-        dslContext: DSLContext,
-        projectId: String,
-        groupName: String,
-        version: Int,
-        referCount: Int,
-        modifier: String
-    ) {
-        with(TResourcePublicVarGroupVersionSummary.T_RESOURCE_PUBLIC_VAR_GROUP_VERSION_SUMMARY) {
-            dslContext.update(this)
-                .set(REFER_COUNT, referCount)
-                .set(MODIFIER, modifier)
-                .set(UPDATE_TIME, LocalDateTime.now())
-                .where(PROJECT_ID.eq(projectId))
-                .and(GROUP_NAME.eq(groupName))
-                .and(VERSION.eq(version))
                 .execute()
         }
     }
@@ -203,88 +118,6 @@ class PublicVarGroupVersionSummaryDao {
                 .set(UPDATE_TIME, LocalDateTime.now())
                 .where(finalCondition)
                 .execute()
-        }
-    }
-
-    /**
-     * 批量获取变量组的引用计数总和
-     * @param dslContext 数据库上下文
-     * @param projectId 项目ID
-     * @param groupNames 变量组名称列表
-     * @return Map<变量组名, 引用计数总和>
-     */
-    fun batchGetTotalReferCount(
-        dslContext: DSLContext,
-        projectId: String,
-        groupNames: List<String>
-    ): Map<String, Int> {
-        if (groupNames.isEmpty()) return emptyMap()
-
-        with(TResourcePublicVarGroupVersionSummary.T_RESOURCE_PUBLIC_VAR_GROUP_VERSION_SUMMARY) {
-            return dslContext.select(GROUP_NAME, REFER_COUNT.sum())
-                .from(this)
-                .where(PROJECT_ID.eq(projectId))
-                .and(GROUP_NAME.`in`(groupNames))
-                .groupBy(GROUP_NAME)
-                .fetch()
-                .associate { record ->
-                    record.value1() to (record.value2()?.toInt() ?: 0)
-                }
-        }
-    }
-
-    /**
-     * 批量获取变量组的动态版本引用计数
-     * @param dslContext 数据库上下文
-     * @param projectId 项目ID
-     * @param groupNames 变量组名称列表
-     * @return Map<变量组名, 动态版本引用计数>
-     */
-    fun batchGetDynamicVersionReferCount(
-        dslContext: DSLContext,
-        projectId: String,
-        groupNames: List<String>
-    ): Map<String, Int> {
-        if (groupNames.isEmpty()) return emptyMap()
-
-        with(TResourcePublicVarGroupVersionSummary.T_RESOURCE_PUBLIC_VAR_GROUP_VERSION_SUMMARY) {
-            return dslContext.select(GROUP_NAME, REFER_COUNT)
-                .from(this)
-                .where(PROJECT_ID.eq(projectId))
-                .and(GROUP_NAME.`in`(groupNames))
-                .and(VERSION.eq(DYNAMIC_VERSION))
-                .fetch()
-                .associate { record ->
-                    record.value1() to (record.value2() ?: 0)
-                }
-        }
-    }
-
-    /**
-     * 批量获取变量组的固定版本引用计数总和
-     * @param dslContext 数据库上下文
-     * @param projectId 项目ID
-     * @param groupNames 变量组名称列表
-     * @return Map<变量组名, 固定版本引用计数总和>
-     */
-    fun batchGetFixedVersionReferCount(
-        dslContext: DSLContext,
-        projectId: String,
-        groupNames: List<String>
-    ): Map<String, Int> {
-        if (groupNames.isEmpty()) return emptyMap()
-
-        with(TResourcePublicVarGroupVersionSummary.T_RESOURCE_PUBLIC_VAR_GROUP_VERSION_SUMMARY) {
-            return dslContext.select(GROUP_NAME, REFER_COUNT.sum())
-                .from(this)
-                .where(PROJECT_ID.eq(projectId))
-                .and(GROUP_NAME.`in`(groupNames))
-                .and(VERSION.ne(DYNAMIC_VERSION))
-                .groupBy(GROUP_NAME)
-                .fetch()
-                .associate { record ->
-                    record.value1() to (record.value2()?.toInt() ?: 0)
-                }
         }
     }
 
