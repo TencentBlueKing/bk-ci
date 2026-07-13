@@ -56,56 +56,6 @@ class PublicVarVersionSummaryDao {
     }
 
     /**
-     * 保存变量版本摘要记录（仅用于保证 (project, group, var, version) 行存在）。
-     *
-     * 注意：`REFER_COUNT` 字段自方案 4 起不再由代码维护，读路径全部走
-     * [batchGetActiveReferCount] / [batchGetReferCountByVarNames] 实时 JOIN 聚合。
-     * 本方法写入 `referCount` 仅用于新建行时填充初始值（通常传 0），不保证后续准确性。
-     */
-    fun save(
-        dslContext: DSLContext,
-        po: PublicVarVersionSummaryPO
-    ) {
-        with(TResourcePublicVarVersionSummary.T_RESOURCE_PUBLIC_VAR_VERSION_SUMMARY) {
-            dslContext.insertInto(this)
-                .set(ID, po.id)
-                .set(PROJECT_ID, po.projectId)
-                .set(GROUP_NAME, po.groupName)
-                .set(VAR_NAME, po.varName)
-                .set(VERSION, po.version)
-                .set(REFER_COUNT, po.referCount)
-                .set(CREATOR, po.creator)
-                .set(MODIFIER, po.modifier)
-                .set(CREATE_TIME, po.createTime)
-                .set(UPDATE_TIME, po.updateTime)
-                .onDuplicateKeyUpdate()
-                .set(MODIFIER, po.modifier)
-                .set(UPDATE_TIME, po.updateTime)
-                .execute()
-        }
-    }
-
-    /**
-     * 根据项目ID、变量组名、变量名和版本号查询记录
-     */
-    fun getByVarNameAndVersion(
-        dslContext: DSLContext,
-        projectId: String,
-        groupName: String,
-        varName: String,
-        version: Int
-    ): PublicVarVersionSummaryPO? {
-        with(TResourcePublicVarVersionSummary.T_RESOURCE_PUBLIC_VAR_VERSION_SUMMARY) {
-            return dslContext.selectFrom(this)
-                .where(PROJECT_ID.eq(projectId))
-                .and(GROUP_NAME.eq(groupName))
-                .and(VAR_NAME.eq(varName))
-                .and(VERSION.eq(version))
-                .fetchOne()?.let { mapRecordToPO(it) }
-        }
-    }
-
-    /**
      * 批量获取变量的"当前有效引用计数"（实时聚合语义）。
      *
      * 语义：统计每个变量被多少不同流水线/模板**当前最新版本**（草稿优先、无草稿则为已发布最新版）
@@ -205,24 +155,6 @@ class PublicVarVersionSummaryDao {
             .associate { record ->
                 record.getValue(r.VAR_NAME) to (record.get(countField) ?: 0)
             }
-    }
-
-    /**
-     * 删除变量的所有版本概要信息
-     */
-    fun deleteByVarName(
-        dslContext: DSLContext,
-        projectId: String,
-        groupName: String,
-        varName: String
-    ) {
-        with(TResourcePublicVarVersionSummary.T_RESOURCE_PUBLIC_VAR_VERSION_SUMMARY) {
-            dslContext.deleteFrom(this)
-                .where(PROJECT_ID.eq(projectId))
-                .and(GROUP_NAME.eq(groupName))
-                .and(VAR_NAME.eq(varName))
-                .execute()
-        }
     }
 
     /**
