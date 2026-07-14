@@ -51,7 +51,7 @@ internal fun buildOperationGuideMarkdown(): String = """
 3. **中文回复**: 结构化呈现关键信息。
 4. **名称转 ID**: 项目名称 → 调用 resolveProjectId；流水线名称 → 调用「搜索流水线」。
 5. **报错分析先走一键工具**: 用户问"为什么失败/报错/挂了"时，先调「分析构建失败」，不要一上来直接拉日志（详见工作流「分析构建错误」）。
-6. **查编排走三级递进**: 默认「获取流水线编排摘要」→ 有定位键时「获取流水线编排节点详情」→ 仅在需要完整 setting/插件对象/全链路时才「获取流水线编排」兜底。
+6. **查编排优先完整、过大再降级**: 默认先「获取流水线编排」；若返回对象过大、内容被截断，或只需补某个局部节点，再结合「获取流水线编排摘要」与「获取流水线编排节点详情」。
 7. **编排解读结合技能且区分排障**: 解释"流水线做什么 / 某 Stage/Job/插件含义"属于编排解读场景，不要调「分析构建失败」，须结合已加载的「流水线编排解释」技能（pipeline-model-interpreter）逐层解读（详见工作流「分析/解释流水线编排」）。
 8. **必要时查 iWiki**: 遇到不熟悉的错误码/插件配置/平台限制，用 iWiki MCP 辅助（详见「iWiki 文档搜索」）。
 9. **深度诊断结合技能**: 做失败根因定位、历史稳定性判定、构建对比、卡住检测、子流水线递归或诊断报告时，结合已加载的「流水线构建诊断」技能（pipeline-build-diagnosis）的方法论与错误码/根因模式库。
@@ -71,7 +71,7 @@ internal fun buildOperationGuideMarkdown(): String = """
 | 搜索流水线 | `搜索流水线(projectId, keyword?, page?, pageSize?)` |
 | 查看流水线基本信息 | `获取流水线信息(projectId, pipelineId)` |
 | 查看流水线当前状态（原始状态信息） | `获取流水线状态(projectId, pipelineId)` |
-| 查看流水线轻量编排摘要（默认首选） | `获取流水线编排摘要(projectId, pipelineId, version?, includeElements?)` |
+| 查看流水线轻量编排摘要（编排过大/只看骨架时） | `获取流水线编排摘要(projectId, pipelineId, version?, includeElements?)` |
 | 查看指定 Stage/Job/插件 的轻量详情 | `获取流水线编排节点详情(projectId, pipelineId, version?, stageId?, containerHashId?, containerId?, jobId?, elementId?, stepId?)` |
 | 查看流水线编排（Model，可指定版本） | `获取流水线编排(projectId, pipelineId, version?)` |
 
@@ -191,8 +191,13 @@ internal fun buildOperationGuideMarkdown(): String = """
 **不要**调用「分析构建失败」等运行态排障工具。
 ```
 1. 确定流水线：名称先「搜索流水线」拿 pipelineId；URL 按解析规则提取
-2. 调用工具「获取流水线编排」，获取完整 setting/插件对象/变量传递/模板展开/复杂全链路。
-3. 拿到编排后，**必须结合已加载的「流水线编排解释」技能（pipeline-model-interpreter）**逐层解读，
+2. 默认先调「获取流水线编排」，解读主流程、插件输入输出、变量传递、模板展开和复杂控制项时优先看完整编排
+3. 如果完整编排返回对象过大、内容被截断，先退到「获取流水线编排摘要」：
+   - 先保住整体 Stage/Job/Step 结构、名称、ID、容器类型、定位键
+   - 必要时可设 includeElements=false，只先看 Stage/Job 骨架
+4. 用户追问某个 Stage/Job/插件，或摘要里已出现明确定位键（stageId/containerHashId/containerId/jobId/elementId/stepId）时，
+   调「获取流水线编排节点详情」补该节点的父链路径、控制项与轻量详情，用局部详情替代再次硬拉大对象
+5. 拿到编排信息后，**必须结合已加载的「流水线编排解释」技能（pipeline-model-interpreter）**逐层解读，
    不要仅凭直觉；按 Model -> Stage -> Container(Job) -> Element 四层展开：
    - 先看 TriggerContainer.params 启动参数（敏感/PASSWORD 只说"敏感参数"，不回显默认值）
    - 判断容器类型（trigger/vmBuild/normal）、构建资源（dispatchType）、控制项
@@ -200,7 +205,7 @@ internal fun buildOperationGuideMarkdown(): String = """
    - 解释插件时同时看 @type、atomCode、name、data.input、data.output 与 additionalOptions
    - classType/枚举/dispatchType 等字面量以技能中的速查清单为准，注意大小写
    - 遇到未知 atomCode 保守表述"需结合插件文档确认"，不臆测；忽略 status 等运行态字段
-4. 用户只贴一段 Model JSON 让你解释时，直接结合该技能按第 3 步解读，无需再调查询工具
+6. 用户只贴一段 Model JSON 让你解释时，直接结合该技能按第 5 步解读，无需再调查询工具
 ```
 
 **注意**：编排解读默认只解释"配置在定义什么"，不主动给修改/优化建议（用户明确要求时才给）；
