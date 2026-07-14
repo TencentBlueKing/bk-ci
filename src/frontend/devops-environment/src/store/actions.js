@@ -23,7 +23,6 @@ import { SET_ENVIRONMENT_EXTENSIONS } from './constants'
 const prefix = 'environment/api'
 const strategyPrefix = 'environment/api/user/environment/strategy' // 调度策略接口前缀
 const dispatchPrefix = 'dispatch/api'
-const processPrefix = 'process/api'
 const authPrefix = 'auth/api'
 const vue = new Vue()
 
@@ -580,9 +579,9 @@ const actions = {
     },
 
     // 获取指定流水线和job的构建历史
-    requestPipelineBuildHistory ({ commit }, { projectId, pipelineId, containerId, params }) {
+    requestPipelineBuildHistory ({ commit }, { params }) {
         const queryString = new URLSearchParams(params).toString()
-        return vue.$ajax.get(`${processPrefix}/user/builds/${projectId}/${pipelineId}/containers/${containerId}/history?${queryString}`).then(response => {
+        return vue.$ajax.get(`${dispatchPrefix}/user/agents/fetchAgentBuildsByJob?${queryString}`).then(response => {
             return response
         })
     },
