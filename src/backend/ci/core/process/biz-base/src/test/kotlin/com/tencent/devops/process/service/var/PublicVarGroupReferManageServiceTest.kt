@@ -27,7 +27,6 @@
 
 package com.tencent.devops.process.service.`var`
 
-import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.redis.RedisOperation
@@ -40,6 +39,7 @@ import com.tencent.devops.process.dao.`var`.PublicVarVersionSummaryDao
 import com.tencent.devops.process.engine.dao.template.TemplateDao
 import com.tencent.devops.process.engine.dao.template.TemplatePipelineDao
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
+import com.tencent.devops.project.pojo.Result
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
