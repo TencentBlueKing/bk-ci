@@ -338,47 +338,57 @@ class BuildRecordContainerDao {
     ): List<PipelineContainerBuild> {
         val container = TPipelineBuildRecordContainer.T_PIPELINE_BUILD_RECORD_CONTAINER
         val model = TPipelineBuildRecordModel.T_PIPELINE_BUILD_RECORD_MODEL
-        return dslContext.select(
-            // Container 字段
+        val containerRecords = dslContext.select(
             container.BUILD_ID,
             container.PROJECT_ID,
             container.PIPELINE_ID,
             container.CONTAINER_ID,
             container.EXECUTE_COUNT,
             container.STATUS,
-            container.CONTAINER_VAR,
-            container.CONTAINER_TYPE,
             container.START_TIME,
-            container.END_TIME,
-            // Model 字段（你需要的额外信息）
-            model.START_USER,
-            model.BUILD_NUM
+            container.END_TIME
         )
             .from(container)
-            .leftJoin(model).on(
-                container.BUILD_ID.eq(model.BUILD_ID)
-                    .and(container.EXECUTE_COUNT.eq(model.EXECUTE_COUNT))
-            )
             .where(container.PROJECT_ID.eq(projectId))
             .and(container.PIPELINE_ID.eq(pipelineId))
             .and(container.CONTAINER_ID.eq(containerId))
             .orderBy(container.START_TIME.desc())
             .offset(offset)
             .limit(limit)
-            .fetch { record ->
-                PipelineContainerBuild(
-                    buildId = record[container.BUILD_ID],
-                    projectId = record[container.PROJECT_ID],
-                    pipelineId = record[container.PIPELINE_ID],
-                    containerId = record[container.CONTAINER_ID],
-                    executeCount = record[container.EXECUTE_COUNT],
-                    status = record[container.STATUS],
-                    startTime = record[container.START_TIME],
-                    endTime = record[container.END_TIME],
-                    buildNum = record[model.BUILD_NUM],
-                    creator = record[model.START_USER]
-                )
-            }
+            .fetch()
+        if (containerRecords.isEmpty()) {
+            return emptyList()
+        }
+
+        val buildKeys = containerRecords.map {
+            DSL.row(it[container.BUILD_ID], it[container.EXECUTE_COUNT])
+        }
+        val modelRecords = dslContext.select(
+            model.BUILD_ID,
+            model.EXECUTE_COUNT,
+            model.START_USER,
+            model.BUILD_NUM
+        )
+            .from(model)
+            .where(DSL.row(model.BUILD_ID, model.EXECUTE_COUNT).`in`(buildKeys))
+            .fetch()
+            .associateBy { it[model.BUILD_ID] to it[model.EXECUTE_COUNT] }
+
+        return containerRecords.map { record ->
+            val modelRecord = modelRecords[record[container.BUILD_ID] to record[container.EXECUTE_COUNT]]
+            PipelineContainerBuild(
+                buildId = record[container.BUILD_ID],
+                projectId = record[container.PROJECT_ID],
+                pipelineId = record[container.PIPELINE_ID],
+                containerId = record[container.CONTAINER_ID],
+                executeCount = record[container.EXECUTE_COUNT],
+                status = record[container.STATUS],
+                startTime = record[container.START_TIME],
+                endTime = record[container.END_TIME],
+                buildNum = modelRecord?.get(model.BUILD_NUM) ?: 0,
+                creator = modelRecord?.get(model.START_USER).orEmpty()
+            )
+        }
     }
 
     private fun TPipelineBuildRecordContainer.generateBuildRecordContainer(

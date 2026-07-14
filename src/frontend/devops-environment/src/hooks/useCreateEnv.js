@@ -7,7 +7,8 @@ const defaultCreateEnvParam = (envType = 'BUILD') => {
         envType,
         name: '',
         // createdUser: '',
-        source: 'EXISTING'
+        source: 'EXISTING',
+        envVars: []
     }
 }
 

@@ -1636,9 +1636,10 @@ class PipelineListFacadeService @Autowired constructor(
                 it.latestBuildUserId = lastBuild.triggerUser ?: lastBuild.startUser
                 it.startType = StartType.transform(lastBuild.trigger, lastBuild.webhookType)
                 it.trigger = StartType.toReadableString(
-                    lastBuild.trigger,
-                    lastBuild.channelCode,
-                    I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                    type = lastBuild.trigger,
+                    channelCode = lastBuild.channelCode,
+                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
+                    webhookType = lastBuild.webhookType
                 )
                 val webhookInfo = lastBuild.webhookInfo
                 if (webhookInfo != null) {

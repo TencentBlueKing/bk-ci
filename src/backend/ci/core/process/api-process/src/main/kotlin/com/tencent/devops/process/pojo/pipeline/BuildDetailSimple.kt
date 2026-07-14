@@ -105,6 +105,20 @@ data class BuildDetailElementSimple(
     val containerHashId: String?,
     @get:Schema(title = "关联jobId")
     val jobId: String?,
+    @get:Schema(title = "插件ID，查询日志时作为tag使用")
+    val elementId: String?,
+    @get:Schema(title = "插件名称")
+    val elementName: String,
+    @get:Schema(title = "插件用户自定义ID(stepId)")
+    val stepId: String?,
+    @get:Schema(title = "插件运行状态")
+    val status: String?,
+    @get:Schema(title = "错误类型")
+    val errorType: String?,
+    @get:Schema(title = "错误代码")
+    val errorCode: Int?,
+    @get:Schema(title = "错误信息")
+    val errorMsg: String?,
     @get:Schema(title = "Job下的插件完整信息列表")
     val element: Element
 )
@@ -184,6 +198,13 @@ private data class BuildElementEntry(
             containerName = container.name,
             containerHashId = container.containerHashId,
             jobId = container.jobId,
+            elementId = element.id,
+            elementName = element.name,
+            stepId = element.stepId,
+            status = element.status,
+            errorType = element.errorType,
+            errorCode = element.errorCode,
+            errorMsg = element.errorMsg,
             element = element
         )
     }

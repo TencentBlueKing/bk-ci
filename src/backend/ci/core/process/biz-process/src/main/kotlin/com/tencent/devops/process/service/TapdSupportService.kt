@@ -10,19 +10,34 @@
 
 package com.tencent.devops.process.service
 
+import com.github.benmanes.caffeine.cache.Cache
+import com.github.benmanes.caffeine.cache.Caffeine
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.repository.api.tapd.ServiceTapdResource
 import com.tencent.devops.scm.pojo.tapd.TapdBug
 import com.tencent.devops.scm.pojo.tapd.TapdBugFieldConfig
 import com.tencent.devops.scm.pojo.tapd.TapdStory
+import com.tencent.devops.scm.pojo.tapd.TapdWorkspace
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import java.util.concurrent.TimeUnit
 
 /**
  * TAPD 支持服务
  */
 @Service
 class TapdSupportService(private val client: Client) {
+
+    /**
+     * TAPD 项目信息本地缓存
+     *
+     * 项目名基本不会变化，缓存 1 小时可显著减少远端调用；
+     * 查询失败或返回空时不缓存，避免瞬时故障被长期记忆。
+     */
+    private val workspaceCache: Cache<String, TapdWorkspace> = Caffeine.newBuilder()
+        .maximumSize(WORKSPACE_CACHE_MAX_SIZE)
+        .expireAfterWrite(WORKSPACE_CACHE_EXPIRE_HOURS, TimeUnit.HOURS)
+        .build()
 
     /**
      * 查询 TAPD 需求详情
@@ -80,7 +95,29 @@ class TapdSupportService(private val client: Client) {
         }
     }
 
+    /**
+     * 查询 TAPD 项目信息（带本地缓存）
+     */
+    fun getWorkspaceInfo(workspaceId: String): TapdWorkspace? {
+        if (workspaceId.isBlank()) {
+            logger.warn("invalid tapd workspace query|workspaceId=$workspaceId")
+            return null
+        }
+        workspaceCache.getIfPresent(workspaceId)?.let { return it }
+        return try {
+            val info = client.get(ServiceTapdResource::class).getWorkspaceInfo(
+                workspaceId = workspaceId
+            ).data
+            info?.also { workspaceCache.put(workspaceId, it) }
+        } catch (ignored: Exception) {
+            logger.warn("fail to query tapd workspace|workspaceId=$workspaceId", ignored)
+            null
+        }
+    }
+
     companion object {
         private val logger = LoggerFactory.getLogger(TapdSupportService::class.java)
+        private const val WORKSPACE_CACHE_MAX_SIZE = 1000L
+        private const val WORKSPACE_CACHE_EXPIRE_HOURS = 1L
     }
 }
