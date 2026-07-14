@@ -40,12 +40,14 @@ import com.tencent.devops.process.engine.dao.template.TemplateDao
 import com.tencent.devops.process.engine.dao.template.TemplatePipelineDao
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import com.tencent.devops.project.pojo.Result
+import io.mockk.clearMocks
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import org.jooq.DSLContext
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
+import org.springframework.data.redis.core.script.RedisScript
 
 /**
  * 覆盖计数体系最核心的“绝对值重算 + 覆盖 + 清零桶”算法（refreshVarLevelSummary）。
@@ -246,9 +248,13 @@ class PublicVarGroupReferManageServiceTest {
      */
     @Test
     fun executeWithGroupSummaryLocks_acquiresLocksInSortedOrder_andRunsAction() {
+        clearMocks(redisOperation)
         val acquiredKeys = mutableListOf<String>()
         every { redisOperation.getKeyByRedisName(any()) } answers { firstArg() }
         every { redisOperation.setNxEx(capture(acquiredKeys), any(), any(), any()) } returns true
+        every {
+            redisOperation.execute(any<RedisScript<Long>>(), any(), *anyVararg(), any())
+        } returns 1L
 
         var executed = false
         val result = service.executeWithGroupSummaryLocks(PROJECT, listOf("groupB", "groupA", "groupC")) {
@@ -265,12 +271,17 @@ class PublicVarGroupReferManageServiceTest {
 
     /**
      * action 抛异常时，异常向上传播，且已获取的锁全部释放（不泄漏）。
-     * 通过 getKeyByRedisName 的调用次数（每组一次加锁 + 一次解锁 = 组数 * 2）间接验证释放。
+     * 注意：类级 redisOperation mock 会跨用例累积调用，必须 clearMocks 后再断言次数。
      */
     @Test
     fun executeWithGroupSummaryLocks_releasesLocksOnException() {
+        clearMocks(redisOperation)
         every { redisOperation.getKeyByRedisName(any()) } answers { firstArg() }
         every { redisOperation.setNxEx(any(), any(), any(), any()) } returns true
+        // 显式 stub unlock lua 成功，避免未 stub 时走异常重试导致 decorateKey 次数不稳定
+        every {
+            redisOperation.execute(any<RedisScript<Long>>(), any(), *anyVararg(), any())
+        } returns 1L
 
         val boom = RuntimeException("boom")
         val thrown = Assertions.assertThrows(RuntimeException::class.java) {
@@ -279,8 +290,12 @@ class PublicVarGroupReferManageServiceTest {
             }
         }
         Assertions.assertEquals("boom", thrown.message)
-        // 2 组：加锁 2 次 + 解锁 2 次，decorateKey 共调用 getKeyByRedisName 4 次
-        verify(exactly = 4) { redisOperation.getKeyByRedisName(any()) }
+        // 2 组加锁
+        verify(exactly = 2) { redisOperation.setNxEx(any(), any(), any(), any()) }
+        // 异常后 finally 仍对 2 把锁各 unlock 一次（lua del）
+        verify(exactly = 2) {
+            redisOperation.execute(any<RedisScript<Long>>(), any(), *anyVararg(), any())
+        }
     }
 
     /**
@@ -288,6 +303,7 @@ class PublicVarGroupReferManageServiceTest {
      */
     @Test
     fun executeWithGroupSummaryLocks_withEmptyGroups_runsActionWithoutLocking() {
+        clearMocks(redisOperation)
         val result = service.executeWithGroupSummaryLocks(PROJECT, emptyList()) { 42 }
 
         Assertions.assertEquals(42, result)
