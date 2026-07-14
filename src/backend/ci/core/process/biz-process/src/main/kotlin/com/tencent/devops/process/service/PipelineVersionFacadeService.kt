@@ -1139,9 +1139,7 @@ class PipelineVersionFacadeService @Autowired constructor(
         return when (actionType) {
             PipelineDraftActionType.EDIT -> getPipelineDraftStatusWhenEdit(
                 userId = userId,
-                versionStatus = versionStatus,
                 releaseVersion = releaseVersion,
-                versionResource = versionResource,
                 releaseResource = releaseResource,
                 draftResource = draftResource,
                 latestReleaseResource = latestReleaseResource
@@ -1163,42 +1161,23 @@ class PipelineVersionFacadeService @Autowired constructor(
     /**
      * EDIT 场景状态校验：
      *
-     * 1. versionStatus != 草稿状态（前端展示的不是草稿版本，即在编辑正式版本 / 分支版本）
-     *    - 后端草稿存在：按草稿状态判断（草稿基线落后 → OUTDATED；保存人不同或超 7 天 → EXISTS；否则 NORMAL）
-     *    - 后端草稿不存在：
-     *      - releaseVersion 对应记录是分支版本 → BRANCH
-     *      - version 已被删除 → DELETED
-     *      - releaseVersion 与当前最新正式版本不一致 → RELEASE_OUTDATED
-     *      - 否则 → NORMAL
+     * - 后端草稿存在：按草稿状态判断（草稿基线落后 → OUTDATED；保存人不同或超 7 天 → EXISTS；否则 NORMAL）
+     * - 后端草稿不存在：
+     *   - releaseVersion 对应资源是分支版本 → BRANCH
+     *   - releaseVersion 与当前最新正式版本不一致 → RELEASE_OUTDATED
+     *   - 否则 → NORMAL
      *
-     * 2. versionStatus == 草稿状态（前端展示的是草稿版本）
-     *    - version 不再是草稿态（可能被发布或删除）：按 version 状态返回（RELEASED/BRANCH/DRAFT_RELEASE
-     *      /BRANCH_RELEASE → PUBLISHED；DELETE → DELETED）
-     *    - version 仍是草稿态：按草稿状态判断（OUTDATED > EXISTS > NORMAL 与老方案对齐）
+     * 说明：无论前端展示的是草稿还是正式/分支版本，统一按上述规则处理；
+     * 原草稿已被删除或发布时，若仍有新草稿则走草稿校验，否则不单独提示 DELETED/PUBLISHED。
      */
     private fun getPipelineDraftStatusWhenEdit(
         userId: String,
-        versionStatus: VersionStatus,
         releaseVersion: Int,
-        versionResource: PipelineResourceVersion?,
         releaseResource: PipelineResourceVersion?,
         draftResource: PipelineResourceVersion?,
         latestReleaseResource: PipelineResourceVersion?
     ): PipelineDraftStatusResult {
-        // 前端展示的是草稿版本
-        if (versionStatus == VersionStatus.COMMITTING) {
-            // 前端认为在编辑草稿，但后端已不是草稿态（可能被发布或删除）
-            if (versionResource?.status != VersionStatus.COMMITTING) {
-                return buildVersionStatusResult(versionResource)
-            }
-            // versionResource 就是当前草稿本身（每条流水线只有一个草稿）
-            return checkDraftForEdit(
-                userId = userId,
-                draftResource = versionResource,
-                latestReleaseResource = latestReleaseResource
-            )
-        }
-        // 前端展示的不是草稿版本，若后端已存在草稿，则先按草稿状态做校验
+        // 若后端已存在草稿，则先按草稿状态做校验
         if (draftResource != null) {
             return checkDraftForEdit(
                 userId = userId,
@@ -1212,10 +1191,6 @@ class PipelineVersionFacadeService @Autowired constructor(
                 status = PipelineDraftStatus.BRANCH,
                 release = PipelineVersionSimple(releaseResource)
             )
-        }
-        // 前端展示的版本已被删除
-        if (versionResource?.status == VersionStatus.DELETE) {
-            return PipelineDraftStatusResult(status = PipelineDraftStatus.DELETED)
         }
         // 前端展示的正式版本已不是最新
         return if (latestReleaseResource != null &&
@@ -1239,7 +1214,8 @@ class PipelineVersionFacadeService @Autowired constructor(
      *    - 后端草稿不存在 → NORMAL
      *
      * 2. versionStatus == 草稿状态（前端展示的是草稿版本）
-     *    - version 不再是草稿态（可能被发布或删除）：按 version 状态返回（PUBLISHED / DELETED）
+     *    - version 已发布 → PUBLISHED
+     *    - version 已删除：若存在新草稿 → CONFLICT，否则 → DELETED
      *    - version 仍是草稿态：比对 draftVersion 与 baseDraftVersion，不一致 → CONFLICT，否则 → NORMAL
      */
     private fun getPipelineDraftStatusWhenSave(
@@ -1261,7 +1237,22 @@ class PipelineVersionFacadeService @Autowired constructor(
         }
         // 前端展示的是草稿版本，但后端已不是草稿态（可能被发布或删除）
         if (versionResource?.status != VersionStatus.COMMITTING) {
-            return buildVersionStatusResult(versionResource)
+            return when (versionResource?.status) {
+                VersionStatus.DELETE -> {
+                    if (draftResource != null) {
+                        PipelineDraftStatusResult(
+                            status = PipelineDraftStatus.CONFLICT,
+                            draft = PipelineVersionSimple(draftResource)
+                        )
+                    } else {
+                        PipelineDraftStatusResult(status = PipelineDraftStatus.DELETED)
+                    }
+                }
+                else -> PipelineDraftStatusResult(
+                    status = PipelineDraftStatus.PUBLISHED,
+                    release = versionResource?.let { PipelineVersionSimple(it) }
+                )
+            }
         }
         // 检测草稿并发保存冲突
         return if (versionResource.draftVersion != baseDraftVersion) {
@@ -1293,7 +1284,14 @@ class PipelineVersionFacadeService @Autowired constructor(
     ): PipelineDraftStatusResult {
         // 前端要发布的版本已不是草稿态（可能被发布或删除）
         if (versionResource?.status != VersionStatus.COMMITTING) {
-            return buildVersionStatusResult(versionResource)
+            return when (versionResource?.status) {
+                VersionStatus.DELETE ->
+                    PipelineDraftStatusResult(status = PipelineDraftStatus.DELETED)
+                else -> PipelineDraftStatusResult(
+                    status = PipelineDraftStatus.PUBLISHED,
+                    release = versionResource?.let { PipelineVersionSimple(it) }
+                )
+            }
         }
         // 检测草稿并发保存冲突
         if (versionResource.draftVersion != baseDraftVersion) {
@@ -1370,18 +1368,6 @@ class PipelineVersionFacadeService @Autowired constructor(
             else -> PipelineDraftStatusResult(
                 status = PipelineDraftStatus.NORMAL,
                 draft = PipelineVersionSimple(draftResource)
-            )
-        }
-    }
-
-    private fun buildVersionStatusResult(
-        versionResource: PipelineResourceVersion?
-    ): PipelineDraftStatusResult {
-        return when (versionResource?.status) {
-            VersionStatus.DELETE -> PipelineDraftStatusResult(status = PipelineDraftStatus.DELETED)
-            else -> PipelineDraftStatusResult(
-                status = PipelineDraftStatus.PUBLISHED,
-                release = versionResource?.let { PipelineVersionSimple(it) }
             )
         }
     }
