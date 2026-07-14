@@ -39,15 +39,6 @@
                     <ArchiveViewName v-if="isArchiveView" />
                     <span v-else>{{ currentViewName }}</span>
                 </p>
-
-                <bk-button
-                    theme="default"
-                    v-if="!isArchiveView"
-                    class="historical-task"
-                    @click="goHistoricalTask"
-                >
-                    {{ $t('historicalTask') }}
-                </bk-button>
             </h5>
             <header class="pipeline-list-main-header">
                 <div class="pipeline-list-main-header-left-area">
@@ -562,14 +553,6 @@
                     filterByPipelineName
                 }
             },
-            goHistoricalTask () {
-                this.$router.push({
-                    name: 'batchHistoricalTask',
-                    params: {
-                        projectId: this.$route.params.projectId
-                    }
-                })
-            }
         }
     }
 
