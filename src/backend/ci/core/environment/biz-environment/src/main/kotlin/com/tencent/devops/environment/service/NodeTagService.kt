@@ -412,7 +412,8 @@ class NodeTagService @Autowired constructor(
                 projectId = projectId,
                 keyName = data.tagKeyName
             )
-            if ((oldRecord != null && oldRecord.id != data.tagKeyId) || getInternalKeys().values.contains(data.tagKeyName)
+            if ((oldRecord != null && oldRecord.id != data.tagKeyId) ||
+                getInternalKeys().values.contains(data.tagKeyName)
             ) {
                 throw ErrorCodeException(
                     errorCode = EnvironmentMessageCode.ERROR_NODE_TAG_EXIST,
