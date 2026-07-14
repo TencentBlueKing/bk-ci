@@ -1,5 +1,9 @@
 .flowTable {
   height: calc(100% - 56px);
+  :global(.bk-table-footer) {
+    background-color: var(--bg-primary);
+    border-top: 1px solid var(--border-color);
+  }
 }
 
 .actions {
@@ -149,6 +153,10 @@
   height: calc(100% - 56px);
   color: var(--color-text-tertiary);
   font-size: var(--font-size-sm);
+}
+
+.ungrouped {
+  color: var(--color-text-tertiary);
 }
 
 /* 表格创作流组 */

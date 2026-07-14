@@ -243,7 +243,7 @@ export const FlowTable = defineComponent({
       }
 
       if (!tags || !Array.isArray(tags) || tags.length === 0) {
-        return <span>--</span>
+        return <span class={styles.ungrouped}>{t('flow.variable.ungrouped')}</span>
       }
 
       const maxDisplayCount = 2
@@ -534,13 +534,13 @@ export const FlowTable = defineComponent({
             {
               label: t('flow.content.groupName'),
               field: 'viewNames',
-              minWidth: 280,
+              minWidth: 220,
               render: ({ row }: { row: ContentTableItem }) => renderTags(row),
             },
             {
               label: renderLastExecLabel(),
               field: 'latestBuildStatus',
-              minWidth: 300,
+              minWidth: 500,
               render: ({ row }: { row: ContentTableItem }) => renderLastExec(row),
             },
             {

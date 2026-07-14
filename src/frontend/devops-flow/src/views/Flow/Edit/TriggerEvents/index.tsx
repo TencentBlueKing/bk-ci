@@ -202,11 +202,10 @@ export default defineComponent({
         render: ({ index }: { index: number }) => (
           <Button
             text
-            theme="primary"
             onClick={() => handleDelete(index)}
             title={t('flow.common.delete')}
           >
-            <SvgIcon name="minus-circle" size={16} />
+            <SvgIcon name="minus-sign" size={16} class={styles.deleteIcon} />
           </Button>
         ),
       },

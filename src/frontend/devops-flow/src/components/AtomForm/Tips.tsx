@@ -3,6 +3,7 @@ import { getResponseData } from '@/hooks/useDataSource'
 import { defineComponent, ref, computed, watch, onMounted, type PropType } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
+import { SvgIcon } from '@/components/SvgIcon'
 import styles from './Tips.module.css'
 
 export default defineComponent({
@@ -150,7 +151,7 @@ export default defineComponent({
     return () => (
       <h3 class={[styles.componentTip, 'pointer-events-auto']}>
         <span class={styles.tipIcon}>
-          <i class="devops-icon icon-info-circle-shape"></i>
+          <SvgIcon name="info-circle-shape" size={18} />
         </span>
         <span class={styles.tipMessage} v-html={tip.value} />
       </h3>

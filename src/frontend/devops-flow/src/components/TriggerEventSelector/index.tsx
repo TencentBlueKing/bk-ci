@@ -28,24 +28,48 @@ export default defineComponent({
     const searchKey = ref('')
     const selectedClassify = ref<string>('')
     const allEventList = ref<TriggerBaseItem[]>([])
+    /** 全量事件列表，仅用于搜索时重算左侧分类数量 */
+    const masterEventList = ref<TriggerBaseItem[]>([])
     const loading = ref(false)
     const selectingAtomCode = ref<string | null>(null)
 
-    // 根据分类和搜索关键词过滤事件列表
+    const isAllClassify = (ownerStoreCode: string) => {
+      const firstCode = triggerManager.typeList.value[0]?.ownerStoreCode ?? ''
+      return !ownerStoreCode || ownerStoreCode === firstCode
+    }
+
+    // 按搜索关键词过滤当前分类下的事件列表
     const filteredEventList = computed(() => {
       let list = allEventList.value
-
-      // 按搜索关键词过滤
-      if (searchKey.value) {
-        const keyword = searchKey.value.toLowerCase()
+      const keyword = searchKey.value.trim().toLowerCase()
+      if (keyword) {
         list = list.filter(
           (item) =>
             item.name.toLowerCase().includes(keyword) ||
             item.summary?.toLowerCase().includes(keyword),
         )
       }
-
       return list
+    })
+
+    // 左侧分类：有搜索关键词时按全量匹配结果重算数量
+    const displayTypeList = computed(() => {
+      const types = triggerManager.typeList.value
+      const keyword = searchKey.value.trim().toLowerCase()
+      if (!keyword) return types
+
+      const matched = masterEventList.value.filter(
+        (item) =>
+          item.name.toLowerCase().includes(keyword) ||
+          item.summary?.toLowerCase().includes(keyword),
+      )
+
+      return types.map((type) => ({
+        ...type,
+        count: isAllClassify(type.ownerStoreCode)
+          ? matched.length
+          : matched.filter((item) => item.ownerStoreCode === type.ownerStoreCode).length,
+      }))
     })
 
     const loadTypeList = async () => {
@@ -57,7 +81,7 @@ export default defineComponent({
       }
     }
 
-    // 加载事件列表
+    // 加载当前分类的事件列表
     const loadEventList = async (ownerStoreCode?: string) => {
       try {
         loading.value = true
@@ -75,10 +99,25 @@ export default defineComponent({
       }
     }
 
+    // 加载全量事件，供搜索时统计各分类数量
+    const loadMasterEventList = async () => {
+      try {
+        const response = await triggerManager.fetchList({
+          page: 1,
+          pageSize: 100,
+        })
+        masterEventList.value = response.records || []
+      } catch (error) {
+        console.error('Failed to load master trigger events:', error)
+        masterEventList.value = []
+      }
+    }
+
     // 初始化：加载分类列表和事件列表
     onMounted(() => {
       loadTypeList()
       loadEventList()
+      loadMasterEventList()
     })
 
     onUnmounted(() => {
@@ -89,7 +128,6 @@ export default defineComponent({
     // 处理分类切换
     const handleClassifyChange = async (classifyCode: string) => {
       selectedClassify.value = classifyCode
-      // 重新加载对应分类的列表
       await loadEventList(classifyCode || undefined)
     }
 
@@ -154,7 +192,7 @@ export default defineComponent({
         <div class={styles.body}>
           {/* 左侧分类导航 */}
           <div class={styles.nav}>
-            {triggerManager.typeList.value.map((type) => (
+            {displayTypeList.value.map((type) => (
               <div
                 key={type.ownerStoreCode}
                 class={[
@@ -188,6 +226,7 @@ export default defineComponent({
                     >
                       <TriggerEventCard
                         eventAtom={eventAtom}
+                        keyword={searchKey.value}
                         loading={isSelectingTrigger(eventAtom.atomCode)}
                         disabled={disabled}
                         onClick={() => handleSelectEvent(eventAtom)}

@@ -106,7 +106,7 @@ export default defineComponent({
         filterable: true,
         list: props.envList,
         loading: props.envLoading,
-        placeholder: t('flow.content.creationEnvironment'),
+        placeholder: t('flow.orchestration.selectPlaceholder'),
         searchPlaceholder: t('flow.content.searchEnvironment'),
         onChange: handleChange,
       }
@@ -164,8 +164,15 @@ export default defineComponent({
             <p class={styles.envItemTit}>
               {t('flow.content.creationNode')}
               {props.isEdit ? (
-                <span onClick={goToEnvironment}>
-                  <SvgIcon name="set-line" size={12} class={`cursor-pointer ${styles.setLine}`} />
+                <span
+                  class={styles.envSettingBtn}
+                  onClick={goToEnvironment}
+                  v-bk-tooltips={{
+                    content: t('flow.content.environmentSettings'),
+                    placement: 'top',
+                  }}
+                >
+                  <SvgIcon name="set-line" size={12} class={styles.setLine} />
                 </span>
               ) : null}
             </p>

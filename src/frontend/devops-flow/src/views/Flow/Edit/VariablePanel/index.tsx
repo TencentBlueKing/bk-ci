@@ -514,12 +514,15 @@ export default defineComponent({
                         <>
                           <Button
                             theme="primary"
+                            outline
                             onClick={() => handleAddVariable(VariableCategory.INPUT)}
                             class={styles.addButton}
                           >
                             {t('flow.variable.addVariable')}
                           </Button>
                           <Button
+                            theme="primary"
+                            outline
                             onClick={() => handleAddVariable(VariableCategory.CONSTANT)}
                             class={styles.addButton}
                           >
@@ -585,7 +588,7 @@ export default defineComponent({
               <div class={styles.editFormContainer}>
                 <div class={styles.editFormHeader}>
                   <span class={styles.editFormBackIcon} onClick={handleCancel}>
-                    <SvgIcon name="arrows-left-shape" />
+                    <SvgIcon name="arrows-left" size="14" />
                   </span>
                   <span class={styles.editFormTitle}>
                     {editingVariable.value

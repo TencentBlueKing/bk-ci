@@ -14,6 +14,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useFlowInfo } from '../../hooks/useFlowInfo'
 import { CommonHeader } from '../CommonHeader'
 import FlowSelector from '../FlowHeader/FlowSelector'
+import { SvgIcon } from '../SvgIcon'
 import styles from './EditHeader.module.css'
 
 export const EditHeader = defineComponent({
@@ -293,6 +294,7 @@ export const EditHeader = defineComponent({
                       disabled: !flowModel.hasValidationError.value,
                     }}
                   >
+                    <SvgIcon name="check-line" size={14} class={styles.publishIcon} />
                     {t('flow.content.publish')}
                   </Button>
                 )}

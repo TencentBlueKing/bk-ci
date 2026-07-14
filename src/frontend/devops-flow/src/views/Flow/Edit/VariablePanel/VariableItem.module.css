@@ -4,7 +4,6 @@
   display: flex;
   justify-content: space-between;
   align-items: stretch;
-  margin-bottom: 2px;
   background: var(--bg-primary);
   transition: all var(--transition-normal) ease;
   border: 1px solid var(--bg-hover);
