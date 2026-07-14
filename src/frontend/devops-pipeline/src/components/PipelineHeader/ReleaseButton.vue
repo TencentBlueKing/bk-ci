@@ -16,7 +16,9 @@
             :version="currentVersion"
             :draft-base-version-name="draftBaseVersionName"
             :draft-status="draftStatus"
+            :current-editing-data="currentEditingData"
             @release-success="handleReleaseSuccess"
+            @close-slider="handleCloseSlider"
         />
         <bk-dialog
             v-model="isPublishedDialogShow"
@@ -88,7 +90,7 @@
     import Logo from '@/components/Logo'
     import VersionDiffEntry from '@/components/PipelineDetailTabs/VersionDiffEntry.vue'
     import { convertTime } from "@/utils/util"
-    import { DRAFT_STATUS, VERSION_STATUS_ENUM } from '@/utils/pipelineConst'
+    import { DRAFT_STATUS } from '@/utils/pipelineConst'
     
     export default {
         components: {
@@ -193,11 +195,10 @@
                     const params = {
                         projectId: this.projectId,
                         actionType: 'RELEASE',
-                        ...(releaseVersion && { releaseVersion }),
-                        ...(versionStatus === VERSION_STATUS_ENUM.COMMITTING && {
-                            version,
-                            baseDraftVersion: draftVersion
-                        }),
+                        version,
+                        versionStatus,
+                        releaseVersion,
+                        baseDraftVersion: draftVersion,
                         ...(this.isTemplate ? { templateId: this.id } : { pipelineId: this.id })
                     }
                     const draftStatus = await request(params)
@@ -252,6 +253,9 @@
             },
             handleReleaseSuccess () {
                 this.$emit('release-success')
+            },
+            handleCloseSlider () {
+                this.isReleaseSliderShow = false
             }
         }
     }

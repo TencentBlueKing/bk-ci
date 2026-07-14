@@ -444,11 +444,10 @@
                     const draftStatus = await this.getDraftStatus({
                         projectId: this.projectId,
                         pipelineId: this.pipelineId,
-                        ...(releaseVersion && { releaseVersion }),
-                        ...(versionStatus === VERSION_STATUS_ENUM.COMMITTING && {
-                            version,
-                            baseDraftVersion: draftVersion
-                        }),
+                        version,
+                        versionStatus,
+                        releaseVersion,
+                        baseDraftVersion: draftVersion,
                         actionType: 'SAVE'
                     })
                     this.lasterDraftInfo = draftStatus

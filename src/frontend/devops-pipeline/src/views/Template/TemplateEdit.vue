@@ -424,13 +424,14 @@
             },
 
             async saveTemplateDraft () {
+                const { releaseVersion, version, draftVersion, versionStatus } = this.pipelineInfo ?? {}
                 const draftStatus = await this.getTemplateDraftStatus({
                     projectId: this.projectId,
                     templateId: this.templateId,
-                    ...(this.pipelineInfo?.draftVersion ? {
-                        version: this.pipelineInfo?.version,
-                        baseDraftVersion: this.pipelineInfo?.draftVersion,
-                    } : {}),
+                    version,
+                    versionStatus,
+                    releaseVersion,
+                    baseDraftVersion: draftVersion,
                     actionType: 'SAVE'
                 })
                 this.lasterDraftInfo = draftStatus

@@ -26,11 +26,10 @@ export default function useDraftStatus () {
         const params = {
             projectId,
             actionType,
-            ...(releaseVersion && { releaseVersion }),
-            ...(versionStatus === VERSION_STATUS_ENUM.COMMITTING && {
-                version,
-                baseDraftVersion: draftVersion
-            }),
+            version,
+            versionStatus,
+            releaseVersion,
+            ...(['SAVE', 'RELEASE'].includes(actionType) ? { baseDraftVersion: draftVersion } : {}),
             [dynamicKey]: id
         }
 

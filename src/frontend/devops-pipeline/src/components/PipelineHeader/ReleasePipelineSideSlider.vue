@@ -508,6 +508,64 @@
             <p>{{ $t('template.versionNameExistTips', [existingVersionName]) }}</p>
             <p style="color: #979BA5; margin-top: 8px;">{{ $t('template.versionNameExistSubTips') }}</p>
         </bk-dialog>
+        <bk-dialog
+            v-model="isPublishedDialogShow"
+            :width="480"
+            :mask-close="false"
+            footer-position="center"
+            ext-cls="published-dialog"
+        >
+            <header
+                class="published-hint-title"
+                slot="header"
+            >
+                <i class="devops-icon icon-exclamation"></i>
+                <span>{{ releaseStatus === DRAFT_STATUS.CONFLICT ? $t('otherUserEditingDetected') : $t("alreadyPublished") }}</span>
+            </header>
+            <div>
+                <div class="published-content">
+                    <span class="label">{{ $t("publisher") }}: </span>
+                    <span>{{ lasterDraftInfo?.updater || "--" }} </span>
+                    <span class="label"> {{ $t("publishTime") }}: </span>
+                    <span>{{ formatTime(lasterDraftInfo?.updateTime) }}</span>
+
+                    <VersionDiffEntry
+                        :class="[
+                            'diff-button',
+                            {
+                                'develop-txt-disabled': !hasDraft
+                            }
+                        ]"
+                        text
+                        :can-switch-version="false"
+                        :show-button="false"
+                        :disabled="!hasDraft"
+                        :version="lasterDraftInfo?.version"
+                        :current-editing-data="currentEditingData"
+                        :diff-mode="diffMode"
+                    >
+                        <Logo
+                            name="diff"
+                            size="14"
+                        />
+                    </VersionDiffEntry>
+                    <p class="published-tips">
+                        <span v-html="releaseStatus === DRAFT_STATUS.CONFLICT ? $t('reviewDifferencesAndOverrideChanges') : $t('alreadyPublishedTip')"></span>
+                    </p>
+                </div>
+            </div>
+            <footer slot="footer">
+                <bk-button
+                    theme="primary"
+                    @click="handleNewDraft"
+                >
+                    {{ $t("newDraft") }}
+                </bk-button>
+                <bk-button @click="goPipelineModel">
+                    {{ $t('exitEditing') }}
+                </bk-button>
+            </footer>
+        </bk-dialog>
     </div>
 </template>
 
@@ -523,6 +581,8 @@
     import { RESOURCE_TYPE } from '@/utils/permission'
     import { TARGET_ACTION_ENUM, VERSION_STATUS_ENUM, DRAFT_STATUS } from '@/utils/pipelineConst'
     import { mapActions, mapGetters, mapState } from 'vuex'
+    import { convertTime } from "@/utils/util"
+
     export default {
         components: {
             VersionDiffEntry,
@@ -562,7 +622,11 @@
             draftStatus: {
                 type: Object,
                 default: null
-            }
+            },
+            currentEditingData: {
+                type: Object,
+                default: null
+            },
         },
         data () {
             return {
@@ -603,6 +667,9 @@
                 isLoadingVersionList: false,
                 showVersionNameExistDialog: false,
                 existingVersionName: '',
+                isPublishedDialogShow: false,
+                lasterDraftInfo: null,
+                releaseStatus: '',
             }
         },
         computed: {
@@ -755,6 +822,13 @@
             },
             versionName () {
                 return this.$route.query?.versionName
+            },
+            hasDraft () {
+                const status = this.releaseStatus
+                return status && !['NORMAL', 'BRANCH', 'PUBLISHED', 'RELEASE_OUTDATED'].includes(status)
+            },
+            diffMode () {
+                return this.releaseStatus === DRAFT_STATUS.CONFLICT ? DRAFT_STATUS.CONFLICT : DRAFT_STATUS.PUBLISHED
             }
         },
         watch: {
@@ -893,6 +967,7 @@
                 'requestPipelineSummary',
                 'requestTemplateSummary',
                 'setSaveStatus',
+                'requestPipeline',
                 'prefetchPipelineVersion',
                 'requestScmBranchList',
                 'prefetchTemplateVersion'
@@ -902,7 +977,13 @@
                 'requestTemplateVersionList',
                 'checkTemplateVersionNameExist'
             ]),
-            ...mapActions('common', ['isPACOAuth', 'getSupportPacScmTypeList', 'getPACRepoList']),
+            ...mapActions('common', [
+                'isPACOAuth',
+                'getSupportPacScmTypeList',
+                'getPACRepoList',
+                'getDraftStatus',
+                'getTemplateDraftStatus'
+            ]),
             updateRollbackDesc () {
                 // 草稿状态为 NORMAL 且是回滚类型时，才设置回滚描述
                 if (this.releaseType && this.versionName && this.draftStatus?.status !== 'NORMAL') {
@@ -1087,6 +1168,27 @@
                         this.releasing = false
                     }
                 } else {
+                    // 检查草稿状态
+                    const { projectId, templateId, pipelineId } = this.$route.params
+                    const request = this.isTemplate ? this.getTemplateDraftStatus : this.getDraftStatus
+                    const { releaseVersion, version, draftVersion, versionStatus } = this.pipelineInfo ?? {}
+                    const params = {
+                        projectId,
+                        actionType: 'RELEASE',
+                        version,
+                        versionStatus,
+                        releaseVersion,
+                        baseDraftVersion: draftVersion,
+                        ...(this.isTemplate ? { templateId } : { pipelineId })
+                    }
+                    const draftStatus = await request(params)
+                    this.releaseStatus = draftStatus.status
+
+                    if ([DRAFT_STATUS.PUBLISHED, DRAFT_STATUS.CONFLICT].includes(draftStatus.status)) {
+                        this.lasterDraftInfo = draftStatus.status === DRAFT_STATUS.PUBLISHED ? draftStatus.release : draftStatus.draft
+                        this.isPublishedDialogShow = true
+                        return
+                    }
                     const releaseFn = this.isTemplate ? this.releaseDraftTemplate : this.releaseDraftPipeline
                     try {
                         if (this.releasing) return
@@ -1097,7 +1199,6 @@
                         // 检查版本名是否存在（仅对模板生效且有自定义版本名时）
                         const versionNameToCheck = this.customVersionName?.trim()
                         if (this.isTemplate && versionNameToCheck && !skipVersionNameCheck) {
-                            const { projectId, templateId } = this.$route.params
                             const isExist = await this.checkTemplateVersionNameExist({
                                 projectId,
                                 templateId,
@@ -1399,6 +1500,42 @@
                         this.releasing = false
                     }
                 }
+            },
+            formatTime (time) {
+                return convertTime(time)
+            },
+            async handleNewDraft () {
+                this.isPublishedDialogShow = false
+                const { projectId, templateId, pipelineId } = this.$route.params
+                // 重新获取流水线摘要信息
+                if (this.isTemplate) {
+                    await this.requestTemplateSummary(this.$route.params)
+                } else {
+                    await this.requestPipelineSummary(this.$route.params)
+                }
+                this.$emit('release-success')
+                await this.requestPipeline({
+                    source: 'EDIT',
+                    projectId,
+                    ...(this.isTemplate ? { templateId } : {pipelineId}),
+                    version: this.pipelineInfo?.version
+                })
+                this.$emit('close-slider')
+            },
+            async goPipelineModel () {
+                const routerName = this.isTemplate ? 'TemplateOverview' : 'pipelinesHistory'
+                if (this.isTemplate) {
+                    await this.requestTemplateSummary(this.$route.params)
+                }
+                this.$router.push({
+                    name: routerName,
+                    params: {
+                        ...this.$route.params,
+                        version: this.pipelineInfo?.releaseVersion,
+                        type: 'pipeline'
+                    },
+                    ...(this.isTemplate ? {} : { query: this.$route.query })
+                })
             },
             showReleaseSlider () {
                 this.$emit('input', true)

@@ -365,10 +365,8 @@ export const actions = {
             console.log(e)
         }
     },
-    getDraftStatus: async ({ commit }, { projectId, pipelineId, actionType, version, baseDraftVersion, releaseVersion }) => {
-        const params = new URLSearchParams({ actionType })
-        version && params.append('version', version)
-        releaseVersion && params.append('releaseVersion', releaseVersion)
+    getDraftStatus: async ({ commit }, { projectId, pipelineId, actionType, version, versionStatus, baseDraftVersion, releaseVersion }) => {
+        const params = new URLSearchParams({ actionType, version, versionStatus, releaseVersion})
         baseDraftVersion && params.append('baseDraftVersion', baseDraftVersion)
         
         const url = `${PROCESS_API_URL_PREFIX}/user/version/projects/${projectId}/pipelines/${pipelineId}/draftStatus?${params}`
@@ -383,10 +381,8 @@ export const actions = {
             return response.data
         })
     },
-    getTemplateDraftStatus: async ({ commit }, { projectId, templateId, actionType, version, baseDraftVersion, releaseVersion }) => {
-        const params = new URLSearchParams({ actionType })
-        version && params.append('version', version)
-        releaseVersion && params.append('releaseVersion', releaseVersion)
+    getTemplateDraftStatus: async ({ commit }, { projectId, templateId, actionType, version, versionStatus, baseDraftVersion, releaseVersion }) => {
+        const params = new URLSearchParams({ actionType, version, versionStatus, releaseVersion})
         baseDraftVersion && params.append('baseDraftVersion', baseDraftVersion)
         
         const url = `${PROCESS_API_URL_PREFIX}/user/pipeline/template/v2/${projectId}/${templateId}/draftStatus?${params}`
