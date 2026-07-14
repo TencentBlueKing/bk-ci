@@ -145,7 +145,6 @@ class RbacPublicVarGroupPermissionService constructor(
             serviceCode = publicVarGroupAuthServiceCode,
             resourceType = RESOURCE_TYPE,
             projectCode = projectId,
-            resourceCode = projectId,
             permission = permission
         )
         if (!resourcePermission) {
