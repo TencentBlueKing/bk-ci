@@ -73,7 +73,7 @@ import com.tencent.devops.process.service.pipeline.version.PipelineVersionManage
 import com.tencent.devops.process.service.scm.ScmProxyService
 import com.tencent.devops.process.service.template.v2.PipelineTemplateRelatedService
 import com.tencent.devops.process.service.template.v2.PipelineTemplateResourceService
-import com.tencent.devops.process.service.var.PublicVarGroupReferManageService
+import com.tencent.devops.process.service.`var`.PublicVarGroupReferManageService
 import com.tencent.devops.process.utils.PipelineVersionUtils
 import com.tencent.devops.process.yaml.PipelineYamlFacadeService
 import com.tencent.devops.process.yaml.transfer.PipelineTransferException
@@ -103,7 +103,6 @@ class PipelineVersionFacadeService @Autowired constructor(
 ) {
 
     companion object {
-        private val logger = LoggerFactory.getLogger(PipelineVersionFacadeService::class.java)
         private const val PAC_BRANCH_PREFIX = "bk-ci-pipeline-"
         fun getReleaseBranchName(pipelineId: String, version: Int): String =
             "$PAC_BRANCH_PREFIX$pipelineId-$version"
