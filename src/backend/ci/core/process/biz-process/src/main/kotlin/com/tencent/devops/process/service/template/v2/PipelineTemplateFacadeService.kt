@@ -1742,6 +1742,10 @@ class PipelineTemplateFacadeService @Autowired constructor(
         releaseVersion: Long,
         baseDraftVersion: Int?
     ): PipelineTemplateDraftStatusResult {
+        pipelineTemplateInfoService.get(
+            projectId = projectId,
+            templateId = templateId
+        )
         val versionResource = pipelineTemplateResourceService.getTemplateResourceVersion(
             projectId = projectId,
             templateId = templateId,
@@ -1760,14 +1764,9 @@ class PipelineTemplateFacadeService @Autowired constructor(
             projectId = projectId,
             templateId = templateId
         )
-        val templateInfo = pipelineTemplateInfoService.get(
+        val latestReleaseResource = pipelineTemplateResourceService.getLatestReleasedResource(
             projectId = projectId,
             templateId = templateId
-        )
-        val latestReleaseResource = pipelineTemplateResourceService.getTemplateResourceVersion(
-            projectId = projectId,
-            templateId = templateId,
-            version = templateInfo.releasedVersion
         )
 
         return when (actionType) {
@@ -1936,6 +1935,7 @@ class PipelineTemplateFacadeService @Autowired constructor(
         }
         // 检查当前待发布草稿的基线版本，是否与当前最新正式版本一致
         return if (latestReleaseResource != null &&
+            versionResource.baseVersion != null &&
             latestReleaseResource.version != versionResource.baseVersion
         ) {
             val draftBaseResource = versionResource.baseVersion?.let { baseVersion ->

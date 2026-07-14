@@ -1103,6 +1103,13 @@ class PipelineVersionFacadeService @Autowired constructor(
         releaseVersion: Int,
         baseDraftVersion: Int?
     ): PipelineDraftStatusResult {
+        pipelineRepositoryService.getPipelineInfo(
+            projectId = projectId,
+            pipelineId = pipelineId
+        ) ?: throw ErrorCodeException(
+            statusCode = Response.Status.NOT_FOUND.statusCode,
+            errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS
+        )
         val versionResource = pipelineRepositoryService.getPipelineVersionRecord(
             projectId = projectId,
             pipelineId = pipelineId,
@@ -1123,17 +1130,9 @@ class PipelineVersionFacadeService @Autowired constructor(
             projectId = projectId,
             pipelineId = pipelineId
         )
-        val pipelineInfo = pipelineRepositoryService.getPipelineInfo(
+        val latestReleaseResource = pipelineRepositoryService.getReleaseVersionRecord(
             projectId = projectId,
             pipelineId = pipelineId
-        ) ?: throw ErrorCodeException(
-            statusCode = Response.Status.NOT_FOUND.statusCode,
-            errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS
-        )
-        val latestReleaseResource = pipelineRepositoryService.getPipelineResourceVersion(
-            projectId = projectId,
-            pipelineId = pipelineId,
-            version = pipelineInfo.version
         )
 
         return when (actionType) {
@@ -1302,6 +1301,7 @@ class PipelineVersionFacadeService @Autowired constructor(
         }
         // 检查当前待发布草稿的基线版本，是否与当前最新正式版本一致
         return if (latestReleaseResource != null &&
+            versionResource.baseVersion != null &&
             latestReleaseResource.version != versionResource.baseVersion
         ) {
             val draftBaseResource = versionResource.baseVersion?.let { baseVersion ->
