@@ -116,10 +116,8 @@ class ServiceRemoteDevRecordResourceImpl @Autowired constructor(
         switchType: FeatureSwitchType
     ): Result<Boolean> {
         permissionService.checkUserManager(userId, projectId)
-        val records = featureSwitchService.list(
+        val records = featureSwitchService.listProject(
             projectId = projectId,
-            userId = null,
-            workspaceName = null,
             featureType = switchType
         )
         if (!enable) {
@@ -128,13 +126,18 @@ class ServiceRemoteDevRecordResourceImpl @Autowired constructor(
             }
             return Result(true)
         }
-        if (records.isNotEmpty()) {
+        if (records.isEmpty()) {
+            featureSwitchService.create(
+                userId,
+                FeatureSwitch(projectId = projectId, featureType = switchType, enabled = true)
+            )
             return Result(true)
         }
-        featureSwitchService.create(
-            userId,
-            FeatureSwitch(projectId = projectId, featureType = switchType)
-        )
+        records.forEach { record ->
+            if (!record.enabled) {
+                featureSwitchService.update(operator = userId, id = record.id ?: return@forEach, enabled = true)
+            }
+        }
         return Result(true)
     }
 

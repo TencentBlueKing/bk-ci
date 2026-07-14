@@ -79,6 +79,17 @@ class FeatureSwitchService @Autowired constructor(
         )
     }
 
+    fun listProject(
+        projectId: String,
+        featureType: FeatureSwitchType
+    ): List<FeatureSwitch> {
+        return featureSwitchDao.listProject(
+            dslContext = dslContext,
+            projectId = projectId,
+            featureType = featureType
+        )
+    }
+
     fun isEnabled(
         projectId: String,
         userId: String,

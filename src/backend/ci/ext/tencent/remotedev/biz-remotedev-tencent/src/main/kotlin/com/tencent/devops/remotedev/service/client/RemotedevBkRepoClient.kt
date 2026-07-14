@@ -326,8 +326,12 @@ class RemotedevBkRepoClient @Autowired constructor(
         resolution: WorkspaceLiveResolution
     ): String {
         val config = bkRepoConfig.getRegionConfig(region, true)
+        var url = "${config.url}/media/api/user/stream/$projectId/$repoName/${resolution.value}/rtc"
+        if (config.proxyUrl.isNotBlank()) {
+            url = "${config.proxyUrl}${URLEncoder.encode(url, "UTF8")}"
+        }
         val request = Request.Builder()
-            .url("${config.url}/media/api/user/stream/$projectId/$repoName/${resolution.value}/rtc")
+            .url(url)
             .headers(getCommonHeaders(region, userId).toHeaders())
             .get()
             .build()
