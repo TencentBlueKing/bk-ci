@@ -102,8 +102,8 @@ class PublicVarGroupService @Autowired constructor(
     private val publicVarReferInfoDao: PublicVarReferInfoDao,
     private val publicVarGroupReleaseRecordService: PublicVarGroupReleaseRecordService,
     private val publicVarGroupPermissionService: PublicVarGroupPermissionService,
-    private val publicVarGroupVersionSummaryDao: PublicVarGroupVersionSummaryDao,
-    private val publicVarVersionSummaryDao: PublicVarVersionSummaryDao
+    private val publicVarVersionSummaryDao: PublicVarVersionSummaryDao,
+    private val publicVarGroupVersionSummaryDao: PublicVarGroupVersionSummaryDao
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(PublicVarGroupService::class.java)
@@ -175,6 +175,10 @@ class PublicVarGroupService @Autowired constructor(
         groupName: String,
         publicVarGroupDTO: PublicVarGroupDTO
     ): Boolean {
+        // 事务外预生成变量分布式 ID（远程调用），避免在 DB 事务持有连接期间发起 RPC
+        val varSegmentIds = publicVarService.batchGenerateVarSegmentIds(
+            publicVarGroupDTO.publicVarGroup.publicVars.size
+        )
         var isCreate = false
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
@@ -213,7 +217,8 @@ class PublicVarGroupService @Autowired constructor(
                     version = publicVarGroupPO.version,
                     versionDesc = publicVarGroupDTO.publicVarGroup.versionDesc ?: "",
                     publicVars = publicVarGroupDTO.publicVarGroup.publicVars
-                )
+                ),
+                preGeneratedIds = varSegmentIds
             )
         }
         return isCreate
@@ -243,7 +248,6 @@ class PublicVarGroupService @Autowired constructor(
                     val ctx = DSL.using(configuration)
                     publicVarGroupDao.deleteByGroupName(ctx, projectId, groupName)
                     publicVarDao.deleteByGroupName(ctx, projectId, groupName)
-                    publicVarGroupVersionSummaryDao.deleteByGroupName(ctx, projectId, groupName)
                     publicVarVersionSummaryDao.deleteByGroupName(ctx, projectId, groupName)
                 }
             } catch (compensationEx: Throwable) {
@@ -349,9 +353,9 @@ class PublicVarGroupService @Autowired constructor(
             emptyMap()
         }
 
-        // 批量查询当前有效引用数量
+        // 批量查询当前有效引用数量（读预聚合 summary，点查/小范围，避免明细表实时聚合的开销）
         val referCountMap = if (groupNameList.isNotEmpty()) {
-            publicVarGroupReferInfoDao.batchGetTotalReferCountByLatest(
+            publicVarGroupVersionSummaryDao.batchGetTotalReferCount(
                 dslContext = dslContext,
                 projectId = projectId,
                 groupNames = groupNameList
@@ -362,7 +366,7 @@ class PublicVarGroupService @Autowired constructor(
 
         // 批量查询当前有效动态版本的引用数量
         val dynamicVersionReferCountMap = if (groupNameList.isNotEmpty()) {
-            publicVarGroupReferInfoDao.batchGetDynamicVersionReferCountByLatest(
+            publicVarGroupVersionSummaryDao.batchGetDynamicVersionReferCount(
                 dslContext = dslContext,
                 projectId = projectId,
                 groupNames = groupNameList
@@ -373,7 +377,7 @@ class PublicVarGroupService @Autowired constructor(
 
         // 批量查询当前有效固定版本的引用数量
         val fixedVersionReferCountMap = if (groupNameList.isNotEmpty()) {
-            publicVarGroupReferInfoDao.batchGetFixedVersionReferCountByLatest(
+            publicVarGroupVersionSummaryDao.batchGetFixedVersionReferCount(
                 dslContext = dslContext,
                 projectId = projectId,
                 groupNames = groupNameList
@@ -483,7 +487,15 @@ class PublicVarGroupService @Autowired constructor(
             lockKey = "${ProcessMessageCode.PUBLIC_VAR_GROUP_DELETE_LOCK_KEY}_${projectId}_$groupName",
             expiredTimeInSeconds = ProcessMessageCode.PUBLIC_VAR_GROUP_LOCK_EXPIRED_TIME_IN_SECONDS
         )
+        // 与引用变更链路的 summary 重算串行化：防止"读到 referCount=0 → 并发保存刚加了引用 → 误删被引用的组"。
+        // 锁 key 必须与 PublicVarGroupReferManageService 的按组 summary 锁一致。
+        val groupSummaryLock = RedisLock(
+            redisOperation = redisOperation,
+            lockKey = "${ProcessMessageCode.PUBLIC_VAR_GROUP_REFER_LOCK_KEY_PREFIX}:summary:$projectId:$groupName",
+            expiredTimeInSeconds = ProcessMessageCode.PUBLIC_VAR_GROUP_LOCK_EXPIRED_TIME_IN_SECONDS
+        )
         redisLock.lock()
+        groupSummaryLock.lock()
         try {
             publicVarGroupDao.getRecordByGroupName(
                 dslContext = dslContext,
@@ -494,14 +506,29 @@ class PublicVarGroupService @Autowired constructor(
                 params = arrayOf(groupName)
             )
 
-            // 检查变量组是否被引用
-            val referCount = publicVarGroupReferInfoDao.getTotalReferCountByLatest(
+            // 检查变量组是否被引用（读预聚合 summary，与列表口径一致；summary 由引用变更事务内重算保证准确）
+            val referCount = publicVarGroupVersionSummaryDao.getTotalReferCount(
                 dslContext = dslContext,
                 projectId = projectId,
                 groupName = groupName
             )
 
             if (referCount > 0) {
+                throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.ERROR_PUBLIC_VAR_GROUP_REFERENCED,
+                    params = arrayOf(groupName)
+                )
+            }
+
+            // summary 仅统计生效版本（LATEST_FLAG=true），草稿版本的引用不计入。
+            // 若仅依赖 summary，草稿仍在引用该组却被删除，会导致草稿后续无法发布。
+            // 故再补充明细存在性判断：只要仍有任意版本（生效/历史/草稿）引用该组即阻止删除。
+            if (publicVarGroupReferInfoDao.existsAnyReferByGroupName(
+                    dslContext = dslContext,
+                    projectId = projectId,
+                    groupName = groupName
+                )
+            ) {
                 throw ErrorCodeException(
                     errorCode = ProcessMessageCode.ERROR_PUBLIC_VAR_GROUP_REFERENCED,
                     params = arrayOf(groupName)
@@ -520,14 +547,14 @@ class PublicVarGroupService @Autowired constructor(
                     groupName = groupName
                 )
                 publicVarDao.deleteByGroupName(dslContext = context, projectId = projectId, groupName = groupName)
-                // 删除变量组版本概要信息
-                publicVarGroupVersionSummaryDao.deleteByGroupName(
+                // 删除变量版本概要信息
+                publicVarVersionSummaryDao.deleteByGroupName(
                     dslContext = context,
                     projectId = projectId,
                     groupName = groupName
                 )
-                // 删除变量版本概要信息
-                publicVarVersionSummaryDao.deleteByGroupName(
+                // 删除变量组版本引用数概要（summary）
+                publicVarGroupVersionSummaryDao.deleteByGroupName(
                     dslContext = context,
                     projectId = projectId,
                     groupName = groupName
@@ -556,6 +583,7 @@ class PublicVarGroupService @Autowired constructor(
                 params = arrayOf(groupName)
             )
         } finally {
+            runCatching { groupSummaryLock.unlock() }
             redisLock.unlock()
         }
     }

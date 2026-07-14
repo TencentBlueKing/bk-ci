@@ -63,6 +63,7 @@ class PublicVarReferInfoService @Autowired constructor(
     private val publicVarGroupDao: PublicVarGroupDao,
     private val publicVarReferInfoDao: PublicVarReferInfoDao,
     private val publicVarReferWriteService: PublicVarReferWriteService,
+    private val publicVarGroupReferManageService: PublicVarGroupReferManageService,
     private val varRefDetailDao: VarRefDetailDao
 ) {
 
@@ -98,31 +99,52 @@ class PublicVarReferInfoService @Autowired constructor(
             expiredTimeInSeconds = RESOURCE_VAR_REFER_LOCK_TIMEOUT_SECONDS
         )
 
+        val referType = PublicVarGroupReferenceTypeEnum.valueOf(request.resourceType)
         try {
             redisLock.lock()
 
-            // 在同一个事务中完成引用关系处理 + 引用记录写入，保证原子性
-            // 注：referCount 已改为实时 JOIN 聚合，无需再维护 Summary.REFER_COUNT 缓存
-            dslContext.transaction { configuration ->
-                val transactionContext = DSL.using(configuration)
+            // 事务外预生成变量引用明细 ID（远程调用），避免在 DB 事务持有连接期间发起 RPC
+            assignVarRefDetailIds(request.varRefDetails)
 
-                // 1. 处理资源维度的引用关系
-                val referenceUpdateResult = doHandleResourceVarReferences(
-                    context = transactionContext,
-                    userId = request.userId,
-                    projectId = request.projectId,
-                    resourceId = request.resourceId,
-                    referType = PublicVarGroupReferenceTypeEnum.valueOf(request.resourceType),
-                    resourceVersion = request.resourceVersion,
-                    model = request.model,
-                    varRefDetails = request.varRefDetails
-                )
+            // 受影响的变量组 = 模型内引用的组 ∪ DB 中该资源版本已存在变量引用的组（覆盖被移除的组）。
+            // 变量级 summary 按组聚合，需对这些组加组级串行化锁（复用组级 summary 锁），
+            // 避免与并发的组级操作/其他 referId 的变量明细写入在同一组上发生 summary 读改写竞态。
+            val affectedGroups = computeVarSummaryAffectedGroups(request, referType)
 
-                // 2. 在同一事务中批量写入新增的引用记录
-                publicVarReferWriteService.batchAddReferInTransaction(
-                    context = transactionContext,
-                    referInfos = referenceUpdateResult.referRecordsToAdd
-                )
+            publicVarGroupReferManageService.executeWithGroupSummaryLocks(request.projectId, affectedGroups) {
+                // 在同一个事务中完成引用关系处理 + 引用记录写入 + 变量级 summary 重算，保证原子性与强一致
+                dslContext.transaction { configuration ->
+                    val transactionContext = DSL.using(configuration)
+
+                    // 1. 处理资源维度的引用关系
+                    val referenceUpdateResult = doHandleResourceVarReferences(
+                        context = transactionContext,
+                        userId = request.userId,
+                        projectId = request.projectId,
+                        resourceId = request.resourceId,
+                        referType = referType,
+                        resourceVersion = request.resourceVersion,
+                        model = request.model,
+                        varRefDetails = request.varRefDetails
+                    )
+
+                    // 2. 在同一事务中批量写入新增的引用记录
+                    publicVarReferWriteService.batchAddReferInTransaction(
+                        context = transactionContext,
+                        referInfos = referenceUpdateResult.referRecordsToAdd
+                    )
+
+                    // 3. 变量引用明细已在本事务内更新完毕，此处重算变量级 summary，保证与明细强一致。
+                    //    变量级概要依赖本表（异步写入），必须放在此事务内重算，不能放在组级保存事务内。
+                    if (affectedGroups.isNotEmpty()) {
+                        publicVarGroupReferManageService.refreshVarLevelSummary(
+                            context = transactionContext,
+                            projectId = request.projectId,
+                            userId = request.userId,
+                            groupNames = affectedGroups
+                        )
+                    }
+                }
             }
         } catch (e: Throwable) {
             logger.warn(
@@ -134,6 +156,26 @@ class PublicVarReferInfoService @Autowired constructor(
         } finally {
             redisLock.unlock()
         }
+    }
+
+    /**
+     * 计算需要重算变量级 summary、并加组级锁的受影响变量组集合。
+     * = 模型当前引用的变量组 ∪ DB 中该资源版本已存在变量引用的变量组（后者用于捕获本次被移除、需归零的组）。
+     * 在事务开启前查询，以便锁在事务外获取、事务提交后释放。
+     */
+    private fun computeVarSummaryAffectedGroups(
+        request: VarReferenceRequestWithLock,
+        referType: PublicVarGroupReferenceTypeEnum
+    ): Set<String> {
+        val modelGroups = request.model.publicVarGroups?.map { it.groupName }?.toSet() ?: emptySet()
+        val existingGroups = publicVarReferInfoDao.listVarGroupsByReferIdAndVersion(
+            dslContext = dslContext,
+            projectId = request.projectId,
+            referId = request.resourceId,
+            referType = referType,
+            referVersion = request.resourceVersion
+        ).map { it.groupName }.toSet()
+        return modelGroups + existingGroups
     }
 
     /**
@@ -164,18 +206,7 @@ class PublicVarReferInfoService @Autowired constructor(
         )
 
         if (varRefDetails.isNotEmpty()) {
-            // 批量生成分布式ID
-            val segmentIds = client.get(ServiceAllocIdResource::class)
-                .batchGenerateSegmentId("T_VAR_REF_DETAIL", varRefDetails.size).data
-            if (segmentIds.isNullOrEmpty() || segmentIds.size != varRefDetails.size) {
-                throw ErrorCodeException(
-                    errorCode = ERROR_INVALID_PARAM_,
-                    params = arrayOf("Failed to generate segment IDs for var ref detail")
-                )
-            }
-            varRefDetails.forEachIndexed { index, detail ->
-                detail.id = segmentIds[index] ?: 0
-            }
+            // ID 已在事务外通过 assignVarRefDetailIds 预生成并回填，这里只做持久化
             varRefDetailDao.batchSave(
                 dslContext = context,
                 varRefDetails = varRefDetails
@@ -441,8 +472,8 @@ class PublicVarReferInfoService @Autowired constructor(
     private fun calculateVarsToAdd(
         context: VarGroupProcessContext
     ): List<ResourcePublicVarReferPO> {
-        val referRecordsToAdd = mutableListOf<ResourcePublicVarReferPO>()
-
+        // 第一遍：计算所有变量组需要新增的变量（纯内存 diff，无远程调用）
+        val pendingAdds = mutableListOf<PendingVarRefer>()
         context.modelVarGroups.forEach { varGroup ->
             val groupKey = PublicGroupKey(varGroup.groupName, varGroup.version)
             val groupName = groupKey.groupName
@@ -455,41 +486,73 @@ class PublicVarReferInfoService @Autowired constructor(
                 groupName = groupName
             ) ?: return@forEach
 
-            // 收集需要新增的变量
-            if (diffResult.varsToAdd.isNotEmpty()) {
-                // 批量生成ID
-                val segmentIds = client.get(ServiceAllocIdResource::class)
-                    .batchGenerateSegmentId("T_RESOURCE_PUBLIC_VAR_REFER_INFO", diffResult.varsToAdd.size).data
-                if (segmentIds.isNullOrEmpty() || segmentIds.size != diffResult.varsToAdd.size) {
-                    throw ErrorCodeException(
-                        errorCode = ERROR_INVALID_PARAM_,
-                        params = arrayOf("Failed to generate segment IDs for var refer info")
-                    )
-                }
-
-                val currentTime = LocalDateTime.now()
-                val newRecords = diffResult.varsToAdd.mapIndexed { index, varName ->
-                    ResourcePublicVarReferPO(
-                        id = segmentIds[index] ?: 0,
-                        projectId = context.projectId,
-                        groupName = groupName,
-                        varName = varName,
-                        version = versionForDb,
-                        referId = context.resourceId,
-                        referType = context.referType,
-                        referVersion = context.resourceVersion,
-                        referVersionName = "v${context.resourceVersion}",
-                        creator = context.userId,
-                        modifier = context.userId,
-                        createTime = currentTime,
-                        updateTime = currentTime
-                    )
-                }
-                referRecordsToAdd.addAll(newRecords)
+            diffResult.varsToAdd.forEach { varName ->
+                pendingAdds.add(PendingVarRefer(groupName = groupName, versionForDb = versionForDb, varName = varName))
             }
         }
 
-        return referRecordsToAdd
+        if (pendingAdds.isEmpty()) {
+            return emptyList()
+        }
+
+        // 第二遍：一次性批量生成 ID（避免逐个变量组远程调用），再统一构建引用记录
+        val segmentIds = client.get(ServiceAllocIdResource::class)
+            .batchGenerateSegmentId("T_RESOURCE_PUBLIC_VAR_REFER_INFO", pendingAdds.size).data
+        if (segmentIds.isNullOrEmpty() || segmentIds.size != pendingAdds.size || segmentIds.any { it == null }) {
+            throw ErrorCodeException(
+                errorCode = ERROR_INVALID_PARAM_,
+                params = arrayOf("Failed to generate segment IDs for var refer info")
+            )
+        }
+
+        val currentTime = LocalDateTime.now()
+        return pendingAdds.mapIndexed { index, pending ->
+            ResourcePublicVarReferPO(
+                id = segmentIds[index]!!,
+                projectId = context.projectId,
+                groupName = pending.groupName,
+                varName = pending.varName,
+                version = pending.versionForDb,
+                referId = context.resourceId,
+                referType = context.referType,
+                referVersion = context.resourceVersion,
+                referVersionName = "v${context.resourceVersion}",
+                creator = context.userId,
+                modifier = context.userId,
+                createTime = currentTime,
+                updateTime = currentTime
+            )
+        }
+    }
+
+    /**
+     * 待新增的变量引用（取号前的中间结构，便于统一批量取号）
+     */
+    private data class PendingVarRefer(
+        val groupName: String,
+        val versionForDb: Int,
+        val varName: String
+    )
+
+    /**
+     * 事务外为变量引用明细批量生成并回填分布式 ID。
+     * 校验数量一致且无 null 元素，避免用 0 兜底导致主键冲突/覆盖。
+     */
+    private fun assignVarRefDetailIds(varRefDetails: List<VarRefDetail>) {
+        if (varRefDetails.isEmpty()) {
+            return
+        }
+        val segmentIds = client.get(ServiceAllocIdResource::class)
+            .batchGenerateSegmentId("T_VAR_REF_DETAIL", varRefDetails.size).data
+        if (segmentIds.isNullOrEmpty() || segmentIds.size != varRefDetails.size || segmentIds.any { it == null }) {
+            throw ErrorCodeException(
+                errorCode = ERROR_INVALID_PARAM_,
+                params = arrayOf("Failed to generate segment IDs for var ref detail")
+            )
+        }
+        varRefDetails.forEachIndexed { index, detail ->
+            detail.id = segmentIds[index]!!
+        }
     }
 
     /**

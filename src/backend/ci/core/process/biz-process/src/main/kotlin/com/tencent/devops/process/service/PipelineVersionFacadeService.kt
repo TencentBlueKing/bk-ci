@@ -45,6 +45,7 @@ import com.tencent.devops.common.pipeline.PipelineVersionWithModelRequest
 import com.tencent.devops.common.pipeline.dialect.PipelineDialectType
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.CodeTargetAction
+import com.tencent.devops.common.pipeline.enums.PublicVarGroupReferenceTypeEnum
 import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
 import com.tencent.devops.common.pipeline.pojo.TemplateInstanceCreateRequest
@@ -72,6 +73,7 @@ import com.tencent.devops.process.service.pipeline.version.PipelineVersionManage
 import com.tencent.devops.process.service.scm.ScmProxyService
 import com.tencent.devops.process.service.template.v2.PipelineTemplateRelatedService
 import com.tencent.devops.process.service.template.v2.PipelineTemplateResourceService
+import com.tencent.devops.process.service.var.PublicVarGroupReferManageService
 import com.tencent.devops.process.utils.PipelineVersionUtils
 import com.tencent.devops.process.yaml.PipelineYamlFacadeService
 import com.tencent.devops.process.yaml.transfer.PipelineTransferException
@@ -97,6 +99,7 @@ class PipelineVersionFacadeService @Autowired constructor(
     private val pipelinePermissionService: PipelinePermissionService,
     private val pipelineVersionManager: PipelineVersionManager,
     private val pipelineTemplateRelatedService: PipelineTemplateRelatedService,
+    private val publicVarGroupReferManageService: PublicVarGroupReferManageService,
 ) {
 
     companion object {
@@ -879,6 +882,16 @@ class PipelineVersionFacadeService @Autowired constructor(
             projectId = projectId,
             pipelineId = pipelineId,
             version = version
+        )
+        // 清理该版本（含草稿）的公共变量组引用明细：
+        // 删除保护会把草稿版本的引用也算进去（存在任意引用即禁止删组），
+        // 若删除版本时不清理其引用明细，会残留"幽灵引用"导致变量组永远无法删除。
+        publicVarGroupReferManageService.deletePublicGroupRefer(
+            userId = userId,
+            projectId = projectId,
+            referId = pipelineId,
+            referType = PublicVarGroupReferenceTypeEnum.PIPELINE,
+            referVersion = version
         )
         return pipelineRepositoryService.getPipelineInfo(projectId, pipelineId)?.pipelineName ?: pipelineId
     }
