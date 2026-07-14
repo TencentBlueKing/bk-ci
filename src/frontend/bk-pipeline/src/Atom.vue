@@ -328,8 +328,6 @@ const isQualityGateAtom = computed(() => {
   return isQualityGate(props.atom);
 });
 
-const SUB_PIPELINE_ACCESS_STATUSES = [STATUS_MAP.SUCCEED, STATUS_MAP.FAILED];
-
 const isSubPipelineAtom = computed(() => {
   return props.atom.atomCode === "SubPipelineExec";
 });
@@ -339,7 +337,6 @@ const showSubPipelineAccess = computed(() => {
     reactiveData.isExecDetail
     && !reactiveData.editable
     && isSubPipelineAtom.value
-    && SUB_PIPELINE_ACCESS_STATUSES.includes(props.atom.asyncStatus || props.atom.status)
   );
 });
 
