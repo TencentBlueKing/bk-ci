@@ -131,5 +131,4 @@ class PipelineArtifactInfoDao {
                 .fetch()
         }
     }
-
 }
