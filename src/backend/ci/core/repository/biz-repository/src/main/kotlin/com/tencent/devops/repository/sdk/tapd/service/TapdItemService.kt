@@ -31,9 +31,11 @@ import com.tencent.devops.repository.sdk.tapd.AutoRetryTapdClient
 import com.tencent.devops.repository.sdk.tapd.request.GetBugFieldRequest
 import com.tencent.devops.repository.sdk.tapd.request.GetBugRequest
 import com.tencent.devops.repository.sdk.tapd.request.GetStoryRequest
+import com.tencent.devops.repository.sdk.tapd.request.GetWorkspaceInfoRequest
 import com.tencent.devops.scm.pojo.tapd.TapdBug
 import com.tencent.devops.scm.pojo.tapd.TapdBugFieldConfig
 import com.tencent.devops.scm.pojo.tapd.TapdStory
+import com.tencent.devops.scm.pojo.tapd.TapdWorkspace
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -90,6 +92,22 @@ class TapdItemService @Autowired constructor(
             result.data
         } catch (ignored: Exception) {
             logger.warn("fail to query tapd bug field|workspaceId=$workspaceId", ignored)
+            null
+        }
+    }
+
+    override fun getWorkspaceInfo(workspaceId: String): TapdWorkspace? {
+        if (workspaceId.isBlank()) {
+            logger.warn("invalid tapd workspace query|workspaceId=$workspaceId")
+            return null
+        }
+        return try {
+            val result = autoRetryTapdClient.execute(
+                GetWorkspaceInfoRequest(workspaceId = workspaceId)
+            )
+            result.data?.workspace
+        } catch (ignored: Exception) {
+            logger.warn("fail to query tapd workspace|workspaceId=$workspaceId", ignored)
             null
         }
     }

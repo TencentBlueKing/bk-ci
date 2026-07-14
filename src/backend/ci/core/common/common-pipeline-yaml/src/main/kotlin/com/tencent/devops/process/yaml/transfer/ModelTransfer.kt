@@ -66,6 +66,7 @@ import com.tencent.devops.process.yaml.v3.models.Notices
 import com.tencent.devops.process.yaml.v3.models.PacNotices
 import com.tencent.devops.process.yaml.v3.models.PreExtends
 import com.tencent.devops.process.yaml.v3.models.PreTemplateScriptBuildYamlV3Parser
+import com.tencent.devops.process.yaml.v3.models.TriggerType
 import com.tencent.devops.process.yaml.v3.models.on.IPreTriggerOn
 import com.tencent.devops.process.yaml.v3.models.on.PreTriggerOn
 import com.tencent.devops.process.yaml.v3.models.on.PreTriggerOnV3
@@ -523,6 +524,9 @@ class ModelTransfer @Autowired constructor(
         val scmTrigger = elementTransfer.scmTriggers2Yaml(
             triggers, modelInput.setting.projectId, modelInput.aspectWrapper
         )
+        // TAPD 触发独立聚合，与代码库触发平级
+        val tapdTrigger = elementTransfer.tapdTriggers2Yaml(triggers, modelInput.aspectWrapper)
+            .map { it.toPre(modelInput.version) }
         when (modelInput.version) {
             YamlVersion.V2_0 -> {
                 // 融合默认git触发器 + 基础触发器
@@ -559,6 +563,10 @@ class ModelTransfer @Autowired constructor(
                         })
                     }
                 }
+                tapdTrigger.forEach { pre ->
+                    (pre as? PreTriggerOnV3)?.type = TriggerType.TAPD.alis
+                    triggerV3.add(pre)
+                }
                 if (baseTrigger != null) {
                     when (triggerV3.size) {
                         // 只带基础触发器
@@ -568,8 +576,7 @@ class ModelTransfer @Autowired constructor(
                             (triggerV3.first() as PreTriggerOnV3).copy(
                                 manual = baseTrigger.manual,
                                 schedules = baseTrigger.schedules,
-                                remote = baseTrigger.remote,
-                                tapd = baseTrigger.tapd
+                                remote = baseTrigger.remote
                             )
                         )
                         // 队列首插入基础触发器

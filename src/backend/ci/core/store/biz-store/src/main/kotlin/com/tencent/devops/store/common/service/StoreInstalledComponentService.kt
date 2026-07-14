@@ -27,34 +27,24 @@
 
 package com.tencent.devops.store.common.service
 
-import com.fasterxml.jackson.core.type.TypeReference
-import com.tencent.devops.common.api.util.JsonUtil
-import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
+import com.tencent.devops.common.api.pojo.Page
+import com.tencent.devops.store.pojo.common.InstalledComponentInfo
+import com.tencent.devops.store.pojo.common.InstalledComponentQueryReq
 
-@Service
-class AtomWhitelistConfigService @Autowired constructor(
-    private val businessConfigService: BusinessConfigService
-) {
-    private val logger = LoggerFactory.getLogger(AtomWhitelistConfigService::class.java)
+/**
+ * 组件安装记录通用查询服务。
+ *
+ * 以 T_STORE_PROJECT_REL 为数据源，按 projectCode + instanceIds 查询组件安装记录，
+ * 与storeType无关的公共字段在此统一组装，storeType个性化信息通过
+ * [StoreInstalledComponentExtHandler] 扩展点织入。
+ */
+interface StoreInstalledComponentService {
 
-    fun isAtomInWhitelist(atomCode: String, whitelistType: String): Boolean {
-        return try {
-            val configValue = businessConfigService.getConfigValue(
-                business = "ATOM",
-                feature = "ATOM_WHITELIST",
-                businessValue = whitelistType
-            )
-            val atomCodes = if (configValue != null) {
-                JsonUtil.to(configValue, object : TypeReference<List<String>>() {})
-            } else {
-                emptyList()
-            }
-            atomCodes.contains(atomCode)
-        } catch (ignored: Throwable) {
-            logger.warn("isAtomInWhitelist failed|atomCode=$atomCode|whitelistType=$whitelistType", ignored)
-            false
-        }
-    }
+    /**
+     * 根据项目和实例ID集合分页获取组件安装记录
+     */
+    fun getInstalledComponents(
+        userId: String,
+        queryReq: InstalledComponentQueryReq
+    ): Page<InstalledComponentInfo>
 }

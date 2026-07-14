@@ -95,6 +95,7 @@ import com.tencent.devops.process.engine.control.lock.PipelineBuildNumAliasLock
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.dao.PipelineBuildSummaryDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
+import com.tencent.devops.process.engine.dao.PipelineResourceDao
 import com.tencent.devops.process.engine.dao.PipelineResourceVersionDao
 import com.tencent.devops.process.engine.dao.PipelineTriggerReviewDao
 import com.tencent.devops.process.engine.pojo.AgentReuseMutexTree
@@ -188,6 +189,7 @@ class PipelineRuntimeService @Autowired constructor(
     private val pipelineTriggerReviewDao: PipelineTriggerReviewDao,
     private val pipelineBuildSummaryDao: PipelineBuildSummaryDao,
     private val pipelineResourceVersionDao: PipelineResourceVersionDao,
+    private val pipelineResourceDao: PipelineResourceDao,
     private val pipelineStageService: PipelineStageService,
     private val pipelineContainerService: PipelineContainerService,
     private val pipelineTaskService: PipelineTaskService,
@@ -639,9 +641,10 @@ class PipelineRuntimeService @Autowired constructor(
                     triggerEventInfo[triggerEventType] ?: ""
                 } else { // 基础触发
                     StartType.toReadableString(
-                        trigger,
-                        channelCode,
-                        I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                        type = trigger,
+                        channelCode = channelCode,
+                        language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
+                        webhookType = webhookType
                     )
                 },
                 buildNum = buildNum,
@@ -1130,6 +1133,38 @@ class PipelineRuntimeService @Autowired constructor(
                     )
                 }
             } else {
+                if (!context.debug) {
+                    // 更新版本引用标识（草稿版本会是最新的版本，不会被清理，故无需处理草稿版本）。
+                    // UPDATE 自身会对该版本行加写锁，天然与版本回收(deleteEarlyVersion)串行，无需额外悲观锁：
+                    // - 若命中 1 行，则本事务持有该行写锁直到提交，令并发的 deleteEarlyVersion 串行等待，
+                    //   待其重新判定 REFER_FLAG=true 后跳过该版本，保证本次构建正常执行；
+                    // - 若命中 0 行，说明该版本不在版本表中：既可能是被并发回收(本次要修复的竞态)，
+                    //   也可能是历史数据仅存于旧资源表(T_PIPELINE_RESOURCE)。此时与 getRecordModel 取模型的
+                    //   兜底逻辑保持一致——仅当旧资源表也取不到该版本的 model 时，才判定为“版本已被回收且不可渲染”，
+                    //   在写入任何构建记录之前抛异常回滚整个启动事务，杜绝产生无法渲染的“孤儿”构建；
+                    //   否则(历史数据)保持既有行为放行，避免影响历史逻辑。
+                    val affected = pipelineResourceVersionDao.updatePipelineVersionReferInfo(
+                        dslContext = transactionContext,
+                        projectId = context.projectId,
+                        pipelineId = context.pipelineId,
+                        versions = listOf(context.resourceVersion),
+                        referFlag = true
+                    )
+                    if (affected == 0) {
+                        val existInOldResource = pipelineResourceDao.getVersionModelString(
+                            dslContext = transactionContext,
+                            projectId = context.projectId,
+                            pipelineId = context.pipelineId,
+                            version = context.resourceVersion
+                        ) != null
+                        if (!existInOldResource) {
+                            throw ErrorCodeException(
+                                errorCode = ProcessMessageCode.ERROR_PIPELINE_VERSION_RECYCLED,
+                                params = arrayOf(context.resourceVersion.toString())
+                            )
+                        }
+                    }
+                }
                 context.watcher.start("updateBuildNum")
                 // 构建号递增
                 context.buildNum = pipelineBuildSummaryDao.updateBuildNum(
@@ -1143,16 +1178,6 @@ class PipelineRuntimeService @Autowired constructor(
                 context.watcher.stop()
                 // 创建构建记录
                 pipelineBuildDao.create(dslContext = transactionContext, startBuildContext = context)
-                if (!context.debug) {
-                    // 更新版本引用标识（草稿版本会是最新的版本，不会被清理，故无需处理草稿版本）
-                    pipelineResourceVersionDao.updatePipelineVersionReferInfo(
-                        dslContext = transactionContext,
-                        projectId = context.projectId,
-                        pipelineId = context.pipelineId,
-                        versions = listOf(context.resourceVersion),
-                        referFlag = true
-                    )
-                }
             }
 
             context.pipelineParamMap[PIPELINE_BUILD_NUM] = BuildParameters(

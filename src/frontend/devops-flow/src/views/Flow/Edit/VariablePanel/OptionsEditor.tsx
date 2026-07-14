@@ -35,7 +35,7 @@ export default defineComponent({
     },
   },
   emits: ['update:options', 'update:payload'],
-  setup(props, { emit }) {
+  setup(props, { emit, expose }) {
     const { t } = useI18n()
 
     // 本地状态
@@ -195,6 +195,24 @@ export default defineComponent({
         valueErrors.value = findInvalidItems('value', t('flow.variable.optionLabel'))
       })
     }
+
+    // 验证选项是否有效（无错误）
+    const validate = (): boolean => {
+      // 触发验证
+      keyErrors.value = findInvalidItems('key', t('flow.variable.optionId'))
+      valueErrors.value = findInvalidItems('value', t('flow.variable.optionLabel'))
+
+      // 检查是否有错误
+      const hasKeyErrors = Object.keys(keyErrors.value).length > 0
+      const hasValueErrors = Object.keys(valueErrors.value).length > 0
+
+      return !hasKeyErrors && !hasValueErrors
+    }
+
+    // 暴露方法给父组件
+    expose({
+      validate,
+    })
 
     // 找出校验有错误的选项
     const findInvalidItems = (key: 'key' | 'value', errPrefix: string): Record<number, string> => {

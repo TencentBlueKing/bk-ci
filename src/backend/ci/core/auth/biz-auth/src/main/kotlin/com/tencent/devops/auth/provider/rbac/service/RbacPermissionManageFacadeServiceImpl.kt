@@ -1912,7 +1912,9 @@ class RbacPermissionManageFacadeServiceImpl(
         removeMemberFromProjectReq: RemoveMemberFromProjectReq
     ): List<ResourceMemberInfo> {
         logger.info("remove member from project $userId|$projectCode|$removeMemberFromProjectReq")
-        return with(removeMemberFromProjectReq) {
+        with(removeMemberFromProjectReq) {
+            targetMember.fillNameIfAbsent()
+            handoverTo?.fillNameIfAbsent()
             val memberType = targetMember.type
             if (memberType == MemberType.USER.type && isNeedToHandover()) {
                 removeMemberFromProjectReq.checkHandoverTo()
@@ -1968,6 +1970,12 @@ class RbacPermissionManageFacadeServiceImpl(
                 }
             }
             return emptyList()
+        }
+    }
+
+    private fun ResourceMemberInfo.fillNameIfAbsent() {
+        if (name == null) {
+            name = deptService.getUserInfo(id)?.name
         }
     }
 

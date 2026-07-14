@@ -40,7 +40,6 @@ import com.tencent.devops.common.pipeline.event.PipelineCallbackEvent
 import com.tencent.devops.common.pipeline.event.ProjectPipelineCallBack
 import com.tencent.devops.common.pipeline.pojo.TemplateInstanceField
 import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
-import com.tencent.devops.common.pipeline.pojo.element.market.MarketEventAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.common.pipeline.pojo.time.BuildRecordTimeCost
 import com.tencent.devops.common.pipeline.pojo.transfer.Resources
@@ -302,20 +301,17 @@ data class Model(
                                     messageCode = CommonMessageCode.BK_BUILD_TRIGGER
                                 ),
                                 elements = listOf(
-                                    MarketEventAtomElement(
-                                        name = I18nUtil.getCodeLanMessage(
-                                            messageCode = CommonMessageCode.BK_MANUAL_TRIGGER
-                                        ),
+                                    ManualTriggerElement(
                                         id = "T-1-1-1",
-                                        atomCode = "CREATIVE_STREAM_MANUAL_TRIGGER",
-                                        version = "1.*",
-                                        data = mapOf(
-                                            "input" to mapOf(
-                                                "canElementSkip" to true,
-                                                "useLatestParameters" to true
-                                            )
-                                        )
-                                    )
+                                        name = I18nUtil.getCodeLanMessage(
+                                            messageCode = CommonMessageCode.BK_MANUAL_TRIGGER,
+                                            language = userId?.let { I18nUtil.getLanguage(userId) }
+                                        ),
+                                        canElementSkip = true,
+                                        useLatestParameters = true
+                                    ).apply {
+                                        additionalOptions = ElementAdditionalOptions(enable = true)
+                                    }
                                 )
                             )
                         )

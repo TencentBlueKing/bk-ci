@@ -13,6 +13,7 @@ export const ATOM_QUALITY_CHECK_EVENT_NAME = 'atom-quality-check'
 export const ATOM_REVIEW_EVENT_NAME = 'atom-review'
 export const ATOM_CONTINUE_EVENT_NAME = 'atom-continue'
 export const ATOM_EXEC_EVENT_NAME = 'atom-exec'
+export const SUB_PIPELINE_ACCESS_EVENT_NAME = 'sub-pipeline-access'
 
 export const ATOM_ADD_EVENT_NAME = 'add-atom'
 export const APPEND_JOB = 'append-job'

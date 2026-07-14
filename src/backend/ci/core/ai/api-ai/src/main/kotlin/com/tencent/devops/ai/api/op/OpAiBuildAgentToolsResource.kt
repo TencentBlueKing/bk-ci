@@ -86,6 +86,49 @@ interface OpAiBuildAgentToolsResource {
         @QueryParam("pipelineId") pipelineId: String
     ): Result<String>
 
+    @Operation(summary = "[Pipeline] getPipelineModel")
+    @POST
+    @Path("/pipeline/get-pipeline-model")
+    fun getPipelineModel(
+        @Parameter(description = "操作人用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @QueryParam("projectId") projectId: String,
+        @QueryParam("pipelineId") pipelineId: String,
+        @QueryParam("version") version: Int?
+    ): Result<String>
+
+    @Operation(summary = "[Pipeline] getPipelineModelSummary")
+    @POST
+    @Path("/pipeline/get-pipeline-model-summary")
+    fun getPipelineModelSummary(
+        @Parameter(description = "操作人用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @QueryParam("projectId") projectId: String,
+        @QueryParam("pipelineId") pipelineId: String,
+        @QueryParam("version") version: Int?,
+        @QueryParam("includeElements") includeElements: Boolean?
+    ): Result<String>
+
+    @Operation(summary = "[Pipeline] getPipelineNodeDetail")
+    @POST
+    @Path("/pipeline/get-pipeline-node-detail")
+    fun getPipelineNodeDetail(
+        @Parameter(description = "操作人用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @QueryParam("projectId") projectId: String,
+        @QueryParam("pipelineId") pipelineId: String,
+        @QueryParam("version") version: Int?,
+        @QueryParam("stageId") stageId: String?,
+        @QueryParam("containerHashId") containerHashId: String?,
+        @QueryParam("containerId") containerId: String?,
+        @QueryParam("jobId") jobId: String?,
+        @QueryParam("elementId") elementId: String?,
+        @QueryParam("stepId") stepId: String?
+    ): Result<String>
+
     // endregion
 
     // region Build operate
@@ -168,6 +211,18 @@ interface OpAiBuildAgentToolsResource {
         @QueryParam("buildId") buildId: String
     ): Result<String>
 
+    @Operation(summary = "[Build] analyzeBuildFailure")
+    @POST
+    @Path("/build/analyze-build-failure")
+    fun analyzeBuildFailure(
+        @Parameter(description = "操作人用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @QueryParam("projectId") projectId: String,
+        @QueryParam("pipelineId") pipelineId: String,
+        @QueryParam("buildId") buildId: String?
+    ): Result<String>
+
     @Operation(summary = "[Build] getBuildStatus")
     @POST
     @Path("/build/get-build-status")
@@ -206,6 +261,25 @@ interface OpAiBuildAgentToolsResource {
         @QueryParam("projectId") projectId: String,
         @QueryParam("pipelineId") pipelineId: String,
         @QueryParam("buildId") buildId: String,
+        @QueryParam("tag") tag: String?,
+        @QueryParam("stepId") stepId: String?,
+        @QueryParam("logType") logType: String?,
+        @QueryParam("jobId") jobId: String?,
+        @QueryParam("size") size: Int?
+    ): Result<String>
+
+    @Operation(summary = "[Log] getMiddleBuildLogs")
+    @POST
+    @Path("/log/get-middle-build-logs")
+    fun getMiddleBuildLogs(
+        @Parameter(description = "操作人用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @QueryParam("projectId") projectId: String,
+        @QueryParam("pipelineId") pipelineId: String,
+        @QueryParam("buildId") buildId: String,
+        @QueryParam("start") start: Long,
+        @QueryParam("end") end: Long,
         @QueryParam("tag") tag: String?,
         @QueryParam("stepId") stepId: String?,
         @QueryParam("logType") logType: String?,

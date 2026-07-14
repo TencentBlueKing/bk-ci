@@ -96,7 +96,10 @@ const routes = [
                 children: [{
                     path: ':tab',
                     name: 'pipelineImportEdit',
-                    component: pipelinesEdit
+                    component: pipelinesEdit,
+                    meta: {
+                        edit: true
+                    }
                 }]
             },
             {

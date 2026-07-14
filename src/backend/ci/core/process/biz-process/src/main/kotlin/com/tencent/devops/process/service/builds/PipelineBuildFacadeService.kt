@@ -72,7 +72,6 @@ import com.tencent.devops.common.pipeline.pojo.element.EmptyElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.ManualReviewUserTaskElement
 import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParam
 import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParamType
-import com.tencent.devops.common.pipeline.pojo.element.market.MarketEventAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.matrix.MatrixStatusElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.RemoteTriggerElement
@@ -176,7 +175,6 @@ import com.tencent.devops.process.utils.PIPELINE_START_TASK_ID
 import com.tencent.devops.process.utils.PipelineVarUtil.recommendVersionKey
 import com.tencent.devops.process.yaml.PipelineYamlFacadeService
 import com.tencent.devops.quality.api.v2.pojo.ControlPointPosition
-import com.tencent.devops.store.pojo.common.BK_STORE_CREATIVE_STREAM_MANUAL_TRIGGER
 import jakarta.ws.rs.core.Response
 import jakarta.ws.rs.core.UriBuilder
 import org.slf4j.LoggerFactory
@@ -293,34 +291,11 @@ class PipelineBuildFacadeService(
         var manualBuildMsg: String? = null
         run lit@{
             triggerContainer.elements.forEach {
-                val targetElement = it is ManualTriggerElement || if (channelCode == ChannelCode.CREATIVE_STREAM) {
-                    it is MarketEventAtomElement && it.atomCode == BK_STORE_CREATIVE_STREAM_MANUAL_TRIGGER
-                } else {
-                    false
-                }
-
-                if (targetElement && it.elementEnabled()) {
+                if (it is ManualTriggerElement && it.elementEnabled()) {
                     canManualStartup = true
-                    val (elementCanElementSkip, elementUseLatestParameters, buildMsg) = when (it) {
-                        is ManualTriggerElement ->
-                            Triple(
-                                it.canElementSkip ?: false,
-                                it.useLatestParameters ?: false,
-                                it.buildMsg
-                            )
-                        is MarketEventAtomElement -> {
-                            val input = it.data["input"] as Map<String, Any>? ?: emptyMap()
-                            Triple(
-                                input["canElementSkip"] as? Boolean ?: false,
-                                input["useLatestParameters"] as? Boolean ?: false,
-                                null
-                            )
-                        }
-                        else -> Triple(false, false, null)
-                    }
-                    canElementSkip = elementCanElementSkip
-                    useLatestParameters = elementUseLatestParameters
-                    manualBuildMsg = buildMsg
+                    canElementSkip = it.canElementSkip ?: false
+                    useLatestParameters = it.useLatestParameters ?: false
+                    manualBuildMsg = it.buildMsg
                     return@lit
                 }
             }
@@ -579,14 +554,7 @@ class PipelineBuildFacadeService(
                 var canManualStartup = false
                 run lit@{
                     triggerContainer.elements.forEach {
-                        val targetElement = it is ManualTriggerElement ||
-                                if (channelCode == ChannelCode.CREATIVE_STREAM) {
-                                    it is MarketEventAtomElement &&
-                                            it.atomCode == BK_STORE_CREATIVE_STREAM_MANUAL_TRIGGER
-                                } else {
-                                    false
-                                }
-                        if (targetElement && it.elementEnabled()) {
+                        if (it is ManualTriggerElement && it.elementEnabled()) {
                             canManualStartup = true
                             return@lit
                         }
@@ -2931,13 +2899,7 @@ class PipelineBuildFacadeService(
             }
 
             StartType.MANUAL, StartType.SERVICE -> {
-                triggerContainer.elements.find {
-                    if (buildInfo.channelCode == ChannelCode.CREATIVE_STREAM) {
-                        it is MarketEventAtomElement && it.atomCode == BK_STORE_CREATIVE_STREAM_MANUAL_TRIGGER
-                    } else {
-                        it is ManualTriggerElement
-                    }
-                }
+                triggerContainer.elements.find { it is ManualTriggerElement }
             }
 
             StartType.REMOTE -> {

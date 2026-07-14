@@ -76,6 +76,7 @@
     import AuthManage from './components/Auth/index.vue'
     import Settings from './components/Settings/index.vue'
     import emptyNode from '../empty_node'
+    import OperateLog from './components/OperateLog/index.vue'
 
     export default {
         name: 'EnvDetail',
@@ -87,7 +88,8 @@
             BuildTask,
             DeployTask,
             Settings,
-            emptyNode
+            emptyNode,
+            OperateLog
         },
         setup () {
             const { proxy } = useInstance()
@@ -128,7 +130,8 @@
                     buildTask: BuildTask,
                     deployTask: DeployTask,
                     settings: Settings,
-                    auth: AuthManage
+                    auth: AuthManage,
+                    operateLog: OperateLog
                 }
                 return comMap[tabActive.value]
             })
@@ -185,7 +188,11 @@
                 ...(projectScope.value !== 1 ? [{
                     name: 'auth',
                     label: proxy.$t('environment.authManage')
-                }] : [])
+                }] : []),
+                {
+                    name: 'operateLog',
+                    label: proxy.$t('environment.operateLog')
+                }
             ])
             
             // 获取可用的 tab 名称列表

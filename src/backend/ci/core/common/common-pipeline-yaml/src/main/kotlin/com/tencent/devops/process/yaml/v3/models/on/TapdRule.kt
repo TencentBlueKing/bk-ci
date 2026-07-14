@@ -33,17 +33,36 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.v3.oas.annotations.media.Schema
 
 /**
- * TAPD 触发器 YAML 规则
+ * TAPD 触发器 YAML 规则（对应一个 workspace 下的 story / bug 事件配置）。
+ *
+ * 与代码库触发一致，TAPD 触发在 YAML 中作为 `on:` 的一个顶层条目，通过 `type: tapd`
+ * 区分；`workspace-id`、`story`、`bug` 都平铺到 [PreTriggerOnV3] 顶层。
  *
  * 对应 YAML：
  * ```yaml
  * on:
- *   tapd:
- *     - tapd-project-id: "12345"
- *       event-type: story
- *       include-actions: [create, update]
- *       include-users: [user1]
- *       exclude-users: [user2]
+ *   type: tapd
+ *   workspace-id: "12345"
+ *   story:
+ *     id: trigger_1
+ *     action:
+ *       - create
+ *       - update
+ *   bug:
+ *     id: trigger_2
+ *     action:
+ *       - create
+ * ```
+ *
+ * 多 workspace：
+ * ```yaml
+ * on:
+ *   - type: tapd
+ *     workspace-id: "12345"
+ *     story: { action: [create, update] }
+ *   - type: tapd
+ *     workspace-id: "67890"
+ *     bug: { action: [create] }
  * ```
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -52,12 +71,6 @@ data class TapdRule(
     override val id: String? = null,
     override val name: String? = null,
     override val enable: Boolean? = true,
-    @get:Schema(title = "project-id")
-    @JsonProperty("project-id")
-    val tapdProjectId: String,
-    @get:Schema(title = "event-type")
-    @JsonProperty("event-type")
-    val eventType: String?,
     @get:Schema(title = "include-actions")
     @JsonProperty("action")
     val action: List<String>? = null,

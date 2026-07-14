@@ -108,59 +108,60 @@ export const actions = {
     },
 
     /**
-     * 根据ID获取评论
+     * 新增评论(通用)
      */
-    requestAtomModifyComment ({ commit }, data) {
-        return vue.$ajax.put(`${prefix}/user/market/atom/comment/comments/${data.id}`, data.postData)
+    requestAddComment ({ commit }, { storeType, id, code, postData }) {
+        const url = `${prefix}/user/store/comments/types/${storeType}/ids/${id}/codes/${code}/add`
+        return vue.$ajax.post(url, postData)
     },
-
     /**
-     * 根据ID获取评论
+     * 评论列表(通用)
      */
-    requestAtomUserComment ({ commit }, id) {
-        return vue.$ajax.get(`${prefix}/user/market/atom/comment/comments/${id}`)
+    requestComments ({ commit }, { storeType, code, page, pageSize }) {
+        const url = `${prefix}/user/store/comments/types/${storeType}/codes/${code}/list?page=${page}&pageSize=${pageSize}`
+        return vue.$ajax.get(url)
     },
-
     /**
-     * 评分详情
+     * 获取组件相应评论的回复列表 (通用)
      */
-    requestAtomScoreDetail ({ commit }, code) {
-        return vue.$ajax.get(`${prefix}/user/market/atom/comment/score/atomCodes/${code}`)
+    requestReplyList ({ commit }, { id: commentId }) {
+        const url = `${prefix}/user/store/comment/replies/comments/${commentId}/list`
+        return vue.$ajax.get(url)
     },
-
     /**
-     * 评论点赞
+     * 评论点赞 (通用)
      */
-    requestAtomPraiseComment ({ commit }, commentId) {
-        return vue.$ajax.put(`${prefix}/user/market/atom/comment/praise/${commentId}`)
+    requestPraiseComment ({ commit }, { id: commentId }) {
+        const url = `${prefix}/user/store/comments/${commentId}/praise`
+        return vue.$ajax.put(url)
     },
-
     /**
-     * 添加评论回复
+     * 组件评论回复 (通用)
      */
-    requestAtomReplyComment ({ commit }, { id, postData }) {
-        return vue.$ajax.post(`${prefix}/user/market/atom/comment/reply/comments/${id}/reply`, postData)
+    requestReplyComment ({ commit }, { id: commentId, postData }) {
+        const url = `${prefix}/user/store/comment/replies/comments/${commentId}/reply`
+        return vue.$ajax.post(url, postData)
     },
-
     /**
-     * 获取原子的评论回复列表
+     * 评分详情 (通用)
      */
-    requestAtomReplyList ({ commit }, commentId) {
-        return vue.$ajax.get(`${prefix}/user/market/atom/comment/reply/comments/${commentId}/replys`)
+    requestScoreDetail ({ commit }, { storeType, code }) {
+        const url = `${prefix}/user/store/comments/types/${storeType}/codes/${code}/score/get`
+        return vue.$ajax.get(url)
     },
-
     /**
-     * 流水线插件新增评论
+     * 更新组件评论 (通用)
      */
-    requestAddAtomComment ({ commit }, { id, code, postData }) {
-        return vue.$ajax.post(`${prefix}/user/market/atom/comment/atomIds/${id}/atomCodes/${code}/comment`, postData)
+    requestModifyComment ({ commit }, { id: commentId, postData }) {
+        const url = `${prefix}/user/store/comments/${commentId}/update`
+        return vue.$ajax.put(url, postData)
     },
-
     /**
-     * 流水线插件评论列表
+     * 获取组件评论接口 (通用)
      */
-    requestAtomComments ({ commit }, { code, page, pageSize }) {
-        return vue.$ajax.get(`${prefix}/user/market/atom/comment/atomCodes/${code}/comments?page=${page}&pageSize=${pageSize}`)
+    requestUserComment ({ commit }, { id: commentId }) {
+        const url = `${prefix}/user/store/comments/${commentId}/get`
+        return vue.$ajax.get(url)
     },
 
     /**

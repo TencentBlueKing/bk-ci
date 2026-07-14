@@ -83,21 +83,21 @@ class TapdTriggerElementVersionProcessor @Autowired constructor(
         }
         val input = triggerElement.data.input
         // 解析变量后的实际值（支持流水线变量替换）
-        val tapdProjectId = EnvUtils.parseEnv(input.tapdProjectId, variables)
+        val workspaceId = EnvUtils.parseEnv(input.workspaceId, variables)
         val eventType = input.eventType?.value ?: run {
             logger.warn("skip register tapd subscription|eventType is null|$projectId|$pipelineId|$taskId")
             return
         }
-        if (tapdProjectId.isBlank()) {
-            logger.warn("skip register tapd subscription|tapdProjectId is blank|$projectId|$pipelineId|$taskId")
+        if (workspaceId.isBlank()) {
+            logger.warn("skip register tapd subscription|workspaceId is blank|$projectId|$pipelineId|$taskId")
             return
         }
         val subscription = PipelineEventSubscription(
             projectId = projectId,
             pipelineId = pipelineId,
             taskId = taskId,
-            eventCode = eventType,
-            eventSource = tapdProjectId,
+            eventCode = TapdWebHookTriggerElement.classType,
+            eventSource = workspaceId,
             eventType = eventType,
             channelCode = context.pipelineBasicInfo.channelCode,
             triggerTarget = TriggerTargetEnum.PIPELINE
@@ -109,7 +109,7 @@ class TapdTriggerElementVersionProcessor @Autowired constructor(
         )
         logger.info(
             "register tapd subscription success|$projectId|$pipelineId|$taskId|" +
-                    "tapdProjectId=$tapdProjectId|eventType=$eventType"
+                    "workspaceId=$workspaceId|eventType=$eventType"
         )
     }
 }
