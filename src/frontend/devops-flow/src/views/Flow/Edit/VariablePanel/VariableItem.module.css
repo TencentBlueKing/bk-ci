@@ -15,16 +15,15 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
+.variableItem:hover .valueText {
+  width: 70%;
+  transition: all var(--transition-normal) ease;
+}
+
 .variableInfo {
   flex: 1;
   min-width: 0;
   padding: var(--spacing-sm);
-  &:hover {
-    .valueText {
-      width: 70%;
-      transition: all var(--transition-normal) ease;
-    }
-  }
 
   .variableHeader {
     display: flex;
@@ -37,7 +36,10 @@
     font-weight: 600;
     color: var(--color-text-primary);
     cursor: default;
-
+    max-width: 300px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
     &[data-has-desc] {
       border-bottom: 1px dashed #979BA5;
     }
@@ -127,11 +129,13 @@
   transition: opacity var(--transition-normal) ease;
   right: calc(var(--spacing-md) + var(--spacing-lg));
   bottom: var(--spacing-sm);
+  
   .actionItem {
     cursor: pointer;
     line-height: 1;
     &:hover {
       color: var(--color-primary);
+    
     }
     .dangerAction:hover {
       color: var(--color-danger);
