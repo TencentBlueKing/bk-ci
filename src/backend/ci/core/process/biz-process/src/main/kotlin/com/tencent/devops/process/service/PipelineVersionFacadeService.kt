@@ -1227,7 +1227,7 @@ class PipelineVersionFacadeService @Autowired constructor(
             // 前端展示的不是草稿版本进行保存，若后端已存在草稿，则提示已存在草稿
             return if (draftResource != null) {
                 PipelineDraftStatusResult(
-                    status = PipelineDraftStatus.EXISTS,
+                    status = PipelineDraftStatus.CONFLICT,
                     draft = PipelineVersionSimple(draftResource)
                 )
             } else {

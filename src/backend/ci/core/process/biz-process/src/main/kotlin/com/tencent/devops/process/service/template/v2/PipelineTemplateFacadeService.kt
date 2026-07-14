@@ -1721,16 +1721,6 @@ class PipelineTemplateFacadeService @Autowired constructor(
      * - [releaseVersion] 前端界面当前展示的正式版本号，必传，用于判断前端界面是否落后于最新正式版本。
      * - [baseDraftVersion] 草稿并发保存校验版本号，SAVE / RELEASE 时需要传入。
      *
-     * 处理流程：
-     *
-     * 1. 一次性查出所需版本信息
-     *    - versionResource       : version 对应的模板资源
-     *    - releaseResource       : releaseVersion 对应的模板资源（与 version 相同时复用，不重复查询）
-     *    - draftResource         : 当前模板的草稿资源
-     *    - latestReleaseResource : 模板最新的版本资源（取 templateInfo.releasedVersion 对应记录）
-     *
-     * 2. 按 actionType 分派到 [getPipelineTemplateDraftStatusWhenEdit] / [getPipelineTemplateDraftStatusWhenSave]
-     *    / [getPipelineTemplateDraftStatusWhenRelease] 各自处理，具体规则见对应方法的注释。
      */
     fun getPipelineTemplateDraftStatus(
         userId: String,
@@ -1858,10 +1848,10 @@ class PipelineTemplateFacadeService @Autowired constructor(
         baseDraftVersion: Int?
     ): PipelineTemplateDraftStatusResult {
         if (versionStatus != VersionStatus.COMMITTING) {
-            // 前端展示的不是草稿版本进行保存，若后端已存在草稿，则提示已存在草稿
+            // 前端展示的不是草稿版本进行保存，若后端已存在草稿，则提示草稿冲突
             return if (draftResource != null) {
                 PipelineTemplateDraftStatusResult(
-                    status = PipelineDraftStatus.EXISTS,
+                    status = PipelineDraftStatus.CONFLICT,
                     draft = PipelineTemplateVersionSimple(draftResource)
                 )
             } else {
