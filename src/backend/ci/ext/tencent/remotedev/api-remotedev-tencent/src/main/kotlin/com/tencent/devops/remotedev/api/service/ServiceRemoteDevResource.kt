@@ -494,8 +494,6 @@ interface ServiceRemoteDevResource {
         @Parameter(description = "工作空间名称", required = true)
         @QueryParam("workspaceName")
         workspaceName: String,
-        @QueryParam("projectId")
-        projectId: String?,
         @Parameter(description = "请求报文", required = true)
         rebuildReq: WorkspaceRebuildReq
     ): Result<Boolean>
@@ -507,8 +505,6 @@ interface ServiceRemoteDevResource {
         @Parameter(description = "用户", required = true)
         @QueryParam("userId")
         userId: String,
-        @QueryParam("projectId")
-        projectId: String?,
         @Parameter(description = "工作空间名称", required = true)
         @QueryParam("workspaceName")
         workspaceName: String
@@ -521,8 +517,6 @@ interface ServiceRemoteDevResource {
         @Parameter(description = "用户", required = true)
         @QueryParam("userId")
         userId: String,
-        @QueryParam("projectId")
-        projectId: String?,
         @Parameter(description = "工作空间名称", required = true)
         @QueryParam("workspaceName")
         workspaceName: String
@@ -538,8 +532,6 @@ interface ServiceRemoteDevResource {
         @Parameter(description = "工作空间名称", required = true)
         @QueryParam("workspaceName")
         workspaceName: String,
-        @QueryParam("projectId")
-        projectId: String?,
         @Parameter(description = "是否强制重启", required = false)
         @QueryParam("force")
         force: Boolean?
@@ -555,8 +547,6 @@ interface ServiceRemoteDevResource {
         @Parameter(description = "工作空间名称", required = true)
         @QueryParam("workspaceName")
         workspaceName: String,
-        @QueryParam("projectId")
-        projectId: String?,
         @Parameter(description = "请求报文", required = true)
         makeImageReq: MakeWorkspaceImageReq
     ): Result<Boolean>
@@ -675,8 +665,6 @@ interface ServiceRemoteDevResource {
         workspaceName: String,
         @QueryParam("size")
         size: String,
-        @QueryParam("projectId")
-        projectId: String?,
         @QueryParam("pvcId")
         pvcId: String?
     ): Result<ExpandDiskValidateResp?>
@@ -910,8 +898,6 @@ interface ServiceRemoteDevResource {
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @QueryParam("projectId")
-        projectId: String?,
         data: ListImagesData
     ): Result<ListImagesResp?>
 

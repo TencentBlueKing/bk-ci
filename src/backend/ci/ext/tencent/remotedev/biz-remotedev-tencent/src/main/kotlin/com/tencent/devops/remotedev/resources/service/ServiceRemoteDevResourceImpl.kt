@@ -591,12 +591,8 @@ class ServiceRemoteDevResourceImpl(
     override fun reBuildWorkspace(
         userId: String,
         workspaceName: String,
-        projectId: String?,
         rebuildReq: WorkspaceRebuildReq
     ): Result<Boolean> {
-        if (projectId != null) {
-            permissionService.checkUserManager(userId, projectId)
-        }
         rebuildWorkspaceHandler.rebuildWorkspace(
             userId = userId,
             workspaceName = workspaceName,
@@ -605,31 +601,17 @@ class ServiceRemoteDevResourceImpl(
         return Result(true)
     }
 
-    override fun startWorkspace(userId: String, projectId: String?, workspaceName: String): Result<Boolean> {
-        if (projectId != null) {
-            permissionService.checkUserManager(userId, projectId)
-        }
+    override fun startWorkspace(userId: String, workspaceName: String): Result<Boolean> {
         startWorkspaceHandler.startWorkspace(userId, workspaceName)
         return Result(true)
     }
 
-    override fun stopWorkspace(userId: String, projectId: String?, workspaceName: String): Result<Boolean> {
-        if (projectId != null) {
-            permissionService.checkUserManager(userId, projectId)
-        }
+    override fun stopWorkspace(userId: String, workspaceName: String): Result<Boolean> {
         stopWorkspaceHandler.stopWorkspace(userId, workspaceName)
         return Result(true)
     }
 
-    override fun restartWorkspace(
-        userId: String,
-        workspaceName: String,
-        projectId: String?,
-        force: Boolean?
-    ): Result<Boolean> {
-        if (projectId != null) {
-            permissionService.checkUserManager(userId, projectId)
-        }
+    override fun restartWorkspace(userId: String, workspaceName: String, force: Boolean?): Result<Boolean> {
         restartWorkspaceHandler.restartWorkspace(userId, workspaceName, force)
         return Result(true)
     }
@@ -637,12 +619,8 @@ class ServiceRemoteDevResourceImpl(
     override fun makeImageByVm(
         userId: String,
         workspaceName: String,
-        projectId: String?,
         makeImageReq: MakeWorkspaceImageReq
     ): Result<Boolean> {
-        if (projectId != null) {
-            permissionService.checkUserManager(userId, projectId)
-        }
         makeWorkspaceImageHandler.makeWorkspaceImage(
             userId = userId,
             workspaceName = workspaceName,
@@ -734,12 +712,8 @@ class ServiceRemoteDevResourceImpl(
         userId: String,
         workspaceName: String,
         size: String,
-        projectId: String?,
         pvcId: String?
     ): Result<ExpandDiskValidateResp?> {
-        if (projectId != null) {
-            permissionService.checkUserManager(userId, projectId)
-        }
         val data = expertSupportService.expandDisk(
             workspaceName = workspaceName,
             userId = userId,
@@ -915,10 +889,7 @@ class ServiceRemoteDevResourceImpl(
         )
     }
 
-    override fun fetchImages(userId: String, projectId: String?, data: ListImagesData): Result<ListImagesResp?> {
-        if (projectId != null) {
-            permissionService.checkUserManager(userId, projectId)
-        }
+    override fun fetchImages(userId: String, data: ListImagesData): Result<ListImagesResp?> {
         return Result(imageManageService.fetchImages(userId, data))
     }
 
@@ -1147,7 +1118,7 @@ class ServiceRemoteDevResourceImpl(
     ): Result<Page<String>> {
         logger.info(
             "batchQueryThumbnailWorkspaces |$userId|enable=$enable|page=$page" +
-                    "|pageSize=$pageSize|projectId=$projectId|workspaceNames.size=${workspaceNames?.size}"
+                "|pageSize=$pageSize|projectId=$projectId|workspaceNames.size=${workspaceNames?.size}"
         )
         return Result(
             workspaceRecordService.batchQueryThumbnailWorkspaces(
