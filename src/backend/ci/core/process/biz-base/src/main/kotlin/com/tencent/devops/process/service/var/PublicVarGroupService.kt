@@ -514,6 +514,10 @@ class PublicVarGroupService @Autowired constructor(
             )
 
             if (referCount > 0) {
+                logger.warn(
+                    "Delete group blocked by active refer summary: " +
+                        "projectId=$projectId, groupName=$groupName, referCount=$referCount"
+                )
                 throw ErrorCodeException(
                     errorCode = ProcessMessageCode.ERROR_PUBLIC_VAR_GROUP_REFERENCED,
                     params = arrayOf(groupName)
@@ -529,6 +533,10 @@ class PublicVarGroupService @Autowired constructor(
                     groupName = groupName
                 )
             ) {
+                logger.warn(
+                    "Delete group blocked by draft/historical refer detail: " +
+                        "projectId=$projectId, groupName=$groupName"
+                )
                 throw ErrorCodeException(
                     errorCode = ProcessMessageCode.ERROR_PUBLIC_VAR_GROUP_REFERENCED,
                     params = arrayOf(groupName)
@@ -572,9 +580,13 @@ class PublicVarGroupService @Autowired constructor(
             // 同步重试覆盖瞬时网络抖动；重试耗尽仍失败则日志告警，不阻断主流程。
             deleteIamResourceWithRetry(projectId, groupName)
 
+            logger.info("Deleted public var group: projectId=$projectId, groupName=$groupName, userId=$userId")
             return true
         } catch (e: ErrorCodeException) {
-            logger.warn("Failed to delete variable group $groupName", e)
+            // 引用拦截已在上方打了具体原因；此处仅对非引用类业务异常补日志，避免重复刷屏
+            if (e.errorCode != ProcessMessageCode.ERROR_PUBLIC_VAR_GROUP_REFERENCED) {
+                logger.warn("Failed to delete variable group $groupName", e)
+            }
             throw e
         } catch (t: Throwable) {
             logger.warn("Failed to delete variable group $groupName", t)
@@ -896,8 +908,6 @@ class PublicVarGroupService @Autowired constructor(
         referVersion: Int
     ): Result<List<PipelineRefPublicVarGroupDO>> {
         try {
-            logger.info("[$projectId|$referId] Get pipeline variables for type: $referType")
-
             // 查询流水线关联的变量组信息
             val referInfos = publicVarGroupReferInfoDao.listVarGroupReferInfoByReferId(
                 dslContext = dslContext,
@@ -949,8 +959,6 @@ class PublicVarGroupService @Autowired constructor(
 
     fun listProjectVarGroupInfo(userId: String, projectId: String): Result<List<PipelineRefPublicVarGroupDO>> {
         try {
-            logger.info("[$projectId] Get all public variable groups info")
-
             // 获取项目中所有的公共变量组
             val varGroups = publicVarGroupDao.listGroupsByProjectId(
                 dslContext = dslContext,

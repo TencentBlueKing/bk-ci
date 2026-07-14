@@ -80,12 +80,6 @@ class PublicVarReferInfoService @Autowired constructor(
      * @param request 变量引用请求DTO（带锁版本）
      */
     fun handleResourceVarReferencesWithLock(request: VarReferenceRequestWithLock) {
-        logger.info(
-            "Start handling resource var references with lock: " +
-                "resourceId=${request.resourceId}, resourceType=${request.resourceType}, " +
-                "resourceVersion=${request.resourceVersion}"
-        )
-
         // 使用资源级分布式锁，粒度：项目+资源类型+资源ID+版本
         // 锁粒度说明：
         // - 资源级别锁确保同一资源的引用操作串行化，避免并发修改导致的数据不一致
@@ -496,12 +490,18 @@ class PublicVarReferInfoService @Autowired constructor(
         }
 
         // 第二遍：一次性批量生成 ID（避免逐个变量组远程调用），再统一构建引用记录
+        val bizTag = "T_RESOURCE_PUBLIC_VAR_REFER_INFO"
         val segmentIds = client.get(ServiceAllocIdResource::class)
-            .batchGenerateSegmentId("T_RESOURCE_PUBLIC_VAR_REFER_INFO", pendingAdds.size).data
+            .batchGenerateSegmentId(bizTag, pendingAdds.size).data
         if (segmentIds.isNullOrEmpty() || segmentIds.size != pendingAdds.size || segmentIds.any { it == null }) {
+            logger.warn(
+                "Failed to generate segment IDs: bizTag=$bizTag, " +
+                    "requested=${pendingAdds.size}, got=${segmentIds?.size}, " +
+                    "hasNull=${segmentIds?.any { it == null }}"
+            )
             throw ErrorCodeException(
                 errorCode = ERROR_INVALID_PARAM_,
-                params = arrayOf("Failed to generate segment IDs for var refer info")
+                params = arrayOf("Failed to generate segment IDs for $bizTag")
             )
         }
 
@@ -542,12 +542,19 @@ class PublicVarReferInfoService @Autowired constructor(
         if (varRefDetails.isEmpty()) {
             return
         }
+        val bizTag = "T_VAR_REF_DETAIL"
         val segmentIds = client.get(ServiceAllocIdResource::class)
-            .batchGenerateSegmentId("T_VAR_REF_DETAIL", varRefDetails.size).data
+            .batchGenerateSegmentId(bizTag, varRefDetails.size).data
         if (segmentIds.isNullOrEmpty() || segmentIds.size != varRefDetails.size || segmentIds.any { it == null }) {
+            // ErrorCodeException.message 常为 null，必须在此打出 bizTag，否则只能看到 2100013
+            logger.warn(
+                "Failed to generate segment IDs: bizTag=$bizTag, " +
+                    "requested=${varRefDetails.size}, got=${segmentIds?.size}, " +
+                    "hasNull=${segmentIds?.any { it == null }}"
+            )
             throw ErrorCodeException(
                 errorCode = ERROR_INVALID_PARAM_,
-                params = arrayOf("Failed to generate segment IDs for var ref detail")
+                params = arrayOf("Failed to generate segment IDs for $bizTag")
             )
         }
         varRefDetails.forEachIndexed { index, detail ->

@@ -456,6 +456,12 @@ class PublicVarGroupReferManageService @Autowired constructor(
     ) {
         val model = publicVarGroupReferDTO.model
         val params = model.getTriggerParams()
+        logger.info(
+            "handleVarGroupReferBus: projectId=${publicVarGroupReferDTO.projectId}, " +
+                "referId=${publicVarGroupReferDTO.referId}, referType=${publicVarGroupReferDTO.referType}, " +
+                "referVersion=${publicVarGroupReferDTO.referVersion}, " +
+                "activeVersion=${publicVarGroupReferDTO.activeVersion}"
+        )
 
         // 兜底校验：未前置调 validateVarGroupReferences 的调用方走这里
         val needFallbackValidation = model.publicVarGroups == null
@@ -569,7 +575,6 @@ class PublicVarGroupReferManageService @Autowired constructor(
                     }
                 }
             }
-            logger.info("handleVarGroupReferBus completed")
         } finally {
             lock.unlock()
         }
@@ -662,19 +667,24 @@ class PublicVarGroupReferManageService @Autowired constructor(
         if (missingGroups.isEmpty()) {
             return emptyList()
         }
+        val bizTag = "T_RESOURCE_PUBLIC_VAR_GROUP_REFER_INFO"
         val segmentIds = client.get(ServiceAllocIdResource::class)
-            .batchGenerateSegmentId("T_RESOURCE_PUBLIC_VAR_GROUP_REFER_INFO", missingGroups.size).data
-            ?: throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ERROR_PUBLIC_VAR_GROUP_ADD_FAILED,
-                params = arrayOf("ID allocation service unavailable")
+            .batchGenerateSegmentId(bizTag, missingGroups.size).data
+        if (segmentIds.isNullOrEmpty() || segmentIds.size != missingGroups.size || segmentIds.any { it == null }) {
+            logger.warn(
+                "Failed to generate segment IDs: bizTag=$bizTag, " +
+                    "requested=${missingGroups.size}, got=${segmentIds?.size}, " +
+                    "hasNull=${segmentIds?.any { it == null }}"
             )
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_PUBLIC_VAR_GROUP_ADD_FAILED,
+                params = arrayOf("ID allocation failed for $bizTag")
+            )
+        }
         val now = LocalDateTime.now()
         return missingGroups.mapIndexed { index, ref ->
             ResourcePublicVarGroupReferPO(
-                id = segmentIds[index] ?: throw ErrorCodeException(
-                    errorCode = ProcessMessageCode.ERROR_PUBLIC_VAR_GROUP_ADD_FAILED,
-                    params = arrayOf("ID allocation service unavailable")
-                ),
+                id = segmentIds[index]!!,
                 projectId = publicVarGroupReferDTO.projectId,
                 groupName = ref.groupName,
                 version = ref.version ?: DYNAMIC_VERSION,
@@ -886,13 +896,18 @@ class PublicVarGroupReferManageService @Autowired constructor(
         newRows: List<Triple<String, Int, Int>>
     ) {
         if (newRows.isEmpty()) return
+        val bizTag = "T_RESOURCE_PUBLIC_VAR_GROUP_VERSION_SUMMARY"
         val ids = client.get(ServiceAllocIdResource::class)
-            .batchGenerateSegmentId("T_RESOURCE_PUBLIC_VAR_GROUP_VERSION_SUMMARY", newRows.size).data
-            ?: throw ErrorCodeException(errorCode = ERROR_PIPELINE_COMMON_VAR_GROUP_REFER_UPDATE_FAILED)
-        newRows.forEachIndexed { index, (groupName, version, count) ->
-            val id = ids[index] ?: throw ErrorCodeException(
-                errorCode = ERROR_PIPELINE_COMMON_VAR_GROUP_REFER_UPDATE_FAILED
+            .batchGenerateSegmentId(bizTag, newRows.size).data
+        if (ids.isNullOrEmpty() || ids.size != newRows.size || ids.any { it == null }) {
+            logger.warn(
+                "Failed to generate segment IDs: bizTag=$bizTag, " +
+                    "requested=${newRows.size}, got=${ids?.size}, hasNull=${ids?.any { it == null }}"
             )
+            throw ErrorCodeException(errorCode = ERROR_PIPELINE_COMMON_VAR_GROUP_REFER_UPDATE_FAILED)
+        }
+        newRows.forEachIndexed { index, (groupName, version, count) ->
+            val id = ids[index]!!
             publicVarGroupVersionSummaryDao.save(
                 dslContext = context,
                 po = PublicVarGroupVersionSummaryPO(
@@ -918,13 +933,18 @@ class PublicVarGroupReferManageService @Autowired constructor(
         newRows: List<VarSummaryRow>
     ) {
         if (newRows.isEmpty()) return
+        val bizTag = "T_RESOURCE_PUBLIC_VAR_VERSION_SUMMARY"
         val ids = client.get(ServiceAllocIdResource::class)
-            .batchGenerateSegmentId("T_RESOURCE_PUBLIC_VAR_VERSION_SUMMARY", newRows.size).data
-            ?: throw ErrorCodeException(errorCode = ERROR_PIPELINE_COMMON_VAR_GROUP_REFER_UPDATE_FAILED)
-        newRows.forEachIndexed { index, row ->
-            val id = ids[index] ?: throw ErrorCodeException(
-                errorCode = ERROR_PIPELINE_COMMON_VAR_GROUP_REFER_UPDATE_FAILED
+            .batchGenerateSegmentId(bizTag, newRows.size).data
+        if (ids.isNullOrEmpty() || ids.size != newRows.size || ids.any { it == null }) {
+            logger.warn(
+                "Failed to generate segment IDs: bizTag=$bizTag, " +
+                    "requested=${newRows.size}, got=${ids?.size}, hasNull=${ids?.any { it == null }}"
             )
+            throw ErrorCodeException(errorCode = ERROR_PIPELINE_COMMON_VAR_GROUP_REFER_UPDATE_FAILED)
+        }
+        newRows.forEachIndexed { index, row ->
+            val id = ids[index]!!
             publicVarVersionSummaryDao.save(
                 dslContext = context,
                 po = PublicVarVersionSummaryPO(
@@ -955,10 +975,6 @@ class PublicVarGroupReferManageService @Autowired constructor(
         model: Model
     ) {
         val params = model.getTriggerParams()
-        logger.info(
-            "handleCrossProjectVarGroup: projectId=$projectId, referId=$referId, " +
-            "referType=$referType, referVersion=$referVersion"
-        )
         if (params.isEmpty()) {
             return
         }
@@ -970,8 +986,6 @@ class PublicVarGroupReferManageService @Autowired constructor(
             referType = referType,
             referHasSource = true
         )
-
-        logger.info("Source project ID: $sourceProjectId")
 
         // 使用分布式锁保护操作
         val lock = createReferLock(
@@ -988,13 +1002,16 @@ class PublicVarGroupReferManageService @Autowired constructor(
             // 验证变量组在源项目中是否存在
             publicVarGroups?.let { validatePublicVarGroupsExist(sourceProjectId, it) }
 
-            // 展开跨项目变量组
+            // 展开跨项目变量组（跨项目不落引用记录）
             expandCrossProjectVarGroupsInternal(
                 params = params,
                 model = model,
                 sourceProjectId = sourceProjectId
             )
-            logger.info("Cross-project var groups expanded, skip saving reference records")
+            logger.info(
+                "Cross-project var groups expanded: projectId=$projectId, referId=$referId, " +
+                    "sourceProjectId=$sourceProjectId, groupCount=${publicVarGroups?.size ?: 0}"
+            )
         } finally {
             lock.unlock()
         }
@@ -1012,14 +1029,8 @@ class PublicVarGroupReferManageService @Autowired constructor(
         val publicVarGroups = model.publicVarGroups
 
         if (publicVarGroups.isNullOrEmpty()) {
-            logger.info("No public var groups to expand for cross-project scenario")
             return
         }
-
-        logger.info(
-            "Expanding cross-project var groups: sourceProjectId=$sourceProjectId, " +
-            "groupCount=${publicVarGroups.size}"
-        )
 
         // 预先收集所有需要处理的varGroupName集合，避免多次遍历params
         val groupNameSet = publicVarGroups.map { it.groupName }.toSet()
@@ -1061,11 +1072,6 @@ class PublicVarGroupReferManageService @Autowired constructor(
                 version = varGroupRecord.version
             )
 
-            logger.info(
-                "Expanding var group: groupName=$groupName, version=${varGroupRecord.version}, " +
-                "varCount=${groupVars.size}"
-            )
-
             // 将变量组的变量转换为BuildFormProperty并添加到待添加列表
             // 在添加前清除公共变量组引用信息，因为跨项目场景不保存引用记录
             groupVars.forEach { varPO ->
@@ -1089,11 +1095,6 @@ class PublicVarGroupReferManageService @Autowired constructor(
 
         // 清除model中的公共变量组信息
         model.publicVarGroups = null
-
-        logger.info(
-            "Cross-project var groups expanded: removed ${indicesToRemove.size} placeholders, " +
-            "added ${varsToAdd.size} vars"
-        )
     }
 
     /**
@@ -1113,12 +1114,6 @@ class PublicVarGroupReferManageService @Autowired constructor(
         publicVarGroupNames: List<String>,
         resourcePublicVarGroupReferPOS: List<ResourcePublicVarGroupReferPO> = emptyList()
     ) {
-        // 记录输入参数的关键信息
-        logger.info(
-            "updateReferenceCountsAfterSave - historicalReferInfos size: ${historicalReferInfos.size}, " +
-                    "publicVarGroupNames: $publicVarGroupNames, " +
-                    "resourcePublicVarGroupReferPOS size: ${resourcePublicVarGroupReferPOS.size}"
-        )
         if (publicVarGroupNames.isEmpty() &&
             resourcePublicVarGroupReferPOS.isEmpty() && historicalReferInfos.isEmpty()) {
             return
@@ -1358,8 +1353,9 @@ class PublicVarGroupReferManageService @Autowired constructor(
     ): List<ResourcePublicVarGroupReferPO> {
 
         val currentTime = LocalDateTime.now()
+        val bizTag = "T_RESOURCE_PUBLIC_VAR_GROUP_REFER_INFO"
         val segmentIds = client.get(ServiceAllocIdResource::class).batchGenerateSegmentId(
-            bizTag = "T_RESOURCE_PUBLIC_VAR_GROUP_REFER_INFO",
+            bizTag = bizTag,
             number = dynamicPublicVarWithPositions.size
         ).data
 
@@ -1367,6 +1363,11 @@ class PublicVarGroupReferManageService @Autowired constructor(
             segmentIds.size != dynamicPublicVarWithPositions.size ||
             segmentIds.any { it == null }
         ) {
+            logger.warn(
+                "Failed to generate segment IDs: bizTag=$bizTag, " +
+                    "requested=${dynamicPublicVarWithPositions.size}, got=${segmentIds?.size}, " +
+                    "hasNull=${segmentIds?.any { it == null }}"
+            )
             throw ErrorCodeException(
                 errorCode = CommonMessageCode.ERROR_REST_EXCEPTION_COMMON_TIP
             )
@@ -1458,7 +1459,6 @@ class PublicVarGroupReferManageService @Autowired constructor(
         val publicVarGroups = model.publicVarGroups
 
         if (publicVarGroups.isNullOrEmpty()) {
-            logger.info("No public var groups found, skip handling")
             return
         }
 
@@ -1497,7 +1497,6 @@ class PublicVarGroupReferManageService @Autowired constructor(
     ) {
         val publicVarGroups = model.publicVarGroups
         if (publicVarGroups.isNullOrEmpty()) {
-            logger.info("addPublicVarGroupsToParams: no public var groups found, skip handling")
             return
         }
 
@@ -1511,15 +1510,19 @@ class PublicVarGroupReferManageService @Autowired constructor(
         val groupsToAdd = publicVarGroups.filter { publicVarGroup ->
             !existingGroupNames.contains(publicVarGroup.groupName)
         }
-        if (groupsToAdd.isNotEmpty()) {
-            logger.info("addPublicVarGroupsToParams: adding groups $groupsToAdd for project $projectId by user $userId")
-            groupsToAdd.forEach { publicVarGroup ->
-                addVarGroupToParams(
-                    projectId = projectId,
-                    publicVarGroup = publicVarGroup,
-                    params = params
-                )
-            }
+        if (groupsToAdd.isEmpty()) {
+            return
+        }
+        logger.info(
+            "addPublicVarGroupsToParams: projectId=$projectId, userId=$userId, " +
+                "groups=${groupsToAdd.map { it.groupName }}"
+        )
+        groupsToAdd.forEach { publicVarGroup ->
+            addVarGroupToParams(
+                projectId = projectId,
+                publicVarGroup = publicVarGroup,
+                params = params
+            )
         }
     }
 
@@ -1534,7 +1537,6 @@ class PublicVarGroupReferManageService @Autowired constructor(
         val groupName = publicVarGroup.groupName
         val versionName = publicVarGroup.versionName
         val version = publicVarGroup.version
-        logger.info("addVarGroupToParams groupName: $groupName, versionName: $versionName, version: $version")
         // 使用当前项目ID查询变量组信息
         val varGroupRecord = publicVarGroupDao.getRecordByGroupName(
             dslContext = dslContext,
@@ -1554,7 +1556,6 @@ class PublicVarGroupReferManageService @Autowired constructor(
             groupName = groupName,
             version = varGroupRecord.version
         )
-        logger.info("addVarGroupToParams groupVars: $groupVars")
         // 将变量添加到params
         groupVars.forEach { varPO ->
             val buildFormProperty = JsonUtil.to(varPO.buildFormProperty, BuildFormProperty::class.java)
