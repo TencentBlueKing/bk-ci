@@ -2124,6 +2124,15 @@ class EnvService @Autowired constructor(
         }
     }
 
+    fun checkEnvPermission(
+        userId: String,
+        projectId: String,
+        envId: Long,
+        permission: AuthPermission
+    ): Boolean {
+        return environmentPermissionService.checkEnvPermission(userId, projectId, envId, permission)
+    }
+
     companion object {
         private val logger = LoggerFactory.getLogger(EnvService::class.java)
     }
