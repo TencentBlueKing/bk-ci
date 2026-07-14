@@ -10,6 +10,7 @@ import jakarta.ws.rs.Consumes
 import jakarta.ws.rs.GET
 import jakarta.ws.rs.Path
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
 import com.tencent.devops.dispatch.pojo.thirdpartyagent.AgentPipelineContainerBuild
 import com.tencent.devops.dispatch.pojo.thirdpartyagent.JobIdAndName
 import com.tencent.devops.dispatch.pojo.thirdpartyagent.PipelineIdAndName
@@ -62,6 +63,9 @@ interface UserAgentResource {
         @Parameter(description = "执行人", required = false)
         @QueryParam("creator")
         creator: String?,
+        @Parameter(description = "状态", required = false)
+        @QueryParam("taskStatus")
+        taskStatus: PipelineTaskStatus?
     ): Result<TPAPipelineBuildCountResp>
 
     @Operation(summary = "获取agent任务详情列表-查询条件pipelineName")

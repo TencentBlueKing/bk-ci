@@ -1027,7 +1027,8 @@ class ThirdPartyAgentService @Autowired constructor(
         endTime: Long?,
         pipelineId: String?,
         jobId: String?,
-        creator: String?
+        creator: String?,
+        status: PipelineTaskStatus?
     ): TPAPipelineBuildCountResp {
         if (agentId.isNullOrBlank() && envId == null) {
             return TPAPipelineBuildCountResp(0L, 0L, Page(0, 0, 0, emptyList()))
@@ -1050,7 +1051,8 @@ class ThirdPartyAgentService @Autowired constructor(
             endTime = endTime,
             pipelineId = pipelineId,
             jobId = jobId,
-            creator = creator
+            creator = creator,
+            status = status
         )
         return TPAPipelineBuildCountResp(
             pipelineCount, jobCount, Page(
@@ -1068,7 +1070,8 @@ class ThirdPartyAgentService @Autowired constructor(
                     endTime = endTime,
                     pipelineId = pipelineId,
                     jobId = jobId,
-                    creator = creator
+                    creator = creator,
+                    status = status
                 )
             )
         )
