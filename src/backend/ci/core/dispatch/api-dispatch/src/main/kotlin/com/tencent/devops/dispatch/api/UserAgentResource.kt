@@ -1,5 +1,8 @@
 ﻿package com.tencent.devops.dispatch.api
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE
+import com.tencent.devops.common.api.pojo.Page
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -7,9 +10,11 @@ import jakarta.ws.rs.Consumes
 import jakarta.ws.rs.GET
 import jakarta.ws.rs.Path
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.dispatch.pojo.thirdpartyagent.AgentPipelineContainerBuild
 import com.tencent.devops.dispatch.pojo.thirdpartyagent.JobIdAndName
 import com.tencent.devops.dispatch.pojo.thirdpartyagent.PipelineIdAndName
 import com.tencent.devops.dispatch.pojo.thirdpartyagent.TPAPipelineBuildCountResp
+import jakarta.ws.rs.HeaderParam
 import jakarta.ws.rs.Produces
 import jakarta.ws.rs.QueryParam
 import jakarta.ws.rs.core.MediaType
@@ -24,6 +29,9 @@ interface UserAgentResource {
     @GET
     @Path("/listAgentPipelineJobs")
     fun listAgentPipelineJobs(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
         @Parameter(description = "项目ID", required = true)
         @QueryParam("projectId")
         projectId: String,
@@ -60,6 +68,9 @@ interface UserAgentResource {
     @GET
     @Path("/listAgentPipelineJobs/searchByPipelineName")
     fun listAgentPipelineJobsByPipelineName(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
         @Parameter(description = "项目ID", required = true)
         @QueryParam("projectId")
         projectId: String,
@@ -78,6 +89,9 @@ interface UserAgentResource {
     @GET
     @Path("/listAgentPipelineJobs/searchByJobName")
     fun listAgentPipelineJobsByJobName(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
         @Parameter(description = "项目ID", required = true)
         @QueryParam("projectId")
         projectId: String,
@@ -96,6 +110,9 @@ interface UserAgentResource {
     @GET
     @Path("/listAgentPipelineJobs/searchByCreator")
     fun listAgentPipelineJobsByCreator(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
         @Parameter(description = "项目ID", required = true)
         @QueryParam("projectId")
         projectId: String,
@@ -109,4 +126,34 @@ interface UserAgentResource {
         @QueryParam("creator")
         creator: String?
     ): Result<List<String>>
+
+
+    @Operation(summary = "根据JobId，获取Agent构建记录")
+    @GET
+    @Path("/fetchAgentBuildsByJob")
+    fun fetchAgentBuildsByJob(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @QueryParam("projectId")
+        projectId: String,
+        @Parameter(description = "agent Hash ID", required = false)
+        @QueryParam("agentId")
+        agentId: String?,
+        @Parameter(description = "env Hash ID", required = false)
+        @QueryParam("envId")
+        envId: String?,
+        @Parameter(description = "筛选此pipelineId", required = false)
+        @QueryParam("pipelineId")
+        pipelineId: String,
+        @QueryParam("jobId")
+        jobId: String,
+        @Parameter(description = "第几页", required = false)
+        @QueryParam("page")
+        page: Int?,
+        @Parameter(description = "每页条数", required = false)
+        @QueryParam("pageSize")
+        pageSize: Int?
+    ): Result<Page<AgentPipelineContainerBuild>>
 }
