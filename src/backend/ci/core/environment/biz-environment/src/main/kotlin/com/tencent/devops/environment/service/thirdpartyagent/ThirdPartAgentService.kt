@@ -355,6 +355,11 @@ class ThirdPartAgentService @Autowired constructor(
         )
     }
 
+    fun checkAgentPermission(userId: String, projectId: String, agentId: Long, permission: AuthPermission): Boolean {
+        val nodeId = agentDao.getAgentByProject(dslContext, agentId, projectId)?.nodeId ?: return false
+        return environmentPermissionService.checkNodePermission(userId, projectId, nodeId, permission)
+    }
+
     companion object {
         private val logger = LoggerFactory.getLogger(ThirdPartAgentService::class.java)
     }
