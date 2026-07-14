@@ -82,6 +82,8 @@
 
 .deleteIcon {
   color: var(--color-text-tertiary);
+  position: relative;
+  top: 3px;
 }
 
 .deleteIconBtn {
