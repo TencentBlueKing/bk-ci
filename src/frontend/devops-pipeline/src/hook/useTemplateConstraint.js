@@ -16,7 +16,6 @@ export default function useTemplateConstraint () {
         labels: 'LABEL',
         notices: 'NOTICES',
         parallelSetting: 'CONCURRENCY',
-        failIfVariableInvalid: 'FAIL_IF_VARIABLE_INVALID',
         buildNo: 'BK_CI_BUILD_NO',
         buildCancelPolicy: 'BUILD_CANCEL_POLICY',
     }

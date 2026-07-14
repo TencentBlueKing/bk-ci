@@ -33,7 +33,27 @@
                     />
                 </span>
                 <span class="build-param-span">
-                    <template v-if="typeof param.value !== 'undefined'">
+                    <template v-if="param.isLongValue">
+                        <span
+                            :class="{
+                                'build-param-long-value-placeholder': true,
+                                'build-param-long-value-error': param.valueError
+                            }"
+                        >
+                            {{ param.valueLoaded ? $t('details.longParamValueLoaded') : $t('details.longParamValueHidden') }}
+                        </span>
+                        <bk-button
+                            text
+                            class="view-param-value-detail"
+                            size="small"
+                            :loading="param.valueLoading"
+                            :disabled="param.valueLoading"
+                            @click="showLongParamDetail(param, index)"
+                        >
+                            {{ param.valueLoaded ? $t("detail") : $t('details.loadParamValue') }}
+                        </bk-button>
+                    </template>
+                    <template v-else-if="typeof param.value !== 'undefined'">
                         <span
                             ref="valueSpan"
                             :class="{
@@ -79,6 +99,10 @@
 
 <script>
     import ParamSet from '@/components/ParamSet.vue'
+    import {
+        formatBuildParamsForDisplay,
+        mergeBuildParamValue
+    } from '@/utils/buildParamLongValue'
     import { allVersionKeyList } from '@/utils/pipelineConst'
     import { mapActions, mapGetters } from 'vuex'
     export default {
@@ -116,10 +140,47 @@
             this.init()
         },
         methods: {
-            ...mapActions('atom', ['requestBuildParams', 'fetchBuildParamsByBuildId']),
+            ...mapActions('atom', [
+                'requestBuildParams',
+                'fetchBuildParamsByBuildId',
+                'requestBuildVariableValues'
+            ]),
             showDetail (param) {
                 this.isDetailShow = true
                 this.activeParam = param
+            },
+            async showLongParamDetail (param, index) {
+                if (param.valueLoaded) {
+                    this.showDetail(param)
+                    return
+                }
+
+                const { projectId, pipelineId, buildNo: buildId } = this.$route.params
+                this.$set(this.params, index, {
+                    ...param,
+                    valueLoading: true,
+                    valueError: false
+                })
+                try {
+                    const values = await this.requestBuildVariableValues({
+                        projectId,
+                        pipelineId,
+                        buildId,
+                        variableNames: [param.key]
+                    })
+                    this.params = mergeBuildParamValue(this.params, param.key, values?.[param.key] ?? '')
+                    const activeParam = this.params.find(item => item.key === param.key)
+                    if (activeParam) {
+                        this.showDetail(activeParam)
+                    }
+                } catch (e) {
+                    this.$set(this.params, index, {
+                        ...this.params[index],
+                        valueLoading: false,
+                        valueError: true
+                    })
+                    console.error(e)
+                }
             },
             hideDetail () {
                 this.activeParam = null
@@ -151,10 +212,11 @@
                         acc[item.key] = item.defaultValue
                         return acc
                     }, {})
-                    this.params = res.map((item) => ({
+                    const params = res.map((item) => ({
                         ...item,
                         isDiff: this.isDefaultDiff(item)
                     }))
+                    this.params = formatBuildParamsForDisplay(params)
                     this.$nextTick(() => {
                         this.overflowSpan = this.isOverflow()
                     })
@@ -229,6 +291,14 @@
         .build-param-value-span {
             @include ellipsis();
             flex: 1;
+        }
+        .build-param-long-value-placeholder {
+            @include ellipsis();
+            flex: 1;
+            color: #979ba5;
+        }
+        .build-param-long-value-error {
+            color: #ea3636;
         }
         .view-param-value-detail {
           display: flex;

@@ -455,6 +455,18 @@ export default {
             rootCommit(commit, FETCH_ERROR, e)
         }
     },
+    requestBuildVariableValues: async ({ commit }, { projectId, pipelineId, buildId, variableNames }) => {
+        try {
+            const { data } = await request.post(
+                `/${PROCESS_API_URL_PREFIX}/user/builds/${projectId}/${pipelineId}/${buildId}/variables`,
+                variableNames
+            )
+            return data
+        } catch (e) {
+            rootCommit(commit, FETCH_ERROR, e)
+            throw e
+        }
+    },
     setPipeline: ({ commit }, payload = null) => {
         commit(SET_PIPELINE, payload)
     },
