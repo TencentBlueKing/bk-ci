@@ -267,7 +267,12 @@ export const EditHeader = defineComponent({
               />
             ),
             actions: () => (
-              <div class={styles.headerRight}>
+              <div
+                class={[
+                  styles.headerRight,
+                  !inImportEditMode.value && styles.headerRightWithPublish,
+                ]}
+              >
                 <Button onClick={handleCancel} disabled={isSaving.value}>
                   {t('flow.common.cancel')}
                 </Button>
@@ -285,8 +290,9 @@ export const EditHeader = defineComponent({
                   {t('flow.content.save')}
                 </Button>
                 {!inImportEditMode.value && (
-                  <Button
-                    theme="primary"
+                  <button
+                    type="button"
+                    class={styles.publishBtn}
                     onClick={handlePublish}
                     disabled={isSaving.value}
                     v-bk-tooltips={{
@@ -296,7 +302,7 @@ export const EditHeader = defineComponent({
                   >
                     <SvgIcon name="check-line" size={14} class={styles.publishIcon} />
                     {t('flow.content.publish')}
-                  </Button>
+                  </button>
                 )}
               </div>
             ),

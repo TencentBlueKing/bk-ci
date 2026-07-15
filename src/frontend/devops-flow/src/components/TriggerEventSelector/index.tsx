@@ -99,14 +99,27 @@ export default defineComponent({
       }
     }
 
-    // 加载全量事件，供搜索时统计各分类数量
+    // 按分类拉取全量事件并标记归属，供搜索时统计左侧数量
+    // 全量接口不带 ownerStoreCode，且与右侧列表数据源不一致，必须按分类拉取
     const loadMasterEventList = async () => {
       try {
-        const response = await triggerManager.fetchList({
-          page: 1,
-          pageSize: 100,
-        })
-        masterEventList.value = response.records || []
+        const types = triggerManager.typeList.value.filter(
+          (type) => !isAllClassify(type.ownerStoreCode),
+        )
+        const lists = await Promise.all(
+          types.map(async (type) => {
+            const response = await triggerManager.fetchList({
+              ownerStoreCode: type.ownerStoreCode,
+              page: 1,
+              pageSize: 100,
+            })
+            return (response.records || []).map((item) => ({
+              ...item,
+              ownerStoreCode: item.ownerStoreCode || type.ownerStoreCode,
+            }))
+          }),
+        )
+        masterEventList.value = lists.flat()
       } catch (error) {
         console.error('Failed to load master trigger events:', error)
         masterEventList.value = []
@@ -114,10 +127,12 @@ export default defineComponent({
     }
 
     // 初始化：加载分类列表和事件列表
-    onMounted(() => {
-      loadTypeList()
-      loadEventList()
-      loadMasterEventList()
+    onMounted(async () => {
+      await loadTypeList()
+      await Promise.all([
+        loadEventList(selectedClassify.value || undefined),
+        loadMasterEventList(),
+      ])
     })
 
     onUnmounted(() => {

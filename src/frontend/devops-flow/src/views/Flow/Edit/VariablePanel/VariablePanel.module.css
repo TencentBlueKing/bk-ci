@@ -56,7 +56,7 @@
 
 /* 按钮收起状态 */
 .buttonClosed {
-  background: #a3c5fd;
+  background: #699df4;
   left: -20px;
   border-radius: var(--border-radius-large) 0 0 var(--border-radius-large);
 }
@@ -261,7 +261,6 @@
 .draggableList {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-sm, 8px);
   min-height: 40px;
   padding: var(--sapcing-xs);
   border-radius: var(--sapcing-xs);

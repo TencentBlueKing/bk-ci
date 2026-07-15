@@ -36,7 +36,7 @@
     font-weight: 600;
     color: var(--color-text-primary);
     cursor: default;
-    max-width: 300px;
+    max-width: 320px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -61,6 +61,7 @@
     font-weight: 500;
     overflow: hidden;
     text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .variableDesc {
@@ -77,7 +78,7 @@
     display: flex;
     align-items: center;
     gap: 3px;
-   
+    min-width: 0;
   }
 
   .valueLabel {
@@ -88,6 +89,7 @@
   .valueText {
     color: var(--color-text-primary);
     font-weight: 500;
+    min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;

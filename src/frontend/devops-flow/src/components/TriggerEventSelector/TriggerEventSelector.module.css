@@ -53,7 +53,7 @@
 }
 
 .navName {
-  font-size: var(--font-size-sm);
+  font-size: var(--font-size-xs);
 }
 
 .navCount {
