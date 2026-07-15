@@ -40,7 +40,6 @@ import com.tencent.devops.process.engine.dao.template.TemplateDao
 import com.tencent.devops.process.engine.dao.template.TemplatePipelineDao
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import com.tencent.devops.project.pojo.Result
-import io.mockk.anyVararg
 import io.mockk.clearMocks
 import io.mockk.every
 import io.mockk.mockk
