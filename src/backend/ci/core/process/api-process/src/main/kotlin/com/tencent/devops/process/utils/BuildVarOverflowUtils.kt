@@ -79,4 +79,16 @@ object BuildVarOverflowUtils {
 
     /** 是否需要将真实值写入溢出表。 */
     fun shouldOverflow(rawValue: String): Boolean = rawValue.length > MAIN_TABLE_MAX_LENGTH
+
+    /**
+     * 从变量 Map 中收集大变量引用键（value 为 `__BK_OVF__:<len>`）。
+     * 供引擎 / Worker 在调用 [com.tencent.devops.common.pipeline.EnvReplacementParser] 前组装 overflowKeys。
+     */
+    fun collectOverflowKeys(variables: Map<String, String>): Set<String> {
+        if (variables.isEmpty()) return emptySet()
+        return variables.asSequence()
+            .filter { isOverflowReference(it.value) }
+            .map { it.key }
+            .toSet()
+    }
 }

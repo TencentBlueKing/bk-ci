@@ -48,9 +48,11 @@ import org.springframework.stereotype.Service
  * ## 方案（与 [BuildVarOverflowUtils] 引用协议一致）
  *  - **写入**（[persistAndStrip]）：value 长度 > 4K 的启动参数，full value 落
  *    [PipelineBuildHistoryParamOverflowDao]，JSON 里只留引用串 `__BK_OVF__:<len>`；
- *  - **读取**（[resolve]）：仅"单构建消费侧"（getBuildParameters / retry / replay）把引用解析回真实值，
- *    带**会话总字节预算**护栏，超预算保留引用串而非继续加载（防 OOM）；
- *  - 列表 / 历史接口**不调用** [resolve]，只看到引用串 → 天然 OOM 安全。
+ *  - **读取**：
+ *    - 启动参数 Tab（getBuildParameters）**不解析**，只返回引用串，避免高频接口批量加载大值；
+ *    - 单 key 按需接口（getBuildParameterValue）走 [resolveSingleValue]；
+ *    - retry / replay 走 [resolveForRestart]（必须完整真实值，带预算护栏）；
+ *  - 列表 / 历史接口**不调用** resolve，只看到引用串 → 天然 OOM 安全。
  *
  * ## 对历史逻辑零影响
  *  - 历史构建启动参数最大 4K，[persistAndStrip] 不会触发溢出、[resolve] 走"无引用"快路径直接原样返回；
@@ -102,9 +104,9 @@ class BuildStartupParamOverflowService @Autowired constructor(
     }
 
     /**
-     * 仅展示场景（getBuildParameters）使用：解析引用串，**严格不超过 [maxResolveBytes]**，
-     * 超过即停止加载、剩余保留引用串（优雅降级）。展示不喂给新构建，降级无副作用，
-     * 且通过预读引用串里编码的长度**提前判断、绝不加载会越界的值**，把高频接口的单次内存稳稳压住。
+     * 批量展示解析（带预算降级）。启动参数 Tab 已改为默认不解析；
+     * 仍保留给"需要尽量还原、但可降级"的单构建消费方（如参数组合回填）。
+     * **严格不超过 [maxResolveBytes]**，超过即停止加载、剩余保留引用串。
      */
     fun resolveForDisplay(
         dslContext: DSLContext,
@@ -116,11 +118,26 @@ class BuildStartupParamOverflowService @Autowired constructor(
         projectId = projectId,
         buildId = buildId,
         params = params,
-        // 展示侧固定用较小的运行期预算（默认 32M），与 startupTotalMax 解耦：
-        // 即便运营把 startupTotalMax 调到 100M，高频的 getBuildParameters 单次也最多加载 32M，超出显示引用串。
+        // 与 startupTotalMax 解耦：单次最多加载 lazyLoadBudgetMax（默认 32M），超出保留引用串。
         maxResolveBytes = pipelineVarOverflowConfig.lazyLoadBudgetMax,
         degradeOnExceed = true
     )
+
+    /**
+     * 单 key 按需解析真实值。非引用串原样返回；引用串则查溢出表，查不到时回退为引用串本身。
+     */
+    fun resolveSingleValue(
+        dslContext: DSLContext,
+        projectId: String,
+        buildId: String,
+        key: String,
+        storedValue: Any?
+    ): Any? {
+        if (storedValue !is String || !BuildVarOverflowUtils.isOverflowReference(storedValue)) {
+            return storedValue
+        }
+        return paramOverflowDao.getValue(dslContext, projectId, buildId, key) ?: storedValue
+    }
 
     /**
      * 重试 / 重放场景使用：必须拿到真实值，否则会把引用串当真实值喂给新构建。

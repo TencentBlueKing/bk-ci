@@ -31,6 +31,7 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.github.benmanes.caffeine.cache.Cache
 import com.github.benmanes.caffeine.cache.Caffeine
 import com.tencent.devops.common.api.constant.BUILD_QUEUE
+import com.tencent.devops.common.api.constant.HIDDEN_SYMBOL
 import com.tencent.devops.common.api.constant.SYSTEM
 import com.tencent.devops.common.api.enums.BuildReviewType
 import com.tencent.devops.common.api.exception.ErrorCodeException
@@ -144,6 +145,7 @@ import com.tencent.devops.process.pojo.pipeline.record.BuildRecordStage.Companio
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordTask
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordTask.Companion.addRecords
 import com.tencent.devops.process.service.BuildStartupParamOverflowService
+import com.tencent.devops.process.service.BuildVarExprOverflowHelper
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.StageTagService
 import com.tencent.devops.process.util.BuildMsgUtils
@@ -961,7 +963,21 @@ class PipelineRuntimeService @Autowired constructor(
                     }
 
                     // #10082 针对构建容器的第三方构建机组装复用互斥信息
-                    agentReuseMutexTree.addNode(container, index, context.variables)
+                    // 启动组装阶段 context.variables 通常仍是完整值（VAR 溢出写入在其后）；
+                    // 若已含引用串，则按需还原，保证 ${{ }} 复用 ID 可解析。
+                    val (overflowKeys, overflowLoader) = BuildVarExprOverflowHelper.options(
+                        buildVariableService = buildVariableService,
+                        projectId = context.projectId,
+                        buildId = context.buildId,
+                        variables = context.variables
+                    )
+                    agentReuseMutexTree.addNode(
+                        container = container,
+                        stageIndex = index,
+                        variables = context.variables,
+                        overflowKeys = overflowKeys,
+                        overflowLoader = overflowLoader
+                    )
                 }
 
                 modelCheckPlugin.checkJobCondition(container, stage.finally, context.variables)
@@ -2004,8 +2020,9 @@ class PipelineRuntimeService @Autowired constructor(
         projectId: String,
         buildId: String,
         queryDslContext: DSLContext? = null,
-        // 是否把大启动参数引用串解析回真实值。展示 / 重放等"需要真实值"的场景传 true（默认）；
-        // 仅需读取小型系统参数（如 BuildStartControl 刷新 BUILD_NO）的场景传 false，避免无谓加载大值。
+        // 是否把大启动参数引用串解析回真实值。
+        // 参数组合回填等"尽量还原"场景传 true（默认，走 resolveForDisplay 预算降级）；
+        // 启动参数 Tab / BuildStartControl 等传 false，只读引用串，避免无谓加载大值。
         resolveOverflow: Boolean = true
     ): List<BuildParameters> {
         return try {
@@ -2021,7 +2038,7 @@ class PipelineRuntimeService @Autowired constructor(
                 val params = (JsonUtil.getObjectMapper().readValue(buildParameters) as List<BuildParameters>)
                     .filter { !it.key.startsWith(ElementUtils.skipPrefix) }
                 if (resolveOverflow) {
-                    // 展示侧：单次解析上限固定（默认 32M）+ 越界降级为引用串，防高频并发把单次内存撑大
+                    // 单次解析上限固定（默认 32M）+ 越界降级为引用串
                     buildStartupParamOverflowService.resolveForDisplay(
                         dslContext = queryContext,
                         projectId = projectId,
@@ -2035,6 +2052,39 @@ class PipelineRuntimeService @Autowired constructor(
         } catch (ignore: Exception) {
             emptyList()
         }
+    }
+
+    /**
+     * 按 key 获取单条启动参数；大变量引用串从溢出表按需还原为真实值。
+     * @param storedParam 若调用方已持有引用态参数，可传入以避免重复读 BUILD_PARAMETERS
+     * @return 找不到该 key 时返回 null
+     */
+    fun getBuildParameterValue(
+        projectId: String,
+        buildId: String,
+        paramKey: String,
+        queryDslContext: DSLContext? = null,
+        storedParam: BuildParameters? = null
+    ): BuildParameters? {
+        val queryContext = queryDslContext ?: dslContext
+        val param = storedParam ?: getBuildParametersFromStartup(
+            projectId = projectId,
+            buildId = buildId,
+            queryDslContext = queryContext,
+            resolveOverflow = false
+        ).find { it.key == paramKey } ?: return null
+        // 敏感参数短路脱敏：不查溢出表，避免把机密大值加载进内存（与 getBuildParameters 展示脱敏保持一致）
+        if (param.sensitive == true) {
+            return param.copy(value = HIDDEN_SYMBOL, defaultValue = HIDDEN_SYMBOL)
+        }
+        val resolved = buildStartupParamOverflowService.resolveSingleValue(
+            dslContext = queryContext,
+            projectId = projectId,
+            buildId = buildId,
+            key = paramKey,
+            storedValue = param.value
+        )
+        return if (resolved === param.value) param else param.copy(value = resolved ?: param.value)
     }
 
     /**

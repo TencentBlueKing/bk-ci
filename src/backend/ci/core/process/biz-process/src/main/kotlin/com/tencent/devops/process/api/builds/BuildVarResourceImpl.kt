@@ -110,6 +110,27 @@ class BuildVarResourceImpl @Autowired constructor(
         return Result(finalValue)
     }
 
+    override fun getBuildVariableValue(
+        buildId: String,
+        projectId: String,
+        pipelineId: String,
+        varName: String
+    ): Result<String?> {
+        checkParam(buildId = buildId, projectId = projectId, pipelineId = pipelineId)
+        checkPermission(projectId = projectId, pipelineId = pipelineId)
+        if (StringUtils.isBlank(varName)) {
+            throw ParamBlankException("varName is null or blank")
+        }
+        // 小变量直接返回；大变量引用则按需从溢出表取真实值
+        val main = buildVariableService.getVariable(projectId, pipelineId, buildId, varName)
+        val value = if (BuildVarOverflowUtils.isOverflowReference(main)) {
+            buildVariableService.getVariableValue(projectId, buildId, varName) ?: main
+        } else {
+            main
+        }
+        return Result(value)
+    }
+
     fun checkPermission(projectId: String, pipelineId: String) {
         // pref:流水线相关的文件操作人调整为流水线的权限代持人 #11016
         val userId = pipelineRepositoryService.getPipelineOauthUser(projectId, pipelineId)?.takeIf { it.isNotBlank() }

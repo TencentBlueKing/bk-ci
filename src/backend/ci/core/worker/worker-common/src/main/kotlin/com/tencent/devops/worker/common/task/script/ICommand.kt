@@ -41,6 +41,7 @@ import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.expression.SpecialFunctions
 import com.tencent.devops.worker.common.service.CIKeywordsService
 import com.tencent.devops.worker.common.utils.CredentialUtils
+import com.tencent.devops.worker.common.utils.BuildVarOverflowExprSupport
 import com.tencent.devops.worker.common.utils.TemplateAcrossInfoUtil
 import java.io.File
 
@@ -85,6 +86,7 @@ interface ICommand {
         PipelineVarUtil.fillContextVarMap(contextMap)
         val dialect = PipelineDialectUtil.getPipelineDialect(variables[PIPELINE_DIALECT])
         return if (dialect.supportUseExpression()) {
+            val (overflowKeys, overflowLoader) = BuildVarOverflowExprSupport.resolveOverflowOptions(contextMap)
             EnvReplacementParser.parse(
                 value = command,
                 contextMap = contextMap,
@@ -94,10 +96,14 @@ interface ICommand {
                     extendNamedValueMap = listOf(
                         CredentialUtils.CredentialRuntimeNamedValue(targetProjectId = acrossTargetProjectId),
                         CIKeywordsService.CIKeywordsRuntimeNamedValue()
-                    )
+                    ),
+                    overflowKeys = overflowKeys,
+                    overflowLoader = overflowLoader
                 ),
                 functions = SpecialFunctions.functions,
-                output = SpecialFunctions.output
+                output = SpecialFunctions.output,
+                overflowKeys = overflowKeys,
+                overflowLoader = overflowLoader
             )
         } else {
             ReplacementUtils.replace(

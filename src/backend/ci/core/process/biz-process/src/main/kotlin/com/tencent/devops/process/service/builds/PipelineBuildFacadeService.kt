@@ -159,6 +159,7 @@ import com.tencent.devops.process.strategy.bus.impl.UserNormalPipelinePermission
 import com.tencent.devops.process.strategy.context.UserPipelinePermissionCheckContext
 import com.tencent.devops.process.strategy.factory.HistoryConditionQueryStrategyFactory
 import com.tencent.devops.process.strategy.factory.UserPipelinePermissionCheckStrategyFactory
+import com.tencent.devops.process.utils.BuildVarOverflowUtils
 import com.tencent.devops.process.strategy.pojo.HistoryConditionQueryRequest
 import com.tencent.devops.process.trigger.PipelineTriggerEventService
 import com.tencent.devops.process.util.TaskUtils
@@ -398,13 +399,87 @@ class PipelineBuildFacadeService(
             permission = AuthPermission.VIEW
         )
         val queryDslContext = CommonUtils.getJooqDslContext(archiveFlag, ARCHIVE_SHARDING_DSL_CONTEXT)
+        // 启动参数 Tab 为高频展示接口：大变量一律返回引用串，真实值走 getBuildParameterValue 按需加载
         return pipelineRuntimeService.getBuildParametersFromStartup(
-            projectId = projectId, buildId = buildId, queryDslContext = queryDslContext
+            projectId = projectId,
+            buildId = buildId,
+            queryDslContext = queryDslContext,
+            resolveOverflow = false
         ).onEach {
             if (it.sensitive == true) {
                 it.value = HIDDEN_SYMBOL
                 it.defaultValue = HIDDEN_SYMBOL
             }
+        }
+    }
+
+    /**
+     * 按变量名获取单条启动参数真实值（大变量从溢出表按需加载）。
+     * 供启动参数 Tab「查看完整值」使用；列表接口 [getBuildParameters] 不批量还原大值。
+     * 敏感参数直接返回脱敏值，不查溢出表。
+     */
+    fun getBuildParameterValue(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        paramKey: String,
+        archiveFlag: Boolean? = false
+    ): BuildParameters? {
+        val userPipelinePermissionCheckStrategy =
+            UserPipelinePermissionCheckStrategyFactory.createUserPipelinePermissionCheckStrategy(archiveFlag)
+        UserPipelinePermissionCheckContext(userPipelinePermissionCheckStrategy).checkUserPipelinePermission(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            permission = AuthPermission.VIEW
+        )
+        val queryDslContext = CommonUtils.getJooqDslContext(archiveFlag, ARCHIVE_SHARDING_DSL_CONTEXT)
+        // 先读引用态，敏感参数短路脱敏，避免把机密大值加载进内存
+        val stored = pipelineRuntimeService.getBuildParametersFromStartup(
+            projectId = projectId,
+            buildId = buildId,
+            queryDslContext = queryDslContext,
+            resolveOverflow = false
+        ).find { it.key == paramKey } ?: return null
+        if (stored.sensitive == true) {
+            stored.value = HIDDEN_SYMBOL
+            stored.defaultValue = HIDDEN_SYMBOL
+            return stored
+        }
+        return pipelineRuntimeService.getBuildParameterValue(
+            projectId = projectId,
+            buildId = buildId,
+            paramKey = paramKey,
+            queryDslContext = queryDslContext,
+            storedParam = stored
+        )
+    }
+
+    /**
+     * 按变量名获取构建运行期变量真实值（VAR 表大变量按需加载）。
+     * 供日志「查看完整值」等场景使用。
+     */
+    fun getBuildVariableValue(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        varName: String
+    ): String? {
+        UserPipelinePermissionCheckContext(
+            UserPipelinePermissionCheckStrategyFactory.createUserPipelinePermissionCheckStrategy(false)
+        ).checkUserPipelinePermission(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            permission = AuthPermission.VIEW
+        )
+        val main = buildVariableService.getVariable(projectId, pipelineId, buildId, varName)
+        return if (BuildVarOverflowUtils.isOverflowReference(main)) {
+            buildVariableService.getVariableValue(projectId, buildId, varName) ?: main
+        } else {
+            main
         }
     }
 

@@ -69,6 +69,8 @@ import com.tencent.devops.process.engine.service.record.ContainerBuildRecordServ
 import com.tencent.devops.process.pojo.TemplateAcrossInfoType
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordContainer
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordTask
+import com.tencent.devops.process.service.BuildVarExprOverflowHelper
+import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.PipelineBuildTemplateAcrossInfoService
 import com.tencent.devops.process.utils.NODE_OS
 import com.tencent.devops.process.utils.PIPELINE_DIALECT
@@ -104,7 +106,8 @@ class InitializeMatrixGroupStageCmd(
     private val modelTaskIdGenerator: ModelTaskIdGenerator,
     private val dispatchTypeParser: DispatchTypeParser,
     private val buildLogPrinter: BuildLogPrinter,
-    private val redisOperation: RedisOperation
+    private val redisOperation: RedisOperation,
+    private val buildVariableService: BuildVariableService
 ) : ContainerCmd {
 
     companion object {
@@ -202,6 +205,12 @@ class InitializeMatrixGroupStageCmd(
             "container(${parentContainer.containerId}) cannot be found in model"
         )
         val dialect = PipelineDialectUtil.getPipelineDialect(variables[PIPELINE_DIALECT])
+        val (overflowKeys, overflowLoader) = BuildVarExprOverflowHelper.options(
+            buildVariableService = buildVariableService,
+            projectId = parentContainer.projectId,
+            buildId = parentContainer.buildId,
+            variables = variables
+        )
         // #4518 待生成的分裂后container表和task表记录
         val buildContainerList = mutableListOf<PipelineBuildContainer>()
         val buildTaskList = mutableListOf<PipelineBuildTask>()
@@ -243,7 +252,12 @@ class InitializeMatrixGroupStageCmd(
                     dependOnContainerId2JobIds = null
                 )
                 matrixOption = checkAndFetchOption(modelContainer.matrixControlOption)
-                matrixConfig = matrixOption.convertMatrixConfig(variables)
+                matrixConfig = matrixOption.convertMatrixConfig(
+                    buildContext = variables,
+                    onlyExpression = dialect.supportUseExpression(),
+                    overflowKeys = overflowKeys,
+                    overflowLoader = overflowLoader
+                )
                 contextCaseList = matrixConfig.getAllCombinations()
                 variables[NODE_OS]
                     ?.takeIf { it.isNotBlank() && modelContainer.baseOS != null }
@@ -263,9 +277,15 @@ class InitializeMatrixGroupStageCmd(
                     modelContainer.customEnv?.forEach {
                         if (!it.key.isNullOrBlank()) customBuildEnv[it.key!!] = it.value ?: ""
                     }
-                    val allContext = customBuildEnv.plus(contextCase)
+                    // 求值用：流水线变量 + customEnv + matrix；落库 customEnv 仍只用后两者，避免把全量变量写入 Job env
+                    val matrixOnlyContext = customBuildEnv.plus(contextCase)
+                    val parseContext = variables + matrixOnlyContext
                     val contextPair = if (dialect.supportUseExpression()) {
-                        EnvReplacementParser.getCustomExecutionContextByMap(allContext)
+                        EnvReplacementParser.getCustomExecutionContextByMap(
+                            variables = parseContext,
+                            overflowKeys = overflowKeys,
+                            overflowLoader = overflowLoader
+                        )
                     } else null
                     // 对自定义构建环境的做特殊解析
                     // customDispatchType决定customBaseOS是否计算，请勿填充默认值
@@ -275,7 +295,7 @@ class InitializeMatrixGroupStageCmd(
                             pipelineId = parentContainer.pipelineId,
                             buildId = parentContainer.buildId,
                             customInfo = self,
-                            context = allContext
+                            context = parseContext
                         )
                     }
                     val customDispatchType = parsedInfo?.dispatchType
@@ -285,15 +305,19 @@ class InitializeMatrixGroupStageCmd(
                         self.copy(
                             mutexGroupName = EnvReplacementParser.parse(
                                 value = self.mutexGroupName,
-                                contextMap = allContext,
+                                contextMap = parseContext,
                                 onlyExpression = dialect.supportUseExpression(),
-                                contextPair = contextPair
+                                contextPair = contextPair,
+                                overflowKeys = overflowKeys,
+                                overflowLoader = overflowLoader
                             ),
                             linkTip = EnvReplacementParser.parse(
                                 value = self.linkTip,
-                                contextMap = allContext,
+                                contextMap = parseContext,
                                 onlyExpression = dialect.supportUseExpression(),
-                                contextPair = contextPair
+                                contextPair = contextPair,
+                                overflowKeys = overflowKeys,
+                                overflowLoader = overflowLoader
                             )
                         )
                     }
@@ -308,9 +332,11 @@ class InitializeMatrixGroupStageCmd(
                     val newContainer = VMBuildContainer(
                         name = EnvReplacementParser.parse(
                             value = modelContainer.name,
-                            contextMap = allContext,
+                            contextMap = parseContext,
                             onlyExpression = dialect.supportUseExpression(),
-                            contextPair = contextPair
+                            contextPair = contextPair,
+                            overflowKeys = overflowKeys,
+                            overflowLoader = overflowLoader
                         ),
                         id = newSeq.toString(),
                         containerId = newSeq.toString(),
@@ -325,38 +351,44 @@ class InitializeMatrixGroupStageCmd(
                         mutexGroup = mutexGroup,
                         executeCount = context.executeCount,
                         containPostTaskFlag = modelContainer.containPostTaskFlag,
-                        customEnv = allContext.map { NameAndValue(it.key, it.value) },
+                        customEnv = matrixOnlyContext.map { NameAndValue(it.key, it.value) },
                         baseOS = customBaseOS ?: modelContainer.baseOS,
                         vmNames = modelContainer.vmNames,
                         dockerBuildVersion = modelContainer.dockerBuildVersion,
                         dispatchType = customDispatchType
                             ?: modelContainer.dispatchType?.deepCopy<DispatchType>()?.let { itd ->
-                                itd.replaceVariable(allContext) // 只处理${{matrix.xxx}}, 其余在DispatchVMStartupTaskAtom处理
+                                itd.replaceVariable(parseContext) // 只处理${{matrix.xxx}}, 其余在DispatchVMStartupTaskAtom处理
                                 itd
                             },
                         buildEnv = buildEnv ?: modelContainer.buildEnv,
                         thirdPartyAgentId = modelContainer.thirdPartyAgentId?.let { self ->
                             EnvReplacementParser.parse(
                                 value = self,
-                                contextMap = allContext,
+                                contextMap = parseContext,
                                 onlyExpression = dialect.supportUseExpression(),
-                                contextPair = contextPair
+                                contextPair = contextPair,
+                                overflowKeys = overflowKeys,
+                                overflowLoader = overflowLoader
                             )
                         },
                         thirdPartyAgentEnvId = modelContainer.thirdPartyAgentEnvId?.let { self ->
                             EnvReplacementParser.parse(
                                 value = self,
-                                contextMap = allContext,
+                                contextMap = parseContext,
                                 onlyExpression = dialect.supportUseExpression(),
-                                contextPair = contextPair
+                                contextPair = contextPair,
+                                overflowKeys = overflowKeys,
+                                overflowLoader = overflowLoader
                             )
                         },
                         thirdPartyWorkspace = modelContainer.thirdPartyWorkspace?.let { self ->
                             EnvReplacementParser.parse(
                                 value = self,
-                                contextMap = allContext,
+                                contextMap = parseContext,
                                 onlyExpression = dialect.supportUseExpression(),
-                                contextPair = contextPair
+                                contextPair = contextPair,
+                                overflowKeys = overflowKeys,
+                                overflowLoader = overflowLoader
                             )
                         }
                     )
@@ -437,7 +469,12 @@ class InitializeMatrixGroupStageCmd(
                     dependOnContainerId2JobIds = null
                 )
                 matrixOption = checkAndFetchOption(modelContainer.matrixControlOption)
-                matrixConfig = matrixOption.convertMatrixConfig(variables)
+                matrixConfig = matrixOption.convertMatrixConfig(
+                    buildContext = variables,
+                    onlyExpression = dialect.supportUseExpression(),
+                    overflowKeys = overflowKeys,
+                    overflowLoader = overflowLoader
+                )
                 contextCaseList = matrixConfig.getAllCombinations()
 
                 contextCaseList.forEach { contextCase ->
@@ -451,29 +488,40 @@ class InitializeMatrixGroupStageCmd(
                     val statusElements = generateMatrixElements(
                         modelContainer.elements, context.executeCount, postParentIdMap, matrixTaskIds
                     )
-                    val replacement = EnvReplacementParser.getCustomExecutionContextByMap(contextCase)
+                    val parseContext = variables + contextCase
+                    val replacement = EnvReplacementParser.getCustomExecutionContextByMap(
+                        variables = parseContext,
+                        overflowKeys = overflowKeys,
+                        overflowLoader = overflowLoader
+                    )
                     val mutexGroup = modelContainer.mutexGroup?.let { self ->
                         self.copy(
                             mutexGroupName = EnvReplacementParser.parse(
                                 value = self.mutexGroupName,
-                                contextMap = contextCase,
+                                contextMap = parseContext,
                                 onlyExpression = dialect.supportUseExpression(),
-                                contextPair = replacement
+                                contextPair = replacement,
+                                overflowKeys = overflowKeys,
+                                overflowLoader = overflowLoader
                             ),
                             linkTip = EnvReplacementParser.parse(
                                 value = self.linkTip,
-                                contextMap = contextCase,
+                                contextMap = parseContext,
                                 onlyExpression = dialect.supportUseExpression(),
-                                contextPair = replacement
+                                contextPair = replacement,
+                                overflowKeys = overflowKeys,
+                                overflowLoader = overflowLoader
                             )
                         )
                     }
                     val newContainer = NormalContainer(
                         name = EnvReplacementParser.parse(
                             value = modelContainer.name,
-                            contextMap = contextCase,
+                            contextMap = parseContext,
                             onlyExpression = dialect.supportUseExpression(),
-                            contextPair = replacement
+                            contextPair = replacement,
+                            overflowKeys = overflowKeys,
+                            overflowLoader = overflowLoader
                         ),
                         id = newSeq.toString(),
                         containerId = newSeq.toString(),

@@ -36,7 +36,9 @@ import com.tencent.devops.process.engine.control.command.CmdFlowState
 import com.tencent.devops.process.engine.control.command.stage.StageCmd
 import com.tencent.devops.process.engine.control.command.stage.StageContext
 import com.tencent.devops.process.engine.pojo.PipelineBuildStage
+import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.PipelineContextService
+import com.tencent.devops.process.utils.BuildVarOverflowUtils
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
@@ -47,7 +49,8 @@ import org.springframework.stereotype.Service
 class CheckConditionalSkipStageCmd constructor(
     private val pipelineContextService: PipelineContextService,
     private val dispatchQueueControl: DispatchQueueControl,
-    private val buildLogPrinter: BuildLogPrinter
+    private val buildLogPrinter: BuildLogPrinter,
+    private val buildVariableService: BuildVariableService
 ) : StageCmd {
 
     override fun canExecute(commandContext: StageContext): Boolean {
@@ -112,12 +115,21 @@ class CheckConditionalSkipStageCmd constructor(
                 variables = variables,
                 executeCount = commandContext.executeCount
             )
+            val conditionVariables = variables.plus(contextMap)
+            val overflowKeys = BuildVarOverflowUtils.collectOverflowKeys(conditionVariables)
+            val overflowLoader: ((String) -> String?)? = if (overflowKeys.isEmpty()) {
+                null
+            } else {
+                { key -> buildVariableService.getVariableValue(stage.projectId, stage.buildId, key) }
+            }
             skip = ControlUtils.checkStageSkipCondition(
                 conditions = conditions,
-                variables = variables.plus(contextMap),
+                variables = conditionVariables,
                 buildId = stage.buildId,
                 runCondition = controlOption.runCondition,
-                customCondition = controlOption.customCondition
+                customCondition = controlOption.customCondition,
+                overflowKeys = overflowKeys,
+                overflowLoader = overflowLoader
             ) // #6366 增加日志明确展示跳过的原因  stage 没有相关可展示的地方，暂时不加
             if (message.isNotBlank()) {
                 // #6366 增加日志明确展示跳过的原因
