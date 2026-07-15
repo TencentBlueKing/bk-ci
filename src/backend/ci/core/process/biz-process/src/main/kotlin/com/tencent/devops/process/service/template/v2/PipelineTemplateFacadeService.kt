@@ -49,7 +49,6 @@ import com.tencent.devops.process.pojo.pipeline.DeployTemplateResult
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlFileInfo
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineDraftActionType
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineDraftStatus
-import com.tencent.devops.process.pojo.setting.PipelineVersionSimple
 import com.tencent.devops.process.pojo.template.CloneTemplateSettingExist
 import com.tencent.devops.process.pojo.template.HighlightType
 import com.tencent.devops.process.pojo.template.OptionalTemplate
@@ -1733,7 +1732,7 @@ class PipelineTemplateFacadeService @Autowired constructor(
         releaseVersion: Long,
         baseDraftVersion: Int?
     ): PipelineTemplateDraftStatusResult {
-        pipelineTemplateInfoService.get(
+        val templateInfo = pipelineTemplateInfoService.get(
             projectId = projectId,
             templateId = templateId
         )
@@ -1755,9 +1754,10 @@ class PipelineTemplateFacadeService @Autowired constructor(
             projectId = projectId,
             templateId = templateId
         )
-        val latestReleaseResource = pipelineTemplateResourceService.getLatestReleasedResource(
+        val latestReleaseResource = pipelineTemplateResourceService.getTemplateResourceVersion(
             projectId = projectId,
-            templateId = templateId
+            templateId = templateId,
+            version = templateInfo.releasedVersion
         )
 
         return when (actionType) {
@@ -1770,6 +1770,7 @@ class PipelineTemplateFacadeService @Autowired constructor(
             )
             PipelineDraftActionType.SAVE -> getPipelineTemplateDraftStatusWhenSave(
                 versionStatus = versionStatus,
+                releaseVersion = releaseVersion,
                 versionResource = versionResource,
                 draftResource = draftResource,
                 baseDraftVersion = baseDraftVersion,
@@ -1810,11 +1811,11 @@ class PipelineTemplateFacadeService @Autowired constructor(
                 latestReleaseResource = latestReleaseResource
             )
         }
-        // 前端展示的版本视图对应分支版本
-        if (releaseResource?.status == VersionStatus.BRANCH) {
+        // 如果最新版本是分支版本,前端需要弹是否基于分支版本创建草稿的提示框
+        if (latestReleaseResource?.status == VersionStatus.BRANCH) {
             return PipelineTemplateDraftStatusResult(
                 status = PipelineDraftStatus.BRANCH,
-                release = PipelineTemplateVersionSimple(releaseResource)
+                release = PipelineTemplateVersionSimple(latestReleaseResource)
             )
         }
         // 前端展示的正式版本已不是最新
@@ -1835,16 +1836,17 @@ class PipelineTemplateFacadeService @Autowired constructor(
      * SAVE 场景状态校验：
      *
      * 1. versionStatus != 草稿状态（前端展示的不是草稿版本，即基于正式版本 / 分支版本进行保存）
-     *    - 后端草稿存在 → EXISTS（提示"草稿版本已存在"，避免误覆盖）
-     *    - 后端草稿不存在 → NORMAL
+     *    - 后端草稿存在 → CONFLICT（提示"草稿版本冲突"，避免误覆盖）
+     *    - 后端草稿不存在：前端正式版与最新不一致 → RELEASE_OUTDATED，否则 → NORMAL
      *
      * 2. versionStatus == 草稿状态（前端展示的是草稿版本）
      *    - version 已发布 → PUBLISHED
-     *    - version 已删除：若存在新草稿 → CONFLICT，否则 → DELETED
+     *    - version 已删除：若存在新草稿 → CONFLICT；否则校验正式版 → RELEASE_OUTDATED / NORMAL
      *    - version 仍是草稿态：比对 draftVersion 与 baseDraftVersion，不一致 → CONFLICT，否则 → NORMAL
      */
     private fun getPipelineTemplateDraftStatusWhenSave(
         versionStatus: VersionStatus,
+        releaseVersion: Long,
         versionResource: PipelineTemplateResource?,
         draftResource: PipelineTemplateResource?,
         baseDraftVersion: Int?,
@@ -1858,7 +1860,10 @@ class PipelineTemplateFacadeService @Autowired constructor(
                     draft = PipelineTemplateVersionSimple(draftResource)
                 )
             } else {
-                PipelineTemplateDraftStatusResult(status = PipelineDraftStatus.NORMAL)
+                buildTemplateSaveNormalOrReleaseOutdated(
+                    releaseVersion = releaseVersion,
+                    latestReleaseResource = latestReleaseResource
+                )
             }
         }
         // 前端展示的是草稿版本，但后端已不是草稿态（可能被发布或删除）
@@ -1871,15 +1876,15 @@ class PipelineTemplateFacadeService @Autowired constructor(
                             draft = PipelineTemplateVersionSimple(draftResource)
                         )
                     } else {
-                        PipelineTemplateDraftStatusResult(
-                            status = PipelineDraftStatus.DELETED,
-                            release = latestReleaseResource?.let { PipelineTemplateVersionSimple(it) }
+                        buildTemplateSaveNormalOrReleaseOutdated(
+                            releaseVersion = releaseVersion,
+                            latestReleaseResource = latestReleaseResource
                         )
                     }
                 }
                 else -> PipelineTemplateDraftStatusResult(
                     status = PipelineDraftStatus.PUBLISHED,
-                    release = versionResource?.let { PipelineTemplateVersionSimple(it) }
+                    release = latestReleaseResource?.let { PipelineTemplateVersionSimple(it) }
                 )
             }
         }
@@ -1942,7 +1947,7 @@ class PipelineTemplateFacadeService @Autowired constructor(
                 )
             }
             PipelineTemplateDraftStatusResult(
-                status = PipelineDraftStatus.OUTDATED,
+                status = PipelineDraftStatus.BASE_OUTDATED,
                 draft = PipelineTemplateVersionSimple(versionResource).copy(
                     baseVersionName = draftBaseResource?.versionName
                 ),
@@ -1953,6 +1958,22 @@ class PipelineTemplateFacadeService @Autowired constructor(
                 status = PipelineDraftStatus.NORMAL,
                 draft = PipelineTemplateVersionSimple(versionResource)
             )
+        }
+    }
+
+    private fun buildTemplateSaveNormalOrReleaseOutdated(
+        releaseVersion: Long,
+        latestReleaseResource: PipelineTemplateResource?
+    ): PipelineTemplateDraftStatusResult {
+        return if (latestReleaseResource != null &&
+            latestReleaseResource.version != releaseVersion
+        ) {
+            PipelineTemplateDraftStatusResult(
+                status = PipelineDraftStatus.RELEASE_OUTDATED,
+                release = PipelineTemplateVersionSimple(latestReleaseResource)
+            )
+        } else {
+            PipelineTemplateDraftStatusResult(status = PipelineDraftStatus.NORMAL)
         }
     }
 
@@ -1976,7 +1997,7 @@ class PipelineTemplateFacadeService @Autowired constructor(
             // 若草稿基线版本早于当前最新版本,则提示草稿版本落后
             releaseTime != null && baseReleaseTime != null && releaseTime > baseReleaseTime -> {
                 PipelineTemplateDraftStatusResult(
-                    status = PipelineDraftStatus.OUTDATED,
+                    status = PipelineDraftStatus.BASE_OUTDATED,
                     draft = PipelineTemplateVersionSimple(draftResource).copy(
                         baseVersionName = baseResource.versionName
                     ),

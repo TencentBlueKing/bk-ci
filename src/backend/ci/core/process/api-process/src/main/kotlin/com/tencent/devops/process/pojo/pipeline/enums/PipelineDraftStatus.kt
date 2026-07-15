@@ -20,12 +20,12 @@ enum class PipelineDraftStatus {
     CONFLICT,
 
     @Schema(title = "草稿基线版本落后", description = "草稿基线版本早于当前最新正式版本")
-    OUTDATED,
+    BASE_OUTDATED,
 
     @Schema(title = "已发布", description = "检测当前版本是否已被发布")
     PUBLISHED,
 
-    @Schema(title = "分支版本")
+    @Schema(title = "分支版本,当前最新版是草稿版本时,编辑时需要提示是否基于分支版本创建草稿")
     BRANCH,
 
     @Schema(title = "正式版本落后", description = "当前页面很旧,但已经有新版本发布")
