@@ -363,4 +363,19 @@ class EnvDao {
             }
         }
     }
+
+    fun batchUpdateOs(
+        dslContext: DSLContext,
+        projectId: String,
+        envIdList: List<Long>,
+        os: OS
+    ) {
+        with(TEnv.T_ENV) {
+            dslContext.update(this)
+                .set(OS, os.name)
+                .where(PROJECT_ID.eq(projectId))
+                .and(ENV_ID.`in`(envIdList))
+                .execute()
+        }
+    }
 }

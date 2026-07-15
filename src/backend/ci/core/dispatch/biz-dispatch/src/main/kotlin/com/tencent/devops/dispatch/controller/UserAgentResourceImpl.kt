@@ -42,7 +42,7 @@ class UserAgentResourceImpl @Autowired constructor(
         creator: String?,
         taskStatus: PipelineTaskStatus?
     ): Result<TPAPipelineBuildCountResp> {
-        val envRId = envRId(envId)
+        val envRId = AllCreateNodeEnv.hashIdToId(envId)
         checkEnvOrAgentPermission(userId, projectId, agentId, envRId)
         return Result(
             thirdPartyAgentService.fetchBuildPipeline(
@@ -68,7 +68,7 @@ class UserAgentResourceImpl @Autowired constructor(
         envId: String?,
         pipelineName: String?
     ): Result<List<PipelineIdAndName>> {
-        val envRId = envRId(envId)
+        val envRId = AllCreateNodeEnv.hashIdToId(envId)
         checkEnvOrAgentPermission(userId, projectId, agentId, envRId)
         return Result(thirdPartyAgentService.fetchPipelineIdAndName(projectId, agentId, envRId, pipelineName))
     }
@@ -80,7 +80,7 @@ class UserAgentResourceImpl @Autowired constructor(
         envId: String?,
         jobName: String?
     ): Result<List<JobIdAndName>> {
-        val envRId = envRId(envId)
+        val envRId = AllCreateNodeEnv.hashIdToId(envId)
         checkEnvOrAgentPermission(userId, projectId, agentId, envRId)
         return Result(thirdPartyAgentService.fetchJobIdAndName(projectId, agentId, envRId, jobName))
     }
@@ -92,7 +92,7 @@ class UserAgentResourceImpl @Autowired constructor(
         envId: String?,
         creator: String?
     ): Result<List<String>> {
-        val envRId = envRId(envId)
+        val envRId = AllCreateNodeEnv.hashIdToId(envId)
         checkEnvOrAgentPermission(userId, projectId, agentId, envRId)
         return Result(thirdPartyAgentService.fetchCreator(projectId, agentId, envRId, creator))
     }
@@ -107,7 +107,7 @@ class UserAgentResourceImpl @Autowired constructor(
         page: Int?,
         pageSize: Int?
     ): Result<Page<AgentPipelineContainerBuild>> {
-        val envRId = envRId(envId)
+        val envRId = AllCreateNodeEnv.hashIdToId(envId)
         checkEnvOrAgentPermission(userId, projectId, agentId, envRId)
         return Result(
             thirdPartyAgentService.fetchAgentBuildsByJob(
@@ -121,14 +121,6 @@ class UserAgentResourceImpl @Autowired constructor(
                 pageSize = pageSize
             )
         )
-    }
-
-    private fun envRId(envId: String?) = envId?.let {
-        if (it == AllCreateNodeEnv.hashId()) {
-            AllCreateNodeEnv.ENV_ID
-        } else {
-            HashUtil.decodeIdToLong(it)
-        }
     }
 
     private fun checkEnvOrAgentPermission(
@@ -154,7 +146,7 @@ class UserAgentResourceImpl @Autowired constructor(
         }
         if (envId != null) {
             // 所有创作环境检验的是管理员权限
-            val hasPermission = if (envId == AllCreateNodeEnv.ENV_ID) {
+            val hasPermission = if (AllCreateNodeEnv.hasHashId(envId)) {
                 client.get(ServiceProjectAuthResource::class).checkProjectManager(
                     token = checkTokenService.getSystemToken(),
                     userId = userId,
