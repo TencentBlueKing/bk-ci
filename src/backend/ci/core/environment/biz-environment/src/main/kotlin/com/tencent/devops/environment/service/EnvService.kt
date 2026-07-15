@@ -57,6 +57,7 @@ import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.environment.constant.EnvironmentMessageCode
+import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_ENV_ADD_NODE_OS_ERROR
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_ENV_BUILD_2_DEPLOY_DENY
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_ENV_BUILD_CAN_NOT_ADD_SVR
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_ENV_DEPLOY_2_BUILD_DENY
@@ -1239,6 +1240,16 @@ class EnvService @Autowired constructor(
                 )
             }
         }
+        // 验证环境系统
+        if (envRecord.envType == EnvType.CREATE.name && envRecord.os != null) {
+            val createNodes = thirdPartyAgentDao.getAgentsByNodeIds(dslContext, toAddNodeIds, projectId)
+            if (createNodes.any { it.os != envRecord.os }) {
+                throw ErrorCodeException(
+                    errorCode = ERROR_ENV_ADD_NODE_OS_ERROR,
+                    params = createNodes.map { it.ip }.toTypedArray()
+                )
+            }
+        }
 
         dslContext.transaction { config ->
             val ctx = DSL.using(config)
@@ -1469,7 +1480,8 @@ class EnvService @Autowired constructor(
                 envDesc = sourceEnv.envDesc,
                 envType = sourceEnv.envType,
                 envNodeType = EnvNodeType.valueOf(sourceEnv.envNodeType),
-                envVars = sourceEnv.envVars
+                envVars = sourceEnv.envVars,
+                os = sourceEnv.os?.let { OS.parse(it) }
             )
             environmentPermissionService.createEnv(userId, targetProjectId, newEnvId, sourceEnv.envName)
         }
