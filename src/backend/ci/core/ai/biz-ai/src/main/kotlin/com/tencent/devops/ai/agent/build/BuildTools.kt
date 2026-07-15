@@ -54,8 +54,14 @@ import java.util.function.Supplier
 @Suppress("TooManyFunctions", "ComplexCondition")
 class BuildTools(
     client: Client,
-    userIdSupplier: Supplier<String>
+    userIdSupplier: Supplier<String>,
+    private val sleepFn: (Long) -> Unit
 ) : BaseTools(client, userIdSupplier) {
+
+    constructor(
+        client: Client,
+        userIdSupplier: Supplier<String>
+    ) : this(client, userIdSupplier, Thread::sleep)
 
     override val logger: Logger = LoggerFactory.getLogger(BuildTools::class.java)
 
@@ -428,6 +434,56 @@ class BuildTools(
             } else {
                 "停止构建失败: ${result.message}"
             }
+        }
+    }
+
+    @Tool(
+        name = "模拟长耗时测试",
+        description = "仅用于超时/取消链路测试。工具会主动等待后返回，默认等待 125 秒，" +
+                "稳定超过 2 分钟且低于默认 5 分钟工具超时。waitSeconds 小于 121 按 121 处理，" +
+                "大于 240 按 240 处理。"
+    )
+    fun simulateLongRunningTool(
+        @ToolParam(
+            name = "waitSeconds",
+            description = "等待秒数，默认 125。为稳定复现超过 2 分钟场景，最小 121，最大 240。",
+            required = false
+        )
+        waitSeconds: Int? = null
+    ): String {
+        return safeQuery("BuildArtifactTool", "simulateLongRunningTool") {
+            val actualWaitSeconds = (waitSeconds ?: DEFAULT_LONG_RUNNING_WAIT_SECONDS).coerceIn(
+                MIN_LONG_RUNNING_WAIT_SECONDS,
+                MAX_LONG_RUNNING_WAIT_SECONDS
+            )
+            logger.info(
+                "[BuildArtifactTool] simulateLongRunningTool | requested={}s, actual={}s",
+                waitSeconds,
+                actualWaitSeconds
+            )
+            val startTime = System.currentTimeMillis()
+            try {
+                sleepFn(actualWaitSeconds * 1000L)
+            } catch (e: InterruptedException) {
+                Thread.currentThread().interrupt()
+                return@safeQuery JsonUtil.toJson(
+                    linkedMapOf(
+                        "status" to "INTERRUPTED",
+                        "requestedWaitSeconds" to waitSeconds,
+                        "actualWaitSeconds" to actualWaitSeconds,
+                        "message" to "模拟长耗时测试被中断"
+                    )
+                )
+            }
+            JsonUtil.toJson(
+                linkedMapOf(
+                    "status" to "OK",
+                    "requestedWaitSeconds" to waitSeconds,
+                    "actualWaitSeconds" to actualWaitSeconds,
+                    "elapsedMs" to (System.currentTimeMillis() - startTime),
+                    "message" to "模拟长耗时测试完成"
+                )
+            )
         }
     }
 
@@ -1162,6 +1218,9 @@ class BuildTools(
     companion object {
         private const val DEFAULT_PAGE_SIZE = 10
         private const val MAX_PAGE_SIZE = 50
+        private const val MIN_LONG_RUNNING_WAIT_SECONDS = 121
+        private const val DEFAULT_LONG_RUNNING_WAIT_SECONDS = 125
+        private const val MAX_LONG_RUNNING_WAIT_SECONDS = 240
         private const val MAX_NODE_MATCH_CANDIDATES = 20
         private const val MAX_FAILED_ELEMENTS_TO_ANALYZE = 3
         private const val DEFAULT_LOG_SIZE = 500
