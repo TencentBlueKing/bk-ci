@@ -562,7 +562,8 @@ class ThirdPartyAgentBuildDao {
         endTime: Long?,
         pipelineId: String?,
         jobId: String?,
-        creator: String?
+        creator: String?,
+        status: PipelineTaskStatus?
     ): Pair<Long, Long> {
         if (agentId.isNullOrBlank() && envId == null) {
             return Pair(0L, 0L)
@@ -603,6 +604,9 @@ class ThirdPartyAgentBuildDao {
             if (!creator.isNullOrBlank()) {
                 dsl.and(START_USER.eq(creator))
             }
+            if (status != null) {
+                dsl.and(STATUS.eq(status.status))
+            }
 
             val result = dsl.and(JOB_ID.isNotNull).fetchOne()
             return Pair(
@@ -623,7 +627,8 @@ class ThirdPartyAgentBuildDao {
         endTime: Long?,
         pipelineId: String?,
         jobId: String?,
-        creator: String?
+        creator: String?,
+        status: PipelineTaskStatus?
     ): List<TPAPipelineBuild> {
         if (agentId.isNullOrBlank() && envId == null) {
             return emptyList()
@@ -685,6 +690,9 @@ class ThirdPartyAgentBuildDao {
             }
             if (!creator.isNullOrBlank()) {
                 dsl.and(START_USER.eq(creator))
+            }
+            if (status != null) {
+                dsl.and(STATUS.eq(status.status))
             }
             return dsl.and(JOB_ID.isNotNull)
                 .groupBy(PIPELINE_ID, JOB_ID)
