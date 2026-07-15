@@ -311,7 +311,7 @@ class ServiceEnvironmentResourceImpl @Autowired constructor(
         envName: String?,
         nodeName: String?,
         enableNode: Boolean,
-        data: EnableNodeEnvData?
+        data: EnableNodeEnvData
     ): Result<Boolean> {
         if (envHashId.isNullOrBlank() && envName.isNullOrBlank()) {
             throw ErrorCodeException(
