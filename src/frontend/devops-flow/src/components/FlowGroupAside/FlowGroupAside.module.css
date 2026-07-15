@@ -174,7 +174,7 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  color: var(--color-text-disabled);
+  color: var(--color-text-tertiary);
 }
 
 .increaseIcon {

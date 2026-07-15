@@ -334,7 +334,7 @@ export const FlowTable = defineComponent({
                   <b class={canView ? styles.flowCellLink : styles.flowCellLinkDisabled}>#{row.latestBuildNum}</b>
                   <b class={[canView ? styles.flowCellLink : styles.flowCellLinkDisabled, styles.line]}>|</b>
                   {!latestExecIsStageProgress.value ? (
-                    <span class="lastBuildMsg">{row.lastBuildMsg}</span>
+                    <span class={[styles.lastBuildMsg, 'text-ellipsis']}>{row.lastBuildMsg}</span>
                   ) : (
                     <span style={{ display: 'inline-block' }}>
                       {row.latestBuildStageStatus && row.latestBuildId ? (
