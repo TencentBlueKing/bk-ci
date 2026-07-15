@@ -341,7 +341,7 @@ class ApigwEnvironmentResourceV4Impl @Autowired constructor(
             nodeHashId = nodeHashId,
             nodeName = nodeName,
             enableNode = enable,
-            data = data
+            data = data ?: EnableNodeEnvData(reason = "")
         )
     }
 

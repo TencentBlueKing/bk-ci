@@ -392,7 +392,7 @@ interface ServiceEnvironmentResource {
         @QueryParam("enableNode")
         @BkField(patternStyle = BkStyleEnum.BOOLEAN_STYLE, required = true)
         enableNode: Boolean,
-        data: EnableNodeEnvData? = null
+        data: EnableNodeEnvData
     ): Result<Boolean>
 
     @Operation(summary = "根据工作空间ID,获取所有拥有这个节点的环境(创作流)")
