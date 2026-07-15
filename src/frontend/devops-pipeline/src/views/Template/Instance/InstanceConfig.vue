@@ -330,6 +330,7 @@
         SET_INSTANCE_LIST,
         UPDATE_INSTANCE_LIST
     } from '@/store/modules/templates/constants'
+    import { CODE_LIB, REPO_REF } from '@/store/modules/atom/paramsConfig'
     import { allVersionKeyList } from '@/utils/pipelineConst'
     import { getParamsValuesMap, isObject, isShallowEqual } from '@/utils/util'
     import { computed, defineProps, ref, watch } from 'vue'
@@ -643,6 +644,19 @@
         deep: true
     })
 
+    function normalizeParamValueForTypeChange (instanceParam, templateParam) {
+        if (instanceParam.type !== REPO_REF || instanceParam.type === templateParam.type) return
+
+        if (templateParam.type === CODE_LIB) {
+            const templateDefaultValue = templateParam.defaultValue
+            instanceParam.defaultValue = isObject(templateDefaultValue) || Array.isArray(templateDefaultValue)
+                ? ''
+                : templateDefaultValue ?? ''
+        } else {
+            instanceParam.defaultValue = JSON.stringify(instanceParam.defaultValue)
+        }
+    }
+
     function compareParams (instance, template, instanceIndex) {
         const instanceParams = (instance?.param ?? []).map(p => ({ ...p })).filter(i => !allVersionKeyList.includes(i.id))
         const templateParams = (template?.param ?? []).filter(i => !allVersionKeyList.includes(i.id))
@@ -666,6 +680,7 @@
                 // 同步 constant 字段，处理模板常量删除后新增同名变量的场景
                 // 如果模板参数是常量则设置为 true，否则清除 constant 标记
                 i.constant = templateParam?.constant ?? false
+                normalizeParamValueForTypeChange(i, templateParam)
                 // 常量 其他变量直接赋值为模板对应参数的值（版本号除外）
                 // hasChange(控制一键填入默认值按钮是否显示, 如果变量值与模板默认值不同则显示)
                 // isChange(控制默认值输入框是否高亮，默认值变更则高亮)
@@ -690,11 +705,6 @@
                 } else {
                     // 入参参数处理
                     i.isRequiredParam = templateParam.required && i.required
-                    if (i.type === 'REPO_REF' && i.type !== templateParam.type) {
-                        // 针对变量类型为 【代码库和分支】的特殊处理
-                        // REPO_REF变量的值为对象，转为字符串类型
-                        i.defaultValue = JSON.stringify(i.defaultValue)
-                    }
                     if (i.isFollowTemplate) {
                         i.defaultValue = templateParam.defaultValue
                     }
@@ -1056,6 +1066,12 @@
     function handleParamChange (id, value) {
         const initialInstanceParams = initialInstanceList.value?.[activeIndex.value - 1]?.param
         const templateParamsMap = new Map(curTemplateDetail.value?.param?.map(t => [t.id, t]) || [])
+        const currentValue = curInstance.value?.param?.find(param => param.id === id)?.defaultValue
+        const isSameValue = isObject(value) || isObject(currentValue)
+            ? isShallowEqual(value, currentValue)
+            : value === currentValue
+
+        if (isSameValue) return
         
         // 检查是否是版本号参数
         const isVersionParam = allVersionKeyList.includes(id)
