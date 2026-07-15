@@ -49,6 +49,7 @@ import com.tencent.devops.process.pojo.pipeline.DeployTemplateResult
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlFileInfo
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineDraftActionType
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineDraftStatus
+import com.tencent.devops.process.pojo.setting.PipelineVersionSimple
 import com.tencent.devops.process.pojo.template.CloneTemplateSettingExist
 import com.tencent.devops.process.pojo.template.HighlightType
 import com.tencent.devops.process.pojo.template.OptionalTemplate
@@ -1771,7 +1772,8 @@ class PipelineTemplateFacadeService @Autowired constructor(
                 versionStatus = versionStatus,
                 versionResource = versionResource,
                 draftResource = draftResource,
-                baseDraftVersion = baseDraftVersion
+                baseDraftVersion = baseDraftVersion,
+                latestReleaseResource = latestReleaseResource
             )
             PipelineDraftActionType.RELEASE -> getPipelineTemplateDraftStatusWhenRelease(
                 versionResource = versionResource,
@@ -1845,7 +1847,8 @@ class PipelineTemplateFacadeService @Autowired constructor(
         versionStatus: VersionStatus,
         versionResource: PipelineTemplateResource?,
         draftResource: PipelineTemplateResource?,
-        baseDraftVersion: Int?
+        baseDraftVersion: Int?,
+        latestReleaseResource: PipelineTemplateResource?,
     ): PipelineTemplateDraftStatusResult {
         if (versionStatus != VersionStatus.COMMITTING) {
             // 前端展示的不是草稿版本进行保存，若后端已存在草稿，则提示草稿冲突
@@ -1868,7 +1871,10 @@ class PipelineTemplateFacadeService @Autowired constructor(
                             draft = PipelineTemplateVersionSimple(draftResource)
                         )
                     } else {
-                        PipelineTemplateDraftStatusResult(status = PipelineDraftStatus.DELETED)
+                        PipelineTemplateDraftStatusResult(
+                            status = PipelineDraftStatus.DELETED,
+                            release = latestReleaseResource?.let { PipelineTemplateVersionSimple(it) }
+                        )
                     }
                 }
                 else -> PipelineTemplateDraftStatusResult(
@@ -1877,7 +1883,7 @@ class PipelineTemplateFacadeService @Autowired constructor(
                 )
             }
         }
-        // 检测草稿并发保存冲突
+        // 前端展示的version是草稿版本，且后端version仍是草稿态,这里versionResource和draftResource应该是相同的
         return if (versionResource.draftVersion != baseDraftVersion) {
             PipelineTemplateDraftStatusResult(
                 status = PipelineDraftStatus.CONFLICT,

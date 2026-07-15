@@ -7,13 +7,19 @@ enum class PipelineDraftStatus {
     @Schema(title = "正常")
     NORMAL,
 
-    @Schema(title = "草稿已存在", description = "当前操作人和原草稿的保存人相同,但草稿已超过7天")
+    @Schema(
+        title = "草稿已存在",
+        description = "当前操作人和最新草稿的保存人不相同或当前操作人和原草稿的保存人相同,但草稿已超过7天"
+    )
     EXISTS,
 
-    @Schema(title = "存在冲突", description = "当前操作人和最新草稿的保存人不相同")
+    @Schema(
+        title = "草稿存在冲突",
+        description = "同一个草稿版本,但是保存多次,前端还是旧版本"
+    )
     CONFLICT,
 
-    @Schema(title = "草稿基线版本落后", description = "草稿基线版本早于当前最新版本")
+    @Schema(title = "草稿基线版本落后", description = "草稿基线版本早于当前最新正式版本")
     OUTDATED,
 
     @Schema(title = "已发布", description = "检测当前版本是否已被发布")

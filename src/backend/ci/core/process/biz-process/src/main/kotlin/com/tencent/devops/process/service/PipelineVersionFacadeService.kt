@@ -1081,17 +1081,6 @@ class PipelineVersionFacadeService @Autowired constructor(
      * - [versionStatus] 前端持有 [version] 时该版本对应的状态，必传，用于识别前端在编辑草稿还是正式版本。
      * - [releaseVersion] 前端界面当前展示的正式版本号，必传，用于判断前端界面是否落后于最新正式版本。
      * - [baseDraftVersion] 草稿并发保存校验版本号，SAVE / RELEASE 时需要传入。
-     *
-     * 处理流程：
-     *
-     * 1. 一次性查出所需版本信息
-     *    - versionResource       : version 对应的流水线资源
-     *    - releaseResource       : releaseVersion 对应的流水线资源（与 version 相同时复用，不重复查询）
-     *    - draftResource         : 当前流水线的草稿资源
-     *    - latestReleaseResource : 流水线最新的版本资源（取 pipelineInfo.version 对应记录）
-     *
-     * 2. 按 actionType 分派到 [getPipelineDraftStatusWhenEdit] / [getPipelineDraftStatusWhenSave]
-     *    / [getPipelineDraftStatusWhenRelease] 各自处理，具体规则见对应方法的注释。
      */
     fun getPipelineDraftStatus(
         userId: String,
@@ -1147,7 +1136,8 @@ class PipelineVersionFacadeService @Autowired constructor(
                 versionStatus = versionStatus,
                 versionResource = versionResource,
                 draftResource = draftResource,
-                baseDraftVersion = baseDraftVersion
+                baseDraftVersion = baseDraftVersion,
+                latestReleaseResource = latestReleaseResource
             )
             PipelineDraftActionType.RELEASE -> getPipelineDraftStatusWhenRelease(
                 versionResource = versionResource,
@@ -1209,7 +1199,7 @@ class PipelineVersionFacadeService @Autowired constructor(
      * SAVE 场景状态校验：
      *
      * 1. versionStatus != 草稿状态（前端展示的不是草稿版本，即基于正式版本 / 分支版本进行保存）
-     *    - 后端草稿存在 → EXISTS（提示"草稿版本已存在"，避免误覆盖）
+     *    - 后端草稿存在 → CONFLICT（提示"草稿版本冲突"，避免误覆盖）
      *    - 后端草稿不存在 → NORMAL
      *
      * 2. versionStatus == 草稿状态（前端展示的是草稿版本）
@@ -1221,10 +1211,11 @@ class PipelineVersionFacadeService @Autowired constructor(
         versionStatus: VersionStatus,
         versionResource: PipelineResourceVersion?,
         draftResource: PipelineResourceVersion?,
-        baseDraftVersion: Int?
+        baseDraftVersion: Int?,
+        latestReleaseResource: PipelineResourceVersion?
     ): PipelineDraftStatusResult {
         if (versionStatus != VersionStatus.COMMITTING) {
-            // 前端展示的不是草稿版本进行保存，若后端已存在草稿，则提示已存在草稿
+            // 前端展示的不是草稿版本进行保存，若后端已存在草稿，则提示草稿冲突
             return if (draftResource != null) {
                 PipelineDraftStatusResult(
                     status = PipelineDraftStatus.CONFLICT,
@@ -1234,7 +1225,7 @@ class PipelineVersionFacadeService @Autowired constructor(
                 PipelineDraftStatusResult(status = PipelineDraftStatus.NORMAL)
             }
         }
-        // 前端展示的是草稿版本，但后端已不是草稿态（可能被发布或删除）
+        // 前端展示的version是草稿版本，但后端version已不是草稿态（可能被发布或删除）
         if (versionResource?.status != VersionStatus.COMMITTING) {
             return when (versionResource?.status) {
                 VersionStatus.DELETE -> {
@@ -1244,16 +1235,19 @@ class PipelineVersionFacadeService @Autowired constructor(
                             draft = PipelineVersionSimple(draftResource)
                         )
                     } else {
-                        PipelineDraftStatusResult(status = PipelineDraftStatus.DELETED)
+                        PipelineDraftStatusResult(
+                            status = PipelineDraftStatus.DELETED,
+                            release = latestReleaseResource?.let { PipelineVersionSimple(it) }
+                        )
                     }
                 }
                 else -> PipelineDraftStatusResult(
                     status = PipelineDraftStatus.PUBLISHED,
-                    release = versionResource?.let { PipelineVersionSimple(it) }
+                    release = latestReleaseResource?.let { PipelineVersionSimple(it) }
                 )
             }
         }
-        // 检测草稿并发保存冲突
+        // 前端展示的version是草稿版本，且后端version仍是草稿态,这里versionResource和draftResource应该是相同的
         return if (versionResource.draftVersion != baseDraftVersion) {
             PipelineDraftStatusResult(
                 status = PipelineDraftStatus.CONFLICT,
