@@ -92,6 +92,13 @@ class BaseToolsTest : BkCiAbstractTest() {
                             containerName = "job-1",
                             containerHashId = "hash-1",
                             jobId = "job-1",
+                            elementId = "e-1",
+                            elementName = "plugin-1",
+                            stepId = "step-1",
+                            status = "FAILED",
+                            errorType = "USER",
+                            errorCode = 2199011,
+                            errorMsg = "script exit 1",
                             element = LinuxScriptElement(
                                 id = "e-1",
                                 name = "plugin-1",
@@ -118,12 +125,12 @@ class BaseToolsTest : BkCiAbstractTest() {
 
     @Test
     fun `should truncate plain text when input is too large`() {
-        val input = "a".repeat(48_100)
+        val input = "a".repeat(150_100)
 
         val result = tools.stringify(input)
 
-        assertEquals(48_000, result.length)
-        assertTrue(result.startsWith("a".repeat(47_992)))
+        assertEquals(150_000, result.length)
+        assertTrue(result.startsWith("a".repeat(149_992)))
         assertTrue(result.endsWith("...(已截断)"))
     }
 
@@ -200,7 +207,7 @@ class BaseToolsTest : BkCiAbstractTest() {
 
         val result = tools.stringify(payload)
 
-        assertEquals(48_000, result.length)
+        assertEquals(150_000, result.length)
         assertTrue(result.endsWith("...(已截断)"))
     }
 

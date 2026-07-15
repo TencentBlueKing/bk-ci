@@ -61,8 +61,10 @@ import com.tencent.bkrepo.repository.pojo.share.ShareRecordCreateRequest
 import com.tencent.bkrepo.repository.pojo.share.ShareRecordInfo
 import com.tencent.bkrepo.repository.pojo.token.TemporaryTokenCreateRequest
 import com.tencent.bkrepo.repository.pojo.token.TokenType
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_CHANNEL
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_IAM_TOKEN
+import com.tencent.devops.common.api.context.ChannelContext
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.OkhttpUtils
@@ -77,6 +79,7 @@ import com.tencent.devops.common.archive.pojo.BkRepoFile
 import com.tencent.devops.common.archive.pojo.PackageVersionInfo
 import com.tencent.devops.common.archive.pojo.ProjectMetadata
 import com.tencent.devops.common.archive.pojo.QueryData
+import com.tencent.devops.common.archive.pojo.QueryNodeInfo
 import com.tencent.devops.common.archive.pojo.RepoCreateRequest
 import com.tencent.devops.common.archive.pojo.defender.ApkDefenderRequest
 import com.tencent.devops.common.archive.pojo.defender.ApkDefenderTasks
@@ -96,6 +99,14 @@ import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import io.opentelemetry.api.trace.Span
 import jakarta.ws.rs.NotFoundException
+import java.io.File
+import java.io.IOException
+import java.io.InputStream
+import java.io.OutputStream
+import java.net.URLEncoder
+import java.nio.file.FileSystems
+import java.nio.file.Paths
+import java.util.UUID
 import okhttp3.Credentials
 import okhttp3.Headers.Companion.toHeaders
 import okhttp3.MediaType
@@ -109,14 +120,6 @@ import org.slf4j.LoggerFactory
 import org.springframework.data.domain.Sort.Direction
 import org.springframework.stereotype.Component
 import org.springframework.util.FileCopyUtils
-import java.io.File
-import java.io.IOException
-import java.io.InputStream
-import java.io.OutputStream
-import java.net.URLEncoder
-import java.nio.file.FileSystems
-import java.nio.file.Paths
-import java.util.UUID
 
 @Component
 class BkRepoClient constructor(
@@ -444,10 +447,12 @@ class BkRepoClient constructor(
     fun deleteNode(userName: String, projectId: String, repoName: String, path: String, authorization: String) {
         logger.info("delete,  projectId: $projectId, repoName: $repoName, path: $path")
         val url = "${getGatewayUrl()}/bkrepo/api/service/repository/api/node/delete/$projectId/$repoName/$path"
+        val headers = getCommonHeaders(userName, projectId).apply {
+            put("Authorization", authorization)
+        }
         val request = Request.Builder()
             .url(url)
-            .header("Authorization", authorization)
-            .headers(getCommonHeaders(userName, projectId).toHeaders())
+            .headers(headers.toHeaders())
             .delete()
             .build()
         doRequest(request).resolveResponse<Response<Void>>()
@@ -500,12 +505,9 @@ class BkRepoClient constructor(
             destFullPath = toPath,
             overwrite = true
         )
-        val devopsToken = EnvironmentUtil.gatewayDevopsToken()
         val request = Request.Builder()
             .url(url)
-            .header(BK_REPO_UID, userId)
-            .header(AUTH_HEADER_DEVOPS_PROJECT_ID, fromProject)
-            .let { if (null == devopsToken) it else it.header("X-DEVOPS-TOKEN", devopsToken) }
+            .headers(getCommonHeaders(userId, fromProject).toHeaders())
             .post(objectMapper.writeValueAsString(requestData).toRequestBody(JSON_MEDIA_TYPE)).build()
         doRequest(request).resolveResponse<Response<Void>>()
     }
@@ -1299,6 +1301,7 @@ class BkRepoClient constructor(
         devopsToken?.let { headers[DEVOPS_TOKEN] = it }
         val traceHeader = getTraceHeader()
         traceHeader?.let { headers[BK_REPO_TRACE] = it }
+        ChannelContext.getChannel()?.takeIf { it.isNotBlank() }?.let { headers[AUTH_HEADER_DEVOPS_CHANNEL] = it }
         return headers
     }
 
@@ -1347,6 +1350,24 @@ class BkRepoClient constructor(
             }
             throw RemoteServiceException(responseData.message ?: responseData.code.toString(), this.code)
         }
+    }
+
+    fun getStoreComponentPkgSize(
+        userId: String,
+        projectId: String,
+        repoName: String,
+        fullPath: String
+    ): Long? {
+        // 对路径每一段做 URL encode，保留 / 分隔符，避免中文/空格/#/? 等字符引起的问题
+        val encodedPath = fullPath.split("/")
+            .joinToString("/") { if (it.isEmpty()) it else URLEncoder.encode(it, "UTF-8") }
+        val url = "${getGatewayUrl()}/bkrepo/api/service/repository/api/node/detail/$projectId/$repoName/$encodedPath"
+        val request = Request.Builder()
+            .url(url)
+            .headers(getCommonHeaders(userId, projectId).toHeaders())
+            .get()
+            .build()
+        return doRequest(request).resolveResponse<Response<QueryNodeInfo>>()?.data?.size
     }
 
     companion object {

@@ -29,13 +29,12 @@ package com.tencent.devops.environment.dao
 
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.environment.constant.T_NODE_NODE_ID
+import com.tencent.devops.environment.pojo.enums.NodeOperatorStatus
 import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.environment.pojo.enums.NodeType
 import com.tencent.devops.model.environment.tables.TNode
 import com.tencent.devops.model.environment.tables.TNodeTags
 import com.tencent.devops.model.environment.tables.records.TNodeRecord
-import java.sql.Timestamp
-import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.jooq.Field
 import org.jooq.OrderField
@@ -45,6 +44,8 @@ import org.jooq.Result
 import org.jooq.SelectConditionStep
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
+import java.sql.Timestamp
+import java.time.LocalDateTime
 
 @Suppress("ALL")
 @Repository
@@ -54,6 +55,21 @@ class NodeDao {
             dslContext.update(this)
                 .set(AGENT_VERSION, agentVersion)
                 .where(NODE_ID.eq(nodeId))
+                .execute()
+        }
+    }
+
+    fun updateProjectId(
+        dslContext: DSLContext,
+        sourceProjectId: String,
+        targetProjectId: String,
+        nodeId: Long
+    ): Int {
+        return with(TNode.T_NODE) {
+            dslContext.update(this)
+                .set(PROJECT_ID, targetProjectId)
+                .where(PROJECT_ID.eq(sourceProjectId))
+                .and(NODE_ID.eq(nodeId))
                 .execute()
         }
     }
@@ -86,7 +102,8 @@ class NodeDao {
         latestBuildTimeEnd: Long?,
         sortType: String?,
         collation: String?,
-        tagValueIds: Set<Long>?
+        tagValueIds: Set<Long>?,
+        operatorStatus: NodeOperatorStatus? = null
     ): List<TNodeRecord> {
         return with(TNode.T_NODE) {
             val dsl = dslContext.select(*TNode.T_NODE.fields()).from(this)
@@ -110,7 +127,8 @@ class NodeDao {
                 latestBuildTimeEnd = latestBuildTimeEnd,
                 sortType = sortType,
                 collation = collation,
-                tagValueIds = tagValueIds
+                tagValueIds = tagValueIds,
+                operatorStatus = operatorStatus
             )
             query.limit(limit).offset(offset)
                 .fetchInto(this)
@@ -133,13 +151,23 @@ class NodeDao {
         latestBuildTimeEnd: Long?,
         sortType: String?,
         collation: String?,
-        tagValueIds: Set<Long>?
+        tagValueIds: Set<Long>?,
+        nodeIds: List<Long>? = null,
+        operatorStatus: NodeOperatorStatus? = null
     ) {
         if (!keywords.isNullOrEmpty()) {
             query.and(NODE_IP.like("%$keywords%").or(DISPLAY_NAME.like("%$keywords%")))
         }
         if (!nodeIp.isNullOrEmpty()) {
-            query.and(NODE_IP.like("%$nodeIp%"))
+            // 支持多 IP 搜索：以英文逗号分隔多个 IP；单 IP 沿用模糊匹配以保持向后兼容，
+            // 多 IP 走精确 IN 匹配（更贴合"批量精确查找"的实际使用场景，性能也更好）
+            val nodeIps = nodeIp.split(",")
+                .map { it.trim() }
+                .filter { it.isNotEmpty() }
+            when {
+                nodeIps.size == 1 -> query.and(NODE_IP.like("%${nodeIps[0]}%"))
+                nodeIps.size > 1 -> query.and(NODE_IP.`in`(nodeIps))
+            }
         }
         if (!displayName.isNullOrEmpty()) {
             query.and(DISPLAY_NAME.like("%$displayName%"))
@@ -159,6 +187,10 @@ class NodeDao {
         if (nodeStatus != null) {
             query.and(NODE_STATUS.eq(nodeStatus.name))
         }
+        // 操作人状态过滤：等值匹配 OPERATOR_STATUS 列；列由 CMDB / CC 同步任务每周期回写
+        if (operatorStatus != null) {
+            query.and(OPERATOR_STATUS.eq(operatorStatus.code))
+        }
         if (!agentVersion.isNullOrEmpty()) {
             query.and(AGENT_VERSION.like("%$agentVersion%"))
         }
@@ -177,6 +209,9 @@ class NodeDao {
         }
         if (!tagValueIds.isNullOrEmpty()) {
             query.and(TNodeTags.T_NODE_TAGS.TAG_VALUE_ID.`in`(tagValueIds))
+        }
+        if (!nodeIds.isNullOrEmpty()) {
+            query.and(NODE_ID.`in`(nodeIds))
         }
         when (sortType) {
             /*别名*/"displayName" -> query.orderBy(DISPLAY_NAME.transferOrder(collation))
@@ -222,7 +257,9 @@ class NodeDao {
         latestBuildTimeEnd: Long?,
         sortType: String?,
         collation: String?,
-        tagValueIds: Set<Long>?
+        tagValueIds: Set<Long>?,
+        nodeIds: List<Long>? = null,
+        operatorStatus: NodeOperatorStatus? = null
     ): Int {
         with(TNode.T_NODE) {
             val dsl = dslContext.selectCount().from(TNode.T_NODE)
@@ -246,8 +283,9 @@ class NodeDao {
                 latestBuildTimeEnd = latestBuildTimeEnd,
                 sortType = sortType,
                 collation = collation,
-                tagValueIds = tagValueIds
-
+                tagValueIds = tagValueIds,
+                nodeIds = nodeIds,
+                operatorStatus = operatorStatus
             )
             return query.fetchOne(0, Int::class.java)!!
         }
@@ -294,12 +332,36 @@ class NodeDao {
         }
     }
 
-    fun listByIds(dslContext: DSLContext, projectId: String, nodeIds: Collection<Long>): List<TNodeRecord> {
+    fun listByIds(
+        dslContext: DSLContext,
+        projectId: String,
+        nodeIds: Collection<Long>,
+        nodeIp: String? = null,
+        displayName: String? = null,
+        createdUser: String? = null,
+        nodeStatus: NodeStatus? = null,
+        nodeType: NodeType? = null
+    ): List<TNodeRecord> {
         with(TNode.T_NODE) {
-            return dslContext.selectFrom(this)
+            val dsl = dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(NODE_ID.`in`(nodeIds))
-                .orderBy(NODE_ID.desc())
+            if (!nodeIp.isNullOrEmpty()) {
+                dsl.and(NODE_IP.like("%$nodeIp%"))
+            }
+            if (!displayName.isNullOrEmpty()) {
+                dsl.and(DISPLAY_NAME.like("%$displayName%"))
+            }
+            if (!createdUser.isNullOrEmpty()) {
+                dsl.and(CREATED_USER.like("%$createdUser%"))
+            }
+            if (nodeStatus != null) {
+                dsl.and(NODE_STATUS.eq(nodeStatus.name))
+            }
+            if (nodeType != null) {
+                dsl.and(NODE_TYPE.eq(nodeType.name))
+            }
+            return dsl.orderBy(NODE_ID.desc())
                 .fetch()
         }
     }
@@ -307,15 +369,31 @@ class NodeDao {
     fun listNodesByIdListWithPageLimit(
         dslContext: DSLContext,
         projectId: String,
+        nodeIp: String?,
+        displayName: String?,
+        createdUser: String?,
+        nodeStatus: NodeStatus?,
         limit: Int,
         offset: Int,
         nodeIds: Collection<Long>
     ): List<TNodeRecord> {
         with(TNode.T_NODE) {
-            return dslContext.selectFrom(this)
+            val dsl = dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(NODE_ID.`in`(nodeIds))
-                .orderBy(NODE_ID.desc())
+            if (!nodeIp.isNullOrEmpty()) {
+                dsl.and(NODE_IP.like("%$nodeIp%"))
+            }
+            if (!displayName.isNullOrEmpty()) {
+                dsl.and(DISPLAY_NAME.like("%$displayName%"))
+            }
+            if (!createdUser.isNullOrEmpty()) {
+                dsl.and(CREATED_USER.like("%$createdUser%"))
+            }
+            if (nodeStatus != null) {
+                dsl.and(NODE_STATUS.eq(nodeStatus.name))
+            }
+            return dsl.orderBy(NODE_ID.desc())
                 .limit(limit).offset(offset)
                 .fetch()
         }
@@ -404,7 +482,7 @@ class NodeDao {
         userId: String,
         agentVersion: String?
     ): Long
-            /** Node ID **/
+        /** Node ID **/
     {
         var nodeId = 0L
         with(TNode.T_NODE) {
@@ -512,20 +590,36 @@ class NodeDao {
         }
     }
 
-    fun updateCreatedUser(dslContext: DSLContext, nodeId: Long, userId: String) {
+    fun updateCreatedUser(
+        dslContext: DSLContext,
+        nodeId: Long,
+        userId: String,
+        operatorStatus: NodeOperatorStatus? = null
+    ) {
         with(TNode.T_NODE) {
-            dslContext.update(this)
+            val update = dslContext.update(this)
                 .set(CREATED_USER, userId)
-                .where(NODE_ID.eq(nodeId))
+            if (operatorStatus != null) {
+                update.set(OPERATOR_STATUS, operatorStatus.code)
+            }
+            update.where(NODE_ID.eq(nodeId))
                 .execute()
         }
     }
 
-    fun batchUpdateNodeCreatedUser(dslContext: DSLContext, nodeIdList: List<Long>, userId: String) {
+    fun batchUpdateNodeCreatedUser(
+        dslContext: DSLContext,
+        nodeIdList: List<Long>,
+        userId: String,
+        operatorStatus: NodeOperatorStatus? = null
+    ) {
         with(TNode.T_NODE) {
-            dslContext.update(this)
+            val update = dslContext.update(this)
                 .set(CREATED_USER, userId)
-                .where(NODE_ID.`in`(nodeIdList))
+            if (operatorStatus != null) {
+                update.set(OPERATOR_STATUS, operatorStatus.code)
+            }
+            update.where(NODE_ID.`in`(nodeIdList))
                 .execute()
         }
     }

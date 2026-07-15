@@ -322,18 +322,20 @@ class StoreReleaseServiceImpl @Autowired constructor(
                 )
             }
         }
-        // 保存可见范围信息
+        // 保存可见范围信息（支持按组织架构以及按蓝盾项目两个维度设置）
         val deptInfoList = storeReleaseInfoUpdateRequest.deptInfoList
-        deptInfoList?.let {
-            deptInfoList.forEach {
-                // 上架过程中设置的可见范围状态默认为待审核状态
-                it.status = DeptStatusEnum.APPROVING.name
-            }
+        deptInfoList?.forEach {
+            // 上架过程中设置的可见范围状态默认为待审核状态
+            it.status = DeptStatusEnum.APPROVING.name
+        }
+        val projectInfoList = storeReleaseInfoUpdateRequest.projectInfoList
+        if (!deptInfoList.isNullOrEmpty() || !projectInfoList.isNullOrEmpty()) {
             storeVisibleDeptService.addVisibleDept(
                 userId = userId,
                 storeType = storeType,
                 storeCode = storeCode,
-                deptInfos = deptInfoList
+                deptInfos = deptInfoList,
+                projectInfos = projectInfoList
             )
         }
         val recordStatus = StoreStatusEnum.valueOf(record.status)

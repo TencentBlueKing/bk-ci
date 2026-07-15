@@ -67,6 +67,8 @@ data class Model(
     var srcTemplateId: String? = null,
     @get:Schema(title = "当前模板的ID", required = false)
     var templateId: String? = null,
+    @get:Schema(title = "流水线ID", required = false)
+    var pipelineId: String? = null,
     @get:Schema(title = "提示", required = false)
     var tips: String? = null,
     @get:Schema(title = "流水线事件回调", required = false)
@@ -248,6 +250,7 @@ data class Model(
 
     companion object {
         const val classType = "model"
+
         fun defaultModel(
             pipelineName: String = "",
             userId: String? = null
@@ -272,6 +275,43 @@ data class Model(
                                     ).apply {
                                         additionalOptions = ElementAdditionalOptions(enable = true)
                                     },
+                                )
+                            )
+                        )
+                    )
+                ),
+                pipelineCreator = userId
+            )
+        }
+
+        fun creativeStreamDefaultModel(
+            pipelineName: String = "",
+            userId: String? = null
+        ): Model {
+            return Model(
+                name = pipelineName,
+                desc = "",
+                stages = listOf(
+                    Stage(
+                        id = "stage-1",
+                        containers = listOf(
+                            TriggerContainer(
+                                id = "0",
+                                name = I18nUtil.getCodeLanMessage(
+                                    messageCode = CommonMessageCode.BK_BUILD_TRIGGER
+                                ),
+                                elements = listOf(
+                                    ManualTriggerElement(
+                                        id = "T-1-1-1",
+                                        name = I18nUtil.getCodeLanMessage(
+                                            messageCode = CommonMessageCode.BK_MANUAL_TRIGGER,
+                                            language = userId?.let { I18nUtil.getLanguage(userId) }
+                                        ),
+                                        canElementSkip = true,
+                                        useLatestParameters = true
+                                    ).apply {
+                                        additionalOptions = ElementAdditionalOptions(enable = true)
+                                    }
                                 )
                             )
                         )

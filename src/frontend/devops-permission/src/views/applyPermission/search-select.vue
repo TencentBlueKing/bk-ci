@@ -336,14 +336,14 @@ export default {
           }
           const resourceCodeParams = {
             id: 'resourceCode',
-            name: this.$t('资源实例'),
+            name: this.t('资源实例'),
             values: [resourceValue],
           };
           this.searchSelectValue.push(resourceCodeParams);
           const actionValue = this.actionsList.find(i => i.action === action)
           const actionParams = {
             id: 'actionId',
-            name: this.$t('操作'),
+            name: this.t('操作'),
             values: [actionValue],
           }
           this.searchSelectValue.push(actionParams);
@@ -354,7 +354,7 @@ export default {
           actionValue.name = `${resourceTypeName}/${actionValue.actionName}`
           const actionParams = {
             id: 'actionId',
-            name: this.$t('操作'),
+            name: this.t('操作'),
             values: [actionValue],
           }
           this.searchSelectValue.push(actionParams);
@@ -363,7 +363,7 @@ export default {
         if (groupName) {
           const nameParams = {
             id: 'name',
-            name: this.$t('用户组名'),
+            name: this.t('用户组名'),
             values: [groupName]
           }
           this.searchSelectValue.push(nameParams);
@@ -377,7 +377,7 @@ export default {
         resourceValue.name = `${resourceTypeName}/${resourceValue?.resourceName}`
         const resourceCodeParams = {
           id: 'resourceCode',
-          name: this.$t('资源实例'),
+          name: this.t('资源实例'),
           values: [resourceValue],
         };
         this.searchSelectValue.push(resourceCodeParams);
@@ -404,7 +404,7 @@ export default {
       if (!this.projectCode) {
         Message({
           theme: 'error',
-          message: this.$t('请选择项目'),
+          message: this.t('请选择项目'),
         });
         return;
       };

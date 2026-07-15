@@ -91,5 +91,7 @@ data class PipelineInfo(
     @get:Schema(title = "流水线权限", required = false)
     var permissions: PipelinePermissions? = null,
     @get:Schema(title = "流水线被锁定，即禁用", required = false)
-    var locked: Boolean? = false
+    var locked: Boolean? = false,
+    @get:Schema(title = "AI自动摘要", required = false)
+    var autoSummary: String? = null
 )

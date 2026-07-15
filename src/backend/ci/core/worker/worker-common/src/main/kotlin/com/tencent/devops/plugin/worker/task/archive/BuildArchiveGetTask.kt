@@ -34,7 +34,6 @@ import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.archive.element.BuildArchiveGetElement
-import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildVariables
@@ -139,7 +138,6 @@ class BuildArchiveGetTask : ITask() {
             projectId = buildVariables.projectId,
             pipelineId = pipelineId,
             buildNum = buildNo,
-            channelCode = ChannelCode.BS,
             buildId = buildVariables.buildId
         ).data ?: throw TaskExecuteException(
             errorCode = ErrorCode.USER_RESOURCE_NOT_FOUND,

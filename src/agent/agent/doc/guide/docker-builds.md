@@ -128,8 +128,8 @@ Agent 会自动将以下宿主机资源挂载到容器中：
 | `jdk/`（如存在） | `/usr/local/jre8` | 只读 | JDK 8 运行时 |
 | `worker-agent.jar` | `/data/worker-agent.jar` | 只读 | 构建 Worker |
 | `docker_init.sh` | `/data/init.sh` | 只读 | 容器入口脚本 |
-| `workspace/{pipeline}/` | `/data/devops/workspace/{pipeline}/` | 读写 | 构建工作空间 |
-| `logs/docker/{buildId}/` | `/data/devops/logs/` | 读写 | 构建日志 |
+| `docker_workspace/data/{pipelineId}/{vmseqId}/ 或 用户自定工作空间` | `/data/devops/workspace` | 读写 | 构建工作空间 |
+| `docker_workspace/logs/{buildId}/{vmseqId}/` | `/data/devops/logs/` | 读写 | 构建日志 |
 
 ## 容器配置
 

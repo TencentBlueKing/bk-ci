@@ -9,7 +9,7 @@ import com.tencent.devops.common.pipeline.type.DispatchType
 @Suppress("UnnecessaryAbstractClass")
 abstract class ThirdPartyAgentDispatch(
     override var value: String,
-    open val agentType: AgentType,
+    open val agentType: AgentDispatchType,
     open var workspace: String?,
     // 第三方构建机用docker作为构建机
     open val dockerInfo: ThirdPartyAgentDockerInfo?,
@@ -18,8 +18,8 @@ abstract class ThirdPartyAgentDispatch(
 ) : DispatchType(value) {
     // 本身是 id，和被复用对象在同一JOB且被复用对象也是 id，是复用但是位于后面的 JOB
     fun idType(): Boolean =
-        (agentType == AgentType.ID) || (reusedInfo?.agentType == AgentType.ID) ||
-                (agentType == AgentType.REUSE_JOB_ID && reusedInfo == null)
+        (agentType == AgentDispatchType.ID) || (reusedInfo?.agentType == AgentDispatchType.ID) ||
+                (agentType == AgentDispatchType.REUSE_JOB_ID && reusedInfo == null)
 
     // 是否在复用锁定链上
     fun hasReuseMutex(): Boolean = this.agentType.isReuse() || this.reusedInfo != null
@@ -37,6 +37,6 @@ abstract class ThirdPartyAgentDispatch(
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class ReusedInfo(
     val value: String,
-    val agentType: AgentType,
+    val agentType: AgentDispatchType,
     val jobId: String?
 )

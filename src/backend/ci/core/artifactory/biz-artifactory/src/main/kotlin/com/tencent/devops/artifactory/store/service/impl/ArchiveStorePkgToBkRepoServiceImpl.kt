@@ -15,9 +15,9 @@ import com.tencent.devops.store.pojo.common.CONFIG_YML_NAME
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.publication.StorePkgEnvInfo
 import jakarta.ws.rs.NotFoundException
+import java.io.File
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import java.io.File
 
 abstract class ArchiveStorePkgToBkRepoServiceImpl : ArchiveStorePkgServiceImpl() {
 
@@ -231,6 +231,26 @@ abstract class ArchiveStorePkgToBkRepoServiceImpl : ArchiveStorePkgServiceImpl()
             bkRepoClientConfig.bkRepoIdcHost
         }
         return repoPrefixUrl
+    }
+
+    override fun getStoreFileSize(filePath: String, storeType: StoreTypeEnum, repoName: String?): Long? {
+        return try {
+            bkRepoClient.getStoreComponentPkgSize(
+                userId = BKREPO_DEFAULT_USER,
+                projectId = getBkRepoProjectId(storeType),
+                repoName = repoName ?: getBkRepoName(storeType),
+                fullPath = filePath
+            )
+        } catch (ignored: RemoteServiceException) {
+            logger.warn(
+                "Remote service error getting store file size -filePath: $filePath, storeType: $storeType",
+                ignored
+            )
+            null
+        } catch (ignored: Throwable) {
+            logger.warn("Unexpected error getting store file size -filePath: $filePath, storeType: $storeType", ignored)
+            null
+        }
     }
 
     companion object {

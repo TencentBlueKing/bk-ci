@@ -25,7 +25,7 @@ const (
 
 // printHealthChecks runs diagnostic checks and appends results to status output.
 func printHealthChecks(workDir string) {
-	fmt.Println()
+	statusBlankLine()
 	printStep(msg("Health Checks", "健康检查"))
 	printStep("--------------------------------------------")
 
@@ -43,7 +43,7 @@ func printHealthChecks(workDir string) {
 	proxyFunc := buildProxyFunc(httpProxy, httpsProxy, noProxy)
 
 	if gateway != "" {
-		fmt.Println()
+		statusBlankLine()
 		checkEndpoint(
 			msg("Gateway", "网关"),
 			gateway,
@@ -52,7 +52,7 @@ func printHealthChecks(workDir string) {
 		)
 	}
 	if fileGateway != "" && fileGateway != gateway {
-		fmt.Println()
+		statusBlankLine()
 		checkEndpoint(
 			msg("File gateway", "文件网关"),
 			fileGateway, "/",
@@ -60,7 +60,7 @@ func printHealthChecks(workDir string) {
 		)
 	}
 
-	fmt.Println()
+	statusBlankLine()
 	printCertStatus(certPath)
 
 	printRecentErrorLogs(workDir)
@@ -269,7 +269,7 @@ var errorLogFiles = []string{
 // printRecentErrorLogs 输出近 recentErrorLogWindow 内每个日志文件的错误条目
 // （最多 maxErrorsPerFile 条），帮助用户通过 status 一次性定位问题。
 func printRecentErrorLogs(workDir string) {
-	fmt.Println()
+	statusBlankLine()
 	printStep(msgf("Recent errors (last %s, up to %d per file)",
 		"近 %s 错误日志 (每文件最多 %d 条)",
 		recentErrorLogWindow, maxErrorsPerFile))
@@ -301,7 +301,7 @@ func printRecentErrorLogs(workDir string) {
 		anyFound = true
 		statusLine("  "+name, msgf("%d error(s) ✗", "%d 条错误 ✗", len(errs)))
 		for _, line := range errs {
-			fmt.Printf("      %s\n", truncateLogLine(line, 500))
+			statusTextLine(fmt.Sprintf("      %s", truncateLogLine(line, 500)))
 		}
 	}
 

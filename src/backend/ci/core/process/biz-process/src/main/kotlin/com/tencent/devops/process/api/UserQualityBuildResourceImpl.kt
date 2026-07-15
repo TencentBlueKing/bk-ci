@@ -65,7 +65,7 @@ class UserQualityBuildResourceImpl @Autowired constructor(
             buildId = buildId,
             elementId = elementId,
             action = action,
-            channelCode = ChannelCode.BS,
+            channelCode = ChannelCode.getRequestChannelCode(),
             ruleIds = request?.ruleIds
         )
         return Result(true)

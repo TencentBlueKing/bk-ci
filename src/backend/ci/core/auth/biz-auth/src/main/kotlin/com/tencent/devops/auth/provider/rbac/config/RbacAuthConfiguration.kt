@@ -66,6 +66,7 @@ import com.tencent.devops.auth.provider.rbac.service.ItsmService
 import com.tencent.devops.auth.provider.rbac.service.PermissionGradeManagerService
 import com.tencent.devops.auth.provider.rbac.service.PermissionRoutingStrategy
 import com.tencent.devops.auth.provider.rbac.service.PermissionSubsetManagerService
+import com.tencent.devops.auth.provider.rbac.service.PersonalProjectService
 import com.tencent.devops.auth.provider.rbac.service.RbacCommonService
 import com.tencent.devops.auth.provider.rbac.service.RbacPermissionApplyService
 import com.tencent.devops.auth.provider.rbac.service.RbacPermissionAuthMonitorSpaceService
@@ -87,6 +88,7 @@ import com.tencent.devops.auth.provider.rbac.service.RoutingStrategyService
 import com.tencent.devops.auth.provider.rbac.service.migrate.MigrateCreatorFixServiceImpl
 import com.tencent.devops.auth.provider.rbac.service.migrate.MigrateIamApiService
 import com.tencent.devops.auth.provider.rbac.service.migrate.MigratePermissionHandoverService
+import com.tencent.devops.auth.provider.rbac.service.migrate.ProjectGroupMigrationService
 import com.tencent.devops.auth.provider.rbac.service.migrate.MigrateResourceAuthorizationService
 import com.tencent.devops.auth.provider.rbac.service.migrate.MigrateResourceCodeConverter
 import com.tencent.devops.auth.provider.rbac.service.migrate.MigrateResourceGroupService
@@ -180,7 +182,9 @@ class RbacAuthConfiguration {
         traceEventDispatcher: TraceEventDispatcher,
         iamV2ManagerService: V2ManagerService,
         permissionAuthorizationService: PermissionAuthorizationService,
-        permissionResourceValidateService: PermissionResourceValidateService
+        permissionResourceValidateService: PermissionResourceValidateService,
+        personalProjectService: PersonalProjectService,
+        permissionResourceGroupService: PermissionResourceGroupService
     ) = RbacPermissionResourceService(
         authResourceService = authResourceService,
         permissionGradeManagerService = permissionGradeManagerService,
@@ -189,7 +193,9 @@ class RbacAuthConfiguration {
         traceEventDispatcher = traceEventDispatcher,
         iamV2ManagerService = iamV2ManagerService,
         permissionAuthorizationService = permissionAuthorizationService,
-        permissionResourceValidateService = permissionResourceValidateService
+        permissionResourceValidateService = permissionResourceValidateService,
+        personalProjectService = personalProjectService,
+        permissionResourceGroupService = permissionResourceGroupService
     )
 
     @Bean
@@ -321,7 +327,8 @@ class RbacAuthConfiguration {
         deptService: DeptService,
         rbacCommonService: RbacCommonService,
         authResourceSyncDao: AuthResourceSyncDao,
-        traceEventDispatcher: TraceEventDispatcher
+        traceEventDispatcher: TraceEventDispatcher,
+        client: Client
     ) = RbacPermissionResourceMemberService(
         authResourceService = authResourceService,
         iamV2ManagerService = iamV2ManagerService,
@@ -330,7 +337,8 @@ class RbacAuthConfiguration {
         dslContext = dslContext,
         deptService = deptService,
         traceEventDispatcher = traceEventDispatcher,
-        authResourceSyncDao = authResourceSyncDao
+        authResourceSyncDao = authResourceSyncDao,
+        client = client
     )
 
     @Bean
@@ -544,6 +552,35 @@ class RbacAuthConfiguration {
     )
 
     @Bean
+    fun projectGroupMigrationService(
+        dslContext: DSLContext,
+        iamConfiguration: IamConfiguration,
+        authResourceService: AuthResourceService,
+        rbacCommonService: RbacCommonService,
+        authResourceCodeConverter: AuthResourceCodeConverter,
+        authResourceGroupDao: AuthResourceGroupDao,
+        authResourceGroupMemberDao: AuthResourceGroupMemberDao,
+        authResourceGroupPermissionDao: AuthResourceGroupPermissionDao,
+        permissionResourceGroupService: PermissionResourceGroupService,
+        permissionResourceGroupPermissionService: PermissionResourceGroupPermissionService,
+        permissionResourceMemberService: PermissionResourceMemberService,
+        deptService: DeptService
+    ) = ProjectGroupMigrationService(
+        dslContext = dslContext,
+        iamConfiguration = iamConfiguration,
+        authResourceService = authResourceService,
+        rbacCommonService = rbacCommonService,
+        authResourceCodeConverter = authResourceCodeConverter,
+        authResourceGroupDao = authResourceGroupDao,
+        authResourceGroupMemberDao = authResourceGroupMemberDao,
+        authResourceGroupPermissionDao = authResourceGroupPermissionDao,
+        permissionResourceGroupService = permissionResourceGroupService,
+        permissionResourceGroupPermissionService = permissionResourceGroupPermissionService,
+        permissionResourceMemberService = permissionResourceMemberService,
+        deptService = deptService
+    )
+
+    @Bean
     fun migrateIamApiService() = MigrateIamApiService()
 
     @Bean
@@ -658,6 +695,7 @@ class RbacAuthConfiguration {
         permissionResourceMemberService: RbacPermissionResourceMemberService,
         migrateResourceAuthorizationService: MigrateResourceAuthorizationService,
         migrateResourceGroupService: MigrateResourceGroupService,
+        projectGroupMigrationService: ProjectGroupMigrationService,
         syncDataTaskDao: AuthSyncDataTaskDao,
         rbacCommonService: RbacCommonService,
         authResourceGroupMemberDao: AuthResourceGroupMemberDao,
@@ -679,6 +717,7 @@ class RbacAuthConfiguration {
         permissionResourceMemberService = permissionResourceMemberService,
         migrateResourceAuthorizationService = migrateResourceAuthorizationService,
         migrateResourceGroupService = migrateResourceGroupService,
+        projectGroupMigrationService = projectGroupMigrationService,
         syncDataTaskDao = syncDataTaskDao,
         rbacCommonService = rbacCommonService,
         authResourceGroupMemberDao = authResourceGroupMemberDao,
@@ -776,7 +815,8 @@ class RbacAuthConfiguration {
         resourceGroupPermissionService: PermissionResourceGroupPermissionService,
         deptService: DeptService,
         traceEventDispatcher: TraceEventDispatcher,
-        syncDataTaskDao: AuthSyncDataTaskDao
+        syncDataTaskDao: AuthSyncDataTaskDao,
+        userService: UserManageService
     ) = RbacPermissionResourceGroupSyncService(
         client = client,
         dslContext = dslContext,
@@ -791,6 +831,7 @@ class RbacAuthConfiguration {
         resourceGroupPermissionService = resourceGroupPermissionService,
         deptService = deptService,
         traceEventDispatcher = traceEventDispatcher,
-        syncDataTaskDao = syncDataTaskDao
+        syncDataTaskDao = syncDataTaskDao,
+        userService = userService
     )
 }

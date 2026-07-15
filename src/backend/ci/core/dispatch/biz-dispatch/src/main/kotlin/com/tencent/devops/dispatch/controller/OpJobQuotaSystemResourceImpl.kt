@@ -58,7 +58,7 @@ class OpJobQuotaSystemResourceImpl @Autowired constructor(
         } else {
             Result(listOf(jobQuotaManagerService.getSystemQuota(
                 jobQuotaVmType,
-                channelCode ?: ChannelCode.BS.name
+                channelCode ?: ChannelCode.getRequestChannelCode().name
             )))
         }
     }
@@ -70,7 +70,7 @@ class OpJobQuotaSystemResourceImpl @Autowired constructor(
     override fun delete(jobQuotaVmType: JobQuotaVmType, channelCode: String?): Result<Boolean> {
         return Result(jobQuotaManagerService.deleteSystemQuota(
             jobQuotaVmType,
-            channelCode ?: ChannelCode.BS.name
+            channelCode ?: ChannelCode.getRequestChannelCode().name
         ))
     }
 

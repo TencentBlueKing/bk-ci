@@ -149,7 +149,7 @@ object MarketBuildUtils {
 
     @Suppress("ALL")
     private fun getDefaultHookUrl(atomCode: String, atomVersion: String, channelCode: ChannelCode): String {
-        if (channelCode != ChannelCode.BS) return ""
+        if (channelCode != ChannelCode.BS && channelCode != ChannelCode.CREATIVE_STREAM) return ""
         val inputMap = atomCache.get("$atomCode|$atomVersion").getOrNull()?.props?.get(INPUT_PARAM)
         if (inputMap == null || inputMap !is Map<*, *>) {
             return ""

@@ -1,6 +1,6 @@
 <template>
     <section>
-        <draggable
+        <VueDraggable
             :class="{
                 'container-atom-list': true,
                 readonly: !reactiveData.editable
@@ -11,6 +11,7 @@
             :move="checkMove"
         >
             <atom
+                @atom-skip-change="handleAtomSkipChange"
                 v-for="(atom, index) in atomList"
                 :key="atom.id"
                 :stage="stage"
@@ -31,7 +32,10 @@
 
             <span
                 v-if="reactiveData.editable"
-                :class="{ 'add-atom-entry': true, 'block-add-entry': atomList.length === 0 }"
+                :class="{
+                    'add-atom-entry': true,
+                    'block-add-entry': atomList.length === 0
+                }"
                 @click="editAtom(atomList.length - 1, true)"
             >
                 <i class="add-plus-icon" />
@@ -60,64 +64,64 @@
                     name="angle-down"
                 ></logo>
             </span>
-        </draggable>
+        </VueDraggable>
     </section>
 </template>
 
 <script>
-    import draggable from 'vuedraggable'
-    import Atom from './Atom'
-    import Logo from './Logo'
+    import { VueDraggable } from "vue-draggable-plus"
+    import Atom from "./Atom"
+    import Logo from "./Logo"
     import {
         ATOM_ADD_EVENT_NAME,
         COPY_EVENT_NAME,
         DELETE_EVENT_NAME,
         QUALITY_IN_ATOM_CODE,
         QUALITY_OUT_ATOM_CODE,
-        STATUS_MAP
-    } from './constants'
-    import { localeMixins } from './locale'
-    import { eventBus } from './util'
+        STATUS_MAP,
+    } from "./constants"
+    import { localeMixins } from "./locale"
+    import { eventBus } from "./util"
     export default {
-        name: 'atom-list',
+        name: "AtomList",
         components: {
-            draggable,
+            VueDraggable,
             Logo,
-            Atom
+            Atom,
         },
-        inject: ['reactiveData', 'emitPipelineChange'],
+        inject: ["reactiveData", "emitPipelineChange"],
         mixins: [localeMixins],
         props: {
             stage: {
                 type: Object,
-                required: true
+                required: true,
             },
             container: {
                 type: Object,
-                required: true
+                required: true,
             },
             stageIndex: {
                 type: Number,
-                required: true
+                required: true,
             },
             containerIndex: {
                 type: Number,
-                required: true
+                required: true,
             },
             containerGroupIndex: Number,
             containerStatus: String,
             containerDisabled: Boolean,
             handleChange: {
                 type: Function,
-                required: true
-            }
+                required: true,
+            },
         },
         data () {
             return {
                 atomMap: {},
                 showPostAction: false,
                 DELETE_EVENT_NAME,
-                COPY_EVENT_NAME
+                COPY_EVENT_NAME,
             }
         },
         computed: {
@@ -126,14 +130,16 @@
             },
             isInstanceEditable () {
                 return (
-                    !this.reactiveData.editable && this.pipeline && this.pipeline.instanceFromTemplate
+                    !this.reactiveData.editable
+                    && this.pipeline
+                    && this.pipeline.instanceFromTemplate
                 )
             },
             hasHookAtom () {
                 return this.container.elements.some(this.isHookAtom)
             },
             hookToggleTips () {
-                return this.t(`${this.showPostAction ? 'fold' : 'open'}POST`)
+                return this.t(`${this.showPostAction ? "fold" : "open"}POST`)
             },
             hookToggleTop () {
                 const firstHookIndex = this.container.elements.findIndex(this.isHookAtom)
@@ -157,14 +163,14 @@
                         .filter((atom) => !this.isHookAtom(atom) || this.showPostAction)
                         .map((atom) => {
                             if (!atom.atomCode) {
-                                atom.atomCode = atom['@type']
+                                atom.atomCode = atom["@type"]
                             }
                             return atom
                         })
                 },
                 set (elements) {
                     this.handleChange(this.container, { elements })
-                }
+                },
             },
             postActionStatus () {
                 if (this.hasHookAtom) {
@@ -185,17 +191,17 @@
                         }
                     }
                 }
-                return ''
+                return ""
             },
             dragOptions () {
                 return {
-                    group: 'pipeline-atom',
-                    ghostClass: 'sortable-ghost-atom',
-                    chosenClass: 'sortable-chosen-atom',
+                    group: "pipeline-atom",
+                    ghostClass: "sortable-ghost-atom",
+                    chosenClass: "sortable-chosen-atom",
                     animation: 130,
-                    disabled: !this.reactiveData.editable
+                    disabled: !this.reactiveData.editable,
                 }
-            }
+            },
         },
         methods: {
             isHookAtom (atom) {
@@ -207,40 +213,62 @@
             },
             isQualityGate (atom) {
                 try {
-                    return [QUALITY_IN_ATOM_CODE, QUALITY_OUT_ATOM_CODE].includes(atom.atomCode)
+                    return [QUALITY_IN_ATOM_CODE, QUALITY_OUT_ATOM_CODE].includes(
+                        atom.atomCode
+                    )
                 } catch (error) {
                     return false
                 }
             },
             handleCopy ({ elementIndex, element }) {
-                this.container.elements.splice(elementIndex + 1, 0, element)
-                this.emitPipelineChange()
+                const newElements = [...this.container.elements]
+                newElements.splice(elementIndex + 1, 0, element)
+                this.handleChange({
+                    ...this.container,
+                    elements: newElements,
+                })
             },
             handleInsertAfter ({ elementIndex }) {
                 this.editAtom(elementIndex, true)
             },
             handleDelete ({ elementIndex }) {
-                this.container.elements.splice(elementIndex, 1)
-                this.emitPipelineChange()
+                const newElements = [...this.container.elements]
+                newElements.splice(elementIndex, 1)
+                this.handleChange({
+                    ...this.container,
+                    elements: newElements,
+                })
+            },
+            handleAtomSkipChange ({ elementIndex, canElementSkip }) {
+                const newElements = [...this.container.elements]
+                newElements[elementIndex] = {
+                    ...newElements[elementIndex],
+                    canElementSkip,
+                }
+                this.handleChange({
+                    ...this.container,
+                    elements: newElements,
+                })
             },
             checkMove (event) {
                 const dragContext = event.draggedContext || {}
                 const element = dragContext.element || {}
-                const atomCode = element.atomCode || ''
+                const atomCode = element.atomCode || ""
                 const os = element.os || []
-                const isTriggerAtom = element.category === 'TRIGGER'
+                const isTriggerAtom = element.category === "TRIGGER"
 
                 const to = event.to || {}
                 const dataSet = to.dataset || {}
-                const baseOS = dataSet.baseos || ''
+                const baseOS = dataSet.baseos || ""
                 const isJobTypeOk
-                    = os.includes(baseOS) || (os.length <= 0 && (!baseOS || baseOS === 'normal'))
+                    = os.includes(baseOS)
+                        || (os.length <= 0 && (!baseOS || baseOS === "normal"))
                 return (
                     !!atomCode
-                    && ((isTriggerAtom && baseOS === 'trigger')
+                    && ((isTriggerAtom && baseOS === "trigger")
                         || (!isTriggerAtom && isJobTypeOk)
                         || (!isTriggerAtom
-                            && baseOS !== 'trigger'
+                            && baseOS !== "trigger"
                             && os.length <= 0
                             && element.buildLessRunFlag))
                 )
@@ -252,7 +280,7 @@
                     container,
                     atomIndex,
                     stageIndex,
-                    containerIndex
+                    containerIndex,
                 })
             },
             togglePostAction () {
@@ -260,8 +288,8 @@
             },
             expandPostAction () {
                 this.showPostAction = true
-            }
-        }
+            },
+        },
     }
 </script>
 
@@ -284,7 +312,13 @@
     cursor: pointer;
     z-index: 3;
     .add-plus-icon {
-      @include add-plus-icon($fontLighterColor, $fontLighterColor, white, 18px, true);
+      @include add-plus-icon(
+        $fontLighterColor,
+        $fontLighterColor,
+        white,
+        18px,
+        true
+      );
       @include add-plus-icon-hover($primaryColor, $primaryColor, white);
     }
     &.block-add-entry {

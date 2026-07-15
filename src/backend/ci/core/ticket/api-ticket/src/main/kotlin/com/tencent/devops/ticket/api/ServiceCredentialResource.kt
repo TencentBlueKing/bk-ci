@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.ticket.pojo.Credential
+import com.tencent.devops.ticket.pojo.CredentialBasicInfo
 import com.tencent.devops.ticket.pojo.CredentialCreate
 import com.tencent.devops.ticket.pojo.CredentialInfo
 import com.tencent.devops.ticket.pojo.CredentialItemVo
@@ -89,6 +90,21 @@ interface ServiceCredentialResource {
         @QueryParam("padding")
         padding: Boolean? = false
     ): Result<CredentialInfo?>
+
+    @Operation(summary = "获取凭据基础信息")
+    @Path("/{projectId}/{credentialId}/basic")
+    @GET
+    fun getBasicInfo(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "凭据ID", required = true)
+        @PathParam("credentialId")
+        credentialId: String
+    ): Result<CredentialBasicInfo>
 
     @Operation(summary = "其他服务获取凭据值")
     @Path("/{projectId}/{credentialId}/item")

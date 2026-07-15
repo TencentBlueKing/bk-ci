@@ -1,218 +1,53 @@
 ---
 name: utility-components
-description: 工具组件指南，涵盖 JWT 安全认证、表达式解析器、线程池循环工具、责任链模式等特定功能的工具类使用。当用户需要实现 JWT 认证、解析表达式、使用线程池或实现责任链时使用。
-core_files:
-  - "src/backend/ci/core/common/common-security/src/main/kotlin/com/tencent/devops/common/security/jwt/"
-  - "src/backend/ci/core/common/common-expression/"
-  - "src/backend/ci/core/common/common-util/src/main/kotlin/com/tencent/devops/common/util/"
-related_skills:
-  - common-technical-practices
-  - design-patterns
-token_estimate: 6000
+description: 使用 BK-CI 中的具体工具组件时使用，例如 JWT、安全认证、表达式解析、线程池循环工具和责任链实现。当用户要直接复用这些组件而不是设计框架级实践时优先使用。
 ---
 
-# 工具组件指南
+# 工具组件
 
-## Skill 概述
+## 适用场景
 
-本 Skill 涵盖了 BK-CI 中常用的 **4 类工具组件**，这些是特定功能的工具类和组件实现。
+- 使用 JWT 或认证相关工具
+- 解析变量表达式、条件表达式或自定义函数
+- 使用线程池、批量处理、循环重试类工具
+- 实现或复用责任链模式组件
 
-### 核心主题
+## 不适用场景
 
-| 主题 | 说明 | 文档 |
-|------|------|------|
-| **JWT 安全认证** | JWT 生成验证、Token 刷新、OAuth2 | [1-jwt-security.md](./reference/1-jwt-security.md) |
-| **表达式解析器** | 变量表达式、条件求值、自定义函数 | [2-expression-parser.md](./reference/2-expression-parser.md) |
-| **线程池循环工具** | 线程池配置、批量处理、循环工具类 | [3-thread-pool-loop-util.md](./reference/3-thread-pool-loop-util.md) |
-| **责任链模式** | 责任链设计、拦截器链、请求处理链 | [4-chain-responsibility.md](./reference/4-chain-responsibility.md) |
+- 只是框架级横切实践，例如 AOP、分布式锁、监控、审计
+- 只是服务间通信、事件驱动或多环境配置
+- 只是某个业务模块自己的数据结构或流程
 
----
+## 快速指导
 
-## ⚠️ 与 `common-technical-practices` 的区别
+1. 这个 skill 关注的是“具体工具怎么用”，不是“框架实践怎么落地”。
+2. 如果问题更像“有没有现成组件可以直接复用”，通常落在这里。
+3. 先按主题进入对应参考文档：
+   - JWT：`reference/1-jwt-security.md`
+   - 表达式解析：`reference/2-expression-parser.md`
+   - 线程池与循环工具：`reference/3-thread-pool-loop-util.md`
+   - 责任链：`reference/4-chain-responsibility.md`
+4. 如果你想解决的是横切架构问题，切到 `common-technical-practices`；如果你想解决的是微服务底座问题，切到 `microservice-infrastructure`。
 
-### 定位对比
+## 高信号规则
 
-| Skill | 定位 | 关注点 | 典型场景 |
-|-------|------|--------|----------|
-| **common-technical-practices** | **框架级实践** | 如何在 Spring Boot 中使用技术 | AOP 切面、分布式锁、重试机制、参数校验、性能监控、定时任务、审计日志 |
-| **utility-components** (本 Skill) | **工具级组件** | 如何使用特定的工具类和组件 | JWT 认证、表达式解析、线程池使用、责任链实现 |
+- 这里更偏“组件级复用”，不是“平台级框架方案”
+- 工具组件应该优先复用现有实现，而不是重复造轮子
+- 责任链在这里更偏具体组件和实现，而不是模式百科
+- 用组件前先确认它解决的是业务问题，还是只是让代码看起来更复杂
 
-### 使用选择
+## 关键陷阱
 
-```
-需要实现横切关注点（AOP、锁、重试、监控）
-    → 使用 common-technical-practices
+- 把组件问题和框架实践问题混在一起
+- 明明已有现成工具，却重新造一套
+- 只会调用工具类，不理解输入输出和边界条件
+- 把责任链、线程池、表达式解析滥用到不需要的地方
 
-需要使用特定工具类（JWT、表达式、线程池、责任链）
-    → 使用 utility-components (本 Skill)
-```
+## 延伸阅读
 
-**示例对比**:
-- 需要 **添加性能监控切面** → `common-technical-practices` (reference/5-performance-monitoring.md)
-- 需要 **使用线程池批量处理** → `utility-components` (reference/3-thread-pool-loop-util.md)
-- 需要 **实现分布式锁** → `common-technical-practices` (reference/2-distributed-lock.md)
-- 需要 **实现 JWT 认证** → `utility-components` (reference/1-jwt-security.md)
-
----
-
-## 工具组件架构
-
-### 组件分层视图
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│                    BK-CI 业务逻辑层                          │
-│      (Process/Project/Store/Auth/Repository...)            │
-└─────────────────────────────────────────────────────────────┘
-                           ↓
-        ┌──────────────────┼──────────────────┐
-        │                  │                  │
-   ┌────▼────┐       ┌────▼────┐       ┌────▼────┐
-   │  JWT    │       │  表达式  │       │  线程池  │
-   │  认证   │       │  解析   │       │  工具   │
-   └─────────┘       └─────────┘       └─────────┘
-        │                  │                  │
-        └──────────────────┼──────────────────┘
-                           ↓
-                  ┌────────────────┐
-                  │  责任链模式    │
-                  │  (拦截器链)    │
-                  └────────────────┘
-```
-
----
-
-## 一、JWT 安全认证
-
-详见 [reference/1-jwt-security.md](./reference/1-jwt-security.md)
-
-### 核心功能
-
-- JWT Token 生成与验证
-- Token 刷新机制
-- 权限校验拦截器
-- OAuth2 集成
-
-### 快速开始
-
-```kotlin
-// 生成 JWT Token
-val token = JwtManager.generateToken(userId, expireTime)
-
-// 验证 Token
-val claims = JwtManager.verifyToken(token)
-```
-
----
-
-## 二、表达式解析器
-
-详见 [reference/2-expression-parser.md](./reference/2-expression-parser.md)
-
-### 核心功能
-
-- 变量表达式解析 (`${variable}`)
-- 条件表达式求值
-- 自定义函数扩展
-- 表达式缓存优化
-
-### 快速开始
-
-```kotlin
-// 解析变量表达式
-val context = mapOf("buildId" to "b-123", "status" to "success")
-val result = ExpressionParser.parse("${buildId}_${status}", context)
-// 结果: "b-123_success"
-```
-
----
-
-## 三、线程池与循环工具
-
-详见 [reference/3-thread-pool-loop-util.md](./reference/3-thread-pool-loop-util.md)
-
-### 核心功能
-
-- 线程池配置与管理
-- 批量任务并发处理
-- 循环工具类 (`LoopUtil`)
-- 并发控制与优化
-
-### 快速开始
-
-```kotlin
-// 批量并发处理
-val results = ThreadPoolUtil.executeBatch(taskList) { task ->
-    processTask(task)
-}
-
-// 循环重试
-LoopUtil.loopWithRetry(maxRetries = 3) {
-    callExternalApi()
-}
-```
-
----
-
-## 四、责任链模式
-
-详见 [reference/4-chain-responsibility.md](./reference/4-chain-responsibility.md)
-
-### 核心功能
-
-- 责任链设计与实现
-- 拦截器链模式
-- 流水线插件链
-- 请求处理链
-
-### 快速开始
-
-```kotlin
-// 定义拦截器链
-val chain = InterceptorChain()
-    .addInterceptor(AuthInterceptor())
-    .addInterceptor(ValidationInterceptor())
-    .addInterceptor(LoggingInterceptor())
-
-// 执行链
-chain.proceed(request)
-```
-
----
-
-## 使用场景决策树
-
-```
-用户需求
-    ↓
-是横切关注点（AOP/锁/重试/监控）？
-    ├─ 是 → 使用 common-technical-practices
-    └─ 否 → 是否需要特定工具类？
-              ├─ JWT 认证 → utility-components (reference/1)
-              ├─ 表达式解析 → utility-components (reference/2)
-              ├─ 线程池处理 → utility-components (reference/3)
-              ├─ 责任链模式 → utility-components (reference/4)
-              └─ 其他 → 查找对应模块 Skill
-```
-
----
-
-## 相关 Skill
-
-- [common-technical-practices](../common-technical-practices/SKILL.md) - 通用技术实践（框架级）
-- [design-patterns](../design-patterns/SKILL.md) - 设计模式指南
-- [backend-microservice-development](../backend-microservice-development/SKILL.md) - 后端微服务开发
-
----
-
-## Quick Reference
-
-| 需求 | 使用 Skill | 参考章节 |
-|------|-----------|----------|
-| 实现 JWT 认证 | utility-components | reference/1-jwt-security.md |
-| 解析流水线变量 | utility-components | reference/2-expression-parser.md |
-| 批量并发处理 | utility-components | reference/3-thread-pool-loop-util.md |
-| 实现拦截器链 | utility-components | reference/4-chain-responsibility.md |
-| 添加 AOP 切面 | common-technical-practices | reference/1-aop-aspect.md |
-| 实现分布式锁 | common-technical-practices | reference/2-distributed-lock.md |
-| 配置重试机制 | common-technical-practices | reference/3-retry-mechanism.md |
+- JWT：`reference/1-jwt-security.md`
+- 表达式解析：`reference/2-expression-parser.md`
+- 线程池与循环工具：`reference/3-thread-pool-loop-util.md`
+- 责任链：`reference/4-chain-responsibility.md`
+- 如果你需要横切实践：再看 `common-technical-practices`
+- 如果你需要微服务底座：再看 `microservice-infrastructure`

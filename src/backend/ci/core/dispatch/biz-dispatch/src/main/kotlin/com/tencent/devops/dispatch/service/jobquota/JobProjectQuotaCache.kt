@@ -51,7 +51,7 @@ object JobProjectQuotaCache {
     fun get(
         projectId: String,
         jobQuotaVmType: JobQuotaVmType,
-        channelCode: String = ChannelCode.BS.name,
+        channelCode: String = ChannelCode.getRequestChannelCode().name,
         loader: () -> JobQuotaStatus
     ): JobQuotaStatus {
         val cacheKey = buildCacheKey(projectId, jobQuotaVmType, channelCode)
@@ -79,7 +79,7 @@ object JobProjectQuotaCache {
     fun put(
         projectId: String,
         jobQuotaVmType: JobQuotaVmType,
-        channelCode: String = ChannelCode.BS.name,
+        channelCode: String = ChannelCode.getRequestChannelCode().name,
         quota: JobQuotaStatus
     ) {
         val cacheKey = buildCacheKey(projectId, jobQuotaVmType, channelCode)
@@ -97,7 +97,7 @@ object JobProjectQuotaCache {
     fun invalidate(
         projectId: String,
         jobQuotaVmType: JobQuotaVmType,
-        channelCode: String = ChannelCode.BS.name
+        channelCode: String = ChannelCode.getRequestChannelCode().name
     ) {
         val cacheKey = buildCacheKey(projectId, jobQuotaVmType, channelCode)
         cache.invalidate(cacheKey)

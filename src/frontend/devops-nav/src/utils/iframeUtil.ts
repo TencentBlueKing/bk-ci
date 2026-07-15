@@ -49,7 +49,7 @@ function iframeUtil (router: any) {
     }
 
     utilMap.syncUrl = function ({ url, refresh = false }: UrlParam): void {
-        const pathname = `${location.pathname.replace(/^\/(\w+)\/(\w+)\/(\S+)$/, '/$1/$2')}${url}`
+        const pathname = `${location.pathname.replace(/^\/([\w\-]+)\/([\w\-]+)\/(\S+)$/, '/$1/$2')}${url}`
         if (refresh) {
             location.pathname = pathname
         } else {

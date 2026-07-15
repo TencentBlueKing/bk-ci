@@ -37,6 +37,7 @@ import com.tencent.devops.common.pipeline.TemplateDescriptor
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.enums.BuildScriptType
 import com.tencent.devops.common.pipeline.enums.CharsetType
+import com.tencent.devops.common.pipeline.enums.TapdEventType
 import com.tencent.devops.common.pipeline.enums.TemplateRefType
 import com.tencent.devops.common.pipeline.pojo.TemplateVariable
 import com.tencent.devops.common.pipeline.pojo.element.Element
@@ -57,6 +58,7 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeScmSvnWebHook
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeTGitWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.RemoteTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.TapdWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.TimerTriggerElement
 import com.tencent.devops.common.pipeline.pojo.transfer.IfType
 import com.tencent.devops.common.pipeline.pojo.transfer.PreStep
@@ -79,6 +81,7 @@ import com.tencent.devops.process.yaml.v3.models.on.EnableType
 import com.tencent.devops.process.yaml.v3.models.on.ManualRule
 import com.tencent.devops.process.yaml.v3.models.on.RemoteRule
 import com.tencent.devops.process.yaml.v3.models.on.SchedulesRule
+import com.tencent.devops.process.yaml.v3.models.on.TapdRule
 import com.tencent.devops.process.yaml.v3.models.on.TriggerOn
 import com.tencent.devops.process.yaml.v3.models.step.PreCheckoutStep
 import com.tencent.devops.process.yaml.v3.models.step.PreManualReviewUserTaskElement
@@ -114,6 +117,7 @@ class ElementTransfer @Autowired(required = false) constructor(
                 TriggerType.CODE_GITLAB -> triggerTransfer.yaml2TriggerGitlab(it.second, elements)
                 TriggerType.SCM_GIT -> triggerTransfer.yaml2TriggerScmGit(it.second, elements)
                 TriggerType.SCM_SVN -> triggerTransfer.yaml2TriggerScmSvn(it.second, elements)
+                TriggerType.TAPD -> triggerTransfer.yaml2TriggerTapd(it.second, elements)
             }
             yamlInput.aspectWrapper.setModelElement4Model(
                 elements.last(),
@@ -205,6 +209,7 @@ class ElementTransfer @Autowired(required = false) constructor(
                 } else {
                     RemoteRule(id = element.stepId, name = element.name, enable = EnableType.FALSE.value)
                 }
+                return@forEach
             }
         }
         if (schedules.isNotEmpty()) {
@@ -218,6 +223,71 @@ class ElementTransfer @Autowired(required = false) constructor(
             return triggerOn.value
         }
         return null
+    }
+
+    /**
+     * 将流水线中的 [TapdWebHookTriggerElement] 按 workspaceId 聚合，生成一批
+     * `on:` 顶层的 TAPD 触发条目（每个 workspace 一条 [TriggerOn]，顶层含
+     * `workspaceId + story + bug`）。
+     *
+     * 与 `scmTriggers2Yaml` 对齐：调用方拿到 `List<TriggerOn>` 后 `toPre(V3_0)`
+     * 会得到 `PreTriggerOnV3(type = "tapd", workspace-id = ..., story = ..., bug = ...)`。
+     */
+    fun tapdTriggers2Yaml(
+        elements: List<Element>,
+        aspectWrapper: PipelineTransferAspectWrapper
+    ): List<TriggerOn> {
+        // 用 LinkedHashMap 保证 YAML 输出中 workspace 顺序稳定
+        val tapdByWorkspace = mutableMapOf<String, TriggerOn>()
+        elements.filterIsInstance<TapdWebHookTriggerElement>().forEach { element ->
+            aspectWrapper.setModelElement4Model(element, PipelineTransferAspectWrapper.AspectType.BEFORE)
+            mergeTapdElement(element, tapdByWorkspace)
+        }
+        return tapdByWorkspace.values.toList()
+    }
+
+    /**
+     * 将同一 workspace 下的 story / bug 触发元素合并到同一个 [TriggerOn] 的
+     * `story` / `bug` 字段。
+     *
+     * 若同一 workspace 下的同一事件类型出现多个触发元素，后者会覆盖前者，
+     * 与 YAML 侧「一个 workspace 只允许配置一个 story / 一个 bug」的语义保持一致。
+     */
+    private fun mergeTapdElement(
+        element: TapdWebHookTriggerElement,
+        acc: MutableMap<String, TriggerOn>
+    ) {
+        val input = element.data.input
+        val eventType = input.eventType ?: return
+        val workspaceId = input.workspaceId
+        if (workspaceId.isNullOrEmpty()) {
+            logger.warn("TapdWebHookTriggerElement workspaceId is empty")
+            return
+        }
+        val includeActions = when (eventType) {
+            TapdEventType.STORY -> input.includeStoryAction
+            TapdEventType.BUG -> input.includeBugAction
+            else -> null
+        }
+        val rule = TapdRule(
+            id = element.stepId,
+            name = element.name,
+            enable = element.elementEnabled().nullIfDefault(true),
+            action = includeActions,
+            users = input.includeUsers.nonEmptyOrNull(),
+            usersIgnore = input.excludeUsers.nonEmptyOrNull(),
+            owners = input.includeOwner.nonEmptyOrNull(),
+            ownersIgnore = input.excludeOwner.nonEmptyOrNull(),
+            labels = input.includeLabels?.takeIf { it.isNotBlank() }?.split(","),
+            labelsIgnore = input.excludeLabels?.takeIf { it.isNotBlank() }?.split(","),
+            priorities = input.includePriority?.takeIf { it.isNotBlank() }?.split(",")
+        )
+        val current = acc[workspaceId] ?: TriggerOn(workspaceId = workspaceId)
+        acc[workspaceId] = when (eventType) {
+            TapdEventType.STORY -> current.copy(story = rule)
+            TapdEventType.BUG -> current.copy(bug = rule)
+            else -> current
+        }
     }
 
     fun scmTriggers2Yaml(
@@ -712,4 +782,6 @@ class ElementTransfer @Autowired(required = false) constructor(
     protected fun makeServiceElementList(job: Job): MutableList<Element> {
         return mutableListOf()
     }
+
+    private fun List<String>?.nonEmptyOrNull() = this?.ifEmpty { null }
 }

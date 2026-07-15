@@ -40,7 +40,7 @@ data class ThirdPartyDevCloudDispatchType(
     @get:Schema(title = "工作空间", required = false)
     var workspace: String?,
     @get:Schema(title = "agent类型", required = false)
-    val agentType: AgentType = AgentType.NAME
+    val agentType: AgentDispatchType = AgentDispatchType.NAME
 ) : DispatchType(
     displayName
 ) {

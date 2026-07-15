@@ -30,6 +30,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE
+import com.tencent.devops.common.api.auth.AUTH_HEADER_IMATE_SESSION_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.BuildHistoryPage
@@ -84,6 +85,9 @@ interface ApigwBuildResourceV3 {
         @Parameter(description = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
+        @Parameter(description = "iMate会话ID", required = false)
+        @HeaderParam(AUTH_HEADER_IMATE_SESSION_ID)
+        imateSessionId: String?,
         @Parameter(
             description = "启动参数：map<变量名(string),变量值(string)>", required = false,
             examples = [
@@ -106,7 +110,10 @@ interface ApigwBuildResourceV3 {
         values: Map<String, String>?,
         @Parameter(description = "手动指定构建版本参数", required = false)
         @QueryParam("buildNo")
-        buildNo: Int? = null
+        buildNo: Int? = null,
+        @Parameter(description = "分支版本, 仅PAC流水线有效", required = false)
+        @QueryParam("branch")
+        branch: String? = null
     ): Result<BuildId>
 
     @Operation(summary = "停止构建", tags = ["v3_app_build_stop", "v3_user_build_stop"])
@@ -253,7 +260,10 @@ interface ApigwBuildResourceV3 {
         pipelineId: String,
         @Parameter(description = "指定草稿版本（为调试构建）", required = false)
         @QueryParam("version")
-        debugVersion: Int?
+        debugVersion: Int?,
+        @Parameter(description = "分支版本, 仅PAC流水线有效", required = false)
+        @QueryParam("branch")
+        branch: String? = null
     ): Result<BuildManualStartupInfo>
 
     @Operation(summary = "构建详情", tags = ["v3_app_build_detail", "v3_user_build_detail"])

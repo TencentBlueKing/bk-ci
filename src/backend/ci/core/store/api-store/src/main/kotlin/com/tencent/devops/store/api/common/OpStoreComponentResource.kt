@@ -41,7 +41,7 @@ import com.tencent.devops.store.pojo.common.enums.StoreSortTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.publication.StoreApproveReleaseRequest
 import com.tencent.devops.store.pojo.common.publication.StoreOfflineRequest
-import com.tencent.devops.store.pojo.common.version.StoreDeskVersionItem
+import com.tencent.devops.store.pojo.common.version.StoreComponentVersionItem
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -151,7 +151,7 @@ interface OpStoreComponentResource {
         @QueryParam("pageSize")
         @BkField(patternStyle = BkStyleEnum.PAGE_SIZE_STYLE)
         pageSize: Int = 10
-    ): Result<Page<StoreDeskVersionItem>>
+    ): Result<Page<StoreComponentVersionItem>>
 
     @Operation(summary = "根据组件ID获取组件详情")
     @GET
@@ -241,5 +241,14 @@ interface OpStoreComponentResource {
         version: String,
         @Parameter(description = "更新组件已安装包文件sha1摘要值请求报文", required = true)
         installedPkgFileShaContentRequest: InstalledPkgFileShaContentRequest
+    ): Result<Boolean>
+
+    @Operation(summary = "批量更新存量组件版本包大小")
+    @PUT
+    @Path("/components/size/batch/update")
+    fun batchUpdateComponentsVersionSize(
+        @Parameter(description = "组件类型", required = true)
+        @QueryParam("storeType")
+        storeType: StoreTypeEnum,
     ): Result<Boolean>
 }

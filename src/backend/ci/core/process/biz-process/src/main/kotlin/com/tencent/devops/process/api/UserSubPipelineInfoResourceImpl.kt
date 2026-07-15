@@ -27,9 +27,13 @@
 
 package com.tencent.devops.process.api
 
+import com.tencent.devops.common.api.context.ChannelContext
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.environment.pojo.NodeBaseInfo
+import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.process.api.user.UserSubPipelineInfoResource
 import com.tencent.devops.process.pojo.pipeline.PipelineBuildParamFormProp
 import com.tencent.devops.process.service.SubPipelineStartUpService
@@ -44,6 +48,7 @@ class UserSubPipelineInfoResourceImpl @Autowired constructor (
         userId: String,
         projectId: String,
         pipelineId: String,
+        channelCode: ChannelCode?,
         includeConst: Boolean?,
         includeNotRequired: Boolean?,
         subBranch: String?
@@ -52,13 +57,40 @@ class UserSubPipelineInfoResourceImpl @Autowired constructor (
         if (pipelineId.isBlank() || projectId.isBlank()) {
             return Result(ArrayList())
         }
-        return subPipeService.subPipelineManualStartupInfo(
+        // query 传了渠道则以其为准设置渠道上下文，统一作用于权限校验、i18n、下游服务透传等
+        return ChannelContext.withChannel(channelCode?.name ?: ChannelContext.getChannel()) {
+            subPipeService.subPipelineManualStartupInfo(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                includeConst = includeConst,
+                includeNotRequired = includeNotRequired,
+                branch = subBranch
+            )
+        }
+    }
+
+    override fun subStreamManualStartupNodeList(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        nodeIp: String?,
+        displayName: String?,
+        createdUser: String?,
+        nodeStatus: NodeStatus?
+    ): Result<List<NodeBaseInfo>> {
+        checkParam(userId)
+        if (pipelineId.isBlank() || projectId.isBlank()) {
+            return Result(emptyList())
+        }
+        return subPipeService.subStreamManualStartupNodeList(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
-            includeConst = includeConst,
-            includeNotRequired = includeNotRequired,
-            branch = subBranch
+            nodeIp = nodeIp,
+            displayName = displayName,
+            createdUser = createdUser,
+            nodeStatus = nodeStatus
         )
     }
 

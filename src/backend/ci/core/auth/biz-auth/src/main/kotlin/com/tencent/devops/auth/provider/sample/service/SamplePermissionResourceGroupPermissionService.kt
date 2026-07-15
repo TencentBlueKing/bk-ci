@@ -30,6 +30,7 @@ package com.tencent.devops.auth.provider.sample.service
 
 import com.tencent.devops.auth.pojo.vo.GroupPermissionDetailVo
 import com.tencent.devops.auth.pojo.vo.IamGroupPoliciesVo
+import com.tencent.devops.auth.pojo.vo.PipelineViewWithoutDownloadGroupVO
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupPermissionService
 import com.tencent.devops.common.auth.api.pojo.ProjectConditionDTO
 
@@ -151,4 +152,8 @@ class SamplePermissionResourceGroupPermissionService : PermissionResourceGroupPe
         memberIds: List<String>,
         action: String
     ): List<String> = emptyList()
+
+    override fun listProjectGroupsWithPipelineViewButNoDownload(
+        projectCodes: List<String>?
+    ): List<PipelineViewWithoutDownloadGroupVO> = emptyList()
 }
