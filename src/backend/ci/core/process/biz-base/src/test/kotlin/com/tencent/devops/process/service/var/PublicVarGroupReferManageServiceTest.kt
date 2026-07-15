@@ -40,6 +40,7 @@ import com.tencent.devops.process.engine.dao.template.TemplateDao
 import com.tencent.devops.process.engine.dao.template.TemplatePipelineDao
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import com.tencent.devops.project.pojo.Result
+import io.mockk.anyVararg
 import io.mockk.clearMocks
 import io.mockk.every
 import io.mockk.mockk
@@ -47,6 +48,7 @@ import io.mockk.verify
 import org.jooq.DSLContext
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
+import org.springframework.data.redis.core.script.RedisScript
 
 /**
  * 覆盖计数体系最核心的“绝对值重算 + 覆盖 + 清零桶”算法（refreshVarLevelSummary）。
@@ -96,6 +98,22 @@ class PublicVarGroupReferManageServiceTest {
         private const val GROUP = "g1"
         private const val DYNAMIC = -1
         private const val VAR_SUMMARY_BIZ_TAG = "T_RESOURCE_PUBLIC_VAR_VERSION_SUMMARY"
+    }
+
+    /**
+     * RedisLock.unlock() 会走 RedisOperation.execute(Lua) 释放锁；clearMocks 会清掉 relaxed 默认应答，
+     * 未显式 stub 时 execute 会抛异常并触发 unlock() 的 catch 重试，污染 decorateKey 调用计数。
+     * 这里用与 BkCiAbstractTest 一致的命名参数写法（args = anyVararg()）确保匹配成功、解锁一次即成功。
+     */
+    private fun stubUnlockExecute() {
+        every {
+            redisOperation.execute(
+                script = any<RedisScript<Long>>(),
+                keys = any(),
+                args = anyVararg(),
+                isRedisLock = any()
+            )
+        } returns 1L
     }
 
     /**
@@ -251,6 +269,7 @@ class PublicVarGroupReferManageServiceTest {
         val acquiredKeys = mutableListOf<String>()
         every { redisOperation.getKeyByRedisName(any()) } answers { firstArg() }
         every { redisOperation.setNxEx(capture(acquiredKeys), any(), any(), any()) } returns true
+        stubUnlockExecute()
 
         var executed = false
         val result = service.executeWithGroupSummaryLocks(PROJECT, listOf("groupB", "groupA", "groupC")) {
@@ -270,13 +289,14 @@ class PublicVarGroupReferManageServiceTest {
      * 注意：类级 redisOperation mock 会跨用例累积调用，必须 clearMocks 后再断言次数。
      * 释放校验用 decorateKey（getKeyByRedisName）的调用次数间接衡量：
      * 每把锁 lock 一次 + unlock 一次各调用一次 decorateKey，2 组共 4 次。
-     * 避免直接 verify RedisLock 内部的 execute（vararg + 尾随参数在 MockK 中匹配不稳定）。
+     * 前提：stubUnlockExecute() 保证 unlock 的 Lua 一次成功、不走 catch 重试，计数才稳定为 4。
      */
     @Test
     fun executeWithGroupSummaryLocks_releasesLocksOnException() {
         clearMocks(redisOperation)
         every { redisOperation.getKeyByRedisName(any()) } answers { firstArg() }
         every { redisOperation.setNxEx(any(), any(), any(), any()) } returns true
+        stubUnlockExecute()
 
         val boom = RuntimeException("boom")
         val thrown = Assertions.assertThrows(RuntimeException::class.java) {
