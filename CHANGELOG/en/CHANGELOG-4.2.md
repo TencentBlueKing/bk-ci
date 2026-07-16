@@ -19,6 +19,23 @@
 # v4.2.0-rc.4
 ## 2026-07-16
 ### Changelog since v4.2.0-rc.3
+### Summary
+Key changes in this release:
+
+**Features**
+- Creation Flow phase 1: management, visibility scope, workspace, YAML bidirectional conversion, repository event triggers, and third-party build agents
+- Pipelines support TAPD event triggers (phase 1)
+- Support copying pipelines across projects
+- Support pipeline public variable management
+- Support custom parameter types and list parameter types for complex inputs
+- Store supports project-level visibility scope and version changelog display
+- Environment management refactor: node enable/disable supports reason notes and operation logs
+
+**Bug Fixes**
+- Fixed deleting early pipeline versions that could remove a version still used by a stuck build
+- Fixed build environment auto-retry not releasing the reuse lock
+- Fixed failed plugins that could not be retried or skipped when a later plugin runs only if previous plugins failed
+
 #### New Features
 
 ##### Pipeline
