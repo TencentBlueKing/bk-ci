@@ -80,7 +80,7 @@ object BuildVarExprOverflowHelper {
         buildVariableService: BuildVariableService,
         projectId: String,
         buildId: String
-    ): Any? {
+    ): Any {
         val overflowKeys = BuildVarOverflowUtils.collectOverflowKeys(variables)
         if (overflowKeys.isEmpty()) {
             return ObjectReplaceEnvVarUtil.replaceEnvVar(value, variables)
