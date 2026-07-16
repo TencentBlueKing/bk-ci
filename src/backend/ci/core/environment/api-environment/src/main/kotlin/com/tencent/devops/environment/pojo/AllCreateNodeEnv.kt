@@ -73,28 +73,32 @@ object AllCreateNodeEnv {
         else -> null
     }
 
-    fun idList() = listOf(WINDOWS_ENV_ID, LINUX_ENV_ID, MACOS_ENV_ID)
+    private val idList = listOf(WINDOWS_ENV_ID, LINUX_ENV_ID, MACOS_ENV_ID)
 
-    fun list() = listOf(
+    fun idList() = idList
+
+    private val infoList = listOf(
         AllCreateNodeEnvInfo(
             os = OS.WINDOWS,
-            name = WINDOWS_ENV_NAME_KEY,
+            name = I18nUtil.getCodeLanMessage(WINDOWS_ENV_NAME_KEY),
             id = WINDOWS_ENV_ID,
             hashId = WINDOWS_ENV_HASH_ID
         ),
         AllCreateNodeEnvInfo(
             os = OS.LINUX,
-            name = LINUX_ENV_NAME_KEY,
+            name = I18nUtil.getCodeLanMessage(LINUX_ENV_NAME_KEY),
             id = LINUX_ENV_ID,
             hashId = LINUX_ENV_HASH_ID
         ),
         AllCreateNodeEnvInfo(
             os = OS.MACOS,
-            name = MACOS_ENV_NAME_KEY,
+            name = I18nUtil.getCodeLanMessage(MACOS_ENV_NAME_KEY),
             id = MACOS_ENV_ID,
             hashId = MACOS_ENV_HASH_ID
         )
     )
+
+    fun list() = infoList
 }
 
 data class AllCreateNodeEnvInfo(
