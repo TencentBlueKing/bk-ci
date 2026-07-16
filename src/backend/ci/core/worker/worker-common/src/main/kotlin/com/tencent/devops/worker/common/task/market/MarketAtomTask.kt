@@ -698,10 +698,22 @@ open class MarketAtomTask : ITask() {
                     }
                     LoggerService.addWarnLine("input(sensitive): (${def["label"]})$key=******")
                 } else {
-                    LoggerService.addNormalLine("input(normal): (${def["label"]})$key=$value")
+                    // 大变量入参只在日志里展示引用串，避免把 4M 级真实值刷进构建日志；
+                    // 插件通过 input.json 拿到的仍是真实值，不受此展示截断影响。
+                    val display = if (value.length > TaskDaemon.PARAM_MAX_LENGTH_WARN) {
+                        "__BK_OVF__:${value.length}"
+                    } else {
+                        value
+                    }
+                    LoggerService.addNormalLine("input(normal): (${def["label"]})$key=$display")
                 }
             } else {
-                LoggerService.addWarnLine("input(except): $key=$value")
+                val display = if (value.length > TaskDaemon.PARAM_MAX_LENGTH_WARN) {
+                    "__BK_OVF__:${value.length}"
+                } else {
+                    value
+                }
+                LoggerService.addWarnLine("input(except): $key=$display")
             }
         }
         LoggerService.addFoldEndLine("-----")

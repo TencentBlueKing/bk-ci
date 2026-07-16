@@ -108,9 +108,9 @@ object ExprReplacementUtil {
      * - [variables] 中包含的"溢出键"对应 value 是**纯引用串** `__BK_OVF__:<len>`；
      *   表达式真正访问该 key 时才通过 [overflowLoader] 拉取完整值，
      *   节省同一次评估、不同条任务都需要全量加载的内存峰值；
-     * - 当前实现仅支持"单层"溢出键替换：若键名不含 `.`，可被替换为
-     *   [LazyStringContextData]；含 `.` 的复合键暂不替换（保留引用串），
-     *   原因是这种用法在流水线变量场景下极少出现，避免引入更复杂的路径替换逻辑。
+     * - 支持任意层级的溢出键：单层键（如 testResult）与嵌套 context 键
+     *   （如 jobs.x.steps.y.outputs.z）都会沿点号路径下钻到叶子后替换为
+     *   [LazyStringContextData]；中间节点缺失时保持引用串降级。
      */
     fun getCustomExecutionContextByMap(
         variables: Map<String, String>,
@@ -146,20 +146,47 @@ object ExprReplacementUtil {
         loader: (String) -> String?
     ) {
         overflowKeys.forEach { rawKey ->
-            // variables.xxx 的落库 key 是 xxx，loader 必须用落库 key 去查
-            val key = if (rawKey.startsWith(VARIABLES_PREFIX)) rawKey.removePrefix(VARIABLES_PREFIX) else rawKey
-            // 仅处理单层 key（不含 `.`），多层嵌套的极少数情况由引用串覆盖
-            if (key.contains('.')) return@forEach
-            // ${{ key }}：根节点。仅当上下文已经持有此 key 时才替换，兼容现有变量过滤逻辑
-            if (root.containsKey(key)) {
-                root[key] = LazyStringContextData(supplier = { loader.invoke(key) })
+            // variables.xxx 的落库 key 是 xxx；其余（含 jobs.x.steps.y.outputs.z 这类嵌套 context）
+            // 落库 key 即完整 rawKey，loader 必须用落库 key 去查。
+            val loadKey = if (rawKey.startsWith(VARIABLES_PREFIX)) rawKey.removePrefix(VARIABLES_PREFIX) else rawKey
+            // 按 rawKey 的点号路径逐层下钻，把叶子替换为懒加载节点，支持任意层级嵌套 key
+            // （如 ${{ jobs.job_UaD.steps.mfKTO5.outputs.testResult }}）
+            replaceLeafByPath(root, rawKey.split('.'), loadKey, loader)
+            // 单层 key（如 testResult）额外替换 variables 命名空间下的同名叶子，
+            // 使 ${{ variables.testResult }} 与 ${{ testResult }} 指向同一落库变量都能懒加载
+            if (!rawKey.contains('.')) {
+                val variablesNode = root[VARIABLES_NAMESPACE]
+                if (variablesNode is DictionaryContextData) {
+                    replaceLeafByPath(variablesNode, listOf(rawKey), loadKey, loader)
+                }
             }
-            // ${{ variables.key }}：variables 命名空间下的同名叶子也要替换，
-            // 否则仍会读到 ContextTree 里残留的引用串
-            val variablesNode = root[VARIABLES_NAMESPACE]
-            if (variablesNode is DictionaryContextData && variablesNode.containsKey(key)) {
-                variablesNode[key] = LazyStringContextData(supplier = { loader.invoke(key) })
+        }
+    }
+
+    /**
+     * 沿点号路径 [path] 从 [root] 逐层下钻 [DictionaryContextData]，若叶子存在则替换为
+     * [LazyStringContextData]（懒加载 [loadKey] 对应的溢出真实值）。任一中间节点不是字典或缺失，
+     * 则保持引用串降级，不做替换。
+     */
+    private fun replaceLeafByPath(
+        root: DictionaryContextData,
+        path: List<String>,
+        loadKey: String,
+        loader: (String) -> String?
+    ) {
+        if (path.isEmpty()) return
+        var node: DictionaryContextData = root
+        for (i in 0 until path.size - 1) {
+            val child = node[path[i]]
+            if (child is DictionaryContextData) {
+                node = child
+            } else {
+                return
             }
+        }
+        val leafKey = path.last()
+        if (node.containsKey(leafKey)) {
+            node[leafKey] = LazyStringContextData(supplier = { loader.invoke(loadKey) })
         }
     }
 

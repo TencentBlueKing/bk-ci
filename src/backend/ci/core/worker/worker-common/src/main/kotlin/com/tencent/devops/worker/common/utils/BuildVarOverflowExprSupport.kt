@@ -73,32 +73,62 @@ object BuildVarOverflowExprSupport {
                 } else {
                     key
                 }
-                val result = variableApi.getBuildVariableValue(pipelineId = pipelineId, varName = loadKey)
-                if (result.isNotOk()) {
-                    logger.warn(
-                        "OVERFLOW_LOADER_FAIL|key=$key|loadKey=$loadKey|" +
-                            "status=${result.status}|message=${result.message}"
-                    )
-                    return@loader variables[key] ?: variables[loadKey]
+                val data = fetchRealValue(pipelineId, loadKey)
+                // 短路径 steps.x.outputs.y 是运行时派生、不落库；其落库 key 为 jobs.<jobId>.steps.x.outputs.y。
+                // 直查 miss（null 或仍是引用串）时，用当前 jobId 补前缀重查一次。
+                if ((data == null || BuildVarOverflowUtils.isOverflowReference(data)) && isShortStepOutput(loadKey)) {
+                    val jobId = LoggerService.buildVariables?.jobId?.takeIf { it.isNotBlank() }
+                    if (!jobId.isNullOrBlank()) {
+                        val fullKey = "jobs.$jobId.$loadKey"
+                        val full = fetchRealValue(pipelineId, fullKey)
+                        if (full != null && !BuildVarOverflowUtils.isOverflowReference(full)) {
+                            logger.info("OVERFLOW_LOADER_OK|key=$key|fullKey=$fullKey|len=${full.length}")
+                            return@loader full
+                        }
+                    }
                 }
-                val data = result.data
-                if (data == null) {
-                    logger.warn("OVERFLOW_LOADER_NULL|key=$key|loadKey=$loadKey")
-                    return@loader variables[key] ?: variables[loadKey]
+                when {
+                    data == null -> {
+                        logger.warn("OVERFLOW_LOADER_NULL|key=$key|loadKey=$loadKey")
+                        variables[key] ?: variables[loadKey]
+                    }
+                    BuildVarOverflowUtils.isOverflowReference(data) -> {
+                        // process 仍返回引用串：溢出表 miss 或未加载成功
+                        logger.warn("OVERFLOW_LOADER_STILL_REF|key=$key|loadKey=$loadKey|data=$data")
+                        data
+                    }
+                    else -> {
+                        logger.info("OVERFLOW_LOADER_OK|key=$key|loadKey=$loadKey|len=${data.length}")
+                        data
+                    }
                 }
-                if (BuildVarOverflowUtils.isOverflowReference(data)) {
-                    // process 仍返回引用串：溢出表 miss 或未加载成功
-                    logger.warn("OVERFLOW_LOADER_STILL_REF|key=$key|loadKey=$loadKey|data=$data")
-                } else {
-                    logger.info("OVERFLOW_LOADER_OK|key=$key|loadKey=$loadKey|len=${data.length}")
-                }
-                data
             } catch (ignore: Throwable) {
                 logger.warn("OVERFLOW_LOADER_FAIL|key=$key|${ignore.message}", ignore)
                 variables[key] ?: variables[key.removePrefix(VARIABLES_PREFIX)]
             }
         }
         return overflowKeys to loader
+    }
+
+    private const val STEPS_PREFIX = "steps."
+    private const val OUTPUTS_INFIX = ".outputs."
+
+    // steps.<stepId>.outputs.<name> 短路径：当前 job 运行时派生、不落库
+    private fun isShortStepOutput(key: String): Boolean =
+        key.startsWith(STEPS_PREFIX) && key.contains(OUTPUTS_INFIX)
+
+    /**
+     * 单键查询大变量真实值；接口异常/失败返回 null（由调用方决定回退策略）。
+     */
+    private fun fetchRealValue(pipelineId: String, varName: String): String? {
+        val result = variableApi.getBuildVariableValue(pipelineId = pipelineId, varName = varName)
+        if (result.isNotOk()) {
+            logger.warn(
+                "OVERFLOW_LOADER_FAIL|varName=$varName|status=${result.status}|message=${result.message}"
+            )
+            return null
+        }
+        return result.data
     }
 
     // 仅匹配双花括号 ${{ key }}；单花括号 ${ } / $x 不在此处处理（保持引用串，避免 4M 值意外展开）
@@ -108,10 +138,12 @@ object BuildVarOverflowExprSupport {
 
     private fun isOverflowToken(key: String, overflowKeys: Set<String>): Boolean {
         if (overflowKeys.isEmpty()) return false
-        if (overflowKeys.contains(key)) return true
-        if (key.startsWith(VARIABLES_PREFIX) && overflowKeys.contains(key.removePrefix(VARIABLES_PREFIX))) return true
-        if (overflowKeys.contains(VARIABLES_PREFIX + key)) return true
-        return false
+        // 与表达式引擎 ExprReplacementUtil.replaceOverflowLeaves 保持一致：支持任意层级 key，
+        // 含嵌套 context 键（如 jobs.x.steps.y.outputs.z），其落库 key 即完整 dotted 名。
+        val loadKey = if (key.startsWith(VARIABLES_PREFIX)) key.removePrefix(VARIABLES_PREFIX) else key
+        return overflowKeys.contains(key) ||
+            overflowKeys.contains(loadKey) ||
+            overflowKeys.contains(VARIABLES_PREFIX + loadKey)
     }
 
     /**
