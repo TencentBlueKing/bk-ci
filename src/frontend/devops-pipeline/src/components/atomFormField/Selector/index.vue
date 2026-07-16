@@ -23,7 +23,7 @@
 </template>
 
 <script>
-    import { isShallowEqual } from '@/utils/util'
+    import { isObject, isShallowEqual } from '@/utils/util'
     import atomFieldMixin from '../atomFieldMixin'
     export default {
         name: 'selector',
@@ -138,9 +138,10 @@
         },
         methods: {
             onChange (val, oldVal) {
-                if (!isShallowEqual(val, oldVal)) {
-                    this.handleChange(this.name, val)
-                }
+                const isSameObject = isObject(val) && isObject(oldVal) && isShallowEqual(val, oldVal)
+                if (val === oldVal || isSameObject) return
+
+                this.handleChange(this.name, val)
             },
             editItem (index) {
                 this.edit(index)
