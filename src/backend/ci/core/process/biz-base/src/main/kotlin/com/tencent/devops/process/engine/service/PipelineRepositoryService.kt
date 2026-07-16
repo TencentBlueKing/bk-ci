@@ -123,8 +123,8 @@ import com.tencent.devops.process.pojo.setting.PipelineModelVersion
 import com.tencent.devops.process.pojo.`var`.dto.PublicVarGroupReferDTO
 import com.tencent.devops.process.service.PipelineAsCodeService
 import com.tencent.devops.process.service.PipelineOperationLogService
-import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.service.PipelineVisibilityService
+import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.service.pipeline.PipelineSettingVersionService
 import com.tencent.devops.process.service.pipeline.PipelineTransferYamlService
 import com.tencent.devops.process.service.`var`.PublicVarGroupReferManageService
@@ -1855,14 +1855,13 @@ class PipelineRepositoryService constructor(
                             channelCode = record.channel
                         )
                     )
+                    publicVarGroupReferManageService.deletePublicVerGroupRefByReferId(
+                        transactionContext = transactionContext,
+                        referId = pipelineId,
+                        projectId = projectId,
+                        referType = PublicVarGroupReferenceTypeEnum.PIPELINE
+                    )
                 }
-                // 引用清理复用 transactionContext，与流水线删除同事务，避免孤儿引用（B-2）。
-                publicVarGroupReferManageService.deletePublicVerGroupRefByReferId(
-                    transactionContext = transactionContext,
-                    referId = pipelineId,
-                    projectId = projectId,
-                    referType = PublicVarGroupReferenceTypeEnum.PIPELINE
-                )
             }
 
             templatePipelineDao.get(
