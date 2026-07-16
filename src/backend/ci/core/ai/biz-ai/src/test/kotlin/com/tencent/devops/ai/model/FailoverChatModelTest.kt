@@ -85,6 +85,40 @@ class FailoverChatModelTest {
     }
 
     @Test
+    fun `should fallback when candidate keeps reasoning beyond total execution timeout`() {
+        val first = FakeModel(
+            name = "primary",
+            response = Flux.never()
+        )
+        val second = FakeModel(
+            name = "backup",
+            response = Flux.just(ChatResponse.builder().build())
+        )
+
+        val model = FailoverChatModel(
+            candidates = listOf(
+                FailoverModelCandidate(
+                    id = "primary",
+                    model = first,
+                    totalExecutionTimeout = Duration.ofMillis(20)
+                ),
+                FailoverModelCandidate(id = "backup", model = second)
+            ),
+            errorClassifier = errorClassifier
+        )
+
+        val responses = model.stream(
+            mutableListOf<Msg>(),
+            mutableListOf<ToolSchema>(),
+            GenerateOptions.builder().build()
+        ).collectList().block()
+
+        assertTrue(responses != null && responses.isNotEmpty())
+        assertEquals(1, first.invocations)
+        assertEquals(1, second.invocations)
+    }
+
+    @Test
     fun `should throw last error when all retryable models fail`() {
         val primaryError = RateLimitException("rate limited", null, null)
         val backupError = IllegalArgumentException("backup down")
