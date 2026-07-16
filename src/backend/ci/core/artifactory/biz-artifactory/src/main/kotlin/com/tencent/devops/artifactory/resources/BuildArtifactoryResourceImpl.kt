@@ -43,7 +43,6 @@ class BuildArtifactoryResourceImpl @Autowired constructor(
     }
 
     override fun show(
-        userId: String,
         projectId: String,
         pipelineId: String,
         artifactoryType: ArtifactoryType,
