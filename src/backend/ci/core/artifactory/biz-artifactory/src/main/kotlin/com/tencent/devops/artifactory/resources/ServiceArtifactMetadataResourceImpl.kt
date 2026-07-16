@@ -15,10 +15,8 @@ import com.tencent.devops.artifactory.pojo.artifact.PipelineArtifactInfo
 import com.tencent.devops.artifactory.service.artifact.PipelineArtifactInfoService
 import com.tencent.devops.auth.api.service.ServicePermissionAuthResource
 import com.tencent.devops.auth.api.service.ServiceProjectAuthResource
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.api.constant.CommonMessageCode
-import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
+import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.client.Client
@@ -74,7 +72,7 @@ class ServiceArtifactMetadataResourceImpl(
         pipelineId: String
     ): Boolean {
         return try {
-            val token = clientTokenService.getSystemToken() ?: ""
+            val token = clientTokenService.getSystemToken()
             client.get(ServicePermissionAuthResource::class)
                 .validateUserResourcePermissionByRelation(
                     userId = userId,
@@ -95,7 +93,7 @@ class ServiceArtifactMetadataResourceImpl(
         projectId: String
     ): Boolean {
         return try {
-            val token = clientTokenService.getSystemToken() ?: ""
+            val token = clientTokenService.getSystemToken()
             client.get(ServiceProjectAuthResource::class)
                 .isProjectUser(
                     token = token,
