@@ -79,8 +79,8 @@ class PipelineArtifactInfoService(
         projectId: String,
         pipelineId: String?,
         artifactType: String,
-        artifactName: String?,
-        artifactVersion: String?
+        artifactName: String,
+        artifactVersion: String
     ): PipelineArtifactInfo? {
         val record = pipelineArtifactInfoDao.getByArtifact(
             dslContext = dslContext,

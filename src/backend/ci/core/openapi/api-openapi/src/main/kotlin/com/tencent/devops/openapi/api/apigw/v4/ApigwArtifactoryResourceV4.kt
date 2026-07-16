@@ -234,11 +234,11 @@ interface ApigwArtifactoryResourceV4 {
         @Parameter(description = "制品类型：FILE/IMAGE/REPORT/PACKAGE等", required = true)
         @PathParam("artifactType")
         artifactType: String,
-        @Parameter(description = "制品名称，如文件名、镜像名（可选）", required = false)
+        @Parameter(description = "制品名称，如文件名、镜像名", required = true)
         @QueryParam("artifactName")
-        artifactName: String?,
-        @Parameter(description = "制品版本，如镜像Tag、包版本（可选）", required = false)
+        artifactName: String,
+        @Parameter(description = "制品版本，如镜像Tag、包版本", required = true)
         @QueryParam("artifactVersion")
-        artifactVersion: String?
+        artifactVersion: String
     ): Result<PipelineArtifactInfo?>
 }

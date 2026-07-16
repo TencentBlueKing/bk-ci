@@ -16,6 +16,8 @@ import com.tencent.devops.artifactory.service.artifact.PipelineArtifactInfoServi
 import com.tencent.devops.auth.api.service.ServicePermissionAuthResource
 import com.tencent.devops.auth.api.service.ServiceProjectAuthResource
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
@@ -40,8 +42,8 @@ class ServiceArtifactMetadataResourceImpl(
         projectId: String,
         pipelineId: String?,
         artifactType: String,
-        artifactName: String?,
-        artifactVersion: String?
+        artifactName: String,
+        artifactVersion: String
     ): Result<PipelineArtifactInfo?> {
         // 权限校验：指定 pipelineId → 校验流水线 VIEW 权限；否则 → 校验项目用户身份
         val hasPermission = if (!pipelineId.isNullOrBlank()) {

@@ -171,8 +171,8 @@ class ApigwArtifactoryResourceV4Impl @Autowired constructor(
         projectId: String,
         pipelineId: String?,
         artifactType: String,
-        artifactName: String?,
-        artifactVersion: String?
+        artifactName: String,
+        artifactVersion: String
     ): Result<PipelineArtifactInfo?> {
 
         val artifactInfo = client.get(ServiceArtifactMetadataResource::class)
