@@ -146,7 +146,7 @@ class UserAgentResourceImpl @Autowired constructor(
         }
         if (envId != null) {
             // 所有创作环境检验的是管理员权限
-            val hasPermission = if (AllCreateNodeEnv.hasHashId(envId)) {
+            val hasPermission = if (AllCreateNodeEnv.hasId(envId)) {
                 client.get(ServiceProjectAuthResource::class).checkProjectManager(
                     token = checkTokenService.getSystemToken(),
                     userId = userId,
