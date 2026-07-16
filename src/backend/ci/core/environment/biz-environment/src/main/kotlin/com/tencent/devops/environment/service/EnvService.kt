@@ -329,6 +329,7 @@ class EnvService @Autowired constructor(
                             name = ace.name,
                             envType = EnvType.CREATE,
                             envNodeType = EnvNodeType.NODE,
+                            os = ace.os,
                             nodeCount = createNodes.filter { it.os == ace.os.name }.size,
                             userId = userId, now = LocalDateTime.now().timestamp()
                         )
@@ -401,6 +402,7 @@ class EnvService @Autowired constructor(
                 desc = it.envDesc,
                 envType = if (it.envType == EnvType.TEST.name) EnvType.DEV.name else it.envType, // 兼容性代码
                 envNodeType = it.envNodeType,
+                os = OS.parse(it.os),
                 nodeCount = if (it.envNodeType == EnvNodeType.TAG.name) {
                     tagNodeCount[it.envId] ?: 0
                 } else {
@@ -453,6 +455,7 @@ class EnvService @Autowired constructor(
                 desc = it.envDesc,
                 envType = if (it.envType == EnvType.TEST.name) EnvType.DEV.name else it.envType, // 兼容性代码
                 envNodeType = it.envNodeType,
+                OS.parse(it.os),
                 nodeCount = if (it.envNodeType == EnvNodeType.TAG.name) {
                     tagNodeCount[it.envId] ?: 0
                 } else {
@@ -628,6 +631,7 @@ class EnvService @Autowired constructor(
                 desc = AllCreateNodeEnv.hashIdToName(envHashId) ?: "",
                 envType = EnvType.CREATE.name, // 兼容性代码
                 envNodeType = EnvNodeType.NODE.name,
+                os = AllCreateNodeEnv.list().firstOrNull { it.hashId == envHashId }?.os,
                 nodeCount = null,
                 tags = null,
                 envVars = null,
@@ -664,6 +668,7 @@ class EnvService @Autowired constructor(
             desc = env.envDesc,
             envType = if (env.envType == EnvType.TEST.name) EnvType.DEV.name else env.envType, // 兼容性代码
             envNodeType = env.envNodeType,
+            os = OS.parse(env.os),
             nodeCount = null,
             tags = tags,
             envVars = jacksonObjectMapper().readValue(env.envVars),
@@ -752,6 +757,7 @@ class EnvService @Autowired constructor(
                 desc = it.envDesc,
                 envType = if (it.envType == EnvType.TEST.name) EnvType.DEV.name else it.envType, // 兼容性代码
                 envNodeType = it.envNodeType,
+                os = OS.parse(it.os),
                 nodeCount = null,
                 tags = null,
                 envVars = jacksonObjectMapper().readValue(it.envVars),
@@ -1494,6 +1500,7 @@ class EnvService @Autowired constructor(
                     desc = it.envDesc,
                     envType = if (it.envType == EnvType.TEST.name) EnvType.DEV.name else it.envType, // 兼容性代码
                     envNodeType = it.envNodeType,
+                    os = OS.parse(it.os),
                     nodeCount = null,
                     tags = null,
                     envVars = jacksonObjectMapper().readValue(it.envVars),
@@ -1534,6 +1541,7 @@ class EnvService @Autowired constructor(
                     desc = it.envDesc,
                     envType = if (it.envType == EnvType.TEST.name) EnvType.DEV.name else it.envType, // 兼容性代码
                     envNodeType = it.envNodeType,
+                    os = null,
                     nodeCount = null,
                     tags = null,
                     envVars = jacksonObjectMapper().readValue(it.envVars),
@@ -1565,6 +1573,7 @@ class EnvService @Autowired constructor(
                 desc = it.envDesc,
                 envType = if (it.envType == EnvType.TEST.name) EnvType.DEV.name else it.envType, // 兼容性代码
                 envNodeType = it.envNodeType,
+                os = null,
                 nodeCount = null,
                 tags = null,
                 envVars = jacksonObjectMapper().readValue(it.envVars),
@@ -1588,6 +1597,7 @@ class EnvService @Autowired constructor(
                 desc = it.envDesc,
                 envType = if (it.envType == EnvType.TEST.name) EnvType.DEV.name else it.envType, // 兼容性代码
                 envNodeType = it.envNodeType,
+                os = null,
                 nodeCount = null,
                 tags = null,
                 envVars = jacksonObjectMapper().readValue(it.envVars),
