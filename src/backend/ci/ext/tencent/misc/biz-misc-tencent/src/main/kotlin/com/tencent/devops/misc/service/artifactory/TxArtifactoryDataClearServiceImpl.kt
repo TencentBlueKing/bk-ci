@@ -28,7 +28,6 @@
 package com.tencent.devops.misc.service.artifactory
 
 import com.tencent.devops.misc.dao.artifactory.TxArtifactoryDataClearDao
-import com.tencent.devops.misc.dao.artifactory.TxPipelineArtifactInfoDao
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -41,11 +40,7 @@ class TxArtifactoryDataClearServiceImpl @Autowired constructor(
     @Autowired
     private lateinit var txArtifactoryDataClearDao: TxArtifactoryDataClearDao
 
-    @Autowired
-    private lateinit var txPipelineArtifactInfoDao: TxPipelineArtifactInfoDao
-
     override fun deleteTableData(dslContext: DSLContext, buildId: String) {
         txArtifactoryDataClearDao.deleteArtifacetoryInfoByBuildId(dslContext, buildId)
-        txPipelineArtifactInfoDao.deleteByBuildId(dslContext, buildId)
     }
 }
