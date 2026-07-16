@@ -61,6 +61,9 @@ import java.io.InputStreamReader
 object ExprReplacementUtil {
     private val logger = LoggerFactory.getLogger(ExprReplacementUtil::class.java)
 
+    private const val VARIABLES_NAMESPACE = "variables"
+    private const val VARIABLES_PREFIX = "$VARIABLES_NAMESPACE."
+
     fun parseExpression(value: String, options: ExprReplacementOptions): String {
         with(options) {
             return try {
@@ -142,12 +145,20 @@ object ExprReplacementUtil {
         overflowKeys: Set<String>,
         loader: (String) -> String?
     ) {
-        overflowKeys.forEach { key ->
-            // 仅处理单层 key（不含 `.`），多层嵌套的极少数情况由摘要值覆盖
+        overflowKeys.forEach { rawKey ->
+            // variables.xxx 的落库 key 是 xxx，loader 必须用落库 key 去查
+            val key = if (rawKey.startsWith(VARIABLES_PREFIX)) rawKey.removePrefix(VARIABLES_PREFIX) else rawKey
+            // 仅处理单层 key（不含 `.`），多层嵌套的极少数情况由引用串覆盖
             if (key.contains('.')) return@forEach
-            // 仅当上下文已经持有此 key 时才替换；否则保持原状以兼容现有变量过滤逻辑
+            // ${{ key }}：根节点。仅当上下文已经持有此 key 时才替换，兼容现有变量过滤逻辑
             if (root.containsKey(key)) {
                 root[key] = LazyStringContextData(supplier = { loader.invoke(key) })
+            }
+            // ${{ variables.key }}：variables 命名空间下的同名叶子也要替换，
+            // 否则仍会读到 ContextTree 里残留的引用串
+            val variablesNode = root[VARIABLES_NAMESPACE]
+            if (variablesNode is DictionaryContextData && variablesNode.containsKey(key)) {
+                variablesNode[key] = LazyStringContextData(supplier = { loader.invoke(key) })
             }
         }
     }

@@ -64,9 +64,32 @@ object BuildVarOverflowExprSupport {
         }
         val loader: (String) -> String? = { key ->
             try {
-                variableApi.getBuildVariableValue(pipelineId = pipelineId, varName = key).data
+                // variables.xxx 落库 key 是 xxx
+                val loadKey = if (key.startsWith("variables.")) {
+                    key.removePrefix("variables.")
+                } else {
+                    key
+                }
+                val result = variableApi.getBuildVariableValue(pipelineId = pipelineId, varName = loadKey)
+                if (result.isNotOk()) {
+                    logger.warn(
+                        "OVERFLOW_LOADER_FAIL|key=$key|loadKey=$loadKey|" +
+                            "status=${result.status}|message=${result.message}"
+                    )
+                    return@loader variables[key] ?: variables[loadKey]
+                }
+                val data = result.data
+                if (data == null) {
+                    logger.warn("OVERFLOW_LOADER_NULL|key=$key|loadKey=$loadKey")
+                    return@loader variables[key] ?: variables[loadKey]
+                }
+                if (BuildVarOverflowUtils.isOverflowReference(data)) {
+                    // process 仍返回引用串：溢出表 miss 或未加载成功
+                    logger.warn("OVERFLOW_LOADER_STILL_REF|key=$key|loadKey=$loadKey|data=$data")
+                }
+                data
             } catch (ignore: Throwable) {
-                logger.warn("OVERFLOW_LOADER_FAIL|key=$key|${ignore.message}")
+                logger.warn("OVERFLOW_LOADER_FAIL|key=$key|${ignore.message}", ignore)
                 variables[key] // 失败时回退引用串，避免整任务直接崩
             }
         }

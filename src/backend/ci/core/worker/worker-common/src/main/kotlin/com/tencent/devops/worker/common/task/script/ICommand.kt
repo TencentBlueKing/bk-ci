@@ -83,7 +83,7 @@ interface ICommand {
             )
         ).toMutableMap()
         // 增加上下文的替换
-        PipelineVarUtil.fillContextVarMap(contextMap)
+        PipelineVarUtil.fillContextVarMap(contextMap, contextMap)
         val dialect = PipelineDialectUtil.getPipelineDialect(variables[PIPELINE_DIALECT])
         return if (dialect.supportUseExpression()) {
             val (overflowKeys, overflowLoader) = BuildVarOverflowExprSupport.resolveOverflowOptions(contextMap)
