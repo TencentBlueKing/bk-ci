@@ -44,16 +44,13 @@ object BuildVarOverflowExprSupport {
     private val logger = LoggerFactory.getLogger(BuildVarOverflowExprSupport::class.java)
     private val variableApi by lazy { ApiFactory.create(BuildVariableSDKApi::class) }
 
-    fun collectOverflowKeys(variables: Map<String, String>): Set<String> =
-        BuildVarOverflowUtils.collectOverflowKeys(variables)
-
     /**
      * @return overflowKeys 与按需 loader；无大变量时 loader 为 null
      */
     fun resolveOverflowOptions(
         variables: Map<String, String>
     ): Pair<Set<String>, ((String) -> String?)?> {
-        val overflowKeys = collectOverflowKeys(variables)
+        val overflowKeys = BuildVarOverflowUtils.collectOverflowKeys(variables)
         if (overflowKeys.isEmpty()) {
             return emptySet<String>() to null
         }
@@ -62,7 +59,7 @@ object BuildVarOverflowExprSupport {
             logger.warn("OVERFLOW_LOADER_SKIP|pipelineId blank, overflowKeys=$overflowKeys")
             return overflowKeys to null
         }
-        val loader: (String) -> String? = { key ->
+        val loader: (String) -> String? = loader@{ key ->
             try {
                 // variables.xxx 落库 key 是 xxx
                 val loadKey = if (key.startsWith("variables.")) {
