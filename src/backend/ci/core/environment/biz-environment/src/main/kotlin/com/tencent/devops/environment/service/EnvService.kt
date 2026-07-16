@@ -2074,7 +2074,7 @@ class EnvService @Autowired constructor(
         }
 
         // 创作流目前要按环境系统过滤
-        val createNodeMap = uniqueCandidates.filter { it.envType == EnvType.CREATE.name }.let { uniqueCandidatesF->
+        val createNodeMap = uniqueCandidates.filter { it.envType == EnvType.CREATE.name }.let { uniqueCandidatesF ->
             thirdPartyAgentDao.getAgentsByNodeIds(dslContext, uniqueCandidatesF.map { it.nodeId }, projectId)
                 .associate { it.nodeId to it.os }
         }
