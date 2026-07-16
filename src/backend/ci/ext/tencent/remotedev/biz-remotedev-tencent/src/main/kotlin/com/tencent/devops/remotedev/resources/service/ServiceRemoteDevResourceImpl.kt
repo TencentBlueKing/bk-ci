@@ -60,12 +60,7 @@ import com.tencent.devops.remotedev.pojo.project.RemotedevProject
 import com.tencent.devops.remotedev.pojo.project.RemotedevProjectNew
 import com.tencent.devops.remotedev.pojo.project.WeSecProjectWorkspace
 import com.tencent.devops.remotedev.pojo.project.WorkspaceProperty
-import com.tencent.devops.remotedev.pojo.record.CheckWorkspaceRecordData
-import com.tencent.devops.remotedev.pojo.record.FetchMetaDataParam
 import com.tencent.devops.remotedev.pojo.record.ThumbnailEncryptedTicketResp
-import com.tencent.devops.remotedev.pojo.record.UserWorkspaceRecordPermissionInfo
-import com.tencent.devops.remotedev.pojo.record.WorkspaceRecordMetadata
-import com.tencent.devops.remotedev.pojo.record.WorkspaceRecordTicketType
 import com.tencent.devops.remotedev.pojo.remotedev.CreateCvmData
 import com.tencent.devops.remotedev.pojo.remotedev.CreateCvmResp
 import com.tencent.devops.remotedev.pojo.remotedev.SyncVmData
@@ -669,41 +664,6 @@ class ServiceRemoteDevResourceImpl(
         return Result(true)
     }
 
-    override fun enableWorkspaceRecord(
-        userId: String,
-        projectId: String,
-        workspaceName: String,
-        enable: Boolean
-    ): Result<Boolean> {
-        permissionService.checkUserProjectManager(userId, projectId)
-        workspaceRecordService.enableRecord(
-            workspaceName = workspaceName,
-            enableUser = if (enable) {
-                userId
-            } else {
-                null
-            }
-        )
-        return Result(true)
-    }
-
-    override fun checkWorkspaceEnableAddress(
-        userId: String,
-        appId: Long,
-        ip: String?,
-        mediaGary: Boolean?,
-        envUid: String?
-    ): Result<CheckWorkspaceRecordData> {
-        val (enable, address) = workspaceRecordService.checkRecordAndAddress(
-            userId = userId,
-            appId = appId,
-            ip = ip,
-            mediaGary = mediaGary,
-            envUid = envUid
-        )
-        return Result(CheckWorkspaceRecordData(enable, address))
-    }
-
     override fun checkUserViewWorkspacePermission(userId: String, workspaceName: String): Result<Boolean> {
         return Result(workspaceRecordService.checkWorkspaceUserApproval(workspaceName = workspaceName, userId = userId))
     }
@@ -802,31 +762,7 @@ class ServiceRemoteDevResourceImpl(
         return Result(workspaceService.getProjectWorkspaceList(userId, projectId, page, pageSize, search))
     }
 
-    override fun getUserWorkspaceRecordPermission(
-        userId: String,
-        workspaceName: String
-    ): Result<UserWorkspaceRecordPermissionInfo> {
-        return Result(workspaceRecordService.getUserWorkspaceRecordPermission(userId, workspaceName))
-    }
 
-    override fun updateUserWorkspaceRecordPermission(userId: String, workspaceName: String): Result<Boolean> {
-        workspaceRecordService.updateApprovalRecordViewPermission(userId, workspaceName)
-        return Result(true)
-    }
-
-    override fun getViewRecordMetadata(data: FetchMetaDataParam): Result<Page<WorkspaceRecordMetadata>> {
-        return Result(
-            workspaceRecordService.getWorkspaceRecordMetadata(
-                projectId = data.projectId,
-                userId = data.userId,
-                workspaceName = data.workspaceName,
-                page = data.page,
-                pageSize = data.pageSize,
-                startTime = data.startTime,
-                stopTime = data.stopTime
-            )
-        )
-    }
 
     override fun getWorkspaceTimeline(
         userId: String,
@@ -844,19 +780,7 @@ class ServiceRemoteDevResourceImpl(
         )
     }
 
-    override fun getWorkspaceRecordTicket(
-        userId: String,
-        workspaceName: String,
-        token: String
-    ): Result<String> {
-        return Result(
-            workspaceRecordService.getWorkspaceRecordTicket(
-                workspaceName = workspaceName,
-                token = token,
-                type = WorkspaceRecordTicketType.RECORD
-            )
-        )
-    }
+
 
     override fun getThumbnailEncryptedTicket(
         userId: String,
@@ -1000,14 +924,6 @@ class ServiceRemoteDevResourceImpl(
 
     override fun openClawOn(userId: String): Result<WorkspaceRegistration?> {
         return Result(coffeeAIService.openClawOn(userId))
-    }
-
-    override fun checkViewLive(
-        userId: String,
-        projectId: String,
-        workspaceName: String
-    ): Result<Boolean> {
-        return Result(workspaceRecordService.checkViewLive(userId, projectId, workspaceName))
     }
 
     override fun convertToPublicWorkspace(

@@ -46,11 +46,7 @@ import com.tencent.devops.remotedev.pojo.project.RemotedevProject
 import com.tencent.devops.remotedev.pojo.project.RemotedevProjectNew
 import com.tencent.devops.remotedev.pojo.project.WeSecProjectWorkspace
 import com.tencent.devops.remotedev.pojo.project.WorkspaceProperty
-import com.tencent.devops.remotedev.pojo.record.CheckWorkspaceRecordData
-import com.tencent.devops.remotedev.pojo.record.FetchMetaDataParam
 import com.tencent.devops.remotedev.pojo.record.ThumbnailEncryptedTicketResp
-import com.tencent.devops.remotedev.pojo.record.UserWorkspaceRecordPermissionInfo
-import com.tencent.devops.remotedev.pojo.record.WorkspaceRecordMetadata
 import com.tencent.devops.remotedev.pojo.remotedev.CreateCvmData
 import com.tencent.devops.remotedev.pojo.remotedev.CreateCvmResp
 import com.tencent.devops.remotedev.pojo.remotedev.SyncVmData
@@ -602,45 +598,6 @@ interface ServiceRemoteDevResource {
         data: OperateCvmData
     ): Result<Boolean>
 
-    @Operation(summary = "开启或关闭工作空间录屏")
-    @PUT
-    @Path("/enable_workspace_record")
-    fun enableWorkspaceRecord(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @Parameter(description = "projectId", required = true)
-        @QueryParam("projectId")
-        projectId: String,
-        @Parameter(description = "工作空间名称", required = true)
-        @QueryParam("workspaceName")
-        workspaceName: String,
-        @Parameter(description = "开启或关闭录屏", required = true)
-        @QueryParam("enable")
-        enable: Boolean
-    ): Result<Boolean>
-
-    @Operation(summary = "检查是否开启录屏并获取推流地址")
-    @GET
-    @Path("/check_workspace_record_enable_address")
-    fun checkWorkspaceEnableAddress(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @Parameter(description = "appId", required = true)
-        @QueryParam("appId")
-        appId: Long,
-        @Parameter(description = "实例IP", required = true)
-        @QueryParam("ip")
-        ip: String?,
-        @Parameter(description = "是否是录屏灰度", required = true)
-        @QueryParam("mediaGary")
-        mediaGary: Boolean?,
-        @Parameter(description = "环境ID", required = true)
-        @QueryParam("envUid")
-        envUid: String?
-    ): Result<CheckWorkspaceRecordData>
-
     @Deprecated("有了token后这个方法可能不会再使用，观察下如果不使用可以废弃")
     @Operation(summary = "检查用户是否有产看当前工作空间录像的权限")
     @GET
@@ -789,35 +746,6 @@ interface ServiceRemoteDevResource {
         search: WorkspaceSearch
     ): Result<Page<ProjectWorkspace>>
 
-    @Operation(summary = "查询录屏权限相关信息")
-    @GET
-    @Path("/get_user_workspace_record_permission_info")
-    fun getUserWorkspaceRecordPermission(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @QueryParam("workspaceName")
-        workspaceName: String
-    ): Result<UserWorkspaceRecordPermissionInfo>
-
-    @Operation(summary = "录屏权限续期")
-    @POST
-    @Path("/update_user_workspace_record_permission_info")
-    fun updateUserWorkspaceRecordPermission(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @QueryParam("workspaceName")
-        workspaceName: String
-    ): Result<Boolean>
-
-    @Operation(summary = "查看当前工作空间录屏元数据")
-    @POST
-    @Path("/get_user_workspace_record_metadata")
-    fun getViewRecordMetadata(
-        data: FetchMetaDataParam
-    ): Result<Page<WorkspaceRecordMetadata>>
-
     @Operation(summary = "获取指定工作空间详情时间线")
     @GET
     @Path("/detail_timeline")
@@ -835,21 +763,6 @@ interface ServiceRemoteDevResource {
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<Page<WorkspaceOpHistory>>
-
-    @Operation(summary = "获取工作空间录屏密钥")
-    @GET
-    @Path("/get_workspace_record_ticket")
-    fun getWorkspaceRecordTicket(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @Parameter(description = "工作空间名称", required = true)
-        @QueryParam("workspaceName")
-        workspaceName: String,
-        @Parameter(description = "skToken", required = true)
-        @QueryParam("token")
-        token: String
-    ): Result<String>
 
     @Operation(summary = "获取工作空间缩略图加密密钥")
     @GET
@@ -1058,21 +971,6 @@ interface ServiceRemoteDevResource {
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String
     ): Result<WorkspaceRegistration?>
-
-    @Operation(summary = "校验是否有权限查看直播")
-    @GET
-    @Path("/check_view_live")
-    fun checkViewLive(
-        @Parameter(description = "用户", required = true)
-        @QueryParam("userId")
-        userId: String,
-        @Parameter(description = "项目id", required = true)
-        @QueryParam("projectId")
-        projectId: String,
-        @Parameter(description = "工作空间名", required = true)
-        @QueryParam("workspaceName")
-        workspaceName: String
-    ): Result<Boolean>
 
     @Operation(summary = "实例转公共云桌面")
     @POST

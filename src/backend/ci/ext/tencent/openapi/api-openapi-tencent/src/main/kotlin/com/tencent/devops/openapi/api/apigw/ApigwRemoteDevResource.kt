@@ -55,6 +55,8 @@ import com.tencent.devops.remotedev.pojo.record.CheckWorkspaceRecordData
 import com.tencent.devops.remotedev.pojo.record.FetchMetaDataParam
 import com.tencent.devops.remotedev.pojo.record.ThumbnailEncryptedTicketResp
 import com.tencent.devops.remotedev.pojo.record.UserWorkspaceRecordPermissionInfo
+import com.tencent.devops.remotedev.pojo.record.WorkspaceLiveResolution
+import com.tencent.devops.remotedev.pojo.record.WorkspaceLiveResp
 import com.tencent.devops.remotedev.pojo.record.WorkspaceRecordMetadata
 import com.tencent.devops.remotedev.pojo.remotedev.CreateCvmData
 import com.tencent.devops.remotedev.pojo.remotedev.CreateCvmResp
@@ -1427,4 +1429,49 @@ interface ApigwRemoteDevResource {
         @QueryParam("taskId")
         taskId: String
     ): Result<TaskStatusResp>
+
+    @Operation(summary = "获取工作空间直播信息", tags = ["v4_app_remotedev_get_workspace_live_info"])
+    @GET
+    @Path("/get_workspace_live_info")
+    fun getWorkspaceLiveInfo(
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @Parameter(description = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID(项目英文名)", required = true)
+        @QueryParam("projectId")
+        projectId: String,
+        @Parameter(description = "工作空间名称", required = true)
+        @QueryParam("workspaceName")
+        workspaceName: String,
+        @Parameter(description = "分辨率(R480P,R720P,R1080P)", required = true)
+        @QueryParam("resolution")
+        resolution: WorkspaceLiveResolution?
+    ): Result<WorkspaceLiveResp>
+
+    @Operation(summary = "开启或关闭直播", tags = ["v4_app_remotedev_enable_live"])
+    @POST
+    @Path("/enable_live")
+    fun enableLive(
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @Parameter(description = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "projectId", required = true)
+        @QueryParam("projectId")
+        projectId: String,
+        @Parameter(description = "开启或关闭录屏", required = true)
+        @QueryParam("enable")
+        enable: Boolean
+    ): Result<Boolean>
 }

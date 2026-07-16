@@ -138,6 +138,20 @@ class CvdService {
         )
     }
 
+    fun inspectAuth(
+        instanceId: String,
+        username: String,
+        projectId: String
+    ): Boolean {
+        val body = mapOf("instanceId" to instanceId, "username" to username, "projectId" to projectId)
+        val resp = doPost(
+            path = "/app/cvd/inspect/auth",
+            body = body,
+            typeRef = object : TypeReference<CvdApiResponse<String>>() {}
+        )
+        return resp.code == 200
+    }
+
     private fun <T : CvdApiResponse<*>> doPost(
         path: String,
         body: Map<String, Any>,
@@ -161,7 +175,7 @@ class CvdService {
                 if (!resp.isSuccessful) {
                     logger.warn(
                         "cvdRequest failed|$path|" +
-                            "${resp.code}|$responseStr"
+                                "${resp.code}|$responseStr"
                     )
                     throw ErrorCodeException(
                         errorCode = ErrorCodeEnum.REQ_DEVCLOUD_ERROR.errorCode,
