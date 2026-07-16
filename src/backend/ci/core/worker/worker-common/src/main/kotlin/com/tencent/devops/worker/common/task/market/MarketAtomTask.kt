@@ -604,11 +604,25 @@ open class MarketAtomTask : ITask() {
                     ).parseCredentialValue(null, acrossInfo?.targetProjectId)
                 }
             } else {
+                // 传统方言：${{ key }} 大变量同样需要懒加载真实值。命中溢出键的双花括号先占位为哨兵，
+                // 经典替换(ObjectReplaceEnvVarUtil)完成后在对象层还原真实值，${x}/$x 旧语法保持引用串。
+                val (overflowKeys, overflowLoader) = BuildVarOverflowExprSupport.resolveOverflowOptions(variables)
                 inputMap.forEach { (name, value) ->
                     // 修复插件input环境变量替换问题 #5682
-                    atomParams[name] = JsonUtil.toJson(
-                        ObjectReplaceEnvVarUtil.replaceEnvVar(value, variables)
-                    ).parseCredentialValue(null, acrossInfo?.targetProjectId)
+                    val sentinels = LinkedHashMap<String, String>()
+                    val preValue = if (overflowLoader != null) {
+                        BuildVarOverflowExprSupport.sentinelizeOverflowInObject(
+                            value, overflowKeys, overflowLoader, sentinels
+                        )
+                    } else {
+                        value
+                    }
+                    val replaced = BuildVarOverflowExprSupport.restoreSentinelsInObject(
+                        ObjectReplaceEnvVarUtil.replaceEnvVar(preValue, variables),
+                        sentinels
+                    )
+                    atomParams[name] = JsonUtil.toJson(replaced)
+                        .parseCredentialValue(null, acrossInfo?.targetProjectId)
                 }
             }
         } catch (e: Throwable) {

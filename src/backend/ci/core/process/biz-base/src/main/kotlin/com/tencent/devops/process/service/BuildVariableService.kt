@@ -200,7 +200,13 @@ class BuildVariableService @Autowired constructor(
                 buildId = buildId,
                 maxCacheBytes = pipelineVarOverflowConfig.lazyLoadCacheMax,
                 maxBudgetBytes = pipelineVarOverflowConfig.lazyLoadBudgetMax
-            ).load(varName)
+            ).load(varName) ?: run {
+                LOG.warn(
+                    "$buildId|VAR_OVERFLOW_MISS|key=$varName|main=$main|" +
+                        "overflow table has no value, keep reference"
+                )
+                main
+            }
         } else {
             main
         }

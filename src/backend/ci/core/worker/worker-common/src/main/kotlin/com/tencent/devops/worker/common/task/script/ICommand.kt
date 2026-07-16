@@ -106,8 +106,17 @@ interface ICommand {
                 overflowLoader = overflowLoader
             )
         } else {
-            ReplacementUtils.replace(
-                command,
+            // 传统方言不走表达式引擎，但需求要求 ${{ key }} 也能懒加载大变量真实值：
+            // 先把命中溢出键的 ${{ }} 占位为哨兵，跑完经典替换后再还原，${x}/$x 旧语法保持引用串不变。
+            val (overflowKeys, overflowLoader) = BuildVarOverflowExprSupport.resolveOverflowOptions(contextMap)
+            val sentinels = LinkedHashMap<String, String>()
+            val preCommand = if (overflowLoader != null) {
+                BuildVarOverflowExprSupport.sentinelizeOverflowInText(command, overflowKeys, overflowLoader, sentinels)
+            } else {
+                command
+            }
+            var result = ReplacementUtils.replace(
+                preCommand,
                 object : KeyReplacement {
                     override fun getReplacement(key: String): String? = contextMap[key] ?: try {
                         if (key == CI_TOKEN_CONTEXT) {
@@ -128,6 +137,8 @@ interface ICommand {
                     }
                 }
             )
+            sentinels.forEach { (sentinel, real) -> result = result.replace(sentinel, real) }
+            result
         }
     }
 }
