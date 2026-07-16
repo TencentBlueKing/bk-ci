@@ -1283,10 +1283,13 @@ class PipelineVersionFacadeService @Autowired constructor(
     ): PipelineDraftStatusResult {
         // 前端要发布的版本已不是草稿态（可能被发布或删除）
         if (versionResource?.status != VersionStatus.COMMITTING) {
-            return when (versionResource?.status) {
-                VersionStatus.DELETE ->
-                    PipelineDraftStatusResult(status = PipelineDraftStatus.DELETED)
-                else -> PipelineDraftStatusResult(
+            return if (versionResource?.status == VersionStatus.DELETE) {
+                PipelineDraftStatusResult(
+                    status = PipelineDraftStatus.DELETED,
+                    draft = PipelineVersionSimple(versionResource)
+                )
+            } else {
+                PipelineDraftStatusResult(
                     status = PipelineDraftStatus.PUBLISHED,
                     release = versionResource?.let { PipelineVersionSimple(it) }
                 )

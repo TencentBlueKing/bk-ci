@@ -1918,10 +1918,13 @@ class PipelineTemplateFacadeService @Autowired constructor(
     ): PipelineTemplateDraftStatusResult {
         // 前端要发布的版本已不是草稿态（可能被发布或删除）
         if (versionResource?.status != VersionStatus.COMMITTING) {
-            return when (versionResource?.status) {
-                VersionStatus.DELETE ->
-                    PipelineTemplateDraftStatusResult(status = PipelineDraftStatus.DELETED)
-                else -> PipelineTemplateDraftStatusResult(
+            return if (versionResource?.status == VersionStatus.DELETE) {
+                PipelineTemplateDraftStatusResult(
+                    status = PipelineDraftStatus.DELETED,
+                    draft = PipelineTemplateVersionSimple(versionResource)
+                )
+            } else {
+                PipelineTemplateDraftStatusResult(
                     status = PipelineDraftStatus.PUBLISHED,
                     release = versionResource?.let { PipelineTemplateVersionSimple(it) }
                 )
