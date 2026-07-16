@@ -3,7 +3,7 @@ import { SvgIcon } from '@/components/SvgIcon'
 import { useTriggerManager } from '@/hooks/useTriggerManager'
 import { TRIGGER_TYPE } from '@/utils/flowConst'
 import { Input, Loading, Message } from 'bkui-vue'
-import { computed, defineComponent, onMounted, onUnmounted, ref } from 'vue'
+import { computed, defineComponent, nextTick, onMounted, onUnmounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import TriggerEventCard from './TriggerEventCard'
 import styles from './TriggerEventSelector.module.css'
@@ -26,12 +26,64 @@ export default defineComponent({
     const triggerManager = useTriggerManager()
 
     const searchKey = ref('')
+    const searchInputWrapRef = ref<HTMLElement | null>(null)
     const selectedClassify = ref<string>('')
     const allEventList = ref<TriggerBaseItem[]>([])
     /** 全量事件列表，仅用于搜索时重算左侧分类数量 */
     const masterEventList = ref<TriggerBaseItem[]>([])
     const loading = ref(false)
     const selectingAtomCode = ref<string | null>(null)
+    let nativeSearchInput: HTMLInputElement | null = null
+    let isComposing = false
+    let removeNativeSearchListeners: (() => void) | null = null
+
+    const updateSearchKey = (val: string | number = '') => {
+      searchKey.value = String(val ?? '')
+    }
+
+    /**
+     * 英文输入走 input → v-model，本身正常。
+     * 中文拼音会先 compositionstart，bkui Input 在此期间吞掉 input/change，
+     * 依赖 compositionend 再同步；现网该同步偶发失败，出现「框里有字、searchKey 仍空」。
+     * 因此在原生 input 上补一层 compositionend 同步。
+     */
+    const bindNativeSearchSync = () => {
+      removeNativeSearchListeners?.()
+      removeNativeSearchListeners = null
+
+      nativeSearchInput = searchInputWrapRef.value?.querySelector('input') ?? null
+      if (!nativeSearchInput) return
+
+      const syncFromNative = () => {
+        if (nativeSearchInput && nativeSearchInput.value !== searchKey.value) {
+          searchKey.value = nativeSearchInput.value
+        }
+      }
+
+      const onCompositionStart = () => {
+        isComposing = true
+      }
+      const onCompositionEnd = () => {
+        isComposing = false
+        syncFromNative()
+      }
+      // 部分输入法上屏后 compositionend 丢失时，keyup 仍能拿到最终值（bkui 不拦截 keyup）
+      const onNativeKeyup = () => {
+        if (isComposing) return
+        syncFromNative()
+      }
+
+      nativeSearchInput.addEventListener('compositionstart', onCompositionStart)
+      nativeSearchInput.addEventListener('compositionend', onCompositionEnd)
+      nativeSearchInput.addEventListener('keyup', onNativeKeyup)
+
+      removeNativeSearchListeners = () => {
+        nativeSearchInput?.removeEventListener('compositionstart', onCompositionStart)
+        nativeSearchInput?.removeEventListener('compositionend', onCompositionEnd)
+        nativeSearchInput?.removeEventListener('keyup', onNativeKeyup)
+        nativeSearchInput = null
+      }
+    }
 
     const isAllClassify = (ownerStoreCode: string) => {
       const firstCode = triggerManager.typeList.value[0]?.ownerStoreCode ?? ''
@@ -128,6 +180,8 @@ export default defineComponent({
 
     // 初始化：加载分类列表和事件列表
     onMounted(async () => {
+      await nextTick()
+      bindNativeSearchSync()
       await loadTypeList()
       await Promise.all([
         loadEventList(selectedClassify.value || undefined),
@@ -136,6 +190,7 @@ export default defineComponent({
     })
 
     onUnmounted(() => {
+      removeNativeSearchListeners?.()
       searchKey.value = ''
       selectedClassify.value = ''
     })
@@ -193,16 +248,21 @@ export default defineComponent({
 
     return () => (
       <div class={styles.triggerEventSelector}>
-        <Input
-          behavior="simplicity"
-          v-model={searchKey.value}
-          placeholder={t('flow.content.enterKeywords')}
-          clearable
-        >
-          {{
-            suffix: () => <SvgIcon name="search" size={16} class={styles.searchIcon} />,
-          }}
-        </Input>
+        <div ref={searchInputWrapRef} class={styles.searchBox}>
+          <Input
+            behavior="simplicity"
+            modelValue={searchKey.value}
+            placeholder={t('flow.content.enterKeywords')}
+            clearable
+            onUpdate:modelValue={updateSearchKey}
+            onChange={updateSearchKey}
+            onClear={() => updateSearchKey('')}
+          >
+            {{
+              suffix: () => <SvgIcon name="search" size={16} class={styles.searchIcon} />,
+            }}
+          </Input>
+        </div>
 
         <div class={styles.body}>
           {/* 左侧分类导航 */}
