@@ -99,7 +99,7 @@ class WebhookTriggerEventListener(
                 eventId = eventId,
                 status = PipelineTriggerStatus.FAILED.name,
                 pipelineId = pipelineId,
-                pipelineName = pipelineInfo?.pipelineName ?: "",
+                pipelineName = pipelineInfo?.pipelineName ?: pipelineId,
                 reason = PipelineTriggerReason.TRIGGER_FAILED.name,
                 reasonDetail = exceptionReasonDetail
             )
