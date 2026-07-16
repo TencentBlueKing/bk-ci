@@ -34,11 +34,11 @@ interface ServiceArtifactMetadataResource {
         @Parameter(description = "产出物类型：FILE/IMAGE/REPORT/PACKAGE等", required = true)
         @PathParam("artifactType")
         artifactType: String,
-        @Parameter(description = "产出物名称，如文件名、镜像名（可选）", required = false)
+        @Parameter(description = "产出物名称，如文件名、镜像名（IMAGE类型为必填）", required = true)
         @QueryParam("artifactName")
-        artifactName: String?,
-        @Parameter(description = "产出物版本，如镜像Tag、包版本（可选）", required = false)
+        artifactName: String,
+        @Parameter(description = "产出物版本，如镜像Tag、包版本（IMAGE类型为必填）", required = true)
         @QueryParam("artifactVersion")
-        artifactVersion: String?
+        artifactVersion: String
     ): Result<PipelineArtifactInfo?>
 }

@@ -30,18 +30,13 @@ class BuildArtifactResourceImpl(
             "BuildArtifact|$userId|reportArtifactMetadata|$projectId|$pipelineId|$buildId|" +
                     "${request.artifactType}|${request.artifactName}|${request.artifactVersion}"
         )
-        return kotlin.runCatching {
-            pipelineArtifactInfoService.saveArtifactInfo(
-                userId = userId,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                buildId = buildId,
-                request = request
-            )
-            Result(true)
-        }.getOrElse { e ->
-            logger.error("Failed to save artifact info: ${e.message}", e)
-            Result(status = 500, message = e.message ?: "Failed to save artifact info")
-        }
+        pipelineArtifactInfoService.saveArtifactInfo(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            request = request
+        )
+        return Result(true)
     }
 }

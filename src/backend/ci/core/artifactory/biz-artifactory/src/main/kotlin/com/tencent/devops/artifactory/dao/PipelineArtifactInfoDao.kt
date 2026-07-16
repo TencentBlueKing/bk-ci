@@ -73,6 +73,7 @@ class PipelineArtifactInfoDao {
             return dslContext.insertInto(this)
                 .set(record)
                 .onDuplicateKeyUpdate()
+                .set(PIPELINE_NAME, artifactInfo.pipelineName)
                 .set(EXECUTE_COUNT, artifactInfo.executeCount)
                 .set(ARTIFACT_DIGEST, artifactInfo.artifactDigest)
                 .set(COMMIT_ID, artifactInfo.commitId)
@@ -92,22 +93,18 @@ class PipelineArtifactInfoDao {
         projectId: String,
         pipelineId: String?,
         artifactType: String,
-        artifactName: String?,
-        artifactVersion: String?
+        artifactName: String,
+        artifactVersion: String
     ): TPipelineArtifactInfoRecord? {
         with(TPipelineArtifactInfo.T_PIPELINE_ARTIFACT_INFO) {
-            val conditions = mutableListOf<Condition>(
-                PROJECT_ID.eq(projectId),
-                ARTIFACT_TYPE.eq(artifactType)
-            )
-            if (!pipelineId.isNullOrBlank()) {
-                conditions.add(PIPELINE_ID.eq(pipelineId))
-            }
-            if (!artifactName.isNullOrBlank()) {
-                conditions.add(ARTIFACT_NAME.eq(artifactName))
-            }
-            if (!artifactVersion.isNullOrBlank()) {
-                conditions.add(ARTIFACT_VERSION.eq(artifactVersion))
+            val conditions = buildList<Condition> {
+                add(PROJECT_ID.eq(projectId))
+                add(ARTIFACT_TYPE.eq(artifactType))
+                if (!pipelineId.isNullOrBlank()) {
+                    add(PIPELINE_ID.eq(pipelineId))
+                }
+                add(ARTIFACT_NAME.eq(artifactName))
+                add(ARTIFACT_VERSION.eq(artifactVersion))
             }
             return dslContext.selectFrom(this)
                 .where(conditions)
