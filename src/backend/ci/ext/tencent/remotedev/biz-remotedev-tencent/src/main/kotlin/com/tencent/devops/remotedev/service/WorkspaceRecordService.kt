@@ -477,8 +477,10 @@ class WorkspaceRecordService @Autowired constructor(
         resolution: WorkspaceLiveResolution?
     ): WorkspaceLiveResp {
         permissionService.checkUserManager(userId, projectId)
-        val record = workspaceWindowsDao.fetchAnyWorkspaceWindowsInfo(
+        val record = workspaceWindowsDao.fetchRecordByProjectIp(
             dslContext = dslContext,
+            projectId = projectId,
+            ip = null,
             workspaceName = workspaceName
         ) ?: throw ErrorCodeException(
             errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
