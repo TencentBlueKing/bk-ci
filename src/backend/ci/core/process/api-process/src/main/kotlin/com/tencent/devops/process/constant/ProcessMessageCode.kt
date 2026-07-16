@@ -481,7 +481,6 @@ object ProcessMessageCode {
     const val ERROR_TEMPLATE_RESOURCE_DRAFT_VERSION_NOT_EXISTS = "2101377" // 模板草稿版本编排[{0}]记录不存在
     const val ERROR_TEMPLATE_SETTING_DRAFT_VERSION_NOT_EXISTS = "2101378" // 模板草稿版本设置[{0}]不存在
 
-
     // 构建执行相关错误码（2101500-2101599）
     const val ERROR_PIPELINE_START_NODE_NO_PERMISSION = "2101500" // 用户[{0}]没有节点[{1}]的操作权限，无法启动流水线
     const val ERROR_PIPELINE_VERSION_RECYCLED = "2101501" // 流水线版本[{0}]已被回收，无法启动构建，请使用最新版本重试
