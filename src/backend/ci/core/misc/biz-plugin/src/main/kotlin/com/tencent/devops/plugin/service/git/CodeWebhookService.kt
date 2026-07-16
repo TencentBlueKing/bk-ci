@@ -765,7 +765,7 @@ class CodeWebhookService @Autowired constructor(
         val codeccTaskId = variables[CodeccUtils.BK_CI_CODECC_TASK_ID]
         val codeccPrefix = "${HomeHostUtil.innerCodeccHost()}/codecc/$projectId/task"
         if (codeccTaskId != null) {
-            "$codeccPrefix/$codeccTaskId/detail"
+            "$codeccPrefix/$codeccTaskId/detail?pipelineId=$pipelineId&buildId=$buildId&from=check_run"
         } else {
             "$codeccPrefix/list?pipelineId=$pipelineId&buildId=$buildId&from=check_run"
         }
