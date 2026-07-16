@@ -37,16 +37,15 @@ class GithubOAuthConfigProvider @Autowired constructor(
 
     private fun isValidDbConfig(props: Oauth2ClientProperties?): Boolean {
         return props != null &&
-            !props.clientId.isNullOrBlank() &&
-            !props.clientSecret.isNullOrBlank() &&
-            !props.redirectUri.isNullOrBlank()
+                !props.clientId.isNullOrBlank() &&
+                !props.clientSecret.isNullOrBlank()
     }
 
     private fun buildFromDb(props: Oauth2ClientProperties): GithubOAuthConfig {
         return GithubOAuthConfig(
             githubClientId = props.clientId!!,
             githubClientSecret = props.clientSecret!!,
-            githubCallbackUrl = props.redirectUri!!,
+            githubCallbackUrl = gitConfig.githubCallbackUrl,
             oauthAppClientId = gitConfig.oauthAppClientId,
             oauthAppClientSecret = gitConfig.oauthAppClientSecret,
             githubRedirectUrl = gitConfig.githubRedirectUrl,
