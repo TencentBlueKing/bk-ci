@@ -1,7 +1,7 @@
 import type { TriggerBaseItem } from '@/api/trigger'
 import { SvgIcon } from '@/components/SvgIcon'
 import { useTriggerManager } from '@/hooks/useTriggerManager'
-import { TRIGGER_TYPE } from '@/utils/flowConst'
+import { isManualTriggerAtomCode } from '@/utils/flowConst'
 import { Input, Loading, Message } from 'bkui-vue'
 import { computed, defineComponent, nextTick, onMounted, onUnmounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
@@ -235,12 +235,12 @@ export default defineComponent({
 
     // 检查手动触发器是否已存在（同一创作流仅需一个手动触发器）
     const hasExistingManualTrigger = computed(() => {
-      return props.existingTriggerAtomCodes.includes(TRIGGER_TYPE.MANUAL)
+      return props.existingTriggerAtomCodes.some(isManualTriggerAtomCode)
     })
 
     // 判断某个事件是否应被禁用
     const isEventDisabled = (atomCode: string) => {
-      if (atomCode === TRIGGER_TYPE.MANUAL && hasExistingManualTrigger.value) {
+      if (isManualTriggerAtomCode(atomCode) && hasExistingManualTrigger.value) {
         return true
       }
       return false

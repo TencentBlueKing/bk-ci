@@ -3,6 +3,7 @@ import { SvgIcon } from '@/components/SvgIcon'
 import TriggerEventSelector from '@/components/TriggerEventSelector'
 import TriggerPropertyPanel from '@/components/TriggerPropertyPanel'
 import { useFlowModel } from '@/hooks/useFlowModel'
+import { getTriggerElementAtomCode } from '@/utils/flowConst'
 import { createDefaultElement } from '@/utils/flowDefaults'
 import { Button, Loading, Message, Popover, Switcher, Table } from 'bkui-vue'
 import { computed, defineComponent, ref, watch } from 'vue'
@@ -233,8 +234,11 @@ export default defineComponent({
                 ),
                 content: () => (
                   <TriggerEventSelector
+                    key={triggerElements.value.map(getTriggerElementAtomCode).join(',')}
                     projectCode={projectCode.value}
-                    existingTriggerAtomCodes={triggerElements.value.map(el => el.atomCode).filter(Boolean) as string[]}
+                    existingTriggerAtomCodes={triggerElements.value
+                      .map(getTriggerElementAtomCode)
+                      .filter(Boolean)}
                     onSelect={handleSelectEvent}
                   />
                 ),
