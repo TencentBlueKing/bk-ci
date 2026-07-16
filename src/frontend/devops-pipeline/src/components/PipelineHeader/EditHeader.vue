@@ -94,6 +94,8 @@
                 :project-id="projectId"
                 :current-editing-data="currentEditingData"
                 :id="pipelineId"
+                @save-draft="executeSaveDraft"
+                @re-save-draft="saveDraft"
                 @release-success="handleSuccess"
             />
         </aside>
@@ -215,9 +217,6 @@
                 immediate: true
             }
         },
-        async mounted () {
-            await this.getDetail()
-        },
         methods: {
             ...mapActions({
                 getDraftStatus: 'common/getDraftStatus',
@@ -233,17 +232,6 @@
                 'savePipelineSnapshot',
                 'updateContainer'
             ]),
-            // 保证编辑页一直是最新的detail
-            async getDetail () {
-                try {
-                    await this.requestPipelineSummary(this.$route.params)
-                } catch (error) {
-                    this.$bkMessage({
-                        theme: 'error',
-                        message: error.message ?? error
-                    })
-                }
-            },
             // 构建 modelAndSetting 对象
             buildModelAndSetting () {
                 const pipeline = Object.assign({}, this.pipeline, {
@@ -402,6 +390,7 @@
                     message: this.$t('editPage.saveDraftSuccess', [pipelineSetting.pipelineName]),
                     limit: 1
                 })
+                this.setSaveStatus(false)
                 return true
             },
 

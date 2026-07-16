@@ -71,11 +71,11 @@
                         class="release-pipeline-pac-form"
                     >
                         <bk-alert
-                            v-if="draftStatus && draftStatus.status === DRAFT_STATUS.OUTDATED"
+                            v-if="draftStatus && draftStatus.status === DRAFT_STATUS.BASE_OUTDATED"
                             type="warning"
                         >
                             <template slot="title">
-                                <i18n path="template.draftPublished">
+                                <i18n path="draftPublished">
                                     <span>{{ draftStatus?.draft?.baseVersionName }}</span>
                                     <span class="red-tip">{{ $t('Earlier') }}</span>
                                     <span>{{ draftStatus?.release?.versionName }}</span>
@@ -455,14 +455,37 @@
                             height: `${isFooterFixed ? '47' : '48'}px`
                         }"
                     >
-                        <bk-button
-                            theme="primary"
-                            :loading="releasing"
-                            :disabled="releasing"
-                            @click="releasePipeline(false)"
+                        <bk-popconfirm
+                            ref="releasePopconfirm"
+                            ext-popover-cls="confirm-popper"
+                            trigger="manual"
+                            z-index="3000"
+                            width="288"
+                            :on-hide="handleCancelConfirmPublish"
+                            :confirm-text="$t('confirmPublish')"
+                            @confirm="releaseConfirm()"
+                            @cancel="handleCancelConfirmPublish"
                         >
-                            {{ $t("release") }}
-                        </bk-button>
+                            <div slot="content">
+                                <div class="confirm-publish-title">{{ $t('confirmPublish') }}</div>
+                                <i18n
+                                    path="confirmPublishTips"
+                                    tag="div"
+                                    class="confirm-publish-tips"
+                                >
+                                    <b>{{ releaseStatus?.draft?.baseVersionName }}</b>
+                                    <b>{{ releaseStatus?.release?.versionName }}</b>
+                                </i18n>
+                            </div>
+                            <bk-button
+                                theme="primary"
+                                :loading="releasing"
+                                :disabled="releasing"
+                                @click="releasePipeline(false)"
+                            >
+                                {{ $t("release") }}
+                            </bk-button>
+                        </bk-popconfirm>
                         <version-diff-entry
                             v-if="!isTemplateInstanceMode"
                             :text="false"
@@ -508,72 +531,25 @@
             <p>{{ $t('template.versionNameExistTips', [existingVersionName]) }}</p>
             <p style="color: #979BA5; margin-top: 8px;">{{ $t('template.versionNameExistSubTips') }}</p>
         </bk-dialog>
-        <bk-dialog
+        <ReleaseConflictDialog
             v-model="isPublishedDialogShow"
-            :width="480"
-            :mask-close="false"
-            footer-position="center"
-            ext-cls="published-dialog"
-        >
-            <header
-                class="published-hint-title"
-                slot="header"
-            >
-                <i class="devops-icon icon-exclamation"></i>
-                <span>{{ releaseStatus === DRAFT_STATUS.CONFLICT ? $t('otherUserEditingDetected') : $t("alreadyPublished") }}</span>
-            </header>
-            <div>
-                <div class="published-content">
-                    <span class="label">{{ $t("publisher") }}: </span>
-                    <span>{{ lasterDraftInfo?.updater || "--" }} </span>
-                    <span class="label"> {{ $t("publishTime") }}: </span>
-                    <span>{{ formatTime(lasterDraftInfo?.updateTime) }}</span>
-
-                    <VersionDiffEntry
-                        :class="[
-                            'diff-button',
-                            {
-                                'develop-txt-disabled': !hasDraft
-                            }
-                        ]"
-                        text
-                        :can-switch-version="false"
-                        :show-button="false"
-                        :disabled="!hasDraft"
-                        :version="lasterDraftInfo?.version"
-                        :current-editing-data="currentEditingData"
-                        :diff-mode="diffMode"
-                    >
-                        <Logo
-                            name="diff"
-                            size="14"
-                        />
-                    </VersionDiffEntry>
-                    <p class="published-tips">
-                        <span v-html="releaseStatus === DRAFT_STATUS.CONFLICT ? $t('reviewDifferencesAndOverrideChanges') : $t('alreadyPublishedTip')"></span>
-                    </p>
-                </div>
-            </div>
-            <footer slot="footer">
-                <bk-button
-                    theme="primary"
-                    @click="handleNewDraft"
-                >
-                    {{ $t("newDraft") }}
-                </bk-button>
-                <bk-button @click="goPipelineModel">
-                    {{ $t('exitEditing') }}
-                </bk-button>
-            </footer>
-        </bk-dialog>
+            :release-status="releaseStatus?.status"
+            :laster-draft-info="lasterDraftInfo"
+            :current-editing-data="currentEditingData"
+            @new-draft="handleNewDraft"
+            @save-draft="handleSaveDraft"
+            @re-save-draft="handleReSaveDraft"
+            @go-pipeline-model="goPipelineModel"
+        />
     </div>
 </template>
 
 <script>
     import Logo from '@/components/Logo'
     import PacTag from '@/components/PacTag.vue'
-    import VersionDiffEntry from '@/components/PipelineDetailTabs/VersionDiffEntry'
+    import VersionDiffEntry from '@/components/PipelineDetailTabs/VersionDiffEntry.vue'
     import ReleaseTaskStatus from '@/components/Template/ReleaseTaskStatus'
+    import ReleaseConflictDialog from './ReleaseConflictDialog'
     import {
         SET_RELEASE_ING,
         SHOW_TASK_DETAIL
@@ -581,13 +557,13 @@
     import { RESOURCE_TYPE } from '@/utils/permission'
     import { TARGET_ACTION_ENUM, VERSION_STATUS_ENUM, DRAFT_STATUS } from '@/utils/pipelineConst'
     import { mapActions, mapGetters, mapState } from 'vuex'
-    import { convertTime } from "@/utils/util"
 
     export default {
         components: {
             VersionDiffEntry,
             PacTag,
-            ReleaseTaskStatus
+            ReleaseTaskStatus,
+            ReleaseConflictDialog
         },
         props: {
             value: {
@@ -669,7 +645,7 @@
                 existingVersionName: '',
                 isPublishedDialogShow: false,
                 lasterDraftInfo: null,
-                releaseStatus: '',
+                releaseStatus: null,
             }
         },
         computed: {
@@ -823,13 +799,6 @@
             versionName () {
                 return this.$route.query?.versionName
             },
-            hasDraft () {
-                const status = this.releaseStatus
-                return status && !['NORMAL', 'BRANCH', 'PUBLISHED', 'RELEASE_OUTDATED'].includes(status)
-            },
-            diffMode () {
-                return this.releaseStatus === DRAFT_STATUS.CONFLICT ? DRAFT_STATUS.CONFLICT : DRAFT_STATUS.PUBLISHED
-            }
         },
         watch: {
             value (val) {
@@ -1146,6 +1115,323 @@
                 this.showPacCodelibSetting = val
                 this.$nextTick(this.getSidesliderContentHeight)
             },
+            handleCancelConfirmPublish () {
+                this.showConfirmPublish = false
+            },
+            // 发布逻辑
+            async releaseConfirm () {
+                const { projectId, templateId, pipelineId } = this.$route.params
+                const releaseFn = this.isTemplate ? this.releaseDraftTemplate : this.releaseDraftPipeline
+                try {
+                    if (this.releasing) return
+                    this.releasing = true
+                    this.setSaveStatus(true)
+                    await this.$refs?.releaseForm?.validate?.()
+                    
+                    // 检查版本名是否存在（仅对模板生效且有自定义版本名时）
+                    const versionNameToCheck = this.customVersionName?.trim()
+                    if (this.isTemplate && versionNameToCheck && !skipVersionNameCheck) {
+                        const isExist = await this.checkTemplateVersionNameExist({
+                            projectId,
+                            templateId,
+                            versionName: versionNameToCheck
+                        })
+                        if (isExist) {
+                            this.existingVersionName = versionNameToCheck
+                            this.showVersionNameExistDialog = true
+                            this.releasing = false
+                            this.setSaveStatus(false)
+                            return
+                        }
+                    }
+                    const {
+                        fileUrl,
+                        webUrl,
+                        pathWithNamespace,
+                        repoHashId,
+                        scmType,
+                        filePath,
+                        targetAction,
+                        ...rest
+                    } = this.releaseParams
+                    const {
+                        data: { versionName, targetUrl, updateBuildNo }
+                    } = await releaseFn({
+                        ...this.$route.params,
+                        version: this.version,
+                        params: {
+                            ...rest,
+                            customVersionName: this.customVersionName?.trim(),
+                            ...(rest.enablePac
+                                ? {
+                                    targetAction
+                                }
+                                : {}
+                            ),
+                            yamlInfo: rest.enablePac
+                                ? {
+                                    scmType,
+                                    repoHashId,
+                                    filePath: `${this.filePathDir}${filePath}`
+                                }
+                                : null
+                        }
+                    })
+                    if (this.isTemplate) {
+                        await this.requestTemplateSummary(this.$route.params)
+                    } else {
+                        await this.requestPipelineSummary(this.$route.params)
+                    }
+                    
+                    const { storeFlag, publishStrategy } = this.pipelineInfo
+                    const isManual = publishStrategy && publishStrategy === 'MANUAL'
+
+                    this.customVersionName = ''
+                    const tipsI18nKey = this.releaseParams.enablePac
+                        ? 'pacPipelineReleaseTips'
+                        : 'releaseTips'
+                    const tipsArrayLength = this.releaseParams.enablePac ? (this.isTemplate ? 1 : 2) : 0
+                    const isPacMR
+                        = this.releaseParams.enablePac
+                            && [
+                                TARGET_ACTION_ENUM.CHECKOUT_BRANCH_AND_REQUEST_MERGE,
+                                TARGET_ACTION_ENUM.COMMIT_TO_SOURCE_BRANCH_AND_REQUEST_MERGE
+                            ].includes(this.releaseParams.targetAction)
+
+                    const getReleaseTitleKey = () => {
+                        if (isPacMR) return 'pacMRRelaseTips'
+                        if (storeFlag) return 'template.versionReleaseSuc'
+                        return 'releaseSuc'
+                    }
+                    const getReleaseContentKey = () => {
+                        if (isPacMR) return 'pacMRRelaseSuc'
+                        if (storeFlag) return isManual ? 'template.manualUpdate' : 'template.autoUpdate'
+                        return 'relaseSucTips'
+                    }
+                    const h = this.$createElement
+                    const instance = this.$bkInfo({
+                        width: 600,
+                        position: {
+                            top: 100,
+                            left: 100
+                        },
+                        extCls: 'release-info-dialog',
+                        showFooter: false,
+                        subHeader: h('div', {
+                            attrs: {
+                                class: 'release-info-content'
+                            }
+                        }, [
+                            isPacMR
+                                ? h('span', {
+                                    attrs: {
+                                        class: 'part-of-mr'
+                                    }
+                                })
+                                : h('i', {
+                                    attrs: {
+                                        class: 'devops-icon icon-check-small release-success-icon'
+                                    }
+                                }),
+                            h('p', {
+                                attrs: {
+                                    class: 'release-info-title'
+                                }
+                            }, this.$t(getReleaseTitleKey(), [versionName])),
+                            h('h3', {
+                                class: 'release-info-text',
+                                domProps: {
+                                    innerHTML: this.$t(getReleaseContentKey(), [
+                                        versionName
+                                    ])
+                                }
+                            }),
+                            updateBuildNo && !tipsArrayLength
+                                ? h('div', { class: 'warning-box' }, [
+                                    h(Logo, { size: 14, name: 'warning-circle-fill' }),
+                                    h('span', this.$t('buildNoBaseline.resetRequiredTips'))
+                                ])
+                                : null,
+                            ...(tipsArrayLength > 0
+                                ? [
+                                    h(
+                                        'p',
+                                        {
+                                            attrs: {
+                                                class: 'pipeline-release-suc-tips'
+                                            }
+                                        },
+                                        [
+                                            h('h3', {}, this.$t('pacPipelineConfRule')),
+                                            ...Array.from({ length: tipsArrayLength }).map((_, index) => {
+                                                if (index === 1 && this.releaseParams.enablePac) {
+                                                    return h('ul', {}, [
+                                                        h('span', {}, this.$t(`${tipsI18nKey}${index}`)),
+                                                        Array(3)
+                                                            .fill(0)
+                                                            .map((_, i) =>
+                                                                h(
+                                                                    'li',
+                                                                    {
+                                                                        domProps: {
+                                                                            innerHTML: this.$t(
+                                                                                `${tipsI18nKey}${index}-${i}`
+                                                                            )
+                                                                        },
+                                                                        style: {
+                                                                            marginLeft: '32px',
+                                                                            listStyle: 'disc'
+                                                                        }
+                                                                    }
+                                                                )
+                                                            )
+                                                    ])
+                                                }
+                                                return h('span', {}, this.$t(`${tipsI18nKey}${index}`))
+                                            })
+                                        ]
+                                    )]
+                                : []),
+                            h(
+                                'footer',
+                                {
+                                    style: {
+                                        display: 'flex',
+                                        gridGap: '10px',
+                                        marginTop: '20px',
+                                        justifyContent: 'center'
+                                    }
+                                },
+                                [
+                                    this.releaseParams.enablePac && isPacMR
+                                        ? h(
+                                            'bk-button',
+                                            {
+                                                props: {
+                                                    theme: 'primary'
+                                                },
+                                                on: {
+                                                    click: () => {
+                                                        this.$bkInfo.close(instance.id)
+                                                        window.open(targetUrl, '_blank')
+                                                    }
+                                                }
+                                            },
+                                            this.$t('dealMR')
+                                        )
+                                        : !this.isTemplate
+                                            ? h(
+                                                'bk-button',
+                                                {
+                                                    props: {
+                                                        theme: 'primary'
+                                                    },
+                                                    on: {
+                                                        click: () => {
+                                                            this.$bkInfo.close(instance.id)
+                                                            if (!updateBuildNo) {
+                                                                this.$router.push({
+                                                                    name: 'executePreview',
+                                                                    params: {
+                                                                        ...this.$route.params,
+                                                                        version: this.pipelineInfo?.releaseVersion
+                                                                    }
+                                                                })
+                                                            } else {
+                                                                this.$router.push({
+                                                                    name: 'pipelinesHistory',
+                                                                    params: {
+                                                                        ...this.$route.params,
+                                                                        type: 'pipeline',
+                                                                        isDirectShowVersion: true,
+                                                                        version: this.pipelineInfo?.releaseVersion
+                                                                    }
+                                                                })
+                                                            }
+                                                        }
+                                                    }
+                                                },
+                                                this.$t(!updateBuildNo ? 'goExec' : 'buildNoBaseline.goReset')
+                                            )
+                                            : null,
+                                    storeFlag && isManual && !isPacMR
+                                        ? h('bk-button', {
+                                            props: {
+                                                theme: 'primary'
+                                            },
+                                            on: {
+                                                click: () => {
+                                                    this.$bkInfo.close(instance.id)
+                                                    if (!this.pipelineInfo.permissions.canEdit) return
+                                                    const href = `${WEB_URL_PREFIX}/store/editTemplate/${this.pipelineInfo.id}?hasSourceInfo=true`
+                                                    window.open(href, '_blank')
+                                                }
+                                            },
+                                        }, this.$t('template.toStoreUpdate')) : null,
+                                    h(
+                                        'bk-button',
+                                        {
+                                            on: {
+                                                click: () => {
+                                                    this.$bkInfo.close(instance.id)
+                                                    !updateBuildNo && this.$router.push({
+                                                        name: this.isTemplate ? 'TemplateOverview' : 'pipelinesHistory',
+                                                        params: {
+                                                            ...this.$route.params,
+                                                            type: 'pipeline',
+                                                            version: this.pipelineInfo?.releaseVersion
+                                                        }
+                                                    })
+                                                }
+                                            }
+                                        },
+                                        this.$t(!updateBuildNo ? (this.isTemplate ? 'checkTemplate' : 'checkPipeline') : 'return')
+                                    ),
+                                    this.isTemplate ? h(
+                                        'bk-button',
+                                        {
+                                            props: {
+                                                theme: 'primary'
+                                            },
+                                            on: {
+                                                click: () => {
+                                                    this.$bkInfo.close(instance.id)
+                                                    this.$router.push({
+                                                        name: 'TemplateOverview',
+                                                        params: {
+                                                            ...this.$route.params,
+                                                            version: this.pipelineInfo?.releaseVersion,
+                                                            type: 'instanceList'
+                                                        }
+                                                    })
+                                                }
+                                            }
+                                        },
+                                        this.$t('template.toInstance')
+                                    ) : null
+
+                                ]
+                            )
+                        ])
+                    })
+                    // 发布成功，触发事件通知父组件刷新草稿列表
+                    this.$emit('release-success')
+                    
+                    this.hideReleaseSlider()
+                } catch (e) {
+                    if (e.state === 'error') {
+                        e.message = e.content
+                    }
+                    this.errorHandler(e)
+                    return {
+                        code: e.code,
+                        message: e.message
+                    }
+                } finally {
+                    this.setSaveStatus(false)
+                    this.releasing = false
+                }
+            },
             async releasePipeline (skipVersionNameCheck = false) {
                 if (this.isTemplateInstanceMode) {
                     try {
@@ -1182,327 +1468,22 @@
                         ...(this.isTemplate ? { templateId } : { pipelineId })
                     }
                     const draftStatus = await request(params)
-                    this.releaseStatus = draftStatus.status
+                    this.releaseStatus = draftStatus
 
-                    if ([DRAFT_STATUS.PUBLISHED, DRAFT_STATUS.CONFLICT].includes(draftStatus.status)) {
+                    if ([DRAFT_STATUS.PUBLISHED, DRAFT_STATUS.CONFLICT, DRAFT_STATUS.DELETED].includes(draftStatus.status)) {
                         this.lasterDraftInfo = draftStatus.status === DRAFT_STATUS.PUBLISHED ? draftStatus.release : draftStatus.draft
                         this.isPublishedDialogShow = true
                         return
                     }
-                    const releaseFn = this.isTemplate ? this.releaseDraftTemplate : this.releaseDraftPipeline
-                    try {
-                        if (this.releasing) return
-                        this.releasing = true
-                        this.setSaveStatus(true)
-                        await this.$refs?.releaseForm?.validate?.()
-                        
-                        // 检查版本名是否存在（仅对模板生效且有自定义版本名时）
-                        const versionNameToCheck = this.customVersionName?.trim()
-                        if (this.isTemplate && versionNameToCheck && !skipVersionNameCheck) {
-                            const isExist = await this.checkTemplateVersionNameExist({
-                                projectId,
-                                templateId,
-                                versionName: versionNameToCheck
-                            })
-                            if (isExist) {
-                                this.existingVersionName = versionNameToCheck
-                                this.showVersionNameExistDialog = true
-                                this.releasing = false
-                                this.setSaveStatus(false)
-                                return
-                            }
-                        }
-                        const {
-                            fileUrl,
-                            webUrl,
-                            pathWithNamespace,
-                            repoHashId,
-                            scmType,
-                            filePath,
-                            targetAction,
-                            ...rest
-                        } = this.releaseParams
-                        const {
-                            data: { versionName, targetUrl, updateBuildNo }
-                        } = await releaseFn({
-                            ...this.$route.params,
-                            version: this.version,
-                            params: {
-                                ...rest,
-                                customVersionName: this.customVersionName?.trim(),
-                                ...(rest.enablePac
-                                    ? {
-                                        targetAction
-                                    }
-                                    : {}
-                                ),
-                                yamlInfo: rest.enablePac
-                                    ? {
-                                        scmType,
-                                        repoHashId,
-                                        filePath: `${this.filePathDir}${filePath}`
-                                    }
-                                    : null
-                            }
+                    if (draftStatus.status === DRAFT_STATUS.BASE_OUTDATED) {
+                        this.$nextTick(() => {
+                            this.$refs.releasePopconfirm?.$refs?.popover?.showHandler()
                         })
-                        if (this.isTemplate) {
-                            await this.requestTemplateSummary(this.$route.params)
-                        } else {
-                            await this.requestPipelineSummary(this.$route.params)
-                        }
-                        
-                        const { storeFlag, publishStrategy } = this.pipelineInfo
-                        const isManual = publishStrategy && publishStrategy === 'MANUAL'
-
-                        this.customVersionName = ''
-                        const tipsI18nKey = this.releaseParams.enablePac
-                            ? 'pacPipelineReleaseTips'
-                            : 'releaseTips'
-                        const tipsArrayLength = this.releaseParams.enablePac ? (this.isTemplate ? 1 : 2) : 0
-                        const isPacMR
-                            = this.releaseParams.enablePac
-                                && [
-                                    TARGET_ACTION_ENUM.CHECKOUT_BRANCH_AND_REQUEST_MERGE,
-                                    TARGET_ACTION_ENUM.COMMIT_TO_SOURCE_BRANCH_AND_REQUEST_MERGE
-                                ].includes(this.releaseParams.targetAction)
-
-                        const getReleaseTitleKey = () => {
-                            if (isPacMR) return 'pacMRRelaseTips'
-                            if (storeFlag) return 'template.versionReleaseSuc'
-                            return 'releaseSuc'
-                        }
-                        const getReleaseContentKey = () => {
-                            if (isPacMR) return 'pacMRRelaseSuc'
-                            if (storeFlag) return isManual ? 'template.manualUpdate' : 'template.autoUpdate'
-                            return 'relaseSucTips'
-                        }
-                        const h = this.$createElement
-                        const instance = this.$bkInfo({
-                            width: 600,
-                            position: {
-                                top: 100,
-                                left: 100
-                            },
-                            extCls: 'release-info-dialog',
-                            showFooter: false,
-                            subHeader: h('div', {
-                                attrs: {
-                                    class: 'release-info-content'
-                                }
-                            }, [
-                                isPacMR
-                                    ? h('span', {
-                                        attrs: {
-                                            class: 'part-of-mr'
-                                        }
-                                    })
-                                    : h('i', {
-                                        attrs: {
-                                            class: 'devops-icon icon-check-small release-success-icon'
-                                        }
-                                    }),
-                                h('p', {
-                                    attrs: {
-                                        class: 'release-info-title'
-                                    }
-                                }, this.$t(getReleaseTitleKey(), [versionName])),
-                                h('h3', {
-                                    class: 'release-info-text',
-                                    domProps: {
-                                        innerHTML: this.$t(getReleaseContentKey(), [
-                                            versionName
-                                        ])
-                                    }
-                                }),
-                                updateBuildNo && !tipsArrayLength
-                                    ? h('div', { class: 'warning-box' }, [
-                                        h(Logo, { size: 14, name: 'warning-circle-fill' }),
-                                        h('span', this.$t('buildNoBaseline.resetRequiredTips'))
-                                    ])
-                                    : null,
-                                ...(tipsArrayLength > 0
-                                    ? [
-                                        h(
-                                            'p',
-                                            {
-                                                attrs: {
-                                                    class: 'pipeline-release-suc-tips'
-                                                }
-                                            },
-                                            [
-                                                h('h3', {}, this.$t('pacPipelineConfRule')),
-                                                ...Array.from({ length: tipsArrayLength }).map((_, index) => {
-                                                    if (index === 1 && this.releaseParams.enablePac) {
-                                                        return h('ul', {}, [
-                                                            h('span', {}, this.$t(`${tipsI18nKey}${index}`)),
-                                                            Array(3)
-                                                                .fill(0)
-                                                                .map((_, i) =>
-                                                                    h(
-                                                                        'li',
-                                                                        {
-                                                                            domProps: {
-                                                                                innerHTML: this.$t(
-                                                                                    `${tipsI18nKey}${index}-${i}`
-                                                                                )
-                                                                            },
-                                                                            style: {
-                                                                                marginLeft: '32px',
-                                                                                listStyle: 'disc'
-                                                                            }
-                                                                        }
-                                                                    )
-                                                                )
-                                                        ])
-                                                    }
-                                                    return h('span', {}, this.$t(`${tipsI18nKey}${index}`))
-                                                })
-                                            ]
-                                        )]
-                                    : []),
-                                h(
-                                    'footer',
-                                    {
-                                        style: {
-                                            display: 'flex',
-                                            gridGap: '10px',
-                                            marginTop: '20px',
-                                            justifyContent: 'center'
-                                        }
-                                    },
-                                    [
-                                        this.releaseParams.enablePac && isPacMR
-                                            ? h(
-                                                'bk-button',
-                                                {
-                                                    props: {
-                                                        theme: 'primary'
-                                                    },
-                                                    on: {
-                                                        click: () => {
-                                                            this.$bkInfo.close(instance.id)
-                                                            window.open(targetUrl, '_blank')
-                                                        }
-                                                    }
-                                                },
-                                                this.$t('dealMR')
-                                            )
-                                            : !this.isTemplate
-                                                ? h(
-                                                    'bk-button',
-                                                    {
-                                                        props: {
-                                                            theme: 'primary'
-                                                        },
-                                                        on: {
-                                                            click: () => {
-                                                                this.$bkInfo.close(instance.id)
-                                                                if (!updateBuildNo) {
-                                                                    this.$router.push({
-                                                                        name: 'executePreview',
-                                                                        params: {
-                                                                            ...this.$route.params,
-                                                                            version: this.pipelineInfo?.releaseVersion
-                                                                        }
-                                                                    })
-                                                                } else {
-                                                                    this.$router.push({
-                                                                        name: 'pipelinesHistory',
-                                                                        params: {
-                                                                            ...this.$route.params,
-                                                                            type: 'pipeline',
-                                                                            isDirectShowVersion: true,
-                                                                            version: this.pipelineInfo?.releaseVersion
-                                                                        }
-                                                                    })
-                                                                }
-                                                            }
-                                                        }
-                                                    },
-                                                    this.$t(!updateBuildNo ? 'goExec' : 'buildNoBaseline.goReset')
-                                                )
-                                                : null,
-                                        storeFlag && isManual && !isPacMR
-                                            ? h('bk-button', {
-                                                props: {
-                                                    theme: 'primary'
-                                                },
-                                                on: {
-                                                    click: () => {
-                                                        this.$bkInfo.close(instance.id)
-                                                        if (!this.pipelineInfo.permissions.canEdit) return
-                                                        const href = `${WEB_URL_PREFIX}/store/editTemplate/${this.pipelineInfo.id}?hasSourceInfo=true`
-                                                        window.open(href, '_blank')
-                                                    }
-                                                },
-                                            }, this.$t('template.toStoreUpdate')) : null,
-                                        h(
-                                            'bk-button',
-                                            {
-                                                on: {
-                                                    click: () => {
-                                                        this.$bkInfo.close(instance.id)
-                                                        !updateBuildNo && this.$router.push({
-                                                            name: this.isTemplate ? 'TemplateOverview' : 'pipelinesHistory',
-                                                            params: {
-                                                                ...this.$route.params,
-                                                                type: 'pipeline',
-                                                                version: this.pipelineInfo?.releaseVersion
-                                                            }
-                                                        })
-                                                    }
-                                                }
-                                            },
-                                            this.$t(!updateBuildNo ? (this.isTemplate ? 'checkTemplate' : 'checkPipeline') : 'return')
-                                        ),
-                                        this.isTemplate ? h(
-                                            'bk-button',
-                                            {
-                                                props: {
-                                                    theme: 'primary'
-                                                },
-                                                on: {
-                                                    click: () => {
-                                                        this.$bkInfo.close(instance.id)
-                                                        this.$router.push({
-                                                            name: 'TemplateOverview',
-                                                            params: {
-                                                                ...this.$route.params,
-                                                                version: this.pipelineInfo?.releaseVersion,
-                                                                type: 'instanceList'
-                                                            }
-                                                        })
-                                                    }
-                                                }
-                                            },
-                                            this.$t('template.toInstance')
-                                        ) : null
-
-                                    ]
-                                )
-                            ])
-                        })
-                        // 发布成功，触发事件通知父组件刷新草稿列表
-                        this.$emit('release-success')
-                        
-                        this.hideReleaseSlider()
-                    } catch (e) {
-                        if (e.state === 'error') {
-                            e.message = e.content
-                        }
-                        this.errorHandler(e)
-                        return {
-                            code: e.code,
-                            message: e.message
-                        }
-                    } finally {
-                        this.setSaveStatus(false)
-                        this.releasing = false
+                        return
                     }
+
+                    this.releaseConfirm()
                 }
-            },
-            formatTime (time) {
-                return convertTime(time)
             },
             async handleNewDraft () {
                 this.isPublishedDialogShow = false
@@ -1521,6 +1502,14 @@
                     version: this.pipelineInfo?.version
                 })
                 this.$emit('close-slider')
+            },
+            handleSaveDraft () {
+                this.isPublishedDialogShow = false
+                this.$emit('save-draft')
+            },
+            handleReSaveDraft () {
+                this.isPublishedDialogShow = false
+                this.$emit('re-save-draft')
             },
             async goPipelineModel () {
                 const routerName = this.isTemplate ? 'TemplateOverview' : 'pipelinesHistory'
@@ -1887,6 +1876,18 @@
 .release-pipeline-pac-footer {
     width: 100%;
     padding: 8px 24px;
+}
+.confirm-popper {
+    .confirm-publish-title {
+        font-size: 14px;
+    }
+    .confirm-publish-tips {
+        margin: 10px 0;
+    }
+}
+.bk-popconfirm-content.confirm-popper .popconfirm-operate button[type=button].primary {
+    background: #ff9c04 !important;
+    border-color: #ff9c04 !important;
 }
 
 .release-info-dialog {

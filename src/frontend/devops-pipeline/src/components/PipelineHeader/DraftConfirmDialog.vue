@@ -1,4 +1,5 @@
 <template>
+    <!-- 详情页冲突提示弹窗 -->
     <bk-dialog
         v-model="value"
         :width="480"
@@ -62,7 +63,7 @@
             <template v-else>
                 <!-- 版本落后 -->
                 <div
-                    v-if="draftStatus === DRAFT_STATUS.OUTDATED"
+                    v-if="draftStatus === DRAFT_STATUS.BASE_OUTDATED"
                     class="is-active-branch-version"
                 >
                     <i18n path="draftBaselineIsEarlierThanCurrentVersionNotice">

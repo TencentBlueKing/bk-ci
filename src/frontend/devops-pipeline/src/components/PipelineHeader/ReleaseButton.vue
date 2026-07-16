@@ -18,66 +18,20 @@
             :draft-status="draftStatus"
             :current-editing-data="currentEditingData"
             @release-success="handleReleaseSuccess"
+            @save-draft="handleSaveDraft"
+            @re-save-draft="handleReSaveDraft"
             @close-slider="handleCloseSlider"
         />
-        <bk-dialog
+        <ReleaseConflictDialog
             v-model="isPublishedDialogShow"
-            :width="480"
-            :mask-close="false"
-            footer-position="center"
-            ext-cls="published-dialog"
-        >
-            <header
-                class="published-hint-title"
-                slot="header"
-            >
-                <i class="devops-icon icon-exclamation"></i>
-                <span>{{ $t("alreadyPublished") }}</span>
-            </header>
-            <div>
-                <div class="published-content">
-                    <span class="label">{{ $t("publisher") }}: </span>
-                    <span>{{ lasterDraftInfo?.updater || "--" }} </span>
-                    <span class="label"> {{ $t("publishTime") }}: </span>
-                    <span>{{ formatTime(lasterDraftInfo?.updateTime) }}</span>
-
-                    <VersionDiffEntry
-                        :class="[
-                            'diff-button',
-                            {
-                                'develop-txt-disabled': !hasDraft
-                            }
-                        ]"
-                        text
-                        :can-switch-version="false"
-                        :show-button="false"
-                        :disabled="!hasDraft"
-                        :version="lasterDraftInfo?.version"
-                        :current-editing-data="currentEditingData"
-                        :diff-mode="DRAFT_STATUS.PUBLISHED"
-                    >
-                        <Logo
-                            name="diff"
-                            size="14"
-                        />
-                    </VersionDiffEntry>
-                    <p class="published-tips">
-                        <span v-html="$t('alreadyPublishedTip')"></span>
-                    </p>
-                </div>
-            </div>
-            <footer slot="footer">
-                <bk-button
-                    theme="primary"
-                    @click="handleNewDraft"
-                >
-                    {{ $t("newDraft") }}
-                </bk-button>
-                <bk-button @click="goPipelineModel">
-                    {{ $t('exitEditing') }}
-                </bk-button>
-            </footer>
-        </bk-dialog>
+            :release-status="draftStatus?.status"
+            :laster-draft-info="lasterDraftInfo"
+            :current-editing-data="currentEditingData"
+            @new-draft="handleNewDraft"
+            @save-draft="handleSaveDraft"
+            @re-save-draft="handleReSaveDraft"
+            @go-pipeline-model="goPipelineModel"
+        />
     </div>
 </template>
 
@@ -87,16 +41,13 @@
     } from '@/utils/permission'
     import { mapActions, mapGetters, mapState } from 'vuex'
     import ReleasePipelineSideSlider from './ReleasePipelineSideSlider'
-    import Logo from '@/components/Logo'
-    import VersionDiffEntry from '@/components/PipelineDetailTabs/VersionDiffEntry.vue'
-    import { convertTime } from "@/utils/util"
+    import ReleaseConflictDialog from './ReleaseConflictDialog'
     import { DRAFT_STATUS } from '@/utils/pipelineConst'
     
     export default {
         components: {
-            Logo,
-            VersionDiffEntry,
-            ReleasePipelineSideSlider
+            ReleasePipelineSideSlider,
+            ReleaseConflictDialog
         },
         props: {
             projectId: {
@@ -149,10 +100,6 @@
             releaseVersion () {
                 return this.pipelineInfo?.releaseVersion ?? ''
             },
-            hasDraft () {
-                const status = this.draftStatus?.status
-                return status && !['NORMAL', 'BRANCH', 'PUBLISHED', 'RELEASE_OUTDATED'].includes(status)
-            },
             permObj () {
                 return {
                     hasPermission: this.canEdit,
@@ -166,9 +113,6 @@
                 }
             }
         },
-        created () {
-            this.DRAFT_STATUS = DRAFT_STATUS
-        },
         methods: {
             ...mapActions('atom', [
                 'requestPipelineSummary',
@@ -180,9 +124,6 @@
                 'getDraftStatus',
                 'getTemplateDraftStatus'
             ]),
-            formatTime (time) {
-                return convertTime(time)
-            },
             async showReleaseSlider () {
                 if (!this.canRelease) {
                     return
@@ -204,9 +145,9 @@
                     const draftStatus = await request(params)
                     this.draftStatus = draftStatus
                     
-                    // 如果状态是 PUBLISHED，显示已发布弹窗
-                    if (draftStatus.status === DRAFT_STATUS.PUBLISHED) {
-                        this.lasterDraftInfo = draftStatus.release
+                    // 已发布 / 冲突 / 已删除时显示冲突弹窗
+                    if ([DRAFT_STATUS.PUBLISHED, DRAFT_STATUS.CONFLICT, DRAFT_STATUS.DELETED].includes(draftStatus.status)) {
+                        this.lasterDraftInfo = draftStatus.status === DRAFT_STATUS.PUBLISHED ? draftStatus.release : draftStatus.draft
                         this.isPublishedDialogShow = true
                     } else {
                         // 否则显示发布侧边栏
@@ -254,6 +195,14 @@
             handleReleaseSuccess () {
                 this.$emit('release-success')
             },
+            handleSaveDraft () {
+                this.isPublishedDialogShow = false
+                this.$emit('save-draft')
+            },
+            handleReSaveDraft () {
+                this.isPublishedDialogShow = false
+                this.$emit('re-save-draft')
+            },
             handleCloseSlider () {
                 this.isReleaseSliderShow = false
             }
@@ -284,48 +233,5 @@
     .icon-check-small {
         font-size: 18px;
     }
-}
-.published-dialog {
-    .published-hint-title {
-        color: #313238;
-        font-size: 20px;
-        display: flex;
-        flex-direction: column;
-        grid-gap: 24px;
-        align-items: center;
-        > i {
-            border-radius: 50%;
-            background-color: #ffe8c3;
-            color: #ff9c01;
-            border-radius: 50%;
-            font-size: 24px;
-            height: 42px;
-            line-height: 42px;
-            width: 42px;
-        }
-    }
-    .published-content {
-        font-size: 14px;
-        color: #313238;
-        .label {
-            color: #b4b4b7;
-        }
-        .diff-button {
-            cursor: pointer;
-            margin-left: 16px;
-        }
-    }
-    .published-tips {
-        padding: 12px 16px;
-        margin-top: 16px;
-        background: #F5F6FA;
-        border-radius: 2px;
-        color: #4d4f56;
-        font-size: 14px;
-    }
-}
-.develop-txt-disabled {
-    cursor: not-allowed;
-    color: #c4c6cc;
 }
 </style>

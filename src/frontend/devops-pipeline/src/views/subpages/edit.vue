@@ -310,6 +310,8 @@
                 'setEditFrom',
                 'updatePipelineSetting',
                 'setAtomEditing',
+                'requestPipelineSummary',
+                'requestTemplateSummary',
                 'clearPipelineSnapshot'
             ]),
             ...mapActions('common', [
@@ -317,9 +319,27 @@
                 'requestInterceptAtom',
                 'requestMatchTemplateRuleList'
             ]),
+            async getDetail () {
+                try {
+                    if (this.isTemplate) {
+                        await this.requestTemplateSummary(this.$route.params)
+                    } else {
+                        await this.requestPipelineSummary(this.$route.params)
+                    }
+                } catch (error) {
+                    this.$bkMessage({
+                        theme: 'error',
+                        message: error.message ?? error
+                    })
+                }
+            },
             async init () {
                 if (this.pipelineVersion) {
                     this.isLoading = true
+                    
+                    // 保证编辑页一直是最新的detail
+                    await this.getDetail()
+                    
                     await this.requestPipeline({
                         ...this.$route.params,
                         source: 'EDIT',

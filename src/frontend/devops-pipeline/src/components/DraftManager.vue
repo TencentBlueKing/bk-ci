@@ -79,7 +79,7 @@
             </ul>
         </div>
 
-        <!-- 冲突对话框部分 -->
+        <!-- 编辑页面点击保存草稿时，冲突对话框部分。 -->
         <bk-dialog
             v-model="value"
             :width="480"
@@ -98,7 +98,7 @@
             <div>
                 <div
                     class="conflict-draft"
-                    v-if="isConflictStatus || isExistsStatus || isOutDatedStatus"
+                    v-if="isConflictStatus || isOutDatedStatus"
                 >
                     <span class="label">{{ $t('conflictingDraft') }}: </span>
                     <span>{{ conflictDraftInfo?.updater }} </span>
@@ -187,7 +187,7 @@
                     {{ secondaryButtonText }}
                 </bk-button>
                 <bk-button
-                    v-if="isConflictStatus || isExistsStatus || isOutDatedStatus"
+                    v-if="isConflictStatus || isOutDatedStatus"
                     @click="handleClose"
                 >
                     {{ $t('returnToEditing') }}
@@ -271,11 +271,8 @@
             isPublishedStatus () {
                 return this.lasterDraftInfo?.status === DRAFT_STATUS.PUBLISHED
             },
-            isExistsStatus () {
-                return this.lasterDraftInfo?.status === DRAFT_STATUS.EXISTS
-            },
             isOutDatedStatus () {
-                return this.lasterDraftInfo?.status === DRAFT_STATUS.OUTDATED
+                return this.lasterDraftInfo?.status === DRAFT_STATUS.BASE_OUTDATED
             },
             isReleaseOutDatedStatus () {
                 return this.lasterDraftInfo?.status === DRAFT_STATUS.RELEASE_OUTDATED
@@ -288,12 +285,16 @@
             },
             dialogTitle () {
                 if (this.isConflictStatus) {
-                    return this.$t('otherUserEditingDetected')
+                    // 检测到当前流水线存在更新的草稿
+                    return this.$t('hasConflictDraft')
                 } else if (this.isPublishedStatus) {
+                    // 当前版本已被发布
                     return this.$t('alreadyPublished')
-                } else if (this.isExistsStatus || this.isOutDatedStatus) {
+                } else if (this.isOutDatedStatus) {
+                    // 检测到当前流水线已存在草稿
                     return this.$t('hasDraft')
                 } else {
+                    // 流水线已更新
                     return this.$t('pipelineUpdated')
                 }
             },
@@ -305,7 +306,7 @@
                 }
             },
             secondaryButtonText () {
-                if (this.isConflictStatus || this.isOutDatedStatus || this.isExistsStatus) {
+                if (this.isConflictStatus || this.isOutDatedStatus) {
                     return this.$t('discardChanges')
                 } else {
                     return this.$t('exitEditing')
@@ -316,8 +317,6 @@
                     return this.$t('reviewDifferencesAndOverrideChanges')
                 } else if (this.isPublishedStatus) {
                     return this.$t('alreadyPublishedTip')
-                } else if (this.isExistsStatus) {
-                    return this.$t('regenerateDraftOrEditExisting')
                 } else if (this.isReleaseOutDatedStatus) {
                     return this.$t('pipelineUpdatedNotice', [this.pipelineInfo?.releaseVersionName, this.publishedInfo?.versionName])
                 }
