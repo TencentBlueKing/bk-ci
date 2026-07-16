@@ -110,6 +110,34 @@ object BuildVarOverflowExprSupport {
         return overflowKeys to loader
     }
 
+    /**
+     * 经典方言脚本/文本的 ${{ 大变量 }} 按需加载。
+     *
+     * process 侧 claim 对 URL 编码的脚本正文是 no-op（匹配不到 `${{`），脚本正文的 `${{ }}`
+     * 实际由 worker 端 [ICommand.parseTemplate] 经典分支的 [ReplacementUtils] 解析，而 claim 下发的
+     * variables 中大变量只是引用串 `__BK_OVF__:<len>`，直接替换只会得到引用串。
+     *
+     * 重写逻辑复用引擎/Worker 共享实现 [BuildVarOverflowUtils.rewriteOverflowRefs]：把被 `${{ key }}`
+     * 引用到的大变量重写成 `${{ 合成key }}`，调用方把返回的 合成key -> 真实值 映射并入替换上下文，
+     * 交给 [ReplacementUtils] 统一替换（其 Matcher.quoteReplacement 负责 $ \ 转义）。
+     *
+     * @return Pair(重写后的文本, 合成变量映射)；无需处理时返回原文本与空映射
+     */
+    fun rewriteOverflowText(
+        text: String,
+        overflowKeys: Set<String>,
+        loader: ((String) -> String?)?
+    ): Pair<String, Map<String, String>> {
+        if (loader == null || overflowKeys.isEmpty() || !text.contains("\${{")) {
+            return text to emptyMap()
+        }
+        val result = BuildVarOverflowUtils.rewriteOverflowRefs(text, overflowKeys, loader)
+        if (result.synthVars.isNotEmpty()) {
+            logger.info("OVERFLOW_SCRIPT_RESOLVED|count=${result.synthVars.size}")
+        }
+        return (result.value as String) to result.synthVars
+    }
+
     private const val STEPS_PREFIX = "steps."
     private const val OUTPUTS_INFIX = ".outputs."
 

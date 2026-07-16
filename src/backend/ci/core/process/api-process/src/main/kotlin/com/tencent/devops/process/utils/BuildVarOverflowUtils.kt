@@ -27,6 +27,9 @@
 
 package com.tencent.devops.process.utils
 
+import java.util.UUID
+import org.slf4j.LoggerFactory
+
 /**
  * 大变量"引用协议"工具。
  *
@@ -46,6 +49,17 @@ package com.tencent.devops.process.utils
  * `$xxx` / `${xxx}` 旧风格固定看到引用串本身。
  */
 object BuildVarOverflowUtils {
+
+    private val logger = LoggerFactory.getLogger(BuildVarOverflowUtils::class.java)
+
+    /** variables.xxx 落库 key 是 xxx，判断/加载时需去掉该前缀。 */
+    private const val VARIABLES_PREFIX = "variables."
+
+    /**
+     * 仅匹配双花括号 `${{ key }}`；key 内不含 `$ { }`。
+     * 单花括号 `${ }` / `$x` 旧语法不在此处处理（保持引用串，避免 4M 值意外展开）。
+     */
+    private val doubleBracePattern = Regex("\\$\\{\\{([^{}$]+)}}")
 
     /** 主表 VALUE 列字符上限，与 [PIPELINE_VARIABLES_STRING_LENGTH_MAX] 对齐。 */
     const val MAIN_TABLE_MAX_LENGTH: Int = PIPELINE_VARIABLES_STRING_LENGTH_MAX
@@ -90,5 +104,97 @@ object BuildVarOverflowUtils {
             .filter { isOverflowReference(it.value) }
             .map { it.key }
             .toSet()
+    }
+
+    /**
+     * 合成键溢出重写的结果。
+     * @property value    重写后的值（结构与入参一致：String / Map / List / 其它原样）
+     * @property synthVars 合成键 -> 大变量真实值 映射；调用方需并入替换上下文
+     */
+    data class OverflowRewriteResult(
+        val value: Any?,
+        val synthVars: Map<String, String>
+    )
+
+    /**
+     * 传统方言 `${{ 大变量 }}` 按需加载的**唯一共享实现**（引擎 claim 侧与 Worker 侧共用）。
+     *
+     * 把被 `${{ key }}` 引用到、且命中溢出键的大变量重写成 `${{ 合成唯一键 }}`，并把
+     * 合成键 -> 真实值 收进 [OverflowRewriteResult.synthVars]；调用方将其并入替换上下文，交由各自的
+     * 替换引擎（引擎侧 ObjectReplaceEnvVarUtil / Worker 脚本侧 ReplacementUtils）把合成键当**普通变量**
+     * 完成替换，从而复用各引擎的 JSON 转义 / quoteReplacement，任意上下文都不会被破坏。
+     *
+     * 语义约束（两侧一致）：
+     * - 仅双花括号 `${{ }}` 且命中溢出键才触发加载；同键只加载一次（去重）；
+     * - `${x}` / `$x` 旧语法、未被引用的大变量、其它普通变量：完全不动；
+     * - loader 返回 null 或仍是引用串（溢出表 miss / 加载失败）：保持原 token 不变，
+     *   行为退化为"输出引用串"，与历史一致。
+     *
+     * @param value        待处理值，支持 String 及任意 Map/List 嵌套对象图
+     * @param overflowKeys [collectOverflowKeys] 收集到的溢出键；为空时直接原样返回
+     * @param loader       按落库 key 拉取真实值；由调用方决定远程/本地及兜底策略
+     */
+    fun rewriteOverflowRefs(
+        value: Any?,
+        overflowKeys: Set<String>,
+        loader: (String) -> String?
+    ): OverflowRewriteResult {
+        if (overflowKeys.isEmpty()) {
+            return OverflowRewriteResult(value, emptyMap())
+        }
+        val ctx = OverflowRewriteContext(overflowKeys, loader)
+        val rewritten = ctx.rewrite(value)
+        return OverflowRewriteResult(rewritten, ctx.synthVars)
+    }
+
+    private class OverflowRewriteContext(
+        private val overflowKeys: Set<String>,
+        private val loader: (String) -> String?
+    ) {
+        // 纯小写字母数字 + 随机 run token：不含 ${}，可被替换引擎当普通变量识别，且不与真实变量名冲突
+        private val runToken = UUID.randomUUID().toString().replace("-", "")
+        val synthVars = LinkedHashMap<String, String>()
+        private val keyToSynth = HashMap<String, String>()
+
+        fun rewrite(value: Any?): Any? = when (value) {
+            is String -> rewriteText(value)
+            is Map<*, *> -> value.entries.associateTo(LinkedHashMap<Any?, Any?>()) { (k, v) -> k to rewrite(v) }
+            is List<*> -> value.map { rewrite(it) }
+            else -> value
+        }
+
+        private fun rewriteText(text: String): String {
+            if (!text.contains("\${{")) return text
+            return doubleBracePattern.replace(text) { m ->
+                val rawKey = m.groupValues[1].trim()
+                if (!isOverflowToken(rawKey)) {
+                    return@replace m.value
+                }
+                keyToSynth[rawKey]?.let { return@replace "\${{$it}}" }
+                val real = try {
+                    loader.invoke(rawKey)
+                } catch (ignore: Throwable) {
+                    logger.warn("OVERFLOW_REWRITE_LOAD_FAIL|key=$rawKey|${ignore.message}")
+                    null
+                }
+                if (real == null || isOverflowReference(real)) {
+                    // 加载失败或仍是引用串：保持原样，行为退化为"输出引用串"
+                    m.value
+                } else {
+                    val synth = "bkovf${runToken}n${keyToSynth.size}"
+                    keyToSynth[rawKey] = synth
+                    synthVars[synth] = real
+                    "\${{$synth}}"
+                }
+            }
+        }
+
+        // 支持任意层级 key，含嵌套 context 键（如 jobs.x.steps.y.outputs.z），其落库 key 即完整 dotted 名
+        private fun isOverflowToken(key: String): Boolean {
+            val loadKey = if (key.startsWith(VARIABLES_PREFIX)) key.removePrefix(VARIABLES_PREFIX) else key
+            return overflowKeys.contains(key) ||
+                overflowKeys.contains(loadKey) ||
+                overflowKeys.contains(VARIABLES_PREFIX + loadKey)
+        }
     }
 }
