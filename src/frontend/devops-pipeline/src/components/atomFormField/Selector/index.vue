@@ -138,16 +138,9 @@
         },
         methods: {
             onChange (val, oldVal) {
-                if (val === oldVal) return
-
-                const isSameArray = Array.isArray(val)
-                    && Array.isArray(oldVal)
-                    && val.length === oldVal.length
-                    && val.every((item, index) => item === oldVal[index] || isShallowEqual(item, oldVal[index]))
-                const isSameObject = isShallowEqual(val, oldVal)
-                if (isSameArray || isSameObject) return
-
-                this.handleChange(this.name, val)
+                if (!isShallowEqual(val, oldVal)) {
+                    this.handleChange(this.name, val)
+                }
             },
             editItem (index) {
                 this.edit(index)
