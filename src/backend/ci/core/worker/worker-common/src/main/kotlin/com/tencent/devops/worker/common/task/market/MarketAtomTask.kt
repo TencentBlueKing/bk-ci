@@ -610,17 +610,17 @@ open class MarketAtomTask : ITask() {
                 inputMap.forEach { (name, value) ->
                     // 修复插件input环境变量替换问题 #5682
                     val sentinels = LinkedHashMap<String, String>()
-                    val preValue = if (overflowLoader != null) {
+                    val preValue: Any = if (overflowLoader != null) {
                         BuildVarOverflowExprSupport.sentinelizeOverflowInObject(
                             value, overflowKeys, overflowLoader, sentinels
-                        )
+                        ) ?: value
                     } else {
                         value
                     }
                     val replaced = BuildVarOverflowExprSupport.restoreSentinelsInObject(
                         ObjectReplaceEnvVarUtil.replaceEnvVar(preValue, variables),
                         sentinels
-                    )
+                    ) ?: ""
                     atomParams[name] = JsonUtil.toJson(replaced)
                         .parseCredentialValue(null, acrossInfo?.targetProjectId)
                 }

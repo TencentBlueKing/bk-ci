@@ -173,17 +173,21 @@ object BuildVarOverflowExprSupport {
      * 与 [sentinelizeOverflowInObject] 配对：在经典替换完成后，对对象图里 String 叶子中的哨兵
      * 还原为真实值。在对象层还原(而非 JSON 串上还原)可保证后续 toJson 正确转义大值内容。
      */
-    fun restoreSentinelsInObject(value: Any?, sink: Map<String, String>): Any? = when {
-        sink.isEmpty() -> value
-        value is String -> {
-            var text = value
-            sink.forEach { (sentinel, real) -> if (text.contains(sentinel)) text = text.replace(sentinel, real) }
-            text
+    fun restoreSentinelsInObject(value: Any?, sink: Map<String, String>): Any? {
+        if (sink.isEmpty()) return value
+        return when (value) {
+            is String -> {
+                var text: String = value
+                for ((sentinel, real) in sink) {
+                    if (text.contains(sentinel)) text = text.replace(sentinel, real)
+                }
+                text
+            }
+            is Map<*, *> -> value.entries.associateTo(LinkedHashMap<Any?, Any?>()) { (k, v) ->
+                k to restoreSentinelsInObject(v, sink)
+            }
+            is List<*> -> value.map { restoreSentinelsInObject(it, sink) }
+            else -> value
         }
-        value is Map<*, *> -> value.entries.associateTo(LinkedHashMap<Any?, Any?>()) { (k, v) ->
-            k to restoreSentinelsInObject(v, sink)
-        }
-        value is List<*> -> value.map { restoreSentinelsInObject(it, sink) }
-        else -> value
     }
 }
