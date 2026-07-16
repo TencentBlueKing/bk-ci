@@ -35,7 +35,6 @@ import com.tencent.devops.common.api.pojo.ErrorInfo
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.MessageUtil
-import com.tencent.devops.common.api.util.ObjectReplaceEnvVarUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.api.util.timestampmilli
@@ -101,6 +100,7 @@ import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildTaskResult
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.pojo.task.TaskBuildEndParam
+import com.tencent.devops.process.service.BuildVarExprOverflowHelper
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.PipelineAsCodeService
 import com.tencent.devops.process.service.PipelineContextService
@@ -825,8 +825,14 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                     params = task.taskParams.map {
                         // 表达式在worker端替换
                         val obj = if (!dialect.supportUseExpression()) {
-                            ObjectReplaceEnvVarUtil.replaceEnvVar(
-                                it.value, buildVariable
+                            // 传统方言在引擎侧替换：被 ${{ key }} 引用到的大变量替换成真实值(按需加载)，
+                            // ${x}/$x 旧语法与未引用的大变量仍保持引用串，避免 4M 值随 claim 全量下发。
+                            BuildVarExprOverflowHelper.replaceEnvVarWithOverflow(
+                                value = it.value,
+                                variables = buildVariable,
+                                buildVariableService = buildVariableService,
+                                projectId = task.projectId,
+                                buildId = buildId
                             )
                         } else {
                             it.value
