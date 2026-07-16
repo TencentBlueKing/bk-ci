@@ -46,11 +46,7 @@ import com.tencent.devops.remotedev.pojo.project.RemotedevProject
 import com.tencent.devops.remotedev.pojo.project.RemotedevProjectNew
 import com.tencent.devops.remotedev.pojo.project.WeSecProjectWorkspace
 import com.tencent.devops.remotedev.pojo.project.WorkspaceProperty
-import com.tencent.devops.remotedev.pojo.record.CheckWorkspaceRecordData
-import com.tencent.devops.remotedev.pojo.record.FetchMetaDataParam
 import com.tencent.devops.remotedev.pojo.record.ThumbnailEncryptedTicketResp
-import com.tencent.devops.remotedev.pojo.record.UserWorkspaceRecordPermissionInfo
-import com.tencent.devops.remotedev.pojo.record.WorkspaceRecordMetadata
 import com.tencent.devops.remotedev.pojo.remotedev.CreateCvmData
 import com.tencent.devops.remotedev.pojo.remotedev.CreateCvmResp
 import com.tencent.devops.remotedev.pojo.remotedev.SyncVmData

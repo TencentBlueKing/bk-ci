@@ -11,7 +11,6 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.remotedev.pojo.CreateOpenClawData
 import com.tencent.devops.remotedev.pojo.CreateOpenClawDataResp
-import com.tencent.devops.remotedev.pojo.FeatureSwitchType
 import com.tencent.devops.remotedev.pojo.IWhiteList
 import com.tencent.devops.remotedev.pojo.OperateCvmData
 import com.tencent.devops.remotedev.pojo.ProjectWorkspace
