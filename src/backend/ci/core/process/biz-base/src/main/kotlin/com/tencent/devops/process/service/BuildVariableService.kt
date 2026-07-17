@@ -98,8 +98,17 @@ class BuildVariableService @Autowired constructor(
     }
 
     fun getVariable(projectId: String, pipelineId: String, buildId: String, varName: String): String? {
-        val vars = getAllVariable(projectId = projectId, pipelineId = pipelineId, buildId = buildId)
-        return if (vars.isNotEmpty()) vars[varName] else null
+        // 单变量查询只按 key 精准查，避免把一次构建的全部变量都拉出来（历史实现会全量加载再取一个 key）。
+        // 落库统一使用新变量名，这里把调用方可能传入的旧变量名 / 预置上下文名映射成落库 key 后再查，
+        // 与 mixOldVarAndNewVar 的取值口径保持一致，不改变对旧命名（含前缀映射）的兼容能力。
+        val storedKey = PipelineVarUtil.resolveStoredVarKey(varName)
+        val dataMap = pipelineBuildVarDao.getVars(
+            dslContext = commonDslContext,
+            projectId = projectId,
+            buildId = buildId,
+            keys = setOf(varName, storedKey)
+        )
+        return dataMap[varName] ?: dataMap[storedKey]
     }
 
     fun getAllVariable(
@@ -184,25 +193,32 @@ class BuildVariableService @Autowired constructor(
     fun getVariableValue(
         projectId: String,
         buildId: String,
-        varName: String
+        varName: String,
+        queryDslContext: DSLContext? = null
     ): String? {
-        val main = pipelineBuildVarDao.getVars(
-            dslContext = commonDslContext,
+        val queryContext = queryDslContext ?: commonDslContext
+        // 落库统一新变量名，兼容旧名 / 预置上下文名（含前缀映射）后单点查询，避免漏查。
+        val storedKey = PipelineVarUtil.resolveStoredVarKey(varName)
+        val varMap = pipelineBuildVarDao.getVars(
+            dslContext = queryContext,
             projectId = projectId,
             buildId = buildId,
-            keys = setOf(varName)
-        )[varName]
+            keys = setOf(varName, storedKey)
+        )
+        // 命中的 key 即溢出表的 key（主表与溢出表 key 一致）
+        val matchedKey = if (varMap.containsKey(varName)) varName else storedKey
+        val main = varMap[matchedKey]
         return if (BuildVarOverflowUtils.isOverflowReference(main)) {
             BuildVarOverflowLoader(
                 overflowDao = pipelineBuildVarOverflowDao,
-                dslContext = commonDslContext,
+                dslContext = queryContext,
                 projectId = projectId,
                 buildId = buildId,
                 maxCacheBytes = pipelineVarOverflowConfig.lazyLoadCacheMax,
                 maxBudgetBytes = pipelineVarOverflowConfig.lazyLoadBudgetMax
-            ).load(varName) ?: run {
+            ).load(matchedKey) ?: run {
                 LOG.warn(
-                    "$buildId|VAR_OVERFLOW_MISS|key=$varName|main=$main|" +
+                    "$buildId|VAR_OVERFLOW_MISS|key=$matchedKey|main=$main|" +
                         "overflow table has no value, keep reference"
                 )
                 main

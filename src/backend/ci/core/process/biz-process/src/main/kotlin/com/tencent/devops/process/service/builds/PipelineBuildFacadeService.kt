@@ -159,7 +159,6 @@ import com.tencent.devops.process.strategy.bus.impl.UserNormalPipelinePermission
 import com.tencent.devops.process.strategy.context.UserPipelinePermissionCheckContext
 import com.tencent.devops.process.strategy.factory.HistoryConditionQueryStrategyFactory
 import com.tencent.devops.process.strategy.factory.UserPipelinePermissionCheckStrategyFactory
-import com.tencent.devops.process.utils.BuildVarOverflowUtils
 import com.tencent.devops.process.strategy.pojo.HistoryConditionQueryRequest
 import com.tencent.devops.process.trigger.PipelineTriggerEventService
 import com.tencent.devops.process.util.TaskUtils
@@ -465,22 +464,26 @@ class PipelineBuildFacadeService(
         projectId: String,
         pipelineId: String,
         buildId: String,
-        varName: String
+        varName: String,
+        archiveFlag: Boolean? = false
     ): String? {
-        UserPipelinePermissionCheckContext(
-            UserPipelinePermissionCheckStrategyFactory.createUserPipelinePermissionCheckStrategy(false)
-        ).checkUserPipelinePermission(
+        val userPipelinePermissionCheckStrategy =
+            UserPipelinePermissionCheckStrategyFactory.createUserPipelinePermissionCheckStrategy(archiveFlag)
+        UserPipelinePermissionCheckContext(userPipelinePermissionCheckStrategy).checkUserPipelinePermission(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
             permission = AuthPermission.VIEW
         )
-        val main = buildVariableService.getVariable(projectId, pipelineId, buildId, varName)
-        return if (BuildVarOverflowUtils.isOverflowReference(main)) {
-            buildVariableService.getVariableValue(projectId, buildId, varName) ?: main
-        } else {
-            main
-        }
+        val queryDslContext = CommonUtils.getJooqDslContext(archiveFlag, ARCHIVE_SHARDING_DSL_CONTEXT)
+        // getVariableValue 已是「单 key 精准查主表 + 溢出按需加载」，直接调用即可，
+        // 无需先 getVariable 再判断是否溢出（避免重复查询）。归档库通过 queryDslContext 路由。
+        return buildVariableService.getVariableValue(
+            projectId = projectId,
+            buildId = buildId,
+            varName = varName,
+            queryDslContext = queryDslContext
+        )
     }
 
     fun retry(

@@ -129,13 +129,6 @@ class UserBuildResourceImpl @Autowired constructor(
         paramKey: String,
         archiveFlag: Boolean?
     ): Result<BuildParameters?> {
-        checkParam(userId, projectId, pipelineId)
-        if (buildId.isBlank()) {
-            throw ParamBlankException("Invalid buildId")
-        }
-        if (paramKey.isBlank()) {
-            throw ParamBlankException("Invalid param key")
-        }
         return Result(
             pipelineBuildFacadeService.getBuildParameterValue(
                 userId = userId,
@@ -153,22 +146,17 @@ class UserBuildResourceImpl @Autowired constructor(
         projectId: String,
         pipelineId: String,
         buildId: String,
-        varName: String
+        varName: String,
+        archiveFlag: Boolean?
     ): Result<String?> {
-        checkParam(userId, projectId, pipelineId)
-        if (buildId.isBlank()) {
-            throw ParamBlankException("Invalid buildId")
-        }
-        if (varName.isBlank()) {
-            throw ParamBlankException("Invalid varName")
-        }
         return Result(
             pipelineBuildFacadeService.getBuildVariableValue(
                 userId = userId,
                 projectId = projectId,
                 pipelineId = pipelineId,
                 buildId = buildId,
-                varName = varName
+                varName = varName,
+                archiveFlag = archiveFlag
             )
         )
     }

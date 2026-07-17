@@ -125,6 +125,12 @@ class ProcessDataDeleteDao {
             JooqUtils.retryWhenDeadLock {
                 deletePipelineBuildTemplateAcrossInfo(dslContext, projectId, pipelineId, buildIds)
             }
+        } else {
+            // 归档库：变量主表 T_PIPELINE_BUILD_VAR 与大变量溢出表 T_PIPELINE_BUILD_VAR_OVERFLOW
+            // 随归档构建一起迁入（见 PipelineBuildLinkedDataMigrationStrategy），归档过期清理 / 迁移回滚时
+            // 必须同步删除，否则会残留孤儿（归档溢出表不做分区，无 DROP PARTITION 兜底）。
+            // 非归档库该两表删除仍按原有 clearBaseBuildData 开关控制，此处不改变其行为。
+            deletePipelineBuildVar(dslContext, projectId, buildIds)
         }
         deleteReport(dslContext, projectId, pipelineId, buildIds)
         deletePipelineTriggerReview(dslContext, projectId, buildIds)

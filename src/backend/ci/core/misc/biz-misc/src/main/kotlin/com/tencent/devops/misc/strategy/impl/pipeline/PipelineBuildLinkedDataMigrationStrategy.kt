@@ -38,7 +38,7 @@ class PipelineBuildLinkedDataMigrationStrategy(
         }
     }
 
-    // 非归档状态下的处理器
+    // 非归档状态下的处理器（运行期 / 执行明细表，归档场景不保留）
     private val nonArchiveHandlers = listOf(
         // 迁移T_PIPELINE_BUILD_DETAIL相关表数据
         object : RecordHandler<TPipelineBuildDetailRecord> {
@@ -47,16 +47,6 @@ class PipelineBuildLinkedDataMigrationStrategy(
             override fun migrate(migratingDslContext: DSLContext, records: List<TPipelineBuildDetailRecord>) =
                 processDataMigrateDao.migratePipelineBuildDetailData(migratingDslContext, records)
         },
-        // 迁移T_PIPELINE_BUILD_VAR相关表数据
-        object : RecordHandler<TPipelineBuildVarRecord> {
-            override fun fetch(dslContext: DSLContext, projectId: String, buildIds: List<String>) =
-                processDataMigrateDao.getPipelineBuildVarRecords(dslContext, projectId, buildIds)
-            override fun migrate(migratingDslContext: DSLContext, records: List<TPipelineBuildVarRecord>) =
-                processDataMigrateDao.migratePipelineBuildVarData(migratingDslContext, records)
-        },
-        // 注：T_PIPELINE_BUILD_VAR_OVERFLOW 不在此处理。由于 mediumtext 字段单条最大 ~16M，
-        // 一次性按 SHORT_PAGE_SIZE（多个 buildId）批量加载会在迁移服务侧造成内存峰值。
-        // 改为在 migrateBuildLinkedData 中按 buildId 流式迁移，参见 [migrateOverflowPerBuild]。
         // 迁移T_PIPELINE_PAUSE_VALUE相关表数据
         object : RecordHandler<TPipelinePauseValueRecord> {
             override fun fetch(dslContext: DSLContext, projectId: String, buildIds: List<String>) =
@@ -94,8 +84,18 @@ class PipelineBuildLinkedDataMigrationStrategy(
         }
     )
 
-    // 所有状态下的处理器
+    // 所有状态下的处理器（归档与非归档都迁移）
     private val commonHandlers = listOf(
+        // 迁移T_PIPELINE_BUILD_VAR 变量主表：归档库要支持构建变量查询，故归档/非归档都迁。
+        // 注：两张溢出表（VAR_OVERFLOW / HISTORY_PARAM_OVERFLOW）因 mediumtext 单条 ~16M，
+        // 一次性按 SHORT_PAGE_SIZE（多 buildId）批量加载会造成内存峰值，改为按 buildId 流式迁移，
+        // 见 [migrateOverflowPerBuild]，不放入本 handler 组。
+        object : RecordHandler<TPipelineBuildVarRecord> {
+            override fun fetch(dslContext: DSLContext, projectId: String, buildIds: List<String>) =
+                processDataMigrateDao.getPipelineBuildVarRecords(dslContext, projectId, buildIds)
+            override fun migrate(migratingDslContext: DSLContext, records: List<TPipelineBuildVarRecord>) =
+                processDataMigrateDao.migratePipelineBuildVarData(migratingDslContext, records)
+        },
         // 迁移T_PIPELINE_TRIGGER_REVIEW相关表数据
         object : RecordHandler<TPipelineTriggerReviewRecord> {
             override fun fetch(dslContext: DSLContext, projectId: String, buildIds: List<String>) =
@@ -222,7 +222,16 @@ class PipelineBuildLinkedDataMigrationStrategy(
 
         ListUtils.partition(buildIds, PageMigrationUtil.SHORT_PAGE_SIZE).forEach { batchIds ->
             with(context) {
-                // 非归档状态下迁移额外表
+                // 大变量 / 启动参数溢出表：归档与非归档都迁移。
+                // 按 buildId 流式迁移，避免一次性把多 build 的 mediumtext 全部加载到内存。
+                migrateOverflowPerBuild(
+                    buildIds = batchIds,
+                    dslContext = dslContext,
+                    projectId = projectId,
+                    migratingDslContext = migratingShardingDslContext
+                )
+
+                // 运行期 / 执行明细表仅非归档场景迁移
                 if (archiveFlag != true) {
                     migrateHandlerGroup(
                         handlers = nonArchiveHandlers,
@@ -231,16 +240,9 @@ class PipelineBuildLinkedDataMigrationStrategy(
                         projectId = projectId,
                         migratingDslContext = migratingShardingDslContext
                     )
-                    // 大变量溢出表单独按 buildId 流式迁移，避免一次性把多 build 的 mediumtext 全部加载到内存
-                    migrateOverflowPerBuild(
-                        buildIds = batchIds,
-                        dslContext = dslContext,
-                        projectId = projectId,
-                        migratingDslContext = migratingShardingDslContext
-                    )
                 }
 
-                // 迁移通用表
+                // 迁移通用表（含 T_PIPELINE_BUILD_VAR 变量主表，归档/非归档都迁）
                 migrateHandlerGroup(
                     handlers = commonHandlers,
                     buildIds = batchIds,

@@ -291,6 +291,12 @@ spring:
       - index: 76
         name: T_PIPELINE_COPY_TASK_RESOURCE_REL
         databaseShardingStrategy: SHARDING
+      - index: 77
+        name: T_PIPELINE_BUILD_VAR_OVERFLOW
+        databaseShardingStrategy: SHARDING
+      - index: 78
+        name: T_PIPELINE_BUILD_HISTORY_PARAM_OVERFLOW
+        databaseShardingStrategy: SHARDING
 
 endpoints:
   metrics:

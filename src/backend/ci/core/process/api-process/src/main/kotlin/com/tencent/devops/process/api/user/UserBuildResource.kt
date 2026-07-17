@@ -163,7 +163,10 @@ interface UserBuildResource {
         buildId: String,
         @Parameter(description = "变量名", required = true)
         @QueryParam("key")
-        varName: String
+        varName: String,
+        @Parameter(description = "是否查询归档数据", required = false)
+        @QueryParam("archiveFlag")
+        archiveFlag: Boolean? = false
     ): Result<String?>
 
     @Operation(summary = "手动启动流水线")
