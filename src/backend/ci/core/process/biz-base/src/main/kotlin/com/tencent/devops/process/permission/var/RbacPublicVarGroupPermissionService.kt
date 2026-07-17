@@ -1,5 +1,6 @@
 package com.tencent.devops.process.permission.`var`
 
+import com.tencent.devops.auth.api.service.ServicePermissionAuthResource
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthPermissionApi
@@ -8,6 +9,8 @@ import com.tencent.devops.common.auth.api.AuthResourceApi
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.AuthResourceInstance
 import com.tencent.devops.common.auth.code.PublicVarGroupAuthServiceCode
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.pojo.`var`.PublicVarGroupPermissions
 import org.slf4j.LoggerFactory
@@ -16,6 +19,8 @@ import org.slf4j.LoggerFactory
 class RbacPublicVarGroupPermissionService constructor(
     val authPermissionApi: AuthPermissionApi,
     val authResourceApi: AuthResourceApi,
+    val client: Client,
+    val tokenService: ClientTokenService,
     authProjectApi: AuthProjectApi,
     publicVarGroupAuthServiceCode: PublicVarGroupAuthServiceCode
 ) : AbstractPublicVarGroupPermissionService(
@@ -140,14 +145,16 @@ class RbacPublicVarGroupPermissionService constructor(
         projectId: String,
         permission: AuthPermission
     ): Boolean {
-        val resourcePermission = authPermissionApi.validateUserResourcePermission(
-            user = userId,
-            serviceCode = publicVarGroupAuthServiceCode,
-            resourceType = AuthResourceType.PROJECT,
-            projectCode = projectId,
-            permission = permission,
-            resourceCode = projectId
-        )
+        val resourcePermission =
+            client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
+                token = tokenService.getSystemToken(),
+                userId = userId,
+                projectCode = projectId,
+                relationResourceType = null,
+                resourceType = AuthResourceType.PROJECT.value,
+                resourceCode = projectId,
+                action = AuthResourceType.PUBLIC_VAR_GROUP.value.plus(permission.value),
+            ).data ?: false
         if (!resourcePermission) {
             throw ErrorCodeException(
                 errorCode = ProcessMessageCode.USER_NEED_PROJECT_X_PERMISSION,
