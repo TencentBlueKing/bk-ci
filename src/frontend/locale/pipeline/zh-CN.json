@@ -929,6 +929,7 @@
     "codeRecords": "代码变更",
     "startupParams": "启动参数",
     "longParamValueHidden": "超长变量值默认隐藏",
+    "longParamValueHiddenWithLength": "超长变量值默认隐藏（{0} 字符）",
     "longParamValueLoaded": "超长变量值已加载",
     "loadParamValue": "查看变量值",
     "canceller": "取消人",

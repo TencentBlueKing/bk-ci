@@ -931,6 +931,7 @@
     "codeRecords": "Commits",
     "startupParams": "Parameters",
     "longParamValueHidden": "Long variable value is hidden by default",
+    "longParamValueHiddenWithLength": "Long variable value is hidden by default ({0} chars)",
     "longParamValueLoaded": "Long variable value loaded",
     "loadParamValue": "View value",
     "canceller": "Canceler",

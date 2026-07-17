@@ -40,7 +40,7 @@
                                 'build-param-long-value-error': param.valueError
                             }"
                         >
-                            {{ param.valueLoaded ? $t('details.longParamValueLoaded') : $t('details.longParamValueHidden') }}
+                            {{ getLongParamPlaceholder(param) }}
                         </span>
                         <bk-button
                             text
@@ -101,6 +101,7 @@
     import ParamSet from '@/components/ParamSet.vue'
     import {
         formatBuildParamsForDisplay,
+        isOverflowReference,
         mergeBuildParamValue
     } from '@/utils/buildParamLongValue'
     import { allVersionKeyList } from '@/utils/pipelineConst'
@@ -143,11 +144,20 @@
             ...mapActions('atom', [
                 'requestBuildParams',
                 'fetchBuildParamsByBuildId',
-                'requestBuildVariableValues'
+                'requestBuildParameterValue'
             ]),
             showDetail (param) {
                 this.isDetailShow = true
                 this.activeParam = param
+            },
+            getLongParamPlaceholder (param) {
+                if (param.valueLoaded) {
+                    return this.$t('details.longParamValueLoaded')
+                }
+                if (param.overflowLength != null) {
+                    return this.$t('details.longParamValueHiddenWithLength', [param.overflowLength])
+                }
+                return this.$t('details.longParamValueHidden')
             },
             async showLongParamDetail (param, index) {
                 if (param.valueLoaded) {
@@ -162,13 +172,21 @@
                     valueError: false
                 })
                 try {
-                    const values = await this.requestBuildVariableValues({
+                    const result = await this.requestBuildParameterValue({
                         projectId,
                         pipelineId,
                         buildId,
-                        variableNames: [param.key]
+                        key: param.key,
+                        ...(this.archiveFlag ? { archiveFlag: this.archiveFlag } : {})
                     })
-                    this.params = mergeBuildParamValue(this.params, param.key, values?.[param.key] ?? '')
+                    const value = result?.value ?? ''
+                    this.params = mergeBuildParamValue(this.params, param.key, value).map(item => {
+                        if (item.key !== param.key) return item
+                        return {
+                            ...item,
+                            isDiff: this.isDefaultDiff(item)
+                        }
+                    })
                     const activeParam = this.params.find(item => item.key === param.key)
                     if (activeParam) {
                         this.showDetail(activeParam)
@@ -212,9 +230,10 @@
                         acc[item.key] = item.defaultValue
                         return acc
                     }, {})
+                    // 引用串无法与默认值比较，等按需加载后再算 isDiff
                     const params = res.map((item) => ({
                         ...item,
-                        isDiff: this.isDefaultDiff(item)
+                        isDiff: isOverflowReference(item.value) ? false : this.isDefaultDiff(item)
                     }))
                     this.params = formatBuildParamsForDisplay(params)
                     this.$nextTick(() => {

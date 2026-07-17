@@ -926,6 +926,7 @@
     "codeRecords": "コード変更",
     "startupParams": "起動パラメータ",
     "longParamValueHidden": "長い変数値はデフォルトで非表示です",
+    "longParamValueHiddenWithLength": "長い変数値はデフォルトで非表示です（{0} 文字）",
     "longParamValueLoaded": "長い変数値を読み込み済み",
     "loadParamValue": "変数値を表示",
     "canceller": "キャンセル者",

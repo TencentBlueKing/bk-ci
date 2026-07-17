@@ -455,11 +455,19 @@ export default {
             rootCommit(commit, FETCH_ERROR, e)
         }
     },
-    requestBuildVariableValues: async ({ commit }, { projectId, pipelineId, buildId, variableNames }) => {
+    /**
+     * 按变量名获取构建启动参数真实值（大变量按需加载）
+     * GET .../parameters/value?key=&archiveFlag=
+     */
+    requestBuildParameterValue: async ({ commit }, { projectId, pipelineId, buildId, key, archiveFlag }) => {
         try {
-            const { data } = await request.post(
-                `/${PROCESS_API_URL_PREFIX}/user/builds/${projectId}/${pipelineId}/${buildId}/variables`,
-                variableNames
+            const params = { key }
+            if (archiveFlag !== undefined && archiveFlag !== null) {
+                params.archiveFlag = archiveFlag
+            }
+            const { data } = await request.get(
+                `/${PROCESS_API_URL_PREFIX}/user/builds/${projectId}/${pipelineId}/${buildId}/parameters/value`,
+                { params }
             )
             return data
         } catch (e) {

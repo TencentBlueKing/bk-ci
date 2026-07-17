@@ -1,42 +1,36 @@
-export const LONG_BUILD_PARAM_VALUE_LENGTH = 4096
+/** 与后端 PIPELINE_VARIABLES_OVERFLOW_PREFIX 对齐 */
+export const PIPELINE_VARIABLES_OVERFLOW_PREFIX = '__BK_OVF__:'
 
-const LONG_VALUE_FIELDS = [
-    'isLongValue',
-    'longValue',
-    'isLongVariable',
-    'longVariable',
-    'valueTooLong',
-    'valueTruncated',
-    'needFetchValue',
-    'needFetch',
-    'valueRef',
-    'valueReference',
-    'variableValueRef'
-]
-
-function hasLongValueFlag (param) {
-    return LONG_VALUE_FIELDS.some(field => {
-        const value = param?.[field]
-        return value === true || (typeof value === 'string' && value.length > 0)
-    })
+/**
+ * 判断主表 VALUE 是否为大变量引用串：`__BK_OVF__:{length}`
+ */
+export function isOverflowReference (value) {
+    return typeof value === 'string' && value.startsWith(PIPELINE_VARIABLES_OVERFLOW_PREFIX)
 }
 
-function getValueLength (value) {
-    if (typeof value === 'undefined' || value === null) return 0
-    return String(value).length
+/**
+ * 从引用串提取原始字符长度；非引用串返回 null
+ */
+export function getOverflowLength (value) {
+    if (!isOverflowReference(value)) return null
+    const lengthText = value.slice(PIPELINE_VARIABLES_OVERFLOW_PREFIX.length)
+    if (!/^\d+$/.test(lengthText)) return null
+    return Number(lengthText)
 }
 
-export function isLongBuildParam (param, maxLength = LONG_BUILD_PARAM_VALUE_LENGTH) {
-    return hasLongValueFlag(param) || getValueLength(param?.value) > maxLength
+export function isLongBuildParam (param) {
+    return isOverflowReference(param?.value)
 }
 
 export function formatBuildParamsForDisplay (params = []) {
     return params.map(param => {
         if (!isLongBuildParam(param)) return param
 
+        const overflowLength = getOverflowLength(param.value)
         return {
             ...param,
             isLongValue: true,
+            overflowLength,
             value: undefined,
             valueLoaded: false,
             valueLoading: false,
