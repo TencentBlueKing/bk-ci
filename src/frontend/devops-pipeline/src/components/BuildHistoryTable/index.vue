@@ -1188,7 +1188,7 @@
                         message: `${this.$t('history.downloading')}${name}`,
                         theme: 'success'
                     })
-                    window.open(encodeArtifactDownloadUrl(res.url, path), '_self')
+                    window.open(encodeArtifactDownloadUrl(url, path), '_self')
                 } catch (err) {
                     const { projectId, pipelineId } = this
                     this.handleError(err, {
