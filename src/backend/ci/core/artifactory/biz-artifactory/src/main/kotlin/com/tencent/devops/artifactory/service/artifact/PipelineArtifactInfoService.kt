@@ -3,6 +3,8 @@ package com.tencent.devops.artifactory.service.artifact
 import com.tencent.devops.artifactory.dao.PipelineArtifactInfoDao
 import com.tencent.devops.artifactory.pojo.artifact.ArtifactMetadataRequest
 import com.tencent.devops.artifactory.pojo.artifact.PipelineArtifactInfo
+import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.model.artifactory.tables.records.TPipelineArtifactInfoRecord
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
@@ -40,7 +42,11 @@ class PipelineArtifactInfoService(
         )
 
         val id =
-            client.get(ServiceAllocIdResource::class).generateSegmentId(PIPELINE_ARTIFACT_INFO_BIZ_ID).data ?: 0
+            client.get(ServiceAllocIdResource::class).generateSegmentId(PIPELINE_ARTIFACT_INFO_BIZ_ID).data
+                ?: throw ErrorCodeException(
+                    errorCode = CommonMessageCode.SYSTEM_ERROR,
+                    params = arrayOf("Failed to generate segment ID for $PIPELINE_ARTIFACT_INFO_BIZ_ID")
+                )
         val now = LocalDateTime.now()
         pipelineArtifactInfoDao.create(
             dslContext = dslContext,
