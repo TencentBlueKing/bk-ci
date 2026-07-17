@@ -1,4 +1,4 @@
-package com.tencent.devops.artifactory.resources
+﻿package com.tencent.devops.artifactory.resources
 
 import com.tencent.devops.artifactory.api.builds.BuildArtifactoryResource
 import com.tencent.devops.artifactory.pojo.Count
@@ -30,7 +30,7 @@ class BuildArtifactoryResourceImpl @Autowired constructor(
         targetProjectId: String,
         targetPath: String
     ): Result<Count> {
-        val userId = getLastModifyUser(projectId, pipelineId)
+        val userId = getPipelineHandoverUser(projectId, pipelineId)
         val count = archiveFileService.acrossProjectCopy(
             userId = userId,
             projectId = projectId,
@@ -48,7 +48,7 @@ class BuildArtifactoryResourceImpl @Autowired constructor(
         artifactoryType: ArtifactoryType,
         path: String
     ): Result<FileDetail> {
-        val operator = getLastModifyUser(projectId, pipelineId)
+        val operator = getPipelineHandoverUser(projectId, pipelineId)
         return Result(archiveFileService.show(
             userId = operator,
             projectId = projectId,
@@ -58,7 +58,7 @@ class BuildArtifactoryResourceImpl @Autowired constructor(
     }
 
     // 获取流水线的权限代持人
-    private fun getLastModifyUser(projectId: String, pipelineId: String): String {
+    private fun getPipelineHandoverUser(projectId: String, pipelineId: String): String {
         return try {
             client.get(ServiceAuthAuthorizationResource::class).getResourceAuthorization(
                 projectId = projectId,
