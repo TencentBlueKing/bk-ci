@@ -167,10 +167,11 @@ class UserPublicVarGroupResourceImpl @Autowired constructor(
 
     override fun convertGroupYaml(userId: String, projectId: String, publicVarGroup: PublicVarGroupVO): Result<String> {
         // 校验查看权限
-        publicVarGroupPermissionService.checkPublicVarGroupPermissions(
+        publicVarGroupPermissionService.checkPublicVarGroupPermissionWithMessage(
             userId = userId,
             projectId = projectId,
-            permission = AuthPermission.VIEW
+            permission = AuthPermission.VIEW,
+            groupName = publicVarGroup.groupName
         )
         return Result(publicVarGroupService.convertGroupYaml(
             userId = userId,
