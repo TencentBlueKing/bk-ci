@@ -46,6 +46,11 @@ class MockPublicVarGroupPermissionService : PublicVarGroupPermissionService {
         groupName: String
     ): Boolean = true
 
+    override fun checkPublicVarGroupCreatePermission(
+        userId: String,
+        projectId: String
+    ): Boolean = true
+
     override fun checkPublicVarGroupPermissions(
         userId: String,
         projectId: String,

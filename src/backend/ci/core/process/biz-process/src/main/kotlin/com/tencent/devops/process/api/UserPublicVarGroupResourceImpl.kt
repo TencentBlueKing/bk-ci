@@ -54,10 +54,9 @@ class UserPublicVarGroupResourceImpl @Autowired constructor(
         publicVarGroup: PublicVarGroupVO
     ): Result<String> {
         // 校验创建权限
-        publicVarGroupPermissionService.checkPublicVarGroupPermissions(
+        publicVarGroupPermissionService.checkPublicVarGroupCreatePermission(
             userId = userId,
-            projectId = projectId,
-            permission = AuthPermission.CREATE
+            projectId = projectId
         )
         return Result(
             publicVarGroupService.addGroup(
@@ -118,10 +117,9 @@ class UserPublicVarGroupResourceImpl @Autowired constructor(
         yaml: PublicVarGroupYamlStringVO
     ): Result<String> {
         // 校验创建权限
-        publicVarGroupPermissionService.checkPublicVarGroupPermissions(
+        publicVarGroupPermissionService.checkPublicVarGroupCreatePermission(
             userId = userId,
-            projectId = projectId,
-            permission = AuthPermission.CREATE
+            projectId = projectId
         )
         return Result(publicVarGroupService.importGroup(
             userId = userId,
