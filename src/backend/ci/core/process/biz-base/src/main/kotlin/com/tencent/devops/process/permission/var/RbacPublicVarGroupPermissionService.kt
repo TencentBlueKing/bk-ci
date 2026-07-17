@@ -140,16 +140,10 @@ class RbacPublicVarGroupPermissionService constructor(
         projectId: String,
         permission: AuthPermission
     ): Boolean {
-        // CREATE 权限粒度为项目级（组尚未注册为资源），其余权限粒度为公共变量组级
-        val resourceType = if (permission == AuthPermission.CREATE) {
-            AuthResourceType.PROJECT
-        } else {
-            RESOURCE_TYPE
-        }
         val resourcePermission = authPermissionApi.validateUserResourcePermission(
             user = userId,
             serviceCode = publicVarGroupAuthServiceCode,
-            resourceType = resourceType,
+            resourceType = AuthResourceType.PROJECT,
             projectCode = projectId,
             permission = permission,
             resourceCode = projectId
