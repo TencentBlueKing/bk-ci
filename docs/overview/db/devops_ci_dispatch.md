@@ -2,7 +2,7 @@
 
 **数据库名：** devops_ci_dispatch
 
-**文档版本：** 1.0.20
+**文档版本：** 1.0.22
 
 **文档描述：** devops_ci_dispatch 的数据库文档
 | 表名                  | 说明       |
@@ -440,6 +440,9 @@
 |  19   | ENV_ID |   bigint   | 20 |   0    |    Y     |  N   |       | 第三方构建所属环境  |
 |  20   | IGNORE_ENV_AGENT_IDS |   json   | 1073741824 |   0    |    Y     |  N   |       | 这次调度被排除的 agent 节点  |
 |  21   | JOB_ID |   varchar   | 128 |   0    |    Y     |  N   |       | 当前构建所属 jobid  |
+|  22   | TIME_INTERVAL |   bigint   | 20 |   0    |    Y     |  N   |       | 时间间隔  |
+|  23   | START_USER |   varchar   | 32 |   0    |    Y     |  N   |       | 流水线启动者  |
+|  24   | STAGE_ID |   varchar   | 64 |   0    |    Y     |  N   |       | 步骤 ID  |
 
 **表名：** <a>T_DISPATCH_THIRDPARTY_AGENT_DOCKER_DEBUG</a>
 
