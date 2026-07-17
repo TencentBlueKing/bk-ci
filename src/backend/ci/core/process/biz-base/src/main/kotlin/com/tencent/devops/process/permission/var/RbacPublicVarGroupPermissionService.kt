@@ -140,6 +140,29 @@ class RbacPublicVarGroupPermissionService constructor(
         )
     }
 
+    override fun checkPublicVarGroupCreatePermission(
+        userId: String,
+        projectId: String
+    ): Boolean {
+        val resourcePermission =
+            client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
+                token = tokenService.getSystemToken(),
+                userId = userId,
+                projectCode = projectId,
+                relationResourceType = null,
+                resourceType = AuthResourceType.PROJECT.value,
+                resourceCode = projectId,
+                action = AuthResourceType.PUBLIC_VAR_GROUP.value + "_" + AuthPermission.CREATE.value,
+            ).data ?: false
+        if (!resourcePermission) {
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.USER_NEED_PROJECT_X_PERMISSION,
+                params = arrayOf(userId, projectId)
+            )
+        }
+        return true
+    }
+
     override fun checkPublicVarGroupPermissions(
         userId: String,
         projectId: String,
@@ -151,8 +174,8 @@ class RbacPublicVarGroupPermissionService constructor(
                 userId = userId,
                 projectCode = projectId,
                 relationResourceType = null,
-                resourceType = AuthResourceType.PROJECT.value,
-                resourceCode = projectId,
+                resourceType = AuthResourceType.PUBLIC_VAR_GROUP.value,
+                resourceCode = "*",
                 action = AuthResourceType.PUBLIC_VAR_GROUP.value + "_" + permission.value,
             ).data ?: false
         if (!resourcePermission) {
