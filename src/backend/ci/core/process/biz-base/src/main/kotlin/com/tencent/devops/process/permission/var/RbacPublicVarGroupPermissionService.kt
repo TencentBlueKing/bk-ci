@@ -153,7 +153,7 @@ class RbacPublicVarGroupPermissionService constructor(
                 relationResourceType = null,
                 resourceType = AuthResourceType.PROJECT.value,
                 resourceCode = projectId,
-                action = AuthResourceType.PUBLIC_VAR_GROUP.value.plus(permission.value),
+                action = AuthResourceType.PUBLIC_VAR_GROUP.value + "_" + permission.value,
             ).data ?: false
         if (!resourcePermission) {
             throw ErrorCodeException(
