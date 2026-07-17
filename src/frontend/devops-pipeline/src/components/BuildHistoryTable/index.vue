@@ -631,7 +631,14 @@
         errorTypeMap,
         extForFile
     } from '@/utils/pipelineConst'
-    import { convertFileSize, convertMStoString, convertTime, flatSearchKey, copyToClipboard } from '@/utils/util'
+    import {
+        convertFileSize,
+        convertMStoString,
+        convertTime,
+        flatSearchKey,
+        copyToClipboard,
+        encodeArtifactDownloadUrl
+    } from '@/utils/util'
     import webSocketMessage from '@/utils/webSocketMessage'
     import { mapActions, mapGetters, mapState } from 'vuex'
 
@@ -1181,7 +1188,7 @@
                         message: `${this.$t('history.downloading')}${name}`,
                         theme: 'success'
                     })
-                    window.open(url, '_self')
+                    window.open(encodeArtifactDownloadUrl(res.url, path), '_self')
                 } catch (err) {
                     const { projectId, pipelineId } = this
                     this.handleError(err, {
