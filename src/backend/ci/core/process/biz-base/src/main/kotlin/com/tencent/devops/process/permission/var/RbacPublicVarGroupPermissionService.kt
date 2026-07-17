@@ -120,7 +120,7 @@ class RbacPublicVarGroupPermissionService constructor(
             user = userId,
             projectCode = projectId,
             serviceCode = publicVarGroupAuthServiceCode,
-            resourceType = AuthResourceType.PROJECT,
+            resourceType = RESOURCE_TYPE,
             resourceCode = groupCode,
             resourceName = name
         )
