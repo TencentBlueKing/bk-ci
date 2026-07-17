@@ -42,9 +42,11 @@ import io.agentscope.core.agent.EventType
 import io.agentscope.core.agent.StreamOptions
 import io.agentscope.core.memory.autocontext.AutoContextConfig
 import io.agentscope.core.memory.autocontext.AutoContextMemory
+import io.agentscope.core.model.ExecutionConfig
 import io.agentscope.core.model.Model
 import io.agentscope.core.tool.Toolkit
 import io.agentscope.core.tool.subagent.SubAgentConfig
+import java.time.Duration
 import org.slf4j.LoggerFactory
 
 /**
@@ -107,9 +109,10 @@ class SupervisorAgentFactory(
 
         logger.info(
             "[Supervisor] Agent created: name={}, " +
-                    "boundSubAgents={}, hooks={}, skills={}",
+                    "boundSubAgents={}, hooks={}, skills={}, toolTimeout={}s",
             SUPERVISOR_NAME, boundAgents.size,
-            allHooks.size, skillBox.allSkillIds.size
+            allHooks.size, skillBox.allSkillIds.size,
+            SUPERVISOR_TOOL_TIMEOUT_MINUTES * 60
         )
 
         return ReActAgent.builder()
@@ -120,6 +123,11 @@ class SupervisorAgentFactory(
             .memory(AutoContextMemory(autoContextConfig, model))
             .maxIters(MAX_ITERS)
             .hooks(allHooks)
+            .toolExecutionConfig(
+                ExecutionConfig.builder()
+                    .timeout(Duration.ofMinutes(SUPERVISOR_TOOL_TIMEOUT_MINUTES))
+                    .build()
+            )
             .build()
     }
 
@@ -255,6 +263,7 @@ class SupervisorAgentFactory(
         private const val SUPERVISOR_NAME = "BkCI-Supervisor"
         private const val SUPERVISOR_BIND_KEY = "supervisor"
         private const val MAX_ITERS = 10
+        private const val SUPERVISOR_TOOL_TIMEOUT_MINUTES = 10L
 
         @Suppress("MaxLineLength")
         private val DEFAULT_SUPERVISOR_PROMPT = """
