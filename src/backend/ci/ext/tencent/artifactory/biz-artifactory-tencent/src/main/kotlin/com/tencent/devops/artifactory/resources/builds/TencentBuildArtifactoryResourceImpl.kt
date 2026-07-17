@@ -254,13 +254,32 @@ class TencentBuildArtifactoryResourceImpl @Autowired constructor(
     }
 
     override fun show(
-        userId: String,
         projectId: String,
         pipelineId: String,
         artifactoryType: ArtifactoryType,
         path: String
     ): Result<FileDetail> {
         checkParam(projectId, path)
-        return Result(bkRepoService.show(userId, projectId, artifactoryType, path))
+        return Result(bkRepoService.show(
+            userId = getPipelineHandoverUser(projectId, pipelineId),
+            projectId = projectId,
+            artifactoryType = artifactoryType,
+            path = path
+        ))
+    }
+
+    // 获取流水线的权限代持人
+    private fun getPipelineHandoverUser(projectId: String, pipelineId: String): String {
+        return try {
+            client.get(ServiceAuthAuthorizationResource::class).getResourceAuthorization(
+                projectId = projectId,
+                resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
+                resourceCode = pipelineId
+            ).data
+        } catch (ignored: Throwable) {
+            logger.info("get pipeline oauth user fail", ignored)
+            null
+        }?.handoverFrom ?: client.get(ServicePipelineResource::class)
+            .getPipelineInfo(projectId, pipelineId, null).data!!.lastModifyUser
     }
 }
