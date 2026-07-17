@@ -32,6 +32,8 @@ import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.api.AuthResourceApi
 import com.tencent.devops.common.auth.code.PublicVarGroupAuthServiceCode
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.process.permission.`var`.MockPublicVarGroupPermissionService
 import com.tencent.devops.process.permission.`var`.PublicVarGroupPermissionService
 import com.tencent.devops.process.permission.`var`.RbacPublicVarGroupPermissionService
@@ -55,12 +57,16 @@ class PublicVarGroupConfiguration {
         authPermissionApi: AuthPermissionApi,
         authResourceApi: AuthResourceApi,
         authProjectApi: AuthProjectApi,
-        publicVarGroupAuthServiceCode: PublicVarGroupAuthServiceCode
+        publicVarGroupAuthServiceCode: PublicVarGroupAuthServiceCode,
+        client: Client,
+        tokenService: ClientTokenService,
     ): PublicVarGroupPermissionService = RbacPublicVarGroupPermissionService(
         authPermissionApi = authPermissionApi,
         authResourceApi = authResourceApi,
         authProjectApi = authProjectApi,
-        publicVarGroupAuthServiceCode = publicVarGroupAuthServiceCode
+        publicVarGroupAuthServiceCode = publicVarGroupAuthServiceCode,
+        client = client,
+        tokenService = tokenService,
     )
 
     @Bean
