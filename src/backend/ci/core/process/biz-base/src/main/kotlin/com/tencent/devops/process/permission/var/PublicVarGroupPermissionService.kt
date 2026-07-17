@@ -35,7 +35,18 @@ interface PublicVarGroupPermissionService {
     ): Boolean
 
     /**
-     * 校验公共变量组权限（项目级别）
+     * 校验创建公共变量组权限（项目级别）
+     * @param userId 用户ID
+     * @param projectId 项目ID
+     * @return 有权限返回true，无权限抛出异常
+     */
+    fun checkPublicVarGroupCreatePermission(
+        userId: String,
+        projectId: String
+    ): Boolean
+
+    /**
+     * 校验公共变量组权限（项目级别，非创建类权限）
      * @param userId 用户ID
      * @param projectId 项目ID
      * @param permission 权限类型

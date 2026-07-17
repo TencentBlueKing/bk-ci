@@ -47,6 +47,17 @@ abstract class AbstractPublicVarGroupPermissionService constructor(
         return true
     }
 
+    override fun checkPublicVarGroupCreatePermission(
+        userId: String,
+        projectId: String
+    ): Boolean {
+        return authProjectApi.checkProjectManager(
+            userId = userId,
+            serviceCode = publicVarGroupAuthServiceCode,
+            projectCode = projectId
+        )
+    }
+
     override fun checkPublicVarGroupPermissions(
         userId: String,
         projectId: String,
