@@ -1869,6 +1869,7 @@
   "bkTimingStartEventDesc": "Timer triggered by {user}",
   "bkEventReplayDesc": "Event [{event}] replayed by {user}",
   "bkRepoEnablePacEventDesc": "Enable PAC by {user}",
+  "bkRepoDisablePacEventDesc": "Disable PAC by {user}",
   "bkSubPipelineCircularDependencyErrorMessage": "Sub-pipeline [{pipeline}] called the current pipeline, forming a circular dependency",
   "bkOtherSubPipelineCircularDependencyErrorMessage": "Sub-pipeline [{pipeline}] called [{targetPipeline}] pipeline, forming a circular dependency",
   "bkGitPushEventDesc": "[{branch}] Commit [{commit}] pushed by {user}",

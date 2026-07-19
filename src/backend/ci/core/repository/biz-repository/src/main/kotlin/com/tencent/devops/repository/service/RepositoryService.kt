@@ -53,10 +53,8 @@ import com.tencent.devops.common.audit.ActionAuditContent
 import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.ResourceTypeId
-import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.repository.tables.records.TRepositoryRecord
-import com.tencent.devops.process.api.service.ServicePipelineYamlResource
 import com.tencent.devops.repository.constant.RepositoryMessageCode
 import com.tencent.devops.repository.constant.RepositoryMessageCode.ERROR_USER_HAVE_NOT_DOWNLOAD_PEM
 import com.tencent.devops.repository.constant.RepositoryMessageCode.NOT_AUTHORIZED_BY_OAUTH
@@ -107,6 +105,7 @@ import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.context.annotation.Lazy
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 import java.util.Base64
@@ -123,10 +122,11 @@ class RepositoryService @Autowired constructor(
     private val dslContext: DSLContext,
     private val repositoryPermissionService: RepositoryPermissionService,
     private val githubService: IGithubService,
-    private val client: Client,
     private val repositoryGithubDao: RepositoryGithubDao,
     private val repositoryScmConfigDao: RepositoryScmConfigDao,
-    private val oauth2TokenStoreManager: Oauth2TokenStoreManager
+    private val oauth2TokenStoreManager: Oauth2TokenStoreManager,
+    @Lazy
+    private val repositoryPacManager: RepositoryPacManager
 ) {
 
     @Value("\${repository.git.devopsPrivateToken}")
@@ -556,6 +556,13 @@ class RepositoryService @Autowired constructor(
                 logger.warn("user [$userId] does not have permission to use the OAUTH account [$oauthUserId]")
             }
         }
+        if (repository.enablePac == true) {
+            repositoryPacManager.validateEnablePac(
+                userId = userId,
+                projectId = projectId,
+                repository = repository
+            )
+        }
         val repositoryService = CodeRepositoryServiceRegistrar.getService(repository = repository)
         val repositoryId =
             repositoryService.create(projectId = projectId, userId = userId, repository = repository)
@@ -564,7 +571,9 @@ class RepositoryService @Autowired constructor(
             .setInstanceName(repository.aliasName)
             .setInstance(repository)
         createResource(userId = userId, projectId = projectId, repositoryId = repositoryId, repository = repository)
-        enablePac(userId = userId, projectId = projectId, repositoryId = repositoryId, repository = repository)
+        if (repository.enablePac == true) {
+            enablePac(userId = userId, projectId = projectId, repositoryId = repositoryId)
+        }
         return repositoryId
     }
 
@@ -1246,20 +1255,24 @@ class RepositoryService @Autowired constructor(
     }
 
     private fun enablePac(
-        repository: Repository,
         userId: String,
         projectId: String,
         repositoryId: Long
     ) {
-        if (repository.enablePac != true) {
-            return
-        }
         try {
-            client.get(ServicePipelineYamlResource::class).enable(
+            // 这里不用前端传入的repository对象,主要是前端传入的缺少hashId,所以再从数据库查询
+            val pacRepository = compose(
+                repositoryDao.get(
+                    dslContext = dslContext,
+                    repositoryId = repositoryId,
+                    projectId = projectId
+                )
+            )
+            repositoryPacManager.enablePac(
                 userId = userId,
                 projectId = projectId,
-                repoHashId = HashUtil.encodeOtherLongId(repositoryId),
-                scmType = repository.getScmType()
+                repository = pacRepository,
+                skipValidate = true
             )
         } catch (exception: Exception) {
             logger.error("failed to enable pac when create repository,rollback|$projectId|$repositoryId")

@@ -245,6 +245,7 @@
     "bkTimingStartEventDesc": "Timer triggered by {user}",
     "bkEventReplayDesc": "Event [{event}] replayed by {user}",
     "bkRepoEnablePacEventDesc": "Enable PAC by {user}",
+    "bkRepoDisablePacEventDesc": "Disable PAC by {user}",
     "bkGitPushEventDesc": "[{branch}] Commit [{commit}] pushed by {user}",
     "bkGitPushCreateEventDesc": "Branch [{branch}] created by {user}",
     "bkGitPushDeleteEventDesc": "Branch [{branch}] deleted by {user}",

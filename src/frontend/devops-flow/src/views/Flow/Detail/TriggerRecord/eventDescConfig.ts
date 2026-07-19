@@ -218,6 +218,7 @@ export const EVENT_DESC_PARAM_MAPPERS: Record<string, ParamMapper> = {
     user: userParam(1),
   }),
   bkRepoEnablePacEventDesc: mapParams({ user: userParam(0) }),
+  bkRepoDisablePacEventDesc: mapParams({ user: userParam(0) }),
 
   /* ===== 通用 Git（参数与 TGit 同形） ===== */
   bkGitPushEventDesc: mapParams({

@@ -41,7 +41,7 @@ import com.tencent.devops.process.pojo.template.TemplatePipelineStatus
 import com.tencent.devops.process.service.PipelineInfoFacadeService
 import com.tencent.devops.process.service.pipeline.version.PipelineVersionManager
 import com.tencent.devops.process.service.template.v2.PipelineTemplateRelatedService
-import com.tencent.devops.process.yaml.actions.GitActionCommon
+import com.tencent.devops.process.yaml.common.YamlFileUtils
 import com.tencent.devops.process.yaml.mq.PipelineYamlFileEvent
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Lazy
@@ -63,7 +63,7 @@ class PipelineYamlResourceService @Autowired constructor(
         with(event) {
             val isDefaultBranch = ref == defaultBranch
             val yamlFileInfo = PipelineYamlFileInfo(repoHashId = repoHashId, filePath = filePath)
-            val yamlFileName = GitActionCommon.getCiFileName(filePath)
+            val yamlFileName = YamlFileUtils.getCiFileName(filePath)
             val pipelineYamlWebhookReq = PipelineYamlWebhookReq(
                 yaml = yaml,
                 yamlFileName = yamlFileName,
@@ -92,7 +92,7 @@ class PipelineYamlResourceService @Autowired constructor(
         with(event) {
             val isDefaultBranch = ref == defaultBranch
             val yamlFileInfo = PipelineYamlFileInfo(repoHashId = repoHashId, filePath = filePath)
-            val yamlFileName = GitActionCommon.getCiFileName(filePath)
+            val yamlFileName = YamlFileUtils.getCiFileName(filePath)
             val pipelineYamlWebhookReq = PipelineYamlWebhookReq(
                 yaml = yaml,
                 yamlFileName = yamlFileName,
