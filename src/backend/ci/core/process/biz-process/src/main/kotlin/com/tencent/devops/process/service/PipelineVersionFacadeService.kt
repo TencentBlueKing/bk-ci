@@ -38,6 +38,7 @@ import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.db.pojo.ARCHIVE_SHARDING_DSL_CONTEXT
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.PipelineVersionWithModel
@@ -73,8 +74,10 @@ import com.tencent.devops.process.service.scm.ScmProxyService
 import com.tencent.devops.process.service.template.v2.PipelineTemplateRelatedService
 import com.tencent.devops.process.service.template.v2.PipelineTemplateResourceService
 import com.tencent.devops.process.utils.PipelineVersionUtils
+import com.tencent.devops.process.yaml.PipelineYamlCommonService
 import com.tencent.devops.process.yaml.PipelineYamlFacadeService
 import com.tencent.devops.process.yaml.transfer.PipelineTransferException
+import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.scm.api.pojo.repository.git.GitScmServerRepository
 import jakarta.ws.rs.core.Response
 import org.slf4j.LoggerFactory
@@ -91,12 +94,14 @@ class PipelineVersionFacadeService @Autowired constructor(
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val repositoryVersionService: PipelineRepositoryVersionService,
     private val pipelineYamlFacadeService: PipelineYamlFacadeService,
+    private val pipelineYamlCommonService: PipelineYamlCommonService,
     private val pipelineRecentUseService: PipelineRecentUseService,
     private val pipelineTemplateResourceService: PipelineTemplateResourceService,
     private val scmProxyService: ScmProxyService,
     private val pipelinePermissionService: PipelinePermissionService,
     private val pipelineVersionManager: PipelineVersionManager,
     private val pipelineTemplateRelatedService: PipelineTemplateRelatedService,
+    private val client: Client
 ) {
 
     companion object {
@@ -134,7 +139,7 @@ class PipelineVersionFacadeService @Autowired constructor(
             params = arrayOf(pipelineId)
         )
         val yamlInfo = if (archiveFlag != true) {
-            pipelineYamlFacadeService.getPipelineYamlInfo(projectId, pipelineId, releaseResource.version)
+            pipelineYamlFacadeService.getPipelineYamlVo(projectId, pipelineId, releaseResource.version)
         } else {
             null
         }
@@ -973,12 +978,16 @@ class PipelineVersionFacadeService @Autowired constructor(
         val finalPage = page ?: 1
         val finalPageSize = pageSize ?: 20
         // PAC 仓库信息
-        val repository = pipelineYamlFacadeService.getRepository(
+        val repository = client.get(ServiceRepositoryResource::class).get(
             projectId = projectId,
-            repoHashId = pipelineYamlInfo.repoHashId
+            repositoryType = RepositoryType.ID,
+            repositoryId = pipelineYamlInfo.repoHashId
+        ).data ?: throw ErrorCodeException(
+            errorCode = ProcessMessageCode.GIT_NOT_FOUND,
+            params = arrayOf(pipelineYamlInfo.repoHashId)
         )
         // 仓库默认分支
-        val defaultBranchName = pipelineYamlFacadeService.getServiceRepository(
+        val defaultBranchName = pipelineYamlCommonService.getServiceRepository(
             projectId = projectId,
             repository = repository
         ).let {
@@ -1022,7 +1031,7 @@ class PipelineVersionFacadeService @Autowired constructor(
             )
         }
         // 仓库分支列表
-        pipelineYamlFacadeService.getServiceBranch(
+        pipelineYamlCommonService.getServiceBranch(
             projectId = projectId,
             repository = repository,
             page = finalPage,

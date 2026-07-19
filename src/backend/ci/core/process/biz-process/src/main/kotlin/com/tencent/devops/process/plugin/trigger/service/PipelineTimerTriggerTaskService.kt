@@ -157,7 +157,7 @@ open class PipelineTimerTriggerTaskService @Autowired constructor(
         params: Map<String, String>,
         latestVersion: Int
     ): Repository? {
-        val pipelineYamlVo = pipelineYamlFacadeService.getPipelineYamlInfo(
+        val pipelineYamlVo = pipelineYamlFacadeService.getPipelineYamlVo(
             projectId = projectId,
             pipelineId = pipelineId,
             version = latestVersion

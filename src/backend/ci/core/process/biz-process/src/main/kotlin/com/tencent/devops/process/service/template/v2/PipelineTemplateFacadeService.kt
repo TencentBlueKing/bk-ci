@@ -1120,7 +1120,7 @@ class PipelineTemplateFacadeService @Autowired constructor(
                 upgradeUrl = upgradeUrl
             )
         } else {
-            val templateDetailsUrl = pipelineYamlFacadeService.getPipelineYamlInfo(
+            val templateDetailsUrl = pipelineYamlFacadeService.getPipelineYamlVo(
                 projectId = projectId,
                 pipelineId = templateId,
                 version = templateVersion.toInt()
@@ -1200,7 +1200,7 @@ class PipelineTemplateFacadeService @Autowired constructor(
                 AuthPermission.MANAGE,
             )
         )
-        val yamlInfo = pipelineYamlFacadeService.getPipelineYamlInfo(
+        val yamlInfo = pipelineYamlFacadeService.getPipelineYamlVo(
             projectId = projectId,
             pipelineId = templateId,
             version = releaseVersion.toInt()

@@ -28,44 +28,22 @@
 
 package com.tencent.devops.process.yaml
 
-import com.tencent.devops.common.api.constant.HTTP_401
-import com.tencent.devops.common.api.constant.HTTP_403
-import com.tencent.devops.common.api.constant.HTTP_404
-import com.tencent.devops.common.api.enums.RepositoryType
-import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.api.exception.RemoteServiceException
-import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_BRANCH
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_WEBHOOK_HASH_ID
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_BRANCH
-import com.tencent.devops.process.constant.ProcessMessageCode
-import com.tencent.devops.process.dao.yaml.PipelineYamlInfoDao
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlVo
 import com.tencent.devops.process.service.pipeline.PipelineYamlVersionResolver
-import com.tencent.devops.repository.api.ServiceRepositoryResource
-import com.tencent.devops.repository.api.scm.ServiceScmRepositoryApiResource
-import com.tencent.devops.repository.pojo.Repository
-import com.tencent.devops.repository.pojo.credential.AuthRepository
-import org.jooq.DSLContext
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
 class PipelineYamlFacadeService @Autowired constructor(
-    private val client: Client,
-    private val dslContext: DSLContext,
-    private val pipelineYamlInfoDao: PipelineYamlInfoDao,
     private val pipelineYamlService: PipelineYamlService,
     private val pipelineYamlVersionResolver: PipelineYamlVersionResolver
 ) {
 
-    companion object {
-        private val logger = LoggerFactory.getLogger(PipelineYamlFacadeService::class.java)
-    }
-
-    fun getPipelineYamlInfo(
+    fun getPipelineYamlVo(
         projectId: String,
         pipelineId: String,
         version: Int
@@ -91,8 +69,8 @@ class PipelineYamlFacadeService @Autowired constructor(
      * 构建yaml流水线触发变量
      */
     fun buildYamlManualParamMap(projectId: String, pipelineId: String): Map<String, BuildParameters>? {
-        val pipelineYamlInfo = pipelineYamlInfoDao.get(
-            dslContext = dslContext, projectId = projectId, pipelineId = pipelineId
+        val pipelineYamlInfo = pipelineYamlService.getPipelineYamlInfo(
+            projectId = projectId, pipelineId = pipelineId
         ) ?: return null
         return mutableMapOf(
             BK_REPO_WEBHOOK_HASH_ID to BuildParameters(BK_REPO_WEBHOOK_HASH_ID, pipelineYamlInfo.repoHashId),
@@ -127,66 +105,6 @@ class PipelineYamlFacadeService @Autowired constructor(
             yamlParams[BK_REPO_GIT_WEBHOOK_BRANCH] = BuildParameters(key = BK_REPO_GIT_WEBHOOK_BRANCH, value = branch)
             it
         }
-    }
-
-    /**
-     * 获取代码库关联信息
-     */
-    fun getRepository(projectId: String, repoHashId: String): Repository {
-        return client.get(ServiceRepositoryResource::class).get(
-            projectId = projectId,
-            repositoryType = RepositoryType.ID,
-            repositoryId = repoHashId
-        ).data ?: throw ErrorCodeException(
-            errorCode = ProcessMessageCode.GIT_NOT_FOUND,
-            params = arrayOf(repoHashId)
-        )
-    }
-
-    fun getServiceRepository(
-        projectId: String,
-        repository: Repository
-    ) = try {
-        client.get(ServiceScmRepositoryApiResource::class).getServerRepository(
-            projectId = projectId,
-            authRepository = AuthRepository(repository)
-        ).data
-    } catch (ignored: RemoteServiceException) {
-        throw when (ignored.httpStatus) {
-            // 目标仓库被删除
-            HTTP_404 -> ErrorCodeException(
-                errorCode = ProcessMessageCode.ERROR_GIT_PROJECT_NOT_FOUND_OR_NOT_PERMISSION,
-                params = arrayOf(repository.projectName)
-            )
-
-            HTTP_401, HTTP_403 -> ErrorCodeException(
-                errorCode = ProcessMessageCode.ERROR_USER_NO_PUSH_PERMISSION,
-                params = arrayOf(repository.userName, repository.projectName)
-            )
-
-            else -> ignored
-        }
-    } catch (ignored: Exception) {
-        throw ignored
-    }
-
-    fun getServiceBranch(
-        projectId: String,
-        repository: Repository,
-        page: Int,
-        pageSize: Int,
-        search: String?
-    ) = try {
-        client.get(ServiceScmRepositoryApiResource::class).listBranches(
-            projectId = projectId,
-            authRepository = AuthRepository(repository),
-            page = page,
-            pageSize = pageSize,
-            search = search
-        ).data
-    } catch (ignored: Exception) {
-        logger.warn("failed to get service branch", ignored)
-        null
     }
 
     fun getPipelineYamlInfo(
