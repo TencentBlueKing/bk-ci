@@ -285,7 +285,7 @@ class PipelineResourceVersionDao {
         with(T_PIPELINE_RESOURCE_VERSION) {
             val update = dslContext.update(this)
                 .set(BRANCH_ACTION, BranchVersionAction.INACTIVE.name)
-                .set(UPDATE_TIME, DSL.field(UPDATE_TIME.name, LocalDateTime::class.java))
+                .set(UPDATE_TIME, LocalDateTime.now())
                 .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
                 .and(STATUS.eq(VersionStatus.BRANCH.name))
                 .and(
@@ -317,7 +317,7 @@ class PipelineResourceVersionDao {
         return with(T_PIPELINE_RESOURCE_VERSION) {
             dslContext.update(this)
                 .set(STATUS, VersionStatus.DELETE.name)
-                .set(UPDATE_TIME, DSL.field(UPDATE_TIME.name, LocalDateTime::class.java))
+                .set(UPDATE_TIME, LocalDateTime.now())
                 .where(PIPELINE_ID.eq(pipelineId))
                 .and(VERSION.eq(version))
                 .and(PROJECT_ID.eq(projectId))
@@ -543,7 +543,7 @@ class PipelineResourceVersionDao {
         with(T_PIPELINE_RESOURCE_VERSION) {
             return dslContext.update(this)
                 .set(DEBUG_BUILD_ID, debugBuildId)
-                .set(UPDATE_TIME, DSL.field(UPDATE_TIME.name, LocalDateTime::class.java))
+                .set(UPDATE_TIME, LocalDateTime.now())
                 .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)).and(VERSION.eq(version)))
                 .execute() == 1
         }
@@ -580,7 +580,7 @@ class PipelineResourceVersionDao {
     ): Int {
         with(T_PIPELINE_RESOURCE_VERSION) {
             val baseStep = dslContext.update(this)
-                .set(UPDATE_TIME, DSL.field(UPDATE_TIME.name, LocalDateTime::class.java))
+                .set(UPDATE_TIME, LocalDateTime.now())
             referCount?.let { baseStep.set(REFER_COUNT, referCount) }
             referFlag?.let { baseStep.set(REFER_FLAG, referFlag) }
             return baseStep
