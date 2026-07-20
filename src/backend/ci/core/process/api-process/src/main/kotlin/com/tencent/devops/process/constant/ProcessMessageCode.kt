@@ -462,32 +462,25 @@ object ProcessMessageCode {
     const val ERROR_PIPELINE_COMMON_VAR_GROUP_VAR_NAME_DUPLICATE = "2101350" // 流水线公共变量组中变量名称重复
 
     const val ERROR_PUBLIC_VAR_GROUP_YAML_PARSE_FAILED = "2101351" // 公共变量组YAML解析失败: {0}
-    const val ERROR_PUBLIC_VAR_GROUP_YAML_VERSION_EMPTY = "2101352" // 公共变量组YAML中version字段不能为空
-    const val ERROR_PUBLIC_VAR_GROUP_YAML_VERSION_FORMAT = "2101353" // 公共变量组YAML版本格式不正确，应为vX.X格式
-    const val ERROR_PUBLIC_VAR_GROUP_YAML_NAME_EMPTY = "2101354" // 公共变量组YAML中name字段不能为空
-    const val ERROR_PUBLIC_VAR_GROUP_YAML_NAME_FORMAT = "2101355" // 公共变量组名称只能包含字母、数字、下划线和中划线，长度限制为1-64个字符
-    const val ERROR_PUBLIC_VAR_GROUP_YAML_VARIABLES_EMPTY = "2101356" // 公共变量组YAML中variables字段不能为空
-    const val ERROR_PUBLIC_VAR_GROUP_YAML_VARIABLE_NAME_EMPTY = "2101357" // 变量名不能为空
+    const val ERROR_PUBLIC_VAR_GROUP_YAML_NAME_FORMAT = "2101352" // 公共变量组名称只能包含字母、数字、下划线和中划线，长度限制为1-64个字符
     // 变量名{0}格式不正确，只能以字母或下划线开头，包含字母、数字、下划线，长度限制为1-64个字符
-    const val ERROR_PUBLIC_VAR_GROUP_YAML_VARIABLE_NAME_FORMAT = "2101358"
-    const val ERROR_PUBLIC_VAR_GROUP_YAML_UNKNOWN_FIELD = "2101359" // 公共变量组YAML包含未知字段: {0}
-    const val ERROR_PUBLIC_VAR_GROUP_YAML_DESERIALIZE_ERROR = "2101360" // 公共变量组YAML格式不正确，请检查字段类型
+    const val ERROR_PUBLIC_VAR_GROUP_YAML_VARIABLE_NAME_FORMAT = "2101353"
+    const val ERROR_PUBLIC_VAR_GROUP_YAML_UNKNOWN_FIELD = "2101354" // 公共变量组YAML包含未知字段: {0}
+    const val ERROR_PUBLIC_VAR_GROUP_YAML_DESERIALIZE_ERROR = "2101355" // 公共变量组YAML格式不正确，请检查字段类型
     // 触发事件缓存过期已清理。若需重放，请到代码库操作。
     const val ERROR_TRIGGER_EVENT_EXPIRED = "2101361"
     const val ERROR_TEMPLATE_MIGRATING = "2101362" // 模板迁移中，不能操作
     // 非约束流水线不能保存为约束模式
     const val ERROR_NON_CONSTRAINED_PIPELINE_CANNOT_SAVE_AS_CONSTRAINED = "2101363"
-    const val ERROR_PIPELINE_COMMON_VAR_GROUP_REFER_COUNT_UPDATE_FAILED = "2101364" // 变量组引用计数更新失败
-    const val ERROR_PIPELINE_COMMON_VAR_GROUP_REFER_QUERY_FAILED = "2101365" // 变量组引用信息查询失败
-    const val ERROR_PUBLIC_VAR_GROUP_ADD_FAILED = "2101366" // 添加公共变量组({0})失败
-    const val ERROR_PUBLIC_VAR_GROUP_DELETE_FAILED = "2101367" // 删除公共变量组({0})失败
-    const val ERROR_PUBLIC_VAR_GROUP_GET_VARIABLES_FAILED = "2101368" // 获取公共变量组({0})的变量失败
-    const val ERROR_PUBLIC_VAR_GROUP_LIST_PIPELINE_VARIABLES_FAILED = "2101369" // 获取流水线变量失败(项目:{0}, 引用ID:{1})
-    const val ERROR_PUBLIC_VAR_GROUP_LIST_PROJECT_VAR_GROUP_FAILED = "2101370" // 获取项目({0})的公共变量组信息失败
-    const val ERROR_PUBLIC_VAR_GROUP_REFER_LOCK_ACQUIRE_FAILED = "2101371" // 获取公共变量组引用锁失败，请稍后重试
-    const val ERROR_PUBLIC_VAR_GROUP_YAML_MISSING_FIELD = "2101372" // 公共变量组YAML缺少必填字段 {0}
-    const val ERROR_PUBLIC_VAR_GROUP_YAML_FORMAT_ERROR = "2101373" // 公共变量组YAML格式错误
-    const val ERROR_PUBLIC_VAR_GROUP_IS_EXIST = "2101374" // 流水线公共变量组({0})已存在
+    const val ERROR_PIPELINE_COMMON_VAR_GROUP_REFER_QUERY_FAILED = "2101364" // 变量组引用信息查询失败
+    const val ERROR_PUBLIC_VAR_GROUP_ADD_FAILED = "2101365" // 添加公共变量组({0})失败
+    const val ERROR_PUBLIC_VAR_GROUP_DELETE_FAILED = "2101366" // 删除公共变量组({0})失败
+    const val ERROR_PUBLIC_VAR_GROUP_LIST_PIPELINE_VARIABLES_FAILED = "2101367" // 获取流水线变量失败(项目:{0}, 引用ID:{1})
+    const val ERROR_PUBLIC_VAR_GROUP_LIST_PROJECT_VAR_GROUP_FAILED = "2101368" // 获取项目({0})的公共变量组信息失败
+    const val ERROR_PUBLIC_VAR_GROUP_YAML_MISSING_FIELD = "2101369" // 公共变量组YAML缺少必填字段 {0}
+    const val ERROR_PUBLIC_VAR_GROUP_YAML_FORMAT_ERROR = "2101370" // 公共变量组YAML格式错误
+    // 用户({0})无公共变量组({1})的编辑权限
+    const val ERROR_PUBLIC_VAR_GROUP_EDIT_NO_PERMISSION = "2101371"
     const val ERROR_TEMPLATE_INSTANCE_OPTIONAL_PARAM_OVERRIDDEN = "2101378" // 实例化异常：流水线其他变量[{0}]默认值被改成模版默认值,请联系助手分析
     // YAML文件[{0}]已绑定其他流水线[{1}]，不能重命名
     const val ERROR_PAC_YAML_FILE_BINDTO_OTHER_PIPELINE = "2101379"
