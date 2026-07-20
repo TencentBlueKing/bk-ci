@@ -14,6 +14,7 @@
             <div class="left-section">
                 <div class="title-section">
                     {{ currentEnv.name }} - {{ $t('environment.relatedNodes') }}
+                    <bk-tag v-if="currentEnv?.os">{{ currentEnv?.os }}</bk-tag>
                 </div>
                 <!-- 关联策略 -->
                 <div class="form-section">

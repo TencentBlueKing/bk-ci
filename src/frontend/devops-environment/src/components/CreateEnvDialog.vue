@@ -47,6 +47,24 @@
                 </bk-radio-group>
             </bk-form-item>
             <bk-form-item
+                v-if="isCreateResType"
+                label="OS"
+                required
+                property="os"
+                error-display-type="normal"
+            >
+                <bk-radio-group v-model="envParams.os">
+                    <bk-radio
+                        v-for="item in osTypeOptions"
+                        :key="item.value"
+                        :value="item.value"
+                        :disabled="item.disabled"
+                    >
+                        <div class="mr10">{{ item.label }}</div>
+                    </bk-radio>
+                </bk-radio-group>
+            </bk-form-item>
+            <bk-form-item
                 :label="$t('environment.envInfo.envRemark')"
                 property="desc"
             >
@@ -96,6 +114,7 @@
 <script>
     import { computed, watch } from 'vue'
     import useCreateEnv from '@/hooks/useCreateEnv'
+    import useEnvDetail from '@/hooks/useEnvDetail'
     import useInstance from '@/hooks/useInstance'
     import { ENV_TYPE_MAP, SERVICE_RESOURCE_TYPE } from '@/store/constants'
     
@@ -103,6 +122,7 @@
         name: 'CreateEnvDialog',
         setup () {
             const { proxy } = useInstance()
+            const { isPersonalProject } = useEnvDetail()
 
             const {
                 isShow,
@@ -119,22 +139,35 @@
                 // ENV_TYPE_MAP.DEV,
                 // ENV_TYPE_MAP.DEVX
             ]))
-            const formRules = computed(() => ({
-                name: [
-                    {
-                        required: true,
-                        message: proxy.$t('environment.fieldCannotEmpty'),
-                        trigger: 'blur'
-                    }
-                ]
-                // createdUser: [
-                //     {
-                //         required: true,
-                //         message: proxy.$t('environment.fieldCannotEmpty'),
-                //         trigger: 'blur'
-                //     }
-                // ]
-            }))
+            const enabledOsType = computed(() => (
+                isPersonalProject.value ? 'WINDOWS' : 'LINUX'
+            ))
+            const osTypeOptions = computed(() => ([
+                { label: 'Linux', value: 'LINUX', disabled: enabledOsType.value !== 'LINUX' },
+                { label: 'macOS', value: 'MACOS', disabled: enabledOsType.value !== 'MACOS' },
+                { label: 'Windows', value: 'WINDOWS', disabled: enabledOsType.value !== 'WINDOWS' }
+            ]))
+            const formRules = computed(() => {
+                const rules = {
+                    name: [
+                        {
+                            required: true,
+                            message: proxy.$t('environment.fieldCannotEmpty'),
+                            trigger: 'blur'
+                        }
+                    ]
+                }
+                if (isCreateResType.value) {
+                    rules.os = [
+                        {
+                            required: true,
+                            message: proxy.$t('environment.fieldCannotEmpty'),
+                            trigger: 'change'
+                        }
+                    ]
+                }
+                return rules
+            })
             const handleConfirm = async () => {
                 const valid = await proxy.$refs.envForm.validate()
                 if (valid) {
@@ -160,6 +193,13 @@
             watch(isShow, (val) => {
                 if (val && isCreateResType.value) {
                     envParams.value.envType = ENV_TYPE_MAP.CREATE
+                    envParams.value.os = ''
+                }
+            })
+
+            watch(enabledOsType, (enabledOs) => {
+                if (isCreateResType.value && envParams.value.os && envParams.value.os !== enabledOs) {
+                    envParams.value.os = ''
                 }
             })
             return {
@@ -168,6 +208,7 @@
                 envParams,
                 formRules,
                 envTypeEnums,
+                osTypeOptions,
                 isCreateResType,
 
                 // function

@@ -12,6 +12,7 @@
                     {{ currentEnv?.name || '--' }}
                 </span>
                 <bk-tag>{{ envNodeTypeDisplayName }}</bk-tag>
+                <bk-tag v-if="currentEnv?.os">{{ currentEnv?.os }}</bk-tag>
                 <span
                     v-if="!isCreateResType"
                     class="env-type-tag"
@@ -98,19 +99,13 @@
                 fetchEnvDetail,
                 envDetailLoaded,
                 setEnvDetailLoaded,
-                projectId
+                projectId,
+                isPersonalProject
             } = useEnvDetail()
             const {
                 envList,
                 isCreateResType
             } = useEnvAside()
-
-            // 获取当前项目的 projectScope
-            const projectScope = computed(() => {
-                const projectList = proxy.$store.state.projectList || []
-                const curProject = projectList.find(p => p.projectCode === projectId.value)
-                return curProject?.projectScope
-            })
 
             const emptyInfo = ref({
                 title: proxy.$t('environment.envInfo.emptyEnv'),
@@ -185,7 +180,7 @@
                             : proxy.$t('environment.nodeInfo.buildTask')
                     }
                 ] : []),
-                ...(projectScope.value !== 1 ? [{
+                ...(!isPersonalProject.value ? [{
                     name: 'auth',
                     label: proxy.$t('environment.authManage')
                 }] : []),
