@@ -1,0 +1,138 @@
+/* CSS 变量定义 - 用于全局样式管理 */
+
+:root {
+  /* 颜色变量 */
+  --bg-primary: #ffffff;
+  --bg-secondary: #f5f7fa;
+  --bg-tertiary: #fafbfd;
+  --bg-active: #f0f5ff;
+  --bg-hover: #f0f1f5;
+  --bg-hover-active: #e1ecff;
+  --bg-drag: #e1f3ff;
+  --bg-light-blue: #eff5ff;
+  --bg-disabled: #f7f7f7;
+  --bg-warning-light: #fff4e6;
+
+  --color-primary: #3a84ff;
+  --color-primary-hover: #699df4;
+  --color-success: #30d878;
+  --color-danger: #ea3636;
+  --color-danger-light: #ff5656;
+  --color-warning: #ff9c01;
+  --color-text-primary: #313238;
+  --color-text-secondary: #63656e;
+  --color-text-tertiary: #979ba5;
+  --color-text-disabled: #c4c6cc;
+  --color-text-medium-black: #4d4f56;
+  --color-text-light-gray: #c3cdd7;
+  --color-text-placeholder: #a9abb9;
+
+  --border-color: #dcdee5;
+  --border-color-light: #e6e6e6;
+  --border-color-lighter: #d8d8d8;
+  --border-color-hover: #a3c5fd;
+  --border-radius: 2px;
+  --border-radius-large: 4px;
+
+  /* 间距变量 */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 12px;
+  --spacing-base: 15px;
+  --spacing-lg: 16px;
+  --spacing-xl: 20px;
+  --spacing-xxl: 24px;
+  --spacing-xxxl: 30px;
+  --spacing-huge: 50px;
+  --spacing-massive: 80px;
+
+  --line-height-xs: 16px;
+  --line-height-base: 18px;
+  --line-height-sm: 20px;
+  --line-height-md: 24px;
+  --line-height-lg: 28px;
+  --line-height-xl: 32px;
+
+  /* 布局相关变量 */
+  --error-popup-min-height: 42px;
+  --timeline-label-width: 60px;
+  --timeline-offset: 108px;
+
+  /* 字体大小变量 */
+  --font-size-xs: 12px;
+  --font-size-sm: 14px;
+  --font-size-md: 16px;
+  --font-size-lg: 18px;
+  --font-size-xl: 20px;
+
+  /* 阴影变量 */
+  --shadow-sm: 0 2px 5px 0 rgba(51, 60, 72, 0.03);
+  --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.12);
+  --shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.16);
+  --shadow-xl: 0 2px 20px 0 rgba(0, 0, 0, 0.15);
+  --shadow-focus: 0 0 0 2px rgba(58, 132, 255, 0.2);
+
+  /* 布局变量 */
+  --header-height: 48px;
+  --sidebar-width: 240px;
+  --footer-height: 60px;
+  --panel-width-sm: 280px;
+  --panel-height-sm: 50px;
+  --icon-size-sm: 14px;
+  --icon-size-md: 16px;
+  --icon-size-lg: 18px;
+  --icon-size-xl: 20px;
+  --icon-size-xxl: 66px;
+  --icon-size-xxxl: 100px;
+
+  /* 过渡时间 */
+  --transition-fast: 0.15s;
+  --transition-normal: 0.2s;
+  --transition-slow: 0.3s;
+  --transition-medium: 0.5s;
+  --transition-long: 0.6s;
+
+  /* 过渡效果 */
+  --transition-all: all 0.3s ease;
+
+  /* ==================== 日志组件相关变量 ==================== */
+  /* 暗色主题背景 */
+  --log-bg-dark: #1a1a1a;
+  --log-bg-dark-secondary: #1e1e1e;
+  --log-bg-dark-tertiary: #2e2e2e;
+  --log-bg-dark-hover: #3a3f4e;
+  --log-bg-dark-active: #4a4f5c;
+
+  /* 暗色主题文字 */
+  --log-text-dark: #d4d4d4;
+  --log-text-dark-secondary: #999999;
+  --log-text-dark-muted: #6e7681;
+
+  /* 暗色主题边框 */
+  --log-border-dark: #2b2b2b;
+  --log-border-dark-light: #3e3e3e;
+  --log-border-dark-lighter: #444444;
+
+  /* 日志级别颜色 */
+  --log-color-error: #f14c4c;
+  --log-color-warning: #ffcc00;
+  --log-color-info: #3a84ff;
+  --log-color-debug: #6e7681;
+  --log-color-success: #6a9955;
+  --log-color-trace: #9fa8b2;
+
+  /* 搜索高亮颜色 */
+  --log-search-highlight: #ffdd00;
+  --log-search-highlight-active: #ff9500;
+
+  /* 日志布局 */
+  --log-header-height: 48px;
+  --log-line-number-width: 60px;
+  --log-timestamp-width: 100px;
+  --log-tool-height: 30px;
+  --log-panel-width: 80vw;
+
+  /* 日志字体 */
+  --log-font-family:
+    'JetBrains Mono', 'SF Mono', Consolas, 'Liberation Mono', Menlo, Courier, monospace;
+}

@@ -1,0 +1,257 @@
+/* ==========================================
+ * 布局容器
+ * ========================================== */
+
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  background: var(--bg-primary);
+}
+
+.sidebarContent {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 0 0 var(--spacing-lg) 0;
+  line-height: var(--spacing-xl);
+  scrollbar-gutter: stable;
+}
+
+.loadingWrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+}
+
+.sidebarFooter {
+  flex-shrink: 0;
+  padding: var(--spacing-xs) 0;
+  border-top: 1px solid var(--border-color);
+  .trashItem {
+    padding-right: 12px;
+  }
+}
+
+/* ==========================================
+ * 菜单项通用样式
+ * ========================================== */
+
+.menuItem {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-sm) var(--spacing-sm) var(--spacing-sm) 42px;
+  cursor: pointer;
+  transition: all var(--transition-normal);
+  position: relative;
+  color: var(--color-text-primary);
+  font-size: var(--font-size-sm);
+}
+
+.menuItem:hover {
+  background: var(--bg-hover) !important;
+}
+
+.menuItem.active {
+  background: var(--bg-hover-active);
+  color: var(--color-primary);
+}
+
+.menuItem.active .text,
+.menuItem.active .icon {
+  color: var(--color-primary);
+}
+
+.menuItem.active::before {
+  content: '';
+  position: absolute;
+  left: -16px;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--color-primary);
+  border-radius: 0 2px 2px 0;
+}
+
+/* 置顶项背景色 */
+.menuItem.pinnedItem {
+  background: var(--bg-secondary);
+}
+
+/* ==========================================
+ * 分组相关样式
+ * ========================================== */
+
+.groupHeader {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  padding: var(--spacing-sm) var(--spacing-sm);
+  cursor: pointer;
+  border-radius: var(--border-radius-large);
+  transition: all var(--transition-normal);
+  color: var(--color-text-tertiary);
+  box-sizing: border-box;
+}
+
+.groupHeader:hover {
+  background: var(--bg-hover);
+}
+
+.groupTitle {
+  flex: 1;
+  font-weight: 500;
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-sm);
+}
+
+.toggleIcon {
+  transition: transform var(--transition-normal);
+}
+
+.toggleIcon.expanded {
+  transform: rotate(90deg);
+}
+
+.groupContent {
+  padding-top: var(--spacing-xs);
+}
+
+/* ==========================================
+ * 吸顶效果（Sticky）
+ * ========================================== */
+
+/* sticky 通用样式 */
+.stickyPlaceholder,
+.menuItem.stickyMenuItem,
+.groupHeader.sticky,
+.divider.sticky,
+.groupHeader.stickyProjectHeader {
+  position: sticky;
+  z-index: 10;
+  background: var(--bg-primary);
+
+  &.divider {
+    margin: 0;
+  }
+}
+
+.stickyPlaceholder {
+  top: 0;
+  height: var(--spacing-lg);
+}
+
+.menuItem.stickyMenuItem {
+  top: var(--spacing-lg);
+  height: 40px;
+}
+
+.divider.sticky {
+  top: calc(var(--spacing-lg) + 40px);
+  background: var(--border-color);
+}
+
+.groupHeader.sticky {
+  top: calc(var(--spacing-lg) + 41px);
+}
+
+.groupHeader.stickyProjectHeader {
+  top: calc(var(--spacing-lg) + 81px);
+}
+
+/* ==========================================
+ * 图标和文本样式
+ * ========================================== */
+
+.icon {
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--color-text-secondary);
+}
+
+.increaseIcon {
+  color: var(--color-primary);
+  cursor: pointer;
+  &:hover {
+    color: var(--color-primary-hover);
+  }
+}
+
+.text {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--color-text-secondary);
+}
+
+/* ==========================================
+ * 数量标签和操作按钮
+ * ========================================== */
+
+.countContainer {
+  margin-left: auto;
+  min-width: 52px;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  flex-shrink: 0;
+  justify-content: flex-end;
+}
+
+.countTag {
+  border-radius: 10px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: calc(var(--font-size-sm) * 2);
+  text-align: center;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', 'Courier New', monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+.itemAction {
+  width: 20px;
+  height: 20px;
+  padding: 2px 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border-radius: 100%;
+  color: var(--color-text-tertiary);
+  transition: opacity var(--transition-normal);
+  cursor: pointer;
+}
+
+.itemActionPlaceholder {
+  visibility: hidden;
+  opacity: 0 !important;
+  cursor: default;
+}
+
+.menuItem:hover .itemAction:not(.itemActionPlaceholder) {
+  opacity: 1;
+}
+
+.itemAction:hover {
+  color: var(--color-text-primary);
+  background: var(--bg-hover-active);
+}
+
+/* ==========================================
+ * 分割线
+ * ========================================== */
+
+.divider {
+  height: 1px;
+  background: var(--border-color);
+  margin: var(--spacing-xs) var(--spacing-md);
+}

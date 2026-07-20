@@ -64,6 +64,7 @@ object ActionId {
     const val ENVIRONMENT_DELETE = "environment_delete"
     const val ENVIRONMENT_LIST = "environment_list"
     const val ENVIRONMENT_USE = "environment_use"
+    const val ENVIRONMENT_TRANSFER = "environment_transfer"
 
     // 环境节点
     const val ENV_NODE_CREATE = "env_node_create"
@@ -72,6 +73,7 @@ object ActionId {
     const val ENV_NODE_DELETE = "env_node_delete"
     const val ENV_NODE_LIST = "env_node_list"
     const val ENV_NODE_USE = "env_node_use"
+    const val ENV_NODE_TRANSFER = "env_node_transfer"
 
     // 环境节点标签
     const val ENV_NODE_TAG_CREATE = "env_node_tag_create"

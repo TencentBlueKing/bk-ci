@@ -100,6 +100,7 @@ import com.tencent.devops.process.yaml.v3.models.on.RemoteRule
 import com.tencent.devops.process.yaml.v3.models.on.ReviewRule
 import com.tencent.devops.process.yaml.v3.models.on.SchedulesRule
 import com.tencent.devops.process.yaml.v3.models.on.TagRule
+import com.tencent.devops.process.yaml.v3.models.on.TapdRule
 import com.tencent.devops.process.yaml.v3.models.on.TriggerOn
 import com.tencent.devops.process.yaml.v3.models.stage.IPreStage
 import com.tencent.devops.process.yaml.v3.models.stage.IStage
@@ -387,18 +388,22 @@ object ScriptYmlUtils {
         if (triggerConfig == null) {
             return null
         }
-        val map = YamlObjects.transValue<Map<String, Any?>>("Extends.template", "trigger-conf", triggerConfig)
+        val map = YamlObjects.transValue<Map<String, Any?>>("extends.template", "trigger-conf", triggerConfig)
         return map.mapValues {
             val config =
-                YamlObjects.transValue<Map<String, Any?>>("Extends.template.trigger-conf", it.key, it.value)
+                YamlObjects.transValue<Map<String, Any?>>("extends.template.trigger-conf", it.key, it.value)
             ExtendsTriggerConfig(
                 disabled = YamlObjects.getNullValue("disabled", config)?.toBooleanStrictOrNull(),
                 cron = YamlObjects.getNullValue("cron", config),
-                variables = YamlObjects.transValue<Map<String, Any>?>(
-                    path = "Extends.template.trigger-conf.${it.key}",
-                    type = "variables",
-                    value = YamlObjects.getNullValue("variables", config)
-                )
+                variables = if (config["variables"] == null) {
+                    null
+                } else {
+                    YamlObjects.transValue<Map<String, Any>>(
+                        path = "extends.template.trigger-conf.${it.key}",
+                        type = "variables",
+                        value = config["variables"]
+                    )
+                }
             )
         }
     }
@@ -414,15 +419,15 @@ object ScriptYmlUtils {
         if (variables == null) {
             return null
         }
-        val map = YamlObjects.transValue<Map<String, Any?>>("Extends.template", "variables", variables)
+        val map = YamlObjects.transValue<Map<String, Any?>>("extends.template", "variables", variables)
         return map.mapValues {
             when (it.value) {
                 is String -> PreTemplateVariable(it.value as String)
                 else -> {
                     val variable =
-                        YamlObjects.transValue<Map<String, Any?>>("Extends.template.variables", it.key, it.value)
+                        YamlObjects.transValue<Map<String, Any?>>("extends.template.variables", it.key, it.value)
                     PreTemplateVariable(
-                        value = YamlObjects.getNotNullValueAny("value", it.key, variable),
+                        value = YamlObjects.getNullValue("value", variable),
                         allowModifyAtStartup = YamlObjects.getNullValue("allow-modify-at-startup", variable)
                             ?.toBoolean() ?: true
                     )
@@ -804,12 +809,15 @@ object ScriptYmlUtils {
             changeSubmit = p4EventRule(preTriggerOn.changeSubmit),
             changeContent = p4EventRule(preTriggerOn.changeContent),
             shelveCommit = p4EventRule(preTriggerOn.shelveCommit),
-            shelveSubmit = p4EventRule(preTriggerOn.shelveSubmit)
+            shelveSubmit = p4EventRule(preTriggerOn.shelveSubmit),
+            story = tapdEventRule(preTriggerOn.story),
+            bug = tapdEventRule(preTriggerOn.bug)
         )
 
         if (preTriggerOn is PreTriggerOnV3) {
             res.repoName = preTriggerOn.repoName
             res.scmCode = preTriggerOn.scmCode
+            res.workspaceId = preTriggerOn.workspaceId
         }
 
         return res
@@ -1004,6 +1012,22 @@ object ScriptYmlUtils {
             }
         }
         return null
+    }
+
+    /**
+     * 将 `on.story` / `on.bug` 承载的 Any（YAML 解析产物，通常为 Map）反序列化为 [TapdRule]。
+     *
+     * 与 `p4EventRule` 类似，YAML 中每个事件（story / bug）以子对象形式书写，
+     * 由 [TapdRule] 承载 action / users / labels / priorities 等过滤条件。
+     */
+    private fun tapdEventRule(rule: Any?): TapdRule? {
+        if (rule == null) return null
+        return kotlin.runCatching {
+            YamlUtil.getObjectMapper().readValue(
+                JsonUtil.toJson(rule),
+                TapdRule::class.java
+            )
+        }.getOrNull()
     }
 
     private fun initScheduleCron(rule: SchedulesRule) {

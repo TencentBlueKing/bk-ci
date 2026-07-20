@@ -63,7 +63,7 @@ class UserStoreComponentManageResourceImpl(
     override fun installComponent(userId: String, installStoreReq: InstallStoreReq): Result<Boolean> {
         return storeComponentManageService.installComponent(
             userId = userId,
-            channelCode = ChannelCode.BS,
+            channelCode = ChannelCode.getRequestChannelCode(),
             installStoreReq = installStoreReq
         )
     }

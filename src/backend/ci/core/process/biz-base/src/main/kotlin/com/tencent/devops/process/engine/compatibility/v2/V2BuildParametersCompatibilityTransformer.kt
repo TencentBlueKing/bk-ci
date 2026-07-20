@@ -33,6 +33,7 @@ import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.pipeline.pojo.CustomFileVersionControlInfo
+import com.tencent.devops.common.pipeline.utils.CascadePropertyUtils
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.compatibility.BuildParametersCompatibilityTransformer
 import com.tencent.devops.process.utils.PipelineVarUtil
@@ -103,7 +104,14 @@ open class V2BuildParametersCompatibilityTransformer : BuildParametersCompatibil
                                 "not required, overrideValue=$overrideValue, defaultValue=${param.defaultValue}"
                         )
                     }
-                    overrideValue ?: param.defaultValue
+                    overrideValue ?: param.defaultValue.let {
+                        // 级联参数的默认值，需要转换为JSON字符串，否则后续存表时会被调用toString方法导致变量会出现问题
+                        if (CascadePropertyUtils.supportCascadeParam(param.type)) {
+                            JsonUtil.toJson(it, false)
+                        } else {
+                            it
+                        }
+                    }
                 }
             }
             if (param.valueNotEmpty == true && value.toString().isEmpty()) {

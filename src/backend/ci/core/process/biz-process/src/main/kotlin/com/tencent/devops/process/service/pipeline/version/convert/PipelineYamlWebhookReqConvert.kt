@@ -120,7 +120,7 @@ class PipelineYamlWebhookReqConvert @Autowired constructor(
                 userId = userId,
                 projectId = projectId,
                 pipelineId = newPipelineId,
-                channelCode = ChannelCode.BS,
+                channelCode = ChannelCode.getRequestChannelCode(),
                 version = version,
                 model = modelAndSetting.model.copy(
                     name = pipelineName
@@ -130,11 +130,11 @@ class PipelineYamlWebhookReqConvert @Autowired constructor(
                 pipelineSettingWithoutVersion = pipelineSettingWithoutVersion,
                 versionStatus = versionStatus,
                 versionAction = versionAction,
+                yamlFileInfo = yamlFileInfo,
                 repoHashId = yamlFileInfo!!.repoHashId,
                 branchName = branchName
             ).copy(
                 enablePac = true,
-                yamlFileInfo = yamlFileInfo,
                 pullRequestUrl = pullRequestUrl,
                 pullRequestId = pullRequestId
             )

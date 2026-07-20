@@ -32,13 +32,12 @@ import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatch
 import com.tencent.devops.common.stream.ScsConsumerBuilder
 import com.tencent.devops.common.websocket.dispatch.WebSocketDispatcher
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildWebSocketPushEvent
+import com.tencent.devops.process.engine.service.PipelineChannelCacheService
 import com.tencent.devops.process.service.PipelineInfoFacadeService
 import com.tencent.devops.process.websocket.listener.PipelineWebSocketListener
-import com.tencent.devops.process.websocket.page.DefaultDetailPageBuild
 import com.tencent.devops.process.websocket.page.DefaultHistoryPageBuild
 import com.tencent.devops.process.websocket.page.DefaultRecordPageBuild
 import com.tencent.devops.process.websocket.page.DefaultStatusPageBuild
-import com.tencent.devops.process.websocket.page.GithubDetailPageBuild
 import com.tencent.devops.process.websocket.page.GithubHistoryPageBuild
 import com.tencent.devops.process.websocket.page.GithubStatusPageBuild
 import com.tencent.devops.process.websocket.service.PipelineWebsocketService
@@ -85,29 +84,31 @@ class PipelineWebSocketConfiguration {
 
     @Bean
     @ConditionalOnProperty(prefix = "cluster", name = ["tag"], havingValue = "github")
-    fun githubDetailPage() = GithubDetailPageBuild()
+    fun githubHistoryPage(
+        @Autowired pipelineChannelCacheService: PipelineChannelCacheService
+    ) = GithubHistoryPageBuild(pipelineChannelCacheService)
 
     @Bean
     @ConditionalOnProperty(prefix = "cluster", name = ["tag"], havingValue = "github")
-    fun githubHistoryPage() = GithubHistoryPageBuild()
-
-    @Bean
-    @ConditionalOnProperty(prefix = "cluster", name = ["tag"], havingValue = "github")
-    fun githubStatusPage() = GithubStatusPageBuild()
-
-    @Bean
-    @ConditionalOnProperty(prefix = "cluster", name = ["tag"], havingValue = "devops")
-    fun defaultHistoryPage() = DefaultHistoryPageBuild()
+    fun githubStatusPage(
+        @Autowired pipelineChannelCacheService: PipelineChannelCacheService
+    ) = GithubStatusPageBuild(pipelineChannelCacheService)
 
     @Bean
     @ConditionalOnProperty(prefix = "cluster", name = ["tag"], havingValue = "devops")
-    fun defaultDetailPage() = DefaultDetailPageBuild()
+    fun defaultHistoryPage(
+        @Autowired pipelineChannelCacheService: PipelineChannelCacheService
+    ) = DefaultHistoryPageBuild(pipelineChannelCacheService)
 
     @Bean
     @ConditionalOnProperty(prefix = "cluster", name = ["tag"], havingValue = "devops")
-    fun defaultRecordPage() = DefaultRecordPageBuild()
+    fun defaultRecordPage(
+        @Autowired pipelineChannelCacheService: PipelineChannelCacheService
+    ) = DefaultRecordPageBuild(pipelineChannelCacheService)
 
     @Bean
     @ConditionalOnProperty(prefix = "cluster", name = ["tag"], havingValue = "devops")
-    fun defaultStatusPage() = DefaultStatusPageBuild()
+    fun defaultStatusPage(
+        @Autowired pipelineChannelCacheService: PipelineChannelCacheService
+    ) = DefaultStatusPageBuild(pipelineChannelCacheService)
 }

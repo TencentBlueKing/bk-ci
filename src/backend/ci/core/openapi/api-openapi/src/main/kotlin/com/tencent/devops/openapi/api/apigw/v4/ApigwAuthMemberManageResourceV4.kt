@@ -15,10 +15,14 @@ import com.tencent.devops.auth.pojo.request.ai.BatchHandoverMembersReq
 import com.tencent.devops.auth.pojo.request.ai.BatchOperateCheckReq
 import com.tencent.devops.auth.pojo.request.ai.BatchRemoveMembersReq
 import com.tencent.devops.auth.pojo.request.ai.BatchRenewalMembersReq
+import com.tencent.devops.auth.pojo.request.ai.GroupRecommendReq
 import com.tencent.devops.auth.pojo.vo.BatchOperateGroupMemberCheckVo
 import com.tencent.devops.auth.pojo.vo.GroupDetailsInfoVo
+import com.tencent.devops.auth.pojo.vo.GroupRecommendationVO
 import com.tencent.devops.auth.pojo.vo.ManagerRoleGroupVO
+import com.tencent.devops.auth.pojo.vo.MemberExitCheckVO
 import com.tencent.devops.auth.pojo.vo.MemberExitsProjectCheckVo
+import com.tencent.devops.auth.pojo.vo.PermissionCloneResultVO
 import com.tencent.devops.auth.pojo.vo.ResourceType2CountVo
 import com.tencent.devops.auth.pojo.vo.UserSearchResultVO
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE
@@ -174,6 +178,66 @@ interface ApigwAuthMemberManageResourceV4 {
         @Parameter(description = "是否已离职,true表示仅查离职用户", required = false)
         @QueryParam("departed")
         departedFlag: Boolean? = null,
+        @Parameter(description = "页码,默认1", required = false)
+        @QueryParam("page")
+        page: Int = 1,
+        @Parameter(description = "每页条数,默认20", required = false)
+        @QueryParam("pageSize")
+        pageSize: Int = 20
+    ): Result<SQLPage<ResourceMemberInfo>>
+
+    @GET
+    @Path("/list_project_members_by_condition")
+    @Operation(
+        summary = "根据条件获取项目全体成员",
+        tags = [
+            "v4_app_list_auth_project_members_by_condition",
+            "v4_user_list_auth_project_members_by_condition"
+        ]
+    )
+    fun listProjectMembersByCondition(
+        @Parameter(description = "应用Code(OpenAPI调用方标识)", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @Parameter(description = "网关类型,取值为apigw-user、apigw-app或apigw", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @Parameter(description = "操作人用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID(项目英文名)", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "成员类型(如USER、DEPARTMENT等)", required = false)
+        @QueryParam("memberType")
+        memberType: String? = null,
+        @Parameter(description = "用户名(模糊匹配)", required = false)
+        @QueryParam("userName")
+        userName: String? = null,
+        @Parameter(description = "部门名称(模糊匹配)", required = false)
+        @QueryParam("deptName")
+        deptName: String? = null,
+        @Parameter(description = "用户组名称(模糊匹配)", required = false)
+        @QueryParam("groupName")
+        groupName: String? = null,
+        @Parameter(description = "权限过期时间下限(毫秒时间戳)", required = false)
+        @QueryParam("minExpiredAt")
+        minExpiredAt: Long? = null,
+        @Parameter(description = "权限过期时间上限(毫秒时间戳)", required = false)
+        @QueryParam("maxExpiredAt")
+        maxExpiredAt: Long? = null,
+        @Parameter(description = "是否已离职,true表示仅查离职用户", required = false)
+        @QueryParam("departed")
+        departedFlag: Boolean? = null,
+        @Parameter(description = "资源类型", required = false)
+        @QueryParam("resourceType")
+        resourceType: String? = null,
+        @Parameter(description = "资源Code", required = false)
+        @QueryParam("resourceCode")
+        resourceCode: String? = null,
+        @Parameter(description = "权限动作/操作标识筛选", required = false)
+        @QueryParam("action")
+        action: String? = null,
         @Parameter(description = "页码,默认1", required = false)
         @QueryParam("page")
         page: Int = 1,
@@ -709,4 +773,105 @@ interface ApigwAuthMemberManageResourceV4 {
         @QueryParam("limit")
         limit: Int = 10
     ): Result<UserSearchResultVO>
+
+    @POST
+    @Path("/recommend_groups")
+    @Operation(
+        summary = "智能推荐用户组",
+        tags = ["v4_app_recommend_auth_groups", "v4_user_recommend_auth_groups"]
+    )
+    fun recommendGroupsForGrant(
+        @Parameter(
+            description = "应用Code(OpenAPI调用方标识)",
+            required = true,
+            example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE
+        )
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @Parameter(description = "网关类型,取值为apigw-user、apigw-app或apigw", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @Parameter(description = "操作人用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID(项目英文名)", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "用户组推荐请求体(含目标成员、资源信息和期望动作等)", required = true)
+        request: GroupRecommendReq
+    ): Result<GroupRecommendationVO>
+
+    @GET
+    @Path("/members/{targetMemberId}/exit_check")
+    @Operation(
+        summary = "检查成员退出/交接权限并推荐交接人",
+        tags = ["v4_app_check_auth_member_exit", "v4_user_check_auth_member_exit"]
+    )
+    fun checkMemberExitWithRecommendation(
+        @Parameter(
+            description = "应用Code(OpenAPI调用方标识)",
+            required = true,
+            example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE
+        )
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @Parameter(description = "网关类型,取值为apigw-user、apigw-app或apigw", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @Parameter(description = "操作人用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID(项目英文名)", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "目标成员ID", required = true)
+        @PathParam("targetMemberId")
+        targetMemberId: String,
+        @Parameter(description = "指定的交接人ID,不传则只做退出检查", required = false)
+        @QueryParam("handoverTo")
+        handoverTo: String? = null,
+        @Parameter(description = "用户组ID列表(多个以逗号分隔),不传则检查退出整个项目", required = false)
+        @QueryParam("groupIds")
+        groupIds: String? = null,
+        @Parameter(description = "推荐候选交接人数量上限,默认5", required = false)
+        @QueryParam("recommendLimit")
+        recommendLimit: Int = 5
+    ): Result<MemberExitCheckVO>
+
+    @POST
+    @Path("/permissions/clone")
+    @Operation(
+        summary = "权限克隆:将来源用户的权限复制给目标用户",
+        tags = ["v4_app_clone_auth_permissions", "v4_user_clone_auth_permissions"]
+    )
+    fun clonePermissions(
+        @Parameter(
+            description = "应用Code(OpenAPI调用方标识)",
+            required = true,
+            example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE
+        )
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @Parameter(description = "网关类型,取值为apigw-user、apigw-app或apigw", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @Parameter(description = "操作人用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID(项目英文名)", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "来源用户ID", required = true)
+        @QueryParam("sourceUserId")
+        sourceUserId: String,
+        @Parameter(description = "目标用户ID", required = true)
+        @QueryParam("targetUserId")
+        targetUserId: String,
+        @Parameter(description = "限定的资源类型列表(多个以逗号分隔),不传则覆盖全部", required = false)
+        @QueryParam("resourceTypes")
+        resourceTypes: String? = null,
+        @Parameter(description = "是否预检查模式,默认true(仅返回差异,不真正执行)", required = false)
+        @QueryParam("dryRun")
+        dryRun: Boolean = true
+    ): Result<PermissionCloneResultVO>
 }

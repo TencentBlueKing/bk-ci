@@ -75,7 +75,9 @@ data class PreTemplateScriptBuildYamlV3Parser(
     @JsonProperty("fail-if-variable-invalid")
     override var failIfVariableInvalid: Boolean? = null,
     @JsonProperty("cancel-policy")
-    override var cancelPolicy: String? = null
+    override var cancelPolicy: String? = null,
+    @JsonProperty("runs-on")
+    override var runsOn: Any? = null
 ) : IPreTemplateScriptBuildYamlParser, ITemplateFilter {
     companion object {
         private val logger = LoggerFactory.getLogger(PreTemplateScriptBuildYamlV3Parser::class.java)

@@ -63,6 +63,7 @@ class ServiceAgentResourceImpl @Autowired constructor(
             agentIds = agentIds
         )
     }
+
     override fun getDockerDebugUrl(
         userId: String,
         projectId: String,

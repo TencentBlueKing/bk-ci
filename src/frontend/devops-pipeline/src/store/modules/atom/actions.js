@@ -634,6 +634,54 @@ export default {
         }
     },
 
+    /**
+     * 搜索模式专用：支持 installed 参数，分页加载已安装/未安装插件列表
+     */
+    fetchSearchAtoms: async ({ commit, state, getters }, {
+        projectCode,
+        category,
+        searchKey,
+        installed,
+        os,
+        page = 1,
+        pageSize = 100
+    }) => {
+        try {
+            const res = await request.get(`${STORE_API_URL_PREFIX}/user/pipeline/atom`, {
+                params: {
+                    page,
+                    pageSize,
+                    projectCode,
+                    jobType: undefined,
+                    category,
+                    classifyId: undefined,
+                    os: undefined,
+                    keyword: searchKey,
+                    queryProjectAtomFlag: false,
+                    fitOsFlag: false,
+                    installed
+                }
+            })
+            // 为当前页记录添加 disabled 属性
+            const curOs = os
+            const processedRecords = getters.getAtomDisabled(res.data.records || [], curOs, category)
+            // 将搜索结果合并进 atomMap，保证选中搜索到的插件时能取到 defaultVersion 等信息
+            const [curAtomCodeList, curAtomMap] = getMapByKey(processedRecords, 'atomCode')
+            commit(SET_ATOMS, {
+                atomCodeList: [...new Set([...state.atomCodeList, ...curAtomCodeList])],
+                atomMap: Object.assign({}, state.atomMap, curAtomMap),
+                atomList: state.atomList
+            })
+            return {
+                ...res.data,
+                records: processedRecords
+            }
+        } catch (e) {
+            rootCommit(commit, FETCH_ERROR, e)
+            throw e
+        }
+    },
+
     setAtomPageOver: ({ commit }) => {
         commit(SET_ATOM_PAGE_OVER, false)
     },
@@ -1193,6 +1241,16 @@ export default {
         const res = await request.get(`/${PROCESS_API_URL_PREFIX}/user/template/instances/v2/projects/${projectId}/${templateId}/compareYaml`, {
             params: query
         })
+        return res.data
+    },
+    /**
+     * 获取 PAC 分支编排
+     * @param {String} projectId 项目ID
+     * @param {String} pipelineId 流水线ID
+     * @param {String} branch 分支名
+     */
+    async fetchPacBranchPipeline (_, { projectId, pipelineId, branch }) {
+        const res = await request.get(`/${PROCESS_API_URL_PREFIX}/user/version/projects/${projectId}/pipelines/${pipelineId}/getVersionByBranch?branch=${encodeURIComponent(branch)}`)
         return res.data
     }
 }

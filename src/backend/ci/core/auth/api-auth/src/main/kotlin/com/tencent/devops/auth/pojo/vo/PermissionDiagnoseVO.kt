@@ -1,5 +1,6 @@
 package com.tencent.devops.auth.pojo.vo
 
+import com.tencent.devops.auth.pojo.enum.JoinedType
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "权限诊断结果")
@@ -22,6 +23,8 @@ data class PermissionDiagnoseVO(
     val applicableGroups: List<ApplicableGroupVO> = emptyList(),
     @get:Schema(title = "用户组管理员（可联系申请）")
     val groupManagers: List<String> = emptyList(),
+    @get:Schema(title = "命中权限的来源用户组")
+    val permissionSourceGroups: List<PermissionSourceGroupVO> = emptyList(),
     @get:Schema(title = "建议操作")
     val suggestion: String? = null
 )
@@ -40,4 +43,24 @@ data class ApplicableGroupVO(
     val permissions: List<String> = emptyList(),
     @get:Schema(title = "推荐标签")
     val tags: List<PermissionTagVO> = emptyList()
+)
+
+@Schema(title = "权限来源用户组")
+data class PermissionSourceGroupVO(
+    @get:Schema(title = "用户组ID")
+    val groupId: Int,
+    @get:Schema(title = "用户组名称")
+    val groupName: String,
+    @get:Schema(title = "管理层级")
+    val managementLevel: String,
+    @get:Schema(title = "管理范围")
+    val managementScope: String,
+    @get:Schema(title = "加入方式")
+    val joinedType: JoinedType,
+    @get:Schema(title = "加入来源成员ID")
+    val joinedMemberId: String? = null,
+    @get:Schema(title = "加入来源成员名称")
+    val joinedMemberName: String? = null,
+    @get:Schema(title = "包含的权限列表")
+    val permissions: List<String> = emptyList()
 )

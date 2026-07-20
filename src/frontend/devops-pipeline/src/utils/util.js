@@ -35,6 +35,19 @@ export function urlJoin (...args) {
     return args.filter(arg => arg).join('/').replace(/([^:]\/)\/+/g, '$1')
 }
 
+export function encodeArtifactDownloadUrl (url, path) {
+    const encodeSegment = segment => encodeURIComponent(segment).replace(
+        /[!'()*]/g,
+        char => `%${char.charCodeAt(0).toString(16).toUpperCase()}`
+    )
+    const encodedPath = path
+        .split('/')
+        .map(encodeSegment)
+        .join('/')
+
+    return url.replace(path, () => encodedPath)
+}
+
 export function isShallowEqual (obj1, obj2) {
     if (obj1 === obj2) return true
     if (!isObject(obj1) || !isObject(obj2)) {
@@ -913,27 +926,36 @@ export function parseErrorMsg (msg) {
     }
 }
 
-export function showPipelineCheckMsg (showTooltips, message, h) {
+export function showPipelineCheckMsg (showTooltips, code, message, h) {
     const errorInfo = parseErrorMsg(message)
-    showTooltips({
-        theme: 'error',
-        delay: 0,
-        ellipsisLine: 0,
-        message: h('div', {
-            class: 'pipeline-save-error-list-box'
-        }, errorInfo.errors.map(item => h('div', {
-            class: 'pipeline-save-error-list-item'
-        }, [
-            h('p', {}, item.errorTitle),
-            h('ul', {
-                class: 'pipeline-save-error-list'
-            }, item.errorDetails.map(err => h('li', {
-                domProps: {
-                    innerHTML: err
-                }
-            })))
-        ])))
-    })
+    if (errorInfo['@type'] === 'errors') {
+        showTooltips({
+            theme: 'error',
+            delay: 0,
+            ellipsisLine: 0,
+            message: h('div', {
+                class: 'pipeline-save-error-list-box'
+            }, errorInfo.errors.map(item => h('div', {
+                class: 'pipeline-save-error-list-item'
+            }, [
+                h('p', {}, item.errorTitle),
+                h('ul', {
+                    class: 'pipeline-save-error-list'
+                }, item.errorDetails.map(err => h('li', {
+                    domProps: {
+                        innerHTML: err
+                    }
+                })))
+            ])))
+        })
+    } else {
+        showTooltips({
+            theme: 'error',
+            delay: 0,
+            ellipsisLine: 0,
+            message: errorInfo.message
+        })
+    }
 }
 
 export async function copyToClipboard (text) {
@@ -947,6 +969,16 @@ export async function copyToClipboard (text) {
         document.execCommand('Copy')
         document.body.removeChild(textArea)
     }
+}
+
+/**
+ * 获取时间戳字符串，格式：yyyyMMddHHmm
+ * @returns {String}
+ */
+export function getTimestamp () {
+    const now = new Date()
+    const prezero = (num) => num < 10 ? '0' + num : num
+    return `${now.getFullYear()}${prezero(now.getMonth() + 1)}${prezero(now.getDate())}${prezero(now.getHours())}${prezero(now.getMinutes())}`
 }
 
 export const COMMON_PARAM_PREFIX = 'COMMON_PARAM_'

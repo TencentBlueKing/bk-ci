@@ -50,6 +50,7 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.pojo.BuildInfo
+import com.tencent.devops.process.engine.pojo.builds.BuildHistoryQueryParam
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.record.ContainerBuildRecordService
 import com.tencent.devops.process.engine.service.vmbuild.EngineVMBuildService
@@ -69,6 +70,8 @@ import com.tencent.devops.process.pojo.pipeline.BuildDetailSimple
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import com.tencent.devops.process.pojo.pipeline.ModelRecord
 import com.tencent.devops.process.pojo.pipeline.PipelineLatestBuild
+import com.tencent.devops.process.pojo.pipeline.SubPipelineBuildLocateResult
+import com.tencent.devops.process.pojo.task.PipelineFailTaskDetail
 import com.tencent.devops.process.service.builds.PipelineBuildFacadeService
 import com.tencent.devops.process.service.builds.PipelineBuildMaintainFacadeService
 import com.tencent.devops.process.service.builds.PipelinePauseBuildFacadeService
@@ -158,7 +161,8 @@ class ServiceBuildResourceImpl @Autowired constructor(
         projectId: String,
         pipelineId: String,
         version: Int?,
-        channelCode: ChannelCode
+        channelCode: ChannelCode,
+        branch: String?
     ): Result<BuildManualStartupInfo> {
         checkUserId(userId)
         checkParam(projectId, pipelineId)
@@ -169,7 +173,8 @@ class ServiceBuildResourceImpl @Autowired constructor(
                 pipelineId = pipelineId,
                 version = version,
                 channelCode = channelCode,
-                checkPermission = ChannelCode.isNeedAuth(channelCode)
+                checkPermission = ChannelCode.isNeedAuth(channelCode),
+                branch = branch
             )
         )
     }
@@ -381,6 +386,36 @@ class ServiceBuildResourceImpl @Autowired constructor(
         )
     }
 
+    override fun locateSubPipelineBuild(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        parentTaskId: String,
+        parentExecuteCount: Int,
+        channelCode: ChannelCode
+    ): Result<SubPipelineBuildLocateResult> {
+        checkUserId(userId)
+        checkParam(projectId, pipelineId)
+        if (buildId.isBlank()) {
+            throw ParamBlankException("Invalid buildId")
+        }
+        if (parentTaskId.isBlank()) {
+            throw ParamBlankException("Invalid parentTaskId")
+        }
+        return Result(
+            pipelineBuildFacadeService.locateSubPipelineBuild(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                parentTaskId = parentTaskId,
+                parentExecuteCount = parentExecuteCount,
+                checkPermission = ChannelCode.isNeedAuth(channelCode)
+            )
+        )
+    }
+
     override fun getBuildRecordByExecuteCount(
         userId: String,
         projectId: String,
@@ -439,16 +474,15 @@ class ServiceBuildResourceImpl @Autowired constructor(
         debug: Boolean?,
         triggerAlias: List<String>?,
         triggerBranch: List<String>?,
-        triggerUser: List<String>?
+        triggerUser: List<String>?,
+        triggerEventTypes: List<String>?,
+        triggerNodeHashIds: List<String>?
     ): Result<BuildHistoryPage<BuildHistory>> {
         checkUserId(userId)
         checkParam(projectId, pipelineId)
-        val result = pipelineBuildFacadeService.getHistoryBuild(
-            userId = userId,
+        val queryParam = BuildHistoryQueryParam(
             projectId = projectId,
             pipelineId = pipelineId,
-            page = page,
-            pageSize = pageSize,
             materialAlias = materialAlias?.filter { it.isNotBlank() },
             materialUrl = materialUrl,
             materialBranch = materialBranch?.filter { it.isNotBlank() },
@@ -469,14 +503,22 @@ class ServiceBuildResourceImpl @Autowired constructor(
             buildNoStart = buildNoStart,
             buildNoEnd = buildNoEnd,
             buildMsg = buildMsg,
-            checkPermission = ChannelCode.isNeedAuth(channelCode),
             startUser = startUser?.filter { it.isNotBlank() },
-            updateTimeDesc = updateTimeDesc,
-            archiveFlag = archiveFlag,
             debug = debug,
             triggerAlias = triggerAlias,
             triggerBranch = triggerBranch,
-            triggerUser = triggerUser
+            triggerUser = triggerUser,
+            triggerEventTypes = triggerEventTypes,
+            triggerNodeHashIds = triggerNodeHashIds
+        )
+        val result = pipelineBuildFacadeService.getHistoryBuild(
+            userId = userId,
+            page = page,
+            pageSize = pageSize,
+            queryParam = queryParam,
+            checkPermission = ChannelCode.isNeedAuth(channelCode),
+            updateTimeDesc = updateTimeDesc,
+            archiveFlag = archiveFlag
         )
         return Result(result)
     }
@@ -762,13 +804,11 @@ class ServiceBuildResourceImpl @Autowired constructor(
     override fun getSingleHistoryBuild(
         projectId: String,
         pipelineId: String,
-        buildNum: String,
-        channelCode: ChannelCode?
+        buildNum: String
     ): Result<BuildHistory?> {
         val history = pipelineBuildFacadeService.getSingleHistoryBuild(
             projectId = projectId, pipelineId = pipelineId,
-            buildNum = buildNum.toInt(), buildId = null,
-            channelCode = channelCode ?: ChannelCode.BS
+            buildNum = buildNum.toInt(), buildId = null
         )
         return Result(history)
     }
@@ -882,7 +922,9 @@ class ServiceBuildResourceImpl @Autowired constructor(
         channelCode: ChannelCode,
         buildNo: Int?,
         startType: StartType,
-        version: Int?
+        version: Int?,
+        imateSessionId: String?,
+        branch: String?
     ): Result<BuildId> {
         checkUserId(userId)
         checkParam(projectId, pipelineId)
@@ -900,7 +942,9 @@ class ServiceBuildResourceImpl @Autowired constructor(
                 buildNo = buildNo,
                 version = version,
                 checkPermission = ChannelCode.isNeedAuth(channelCode),
-                frequencyLimit = true
+                frequencyLimit = true,
+                imateSessionId = imateSessionId,
+                branch = branch
             )
         )
     }
@@ -981,6 +1025,22 @@ class ServiceBuildResourceImpl @Autowired constructor(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 debug = debug ?: false
+            )
+        )
+    }
+
+    override fun getBuildFailedTasks(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        executeCount: Int?
+    ): Result<List<PipelineFailTaskDetail>> {
+        return Result(
+            pipelineBuildFacadeService.getBuildFailedTasks(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                executeCount = executeCount
             )
         )
     }

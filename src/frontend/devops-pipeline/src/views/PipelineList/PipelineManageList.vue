@@ -1,31 +1,40 @@
 <template>
     <main class="pipeline-list-main">
-        <div
-            class="recycle-bin-header"
-            v-if="isDeleteView"
-        >
-            <h5>{{ $t('restore.recycleBin') }}</h5>
-            <bk-input
-                clearable
-                :placeholder="$t('restore.restoreSearchTips')"
-                right-icon="bk-icon icon-search"
-                :value="filters.filterByPipelineName"
-                @enter="handleSearch"
-                @clear="handleSearch"
-                @right-icon-click="handleSearch"
-            />
-        </div>
+        <template v-if="isDeleteView">
+            <bk-alert
+                class="recycle-bin-clean-alert"
+                type="info"
+            >
+                <div slot="title">
+                    {{ $t('restore.recycleBinCleanTips') }}
+                </div>
+            </bk-alert>
+            <div class="recycle-bin-header">
+                <h5>{{ $t('restore.recycleBin') }}</h5>
+                <bk-input
+                    clearable
+                    :placeholder="$t('restore.restoreSearchTips')"
+                    right-icon="bk-icon icon-search"
+                    :value="filters.filterByPipelineName"
+                    @enter="handleSearch"
+                    @clear="handleSearch"
+                    @right-icon-click="handleSearch"
+                />
+            </div>
+        </template>
         <template v-else>
             <h5 class="current-pipeline-group-name">
-                <bk-tag
-                    v-bk-tooltips="pipelineGroupType.tips"
-                    v-if="pipelineGroupType"
-                    type="stroke"
-                >
-                    {{ pipelineGroupType.label }}
-                </bk-tag>
-                <ArchiveViewName v-if="isArchiveView" />
-                <span v-else>{{ currentViewName }}</span>
+                <p>
+                    <bk-tag
+                        v-bk-tooltips="pipelineGroupType.tips"
+                        v-if="pipelineGroupType"
+                        type="stroke"
+                    >
+                        {{ pipelineGroupType.label }}
+                    </bk-tag>
+                    <ArchiveViewName v-if="isArchiveView" />
+                    <span v-else>{{ currentViewName }}</span>
+                </p>
             </h5>
             <header class="pipeline-list-main-header">
                 <div class="pipeline-list-main-header-left-area">
@@ -407,6 +416,7 @@
             },
             '$route.params.viewId' () {
                 this.filters = {}
+                this.$nextTick(this.updateTableHeight)
             }
         },
 
@@ -536,7 +546,7 @@
                 this.filters = {
                     filterByPipelineName
                 }
-            }
+            },
         }
     }
 
@@ -549,9 +559,13 @@
         display: grid;
         grid-template-columns: 1fr 6fr;
         align-items: center;
+        margin-bottom: 16px;
         > h5 {
             color: #313238;
         }
+    }
+    .recycle-bin-clean-alert {
+        margin-bottom: 16px;
     }
     .pipeline-sort-dropdown-menu {
         margin: 0 8px;

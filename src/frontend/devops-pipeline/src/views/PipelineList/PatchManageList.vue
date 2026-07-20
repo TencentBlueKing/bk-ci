@@ -1,11 +1,18 @@
 <template>
     <main class="pipeline-list-main">
-        <div class="current-pipeline-group-name">
+        <h5 class="current-pipeline-group-name">
             <ArchiveViewName v-if="isArchiveView" />
-            <h5 v-else>
-                {{ currentViewName }}
-            </h5>
-        </div>
+            <span v-else>{{ currentViewName }}</span>
+
+            <bk-button
+                theme="default"
+                v-if="!isArchiveView"
+                class="historical-task"
+                @click="goHistoricalTask"
+            >
+                {{ $t('historicalTask') }}
+            </bk-button>
+        </h5>
         <header class="pipeline-list-main-header">
             <div class="pipeline-list-main-header-left-area">
                 <bk-button
@@ -21,6 +28,13 @@
                     @click="toggleArchive"
                 >
                     {{ $t('archive.batchArchiving') }}
+                </bk-button>
+                <bk-button
+                    v-if="!isArchiveView"
+                    :disabled="!isSelected"
+                    @click="toggleCrossProjectCopy"
+                >
+                    {{ $t('crossProjectCopy') }}
                 </bk-button>
                 <span v-bk-tooltips="notAllowPatchDeleteTips">
                     <bk-button
@@ -94,9 +108,10 @@
     import PipelineTableView from '@/components/pipelineList/PipelineTableView'
     import AddToGroupDialog from '@/views/PipelineList/AddToGroupDialog'
     import RemoveConfirmDialog from '@/views/PipelineList/RemoveConfirmDialog'
-    import { mapGetters } from 'vuex'
+    import { mapGetters, mapActions } from 'vuex'
     import PipelineSearcher from './PipelineSearcher'
     import { ARCHIVE_VIEW_ID } from '@/store/constants'
+    import { PipelineBatchTaskStep } from '@/store/modules/crossProjectCopy/constants'
     import ArchiveDialog from '@/views/PipelineList/ArchiveDialog'
     import DeleteArchivedDialog from '@/views/PipelineList/DeleteArchivedDialog'
     import ArchiveViewName from '@/components/pipelineList/archiveViewName'
@@ -129,7 +144,7 @@
                 'groupMap'
             ]),
             currentViewName () {
-                return this.$t(this.groupMap?.[this.$route.params.viewId]?.name ?? '')
+                return this.$t(this.groupMap?.[this.$route.params.viewId]?.name ?? this.groupMap?.[this.$route.params.viewId]?.i18nKey)
             },
             isPacGroup () {
                 return this.groupMap?.[this.$route.params.viewId]?.pac
@@ -157,8 +172,39 @@
             window.removeEventListener('resize', this.updateTableHeight)
         },
         methods: {
+            ...mapActions('crossProjectCopy', [
+                'createBatchTask'
+            ]),
             updateTableHeight () {
-                this.tableHeight = this.$refs.tableBox.offsetHeight
+                this.tableHeight = this.$refs.tableBox?.offsetHeight
+            },
+            async toggleCrossProjectCopy () {
+                const pipelineIds = this.selected.map(item => item.pipelineId)
+
+                try {
+                    const params = {
+                        taskName: '',
+                        taskType: 'PIPELINE_COPY',
+                        pipelineIds
+                    }
+                    
+                    const taskId = await this.createBatchTask({
+                        projectId: this.$route.params.projectId,
+                        params
+                    })
+                    this.$router.push({
+                        name: 'crossProjectCopy',
+                        params: {
+                            taskId,
+                            tab: PipelineBatchTaskStep.CONFIG
+                        }
+                    })
+                } catch (error) {
+                    this.$bkMessage({
+                        theme: 'error',
+                        message: error.message || error
+                    })
+                }
             },
             exitPatch () {
                 this.$router.push({
@@ -192,6 +238,14 @@
             },
             toggleSelection (list) {
                 this.$refs.pipelineTable?.toggleSelection?.(list)
+            },
+            goHistoricalTask () {
+                this.$router.push({
+                    name: 'batchHistoricalTask',
+                    params: {
+                        projectId: this.$route.params.projectId
+                    }
+                })
             }
         }
     }

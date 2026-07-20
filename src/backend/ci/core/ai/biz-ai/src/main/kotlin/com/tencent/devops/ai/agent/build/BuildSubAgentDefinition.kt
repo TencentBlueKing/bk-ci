@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -51,8 +51,8 @@ class BuildSubAgentDefinition @Autowired constructor(
     override fun toolName(): String = "build_agent"
 
     override fun description(): String =
-        "流水线构建智能体，负责流水线查询、构建触发与管理、构建日志分析。" +
-                "当用户询问流水线信息、触发/停止/重试构建、" +
+        "流水线构建智能体，负责流水线基本信息/编排model查询、构建触发与管理、构建日志分析。" +
+                "当用户询问流水线信息/编排、触发/停止/重试构建、" +
                 "查看构建历史/详情/状态/变量、" +
                 "分析构建错误日志等相关问题时使用。"
 

@@ -4,6 +4,7 @@
       <bk-input
         v-model="projectData.projectName"
         :placeholder="t('请输入1-32字符的项目名称')"
+        :disabled="isPersonalProject"
         :maxlength="32"
         @change="handleChangeForm"
       ></bk-input>
@@ -104,6 +105,7 @@ const props = defineProps({
 const emits = defineEmits(['handleChangeForm', 'clearValidate']);
 
 const projectData = ref(props.data);
+const isPersonalProject = computed(() => projectData.value.projectScope === 1)
 const projectTypeList = [
   {
     id: 1,

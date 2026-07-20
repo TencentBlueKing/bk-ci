@@ -72,7 +72,7 @@ interface OpJobQuotaProjectResource {
         vmType: JobQuotaVmType,
         @Parameter(description = "构建来源", required = false)
         @QueryParam("channelCode")
-        channelCode: String = ChannelCode.BS.name
+        channelCode: String = ChannelCode.getRequestChannelCode().name
     ): Result<JobQuotaProject>
 
     @Operation(summary = "添加项目的JOB配额信息")
@@ -98,7 +98,7 @@ interface OpJobQuotaProjectResource {
         vmType: JobQuotaVmType,
         @Parameter(description = "构建来源", required = false)
         @QueryParam("channelCode")
-        channelCode: String = ChannelCode.BS.name
+        channelCode: String = ChannelCode.getRequestChannelCode().name
     ): Result<Boolean>
 
     @Operation(summary = "更新项目的JOB配额信息")
@@ -130,6 +130,6 @@ interface OpJobQuotaProjectResource {
         createTime: String,
         @Parameter(description = "构建来源", required = false)
         @QueryParam("channelCode")
-        channelCode: String = ChannelCode.BS.name
+        channelCode: String = ChannelCode.getRequestChannelCode().name
     ): Result<Boolean>
 }

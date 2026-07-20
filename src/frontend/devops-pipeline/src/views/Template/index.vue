@@ -10,7 +10,9 @@
         @after-resize="afterResize"
     >
         <TemplateGroupAside slot="aside" />
-        <router-view slot="main" />
+        <router-view
+            slot="main"
+        />
     </bk-resize-layout>
 </template>
 

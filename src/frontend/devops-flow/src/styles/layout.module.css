@@ -1,0 +1,58 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100%;
+  overflow: hidden;
+}
+
+.content {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  width: 100%;
+}
+
+.content.vertical {
+  flex-direction: column;
+}
+
+/* 通用的详情页面容器样式 */
+.detailContainer {
+  width: 100%;
+  padding: var(--spacing-lg);
+}
+
+.detailContainerWithRightPadding {
+  padding: var(--spacing-lg);
+  padding-right: var(--spacing-xl);
+  flex: 1;
+}
+
+/* 通用的内容区域样式 */
+.detailContent {
+  margin-top: var(--spacing-lg);
+  height: calc(100% - 16px);
+}
+
+/* FlowModel专用的内容区域样式 */
+.flexDetailContent {
+  margin-top: var(--spacing-lg);
+  flex: 1;
+  overflow: hidden;
+}
+
+/* 通用的Loading包装器样式 */
+.loadingWrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  width: 100%;
+}
+
+/* 通用的代码编辑器包装器样式 */
+.codeEditorWrapper {
+  width: 100%;
+  height: 100%;
+}

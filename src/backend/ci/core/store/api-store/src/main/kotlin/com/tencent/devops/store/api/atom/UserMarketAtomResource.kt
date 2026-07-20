@@ -45,12 +45,14 @@ import com.tencent.devops.store.pojo.atom.enums.AtomTypeEnum
 import com.tencent.devops.store.pojo.atom.enums.MarketAtomSortTypeEnum
 import com.tencent.devops.store.pojo.common.InstalledProjRespItem
 import com.tencent.devops.store.pojo.common.StoreErrorCodeInfo
+import com.tencent.devops.store.pojo.common.enums.ServiceScopeEnum
 import com.tencent.devops.store.pojo.common.version.StoreShowVersionInfo
 import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import jakarta.ws.rs.Consumes
 import jakarta.ws.rs.DELETE
+import jakarta.ws.rs.DefaultValue
 import jakarta.ws.rs.GET
 import jakarta.ws.rs.HeaderParam
 import jakarta.ws.rs.POST
@@ -78,12 +80,19 @@ interface UserMarketAtomResource {
         @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
+        @Parameter(description = "支持的服务范围", required = false)
+        @QueryParam("serviceScope")
+        @DefaultValue("PIPELINE")
+        serviceScope: ServiceScopeEnum? = ServiceScopeEnum.PIPELINE,
         @Parameter(description = "页码", required = false)
         @QueryParam("page")
-        page: Int?,
+        @DefaultValue("1")
+        page: Int? = 1,
         @Parameter(description = "每页数量", required = false)
         @QueryParam("pageSize")
-        pageSize: Int?
+        @BkField(patternStyle = BkStyleEnum.PAGE_SIZE_STYLE, required = false)
+        @DefaultValue("10")
+        pageSize: Int? = 10
     ): Result<List<MarketMainItem>>
 
     @Operation(summary = "插件市场搜索插件")
@@ -123,12 +132,19 @@ interface UserMarketAtomResource {
         @Parameter(description = "排序", required = false)
         @QueryParam("sortType")
         sortType: MarketAtomSortTypeEnum? = MarketAtomSortTypeEnum.CREATE_TIME,
+        @Parameter(description = "支持的服务范围", required = false)
+        @QueryParam("serviceScope")
+        @DefaultValue("PIPELINE")
+        serviceScope: ServiceScopeEnum? = ServiceScopeEnum.PIPELINE,
         @Parameter(description = "页码", required = false)
         @QueryParam("page")
-        page: Int?,
+        @DefaultValue("1")
+        page: Int? = 1,
         @Parameter(description = "每页数量", required = false)
         @QueryParam("pageSize")
-        pageSize: Int?
+        @BkField(patternStyle = BkStyleEnum.PAGE_SIZE_STYLE, required = false)
+        @DefaultValue("10")
+        pageSize: Int? = 10
     ): Result<MarketAtomResp>
 
     @Operation(summary = "根据用户获取插件工作台插件列表")
@@ -165,7 +181,10 @@ interface UserMarketAtomResource {
         userId: String,
         @Parameter(description = "atomId", required = true)
         @PathParam("atomId")
-        atomId: String
+        atomId: String,
+        @Parameter(description = "支持的服务范围", required = false)
+        @QueryParam("serviceScope")
+        serviceScope: ServiceScopeEnum?
     ): Result<AtomVersion?>
 
     @Operation(summary = "根据插件标识获取插件正式版本详情")
@@ -180,7 +199,10 @@ interface UserMarketAtomResource {
         userId: String,
         @Parameter(description = "atomCode", required = true)
         @PathParam("atomCode")
-        atomCode: String
+        atomCode: String,
+        @Parameter(description = "支持的服务范围", required = false)
+        @QueryParam("serviceScope")
+        serviceScope: ServiceScopeEnum?
     ): Result<AtomVersion?>
 
     @Operation(summary = "根据插件标识获取插件版本列表")

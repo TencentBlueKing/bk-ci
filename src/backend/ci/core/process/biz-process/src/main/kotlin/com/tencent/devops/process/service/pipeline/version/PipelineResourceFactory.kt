@@ -48,7 +48,7 @@ import com.tencent.devops.process.engine.utils.TemplateInstanceUtil
 import com.tencent.devops.process.pojo.pipeline.PipelineBasicInfo
 import com.tencent.devops.process.pojo.pipeline.PipelineModelBasicInfo
 import com.tencent.devops.process.pojo.pipeline.PipelineTemplateInstanceBasicInfo
-import com.tencent.devops.process.pojo.pipeline.PipelineYamlVo
+import com.tencent.devops.process.pojo.pipeline.PipelineYamlFileInfo
 import com.tencent.devops.process.service.pipeline.PipelineModelParser
 import com.tencent.devops.process.service.template.v2.PipelineTemplateInfoService
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
@@ -83,6 +83,7 @@ class PipelineResourceFactory @Autowired constructor(
         )
     }
 
+    @Suppress("NestedBlockDepth")
     fun createPipelineModelBasicInfo(
         userId: String,
         projectId: String,
@@ -91,7 +92,7 @@ class PipelineResourceFactory @Autowired constructor(
         create: Boolean = true,
         versionStatus: VersionStatus? = VersionStatus.RELEASED,
         channelCode: ChannelCode,
-        yamlInfo: PipelineYamlVo? = null,
+        yamlFileInfo: PipelineYamlFileInfo? = null,
         pipelineDialect: IPipelineDialect? = null
     ): PipelineModelBasicInfo {
         val triggerContainer = model.getTriggerContainer()
@@ -122,7 +123,7 @@ class PipelineResourceFactory @Autowired constructor(
             create = create,
             versionStatus = versionStatus,
             channelCode = channelCode,
-            yamlInfo = yamlInfo,
+            yamlFileInfo = yamlFileInfo,
             pipelineDialect = pipelineDialect
         )
         return PipelineModelBasicInfo(

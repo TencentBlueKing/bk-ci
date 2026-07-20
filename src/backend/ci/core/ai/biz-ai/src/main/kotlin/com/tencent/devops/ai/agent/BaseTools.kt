@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -88,6 +88,12 @@ abstract class BaseTools(
             JsonUtil.toJson(mapOf("_fields" to fields, "data" to obj))
         }
         return truncatePlainText(json, MAX_TOOL_OUTPUT_CHARS)
+    }
+
+    /** 预判对象序列化后是否会超过工具输出上限，便于调用方先做降级。 */
+    protected fun wouldExceedToolOutputLimit(value: Any): Boolean {
+        val text = if (value is String) value else JsonUtil.toJson(value)
+        return text.length > MAX_TOOL_OUTPUT_CHARS
     }
 
     private fun truncatePlainText(text: String, maxChars: Int): String {
@@ -286,7 +292,7 @@ abstract class BaseTools(
     companion object {
         private val schemaCache = ConcurrentHashMap<Class<*>, Map<String, String>>()
         private const val MAX_SCHEMA_DEPTH = 3
-        private const val MAX_TOOL_OUTPUT_CHARS = 48_000
+        private const val MAX_TOOL_OUTPUT_CHARS = 150_000
         private const val TRUNCATION_SUFFIX = "...(已截断)"
     }
 }

@@ -30,6 +30,7 @@ package com.tencent.devops.common.web
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.security.jwt.JwtManager
 import com.tencent.devops.common.web.filter.RequestProjectPermissionFilter
+import com.tencent.devops.common.web.filter.ResponseBkFilter
 import com.tencent.devops.common.web.filter.ServiceSecurityFilter
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
@@ -56,4 +57,7 @@ class FilterAutoConfiguration(
     fun requestProjectPermissionFilter(
         @Autowired redisOperation: RedisOperation
     ) = RequestProjectPermissionFilter(redisOperation)
+
+    @Bean
+    fun responseBkFilter() = ResponseBkFilter()
 }
