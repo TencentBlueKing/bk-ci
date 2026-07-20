@@ -320,16 +320,20 @@ class PublicVarGroupService @Autowired constructor(
                 AuthPermission.VIEW,
                 AuthPermission.DELETE,
                 AuthPermission.USE
-            ),
-            groupNames = emptyList()
+            )
         )
         val hasListPermissionGroupNames = permissionsMap[AuthPermission.LIST] ?: emptyList()
 
         // 合并变量筛选和LIST权限筛选的groupNames
-        val effectiveGroupNames = if (hasVarFilter) {
-            varFilterGroupNames.intersect(hasListPermissionGroupNames.toSet()).toList()
+        // 如果LIST权限返回空（非RBAC模式或管理员），则不按LIST过滤
+        val effectiveGroupNames = if (hasListPermissionGroupNames.isNotEmpty()) {
+            if (hasVarFilter) {
+                varFilterGroupNames.intersect(hasListPermissionGroupNames.toSet()).toList()
+            } else {
+                hasListPermissionGroupNames
+            }
         } else {
-            hasListPermissionGroupNames
+            varFilterGroupNames
         }
 
         val totalCount = publicVarGroupDao.countGroupsByProjectId(
