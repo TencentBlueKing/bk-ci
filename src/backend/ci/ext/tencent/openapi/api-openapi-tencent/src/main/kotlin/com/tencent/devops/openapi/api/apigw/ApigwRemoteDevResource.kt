@@ -579,6 +579,7 @@ interface ApigwRemoteDevResource {
         displayName: String
     ): Result<Boolean>
 
+    @Deprecated("reBuildWorkspaceProject")
     @Operation(summary = "重装云桌面系统", tags = ["v4_app_remotedev_workspace_rebuild"])
     @POST
     @Path("/workspace_rebuild")
@@ -593,6 +594,24 @@ interface ApigwRemoteDevResource {
         rebuildReq: WorkspaceRebuildReq
     ): Result<Boolean>
 
+    @Operation(summary = "重装云桌面系统-项目", tags = ["v4_app_remotedev_workspace_rebuild_project"])
+    @POST
+    @Path("/workspace_rebuild_project")
+    fun reBuildWorkspaceProject(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @Parameter(description = "工作空间名称", required = true)
+        @QueryParam("workspaceName")
+        workspaceName: String,
+        @Parameter(description = "项目ID(项目英文名)", required = true)
+        @QueryParam("projectId")
+        projectId: String,
+        @Parameter(description = "请求报文", required = true)
+        rebuildReq: WorkspaceRebuildReq
+    ): Result<Boolean>
+
+    @Deprecated("startWorkspaceProject")
     @Operation(summary = "云桌面开机", tags = ["v4_app_remotedev_workspace_start"])
     @POST
     @Path("/workspace_start")
@@ -605,6 +624,22 @@ interface ApigwRemoteDevResource {
         workspaceName: String
     ): Result<Boolean>
 
+    @Operation(summary = "云桌面开机-项目", tags = ["v4_app_remotedev_workspace_start_project"])
+    @POST
+    @Path("/workspace_start_project")
+    fun startWorkspaceProject(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @Parameter(description = "工作空间名称", required = true)
+        @QueryParam("workspaceName")
+        workspaceName: String,
+        @Parameter(description = "项目ID(项目英文名)", required = true)
+        @QueryParam("projectId")
+        projectId: String
+    ): Result<Boolean>
+
+    @Deprecated("stopWorkspaceProject")
     @Operation(summary = "云桌面关机", tags = ["v4_app_remotedev_workspace_stop"])
     @POST
     @Path("/workspace_stop")
@@ -617,6 +652,22 @@ interface ApigwRemoteDevResource {
         workspaceName: String
     ): Result<Boolean>
 
+    @Operation(summary = "云桌面关机-项目", tags = ["v4_app_remotedev_workspace_stop_project"])
+    @POST
+    @Path("/workspace_stop_project")
+    fun stopWorkspaceProject(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @Parameter(description = "工作空间名称", required = true)
+        @QueryParam("workspaceName")
+        workspaceName: String,
+        @Parameter(description = "项目ID(项目英文名)", required = true)
+        @QueryParam("projectId")
+        projectId: String
+    ): Result<Boolean>
+
+    @Deprecated("restartWorkspaceProject")
     @Operation(summary = "云桌面重启", tags = ["v4_app_remotedev_workspace_restart"])
     @POST
     @Path("/workspace_restart")
@@ -632,6 +683,25 @@ interface ApigwRemoteDevResource {
         force: Boolean?
     ): Result<Boolean>
 
+    @Operation(summary = "云桌面重启-项目", tags = ["v4_app_remotedev_workspace_restart_project"])
+    @POST
+    @Path("/workspace_restart_project")
+    fun restartWorkspaceProject(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @Parameter(description = "工作空间名称", required = true)
+        @QueryParam("workspaceName")
+        workspaceName: String,
+        @Parameter(description = "是否强制重启", required = false)
+        @QueryParam("force")
+        force: Boolean?,
+        @Parameter(description = "项目ID(项目英文名)", required = true)
+        @QueryParam("projectId")
+        projectId: String
+    ): Result<Boolean>
+
+    @Deprecated("makeImageByVmProject")
     @Operation(summary = "根据已存在的云桌面制作镜像", tags = ["v4_app_remotedev_image_make"])
     @POST
     @Path("/make_vm_image")
@@ -642,6 +712,23 @@ interface ApigwRemoteDevResource {
         @Parameter(description = "工作空间名称", required = true)
         @QueryParam("workspaceName")
         workspaceName: String,
+        @Parameter(description = "请求报文", required = true)
+        makeImageReq: MakeWorkspaceImageReq
+    ): Result<Boolean>
+
+    @Operation(summary = "根据已存在的云桌面制作镜像-项目", tags = ["v4_app_remotedev_image_make_project"])
+    @POST
+    @Path("/make_vm_image_project")
+    fun makeImageByVmProject(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @Parameter(description = "工作空间名称", required = true)
+        @QueryParam("workspaceName")
+        workspaceName: String,
+        @Parameter(description = "项目ID(项目英文名)", required = true)
+        @QueryParam("projectId")
+        projectId: String,
         @Parameter(description = "请求报文", required = true)
         makeImageReq: MakeWorkspaceImageReq
     ): Result<Boolean>
@@ -745,6 +832,7 @@ interface ApigwRemoteDevResource {
         workspaceName: String
     ): Result<Boolean>
 
+    @Deprecated("expandWorkspaceDiskProject")
     @Operation(summary = "磁盘扩容", tags = ["v4_app_remotedev_workspace_expand_disk"])
     @POST
     @Path("/workspace_expand_disk")
@@ -761,6 +849,27 @@ interface ApigwRemoteDevResource {
         @Parameter(description = "磁盘唯一标识", required = true)
         @QueryParam("pvcId")
         pvcId: String?
+    ): Result<ExpandDiskValidateResp?>
+
+    @Operation(summary = "磁盘扩容", tags = ["v4_app_remotedev_workspace_expand_disk_project"])
+    @POST
+    @Path("/workspace_expand_disk_project")
+    fun expandWorkspaceDiskProject(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "工作空间名称", required = true)
+        @QueryParam("workspaceName")
+        workspaceName: String,
+        @Parameter(description = "扩容大小", required = true)
+        @QueryParam("size")
+        size: String,
+        @Parameter(description = "磁盘唯一标识", required = true)
+        @QueryParam("pvcId")
+        pvcId: String?,
+        @Parameter(description = "项目ID(项目英文名)", required = true)
+        @QueryParam("projectId")
+        projectId: String
     ): Result<ExpandDiskValidateResp?>
 
     @Operation(summary = "创建磁盘", tags = ["v4_app_remotedev_workspace_create_disk"])
@@ -999,6 +1108,7 @@ interface ApigwRemoteDevResource {
         data: UpdateRemotedevDataManagers
     ): Result<Boolean>
 
+    @Deprecated("fetchImagesProject")
     @Operation(summary = "获取镜像列表", tags = ["v4_app_remotedev_get_images"])
     @POST
     @Path("/images")
@@ -1006,6 +1116,19 @@ interface ApigwRemoteDevResource {
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
+        data: ListImagesData
+    ): Result<ListImagesResp?>
+
+    @Operation(summary = "获取镜像列表-项目", tags = ["v4_app_remotedev_get_images_project"])
+    @POST
+    @Path("/images_project")
+    fun fetchImagesProject(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID(项目英文名)", required = true)
+        @QueryParam("projectId")
+        projectId: String,
         data: ListImagesData
     ): Result<ListImagesResp?>
 

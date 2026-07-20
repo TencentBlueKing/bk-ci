@@ -453,22 +453,61 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
         rebuildReq: WorkspaceRebuildReq
     ): Result<Boolean> {
         logger.info("reBuildWorkspace $userId|$userId|$workspaceName|$rebuildReq")
-        return client.get(ServiceRemoteDevResource::class).reBuildWorkspace(userId, workspaceName, rebuildReq)
+        return client.get(ServiceRemoteDevResource::class).reBuildWorkspace(userId, workspaceName, null, rebuildReq)
+    }
+
+    override fun reBuildWorkspaceProject(
+        userId: String,
+        workspaceName: String,
+        projectId: String,
+        rebuildReq: WorkspaceRebuildReq
+    ): Result<Boolean> {
+        logger.info("reBuildWorkspaceProject $projectId|$userId|$userId|$workspaceName|$rebuildReq")
+        return client.get(ServiceRemoteDevResource::class)
+            .reBuildWorkspace(userId, workspaceName, projectId, rebuildReq)
     }
 
     override fun startWorkspace(userId: String, workspaceName: String): Result<Boolean> {
         logger.info("startWorkspace $userId|$workspaceName")
-        return client.get(ServiceRemoteDevResource::class).startWorkspace(userId, workspaceName)
+        return client.get(ServiceRemoteDevResource::class).startWorkspace(userId, null, workspaceName)
+    }
+
+    override fun startWorkspaceProject(
+        userId: String,
+        workspaceName: String,
+        projectId: String
+    ): Result<Boolean> {
+        logger.info("startWorkspaceProject $projectId|$userId|$workspaceName")
+        return client.get(ServiceRemoteDevResource::class).startWorkspace(userId, projectId, workspaceName)
     }
 
     override fun stopWorkspace(userId: String, workspaceName: String): Result<Boolean> {
         logger.info("stopWorkspace $userId|$workspaceName")
-        return client.get(ServiceRemoteDevResource::class).stopWorkspace(userId, workspaceName)
+        return client.get(ServiceRemoteDevResource::class).stopWorkspace(userId, null, workspaceName)
+    }
+
+    override fun stopWorkspaceProject(
+        userId: String,
+        workspaceName: String,
+        projectId: String
+    ): Result<Boolean> {
+        logger.info("stopWorkspaceProject $projectId|$userId|$workspaceName")
+        return client.get(ServiceRemoteDevResource::class).stopWorkspace(userId, projectId, workspaceName)
     }
 
     override fun restartWorkspace(userId: String, workspaceName: String, force: Boolean?): Result<Boolean> {
         logger.info("restartWorkspace $userId|$workspaceName|force=$force")
-        return client.get(ServiceRemoteDevResource::class).restartWorkspace(userId, workspaceName, force)
+        return client.get(ServiceRemoteDevResource::class).restartWorkspace(userId, workspaceName, null, force)
+    }
+
+    override fun restartWorkspaceProject(
+        userId: String,
+        workspaceName: String,
+        force: Boolean?,
+        projectId: String
+    ): Result<Boolean> {
+        logger.info("restartWorkspaceProject $projectId|$userId|$workspaceName|force=$force")
+        return client.get(ServiceRemoteDevResource::class).restartWorkspace(userId, workspaceName, projectId, force)
     }
 
     override fun makeImageByVm(
@@ -477,7 +516,17 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
         makeImageReq: MakeWorkspaceImageReq
     ): Result<Boolean> {
         logger.info("makeImageByVm $userId|$workspaceName|$makeImageReq")
-        return client.get(ServiceRemoteDevResource::class).makeImageByVm(userId, workspaceName, makeImageReq)
+        return client.get(ServiceRemoteDevResource::class).makeImageByVm(userId, workspaceName, null, makeImageReq)
+    }
+
+    override fun makeImageByVmProject(
+        userId: String,
+        workspaceName: String,
+        projectId: String,
+        makeImageReq: MakeWorkspaceImageReq
+    ): Result<Boolean> {
+        logger.info("makeImageByVmProject $projectId|$userId|$workspaceName|$makeImageReq")
+        return client.get(ServiceRemoteDevResource::class).makeImageByVm(userId, workspaceName, projectId, makeImageReq)
     }
 
     override fun modifyWorkspaceProperty(
@@ -556,7 +605,18 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
         pvcId: String?
     ): Result<ExpandDiskValidateResp?> {
         logger.info("expandWorkspaceDisk |$userId|$workspaceName|$size|$pvcId")
-        return client.get(ServiceRemoteDevResource::class).expandDisk(userId, workspaceName, size, pvcId)
+        return client.get(ServiceRemoteDevResource::class).expandDisk(userId, workspaceName, size, null, pvcId)
+    }
+
+    override fun expandWorkspaceDiskProject(
+        userId: String,
+        workspaceName: String,
+        size: String,
+        pvcId: String?,
+        projectId: String
+    ): Result<ExpandDiskValidateResp?> {
+        logger.info("expandWorkspaceDiskProject $projectId|$userId|$workspaceName|$size|$pvcId")
+        return client.get(ServiceRemoteDevResource::class).expandDisk(userId, workspaceName, size, projectId, pvcId)
     }
 
     override fun createWorkspaceDisk(
@@ -719,7 +779,16 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
 
     override fun fetchImages(userId: String, data: ListImagesData): Result<ListImagesResp?> {
         logger.info("fetchImages |$userId|$data")
-        return client.get(ServiceRemoteDevResource::class).fetchImages(userId, data)
+        return client.get(ServiceRemoteDevResource::class).fetchImages(userId, null, data)
+    }
+
+    override fun fetchImagesProject(
+        userId: String,
+        projectId: String,
+        data: ListImagesData
+    ): Result<ListImagesResp?> {
+        logger.info("fetchImagesProject $projectId|$userId|$data")
+        return client.get(ServiceRemoteDevResource::class).fetchImages(userId, projectId, data)
     }
 
     override fun deleteImage(
