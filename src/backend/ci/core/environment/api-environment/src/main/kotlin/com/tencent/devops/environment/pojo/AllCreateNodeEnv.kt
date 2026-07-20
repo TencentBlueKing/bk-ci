@@ -67,9 +67,9 @@ object AllCreateNodeEnv {
     }
 
     fun hashIdToName(hashId: String?) = when (hashId) {
-        WINDOWS_ENV_HASH_ID -> WINDOWS_ENV_NAME_KEY
-        LINUX_ENV_HASH_ID -> LINUX_ENV_NAME_KEY
-        MACOS_ENV_HASH_ID -> MACOS_ENV_NAME_KEY
+        WINDOWS_ENV_HASH_ID -> I18nUtil.getCodeLanMessage(WINDOWS_ENV_NAME_KEY)
+        LINUX_ENV_HASH_ID -> I18nUtil.getCodeLanMessage(LINUX_ENV_NAME_KEY)
+        MACOS_ENV_HASH_ID -> I18nUtil.getCodeLanMessage(MACOS_ENV_NAME_KEY)
         else -> null
     }
 
