@@ -360,7 +360,9 @@
             }
         },
         mounted () {
-            this.fetchPipelineRePlayStatus()
+            if (!this.archiveFlag) {
+                this.fetchPipelineRePlayStatus()
+            }
         },
         methods: {
             ...mapActions(
