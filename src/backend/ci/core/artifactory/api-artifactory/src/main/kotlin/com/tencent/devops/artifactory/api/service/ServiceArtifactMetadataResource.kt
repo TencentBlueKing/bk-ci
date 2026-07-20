@@ -39,6 +39,15 @@ interface ServiceArtifactMetadataResource {
         artifactName: String,
         @Parameter(description = "产出物版本，如镜像Tag、包版本（IMAGE类型为必填）", required = true)
         @QueryParam("artifactVersion")
-        artifactVersion: String
+        artifactVersion: String,
+        @Parameter(description = "执行次数（可选），不传则匹配所有执行次数", required = false)
+        @QueryParam("executeCount")
+        executeCount: Int?,
+        @Parameter(description = "构建ID（可选）", required = false)
+        @QueryParam("buildId")
+        buildId: String?,
+        @Parameter(description = "任务ID（可选）", required = false)
+        @QueryParam("taskId")
+        taskId: String?
     ): Result<PipelineArtifactInfo?>
 }

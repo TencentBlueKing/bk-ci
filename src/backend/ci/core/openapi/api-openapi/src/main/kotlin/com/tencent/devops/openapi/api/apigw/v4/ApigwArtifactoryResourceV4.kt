@@ -239,6 +239,15 @@ interface ApigwArtifactoryResourceV4 {
         artifactName: String,
         @Parameter(description = "制品版本，如镜像Tag、包版本", required = true)
         @QueryParam("artifactVersion")
-        artifactVersion: String
+        artifactVersion: String,
+        @Parameter(description = "构建ID（可选），不传则不按构建ID过滤", required = false)
+        @QueryParam("buildId")
+        buildId: String?,
+        @Parameter(description = "执行次数（可选）", required = false)
+        @QueryParam("executeCount")
+        executeCount: Int?,
+        @Parameter(description = "任务ID（可选）", required = false)
+        @QueryParam("taskId")
+        taskId: String?
     ): Result<PipelineArtifactInfo?>
 }

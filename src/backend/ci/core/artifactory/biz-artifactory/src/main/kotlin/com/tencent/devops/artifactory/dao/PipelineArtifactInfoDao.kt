@@ -94,7 +94,10 @@ class PipelineArtifactInfoDao {
         pipelineId: String?,
         artifactType: String,
         artifactName: String,
-        artifactVersion: String
+        artifactVersion: String,
+        executeCount: Int? = null,
+        buildId: String? = null,
+        taskId: String? = null
     ): TPipelineArtifactInfoRecord? {
         with(TPipelineArtifactInfo.T_PIPELINE_ARTIFACT_INFO) {
             val conditions = buildList<Condition> {
@@ -103,14 +106,22 @@ class PipelineArtifactInfoDao {
                 if (!pipelineId.isNullOrBlank()) {
                     add(PIPELINE_ID.eq(pipelineId))
                 }
+                if (!buildId.isNullOrBlank()) {
+                    add(BUILD_ID.eq(buildId))
+                }
+                if (executeCount != null) {
+                    add(EXECUTE_COUNT.eq(executeCount))
+                }
+                if (!taskId.isNullOrBlank()) {
+                    add(TASK_ID.eq(taskId))
+                }
                 add(ARTIFACT_NAME.eq(artifactName))
                 add(ARTIFACT_VERSION.eq(artifactVersion))
             }
-            return dslContext.selectFrom(this)
-                .where(conditions)
-                .orderBy(CREATE_TIME.desc())
-                .limit(1)
-                .fetchOne()
+                return dslContext.selectFrom(this)
+                    .where(conditions)
+                    .orderBy(EXECUTE_COUNT.desc(), CREATE_TIME.desc())
+                    .fetchOne()
         }
     }
 

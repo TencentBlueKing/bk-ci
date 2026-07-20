@@ -172,7 +172,10 @@ class ApigwArtifactoryResourceV4Impl @Autowired constructor(
         pipelineId: String?,
         artifactType: String,
         artifactName: String,
-        artifactVersion: String
+        artifactVersion: String,
+        buildId: String?,
+        executeCount: Int?,
+        taskId: String?
     ): Result<PipelineArtifactInfo?> {
 
         val artifactInfo = client.get(ServiceArtifactMetadataResource::class)
@@ -182,7 +185,10 @@ class ApigwArtifactoryResourceV4Impl @Autowired constructor(
                 pipelineId = pipelineId,
                 artifactType = artifactType,
                 artifactName = artifactName,
-                artifactVersion = artifactVersion
+                artifactVersion = artifactVersion,
+                executeCount = executeCount,
+                buildId = buildId,
+                taskId = taskId
             ).data
         return Result(artifactInfo)
     }
