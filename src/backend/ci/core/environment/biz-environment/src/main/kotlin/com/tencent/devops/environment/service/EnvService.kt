@@ -296,7 +296,7 @@ class EnvService @Autowired constructor(
                 listOf(HashUtil.decodeIdToLong(nodeHashId))
             ).map { it.envId }.toSet()
         }
-        val envRecordList = envDao.list(
+        var envRecordList = envDao.list(
             dslContext = dslContext,
             projectId = projectId,
             envName = envName,
@@ -317,6 +317,18 @@ class EnvService @Autowired constructor(
         // 这里修复下历史数据做一次创作环境系统参数的刷历史数据
         if (createMode == true) {
             repairCreateEnvOs(projectId, envRecordList.filter { it.os == null }.map { it.envId })
+            envRecordList.filter { it.envType == EnvType.CREATE.name && it.os == null }.let { noOsEnv ->
+                // 这里修复下历史数据做一次创作环境系统参数的刷历史数据
+                repairCreateEnvOs(projectId, noOsEnv.map { it.envId })
+                envRecordList = envDao.list(
+                    dslContext = dslContext,
+                    projectId = projectId,
+                    envName = envName,
+                    envTypeList = listOf(EnvType.CREATE.name),
+                    noEnvTypeList = null,
+                    envIds = envIds
+                )
+            }
         }
         val result = mutableListOf<EnvWithPermission>()
         if (envType == EnvType.CREATE || createMode == true) {
