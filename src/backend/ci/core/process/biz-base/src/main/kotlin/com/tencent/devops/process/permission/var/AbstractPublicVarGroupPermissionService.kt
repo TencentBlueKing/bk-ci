@@ -117,7 +117,7 @@ abstract class AbstractPublicVarGroupPermissionService constructor(
         } else {
             authPermissions.associateWith { permission ->
                 when (permission) {
-                    AuthPermission.VIEW, AuthPermission.USE -> groupNames
+                    AuthPermission.VIEW, AuthPermission.USE, AuthPermission.LIST -> groupNames
                     else -> emptyList()
                 }
             }
