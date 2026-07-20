@@ -1,76 +1,57 @@
 <template>
-    <div
-        class="select-input"
-        v-bk-clickoutside="handleBlur"
-    >
-        <input
-            class="bk-form-input"
-            v-bind="restProps"
-            v-model="displayName"
-            :disabled="disabled || loading"
-            ref="inputArea"
-            :title="value"
-            :placeholder="placeholder"
-            autocomplete="off"
-            @input="handleInput"
-            @focus="handleFocus"
-            @keypress.enter.prevent="handleEnterOption"
-            @keydown.up.prevent="handleKeyup"
-            @keydown.down.prevent="handleKeydown"
-            @keydown.tab.prevent="handleBlur"
-        />
-        <i
-            v-if="loading"
-            class="devops-icon icon-circle-2-1 option-fetching-icon spin-icon"
-        />
-        <i
-            v-else-if="!disabled && value"
-            class="devops-icon icon-close-circle-shape option-fetching-icon"
-            @click.stop="clearValue"
-        />
-        <div
-            class="dropbox-container"
-            v-show="hasOption && optionListVisible && !loading"
-            ref="dropMenu"
+    <div class="select-input">
+        <span
+            @click="handleChangeType"
+            :class="['change-type', !isVarInputMode ? 'open-var' : 'close-var', { disabled: disabled }]"
+            v-bk-tooltips="{ content: !isVarInputMode ? $t('switchToVarMode') : $t('closeVarMode') }"
         >
-            <ul>
+            <Logo
+                size="14"
+                name="isSetAsVariable"
+            />
+        </span>
+        <div class="select-input-content">
+            <bk-select
+                v-if="!isVarInputMode"
+                v-bind="dropdownConf"
+                :name="name"
+                :loading="loading"
+                :value="value"
+                :disabled="disabled || loading"
+                @selected="handleSelect"
+                @toggle="toggleVisible"
+                @clear="handleClear"
+                :popover-options="popoverOptions"
+            >
                 <template v-if="hasGroup">
-                    <li
-                        v-for="(item, index) in filteredList"
-                        :key="item.id + index"
-                        :disabled="item.disabled"
+                    <bk-option-group
+                        v-for="(group, index) in processedOptionList"
+                        :key="group.id || index"
+                        :name="group.name"
                     >
-                        <div class="option-group-name">{{ item.name }}</div>
-                        <div
-                            class="option-group-item"
-                            v-for="(child, childIndex) in item.children"
+                        <bk-option
+                            v-for="child in group.children"
                             :key="child.id"
-                            :class="{ active: child.id === value, selected: selectedPointer === childIndex && selectedGroupPointer === index }"
+                            :id="child.id"
+                            :name="child.name"
                             :disabled="child.disabled"
-                            @click.stop="selectOption(child)"
-                            @mouseover="setSelectGroupPointer(index, childIndex)"
-                            :title="item.name"
-                        >
-                            {{ child.name }}
-                        </div>
-                    </li>
+                        />
+                    </bk-option-group>
                 </template>
                 <template v-else>
-                    <li
-                        v-for="(item, index) in filteredList"
-                        class="option-item"
-                        :key="item.id + index"
-                        :class="{ active: item.id === value, selected: selectedPointer === index }"
+                    <bk-option
+                        v-for="item in processedOptionList"
+                        :key="item.id"
+                        :id="item.id"
+                        :name="item.name"
                         :disabled="item.disabled"
-                        @click.stop="selectOption(item)"
-                        @mouseover="setSelectPointer(index)"
-                        :title="item.name"
-                    >
-                        {{ item.name }}
-                    </li>
+                    />
                 </template>
                 <template v-if="mergedOptionsConf.hasAddItem">
-                    <div class="bk-select-extension">
+                    <div
+                        slot="extension"
+                        class="bk-select-extension"
+                    >
                         <a
                             :href="addItemUrl"
                             target="_blank"
@@ -80,7 +61,23 @@
                         </a>
                     </div>
                 </template>
-            </ul>
+            </bk-select>
+            <bk-input
+                v-else
+                :class="['var-input', isError ? 'error-input' : '']"
+                :clearable="!disabled"
+                v-model="displayValue"
+                @blur="handleVarBlur"
+                @clear="handleVarClear"
+                :disabled="disabled"
+                :placeholder="pipelineDialect === 'CLASSIC' ? $t('placeholderVar') : $t('placeholderConstraintVar')"
+            />
+            <span
+                v-if="isError"
+                class="error-text"
+            >
+                {{ $t('validVariableFormat') }}
+            </span>
         </div>
     </div>
 </template>
@@ -89,14 +86,19 @@
     import mixins from '../mixins'
     import scrollMixins from './scrollMixins'
     import selectorMixins from '../selectorMixins'
+    import Logo from '@/components/Logo'
     import { debounce, isObject } from '@/utils/util'
 
     export default {
         name: 'select-input',
+        components: {
+            Logo
+        },
         mixins: [mixins, scrollMixins, selectorMixins],
         props: {
             isLoading: Boolean,
             placeholder: String,
+            type: String,
             preFilter: {
                 type: Object,
                 default: () => ({})
@@ -105,63 +107,72 @@
         data () {
             return {
                 optionList: Array.isArray(this.options) ? this.options : [],
-                optionListVisible: false,
-                isFocused: false,
                 loading: this.isLoading,
-                selectedPointer: 0,
-                selectedGroupPointer: 0,
-                displayName: '',
-                timerId: null
+                isVarInputMode: false,
+                displayValue: '',
+                isError: false
             }
         },
         computed: {
-            restProps () {
-                const { options, optionsConf, atomvalue, container, ...restProps } = this.$props
-                return restProps
-            },
             hasGroup () {
                 return this.mergedOptionsConf && this.mergedOptionsConf.hasGroup
             },
-            filteredList () {
-                const { displayName, value, optionList } = this
-                const strVal = this.hasGroup ? displayName + '' : value + ''
-
-                if (this.hasGroup) {
-                    let target = []
-                    optionList.map(option => {
-                        if (option.children.length && option.children.some(child => child.name.toLowerCase().indexOf(strVal.toLowerCase()) > -1)) {
-                            const temp = {
-                                ...option,
-                                children: option.children.filter(child => {
-                                    if (isObject(this.preFilter) && this.preFilter.key) {
-                                        if (Array.isArray(this.preFilter.value) && Array.isArray(child[this.preFilter.key])) {
-                                            const intersection = this.preFilter.value.filter(val => child[this.preFilter.key].indexOf(val) > -1)
-                                            return child.name.toLowerCase().indexOf(strVal.toLowerCase()) > -1 && intersection.length
-                                        } else {
-                                            return child.name.toLowerCase().indexOf(strVal.toLowerCase()) > -1 && child[this.preFilter.key] === this.preFilter.value
-                                        }
-                                    } else {
-                                        return child.name.toLowerCase().indexOf(strVal.toLowerCase()) > -1
-                                    }
-                                })
+            popoverOptions () {
+                return {
+                    popperOptions: {
+                        modifiers: {
+                            preventOverflow: {
+                                boundariesElement: 'window'
                             }
-                            target.push(temp)
                         }
-                        return false
-                    })
-                    target = target.filter(tag => tag.children.length)
-                    return target
-                } else {
-                    return optionList.filter(option => {
-                        if (typeof option.name === 'string' && option.name.toLowerCase().indexOf(strVal.toLowerCase()) > -1) {
-                            return option
-                        }
-                        return false
-                    })
+                    }
                 }
             },
-            hasOption () {
-                return Array.isArray(this.filteredList) && this.filteredList.length > 0
+            dropdownConf () {
+                const { searchable, multiple, clearable, searchPlaceholder } = this.mergedOptionsConf
+                const confPlaceholder = this.mergedOptionsConf.placeholder
+                return {
+                    searchable: searchable ?? true,
+                    multiple,
+                    clearable,
+                    placeholder: this.loading ? this.$t('editPage.loadingData') : (this.placeholder || confPlaceholder),
+                    searchPlaceholder: searchPlaceholder ?? (this.placeholder || confPlaceholder)
+                }
+            },
+            processedOptionList () {
+                const { optionList, preFilter } = this
+                if (this.hasGroup) {
+                    return optionList.map(option => {
+                        if (!option.children || !option.children.length) return option
+                        const filteredChildren = option.children.filter(child => {
+                            if (isObject(preFilter) && preFilter.key) {
+                                if (Array.isArray(preFilter.value) && Array.isArray(child[preFilter.key])) {
+                                    const intersection = preFilter.value.filter(val => child[preFilter.key].indexOf(val) > -1)
+                                    return intersection.length
+                                } else {
+                                    return child[preFilter.key] === preFilter.value
+                                }
+                            }
+                            return true
+                        })
+                        return {
+                            ...option,
+                            children: filteredChildren
+                        }
+                    }).filter(group => group.children && group.children.length)
+                } else {
+                    if (isObject(preFilter) && preFilter.key) {
+                        return optionList.filter(option => {
+                            if (Array.isArray(preFilter.value) && Array.isArray(option[preFilter.key])) {
+                                const intersection = preFilter.value.filter(val => option[preFilter.key].indexOf(val) > -1)
+                                return intersection.length
+                            } else {
+                                return option[preFilter.key] === preFilter.value
+                            }
+                        })
+                    }
+                    return optionList
+                }
             }
         },
         watch: {
@@ -173,98 +184,109 @@
             },
             options (newOptions) {
                 this.optionList = newOptions
-                this.isFocused && !this.disabled && this.$nextTick(() => {
-                    this.$refs.inputArea.focus()
-                })
+                this.addNoPermItems()
             },
             isLoading (isLoading) {
                 this.loading = isLoading
             },
             value (newVal) {
-                if (newVal) {
-                    if (this.hasGroup) {
-                        this.optionList.forEach(option => {
-                            const matchVal = option.children.find(child => child.id === newVal)
-                            if (matchVal) this.displayName = matchVal.name
-                        })
-                    } else {
-                        this.displayName = newVal
-                    }
-                } else this.displayName = ''
+                // 存量数据自动识别：如果值为变量格式，自动切换到输入变量模式
+                if (newVal && this.getValidaVar(newVal)) {
+                    this.isVarInputMode = true
+                    this.displayValue = newVal
+                }
             }
         },
         created () {
+            // 存量数据自动识别
+            if (this.value && this.getValidaVar(this.value)) {
+                this.isVarInputMode = true
+                this.displayValue = this.value
+            }
             if (this.hasUrl) {
                 this.getOptionList()
                 this.debounceGetOptionList = debounce(this.getOptionList)
-            } else {
-                this.displayName = this.value
-            }
-        },
-        beforeDestroy () {
-            if (this.timerId) {
-                clearTimeout(this.timerId)
-                this.timerId = null
             }
         },
         methods: {
-            handleInput (e) {
-                const { name, value } = e.target
-                this.optionListVisible = true
-                if (!this.hasGroup) this.handleChange(name, value.trim())
-            },
-            selectOption ({ id, name, disabled = false }) {
-                if (disabled) return
-                this.handleBlur()
-                this.handleChange(this.name, id)
-            },
-
-            clearValue () {
+            handleChangeType () {
+                if (this.disabled) return
+                this.isVarInputMode = !this.isVarInputMode
+                this.isError = false
+                this.displayValue = ''
                 this.handleChange(this.name, '')
-                this.$refs.inputArea.focus()
             },
 
-            handleBlur () {
-                this.optionListVisible = false
-                this.selectedPointer = 0
-                this.selectedGroupPointer = 0
-                this.isFocused = false
-                this.$refs.inputArea && this.$refs.inputArea.blur()
-                this.$emit('blur', null)
-                if (this.hasGroup && !this.filteredList.length) {
-                    this.handleChange(this.name, '')
-                    this.displayName = ''
-                } else if (!this.hasGroup) {
-                    this.displayName = this.value
+            handleVarBlur () {
+                const newValue = this.displayValue
+                if (newValue !== '' && !this.getValidaVar(newValue)) {
+                    this.isError = true
+                } else {
+                    this.isError = false
+                    this.handleChange(this.name, newValue)
                 }
             },
 
-            handleFocus (e) {
-                this.isFocused = true
-                if (!this.optionListVisible) {
-                    this.timerId = setTimeout(() => {
-                        this.optionListVisible = true
-                        this.$emit('focus', e)
-                    }, 300)
+            handleVarClear () {
+                this.isError = false
+                this.handleChange(this.name, '')
+            },
+
+            handleSelect (selected) {
+                this.handleChange(this.name, selected)
+            },
+
+            handleClear () {
+                const val = this.mergedOptionsConf.multiple ? [] : ''
+                this.handleChange(this.name, val)
+            },
+
+            toggleVisible (open) {
+                if (open) {
+                    this.hasUrl && this.getOptionList()
+                    this.$emit('focus')
                 }
             },
 
-            setSelectPointer (index) {
-                this.$refs.inputArea.focus()
-                this.selectedPointer = index
-                this.adjustViewPort()
-            },
-
-            setSelectGroupPointer (index, childIndex) {
-                this.$refs.inputArea.focus()
-                this.selectedGroupPointer = index
-                this.selectedPointer = childIndex
-                this.adjustViewPort()
+            addNoPermItems () {
+                if (!this.value || this.isVarInputMode) return
+                if (this.hasGroup) {
+                    const allChildren = []
+                    this.optionList.forEach(group => {
+                        if (group.children) {
+                            allChildren.push(...group.children)
+                        }
+                    })
+                    const childMap = allChildren.reduce((map, child) => {
+                        map[child.id] = child
+                        return map
+                    }, {})
+                    if (!childMap[this.value]) {
+                        this.optionList.unshift({
+                            id: `__no_perm_${this.value}`,
+                            name: '',
+                            children: [{
+                                id: this.value,
+                                name: `******（${this.$t('editPage.noPermToView')}）`
+                            }]
+                        })
+                    }
+                } else {
+                    const listMap = this.optionList.reduce((map, item) => {
+                        map[item.id] = item
+                        return map
+                    }, {})
+                    if (!listMap[this.value]) {
+                        this.optionList.splice(0, 0, {
+                            id: this.value,
+                            name: `******（${this.$t('editPage.noPermToView')}）`
+                        })
+                    }
+                }
             },
 
             async getOptionList () {
-                if (this.isLackParam) { // 缺少参数时，选择列表置空
-                    if (this.value !== '') this.displayName = this.value
+                if (this.isLackParam) {
                     this.optionList = []
                     return
                 }
@@ -276,8 +298,8 @@
                     let options = getResponseData(res, dataPath)
 
                     if (this.hasGroup) {
-                        options = options.filter(item => item.children.length)
-                        this.optionList = options.forEach(item => {
+                        options = options.filter(item => item.children && item.children.length)
+                        this.optionList = options.map(item => {
                             if (isObject(item)) {
                                 return {
                                     ...item,
@@ -288,6 +310,7 @@
                                     }))
                                 }
                             }
+                            return item
                         })
                     } else {
                         this.optionList = options.map(item => {
@@ -298,7 +321,6 @@
                                     name: item[paramName]
                                 }
                             }
-
                             return {
                                 id: item,
                                 name: item
@@ -306,19 +328,10 @@
                         })
                     }
 
-                    if (this.value) {
-                        if (this.hasGroup) {
-                            this.optionList.forEach(option => {
-                                const matchVal = option.children.find(child => child.id === this.value)
-                                if (matchVal) this.displayName = matchVal.name
-                            })
-                        } else {
-                            this.displayName = this.value
-                        }
-                    }
+                    // 添加无权限查看项
+                    this.addNoPermItems()
                 } catch (e) {
                     console.error(e)
-                    this.displayName = this.value
                 } finally {
                     this.loading = false
                 }
@@ -330,85 +343,80 @@
 <style lang="scss" scoped>
     @import "../../../scss/conf";
     .select-input {
+        display: flex;
+        align-items: flex-start;
         position: relative;
-        .option-fetching-icon {
-            position: absolute;
-            right: 20px;
-            top: 10px;
-            color: $fontLighterColor;
-            &.icon-close-circle-shape {
-                cursor: pointer;
+        .change-type {
+            display: inline-block;
+            flex-shrink: 0;
+            margin-right: 4px;
+            width: 32px;
+            height: 32px;
+            line-height: 34px;
+            text-align: center;
+            border-radius: 2px;
+            cursor: pointer;
+            &.disabled {
+                cursor: not-allowed;
+                opacity: 0.6;
             }
         }
-        > input {
-            padding-right: 50px;
-            text-overflow: ellipsis;
+        .open-var {
+            background: #EAEBF0;
+            svg {
+                color: #979BA5;
+            }
+            &:not(.disabled):hover {
+                background-color: #DCDEE5;
+            }
+            &:not(.disabled):hover svg {
+                color: #4D4F56;
+            }
         }
-        > .dropbox-container {
-            position: absolute;
-            max-height: 222px;
+        .close-var {
+            background: #E1ECFF;
+            svg {
+                color: #3A84FF;
+            }
+            &:not(.disabled):hover {
+                background-color: #CDDFFE;
+            }
+            &:not(.disabled):hover svg {
+                color: #1768EF;
+            }
+        }
+        .select-input-content {
+            flex: 1;
+            min-width: 0;
+        }
+        .bk-select,
+        .var-input {
             width: 100%;
-            border: 1px solid $borderLightColor;
-            border-radius: 2px;
-            box-shadow: 0 0 8px 1px rgba(0, 0, 0, 0.1);
+        }
+        .error-text {
+            display: block;
             margin-top: 4px;
-            z-index: 1111;
-            overflow: auto;
-            background: white;
-            > ul {
-                float:left;
-                transition: all 0.3s ease;
-                min-width: 100%;
-                // > li {
-                //     line-height: 36px;
-                //     padding-left: 10px;
-                //     white-space: nowrap;
-                //     cursor: pointer;
-                //     font-size: 12px;
-                //     &.selected,
-                //     &.active,
-                //     &:hover {
-                //         background-color: $primaryLightColor;
-                //         color: $primaryColor;
-                //     }
-
-                //     &[disabled] {
-                //         color: $fontLighterColor;
-                //     }
-                // }
-                .option-group-name {
-                    padding: 0 12px;
-                    line-height: 36px;
-                    font-size: 14px;
-                    font-weight: bold;
-                    border-bottom: 1px solid #dcdee5;
-                    color: #979ba5;
-                }
-                .option-item,
-                .option-group-item {
-                    line-height: 36px;
-                    padding: 0 18px;
-                    white-space: nowrap;
-                    cursor: pointer;
-                    font-size: 12px;
-                    border: 1px solid transparent;
-                    &.selected,
-                    &.active,
-                    &:hover {
-                        background-color: $primaryLightColor;
-                        color: $primaryColor;
-                    }
-                    &.selected {
-                       border-color : $primaryColor;
-                    }
-
-                    &[disabled] {
-                        color: $fontLighterColor;
-                    }
-                }
-                .bk-select-extension a {
-                    color: #63656e;
-                }
+            color: #ff5656;
+            line-height: 16px;
+            font-size: 12px;
+        }
+        .bk-select-extension a {
+            color: #63656e;
+        }
+    }
+</style>
+<style lang="scss">
+    .select-input {
+        .error-text {
+            display: block;
+            margin-top: 4px;
+            color: #ff5656;
+            line-height: 16px;
+            font-size: 12px;
+        }
+        .error-input {
+            .bk-form-input {
+                border-color: #ff5656 !important;
             }
         }
     }
