@@ -353,26 +353,40 @@ class ProcessDataMigrateDao {
     }
 
     /**
-     * 抓取大变量溢出表 T_PIPELINE_BUILD_VAR_OVERFLOW 的记录，
-     * 以便在归档/分库迁移过程中和主表保持一致。
+     * 抓取指定 build 大变量溢出表 T_PIPELINE_BUILD_VAR_OVERFLOW 的**变量名(KEY)列表**（仅 KEY 列，轻量）。
      *
-     * 该表已在现网建好，jOOQ codegen 会生成
-     * [com.tencent.devops.model.process.tables.TPipelineBuildVarOverflow]，
-     * 因此直接复用生成代码，与其它 `getXxxRecords` 方法风格一致。
-     *
-     * 内存安全：调用方
-     * [com.tencent.devops.misc.strategy.impl.pipeline.PipelineBuildLinkedDataMigrationStrategy]
-     * 按**单 buildId** 流式调用，避免一次性把多个 build 的 mediumtext 全部载入内存。
+     * 供迁移逐 key 流式搬运：先取 key 列表，再按单个 key 拉真实值，避免一次性把整个 build 的
+     * 多条 mediumtext（每条可达 4M、且大变量个数无上限）同时载入内存。
      */
-    fun getPipelineBuildVarOverflowRecords(
+    fun getPipelineBuildVarOverflowKeys(
         dslContext: DSLContext,
         projectId: String,
-        buildIds: List<String>
+        buildId: String
+    ): List<String> {
+        with(TPipelineBuildVarOverflow.T_PIPELINE_BUILD_VAR_OVERFLOW) {
+            return dslContext.selectDistinct(KEY).from(this)
+                .where(PROJECT_ID.eq(projectId).and(BUILD_ID.eq(buildId)))
+                .fetch(KEY)
+        }
+    }
+
+    /**
+     * 按 (buildId, 一小批 key) 抓取大变量溢出记录。
+     *
+     * 正常每个 (BUILD_ID, KEY) 仅一行；历史脏数据下同 key 可能有多条不同 CREATE_TIME 行，需一并搬运。
+     * 单次内存峰值 ≈ `keys.size × 单个大变量值`（调用方按小批控制，见迁移策略 OVERFLOW_MIGRATE_KEY_BATCH_SIZE），
+     * 与该 build 大变量总数无关。
+     */
+    fun getPipelineBuildVarOverflowRecordsByKeys(
+        dslContext: DSLContext,
+        projectId: String,
+        buildId: String,
+        keys: List<String>
     ): List<TPipelineBuildVarOverflowRecord> {
-        if (buildIds.isEmpty()) return emptyList()
+        if (keys.isEmpty()) return emptyList()
         with(TPipelineBuildVarOverflow.T_PIPELINE_BUILD_VAR_OVERFLOW) {
             return dslContext.selectFrom(this)
-                .where(PROJECT_ID.eq(projectId).and(BUILD_ID.`in`(buildIds)))
+                .where(PROJECT_ID.eq(projectId).and(BUILD_ID.eq(buildId)).and(KEY.`in`(keys)))
                 .fetchInto(TPipelineBuildVarOverflowRecord::class.java)
         }
     }
@@ -398,20 +412,37 @@ class ProcessDataMigrateDao {
     }
 
     /**
-     * 抓取启动参数大值溢出表 T_PIPELINE_BUILD_HISTORY_PARAM_OVERFLOW 的记录。
+     * 抓取指定 build 启动参数大值溢出表 T_PIPELINE_BUILD_HISTORY_PARAM_OVERFLOW 的**参数名(KEY)列表**（仅 KEY 列）。
      *
-     * 该表是启动参数大值的长期载体（不分区），与构建历史同生命周期，迁移时需随主表一起搬运。
-     * 内存安全：调用方按**单 buildId** 流式调用，避免一次性把多个 build 的 mediumtext 全部载入内存。
+     * 启动参数总量虽有 startupParamsTotalMax 闸门，但一次仍可能是数十 MB 级；配合逐 key 搬运，
+     * 单次内存峰值收敛到单个参数值（≤4M），与迁移单 build 逐 key 语义保持一致。
      */
-    fun getPipelineBuildHistoryParamOverflowRecords(
+    fun getPipelineBuildHistoryParamOverflowKeys(
         dslContext: DSLContext,
         projectId: String,
-        buildIds: List<String>
+        buildId: String
+    ): List<String> {
+        with(TPipelineBuildHistoryParamOverflow.T_PIPELINE_BUILD_HISTORY_PARAM_OVERFLOW) {
+            return dslContext.selectDistinct(KEY).from(this)
+                .where(PROJECT_ID.eq(projectId).and(BUILD_ID.eq(buildId)))
+                .fetch(KEY)
+        }
+    }
+
+    /**
+     * 按 (buildId, 一小批 key) 抓取启动参数大值溢出记录。
+     * 主键 (BUILD_ID, KEY) 决定每个 key 仅一行；单次内存峰值 ≈ `keys.size × 单个参数值`（≤4M/条）。
+     */
+    fun getPipelineBuildHistoryParamOverflowRecordsByKeys(
+        dslContext: DSLContext,
+        projectId: String,
+        buildId: String,
+        keys: List<String>
     ): List<TPipelineBuildHistoryParamOverflowRecord> {
-        if (buildIds.isEmpty()) return emptyList()
+        if (keys.isEmpty()) return emptyList()
         with(TPipelineBuildHistoryParamOverflow.T_PIPELINE_BUILD_HISTORY_PARAM_OVERFLOW) {
             return dslContext.selectFrom(this)
-                .where(PROJECT_ID.eq(projectId).and(BUILD_ID.`in`(buildIds)))
+                .where(PROJECT_ID.eq(projectId).and(BUILD_ID.eq(buildId)).and(KEY.`in`(keys)))
                 .fetchInto(TPipelineBuildHistoryParamOverflowRecord::class.java)
         }
     }
