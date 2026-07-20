@@ -136,12 +136,31 @@ class PublicVarGroupService @Autowired constructor(
                     errorCode = ProcessMessageCode.ERROR_PUBLIC_VAR_GROUP_ADD_FAILED,
                     params = arrayOf("ID allocation service unavailable")
                 )
+            // 判断是新建还是升级：升级需校验编辑权限
+            val existingVersion = publicVarGroupDao.getLatestVersionByGroupName(
+                dslContext, projectId, groupName
+            ) ?: 0
+            if (existingVersion > 0) {
+                val editPermissionMap = publicVarGroupPermissionService.filterPublicVarGroups(
+                    userId = userId,
+                    projectId = projectId,
+                    authPermissions = setOf(AuthPermission.EDIT)
+                )
+                val canEdit = editPermissionMap[AuthPermission.EDIT]?.contains(groupName) ?: false
+                if (!canEdit) {
+                    throw ErrorCodeException(
+                        errorCode = ProcessMessageCode.ERROR_PUBLIC_VAR_GROUP_EDIT_NO_PERMISSION,
+                        params = arrayOf(userId, groupName)
+                    )
+                }
+            }
             val isCreate = createOrUpgradeGroupRecord(
                 id = id,
                 projectId = projectId,
                 userId = userId,
                 groupName = groupName,
-                publicVarGroupDTO = publicVarGroupDTO
+                publicVarGroupDTO = publicVarGroupDTO,
+                existingVersion = existingVersion
             )
             // 数据库事务成功后，如果是新建变量组（首次创建），注册到权限中心
             if (isCreate) {
@@ -167,20 +186,20 @@ class PublicVarGroupService @Autowired constructor(
 
     /**
      * 在事务中创建或升级变量组记录，返回是否为新建（首次创建）。
+     * @param existingVersion 已查出的版本号
      */
     private fun createOrUpgradeGroupRecord(
         id: Long,
         projectId: String,
         userId: String,
         groupName: String,
-        publicVarGroupDTO: PublicVarGroupDTO
+        publicVarGroupDTO: PublicVarGroupDTO,
+        existingVersion: Int
     ): Boolean {
-        var isCreate = false
+        val isCreate = (existingVersion == 0)
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
-            val version = publicVarGroupDao.getLatestVersionByGroupName(context, projectId, groupName) ?: 0
-            isCreate = (version == 0)
-            val newVersion = version + 1
+            val newVersion = existingVersion + 1
             val publicVarGroupPO = PublicVarGroupPO(
                 id = id,
                 projectId = projectId,
@@ -195,7 +214,7 @@ class PublicVarGroupService @Autowired constructor(
                 createTime = LocalDateTime.now(),
                 updateTime = LocalDateTime.now()
             )
-            if (version != 0) {
+            if (existingVersion != 0) {
                 publicVarGroupDao.updateLatestFlag(
                     dslContext = context,
                     projectId = projectId,
@@ -311,39 +330,8 @@ class PublicVarGroupService @Autowired constructor(
             )
         }
 
-        val permissionsMap = publicVarGroupPermissionService.filterPublicVarGroups(
-            userId = userId,
-            projectId = projectId,
-            authPermissions = setOf(
-                AuthPermission.LIST,
-                AuthPermission.EDIT,
-                AuthPermission.VIEW,
-                AuthPermission.DELETE,
-                AuthPermission.USE
-            )
-        )
-        val hasListPermissionGroupNames = permissionsMap[AuthPermission.LIST] ?: emptyList()
-
-        // 合并变量筛选和LIST权限筛选的groupNames
-        val effectiveGroupNames = if (permissionsMap.isNotEmpty()) {
-            if (hasVarFilter) {
-                varFilterGroupNames.intersect(hasListPermissionGroupNames.toSet()).toList()
-            } else {
-                hasListPermissionGroupNames
-            }
-        } else {
-            varFilterGroupNames
-        }
-
-        if (permissionsMap.isNotEmpty() && effectiveGroupNames.isEmpty()) {
-            return Page(
-                count = 0,
-                page = page,
-                pageSize = pageSize,
-                totalPages = 0,
-                records = emptyList()
-            )
-        }
+        // count 和分页查询不按资源粒度过滤，只按变量筛选条件过滤
+        val effectiveGroupNames = varFilterGroupNames
 
         val totalCount = publicVarGroupDao.countGroupsByProjectId(
             dslContext = dslContext,
@@ -395,6 +383,23 @@ class PublicVarGroupService @Autowired constructor(
                 dslContext = dslContext,
                 projectId = projectId,
                 groupNames = groupNameList
+            )
+        } else {
+            emptyMap()
+        }
+
+        // 批量查询当前页结果集的 EDIT/VIEW/DELETE/USE 权限
+        val permissionsMap = if (groupNameList.isNotEmpty()) {
+            publicVarGroupPermissionService.filterPublicVarGroups(
+                userId = userId,
+                projectId = projectId,
+                authPermissions = setOf(
+                    AuthPermission.EDIT,
+                    AuthPermission.VIEW,
+                    AuthPermission.DELETE,
+                    AuthPermission.USE,
+                    AuthPermission.LIST
+                )
             )
         } else {
             emptyMap()
