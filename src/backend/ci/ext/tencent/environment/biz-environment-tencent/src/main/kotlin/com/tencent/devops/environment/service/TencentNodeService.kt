@@ -313,6 +313,22 @@ class TencentNodeService @Autowired constructor(
         }
     }
 
+    fun getNodeAgentDetailByWorkspaceName(
+        userId: String,
+        projectId: String,
+        workspaceName: String
+    ): NodeAgentDetail? {
+        val agent =
+            thirdPartyAgentDao.getAgentByWorkspaceName(dslContext, projectId, listOf(workspaceName)).firstOrNull()
+                ?: return null
+        val node = nodeDao.get(dslContext, projectId, agent.nodeId) ?: return null
+        return NodeAgentDetail(
+            displayName = node.displayName,
+            ip = agent.ip,
+            workspaceName = agent.createWorkspaceName
+        )
+    }
+
 
     companion object {
         private const val INSTALL_IMATE_TIMEOUT_KEY = "environment:install_imate_timeout_key"
