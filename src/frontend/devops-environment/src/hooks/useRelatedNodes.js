@@ -2,6 +2,7 @@ import { ref, computed } from 'vue'
 import useEnvDetail from './useEnvDetail'
 import useInstance from './useInstance'
 import useEnvAside from './useEnvAside'
+import { ENV_TYPE_MAP } from '@/store/constants'
 
 const RELATED_TYPE = {
     NODE: 'static',
@@ -24,6 +25,7 @@ export default function useRelatedNodes () {
     const relatedType = ref(RELATED_TYPE[currentEnv.value?.envNodeType] || RELATED_TYPE.NODE)
     const projectId = computed(() => proxy.$route.params.projectId)
     const envHashId = computed(() => proxy.$route.params.envId)
+    const isDevxEnv = computed(() => currentEnv.value?.envType === ENV_TYPE_MAP.DEVX)
     const handleShowRelatedNodes = () => {
         isShow.value = true
     }
@@ -73,9 +75,11 @@ export default function useRelatedNodes () {
                 envHashId: envHashId.value,
                 params: {
                     ...params,
-                    ...(isCreateResType.value ? {
-                        nodeType: 'CREATE'
-                    }: {})
+                    ...(isCreateResType.value
+                        ? { nodeType: ENV_TYPE_MAP.CREATE }
+                        : isDevxEnv.value
+                            ? { nodeType: ENV_TYPE_MAP.DEVX }
+                            : {})
                 },
                 tags
             })
