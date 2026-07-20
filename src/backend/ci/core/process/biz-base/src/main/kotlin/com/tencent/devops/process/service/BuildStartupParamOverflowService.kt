@@ -185,7 +185,8 @@ class BuildStartupParamOverflowService @Autowired constructor(
             val declaredLen = referenceLength(value as String)
             if (loaded + declaredLen > maxResolveBytes) {
                 if (degradeOnExceed) {
-                    LOG.warn("$buildId|STARTUP_PARAM_RESOLVE_DEGRADE|key=${param.key}|loaded=$loaded|max=$maxResolveBytes")
+                    LOG.warn("$buildId|STARTUP_PARAM_RESOLVE_DEGRADE|key=${param.key}|loaded=$loaded|" +
+                            "max=$maxResolveBytes")
                     return@map param
                 }
                 throw ErrorCodeException(

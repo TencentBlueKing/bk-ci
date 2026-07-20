@@ -281,49 +281,69 @@ class PipelineBuildLinkedDataMigrationStrategy(
     ) {
         buildIds.forEach { buildId ->
             try {
-                // 大变量溢出表：按小批 key 流式迁移，避免整 build 多条 mediumtext 同时驻留内存
-                processDataMigrateDao.getPipelineBuildVarOverflowKeys(
+                migrateVarOverflow(
+                    buildId = buildId,
                     dslContext = dslContext,
                     projectId = projectId,
-                    buildId = buildId
-                ).chunked(OVERFLOW_MIGRATE_KEY_BATCH_SIZE).forEach { keyBatch ->
-                    val records = processDataMigrateDao.getPipelineBuildVarOverflowRecordsByKeys(
-                        dslContext = dslContext,
-                        projectId = projectId,
-                        buildId = buildId,
-                        keys = keyBatch
-                    )
-                    if (records.isNotEmpty()) {
-                        processDataMigrateDao.migratePipelineBuildVarOverflowData(
-                            migratingShardingDslContext = migratingDslContext,
-                            records = records
-                        )
-                    }
-                }
-                // 启动参数大值溢出表（长期载体）同样按小批 key 流式迁移
-                processDataMigrateDao.getPipelineBuildHistoryParamOverflowKeys(
+                    migratingDslContext = migratingDslContext
+                )
+                migrateHistoryParamOverflow(
+                    buildId = buildId,
                     dslContext = dslContext,
                     projectId = projectId,
-                    buildId = buildId
-                ).chunked(OVERFLOW_MIGRATE_KEY_BATCH_SIZE).forEach { keyBatch ->
-                    val paramRecords = processDataMigrateDao.getPipelineBuildHistoryParamOverflowRecordsByKeys(
-                        dslContext = dslContext,
-                        projectId = projectId,
-                        buildId = buildId,
-                        keys = keyBatch
-                    )
-                    if (paramRecords.isNotEmpty()) {
-                        processDataMigrateDao.migratePipelineBuildHistoryParamOverflowData(
-                            migratingShardingDslContext = migratingDslContext,
-                            records = paramRecords
-                        )
-                    }
-                }
-            } catch (e: Exception) {
-                logger.error("Failed to migrate overflow data for build[$buildId]", e)
-                throw e
+                    migratingDslContext = migratingDslContext
+                )
+            } catch (ignored: Throwable) {
+                logger.error("Failed to migrate overflow data for build[$buildId]", ignored)
+                throw ignored
             }
         }
+    }
+
+    /**
+     * 流式迁移大变量溢出表（T_PIPELINE_BUILD_VAR_OVERFLOW）：
+     * 按小批 key 拉取真实值再写入目标，避免整 build 多条 mediumtext 同时驻留内存。
+     */
+    private fun migrateVarOverflow(
+        buildId: String,
+        dslContext: DSLContext,
+        projectId: String,
+        migratingDslContext: DSLContext
+    ) {
+        processDataMigrateDao.getPipelineBuildVarOverflowKeys(dslContext, projectId, buildId)
+            .chunked(OVERFLOW_MIGRATE_KEY_BATCH_SIZE)
+            .forEach { keyBatch ->
+                val records = processDataMigrateDao.getPipelineBuildVarOverflowRecordsByKeys(
+                    dslContext, projectId, buildId, keyBatch
+                )
+                if (records.isNotEmpty()) {
+                    processDataMigrateDao.migratePipelineBuildVarOverflowData(migratingDslContext, records)
+                }
+            }
+    }
+
+    /**
+     * 流式迁移启动参数大值溢出表（T_PIPELINE_BUILD_HISTORY_PARAM_OVERFLOW）：
+     * 按小批 key 拉取真实值再写入目标，避免整 build 多条 mediumtext 同时驻留内存。
+     */
+    private fun migrateHistoryParamOverflow(
+        buildId: String,
+        dslContext: DSLContext,
+        projectId: String,
+        migratingDslContext: DSLContext
+    ) {
+        processDataMigrateDao.getPipelineBuildHistoryParamOverflowKeys(dslContext, projectId, buildId)
+            .chunked(OVERFLOW_MIGRATE_KEY_BATCH_SIZE)
+            .forEach { keyBatch ->
+                val paramRecords = processDataMigrateDao.getPipelineBuildHistoryParamOverflowRecordsByKeys(
+                    dslContext, projectId, buildId, keyBatch
+                )
+                if (paramRecords.isNotEmpty()) {
+                    processDataMigrateDao.migratePipelineBuildHistoryParamOverflowData(
+                        migratingDslContext, paramRecords
+                    )
+                }
+            }
     }
 
     /**
@@ -343,9 +363,9 @@ class PipelineBuildLinkedDataMigrationStrategy(
                     // 调用接口内置的类型安全迁移方法，无需外部推断T
                     handler.migrateUnsafe(migratingDslContext, records)
                 }
-            } catch (e: Exception) {
-                logger.error("Failed to migrate linked data for handler", e)
-                throw e
+            } catch (ignored: Throwable) {
+                logger.error("Failed to migrate linked data for handler", ignored)
+                throw ignored
             }
         }
     }

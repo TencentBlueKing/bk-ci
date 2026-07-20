@@ -250,14 +250,8 @@ const val PIPELINE_VARIABLES_STRING_LENGTH_HARD_MAX = 4 * 1024 * 1024
  *
  * **运营可配置**：通过 Spring 配置覆盖
  *     `pipeline.variables.startupTotalMax = 67108864`  # 例：调大到 64M
- *  详见 [PIPELINE_VARIABLES_STARTUP_TOTAL_MAX_KEY]。
  */
 const val PIPELINE_VARIABLES_STARTUP_TOTAL_MAX = 32 * 1024 * 1024
-
-/**
- * Spring 配置键：覆盖 [PIPELINE_VARIABLES_STARTUP_TOTAL_MAX] 默认值。单位：字符数。
- */
-const val PIPELINE_VARIABLES_STARTUP_TOTAL_MAX_KEY = "pipeline.variables.startupTotalMax"
 
 /**
  * 大变量主表引用前缀。
@@ -291,7 +285,7 @@ const val PIPELINE_VARIABLES_OVERFLOW_PREFIX = "__BK_OVF__:"
  *     `pipeline.variables.lazyLoad.budgetMax = 67108864`  # 例：调大到 64M
  *  详见 [PIPELINE_VARIABLES_LAZY_LOAD_BUDGET_MAX_KEY]。
  *
- * 默认 32M ≈ 一次评估展开 8 个 4M 变量；现网 16G/Pod、最坏 N 并发会话峰值 ≤ N×32M，仍有充足冗余。
+ * 默认 32M ≈ 一次评估展开 8 个 4M 变量。
  */
 const val PIPELINE_VARIABLES_LAZY_LOAD_BUDGET_MAX = 32 * 1024 * 1024
 

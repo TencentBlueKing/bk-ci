@@ -67,47 +67,64 @@ object BuildVarOverflowExprSupport {
         }
         val loader: (String) -> String? = loader@{ key ->
             try {
-                // variables.xxx 落库 key 是 xxx
-                val loadKey = if (key.startsWith(VARIABLES_PREFIX)) {
-                    key.removePrefix(VARIABLES_PREFIX)
-                } else {
-                    key
-                }
+                val loadKey = resolveLoadKey(key)
                 val data = fetchRealValue(pipelineId, loadKey)
-                // 短路径 steps.x.outputs.y 是运行时派生、不落库；其落库 key 为 jobs.<jobId>.steps.x.outputs.y。
-                // 直查 miss（null 或仍是引用串）时，用当前 jobId 补前缀重查一次。
-                if ((data == null || BuildVarOverflowUtils.isOverflowReference(data)) && isShortStepOutput(loadKey)) {
-                    val jobId = LoggerService.buildVariables?.jobId?.takeIf { it.isNotBlank() }
-                    if (!jobId.isNullOrBlank()) {
-                        val fullKey = "jobs.$jobId.$loadKey"
-                        val full = fetchRealValue(pipelineId, fullKey)
-                        if (full != null && !BuildVarOverflowUtils.isOverflowReference(full)) {
-                            logger.info("OVERFLOW_LOADER_OK|key=$key|fullKey=$fullKey|len=${full.length}")
-                            return@loader full
-                        }
-                    }
+                // 短路径 steps.x.outputs.y 直查 miss 时，尝试用 jobId 补前缀重查
+                val stepResult = tryFetchFullStepOutput(data, pipelineId, loadKey, key)
+                if (stepResult != null) {
+                    return@loader stepResult
                 }
-                when {
-                    data == null -> {
-                        logger.warn("OVERFLOW_LOADER_NULL|key=$key|loadKey=$loadKey")
-                        variables[key] ?: variables[loadKey]
-                    }
-                    BuildVarOverflowUtils.isOverflowReference(data) -> {
-                        // process 仍返回引用串：溢出表 miss 或未加载成功
-                        logger.warn("OVERFLOW_LOADER_STILL_REF|key=$key|loadKey=$loadKey|data=$data")
-                        data
-                    }
-                    else -> {
-                        logger.info("OVERFLOW_LOADER_OK|key=$key|loadKey=$loadKey|len=${data.length}")
-                        data
-                    }
-                }
+                handleLoadResult(key, loadKey, data, variables)
             } catch (ignore: Throwable) {
                 logger.warn("OVERFLOW_LOADER_FAIL|key=$key|${ignore.message}", ignore)
                 variables[key] ?: variables[key.removePrefix(VARIABLES_PREFIX)]
             }
         }
         return overflowKeys to loader
+    }
+
+    private fun resolveLoadKey(key: String): String =
+        key.removePrefix(VARIABLES_PREFIX)
+
+    /**
+     * 短路径 steps.x.outputs.y 是运行时派生、不落库；其落库 key 为 jobs.<jobId>.steps.x.outputs.y。
+     * 直查 miss（null 或仍是引用串）时，用当前 jobId 补前缀重查一次。
+     */
+    private fun tryFetchFullStepOutput(
+        data: String?,
+        pipelineId: String,
+        loadKey: String,
+        key: String
+    ): String? {
+        if (data != null && !BuildVarOverflowUtils.isOverflowReference(data)) return null
+        if (!isShortStepOutput(loadKey)) return null
+        val jobId = LoggerService.buildVariables?.jobId?.takeIf { it.isNotBlank() } ?: return null
+        val fullKey = "jobs.$jobId.$loadKey"
+        val full = fetchRealValue(pipelineId, fullKey)
+        if (full == null || BuildVarOverflowUtils.isOverflowReference(full)) return null
+        logger.info("OVERFLOW_LOADER_OK|key=$key|fullKey=$fullKey|len=${full.length}")
+        return full
+    }
+
+    private fun handleLoadResult(
+        key: String,
+        loadKey: String,
+        data: String?,
+        variables: Map<String, String>
+    ): String? = when {
+        data == null -> {
+            logger.warn("OVERFLOW_LOADER_NULL|key=$key|loadKey=$loadKey")
+            variables[key] ?: variables[loadKey]
+        }
+        BuildVarOverflowUtils.isOverflowReference(data) -> {
+            // process 仍返回引用串：溢出表 miss 或未加载成功
+            logger.warn("OVERFLOW_LOADER_STILL_REF|key=$key|loadKey=$loadKey|data=$data")
+            data
+        }
+        else -> {
+            logger.info("OVERFLOW_LOADER_OK|key=$key|loadKey=$loadKey|len=${data.length}")
+            data
+        }
     }
 
     /**

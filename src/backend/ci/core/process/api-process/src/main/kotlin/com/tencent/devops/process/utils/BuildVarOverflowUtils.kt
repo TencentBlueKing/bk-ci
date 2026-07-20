@@ -62,13 +62,10 @@ object BuildVarOverflowUtils {
     private val doubleBracePattern = Regex("\\$\\{\\{([^{}$]+)}}")
 
     /** 主表 VALUE 列字符上限，与 [PIPELINE_VARIABLES_STRING_LENGTH_MAX] 对齐。 */
-    const val MAIN_TABLE_MAX_LENGTH: Int = PIPELINE_VARIABLES_STRING_LENGTH_MAX
+    private const val MAIN_TABLE_MAX_LENGTH: Int = PIPELINE_VARIABLES_STRING_LENGTH_MAX
 
     /** 哨兵前缀，用于在主表 VALUE 列识别"是否大变量引用"。 */
     const val OVERFLOW_PREFIX: String = PIPELINE_VARIABLES_OVERFLOW_PREFIX
-
-    /** 大变量值硬上限（字符数），超过则拒绝写入。 */
-    const val HARD_MAX_LENGTH: Int = PIPELINE_VARIABLES_STRING_LENGTH_HARD_MAX
 
     /**
      * 判断主表 VALUE 是否为"大变量引用"。
@@ -108,7 +105,7 @@ object BuildVarOverflowUtils {
 
     /**
      * 合成键溢出重写的结果。
-     * @property value    重写后的值（结构与入参一致：String / Map / List / 其它原样）
+     * @property value 重写后的值（结构与入参一致：String / Map / List / 其它原样）
      * @property synthVars 合成键 -> 大变量真实值 映射；调用方需并入替换上下文
      */
     data class OverflowRewriteResult(
@@ -130,9 +127,9 @@ object BuildVarOverflowUtils {
      * - loader 返回 null 或仍是引用串（溢出表 miss / 加载失败）：保持原 token 不变，
      *   行为退化为"输出引用串"，与历史一致。
      *
-     * @param value        待处理值，支持 String 及任意 Map/List 嵌套对象图
+     * @param value 待处理值，支持 String 及任意 Map/List 嵌套对象图
      * @param overflowKeys [collectOverflowKeys] 收集到的溢出键；为空时直接原样返回
-     * @param loader       按落库 key 拉取真实值；由调用方决定远程/本地及兜底策略
+     * @param loader 按落库 key 拉取真实值；由调用方决定远程/本地及兜底策略
      */
     fun rewriteOverflowRefs(
         value: Any?,
