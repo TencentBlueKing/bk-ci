@@ -73,10 +73,9 @@ class MockPublicVarGroupPermissionService : PublicVarGroupPermissionService {
     override fun filterPublicVarGroups(
         userId: String,
         projectId: String,
-        authPermissions: Set<AuthPermission>,
-        groupNames: List<String>
+        authPermissions: Set<AuthPermission>
     ): Map<AuthPermission, List<String>> {
-        return authPermissions.associateWith { groupNames }
+        return emptyMap()
     }
 
     override fun createResource(

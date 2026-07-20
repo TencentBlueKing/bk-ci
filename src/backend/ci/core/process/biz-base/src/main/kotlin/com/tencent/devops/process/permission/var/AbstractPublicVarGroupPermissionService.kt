@@ -100,30 +100,6 @@ abstract class AbstractPublicVarGroupPermissionService constructor(
         }
     }
 
-    override fun filterPublicVarGroups(
-        userId: String,
-        projectId: String,
-        authPermissions: Set<AuthPermission>,
-        groupNames: List<String>
-    ): Map<AuthPermission, List<String>> {
-        val isManager = authProjectApi.checkProjectManager(
-            userId = userId,
-            serviceCode = publicVarGroupAuthServiceCode,
-            projectCode = projectId
-        )
-
-        return if (isManager) {
-            authPermissions.associateWith { groupNames }
-        } else {
-            authPermissions.associateWith { permission ->
-                when (permission) {
-                    AuthPermission.VIEW, AuthPermission.USE, AuthPermission.LIST -> groupNames
-                    else -> emptyList()
-                }
-            }
-        }
-    }
-
     companion object {
         private val logger = LoggerFactory.getLogger(AbstractPublicVarGroupPermissionService::class.java)
     }

@@ -28,7 +28,6 @@
 
 package com.tencent.devops.process.permission.config
 
-import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.api.AuthResourceApi
 import com.tencent.devops.common.auth.code.PublicVarGroupAuthServiceCode
@@ -54,14 +53,12 @@ class PublicVarGroupConfiguration {
     @Bean
     @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "rbac")
     fun rbacPublicVarGroupPermissionService(
-        authPermissionApi: AuthPermissionApi,
         authResourceApi: AuthResourceApi,
         authProjectApi: AuthProjectApi,
         publicVarGroupAuthServiceCode: PublicVarGroupAuthServiceCode,
         client: Client,
         tokenService: ClientTokenService,
     ): PublicVarGroupPermissionService = RbacPublicVarGroupPermissionService(
-        authPermissionApi = authPermissionApi,
         authResourceApi = authResourceApi,
         authProjectApi = authProjectApi,
         publicVarGroupAuthServiceCode = publicVarGroupAuthServiceCode,
