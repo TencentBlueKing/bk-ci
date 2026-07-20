@@ -293,7 +293,7 @@ class PublicVarGroupService @Autowired constructor(
         val page = queryReq.page
         val pageSize = queryReq.pageSize
 
-        val groupNames = publicVarService.listGroupNamesByVarFilter(
+        val varFilterGroupNames = publicVarService.listGroupNamesByVarFilter(
             projectId = projectId,
             filterByVarName = queryReq.filterByVarName,
             filterByVarAlias = queryReq.filterByVarAlias
@@ -301,7 +301,7 @@ class PublicVarGroupService @Autowired constructor(
 
         // 如果用户指定了变量名或别名筛选条件，但没有匹配结果，直接返回空页面
         val hasVarFilter = !queryReq.filterByVarName.isNullOrBlank() || !queryReq.filterByVarAlias.isNullOrBlank()
-        if (hasVarFilter && groupNames.isEmpty()) {
+        if (hasVarFilter && varFilterGroupNames.isEmpty()) {
             return Page(
                 count = 0,
                 page = page,
@@ -311,13 +311,34 @@ class PublicVarGroupService @Autowired constructor(
             )
         }
 
+        val permissionsMap = publicVarGroupPermissionService.filterPublicVarGroups(
+            userId = userId,
+            projectId = projectId,
+            authPermissions = setOf(
+                AuthPermission.LIST,
+                AuthPermission.EDIT,
+                AuthPermission.VIEW,
+                AuthPermission.DELETE,
+                AuthPermission.USE
+            ),
+            groupNames = emptyList()
+        )
+        val hasListPermissionGroupNames = permissionsMap[AuthPermission.LIST] ?: emptyList()
+
+        // 合并变量筛选和LIST权限筛选的groupNames
+        val effectiveGroupNames = if (hasVarFilter) {
+            varFilterGroupNames.intersect(hasListPermissionGroupNames.toSet()).toList()
+        } else {
+            hasListPermissionGroupNames
+        }
+
         val totalCount = publicVarGroupDao.countGroupsByProjectId(
             dslContext = dslContext,
             projectId = projectId,
             filterByGroupName = queryReq.filterByGroupName,
             filterByGroupDesc = queryReq.filterByGroupDesc,
             filterByUpdater = queryReq.filterByUpdater,
-            groupNames = groupNames.takeIf { it.isNotEmpty() }
+            groupNames = effectiveGroupNames.takeIf { it.isNotEmpty() }
         )
 
         val groupPOs = publicVarGroupDao.listGroupsByProjectIdPage(
@@ -328,26 +349,10 @@ class PublicVarGroupService @Autowired constructor(
             filterByGroupName = queryReq.filterByGroupName,
             filterByGroupDesc = queryReq.filterByGroupDesc,
             filterByUpdater = queryReq.filterByUpdater,
-            groupNames = groupNames.takeIf { it.isNotEmpty() }
+            groupNames = effectiveGroupNames.takeIf { it.isNotEmpty() }
         )
 
-        // 批量查询权限
         val groupNameList = groupPOs.map { it.groupName }
-        val permissionsMap = if (groupNameList.isNotEmpty()) {
-            publicVarGroupPermissionService.filterPublicVarGroups(
-                userId = userId,
-                projectId = projectId,
-                authPermissions = setOf(
-                    AuthPermission.EDIT,
-                    AuthPermission.VIEW,
-                    AuthPermission.DELETE,
-                    AuthPermission.USE
-                ),
-                groupNames = groupNameList
-            )
-        } else {
-            emptyMap()
-        }
 
         // 批量查询当前有效引用数量
         val referCountMap = if (groupNameList.isNotEmpty()) {
