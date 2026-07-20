@@ -101,9 +101,6 @@
                 }
             }
         },
-        created () {
-            this.getProjects()
-        },
         methods: {
             ...mapActions('environment', [
                 'requestProjects'
