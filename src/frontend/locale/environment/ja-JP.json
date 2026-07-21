@@ -532,5 +532,12 @@
     "pipelineResource": "パイプラインリソース",
     "relatedCreativeFlow": "関連クリエイティブフロー",
     "workspace": "ワークスペース",
-    "enableTitle": "スタート/ストップ"
+    "enableTitle": "スタート/ストップ",
+    "taskStatus": "タスク状態",
+    "pipelineTaskStatusMap": {
+        "QUEUE": "キュー中",
+        "RUNNING": "実行中",
+        "DONE": "完了",
+        "FAILURE": "失敗"
+    }
 }

@@ -270,6 +270,28 @@
                                 return []
                             }
                         }
+                    },
+                    {
+                        name: proxy.$t('environment.taskStatus'),
+                        id: 'taskStatus',
+                        children: [
+                            {
+                                id: 'QUEUE',
+                                name: proxy.$t('environment.pipelineTaskStatusMap.QUEUE')
+                            },
+                            {
+                                id: 'RUNNING',
+                                name: proxy.$t('environment.pipelineTaskStatusMap.RUNNING')
+                            },
+                            {
+                                id: 'DONE',
+                                name: proxy.$t('environment.pipelineTaskStatusMap.DONE')
+                            },
+                            {
+                                id: 'FAILURE',
+                                name: proxy.$t('environment.pipelineTaskStatusMap.FAILURE')
+                            }
+                        ]
                     }
                 ]
             })

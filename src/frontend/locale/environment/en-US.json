@@ -537,5 +537,12 @@
     "pipelineResource": "Pipeline Resource",
     "relatedCreativeFlow": "Related Creative Flow",
     "workspace": "Workspace",
-    "enableTitle": "Start/Stop"
+    "enableTitle": "Start/Stop",
+    "taskStatus": "Task Status",
+    "pipelineTaskStatusMap": {
+        "QUEUE": "Queued",
+        "RUNNING": "Running",
+        "DONE": "Done",
+        "FAILURE": "Failed"
+    }
 }

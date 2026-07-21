@@ -534,5 +534,12 @@
     "pipelineResource": "流水线资源",
     "relatedCreativeFlow": "关联的创作流",
     "workspace": "工作空间",
-    "enableTitle": "启/停"
+    "enableTitle": "启/停",
+    "taskStatus": "任务状态",
+    "pipelineTaskStatusMap": {
+        "QUEUE": "排队中",
+        "RUNNING": "执行中",
+        "DONE": "已完成",
+        "FAILURE": "失败"
+    }
 }
