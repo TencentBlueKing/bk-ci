@@ -1127,26 +1127,28 @@ class PipelineYamlFileManager @Autowired constructor(
             "[PAC_PIPELINE]|delete pipeline|$eventId|" +
                 "$projectId|$repoHashId|$filePath|$ref|${commit?.commitId}|$pipelineId"
         )
-        pipelineYamlResourceManager.deletePipeline(
-            userId = userId,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            isTemplate = isTemplate
-        )
+        // 先删除yaml关联关系,再删除流水线,这样如果后面失败,用户可以页面删除
         pipelineYamlService.deleteYamlPipeline(
             userId = authUser,
             projectId = projectId,
             repoHashId = repoHashId,
             filePath = filePath
         )
-        // 删除流水线,如果关联的流水线组下流水线已经为空,应该删除
+        pipelineYamlResourceManager.deletePipeline(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            isTemplate = isTemplate
+        )
+        // 删除流水线后清理流水线组
         if (!isTemplate) {
             val directory = GitActionCommon.getCiDirectory(filePath)
-            pipelineYamlViewService.deleteEmptyYamlView(
+            pipelineYamlViewService.cleanupYamlView(
                 userId = userId,
                 projectId = projectId,
                 repoHashId = repoHashId,
-                directory = directory
+                directory = directory,
+                pipelineId = pipelineId
             )
         }
     }
@@ -1216,7 +1218,10 @@ class PipelineYamlFileManager @Autowired constructor(
         } ?: run {
             context.actionType = YamlPipelineActionType.NO_CHANGE
         }
-        deleteOldYamlPipeline(needDeleteOldInfo = needDeleteOldInfo)
+        deleteOldYamlPipeline(
+            pipelineId = pipelineId,
+            needDeleteOldInfo = needDeleteOldInfo
+        )
         handleMergedPullRequest(pipelineId = pipelineId)
     }
 
@@ -1321,7 +1326,10 @@ class PipelineYamlFileManager @Autowired constructor(
         return deployPipelineResult
     }
 
-    private fun PipelineYamlFileEvent.deleteOldYamlPipeline(needDeleteOldInfo: Boolean) {
+    private fun PipelineYamlFileEvent.deleteOldYamlPipeline(
+        pipelineId: String,
+        needDeleteOldInfo: Boolean
+    ) {
         logger.info(
             "[PAC_PIPELINE]|delete old yaml pipeline|" +
                 "$eventId|$projectId|$repoHashId|$filePath|$oldFilePath|$needDeleteOldInfo"
@@ -1334,15 +1342,19 @@ class PipelineYamlFileManager @Autowired constructor(
             oldFilePath = oldFilePath!!,
             needDeleteOldInfo = needDeleteOldInfo
         )
-        // 删除流水线,如果关联的流水线组下流水线已经为空,应该删除
+        // 重命名导致目录变更时，从旧目录流水线组移除并清理空组；同目录重命名无需处理
         if (!isTemplate && needDeleteOldInfo) {
-            val directory = GitActionCommon.getCiDirectory(oldFilePath)
-            pipelineYamlViewService.deleteEmptyYamlView(
-                userId = userId,
-                projectId = projectId,
-                repoHashId = repoHashId,
-                directory = directory
-            )
+            val oldDirectory = GitActionCommon.getCiDirectory(oldFilePath)
+            val newDirectory = GitActionCommon.getCiDirectory(filePath)
+            if (oldDirectory != newDirectory) {
+                pipelineYamlViewService.cleanupYamlView(
+                    userId = userId,
+                    projectId = projectId,
+                    repoHashId = repoHashId,
+                    directory = oldDirectory,
+                    pipelineId = pipelineId
+                )
+            }
         }
     }
 
