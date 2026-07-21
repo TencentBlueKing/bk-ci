@@ -33,6 +33,7 @@ import com.tencent.devops.log.configuration.LogServiceConfig
 import com.tencent.devops.log.configuration.StorageProperties
 import com.tencent.devops.log.event.ILogEvent
 import com.tencent.devops.log.event.LogOriginEvent
+import com.tencent.devops.log.event.LogOriginHeavyEvent
 import com.tencent.devops.log.event.LogStatusEvent
 import com.tencent.devops.log.event.LogStorageEvent
 import com.tencent.devops.log.jmx.LogPrintBean
@@ -53,6 +54,7 @@ class BuildLogPrintService @Autowired constructor(
     private val logPrintBean: LogPrintBean,
     private val storageProperties: StorageProperties,
     private val logProjectIdResolver: LogProjectIdResolver,
+    private val logTrafficStatsService: LogTrafficStatsService,
     logServiceConfig: LogServiceConfig
 ) {
 
@@ -64,24 +66,28 @@ class BuildLogPrintService @Autowired constructor(
         LinkedBlockingQueue(logServiceConfig.taskQueueSize ?: 1000)
     )
 
-    fun dispatchEvent(event: ILogEvent) {
-        enrichAndSend(event)
+    /**
+     * @param recordTraffic 仅上报入口统计流量并决定队列投放；MQ 重试/降级转发传 false
+     */
+    fun dispatchEvent(event: ILogEvent, recordTraffic: Boolean = false) {
+        enrichAndSend(event, recordTraffic)
     }
 
-    fun asyncDispatchEvent(event: ILogEvent): Result<Boolean> {
+    fun asyncDispatchEvent(event: ILogEvent, recordTraffic: Boolean = true): Result<Boolean> {
         val enriched = enrichProjectId(event)
         if (!isEnabled(storageProperties.enable)) {
             val warnings = "Service refuses to write the log, the log file of the task will be archived."
             if (enriched is LogOriginEvent && enriched.logs.isNotEmpty()) {
                 dispatchEvent(
-                    enriched.copy(
+                    event = enriched.copy(
                         logs = listOf(
                             enriched.logs.first().copy(
                                 message = Ansi().fgYellow().a(warnings).reset().toString(),
                                 logType = LogType.WARN
                             )
                         )
-                    )
+                    ),
+                    recordTraffic = false
                 )
             }
             return Result(
@@ -92,7 +98,7 @@ class BuildLogPrintService @Autowired constructor(
         }
         return try {
             logExecutorService.execute {
-                enrichAndSend(enriched)
+                enrichAndSend(enriched, recordTraffic)
             }
             Result(true)
         } catch (e: RejectedExecutionException) {
@@ -117,8 +123,26 @@ class BuildLogPrintService @Autowired constructor(
         logPrintBean.savePrintQueueSize(logExecutorService.queue.size)
     }
 
-    private fun enrichAndSend(event: ILogEvent) {
-        enrichProjectId(event).sendTo(streamBridge)
+    private fun enrichAndSend(event: ILogEvent, recordTraffic: Boolean) {
+        val enriched = enrichProjectId(event)
+        when {
+            // 已在 heavy 队列内的重试/转发，保持原 destination
+            enriched is LogOriginHeavyEvent -> enriched.sendTo(streamBridge)
+            enriched is LogOriginEvent && recordTraffic -> {
+                logTrafficStatsService.record(enriched.buildId, enriched.logs.size)
+                if (logTrafficStatsService.shouldRouteHeavy(enriched.buildId)) {
+                    LogOriginHeavyEvent.from(enriched).sendTo(streamBridge)
+                } else {
+                    enriched.sendTo(streamBridge)
+                }
+            }
+            else -> {
+                if (recordTraffic) {
+                    recordTrafficLines(enriched)
+                }
+                enriched.sendTo(streamBridge)
+            }
+        }
     }
 
     private fun enrichProjectId(event: ILogEvent): ILogEvent {
@@ -128,9 +152,22 @@ class BuildLogPrintService @Autowired constructor(
         }
         return when (event) {
             is LogOriginEvent -> event.copy(projectId = resolved)
+            is LogOriginHeavyEvent -> event.copy(projectId = resolved)
             is LogStorageEvent -> event.copy(projectId = resolved)
             is LogStatusEvent -> event.copy(projectId = resolved)
             else -> event
+        }
+    }
+
+    private fun recordTrafficLines(event: ILogEvent) {
+        val lines = when (event) {
+            is LogOriginEvent -> event.logs.size
+            is LogOriginHeavyEvent -> event.logs.size
+            is LogStorageEvent -> event.logs.size
+            else -> 0
+        }
+        if (lines > 0) {
+            logTrafficStatsService.record(event.buildId, lines)
         }
     }
 

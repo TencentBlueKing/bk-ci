@@ -71,7 +71,8 @@ class BuildLogPrintResourceImpl @Autowired constructor(
             return Result(false)
         }
         buildLogPrintService.dispatchEvent(
-            LogOriginEvent(buildId = buildId, logs = listOf(logMessage), projectId = projectId)
+            event = LogOriginEvent(buildId = buildId, logs = listOf(logMessage), projectId = projectId),
+            recordTraffic = true
         )
         return Result(true)
     }
@@ -82,7 +83,7 @@ class BuildLogPrintResourceImpl @Autowired constructor(
             return Result(false)
         }
         buildLogPrintService.dispatchEvent(
-            LogOriginEvent(
+            event = LogOriginEvent(
                 buildId = buildId,
                 logs = listOf(
                     logMessage.copy(
@@ -90,7 +91,8 @@ class BuildLogPrintResourceImpl @Autowired constructor(
                     )
                 ),
                 projectId = projectId
-            )
+            ),
+            recordTraffic = true
         )
         return Result(true)
     }
@@ -101,7 +103,7 @@ class BuildLogPrintResourceImpl @Autowired constructor(
             return Result(false)
         }
         buildLogPrintService.dispatchEvent(
-            LogOriginEvent(
+            event = LogOriginEvent(
                 buildId = buildId,
                 logs = listOf(
                     logMessage.copy(
@@ -109,7 +111,8 @@ class BuildLogPrintResourceImpl @Autowired constructor(
                     )
                 ),
                 projectId = projectId
-            )
+            ),
+            recordTraffic = true
         )
         return Result(true)
     }
@@ -125,7 +128,8 @@ class BuildLogPrintResourceImpl @Autowired constructor(
             return Result(false)
         }
         buildLogPrintService.dispatchEvent(
-            LogOriginEvent(buildId = buildId, logs = logMessages, projectId = projectId)
+            event = LogOriginEvent(buildId = buildId, logs = logMessages, projectId = projectId),
+            recordTraffic = true
         )
         recordMultiLogCount(logMessages.size)
         return Result(true)
@@ -150,7 +154,7 @@ class BuildLogPrintResourceImpl @Autowired constructor(
         val index = indexService.getIndexName(buildId)
         logger.info("Start to print log to index[$index]")
         buildLogPrintService.dispatchEvent(
-            LogStatusEvent(
+            event = LogStatusEvent(
                 buildId = buildId,
                 finished = false,
                 tag = tag,
@@ -161,7 +165,8 @@ class BuildLogPrintResourceImpl @Autowired constructor(
                 userJobId = jobId,
                 stepId = stepId,
                 projectId = projectId
-            )
+            ),
+            recordTraffic = false
         )
         return Result(true)
     }
@@ -183,7 +188,7 @@ class BuildLogPrintResourceImpl @Autowired constructor(
             return Result(false)
         }
         buildLogPrintService.dispatchEvent(
-            LogStatusEvent(
+            event = LogStatusEvent(
                 buildId = buildId,
                 finished = finished,
                 tag = tag,
@@ -194,7 +199,8 @@ class BuildLogPrintResourceImpl @Autowired constructor(
                 userJobId = jobId,
                 stepId = stepId,
                 projectId = projectId
-            )
+            ),
+            recordTraffic = false
         )
         return Result(false)
     }

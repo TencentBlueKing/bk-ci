@@ -250,11 +250,12 @@ class LogServiceESImpl(
 
     private fun dispatchToStorage(event: LogOriginEvent, logMessage: List<LogMessageWithLineNo>) {
         buildLogPrintService.dispatchEvent(
-            LogStorageEvent(
+            event = LogStorageEvent(
                 buildId = event.buildId,
                 logs = logMessage,
                 projectId = event.projectId
-            )
+            ),
+            recordTraffic = false
         )
     }
 
