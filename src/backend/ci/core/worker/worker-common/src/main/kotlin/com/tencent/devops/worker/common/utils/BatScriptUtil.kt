@@ -66,14 +66,15 @@ object BatScriptUtil {
         "    goto:eof\r\n"
 
     private const val formatMultipleLines = ":format_multiple_lines\r\n" +
-        "    setlocal enabledelayedexpansion\r\n" +
+        "    setlocal\r\n" +
         "    set RAW=%~1\r\n" +
         "    powershell -NoProfile -Command ^\r\n" +
         "        \"\$c=\$env:RAW;\" ^\r\n" +
         "        \"\$c=\$c -replace '%%','%25';\" ^\r\n" +
         "        \"\$c=\$c -replace '\\\\n','%0A';\" ^\r\n" +
         "        \"\$c=\$c -replace '\\\\r','%0D';\" ^\r\n" +
-        "        \"Add-Content -Path '##multiLineFile##' -Value \$c -Encoding UTF8\"\r\n" +
+        "        \"\$enc=New-Object System.Text.UTF8Encoding(\$false);\" ^\r\n" +
+        "        \"[System.IO.File]::AppendAllText('##multiLineFile##', \$c + [Environment]::NewLine, \$enc)\"\r\n" +
         "    endlocal\r\n" +
         "    goto:eof\r\n"
 

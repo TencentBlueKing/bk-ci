@@ -87,7 +87,10 @@ object ScriptEnvUtils {
     fun getMultipleLines(buildId: String, workspace: File): List<String> {
         val f = File(workspace, getMultipleLineFile(buildId))
         if (!f.exists() || f.isDirectory) return emptyList()
-        return f.readLines()
+        return f.readText()
+            .removePrefix("\uFEFF")
+            .split(Regex("\\r\\n|\\r|\\n"))
+            .let { if (it.isNotEmpty() && it.last().isEmpty()) it.dropLast(1) else it }
     }
     /*限定文件名*/
     fun getFlagFile(buildId: String): String {

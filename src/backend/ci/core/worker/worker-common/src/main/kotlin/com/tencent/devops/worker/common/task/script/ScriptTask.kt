@@ -265,16 +265,6 @@ open class ScriptTask : ITask() {
         buildVariables: BuildVariables
     ): List<BuildEnv> = buildVariables.buildEnvs
 
-    /**
-     * 解码 format_multiple_lines 写入的多行输出内容
-     * 格式: ::set-output name=KEY::VALUE (VALUE 中换行/回车/百分号经 URL 编码)
-     */
-    private fun decodeMultipleLines(
-        lines: List<String>,
-        jobId: String?,
-        stepId: String?
-    ): Map<String, String> = Companion.decodeMultipleLines(lines, jobId, stepId)
-
     private fun setGatewayValue(workspace: File, taskId: String, taskName: String) {
         try {
             val gatewayFile = File(workspace, ScriptEnvUtils.getQualityGatewayEnvFile())
@@ -308,6 +298,7 @@ open class ScriptTask : ITask() {
 
     companion object {
         private val logger = LoggerFactory.getLogger(ScriptTask::class.java)
+        private val outputKeyRegex = Regex("^[a-zA-Z_][a-zA-Z0-9_]*\$")
 
         /**
          * 解码 format_multiple_lines 写入的多行输出内容
@@ -327,7 +318,7 @@ open class ScriptTask : ITask() {
                 val firstColonIndex = value.indexOf("::")
                 if (firstColonIndex < 0) continue
                 val key = value.substring(0, firstColonIndex)
-                if (key.isBlank() || !key.matches(Regex("^[a-zA-Z_][a-zA-Z0-9_]*\$"))) continue
+                if (key.isBlank() || !key.matches(outputKeyRegex)) continue
                 /*
                  * 解码顺序必须与编码逆序：
                  * 编码: % → %25(先)  \n → %0A  \r → %0D(后)

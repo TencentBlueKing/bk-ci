@@ -79,11 +79,11 @@ object ShellUtil {
         "    }\n"
 
     private const val formatMultipleLines = "format_multiple_lines() {\n" +
-        "    local content=\$1\n" +
+        "    local content=\"\$1\"\n" +
         "    content=\"\${content//'%'/'%25'}\"\n" +
-        "    content=\"\${content//\$'\\n'/'%0A'}\"\n" +
         "    content=\"\${content//\$'\\r'/'%0D'}\"\n" +
-        "    /bin/echo \"\$content\"|sed 's/\\\\n/%0A/g'|sed 's/\\\\r/%0D/g' >> ##multiLineFile##\n" +
+        "    content=\"\${content//\$'\\n'/'%0A'}\"\n" +
+        "    printf '%s\\n' \"\$content\" >> \"##multiLineFile##\"\n" +
         "}\n"
 
     lateinit var buildEnvs: List<BuildEnv>
