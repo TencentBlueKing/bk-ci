@@ -259,7 +259,7 @@ class LogBulkAggregator(
             )
         } finally {
             val elapse = System.currentTimeMillis() - start
-            logStorageBean.bulkRequest(elapse, success)
+            logStorageBean.bulkRequest(elapse, success, client.clusterName)
             val result = BulkOfferResult(success = success, elapseMs = elapse, message = errorMessage)
             batch.forEach { pending ->
                 pending.future.complete(result)

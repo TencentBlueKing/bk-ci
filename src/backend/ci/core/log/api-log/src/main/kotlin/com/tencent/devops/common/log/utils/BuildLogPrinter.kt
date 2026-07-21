@@ -50,8 +50,7 @@ class BuildLogPrinter(
         executeCount: Int,
         subTag: String? = null,
         jobId: String?,
-        stepId: String?,
-        projectId: String? = null
+        stepId: String?
     ) {
         try {
             doWithCircuitBreaker {
@@ -66,8 +65,7 @@ class BuildLogPrinter(
                         executeCount = executeCount,
                         jobId = jobId,
                         stepId = stepId
-                    ),
-                    projectId = projectId
+                    )
                 )
             }
         } catch (e: CallNotPermittedException) {
@@ -77,13 +75,12 @@ class BuildLogPrinter(
         }
     }
 
-    fun addLines(buildId: String, logMessages: List<LogMessage>, projectId: String? = null) {
+    fun addLines(buildId: String, logMessages: List<LogMessage>) {
         try {
             doWithCircuitBreaker {
                 genLogPrintPrintResource().addLogMultiLine(
                     buildId = buildId,
-                    logMessages = logMessages,
-                    projectId = projectId
+                    logMessages = logMessages
                 )
             }
         } catch (e: CallNotPermittedException) {
@@ -163,8 +160,7 @@ class BuildLogPrinter(
         executeCount: Int,
         subTag: String? = null,
         jobId: String?,
-        stepId: String?,
-        projectId: String? = null
+        stepId: String?
     ) {
         try {
             doWithCircuitBreaker {
@@ -179,8 +175,7 @@ class BuildLogPrinter(
                         executeCount = executeCount,
                         jobId = jobId,
                         stepId = stepId
-                    ),
-                    projectId = projectId
+                    )
                 )
             }
         } catch (e: CallNotPermittedException) {
@@ -198,8 +193,7 @@ class BuildLogPrinter(
         executeCount: Int,
         subTag: String? = null,
         jobId: String?,
-        stepId: String?,
-        projectId: String? = null
+        stepId: String?
     ) {
         try {
             doWithCircuitBreaker {
@@ -214,8 +208,7 @@ class BuildLogPrinter(
                         executeCount = executeCount,
                         jobId = jobId,
                         stepId = stepId
-                    ),
-                    projectId = projectId
+                    )
                 )
             }
         } catch (e: CallNotPermittedException) {
@@ -233,8 +226,7 @@ class BuildLogPrinter(
         executeCount: Int,
         subTag: String? = null,
         jobId: String?,
-        stepId: String?,
-        projectId: String? = null
+        stepId: String?
     ) {
         try {
             doWithCircuitBreaker {
@@ -249,8 +241,7 @@ class BuildLogPrinter(
                         executeCount = executeCount,
                         jobId = jobId,
                         stepId = stepId
-                    ),
-                    projectId = projectId
+                    )
                 )
             }
         } catch (e: CallNotPermittedException) {
@@ -328,8 +319,7 @@ class BuildLogPrinter(
         executeCount: Int? = null,
         subTag: String? = null,
         jobId: String? = null,
-        stepId: String? = null,
-        projectId: String? = null
+        stepId: String? = null
     ) {
         try {
             doWithCircuitBreaker {
@@ -341,8 +331,7 @@ class BuildLogPrinter(
                     containerHashId = containerHashId,
                     executeCount = executeCount,
                     jobId = jobId,
-                    stepId = stepId,
-                    projectId = projectId
+                    stepId = stepId
                 )
             }
         } catch (ignore: Exception) {
@@ -357,8 +346,7 @@ class BuildLogPrinter(
         executeCount: Int? = null,
         subTag: String? = null,
         jobId: String? = null,
-        stepId: String? = null,
-        projectId: String? = null
+        stepId: String? = null
     ) {
         try {
             doWithCircuitBreaker {
@@ -369,8 +357,7 @@ class BuildLogPrinter(
                     containerHashId = containerHashId,
                     executeCount = executeCount,
                     jobId = jobId,
-                    stepId = stepId,
-                    projectId = projectId
+                    stepId = stepId
                 )
             }
         } catch (ignore: Exception) {

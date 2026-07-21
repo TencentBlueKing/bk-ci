@@ -28,13 +28,12 @@
 package com.tencent.devops.log.api.print
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BUILD_ID
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.log.pojo.enums.LogStorageMode
 import com.tencent.devops.common.log.pojo.message.LogMessage
+import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
-import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.ws.rs.Consumes
 import jakarta.ws.rs.HeaderParam
 import jakarta.ws.rs.POST
@@ -63,10 +62,7 @@ interface ServiceLogPrintResource {
         @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
         buildId: String,
         @Parameter(description = "一条日志", required = true)
-        logMessage: LogMessage,
-        @Parameter(description = "项目ID，可空；未传时服务端反查并缓存", required = false)
-        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
-        projectId: String? = null
+        logMessage: LogMessage
     ): Result<Boolean>
 
     @Operation(summary = "写入多条日志")
@@ -77,10 +73,7 @@ interface ServiceLogPrintResource {
         @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
         buildId: String,
         @Parameter(description = "多条日志列表", required = true)
-        logMessages: List<LogMessage>,
-        @Parameter(description = "项目ID，可空；未传时服务端反查并缓存", required = false)
-        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
-        projectId: String? = null
+        logMessages: List<LogMessage>
     ): Result<Boolean>
 
     @Operation(summary = "写入日志状态")
@@ -107,10 +100,7 @@ interface ServiceLogPrintResource {
         jobId: String?,
         @Parameter(description = "step id", required = false)
         @QueryParam("stepId")
-        stepId: String?,
-        @Parameter(description = "项目ID，可空；未传时服务端反查并缓存", required = false)
-        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
-        projectId: String? = null
+        stepId: String?
     ): Result<Boolean>
 
     @Operation(summary = "更新日志状态")
@@ -143,9 +133,6 @@ interface ServiceLogPrintResource {
         jobId: String?,
         @Parameter(description = "step id", required = false)
         @QueryParam("stepId")
-        stepId: String?,
-        @Parameter(description = "项目ID，可空；未传时服务端反查并缓存", required = false)
-        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
-        projectId: String? = null
+        stepId: String?
     ): Result<Boolean>
 }

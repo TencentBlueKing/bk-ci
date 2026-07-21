@@ -28,7 +28,6 @@
 package com.tencent.devops.log.api.print
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BUILD_ID
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
@@ -69,10 +68,7 @@ interface BuildLogPrintResource {
         @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
         buildId: String,
         @Parameter(description = "一条日志", required = true)
-        logMessage: LogMessage,
-        @Parameter(description = "项目ID，可空；未传时服务端反查并缓存", required = false)
-        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
-        projectId: String? = null
+        logMessage: LogMessage
     ): Result<Boolean>
 
     @Operation(summary = "写入一条红色高亮日志")
@@ -83,10 +79,7 @@ interface BuildLogPrintResource {
         @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
         buildId: String,
         @Parameter(description = "一条日志", required = true)
-        logMessage: LogMessage,
-        @Parameter(description = "项目ID，可空；未传时服务端反查并缓存", required = false)
-        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
-        projectId: String? = null
+        logMessage: LogMessage
     ): Result<Boolean>
 
     @Operation(summary = "写入一条黄色高亮日志")
@@ -97,10 +90,7 @@ interface BuildLogPrintResource {
         @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
         buildId: String,
         @Parameter(description = "一条日志", required = true)
-        logMessage: LogMessage,
-        @Parameter(description = "项目ID，可空；未传时服务端反查并缓存", required = false)
-        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
-        projectId: String? = null
+        logMessage: LogMessage
     ): Result<Boolean>
 
     @Operation(summary = "写入多条日志")
@@ -111,10 +101,7 @@ interface BuildLogPrintResource {
         @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
         buildId: String,
         @Parameter(description = "多条日志列表", required = true)
-        logMessages: List<LogMessage>,
-        @Parameter(description = "项目ID，可空；未传时服务端反查并缓存", required = false)
-        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
-        projectId: String? = null
+        logMessages: List<LogMessage>
     ): Result<Boolean>
 
     @Operation(summary = "写入日志状态")
@@ -144,10 +131,7 @@ interface BuildLogPrintResource {
         jobId: String?,
         @Parameter(description = "step id", required = false)
         @QueryParam("stepId")
-        stepId: String?,
-        @Parameter(description = "项目ID，可空；未传时服务端反查并缓存", required = false)
-        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
-        projectId: String? = null
+        stepId: String?
     ): Result<Boolean>
 
     @Operation(summary = "更新日志状态")
@@ -180,10 +164,7 @@ interface BuildLogPrintResource {
         jobId: String?,
         @Parameter(description = "step id", required = false)
         @QueryParam("stepId")
-        stepId: String?,
-        @Parameter(description = "项目ID，可空；未传时服务端反查并缓存", required = false)
-        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
-        projectId: String? = null
+        stepId: String?
     ): Result<Boolean>
 
     @Operation(summary = "更新日志存储模式的流转状态")
@@ -197,10 +178,7 @@ interface BuildLogPrintResource {
         @QueryParam("executeCount")
         executeCount: Int,
         @Parameter(description = "所有插件的日志存储结果", required = true)
-        propertyList: List<TaskBuildLogProperty>,
-        @Parameter(description = "项目ID，可空；未传时服务端反查并缓存", required = false)
-        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
-        projectId: String? = null
+        propertyList: List<TaskBuildLogProperty>
     ): Result<Boolean>
 
     @Operation(summary = "根据构建ID获取初始化所有日志")

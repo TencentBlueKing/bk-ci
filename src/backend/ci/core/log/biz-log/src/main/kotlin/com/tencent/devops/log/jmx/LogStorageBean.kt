@@ -27,6 +27,8 @@
 
 package com.tencent.devops.log.jmx
 
+import com.tencent.devops.log.metrics.LogMetrics
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.jmx.export.annotation.ManagedAttribute
 import org.springframework.jmx.export.annotation.ManagedResource
 import org.springframework.stereotype.Component
@@ -35,7 +37,9 @@ import java.util.concurrent.atomic.AtomicLong
 @Suppress("TooManyFunctions")
 @Component
 @ManagedResource(objectName = "com.tencent.devops.log.v2:type=logs", description = "log performance")
-class LogStorageBean {
+class LogStorageBean @Autowired constructor(
+    private val logMetrics: LogMetrics
+) {
 
     private val batchWriteCount = AtomicLong(0)
     private val batchWriteElapse = AtomicLong(0)
@@ -68,6 +72,7 @@ class LogStorageBean {
         if (!success) {
             downloadFailureCount.incrementAndGet()
         }
+        logMetrics.recordEsDownload(elapse, success)
     }
 
     @Synchronized
@@ -78,15 +83,17 @@ class LogStorageBean {
         if (!success) {
             failureCount.incrementAndGet()
         }
+        logMetrics.recordEsBatchWrite(elapse, success)
     }
 
     @Synchronized
-    fun bulkRequest(elapse: Long, success: Boolean) {
+    fun bulkRequest(elapse: Long, success: Boolean, cluster: String? = null) {
         bulkRequestCount.incrementAndGet()
         bulkRequestElapse.addAndGet(elapse)
         if (!success) {
             bulkRequestFailureCount.incrementAndGet()
         }
+        logMetrics.recordEsBulk(elapse, success, cluster)
     }
 
     @Synchronized
@@ -97,10 +104,12 @@ class LogStorageBean {
         if (!success) {
             queryFailureCount.incrementAndGet()
         }
+        logMetrics.recordEsQuery(elapse, success)
     }
 
     fun degradeToStorage() {
         degradeToStorageCount.incrementAndGet()
+        logMetrics.recordEsDegradeToStorage()
     }
 
     fun directWrite(success: Boolean) {
@@ -109,6 +118,7 @@ class LogStorageBean {
         } else {
             directWriteFailureCount.incrementAndGet()
         }
+        logMetrics.recordEsDirectWrite(success)
     }
 
     @Synchronized

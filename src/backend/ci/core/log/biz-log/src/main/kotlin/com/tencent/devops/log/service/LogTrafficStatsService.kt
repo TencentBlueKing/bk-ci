@@ -108,6 +108,12 @@ class LogTrafficStatsService {
         return true
     }
 
+    /** 当前仍处于热点粘性窗口内的 build 数量，供监控 Gauge 使用 */
+    fun heavySize(): Int {
+        purgeExpiredHeavy()
+        return heavyUntil.size
+    }
+
     @Scheduled(initialDelay = 30000, fixedDelay = 30000)
     fun printTopTraffic() {
         if (!enabled) {
