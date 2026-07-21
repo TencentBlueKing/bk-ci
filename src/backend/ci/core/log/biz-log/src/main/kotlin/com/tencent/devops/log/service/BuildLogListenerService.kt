@@ -31,6 +31,7 @@ import com.tencent.devops.log.event.LogOriginEvent
 import com.tencent.devops.log.event.LogOriginHeavyEvent
 import com.tencent.devops.log.event.LogStatusEvent
 import com.tencent.devops.log.event.LogStorageEvent
+import com.tencent.devops.log.metrics.LogMetrics
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
@@ -39,10 +40,12 @@ import org.springframework.stereotype.Component
 class BuildLogListenerService @Autowired constructor(
     private val logService: LogService,
     private val indexService: IndexService,
-    private val buildLogPrintService: BuildLogPrintService
+    private val buildLogPrintService: BuildLogPrintService,
+    private val logMetrics: LogMetrics
 ) {
 
     fun handleEvent(event: LogOriginEvent) {
+        val start = System.currentTimeMillis()
         var result = false
         try {
             logService.addLogEvent(event)
@@ -50,7 +53,14 @@ class BuildLogListenerService @Autowired constructor(
         } catch (ignored: Throwable) {
             logger.warn("Fail to add the log event [${event.buildId}|${event.retryTime}]", ignored)
         } finally {
-            if (!result && event.retryTime >= 0) {
+            val retried = !result && event.retryTime >= 0
+            logMetrics.recordKafkaConsume(
+                destination = LogMetrics.DESTINATION_ORIGIN,
+                elapseMs = System.currentTimeMillis() - start,
+                success = result,
+                retried = retried
+            )
+            if (retried) {
                 logger.warn("Retry to add the log event [${event.buildId}|${event.retryTime}]")
                 with(event) {
                     buildLogPrintService.dispatchEvent(
@@ -69,6 +79,7 @@ class BuildLogListenerService @Autowired constructor(
     }
 
     fun handleEvent(event: LogOriginHeavyEvent) {
+        val start = System.currentTimeMillis()
         var result = false
         try {
             logService.addLogEvent(event.toOriginEvent())
@@ -76,7 +87,14 @@ class BuildLogListenerService @Autowired constructor(
         } catch (ignored: Throwable) {
             logger.warn("Fail to add the heavy log event [${event.buildId}|${event.retryTime}]", ignored)
         } finally {
-            if (!result && event.retryTime >= 0) {
+            val retried = !result && event.retryTime >= 0
+            logMetrics.recordKafkaConsume(
+                destination = LogMetrics.DESTINATION_ORIGIN_HEAVY,
+                elapseMs = System.currentTimeMillis() - start,
+                success = result,
+                retried = retried
+            )
+            if (retried) {
                 logger.warn("Retry to add the heavy log event [${event.buildId}|${event.retryTime}]")
                 with(event) {
                     buildLogPrintService.dispatchEvent(
@@ -95,6 +113,7 @@ class BuildLogListenerService @Autowired constructor(
     }
 
     fun handleEvent(event: LogStorageEvent) {
+        val start = System.currentTimeMillis()
         var result = false
         try {
             logService.addBatchLogEvent(event)
@@ -102,7 +121,14 @@ class BuildLogListenerService @Autowired constructor(
         } catch (ignored: Throwable) {
             logger.warn("Fail to add the log batch event [${event.buildId}|${event.retryTime}]", ignored)
         } finally {
-            if (!result && event.retryTime >= 0) {
+            val retried = !result && event.retryTime >= 0
+            logMetrics.recordKafkaConsume(
+                destination = LogMetrics.DESTINATION_STORAGE,
+                elapseMs = System.currentTimeMillis() - start,
+                success = result,
+                retried = retried
+            )
+            if (retried) {
                 logger.warn("Retry to add log batch event [${event.buildId}|${event.retryTime}]")
                 with(event) {
                     buildLogPrintService.dispatchEvent(
@@ -121,6 +147,7 @@ class BuildLogListenerService @Autowired constructor(
     }
 
     fun handleEvent(event: LogStatusEvent) {
+        val start = System.currentTimeMillis()
         var result = false
         try {
             logService.updateLogStatus(event)
@@ -132,7 +159,14 @@ class BuildLogListenerService @Autowired constructor(
         } catch (ignored: Throwable) {
             logger.warn("Fail to add the multi lines [${event.buildId}|${event.retryTime}]", ignored)
         } finally {
-            if (!result && event.retryTime >= 0) {
+            val retried = !result && event.retryTime >= 0
+            logMetrics.recordKafkaConsume(
+                destination = LogMetrics.DESTINATION_STATUS,
+                elapseMs = System.currentTimeMillis() - start,
+                success = result,
+                retried = retried
+            )
+            if (retried) {
                 logger.warn("Retry to add the multi lines [${event.buildId}|${event.retryTime}]")
                 with(event) {
                     buildLogPrintService.dispatchEvent(

@@ -38,6 +38,7 @@ import com.tencent.devops.log.event.LogStatusEvent
 import com.tencent.devops.log.event.LogStorageEvent
 import com.tencent.devops.log.jmx.LogPrintBean
 import com.tencent.devops.log.meta.Ansi
+import com.tencent.devops.log.metrics.LogMetrics
 import com.tencent.devops.log.util.LogErrorCodeEnum
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -55,6 +56,7 @@ class BuildLogPrintService @Autowired constructor(
     private val storageProperties: StorageProperties,
     private val logProjectIdResolver: LogProjectIdResolver,
     private val logTrafficStatsService: LogTrafficStatsService,
+    private val logMetrics: LogMetrics,
     logServiceConfig: LogServiceConfig
 ) {
 
@@ -108,6 +110,7 @@ class BuildLogPrintService @Autowired constructor(
                     "asyncDispatchEvent failed with queue tasks exceed the limit",
                 e
             )
+            logMetrics.recordPrintRejected()
             Result(
                 status = 509,
                 message = LogErrorCodeEnum.PRINT_QUEUE_LIMIT.formatErrorMessage,
@@ -127,21 +130,32 @@ class BuildLogPrintService @Autowired constructor(
         val enriched = enrichProjectId(event)
         when {
             // 已在 heavy 队列内的重试/转发，保持原 destination
-            enriched is LogOriginHeavyEvent -> enriched.sendTo(streamBridge)
+            enriched is LogOriginHeavyEvent -> sendWithMetrics(enriched)
             enriched is LogOriginEvent && recordTraffic -> {
                 logTrafficStatsService.record(enriched.buildId, enriched.logs.size)
                 if (logTrafficStatsService.shouldRouteHeavy(enriched.buildId)) {
-                    LogOriginHeavyEvent.from(enriched).sendTo(streamBridge)
+                    sendWithMetrics(LogOriginHeavyEvent.from(enriched))
                 } else {
-                    enriched.sendTo(streamBridge)
+                    sendWithMetrics(enriched)
                 }
             }
             else -> {
                 if (recordTraffic) {
                     recordTrafficLines(enriched)
                 }
-                enriched.sendTo(streamBridge)
+                sendWithMetrics(enriched)
             }
+        }
+    }
+
+    private fun sendWithMetrics(event: ILogEvent) {
+        val start = System.currentTimeMillis()
+        var success = false
+        try {
+            event.sendTo(streamBridge)
+            success = true
+        } finally {
+            logMetrics.recordKafkaProduce(event, System.currentTimeMillis() - start, success)
         }
     }
 

@@ -1305,7 +1305,7 @@ class LogServiceESImpl(
                 logger.warn("[$buildId] Part of bulk lines failed, lines:$lines, bulkLines:$bulkLines")
             }
             val elapse = System.currentTimeMillis() - currentEpoch
-            logStorageBean.bulkRequest(elapse, bulkLines > 0)
+            logStorageBean.bulkRequest(elapse, bulkLines > 0, bulkClient.clusterName)
 
             // #4265 当日志消息处理时间过长时打印消息内容
             if (elapse >= INDEX_STORAGE_WARN_MILLIS && logMessages.isNotEmpty()) logger.warn(

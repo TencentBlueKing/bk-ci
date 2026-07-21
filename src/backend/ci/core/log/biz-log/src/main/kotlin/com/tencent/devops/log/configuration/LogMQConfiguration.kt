@@ -34,6 +34,7 @@ import com.tencent.devops.log.event.LogOriginHeavyEvent
 import com.tencent.devops.log.event.LogStatusEvent
 import com.tencent.devops.log.event.LogStorageEvent
 import com.tencent.devops.log.jmx.LogPrintBean
+import com.tencent.devops.log.metrics.LogMetrics
 import com.tencent.devops.log.service.BuildLogListenerService
 import com.tencent.devops.log.service.BuildLogPrintService
 import com.tencent.devops.log.service.LogProjectIdResolver
@@ -58,6 +59,7 @@ class LogMQConfiguration {
         @Autowired storageProperties: StorageProperties,
         @Autowired logProjectIdResolver: LogProjectIdResolver,
         @Autowired logTrafficStatsService: LogTrafficStatsService,
+        @Autowired logMetrics: LogMetrics,
         @Autowired logServiceConfig: LogServiceConfig
     ) = BuildLogPrintService(
         streamBridge = streamBridge,
@@ -65,6 +67,7 @@ class LogMQConfiguration {
         storageProperties = storageProperties,
         logProjectIdResolver = logProjectIdResolver,
         logTrafficStatsService = logTrafficStatsService,
+        logMetrics = logMetrics,
         logServiceConfig = logServiceConfig
     )
 
