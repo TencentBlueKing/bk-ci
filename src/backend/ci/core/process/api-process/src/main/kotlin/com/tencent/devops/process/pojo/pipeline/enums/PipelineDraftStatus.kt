@@ -22,6 +22,9 @@ enum class PipelineDraftStatus {
     @Schema(title = "草稿基线版本落后", description = "草稿基线版本早于当前最新正式版本")
     BASE_OUTDATED,
 
+    @Schema(title = "草稿基线版本落后", description = "草稿基线版本是分支版本")
+    BASE_BRANCH,
+
     @Schema(title = "已发布", description = "检测当前版本是否已被发布")
     PUBLISHED,
 

@@ -1307,17 +1307,23 @@ class PipelineVersionFacadeService @Autowired constructor(
             versionResource.baseVersion != null &&
             latestReleaseResource.version != versionResource.baseVersion
         ) {
-            val draftBaseResource = versionResource.baseVersion?.let { baseVersion ->
+            val baseResource = versionResource.baseVersion?.let { baseVersion ->
                 pipelineRepositoryService.getPipelineResourceVersion(
                     projectId = versionResource.projectId,
                     pipelineId = versionResource.pipelineId,
                     version = baseVersion
                 )
             }
+            // 若基线是分支版本，则提示草稿基于分支版本,否则提示版本落后
+            val status = if (baseResource?.status == VersionStatus.BRANCH) {
+                PipelineDraftStatus.BASE_BRANCH
+            } else {
+                PipelineDraftStatus.BASE_OUTDATED
+            }
             PipelineDraftStatusResult(
-                status = PipelineDraftStatus.BASE_OUTDATED,
+                status = status,
                 draft = PipelineVersionSimple(versionResource).copy(
-                    baseVersionName = draftBaseResource?.versionName
+                    baseVersionName = baseResource?.versionName
                 ),
                 release = PipelineVersionSimple(latestReleaseResource)
             )
@@ -1367,8 +1373,14 @@ class PipelineVersionFacadeService @Autowired constructor(
         return when {
             // 若草稿基线版本早于当前最新版本,则提示草稿版本落后
             releaseTime != null && baseReleaseTime != null && releaseTime > baseReleaseTime -> {
+                // 如果草稿基线基于分支版本,则提示草稿基于分支版本
+                val status = if (baseResource.status == VersionStatus.BRANCH) {
+                    PipelineDraftStatus.BASE_BRANCH
+                } else {
+                    PipelineDraftStatus.BASE_OUTDATED
+                }
                 PipelineDraftStatusResult(
-                    status = PipelineDraftStatus.BASE_OUTDATED,
+                    status = status,
                     draft = PipelineVersionSimple(draftResource).copy(
                         baseVersionName = baseResource.versionName
                     ),
