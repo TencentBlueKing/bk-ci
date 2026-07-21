@@ -1119,7 +1119,7 @@
                 this.showConfirmPublish = false
             },
             // 发布逻辑
-            async releaseConfirm () {
+            async releaseConfirm (skipVersionNameCheck) {
                 const { projectId, templateId, pipelineId } = this.$route.params
                 const releaseFn = this.isTemplate ? this.releaseDraftTemplate : this.releaseDraftPipeline
                 try {
@@ -1482,7 +1482,7 @@
                         return
                     }
 
-                    this.releaseConfirm()
+                    this.releaseConfirm(skipVersionNameCheck)
                 }
             },
             async handleNewDraft () {
