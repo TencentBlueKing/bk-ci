@@ -42,15 +42,13 @@ import com.tencent.devops.common.stream.constants.StreamBinding
 data class LogOriginHeavyEvent(
     override val buildId: String,
     val logs: List<LogMessage>,
-    override val projectId: String? = null,
     override var retryTime: Int = 2,
     override var delayMills: Int = 0
-) : ILogEvent(buildId, retryTime, delayMills, projectId) {
+) : ILogEvent(buildId, retryTime, delayMills) {
 
     fun toOriginEvent() = LogOriginEvent(
         buildId = buildId,
         logs = logs,
-        projectId = projectId,
         retryTime = retryTime,
         delayMills = delayMills
     )
@@ -59,7 +57,6 @@ data class LogOriginHeavyEvent(
         fun from(event: LogOriginEvent) = LogOriginHeavyEvent(
             buildId = event.buildId,
             logs = event.logs,
-            projectId = event.projectId,
             retryTime = event.retryTime,
             delayMills = event.delayMills
         )

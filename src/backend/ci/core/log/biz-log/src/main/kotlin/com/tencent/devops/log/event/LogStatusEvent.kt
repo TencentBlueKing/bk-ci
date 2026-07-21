@@ -48,7 +48,6 @@ data class LogStatusEvent(
     val stepId: String?,
     val executeCount: Int?,
     val logStorageMode: LogStorageMode?,
-    override val projectId: String? = null,
     override var retryTime: Int = 2,
     override var delayMills: Int = 0
-) : ILogEvent(buildId, retryTime, delayMills, projectId)
+) : ILogEvent(buildId, retryTime, delayMills)

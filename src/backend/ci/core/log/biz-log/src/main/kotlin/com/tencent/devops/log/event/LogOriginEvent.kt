@@ -39,7 +39,6 @@ import com.tencent.devops.common.stream.constants.StreamBinding
 data class LogOriginEvent(
     override val buildId: String,
     val logs: List<LogMessage>,
-    override val projectId: String? = null,
     override var retryTime: Int = 2,
     override var delayMills: Int = 0
-) : ILogEvent(buildId, retryTime, delayMills, projectId)
+) : ILogEvent(buildId, retryTime, delayMills)

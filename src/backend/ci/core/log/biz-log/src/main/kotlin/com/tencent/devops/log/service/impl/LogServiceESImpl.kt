@@ -252,8 +252,7 @@ class LogServiceESImpl(
         buildLogPrintService.dispatchEvent(
             event = LogStorageEvent(
                 buildId = event.buildId,
-                logs = logMessage,
-                projectId = event.projectId
+                logs = logMessage
             ),
             recordTraffic = false
         )
