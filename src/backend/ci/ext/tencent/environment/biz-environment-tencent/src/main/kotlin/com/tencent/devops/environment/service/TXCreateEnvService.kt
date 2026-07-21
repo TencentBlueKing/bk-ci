@@ -1,6 +1,7 @@
 ﻿package com.tencent.devops.environment.service
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.util.AESUtil
@@ -16,6 +17,7 @@ import com.tencent.devops.environment.model.AgentProps
 import com.tencent.devops.environment.model.AgentPropsSource
 import com.tencent.devops.environment.pojo.op.CreateGateWayConfig
 import com.tencent.devops.environment.service.thirdpartyagent.DownloadAgentInstallService
+import com.tencent.devops.project.pojo.ProjectProperties
 import com.tencent.devops.remotedev.api.service.ServiceRemoteDevInternalResource
 import com.tencent.devops.remotedev.api.service.ServiceRemoteDevResource
 import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfigType
@@ -166,7 +168,7 @@ class TXCreateEnvService @Autowired constructor(
 
     fun getCreateGatewayConfig(): CreateGateWayConfig? {
         return redisOperation.get(CREATE_INSTALL_KEY, true)?.let {
-            JsonUtil.to<CreateGateWayConfig>(it)
+            JsonUtil.to(it, object : TypeReference<CreateGateWayConfig>() {})
         }
     }
 
