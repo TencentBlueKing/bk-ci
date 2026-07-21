@@ -2,7 +2,7 @@ import type { AtomModal } from '@/api/atom'
 import type { Element } from '@/api/flowModel'
 import AtomForm, { DISPLAY_MODE, type AtomPropsModel } from '@/components/AtomForm/AtomForm'
 import { SvgIcon } from '@/components/SvgIcon'
-import { getAtomDefaultValue, getAtomOutputObj } from '@/utils/atom'
+import { getAtomDefaultValue, getAtomOutputObj, isNewAtomTemplate } from '@/utils/atom'
 import { TRIGGER_TYPE } from '@/utils/flowConst'
 import { createDefaultElement } from '@/utils/flowDefaults'
 import { validateAtomElement, validateStepId } from '@/utils/validation'
@@ -121,8 +121,22 @@ export default defineComponent({
       return atomModal.value.props as AtomPropsModel
     })
 
+    // 依据插件的 htmlTemplateVersion 判断是否为新模板：
+    // - 新模板：插件输入存放在 element.data.input 中
+    // - 旧模板：插件输入平铺在 element 顶层
+    const isNewTemplate = computed(() => isNewAtomTemplate(atomModal.value?.htmlTemplateVersion))
+
     const atomValue = computed(() => {
-      const input = localElement.value?.data?.input
+      const element = localElement.value
+      if (!element) return {}
+
+      // 旧模板：字段平铺在 element 顶层，直接使用 element
+      if (!isNewTemplate.value) {
+        return element as unknown as Record<string, any>
+      }
+
+      // 新模板：从 element.data.input 读取
+      const input = element.data?.input
       if (input && Object.keys(input).length > 0) return input
       const inputModel = atomPropsModel.value?.input || atomPropsModel.value || {}
       return getAtomDefaultValue(inputModel)
@@ -130,16 +144,6 @@ export default defineComponent({
 
     const hasAtomFormConfig = computed(() => Object.keys(atomPropsModel.value || {}).length > 0)
     const isDisabled = computed(() => isLoadingModal.value || props.readonly)
-
-    // CDS- 开头的为云桌面触发事件，需要包在 data 里
-    // 代码库事件触发（如 codeGitWebHookTrigger）不需要 data 包装，平铺在 element 上
-    // 需要平铺的插件code ：'codeGitWebHookTrigger', 'codeSVNWebHookTrigger', 'codeGitlabWebHookTrigger', 'codeGithubWebHookTrigger'
-    const codeLists = ['codeGitWebHookTrigger', 'codeSVNWebHookTrigger', 'codeGitlabWebHookTrigger', 'codeGithubWebHookTrigger']
-    const isCodeRepoTrigger = computed(() => {
-      if (!localElement.value) return false
-      const atomCode = localElement.value.atomCode || ''
-      return codeLists.includes(atomCode)
-    })
 
     const triggerErrorFields = computed(() => {
       if (!localElement.value) return []
@@ -159,55 +163,33 @@ export default defineComponent({
     // ========== Modal Loading ==========
 
     const applyModalDefaults = (modal: TriggerModal) => {
-      if (!localElement.value?.data) return
+      if (!localElement.value) return
 
       const modalProps = modal.props || {}
       const inputModel = (modalProps as Record<string, any>).input || modalProps
       const outputModel = (modalProps as Record<string, any>).output || {}
+      const defaults = getAtomDefaultValue(inputModel)
 
-      // 收集 inputModel 中所有插件字段名
-      const collectFieldKeys = (model: Record<string, any>): string[] => {
-        const keys: string[] = []
-        const collectFromItem = (key: string, prop: any) => {
-          if (prop?.type === 'group' && Array.isArray(prop.children)) {
-            // group 自身的 key 也是字段
-            if (key) keys.push(key)
-            prop.children.forEach((child: any) => collectFromItem(child?.key, child))
-            return
-          }
-          if (key) keys.push(key)
-          if (Array.isArray(prop.list)) {
-            prop.list.forEach((item: any) => item?.key && keys.push(item.key))
-          }
-        }
-        Object.entries(model).forEach(([key, prop]) => collectFromItem(key, prop))
-        return keys
-      }
-      const fieldKeys = collectFieldKeys(inputModel)
-
-      if (isCodeRepoTrigger.value) {
-        // 代码库事件触发：从 element 顶层提取插件字段到 data.input（仅当 data.input 为空时）
-        if (Object.keys(localElement.value.data.input).length === 0) {
-          const elementAny = localElement.value as any
-          fieldKeys.forEach((key) => {
-            if (key in elementAny) {
-              localElement.value!.data!.input[key] = elementAny[key]
-              delete elementAny[key]
-            }
-          })
-        }
-        // 用 modal 默认值填充字段
-        const defaults = getAtomDefaultValue(inputModel)
+      if (!isNewTemplate.value) {
+        // 旧模板：插件输入平铺在 element 顶层，补齐缺失的默认值
+        const elementAny = localElement.value as Record<string, any>
         Object.entries(defaults).forEach(([key, value]) => {
-          if (!(key in localElement.value!.data!.input)) {
-            localElement.value!.data!.input[key] = value
+          if (!(key in elementAny) || elementAny[key] === undefined) {
+            elementAny[key] = value
           }
         })
-      } else {
-        // 云桌面事件：使用原有逻辑
-        if (Object.keys(localElement.value.data.input).length === 0) {
-          localElement.value.data.input = getAtomDefaultValue(inputModel)
-        }
+        return
+      }
+
+      // 新模板：插件输入存放在 element.data.input
+      if (!localElement.value.data) {
+        localElement.value.data = { input: {}, output: [] }
+      }
+      if (!localElement.value.data.input) {
+        localElement.value.data.input = {}
+      }
+      if (Object.keys(localElement.value.data.input).length === 0) {
+        localElement.value.data.input = defaults
       }
 
       const currentOutput = localElement.value.data.output
@@ -285,9 +267,8 @@ export default defineComponent({
       const elementToSave = JSON.parse(JSON.stringify(localElement.value))
       delete elementToSave.isError
 
-      // 代码库事件触发：将 data.input 平铺到 element 上，删除 data
-      if (isCodeRepoTrigger.value && elementToSave.data?.input) {
-        Object.assign(elementToSave, elementToSave.data.input)
+      // 旧模板：插件输入平铺在 element 顶层，无需 data 包装
+      if (!isNewTemplate.value) {
         delete elementToSave.data
       }
 
@@ -313,8 +294,19 @@ export default defineComponent({
     }
 
     const updateInput = (key: string, value: any) => {
-      if (!localElement.value?.data) return
-      localElement.value.data.input[key] = value
+      const element = localElement.value
+      if (!element) return
+
+      // 旧模板：插件输入平铺在 element 顶层
+      if (!isNewTemplate.value) {
+        ;(element as Record<string, any>)[key] = value
+        return
+      }
+
+      // 新模板：插件输入存放在 element.data.input
+      if (!element.data) element.data = { input: {}, output: [] }
+      if (!element.data.input) element.data.input = {}
+      element.data.input[key] = value
     }
 
     // ========== Render ==========

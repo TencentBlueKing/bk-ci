@@ -318,6 +318,8 @@
                 if (this.pipelineVersion) {
                     this.isLoading = true
                     await this.requestPipeline({
+                        pipelineId: this.pipelineId,
+                        projectId: this.projectId,
                         ...this.$route.params,
                         source: 'EDIT',
                         version: this.pipelineVersion
