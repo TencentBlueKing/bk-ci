@@ -1,5 +1,6 @@
 package com.tencent.devops.remotedev.pojo
 
+import com.tencent.devops.common.api.pojo.OS
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "开启AI功能的云桌面信息")
@@ -15,5 +16,7 @@ data class WorkspaceAiInfo(
     @get:Schema(title = "项目ID", required = false)
     val projectId: String,
     @get:Schema(title = "云桌面地域类型", required = false)
-    val zoneConfigType: String
+    val zoneConfigType: String,
+    @get:Schema(title = "操作系统", required = false)
+    val os: OS?
 )
