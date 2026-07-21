@@ -115,6 +115,13 @@
                     type: 'input',
                     maxlength: 30
                 },
+                ...(isCreateResType.value ? [
+                    {
+                        key: 'os',
+                        label: proxy.$t('environment.nodeInfo.os'),
+                        editable: false
+                    }
+                ] : []),
                 ...(!isCreateResType.value ? [
                     {
                         key: 'envType',
@@ -169,6 +176,12 @@
                 }
             }
             
+            const osLabelMap = {
+                LINUX: 'Linux',
+                MACOS: 'macOS',
+                WINDOWS: 'Windows'
+            }
+
             // 获取字段值
             const getFieldValue = (key) => {
                 const value = currentEnv.value?.[key]
@@ -178,6 +191,9 @@
                 }
                 if (key === 'envType' && value) {
                     return proxy.$t(`environment.envInfo.${value}EnvType`)
+                }
+                if (key === 'os' && value) {
+                    return osLabelMap[value] || value
                 }
                 return value
             }
@@ -274,7 +290,7 @@
     .info-item {
         display: flex;
         align-items: center;
-        margin-bottom: 20px;
+        margin-bottom: 24px;
         line-height: 20px;
         font-size: 12px;
         

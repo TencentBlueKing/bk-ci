@@ -538,11 +538,11 @@
     "relatedCreativeFlow": "Related Creative Flow",
     "workspace": "Workspace",
     "enableTitle": "Start/Stop",
-    "taskStatus": "Task Status",
+    "taskStatus": "Build Status",
     "pipelineTaskStatusMap": {
         "QUEUE": "Queued",
         "RUNNING": "Running",
-        "DONE": "Done",
+        "DONE": "Succeeded",
         "FAILURE": "Failed"
     }
 }

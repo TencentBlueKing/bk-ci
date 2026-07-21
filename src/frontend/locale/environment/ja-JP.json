@@ -533,11 +533,11 @@
     "relatedCreativeFlow": "関連クリエイティブフロー",
     "workspace": "ワークスペース",
     "enableTitle": "スタート/ストップ",
-    "taskStatus": "タスク状態",
+    "taskStatus": "ビルドステータス",
     "pipelineTaskStatusMap": {
         "QUEUE": "キュー中",
         "RUNNING": "実行中",
-        "DONE": "完了",
-        "FAILURE": "失敗"
+        "DONE": "実行成功",
+        "FAILURE": "実行失敗"
     }
 }

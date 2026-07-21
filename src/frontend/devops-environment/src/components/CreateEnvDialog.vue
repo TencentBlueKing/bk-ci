@@ -53,7 +53,10 @@
                 property="os"
                 error-display-type="normal"
             >
-                <bk-radio-group v-model="envParams.os">
+                <bk-radio-group
+                    v-model="envParams.os"
+                    class="os-radio-group"
+                >
                     <bk-radio
                         v-for="item in osTypeOptions"
                         :key="item.value"
@@ -224,6 +227,11 @@
     .create-env-form {
         .form-error-tip {
             text-align: left !important;
+        }
+        .os-radio-group {
+            .bk-form-radio {
+                margin-right: 14px;
+            }
         }
     }
 </style>
