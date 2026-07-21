@@ -70,9 +70,9 @@ object BatScriptUtil {
         "    set RAW=%~1\r\n" +
         "    powershell -NoProfile -Command ^\r\n" +
         "        \"\$c=\$env:RAW;\" ^\r\n" +
-        "        \"\$c=\$c -replace '%%','%25';\" ^\r\n" +
-        "        \"\$c=\$c -replace '\\\\n','%0A';\" ^\r\n" +
-        "        \"\$c=\$c -replace '\\\\r','%0D';\" ^\r\n" +
+        "        \"\$c=\$c -replace '%%','%%25';\" ^\r\n" +
+        "        \"\$c=\$c -replace '\\\\n','%%0A';\" ^\r\n" +
+        "        \"\$c=\$c -replace '\\\\r','%%0D';\" ^\r\n" +
         "        \"\$enc=New-Object System.Text.UTF8Encoding(\$false);\" ^\r\n" +
         "        \"[System.IO.File]::AppendAllText('##multiLineFile##', \$c + [Environment]::NewLine, \$enc)\"\r\n" +
         "    endlocal\r\n" +
