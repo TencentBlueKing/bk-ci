@@ -56,6 +56,10 @@ class LogStorageBean {
     private val downloadCalculateCount = AtomicLong(0)
     private val downloadFailureCount = AtomicLong(0)
 
+    private val degradeToStorageCount = AtomicLong(0)
+    private val directWriteSuccessCount = AtomicLong(0)
+    private val directWriteFailureCount = AtomicLong(0)
+
     @Synchronized
     fun download(elapse: Long, success: Boolean) {
         downloadLogCount.incrementAndGet()
@@ -92,6 +96,18 @@ class LogStorageBean {
         queryLogElapse.addAndGet(elapse)
         if (!success) {
             queryFailureCount.incrementAndGet()
+        }
+    }
+
+    fun degradeToStorage() {
+        degradeToStorageCount.incrementAndGet()
+    }
+
+    fun directWrite(success: Boolean) {
+        if (success) {
+            directWriteSuccessCount.incrementAndGet()
+        } else {
+            directWriteFailureCount.incrementAndGet()
         }
     }
 
@@ -160,4 +176,13 @@ class LogStorageBean {
 
     @ManagedAttribute
     fun getDownloadFailureCount() = downloadFailureCount.get()
+
+    @ManagedAttribute
+    fun getDegradeToStorageCount() = degradeToStorageCount.get()
+
+    @ManagedAttribute
+    fun getDirectWriteSuccessCount() = directWriteSuccessCount.get()
+
+    @ManagedAttribute
+    fun getDirectWriteFailureCount() = directWriteFailureCount.get()
 }
