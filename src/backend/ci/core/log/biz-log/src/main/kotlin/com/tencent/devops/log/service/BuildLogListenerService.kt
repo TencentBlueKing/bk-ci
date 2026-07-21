@@ -56,6 +56,7 @@ class BuildLogListenerService @Autowired constructor(
                         LogOriginEvent(
                             buildId = buildId,
                             logs = logs,
+                            projectId = projectId,
                             retryTime = retryTime - 1,
                             delayMills = getNextDelayMills(retryTime)
                         )
@@ -80,6 +81,7 @@ class BuildLogListenerService @Autowired constructor(
                         LogStorageEvent(
                             buildId = buildId,
                             logs = logs,
+                            projectId = projectId,
                             retryTime = retryTime - 1,
                             delayMills = getNextDelayMills(retryTime)
                         )
@@ -113,6 +115,7 @@ class BuildLogListenerService @Autowired constructor(
                             jobId = jobId,
                             logStorageMode = logStorageMode,
                             executeCount = executeCount,
+                            projectId = projectId,
                             retryTime = retryTime - 1,
                             delayMills = getNextDelayMills(retryTime),
                             userJobId = userJobId,

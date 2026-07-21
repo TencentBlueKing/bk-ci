@@ -35,6 +35,7 @@ import com.tencent.devops.log.event.LogStorageEvent
 import com.tencent.devops.log.jmx.LogPrintBean
 import com.tencent.devops.log.service.BuildLogListenerService
 import com.tencent.devops.log.service.BuildLogPrintService
+import com.tencent.devops.log.service.LogProjectIdResolver
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
@@ -53,8 +54,15 @@ class LogMQConfiguration {
         @Autowired streamBridge: StreamBridge,
         @Autowired logPrintBean: LogPrintBean,
         @Autowired storageProperties: StorageProperties,
+        @Autowired logProjectIdResolver: LogProjectIdResolver,
         @Autowired logServiceConfig: LogServiceConfig
-    ) = BuildLogPrintService(streamBridge, logPrintBean, storageProperties, logServiceConfig)
+    ) = BuildLogPrintService(
+        streamBridge = streamBridge,
+        logPrintBean = logPrintBean,
+        storageProperties = storageProperties,
+        logProjectIdResolver = logProjectIdResolver,
+        logServiceConfig = logServiceConfig
+    )
 
     @EventConsumer(defaultConcurrency = 5)
     fun logOriginEventConsumer(

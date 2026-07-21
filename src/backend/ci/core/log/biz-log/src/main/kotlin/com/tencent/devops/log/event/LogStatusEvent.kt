@@ -27,8 +27,8 @@
 
 package com.tencent.devops.log.event
 
-import com.tencent.devops.common.log.pojo.enums.LogStorageMode
 import com.tencent.devops.common.event.annotation.Event
+import com.tencent.devops.common.log.pojo.enums.LogStorageMode
 import com.tencent.devops.common.stream.constants.StreamBinder
 import com.tencent.devops.common.stream.constants.StreamBinding
 
@@ -48,6 +48,7 @@ data class LogStatusEvent(
     val stepId: String?,
     val executeCount: Int?,
     val logStorageMode: LogStorageMode?,
+    override val projectId: String? = null,
     override var retryTime: Int = 2,
     override var delayMills: Int = 0
-) : ILogEvent(buildId, retryTime, delayMills)
+) : ILogEvent(buildId, retryTime, delayMills, projectId)

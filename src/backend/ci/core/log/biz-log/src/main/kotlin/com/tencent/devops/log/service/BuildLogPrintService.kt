@@ -33,6 +33,8 @@ import com.tencent.devops.log.configuration.LogServiceConfig
 import com.tencent.devops.log.configuration.StorageProperties
 import com.tencent.devops.log.event.ILogEvent
 import com.tencent.devops.log.event.LogOriginEvent
+import com.tencent.devops.log.event.LogStatusEvent
+import com.tencent.devops.log.event.LogStorageEvent
 import com.tencent.devops.log.jmx.LogPrintBean
 import com.tencent.devops.log.meta.Ansi
 import com.tencent.devops.log.util.LogErrorCodeEnum
@@ -50,6 +52,7 @@ class BuildLogPrintService @Autowired constructor(
     private val streamBridge: StreamBridge,
     private val logPrintBean: LogPrintBean,
     private val storageProperties: StorageProperties,
+    private val logProjectIdResolver: LogProjectIdResolver,
     logServiceConfig: LogServiceConfig
 ) {
 
@@ -62,17 +65,18 @@ class BuildLogPrintService @Autowired constructor(
     )
 
     fun dispatchEvent(event: ILogEvent) {
-        event.sendTo(streamBridge)
+        enrichAndSend(event)
     }
 
     fun asyncDispatchEvent(event: ILogEvent): Result<Boolean> {
+        val enriched = enrichProjectId(event)
         if (!isEnabled(storageProperties.enable)) {
             val warnings = "Service refuses to write the log, the log file of the task will be archived."
-            if (event is LogOriginEvent && event.logs.isNotEmpty()) {
+            if (enriched is LogOriginEvent && enriched.logs.isNotEmpty()) {
                 dispatchEvent(
-                    event.copy(
+                    enriched.copy(
                         logs = listOf(
-                            event.logs.first().copy(
+                            enriched.logs.first().copy(
                                 message = Ansi().fgYellow().a(warnings).reset().toString(),
                                 logType = LogType.WARN
                             )
@@ -88,13 +92,13 @@ class BuildLogPrintService @Autowired constructor(
         }
         return try {
             logExecutorService.execute {
-                dispatchEvent(event)
+                enrichAndSend(enriched)
             }
             Result(true)
         } catch (e: RejectedExecutionException) {
             // 队列满时的处理逻辑
             logger.warn(
-                "BuildLogPrintService[${event.buildId}] " +
+                "BuildLogPrintService[${enriched.buildId}] " +
                     "asyncDispatchEvent failed with queue tasks exceed the limit",
                 e
             )
@@ -111,6 +115,23 @@ class BuildLogPrintService @Autowired constructor(
         logPrintBean.savePrintTaskCount(logExecutorService.taskCount)
         logPrintBean.savePrintActiveCount(logExecutorService.activeCount)
         logPrintBean.savePrintQueueSize(logExecutorService.queue.size)
+    }
+
+    private fun enrichAndSend(event: ILogEvent) {
+        enrichProjectId(event).sendTo(streamBridge)
+    }
+
+    private fun enrichProjectId(event: ILogEvent): ILogEvent {
+        val resolved = logProjectIdResolver.resolve(event.buildId, event.projectId)
+        if (resolved.isNullOrBlank() || resolved == event.projectId) {
+            return event
+        }
+        return when (event) {
+            is LogOriginEvent -> event.copy(projectId = resolved)
+            is LogStorageEvent -> event.copy(projectId = resolved)
+            is LogStatusEvent -> event.copy(projectId = resolved)
+            else -> event
+        }
     }
 
     private fun isEnabled(value: String?): Boolean {

@@ -159,12 +159,12 @@ class LogServiceESImpl(
         }
         // 兼容开关：关闭聚合直写时，保持历史「origin → storage」双队列行为
         if (!logBulkProperties.enabled) {
-            dispatchToStorage(event.buildId, logMessage)
+            dispatchToStorage(event, logMessage)
             return
         }
         // 熔断开启时直接降级到 storage，避免继续打满 ES
         if (logStorageDegradeSwitcher.shouldDegrade()) {
-            dispatchToStorage(event.buildId, logMessage)
+            dispatchToStorage(event, logMessage)
             logStorageDegradeSwitcher.recordDegrade()
             logStorageBean.degradeToStorage()
             return
@@ -194,7 +194,7 @@ class LogServiceESImpl(
                 ignore
             )
         }
-        dispatchToStorage(event.buildId, logMessage)
+        dispatchToStorage(event, logMessage)
         logStorageDegradeSwitcher.recordDegrade()
         logStorageBean.degradeToStorage()
     }
@@ -248,8 +248,14 @@ class LogServiceESImpl(
         }
     }
 
-    private fun dispatchToStorage(buildId: String, logMessage: List<LogMessageWithLineNo>) {
-        buildLogPrintService.dispatchEvent(LogStorageEvent(buildId, logMessage))
+    private fun dispatchToStorage(event: LogOriginEvent, logMessage: List<LogMessageWithLineNo>) {
+        buildLogPrintService.dispatchEvent(
+            LogStorageEvent(
+                buildId = event.buildId,
+                logs = logMessage,
+                projectId = event.projectId
+            )
+        )
     }
 
     private fun writeLogsByAggregator(
