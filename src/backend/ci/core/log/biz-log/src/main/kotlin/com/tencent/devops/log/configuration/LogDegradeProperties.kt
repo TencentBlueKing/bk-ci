@@ -25,30 +25,38 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.log.event
+package com.tencent.devops.log.configuration
 
-import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.common.log.pojo.enums.LogStorageMode
-import com.tencent.devops.common.stream.constants.StreamBinder
-import com.tencent.devops.common.stream.constants.StreamBinding
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.stereotype.Component
 
-@Event(
-    destination = StreamBinding.LOG_STATUS_EVENT_DESTINATION,
-    binder = StreamBinder.CUSTOM
-)
-data class LogStatusEvent(
-    override val buildId: String,
-    val finished: Boolean,
-    val tag: String?,
-    val subTag: String?,
-    /*此 jobId 实际为 container id*/
-    val jobId: String?,
-    /*此 jobId 将是用户可选填的 job id*/
-    val userJobId: String?,
-    val stepId: String?,
-    val executeCount: Int?,
-    val logStorageMode: LogStorageMode?,
-    override val projectId: String? = null,
-    override var retryTime: Int = 2,
-    override var delayMills: Int = 0
-) : ILogEvent(buildId, retryTime, delayMills, projectId)
+/**
+ * origin 直写 ES 失败/过慢时，降级到 storage 队列的熔断配置。
+ */
+@Component
+class LogDegradeProperties {
+
+    @Value("\${log.degrade.enabled:true}")
+    var enabled: Boolean = true
+
+    /**
+     * 紧急开关：为 true 时 origin 全部走 storage，不直写 ES。
+     */
+    @Value("\${log.degrade.forceStorage:false}")
+    var forceStorage: Boolean = false
+
+    @Value("\${log.degrade.circuitFailRate:0.2}")
+    var circuitFailRate: Double = 0.2
+
+    @Value("\${log.degrade.circuitWindowMs:10000}")
+    var circuitWindowMs: Long = 10000
+
+    @Value("\${log.degrade.circuitOpenMs:30000}")
+    var circuitOpenMs: Long = 30000
+
+    @Value("\${log.degrade.circuitMinSamples:20}")
+    var circuitMinSamples: Int = 20
+
+    @Value("\${log.degrade.slowMs:300}")
+    var slowMs: Long = 300
+}

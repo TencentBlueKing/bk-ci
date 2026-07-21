@@ -45,20 +45,30 @@ class ServiceLogPrintResourceImpl @Autowired constructor(
     private val buildLogPrintService: BuildLogPrintService
 ) : ServiceLogPrintResource {
 
-    override fun addLogLine(buildId: String, logMessage: LogMessage): Result<Boolean> {
+    override fun addLogLine(buildId: String, logMessage: LogMessage, projectId: String?): Result<Boolean> {
         if (buildId.isBlank()) {
             logger.warn("Invalid build ID[$buildId]")
             return Result(false)
         }
-        return buildLogPrintService.asyncDispatchEvent(LogOriginEvent(buildId, listOf(logMessage)))
+        return buildLogPrintService.asyncDispatchEvent(
+            event = LogOriginEvent(buildId = buildId, logs = listOf(logMessage), projectId = projectId),
+            recordTraffic = true
+        )
     }
 
-    override fun addLogMultiLine(buildId: String, logMessages: List<LogMessage>): Result<Boolean> {
+    override fun addLogMultiLine(
+        buildId: String,
+        logMessages: List<LogMessage>,
+        projectId: String?
+    ): Result<Boolean> {
         if (buildId.isBlank()) {
             logger.warn("Invalid build ID[$buildId]")
             return Result(false)
         }
-        buildLogPrintService.asyncDispatchEvent(LogOriginEvent(buildId, logMessages))
+        buildLogPrintService.asyncDispatchEvent(
+            event = LogOriginEvent(buildId = buildId, logs = logMessages, projectId = projectId),
+            recordTraffic = true
+        )
         return Result(true)
     }
 
@@ -69,7 +79,8 @@ class ServiceLogPrintResourceImpl @Autowired constructor(
         containerHashId: String?,
         executeCount: Int?,
         jobId: String?,
-        stepId: String?
+        stepId: String?,
+        projectId: String?
     ): Result<Boolean> {
         if (buildId.isBlank()) {
             logger.warn("Invalid build ID[$buildId]")
@@ -79,7 +90,7 @@ class ServiceLogPrintResourceImpl @Autowired constructor(
         val index = indexService.getIndexName(buildId)
         logger.info("Start to print log to index[$index]")
         buildLogPrintService.asyncDispatchEvent(
-            LogStatusEvent(
+            event = LogStatusEvent(
                 buildId = buildId,
                 finished = false,
                 tag = tag,
@@ -88,8 +99,10 @@ class ServiceLogPrintResourceImpl @Autowired constructor(
                 executeCount = executeCount,
                 logStorageMode = null,
                 userJobId = jobId,
-                stepId = stepId
-            )
+                stepId = stepId,
+                projectId = projectId
+            ),
+            recordTraffic = false
         )
         return Result(true)
     }
@@ -103,14 +116,15 @@ class ServiceLogPrintResourceImpl @Autowired constructor(
         executeCount: Int?,
         logStorageMode: LogStorageMode?,
         jobId: String?,
-        stepId: String?
+        stepId: String?,
+        projectId: String?
     ): Result<Boolean> {
         if (buildId.isBlank()) {
             logger.warn("Invalid build ID[$buildId]")
             return Result(false)
         }
         buildLogPrintService.asyncDispatchEvent(
-            LogStatusEvent(
+            event = LogStatusEvent(
                 buildId = buildId,
                 finished = finished,
                 tag = tag,
@@ -119,8 +133,10 @@ class ServiceLogPrintResourceImpl @Autowired constructor(
                 executeCount = executeCount,
                 logStorageMode = logStorageMode,
                 userJobId = jobId,
-                stepId = stepId
-            )
+                stepId = stepId,
+                projectId = projectId
+            ),
+            recordTraffic = false
         )
         return Result(true)
     }

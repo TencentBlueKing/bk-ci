@@ -28,27 +28,40 @@
 package com.tencent.devops.log.event
 
 import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.common.log.pojo.enums.LogStorageMode
+import com.tencent.devops.common.log.pojo.message.LogMessage
 import com.tencent.devops.common.stream.constants.StreamBinder
 import com.tencent.devops.common.stream.constants.StreamBinding
 
+/**
+ * 热点构建的 origin 日志事件，载荷与 [LogOriginEvent] 一致，独立 destination 做队列隔离。
+ */
 @Event(
-    destination = StreamBinding.LOG_STATUS_EVENT_DESTINATION,
+    destination = StreamBinding.LOG_ORIGIN_HEAVY_EVENT_DESTINATION,
     binder = StreamBinder.CUSTOM
 )
-data class LogStatusEvent(
+data class LogOriginHeavyEvent(
     override val buildId: String,
-    val finished: Boolean,
-    val tag: String?,
-    val subTag: String?,
-    /*此 jobId 实际为 container id*/
-    val jobId: String?,
-    /*此 jobId 将是用户可选填的 job id*/
-    val userJobId: String?,
-    val stepId: String?,
-    val executeCount: Int?,
-    val logStorageMode: LogStorageMode?,
+    val logs: List<LogMessage>,
     override val projectId: String? = null,
     override var retryTime: Int = 2,
     override var delayMills: Int = 0
-) : ILogEvent(buildId, retryTime, delayMills, projectId)
+) : ILogEvent(buildId, retryTime, delayMills, projectId) {
+
+    fun toOriginEvent() = LogOriginEvent(
+        buildId = buildId,
+        logs = logs,
+        projectId = projectId,
+        retryTime = retryTime,
+        delayMills = delayMills
+    )
+
+    companion object {
+        fun from(event: LogOriginEvent) = LogOriginHeavyEvent(
+            buildId = event.buildId,
+            logs = event.logs,
+            projectId = event.projectId,
+            retryTime = event.retryTime,
+            delayMills = event.delayMills
+        )
+    }
+}

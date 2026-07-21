@@ -28,6 +28,7 @@
 package com.tencent.devops.log.service
 
 import com.tencent.devops.log.event.LogOriginEvent
+import com.tencent.devops.log.event.LogOriginHeavyEvent
 import com.tencent.devops.log.event.LogStatusEvent
 import com.tencent.devops.log.event.LogStorageEvent
 import org.slf4j.LoggerFactory
@@ -53,12 +54,40 @@ class BuildLogListenerService @Autowired constructor(
                 logger.warn("Retry to add the log event [${event.buildId}|${event.retryTime}]")
                 with(event) {
                     buildLogPrintService.dispatchEvent(
-                        LogOriginEvent(
+                        event = LogOriginEvent(
                             buildId = buildId,
                             logs = logs,
+                            projectId = projectId,
                             retryTime = retryTime - 1,
                             delayMills = getNextDelayMills(retryTime)
-                        )
+                        ),
+                        recordTraffic = false
+                    )
+                }
+            }
+        }
+    }
+
+    fun handleEvent(event: LogOriginHeavyEvent) {
+        var result = false
+        try {
+            logService.addLogEvent(event.toOriginEvent())
+            result = true
+        } catch (ignored: Throwable) {
+            logger.warn("Fail to add the heavy log event [${event.buildId}|${event.retryTime}]", ignored)
+        } finally {
+            if (!result && event.retryTime >= 0) {
+                logger.warn("Retry to add the heavy log event [${event.buildId}|${event.retryTime}]")
+                with(event) {
+                    buildLogPrintService.dispatchEvent(
+                        event = LogOriginHeavyEvent(
+                            buildId = buildId,
+                            logs = logs,
+                            projectId = projectId,
+                            retryTime = retryTime - 1,
+                            delayMills = getNextDelayMills(retryTime)
+                        ),
+                        recordTraffic = false
                     )
                 }
             }
@@ -77,12 +106,14 @@ class BuildLogListenerService @Autowired constructor(
                 logger.warn("Retry to add log batch event [${event.buildId}|${event.retryTime}]")
                 with(event) {
                     buildLogPrintService.dispatchEvent(
-                        LogStorageEvent(
+                        event = LogStorageEvent(
                             buildId = buildId,
                             logs = logs,
+                            projectId = projectId,
                             retryTime = retryTime - 1,
                             delayMills = getNextDelayMills(retryTime)
-                        )
+                        ),
+                        recordTraffic = false
                     )
                 }
             }
@@ -105,7 +136,7 @@ class BuildLogListenerService @Autowired constructor(
                 logger.warn("Retry to add the multi lines [${event.buildId}|${event.retryTime}]")
                 with(event) {
                     buildLogPrintService.dispatchEvent(
-                        LogStatusEvent(
+                        event = LogStatusEvent(
                             buildId = buildId,
                             finished = finished,
                             tag = tag,
@@ -113,11 +144,13 @@ class BuildLogListenerService @Autowired constructor(
                             jobId = jobId,
                             logStorageMode = logStorageMode,
                             executeCount = executeCount,
+                            projectId = projectId,
                             retryTime = retryTime - 1,
                             delayMills = getNextDelayMills(retryTime),
                             userJobId = userJobId,
                             stepId = stepId
-                        )
+                        ),
+                        recordTraffic = false
                     )
                 }
             }

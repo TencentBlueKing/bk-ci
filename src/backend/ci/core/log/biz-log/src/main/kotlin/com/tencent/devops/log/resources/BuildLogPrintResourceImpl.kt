@@ -65,58 +65,72 @@ class BuildLogPrintResourceImpl @Autowired constructor(
     @Value("\${spring.application.name:#{null}}")
     private val applicationName: String? = null
 
-    override fun addLogLine(buildId: String, logMessage: LogMessage): Result<Boolean> {
-        if (buildId.isBlank()) {
-            logger.warn("Invalid build ID[$buildId]")
-            return Result(false)
-        }
-        buildLogPrintService.dispatchEvent(LogOriginEvent(buildId, listOf(logMessage)))
-        return Result(true)
-    }
-
-    override fun addRedLogLine(buildId: String, logMessage: LogMessage): Result<Boolean> {
+    override fun addLogLine(buildId: String, logMessage: LogMessage, projectId: String?): Result<Boolean> {
         if (buildId.isBlank()) {
             logger.warn("Invalid build ID[$buildId]")
             return Result(false)
         }
         buildLogPrintService.dispatchEvent(
-            LogOriginEvent(
+            event = LogOriginEvent(buildId = buildId, logs = listOf(logMessage), projectId = projectId),
+            recordTraffic = true
+        )
+        return Result(true)
+    }
+
+    override fun addRedLogLine(buildId: String, logMessage: LogMessage, projectId: String?): Result<Boolean> {
+        if (buildId.isBlank()) {
+            logger.warn("Invalid build ID[$buildId]")
+            return Result(false)
+        }
+        buildLogPrintService.dispatchEvent(
+            event = LogOriginEvent(
                 buildId = buildId,
                 logs = listOf(
                     logMessage.copy(
                         message = Ansi().bold().fgRed().a(logMessage.message).reset().toString()
                     )
-                )
-            )
+                ),
+                projectId = projectId
+            ),
+            recordTraffic = true
         )
         return Result(true)
     }
 
-    override fun addYellowLogLine(buildId: String, logMessage: LogMessage): Result<Boolean> {
+    override fun addYellowLogLine(buildId: String, logMessage: LogMessage, projectId: String?): Result<Boolean> {
         if (buildId.isBlank()) {
             logger.warn("Invalid build ID[$buildId]")
             return Result(false)
         }
         buildLogPrintService.dispatchEvent(
-            LogOriginEvent(
+            event = LogOriginEvent(
                 buildId = buildId,
                 logs = listOf(
                     logMessage.copy(
                         message = Ansi().bold().fgYellow().a(logMessage.message).reset().toString()
                     )
-                )
-            )
+                ),
+                projectId = projectId
+            ),
+            recordTraffic = true
         )
         return Result(true)
     }
 
     @Timed
-    override fun addLogMultiLine(buildId: String, logMessages: List<LogMessage>): Result<Boolean> {
+    override fun addLogMultiLine(
+        buildId: String,
+        logMessages: List<LogMessage>,
+        projectId: String?
+    ): Result<Boolean> {
         if (buildId.isBlank()) {
             logger.warn("Invalid build ID[$buildId]")
             return Result(false)
         }
-        buildLogPrintService.dispatchEvent(LogOriginEvent(buildId, logMessages))
+        buildLogPrintService.dispatchEvent(
+            event = LogOriginEvent(buildId = buildId, logs = logMessages, projectId = projectId),
+            recordTraffic = true
+        )
         recordMultiLogCount(logMessages.size)
         return Result(true)
     }
@@ -129,7 +143,8 @@ class BuildLogPrintResourceImpl @Autowired constructor(
         executeCount: Int?,
         logMode: String?,
         jobId: String?,
-        stepId: String?
+        stepId: String?,
+        projectId: String?
     ): Result<Boolean> {
         if (buildId.isBlank()) {
             logger.warn("Invalid build ID[$buildId]")
@@ -139,7 +154,7 @@ class BuildLogPrintResourceImpl @Autowired constructor(
         val index = indexService.getIndexName(buildId)
         logger.info("Start to print log to index[$index]")
         buildLogPrintService.dispatchEvent(
-            LogStatusEvent(
+            event = LogStatusEvent(
                 buildId = buildId,
                 finished = false,
                 tag = tag,
@@ -148,8 +163,10 @@ class BuildLogPrintResourceImpl @Autowired constructor(
                 executeCount = executeCount,
                 logStorageMode = LogStorageMode.parse(logMode),
                 userJobId = jobId,
-                stepId = stepId
-            )
+                stepId = stepId,
+                projectId = projectId
+            ),
+            recordTraffic = false
         )
         return Result(true)
     }
@@ -163,14 +180,15 @@ class BuildLogPrintResourceImpl @Autowired constructor(
         executeCount: Int?,
         logMode: String?,
         jobId: String?,
-        stepId: String?
+        stepId: String?,
+        projectId: String?
     ): Result<Boolean> {
         if (buildId.isBlank()) {
             logger.warn("Invalid build ID[$buildId]")
             return Result(false)
         }
         buildLogPrintService.dispatchEvent(
-            LogStatusEvent(
+            event = LogStatusEvent(
                 buildId = buildId,
                 finished = finished,
                 tag = tag,
@@ -179,8 +197,10 @@ class BuildLogPrintResourceImpl @Autowired constructor(
                 executeCount = executeCount,
                 logStorageMode = LogStorageMode.parse(logMode),
                 userJobId = jobId,
-                stepId = stepId
-            )
+                stepId = stepId,
+                projectId = projectId
+            ),
+            recordTraffic = false
         )
         return Result(false)
     }
@@ -188,12 +208,14 @@ class BuildLogPrintResourceImpl @Autowired constructor(
     override fun updateLogStorageMode(
         buildId: String,
         executeCount: Int,
-        propertyList: List<TaskBuildLogProperty>
+        propertyList: List<TaskBuildLogProperty>,
+        projectId: String?
     ): Result<Boolean> {
         if (buildId.isBlank()) {
             logger.warn("Invalid build ID[$buildId]")
             return Result(false)
         }
+        // projectId 可空：未上报时由其它写日志请求触发反查缓存；此处仅更新存储模式
         logStatusService.updateStorageMode(
             buildId = buildId,
             executeCount = executeCount,

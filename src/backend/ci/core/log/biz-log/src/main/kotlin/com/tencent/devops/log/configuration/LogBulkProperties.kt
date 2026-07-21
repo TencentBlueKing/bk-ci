@@ -25,30 +25,36 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.log.event
+package com.tencent.devops.log.configuration
 
-import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.common.log.pojo.enums.LogStorageMode
-import com.tencent.devops.common.stream.constants.StreamBinder
-import com.tencent.devops.common.stream.constants.StreamBinding
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.stereotype.Component
 
-@Event(
-    destination = StreamBinding.LOG_STATUS_EVENT_DESTINATION,
-    binder = StreamBinder.CUSTOM
-)
-data class LogStatusEvent(
-    override val buildId: String,
-    val finished: Boolean,
-    val tag: String?,
-    val subTag: String?,
-    /*此 jobId 实际为 container id*/
-    val jobId: String?,
-    /*此 jobId 将是用户可选填的 job id*/
-    val userJobId: String?,
-    val stepId: String?,
-    val executeCount: Int?,
-    val logStorageMode: LogStorageMode?,
-    override val projectId: String? = null,
-    override var retryTime: Int = 2,
-    override var delayMills: Int = 0
-) : ILogEvent(buildId, retryTime, delayMills, projectId)
+/**
+ * 日志 ES bulk 聚合写配置。
+ * enabled=false 时保持历史行为：origin 只负责行号分配并投递 storage 队列。
+ */
+@Component
+class LogBulkProperties {
+
+    @Value("\${log.bulk.enabled:true}")
+    var enabled: Boolean = true
+
+    @Value("\${log.bulk.maxDocs:3000}")
+    var maxDocs: Int = 3000
+
+    @Value("\${log.bulk.maxBytes:5242880}")
+    var maxBytes: Long = 5 * 1024 * 1024
+
+    @Value("\${log.bulk.maxWaitMs:80}")
+    var maxWaitMs: Long = 80
+
+    @Value("\${log.bulk.maxBuildsPerBulk:64}")
+    var maxBuildsPerBulk: Int = 64
+
+    @Value("\${log.bulk.writeTimeoutMs:300}")
+    var writeTimeoutMs: Long = 300
+
+    @Value("\${log.bulk.maxPendingBatches:2000}")
+    var maxPendingBatches: Int = 2000
+}
