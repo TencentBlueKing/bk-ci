@@ -281,13 +281,18 @@ class LogServiceESImpl(
         if (requests.isEmpty()) {
             return BulkOfferResult(success = false, elapseMs = 0, message = "no valid index requests")
         }
-        return logBulkAggregator.offer(
+        val result = logBulkAggregator.offer(
             client = client,
             buildId = buildId,
             requests = requests,
             approxBytes = approxBytes,
             timeoutMs = logBulkProperties.writeTimeoutMs
         )
+        // 仅在真正发生 ES 写尝试时反馈集群健康：本地背压(队列满/无有效请求)elapseMs=0 不计入，避免误熔断集群
+        if (result.success || result.elapseMs > 0) {
+            logClient.reportWriteResult(client.clusterName, result.success, result.elapseMs)
+        }
+        return result
     }
 
     override fun updateLogStatus(event: LogStatusEvent) {
