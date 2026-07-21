@@ -121,6 +121,7 @@ class PipelineArtifactInfoDao {
                 return dslContext.selectFrom(this)
                     .where(conditions)
                     .orderBy(EXECUTE_COUNT.desc(), CREATE_TIME.desc())
+                    .limit(1)
                     .fetchOne()
         }
     }
