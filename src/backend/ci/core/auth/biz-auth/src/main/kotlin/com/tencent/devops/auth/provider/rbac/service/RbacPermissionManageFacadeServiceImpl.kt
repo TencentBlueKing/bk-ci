@@ -360,6 +360,8 @@ class RbacPermissionManageFacadeServiceImpl(
 
                 else -> JoinedType.DIRECT
             },
+            joinedMemberId = authResourceGroupMember.memberId,
+            joinedMemberName = authResourceGroupMember.memberName,
             operator = "",
             beingHandedOver = groupsBeingHandover.map { it.itemId.toInt() }.contains(groupId),
             flowNo = groupsBeingHandover.firstOrNull { it.itemId.toInt() == groupId }?.flowNo,
@@ -1910,7 +1912,9 @@ class RbacPermissionManageFacadeServiceImpl(
         removeMemberFromProjectReq: RemoveMemberFromProjectReq
     ): List<ResourceMemberInfo> {
         logger.info("remove member from project $userId|$projectCode|$removeMemberFromProjectReq")
-        return with(removeMemberFromProjectReq) {
+        with(removeMemberFromProjectReq) {
+            targetMember.fillNameIfAbsent()
+            handoverTo?.fillNameIfAbsent()
             val memberType = targetMember.type
             if (memberType == MemberType.USER.type && isNeedToHandover()) {
                 removeMemberFromProjectReq.checkHandoverTo()
@@ -1955,17 +1959,23 @@ class RbacPermissionManageFacadeServiceImpl(
 
             if (memberType == MemberType.USER.type) {
                 // 查询用户还存在哪些组织中
-                val userDeptInfos = deptService.getUserInfo(targetMember.id)?.deptInfo?.map { it.name!! }
-                if (userDeptInfos != null) {
+                val userIds = deptService.getUserInfo(targetMember.id)?.deptInfo?.map { it.id!! }
+                if (!userIds.isNullOrEmpty()) {
                     return authResourceGroupMemberDao.isMembersInProject(
                         dslContext = dslContext,
                         projectCode = projectCode,
-                        memberNames = userDeptInfos,
+                        memberIds = userIds,
                         memberType = MemberType.DEPARTMENT.type
-                    )
+                    ).distinctBy { it.name }
                 }
             }
             return emptyList()
+        }
+    }
+
+    private fun ResourceMemberInfo.fillNameIfAbsent() {
+        if (name == null) {
+            name = deptService.getUserInfo(id)?.name
         }
     }
 
@@ -2310,13 +2320,13 @@ class RbacPermissionManageFacadeServiceImpl(
         userId: String
     ): MemberExitsProjectCheckVo {
         logger.info("check member exits project:$projectCode|$userId")
-        val userDeptInfos = deptService.getUserInfo(userId)?.deptInfo?.map { it.name!! } ?: emptyList()
+        val userDeptIds = deptService.getUserInfo(userId)?.deptInfo?.map { it.id!! } ?: emptyList()
         val userDepartmentsInProject = authResourceGroupMemberDao.isMembersInProject(
             dslContext = dslContext,
             projectCode = projectCode,
-            memberNames = userDeptInfos,
+            memberIds = userDeptIds,
             memberType = MemberType.DEPARTMENT.type
-        ).map { it.name }
+        ).map { it.name }.distinct()
         var managers = emptyList<String>()
         if (userDepartmentsInProject.isNotEmpty()) {
             managers = permissionResourceMemberService.getResourceGroupMembers(

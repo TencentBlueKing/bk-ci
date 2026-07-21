@@ -187,6 +187,66 @@ interface ApigwAuthMemberManageResourceV4 {
     ): Result<SQLPage<ResourceMemberInfo>>
 
     @GET
+    @Path("/list_project_members_by_condition")
+    @Operation(
+        summary = "根据条件获取项目全体成员",
+        tags = [
+            "v4_app_list_auth_project_members_by_condition",
+            "v4_user_list_auth_project_members_by_condition"
+        ]
+    )
+    fun listProjectMembersByCondition(
+        @Parameter(description = "应用Code(OpenAPI调用方标识)", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @Parameter(description = "网关类型,取值为apigw-user、apigw-app或apigw", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @Parameter(description = "操作人用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID(项目英文名)", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "成员类型(如USER、DEPARTMENT等)", required = false)
+        @QueryParam("memberType")
+        memberType: String? = null,
+        @Parameter(description = "用户名(模糊匹配)", required = false)
+        @QueryParam("userName")
+        userName: String? = null,
+        @Parameter(description = "部门名称(模糊匹配)", required = false)
+        @QueryParam("deptName")
+        deptName: String? = null,
+        @Parameter(description = "用户组名称(模糊匹配)", required = false)
+        @QueryParam("groupName")
+        groupName: String? = null,
+        @Parameter(description = "权限过期时间下限(毫秒时间戳)", required = false)
+        @QueryParam("minExpiredAt")
+        minExpiredAt: Long? = null,
+        @Parameter(description = "权限过期时间上限(毫秒时间戳)", required = false)
+        @QueryParam("maxExpiredAt")
+        maxExpiredAt: Long? = null,
+        @Parameter(description = "是否已离职,true表示仅查离职用户", required = false)
+        @QueryParam("departed")
+        departedFlag: Boolean? = null,
+        @Parameter(description = "资源类型", required = false)
+        @QueryParam("resourceType")
+        resourceType: String? = null,
+        @Parameter(description = "资源Code", required = false)
+        @QueryParam("resourceCode")
+        resourceCode: String? = null,
+        @Parameter(description = "权限动作/操作标识筛选", required = false)
+        @QueryParam("action")
+        action: String? = null,
+        @Parameter(description = "页码,默认1", required = false)
+        @QueryParam("page")
+        page: Int = 1,
+        @Parameter(description = "每页条数,默认20", required = false)
+        @QueryParam("pageSize")
+        pageSize: Int = 20
+    ): Result<SQLPage<ResourceMemberInfo>>
+
+    @GET
     @Path("/members/group_count")
     @Operation(
         summary = "获取成员用户组数量",

@@ -39,13 +39,14 @@ class MarketEventRequestService constructor(
         logger.info("Receive CdsWebhookRequestEvent from MQ [${JsonUtil.toJson(event, false)}]")
         with(event) {
             // 1. 获取事件源: 通过项目ID+workspaceName获取环境列表
+            // 云桌面和agent项目ID可能不一致，这里查询时不使用事件的项目ID
             val envList = creativeStreamService.fetchAllNodeEnvList(
-                projectId = projectId,
+                projectId = null,
                 workspaceName = workspaceName,
                 userId = userId
             )
             if (envList.isEmpty()) {
-                logger.warn("target env list is empty|$projectId|$workspaceName")
+                logger.warn("target env list is empty|$workspaceName")
                 return
             }
             // 云桌面信息
@@ -60,6 +61,9 @@ class MarketEventRequestService constructor(
             ).toJsonStr()
             val requestId = MDC.get(TraceTag.BIZID)
             envList.forEach { env ->
+                // 这里可能存在事件触发的项目ID（云桌面所在项目ID）和创作流项目ID不一致的情况
+                // 所以优先使用创作流环境所在的项目ID
+                val realProjectId = env.projectId
                 val eventId = pipelineTriggerEventService.getEventId()
                 val eventBody = GenericWebhookEventBody(
                     headers = mapOf(
@@ -73,7 +77,7 @@ class MarketEventRequestService constructor(
                     queryParams = mapOf()
                 )
                 val triggerEvent = PipelineTriggerEvent(
-                    projectId = projectId,
+                    projectId = realProjectId,
                     eventId = eventId,
                     triggerType = StartType.TRIGGER_EVENT.name,
                     eventSource = env.hashId,
@@ -159,7 +163,7 @@ class MarketEventRequestService constructor(
             sampleEventDispatcher.dispatch(
                 CdsWebhookTriggerEvent(
                     userId = userId,
-                    projectId = projectId,
+                    projectId = subscriber.projectId,
                     pipelineId = subscriber.pipelineId,
                     workspaceName = workspaceName,
                     cdsIp = cdsIp,

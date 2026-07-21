@@ -60,16 +60,15 @@ import com.tencent.devops.process.api.service.ServiceMeasurePipelineResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
 import com.tencent.devops.store.atom.dao.AtomDao
-import com.tencent.devops.store.atom.dao.AtomQueryParam
 import com.tencent.devops.store.atom.dao.AtomLabelRelDao
+import com.tencent.devops.store.atom.dao.AtomQueryParam
 import com.tencent.devops.store.atom.dao.MarketAtomFeatureDao
 import com.tencent.devops.store.atom.service.AtomLabelService
 import com.tencent.devops.store.atom.service.AtomService
 import com.tencent.devops.store.atom.service.MarketAtomCommonService
 import com.tencent.devops.store.atom.util.AtomOsMapUtil
 import com.tencent.devops.store.atom.util.AtomServiceScopeUtil
-import com.tencent.devops.store.pojo.common.ServiceScopeConfig
-import com.tencent.devops.store.util.ServiceScopeUtil
+import com.tencent.devops.store.common.dao.ClassifyDao
 import com.tencent.devops.store.common.dao.ReasonRelDao
 import com.tencent.devops.store.common.dao.StoreMemberDao
 import com.tencent.devops.store.common.dao.StoreProjectRelDao
@@ -90,6 +89,7 @@ import com.tencent.devops.store.pojo.atom.AtomBaseInfoUpdateRequest
 import com.tencent.devops.store.pojo.atom.AtomCodeVersionReqItem
 import com.tencent.devops.store.pojo.atom.AtomCreateRequest
 import com.tencent.devops.store.pojo.atom.AtomFeatureRequest
+import com.tencent.devops.store.pojo.atom.AtomGroupQueryParam
 import com.tencent.devops.store.pojo.atom.AtomResp
 import com.tencent.devops.store.pojo.atom.AtomRespItem
 import com.tencent.devops.store.pojo.atom.AtomRunInfo
@@ -128,16 +128,17 @@ import com.tencent.devops.store.pojo.common.KEY_RECENT_EXECUTE_NUM
 import com.tencent.devops.store.pojo.common.KEY_RECOMMEND_FLAG
 import com.tencent.devops.store.pojo.common.KEY_SERVICE_SCOPE
 import com.tencent.devops.store.pojo.common.KEY_UPDATE_TIME
-import com.tencent.devops.store.common.dao.ClassifyDao
+import com.tencent.devops.store.pojo.common.ServiceScopeConfig
 import com.tencent.devops.store.pojo.common.UnInstallReq
-import com.tencent.devops.store.pojo.common.honor.HonorInfo
-import com.tencent.devops.store.pojo.common.index.StoreIndexInfo
-import com.tencent.devops.store.pojo.common.label.Label
 import com.tencent.devops.store.pojo.common.enums.ReasonTypeEnum
 import com.tencent.devops.store.pojo.common.enums.ServiceScopeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.pojo.common.honor.HonorInfo
+import com.tencent.devops.store.pojo.common.index.StoreIndexInfo
+import com.tencent.devops.store.pojo.common.label.Label
 import com.tencent.devops.store.pojo.common.version.VersionInfo
+import com.tencent.devops.store.util.ServiceScopeUtil
 import com.tencent.devops.store.utils.VersionUtils
 import org.apache.commons.collections4.ListUtils
 import org.jooq.DSLContext
@@ -152,7 +153,6 @@ import java.util.concurrent.Future
 import java.util.concurrent.SynchronousQueue
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
-import kotlin.collections.orEmpty
 
 /**
  * 插件业务逻辑类
@@ -370,6 +370,8 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         watch.start("buildResponse")
         val respContext = AtomRespContext(
             queryProjectAtomFlag = queryProjectAtomFlag,
+            projectCode = projectCode,
+            installed = queryParam.installed,
             userId = userId,
             serviceScope = queryParam.serviceScope,
             jobType = queryParam.jobType,
@@ -389,10 +391,10 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         watch.stop()
 
         logger.info("serviceGetPipelineAtoms|$userId|$projectCode" +
-            "|atoms=${pipelineAtoms?.size}|total=$totalSize" +
-            "|${watch.taskInfo.joinToString("|") { "${it.taskName}=${it.timeMillis}ms" }}" +
-            "|totalCost=${watch.totalTimeMillis}ms" +
-            "|poolActive=${auxiliaryExecutor.activeCount}/${auxiliaryExecutor.poolSize}")
+                "|atoms=${pipelineAtoms?.size}|total=$totalSize" +
+                "|${watch.taskInfo.joinToString("|") { "${it.taskName}=${it.timeMillis}ms" }}" +
+                "|totalCost=${watch.totalTimeMillis}ms" +
+                "|poolActive=${auxiliaryExecutor.activeCount}/${auxiliaryExecutor.poolSize}")
 
         val effectivePage = page ?: 1
         val effectivePageSize = pageSize ?: dataList.size.coerceAtLeast(1)
@@ -405,6 +407,8 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
      */
     private data class AtomRespContext(
         val queryProjectAtomFlag: Boolean,
+        val projectCode: String,
+        val installed: Boolean?,
         val userId: String,
         val serviceScope: ServiceScopeEnum?,
         val jobType: String?,
@@ -479,7 +483,11 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
             classifyName = classifyLanName,
             category = AtomCategoryEnum.getAtomCategory((record[KEY_CATEGORY] as? Byte)?.toInt() ?: 0),
             summary = record[KEY_SUMMARY] as? String,
-            docsLink = record[KEY_DOCSLINK] as? String,
+            docsLink = StoreUtils.transformDocsLink(
+                docsLink = record[KEY_DOCSLINK] as? String,
+                storeType = StoreTypeEnum.ATOM,
+                serviceScope = ctx.serviceScope
+            ),
             atomType = AtomTypeEnum.getAtomType((record[KEY_ATOM_TYPE] as? Byte)?.toInt() ?: 0),
             atomStatus = AtomStatusEnum.getAtomStatus((record[KEY_ATOM_STATUS] as? Byte)?.toInt() ?: 0),
             description = description?.let {
@@ -501,7 +509,11 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
             uninstallFlag = atomPipelineCnt?.let { it < 1 },
             labelList = ctx.atomLabelInfoMap?.get(atomId),
             installFlag = installFlag,
-            installed = if (ctx.queryProjectAtomFlag) true else ctx.installedAtomList?.contains(atomCode),
+            installed = when {
+                ctx.installed != null && ctx.projectCode.isNotBlank() -> ctx.installed
+                ctx.queryProjectAtomFlag -> true
+                else -> ctx.installedAtomList?.contains(atomCode)
+            },
             honorInfos = ctx.atomHonorInfoMap[atomCode],
             indexInfos = ctx.atomIndexInfosMap[atomCode],
             hotFlag = record[KEY_HOT_FLAG] as? Boolean ?: false
@@ -823,7 +835,11 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                     classifyId = atomClassify?.id,
                     classifyCode = atomClassify?.classifyCode,
                     classifyName = atomClassify?.classifyName,
-                    docsLink = pipelineAtomRecord.docsLink,
+                    docsLink = StoreUtils.transformDocsLink(
+                        docsLink = pipelineAtomRecord.docsLink,
+                        storeType = StoreTypeEnum.ATOM,
+                        serviceScope = serviceScope
+                    ),
                     category = AtomCategoryEnum.getAtomCategory(pipelineAtomRecord.categroy.toInt()),
                     atomType = AtomTypeEnum.getAtomType(pipelineAtomRecord.atomType.toInt()),
                     atomStatus = AtomStatusEnum.getAtomStatus(pipelineAtomRecord.atomStatus.toInt()),
@@ -954,15 +970,32 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                 language = I18nUtil.getLanguage(userId)
             )
         }
-        // 校验插件分类是否合法
-        classifyService.getClassify(atomRequest.classifyId).data
-            ?: return I18nUtil.generateResponseDataObject(
-                messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
-                params = arrayOf(atomRequest.classifyId),
-                data = false,
-                language = I18nUtil.getLanguage(userId)
-            )
-        val classType = handleClassType(atomRequest.os)
+        // 校验插件分类是否合法：优先校验 serviceScopeConfigs，兼容旧 classifyId
+        val configs = atomRequest.serviceScopeConfigs
+        if (!configs.isNullOrEmpty()) {
+            configs.forEach { config ->
+                classifyDao.getClassifyByCode(
+                    dslContext = dslContext,
+                    classifyCode = config.classifyCode,
+                    type = StoreTypeEnum.ATOM,
+                    serviceScope = config.serviceScope
+                ) ?: return I18nUtil.generateResponseDataObject(
+                    messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                    params = arrayOf("${config.serviceScope.name}:${config.classifyCode}"),
+                    data = false,
+                    language = I18nUtil.getLanguage(userId)
+                )
+            }
+        } else {
+            classifyService.getClassify(atomRequest.classifyId).data
+                ?: return I18nUtil.generateResponseDataObject(
+                    messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                    params = arrayOf(atomRequest.classifyId),
+                    data = false,
+                    language = I18nUtil.getLanguage(userId)
+                )
+        }
+        val classType = handleClassType(atomRequest.os, atomRequest.serviceScopeConfigs)
         atomRequest.os.sort() // 给操作系统排序
         atomDao.addAtomFromOp(dslContext, userId, id, classType, atomRequest)
         return Result(true)
@@ -1566,5 +1599,35 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
 
     override fun getAtomId(atomCode: String, version: String): String? {
         return atomDao.getAtomIdByVersionWithCode(dslContext, atomCode, version)
+    }
+
+    override fun getAtomGroupCount(
+        userId: String,
+        atomGroupQueryParam: AtomGroupQueryParam
+    ): List<Pair<String, Int>> {
+        // 直接使用内嵌的插件过滤条件，查询用户有权限查看的插件code集合
+        val queryResult = atomDao.getPipelineAtomsAndCount(
+            dslContext = dslContext,
+            param = AtomQueryParam(
+                serviceScope = atomGroupQueryParam.serviceScope,
+                category = atomGroupQueryParam.category?.name,
+                classifyId = null,
+                fitOsFlag = null,
+                jobType = null,
+                keyword = null,
+                os = null,
+                projectCode = null,
+                queryFitAgentBuildLessAtomFlag = null,
+                recommendFlag = null
+            ),
+            page = null,
+            pageSize = null
+        )
+        val atomCodes = queryResult.atoms?.map { it[KEY_ATOM_CODE] as String }?.toSet() ?: emptySet()
+        return atomDao.getAtomGroupCount(
+            dslContext = dslContext,
+            atomGroupQueryParam = atomGroupQueryParam,
+            atomCodes = atomCodes
+        )
     }
 }

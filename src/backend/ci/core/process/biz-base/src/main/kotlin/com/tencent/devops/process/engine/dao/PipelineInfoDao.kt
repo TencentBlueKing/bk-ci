@@ -347,7 +347,8 @@ class PipelineInfoDao {
         limit: Int? = null,
         sortType: PipelineSortType,
         collation: PipelineCollation,
-        filterByPipelineName: String?
+        filterByPipelineName: String?,
+        channelCode: ChannelCode? = null
     ): Result<TPipelineInfoRecord>? {
         with(T_PIPELINE_INFO) {
             val conditions = mutableListOf<Condition>()
@@ -360,6 +361,9 @@ class PipelineInfoDao {
             }
             if (filterByPipelineName != null) {
                 conditions.add(PIPELINE_NAME.like("%$filterByPipelineName%"))
+            }
+            channelCode?.let {
+                conditions.add(CHANNEL.eq(channelCode.name))
             }
             return dslContext
                 .selectFrom(this)
@@ -624,6 +628,9 @@ class PipelineInfoDao {
                     PIPELINE_NAME.like("%${condition.pipelineName}%")
                 )
             }
+            if (condition.locked != null) {
+                conditions.add(LOCKED.eq(condition.locked))
+            }
             conditions
         }
     }
@@ -686,6 +693,25 @@ class PipelineInfoDao {
                 .and(PIPELINE_NAME.`in`(pipelineNames))
             if (filterDelete) query.and(DELETE.eq(false))
             query.fetch()
+        }
+    }
+
+    fun getPipelineInfoByName(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineName: String,
+        channelCode: ChannelCode? = null,
+        filterDelete: Boolean = true
+    ): TPipelineInfoRecord? {
+        return with(T_PIPELINE_INFO) {
+            val query = dslContext.selectFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(PIPELINE_NAME.eq(pipelineName))
+            if (channelCode != null) {
+                query.and(CHANNEL.eq(channelCode.name))
+            }
+            if (filterDelete) query.and(DELETE.eq(false))
+            query.fetchAny()
         }
     }
 

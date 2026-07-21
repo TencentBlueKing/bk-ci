@@ -2,7 +2,7 @@
 
 **数据库名：** devops_ci_repository
 
-**文档版本：** 1.0.20
+**文档版本：** 1.0.22
 
 **文档描述：** devops_ci_repository 的数据库文档
 | 表名                  | 说明       |
@@ -45,7 +45,7 @@
 |  9   | UPDATED_TIME |   timestamp   | 19 |   0    |    N     |  N   |   2019-08-0100:00:00    | 修改时间  |
 |  10   | IS_DELETED |   bit   | 1 |   0    |    N     |  N   |       | 是否删除 0 可用 1 删除  |
 |  11   | UPDATED_USER |   varchar   | 64 |   0    |    Y     |  N   |       | 代码库最近修改人  |
-|  12   | ATOM |   bit   | 1 |   0    |    Y     |  N   |   b'0'    | 是否为插件库(插件库不得修改和删除)  |
+|  12   | ATOM |   bit   | 1 |   0    |    Y     |  N   |   b'0'    | 是否为插件库（插件库不得修改和删除）  |
 |  13   | ENABLE_PAC |   bit   | 1 |   0    |    N     |  N   |   b'0'    | 是否开启 pac  |
 |  14   | YAML_SYNC_STATUS |   varchar   | 10 |   0    |    Y     |  N   |       | pac 同步状态  |
 |  15   | SCM_CODE |   varchar   | 64 |   0    |    Y     |  N   |       | 代码库标识  |
@@ -155,7 +155,7 @@
 |  6   | PROJECT_NAME |   varchar   | 255 |   0    |    Y     |  N   |       | 仓库唯一标识  |
 |  7   | SOURCE_COMMIT |   varchar   | 64 |   0    |    Y     |  N   |       | 源提交点  |
 |  8   | TARGET_COMMIT |   varchar   | 64 |   0    |    Y     |  N   |       | 目标提交点  |
-|  9   | STATUS |   int   | 10 |   0    |    Y     |  N   |       | 生成状态，1-生成中，3-生成失败,5-生成成功  |
+|  9   | STATUS |   int   | 10 |   0    |    Y     |  N   |       | 生成状态，1-生成中，3-生成失败，5-生成成功  |
 |  10   | SUMMARY |   text   | 65535 |   0    |    Y     |  N   |       | AI 摘要  |
 |  11   | CREATE_TIME |   timestamp   | 19 |   0    |    N     |  Y   |   CURRENT_TIMESTAMP    | 创建时间  |
 
@@ -271,14 +271,14 @@
 |  1   | ID |   bigint   | 20 |   0    |    N     |  Y   |       | 主键 ID  |
 |  2   | SCM_CODE |   varchar   | 64 |   0    |    N     |  N   |       | 代码库标识  |
 |  3   | NAME |   varchar   | 255 |   0    |    N     |  N   |       | 代码库名称  |
-|  4   | PROVIDER_CODE |   varchar   | 32 |   0    |    N     |  N   |       | 源代码平台提供者,如 github、gitlab  |
-|  5   | SCM_TYPE |   varchar   | 32 |   0    |    N     |  N   |       | 源代码类型,如 git,svn  |
-|  6   | HOSTS |   varchar   | 256 |   0    |    Y     |  N   |       | 代码库域名,支持多个  |
+|  4   | PROVIDER_CODE |   varchar   | 32 |   0    |    N     |  N   |       | 源代码平台提供者，如 github、gitlab  |
+|  5   | SCM_TYPE |   varchar   | 32 |   0    |    N     |  N   |       | 源代码类型，如 git,svn  |
+|  6   | HOSTS |   varchar   | 256 |   0    |    Y     |  N   |       | 代码库域名，支持多个  |
 |  7   | LOGO_URL |   varchar   | 256 |   0    |    N     |  N   |       | logo 链接  |
 |  8   | CREDENTIAL_TYPE_LIST |   varchar   | 256 |   0    |    N     |  N   |       | 支持的授权类型  |
-|  9   | OAUTH_TYPE |   varchar   | 32 |   0    |    N     |  N   |       | oauth 类型,NEW-新增,REUSE-复用  |
-|  10   | OAUTH_SCM_CODE |   varchar   | 64 |   0    |    Y     |  N   |       | oauth 代码库标识,OAUTH_TYPE 为 REUSE 有值  |
-|  11   | STATUS |   varchar   | 32 |   0    |    N     |  N   |   SUCCEED    | 状态,SUCCEED-配置成功,DEPLOYING-配置中,DISABLED-禁用  |
+|  9   | OAUTH_TYPE |   varchar   | 32 |   0    |    N     |  N   |       | oauth 类型，NEW-新增，REUSE-复用  |
+|  10   | OAUTH_SCM_CODE |   varchar   | 64 |   0    |    Y     |  N   |       | oauth 代码库标识，OAUTH_TYPE 为 REUSE 有值  |
+|  11   | STATUS |   varchar   | 32 |   0    |    N     |  N   |   SUCCEED    | 状态，SUCCEED-配置成功，DEPLOYING-配置中，DISABLED-禁用  |
 |  12   | OAUTH2_ENABLED |   bit   | 1 |   0    |    N     |  N   |   b'0'    | 是否能够使用 oauth2  |
 |  13   | MERGE_ENABLED |   bit   | 1 |   0    |    N     |  N   |   b'0'    | 是否能够使用 merge 功能  |
 |  14   | PAC_ENABLED |   bit   | 1 |   0    |    N     |  N   |   b'0'    | 是否能够使用 PAC 功能  |
@@ -314,17 +314,17 @@
 | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
 |  1   | ID |   bigint   | 20 |   0    |    N     |  Y   |       | 主键 ID  |
 |  2   | PROVIDER_CODE |   varchar   | 64 |   0    |    N     |  N   |       | 提供者标识  |
-|  3   | PROVIDER_TYPE |   varchar   | 32 |   0    |    N     |  N   |       | 提供者类型,如 git,svn  |
+|  3   | PROVIDER_TYPE |   varchar   | 32 |   0    |    N     |  N   |       | 提供者类型，如 git,svn  |
 |  4   | NAME |   varchar   | 255 |   0    |    N     |  N   |       | 提供者名称  |
 |  5   | DESC |   varchar   | 255 |   0    |    Y     |  N   |       | 提供者描述  |
-|  6   | SCM_TYPE |   varchar   | 32 |   0    |    N     |  N   |       | 源代码类型,如 git,svn  |
+|  6   | SCM_TYPE |   varchar   | 32 |   0    |    N     |  N   |       | 源代码类型，如 git,svn  |
 |  7   | LOGO_URL |   varchar   | 256 |   0    |    Y     |  N   |       | 提供者 iconurl  |
 |  8   | DOC_URL |   varchar   | 256 |   0    |    Y     |  N   |       | 文档链接  |
 |  9   | CREDENTIAL_TYPE_LIST |   varchar   | 256 |   0    |    N     |  N   |       | 支持的授权类型  |
 |  10   | API |   bit   | 1 |   0    |    N     |  N   |   b'0'    | 是否支持 api 接口  |
 |  11   | MERGE |   bit   | 1 |   0    |    N     |  N   |   b'0'    | 是否支持 merge  |
 |  12   | WEBHOOK |   bit   | 1 |   0    |    N     |  N   |   b'0'    | 是否支持 webhook  |
-|  13   | WEBHOOK_SECRET_TYPE |   varchar   | 64 |   0    |    Y     |  N   |       | webhook 鉴权类型,APP,REQUEST_HEADER  |
+|  13   | WEBHOOK_SECRET_TYPE |   varchar   | 64 |   0    |    Y     |  N   |       | webhook 鉴权类型，APP,REQUEST_HEADER  |
 |  14   | WEBHOOK_PROPS |   text   | 65535 |   0    |    N     |  N   |       | webhook 配置  |
 |  15   | PAC |   bit   | 1 |   0    |    N     |  N   |   b'0'    | 是否支持 PAC  |
 |  16   | CREATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 创建时间  |

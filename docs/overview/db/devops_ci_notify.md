@@ -2,7 +2,7 @@
 
 **数据库名：** devops_ci_notify
 
-**文档版本：** 1.0.20
+**文档版本：** 1.0.22
 
 **文档描述：** devops_ci_notify 的数据库文档
 | 表名                  | 说明       |
@@ -33,7 +33,7 @@
 |  1   | ID |   varchar   | 32 |   0    |    N     |  Y   |       | 主键 ID  |
 |  2   | TEMPLATE_CODE |   varchar   | 64 |   0    |    N     |  N   |       | 模板代码  |
 |  3   | TEMPLATE_NAME |   varchar   | 128 |   0    |    N     |  N   |       | 模板名称  |
-|  4   | NOTIFY_TYPE_SCOPE |   varchar   | 64 |   0    |    N     |  N   |       | 适用的通知类型（EMAIL:邮件 RTX:企业微信 WECHAT:微信 SMS:短信）  |
+|  4   | NOTIFY_TYPE_SCOPE |   varchar   | 64 |   0    |    N     |  N   |       | 适用的通知类型（EMAIL：邮件 RTX：企业微信 WECHAT：微信 SMS：短信）  |
 |  5   | PRIORITY |   tinyint   | 4 |   0    |    N     |  N   |       | 优先级  |
 |  6   | SOURCE |   tinyint   | 4 |   0    |    N     |  N   |       | 邮件来源  |
 
@@ -52,8 +52,8 @@
 |  5   | SENDER |   varchar   | 128 |   0    |    N     |  N   |   DevOps    | 邮件发送者  |
 |  6   | TITLE |   varchar   | 256 |   0    |    Y     |  N   |       | 邮件标题  |
 |  7   | BODY |   mediumtext   | 16777215 |   0    |    N     |  N   |       | 邮件内容  |
-|  8   | BODY_FORMAT |   tinyint   | 4 |   0    |    N     |  N   |       | 邮件格式（0:文本 1:html网页）  |
-|  9   | EMAIL_TYPE |   tinyint   | 4 |   0    |    N     |  N   |       | 邮件类型（0:外部邮件 1:内部邮件）  |
+|  8   | BODY_FORMAT |   tinyint   | 4 |   0    |    N     |  N   |       | 邮件格式（0：文本 1:html网页）  |
+|  9   | EMAIL_TYPE |   tinyint   | 4 |   0    |    N     |  N   |       | 邮件类型（0：外部邮件 1：内部邮件）  |
 |  10   | TENCENT_CLOUD_TEMPLATE_ID |   int   | 10 |   0    |    Y     |  N   |       | 腾讯云邮件模板 id  |
 |  11   | CREATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 创建时间  |
 |  12   | UPDATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 更新时间  |

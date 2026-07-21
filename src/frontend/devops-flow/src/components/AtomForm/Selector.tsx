@@ -19,6 +19,11 @@ export default defineComponent({
       type: Array as PropType<Array<{ id: string | number; name: string; disabled?: boolean }>>,
       default: () => [],
     },
+    // Static list (backward compatible)
+    options: {
+      type: Array as PropType<Array<{ id: string | number; name: string; disabled?: boolean }>>,
+      default: () => [],
+    },
     // API request URL
     optionsConf: {
       type: Object as PropType<SelectDataConf>,
@@ -41,16 +46,31 @@ export default defineComponent({
       type: Object as PropType<Record<string, unknown>>,
       default: () => ({}),
     },
+    multiSelect: {
+      type: Boolean,
+      default: false
+    }
   },
   emits: ['change', 'update:value'],
-  setup(props, { emit }) {
+  setup(props, { emit, attrs }) {
     const { t } = useI18n()
-    // Use data source hook for API data fetching
-    const { list, isLoading, refreshList, isApiMode, selectConf } = useDataSource({
-      ...props.optionsConf,
-      options: props.list ?? props.optionsConf.options,
-      atomValue: props.atomValue,
+    const staticOptions = computed(() => {
+      // whether list or options is provided, use the static list, due to the list and options has default value [], which is not empty array
+      if (Array.isArray(props.list) && props.list.length > 0) {
+        return props.list
+      }
+      if (Array.isArray(props.options) && props.options.length > 0) {
+        return props.options
+      }
     })
+    const mergedConf: SelectDataConf = {
+      ...(attrs as SelectDataConf),
+      ...props.optionsConf,
+      options: staticOptions.value ?? props.optionsConf.options,
+      atomValue: props.atomValue,
+      multiSelect: props.multiSelect,
+    }
+    const { list, isLoading, refreshList, isApiMode, selectConf } = useDataSource(mergedConf)
 
     // Placeholder with loading state
     const displayPlaceholder = computed(() =>

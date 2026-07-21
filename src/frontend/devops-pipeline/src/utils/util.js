@@ -35,6 +35,19 @@ export function urlJoin (...args) {
     return args.filter(arg => arg).join('/').replace(/([^:]\/)\/+/g, '$1')
 }
 
+export function encodeArtifactDownloadUrl (url, path) {
+    const encodeSegment = segment => encodeURIComponent(segment).replace(
+        /[!'()*]/g,
+        char => `%${char.charCodeAt(0).toString(16).toUpperCase()}`
+    )
+    const encodedPath = path
+        .split('/')
+        .map(encodeSegment)
+        .join('/')
+
+    return url.replace(path, () => encodedPath)
+}
+
 export function isShallowEqual (obj1, obj2) {
     if (obj1 === obj2) return true
     if (!isObject(obj1) || !isObject(obj2)) {
@@ -956,6 +969,16 @@ export async function copyToClipboard (text) {
         document.execCommand('Copy')
         document.body.removeChild(textArea)
     }
+}
+
+/**
+ * 获取时间戳字符串，格式：yyyyMMddHHmm
+ * @returns {String}
+ */
+export function getTimestamp () {
+    const now = new Date()
+    const prezero = (num) => num < 10 ? '0' + num : num
+    return `${now.getFullYear()}${prezero(now.getMonth() + 1)}${prezero(now.getDate())}${prezero(now.getHours())}${prezero(now.getMinutes())}`
 }
 
 export const COMMON_PARAM_PREFIX = 'COMMON_PARAM_'

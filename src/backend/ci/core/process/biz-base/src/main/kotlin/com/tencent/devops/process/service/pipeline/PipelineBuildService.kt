@@ -56,6 +56,7 @@ import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.engine.service.PipelineElementService
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
+import com.tencent.devops.process.engine.service.PipelineStartupPermissionExtService
 import com.tencent.devops.process.enums.PipelineCategory
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.app.StartBuildContext
@@ -117,6 +118,7 @@ class PipelineBuildService(
     private val simpleRateLimiter: SimpleRateLimiter,
     private val buildIdGenerator: BuildIdGenerator,
     private val pipelineAsCodeService: PipelineAsCodeService,
+    private val pipelineStartupPermissionExtService: PipelineStartupPermissionExtService,
     private val client: Client
 ) {
     companion object {
@@ -171,6 +173,15 @@ class PipelineBuildService(
         triggerReviewers: List<String>? = null,
         debug: Boolean? = false
     ): BuildId {
+
+        // 启动前的扩展权限校验（如基于 NODE_HASH_ID 校验节点操作权限），校验不通过会抛出异常阻断启动
+        pipelineStartupPermissionExtService.checkStartupPermission(
+            userId = userId,
+            projectId = pipeline.projectId,
+            pipelineId = pipeline.pipelineId,
+            pipelineParamMap = pipelineParamMap,
+            channelCode = channelCode
+        )
 
         var acquire = false
         val projectVO = projectCacheService.getProject(pipeline.projectId)
@@ -471,7 +482,9 @@ class PipelineBuildService(
      * 初始化节点/Agent 相关参数
      */
     private fun initNodeAgentParams(ctx: InitParamContext) {
-        ctx.startValues?.get(NODE_AGENT_ID)?.takeIf(String::isNotBlank)?.let { agentId ->
+        val agentIdValue = ctx.startValues?.get(NODE_AGENT_ID)
+            ?: ctx.pipelineParamMap[NODE_AGENT_ID]?.value?.toString()
+        agentIdValue?.takeIf(String::isNotBlank)?.let { agentId ->
             val agentInfo = client.get(ServiceThirdPartyAgentResource::class)
                 .getAgentById(ctx.pipeline.projectId, agentId).data
             val paramMap = ctx.pipelineParamMap

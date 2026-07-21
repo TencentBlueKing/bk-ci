@@ -80,6 +80,23 @@ export function validateStepId(stepId: string | undefined, siblingStepIds: strin
 }
 
 /**
+ * Validate a jobId for uniqueness across the whole flow.
+ * Returns a list of error keys (empty = valid).
+ * @param jobId - The jobId to validate
+ * @param siblingJobIds - jobIds of all other containers in the flow (excluding current)
+ */
+export function validateJobId(jobId: string | undefined, siblingJobIds: string[]): string[] {
+  const trimmed = jobId?.trim()
+  if (!trimmed) return []
+
+  if (siblingJobIds.includes(trimmed)) {
+    return ['jobIdDuplicate']
+  }
+
+  return []
+}
+
+/**
  * Validate an atom element's required fields against its atom modal definition,
  * including additionalOptions validation.
  * Returns a list of field keys that failed validation (empty = valid).
@@ -111,6 +128,17 @@ export function validateAtomElement(
 
         if (prop.required && isValueEmpty(atomValue[key])) {
           errors.push(key)
+        }
+
+        // 校验 list 中子项含 key + required 的子字段（如 conditional-input-selector 等组件）
+        if (Array.isArray(prop.list)) {
+          const currentValue = atomValue[key]
+          if (!isValueEmpty(currentValue)) {
+            const matchedItem = prop.list.find((item: any) => item.value === currentValue)
+            if (matchedItem?.required && matchedItem.key && isValueEmpty(atomValue[matchedItem.key])) {
+              errors.push(matchedItem.key)
+            }
+          }
         }
       }
     }

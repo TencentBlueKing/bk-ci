@@ -97,7 +97,6 @@ task('build', series(cb => {
     console.log('gulp cmd: ', cmd, cmd.split(' '))
     const { spawn } = require('node:child_process')
     const spawnCmd = spawn('pnpm', [
-        'exec',
         'nx',
         '--parallel=16',
         ...cmd.split(' ')

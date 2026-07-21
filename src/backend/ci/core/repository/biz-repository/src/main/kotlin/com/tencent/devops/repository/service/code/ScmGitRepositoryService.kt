@@ -161,16 +161,6 @@ class ScmGitRepositoryService @Autowired constructor(
                 )
             )
         }
-        // 不得切换代码库
-        if (GitUtils.diffRepoUrl(record.url, repository.url)) {
-            logger.warn("can not switch repo url|sourceUrl[${record.url}]|targetUrl[${repository.url}]")
-            throw OperationException(
-                MessageUtil.getMessageByLocale(
-                    RepositoryMessageCode.CAN_NOT_SWITCH_REPO_URL,
-                    I18nUtil.getLanguage(userId)
-                )
-            )
-        }
 
         // 凭证信息
         val authRepository = AuthRepository(repository)

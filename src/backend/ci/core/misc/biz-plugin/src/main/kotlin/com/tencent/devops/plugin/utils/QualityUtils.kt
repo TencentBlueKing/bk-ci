@@ -122,7 +122,8 @@ object QualityUtils {
                             detail = indicator?.elementDetail,
                             value = interceptItem.actualValue ?: "null",
                             client = client,
-                            channelCode = channelCode
+                            channelCode = channelCode,
+                            logPrompt = indicator?.logPrompt ?: ""
                         )
                         else -> interceptItem.actualValue ?: "null"
                     }
@@ -150,7 +151,8 @@ object QualityUtils {
         detail: String?,
         value: String,
         client: Client,
-        channelCode: ChannelCode
+        channelCode: ChannelCode,
+        logPrompt: String?
     ): String {
         val taskId = getBuildVar(
             client = client,
@@ -163,7 +165,10 @@ object QualityUtils {
             "<a target='_blank' href='${HomeHostUtil.innerServerHost()}/" +
                 "console/codecc/$projectId/task/$taskId/detail?buildId=$buildId'>$value</a>"
         } else {
-            val detailValue = codeccToolUrlPathMap[detail] ?: DEFAULT_CODECC_URL
+            var detailValue = logPrompt
+            if (detailValue.isNullOrBlank()) {
+                detailValue = codeccToolUrlPathMap[detail] ?: DEFAULT_CODECC_URL
+            }
             val fillDetailUrl = detailValue.replace("##projectId##", projectId)
                 .replace("##taskId##", taskId.toString())
                 .replace("##buildId##", buildId)

@@ -43,6 +43,7 @@ import com.tencent.devops.environment.pojo.SharedProjectInfoWrap
 import com.tencent.devops.environment.pojo.enums.EnvType
 import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.environment.pojo.enums.NodeType
+import com.tencent.devops.environment.pojo.envOperate.EnableNodeEnvData
 import com.tencent.devops.environment.pojo.thirdpartyagent.AgentPipelineRef
 import com.tencent.devops.openapi.BkApigwApi
 import io.swagger.v3.oas.annotations.Operation
@@ -489,7 +490,10 @@ interface ApigwEnvironmentResourceV4 {
         @Parameter(description = "每页多少条", required = false)
         @QueryParam("pageSize")
         pageSize: Int? = 20,
-        @Parameter(description = "IP", required = false)
+        @Parameter(
+            description = "IP，支持多 IP 搜索：英文逗号分隔；单 IP 模糊匹配，多 IP 精确匹配（IN）",
+            required = false
+        )
         @QueryParam("nodeIp")
         nodeIp: String?,
         @Parameter(description = "别名", required = false)
@@ -561,6 +565,7 @@ interface ApigwEnvironmentResourceV4 {
         nodeName: String?,
         @Parameter(description = "启动true/停用false", required = true)
         @QueryParam("enable")
-        enable: Boolean
+        enable: Boolean,
+        data: EnableNodeEnvData?
     ): Result<Boolean>
 }

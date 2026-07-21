@@ -11,7 +11,6 @@ interface PipelineTaskVersionProcessor {
      * 插件保存前执行
      */
     fun postProcessBeforeSave(
-        transactionContext: DSLContext,
         context: PipelineVersionCreateContext,
         pipelineResourceVersion: PipelineResourceVersion,
         pipelineSetting: PipelineSetting,

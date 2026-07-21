@@ -156,7 +156,8 @@
                 initData,
                 fetchEnvList,
                 deleteEnv,
-                isCreateResType
+                isCreateResType,
+                fetchEnvCountAsType
             } = useEnvAside()
             const {
                 setEnvDetailLoaded
@@ -190,15 +191,18 @@
                 //     count: envCountData.value[ENV_TYPE_MAP.DEVX] ?? 0
                 // }
             ]))
-            const handleCreateEnvSuccess = async ({ hashId }) => {
+            const handleCreateEnvSuccess = async ({ hashId }, envType) => {
                 await fetchEnvList()
+                await fetchEnvCountAsType()
                 proxy.$router.replace({
                     name: 'envDetail',
                     params: {
                         ...proxy.$route.params,
-                        envId: hashId
+                        envId: hashId,
+                        envType
                     }
                 })
+                handleChangeEnvType(envType)
             }
             const handleChangeEnvType = async (type) => {
                 await proxy.$router.replace({
@@ -309,6 +313,7 @@
                 fetchEnvList,
                 showCreateEnvDialog,
                 isCreateResType,
+                fetchEnvCountAsType,
                 ENV_RESOURCE_ACTION,
                 ENV_RESOURCE_TYPE,
 

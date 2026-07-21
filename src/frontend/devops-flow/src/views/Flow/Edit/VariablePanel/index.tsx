@@ -60,6 +60,9 @@ export default defineComponent({
       // System variables
       systemVariables,
       fetchSystemVariables,
+      // Trigger params
+      triggerParams,
+      fetchTriggerParams,
     } = useFlowVariables(props.flowId)
 
     // Edit mode state
@@ -101,22 +104,40 @@ export default defineComponent({
       return grouped
     }
 
+    // Read-only variable panels expanded state (system variables & plugin output)
+    // Reference: system-var.vue - search results auto-expand, default first group open
+    const readonlyExpandedPanels = ref<(string | number)[]>([0])
+
     // Filter system variable groups
+    // Reference: system-var.vue renderSysParamList - filter by name and desc, auto-expand matching groups
     const getFilteredReadonlyVariableGroups = (list: ReadOnlyVariableGroup[]) => {
       if (!searchKeyword.value) {
+        // No search: default expand first group (same as system-var.vue: this.sysParamList[0] && (this.sysParamList[0].isOpen = true))
+        readonlyExpandedPanels.value = [0]
         return list
       }
 
-      return list
-        .map((group) => ({
+      // With search: filter params within each group by name and desc
+      // Auto-expand groups with matching results (same as system-var.vue: isOpen: searchRes.length > 0)
+      // Keep all groups including empty ones (same as system-var.vue)
+      const expandedIndices: (string | number)[] = []
+      const keyword = searchKeyword.value.toLowerCase()
+      const filteredList = list.map((group, index) => {
+        const searchRes = group.params.filter(
+          (v) =>
+            (v.name && v.name.toLowerCase().includes(keyword)) ||
+            (v.desc && v.desc.toLowerCase().includes(keyword)),
+        )
+        if (searchRes.length > 0) {
+          expandedIndices.push(index)
+        }
+        return {
           ...group,
-          params: group.params.filter(
-            (v) =>
-              v.id.toLowerCase().includes(searchKeyword.value.toLowerCase()) ||
-              v.name.toLowerCase().includes(searchKeyword.value.toLowerCase()),
-          ),
-        }))
-        .filter((group) => group.params.length > 0)
+          params: searchRes,
+        }
+      })
+      readonlyExpandedPanels.value = expandedIndices
+      return filteredList
     }
 
     // Computed variables for each tab (grouped)
@@ -126,9 +147,11 @@ export default defineComponent({
     const filteredPluginOutputVariables = computed(() =>
       getFilteredReadonlyVariableGroups(pluginOutputVariables.value),
     )
-    const filteredSystemVariableGroups = computed(() =>
-      getFilteredReadonlyVariableGroups(systemVariables.value),
-    )
+    const filteredSystemVariableGroups = computed(() => {
+      // Combine system variables and trigger params, then filter
+      const combinedList = [...systemVariables.value, ...triggerParams.value]
+      return getFilteredReadonlyVariableGroups(combinedList)
+    })
 
     // Get current category for adding variables
     const currentCategory = computed(() => currentAddingCategory.value)
@@ -215,6 +238,7 @@ export default defineComponent({
         fetchPluginOutputVariables()
       } else if (name === VariablePanelTab.SYSTEM) {
         fetchSystemVariables()
+        fetchTriggerParams()
       }
     }
 
@@ -259,6 +283,41 @@ export default defineComponent({
       } catch (error) {
         // Error handling is done in the hook
       }
+    }
+
+    // Handle move variable to top - 将变量移到当前分组的第一个位置
+    const handleMoveToTop = (variableId: string) => {
+      // 获取所有变量并按 order 排序
+      const allVars = [...variables.value].sort((a, b) => (a.order ?? Infinity) - (b.order ?? Infinity))
+
+      // 找到要移动的变量
+      const variable = allVars.find(v => v.id === variableId)
+      if (!variable) return
+
+      // 获取变量所在的分组名称
+      const groupName = variable.category || ''
+
+      // 找到同一分组中第一个变量在数组中的索引
+      const preEleIndex = allVars.findIndex(v => (v.category || '') === groupName)
+
+      // 找到要移动的变量在数组中的索引
+      const index = allVars.findIndex(v => v.id === variableId)
+
+      // 检查是否已经在分组顶部
+      if (index === preEleIndex) return
+
+      // 从当前位置移除变量
+      allVars.splice(index, 1)
+
+      // 插入到分组的第一个位置
+      allVars.splice(preEleIndex, 0, variable)
+
+      // 更新所有变量的 order 值
+      allVars.forEach((v, idx) => {
+        v.order = idx
+      })
+
+      updateParams(allVars)
     }
 
     // Handle copy variable reference
@@ -360,6 +419,7 @@ export default defineComponent({
                     onEdit={handleEditVariable}
                     onDelete={handleDeleteVariable}
                     onCopy={handleCopyReference}
+                    onMoveToTop={handleMoveToTop}
                   />
                 ))}
               </VueDraggable>
@@ -389,7 +449,7 @@ export default defineComponent({
             )}
           </Alert>
           <div class={styles.listContent}>
-            <Collapse useBlockTheme list={variableGroups}>
+            <Collapse useBlockTheme list={variableGroups} v-model={readonlyExpandedPanels.value}>
               {{
                 title: (group: ReadOnlyVariableGroup) => (
                   <div class={styles.collapseHeader}>
@@ -401,7 +461,7 @@ export default defineComponent({
                   <div class={styles.flatVariableList}>
                     {group.params.map((variable) => (
                       <ReadOnlyVariableItem
-                        key={variable.id}
+                        key={variable.name ?? variable.id}
                         variable={variable}
                         type={readonlyVarType}
                         onCopy={handleCopyReference}

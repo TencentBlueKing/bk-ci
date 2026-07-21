@@ -2,7 +2,7 @@ import type { AtomModal } from '@/api/atom'
 import type { Element } from '@/api/flowModel'
 import AtomForm, { DISPLAY_MODE, type AtomPropsModel } from '@/components/AtomForm/AtomForm'
 import { SvgIcon } from '@/components/SvgIcon'
-import { getAtomDefaultValue, getAtomOutputObj } from '@/utils/atom'
+import { getAtomDefaultValue, getAtomOutputObj, isNewAtomTemplate } from '@/utils/atom'
 import { TRIGGER_TYPE } from '@/utils/flowConst'
 import { createDefaultElement } from '@/utils/flowDefaults'
 import { validateAtomElement, validateStepId } from '@/utils/validation'
@@ -121,8 +121,22 @@ export default defineComponent({
       return atomModal.value.props as AtomPropsModel
     })
 
+    // 依据插件的 htmlTemplateVersion 判断是否为新模板：
+    // - 新模板：插件输入存放在 element.data.input 中
+    // - 旧模板：插件输入平铺在 element 顶层
+    const isNewTemplate = computed(() => isNewAtomTemplate(atomModal.value?.htmlTemplateVersion))
+
     const atomValue = computed(() => {
-      const input = localElement.value?.data?.input
+      const element = localElement.value
+      if (!element) return {}
+
+      // 旧模板：字段平铺在 element 顶层，直接使用 element
+      if (!isNewTemplate.value) {
+        return element as unknown as Record<string, any>
+      }
+
+      // 新模板：从 element.data.input 读取
+      const input = element.data?.input
       if (input && Object.keys(input).length > 0) return input
       const inputModel = atomPropsModel.value?.input || atomPropsModel.value || {}
       return getAtomDefaultValue(inputModel)
@@ -149,14 +163,33 @@ export default defineComponent({
     // ========== Modal Loading ==========
 
     const applyModalDefaults = (modal: TriggerModal) => {
-      if (!localElement.value?.data) return
+      if (!localElement.value) return
 
       const modalProps = modal.props || {}
       const inputModel = (modalProps as Record<string, any>).input || modalProps
       const outputModel = (modalProps as Record<string, any>).output || {}
+      const defaults = getAtomDefaultValue(inputModel)
 
+      if (!isNewTemplate.value) {
+        // 旧模板：插件输入平铺在 element 顶层，补齐缺失的默认值
+        const elementAny = localElement.value as Record<string, any>
+        Object.entries(defaults).forEach(([key, value]) => {
+          if (!(key in elementAny) || elementAny[key] === undefined) {
+            elementAny[key] = value
+          }
+        })
+        return
+      }
+
+      // 新模板：插件输入存放在 element.data.input
+      if (!localElement.value.data) {
+        localElement.value.data = { input: {}, output: [] }
+      }
+      if (!localElement.value.data.input) {
+        localElement.value.data.input = {}
+      }
       if (Object.keys(localElement.value.data.input).length === 0) {
-        localElement.value.data.input = getAtomDefaultValue(inputModel)
+        localElement.value.data.input = defaults
       }
 
       const currentOutput = localElement.value.data.output
@@ -233,6 +266,12 @@ export default defineComponent({
 
       const elementToSave = JSON.parse(JSON.stringify(localElement.value))
       delete elementToSave.isError
+
+      // 旧模板：插件输入平铺在 element 顶层，无需 data 包装
+      if (!isNewTemplate.value) {
+        delete elementToSave.data
+      }
+
       emit('save', elementToSave)
       handleClose()
     }
@@ -255,8 +294,19 @@ export default defineComponent({
     }
 
     const updateInput = (key: string, value: any) => {
-      if (!localElement.value?.data) return
-      localElement.value.data.input[key] = value
+      const element = localElement.value
+      if (!element) return
+
+      // 旧模板：插件输入平铺在 element 顶层
+      if (!isNewTemplate.value) {
+        ;(element as Record<string, any>)[key] = value
+        return
+      }
+
+      // 新模板：插件输入存放在 element.data.input
+      if (!element.data) element.data = { input: {}, output: [] }
+      if (!element.data.input) element.data.input = {}
+      element.data.input[key] = value
     }
 
     // ========== Render ==========
@@ -345,7 +395,7 @@ export default defineComponent({
     }
 
     return () => (
-      <Sideslider isShow={props.visible} width={560} transfer onClosed={handleClose}>
+      <Sideslider isShow={props.visible} width={640} transfer onClosed={handleClose}>
         {{
           header: () => (
             <div class={styles.header}>

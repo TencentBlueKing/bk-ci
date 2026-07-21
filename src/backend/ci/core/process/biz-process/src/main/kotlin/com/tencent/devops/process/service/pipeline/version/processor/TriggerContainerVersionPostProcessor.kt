@@ -45,6 +45,25 @@ class TriggerContainerVersionPostProcessor @Autowired constructor(
         }
     }
 
+    override fun postProcessBeforeVersionCreate(
+        context: PipelineVersionCreateContext,
+        pipelineResourceVersion: PipelineResourceVersion,
+        pipelineSetting: PipelineSetting
+    ) {
+        val triggerContainer = pipelineResourceVersion.model.getTriggerContainer()
+        val variables = pipelineRepositoryService.getTriggerParams(triggerContainer)
+        triggerContainer.elements.forEach { element ->
+            taskVersionProcessors.firstOrNull { it.support(element) }
+                    ?.postProcessBeforeSave(
+                        context = context,
+                        pipelineResourceVersion = pipelineResourceVersion,
+                        pipelineSetting = pipelineSetting,
+                        element = element,
+                        variables = variables
+                    )
+        }
+    }
+
     companion object {
         private val logger = LoggerFactory.getLogger(TriggerContainerVersionPostProcessor::class.java)
     }

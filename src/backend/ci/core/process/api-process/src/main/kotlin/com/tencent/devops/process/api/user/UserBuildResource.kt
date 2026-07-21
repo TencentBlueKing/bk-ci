@@ -811,6 +811,7 @@ interface UserBuildResource {
         buildId: String
     ): Result<BuildReplayResult>
 
+    @Deprecated("新接口放到了dispatch，等正式上线看看日志，没人用就删掉")
     @Operation(summary = "获取指定流水线和job的构建历史")
     @GET
     @Path("/{projectId}/{pipelineId}/containers/{containerId}/history")

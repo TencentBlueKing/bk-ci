@@ -2,7 +2,7 @@ import type { Container, CustomVariable, Stage } from '@/api/flowModel'
 import KeyValueMap from '@/components/AtomForm/KeyValueMap'
 import { getJobRunConditionList } from '@/constants/flowOptionConfig'
 import { JobRunCondition } from '@/utils/flowDefaults'
-import { computeContainerIsError, validateContainer, validateJobControlOption } from '@/utils/validation'
+import { computeContainerIsError, validateContainer, validateJobControlOption, validateJobId } from '@/utils/validation'
 import { Checkbox, Collapse, Form, Input, Radio, Select, Switcher } from 'bkui-vue'
 import { computed, defineComponent, ref, watch, type PropType } from 'vue'
 import { useI18n } from 'vue-i18n'
@@ -40,6 +40,8 @@ export interface JobPropertyContentProps {
   showNameField?: boolean
   /** Whether to show the job id field */
   showJobIdField?: boolean
+  /** jobIds of all other containers in the flow (for uniqueness validation) */
+  siblingJobIds?: string[]
 }
 
 export default defineComponent({
@@ -76,6 +78,10 @@ export default defineComponent({
     showJobIdField: {
       type: Boolean,
       default: true,
+    },
+    siblingJobIds: {
+      type: Array as PropType<string[]>,
+      default: () => [],
     },
   },
   emits: ['change'],
@@ -114,6 +120,11 @@ export default defineComponent({
         }))
     })
 
+    // 指定工作空间仅对创作任务 Job（vmBuild）生效，存储在 dispatchType.workspace
+    const showWorkspace = computed(
+      () => formData.value?.['@type'] === 'vmBuild' && !!formData.value?.dispatchType,
+    )
+
     // Condition display computed properties
     const jobCtrl = computed(() => formData.value?.jobControlOption)
     const showCustomVariables = computed(() =>
@@ -133,6 +144,11 @@ export default defineComponent({
     const containerErrorFields = computed(() => {
       if (!formData.value) return []
       return validateContainer(formData.value)
+    })
+
+    const jobIdErrors = computed(() => {
+      if (!formData.value) return []
+      return validateJobId(formData.value.jobId, props.siblingJobIds)
     })
 
     const jobCtrlErrorFields = computed(() => {
@@ -181,9 +197,8 @@ export default defineComponent({
       formData,
       () => {
         if (formData.value) {
-          ; (formData.value as Record<string, unknown>).isError = computeContainerIsError(
-            formData.value,
-          )
+          ; (formData.value as Record<string, unknown>).isError =
+            computeContainerIsError(formData.value) || jobIdErrors.value.length > 0
           emit('change', formData.value)
         }
       },
@@ -532,7 +547,7 @@ export default defineComponent({
                     label={t('flow.orchestration.jobId')}
                     property="jobId"
                     required
-                    class={containerErrorFields.value.includes('jobId') ? sharedStyles.fieldError : ''}
+                    class={containerErrorFields.value.includes('jobId') || jobIdErrors.value.length > 0 ? sharedStyles.fieldError : ''}
                   >
                     <Input
                       v-model={formData.value.jobId}
@@ -540,8 +555,24 @@ export default defineComponent({
                       disabled={!props.editable}
                       class={sharedStyles.propertyPanelHalfWidthInput}
                     />
+                    {jobIdErrors.value.includes('jobIdDuplicate') && (
+                      <div class={sharedStyles.fieldErrorMessage}>{t('flow.orchestration.jobIdDuplicateError')}</div>
+                    )}
                   </FormItem>
                 </div>
+              </div>
+            )}
+
+            {/* Specify workspace (创作任务 only) — sibling above Matrix */}
+            {showWorkspace.value && (
+              <div class={sharedStyles.flowControlSection}>
+                <FormItem label={t('flow.orchestration.jobWorkspace')}>
+                  <Input
+                    v-model={formData.value!.dispatchType!.workspace}
+                    placeholder={t('flow.orchestration.jobWorkspacePlaceholder')}
+                    disabled={!props.editable}
+                  />
+                </FormItem>
               </div>
             )}
 
