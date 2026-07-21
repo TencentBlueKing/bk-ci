@@ -218,6 +218,7 @@ class PipelineYamlFileManager @Autowired constructor(
                             "$projectId$repoHashId|$filePath|$ref|${commit?.commitId}|$blobId",
                     ignored
                 )
+                handlePullRequestOnFailed(context = context, exception = ignored)
                 webhookTriggerManager.fireChangeError(context = context, exception = ignored)
                 false
             } finally {
@@ -378,6 +379,7 @@ class PipelineYamlFileManager @Autowired constructor(
                 context.pipelineId = pipelineId
                 context.versionName = pipelineName
                 pipelineYamlResourceManager.completePullRequest(
+                    userId = userId,
                     projectId = projectId,
                     pipelineId = pipelineYamlInfo.pipelineId,
                     pullRequestId = pullRequestId ?: 0L,
@@ -592,7 +594,7 @@ class PipelineYamlFileManager @Autowired constructor(
             } ?: run {
                 context.actionType = YamlPipelineActionType.NO_CHANGE
             }
-            handleMergedPullRequest(pipelineId = pipelineId)
+            handlePullRequestOnSuccess(pipelineId = pipelineId)
         }
     }
 
@@ -1023,7 +1025,7 @@ class PipelineYamlFileManager @Autowired constructor(
     /**
      * 合并到目标分支后处理源分支版本与 pr 状态
      */
-    private fun PipelineYamlFileEvent.handleMergedPullRequest(pipelineId: String) {
+    private fun PipelineYamlFileEvent.handlePullRequestOnSuccess(pipelineId: String) {
         // 如果合并到目标分支或者 fork 仓库合并,需要将源分支的分支版本删除
         if (!merged || (ref != defaultBranch && !fork)) {
             return
@@ -1031,6 +1033,7 @@ class PipelineYamlFileManager @Autowired constructor(
         deleteSourceWhenMerged(pipelineId = pipelineId)
         // pr 合并后,通知资源更新状态
         pipelineYamlResourceManager.completePullRequest(
+            userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
             pullRequestId = pullRequestId!!,
@@ -1039,6 +1042,38 @@ class PipelineYamlFileManager @Autowired constructor(
             merged = true,
             isTemplate = isTemplate
         )
+    }
+
+    /**
+     * MR 已合并但 yaml 处理失败时的兜底,避免模板实例状态一直停留在"更新中"
+     */
+    private fun PipelineYamlFileEvent.handlePullRequestOnFailed(
+        context: PipelineYamlChangeContext,
+        exception: Exception
+    ) {
+        val pipelineId = context.pipelineId
+        // 仅处理"MR 已合并 + 有合并请求 + 已知 pipelineId"的场景
+        if (!merged || pullRequestId == null || pipelineId.isNullOrBlank()) {
+            return
+        }
+        runCatching {
+            pipelineYamlResourceManager.completePullRequest(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                pullRequestId = pullRequestId!!,
+                pullRequestUrl = pullRequestUrl ?: "",
+                pullRequestNumber = pullRequestNumber ?: 0,
+                merged = merged,
+                isTemplate = isTemplate,
+                exception = exception
+            )
+        }.onFailure {
+            logger.warn(
+                "[PAC_PIPELINE]|complete pull request on failed error|$projectId|$pipelineId",
+                it
+            )
+        }
     }
 
     /**
@@ -1222,7 +1257,7 @@ class PipelineYamlFileManager @Autowired constructor(
             pipelineId = pipelineId,
             needDeleteOldInfo = needDeleteOldInfo
         )
-        handleMergedPullRequest(pipelineId = pipelineId)
+        handlePullRequestOnSuccess(pipelineId = pipelineId)
     }
 
     /**
