@@ -85,8 +85,9 @@ class ServiceArtifactMetadataResourceImpl(
                     token = token,
                     projectCode = projectId,
                     resourceCode = pipelineId,
-                    resourceType = AuthResourceType.PIPELINE_DEFAULT.name,
-                    action = AuthPermission.VIEW.name
+                    resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
+                    action = "${AuthResourceType.PIPELINE_DEFAULT.value}_${AuthPermission.VIEW.value}",
+                    relationResourceType = null
                 ).data ?: false
         } catch (e: Exception) {
             logger.warn("Failed to check pipeline view permission: ${e.message}")
