@@ -327,6 +327,18 @@ class PipelineBuildFacadeService(
                         latestParam?.value?.toString()?.toBoolean()
                     }
 
+                    // 级联参数（如代码库分支参数）存表时被转为JSON字符串，回显时需解析回Map，
+                    // 否则前端读不到子字段（repo-name/branch），导致上一次的参数值无法回显
+                    CascadePropertyUtils.supportCascadeParam(param.type) -> {
+                        latestParam?.value?.let {
+                            CascadePropertyUtils.parseDefaultValue(
+                                key = param.id,
+                                defaultValue = it,
+                                type = param.type
+                            )
+                        }
+                    }
+
                     else -> {
                         latestParam?.value
                     }
