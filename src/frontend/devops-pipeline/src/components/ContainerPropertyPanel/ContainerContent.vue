@@ -1195,7 +1195,6 @@
             },
 
             changeBuildResource (name, value, envProjectId) {
-                console.log(name, value, envProjectId)
                 const emptyValueObj
                     = name === 'imageType' || name === 'agentType'
                         ? { value: '', envProjectId: '' }
