@@ -29,7 +29,7 @@ class BatScriptUtilTest {
         Assertions.assertTrue(content.contains(":format_multiple_lines"))
         /*PowerShell 编码逻辑被注入*/
         Assertions.assertTrue(content.contains("powershell"))
-        Assertions.assertTrue(content.contains("Add-Content"))
+        Assertions.assertTrue(content.contains("AppendAllText"))
         /*编码目标 %25、%0A、%0D 被注入*/
         Assertions.assertTrue(content.contains("%25"))
         Assertions.assertTrue(content.contains("%0A"))
@@ -87,7 +87,7 @@ class BatScriptUtilTest {
         /*即使脚本不调用,标签函数也存在*/
         Assertions.assertTrue(content.contains(":format_multiple_lines"))
         /*::set-output 不在用户脚本中但标签函数定义中包含*/
-        Assertions.assertTrue(content.contains("Add-Content"))
+        Assertions.assertTrue(content.contains("AppendAllText"))
 
         file.delete()
         workspace.deleteRecursively()
