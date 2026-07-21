@@ -167,6 +167,21 @@ class LogESAutoConfiguration {
     @Value("\${log.elasticsearch2.maxConnectPerRoute:#{null}}")
     private val e2MaxConnectPerRoute: Int? = null
 
+    @Value("\${log.multiEs.fastFail.enabled:true}")
+    private val fastFailEnabled: Boolean = true
+
+    @Value("\${log.multiEs.fastFail.windowMs:10000}")
+    private val fastFailWindowMs: Long = 10000
+
+    @Value("\${log.multiEs.fastFail.minSamples:30}")
+    private val fastFailMinSamples: Int = 30
+
+    @Value("\${log.multiEs.fastFail.rate:0.6}")
+    private val fastFailRate: Double = 0.6
+
+    @Value("\${log.multiEs.fastFail.slowMs:3000}")
+    private val fastFailSlowMs: Long = 3000
+
     private val tcpKeepAliveSeconds = 30000 // 探活连接时长
 
     fun client(): ESClient {
@@ -317,7 +332,18 @@ class LogESAutoConfiguration {
         @Autowired tencentIndexDao: TencentIndexDao,
         @Autowired indexDao: IndexDao,
         @Autowired dslContext: DSLContext
-    ) = MultiESLogClient(listOf(client(), client2()), redisOperation, dslContext, tencentIndexDao, indexDao)
+    ) = MultiESLogClient(
+        clients = listOf(client(), client2()),
+        redisOperation = redisOperation,
+        dslContext = dslContext,
+        tencentIndexDao = tencentIndexDao,
+        indexDao = indexDao,
+        fastFailEnabled = fastFailEnabled,
+        fastFailWindowMs = fastFailWindowMs,
+        fastFailMinSamples = fastFailMinSamples,
+        fastFailRate = fastFailRate,
+        fastFailSlowMs = fastFailSlowMs
+    )
 
     private fun getBasicCredentialsProvider(username: String, password: String): BasicCredentialsProvider {
         val provider = BasicCredentialsProvider()
