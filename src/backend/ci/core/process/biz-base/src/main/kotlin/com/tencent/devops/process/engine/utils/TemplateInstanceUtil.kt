@@ -17,16 +17,22 @@ import com.tencent.devops.common.pipeline.pojo.TemplateVariable
 import com.tencent.devops.common.pipeline.pojo.cascade.BuildCascadeProps
 import com.tencent.devops.common.pipeline.pojo.cascade.RepoRefCascadeParam
 import com.tencent.devops.common.pipeline.pojo.element.Element
+import com.tencent.devops.common.pipeline.pojo.element.atom.PipelineCheckFailedErrors
+import com.tencent.devops.common.pipeline.pojo.element.atom.PipelineCheckFailedMsg
+import com.tencent.devops.common.pipeline.pojo.element.atom.PipelineCheckFailedReason
 import com.tencent.devops.common.pipeline.pojo.element.trigger.TimerTriggerElement
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSettingGroupType
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_ELEMENT_CHECK_FAILED
 import com.tencent.devops.process.engine.utils.PipelineUtils.getFixedStages
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateResource
 import com.tencent.devops.process.utils.FIXVERSION
 import com.tencent.devops.process.utils.MAJORVERSION
 import com.tencent.devops.process.utils.MINORVERSION
 import org.slf4j.LoggerFactory
+import org.springframework.dao.DuplicateKeyException
 
 /**
  *  模板实例工具类
@@ -856,6 +862,42 @@ object TemplateInstanceUtil {
                 errorCode = ProcessMessageCode.ERROR_TEMPLATE_INSTANCE_OPTIONAL_PARAM_OVERRIDDEN,
                 params = arrayOf(overriddenParamIds.joinToString { "[$it]" })
             )
+        }
+    }
+
+    /**
+     * 将模板实例化过程中的异常转换为可展示的失败原因
+     */
+    fun translateInstanceException(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        exception: Throwable
+    ): PipelineCheckFailedReason {
+        logger.warn("Failed to instance template|$userId|$projectId|$pipelineId|${exception.message}")
+        return when (exception) {
+            is DuplicateKeyException -> {
+                PipelineCheckFailedMsg("duplicate!")
+            }
+
+            is ErrorCodeException -> {
+                val message = I18nUtil.generateResponseDataObject(
+                    messageCode = exception.errorCode,
+                    params = exception.params,
+                    data = null,
+                    defaultMessage = exception.defaultMessage
+                ).message ?: exception.defaultMessage ?: "unknown!"
+                // ERROR_PIPELINE_ELEMENT_CHECK_FAILED输出的是一个json,需要格式化输出
+                if (exception.errorCode == ERROR_PIPELINE_ELEMENT_CHECK_FAILED) {
+                    JsonUtil.to(message, PipelineCheckFailedErrors::class.java)
+                } else {
+                    PipelineCheckFailedMsg(message)
+                }
+            }
+
+            else -> {
+                PipelineCheckFailedMsg(exception.message ?: "template instance fail")
+            }
         }
     }
 
