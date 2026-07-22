@@ -427,24 +427,6 @@ class ProjectTagService @Autowired constructor(
         return redisOperation.get(DEFAULT_TAG_REDIS_KEY) ?: ""
     }
 
-    // ======================== 路由名单管理（黑名单） ========================
-
-    fun addToBlacklist(projectCodes: List<String>): Long {
-        if (projectCodes.isEmpty()) return 0L
-        redisOperation.sadd(BLACKLIST_KEY, *projectCodes.toTypedArray())
-        logger.info("addToBlacklist count=${projectCodes.size}")
-        return redisOperation.getSetMembers(BLACKLIST_KEY)?.size?.toLong() ?: 0L
-    }
-
-    fun removeFromBlacklist(projectCodes: List<String>): Long {
-        if (projectCodes.isEmpty()) return 0L
-        redisOperation.sremove(BLACKLIST_KEY, *projectCodes.toTypedArray())
-        logger.info("removeFromBlacklist count=${projectCodes.size}")
-        return redisOperation.getSetMembers(BLACKLIST_KEY)?.size?.toLong() ?: 0L
-    }
-
-    fun getBlacklist(): Set<String> = redisOperation.getSetMembers(BLACKLIST_KEY) ?: emptySet()
-
     // ======================== 发布批次路由 ========================
 
     fun createReleaseBatch(request: ProjectReleaseBatchCreateRequest): List<ProjectReleaseBatchCreateResult> {
@@ -456,21 +438,29 @@ class ProjectTagService @Autowired constructor(
         checkRouteTag(request.targetTag)
 
         val batchPercentages = normalizeBatchPercentages(request.batchPercentages)
-        val blacklist = getBlacklist()
+        val excludedProjectCodes = request.blacklist
+            ?.map { it.trim() }
+            ?.filter { it.isNotEmpty() }
+            ?.distinct()
+            ?.takeIf { it.isNotEmpty() }
         val records = mutableListOf<ProjectReleaseBatchCreateDTO>()
         var offset = 0
         var pageSize: Int
         do {
             val projectRecords = projectDao.listProjectsByCondition(
                 dslContext = dslContext,
-                projectConditionDTO = ProjectConditionDTO(channelCode = request.channelCode),
+                projectConditionDTO = ProjectConditionDTO(
+                    channelCode = request.channelCode,
+                    enabled = request.enabled,
+                    excludedProjectCodes = excludedProjectCodes
+                ),
                 limit = PAGE_SIZE,
                 offset = offset
             )
             pageSize = projectRecords.size
             projectRecords.forEach { record ->
                 val projectId = record.englishName ?: return@forEach
-                if (projectId in blacklist || record.routerTag != request.sourceTag) {
+                if (record.routerTag != request.sourceTag) {
                     return@forEach
                 }
                 val batchPercent = batchPercentages.firstOrNull { hashBucket(projectId, request.version) < it }
@@ -701,7 +691,6 @@ class ProjectTagService @Autowired constructor(
         private const val BATCH_SIZE = 500
         private const val PAGE_SIZE = 1000
         private const val RELEASE_BATCH_CREATE_LOCK = "project:release:batch:create"
-        const val BLACKLIST_KEY = "project:percentage:routing:blacklist"
         private val logger = LoggerFactory.getLogger(ProjectTagService::class.java)
     }
 }
