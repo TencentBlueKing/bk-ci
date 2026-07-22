@@ -129,6 +129,15 @@ class PublicVarGroupService @Autowired constructor(
         )
         redisLock.lock()
         try {
+            // 大小写不敏感重复性校验
+            val conflictGroupName = publicVarGroupDao.listGroupsNameByProjectId(dslContext, projectId)
+                .firstOrNull { it.equals(groupName, ignoreCase = true) && it != groupName }
+            if (conflictGroupName != null) {
+                throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.ERROR_PUBLIC_VAR_GROUP_NAME_DUPLICATE_CASE_INSENSITIVE,
+                    params = arrayOf(groupName)
+                )
+            }
             publicVarService.checkGroupPublicVar(publicVarGroupDTO.publicVarGroup.publicVars)
             val id = client.get(ServiceAllocIdResource::class)
                 .generateSegmentId("T_RESOURCE_PUBLIC_VAR_GROUP").data

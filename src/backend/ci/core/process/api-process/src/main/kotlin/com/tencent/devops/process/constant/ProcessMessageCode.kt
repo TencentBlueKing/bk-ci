@@ -459,7 +459,7 @@ object ProcessMessageCode {
     const val ERROR_PIPELINE_COMMON_VAR_GROUP_REFER_UPDATE_FAILED = "2101347" // 变量组引用更新失败
     const val ERROR_PIPELINE_COMMON_VAR_GROUP_NOT_EXIST = "2101348" // 变量组 {0} 不存在
     const val ERROR_PUBLIC_VAR_GROUP_REFERENCED = "2101349" // 公共变量组({0})已被引用，无法删除
-    const val ERROR_PIPELINE_COMMON_VAR_GROUP_VAR_NAME_DUPLICATE = "2101350" // 流水线公共变量组中变量名称重复
+    const val ERROR_PIPELINE_COMMON_VAR_GROUP_VAR_NAME_DUPLICATE = "2101350" // 流水线公共变量组中变量名称({0})已存在
 
     const val ERROR_PUBLIC_VAR_GROUP_YAML_PARSE_FAILED = "2101351" // 公共变量组YAML解析失败: {0}
     const val ERROR_PUBLIC_VAR_GROUP_YAML_NAME_FORMAT = "2101352" // 公共变量组名称只能包含字母、数字、下划线和中划线，长度限制为1-64个字符
@@ -481,6 +481,7 @@ object ProcessMessageCode {
     const val ERROR_PUBLIC_VAR_GROUP_YAML_FORMAT_ERROR = "2101370" // 公共变量组YAML格式错误
     // 用户({0})无公共变量组({1})的编辑权限
     const val ERROR_PUBLIC_VAR_GROUP_EDIT_NO_PERMISSION = "2101371"
+    const val ERROR_PUBLIC_VAR_GROUP_NAME_DUPLICATE_CASE_INSENSITIVE = "2101372" // 公共变量组名称({0})与已存在的变量组({1})仅大小写不同，保存被拒绝
     const val ERROR_TEMPLATE_INSTANCE_OPTIONAL_PARAM_OVERRIDDEN = "2101378" // 实例化异常：流水线其他变量[{0}]默认值被改成模版默认值,请联系助手分析
     // YAML文件[{0}]已绑定其他流水线[{1}]，不能重命名
     const val ERROR_PAC_YAML_FILE_BINDTO_OTHER_PIPELINE = "2101379"

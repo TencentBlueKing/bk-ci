@@ -80,12 +80,6 @@ class UserPublicVarGroupResourceImpl @Autowired constructor(
         page: Int,
         pageSize: Int
     ): Result<Page<PublicVarGroupDO>> {
-        // 校验列表权限
-        publicVarGroupPermissionService.checkPublicVarGroupPermissions(
-            userId = userId,
-            projectId = projectId,
-            permission = AuthPermission.LIST
-        )
         return Result(publicVarGroupService.getGroups(
             userId = userId,
             queryReq = PublicVarGroupInfoQueryReqDTO(
