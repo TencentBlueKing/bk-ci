@@ -95,17 +95,19 @@ class LogTrafficStatsService {
 
     /**
      * 窗口内最多跟踪的 build 槽位数（固定数组容量）。
-     * 防止突发多 build 时无界 Map 膨胀；冲突时丢弃未能入槽的冷流量统计。
+     * 生产常有上万并发构建，默认需远高于「仅 top 热点」规模，避免窗口内冷流量占满槽位后漏检真热点。
+     * 内存开销很小（约数千槽位量级）；冲突时优先替换探测范围内累计更低的冷槽。
      */
-    @Value("\${log.traffic.maxTrackedBuilds:256}")
-    private var maxTrackedBuilds: Int = 256
+    @Value("\${log.traffic.maxTrackedBuilds:8192}")
+    private var maxTrackedBuilds: Int = 8192
 
     /**
      * 同时处于热点粘性窗口的 build 上限（固定数组容量）。
-     * 满时替换最早到期条目，限制热点表内存。
+     * 仅容纳「已达 [heavyThreshold]」的热点，不是全量并发构建数；
+     * 上万并发下同时成为热点的通常远少于此，但默认需留足突发余量。满时替换最早到期条目。
      */
-    @Value("\${log.traffic.maxHeavyBuilds:64}")
-    private var maxHeavyBuilds: Int = 64
+    @Value("\${log.traffic.maxHeavyBuilds:512}")
+    private var maxHeavyBuilds: Int = 512
 
     @Volatile
     private lateinit var window: Window
@@ -123,7 +125,7 @@ class LogTrafficStatsService {
         if (!enabled || buildId.isBlank() || lines <= 0) {
             return
         }
-        val sum = currentWindow().slots.add(buildId, lines.toLong())
+        val sum = currentWindow().slots.add(buildId, lines.toLong(), heavyThreshold)
         if (sum >= heavyThreshold) {
             heavyTable.mark(buildId, System.currentTimeMillis() + heavyStickyMs)
         }
@@ -188,12 +190,13 @@ class LogTrafficStatsService {
     private fun heavyCapacity(): Int = maxHeavyBuilds.coerceAtLeast(topN).coerceAtLeast(8)
 
     /**
-     * 固定容量的 build 行数计数槽：hash 定位 + 有限探测；冲突时不扩容，丢弃未能入槽的冷流量。
+     * 固定容量的 build 行数计数槽：hash 定位 + 有限探测；冲突时不扩容。
+     * 探测范围内无空槽时，替换累计行数低于 [protectThreshold] 的最冷槽，避免冷流量占满后漏掉热点。
      */
     private class BuildLineSlots(val capacity: Int) {
         private val slots = Array(capacity) { Slot() }
 
-        fun add(buildId: String, delta: Long): Long {
+        fun add(buildId: String, delta: Long, protectThreshold: Long): Long {
             val start = index(buildId)
             // 先找已占用本 buildId 的槽
             for (probe in 0 until PROBE_LIMIT) {
@@ -205,7 +208,9 @@ class LogTrafficStatsService {
                     }
                 }
             }
-            // 再尝试占用空槽
+            // 再尝试占用空槽，或记录可替换的最冷槽
+            var victim: Slot? = null
+            var victimSum = Long.MAX_VALUE
             for (probe in 0 until PROBE_LIMIT) {
                 val slot = slots[(start + probe) % capacity]
                 synchronized(slot) {
@@ -220,10 +225,42 @@ class LogTrafficStatsService {
                             slot.lines.add(delta)
                             return slot.lines.sum()
                         }
+                        else -> {
+                            val sum = slot.lines.sum()
+                            // 已接近/超过热点阈值的槽受保护，不被冷流量挤掉
+                            if (sum < protectThreshold && sum < victimSum) {
+                                victim = slot
+                                victimSum = sum
+                            }
+                        }
                     }
                 }
             }
-            return 0L
+            val replace = victim ?: return 0L
+            synchronized(replace) {
+                // 再次确认：仍是可替换冷槽，或已被同 buildId 占用
+                when (replace.buildId) {
+                    buildId -> {
+                        replace.lines.add(delta)
+                        return replace.lines.sum()
+                    }
+                    null -> {
+                        replace.buildId = buildId
+                        replace.lines.reset()
+                        replace.lines.add(delta)
+                        return replace.lines.sum()
+                    }
+                    else -> {
+                        if (replace.lines.sum() >= protectThreshold) {
+                            return 0L
+                        }
+                        replace.buildId = buildId
+                        replace.lines.reset()
+                        replace.lines.add(delta)
+                        return replace.lines.sum()
+                    }
+                }
+            }
         }
 
         fun top(n: Int): List<Pair<String, Long>> {
@@ -248,7 +285,7 @@ class LogTrafficStatsService {
         }
 
         companion object {
-            private const val PROBE_LIMIT = 4
+            private const val PROBE_LIMIT = 8
         }
     }
 
