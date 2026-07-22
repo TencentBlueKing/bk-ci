@@ -51,14 +51,15 @@ import com.tencent.devops.process.pojo.template.v2.PipelineTemplateSettingCommon
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateSettingUpdateInfo
 import com.tencent.devops.process.service.template.v2.version.PipelineTemplateVersionCreateContext
 import com.tencent.devops.process.service.template.v2.version.processor.PTemplateVersionCreatePostProcessor
+import com.tencent.devops.process.service.`var`.PublicVarGroupReferManageService
 import com.tencent.devops.store.api.common.ServiceStoreResource
 import com.tencent.devops.store.api.template.ServiceTemplateResource
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.time.LocalDateTime
 
 /**
  * 负责流水线模版持久化业务逻辑
@@ -75,7 +76,8 @@ class PipelineTemplatePersistenceService @Autowired constructor(
     private val templatePipelineDao: TemplatePipelineDao,
     private val versionCreatePostProcessors: List<PTemplateVersionCreatePostProcessor>,
     private val pipelineYamlInfoDao: PipelineYamlInfoDao,
-    private val pipelineYamlVersionDao: PipelineYamlVersionDao
+    private val pipelineYamlVersionDao: PipelineYamlVersionDao,
+    private val publicVarGroupReferManageService: PublicVarGroupReferManageService
 ) {
 
     /**

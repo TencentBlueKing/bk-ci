@@ -84,12 +84,13 @@ object ModelVarRefUtils {
     fun parseModelVarReferences(
         model: Model,
         projectId: String,
+        resourceId: String,
+        resourceType: String,
         filterByTriggerParams: Boolean = true
     ): List<VarRefDetail> {
         val startTime = System.currentTimeMillis()
 
         try {
-            val (resourceType, resourceId) = determineResourceTypeAndId(model)
             val triggerContainer = model.getTriggerContainer()
             val paramVariables = extractParamVariables(triggerContainer.params)
 
@@ -1007,7 +1008,7 @@ object ModelVarRefUtils {
      * @param model 模型对象
      * @return Pair<资源类型, 资源ID>
      */
-    private fun determineResourceTypeAndId(model: Model): Pair<String, String> {
+    internal fun determineResourceTypeAndId(model: Model): Pair<String, String> {
         return when {
             !model.pipelineId.isNullOrBlank() -> Pair(RESOURCE_TYPE_PIPELINE, model.pipelineId!!)
             !model.templateId.isNullOrBlank() -> Pair(RESOURCE_TYPE_TEMPLATE, model.templateId!!)
