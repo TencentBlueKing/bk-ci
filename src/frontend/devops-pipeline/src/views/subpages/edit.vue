@@ -341,6 +341,8 @@
                     await this.getDetail()
                     
                     await this.requestPipeline({
+                        pipelineId: this.pipelineId,
+                        projectId: this.projectId,
                         ...this.$route.params,
                         source: 'EDIT',
                         version: this.pipelineVersion

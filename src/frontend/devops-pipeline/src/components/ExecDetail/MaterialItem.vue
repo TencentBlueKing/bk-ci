@@ -94,6 +94,9 @@
                     'MERGE_REQUEST_ACCEPT'
                 ].includes(this.material?.webhookEventType)
             },
+            isSubFlow () {
+                return this.material?.channelType === 'CREATIVE_STREAM'
+            },
             scmType () {
                 return this.isWebhook ? `CODE_${this.material?.codeType}` : this.material?.scmType
             },
@@ -116,7 +119,7 @@
                     issueIid: 'webhook-issue',
                     reviewId: 'webhook-review',
                     webhookSourceTarget: 'branch',
-                    parentPipelineName: 'pipeline',
+                    parentPipelineName: this.isSubFlow ? 'sub-flow' : 'pipeline',
                     parentBuildNum: 'sharp',
                     materialName: scmIcon,
                     materialId: 'link'

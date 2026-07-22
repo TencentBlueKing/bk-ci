@@ -84,6 +84,7 @@
         showPipelineCheckMsg
     } from '@/utils/util'
     import { DRAFT_STATUS } from '@/utils/pipelineConst'
+    import { normalizePipelineModel } from '@/utils/normalizePipelineModel'
     import Edit from '@/views/subpages/edit'
     import { mapActions, mapGetters, mapState } from 'vuex'
     import DraftManager from '@/components/DraftManager'
@@ -333,6 +334,7 @@
 
                 // 清除流水线参数渲染过程中添加的key
                 this.formatParams(pipeline)
+                normalizePipelineModel(pipeline)
                 let result
                 try {
                     this.saveStatus = true
@@ -358,6 +360,7 @@
                             message: `${this.pipeline.name}${' '}${this.$t('updateSuc')}`,
                             theme: 'success'
                         })
+                        this.setPipelineEditing(false)
                         await this.savePipelineSnapshot()
 
                         await this.requestTemplateSummary(this.$route.params)

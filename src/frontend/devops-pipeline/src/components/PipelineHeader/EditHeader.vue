@@ -111,6 +111,7 @@
     } from '@/utils/permission'
     import { UI_MODE, DRAFT_STATUS, VERSION_STATUS_ENUM } from '@/utils/pipelineConst'
     import { showPipelineCheckMsg, convertTime } from '@/utils/util'
+    import { normalizePipelineModel } from '@/utils/normalizePipelineModel'
     import { mapActions, mapGetters, mapState } from 'vuex'
     import PipelineBreadCrumb from './PipelineBreadCrumb.vue'
     import ReleaseButton from './ReleaseButton'
@@ -363,6 +364,7 @@
                 const modelAndSetting = this.buildModelAndSetting()
                 // 清除流水线参数渲染过程中添加的key
                 this.formatParams(pipeline)
+                normalizePipelineModel(pipeline)
 
                 // 请求执行构建
                 const { version } = await this.saveDraftPipeline({
@@ -375,6 +377,7 @@
                     yaml: pipelineYaml
                 })
                 await this.savePipelineSnapshot()
+                this.setPipelineEditing(false)
 
                 await this.requestPipelineSummary(this.$route.params)
                 this.$router.replace({

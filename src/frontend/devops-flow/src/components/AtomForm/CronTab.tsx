@@ -64,10 +64,11 @@ export default defineComponent({
         return
       }
       hasInternalError.value = false
+      const arrValue = typeof val === 'string' ? val.split(',') : val
       reportFieldError?.(props.name, false)
-      emit('update:value', val)
-      emit('change', val)
-      props.handleChange(props.name, val)
+      emit('update:value', arrValue)
+      emit('change', arrValue)
+      props.handleChange(props.name, arrValue)
     }
 
     const handleError = () => {

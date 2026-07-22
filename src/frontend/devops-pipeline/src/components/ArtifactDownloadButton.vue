@@ -51,6 +51,8 @@
 </template>
 
 <script>
+    import { encodeArtifactDownloadUrl } from '@/utils/util'
+
     export default {
         props: {
             downloadIcon: Boolean,
@@ -114,14 +116,15 @@
                             path: this.path
                         })
                     
-                    const result = await this.checkApkSigned(url2)
+                    const downloadUrl = encodeArtifactDownloadUrl(url2, this.path)
+                    const result = await this.checkApkSigned(downloadUrl)
                     if (result) {
-                        window.location.href = url2
+                        window.location.href = downloadUrl
                         return
                     } else {
                         this.signingMap.set(this.path, true)
                         this.setVisible(true)
-                        const result = await this.pollingCheckSignedApk(url2)
+                        const result = await this.pollingCheckSignedApk(downloadUrl)
                         if (result) {
                             this.setVisible(false)
                             this.$bkMessage({
@@ -129,7 +132,7 @@
                                 message: this.$t('apkSignSuccess', [this.name])
                             })
                             
-                            window.location.href = url2
+                            window.location.href = downloadUrl
                         }
                         this.signingMap.delete(this.path)
                     }
