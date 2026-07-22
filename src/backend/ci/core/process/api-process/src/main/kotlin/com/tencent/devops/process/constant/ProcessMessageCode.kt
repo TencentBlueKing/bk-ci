@@ -481,7 +481,8 @@ object ProcessMessageCode {
     const val ERROR_PUBLIC_VAR_GROUP_YAML_FORMAT_ERROR = "2101396" // 公共变量组YAML格式错误
     // 用户({0})无公共变量组({1})的编辑权限
     const val ERROR_PUBLIC_VAR_GROUP_EDIT_NO_PERMISSION = "2101397"
-    const val ERROR_PUBLIC_VAR_GROUP_NAME_DUPLICATE_CASE_INSENSITIVE = "2101398" // 公共变量组名称({0})与已存在的变量组({1})仅大小写不同，保存被拒绝
+    // 公共变量组名称({0})已存在
+    const val ERROR_PUBLIC_VAR_GROUP_NAME_DUPLICATE_CASE_INSENSITIVE = "2101398"
     const val ERROR_TEMPLATE_INSTANCE_OPTIONAL_PARAM_OVERRIDDEN = "2101364" // 实例化异常：流水线其他变量[{0}]默认值被改成模版默认值,请联系助手分析
     // YAML文件[{0}]已绑定其他流水线[{1}]，不能重命名
     const val ERROR_PAC_YAML_FILE_BINDTO_OTHER_PIPELINE = "2101365"
