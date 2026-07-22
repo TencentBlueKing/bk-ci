@@ -109,7 +109,7 @@
         RESOURCE_ACTION,
         RESOURCE_TYPE
     } from '@/utils/permission'
-    import { UI_MODE, DRAFT_STATUS, VERSION_STATUS_ENUM } from '@/utils/pipelineConst'
+    import { UI_MODE, DRAFT_STATUS } from '@/utils/pipelineConst'
     import { showPipelineCheckMsg, convertTime } from '@/utils/util'
     import { normalizePipelineModel } from '@/utils/normalizePipelineModel'
     import { mapActions, mapGetters, mapState } from 'vuex'
@@ -384,7 +384,8 @@
                     params: {
                         ...this.$route.params,
                         version
-                    }
+                    },
+                    query: this.$route.query
                 })
                 // 刷新草稿列表
                 await this.handleSuccess()
