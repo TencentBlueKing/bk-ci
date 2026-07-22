@@ -27,11 +27,11 @@
 
 package com.tencent.devops.log.service
 
+import jakarta.annotation.PostConstruct
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
-import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.LongAdder
 
 /**
@@ -45,51 +45,87 @@ import java.util.concurrent.atomic.LongAdder
  *
  * 计数窗口（[windowMs]）与热点标记（[heavyStickyMs]）解耦：计数窗口到期会清零重算，
  * 但热点标记按独立 TTL 延续，避免窗口边界把热点 build 抖回普通队列。
+ *
+ * 内存：窗口计数与热点粘性均使用固定容量数组（非无界 ConcurrentHashMap），
+ * 容量由 [maxTrackedBuilds] / [maxHeavyBuilds] 限制；冲突时丢弃冷流量统计，偏向保留热点。
  */
 @Component
 class LogTrafficStatsService {
 
+    /**
+     * 是否启用本地窗口吞吐统计。
+     * false：不 record、不判定热点，所有 origin 走普通队列（即使 [routeHeavyEnabled]=true）。
+     */
     @Value("\${log.traffic.enabled:true}")
     private var enabled: Boolean = true
 
+    /**
+     * 定时日志打印的 topN 热点 build 数量（仅观测，不影响分流决策）。
+     */
     @Value("\${log.traffic.topN:10}")
     private var topN: Int = 10
 
+    /**
+     * 本地行数累计窗口长度（毫秒）。窗口到期会清零重算；热点粘性由 [heavyStickyMs] 独立维持。
+     */
     @Value("\${log.traffic.windowMs:30000}")
     private var windowMs: Long = 30_000L
 
     /**
-     * 单个 buildId 在窗口内累计上报行数达到该阈值后视为热点。
+     * 单个 buildId 在窗口内累计上报行数达到该阈值后视为热点，写入粘性表。
+     * 调低：更容易被标为热点并分流；调高：仅极端突发构建进入 heavy。
      */
     @Value("\${log.traffic.heavyThreshold:20000}")
     private var heavyThreshold: Long = 20_000L
 
     /**
-     * 热点标记延续时间：被判定为热点后，在该时长内持续走 heavy 队列，跨计数窗口生效。
+     * 热点标记延续时间（毫秒）：判定为热点后，在该时长内持续可走 heavy 队列，跨计数窗口生效。
+     * 避免窗口边界把热点 build 抖回普通队列。
      */
     @Value("\${log.traffic.heavyStickyMs:60000}")
     private var heavyStickyMs: Long = 60_000L
 
     /**
-     * 是否将热点 build 投放到独立 heavy origin 队列。默认关闭，兼容未创建 topic 的环境。
+     * 是否将热点 build 投放到独立 heavy origin 队列。
+     * 默认 false，兼容未创建 heavy topic 的环境；开启前需确保 MQ destination 已就绪。
+     * 影响：[com.tencent.devops.log.service.BuildLogPrintService] 的队列投放决策。
      */
     @Value("\${log.traffic.routeHeavyEnabled:false}")
     private var routeHeavyEnabled: Boolean = false
 
-    @Volatile
-    private var window = newWindow()
+    /**
+     * 窗口内最多跟踪的 build 槽位数（固定数组容量）。
+     * 防止突发多 build 时无界 Map 膨胀；冲突时丢弃未能入槽的冷流量统计。
+     */
+    @Value("\${log.traffic.maxTrackedBuilds:256}")
+    private var maxTrackedBuilds: Int = 256
 
-    // buildId -> 热点标记到期时间戳；独立于计数窗口，保证热点分流的粘性
-    private val heavyUntil = ConcurrentHashMap<String, Long>()
+    /**
+     * 同时处于热点粘性窗口的 build 上限（固定数组容量）。
+     * 满时替换最早到期条目，限制热点表内存。
+     */
+    @Value("\${log.traffic.maxHeavyBuilds:64}")
+    private var maxHeavyBuilds: Int = 64
+
+    @Volatile
+    private lateinit var window: Window
+
+    // 热点粘性表：固定容量，独立于计数窗口
+    private lateinit var heavyTable: HeavyStickyTable
+
+    @PostConstruct
+    fun init() {
+        window = Window(System.currentTimeMillis(), BuildLineSlots(trackedCapacity()))
+        heavyTable = HeavyStickyTable(heavyCapacity())
+    }
 
     fun record(buildId: String, lines: Int) {
         if (!enabled || buildId.isBlank() || lines <= 0) {
             return
         }
-        val adder = currentWindow().buildLines.computeIfAbsent(buildId) { LongAdder() }
-        adder.add(lines.toLong())
-        if (adder.sum() >= heavyThreshold) {
-            heavyUntil[buildId] = System.currentTimeMillis() + heavyStickyMs
+        val sum = currentWindow().slots.add(buildId, lines.toLong())
+        if (sum >= heavyThreshold) {
+            heavyTable.mark(buildId, System.currentTimeMillis() + heavyStickyMs)
         }
     }
 
@@ -100,43 +136,33 @@ class LogTrafficStatsService {
         if (!enabled || !routeHeavyEnabled || buildId.isBlank()) {
             return false
         }
-        val until = heavyUntil[buildId] ?: return false
-        if (System.currentTimeMillis() >= until) {
-            heavyUntil.remove(buildId, until)
-            return false
-        }
-        return true
+        return heavyTable.isActive(buildId, System.currentTimeMillis())
     }
 
     /** 当前仍处于热点粘性窗口内的 build 数量，供监控 Gauge 使用 */
-    fun heavySize(): Int {
-        purgeExpiredHeavy()
-        return heavyUntil.size
-    }
+    fun heavySize(): Int = heavyTable.size(System.currentTimeMillis())
 
     @Scheduled(initialDelay = 30000, fixedDelay = 30000)
     fun printTopTraffic() {
         if (!enabled) {
             return
         }
-        purgeExpiredHeavy()
-        val snapshot = window
-        val buildTop = snapshot.buildLines.entries
-            .map { it.key to it.value.sum() }
-            .filter { it.second > 0 }
-            .sortedByDescending { it.second }
-            .take(topN)
-        if (buildTop.isEmpty() && heavyUntil.isEmpty()) {
+        val now = System.currentTimeMillis()
+        val buildTop = window.slots.top(topN)
+        val heavySize = heavyTable.size(now)
+        if (buildTop.isEmpty() && heavySize == 0) {
             return
         }
         logger.info(
             "Log traffic top{} builds in local window({}ms), heavyThreshold={}, " +
-                "routeHeavyEnabled={}, heavySize={}, builds={}",
+                "routeHeavyEnabled={}, heavySize={}, maxTracked={}, maxHeavy={}, builds={}",
             topN,
             windowMs,
             heavyThreshold,
             routeHeavyEnabled,
-            heavyUntil.size,
+            heavySize,
+            trackedCapacity(),
+            heavyCapacity(),
             buildTop
         )
     }
@@ -150,26 +176,154 @@ class LogTrafficStatsService {
         synchronized(this) {
             current = window
             if (now - current.startMs >= windowMs) {
-                window = newWindow(now)
+                window = Window(now, BuildLineSlots(trackedCapacity()))
                 current = window
             }
         }
         return current
     }
 
-    private fun purgeExpiredHeavy() {
-        val now = System.currentTimeMillis()
-        heavyUntil.entries.removeIf { it.value <= now }
+    private fun trackedCapacity(): Int = maxTrackedBuilds.coerceAtLeast(topN).coerceAtLeast(16)
+
+    private fun heavyCapacity(): Int = maxHeavyBuilds.coerceAtLeast(topN).coerceAtLeast(8)
+
+    /**
+     * 固定容量的 build 行数计数槽：hash 定位 + 有限探测；冲突时不扩容，丢弃未能入槽的冷流量。
+     */
+    private class BuildLineSlots(val capacity: Int) {
+        private val slots = Array(capacity) { Slot() }
+
+        fun add(buildId: String, delta: Long): Long {
+            val start = index(buildId)
+            // 先找已占用本 buildId 的槽
+            for (probe in 0 until PROBE_LIMIT) {
+                val slot = slots[(start + probe) % capacity]
+                synchronized(slot) {
+                    if (slot.buildId == buildId) {
+                        slot.lines.add(delta)
+                        return slot.lines.sum()
+                    }
+                }
+            }
+            // 再尝试占用空槽
+            for (probe in 0 until PROBE_LIMIT) {
+                val slot = slots[(start + probe) % capacity]
+                synchronized(slot) {
+                    when (slot.buildId) {
+                        null -> {
+                            slot.buildId = buildId
+                            slot.lines.reset()
+                            slot.lines.add(delta)
+                            return slot.lines.sum()
+                        }
+                        buildId -> {
+                            slot.lines.add(delta)
+                            return slot.lines.sum()
+                        }
+                    }
+                }
+            }
+            return 0L
+        }
+
+        fun top(n: Int): List<Pair<String, Long>> {
+            val result = ArrayList<Pair<String, Long>>(minOf(n, capacity))
+            for (slot in slots) {
+                val id = slot.buildId ?: continue
+                val sum = slot.lines.sum()
+                if (sum > 0) {
+                    result.add(id to sum)
+                }
+            }
+            return result.sortedByDescending { it.second }.take(n)
+        }
+
+        private fun index(buildId: String): Int =
+            (buildId.hashCode() and Int.MAX_VALUE) % capacity
+
+        private class Slot {
+            @Volatile
+            var buildId: String? = null
+            val lines = LongAdder()
+        }
+
+        companion object {
+            private const val PROBE_LIMIT = 4
+        }
     }
 
-    private fun newWindow(startMs: Long = System.currentTimeMillis()) = Window(
-        startMs = startMs,
-        buildLines = ConcurrentHashMap()
-    )
+    /**
+     * 固定容量的热点粘性表：线性扫描（容量小，如默认 64），满时替换最早到期的条目。
+     */
+    private class HeavyStickyTable(val capacity: Int) {
+        private val buildIds = arrayOfNulls<String>(capacity)
+        private val untilMs = LongArray(capacity)
+        private val lock = Any()
+
+        fun mark(buildId: String, until: Long) {
+            synchronized(lock) {
+                var emptyIdx = -1
+                var victimIdx = 0
+                var victimUntil = Long.MAX_VALUE
+                for (i in 0 until capacity) {
+                    val id = buildIds[i]
+                    when {
+                        id == buildId -> {
+                            untilMs[i] = until
+                            return
+                        }
+                        id == null -> if (emptyIdx < 0) emptyIdx = i
+                        else -> if (untilMs[i] < victimUntil) {
+                            victimUntil = untilMs[i]
+                            victimIdx = i
+                        }
+                    }
+                }
+                val idx = if (emptyIdx >= 0) emptyIdx else victimIdx
+                buildIds[idx] = buildId
+                untilMs[idx] = until
+            }
+        }
+
+        fun isActive(buildId: String, now: Long): Boolean {
+            synchronized(lock) {
+                for (i in 0 until capacity) {
+                    if (buildIds[i] != buildId) {
+                        continue
+                    }
+                    if (untilMs[i] > now) {
+                        return true
+                    }
+                    buildIds[i] = null
+                    untilMs[i] = 0L
+                    return false
+                }
+                return false
+            }
+        }
+
+        fun size(now: Long): Int {
+            synchronized(lock) {
+                var count = 0
+                for (i in 0 until capacity) {
+                    if (buildIds[i] == null) {
+                        continue
+                    }
+                    if (untilMs[i] > now) {
+                        count++
+                    } else {
+                        buildIds[i] = null
+                        untilMs[i] = 0L
+                    }
+                }
+                return count
+            }
+        }
+    }
 
     private data class Window(
         val startMs: Long,
-        val buildLines: ConcurrentHashMap<String, LongAdder>
+        val slots: BuildLineSlots
     )
 
     companion object {
