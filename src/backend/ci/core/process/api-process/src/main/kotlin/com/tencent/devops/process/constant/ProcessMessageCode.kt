@@ -472,36 +472,36 @@ object ProcessMessageCode {
     const val ERROR_TEMPLATE_MIGRATING = "2101362" // 模板迁移中，不能操作
     // 非约束流水线不能保存为约束模式
     const val ERROR_NON_CONSTRAINED_PIPELINE_CANNOT_SAVE_AS_CONSTRAINED = "2101363"
-    const val ERROR_PIPELINE_COMMON_VAR_GROUP_REFER_QUERY_FAILED = "2101364" // 变量组引用信息查询失败
-    const val ERROR_PUBLIC_VAR_GROUP_ADD_FAILED = "2101365" // 添加公共变量组({0})失败
-    const val ERROR_PUBLIC_VAR_GROUP_DELETE_FAILED = "2101366" // 删除公共变量组({0})失败
-    const val ERROR_PUBLIC_VAR_GROUP_LIST_PIPELINE_VARIABLES_FAILED = "2101367" // 获取流水线变量失败(项目:{0}, 引用ID:{1})
-    const val ERROR_PUBLIC_VAR_GROUP_LIST_PROJECT_VAR_GROUP_FAILED = "2101368" // 获取项目({0})的公共变量组信息失败
-    const val ERROR_PUBLIC_VAR_GROUP_YAML_MISSING_FIELD = "2101369" // 公共变量组YAML缺少必填字段 {0}
-    const val ERROR_PUBLIC_VAR_GROUP_YAML_FORMAT_ERROR = "2101370" // 公共变量组YAML格式错误
+    const val ERROR_PIPELINE_COMMON_VAR_GROUP_REFER_QUERY_FAILED = "2101390" // 变量组引用信息查询失败
+    const val ERROR_PUBLIC_VAR_GROUP_ADD_FAILED = "2101391" // 添加公共变量组({0})失败
+    const val ERROR_PUBLIC_VAR_GROUP_DELETE_FAILED = "2101392" // 删除公共变量组({0})失败
+    const val ERROR_PUBLIC_VAR_GROUP_LIST_PIPELINE_VARIABLES_FAILED = "2101393" // 获取流水线变量失败(项目:{0}, 引用ID:{1})
+    const val ERROR_PUBLIC_VAR_GROUP_LIST_PROJECT_VAR_GROUP_FAILED = "2101394" // 获取项目({0})的公共变量组信息失败
+    const val ERROR_PUBLIC_VAR_GROUP_YAML_MISSING_FIELD = "2101395" // 公共变量组YAML缺少必填字段 {0}
+    const val ERROR_PUBLIC_VAR_GROUP_YAML_FORMAT_ERROR = "2101396" // 公共变量组YAML格式错误
     // 用户({0})无公共变量组({1})的编辑权限
-    const val ERROR_PUBLIC_VAR_GROUP_EDIT_NO_PERMISSION = "2101371"
-    const val ERROR_PUBLIC_VAR_GROUP_NAME_DUPLICATE_CASE_INSENSITIVE = "2101372" // 公共变量组名称({0})与已存在的变量组({1})仅大小写不同，保存被拒绝
-    const val ERROR_TEMPLATE_INSTANCE_OPTIONAL_PARAM_OVERRIDDEN = "2101378" // 实例化异常：流水线其他变量[{0}]默认值被改成模版默认值,请联系助手分析
+    const val ERROR_PUBLIC_VAR_GROUP_EDIT_NO_PERMISSION = "2101397"
+    const val ERROR_PUBLIC_VAR_GROUP_NAME_DUPLICATE_CASE_INSENSITIVE = "2101398" // 公共变量组名称({0})与已存在的变量组({1})仅大小写不同，保存被拒绝
+    const val ERROR_TEMPLATE_INSTANCE_OPTIONAL_PARAM_OVERRIDDEN = "2101364" // 实例化异常：流水线其他变量[{0}]默认值被改成模版默认值,请联系助手分析
     // YAML文件[{0}]已绑定其他流水线[{1}]，不能重命名
-    const val ERROR_PAC_YAML_FILE_BINDTO_OTHER_PIPELINE = "2101379"
+    const val ERROR_PAC_YAML_FILE_BINDTO_OTHER_PIPELINE = "2101365"
     // 分支版本[{0}]不存在, 目标分支不存在或流水线引用的Yaml文件[{1}]在分支[{0}]不存在或已被删除
-    const val ERROR_PIPELINE_REF_YAML_FILE_NOT_FOUND = "2101380"
+    const val ERROR_PIPELINE_REF_YAML_FILE_NOT_FOUND = "2101378"
     // 分支版本[{0}]不存在, 请检查分支版本是否被成功创建
-    const val ERROR_NOT_FOUND_PIPELINE_VERSION_EXISTS_BY_BRANCH = "2101381"
+    const val ERROR_NOT_FOUND_PIPELINE_VERSION_EXISTS_BY_BRANCH = "2101379"
     const val ERROR_PIPELINE_IS_NOT_PAC = "2101389" // [{0}]不是PAC流水线
 
     // 回调URL[{0}]指向内网/元数据地址，禁止使用以防止SSRF攻击
-    const val ERROR_CALLBACK_URL_INTERNAL_HOST = "2101376"
+    const val ERROR_CALLBACK_URL_INTERNAL_HOST = "2101366"
 
-    const val BUILD_MSG_TRIGGER_EVENT = "2101382" // 通用事件触发
+    const val BUILD_MSG_TRIGGER_EVENT = "2101368" // 通用事件触发
     // 流水线{0}的权限代持人不存在
-    const val ERROR_PIPELINE_AUTH_USER_NOT_EXISTS = "2101383"
+    const val ERROR_PIPELINE_AUTH_USER_NOT_EXISTS = "2101369"
     // 用户({0})不在流水线({1})的可见范围内
-    const val ERROR_PIPELINE_USER_NOT_VISIBLE = "2101384"
+    const val ERROR_PIPELINE_USER_NOT_VISIBLE = "2101370"
 
     // 模型变量引用表达式不合规：单花括号不得以 context 前缀开头；双花括号须以前缀开头或为合法表达式函数。不合规项：{0}
-    const val ERROR_PIPELINE_MODEL_VAR_REF_INVALID = "2101377"
+    const val ERROR_PIPELINE_MODEL_VAR_REF_INVALID = "2101376"
 
     // 构建执行相关错误码（2101500-2101599）
     const val ERROR_PIPELINE_START_NODE_NO_PERMISSION = "2101500" // 用户[{0}]没有节点[{1}]的操作权限，无法启动流水线
