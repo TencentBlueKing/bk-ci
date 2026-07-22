@@ -41,6 +41,8 @@ import com.tencent.devops.artifactory.service.bkrepo.BkRepoDownloadService
 import com.tencent.devops.artifactory.service.bkrepo.BkRepoService
 import com.tencent.devops.artifactory.util.PathUtils
 import com.tencent.devops.auth.api.service.ServiceAuthAuthorizationResource
+import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.archive.pojo.ArtifactorySearchParam
@@ -279,7 +281,12 @@ class TencentBuildArtifactoryResourceImpl @Autowired constructor(
         } catch (ignored: Throwable) {
             logger.info("get pipeline oauth user fail", ignored)
             null
-        }?.handoverFrom ?: client.get(ServicePipelineResource::class)
-            .getPipelineInfo(projectId, pipelineId, null).data!!.lastModifyUser
+        }?.handoverFrom
+            ?: client.get(ServicePipelineResource::class)
+                .getPipelineInfo(projectId, pipelineId, null).data?.lastModifyUser
+            ?: throw ErrorCodeException(
+                errorCode = CommonMessageCode.SYSTEM_ERROR,
+                params = arrayOf("Failed to get pipeline user for pipeline $pipelineId in project $projectId")
+            )
     }
 }
