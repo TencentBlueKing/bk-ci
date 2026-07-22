@@ -16,17 +16,63 @@
 -- WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 -- SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 _M = {}
+
+-- 根据源请求域名判断是否需要强制路由到 creative namespace
+local function get_creative_namespace()
+    if config == nil or ngx.var.project == 'codecc' or type(config.kubernetes) ~= 'table' then
+        return nil
+    end
+
+    local creative_host_suffix = config.kubernetes.creative_host_suffix
+    local creative_namespace = config.kubernetes.creative_namespace
+    if type(creative_host_suffix) ~= 'string' or type(creative_namespace) ~= 'string' or
+        creative_host_suffix == '' or creative_namespace == '' then
+        return nil
+    end
+
+    local source_host = ngx.var.original_host
+    if source_host == nil or source_host == '' then
+        source_host = ngx.var.http_host
+    end
+    if source_host == nil or source_host == '' then
+        source_host = ngx.var.host
+    end
+    if source_host == nil or source_host == '' then
+        return nil
+    end
+
+    source_host = string.lower(source_host)
+    source_host = string.match(source_host, '^[^:]+') or source_host
+    local first_label = string.match(source_host, '^[^%.]+')
+    creative_host_suffix = string.lower(creative_host_suffix)
+
+    if first_label == nil or string.sub(first_label, -string.len(creative_host_suffix)) ~= creative_host_suffix then
+        return nil
+    end
+
+    return creative_namespace
+end
+
 -- 获取目标ip:port
 function _M:getTarget(devops_tag, service_name, cache_tail, ns_config)
     local in_container = ngx.var.namespace ~= '' and ngx.var.namespace ~= nil
     local gateway_project = ngx.var.project
     local devops_project_id = ngx.var.project_id
+    local creative_namespace = get_creative_namespace()
+    local creative_route = creative_namespace ~= nil
+
+    if creative_route then
+        devops_tag = 'kubernetes-' .. creative_namespace
+        tagUtil:set_header(devops_tag)
+    end
 
     -- 不走容器化的服务
     local no_container = false
-    for index, value in ipairs(no_container_svr) do
-        if value == service_name then
-            no_container = true
+    if not creative_route then
+        for index, value in ipairs(no_container_svr) do
+            if value == service_name then
+                no_container = true
+            end
         end
     end
     if no_container and string.find(devops_tag, '^kubernetes-') then
@@ -79,13 +125,17 @@ function _M:getTarget(devops_tag, service_name, cache_tail, ns_config)
             local domain = prefix .. '.' .. devops_tag .. '.svc.cluster.local'
             local records = dns:query(domain, { qtype = dns.TYPE_A })
             -- 兜底策略
-            if ngx.var.default_namespace ~= '' and ngx.var.default_namespace ~= nil and not records then
+            if ngx.var.default_namespace ~= '' and ngx.var.default_namespace ~= nil and not records and not creative_route then
                 domain = prefix .. ngx.var.default_namespace .. '.svc.cluster.local'
             end
             return domain
         else -- 单一集群场景
+            local target_namespace = ngx.var.namespace
+            if creative_route then
+                target_namespace = creative_namespace
+            end
             return
-                ngx.var.release_name .. '-' .. ngx.var.chart_name .. '-' .. service_name .. '.' .. ngx.var.namespace ..
+                ngx.var.release_name .. '-' .. ngx.var.chart_name .. '-' .. service_name .. '.' .. target_namespace ..
                 '.svc.cluster.local'
         end
     end
