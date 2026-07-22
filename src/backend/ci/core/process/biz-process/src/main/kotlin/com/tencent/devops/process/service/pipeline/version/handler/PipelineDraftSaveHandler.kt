@@ -98,6 +98,19 @@ class PipelineDraftSaveHandler @Autowired constructor(
                     resourceOnlyVersion = resourceOnlyVersion
                 )
                 resourceOnlyVersion
+            } else if (overrideDraft) {
+                // 非草稿历史回滚:删除当前草稿(逻辑删),用新版本号重建草稿
+                val resourceOnlyVersion = pipelineVersionGenerator.generateDraftVersion(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    baseVersion = pipelineResourceWithoutVersion.baseVersion
+                )
+                pipelineVersionPersistenceService.createDraftVersion(
+                    context = this,
+                    resourceOnlyVersion = resourceOnlyVersion,
+                    oldDraftVersion = draftVersionResource.version
+                )
+                resourceOnlyVersion
             } else {
                 val draftVersion = pipelineVersionGenerator.incrementDraftVersion(
                     projectId = projectId,

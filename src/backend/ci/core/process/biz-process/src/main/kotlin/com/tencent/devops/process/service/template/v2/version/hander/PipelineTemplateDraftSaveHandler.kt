@@ -101,10 +101,11 @@ class PipelineTemplateDraftSaveHandler @Autowired constructor(
                 projectId = projectId,
                 templateId = templateId
             )
-            if (draftResource == null) {
-                createDraftVersion()
-            } else {
-                updateDraftVersion(draftResource)
+            when {
+                draftResource == null -> createDraftVersion()
+                // 非草稿历史回滚:删除当前草稿(逻辑删),用新版本号重建草稿
+                overrideDraft -> createDraftVersion(oldDraftVersion = draftResource.version)
+                else -> updateDraftVersion(draftResource)
             }
         }
         return DeployTemplateResult(
@@ -120,7 +121,9 @@ class PipelineTemplateDraftSaveHandler @Autowired constructor(
         )
     }
 
-    private fun PipelineTemplateVersionCreateContext.createDraftVersion(): PTemplateResourceOnlyVersion {
+    private fun PipelineTemplateVersionCreateContext.createDraftVersion(
+        oldDraftVersion: Long? = null
+    ): PTemplateResourceOnlyVersion {
         val resourceOnlyVersion = pipelineTemplateGenerator.generateDraftVersion(
             projectId = projectId,
             templateId = templateId,
@@ -130,7 +133,8 @@ class PipelineTemplateDraftSaveHandler @Autowired constructor(
         fixSrcTemplate(resourceOnlyVersion)
         pipelineTemplatePersistenceService.createDraftVersion(
             context = this,
-            resourceOnlyVersion = resourceOnlyVersion
+            resourceOnlyVersion = resourceOnlyVersion,
+            oldDraftVersion = oldDraftVersion
         )
         return resourceOnlyVersion
     }

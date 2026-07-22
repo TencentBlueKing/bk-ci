@@ -234,7 +234,8 @@ class PipelineVersionPersistenceService @Autowired constructor(
 
     fun createDraftVersion(
         context: PipelineVersionCreateContext,
-        resourceOnlyVersion: PipelineResourceOnlyVersion
+        resourceOnlyVersion: PipelineResourceOnlyVersion,
+        oldDraftVersion: Int? = null
     ) {
         with(context) {
             operationLogType = OperationLogType.CREATE_DRAFT_VERSION
@@ -255,6 +256,15 @@ class PipelineVersionPersistenceService @Autowired constructor(
             )
             dslContext.transaction { configuration ->
                 val transactionContext = DSL.using(configuration)
+                // 删除当前草稿(逻辑删,STATUS->DELETE),再重建新草稿
+                oldDraftVersion?.let {
+                    pipelineResourceVersionDao.deleteByVersion(
+                        dslContext = transactionContext,
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        version = it
+                    )
+                }
                 createPipelineResourceVersion(
                     transactionContext = transactionContext,
                     userId = userId,

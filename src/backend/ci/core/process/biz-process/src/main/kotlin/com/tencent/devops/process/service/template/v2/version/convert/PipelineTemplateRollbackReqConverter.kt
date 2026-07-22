@@ -133,7 +133,9 @@ class PipelineTemplateRollbackReqConverter @Autowired constructor(
             pipelineTemplateInfo = pipelineTemplateInfo,
             pTemplateResourceWithoutVersion = pTemplateResourceWithoutVersion,
             pTemplateSettingWithoutVersion = targetSetting,
-            baseDraftVersion = draftVersion
+            baseDraftVersion = draftVersion,
+            // 非草稿历史回滚(从正式/历史版本回滚)时,删除当前草稿并重建
+            overrideDraft = draftVersion == null
         )
     }
 

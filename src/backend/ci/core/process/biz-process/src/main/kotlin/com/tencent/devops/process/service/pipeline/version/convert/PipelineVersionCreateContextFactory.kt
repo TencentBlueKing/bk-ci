@@ -123,7 +123,8 @@ class PipelineVersionCreateContextFactory @Autowired constructor(
             pipelineSettingWithoutVersion = pipelineSettingWithoutVersion,
             branchName = branchName,
             yamlFileInfo = yamlFileInfo,
-            baseDraftVersion = baseDraftVersion
+            baseDraftVersion = baseDraftVersion,
+            overrideDraft = overrideDraft
         )
     }
 
@@ -206,7 +207,8 @@ class PipelineVersionCreateContextFactory @Autowired constructor(
             templateInstanceBasicInfo = templateInstanceBasicInfo,
             branchName = branchName,
             yamlFileInfo = yamlFileInfo,
-            baseDraftVersion = baseDraftVersion
+            baseDraftVersion = baseDraftVersion,
+            overrideDraft = overrideDraft
         )
     }
 }

@@ -28,6 +28,8 @@ data class PipelineVersionCreateContextParam(
     val baseVersion: Int? = null,
     @get:Schema(title = "该版本的来源草稿版本", required = false)
     val baseDraftVersion: Int? = null,
+    @get:Schema(title = "是否删除当前草稿并重建", required = false)
+    val overrideDraft: Boolean = false,
     @get:Schema(title = "版本变更说明", required = false)
     val description: String? = null,
     @get:Schema(title = "流水线设置,没有版本信息", required = true)

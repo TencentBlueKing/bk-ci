@@ -281,7 +281,8 @@ class PipelineTemplatePersistenceService @Autowired constructor(
 
     fun createDraftVersion(
         context: PipelineTemplateVersionCreateContext,
-        resourceOnlyVersion: PTemplateResourceOnlyVersion
+        resourceOnlyVersion: PTemplateResourceOnlyVersion,
+        oldDraftVersion: Long? = null
     ) {
         with(context) {
             if (pTemplateResourceWithoutVersion.model is Model) {
@@ -299,6 +300,18 @@ class PipelineTemplatePersistenceService @Autowired constructor(
 
             dslContext.transaction { configuration ->
                 val transactionContext = DSL.using(configuration)
+                // 删除当前草稿(逻辑删,STATUS->DELETE),再重建新草稿
+                oldDraftVersion?.let {
+                    pipelineTemplateResourceService.update(
+                        transactionContext = transactionContext,
+                        record = PipelineTemplateResourceUpdateInfo(status = VersionStatus.DELETE),
+                        commonCondition = PipelineTemplateResourceCommonCondition(
+                            projectId = projectId,
+                            templateId = templateId,
+                            version = it
+                        )
+                    )
+                }
                 pipelineTemplateResourceService.create(
                     transactionContext = transactionContext,
                     pipelineTemplateResource = pipelineTemplateResource
