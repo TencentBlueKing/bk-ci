@@ -71,13 +71,13 @@
                         class="release-pipeline-pac-form"
                     >
                         <bk-alert
-                            v-if="draftStatus && draftStatus.status === DRAFT_STATUS.BASE_OUTDATED"
+                            v-if="draftStatus && [DRAFT_STATUS.BASE_OUTDATED, DRAFT_STATUS.BASE_BRANCH].includes(draftStatus.status)"
                             type="warning"
                         >
                             <template slot="title">
-                                <i18n path="draftPublished">
+                                <i18n :path="releaseBaselineNoticePath">
                                     <span>{{ draftStatus?.draft?.baseVersionName }}</span>
-                                    <span class="red-tip">{{ $t('Earlier') }}</span>
+                                    <span class="red-tip">{{ $t(releaseBaselineNoticeKeyword) }}</span>
                                     <span>{{ draftStatus?.release?.versionName }}</span>
                                 </i18n>
                             </template>
@@ -669,6 +669,14 @@
             },
             baseVersionBranch () {
                 return this.pipelineInfo?.baseVersionName || '--'
+            },
+            releaseBaselineNoticePath () {
+                return this.draftStatus?.status === DRAFT_STATUS.BASE_BRANCH
+                    ? 'releaseBaselineWarning'
+                    : 'draftPublished'
+            },
+            releaseBaselineNoticeKeyword () {
+                return this.draftStatus?.status === DRAFT_STATUS.BASE_BRANCH ? 'no' : 'Earlier'
             },
             pipelineName () {
                 return this.pipelineSetting?.pipelineName
@@ -1475,7 +1483,7 @@
                         this.isPublishedDialogShow = true
                         return
                     }
-                    if (draftStatus.status === DRAFT_STATUS.BASE_OUTDATED) {
+                    if ([DRAFT_STATUS.BASE_OUTDATED, DRAFT_STATUS.BASE_BRANCH].includes(draftStatus.status)) {
                         this.$nextTick(() => {
                             this.$refs.releasePopconfirm?.$refs?.popover?.showHandler()
                         })

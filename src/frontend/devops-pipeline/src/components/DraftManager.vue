@@ -158,9 +158,9 @@
                         v-html="tipsText"
                     ></span>
                     <div v-else-if="isOutDatedStatus">
-                        <i18n path="draftBaselineIsEarlierThanCurrentVersionNotice">
+                        <i18n :path="baselineNoticePath">
                             <span>{{ draftSaveInfo?.draftVersionName }}</span>
-                            <span class="earlier">{{ $t('Earlier') }}</span>
+                            <span class="earlier">{{ $t(baselineNoticeKeyword) }}</span>
                             <span>{{ draftSaveInfo?.releaseVersionName }}</span>
                         </i18n>
                         <p>{{ $t('draftNoticeTip1') }}</p>
@@ -272,10 +272,18 @@
                 return this.lasterDraftInfo?.status === DRAFT_STATUS.PUBLISHED
             },
             isOutDatedStatus () {
-                return this.lasterDraftInfo?.status === DRAFT_STATUS.BASE_OUTDATED
+                return [DRAFT_STATUS.BASE_OUTDATED, DRAFT_STATUS.BASE_BRANCH].includes(this.lasterDraftInfo?.status)
             },
             isReleaseOutDatedStatus () {
                 return this.lasterDraftInfo?.status === DRAFT_STATUS.RELEASE_OUTDATED
+            },
+            baselineNoticePath () {
+                return this.lasterDraftInfo?.status === DRAFT_STATUS.BASE_BRANCH
+                    ? 'branchBaseline'
+                    : 'draftBaselineIsEarlierThanCurrentVersionNotice'
+            },
+            baselineNoticeKeyword () {
+                return this.lasterDraftInfo?.status === DRAFT_STATUS.BASE_BRANCH ? 'no' : 'Earlier'
             },
             conflictDraftInfo () {
                 return this.lasterDraftInfo?.draft

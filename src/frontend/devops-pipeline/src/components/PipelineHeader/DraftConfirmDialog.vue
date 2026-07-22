@@ -61,14 +61,14 @@
             </div>
             <!-- 编辑提示 -->
             <template v-else>
-                <!-- 版本落后 -->
+                <!-- 版本落后 / 草稿基线为分支 -->
                 <div
-                    v-if="draftStatus === DRAFT_STATUS.BASE_OUTDATED"
+                    v-if="[DRAFT_STATUS.BASE_OUTDATED, DRAFT_STATUS.BASE_BRANCH].includes(draftStatus)"
                     class="is-active-branch-version"
                 >
-                    <i18n path="draftBaselineIsEarlierThanCurrentVersionNotice">
+                    <i18n :path="baselineNoticePath">
                         <span>{{ draftSaveInfo?.draftVersionName }}</span>
-                        <span class="earlier">{{ $t('Earlier') }}</span>
+                        <span class="earlier">{{ $t(baselineNoticeKeyword) }}</span>
                         <span>{{ draftSaveInfo?.releaseVersionName }}</span>
                     </i18n>
                     <p>{{ $t('draftNoticeTip1') }}</p>
@@ -240,6 +240,14 @@
                     return this.$t('rollbackConfirm')
                 }
                 return this.$t('newDraft')
+            },
+            baselineNoticePath () {
+                return this.draftStatus === DRAFT_STATUS.BASE_BRANCH
+                    ? 'branchBaseline'
+                    : 'draftBaselineIsEarlierThanCurrentVersionNotice'
+            },
+            baselineNoticeKeyword () {
+                return this.draftStatus === DRAFT_STATUS.BASE_BRANCH ? 'no' : 'Earlier'
             }
         },
         methods: {
