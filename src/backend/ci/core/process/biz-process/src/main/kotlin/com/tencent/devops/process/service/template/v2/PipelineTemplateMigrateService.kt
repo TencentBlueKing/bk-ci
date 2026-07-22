@@ -139,11 +139,17 @@ class PipelineTemplateMigrateService(
                 "dryRun=${request.dryRun}"
         )
 
-        val blacklist = client.get(ServiceProjectTagResource::class).getBlacklist().data
-            ?: throw IllegalStateException("Failed to fetch routing blacklist from project service")
+        val blacklist = request.blacklist
+            ?.map { it.trim() }
+            ?.filter { it.isNotEmpty() }
+            ?.toSet()
+            ?: emptySet()
         logger.info("migrateTemplatesByPercentage blacklistSize=${blacklist.size}")
 
-        val condition = ProjectConditionDTO(channelCode = request.channelCode)
+        val condition = ProjectConditionDTO(
+            channelCode = request.channelCode,
+            excludedProjectCodes = blacklist.takeIf { it.isNotEmpty() }?.toList()
+        )
         var totalProjectCount = 0
         var alreadyDoneCount = 0
         val candidates = mutableListOf<String>()
@@ -160,7 +166,6 @@ class PipelineTemplateMigrateService(
             totalProjectCount += projectCodes.size
             projectCodes.forEach { project ->
                 val englishName = project.englishName
-                if (englishName in blacklist) return@forEach
                 if (hashBucket(englishName) >= request.targetPercent) return@forEach
                 val migrationRecord = pipelineTemplateMigrationDao.get(dslContext, englishName)
                 if (migrationRecord?.status == MigrationStatus.SUCCESS.name ||

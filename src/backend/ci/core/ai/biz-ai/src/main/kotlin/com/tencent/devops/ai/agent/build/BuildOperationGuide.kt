@@ -51,7 +51,7 @@ internal fun buildOperationGuideMarkdown(): String = """
 3. **中文回复**: 结构化呈现关键信息。
 4. **名称转 ID**: 项目名称 → 调用 resolveProjectId；流水线名称 → 调用「搜索流水线」。
 5. **报错分析先走一键工具**: 用户问"为什么失败/报错/挂了"时，先调「分析构建失败」，不要一上来直接拉日志（详见工作流「分析构建错误」）。
-6. **查编排走三级递进**: 默认「获取流水线编排摘要」→ 有定位键时「获取流水线编排节点详情」→ 仅在需要完整 setting/插件对象/全链路时才「获取流水线编排」兜底。
+6. **查编排优先完整、过大再降级**: 默认先「获取流水线编排」；若返回对象过大、内容被截断，或只需补某个局部节点，再结合「获取流水线编排摘要」与「获取流水线编排节点详情」。
 7. **编排解读结合技能且区分排障**: 解释"流水线做什么 / 某 Stage/Job/插件含义"属于编排解读场景，不要调「分析构建失败」，须结合已加载的「流水线编排解释」技能（pipeline-model-interpreter）逐层解读（详见工作流「分析/解释流水线编排」）。
 8. **必要时查 iWiki**: 遇到不熟悉的错误码/插件配置/平台限制，用 iWiki MCP 辅助（详见「iWiki 文档搜索」）。
 9. **深度诊断结合技能**: 做失败根因定位、历史稳定性判定、构建对比、卡住检测、子流水线递归或诊断报告时，结合已加载的「流水线构建诊断」技能（pipeline-build-diagnosis）的方法论与错误码/根因模式库。
@@ -71,7 +71,7 @@ internal fun buildOperationGuideMarkdown(): String = """
 | 搜索流水线 | `搜索流水线(projectId, keyword?, page?, pageSize?)` |
 | 查看流水线基本信息 | `获取流水线信息(projectId, pipelineId)` |
 | 查看流水线当前状态（原始状态信息） | `获取流水线状态(projectId, pipelineId)` |
-| 查看流水线轻量编排摘要（默认首选） | `获取流水线编排摘要(projectId, pipelineId, version?, includeElements?)` |
+| 查看流水线轻量编排摘要（编排过大/只看骨架时） | `获取流水线编排摘要(projectId, pipelineId, version?, includeElements?)` |
 | 查看指定 Stage/Job/插件 的轻量详情 | `获取流水线编排节点详情(projectId, pipelineId, version?, stageId?, containerHashId?, containerId?, jobId?, elementId?, stepId?)` |
 | 查看流水线编排（Model，可指定版本） | `获取流水线编排(projectId, pipelineId, version?)` |
 
@@ -139,8 +139,18 @@ internal fun buildOperationGuideMarkdown(): String = """
 3. latest 窗口不足以判断根因时，按返回的 lineRange/nextActions 调「获取指定行号范围构建日志」滚动拉取
    - 通常先向前滚：start = 当前 startLineNo - 500，end = 当前 startLineNo - 1
    - 保持相同 tag/jobId/logType，必要时分别拉 ERROR 与普通日志
-4. 仅看失败插件仍不够时，按「查编排走三级递进」查看结构，定位 elementId 所在 Job 或上下游依赖
-5. 失败根因判定、历史稳定性、构建对比、卡住检测、子流水线递归与诊断报告，
+4. 若失败插件是子流水线插件（如 atomCode=SubPipelineExec / classType=subPipelineCall，或错误信息为“子流水线运行失败”）：
+   - 先检查当前错误日志/插件日志中是否已经直接出现子流水线的 projectId、pipelineId、buildId、buildNum、
+     详情链接，尤其优先识别这些高信号内容：
+     `sub_pipeline_buildId=`、`sub_pipeline_id=`、`sub_pipeline_build_num=`、`sub_project_id=`、
+     `sub_pipeline_url=`、`查看子流水线执行详情`、`start pipeline, ... subPipelineId: ...,`
+   - **如果日志里已经有明确的子流水线 buildId/pipelineId（哪怕只是从 output/url/链接里提取出来），就直接用这些信息继续分析子构建，不要再调用「定位子流水线构建」**
+   - 只有当日志里没有明确子构建标识时，才调用「定位子流水线构建(projectId, pipelineId, buildId, parentTaskId, parentExecuteCount)」
+   - 日志里同时出现多组子流水线标识时，优先采用最终输出区（如 `sub_pipeline_buildId` / `sub_pipeline_url`）或最后一次
+     `查看子流水线执行详情` 链接中的 buildId，避免误取启动前的旧信息
+   - 无论哪条路径，都**禁止**默认取子流水线“最新构建”代替本次失败实例
+5. 仅看失败插件仍不够时，按「查编排走三级递进」查看结构，定位 elementId 所在 Job 或上下游依赖
+6. 失败根因判定、历史稳定性、构建对比、卡住检测、子流水线递归与诊断报告，
    均按「流水线构建诊断」技能的方法论执行；技能未覆盖的错误码/配置再查 iWiki 补充
 ```
 
@@ -150,7 +160,12 @@ internal fun buildOperationGuideMarkdown(): String = """
    - failedElements 被截断时改用 stageSummary.failedElementIds 兜底定位
 2. 以 elementId 作 tag 调「获取构建日志」（latest 窗口），建议 ERROR 与普通日志各拉一次
 3. 窗口不足则按 lineRange 调「获取指定行号范围构建日志」继续滚动
-4. 需要编排上下文时按「查编排走三级递进」查看
+4. 若判定为子流水线插件失败：
+   - 日志里已明确给出子流水线 buildId/pipelineId/buildNum/链接时，直接使用这些信息递归分析子构建
+   - 同样优先识别 `sub_pipeline_buildId`、`sub_pipeline_id`、`sub_pipeline_build_num`、
+     `sub_pipeline_url` 与 `查看子流水线执行详情` 这些固定模式
+   - 只有日志里没有明确子构建标识时，才调用「定位子流水线构建」
+5. 需要编排上下文时按「查编排走三级递进」查看
 ```
 
 **注意**：除非用户明确要"原始/完整日志"，否则不要把「获取构建日志」当报错分析第一步；
@@ -176,13 +191,13 @@ internal fun buildOperationGuideMarkdown(): String = """
 **不要**调用「分析构建失败」等运行态排障工具。
 ```
 1. 确定流水线：名称先「搜索流水线」拿 pipelineId；URL 按解析规则提取
-2. 默认「获取流水线编排摘要(projectId, pipelineId, version?, includeElements?)」拿整体结构
-   - 需要 step 级插件时把 includeElements 设为 true
-   - 先说清楚：整体做什么、有几个 Stage、关键 Job 负责什么、启动参数入口
-3. 聚焦某节点，或已拿到 stageId/containerHashId/jobId/elementId/stepId 时，
-   「获取流水线编排节点详情」只解读该节点及必要上下文
-4. 仅在需要完整 setting/插件对象/变量传递/模板展开/复杂全链路时，才「获取流水线编排」全量兜底
-5. 拿到编排后，**必须结合已加载的「流水线编排解释」技能（pipeline-model-interpreter）**逐层解读，
+2. 默认先调「获取流水线编排」，解读主流程、插件输入输出、变量传递、模板展开和复杂控制项时优先看完整编排
+3. 如果完整编排返回对象过大、内容被截断，先退到「获取流水线编排摘要」：
+   - 先保住整体 Stage/Job/Step 结构、名称、ID、容器类型、定位键
+   - 必要时可设 includeElements=false，只先看 Stage/Job 骨架
+4. 用户追问某个 Stage/Job/插件，或摘要里已出现明确定位键（stageId/containerHashId/containerId/jobId/elementId/stepId）时，
+   调「获取流水线编排节点详情」补该节点的父链路径、控制项与轻量详情，用局部详情替代再次硬拉大对象
+5. 拿到编排信息后，**必须结合已加载的「流水线编排解释」技能（pipeline-model-interpreter）**逐层解读，
    不要仅凭直觉；按 Model -> Stage -> Container(Job) -> Element 四层展开：
    - 先看 TriggerContainer.params 启动参数（敏感/PASSWORD 只说"敏感参数"，不回显默认值）
    - 判断容器类型（trigger/vmBuild/normal）、构建资源（dispatchType）、控制项

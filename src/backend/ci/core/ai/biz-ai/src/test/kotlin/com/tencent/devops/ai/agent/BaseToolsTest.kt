@@ -211,12 +211,28 @@ class BaseToolsTest : BkCiAbstractTest() {
         assertTrue(result.endsWith("...(已截断)"))
     }
 
+    @Test
+    fun `should detect payload that exceeds tool output limit`() {
+        val payload = "x".repeat(150_001)
+
+        assertTrue(tools.wouldExceedLimit(payload))
+    }
+
+    @Test
+    fun `should allow payload within tool output limit`() {
+        val payload = mapOf("content" to "ok".repeat(100))
+
+        assertFalse(tools.wouldExceedLimit(payload))
+    }
+
     private fun parseJson(value: String) = JsonUtil.getObjectMapper(false).readTree(value)
 
     private class TestTools : BaseTools(client, { "tester" }) {
         override val logger: Logger = LoggerFactory.getLogger(TestTools::class.java)
 
         fun stringify(value: Any): String = toJson(value)
+
+        fun wouldExceedLimit(value: Any): Boolean = wouldExceedToolOutputLimit(value)
     }
 
     private data class SchemaPayload(

@@ -99,6 +99,11 @@
                                 v-model.trim="newViewName"
                             />
                             <span
+                                v-else-if="item.pac"
+                                v-start-ellipsis="item.name"
+                                class="pipeline-group-item-name pac-pipeline-group-item-name"
+                            />
+                            <span
                                 v-else
                                 class="pipeline-group-item-name"
                                 v-bk-overflow-tips
@@ -237,10 +242,86 @@
     } from '@/utils/permission'
     import { cacheViewId } from '@/utils/util'
     import { mapActions, mapGetters, mapState } from 'vuex'
+
+    // CSS 无法稳定实现多行头部省略，按容器宽度保留 PAC 分组名称的最长后缀。
+    const startEllipsisState = new WeakMap()
+
+    function updateStartEllipsis (el, text) {
+        const state = startEllipsisState.get(el)
+        if (!state) return
+
+        state.text = text ?? ''
+        if (state.frame) cancelAnimationFrame(state.frame)
+        state.frame = requestAnimationFrame(() => {
+            state.frame = null
+            el.textContent = state.text
+            el.removeAttribute('title')
+
+            if (!el.clientWidth || !state.text) return
+
+            const lineHeight = parseFloat(getComputedStyle(el).lineHeight)
+            if (!Number.isFinite(lineHeight)) return
+
+            const maxHeight = lineHeight * 2
+            if (el.scrollHeight <= maxHeight + 1) return
+
+            const characters = Array.from(state.text)
+            let start = 0
+            let end = characters.length
+            while (start < end) {
+                const middle = Math.floor((start + end) / 2)
+                el.textContent = `…${characters.slice(middle).join('')}`
+                if (el.scrollHeight <= maxHeight + 1) {
+                    end = middle
+                } else {
+                    start = middle + 1
+                }
+            }
+
+            el.textContent = `…${characters.slice(start).join('')}`
+            el.title = state.text
+        })
+    }
+
+    const startEllipsis = {
+        inserted (el, binding) {
+            const state = {
+                frame: null,
+                observer: null,
+                text: binding.value ?? ''
+            }
+            startEllipsisState.set(el, state)
+
+            if (typeof ResizeObserver === 'function') {
+                state.observer = new ResizeObserver(() => updateStartEllipsis(el, state.text))
+                state.observer.observe(el)
+            } else {
+                state.resizeHandler = () => updateStartEllipsis(el, state.text)
+                window.addEventListener('resize', state.resizeHandler)
+            }
+            updateStartEllipsis(el, state.text)
+        },
+        componentUpdated (el, binding) {
+            updateStartEllipsis(el, binding.value)
+        },
+        unbind (el) {
+            const state = startEllipsisState.get(el)
+            if (!state) return
+
+            if (state.frame) cancelAnimationFrame(state.frame)
+            state.observer?.disconnect()
+            if (state.resizeHandler) window.removeEventListener('resize', state.resizeHandler)
+            startEllipsisState.delete(el)
+        }
+    }
+
     export default {
         components: {
             Logo,
             ExtMenu
+        },
+        directives: {
+            startEllipsis
         },
         data () {
             return {
@@ -767,6 +848,16 @@
             .pipeline-group-item-name {
                 flex: 1;
                 @include ellipsis();
+
+                &.pac-pipeline-group-item-name {
+                    display: block;
+                    min-width: 0;
+                    max-height: 40px;
+                    overflow: hidden;
+                    line-height: 20px;
+                    white-space: normal;
+                    word-break: break-all;
+                }
             }
             .pipeline-group-item-sum {
                 display: flex;

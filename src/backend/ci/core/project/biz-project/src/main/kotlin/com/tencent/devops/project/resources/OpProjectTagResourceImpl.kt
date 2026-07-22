@@ -5,7 +5,6 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.project.api.op.OpProjectTagResource
 import com.tencent.devops.project.pojo.ProjectClusterPercentageResult
 import com.tencent.devops.project.pojo.ProjectExtSystemTagDTO
-import com.tencent.devops.project.pojo.ProjectRoutingListRequest
 import com.tencent.devops.project.pojo.ProjectReleaseBatchCreateRequest
 import com.tencent.devops.project.pojo.ProjectReleaseBatchCreateResult
 import com.tencent.devops.project.pojo.ProjectReleaseBatchExecuteRequest
@@ -45,18 +44,6 @@ class OpProjectTagResourceImpl @Autowired constructor(
         request: ProjectReleaseBatchExecuteRequest
     ): Result<ProjectReleaseBatchExecuteResult> {
         return Result(projectTagService.executeReleaseBatch(request))
-    }
-
-    override fun addToBlacklist(request: ProjectRoutingListRequest): Result<Long> {
-        return Result(projectTagService.addToBlacklist(request.projectCodes))
-    }
-
-    override fun removeFromBlacklist(request: ProjectRoutingListRequest): Result<Long> {
-        return Result(projectTagService.removeFromBlacklist(request.projectCodes))
-    }
-
-    override fun getBlacklist(): Result<Set<String>> {
-        return Result(projectTagService.getBlacklist())
     }
 
     override fun setDefaultTag(tag: String): Result<Boolean> {

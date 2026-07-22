@@ -25,11 +25,11 @@ class FeatureSwitchService @Autowired constructor(
     ): Long {
         logger.info(
             "operator($operator) creates feature switch: " +
-                "projectId=${featureSwitch.projectId}, " +
-                "userId=${featureSwitch.userId}, " +
-                "workspaceName=${featureSwitch.workspaceName}, " +
-                "featureType=${featureSwitch.featureType}, " +
-                "enabled=${featureSwitch.enabled}"
+                    "projectId=${featureSwitch.projectId}, " +
+                    "userId=${featureSwitch.userId}, " +
+                    "workspaceName=${featureSwitch.workspaceName}, " +
+                    "featureType=${featureSwitch.featureType}, " +
+                    "enabled=${featureSwitch.enabled}"
         )
         return featureSwitchDao.create(
             dslContext = dslContext,
@@ -45,7 +45,7 @@ class FeatureSwitchService @Autowired constructor(
     ): Boolean {
         logger.info(
             "operator($operator) updates feature switch " +
-                "id=$id, enabled=$enabled"
+                    "id=$id, enabled=$enabled"
         )
         return featureSwitchDao.update(
             dslContext = dslContext,
@@ -79,6 +79,17 @@ class FeatureSwitchService @Autowired constructor(
         )
     }
 
+    fun listProject(
+        projectId: String,
+        featureType: FeatureSwitchType
+    ): List<FeatureSwitch> {
+        return featureSwitchDao.listProject(
+            dslContext = dslContext,
+            projectId = projectId,
+            featureType = featureType
+        )
+    }
+
     fun isEnabled(
         projectId: String,
         userId: String,
@@ -91,6 +102,17 @@ class FeatureSwitchService @Autowired constructor(
             userId = userId,
             workspaceName = workspaceName,
             featureType = featureType
+        )
+    }
+
+    fun isProjectEnabled(
+        projectId: String,
+        featureTypeList: List<FeatureSwitchType>
+    ): Boolean {
+        return featureSwitchDao.isProjectEnabled(
+            dslContext = dslContext,
+            projectId = projectId,
+            featureTypeList = featureTypeList
         )
     }
 }

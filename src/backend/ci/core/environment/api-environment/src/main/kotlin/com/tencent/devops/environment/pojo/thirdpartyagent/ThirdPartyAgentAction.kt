@@ -47,7 +47,7 @@ data class OfflinePeriod(
     @get:Schema(title = "离线开始时间", required = true)
     val offlineTime: LocalDateTime,
     @get:Schema(title = "上线时间（离线结束时间）", required = true)
-    val onlineTime: LocalDateTime,
+    val onlineTime: LocalDateTime?,
     @get:Schema(title = "持续时长（秒）", required = true)
-    val duration: Long
+    val duration: Long?
 )

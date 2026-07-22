@@ -2,7 +2,7 @@
 
 **数据库名：** devops_ci_project
 
-**文档版本：** 1.0.20
+**文档版本：** 1.0.22
 
 **文档描述：** devops_ci_project 的数据库文档
 | 表名                  | 说明       |
@@ -67,7 +67,7 @@
 |  7   | MODIFIER |   varchar   | 50 |   0    |    N     |  N   |   system    | 修改者  |
 |  8   | DS_URL |   varchar   | 1024 |   0    |    Y     |  N   |       | 数据源 URL 地址  |
 |  9   | TAG |   varchar   | 128 |   0    |    Y     |  N   |       | 数据源标签  |
-|  10   | TYPE |   varchar   | 32 |   0    |    N     |  N   |   DB    | 数据库类型，DB:普通数据库，ARCHIVE_DB:归档数据库  |
+|  10   | TYPE |   varchar   | 32 |   0    |    N     |  N   |   DB    | 数据库类型，DB：普通数据库，ARCHIVE_DB：归档数据库  |
 |  11   | UPDATE_TIME |   datetime   | 23 |   0    |    N     |  N   |   CURRENT_TIMESTAMP(3)    | 修改时间  |
 |  12   | CREATE_TIME |   datetime   | 23 |   0    |    N     |  N   |   CURRENT_TIMESTAMP(3)    | 创建时间  |
 
@@ -124,7 +124,7 @@
 | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
 |  1   | BIZ_TAG |   varchar   | 128 |   0    |    N     |  Y   |       | 业务标签  |
 |  2   | MAX_ID |   bigint   | 20 |   0    |    N     |  N   |   1    | 当前最大 ID 值  |
-|  3   | STEP |   int   | 10 |   0    |    N     |  N   |       | 步长,每一次请求获取的 ID 个数  |
+|  3   | STEP |   int   | 10 |   0    |    N     |  N   |       | 步长，每一次请求获取的 ID 个数  |
 |  4   | DESCRIPTION |   varchar   | 256 |   0    |    Y     |  N   |       | 说明  |
 |  5   | UPDATE_TIME |   timestamp   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 更新时间  |
 
@@ -159,7 +159,7 @@
 |  6   | UPDATE_DATE |   timestamp   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 更新日期  |
 |  7   | NOTICE_CONTENT |   text   | 65535 |   0    |    N     |  N   |       | 公告内容  |
 |  8   | REDIRECT_URL |   varchar   | 200 |   0    |    Y     |  N   |       | 跳转地址  |
-|  9   | NOTICE_TYPE |   tinyint   | 4 |   0    |    N     |  N   |   0    | 消息类型:0.弹框 1.跑马灯  |
+|  9   | NOTICE_TYPE |   tinyint   | 4 |   0    |    N     |  N   |   0    | 消息类型：0。弹框 1。跑马灯  |
 |  10   | SERVICE_NAME |   varchar   | 1024 |   0    |    Y     |  N   |       | 服务名称  |
 
 **表名：** <a>T_OPERATIONAL_PRODUCT</a>
@@ -236,7 +236,7 @@
 |  46   | other_router_tags |   varchar   | 128 |   0    |    Y     |  N   |       | 其他系统网关路由 tags  |
 |  47   | properties |   text   | 65535 |   0    |    Y     |  N   |       | 项目其他配置  |
 |  48   | SUBJECT_SCOPES |   text   | 65535 |   0    |    Y     |  N   |       | 最大可授权人员范围  |
-|  49   | AUTH_SECRECY |   int   | 10 |   0    |    Y     |  N   |   0    | 项目性质,0-公开，1-保密,2-机密  |
+|  49   | AUTH_SECRECY |   int   | 10 |   0    |    Y     |  N   |   0    | 项目性质，0-公开，1-保密，2-机密  |
 |  50   | product_id |   int   | 10 |   0    |    Y     |  N   |       | 运营产品 ID  |
 |  51   | HIDDEN |   bit   | 1 |   0    |    Y     |  N   |   b'0'    | 是否隐藏  |
 |  52   | project_scope |   int   | 10 |   0    |    N     |  N   |   0    | 项目组织形态：0-团队项目，1-个人项目  |
@@ -271,8 +271,8 @@
 |  20   | APPROVAL_TIME |   timestamp   | 19 |   0    |    Y     |  N   |       | 批准时间  |
 |  21   | RELATION_ID |   varchar   | 32 |   0    |    Y     |  N   |       | 扩展系统关联 ID  |
 |  22   | SUBJECT_SCOPES |   text   | 65535 |   0    |    Y     |  N   |       | 最大可授权人员范围  |
-|  23   | AUTH_SECRECY |   int   | 10 |   0    |    Y     |  N   |   0    | 项目性质,0-公开,1-保密,2-机密  |
-|  24   | TIPS_STATUS |   int   | 10 |   0    |    Y     |  N   |   0    | 提示状态,0-不展示,1-展示创建成功,2-展示更新成功  |
+|  23   | AUTH_SECRECY |   int   | 10 |   0    |    Y     |  N   |   0    | 项目性质，0-公开，1-保密，2-机密  |
+|  24   | TIPS_STATUS |   int   | 10 |   0    |    Y     |  N   |   0    | 提示状态，0-不展示，1-展示创建成功，2-展示更新成功  |
 |  25   | PROJECT_TYPE |   int   | 10 |   0    |    Y     |  N   |       | 项目类型  |
 |  26   | PRODUCT_ID |   int   | 10 |   0    |    Y     |  N   |       | 运营产品 ID  |
 |  27   | PRODUCT_NAME |   varchar   | 64 |   0    |    Y     |  N   |       | 运营产品名称  |
@@ -457,7 +457,7 @@
 |  3   | ROUTING_RULE |   varchar   | 256 |   0    |    N     |  N   |       | 路由规则  |
 |  4   | CLUSTER_NAME |   varchar   | 64 |   0    |    N     |  N   |   prod    | 集群名称  |
 |  5   | MODULE_CODE |   varchar   | 64 |   0    |    N     |  N   |   PROCESS    | 模块标识  |
-|  6   | TYPE |   varchar   | 32 |   0    |    N     |  N   |   DB    | 路由类型，DB:数据库，TABLE:数据库表  |
+|  6   | TYPE |   varchar   | 32 |   0    |    N     |  N   |   DB    | 路由类型，DB：数据库，TABLE：数据库表  |
 |  7   | DATA_SOURCE_NAME |   varchar   | 128 |   0    |    N     |  N   |   ds_0    | 数据源名称  |
 |  8   | TABLE_NAME |   varchar   | 128 |   0    |    Y     |  N   |       | 数据库表名称  |
 |  9   | CREATOR |   varchar   | 50 |   0    |    N     |  N   |   system    | 创建者  |

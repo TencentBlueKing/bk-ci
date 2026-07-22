@@ -7,6 +7,7 @@ import com.tencent.devops.ai.model.FailoverModelCandidate
 import com.tencent.devops.ai.properties.AiLlmModelProperties
 import com.tencent.devops.ai.properties.AiLlmProperties
 import io.agentscope.core.model.Model
+import java.time.Duration
 import kotlin.random.Random
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -69,11 +70,15 @@ class AiModelResolver(
                 candidates = listOf(
                     FailoverModelCandidate(
                         id = userModelConfig.id,
-                        model = modelFactory.createSingleAttempt(userModelConfig)
+                        model = modelFactory.createSingleAttempt(userModelConfig),
+                        totalExecutionTimeout = Duration.ofSeconds(
+                            userModelConfig.totalExecutionTimeoutSeconds
+                        )
                     ),
                     FailoverModelCandidate(
                         id = "platform:${fallback.identifier}",
-                        model = fallback.model
+                        model = fallback.model,
+                        totalExecutionTimeout = null
                     )
                 ),
                 errorClassifier = errorClassifier
@@ -101,7 +106,10 @@ class AiModelResolver(
         val orderedCandidates = orderedConfigs.map { config ->
             FailoverModelCandidate(
                 id = config.id,
-                model = cache.getValue(config.id)
+                model = cache.getValue(config.id),
+                totalExecutionTimeout = Duration.ofSeconds(
+                    config.totalExecutionTimeoutSeconds
+                )
             )
         }
         val chainId = orderedCandidates.joinToString(separator = " -> ") { it.id }

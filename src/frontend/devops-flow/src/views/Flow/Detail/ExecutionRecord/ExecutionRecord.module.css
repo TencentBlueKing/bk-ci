@@ -85,6 +85,18 @@
   font-weight: 500;
 }
 
+.triggerAndUserCell {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  overflow: hidden;
+}
+
+.triggerTypeIcon {
+  flex-shrink: 0;
+  color: var(--text-secondary, #979ba5);
+}
+
 /* 操作列 */
 .operationDisabled {
   color: var(--text-tertiary);

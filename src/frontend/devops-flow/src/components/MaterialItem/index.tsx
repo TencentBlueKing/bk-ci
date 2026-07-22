@@ -25,6 +25,10 @@ interface MaterialInfoKey {
   [key: string]: string | undefined
 }
 
+const tapdIconTypeMap: Record<string, string> = {
+  story: 'intercept-history',
+  bug: 'bug'
+}
 export default defineComponent({
   name: 'MaterialItem',
   props: {
@@ -48,6 +52,8 @@ export default defineComponent({
   },
   emits: ['mouseEnter', 'click'],
   setup(props, { emit }) {
+    const isSubFlow = computed(() => props.material?.channelCode === 'CREATIVE_STREAM')
+    const isTAPD = computed(() => props.material?.webhookType === 'TAPD')
     const scmType = computed(() =>
       props.isWebhook ? `CODE_${props.material?.codeType}` : props.material?.scmType,
     )
@@ -56,8 +62,12 @@ export default defineComponent({
         props.material?.webhookEventType,
       )
     })
+    
     const isSVN = computed(() => scmType.value === 'CODE_SVN')
     const materialInfoKeys = computed<string[]>(() => {
+      if (isTAPD.value) {
+        return ['webhookAliasName', 'materialName']
+      }
       if (!props.isWebhook) {
         return ['aliasName', ...(isSVN.value ? [] : ['branchName']), 'newCommitId']
       }
@@ -95,7 +105,7 @@ export default defineComponent({
         aliasName: scmIcon,
         branchName: 'branch',
         newCommitId: 'commit',
-        webhookAliasName: scmIcon,
+        webhookAliasName: isTAPD.value ? 'codeTapdWebHookTrigger' : scmIcon,
         webhookBranch: 'branch',
         webhookCommitId: 'commit',
         webhookSourceBranch: 'branch',
@@ -105,10 +115,10 @@ export default defineComponent({
         issueIid: 'webhook-issue',
         reviewId: 'webhook-review',
         webhookSourceTarget: 'branch',
-        parentPipelineName: 'pipeline',
+        parentPipelineName: isSubFlow.value ? 'sub-flow' : 'pipeline',
         parentBuildNum: 'sharp',
-        materialName: scmIcon,
-        materialId: 'link',
+        materialName: isTAPD.value ? tapdIconTypeMap[props.material.webhookEventType] : scmIcon,
+        materialId: 'link'
       }
     })
     const materialInfoValueMap = computed<Record<string, string>>(() => {
@@ -138,7 +148,14 @@ export default defineComponent({
       }
     }
 
+    const showMaterialLink = (field: string) => {
+      return ['materialId'].includes(field)
+    }
+
     const includeLink = (field: string) => {
+      if (isTAPD.value) {
+        return ['materialName'].includes(field)
+      }
       return (
         [
           'newCommitId',
@@ -171,7 +188,7 @@ export default defineComponent({
     }
 
     const handleToLink = (field: string) => {
-      if (field === 'materialId') {
+      if (showMaterialLink(field)) {
         window.open(getLink(field), '_blink')
       }
     }
@@ -225,7 +242,7 @@ export default defineComponent({
                       <span
                         class={[
                           styles.materialSpan,
-                          field === 'materialId' ? styles.materialUrl : '',
+                          showMaterialLink(field) ? styles.materialUrl : '',
                         ]}
                         onClick={() => handleToLink(field)}
                       >

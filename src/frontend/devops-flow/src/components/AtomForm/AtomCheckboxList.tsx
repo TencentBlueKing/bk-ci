@@ -15,7 +15,7 @@ export default defineComponent({
       required: true,
     },
     list: {
-      type: Array as PropType<Array<{ id: string; name: string; disabled?: boolean }>>,
+      type: Array as PropType<Array<{ id: string; name: string; disabled?: boolean; desc?: string }>>,
       default: () => [],
     },
     handleChange: {
@@ -44,7 +44,16 @@ export default defineComponent({
             disabled={item.disabled}
             class={styles.checkboxItem}
           >
-            {item.name}
+            {item.desc ? (
+              <span
+                class={item.disabled ? styles.disabledColor : ''}
+                v-bk-tooltips={{ content: item.desc, width: 300, allowHTML: false }}
+              >
+                {item.name}
+              </span>
+            ) : (
+              <span class={item.disabled ? styles.disabledColor : ''}>{item.name}</span>
+            )}
           </Checkbox>
         ))}
       </CheckboxGroup>

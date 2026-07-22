@@ -64,13 +64,13 @@
         <span @click.stop="reviewAtom" class="atom-reviewing-tips atom-operate-area" :disabled="!hasReviewPerm">
           {{ t("manualCheck") }}
         </span>
-        <template slot="content">
+        <template #content>
           <p>{{ t("checkUser") }}{{ reviewUsers.join(";") }}</p>
         </template>
       </bk-popover>
       <bk-popover :delay="[300, 0]" v-else-if="isReviewAbort" placement="top">
         <span class="atom-review-diasbled-tips">{{ t("aborted") }}</span>
-        <template slot="content">
+        <template #content>
           <p>
             {{ t("abortTips") }}{{ t("checkUser")
             }}{{ reactiveData.cancelUserId }}
@@ -82,7 +82,7 @@
           <span :class="resumeSpanCls" @click.stop="atomExecute(true)">
             {{ t("resume") }}
           </span>
-          <template slot="content">
+          <template #content>
             <p>{{ t("checkUser") }}{{ pauseReviewerStr }}</p>
           </template>
         </bk-popover>
@@ -95,7 +95,7 @@
           <span class="atom-execute-time">
             {{ formatTime }}
           </span>
-          <template slot="content">
+          <template #content>
             <p>{{ formatTime }}</p>
           </template>
         </bk-popover>
@@ -328,8 +328,6 @@ const isQualityGateAtom = computed(() => {
   return isQualityGate(props.atom);
 });
 
-const SUB_PIPELINE_ACCESS_STATUSES = [STATUS_MAP.SUCCEED, STATUS_MAP.FAILED];
-
 const isSubPipelineAtom = computed(() => {
   return props.atom.atomCode === "SubPipelineExec";
 });
@@ -339,7 +337,6 @@ const showSubPipelineAccess = computed(() => {
     reactiveData.isExecDetail
     && !reactiveData.editable
     && isSubPipelineAtom.value
-    && SUB_PIPELINE_ACCESS_STATUSES.includes(props.atom.asyncStatus || props.atom.status)
   );
 });
 

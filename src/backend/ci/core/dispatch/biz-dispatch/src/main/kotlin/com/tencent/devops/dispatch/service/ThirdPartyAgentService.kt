@@ -59,6 +59,7 @@ import com.tencent.devops.dispatch.exception.ErrorCodeEnum
 import com.tencent.devops.dispatch.pojo.ThirdPartyAgentDispatchData
 import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
 import com.tencent.devops.dispatch.pojo.thirdpartyagent.AgentBuildInfo
+import com.tencent.devops.dispatch.pojo.thirdpartyagent.AgentPipelineContainerBuild
 import com.tencent.devops.dispatch.pojo.thirdpartyagent.BuildJobType
 import com.tencent.devops.dispatch.pojo.thirdpartyagent.JobIdAndName
 import com.tencent.devops.dispatch.pojo.thirdpartyagent.PipelineIdAndName
@@ -95,6 +96,8 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.dao.DeadlockLoserDataAccessException
 import org.springframework.stereotype.Service
+import java.time.Instant
+import java.time.ZoneId
 
 @Service
 @Suppress("ALL")
@@ -489,13 +492,15 @@ class ThirdPartyAgentService @Autowired constructor(
             dslContext = dslContext,
             agentId = agentId,
             status = status,
-            pipelineId = pipelineId
+            pipelineId = pipelineId,
+            jobId = null
         )
         val agentBuilds = thirdPartyAgentBuildDao.listAgentBuilds(
             dslContext = dslContext,
             agentId = agentId,
             status = status,
             pipelineId = pipelineId,
+            jobId = null,
             offset = offset,
             limit = limit
         ).map {
@@ -515,6 +520,73 @@ class ThirdPartyAgentService @Autowired constructor(
             )
         }
         return Page(pageNotNull, pageSizeNotNull, agentBuildCount, agentBuilds)
+    }
+
+    fun fetchAgentBuildsByJob(
+        userId: String,
+        projectId: String,
+        agentId: String?,
+        envId: Long?,
+        pipelineId: String,
+        jobId: String,
+        page: Int?,
+        pageSize: Int?
+    ): Page<AgentPipelineContainerBuild> {
+        val pageNotNull = page ?: 0
+        val pageSizeNotNull = pageSize ?: PageUtil.MAX_PAGE_SIZE
+        val sqlLimit = PageUtil.convertPageSizeToSQLMAXLimit(pageNotNull, pageSizeNotNull)
+        val offset = sqlLimit.offset
+        val limit = sqlLimit.limit
+
+        val agentBuildCount = thirdPartyAgentBuildDao.countAgentBuildsProject(
+            dslContext = dslContext,
+            projectId = projectId,
+            agentId = agentId,
+            envId = envId,
+            pipelineId = pipelineId,
+            jobId = jobId
+        )
+        val agentBuilds = thirdPartyAgentBuildDao.listAgentBuildsByProject(
+            dslContext = dslContext,
+            projectId = projectId,
+            agentId = agentId,
+            envId = envId,
+            pipelineId = pipelineId,
+            jobId = jobId,
+            offset = offset,
+            limit = limit
+        )
+        val builds = client.get(ServiceBuildResource::class).batchGetBuildStatus(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildIdSet = agentBuilds.map { it.buildId }.toSet()
+        ).data?.associateBy { it.id }
+        val result = mutableListOf<AgentPipelineContainerBuild>()
+        agentBuilds.forEach {
+            val build = builds?.get(it.buildId) ?: return@forEach
+            result.add(
+                AgentPipelineContainerBuild(
+                    buildId = build.id,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    containerId = (it.vmSeqId ?: 0).toString(),
+                    executeCount = build.executeCount ?: 1,
+                    status = build.status,
+                    startTime = Instant.ofEpochMilli(build.startTime)
+                        .atZone(ZoneId.systemDefault())
+                        .toLocalDateTime(),
+                    endTime = build.endTime?.let { ed ->
+                        Instant.ofEpochMilli(ed)
+                            .atZone(ZoneId.systemDefault())
+                            .toLocalDateTime()
+                    },
+                    buildNum = build.buildNum ?: 0,
+                    creator = build.userId
+                )
+            )
+        }
+        return Page(pageNotNull, pageSizeNotNull, agentBuildCount, result)
     }
 
     fun listLatestBuildPipelines(agentIds: List<String>): List<AgentBuildInfo> {
@@ -960,7 +1032,8 @@ class ThirdPartyAgentService @Autowired constructor(
         endTime: Long?,
         pipelineId: String?,
         jobId: String?,
-        creator: String?
+        creator: String?,
+        status: PipelineTaskStatus?
     ): TPAPipelineBuildCountResp {
         if (agentId.isNullOrBlank() && envId == null) {
             return TPAPipelineBuildCountResp(0L, 0L, Page(0, 0, 0, emptyList()))
@@ -983,7 +1056,8 @@ class ThirdPartyAgentService @Autowired constructor(
             endTime = endTime,
             pipelineId = pipelineId,
             jobId = jobId,
-            creator = creator
+            creator = creator,
+            status = status
         )
         return TPAPipelineBuildCountResp(
             pipelineCount, jobCount, Page(
@@ -1001,7 +1075,8 @@ class ThirdPartyAgentService @Autowired constructor(
                     endTime = endTime,
                     pipelineId = pipelineId,
                     jobId = jobId,
-                    creator = creator
+                    creator = creator,
+                    status = status
                 )
             )
         )

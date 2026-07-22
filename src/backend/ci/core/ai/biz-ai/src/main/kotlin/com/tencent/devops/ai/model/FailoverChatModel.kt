@@ -4,13 +4,18 @@ import io.agentscope.core.message.Msg
 import io.agentscope.core.model.ChatResponse
 import io.agentscope.core.model.GenerateOptions
 import io.agentscope.core.model.Model
+import io.agentscope.core.model.ModelException
 import io.agentscope.core.model.ToolSchema
+import java.time.Duration
 import org.slf4j.LoggerFactory
 import reactor.core.publisher.Flux
+import reactor.core.publisher.Mono
+import reactor.core.publisher.Signal
 
 data class FailoverModelCandidate(
     val id: String,
-    val model: Model
+    val model: Model,
+    val totalExecutionTimeout: Duration? = null
 )
 
 class FailoverChatModel(
@@ -49,33 +54,52 @@ class FailoverChatModel(
         val candidate = candidates[candidateIndex]
         return Flux.defer {
             logger.info(
-                "[LLM-Failover] attempting candidate {}/{}: {} ({})",
+                "[LLM-Failover] attempting candidate {}/{}: {} ({}), totalTimeout={}",
                 candidateIndex + 1,
                 candidates.size,
                 candidate.id,
-                candidate.model.getModelName()
+                candidate.model.getModelName(),
+                candidate.totalExecutionTimeout ?: "<delegated>"
             )
-            candidate.model.stream(messages, toolSchemas, options)
-                .doOnComplete {
-                    logger.info(
-                        "[LLM-Failover] candidate completed: current={} ({}), position={}/{}",
-                        candidate.id,
-                        candidate.model.getModelName(),
-                        candidateIndex + 1,
-                        candidates.size
-                    )
-                }
-                .onErrorResume { error ->
-                    handleCandidateError(
-                        error = error,
-                        candidateIndex = candidateIndex,
-                        candidate = candidate,
-                        messages = messages,
-                        toolSchemas = toolSchemas,
-                        options = options
-                    )
-                }
+            enforceTotalExecutionTimeout(
+                source = candidate.model.stream(messages, toolSchemas, options),
+                candidate = candidate
+            ).doOnComplete {
+                logger.info(
+                    "[LLM-Failover] candidate completed: current={} ({}), position={}/{}",
+                    candidate.id,
+                    candidate.model.getModelName(),
+                    candidateIndex + 1,
+                    candidates.size
+                )
+            }.onErrorResume { error ->
+                handleCandidateError(
+                    error = error,
+                    candidateIndex = candidateIndex,
+                    candidate = candidate,
+                    messages = messages,
+                    toolSchemas = toolSchemas,
+                    options = options
+                )
+            }
         }
+    }
+
+    private fun enforceTotalExecutionTimeout(
+        source: Flux<ChatResponse>,
+        candidate: FailoverModelCandidate
+    ): Flux<ChatResponse> {
+        val totalExecutionTimeout = candidate.totalExecutionTimeout ?: return source
+        val timeoutSignal: Mono<Signal<ChatResponse>> = Mono.delay(totalExecutionTimeout)
+            .map {
+                Signal.error(
+                    ModelException(
+                        "Model total execution timeout after $totalExecutionTimeout"
+                    )
+                )
+            }
+        return Flux.merge(source.materialize(), timeoutSignal)
+            .dematerialize()
     }
 
     private fun handleCandidateError(
@@ -94,7 +118,7 @@ class FailoverChatModel(
         if (!isLast && !errorClassifier.isRetryable(error)) {
             logger.warn(
                 "[LLM-Failover] non-retryable error, fail-fast: current={} ({}), " +
-                    "position={}/{}, reasonType={}, reason={} | cause: {}",
+                        "position={}/{}, reasonType={}, reason={} | cause: {}",
                 candidate.id,
                 candidate.model.getModelName(),
                 candidateIndex + 1,
@@ -108,7 +132,7 @@ class FailoverChatModel(
         if (isLast) {
             logger.error(
                 "[LLM-Failover] all candidates failed, lastCandidate={} ({}), " +
-                    "position={}/{}, reasonType={}, reason={}",
+                        "position={}/{}, reasonType={}, reason={}",
                 candidate.id,
                 candidate.model.getModelName(),
                 candidateIndex + 1,
@@ -122,7 +146,7 @@ class FailoverChatModel(
         val nextCandidate = candidates[nextIndex]
         logger.warn(
             "[LLM-Failover] candidate failed, switching: current={} ({}), " +
-                "next={} ({}), currentPosition={}/{}, reasonType={}, reason={}",
+                    "next={} ({}), currentPosition={}/{}, reasonType={}, reason={}",
             candidate.id,
             candidate.model.getModelName(),
             nextCandidate.id,
