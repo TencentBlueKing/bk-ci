@@ -1,6 +1,7 @@
 import type { Container, Stage } from '@/api/flowModel'
 import { SvgIcon } from '@/components/SvgIcon'
 import { useUIStore } from '@/stores/ui'
+import { validateJobId } from '@/utils/validation'
 import { Button, Form, InfoBox, Input, Sideslider } from 'bkui-vue'
 import { storeToRefs } from 'pinia'
 import { computed, defineComponent, nextTick, ref, watch, type PropType } from 'vue'
@@ -42,6 +43,11 @@ export default defineComponent({
     isFinally: {
       type: Boolean,
       default: false,
+    },
+    /** jobIds of all other containers in the flow (for uniqueness validation) */
+    siblingJobIds: {
+      type: Array as PropType<string[]>,
+      default: () => [],
     },
   },
   emits: ['update:modelValue', 'confirm', 'change'],
@@ -109,6 +115,15 @@ export default defineComponent({
         InfoBox({
           title: t('flow.common.failed'),
           subTitle: t('flow.orchestration.jobIdRequired'),
+          theme: 'danger',
+        })
+        return
+      }
+
+      if (validateJobId(formData.value?.jobId, props.siblingJobIds).length > 0) {
+        InfoBox({
+          title: t('flow.common.failed'),
+          subTitle: t('flow.orchestration.jobIdDuplicateError'),
           theme: 'danger',
         })
         return
@@ -201,6 +216,7 @@ export default defineComponent({
                   isFinally={props.isFinally}
                   showNameField={props.isNew}
                   showJobIdField={true}
+                  siblingJobIds={props.siblingJobIds}
                   onChange={handleContainerChange}
                 />
               </Form>

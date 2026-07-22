@@ -17,6 +17,16 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+import { hasAnyMatrixRuleValue } from './matrixRule'
+
+function getPipelineI18nText (key, fallback, params) {
+    const i18n = window?.pipelineVue?.$i18n
+    if (i18n?.t) {
+        return i18n.t(key, params)
+    }
+    return fallback
+}
+
 const customeRules = {
     string: {
         validate: function (value, args) {
@@ -44,16 +54,11 @@ const customeRules = {
         },
     },
     // 不同时为空
-    atlestNotEmpty: {
+    atLeastNotEmpty: {
+        getMessage: () => getPipelineI18nText('editPage.matrixAnyRequiredTips', 'At least one field is required'),
         validate: function (value, args) {
-            console.log(args, 'not')
-            let notEmptyNum = 0
-            for (const i in args) {
-                if (args[i]) {
-                    notEmptyNum++
-                }
-            }
-            return notEmptyNum > 0
+            const values = Array.isArray(args) ? args : (args || {})
+            return hasAnyMatrixRuleValue(values)
         }
     },
     pullmode: {
@@ -155,6 +160,8 @@ const customeRules = {
         }
     }
 }
+
+customeRules.atlestNotEmpty = customeRules.atLeastNotEmpty
 
 function ExtendsCustomRules (_extends) {
     if (typeof _extends !== 'function') {
