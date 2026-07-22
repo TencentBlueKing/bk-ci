@@ -86,7 +86,10 @@ class PipelineArtifactInfoService(
         pipelineId: String?,
         artifactType: String,
         artifactName: String,
-        artifactVersion: String
+        artifactVersion: String,
+        executeCount: Int? = null,
+        buildId: String? = null,
+        taskId: String? = null
     ): PipelineArtifactInfo? {
         val record = pipelineArtifactInfoDao.getByArtifact(
             dslContext = dslContext,
@@ -94,7 +97,10 @@ class PipelineArtifactInfoService(
             pipelineId = pipelineId,
             artifactType = artifactType,
             artifactName = artifactName,
-            artifactVersion = artifactVersion
+            artifactVersion = artifactVersion,
+            executeCount = executeCount,
+            buildId = buildId,
+            taskId = taskId
         ) ?: return null
 
         return convertToRecord(record)

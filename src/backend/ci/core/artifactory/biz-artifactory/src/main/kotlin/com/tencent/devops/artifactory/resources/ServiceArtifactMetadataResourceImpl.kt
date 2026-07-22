@@ -41,7 +41,10 @@ class ServiceArtifactMetadataResourceImpl(
         pipelineId: String?,
         artifactType: String,
         artifactName: String,
-        artifactVersion: String
+        artifactVersion: String,
+        executeCount: Int?,
+        buildId: String?,
+        taskId: String?
     ): Result<PipelineArtifactInfo?> {
         // 权限校验：指定 pipelineId → 校验流水线 VIEW 权限；否则 → 校验项目用户身份
         val hasPermission = if (!pipelineId.isNullOrBlank()) {
@@ -61,7 +64,10 @@ class ServiceArtifactMetadataResourceImpl(
             pipelineId = pipelineId,
             artifactType = artifactType,
             artifactName = artifactName,
-            artifactVersion = artifactVersion
+            artifactVersion = artifactVersion,
+            executeCount = executeCount,
+            buildId = buildId,
+            taskId = taskId
         )
         return Result(artifactInfo)
     }
@@ -79,8 +85,9 @@ class ServiceArtifactMetadataResourceImpl(
                     token = token,
                     projectCode = projectId,
                     resourceCode = pipelineId,
-                    resourceType = AuthResourceType.PIPELINE_DEFAULT.name,
-                    action = AuthPermission.VIEW.name
+                    resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
+                    action = "${AuthResourceType.PIPELINE_DEFAULT.value}_${AuthPermission.VIEW.value}",
+                    relationResourceType = null
                 ).data ?: false
         } catch (e: Exception) {
             logger.warn("Failed to check pipeline view permission: ${e.message}")
