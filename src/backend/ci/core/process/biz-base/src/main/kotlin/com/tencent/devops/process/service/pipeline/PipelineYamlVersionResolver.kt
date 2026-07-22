@@ -11,7 +11,6 @@ import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_NOT_FOUND_PIPELINE_VERSION_EXISTS_BY_BRANCH
 import com.tencent.devops.process.dao.yaml.PipelineYamlVersionDao
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlVersion
-import com.tencent.devops.process.pojo.trigger.PipelineTriggerReason
 import com.tencent.devops.process.service.scm.ScmProxyService
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.repository.pojo.credential.AuthRepository
@@ -102,8 +101,9 @@ class PipelineYamlVersionResolver @Autowired constructor(
      * 获取触发时版本
      *
      * 1. 如果是默认分支,则查找当前文件blob_id在默认分支对应的版本
+     *    （不按 ACTIVE 过滤：默认分支删除再创建会把历史版本置为 INACTIVE，过滤后无法触发）
      * 2. 如果不是默认分支
-     *      - 查找blob_id在当前分支是否存在对应的版本
+     *      - 仅查找当前分支 ACTIVE 版本；已合入默认分支的应回退到默认分支查找
      *      - 如果当前分支不存在,则查找是否在默认分支存在
      *      - 如果默认分支也不存在,则查找所有的blob_id对应的版本,
      *           这种情况出现在分支a,修改了文件,分支b从分支a拉出,后面分支a又做了修改,分支a合入默认分支后
@@ -117,6 +117,9 @@ class PipelineYamlVersionResolver @Autowired constructor(
         defaultBranch: String
     ): PipelineYamlVersion? {
         logger.info("get pipeline yaml version|$projectId|$repoHashId|$filePath|$ref|$blobId|$defaultBranch")
+        // 默认分支不过滤 ACTIVE,因为默认分支可能存在先删除再创建的场景,删建后历史版本被标 INACTIVE 导致触发失败
+        // 非默认分支过滤 ACTIVE,因为非默认分支合入默认分支后,应该触发默认分支对应的版本
+        val branchAction = BranchVersionAction.ACTIVE.name.takeIf { ref != defaultBranch }
         val pipelineBranchVersion = pipelineYamlVersionDao.getPipelineYamlVersion(
             dslContext = dslContext,
             projectId = projectId,
@@ -124,7 +127,7 @@ class PipelineYamlVersionResolver @Autowired constructor(
             filePath = filePath,
             ref = ref,
             blobId = blobId,
-            branchAction = BranchVersionAction.ACTIVE.name
+            branchAction = branchAction
         )
         return if (ref == defaultBranch) {
             pipelineBranchVersion
@@ -135,8 +138,7 @@ class PipelineYamlVersionResolver @Autowired constructor(
                 repoHashId = repoHashId,
                 filePath = filePath,
                 ref = defaultBranch,
-                blobId = blobId,
-                branchAction = BranchVersionAction.ACTIVE.name
+                blobId = blobId
             ) ?: pipelineYamlVersionDao.getPipelineYamlVersion(
                 dslContext = dslContext,
                 projectId = projectId,
@@ -213,15 +215,7 @@ class PipelineYamlVersionResolver @Autowired constructor(
             defaultBranch = defaultBranch
         )?.version ?: throw ErrorCodeException(
             errorCode = ERROR_NOT_FOUND_PIPELINE_VERSION_EXISTS_BY_BRANCH,
-            params = arrayOf(
-                ref,
-                triggerEventPageUrl(
-                    projectId,
-                    repoHashId,
-                    repository.aliasName,
-                    PipelineTriggerReason.TRIGGER_FAILED
-                )
-            )
+            params = arrayOf(ref)
         )
     }
 
@@ -232,17 +226,6 @@ class PipelineYamlVersionResolver @Autowired constructor(
             else -> branch
         }
     }
-
-    /**
-     * 蓝盾代码库触发事件页面链接
-     */
-    private fun triggerEventPageUrl(
-        projectId: String,
-        repoHashId: String,
-        repoAliasName: String,
-        reason: PipelineTriggerReason
-    ) = "/console/codelib/$projectId/?id=$repoHashId&searchName=$repoAliasName&page=1&scmType=CODE_GIT&" +
-            "limit=50&tab=triggerEvent&reason=${reason.name}"
 
     /**
      * 代码源仓库文件链接
