@@ -69,15 +69,30 @@ class MultiESLogClient constructor(
     private val dslContext: DSLContext,
     private val tencentIndexDao: TencentIndexDao,
     private val indexDao: IndexDao,
-    // 直写失败快速熔断（按集群维度），默认开启；与 ESDetectionJob 的 30s 探测互补，做到秒级隔离故障集群
+    /**
+     * 直写失败快速熔断总开关（按集群维度）。
+     * 默认开启；与 ESDetectionJob 的分钟级探测互补，做到秒级隔离故障集群。
+     * 配置项：`log.multiEs.fastFail.enabled`
+     */
     private val fastFailEnabled: Boolean = true,
-    // 滑动统计窗口
+    /**
+     * 单集群写入健康滑动统计窗口（毫秒）。配置项：`log.multiEs.fastFail.windowMs`
+     */
     private val fastFailWindowMs: Long = 10_000,
-    // 触发熔断评估的窗口内最小样本数，样本不足不熔断，避免抖动误判
+    /**
+     * 触发熔断评估的窗口内最小样本数；样本不足不熔断，避免抖动误判。
+     * 配置项：`log.multiEs.fastFail.minSamples`
+     */
     private val fastFailMinSamples: Int = 30,
-    // 窗口内坏样本占比阈值，达到则将该集群标记为不可用
+    /**
+     * 窗口内坏样本占比阈值，达到则将该集群标记为不可用。
+     * 配置项：`log.multiEs.fastFail.rate`
+     */
     private val fastFailRate: Double = 0.6,
-    // 慢写阈值：超过该耗时的成功写入同样计为坏样本
+    /**
+     * 慢写阈值（毫秒）：超过该耗时的成功写入同样计为坏样本。
+     * 配置项：`log.multiEs.fastFail.slowMs`
+     */
     private val fastFailSlowMs: Long = 3_000
 ) : LogClient {
 

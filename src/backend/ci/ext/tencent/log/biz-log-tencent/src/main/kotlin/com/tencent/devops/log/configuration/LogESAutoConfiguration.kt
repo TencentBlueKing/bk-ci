@@ -167,18 +167,39 @@ class LogESAutoConfiguration {
     @Value("\${log.elasticsearch2.maxConnectPerRoute:#{null}}")
     private val e2MaxConnectPerRoute: Int? = null
 
+    /**
+     * 多 ES 直写失败快速熔断总开关（#13327，腾讯多集群）。
+     * 影响：[com.tencent.devops.log.client.impl.MultiESLogClient] 按集群维度的健康统计与失活。
+     * false：不做秒级快速失活，仅依赖既有定时探测（如 ESDetectionJob）。
+     */
     @Value("\${log.multiEs.fastFail.enabled:true}")
     private val fastFailEnabled: Boolean = true
 
+    /**
+     * 单集群写入健康滑动统计窗口（毫秒）。
+     * 窗口内样本用于计算坏样本占比；过短易抖、过长对故障反应变慢。
+     */
     @Value("\${log.multiEs.fastFail.windowMs:10000}")
     private val fastFailWindowMs: Long = 10000
 
+    /**
+     * 触发熔断评估前窗口内最少样本数。
+     * 样本不足不熔断，避免冷启动/低流量误判。
+     */
     @Value("\${log.multiEs.fastFail.minSamples:30}")
     private val fastFailMinSamples: Int = 30
 
+    /**
+     * 窗口内坏样本占比阈值，达到则将该集群标记为 inactive。
+     * 坏样本 = 写入失败，或耗时 >= [fastFailSlowMs]。调低更敏感。
+     */
     @Value("\${log.multiEs.fastFail.rate:0.6}")
     private val fastFailRate: Double = 0.6
 
+    /**
+     * 慢写阈值（毫秒）：成功但超过该耗时的写入同样计为坏样本。
+     * 用于在超时前识别「还能写但已经很慢」的故障集群。
+     */
     @Value("\${log.multiEs.fastFail.slowMs:3000}")
     private val fastFailSlowMs: Long = 3000
 
