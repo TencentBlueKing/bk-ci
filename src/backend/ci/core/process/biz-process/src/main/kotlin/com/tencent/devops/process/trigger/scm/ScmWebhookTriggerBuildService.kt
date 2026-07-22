@@ -87,7 +87,7 @@ class ScmWebhookTriggerBuildService @Autowired constructor(
     private val sampleEventDispatcher: SampleEventDispatcher,
     private val creativeStreamTriggerSupportService: CreateStreamTriggerSupportService
 ) {
-    @Value("\${scm.webhook.trigger.max.count:$SCM_WEBHOOK_TRIGGER_MAX_COUNT_DEFAULT}")
+    @Value("\${scm.webhook.trigger.max-count:$SCM_WEBHOOK_TRIGGER_MAX_COUNT_DEFAULT}")
     private val scmWebhookTriggerMaxCount: Int = SCM_WEBHOOK_TRIGGER_MAX_COUNT_DEFAULT
 
     fun trigger(event: ScmWebhookTriggerEvent) {
