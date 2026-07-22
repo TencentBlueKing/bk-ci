@@ -286,7 +286,12 @@ class PipelineVersionFacadeService @Autowired constructor(
                 errorCode = ProcessMessageCode.ERROR_NO_PIPELINE_EXISTS_BY_ID,
                 params = arrayOf(pipelineId)
             )
-        val newVersionNum = (releaseVersion.versionNum ?: releaseVersion.version) + 1
+        // 第一次发布,versionNum不需要+1
+        val newVersionNum = if (draftVersion.version == releaseVersion.version) {
+            releaseVersion.versionNum ?: releaseVersion.version
+        } else {
+            (releaseVersion.versionNum ?: releaseVersion.version) + 1
+        }
         val prefetchVersionName = targetAction?.let {
             getVersionStatusAndName(
                 projectId = projectId,
