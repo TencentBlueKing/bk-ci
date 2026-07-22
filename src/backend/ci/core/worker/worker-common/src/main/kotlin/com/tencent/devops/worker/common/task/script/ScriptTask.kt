@@ -184,9 +184,11 @@ open class ScriptTask : ITask() {
                 jobId = buildVariables.jobId,
                 stepId = buildTask.stepId
             )
-            failIfVariableInvalidCheckFlag = failIfVariableInvalidCheck(failIfVariableInvalid, envs) &&
-                failIfVariableInvalidCheck(failIfVariableInvalid, context) &&
-                failIfVariableInvalidCheck(failIfVariableInvalid, multiLineContext)
+            // 避免 && 短路导致后面 map 的超长告警不被打印
+            val envsCheck = failIfVariableInvalidCheck(failIfVariableInvalid, envs)
+            val contextCheck = failIfVariableInvalidCheck(failIfVariableInvalid, context)
+            val multiLineCheck = failIfVariableInvalidCheck(failIfVariableInvalid, multiLineContext)
+            failIfVariableInvalidCheckFlag = envsCheck && contextCheck && multiLineCheck
             addEnv(envs)
             addEnv(context)
             addEnv(multiLineContext)

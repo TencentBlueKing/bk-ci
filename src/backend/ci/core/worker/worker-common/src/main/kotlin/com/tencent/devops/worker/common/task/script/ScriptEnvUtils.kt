@@ -40,6 +40,7 @@ object ScriptEnvUtils {
     private const val MULTILINE_FILE = "multiLine.log"
     private const val QUALITY_GATEWAY_FILE = "gatewayValueFile.ini"
     private val keyRegex = Regex("^[a-zA-Z_][a-zA-Z0-9_]*$")
+    private val lineSplitRegex = Regex("\\r\\n|\\r|\\n")
     private val logger = LoggerFactory.getLogger(ScriptEnvUtils::class.java)
 
     fun cleanEnv(buildId: String, workspace: File) {
@@ -89,7 +90,7 @@ object ScriptEnvUtils {
         if (!f.exists() || f.isDirectory) return emptyList()
         return f.readText()
             .removePrefix("\uFEFF")
-            .split(Regex("\\r\\n|\\r|\\n"))
+            .split(lineSplitRegex)
             .let { if (it.isNotEmpty() && it.last().isEmpty()) it.dropLast(1) else it }
     }
     /*限定文件名*/
