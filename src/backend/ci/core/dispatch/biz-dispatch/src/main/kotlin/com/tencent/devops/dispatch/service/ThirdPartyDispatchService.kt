@@ -236,13 +236,7 @@ class ThirdPartyDispatchService @Autowired constructor(
                         dockerInfo = originDispatchType.dockerInfo,
                         reusedInfo = null
                     ),
-                    envId = originDispatchType.envHashId?.let {
-                        if (it == AllCreateNodeEnv.hashId()) {
-                            AllCreateNodeEnv.ENV_ID
-                        } else {
-                            HashUtil.decodeIdToLong(it)
-                        }
-                    }
+                    envId = AllCreateNodeEnv.hashIdToId(originDispatchType.envHashId)
                 )
             }
 
