@@ -6,10 +6,7 @@
             v-bkloading="{ isLoading }"
         >
             <div class="detail-header">
-                <div
-                    v-if="!isEditing"
-                    class="codelib-name"
-                >
+                <div class="codelib-name">
                     <span
                         v-bk-overflow-tips
                         class="name mr5"
@@ -25,19 +22,12 @@
                                 action: RESOURCE_ACTION.EDIT
                             }
                         }"
-                        v-bk-tooltips="{
-                            content: $t('codelib.PAC 模式下不允许修改别名'),
-                            disabled: !curRepo.enablePac
-                        }"
-                        @click="handleEditName"
+                        @click="handleEditRepo"
                     >
                         <Icon
                             name="edit-line"
                             size="16"
                             class="edit-icon"
-                            :class="{
-                                'disable-delete-icon': curRepo.enablePac
-                            }"
                         />
                     </span>
                     <span
@@ -66,32 +56,6 @@
                             }"
                         />
                     </span>
-                </div>
-                <div
-                    v-else
-                    class="edit-input"
-                >
-                    <bk-input
-                        class="aliasName-input"
-                        ref="aliasNameInput"
-                        :maxlength="60"
-                        v-model="repoInfo.aliasName"
-                        @enter="checkPipelines"
-                    >
-                    </bk-input>
-                    <bk-button
-                        class="ml5 mr5"
-                        text
-                        @click="checkPipelines"
-                    >
-                        {{ $t('codelib.save') }}
-                    </bk-button>
-                    <bk-button
-                        text
-                        @click="handleCancelEdit"
-                    >
-                        {{ $t('codelib.cancel') }}
-                    </bk-button>
                 </div>
                 <div class="address-content">
                     <img
@@ -147,7 +111,13 @@
                 :is-loading-more="pipelinesDialogPayload.isLoadingMore"
                 :has-load-end="pipelinesDialogPayload.hasLoadEnd"
                 :task-repo-type="pipelinesDialogPayload.taskRepoType"
-                @confirm="handleSave"
+            />
+            <UpdateRepoDialog
+                ref="updateRepoDialog"
+                :repo-info="repoInfo"
+                :cur-repo="curRepo"
+                :fetch-repo-detail="fetchRepoDetail"
+                :refresh-codelib-list="refreshCodelibList"
             />
         </section>
         <empty-tips
@@ -179,6 +149,7 @@
         REPOSITORY_API_URL_PREFIX
     } from '../../store/constants'
     import UsingPipelinesDialog from '../UsingPipelinesDialog.vue'
+    import UpdateRepoDialog from './updateRepoDialog.vue'
     import BasicSetting from './basic-setting.vue'
     import TriggerEvent from './trigger-event.vue'
     import Trigger from './trigger.vue'
@@ -188,7 +159,8 @@
             Trigger,
             BasicSetting,
             TriggerEvent,
-            UsingPipelinesDialog
+            UsingPipelinesDialog,
+            UpdateRepoDialog
         },
         props: {
             curRepoId: {
@@ -215,9 +187,7 @@
             return {
                 RESOURCE_ACTION,
                 RESOURCE_TYPE,
-                isEditing: false,
                 isLoading: false,
-                oldAliasName: '',
                 panels: [
                     { name: 'basic', label: this.$t('codelib.basicSetting') },
                     { name: 'trigger', label: this.$t('codelib.trigger') },
@@ -319,7 +289,6 @@
             ...mapActions('codelib', [
                 'deleteRepo',
                 'checkPacProject',
-                'renameAliasName',
                 'fetchUsingPipelinesList',
                 'fetchEventType',
                 'fetchTriggerType'
@@ -376,76 +345,15 @@
                         }
                     })
             },
-
             /**
-             * 开启代码库别名编辑状态
+             * 编辑代码库
              */
-            handleEditName () {
-                if (this.curRepo.enablePac) return
-                this.isEditing = true
-                this.oldAliasName = this.repoInfo.aliasName
-                setTimeout(() => {
-                    this.$refs.aliasNameInput.focus()
-                })
-            },
-
-            async checkPipelines () {
-                if (this.repoInfo.aliasName === this.oldAliasName) {
-                    this.isEditing = false
-                    return
-                }
-                if (this.curRepo.repositoryHashId !== this.pipelinesDialogPayload.repositoryHashId) {
-                    this.pipelinesDialogPayload.repositoryHashId = this.curRepo.repositoryHashId
-                    this.pipelinesList = []
-                }
-                this.pipelinesDialogPayload.taskRepoType = 'NAME'
-                this.pipelinesDialogPayload.page = 1
-                await this.fetchPipelinesList()
-
-                if (this.pipelinesList.length) return
-                this.handleSave()
-            },
-
-            /**
-             * 保存代码库别名
-             */
-            handleSave () {
-                this.renameAliasName({
-                    projectId: this.projectId,
-                    repositoryHashId: this.repoInfo.repoHashId,
-                    params: {
-                        name: this.repoInfo.aliasName,
-                        oldName: this.oldAliasName
-                    }
-                }).then(() => {
-                    this.$bkMessage({
-                        message: this.$t('codelib.保存成功'),
-                        theme: 'success'
-                    })
-                    this.updateList()
-                }).catch(e => {
-                    this.$bkMessage({
-                        message: e.message || e,
-                        theme: 'error'
-                    })
-                    this.repoInfo.aliasName = this.oldAliasName
-                    console.error(e)
-                }).finally(() => {
-                    this.pipelinesDialogPayload.isShow = false
-                    this.isEditing = false
-                })
+            handleEditRepo () {
+                this.$refs.updateRepoDialog.open()
             },
 
             updateList () {
                 this.switchPage(1, this.$route.query.limit)
-            },
-
-            /**
-             * 取消编辑 关闭代码库别名编辑状态
-             */
-            handleCancelEdit () {
-                this.repoInfo.aliasName = this.oldAliasName
-                this.isEditing = false
             },
 
             /**
@@ -617,12 +525,6 @@
             font-size: 16px;
             color: #313238;
             margin-right: 30px;
-            &:hover {
-                .edit-icon,
-                .delete-icon {
-                    display: inline;
-                }
-            }
             span {
                 display: inline-block;
                 overflow: hidden;
@@ -630,26 +532,14 @@
                 white-space: nowrap;
             }
         }
-        .edit-input {
-            display: flex;
-            align-items: center;
-            width: 100%;
-        }
-
-        .aliasName-input {
-            flex: 1;
-            max-width: 350px;
-            min-width: 200px;
-            line-height: 48px;
-        }
         .edit-icon,
         .delete-icon {
+            display: inline;
             position: relative;
             top: 1px;
             cursor: pointer;
             margin-left: 5px;
             color: #979BA5;
-            display: none;
         }
         .disable-delete-icon {
             cursor: not-allowed;
