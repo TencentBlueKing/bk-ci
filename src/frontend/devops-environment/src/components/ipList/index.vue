@@ -124,15 +124,15 @@
             bkCloudId: Number,
             hostId: Number,
             activeGroupIndex: Number,
-            paginationChangeLoading: Boolean
+            paginationChangeLoading: Boolean,
+            pageSize: Number
         },
         data () {
             return {
                 tableColumn: [],
                 selectedTableColumn: [],
                 tableSize: 'small',
-                page: 1,
-                pageSize: 20
+                page: 1
             }
         },
         computed: {
