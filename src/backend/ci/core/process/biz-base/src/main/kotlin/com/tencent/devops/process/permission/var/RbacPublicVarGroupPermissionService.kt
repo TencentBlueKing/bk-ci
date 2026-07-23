@@ -58,11 +58,11 @@ class RbacPublicVarGroupPermissionService(
             )) {
             logger.warn(
                 "User($userId) does not have permission to ${permission.value} " +
-                        "var group under project($projectId)"
+                        "var group($groupName) under project($projectId)"
             )
             throw ErrorCodeException(
-                errorCode = ProcessMessageCode.USER_NEED_PROJECT_X_PERMISSION,
-                params = arrayOf(userId, projectId)
+                errorCode = ProcessMessageCode.ERROR_PUBLIC_VAR_GROUP_NO_PERMISSION,
+                params = arrayOf(groupName, permission.value)
             )
         }
         return true
