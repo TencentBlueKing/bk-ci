@@ -85,6 +85,7 @@
         RESOURCE_ACTION,
         RESOURCE_TYPE
     } from '@/utils/permission'
+    import { normalizePipelineModel } from '@/utils/normalizePipelineModel'
     import { UI_MODE } from '@/utils/pipelineConst'
     import { showPipelineCheckMsg } from '@/utils/util'
     import { mapActions, mapGetters, mapState } from 'vuex'
@@ -237,6 +238,7 @@
                     }
                     // 清除流水线参数渲染过程中添加的key
                     this.formatParams(pipeline)
+                    normalizePipelineModel(pipeline)
 
                     // 请求执行构建
                     const { version } = await this.saveDraftPipeline({

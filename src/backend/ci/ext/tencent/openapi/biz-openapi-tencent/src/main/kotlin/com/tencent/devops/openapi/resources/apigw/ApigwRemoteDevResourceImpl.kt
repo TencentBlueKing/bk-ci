@@ -22,11 +22,11 @@ import com.tencent.devops.remotedev.pojo.WhiteListType
 import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
 import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfigType
 import com.tencent.devops.remotedev.pojo.WindowsWorkspaceCreate
+import com.tencent.devops.remotedev.pojo.Workspace
 import com.tencent.devops.remotedev.pojo.WorkspaceCloneReq
 import com.tencent.devops.remotedev.pojo.WorkspaceOpHistory
 import com.tencent.devops.remotedev.pojo.WorkspaceRebuildReq
 import com.tencent.devops.remotedev.pojo.WorkspaceRegistration
-import com.tencent.devops.remotedev.pojo.Workspace
 import com.tencent.devops.remotedev.pojo.WorkspaceSearch
 import com.tencent.devops.remotedev.pojo.WorkspaceStartCloudDetail
 import com.tencent.devops.remotedev.pojo.WorkspaceUpgradeReq
@@ -886,9 +886,10 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
         )
     }
 
-    override fun openClawOn(userId: String): Result<WorkspaceRegistration?> {
+
+    override fun openClawOn(userId: String, workspaceName: String?, ip: String?): Result<WorkspaceRegistration?> {
         logger.info("openClawOn |$userId")
-        return client.get(ServiceRemoteDevResource::class).openClawOn(userId)
+        return client.get(ServiceRemoteDevResource::class).openClawOn(userId, workspaceName, ip)
     }
 
     override fun checkViewLive(
@@ -919,7 +920,7 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
     ): Result<Map<String, String>> {
         logger.info(
             "refreshInstanceStatus" +
-                    " |$userId|$projectId|${instanceIds.size}"
+                " |$userId|$projectId|${instanceIds.size}"
         )
         return client.get(ServiceRemoteDevResource::class)
             .refreshWorkspaceStatus(
@@ -934,7 +935,7 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
     ): Result<List<WeSecProjectWorkspace>> {
         logger.info(
             "batchGetSimpleWorkspaces" +
-                    " |$userId|$projectId|${workspaceNames.size}"
+                " |$userId|$projectId|${workspaceNames.size}"
         )
         return client.get(ServiceRemoteDevResource::class)
             .batchGetSimpleWorkspaces(
@@ -950,7 +951,7 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
     ): Result<Page<Workspace>> {
         logger.info(
             "searchUserWorkspaces" +
-                    " |$userId|$page|$pageSize"
+                " |$userId|$page|$pageSize"
         )
         return client.get(ServiceRemoteDevResource::class)
             .searchUserWorkspaces(
@@ -973,8 +974,8 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
     ): Result<Page<String>> {
         logger.info(
             "batchQueryThumbnailWorkspaces" +
-                    " |$appCode|$userId|enable=$enable|page=$page|pageSize=$pageSize" +
-                    "|projectId=$projectId|workspaceNames.size=${workspaceNames?.size}"
+                " |$appCode|$userId|enable=$enable|page=$page|pageSize=$pageSize" +
+                "|projectId=$projectId|workspaceNames.size=${workspaceNames?.size}"
         )
         return client.get(ServiceRemoteDevResource::class)
             .batchQueryThumbnailWorkspaces(
@@ -996,7 +997,7 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
     ): Result<Boolean> {
         logger.info(
             "enableWorkspaceThumbnail" +
-                    " |$appCode|$userId|enable=$enable|workspaceNames.size=${workspaceNames.size}"
+                " |$appCode|$userId|enable=$enable|workspaceNames.size=${workspaceNames.size}"
         )
         return client.get(ServiceRemoteDevResource::class)
             .enableWorkspaceThumbnail(

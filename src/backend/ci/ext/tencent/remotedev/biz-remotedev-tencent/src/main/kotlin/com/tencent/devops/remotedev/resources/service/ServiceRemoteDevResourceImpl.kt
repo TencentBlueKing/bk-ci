@@ -28,12 +28,12 @@ import com.tencent.devops.remotedev.pojo.WhiteListType
 import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
 import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfigType
 import com.tencent.devops.remotedev.pojo.WindowsWorkspaceCreate
+import com.tencent.devops.remotedev.pojo.Workspace
 import com.tencent.devops.remotedev.pojo.WorkspaceCloneReq
 import com.tencent.devops.remotedev.pojo.WorkspaceOpHistory
 import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
 import com.tencent.devops.remotedev.pojo.WorkspaceRebuildReq
 import com.tencent.devops.remotedev.pojo.WorkspaceRegistration
-import com.tencent.devops.remotedev.pojo.Workspace
 import com.tencent.devops.remotedev.pojo.WorkspaceSearch
 import com.tencent.devops.remotedev.pojo.WorkspaceStartCloudDetail
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
@@ -789,7 +789,6 @@ class ServiceRemoteDevResourceImpl(
     }
 
 
-
     override fun getWorkspaceTimeline(
         userId: String,
         workspaceName: String,
@@ -805,7 +804,6 @@ class ServiceRemoteDevResourceImpl(
             )
         )
     }
-
 
 
     override fun getThumbnailEncryptedTicket(
@@ -951,8 +949,8 @@ class ServiceRemoteDevResourceImpl(
         return Result(true)
     }
 
-    override fun openClawOn(userId: String): Result<WorkspaceRegistration?> {
-        return Result(coffeeAIService.openClawOn(userId))
+    override fun openClawOn(userId: String, workspaceName: String?, ip: String?): Result<WorkspaceRegistration?> {
+        return Result(coffeeAIService.openClawOn(userId, workspaceName, ip))
     }
 
     override fun convertToPublicWorkspace(
@@ -1063,7 +1061,7 @@ class ServiceRemoteDevResourceImpl(
     ): Result<Page<String>> {
         logger.info(
             "batchQueryThumbnailWorkspaces |$userId|enable=$enable|page=$page" +
-                    "|pageSize=$pageSize|projectId=$projectId|workspaceNames.size=${workspaceNames?.size}"
+                "|pageSize=$pageSize|projectId=$projectId|workspaceNames.size=${workspaceNames?.size}"
         )
         return Result(
             workspaceRecordService.batchQueryThumbnailWorkspaces(

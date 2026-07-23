@@ -9,3 +9,7 @@
   font-size: var(--font-size-xs);
   margin-left: 0px !important;
 }
+
+.disabledColor {
+  color: #ccc;
+}
