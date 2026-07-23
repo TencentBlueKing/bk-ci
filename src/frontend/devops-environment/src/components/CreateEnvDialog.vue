@@ -119,7 +119,7 @@
     import useCreateEnv from '@/hooks/useCreateEnv'
     import useEnvDetail from '@/hooks/useEnvDetail'
     import useInstance from '@/hooks/useInstance'
-    import { ENV_TYPE_MAP, SERVICE_RESOURCE_TYPE } from '@/store/constants'
+    import { ENV_TYPE_MAP, OS_LABEL_MAP, SERVICE_RESOURCE_TYPE } from '@/store/constants'
     
     export default {
         name: 'CreateEnvDialog',
@@ -145,11 +145,13 @@
             const enabledOsType = computed(() => (
                 isPersonalProject.value ? 'WINDOWS' : 'LINUX'
             ))
-            const osTypeOptions = computed(() => ([
-                { label: 'Linux', value: 'LINUX', disabled: enabledOsType.value !== 'LINUX' },
-                { label: 'macOS', value: 'MACOS', disabled: enabledOsType.value !== 'MACOS' },
-                { label: 'Windows', value: 'WINDOWS', disabled: enabledOsType.value !== 'WINDOWS' }
-            ]))
+            const osTypeOptions = computed(() => (
+                Object.entries(OS_LABEL_MAP).map(([value, label]) => ({
+                    label,
+                    value,
+                    disabled: enabledOsType.value !== value
+                }))
+            ))
             const formRules = computed(() => {
                 const rules = {
                     name: [

@@ -14,7 +14,7 @@
             <div class="left-section">
                 <div class="title-section">
                     {{ currentEnv.name }} - {{ $t('environment.relatedNodes') }}
-                    <bk-tag v-if="currentEnv?.os">{{ currentEnv?.os }}</bk-tag>
+                    <bk-tag v-if="currentEnv?.os">{{ osDisplayName }}</bk-tag>
                 </div>
                 <!-- 关联策略 -->
                 <div class="form-section">
@@ -330,6 +330,7 @@
     import useEnvDetail from '@/hooks/useEnvDetail'
     import usePagination from '@/hooks/usePagination'
     import useInstance from '@/hooks/useInstance'
+    import { OS_LABEL_MAP } from '@/store/constants'
     export default {
         name: 'RelatedNodes',
         components: {
@@ -356,6 +357,11 @@
                 currentEnv,
                 fetchEnvNodeList
             } = useEnvDetail()
+
+            const osDisplayName = computed(() => {
+                const os = currentEnv.value?.os
+                return os ? (OS_LABEL_MAP[os] || os) : ''
+            })
 
             const currentNodeList = ref([])
 
@@ -782,6 +788,7 @@
                 relatedType,
                 searchKeyword,
                 currentEnv,
+                osDisplayName,
                 selectedNodesList,
                 nodeList,
                 pagination,

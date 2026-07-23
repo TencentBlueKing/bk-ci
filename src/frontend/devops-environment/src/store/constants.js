@@ -33,3 +33,9 @@ export const ENV_TYPE_MAP = {
     DEVX: 'DEVX',
     CREATE: 'CREATE'
 }
+
+export const OS_LABEL_MAP = {
+    LINUX: 'Linux',
+    MACOS: 'macOS',
+    WINDOWS: 'Windows'
+}

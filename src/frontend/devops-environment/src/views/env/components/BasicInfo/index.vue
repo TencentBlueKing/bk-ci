@@ -83,6 +83,7 @@
     import useEnvDetail from '@/hooks/useEnvDetail'
     import useEnvAside from '@/hooks/useEnvAside'
     import { convertTime } from '@/utils/util'
+    import { OS_LABEL_MAP } from '@/store/constants'
     
     export default {
         name: 'BasicInfo',
@@ -176,12 +177,6 @@
                 }
             }
             
-            const osLabelMap = {
-                LINUX: 'Linux',
-                MACOS: 'macOS',
-                WINDOWS: 'Windows'
-            }
-
             // 获取字段值
             const getFieldValue = (key) => {
                 const value = currentEnv.value?.[key]
@@ -193,7 +188,7 @@
                     return proxy.$t(`environment.envInfo.${value}EnvType`)
                 }
                 if (key === 'os' && value) {
-                    return osLabelMap[value] || value
+                    return OS_LABEL_MAP[value] || value
                 }
                 return value
             }
