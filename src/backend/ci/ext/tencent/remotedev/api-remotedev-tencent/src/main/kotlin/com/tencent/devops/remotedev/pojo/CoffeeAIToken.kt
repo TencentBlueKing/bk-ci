@@ -1,6 +1,7 @@
 package com.tencent.devops.remotedev.pojo
 
 import com.fasterxml.jackson.annotation.JsonProperty
+import com.tencent.devops.common.api.pojo.OS
 import io.swagger.v3.oas.annotations.media.Schema
 
 /**
@@ -70,5 +71,9 @@ data class WorkspaceRegistration(
 
     @get:Schema(title = "组织架构", required = false)
     @JsonProperty("organization")
-    val organization: String
+    val organization: String,
+
+    @get:Schema(title = "操作系统", required = false)
+    @JsonProperty("os")
+    val os: OS?
 )
