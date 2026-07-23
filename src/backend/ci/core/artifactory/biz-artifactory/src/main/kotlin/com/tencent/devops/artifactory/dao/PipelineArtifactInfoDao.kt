@@ -74,7 +74,6 @@ class PipelineArtifactInfoDao {
                 .set(record)
                 .onDuplicateKeyUpdate()
                 .set(PIPELINE_NAME, artifactInfo.pipelineName)
-                .set(EXECUTE_COUNT, artifactInfo.executeCount)
                 .set(ARTIFACT_DIGEST, artifactInfo.artifactDigest)
                 .set(COMMIT_ID, artifactInfo.commitId)
                 .set(CODE_REPO_URL, artifactInfo.codeRepoUrl)
@@ -120,7 +119,7 @@ class PipelineArtifactInfoDao {
             }
                 return dslContext.selectFrom(this)
                     .where(conditions)
-                    .orderBy(EXECUTE_COUNT.desc(), CREATE_TIME.desc())
+                    .orderBy(CREATE_TIME.desc())
                     .limit(1)
                     .fetchOne()
         }
