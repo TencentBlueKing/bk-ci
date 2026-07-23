@@ -63,11 +63,18 @@ spec:
           ports:
             - name: http
               containerPort: 80
+          env:
+            - name: BK_CI_ENV_TAG
+              value: {{ .Values.frontend.envTag | default "prod" | quote }}
           workingDir: /usr/local/openresty/nginx
           command:
             - "/bin/sh"
             - "-c"
             - |
+              cd /data/workspace/scripts/
+              cp -f "ci_env_${BK_CI_ENV_TAG}.properties" ci_env.properties
+              ./render_ci -m . ../support-files/templates/*
+              cd /usr/local/openresty/nginx
               sbin/nginx -g 'daemon off;';
           livenessProbe:
             httpGet:
@@ -87,4 +94,3 @@ spec:
             successThreshold: 1
       terminationGracePeriodSeconds: 30
 {{- end -}}
-
