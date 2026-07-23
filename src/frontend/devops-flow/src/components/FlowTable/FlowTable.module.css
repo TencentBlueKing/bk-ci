@@ -1,5 +1,9 @@
 .flowTable {
   height: calc(100% - 56px);
+  :global(.bk-table-footer) {
+    background-color: var(--bg-primary);
+    border-top: 1px solid var(--border-color);
+  }
 }
 
 .actions {
@@ -151,6 +155,10 @@
   font-size: var(--font-size-sm);
 }
 
+.ungrouped {
+  color: var(--color-text-tertiary);
+}
+
 /* 表格创作流组 */
 .tagList,
 .popoverTagList {
@@ -196,6 +204,7 @@
   align-items: center;
   margin: 9px 0;
   width: 100%;
+  min-width: 0;
 }
 
 .execDesc {
@@ -211,6 +220,8 @@
 .flowExecMsg {
   display: flex;
   flex-direction: column;
+  flex: 1;
+  min-width: 0;
   font-size: var(--font-size-xs);
   line-height: var(--line-height-sm);
   margin-left: var(--spacing-md);
@@ -219,14 +230,18 @@
 
 .flowExecMsgTitle {
   flex: 1;
+  min-width: 0;
+  max-width: 100%;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   vertical-align: middle;
   line-height: normal;
+  overflow: hidden;
 }
 
 .flowCellLink {
+  flex-shrink: 0;
   color: var(--color-primary);
   cursor: pointer;
   &:hover {
@@ -239,6 +254,7 @@
 }
 
 .line {
+  flex-shrink: 0;
   width: 10px;
   text-align: center;
   line-height: 1;
@@ -246,6 +262,7 @@
 }
 
 .lastBuildMsg {
+  min-width: 0;
   color: var(--color-text-secondary);
   &:hover {
     color: var(--color-primary);
@@ -257,12 +274,16 @@
 }
 
 .flowExecMsgDesc {
-  display: grid;
-  column-gap: var(--spacing-lg);
-  grid-template-columns: auto auto auto;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-lg);
+  min-width: 0;
+  width: 100%;
+  overflow: hidden;
   > span {
     display: flex;
     align-items: center;
+    min-width: 0;
     overflow: hidden;
     > span {
       min-width: 0;

@@ -91,6 +91,7 @@
       "noCreationNodeInEnvironment": "No nodes in this environment",
       "searchEnvironment": "Search Creation Environment",
       "environmentManagement": "Creation Environment Management",
+      "environmentSettings": "Environment Settings",
       "creationEnvironment": "Creation Environment",
       "selectEnvironment": "Select Environment",
       "description": "Description",

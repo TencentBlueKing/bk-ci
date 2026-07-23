@@ -27,6 +27,7 @@
 
 package com.tencent.devops.environment.pojo
 
+import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.environment.pojo.enums.EnvNodeType
 import com.tencent.devops.environment.pojo.enums.EnvType
 import io.swagger.v3.oas.annotations.media.Schema
@@ -43,6 +44,8 @@ data class EnvWithPermission(
     val envType: String,
     @get:Schema(title = "环境节点类型（节点环境{NODE}|标签环境{TAG}）", required = false)
     val envNodeType: String,
+    @get:Schema(title = "环境系统", required = false)
+    val os: OS?,
     @get:Schema(title = "节点数量", required = false)
     val nodeCount: Int?,
     @get:Schema(title = "节点所有的标签", required = false)
@@ -71,6 +74,7 @@ data class EnvWithPermission(
         name: String,
         envType: EnvType,
         envNodeType: EnvNodeType,
+        os: OS?,
         nodeCount: Int?,
         userId: String,
         now: Long
@@ -80,6 +84,7 @@ data class EnvWithPermission(
         desc = "",
         envType = envType.name,
         envNodeType = envNodeType.name,
+        os = os,
         nodeCount = nodeCount,
         tags = null,
         envVars = null,

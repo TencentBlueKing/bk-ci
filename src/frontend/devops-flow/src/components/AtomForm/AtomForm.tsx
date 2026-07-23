@@ -244,6 +244,14 @@ export default defineComponent({
     const getPlaceholder = (obj: any) => {
       return obj.placeholder || obj.desc || ''
     }
+
+    const hasFieldLabel = (obj: any) => {
+      if (typeof obj?.label === 'string') {
+        return obj.label.trim().length > 0
+      }
+      return Boolean(obj?.label)
+    }
+
     const hasGroups = computed(() => {
       if (Array.isArray(props.atomPropsModel?.inputGroups)) {
         return props.atomPropsModel?.inputGroups?.length > 0
@@ -368,15 +376,16 @@ export default defineComponent({
               const hasError = props.errorFields.includes(childKey)
               const showDefaultError = hasError && !SELF_ERROR_COMPONENTS.has(componentType)
               const { '@type': _type, ...childRest } = child
+              const childHasLabel = hasFieldLabel(child)
 
               return (
                 <FormItem
                   key={childKey}
-                  label={child.label}
+                  label={childHasLabel ? child.label : undefined}
                   required={child.required}
                   property={childKey}
-                  description={child.desc}
-                  class={hasError ? styles.fieldError : ''}
+                  description={childHasLabel ? child.desc : undefined}
+                  class={[hasError && styles.fieldError, !childHasLabel && styles.noLabel]}
                 >
                   <ChildComponent
                     name={childKey}
@@ -402,16 +411,17 @@ export default defineComponent({
       const value = props.atomValue[key] ?? obj.default ?? ''
       const hasError = props.errorFields.includes(key)
       const showDefaultError = hasError && !SELF_ERROR_COMPONENTS.has(componentType)
+      const fieldHasLabel = hasFieldLabel(obj)
       // remove '@type' from obj
       const { '@type': _type, ...rest } = obj
       return (
         <FormItem
           key={key}
-          label={obj.label}
+          label={fieldHasLabel ? obj.label : undefined}
           required={obj.required}
           property={key}
-          description={obj.desc}
-          class={hasError ? styles.fieldError : ''}
+          description={fieldHasLabel ? obj.desc : undefined}
+          class={[hasError && styles.fieldError, !fieldHasLabel && styles.noLabel]}
         >
           <Component
             name={key}
@@ -575,9 +585,11 @@ export default defineComponent({
         // 无分组时，使用正常表单显示
         if (!hasGroups.value) {
           return (
-            <Form formType="vertical" class={styles.atomForm}>
-              {renderRootOrSortedFields()}
-            </Form>
+            <div class={styles.triggerForm}>
+              <Form formType="vertical" class={styles.atomForm}>
+                {renderRootOrSortedFields()}
+              </Form>
+            </div>
           )
         }
 

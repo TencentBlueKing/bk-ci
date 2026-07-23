@@ -29,6 +29,7 @@ package com.tencent.devops.environment.resources
 
 import com.tencent.bk.audit.annotations.AuditEntry
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
@@ -84,6 +85,9 @@ class UserEnvironmentResourceImpl @Autowired constructor(
         }
         if (environment.name.isBlank()) {
             throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_ENV_NAME_TOO_LONG)
+        }
+        if (environment.envType == EnvType.CREATE && environment.os == null) {
+            throw InvalidParamException("create env need os")
         }
 
         return Result(envService.createEnvironment(userId, projectId, environment))
