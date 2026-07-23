@@ -120,7 +120,8 @@ open class PipelineTimerTriggerTaskService @Autowired constructor(
                 } catch (ignored: RemoteServiceException) {
                     if (ignored.httpStatus == HTTP_404) {
                         throw ErrorCodeException(
-                            errorCode = ProcessMessageCode.ERROR_TIMER_TRIGGER_REPO_NOT_FOUND
+                            errorCode = ProcessMessageCode.ERROR_TIMER_TRIGGER_REPO_NOT_FOUND,
+                            params = arrayOf(element.name)
                         )
                     }
                     throw ignored
@@ -145,7 +146,8 @@ open class PipelineTimerTriggerTaskService @Autowired constructor(
                 } catch (ignored: RemoteServiceException) {
                     if (ignored.httpStatus == HTTP_404) {
                         throw ErrorCodeException(
-                            errorCode = ProcessMessageCode.ERROR_TIMER_TRIGGER_REPO_NOT_FOUND
+                            errorCode = ProcessMessageCode.ERROR_TIMER_TRIGGER_REPO_NOT_FOUND,
+                            params = arrayOf(element.name)
                         )
                     }
                     throw ignored
