@@ -117,7 +117,6 @@ import com.tencent.devops.environment.utils.NodeStringIdUtils
 import com.tencent.devops.model.environment.tables.records.TEnvRecord
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import jakarta.ws.rs.NotFoundException
-import org.glassfish.jersey.server.ParamException
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -2143,17 +2142,9 @@ class EnvService @Autowired constructor(
         }
 
         // 创作流目前要按环境系统过滤
-        val createCandidates = uniqueCandidates.filter {
-            it.envType == EnvType.CREATE.name
-        }
-        val createNodeMap = if (createCandidates.isEmpty()) {
-            emptyMap()
-        } else {
-            thirdPartyAgentDao.getAgentsByNodeIds(
-                dslContext = dslContext,
-                nodeIds = createCandidates.map { it.nodeId },
-                projectId = projectId
-            ).associate { it.nodeId to it.os }
+        val createNodeMap = uniqueCandidates.filter { it.envType == EnvType.CREATE.name }.let { uniqueCandidatesF ->
+            thirdPartyAgentDao.getAgentsByNodeIds(dslContext, uniqueCandidatesF.map { it.nodeId }, projectId)
+                .associate { it.nodeId to it.os }
         }
 
         val nodeMap = nodeDao.listByIds(
