@@ -38,6 +38,7 @@ import com.tencent.bk.audit.context.ActionAuditContext
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.enums.AgentStatus
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.pojo.Page
@@ -115,6 +116,7 @@ import com.tencent.devops.environment.utils.NodeStringIdUtils
 import com.tencent.devops.model.environment.tables.records.TEnvRecord
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import jakarta.ws.rs.NotFoundException
+import org.glassfish.jersey.server.ParamException
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -1047,15 +1049,70 @@ class EnvService @Autowired constructor(
         nodeHashIds: List<String>,
         envOperateOrigin: EnvOperateOrigin
     ) {
-        addEnvNodesNew(
-            userId = userId,
-            projectId = projectId,
-            envHashId = envHashId,
-            data = EnvAddNodesData(
-                nodeHashIds = nodeHashIds, null
-            ),
-            envOperateOrigin = envOperateOrigin
-        )
+        val envId = HashUtil.decodeIdToLong(envHashId)
+        if (!environmentPermissionService.checkEnvPermission(userId, projectId, envId, AuthPermission.EDIT)) {
+            throw PermissionForbiddenException(
+                message = I18nUtil.getCodeLanMessage(ERROR_ENV_NO_EDIT_PERMISSSION)
+            )
+        }
+
+        val nodeLongIds = nodeHashIds.map { HashUtil.decodeIdToLong(it) }
+        // 检查 node 权限
+        val canUseNodeIds = environmentPermissionService.listNodeByPermission(userId, projectId, AuthPermission.USE)
+        val unauthorizedNodeIds = nodeLongIds.filterNot { canUseNodeIds.contains(it) }
+        if (unauthorizedNodeIds.isNotEmpty()) {
+            throw ErrorCodeException(
+                errorCode = ERROR_NODE_NO_USE_PERMISSSION,
+                params = arrayOf(unauthorizedNodeIds.joinToString(",") { HashUtil.encodeLongId(it) })
+            )
+        }
+
+        val env = envDao.get(dslContext, projectId, envId)
+        // 这里老接口要加个校验，静态节点修改不能改动动态环境
+        if (env.envNodeType != EnvNodeType.NODE.name) {
+            throw InvalidParamException("cant update tag env")
+        }
+        ActionAuditContext.current()
+            .setInstanceId(envId.toString())
+            .setInstanceName(env.envName)
+            .addExtendData("addNodeIds", nodeLongIds.toString())
+
+        // 检查 node 是否存在
+        val existNodes = nodeDao.listByIds(dslContext, projectId, nodeLongIds)
+        val existNodeIds = existNodes.map { it.nodeId }.toSet()
+        val notExistNodeIds = nodeLongIds.filterNot { existNodeIds.contains(it) }
+        if (notExistNodeIds.isNotEmpty()) {
+            throw ErrorCodeException(
+                errorCode = ERROR_NODE_NOT_EXISTS,
+                params = arrayOf(notExistNodeIds.joinToString(",") { HashUtil.encodeLongId(it) })
+            )
+        }
+
+        // 过滤已在环境中的节点
+        val existEnvNodeIds = envNodeDao.list(dslContext, projectId, listOf(envId)).map { it.nodeId }
+        val toAddNodeIds = nodeLongIds.subtract(existEnvNodeIds)
+
+        // 验证节点类型
+        val existNodesMap = existNodes.associateBy { it.nodeId }
+        val serverNodeTypes = listOf(NodeType.CMDB.name)
+        val buildNodeType = listOf(NodeType.DEVCLOUD.name, NodeType.THIRDPARTY.name)
+
+        toAddNodeIds.forEach {
+            if (env.envType == EnvType.BUILD.name && existNodesMap[it]?.nodeType in serverNodeTypes) {
+                throw ErrorCodeException(
+                    errorCode = ERROR_ENV_BUILD_CAN_NOT_ADD_SVR,
+                    params = arrayOf(HashUtil.encodeLongId(it))
+                )
+            }
+            if (env.envType != EnvType.BUILD.name && existNodesMap[it]?.nodeType in buildNodeType) {
+                throw ErrorCodeException(
+                    errorCode = ERROR_ENV_DEPLOY_CAN_NOT_ADD_AGENT,
+                    params = arrayOf(HashUtil.encodeLongId(it))
+                )
+            }
+        }
+
+        envNodeDao.batchStoreEnvNode(dslContext, toAddNodeIds.toList(), envId, projectId)
     }
 
     @ActionAuditRecord(
