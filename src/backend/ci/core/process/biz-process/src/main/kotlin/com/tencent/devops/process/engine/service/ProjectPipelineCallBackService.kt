@@ -620,6 +620,28 @@ class ProjectPipelineCallBackService @Autowired constructor(
         )
     }
 
+    fun deletePipelineCallBack(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        callbackName: String
+    ) {
+        // 验证用户是否可以编辑流水线
+        pipelinePermissionService.checkPipelinePermission(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            permission = AuthPermission.EDIT
+        )
+        logger.info("delete pipeline callback|$userId|$projectId|$pipelineId|$callbackName")
+        pipelineCallbackDao.delete(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            names = setOf(callbackName)
+        )
+    }
+
     private fun checkParam(
         userId: String,
         projectId: String

@@ -185,4 +185,19 @@ class ServiceCallBackResourceImpl @Autowired constructor(
             )
         )
     }
+
+    override fun deletePipelineCallBack(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        callbackName: String
+    ): Result<Boolean> {
+        projectPipelineCallBackService.deletePipelineCallBack(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            callbackName = callbackName
+        )
+        return Result(true)
+    }
 }

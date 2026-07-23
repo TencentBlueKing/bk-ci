@@ -2481,14 +2481,15 @@ class PipelineRepositoryService constructor(
         dslContext: DSLContext,
         userId: String
     ) {
-        if (events.isNullOrEmpty()) return
         val existEventNames = pipelineCallbackDao.list(
             dslContext = dslContext,
             projectId = projectId,
             pipelineId = pipelineId
         ).map { it.name }.toSet()
-        if (existEventNames.isNotEmpty()) {
-            val needDelNames = existEventNames.subtract(events.keys).toSet()
+        // events 为空时新事件集合为空，差集即为全部已存在事件，实现全量清理
+        val newEventKeys = events?.keys ?: emptySet()
+        val needDelNames = existEventNames.subtract(newEventKeys)
+        if (needDelNames.isNotEmpty()) {
             pipelineCallbackDao.delete(
                 dslContext = dslContext,
                 projectId = projectId,
@@ -2497,15 +2498,17 @@ class PipelineRepositoryService constructor(
             )
         }
         // 保存回调事件
-        pipelineCallbackDao.save(
-            dslContext = dslContext,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            userId = userId,
-            list = events.map { (key, value) ->
-                value.copy(secretToken = value.secretToken?.let { AESUtil.encrypt(aesKey, it) })
-            }
-        )
+        if (!events.isNullOrEmpty()) {
+            pipelineCallbackDao.save(
+                dslContext = dslContext,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                userId = userId,
+                list = events.map { (_, value) ->
+                    value.copy(secretToken = value.secretToken?.let { AESUtil.encrypt(aesKey, it) })
+                }
+            )
+        }
     }
 
     fun getReleaseVersionRecord(projectId: String, pipelineId: String): PipelineResourceVersion? {

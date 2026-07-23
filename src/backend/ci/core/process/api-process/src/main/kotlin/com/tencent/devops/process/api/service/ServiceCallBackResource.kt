@@ -215,4 +215,22 @@ interface ServiceCallBackResource {
         @QueryParam("event")
         event: CallBackEvent?
     ): Result<List<ProjectPipelineCallBack>>
+
+    @Operation(summary = "删除流水线级别callback")
+    @DELETE
+    @Path("/projects/{projectId}/pipelines/{pipelineId}")
+    fun deletePipelineCallBack(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "projectId", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "pipelineId", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @Parameter(description = "回调名称", required = true)
+        @QueryParam("callbackName")
+        callbackName: String
+    ): Result<Boolean>
 }
