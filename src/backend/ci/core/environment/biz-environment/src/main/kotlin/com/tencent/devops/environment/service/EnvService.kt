@@ -829,7 +829,7 @@ class EnvService @Autowired constructor(
         }
         val envNodes = fetchEnvNodes(projectId, listOf(envId), userId)
         val nodes = nodeDao.listThirdpartyNodes(dslContext, projectId, envNodes.map { it.nodeId })
-        return nodeService.formatNodeWithPermissions(userId, projectId, nodes)
+        return nodeService.formatNodeWithPermissions(userId, projectId, nodes, envId = envId)
     }
 
     override fun listAllEnvNodes(userId: String, projectId: String, envHashIds: List<String>): List<NodeBaseInfo> {
@@ -2110,6 +2110,15 @@ class EnvService @Autowired constructor(
                 it.key !in listOf(EnvType.CREATE.name)
             }
         }
+    }
+
+    fun checkEnvPermission(
+        userId: String,
+        projectId: String,
+        envId: Long,
+        permission: AuthPermission
+    ): Boolean {
+        return environmentPermissionService.checkEnvPermission(userId, projectId, envId, permission)
     }
 
     companion object {

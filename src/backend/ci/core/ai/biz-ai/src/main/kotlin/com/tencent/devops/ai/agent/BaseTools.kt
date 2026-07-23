@@ -90,6 +90,12 @@ abstract class BaseTools(
         return truncatePlainText(json, MAX_TOOL_OUTPUT_CHARS)
     }
 
+    /** 预判对象序列化后是否会超过工具输出上限，便于调用方先做降级。 */
+    protected fun wouldExceedToolOutputLimit(value: Any): Boolean {
+        val text = if (value is String) value else JsonUtil.toJson(value)
+        return text.length > MAX_TOOL_OUTPUT_CHARS
+    }
+
     private fun truncatePlainText(text: String, maxChars: Int): String {
         if (text.length <= maxChars) {
             return text

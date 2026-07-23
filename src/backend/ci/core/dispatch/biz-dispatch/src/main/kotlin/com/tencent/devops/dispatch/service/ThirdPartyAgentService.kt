@@ -555,33 +555,38 @@ class ThirdPartyAgentService @Autowired constructor(
             jobId = jobId,
             offset = offset,
             limit = limit
-        ).associateBy { it.buildId }
+        )
         val builds = client.get(ServiceBuildResource::class).batchGetBuildStatus(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
-            buildIdSet = agentBuilds.keys
-        ).data
-        return Page(pageNotNull, pageSizeNotNull, agentBuildCount, builds?.map {
-            AgentPipelineContainerBuild(
-                buildId = it.id,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                containerId = (agentBuilds[it.id]?.vmSeqId ?: 0).toString(),
-                executeCount = it.executeCount ?: 1,
-                status = it.status,
-                startTime = Instant.ofEpochMilli(it.startTime)
-                    .atZone(ZoneId.systemDefault())
-                    .toLocalDateTime(),
-                endTime = it.endTime?.let { ed ->
-                    Instant.ofEpochMilli(ed)
+            buildIdSet = agentBuilds.map { it.buildId }.toSet()
+        ).data?.associateBy { it.id }
+        val result = mutableListOf<AgentPipelineContainerBuild>()
+        agentBuilds.forEach {
+            val build = builds?.get(it.buildId) ?: return@forEach
+            result.add(
+                AgentPipelineContainerBuild(
+                    buildId = build.id,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    containerId = (it.vmSeqId ?: 0).toString(),
+                    executeCount = build.executeCount ?: 1,
+                    status = build.status,
+                    startTime = Instant.ofEpochMilli(build.startTime)
                         .atZone(ZoneId.systemDefault())
-                        .toLocalDateTime()
-                },
-                buildNum = it.buildNum ?: 0,
-                creator = it.userId
+                        .toLocalDateTime(),
+                    endTime = build.endTime?.let { ed ->
+                        Instant.ofEpochMilli(ed)
+                            .atZone(ZoneId.systemDefault())
+                            .toLocalDateTime()
+                    },
+                    buildNum = build.buildNum ?: 0,
+                    creator = build.userId
+                )
             )
-        } ?: emptyList())
+        }
+        return Page(pageNotNull, pageSizeNotNull, agentBuildCount, result)
     }
 
     fun listLatestBuildPipelines(agentIds: List<String>): List<AgentBuildInfo> {
@@ -1027,7 +1032,8 @@ class ThirdPartyAgentService @Autowired constructor(
         endTime: Long?,
         pipelineId: String?,
         jobId: String?,
-        creator: String?
+        creator: String?,
+        status: PipelineTaskStatus?
     ): TPAPipelineBuildCountResp {
         if (agentId.isNullOrBlank() && envId == null) {
             return TPAPipelineBuildCountResp(0L, 0L, Page(0, 0, 0, emptyList()))
@@ -1050,7 +1056,8 @@ class ThirdPartyAgentService @Autowired constructor(
             endTime = endTime,
             pipelineId = pipelineId,
             jobId = jobId,
-            creator = creator
+            creator = creator,
+            status = status
         )
         return TPAPipelineBuildCountResp(
             pipelineCount, jobCount, Page(
@@ -1068,7 +1075,8 @@ class ThirdPartyAgentService @Autowired constructor(
                     endTime = endTime,
                     pipelineId = pipelineId,
                     jobId = jobId,
-                    creator = creator
+                    creator = creator,
+                    status = status
                 )
             )
         )

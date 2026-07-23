@@ -338,17 +338,18 @@ func parseDebugContainerMountArgs(debugInfo *api.ImageDebug) ([]string, error) {
 
 	workDir := systemutil.GetWorkDir()
 	dataDir := debugInfo.Workspace
-	if dataDir == "" {
-		dataDir = fmt.Sprintf("%s/%s/data/%s/%s", workDir, job_docker.LocalDockerWorkSpaceDirName, debugInfo.PipelineId, debugInfo.VmSeqId)
+	if dataDir != constant.DockerNoMount {
+		if dataDir == "" {
+			dataDir = fmt.Sprintf("%s/%s/data/%s/%s", workDir, job_docker.LocalDockerWorkSpaceDirName, debugInfo.PipelineId, debugInfo.VmSeqId)
+		}
+		err := systemutil.MkDir(dataDir)
+		if err != nil && !os.IsExist(err) {
+			return nil, errors.Wrapf(err, "create local data dir %s error", dataDir)
+		}
+		args = append(args, "--mount", fmt.Sprintf("type=bind,source=%s,target=%s", dataDir, constant.DockerDataDir))
 	}
-	err := systemutil.MkDir(dataDir)
-	if err != nil && !os.IsExist(err) {
-		return nil, errors.Wrapf(err, "create local data dir %s error", dataDir)
-	}
-	args = append(args, "--mount", fmt.Sprintf("type=bind,source=%s,target=%s", dataDir, constant.DockerDataDir))
-
 	logsDir := fmt.Sprintf("%s/%s/logs/%s/%s", workDir, job_docker.LocalDockerWorkSpaceDirName, debugInfo.BuildId, debugInfo.VmSeqId)
-	err = systemutil.MkDir(logsDir)
+	err := systemutil.MkDir(logsDir)
 	if err != nil && !os.IsExist(err) {
 		return nil, errors.Wrapf(err, "create local logs dir %s error", logsDir)
 	}

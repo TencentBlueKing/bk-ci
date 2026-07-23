@@ -54,6 +54,7 @@ class AiLlmPropertiesTest {
             readTimeoutSeconds = 34,
             writeTimeoutSeconds = 56,
             executionTimeoutSeconds = 78,
+            totalExecutionTimeoutSeconds = 89,
             maxAttempts = 4,
             initialBackoffSeconds = 2,
             maxBackoffSeconds = 9,
@@ -70,6 +71,7 @@ class AiLlmPropertiesTest {
         assertEquals(34, model.readTimeoutSeconds)
         assertEquals(56, model.writeTimeoutSeconds)
         assertEquals(78, model.executionTimeoutSeconds)
+        assertEquals(89, model.totalExecutionTimeoutSeconds)
         assertEquals(4, model.maxAttempts)
         assertEquals(2, model.initialBackoffSeconds)
         assertEquals(9, model.maxBackoffSeconds)
@@ -83,6 +85,7 @@ class AiLlmPropertiesTest {
             readTimeoutSeconds = 120,
             writeTimeoutSeconds = 45,
             executionTimeoutSeconds = 75,
+            totalExecutionTimeoutSeconds = 95,
             maxAttempts = 7,
             initialBackoffSeconds = 4,
             maxBackoffSeconds = 16,
@@ -108,6 +111,7 @@ class AiLlmPropertiesTest {
         assertEquals(120, effective.readTimeoutSeconds)
         assertEquals(45, effective.writeTimeoutSeconds)
         assertEquals(75, effective.executionTimeoutSeconds)
+        assertEquals(95, effective.totalExecutionTimeoutSeconds)
         assertEquals(7, effective.maxAttempts)
         assertEquals(4, effective.initialBackoffSeconds)
         assertEquals(16, effective.maxBackoffSeconds)
@@ -234,6 +238,7 @@ class AiLlmPropertiesTest {
             readTimeoutSeconds = 90,
             writeTimeoutSeconds = 30,
             executionTimeoutSeconds = 60,
+            totalExecutionTimeoutSeconds = 90,
             maxAttempts = 5,
             initialBackoffSeconds = 1,
             maxBackoffSeconds = 8,
@@ -249,6 +254,7 @@ class AiLlmPropertiesTest {
                     readTimeoutSeconds = 199,
                     writeTimeoutSeconds = 299,
                     executionTimeoutSeconds = 399,
+                    totalExecutionTimeoutSeconds = 499,
                     maxAttempts = 9,
                     initialBackoffSeconds = 11,
                     maxBackoffSeconds = 22,
@@ -266,6 +272,7 @@ class AiLlmPropertiesTest {
         assertEquals(199, effective.readTimeoutSeconds)
         assertEquals(299, effective.writeTimeoutSeconds)
         assertEquals(399, effective.executionTimeoutSeconds)
+        assertEquals(499, effective.totalExecutionTimeoutSeconds)
         assertEquals(9, effective.maxAttempts)
         assertEquals(11, effective.initialBackoffSeconds)
         assertEquals(22, effective.maxBackoffSeconds)

@@ -424,7 +424,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
                             pathFilterType = push.pathFilterType?.let { PathFilterType.valueOf(it) }
                                 ?: PathFilterType.NamePrefixFilter,
                             eventType = CodeEventType.PUSH,
-                            includeMrAction = push.action ?: listOf(
+                            includePushAction = push.action ?: listOf(
                                 TGitPushActionType.PUSH_FILE.value,
                                 TGitPushActionType.NEW_BRANCH.value
                             ),

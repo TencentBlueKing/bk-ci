@@ -44,7 +44,6 @@ import com.tencent.devops.repository.pojo.oauth.GithubTokenType
 import com.tencent.devops.repository.sdk.github.response.GetUserResponse
 import com.tencent.devops.repository.sdk.github.service.GithubUserService
 import com.tencent.devops.repository.service.ScmUrlProxyService
-import com.tencent.devops.scm.config.GitConfig
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
@@ -60,7 +59,7 @@ import jakarta.ws.rs.core.Response
 @Suppress("ALL")
 class GithubOAuthService @Autowired constructor(
     private val objectMapper: ObjectMapper,
-    private val gitConfig: GitConfig,
+    private val githubOAuthConfigProvider: GithubOAuthConfigProvider,
     private val githubTokenService: GithubTokenService,
     private val githubUserService: GithubUserService,
     private val scmUrlProxyService: ScmUrlProxyService
@@ -91,18 +90,17 @@ class GithubOAuthService @Autowired constructor(
             operator
         ).joinToString(separator = OAUTH_URL_STATE_SEPARATOR)
         val encodeState = URLEncoder.encode(state, "UTF-8")
+        val config = githubOAuthConfigProvider.getConfig()
         val redirectUrl = "$GITHUB_URL/login/oauth/authorize" +
-            "?client_id=${gitConfig.githubClientId}&redirect_uri=${gitConfig.githubCallbackUrl}&state=$encodeState"
+            "?client_id=${config.githubClientId}&redirect_uri=${config.githubCallbackUrl}&state=$encodeState"
         return GithubOauth(redirectUrl)
     }
 
-    fun getGithubAppUrl() = GithubAppUrl(gitConfig.githubAppUrl)
+    fun getGithubAppUrl() = GithubAppUrl(githubOAuthConfigProvider.getConfig().githubAppUrl)
 
     fun oauthUrl(redirectUrl: String, userId: String?, tokenType: GithubTokenType): String {
-        val clientId = when (tokenType) {
-            GithubTokenType.GITHUB_APP -> gitConfig.githubClientId
-            GithubTokenType.OAUTH_APP -> gitConfig.oauthAppClientId
-        }
+        val config = githubOAuthConfigProvider.getConfig()
+        val clientId = config.clientIdOf(tokenType)
         val stateParams = mutableMapOf(
             "redirectUrl" to redirectUrl,
             "randomStr" to RandomStringUtils.randomAlphanumeric(RANDOM_ALPHA_NUM)
@@ -114,7 +112,7 @@ class GithubOAuthService @Autowired constructor(
 
         return when (tokenType) {
             GithubTokenType.GITHUB_APP -> "$GITHUB_URL/login/oauth/authorize" +
-                "?client_id=$clientId&redirect_uri=${gitConfig.githubCallbackUrl}&state=$state"
+                "?client_id=$clientId&redirect_uri=${config.githubCallbackUrl}&state=$state"
             GithubTokenType.OAUTH_APP -> "$GITHUB_URL/login/oauth/authorize" +
                 "?client_id=$clientId&state=$state&scope=user,repo"
         }
@@ -174,7 +172,7 @@ class GithubOAuthService @Autowired constructor(
             redirectUrl = if (redirectUrlTypeEnum == RedirectUrlTypeEnum.SPEC && specRedirectUrl.isNotBlank()) {
                 specRedirectUrl
             } else {
-                "${gitConfig.githubRedirectUrl}/$projectId$popupTag$repoHashId?" +
+                "${githubOAuthConfigProvider.getConfig().githubRedirectUrl}/$projectId$popupTag$repoHashId?" +
                         "resetType=$resetType&userId=$userId"
             }
         )
@@ -208,15 +206,9 @@ class GithubOAuthService @Autowired constructor(
         code: String,
         githubTokenType: GithubTokenType = GithubTokenType.GITHUB_APP
     ): GithubToken {
-        val clientId = when (githubTokenType) {
-            GithubTokenType.GITHUB_APP -> gitConfig.githubClientId
-            GithubTokenType.OAUTH_APP -> gitConfig.oauthAppClientId
-        }
-
-        val secret = when (githubTokenType) {
-            GithubTokenType.GITHUB_APP -> gitConfig.githubClientSecret
-            GithubTokenType.OAUTH_APP -> gitConfig.oauthAppClientSecret
-        }
+        val config = githubOAuthConfigProvider.getConfig()
+        val clientId = config.clientIdOf(githubTokenType)
+        val secret = config.clientSecretOf(githubTokenType)
         val url = "$GITHUB_URL/login/oauth/access_token" +
             "?client_id=$clientId&client_secret=$secret&code=$code"
 

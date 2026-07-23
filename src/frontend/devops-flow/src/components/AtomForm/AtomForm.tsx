@@ -30,6 +30,7 @@ const EnumButton = defineAsyncComponent(() => import('./EnumButton'))
 const CompositeInput = defineAsyncComponent(() => import('./CompositeInput'))
 const TipsSimple = defineAsyncComponent(() => import('./TipsSimple'))
 const ConditionalInputSelector = defineAsyncComponent(() => import('./ConditionalInputSelector'))
+const CodelibSelector = defineAsyncComponent(() => import('./CodelibSelector'))
 const DevopsSelect = defineAsyncComponent(() => import('./DevopsSelect'))
 const DynamicParameterSimple = defineAsyncComponent(() => import('./DynamicParameterSimple'))
 const Tips = defineAsyncComponent(() => import('./Tips'))
@@ -70,6 +71,7 @@ export const COMPONENT_MAP: Record<string, any> = {
   'tips-simple': TipsSimple,
   'tips': Tips,
   'conditional-input-selector': ConditionalInputSelector,
+  'codelib-selector': CodelibSelector,
   'devops-select': DevopsSelect,
   'dynamic-parameter-simple': DynamicParameterSimple,
 }

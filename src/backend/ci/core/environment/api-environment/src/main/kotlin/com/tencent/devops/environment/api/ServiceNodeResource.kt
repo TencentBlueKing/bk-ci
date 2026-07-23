@@ -339,13 +339,13 @@ interface ServiceNodeResource {
 
     @Operation(summary = "校验用户对节点的权限")
     @GET
-    @Path("/projects/{projectId}/checkNodePermission")
+    @Path("/projects/checkNodePermission")
     fun checkNodePermission(
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "项目ID", required = true)
-        @PathParam("projectId")
+        @QueryParam("projectId")
         projectId: String,
         @Parameter(description = "节点Id", required = true)
         @QueryParam("nodeId")
@@ -357,13 +357,13 @@ interface ServiceNodeResource {
 
     @Operation(summary = "校验用户对Agent的权限")
     @GET
-    @Path("/projects/{projectId}/checkAgentPermission")
+    @Path("/projects/checkAgentPermission")
     fun checkAgentPermission(
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "项目ID", required = true)
-        @PathParam("projectId")
+        @QueryParam("projectId")
         projectId: String,
         @Parameter(description = "节点Id", required = true)
         @QueryParam("agentHashId")

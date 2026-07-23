@@ -31,6 +31,7 @@ import com.tencent.devops.ai.agent.BaseTools
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.log.pojo.QueryLogsText
+import com.tencent.devops.common.pipeline.PipelineVersionWithModel
 import com.tencent.devops.common.log.pojo.enums.LogType
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
@@ -53,8 +54,14 @@ import java.util.function.Supplier
 @Suppress("TooManyFunctions", "ComplexCondition")
 class BuildTools(
     client: Client,
-    userIdSupplier: Supplier<String>
+    userIdSupplier: Supplier<String>,
+    private val sleepFn: (Long) -> Unit
 ) : BaseTools(client, userIdSupplier) {
+
+    constructor(
+        client: Client,
+        userIdSupplier: Supplier<String>
+    ) : this(client, userIdSupplier, Thread::sleep)
 
     override val logger: Logger = LoggerFactory.getLogger(BuildTools::class.java)
 
@@ -151,7 +158,8 @@ class BuildTools(
     @Tool(
         name = "获取流水线编排",
         description = "获取流水线的编排 Model，包括阶段、任务、参数等。" +
-                "支持按指定版本号查询；version 不传时默认返回最新正式版本。"
+                "支持按指定版本号查询；version 不传时默认返回最新正式版本。" +
+                "若完整编排过大，会自动退化为去除 setting 的结果或轻量摘要，避免返回半截 JSON。"
     )
     fun getPipelineModel(
         @ToolParam(name = "projectId", description = "项目ID")
@@ -169,16 +177,7 @@ class BuildTools(
                 version = version
             )
             val data = result.data ?: return@safeQuery "未找到流水线 $pipelineId 的编排信息"
-            toJson(
-                mapOf(
-                    "pipelineId" to pipelineId,
-                    "version" to data.version,
-                    "versionName" to data.versionName,
-                    "latestVersion" to data.latestVersion,
-                    "model" to data.modelAndSetting.model,
-                    "setting" to data.modelAndSetting.setting
-                )
-            )
+            buildPipelineModelResult(pipelineId = pipelineId, data = data)
         }
     }
 
@@ -438,6 +437,56 @@ class BuildTools(
         }
     }
 
+    @Tool(
+        name = "模拟长耗时测试",
+        description = "仅用于超时/取消链路测试。工具会主动等待后返回，默认等待 125 秒，" +
+                "稳定超过 2 分钟且低于默认 5 分钟工具超时。waitSeconds 小于 121 按 121 处理，" +
+                "大于 240 按 240 处理。"
+    )
+    fun simulateLongRunningTool(
+        @ToolParam(
+            name = "waitSeconds",
+            description = "等待秒数，默认 125。为稳定复现超过 2 分钟场景，最小 121，最大 240。",
+            required = false
+        )
+        waitSeconds: Int? = null
+    ): String {
+        return safeQuery("BuildArtifactTool", "simulateLongRunningTool") {
+            val actualWaitSeconds = (waitSeconds ?: DEFAULT_LONG_RUNNING_WAIT_SECONDS).coerceIn(
+                MIN_LONG_RUNNING_WAIT_SECONDS,
+                MAX_LONG_RUNNING_WAIT_SECONDS
+            )
+            logger.info(
+                "[BuildArtifactTool] simulateLongRunningTool | requested={}s, actual={}s",
+                waitSeconds,
+                actualWaitSeconds
+            )
+            val startTime = System.currentTimeMillis()
+            try {
+                sleepFn(actualWaitSeconds * 1000L)
+            } catch (e: InterruptedException) {
+                Thread.currentThread().interrupt()
+                return@safeQuery JsonUtil.toJson(
+                    linkedMapOf(
+                        "status" to "INTERRUPTED",
+                        "requestedWaitSeconds" to waitSeconds,
+                        "actualWaitSeconds" to actualWaitSeconds,
+                        "message" to "模拟长耗时测试被中断"
+                    )
+                )
+            }
+            JsonUtil.toJson(
+                linkedMapOf(
+                    "status" to "OK",
+                    "requestedWaitSeconds" to waitSeconds,
+                    "actualWaitSeconds" to actualWaitSeconds,
+                    "elapsedMs" to (System.currentTimeMillis() - startTime),
+                    "message" to "模拟长耗时测试完成"
+                )
+            )
+        }
+    }
+
     // ── 构建查询 ──
 
     @Tool(
@@ -482,6 +531,45 @@ class BuildTools(
             )
             val data = result.data ?: return@safeQuery "获取构建历史失败"
             if (data.records.isEmpty()) return@safeQuery "暂无构建记录"
+            toJson(data)
+        }
+    }
+
+    @Tool(
+        name = "定位子流水线构建",
+        description = "当父构建因「子流水线运行失败」报错时，精确定位本次父构建触发的子流水线构建实例。" +
+                "从父构建插件在 T_PIPELINE_BUILD_RECORD_TASK 的 TASK_VAR.subPipelineBuildInfo 中读取子构建信息。" +
+                "禁止使用子流水线最新构建代替。返回 matchType：RECORD_TASK（精确）或 NONE（未找到）。"
+    )
+    fun locateSubPipelineBuild(
+        @ToolParam(name = "projectId", description = "父构建项目ID")
+        projectId: String,
+        @ToolParam(name = "pipelineId", description = "父流水线ID")
+        pipelineId: String,
+        @ToolParam(name = "buildId", description = "父构建ID")
+        buildId: String,
+        @ToolParam(
+            name = "parentTaskId",
+            description = "父构建失败插件的 elementId（格式 e-xxxxxxxx），即子流水线插件任务ID"
+        )
+        parentTaskId: String,
+        @ToolParam(
+            name = "parentExecuteCount",
+            description = "父构建失败插件的 executeCount，来自 failedElements 中 element.executeCount"
+        )
+        parentExecuteCount: Int
+    ): String {
+        return safeQuery("BuildArtifactTool", "locateSubPipelineBuild") {
+            val result = buildResource().locateSubPipelineBuild(
+                userId = getOperatorUserId(),
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                parentTaskId = parentTaskId,
+                parentExecuteCount = parentExecuteCount,
+                channelCode = ChannelCode.BS
+            )
+            val data = result.data ?: return@safeQuery "定位子流水线构建失败: ${result.message}"
             toJson(data)
         }
     }
@@ -847,6 +935,125 @@ class BuildTools(
         )
     }
 
+    private fun buildPipelineModelResult(
+        pipelineId: String,
+        data: PipelineVersionWithModel
+    ): String {
+        val fullPayload = buildPipelineModelPayload(
+            pipelineId = pipelineId,
+            data = data,
+            includeSetting = true
+        )
+        if (!wouldExceedToolOutputLimit(fullPayload)) {
+            return toJson(fullPayload)
+        }
+
+        val withoutSettingPayload = buildPipelineModelPayload(
+            pipelineId = pipelineId,
+            data = data,
+            includeSetting = false,
+            notices = listOf(
+                "完整编排超过工具输出上限，已自动省略 setting，避免返回半截 JSON。"
+            )
+        )
+        if (!wouldExceedToolOutputLimit(withoutSettingPayload)) {
+            return toJson(withoutSettingPayload)
+        }
+
+        val summaryWithElementsPayload = buildPipelineModelSummaryFallback(
+            pipelineId = pipelineId,
+            data = data,
+            includeElements = true,
+            notices = listOf(
+                "完整编排仍然过大，已自动退化为轻量摘要，避免返回半截 JSON。",
+                "当前摘要仍包含插件列表，适合先定位 stage/job/step。"
+            )
+        )
+        if (!wouldExceedToolOutputLimit(summaryWithElementsPayload)) {
+            return toJson(summaryWithElementsPayload)
+        }
+
+        val summaryWithoutElementsPayload = buildPipelineModelSummaryFallback(
+            pipelineId = pipelineId,
+            data = data,
+            includeElements = false,
+            notices = listOf(
+                "完整编排和带插件摘要都超过工具输出上限，已退化为 stage/job 级摘要。",
+                "如需查看具体插件，请结合 containerHashId、jobId、elementId 调用节点详情工具。"
+            )
+        )
+        if (!wouldExceedToolOutputLimit(summaryWithoutElementsPayload)) {
+            return toJson(summaryWithoutElementsPayload)
+        }
+
+        val summary = data.toPipelineModelSummary(includeElements = false)
+        return toJson(
+            linkedMapOf(
+                "pipelineId" to pipelineId,
+                "version" to data.version,
+                "versionName" to data.versionName,
+                "latestVersion" to data.latestVersion,
+                "fullModelOmitted" to true,
+                "settingOmitted" to true,
+                "summaryOmitted" to true,
+                "stageCount" to summary.stageCount,
+                "containerCount" to summary.containerCount,
+                "elementCount" to summary.elementCount,
+                "notices" to listOf(
+                    "编排体积过大，已退化为最小元信息，避免返回半截 JSON。"
+                ),
+                "nextActions" to listOf(
+                    "请先调用「获取流水线编排摘要」查看 stage/job 结构。",
+                    "再结合 containerHashId、jobId、elementId 调用「获取流水线编排节点详情」精准下钻。"
+                )
+            )
+        )
+    }
+
+    private fun buildPipelineModelPayload(
+        pipelineId: String,
+        data: PipelineVersionWithModel,
+        includeSetting: Boolean,
+        notices: List<String> = emptyList()
+    ): Map<String, Any?> {
+        return linkedMapOf<String, Any?>(
+            "pipelineId" to pipelineId,
+            "version" to data.version,
+            "versionName" to data.versionName,
+            "latestVersion" to data.latestVersion,
+            "includeSetting" to includeSetting,
+            "notices" to notices.takeIf { it.isNotEmpty() },
+            "model" to data.modelAndSetting.model
+        ).apply {
+            if (includeSetting) {
+                this["setting"] = data.modelAndSetting.setting
+            }
+        }
+    }
+
+    private fun buildPipelineModelSummaryFallback(
+        pipelineId: String,
+        data: PipelineVersionWithModel,
+        includeElements: Boolean,
+        notices: List<String>
+    ): Map<String, Any?> {
+        return linkedMapOf(
+            "pipelineId" to pipelineId,
+            "version" to data.version,
+            "versionName" to data.versionName,
+            "latestVersion" to data.latestVersion,
+            "fullModelOmitted" to true,
+            "settingOmitted" to true,
+            "includeElements" to includeElements,
+            "notices" to notices,
+            "nextActions" to listOf(
+                "如需查看具体节点，请优先使用「获取流水线编排节点详情」按 stageId/jobId/elementId 下钻。",
+                "若只想看整体结构，优先使用「获取流水线编排摘要」。"
+            ),
+            "modelSummary" to data.toPipelineModelSummary(includeElements = includeElements)
+        )
+    }
+
     private fun truncateLogContent(content: String): String {
         if (content.length <= MAX_LOG_CONTENT_CHARS) {
             return content
@@ -1011,6 +1218,9 @@ class BuildTools(
     companion object {
         private const val DEFAULT_PAGE_SIZE = 10
         private const val MAX_PAGE_SIZE = 50
+        private const val MIN_LONG_RUNNING_WAIT_SECONDS = 121
+        private const val DEFAULT_LONG_RUNNING_WAIT_SECONDS = 125
+        private const val MAX_LONG_RUNNING_WAIT_SECONDS = 240
         private const val MAX_NODE_MATCH_CANDIDATES = 20
         private const val MAX_FAILED_ELEMENTS_TO_ANALYZE = 3
         private const val DEFAULT_LOG_SIZE = 500
