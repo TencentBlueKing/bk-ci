@@ -1254,7 +1254,7 @@ class EnvService @Autowired constructor(
             }
         }
         // 验证环境系统
-        if (envRecord.envType == EnvType.CREATE.name && envRecord.os != null) {
+        if (envRecord.envType == EnvType.CREATE.name && envRecord.os != null && toAddNodeIds.isNotEmpty()) {
             val createNodes = thirdPartyAgentDao.getAgentsByNodeIds(dslContext, toAddNodeIds, projectId)
             if (createNodes.any { it.os != envRecord.os }) {
                 throw ErrorCodeException(
@@ -2086,9 +2086,17 @@ class EnvService @Autowired constructor(
         }
 
         // 创作流目前要按环境系统过滤
-        val createNodeMap = uniqueCandidates.filter { it.envType == EnvType.CREATE.name }.let { uniqueCandidatesF ->
-            thirdPartyAgentDao.getAgentsByNodeIds(dslContext, uniqueCandidatesF.map { it.nodeId }, projectId)
-                .associate { it.nodeId to it.os }
+        val createCandidates = uniqueCandidates.filter {
+            it.envType == EnvType.CREATE.name
+        }
+        val createNodeMap = if (createCandidates.isEmpty()) {
+            emptyMap()
+        } else {
+            thirdPartyAgentDao.getAgentsByNodeIds(
+                dslContext = dslContext,
+                nodeIds = createCandidates.map { it.nodeId },
+                projectId = projectId
+            ).associate { it.nodeId to it.os }
         }
 
         val nodeMap = nodeDao.listByIds(
