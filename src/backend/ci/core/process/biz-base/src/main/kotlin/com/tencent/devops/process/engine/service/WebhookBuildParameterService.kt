@@ -26,7 +26,7 @@ class WebhookBuildParameterService @Autowired constructor(
         buildParameters: List<BuildParameters>
     ) {
         var parameters = buildParameters
-        var json = JsonUtil.toJson(parameters)
+        var json = JsonUtil.toJson(parameters, false)
         if (json.toByteArray(Charsets.UTF_8).size > WEBHOOK_BUILD_PARAMETER_LENGTH_MAX) {
             // 过滤按提交/文件累加的超大批量变量，保留其余有效参数，避免整体丢弃导致重试时变量缺失
             val filtered = parameters.filter { param ->
@@ -38,7 +38,7 @@ class WebhookBuildParameterService @Autowired constructor(
                     "buildId: $buildId|drop oversized params: $droppedKeys"
             )
             parameters = filtered
-            json = JsonUtil.toJson(parameters)
+            json = JsonUtil.toJson(parameters, false)
         }
         // 极端情况下过滤后仍超长，跳过保存避免 DB 写入失败
         if (json.toByteArray(Charsets.UTF_8).size > WEBHOOK_BUILD_PARAMETER_LENGTH_MAX) {
