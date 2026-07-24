@@ -12,105 +12,43 @@ package com.tencent.devops.artifactory.resources
 
 import com.tencent.devops.artifactory.api.service.ServiceArtifactMetadataResource
 import com.tencent.devops.artifactory.pojo.artifact.PipelineArtifactInfo
+import com.tencent.devops.artifactory.pojo.artifact.PipelineArtifactInfoQuery
 import com.tencent.devops.artifactory.service.artifact.PipelineArtifactInfoService
-import com.tencent.devops.auth.api.service.ServicePermissionAuthResource
-import com.tencent.devops.auth.api.service.ServiceProjectAuthResource
-import com.tencent.devops.common.api.exception.PermissionForbiddenException
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.auth.api.AuthPermission
-import com.tencent.devops.common.auth.api.AuthResourceType
-import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.web.RestResource
-import org.slf4j.LoggerFactory
 
 @RestResource
 class ServiceArtifactMetadataResourceImpl(
-    private val client: Client,
-    private val clientTokenService: ClientTokenService,
     private val pipelineArtifactInfoService: PipelineArtifactInfoService
 ) : ServiceArtifactMetadataResource {
 
-    companion object {
-        private val logger = LoggerFactory.getLogger(ServiceArtifactMetadataResourceImpl::class.java)
-    }
-
-    override fun getArtifactInfo(
+    override fun listArtifactInfo(
         userId: String,
         projectId: String,
         pipelineId: String?,
-        artifactType: String,
-        artifactName: String,
-        artifactVersion: String,
+        artifactType: String?,
+        artifactName: String?,
+        artifactVersion: String?,
         executeCount: Int?,
         buildId: String?,
-        taskId: String?
-    ): Result<PipelineArtifactInfo?> {
-        // 权限校验：指定 pipelineId → 校验流水线 VIEW 权限；否则 → 校验项目用户身份
-        val hasPermission = if (!pipelineId.isNullOrBlank()) {
-            checkPipelineViewPermission(userId, projectId, pipelineId)
-        } else {
-            checkProjectPermission(userId, projectId)
-        }
-        if (!hasPermission) {
-            logger.warn("Service artifact metadata: $userId has no permission to access $projectId/$pipelineId")
-            throw PermissionForbiddenException(
-                message = "User $userId has no permission to access artifact metadata in project $projectId"
-            )
-        }
-
-        val artifactInfo = pipelineArtifactInfoService.getArtifactInfo(
-            projectId = projectId,
-            pipelineId = pipelineId,
-            artifactType = artifactType,
-            artifactName = artifactName,
-            artifactVersion = artifactVersion,
-            executeCount = executeCount,
-            buildId = buildId,
-            taskId = taskId
+        page: Int?,
+        pageSize: Int?
+    ): Result<Page<PipelineArtifactInfo>> {
+        val artifactInfo = pipelineArtifactInfoService.listArtifactInfo(
+            userId = userId,
+            query = PipelineArtifactInfoQuery(
+                projectId = projectId,
+                artifactType = artifactType,
+                artifactName = artifactName,
+                artifactVersion = artifactVersion,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                executeCount = executeCount
+            ),
+            page = page ?: 1,
+            pageSize = pageSize ?: 20
         )
         return Result(artifactInfo)
-    }
-
-    private fun checkPipelineViewPermission(
-        userId: String,
-        projectId: String,
-        pipelineId: String
-    ): Boolean {
-        return try {
-            val token = clientTokenService.getSystemToken()
-            client.get(ServicePermissionAuthResource::class)
-                .validateUserResourcePermissionByRelation(
-                    userId = userId,
-                    token = token,
-                    projectCode = projectId,
-                    resourceCode = pipelineId,
-                    resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
-                    action = "${AuthResourceType.PIPELINE_DEFAULT.value}_${AuthPermission.VIEW.value}",
-                    relationResourceType = null
-                ).data ?: false
-        } catch (e: Exception) {
-            logger.warn("Failed to check pipeline view permission: ${e.message}")
-            false
-        }
-    }
-
-    private fun checkProjectPermission(
-        userId: String,
-        projectId: String
-    ): Boolean {
-        return try {
-            val token = clientTokenService.getSystemToken()
-            client.get(ServiceProjectAuthResource::class)
-                .isProjectUser(
-                    token = token,
-                    type = null,
-                    userId = userId,
-                    projectCode = projectId
-                ).data ?: false
-        } catch (e: Exception) {
-            logger.warn("Failed to check project permission: ${e.message}")
-            false
-        }
     }
 }

@@ -164,22 +164,22 @@ class ApigwArtifactoryResourceV4Impl @Autowired constructor(
         )
     }
 
-    override fun getArtifactInfo(
+    override fun listArtifactInfo(
         appCode: String?,
         apigwType: String?,
         userId: String,
         projectId: String,
         pipelineId: String?,
-        artifactType: String,
-        artifactName: String,
-        artifactVersion: String,
+        artifactType: String?,
+        artifactName: String?,
+        artifactVersion: String?,
         buildId: String?,
         executeCount: Int?,
-        taskId: String?
-    ): Result<PipelineArtifactInfo?> {
+        page: Int?,
+        pageSize: Int?
+    ): Result<Page<PipelineArtifactInfo>> {
 
-        val artifactInfo = client.get(ServiceArtifactMetadataResource::class)
-            .getArtifactInfo(
+        return client.get(ServiceArtifactMetadataResource::class).listArtifactInfo(
                 userId = userId,
                 projectId = projectId,
                 pipelineId = pipelineId,
@@ -188,9 +188,9 @@ class ApigwArtifactoryResourceV4Impl @Autowired constructor(
                 artifactVersion = artifactVersion,
                 executeCount = executeCount,
                 buildId = buildId,
-                taskId = taskId
-            ).data
-        return Result(artifactInfo)
+                page = page,
+                pageSize = pageSize
+            )
     }
 
     private fun checkPipelineId(projectId: String, pipelineId: String?, buildId: String): String {

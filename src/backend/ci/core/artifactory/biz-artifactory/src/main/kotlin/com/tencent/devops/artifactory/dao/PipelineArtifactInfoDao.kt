@@ -28,14 +28,19 @@
 package com.tencent.devops.artifactory.dao
 
 import com.tencent.devops.artifactory.pojo.artifact.PipelineArtifactInfo
+import com.tencent.devops.artifactory.pojo.artifact.PipelineArtifactInfoQuery
 import com.tencent.devops.model.artifactory.tables.TPipelineArtifactInfo
 import com.tencent.devops.model.artifactory.tables.records.TPipelineArtifactInfoRecord
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Result
+import org.jooq.impl.DSL.max
+import org.jooq.impl.DSL.row
 import org.springframework.stereotype.Repository
 
-@Suppress("ALL")
+/**
+ * 流水线产出物元数据 DAO
+ */
 @Repository
 class PipelineArtifactInfoDao {
 
@@ -87,42 +92,40 @@ class PipelineArtifactInfoDao {
         }
     }
 
-    fun getByArtifact(
+    fun searchArtifactInfo(
         dslContext: DSLContext,
-        projectId: String,
-        pipelineId: String?,
-        artifactType: String,
-        artifactName: String,
-        artifactVersion: String,
-        executeCount: Int? = null,
-        buildId: String? = null,
-        taskId: String? = null
-    ): TPipelineArtifactInfoRecord? {
-        with(TPipelineArtifactInfo.T_PIPELINE_ARTIFACT_INFO) {
-            val conditions = buildList<Condition> {
-                add(PROJECT_ID.eq(projectId))
-                add(ARTIFACT_TYPE.eq(artifactType))
-                if (!pipelineId.isNullOrBlank()) {
-                    add(PIPELINE_ID.eq(pipelineId))
-                }
-                if (!buildId.isNullOrBlank()) {
-                    add(BUILD_ID.eq(buildId))
-                }
-                if (executeCount != null) {
-                    add(EXECUTE_COUNT.eq(executeCount))
-                }
-                if (!taskId.isNullOrBlank()) {
-                    add(TASK_ID.eq(taskId))
-                }
-                add(ARTIFACT_NAME.eq(artifactName))
-                add(ARTIFACT_VERSION.eq(artifactVersion))
-            }
-                return dslContext.selectFrom(this)
-                    .where(conditions)
-                    .orderBy(CREATE_TIME.desc())
-                    .limit(1)
-                    .fetchOne()
+        query: PipelineArtifactInfoQuery,
+        page: Int,
+        pageSize: Int
+    ): List<TPipelineArtifactInfoRecord> {
+        val conditions = buildConditions(query)
+        val offset = (page - 1) * pageSize
+        val ids = if (isLatestByBuild(query)) {
+            selectLatestIdsByBuild(dslContext, conditions, offset, pageSize)
+        } else {
+            selectIdsByConditions(dslContext, conditions, offset, pageSize)
         }
+        if (ids.isEmpty()) {
+            return emptyList()
+        }
+        return selectByIds(dslContext, ids)
+    }
+
+    fun countArtifactInfo(
+        dslContext: DSLContext,
+        query: PipelineArtifactInfoQuery
+    ): Long {
+        val conditions = buildConditions(query)
+        return if (isLatestByBuild(query)) {
+            countLatestByBuild(dslContext, conditions)
+        } else {
+            countByConditions(dslContext, conditions)
+        }
+    }
+
+    // 传 buildId 未传 executeCount：收敛为当次构建各制品最新一次执行
+    private fun isLatestByBuild(query: PipelineArtifactInfoQuery): Boolean {
+        return !query.buildId.isNullOrBlank() && query.executeCount == null
     }
 
     fun listByBuild(
@@ -136,6 +139,139 @@ class PipelineArtifactInfoDao {
                 .where(PROJECT_ID.eq(projectId)
                     .and(PIPELINE_ID.eq(pipelineId))
                     .and(BUILD_ID.eq(buildId)))
+                .orderBy(EXECUTE_COUNT.desc(), CREATE_TIME.desc(), ID.desc())
+                .fetch()
+        }
+    }
+
+    private fun buildConditions(query: PipelineArtifactInfoQuery): List<Condition> {
+        with(TPipelineArtifactInfo.T_PIPELINE_ARTIFACT_INFO) {
+            return buildList {
+                add(PROJECT_ID.eq(query.projectId))
+                if (!query.artifactType.isNullOrBlank()) {
+                    add(ARTIFACT_TYPE.eq(query.artifactType))
+                }
+                if (!query.pipelineId.isNullOrBlank()) {
+                    add(PIPELINE_ID.eq(query.pipelineId))
+                }
+                if (!query.buildId.isNullOrBlank()) {
+                    add(BUILD_ID.eq(query.buildId))
+                }
+                if (query.executeCount != null) {
+                    add(EXECUTE_COUNT.eq(query.executeCount))
+                }
+                if (!query.artifactName.isNullOrBlank()) {
+                    add(ARTIFACT_NAME.eq(query.artifactName))
+                }
+                if (!query.artifactVersion.isNullOrBlank()) {
+                    add(ARTIFACT_VERSION.eq(query.artifactVersion))
+                }
+            }
+        }
+    }
+
+    /**
+     * 覆盖索引取 ID 分页：BKM 溯源场景（类型+名称+版本等值）完全命中索引，OFFSET 丢弃行不回表
+     */
+    private fun selectIdsByConditions(
+        dslContext: DSLContext,
+        conditions: List<Condition>,
+        offset: Int,
+        limit: Int
+    ): List<Long> {
+        with(TPipelineArtifactInfo.T_PIPELINE_ARTIFACT_INFO) {
+            return dslContext.select(ID)
+                .from(this)
+                .where(conditions)
+                .orderBy(CREATE_TIME.desc(), ID.desc())
+                .offset(offset)
+                .limit(limit)
+                .fetch(ID)
+        }
+    }
+
+    private fun countByConditions(
+        dslContext: DSLContext,
+        conditions: List<Condition>
+    ): Long {
+        with(TPipelineArtifactInfo.T_PIPELINE_ARTIFACT_INFO) {
+            return dslContext.selectCount()
+                .from(this)
+                .where(conditions)
+                .fetchOne(0, Long::class.java) ?: 0L
+        }
+    }
+
+    /**
+     * 当次构建最新：元组 IN 子查询收敛各制品最新一次执行（兼容 MySQL 5.7，不依赖窗口函数）
+     */
+    private fun selectLatestIdsByBuild(
+        dslContext: DSLContext,
+        conditions: List<Condition>,
+        offset: Int,
+        limit: Int
+    ): List<Long> {
+        with(TPipelineArtifactInfo.T_PIPELINE_ARTIFACT_INFO) {
+            return dslContext.select(ID)
+                .from(this)
+                .where(conditions)
+                .and(latestArtifactKeys(dslContext, conditions))
+                .orderBy(CREATE_TIME.desc(), ID.desc())
+                .offset(offset)
+                .limit(limit)
+                .fetch(ID)
+        }
+    }
+
+    private fun countLatestByBuild(
+        dslContext: DSLContext,
+        conditions: List<Condition>
+    ): Long {
+        with(TPipelineArtifactInfo.T_PIPELINE_ARTIFACT_INFO) {
+            return dslContext.selectCount()
+                .from(this)
+                .where(conditions)
+                .and(latestArtifactKeys(dslContext, conditions))
+                .fetchOne(0, Long::class.java) ?: 0L
+        }
+    }
+
+    /**
+     * 各制品（构建+类型+名称+版本）最新一次执行的元组匹配条件
+     */
+    private fun latestArtifactKeys(
+        dslContext: DSLContext,
+        conditions: List<Condition>
+    ): Condition {
+        with(TPipelineArtifactInfo.T_PIPELINE_ARTIFACT_INFO) {
+            val latestKeys = dslContext.select(
+                BUILD_ID,
+                ARTIFACT_TYPE,
+                ARTIFACT_NAME,
+                ARTIFACT_VERSION,
+                max(EXECUTE_COUNT)
+            ).from(this)
+                .where(conditions)
+                .groupBy(BUILD_ID, ARTIFACT_TYPE, ARTIFACT_NAME, ARTIFACT_VERSION)
+            return row(BUILD_ID,
+                ARTIFACT_TYPE,
+                ARTIFACT_NAME,
+                ARTIFACT_VERSION,
+                EXECUTE_COUNT).`in`(latestKeys)
+        }
+    }
+
+    /**
+     * 按 ID 回表取整行，IN 不保证顺序，需重新排序
+     */
+    private fun selectByIds(
+        dslContext: DSLContext,
+        ids: List<Long>
+    ): Result<TPipelineArtifactInfoRecord> {
+        with(TPipelineArtifactInfo.T_PIPELINE_ARTIFACT_INFO) {
+            return dslContext.selectFrom(this)
+                .where(ID.`in`(ids))
+                .orderBy(CREATE_TIME.desc(), ID.desc())
                 .fetch()
         }
     }
