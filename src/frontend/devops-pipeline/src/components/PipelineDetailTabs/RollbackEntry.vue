@@ -51,7 +51,7 @@
     } from '@/utils/permission'
     import { pipelineTabIdMap, DRAFT_STATUS } from '@/utils/pipelineConst'
     import dayjs from 'dayjs'
-    import { mapActions, mapGetters, mapState } from 'vuex'
+    import { mapActions, mapGetters, mapMutations, mapState } from 'vuex'
     import DraftConfirmDialog from '@/components/PipelineHeader/DraftConfirmDialog'
     import useDraftStatus from '@/hook/useDraftStatus'
 
@@ -193,6 +193,7 @@
             this.DRAFT_STATUS = DRAFT_STATUS
         },
         methods: {
+            ...mapMutations('common', ['SET_HAS_DRAFT']),
             ...mapActions({
                 requestPipelineSummary: 'atom/requestPipelineSummary',
                 requestTemplateSummary: 'atom/requestTemplateSummary',
@@ -258,6 +259,7 @@
                 this.draftSaveInfo = null
                 this.draftStatus = DRAFT_STATUS.NORMAL
                 this.isShowConfirmDialog = false
+                this.SET_HAS_DRAFT(false)
             },
             async rollback (rollbackVersion, actionType = '') {
                 try {

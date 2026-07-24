@@ -251,7 +251,7 @@
         RESOURCE_TYPE
     } from '@/utils/permission'
     import { TEMP_PARAM_SET_ID, DRAFT_STATUS, VERSION_STATUS_ENUM } from '@/utils/pipelineConst'
-    import { mapActions, mapGetters, mapState } from 'vuex'
+    import { mapActions, mapGetters, mapMutations, mapState } from 'vuex'
     import PipelineBreadCrumb from './PipelineBreadCrumb'
     import ReleaseButton from './ReleaseButton'
     import DraftConfirmDialog from './DraftConfirmDialog.vue'
@@ -365,6 +365,7 @@
             }
         },
         methods: {
+            ...mapMutations('common', ['SET_HAS_DRAFT']),
             ...mapActions(
                 'pipelines',
                 [
@@ -581,6 +582,7 @@
                 this.draftSaveInfo = null
                 this.draftStatus = DRAFT_STATUS.NORMAL
                 this.isShowConfirmDialog = false
+                this.SET_HAS_DRAFT(false)
             },
             goEdit (version) {
                 this.$router.push({

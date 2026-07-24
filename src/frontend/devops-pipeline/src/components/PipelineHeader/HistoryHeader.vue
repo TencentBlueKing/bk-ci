@@ -166,7 +166,7 @@
         TEMPLATE_RESOURCE_ACTION,
     } from '@/utils/permission'
     import { pipelineTabIdMap, DRAFT_STATUS } from '@/utils/pipelineConst'
-    import { mapActions, mapGetters, mapState } from 'vuex'
+    import { mapActions, mapGetters, mapMutations, mapState } from 'vuex'
     import MoreActions from './MoreActions.vue'
     import PipelineBreadCrumb from './PipelineBreadCrumb.vue'
     import DraftConfirmDialog from './DraftConfirmDialog.vue'
@@ -288,6 +288,8 @@
                 return this.pipelineInfo?.baseVersion && this.activePipelineVersion?.version === this.pipelineInfo?.baseVersion
             },
             draftHintTitle () {
+                console.log(this.hasDraft, this.isActiveBranchVersion, '111111111111111111')
+                
                 switch (true) {
                     case this.hasDraft && this.isActiveBranchVersion:
                         return this.$t('template.templateCoverWarning')
@@ -353,6 +355,7 @@
             }
         },
         methods: {
+            ...mapMutations('common', ['SET_HAS_DRAFT']),
             ...mapActions('atom', [
                 'selectPipelineVersion',
                 'requestPipeline',
@@ -438,6 +441,7 @@
                 this.draftSaveInfo = null
                 this.draftStatus = DRAFT_STATUS.NORMAL
                 this.isShowConfirmDialog = false
+                this.SET_HAS_DRAFT(false)
             },
             goEdit (version) {
                 this.$router.push({
