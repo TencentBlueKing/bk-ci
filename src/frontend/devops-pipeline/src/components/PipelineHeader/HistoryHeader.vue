@@ -288,8 +288,6 @@
                 return this.pipelineInfo?.baseVersion && this.activePipelineVersion?.version === this.pipelineInfo?.baseVersion
             },
             draftHintTitle () {
-                console.log(this.hasDraft, this.isActiveBranchVersion, '111111111111111111')
-                
                 switch (true) {
                     case this.hasDraft && this.isActiveBranchVersion:
                         return this.$t('template.templateCoverWarning')
