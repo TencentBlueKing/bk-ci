@@ -115,7 +115,7 @@ class PublicVarGroupService @Autowired constructor(
         private const val IAM_DELETE_RETRY_INTERVAL_MS = 500L
     }
 
-    fun addGroup(publicVarGroupDTO: PublicVarGroupDTO): String {
+    fun addGroup(publicVarGroupDTO: PublicVarGroupDTO, allowUpgrade: Boolean = true): String {
         val projectId = publicVarGroupDTO.projectId
         val userId = publicVarGroupDTO.userId
         val groupName = publicVarGroupDTO.publicVarGroup.groupName
@@ -129,9 +129,9 @@ class PublicVarGroupService @Autowired constructor(
         )
         redisLock.lock()
         try {
-            // 大小写不敏感重复性校验
+            // 同名校验（忽略大小写）
             val conflictGroupName = publicVarGroupDao.listGroupsNameByProjectId(dslContext, projectId)
-                .firstOrNull { it.equals(groupName, ignoreCase = true) && it != groupName }
+                .firstOrNull { it.equals(groupName, ignoreCase = true) && (!allowUpgrade || it != groupName) }
             if (conflictGroupName != null) {
                 throw ErrorCodeException(
                     errorCode = ProcessMessageCode.ERROR_PUBLIC_VAR_GROUP_NAME_DUPLICATE_CASE_INSENSITIVE,
@@ -461,7 +461,8 @@ class PublicVarGroupService @Autowired constructor(
                 projectId = projectId,
                 userId = userId,
                 publicVarGroup = publicVarGroupVO
-            )
+            ),
+            allowUpgrade = false
         )
     }
 
