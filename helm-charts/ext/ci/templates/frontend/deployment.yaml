@@ -75,8 +75,7 @@ spec:
             - |
               cd /data/workspace/scripts/
               cp -f "ci_env_${BK_CI_ENV_TAG}.properties" ci_env.properties
-              echo "BK_CI_VERSION=${BK_CI_VERSION}" >> ci_env.properties
-              ./render_ci -m . ../support-files/templates/*
+              ./render_ci -m . ../templates/*
               cd /usr/local/openresty/nginx
               sbin/nginx -g 'daemon off;';
           livenessProbe:
