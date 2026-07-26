@@ -66,8 +66,6 @@ spec:
           env:
             - name: BK_CI_ENV_TAG
               value: {{ .Values.frontend.envTag | default "prod" | quote }}
-            - name: BK_CI_VERSION
-              value: {{ .Values.frontend.ciVersion | quote }}
           workingDir: /usr/local/openresty/nginx
           command:
             - "/bin/sh"
