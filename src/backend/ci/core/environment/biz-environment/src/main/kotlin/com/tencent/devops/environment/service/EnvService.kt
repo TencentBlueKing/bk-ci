@@ -117,7 +117,6 @@ import com.tencent.devops.environment.utils.NodeStringIdUtils
 import com.tencent.devops.model.environment.tables.records.TEnvRecord
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import jakarta.ws.rs.NotFoundException
-import org.glassfish.jersey.server.ParamException
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
