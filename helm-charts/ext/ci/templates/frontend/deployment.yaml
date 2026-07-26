@@ -102,7 +102,7 @@ spec:
       volumes:
         - name: version-log
           nfs:
-            path: /{{ .Values.frontend.cfs.path }}/{{ .Values.frontend.cfs.env }}/version-log
+            path: /{{ .Values.frontend.cfs.path }}/{{ .Values.frontend.cfs.env }}/frontend/version-log
             server: {{ .Values.frontend.cfs.ip }}
       {{- end }}
 {{- end -}}
