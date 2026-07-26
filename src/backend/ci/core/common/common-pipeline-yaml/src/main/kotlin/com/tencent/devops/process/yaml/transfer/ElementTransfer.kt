@@ -36,6 +36,7 @@ import com.tencent.devops.common.pipeline.NameAndValue
 import com.tencent.devops.common.pipeline.TemplateDescriptor
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.enums.BuildScriptType
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.CharsetType
 import com.tencent.devops.common.pipeline.enums.TapdEventType
 import com.tencent.devops.common.pipeline.enums.TemplateRefType
@@ -126,7 +127,11 @@ class ElementTransfer @Autowired(required = false) constructor(
         }
     }
 
-    fun baseTriggers2yaml(elements: List<Element>, aspectWrapper: PipelineTransferAspectWrapper): TriggerOn? {
+    fun baseTriggers2yaml(
+        elements: List<Element>,
+        aspectWrapper: PipelineTransferAspectWrapper,
+        channelCode: ChannelCode = ChannelCode.BS
+    ): TriggerOn? {
         val triggerOn = lazy { TriggerOn() }
         val schedules = mutableListOf<SchedulesRule>()
         triggerOn.value.manual = ManualRule(
@@ -198,7 +203,11 @@ class ElementTransfer @Autowired(required = false) constructor(
                         branches = element.branches,
                         always = (element.noScm != true).nullIfDefault(false),
                         enable = element.elementEnabled().nullIfDefault(true),
-                        startParams = element.convertStartParams()
+                        startParams = element.convertStartParams(),
+                        // nodes 仅创作流通道回写，且只有 NODE_LIST 指定了具体创作节点时才输出
+                        nodes = element.nodes?.ifEmpty { null }?.takeIf {
+                            channelCode == ChannelCode.CREATIVE_STREAM
+                        }
                     )
                 )
                 return@forEach

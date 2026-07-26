@@ -65,7 +65,12 @@ data class SchedulesRule(
     var advanceExpression: List<String>? = null,
     @get:Schema(title = "start-params")
     @JsonProperty("start-params")
-    val startParams: Map<String, String>? = null
+    val startParams: Map<String, String>? = null,
+    @get:Schema(
+        title = "nodes",
+        description = "创作流定时触发指定的启动节点(agentHashId列表)，不填则默认创作环境全部节点"
+    )
+    val nodes: List<String>? = null
 ) : Rule(id, name, enable) {
     data class Interval(
         val week: List<String>,
