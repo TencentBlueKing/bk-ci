@@ -196,7 +196,7 @@ interface BuildBuildResource {
 
     @Operation(summary = "查询互斥组当前任务列表")
     @GET
-    @Path("/{projectId}/mutex_group/tasks")
+    @Path("/{projectId}/mutexGroup/tasks")
     fun getMutexGroupTasks(
         @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
