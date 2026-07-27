@@ -77,12 +77,15 @@
         @Action togglePopupShow
 
         get tenantId (): string {
-            return window.tenantInfoForDisplay?.tenantId || ''
+            const tenantInfo = (window as any).tenantInfoForDisplay
+            return (tenantInfo && tenantInfo.tenantId) || ''
         }
 
         get timeZone (): string {
-            return window.tenantInfoForDisplay?.timeZone
-                || window.userInfo?.timeZone
+            const tenantInfo = (window as any).tenantInfoForDisplay
+            const userInfo = window.userInfo
+            return (tenantInfo && tenantInfo.timeZone)
+                || (userInfo && userInfo.timeZone)
                 || DEFAULT_USER_TIME_ZONE
         }
 
