@@ -31,7 +31,6 @@ import com.tencent.devops.common.api.constant.CommonMessageCode.BK_ENV_NOT_YET_S
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
-import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.client.Client
@@ -67,6 +66,8 @@ import com.tencent.devops.process.engine.service.record.ContainerBuildRecordServ
 import com.tencent.devops.process.engine.utils.ContainerUtils
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
 import com.tencent.devops.process.pojo.mq.PipelineAgentStartupEvent
+import com.tencent.devops.process.service.BuildVarExprOverflowHelper
+import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.PipelineContextService
 import com.tencent.devops.process.utils.BK_CI_AUTHORIZER
 import com.tencent.devops.process.utils.NODE_OS
@@ -95,7 +96,8 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
     private val buildLogPrinter: BuildLogPrinter,
     private val dispatchTypeBuilder: DispatchTypeBuilder,
     private val pipelineContextService: PipelineContextService,
-    private val pipelineTaskService: PipelineTaskService
+    private val pipelineTaskService: PipelineTaskService,
+    private val buildVariableService: BuildVariableService
 ) : IAtomTask<VMBuildContainer> {
     override fun getParamElement(task: PipelineBuildTask): VMBuildContainer {
         return JsonUtil.mapTo(task.taskParams, VMBuildContainer::class.java)
@@ -111,8 +113,33 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
         var atomResponse: AtomResponse
         // 解决BUG:93319235,env变量提前替换
         val context = pipelineContextService.getAllBuildContext(runVariables)
+        val (overflowKeys, overflowLoader) = BuildVarExprOverflowHelper.options(
+            buildVariableService = buildVariableService,
+            projectId = task.projectId,
+            buildId = task.buildId,
+            variables = context
+        )
+        val dialect = PipelineDialectUtil.getPipelineDialect(runVariables[PIPELINE_DIALECT])
+        val contextPair = if (dialect.supportUseExpression()) {
+            EnvReplacementParser.getCustomExecutionContextByMap(
+                variables = context,
+                overflowKeys = overflowKeys,
+                overflowLoader = overflowLoader
+            )
+        } else null
+        // customEnv：as-code 走 ${{ }} 可还原大变量；经典 $ 语法仍见引用串
         val buildEnv = param.customEnv?.map { mit ->
-            NameAndValue(mit.key, EnvUtils.parseEnv(mit.value, context))
+            NameAndValue(
+                mit.key,
+                EnvReplacementParser.parse(
+                    value = mit.value,
+                    contextMap = context,
+                    onlyExpression = dialect.supportUseExpression(),
+                    contextPair = contextPair,
+                    overflowKeys = overflowKeys,
+                    overflowLoader = overflowLoader
+                )
+            )
         }
         val fixParam = param.copy(customEnv = buildEnv)
         val executeCount = task.executeCount ?: 1
@@ -125,7 +152,9 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
                     task = task,
                     param = param,
                     variables = context,
-                    os = os
+                    os = os,
+                    overflowKeys = overflowKeys,
+                    overflowLoader = overflowLoader
                 )
             ) {
                 AtomResponse(
@@ -337,13 +366,19 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
         task: PipelineBuildTask,
         param: VMBuildContainer,
         variables: Map<String, String>,
-        os: String
+        os: String,
+        overflowKeys: Set<String> = emptySet(),
+        overflowLoader: ((String) -> String?)? = null
     ): Boolean {
         param.buildEnv?.let { buildEnv ->
             val asCode by lazy {
                 val dialect = PipelineDialectUtil.getPipelineDialect(variables[PIPELINE_DIALECT])
                 val contextPair = if (dialect.supportUseExpression()) {
-                    EnvReplacementParser.getCustomExecutionContextByMap(variables)
+                    EnvReplacementParser.getCustomExecutionContextByMap(
+                        variables = variables,
+                        overflowKeys = overflowKeys,
+                        overflowLoader = overflowLoader
+                    )
                 } else null
                 Pair(dialect, contextPair)
             }
@@ -355,7 +390,9 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
                     value = env.value,
                     contextMap = variables,
                     onlyExpression = asCode.first.supportUseExpression(),
-                    contextPair = asCode.second
+                    contextPair = asCode.second,
+                    overflowKeys = overflowKeys,
+                    overflowLoader = overflowLoader
                 )
                 val res = client.get(ServiceContainerAppResource::class).getBuildEnv(
                     name = env.key,

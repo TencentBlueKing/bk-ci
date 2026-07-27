@@ -29,11 +29,11 @@ package com.tencent.devops.common.pipeline.option
 
 import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.constant.CommonMessageCode.BK_JOB_MATRIX_STR_ERROR
-import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.KeyReplacement
 import com.tencent.devops.common.api.util.ReplacementUtils
 import com.tencent.devops.common.api.util.YamlUtil
+import com.tencent.devops.common.pipeline.EnvReplacementParser
 import com.tencent.devops.common.pipeline.matrix.DispatchInfo
 import com.tencent.devops.common.pipeline.matrix.MatrixConfig
 import com.tencent.devops.common.web.utils.I18nUtil
@@ -72,25 +72,73 @@ data class MatrixControlOption(
     }
 
     /**
-     * 根据[strategyStr], [includeCaseStr], [excludeCaseStr]计算后得到的矩阵配置
+     * 根据[strategyStr], [includeCaseStr], [excludeCaseStr]计算后得到的矩阵配置。
+     * [overflowKeys]/[overflowLoader]：strategy / fromJSON 引用大变量时按需还原真值。
      */
-    fun convertMatrixConfig(buildContext: Map<String, String>): MatrixConfig {
+    fun convertMatrixConfig(
+        buildContext: Map<String, String>,
+        onlyExpression: Boolean = false,
+        overflowKeys: Set<String> = emptySet(),
+        overflowLoader: ((String) -> String?)? = null
+    ): MatrixConfig {
         val matrixConfig = try {
             // 由于yaml和json结构不同，就不放在同一函数进行解析了
-            convertStrategyYaml(buildContext)
+            convertStrategyYaml(buildContext, onlyExpression, overflowKeys, overflowLoader)
         } catch (ignore: Throwable) {
             logger.warn("convert Strategy from Yaml error. try parse with JSON. Error message: ${ignore.message}")
-            convertStrategyJson(buildContext)
+            convertStrategyJson(buildContext, overflowKeys, overflowLoader)
         }
-        matrixConfig.include!!.addAll(convertCase(EnvUtils.parseEnv(includeCaseStr, buildContext), buildContext))
-        matrixConfig.exclude!!.addAll(convertCase(EnvUtils.parseEnv(excludeCaseStr, buildContext), buildContext))
+        matrixConfig.include!!.addAll(
+            convertCase(
+                parseContextValue(includeCaseStr, buildContext, onlyExpression, overflowKeys, overflowLoader),
+                buildContext,
+                overflowKeys,
+                overflowLoader
+            )
+        )
+        matrixConfig.exclude!!.addAll(
+            convertCase(
+                parseContextValue(excludeCaseStr, buildContext, onlyExpression, overflowKeys, overflowLoader),
+                buildContext,
+                overflowKeys,
+                overflowLoader
+            )
+        )
         return matrixConfig
+    }
+
+    private fun parseContextValue(
+        value: String?,
+        buildContext: Map<String, String>,
+        onlyExpression: Boolean,
+        overflowKeys: Set<String>,
+        overflowLoader: ((String) -> String?)?
+    ): String {
+        return EnvReplacementParser.parse(
+            value = value,
+            contextMap = buildContext,
+            onlyExpression = onlyExpression,
+            overflowKeys = overflowKeys,
+            overflowLoader = overflowLoader
+        )
+    }
+
+    private fun lookupContext(
+        key: String,
+        buildContext: Map<String, String>,
+        overflowKeys: Set<String>,
+        overflowLoader: ((String) -> String?)?
+    ): String? {
+        if (overflowLoader != null && overflowKeys.contains(key)) {
+            return overflowLoader.invoke(key) ?: buildContext[key]
+        }
+        return buildContext[key]
     }
 
     fun convertMatrixToYamlStrategy(): Any? {
         val matrixConfig = try {
             // 由于yaml和json结构不同，就不放在同一函数进行解析了
-            convertStrategyYaml(emptyMap())
+            convertStrategyYaml(emptyMap(), onlyExpression = false, overflowKeys = emptySet(), overflowLoader = null)
         } catch (ignore: Throwable) {
             logger.warn("convert Strategy from Yaml error. try parse with JSON. Error message: ${ignore.message}")
             return strategyStr
@@ -119,13 +167,18 @@ data class MatrixControlOption(
     /**
      * 根据[strategyStr]生成对应的矩阵参数表
      */
-    private fun convertStrategyYaml(buildContext: Map<String, String>): MatrixConfig {
+    private fun convertStrategyYaml(
+        buildContext: Map<String, String>,
+        onlyExpression: Boolean,
+        overflowKeys: Set<String>,
+        overflowLoader: ((String) -> String?)?
+    ): MatrixConfig {
         if (strategyStr.isNullOrBlank()) {
             return MatrixConfig(
                 emptyMap(), mutableListOf(), mutableListOf()
             )
         }
-        val contextStr = EnvUtils.parseEnv(strategyStr, buildContext)
+        val contextStr = parseContextValue(strategyStr, buildContext, onlyExpression, overflowKeys, overflowLoader)
         return MatrixConfig(
             strategy = JsonUtil.anyTo(
                 YamlUtil.to<Map<String, List<String>>>(contextStr),
@@ -135,7 +188,12 @@ data class MatrixControlOption(
         )
     }
 
-    private fun replaceJsonPattern(command: String, buildContext: Map<String, String>): String {
+    private fun replaceJsonPattern(
+        command: String,
+        buildContext: Map<String, String>,
+        overflowKeys: Set<String> = emptySet(),
+        overflowLoader: ((String) -> String?)? = null
+    ): String {
         return ReplacementUtils.replace(
             command = command,
             replacement = object : KeyReplacement {
@@ -144,9 +202,9 @@ data class MatrixControlOption(
                     // 匹配fromJSON()
                     val matcher = MATRIX_JSON_KEY_PATTERN.matcher(key)
                     if (matcher.find()) {
-                        return buildContext[matcher.group(2)]
+                        return lookupContext(matcher.group(2), buildContext, overflowKeys, overflowLoader)
                     }
-                    return buildContext[key]
+                    return lookupContext(key, buildContext, overflowKeys, overflowLoader)
                 }
             }
         )
@@ -155,7 +213,11 @@ data class MatrixControlOption(
     /**
      * 根据[strategyStr]生成对应的矩阵参数表
      */
-    private fun convertStrategyJson(buildContext: Map<String, String>): MatrixConfig {
+    private fun convertStrategyJson(
+        buildContext: Map<String, String>,
+        overflowKeys: Set<String>,
+        overflowLoader: ((String) -> String?)?
+    ): MatrixConfig {
         // 替换上下文 要考虑带fromJSON()的写法
         if (strategyStr.isNullOrBlank()) {
             return MatrixConfig(
@@ -164,7 +226,9 @@ data class MatrixControlOption(
         }
         val contextStr = replaceJsonPattern(
             command = strategyStr,
-            buildContext = buildContext
+            buildContext = buildContext,
+            overflowKeys = overflowKeys,
+            overflowLoader = overflowLoader
         )
         try {
             // 适用于matrix中是包含了key的map类型JSON，这种情况必包含strategy，可能包含include和exclude
@@ -194,7 +258,9 @@ data class MatrixControlOption(
                         is String -> JsonUtil.to<List<String>>(
                             replaceJsonPattern(
                                 command = it.value as String,
-                                buildContext = buildContext
+                                buildContext = buildContext,
+                                overflowKeys = overflowKeys,
+                                overflowLoader = overflowLoader
                             )
                         )
 
@@ -211,7 +277,12 @@ data class MatrixControlOption(
     /**
      * 传入[includeCaseStr]或[excludeCaseStr]的获得组合数组
      */
-    private fun convertCase(caseStr: String?, buildContext: Map<String, String>? = null): List<Map<String, String>> {
+    private fun convertCase(
+        caseStr: String?,
+        buildContext: Map<String, String>? = null,
+        overflowKeys: Set<String> = emptySet(),
+        overflowLoader: ((String) -> String?)? = null
+    ): List<Map<String, String>> {
         if (caseStr.isNullOrBlank()) {
             return emptyList()
         }
@@ -221,7 +292,9 @@ data class MatrixControlOption(
             // 这种情况应该只出现于fromJSON
             val contextStr = replaceJsonPattern(
                 command = caseStr,
-                buildContext = buildContext ?: throw Exception("empty buildContext")
+                buildContext = buildContext ?: throw Exception("empty buildContext"),
+                overflowKeys = overflowKeys,
+                overflowLoader = overflowLoader
             )
             kotlin.runCatching { JsonUtil.to<List<Map<String, String>>>(contextStr) }.getOrElse {
                 throw Exception(I18nUtil.getCodeLanMessage(BK_JOB_MATRIX_STR_ERROR, params = arrayOf(contextStr)))

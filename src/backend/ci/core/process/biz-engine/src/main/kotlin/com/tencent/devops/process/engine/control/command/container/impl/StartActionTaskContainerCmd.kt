@@ -61,8 +61,10 @@ import com.tencent.devops.process.engine.service.PipelineTaskService
 import com.tencent.devops.process.engine.service.record.TaskBuildRecordService
 import com.tencent.devops.process.engine.utils.ContainerUtils
 import com.tencent.devops.process.pojo.task.TaskBuildEndParam
+import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.PipelineContextService
 import com.tencent.devops.process.util.TaskUtils
+import com.tencent.devops.process.utils.BuildVarOverflowUtils
 import com.tencent.devops.store.pojo.common.ATOM_POST_EXECUTE_TIP
 import java.time.LocalDateTime
 import org.slf4j.LoggerFactory
@@ -76,7 +78,8 @@ class StartActionTaskContainerCmd(
     private val taskBuildRecordService: TaskBuildRecordService,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val buildLogPrinter: BuildLogPrinter,
-    private val pipelineContextService: PipelineContextService
+    private val pipelineContextService: PipelineContextService,
+    private val buildVariableService: BuildVariableService
 ) : ContainerCmd {
 
     companion object {
@@ -480,7 +483,18 @@ class StartActionTaskContainerCmd(
         }
 
         if (toDoTask != null) {
-            val msg = TaskUtils.parseTimeout(toDoTask, contextMap)
+            val overflowKeys = BuildVarOverflowUtils.collectOverflowKeys(contextMap)
+            val overflowLoader: ((String) -> String?)? = if (overflowKeys.isEmpty()) {
+                null
+            } else {
+                { key -> buildVariableService.getVariableValue(toDoTask.projectId, toDoTask.buildId, key) }
+            }
+            val msg = TaskUtils.parseTimeout(
+                task = toDoTask,
+                contextMap = contextMap,
+                overflowKeys = overflowKeys,
+                overflowLoader = overflowLoader
+            )
             buildLogPrinter.addDebugLine(
                 buildId = toDoTask.buildId,
                 message = msg,
@@ -506,18 +520,32 @@ class StartActionTaskContainerCmd(
     ): Boolean {
 
         if (this.taskId != VMUtils.genStartVMTaskId(this.containerId)) { // 非开机插件,检查条件
+            val overflowKeys = BuildVarOverflowUtils.collectOverflowKeys(contextMap)
+            val overflowLoader: ((String) -> String?)? = if (overflowKeys.isEmpty()) {
+                null
+            } else {
+                { key -> buildVariableService.getVariableValue(projectId, buildId, key) }
+            }
             return ControlUtils.checkTaskSkip(
                 buildId = buildId,
                 additionalOptions = additionalOptions,
                 containerFinalStatus = containerContext.buildStatus,
                 variables = contextMap,
                 hasFailedTaskInSuccessContainer = hasFailedTaskInSuccessContainer,
-                message = message
+                message = message,
+                overflowKeys = overflowKeys,
+                overflowLoader = overflowLoader
             )
         }
 
         var skip = false
         var idx = startPos
+        val overflowKeys = BuildVarOverflowUtils.collectOverflowKeys(contextMap)
+        val overflowLoader: ((String) -> String?)? = if (overflowKeys.isEmpty()) {
+            null
+        } else {
+            { key -> buildVariableService.getVariableValue(projectId, buildId, key) }
+        }
         while (++idx < containerContext.containerTasks.size) {
             val it = containerContext.containerTasks[idx]
             if (!VMUtils.isVMTask(it.taskId)) {
@@ -527,7 +555,9 @@ class StartActionTaskContainerCmd(
                     containerFinalStatus = containerContext.buildStatus,
                     variables = contextMap,
                     hasFailedTaskInSuccessContainer = hasFailedTaskInSuccessContainer,
-                    message = message
+                    message = message,
+                    overflowKeys = overflowKeys,
+                    overflowLoader = overflowLoader
                 )
                 if (LOG.isDebugEnabled) {
                     LOG.debug("ENGINE|$buildId|CHECK_QUICK_SKIP|$stageId|j($containerId)|${it.taskName}|$skip")

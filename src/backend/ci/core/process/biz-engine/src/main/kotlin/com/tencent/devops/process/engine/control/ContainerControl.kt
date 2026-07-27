@@ -60,6 +60,7 @@ import com.tencent.devops.process.engine.service.PipelineContainerService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineStageService
 import com.tencent.devops.process.engine.service.PipelineTaskService
+import com.tencent.devops.process.service.BuildVarExprOverflowHelper
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.PipelineAsCodeService
 import org.slf4j.LoggerFactory
@@ -220,7 +221,18 @@ class ContainerControl @Autowired constructor(
         // #7954 初次时解析变量替换真正的Job超时时间
         val timeoutStr = container.controlOption.jobControlOption.timeoutVar?.trim()
         if (!timeoutStr.isNullOrBlank()) {
-            val obj = Timeout.decTimeout(timeoutStr, contextMap = variables)
+            val (overflowKeys, overflowLoader) = BuildVarExprOverflowHelper.options(
+                buildVariableService = buildVariableService,
+                projectId = container.projectId,
+                buildId = container.buildId,
+                variables = variables
+            )
+            val obj = Timeout.decTimeout(
+                timeoutVar = timeoutStr,
+                contextMap = variables,
+                overflowKeys = overflowKeys,
+                overflowLoader = overflowLoader
+            )
             if (needUpdateControlOption == null) {
                 needUpdateControlOption = container.controlOption
             }

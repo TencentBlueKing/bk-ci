@@ -269,6 +269,33 @@ class AppPipelineBuildResourceImpl @Autowired constructor(
         )
     }
 
+    override fun getBuildParameterValue(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        paramKey: String,
+        archiveFlag: Boolean?
+    ): Result<BuildParameters?> {
+        checkParam(userId, projectId, pipelineId)
+        if (buildId.isBlank()) {
+            throw ParamBlankException("Invalid buildId")
+        }
+        if (paramKey.isBlank()) {
+            throw ParamBlankException("Invalid param key")
+        }
+        return Result(
+            pipelineBuildFacadeService.getBuildParameterValue(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                paramKey = paramKey,
+                archiveFlag = archiveFlag
+            )
+        )
+    }
+
     override fun goToReview(
         userId: String,
         projectId: String,

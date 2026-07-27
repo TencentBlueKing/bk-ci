@@ -482,6 +482,10 @@ object ProcessMessageCode {
     // 构建执行相关错误码（2101500-2101599）
     const val ERROR_PIPELINE_START_NODE_NO_PERMISSION = "2101500" // 用户[{0}]没有节点[{1}]的操作权限，无法启动流水线
     const val ERROR_PIPELINE_VERSION_RECYCLED = "2101501" // 流水线版本[{0}]已被回收，无法启动构建，请使用最新版本重试
+    // 本次启动的所有启动参数值总大小[{0}]超过系统限制[{1}]，启动失败
+    const val ERROR_START_VARIABLES_TOTAL_OVERSIZE = "2101502"
+    // 启动参数[{0}]的默认值长度[{1}]超过系统限制[{2}]，请缩短默认值后再保存
+    const val ERROR_START_PARAM_DEFAULT_VALUE_OVERSIZE = "2101503"
 
     // 批量任务
     const val ERROR_PIPELINE_BATCH_TASK_NOT_EXISTS = "2101650" // 流水线批量任务{0}不存在

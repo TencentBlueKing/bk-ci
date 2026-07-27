@@ -214,10 +214,20 @@ object TaskUtils {
     /**
      * 解析[task]中的[ElementAdditionalOptions]配置的超时设定，做变量替换，并返回日志信息
      */
-    fun parseTimeout(task: PipelineBuildTask, contextMap: Map<String, String>): String {
+    fun parseTimeout(
+        task: PipelineBuildTask,
+        contextMap: Map<String, String>,
+        overflowKeys: Set<String> = emptySet(),
+        overflowLoader: ((String) -> String?)? = null
+    ): String {
         val timeoutStr = task.additionalOptions?.timeoutVar
         return if (!timeoutStr.isNullOrBlank()) {
-            val obj = Timeout.decTimeout(timeoutStr, contextMap)
+            val obj = Timeout.decTimeout(
+                timeoutVar = timeoutStr,
+                contextMap = contextMap,
+                overflowKeys = overflowKeys,
+                overflowLoader = overflowLoader
+            )
             task.additionalOptions!!.change = true
             task.additionalOptions!!.timeout = obj.minutes.toLong() // 替换成真正的超时分钟数
             val ele: Element = JsonUtil.mapTo((task.taskParams), Element::class.java)

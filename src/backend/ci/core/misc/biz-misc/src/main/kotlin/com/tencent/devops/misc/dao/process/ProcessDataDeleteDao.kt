@@ -37,6 +37,7 @@ import com.tencent.devops.model.process.tables.TPipelineBuildContainer
 import com.tencent.devops.model.process.tables.TPipelineBuildDetail
 import com.tencent.devops.model.process.tables.TPipelineBuildHistory
 import com.tencent.devops.model.process.tables.TPipelineBuildHistoryDebug
+import com.tencent.devops.model.process.tables.TPipelineBuildHistoryParamOverflow
 import com.tencent.devops.model.process.tables.TPipelineBuildParamCombination
 import com.tencent.devops.model.process.tables.TPipelineBuildParamCombinationDetail
 import com.tencent.devops.model.process.tables.TPipelineBuildRecordContainer
@@ -48,6 +49,7 @@ import com.tencent.devops.model.process.tables.TPipelineBuildSummary
 import com.tencent.devops.model.process.tables.TPipelineBuildTask
 import com.tencent.devops.model.process.tables.TPipelineBuildTemplateAcrossInfo
 import com.tencent.devops.model.process.tables.TPipelineBuildVar
+import com.tencent.devops.model.process.tables.TPipelineBuildVarOverflow
 import com.tencent.devops.model.process.tables.TPipelineCallback
 import com.tencent.devops.model.process.tables.TPipelineFavor
 import com.tencent.devops.model.process.tables.TPipelineGroup
@@ -72,10 +74,10 @@ import com.tencent.devops.model.process.tables.TPipelineTriggerEvent
 import com.tencent.devops.model.process.tables.TPipelineTriggerReview
 import com.tencent.devops.model.process.tables.TPipelineView
 import com.tencent.devops.model.process.tables.TPipelineViewGroup
-import com.tencent.devops.model.process.tables.TPipelineVisibility
 import com.tencent.devops.model.process.tables.TPipelineViewTop
 import com.tencent.devops.model.process.tables.TPipelineViewUserLastView
 import com.tencent.devops.model.process.tables.TPipelineViewUserSettings
+import com.tencent.devops.model.process.tables.TPipelineVisibility
 import com.tencent.devops.model.process.tables.TPipelineWebhook
 import com.tencent.devops.model.process.tables.TPipelineWebhookBuildParameter
 import com.tencent.devops.model.process.tables.TPipelineWebhookVersion
@@ -123,6 +125,12 @@ class ProcessDataDeleteDao {
             JooqUtils.retryWhenDeadLock {
                 deletePipelineBuildTemplateAcrossInfo(dslContext, projectId, pipelineId, buildIds)
             }
+        } else {
+            // 归档库：变量主表 T_PIPELINE_BUILD_VAR 与大变量溢出表 T_PIPELINE_BUILD_VAR_OVERFLOW
+            // 随归档构建一起迁入（见 PipelineBuildLinkedDataMigrationStrategy），归档过期清理 / 迁移回滚时
+            // 必须同步删除，否则会残留孤儿（归档溢出表不做分区，无 DROP PARTITION 兜底）。
+            // 非归档库该两表删除仍按原有 clearBaseBuildData 开关控制，此处不改变其行为。
+            deletePipelineBuildVar(dslContext, projectId, buildIds)
         }
         deleteReport(dslContext, projectId, pipelineId, buildIds)
         deletePipelineTriggerReview(dslContext, projectId, buildIds)
@@ -130,6 +138,7 @@ class ProcessDataDeleteDao {
         deletePipelineBuildRecordModel(dslContext, projectId, buildIds)
         deletePipelineBuildRecordStage(dslContext, projectId, buildIds)
         deletePipelineBuildRecordTask(dslContext, projectId, buildIds)
+        deletePipelineBuildHistoryParamOverflow(dslContext, projectId, buildIds)
     }
 
     /**
@@ -299,7 +308,48 @@ class ProcessDataDeleteDao {
     }
 
     fun deletePipelineBuildVar(dslContext: DSLContext, projectId: String, buildIds: List<String>) {
+        if (buildIds.isEmpty()) return
+        // 先删 OVERFLOW → 再删主表
+        deletePipelineBuildVarOverflow(dslContext, projectId, buildIds)
         with(TPipelineBuildVar.T_PIPELINE_BUILD_VAR) {
+            dslContext.deleteFrom(this)
+                .where(PROJECT_ID.eq(projectId).and(BUILD_ID.`in`(buildIds)))
+                .execute()
+        }
+    }
+
+    /**
+     * 删除大变量溢出表中本批 buildId 的全部记录。
+     *
+     * 该表已在现网建好，直接使用 jOOQ 生成表
+     * [TPipelineBuildVarOverflow]，与本类其它删除方法风格一致。
+     */
+    fun deletePipelineBuildVarOverflow(
+        dslContext: DSLContext,
+        projectId: String,
+        buildIds: List<String>
+    ) {
+        if (buildIds.isEmpty()) return
+        with(TPipelineBuildVarOverflow.T_PIPELINE_BUILD_VAR_OVERFLOW) {
+            dslContext.deleteFrom(this)
+                .where(PROJECT_ID.eq(projectId).and(BUILD_ID.`in`(buildIds)))
+                .execute()
+        }
+    }
+
+    /**
+     * 删除构建启动参数大值溢出表中本批 buildId 的全部记录。
+     *
+     * 该表是启动参数大值的长期载体（不分区），与构建历史 T_PIPELINE_BUILD_HISTORY[_DEBUG]
+     * 同生命周期，故随历史一起按 buildId 清理 / 归档迁移。
+     */
+    fun deletePipelineBuildHistoryParamOverflow(
+        dslContext: DSLContext,
+        projectId: String,
+        buildIds: List<String>
+    ) {
+        if (buildIds.isEmpty()) return
+        with(TPipelineBuildHistoryParamOverflow.T_PIPELINE_BUILD_HISTORY_PARAM_OVERFLOW) {
             dslContext.deleteFrom(this)
                 .where(PROJECT_ID.eq(projectId).and(BUILD_ID.`in`(buildIds)))
                 .execute()

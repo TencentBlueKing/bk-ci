@@ -107,7 +107,7 @@ open class DefaultModelCheckPlugin constructor(
             maxPipelineNameSize = pipelineCommonSettingConfig.maxPipelineDescSize
         )
         // 检查流水线model是否过大
-        val modelSize = JsonUtil.toJson(model).length
+        val modelSize = JsonUtil.toJson(model, false).length
         if (modelSize > pipelineCommonSettingConfig.maxModelSize.toLong()) {
             throw ErrorCodeException(
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_TOO_LARGE,

@@ -36,12 +36,16 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.process.engine.control.lock.PipelineBuildVarLock
 import com.tencent.devops.process.engine.dao.PipelineBuildVarDao
+import com.tencent.devops.process.engine.dao.PipelineBuildVarOverflowDao
+import com.tencent.devops.process.pojo.BuildVariableSnapshot
+import com.tencent.devops.process.utils.BuildVarOverflowUtils
 import com.tencent.devops.process.utils.PIPELINE_DIALECT
 import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
 import com.tencent.devops.process.utils.PipelineVarUtil
 import org.apache.commons.lang3.math.NumberUtils
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -50,8 +54,10 @@ import org.springframework.stereotype.Service
 class BuildVariableService @Autowired constructor(
     private val commonDslContext: DSLContext,
     private val pipelineBuildVarDao: PipelineBuildVarDao,
+    private val pipelineBuildVarOverflowDao: PipelineBuildVarOverflowDao,
     private val pipelineAsCodeService: PipelineAsCodeService,
-    private val redisOperation: RedisOperation
+    private val redisOperation: RedisOperation,
+    private val pipelineVarOverflowConfig: PipelineVarOverflowConfig
 ) {
 
     /**
@@ -70,7 +76,11 @@ class BuildVariableService @Autowired constructor(
     }
 
     /**
-     * 将模板语法中的[template]模板字符串替换成当前构建[buildId]下对应的真正的字符串
+     * 将模板语法中的[template]模板字符串替换成当前构建[buildId]下对应的真正的字符串。
+     *
+     * 注意：旧风格 `${xxx}` 模板**不会**触发大变量懒加载——若变量是溢出值，
+     * 这里看到的是引用串 `__BK_OVF__:<len>`。这与历史 `$xxx`/`${xxx}` 行为一致：
+     * 旧语法不应感知到大值，避免脚本里直接展开 4M 内容造成日志爆炸 / OOM。
      */
     fun replaceTemplate(projectId: String, buildId: String, template: String?): String {
         return TemplateFastReplaceUtils.replaceTemplate(templateString = template) { templateWord ->
@@ -88,8 +98,17 @@ class BuildVariableService @Autowired constructor(
     }
 
     fun getVariable(projectId: String, pipelineId: String, buildId: String, varName: String): String? {
-        val vars = getAllVariable(projectId = projectId, pipelineId = pipelineId, buildId = buildId)
-        return if (vars.isNotEmpty()) vars[varName] else null
+        // 单变量查询只按 key 精准查，避免把一次构建的全部变量都拉出来（历史实现会全量加载再取一个 key）。
+        // 落库统一使用新变量名，这里把调用方可能传入的旧变量名 / 预置上下文名映射成落库 key 后再查，
+        // 与 mixOldVarAndNewVar 的取值口径保持一致，不改变对旧命名（含前缀映射）的兼容能力。
+        val storedKey = PipelineVarUtil.resolveStoredVarKey(varName)
+        val dataMap = pipelineBuildVarDao.getVars(
+            dslContext = commonDslContext,
+            projectId = projectId,
+            buildId = buildId,
+            keys = setOf(varName, storedKey)
+        )
+        return dataMap[varName] ?: dataMap[storedKey]
     }
 
     fun getAllVariable(
@@ -109,6 +128,103 @@ class BuildVariableService @Autowired constructor(
             dataMap
         } else {
             PipelineVarUtil.mixOldVarAndNewVar(dataMap)
+        }
+    }
+
+    /**
+     * 获取构建变量"快照"。
+     *
+     * 与 [getAllVariable] 不同的是，本方法**始终**返回原始值（小变量真实值 + 大变量引用串）+
+     * 溢出键集合 + 懒加载器。
+     *
+     * 仅在"需要按 ${{ xxx }} 表达式求值"的场景使用，普通查询继续使用 [getAllVariable]，
+     * 不会改变现有行为与内存占用。
+     *
+     * 内存安全：
+     *  - 返回的 [BuildVariableSnapshot.largeValueLoader] 由 [BuildVarOverflowLoader] 提供，
+     *    具备 Caffeine 字符加权缓存与会话级总字节预算控制；
+     *  - 调用方应将快照视为"会话级"对象，**不要**长期持有，避免持有缓存中的大变量。
+     */
+    fun getVariableSnapshot(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        keys: Set<String>? = null
+    ): BuildVariableSnapshot {
+        val dataMap = pipelineBuildVarDao.getVars(
+            dslContext = commonDslContext,
+            projectId = projectId,
+            buildId = buildId,
+            keys = keys
+        )
+        val largeKeys = dataMap.entries.asSequence()
+            .filter { BuildVarOverflowUtils.isOverflowReference(it.value) }
+            .map { it.key }
+            .toSet()
+        val loader = BuildVarOverflowLoader(
+            overflowDao = pipelineBuildVarOverflowDao,
+            dslContext = commonDslContext,
+            projectId = projectId,
+            buildId = buildId,
+            maxCacheBytes = pipelineVarOverflowConfig.lazyLoadCacheMax,
+            maxBudgetBytes = pipelineVarOverflowConfig.lazyLoadBudgetMax
+        )
+        return BuildVariableSnapshot(
+            smallVars = dataMap,
+            largeKeys = largeKeys,
+            largeValueLoader = { key ->
+                if (key !in largeKeys) {
+                    dataMap[key]
+                } else {
+                    loader.load(key)
+                }
+            }
+        )
+    }
+
+    /**
+     * 单变量按需获取真实值（含溢出表）。
+     * 主要供 ${{ xxx }} 表达式按需求值或 REST 单变量查询使用。
+     *
+     * 注：本方法每次调用都会新建一个 [BuildVarOverflowLoader]——只走单条查询，
+     * 没有跨调用的缓存收益，但相应也不持有任何热数据；适合"零碎、单点"使用。
+     * 若需要在一次会话中多次访问大变量，请改用 [getVariableSnapshot]。
+     */
+    fun getVariableValue(
+        projectId: String,
+        buildId: String,
+        varName: String,
+        queryDslContext: DSLContext? = null
+    ): String? {
+        val queryContext = queryDslContext ?: commonDslContext
+        // 落库统一新变量名，兼容旧名 / 预置上下文名（含前缀映射）后单点查询，避免漏查。
+        val storedKey = PipelineVarUtil.resolveStoredVarKey(varName)
+        val varMap = pipelineBuildVarDao.getVars(
+            dslContext = queryContext,
+            projectId = projectId,
+            buildId = buildId,
+            keys = setOf(varName, storedKey)
+        )
+        // 命中的 key 即溢出表的 key（主表与溢出表 key 一致）
+        val matchedKey = if (varMap.containsKey(varName)) varName else storedKey
+        val main = varMap[matchedKey]
+        return if (BuildVarOverflowUtils.isOverflowReference(main)) {
+            BuildVarOverflowLoader(
+                overflowDao = pipelineBuildVarOverflowDao,
+                dslContext = queryContext,
+                projectId = projectId,
+                buildId = buildId,
+                maxCacheBytes = pipelineVarOverflowConfig.lazyLoadCacheMax,
+                maxBudgetBytes = pipelineVarOverflowConfig.lazyLoadBudgetMax
+            ).load(matchedKey) ?: run {
+                LOG.warn(
+                    "$buildId|VAR_OVERFLOW_MISS|key=$matchedKey|main=$main|" +
+                        "overflow table has no value, keep reference"
+                )
+                main
+            }
+        } else {
+            main
         }
     }
 
@@ -168,6 +284,11 @@ class BuildVariableService @Autowired constructor(
      * will delete the [buildId] 's all writable vars
      */
     fun deleteWritableVars(dslContext: DSLContext, projectId: String, buildId: String) {
+        // 先删大变量溢出，再删主表，避免出现"主表删除而溢出表残留"的孤儿。
+        // 注意：当前 deleteWritableVars 仅清理 readOnly=false 的变量，溢出表不区分 readOnly，
+        // 业务侧的调用方（PipelineBuildRetryService 等）实际是为重试做"清理可写变量"，
+        // 此时 readOnly=true 的内置变量不会有溢出值，全量删除溢出表数据是安全的。
+        pipelineBuildVarOverflowDao.deleteByBuildId(commonDslContext, projectId, buildId)
         pipelineBuildVarDao.deleteBuildVar(
             dslContext = commonDslContext,
             projectId = projectId,
@@ -178,6 +299,7 @@ class BuildVariableService @Autowired constructor(
     }
 
     fun deleteBuildVars(projectId: String, pipelineId: String, buildId: String) {
+        pipelineBuildVarOverflowDao.deleteByBuildId(commonDslContext, projectId, buildId)
         pipelineBuildVarDao.deleteBuildVars(
             dslContext = commonDslContext,
             projectId = projectId,
@@ -187,6 +309,7 @@ class BuildVariableService @Autowired constructor(
     }
 
     fun deletePipelineBuildVar(projectId: String, pipelineId: String) {
+        pipelineBuildVarOverflowDao.deleteByPipelineId(commonDslContext, projectId, pipelineId)
         pipelineBuildVarDao.deletePipelineBuildVar(
             dslContext = commonDslContext,
             projectId = projectId,
@@ -206,9 +329,22 @@ class BuildVariableService @Autowired constructor(
         readOnly: Boolean? = null,
         rewriteReadOnly: Boolean? = null
     ) {
+        val rawValue = value.toString()
+        // 超 4M：直接丢弃 + WARN，避免单条变量值撑爆 mediumtext / 内存
+        if (!acceptWithinHardLimit(buildId, name, rawValue)) return
         val redisLock = PipelineBuildVarLock(redisOperation, buildId, name)
         try {
             redisLock.lock()
+            // 1) 先把溢出值写入溢出表，再让主表写"引用"，保证一致性
+            persistOverflowIfNeeded(
+                dslContext = dslContext,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                key = name,
+                rawValue = rawValue,
+                readOnly = readOnly
+            )
             val varMap = pipelineBuildVarDao.getVars(dslContext, projectId, buildId, setOf(name))
             if (varMap.isEmpty()) {
                 pipelineBuildVarDao.save(
@@ -217,7 +353,7 @@ class BuildVariableService @Autowired constructor(
                     pipelineId = pipelineId,
                     buildId = buildId,
                     name = name,
-                    value = value,
+                    value = rawValue,
                     readOnly = readOnly
                 )
             } else {
@@ -226,9 +362,13 @@ class BuildVariableService @Autowired constructor(
                     projectId = projectId,
                     buildId = buildId,
                     name = name,
-                    value = value,
+                    value = rawValue,
                     rewriteReadOnly = rewriteReadOnly
                 )
+            }
+            // 2) 当一个原本是大值的变量被改回小值时，需要把溢出表的旧记录清理掉
+            if (!BuildVarOverflowUtils.shouldOverflow(rawValue)) {
+                pipelineBuildVarOverflowDao.deleteByKey(dslContext, projectId, buildId, name)
             }
         } finally {
             redisLock.unlock()
@@ -245,12 +385,25 @@ class BuildVariableService @Autowired constructor(
         buildId: String,
         variables: Map<String, BuildParameters>
     ) {
+        // 启动阶段先做硬上限过滤，避免把 >4M 的脏数据继续传下去
+        val params = variables.values.filter { acceptWithinHardLimit(buildId, it.key, it.value.toString()) }
+        if (params.isEmpty()) return
+        val overflowParams = params.filter { BuildVarOverflowUtils.shouldOverflow(it.value.toString()) }
+        if (overflowParams.isNotEmpty()) {
+            pipelineBuildVarOverflowDao.batchSave(
+                dslContext = dslContext,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                params = overflowParams
+            )
+        }
         pipelineBuildVarDao.batchSave(
             dslContext = dslContext,
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,
-            variables = variables.map { it.value }
+            variables = params
         )
     }
 
@@ -285,6 +438,13 @@ class BuildVariableService @Autowired constructor(
                 )
             }
         }
+        // 入库前统一做硬上限校验：超 4M 直接丢弃并 WARN，避免堆积大对象在内存中
+        val acceptedParameters = pipelineBuildParameters
+            .filter { acceptWithinHardLimit(buildId, it.key, it.value.toString()) }
+        if (acceptedParameters.isEmpty()) {
+            LOG.warn("$buildId|batchSetVariable|all params dropped after hard-limit filter")
+            return
+        }
 
         val redisLock = PipelineBuildVarLock(redisOperation, buildId)
         try {
@@ -295,11 +455,33 @@ class BuildVariableService @Autowired constructor(
             val buildVarMap = pipelineBuildVarDao.getVars(dslContext, projectId, buildId)
             val insertBuildParameters = mutableListOf<BuildParameters>()
             val updateBuildParameters = mutableListOf<BuildParameters>()
-            pipelineBuildParameters.forEach {
+            acceptedParameters.forEach {
                 if (!buildVarMap.containsKey(it.key)) {
                     insertBuildParameters.add(it)
                 } else {
                     updateBuildParameters.add(it)
+                }
+            }
+            // 1) 先把溢出值写入溢出表（无论 insert 还是 update 路径）
+            watch.start("overflowSave")
+            val overflowParams = acceptedParameters
+                .filter { BuildVarOverflowUtils.shouldOverflow(it.value.toString()) }
+            if (overflowParams.isNotEmpty()) {
+                pipelineBuildVarOverflowDao.batchSave(
+                    dslContext = dslContext,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    buildId = buildId,
+                    params = overflowParams
+                )
+            }
+            // 2) 由小变大、由大变小的回退也要清理：把不再溢出的 key 从溢出表清掉
+            val shrunkKeys = acceptedParameters
+                .filter { !BuildVarOverflowUtils.shouldOverflow(it.value.toString()) }
+                .map { it.key }
+            if (shrunkKeys.isNotEmpty()) {
+                shrunkKeys.forEach { key ->
+                    pipelineBuildVarOverflowDao.deleteByKey(dslContext, projectId, buildId, key)
                 }
             }
             watch.start("batchSave")
@@ -336,5 +518,55 @@ class BuildVariableService @Autowired constructor(
             readOnly = true,
             likeStr = likeStr
         )
+    }
+
+    private fun persistOverflowIfNeeded(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        key: String,
+        rawValue: String,
+        readOnly: Boolean?
+    ) {
+        if (!BuildVarOverflowUtils.shouldOverflow(rawValue)) return
+        pipelineBuildVarOverflowDao.save(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            param = BuildParameters(
+                key = key,
+                value = rawValue,
+                readOnly = readOnly
+            )
+        )
+    }
+
+    /**
+     * 单变量硬上限校验：超过 [PipelineVarOverflowConfig.hardMaxLength]（默认 4M，
+     * 可由 `pipeline.variables.hardMaxLength` 动态调整）则**直接丢弃**。
+     *
+     * 设计取舍：
+     *  - 抛异常会让一次 batch save 整体失败，影响构建；
+     *  - 静默截断会让用户拿到错乱的数据；
+     *  - 选择"丢弃 + WARN"更接近过去 `failIfVariableInvalid=false` 的语义，
+     *    且与 worker 端 [com.tencent.devops.worker.common.task.TaskDaemon] 的过滤行为一致，
+     *    也是防止 16G/Pod 内存被一条异常变量击穿的关键防线。
+     *
+     * @return true 表示通过校验可以继续保存；false 表示已被丢弃。
+     */
+    private fun acceptWithinHardLimit(buildId: String, key: String, rawValue: String): Boolean {
+        val hardMax = pipelineVarOverflowConfig.hardMaxLength
+        if (rawValue.length <= hardMax) return true
+        LOG.warn(
+            "$buildId|VAR_HARD_OVERSIZE|key=$key|len=${rawValue.length}|" +
+                "hardMax=$hardMax|dropped"
+        )
+        return false
+    }
+
+    companion object {
+        private val LOG = LoggerFactory.getLogger(BuildVariableService::class.java)
     }
 }

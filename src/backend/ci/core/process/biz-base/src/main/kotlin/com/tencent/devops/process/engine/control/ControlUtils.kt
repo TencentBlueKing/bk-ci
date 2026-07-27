@@ -50,6 +50,7 @@ import com.tencent.devops.process.constant.ProcessMessageCode.BK_TASK_DISABLED
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_WHEN_THE_CUSTOM_VARIABLES_ARE_ALL_SATISFIED
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
 import com.tencent.devops.process.util.TaskUtils
+import com.tencent.devops.process.utils.BuildVarOverflowUtils
 import com.tencent.devops.process.utils.PipelineVarUtil
 import com.tencent.devops.process.utils.TASK_FAIL_RETRY_MAX_COUNT
 import com.tencent.devops.process.utils.TASK_FAIL_RETRY_MIN_COUNT
@@ -171,7 +172,9 @@ object ControlUtils {
         containerFinalStatus: BuildStatus,
         variables: Map<String, String>,
         hasFailedTaskInSuccessContainer: Boolean,
-        message: StringBuilder = StringBuilder()
+        message: StringBuilder = StringBuilder(),
+        overflowKeys: Set<String> = emptySet(),
+        overflowLoader: ((String) -> String?)? = null
     ): Boolean {
         message.append(
             I18nUtil.getCodeLanMessage(BK_CHECK_TASK_RUN_CONDITION)
@@ -221,7 +224,9 @@ object ControlUtils {
                     buildId = buildId,
                     additionalOptions = additionalOptions,
                     variables = variables,
-                    message = message
+                    message = message,
+                    overflowKeys = overflowKeys,
+                    overflowLoader = overflowLoader
                 )
             } else -> {
                 message.clear()
@@ -235,12 +240,21 @@ object ControlUtils {
         buildId: String,
         additionalOptions: ElementAdditionalOptions?,
         variables: Map<String, String>,
-        message: StringBuilder
+        message: StringBuilder,
+        overflowKeys: Set<String> = emptySet(),
+        overflowLoader: ((String) -> String?)? = null
     ): Boolean {
         if (additionalOptions?.runCondition == RunCondition.CUSTOM_CONDITION_MATCH &&
             !additionalOptions.customCondition.isNullOrBlank()
         ) {
-            return !evalExpressionAsCode(additionalOptions.customCondition, buildId, variables, message)
+            return !evalExpressionAsCode(
+                customCondition = additionalOptions.customCondition,
+                buildId = buildId,
+                variables = variables,
+                message = message,
+                overflowKeys = overflowKeys,
+                overflowLoader = overflowLoader
+            )
         }
 
         return false
@@ -253,7 +267,9 @@ object ControlUtils {
         buildId: String,
         runCondition: JobRunCondition,
         customCondition: String? = null,
-        message: StringBuilder = StringBuilder()
+        message: StringBuilder = StringBuilder(),
+        overflowKeys: Set<String> = emptySet(),
+        overflowLoader: ((String) -> String?)? = null
     ): Boolean {
         message.append(
             I18nUtil.getCodeLanMessage(BK_CHECK_JOB_RUN_CONDITION)
@@ -270,7 +286,14 @@ object ControlUtils {
                 false
             } // 条件全匹配就运行
             JobRunCondition.CUSTOM_CONDITION_MATCH -> { // 满足以下自定义条件时运行
-                return !evalExpressionAsCode(customCondition, buildId, variables, message)
+                return !evalExpressionAsCode(
+                    customCondition = customCondition,
+                    buildId = buildId,
+                    variables = variables,
+                    message = message,
+                    overflowKeys = overflowKeys,
+                    overflowLoader = overflowLoader
+                )
             }
             else -> {
                 message.append(runCondition)
@@ -299,13 +322,22 @@ object ControlUtils {
         buildId: String,
         runCondition: StageRunCondition,
         customCondition: String? = null,
-        message: StringBuilder = StringBuilder()
+        message: StringBuilder = StringBuilder(),
+        overflowKeys: Set<String> = emptySet(),
+        overflowLoader: ((String) -> String?)? = null
     ): Boolean {
         var skip = when (runCondition) {
             StageRunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN -> true // 条件匹配就跳过
             StageRunCondition.CUSTOM_VARIABLE_MATCH -> false // 条件全匹配就运行
             StageRunCondition.CUSTOM_CONDITION_MATCH -> { // 满足以下自定义条件时运行
-                return !evalExpressionAsCode(customCondition, buildId, variables, message)
+                return !evalExpressionAsCode(
+                    customCondition = customCondition,
+                    buildId = buildId,
+                    variables = variables,
+                    message = message,
+                    overflowKeys = overflowKeys,
+                    overflowLoader = overflowLoader
+                )
             }
             else -> return false // 其它类型直接返回不跳过
         }
@@ -322,19 +354,31 @@ object ControlUtils {
         return skip
     }
 
+    /**
+     * 求值自定义条件表达式。大变量在 context 中为引用串时，仅对条件里**出现过的** overflow key 按需还原，
+     * 避免一次条件判断把构建内全部大变量加载进内存。
+     */
     private fun evalExpressionAsCode(
         customCondition: String?,
         buildId: String,
         variables: Map<String, String>,
-        message: StringBuilder
+        message: StringBuilder,
+        overflowKeys: Set<String> = emptySet(),
+        overflowLoader: ((String) -> String?)? = null
     ): Boolean {
         return if (!customCondition.isNullOrBlank()) {
             try {
                 // 新增的表达式调用需要去掉兼容老流水线变量
                 val variablesWithOutOld = variables.filter { PipelineVarUtil.oldVarToNewVar(it.key) == null }
+                val evalContext = resolveOverflowForCondition(
+                    condition = customCondition,
+                    variables = variablesWithOutOld,
+                    overflowKeys = overflowKeys,
+                    overflowLoader = overflowLoader
+                )
                 val expressionResult = ExpressionParser.evaluateByMap(
-                    expression = EnvReplacementParser.parse(customCondition, variables),
-                    contextMap = variablesWithOutOld,
+                    expression = EnvReplacementParser.parse(customCondition, evalContext),
+                    contextMap = evalContext,
                     fetchValue = false
                 )
                 logger.info(
@@ -386,6 +430,31 @@ object ControlUtils {
             message.append("Custom condition is empty, will be skipped!")
             false
         }
+    }
+
+    /**
+     * 仅还原条件表达式中出现的大变量引用，避免条件判断触发全量加载。
+     */
+    private fun resolveOverflowForCondition(
+        condition: String,
+        variables: Map<String, String>,
+        overflowKeys: Set<String>,
+        overflowLoader: ((String) -> String?)?
+    ): Map<String, String> {
+        if (overflowLoader == null || overflowKeys.isEmpty()) {
+            return variables
+        }
+        val keysInCondition = overflowKeys.filter { condition.contains(it) }
+        if (keysInCondition.isEmpty()) {
+            return variables
+        }
+        val resolved = variables.toMutableMap()
+        keysInCondition.forEach { key ->
+            if (BuildVarOverflowUtils.isOverflowReference(resolved[key])) {
+                overflowLoader.invoke(key)?.let { resolved[key] = it }
+            }
+        }
+        return resolved
     }
 
     fun checkContainerFailure(c: PipelineBuildContainer) =
