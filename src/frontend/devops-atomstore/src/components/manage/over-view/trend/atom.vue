@@ -40,7 +40,7 @@
 
 <script>
     import BKChart from '@blueking/bkcharts'
-    import { userTzTrendRange } from '../../../../../common-lib/time'
+    import { userTzTrendRange } from '../../../../../../common-lib/time'
     import api from '@/api'
 
     function getTimeRange (time) {

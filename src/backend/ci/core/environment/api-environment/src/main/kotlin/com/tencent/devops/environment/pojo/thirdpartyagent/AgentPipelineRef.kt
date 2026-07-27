@@ -51,7 +51,6 @@ data class AgentPipelineRef(
     val jobId: String?,
     @get:Schema(title = "Job Name", required = true)
     val jobName: String,
-    @get:Schema(title = "上次构建时间", required = false)
-    @get:Schema(title = "最近构建时间（毫秒时间戳）")
+    @get:Schema(title = "最近构建时间（毫秒时间戳）", required = false)
     val lastBuildTime: Long? = null
 )
