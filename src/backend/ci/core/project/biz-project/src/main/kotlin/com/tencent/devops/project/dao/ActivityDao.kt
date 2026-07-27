@@ -27,7 +27,6 @@
 
 package com.tencent.devops.project.dao
 
-import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.model.project.tables.TActivity
