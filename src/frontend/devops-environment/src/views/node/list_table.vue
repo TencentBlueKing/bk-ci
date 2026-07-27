@@ -270,7 +270,7 @@
                 show-overflow-tooltip
             >
                 <template slot-scope="props">
-                    {{ convertTime(props.row.lastModifyTime) }}
+                    <time-display :value="props.row.lastModifyTime" />
                 </template>
             </bk-table-column>
             <bk-table-column
@@ -299,7 +299,7 @@
                 show-overflow-tooltip
             >
                 <template slot-scope="props">
-                    {{ convertTime(props.row.lastBuildTime) }}
+                    <time-display :value="props.row.lastBuildTime" />
                 </template>
             </bk-table-column>
             <bk-table-column
@@ -462,13 +462,14 @@
     import { NODE_RESOURCE_ACTION, NODE_RESOURCE_TYPE } from '@/utils/permission'
     import EmptyTableStatus from '@/components/empty-table-status'
     import { mapActions } from 'vuex'
-    import { convertTime } from '@/utils/util'
+    import TimeDisplay from '../../../../common-lib/time-display'
     const NODE_TABLE_COLUMN_CACHE = 'node_list_columns'
     import { ENV_ACTIVE_NODE_TYPE, ALLNODE } from '@/store/constants'
 
     export default {
         components: {
-            EmptyTableStatus
+            EmptyTableStatus,
+            TimeDisplay
         },
         props: {
             nodeList: {
@@ -634,7 +635,6 @@
             }
         },
         methods: {
-            convertTime,
             ...mapActions('environment', ['requestNodeTagList', 'requestGetCounts']),
             calcOverPosTable () {
                 const tagMargin = 6

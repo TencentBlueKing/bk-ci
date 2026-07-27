@@ -92,7 +92,7 @@
                     :prop="'updatedTime'"
                 >
                     <template slot-scope="props">
-                        {{ convertTime(props.row.updatedTime * 1000) }}
+                        <time-display :value="props.row.updatedTime" />
                     </template>
                 </bk-table-column>
                 <bk-table-column
@@ -108,9 +108,11 @@
     import PipelineHeader from '@/components/devops/pipeline-header'
     import { convertTime } from '@/utils/util'
     import { mapActions } from 'vuex'
+    import TimeDisplay from '../../../common-lib/time-display'
     export default {
         components: {
-            PipelineHeader
+            PipelineHeader,
+            TimeDisplay
         },
         data () {
             const query = this.$route.query

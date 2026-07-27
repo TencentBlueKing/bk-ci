@@ -100,9 +100,12 @@
                     :label="$t('store.修改时间')"
                     prop="updateTime"
                     width="160"
-                    :formatter="timeFormatter"
                     show-overflow-tooltip
-                ></bk-table-column>
+                >
+                    <template slot-scope="props">
+                        <time-display :value="props.row.updateTime" />
+                    </template>
+                </bk-table-column>
                 <bk-table-column
                     :label="$t('store.操作')"
                     width="250"
@@ -375,10 +378,12 @@
     import { imageStatusList } from '@/store/constants'
     import { debounce } from '@/utils/index'
     import status from './status'
+    import TimeDisplay from '../../../../common-lib/time-display'
 
     export default {
         components: {
-            status
+            status,
+            TimeDisplay
         },
         data () {
             return {
@@ -678,13 +683,6 @@
             relateImage () {
                 window.changeFlag = false
                 this.relateImageData.show = true
-            },
-
-            timeFormatter (row, column, cellValue, index) {
-                const date = new Date(cellValue)
-                const year = date.toISOString().slice(0, 10)
-                const time = date.toTimeString().split(' ')[0]
-                return `${year} ${time}`
             },
 
             sourceTypeFormatter (row, column, cellValue, index) {

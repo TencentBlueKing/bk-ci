@@ -67,7 +67,7 @@
                         prop="latestBuildStartTime"
                     >
                         <template slot-scope="props">
-                            <span>{{ localConvertTime(props.row.latestBuildStartTime) }}</span>
+                            <time-display :value="props.row.latestBuildStartTime" />
                         </template>
                     </bk-table-column>
                 </bk-table>
@@ -77,9 +77,12 @@
 </template>
 
 <script>
-    import { convertTime } from '@/utils/util'
+    import TimeDisplay from '../../../../common-lib/time-display'
 
     export default {
+        components: {
+            TimeDisplay
+        },
         props: {
             pipelineListConf: Object,
             loading: Object,
@@ -98,12 +101,6 @@
         methods: {
             close () {
                 this.$emit('close')
-            },
-            /**
-             * 处理时间格式
-             */
-            localConvertTime (timestamp) {
-                return convertTime(timestamp)
             }
         }
     }

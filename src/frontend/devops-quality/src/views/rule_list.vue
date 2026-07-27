@@ -347,7 +347,7 @@
                                                 prop="timestamp"
                                             >
                                                 <template slot-scope="props">
-                                                    <span>{{ localConvertTime(props.row.timestamp) }}</span>
+                                                    <time-display :value="props.row.timestamp" />
                                                 </template>
                                             </bk-table-column>
                                         </bk-table>
@@ -392,14 +392,16 @@
     import imageEmpty from '@/components/common/imageEmpty'
     import effectivePipeline from '@/components/devops/effective-pipeline'
     import effectiveRange from '@/components/devops/effective-range'
-    import { convertTime, getQueryString } from '@/utils/util'
+    import { getQueryString } from '@/utils/util'
     import { RULE_RESOURCE_ACTION, RULE_RESOURCE_TYPE } from '@/utils/permission.js'
+    import TimeDisplay from '../../../common-lib/time-display'
 
     export default {
         components: {
             effectivePipeline,
             effectiveRange,
-            'image-empty': imageEmpty
+            'image-empty': imageEmpty,
+            TimeDisplay
         },
         data () {
             const { projectId } = this.$route.params
@@ -782,12 +784,6 @@
                 })
 
                 return tips
-            },
-            /**
-             * 处理时间格式
-             */
-            localConvertTime (timestamp) {
-                return convertTime(timestamp * 1000)
             },
             toCreateRule () {
                 this.$router.push({

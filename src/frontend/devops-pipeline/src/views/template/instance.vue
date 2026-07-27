@@ -127,7 +127,7 @@
                         prop="updateTime"
                     >
                         <template slot-scope="props">
-                            <span>{{ localConvertTime(props.row.updateTime) }}</span>
+                            <time-display :value="props.row.updateTime" />
                         </template>
                     </bk-table-column>
                     <bk-table-column
@@ -245,14 +245,15 @@
         RESOURCE_ACTION,
         TEMPLATE_RESOURCE_ACTION
     } from '@/utils/permission'
-    import { convertTime } from '@/utils/util'
+    import TimeDisplay from '../../../../common-lib/time-display'
 
     export default {
         components: {
             innerHeader,
             emptyTips,
             instanceCompared,
-            instanceMessage
+            instanceMessage,
+            TimeDisplay
         },
         props: {
             isEnabledPermission: Boolean
@@ -411,9 +412,6 @@
                     this.loading.isLoading = false
                     this.showContent = true
                 }
-            },
-            localConvertTime (timestamp) {
-                return convertTime(timestamp)
             },
             currentVersionFormatter () {
                 return this.currentVersionName

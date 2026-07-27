@@ -260,8 +260,11 @@
                 sortable="custom"
                 :label="$t('createTime')"
                 prop="createTime"
-                :formatter="formatTime"
-            />
+            >
+                <template v-slot="props">
+                    <time-display :value="props.row.createTime" />
+                </template>
+            </bk-table-column>
             <bk-table-column
                 :width="tableWidthMap.creator"
                 :label="$t('creator')"
@@ -280,16 +283,22 @@
                 sortable="custom"
                 prop="createTime"
                 sort
-                :formatter="formatTime"
-            />
+            >
+                <template v-slot="props">
+                    <time-display :value="props.row.createTime" />
+                </template>
+            </bk-table-column>
             <bk-table-column
                 :width="tableWidthMap.deleteTime"
                 key="updateTime"
                 :label="$t('restore.deleteTime')"
                 sortable="custom"
                 prop="updateTime"
-                :formatter="formatTime"
-            />
+            >
+                <template v-slot="props">
+                    <time-display :value="props.row.updateTime" />
+                </template>
+            </bk-table-column>
             <bk-table-column
                 :width="tableWidthMap.lastModifyUser"
                 key="lastModifyUser"
@@ -422,7 +431,7 @@
                         v-if="!props.row.delete || isArchiveView"
                     >
                         <bk-user-display-name :user-id="props.row.updater" />
-                        <p class="desc">{{ props.row.updateDate }}</p>
+                        <p class="desc"><time-display :value="props.row.updateTime" /></p>
                     </div>
                 </template>
             </bk-table-column>
@@ -444,7 +453,7 @@
                 prop="createTime"
             >
                 <template slot-scope="props">
-                    {{ prettyDateTimeFormat(props.row.createTime) }}
+                    <time-display :value="props.row.createTime" />
                 </template>
             </bk-table-column>
         </template>
@@ -606,7 +615,8 @@
     //     PIPELINE_FILTER_VIEWIDS
     // } from '@/utils/pipelineConst'
     import { ORDER_ENUM, PIPELINE_SORT_FILED } from '@/utils/pipelineConst'
-    import { convertTime, isShallowEqual, prettyDateTimeFormat } from '@/utils/util'
+    import { isShallowEqual } from '@/utils/util'
+    import TimeDisplay from '../../../../common-lib/time-display'
     import { mapGetters, mapState } from 'vuex'
 
     export default {
@@ -614,7 +624,8 @@
             Logo,
             ExtMenu,
             PipelineStatusIcon,
-            PipelineListEmpty
+            PipelineListEmpty,
+            TimeDisplay
         },
         mixins: [pipelineActionMixin],
         props: {
@@ -846,7 +857,6 @@
             this.requestList()
         },
         methods: {
-            prettyDateTimeFormat,
             getkeyByValue (obj, value) {
                 return Object.keys(obj).find(key => obj[key] === value)
             },
@@ -949,9 +959,6 @@
             },
             refresh () {
                 this.requestList()
-            },
-            formatTime (row, cell, value) {
-                return convertTime(value)
             },
             async handleRestore (...args) {
                 const res = await this.restore(...args)

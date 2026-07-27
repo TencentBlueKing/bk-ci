@@ -112,6 +112,76 @@ export function convertTime (ms) {
 }
 
 /**
+ * UTC offset label at the given instant in IANA timezone, e.g. UTC+08:00
+ */
+export function getUtcOffsetLabel (value, timeZone) {
+    const ms = toEpochMilli(value)
+    if (ms === null) return ''
+    const date = new Date(ms)
+    if (Number.isNaN(date.getTime())) return ''
+    const tz = timeZone || getUserTimeZone()
+    try {
+        const parts = new Intl.DateTimeFormat('en-US', {
+            timeZone: tz,
+            timeZoneName: 'longOffset'
+        }).formatToParts(date)
+        const name = parts.find(p => p.type === 'timeZoneName')?.value || ''
+        // GMT+08:00 / GMT-04:00 / GMT → UTC+08:00 / UTC-04:00 / UTC+00:00
+        if (name === 'GMT' || name === 'UTC') return 'UTC+00:00'
+        return name.replace(/^GMT/, 'UTC').replace(/^UTC([+-])(\d)(?::|$)/, (_, sign, h) => `UTC${sign}0${h}`)
+            .replace(/^UTC([+-]\d{2})$/, 'UTC$1:00')
+    } catch (e) {
+        return ''
+    }
+}
+
+/**
+ * Region / locale label from IANA timezone, e.g. China / Japan / United Kingdom
+ */
+export function getTimezoneRegionLabel (value, timeZone) {
+    const ms = toEpochMilli(value)
+    if (ms === null) return ''
+    const date = new Date(ms)
+    if (Number.isNaN(date.getTime())) return ''
+    const tz = timeZone || getUserTimeZone()
+    if (tz === 'UTC' || tz === 'Etc/UTC' || tz === 'Etc/GMT') return 'UTC'
+    try {
+        const parts = new Intl.DateTimeFormat('en-US', {
+            timeZone: tz,
+            timeZoneName: 'longGeneric'
+        }).formatToParts(date)
+        const name = parts.find(p => p.type === 'timeZoneName')?.value || ''
+        if (!name || /^GMT/i.test(name) || /^UTC/i.test(name)) {
+            // fallback: city segment of IANA id
+            const city = tz.split('/').pop() || tz
+            return city.replace(/_/g, ' ')
+        }
+        return name
+            .replace(/\s*(Standard|Daylight|Summer)\s+Time$/i, '')
+            .replace(/\s+Time$/i, '')
+            .trim()
+    } catch (e) {
+        const city = tz.split('/').pop() || tz
+        return city.replace(/_/g, ' ')
+    }
+}
+
+/**
+ * Tooltip content matching product format:
+ * 2026-07-13 17:24:06 Asia/Shanghai China UTC+08:00
+ */
+export function formatTimezoneTooltip (value, timeZone, pattern = DEFAULT_FORMAT) {
+    const ms = toEpochMilli(value)
+    if (ms === null) return ''
+    const tz = timeZone || getUserTimeZone()
+    const display = formatByUserTz(ms, tz, pattern)
+    if (display === '--') return ''
+    const region = getTimezoneRegionLabel(ms, tz)
+    const offset = getUtcOffsetLabel(ms, tz)
+    return [display, tz, region, offset].filter(Boolean).join(' ')
+}
+
+/**
  * Day range helpers for query params: calendar date in user TZ → epoch millis.
  * @returns {{ startTime: number, endTime: number }} endTime is exclusive next-day start
  */
@@ -158,6 +228,9 @@ export default {
     toEpochMilli,
     formatByUserTz,
     convertTime,
+    getUtcOffsetLabel,
+    getTimezoneRegionLabel,
+    formatTimezoneTooltip,
     calendarDateRangeToEpochMilli,
     zonedDayStartEpochMilli
 }

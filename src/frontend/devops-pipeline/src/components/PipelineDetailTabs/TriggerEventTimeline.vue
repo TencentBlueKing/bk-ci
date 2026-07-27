@@ -10,7 +10,7 @@
 </template>
 <script>
     import { computed, defineComponent } from 'vue'
-    import dayjs from 'dayjs'
+    import { formatByUserTz } from '@/utils/util'
     import TriggerEventChildren from './TriggerEventChildren.vue'
 
     export default defineComponent({
@@ -26,7 +26,7 @@
         setup (props) {
             const timelineList = computed(() => {
                 const dateMap = props.list.reduce((acc, item) => {
-                    const date = dayjs(item.eventTime).format('YYYY-MM-DD')
+                    const date = formatByUserTz(item.eventTime, undefined, 'YYYY-MM-DD')
                     if (!acc.has(date)) {
                         acc.set(date, [])
                     }

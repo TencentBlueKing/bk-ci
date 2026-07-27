@@ -62,7 +62,7 @@
       <bk-table-column :label="t('有效期')" prop="expiredAtDisplay" />
       <bk-table-column :label="t('加入时间')" prop="joinedTime" >
         <template #default="{row}">
-          {{ timeFormatter(row.joinedTime) }}
+          <time-display :value="row.joinedTime" />
         </template>
       </bk-table-column>
       <bk-table-column :label="t('加入方式')" prop="joinedType">
@@ -163,7 +163,7 @@
 <script setup name="TabTable">
 import { useI18n } from 'vue-i18n';
 import { ref, defineProps, defineEmits, computed } from 'vue';
-import { timeFormatter } from '@/common/util.ts'
+import TimeDisplay from '../../../../common-lib/time-display';
 import userGroupTable from '@/store/userGroupTable';
 
 const LINKABLE_RESOURCE_TYPES = ['codecc_task', 'pipeline', 'pipeline_group', 'repertory', 'env_node'];

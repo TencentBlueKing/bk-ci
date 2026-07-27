@@ -1,4 +1,5 @@
 import store from '../store'
+import { formatByUserTz } from '../../../common-lib/time'
 const moment = require('moment')
 
 /**
@@ -154,7 +155,7 @@ export function preciseDiff (duration) {
 }
 
 export function timeFormatter (time, format = 'YYYY-MM-DD HH:mm:ss') {
-    return time ? moment(time).format(format) : '--'
+    return formatByUserTz(time, undefined, format)
 }
 
 export function commitIdFormatter (commitId) {

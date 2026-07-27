@@ -190,7 +190,7 @@
             <div class="base-form-item">
                 <label class="env-item-label env-desc-label">{{ $t('environment.envInfo.creationTime') }}</label>
                 <div class="env-item-content">
-                    <p class="env-base">{{ localConvertTime(curEnvDetail.createdTime) }}</p>
+                    <p class="env-base"><time-display :value="curEnvDetail.createdTime" /></p>
                 </div>
             </div>
             <div class="base-form-item create-user-item">
@@ -207,9 +207,12 @@
 
 <script>
     import { ENV_RESOURCE_ACTION, ENV_RESOURCE_TYPE } from '@/utils/permission'
-    import { convertTime } from '@/utils/util'
+    import TimeDisplay from '../../../../common-lib/time-display'
     export default {
         name: 'base-tab',
+        components: {
+            TimeDisplay
+        },
         props: {
             projectId: {
                 type: String,
@@ -367,12 +370,6 @@
                 } else {
                     this.isEditingType = false
                 }
-            },
-            /**
-             * 处理时间格式
-             */
-            localConvertTime (timestamp) {
-                return convertTime(timestamp * 1000)
             }
         }
     }

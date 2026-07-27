@@ -54,9 +54,12 @@
                     <bk-table-column
                         :label="$t('ticket.creationTime')"
                         prop="createTime"
-                        :formatter="convertToTime"
                         show-overflow-tooltip
-                    ></bk-table-column>
+                    >
+                        <template v-slot="props">
+                            <time-display :value="props.row.createTime" />
+                        </template>
+                    </bk-table-column>
                     <bk-table-column
                         :label="$t('ticket.lastModifiedBy')"
                         prop="updateUser"
@@ -68,9 +71,12 @@
                     <bk-table-column
                         :label="$t('ticket.lastModifiedTime')"
                         prop="updatedTime"
-                        :formatter="convertToTime"
                         show-overflow-tooltip
-                    ></bk-table-column>
+                    >
+                        <template v-slot="props">
+                            <time-display :value="props.row.updatedTime" />
+                        </template>
+                    </bk-table-column>
                     <bk-table-column
                         :label="$t('ticket.operation')"
                         width="200"
@@ -139,12 +145,13 @@
 <script>
     import EmptyTips from '@/components/devops/emptyTips'
     import { CRED_RESOURCE_ACTION, CRED_RESOURCE_TYPE } from '@/utils/permission'
-    import { convertTime } from '@/utils/util'
     import { mapGetters } from 'vuex'
+    import TimeDisplay from '../../../common-lib/time-display'
 
     export default {
         components: {
-            EmptyTips
+            EmptyTips,
+            TimeDisplay
         },
         data () {
             return {
@@ -337,9 +344,6 @@
             },
             addCredentialHandler () {
                 this.$router.push('createCredential')
-            },
-            convertToTime (row, cell, time) {
-                return convertTime(time * 1000)
             }
         }
     }

@@ -158,6 +158,9 @@
                 sortable
                 prop="updateTime"
             >
+                <template v-slot="props">
+                    <time-display :value="props.row.updateTime" />
+                </template>
             </bk-table-column>
             <bk-table-column
                 :label="$t('operate')"
@@ -268,13 +271,14 @@
         TEMPLATE_RESOURCE_ACTION
     } from '@/utils/permission'
     import { navConfirm } from '@/utils/util'
-    import dayjs from 'dayjs'
     import ExtMenu from './extMenu'
+    import TimeDisplay from '../../../../common-lib/time-display'
 
     export default {
         components: {
             Logo,
-            ExtMenu
+            ExtMenu,
+            TimeDisplay
         },
         data () {
             return {
@@ -364,7 +368,6 @@
                         this.isEnabledPermission = res.enableTemplatePermissionManage
                         this.isManagerUser = res.hasPermission
                         this.listData = (res.models || []).map(x => {
-                            x.updateTime = dayjs(x.updateTime).format('YYYY-MM-DD HH:mm:ss')
                             x.templateActions = [
                                 {
                                     text: this.$t('clone'),

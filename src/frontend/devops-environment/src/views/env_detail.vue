@@ -51,7 +51,6 @@
     import nodeTab from '@/components/envTabs/nodeTab'
     import settingTab from '@/components/envTabs/settingTab'
     import authTab from '@/components/envTabs/authTab'
-    import { convertTime } from '@/utils/util'
     import { ENV_RESOURCE_ACTION, ENV_RESOURCE_TYPE } from '@/utils/permission'
     
     export default {
@@ -192,13 +191,6 @@
                         obj.classList.remove('.config-active')
                     }
                 })
-            },
-           
-            /**
-             * 处理时间格式
-             */
-            localConvertTime (timestamp) {
-                return convertTime(timestamp * 1000)
             }
         }
     }

@@ -71,5 +71,6 @@ DateTimeUtil.toDateTime(record.createTime) // 仅允许通知文案、日志、�
 
 ## 前端公共工具
 
-- [`src/frontend/common-lib/time.js`](../../src/frontend/common-lib/time.js)：`formatByUserTz` / `convertTime` / `getUserTimeZone` / `calendarDateRangeToEpochMilli`
+- [`src/frontend/common-lib/time.js`](../../src/frontend/common-lib/time.js)：`formatByUserTz` / `convertTime` / `getUserTimeZone` / `formatTimezoneTooltip` / `calendarDateRangeToEpochMilli`
+- [`src/frontend/common-lib/time-display.vue`](../../src/frontend/common-lib/time-display.vue)：列表/详情时刻展示组件（含时区 hover tooltip），表格列推荐直接使用
 - 用户时区读取顺序：`window.userInfo.timeZone` → 浏览器 `Intl` → `Asia/Shanghai`

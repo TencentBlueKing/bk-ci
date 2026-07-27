@@ -95,6 +95,12 @@
                         >
                             <bk-user-display-name :user-id="row[column.prop]" />
                         </template>
+                        <template
+                            v-else-if="column.prop === 'createTime' || column.prop === 'updateTime'"
+                            v-slot="{ row }"
+                        >
+                            <time-display :value="row[column.prop]" />
+                        </template>
                     </bk-table-column>
                     
                     <bk-table-column
@@ -155,10 +161,11 @@
     import EmptyException from '@/components/common/exception'
     import { VERSION_STATUS_ENUM } from '@/utils/pipelineConst'
     import TenantSingleton from '@/utils/tenant'
-    import { convertTime, navConfirm } from '@/utils/util'
+    import { navConfirm } from '@/utils/util'
     import SearchSelect from '@blueking/search-select'
     import '@blueking/search-select/dist/styles/index.css'
     import { mapActions, mapGetters, mapState } from 'vuex'
+    import TimeDisplay from '../../../../common-lib/time-display'
     import RollbackEntry from './RollbackEntry'
     import VersionDiffEntry from './VersionDiffEntry'
     export default {
@@ -167,7 +174,8 @@
             VersionDiffEntry,
             RollbackEntry,
             EmptyException,
-            Logo
+            Logo,
+            TimeDisplay
         },
         props: {
             showVersionSideslider: Boolean
@@ -210,10 +218,7 @@
                     prop: 'createTime',
                     label: this.$t('createTime'),
                     showOverflowTooltip: true,
-                    width: 156,
-                    formatter: (row) => {
-                        return convertTime(row.createTime)
-                    }
+                    width: 156
                 }, {
                     prop: 'creator',
                     width: 120,
@@ -222,10 +227,7 @@
                     prop: 'updateTime',
                     label: this.$t('lastUpdateTime'),
                     showOverflowTooltip: true,
-                    width: 156,
-                    formatter: (row) => {
-                        return convertTime(row.updateTime)
-                    }
+                    width: 156
                 }, {
                     prop: 'updater',
                     width: 120,
