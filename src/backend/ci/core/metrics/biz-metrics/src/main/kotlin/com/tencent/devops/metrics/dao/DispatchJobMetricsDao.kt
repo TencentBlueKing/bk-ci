@@ -55,7 +55,9 @@ class DispatchJobMetricsDao {
                 .set(CHANNEL_CODE, jobMetricsData.channelCode)
                 .set(MAX_JOB_CONCURRENCY, jobMetricsData.maxJobConcurrency)
                 .set(SUM_JOB_COST, jobMetricsData.sumJobCost)
-                .set(CHANNEL_CODE, jobMetricsData.channelCode)
+                .onDuplicateKeyUpdate()
+                .set(MAX_JOB_CONCURRENCY, jobMetricsData.maxJobConcurrency)
+                .set(SUM_JOB_COST, jobMetricsData.sumJobCost)
                 .execute()
         }
     }
