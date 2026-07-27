@@ -195,13 +195,13 @@ interface ServiceCallBackResource {
         @Parameter(description = "pipelineId", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        callbackInfo: PipelineCallbackEvent
+        callbackInfoList: List<PipelineCallbackEvent>
     ): Result<Boolean>
 
     @Operation(summary = "流水线级别callback")
     @GET
     @Path("/projects/{projectId}/pipelines/{pipelineId}")
-    fun getPipelineCallBack(
+    fun listPipelineCallBack(
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,

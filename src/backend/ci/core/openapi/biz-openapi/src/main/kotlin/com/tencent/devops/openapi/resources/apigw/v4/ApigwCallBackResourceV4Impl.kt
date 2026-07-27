@@ -179,18 +179,18 @@ class ApigwCallBackResourceV4Impl @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
-        callbackInfo: PipelineCallbackEvent
+        callbackInfoList: List<PipelineCallbackEvent>
     ): Result<Boolean> {
-        logger.info("OPENAPI_CALLBACK_V4|$userId|create pipeline callback|$projectId|$pipelineId|$callbackInfo")
+        logger.info("OPENAPI_CALLBACK_V4|$userId|create pipeline callback|$projectId|$pipelineId|$callbackInfoList")
         return client.get(ServiceCallBackResource::class).createPipelineCallBack(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
-            callbackInfo = callbackInfo
+            callbackInfoList = callbackInfoList
         )
     }
 
-    override fun getPipelineCallBack(
+    override fun listPipelineCallBack(
         appCode: String?,
         apigwType: String?,
         userId: String,
@@ -198,8 +198,8 @@ class ApigwCallBackResourceV4Impl @Autowired constructor(
         pipelineId: String,
         event: CallBackEvent?
     ): Result<List<ProjectPipelineCallBack>> {
-        logger.info("OPENAPI_CALLBACK_V4|$userId|get pipeline callback|$projectId|$pipelineId|$event")
-        return client.get(ServiceCallBackResource::class).getPipelineCallBack(
+        logger.info("OPENAPI_CALLBACK_V4|$userId|list pipeline callback|$projectId|$pipelineId|$event")
+        return client.get(ServiceCallBackResource::class).listPipelineCallBack(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,

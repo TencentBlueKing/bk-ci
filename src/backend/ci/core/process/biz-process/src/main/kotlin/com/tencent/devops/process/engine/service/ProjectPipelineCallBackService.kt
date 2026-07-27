@@ -561,8 +561,9 @@ class ProjectPipelineCallBackService @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
-        callbackInfo: PipelineCallbackEvent
+        callbackInfoList: List<PipelineCallbackEvent>
     ) {
+        if (callbackInfoList.isEmpty()) return
         // 验证用户是否可以编辑流水线
         pipelinePermissionService.checkPipelinePermission(
             userId = userId,
@@ -570,20 +571,21 @@ class ProjectPipelineCallBackService @Autowired constructor(
             pipelineId = pipelineId,
             permission = AuthPermission.EDIT
         )
-        validateCallbackUrl(projectId = projectId, url = callbackInfo.callbackUrl)
-        val callBackUrl = projectPipelineCallBackUrlGenerator.generateCallBackUrl(
-            region = callbackInfo.region,
-            url = callbackInfo.callbackUrl
-        )
-        callbackInfo.callbackUrl = callBackUrl
+        // 逐个校验回调URL并生成最终回调地址
+        callbackInfoList.forEach { callbackInfo ->
+            validateCallbackUrl(projectId = projectId, url = callbackInfo.callbackUrl)
+            callbackInfo.callbackUrl = projectPipelineCallBackUrlGenerator.generateCallBackUrl(
+                region = callbackInfo.region,
+                url = callbackInfo.callbackUrl
+            )
+        }
         val model = pipelineRepositoryService.getPipelineResourceVersion(projectId, pipelineId)?.model ?: return
         val newEventMap = mutableMapOf<String, PipelineCallbackEvent>()
-
-        if (model.events?.isEmpty() == true) {
-            newEventMap[callbackInfo.callbackName] = callbackInfo
-        } else {
+        if (model.events?.isNotEmpty() == true) {
             newEventMap.putAll(model.events!!)
-            // 若key存在会覆盖原来的value,否则就是追加新key
+        }
+        // 若key存在会覆盖原来的value,否则就是追加新key
+        callbackInfoList.forEach { callbackInfo ->
             newEventMap[callbackInfo.callbackName] = callbackInfo
         }
         dslContext.transaction { transactionContext ->
@@ -593,7 +595,7 @@ class ProjectPipelineCallBackService @Autowired constructor(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 userId = userId,
-                list = newEventMap.map { (key, value) ->
+                list = newEventMap.map { (_, value) ->
                     val encodeToken = value.secretToken?.let { AESUtil.encrypt(aesKey, it) }
                     value.copy(secretToken = encodeToken)
                 }
@@ -601,7 +603,7 @@ class ProjectPipelineCallBackService @Autowired constructor(
         }
     }
 
-    fun getPipelineCallback(
+    fun listPipelineCallback(
         projectId: String,
         pipelineId: String,
         event: String?

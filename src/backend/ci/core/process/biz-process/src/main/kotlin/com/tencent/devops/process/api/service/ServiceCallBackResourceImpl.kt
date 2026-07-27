@@ -160,25 +160,25 @@ class ServiceCallBackResourceImpl @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
-        callbackInfo: PipelineCallbackEvent
+        callbackInfoList: List<PipelineCallbackEvent>
     ): Result<Boolean> {
         projectPipelineCallBackService.bindPipelineCallBack(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
-            callbackInfo = callbackInfo
+            callbackInfoList = callbackInfoList
         )
         return Result(true)
     }
 
-    override fun getPipelineCallBack(
+    override fun listPipelineCallBack(
         userId: String,
         projectId: String,
         pipelineId: String,
         event: CallBackEvent?
     ): Result<List<ProjectPipelineCallBack>> {
         return Result(
-            projectPipelineCallBackService.getPipelineCallback(
+            projectPipelineCallBackService.listPipelineCallback(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 event = event?.name

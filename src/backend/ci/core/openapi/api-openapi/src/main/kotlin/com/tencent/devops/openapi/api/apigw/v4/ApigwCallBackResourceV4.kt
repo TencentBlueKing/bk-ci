@@ -245,8 +245,8 @@ interface ApigwCallBackResourceV4 {
         @Parameter(description = "pipelineId", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(description = "回调信息", required = true)
-        callbackInfo: PipelineCallbackEvent
+        @Parameter(description = "回调信息列表", required = true)
+        callbackInfoList: List<PipelineCallbackEvent>
     ): Result<Boolean>
 
     @Operation(
@@ -255,7 +255,7 @@ interface ApigwCallBackResourceV4 {
     )
     @GET
     @Path("/pipelines/{pipelineId}")
-    fun getPipelineCallBack(
+    fun listPipelineCallBack(
         @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
