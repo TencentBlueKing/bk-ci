@@ -329,8 +329,8 @@ class PipelineRuntimeService @Autowired constructor(
             ret[pipelineId] = PipelineLatestBuild(
                 buildId = it.latestBuildId ?: "",
                 startUser = it.latestStartUser ?: "",
-                startTime = DateTimeUtil.toDateTime(it.latestStartTime),
-                endTime = DateTimeUtil.toDateTime(it.latestEndTime),
+                startTime = it.latestStartTime?.timestampmilli(),
+                endTime = it.latestEndTime?.timestampmilli(),
                 status = if (status != null) BuildStatus.values()[status].name else null
             )
         }

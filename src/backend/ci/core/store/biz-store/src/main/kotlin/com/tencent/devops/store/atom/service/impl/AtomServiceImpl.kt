@@ -44,7 +44,6 @@ import com.tencent.devops.common.api.enums.SystemModuleEnum
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.UUIDUtil
@@ -1208,9 +1207,9 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                     publisher = it[KEY_PUBLISHER] as? String,
                     installer = installer,
                     installTime = if (default) {
-                        ""
+                        0L
                     } else {
-                        DateTimeUtil.toDateTime(it[KEY_INSTALL_TIME] as LocalDateTime)
+                        (it[KEY_INSTALL_TIME] as LocalDateTime).timestampmilli()
                     },
                     installType = if (default) {
                         StoreProjectTypeEnum.COMMON.name

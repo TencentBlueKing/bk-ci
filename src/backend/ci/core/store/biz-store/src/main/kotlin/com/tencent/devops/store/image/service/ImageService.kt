@@ -34,7 +34,6 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.timestampmilli
@@ -116,7 +115,6 @@ import com.tencent.devops.store.pojo.image.response.MarketImageMain
 import com.tencent.devops.store.pojo.image.response.MarketImageResp
 import com.tencent.devops.store.pojo.image.response.MyImage
 import java.time.LocalDateTime
-import java.util.Date
 import org.jooq.DSLContext
 import org.jooq.Record
 import org.jooq.impl.DSL
@@ -513,7 +511,7 @@ abstract class ImageService @Autowired constructor() {
                     buildLessRunFlag = false,
                     docsLink = storeCommonService.getStoreDetailUrl(StoreTypeEnum.IMAGE, it.code),
                     modifier = it.modifier,
-                    updateTime = DateTimeUtil.formatDate(Date(it.updateTime)),
+                    updateTime = it.updateTime,
                     recommendFlag = it.recommendFlag,
                     hotFlag = it.hotFlag
                 )
