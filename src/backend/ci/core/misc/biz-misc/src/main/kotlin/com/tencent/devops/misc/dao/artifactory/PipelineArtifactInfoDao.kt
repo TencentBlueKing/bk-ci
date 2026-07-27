@@ -25,36 +25,20 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.misc.service.artifactory
+package com.tencent.devops.misc.dao.artifactory
 
-import com.tencent.devops.misc.dao.artifactory.PipelineArtifactInfoDao
+import com.tencent.devops.model.artifactory.tables.TPipelineArtifactInfo
 import org.jooq.DSLContext
-import org.jooq.impl.DSL
-import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Repository
 
-abstract class ArtifactoryDataClearService @Autowired constructor(
-    private val dslContext: DSLContext
-) {
+@Repository
+class PipelineArtifactInfoDao {
 
-    @Autowired
-    private lateinit var pipelineArtifactInfoDao: PipelineArtifactInfoDao
-
-    /**
-     * 清除构建数据
-     * @param buildId 构建ID
-     */
-    fun clearBuildData(buildId: String) {
-        dslContext.transaction { t ->
-            val context = DSL.using(t)
-            deleteTableData(context, buildId)
-            pipelineArtifactInfoDao.deleteByBuildId(context, buildId)
+    fun deleteByBuildId(dslContext: DSLContext, buildId: String) {
+        with(TPipelineArtifactInfo.T_PIPELINE_ARTIFACT_INFO) {
+            dslContext.deleteFrom(this)
+                .where(BUILD_ID.eq(buildId))
+                .execute()
         }
     }
-
-    /**
-     * 删除表中构建数据
-     * @param dslContext jooq上下文
-     * @param buildId 构建ID
-     */
-    abstract fun deleteTableData(dslContext: DSLContext, buildId: String)
 }
