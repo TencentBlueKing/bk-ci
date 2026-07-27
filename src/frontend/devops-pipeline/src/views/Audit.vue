@@ -109,6 +109,7 @@
     import { convertTime } from '@/utils/util'
     import { mapActions } from 'vuex'
     import TimeDisplay from '../../../common-lib/time-display'
+    import { userTzTodayRange, userTzLastDaysRange } from '@/utils/util'
     export default {
         components: {
             PipelineHeader,
@@ -131,25 +132,25 @@
                     {
                         text: this.$t('history.today'),
                         value () {
-                            return [new Date(), new Date()]
+                            return userTzTodayRange()
                         }
                     },
                     {
                         text: this.$t('history.last7days'),
                         value () {
-                            return [new Date(new Date().getTime() - 3600 * 1000 * 24 * 7), new Date()]
+                            return userTzLastDaysRange(7)
                         }
                     },
                     {
                         text: this.$t('history.last15days'),
                         value () {
-                            return [new Date(new Date().getTime() - 3600 * 1000 * 24 * 15), new Date()]
+                            return userTzLastDaysRange(15)
                         }
                     },
                     {
                         text: this.$t('history.last30days'),
                         value () {
-                            return [new Date(new Date().getTime() - 3600 * 1000 * 24 * 30), new Date()]
+                            return userTzLastDaysRange(30)
                         }
                     }
                 ],

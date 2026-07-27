@@ -5,6 +5,7 @@
  */
 
 const DEFAULT_FORMAT = 'YYYY-MM-DD HH:mm:ss'
+const DAY_MS = 24 * 3600 * 1000
 
 function pad (n) {
     return n < 10 ? `0${n}` : `${n}`
@@ -31,6 +32,10 @@ export function getUserTimeZone () {
 export function toEpochMilli (value) {
     if (value === null || value === undefined || value === '') {
         return null
+    }
+    if (value instanceof Date) {
+        const t = value.getTime()
+        return Number.isNaN(t) || t <= 0 ? null : t
     }
     if (typeof value === 'number') {
         if (!Number.isFinite(value) || value <= 0) return null
@@ -73,9 +78,9 @@ function formatParts (date, timeZone) {
 
 /**
  * Format absolute time to user local display string.
- * @param {number|string} value epoch millis (preferred), seconds, or date string
+ * @param {number|string|Date} value epoch millis (preferred), seconds, or date string
  * @param {string} [timeZone] IANA timezone; default getUserTimeZone()
- * @param {string} [pattern] currently supports YYYY-MM-DD HH:mm:ss and YYYY-MM-DD
+ * @param {string} [pattern] YYYY-MM-DD HH:mm:ss | YYYY-MM-DD | MM-DD HH:mm | HH:mm:ss
  */
 export function formatByUserTz (value, timeZone, pattern = DEFAULT_FORMAT) {
     const ms = toEpochMilli(value)
@@ -101,6 +106,9 @@ export function formatByUserTz (value, timeZone, pattern = DEFAULT_FORMAT) {
     if (pattern === 'MM-DD HH:mm') {
         return `${m}-${d} ${h}:${mi}`
     }
+    if (pattern === 'HH:mm:ss') {
+        return `${h}:${mi}:${s}`
+    }
     return `${y}-${m}-${d} ${h}:${mi}:${s}`
 }
 
@@ -109,6 +117,73 @@ export function formatByUserTz (value, timeZone, pattern = DEFAULT_FORMAT) {
  */
 export function convertTime (ms) {
     return formatByUserTz(ms)
+}
+
+/**
+ * Legacy helper: empty → '' (not '--'); formats in user timezone.
+ */
+export function prettyDateTimeFormat (target) {
+    if (target === null || target === undefined || target === '') return ''
+    const result = formatByUserTz(target)
+    return result === '--' ? '' : result
+}
+
+/**
+ * Current instant formatted in user timezone.
+ */
+export function nowInUserTz (pattern = DEFAULT_FORMAT, timeZone) {
+    return formatByUserTz(Date.now(), timeZone, pattern)
+}
+
+/**
+ * Calendar date (YYYY-MM-DD) of an instant in user timezone.
+ */
+export function calendarDateInUserTz (value = Date.now(), timeZone) {
+    return formatByUserTz(value || Date.now(), timeZone, 'YYYY-MM-DD')
+}
+
+/**
+ * Format relative duration (elapsed ms). Units match previous moment.duration behavior (365d/y, 30d/mon).
+ * Output e.g. "1y 2mon 3d 4h 5m 6s" (leading zero units omitted).
+ */
+export function formatDuration (durationMs, empty = '--') {
+    if (durationMs === null || durationMs === undefined || durationMs === '') return empty
+    const totalSec = Math.floor(Math.abs(Number(durationMs)) / 1000)
+    if (!Number.isFinite(totalSec) || totalSec <= 0) return empty
+
+    const years = Math.floor(totalSec / (365 * 24 * 3600))
+    let rem = totalSec % (365 * 24 * 3600)
+    const months = Math.floor(rem / (30 * 24 * 3600))
+    rem = rem % (30 * 24 * 3600)
+    const days = Math.floor(rem / (24 * 3600))
+    rem = rem % (24 * 3600)
+    const hours = Math.floor(rem / 3600)
+    rem = rem % 3600
+    const minutes = Math.floor(rem / 60)
+    const seconds = rem % 60
+
+    const timeMap = {
+        y: years,
+        mon: months,
+        d: days,
+        h: hours,
+        m: minutes,
+        s: seconds
+    }
+    const diffTime = []
+    let hasFirstNum = false
+    Object.keys(timeMap).forEach((key) => {
+        const val = timeMap[key]
+        if (val <= 0 && !hasFirstNum) return
+        hasFirstNum = true
+        diffTime.push(`${val}${key}`)
+    })
+    return diffTime.length ? diffTime.join(' ') : empty
+}
+
+/** @deprecated alias — prefer formatDuration */
+export function preciseDiff (duration) {
+    return formatDuration(duration)
 }
 
 /**
@@ -182,23 +257,24 @@ export function formatTimezoneTooltip (value, timeZone, pattern = DEFAULT_FORMAT
 }
 
 /**
+ * Shift YYYY-MM-DD by N calendar days (date-only arithmetic).
+ */
+export function addCalendarDays (dateStr, days) {
+    const [y, m, d] = dateStr.split('-').map(Number)
+    const utc = new Date(Date.UTC(y, m - 1, d))
+    utc.setUTCDate(utc.getUTCDate() + days)
+    return `${utc.getUTCFullYear()}-${pad(utc.getUTCMonth() + 1)}-${pad(utc.getUTCDate())}`
+}
+
+/**
  * Day range helpers for query params: calendar date in user TZ → epoch millis.
  * @returns {{ startTime: number, endTime: number }} endTime is exclusive next-day start
  */
 export function calendarDateRangeToEpochMilli (startDate, endDate, timeZone) {
     const tz = timeZone || getUserTimeZone()
-    // Interpret YYYY-MM-DD as local calendar date in tz via noon UTC trick + formatter is hard;
-    // use Temporal-free approach: construct as UTC date components then adjust with offset at that day.
     const startMs = zonedDayStartEpochMilli(startDate, tz)
-    const endExclusiveMs = zonedDayStartEpochMilli(addOneDay(endDate), tz)
+    const endExclusiveMs = zonedDayStartEpochMilli(addCalendarDays(endDate, 1), tz)
     return { startTime: startMs, endTime: endExclusiveMs }
-}
-
-function addOneDay (dateStr) {
-    const [y, m, d] = dateStr.split('-').map(Number)
-    const utc = new Date(Date.UTC(y, m - 1, d))
-    utc.setUTCDate(utc.getUTCDate() + 1)
-    return `${utc.getUTCFullYear()}-${pad(utc.getUTCMonth() + 1)}-${pad(utc.getUTCDate())}`
 }
 
 /**
@@ -223,14 +299,104 @@ export function zonedDayStartEpochMilli (dateStr, timeZone) {
     return lo
 }
 
+/**
+ * Recent N calendar days as display/query strings in user TZ: [start, end] inclusive dates → datetime strings.
+ * end is "now"; start is day-start of (today - daysBack).
+ */
+export function recentDaysRangeInUserTz (daysBack = 7, timeZone, pattern = DEFAULT_FORMAT) {
+    const tz = timeZone || getUserTimeZone()
+    const now = Date.now()
+    const today = calendarDateInUserTz(now, tz)
+    const startDate = addCalendarDays(today, -Math.abs(daysBack))
+    const startMs = zonedDayStartEpochMilli(startDate, tz)
+    return {
+        startTime: formatByUserTz(startMs, tz, pattern),
+        endTime: formatByUserTz(now, tz, pattern),
+        startMs,
+        endMs: now,
+        startDate,
+        endDate: today,
+        timeZone: tz
+    }
+}
+
+/**
+ * Datepicker shortcut: today in user TZ → [dayStart, now]
+ */
+export function userTzTodayRange (timeZone) {
+    const tz = timeZone || getUserTimeZone()
+    const today = calendarDateInUserTz(Date.now(), tz)
+    return [new Date(zonedDayStartEpochMilli(today, tz)), new Date()]
+}
+
+/**
+ * Datepicker shortcut: yesterday in user TZ → [dayStart, dayEnd]
+ */
+export function userTzYesterdayRange (timeZone) {
+    const tz = timeZone || getUserTimeZone()
+    const today = calendarDateInUserTz(Date.now(), tz)
+    const yesterday = addCalendarDays(today, -1)
+    const start = zonedDayStartEpochMilli(yesterday, tz)
+    const end = zonedDayStartEpochMilli(today, tz) - 1
+    return [new Date(start), new Date(end)]
+}
+
+/**
+ * Datepicker shortcut: last N days (rolling) → [now - N days, now]
+ */
+export function userTzLastDaysRange (days, timeZone) {
+    const end = Date.now()
+    const start = end - Math.abs(days) * DAY_MS
+    return [new Date(start), new Date(end)]
+}
+
+/**
+ * Trend-style range used by atomstore charts:
+ * end = yesterday 00:00:00 in user TZ; start = end - 1 unit (+1 day for weeks).
+ * @param {'weeks'|'months'|'years'} unit
+ */
+export function userTzTrendRange (unit, timeZone) {
+    const tz = timeZone || getUserTimeZone()
+    const today = calendarDateInUserTz(Date.now(), tz)
+    const endDate = addCalendarDays(today, -1)
+    let startDate
+    if (unit === 'weeks') {
+        startDate = addCalendarDays(endDate, -6)
+    } else if (unit === 'months') {
+        startDate = addCalendarDays(endDate, -30)
+    } else {
+        startDate = addCalendarDays(endDate, -365)
+    }
+    const startMs = zonedDayStartEpochMilli(startDate, tz)
+    const endMs = zonedDayStartEpochMilli(endDate, tz)
+    return {
+        startTime: formatByUserTz(startMs, tz, DEFAULT_FORMAT),
+        endTime: formatByUserTz(endMs, tz, DEFAULT_FORMAT),
+        startMs,
+        endMs,
+        timeZone: tz
+    }
+}
+
 export default {
     getUserTimeZone,
     toEpochMilli,
     formatByUserTz,
     convertTime,
+    prettyDateTimeFormat,
+    nowInUserTz,
+    calendarDateInUserTz,
+    formatDuration,
+    preciseDiff,
     getUtcOffsetLabel,
     getTimezoneRegionLabel,
     formatTimezoneTooltip,
+    addCalendarDays,
     calendarDateRangeToEpochMilli,
-    zonedDayStartEpochMilli
+    zonedDayStartEpochMilli,
+    recentDaysRangeInUserTz,
+    userTzTodayRange,
+    userTzYesterdayRange,
+    userTzLastDaysRange,
+    userTzTrendRange
 }

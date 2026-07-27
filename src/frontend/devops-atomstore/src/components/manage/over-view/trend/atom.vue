@@ -40,18 +40,11 @@
 
 <script>
     import BKChart from '@blueking/bkcharts'
-    import dayjs from 'dayjs'
+    import { userTzTrendRange } from '../../../../../common-lib/time'
     import api from '@/api'
 
     function getTimeRange (time) {
-        const now = dayjs(dayjs().format('YYYY-MM-DD')).subtract(1, 'days')
-        const params = {
-            endTime: now.format('YYYY-MM-DD HH:mm:ss'),
-            startTime: now.subtract(1, time)
-        }
-        if (time === 'weeks') params.startTime = params.startTime.add(1, 'days')
-        params.startTime = params.startTime.format('YYYY-MM-DD HH:mm:ss')
-        return params
+        return userTzTrendRange(time)
     }
 
     export default {

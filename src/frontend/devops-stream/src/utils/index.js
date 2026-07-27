@@ -1,6 +1,5 @@
 import store from '../store'
-import { formatByUserTz } from '../../../common-lib/time'
-const moment = require('moment')
+import { formatByUserTz, formatDuration } from '../../../common-lib/time'
 
 /**
  *  将毫秒值转换成xx:xx(分:秒)的形式
@@ -133,25 +132,7 @@ export function goYaml (projectUrl, branch, yamlName) {
 }
 
 export function preciseDiff (duration) {
-    if (!duration) return '--'
-    const durationDate = moment.duration(Math.abs(duration))
-    const timeMap = {
-        y: durationDate.years(),
-        mon: durationDate.months(),
-        d: durationDate.days(),
-        h: durationDate.hours(),
-        m: durationDate.minutes(),
-        s: durationDate.seconds()
-    }
-    const diffTime = []
-    let hasFirstNum = false
-    for (const key in timeMap) {
-        const val = timeMap[key]
-        if (val <= 0 && !hasFirstNum) continue
-        hasFirstNum = true
-        diffTime.push(`${val}${key}`)
-    }
-    return diffTime.join(' ')
+    return formatDuration(duration)
 }
 
 export function timeFormatter (time, format = 'YYYY-MM-DD HH:mm:ss') {

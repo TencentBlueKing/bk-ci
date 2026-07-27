@@ -71,6 +71,8 @@ DateTimeUtil.toDateTime(record.createTime) // 仅允许通知文案、日志、�
 
 ## 前端公共工具
 
-- [`src/frontend/common-lib/time.js`](../../src/frontend/common-lib/time.js)：`formatByUserTz` / `convertTime` / `getUserTimeZone` / `formatTimezoneTooltip` / `calendarDateRangeToEpochMilli`
+- [`src/frontend/common-lib/time.js`](../../src/frontend/common-lib/time.js)：`formatByUserTz` / `convertTime` / `getUserTimeZone` / `formatTimezoneTooltip` / `formatDuration` / `calendarDateRangeToEpochMilli` / `recentDaysRangeInUserTz` / `userTzTodayRange` 等
 - [`src/frontend/common-lib/time-display.vue`](../../src/frontend/common-lib/time-display.vue)：列表/详情时刻展示组件（含时区 hover tooltip），表格列推荐直接使用
 - 用户时区读取顺序：`window.userInfo.timeZone` → 浏览器 `Intl` → `Asia/Shanghai`
+- **日历入参 / 快捷区间 /「现在」预览**：统一按用户 IANA 时区计算自然日与展示，禁止再用浏览器本地 `Date#getHours` / 裸 `dayjs()` / `moment()` 解释绝对时刻
+- **相对时长**：展示用 `formatDuration`（与时区无关的 elapsed ms），但实现收口到同一时间工具，避免各处自行依赖 moment/dayjs duration
