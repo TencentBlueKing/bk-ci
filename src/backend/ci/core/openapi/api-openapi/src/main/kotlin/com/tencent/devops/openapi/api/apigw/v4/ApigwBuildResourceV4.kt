@@ -51,6 +51,7 @@ import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.BuildManualStartupInfo
 import com.tencent.devops.process.pojo.BuildTaskPauseInfo
 import com.tencent.devops.process.pojo.LightBuildHistory
+import com.tencent.devops.process.pojo.MutexGroupTaskInfo
 import com.tencent.devops.process.pojo.ReviewParam
 import com.tencent.devops.process.pojo.pipeline.ModelRecord
 import com.tencent.devops.process.pojo.task.PipelineFailTaskDetail
@@ -695,4 +696,28 @@ interface ApigwBuildResourceV4 {
         @QueryParam("executeCount")
         executeCount: Int?
     ): Result<List<PipelineFailTaskDetail>>
+
+    @Operation(
+        summary = "查询互斥组当前任务列表",
+        tags = ["v4_app_mutex_group_tasks", "v4_user_mutex_group_tasks"]
+    )
+    @GET
+    @Path("/mutex_group_tasks")
+    fun getMutexGroupTasks(
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @Parameter(description = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID(项目英文名)", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "互斥组名称", required = true)
+        @QueryParam("mutexGroupName")
+        mutexGroupName: String
+    ): Result<List<MutexGroupTaskInfo>>
 }
