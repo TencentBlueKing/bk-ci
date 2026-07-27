@@ -209,13 +209,13 @@ interface ApigwArtifactoryResourceV4 {
     ): Result<Page<FileInfo>>
 
     @Operation(
-        summary = "查询制品元数据",
-        description = "根据项目ID、制品类型等条件查询元数据，包含代码库地址和Commit ID",
-        tags = ["v4_app_artifactory_metadata", "v4_user_artifactory_metadata"]
+        summary = "分页查询制品元数据列表",
+        description = "根据项目ID等条件分页查询制品元数据，包含代码库地址和Commit ID",
+        tags = ["v4_app_artifactory_metadata_list", "v4_user_artifactory_metadata_list"]
     )
     @GET
-    @Path("/metadata/{artifactType}")
-    fun getArtifactInfo(
+    @Path("/metadata/list")
+    fun listArtifactInfo(
         @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
@@ -231,23 +231,26 @@ interface ApigwArtifactoryResourceV4 {
         @Parameter(description = "流水线ID（可选）", required = false)
         @QueryParam("pipelineId")
         pipelineId: String?,
-        @Parameter(description = "制品类型：FILE/IMAGE/REPORT/PACKAGE等", required = true)
-        @PathParam("artifactType")
-        artifactType: String,
-        @Parameter(description = "制品名称，如文件名、镜像名", required = true)
+        @Parameter(description = "制品类型：FILE/IMAGE/REPORT/PACKAGE等（不传返回全部类型）", required = false)
+        @QueryParam("artifactType")
+        artifactType: String?,
+        @Parameter(description = "制品名称，如文件名、镜像名", required = false)
         @QueryParam("artifactName")
-        artifactName: String,
-        @Parameter(description = "制品版本，如镜像Tag、包版本", required = true)
+        artifactName: String?,
+        @Parameter(description = "制品版本，如镜像Tag、包版本", required = false)
         @QueryParam("artifactVersion")
-        artifactVersion: String,
+        artifactVersion: String?,
         @Parameter(description = "构建ID（可选），不传则不按构建ID过滤", required = false)
         @QueryParam("buildId")
         buildId: String?,
-        @Parameter(description = "执行次数（可选）", required = false)
+        @Parameter(description = "执行次数（可选），不传则匹配所有执行次数；传 buildId 时不传则取当次构建最新", required = false)
         @QueryParam("executeCount")
         executeCount: Int?,
-        @Parameter(description = "任务ID（可选）", required = false)
-        @QueryParam("taskId")
-        taskId: String?
-    ): Result<PipelineArtifactInfo?>
+        @Parameter(description = "第几页，默认1", required = false)
+        @QueryParam("page")
+        page: Int?,
+        @Parameter(description = "每页条数，默认20", required = false)
+        @QueryParam("pageSize")
+        pageSize: Int?
+    ): Result<Page<PipelineArtifactInfo>>
 }
