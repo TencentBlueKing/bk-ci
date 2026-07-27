@@ -64,7 +64,20 @@ DateTimeUtil.toDateTime(record.createTime) // 仅允许通知文案、日志、�
 | 邮件 / 企业微信等通知正文中的时间 | 后端可按用户时区格式化字符串 |
 | OpenAPI / 第三方 | 返回毫秒时间戳，由消费方自行格式化 |
 
-## 存量债务治理顺序
+## 定时触发（日历语义）
+
+与「绝对时刻展示」不同，定时触发 cron 表达的是**墙上时间**（如每天 10:00），必须绑定 IANA 时区。
+
+| 规则 | 说明 |
+|------|------|
+| 配置字段 | `TimerTriggerElement.timeZone` / YAML `schedules[].timezone` / `T_PIPELINE_TIMER.TIME_ZONE` |
+| 新建默认 | 前端写入当前租户时区（`tenantInfoForDisplay.timeZone`） |
+| 用户可选 | 任意 IANA 时区 |
+| 存量缺省 | `Asia/Shanghai`（东八区）；DB 列默认值同此 |
+| 调度 | Quartz `cronSchedule(cron).inTimeZone(zone)`，与 JVM 部署时区解耦 |
+| 不加 DB 列的替代 | 也可把 `timeZone` 仅存在流水线模型 Element，并在 `CRONTAB` JSON 外包一层 `{"expressions":[],"timeZone":""}`；但 `reloadTimer` 全量装载依赖表字段更稳，**推荐加列** |
+
+
 
 1. Environment / Store / Metrics / Quality / Project 等字符串出站字段改为毫秒 `Long`
 2. Auth / Notify 等秒级字段统一为毫秒

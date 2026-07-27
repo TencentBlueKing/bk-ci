@@ -7,7 +7,6 @@
  *
  * A copy of the MIT License is included in this file.
  *
- *
  * Terms of the MIT License:
  * ---------------------------------------------------
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
@@ -25,28 +24,36 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.plugin.trigger.pojo.event
+package com.tencent.devops.process.plugin.trigger.util
 
-import com.tencent.devops.common.event.enums.ActionType
-import com.tencent.devops.common.event.pojo.pipeline.IPipelineEvent
-import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.common.stream.constants.StreamBinding
+import java.time.DateTimeException
+import java.time.ZoneId
+import java.util.TimeZone
 
 /**
- * 广播定时规则变化的事件
+ * 定时触发时区工具。
  *
- * @version 1.0
+ * 调度语义：cron 按 IANA 墙上时间解释，与 JVM 部署时区解耦。
+ * 存量无配置时统一回落 [DEFAULT_LEGACY_TIME_ZONE]（东八区 / 上海）。
  */
-@Event(StreamBinding.PIPELINE_TIMER_CHANGE_FANOUT)
-data class PipelineTimerChangeEvent(
-    override val source: String,
-    override val projectId: String,
-    override val pipelineId: String,
-    override val userId: String,
-    val crontabExpressionJson: String,
-    val taskId: String?,
-    /** IANA 时区；空则调度回落 Asia/Shanghai */
-    val timeZone: String? = null,
-    override var actionType: ActionType = ActionType.REFRESH,
-    override var delayMills: Int = 0
-) : IPipelineEvent(actionType, source, projectId, pipelineId, userId, delayMills)
+object TimerTimeZoneUtils {
+
+    /** 存量定时任务 / DB 缺省时区：Asia/Shanghai（东八区） */
+    const val DEFAULT_LEGACY_TIME_ZONE = "Asia/Shanghai"
+
+    fun resolve(configured: String?): String {
+        val raw = configured?.trim().orEmpty()
+        if (raw.isEmpty()) {
+            return DEFAULT_LEGACY_TIME_ZONE
+        }
+        return try {
+            ZoneId.of(raw).id
+        } catch (_: DateTimeException) {
+            DEFAULT_LEGACY_TIME_ZONE
+        }
+    }
+
+    fun toQuartzTimeZone(configured: String?): TimeZone {
+        return TimeZone.getTimeZone(ZoneId.of(resolve(configured)))
+    }
+}

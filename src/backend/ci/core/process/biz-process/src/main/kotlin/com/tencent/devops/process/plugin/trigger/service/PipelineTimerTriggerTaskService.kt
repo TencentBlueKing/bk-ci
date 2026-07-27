@@ -81,7 +81,7 @@ open class PipelineTimerTriggerTaskService @Autowired constructor(
                         params = arrayOf(cron)
                     )
                 }
-                if (!CronExpressionUtils.isValidTimeInterval(cron)) {
+                if (!CronExpressionUtils.isValidTimeInterval(cron, element.timeZone)) {
                     throw ErrorCodeException(
                         errorCode = ProcessMessageCode.ILLEGAL_TIMER_INTERVAL_CRONTAB,
                         params = arrayOf(cron)

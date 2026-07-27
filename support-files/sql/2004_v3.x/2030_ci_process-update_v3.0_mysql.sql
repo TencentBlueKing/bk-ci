@@ -232,6 +232,17 @@ BEGIN
         ADD COLUMN `ARTIFACT_QUALITY_INFO` mediumtext CHARACTER SET utf8mb4 comment '制品质量分析结果' after `ARTIFACT_INFO`;
     END IF;
 
+    -- 定时触发 IANA 时区；存量默认 Asia/Shanghai（东八区）
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+              WHERE TABLE_SCHEMA = db
+                AND TABLE_NAME = 'T_PIPELINE_TIMER'
+                AND COLUMN_NAME = 'TIME_ZONE') THEN
+    ALTER TABLE `T_PIPELINE_TIMER`
+        ADD COLUMN `TIME_ZONE` varchar(64) NOT NULL DEFAULT 'Asia/Shanghai'
+            COMMENT '定时触发IANA时区，存量默认Asia/Shanghai' AFTER `START_PARAM`;
+    END IF;
+
 COMMIT;
 
 END <CI_UBF>

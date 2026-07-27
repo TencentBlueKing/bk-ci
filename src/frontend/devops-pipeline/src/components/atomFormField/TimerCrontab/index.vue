@@ -65,6 +65,7 @@
 <script>
     import CronExpression from 'cron-parser-custom'
     import { prettyDateTimeFormat } from '@/utils/util'
+    import { DEFAULT_USER_TIME_ZONE, getUserTimeZone } from '../../../../../common-lib/time'
     import Translate from '@/utils/cron/translate'
     import renderTextCn from './components/render-text-cn.vue'
     import renderTextEn from './components/render-text-en.vue'
@@ -96,6 +97,11 @@
             handleChange: {
                 type: Function,
                 default: () => {}
+            },
+            /** IANA timezone for next-fire preview; default tenant/user timezone */
+            timeZone: {
+                type: String,
+                default: ''
             }
         },
         data () {
@@ -110,6 +116,9 @@
             }
         },
         computed: {
+            resolvedTimeZone () {
+                return this.timeZone || getUserTimeZone() || DEFAULT_USER_TIME_ZONE
+            },
             curLocale () {
                 return this.$i18n.locale || 'zh-CN'
             },
@@ -141,6 +150,17 @@
                 ]
             }
         },
+        watch: {
+            resolvedTimeZone () {
+                if (this.nativeValue) {
+                    try {
+                        this.checkAndTranslate(this.nativeValue)
+                    } catch (e) {
+                        // ignore preview errors while editing
+                    }
+                }
+            }
+        },
         mounted () {
             if (!this.nativeValue) {
                 return
@@ -153,7 +173,8 @@
              */
             checkAndTranslate (value) {
                 const interval = CronExpression.parse(`0 ${value.trim()}`, {
-                    currentDate: new Date()
+                    currentDate: new Date(),
+                    tz: this.resolvedTimeZone
                 })
 
                 let i = 5
