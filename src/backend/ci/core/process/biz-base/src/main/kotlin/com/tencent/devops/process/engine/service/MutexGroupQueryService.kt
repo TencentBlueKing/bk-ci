@@ -104,8 +104,10 @@ class MutexGroupQueryService @Autowired constructor(
                 stageId = null,
                 containerId = containerId
             )
-        } catch (e: Exception) {
-            logger.warn("Failed to query container: projectId=$projectId, buildId=$buildId, containerId=$containerId", e)
+        } catch (e: Throwable) {
+            logger.warn(
+                "Failed to query container: projectId=$projectId, buildId=$buildId, containerId=$containerId", e
+            )
             null
         }
 
@@ -115,7 +117,7 @@ class MutexGroupQueryService @Autowired constructor(
         // 查询 Redis LinkTip 获取可读信息
         val linkTipValue = try {
             redisOperation.get(mutexGroup.genMutexLinkTipKey(containerMutexId))
-        } catch (e: Exception) {
+        } catch (e: Throwable) {
             logger.warn("Failed to query linkTip: $containerMutexId", e)
             null
         }
