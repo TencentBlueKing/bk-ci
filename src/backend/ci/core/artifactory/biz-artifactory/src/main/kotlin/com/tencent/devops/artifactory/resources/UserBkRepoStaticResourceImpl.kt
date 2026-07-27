@@ -33,6 +33,7 @@ import com.tencent.devops.artifactory.pojo.enums.FileChannelTypeEnum
 import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
 import com.tencent.devops.artifactory.service.ArchiveFileService
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.FileUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.web.RestResource
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
@@ -50,7 +51,9 @@ class UserBkRepoStaticResourceImpl @Autowired constructor(
         disposition: FormDataContentDisposition,
         type: String?
     ): Result<String?> {
-        val fileName = disposition.fileName
+        // multipart filename 由客户端控制，先 basename 化阻断 ../ 等输入，
+        // 否则 fileSuffix 会把 /../ 之类字符流入 filePath 拼接，污染最终存储路径
+        val fileName = FileUtil.getSafeFileName(disposition.fileName)
         val index = fileName.lastIndexOf(".")
         val fileSuffix = fileName.substring(index + 1)
         val filePathSb = StringBuilder("file/")
