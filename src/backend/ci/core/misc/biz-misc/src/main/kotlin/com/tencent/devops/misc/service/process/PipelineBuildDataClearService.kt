@@ -33,11 +33,11 @@ import com.tencent.devops.misc.service.dispatch.DispatchDataClearService
 import com.tencent.devops.misc.service.plugin.PluginDataClearService
 import com.tencent.devops.misc.service.quality.QualityDataClearService
 import com.tencent.devops.misc.service.repository.RepositoryDataClearService
-import java.time.LocalDateTime
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
 
 /**
  * 流水线构建数据清理核心服务
@@ -66,6 +66,9 @@ class PipelineBuildDataClearService @Autowired constructor(
     @Value("\${process.clearBaseBuildData:false}")
     private val clearBaseBuildData: Boolean = false
 
+    @Value("\${process.draftVersionStoreDays:30}")
+    private val draftVersionStoreDays: Long = 30
+
     /**
      * 清理正常流水线的超量和过期构建数据（定时任务使用）
      */
@@ -76,6 +79,7 @@ class PipelineBuildDataClearService @Autowired constructor(
     ) {
         cleanOverflowPipelineData(pipelineId, projectId, projectDataClearConfig)
         cleanExpiredPipelineData(pipelineId, projectId, projectDataClearConfig)
+        clearPipelineDraftVersionData(projectId = projectId, pipelineId = pipelineId)
     }
 
     /**
@@ -226,5 +230,40 @@ class PipelineBuildDataClearService @Autowired constructor(
                 processRelatedPlatformDataClearService.cleanBuildData(projectId, pipelineId, cleanBuilds)
             }
         }
+    }
+
+    /**
+     * 清理流水线草稿版本
+     */
+    private fun clearPipelineDraftVersionData(projectId: String, pipelineId: String) {
+        val expireTime = LocalDateTime.now().minusDays(draftVersionStoreDays)
+        var offset = 0
+        do {
+            // 1. 从草稿表中获取流水线版本
+            val versions = processMiscService.listPipelineDraftVersions(
+                projectId = projectId, pipelineId = pipelineId,
+                limit = DEFAULT_PAGE_SIZE, offset = offset
+            )
+            if (versions.isEmpty()) return
+            // 2. 获取已经发布超过X天的版本
+            val expiredVersions = processMiscService.getExpiredPipelineVersions(
+                projectId = projectId, pipelineId = pipelineId,
+                versions = versions, expireTime = expireTime
+            )
+            logger.info("clearPipelineDraftVersionData|$projectId|$pipelineId|$expiredVersions")
+            if (expiredVersions.isEmpty()) return
+            try {
+                processDataClearService.deletePipelineDraftData(
+                    projectId = projectId, pipelineId = pipelineId,
+                    versions = expiredVersions
+                )
+            } catch (ignored: Throwable) {
+                logger.warn(
+                    "clearPipelineDraftVersionData failed|$projectId|$pipelineId|$expiredVersions",
+                    ignored
+                )
+            }
+            offset += DEFAULT_PAGE_SIZE
+        } while (versions.size >= DEFAULT_PAGE_SIZE)
     }
 }

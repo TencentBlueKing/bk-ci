@@ -45,7 +45,7 @@ import org.springframework.stereotype.Service
  * 流水线调试后置处理器
  */
 @Service
-class PipelineDebugVersionPostProcessor @Autowired constructor(
+class PipelineDraftVersionPostProcessor @Autowired constructor(
     private val dslContext: DSLContext,
     private val pipelineBuildDao: PipelineBuildDao,
     private val buildLogPrinter: BuildLogPrinter,
