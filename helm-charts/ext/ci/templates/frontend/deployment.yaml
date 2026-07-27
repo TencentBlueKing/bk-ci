@@ -92,17 +92,17 @@ spec:
             periodSeconds: 10
             failureThreshold: 3
             successThreshold: 1
-          {{- if .Values.frontend.cfsEnabled }}
+          {{- if .Values.frontend.cfs.enabled }}
           volumeMounts:
             - name: version-log
               mountPath: /data/workspace/version-log
           {{- end }}
       terminationGracePeriodSeconds: 30
-      {{- if .Values.frontend.cfsEnabled }}
+      {{- if .Values.frontend.cfs.enabled }}
       volumes:
         - name: version-log
           nfs:
-            path: /{{ .Values.frontend.cfsPath }}/{{ .Values.frontend.cfsEnv }}/frontend/version-log
-            server: {{ .Values.frontend.cfsIp }}
+            path: /{{ .Values.frontend.cfs.path }}/{{ .Values.frontend.cfs.env }}/frontend/version-log
+            server: {{ .Values.frontend.cfs.ip }}
       {{- end }}
 {{- end -}}
