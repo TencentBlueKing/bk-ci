@@ -42,12 +42,14 @@ import com.tencent.devops.common.pipeline.pojo.transfer.TransferBody
 import com.tencent.devops.common.pipeline.pojo.transfer.TransferResponse
 import com.tencent.devops.common.pipeline.pojo.transfer.YamlWithVersion
 import com.tencent.devops.common.pipeline.template.PipelineTemplateType
+import com.tencent.devops.process.dao.PipelineTemplateResourceDraftVersionDao
 import com.tencent.devops.process.engine.service.PipelineInfoExtService
 import com.tencent.devops.process.service.pipeline.PipelineTransferYamlService
 import com.tencent.devops.process.yaml.PipelineYamlCommonService
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import org.jooq.DSLContext
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertNull
@@ -65,6 +67,8 @@ class PipelineTemplateGeneratorTest {
     private val settingService: PipelineTemplateSettingService = mockk()
     private val pipelineInfoExtService: PipelineInfoExtService = mockk()
     private val pipelineYamlCommonService: PipelineYamlCommonService = mockk()
+    private val dslContext: DSLContext = mockk()
+    private val pipelineTemplateResourceDraftVersionDao: PipelineTemplateResourceDraftVersionDao = mockk()
 
     private lateinit var generator: PipelineTemplateGenerator
 
@@ -79,7 +83,9 @@ class PipelineTemplateGeneratorTest {
             pipelineTemplateResourceService = resourceService,
             pipelineTemplateSettingService = settingService,
             pipelineInfoExtService = pipelineInfoExtService,
-            pipelineYamlCommonService = pipelineYamlCommonService
+            pipelineYamlCommonService = pipelineYamlCommonService,
+            dslContext = dslContext,
+            pipelineTemplateResourceDraftVersionDao = pipelineTemplateResourceDraftVersionDao
         )
     }
 

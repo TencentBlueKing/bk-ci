@@ -478,6 +478,8 @@ object ProcessMessageCode {
 
     // 模型变量引用表达式不合规：单花括号不得以 context 前缀开头；双花括号须以前缀开头或为合法表达式函数。不合规项：{0}
     const val ERROR_PIPELINE_MODEL_VAR_REF_INVALID = "2101376"
+    const val ERROR_TEMPLATE_RESOURCE_DRAFT_VERSION_NOT_EXISTS = "2101377" // 模板草稿版本编排[{0}]记录不存在
+    const val ERROR_TEMPLATE_SETTING_DRAFT_VERSION_NOT_EXISTS = "2101378" // 模板草稿版本设置[{0}]不存在
 
     // 构建执行相关错误码（2101500-2101599）
     const val ERROR_PIPELINE_START_NODE_NO_PERMISSION = "2101500" // 用户[{0}]没有节点[{1}]的操作权限，无法启动流水线

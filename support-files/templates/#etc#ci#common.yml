@@ -291,6 +291,18 @@ spring:
       - index: 76
         name: T_PIPELINE_COPY_TASK_RESOURCE_REL
         databaseShardingStrategy: SHARDING
+      - index: 77
+        name: T_PIPELINE_RESOURCE_DRAFT_VERSION
+        databaseShardingStrategy: SHARDING
+      - index: 78
+        name: T_PIPELINE_SETTING_DRAFT_VERSION
+        databaseShardingStrategy: SHARDING
+      - index: 79
+        name: T_PIPELINE_TEMPLATE_RESOURCE_DRAFT_VERSION
+        databaseShardingStrategy: SHARDING
+      - index: 80
+        name: T_PIPELINE_TEMPLATE_SETTING_DRAFT_VERSION
+        databaseShardingStrategy: SHARDING
 
 endpoints:
   metrics:
