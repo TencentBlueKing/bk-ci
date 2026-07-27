@@ -7,8 +7,16 @@ interface User {
     chineseName?: string
     phone?: string
     email?: string
-    /** IANA timezone from BlueKing user management */
+    /** IANA timezone — synced from tenantInfoForDisplay */
     timeZone?: string
+    tenantId?: string
+}
+
+interface TenantInfoForDisplay {
+    tenantId: string
+    apiBaseUrl: string
+    /** IANA timezone for page time display */
+    timeZone: string
 }
 
 interface ObjectMap {
@@ -32,6 +40,7 @@ interface Window {
     serviceObject: ObjectMap
     currentPage: subService
     userInfo: User
+    tenantInfoForDisplay?: TenantInfoForDisplay
     vuexStore: any
     setLsCacheItem: Function
     getLsCacheItem: Function

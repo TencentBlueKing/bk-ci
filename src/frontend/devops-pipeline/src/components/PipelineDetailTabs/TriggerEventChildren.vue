@@ -16,7 +16,7 @@
                 [<span class="text-link">{{event.commitId}}</span>]
                 pushed -->
                 <span v-html="event.eventDesc"></span>
-                <span class="trigger-event-item-lighter-field">{{ convertTime(event.eventTime) }}</span>
+                <span class="trigger-event-item-lighter-field"><time-display :value="event.eventTime" /></span>
             </p>
             <p class="trigger-event-reason">
                 <span>{{ event.reason }}</span>  |
@@ -56,9 +56,12 @@
         RESOURCE_ACTION
     } from '@/utils/permission'
     import { statusColorMap } from '@/utils/pipelineStatus'
-    import { convertTime } from '@/utils/util'
     import { mapActions, mapState } from 'vuex'
+    import TimeDisplay from '../../../../common-lib/time-display'
     export default {
+        components: {
+            TimeDisplay
+        },
         props: {
             events: {
                 type: Array,

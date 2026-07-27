@@ -6,6 +6,7 @@
 
 - 后端存储与传输**绝对时刻**（Instant），不绑定展示时区。
 - 前端按蓝鲸用户管理返回的 IANA `time_zone`，将绝对时刻格式化为用户当地时间。
+- 前端展示时区以 project 模板接口 `tenantInfoForDisplay.timeZone` 为统一入口（与多租户 `tenantId` 同接口获取）；暂默认 `Asia/Shanghai`，待蓝鲸 API 就绪后替换。
 - 不要求把 DB 列全面改为 Unix BIGINT；`datetime` / `timestamp` 可继续使用，读写须不丢绝对时刻。
 
 ## API 出站契约（对人端）
@@ -57,8 +58,9 @@ DateTimeUtil.toDateTime(record.createTime) // 仅允许通知文案、日志、�
 
 | 场景 | 负责方 |
 |------|--------|
-| 页面列表 / 详情展示 | **前端** `formatByUserTz(ms, timeZone)` |
-| 用户时区来源 | 蓝鲸用户管理 `time_zone` → `/project/api/user/users` 的 `timeZone` |
+| 页面列表 / 详情展示 | **前端** `formatByUserTz(ms, timeZone)` / `<time-display>` |
+| 用户时区来源（展示基准） | **多租户统一入口** `GET /project/api/user/users/tenantInfoForDisplay` 的 `timeZone`（与 `tenantId` / `apiBaseUrl` 同接口）；前端经 `applyTenantDisplayInfo` 写入 `window.tenantInfoForDisplay` / `window.userInfo.timeZone`。暂默认 `Asia/Shanghai`，待蓝鲸用户管理 API 提供后替换 |
+| 兼容读取顺序 | `window.tenantInfoForDisplay.timeZone` → `window.userInfo.timeZone` → 浏览器 `Intl` → `Asia/Shanghai` |
 | 邮件 / 企业微信等通知正文中的时间 | 后端可按用户时区格式化字符串 |
 | OpenAPI / 第三方 | 返回毫秒时间戳，由消费方自行格式化 |
 
@@ -71,8 +73,8 @@ DateTimeUtil.toDateTime(record.createTime) // 仅允许通知文案、日志、�
 
 ## 前端公共工具
 
-- [`src/frontend/common-lib/time.js`](../../src/frontend/common-lib/time.js)：`formatByUserTz` / `convertTime` / `getUserTimeZone` / `formatTimezoneTooltip` / `formatDuration` / `calendarDateRangeToEpochMilli` / `recentDaysRangeInUserTz` / `userTzTodayRange` 等
+- [`src/frontend/common-lib/time.js`](../../src/frontend/common-lib/time.js)：`applyTenantDisplayInfo` / `getUserTimeZone` / `formatByUserTz` / `convertTime` / `formatTimezoneTooltip` / `formatDuration` / `calendarDateRangeToEpochMilli` / `recentDaysRangeInUserTz` / `userTzTodayRange` 等
 - [`src/frontend/common-lib/time-display.vue`](../../src/frontend/common-lib/time-display.vue)：列表/详情时刻展示组件（含时区 hover tooltip），表格列推荐直接使用
-- 用户时区读取顺序：`window.userInfo.timeZone` → 浏览器 `Intl` → `Asia/Shanghai`
+- 展示时区入口：各模块 `TenantSingleton.init()` → `tenantInfoForDisplay` → `applyTenantDisplayInfo`
 - **日历入参 / 快捷区间 /「现在」预览**：统一按用户 IANA 时区计算自然日与展示，禁止再用浏览器本地 `Date#getHours` / 裸 `dayjs()` / `moment()` 解释绝对时刻
 - **相对时长**：展示用 `formatDuration`（与时区无关的 elapsed ms），但实现收口到同一时间工具，避免各处自行依赖 moment/dayjs duration

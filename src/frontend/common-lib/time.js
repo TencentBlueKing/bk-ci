@@ -2,26 +2,60 @@
  * Unified time formatting by user IANA timezone.
  * Contract: backend returns Unix epoch millis; frontend formats with formatByUserTz.
  * See docs/specification/timezone_and_datetime.md
+ *
+ * Display timezone source (converged with multi-tenant):
+ * GET /project/api/user/users/tenantInfoForDisplay → applyTenantDisplayInfo → getUserTimeZone
  */
 
 const DEFAULT_FORMAT = 'YYYY-MM-DD HH:mm:ss'
 const DAY_MS = 24 * 3600 * 1000
+export const DEFAULT_USER_TIME_ZONE = 'Asia/Shanghai'
 
 function pad (n) {
     return n < 10 ? `0${n}` : `${n}`
 }
 
 /**
- * Resolve IANA timezone: window.userInfo.timeZone → browser → Asia/Shanghai
+ * Apply tenant display info from project template API (tenantInfoForDisplay).
+ * Sets window.tenantInfoForDisplay and syncs window.userInfo.timeZone for all page formatters.
+ * @param {{ tenantId?: string, apiBaseUrl?: string, timeZone?: string }} info
+ * @returns {{ tenantId: string, apiBaseUrl: string, timeZone: string }}
+ */
+export function applyTenantDisplayInfo (info = {}) {
+    const timeZone = info.timeZone || DEFAULT_USER_TIME_ZONE
+    const tenantInfo = {
+        tenantId: info.tenantId || '',
+        apiBaseUrl: info.apiBaseUrl || '',
+        timeZone
+    }
+    if (typeof window !== 'undefined') {
+        window.tenantInfoForDisplay = tenantInfo
+        window.userInfo = {
+            ...(window.userInfo || {}),
+            timeZone,
+            tenantId: tenantInfo.tenantId || (window.userInfo && window.userInfo.tenantId)
+        }
+    }
+    return tenantInfo
+}
+
+/**
+ * Resolve IANA timezone for display:
+ * window.tenantInfoForDisplay.timeZone → window.userInfo.timeZone → browser → Asia/Shanghai
  */
 export function getUserTimeZone () {
-    if (typeof window !== 'undefined' && window.userInfo && window.userInfo.timeZone) {
-        return window.userInfo.timeZone
+    if (typeof window !== 'undefined') {
+        if (window.tenantInfoForDisplay && window.tenantInfoForDisplay.timeZone) {
+            return window.tenantInfoForDisplay.timeZone
+        }
+        if (window.userInfo && window.userInfo.timeZone) {
+            return window.userInfo.timeZone
+        }
     }
     try {
-        return Intl.DateTimeFormat().resolvedOptions().timeZone || 'Asia/Shanghai'
+        return Intl.DateTimeFormat().resolvedOptions().timeZone || DEFAULT_USER_TIME_ZONE
     } catch (e) {
-        return 'Asia/Shanghai'
+        return DEFAULT_USER_TIME_ZONE
     }
 }
 
@@ -379,6 +413,8 @@ export function userTzTrendRange (unit, timeZone) {
 }
 
 export default {
+    DEFAULT_USER_TIME_ZONE,
+    applyTenantDisplayInfo,
     getUserTimeZone,
     toEpochMilli,
     formatByUserTz,

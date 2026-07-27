@@ -1,4 +1,5 @@
 import BkUserDisplayName from '@blueking/bk-user-display-name'
+import { applyTenantDisplayInfo, DEFAULT_USER_TIME_ZONE } from '../../../common-lib/time'
 import request from './request'
 
 const userApiPrefix = `${window.BK_APIGW_USER_WEB_URL}/api/v3/open-web/tenant/users/-`
@@ -6,6 +7,7 @@ export default class TenantSingleton {
     static instance;
     apiBaseUrl = '';
     tenantId = '';
+    timeZone = DEFAULT_USER_TIME_ZONE;
     
     constructor () {
         if (TenantSingleton.instance) {
@@ -52,17 +54,24 @@ export default class TenantSingleton {
     async init () {
         try {
             const { data } = await request.get('project/api/user/users/tenantInfoForDisplay')
-            console.log(data)
-            this.apiBaseUrl = data.apiBaseUrl
-            this.tenantId = data.tenantId
-            request.defaults.headers.common['X-Bk-Tenant-Id'] = data.tenantId
+            const tenantInfo = applyTenantDisplayInfo(data)
+            this.apiBaseUrl = tenantInfo.apiBaseUrl
+            this.tenantId = tenantInfo.tenantId
+            this.timeZone = tenantInfo.timeZone
+            request.defaults.headers.common['X-Bk-Tenant-Id'] = tenantInfo.tenantId
             BkUserDisplayName.configure({
-                tenantId: data.tenantId,
-                apiBaseUrl: data.apiBaseUrl,
+                tenantId: tenantInfo.tenantId,
+                apiBaseUrl: tenantInfo.apiBaseUrl,
                 emptyText: 'unkown_user'
             })
+            return tenantInfo
         } catch (error) {
             console.error(error)
+            return applyTenantDisplayInfo({
+                tenantId: '',
+                apiBaseUrl: '',
+                timeZone: DEFAULT_USER_TIME_ZONE
+            })
         }
     }
 }

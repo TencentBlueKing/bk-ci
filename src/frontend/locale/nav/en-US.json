@@ -3,6 +3,8 @@
     "cancelLabel": "Cancel",
     "logout": "Sign out",
     "close": "Close",
+    "enterpriseSpace": "Enterprise Space",
+    "defaultTimeZone": "Default Timezone",
     "accessCenter": "Access center",
     "recentVisiteService": "Recent service",
     "allService": "All service",

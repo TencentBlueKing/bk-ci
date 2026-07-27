@@ -1,4 +1,5 @@
 import BkUserDisplayName from '@blueking/bk-user-display-name'
+import { applyTenantDisplayInfo, DEFAULT_USER_TIME_ZONE } from '../../../common-lib/time'
 import fetch from '../http/fetch'
 
 const userApiPrefix = `${window.BK_APIGW_USER_WEB_URL}/api/v3/open-web/tenant/users/-`
@@ -6,6 +7,7 @@ export default class TenantSingleton {
     static instance: any
     static tenantId: string
     static apiBaseUrl: string
+    static timeZone: string = DEFAULT_USER_TIME_ZONE
     
     constructor () {
         if (TenantSingleton.instance) {
@@ -58,28 +60,33 @@ export default class TenantSingleton {
 
     async init (): Promise<{
         tenantId: string,
-        apiBaseUrl: string
+        apiBaseUrl: string,
+        timeZone: string
     }> {
         try {
             const data : {
                 tenantId: string,
-                apiBaseUrl: string
+                apiBaseUrl: string,
+                timeZone?: string
             } = await fetch.get?.('/project/api/user/users/tenantInfoForDisplay')
 
+            const tenantInfo = applyTenantDisplayInfo(data)
             BkUserDisplayName.configure({
-                tenantId: data.tenantId,
-                apiBaseUrl: data.apiBaseUrl,
+                tenantId: tenantInfo.tenantId,
+                apiBaseUrl: tenantInfo.apiBaseUrl,
                 emptyText: 'unkown_user'
             })
-            TenantSingleton.tenantId = data.tenantId
-            TenantSingleton.apiBaseUrl = data.apiBaseUrl
-            return data
+            TenantSingleton.tenantId = tenantInfo.tenantId
+            TenantSingleton.apiBaseUrl = tenantInfo.apiBaseUrl
+            TenantSingleton.timeZone = tenantInfo.timeZone
+            return tenantInfo
         } catch (error) {
             console.error(error)
-            return {
+            return applyTenantDisplayInfo({
                 tenantId: '',
-                apiBaseUrl: ''
-            }
+                apiBaseUrl: '',
+                timeZone: DEFAULT_USER_TIME_ZONE
+            })
         }
     }
 }

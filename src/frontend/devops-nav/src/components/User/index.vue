@@ -15,6 +15,16 @@
             <i class="devops-icon icon-down-shape ml5" />
         </div>
         <template slot="content">
+            <div class="user-tenant-info">
+                <p class="user-tenant-info-row">
+                    <span class="user-tenant-info-label">{{ $t('enterpriseSpace') }}</span>
+                    <span class="user-tenant-info-value">{{ tenantId || '--' }}</span>
+                </p>
+                <p class="user-tenant-info-row">
+                    <span class="user-tenant-info-label">{{ $t('defaultTimeZone') }}</span>
+                    <span class="user-tenant-info-value">{{ timeZone || '--' }}</span>
+                </p>
+            </div>
             <li
                 v-for="(item, index) in menu"
                 :key="index"
@@ -44,6 +54,7 @@
     import { Action } from 'vuex-class'
     import { clickoutside } from '../../directives/index'
     import { addRoutePrefix } from '@/utils/util'
+    import { DEFAULT_USER_TIME_ZONE } from '../../../common-lib/time'
 
     @Component({
         directives: {
@@ -64,6 +75,16 @@
         bkpaasUserId: string
 
         @Action togglePopupShow
+
+        get tenantId (): string {
+            return window.tenantInfoForDisplay?.tenantId || ''
+        }
+
+        get timeZone (): string {
+            return window.tenantInfoForDisplay?.timeZone
+                || window.userInfo?.timeZone
+                || DEFAULT_USER_TIME_ZONE
+        }
 
         hideUserInfo (item): void {
             this.$refs.popoverRef.hideHandler()
@@ -133,6 +154,37 @@
         line-height: 32px;
         padding:0 12px;
         align-items: center;
+    }
+
+    .user-tenant-info {
+        padding: 8px 16px 12px;
+        border-bottom: 1px solid #f0f1f5;
+        margin-bottom: 4px;
+        min-width: $dropmenuWidth;
+        box-sizing: border-box;
+    }
+
+    .user-tenant-info-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        line-height: 22px;
+        font-size: 12px;
+        & + .user-tenant-info-row {
+            margin-top: 4px;
+        }
+    }
+
+    .user-tenant-info-label {
+        color: #979ba5;
+        margin-right: 12px;
+        flex-shrink: 0;
+    }
+
+    .user-tenant-info-value {
+        color: #63656e;
+        text-align: right;
+        word-break: break-all;
     }
 
     .user-menu-item {

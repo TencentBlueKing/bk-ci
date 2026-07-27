@@ -66,11 +66,17 @@ class UserProjectUserResourceImpl @Autowired constructor(
     }
 
     override fun tenantInfoForDisplay(userId: String, tenantId: String): Result<TenantInfoForDisplay> {
+        // TODO: 待蓝鲸用户管理提供时区 API 后，改为读取真实用户/租户时区
         return Result(
             TenantInfoForDisplay(
                 tenantId = tenantId,
-                apiBaseUrl = bkUserWebUrl ?: ""
+                apiBaseUrl = bkUserWebUrl ?: "",
+                timeZone = DEFAULT_DISPLAY_TIME_ZONE
             )
         )
+    }
+
+    companion object {
+        private const val DEFAULT_DISPLAY_TIME_ZONE = "Asia/Shanghai"
     }
 }
