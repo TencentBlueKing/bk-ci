@@ -21,10 +21,15 @@ if config.esb.enabled then
     oauthUtil:is_login(bk_token)
 end
 
--- 获取租户ID
+-- 获取租户ID与用户时区（蓝鲸 get_bk_token_userinfo；time_zone 可空，后端兜底）
 local tenant_id = 'default'
+local time_zone = nil
 if config.tenant.enabled then
-    tenant_id = oauthUtil:verify_bk_token(bk_token).tenant_id
+    local user_info = oauthUtil:verify_bk_token(bk_token)
+    if user_info ~= nil then
+        tenant_id = user_info.tenant_id
+        time_zone = user_info.time_zone
+    end
 end
 
 local ticket = oauthUtil:get_ticket(bk_token)
@@ -34,4 +39,7 @@ ngx.header["x-devops-uid"] = ticket.identity.username
 ngx.header["x-devops-bk-token"] = bk_token
 ngx.header["x-devops-access-token"] = ticket.access_token
 ngx.header["x-bk-tenant-id"] = tenant_id
+if time_zone ~= nil and time_zone ~= "" then
+    ngx.header["x-bk-user-timezone"] = time_zone
+end
 ngx.exit(200)

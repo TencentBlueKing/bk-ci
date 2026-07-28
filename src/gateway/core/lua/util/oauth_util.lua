@@ -143,6 +143,8 @@ function _M:is_login(bk_token)
     end
 end
 
+--- 调用蓝鲸登录接口（建议配置 BK_LOGIN_PATH 为 get_bk_token_userinfo）
+--- 返回 data，含 tenant_id；若为 userinfo 接口还可含 time_zone（可空）
 function _M:verify_bk_token(bk_token)
     if bk_token == nil then
         ngx.log(ngx.ERR, "bk_token is null")
@@ -185,7 +187,7 @@ function _M:verify_bk_token(bk_token)
     --- 转换JSON的返回数据为TABLE
     local result = json.decode(responseBody)
 
-    -- 获取租户ID
+    -- 返回 data（tenant_id / time_zone 等）
     if result == nil then
         ngx.log(ngx.ERR, "null is tenant result")
         ngx.exit(401)
