@@ -54,6 +54,23 @@
   width: 100%;
 }
 
+.envOption {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.envOsTag {
+  flex-shrink: 0;
+}
+
+.envOptionName {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .envSelect :global(.bk-select-trigger) {
   width: 100%;
 }
@@ -70,6 +87,13 @@
   color: var(--color-text-secondary);
 }
 
+.envSelectPrefix {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  padding-left: var(--spacing-lg);
+}
+
 .envSelect :global(.bk-input--text) {
   width: 100%;
   padding-left: var(--spacing-lg);
@@ -77,6 +101,10 @@
   font-size: var(--font-size-sm);
   color: var(--color-text-primary);
   background-color: #f5f7fa;
+}
+
+.envSelectWithOs :global(.bk-input--text) {
+  padding-left: 8px;
 }
 
 .envManageEntry {

@@ -1,4 +1,7 @@
-import { getAuthoringNodeDisplayText } from '@/api/authoringEnvironmentApi'
+import {
+  getAuthoringNodeDisplayText,
+  getEnvOsDisplayName,
+} from '@/api/authoringEnvironmentApi'
 import { SvgIcon } from '@/components/SvgIcon'
 import useAuthoringEnvironment, { type EnvSelectItem } from '@/hooks/useAuthoringEnvironment'
 import { Exception, Loading, Select, Tag } from 'bkui-vue'
@@ -54,9 +57,11 @@ export default defineComponent({
     const { t } = useI18n()
     const envHashId = ref(props.modelValue)
     const { goEnvironment, loadNodeList } = useAuthoringEnvironment()
-    const envName = computed(() => {
-      return props.envList.find((env) => env.envHashId === envHashId.value)?.name || envHashId.value
+    const selectedEnv = computed(() => {
+      return props.envList.find((env) => env.envHashId === envHashId.value || env.value === envHashId.value)
     })
+    const envName = computed(() => selectedEnv.value?.name || envHashId.value)
+    const selectedOsLabel = computed(() => getEnvOsDisplayName(selectedEnv.value?.os))
 
     watch(
       () => props.modelValue,
@@ -96,31 +101,55 @@ export default defineComponent({
       )
     }
 
+    function renderEnvOption(env: EnvSelectItem) {
+      const osLabel = getEnvOsDisplayName(env.os)
+      return (
+        <Select.Option key={env.value} id={env.value} name={env.label}>
+          <div class={styles.envOption}>
+            {osLabel ? (
+              <Tag size="small" class={styles.envOsTag}>
+                {osLabel}
+              </Tag>
+            ) : null}
+            <span class={styles.envOptionName}>{env.label}</span>
+          </div>
+        </Select.Option>
+      )
+    }
+
+    function renderSelectedOsTag() {
+      if (!selectedOsLabel.value) return null
+      return (
+        <div class={styles.envSelectPrefix}>
+          <Tag size="small" class={styles.envOsTag}>
+            {selectedOsLabel.value}
+          </Tag>
+        </div>
+      )
+    }
+
     function renderEnvSelect() {
       const selectProps = {
-        class: styles.envSelect,
+        class: [styles.envSelect, selectedOsLabel.value && styles.envSelectWithOs],
         modelValue: envHashId.value,
         'onUpdate:modelValue': (value: string) => {
           envHashId.value = value
         },
         filterable: true,
-        list: props.envList,
         loading: props.envLoading,
         placeholder: t('flow.content.creationEnvironment'),
         searchPlaceholder: t('flow.content.searchEnvironment'),
         onChange: handleChange,
       }
-      const select = props.showEnvironmentManagement ? (
-        <Select {...selectProps}>
-          {{
-            extension: renderEnvironmentManagement,
-          }}
-        </Select>
-      ) : (
-        <Select
-          {...selectProps}
-        ></Select>
-      )
+      const selectSlots: Record<string, () => unknown> = {
+        default: () => props.envList.map(renderEnvOption),
+      }
+      if (selectedOsLabel.value) {
+        selectSlots.prefix = renderSelectedOsTag
+      }
+      if (props.showEnvironmentManagement) {
+        selectSlots.extension = renderEnvironmentManagement
+      }
 
       return (
         <div class={[styles.envSelectLine, !props.selectLabel && styles.envSelectLinePlain]}>
@@ -130,7 +159,9 @@ export default defineComponent({
               {props.selectRequired ? <span class={styles.requiredMark}>*</span> : null}
             </label>
           ) : null}
-          <div class={styles.envSelectControl}>{select}</div>
+          <div class={styles.envSelectControl}>
+            <Select {...selectProps}>{selectSlots}</Select>
+          </div>
         </div>
       )
     }

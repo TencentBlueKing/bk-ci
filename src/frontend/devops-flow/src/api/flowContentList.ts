@@ -205,6 +205,7 @@ export interface AuthoringEnvItem {
   desc: string
   envType: string
   envNodeType: string
+  os?: string
   nodeCount: number
   tags: [
     {
