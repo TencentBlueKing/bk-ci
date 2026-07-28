@@ -1,51 +1,9 @@
 <template>
-    <bk-popover
-        theme="light navigation-message"
-        placement="bottom"
-        trigger="click"
-        :arrow="false"
-        ref="popoverRef"
-        :on-hide="handleHide"
-        :on-show="handleShow"
-    >
-        <div
-            class="user-entry"
-        >
-            <bk-user-display-name :user-id="username"></bk-user-display-name>
-            <i class="devops-icon icon-down-shape ml5" />
-        </div>
-        <template slot="content">
-            <div class="user-tenant-info">
-                <p class="user-tenant-info-row">
-                    <span class="user-tenant-info-label">{{ $t('enterpriseSpace') }}</span>
-                    <span class="user-tenant-info-value">{{ tenantId || '--' }}</span>
-                </p>
-                <p class="user-tenant-info-row">
-                    <span class="user-tenant-info-label">{{ $t('defaultTimeZone') }}</span>
-                    <span class="user-tenant-info-value">{{ timeZone || '--' }}</span>
-                </p>
-            </div>
-            <li
-                v-for="(item, index) in menu"
-                :key="index"
-                class="bkci-dropdown-item"
-            >
-                <router-link
-                    v-if="item.to"
-                    class="user-menu-item"
-                    :to="item.to"
-                    @click="hideUserInfo"
-                >
-                    {{ item.label }}
-                </router-link>
-                <span
-                    v-else-if="item.cb"
-                    class="user-menu-item"
-                    @click.stop="item.cb(item.name)"
-                >{{ item.label }}</span>
-            </li>
-        </template>
-    </bk-popover>
+    <BkLoginUserinfo
+        :userinfo="userinfo"
+        :render-slot="renderSlot"
+        :action-list="actionList"
+    />
 </template>
 
 <script lang="ts">
@@ -54,9 +12,14 @@
     import { Action } from 'vuex-class'
     import { clickoutside } from '../../directives/index'
     import { addRoutePrefix } from '@/utils/util'
-    import { DEFAULT_USER_TIME_ZONE } from '../../../../common-lib/time'
+    import { getUserTimeZone } from '../../../../common-lib/time.js'
+    import BkLoginUserinfo from '@blueking/login-userinfo/vue2'
+    import('@blueking/login-userinfo/vue2/vue2.css')
 
     @Component({
+        components: {
+            BkLoginUserinfo
+        },
         directives: {
             clickoutside
         }
@@ -81,56 +44,58 @@
             return (tenantInfo && tenantInfo.tenantId) || ''
         }
 
-        get timeZone (): string {
-            const tenantInfo = (window as any).tenantInfoForDisplay
-            const userInfo = window.userInfo
-            return (tenantInfo && tenantInfo.timeZone)
-                || (userInfo && userInfo.timeZone)
-                || DEFAULT_USER_TIME_ZONE
+        get userSettingUrl (): string {
+            const domain = window.LOCALE_DOMAIN
+            return domain ? `https://bkuser.${domain}` : ''
         }
 
-        hideUserInfo (item): void {
-            this.$refs.popoverRef.hideHandler()
+        get actionList () {
+            return [
+                {
+                    text: this.$t('projectManage'),
+                    icon: 'projectManage',
+                    theme: 'primary',
+                    href: addRoutePrefix('/console/pm')
+                },
+                {
+                    text: this.$t('accessCenter'),
+                    icon: 'accessCenter',
+                    theme: 'primary',
+                    href: addRoutePrefix('/console/permission')
+                },
+                {
+                    text: this.$t('oauthManage'),
+                    icon: 'oauthManage',
+                    theme: 'primary',
+                    href: addRoutePrefix('/console/permission/auth/oauth')
+                },
+                {
+                    text: this.$t('userSetting'),
+                    icon: 'userCircle',
+                    href: this.userSettingUrl,
+                    target: '_blank',
+                    theme: 'primary',
+                },
+                {
+                    text: this.$t('logout'),
+                    icon: 'logout',
+                    theme: 'danger',
+                    handle: this.logout,
+                },
+            ]
         }
-
-        handleShow () {
-            this.togglePopupShow(true)
-        }
-
-        handleHide () {
-            this.togglePopupShow(false)
-        }
-
-        updatePage (name) {
-            window.open(`${window.location.origin}${window.getRoutePrefix()}/${name}`, '_self')
-        }
-
-        get menu (): object[] {
-            try {
-                return [
-                    {
-                        to: addRoutePrefix('/console/pm'),
-                        label: this.$t('projectManage')
-                    },
-                    {
-                        cb: this.updatePage,
-                        label: this.$t('accessCenter'),
-                        name: 'permission'
-                    },
-                    {
-                        cb: this.updatePage,
-                        label: this.$t('oauthManage'),
-                        name: 'permission/auth/oauth'
-                    },
-                    {
-                        cb: this.logout,
-                        label: this.$t('logout')
-                    }
-                ]
-            } catch (e) {
-                console.warn(e)
-                return []
+        get userinfo () {
+            const name = `${this.username}(${this.chineseName})`
+            
+            return {
+                name,
+                organization: this.tenantId || '--',
+                timezone: getUserTimeZone(),
             }
+        }
+
+        renderSlot (h) {
+            return h('bk-user-display-name', { 'user-id': `${this.username}(${this.chineseName})` })
         }
 
         logout (): void {
