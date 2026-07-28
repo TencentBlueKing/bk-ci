@@ -67,14 +67,12 @@ object BatScriptUtil {
 
     private const val formatMultipleLines = ":format_multiple_lines\r\n" +
         "    setlocal\r\n" +
-        "    set RAW=%~1\r\n" +
         "    powershell -NoProfile -Command ^\r\n" +
-        "        \"\$c=\$env:RAW;\" ^\r\n" +
-        "        \"\$c=\$c -replace '%%','%%25';\" ^\r\n" +
-        "        \"\$c=\$c -replace '\\\\n','%%0A';\" ^\r\n" +
-        "        \"\$c=\$c -replace '\\\\r','%%0D';\" ^\r\n" +
+        "        \"\$c=[System.IO.File]::ReadAllText('%~2');\" ^\r\n" +
+        "        \"\$c=\$c -replace '%%','%%25' -replace ([char]13),'%%0D' -replace ([char]10),'%%0A';\" ^\r\n" +
+        "        \"\$line='::set-output name=%~1::'+\$c;\" ^\r\n" +
         "        \"\$enc=New-Object System.Text.UTF8Encoding(\$false);\" ^\r\n" +
-        "        \"[System.IO.File]::AppendAllText('##multiLineFile##', \$c + [Environment]::NewLine, \$enc)\"\r\n" +
+        "        \"[System.IO.File]::AppendAllText('##multiLineFile##', \$line + [Environment]::NewLine, \$enc)\"\r\n" +
         "    endlocal\r\n" +
         "    goto:eof\r\n"
 

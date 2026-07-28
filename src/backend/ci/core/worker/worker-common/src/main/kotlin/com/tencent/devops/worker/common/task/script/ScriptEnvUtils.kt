@@ -30,6 +30,7 @@ package com.tencent.devops.worker.common.task.script
 import com.tencent.devops.worker.common.utils.ExecutorUtil
 import org.slf4j.LoggerFactory
 import java.io.File
+import kotlin.text.Charsets
 
 @Suppress("TooManyFunctions")
 object ScriptEnvUtils {
@@ -88,7 +89,7 @@ object ScriptEnvUtils {
     fun getMultipleLines(buildId: String, workspace: File): List<String> {
         val f = File(workspace, getMultipleLineFile(buildId))
         if (!f.exists() || f.isDirectory) return emptyList()
-        return f.readText()
+        return f.readText(Charsets.UTF_8)
             .removePrefix("\uFEFF")
             .split(lineSplitRegex)
             .let { if (it.isNotEmpty() && it.last().isEmpty()) it.dropLast(1) else it }
