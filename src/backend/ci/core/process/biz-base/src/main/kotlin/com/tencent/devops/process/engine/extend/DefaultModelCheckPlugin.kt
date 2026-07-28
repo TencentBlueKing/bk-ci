@@ -42,6 +42,7 @@ import com.tencent.devops.common.pipeline.enums.JobRunCondition
 import com.tencent.devops.common.pipeline.enums.StageRunCondition
 import com.tencent.devops.common.pipeline.extend.ModelCheckPlugin
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
+import com.tencent.devops.common.pipeline.pojo.PipelineRunEnvOsChange
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.RunCondition
 import com.tencent.devops.common.pipeline.pojo.element.atom.BeforeDeleteParam
@@ -94,7 +95,8 @@ open class DefaultModelCheckPlugin constructor(
         isTemplate: Boolean,
         oauthUser: String?,
         pipelineDialect: IPipelineDialect?,
-        pipelineId: String
+        pipelineId: String,
+        runEnvOsChange: PipelineRunEnvOsChange?
     ): Int {
         var metaSize = 0
         // 检查流水线名称
@@ -192,7 +194,8 @@ open class DefaultModelCheckPlugin constructor(
                     atomVersions = atomVersions,
                     atomCheckParams = atomCheckParams,
                     inputTypeConfigMap = AtomUtils.getInputTypeConfigMap(taskCommonSettingConfig),
-                    client = client
+                    client = client,
+                    runEnvOsChange = runEnvOsChange
                 )
             }
             DependOnUtils.checkRepeatedJobId(stage)

@@ -36,6 +36,7 @@ import com.tencent.devops.common.api.constant.KEY_INPUT
 import com.tencent.devops.common.api.constant.KEY_TEXTAREA
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.ErrorType
+import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.log.utils.BuildLogPrinter
@@ -44,6 +45,7 @@ import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.pipeline.pojo.PipelineRunEnvOsChange
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
@@ -233,16 +235,20 @@ object AtomUtils {
         atomVersions: Set<StoreVersion>,
         atomCheckParams: List<AtomCheckParam>,
         inputTypeConfigMap: Map<String, Int>,
-        client: Client
+        client: Client,
+        runEnvOsChange: PipelineRunEnvOsChange? = null
     ) {
         if (atomVersions.isEmpty()) return
-        // 复用同一次批量查询结果，服务范围/构建环境/参数三类校验共享，避免额外远程调用
+        // 复用同一次批量查询结果，服务范围/构建环境/参数/运行环境操作系统四类校验共享，避免额外远程调用
         val atomRunInfoMap = client.get(ServiceMarketAtomEnvResource::class).batchGetAtomRunInfos(
             projectCode = projectCode,
             atomVersions = atomVersions
         ).data
         // 保存/校验阶段：渠道取自请求上下文
         val channelCode = ChannelCode.getRequestChannelCode()
+        val targetOs = runEnvOsChange?.currentOs
+        // 不适配插件在本次调用内收集后统一抛出
+        val osIncompatibleAtoms = mutableListOf<OsIncompatibleAtom>()
         atomCheckParams.forEach { checkParam ->
             val storeParam = checkParam.storeParam
             val atomRunInfo = atomRunInfoMap?.get("${storeParam.storeCode}:${storeParam.version}") ?: return@forEach
@@ -258,8 +264,98 @@ object AtomUtils {
                 inputTypeConfigMap = inputTypeConfigMap,
                 atomName = storeParam.storeName
             )
+            if (targetOs != null) {
+                findOsIncompatibleAtom(
+                    atomRunInfo = atomRunInfo,
+                    checkParam = checkParam,
+                    channelCode = channelCode,
+                    targetOs = targetOs
+                )?.let { osIncompatibleAtoms.add(it) }
+            }
+        }
+        if (runEnvOsChange != null && osIncompatibleAtoms.isNotEmpty()) {
+            throw osIncompatibleException(runEnvOsChange = runEnvOsChange, incompatibleAtoms = osIncompatibleAtoms)
         }
     }
+
+    /**
+     * 渠道到「插件操作系统声明所属 jobType」的映射。
+     *
+     * 与 [resolveRequiredServiceScope] 同为「渠道」的扩展点：插件的 OS 按 jobType 分别声明，
+     * 未来新增需要做运行环境操作系统校验的渠道时，只需在此处补充对应分支。
+     */
+    private fun resolveOsJobType(channelCode: ChannelCode): JobTypeEnum = when (channelCode) {
+        ChannelCode.CREATIVE_STREAM -> JobTypeEnum.CREATIVE_STREAM
+        else -> JobTypeEnum.AGENT
+    }
+
+    /**
+     * 判断插件是否适用于运行环境的目标操作系统，不适用时返回明细项。
+     *
+     * 仅校验有编译环境的 Job：插件运行在运行环境的节点上，
+     * 无编译环境插件与触发器插件不受运行环境操作系统约束。
+     * 插件未声明当前渠道对应的操作系统范围时默认放行，保证存量插件逻辑不受影响。
+     */
+    private fun findOsIncompatibleAtom(
+        atomRunInfo: AtomRunInfo,
+        checkParam: AtomCheckParam,
+        channelCode: ChannelCode,
+        targetOs: OS
+    ): OsIncompatibleAtom? {
+        if (checkParam.containerEnvType != AtomContainerEnvType.BUILD_ENV) return null
+        val supportedOsList = atomRunInfo.osMap?.get(resolveOsJobType(channelCode).name)
+        if (supportedOsList.isNullOrEmpty()) return null
+        if (supportedOsList.any { it.equals(targetOs.name, ignoreCase = true) }) return null
+        return OsIncompatibleAtom(
+            atomName = checkParam.storeParam.storeName,
+            supportedOsList = supportedOsList
+        )
+    }
+
+    /**
+     * 构造运行环境操作系统变更后插件不适配的异常，文案中列出全部不适配插件及其适用系统。
+     */
+    private fun osIncompatibleException(
+        runEnvOsChange: PipelineRunEnvOsChange,
+        incompatibleAtoms: List<OsIncompatibleAtom>
+    ): ErrorCodeException {
+        val currentOsName = osDisplayName(runEnvOsChange.currentOs.name)
+        val atomDetail = incompatibleAtoms.distinct().joinToString(separator = "\n") { atom ->
+            I18nUtil.getCodeLanMessage(
+                messageCode = ProcessMessageCode.BK_ATOM_RUN_ENV_OS_INCOMPATIBLE_ITEM,
+                params = arrayOf(
+                    atom.atomName,
+                    atom.supportedOsList.joinToString(separator = " / ") { osDisplayName(it) },
+                    currentOsName
+                )
+            )
+        }
+        val messageCode = ProcessMessageCode.ERROR_ATOM_RUN_ENV_OS_INCOMPATIBLE
+        val params = arrayOf(osDisplayName(runEnvOsChange.previousOs.name), currentOsName, atomDetail)
+        return ErrorCodeException(
+            errorCode = messageCode,
+            params = params,
+            defaultMessage = I18nUtil.getCodeLanMessage(messageCode = messageCode, params = params)
+        )
+    }
+
+    /**
+     * 操作系统展示名称，为跨语言一致的专有名词，不做国际化。
+     */
+    private fun osDisplayName(osName: String): String = when (osName.uppercase()) {
+        OS.WINDOWS.name -> "Windows"
+        OS.LINUX.name -> "Linux"
+        OS.MACOS.name -> "macOS"
+        else -> osName
+    }
+
+    /**
+     * 与运行环境操作系统不适配的插件明细。
+     */
+    private data class OsIncompatibleAtom(
+        val atomName: String,
+        val supportedOsList: List<String>
+    )
 
     /**
      * 构造保存阶段插件校验失败异常，提示中明确指出不满足运行环境要求的 Stage / Job 及插件名。

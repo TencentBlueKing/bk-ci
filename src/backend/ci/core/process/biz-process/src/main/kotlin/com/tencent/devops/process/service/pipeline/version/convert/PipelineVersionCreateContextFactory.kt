@@ -108,7 +108,8 @@ class PipelineVersionCreateContextFactory @Autowired constructor(
             versionStatus = versionStatus,
             channelCode = channelCode,
             yamlFileInfo = yamlFileInfo,
-            pipelineDialect = pipelineDialect
+            pipelineDialect = pipelineDialect,
+            runEnvOsChange = runEnvOsChange
         )
         return PipelineVersionCreateContext(
             userId = userId,
@@ -179,7 +180,8 @@ class PipelineVersionCreateContextFactory @Autowired constructor(
             versionStatus = versionStatus,
             channelCode = channelCode,
             yamlFileInfo = yamlFileInfo,
-            pipelineDialect = pipelineDialect
+            pipelineDialect = pipelineDialect,
+            runEnvOsChange = runEnvOsChange
         )
 
         val templateSetting = pipelineTemplateSettingService.get(

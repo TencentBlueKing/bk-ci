@@ -4,6 +4,7 @@ import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.PipelineVersionAction
 import com.tencent.devops.common.pipeline.enums.VersionStatus
+import com.tencent.devops.common.pipeline.pojo.PipelineRunEnvOsChange
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlFileInfo
 import io.swagger.v3.oas.annotations.media.Schema
@@ -43,5 +44,7 @@ data class PipelineVersionCreateContextParam(
     @get:Schema(title = "代码库ID")
     val repoHashId: String? = null,
     @get:Schema(title = "分支名,代码库推送的分支/分支版本时,发布的分支名", required = false)
-    val branchName: String? = null
+    val branchName: String? = null,
+    @get:Schema(title = "运行环境操作系统变更记录,由用户直接编辑的保存入口传入,用于校验插件与新操作系统的适配度", required = false)
+    val runEnvOsChange: PipelineRunEnvOsChange? = null
 )

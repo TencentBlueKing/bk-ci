@@ -62,6 +62,7 @@ import com.tencent.devops.common.pipeline.option.MatrixControlOption
 import com.tencent.devops.common.pipeline.pojo.BuildNo
 import com.tencent.devops.common.pipeline.pojo.MatrixPipelineInfo
 import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
+import com.tencent.devops.common.pipeline.pojo.PipelineRunEnvOsChange
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
@@ -383,7 +384,8 @@ class PipelineRepositoryService constructor(
         versionStatus: VersionStatus? = VersionStatus.RELEASED,
         channelCode: ChannelCode,
         yamlFileInfo: PipelineYamlFileInfo? = null,
-        pipelineDialect: IPipelineDialect? = null
+        pipelineDialect: IPipelineDialect? = null,
+        runEnvOsChange: PipelineRunEnvOsChange? = null
     ): List<PipelineModelTask> {
         val metaSize = modelCheckPlugin.checkModelIntegrity(
             model = model,
@@ -391,7 +393,8 @@ class PipelineRepositoryService constructor(
             userId = userId,
             oauthUser = getPipelineOauthUser(projectId, pipelineId),
             pipelineDialect = pipelineDialect,
-            pipelineId = pipelineId
+            pipelineId = pipelineId,
+            runEnvOsChange = runEnvOsChange
         )
         // 去重id
         val distinctIdSet = HashSet<String>(metaSize, 1F /* loadFactor */)

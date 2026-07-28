@@ -50,6 +50,7 @@ import com.tencent.devops.process.pojo.pipeline.version.PipelineDraftSaveReq
 import com.tencent.devops.process.pojo.pipeline.version.PipelineVersionCreateReq
 import com.tencent.devops.process.service.pipeline.PipelineModelParser
 import com.tencent.devops.process.service.pipeline.version.PipelineResourceFactory
+import com.tencent.devops.process.service.pipeline.version.PipelineRunEnvOsChangeResolver
 import com.tencent.devops.process.service.pipeline.version.PipelineVersionCreateContext
 import com.tencent.devops.process.service.pipeline.version.PipelineVersionCreateContextParam
 import com.tencent.devops.process.service.pipeline.version.PipelineVersionGenerator
@@ -73,7 +74,8 @@ class PipelineDraftSaveReqConverter(
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val pipelineTemplateResourceService: PipelineTemplateResourceService,
     private val client: Client,
-    private val pipelineModelParser: PipelineModelParser
+    private val pipelineModelParser: PipelineModelParser,
+    private val pipelineRunEnvOsChangeResolver: PipelineRunEnvOsChangeResolver
 ) : PipelineVersionCreateReqConverter {
     override fun support(request: PipelineVersionCreateReq): Boolean {
         return request is PipelineDraftSaveReq
@@ -149,11 +151,12 @@ class PipelineDraftSaveReqConverter(
                 projectId = projectId,
                 pipelineId = newPipelineId
             )
+            val channelCode = ChannelCode.getRequestChannelCode()
             val contextParam = PipelineVersionCreateContextParam(
                 userId = userId,
                 projectId = projectId,
                 pipelineId = newPipelineId,
-                channelCode = ChannelCode.getRequestChannelCode(),
+                channelCode = channelCode,
                 version = version,
                 model = modelAndSetting.model,
                 yaml = yamlWithVersion?.yamlStr,
@@ -166,8 +169,16 @@ class PipelineDraftSaveReqConverter(
                         filePath = it.filePath
                     )
                 },
-                repoHashId = pipelineYamlInfo?.repoHashId
-
+                repoHashId = pipelineYamlInfo?.repoHashId,
+                // 仅用户直接编辑保存草稿时校验插件与运行环境操作系统的适配度，
+                // 回滚/发布/YAML同步等非用户编辑的保存入口沿用原有逻辑，避免阻断自动化流程
+                runEnvOsChange = pipelineRunEnvOsChangeResolver.resolve(
+                    userId = userId,
+                    projectId = projectId,
+                    pipelineId = newPipelineId,
+                    channelCode = channelCode,
+                    setting = pipelineSettingWithoutVersion
+                )
             )
             val context = pipelineVersionCreateContextFactory.create(
                 contextParam = contextParam
