@@ -28,6 +28,7 @@
 package com.tencent.devops.project.api.user
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_BK_TENANT_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_BK_USER_TIMEZONE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.project.pojo.Result
@@ -77,6 +78,9 @@ interface UserProjectUserResource {
         userId: String,
         @Parameter(description = "租户ID", required = true)
         @HeaderParam(AUTH_HEADER_BK_TENANT_ID)
-        tenantId: String
+        tenantId: String,
+        @Parameter(description = "用户时区（IANA，网关从蓝鲸写入；可空，缺省后端兜底）", required = false)
+        @HeaderParam(AUTH_HEADER_BK_USER_TIMEZONE)
+        timeZone: String?
     ): Result<TenantInfoForDisplay>
 }

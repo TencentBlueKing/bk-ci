@@ -65,13 +65,17 @@ class UserProjectUserResourceImpl @Autowired constructor(
         return Result(userCacheService.getDetailFromCache(userId))
     }
 
-    override fun tenantInfoForDisplay(userId: String, tenantId: String): Result<TenantInfoForDisplay> {
-        // TODO: 待蓝鲸用户管理提供时区 API 后，改为读取真实用户/租户时区
+    override fun tenantInfoForDisplay(
+        userId: String,
+        tenantId: String,
+        timeZone: String?
+    ): Result<TenantInfoForDisplay> {
+        // 时区由网关鉴权调用蓝鲸 get_bk_token_userinfo 写入 X-BK-USER-TIMEZONE；缺省/空则兜底东八区
         return Result(
             TenantInfoForDisplay(
                 tenantId = tenantId,
                 apiBaseUrl = bkUserWebUrl ?: "",
-                timeZone = DEFAULT_DISPLAY_TIME_ZONE
+                timeZone = timeZone?.takeIf { it.isNotBlank() } ?: DEFAULT_DISPLAY_TIME_ZONE
             )
         )
     }

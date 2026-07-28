@@ -48,6 +48,8 @@ const val AUTH_HEADER_DEVOPS_APP_SECRET: String = "X-DEVOPS-APP-SECRET"
 const val AUTH_HEADER_DEVOPS_BUILD_TYPE: String = "X-DEVOPS-BUILD-TYPE"
 const val AUTH_HEADER_DEVOPS_USER_ID = AUTH_HEADER_USER_ID
 const val AUTH_HEADER_BK_TENANT_ID = "X-BK-TENANT-ID"
+/** 用户 IANA 时区，由网关从蓝鲸 get_bk_token_userinfo 的 time_zone 写入；可空，缺省由业务兜底 */
+const val AUTH_HEADER_BK_USER_TIMEZONE = "X-BK-USER-TIMEZONE"
 const val AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE: String = "admin"
 
 // 默认代码库用户
