@@ -25,43 +25,48 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.log.event
+package com.tencent.devops.log.dao
 
-import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.common.log.pojo.message.LogMessage
-import com.tencent.devops.common.stream.constants.StreamBinder
-import com.tencent.devops.common.stream.constants.StreamBinding
+import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
+import org.springframework.stereotype.Repository
 
 /**
- * 热点构建的 origin 日志事件，载荷与 [LogOriginEvent] 一致，独立 destination 做队列隔离。
+ * 使用原生 SQL 操作 T_LOG_BUILD_PROJECT 表（无 JOOQ codegen 依赖）。
+ * 表可能尚未创建（增量 DDL 未执行），所有 DB 操作均容忍失败并降级为 warn 日志。
  */
-@Event(
-    destination = StreamBinding.LOG_ORIGIN_HEAVY_EVENT_DESTINATION,
-    binder = StreamBinder.CUSTOM
-)
-data class LogOriginHeavyEvent(
-    override val buildId: String,
-    val logs: List<LogMessage>,
-    override var retryTime: Int = 2,
-    override var delayMills: Int = 0,
-    override val projectId: String? = null
-) : ILogEvent(buildId, retryTime, delayMills, projectId) {
+@Repository
+class BuildProjectDao(
+    private val dslContext: DSLContext
+) {
 
-    fun toOriginEvent() = LogOriginEvent(
-        buildId = buildId,
-        logs = logs,
-        retryTime = retryTime,
-        delayMills = delayMills,
-        projectId = projectId
-    )
+    fun getProjectId(buildId: String): String? {
+        return try {
+            dslContext.fetch(
+                "SELECT PROJECT_ID FROM T_LOG_BUILD_PROJECT WHERE BUILD_ID = ?",
+                buildId
+            ).firstOrNull()?.get("PROJECT_ID", String::class.java)
+        } catch (e: Exception) {
+            logger.warn("BuildProjectDao.getProjectId failed for buildId={}: {}", buildId, e.message)
+            null
+        }
+    }
+
+    fun upsert(buildId: String, projectId: String) {
+        try {
+            dslContext.execute(
+                """INSERT INTO T_LOG_BUILD_PROJECT (BUILD_ID, PROJECT_ID)
+                   VALUES (?, ?)
+                   ON DUPLICATE KEY UPDATE PROJECT_ID = VALUES(PROJECT_ID)""",
+                buildId,
+                projectId
+            )
+        } catch (e: Exception) {
+            logger.warn("BuildProjectDao.upsert failed for buildId={}, projectId={}: {}", buildId, projectId, e.message)
+        }
+    }
 
     companion object {
-        fun from(event: LogOriginEvent) = LogOriginHeavyEvent(
-            buildId = event.buildId,
-            logs = event.logs,
-            retryTime = event.retryTime,
-            delayMills = event.delayMills,
-            projectId = event.projectId
-        )
+        private val logger = LoggerFactory.getLogger(BuildProjectDao::class.java)
     }
 }

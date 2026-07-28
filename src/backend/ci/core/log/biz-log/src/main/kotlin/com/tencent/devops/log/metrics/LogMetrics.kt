@@ -80,6 +80,11 @@ class LogMetrics(
         }
             .description("Whether ES direct-write circuit is open (1=open, 0=closed)")
             .register(meterRegistry)
+        Gauge.builder("log_es_circuit_open_projects") {
+            (logStorageDegradeSwitcher.getIfAvailable()?.openCircuitProjectCount() ?: 0).toDouble()
+        }
+            .description("Number of projects (traffic keys) with open ES circuit")
+            .register(meterRegistry)
     }
 
     fun recordEsBatchWrite(elapseMs: Long, success: Boolean) {

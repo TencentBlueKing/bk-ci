@@ -34,11 +34,13 @@ import com.tencent.devops.log.configuration.StorageProperties
 import com.tencent.devops.log.event.ILogEvent
 import com.tencent.devops.log.event.LogOriginEvent
 import com.tencent.devops.log.event.LogOriginHeavyEvent
+import com.tencent.devops.log.event.LogStatusEvent
 import com.tencent.devops.log.event.LogStorageEvent
 import com.tencent.devops.log.jmx.LogPrintBean
 import com.tencent.devops.log.meta.Ansi
 import com.tencent.devops.log.metrics.LogMetrics
 import com.tencent.devops.log.util.LogErrorCodeEnum
+import com.tencent.devops.log.util.LogTrafficKey
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.cloud.stream.function.StreamBridge
@@ -55,6 +57,7 @@ class BuildLogPrintService @Autowired constructor(
     private val storageProperties: StorageProperties,
     private val logTrafficStatsService: LogTrafficStatsService,
     private val logMetrics: LogMetrics,
+    private val logProjectIdResolver: LogProjectIdResolver,
     logServiceConfig: LogServiceConfig
 ) {
 
@@ -124,23 +127,37 @@ class BuildLogPrintService @Autowired constructor(
     }
 
     private fun enrichAndSend(event: ILogEvent, recordTraffic: Boolean) {
+        val enriched = resolveAndEnrichProjectId(event)
+        val trafficKey = LogTrafficKey.of(enriched.projectId, enriched.buildId)
+
         when {
-            // 已在 heavy 队列内的重试/转发，保持原 destination
-            event is LogOriginHeavyEvent -> sendWithMetrics(event)
-            event is LogOriginEvent && recordTraffic -> {
-                logTrafficStatsService.record(event.buildId, event.logs.size)
-                if (logTrafficStatsService.shouldRouteHeavy(event.buildId)) {
-                    sendWithMetrics(LogOriginHeavyEvent.from(event))
+            enriched is LogOriginHeavyEvent -> sendWithMetrics(enriched)
+            enriched is LogOriginEvent && recordTraffic -> {
+                logTrafficStatsService.record(trafficKey, enriched.logs.size)
+                if (logTrafficStatsService.shouldRouteHeavy(trafficKey)) {
+                    sendWithMetrics(LogOriginHeavyEvent.from(enriched))
                 } else {
-                    sendWithMetrics(event)
+                    sendWithMetrics(enriched)
                 }
             }
             else -> {
                 if (recordTraffic) {
-                    recordTrafficLines(event)
+                    recordTrafficLines(enriched, trafficKey)
                 }
-                sendWithMetrics(event)
+                sendWithMetrics(enriched)
             }
+        }
+    }
+
+    private fun resolveAndEnrichProjectId(event: ILogEvent): ILogEvent {
+        val resolved = logProjectIdResolver.resolve(event.buildId, event.projectId)
+        if (resolved == event.projectId) return event
+        return when (event) {
+            is LogOriginEvent -> event.copy(projectId = resolved)
+            is LogOriginHeavyEvent -> event.copy(projectId = resolved)
+            is LogStorageEvent -> event.copy(projectId = resolved)
+            is LogStatusEvent -> event.copy(projectId = resolved)
+            else -> event
         }
     }
 
@@ -155,7 +172,7 @@ class BuildLogPrintService @Autowired constructor(
         }
     }
 
-    private fun recordTrafficLines(event: ILogEvent) {
+    private fun recordTrafficLines(event: ILogEvent, trafficKey: String) {
         val lines = when (event) {
             is LogOriginEvent -> event.logs.size
             is LogOriginHeavyEvent -> event.logs.size
@@ -163,7 +180,7 @@ class BuildLogPrintService @Autowired constructor(
             else -> 0
         }
         if (lines > 0) {
-            logTrafficStatsService.record(event.buildId, lines)
+            logTrafficStatsService.record(trafficKey, lines)
         }
     }
 

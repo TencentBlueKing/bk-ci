@@ -88,4 +88,11 @@ class LogDegradeProperties {
      */
     @Value("\${log.degrade.slowMs:300}")
     var slowMs: Long = 300
+
+    /**
+     * per-project 熔断最多跟踪的 key（projectId 或 b:buildId）数量上限。
+     * 超出时淘汰最冷的 key，避免无限增长。
+     */
+    @Value("\${log.degrade.maxTrackedProjects:1024}")
+    var maxTrackedProjects: Int = 1024
 }

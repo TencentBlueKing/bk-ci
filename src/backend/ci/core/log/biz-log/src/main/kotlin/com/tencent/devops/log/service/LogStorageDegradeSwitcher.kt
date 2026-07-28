@@ -31,11 +31,16 @@ import com.tencent.devops.log.configuration.LogDegradeProperties
 import org.slf4j.LoggerFactory
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Component
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.atomic.AtomicLong
 
 /**
- * origin 直写 ES 的熔断器：失败率或慢请求过高时，短期切到 storage 队列容灾。
+ * origin 直写 ES 的 per-project（per-key）熔断器。
+ *
+ * trafficKey 通常是 projectId，回退场景下是 `b:{buildId}`。
+ * 每个 key 独立维护滑动窗口 + 熔断状态，单个项目故障不影响其他项目。
+ * [forceStorage][LogDegradeProperties.forceStorage] 仍是全局开关。
  */
 @Component
 @ConditionalOnProperty(prefix = "log.storage", name = ["type"], havingValue = "elasticsearch")
@@ -49,27 +54,39 @@ class LogStorageDegradeSwitcher(
         val latencyMs: Long
     )
 
-    private val samples = ConcurrentLinkedQueue<Sample>()
-    private val circuitOpenUntil = AtomicLong(0)
+    private class KeyState {
+        val samples = ConcurrentLinkedQueue<Sample>()
+        val circuitOpenUntil = AtomicLong(0)
+        @Volatile var lastAccessMs: Long = System.currentTimeMillis()
+    }
+
+    private val keyStates = ConcurrentHashMap<String, KeyState>()
     private val degradeCount = AtomicLong(0)
 
-    fun shouldDegrade(): Boolean {
+    fun shouldDegrade(trafficKey: String? = null): Boolean {
         if (properties.forceStorage) {
             return true
         }
         if (!properties.enabled) {
             return false
         }
-        return System.currentTimeMillis() < circuitOpenUntil.get()
+        val key = normalizeKey(trafficKey)
+        val state = keyStates[key] ?: return false
+        state.lastAccessMs = System.currentTimeMillis()
+        return System.currentTimeMillis() < state.circuitOpenUntil.get()
     }
 
-    fun recordSuccess(latencyMs: Long) {
-        addSample(success = true, latencyMs = latencyMs)
+    fun recordSuccess(latencyMs: Long, trafficKey: String? = null) {
+        val key = normalizeKey(trafficKey)
+        val state = getOrCreateState(key)
+        addSample(state, success = true, latencyMs = latencyMs)
     }
 
-    fun recordFailure(latencyMs: Long) {
-        addSample(success = false, latencyMs = latencyMs)
-        maybeOpenCircuit()
+    fun recordFailure(latencyMs: Long, trafficKey: String? = null) {
+        val key = normalizeKey(trafficKey)
+        val state = getOrCreateState(key)
+        addSample(state, success = false, latencyMs = latencyMs)
+        maybeOpenCircuit(key, state)
     }
 
     fun recordDegrade() {
@@ -78,18 +95,33 @@ class LogStorageDegradeSwitcher(
 
     fun getDegradeCount(): Long = degradeCount.get()
 
-    fun isCircuitOpen(): Boolean = System.currentTimeMillis() < circuitOpenUntil.get()
-
-    private fun addSample(success: Boolean, latencyMs: Long) {
+    fun isCircuitOpen(): Boolean {
         val now = System.currentTimeMillis()
-        samples.add(Sample(now, success, latencyMs))
-        trim(now)
+        return keyStates.values.any { now < it.circuitOpenUntil.get() }
     }
 
-    private fun maybeOpenCircuit() {
+    fun openCircuitProjectCount(): Int {
         val now = System.currentTimeMillis()
-        trim(now)
-        val snapshot = samples.toList()
+        return keyStates.values.count { now < it.circuitOpenUntil.get() }
+    }
+
+    private fun getOrCreateState(key: String): KeyState {
+        val state = keyStates.computeIfAbsent(key) { KeyState() }
+        state.lastAccessMs = System.currentTimeMillis()
+        evictIfNeeded()
+        return state
+    }
+
+    private fun addSample(state: KeyState, success: Boolean, latencyMs: Long) {
+        val now = System.currentTimeMillis()
+        state.samples.add(Sample(now, success, latencyMs))
+        trim(state, now)
+    }
+
+    private fun maybeOpenCircuit(key: String, state: KeyState) {
+        val now = System.currentTimeMillis()
+        trim(state, now)
+        val snapshot = state.samples.toList()
         if (snapshot.size < properties.circuitMinSamples) {
             return
         }
@@ -97,28 +129,43 @@ class LogStorageDegradeSwitcher(
         val failRate = failures.toDouble() / snapshot.size
         if (failRate >= properties.circuitFailRate) {
             val openUntil = now + properties.circuitOpenMs
-            circuitOpenUntil.set(openUntil)
+            state.circuitOpenUntil.set(openUntil)
             logger.warn(
-                "Log ES direct-write circuit open until {}, failRate={}, samples={}",
-                openUntil,
-                failRate,
-                snapshot.size
+                "Log ES direct-write circuit open for key={} until {}, failRate={}, samples={}",
+                key, openUntil, failRate, snapshot.size
             )
         }
     }
 
-    private fun trim(now: Long) {
+    private fun trim(state: KeyState, now: Long) {
         val expireBefore = now - properties.circuitWindowMs
         while (true) {
-            val head = samples.peek() ?: return
+            val head = state.samples.peek() ?: return
             if (head.timestamp >= expireBefore) {
                 return
             }
-            samples.poll()
+            state.samples.poll()
+        }
+    }
+
+    private fun evictIfNeeded() {
+        val maxSize = properties.maxTrackedProjects
+        if (keyStates.size <= maxSize) return
+        val sortedEntries = keyStates.entries
+            .sortedBy { it.value.lastAccessMs }
+        val toRemove = keyStates.size - maxSize
+        for ((i, entry) in sortedEntries.withIndex()) {
+            if (i >= toRemove) break
+            keyStates.remove(entry.key)
         }
     }
 
     companion object {
         private val logger = LoggerFactory.getLogger(LogStorageDegradeSwitcher::class.java)
+        private const val UNKNOWN_KEY = "#unknown"
+
+        private fun normalizeKey(trafficKey: String?): String {
+            return trafficKey?.takeIf { it.isNotBlank() } ?: UNKNOWN_KEY
+        }
     }
 }

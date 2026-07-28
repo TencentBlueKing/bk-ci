@@ -48,6 +48,7 @@ import com.tencent.devops.log.configuration.LogBulkProperties
 import com.tencent.devops.log.event.LogOriginEvent
 import com.tencent.devops.log.event.LogStatusEvent
 import com.tencent.devops.log.event.LogStorageEvent
+import com.tencent.devops.log.util.LogTrafficKey
 import com.tencent.devops.log.jmx.CreateIndexBean
 import com.tencent.devops.log.jmx.LogStorageBean
 import com.tencent.devops.log.service.BuildLogPrintService
@@ -162,8 +163,9 @@ class LogServiceESImpl(
             dispatchToStorage(event, logMessage)
             return
         }
+        val trafficKey = LogTrafficKey.of(event.projectId, event.buildId)
         // 熔断开启时直接降级到 storage，避免继续打满 ES
-        if (logStorageDegradeSwitcher.shouldDegrade()) {
+        if (logStorageDegradeSwitcher.shouldDegrade(trafficKey)) {
             dispatchToStorage(event, logMessage)
             logStorageDegradeSwitcher.recordDegrade()
             logStorageBean.degradeToStorage()
@@ -173,12 +175,12 @@ class LogServiceESImpl(
             prepareIndex(event.buildId)
             val result = writeLogsByAggregator(event.buildId, logMessage)
             if (result.success) {
-                logStorageDegradeSwitcher.recordSuccess(result.elapseMs)
+                logStorageDegradeSwitcher.recordSuccess(result.elapseMs, trafficKey)
                 logStorageBean.batchWrite(result.elapseMs, true)
                 logStorageBean.directWrite(true)
                 return
             }
-            logStorageDegradeSwitcher.recordFailure(result.elapseMs)
+            logStorageDegradeSwitcher.recordFailure(result.elapseMs, trafficKey)
             logStorageBean.batchWrite(result.elapseMs, false)
             logStorageBean.directWrite(false)
             logger.warn(
@@ -187,7 +189,7 @@ class LogServiceESImpl(
                 result.message
             )
         } catch (ignore: Exception) {
-            logStorageDegradeSwitcher.recordFailure(0)
+            logStorageDegradeSwitcher.recordFailure(0, trafficKey)
             logStorageBean.directWrite(false)
             logger.warn(
                 "[${event.buildId}] Direct ES write exception, degrade to storage queue",
@@ -252,7 +254,8 @@ class LogServiceESImpl(
         buildLogPrintService.dispatchEvent(
             event = LogStorageEvent(
                 buildId = event.buildId,
-                logs = logMessage
+                logs = logMessage,
+                projectId = event.projectId
             ),
             recordTraffic = false
         )

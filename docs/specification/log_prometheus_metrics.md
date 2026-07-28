@@ -26,7 +26,8 @@ curl -s "http://localhost/management/prometheus" | grep -E '^log_'
 | Kafka 消费（按 destination + retried） | `log_kafka_consume*` | `BuildLogListenerService` 四个 `handleEvent` | ✅ |
 | heavy 分流可观测 | `destination=origin_heavy` | produce/consume 自动带标签 | ✅ |
 | 打印线程池背压 | `log_print_*` / `log_print_rejected_total` | Gauge + 拒绝 Counter | ✅ |
-| 热点 build 规模 | `log_traffic_heavy_size` | `LogTrafficStatsService.heavySize()` | ✅ |
+| 热点 build/project 规模 | `log_traffic_heavy_size` | `LogTrafficStatsService.heavySize()` | ✅ |
+| 项目熔断计数 | `log_es_circuit_open_projects` | `LogMetrics` Gauge ← `LogStorageDegradeSwitcher.openCircuitProjectCount()` | ✅ |
 
 **当前刻意未做（非判断 Kafka/ES 性能的必要项）：**
 
@@ -52,9 +53,13 @@ curl -s "http://localhost/management/prometheus" | grep -E '^log_'
 | `log_es_query_total` | `log_es_query_total` | Counter | `success` | 查询次数 |
 | `log_es_download` | `log_es_download_seconds_*` | Timer | `success` | 日志下载耗时 |
 | `log_es_download_total` | `log_es_download_total` | Counter | `success` | 下载次数 |
-| `log_es_circuit_open` | `log_es_circuit_open` | Gauge | 无 | 直写熔断是否打开：`1`=打开，`0`=关闭 |
+| `log_es_circuit_open` | `log_es_circuit_open` | Gauge | 无 | 直写熔断是否打开：`1`=任一项目熔断打开，`0`=全部关闭 |
+| `log_es_circuit_open_projects` | `log_es_circuit_open_projects` | Gauge | 无 | 当前处于熔断打开状态的项目（trafficKey）数量 |
 
 `cluster`：ES 集群名（腾讯多集群为真实 `clusterName`；拿不到时为 `unknown`）。
+
+> **项目维度说明**：熔断已改为 per-project（per-trafficKey）粒度。`log_es_circuit_open` 仍为全局 0/1 兼容旧告警，
+> `log_es_circuit_open_projects` 反映具体有多少项目处于熔断中。trafficKey 优先为 projectId，无 projectId 时回退为 `b:{buildId}`。
 
 ### 1.2 Kafka 相关
 
@@ -88,7 +93,8 @@ curl -s "http://localhost/management/prometheus" | grep -E '^log_'
 | `log_print_active_count` | Gauge | 异步打印活跃线程数 |
 | `log_print_queue_size` | Gauge | 异步打印队列堆积长度 |
 | `log_print_rejected_total` | Counter | 异步打印队列满被拒绝次数（HTTP 509） |
-| `log_traffic_heavy_size` | Gauge | 当前仍处于热点粘性窗口的 build 数量 |
+| `log_traffic_heavy_size` | Gauge | 当前仍处于热点粘性窗口的 key（projectId 或 b:buildId）数量 |
+| `log_es_circuit_open_projects` | Gauge | 当前处于 per-project 熔断打开状态的 key 数量 |
 
 ---
 

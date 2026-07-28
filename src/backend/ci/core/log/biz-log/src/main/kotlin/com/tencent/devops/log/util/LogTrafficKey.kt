@@ -25,21 +25,18 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.log.event
+package com.tencent.devops.log.util
 
-import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.common.log.pojo.message.LogMessage
-import com.tencent.devops.common.stream.constants.StreamBinder
-import com.tencent.devops.common.stream.constants.StreamBinding
-
-@Event(
-    destination = StreamBinding.LOG_ORIGIN_EVENT_DESTINATION,
-    binder = StreamBinder.CUSTOM
-)
-data class LogOriginEvent(
-    override val buildId: String,
-    val logs: List<LogMessage>,
-    override var retryTime: Int = 2,
-    override var delayMills: Int = 0,
-    override val projectId: String? = null
-) : ILogEvent(buildId, retryTime, delayMills, projectId)
+/**
+ * 统一生成流量统计 / 熔断的聚合 key。
+ *
+ * 优先使用 projectId（按项目维度聚合）；若 projectId 为空则回退到 `b:{buildId}`
+ * （兼容旧 worker / 旧消息不携带 projectId 的场景）。
+ */
+object LogTrafficKey {
+    fun of(projectId: String?, buildId: String): String {
+        val p = projectId?.takeIf { it.isNotBlank() }
+        if (p != null) return p
+        return if (buildId.isNotBlank()) "b:$buildId" else ""
+    }
+}
