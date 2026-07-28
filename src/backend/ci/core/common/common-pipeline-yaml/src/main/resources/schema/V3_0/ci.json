@@ -2893,7 +2893,7 @@
         },
         "queue-length" : {
           "type" : "integer",
-          "minimum" : 0,
+          "minimum" : 1,
           "maximum" : 200
         },
         "queue-timeout-minutes" : {
