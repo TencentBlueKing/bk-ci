@@ -31,7 +31,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 
 /**
- * 日志 ES bulk 聚合写配置（#13327）。
+ * 日志 ES bulk 聚合写配置。
  *
  * 影响范围：[com.tencent.devops.log.service.LogBulkAggregator]、
  * [com.tencent.devops.log.service.impl.LogServiceESImpl] 的 origin 直写路径。

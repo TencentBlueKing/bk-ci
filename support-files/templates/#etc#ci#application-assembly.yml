@@ -212,7 +212,7 @@ log:
 #    truststore:
 #      filePath:
 #      password:
-  # origin 直写 ES 的 bulk 聚合（#13327）；enabled=false 回退为只投 storage 队列
+  # origin 直写 ES 的 bulk 聚合；enabled=false 回退为只投 storage 队列
   bulk:
     enabled: true
     maxDocs: 3000                 # 单集群缓冲文档数达到后 flush

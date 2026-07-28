@@ -31,7 +31,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 
 /**
- * origin 直写 ES 失败/过慢时，降级到 storage 队列的熔断配置（#13327）。
+ * origin 直写 ES 失败/过慢时，降级到 storage 队列的熔断配置。
  *
  * 影响范围：[com.tencent.devops.log.service.LogStorageDegradeSwitcher]、
  * [com.tencent.devops.log.service.impl.LogServiceESImpl] 的直写/降级决策。
