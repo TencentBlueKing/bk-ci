@@ -412,7 +412,8 @@ class PipelineCopyResourceCreateService @Autowired constructor(
                 envVars = sourceEnv.envVars,
                 source = NodeSource.EXISTING,
                 nodeHashIds = nodeHashIds,
-                nodeTags = null
+                nodeTags = null,
+                os = sourceEnv.os
             )
         )
         val envId = checkTargetResourceCreateResult(

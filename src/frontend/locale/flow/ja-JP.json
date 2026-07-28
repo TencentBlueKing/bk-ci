@@ -86,6 +86,7 @@
       "noCreationNodeInEnvironment": "この環境にはノードがありません",
       "searchEnvironment": "作成環境を検索",
       "environmentManagement": "作成環境管理",
+      "environmentSettings": "環境設定",
       "creationEnvironment": "作成環境",
       "selectEnvironment": "環境を選択",
       "description": "説明",
@@ -455,6 +456,13 @@
       "resolvedUrl": "実際のリクエストURL",
       "waitingForVariables": "変数の値を待っています..."
     },
+    "codelibSelector": {
+      "selectRepo": "コードリポジトリを選択",
+      "enterAlias": "別名を入力",
+      "monitorPac": "PACを監視",
+      "enterRepoAlias": "コードリポジトリの別名を入力してください",
+      "pacRepoNotSet": "所属PACコードリポジトリを自動的に監視するため、設定する必要はありません"
+    },
     "orchestration": {
       "clickToAddStage": "最初の作成フローステージを追加するにはクリック",
       "noFlowStageTips": "作成フローステージがありません",
@@ -482,6 +490,7 @@
       "jobId": "ジョブID",
       "jobIdPlaceholder": "ジョブIDを入力してください",
       "jobIdRequired": "ジョブIDは必須です",
+      "jobIdDuplicateError": "ジョブIDが現在のフロー内で重複しています",
       "matrixJob": "マトリックスジョブ",
       "mutexGroup": "排他グループ",
       "enableJob": "このジョブを有効にする",

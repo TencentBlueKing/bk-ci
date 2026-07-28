@@ -31,6 +31,7 @@ import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.misc.config.MiscBuildDataClearConfig
 import com.tencent.devops.misc.service.process.PipelineBuildDataClearService
+import com.tencent.devops.misc.service.process.PipelineTemplateDataClearService
 import com.tencent.devops.misc.service.process.ProcessMiscService
 import com.tencent.devops.misc.service.project.ProjectDataClearConfigFactory
 import com.tencent.devops.misc.service.project.ProjectDataClearConfigService
@@ -55,7 +56,8 @@ class PipelineBuildHistoryDataClearJob @Autowired constructor(
     private val miscBuildDataClearConfig: MiscBuildDataClearConfig,
     private val projectMiscService: ProjectMiscService,
     private val processMiscService: ProcessMiscService,
-    private val pipelineBuildDataClearService: PipelineBuildDataClearService
+    private val pipelineBuildDataClearService: PipelineBuildDataClearService,
+    private val pipelineTemplateDataClearService: PipelineTemplateDataClearService
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineBuildHistoryDataClearJob::class.java)
@@ -211,6 +213,8 @@ class PipelineBuildHistoryDataClearJob @Autowired constructor(
                     clearPipelineBuildData(projectId, projectDataClearConfigService)
                     // 清理归档流水线构建数据
                     clearPipelineBuildData(projectId, projectDataClearConfigService, true)
+                    // 清理模板草稿版本数据
+                    clearTemplateData(projectId)
                 }
                 // 将当前已处理完的最大项目Id存入redis
                 redisOperation.set(
@@ -285,5 +289,24 @@ class PipelineBuildHistoryDataClearJob @Autowired constructor(
                 }
             }
         } while (pipelineIdList?.size == DEFAULT_PAGE_SIZE)
+    }
+
+    private fun clearTemplateData(projectId: String) {
+        var templateOffset = 0
+        do {
+            val templateIds = processMiscService.getTemplateIdsByProjectId(
+                projectId = projectId,
+                limit = DEFAULT_PAGE_SIZE,
+                offset = templateOffset
+            )
+            if (templateIds.isEmpty()) return
+            templateIds.forEach { templateId ->
+                pipelineTemplateDataClearService.clearTemplateDraftVersionData(
+                    projectId = projectId,
+                    templateId = templateId
+                )
+            }
+            templateOffset += DEFAULT_PAGE_SIZE
+        } while (templateIds.size == DEFAULT_PAGE_SIZE)
     }
 }

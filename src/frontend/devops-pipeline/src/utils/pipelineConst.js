@@ -330,3 +330,15 @@ export const STRATEGY_ENUM = {
     AUTO: 'AUTO',
     MANUAL: 'MANUAL'
 }
+
+export const DRAFT_STATUS = {
+    NORMAL: 'NORMAL',   // 无草稿
+    EXISTS: 'EXISTS',   // 草稿已存在
+    CONFLICT: 'CONFLICT',   // 草稿冲突
+    BASE_OUTDATED: 'BASE_OUTDATED',   // 草稿版本落后
+    BASE_BRANCH: 'BASE_BRANCH',   // 草稿基线为分支版本
+    PUBLISHED: 'PUBLISHED',   // 已发布
+    BRANCH: 'BRANCH',   // 分支版本-无草稿
+    RELEASE_OUTDATED: 'RELEASE_OUTDATED', // 基线版本落后-无草稿
+    DELETED: 'DELETED' // 已删除
+}

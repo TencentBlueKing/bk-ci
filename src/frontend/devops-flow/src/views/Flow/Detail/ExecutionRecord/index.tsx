@@ -245,6 +245,18 @@ export default defineComponent({
             const record = row as ExecutionRecord
             return renderStageStatus(record.stageStatus, record.id)
           }
+        } else if (col.field === 'triggerAndUser') {
+          baseColumn.render = ({ row }: any) => {
+            const record = row as ExecutionRecord
+            return (
+              <span class={styles.triggerAndUserCell}>
+                {record.startType && (
+                  <SvgIcon name={record.startType} size={14} class={styles.triggerTypeIcon} />
+                )}
+                <span v-overflow-title>{record.triggerAndUser || '--'}</span>
+              </span>
+            )
+          }
         } else if (col.field === 'remark') {
           baseColumn.render = ({ row }: any) => renderRemark(row as ExecutionRecord)
         } else if (col.field === 'errorCode') {
