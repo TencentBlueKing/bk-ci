@@ -197,7 +197,7 @@ class ApigwCallBackResourceV4Impl @Autowired constructor(
         projectId: String,
         pipelineId: String,
         event: CallBackEvent?
-    ): Result<List<ProjectPipelineCallBack>> {
+    ): Result<List<PipelineCallbackEvent>> {
         logger.info("OPENAPI_CALLBACK_V4|$userId|list pipeline callback|$projectId|$pipelineId|$event")
         return client.get(ServiceCallBackResource::class).listPipelineCallBack(
             userId = userId,

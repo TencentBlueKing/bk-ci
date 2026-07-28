@@ -622,6 +622,28 @@ class ProjectPipelineCallBackService @Autowired constructor(
         )
     }
 
+    /**
+     * 查询流水线级回调，返回与创建入参一致的 [PipelineCallbackEvent] 结构
+     */
+    fun listPipelineCallbackEvent(
+        projectId: String,
+        pipelineId: String,
+        event: String?
+    ): List<PipelineCallbackEvent> = pipelineCallbackDao.list(
+        dslContext = dslContext,
+        projectId = projectId,
+        pipelineId = pipelineId,
+        event = event
+    ).map {
+        PipelineCallbackEvent(
+            callbackEvent = CallBackEvent.valueOf(it.eventType),
+            callbackUrl = it.url,
+            secretToken = it.secretToken?.let { token -> AESUtil.decrypt(aesKey, token) },
+            callbackName = it.name,
+            region = it.region?.let { region -> CallBackNetWorkRegionType.valueOf(region) }
+        )
+    }
+
     @ActionAuditRecord(
         actionId = ActionId.PIPELINE_EDIT,
         instance = AuditInstanceRecord(

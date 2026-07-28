@@ -214,7 +214,7 @@ interface ServiceCallBackResource {
         @Parameter(description = "事件类型", required = false)
         @QueryParam("event")
         event: CallBackEvent?
-    ): Result<List<ProjectPipelineCallBack>>
+    ): Result<List<PipelineCallbackEvent>>
 
     @Operation(summary = "删除流水线级别callback")
     @DELETE

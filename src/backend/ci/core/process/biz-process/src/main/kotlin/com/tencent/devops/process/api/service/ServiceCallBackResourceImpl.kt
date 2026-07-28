@@ -176,9 +176,9 @@ class ServiceCallBackResourceImpl @Autowired constructor(
         projectId: String,
         pipelineId: String,
         event: CallBackEvent?
-    ): Result<List<ProjectPipelineCallBack>> {
+    ): Result<List<PipelineCallbackEvent>> {
         return Result(
-            projectPipelineCallBackService.listPipelineCallback(
+            projectPipelineCallBackService.listPipelineCallbackEvent(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 event = event?.name
