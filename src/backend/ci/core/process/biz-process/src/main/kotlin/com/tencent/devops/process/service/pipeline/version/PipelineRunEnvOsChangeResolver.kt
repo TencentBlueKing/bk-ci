@@ -34,7 +34,7 @@ import com.tencent.devops.common.pipeline.pojo.PipelineRunEnvOsChange
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.environment.api.ServiceEnvironmentResource
 import com.tencent.devops.environment.pojo.AllCreateNodeEnv
-import com.tencent.devops.process.engine.service.PipelineRepositoryService
+import com.tencent.devops.process.service.pipeline.PipelineSettingVersionService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -45,7 +45,7 @@ import org.springframework.stereotype.Service
 @Service
 class PipelineRunEnvOsChangeResolver @Autowired constructor(
     private val client: Client,
-    private val pipelineRepositoryService: PipelineRepositoryService
+    private val pipelineSettingVersionService: PipelineSettingVersionService
 ) {
 
     /**
@@ -78,13 +78,19 @@ class PipelineRunEnvOsChangeResolver @Autowired constructor(
         pipelineId: String,
         currentEnvHashId: String?
     ): PipelineRunEnvOsChange? {
-        currentEnvHashId ?: return null
-        // 新建流水线不存在「变更前」的环境，无需校验
-        val previousEnvHashId = pipelineRepositoryService.getSetting(projectId, pipelineId)?.envHashId ?: return null
+        val currentId = currentEnvHashId?.takeIf { it.isNotBlank() } ?: return null
+        // 基线取最新 setting 版本而非主表：草稿保存只写 T_PIPELINE_SETTING_VERSION 不写主表，
+        // 若取主表(最后发布版)，草稿里改过一次环境后，之后每次保存都会被误判为「本次变更了环境」，
+        // 既重复校验、又会给出「由 A -> B」这种用户本次并未做过的变更提示。
+        // 新建流水线无历史 setting，返回 null 即跳过校验。
+        val previousId = pipelineSettingVersionService.getLatestSettingVersion(
+            projectId = projectId,
+            pipelineId = pipelineId
+        )?.envHashId?.takeIf { it.isNotBlank() } ?: return null
         // 环境未变更是绝对多数场景，在此提前返回，避免无谓的操作系统解析
-        if (previousEnvHashId == currentEnvHashId) return null
-        val currentOs = resolveEnvOs(userId, projectId, currentEnvHashId) ?: return null
-        val previousOs = resolveEnvOs(userId, projectId, previousEnvHashId) ?: return null
+        if (previousId == currentId) return null
+        val currentOs = resolveEnvOs(userId, projectId, currentId) ?: return null
+        val previousOs = resolveEnvOs(userId, projectId, previousId) ?: return null
         // 换了环境但操作系统相同(如同为 Linux 的两个环境)时，插件适配性不会变化
         if (previousOs == currentOs) return null
         return PipelineRunEnvOsChange(previousOs = previousOs, currentOs = currentOs)

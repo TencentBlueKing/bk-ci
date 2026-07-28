@@ -476,7 +476,7 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
             serviceScope = ServiceScopeUtil.parseServiceScopes(atomBaseInfoRecord[tAtom.SERVICE_SCOPE])
                 .ifEmpty { null },
             // 完整的 jobType -> OS 映射，供保存/校验阶段判断插件与运行环境操作系统的适配度。
-            // 与其它读取点保持一致地带上 OS/JOB_TYPE，使无 OS_MAP 的旧记录也能还原出映射
+            // OS_MAP 为空的旧插件记录需由 OS/JOB_TYPE 兜底还原出映射，故三者一并传入
             osMap = AtomOsMapUtil.getAllOs(
                 osValue = atomBaseInfoRecord[tAtom.OS],
                 osMapValue = atomBaseInfoRecord[tAtom.OS_MAP],

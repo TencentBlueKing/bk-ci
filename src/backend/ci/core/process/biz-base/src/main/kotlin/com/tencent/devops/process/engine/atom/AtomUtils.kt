@@ -247,6 +247,8 @@ object AtomUtils {
         // 保存/校验阶段：渠道取自请求上下文
         val channelCode = ChannelCode.getRequestChannelCode()
         val targetOs = runEnvOsChange?.currentOs
+        // 插件的 OS 按 jobType 分别声明，本次要比对的 jobType 由渠道决定，循环外解析一次
+        val osJobTypeName = resolveOsJobType(channelCode).name
         // 不适配插件在本次调用内收集后统一抛出
         val osIncompatibleAtoms = mutableListOf<OsIncompatibleAtom>()
         atomCheckParams.forEach { checkParam ->
@@ -268,7 +270,7 @@ object AtomUtils {
                 findOsIncompatibleAtom(
                     atomRunInfo = atomRunInfo,
                     checkParam = checkParam,
-                    channelCode = channelCode,
+                    osJobTypeName = osJobTypeName,
                     targetOs = targetOs
                 )?.let { osIncompatibleAtoms.add(it) }
             }
@@ -299,11 +301,11 @@ object AtomUtils {
     private fun findOsIncompatibleAtom(
         atomRunInfo: AtomRunInfo,
         checkParam: AtomCheckParam,
-        channelCode: ChannelCode,
+        osJobTypeName: String,
         targetOs: OS
     ): OsIncompatibleAtom? {
         if (checkParam.containerEnvType != AtomContainerEnvType.BUILD_ENV) return null
-        val supportedOsList = atomRunInfo.osMap?.get(resolveOsJobType(channelCode).name)
+        val supportedOsList = atomRunInfo.osMap?.get(osJobTypeName)
         if (supportedOsList.isNullOrEmpty()) return null
         if (supportedOsList.any { it.equals(targetOs.name, ignoreCase = true) }) return null
         return OsIncompatibleAtom(
