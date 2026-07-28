@@ -55,7 +55,7 @@
                     </template>
                     <template v-else-if="typeof param.value !== 'undefined'">
                         <span
-                            ref="valueSpan"
+                            :ref="el => setValueSpanRef(param.key, el)"
                             :class="{
                                 'build-param-value-span': true,
                                 'diff-param-value': param.isDiff
@@ -64,7 +64,7 @@
                             {{ param.value }}
                         </span>
                         <bk-button
-                            v-if="overflowSpan[index]"
+                            v-if="overflowSpanMap[param.key]"
                             text
                             class="view-param-value-detail"
                             size="small"
@@ -118,7 +118,8 @@
                 defaultParamMap: {},
                 activeParam: null,
                 isDetailShow: false,
-                overflowSpan: [],
+                overflowSpanMap: {},
+                valueSpanRefs: {},
                 buildParamProperities: [],
                 isVisibleVersion: false
             }
@@ -146,11 +147,21 @@
                 'fetchBuildParamsByBuildId',
                 'requestBuildParameterValue'
             ]),
+            setValueSpanRef (key, el) {
+                if (el) {
+                    this.$set(this.valueSpanRefs, key, el)
+                } else if (this.valueSpanRefs[key]) {
+                    this.$delete(this.valueSpanRefs, key)
+                }
+            },
             showDetail (param) {
                 this.isDetailShow = true
                 this.activeParam = param
             },
             getLongParamPlaceholder (param) {
+                if (param.valueError) {
+                    return this.$t('details.longParamValueLoadFailed')
+                }
                 if (param.valueLoaded) {
                     return this.$t('details.longParamValueLoaded')
                 }
@@ -160,7 +171,7 @@
                 return this.$t('details.longParamValueHidden')
             },
             async showLongParamDetail (param, index) {
-                if (param.valueLoaded) {
+                if (param.valueLoaded && !isOverflowReference(param.value)) {
                     this.showDetail(param)
                     return
                 }
@@ -180,6 +191,20 @@
                         ...(this.archiveFlag ? { archiveFlag: this.archiveFlag } : {})
                     })
                     const value = result?.value ?? ''
+                    // 接口若仍返回引用串，视为加载失败，避免把 __BK_OVF__ 当真实值展示
+                    if (isOverflowReference(value)) {
+                        this.$set(this.params, index, {
+                            ...this.params[index],
+                            valueLoading: false,
+                            valueLoaded: false,
+                            valueError: true
+                        })
+                        this.$bkMessage({
+                            theme: 'error',
+                            message: this.$t('details.longParamValueLoadFailed')
+                        })
+                        return
+                    }
                     this.params = mergeBuildParamValue(this.params, param.key, value).map(item => {
                         if (item.key !== param.key) return item
                         return {
@@ -217,6 +242,8 @@
             async init () {
                 try {
                     this.isLoading = true
+                    this.valueSpanRefs = {}
+                    this.overflowSpanMap = {}
                     const { projectId, pipelineId, buildNo: buildId } = this.$route.params
                     const urlParams = {
                         projectId,
@@ -237,7 +264,7 @@
                     }))
                     this.params = formatBuildParamsForDisplay(params)
                     this.$nextTick(() => {
-                        this.overflowSpan = this.isOverflow()
+                        this.overflowSpanMap = this.computeOverflowSpanMap()
                     })
                 } catch (e) {
                     console.error(e)
@@ -252,11 +279,15 @@
                 }
                 return defaultValue !== value
             },
-            isOverflow () {
+            computeOverflowSpanMap () {
                 try {
-                    return this.$refs.valueSpan?.map(span => span.scrollWidth > span.clientWidth) ?? []
+                    return Object.keys(this.valueSpanRefs).reduce((acc, key) => {
+                        const span = this.valueSpanRefs[key]
+                        acc[key] = !!(span && span.scrollWidth > span.clientWidth)
+                        return acc
+                    }, {})
                 } catch (e) {
-                    return []
+                    return {}
                 }
             }
         }

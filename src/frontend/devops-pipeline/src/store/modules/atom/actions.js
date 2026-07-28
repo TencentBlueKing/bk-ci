@@ -26,6 +26,10 @@ import {
 } from '@/store/constants'
 import { CODE_MODE, UI_MODE } from '@/utils/pipelineConst'
 import request from '@/utils/request'
+import {
+    hasOverflowReferenceValues,
+    replaceOverflowValues
+} from '@/utils/buildParamLongValue'
 import { areDeeplyEqual, hashID, randomString } from '@/utils/util'
 import { PipelineEditActionCreator, actionCreator } from './atomUtil'
 import {
@@ -1249,6 +1253,46 @@ export default {
         } catch (error) {
             return []
         }
+    },
+    /**
+     * 获取最近一次构建 ID，用于回填时解析超长变量引用串
+     */
+    async fetchLatestBuildId (_, { projectId, pipelineId, debug = false }) {
+        try {
+            const query = new URLSearchParams({
+                page: '1',
+                pageSize: '1'
+            })
+            if (debug) query.append('debug', 'true')
+            const { data } = await request.get(
+                `/${PROCESS_API_URL_PREFIX}/user/builds/${projectId}/${pipelineId}/history/new?${query}`
+            )
+            const record = data?.records?.[0]
+            return record?.id || record?.buildId || null
+        } catch (e) {
+            return null
+        }
+    },
+    /**
+     * 将 values 中的 __BK_OVF__ 引用串替换为真实值（通过 getCombinationFromBuild）
+     */
+    async resolveOverflowParamValues ({ dispatch }, { projectId, pipelineId, values, buildId, debug = false }) {
+        if (!hasOverflowReferenceValues(values)) {
+            return values
+        }
+        let targetBuildId = buildId
+        if (!targetBuildId) {
+            targetBuildId = await dispatch('fetchLatestBuildId', { projectId, pipelineId, debug })
+        }
+        if (!targetBuildId) {
+            return replaceOverflowValues(values, [])
+        }
+        const resolvedParams = await dispatch('fetchBuildParamsByBuildId', {
+            projectId,
+            pipelineId,
+            buildId: targetBuildId
+        })
+        return replaceOverflowValues(values, resolvedParams)
     },
     setTemplateStrategy (_, { projectId, templateId, ...strategy }) {
         return request.put(`/${PROCESS_API_URL_PREFIX}/user/pipeline/template/v2/${projectId}/${templateId}/updateUpgradeStrategy`, strategy)
