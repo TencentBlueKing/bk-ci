@@ -205,6 +205,62 @@ class BKBaseService @Autowired constructor(
 
         return result
     }
+
+    /**
+     * 批量更新主机补充维度到 bkbase 平台。
+     * 单批上限 1000；更新为整机覆盖语义。
+     */
+    fun updateHostExtraDimensions(items: List<HostExtraDimensionItem>): Boolean {
+        if (items.isEmpty()) {
+            return true
+        }
+        if (bkConfig.baseUrl.isBlank()) {
+            logger.warn("updateHostExtraDimensions skipped, bkbase.url is blank")
+            return false
+        }
+        val url = "${bkConfig.baseUrl}/prod/v4/metrics/cmdb/host_extra_dimensions/"
+        var allSuccess = true
+        items.chunked(HOST_EXTRA_DIMENSION_BATCH_SIZE).forEachIndexed { index, batch ->
+            val request = Request.Builder()
+                .url(url)
+                .addHeader("x-bkapi-authorization", headerStr())
+                .post(
+                    JsonUtil.toJson(batch)
+                        .toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull())
+                )
+                .build()
+            try {
+                okHttpClient.newCall(request).execute().use { response ->
+                    val data = response.body!!.string()
+                    logger.info(
+                        "updateHostExtraDimensions|batch={}|size={}|code={}|content={}",
+                        index, batch.size, response.code, data
+                    )
+                    if (!response.isSuccessful) {
+                        logger.error(
+                            "updateHostExtraDimensions failed|batch={}|code={}|content={}",
+                            index, response.code, data
+                        )
+                        allSuccess = false
+                        return@forEachIndexed
+                    }
+                    val resp = objectMapper.readValue<HostExtraDimensionResp>(data)
+                    if (!resp.result) {
+                        logger.error(
+                            "updateHostExtraDimensions biz failed|batch={}|code={}|message={}|errors={}",
+                            index, resp.code, resp.message, resp.errors
+                        )
+                        allSuccess = false
+                    }
+                }
+            } catch (e: Exception) {
+                logger.error("updateHostExtraDimensions request error|batch=$index", e)
+                allSuccess = false
+            }
+        }
+        return allSuccess
+    }
+
     private fun headerStr(): String {
         return objectMapper.writeValueAsString(
             mapOf("bk_app_code" to bkConfig.appCode, "bk_app_secret" to bkConfig.appSecret)
@@ -212,6 +268,7 @@ class BKBaseService @Autowired constructor(
     }
 
     companion object {
+        private const val HOST_EXTRA_DIMENSION_BATCH_SIZE = 1000
         private val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
         private val theDateFormat = DateTimeFormatter.ofPattern("yyyyMMdd")
         private val dataInputFormat = SimpleDateFormat("yyyyMMddHHmm")
@@ -273,4 +330,18 @@ data class BakeBaseQuerySyncRespData(
     val totalRecords: Int,
     val timetaken: Double,
     val list: List<Map<String, Any>>
+)
+
+data class HostExtraDimensionItem(
+    @JsonProperty("host_id")
+    val hostId: Long,
+    val dimensions: List<Map<String, String>>
+)
+
+data class HostExtraDimensionResp(
+    val result: Boolean,
+    val code: String?,
+    val message: String?,
+    val data: Any?,
+    val errors: Any?
 )

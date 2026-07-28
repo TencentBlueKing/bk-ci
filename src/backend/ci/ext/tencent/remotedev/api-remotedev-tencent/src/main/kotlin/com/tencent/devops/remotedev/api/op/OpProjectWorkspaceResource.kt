@@ -184,4 +184,16 @@ interface OpProjectWorkspaceResource {
         @Parameter(description = "工作空间属性")
         workspaceProperty: WorkspaceProperty
     ): Result<Boolean>
+
+    @Operation(summary = "按项目刷存量云桌面监控维度到bkbase")
+    @POST
+    @Path("/refresh/base/dimension")
+    fun refreshProjectWorkspaceDimension(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @QueryParam("projectId")
+        projectId: String
+    ): Result<Boolean>
 }

@@ -491,9 +491,8 @@ class DeleteControl @Autowired constructor(
             )
         )
         val hostIdSub = windowsInfo?.hostIp?.split(".") ?: return
-        workspaceCommon.updateHostMonitor(
+        workspaceCommon.clearWorkspaceDimension(
             workspaceName = workspaceName,
-            props = mapOf("devx_meta" to ""),
             type = workspace.workspaceSystemType
         )
 
