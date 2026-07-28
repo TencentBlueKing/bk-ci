@@ -105,9 +105,20 @@
             window.open(`${window.location.origin}${window.getRoutePrefix()}/${name}`, '_self')
         }
 
+        /** 蓝鲸用户管理个人设置：bkuser.<BK_DOMAIN>；上云版 / 未配置 BK_DOMAIN 时不跳转 */
+        openPersonalSettings (): void {
+            const domain = (window.LOCALE_DOMAIN || '').trim()
+            if (!domain) {
+                return
+            }
+            const url = `${window.location.protocol}//bkuser.${domain}`
+            window.open(url, '_blank')
+            this.hideUserInfo(null)
+        }
+
         get menu (): object[] {
             try {
-                return [
+                const items: object[] = [
                     {
                         to: addRoutePrefix('/console/pm'),
                         label: this.$t('projectManage')
@@ -121,12 +132,20 @@
                         cb: this.updatePage,
                         label: this.$t('oauthManage'),
                         name: 'permission/auth/oauth'
-                    },
-                    {
-                        cb: this.logout,
-                        label: this.$t('logout')
                     }
                 ]
+                // 社区/私有化：BK_DOMAIN 即环境统一域名，拼 bkuser.<domain>
+                if ((window.LOCALE_DOMAIN || '').trim()) {
+                    items.push({
+                        cb: this.openPersonalSettings,
+                        label: this.$t('personalSettings')
+                    })
+                }
+                items.push({
+                    cb: this.logout,
+                    label: this.$t('logout')
+                })
+                return items
             } catch (e) {
                 console.warn(e)
                 return []
