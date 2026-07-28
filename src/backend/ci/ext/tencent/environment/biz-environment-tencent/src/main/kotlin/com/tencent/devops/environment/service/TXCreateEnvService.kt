@@ -51,9 +51,7 @@ class TXCreateEnvService @Autowired constructor(
         val detail = client.get(ServiceRemoteDevInternalResource::class).getWorkspaceDetail(
             workspaceId
         ).data ?: return null
-        val config = redisOperation.get(CREATE_INSTALL_KEY, true)?.let {
-            JsonUtil.to<CreateGateWayConfig>(it)
-        } ?: return null
+        val config = getCreateGatewayConfig() ?: return null
         return when (detail.zoneConfig?.type) {
             WindowsResourceZoneConfigType.DEVCLOUD -> config.devnetGateway
             null -> null
