@@ -131,7 +131,9 @@ config = {
             token = "__BK_CI_KUBERNETES_API_TOKEN__"
         },
         special_domain = {},
-        auto_prefix = "__BK_CI_KUBERNETES_AUTO_PREFIX__"
+        auto_prefix = "__BK_CI_KUBERNETES_AUTO_PREFIX__",
+        creative_host_suffix = "__BK_CI_CREATIVE_HOST_SUFFIX__",
+        creative_namespace = "__BK_CI_CREATIVE_NAMESPACE__"
     },
     external_auth = {
         base_url = "http://__BKCI_FQDN__",
