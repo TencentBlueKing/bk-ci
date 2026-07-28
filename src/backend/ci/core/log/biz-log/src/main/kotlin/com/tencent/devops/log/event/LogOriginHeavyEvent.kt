@@ -25,25 +25,40 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.es.client
+package com.tencent.devops.log.event
 
-import com.tencent.devops.common.es.ESClient
+import com.tencent.devops.common.event.annotation.Event
+import com.tencent.devops.common.log.pojo.message.LogMessage
+import com.tencent.devops.common.stream.constants.StreamBinder
+import com.tencent.devops.common.stream.constants.StreamBinding
 
-interface LogClient {
+/**
+ * 热点构建的 origin 日志事件，载荷与 [LogOriginEvent] 一致，独立 destination 做队列隔离。
+ */
+@Event(
+    destination = StreamBinding.LOG_ORIGIN_HEAVY_EVENT_DESTINATION,
+    binder = StreamBinder.CUSTOM
+)
+data class LogOriginHeavyEvent(
+    override val buildId: String,
+    val logs: List<LogMessage>,
+    override var retryTime: Int = 2,
+    override var delayMills: Int = 0
+) : ILogEvent(buildId, retryTime, delayMills) {
 
-    fun getActiveClients(): List<ESClient>
+    fun toOriginEvent() = LogOriginEvent(
+        buildId = buildId,
+        logs = logs,
+        retryTime = retryTime,
+        delayMills = delayMills
+    )
 
-    fun hashClient(buildId: String): ESClient
-
-    /**
-     * 直写链路回传一次 ES 写入结果，供多集群实现按集群维度做健康统计与快速熔断。
-     * 默认空实现：社区单 ES（LogClientImpl）无需感知，保持原有行为。
-     *
-     * @param clusterName 本次写入命中的集群名（[hashClient] 返回集群的 clusterName）
-     * @param success 本次 ES 写入是否成功
-     * @param latencyMs 本次写入耗时（毫秒），慢写同样可作为熔断依据
-     */
-    fun reportWriteResult(clusterName: String, success: Boolean, latencyMs: Long) {
-        // no-op by default
+    companion object {
+        fun from(event: LogOriginEvent) = LogOriginHeavyEvent(
+            buildId = event.buildId,
+            logs = event.logs,
+            retryTime = event.retryTime,
+            delayMills = event.delayMills
+        )
     }
 }
