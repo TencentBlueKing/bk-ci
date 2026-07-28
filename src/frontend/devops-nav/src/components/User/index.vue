@@ -54,7 +54,7 @@
     import { Action } from 'vuex-class'
     import { clickoutside } from '../../directives/index'
     import { addRoutePrefix } from '@/utils/util'
-    import { DEFAULT_USER_TIME_ZONE } from '../../../common-lib/time'
+    import { DEFAULT_USER_TIME_ZONE } from '../../../../common-lib/time'
 
     @Component({
         directives: {
