@@ -201,8 +201,10 @@ class ManualReviewTaskAtom(
                     "pipelineName" to pipelineName,
                     "dataTime" to DateTimeUtil.formatDate(Date(), "yyyy-MM-dd HH:mm:ss"),
                     "reviewDesc" to reviewDesc,
+                    "reviewers" to reviewUsersList.joinToString(","),
                     "manualReviewParam" to JsonUtil.toJson(param.params),
                     "checkParams" to param.params.isNotEmpty().toString(),
+                    "hasRequiredParams" to (param.params.any { it.required == true }).toString(),
                     // 企业微信组
                     NotifyUtils.WEWORK_GROUP_KEY to notifyGroup.joinToString(separator = ",")
                 ),
@@ -210,11 +212,13 @@ class ManualReviewTaskAtom(
                 stageId = null,
                 taskId = param.id,
                 callbackData = mapOf(
+                    "reviewType" to "ATOM",
                     "projectId" to projectCode,
                     "pipelineId" to pipelineId,
                     "buildId" to buildId,
                     "elementId" to (param.id ?: ""),
                     "reviewUsers" to reviewUsers,
+                    "hasRequiredParams" to (param.params.any { it.required == true }).toString(),
                     "signature" to ShaUtils.sha256(projectCode + buildId + (param.id ?: "") + appSecret)
                 ),
                 markdownContent = param.markdownContent

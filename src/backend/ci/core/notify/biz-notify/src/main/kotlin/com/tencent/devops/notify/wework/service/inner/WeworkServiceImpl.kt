@@ -139,6 +139,45 @@ class WeworkServiceImpl(
         return true
     }
 
+    override fun sendTemplateCardMessage(
+        receivers: Collection<String>,
+        templateCard: com.tencent.devops.notify.pojo.wework.WeworkTemplateCard
+    ): Boolean {
+        return kotlin.runCatching {
+            val agentId =
+                weWorkConfiguration.agentId.toIntOrNull() ?: throw OperationException("Wework agent id is invalid")
+            val toUser = receivers.joinToString("|")
+            val payload = mapOf(
+                "touser" to toUser,
+                "msgtype" to "template_card",
+                "agentid" to agentId,
+                "template_card" to templateCard,
+                "enable_id_trans" to (weWorkConfiguration.enableIdTrans?.toIntOrNull() ?: 0),
+                "enable_duplicate_check" to (weWorkConfiguration.enableDuplicateCheck?.toIntOrNull() ?: 0),
+                "duplicate_check_interval" to (weWorkConfiguration.duplicateCheckInterval?.toIntOrNull() ?: 1800)
+            )
+            val url = buildUrl("${weWorkConfiguration.apiUrl}/cgi-bin/message/send?access_token=${getAccessToken()}")
+            OkhttpUtils.doPost(url, JsonUtil.toJson(payload, false)).use {
+                val responseBody = it.body?.string() ?: ""
+                val sendMessageResp = JsonUtil.to(responseBody, jacksonTypeRef<SendMessageResp>())
+                if (!it.isSuccessful || 0 != sendMessageResp.errCode) {
+                    throw RemoteServiceException(
+                        httpStatus = it.code,
+                        responseContent = responseBody,
+                        errorMessage = "send wework template_card failed",
+                        errorCode = sendMessageResp.errCode
+                    )
+                }
+            }
+            saveResult(receivers, "template_card:${templateCard.taskId}", true, null)
+            true
+        }.fold({ it }, {
+            LOG.warn("send template_card failed, receivers=$receivers", it)
+            saveResult(receivers, "template_card:${templateCard.taskId}", false, it.message)
+            false
+        })
+    }
+
     private fun doSendRequest(requestBodies: List<Optional<AbstractSendMessageRequest>>) {
         if (requestBodies.isEmpty()) {
             throw OperationException("no message to send")
