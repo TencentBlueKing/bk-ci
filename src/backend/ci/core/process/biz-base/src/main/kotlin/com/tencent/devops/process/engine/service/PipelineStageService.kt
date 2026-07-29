@@ -38,6 +38,7 @@ import com.tencent.devops.common.event.enums.PipelineBuildStatusBroadCastEventTy
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildQualityCheckBroadCastEvent
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildReviewBroadCastEvent
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCastEvent
+import com.tencent.devops.common.notify.enums.NotifyType
 import com.tencent.devops.common.notify.utils.NotifyUtils
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ManualReviewAction
@@ -703,6 +704,9 @@ class PipelineStageService @Autowired constructor(
         val signature = ShaUtils.sha256(
             stage.projectId + stage.buildId + stage.stageId + (group.id ?: "") + (appSecret ?: "")
         )
+        val notifyType = NotifyUtils.checkNotifyType(checkIn.notifyType)
+        // 勾选企业微信群消息时，群通知通过 mentioned_list @审核人（与人工审核插件一致）
+        val mentionReceivers = notifyType.contains(NotifyType.WEWORK_GROUP.name)
         pipelineEventDispatcher.dispatch(
             PipelineBuildReviewBroadCastEvent(
                 source = "s(${stage.stageId}) waiting for REVIEW",
@@ -736,9 +740,9 @@ class PipelineStageService @Autowired constructor(
                 position = ControlPointPosition.BEFORE_POSITION,
                 stageSeq = stage.seq,
                 stageId = stage.stageId,
-                notifyType = NotifyUtils.checkNotifyType(checkIn.notifyType),
+                notifyType = notifyType,
                 markdownContent = checkIn.markdownContent,
-                mentionReceivers = true,
+                mentionReceivers = mentionReceivers,
                 callbackData = mapOf(
                     "reviewType" to "STAGE",
                     "projectId" to stage.projectId,
