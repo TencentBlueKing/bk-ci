@@ -423,6 +423,14 @@ class WechatWorkService @Autowired constructor(
         }
     }
 
+    /**
+     * 应用号向群聊发消息。
+     *
+     * 非 markdown 时通过 richtext mentioned 节点 @ [mentionUsers]。
+     * 后续可扩展（暂未实现）：
+     * - @all：mentioned 列表增加 "@all" 或等价能力
+     * - markdown 场景的 content 内 <@userid> @成员（当前 markdown 分支尚未带 mention）
+     */
     fun sendByApp(
         chatId: String,
         content: String,
