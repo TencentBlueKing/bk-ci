@@ -268,7 +268,7 @@ class BKBaseService @Autowired constructor(
     }
 
     companion object {
-        private const val HOST_EXTRA_DIMENSION_BATCH_SIZE = 1000
+        private const val HOST_EXTRA_DIMENSION_BATCH_SIZE = 100
         private val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
         private val theDateFormat = DateTimeFormatter.ofPattern("yyyyMMdd")
         private val dataInputFormat = SimpleDateFormat("yyyyMMddHHmm")
