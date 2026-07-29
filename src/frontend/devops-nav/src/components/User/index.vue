@@ -14,7 +14,23 @@
     import { addRoutePrefix } from '@/utils/util'
     import { getUserTimeZone } from '../../../../common-lib/time.js'
     import BkLoginUserinfo from '@blueking/login-userinfo/vue2'
-    import('@blueking/login-userinfo/vue2/vue2.css')
+    import '@blueking/login-userinfo/vue2/vue2.css'
+    import projectManageIcon from '@/assets/scss/logo/projectManage.svg'
+    import accessCenterIcon from '@/assets/scss/logo/accessCenter.svg'
+    import oauthManageIcon from '@/assets/scss/logo/oauthManage.svg'
+    import userCircleIcon from '@/assets/scss/logo/userCircle.svg'
+    import logoutIcon from '@/assets/scss/logo/logout.svg'
+
+    const renderActionIcon = (src: string) => (h) => h('i', {
+        style: {
+            width: '14px',
+            height: '14px',
+            display: 'inline-block',
+            backgroundColor: 'currentColor',
+            mask: `url(${src}) no-repeat center / contain`,
+            WebkitMask: `url(${src}) no-repeat center / contain`,
+        }
+    })
 
     @Component({
         components: {
@@ -41,11 +57,12 @@
 
         get tenantId (): string {
             const tenantInfo = (window as any).tenantInfoForDisplay
-            return (tenantInfo && tenantInfo.tenantId) || ''
+            return (tenantInfo && tenantInfo.tenantId) || '--'
         }
 
         get userSettingUrl (): string {
-            const domain = window.LOCALE_DOMAIN
+            const domain = (window.LOCALE_DOMAIN || '').trim() || ''
+            console.log(domain, 'domain--------------')
             return domain ? `https://bkuser.${domain}` : ''
         }
 
@@ -53,34 +70,34 @@
             return [
                 {
                     text: this.$t('projectManage'),
-                    icon: 'projectManage',
                     theme: 'primary',
-                    href: addRoutePrefix('/console/pm')
+                    href: addRoutePrefix('/console/pm'),
+                    renderIcon: renderActionIcon(projectManageIcon)
                 },
                 {
                     text: this.$t('accessCenter'),
-                    icon: 'accessCenter',
                     theme: 'primary',
-                    href: addRoutePrefix('/console/permission')
+                    href: addRoutePrefix('/console/permission'),
+                    renderIcon: renderActionIcon(accessCenterIcon)
                 },
                 {
                     text: this.$t('oauthManage'),
-                    icon: 'oauthManage',
                     theme: 'primary',
-                    href: addRoutePrefix('/console/permission/auth/oauth')
+                    href: addRoutePrefix('/console/permission/auth/oauth'),
+                    renderIcon: renderActionIcon(oauthManageIcon)
                 },
                 {
                     text: this.$t('userSetting'),
-                    icon: 'userCircle',
-                    href: this.userSettingUrl,
                     target: '_blank',
                     theme: 'primary',
+                    href: this.userSettingUrl,
+                    renderIcon: renderActionIcon(userCircleIcon)
                 },
                 {
                     text: this.$t('logout'),
-                    icon: 'logout',
                     theme: 'danger',
-                    handle: this.logout,
+                    handle: () => this.logout(),
+                    renderIcon: renderActionIcon(logoutIcon)
                 },
             ]
         }
@@ -89,7 +106,7 @@
             
             return {
                 name,
-                organization: this.tenantId || '--',
+                organization: this.tenantId,
                 timezone: getUserTimeZone(),
             }
         }

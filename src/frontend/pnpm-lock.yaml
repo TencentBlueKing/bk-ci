@@ -1132,8 +1132,8 @@ importers:
         specifier: 1.0.4
         version: 1.0.4
       '@blueking/login-userinfo':
-        specifier: ^0.0.16
-        version: 0.0.16(vue@2.7.16)
+        specifier: ^0.0.20
+        version: 0.0.20(vue@2.7.16)
       '@blueking/platform-config':
         specifier: ^1.0.4
         version: 1.0.5
@@ -3282,8 +3282,8 @@ packages:
   '@blueking/login-modal@1.0.4':
     resolution: {integrity: sha512-HMSIZl4QeRAPEVcD/FV2vysnZxJiDSVeLppVw65wvQnvNwos2JwqjoCSoS46Joe/JY/H0r89RgA2WIkneOekNg==}
 
-  '@blueking/login-userinfo@0.0.16':
-    resolution: {integrity: sha512-78ijRCj1+Oal+qP6/T6s21Ww9IZbPu/7OmVnDPfF6+OrW6JQAu2n6yk9Bv4eG5ARDlG3hrLb0R1LzhlJZ52JaQ==}
+  '@blueking/login-userinfo@0.0.20':
+    resolution: {integrity: sha512-B5rJLszakZetbqke9bhDAupbQXx8HYv/N+9Z4YnPCQAhidPoNLzl5AcmX9PhyO800CNjPDD5ENvhG7iKmwOJVg==}
     peerDependencies:
       vue: ^3
 
@@ -9742,6 +9742,7 @@ packages:
   git-semver-tags@2.0.3:
     resolution: {integrity: sha512-tj4FD4ww2RX2ae//jSrXZzrocla9db5h0V7ikPl1P/WwoZar9epdUhwR7XHXSgc+ZkNq72BEEerqQuicoEQfzA==}
     engines: {node: '>=6.9.0'}
+    deprecated: This package is no longer maintained. For the JavaScript API, please use @conventional-changelog/git-client instead.
     hasBin: true
 
   git-up@4.0.5:
@@ -18243,7 +18244,7 @@ snapshots:
 
   '@blueking/login-modal@1.0.4': {}
 
-  '@blueking/login-userinfo@0.0.16(vue@2.7.16)':
+  '@blueking/login-userinfo@0.0.20(vue@2.7.16)':
     dependencies:
       js-cookie: 3.0.5
       tippy.js: 6.3.7
