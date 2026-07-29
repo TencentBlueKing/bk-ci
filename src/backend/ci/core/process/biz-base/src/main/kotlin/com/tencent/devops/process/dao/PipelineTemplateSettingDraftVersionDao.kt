@@ -180,7 +180,7 @@ class PipelineTemplateSettingDraftVersionDao {
                             .map { s -> s.fixWeworkGroupType() }
                     },
                     runLockType = r.runLockType?.let { PipelineRunLockType.valueOf(it) },
-                    waitQueueTimeSecond = r.waitQueueTimeSecond,
+                    waitQueueTimeSecond = DateTimeUtil.secondToMinute(r.waitQueueTimeSecond ?: 600000),
                     maxQueueSize = r.maxQueueSize,
                     concurrencyGroup = r.concurrencyGroup,
                     concurrencyCancelInProgress = r.concurrencyCancelInProgress,
