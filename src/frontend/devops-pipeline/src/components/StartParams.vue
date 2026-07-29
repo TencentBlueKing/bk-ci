@@ -11,13 +11,14 @@
             :is-visible-version="isVisibleVersion"
             :build-num="execDetail?.buildNum"
             :all-params="buildParamProperities"
+            :resolve-params-for-save="resolveParamsForSave"
         />
         <div class="startup-parameter-wrapper">
             <div
                 ref="parent"
                 class="build-param-row"
                 v-for="(param, index) in params"
-                :key="index"
+                :key="param.key || index"
             >
                 <span class="build-param-span">
                     <span
@@ -55,7 +56,8 @@
                     </template>
                     <template v-else-if="typeof param.value !== 'undefined'">
                         <span
-                            :ref="el => setValueSpanRef(param.key, el)"
+                            ref="valueSpan"
+                            :data-param-key="param.key"
                             :class="{
                                 'build-param-value-span': true,
                                 'diff-param-value': param.isDiff
@@ -90,7 +92,7 @@
                     class="startup-param-detail-wrapper"
                 >
                     <p>{{ activeParam.key }}</p>
-                    <pre>{{ activeParam.value }}</pre>
+                    <pre>{{ detailRenderValue }}</pre>
                 </div>
             </bk-sideslider>
         </div>
@@ -101,8 +103,11 @@
     import ParamSet from '@/components/ParamSet.vue'
     import {
         formatBuildParamsForDisplay,
+        getDetailRenderValue,
+        isLongInputValue,
         isOverflowReference,
-        mergeBuildParamValue
+        mergeBuildParamValue,
+        toStartupParamMeta
     } from '@/utils/buildParamLongValue'
     import { allVersionKeyList } from '@/utils/pipelineConst'
     import { mapActions, mapGetters } from 'vuex'
@@ -119,7 +124,6 @@
                 activeParam: null,
                 isDetailShow: false,
                 overflowSpanMap: {},
-                valueSpanRefs: {},
                 buildParamProperities: [],
                 isVisibleVersion: false
             }
@@ -130,8 +134,10 @@
             }),
             archiveFlag () {
                 return this.$route.query.archiveFlag
+            },
+            detailRenderValue () {
+                return getDetailRenderValue(this.activeParam?.value)
             }
-            
         },
         watch: {
             '$route.params.buildNo': function () {
@@ -144,16 +150,8 @@
         methods: {
             ...mapActions('atom', [
                 'requestBuildParams',
-                'fetchBuildParamsByBuildId',
                 'requestBuildParameterValue'
             ]),
-            setValueSpanRef (key, el) {
-                if (el) {
-                    this.$set(this.valueSpanRefs, key, el)
-                } else if (this.valueSpanRefs[key]) {
-                    this.$delete(this.valueSpanRefs, key)
-                }
-            },
             showDetail (param) {
                 this.isDetailShow = true
                 this.activeParam = param
@@ -226,23 +224,56 @@
                 }
             },
             hideDetail () {
+                // 关闭详情后释放已加载的大文本，避免多次查看后内存堆积
+                if (this.activeParam?.isLongValue && this.activeParam?.key) {
+                    const key = this.activeParam.key
+                    this.params = this.params.map(item => {
+                        if (item.key !== key || !item.isLongValue) return item
+                        return {
+                            ...item,
+                            value: undefined,
+                            valueLoaded: false,
+                            valueLoading: false,
+                            isDiff: false
+                        }
+                    })
+                }
                 this.activeParam = null
             },
-            async fetchBuildParamProperties (urlParams) {
-                try {
-                    this.isBuildParamReady = false
-                    const buildParamProperities = await this.fetchBuildParamsByBuildId(urlParams)
-                    this.buildParamProperities = buildParamProperities
-                    this.isVisibleVersion = buildParamProperities.some(item => allVersionKeyList.includes(item.id))
-                    this.isBuildParamReady = true
-                } catch (e) {
-                    console.error(e)
+            /**
+             * 保存参数组合时才按需 resolve 大变量，避免进入 Tab 时批量加载导致 OOM
+             */
+            async resolveParamsForSave (params = []) {
+                const { projectId, pipelineId, buildNo: buildId } = this.$route.params
+                const resolved = []
+                for (const param of params) {
+                    const key = param.id ?? param.key
+                    let value = param.value
+                    if (isOverflowReference(value)) {
+                        const result = await this.requestBuildParameterValue({
+                            projectId,
+                            pipelineId,
+                            buildId,
+                            key,
+                            ...(this.archiveFlag ? { archiveFlag: this.archiveFlag } : {})
+                        })
+                        value = result?.value ?? ''
+                        if (isOverflowReference(value)) {
+                            throw new Error(this.$t('details.longParamValueLoadFailed'))
+                        }
+                    }
+                    resolved.push({
+                        ...param,
+                        id: key,
+                        value
+                    })
                 }
+                return resolved
             },
             async init () {
                 try {
                     this.isLoading = true
-                    this.valueSpanRefs = {}
+                    this.isBuildParamReady = false
                     this.overflowSpanMap = {}
                     const { projectId, pipelineId, buildNo: buildId } = this.$route.params
                     const urlParams = {
@@ -251,18 +282,23 @@
                         buildId,
                         ...(this.archiveFlag ? { archiveFlag: this.archiveFlag } : {})
                     }
-                    this.fetchBuildParamProperties(urlParams)
-                    const res = await this.requestBuildParams(urlParams)
+                    // 列表接口（action 内已 sanitize）；切勿调用 getCombinationFromBuild（会批量 resolve 大值 OOM）
+                    const res = await this.requestBuildParams(urlParams) || []
                     this.defaultParamMap = res.reduce((acc, item) => {
-                        acc[item.key] = item.defaultValue
+                        if (!isLongInputValue(item.defaultValue) && typeof item.defaultValue !== 'undefined') {
+                            acc[item.key] = item.defaultValue
+                        }
                         return acc
                     }, {})
                     // 引用串无法与默认值比较，等按需加载后再算 isDiff
-                    const params = res.map((item) => ({
+                    this.params = formatBuildParamsForDisplay(res.map((item) => ({
                         ...item,
-                        isDiff: isOverflowReference(item.value) ? false : this.isDefaultDiff(item)
-                    }))
-                    this.params = formatBuildParamsForDisplay(params)
+                        isDiff: isLongInputValue(item.value) ? false : this.isDefaultDiff(item)
+                    })))
+                    // ParamSet 仅保留短元数据，供「保存为参数组合」时再按需 resolve
+                    this.buildParamProperities = res.map(toStartupParamMeta)
+                    this.isVisibleVersion = this.buildParamProperities.some(item => allVersionKeyList.includes(item.id))
+                    this.isBuildParamReady = true
                     this.$nextTick(() => {
                         this.overflowSpanMap = this.computeOverflowSpanMap()
                     })
@@ -273,17 +309,29 @@
                 }
             },
             isDefaultDiff ({ key, value }) {
+                if (!Object.prototype.hasOwnProperty.call(this.defaultParamMap, key)) {
+                    return false
+                }
                 const defaultValue = this.defaultParamMap[key]
                 if (typeof defaultValue === 'boolean') {
                     return defaultValue.toString() !== value.toString()
                 }
                 return defaultValue !== value
             },
+            /**
+             * 用 data-param-key 按 key 判断截断，避免 valueSpan 数组下标与列表 index 错位（1847）
+             * 不要用函数 ref + $set 写响应式对象，否则会触发无限更新导致崩溃
+             */
             computeOverflowSpanMap () {
                 try {
-                    return Object.keys(this.valueSpanRefs).reduce((acc, key) => {
-                        const span = this.valueSpanRefs[key]
-                        acc[key] = !!(span && span.scrollWidth > span.clientWidth)
+                    const spans = this.$refs.valueSpan
+                    if (!spans) return {}
+                    const list = Array.isArray(spans) ? spans : [spans]
+                    return list.reduce((acc, span) => {
+                        const key = span?.dataset?.paramKey
+                        if (key) {
+                            acc[key] = span.scrollWidth > span.clientWidth
+                        }
                         return acc
                     }, {})
                 } catch (e) {

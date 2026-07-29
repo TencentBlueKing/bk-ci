@@ -28,7 +28,8 @@ import { CODE_MODE, UI_MODE } from '@/utils/pipelineConst'
 import request from '@/utils/request'
 import {
     hasOverflowReferenceValues,
-    replaceOverflowValues
+    replaceOverflowValues,
+    sanitizeParamForMemory
 } from '@/utils/buildParamLongValue'
 import { areDeeplyEqual, hashID, randomString } from '@/utils/util'
 import { PipelineEditActionCreator, actionCreator } from './atomUtil'
@@ -454,7 +455,8 @@ export default {
                 url += `?archiveFlag=${encodeURIComponent(archiveFlag)}`
             }
             const { data } = await request.get(url)
-            return data
+            // 进页即剥离超长 value/defaultValue，避免列表响应里的大字段进入 Vue 响应式导致 OOM
+            return Array.isArray(data) ? data.map(sanitizeParamForMemory) : data
         } catch (e) {
             rootCommit(commit, FETCH_ERROR, e)
         }

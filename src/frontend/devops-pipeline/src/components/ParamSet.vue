@@ -339,6 +339,13 @@
             disabled: {
                 type: Boolean,
                 default: false
+            },
+            /**
+             * 可选：保存参数组合前异步取回完整参数（启动参数 Tab 避免进页时 resolve 大变量导致 OOM）
+             */
+            resolveParamsForSave: {
+                type: Function,
+                default: null
             }
         },
         setup (props, ctx) {
@@ -487,10 +494,15 @@
             })
 
             onBeforeMount(() => {
-                dispatch('fetchParamSets', proxy.$route.params)
+                // 启动参数 Tab 仅「保存为参数组合」，无需拉组合列表
+                if (!props.onlySaveAsSet) {
+                    dispatch('fetchParamSets', proxy.$route.params)
+                }
             })
 
             onMounted(() => {
+                // onlySaveAsSet 时不要 apply：tempParamSet 可能含已 resolve 的超长值，reduce/emit 会再拷贝一份导致 OOM
+                if (props.onlySaveAsSet) return
                 if (tempParamSet.value) {
                     paramSetId.value = TEMP_PARAM_SET_ID
                     applyParamSet()
@@ -628,11 +640,27 @@
                 })
             }
 
-            function saveAsParamSet (params = props.allParams, values) {
+            async function saveAsParamSet (params = props.allParams, values) {
+                let sourceParams = params
+                if (typeof props.resolveParamsForSave === 'function') {
+                    try {
+                        isOperating.value = true
+                        sourceParams = await props.resolveParamsForSave(params) || params
+                    } catch (e) {
+                        console.error(e)
+                        proxy.$bkMessage({
+                            theme: 'error',
+                            message: e.message || proxy.$t('saveAsParamSet')
+                        })
+                        return
+                    } finally {
+                        isOperating.value = false
+                    }
+                }
                 const newSet = {
                     ...DEFAULT_PARAM_SET,
                     name: props.isStartUp ? `SET_#${props.buildNum}` : `SET_${randomString(6)}`,
-                    params: params.map(param => ( {
+                    params: sourceParams.map(param => ( {
                         ...param,
                         value: values?.[param.id] ?? param.value
                     })),
