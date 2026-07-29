@@ -52,7 +52,8 @@ config = {
         pool_size = 5,                     -- 连接池的大小
         backlog = 100,                     -- 连接等待队列
         ssl = __BK_CI_REDIS_SSL__,
-        auto_redis = nil
+        auto_redis = nil,
+        creative_redis = nil
     },
     oauth = { -- 对接蓝鲸权限中心才需要的配置
         ip = "__BK_SSM_HOST__",

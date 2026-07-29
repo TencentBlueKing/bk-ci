@@ -52,7 +52,8 @@ function _M:call_external_auth_api(auth_type, params)
             headers = {
                 ["Accept"] = "application/json",
                 ["Content-Type"] = "application/json",
-                ["X-DEVOPS-PROJECT-ID"] = ngx.var.project_id
+                ["X-DEVOPS-PROJECT-ID"] = ngx.var.project_id,
+                ["HOST"] = ngx.var.host
             },
             ssl_verify = false
         })
