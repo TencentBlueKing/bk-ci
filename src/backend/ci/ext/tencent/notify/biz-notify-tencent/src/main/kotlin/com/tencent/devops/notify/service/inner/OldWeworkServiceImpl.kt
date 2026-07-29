@@ -26,10 +26,12 @@
  */
 package com.tencent.devops.notify.service.inner
 
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.wechatwork.WechatWorkService
 import com.tencent.devops.common.wechatwork.model.enums.UploadMediaType
 import com.tencent.devops.notify.pojo.WeworkNotifyMediaMessage
 import com.tencent.devops.notify.pojo.WeworkNotifyTextMessage
+import com.tencent.devops.notify.pojo.wework.WeworkTemplateCard
 import com.tencent.devops.notify.service.WeworkService
 import org.apache.commons.lang3.StringEscapeUtils
 import org.slf4j.LoggerFactory
@@ -111,5 +113,38 @@ class OldWeworkServiceImpl @Autowired constructor(
             }
         }
         return true
+    }
+
+    /**
+     * 内场 chat/send 发送 template_card；任一接收人失败则返回 false，由上层降级为文本。
+     */
+    override fun sendTemplateCardMessage(
+        receivers: Collection<String>,
+        templateCard: WeworkTemplateCard
+    ): Boolean {
+        var allOk = true
+        receivers.forEach { receiver ->
+            val payload = mapOf(
+                "receiver" to mapOf(
+                    "type" to "single",
+                    "id" to receiver
+                ),
+                "msgtype" to "template_card",
+                "template_card" to templateCard
+            )
+            val sendResult = try {
+                wechatWorkService.sendMessage(JsonUtil.toJson(payload, false))
+            } catch (ignored: Exception) {
+                logger.warn("Send wework template_card exception, receiver=$receiver", ignored)
+                false
+            }
+            if (sendResult) {
+                logger.info("Send wework template_card success, receiver=$receiver, taskId=${templateCard.taskId}")
+            } else {
+                logger.warn("Send wework template_card failed, receiver=$receiver, taskId=${templateCard.taskId}")
+                allOk = false
+            }
+        }
+        return allOk && receivers.isNotEmpty()
     }
 }

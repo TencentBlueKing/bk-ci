@@ -57,8 +57,10 @@ import com.tencent.devops.common.wechatwork.model.sendmessage.richtext.RichtextT
 import com.tencent.devops.common.wechatwork.model.sendmessage.richtext.RichtextTextText
 import com.tencent.devops.common.wechatwork.model.sendmessage.richtext.RichtextView
 import com.tencent.devops.common.wechatwork.model.sendmessage.richtext.RichtextViewLink
+import com.tencent.devops.notify.pojo.wework.WeworkReviewCardConst
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
+import com.tencent.devops.process.api.service.ServiceTXWeworkReviewCallBackResource
 import com.tencent.devops.process.api.user.UserBuildResource
 import com.tencent.devops.process.api.user.UserPipelineResource
 import com.tencent.devops.process.pojo.BuildId
@@ -153,19 +155,35 @@ class WechatWorkCallbackService @Autowired constructor(
 
         userName = wechatWorkService.getUserNameByUserId(userId)
 
-        // 处理msgid,个人会话，群会发并@，click事件
-        if ((receiverType == ReceiverType.group && mentionType != "0") || receiverType == ReceiverType.single ||
-            (callbackElement.msgType == MsgType.Event && EventType.valueOf(
-                (callbackElement.msgElement.elementIterator("Event").next() as Element).text
-            ) == EventType.click)
+        // 处理msgid,个人会话，群会发并@，click/模板卡片事件
+        val isReviewRelatedEvent = callbackElement.msgType == MsgType.Event && run {
+            try {
+                val et = EventType.valueOf(
+                    (callbackElement.msgElement.elementIterator("Event").next() as Element).text
+                )
+                et == EventType.click || et == EventType.template_card_event
+            } catch (ignored: Exception) {
+                false
+            }
+        }
+        if ((receiverType == ReceiverType.group && mentionType != "0") ||
+            receiverType == ReceiverType.single ||
+            isReviewRelatedEvent
         ) {
-            val msgId = (callbackElement.msgElement.elementIterator("MsgId").next() as Element).text
-            if (wechatWorkMessageDAO.exist(dslContext, msgId)) {
-                // 已存在则直接返回
-                return true
-            } else {
-                // 还没有存在则插入并往下走
-                wechatWorkMessageDAO.insertMassageId(dslContext, msgId)
+            try {
+                val msgIdIterator = callbackElement.msgElement.elementIterator("MsgId")
+                if (msgIdIterator.hasNext()) {
+                    val msgId = (msgIdIterator.next() as Element).text
+                    if (wechatWorkMessageDAO.exist(dslContext, msgId)) {
+                        // 已存在则直接返回
+                        return true
+                    } else {
+                        // 还没有存在则插入并往下走
+                        wechatWorkMessageDAO.insertMassageId(dslContext, msgId)
+                    }
+                }
+            } catch (ignored: Exception) {
+                logger.info("skip msgId dedup for callback without MsgId: ${ignored.message}")
             }
         }
 
@@ -178,17 +196,33 @@ class WechatWorkCallbackService @Autowired constructor(
 
             MsgType.Event -> {
                 // 事件类型
-                var eventType =
-                    EventType.valueOf((callbackElement.msgElement.elementIterator("Event").next() as Element).text)
-                var eventKey = ""
-                if (eventType == EventType.click) {
-                    eventKey = (callbackElement.msgElement.elementIterator("EventKey").next() as Element).text
+                val eventText = (callbackElement.msgElement.elementIterator("Event").next() as Element).text
+                val eventType = try {
+                    EventType.valueOf(eventText)
+                } catch (ignored: Exception) {
+                    logger.info("unknown wechat work event type: $eventText")
+                    null
                 }
-//                eventKey = "project:freytest:pipeline:list"
-                when (eventType) {
-                    EventType.click -> processClickEvent(eventKey, receiverType, chatId, userName)
-//                    EventType.enter_chat -> autoReplyMessage(receiverType, chatId, userName)
-                    else -> {}
+                var eventKey = ""
+                if (eventType == EventType.click || eventType == EventType.template_card_event) {
+                    try {
+                        eventKey = (callbackElement.msgElement.elementIterator("EventKey").next() as Element).text
+                    } catch (ignored: Exception) {
+                        logger.warn("wechat work event missing EventKey, event=$eventText")
+                    }
+                }
+                // 审核模板卡片同意/拒绝（优先于旧 click 菜单逻辑）
+                if (eventKey.isNotBlank() &&
+                    WeworkReviewCardConst.parseButtonKey(eventKey) != null
+                ) {
+                    processWeworkReviewCardEvent(
+                        eventKey = eventKey,
+                        receiverType = receiverType,
+                        chatId = chatId,
+                        userName = userName
+                    )
+                } else if (eventType == EventType.click) {
+                    processClickEvent(eventKey, receiverType, chatId, userName)
                 }
                 logger.info("accept a event callback:$eventType")
             }
@@ -425,6 +459,11 @@ class WechatWorkCallbackService @Autowired constructor(
     * 分发不同的事件。
     * */
     fun processClickEvent(eventKey: String, receiverType: ReceiverType, chatId: String, userName: String) {
+        // 审核卡片按钮 EventKey 形如 BKCI_REVIEW|agree|taskId，不走旧菜单权限前缀
+        if (WeworkReviewCardConst.parseButtonKey(eventKey) != null) {
+            processWeworkReviewCardEvent(eventKey, receiverType, chatId, userName)
+            return
+        }
         // 点击事件是否有权限,没有则直接返回
         val eventKeySplit = eventKey.split(":")
         val clickUsername = eventKeySplit[0]
@@ -455,6 +494,42 @@ class WechatWorkCallbackService @Autowired constructor(
                 else -> {}
             }
         }
+    }
+
+    /**
+     * 处理企业微信审核模板卡片同意/拒绝按钮。
+     */
+    fun processWeworkReviewCardEvent(
+        eventKey: String,
+        receiverType: ReceiverType,
+        chatId: String,
+        userName: String
+    ) {
+        val parsed = WeworkReviewCardConst.parseButtonKey(eventKey) ?: return
+        val (action, taskId) = parsed
+        val dedupId = "wework_review_card:$eventKey"
+        if (wechatWorkMessageDAO.exist(dslContext, dedupId)) {
+            logger.info("wework review card event already handled|$dedupId")
+            return
+        }
+        wechatWorkMessageDAO.insertMassageId(dslContext, dedupId)
+
+        val reply = try {
+            client.get(ServiceTXWeworkReviewCallBackResource::class)
+                .manualReviewCallBack(userId = userName, action = action, taskId = taskId)
+                .data ?: "审核处理完成"
+        } catch (ignored: Exception) {
+            logger.warn("wework review card callback failed|user=$userName|key=$eventKey", ignored)
+            "审核处理失败：${ignored.message ?: "unknown"}"
+        }
+
+        val receiver = Receiver(receiverType, chatId)
+        val richtextContentList = mutableListOf<RichtextContent>()
+        if (receiverType == ReceiverType.group) {
+            sendMetionMessage(receiverType, chatId, userName)
+        }
+        richtextContentList.add(RichtextText(RichtextTextText(reply)))
+        wechatWorkService.sendRichText(RichtextMessage(receiver, richtextContentList))
     }
 
     /*

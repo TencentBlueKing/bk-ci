@@ -44,6 +44,7 @@ dependencies {
     api(project(":ext:tencent:artifactory:api-experience-tencent"))
     api(project(":ext:tencent:artifactory:api-artifactory-tencent"))
     api(project(":ext:tencent:misc:api-support-tencent"))
+    api(project(":core:notify:api-notify"))
     api(project(":ext:tencent:misc:api-plugin-tencent"))
     api(project(":ext:tencent:misc:api-image-tencent"))
     api(project(":ext:tencent:project:api-project-tencent"))
