@@ -39,14 +39,21 @@ data class WeworkRobotContentMessage(
     val content: String,
 
     /**
-     * 提醒群中的指定成员(@某个成员)，@all表示提醒所有人，如果开发者获取不到userid，可以使用mentioned_mobile_list，目前 mentioned_list 暂不支持小黑板
+     * 提醒群中的指定成员(@某个成员)。
+     * 当前人工审核群通知会传入审核人 userid 列表。
+     * 后续可扩展（暂未启用）：列表中增加 "@all" 可提醒所有人；
+     * 若拿不到 userid，可用 mentioned_mobile_list。
+     * 另：也可在 content 中使用 <@userid> 语法 @成员（markdown_v2 不支持，暂未启用）。
+     * 目前 mentioned_list 暂不支持小黑板。
      */
     @JsonProperty("mentioned_list")
     @get:Schema(title = "userid的列表", description = "mentioned_list")
     val mentionedList: Set<String>?,
 
     /**
-     * 手机号列表，提醒手机号对应的群成员(@某个成员)，@all表示提醒所有人，目前 mentioned_mobile_list 暂不支持小黑板
+     * 手机号列表，提醒手机号对应的群成员(@某个成员)。
+     * 后续可扩展（暂未启用）：列表中增加 "@all" 可提醒所有人。
+     * 目前 mentioned_mobile_list 暂不支持小黑板。
      */
     @JsonProperty("mentioned_mobile_list")
     @get:Schema(title = "手机号列表，提醒手机号对应的群成员(@某个成员)，@all表示提醒所有人", description = "mentioned_mobile_list")
