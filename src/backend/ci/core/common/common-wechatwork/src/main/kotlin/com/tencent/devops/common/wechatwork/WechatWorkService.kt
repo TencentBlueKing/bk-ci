@@ -443,8 +443,14 @@ class WechatWorkService @Autowired constructor(
         } else {
             val receiver = Receiver(ReceiverType.group, chatId)
             val richTextContentList = mutableListOf<RichtextContent>()
+            // mentioned 节点接在正文后；正文不以换行结尾时 @ 会粘在同一行，补换行以单独成行
+            val textContent = if (mentionUsers.isNotEmpty() && !content.endsWith("\n")) {
+                "$content\n"
+            } else {
+                content
+            }
             richTextContentList.add(
-                RichtextText(RichtextTextText(content))
+                RichtextText(RichtextTextText(textContent))
             )
             if (mentionUsers.isNotEmpty()) {
                 richTextContentList.add(
