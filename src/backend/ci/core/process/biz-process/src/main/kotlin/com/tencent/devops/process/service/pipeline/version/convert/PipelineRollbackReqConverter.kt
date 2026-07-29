@@ -59,6 +59,23 @@ class PipelineRollbackReqConverter @Autowired constructor(
             errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS,
             params = arrayOf(pipelineId)
         )
+        // 以版本主表为准校验目标版本是否存在/已删除,草稿历史表无删除状态
+        val versionResource = pipelineRepositoryService.getPipelineResourceVersion(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            version = version,
+            includeDraft = true
+        ) ?: throw ErrorCodeException(
+            statusCode = Response.Status.NOT_FOUND.statusCode,
+            errorCode = ProcessMessageCode.ERROR_NO_PIPELINE_VERSION_EXISTS_BY_ID,
+            params = arrayOf(version.toString())
+        )
+        if (versionResource.status == VersionStatus.DELETE) {
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_PIPELINE_VERSION_HAS_DELETED,
+                params = arrayOf(version.toString())
+            )
+        }
         // 获取目标的版本用于更新草稿
         val targetResource = if (draftVersion != null) {
             pipelineRepositoryService.getPipelineResourceByDraftVersion(
@@ -66,18 +83,14 @@ class PipelineRollbackReqConverter @Autowired constructor(
                 pipelineId = pipelineId,
                 version = version,
                 draftVersion = draftVersion
+            ) ?: throw ErrorCodeException(
+                statusCode = Response.Status.NOT_FOUND.statusCode,
+                errorCode = ProcessMessageCode.ERROR_NO_PIPELINE_VERSION_EXISTS_BY_ID,
+                params = arrayOf(version.toString())
             )
         } else {
-            pipelineRepositoryService.getPipelineResourceVersion(
-                projectId = projectId,
-                pipelineId = pipelineId,
-                version = version
-            )
-        } ?: throw ErrorCodeException(
-            statusCode = Response.Status.NOT_FOUND.statusCode,
-            errorCode = ProcessMessageCode.ERROR_NO_PIPELINE_VERSION_EXISTS_BY_ID,
-            params = arrayOf(version.toString())
-        )
+            versionResource
+        }
         val targetSetting = if (draftVersion != null) {
             pipelineSettingFacadeService.getPipelineSettingByDraftVersion(
                 projectId = projectId,
