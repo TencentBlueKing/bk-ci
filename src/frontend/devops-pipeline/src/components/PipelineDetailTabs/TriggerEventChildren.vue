@@ -57,6 +57,7 @@
     } from '@/utils/permission'
     import { statusColorMap } from '@/utils/pipelineStatus'
     import { mapActions, mapState } from 'vuex'
+    import { convertTime } from '@/utils/util'
     import TimeDisplay from '../../../../common-lib/time-display'
     export default {
         components: {
