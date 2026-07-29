@@ -49,8 +49,10 @@ class WechatWorkRobotService @Autowired constructor(
         mentionUsers: List<String> = emptyList()
     ) {
         logger.info("send group msg by robot: $chatId, $content")
+        // mentioned_list 渲染在正文末尾；正文不以换行结尾时 @ 会粘在同一行，补换行以单独成行
+        val finalContent = appendNewlineBeforeMention(content, mentionUsers)
         val msgInfo = MsgInfo(
-            content = content,
+            content = finalContent,
             mentionedList = mentionUsers.ifEmpty { null }
         )
         val msg: Any = if (markerDownFlag) {
@@ -65,6 +67,13 @@ class WechatWorkRobotService @Autowired constructor(
             )
         }
         send(JsonUtil.toJson(msg, false))
+    }
+
+    private fun appendNewlineBeforeMention(content: String, mentionUsers: List<String>): String {
+        if (mentionUsers.isEmpty() || content.endsWith("\n")) {
+            return content
+        }
+        return "$content\n"
     }
 
     companion object {
