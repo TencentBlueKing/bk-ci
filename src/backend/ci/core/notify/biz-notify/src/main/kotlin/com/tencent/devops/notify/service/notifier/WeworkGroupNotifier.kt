@@ -77,6 +77,10 @@ class WeworkGroupNotifier @Autowired constructor(
         val finalBody = NotifierUtils.replaceContentParams(request.bodyParams, rawBody)
 
         val content = finalTitle + "\n\n" + finalBody
+        // mentionReceivers=true 时，将 receivers（如人工审核插件的审核人）写入企微 webhook 的 mentioned_list @成员。
+        // 后续可扩展（暂未实现）：
+        // 1) @all：往 mentioned_list / mentioned_mobile_list 追加 "@all"
+        // 2) content 内 @：企微文档支持在 text/markdown 的 content 中使用 <@userid>（markdown_v2 不支持）
         val mentionUsers = if (request.mentionReceivers == true) {
             request.receivers.toList()
         } else {
