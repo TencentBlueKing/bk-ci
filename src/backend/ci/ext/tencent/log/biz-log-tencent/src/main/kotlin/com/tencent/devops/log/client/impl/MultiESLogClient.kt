@@ -54,6 +54,8 @@ import com.tencent.devops.notify.api.service.ServiceNotifyResource
 import com.tencent.devops.notify.pojo.EmailNotifyMessage
 import java.text.SimpleDateFormat
 import java.util.Date
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import java.util.regex.Pattern
@@ -66,7 +68,32 @@ class MultiESLogClient constructor(
     private val redisOperation: RedisOperation,
     private val dslContext: DSLContext,
     private val tencentIndexDao: TencentIndexDao,
-    private val indexDao: IndexDao
+    private val indexDao: IndexDao,
+    /**
+     * 直写失败快速熔断总开关（按集群维度）。
+     * 默认开启；与 ESDetectionJob 的分钟级探测互补，做到秒级隔离故障集群。
+     * 配置项：`log.multiEs.fastFail.enabled`
+     */
+    private val fastFailEnabled: Boolean = true,
+    /**
+     * 单集群写入健康滑动统计窗口（毫秒）。配置项：`log.multiEs.fastFail.windowMs`
+     */
+    private val fastFailWindowMs: Long = 10_000,
+    /**
+     * 触发熔断评估的窗口内最小样本数；样本不足不熔断，避免抖动误判。
+     * 配置项：`log.multiEs.fastFail.minSamples`
+     */
+    private val fastFailMinSamples: Int = 30,
+    /**
+     * 窗口内坏样本占比阈值，达到则将该集群标记为不可用。
+     * 配置项：`log.multiEs.fastFail.rate`
+     */
+    private val fastFailRate: Double = 0.6,
+    /**
+     * 慢写阈值（毫秒）：超过该耗时的成功写入同样计为坏样本。
+     * 配置项：`log.multiEs.fastFail.slowMs`
+     */
+    private val fastFailSlowMs: Long = 3_000
 ) : LogClient {
 
     init {
@@ -97,6 +124,11 @@ class MultiESLogClient constructor(
     @Volatile
     private var notifyUserLastUpdate = 0L
 
+    private data class HealthSample(val timestamp: Long, val bad: Boolean)
+
+    // 每个集群独立的写入健康滑动窗口，用于直写失败快速熔断（按集群维度隔离）
+    private val clusterHealthSamples = ConcurrentHashMap<String/*ES NAME*/, ConcurrentLinkedQueue<HealthSample>>()
+
     @Synchronized
     fun markESInactive(esName: String) {
         logger.warn("[$esName] Mark as inactive es cluster")
@@ -112,6 +144,8 @@ class MultiESLogClient constructor(
         logger.info("[$esName] Mark as active es cluster")
         inactiveESCache.put(esName, false)
         removeInactiveES(esName)
+        // 恢复后清空历史健康样本，避免旧的坏样本导致刚恢复即被再次熔断
+        clusterHealthSamples.remove(esName)
         notifyExecutor.submit {
             sendNotify(esName, false)
         }
@@ -192,13 +226,90 @@ class MultiESLogClient constructor(
                 return it
             }
         }
-        logger.warn("[$buildId|$esName] Fail to get the es name for the build, return the first one")
+        // 绑定集群已被熔断/探测标记为不可用：故障转移到健康可写集群，避免单集群故障拖垮该构建的写入
+        val failover = activeClients.filter { it.writable == true }
+        if (failover.isNotEmpty()) {
+            val target = failover[hashBuildId(buildId, failover.size)]
+            logger.warn(
+                "[$buildId|$esName] Bound cluster inactive, failover to healthy writable cluster: ${target.clusterName}"
+            )
+            return target
+        }
+        logger.warn("[$buildId|$esName] No healthy writable cluster for the build, return the main one")
         return mainCluster()
     }
 
     private fun getWritableClient(activeClients: List<ESClient>, buildId: String): ESClient {
         val writableClients = activeClients.filter { it.writable == true }
         return writableClients[hashBuildId(buildId, writableClients.size)]
+    }
+
+    /**
+     * 直写链路回传单次 ES 写入结果，按集群维度做滑窗统计。
+     * 当某集群窗口内坏样本占比超过阈值时立即将其标记为不可用（秒级隔离），
+     * 后续写入经 [hashClient] 自动转移到健康集群；集群恢复由 ESDetectionJob 的 inactive 复探负责 markESActive。
+     *
+     * 保护措施：
+     * - 已处于 inactive 的集群不再累计，交由探测任务恢复；
+     * - 仅当存在其它健康可写集群时才快速熔断，避免误杀最后一个可用集群导致整体不可写。
+     */
+    override fun reportWriteResult(clusterName: String, success: Boolean, latencyMs: Long) {
+        if (!fastFailEnabled || clusterName.isBlank()) {
+            return
+        }
+        // 已判定不可用的集群无需继续统计，避免与探测恢复流程相互干扰
+        if (inactiveESCache.get(clusterName) == true) {
+            return
+        }
+        val bad = !success || latencyMs >= fastFailSlowMs
+        val now = System.currentTimeMillis()
+        val samples = clusterHealthSamples.computeIfAbsent(clusterName) { ConcurrentLinkedQueue() }
+        samples.add(HealthSample(now, bad))
+        trimHealthSamples(samples, now)
+        // 仅在出现坏样本时评估，健康写入无需触发计算
+        if (!bad) {
+            return
+        }
+        val snapshot = samples.toList()
+        if (snapshot.size < fastFailMinSamples) {
+            return
+        }
+        val badRate = snapshot.count { it.bad }.toDouble() / snapshot.size
+        if (badRate < fastFailRate) {
+            return
+        }
+        if (!hasHealthyWritableFailover(clusterName)) {
+            logger.warn(
+                "[$clusterName] Fast-fail circuit reached(badRate=$badRate, samples=${snapshot.size}), " +
+                    "but no other healthy writable cluster, keep it active and fallback to storage degrade"
+            )
+            return
+        }
+        logger.warn(
+            "[$clusterName] Fast-fail circuit tripped(badRate=$badRate, samples=${snapshot.size}), mark inactive"
+        )
+        markESInactive(clusterName)
+        samples.clear()
+    }
+
+    private fun trimHealthSamples(samples: ConcurrentLinkedQueue<HealthSample>, now: Long) {
+        val expireBefore = now - fastFailWindowMs
+        while (true) {
+            val head = samples.peek() ?: return
+            if (head.timestamp >= expireBefore) {
+                return
+            }
+            samples.poll()
+        }
+    }
+
+    // 是否存在除 excludingClusterName 外的健康可写集群，用于判断能否安全熔断
+    private fun hasHealthyWritableFailover(excludingClusterName: String): Boolean {
+        return clients.any {
+            it.clusterName != excludingClusterName &&
+                it.writable == true &&
+                inactiveESCache.get(it.clusterName) != true
+        }
     }
 
     private fun hashBuildId(buildId: String, size: Int): Int {
