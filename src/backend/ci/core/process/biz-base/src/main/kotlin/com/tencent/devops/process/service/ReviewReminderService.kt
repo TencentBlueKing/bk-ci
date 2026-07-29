@@ -28,6 +28,7 @@
 package com.tencent.devops.process.service
 
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildReviewReminderEvent
 import com.tencent.devops.common.notify.utils.NotifyUtils
@@ -41,6 +42,7 @@ import com.tencent.devops.process.engine.service.PipelineTaskService
 import com.tencent.devops.process.pojo.PipelineNotifyTemplateEnum
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 /**
@@ -59,6 +61,9 @@ class ReviewReminderService @Autowired constructor(
     companion object {
         private val LOG = LoggerFactory.getLogger(ReviewReminderService::class.java)
     }
+
+    @Value("\${esb.appSecret:#{null}}")
+    private val appSecret: String? = null
 
     /**
      * 入口
@@ -121,6 +126,9 @@ class ReviewReminderService @Autowired constructor(
                 bodyParams = mutableMapOf(
                     "title" to notifyTitle,
                     "body" to notifyBody,
+                    "reviewDesc" to notifyBody,
+                    "reviewers" to reviewUsers.joinToString(","),
+                    "hasRequiredParams" to (param.params.any { it.required }).toString(),
                     "reviewUrl" to pipelineUrlBean.genBuildDetailUrl(
                         projectCode = projectId,
                         pipelineId = pipelineId,
@@ -139,7 +147,18 @@ class ReviewReminderService @Autowired constructor(
                 ),
                 position = null,
                 stageId = null,
-                markdownContent = param.markdownContent
+                taskId = taskId,
+                markdownContent = param.markdownContent,
+                callbackData = mapOf(
+                    "reviewType" to "ATOM",
+                    "projectId" to projectId,
+                    "pipelineId" to pipelineId,
+                    "buildId" to buildId,
+                    "elementId" to taskId,
+                    "reviewUsers" to reviewUsers.joinToString(","),
+                    "hasRequiredParams" to (param.params.any { it.required }).toString(),
+                    "signature" to ShaUtils.sha256(projectId + buildId + taskId + (appSecret ?: ""))
+                )
             ),
             this.copy(reminderCount = reminderCount + 1)
         )

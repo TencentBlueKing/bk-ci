@@ -29,6 +29,7 @@ package com.tencent.devops.notify.model
 import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.notify.constant.NotifyMQ.NOTIFY_WEWORK
 import com.tencent.devops.notify.pojo.WechatNotifyMessage
+import com.tencent.devops.notify.pojo.wework.WeworkTemplateCard
 
 @Suppress("ALL")
 @Event(NOTIFY_WEWORK)
@@ -36,9 +37,13 @@ class WeworkNotifyMessageWithOperation : WechatNotifyMessage() {
     var id: String? = null
     var retryCount: Int = 0
     var lastError: String? = null
+    /** 审核模板卡片；非空时优先按 template_card 发送，失败可降级为 body 文本 */
+    var templateCard: WeworkTemplateCard? = null
 
     override fun toString(): String {
-        return String.format("id(%s), retryCount(%s), message(%s) ",
-            id, retryCount, super.toString())
+        return String.format(
+            "id(%s), retryCount(%s), hasCard(%s), message(%s) ",
+            id, retryCount, templateCard != null, super.toString()
+        )
     }
 }

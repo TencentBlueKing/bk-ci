@@ -29,6 +29,7 @@ package com.tencent.devops.notify.service
 import com.tencent.devops.notify.model.WeworkNotifyMessageWithOperation
 import com.tencent.devops.notify.pojo.WeworkNotifyMediaMessage
 import com.tencent.devops.notify.pojo.WeworkNotifyTextMessage
+import com.tencent.devops.notify.pojo.wework.WeworkTemplateCard
 
 interface WeworkService {
 
@@ -37,4 +38,12 @@ interface WeworkService {
     fun sendMediaMessage(weworkNotifyMediaMessage: WeworkNotifyMediaMessage)
 
     fun sendTextMessage(weworkNotifyTextMessage: WeworkNotifyTextMessage): Boolean
+
+    /**
+     * 发送企业微信模板卡片。默认实现降级为 false，由调用方改走文本。
+     */
+    fun sendTemplateCardMessage(
+        receivers: Collection<String>,
+        templateCard: WeworkTemplateCard
+    ): Boolean = false
 }

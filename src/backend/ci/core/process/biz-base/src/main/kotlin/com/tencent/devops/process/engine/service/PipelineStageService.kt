@@ -76,7 +76,9 @@ import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import com.tencent.devops.common.api.util.ShaUtils
 
 /**
  * 流水线Stage相关的服务
@@ -98,6 +100,9 @@ class PipelineStageService @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineStageService::class.java)
     }
+
+    @Value("\${esb.appSecret:#{null}}")
+    private val appSecret: String? = null
 
     fun getStage(projectId: String, buildId: String, stageId: String?): PipelineBuildStage? {
         return pipelineBuildStageDao.get(dslContext, projectId, buildId, stageId)
@@ -694,6 +699,10 @@ class PipelineStageService @Autowired constructor(
             )
             return
         }
+        val hasRequiredParams = checkIn.reviewParams?.any { it.required } == true
+        val signature = ShaUtils.sha256(
+            stage.projectId + stage.buildId + stage.stageId + (group.id ?: "") + (appSecret ?: "")
+        )
         pipelineEventDispatcher.dispatch(
             PipelineBuildReviewBroadCastEvent(
                 source = "s(${stage.stageId}) waiting for REVIEW",
@@ -720,6 +729,7 @@ class PipelineStageService @Autowired constructor(
                     "dataTime" to DateTimeUtil.formatDate(Date(), "yyyy-MM-dd HH:mm:ss"),
                     "reviewDesc" to (checkIn.reviewDesc ?: ""),
                     "reviewers" to group.reviewers.joinToString(),
+                    "hasRequiredParams" to hasRequiredParams.toString(),
                     // 企业微信组
                     NotifyUtils.WEWORK_GROUP_KEY to (checkIn.notifyGroup?.joinToString(separator = ",") ?: "")
                 ),
@@ -728,7 +738,18 @@ class PipelineStageService @Autowired constructor(
                 stageId = stage.stageId,
                 notifyType = NotifyUtils.checkNotifyType(checkIn.notifyType),
                 markdownContent = checkIn.markdownContent,
-                mentionReceivers = true
+                mentionReceivers = true,
+                callbackData = mapOf(
+                    "reviewType" to "STAGE",
+                    "projectId" to stage.projectId,
+                    "pipelineId" to stage.pipelineId,
+                    "buildId" to stage.buildId,
+                    "stageId" to stage.stageId,
+                    "groupId" to (group.id ?: ""),
+                    "reviewUsers" to group.reviewers.joinToString(","),
+                    "hasRequiredParams" to hasRequiredParams.toString(),
+                    "signature" to signature
+                )
             )
         )
         // #7971 无指定通知类型时、或者触发人是审核人时，不去通知触发人。
