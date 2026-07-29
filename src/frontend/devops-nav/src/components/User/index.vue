@@ -61,9 +61,7 @@
         }
 
         get userSettingUrl (): string {
-            const domain = (window.LOCALE_DOMAIN || '').trim() || ''
-            console.log(domain, 'domain--------------')
-            return domain ? `https://bkuser.${domain}` : ''
+            return window.LOCALE_DOMAIN ? `https://bkuser.${window.LOCALE_DOMAIN}` : ''
         }
 
         get actionList () {
