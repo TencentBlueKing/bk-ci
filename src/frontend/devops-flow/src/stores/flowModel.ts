@@ -41,6 +41,9 @@ export const useFlowModelStore = defineStore('flowModel', () => {
   // 当前版本号
   const currentVersion = ref<string>('')
 
+  // 加载请求序号：用于丢弃过期的 getFlowModel 响应，避免旧请求后返回覆盖新数据
+  let loadSeq = 0
+
   // 是否有未保存的更改
   const hasUnsavedChanges = ref(false)
 
@@ -133,8 +136,6 @@ export const useFlowModelStore = defineStore('flowModel', () => {
   ) {
     if (isImportMode.value) return
 
-    if (loading.value) return
-
     const versionStr = version || ''
 
     // Skip if data already exists for this flowId + version and not forcing reload
@@ -144,6 +145,13 @@ export const useFlowModelStore = defineStore('flowModel', () => {
       return
     }
 
+    // 非强制加载时，若已有请求在进行则直接跳过，避免并发互相覆盖
+    // 强制加载（如保存草稿后）必须发起新请求，并通过 loadSeq 丢弃旧响应
+    if (loading.value && !forceReload) {
+      return
+    }
+
+    const seq = ++loadSeq
     loading.value = true
     hasError.value = false
     currentFlowId.value = flowId
@@ -152,7 +160,13 @@ export const useFlowModelStore = defineStore('flowModel', () => {
       const [modelRes, atomProp] = await Promise.all([
         getFlowModel(projectId, flowId, version),
         getPluginProperties({ projectId, pipelineId: flowId, version: version ? Number(version) : undefined }).catch(() => null),
-      ])      
+      ])
+
+      // 旧请求返回时直接丢弃，防止保存后仍被旧编排覆盖
+      if (seq !== loadSeq) {
+        return
+      }
+
       const model = modelRes.modelAndSetting?.model
       if (model && atomProp) {
         mergeAtomProps(model, atomProp)
@@ -170,11 +184,16 @@ export const useFlowModelStore = defineStore('flowModel', () => {
       modelDirty.value = false
       yamlDirty.value = false
     } catch (error) {
+      if (seq !== loadSeq) {
+        return
+      }
       console.error('Failed to load flow model:', error)
       hasError.value = true
       throw error
     } finally {
-      loading.value = false
+      if (seq === loadSeq) {
+        loading.value = false
+      }
     }
   }
 
@@ -275,6 +294,12 @@ export const useFlowModelStore = defineStore('flowModel', () => {
       hasUnsavedChanges.value = false
       modelDirty.value = false
       yamlDirty.value = false
+      if (response?.version != null) {
+        currentVersion.value = String(response.version)
+      }
+      if (response?.pipelineId) {
+        currentFlowId.value = response.pipelineId
+      }
       return response
     } catch (error) {
       console.error('Failed to save flow model:', error)
@@ -356,6 +381,7 @@ export const useFlowModelStore = defineStore('flowModel', () => {
    * 重置状态
    */
   function reset() {
+    loadSeq += 1
     flowModel.value = null
     yamlContent.value = ''
     yamlHighlightBlockMap.value = {}
