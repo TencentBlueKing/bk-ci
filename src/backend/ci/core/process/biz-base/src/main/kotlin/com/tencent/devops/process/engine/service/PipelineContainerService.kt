@@ -293,19 +293,21 @@ class PipelineContainerService @Autowired constructor(
      *  - 子插件重试：重置目标插件及其后续插件（含开关机VM任务），保留其前置已完成插件
      *  - 子插件跳过：目标插件置为SKIP，其后续插件重排以便重新评估运行条件
      */
-    private fun prepareMatrixGroupRetry(context: StartBuildContext, matrixContainer: Container) {
+    private fun prepareMatrixGroupRetry(context: StartBuildContext, matrixContainer: Container): Boolean {
         val matrixGroupId = matrixContainer.id!!
         val groupContainers = listGroupContainers(
             projectId = context.projectId, buildId = context.buildId, matrixGroupId = matrixGroupId
         )
-        if (groupContainers.isEmpty()) return
+        // 子容器已被清空（如历史全量/Stage重试已删空）→ 交回上层做整组重新分裂
+        if (groupContainers.isEmpty()) return false
         val batchRetry = context.retryMatrixContainerId.isNullOrBlank()
         val targetContainers = if (batchRetry) {
             groupContainers.filter { it.status.isFailure() || it.status.isCancel() }
         } else {
             groupContainers.filter { it.containerId == context.retryMatrixContainerId }
         }
-        if (targetContainers.isEmpty()) return
+        // 没有可局部重试的目标子容器 → 交回上层按存量逻辑处理
+        if (targetContainers.isEmpty()) return false
 
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
@@ -360,6 +362,7 @@ class PipelineContainerService @Autowired constructor(
                 )
             }
         }
+        return true
     }
 
     /**
@@ -703,9 +706,15 @@ class PipelineContainerService @Autowired constructor(
 
         // 构建矩阵永远跟随stage重试，在需要重试的stage中，单独增加重试记录
         if (container.matrixGroupFlag == true && !context.needSkipWhenStageFailRetry(stage = stage)) {
-            if (context.isRetryMatrixGroup(container)) {
-                // 矩阵局部重试：只重置目标子容器及其任务，保留其它子Job结果，不重新分裂
+            // 矩阵局部重试（保留分裂结果，只重跑目标/失败子Job，不整组重新分裂）触发条件：
+            //  1) 显式矩阵局部重试（子Job整体/子插件/矩阵批量按钮）：isRetryMatrixGroup
+            //  2) Stage级“仅重试失败Job”(retryFailedContainer=true)：矩阵父容器同样按失败子Job做批量局部重试，
+            //     避免对已分裂的矩阵整组重新分裂计算。
+            // prepareMatrixGroupRetry 命中并成功重置目标子容器时返回true；若子容器已被清空或无可重试目标，
+            // 则返回false回退到原整组重新分裂逻辑（保持全量重试/存量行为不变）。
+            val partialRetried = (context.isRetryMatrixGroup(container) || context.retryFailedContainer) &&
                 prepareMatrixGroupRetry(context = context, matrixContainer = container)
+            if (partialRetried) {
                 // 让父矩阵容器重新进入排队（走下方 needUpdateContainer 分支重置状态），并保留 groupContainers
                 needUpdateContainer = true
             } else {

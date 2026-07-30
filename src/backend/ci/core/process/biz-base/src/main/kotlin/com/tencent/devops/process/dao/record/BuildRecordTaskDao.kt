@@ -35,6 +35,7 @@ import com.tencent.devops.common.pipeline.pojo.element.ElementPostInfo
 import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
 import com.tencent.devops.model.process.tables.TPipelineBuildRecordTask
 import com.tencent.devops.model.process.tables.records.TPipelineBuildRecordTaskRecord
+import com.tencent.devops.process.pojo.KEY_CONTAINER_ID
 import com.tencent.devops.process.pojo.KEY_EXECUTE_COUNT
 import com.tencent.devops.process.pojo.KEY_TASK_ID
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordTask
@@ -238,22 +239,25 @@ class BuildRecordTaskDao {
         matrixContainerIds: List<String>
     ): List<BuildRecordTask> {
         with(TPipelineBuildRecordTask.T_PIPELINE_BUILD_RECORD_TASK) {
-            // 取每个矩阵子插件在不超过当前执行次数下的最新记录（与矩阵子容器查询保持一致），
-            // 以便矩阵局部重试后，未被重跑的兄弟子Job插件仍能按其历史执行次数正常展示。
+            // 按“子容器”取其不超过当前执行次数下的最新一次执行的任务集合（与矩阵子容器记录聚合口径保持一致）。
+            // 不能按 TASK_ID 聚合：矩阵重新分裂会为同一子容器生成全新的 taskId，若按 taskId 取 max，
+            // 会把分裂前历史执行次数的旧任务一并返回，导致详情里出现重复插件/“待选择插件”占位。
+            // 按 CONTAINER_ID 取该子容器最新执行次数，再回表取该执行次数下的全部任务，即可只返回当前有效任务，
+            // 同时兼容局部重试后兄弟子Job按其历史执行次数正常展示。
             val conditions = BUILD_ID.eq(buildId)
                 .and(PROJECT_ID.eq(projectId))
                 .and(EXECUTE_COUNT.lessOrEqual(executeCount))
                 .and(CONTAINER_ID.`in`(matrixContainerIds))
             val max = DSL.select(
-                TASK_ID.`as`(KEY_TASK_ID),
+                CONTAINER_ID.`as`(KEY_CONTAINER_ID),
                 DSL.max(EXECUTE_COUNT).`as`(KEY_EXECUTE_COUNT)
-            ).from(this).where(conditions).groupBy(TASK_ID)
+            ).from(this).where(conditions).groupBy(CONTAINER_ID)
             val result = dslContext.select(
                 BUILD_ID, PROJECT_ID, PIPELINE_ID, RESOURCE_VERSION, STAGE_ID, CONTAINER_ID, TASK_ID,
                 TASK_SEQ, EXECUTE_COUNT, TASK_VAR, CLASS_TYPE, ATOM_CODE, STATUS, ORIGIN_CLASS_TYPE,
                 START_TIME, END_TIME, TIMESTAMPS, POST_INFO, ASYNC_STATUS
             ).from(this).join(max).on(
-                TASK_ID.eq(max.field(KEY_TASK_ID, String::class.java))
+                CONTAINER_ID.eq(max.field(KEY_CONTAINER_ID, String::class.java))
                     .and(EXECUTE_COUNT.eq(max.field(KEY_EXECUTE_COUNT, Int::class.java)))
             ).where(conditions).orderBy(TASK_SEQ.asc()).fetch()
             return result.map { record ->
