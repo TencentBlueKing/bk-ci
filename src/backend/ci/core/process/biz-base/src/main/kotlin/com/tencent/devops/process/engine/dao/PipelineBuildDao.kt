@@ -178,7 +178,8 @@ class PipelineBuildDao {
                         YAML_VERSION,
                         RESOURCE_MODEL,
                         EXECUTE_COUNT,
-                        NODE_HASH_ID
+                        NODE_HASH_ID,
+                        DRAFT_VERSION
                     ).values(
                         startBuildContext.buildId,
                         startBuildContext.buildNum,
@@ -204,7 +205,8 @@ class PipelineBuildDao {
                         startBuildContext.yamlVersion,
                         startBuildContext.debugModelStr,
                         startBuildContext.executeCount,
-                        nodeHashId
+                        nodeHashId,
+                        startBuildContext.draftVersion
                     ).execute()
                 }
             }
@@ -2080,7 +2082,8 @@ class PipelineBuildDao {
                     remark = t.remark,
                     debug = true, // #8164 原历史表中查出的记录均为非调试的记录
                     versionChange = t.versionChange,
-                    nodeHashId = t.nodeHashId
+                    nodeHashId = t.nodeHashId,
+                    draftVersion = t.draftVersion
                 )
             }
         }

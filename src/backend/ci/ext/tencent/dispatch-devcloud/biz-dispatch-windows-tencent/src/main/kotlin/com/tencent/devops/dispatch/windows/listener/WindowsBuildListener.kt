@@ -189,8 +189,12 @@ class WindowsBuildListener @Autowired constructor(
 
     override fun onShutdown(event: PipelineAgentShutdownEvent) {
         logger.info("[${event.pipelineId}|${event.pipelineId}|${event.buildId}] Build shutdown with event($event)")
-        // 锁到buildid级别
-        val lockKey = "$LOCK_SHUTDOWN:${event.buildId}"
+        // 如果是某个job关闭，则锁到job，如果是整条流水线shutdown，则锁到buildId级别
+        val lockKey = if (event.vmSeqId == null) {
+            "$LOCK_SHUTDOWN:${event.buildId}"
+        } else {
+            "$LOCK_SHUTDOWN:${event.buildId}:${event.vmSeqId}"
+        }
         val redisLock = RedisLock(
             redisOperation = redisOperation,
             lockKey = lockKey,

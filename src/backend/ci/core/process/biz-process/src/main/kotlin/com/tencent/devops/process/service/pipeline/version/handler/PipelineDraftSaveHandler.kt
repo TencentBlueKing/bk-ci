@@ -98,8 +98,40 @@ class PipelineDraftSaveHandler @Autowired constructor(
                     resourceOnlyVersion = resourceOnlyVersion
                 )
                 resourceOnlyVersion
+            } else if (overrideDraft) {
+                // 非草稿历史回滚:删除当前草稿(逻辑删),用新版本号重建草稿
+                val resourceOnlyVersion = pipelineVersionGenerator.generateDraftVersion(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    baseVersion = pipelineResourceWithoutVersion.baseVersion
+                )
+                pipelineVersionPersistenceService.createDraftVersion(
+                    context = this,
+                    resourceOnlyVersion = resourceOnlyVersion,
+                    oldDraftVersion = draftVersionResource.version
+                )
+                resourceOnlyVersion
             } else {
-                val resourceOnlyVersion = PipelineResourceOnlyVersion(draftVersionResource)
+                val draftVersion = pipelineVersionGenerator.incrementDraftVersion(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    version = draftVersionResource.version
+                )
+                // 保存草稿时,pipelineResourceWithoutVersion没有传入baseVersion,回滚的时候会传入
+                val baseVersion = pipelineResourceWithoutVersion.baseVersion ?: draftVersionResource.baseVersion
+                val baseResource = baseVersion?.let {
+                    pipelineRepositoryService.getPipelineVersionRecord(
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        version = it
+                    )
+                }
+                val resourceOnlyVersion = PipelineResourceOnlyVersion(
+                    pipelineResource = draftVersionResource,
+                    draftVersion = draftVersion,
+                    baseVersion = baseVersion,
+                    baseVersionName = baseResource?.versionName
+                )
                 pipelineVersionPersistenceService.updateDraftVersion(
                     context = this,
                     resourceOnlyVersion = resourceOnlyVersion

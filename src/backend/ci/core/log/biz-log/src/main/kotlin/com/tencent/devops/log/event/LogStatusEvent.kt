@@ -27,8 +27,8 @@
 
 package com.tencent.devops.log.event
 
-import com.tencent.devops.common.log.pojo.enums.LogStorageMode
 import com.tencent.devops.common.event.annotation.Event
+import com.tencent.devops.common.log.pojo.enums.LogStorageMode
 import com.tencent.devops.common.stream.constants.StreamBinder
 import com.tencent.devops.common.stream.constants.StreamBinding
 

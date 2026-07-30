@@ -99,7 +99,9 @@ config = {
             token = ""
         },
         special_domain = {},
-        auto_prefix = ""
+        auto_prefix = "",
+        creative_host_suffix = "__BK_CI_CREATIVE_HOST_SUFFIX__",
+        creative_namespace = "__BK_CI_CREATIVE_NAMESPACE__"
     },
     external_auth = {
         base_url = "",

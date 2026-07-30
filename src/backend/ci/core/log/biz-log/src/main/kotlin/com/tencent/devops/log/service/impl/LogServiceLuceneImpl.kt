@@ -82,7 +82,13 @@ class LogServiceLuceneImpl constructor(
     override fun addLogEvent(event: LogOriginEvent) {
         val logMessage = addLineNo(event.buildId, event.logs)
         if (logMessage.isNotEmpty()) {
-            buildLogPrintService.dispatchEvent(LogStorageEvent(event.buildId, logMessage))
+            buildLogPrintService.dispatchEvent(
+                event = LogStorageEvent(
+                    buildId = event.buildId,
+                    logs = logMessage
+                ),
+                recordTraffic = false
+            )
         }
     }
 
