@@ -189,6 +189,19 @@ object AtomUtils {
         return atomVersions
     }
 
+    /**
+     * 解析出编排中所有市场插件的版本信息，用于批量查询插件运行时信息。
+     */
+    fun getModelAtomVersions(model: Model): Set<StoreVersion> {
+        val atomVersions = mutableSetOf<StoreVersion>()
+        model.stages.forEach { stage ->
+            stage.containers.forEach { container ->
+                atomVersions.addAll(getAtomVersions(container))
+            }
+        }
+        return atomVersions
+    }
+
     fun isHisAtomElement(element: Element) =
         element !is MarketBuildAtomElement && element !is MarketBuildLessAtomElement
 
@@ -285,8 +298,11 @@ object AtomUtils {
      *
      * 与 [resolveRequiredServiceScope] 同为「渠道」的扩展点：插件的 OS 按 jobType 分别声明，
      * 未来新增需要做运行环境操作系统校验的渠道时，只需在此处补充对应分支。
+     *
+     * 保存校验与前端查询插件适用操作系统时共用该映射，保证两侧读取的是插件同一份声明。
+     * 返回 [JobTypeEnum.AGENT] 表示该渠道沿用插件的遗留 OS 字段语义。
      */
-    private fun resolveOsJobType(channelCode: ChannelCode): JobTypeEnum = when (channelCode) {
+    fun resolveOsJobType(channelCode: ChannelCode): JobTypeEnum = when (channelCode) {
         ChannelCode.CREATIVE_STREAM -> JobTypeEnum.CREATIVE_STREAM
         else -> JobTypeEnum.AGENT
     }
@@ -305,6 +321,7 @@ object AtomUtils {
         targetOs: OS
     ): OsIncompatibleAtom? {
         if (checkParam.containerEnvType != AtomContainerEnvType.BUILD_ENV) return null
+        if (isBuildLessAtomRunInBuildEnv(atomRunInfo)) return null
         val supportedOsList = atomRunInfo.osMap?.get(osJobTypeName)
         if (supportedOsList.isNullOrEmpty()) return null
         if (supportedOsList.any { it.equals(targetOs.name, ignoreCase = true) }) return null
@@ -315,7 +332,22 @@ object AtomUtils {
     }
 
     /**
-     * 构造运行环境操作系统变更后插件不适配的异常，文案中列出全部不适配插件及其适用系统。
+     * 判断插件是否为「借助 buildLessRunFlag 运行在有编译环境 Job 中的无编译环境插件」。
+     *
+     * 这类插件自身不具备编译环境 jobType，即使被放进有编译环境的 Job 也不在运行环境的节点上执行，
+     * 不受运行环境操作系统约束，需要排除在操作系统适配校验之外。
+     * 同时声明了编译环境 jobType 的插件按编译环境插件运行，仍需校验操作系统。
+     */
+    private fun isBuildLessAtomRunInBuildEnv(atomRunInfo: AtomRunInfo): Boolean {
+        if (atomRunInfo.buildLessRunFlag != true) return false
+        val allJobTypes = JobTypeEnum.resolveAllFromFields(atomRunInfo.jobType, atomRunInfo.jobTypeMap)
+        return allJobTypes.isNotEmpty() && allJobTypes.none { it.isBuildEnv() }
+    }
+
+    /**
+     * 构造插件与运行环境操作系统不适配的异常，文案中列出全部不适配插件及其适用系统。
+     *
+     * 变更前操作系统为空(如新建流水线时首次指定运行环境)时，文案不呈现「由 A 变更为 B」。
      */
     private fun osIncompatibleException(
         runEnvOsChange: PipelineRunEnvOsChange,
@@ -332,8 +364,17 @@ object AtomUtils {
                 )
             )
         }
-        val messageCode = ProcessMessageCode.ERROR_ATOM_RUN_ENV_OS_INCOMPATIBLE
-        val params = arrayOf(osDisplayName(runEnvOsChange.previousOs.name), currentOsName, atomDetail)
+        val previousOs = runEnvOsChange.previousOs
+        val messageCode = if (previousOs == null) {
+            ProcessMessageCode.ERROR_ATOM_RUN_ENV_OS_UNSUPPORTED
+        } else {
+            ProcessMessageCode.ERROR_ATOM_RUN_ENV_OS_INCOMPATIBLE
+        }
+        val params = if (previousOs == null) {
+            arrayOf(currentOsName, atomDetail)
+        } else {
+            arrayOf(osDisplayName(previousOs.name), currentOsName, atomDetail)
+        }
         return ErrorCodeException(
             errorCode = messageCode,
             params = params,

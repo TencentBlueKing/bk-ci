@@ -484,6 +484,8 @@ object ProcessMessageCode {
     // 构建执行相关错误码（2101400-2101499）
     // 运行环境操作系统已由{0}变更为{1}，编排中存在不适用于新系统的插件，暂不能保存，不适配插件明细：{2}
     const val ERROR_ATOM_RUN_ENV_OS_INCOMPATIBLE = "2101400"
+    // 运行环境操作系统为{0}，编排中存在不适用该系统的插件，暂不能保存，不适配插件明细：{1}
+    const val ERROR_ATOM_RUN_ENV_OS_UNSUPPORTED = "2101401"
 
     // 构建执行相关错误码（2101500-2101599）
     const val ERROR_PIPELINE_START_NODE_NO_PERMISSION = "2101500" // 用户[{0}]没有节点[{1}]的操作权限，无法启动流水线

@@ -31,17 +31,20 @@ import com.tencent.devops.common.api.pojo.OS
 import io.swagger.v3.oas.annotations.media.Schema
 
 /**
- * 流水线运行环境操作系统的变更记录。
+ * 流水线运行环境操作系统的校验目标。
  *
  * 部分渠道的运行环境由流水线设置指定而非编排自身指定(如创作流的创作环境)，
- * 这类渠道变更运行环境后，编排中的插件未必仍适用于新的操作系统，需要在保存时校验。
- * 该对象仅在「确实发生了操作系统变更」时才会被构造，其余场景为 null，
- * 使不具备该语义的渠道走原有逻辑、零额外开销。
+ * 这类渠道下编排中的插件未必适用于运行环境的操作系统，需要在保存时校验。
+ * 该对象仅由具备该语义的渠道构造，其余渠道为 null，走原有逻辑、零额外开销。
+ *
+ * [previousOs] 仅在本次保存确实变更了运行环境操作系统时才有值，用于报错文案呈现
+ * 「由 A 变更为 B」；为空时表示本次并未变更(如环境未变动或新建流水线首次指定环境)，
+ * 报错文案只呈现当前环境的操作系统。无论是否变更都会校验编排中的插件是否适用于 [currentOs]。
  */
-@Schema(title = "流水线运行环境操作系统变更记录")
+@Schema(title = "流水线运行环境操作系统校验目标")
 data class PipelineRunEnvOsChange(
-    @get:Schema(title = "变更前运行环境的操作系统", required = true)
-    val previousOs: OS,
-    @get:Schema(title = "变更后运行环境的操作系统", required = true)
+    @get:Schema(title = "变更前运行环境的操作系统", required = false)
+    val previousOs: OS?,
+    @get:Schema(title = "本次要校验的运行环境操作系统", required = true)
     val currentOs: OS
 )

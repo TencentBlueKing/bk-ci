@@ -265,7 +265,8 @@ class PipelineRepositoryService constructor(
         branchName: String? = null,
         description: String? = null,
         yamlFileInfo: PipelineYamlFileInfo? = null,
-        pipelineDisable: Boolean? = null
+        pipelineDisable: Boolean? = null,
+        runEnvOsChange: PipelineRunEnvOsChange? = null
     ): DeployPipelineResult {
 
         // 生成流水线ID,新流水线以p-开头，以区分以前旧数据
@@ -289,7 +290,8 @@ class PipelineRepositoryService constructor(
             versionStatus = versionStatus,
             channelCode = channelCode,
             yamlFileInfo = yamlFileInfo,
-            pipelineDialect = pipelineDialect
+            pipelineDialect = pipelineDialect,
+            runEnvOsChange = runEnvOsChange
         )
         val triggerContainer = model.getTriggerContainer()
         val buildNo = triggerContainer.buildNo?.apply {

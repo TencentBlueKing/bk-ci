@@ -108,6 +108,7 @@ import com.tencent.devops.process.pojo.template.TemplateType
 import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.service.pipeline.PipelineSettingFacadeService
 import com.tencent.devops.process.service.pipeline.PipelineTransferYamlService
+import com.tencent.devops.process.service.pipeline.version.PipelineRunEnvOsChangeResolver
 import com.tencent.devops.process.service.template.v2.PipelineTemplateInfoService
 import com.tencent.devops.process.service.template.v2.PipelineTemplateRelatedService
 import com.tencent.devops.process.service.template.v2.PipelineTemplateResourceService
@@ -165,7 +166,8 @@ class PipelineInfoFacadeService @Autowired constructor(
     private val auditService: AuditService,
     private val pipelineTemplateRelatedService: PipelineTemplateRelatedService,
     private val pipelineTemplateResourceService: PipelineTemplateResourceService,
-    private val pipelineTemplateInfoService: PipelineTemplateInfoService
+    private val pipelineTemplateInfoService: PipelineTemplateInfoService,
+    private val pipelineRunEnvOsChangeResolver: PipelineRunEnvOsChangeResolver
 ) {
 
     @Value("\${process.deletedPipelineStoreDays:30}")
@@ -647,7 +649,17 @@ class PipelineInfoFacadeService @Autowired constructor(
                     yaml = yaml,
                     baseVersion = null,
                     yamlFileInfo = yamlFileInfo,
-                    pipelineDisable = pipelineDisable
+                    pipelineDisable = pipelineDisable,
+                    // 新建时首次指定运行环境，编排(如模板带入的插件)未必适用于该环境的操作系统，需要一并校验
+                    runEnvOsChange = setting?.let {
+                        pipelineRunEnvOsChangeResolver.resolve(
+                            userId = userId,
+                            projectId = projectId,
+                            pipelineId = fixPipelineId ?: "",
+                            channelCode = channelCode,
+                            setting = it
+                        )
+                    }
                 )
                 pipelineId = result.pipelineId
                 watcher.stop()

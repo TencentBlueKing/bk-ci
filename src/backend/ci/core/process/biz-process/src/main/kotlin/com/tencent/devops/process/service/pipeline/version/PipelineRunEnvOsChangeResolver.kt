@@ -72,6 +72,14 @@ class PipelineRunEnvOsChangeResolver @Autowired constructor(
         else -> null
     }
 
+    /**
+     * 解析本次保存需要校验的运行环境操作系统。
+     *
+     * 无论本次是否变更过环境都返回校验目标：只在变更时校验会漏掉「环境不变但新增了不适配插件」
+     * 以及「新建时所选环境与模板插件不适配」两类场景。
+     * [PipelineRunEnvOsChange.previousOs] 仅在本次确实变更了操作系统时才有值，
+     * 用于区分报错文案是「由 A 变更为 B」还是「当前环境为 A」。
+     */
     private fun resolveByEnvHashId(
         userId: String,
         projectId: String,
@@ -79,21 +87,42 @@ class PipelineRunEnvOsChangeResolver @Autowired constructor(
         currentEnvHashId: String?
     ): PipelineRunEnvOsChange? {
         val currentId = currentEnvHashId?.takeIf { it.isNotBlank() } ?: return null
-        // 基线取最新 setting 版本而非主表：草稿保存只写 T_PIPELINE_SETTING_VERSION 不写主表，
-        // 若取主表(最后发布版)，草稿里改过一次环境后，之后每次保存都会被误判为「本次变更了环境」，
-        // 既重复校验、又会给出「由 A -> B」这种用户本次并未做过的变更提示。
-        // 新建流水线无历史 setting，返回 null 即跳过校验。
+        val currentOs = resolveEnvOs(userId, projectId, currentId) ?: return null
+        return PipelineRunEnvOsChange(
+            previousOs = resolvePreviousOs(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                currentEnvHashId = currentId,
+                currentOs = currentOs
+            ),
+            currentOs = currentOs
+        )
+    }
+
+    /**
+     * 解析变更前运行环境的操作系统，仅在本次保存确实变更了操作系统时返回，其余场景返回 null。
+     *
+     * 基线取最新 setting 版本而非主表：草稿保存只写 T_PIPELINE_SETTING_VERSION 不写主表，
+     * 若取主表(最后发布版)，草稿里改过一次环境后，之后每次保存都会给出
+     * 「由 A 变更为 B」这种用户本次并未做过的变更提示。
+     */
+    private fun resolvePreviousOs(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        currentEnvHashId: String,
+        currentOs: OS
+    ): OS? {
+        // 新建流水线无历史 setting，不存在可对比的变更前环境
         val previousId = pipelineSettingVersionService.getLatestSettingVersion(
             projectId = projectId,
             pipelineId = pipelineId
         )?.envHashId?.takeIf { it.isNotBlank() } ?: return null
         // 环境未变更是绝对多数场景，在此提前返回，避免无谓的操作系统解析
-        if (previousId == currentId) return null
-        val currentOs = resolveEnvOs(userId, projectId, currentId) ?: return null
-        val previousOs = resolveEnvOs(userId, projectId, previousId) ?: return null
-        // 换了环境但操作系统相同(如同为 Linux 的两个环境)时，插件适配性不会变化
-        if (previousOs == currentOs) return null
-        return PipelineRunEnvOsChange(previousOs = previousOs, currentOs = currentOs)
+        if (previousId == currentEnvHashId) return null
+        // 换了环境但操作系统相同(如同为 Linux 的两个环境)时，不属于操作系统变更
+        return resolveEnvOs(userId, projectId, previousId)?.takeIf { it != currentOs }
     }
 
     /**
