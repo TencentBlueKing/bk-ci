@@ -9,5 +9,12 @@ data class TGitBindRemotedevData(
     val tgitId: Long,
     @get:JsonProperty("tGitUrl")
     val tgitUrl: String,
-    val projectIds: List<String>
+    val projectIds: List<String>,
+    val projectType: TGitBindRemotedevDataProjectType
 )
+
+enum class TGitBindRemotedevDataProjectType {
+    GIT,
+    SVN,
+    ;
+}
