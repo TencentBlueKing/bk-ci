@@ -18,11 +18,43 @@
  */
 
 import Vue from 'vue'
+import { SERVICE_RESOURCE_TYPE } from './constants'
 
 const prefix = 'environment/api'
 const dispatchPrefix = 'dispatch/api'
 const authPrefix = 'auth/api'
 const vue = new Vue()
+const ajax = vue.$ajax
+
+const withDevopsChannel = (config = {}) => {
+    const resType = window.devops?.$route?.params?.resType
+    if (resType !== SERVICE_RESOURCE_TYPE.CREATE) {
+        return config
+    }
+
+    return {
+        ...config,
+        headers: {
+            ...(config.headers || {}),
+            'X-DEVOPS-CHANNEL': 'CREATIVE_STREAM'
+        }
+    }
+}
+
+vue.$ajax = {
+    get (url, config) {
+        return ajax.get(url, withDevopsChannel(config))
+    },
+    post (url, data, config) {
+        return ajax.post(url, data, withDevopsChannel(config))
+    },
+    put (url, data, config) {
+        return ajax.put(url, data, withDevopsChannel(config))
+    },
+    delete (url, config) {
+        return ajax.delete(url, withDevopsChannel(config))
+    }
+}
 
 const actions = {
     /**
