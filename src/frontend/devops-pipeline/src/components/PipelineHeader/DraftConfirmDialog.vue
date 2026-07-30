@@ -7,6 +7,7 @@
         :key="false"
         :esc-close="false"
         theme="primary"
+        ext-cls="draft-confirm-dialog"
         @cancel="close"
     >
         <header
@@ -280,6 +281,11 @@
 </script>
 
 <style lang="scss" scoped>
+    ::v-deep .draft-confirm-dialog .bk-dialog-footer {
+        border-top: none !important;
+        background-color: #fff !important;
+        padding: 7px 24px 33px !important;
+    }
     .draft-hint-title {
         color: #313238;
         font-size: 20px;
