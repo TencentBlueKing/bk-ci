@@ -145,6 +145,58 @@ class ContainerBuildRecordService(
         recordContainerDao.batchSave(transactionContext ?: dslContext, containerList)
     }
 
+    /**
+     * 矩阵局部重试：将矩阵子容器[childContainerId]在[oldExecuteCount]的详情记录克隆到[newExecuteCount]，
+     * 并按[resetTaskIds]/[skipTaskIds]重置对应插件记录状态，使子Job在不重新分裂的前提下能在新执行次数下重跑。
+     * 因为运行期的记录更新为"存在才更新"，若不预先补齐新执行次数的记录，重跑时的状态刷新会被静默丢弃。
+     */
+    fun cloneMatrixChildRecordsForRetry(
+        transactionContext: DSLContext?,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        childContainerId: String,
+        oldExecuteCount: Int,
+        newExecuteCount: Int,
+        resetTaskIds: Set<String>,
+        skipTaskIds: Set<String>
+    ) {
+        val ctx = transactionContext ?: dslContext
+        val oldContainer = recordContainerDao.getRecord(
+            dslContext = ctx, projectId = projectId, pipelineId = pipelineId,
+            buildId = buildId, containerId = childContainerId, executeCount = oldExecuteCount
+        ) ?: return
+        val newContainerVar = oldContainer.containerVar.toMutableMap().apply {
+            remove(Container::timeCost.name)
+            remove(Container::startEpoch.name)
+            remove(Container::startVMStatus.name)
+        }
+        val newContainer = oldContainer.copy(
+            executeCount = newExecuteCount, status = BuildStatus.QUEUE.name,
+            startTime = null, endTime = null, timestamps = mapOf(), containerVar = newContainerVar
+        )
+        val oldTasks = recordTaskDao.getRecords(
+            ctx, projectId, pipelineId, buildId, oldExecuteCount, childContainerId
+        )
+        val newTasks = oldTasks.map { task ->
+            val skip = skipTaskIds.contains(task.taskId)
+            val reset = skip || resetTaskIds.contains(task.taskId)
+            task.copy(
+                executeCount = newExecuteCount,
+                status = when {
+                    skip -> BuildStatus.SKIP.name
+                    reset -> BuildStatus.QUEUE.name
+                    else -> task.status
+                },
+                startTime = if (reset) null else task.startTime,
+                endTime = if (reset) null else task.endTime,
+                timestamps = if (reset) mapOf() else task.timestamps,
+                asyncStatus = if (reset) null else task.asyncStatus
+            )
+        }
+        batchSave(ctx, listOf(newContainer), newTasks)
+    }
+
 //    fun batchUpdate(transactionContext: DSLContext?, containerList: List<BuildRecordContainer>) {
 //        return buildRecordContainerDao.batchUpdate(transactionContext ?: dslContext, containerList)
 //    }

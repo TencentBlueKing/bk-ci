@@ -238,15 +238,24 @@ class BuildRecordTaskDao {
         matrixContainerIds: List<String>
     ): List<BuildRecordTask> {
         with(TPipelineBuildRecordTask.T_PIPELINE_BUILD_RECORD_TASK) {
+            // 取每个矩阵子插件在不超过当前执行次数下的最新记录（与矩阵子容器查询保持一致），
+            // 以便矩阵局部重试后，未被重跑的兄弟子Job插件仍能按其历史执行次数正常展示。
             val conditions = BUILD_ID.eq(buildId)
                 .and(PROJECT_ID.eq(projectId))
-                .and(EXECUTE_COUNT.eq(executeCount))
+                .and(EXECUTE_COUNT.lessOrEqual(executeCount))
                 .and(CONTAINER_ID.`in`(matrixContainerIds))
+            val max = DSL.select(
+                TASK_ID.`as`(KEY_TASK_ID),
+                DSL.max(EXECUTE_COUNT).`as`(KEY_EXECUTE_COUNT)
+            ).from(this).where(conditions).groupBy(TASK_ID)
             val result = dslContext.select(
                 BUILD_ID, PROJECT_ID, PIPELINE_ID, RESOURCE_VERSION, STAGE_ID, CONTAINER_ID, TASK_ID,
                 TASK_SEQ, EXECUTE_COUNT, TASK_VAR, CLASS_TYPE, ATOM_CODE, STATUS, ORIGIN_CLASS_TYPE,
                 START_TIME, END_TIME, TIMESTAMPS, POST_INFO, ASYNC_STATUS
-            ).from(this).where(conditions).orderBy(TASK_SEQ.asc()).fetch()
+            ).from(this).join(max).on(
+                TASK_ID.eq(max.field(KEY_TASK_ID, String::class.java))
+                    .and(EXECUTE_COUNT.eq(max.field(KEY_EXECUTE_COUNT, Int::class.java)))
+            ).where(conditions).orderBy(TASK_SEQ.asc()).fetch()
             return result.map { record ->
                 generateBuildRecordTask(record)
             }

@@ -22,6 +22,13 @@
                 </span>
             </div>
             <div class="matrix-status">
+                <span
+                    v-if="showMatrixRetry"
+                    class="matrix-group-retry"
+                    @click.stop="triggerMatrixRetry"
+                >
+                    {{ t('retry') }}
+                </span>
                 <status-icon
                     type="matrix"
                     :status="matrix.status"
@@ -56,7 +63,7 @@
     import Job from './Job'
 import Logo from './Logo'
 import StatusIcon from './StatusIcon'
-import { CLICK_EVENT_NAME, STATUS_MAP } from './constants'
+import { CLICK_EVENT_NAME, STAGE_RETRY, STATUS_MAP } from './constants'
 import { localeMixins } from './locale'
 import { eventBus, getDependOnDesc, isTriggerContainer } from './util'
     
@@ -151,6 +158,11 @@ import { eventBus, getDependOnDesc, isTriggerContainer } from './util'
             hasMatrixJob () {
                 return this.computedJobs.length > 0
             },
+            showMatrixRetry () {
+                return this.reactiveData.isExecDetail &&
+                    this.reactiveData.isLatestBuild &&
+                    this.matrix.canRetry === true
+            },
             dependOnValue () {
                 if (isTriggerContainer(this.matrix)) return ''
                 const val = getDependOnDesc(this.matrix)
@@ -166,6 +178,13 @@ import { eventBus, getDependOnDesc, isTriggerContainer } from './util'
                 eventBus.$emit(CLICK_EVENT_NAME, {
                     stageIndex: this.stageIndex,
                     containerIndex: this.containerIndex
+                })
+            },
+            triggerMatrixRetry () {
+                // 复用 stage 重试弹窗：选择"重试失败Job"即对该矩阵下所有失败子Job做局部批量重试，
+                // 选择"重试所有Job"则回退到整组重新分裂（存量行为）
+                eventBus.$emit(STAGE_RETRY, {
+                    taskId: this.matrix.id
                 })
             }
         }
@@ -210,6 +229,12 @@ import { eventBus, getDependOnDesc, isTriggerContainer } from './util'
         color: $primaryColor;
         display: flex;
         align-items: center;
+        .matrix-group-retry {
+            font-size: 12px;
+            margin-right: 8px;
+            cursor: pointer;
+            color: $primaryColor;
+        }
         .status-desc {
             font-size: 12px;
             @include ellipsis(110px);

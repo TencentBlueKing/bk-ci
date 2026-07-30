@@ -971,6 +971,7 @@ class PipelineRuntimeService @Autowired constructor(
                     如果不属于，则表示该Job在本次重试不会被执行到，则不做处理，保持原状态, 跳过
                  */
                 if (context.needSkipContainerWhenFailRetry(stage, container) &&
+                    !context.isRetryMatrixGroup(container) &&
                     lastTimeBuildContainers.isNotEmpty()
                 ) {
                     if (null == pipelineContainerService.findLastTimeBuildTask(

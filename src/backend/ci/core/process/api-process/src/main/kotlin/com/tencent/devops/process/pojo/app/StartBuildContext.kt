@@ -77,6 +77,8 @@ import com.tencent.devops.process.utils.DependOnUtils
 import com.tencent.devops.process.utils.PIPELINE_BUILD_MSG
 import com.tencent.devops.process.utils.PIPELINE_RETRY_ALL_FAILED_CONTAINER
 import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
+import com.tencent.devops.process.utils.PIPELINE_RETRY_MATRIX_CONTAINER_ID
+import com.tencent.devops.process.utils.PIPELINE_RETRY_MATRIX_GROUP_ID
 import com.tencent.devops.process.utils.PIPELINE_RETRY_RUNNING_BUILD
 import com.tencent.devops.process.utils.PIPELINE_RETRY_START_TASK_ID
 import com.tencent.devops.process.utils.PIPELINE_RETRY_TASK_IN_CONTAINER_ID
@@ -151,9 +153,25 @@ data class StartBuildContext(
     // 触发事件标识
     val triggerEventType: String? = null,
     // 草稿版本号
-    val draftVersion: Int? = null
+    val draftVersion: Int? = null,
+    // 矩阵局部重试：目标父矩阵容器ID，非空表示本次为矩阵组内的局部重试
+    val retryMatrixGroupId: String? = null,
+    // 矩阵局部重试：目标子容器ID，为空且 retryFailedContainer=true 时表示重试该矩阵下所有失败子Job
+    val retryMatrixContainerId: String? = null
 ) {
     val watcher: Watcher = Watcher("startBuild-$buildId")
+
+    /**
+     * 是否为矩阵组内的局部重试（子Job/子插件重试、跳过或矩阵级批量重试）
+     */
+    fun isMatrixPartialRetry(): Boolean = !retryMatrixGroupId.isNullOrBlank()
+
+    /**
+     * 当前[container]是否为本次矩阵局部重试所针对的父矩阵容器
+     */
+    fun isRetryMatrixGroup(container: Container): Boolean {
+        return isMatrixPartialRetry() && retryMatrixGroupId == container.id
+    }
 
     /**
      * 检查Stage是否属于失败重试[stageRetry]时，当前[stage]是否需要跳过
@@ -401,7 +419,9 @@ data class StartBuildContext(
                 triggerEventType = params[PIPELINE_TRIGGER_EVENT_TYPE]?.let {
                     it.ifBlank { startType.name }
                 } ?: startType.name,
-                draftVersion = draftVersion
+                draftVersion = draftVersion,
+                retryMatrixGroupId = params[PIPELINE_RETRY_MATRIX_GROUP_ID]?.takeIf { it.isNotBlank() },
+                retryMatrixContainerId = params[PIPELINE_RETRY_MATRIX_CONTAINER_ID]?.takeIf { it.isNotBlank() }
             )
         }
 

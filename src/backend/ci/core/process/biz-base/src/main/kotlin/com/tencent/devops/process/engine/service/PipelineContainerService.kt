@@ -75,6 +75,7 @@ import com.tencent.devops.process.utils.BUILD_NO
 import com.tencent.devops.process.utils.NODE_OS
 import com.tencent.devops.process.utils.PIPELINE_NAME
 import org.jooq.DSLContext
+import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -280,6 +281,118 @@ class PipelineContainerService @Autowired constructor(
             matrixGroupId = matrixGroupId
         )
         logger.info("[$buildId]|cleanContainersInMatrixGroup|deleteT=$taskCount|deleteC=$containerCount")
+    }
+
+    /**
+     * 矩阵局部重试：只重置目标子容器及其任务，保留兄弟子Job结果，不重新分裂。
+     * 目标范围：
+     *  - 单子容器：[StartBuildContext.retryMatrixContainerId] 指定的子容器
+     *  - 矩阵级批量：retryMatrixContainerId 为空 + retryFailedContainer=true，重试该矩阵下所有失败/取消子Job
+     * 重置粒度：
+     *  - 子Job整体/批量重试：重置子容器内全部任务
+     *  - 子插件重试：重置目标插件及其后续插件（含开关机VM任务），保留其前置已完成插件
+     *  - 子插件跳过：目标插件置为SKIP，其后续插件重排以便重新评估运行条件
+     */
+    private fun prepareMatrixGroupRetry(context: StartBuildContext, matrixContainer: Container) {
+        val matrixGroupId = matrixContainer.id!!
+        val groupContainers = listGroupContainers(
+            projectId = context.projectId, buildId = context.buildId, matrixGroupId = matrixGroupId
+        )
+        if (groupContainers.isEmpty()) return
+        val batchRetry = context.retryMatrixContainerId.isNullOrBlank()
+        val targetContainers = if (batchRetry) {
+            groupContainers.filter { it.status.isFailure() || it.status.isCancel() }
+        } else {
+            groupContainers.filter { it.containerId == context.retryMatrixContainerId }
+        }
+        if (targetContainers.isEmpty()) return
+
+        dslContext.transaction { configuration ->
+            val transactionContext = DSL.using(configuration)
+            targetContainers.forEach { child ->
+                val oldExecuteCount = child.executeCount
+                val childTasks = pipelineTaskService.listContainerBuildTasks(
+                    projectId = context.projectId, buildId = context.buildId, containerSeqId = child.containerId
+                ).sortedBy { it.taskSeq }
+                val (resetTaskIds, skipTaskIds) = computeChildRetryTasks(
+                    childTasks = childTasks,
+                    retryStartTaskId = context.retryStartTaskId,
+                    skipFailedTask = context.skipFailedTask,
+                    wholeJob = batchRetry
+                )
+                val updateTasks = mutableListOf<PipelineBuildTask>()
+                childTasks.forEach { task ->
+                    when {
+                        skipTaskIds.contains(task.taskId) -> {
+                            setRetryBuildTask(
+                                target = task, executeCount = context.executeCount,
+                                atomElement = null, initialStatus = BuildStatus.SKIP
+                            )
+                            updateTasks.add(task)
+                        }
+
+                        resetTaskIds.contains(task.taskId) -> {
+                            setRetryBuildTask(target = task, executeCount = context.executeCount, atomElement = null)
+                            updateTasks.add(task)
+                        }
+                    }
+                }
+                if (updateTasks.isNotEmpty()) {
+                    pipelineTaskService.batchUpdate(transactionContext, updateTasks)
+                }
+                child.status = BuildStatus.QUEUE
+                child.startTime = null
+                child.endTime = null
+                child.executeCount = context.executeCount
+                child.controlOption.agentReuseMutex?.runtimeAgentOrEnvId = null
+                child.controlOption.mutexGroup?.runtimeMutexGroup = null
+                batchUpdate(transactionContext, listOf(child))
+                containerBuildRecordService.cloneMatrixChildRecordsForRetry(
+                    transactionContext = transactionContext,
+                    projectId = context.projectId,
+                    pipelineId = context.pipelineId,
+                    buildId = context.buildId,
+                    childContainerId = child.containerId,
+                    oldExecuteCount = oldExecuteCount,
+                    newExecuteCount = context.executeCount,
+                    resetTaskIds = resetTaskIds,
+                    skipTaskIds = skipTaskIds
+                )
+            }
+        }
+    }
+
+    /**
+     * 计算矩阵子容器内需要重置(重跑)与需要跳过的任务集合
+     */
+    private fun computeChildRetryTasks(
+        childTasks: List<PipelineBuildTask>,
+        retryStartTaskId: String?,
+        skipFailedTask: Boolean,
+        wholeJob: Boolean
+    ): Pair<Set<String>, Set<String>> {
+        // 批量或未指定具体插件：整个子Job重跑
+        if (wholeJob || retryStartTaskId.isNullOrBlank()) {
+            return childTasks.map { it.taskId }.toSet() to emptySet()
+        }
+        val target = childTasks.firstOrNull { it.taskId == retryStartTaskId }
+            ?: return childTasks.map { it.taskId }.toSet() to emptySet()
+        // 子Job第一个可执行(非VM)任务即为目标，且非跳过场景 → 视为整体重跑
+        val firstRealTask = childTasks.firstOrNull { !VMUtils.isVMTask(it.taskId) }
+        if (firstRealTask != null && firstRealTask.taskId == target.taskId && !skipFailedTask) {
+            return childTasks.map { it.taskId }.toSet() to emptySet()
+        }
+        // 目标插件及其后续插件 + 开关机VM任务需要重置；前置已完成插件保留
+        val resetIds = childTasks.filter {
+            VMUtils.isVMTask(it.taskId) || it.taskSeq >= target.taskSeq
+        }.map { it.taskId }.toMutableSet()
+        val skipIds = if (skipFailedTask) {
+            resetIds.remove(target.taskId)
+            setOf(target.taskId)
+        } else {
+            emptySet()
+        }
+        return resetIds to skipIds
     }
 
     fun prepareMatrixBuildContainer(
@@ -590,18 +703,25 @@ class PipelineContainerService @Autowired constructor(
 
         // 构建矩阵永远跟随stage重试，在需要重试的stage中，单独增加重试记录
         if (container.matrixGroupFlag == true && !context.needSkipWhenStageFailRetry(stage = stage)) {
-            container.retryFreshMatrixOption()
-            cleanContainersInMatrixGroup(
-                transactionContext = dslContext,
-                projectId = context.projectId,
-                pipelineId = context.pipelineId,
-                buildId = context.buildId,
-                matrixGroupId = container.id!!
-            )
-            // 去掉要重试的矩阵内部数据
-            updateExistsTask.removeIf { it.containerId == container.id }
-            updateExistsContainer.removeIf { it.first.matrixGroupId == container.id }
-            needUpdateContainer = true
+            if (context.isRetryMatrixGroup(container)) {
+                // 矩阵局部重试：只重置目标子容器及其任务，保留其它子Job结果，不重新分裂
+                prepareMatrixGroupRetry(context = context, matrixContainer = container)
+                // 让父矩阵容器重新进入排队（走下方 needUpdateContainer 分支重置状态），并保留 groupContainers
+                needUpdateContainer = true
+            } else {
+                container.retryFreshMatrixOption()
+                cleanContainersInMatrixGroup(
+                    transactionContext = dslContext,
+                    projectId = context.projectId,
+                    pipelineId = context.pipelineId,
+                    buildId = context.buildId,
+                    matrixGroupId = container.id!!
+                )
+                // 去掉要重试的矩阵内部数据
+                updateExistsTask.removeIf { it.containerId == container.id }
+                updateExistsContainer.removeIf { it.first.matrixGroupId == container.id }
+                needUpdateContainer = true
+            }
         }
 
         // 填入: 构建机或无编译环境的环境处理，需要启动和结束构建机/环境的插件任务
