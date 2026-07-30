@@ -309,7 +309,10 @@ interface UserWorkspaceResource {
         workspaceName: String?,
         @Parameter(description = "环境id", required = true)
         @QueryParam("envHashId")
-        envHashId: String?
+        envHashId: String?,
+        @Parameter(description = "是否是开黑场景", required = true)
+        @QueryParam("multiple")
+        multiple: Boolean?,
     ): Result<WorkspaceStartCloudDetail?>
 
     @Operation(summary = "校验云桌面设备管控")

@@ -1308,6 +1308,7 @@ class WorkspaceService @Autowired constructor(
             }
             // 优化：如果当前后台记录的用户，跟进入云桌面人不一致，提示有人在用
             // --story=136579406 【云桌面】支持团队虾和开黑功能 如果是被分享人且是开黑接口，可以使用
+            // TODO: 开黑功能的分享是否复用shared待确认
             cgsStatus.userInfos?.firstOrNull()?.takeIf { it.account != userId }?.let {
                 if (multiple && workspaceSharedDao.fetchWorkspaceSharedInfo(
                         dslContext = dslContext,

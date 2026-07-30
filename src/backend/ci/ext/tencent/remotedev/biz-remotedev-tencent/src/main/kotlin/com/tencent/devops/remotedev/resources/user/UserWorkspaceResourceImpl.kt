@@ -252,9 +252,17 @@ class UserWorkspaceResourceImpl @Autowired constructor(
     override fun startCloudWorkspaceDetail(
         userId: String,
         workspaceName: String?,
-        envHashId: String?
+        envHashId: String?,
+        multiple: Boolean?
     ): Result<WorkspaceStartCloudDetail?> {
-        return Result(workspaceService.startCloudWorkspaceDetail(userId, workspaceName, envHashId))
+        return Result(
+            workspaceService.startCloudWorkspaceDetail(
+                userId = userId,
+                workspaceName = workspaceName,
+                envId = envHashId,
+                multiple = multiple ?: false
+            )
+        )
     }
 
     override fun projectAccessDevicePermissions(
