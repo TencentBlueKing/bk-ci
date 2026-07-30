@@ -259,8 +259,7 @@ class UserWorkspaceResourceImpl @Autowired constructor(
             workspaceService.startCloudWorkspaceDetail(
                 userId = userId,
                 workspaceName = workspaceName,
-                envId = envHashId,
-                multiple = multiple ?: false
+                envId = envHashId
             )
         )
     }

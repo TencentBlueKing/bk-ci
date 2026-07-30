@@ -170,7 +170,8 @@ class WorkspaceService @Autowired constructor(
     private val windowsGpuResourceDao: WindowsGpuResourceDao,
     private val whiteListService: WhiteListService,
     private val whiteListDao: WhiteListDao,
-    private val dispatchWorkspaceDao: DispatchWorkspaceDao
+    private val dispatchWorkspaceDao: DispatchWorkspaceDao,
+    private val teamService: TeamService
 ) {
     @Value("\${remoteDev.projectMonitorUrl:}")
     val projectMonitorUrl = ""
@@ -1278,8 +1279,7 @@ class WorkspaceService @Autowired constructor(
     fun startCloudWorkspaceDetail(
         userId: String,
         workspaceName: String?,
-        envId: String?,
-        multiple: Boolean = false
+        envId: String?
     ): WorkspaceStartCloudDetail {
         if (workspaceName != null) {
             val workspace = workspaceJoinDao.fetchAnyWindowsWorkspace(dslContext, workspaceName = workspaceName)
@@ -1310,7 +1310,7 @@ class WorkspaceService @Autowired constructor(
             // --story=136579406 【云桌面】支持团队虾和开黑功能 如果是被分享人且是开黑接口，可以使用
             // TODO: 开黑功能的分享是否复用shared待确认
             cgsStatus.userInfos?.firstOrNull()?.takeIf { it.account != userId }?.let {
-                if (multiple && workspaceSharedDao.fetchWorkspaceSharedInfo(
+                if (teamService.enableTeam(workspaceName) && workspaceSharedDao.fetchWorkspaceSharedInfo(
                         dslContext = dslContext,
                         workspaceName = workspaceName,
                         sharedUsers = listOf(userId)
