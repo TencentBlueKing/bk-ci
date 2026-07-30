@@ -300,7 +300,7 @@ class WorkspaceService @Autowired constructor(
                     workspaceName = ws.workspaceName
 
                 )
-            }catch (e: Exception) {
+            } catch (e: Exception) {
                 logger.error("modifyWorkspaceProperty update create node error", e)
             }
         }
@@ -1154,7 +1154,7 @@ class WorkspaceService @Autowired constructor(
             sleepingCount = status.count { it.checkSleeping() },
             deleteCount = status.count { it.checkDeleted() },
             chargeableTime = endBilling.second +
-                (endBilling.first - discountTime * 60).coerceAtLeast(0),
+                    (endBilling.first - discountTime * 60).coerceAtLeast(0),
             usageTime = usageTime,
             sleepingTime = sleepingTime,
             discountTime = discountTime,
@@ -1275,7 +1275,12 @@ class WorkspaceService @Autowired constructor(
         ),
         content = TencentActionAuditContent.CGS_VIEW_CONTENT
     )
-    fun startCloudWorkspaceDetail(userId: String, workspaceName: String?, envId: String?): WorkspaceStartCloudDetail {
+    fun startCloudWorkspaceDetail(
+        userId: String,
+        workspaceName: String?,
+        envId: String?,
+        multiple: Boolean = false
+    ): WorkspaceStartCloudDetail {
         if (workspaceName != null) {
             val workspace = workspaceJoinDao.fetchAnyWindowsWorkspace(dslContext, workspaceName = workspaceName)
                 ?: throw ErrorCodeException(
@@ -1302,7 +1307,16 @@ class WorkspaceService @Autowired constructor(
                 )
             }
             // 优化：如果当前后台记录的用户，跟进入云桌面人不一致，提示有人在用
+            // --story=136579406 【云桌面】支持团队虾和开黑功能 如果是被分享人且是开黑接口，可以使用
             cgsStatus.userInfos?.firstOrNull()?.takeIf { it.account != userId }?.let {
+                if (multiple && workspaceSharedDao.fetchWorkspaceSharedInfo(
+                        dslContext = dslContext,
+                        workspaceName = workspaceName,
+                        sharedUsers = listOf(userId)
+                    ).isNotEmpty()
+                ) {
+                    return startCloudWorkspaceDetail(userId, workspace)
+                }
                 throw ErrorCodeException(
                     errorCode = ErrorCodeEnum.WORKSPACE_LOGGED_IN.errorCode,
                     params = arrayOf(workspace.hostIp ?: workspaceName)
@@ -1349,8 +1363,8 @@ class WorkspaceService @Autowired constructor(
 
             val oneReady = public.filter {
                 loginUserMap[it.value2()]?.loginUsers.isNullOrEmpty() &&
-                    workspaceStatus[it.value1()] in setOf(WorkspaceStatus.RUNNING, WorkspaceStatus.DISTRIBUTING) &&
-                    cgsStatus?.get(it.value2()) == ComputerStatusEnum.NORMAL.status
+                        workspaceStatus[it.value1()] in setOf(WorkspaceStatus.RUNNING, WorkspaceStatus.DISTRIBUTING) &&
+                        cgsStatus?.get(it.value2()) == ComputerStatusEnum.NORMAL.status
             }.randomOrNull() ?: run {
                 logger.warn("there are no idle public cloud desktops|$envId|$loginUserMap|$workspaceStatus")
                 throw ErrorCodeException(
@@ -1424,7 +1438,7 @@ class WorkspaceService @Autowired constructor(
             val normalNodeCount =
                 env.nodeHashIds?.count {
                     workspaceStatus[it] in normalStatuses &&
-                        cgsStatus?.get(node2HostMap[it]) == ComputerStatusEnum.NORMAL.status
+                            cgsStatus?.get(node2HostMap[it]) == ComputerStatusEnum.NORMAL.status
                 } ?: 0
             val abnormalNodeCount = (env.nodeHashIds?.size ?: 0) - normalNodeCount
             val currentLoginUsers = env.nodeHashIds?.flatMap { nodeHashId ->
