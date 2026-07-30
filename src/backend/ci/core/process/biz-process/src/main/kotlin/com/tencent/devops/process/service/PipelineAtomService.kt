@@ -46,7 +46,6 @@ import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.PipelineAtomInfo
 import com.tencent.devops.common.pipeline.utils.ModelUtils
@@ -70,12 +69,10 @@ import com.tencent.devops.process.utils.KEY_PIPELINE_ID
 import com.tencent.devops.process.utils.KEY_PROJECT_ID
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.store.api.atom.ServiceAtomResource
-import com.tencent.devops.store.api.atom.ServiceMarketAtomEnvResource
 import com.tencent.devops.store.api.common.ServiceStoreResource
 import com.tencent.devops.store.pojo.atom.AtomProp
 import com.tencent.devops.store.pojo.atom.AtomReplaceRequest
 import com.tencent.devops.store.pojo.atom.AtomReplaceRollBack
-import com.tencent.devops.store.pojo.atom.enums.JobTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import jakarta.servlet.http.HttpServletResponse
 import jakarta.ws.rs.core.Response
@@ -100,6 +97,7 @@ class PipelineAtomService @Autowired constructor(
     private val pipelineAtomReplaceBaseDao: PipelineAtomReplaceBaseDao,
     private val pipelineAtomReplaceItemDao: PipelineAtomReplaceItemDao,
     private val pipelineRepositoryService: PipelineRepositoryService,
+    private val atomPropVersionOsService: AtomPropVersionOsService,
     private val client: Client
 ) {
 
@@ -429,62 +427,17 @@ class PipelineAtomService @Autowired constructor(
         )
         // 获取流水线下插件标识集合
         val atomCodes = ModelUtils.getModelAtoms(model)
-        val atomPropResult = client.get(ServiceAtomResource::class).getAtomProps(atomCodes)
-        val atomProps = atomPropResult.data
-        if (atomProps.isNullOrEmpty()) {
-            return atomPropResult
-        }
-        val versionOsMap = buildVersionOsMap(projectId = projectId, model = model)
-        if (versionOsMap.isEmpty()) {
-            return atomPropResult
-        }
-        return Result(
-            atomProps.mapValues { (atomCode, atomProp) ->
-                versionOsMap[atomCode]?.let { atomProp.copy(versionOsMap = it) } ?: atomProp
-            }
+        return atomPropVersionOsService.fillVersionOsMap(
+            projectId = projectId,
+            atomVersions = AtomUtils.getModelAtomVersions(model),
+            atomPropResult = client.get(ServiceAtomResource::class).getAtomProps(atomCodes),
+            // 与保存校验同样以流水线自身记录的渠道为准，两侧口径必须一致，
+            // 取不到记录(如已归档流水线)时才退到请求渠道
+            channelCode = pipelineRepositoryService.getPipelineInfo(
+                projectId = projectId,
+                pipelineId = pipelineId
+            )?.channelCode ?: ChannelCode.getRequestChannelCode()
         )
-    }
-
-    /**
-     * 解析编排中各插件版本适用的运行环境操作系统，用于前端提示插件与运行环境的适配情况。
-     *
-     * 插件的适用操作系统按 jobType 分别声明，且不同版本的声明可能不同，因此必须按
-     * 「请求渠道对应的 jobType」+「编排中该插件的版本」解析，与保存时的校验共用同一份数据来源，
-     * 避免前端提示适配而保存被拦截。
-     *
-     * @return key 为插件标识，value 为该插件在编排中出现的各版本对应的适用操作系统
-     */
-    private fun buildVersionOsMap(projectId: String, model: Model): Map<String, Map<String, List<String>>> {
-        val osJobType = AtomUtils.resolveOsJobType(ChannelCode.getRequestChannelCode())
-        // AGENT 表示该渠道沿用插件的遗留 OS 字段，AtomProp.os 已承载该语义，无需额外查询
-        if (osJobType == JobTypeEnum.AGENT) {
-            return emptyMap()
-        }
-        val atomVersions = AtomUtils.getModelAtomVersions(model)
-        if (atomVersions.isEmpty()) {
-            return emptyMap()
-        }
-        // 适用操作系统属于展示增强信息，查询失败时降级为不返回，不影响编排本身的展示
-        val atomRunInfoMap = try {
-            client.get(ServiceMarketAtomEnvResource::class).batchGetAtomRunInfos(
-                projectCode = projectId,
-                atomVersions = atomVersions
-            ).data
-        } catch (ignored: Throwable) {
-            logger.warn("Failed to batch get atom run infos|$projectId", ignored)
-            null
-        } ?: return emptyMap()
-        val versionOsMap = mutableMapOf<String, MutableMap<String, List<String>>>()
-        atomVersions.forEach { atomVersion ->
-            val atomCode = atomVersion.storeCode
-            val version = atomVersion.version
-            // key 与 batchGetAtomRunInfos 的返回一致，为请求时的版本号而非解析后的具体版本
-            val atomRunInfo = atomRunInfoMap["$atomCode:$version"] ?: return@forEach
-            // 插件未声明该 jobType 的适用范围时返回空列表，与保存校验的放行逻辑保持一致
-            versionOsMap.getOrPut(atomCode) { mutableMapOf() }[version] =
-                atomRunInfo.osMap?.get(osJobType.name) ?: emptyList()
-        }
-        return versionOsMap
     }
 
     fun buildPipelineAtomRelInfoList(

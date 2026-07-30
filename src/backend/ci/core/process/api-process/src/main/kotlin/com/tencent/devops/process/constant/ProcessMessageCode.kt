@@ -486,6 +486,8 @@ object ProcessMessageCode {
     const val ERROR_ATOM_RUN_ENV_OS_INCOMPATIBLE = "2101400"
     // 运行环境操作系统为{0}，编排中存在不适用该系统的插件，暂不能保存，不适配插件明细：{1}
     const val ERROR_ATOM_RUN_ENV_OS_UNSUPPORTED = "2101401"
+    // 编排中存在不适用于所在Job构建环境操作系统的插件，暂不能保存，不适配插件明细：{0}
+    const val ERROR_ATOM_JOB_OS_INCOMPATIBLE = "2101402"
 
     // 构建执行相关错误码（2101500-2101599）
     const val ERROR_PIPELINE_START_NODE_NO_PERMISSION = "2101500" // 用户[{0}]没有节点[{1}]的操作权限，无法启动流水线
@@ -844,4 +846,7 @@ object ProcessMessageCode {
 
     // 运行环境操作系统不适配插件的明细项：{0} 需要 {1}（所选环境：{2}）
     const val BK_ATOM_RUN_ENV_OS_INCOMPATIBLE_ITEM = "bkAtomRunEnvOsIncompatibleItem"
+
+    // Job构建环境操作系统不适配插件的明细项：Job[{0}]（{1}）中的 {2} 需要 {3}
+    const val BK_ATOM_JOB_OS_INCOMPATIBLE_ITEM = "bkAtomJobOsIncompatibleItem"
 }

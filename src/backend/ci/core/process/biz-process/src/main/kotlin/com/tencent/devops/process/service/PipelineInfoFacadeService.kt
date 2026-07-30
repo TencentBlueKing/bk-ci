@@ -66,6 +66,7 @@ import com.tencent.devops.common.pipeline.extend.ModelCheckPlugin
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildNo
 import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
+import com.tencent.devops.common.pipeline.pojo.PipelineRunEnvOsChange
 import com.tencent.devops.common.pipeline.pojo.TemplateInstanceField
 import com.tencent.devops.common.pipeline.pojo.TemplateVariable
 import com.tencent.devops.common.pipeline.pojo.element.atom.BeforeDeleteParam
@@ -1340,7 +1341,14 @@ class PipelineInfoFacadeService @Autowired constructor(
                 yaml = yaml,
                 baseVersion = baseVersion,
                 yamlFileInfo = yamlFileInfo,
-                pipelineDisable = pipelineDisable
+                pipelineDisable = pipelineDisable,
+                runEnvOsChange = resolveRunEnvOsChange(
+                    userId = userId,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    channelCode = channelCode,
+                    setting = savedSetting
+                )
             )
             // 审计
             ActionAuditContext.current()
@@ -1352,6 +1360,33 @@ class PipelineInfoFacadeService @Autowired constructor(
             processJmxApi.execute(ProcessJmxApi.NEW_PIPELINE_EDIT, System.currentTimeMillis() - apiStartEpoch)
             logger.info("EDIT_PIPELINE|$pipelineId|$channelCode|p=$checkPermission|u=$userId")
         }
+    }
+
+    /**
+     * 解析本次保存需要校验的运行环境操作系统。
+     *
+     * [setting] 为本次一并保存的设置，为空时取流水线当前设置：只改编排不改设置时，
+     * 运行环境虽未变，但新增的插件仍可能不适用于当前环境，同样需要校验。
+     */
+    private fun resolveRunEnvOsChange(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        channelCode: ChannelCode,
+        setting: PipelineSetting?
+    ): PipelineRunEnvOsChange? {
+        // 先判渠道再取设置，普通流水线在此返回，不产生额外查询
+        if (!pipelineRunEnvOsChangeResolver.isRunEnvSpecifiedBySetting(channelCode)) return null
+        val effectiveSetting = setting
+            ?: pipelineRepositoryService.getSetting(projectId, pipelineId)
+            ?: return null
+        return pipelineRunEnvOsChangeResolver.resolve(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            channelCode = channelCode,
+            setting = effectiveSetting
+        )
     }
 
     fun renamePipeline(
@@ -1482,7 +1517,10 @@ class PipelineInfoFacadeService @Autowired constructor(
             pipelineId = pipelineId,
             setting = setting,
             checkPermission = checkPermission,
-            dispatchPipelineUpdateEvent = false
+            dispatchPipelineUpdateEvent = false,
+            // 设置先于编排落库，其中的运行环境校验须以本次要保存的编排为准，
+            // 否则用户在同一次里既换了环境又把插件改成适配的，会被上一版编排误判为不适配
+            savingModel = model
         )
         val pipelineResult = editPipeline(
             userId = userId,

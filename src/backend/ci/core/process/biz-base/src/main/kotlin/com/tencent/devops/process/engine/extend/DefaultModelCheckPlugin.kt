@@ -29,6 +29,7 @@ package com.tencent.devops.process.engine.extend
 
 import com.tencent.devops.common.api.check.Preconditions
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
@@ -42,7 +43,7 @@ import com.tencent.devops.common.pipeline.enums.JobRunCondition
 import com.tencent.devops.common.pipeline.enums.StageRunCondition
 import com.tencent.devops.common.pipeline.extend.ModelCheckPlugin
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
-import com.tencent.devops.common.pipeline.pojo.PipelineRunEnvOsChange
+import com.tencent.devops.common.pipeline.pojo.PipelineRunEnvOsCheckParam
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.RunCondition
 import com.tencent.devops.common.pipeline.pojo.element.atom.BeforeDeleteParam
@@ -96,7 +97,7 @@ open class DefaultModelCheckPlugin constructor(
         oauthUser: String?,
         pipelineDialect: IPipelineDialect?,
         pipelineId: String,
-        runEnvOsChange: PipelineRunEnvOsChange?
+        runEnvOsCheckParam: PipelineRunEnvOsCheckParam?
     ): Int {
         var metaSize = 0
         // 检查流水线名称
@@ -195,7 +196,7 @@ open class DefaultModelCheckPlugin constructor(
                     atomCheckParams = atomCheckParams,
                     inputTypeConfigMap = AtomUtils.getInputTypeConfigMap(taskCommonSettingConfig),
                     client = client,
-                    runEnvOsChange = runEnvOsChange
+                    runEnvOsCheckParam = runEnvOsCheckParam
                 )
             }
             DependOnUtils.checkRepeatedJobId(stage)
@@ -345,7 +346,8 @@ open class DefaultModelCheckPlugin constructor(
                 atomCheckParams = atomCheckParams,
                 containerEnvType = AtomUtils.AtomContainerEnvType.UNKNOWN,
                 stageName = stage.name ?: stage.id ?: "",
-                jobName = this.name
+                jobName = this.name,
+                jobRunEnvOs = null
             )
             return
         }
@@ -375,7 +377,9 @@ open class DefaultModelCheckPlugin constructor(
             atomCheckParams = atomCheckParams,
             containerEnvType = containerEnvType,
             stageName = stage.name ?: stage.id ?: "",
-            jobName = this.name
+            jobName = this.name,
+            // 该 Job 声明的构建环境操作系统，用于校验其中的插件是否适用；无从确定唯一系统时为空
+            jobRunEnvOs = AtomUtils.resolveJobRunEnvOs(this)
         )
 
         checkElementTimeoutVar(container = this, element = element, contextMap = contextMap)
@@ -452,7 +456,8 @@ open class DefaultModelCheckPlugin constructor(
         atomCheckParams: MutableList<AtomUtils.AtomCheckParam>,
         containerEnvType: AtomUtils.AtomContainerEnvType,
         stageName: String,
-        jobName: String
+        jobName: String,
+        jobRunEnvOs: OS?
     ) {
         var version = e.version
         if (version.isBlank()) {
@@ -508,7 +513,8 @@ open class DefaultModelCheckPlugin constructor(
                     ),
                     containerEnvType = containerEnvType,
                     stageName = stageName,
-                    jobName = jobName
+                    jobName = jobName,
+                    jobRunEnvOs = jobRunEnvOs
                 )
             )
         }

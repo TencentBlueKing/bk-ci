@@ -95,7 +95,8 @@ class PipelineResourceFactory @Autowired constructor(
         channelCode: ChannelCode,
         yamlFileInfo: PipelineYamlFileInfo? = null,
         pipelineDialect: IPipelineDialect? = null,
-        runEnvOsChange: PipelineRunEnvOsChange? = null
+        runEnvOsChange: PipelineRunEnvOsChange? = null,
+        modelCarriedOver: Boolean = false
     ): PipelineModelBasicInfo {
         val triggerContainer = model.getTriggerContainer()
         var canManualStartup = false
@@ -127,7 +128,8 @@ class PipelineResourceFactory @Autowired constructor(
             channelCode = channelCode,
             yamlFileInfo = yamlFileInfo,
             pipelineDialect = pipelineDialect,
-            runEnvOsChange = runEnvOsChange
+            runEnvOsChange = runEnvOsChange,
+            modelCarriedOver = modelCarriedOver
         )
         return PipelineModelBasicInfo(
             canManualStartup = canManualStartup,
