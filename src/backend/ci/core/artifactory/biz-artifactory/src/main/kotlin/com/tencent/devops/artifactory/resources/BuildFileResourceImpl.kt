@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
  * Copyright (C) 2019 Tencent.  All rights reserved.
@@ -61,7 +61,7 @@ class BuildFileResourceImpl @Autowired constructor(
         filePath: String,
         response: HttpServletResponse
     ) {
-        val userId = getLastModifyUser(projectCode, pipelineId)
+        val userId = getPipelineHandoverUser(projectCode, pipelineId)
         archiveFileService.downloadFile(userId, PathUtil.getNormalizedPath(filePath), response)
     }
 
@@ -74,7 +74,7 @@ class BuildFileResourceImpl @Autowired constructor(
         inputStream: InputStream,
         disposition: FormDataContentDisposition
     ): Result<String?> {
-        val userId = getLastModifyUser(projectCode, pipelineId)
+        val userId = getPipelineHandoverUser(projectCode, pipelineId)
         val url = archiveFileService.archiveFile(
             userId = userId,
             projectId = projectCode,
@@ -97,7 +97,7 @@ class BuildFileResourceImpl @Autowired constructor(
         customFilePath: String,
         response: HttpServletResponse
     ) {
-        val userId = getLastModifyUser(projectCode, pipelineId)
+        val userId = getPipelineHandoverUser(projectCode, pipelineId)
         return archiveFileService.downloadArchiveFile(
             userId = userId,
             projectId = projectCode,
@@ -116,7 +116,7 @@ class BuildFileResourceImpl @Autowired constructor(
         fileType: FileTypeEnum,
         customFilePath: String?
     ): Result<GetFileDownloadUrlsResponse?> {
-        val userId = getLastModifyUser(projectCode, pipelineId)
+        val userId = getPipelineHandoverUser(projectCode, pipelineId)
         val urls = archiveFileService.getFileDownloadUrls(
             userId = userId,
             projectId = projectCode,
@@ -129,7 +129,7 @@ class BuildFileResourceImpl @Autowired constructor(
         return Result(urls)
     }
 
-    private fun getLastModifyUser(projectId: String, pipelineId: String): String {
+    private fun getPipelineHandoverUser(projectId: String, pipelineId: String): String {
         // pref:流水线相关的文件操作人调整为流水线的权限代持人 #11016
         return try {
             client.get(ServiceAuthAuthorizationResource::class).getResourceAuthorization(

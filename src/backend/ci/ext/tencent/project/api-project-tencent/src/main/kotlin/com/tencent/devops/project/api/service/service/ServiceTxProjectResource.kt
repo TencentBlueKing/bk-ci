@@ -39,6 +39,7 @@ import com.tencent.devops.common.auth.api.pojo.BKAuthProjectRolesResources
 import com.tencent.devops.project.api.pojo.PipelinePermissionInfo
 import com.tencent.devops.project.api.pojo.ProjectProductInfo
 import com.tencent.devops.project.pojo.AddManagerRequest
+import com.tencent.devops.project.pojo.CrosProductVO
 import com.tencent.devops.project.pojo.OperationalProductVO
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectCreateUserDTO
@@ -491,4 +492,13 @@ interface ServiceTxProjectResource {
         @PathParam("productId")
         productId: Int
     ): Result<OperationalProductVO?>
+
+    @GET
+    @Path("/kpiProducts/list")
+    @Operation(summary = "获取KPI产品列表")
+    fun getKpiProducts(
+        @Parameter(description = "KPI产品名称（模糊搜索）", required = false)
+        @QueryParam("kpiName")
+        kpiName: String? = null
+    ): Result<List<CrosProductVO>>
 }

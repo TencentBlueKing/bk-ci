@@ -79,7 +79,11 @@ export default function useRelatedNodes () {
                         ? { nodeType: ENV_TYPE_MAP.CREATE }
                         : isDevxEnv.value
                             ? { nodeType: ENV_TYPE_MAP.DEVX }
-                            : {})
+                            : {}
+                    ),
+                    ...(currentEnv.value?.os ? {
+                        osName: currentEnv.value.os.toLowerCase()
+                    } : {})
                 },
                 tags
             })

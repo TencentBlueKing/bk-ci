@@ -42,16 +42,20 @@ local in_container = ngx.var.namespace ~= '' and ngx.var.namespace ~= nil
 if tag == 'rbac-gray' or
     tag == 'dev-rbac' or
     tag == 'test-rbac' or
+    tag == 'test-creative' or
     tag == 'rbac-staging' or
     tag == 'stream-gray' or
-    tag == 'rbac-std-01' then
+    tag == 'rbac-std-01' or
+    tag == 'creative' then
     ngx.header["X-USE-FRONTEND-CONTAINER"] = "true"
 else
     ngx.header["X-USE-FRONTEND-CONTAINER"] = "false"
 end
 if in_container then -- 容器化环境转发到对应ns的frontend服务
     local final_host = config.frontend.host
-    if ngx.var.project_id == 'frontend-for-gray' or
+    -- 前端传 X-GATEWAY-FRONTEND-PRE: true，或指定灰度项目时，转发到预发布前端服务
+    if ngx.var.http_x_gateway_frontend_pre == 'true' or
+        ngx.var.project_id == 'frontend-for-gray' or
         ngx.var.project_id == 'frontend-for-staging' or
         ngx.var.project_id == 'git_689077' or
         ngx.var.project_id == 'frontend-for-std-01' then

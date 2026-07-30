@@ -1484,6 +1484,11 @@ frontend:
     maxReplicas: 3
     targetCPU: 80
     targetMemory: 80
+  cfs:
+    enabled: false
+    path: ""
+    env: ""
+    ip: ""
 
 # AI Assistant Deployment
 ai:

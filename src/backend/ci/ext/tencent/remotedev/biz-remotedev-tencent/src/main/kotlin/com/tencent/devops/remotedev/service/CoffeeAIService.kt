@@ -111,7 +111,8 @@ class CoffeeAIService @Autowired constructor(
                 description = it.displayName,
                 projectId = it.projectId,
                 zoneConfigType = it.zoneConfigType,
-                organization = organization ?: ""
+                organization = organization ?: "",
+                os = it.os
             )
         })
         return token
@@ -144,7 +145,8 @@ class CoffeeAIService @Autowired constructor(
                 ip = record.ip ?: "",
                 envId = envIdMap[record.workspaceName]?.takeIf { it.isNotBlank() } ?: "",
                 projectId = record.projectId.takeIf { it != "NO_CHECK" } ?: "",
-                zoneConfigType = record.zoneId?.let { zoneTypeMap[it] } ?: ""
+                zoneConfigType = record.zoneId?.let { zoneTypeMap[it] } ?: "",
+                os = record.os
             )
         }
     }
@@ -154,12 +156,14 @@ class CoffeeAIService @Autowired constructor(
         workspaceDao.enableCoffeeAI(dslContext, workspaceNames)
     }
 
-    fun openClawOn(userId: String): WorkspaceRegistration? {
+    fun openClawOn(userId: String, workspaceName: String?, ip: String?): WorkspaceRegistration? {
         // 暂时采用这个方法，待后续能传入ip，再根据ip获取
         val openClawWs = workspaceService.limitFetchProjectWorkspace(
             limit = PageUtil.convertPageSizeToSQLLimit(1, 10),
             queryType = QueryType.SERVICE,
             search = WorkspaceSearch(
+                workspaceName = workspaceName?.let { listOf(it) },
+                sips = ip?.let { listOf(it) },
                 owner = listOf(userId),
                 status = listOf(WorkspaceStatus.RUNNING),
                 logicalArea = listOf(WindowsResourceZoneConfigType.DEVCLOUD)
@@ -192,7 +196,8 @@ class CoffeeAIService @Autowired constructor(
             description = openClawWs.displayName,
             projectId = openClawWs.projectId,
             zoneConfigType = WindowsResourceZoneConfigType.DEVCLOUD.name,
-            organization = organization ?: ""
+            organization = organization ?: "",
+            os = openClawWs.os
         )
     }
 }

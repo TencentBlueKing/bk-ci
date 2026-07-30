@@ -1293,7 +1293,13 @@ interface ApigwRemoteDevResource {
     fun openClawOn(
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String
+        userId: String,
+        @Parameter(description = "工作空间名称", required = false)
+        @QueryParam("workspaceName")
+        workspaceName: String?,
+        @Parameter(description = "ip", required = false)
+        @QueryParam("ip")
+        ip: String?
     ): Result<WorkspaceRegistration?>
 
     @Operation(summary = "校验是否有权限查看直播", tags = ["v4_app_remotedev_check_view_live"])
