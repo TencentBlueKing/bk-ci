@@ -1,8 +1,6 @@
 local _M = {}
 function _M:enable()
-    if creativeUtil:is_creative_host() then
-        return true
-    end
+    -- 只在codecc项目中启用
     local isCodecc = ngx.var.project == 'codecc'
     if isCodecc and ngx.var.project_id ~= nil and config.kubernetes.auto_prefix ~= nil then
         -- 将前缀字符串分割成表

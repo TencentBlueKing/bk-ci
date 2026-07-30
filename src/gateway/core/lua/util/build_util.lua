@@ -47,14 +47,17 @@ function _M:call_external_auth_api(auth_type, params)
         httpc:set_timeout(timeout)
 
         -- 发送HTTP请求
+        local headers = {
+            ["Accept"] = "application/json",
+            ["Content-Type"] = "application/json",
+            ["X-DEVOPS-PROJECT-ID"] = ngx.var.project_id,
+        }
+        if creativeUtil:is_creative_host() then
+            headers["HOST"] = ngx.var.host
+        end
         local res, err = httpc:request_uri(full_url, {
             method = "GET",
-            headers = {
-                ["Accept"] = "application/json",
-                ["Content-Type"] = "application/json",
-                ["X-DEVOPS-PROJECT-ID"] = ngx.var.project_id,
-                ["HOST"] = ngx.var.host
-            },
+            headers = headers,
             ssl_verify = false
         })
 
