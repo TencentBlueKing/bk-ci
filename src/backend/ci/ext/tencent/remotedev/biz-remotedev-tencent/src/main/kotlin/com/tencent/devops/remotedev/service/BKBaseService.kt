@@ -208,7 +208,7 @@ class BKBaseService @Autowired constructor(
 
     /**
      * 批量更新主机补充维度到 bkbase 平台。
-     * 单批上限 1000；更新为整机覆盖语义。
+     * 单批上限 100；更新为整机覆盖语义。
      */
     fun updateHostExtraDimensions(items: List<HostExtraDimensionItem>): Boolean {
         if (items.isEmpty()) {
