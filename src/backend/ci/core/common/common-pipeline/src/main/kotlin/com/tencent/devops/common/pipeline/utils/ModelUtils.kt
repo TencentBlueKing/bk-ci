@@ -160,6 +160,11 @@ object ModelUtils {
         }
     }
 
+    /**
+     * 计算单个矩阵子插件的 canRetry/canSkip，逻辑镜像 [refreshElement]：
+     * 因子插件 MatrixStatusElement 无 additionalOptions，重试/跳过配置从父模板元素 [templateElement] 读取，
+     * 再结合子插件 [childElement] 自身的运行状态判定。
+     */
     private fun refreshMatrixElement(templateElement: Element?, childElement: Element) {
         val additionalOptions = templateElement?.additionalOptions
         if (additionalOptions == null || !additionalOptions.enable) {

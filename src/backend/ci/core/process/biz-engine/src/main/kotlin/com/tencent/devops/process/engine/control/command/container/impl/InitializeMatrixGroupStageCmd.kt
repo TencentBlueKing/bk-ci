@@ -707,7 +707,7 @@ class InitializeMatrixGroupStageCmd(
     ): List<MatrixStatusElement> {
         val originToNewId = mutableMapOf<String, String>()
         return elements.map { e ->
-            // 每次写入TASK表都要是新获取的taskId，统一调整为不可重试
+            // 每次写入TASK表都要是新获取的taskId（矩阵重新分裂会生成全新taskId）
             val newTaskId = modelTaskIdGenerator.getNextId()
             // 记录所有新ID对应的原ID，并将post-action信息更新父插件的ID
             originToNewId[e.id!!] = newTaskId

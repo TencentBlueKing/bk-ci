@@ -970,6 +970,8 @@ class PipelineRuntimeService @Autowired constructor(
                     如果是插件失败重试，并且当前的Job状态是失败的，则检查重试的插件是不是属于该失败Job:
                     如果不属于，则表示该Job在本次重试不会被执行到，则不做处理，保持原状态, 跳过
                  */
+                // 矩阵局部重试豁免：父矩阵容器不含子task，findLastTimeBuildTask 按子task id 必然找不到，
+                // 若不豁免会被整体跳过，导致局部重试的子Job无法下发。矩阵父容器的重置交由 prepareMatrixGroupRetry 处理。
                 if (context.needSkipContainerWhenFailRetry(stage, container) &&
                     !context.isRetryMatrixGroup(container) &&
                     lastTimeBuildContainers.isNotEmpty()

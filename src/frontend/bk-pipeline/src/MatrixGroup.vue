@@ -158,6 +158,7 @@ import { eventBus, getDependOnDesc, isTriggerContainer } from './util'
             hasMatrixJob () {
                 return this.computedJobs.length > 0
             },
+            // 矩阵组级批量重试入口：仅在执行详情、最新构建、且矩阵父容器可重试(失败/取消)时展示
             showMatrixRetry () {
                 return this.reactiveData.isExecDetail &&
                     this.reactiveData.isLatestBuild &&

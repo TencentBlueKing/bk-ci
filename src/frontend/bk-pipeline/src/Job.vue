@@ -217,6 +217,8 @@ export default {
         isUnExecThisTime() {
             return this.container?.executeCount < this.reactiveData.currentExecCount
         },
+        // 矩阵子Job整体重试入口：仅在执行详情、最新构建、且当前为矩阵子容器(containerGroupIndex 有值)、
+        // 子容器可重试(后端 refreshCanRetry 计算的 canRetry)时展示
         showMatrixJobRetry() {
             return (
                 this.reactiveData.isExecDetail
