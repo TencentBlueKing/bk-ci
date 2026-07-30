@@ -49,7 +49,7 @@ data class ChangeFileInfo(
     @JsonProperty("deleted_file")
     val deletedFile: Boolean,
     @JsonProperty("additions")
-    val additions: Int,
+    val additions: Int = 0,
     @JsonProperty("deletions")
-    val deletions: Int
+    val deletions: Int = 0
 )
