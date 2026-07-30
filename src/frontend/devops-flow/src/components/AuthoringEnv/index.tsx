@@ -306,7 +306,9 @@ export default defineComponent({
 
           <Dialog
             isShow={isOsDialogShow.value}
-            title={t('flow.content.environmentOsCheckTitle')}
+            title={result?.type === 'incompatible'
+              ? t('flow.content.environmentOsIncompatibleTitle')
+              : t('flow.content.environmentOsConfirmTitle')}
             width={680}
             quickClose={false}
             showFooter={false}
