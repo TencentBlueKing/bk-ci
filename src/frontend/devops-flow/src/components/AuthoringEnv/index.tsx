@@ -4,7 +4,8 @@ import {
 } from '@/api/authoringEnvironmentApi'
 import { SvgIcon } from '@/components/SvgIcon'
 import useAuthoringEnvironment, { type EnvSelectItem } from '@/hooks/useAuthoringEnvironment'
-import { Exception, Loading, Select, Tag } from 'bkui-vue'
+import type { EnvironmentOsCompatibilityResult } from '@/hooks/useEnvironmentOsCompatibility'
+import { Button, Dialog, Exception, Loading, Message, Select, Tag } from 'bkui-vue'
 import { computed, defineComponent, nextTick, onMounted, ref, watch, type PropType } from 'vue'
 import { useI18n } from 'vue-i18n'
 import styles from './AuthoringEnv.module.css'
@@ -51,11 +52,22 @@ export default defineComponent({
       type: Boolean,
       default: false,
     },
+    beforeChange: {
+      type: Function as PropType<(
+        currentEnv?: EnvSelectItem,
+        nextEnv?: EnvSelectItem,
+      ) => Promise<EnvironmentOsCompatibilityResult>>,
+      default: undefined,
+    },
   },
   emits: ['update:modelValue'],
   setup(props, { emit }) {
     const { t } = useI18n()
     const envHashId = ref(props.modelValue)
+    const pendingEnvHashId = ref('')
+    const osCompatibilityResult = ref<EnvironmentOsCompatibilityResult | null>(null)
+    const isOsDialogShow = ref(false)
+    const isCheckingOs = ref(false)
     const { goEnvironment, loadNodeList } = useAuthoringEnvironment()
     const selectedEnv = computed(() => {
       return props.envList.find((env) => env.envHashId === envHashId.value || env.value === envHashId.value)
@@ -81,11 +93,62 @@ export default defineComponent({
       }
     })
 
-    function handleChange() {
-      emit('update:modelValue', envHashId.value)
+    function commitEnvironmentChange(value: string) {
+      envHashId.value = value
+      emit('update:modelValue', value)
       nextTick(() => {
-        loadNodeList(envHashId.value)
+        loadNodeList(value)
       })
+    }
+
+    async function handleChange(value: string) {
+      if (!value || value === envHashId.value) return
+
+      const currentEnv = props.envList.find(
+        (env) => env.envHashId === envHashId.value || env.value === envHashId.value,
+      )
+      const nextEnv = props.envList.find(
+        (env) => env.envHashId === value || env.value === value,
+      )
+
+      if (!props.beforeChange) {
+        commitEnvironmentChange(value)
+        return
+      }
+
+      isCheckingOs.value = true
+      try {
+        const result = await props.beforeChange(currentEnv, nextEnv)
+        if (result.type === 'unchanged') {
+          commitEnvironmentChange(value)
+          return
+        }
+
+        pendingEnvHashId.value = value
+        osCompatibilityResult.value = result
+        isOsDialogShow.value = true
+      } catch (error: any) {
+        Message({
+          theme: 'error',
+          message: error?.message || t('flow.content.environmentOsCheckFailed'),
+        })
+      } finally {
+        isCheckingOs.value = false
+      }
+    }
+
+    function closeOsDialog() {
+      isOsDialogShow.value = false
+      pendingEnvHashId.value = ''
+      osCompatibilityResult.value = null
+    }
+
+    function continueEnvironmentChange() {
+      const value = pendingEnvHashId.value
+      closeOsDialog()
+      if (value) {
+        commitEnvironmentChange(value)
+      }
     }
 
     function goToEnvironment() {
@@ -133,13 +196,12 @@ export default defineComponent({
         class: [styles.envSelect, selectedOsLabel.value && styles.envSelectWithOs],
         modelValue: envHashId.value,
         'onUpdate:modelValue': (value: string) => {
-          envHashId.value = value
+          handleChange(value)
         },
         filterable: true,
-        loading: props.envLoading,
+        loading: props.envLoading || isCheckingOs.value,
         placeholder: t('flow.orchestration.selectPlaceholder'),
         searchPlaceholder: t('flow.content.searchEnvironment'),
-        onChange: handleChange,
       }
       const selectSlots: Record<string, () => unknown> = {
         default: () => props.envList.map(renderEnvOption),
@@ -217,24 +279,86 @@ export default defineComponent({
       )
     }
 
-    return () => (
-      <div class={styles.authoringRoot}>
-        {props.isEdit ? renderEnvSelect() : null}
-        <div class={styles.authoringContent}>
-          {!props.isEdit ? (
-            <p class={styles.authoringHeader}>
-              <span class={styles.headerText}>{envName.value}</span>
-            </p>
-          ) : null}
-          {envHashId.value ? (
-            <Loading loading={props.nodeLoading} size="small" class="p-lg">
-              {renderEnvironmentDetails()}
-            </Loading>
-          ) : (
-            <p class={styles.noData}>{t('flow.content.previewDetailsAfterEnvironmentSelection')}</p>
-          )}
-        </div>
-      </div>
-    )
+    return () => {
+      const result = osCompatibilityResult.value
+      const previousOs = getEnvOsDisplayName(result?.previousOs)
+      const nextOs = getEnvOsDisplayName(result?.nextOs)
+
+      return (
+        <>
+          <div class={styles.authoringRoot}>
+            {props.isEdit ? renderEnvSelect() : null}
+            <div class={styles.authoringContent}>
+              {!props.isEdit ? (
+                <p class={styles.authoringHeader}>
+                  <span class={styles.headerText}>{envName.value}</span>
+                </p>
+              ) : null}
+              {envHashId.value ? (
+                <Loading loading={props.nodeLoading} size="small" class="p-lg">
+                  {renderEnvironmentDetails()}
+                </Loading>
+              ) : (
+                <p class={styles.noData}>{t('flow.content.previewDetailsAfterEnvironmentSelection')}</p>
+              )}
+            </div>
+          </div>
+
+          <Dialog
+            isShow={isOsDialogShow.value}
+            title={t('flow.content.environmentOsCheckTitle')}
+            width={680}
+            quickClose={false}
+            showFooter={false}
+            onClosed={closeOsDialog}
+          >
+            {{
+              default: () => (
+                <div class={styles.osDialogContent}>
+                  <p>
+                    {t('flow.content.environmentOsChanged', [previousOs, nextOs])}
+                    {result?.type === 'incompatible'
+                      ? t('flow.content.environmentOsIncompatible')
+                      : t('flow.content.environmentOsCompatible')}
+                  </p>
+                  {result?.type === 'incompatible' ? (
+                    <>
+                      <p>{t('flow.content.environmentOsChooseTip')}</p>
+                      <ul class={styles.osIncompatibleList}>
+                        {result.incompatiblePlugins.map((plugin, index) => (
+                          <li key={`${plugin.atomCode}-${index}`}>
+                            {t('flow.content.environmentOsPluginTip', [
+                              plugin.name,
+                              plugin.supportedOs.map(getEnvOsDisplayName).join(' / '),
+                              nextOs,
+                            ])}
+                          </li>
+                        ))}
+                      </ul>
+                    </>
+                  ) : null}
+                </div>
+              ),
+              footer: () => (
+                <div class={styles.osDialogFooter}>
+                  {result?.type === 'compatible' ? (
+                    <>
+                      <Button onClick={closeOsDialog}>{t('flow.common.cancel')}</Button>
+                      <Button theme="primary" onClick={continueEnvironmentChange}>
+                        {t('flow.content.continueSave')}
+                      </Button>
+                    </>
+                  ) : (
+                    <Button theme="primary" onClick={closeOsDialog}>
+                      {t('flow.content.known')}
+                    </Button>
+                  )}
+                </div>
+              ),
+            }}
+          </Dialog>
+        </>
+      )
+    }
   },
 })

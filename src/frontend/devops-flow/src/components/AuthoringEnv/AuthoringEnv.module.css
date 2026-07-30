@@ -207,6 +207,28 @@
   color: var(--color-text-disabled);
 }
 
+.osDialogContent {
+  line-height: 22px;
+  color: var(--color-text-primary);
+}
+
+.osDialogContent p {
+  margin: 0 0 16px;
+}
+
+.osIncompatibleList {
+  max-height: 240px;
+  margin: 0;
+  padding-left: 20px;
+  overflow-y: auto;
+}
+
+.osDialogFooter {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
 /* Loading styles and code editor wrapper moved to layout.module.css */
 
 /* Removed section navigation styles as they are no longer needed */

@@ -417,6 +417,7 @@ export interface PluginPropertyItem {
   os: string[]
   logoUrl: string
   buildLessRunFlag: boolean
+  versionOsMap?: Record<string, string[]>
 }
 
 export interface PluginProperty {
