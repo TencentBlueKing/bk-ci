@@ -26,13 +26,6 @@
                 container.matrixGroupFlag
             " name="matrix" size="16" class="matrix-flag-icon">
             </Logo>
-            <span
-                v-if="showMatrixJobRetry"
-                class="matrix-job-retry"
-                @click.stop="triggerMatrixJobRetry"
-            >
-                {{ t('retry') }}
-            </span>
             <Logo name="angle-circle-down" size="18" @click.stop="toggleShowAtom()" :class="matrixFoldLogoCls">
             </Logo>
             <bk-button v-if="showDebugBtn" class="debug-btn" theme="warning" @click.stop="debugDocker">
@@ -63,7 +56,6 @@ import ContainerType from "./ContainerType"
 import Logo from "./Logo"
 import StatusIcon from "./StatusIcon"
 import {
-    ATOM_CONTINUE_EVENT_NAME,
     CLICK_EVENT_NAME,
     COPY_EVENT_NAME,
     DEBUG_CONTAINER,
@@ -217,16 +209,6 @@ export default {
         isUnExecThisTime() {
             return this.container?.executeCount < this.reactiveData.currentExecCount
         },
-        // 矩阵子Job整体重试入口：仅在执行详情、最新构建、且当前为矩阵子容器(containerGroupIndex 有值)、
-        // 子容器可重试(后端 refreshCanRetry 计算的 canRetry)时展示
-        showMatrixJobRetry() {
-            return (
-                this.reactiveData.isExecDetail
-                && this.reactiveData.isLatestBuild
-                && this.containerGroupIndex !== undefined
-                && this.container.canRetry === true
-            )
-        },
     },
     watch: {
         "container.runContainer"(newVal) {
@@ -320,13 +302,6 @@ export default {
                 container: this.container,
             })
         },
-        triggerMatrixJobRetry() {
-            // 矩阵子Job整体重试：taskId 为子容器 id，后端据此重跑该子Job内全部插件
-            eventBus.$emit(ATOM_CONTINUE_EVENT_NAME, {
-                taskId: this.container.id,
-                skip: false,
-            })
-        },
         handleContainerRunChange(value) {
             const newElements = this.container.elements.map((element) => ({
                 ...element,
@@ -397,14 +372,6 @@ export default {
             &.open {
                 transform: rotate(-180deg);
             }
-        }
-
-        .matrix-job-retry {
-            font-size: 12px;
-            margin-right: 12px;
-            color: $primaryColor;
-            cursor: pointer;
-            white-space: nowrap;
         }
 
         .copyJob {
