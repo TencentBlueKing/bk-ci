@@ -309,6 +309,8 @@
             primaryButtonText () {
                 if (this.isConflictStatus) {
                     return this.$t('continueSaving')
+                } else if (this.isReleaseOutDatedStatus) {
+                    return this.$t('editBasedOnLatest')
                 } else {
                     return this.$t('newDraft')
                 }

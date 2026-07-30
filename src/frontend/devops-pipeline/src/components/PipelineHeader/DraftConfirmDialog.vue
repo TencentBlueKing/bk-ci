@@ -239,6 +239,8 @@
                     return this.$t('resume')
                 } else if (this.showRollbackTips) {
                     return this.$t('rollbackConfirm')
+                } else if ([DRAFT_STATUS.PUBLISHED, DRAFT_STATUS.RELEASE_OUTDATED].includes(this.draftStatus)) {
+                    return this.$t('editBasedOnLatest')
                 }
                 return this.$t('newDraft')
             },
