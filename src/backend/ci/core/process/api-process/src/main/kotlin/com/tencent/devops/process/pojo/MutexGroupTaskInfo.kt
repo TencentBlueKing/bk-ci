@@ -42,6 +42,8 @@ data class MutexGroupTaskInfo(
     val pipelineName: String?,
     @get:Schema(title = "Job名称", required = false)
     val jobName: String?,
+    @get:Schema(title = "Job标识", required = false)
+    val jobId: String?,
     @get:Schema(title = "构建状态", required = true)
     val status: BuildStatus,
     @get:Schema(title = "是否当前锁持有者", required = true)

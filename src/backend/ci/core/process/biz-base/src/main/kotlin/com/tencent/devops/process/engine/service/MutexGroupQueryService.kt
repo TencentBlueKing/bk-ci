@@ -129,6 +129,7 @@ class MutexGroupQueryService @Autowired constructor(
             pipelineId = linkPipelineId ?: pipelineIdFromDb,
             pipelineName = pipelineName,
             jobName = jobName,
+            jobId = containerId,
             status = status,
             isLockHolder = isLockHolder
         )
