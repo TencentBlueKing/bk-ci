@@ -1687,12 +1687,22 @@ class WorkspaceService @Autowired constructor(
             logger.debug("projectAccessDevicePermissions ip null")
             return emptyMap()
         }
-        val res = apiGwService.projectAccessDevicePermissions(
-            mac = macAddress,
-            userId = userId,
-            projects = projects.joinToString(","),
-            ip = ip
-        ) ?: emptyMap()
+        // 外部安全接口不可用时（超时/异常）降级放行，避免阻断用户进入云桌面
+        val res = try {
+            apiGwService.projectAccessDevicePermissions(
+                mac = macAddress,
+                userId = userId,
+                projects = projects.joinToString(","),
+                ip = ip
+            ) ?: emptyMap()
+        } catch (ignored: Exception) {
+            logger.warn(
+                "projectAccessDevicePermissions|call security apigw failed|" +
+                    "userId=$userId|projectId=$projectId|degrade to emptyMap",
+                ignored
+            )
+            return emptyMap()
+        }
         res.forEach { (project, v) -> v.checkWhiteList(project, userId) }
         return res
     }
