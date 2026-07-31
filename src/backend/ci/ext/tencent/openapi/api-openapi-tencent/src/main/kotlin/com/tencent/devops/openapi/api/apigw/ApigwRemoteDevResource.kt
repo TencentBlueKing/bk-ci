@@ -16,6 +16,7 @@ import com.tencent.devops.remotedev.pojo.OperateCvmData
 import com.tencent.devops.remotedev.pojo.ProjectWorkspace
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
 import com.tencent.devops.remotedev.pojo.TaskStatusResp
+import com.tencent.devops.remotedev.pojo.TeamInfo
 import com.tencent.devops.remotedev.pojo.UserOnePassword
 import com.tencent.devops.remotedev.pojo.WhiteListType
 import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
@@ -1603,4 +1604,43 @@ interface ApigwRemoteDevResource {
         @QueryParam("enable")
         enable: Boolean
     ): Result<Boolean>
+
+    @Operation(summary = "获取开黑信息，如果没有说明没开黑", tags = ["v4_app_remotedev_get_workspace_team_info"])
+    @GET
+    @Path("/get_workspace_team_info")
+    fun getWorkspaceTeamInfo(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目Id", required = true)
+        @QueryParam("workspaceName")
+        projectId: String,
+        @Parameter(description = "工作空间名称", required = true)
+        @QueryParam("workspaceName")
+        workspaceName: String?,
+        @Parameter(description = "环境ID", required = true)
+        @QueryParam("envId")
+        envId: String?
+    ): Result<TeamInfo?>
+
+    @Operation(summary = "开启或关闭开黑功能", tags = ["v4_app_remotedev_enable_workspace_team"])
+    @POST
+    @Path("/enable_workspace_team")
+    fun enableWorkspaceTeam(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目Id", required = true)
+        @QueryParam("workspaceName")
+        projectId: String,
+        @Parameter(description = "工作空间名称", required = true)
+        @QueryParam("workspaceName")
+        workspaceName: String?,
+        @Parameter(description = "环境ID", required = true)
+        @QueryParam("envId")
+        envId: String?,
+        @Parameter(description = "开启或关闭(true/false)", required = true)
+        @QueryParam("enable")
+        enable: Boolean
+    ): Result<TeamInfo?>
 }

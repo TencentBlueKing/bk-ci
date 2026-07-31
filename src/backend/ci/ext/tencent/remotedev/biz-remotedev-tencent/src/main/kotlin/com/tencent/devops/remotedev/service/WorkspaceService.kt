@@ -1310,7 +1310,7 @@ class WorkspaceService @Autowired constructor(
             // --story=136579406 【云桌面】支持团队虾和开黑功能 如果是被分享人且是开黑接口，可以使用
             // TODO: 开黑功能的分享是否复用shared待确认
             cgsStatus.userInfos?.firstOrNull()?.takeIf { it.account != userId }?.let {
-                if (teamService.enableTeam(workspaceName) && workspaceSharedDao.fetchWorkspaceSharedInfo(
+                if (teamService.hasEnableTeam(workspaceName) && workspaceSharedDao.fetchWorkspaceSharedInfo(
                         dslContext = dslContext,
                         workspaceName = workspaceName,
                         sharedUsers = listOf(userId)
