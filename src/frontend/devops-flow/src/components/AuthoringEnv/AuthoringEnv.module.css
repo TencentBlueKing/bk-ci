@@ -7,12 +7,15 @@
 .headerText {
   font-size: var(--font-size-xs);
   color: var(--color-text-primary);
-  margin-left: var(--spacing-lg);
 }
 
 .authoringHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   height: 40px;
-  line-height: 40px;
+  padding: 0 var(--spacing-lg);
+  box-sizing: border-box;
   background: var(--bg-secondary);
 }
 

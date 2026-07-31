@@ -337,6 +337,11 @@ export default defineComponent({
         <div class={styles.authoringContent}>
           {!props.isEdit ? (
             <p class={styles.authoringHeader}>
+              {selectedOsLabel.value ? (
+                <Tag size="small" class={styles.envOsTag}>
+                  {selectedOsLabel.value}
+                </Tag>
+              ) : null}
               <span class={styles.headerText}>{envName.value}</span>
             </p>
           ) : null}
