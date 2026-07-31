@@ -1408,7 +1408,7 @@ interface ApigwRemoteDevResource {
             required = true,
             example = AUTH_HEADER_USER_ID_DEFAULT_VALUE
         )
-       @HeaderParam(AUTH_HEADER_USER_ID)
+        @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(
             description = "第几页",
@@ -1609,6 +1609,12 @@ interface ApigwRemoteDevResource {
     @GET
     @Path("/get_workspace_team_info")
     fun getWorkspaceTeamInfo(
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @Parameter(description = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
@@ -1627,6 +1633,12 @@ interface ApigwRemoteDevResource {
     @POST
     @Path("/enable_workspace_team")
     fun enableWorkspaceTeam(
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @Parameter(description = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,

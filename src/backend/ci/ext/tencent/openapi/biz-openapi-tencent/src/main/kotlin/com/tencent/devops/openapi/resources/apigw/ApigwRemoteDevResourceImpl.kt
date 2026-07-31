@@ -9,6 +9,7 @@ import com.tencent.devops.openapi.api.apigw.ApigwRemoteDevResource
 import com.tencent.devops.project.api.service.ServiceUserResource
 import com.tencent.devops.remotedev.api.service.ServiceRemoteDevRecordResource
 import com.tencent.devops.remotedev.api.service.ServiceRemoteDevResource
+import com.tencent.devops.remotedev.api.service.ServiceRemoteDevTeamResource
 import com.tencent.devops.remotedev.pojo.CreateOpenClawData
 import com.tencent.devops.remotedev.pojo.CreateOpenClawDataResp
 import com.tencent.devops.remotedev.pojo.FeatureSwitchType
@@ -17,6 +18,7 @@ import com.tencent.devops.remotedev.pojo.OperateCvmData
 import com.tencent.devops.remotedev.pojo.ProjectWorkspace
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
 import com.tencent.devops.remotedev.pojo.TaskStatusResp
+import com.tencent.devops.remotedev.pojo.TeamInfo
 import com.tencent.devops.remotedev.pojo.UserOnePassword
 import com.tencent.devops.remotedev.pojo.WhiteListType
 import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
@@ -920,7 +922,7 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
     ): Result<Map<String, String>> {
         logger.info(
             "refreshInstanceStatus" +
-                " |$userId|$projectId|${instanceIds.size}"
+                    " |$userId|$projectId|${instanceIds.size}"
         )
         return client.get(ServiceRemoteDevResource::class)
             .refreshWorkspaceStatus(
@@ -935,7 +937,7 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
     ): Result<List<WeSecProjectWorkspace>> {
         logger.info(
             "batchGetSimpleWorkspaces" +
-                " |$userId|$projectId|${workspaceNames.size}"
+                    " |$userId|$projectId|${workspaceNames.size}"
         )
         return client.get(ServiceRemoteDevResource::class)
             .batchGetSimpleWorkspaces(
@@ -951,7 +953,7 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
     ): Result<Page<Workspace>> {
         logger.info(
             "searchUserWorkspaces" +
-                " |$userId|$page|$pageSize"
+                    " |$userId|$page|$pageSize"
         )
         return client.get(ServiceRemoteDevResource::class)
             .searchUserWorkspaces(
@@ -974,8 +976,8 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
     ): Result<Page<String>> {
         logger.info(
             "batchQueryThumbnailWorkspaces" +
-                " |$appCode|$userId|enable=$enable|page=$page|pageSize=$pageSize" +
-                "|projectId=$projectId|workspaceNames.size=${workspaceNames?.size}"
+                    " |$appCode|$userId|enable=$enable|page=$page|pageSize=$pageSize" +
+                    "|projectId=$projectId|workspaceNames.size=${workspaceNames?.size}"
         )
         return client.get(ServiceRemoteDevResource::class)
             .batchQueryThumbnailWorkspaces(
@@ -997,7 +999,7 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
     ): Result<Boolean> {
         logger.info(
             "enableWorkspaceThumbnail" +
-                " |$appCode|$userId|enable=$enable|workspaceNames.size=${workspaceNames.size}"
+                    " |$appCode|$userId|enable=$enable|workspaceNames.size=${workspaceNames.size}"
         )
         return client.get(ServiceRemoteDevResource::class)
             .enableWorkspaceThumbnail(
@@ -1078,6 +1080,35 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
             projectId = projectId,
             enable = enable,
             switchType = FeatureSwitchType.LIVE_STREAMING_DEVCLOUD
+        )
+    }
+
+    override fun getWorkspaceTeamInfo(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        workspaceName: String?,
+        envId: String?
+    ): Result<TeamInfo?> {
+        logger.info("getWorkspaceTeamInfo |$appCode|$userId|$projectId|$workspaceName|$envId")
+        return client.get(ServiceRemoteDevTeamResource::class).getWorkspaceTeamInfo(
+            userId = userId, projectId = projectId, workspaceName = workspaceName, envId = envId
+        )
+    }
+
+    override fun enableWorkspaceTeam(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        workspaceName: String?,
+        envId: String?,
+        enable: Boolean
+    ): Result<TeamInfo?> {
+        logger.info("enableWorkspaceTeam |$appCode|$userId|$projectId|$workspaceName|$envId|$enable")
+        return client.get(ServiceRemoteDevTeamResource::class).enableWorkspaceTeam(
+            userId = userId, projectId = projectId, workspaceName = workspaceName, envId = envId, enable = enable
         )
     }
 }
