@@ -209,24 +209,20 @@
 
 .osDialogContent {
   line-height: 22px;
+  text-align: left;
   color: var(--color-text-primary);
 }
 
 .osDialogContent p {
-  margin: 0 0 16px;
+  margin: 0 0 12px;
 }
 
 .osIncompatibleList {
   max-height: 240px;
   margin: 0;
-  padding-left: 20px;
+  padding-left: 0;
+  list-style: none;
   overflow-y: auto;
-}
-
-.osDialogFooter {
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
 }
 
 /* Loading styles and code editor wrapper moved to layout.module.css */
