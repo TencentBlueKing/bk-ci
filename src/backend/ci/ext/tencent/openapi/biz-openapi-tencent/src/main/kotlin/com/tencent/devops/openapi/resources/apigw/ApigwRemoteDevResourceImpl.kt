@@ -1082,33 +1082,4 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
             switchType = FeatureSwitchType.LIVE_STREAMING_DEVCLOUD
         )
     }
-
-    override fun getWorkspaceTeamInfo(
-        appCode: String?,
-        apigwType: String?,
-        userId: String,
-        projectId: String,
-        workspaceName: String?,
-        envId: String?
-    ): Result<TeamInfo?> {
-        logger.info("getWorkspaceTeamInfo |$appCode|$userId|$projectId|$workspaceName|$envId")
-        return client.get(ServiceRemoteDevTeamResource::class).getWorkspaceTeamInfo(
-            userId = userId, projectId = projectId, workspaceName = workspaceName, envId = envId
-        )
-    }
-
-    override fun enableWorkspaceTeam(
-        appCode: String?,
-        apigwType: String?,
-        userId: String,
-        projectId: String,
-        workspaceName: String?,
-        envId: String?,
-        enable: Boolean
-    ): Result<TeamInfo?> {
-        logger.info("enableWorkspaceTeam |$appCode|$userId|$projectId|$workspaceName|$envId|$enable")
-        return client.get(ServiceRemoteDevTeamResource::class).enableWorkspaceTeam(
-            userId = userId, projectId = projectId, workspaceName = workspaceName, envId = envId, enable = enable
-        )
-    }
 }

@@ -170,8 +170,7 @@ class WorkspaceService @Autowired constructor(
     private val windowsGpuResourceDao: WindowsGpuResourceDao,
     private val whiteListService: WhiteListService,
     private val whiteListDao: WhiteListDao,
-    private val dispatchWorkspaceDao: DispatchWorkspaceDao,
-    private val teamService: TeamService
+    private val dispatchWorkspaceDao: DispatchWorkspaceDao
 ) {
     @Value("\${remoteDev.projectMonitorUrl:}")
     val projectMonitorUrl = ""
@@ -1279,7 +1278,8 @@ class WorkspaceService @Autowired constructor(
     fun startCloudWorkspaceDetail(
         userId: String,
         workspaceName: String?,
-        envId: String?
+        envId: String?,
+        multiple: Boolean? = null
     ): WorkspaceStartCloudDetail {
         if (workspaceName != null) {
             val workspace = workspaceJoinDao.fetchAnyWindowsWorkspace(dslContext, workspaceName = workspaceName)
@@ -1307,10 +1307,9 @@ class WorkspaceService @Autowired constructor(
                 )
             }
             // 优化：如果当前后台记录的用户，跟进入云桌面人不一致，提示有人在用
-            // --story=136579406 【云桌面】支持团队虾和开黑功能 如果是被分享人且是开黑接口，可以使用
-            // TODO: 开黑功能的分享是否复用shared待确认
+            // --story=136579406 【云桌面】支持团队虾和开黑功能 如果是被分享人可以看
             cgsStatus.userInfos?.firstOrNull()?.takeIf { it.account != userId }?.let {
-                if (teamService.hasEnableTeam(workspaceName) && workspaceSharedDao.fetchWorkspaceSharedInfo(
+                if (multiple == true || workspaceSharedDao.fetchWorkspaceSharedInfo(
                         dslContext = dslContext,
                         workspaceName = workspaceName,
                         sharedUsers = listOf(userId)

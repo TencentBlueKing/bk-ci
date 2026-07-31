@@ -252,13 +252,15 @@ class UserWorkspaceResourceImpl @Autowired constructor(
     override fun startCloudWorkspaceDetail(
         userId: String,
         workspaceName: String?,
-        envHashId: String?
+        envHashId: String?,
+        multiple: Boolean?
     ): Result<WorkspaceStartCloudDetail?> {
         return Result(
             workspaceService.startCloudWorkspaceDetail(
                 userId = userId,
                 workspaceName = workspaceName,
-                envId = envHashId
+                envId = envHashId,
+                multiple = multiple
             )
         )
     }
