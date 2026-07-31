@@ -146,6 +146,14 @@ class OpProjectWorkspaceResourceImpl @Autowired constructor(
         )
     }
 
+    override fun refreshProjectWorkspaceDimension(
+        userId: String,
+        projectId: String
+    ): Result<Boolean> {
+        logger.info("op refreshProjectWorkspaceDimension|$userId|$projectId")
+        return Result(desktopWorkspaceService.refreshProjectWorkspaceDimension(projectId))
+    }
+
     companion object {
         private val logger = LoggerFactory.getLogger(OpProjectWorkspaceResourceImpl::class.java)
     }
