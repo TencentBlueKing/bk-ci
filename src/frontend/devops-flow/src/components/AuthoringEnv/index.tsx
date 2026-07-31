@@ -65,7 +65,7 @@ export default defineComponent({
     const { t } = useI18n()
     const envHashId = ref(props.modelValue)
     const isCheckingOs = ref(false)
-    const { goEnvironment, loadNodeList } = useAuthoringEnvironment()
+    const { goEnvironment, getEnvironmentUrl, loadNodeList } = useAuthoringEnvironment()
     const selectedEnv = computed(() => {
       return props.envList.find((env) => env.envHashId === envHashId.value || env.value === envHashId.value)
     })
@@ -283,7 +283,17 @@ export default defineComponent({
     function renderNodeEmpty() {
       return (
         <Exception type="empty" scene="part" class={styles.nodeEmpty}>
-          {t('flow.content.noCreationNodeInEnvironment')}
+          <span>
+            {t('flow.content.noCreationNodeInEnvironment')}
+            <a
+              class={styles.relateNodeLink}
+              href={getEnvironmentUrl(envHashId.value)}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              {t('flow.content.goRelateNode')}
+            </a>
+          </span>
         </Exception>
       )
     }

@@ -203,6 +203,15 @@
   margin-top: -4px !important;
 }
 
+.relateNodeLink {
+  color: var(--color-primary);
+  cursor: pointer;
+}
+
+.relateNodeLink:hover {
+  color: var(--color-primary-hover);
+}
+
 .noData {
   margin-top: 58px;
   text-align: center;
