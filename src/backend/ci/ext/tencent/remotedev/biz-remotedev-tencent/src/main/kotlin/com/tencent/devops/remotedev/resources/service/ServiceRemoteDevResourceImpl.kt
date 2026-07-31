@@ -22,6 +22,7 @@ import com.tencent.devops.remotedev.pojo.ProjectWorkspace
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
 import com.tencent.devops.remotedev.pojo.RemoteDevGitType
 import com.tencent.devops.remotedev.pojo.TaskStatusResp
+import com.tencent.devops.remotedev.pojo.TemplateWorkspaceAssignResp
 import com.tencent.devops.remotedev.pojo.UserNotifyInfo
 import com.tencent.devops.remotedev.pojo.UserOnePassword
 import com.tencent.devops.remotedev.pojo.WhiteListType
@@ -81,6 +82,7 @@ import com.tencent.devops.remotedev.service.PermissionService
 import com.tencent.devops.remotedev.service.ProjectStrategyService
 import com.tencent.devops.remotedev.service.RemotedevProjectService
 import com.tencent.devops.remotedev.service.StartWorkspaceService
+import com.tencent.devops.remotedev.service.TemplateWorkspaceAssignService
 import com.tencent.devops.remotedev.service.WhiteListService
 import com.tencent.devops.remotedev.service.WindowsResourceConfigService
 import com.tencent.devops.remotedev.service.WorkspaceHookService
@@ -148,7 +150,8 @@ class ServiceRemoteDevResourceImpl(
     private val tGitBindService: TGitService,
     private val gitTransfer: RemoteDevGitTransfer,
     private val coffeeAIService: CoffeeAIService,
-    private val openClawService: OpenClawService
+    private val openClawService: OpenClawService,
+    private val templateWorkspaceAssignService: TemplateWorkspaceAssignService
 ) : ServiceRemoteDevResource {
     companion object {
         private const val MAX_REFRESH_SIZE = 100
@@ -247,6 +250,14 @@ class ServiceRemoteDevResourceImpl(
     ): Result<Boolean> {
         createControl.assignWorkspace(operator, data, owner)
         return Result(true)
+    }
+
+    override fun assignWorkspaceByTemplate(
+        templateId: String,
+        applicant: String
+    ): Result<TemplateWorkspaceAssignResp> {
+        logger.info("assignWorkspaceByTemplate|templateId=$templateId|applicant=$applicant")
+        return Result(templateWorkspaceAssignService.assignByTemplate(applicant, templateId))
     }
 
     override fun notifyWorkspaceInfo(operator: String, notifyData: WorkspaceNotifyData): Result<Boolean> {
