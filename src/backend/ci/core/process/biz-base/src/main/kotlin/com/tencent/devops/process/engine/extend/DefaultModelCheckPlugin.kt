@@ -68,8 +68,10 @@ import com.tencent.devops.process.utils.DependOnUtils
 import com.tencent.devops.process.utils.KEY_JOB
 import com.tencent.devops.process.utils.KEY_STAGE
 import com.tencent.devops.process.utils.KEY_TASK
+import com.tencent.devops.process.service.PipelineVarOverflowConfig
 import com.tencent.devops.process.utils.PIPELINE_CONDITION_EXPRESSION_LENGTH_MAX
 import com.tencent.devops.process.utils.PIPELINE_ID
+import com.tencent.devops.process.utils.PIPELINE_VARIABLES_STRING_LENGTH_MAX
 import com.tencent.devops.process.utils.PROJECT_NAME
 import com.tencent.devops.process.utils.PipelineVarUtil
 import com.tencent.devops.store.pojo.common.KEY_INPUT
@@ -84,7 +86,8 @@ open class DefaultModelCheckPlugin constructor(
     open val stageCommonSettingConfig: StageCommonSettingConfig,
     open val jobCommonSettingConfig: JobCommonSettingConfig,
     open val taskCommonSettingConfig: TaskCommonSettingConfig,
-    open val elementBizPluginServices: List<IElementBizPluginService>
+    open val elementBizPluginServices: List<IElementBizPluginService>,
+    open val pipelineVarOverflowConfig: PipelineVarOverflowConfig
 ) : ModelCheckPlugin {
 
     override fun checkModelIntegrity(
@@ -525,11 +528,32 @@ open class DefaultModelCheckPlugin constructor(
         val triggerContainer = (trigger.containers.getOrNull(0) ?: throw ErrorCodeException(
             errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NEED_JOB
         )) as TriggerContainer
+        checkParamDefaultValueLength(triggerContainer)
         return PipelineUtils.checkPipelineParams(
             params = triggerContainer.params,
             supportChineseVarName = supportChineseVarName,
             isTemplate = isTemplate
         )
+    }
+
+    /**
+     * 校验启动参数（params / templateParams）的默认值长度，
+     * 阈值复用运行期主表上限 [PIPELINE_VARIABLES_STRING_LENGTH_MAX]，
+     * 保证"保存时通过校验的默认值，启动后写入 VAR 主表不会溢出"。
+     */
+    private fun checkParamDefaultValueLength(triggerContainer: TriggerContainer) {
+        if (!pipelineVarOverflowConfig.startParamDefaultValueCheckEnabled) return
+        val maxLength = PIPELINE_VARIABLES_STRING_LENGTH_MAX
+        val allParams = triggerContainer.params + (triggerContainer.templateParams ?: emptyList())
+        allParams.forEach { param ->
+            val length = param.defaultValue.toString().length
+            if (length > maxLength) {
+                throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.ERROR_START_PARAM_DEFAULT_VALUE_OVERSIZE,
+                    params = arrayOf(param.id, length.toString(), maxLength.toString())
+                )
+            }
+        }
     }
 
     companion object {

@@ -42,7 +42,6 @@ import com.tencent.devops.common.db.pojo.ARCHIVE_SHARDING_DSL_CONTEXT
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.PipelineVersionWithModel
 import com.tencent.devops.common.pipeline.PipelineVersionWithModelRequest
-import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.dialect.PipelineDialectType
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.CodeTargetAction
@@ -73,7 +72,6 @@ import com.tencent.devops.process.service.pipeline.version.PipelineVersionManage
 import com.tencent.devops.process.service.scm.ScmProxyService
 import com.tencent.devops.process.service.template.v2.PipelineTemplateRelatedService
 import com.tencent.devops.process.service.template.v2.PipelineTemplateResourceService
-import com.tencent.devops.process.utils.PIPELINE_VARIABLES_STRING_LENGTH_MAX
 import com.tencent.devops.process.utils.PipelineVersionUtils
 import com.tencent.devops.process.yaml.PipelineYamlFacadeService
 import com.tencent.devops.process.yaml.transfer.PipelineTransferException
@@ -98,8 +96,7 @@ class PipelineVersionFacadeService @Autowired constructor(
     private val scmProxyService: ScmProxyService,
     private val pipelinePermissionService: PipelinePermissionService,
     private val pipelineVersionManager: PipelineVersionManager,
-    private val pipelineTemplateRelatedService: PipelineTemplateRelatedService,
-    private val pipelineVarOverflowConfig: PipelineVarOverflowConfig,
+    private val pipelineTemplateRelatedService: PipelineTemplateRelatedService
 ) {
 
     companion object {
@@ -594,40 +591,12 @@ class PipelineVersionFacadeService @Autowired constructor(
         projectId: String,
         modelAndYaml: PipelineVersionWithModelRequest
     ): DeployPipelineResult {
-        checkStartParamDefaultValueLength(modelAndYaml.modelAndSetting?.model)
         return pipelineVersionManager.deployPipeline(
             userId = userId,
             projectId = projectId,
             pipelineId = modelAndYaml.pipelineId,
             request = PipelineDraftSaveReq(modelAndYaml)
         )
-    }
-
-    /**
-     * 保存流水线编排时，校验启动参数（[TriggerContainer.params] 与 [TriggerContainer.templateParams]）
-     * 的默认值长度，避免过大的默认值随 model 序列化进版本表（含历史版本列表），放大存储与传输。
-     *
-     * 由 [PipelineVarOverflowConfig.startParamDefaultValueCheckEnabled] 开关控制（默认开启），
-     * 上限由 [PipelineVarOverflowConfig.startParamDefaultValueMaxLength] 控制（默认 4000），均支持热更新。
-     * 仅对前端传入 model 的编排生效；YAML-only（model 为空）由后续转换流程兜底，这里不阻断。
-     */
-    private fun checkStartParamDefaultValueLength(model: Model?) {
-        if (!pipelineVarOverflowConfig.startParamDefaultValueCheckEnabled) return
-        model ?: return
-        val triggerContainer = model.stages.firstOrNull()
-            ?.containers?.firstOrNull() as? TriggerContainer ?: return
-        // 阈值复用运行期主表上限：默认值 ≤ 该值时启动后写入 VAR 主表不会溢出
-        val maxLength = PIPELINE_VARIABLES_STRING_LENGTH_MAX
-        val allParams = triggerContainer.params + (triggerContainer.templateParams ?: emptyList())
-        allParams.forEach { param ->
-            val length = param.defaultValue.toString().length
-            if (length > maxLength) {
-                throw ErrorCodeException(
-                    errorCode = ProcessMessageCode.ERROR_START_PARAM_DEFAULT_VALUE_OVERSIZE,
-                    params = arrayOf(param.id, length.toString(), maxLength.toString())
-                )
-            }
-        }
     }
 
     fun listPipelineVersionInfo(

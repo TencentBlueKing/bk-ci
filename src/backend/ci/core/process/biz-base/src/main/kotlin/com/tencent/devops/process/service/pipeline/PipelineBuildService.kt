@@ -548,7 +548,7 @@ class PipelineBuildService(
             if (len > PIPELINE_VARIABLES_STRING_LENGTH_HARD_MAX) {
                 throw ErrorCodeException(
                     errorCode = ProcessMessageCode.ERROR_FAIL_IF_VARIABLE_INVALID,
-                    params = arrayOf(key)
+                    params = arrayOf(key, "${PIPELINE_VARIABLES_STRING_LENGTH_HARD_MAX / (1024 * 1024)}M")
                 )
             }
             totalLen += len
