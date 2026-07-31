@@ -1084,7 +1084,8 @@ class AtomDao : AtomBaseDao() {
      * 性能策略：
      * - AGENT（或 jobType/scope 均为空）：只查 OS 字段（LIKE），与优化前一致，零开销
      * - 非 AGENT 编译环境 jobType（如 CREATIVE_STREAM）：用 JSON_EXTRACT + JSON_CONTAINS 精确定位
-     *   OS_MAP 中对应 jobType 的数组，避免 JSON_SEARCH 全路径遍历。同时 OR OS 字段兜底兼容。
+     *   OS_MAP 中对应 jobType 的数组，避免 JSON_SEARCH 全路径遍历。
+     *   仅当 OS_MAP 未填充时才回退到 OS 字段（兼容未迁移的旧插件）。
      */
     private fun buildJobTypeAwareOsMatch(
         tAtom: TAtom,
@@ -1102,7 +1103,9 @@ class AtomDao : AtomBaseDao() {
             DSL.inline("\$.$osMapKey"),
             DSL.inline(os)
         )
-        return osInMapCondition.or(tAtom.OS.contains(os))
+        val osMapPopulated = tAtom.OS_MAP.isNotNull.and(tAtom.OS_MAP.ne(""))
+        return osMapPopulated.and(osInMapCondition)
+            .or(osMapPopulated.not().and(tAtom.OS.contains(os)))
     }
 
     /**
