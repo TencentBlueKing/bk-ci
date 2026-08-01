@@ -80,6 +80,7 @@ import com.tencent.devops.environment.dao.EnvDao
 import com.tencent.devops.environment.dao.EnvNodeDao
 import com.tencent.devops.environment.dao.EnvShareProjectDao
 import com.tencent.devops.environment.dao.EnvTagDao
+import com.tencent.devops.environment.dao.EnvTagNodeEnableDao
 import com.tencent.devops.environment.dao.NodeDao
 import com.tencent.devops.environment.dao.NodeTagKeyDao
 import com.tencent.devops.environment.dao.thirdpartyagent.ThirdPartyAgentDao
@@ -141,6 +142,7 @@ class EnvService @Autowired constructor(
     private val slaveGatewayService: SlaveGatewayService,
     private val environmentPermissionService: EnvironmentPermissionService,
     private val envShareProjectDao: EnvShareProjectDao,
+    private val envTagNodeEnableDao: EnvTagNodeEnableDao,
     private val nodeService: NodeService,
     private val client: Client,
     private val authProjectApi: AuthProjectApi,
@@ -1240,6 +1242,8 @@ class EnvService @Autowired constructor(
                 if (envRecord.envNodeType == EnvNodeType.TAG.name) {
                     envTagDao.deleteByEnvId(ctx, envId)
                     envDao.updateEnvNodeType(ctx, envId, EnvNodeType.NODE)
+                    // 清空关联节点记录
+                    envTagNodeEnableDao.delete(ctx, projectId, envId)
                 }
                 envNodeDao.deleteByEnvId(ctx, envId)
             }
@@ -1326,9 +1330,14 @@ class EnvService @Autowired constructor(
             if (envRecord.envNodeType == EnvNodeType.TAG.name) {
                 envTagDao.deleteByEnvId(ctx, envId)
                 envDao.updateEnvNodeType(ctx, envId, EnvNodeType.NODE)
+                // 清空关联节点记录
+                envTagNodeEnableDao.delete(ctx, projectId, envId)
             }
+            // 删除前拿一下启停数据
+            val existRecord = envNodeDao.list(ctx, projectId, listOf(envId)).associate { it.nodeId to it.enableNode }
+            val nodeEnableMap = existNodeIds.associateWith { (existRecord[it] ?: true) }
             envNodeDao.deleteByEnvId(ctx, envId)
-            envNodeDao.batchStoreEnvNode(ctx, existNodeIds.toList(), envId, projectId)
+            envNodeDao.batchStoreEnvNode(ctx, nodeEnableMap, envId, projectId)
         }
 
         envOperateLogService.addOperateLog(
@@ -1989,37 +1998,48 @@ class EnvService @Autowired constructor(
         } else {
             ActionAuditContext.current().addAttribute(PROJECT_ENABLE_OR_DISABLE_TEMPLATE, "disable")
         }
-        return if (envNodeDao.exists(dslContext, projectId, envId, nodeId)) {
-            val result = envNodeDao.disableOrEnableNode(
+        // 动态
+        val result = if (env.envNodeType == EnvNodeType.TAG.name) {
+            envTagNodeEnableDao.disableOrEnableNode(
                 dslContext = dslContext,
                 projectId = projectId,
                 envId = envId,
                 nodeId = nodeId,
                 enable = enableNode
             )
-            envOperateLogService.addOperateLog(
+        } else {
+            // 静态
+            if (!envNodeDao.exists(dslContext, projectId, envId, nodeId)) {
+                return Result(
+                    data = false,
+                    status = 400,
+                    message = I18nUtil.getCodeLanMessage(
+                        messageCode = ERROR_NODE_NOT_EXISTS,
+                        params = arrayOf(node.displayName)
+                    )
+                )
+            }
+            envNodeDao.disableOrEnableNode(
+                dslContext = dslContext,
                 projectId = projectId,
                 envId = envId,
-                operateOrigin = operateOrigin,
-                operateName = if (enableNode) {
-                    EnvOperateName.ENABLE_NODE
-                } else {
-                    EnvOperateName.DISABLE_NODE
-                },
-                operateContent = EnvOperateContent(content = data?.reason ?: "", resourceCount = 1),
-                operator = userId
-            )
-            Result(result)
-        } else {
-            Result(
-                data = false,
-                status = 400,
-                message = I18nUtil.getCodeLanMessage(
-                    messageCode = ERROR_NODE_NOT_EXISTS,
-                    params = arrayOf(node.displayName)
-                )
+                nodeId = nodeId,
+                enable = enableNode
             )
         }
+        envOperateLogService.addOperateLog(
+            projectId = projectId,
+            envId = envId,
+            operateOrigin = operateOrigin,
+            operateName = if (enableNode) {
+                EnvOperateName.ENABLE_NODE
+            } else {
+                EnvOperateName.DISABLE_NODE
+            },
+            operateContent = EnvOperateContent(content = data?.reason ?: "", resourceCount = 1),
+            operator = userId
+        )
+        return Result(result)
     }
 
     /**
@@ -2096,6 +2116,8 @@ class EnvService @Autowired constructor(
         val candidates = mutableListOf<EnvNodeCandidate>()
         // 动态
         val tagEnvIds = envs.filter { it.envNodeType == EnvNodeType.TAG.name }.map { it.envId }.toSet()
+        val enableTagNodes = envTagNodeEnableDao.listEnvNodeEnable(dslContext, projectId, tagEnvIds)
+            .associate { it.nodeId to it.enableNode }
         envTagDao.batchEnvTagNode(
             dslContext = dslContext,
             projectId = projectId,
@@ -2103,14 +2125,16 @@ class EnvService @Autowired constructor(
         ).forEach { (envId, nodeIds) ->
             val nodeType = getEnvNodeType(envMap[envId]?.envType)
             nodeIds.forEach { nodeId ->
-                candidates.add(EnvNodeCandidate(
-                    envId = envId,
-                    nodeId = nodeId,
-                    enableNode = true,
-                    nodeType = nodeType,
-                    os = envMap[envId]?.os,
-                    envType = envMap[envId]?.envType
-                ))
+                candidates.add(
+                    EnvNodeCandidate(
+                        envId = envId,
+                        nodeId = nodeId,
+                        enableNode = enableTagNodes[nodeId] ?: true,
+                        nodeType = nodeType,
+                        os = envMap[envId]?.os,
+                        envType = envMap[envId]?.envType
+                    )
+                )
             }
         }
         // 静态
