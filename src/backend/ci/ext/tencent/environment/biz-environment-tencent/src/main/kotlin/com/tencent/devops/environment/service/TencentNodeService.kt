@@ -199,10 +199,14 @@ class TencentNodeService @Autowired constructor(
     }
 
     fun getNodeAgentDetail(userId: String, projectId: String, agentHashId: String): NodeAgentDetail? {
-        val agent = thirdPartyAgentDao.getAgentByProject(dslContext, HashUtil.decodeIdToLong(agentHashId), projectId)
-            ?: return null
+        val agent = thirdPartyAgentDao.getAgentByProject(
+            dslContext = dslContext,
+            id = HashUtil.decodeIdToLong(agentHashId),
+            projectId = projectId
+        ) ?: return null
         val node = nodeDao.get(dslContext, projectId, agent.nodeId) ?: return null
         return NodeAgentDetail(
+            agentHashId = agentHashId,
             displayName = node.displayName,
             ip = agent.ip,
             workspaceName = agent.createWorkspaceName
@@ -323,6 +327,7 @@ class TencentNodeService @Autowired constructor(
                 ?: return null
         val node = nodeDao.get(dslContext, projectId, agent.nodeId) ?: return null
         return NodeAgentDetail(
+            agentHashId = HashUtil.encodeLongId(agent.id),
             displayName = node.displayName,
             ip = agent.ip,
             workspaceName = agent.createWorkspaceName
