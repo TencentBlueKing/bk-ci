@@ -767,8 +767,15 @@ class TriggerTransfer @Autowired(required = false) constructor(
                             !timer.nodes.isNullOrEmpty() -> TimerNodeType.NODE_LIST
                             else -> TimerNodeType.ENV_ALL
                         },
+                        // yaml 中存的是 workspaceName，转换为 Model 侧的 agentHashId
                         nodes = timer.nodes?.takeIf {
                             yamlInput.channelCode == ChannelCode.CREATIVE_STREAM
+                        }?.mapNotNull { workspaceName ->
+                            transferCache.getAgentHashIdByWorkspace(
+                                userId = yamlInput.userId,
+                                projectId = yamlInput.projectCode,
+                                workspaceName = workspaceName
+                            )
                         },
                         version = if (timer.newExpression.filterNonEmpty().isEmpty() &&
                                 (timer.advanceExpression?.size ?: 0) == 1

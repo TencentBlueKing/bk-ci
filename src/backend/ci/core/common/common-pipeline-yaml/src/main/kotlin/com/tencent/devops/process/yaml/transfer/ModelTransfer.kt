@@ -522,7 +522,9 @@ class ModelTransfer @Autowired constructor(
         val baseTrigger = elementTransfer.baseTriggers2yaml(
             elements = triggers,
             aspectWrapper = modelInput.aspectWrapper,
-            channelCode = modelInput.channelCode
+            channelCode = modelInput.channelCode,
+            userId = modelInput.userId,
+            projectId = modelInput.setting.projectId
         )?.toPre(modelInput.version)
         val scmTrigger = elementTransfer.scmTriggers2Yaml(
             triggers, modelInput.setting.projectId, modelInput.aspectWrapper

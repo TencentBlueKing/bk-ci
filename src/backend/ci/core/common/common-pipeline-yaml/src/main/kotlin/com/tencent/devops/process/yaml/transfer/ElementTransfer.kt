@@ -130,7 +130,9 @@ class ElementTransfer @Autowired(required = false) constructor(
     fun baseTriggers2yaml(
         elements: List<Element>,
         aspectWrapper: PipelineTransferAspectWrapper,
-        channelCode: ChannelCode = ChannelCode.BS
+        channelCode: ChannelCode = ChannelCode.BS,
+        userId: String = "",
+        projectId: String = ""
     ): TriggerOn? {
         val triggerOn = lazy { TriggerOn() }
         val schedules = mutableListOf<SchedulesRule>()
@@ -205,8 +207,15 @@ class ElementTransfer @Autowired(required = false) constructor(
                         enable = element.elementEnabled().nullIfDefault(true),
                         startParams = element.convertStartParams(),
                         // nodes 仅创作流通道回写，且只有 NODE_LIST 指定了具体创作节点时才输出
+                        // Model 侧存的是 agentHashId，转换为 yaml 侧的 workspaceName
                         nodes = element.nodes?.ifEmpty { null }?.takeIf {
                             channelCode == ChannelCode.CREATIVE_STREAM
+                        }?.mapNotNull { agentHashId ->
+                            transferCache.getWorkspaceByAgentHashId(
+                                userId = userId,
+                                projectId = projectId,
+                                agentHashId = agentHashId
+                            )
                         }
                     )
                 )

@@ -68,7 +68,7 @@ data class SchedulesRule(
     val startParams: Map<String, String>? = null,
     @get:Schema(
         title = "nodes",
-        description = "创作流定时触发指定的启动节点(agentHashId列表)，不填则默认创作环境全部节点"
+        description = "创作流定时触发指定的启动节点(workspaceName列表)，不填则默认创作环境全部节点"
     )
     val nodes: List<String>? = null
 ) : Rule(id, name, enable) {
