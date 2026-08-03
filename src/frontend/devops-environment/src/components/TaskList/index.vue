@@ -64,12 +64,15 @@
                             </span>
                             <span class="task-pipeline-name">
                                 <i class="bk-icon icon-pipeline" />
-                                <span
-                                    class="pipeline-text"
+                                <a
+                                    class="pipeline-text text-link"
                                     v-bk-overflow-tips
+                                    :href="getPipelineHistoryUrl(task)"
+                                    target="_blank"
+                                    @click.stop
                                 >
                                     {{ task.pipelineName }}
-                                </span>
+                                </a>
                             </span>
                         </div>
                         <div class="task-info">
@@ -104,7 +107,11 @@
                                 width="80"
                             >
                                 <template #default="{ row }">
-                                    <span>#{{ row.buildNum }}</span>
+                                    <a
+                                        class="text-link"
+                                        :href="getBuildDetailUrl(row)"
+                                        target="_blank"
+                                    >#{{ row.buildNum }}</a>
                                 </template>
                             </bk-table-column>
                             <bk-table-column
@@ -263,6 +270,28 @@
                                 return []
                             }
                         }
+                    },
+                    {
+                        name: proxy.$t('environment.taskStatus'),
+                        id: 'taskStatus',
+                        children: [
+                            {
+                                id: 'QUEUE',
+                                name: proxy.$t('environment.pipelineTaskStatusMap.QUEUE')
+                            },
+                            {
+                                id: 'RUNNING',
+                                name: proxy.$t('environment.pipelineTaskStatusMap.RUNNING')
+                            },
+                            {
+                                id: 'DONE',
+                                name: proxy.$t('environment.pipelineTaskStatusMap.DONE')
+                            },
+                            {
+                                id: 'FAILURE',
+                                name: proxy.$t('environment.pipelineTaskStatusMap.FAILURE')
+                            }
+                        ]
                     }
                 ]
             })
@@ -297,6 +326,18 @@
             const searchPlaceholder = computed(() => {
                 return searchSelectData.value.map(item => item.name).join(' / ')
             })
+            
+            const projectId = computed(() => proxy.$route.params?.projectId)
+
+            // 流水线编排页
+            const getPipelineHistoryUrl = (task) => {
+                return `/console/pipeline/${projectId.value}/${task.pipelineId}/history/pipeline`
+            }
+
+            // 构建执行详情页
+            const getBuildDetailUrl = (row) => {
+                return `/console/pipeline/${row.projectId || projectId.value}/${row.pipelineId}/detail/${row.buildId}/executeDetail`
+            }
             
             // 获取任务信息项
             const getTaskInfoItems = (task) => {
@@ -412,7 +453,7 @@
                     }
                     const res = await fetchPipelineBuildHistory({
                         pipelineId: task.pipelineId,
-                        containerId: task.lastContainerId,
+                        jobId: task.jobId,
                         params
                     })
                     task.records = res.records.map(i => {
@@ -448,10 +489,6 @@
                     const params = {
                         ...filterQuery.value,
                         ...timeRangeParams.value,
-                        ...(routeName === 'envDetail'
-                            ? { envId: envHashId.value }
-                            : { agentId: nodeHashId.value }
-                        ),
                         page: pagination.value.current,
                         pageSize: pagination.value.limit
                     }
@@ -598,6 +635,8 @@
                 // function
                 setTaskRef,
                 getTaskInfoItems,
+                getPipelineHistoryUrl,
+                getBuildDetailUrl,
                 formatTime,
                 getStatusIcon,
                 toggleExpand,
@@ -727,6 +766,12 @@
                             overflow: hidden;
                             white-space: nowrap;
                             text-overflow: ellipsis;
+                            color: inherit;
+                            cursor: pointer;
+                            text-decoration: none;
+                            &:hover {
+                                color: #3a84ff;
+                            }
                         }
                     }
                 }
@@ -771,6 +816,15 @@
                     align-items: center;
                     gap: 2px;
                 }
+            }
+        }
+
+        .text-link {
+            color: inherit;
+            cursor: pointer;
+            text-decoration: none;
+            &:hover {
+                color: #3a84ff;
             }
         }
         

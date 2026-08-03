@@ -14,6 +14,7 @@
   min-width: 0;
   transition: margin-right 0.3s ease;
   height: 100%;
+  margin-right: var(--spacing-xs);
 }
 
 /* 当变量面板展开时，主内容区域右侧留出空间 */
@@ -34,6 +35,7 @@
   overflow-y: auto;
   box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.15);
   min-height: 0;
+  padding: var(--spacing-md);
 }
 
 .tabContent {

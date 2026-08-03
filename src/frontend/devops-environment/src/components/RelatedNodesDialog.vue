@@ -14,6 +14,7 @@
             <div class="left-section">
                 <div class="title-section">
                     {{ currentEnv.name }} - {{ $t('environment.relatedNodes') }}
+                    <bk-tag v-if="currentEnv?.os">{{ osDisplayName }}</bk-tag>
                 </div>
                 <!-- 关联策略 -->
                 <div class="form-section">
@@ -329,19 +330,14 @@
     import useEnvDetail from '@/hooks/useEnvDetail'
     import usePagination from '@/hooks/usePagination'
     import useInstance from '@/hooks/useInstance'
+    import { OS_LABEL_MAP } from '@/store/constants'
     export default {
         name: 'RelatedNodes',
         components: {
             Logo
         },
-        props: {
-            currentNodeList: {
-                type: Array,
-                default: () => []
-            }
-        },
         emits: ['save-success'],
-        setup (props, { emit }) {
+        setup (_, { emit }) {
             const { proxy } = useInstance()
             const {
                 isShow,
@@ -358,8 +354,16 @@
             } = useRelatedNodes()
 
             const {
-                currentEnv
+                currentEnv,
+                fetchEnvNodeList
             } = useEnvDetail()
+
+            const osDisplayName = computed(() => {
+                const os = currentEnv.value?.os
+                return os ? (OS_LABEL_MAP[os] || os) : ''
+            })
+
+            const currentNodeList = ref([])
 
             const {
                 pagination,
@@ -429,7 +433,7 @@
             })
             
             // 计算新增和移除的节点数量
-            const currentNodeIds = computed(() => new Set(props.currentNodeList.map(node => node.nodeHashId)))
+            const currentNodeIds = computed(() => new Set(currentNodeList.value.map(node => node.nodeHashId)))
             
             const newCount = computed(() => {
                 // 动态模式未预览时返回 0
@@ -666,7 +670,7 @@
                     const previewNodeIds = new Set(previewNodes.map(node => node.nodeHashId))
                     
                     // 1. 标记已关联但不在预览结果中的节点为删除（isDelete: true）
-                    const deletedNodes = props.currentNodeList
+                    const deletedNodes = currentNodeList.value
                         .filter(node => !previewNodeIds.has(node.nodeHashId))
                         .map(node => ({
                             ...node,
@@ -725,13 +729,26 @@
                 }
             }
 
+            // 获取当前环境已关联的节点列表
+            const fetchCurrentNodeList = async () => {
+                try {
+                    const res = await fetchEnvNodeList({ page: -1 })
+                    currentNodeList.value = res?.records || []
+                } catch (error) {
+                    console.error(error)
+                    currentNodeList.value = []
+                }
+            }
+
             // 监听弹窗显示状态,显示时初始化数据
-            watch(() => isShow.value, (newVal) => {
+            watch(() => isShow.value, async (newVal) => {
                 if (newVal) {
                     fetchTagList()
+                    // 拉取当前环境已关联的节点列表
+                    await fetchCurrentNodeList()
                     // 从 currentNodeList 初始化静态模式的数据
-                    if (props.currentNodeList?.length) {
-                        staticModeSelectedNodes.value = props.currentNodeList.map(node => ({ ...node }))
+                    if (currentNodeList.value?.length) {
+                        staticModeSelectedNodes.value = currentNodeList.value.map(node => ({ ...node }))
                     }
                     // 初始化当前模式的数据
                     initData()
@@ -740,6 +757,7 @@
                     selectedNodesList.value = []
                     staticModeSelectedNodes.value = []
                     dynamicModeSelectedNodes.value = []
+                    currentNodeList.value = []
                     isDynamicPreviewed.value = false
                     labelRules.value = [{ tagKeyId: '', tagValues: [] }]
                     searchKeyword.value = ''
@@ -770,6 +788,7 @@
                 relatedType,
                 searchKeyword,
                 currentEnv,
+                osDisplayName,
                 selectedNodesList,
                 nodeList,
                 pagination,

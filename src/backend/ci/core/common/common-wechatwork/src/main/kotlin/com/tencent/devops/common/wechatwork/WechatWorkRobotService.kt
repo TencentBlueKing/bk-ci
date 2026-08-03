@@ -34,6 +34,14 @@ class WechatWorkRobotService @Autowired constructor(
         }
     }
 
+    /**
+     * 群机器人发消息。
+     *
+     * [mentionUsers] 会写入 webhook text/markdown 的 mentioned_list，用于 @指定成员（userid）。
+     * 后续可扩展（暂未实现）：
+     * - @all：mentioned_list 中增加 "@all"（或 mentioned_mobile_list 中增加 "@all"）
+     * - content 内 @：按企微文档在 content 中拼接 <@userid>（官方 markdown_v2 不支持该语法）
+     */
     fun sendByRobot(
         chatId: String,
         content: String,
@@ -41,23 +49,31 @@ class WechatWorkRobotService @Autowired constructor(
         mentionUsers: List<String> = emptyList()
     ) {
         logger.info("send group msg by robot: $chatId, $content")
+        // mentioned_list 渲染在正文末尾；正文不以换行结尾时 @ 会粘在同一行，补换行以单独成行
+        val finalContent = appendNewlineBeforeMention(content, mentionUsers)
+        val msgInfo = MsgInfo(
+            content = finalContent,
+            mentionedList = mentionUsers.ifEmpty { null }
+        )
         val msg: Any = if (markerDownFlag) {
             RobotMarkdownSendMsg(
                 chatId = chatId,
-                markdown = MsgInfo(
-                    content = content
-                )
+                markdown = msgInfo
             )
         } else {
             RobotTextSendMsg(
                 chatId = chatId,
-                text = MsgInfo(
-                    content = content,
-                    mentionedList = mentionUsers
-                )
+                text = msgInfo
             )
         }
         send(JsonUtil.toJson(msg, false))
+    }
+
+    private fun appendNewlineBeforeMention(content: String, mentionUsers: List<String>): String {
+        if (mentionUsers.isEmpty() || content.endsWith("\n")) {
+            return content
+        }
+        return "$content\n"
     }
 
     companion object {

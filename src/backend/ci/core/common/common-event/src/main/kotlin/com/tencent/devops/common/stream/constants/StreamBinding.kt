@@ -31,6 +31,9 @@ object StreamBinding {
     // 日志预处理事件
     const val LOG_ORIGIN_EVENT_DESTINATION = "build.log.origin.event"
 
+    // 热点构建日志预处理事件（与 origin 同构，独立 topic 隔离）
+    const val LOG_ORIGIN_HEAVY_EVENT_DESTINATION = "build.log.origin.heavy.event"
+
     // 日志预处理事件
     const val LOG_STORAGE_EVENT_DESTINATION = "build.log.storage.event"
 

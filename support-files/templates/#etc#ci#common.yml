@@ -292,16 +292,16 @@ spring:
         name: T_PIPELINE_COPY_TASK_RESOURCE_REL
         databaseShardingStrategy: SHARDING
       - index: 77
-        name: T_RESOURCE_PUBLIC_VAR
+        name: T_PIPELINE_RESOURCE_DRAFT_VERSION
         databaseShardingStrategy: SHARDING
       - index: 78
-        name: T_RESOURCE_PUBLIC_VAR_GROUP
+        name: T_PIPELINE_SETTING_DRAFT_VERSION
         databaseShardingStrategy: SHARDING
       - index: 79
-        name: T_RESOURCE_PUBLIC_VAR_GROUP_REFER_INFO
+        name: T_PIPELINE_TEMPLATE_RESOURCE_DRAFT_VERSION
         databaseShardingStrategy: SHARDING
       - index: 80
-        name: T_RESOURCE_PUBLIC_VAR_GROUP_RELEASE_RECORD
+        name: T_PIPELINE_TEMPLATE_SETTING_DRAFT_VERSION
         databaseShardingStrategy: SHARDING
       - index: 81
         name: T_RESOURCE_PUBLIC_VAR_REFER_INFO
@@ -314,6 +314,18 @@ spring:
         databaseShardingStrategy: SHARDING
       - index: 84
         name: T_RESOURCE_PUBLIC_VAR_VERSION_SUMMARY
+        databaseShardingStrategy: SHARDING
+      - index: 85
+        name: T_RESOURCE_PUBLIC_VAR
+        databaseShardingStrategy: SHARDING
+      - index: 86
+        name: T_RESOURCE_PUBLIC_VAR_GROUP
+        databaseShardingStrategy: SHARDING
+      - index: 87
+        name: T_RESOURCE_PUBLIC_VAR_GROUP_REFER_INFO
+        databaseShardingStrategy: SHARDING
+      - index: 88
+        name: T_RESOURCE_PUBLIC_VAR_GROUP_RELEASE_RECORD
         databaseShardingStrategy: SHARDING
 
 endpoints:

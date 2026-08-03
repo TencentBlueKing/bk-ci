@@ -211,7 +211,8 @@ async function getListResourceTypes () {
 }
 function getSearchResource (val) {
   searchResourceName.value = val;
-  resourceList.value =[]
+  resourcePage.value = 1
+  resourceList.value = []
   getListResource();
 }
 async function getListResource () {
