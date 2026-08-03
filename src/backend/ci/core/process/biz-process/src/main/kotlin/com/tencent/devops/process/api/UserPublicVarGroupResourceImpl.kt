@@ -51,7 +51,8 @@ class UserPublicVarGroupResourceImpl @Autowired constructor(
     override fun addGroup(
         userId: String,
         projectId: String,
-        publicVarGroup: PublicVarGroupVO
+        publicVarGroup: PublicVarGroupVO,
+        allowUpgrade: Boolean?
     ): Result<String> {
         // 校验创建权限
         publicVarGroupPermissionService.checkPublicVarGroupCreatePermission(
@@ -64,7 +65,8 @@ class UserPublicVarGroupResourceImpl @Autowired constructor(
                     projectId = projectId,
                     userId = userId,
                     publicVarGroup = publicVarGroup
-                )
+                ),
+                allowUpgrade = allowUpgrade ?: false
             )
         )
     }
