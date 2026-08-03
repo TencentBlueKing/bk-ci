@@ -562,7 +562,8 @@ open class GitApi {
         pageSize: Int
     ): List<ChangeFileInfo> {
         val url = "projects/${urlEncode(gitProjectId)}/repository/compare/changed_files/list"
-        val queryParam = "from=$from&to=$to&straight=$straight&page=$page&pageSize=$pageSize"
+        // calc_lines=false: 触发判断只需变更文件列表(路径)，不计算文件变更行数，大diff下返回更快，避免超时导致漏拉文件
+        val queryParam = "from=$from&to=$to&straight=$straight&page=$page&pageSize=$pageSize&calc_lines=false"
         val request = get(host, token, url, queryParam)
         return JsonUtil.getObjectMapper().readValue(
             getBody(getMessageByLocale(CommonMessageCode.OPERATION_GET_CHANGE_FILE_LIST), request)

@@ -122,11 +122,9 @@ class DeliverControl @Autowired constructor(
                     streamBridge = streamBridge,
                     data = AsyncUpdateHostMonitor(
                         workspaceName = workspaceName,
-                        props = workspaceCommon.genWorkspaceCCInfo(
-                            workspace.projectId,
-                            workspace.displayName.ifBlank { workspaceName },
-                            assign2Owner.userId
-                        ),
+                        projectId = workspace.projectId,
+                        displayName = workspace.displayName.ifBlank { workspaceName },
+                        owner = assign2Owner.userId,
                         type = workspace.workspaceSystemType
                     )
                 )
@@ -178,11 +176,9 @@ class DeliverControl @Autowired constructor(
                         streamBridge = streamBridge,
                         data = AsyncUpdateHostMonitor(
                             workspaceName = workspaceName,
-                            props = workspaceCommon.genWorkspaceCCInfo(
-                                workspace.projectId,
-                                workspace.displayName.ifBlank { workspaceName },
-                                assign2Owner.userId
-                            ),
+                            projectId = workspace.projectId,
+                            displayName = workspace.displayName.ifBlank { workspaceName },
+                            owner = assign2Owner.userId,
                             type = workspace.workspaceSystemType
                         )
                     )

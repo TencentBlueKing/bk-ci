@@ -131,7 +131,13 @@ class AsyncExecuteListener @Autowired constructor(
 
             AsyncExecuteEventType.ASYNC_UPDATE_HOST_MONITOR -> {
                 val data = objectMapper.readValue<AsyncUpdateHostMonitor>(event.eventStr)
-                workspaceCommon.updateHostMonitor(data.workspaceName, data.props, data.type)
+                workspaceCommon.reportWorkspaceDimension(
+                    workspaceName = data.workspaceName,
+                    projectId = data.projectId,
+                    displayName = data.displayName,
+                    owner = data.owner,
+                    type = data.type
+                )
             }
         }
     }

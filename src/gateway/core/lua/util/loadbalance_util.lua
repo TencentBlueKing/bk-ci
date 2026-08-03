@@ -17,48 +17,12 @@
 -- SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 _M = {}
 
--- 根据源请求域名判断是否需要强制路由到 creative namespace
-local function get_creative_namespace()
-    if config == nil or ngx.var.project == 'codecc' or type(config.kubernetes) ~= 'table' then
-        return nil
-    end
-
-    local creative_host_suffix = config.kubernetes.creative_host_suffix
-    local creative_namespace = config.kubernetes.creative_namespace
-    if type(creative_host_suffix) ~= 'string' or type(creative_namespace) ~= 'string' or
-        creative_host_suffix == '' or creative_namespace == '' then
-        return nil
-    end
-
-    local source_host = ngx.var.original_host
-    if source_host == nil or source_host == '' then
-        source_host = ngx.var.http_host
-    end
-    if source_host == nil or source_host == '' then
-        source_host = ngx.var.host
-    end
-    if source_host == nil or source_host == '' then
-        return nil
-    end
-
-    source_host = string.lower(source_host)
-    source_host = string.match(source_host, '^[^:]+') or source_host
-    local first_label = string.match(source_host, '^[^%.]+')
-    creative_host_suffix = string.lower(creative_host_suffix)
-
-    if first_label == nil or string.sub(first_label, -string.len(creative_host_suffix)) ~= creative_host_suffix then
-        return nil
-    end
-
-    return creative_namespace
-end
-
 -- 获取目标ip:port
 function _M:getTarget(devops_tag, service_name, cache_tail, ns_config)
     local in_container = ngx.var.namespace ~= '' and ngx.var.namespace ~= nil
     local gateway_project = ngx.var.project
     local devops_project_id = ngx.var.project_id
-    local creative_namespace = get_creative_namespace()
+    local creative_namespace = creativeUtil:get_namespace()
     local creative_route = creative_namespace ~= nil
 
     if creative_route then

@@ -182,18 +182,25 @@ export const EditHeader = defineComponent({
           return
         }
 
-        if (response?.version) {
-          router.replace({
+        // 必须用保存接口返回的 version，不能读 route.params.version：
+        // router.replace 异步更新路由，立刻读取仍可能是旧版本，导致重新拉取旧编排
+        const savedVersion =
+          response?.version != null
+            ? String(response.version)
+            : (route.params.version as string)
+
+        if (response?.version != null) {
+          await router.replace({
             name: route.name as string,
             params: {
               ...route.params,
-              version: String(response.version),
+              version: savedVersion,
             },
             query: route.query,
           })
         }
         // 保存成功后重新加载 flowModel，确保 yamlContent 同步更新
-        await flowModel.loadFlow(projectId.value, flowId.value, route.params.version as string, true)
+        await flowModel.loadFlow(projectId.value, flowId.value, savedVersion, true)
         await refreshFlowInfo()
       } catch (error: any) {
         console.error('Failed to save flow:', error)
