@@ -2191,6 +2191,8 @@
   "notGrouped": "Not grouped",
   "attributeValue": "Attribute Value",
   "attributeName": "Attribute Name",
+  "keyPlaceholder": "Key, e.g. quality-gate",
+  "valuePlaceholder": "Value, e.g. passed",
   "metadataAttributeName": "Metadata Attribute Name",
   "metadataAttributeValue": "Metadata Attribute Value",
   "artifactQuality": "Artifact Quality",

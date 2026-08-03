@@ -424,3 +424,17 @@ export const getParamsGroupByLabel = (list) => {
         sortedCategories
     }
 }
+
+export const DEFAULT_DISPLAY_CONDITION_OPERATOR = '=='
+
+export const DISPLAY_CONDITION_OPERATORS = [
+    { id: DEFAULT_DISPLAY_CONDITION_OPERATOR, name: DEFAULT_DISPLAY_CONDITION_OPERATOR },
+    { id: '>=', name: '>=' },
+    { id: '<=', name: '<=' },
+    { id: '>', name: '>' },
+    { id: '<', name: '<' },
+    { id: 'IN', name: 'in' },
+    { id: 'CONTAINS', name: 'Contains' },
+    { id: 'STARTS_WITH', name: 'StartWith' },
+    { id: 'ENDS_WITH', name: 'EndWith' }
+]
