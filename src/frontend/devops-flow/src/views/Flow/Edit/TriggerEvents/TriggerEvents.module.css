@@ -1,5 +1,5 @@
 .triggerEvents {
-  padding: var(--spacing-xxl);
+  padding: 0 var(--spacing-xxl);
   max-width: 1200px;
 }
 
@@ -35,6 +35,9 @@
 
 .triggerTable {
   margin-top: var(--spacing-xxl);
+  width: 750px;
+  border: 1px solid var(--border-color);
+  border-bottom: none;
 }
 
 .eventCell {
@@ -57,7 +60,7 @@
 }
 
 .eventName {
-  color: var(--color-text-primary);
+  color: var(--color-primary);
 }
 
 .eventName.deletedName {
@@ -75,6 +78,12 @@
 .deletedVersion {
   color: var(--color-text-secondary);
   font-size: var(--font-size-xs);
+}
+
+.deleteIcon {
+  color: var(--color-text-tertiary);
+  position: relative;
+  top: 3px;
 }
 
 .deleteIconBtn {

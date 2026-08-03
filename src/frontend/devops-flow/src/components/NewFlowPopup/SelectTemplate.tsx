@@ -275,7 +275,9 @@ export default defineComponent({
                     </span>
                   ) : null}
                 </div>
-                <div class={styles.templateDesc}>{template.desc || '--'}</div>
+                <div class={styles.templateDesc}>{template.desc
+                  || (templateInfoData.value.activeTemplate?.templateType === 'PUBLIC' ? t('flow.content.orchestrateFromScratch') : '--')
+                }</div>
               </div>
             </div>
           ))}

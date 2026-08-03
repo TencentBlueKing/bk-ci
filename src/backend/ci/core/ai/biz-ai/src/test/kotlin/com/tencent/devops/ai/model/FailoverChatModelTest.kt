@@ -8,6 +8,7 @@ import io.agentscope.core.model.ToolSchema
 import io.agentscope.core.model.exception.AuthenticationException
 import io.agentscope.core.model.exception.BadRequestException
 import io.agentscope.core.model.exception.RateLimitException
+import java.time.Duration
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -43,6 +44,76 @@ class FailoverChatModelTest {
             GenerateOptions.builder().build()
         ).collectList().block()
 
+        assertEquals(1, first.invocations)
+        assertEquals(1, second.invocations)
+    }
+
+    @Test
+    fun `should fallback when candidate exceeds total execution timeout after emitting response`() {
+        val first = FakeModel(
+            name = "primary",
+            response = Flux.concat(
+                Flux.just(ChatResponse.builder().build()),
+                Flux.never()
+            )
+        )
+        val second = FakeModel(
+            name = "backup",
+            response = Flux.just(ChatResponse.builder().build())
+        )
+
+        val model = FailoverChatModel(
+            candidates = listOf(
+                FailoverModelCandidate(
+                    id = "primary",
+                    model = first,
+                    totalExecutionTimeout = Duration.ofMillis(20)
+                ),
+                FailoverModelCandidate(id = "backup", model = second)
+            ),
+            errorClassifier = errorClassifier
+        )
+
+        model.stream(
+            mutableListOf<Msg>(),
+            mutableListOf<ToolSchema>(),
+            GenerateOptions.builder().build()
+        ).collectList().block()
+
+        assertEquals(1, first.invocations)
+        assertEquals(1, second.invocations)
+    }
+
+    @Test
+    fun `should fallback when candidate keeps reasoning beyond total execution timeout`() {
+        val first = FakeModel(
+            name = "primary",
+            response = Flux.never()
+        )
+        val second = FakeModel(
+            name = "backup",
+            response = Flux.just(ChatResponse.builder().build())
+        )
+
+        val model = FailoverChatModel(
+            candidates = listOf(
+                FailoverModelCandidate(
+                    id = "primary",
+                    model = first,
+                    totalExecutionTimeout = Duration.ofMillis(20)
+                ),
+                FailoverModelCandidate(id = "backup", model = second)
+            ),
+            errorClassifier = errorClassifier
+        )
+
+        val responses = model.stream(
+            mutableListOf<Msg>(),
+            mutableListOf<ToolSchema>(),
+            GenerateOptions.builder().build()
+        ).collectList().block()
+
+        assertTrue(responses != null && responses.isNotEmpty())
         assertEquals(1, first.invocations)
         assertEquals(1, second.invocations)
     }

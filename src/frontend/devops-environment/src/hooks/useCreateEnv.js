@@ -1,13 +1,16 @@
 import { ref } from 'vue'
 import useInstance from './useInstance'
+import { ENV_TYPE_MAP } from '@/store/constants'
 
 const defaultCreateEnvParam = (envType = 'BUILD') => {
     return {
         desc: '',
         envType,
         name: '',
+        os: '',
         // createdUser: '',
-        source: 'EXISTING'
+        source: 'EXISTING',
+        envVars: []
     }
 }
 
@@ -32,9 +35,13 @@ export default function useCreateEnv (onSuccess, onError) {
         isLoading.value = true
         try {
             const projectId = proxy.$route.params.projectId
+            const params = { ...envParams.value }
+            if (params.envType !== ENV_TYPE_MAP.CREATE) {
+                delete params.os
+            }
             const res = await proxy.$store.dispatch('environment/createNewEnv', {
                 projectId,
-                params: envParams.value
+                params
             })
             
             closeCreateEnvDialog()

@@ -31,5 +31,6 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 
 class PipelineTransferException(
     errorCode: String,
-    params: Array<String>? = null
+    params: Array<String>? = null,
+    val validateDetails: List<PipelineTransferValidateDetail>? = null
 ) : ErrorCodeException(errorCode = errorCode, params = params)

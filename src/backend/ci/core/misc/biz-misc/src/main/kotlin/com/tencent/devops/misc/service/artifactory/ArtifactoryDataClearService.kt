@@ -27,6 +27,7 @@
 
 package com.tencent.devops.misc.service.artifactory
 
+import com.tencent.devops.misc.dao.artifactory.PipelineArtifactInfoDao
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.springframework.beans.factory.annotation.Autowired
@@ -34,6 +35,9 @@ import org.springframework.beans.factory.annotation.Autowired
 abstract class ArtifactoryDataClearService @Autowired constructor(
     private val dslContext: DSLContext
 ) {
+
+    @Autowired
+    private lateinit var pipelineArtifactInfoDao: PipelineArtifactInfoDao
 
     /**
      * 清除构建数据
@@ -43,6 +47,7 @@ abstract class ArtifactoryDataClearService @Autowired constructor(
         dslContext.transaction { t ->
             val context = DSL.using(t)
             deleteTableData(context, buildId)
+            pipelineArtifactInfoDao.deleteByBuildId(context, buildId)
         }
     }
 

@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.common.web.constant.BkStyleEnum
 import com.tencent.devops.environment.pojo.EnvCreateInfo
@@ -392,7 +393,7 @@ interface ServiceEnvironmentResource {
         @QueryParam("enableNode")
         @BkField(patternStyle = BkStyleEnum.BOOLEAN_STYLE, required = true)
         enableNode: Boolean,
-        data: EnableNodeEnvData? = null
+        data: EnableNodeEnvData
     ): Result<Boolean>
 
     @Operation(summary = "根据工作空间ID,获取所有拥有这个节点的环境(创作流)")
@@ -431,4 +432,22 @@ interface ServiceEnvironmentResource {
         @QueryParam("envName")
         envName: String
     ): Result<Page<NodeBaseInfo>>
+
+    @Operation(summary = "校验用户对环境的权限")
+    @GET
+    @Path("/projects/checkEnvPermission")
+    fun checkEnvPermission(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @QueryParam("projectId")
+        projectId: String,
+        @Parameter(description = "环境Id", required = true)
+        @QueryParam("envId")
+        envId: Long,
+        @Parameter(description = "权限类型", required = true)
+        @QueryParam("permission")
+        permission: AuthPermission
+    ): Result<Boolean>
 }

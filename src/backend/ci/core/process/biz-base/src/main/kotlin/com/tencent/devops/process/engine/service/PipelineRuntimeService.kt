@@ -641,9 +641,10 @@ class PipelineRuntimeService @Autowired constructor(
                     triggerEventInfo[triggerEventType] ?: ""
                 } else { // 基础触发
                     StartType.toReadableString(
-                        trigger,
-                        channelCode,
-                        I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                        type = trigger,
+                        channelCode = channelCode,
+                        language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
+                        webhookType = webhookType
                     )
                 },
                 buildNum = buildNum,

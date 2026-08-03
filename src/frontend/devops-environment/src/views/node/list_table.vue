@@ -748,6 +748,9 @@
         },
         methods: {
             ...mapActions('environment', ['requestNodeTagList', 'requestGetCounts']),
+            handleExpandList () {
+                this.$emit('toggle-fold')
+            },
             calcOverPosTable () {
                 const tagMargin = 6
                 this.visibleLabelCountList = this.nodeList.reduce((acc, item, index) => {

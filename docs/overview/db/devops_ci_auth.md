@@ -2,7 +2,7 @@
 
 **数据库名：** devops_ci_auth
 
-**文档版本：** 1.0.20
+**文档版本：** 1.0.22
 
 **文档描述：** devops_ci_auth 的数据库文档
 | 表名                  | 说明       |
@@ -17,7 +17,7 @@
 | T_AUTH_ITSM_CALLBACK | 权限 itsm 回调表 |
 | T_AUTH_MANAGER | 管理员策略表 |
 | T_AUTH_MANAGER_APPROVAL | 蓝盾超级管理员权限续期审核表 |
-| T_AUTH_MANAGER_USER | 管理员用户表(只存有效期内的用户) |
+| T_AUTH_MANAGER_USER | 管理员用户表（只存有效期内的用户） |
 | T_AUTH_MANAGER_USER_HISTORY | 管理员用户历史表 |
 | T_AUTH_MANAGER_WHITELIST | 管理员自助申请表名单表 |
 | T_AUTH_MEMBER_PROJECT_PERMISSION | 用户项目级权限表 |
@@ -225,13 +225,13 @@
 |  4   | EXPIRED_TIME |   timestamp   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 权限过期时间  |
 |  5   | START_TIME |   timestamp   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 审批单生效时间  |
 |  6   | END_TIME |   timestamp   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 审批单失效时间  |
-|  7   | STATUS |   int   | 10 |   0    |    N     |  N   |       | 发送状态 0-审核流程中,1-用户拒绝续期,2-用户同意续期,3-审批人拒绝续期，4-审批人同意续期  |
+|  7   | STATUS |   int   | 10 |   0    |    N     |  N   |       | 发送状态 0-审核流程中，1-用户拒绝续期，2-用户同意续期，3-审批人拒绝续期，4-审批人同意续期  |
 |  8   | CREATE_TIME |   timestamp   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 创建时间  |
 |  9   | UPDATE_TIME |   timestamp   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 修改时间  |
 
 **表名：** <a>T_AUTH_MANAGER_USER</a>
 
-**说明：** 管理员用户表(只存有效期内的用户)
+**说明：** 管理员用户表（只存有效期内的用户）
 
 **数据列：**
 
@@ -302,7 +302,7 @@
 | 序号 | 名称 | 数据类型 |  长度  | 小数位 | 允许空值 | 主键 | 默认值 | 说明 |
 | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
 |  1   | PROJECT_CODE |   varchar   | 32 |   0    |    N     |  Y   |       | 项目 ID  |
-|  2   | STATUS |   int   | 10 |   0    |    Y     |  N   |   0    | 迁移状态,0-迁移中,1-迁移成功,2-迁移失败  |
+|  2   | STATUS |   int   | 10 |   0    |    Y     |  N   |   0    | 迁移状态，0-迁移中，1-迁移成功，2-迁移失败  |
 |  3   | BEFORE_GROUP_COUNT |   int   | 10 |   0    |    Y     |  N   |   0    | 迁移前用户组数  |
 |  4   | AFTER_GROUP_COUNT |   int   | 10 |   0    |    Y     |  N   |   0    | 迁移后用户组数  |
 |  5   | RESOURCE_COUNT |   text   | 65535 |   0    |    Y     |  N   |       | 迁移后资源数和资源用户组数  |
@@ -435,15 +435,15 @@
 |  1   | ID |   bigint   | 20 |   0    |    N     |  Y   |       | 主键 ID  |
 |  2   | TASK_ID |   varchar   | 64 |   0    |    N     |  N   |       | 任务 ID  |
 |  3   | PROJECT_CODE |   varchar   | 64 |   0    |    N     |  N   |       | 项目代码  |
-|  4   | RESET_TYPE |   varchar   | 32 |   0    |    N     |  N   |       | 重置类型：FULL-完整重置,RESOURCE-资源重置,PERMISSION-权限重置  |
+|  4   | RESET_TYPE |   varchar   | 32 |   0    |    N     |  N   |       | 重置类型：FULL-完整重置，RESOURCE-资源重置，PERMISSION-权限重置  |
 |  5   | MIGRATE_RESOURCE |   bit   | 1 |   0    |    N     |  N   |   0    | 是否迁移资源  |
-|  6   | FILTER_RESOURCE_TYPES |   text   | 65535 |   0    |    Y     |  N   |       | 过滤的资源类型列表(JSON 格式)  |
-|  7   | FILTER_ACTIONS |   text   | 65535 |   0    |    Y     |  N   |       | 过滤的操作列表(JSON 格式)  |
-|  8   | STATUS |   varchar   | 32 |   0    |    N     |  N   |   PROCESSING    | 状态：PROCESSING-处理中,SUCCESS-成功,FAILED-失败  |
+|  6   | FILTER_RESOURCE_TYPES |   text   | 65535 |   0    |    Y     |  N   |       | 过滤的资源类型列表（JSON 格式）  |
+|  7   | FILTER_ACTIONS |   text   | 65535 |   0    |    Y     |  N   |       | 过滤的操作列表（JSON 格式）  |
+|  8   | STATUS |   varchar   | 32 |   0    |    N     |  N   |   PROCESSING    | 状态：PROCESSING-处理中，SUCCESS-成功，FAILED-失败  |
 |  9   | ERROR_MESSAGE |   text   | 65535 |   0    |    Y     |  N   |       | 错误信息  |
 |  10   | START_TIME |   datetime   | 19 |   0    |    N     |  N   |       | 开始时间  |
 |  11   | END_TIME |   datetime   | 19 |   0    |    Y     |  N   |       | 结束时间  |
-|  12   | TOTAL_TIME |   bigint   | 20 |   0    |    Y     |  N   |       | 总耗时(毫秒)  |
+|  12   | TOTAL_TIME |   bigint   | 20 |   0    |    Y     |  N   |       | 总耗时（毫秒）  |
 |  13   | OPERATOR |   varchar   | 64 |   0    |    Y     |  N   |       | 操作人  |
 |  14   | CREATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 创建时间  |
 |  15   | UPDATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 更新时间  |
@@ -462,7 +462,7 @@
 |  4   | RESOURCE_CODE |   varchar   | 255 |   0    |    N     |  N   |       | 资源 ID  |
 |  5   | RESOURCE_NAME |   varchar   | 255 |   0    |    N     |  N   |       | 资源名  |
 |  6   | IAM_RESOURCE_CODE |   varchar   | 32 |   0    |    N     |  N   |       | IAM 资源 ID  |
-|  7   | ENABLE |   bit   | 1 |   0    |    N     |  N   |   b'0'    | 开启权限管理,0-不启用,1-启用  |
+|  7   | ENABLE |   bit   | 1 |   0    |    N     |  N   |   b'0'    | 开启权限管理，0-不启用，1-启用  |
 |  8   | RELATION_ID |   varchar   | 32 |   0    |    N     |  N   |       | 关联的 IAM 分级管理员 ID  |
 |  9   | CREATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 创建时间  |
 |  10   | UPDATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 更新时间  |
@@ -504,7 +504,7 @@
 |  6   | IAM_RESOURCE_CODE |   varchar   | 32 |   0    |    N     |  N   |       | IAM 资源 ID  |
 |  7   | GROUP_CODE |   varchar   | 32 |   0    |    N     |  N   |       | 用户组标识  |
 |  8   | GROUP_NAME |   varchar   | 255 |   0    |    N     |  N   |       | 用户组名称  |
-|  9   | DEFAULT_GROUP |   bit   | 1 |   0    |    N     |  N   |   b'1'    | 是否为默认组,0-非默认组,1-默认组  |
+|  9   | DEFAULT_GROUP |   bit   | 1 |   0    |    N     |  N   |   b'1'    | 是否为默认组，0-非默认组，1-默认组  |
 |  10   | RELATION_ID |   varchar   | 32 |   0    |    N     |  N   |       | 关联的 IAM 组 ID  |
 |  11   | CREATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 创建时间  |
 |  12   | UPDATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 更新时间  |
@@ -524,7 +524,7 @@
 |  2   | PROJECT_CODE |   varchar   | 64 |   0    |    N     |  N   |       | 项目 ID  |
 |  3   | MEMBER_ID |   varchar   | 64 |   0    |    N     |  N   |       | 成员 ID  |
 |  4   | IAM_GROUP_ID |   int   | 10 |   0    |    N     |  N   |       | IAM 组 ID  |
-|  5   | STATUS |   int   | 10 |   0    |    Y     |  N   |   0    | 状态,0-审批中,1-审批成功,2-审批超时  |
+|  5   | STATUS |   int   | 10 |   0    |    Y     |  N   |   0    | 状态，0-审批中，1-审批成功，2-审批超时  |
 |  6   | NUMBER_OF_CHECKS |   int   | 10 |   0    |    Y     |  N   |   0    | 检查次数，用于同步组数据  |
 |  7   | CREATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 创建时间  |
 |  8   | UPDATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 更新时间  |
@@ -541,7 +541,7 @@
 |  2   | RESOURCE_TYPE |   varchar   | 32 |   0    |    N     |  N   |       | 资源类型  |
 |  3   | GROUP_CODE |   varchar   | 32 |   0    |    N     |  N   |       | 用户组标识  |
 |  4   | GROUP_NAME |   varchar   | 32 |   0    |    N     |  N   |       | 用户组名称  |
-|  5   | CREATE_MODE |   bit   | 1 |   0    |    N     |  N   |   b'0'    | 创建模式,0-开启时创建,1-启用权限管理时创建  |
+|  5   | CREATE_MODE |   bit   | 1 |   0    |    N     |  N   |   b'0'    | 创建模式，0-开启时创建，1-启用权限管理时创建  |
 |  6   | GROUP_TYPE |   int   | 10 |   0    |    N     |  N   |   0    | 用户组类型 0-默认组 1-自定义组  |
 |  7   | DESCRIPTION |   text   | 65535 |   0    |    Y     |  N   |       | 用户组描述  |
 |  8   | AUTHORIZATION_SCOPES |   mediumtext   | 16777215 |   0    |    N     |  N   |       | 用户组授权范围  |
@@ -565,7 +565,7 @@
 |  6   | IAM_GROUP_ID |   int   | 10 |   0    |    N     |  N   |       | IAM 组 ID  |
 |  7   | MEMBER_ID |   varchar   | 64 |   0    |    N     |  N   |       | 成员 ID  |
 |  8   | MEMBER_NAME |   varchar   | 512 |   0    |    N     |  N   |       | 成员名  |
-|  9   | MEMBER_TYPE |   varchar   | 32 |   0    |    N     |  N   |       | 成员类型,用户/组织/模板  |
+|  9   | MEMBER_TYPE |   varchar   | 32 |   0    |    N     |  N   |       | 成员类型，用户/组织/模板  |
 |  10   | EXPIRED_TIME |   datetime   | 19 |   0    |    N     |  N   |       | 过期时间  |
 |  11   | CREATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 创建时间  |
 |  12   | UPDATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 更新时间  |
@@ -603,7 +603,7 @@
 | 序号 | 名称 | 数据类型 |  长度  | 小数位 | 允许空值 | 主键 | 默认值 | 说明 |
 | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
 |  1   | PROJECT_CODE |   varchar   | 64 |   0    |    N     |  Y   |       | 项目 ID  |
-|  2   | STATUS |   int   | 10 |   0    |    Y     |  N   |   0    | 迁移状态,0-同步中,1-同步成功,2-同步失败  |
+|  2   | STATUS |   int   | 10 |   0    |    Y     |  N   |   0    | 迁移状态，0-同步中，1-同步成功，2-同步失败  |
 |  3   | ERROR_MESSAGE |   text   | 65535 |   0    |    Y     |  N   |       | 错误信息  |
 |  4   | TOTAL_TIME |   bigint   | 20 |   0    |    Y     |  N   |       | 总耗时  |
 |  5   | CREATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 创建时间  |
@@ -704,9 +704,9 @@
 |  3   | email |   varchar   | 255 |   0    |    Y     |  N   |       | 邮箱  |
 |  4   | phone |   varchar   | 32 |   0    |    Y     |  N   |       | 手机号  |
 |  5   | create_time |   datetime   | 19 |   0    |    N     |  N   |       | 注册时间  |
-|  6   | user_type |   int   | 10 |   0    |    N     |  N   |       | 用户类型 0.页面注册 1.GitHub2.Gitlab  |
+|  6   | user_type |   int   | 10 |   0    |    N     |  N   |       | 用户类型 0。页面注册 1.GitHub2.Gitlab  |
 |  7   | last_login_time |   datetime   | 19 |   0    |    Y     |  N   |       | 最后登陆时间  |
-|  8   | user_status |   int   | 10 |   0    |    N     |  N   |       | 用户状态,0--正常,1--冻结  |
+|  8   | user_status |   int   | 10 |   0    |    N     |  N   |       | 用户状态，0--正常，1--冻结  |
 
 **表名：** <a>T_DEPARTMENT</a>
 

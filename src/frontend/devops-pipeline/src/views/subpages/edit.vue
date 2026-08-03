@@ -287,7 +287,9 @@
             this.togglePropertyPanel({
                 isShow: false
             })
+            this.clearPipelineSnapshot() // 清除流水线快照，防止内存泄漏
             this.errors.clear()
+            this.$store.commit('common/SET_HAS_DRAFT', false)  // 清除草稿状态
         },
         beforeRouteUpdate (to, from, next) {
             if (from.name !== to.name) {
@@ -307,17 +309,40 @@
                 'setSaveStatus',
                 'setEditFrom',
                 'updatePipelineSetting',
-                'setAtomEditing'
+                'setAtomEditing',
+                'requestPipelineSummary',
+                'requestTemplateSummary',
+                'clearPipelineSnapshot'
             ]),
             ...mapActions('common', [
                 'requestQualityAtom',
                 'requestInterceptAtom',
                 'requestMatchTemplateRuleList'
             ]),
+            async getDetail () {
+                try {
+                    if (this.isTemplate) {
+                        await this.requestTemplateSummary(this.$route.params)
+                    } else {
+                        await this.requestPipelineSummary(this.$route.params)
+                    }
+                } catch (error) {
+                    this.$bkMessage({
+                        theme: 'error',
+                        message: error.message ?? error
+                    })
+                }
+            },
             async init () {
                 if (this.pipelineVersion) {
                     this.isLoading = true
+                    
+                    // 保证编辑页一直是最新的detail
+                    await this.getDetail()
+                    
                     await this.requestPipeline({
+                        pipelineId: this.pipelineId,
+                        projectId: this.projectId,
                         ...this.$route.params,
                         source: 'EDIT',
                         version: this.pipelineVersion

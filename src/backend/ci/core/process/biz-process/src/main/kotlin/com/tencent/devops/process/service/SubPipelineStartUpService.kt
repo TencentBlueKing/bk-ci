@@ -40,6 +40,7 @@ import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.SubPipelineCallElement
+import com.tencent.devops.common.pipeline.pojo.element.SubPipelineBuildInfo
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
@@ -58,6 +59,7 @@ import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineTaskService
 import com.tencent.devops.process.engine.service.SubPipelineRefService
+import com.tencent.devops.process.engine.service.record.TaskBuildRecordService
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.PipelineId
@@ -102,6 +104,7 @@ class SubPipelineStartUpService @Autowired constructor(
     private val pipelineUrlBean: PipelineUrlBean,
     private val templateFacadeService: TemplateFacadeService,
     private val subPipelineRefService: SubPipelineRefService,
+    private val taskBuildRecordService: TaskBuildRecordService,
     private val client: Client
 ) {
 
@@ -232,13 +235,6 @@ class SubPipelineStartUpService @Autowired constructor(
             pipelineResource = subPipelineResource,
             branch = branch
         )
-        pipelineTaskService.updateSubBuildId(
-            projectId = projectId,
-            buildId = buildId,
-            taskId = taskId,
-            subBuildId = subBuildId.id,
-            subProjectId = fixProjectId
-        )
         if (runMode == SYNC_RUN_MODE) {
             subPipelineStatusService.onStart(subBuildId.id)
         }
@@ -348,7 +344,8 @@ class SubPipelineStartUpService @Autowired constructor(
                         buildId = parentBuildId,
                         position = null,
                         stageId = null,
-                        needShortUrl = false
+                        needShortUrl = false,
+                        channelCode = parentPipelineInfo.channelCode
                     )
                 )
             // 给触发材料展示时使用
@@ -390,6 +387,25 @@ class SubPipelineStartUpService @Autowired constructor(
                 subBuildId = subBuildId.id,
                 subProjectId = readyToBuildPipelineInfo.projectId
             )
+            parentExecuteCount?.let { ec ->
+                taskBuildRecordService.updateTaskRecord(
+                    projectId = parentProjectId,
+                    pipelineId = parentPipelineId,
+                    buildId = parentBuildId,
+                    taskId = parentTaskId,
+                    executeCount = ec,
+                    taskVar = mapOf(
+                        Element::subPipelineBuildInfo.name to SubPipelineBuildInfo(
+                            projectId = readyToBuildPipelineInfo.projectId,
+                            pipelineId = pipelineId,
+                            buildId = subBuildId.id
+                        )
+                    ),
+                    buildStatus = null,
+                    operation = "updateSubPipelineBuildInfo#$parentTaskId",
+                    timestamps = null
+                )
+            }
             return subBuildId
         } finally {
             logger.info("It take(${System.currentTimeMillis() - startEpoch})ms to start sub-pipeline($pipelineId)")

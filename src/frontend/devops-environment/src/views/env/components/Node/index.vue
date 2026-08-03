@@ -253,7 +253,6 @@
             </div>
         </bk-dialog>
         <related-nodes-dialog
-            :current-node-list="envNodeList"
             @save-success="handleRelateSuccess"
         />
     </div>
