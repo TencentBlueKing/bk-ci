@@ -69,7 +69,10 @@ interface UserPublicVarGroupResource {
         @PathParam("projectId")
         projectId: String,
         @Parameter(description = "公共变量组请求报文", required = true)
-        publicVarGroup: PublicVarGroupVO
+        publicVarGroup: PublicVarGroupVO,
+        @Parameter(description = "是否允许升级同名变量组，默认 false（同名即报错）", required = false)
+        @QueryParam("allowUpgrade")
+        allowUpgrade: Boolean? = false
     ): Result<String>
 
     @Operation(summary = "查询公共变量组列表")
