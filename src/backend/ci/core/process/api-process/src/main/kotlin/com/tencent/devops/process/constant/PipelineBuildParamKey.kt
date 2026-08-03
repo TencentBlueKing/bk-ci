@@ -57,6 +57,16 @@ object PipelineBuildParamKey {
     const val CI_ISSUE_STATE = "ci.issue_state"
     const val CI_ISSUE_OWNER = "ci.issue_owner"
     const val CI_ISSUE_MILESTONE_ID = "ci.issue_milestone_id"
+    const val CI_ISSUE_ASSIGNEE = "ci.issue_assignee"
+    const val CI_ISSUE_ASSIGNEE_ID = "ci.issue_assignee_id"
+    const val CI_ISSUE_ASSIGNEES = "ci.issue_assignees"
+    const val CI_ISSUE_ASSIGNEE_LOGINS = "ci.issue_assignee_logins"
+    const val CI_ISSUE_LABEL = "ci.issue_label"
+    const val CI_ISSUE_LABEL_ID = "ci.issue_label_id"
+    const val CI_ISSUE_LABEL_COLOR = "ci.issue_label_color"
+    const val CI_ISSUE_LABEL_DESCRIPTION = "ci.issue_label_description"
+    const val CI_ISSUE_LABELS = "ci.issue_labels"
+    const val CI_ISSUE_LABEL_NAMES = "ci.issue_label_names"
 
     // GIT NOTE参数
     const val CI_NOTE_COMMENT = "ci.note_comment"

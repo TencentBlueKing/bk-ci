@@ -28,6 +28,7 @@
 package com.tencent.devops.common.webhook.service.code.handler.github
 
 import com.tencent.devops.common.api.pojo.I18Variable
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_ACTION
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_EVENT_URL
@@ -36,9 +37,19 @@ import com.tencent.devops.common.webhook.annotation.CodeWebhookHandler
 import com.tencent.devops.common.webhook.enums.WebhookI18nConstants
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_BRANCH
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_ACTION
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_ASSIGNEE
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_ASSIGNEES
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_ASSIGNEE_ID
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_ASSIGNEE_LOGINS
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_DESCRIPTION
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_ID
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_IID
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_LABEL
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_LABELS
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_LABEL_COLOR
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_LABEL_DESCRIPTION
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_LABEL_ID
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_LABEL_NAMES
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_MILESTONE_ID
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_OWNER
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_STATE
@@ -166,6 +177,17 @@ class GithubIssueTriggerHandler : CodeWebhookTriggerHandler<GithubIssuesEvent> {
             startParams[PIPELINE_GIT_REPO_URL] = event.repository.getRepoUrl()
             startParams[BK_REPO_GIT_WEBHOOK_BRANCH] = event.repository.defaultBranch
             startParams[PIPELINE_GIT_ACTION] = event.convertAction()
+            startParams[BK_REPO_GIT_WEBHOOK_ISSUE_ASSIGNEE] = event.assignee?.login ?: ""
+            startParams[BK_REPO_GIT_WEBHOOK_ISSUE_ASSIGNEE_ID] = event.assignee?.id ?: ""
+            startParams[BK_REPO_GIT_WEBHOOK_ISSUE_ASSIGNEES] = JsonUtil.toJson(assignees.orEmpty(), false)
+            startParams[BK_REPO_GIT_WEBHOOK_ISSUE_ASSIGNEE_LOGINS] =
+                assignees.orEmpty().joinToString(",") { it.login }
+            startParams[BK_REPO_GIT_WEBHOOK_ISSUE_LABEL] = event.label?.name ?: ""
+            startParams[BK_REPO_GIT_WEBHOOK_ISSUE_LABEL_ID] = event.label?.id ?: ""
+            startParams[BK_REPO_GIT_WEBHOOK_ISSUE_LABEL_COLOR] = event.label?.color ?: ""
+            startParams[BK_REPO_GIT_WEBHOOK_ISSUE_LABEL_DESCRIPTION] = event.label?.description ?: ""
+            startParams[BK_REPO_GIT_WEBHOOK_ISSUE_LABELS] = JsonUtil.toJson(labels, false)
+            startParams[BK_REPO_GIT_WEBHOOK_ISSUE_LABEL_NAMES] = labels.joinToString(",") { it.name }
         }
         return startParams
     }
@@ -175,6 +197,10 @@ class GithubIssueTriggerHandler : CodeWebhookTriggerHandler<GithubIssuesEvent> {
         GithubIssuesAction.EDITED.value -> WebhookI18nConstants.TGIT_ISSUE_UPDATED_EVENT_DESC
         GithubIssuesAction.CLOSED.value -> WebhookI18nConstants.TGIT_ISSUE_CLOSED_EVENT_DESC
         GithubIssuesAction.REOPENED.value -> WebhookI18nConstants.TGIT_ISSUE_REOPENED_EVENT_DESC
+        GithubIssuesAction.ASSIGNED.value -> WebhookI18nConstants.GITHUB_ISSUE_ASSIGNED_EVENT_DESC
+        GithubIssuesAction.UNASSIGNED.value -> WebhookI18nConstants.GITHUB_ISSUE_UNASSIGNED_EVENT_DESC
+        GithubIssuesAction.LABELED.value -> WebhookI18nConstants.GITHUB_ISSUE_LABELED_EVENT_DESC
+        GithubIssuesAction.UNLABELED.value -> WebhookI18nConstants.GITHUB_ISSUE_UNLABELED_EVENT_DESC
         else -> ""
     }
 

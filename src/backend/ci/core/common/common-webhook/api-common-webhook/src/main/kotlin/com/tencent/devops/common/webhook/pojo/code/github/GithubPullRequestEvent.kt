@@ -216,7 +216,7 @@ data class GithubLabel(
     @JsonProperty("default")
     val default: Boolean, // true
     @JsonProperty("description")
-    val description: String, // Improvements or additions to documentation
+    val description: String?, // Improvements or additions to documentation
     @JsonProperty("id")
     val id: Long, // 4253282496
     @JsonProperty("name")

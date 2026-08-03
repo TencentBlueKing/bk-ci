@@ -56,6 +56,10 @@ object WebhookI18nConstants {
     const val GITHUB_CREATE_TAG_EVENT_DESC = "bkGithubCreateTagEventDesc"
     const val GITHUB_CREATE_BRANCH_EVENT_DESC = "bkGithubCreateBranchEventDesc"
     const val GITHUB_PR_EVENT_DESC = "bkGithubPrEventDesc"
+    const val GITHUB_ISSUE_ASSIGNED_EVENT_DESC = "bkGitIssueAssignedEventDesc"
+    const val GITHUB_ISSUE_UNASSIGNED_EVENT_DESC = "bkGitIssueUnassignedEventDesc"
+    const val GITHUB_ISSUE_LABELED_EVENT_DESC = "bkGitIssueLabeledEventDesc"
+    const val GITHUB_ISSUE_UNLABELED_EVENT_DESC = "bkGitIssueUnlabeledEventDesc"
 
     // P4事件描述
     const val P4_EVENT_DESC = "bkP4EventDesc"
