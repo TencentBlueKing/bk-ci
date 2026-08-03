@@ -902,6 +902,21 @@ interface ApigwRemoteDevResource {
         workspaceName: String
     ): Result<List<VmDiskInfo>?>
 
+    @Operation(summary = "获取工作空间磁盘列表-项目", tags = ["v4_app_remotedev_workspace_disk_list_project"])
+    @GET
+    @Path("/workspace_disk_list_project")
+    fun fetchWorkspaceDiskListProject(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "工作空间名称", required = true)
+        @QueryParam("workspaceName")
+        workspaceName: String,
+        @Parameter(description = "项目ID(项目英文名)", required = true)
+        @QueryParam("projectId")
+        projectId: String
+    ): Result<List<VmDiskInfo>?>
+
     @Operation(summary = "卸载并回收磁盘", tags = ["v4_app_remotedev_workspace_delete_disk"])
     @POST
     @Path("/workspace_delete_disk")
@@ -1407,7 +1422,7 @@ interface ApigwRemoteDevResource {
             required = true,
             example = AUTH_HEADER_USER_ID_DEFAULT_VALUE
         )
-       @HeaderParam(AUTH_HEADER_USER_ID)
+        @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(
             description = "第几页",

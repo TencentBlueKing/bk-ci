@@ -661,7 +661,10 @@ interface ServiceRemoteDevResource {
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @QueryParam("workspaceName")
-        workspaceName: String
+        workspaceName: String,
+        @Parameter(description = "项目ID(项目英文名)", required = true)
+        @QueryParam("projectId")
+        projectId: String?
     ): Result<List<VmDiskInfo>>
 
     @Operation(summary = "卸载并回收磁盘")

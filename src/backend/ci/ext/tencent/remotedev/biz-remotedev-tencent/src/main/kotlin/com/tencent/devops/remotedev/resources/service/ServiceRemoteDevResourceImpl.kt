@@ -731,8 +731,8 @@ class ServiceRemoteDevResourceImpl(
         )
     }
 
-    override fun fetchDiskList(userId: String, workspaceName: String): Result<List<VmDiskInfo>> {
-        return Result(expertSupportService.fetchDiskList(userId, workspaceName))
+    override fun fetchDiskList(userId: String, workspaceName: String, projectId: String?): Result<List<VmDiskInfo>> {
+        return Result(expertSupportService.fetchDiskList(userId, workspaceName, projectId))
     }
 
     override fun deleteDisk(userId: String, data: DeleteDiskData): Result<CreateDiskResp> {

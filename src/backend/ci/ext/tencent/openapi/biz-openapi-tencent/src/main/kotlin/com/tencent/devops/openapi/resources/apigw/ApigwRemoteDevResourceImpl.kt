@@ -636,7 +636,16 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
 
     override fun fetchWorkspaceDiskList(userId: String, workspaceName: String): Result<List<VmDiskInfo>?> {
         logger.info("fetchWorkspaceDiskList |$userId|$workspaceName")
-        return client.get(ServiceRemoteDevResource::class).fetchDiskList(userId, workspaceName)
+        return client.get(ServiceRemoteDevResource::class).fetchDiskList(userId, workspaceName, null)
+    }
+
+    override fun fetchWorkspaceDiskListProject(
+        userId: String,
+        workspaceName: String,
+        projectId: String
+    ): Result<List<VmDiskInfo>?> {
+        logger.info("fetchWorkspaceDiskList |$userId|$workspaceName|$projectId")
+        return client.get(ServiceRemoteDevResource::class).fetchDiskList(userId, workspaceName, projectId)
     }
 
     override fun deleteDisk(userId: String, data: DeleteDiskData): Result<CreateDiskResp> {
@@ -920,7 +929,7 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
     ): Result<Map<String, String>> {
         logger.info(
             "refreshInstanceStatus" +
-                " |$userId|$projectId|${instanceIds.size}"
+                    " |$userId|$projectId|${instanceIds.size}"
         )
         return client.get(ServiceRemoteDevResource::class)
             .refreshWorkspaceStatus(
@@ -935,7 +944,7 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
     ): Result<List<WeSecProjectWorkspace>> {
         logger.info(
             "batchGetSimpleWorkspaces" +
-                " |$userId|$projectId|${workspaceNames.size}"
+                    " |$userId|$projectId|${workspaceNames.size}"
         )
         return client.get(ServiceRemoteDevResource::class)
             .batchGetSimpleWorkspaces(
@@ -951,7 +960,7 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
     ): Result<Page<Workspace>> {
         logger.info(
             "searchUserWorkspaces" +
-                " |$userId|$page|$pageSize"
+                    " |$userId|$page|$pageSize"
         )
         return client.get(ServiceRemoteDevResource::class)
             .searchUserWorkspaces(
@@ -974,8 +983,8 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
     ): Result<Page<String>> {
         logger.info(
             "batchQueryThumbnailWorkspaces" +
-                " |$appCode|$userId|enable=$enable|page=$page|pageSize=$pageSize" +
-                "|projectId=$projectId|workspaceNames.size=${workspaceNames?.size}"
+                    " |$appCode|$userId|enable=$enable|page=$page|pageSize=$pageSize" +
+                    "|projectId=$projectId|workspaceNames.size=${workspaceNames?.size}"
         )
         return client.get(ServiceRemoteDevResource::class)
             .batchQueryThumbnailWorkspaces(
@@ -997,7 +1006,7 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
     ): Result<Boolean> {
         logger.info(
             "enableWorkspaceThumbnail" +
-                " |$appCode|$userId|enable=$enable|workspaceNames.size=${workspaceNames.size}"
+                    " |$appCode|$userId|enable=$enable|workspaceNames.size=${workspaceNames.size}"
         )
         return client.get(ServiceRemoteDevResource::class)
             .enableWorkspaceThumbnail(
