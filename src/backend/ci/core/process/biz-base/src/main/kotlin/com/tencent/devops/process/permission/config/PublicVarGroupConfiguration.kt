@@ -33,11 +33,10 @@ import com.tencent.devops.common.auth.api.AuthResourceApi
 import com.tencent.devops.common.auth.code.PublicVarGroupAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
-import com.tencent.devops.process.permission.`var`.MockPublicVarGroupPermissionService
 import com.tencent.devops.process.permission.`var`.PublicVarGroupPermissionService
 import com.tencent.devops.process.permission.`var`.RbacPublicVarGroupPermissionService
+import com.tencent.devops.process.permission.`var`.SimplePublicVarGroupPermissionService
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
 import org.springframework.context.annotation.Bean
@@ -49,6 +48,10 @@ import org.springframework.core.Ordered
 @ConditionalOnWebApplication
 @AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
 class PublicVarGroupConfiguration {
+
+    @Bean
+    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "sample")
+    fun samplePublicVarGroupPermissionService(): PublicVarGroupPermissionService = SimplePublicVarGroupPermissionService()
 
     @Bean
     @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "rbac")
@@ -65,8 +68,4 @@ class PublicVarGroupConfiguration {
         client = client,
         tokenService = tokenService,
     )
-
-    @Bean
-    @ConditionalOnMissingBean(PublicVarGroupPermissionService::class)
-    fun mockPublicVarGroupPermissionService() = MockPublicVarGroupPermissionService()
 }

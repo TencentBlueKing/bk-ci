@@ -31,7 +31,7 @@ package com.tencent.devops.process.permission.`var`
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.process.pojo.`var`.PublicVarGroupPermissions
 
-class MockPublicVarGroupPermissionService : PublicVarGroupPermissionService {
+class SimplePublicVarGroupPermissionService : PublicVarGroupPermissionService {
     override fun checkPublicVarGroupPermission(
         userId: String,
         projectId: String,
