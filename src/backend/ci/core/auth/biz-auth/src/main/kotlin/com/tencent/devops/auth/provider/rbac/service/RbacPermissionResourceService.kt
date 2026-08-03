@@ -32,6 +32,7 @@ import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
 import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.constant.AuthMessageCode.ERROR_RESOURCE_CREATE_FAIL
 import com.tencent.devops.auth.pojo.AuthResourceInfo
+import com.tencent.devops.auth.pojo.vo.ProjectResourceRelationsDeleteVO
 import com.tencent.devops.auth.provider.rbac.pojo.enums.AuthGroupCreateMode
 import com.tencent.devops.auth.provider.rbac.pojo.event.AuthResourceGroupCreateEvent
 import com.tencent.devops.auth.provider.rbac.pojo.event.AuthResourceGroupModifyEvent
@@ -46,8 +47,11 @@ import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.ResourceAuthorizationDTO
 import com.tencent.devops.common.event.dispatcher.trace.TraceEventDispatcher
+import com.tencent.devops.common.service.trace.TraceTag
 import org.slf4j.LoggerFactory
+import org.slf4j.MDC
 import java.time.LocalDateTime
+import java.util.concurrent.Executors
 
 @SuppressWarnings("LongParameterList", "TooManyFunctions")
 class RbacPermissionResourceService(
@@ -65,6 +69,8 @@ class RbacPermissionResourceService(
 
     companion object {
         private val logger = LoggerFactory.getLogger(RbacPermissionResourceService::class.java)
+        private const val DELETE_PREVIEW_LIMIT = 20
+        private val deleteRelationsExecutorService = Executors.newFixedThreadPool(5)
     }
 
     @SuppressWarnings("LongMethod")
@@ -425,6 +431,90 @@ class RbacPermissionResourceService(
             resourceCode = resourceCode
         )
         return true
+    }
+
+    override fun resourceDeleteRelations(
+        projectCode: String,
+        resourceType: String,
+        dryRun: Boolean,
+        confirm: Boolean
+    ): ProjectResourceRelationsDeleteVO {
+        require(resourceType != AuthResourceType.PROJECT.value) {
+            "project resource type does not support batch deletion"
+        }
+        val resourceCodes = authResourceService.listByProjectAndType(
+            projectCode = projectCode,
+            resourceType = resourceType
+        )
+        val previewResourceCodes = resourceCodes.take(DELETE_PREVIEW_LIMIT)
+        val submitted = !dryRun && confirm
+        val async = submitted
+        val executed = false
+        logger.info(
+            "resource delete relations|$projectCode|$resourceType|dryRun=$dryRun|confirm=$confirm|" +
+                "async=$async|submitted=$submitted|count=${resourceCodes.size}"
+        )
+        if (submitted) {
+            val traceId = MDC.get(TraceTag.BIZID)
+            deleteRelationsExecutorService.submit {
+                if (!traceId.isNullOrBlank()) {
+                    MDC.put(TraceTag.BIZID, traceId)
+                }
+                var deletedCount = 0
+                resourceCodes.forEach { resourceCode ->
+                    try {
+                        resourceDeleteRelation(
+                            projectCode = projectCode,
+                            resourceType = resourceType,
+                            resourceCode = resourceCode
+                        )
+                        deletedCount++
+                    } catch (ignored: Exception) {
+                        logger.warn(
+                            "batch delete resource relation failed|$projectCode|$resourceType|$resourceCode",
+                            ignored
+                        )
+                    }
+                }
+                logger.info(
+                    "async resource delete relations finished|$projectCode|$resourceType|deletedCount=$deletedCount|" +
+                        "totalCount=${resourceCodes.size}"
+                )
+                MDC.remove(TraceTag.BIZID)
+            }
+        }
+        return ProjectResourceRelationsDeleteVO(
+            projectCode = projectCode,
+            resourceType = resourceType,
+            dryRun = dryRun,
+            confirm = confirm,
+            async = async,
+            submitted = submitted,
+            executed = executed,
+            totalCount = resourceCodes.size,
+            deletedCount = 0,
+            previewLimit = DELETE_PREVIEW_LIMIT,
+            previewResourceCodes = previewResourceCodes
+        )
+    }
+
+    override fun batchDeleteProjectResourceRelations(
+        projectCodes: List<String>,
+        resourceType: String,
+        dryRun: Boolean,
+        confirm: Boolean
+    ): List<ProjectResourceRelationsDeleteVO> {
+        return projectCodes
+            .filter { it.isNotBlank() }
+            .distinct()
+            .map { projectCode ->
+                resourceDeleteRelations(
+                    projectCode = projectCode,
+                    resourceType = resourceType,
+                    dryRun = dryRun,
+                    confirm = confirm
+                )
+            }
     }
 
     override fun resourceCancelRelation(

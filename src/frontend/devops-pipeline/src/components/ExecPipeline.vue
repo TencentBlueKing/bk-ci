@@ -305,7 +305,7 @@
     import 'bkui-pipeline/dist/bk-pipeline.css'
     
     import { mapActions, mapGetters, mapState } from 'vuex'
-    import MacDebugDialog from '@/components/MacDebugDialog.vue'    
+    import MacDebugDialog from '@/components/MacDebugDialog.vue'
 
     const getSubPipelineAccessUrl = (atom) => {
         const {

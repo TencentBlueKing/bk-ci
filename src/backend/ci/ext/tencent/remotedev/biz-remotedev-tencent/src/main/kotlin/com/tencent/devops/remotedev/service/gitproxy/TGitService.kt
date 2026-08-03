@@ -4,9 +4,9 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.remotedev.config.TGitConfig
 import com.tencent.devops.remotedev.dao.ProjectTGitLinkDao
 import com.tencent.devops.remotedev.pojo.TGitRepoDaoData
+import com.tencent.devops.remotedev.pojo.gitproxy.TGitBindRemotedevData
 import com.tencent.devops.remotedev.pojo.gitproxy.TGitCredType
 import com.tencent.devops.remotedev.pojo.gitproxy.TGitRepoStatus
-import com.tencent.devops.remotedev.service.gitproxy.GitProxyTGitService.Companion.removeHttpPrefix
 import com.tencent.devops.repository.api.ServiceOauthResource
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -33,9 +33,9 @@ class TGitService @Autowired constructor(
         return projectTGitLinkDao.fetchByTGitId(dslContext, tGitId, null).map { it.projectId }
     }
 
-    fun bindTGitProject(userId: String, tGitId: Long, tGitUrl: String, projectIds: List<String>): Map<String, Boolean> {
+    fun bindTGitProject(userId: String, data: TGitBindRemotedevData): Map<String, Boolean> {
         val result = mutableMapOf<String, Boolean>()
-        projectIds.forEach { projectId ->
+        data.projectIds.forEach { projectId ->
             try {
                 // 入库
                 projectTGitLinkDao.batchAdd(
@@ -43,25 +43,20 @@ class TGitService @Autowired constructor(
                     projectId = projectId,
                     data = listOf(
                         TGitRepoDaoData(
-                            tgitId = tGitId,
+                            tgitId = data.tgitId,
                             status = TGitRepoStatus.TO_BE_MIGRATED,
                             oauthUser = userId,
-                            gitType = if (tGitUrl.removeHttpPrefix().startsWith(tGitConfig.tSvnUrl.removeHttpPrefix())
-                            ) {
-                                TGitProjectType.SVN.name
-                            } else {
-                                TGitProjectType.GIT.name
-                            },
-                            url = tGitUrl,
+                            gitType = data.projectType.name,
+                            url = data.tgitUrl,
                             cred = userId,
                             credType = TGitCredType.OAUTH_USER
                         )
                     )
                 )
-                val res = gitProxyTGitService.linkTGit(projectId, setOf(tGitId)).values.firstOrNull() ?: false
+                val res = gitProxyTGitService.linkTGit(projectId, setOf(data.tgitId)).values.firstOrNull() ?: false
                 result[projectId] = res
             } catch (e: Exception) {
-                logger.error("bindTGitProject $tGitId|$projectId bind error", e)
+                logger.error("bindTGitProject ${data.tgitId}|$projectId bind error", e)
                 result[projectId] = false
             }
         }

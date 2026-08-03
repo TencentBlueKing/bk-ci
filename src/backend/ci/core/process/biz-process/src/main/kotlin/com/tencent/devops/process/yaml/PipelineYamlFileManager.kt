@@ -475,7 +475,7 @@ class PipelineYamlFileManager @Autowired constructor(
                         targetBranch = defaultBranch,
                         commitMessage = commitMessage,
                         newFile = filePushResult.newFile,
-                        authRepository = authRepository
+                        authRepository = pushAuthRepository
                     )
                 } else {
                     null

@@ -62,5 +62,7 @@ data class PipelineVersionWithModel(
     @get:Schema(title = "流水线当前最新版本号", required = true)
     val latestVersion: Int,
     @get:Schema(title = "运行环境HashId", required = false)
-    val envHashId: String? = null
+    val envHashId: String? = null,
+    @get:Schema(title = "该版本来源的草稿版本", required = false)
+    val draftVersion: Int? = null
 )

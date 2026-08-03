@@ -90,6 +90,7 @@
       "noCreationNodeInEnvironment": "この環境にはノードがありません",
       "searchEnvironment": "作成環境を検索",
       "environmentManagement": "作成環境管理",
+      "environmentSettings": "環境設定",
       "creationEnvironment": "作成環境",
       "selectEnvironment": "環境を選択",
       "description": "説明",

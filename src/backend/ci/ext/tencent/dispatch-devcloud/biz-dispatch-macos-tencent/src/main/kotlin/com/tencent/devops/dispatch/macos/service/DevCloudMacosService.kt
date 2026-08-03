@@ -380,8 +380,11 @@ class DevCloudMacosService @Autowired constructor(
                     )
                     return null
                 }
-                
-                return JsonUtil.to(responseContent, DevCloudMacosVmModelResponse::class.java)
+
+                val vmModelResponse = JsonUtil.to(responseContent, DevCloudMacosVmModelResponse::class.java)
+                return vmModelResponse.copy(
+                    data = vmModelResponse.data?.sortedByDescending { it.enabled }
+                )
             }
         } catch (e: Exception) {
             logger.error("Failed to get VM model from DevCloud, url: $url", e)

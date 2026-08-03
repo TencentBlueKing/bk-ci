@@ -86,6 +86,22 @@ export const TRIGGER_TYPE = {
 
 export type TriggerType = (typeof TRIGGER_TYPE)[keyof typeof TRIGGER_TYPE]
 
+/** 手动触发器在创作流/流水线中可能出现的 atomCode / @type 值 */
+export const MANUAL_TRIGGER_ATOM_CODES = [TRIGGER_TYPE.MANUAL, 'manualTrigger'] as const
+
+export function isManualTriggerAtomCode(atomCode?: string): boolean {
+  if (!atomCode) return false
+  return (MANUAL_TRIGGER_ATOM_CODES as readonly string[]).includes(atomCode)
+}
+
+export function getTriggerElementAtomCode(element: {
+  atomCode?: string
+  '@type'?: string
+  classType?: string
+}): string {
+  return element.atomCode || element['@type'] || element.classType || ''
+}
+
 export const errorTypeMap = [
   { title: 'flow.content.systemError', icon: 'info-circle' },
   { title: 'flow.content.userError', icon: 'user' },

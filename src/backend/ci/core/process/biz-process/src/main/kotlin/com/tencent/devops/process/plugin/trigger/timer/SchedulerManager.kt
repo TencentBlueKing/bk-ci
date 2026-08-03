@@ -133,7 +133,11 @@ abstract class SchedulerManager {
     @Synchronized
     fun deleteJob(crontabId: String): Boolean {
         return try {
-            getScheduler().deleteJob(JobKey.jobKey(crontabId, this.getTriggerGroup()))
+            // 删除必须与 addJob/checkExists 使用相同的 jobGroup 构造 JobKey，否则删不到 job 导致残留
+            val jobGroup = this.getJobGroup()
+            val deleted = getScheduler().deleteJob(JobKey.jobKey(crontabId, jobGroup))
+            logger.info("SchedulerManager.deleteJob|crontabId=$crontabId|jobGroup=$jobGroup|deleted=$deleted")
+            deleted
         } catch (ignored: Exception) {
             logger.error("SchedulerManager.deleteJob fail! e:$ignored", ignored)
             false

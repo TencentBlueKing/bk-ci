@@ -1046,14 +1046,15 @@
                         this.macOSHwSpecList = res.data
 
                         const defaultHwSpec = res.data.find(i => i.uid === 'VMware')
-                        const defaultImage = defaultHwSpec?.images?.[0]
-                        const defaultXcode = defaultImage?.xcodes?.[0]
+                        const firstHwSpec = res.data[0]
+                        const firstImage = firstHwSpec?.images?.[0]
+                        const firstXcode = firstImage?.xcodes?.[0]
 
-                        // 新建流水线：初始化默认值
+                        // 新建流水线：新建默认取接口返回第一条为初始化默认值
                         if (this.macOSHwSpec === undefined || (this.systemVersion === undefined && this.xcodeVersion === undefined)) {
-                            this.chooseMacOSHwSpec(defaultHwSpec.uid)
-                            this.chooseMacSystem(defaultImage.uid)
-                            this.chooseXcode('xcodeVersion', defaultXcode)
+                            this.chooseMacOSHwSpec(firstHwSpec.uid)
+                            this.chooseMacSystem(firstImage.uid)
+                            this.chooseXcode('xcodeVersion', firstXcode)
                         } else if (this.macOSHwSpec === '') {
                             // 存量数据兼容：macOSHwSpec 为空字符串，但已有 systemVersion 和 xcodeVersion
                             // 先填充下拉列表数据

@@ -27,6 +27,8 @@
 
 package com.tencent.devops.common.api.util
 
+import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import org.apache.commons.codec.binary.Hex
 import org.apache.commons.codec.digest.DigestUtils
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream
@@ -206,6 +208,73 @@ object FileUtil {
             }
         }
     }
+
+    /**
+     * 把 multipart 上传的 fileName 转换成可信的 basename。
+     * Jersey/FormDataContentDisposition 不会强制对 filename 做 basename 化处理，
+     * 攻击者可通过 ../、绝对路径、Windows 盘符、空字节等让"上传包本身"写出受限目录，
+     * 因此在落盘、解压、命令拼接等任何使用 disposition.fileName 的入口都需要先经过本方法。
+     */
+    fun getSafeFileName(rawFileName: String?): String {
+        if (rawFileName.isNullOrBlank()) {
+            throw ErrorCodeException(
+                errorCode = CommonMessageCode.PARAMETER_IS_NULL,
+                params = arrayOf("fileName")
+            )
+        }
+        // 仅取 basename，去除任何可能的目录前缀（/ 或 \）
+        val baseName = rawFileName.substringAfterLast('/').substringAfterLast('\\').trim()
+        if (baseName.isBlank() ||
+            baseName == "." || baseName == ".." ||
+            baseName.contains("..") ||
+            baseName.contains('/') ||
+            baseName.contains('\\') ||
+            baseName.contains('\u0000') ||
+            baseName.contains(':')
+        ) {
+            throw ErrorCodeException(
+                errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                params = arrayOf(rawFileName)
+            )
+        }
+        return baseName
+    }
+
+    /**
+     * 在受限根目录下安全地解析子路径，用于"合法值可能包含 / 但仍由外部输入控制"的场景，
+     * 例如 config.yml / task.json 里的 pkgLocalPath、查询接口里的 filePath 等。
+     *
+     * 校验语义：用 canonical path 判断目标是否真位于 baseDir 之下（可识别 ../、符号链接等），
+     * 越界则抛 ErrorCodeException。
+     *
+     * 返回值语义：返回 File(baseDir, relativePath) 的"原始"形式（未做 canonical 归一），
+     * 这样调用方再做 `file.absolutePath.removePrefix(getXxxBasePath())` 等字符串
+     * 拼接/裁剪时仍能与原 base 路径前缀对齐；如部署中存在 symlink，校验仍然有效，
+     * 但调用方不会被 canonical 化的真实路径所影响。
+     */
+    fun resolveSafeChildFile(baseDir: File, relativePath: String?): File {
+        if (relativePath.isNullOrBlank() || relativePath.contains('\u0000')) {
+            throw ErrorCodeException(
+                errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                params = arrayOf(relativePath ?: "")
+            )
+        }
+        val target = File(baseDir, relativePath)
+        val baseCanonical = baseDir.canonicalFile
+        val targetCanonical = target.canonicalFile
+        if (targetCanonical != baseCanonical &&
+            !targetCanonical.toPath().startsWith(baseCanonical.toPath())
+        ) {
+            throw ErrorCodeException(
+                errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                params = arrayOf(relativePath)
+            )
+        }
+        return target
+    }
+
+    fun resolveSafeChildFile(baseDirPath: String, relativePath: String?): File =
+        resolveSafeChildFile(File(baseDirPath), relativePath)
 
     /**
      * 防御 Zip Slip：将解压条目名安全地解析到目标目录之下。

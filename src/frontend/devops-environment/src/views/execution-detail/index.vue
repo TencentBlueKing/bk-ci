@@ -135,6 +135,7 @@
                     :ip.sync="activeIp"
                     :is-search="isSearch"
                     :host-id.sync="activeHostId"
+                    :page-size="initPageSize"
                     :ip-status.sync="activeIpStatus"
                     :bk-cloud-id.sync="activeBkCloudId"
                     :active-group-index="activeGroupIndex"
@@ -211,9 +212,11 @@
                 isHostLoading: true,
                 paginationChangeLoading: false,
                 hasLoadEnd: false,
-                maxHostNumPerGroup: 20,
                 keyword: '',
-                searchIp: ''
+                searchIp: '',
+                ROW_HEIGHT: 43,
+                maxHostNumPerGroup: 30,
+                initPageSize: 30
             }
         },
         computed: {
@@ -298,11 +301,32 @@
             this.fetchJobInstanceStatus()
             this.fetchStepInstanceStatus()
         },
+        mounted () {
+            // 首次页面加载时计算 maxHostNumPerGroup
+            this.calculateMaxHostNumPerGroup()
+        },
         methods: {
             ...mapActions('environment', [
                 'getJobInstanceStatus',
                 'getStepInstanceStatus'
             ]),
+            /**
+             * @description: 首次加载时计算每页显示的行数
+             */
+            calculateMaxHostNumPerGroup () {
+                this.$nextTick(() => {
+                    if (this.$refs.detailContainer) {
+                        const containerHeight = this.$refs.detailContainer.clientHeight
+                        if (containerHeight) {
+                            const padding = 40 // 上下各20px
+                            const tableAreaHeight = containerHeight - padding
+                            const rowCount = Math.floor(tableAreaHeight / this.ROW_HEIGHT)
+                            this.maxHostNumPerGroup = Math.max(1, Math.min(rowCount, 50))
+                            this.initPageSize = this.maxHostNumPerGroup
+                        }
+                    }
+                })
+            },
             /**
              * @description: 获取步骤执行结果
              */
@@ -393,7 +417,7 @@
                     this.activeBkCloudId = 0
                     this.activeIpStatus = ''
                     this.isHostLoading = true
-                    this.maxHostNumPerGroup = 20
+                    this.maxHostNumPerGroup = this.initPageSize
                     this.keyword = value
                     this.searchIp = ''
                     this.fetchStepInstanceStatus()
@@ -414,7 +438,7 @@
                     this.activeBkCloudId = 0
                     this.activeIpStatus = ''
                     this.isHostLoading = true
-                    this.maxHostNumPerGroup = 20
+                    this.maxHostNumPerGroup = this.initPageSize
                     this.keyword = ''
                     this.searchIp = value
                     this.fetchStepInstanceStatus()

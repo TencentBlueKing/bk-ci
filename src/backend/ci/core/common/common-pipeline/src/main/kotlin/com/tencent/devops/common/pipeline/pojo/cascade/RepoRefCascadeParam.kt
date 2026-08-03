@@ -16,11 +16,11 @@ class RepoRefCascadeParam : CascadeParam(
     }
 
     private val repoNameHandler = object : CascadeParamPropsHandler {
-        override fun handle(key: String, defaultValue: String, projectId: String): BuildCascadeProps {
+        override fun handle(key: String, defaultValue: String, value: String?, projectId: String): BuildCascadeProps {
             val repositoryTypes = SUPPORT_REPO_TYPE.joinToString(separator = ",") { it.name }
             return BuildCascadeProps(
                 id = key,
-                options = listOf(BuildFormValue(defaultValue, defaultValue)),
+                options = buildOptions(value, defaultValue),
                 searchUrl = "process/api/user/buildParam/repository/$projectId/aliasName?aliasName={words}&" +
                         "permission=LIST&repositoryType=$repositoryTypes",
                 replaceKey = "{words}"
@@ -29,14 +29,22 @@ class RepoRefCascadeParam : CascadeParam(
     }
 
     private val branchHandler = object : CascadeParamPropsHandler {
-        override fun handle(key: String, defaultValue: String, projectId: String) =
+        override fun handle(key: String, defaultValue: String, value: String?, projectId: String) =
             BuildCascadeProps(
                 id = key,
-                options = listOf(BuildFormValue(defaultValue, defaultValue)),
+                options = buildOptions(value, defaultValue),
                 searchUrl = "/process/api/user/buildParam/$projectId/repository/refs?search={branch}&" +
                         "repositoryType=NAME&repositoryId={parentValue}",
                 replaceKey = "{branch}"
             )
+    }
+
+    private fun buildOptions(value: String?, defaultValue: String): List<BuildFormValue> {
+        return listOfNotNull(value, defaultValue)
+            .filter { it.isNotBlank() }
+            .distinct()
+            .map { BuildFormValue(it, it) }
+            .ifEmpty { listOf(BuildFormValue(defaultValue, defaultValue)) }
     }
 
     companion object {
