@@ -4,12 +4,21 @@ import com.fasterxml.jackson.databind.module.SimpleModule
 import com.tencent.devops.common.api.util.JsonUtil
 import org.slf4j.LoggerFactory
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
+import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
+import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.Ordered
 
 @Configuration
 @AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
 class ModelAutoConfiguration {
+
+    /**
+     * 显式声明入参读取拦截器
+     */
+    @Bean
+    @ConditionalOnWebApplication
+    fun modelRequestReaderInterceptor() = ModelRequestReaderInterceptor()
 
     companion object {
         private val logger = LoggerFactory.getLogger(ModelAutoConfiguration::class.java)

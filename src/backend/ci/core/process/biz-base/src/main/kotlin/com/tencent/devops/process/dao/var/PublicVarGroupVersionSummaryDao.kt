@@ -28,30 +28,26 @@
 package com.tencent.devops.process.dao.`var`
 
 import com.tencent.devops.model.process.tables.TResourcePublicVarGroupVersionSummary
-import com.tencent.devops.model.process.tables.records.TResourcePublicVarGroupVersionSummaryRecord
 import com.tencent.devops.process.constant.ProcessMessageCode.DYNAMIC_VERSION
 import com.tencent.devops.process.pojo.`var`.po.PublicVarGroupVersionSummaryPO
 import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
 
+/**
+ * 公共变量组版本概要（引用数）DAO。
+ *
+ * 设计原则：只提供"绝对值写入 + 读取"，不提供增量增减（increment/decrement）。
+ * 计数由 PublicVarGroupReferManageService 在引用变更所在事务内，从引用明细表
+ * T_RESOURCE_PUBLIC_VAR_GROUP_REFER_INFO 重算后覆盖写入，从根本上杜绝旧增量方案的误差累积/漂移。
+ */
 @Repository
 class PublicVarGroupVersionSummaryDao {
 
-    private fun mapRecordToPO(record: TResourcePublicVarGroupVersionSummaryRecord): PublicVarGroupVersionSummaryPO {
-        return PublicVarGroupVersionSummaryPO(
-            id = record.id,
-            projectId = record.projectId,
-            groupName = record.groupName,
-            version = record.version,
-            referCount = record.referCount,
-            creator = record.creator,
-            modifier = record.modifier,
-            createTime = record.createTime,
-            updateTime = record.updateTime
-        )
-    }
-
+    /**
+     * 绝对值 upsert：不存在则插入，存在则用 po.referCount 覆盖（不做累加）。
+     * 用于重算后写入新出现的 (变量组, 版本) 行；并发下若行已被其他事务创建则退化为覆盖更新。
+     */
     fun save(
         dslContext: DSLContext,
         po: PublicVarGroupVersionSummaryPO
@@ -76,59 +72,30 @@ class PublicVarGroupVersionSummaryDao {
     }
 
     /**
-     * 插入新记录或在唯一键冲突时增量累加引用计数（原子操作）
-     * 使用 INSERT ... ON DUPLICATE KEY UPDATE REFER_COUNT = REFER_COUNT + countChange
-     * 解决并发场景下 update-first-then-insert 的 TOCTOU 竞态问题
-     * @param dslContext 数据库上下文
-     * @param po 版本概要对象（referCount 字段作为增量值）
+     * 用绝对值覆盖更新引用数（不做累加）。返回受影响行数：0 表示行不存在，需走 [save] 插入。
      */
-    fun saveOrIncrementReferCount(
+    fun updateReferCount(
         dslContext: DSLContext,
-        po: PublicVarGroupVersionSummaryPO
-    ) {
+        projectId: String,
+        groupName: String,
+        version: Int,
+        referCount: Int,
+        modifier: String
+    ): Int {
         with(TResourcePublicVarGroupVersionSummary.T_RESOURCE_PUBLIC_VAR_GROUP_VERSION_SUMMARY) {
-            dslContext.insertInto(this)
-                .set(ID, po.id)
-                .set(PROJECT_ID, po.projectId)
-                .set(GROUP_NAME, po.groupName)
-                .set(VERSION, po.version)
-                .set(REFER_COUNT, po.referCount)
-                .set(CREATOR, po.creator)
-                .set(MODIFIER, po.modifier)
-                .set(CREATE_TIME, po.createTime)
-                .set(UPDATE_TIME, po.updateTime)
-                .onDuplicateKeyUpdate()
-                .set(REFER_COUNT, REFER_COUNT.plus(po.referCount))
-                .set(MODIFIER, po.modifier)
-                .set(UPDATE_TIME, po.updateTime)
+            return dslContext.update(this)
+                .set(REFER_COUNT, referCount)
+                .set(MODIFIER, modifier)
+                .set(UPDATE_TIME, LocalDateTime.now())
+                .where(PROJECT_ID.eq(projectId))
+                .and(GROUP_NAME.eq(groupName))
+                .and(VERSION.eq(version))
                 .execute()
         }
     }
 
     /**
-     * 根据项目ID、变量组名和版本号查询记录
-     */
-    fun getByGroupNameAndVersion(
-        dslContext: DSLContext,
-        projectId: String,
-        groupName: String,
-        version: Int
-    ): PublicVarGroupVersionSummaryPO? {
-        with(TResourcePublicVarGroupVersionSummary.T_RESOURCE_PUBLIC_VAR_GROUP_VERSION_SUMMARY) {
-            return dslContext.selectFrom(this)
-                .where(PROJECT_ID.eq(projectId))
-                .and(GROUP_NAME.eq(groupName))
-                .and(VERSION.eq(version))
-                .fetchOne()?.let { mapRecordToPO(it) }
-        }
-    }
-
-    /**
-     * 获取变量组所有版本的引用计数总和（固定版本 + 动态版本）
-     * @param dslContext 数据库上下文
-     * @param projectId 项目ID
-     * @param groupName 变量组名称
-     * @return 引用计数总和
+     * 获取变量组所有版本的引用计数总和（固定版本 + 动态版本），用于删除保护。
      */
     fun getTotalReferCount(
         dslContext: DSLContext,
@@ -145,73 +112,7 @@ class PublicVarGroupVersionSummaryDao {
     }
 
     /**
-     * 更新引用计数
-     */
-    fun updateReferCount(
-        dslContext: DSLContext,
-        projectId: String,
-        groupName: String,
-        version: Int,
-        referCount: Int,
-        modifier: String
-    ) {
-        with(TResourcePublicVarGroupVersionSummary.T_RESOURCE_PUBLIC_VAR_GROUP_VERSION_SUMMARY) {
-            dslContext.update(this)
-                .set(REFER_COUNT, referCount)
-                .set(MODIFIER, modifier)
-                .set(UPDATE_TIME, LocalDateTime.now())
-                .where(PROJECT_ID.eq(projectId))
-                .and(GROUP_NAME.eq(groupName))
-                .and(VERSION.eq(version))
-                .execute()
-        }
-    }
-
-    /**
-     * 增量更新引用计数（支持增加或减少）
-     * @param dslContext 数据库上下文
-     * @param projectId 项目ID
-     * @param groupName 变量组名称
-     * @param version 版本号（-1表示动态版本）
-     * @param countChange 变化数量（正数增加，负数减少）
-     * @param modifier 修改人
-     * @return 更新的行数
-     */
-    fun incrementReferCount(
-        dslContext: DSLContext,
-        projectId: String,
-        groupName: String,
-        version: Int,
-        countChange: Int,
-        modifier: String
-    ): Int {
-        with(TResourcePublicVarGroupVersionSummary.T_RESOURCE_PUBLIC_VAR_GROUP_VERSION_SUMMARY) {
-            val condition = PROJECT_ID.eq(projectId)
-                .and(GROUP_NAME.eq(groupName))
-                .and(VERSION.eq(version))
-
-            // 如果是减少操作，添加条件确保结果不会为负
-            val finalCondition = if (countChange < 0) {
-                condition.and(REFER_COUNT.plus(countChange).ge(0))
-            } else {
-                condition
-            }
-
-            return dslContext.update(this)
-                .set(REFER_COUNT, REFER_COUNT.plus(countChange))
-                .set(MODIFIER, modifier)
-                .set(UPDATE_TIME, LocalDateTime.now())
-                .where(finalCondition)
-                .execute()
-        }
-    }
-
-    /**
-     * 批量获取变量组的引用计数总和
-     * @param dslContext 数据库上下文
-     * @param projectId 项目ID
-     * @param groupNames 变量组名称列表
-     * @return Map<变量组名, 引用计数总和>
+     * 批量获取变量组的引用计数总和。
      */
     fun batchGetTotalReferCount(
         dslContext: DSLContext,
@@ -219,7 +120,6 @@ class PublicVarGroupVersionSummaryDao {
         groupNames: List<String>
     ): Map<String, Int> {
         if (groupNames.isEmpty()) return emptyMap()
-
         with(TResourcePublicVarGroupVersionSummary.T_RESOURCE_PUBLIC_VAR_GROUP_VERSION_SUMMARY) {
             return dslContext.select(GROUP_NAME, REFER_COUNT.sum())
                 .from(this)
@@ -227,18 +127,12 @@ class PublicVarGroupVersionSummaryDao {
                 .and(GROUP_NAME.`in`(groupNames))
                 .groupBy(GROUP_NAME)
                 .fetch()
-                .associate { record ->
-                    record.value1() to (record.value2()?.toInt() ?: 0)
-                }
+                .associate { it.value1() to (it.value2()?.toInt() ?: 0) }
         }
     }
 
     /**
-     * 批量获取变量组的动态版本引用计数
-     * @param dslContext 数据库上下文
-     * @param projectId 项目ID
-     * @param groupNames 变量组名称列表
-     * @return Map<变量组名, 动态版本引用计数>
+     * 批量获取变量组的动态版本引用计数（VERSION = -1）。
      */
     fun batchGetDynamicVersionReferCount(
         dslContext: DSLContext,
@@ -246,7 +140,6 @@ class PublicVarGroupVersionSummaryDao {
         groupNames: List<String>
     ): Map<String, Int> {
         if (groupNames.isEmpty()) return emptyMap()
-
         with(TResourcePublicVarGroupVersionSummary.T_RESOURCE_PUBLIC_VAR_GROUP_VERSION_SUMMARY) {
             return dslContext.select(GROUP_NAME, REFER_COUNT)
                 .from(this)
@@ -254,18 +147,12 @@ class PublicVarGroupVersionSummaryDao {
                 .and(GROUP_NAME.`in`(groupNames))
                 .and(VERSION.eq(DYNAMIC_VERSION))
                 .fetch()
-                .associate { record ->
-                    record.value1() to (record.value2() ?: 0)
-                }
+                .associate { it.value1() to (it.value2() ?: 0) }
         }
     }
 
     /**
-     * 批量获取变量组的固定版本引用计数总和
-     * @param dslContext 数据库上下文
-     * @param projectId 项目ID
-     * @param groupNames 变量组名称列表
-     * @return Map<变量组名, 固定版本引用计数总和>
+     * 批量获取变量组的固定版本引用计数总和（VERSION <> -1）。
      */
     fun batchGetFixedVersionReferCount(
         dslContext: DSLContext,
@@ -273,7 +160,6 @@ class PublicVarGroupVersionSummaryDao {
         groupNames: List<String>
     ): Map<String, Int> {
         if (groupNames.isEmpty()) return emptyMap()
-
         with(TResourcePublicVarGroupVersionSummary.T_RESOURCE_PUBLIC_VAR_GROUP_VERSION_SUMMARY) {
             return dslContext.select(GROUP_NAME, REFER_COUNT.sum())
                 .from(this)
@@ -282,14 +168,33 @@ class PublicVarGroupVersionSummaryDao {
                 .and(VERSION.ne(DYNAMIC_VERSION))
                 .groupBy(GROUP_NAME)
                 .fetch()
-                .associate { record ->
-                    record.value1() to (record.value2()?.toInt() ?: 0)
-                }
+                .associate { it.value1() to (it.value2()?.toInt() ?: 0) }
         }
     }
 
     /**
-     * 删除变量组的所有版本概要信息
+     * 删除变量组下、版本不在 keepVersions 中的所有概要行。
+     * 用于重算后清理"引用数已归零"的版本行；keepVersions 为空表示该组已无任何生效引用，删除全部行。
+     */
+    fun deleteByGroupNameExceptVersions(
+        dslContext: DSLContext,
+        projectId: String,
+        groupName: String,
+        keepVersions: Collection<Int>
+    ) {
+        with(TResourcePublicVarGroupVersionSummary.T_RESOURCE_PUBLIC_VAR_GROUP_VERSION_SUMMARY) {
+            val delete = dslContext.deleteFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(GROUP_NAME.eq(groupName))
+            if (keepVersions.isNotEmpty()) {
+                delete.and(VERSION.notIn(keepVersions))
+            }
+            delete.execute()
+        }
+    }
+
+    /**
+     * 删除变量组的所有版本概要信息（变量组被删除时清理）。
      */
     fun deleteByGroupName(
         dslContext: DSLContext,

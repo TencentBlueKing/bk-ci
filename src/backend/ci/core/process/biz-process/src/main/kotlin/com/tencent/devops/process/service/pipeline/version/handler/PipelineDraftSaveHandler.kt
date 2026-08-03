@@ -124,7 +124,8 @@ class PipelineDraftSaveHandler @Autowired constructor(
                 referName = pipelineBasicInfo.pipelineName,
                 referVersion = resourceOnlyVersion.version,
                 referVersionName = resourceOnlyVersion.versionName,
-                updateCount = true
+                // 草稿保存（COMMITTING）：只写引用明细，不同步 LATEST_FLAG
+                activeVersion = false
             )
         )
 
