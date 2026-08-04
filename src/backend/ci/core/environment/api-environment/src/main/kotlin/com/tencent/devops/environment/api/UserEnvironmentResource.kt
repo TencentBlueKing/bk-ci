@@ -225,7 +225,7 @@ interface UserEnvironmentResource {
     @Operation(summary = "获取环境的节点列表")
     @POST
     @Path("/{projectId}/{envHashId}/listNodes")
-    fun  listNodes(
+    fun listNodes(
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
