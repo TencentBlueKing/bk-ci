@@ -456,6 +456,7 @@ class NodeService @Autowired constructor(
         CsvUtil.setCsvResponse("$projectId-environment-nodes-data", bytes, response)
     }
 
+    @Deprecated("这个方法如果不传入 envId 那么得到的环境相关的结果不可控，后续修改尽量不使用这个方法")
     fun formatNodeWithPermissions(
         userId: String,
         projectId: String,
