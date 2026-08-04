@@ -1045,6 +1045,11 @@ class PipelineRuntimeService @Autowired constructor(
                 if (context.needUpdateStage) {
                     afterRetryStage = true
                     stage.resetBuildOption(true)
+                }
+                // 重试点之后的所有 stage 都需要重置状态和执行次数，防止残留的终态（如 CANCELED）
+                // 导致 StageControl 在 judgeStageContainer 中短路返回错误状态。
+                // 但仅当 needUpdateStage 时才同步 checkIn/checkOut，避免重置审核状态后重新触发审核暂停
+                if (context.needUpdateStage || afterRetryStage) {
                     run findHistoryStage@{
                         lastTimeBuildStages.forEach {
                             if (it.stageId == stage.id!!) {
@@ -1052,8 +1057,10 @@ class PipelineRuntimeService @Autowired constructor(
                                 it.startTime = stageStartTime
                                 it.endTime = null
                                 it.executeCount = context.executeCount
-                                it.checkIn = stage.checkIn
-                                it.checkOut = stage.checkOut
+                                if (context.needUpdateStage) {
+                                    it.checkIn = stage.checkIn
+                                    it.checkOut = stage.checkOut
+                                }
                                 it.name = stage.name
                                 updateExistsStage.add(it)
                                 return@findHistoryStage
