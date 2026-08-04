@@ -1906,6 +1906,12 @@ class PipelineRepositoryService constructor(
                             channelCode = record.channel
                         )
                     )
+                    publicVarGroupReferManageService.deletePublicVerGroupRefByReferId(
+                        transactionContext = transactionContext,
+                        referId = pipelineId,
+                        projectId = projectId,
+                        referType = PublicVarGroupReferenceTypeEnum.PIPELINE
+                    )
                 }
                 // 引用清理复用 transactionContext，与流水线删除同事务，避免孤儿引用（B-2）。
                 publicVarGroupReferManageService.deletePublicVerGroupRefByReferId(

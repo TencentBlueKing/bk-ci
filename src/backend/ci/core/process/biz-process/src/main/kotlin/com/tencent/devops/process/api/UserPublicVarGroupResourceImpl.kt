@@ -51,13 +51,13 @@ class UserPublicVarGroupResourceImpl @Autowired constructor(
     override fun addGroup(
         userId: String,
         projectId: String,
-        publicVarGroup: PublicVarGroupVO
+        publicVarGroup: PublicVarGroupVO,
+        allowUpgrade: Boolean?
     ): Result<String> {
         // 校验创建权限
-        publicVarGroupPermissionService.checkPublicVarGroupPermissions(
+        publicVarGroupPermissionService.checkPublicVarGroupCreatePermission(
             userId = userId,
-            projectId = projectId,
-            permission = AuthPermission.CREATE
+            projectId = projectId
         )
         return Result(
             publicVarGroupService.addGroup(
@@ -65,7 +65,8 @@ class UserPublicVarGroupResourceImpl @Autowired constructor(
                     projectId = projectId,
                     userId = userId,
                     publicVarGroup = publicVarGroup
-                )
+                ),
+                allowUpgrade = allowUpgrade ?: false
             )
         )
     }
@@ -81,12 +82,6 @@ class UserPublicVarGroupResourceImpl @Autowired constructor(
         page: Int,
         pageSize: Int
     ): Result<Page<PublicVarGroupDO>> {
-        // 校验列表权限
-        publicVarGroupPermissionService.checkPublicVarGroupPermissions(
-            userId = userId,
-            projectId = projectId,
-            permission = AuthPermission.LIST
-        )
         return Result(publicVarGroupService.getGroups(
             userId = userId,
             queryReq = PublicVarGroupInfoQueryReqDTO(
@@ -118,10 +113,9 @@ class UserPublicVarGroupResourceImpl @Autowired constructor(
         yaml: PublicVarGroupYamlStringVO
     ): Result<String> {
         // 校验创建权限
-        publicVarGroupPermissionService.checkPublicVarGroupPermissions(
+        publicVarGroupPermissionService.checkPublicVarGroupCreatePermission(
             userId = userId,
-            projectId = projectId,
-            permission = AuthPermission.CREATE
+            projectId = projectId
         )
         return Result(publicVarGroupService.importGroup(
             userId = userId,
@@ -167,10 +161,11 @@ class UserPublicVarGroupResourceImpl @Autowired constructor(
 
     override fun convertGroupYaml(userId: String, projectId: String, publicVarGroup: PublicVarGroupVO): Result<String> {
         // 校验查看权限
-        publicVarGroupPermissionService.checkPublicVarGroupPermissions(
+        publicVarGroupPermissionService.checkPublicVarGroupPermissionWithMessage(
             userId = userId,
             projectId = projectId,
-            permission = AuthPermission.VIEW
+            permission = AuthPermission.VIEW,
+            groupName = publicVarGroup.groupName
         )
         return Result(publicVarGroupService.convertGroupYaml(
             userId = userId,

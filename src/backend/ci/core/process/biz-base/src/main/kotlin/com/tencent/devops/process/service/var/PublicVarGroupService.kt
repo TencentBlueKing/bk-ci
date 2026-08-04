@@ -115,7 +115,7 @@ class PublicVarGroupService @Autowired constructor(
         private const val IAM_DELETE_RETRY_INTERVAL_MS = 500L
     }
 
-    fun addGroup(publicVarGroupDTO: PublicVarGroupDTO): String {
+    fun addGroup(publicVarGroupDTO: PublicVarGroupDTO, allowUpgrade: Boolean = true): String {
         val projectId = publicVarGroupDTO.projectId
         val userId = publicVarGroupDTO.userId
         val groupName = publicVarGroupDTO.publicVarGroup.groupName
@@ -129,6 +129,15 @@ class PublicVarGroupService @Autowired constructor(
         )
         redisLock.lock()
         try {
+            // 同名校验（忽略大小写）
+            val conflictGroupName = publicVarGroupDao.listGroupsNameByProjectId(dslContext, projectId)
+                .firstOrNull { it.equals(groupName, ignoreCase = true) && (!allowUpgrade || it != groupName) }
+            if (conflictGroupName != null) {
+                throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.ERROR_PUBLIC_VAR_GROUP_NAME_DUPLICATE_CASE_INSENSITIVE,
+                    params = arrayOf(groupName)
+                )
+            }
             publicVarService.checkGroupPublicVar(publicVarGroupDTO.publicVarGroup.publicVars)
             val id = client.get(ServiceAllocIdResource::class)
                 .generateSegmentId("T_RESOURCE_PUBLIC_VAR_GROUP").data
@@ -136,12 +145,31 @@ class PublicVarGroupService @Autowired constructor(
                     errorCode = ProcessMessageCode.ERROR_PUBLIC_VAR_GROUP_ADD_FAILED,
                     params = arrayOf("ID allocation service unavailable")
                 )
+            // 判断是新建还是升级：升级需校验编辑权限
+            val existingVersion = publicVarGroupDao.getLatestVersionByGroupName(
+                dslContext, projectId, groupName
+            ) ?: 0
+            if (existingVersion > 0) {
+                val editPermissionMap = publicVarGroupPermissionService.filterPublicVarGroups(
+                    userId = userId,
+                    projectId = projectId,
+                    authPermissions = setOf(AuthPermission.EDIT)
+                )
+                val canEdit = editPermissionMap[AuthPermission.EDIT]?.contains(groupName) ?: false
+                if (!canEdit) {
+                    throw ErrorCodeException(
+                        errorCode = ProcessMessageCode.ERROR_PUBLIC_VAR_GROUP_EDIT_NO_PERMISSION,
+                        params = arrayOf(userId, groupName)
+                    )
+                }
+            }
             val isCreate = createOrUpgradeGroupRecord(
                 id = id,
                 projectId = projectId,
                 userId = userId,
                 groupName = groupName,
-                publicVarGroupDTO = publicVarGroupDTO
+                publicVarGroupDTO = publicVarGroupDTO,
+                existingVersion = existingVersion
             )
             // 数据库事务成功后，如果是新建变量组（首次创建），注册到权限中心
             if (isCreate) {
@@ -167,24 +195,24 @@ class PublicVarGroupService @Autowired constructor(
 
     /**
      * 在事务中创建或升级变量组记录，返回是否为新建（首次创建）。
+     * @param existingVersion 已查出的版本号
      */
     private fun createOrUpgradeGroupRecord(
         id: Long,
         projectId: String,
         userId: String,
         groupName: String,
-        publicVarGroupDTO: PublicVarGroupDTO
+        publicVarGroupDTO: PublicVarGroupDTO,
+        existingVersion: Int
     ): Boolean {
         // 事务外预生成变量分布式 ID（远程调用），避免在 DB 事务持有连接期间发起 RPC
         val varSegmentIds = publicVarService.batchGenerateVarSegmentIds(
             publicVarGroupDTO.publicVarGroup.publicVars.size
         )
-        var isCreate = false
+        val isCreate = (existingVersion == 0)
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
-            val version = publicVarGroupDao.getLatestVersionByGroupName(context, projectId, groupName) ?: 0
-            isCreate = (version == 0)
-            val newVersion = version + 1
+            val newVersion = existingVersion + 1
             val publicVarGroupPO = PublicVarGroupPO(
                 id = id,
                 projectId = projectId,
@@ -199,7 +227,7 @@ class PublicVarGroupService @Autowired constructor(
                 createTime = LocalDateTime.now(),
                 updateTime = LocalDateTime.now()
             )
-            if (version != 0) {
+            if (existingVersion != 0) {
                 publicVarGroupDao.updateLatestFlag(
                     dslContext = context,
                     projectId = projectId,
@@ -297,7 +325,7 @@ class PublicVarGroupService @Autowired constructor(
         val page = queryReq.page
         val pageSize = queryReq.pageSize
 
-        val groupNames = publicVarService.listGroupNamesByVarFilter(
+        val varFilterGroupNames = publicVarService.listGroupNamesByVarFilter(
             projectId = projectId,
             filterByVarName = queryReq.filterByVarName,
             filterByVarAlias = queryReq.filterByVarAlias
@@ -305,7 +333,7 @@ class PublicVarGroupService @Autowired constructor(
 
         // 如果用户指定了变量名或别名筛选条件，但没有匹配结果，直接返回空页面
         val hasVarFilter = !queryReq.filterByVarName.isNullOrBlank() || !queryReq.filterByVarAlias.isNullOrBlank()
-        if (hasVarFilter && groupNames.isEmpty()) {
+        if (hasVarFilter && varFilterGroupNames.isEmpty()) {
             return Page(
                 count = 0,
                 page = page,
@@ -315,13 +343,16 @@ class PublicVarGroupService @Autowired constructor(
             )
         }
 
+        // count 和分页查询不按资源粒度过滤，只按变量筛选条件过滤
+        val effectiveGroupNames = varFilterGroupNames
+
         val totalCount = publicVarGroupDao.countGroupsByProjectId(
             dslContext = dslContext,
             projectId = projectId,
             filterByGroupName = queryReq.filterByGroupName,
             filterByGroupDesc = queryReq.filterByGroupDesc,
             filterByUpdater = queryReq.filterByUpdater,
-            groupNames = groupNames.takeIf { it.isNotEmpty() }
+            groupNames = effectiveGroupNames.takeIf { it.isNotEmpty() }
         )
 
         val groupPOs = publicVarGroupDao.listGroupsByProjectIdPage(
@@ -332,26 +363,10 @@ class PublicVarGroupService @Autowired constructor(
             filterByGroupName = queryReq.filterByGroupName,
             filterByGroupDesc = queryReq.filterByGroupDesc,
             filterByUpdater = queryReq.filterByUpdater,
-            groupNames = groupNames.takeIf { it.isNotEmpty() }
+            groupNames = effectiveGroupNames.takeIf { it.isNotEmpty() }
         )
 
-        // 批量查询权限
         val groupNameList = groupPOs.map { it.groupName }
-        val permissionsMap = if (groupNameList.isNotEmpty()) {
-            publicVarGroupPermissionService.filterPublicVarGroups(
-                userId = userId,
-                projectId = projectId,
-                authPermissions = setOf(
-                    AuthPermission.EDIT,
-                    AuthPermission.VIEW,
-                    AuthPermission.DELETE,
-                    AuthPermission.USE
-                ),
-                groupNames = groupNameList
-            )
-        } else {
-            emptyMap()
-        }
 
         // 批量查询当前有效引用数量（读预聚合 summary，点查/小范围，避免明细表实时聚合的开销）
         val referCountMap = if (groupNameList.isNotEmpty()) {
@@ -381,6 +396,23 @@ class PublicVarGroupService @Autowired constructor(
                 dslContext = dslContext,
                 projectId = projectId,
                 groupNames = groupNameList
+            )
+        } else {
+            emptyMap()
+        }
+
+        // 批量查询当前页结果集的 EDIT/VIEW/DELETE/USE 权限
+        val permissionsMap = if (groupNameList.isNotEmpty()) {
+            publicVarGroupPermissionService.filterPublicVarGroups(
+                userId = userId,
+                projectId = projectId,
+                authPermissions = setOf(
+                    AuthPermission.EDIT,
+                    AuthPermission.VIEW,
+                    AuthPermission.DELETE,
+                    AuthPermission.USE,
+                    AuthPermission.LIST
+                )
             )
         } else {
             emptyMap()
@@ -433,7 +465,8 @@ class PublicVarGroupService @Autowired constructor(
                 projectId = projectId,
                 userId = userId,
                 publicVarGroup = publicVarGroupVO
-            )
+            ),
+            allowUpgrade = false
         )
     }
 

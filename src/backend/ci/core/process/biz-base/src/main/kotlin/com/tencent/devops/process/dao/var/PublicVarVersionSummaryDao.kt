@@ -207,24 +207,6 @@ class PublicVarVersionSummaryDao {
     }
 
     /**
-     * 删除变量的所有版本概要信息
-     */
-    fun deleteByVarName(
-        dslContext: DSLContext,
-        projectId: String,
-        groupName: String,
-        varName: String
-    ) {
-        with(TResourcePublicVarVersionSummary.T_RESOURCE_PUBLIC_VAR_VERSION_SUMMARY) {
-            dslContext.deleteFrom(this)
-                .where(PROJECT_ID.eq(projectId))
-                .and(GROUP_NAME.eq(groupName))
-                .and(VAR_NAME.eq(varName))
-                .execute()
-        }
-    }
-
-    /**
      * 删除变量组下所有变量的概要信息
      */
     fun deleteByGroupName(

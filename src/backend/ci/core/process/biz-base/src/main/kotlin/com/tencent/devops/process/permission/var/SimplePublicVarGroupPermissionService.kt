@@ -31,7 +31,7 @@ package com.tencent.devops.process.permission.`var`
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.process.pojo.`var`.PublicVarGroupPermissions
 
-class MockPublicVarGroupPermissionService : PublicVarGroupPermissionService {
+class SimplePublicVarGroupPermissionService : PublicVarGroupPermissionService {
     override fun checkPublicVarGroupPermission(
         userId: String,
         projectId: String,
@@ -44,6 +44,11 @@ class MockPublicVarGroupPermissionService : PublicVarGroupPermissionService {
         projectId: String,
         permission: AuthPermission,
         groupName: String
+    ): Boolean = true
+
+    override fun checkPublicVarGroupCreatePermission(
+        userId: String,
+        projectId: String
     ): Boolean = true
 
     override fun checkPublicVarGroupPermissions(
@@ -68,10 +73,9 @@ class MockPublicVarGroupPermissionService : PublicVarGroupPermissionService {
     override fun filterPublicVarGroups(
         userId: String,
         projectId: String,
-        authPermissions: Set<AuthPermission>,
-        groupNames: List<String>
+        authPermissions: Set<AuthPermission>
     ): Map<AuthPermission, List<String>> {
-        return authPermissions.associateWith { groupNames }
+        return emptyMap()
     }
 
     override fun createResource(
