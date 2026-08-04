@@ -125,8 +125,8 @@ import com.tencent.devops.process.pojo.setting.PipelineModelVersion
 import com.tencent.devops.process.pojo.`var`.dto.PublicVarGroupReferDTO
 import com.tencent.devops.process.service.PipelineAsCodeService
 import com.tencent.devops.process.service.PipelineOperationLogService
-import com.tencent.devops.process.service.PipelineVisibilityService
 import com.tencent.devops.process.service.label.PipelineGroupService
+import com.tencent.devops.process.service.PipelineVisibilityService
 import com.tencent.devops.process.service.pipeline.PipelineSettingVersionService
 import com.tencent.devops.process.service.pipeline.PipelineTransferYamlService
 import com.tencent.devops.process.service.`var`.PublicVarGroupReferManageService
@@ -193,8 +193,8 @@ class PipelineRepositoryService constructor(
     private val pipelineTemplateInfoDao: PipelineTemplateInfoDao,
     private val pipelineGroupService: PipelineGroupService,
     private val pipelineVisibilityService: PipelineVisibilityService,
-    private val pipelineResourceDraftVersionDao: PipelineResourceDraftVersionDao,
-    private val publicVarGroupReferManageService: PublicVarGroupReferManageService
+    private val publicVarGroupReferManageService: PublicVarGroupReferManageService,
+    private val pipelineResourceDraftVersionDao: PipelineResourceDraftVersionDao
 ) {
 
     companion object {
@@ -922,7 +922,8 @@ class PipelineRepositoryService constructor(
         }
 
         // 引用关系写入在事务提交后执行，避免事务回滚产生孤儿引用。
-        // updateCount 控制引用计数写入：RELEASED/COMMITTING 需更新计数，BRANCH 与草稿一致不更新。
+        // activeVersion 控制 LATEST_FLAG 同步（引用计数/删除保护来源）：RELEASED/BRANCH 为生效版本需同步；
+        // COMMITTING 为草稿不同步，避免草稿改动误伤已发布版本的引用计数。
         publicVarGroupReferManageService.handleVarGroupReferBus(
             PublicVarGroupReferDTO(
                 userId = userId,
@@ -933,7 +934,7 @@ class PipelineRepositoryService constructor(
                 referName = model.name,
                 referVersion = 1,
                 referVersionName = versionName ?: "",
-                updateCount = versionStatus == VersionStatus.RELEASED || versionStatus == VersionStatus.COMMITTING
+                activeVersion = versionStatus == VersionStatus.RELEASED || versionStatus == VersionStatus.BRANCH
             )
         )
 
@@ -1306,7 +1307,8 @@ class PipelineRepositoryService constructor(
         }
 
         // 引用关系写入在事务提交后执行，避免事务回滚产生孤儿引用。
-        // updateCount: RELEASED 更新计数，BRANCH 与草稿一致不更新；草稿保存走 DraftSaveHandler。
+        // activeVersion: RELEASED/BRANCH 为生效版本需同步 LATEST_FLAG；草稿（COMMITTING）不同步，
+        // 走 DraftSaveHandler 且不改动已发布版本的引用计数。
         publicVarGroupReferManageService.handleVarGroupReferBus(
             PublicVarGroupReferDTO(
                 userId = userId,
@@ -1317,7 +1319,8 @@ class PipelineRepositoryService constructor(
                 referName = model.name,
                 referVersion = version,
                 referVersionName = versionName,
-                updateCount = versionStatus?.fix() == VersionStatus.RELEASED
+                activeVersion = versionStatus?.fix() == VersionStatus.RELEASED ||
+                    versionStatus?.fix() == VersionStatus.BRANCH
             )
         )
 
@@ -1910,6 +1913,13 @@ class PipelineRepositoryService constructor(
                         referType = PublicVarGroupReferenceTypeEnum.PIPELINE
                     )
                 }
+                // 引用清理复用 transactionContext，与流水线删除同事务，避免孤儿引用（B-2）。
+                publicVarGroupReferManageService.deletePublicVerGroupRefByReferId(
+                    transactionContext = transactionContext,
+                    referId = pipelineId,
+                    projectId = projectId,
+                    referType = PublicVarGroupReferenceTypeEnum.PIPELINE
+                )
             }
 
             templatePipelineDao.get(

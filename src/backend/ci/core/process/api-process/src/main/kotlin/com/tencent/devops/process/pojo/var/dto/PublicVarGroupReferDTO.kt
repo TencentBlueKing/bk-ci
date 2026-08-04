@@ -49,8 +49,12 @@ data class PublicVarGroupReferDTO(
     val referVersion: Int,
     @get:Schema(title = "关联组件版本名称")
     val referVersionName: String? = null,
-    @get:Schema(title = "是否更新计数")
-    val updateCount: Boolean = false
+    @get:Schema(
+        title = "是否为生效版本",
+        description = "true 表示本次保存的是生效版本（RELEASED/BRANCH），需要同步 LATEST_FLAG（影响引用计数与删除保护）；" +
+            "false 表示草稿版本（COMMITTING），仅写引用明细、不改动 LATEST_FLAG，避免草稿改动误伤已发布版本的引用计数。"
+    )
+    val activeVersion: Boolean = false
 ) {
     override fun toString(): String {
         return "PublicVarGroupReferDTO(userId='$userId', projectId='$projectId', " +

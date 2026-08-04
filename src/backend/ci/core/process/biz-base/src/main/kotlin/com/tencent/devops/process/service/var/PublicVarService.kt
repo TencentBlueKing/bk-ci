@@ -40,7 +40,6 @@ import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_COM
 import com.tencent.devops.process.dao.`var`.PublicVarDao
 import com.tencent.devops.process.dao.`var`.PublicVarGroupDao
 import com.tencent.devops.process.dao.`var`.PublicVarGroupReferInfoDao
-import com.tencent.devops.process.dao.`var`.PublicVarReferInfoDao
 import com.tencent.devops.process.dao.`var`.PublicVarVersionSummaryDao
 import com.tencent.devops.process.pojo.`var`.VarGroupDiffResult
 import com.tencent.devops.process.pojo.`var`.`do`.PublicVarDO
@@ -52,12 +51,12 @@ import com.tencent.devops.process.pojo.`var`.po.PublicVarPositionPO
 import com.tencent.devops.process.pojo.`var`.po.ResourcePublicVarGroupReferPO
 import com.tencent.devops.process.pojo.`var`.vo.PublicVarVO
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
-import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
 
 @Service
 class PublicVarService @Autowired constructor(
@@ -66,7 +65,6 @@ class PublicVarService @Autowired constructor(
     private val publicVarDao: PublicVarDao,
     private val publicVarGroupDao: PublicVarGroupDao,
     private val publicVarGroupReferInfoDao: PublicVarGroupReferInfoDao,
-    private val publicVarReferInfoDao: PublicVarReferInfoDao,
     private val publicVarVersionSummaryDao: PublicVarVersionSummaryDao,
     private val publicVarGroupReleaseRecordService: PublicVarGroupReleaseRecordService
 ) {
@@ -78,15 +76,41 @@ class PublicVarService @Autowired constructor(
         private const val MAX_VAR_NAME_LENGTH = 64
     }
 
-    fun addGroupPublicVar(context: DSLContext = dslContext, publicVarDTO: PublicVarDTO): Boolean {
+    /**
+     * 批量生成公共变量的分布式 ID（含远程调用）。
+     * 必须在 DB 事务外调用，避免事务持有连接期间发起 RPC。
+     * 校验数量一致且无 null 元素，任一不满足即抛错（不再用 0 兜底，防止主键冲突/覆盖）。
+     */
+    fun batchGenerateVarSegmentIds(size: Int): List<Long> {
+        if (size == 0) return emptyList()
+        val bizTag = "T_RESOURCE_PUBLIC_VAR"
+        val segmentIds = client.get(ServiceAllocIdResource::class)
+            .batchGenerateSegmentId(bizTag, size).data
+        if (segmentIds.isNullOrEmpty() || segmentIds.size != size || segmentIds.any { it == null }) {
+            logger.warn(
+                "Failed to generate segment IDs: bizTag=$bizTag, " +
+                    "requested=$size, got=${segmentIds?.size}, hasNull=${segmentIds?.any { it == null }}"
+            )
+            throw ErrorCodeException(
+                errorCode = ERROR_INVALID_PARAM_,
+                params = arrayOf("Failed to generate segment IDs for $bizTag")
+            )
+        }
+        return segmentIds.filterNotNull()
+    }
+
+    fun addGroupPublicVar(
+        context: DSLContext = dslContext,
+        publicVarDTO: PublicVarDTO,
+        preGeneratedIds: List<Long>? = null
+    ): Boolean {
         val projectId = publicVarDTO.projectId
         val userId = publicVarDTO.userId
         val groupName = publicVarDTO.groupName
 
-        // 批量生成ID
-        val segmentIds = client.get(ServiceAllocIdResource::class)
-            .batchGenerateSegmentId("T_RESOURCE_PUBLIC_VAR", publicVarDTO.publicVars.size).data
-        if (segmentIds.isNullOrEmpty() || segmentIds.size != publicVarDTO.publicVars.size) {
+        // 优先使用调用方在事务外预生成的 ID（避免在 DB 事务中发起远程调用）；未提供时兜底自行生成
+        val segmentIds = preGeneratedIds ?: batchGenerateVarSegmentIds(publicVarDTO.publicVars.size)
+        if (segmentIds.size != publicVarDTO.publicVars.size) {
             throw ErrorCodeException(
                 errorCode = ERROR_INVALID_PARAM_,
                 params = arrayOf("Failed to generate segment IDs")
@@ -103,7 +127,7 @@ class PublicVarService @Autowired constructor(
             }
 
             PublicVarPO(
-                id = segmentIds[index++] ?: 0,
+                id = segmentIds[index++],
                 projectId = projectId,
                 varName = it.varName,
                 alias = it.alias,
@@ -209,7 +233,8 @@ class PublicVarService @Autowired constructor(
         varPOs: List<PublicVarPO>,
         projectId: String,
         groupName: String,
-        queryVersion: Int?
+        queryVersion: Int?,
+        resolvedLatestVersion: Int? = null
     ): List<PublicVarDO> {
         if (varPOs.isEmpty()) {
             return emptyList()
@@ -218,7 +243,8 @@ class PublicVarService @Autowired constructor(
             projectId = projectId,
             groupName = groupName,
             varNames = varPOs.map { it.varName },
-            queryVersion = queryVersion
+            queryVersion = queryVersion,
+            latestVersion = resolvedLatestVersion
         )
         return convertVarPOsToPublicVarDOs(varPOs, referCountMap, queryVersion)
     }
@@ -246,7 +272,9 @@ class PublicVarService @Autowired constructor(
             varPOs = publicVarPOs,
             projectId = projectId,
             groupName = groupName,
-            queryVersion = version
+            queryVersion = version,
+            // version 为 null（默认查最新）时，targetVersion 即为最新版本，直接复用避免下游重复查询
+            resolvedLatestVersion = if (version == null) targetVersion else null
         )
     }
 
@@ -315,7 +343,8 @@ class PublicVarService @Autowired constructor(
         projectId: String,
         groupName: String,
         varNames: List<String>,
-        queryVersion: Int? = null
+        queryVersion: Int? = null,
+        latestVersion: Int? = null
     ): Map<String, Int> {
         if (varNames.isEmpty()) return emptyMap()
         val rawMap = if (queryVersion != null) {
@@ -327,7 +356,8 @@ class PublicVarService @Autowired constructor(
                 varNames = varNames
             )
         } else {
-            val latestVersion = publicVarGroupDao.getLatestVersionByGroupName(
+            // 优先复用调用方已解析出的最新版本，避免重复查询；未传入时再查询
+            val resolvedLatestVersion = latestVersion ?: publicVarGroupDao.getLatestVersionByGroupName(
                 dslContext = dslContext,
                 projectId = projectId,
                 groupName = groupName
@@ -336,7 +366,7 @@ class PublicVarService @Autowired constructor(
                 dslContext = dslContext,
                 projectId = projectId,
                 groupName = groupName,
-                latestVersion = latestVersion,
+                latestVersion = resolvedLatestVersion,
                 varNames = varNames
             )
         }
@@ -392,7 +422,6 @@ class PublicVarService @Autowired constructor(
     ): List<BuildFormProperty> {
         val publicVarGroups = modelPublicVarHandleContext.publicVarGroups.toMutableList()
         if (publicVarGroups.isEmpty()) {
-            logger.info("[PVS] handleModelParams skip: publicVarGroups empty")
             return modelPublicVarHandleContext.params
         }
 
@@ -404,11 +433,6 @@ class PublicVarService @Autowired constructor(
             referId = modelPublicVarHandleContext.referId,
             referVersion = modelPublicVarHandleContext.referVersion
         )
-        logger.info(
-            "[PVS] handleModelParams groupReferInfos fetched size=${groupReferInfos.size}, " +
-                "groupNames=${groupReferInfos.map { it.groupName }}, " +
-                "positionInfoSizes=${groupReferInfos.map { it.groupName to (it.positionInfo?.size ?: -1) }}"
-        )
 
         // 批量查询需要更新到最新版本的变量组
         val groupsToUpdate = publicVarGroups.filter { it.version == null }
@@ -419,10 +443,6 @@ class PublicVarService @Autowired constructor(
         val latestVars = getAllLatestVarsForGroups(
             projectId = projectId,
             groupToVersion = latestGroupVersionMap
-        )
-        logger.info(
-            "[PVS] handleModelParams latestGroupVersionMap=$latestGroupVersionMap, " +
-                "latestVarsSizes=${latestVars.mapValues { it.value.size }}"
         )
 
         val params = modelPublicVarHandleContext.params.toMutableList()
@@ -438,9 +458,6 @@ class PublicVarService @Autowired constructor(
                 pipelineVarNames = pipelineVarNames
             )
         }
-        logger.info(
-            "[PVS] handleModelParams end paramsSize=${params.size}, paramIds=${params.map { it.id }}"
-        )
         return params
     }
 
@@ -456,32 +473,29 @@ class PublicVarService @Autowired constructor(
         pipelineVarNames: Set<String>
     ) {
         val groupName = varGroup.groupName
+        // 固定版本（version != null）引用 pin 在具体版本，其变量应保持不变，不应与"最新版本"做 diff。
+        // 上游 latestVars 仅包含动态版本组（version == null，见 groupsToUpdate 过滤），
+        // 若此处继续处理固定版本组，latestGroupVars 会为空，导致该组全部变量被误判为"已删除"，
+        // 进而从 params 中被整体移除。因此固定版本组直接跳过。
+        if (varGroup.version != null) {
+            return
+        }
         val latestGroupVars = latestVars[groupName] ?: emptyList()
         val groupReferInfo = groupReferInfos.find { it.groupName == groupName }
         if (groupReferInfo == null) {
-            logger.info("[PVS] processVarGroupForModel skip: no groupReferInfo for groupName=$groupName")
+            // 常见于 YAML/引用式补充引用：无 positionInfo 可 diff，跳过即可
             return
         }
         val positionInfo = groupReferInfo.positionInfo
         if (positionInfo == null) {
-            logger.info("[PVS] processVarGroupForModel skip: null positionInfo for groupName=$groupName")
             return
         }
 
         val latestGroupVarNames = latestGroupVars.map { it.id }.toSet()
         val savedGroupVarNames = positionInfo.map { it.varName }.toSet()
-        logger.info(
-            "[PVS] processVarGroupForModel group=$groupName, " +
-                "savedGroupVarNames=$savedGroupVarNames, latestGroupVarNames=$latestGroupVarNames"
-        )
 
         // 对比版本差异并处理
         val diffResult = compareVarGroupVersions(savedGroupVarNames, latestGroupVarNames)
-        logger.info(
-            "[PVS] processVarGroupForModel group=$groupName diff: " +
-                "varsToRemove=${diffResult.varsToRemove}, varsToUpdate=${diffResult.varsToUpdate}, " +
-                "varsToAdd=${diffResult.varsToAdd}"
-        )
         val removedVars = processVarGroupDiff(
             diffResult = diffResult,
             groupReferInfo = groupReferInfo,
@@ -497,10 +511,6 @@ class PublicVarService @Autowired constructor(
 
         // 将已移除的变量设置到 variables 中（用于前端回显）
         varGroup.variables = removedVars
-        logger.info(
-            "[PVS] processVarGroupForModel done group=$groupName, paramsIds=${params.map { it.id }}, " +
-                "removedVarsForUi=${removedVars.map { it.id }}"
-        )
     }
 
     /**
@@ -599,28 +609,15 @@ class PublicVarService @Autowired constructor(
     ) {
         val indicesToRemove = varsToRemove
             .mapNotNull { varName ->
-                val pos = positionInfoMap[varName]
-                if (pos == null) {
-                    logger.info("[PVS] removeObsoleteVars no positionInfo for varName=$varName")
-                    return@mapNotNull null
-                }
+                val pos = positionInfoMap[varName] ?: return@mapNotNull null
                 val index = findVarIndexInParams(varName, pos.index, params)
-                logger.info(
-                    "[PVS] removeObsoleteVars lookup varName=$varName, expectedIndex=${pos.index}, " +
-                        "foundIndex=$index, paramAtIndex=${params.getOrNull(index)?.id}"
-                )
                 if (index >= 0) index else null // 过滤掉未找到的变量
             }
             .sortedDescending() // 降序排序，确保先删除索引大的
 
-        logger.info(
-            "[PVS] removeObsoleteVars varsToRemove=$varsToRemove, indicesToRemove=$indicesToRemove, " +
-                "paramsBefore=${params.map { it.id }}"
-        )
         indicesToRemove.forEach { index ->
             params.removeAt(index)
         }
-        logger.info("[PVS] removeObsoleteVars done, paramsAfter=${params.map { it.id }}")
     }
 
     /**

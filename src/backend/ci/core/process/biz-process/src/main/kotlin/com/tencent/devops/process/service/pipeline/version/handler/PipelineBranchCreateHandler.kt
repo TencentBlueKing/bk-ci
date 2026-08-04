@@ -129,7 +129,9 @@ class PipelineBranchCreateHandler @Autowired constructor(
                 referType = PublicVarGroupReferenceTypeEnum.PIPELINE,
                 referName = pipelineBasicInfo.pipelineName,
                 referVersion = resourceOnlyVersion.version,
-                referVersionName = resourceOnlyVersion.versionName
+                referVersionName = resourceOnlyVersion.versionName,
+                // 分支版本（BRANCH）为可运行的生效版本：需同步 LATEST_FLAG
+                activeVersion = true
             )
         )
 
