@@ -2117,7 +2117,7 @@ class EnvService @Autowired constructor(
         // 动态
         val tagEnvIds = envs.filter { it.envNodeType == EnvNodeType.TAG.name }.map { it.envId }.toSet()
         val enableTagNodes = envTagNodeEnableDao.listEnvNodeEnable(dslContext, projectId, tagEnvIds)
-            .associate { it.nodeId to it.enableNode }
+            .groupBy { it.envId }.mapValues { (_, items) -> items.associate { it.nodeId to it.enableNode } }
         envTagDao.batchEnvTagNode(
             dslContext = dslContext,
             projectId = projectId,
@@ -2129,7 +2129,7 @@ class EnvService @Autowired constructor(
                     EnvNodeCandidate(
                         envId = envId,
                         nodeId = nodeId,
-                        enableNode = enableTagNodes[nodeId] ?: true,
+                        enableNode = enableTagNodes[envId]?.get(nodeId) ?: true,
                         nodeType = nodeType,
                         os = envMap[envId]?.os,
                         envType = envMap[envId]?.envType
