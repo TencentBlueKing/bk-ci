@@ -130,6 +130,7 @@
                                     <bk-radio
                                         v-for="item in pacSupportScmTypeList"
                                         :key="item.id"
+                                        class="scm-type-radio"
                                         :value="item.id"
                                     >
                                         {{ $t(item.value) }}
@@ -1824,6 +1825,10 @@
             &.release-pipeline-pac-conf-leftside {
                 width: 176px;
                 flex-shrink: 0;
+            }
+
+            .scm-type-radio {
+                margin-right: 14px;
             }
         }
     }

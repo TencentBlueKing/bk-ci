@@ -412,7 +412,7 @@
                         Object.assign(CodelibDialog, { authType: 'OAUTH' })
                         if (isEdit) Object.assign(CodelibDialog, { repositoryHashId: this.$route.hash.split('-')[1] })
                     } else if (isTGit(typeName)) {
-                        Object.assign(CodelibDialog, { authType: 'HTTPS' })
+                        Object.assign(CodelibDialog, { authType: 'OAUTH' })
                         if (isEdit) Object.assign(CodelibDialog, { repositoryHashId: this.$route.hash.split('-')[1] })
                     } else if (isGitLab(typeName) || isSvn(typeName)) {
                         Object.assign(CodelibDialog, { authType: 'SSH' })
