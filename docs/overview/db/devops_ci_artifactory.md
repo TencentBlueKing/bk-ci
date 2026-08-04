@@ -2,7 +2,7 @@
 
 **数据库名：** devops_ci_artifactory
 
-**文档版本：** 1.0.22
+**文档版本：** 1.0.23
 
 **文档描述：** devops_ci_artifactory 的数据库文档
 | 表名                  | 说明       |
@@ -10,6 +10,7 @@
 | T_FILE_INFO | 文件信息表 |
 | T_FILE_PROPS_INFO | 文件元数据信息表 |
 | T_FILE_TASK | 文件托管任务表 |
+| T_PIPELINE_ARTIFACT_INFO | 流水线产出物基础元数据信息表 |
 | T_TOKEN |  |
 
 **表名：** <a>T_FILE_INFO</a>
@@ -68,6 +69,39 @@
 |  10   | BUILD_ID |   varchar   | 34 |   0    |    Y     |  N   |       | 构建 ID  |
 |  11   | CREATE_TIME |   datetime   | 19 |   0    |    Y     |  N   |       | 创建时间  |
 |  12   | UPDATE_TIME |   datetime   | 19 |   0    |    Y     |  N   |       | 修改时间  |
+
+**表名：** <a>T_PIPELINE_ARTIFACT_INFO</a>
+
+**说明：** 流水线产出物基础元数据信息表
+
+**数据列：**
+
+| 序号 | 名称 | 数据类型 |  长度  | 小数位 | 允许空值 | 主键 | 默认值 | 说明 |
+| :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+|  1   | ID |   bigint   | 20 |   0    |    N     |  Y   |       | 主键 ID  |
+|  2   | PROJECT_ID |   varchar   | 64 |   0    |    N     |  N   |       | 蓝盾项目 ID  |
+|  3   | PIPELINE_ID |   varchar   | 34 |   0    |    N     |  N   |       | 流水线 ID  |
+|  4   | PIPELINE_NAME |   varchar   | 255 |   0    |    Y     |  N   |       | 流水线名称  |
+|  5   | BUILD_ID |   varchar   | 34 |   0    |    N     |  N   |       | 构建 ID  |
+|  6   | BUILD_NUM |   int   | 10 |   0    |    Y     |  N   |   0    | 构建号  |
+|  7   | STAGE_ID |   varchar   | 34 |   0    |    N     |  N   |       | 阶段 ID  |
+|  8   | CONTAINER_ID |   varchar   | 34 |   0    |    N     |  N   |       | 构建容器 ID  |
+|  9   | TASK_ID |   varchar   | 34 |   0    |    N     |  N   |       | 任务 ID  |
+|  10   | EXECUTE_COUNT |   int   | 10 |   0    |    N     |  N   |   1    | 执行次数  |
+|  11   | ARTIFACT_TYPE |   varchar   | 32 |   0    |    N     |  N   |       | 产出物类型：FILE/IMAGE/REPORT/PACKAGE 等  |
+|  12   | ARTIFACT_NAME |   varchar   | 256 |   0    |    N     |  N   |       | 产出物名称，如文件名、镜像名  |
+|  13   | ARTIFACT_VERSION |   varchar   | 128 |   0    |    N     |  N   |       | 产出物版本，如镜像 Tag、包版本  |
+|  14   | ARTIFACT_URI |   varchar   | 1024 |   0    |    Y     |  N   |       | 产出物唯一资源标识，如文件路径、镜像完整地址  |
+|  15   | ARTIFACT_REPO_URL |   varchar   | 512 |   0    |    Y     |  N   |       | 产出物仓库地址，如制品库地址、镜像 Registry  |
+|  16   | ARTIFACT_DIGEST |   varchar   | 128 |   0    |    Y     |  N   |       | 产出物摘要，如 sha256、镜像 digest  |
+|  17   | ARTIFACT_SIZE |   bigint   | 20 |   0    |    Y     |  N   |       | 产出物大小，单位字节  |
+|  18   | CODE_REPO_URL |   varchar   | 512 |   0    |    Y     |  N   |       | 代码库地址  |
+|  19   | COMMIT_ID |   varchar   | 64 |   0    |    N     |  N   |       | 代码提交 ID  |
+|  20   | EXTRA_INFO |   text   | 65535 |   0    |    Y     |  N   |       | 扩展元数据，JSON 格式  |
+|  21   | CREATOR |   varchar   | 50 |   0    |    N     |  N   |   system    | 创建人  |
+|  22   | MODIFIER |   varchar   | 50 |   0    |    N     |  N   |   system    | 修改人  |
+|  23   | CREATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 创建时间  |
+|  24   | UPDATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 更新时间  |
 
 **表名：** <a>T_TOKEN</a>
 
