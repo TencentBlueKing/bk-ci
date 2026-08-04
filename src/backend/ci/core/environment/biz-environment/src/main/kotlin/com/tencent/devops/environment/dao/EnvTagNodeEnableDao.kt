@@ -42,7 +42,9 @@ class EnvTagNodeEnableDao {
         dslContext: DSLContext,
         projectId: String,
         envId: Long
-    ) = with(TEnvTagNodeEnable.T_ENV_TAG_NODE_ENABLE) {
-        dslContext.deleteFrom(this).where(PROJECT_ID.eq(projectId)).and(ENV_ID.eq(envId)).execute() == 1
+    ) {
+        with(TEnvTagNodeEnable.T_ENV_TAG_NODE_ENABLE) {
+            dslContext.deleteFrom(this).where(PROJECT_ID.eq(projectId)).and(ENV_ID.eq(envId)).execute()
+        }
     }
 }
