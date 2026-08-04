@@ -45,6 +45,7 @@ import jakarta.ws.rs.DELETE
 import jakarta.ws.rs.GET
 import jakarta.ws.rs.HeaderParam
 import jakarta.ws.rs.POST
+import jakarta.ws.rs.PUT
 import jakarta.ws.rs.Path
 import jakarta.ws.rs.PathParam
 import jakarta.ws.rs.Produces
@@ -69,10 +70,21 @@ interface UserPublicVarGroupResource {
         @PathParam("projectId")
         projectId: String,
         @Parameter(description = "公共变量组请求报文", required = true)
-        publicVarGroup: PublicVarGroupVO,
-        @Parameter(description = "是否允许升级同名变量组，默认 false（同名即报错）", required = false)
-        @QueryParam("allowUpgrade")
-        allowUpgrade: Boolean? = false
+        publicVarGroup: PublicVarGroupVO
+    ): Result<String>
+
+    @Operation(summary = "更新公共变量组")
+    @PUT
+    @Path("/projects/{projectId}/update")
+    fun updateGroup(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "公共变量组请求报文", required = true)
+        publicVarGroup: PublicVarGroupVO
     ): Result<String>
 
     @Operation(summary = "查询公共变量组列表")
