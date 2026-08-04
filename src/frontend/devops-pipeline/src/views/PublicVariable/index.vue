@@ -596,7 +596,6 @@
         try {
             const res = await proxy.$store.dispatch('publicVar/importVarByYaml', {
                 projectId: projectId.value,
-                allowUpgrade: operateType.value === OPERATE_TYPE.UPDATE,
                 yaml
             })
             showImportDialog.value = false

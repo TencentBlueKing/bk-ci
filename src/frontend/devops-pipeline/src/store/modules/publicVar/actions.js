@@ -18,8 +18,8 @@ const actions = {
         })
     },
     // 导入公共变量组（yaml）
-    importVarByYaml (_, { projectId, allowUpgrade, yaml }) {
-        return ajax.post(`${PROCESS_API_URL_PREFIX}/user/public/var/groups/projects/${projectId}/import?allowUpgrade=${allowUpgrade}`, {
+    importVarByYaml (_, { projectId, yaml }) {
+        return ajax.post(`${PROCESS_API_URL_PREFIX}/user/public/var/groups/projects/${projectId}/import`, {
             yaml
         }).then(response => {
             return response.data
