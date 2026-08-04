@@ -284,7 +284,7 @@ export default defineComponent({
                 class={styles.inputCom}
                 name={`metadata-tigger-key-${index}`}
                 value={parameter.key}
-                placeholder={t('flow.orchestration.envKeyPlaceholder')}
+                placeholder={t('flow.content.keyPlaceholder')}
                 disabled={props.disabled}
                 options={keyList.value}
                 handleChange={(name: string, value: string) =>
@@ -306,7 +306,7 @@ export default defineComponent({
                 class={styles.inputCom}
                 name={`metadata-tigger-value-${index}`}
                 value={parameter.value}
-                placeholder={t('flow.orchestration.envValuePlaceholder')}
+                placeholder={t('flow.content.valuePlaceholder')}
                 disabled={props.disabled}
                 options={getValueListByIndex(index)}
                 handleChange={(name: string, value: string) =>
