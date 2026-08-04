@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.pipeline.enums.PublicVarGroupReferenceTypeEnum
+import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.engine.dao.PipelineResourceVersionDao
 import com.tencent.devops.process.engine.dao.template.TemplateInstanceBaseDao
@@ -427,6 +428,10 @@ class PipelineTemplateInstanceListener @Autowired constructor(
                 version = deployPipelineResult.version
             )
             if (versionResource != null) {
+                // 实例化落库版本为 RELEASED/BRANCH 时才是生效版本，需同步 LATEST_FLAG；草稿则不同步
+                val activeVersion = versionResource.status?.fix()?.let {
+                    it == VersionStatus.RELEASED || it == VersionStatus.BRANCH
+                } ?: false
                 publicVarGroupReferManageService.handleVarGroupReferBus(
                     PublicVarGroupReferDTO(
                         userId = "system",
@@ -436,7 +441,8 @@ class PipelineTemplateInstanceListener @Autowired constructor(
                         referName = deployPipelineResult.pipelineName,
                         referVersion = deployPipelineResult.version,
                         referVersionName = deployPipelineResult.versionName,
-                        model = versionResource.model
+                        model = versionResource.model,
+                        activeVersion = activeVersion
                     )
                 )
             }

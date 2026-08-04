@@ -2636,7 +2636,9 @@ class TemplateFacadeService @Autowired constructor(
                 referType = PublicVarGroupReferenceTypeEnum.TEMPLATE,
                 referName = model.name,
                 referVersion = version,
-                referVersionName = versionName
+                referVersionName = versionName,
+                // V1 模板创建/更新均为已发布（生效）版本，无草稿态：需同步 LATEST_FLAG
+                activeVersion = true
             )
         )
         var randomSeed = 1

@@ -176,7 +176,8 @@ class PipelineTemplateInstanceHandler @Autowired constructor(
                 referName = pipelineSettingWithoutVersion.pipelineName,
                 referVersion = resourceOnlyVersion.version,
                 referVersionName = resourceOnlyVersion.versionName,
-                updateCount = true
+                // 模板实例化生成的是 RELEASED/BRANCH 生效版本：需同步 LATEST_FLAG
+                activeVersion = true
             )
         )
 

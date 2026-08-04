@@ -42,15 +42,14 @@ import {
     RESET_ATOM_MODAL_MAP,
     RESET_PIPELINE_SETTING_MUNTATION,
     SELECT_PIPELINE_VERSION,
-    SET_ATOMS,
-    SET_ATOMS_CLASSIFY,
-    SET_ATOMS_OUTPUT_MAP,
     SET_ATOM_EDITING,
     SET_ATOM_MODAL,
     SET_ATOM_MODAL_FETCHING,
     SET_ATOM_PAGE_OVER,
     SET_ATOM_VERSION_LIST,
-    SET_AUTH_EDITING,
+    SET_ATOMS,
+    SET_ATOMS_CLASSIFY,
+    SET_ATOMS_OUTPUT_MAP,
     SET_COMMEND_ATOM_COUNT,
     SET_COMMEND_ATOM_PAGE_OVER,
     SET_COMMON_PARAMS,
@@ -67,6 +66,7 @@ import {
     SET_PIPELINE_EDITING,
     SET_PIPELINE_EXEC_DETAIL,
     SET_PIPELINE_INFO,
+    SET_EXEC_INFO,
     SET_PIPELINE_WITHOUT_TRIGGER,
     SET_PIPELINE_YAML,
     SET_PIPELINE_YAML_HIGHLIGHT_MAP,
@@ -80,7 +80,6 @@ import {
     SET_STORE_SEARCH,
     SET_TEMP_PARAM_SET,
     SET_TEMPLATE,
-    SET_TRIGGER_PARAMS,
     SWITCHING_PIPELINE_VERSION,
     TOGGLE_ATOM_SELECTOR_POPUP,
     TOGGLE_STAGE_REVIEW_PANEL,
@@ -95,15 +94,12 @@ import {
     UPDATE_STORESTATUS,
     UPDATE_TEMPLATE_CONSTRAINT,
     UPDATE_WHOLE_ATOM_INPUT,
-    UPDATE_PIPELINE_PUBLIC_VAR_GROUPS
+    UPDATE_PIPELINE_PUBLIC_VAR_GROUPS,
+    SAVE_PIPELINE_SNAPSHOT,
+    CLEAR_PIPELINE_SNAPSHOT
 } from './constants'
 
 export default {
-    [SET_AUTH_EDITING]: (state, editing) => {
-        return Object.assign(state, {
-            authSettingEditing: editing
-        })
-    },
     [TOGGLE_STAGE_REVIEW_PANEL]: (state, { showStageReviewPanel, editingElementPos = null }) => {
         Object.assign(state, {
             showStageReviewPanel,
@@ -193,7 +189,12 @@ export default {
         })
     },
     [UPDATE_PIPELINE_SETTING_MUNTATION]: (state, { setting, param }) => {
-        Object.assign(setting, param)
+        // 使用 Vue.set 或解构赋值确保响应式更新
+        Object.keys(param).forEach(key => {
+            if (setting[key] !== param[key]) {
+                Vue.set(setting, key, param[key])
+            }
+        })
         return state
     },
     [SET_EDIT_FROM]: (state, editfromImport = false) => {
@@ -445,11 +446,6 @@ export default {
             commonParams
         })
     },
-    [SET_TRIGGER_PARAMS]: (state, triggerParams) => {
-        return Object.assign(state, {
-            triggerParams
-        })
-    },
     [TOGGLE_ATOM_SELECTOR_POPUP]: (state, show) => {
         Vue.set(state, 'showAtomSelectorPopup', show)
         return state
@@ -554,6 +550,18 @@ export default {
         return Object.assign(state, {
             storeStatus
         })
+    },
+    [SAVE_PIPELINE_SNAPSHOT]: (state, { snapshot }) => {
+        Vue.set(state, 'originalPipelineSnapshot', snapshot)
+        return state
+    },
+    [SET_EXEC_INFO]: (state, infoData) => {
+        Vue.set(state, 'execInfo', infoData)
+        return state
+    },
+    [CLEAR_PIPELINE_SNAPSHOT]: (state) => {
+        Vue.set(state, 'originalPipelineSnapshot', null)
+        return state
     },
     [UPDATE_PIPELINE_PUBLIC_VAR_GROUPS]: (state, publicVarGroups) => {
         Object.assign(state.pipeline, { publicVarGroups })

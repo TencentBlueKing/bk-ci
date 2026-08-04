@@ -117,7 +117,8 @@ class PipelineTemplateReleaseCreateHandler @Autowired constructor(
                     referName = pipelineTemplateInfo.name,
                     referVersion = resourceOnlyVersion.version.toInt(),
                     referVersionName = resourceOnlyVersion.versionName ?: "",
-                    updateCount = true
+                    // 模板发布创建（RELEASED）为生效版本：需同步 LATEST_FLAG
+                    activeVersion = true
                 )
             )
         }

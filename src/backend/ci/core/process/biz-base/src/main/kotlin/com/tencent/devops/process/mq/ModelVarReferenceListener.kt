@@ -45,13 +45,12 @@ class ModelVarReferenceListener @Autowired constructor(
 
     override fun execute(event: ModelVarReferenceEvent) {
         try {
+            // 入口摘要即可；成功明细由 ModelHandleServiceImpl 打 refCount/varNames，避免 start/success 双份刷屏
             logger.info(
-                "Start processing variable reference event: userId=${event.userId}, " +
-                "projectId=${event.projectId}, resourceId=${event.resourceId}, " +
-                "resourceType=${event.resourceType}, resourceVersion=${event.resourceVersion}"
+                "Process variable reference event: projectId=${event.projectId}, " +
+                    "resourceId=${event.resourceId}, resourceType=${event.resourceType}, " +
+                    "resourceVersion=${event.resourceVersion}"
             )
-
-            // 调用 handleModelVarReferences 方法处理变量引用
             modelHandleService.handleModelVarReferences(
                 userId = event.userId,
                 context = ModelVarReferenceHandleContext(
@@ -61,15 +60,11 @@ class ModelVarReferenceListener @Autowired constructor(
                     resourceVersion = event.resourceVersion
                 )
             )
-
-            logger.info(
-                "Successfully processed variable reference event: resourceId=${event.resourceId}, " +
-                "resourceType=${event.resourceType}, resourceVersion=${event.resourceVersion}"
-            )
         } catch (e: Throwable) {
+            // MQ 消费失败仅 warn（外层无重试），便于定位「静默不计数」
             logger.warn(
                 "Failed to process variable reference event: resourceId=${event.resourceId}, " +
-                "resourceType=${event.resourceType}, resourceVersion=${event.resourceVersion}",
+                    "resourceType=${event.resourceType}, resourceVersion=${event.resourceVersion}",
                 e
             )
         }

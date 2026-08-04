@@ -677,6 +677,28 @@ class PublicVarGroupReferInfoDao {
     }
 
     /**
+     * 按变量组版本(VERSION)聚合当前有效引用数（LATEST_FLAG=true，按 REFER_ID 去重）。
+     * 返回 Map<VERSION, 去重后的引用资源数>，仅包含引用数>0 的版本（VERSION=-1 为动态版本）。
+     * 供 summary 表"重算覆盖"使用：它是引用计数的权威来源。
+     */
+    fun getLatestReferCountByVersion(
+        dslContext: DSLContext,
+        projectId: String,
+        groupName: String
+    ): Map<Int, Int> {
+        with(TResourcePublicVarGroupReferInfo.T_RESOURCE_PUBLIC_VAR_GROUP_REFER_INFO) {
+            return dslContext.select(VERSION, DSL.countDistinct(REFER_ID))
+                .from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(GROUP_NAME.eq(groupName))
+                .and(LATEST_FLAG.eq(true))
+                .groupBy(VERSION)
+                .fetch()
+                .associate { it.value1() to it.value2() }
+        }
+    }
+
+    /**
      * 获取变量组当前有效引用总数（LATEST_FLAG=true，用于删除保护）
      */
     fun getTotalReferCountByLatest(
@@ -691,6 +713,27 @@ class PublicVarGroupReferInfoDao {
                 .and(GROUP_NAME.eq(groupName))
                 .and(LATEST_FLAG.eq(true))
                 .fetchOne(0, Int::class.java) ?: 0
+        }
+    }
+
+    /**
+     * 是否存在对该变量组的任意引用明细（不限 LATEST_FLAG、不限 referType）。
+     * 用于删除保护：summary（仅统计 LATEST_FLAG=true 的生效版本）无法覆盖草稿版本的引用，
+     * 若草稿仍在引用该组却未被计入删除保护，删除后草稿将无法发布。此处补充明细存在性判断，
+     * 只要还有任意版本（生效/历史/草稿）在引用就阻止删除。
+     */
+    fun existsAnyReferByGroupName(
+        dslContext: DSLContext,
+        projectId: String,
+        groupName: String
+    ): Boolean {
+        with(TResourcePublicVarGroupReferInfo.T_RESOURCE_PUBLIC_VAR_GROUP_REFER_INFO) {
+            return dslContext.fetchExists(
+                dslContext.selectOne()
+                    .from(this)
+                    .where(PROJECT_ID.eq(projectId))
+                    .and(GROUP_NAME.eq(groupName))
+            )
         }
     }
 }
