@@ -347,7 +347,10 @@ class PipelineTransferYamlService @Autowired constructor(
                     referName = model.name,
                     referVersion = pipelineInfo.version,
                     referVersionName = pipelineInfo.versionName,
-                    updateCount = pipelineInfo.latestVersionStatus == VersionStatus.COMMITTING
+                    // 仅当前版本为 RELEASED/BRANCH（生效版本）时同步 LATEST_FLAG；草稿（COMMITTING）不同步
+                    activeVersion = pipelineInfo.latestVersionStatus?.fix()?.let {
+                        it == VersionStatus.RELEASED || it == VersionStatus.BRANCH
+                    } ?: false
                 )
             )
         }

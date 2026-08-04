@@ -32,8 +32,10 @@ import java.time.LocalDateTime
 
 /**
  * 公共变量组版本概要信息PO
- * 用于按版本维度统计变量组的引用数量
- * 版本号为-1时表示动态版本引用
+ * 用于按 (变量组, 版本) 维度存储引用数（生效版本口径），供列表展示与删除保护快速点查。
+ * 版本号为 -1 时表示动态版本引用。
+ * 该表为引用明细表 T_RESOURCE_PUBLIC_VAR_GROUP_REFER_INFO 的物化聚合，
+ * 由 PublicVarGroupReferManageService 在引用变更所在事务内"重算覆盖"维护，保证与明细表强一致。
  */
 @Schema(title = "公共变量组版本概要信息")
 data class PublicVarGroupVersionSummaryPO(

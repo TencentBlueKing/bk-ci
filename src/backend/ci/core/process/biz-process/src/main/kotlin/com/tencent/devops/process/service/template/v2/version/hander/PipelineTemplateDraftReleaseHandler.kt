@@ -165,7 +165,9 @@ class PipelineTemplateDraftReleaseHandler @Autowired constructor(
                     referType = PublicVarGroupReferenceTypeEnum.TEMPLATE,
                     referName = pipelineTemplateInfo.name,
                     referVersion = resourceOnlyVersion.version.toInt(),
-                    referVersionName = resourceOnlyVersion.versionName ?: ""
+                    referVersionName = resourceOnlyVersion.versionName ?: "",
+                    // 模板草稿发布为 RELEASED/BRANCH（生效版本）：需同步 LATEST_FLAG
+                    activeVersion = true
                 )
             )
         }
