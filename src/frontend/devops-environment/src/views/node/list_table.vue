@@ -549,14 +549,22 @@
                             </div>
                         </template>
                         <template v-else>
-                            <bk-button
+                            <span
                                 v-if="!['TSTACK'].includes(props.row.nodeType)"
-                                theme="primary"
-                                outline
-                                @click="handleApplyPermission(props.row)"
+                                v-bk-tooltips="{
+                                    content: createNodePermissionTip,
+                                    disabled: !isCreateResType
+                                }"
                             >
-                                {{ $t('environment.applyPermission') }}
-                            </bk-button>
+                                <bk-button
+                                    theme="primary"
+                                    outline
+                                    :disabled="isCreateResType"
+                                    @click="handleApplyPermission(props.row)"
+                                >
+                                    {{ $t('environment.applyPermission') }}
+                                </bk-button>
+                            </span>
                         </template>
                     </template>
                 </bk-table-column>
@@ -682,12 +690,6 @@
             EmptyTableStatus,
             dropdownList,
             StatusIcon
-        },
-        setup () {
-            const { isPersonalProject } = useEnvDetail()
-            return {
-                isPersonalProject
-            }
         },
         setup () {
             const { isPersonalProject } = useEnvDetail()
@@ -832,6 +834,11 @@
             },
             isCreateResType () {
                 return this.currentResType === SERVICE_RESOURCE_TYPE.CREATE
+            },
+            createNodePermissionTip () {
+                return this.isPersonalProject
+                    ? this.$t('environment.createNodePersonalPermissionTip')
+                    : this.$t('environment.createNodeIMatePermissionTip')
             },
             tableColumn () {
                 const columns = [
