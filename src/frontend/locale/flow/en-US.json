@@ -323,6 +323,8 @@
       "greaterThanDays": "Greater than {0} days",
       "total": "Total",
       "items": "items",
+      "keyPlaceholder": "Key, e.g. quality-gate",
+      "valuePlaceholder": "Value, e.g. passed",
       "perPage": "Per page"
     },
     "triggerPanel": {

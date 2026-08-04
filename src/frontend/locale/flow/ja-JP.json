@@ -323,6 +323,8 @@
       "greaterThanDays": "{0}日より大きい",
       "total": "合計",
       "items": "件",
+      "keyPlaceholder": "キー（例：quality-gate）",
+      "valuePlaceholder": "値（例：passed）",
       "perPage": "ページあたり"
     },
     "triggerPanel": {
