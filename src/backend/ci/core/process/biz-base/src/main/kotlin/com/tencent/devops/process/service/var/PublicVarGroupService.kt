@@ -159,7 +159,7 @@ class PublicVarGroupService @Autowired constructor(
                 if (!canEdit) {
                     throw ErrorCodeException(
                         errorCode = ProcessMessageCode.ERROR_PUBLIC_VAR_GROUP_NO_PERMISSION,
-                        params = arrayOf(userId, groupName)
+                        params = arrayOf(groupName, AuthPermission.EDIT.getI18n(I18nUtil.getLanguage()))
                     )
                 }
             }
