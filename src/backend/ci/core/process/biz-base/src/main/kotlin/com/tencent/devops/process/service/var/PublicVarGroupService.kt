@@ -115,7 +115,7 @@ class PublicVarGroupService @Autowired constructor(
         private const val IAM_DELETE_RETRY_INTERVAL_MS = 500L
     }
 
-    fun addGroup(publicVarGroupDTO: PublicVarGroupDTO, allowUpgrade: Boolean = true): String {
+    fun saveGroup(publicVarGroupDTO: PublicVarGroupDTO, allowUpgrade: Boolean = true): String {
         val projectId = publicVarGroupDTO.projectId
         val userId = publicVarGroupDTO.userId
         val groupName = publicVarGroupDTO.publicVarGroup.groupName
@@ -194,9 +194,24 @@ class PublicVarGroupService @Autowired constructor(
     }
 
     /**
-     * 在事务中创建或升级变量组记录，返回是否为新建（首次创建）。
-     * @param existingVersion 已查出的版本号
+     * 更新已存在的公共变量组：以新版本覆盖当前最新版本。
+     * 变量组必须已存在（不存在则报错，避免误走创建路径）；编辑权限由接口层校验。
      */
+    fun updateGroup(publicVarGroupDTO: PublicVarGroupDTO): String {
+        val projectId = publicVarGroupDTO.projectId
+        val groupName = publicVarGroupDTO.publicVarGroup.groupName
+        val existingVersion = publicVarGroupDao.getLatestVersionByGroupName(
+            dslContext, projectId, groupName
+        ) ?: 0
+        if (existingVersion == 0) {
+            throw ErrorCodeException(
+                errorCode = ERROR_INVALID_PARAM_,
+                params = arrayOf(groupName)
+            )
+        }
+        return saveGroup(publicVarGroupDTO, allowUpgrade = true)
+    }
+
     private fun createOrUpgradeGroupRecord(
         id: Long,
         projectId: String,
@@ -456,7 +471,7 @@ class PublicVarGroupService @Autowired constructor(
     ): String {
         val publicVarGroupVO = parseYamlToPublicVarGroupVO(yaml)
 
-        return addGroup(
+        return saveGroup(
             PublicVarGroupDTO(
                 projectId = projectId,
                 userId = userId,
