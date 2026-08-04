@@ -20,6 +20,7 @@
                         theme="primary"
                         icon="plus"
                         class="mr10"
+                        key="add-param-group-button"
                         v-perm="{
                             permissionData: {
                                 projectId: projectId,
@@ -34,6 +35,7 @@
                     </bk-button>
                     <bk-button
                         @click="handleShowImportDialog"
+                        key="import-param-group-button"
                         v-perm="{
                             permissionData: {
                                 projectId: projectId,
@@ -304,6 +306,8 @@
                         text: proxy.$t('copy'),
                         handler: handleCopyGroup,
                         data: row,
+                        disable: !row?.permission?.canView,
+                        tooltips: !row?.permission?.canView ? proxy.$t('publicVar.noViewPermissionCopyTips') : '',
                         permissionData: {
                             projectId: projectId.value,
                             resourceType: RESOURCE_TYPE.VARIABLE,
@@ -314,7 +318,9 @@
                     {
                         text: proxy.$t('publicVar.export'),
                         handler: handleExportGroup,
-                        data: row
+                        data: row,
+                        disable: !row?.permission?.canView,
+                        tooltips: !row?.permission?.canView ? proxy.$t('publicVar.noViewPermissionExportTips') : ''
                     },
                     // {
                     //     text: proxy.$t('publicVar.offline'),
@@ -328,6 +334,7 @@
                         hasPermission: row?.permission?.canDelete,
                         disablePermissionApi: true,
                         disable: row.referCount > 0,
+                        tooltips: row.referCount > 0 ? proxy.$t('publicVar.hasRefNumDeleteTips') : '',
                         permissionData: {
                             projectId: projectId,
                             resourceType: RESOURCE_TYPE.VARIABLE,
@@ -589,7 +596,7 @@
         try {
             const res = await proxy.$store.dispatch('publicVar/importVarByYaml', {
                 projectId: projectId.value,
-                type: operateType.value,
+                allowUpgrade: operateType.value === OPERATE_TYPE.UPDATE,
                 yaml
             })
             showImportDialog.value = false

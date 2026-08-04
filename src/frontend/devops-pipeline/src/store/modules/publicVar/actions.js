@@ -10,15 +10,16 @@ import {
 import ajax from '@/utils/request'
 
 const actions = {
-    // 新建变量组
-    saveVariableGroup (_, { projectId, type, params }) {
-        return ajax.post(`${PROCESS_API_URL_PREFIX}/user/public/var/groups/projects/${projectId}/add?operateType=${type}`, params).then(response => {
+    // 新建/更新变量组
+    saveVariableGroup (_, { projectId, isUpdate, params }) {
+        const action = isUpdate ? 'update' : 'add'
+        return ajax.post(`${PROCESS_API_URL_PREFIX}/user/public/var/groups/projects/${projectId}/${action}`, params).then(response => {
             return response.data
         })
     },
     // 导入公共变量组（yaml）
-    importVarByYaml (_, { projectId, type, yaml }) {
-        return ajax.post(`${PROCESS_API_URL_PREFIX}/user/public/var/groups/projects/${projectId}/import?operateType=${type}`, {
+    importVarByYaml (_, { projectId, allowUpgrade, yaml }) {
+        return ajax.post(`${PROCESS_API_URL_PREFIX}/user/public/var/groups/projects/${projectId}/import?allowUpgrade=${allowUpgrade}`, {
             yaml
         }).then(response => {
             return response.data
