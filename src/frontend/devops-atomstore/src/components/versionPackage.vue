@@ -77,12 +77,12 @@
         emit('delete')
     }
 
-    function handleError (_file, fileList, error) {
+    function handleError (file, fileList) {
         files.value = []
         emit('delete')
         $bkMessage({
             theme: 'error',
-            message: error
+            message: file.errorMsg
         })
     }
 

@@ -202,62 +202,6 @@ export const actions = {
         return vue.$ajax.get(`${prefix}/user/market/image/imageCodes/${imageCode}`)
     },
 
-    /**
-     * 评论列表
-     */
-    requestImageComments ({ commit }, { code, page, pageSize }) {
-        return vue.$ajax.get(`${prefix}/user/market/image/comment/imageCodes/${code}/comments?page=${page}&pageSize=${pageSize}`)
-    },
-
-    /**
-     * 评分详情
-     */
-    requestImageScoreDetail ({ commit }, code) {
-        return vue.$ajax.get(`${prefix}/user/market/image/comment/score/imageCodes/${code}`)
-    },
-
-    /**
-     * 添加评论回复
-     */
-    requestImageReplyComment ({ commit }, { id, postData }) {
-        return vue.$ajax.post(`${prefix}/user/market/image/comment/reply/comments/${id}/reply`, postData)
-    },
-
-    /**
-     * 评论点赞
-     */
-    requestImagePraiseComment ({ commit }, commentId) {
-        return vue.$ajax.put(`${prefix}/user/market/image/comment/praise/${commentId}`)
-    },
-
-    /**
-     * 获取评论回复列表
-     */
-    requestImageReplyList ({ commit }, commentId) {
-        return vue.$ajax.get(`${prefix}/user/market/image/comment/reply/comments/${commentId}/replys`)
-    },
-
-    /**
-     * 新增评论
-     */
-    requestAddImageComment ({ commit }, { id, code, postData }) {
-        return vue.$ajax.post(`${prefix}/user/market/image/comment/imageIds/${id}/imageCodes/${code}/comment`, postData)
-    },
-
-    /**
-     * 根据ID修改评论
-     */
-    requestImageModifyComment ({ commit }, data) {
-        return vue.$ajax.put(`${prefix}/user/market/image/comment/comments/${data.id}`, data.postData)
-    },
-
-    /**
-     * 根据ID获取评论
-     */
-    requestImageUserComment ({ commit }, id) {
-        return vue.$ajax.get(`${prefix}/user/market/image/comment/comments/${id}`)
-    },
-
     updateCurrentImage ({ commit }, res) {
         commit(UPDATE_CURRENT_IMAGE, res)
     },

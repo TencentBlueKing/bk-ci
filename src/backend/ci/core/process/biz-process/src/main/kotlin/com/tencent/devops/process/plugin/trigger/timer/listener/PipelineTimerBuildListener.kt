@@ -35,9 +35,9 @@ import com.tencent.devops.common.api.pojo.I18Variable
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.listener.pipeline.PipelineEventListener
-import com.tencent.devops.common.pipeline.pojo.element.trigger.TimerTriggerElement
 import com.tencent.devops.common.pipeline.enums.ChannelCode
-import com.tencent.devops.common.pipeline.pojo.element.market.MarketEventAtomElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.TimerTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.TimerNodeType
 import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.webhook.enums.WebhookI18nConstants.TIMING_START_EVENT_DESC
@@ -63,12 +63,9 @@ import com.tencent.devops.process.pojo.trigger.PipelineTriggerReasonDetail
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerStatus
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerType
 import com.tencent.devops.process.service.CreateStreamTriggerSupportService
-import com.tencent.devops.process.trigger.PipelineTriggerMeasureService
 import com.tencent.devops.process.service.scm.ScmProxyService
 import com.tencent.devops.process.trigger.PipelineTriggerEventService
-import com.tencent.devops.store.pojo.common.KEY_CREATIVE_TASK_LIST
-import com.tencent.devops.store.pojo.common.KEY_INPUT
-import com.tencent.devops.store.pojo.common.KEY_START_TASK_TYPE
+import com.tencent.devops.process.trigger.PipelineTriggerMeasureService
 import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
@@ -191,33 +188,29 @@ class PipelineTimerBuildListener @Autowired constructor(
         params: Map<String, String> = emptyMap(),
         taskId: String
     ) {
-        // 查找触发器
         val triggerElement = checkTriggerExist(
             projectId = projectId,
             pipelineId = pipelineId,
-            channelCode = timerChannelCode,
             taskId = taskId
-        ) as? MarketEventAtomElement ?: return
-        val input = triggerElement.data[KEY_INPUT] as Map<String, Any>? ?: mapOf()
-        val startType = input[KEY_START_TASK_TYPE]
-        if (startType == "CREATIVE_TASK") {
-            val creativeTaskList = input[KEY_CREATIVE_TASK_LIST] as List<String>? ?: listOf()
-            if (creativeTaskList.isEmpty()) {
-                // 启动节点为空
-                saveTriggerEvent(
-                    projectId = projectId,
-                    userId = userId,
-                    pipelineId = pipelineId,
-                    reasonDetail = PipelineTriggerFailedErrorCode(
-                        BK_CREATIVE_STREAM_TIMER_TRIGGER_NODE_IS_EMPTY
+        ) as? TimerTriggerElement ?: return
+        when (triggerElement.nodeType) {
+            TimerNodeType.NODE_LIST -> {
+                val agentHashIdList = triggerElement.nodes ?: listOf()
+                if (agentHashIdList.isEmpty()) {
+                    saveTriggerEvent(
+                        projectId = projectId,
+                        userId = userId,
+                        pipelineId = pipelineId,
+                        reasonDetail = PipelineTriggerFailedErrorCode(
+                            BK_CREATIVE_STREAM_TIMER_TRIGGER_NODE_IS_EMPTY
+                        )
                     )
-                )
-            } else {
-                // 对创作环境下选中的创作节点，逐一启动
-                creativeTaskList.forEach {
+                    return
+                }
+                agentHashIdList.forEach { agentHashId ->
                     val creativeStreamParams = creativeStreamService.creativeStreamParams(
                         projectId = projectId,
-                        agentHashId = it,
+                        agentHashId = agentHashId,
                         userId = userId
                     )
                     timerTriggerPipeline(
@@ -230,35 +223,35 @@ class PipelineTimerBuildListener @Autowired constructor(
                     )
                 }
             }
-        } else {
-            // 对创作环境下所有的创作节点，逐一启动
-            val envHashId = pipelineRepositoryService.getSetting(
-                projectId = projectId,
-                pipelineId = pipelineId
-            )?.envHashId ?: ""
-            val envNodeList = creativeStreamService.getEnvNodeList(
-                projectId = projectId,
-                envHashId = envHashId,
-                userId = userId
-            )
-            if (envNodeList.isEmpty()) {
-                logger.info("[$pipelineId]|env node list is empty")
-                return
-            }
-            envNodeList.forEach {
-                val creativeStreamParams = creativeStreamService.creativeStreamParams(
+            TimerNodeType.ENV_ALL, null -> {
+                val envHashId = pipelineRepositoryService.getSetting(
                     projectId = projectId,
-                    agentHashId = it,
+                    pipelineId = pipelineId
+                )?.envHashId ?: ""
+                val envNodeList = creativeStreamService.getEnvNodeList(
+                    projectId = projectId,
+                    envHashId = envHashId,
                     userId = userId
                 )
-                timerTriggerPipeline(
-                    userId = userId,
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    params = params.plus(creativeStreamParams),
-                    channelCode = timerChannelCode,
-                    taskId = taskId
-                )
+                if (envNodeList.isEmpty()) {
+                    logger.info("[$pipelineId]|env node list is empty")
+                    return
+                }
+                envNodeList.forEach { agentHashId ->
+                    val creativeStreamParams = creativeStreamService.creativeStreamParams(
+                        projectId = projectId,
+                        agentHashId = agentHashId,
+                        userId = userId
+                    )
+                    timerTriggerPipeline(
+                        userId = userId,
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        params = params.plus(creativeStreamParams),
+                        channelCode = timerChannelCode,
+                        taskId = taskId
+                    )
+                }
             }
         }
     }
@@ -491,16 +484,11 @@ class PipelineTimerBuildListener @Autowired constructor(
         projectId: String,
         pipelineId: String,
         taskId: String,
-        channelCode: ChannelCode
     ) = pipelineRepositoryService.getModel(
         projectId = projectId,
         pipelineId = pipelineId
     )?.getTriggerContainer()?.elements?.find {
-        if (channelCode == ChannelCode.CREATIVE_STREAM) {
-            it is MarketEventAtomElement
-        } else {
-            it is TimerTriggerElement
-        } && it.id == taskId
+        it is TimerTriggerElement && it.id == taskId
     }
 
     /**
@@ -511,8 +499,7 @@ class PipelineTimerBuildListener @Autowired constructor(
             val triggerExist = checkTriggerExist(
                 projectId = projectId,
                 pipelineId = pipelineId,
-                taskId = it,
-                channelCode = timerChannelCode
+                taskId = it
             )
             if (triggerExist == null) {
                 // 存在异常定时任务，尝试删除定时任务

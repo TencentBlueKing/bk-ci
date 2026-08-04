@@ -60,4 +60,7 @@ const (
 	// 端口号持久化到 .agent.properties 的 devops.mcp.server.port，
 	// 支持通过后台心跳环境变量动态启停
 	DevopsAgentEnableMCP = "DEVOPS_AGENT_ENABLE_MCP"
+
+	// docker不挂载工作空间的默认关键字
+	DockerNoMount = "__NO_MOUNT__"
 )

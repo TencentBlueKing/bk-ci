@@ -1,0 +1,4 @@
+interface:
+  display_name: "Java Heap Dump 排查"
+  short_description: "分析 Java heap dump，并把内存证据关联回代码。"
+  default_prompt: "分析这个 Java heap dump 或 MAT 报告，识别 retained memory 根因，结合项目代码定位问题，并给出中文修复方案和验证计划。"

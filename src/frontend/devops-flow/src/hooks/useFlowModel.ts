@@ -216,6 +216,9 @@ export function useFlowModel() {
       stage.containers[containerIndex!] = {
         ...currentContainer,
         ...container,
+        // elements（Job 下的插件列表）由画布/插件面板维护，Job 属性面板不编辑它。
+        // Job 面板持有的是容器快照，可能已过期，若用其覆盖会丢失新增插件，故始终保留最新的 elements。
+        elements: currentContainer.elements,
       }
       emitChange()
     }

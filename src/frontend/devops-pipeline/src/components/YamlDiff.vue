@@ -23,7 +23,10 @@
             newYaml: {
                 type: String,
                 default: ''
-            }
+            },
+            readOnly: {
+                type: Boolean
+            },
         },
         data () {
             return {

@@ -104,6 +104,25 @@ class FeatureSwitchDao {
         }
     }
 
+    fun listProject(
+        dslContext: DSLContext,
+        projectId: String?,
+        featureType: FeatureSwitchType
+    ): List<FeatureSwitch> {
+        with(TFeatureSwitch.T_FEATURE_SWITCH) {
+            val query = dslContext.selectFrom(this).where(
+                org.jooq.impl.DSL.trueCondition()
+            )
+            if (!projectId.isNullOrBlank()) {
+                query.and(PROJECT_ID.eq(projectId))
+            }
+            query.and(USER_ID.eq(""))
+            query.and(WORKSPACE_NAME.eq(""))
+            query.and(FEATURE_TYPE.eq(featureType.name))
+            return query.orderBy(UPDATE_TIME.desc()).fetch(MAPPER)
+        }
+    }
+
     fun isEnabled(
         dslContext: DSLContext,
         projectId: String,
@@ -127,7 +146,20 @@ class FeatureSwitchDao {
                     WORKSPACE_NAME.eq(workspaceName)
                         .or(WORKSPACE_NAME.eq(""))
                 )
-                .limit(1)
+                .fetchAny() != null
+        }
+    }
+
+    fun isProjectEnabled(
+        dslContext: DSLContext,
+        projectId: String,
+        featureTypeList: List<FeatureSwitchType>
+    ): Boolean {
+        with(TFeatureSwitch.T_FEATURE_SWITCH) {
+            return dslContext.selectFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(ENABLED.eq(true))
+                .and(FEATURE_TYPE.`in`(featureTypeList.map { it.name }))
                 .fetchAny() != null
         }
     }

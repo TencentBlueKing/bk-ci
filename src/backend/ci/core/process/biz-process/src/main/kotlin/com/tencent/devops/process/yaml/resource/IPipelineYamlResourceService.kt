@@ -96,11 +96,13 @@ interface IPipelineYamlResourceService {
      * 合并请求完成
      */
     fun completePullRequest(
+        userId: String,
         projectId: String,
         pipelineId: String,
         pullRequestId: Long,
         pullRequestUrl: String,
         pullRequestNumber: Int,
-        merged: Boolean
+        merged: Boolean,
+        exception: Throwable? = null
     ) = Unit
 }

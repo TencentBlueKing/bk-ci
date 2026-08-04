@@ -31,14 +31,17 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.I18Variable
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.enums.StartType
+import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.trigger.TapdWebHookTriggerElement
 import com.tencent.devops.common.webhook.enums.WebhookI18nConstants.TRIGGER_CONDITION_NOT_MATCH
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
+import com.tencent.devops.process.pojo.trigger.GenericWebhookEventBody
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerFailedMatchElement
 import com.tencent.devops.process.service.CreateStreamTriggerSupportService
+import com.tencent.devops.process.trigger.PipelineTriggerEventService
 import com.tencent.devops.process.trigger.WebhookTriggerBuildService
 import com.tencent.devops.process.trigger.enums.MatchStatus
 import com.tencent.devops.process.trigger.event.TapdWebhookTriggerEvent
@@ -51,6 +54,14 @@ import org.springframework.stereotype.Service
 
 /**
  * TAPD 事件触发构建服务
+ *
+ * 与 [TapdWebhookRequestService] 分工：
+ * - RequestService：解析原始 webhook、保存 [com.tencent.devops.process.pojo.trigger.PipelineTriggerEvent]、
+ *   投递精简版 [TapdWebhookTriggerEvent] 路由事件。
+ * - BuildService：接收路由事件后反查 `PipelineTriggerEvent.eventBody` 拿到原始 body，
+ *   完成触发器匹配 → 匹配成功再组装启动参数 → 启动流水线。
+ *
+ * 该分工与 SCM/Market 触发保持一致（参考 `ScmWebhookTriggerBuildService.trigger`）。
  */
 @Service
 class TapdEventTriggerBuildService @Autowired constructor(
@@ -58,6 +69,7 @@ class TapdEventTriggerBuildService @Autowired constructor(
     private val webhookTriggerManager: WebhookTriggerManager,
     private val webhookTriggerBuildService: WebhookTriggerBuildService,
     private val tapdEventMatcher: TapdEventTriggerMatcher,
+    private val pipelineTriggerEventService: PipelineTriggerEventService,
     private val createStreamTriggerSupportService: CreateStreamTriggerSupportService
 ) {
 
@@ -77,7 +89,7 @@ class TapdEventTriggerBuildService @Autowired constructor(
             doTrigger(event, context)
         } catch (ignored: Exception) {
             logger.warn(
-                "failed to trigger by tapd webhook|${event.projectId}|${event.pipelineId}|${event.tapdProjectId}",
+                "failed to trigger by tapd webhook|${event.projectId}|${event.pipelineId}|${event.workspaceId}",
                 ignored
             )
             webhookTriggerManager.fireError(context, ignored)
@@ -85,7 +97,17 @@ class TapdEventTriggerBuildService @Autowired constructor(
     }
 
     private fun doTrigger(event: TapdWebhookTriggerEvent, context: WebhookTriggerContext) = with(event) {
-        // 1. 查询流水线信息，已锁定的流水线跳过
+        // 1. 反查触发事件（参考 webhook 那边），从 eventBody 取原始 body
+        val triggerEvent = pipelineTriggerEventService.getTriggerEvent(projectId, eventId) ?: run {
+            logger.info("tapd trigger event not found|$eventId|$projectId|$pipelineId")
+            return@with
+        }
+        val body = (triggerEvent.eventBody as? GenericWebhookEventBody)?.body ?: run {
+            logger.info("tapd trigger event body is empty|$eventId|$projectId|$pipelineId")
+            return@with
+        }
+
+        // 2. 查询流水线信息，已锁定的流水线跳过
         val pipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId)
             ?: throw ErrorCodeException(
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS,
@@ -94,14 +116,7 @@ class TapdEventTriggerBuildService @Autowired constructor(
         if (pipelineInfo.locked == true) return@with
         context.pipelineInfo = pipelineInfo
 
-        val oauthUserId = pipelineRepositoryService.getPipelineOauthUser(projectId, pipelineId)
-            ?: pipelineInfo.lastModifyUser
-        // 2. 创作环境下需要补充节点相关启动参数
-        val externalStartParams = createStreamTriggerSupportService.externalWebhookStartParams(
-            pipelineInfo = pipelineInfo,
-            userId = oauthUserId
-        )
-        // 3. 匹配触发器并启动构建
+        // 3. 取流水线资源版本
         val resource = pipelineRepositoryService.getPipelineResourceVersion(
             projectId = projectId,
             pipelineId = pipelineId,
@@ -110,12 +125,14 @@ class TapdEventTriggerBuildService @Autowired constructor(
             statusCode = Response.Status.NOT_FOUND.statusCode,
             errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS
         )
+
+        // 4. 匹配触发器并启动构建（启动参数在匹配成功后再计算）
         matchAndStart(
             event = this,
             context = context,
             pipelineInfo = pipelineInfo,
             resource = resource,
-            externalStartParams = externalStartParams
+            body = body
         )
     }
 
@@ -125,7 +142,7 @@ class TapdEventTriggerBuildService @Autowired constructor(
         context: WebhookTriggerContext,
         pipelineInfo: PipelineInfo,
         resource: PipelineResourceVersion,
-        externalStartParams: Map<String, String>
+        body: Map<String, String>
     ) {
         val elements = resource.model.getTriggerContainer().elements
             .filterIsInstance<TapdWebHookTriggerElement>()
@@ -141,21 +158,25 @@ class TapdEventTriggerBuildService @Autowired constructor(
             val atomResponse = tapdEventMatcher.matches(
                 element = element,
                 event = event,
+                body = body,
                 variables = variables
             )
             when (atomResponse.matchStatus) {
                 MatchStatus.SUCCESS -> {
-                    webhookTriggerBuildService.startPipeline(
+                    startPipeline(
+                        event = event,
                         context = context,
                         pipelineInfo = pipelineInfo,
                         resource = resource,
-                        startParams = event.startParams.plus(externalStartParams)
+                        element = element,
+                        body = body
                     )
                     logger.info(
                         "tapd webhook trigger success|${event.projectId}|${event.pipelineId}|element=${element.id}"
                     )
                     return
                 }
+
                 MatchStatus.CONDITION_NOT_MATCH -> failedMatchElements.add(
                     PipelineTriggerFailedMatchElement(
                         elementId = element.id,
@@ -165,6 +186,7 @@ class TapdEventTriggerBuildService @Autowired constructor(
                             ?: I18Variable(code = TRIGGER_CONDITION_NOT_MATCH).toJsonStr()
                     )
                 )
+
                 else -> Unit
             }
         }
@@ -172,5 +194,43 @@ class TapdEventTriggerBuildService @Autowired constructor(
             context.failedMatchElements = failedMatchElements
             webhookTriggerManager.fireMatchFailed(context)
         }
+    }
+
+    /**
+     * 匹配成功后组装启动参数并启动流水线
+     *
+     * 启动参数由两部分组成：
+     * 1. [TapdWebhookUtils.buildStartParams]：基于 event + body 计算 TAPD 事件的启动变量；
+     * 2. [CreateStreamTriggerSupportService.externalWebhookStartParams]：创作流场景下的额外节点参数。
+     *
+     * 二者都在这里延迟计算，匹配失败的路径不会产生任何组装开销。
+     */
+    private fun startPipeline(
+        event: TapdWebhookTriggerEvent,
+        context: WebhookTriggerContext,
+        pipelineInfo: PipelineInfo,
+        resource: PipelineResourceVersion,
+        element: Element,
+        body: Map<String, String>
+    ) {
+        val tapdParams = TapdWebhookUtils.buildStartParams(
+            event = event,
+            body = body,
+            element = element
+        )
+        val oauthUserId = pipelineRepositoryService.getPipelineOauthUser(
+            projectId = event.projectId,
+            pipelineId = event.pipelineId
+        ) ?: pipelineInfo.lastModifyUser
+        val externalStartParams = createStreamTriggerSupportService.externalWebhookStartParams(
+            pipelineInfo = pipelineInfo,
+            userId = oauthUserId
+        )
+        webhookTriggerBuildService.startPipeline(
+            context = context,
+            pipelineInfo = pipelineInfo,
+            resource = resource,
+            startParams = tapdParams + externalStartParams
+        )
     }
 }

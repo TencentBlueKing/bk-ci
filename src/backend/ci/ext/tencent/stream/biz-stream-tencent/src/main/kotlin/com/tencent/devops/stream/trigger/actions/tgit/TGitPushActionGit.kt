@@ -90,6 +90,12 @@ class TGitPushActionGit(
         val logger = LoggerFactory.getLogger(TGitPushActionGit::class.java)
         val SKIP_CI_KEYS = setOf("skip ci", "ci skip", "no ci", "ci.skip")
         private const val PUSH_OPTIONS_PREFIX = "ci.variable::"
+
+        // 触发判断拉取变更文件列表的分页大小
+        private const val CHANGE_FILE_PAGE_SIZE = 100
+
+        // 防御性分页上限，最多拉取 MAX_CHANGE_FILE_PAGE * CHANGE_FILE_PAGE_SIZE 个变更文件，避免超大diff无限翻页
+        private const val MAX_CHANGE_FILE_PAGE = 100
     }
 
     override val metaData: ActionMetaData = ActionMetaData(streamObjectKind = StreamObjectKind.PUSH)
@@ -273,15 +279,17 @@ class TGitPushActionGit(
             gitEvent.after
         }
 
-        for (i in 1..10) {
+        // 分页拉取全量变更文件，避免超过阈值(如1000)的大diff因翻页不足而漏掉命中触发规则的文件
+        var page = 1
+        while (page <= MAX_CHANGE_FILE_PAGE) {
             val result = apiService.getCommitChangeList(
                 cred = (this.data.context.repoTrigger?.repoTriggerCred ?: getGitCred()) as TGitCred,
                 gitProjectId = data.eventCommon.gitProjectId,
                 from = from,
                 to = to,
                 straight = false,
-                page = i,
-                pageSize = 100,
+                page = page,
+                pageSize = CHANGE_FILE_PAGE_SIZE,
                 retry = ApiRequestRetryInfo(true)
             )
             changeSet.addAll(
@@ -296,9 +304,19 @@ class TGitPushActionGit(
                     }
                 }
             )
-            if (result.size < 100) {
+            // 返回数量不足一页，说明已取完，正常结束
+            if (result.size < CHANGE_FILE_PAGE_SIZE) {
                 break
             }
+            // 触达防御性上限仍未取完，说明变更文件超大，记录告警后按已取到的部分继续
+            if (page >= MAX_CHANGE_FILE_PAGE) {
+                logger.warn(
+                    "getChangeSet reached max page limit|gitProjectId=${data.eventCommon.gitProjectId}|" +
+                        "from=$from|to=$to|maxFiles=${MAX_CHANGE_FILE_PAGE * CHANGE_FILE_PAGE_SIZE}"
+                )
+                break
+            }
+            page++
         }
 
         this.data.context.changeSet = changeSet

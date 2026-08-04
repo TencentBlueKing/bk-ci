@@ -30,6 +30,7 @@ package com.tencent.devops.repository.sdk.tapd.service
 import com.tencent.devops.scm.pojo.tapd.TapdBug
 import com.tencent.devops.scm.pojo.tapd.TapdBugFieldConfig
 import com.tencent.devops.scm.pojo.tapd.TapdStory
+import com.tencent.devops.scm.pojo.tapd.TapdWorkspace
 
 /**
  * TAPD 业务对象（需求/缺陷）查询服务
@@ -50,4 +51,9 @@ interface ITapdItemService {
      * 查询 TAPD 缺陷详情
      */
     fun getBugFieldsInfo(workspaceId: String): TapdBugFieldConfig?
+
+    /**
+     * 查询 TAPD 项目信息
+     */
+    fun getWorkspaceInfo(workspaceId: String): TapdWorkspace?
 }

@@ -36,6 +36,8 @@ import com.tencent.devops.scm.pojo.tapd.BugResponse
 import com.tencent.devops.scm.pojo.tapd.StoryResponse
 import com.tencent.devops.scm.pojo.tapd.TapdBugFieldConfig
 import com.tencent.devops.scm.pojo.tapd.TapdResult
+import com.tencent.devops.scm.pojo.tapd.TapdWorkspace
+import com.tencent.devops.scm.pojo.tapd.WorkspaceResponse
 import com.tencent.devops.scm.utils.RetryUtils
 import okhttp3.Headers
 import okhttp3.Request
@@ -153,6 +155,41 @@ class TapdItemService {
                     it,
                     object : TypeReference<TapdResult<TapdBugFieldConfig>>() {}
                 )?.data
+            }
+        }
+    }
+
+    fun getWorkspaceInfo(
+        apiUrl: String,
+        authorToken: String,
+        workspaceId: String
+    ): TapdWorkspace? {
+        if (workspaceId.isBlank()) {
+            logger.warn("invalid tapd workspace query|workspaceId=$workspaceId")
+            return null
+        }
+        val url = "${apiUrl.removeSuffix("/")}/workspaces/get_workspace_info".addParams(
+            mapOf(
+                "workspace_id" to workspaceId
+            )
+        )
+        val request = Request.Builder()
+                .url(url)
+                .headers(authHeaders(authorToken))
+                .get()
+                .build()
+        RetryUtils.doRetryHttp(request).use { response ->
+            if (!response.isSuccessful) {
+                throw RemoteServiceException(
+                    httpStatus = response.code,
+                    errorMessage = "(${response.code})${response.message}"
+                )
+            }
+            return response.body?.string()?.takeIf { it.isNotBlank() }?.let {
+                JsonUtil.toOrNull(
+                    it,
+                    object : TypeReference<TapdResult<WorkspaceResponse>>() {}
+                )?.data?.workspace
             }
         }
     }

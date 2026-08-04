@@ -32,6 +32,7 @@ import com.tencent.devops.remotedev.pojo.common.QuotaType
 import com.tencent.devops.remotedev.pojo.image.StandardVmImage
 import com.tencent.devops.remotedev.pojo.kubernetes.TaskStatus
 import com.tencent.devops.remotedev.pojo.kubernetes.WorkspaceInfo
+import com.tencent.devops.remotedev.pojo.remotedev.AvailableResource
 import com.tencent.devops.remotedev.pojo.remotedev.EnvironmentResourceData
 import com.tencent.devops.remotedev.pojo.remotedev.FetchWinPoolData
 import com.tencent.devops.remotedev.pojo.remotedev.ResourceEstimateByVmResponse
@@ -66,6 +67,10 @@ interface ServiceStartCloudInterface {
     fun getResourceVm(
         data: ResourceVmReq
     ): Result<List<ResourceVmRespData>?>
+
+    fun getAvailableResource(
+        provider: String
+    ): Result<List<AvailableResource>?>
 
     fun startGetResourceEstimateByVm(
         specifyTaints: String,

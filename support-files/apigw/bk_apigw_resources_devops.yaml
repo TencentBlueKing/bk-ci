@@ -89,6 +89,27 @@ paths:
         enableWebsocket: false
         isPublic: true
         matchSubpath: false
+  /v4/apigw-app/atoms/atom_list:
+    get:
+      operationId: "v4_app_atom_list_all"
+      description: "获取所有流水线插件信息"
+      tags:
+      - "V4应用态"
+      x-bk-apigateway-resource:
+        allowApplyPermission: true
+        authConfig:
+          appVerifiedRequired: true
+          resourcePermissionRequired: true
+          userVerifiedRequired: false
+        backend:
+          matchSubpath: false
+          method: "get"
+          name: "backend-1"
+          path: "/openapi/api/apigw-app/v4/atoms/atom_list"
+          timeout: 30
+        enableWebsocket: false
+        isPublic: true
+        matchSubpath: false
   /v4/apigw-app/atoms/atom_pipelines:
     get:
       operationId: "v4_app_atom_pipeline_list"
@@ -127,6 +148,27 @@ paths:
           method: "get"
           name: "backend-1"
           path: "/openapi/api/apigw-app/v4/atoms/atom_statistic"
+          timeout: 30
+        enableWebsocket: false
+        isPublic: true
+        matchSubpath: false
+  /v4/apigw-app/atoms/atom_yml_v2_detail:
+    get:
+      operationId: "v4_app_atom_yml_v2_detail"
+      description: "查看插件的yml 2.0信息"
+      tags:
+      - "V4应用态"
+      x-bk-apigateway-resource:
+        allowApplyPermission: true
+        authConfig:
+          appVerifiedRequired: true
+          resourcePermissionRequired: true
+          userVerifiedRequired: false
+        backend:
+          matchSubpath: false
+          method: "get"
+          name: "backend-1"
+          path: "/openapi/api/apigw-app/v4/atoms/atom_yml_v2_detail"
           timeout: 30
         enableWebsocket: false
         isPublic: true
@@ -778,6 +820,27 @@ paths:
           method: "get"
           name: "backend-1"
           path: "/openapi/api/apigw-app/v4/auth/project/{projectId}/member_manage/list_project_members"
+          timeout: 30
+        enableWebsocket: false
+        isPublic: true
+        matchSubpath: false
+  /v4/apigw-app/auth/project/{projectId}/member_manage/list_project_members_by_condition:
+    get:
+      operationId: "v4_app_list_auth_project_members_by_condition"
+      description: "根据条件获取项目全体成员"
+      tags:
+      - "V4应用态"
+      x-bk-apigateway-resource:
+        allowApplyPermission: true
+        authConfig:
+          appVerifiedRequired: true
+          resourcePermissionRequired: true
+          userVerifiedRequired: false
+        backend:
+          matchSubpath: false
+          method: "get"
+          name: "backend-1"
+          path: "/openapi/api/apigw-app/v4/auth/project/{projectId}/member_manage/list_project_members_by_condition"
           timeout: 30
         enableWebsocket: false
         isPublic: true
@@ -1453,6 +1516,48 @@ paths:
         enableWebsocket: false
         isPublic: true
         matchSubpath: false
+  /v4/apigw-app/environment/projects/{projectId}/envs/list:
+    get:
+      operationId: "v4_app_env_list"
+      description: "获取环境列表"
+      tags:
+      - "V4应用态"
+      x-bk-apigateway-resource:
+        allowApplyPermission: true
+        authConfig:
+          appVerifiedRequired: true
+          resourcePermissionRequired: true
+          userVerifiedRequired: false
+        backend:
+          matchSubpath: false
+          method: "get"
+          name: "backend-1"
+          path: "/openapi/api/apigw-app/v4/environment/projects/{projectId}/envs/list"
+          timeout: 30
+        enableWebsocket: false
+        isPublic: true
+        matchSubpath: false
+  /v4/apigw-app/environment/projects/{projectId}/envs/{envHashId}/nodes_list:
+    get:
+      operationId: "v4_app_env_list_nodes_new"
+      description: "获取环境的节点列表"
+      tags:
+      - "V4应用态"
+      x-bk-apigateway-resource:
+        allowApplyPermission: true
+        authConfig:
+          appVerifiedRequired: true
+          resourcePermissionRequired: true
+          userVerifiedRequired: false
+        backend:
+          matchSubpath: false
+          method: "get"
+          name: "backend-1"
+          path: "/openapi/api/apigw-app/v4/environment/projects/{projectId}/envs/{envHashId}/nodes_list"
+          timeout: 30
+        enableWebsocket: false
+        isPublic: true
+        matchSubpath: false
   /v4/apigw-app/environment/projects/{projectId}/ext_nodes:
     get:
       operationId: "v4_app_env_node_list_ext"
@@ -1638,6 +1743,48 @@ paths:
           method: "get"
           name: "backend-1"
           path: "/openapi/api/apigw-app/v4/environment/projects/{projectId}/usable_server_nodes"
+          timeout: 30
+        enableWebsocket: false
+        isPublic: true
+        matchSubpath: false
+  /v4/apigw-app/market/event/projects/{projectId}/pipelines/{pipelineId}/{eventCode}/start:
+    post:
+      operationId: "v4_app_market_event_start"
+      description: "通过触发器插件启动流水线"
+      tags:
+      - "V4应用态"
+      x-bk-apigateway-resource:
+        allowApplyPermission: true
+        authConfig:
+          appVerifiedRequired: true
+          resourcePermissionRequired: true
+          userVerifiedRequired: false
+        backend:
+          matchSubpath: false
+          method: "post"
+          name: "backend-1"
+          path: "/openapi/api/apigw-app/v4/market/event/projects/{projectId}/pipelines/{pipelineId}/{eventCode}/start"
+          timeout: 30
+        enableWebsocket: false
+        isPublic: true
+        matchSubpath: false
+  /v4/apigw-app/market/event/{eventCode}/webhook/cds:
+    post:
+      operationId: "v4_app_cds_webhook"
+      description: "云桌面webhook事件推送"
+      tags:
+      - "V4应用态"
+      x-bk-apigateway-resource:
+        allowApplyPermission: true
+        authConfig:
+          appVerifiedRequired: true
+          resourcePermissionRequired: true
+          userVerifiedRequired: false
+        backend:
+          matchSubpath: false
+          method: "post"
+          name: "backend-1"
+          path: "/openapi/api/apigw-app/v4/market/event/{eventCode}/webhook/cds"
           timeout: 30
         enableWebsocket: false
         isPublic: true
@@ -4763,6 +4910,27 @@ paths:
         enableWebsocket: false
         isPublic: true
         matchSubpath: false
+  /v4/apigw-user/atoms/atom_list:
+    get:
+      operationId: "v4_user_atom_list_all"
+      description: "获取所有流水线插件信息"
+      tags:
+      - "V4用户态"
+      x-bk-apigateway-resource:
+        allowApplyPermission: true
+        authConfig:
+          appVerifiedRequired: false
+          resourcePermissionRequired: false
+          userVerifiedRequired: true
+        backend:
+          matchSubpath: false
+          method: "get"
+          name: "backend-1"
+          path: "/openapi/api/apigw-user/v4/atoms/atom_list"
+          timeout: 30
+        enableWebsocket: false
+        isPublic: true
+        matchSubpath: false
   /v4/apigw-user/atoms/atom_pipelines:
     get:
       operationId: "v4_user_atom_pipeline_list"
@@ -4822,6 +4990,27 @@ paths:
           method: "get"
           name: "backend-1"
           path: "/openapi/api/apigw-user/v4/atoms/atom_statistic"
+          timeout: 30
+        enableWebsocket: false
+        isPublic: true
+        matchSubpath: false
+  /v4/apigw-user/atoms/atom_yml_v2_detail:
+    get:
+      operationId: "v4_user_atom_yml_v2_detail"
+      description: "查看插件的yml 2.0信息"
+      tags:
+      - "V4用户态"
+      x-bk-apigateway-resource:
+        allowApplyPermission: true
+        authConfig:
+          appVerifiedRequired: false
+          resourcePermissionRequired: false
+          userVerifiedRequired: true
+        backend:
+          matchSubpath: false
+          method: "get"
+          name: "backend-1"
+          path: "/openapi/api/apigw-user/v4/atoms/atom_yml_v2_detail"
           timeout: 30
         enableWebsocket: false
         isPublic: true
@@ -5242,6 +5431,27 @@ paths:
           method: "get"
           name: "backend-1"
           path: "/openapi/api/apigw-user/v4/auth/project/{projectId}/member_manage/list_project_members"
+          timeout: 30
+        enableWebsocket: false
+        isPublic: true
+        matchSubpath: false
+  /v4/apigw-user/auth/project/{projectId}/member_manage/list_project_members_by_condition:
+    get:
+      operationId: "v4_user_list_auth_project_members_by_condition"
+      description: "根据条件获取项目全体成员"
+      tags:
+      - "V4用户态"
+      x-bk-apigateway-resource:
+        allowApplyPermission: true
+        authConfig:
+          appVerifiedRequired: false
+          resourcePermissionRequired: false
+          userVerifiedRequired: true
+        backend:
+          matchSubpath: false
+          method: "get"
+          name: "backend-1"
+          path: "/openapi/api/apigw-user/v4/auth/project/{projectId}/member_manage/list_project_members_by_condition"
           timeout: 30
         enableWebsocket: false
         isPublic: true
@@ -5875,6 +6085,48 @@ paths:
         enableWebsocket: false
         isPublic: true
         matchSubpath: false
+  /v4/apigw-user/environment/projects/{projectId}/envs/list:
+    get:
+      operationId: "v4_user_env_list"
+      description: "获取环境列表"
+      tags:
+      - "V4用户态"
+      x-bk-apigateway-resource:
+        allowApplyPermission: true
+        authConfig:
+          appVerifiedRequired: false
+          resourcePermissionRequired: false
+          userVerifiedRequired: true
+        backend:
+          matchSubpath: false
+          method: "get"
+          name: "backend-1"
+          path: "/openapi/api/apigw-user/v4/environment/projects/{projectId}/envs/list"
+          timeout: 30
+        enableWebsocket: false
+        isPublic: true
+        matchSubpath: false
+  /v4/apigw-user/environment/projects/{projectId}/envs/{envHashId}/nodes_list:
+    get:
+      operationId: "v4_user_env_list_nodes_new"
+      description: "获取环境的节点列表"
+      tags:
+      - "V4用户态"
+      x-bk-apigateway-resource:
+        allowApplyPermission: true
+        authConfig:
+          appVerifiedRequired: false
+          resourcePermissionRequired: false
+          userVerifiedRequired: true
+        backend:
+          matchSubpath: false
+          method: "get"
+          name: "backend-1"
+          path: "/openapi/api/apigw-user/v4/environment/projects/{projectId}/envs/{envHashId}/nodes_list"
+          timeout: 30
+        enableWebsocket: false
+        isPublic: true
+        matchSubpath: false
   /v4/apigw-user/environment/projects/{projectId}/ext_nodes:
     get:
       operationId: "v4_user_env_node_list_ext"
@@ -6060,6 +6312,48 @@ paths:
           method: "get"
           name: "backend-1"
           path: "/openapi/api/apigw-user/v4/environment/projects/{projectId}/usable_server_nodes"
+          timeout: 30
+        enableWebsocket: false
+        isPublic: true
+        matchSubpath: false
+  /v4/apigw-user/market/event/projects/{projectId}/pipelines/{pipelineId}/{eventCode}/start:
+    post:
+      operationId: "v4_user_market_event_start"
+      description: "通过触发器插件启动流水线"
+      tags:
+      - "V4用户态"
+      x-bk-apigateway-resource:
+        allowApplyPermission: true
+        authConfig:
+          appVerifiedRequired: false
+          resourcePermissionRequired: false
+          userVerifiedRequired: true
+        backend:
+          matchSubpath: false
+          method: "post"
+          name: "backend-1"
+          path: "/openapi/api/apigw-user/v4/market/event/projects/{projectId}/pipelines/{pipelineId}/{eventCode}/start"
+          timeout: 30
+        enableWebsocket: false
+        isPublic: true
+        matchSubpath: false
+  /v4/apigw-user/market/event/{eventCode}/webhook/cds:
+    post:
+      operationId: "v4_user_cds_webhook"
+      description: "云桌面webhook事件推送"
+      tags:
+      - "V4用户态"
+      x-bk-apigateway-resource:
+        allowApplyPermission: true
+        authConfig:
+          appVerifiedRequired: false
+          resourcePermissionRequired: false
+          userVerifiedRequired: true
+        backend:
+          matchSubpath: false
+          method: "post"
+          name: "backend-1"
+          path: "/openapi/api/apigw-user/v4/market/event/{eventCode}/webhook/cds"
           timeout: 30
         enableWebsocket: false
         isPublic: true

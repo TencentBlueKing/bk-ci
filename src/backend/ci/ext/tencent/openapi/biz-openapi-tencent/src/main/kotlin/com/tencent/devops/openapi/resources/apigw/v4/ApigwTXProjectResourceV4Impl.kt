@@ -5,6 +5,7 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.v4.ApigwTXProjectResourceV4
 import com.tencent.devops.project.api.pojo.ProjectProductInfo
 import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
+import com.tencent.devops.project.pojo.CrosProductVO
 import com.tencent.devops.project.pojo.OperationalProductVO
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.Result
@@ -50,6 +51,16 @@ class ApigwTXProjectResourceV4Impl constructor(
     ): Result<OperationalProductVO?> {
         logger.info("OPENAPI_TX_PROJECT_V4|$appCode|$apigwType|get_product_by_product_id|$productId")
         return client.get(ServiceTxProjectResource::class).getProductByProductId(productId)
+    }
+
+    override fun getKpiProducts(
+        appCode: String?,
+        apigwType: String?,
+        userId: String?,
+        kpiName: String?
+    ): Result<List<CrosProductVO>> {
+        logger.info("OPENAPI_TX_PROJECT_V4|$appCode|$apigwType|get_kpi_products|$userId|$kpiName")
+        return client.get(ServiceTxProjectResource::class).getKpiProducts(kpiName)
     }
 
     companion object {

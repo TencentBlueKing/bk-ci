@@ -225,7 +225,37 @@ interface ApigwRepositoryResourceV4 {
         repository: Repository
     ): Result<Boolean>
 
-    @Operation(summary = "代码库详情", tags = ["v4_user_repository_get", "v4_app_repository_get"])
+    @Operation(
+        summary = "代码库详情（支持按哈希ID或别名查询）",
+        tags = ["v4_user_repository_get_by_name", "v4_app_repository_get_by_name"]
+    )
+    @GET
+    @Path("/repository")
+    fun getByName(
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @Parameter(description = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID(项目英文名)", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "代码库哈希ID或别名，别名可包含/", required = true)
+        @QueryParam("repositoryId")
+        repositoryId: String,
+        @Parameter(description = "代码库请求类型，ID-哈希ID，NAME-别名", required = true)
+        @QueryParam("repositoryType")
+        repositoryType: RepositoryType?
+    ): Result<Repository>
+
+    @Operation(
+        summary = "代码库详情（别名含/时请使用 get_by_name）",
+        tags = ["v4_user_repository_get", "v4_app_repository_get"]
+    )
     @GET
     @Path("/repository/{repositoryId}")
     fun get(
@@ -241,10 +271,14 @@ interface ApigwRepositoryResourceV4 {
         @Parameter(description = "项目ID(项目英文名)", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "代码库哈希ID货代代码库名称", required = true)
+        @Parameter(
+            description = "代码库哈希ID或别名。别名含/时不能使用本接口，请改用 " +
+                "v4_user_repository_get_by_name / v4_app_repository_get_by_name",
+            required = true
+        )
         @PathParam("repositoryId")
         repositoryId: String,
-        @Parameter(description = "代码库请求类型", required = true)
+        @Parameter(description = "代码库请求类型，ID-哈希ID，NAME-别名", required = true)
         @QueryParam("repositoryType")
         repositoryType: RepositoryType?
     ): Result<Repository>

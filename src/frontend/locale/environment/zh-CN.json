@@ -774,5 +774,13 @@
     "IMetaNodeStatus": {
         "RUNNING": "运行中"
     },
-    "IMetaStatus": "状态"
+    "IMetaStatus": "状态",
+    "taskStatus": "构建状态",
+    "pipelineTaskStatusMap": {
+        "QUEUE": "排队中",
+        "RUNNING": "运行中",
+        "DONE": "执行成功",
+        "FAILURE": "执行失败"
+    }
 }
+

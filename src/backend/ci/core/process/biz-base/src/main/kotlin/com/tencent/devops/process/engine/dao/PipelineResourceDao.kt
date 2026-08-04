@@ -299,6 +299,7 @@ class PipelineResourceDao {
                         try {
                             JsonUtil.to(str, Model::class.java)
                         } catch (ignore: Exception) {
+                            logger.warn("Failed to parse model: $str", ignore)
                             null
                         }
                     } ?: return null,

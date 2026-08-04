@@ -1,12 +1,14 @@
 import { searchFlowByName, type SimplePipelineInfo } from '@/api/flowContentList'
 import { ROUTE_NAMES } from '@/constants/routes'
 import { debounce } from '@/utils/util'
-import { Input, Loading, Popover } from 'bkui-vue'
+import { Select } from 'bkui-vue'
 import { defineComponent, onMounted, type PropType, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import { SvgIcon } from '../SvgIcon'
 import styles from './FlowSelector.module.css'
+
+const { Option } = Select
 
 export default defineComponent({
   name: 'FlowSelector',
@@ -31,19 +33,23 @@ export default defineComponent({
     const { t } = useI18n()
     const router = useRouter()
 
-    const isPopoverShow = ref(false)
-    const searchKey = ref('')
+    const selectedFlowId = ref(props.currentFlowId)
     const loading = ref(false)
     const flowList = ref<SimplePipelineInfo[]>([])
 
-    // 获取工作流列表（支持远程搜索）
+    watch(
+      () => props.currentFlowId,
+      (flowId) => {
+        selectedFlowId.value = flowId
+      },
+    )
+
     const fetchFlowList = async (keyword?: string) => {
       if (!props.projectId) return
 
       loading.value = true
       try {
         const list = await searchFlowByName(props.projectId, keyword || '')
-        // 确保当前流水线在列表最前面
         flowList.value = generateFlowList(list)
       } catch (error) {
         console.error('Failed to fetch flow list:', error)
@@ -53,7 +59,6 @@ export default defineComponent({
       }
     }
 
-    // 生成流水线列表，确保当前流水线在最前面
     const generateFlowList = (list: SimplePipelineInfo[]) => {
       if (!props.currentFlowId || !props.currentFlowName) {
         return list
@@ -65,53 +70,37 @@ export default defineComponent({
       return [currentFlow, ...list.filter((item) => item.pipelineId !== props.currentFlowId)]
     }
 
-    // 防抖搜索
     const debouncedSearch = debounce((keyword: string) => {
       fetchFlowList(keyword)
     }, 300)
 
-    // 监听搜索关键词变化，触发远程搜索
-    watch(searchKey, (newVal) => {
-      debouncedSearch(newVal)
-    })
+    const handleSearchFlow = (keyword: string) => {
+      debouncedSearch(keyword)
+    }
 
-    // 选择工作流
-    const handleSelectFlow = (flow: SimplePipelineInfo) => {
-      if (flow.pipelineId === props.currentFlowId) {
-        isPopoverShow.value = false
-        return
-      }
+    const handleSelectFlow = (flowId: string) => {
+      if (flowId === props.currentFlowId) return
 
-      // 跳转到 flow 基础路径，触发 beforeEnter 守卫获取最新版本并重定向
       router.push({
         name: ROUTE_NAMES.FLOW_DETAIL,
         params: {
           projectId: props.projectId,
-          flowId: flow.pipelineId,
+          flowId,
         },
       })
-      isPopoverShow.value = false
     }
 
-    // 点击工作流名称
-    const handleNameClick = () => {
-      if (props.onNameClick) {
-        props.onNameClick()
-      }
-    }
-
-    // 监听 popover 显示状态
-    watch(isPopoverShow, (show) => {
-      if (show) {
-        // 每次打开时重新获取列表
-        searchKey.value = ''
+    const handleSelectorToggle = (isOpen: boolean) => {
+      if (isOpen) {
         fetchFlowList()
       }
-    })
+    }
 
-    // 组件挂载时预加载数据
+    const handleNameClick = () => {
+      props.onNameClick?.()
+    }
+
     onMounted(() => {
-      // 延迟加载，不阻塞初始渲染
       setTimeout(() => {
         if (props.projectId) {
           fetchFlowList()
@@ -119,75 +108,51 @@ export default defineComponent({
       }, 500)
     })
 
-    // 渲染工作流列表项
-    const renderFlowItem = (flow: SimplePipelineInfo) => {
+    const renderFlowOption = (flow: SimplePipelineInfo) => {
       const isActive = flow.pipelineId === props.currentFlowId
 
       return (
-        <div
-          key={flow.pipelineId}
-          class={[styles.flowItem, isActive && styles.flowItemActive]}
-          onClick={() => handleSelectFlow(flow)}
-        >
-          <span class={styles.flowItemName} title={flow.pipelineName}>
-            {flow.pipelineName}
-          </span>
-          {isActive && <SvgIcon name="check-line" class={styles.checkIcon} size={16} />}
-        </div>
+        <Option key={flow.pipelineId} value={flow.pipelineId} label={flow.pipelineName}>
+          <div class={styles.flowOption}>
+            <span class={styles.flowOptionName} title={flow.pipelineName}>
+              {flow.pipelineName}
+            </span>
+            {isActive ? <SvgIcon name="check-line" class={styles.checkIcon} size={12} /> : null}
+          </div>
+        </Option>
       )
     }
 
-    // 渲染 popover 内容
-    const renderPopoverContent = () => (
-      <div class={styles.flowSelectorPopover}>
-        <Input
-          v-model={searchKey.value}
-          placeholder={t('flow.common.search')}
-          clearable
-          type="search"
-        />
-
-        <div class={styles.flowListWrapper}>
-          <Loading loading={loading.value} mode="spin" size="small">
-            {flowList.value.length > 0 ? (
-              <div class={styles.flowList}>
-                {flowList.value.map((flow) => renderFlowItem(flow))}
-              </div>
-            ) : (
-              <div class={styles.emptyState}>
-                {searchKey.value ? t('flow.searchResultsEmpty') : t('flow.common.noData')}
-              </div>
-            )}
-          </Loading>
-        </div>
-      </div>
-    )
-
     return () => (
-      <Popover
-        trigger="click"
-        theme="light"
-        placement="bottom-start"
-        arrow={false}
-        is-show={isPopoverShow.value}
-        onUpdate:isShow={(val: boolean) => (isPopoverShow.value = val)}
+      <Select
+        v-model={selectedFlowId.value}
+        class={styles.flowSelector}
+        filterable
+        remoteMethod={handleSearchFlow}
+        loading={loading.value}
+        clearable={false}
+        popoverMinWidth={240}
+        popoverOptions={{ extCls: styles.flowSelectorPopover }}
+        searchPlaceholder={t('flow.common.search')}
+        onChange={handleSelectFlow}
+        onToggle={handleSelectorToggle}
       >
         {{
-          default: () => (
-            <div class={styles.flowSelector}>
+          trigger: () => (
+            <div class={styles.flowSelectorTrigger}>
               <span
                 class={[styles.flowName, props.onNameClick && styles.clickable]}
                 title={props.currentFlowName}
-                onClick={handleNameClick}
+                onClick={props.onNameClick ? handleNameClick : undefined}
               >
                 {props.currentFlowName || '--'}
               </span>
               <SvgIcon name="exchange-line" class={styles.exchangeIcon} size={16} />
             </div>
           ),
-          content: renderPopoverContent,
+          default: () => flowList.value.map((flow) => renderFlowOption(flow)),
         }}
-      </Popover>
+      </Select>
     )
   },
 })

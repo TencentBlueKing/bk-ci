@@ -42,6 +42,8 @@ export interface BuildRecord {
   buildNumAlias?: string
   userId: string
   trigger: string
+  /** 触发类型图标名（如 manualTrigger、timerTrigger 等） */
+  startType?: string
   status: string
   stageStatus: StageStatusInfo[]
   queueTime?: number
@@ -111,6 +113,8 @@ export interface ExecutionRecord {
   stageStatus: StageStatusStep[]
   nodeName: string
   nodeIp: string
+  /** 触发类型图标名（如 manualTrigger、timerTrigger 等），用于展示触发方式对应的 icon */
+  startType: string
   triggerAndUser: string
   triggerTime: string
   startTime: string
@@ -197,6 +201,7 @@ function convertBuildRecordToExecutionRecord(record: BuildRecord): ExecutionReco
     stageStatus,
     nodeName: record.nodeName || '',
     nodeIp: nodeDisplayText,
+    startType: record.startType || '',
     triggerAndUser,
     triggerTime: convertTime(record.queueTime || 0),
     startTime: convertTime(record.startTime || 0),

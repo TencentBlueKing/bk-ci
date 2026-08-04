@@ -38,6 +38,14 @@ BEGIN
             ADD INDEX `PROJECT_ID_NODE_STATUS` (`PROJECT_ID`, `NODE_STATUS`);
     END IF;
 
+    IF NOT EXISTS(SELECT 1
+                   FROM information_schema.statistics
+                   WHERE TABLE_SCHEMA = db
+                     AND TABLE_NAME = 'T_NODE'
+                     AND INDEX_NAME = 'PROJECT_ID_NODE_STATUS') THEN
+    ALTER TABLE `T_ENV` ADD COLUMN `OS` varchar(16) NULL COMMENT '环境节点系统类型';
+    END IF;
+
     COMMIT;
 END <CI_UBF>
 DELIMITER ;

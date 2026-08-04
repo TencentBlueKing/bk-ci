@@ -40,6 +40,7 @@ import com.tencent.devops.project.api.pojo.PipelinePermissionInfo
 import com.tencent.devops.project.api.pojo.ProjectProductInfo
 import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
 import com.tencent.devops.project.pojo.AddManagerRequest
+import com.tencent.devops.project.pojo.CrosProductVO
 import com.tencent.devops.project.pojo.OperationalProductVO
 import com.tencent.devops.project.pojo.ProjectCreateExtInfo
 import com.tencent.devops.project.pojo.ProjectCreateInfo
@@ -54,6 +55,7 @@ import com.tencent.devops.project.pojo.enums.ProjectValidateType
 import com.tencent.devops.project.service.ProjectExtPermissionService
 import com.tencent.devops.project.service.ProjectLocalService
 import com.tencent.devops.project.service.ProjectMemberService
+import com.tencent.devops.project.service.ProjectOperationalProductService
 import com.tencent.devops.project.service.ProjectService
 import com.tencent.devops.project.service.ProjectTagService
 import com.tencent.devops.project.service.ProjectTxInfoService
@@ -74,7 +76,8 @@ class ServiceTxProjectResourceImpl @Autowired constructor(
     private val projectMemberService: ProjectMemberService,
     private val projectTagService: ProjectTagService,
     private val projectTxService: ProjectTxInfoService,
-    private val remoteDevService: ProjectRemoteDevService
+    private val remoteDevService: ProjectRemoteDevService,
+    private val projectOperationalProductService: ProjectOperationalProductService
 ) : ServiceTxProjectResource {
 
     @Value("\${tag.auto:#{null}}")
@@ -447,6 +450,10 @@ class ServiceTxProjectResourceImpl @Autowired constructor(
 
     override fun getProductByProductId(productId: Int): Result<OperationalProductVO?> {
         return Result(projectService.getProductByProductId(productId))
+    }
+
+    override fun getKpiProducts(kpiName: String?): Result<List<CrosProductVO>> {
+        return Result(projectOperationalProductService.getKpiProducts(kpiName))
     }
 
     companion object {

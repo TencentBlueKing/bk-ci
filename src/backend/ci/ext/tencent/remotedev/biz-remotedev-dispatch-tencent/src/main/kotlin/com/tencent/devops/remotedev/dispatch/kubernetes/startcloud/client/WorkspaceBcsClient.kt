@@ -30,6 +30,8 @@ import com.tencent.devops.remotedev.pojo.image.ListImagesData
 import com.tencent.devops.remotedev.pojo.image.ListImagesResp
 import com.tencent.devops.remotedev.pojo.image.ListVmImagesResp
 import com.tencent.devops.remotedev.pojo.image.StandardVmImage
+import com.tencent.devops.remotedev.pojo.remotedev.AvailableResource
+import com.tencent.devops.remotedev.pojo.remotedev.AvailableResourceReq
 import com.tencent.devops.remotedev.pojo.remotedev.BcsResp
 import com.tencent.devops.remotedev.pojo.remotedev.CreateCvmData
 import com.tencent.devops.remotedev.pojo.remotedev.ExpandDiskValidateResp
@@ -292,6 +294,43 @@ class WorkspaceBcsClient @Autowired constructor(
             logger.error("get resource vm SocketTimeoutException.", e)
             throw WorkspaceDispatchException(
                 errorMessage = "获取机器资源接口异常: 接口超时, url: $url"
+            )
+        }
+    }
+
+    fun startGetAvailableResource(
+        provider: String
+    ): List<AvailableResource>? {
+        val url = "$bcsCloudUrl/api/v1/remotedevenv/resource/available"
+        val body = JsonUtil.toJson(AvailableResourceReq(provider), false)
+        val request = Request.Builder()
+            .url(url)
+            .headers(makeHeaders().toHeaders())
+            .post(body.toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull()))
+            .build()
+
+        try {
+            OkhttpUtils.doHttp(request).use { response ->
+                val responseContent = response.body!!.string()
+                logger.info("get available resource body: $body response: ${response.rid()}|$responseContent")
+                if (!response.isSuccessful) {
+                    throw WorkspaceDispatchException(
+                        "获取空闲资源接口异常: ${response.code}"
+                    )
+                }
+                val resp: BcsResp<List<AvailableResource>> = jacksonObjectMapper().readValue(responseContent)
+                if (WorkspaceStartCloudClient.OK == resp.code) {
+                    return resp.data
+                } else {
+                    throw WorkspaceDispatchException(
+                        "获取空闲资源接口异常: ${resp.code}-${resp.message}"
+                    )
+                }
+            }
+        } catch (e: SocketTimeoutException) {
+            logger.error("get available resource SocketTimeoutException.", e)
+            throw WorkspaceDispatchException(
+                errorMessage = "获取空闲资源接口异常: 接口超时, url: $url"
             )
         }
     }

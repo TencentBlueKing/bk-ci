@@ -149,7 +149,9 @@ data class StartBuildContext(
     // 重试插件对应的containerId
     val retryTaskInContainerId: String? = null,
     // 触发事件标识
-    val triggerEventType: String? = null
+    val triggerEventType: String? = null,
+    // 草稿版本号
+    val draftVersion: Int? = null
 ) {
     val watcher: Watcher = Watcher("startBuild-$buildId")
 
@@ -320,7 +322,8 @@ data class StartBuildContext(
             pipelineParamMap: MutableMap<String, BuildParameters>,
             webHookStartParam: MutableMap<String, BuildParameters> = mutableMapOf(),
             triggerReviewers: List<String>? = null,
-            currentBuildNo: Int? = null
+            currentBuildNo: Int? = null,
+            draftVersion: Int? = null
         ): StartBuildContext {
             val buildParam = genOriginStartParamsList(realStartParamKeys, pipelineParamMap)
             val params: Map<String, String> = pipelineParamMap.values.associate { it.key to it.value.toString() }
@@ -397,7 +400,8 @@ data class StartBuildContext(
                 retryTaskInContainerId = params[PIPELINE_RETRY_TASK_IN_CONTAINER_ID],
                 triggerEventType = params[PIPELINE_TRIGGER_EVENT_TYPE]?.let {
                     it.ifBlank { startType.name }
-                } ?: startType.name
+                } ?: startType.name,
+                draftVersion = draftVersion
             )
         }
 
@@ -465,7 +469,8 @@ data class StartBuildContext(
                     params[PIPELINE_GIT_EVENT_URL]
                 },
                 materialId = params[BK_CI_MATERIAL_ID],
-                materialName = params[BK_CI_MATERIAL_NAME]
+                materialName = params[BK_CI_MATERIAL_NAME],
+                channelCode = channelCode.name
             )
         }
 

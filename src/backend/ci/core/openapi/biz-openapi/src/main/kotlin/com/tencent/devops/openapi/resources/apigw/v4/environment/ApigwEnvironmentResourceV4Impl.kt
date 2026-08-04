@@ -44,6 +44,7 @@ import com.tencent.devops.environment.pojo.SharedProjectInfoWrap
 import com.tencent.devops.environment.pojo.enums.EnvType
 import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.environment.pojo.enums.NodeType
+import com.tencent.devops.environment.pojo.envOperate.EnableNodeEnvData
 import com.tencent.devops.environment.pojo.thirdpartyagent.AgentPipelineRef
 import com.tencent.devops.openapi.api.apigw.v4.environment.ApigwEnvironmentResourceV4
 import org.slf4j.LoggerFactory
@@ -327,10 +328,11 @@ class ApigwEnvironmentResourceV4Impl @Autowired constructor(
         envName: String?,
         nodeHashId: String?,
         nodeName: String?,
-        enable: Boolean
+        enable: Boolean,
+        data: EnableNodeEnvData?
     ): Result<Boolean> {
         logger.info("OPENAPI_ENVIRONMENT_V4|$userId|enable env node" +
-                        "|$projectId|$userId|$envHashId|$envName|$nodeHashId|$nodeName|$enable")
+                        "|$projectId|$userId|$envHashId|$envName|$nodeHashId|$nodeName|$enable|$data")
         return client.get(ServiceEnvironmentResource::class).enableNodeEnv(
             userId = userId,
             projectId = projectId,
@@ -338,7 +340,8 @@ class ApigwEnvironmentResourceV4Impl @Autowired constructor(
             envName = envName,
             nodeHashId = nodeHashId,
             nodeName = nodeName,
-            enableNode = enable
+            enableNode = enable,
+            data = data ?: EnableNodeEnvData(reason = "")
         )
     }
 

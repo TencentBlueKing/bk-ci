@@ -26,6 +26,7 @@ import com.tencent.devops.remotedev.pojo.bkrepo.RepoToggleRequest
 import com.tencent.devops.remotedev.pojo.bkrepo.TemporaryTokenCreateRequest
 import com.tencent.devops.remotedev.pojo.bkrepo.TemporaryTokenCreateResponse
 import com.tencent.devops.remotedev.pojo.gitproxy.CreateProjectData
+import com.tencent.devops.remotedev.pojo.record.WorkspaceLiveResolution
 import okhttp3.Headers.Companion.toHeaders
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
@@ -305,6 +306,37 @@ class RemotedevBkRepoClient @Autowired constructor(
             .build()
         val response = doRequest(config, request).resolveResponse<Response<List<TemporaryTokenCreateResponse>>>()
         return response?.data?.firstOrNull()?.token ?: throw RemoteServiceException("create temporary token failed")
+    }
+
+    /**
+     * 获取仓库的rtc链接
+     *
+     * @param region BkRepo区域配置
+     * @param projectId 项目ID
+     * @param repoName 仓库名称
+     * @param userId 用户ID
+     * @param resolution 分辨率
+     * @return 链接
+     */
+    fun getRepoRtc(
+        region: BkRepoRegion,
+        projectId: String,
+        repoName: String,
+        userId: String,
+        resolution: WorkspaceLiveResolution
+    ): String {
+        val config = bkRepoConfig.getRegionConfig(region, true)
+        var url = "${config.url}/media/api/user/stream/$projectId/$repoName/${resolution.value}/rtc"
+        if (config.proxyUrl.isNotBlank()) {
+            url = "${config.proxyUrl}${URLEncoder.encode(url, "UTF8")}"
+        }
+        val request = Request.Builder()
+            .url(url)
+            .headers(getCommonHeaders(region, userId).toHeaders())
+            .get()
+            .build()
+        val response = doRequest(config, request).resolveResponse<Response<String>>()
+        return response?.data ?: ""
     }
 
     private fun getCommonHeaders(

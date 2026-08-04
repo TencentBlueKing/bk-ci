@@ -81,6 +81,26 @@ BEGIN
         ADD`TRIGGER_EVENT_TYPE` VARCHAR(64) DEFAULT NULL comment '触发事件标识';
     END IF;
 
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                      WHERE TABLE_SCHEMA = db
+                        AND TABLE_NAME = 'T_PIPELINE_RESOURCE_VERSION'
+                        AND COLUMN_NAME = 'DRAFT_VERSION') THEN
+        ALTER TABLE T_PIPELINE_RESOURCE_VERSION
+            ADD COLUMN `DRAFT_VERSION` int(11) DEFAULT NULL
+                    COMMENT '来源的草稿版本';
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
+                      FROM information_schema.COLUMNS
+                      WHERE TABLE_SCHEMA = db
+                        AND TABLE_NAME = 'T_PIPELINE_BUILD_HISTORY_DEBUG'
+                            AND COLUMN_NAME = 'DRAFT_VERSION') THEN
+        ALTER TABLE T_PIPELINE_BUILD_HISTORY_DEBUG
+            ADD COLUMN `DRAFT_VERSION` int(11) DEFAULT NULL
+                        COMMENT '来源的草稿版本';
+    END IF;
+
     COMMIT;
 END <CI_UBF>
 DELIMITER ;

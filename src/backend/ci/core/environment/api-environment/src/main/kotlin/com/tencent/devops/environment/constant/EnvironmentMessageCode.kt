@@ -124,6 +124,8 @@ object EnvironmentMessageCode {
     const val ERROR_ENV_STRATEGY_COUNT_EXCEEDED = "2105073" // 环境管理：环境{0}下策略数量超过了项目限制{1}
     const val ERROR_ENV_STRATEGY_TAG_COUNT_EXCEEDED = "2105074" // 环境管理：环境{0}下策略{1}的标签选择器数量超过了项目限制{1}
 
+    const val ERROR_ENV_ADD_NODE_OS_ERROR = "2105075" // 环境管理：环境{0}仅支持系统{1}，节点{2}不支持
+
     const val BK_NORMAL_VERSION = "bkNormalVersion" // 8核16G（普通版）
     const val BK_INTEL_XEON_SKYLAKE_PROCESSOR = "bkIntelXeonSkylakeProcessor" // 2.5GHz 64核 Intel Xeon Skylake 6133处理器
     const val BK_MEMORY = "bkMemory" // 32GB*12 DDR3 内存

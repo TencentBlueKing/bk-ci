@@ -28,12 +28,12 @@ import com.tencent.devops.remotedev.pojo.WhiteListType
 import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
 import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfigType
 import com.tencent.devops.remotedev.pojo.WindowsWorkspaceCreate
+import com.tencent.devops.remotedev.pojo.Workspace
 import com.tencent.devops.remotedev.pojo.WorkspaceCloneReq
 import com.tencent.devops.remotedev.pojo.WorkspaceOpHistory
 import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
 import com.tencent.devops.remotedev.pojo.WorkspaceRebuildReq
 import com.tencent.devops.remotedev.pojo.WorkspaceRegistration
-import com.tencent.devops.remotedev.pojo.Workspace
 import com.tencent.devops.remotedev.pojo.WorkspaceSearch
 import com.tencent.devops.remotedev.pojo.WorkspaceStartCloudDetail
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
@@ -60,12 +60,7 @@ import com.tencent.devops.remotedev.pojo.project.RemotedevProject
 import com.tencent.devops.remotedev.pojo.project.RemotedevProjectNew
 import com.tencent.devops.remotedev.pojo.project.WeSecProjectWorkspace
 import com.tencent.devops.remotedev.pojo.project.WorkspaceProperty
-import com.tencent.devops.remotedev.pojo.record.CheckWorkspaceRecordData
-import com.tencent.devops.remotedev.pojo.record.FetchMetaDataParam
 import com.tencent.devops.remotedev.pojo.record.ThumbnailEncryptedTicketResp
-import com.tencent.devops.remotedev.pojo.record.UserWorkspaceRecordPermissionInfo
-import com.tencent.devops.remotedev.pojo.record.WorkspaceRecordMetadata
-import com.tencent.devops.remotedev.pojo.record.WorkspaceRecordTicketType
 import com.tencent.devops.remotedev.pojo.remotedev.CreateCvmData
 import com.tencent.devops.remotedev.pojo.remotedev.CreateCvmResp
 import com.tencent.devops.remotedev.pojo.remotedev.SyncVmData
@@ -591,8 +586,12 @@ class ServiceRemoteDevResourceImpl(
     override fun reBuildWorkspace(
         userId: String,
         workspaceName: String,
+        projectId: String?,
         rebuildReq: WorkspaceRebuildReq
     ): Result<Boolean> {
+        if (projectId != null) {
+            permissionService.checkUserManager(userId, projectId)
+        }
         rebuildWorkspaceHandler.rebuildWorkspace(
             userId = userId,
             workspaceName = workspaceName,
@@ -601,17 +600,31 @@ class ServiceRemoteDevResourceImpl(
         return Result(true)
     }
 
-    override fun startWorkspace(userId: String, workspaceName: String): Result<Boolean> {
+    override fun startWorkspace(userId: String, projectId: String?, workspaceName: String): Result<Boolean> {
+        if (projectId != null) {
+            permissionService.checkUserManager(userId, projectId)
+        }
         startWorkspaceHandler.startWorkspace(userId, workspaceName)
         return Result(true)
     }
 
-    override fun stopWorkspace(userId: String, workspaceName: String): Result<Boolean> {
+    override fun stopWorkspace(userId: String, projectId: String?, workspaceName: String): Result<Boolean> {
+        if (projectId != null) {
+            permissionService.checkUserManager(userId, projectId)
+        }
         stopWorkspaceHandler.stopWorkspace(userId, workspaceName)
         return Result(true)
     }
 
-    override fun restartWorkspace(userId: String, workspaceName: String, force: Boolean?): Result<Boolean> {
+    override fun restartWorkspace(
+        userId: String,
+        workspaceName: String,
+        projectId: String?,
+        force: Boolean?
+    ): Result<Boolean> {
+        if (projectId != null) {
+            permissionService.checkUserManager(userId, projectId)
+        }
         restartWorkspaceHandler.restartWorkspace(userId, workspaceName, force)
         return Result(true)
     }
@@ -619,8 +632,12 @@ class ServiceRemoteDevResourceImpl(
     override fun makeImageByVm(
         userId: String,
         workspaceName: String,
+        projectId: String?,
         makeImageReq: MakeWorkspaceImageReq
     ): Result<Boolean> {
+        if (projectId != null) {
+            permissionService.checkUserManager(userId, projectId)
+        }
         makeWorkspaceImageHandler.makeWorkspaceImage(
             userId = userId,
             workspaceName = workspaceName,
@@ -669,41 +686,6 @@ class ServiceRemoteDevResourceImpl(
         return Result(true)
     }
 
-    override fun enableWorkspaceRecord(
-        userId: String,
-        projectId: String,
-        workspaceName: String,
-        enable: Boolean
-    ): Result<Boolean> {
-        permissionService.checkUserProjectManager(userId, projectId)
-        workspaceRecordService.enableRecord(
-            workspaceName = workspaceName,
-            enableUser = if (enable) {
-                userId
-            } else {
-                null
-            }
-        )
-        return Result(true)
-    }
-
-    override fun checkWorkspaceEnableAddress(
-        userId: String,
-        appId: Long,
-        ip: String?,
-        mediaGary: Boolean?,
-        envUid: String?
-    ): Result<CheckWorkspaceRecordData> {
-        val (enable, address) = workspaceRecordService.checkRecordAndAddress(
-            userId = userId,
-            appId = appId,
-            ip = ip,
-            mediaGary = mediaGary,
-            envUid = envUid
-        )
-        return Result(CheckWorkspaceRecordData(enable, address))
-    }
-
     override fun checkUserViewWorkspacePermission(userId: String, workspaceName: String): Result<Boolean> {
         return Result(workspaceRecordService.checkWorkspaceUserApproval(workspaceName = workspaceName, userId = userId))
     }
@@ -712,8 +694,12 @@ class ServiceRemoteDevResourceImpl(
         userId: String,
         workspaceName: String,
         size: String,
+        projectId: String?,
         pvcId: String?
     ): Result<ExpandDiskValidateResp?> {
+        if (projectId != null) {
+            permissionService.checkUserManager(userId, projectId)
+        }
         val data = expertSupportService.expandDisk(
             workspaceName = workspaceName,
             userId = userId,
@@ -802,31 +788,6 @@ class ServiceRemoteDevResourceImpl(
         return Result(workspaceService.getProjectWorkspaceList(userId, projectId, page, pageSize, search))
     }
 
-    override fun getUserWorkspaceRecordPermission(
-        userId: String,
-        workspaceName: String
-    ): Result<UserWorkspaceRecordPermissionInfo> {
-        return Result(workspaceRecordService.getUserWorkspaceRecordPermission(userId, workspaceName))
-    }
-
-    override fun updateUserWorkspaceRecordPermission(userId: String, workspaceName: String): Result<Boolean> {
-        workspaceRecordService.updateApprovalRecordViewPermission(userId, workspaceName)
-        return Result(true)
-    }
-
-    override fun getViewRecordMetadata(data: FetchMetaDataParam): Result<Page<WorkspaceRecordMetadata>> {
-        return Result(
-            workspaceRecordService.getWorkspaceRecordMetadata(
-                projectId = data.projectId,
-                userId = data.userId,
-                workspaceName = data.workspaceName,
-                page = data.page,
-                pageSize = data.pageSize,
-                startTime = data.startTime,
-                stopTime = data.stopTime
-            )
-        )
-    }
 
     override fun getWorkspaceTimeline(
         userId: String,
@@ -844,19 +805,6 @@ class ServiceRemoteDevResourceImpl(
         )
     }
 
-    override fun getWorkspaceRecordTicket(
-        userId: String,
-        workspaceName: String,
-        token: String
-    ): Result<String> {
-        return Result(
-            workspaceRecordService.getWorkspaceRecordTicket(
-                workspaceName = workspaceName,
-                token = token,
-                type = WorkspaceRecordTicketType.RECORD
-            )
-        )
-    }
 
     override fun getThumbnailEncryptedTicket(
         userId: String,
@@ -889,7 +837,10 @@ class ServiceRemoteDevResourceImpl(
         )
     }
 
-    override fun fetchImages(userId: String, data: ListImagesData): Result<ListImagesResp?> {
+    override fun fetchImages(userId: String, projectId: String?, data: ListImagesData): Result<ListImagesResp?> {
+        if (projectId != null) {
+            permissionService.checkUserManager(userId, projectId)
+        }
         return Result(imageManageService.fetchImages(userId, data))
     }
 
@@ -976,7 +927,7 @@ class ServiceRemoteDevResourceImpl(
         userId: String,
         data: TGitBindRemotedevData
     ): Result<Map<String, Boolean>> {
-        return Result(tGitBindService.bindTGitProject(userId, data.tgitId, data.tgitUrl, data.projectIds))
+        return Result(tGitBindService.bindTGitProject(userId, data))
     }
 
     override fun cdsWebhookEvent(
@@ -998,16 +949,8 @@ class ServiceRemoteDevResourceImpl(
         return Result(true)
     }
 
-    override fun openClawOn(userId: String): Result<WorkspaceRegistration?> {
-        return Result(coffeeAIService.openClawOn(userId))
-    }
-
-    override fun checkViewLive(
-        userId: String,
-        projectId: String,
-        workspaceName: String
-    ): Result<Boolean> {
-        return Result(workspaceRecordService.checkViewLive(userId, projectId, workspaceName))
+    override fun openClawOn(userId: String, workspaceName: String?, ip: String?): Result<WorkspaceRegistration?> {
+        return Result(coffeeAIService.openClawOn(userId, workspaceName, ip))
     }
 
     override fun convertToPublicWorkspace(

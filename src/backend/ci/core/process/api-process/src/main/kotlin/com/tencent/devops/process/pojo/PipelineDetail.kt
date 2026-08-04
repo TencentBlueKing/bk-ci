@@ -58,6 +58,8 @@ data class PipelineDetail(
     val version: Int,
     @get:Schema(title = "草稿或最新的发布版本名称")
     val versionName: String?,
+    @get:Schema(title = "草稿或最新的发布版本状态")
+    val versionStatus: VersionStatus?,
     @get:Schema(title = "草稿的基准版本（存在草稿才有值）", required = false)
     val baseVersion: Int?,
     @get:Schema(title = "草稿的基准版本的状态（存在草稿才有值）", required = false)
@@ -95,5 +97,7 @@ data class PipelineDetail(
     @get:Schema(title = "运行锁定", required = false)
     val locked: Boolean,
     @get:Schema(title = "构建取消权限策略", required = false)
-    var buildCancelPolicy: BuildCancelPolicy? = BuildCancelPolicy.EXECUTE_PERMISSION
+    var buildCancelPolicy: BuildCancelPolicy? = BuildCancelPolicy.EXECUTE_PERMISSION,
+    @get:Schema(title = "草稿版本号", required = false)
+    val draftVersion: Int? = null
 )

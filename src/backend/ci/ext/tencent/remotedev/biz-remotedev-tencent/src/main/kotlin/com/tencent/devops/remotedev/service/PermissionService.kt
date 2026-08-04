@@ -96,7 +96,7 @@ class PermissionService @Autowired constructor(
 
     private val workspaceOwnerCache = CacheBuilder.newBuilder()
         .maximumSize(10000)
-        .expireAfterWrite(1, TimeUnit.MINUTES)
+        .expireAfterWrite(1, TimeUnit.SECONDS)
         .build(
             object : CacheLoader<String, List<String>>() {
                 override fun load(name: String): List<String> {
@@ -116,7 +116,7 @@ class PermissionService @Autowired constructor(
 
     private val workspaceViewerCache = CacheBuilder.newBuilder()
         .maximumSize(10000)
-        .expireAfterWrite(1, TimeUnit.MINUTES)
+        .expireAfterWrite(1, TimeUnit.SECONDS)
         .build(
             object : CacheLoader<String, List<String>>() {
                 override fun load(name: String): List<String> {

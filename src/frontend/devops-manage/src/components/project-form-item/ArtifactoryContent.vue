@@ -511,7 +511,7 @@ async function handleDelete (row) {
     headerAlign: 'center',
     footerAlign: 'center',
     onConfirm: () => {
-      const index = metadataList.value.findIndex(item => item.id === row.id);
+      const index = metadataList.value.findIndex(item => item.labelKey === row.labelKey);
       if (index !== -1) {
         metadataList.value.splice(index, 1);
         updateMetadata();

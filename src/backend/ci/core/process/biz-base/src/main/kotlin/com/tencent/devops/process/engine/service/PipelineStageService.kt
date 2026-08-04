@@ -38,6 +38,7 @@ import com.tencent.devops.common.event.enums.PipelineBuildStatusBroadCastEventTy
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildQualityCheckBroadCastEvent
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildReviewBroadCastEvent
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCastEvent
+import com.tencent.devops.common.notify.enums.NotifyType
 import com.tencent.devops.common.notify.utils.NotifyUtils
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ManualReviewAction
@@ -694,6 +695,9 @@ class PipelineStageService @Autowired constructor(
             )
             return
         }
+        val notifyType = NotifyUtils.checkNotifyType(checkIn.notifyType)
+        // 勾选企业微信群消息时，群通知通过 mentioned_list @审核人（与人工审核插件一致）
+        val mentionReceivers = notifyType.contains(NotifyType.WEWORK_GROUP.name)
         pipelineEventDispatcher.dispatch(
             PipelineBuildReviewBroadCastEvent(
                 source = "s(${stage.stageId}) waiting for REVIEW",
@@ -726,9 +730,9 @@ class PipelineStageService @Autowired constructor(
                 position = ControlPointPosition.BEFORE_POSITION,
                 stageSeq = stage.seq,
                 stageId = stage.stageId,
-                notifyType = NotifyUtils.checkNotifyType(checkIn.notifyType),
+                notifyType = notifyType,
                 markdownContent = checkIn.markdownContent,
-                mentionReceivers = true
+                mentionReceivers = mentionReceivers
             )
         )
         // #7971 无指定通知类型时、或者触发人是审核人时，不去通知触发人。

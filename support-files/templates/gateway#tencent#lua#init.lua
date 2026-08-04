@@ -52,6 +52,16 @@ config = {
             backlog = 10,           -- 连接等待队列
             ssl = false,
             tag = "kubernetes-auto"
+        },
+        creative_redis = {
+            host = "__CREATIVE_REDIS_IP0__",
+            port = __CREATIVE_REDIS_PORT__,
+            pass = "__CREATIVE_REDIS_PASS__", -- redis 密码，没有密码的话，把这行注释掉
+            database = __CREATIVE_REDIS_DB__, -- 默认选择db0
+            max_idle_time = 30000,  -- 保留在连接池的时间
+            pool_size = 10,           -- 连接池的大小
+            backlog = 10,           -- 连接等待队列
+            ssl = false
         }
     },
     oauth = { -- 对接蓝鲸权限中心才需要的配置
@@ -131,7 +141,9 @@ config = {
             token = "__BK_CI_KUBERNETES_API_TOKEN__"
         },
         special_domain = {},
-        auto_prefix = "__BK_CI_KUBERNETES_AUTO_PREFIX__"
+        auto_prefix = "__BK_CI_KUBERNETES_AUTO_PREFIX__",
+        creative_host_suffix = "__BK_CI_CREATIVE_HOST_SUFFIX__",
+        creative_namespace = "__BK_CI_CREATIVE_NAMESPACE__"
     },
     external_auth = {
         base_url = "http://__BKCI_FQDN__",

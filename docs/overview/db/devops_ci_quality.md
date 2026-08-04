@@ -2,7 +2,7 @@
 
 **数据库名：** devops_ci_quality
 
-**文档版本：** 1.0.20
+**文档版本：** 1.0.22
 
 **文档描述：** devops_ci_quality 的数据库文档
 | 表名                  | 说明       |
@@ -179,9 +179,9 @@
 | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
 |  1   | ID |   bigint   | 20 |   0    |    N     |  Y   |       | 主键 ID  |
 |  2   | ELEMENT_TYPE |   varchar   | 64 |   0    |    Y     |  N   |       | 原子的 ClassType  |
-|  3   | NAME |   varchar   | 64 |   0    |    Y     |  N   |       | 控制点名称(原子名称)  |
+|  3   | NAME |   varchar   | 64 |   0    |    Y     |  N   |       | 控制点名称（原子名称）  |
 |  4   | STAGE |   varchar   | 64 |   0    |    Y     |  N   |       | 研发阶段  |
-|  5   | AVAILABLE_POSITION |   varchar   | 64 |   0    |    Y     |  N   |       | 支持红线位置(准入-BEFORE,准出-AFTER)  |
+|  5   | AVAILABLE_POSITION |   varchar   | 64 |   0    |    Y     |  N   |       | 支持红线位置（准入-BEFORE，准出-AFTER）  |
 |  6   | DEFAULT_POSITION |   varchar   | 64 |   0    |    Y     |  N   |       | 默认红线位置  |
 |  7   | ENABLE |   bit   | 1 |   0    |    Y     |  N   |       | 是否启用  |
 |  8   | CREATE_USER |   varchar   | 64 |   0    |    Y     |  N   |       | 创建用户  |
@@ -458,7 +458,7 @@
 |  7   | TASK_ID |   varchar   | 64 |   0    |    N     |  N   |       | 任务 ID  |
 |  8   | THRESHOLD |   text   | 65535 |   0    |    N     |  N   |       | 默认阈值  |
 |  9   | INDICATOR_RANGE |   text   | 65535 |   0    |    Y     |  N   |       | 指标范围  |
-|  10   | RANGE_IDENTIFICATION |   text   | 65535 |   0    |    N     |  N   |       | ANY-项目 ID 集合,PART_BY_NAME-空集合  |
+|  10   | RANGE_IDENTIFICATION |   text   | 65535 |   0    |    N     |  N   |       | ANY-项目 ID 集合，PART_BY_NAME-空集合  |
 |  11   | OPERATION |   varchar   | 32 |   0    |    N     |  N   |       | 可选操作  |
 |  12   | OPERATION_END_NOTIFY_TYPE |   varchar   | 128 |   0    |    Y     |  N   |       | 操作结束通知类型  |
 |  13   | OPERATION_END_NOTIFY_GROUP |   text   | 65535 |   0    |    Y     |  N   |       | 操作结束通知用户组  |

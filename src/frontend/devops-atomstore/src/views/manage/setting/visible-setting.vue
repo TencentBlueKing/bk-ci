@@ -6,7 +6,7 @@
                 @click="showDialog = true"
                 :disabled="!userInfo.isProjectAdmin"
             >
-                {{ $t('store.添加') }}
+                {{ isDevx ? $t('store.添加范围') : $t('store.添加') }}
             </bk-button>
             <bk-button
                 @click="bitchrRemove"
@@ -37,8 +37,18 @@
                 ></bk-table-column>
                 <bk-table-column
                     :label="$t('store.可见对象')"
-                    prop="deptName"
-                ></bk-table-column>
+                    prop="visibleName"
+                >
+                    <template slot-scope="props">
+                        <span v-if="routeType !== 'devx'">{{ props.row.visibleName }}</span>
+                        <p v-else>
+                            <span :class="['type-tag', props.row.visibleType === 'dept' ? 'type-dept' : 'type-project']">
+                                {{ props.row.visibleType === 'dept' ? $t('store.组织') : $t('store.项目') }}
+                            </span>
+                            <span>{{ props.row.visibleName }}</span>
+                        </p>
+                    </template>
+                </bk-table-column>
                 <bk-table-column :label="$t('store.状态')">
                     <template slot-scope="props">
                         <span>{{ statusMap[props.row.status] }}</span>
@@ -70,6 +80,7 @@
         <VisibleRangeDialog
             :show-dialog="showDialog"
             :is-loading="isSaveOrg"
+            :route-type="routeType"
             @saveHandle="saveHandle"
             @cancelHandle="cancelHandle"
         >
@@ -125,6 +136,12 @@
 
             isEnterprise () {
                 return VERSION_TYPE === 'ee'
+            },
+            routeType () {
+                return this.$route.params.type
+            },
+            isDevx () {
+                return this.routeType === 'devx'
             }
         },
 
@@ -141,11 +158,33 @@
                     service: () => this.$store.dispatch('store/requestServiceVisableList', this.detail.serviceCode),
                     devx: () => this.$store.dispatch('store/getVisibilitiesList', this.detail.storeCode)
                 }
-                const type = this.$route.params.type
+                
                 this.isLoading = true
-                initMethodMap[type]().then((res = {}) => {
-                    const deptInfos = res.deptInfos || []
-                    this.visibleList = deptInfos.map((x) => {
+                initMethodMap[this.routeType]().then((res = {}) => {
+                    let list = []
+                    if (this.routeType === 'devx') {
+                        // 云研发模式
+                        const deptInfos = (res.deptInfos || []).map(item => ({
+                            ...item,
+                            visibleName: item.deptName,
+                            visibleId: item.deptId,
+                            visibleType: 'dept'
+                        }))
+                        const projectInfos = (res.projectInfos || []).map(item => ({
+                            ...item,
+                            visibleName: item.projectName,
+                            visibleId: item.projectCode,
+                            visibleType: 'project'
+                        }))
+                        list = [...deptInfos, ...projectInfos]
+                    } else {
+                        list = (res.deptInfos || []).map(item => ({
+                            ...item,
+                            visibleName: item.deptName,
+                            visibleId: item.deptId
+                        }))
+                    }
+                    this.visibleList = list.map((x) => {
                         x.selected = false
                         return x
                     })
@@ -162,15 +201,14 @@
 
             selectAll (selection = []) {
                 this.visibleList.forEach((item) => {
-                    const isSelected = selection.findIndex((x) => x.deptId === item.deptId) > -1
+                    const isSelected = selection.findIndex((x) => x.visibleId === item.visibleId) > -1
                     item.selected = isSelected
                 })
             },
 
             saveHandle (params) {
-                const type = this.$route.params.type
                 let method
-                switch (type) {
+                switch (this.routeType) {
                     case 'atom':
                         params.atomCode = this.detail.atomCode
                         method = () => this.$store.dispatch('store/setVisableDept', { params })
@@ -209,12 +247,7 @@
             },
 
             bitchrRemove () {
-                const target = this.visibleList.filter(val => {
-                    if (val.selected) {
-                        return val.deptId || val.deptId === 0
-                    }
-                    return false
-                })
+                const target = this.visibleList.filter(val => val.selected)
                 if (!target.length) {
                     this.$bkMessage({
                         message: this.$t('store.请至少选择一个可见对象'),
@@ -224,40 +257,58 @@
                 } else {
                     this.deleteObj.show = true
                     this.deleteObj.name = ''
-                    this.deleteObj.id = target.map(val => val.deptId).join(',')
+                    this.deleteObj.target = target
                 }
             },
 
             handleDelete (row) {
                 if (!this.userInfo.isProjectAdmin) return
                 this.deleteObj.show = true
-                this.deleteObj.name = row.deptName
-                this.deleteObj.id = row.deptId
+                this.deleteObj.name = row.visibleName
+                this.deleteObj.target = [row]
             },
 
             requestDeleteVisiable () {
-                const deptIds = this.deleteObj.id
-                const deleteMethodMap = {
-                    atom: () => this.$store.dispatch('store/requestDeleteVisiable', { atomCode: this.detail.atomCode, deptIds }),
-                    template: () => this.$store.dispatch('store/deleteTplVisiable', { templateCode: this.detail.templateCode, deptIds }),
-                    image: () => this.$store.dispatch('store/requestDeleteImageVis', { imageCode: this.detail.imageCode, deptIds }),
-                    service: () => this.$store.dispatch('store/requestDeleteServiceVis', { serviceCode: this.detail.serviceCode, deptIds }),
-                    devx: () => this.$store.dispatch('store/deleteVisibilitiesList', { storeCode: this.detail.storeCode, deptIds })
+                const target = this.deleteObj.target || []
+                let promise
+
+                // atom、template、image、service 四种类型的配置
+                const deleteConfigMap = {
+                    atom: { action: 'store/requestDeleteVisiable', codeField: 'atomCode' },
+                    template: { action: 'store/deleteTplVisiable', codeField: 'templateCode' },
+                    image: { action: 'store/requestDeleteImageVis', codeField: 'imageCode' },
+                    service: { action: 'store/requestDeleteServiceVis', codeField: 'serviceCode' }
                 }
-                const type = this.$route.params.type
-                this.deleteObj.loading = true
-                deleteMethodMap[type]().then(() => {
-                    (String(deptIds).split(',')).forEach(id => {
-                        const index = this.visibleList.findIndex(x => String(x.deptId) === String(id))
-                        this.visibleList.splice(index, 1)
+
+                const config = deleteConfigMap[this.routeType]
+                if (config) {
+                    const deptIds = target.map(item => item.visibleId).join(',')
+                    const params = { deptIds }
+                    params[config.codeField] = this.detail[config.codeField]
+                    promise = this.$store.dispatch(config.action, params)
+                } else if (this.routeType === 'devx') {
+                    // 云研发模式：分别处理组织和项目
+                    const deptIds = target.filter(item => item.visibleType === 'dept').map(item => item.visibleId)
+                    const projectCodes = target.filter(item => item.visibleType === 'project').map(item => item.visibleId)
+                    const params = { storeCode: this.detail.storeCode }
+                    if (deptIds.length) params.deptIds = deptIds
+                    if (projectCodes.length) params.projectCodes = projectCodes
+                    promise = this.$store.dispatch('store/deleteVisibilitiesList', params)
+                }
+
+                if (promise) {
+                    this.deleteObj.loading = true
+                    promise.then(() => {
+                        this.requestList()
+                        this.$bkMessage({ message: this.$t('store.删除成功'), theme: 'success' })
+                    }).catch((err) => {
+                        this.$bkMessage({ message: err.message || err, theme: 'error' })
+                    }).finally(() => {
+                        this.deleteObj.loading = false
+                        this.deleteObj.show = false
+                        this.deleteObj.target = null
                     })
-                    this.$bkMessage({ message: this.$t('store.删除成功'), theme: 'success' })
-                }).catch((err) => {
-                    this.$bkMessage({ message: err.message || err, theme: 'error' })
-                }).finally(() => {
-                    this.deleteObj.loading = false
-                    this.deleteObj.show = false
-                })
+                }
             }
         }
     }
@@ -285,6 +336,22 @@
         .disable {
             cursor: not-allowed;
             color: #bcbcbc;
+        }
+        .type-tag {
+            display: inline-block;
+            padding: 0 6px;
+            border-radius: 2px;
+            line-height: 16px;
+            margin-right: 8px;
+            font-size: 10px;
+        }
+        .type-dept {
+            color: #1768EF;
+            background-color: #E1ECFF;
+        }
+        .type-project {
+            color: #299E56;
+            background-color: #DAF6E5;
         }
     }
 </style>

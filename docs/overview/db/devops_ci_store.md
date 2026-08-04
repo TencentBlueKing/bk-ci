@@ -2,7 +2,7 @@
 
 **数据库名：** devops_ci_store
 
-**文档版本：** 1.0.20
+**文档版本：** 1.0.22
 
 **文档描述：** devops_ci_store 的数据库文档
 | 表名                  | 说明       |
@@ -72,6 +72,7 @@
 | T_STORE_PIPELINE_REL | 商店组件与与流水线关联关系表 |
 | T_STORE_PKG_RUN_ENV_INFO | 组件安装包运行时环境信息表 |
 | T_STORE_PROJECT_REL | 商店组件与项目关联关系表 |
+| T_STORE_PROJECT_VISIBLE_REL | 商店组件与项目可见范围关联关系表 |
 | T_STORE_PUBLISHER_INFO | 发布者信息表 |
 | T_STORE_PUBLISHER_MEMBER_REL | 发布者成员关联关系表 |
 | T_STORE_RELEASE | store 组件发布升级信息表 |
@@ -174,7 +175,10 @@
 |  38   | BRANCH |   varchar   | 128 |   0    |    Y     |  N   |   master    | 代码库分支  |
 |  39   | BRANCH_TEST_FLAG |   bit   | 1 |   0    |    Y     |  N   |   b'0'    | 是否是分支测试版本  |
 |  40   | LATEST_TEST_FLAG |   bit   | 1 |   0    |    Y     |  N   |   b'0'    | 是否为最新测试版本原子，TRUE：最新 FALSE：非最新  |
-|  41   | CLASSIFY_ID_MAP |   text   | 65535 |   0    |    Y     |  N   |       | 多服务范围分类映射，JSON 格式：{"PIPELINE":"classifyId1","CREATIVE_STREAM":"classifyId2"}  |
+|  41   | JOB_TYPE_MAP |   text   | 65535 |   0    |    Y     |  N   |       | 多服务范围 Job 类型映射，JSON 格式：{"PIPELINE":["AGENT"],"CREATIVE_STREAM":["CREATIVE_STREAM","CLOUD_TASK"]}  |
+|  42   | CLASSIFY_ID_MAP |   text   | 65535 |   0    |    Y     |  N   |       | 多服务范围分类映射，JSON 格式：{"PIPELINE":"classifyId1","CREATIVE_STREAM":"classifyId2"}  |
+|  43   | OS_MAP |   text   | 65535 |   0    |    Y     |  N   |       | 多 JobType 操作系统映射，JSON 格式：{"AGENT":["WINDOWS","LINUX","MACOS"],"CREATIVE_STREAM":["WINDOWS"]}  |
+|  44   | OWNER_STORE_CODE |   varchar   | 64 |   0    |    Y     |  N   |       | 归属应用标识  |
 
 **表名：** <a>T_ATOM_APPROVE_REL</a>
 
@@ -203,7 +207,7 @@
 | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
 |  1   | ID |   varchar   | 32 |   0    |    N     |  Y   |       | 主键 ID  |
 |  2   | BUILD_INFO_ID |   varchar   | 32 |   0    |    N     |  N   |       | 构建信息 Id  |
-|  3   | APP_VERSION_ID |   int   | 10 |   0    |    Y     |  N   |       | 编译环境版本 Id(对应 T_APP_VERSION 主键)  |
+|  3   | APP_VERSION_ID |   int   | 10 |   0    |    Y     |  N   |       | 编译环境版本 Id（对应 T_APP_VERSION 主键）  |
 |  4   | CREATOR |   varchar   | 50 |   0    |    N     |  N   |   system    | 创建者  |
 |  5   | MODIFIER |   varchar   | 50 |   0    |    N     |  N   |   system    | 修改者  |
 |  6   | CREATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 创建时间  |
@@ -240,8 +244,8 @@
 |  2   | LANGUAGE |   varchar   | 64 |   0    |    N     |  N   |       | 插件开发语言  |
 |  3   | ENV_KEY |   varchar   | 64 |   0    |    N     |  N   |       | 环境变量 key 值  |
 |  4   | ENV_VALUE |   varchar   | 256 |   0    |    N     |  N   |       | 环境变量 value 值  |
-|  5   | BUILD_HOST_TYPE |   varchar   | 32 |   0    |    N     |  N   |       | 适用构建机类型 PUBLIC:公共构建机，THIRD:第三方构建机，ALL:所有  |
-|  6   | BUILD_HOST_OS |   varchar   | 32 |   0    |    N     |  N   |       | 适用构建机操作系统 WINDOWS:windows构建机，LINUX:linux构建机，MAC_OS:mac构建机，ALL:所有  |
+|  5   | BUILD_HOST_TYPE |   varchar   | 32 |   0    |    N     |  N   |       | 适用构建机类型 PUBLIC：公共构建机，THIRD：第三方构建机，ALL：所有  |
+|  6   | BUILD_HOST_OS |   varchar   | 32 |   0    |    N     |  N   |       | 适用构建机操作系统 WINDOWS:windows构建机，LINUX:linux构建机，MAC_OS:mac构建机，ALL：所有  |
 |  7   | CREATOR |   varchar   | 50 |   0    |    N     |  N   |   system    | 创建人  |
 |  8   | MODIFIER |   varchar   | 50 |   0    |    N     |  N   |   system    | 最近修改人  |
 |  9   | CREATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 创建时间  |
@@ -527,7 +531,7 @@
 |  12   | IMAGE_SIZE |   varchar   | 20 |   0    |    N     |  N   |       | 镜像大小  |
 |  13   | IMAGE_TAG |   varchar   | 256 |   0    |    Y     |  N   |       | 镜像 tag  |
 |  14   | LOGO_URL |   varchar   | 256 |   0    |    Y     |  N   |       | logo 地址  |
-|  15   | ICON |   text   | 65535 |   0    |    Y     |  N   |       | 镜像图标(BASE64 字符串)  |
+|  15   | ICON |   text   | 65535 |   0    |    Y     |  N   |       | 镜像图标（BASE64 字符串）  |
 |  16   | SUMMARY |   varchar   | 256 |   0    |    Y     |  N   |       | 镜像简介  |
 |  17   | DESCRIPTION |   text   | 65535 |   0    |    Y     |  N   |       | 镜像描述  |
 |  18   | PUBLISHER |   varchar   | 50 |   0    |    N     |  N   |   system    | 镜像发布者  |
@@ -738,7 +742,7 @@
 |  10   | SUMMARY |   varchar   | 256 |   0    |    Y     |  N   |       | 组件简介  |
 |  11   | DESCRIPTION |   mediumtext   | 16777215 |   0    |    Y     |  N   |       | 组件描述  |
 |  12   | LATEST_FLAG |   bit   | 1 |   0    |    N     |  N   |       | 是否为最新版本，TRUE：最新 FALSE：非最新  |
-|  13   | PUBLISHER |   varchar   | 1024 |   0    |    N     |  N   |   system    | 发布者,对应 T_STORE_PUBLISHER_INFO 表的 PUBLISHER_NAME 字段  |
+|  13   | PUBLISHER |   varchar   | 1024 |   0    |    N     |  N   |   system    | 发布者，对应 T_STORE_PUBLISHER_INFO 表的 PUBLISHER_NAME 字段  |
 |  14   | PUB_TIME |   datetime   | 23 |   0    |    Y     |  N   |       | 发布时间  |
 |  15   | CLASSIFY_ID |   varchar   | 32 |   0    |    N     |  N   |       | 所属分类 ID  |
 |  16   | BUS_NUM |   bigint   | 20 |   0    |    Y     |  N   |       | 业务序号  |
@@ -746,6 +750,7 @@
 |  18   | MODIFIER |   varchar   | 50 |   0    |    N     |  N   |   system    | 最近修改人  |
 |  19   | UPDATE_TIME |   datetime   | 23 |   0    |    N     |  N   |   CURRENT_TIMESTAMP(3)    | 修改时间  |
 |  20   | CREATE_TIME |   datetime   | 23 |   0    |    N     |  N   |   CURRENT_TIMESTAMP(3)    | 创建时间  |
+|  21   | OWNER_STORE_CODE |   varchar   | 64 |   0    |    Y     |  N   |       | 归属应用标识  |
 
 **表名：** <a>T_STORE_BASE_ENV</a>
 
@@ -862,8 +867,8 @@
 | 序号 | 名称 | 数据类型 |  长度  | 小数位 | 允许空值 | 主键 | 默认值 | 说明 |
 | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
 |  1   | ID |   varchar   | 32 |   0    |    N     |  Y   |       | 主键  |
-|  2   | BUILD_INFO_ID |   varchar   | 32 |   0    |    N     |  N   |       | 构建信息 Id(对应 T_STORE_BUILD_INFO 主键)  |
-|  3   | APP_VERSION_ID |   int   | 10 |   0    |    Y     |  N   |       | 编译环境版本 Id(对应 T_APP_VERSION 主键)  |
+|  2   | BUILD_INFO_ID |   varchar   | 32 |   0    |    N     |  N   |       | 构建信息 Id（对应 T_STORE_BUILD_INFO 主键）  |
+|  3   | APP_VERSION_ID |   int   | 10 |   0    |    Y     |  N   |       | 编译环境版本 Id（对应 T_APP_VERSION 主键）  |
 |  4   | CREATOR |   varchar   | 50 |   0    |    N     |  N   |   system    | 创建人  |
 |  5   | MODIFIER |   varchar   | 50 |   0    |    N     |  N   |   system    | 最近修改人  |
 |  6   | CREATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 创建时间  |
@@ -1071,7 +1076,7 @@
 | 序号 | 名称 | 数据类型 |  长度  | 小数位 | 允许空值 | 主键 | 默认值 | 说明 |
 | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
 |  1   | ID |   varchar   | 32 |   0    |    N     |  Y   |       | 主键  |
-|  2   | STORE_CODE |   varchar   | 64 |   0    |    Y     |  N   |       | 组件代码,为空则表示属于通用错误码  |
+|  2   | STORE_CODE |   varchar   | 64 |   0    |    Y     |  N   |       | 组件代码，为空则表示属于通用错误码  |
 |  3   | ERROR_CODE |   int   | 10 |   0    |    N     |  N   |       | 错误码  |
 |  4   | STORE_TYPE |   tinyint   | 4 |   0    |    Y     |  N   |       | 组件类型 0：插件 1：模板  |
 |  5   | CREATOR |   varchar   | 50 |   0    |    N     |  N   |   system    | 创建人  |
@@ -1127,12 +1132,12 @@
 |  2   | INDEX_CODE |   varchar   | 64 |   0    |    N     |  N   |       | 指标标识  |
 |  3   | INDEX_NAME |   varchar   | 64 |   0    |    N     |  N   |       | 指标名称  |
 |  4   | DESCRIPTION |   text   | 65535 |   0    |    Y     |  N   |       | 描述  |
-|  5   | OPERATION_TYPE |   varchar   | 32 |   0    |    N     |  N   |       | 运算类型 ATOM:插件 PLATFORM:平台  |
+|  5   | OPERATION_TYPE |   varchar   | 32 |   0    |    N     |  N   |       | 运算类型 ATOM：插件 PLATFORM：平台  |
 |  6   | ATOM_CODE |   varchar   | 64 |   0    |    Y     |  N   |       | 指标对应的插件件代码  |
 |  7   | ATOM_VERSION |   varchar   | 64 |   0    |    Y     |  N   |       | 指标对应的插件版本  |
 |  8   | FINISH_TASK_NUM |   int   | 10 |   0    |    Y     |  N   |       | 完成执行任务数量  |
 |  9   | TOTAL_TASK_NUM |   int   | 10 |   0    |    Y     |  N   |       | 执行任务总数  |
-|  10   | EXECUTE_TIME_TYPE |   varchar   | 32 |   0    |    N     |  N   |       | 执行时间类型 INDEX_CHANGE:指标变动 COMPONENT_UPGRADE:组件升级 CRON:定时  |
+|  10   | EXECUTE_TIME_TYPE |   varchar   | 32 |   0    |    N     |  N   |       | 执行时间类型 INDEX_CHANGE：指标变动 COMPONENT_UPGRADE：组件升级 CRON：定时  |
 |  11   | STORE_TYPE |   tinyint   | 4 |   0    |    N     |  N   |   0    | store 组件类型 0：插件 1：模板 2：镜像 3：IDE 插件 4：微扩展  |
 |  12   | CREATOR |   varchar   | 50 |   0    |    N     |  N   |   system    | 创建者  |
 |  13   | MODIFIER |   varchar   | 50 |   0    |    N     |  N   |   system    | 修改者  |
@@ -1226,7 +1231,7 @@
 |  1   | ID |   varchar   | 32 |   0    |    N     |  Y   |       | 主键  |
 |  2   | STORE_CODE |   varchar   | 64 |   0    |    N     |  N   |       | store 组件标识  |
 |  3   | MEDIA_URL |   varchar   | 256 |   0    |    N     |  N   |       | 媒体资源链接  |
-|  4   | MEDIA_TYPE |   varchar   | 32 |   0    |    N     |  N   |       | 媒体资源类型 PICTURE:图片 VIDEO:视频  |
+|  4   | MEDIA_TYPE |   varchar   | 32 |   0    |    N     |  N   |       | 媒体资源类型 PICTURE：图片 VIDEO：视频  |
 |  5   | STORE_TYPE |   tinyint   | 4 |   0    |    N     |  N   |   0    | store 组件类型 0：插件 1：模板 2：镜像 3：IDE 插件 4：微扩展  |
 |  6   | CREATOR |   varchar   | 50 |   0    |    N     |  N   |   system    | 创建人  |
 |  7   | MODIFIER |   varchar   | 50 |   0    |    N     |  N   |   system    | 最近修改人  |
@@ -1302,7 +1307,7 @@
 |  6   | CREATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 创建时间  |
 |  7   | UPDATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 更新时间  |
 |  8   | STORE_TYPE |   tinyint   | 4 |   0    |    N     |  N   |   0    | 商店组件类型 0：插件 1：模板 2：镜像 3：IDE 插件  |
-|  9   | BUS_TYPE |   varchar   | 32 |   0    |    N     |  N   |   BUILD    | 业务类型 BUILD:构建 INDEX:研发商店指标  |
+|  9   | BUS_TYPE |   varchar   | 32 |   0    |    N     |  N   |   BUILD    | 业务类型 BUILD：构建 INDEX：研发商店指标  |
 |  10   | PROJECT_CODE |   varchar   | 64 |   0    |    N     |  N   |       | 项目代码  |
 
 **表名：** <a>T_STORE_PKG_RUN_ENV_INFO</a>
@@ -1347,6 +1352,24 @@
 |  10   | CREATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 创建时间  |
 |  11   | UPDATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 更新时间  |
 |  12   | STORE_TYPE |   tinyint   | 4 |   0    |    N     |  N   |   0    | store 组件类型  |
+
+**表名：** <a>T_STORE_PROJECT_VISIBLE_REL</a>
+
+**说明：** 商店组件与项目可见范围关联关系表
+
+**数据列：**
+
+| 序号 | 名称 | 数据类型 |  长度  | 小数位 | 允许空值 | 主键 | 默认值 | 说明 |
+| :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+|  1   | ID |   varchar   | 32 |   0    |    N     |  Y   |       | 主键 ID  |
+|  2   | STORE_CODE |   varchar   | 64 |   0    |    N     |  N   |       | store 组件编码  |
+|  3   | STORE_TYPE |   tinyint   | 4 |   0    |    N     |  N   |   0    | store 组件类型  |
+|  4   | PROJECT_CODE |   varchar   | 64 |   0    |    N     |  N   |       | 项目编码  |
+|  5   | PROJECT_NAME |   varchar   | 256 |   0    |    Y     |  N   |       | 项目名称  |
+|  6   | CREATOR |   varchar   | 50 |   0    |    N     |  N   |   system    | 创建者  |
+|  7   | MODIFIER |   varchar   | 50 |   0    |    N     |  N   |   system    | 修改者  |
+|  8   | CREATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 创建时间  |
+|  9   | UPDATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 更新时间  |
 
 **表名：** <a>T_STORE_PUBLISHER_INFO</a>
 

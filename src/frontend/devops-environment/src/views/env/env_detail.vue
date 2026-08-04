@@ -12,6 +12,7 @@
                     {{ currentEnv?.name || '--' }}
                 </span>
                 <bk-tag>{{ envNodeTypeDisplayName }}</bk-tag>
+                <bk-tag v-if="currentEnv?.os">{{ osDisplayName }}</bk-tag>
                 <span
                     v-if="!isCreateResType"
                     class="env-type-tag"
@@ -64,7 +65,8 @@
     import useEnvDetail from '@/hooks/useEnvDetail'
     import useInstance from '@/hooks/useInstance'
     import {
-        ENV_TYPE_MAP
+        ENV_TYPE_MAP,
+        OS_LABEL_MAP
     } from '@/store/constants'
     import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
     import emptyNode from '../empty_node'
@@ -142,6 +144,10 @@
                     'NODE': proxy.$t('environment.static')
                 }
                 return envNodeTypeMap[currentEnv.value?.envNodeType]
+            })
+            const osDisplayName = computed(() => {
+                const os = currentEnv.value?.os
+                return os ? (OS_LABEL_MAP[os] || os) : ''
             })
             const envTypeDisplayName = computed(() => {
                 const envTypeMap = {
@@ -304,6 +310,7 @@
                 envDetailLoaded,
                 envTypeDisplayName,
                 envNodeTypeDisplayName,
+                osDisplayName,
                 isCreateResType,
                 handleCreateEnv
             }

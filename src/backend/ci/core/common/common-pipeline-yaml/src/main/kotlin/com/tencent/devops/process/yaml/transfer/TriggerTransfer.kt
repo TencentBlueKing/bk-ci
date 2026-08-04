@@ -211,10 +211,6 @@ class TriggerTransfer @Autowired(required = false) constructor(
                 }
             )
         }
-
-        triggerOn.tapd?.let {
-            elementQueue.addAll(it.map { trigger -> yaml2TriggerTapdElement(trigger) })
-        }
     }
 
     @Suppress("ComplexMethod")
@@ -428,7 +424,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
                             pathFilterType = push.pathFilterType?.let { PathFilterType.valueOf(it) }
                                 ?: PathFilterType.NamePrefixFilter,
                             eventType = CodeEventType.PUSH,
-                            includeMrAction = push.action ?: listOf(
+                            includePushAction = push.action ?: listOf(
                                 TGitPushActionType.PUSH_FILE.value,
                                 TGitPushActionType.NEW_BRANCH.value
                             ),
@@ -794,32 +790,59 @@ class TriggerTransfer @Autowired(required = false) constructor(
     }
 
     /**
-     * 将 YAML [TapdRule] 转为 [TapdWebHookTriggerElement]。
-     * 仅当 eventType 为 STORY/BUG 时分别填充对应的 includeAction 字段。
+     * 将 `on:` 条目中的 TAPD 触发转换为对应 [TapdWebHookTriggerElement]。
+     *
+     * 与代码库触发的 `yaml2TriggerGit` 平级：一个 [TriggerOn] 承载一个 workspace 的
+     * story / bug 配置（通过 `type: tapd` 区分）；story / bug 各自最多生成一个触发元素。
      */
-    private fun yaml2TriggerTapdElement(tapd: TapdRule): TapdWebHookTriggerElement {
-        val eventType = tapd.eventType?.let { TapdEventType.parse(it) }
-        val includeStoryAction = tapd.action?.takeIf { eventType == TapdEventType.STORY }
-        val includeBugAction = tapd.action?.takeIf { eventType == TapdEventType.BUG }
+    fun yaml2TriggerTapd(triggerOn: TriggerOn, elementQueue: MutableList<Element>) {
+        val workspaceId = triggerOn.workspaceId ?: return
+        triggerOn.story?.let { story ->
+            elementQueue.add(
+                buildTapdElement(
+                    workspaceId = workspaceId,
+                    eventType = TapdEventType.STORY,
+                    rule = story
+                )
+            )
+        }
+        triggerOn.bug?.let { bug ->
+            elementQueue.add(
+                buildTapdElement(
+                    workspaceId = workspaceId,
+                    eventType = TapdEventType.BUG,
+                    rule = bug
+                )
+            )
+        }
+    }
+
+    private fun buildTapdElement(
+        workspaceId: String,
+        eventType: TapdEventType,
+        rule: TapdRule
+    ): TapdWebHookTriggerElement {
+        val includeStoryAction = rule.action?.takeIf { eventType == TapdEventType.STORY }
+        val includeBugAction = rule.action?.takeIf { eventType == TapdEventType.BUG }
         return TapdWebHookTriggerElement(
-            name = tapd.name ?: "TAPD事件触发",
-            stepId = tapd.id,
+            name = rule.name ?: "TAPD事件触发",
+            stepId = rule.id,
             data = TapdWebHookTriggerData(
                 input = TapdWebHookTriggerInput(
-                    tapdProjectId = tapd.tapdProjectId,
+                    workspaceId = workspaceId,
                     eventType = eventType,
                     includeStoryAction = includeStoryAction,
                     includeBugAction = includeBugAction,
-                    includeUsers = tapd.users,
-                    excludeUsers = tapd.usersIgnore,
-                    includeLabels = tapd.labels?.join(),
-                    excludeLabels = tapd.labelsIgnore?.join(),
-                    includePriority = tapd.priorities?.join(),
-                    includeOwner = tapd.owners,
-                    excludeOwner = tapd.ownersIgnore
+                    includeUsers = rule.users,
+                    excludeUsers = rule.usersIgnore,
+                    includeLabels = rule.labels?.join(),
+                    excludeLabels = rule.labelsIgnore?.join(),
+                    includePriority = rule.priorities?.join(),
+                    includeOwner = rule.owners,
+                    excludeOwner = rule.ownersIgnore
                 )
             )
-        ).checkTriggerElementEnable(tapd.enable) as TapdWebHookTriggerElement
+        ).checkTriggerElementEnable(rule.enable) as TapdWebHookTriggerElement
     }
 
     @Suppress("ComplexMethod")

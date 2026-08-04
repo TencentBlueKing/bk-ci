@@ -29,8 +29,7 @@ package com.tencent.devops.artifactory.store.service.impl
 
 import com.tencent.devops.artifactory.constant.BK_CI_ATOM_DIR
 import com.tencent.devops.artifactory.constant.REALM_LOCAL
-import com.tencent.devops.common.api.constant.CommonMessageCode
-import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.util.FileUtil
 import java.io.File
 import java.io.InputStream
 import java.net.URLDecoder
@@ -54,10 +53,10 @@ class ArchiveAtomToLocalServiceImpl : ArchiveAtomServiceImpl() {
 
     override fun getAtomFileContent(filePath: String): String {
         logger.info("getAtomFileContent, filePath: $filePath")
-        if (filePath.contains("../")) {
-            throw ErrorCodeException(errorCode = CommonMessageCode.PARAMETER_IS_INVALID, params = arrayOf(filePath))
-        }
-        val file = File("$atomArchiveLocalBasePath/$BK_CI_ATOM_DIR/${URLDecoder.decode(filePath, "UTF-8")}")
+        val file = FileUtil.resolveSafeChildFile(
+            "$atomArchiveLocalBasePath/$BK_CI_ATOM_DIR",
+            URLDecoder.decode(filePath, "UTF-8")
+        )
         val content = if (file.exists()) FileUtils.readFileToString(file) else ""
         logger.info("getAtomFileContent content: $content")
         return content

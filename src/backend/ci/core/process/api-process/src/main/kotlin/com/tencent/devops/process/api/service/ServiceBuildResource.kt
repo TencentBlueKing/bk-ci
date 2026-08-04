@@ -65,6 +65,7 @@ import com.tencent.devops.process.pojo.pipeline.BuildDetailSimple
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import com.tencent.devops.process.pojo.pipeline.ModelRecord
 import com.tencent.devops.process.pojo.pipeline.PipelineLatestBuild
+import com.tencent.devops.process.pojo.pipeline.SubPipelineBuildLocateResult
 import com.tencent.devops.process.pojo.task.PipelineFailTaskDetail
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
@@ -427,6 +428,33 @@ interface ServiceBuildResource {
         @QueryParam("channelCode")
         channelCode: ChannelCode
     ): Result<BuildDetailSimple>
+
+    @Operation(summary = "定位父构建触发的子流水线构建")
+    @GET
+    @Path("/{projectId}/{pipelineId}/{buildId}/sub_build/locate")
+    fun locateSubPipelineBuild(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "父构建项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "父流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @Parameter(description = "父构建ID", required = true)
+        @PathParam("buildId")
+        buildId: String,
+        @Parameter(description = "父构建失败插件 elementId（即 parentTaskId）", required = true)
+        @QueryParam("parentTaskId")
+        parentTaskId: String,
+        @Parameter(description = "父构建插件执行次数，对应 element.executeCount", required = true)
+        @QueryParam("parentExecuteCount")
+        parentExecuteCount: Int,
+        @Parameter(description = "渠道号，默认为BS", required = false)
+        @QueryParam("channelCode")
+        channelCode: ChannelCode
+    ): Result<SubPipelineBuildLocateResult>
 
     @Operation(summary = "根据执行次数获取构建详情")
     @GET

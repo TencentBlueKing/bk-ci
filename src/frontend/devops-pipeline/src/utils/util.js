@@ -35,6 +35,19 @@ export function urlJoin (...args) {
     return args.filter(arg => arg).join('/').replace(/([^:]\/)\/+/g, '$1')
 }
 
+export function encodeArtifactDownloadUrl (url, path) {
+    const encodeSegment = segment => encodeURIComponent(segment).replace(
+        /[!'()*]/g,
+        char => `%${char.charCodeAt(0).toString(16).toUpperCase()}`
+    )
+    const encodedPath = path
+        .split('/')
+        .map(encodeSegment)
+        .join('/')
+
+    return url.replace(path, () => encodedPath)
+}
+
 export function isShallowEqual (obj1, obj2) {
     if (obj1 === obj2) return true
     if (!isObject(obj1) || !isObject(obj2)) {

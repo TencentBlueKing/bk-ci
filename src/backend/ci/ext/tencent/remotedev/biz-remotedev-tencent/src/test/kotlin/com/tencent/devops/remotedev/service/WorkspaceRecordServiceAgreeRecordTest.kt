@@ -12,6 +12,7 @@ import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
 import com.tencent.devops.remotedev.pojo.WorkspaceRecord
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
+import com.tencent.devops.remotedev.service.cvd.CvdService
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
 import io.mockk.every
 import io.mockk.mockk
@@ -30,6 +31,8 @@ class WorkspaceRecordServiceAgreeRecordTest {
     private val permissionService: PermissionService = mockk()
     private val workspaceOpHistoryDao: WorkspaceOpHistoryDao = mockk()
     private val workspaceCommon: WorkspaceCommon = mockk()
+
+    private val cvdService: CvdService = mockk()
 
     private lateinit var service: WorkspaceRecordService
 
@@ -54,7 +57,8 @@ class WorkspaceRecordServiceAgreeRecordTest {
             redisOperation = mockk(),
             workspaceSharedDao = mockk(),
             workspaceOpHistoryDao = workspaceOpHistoryDao,
-            workspaceCommon = workspaceCommon
+            workspaceCommon = workspaceCommon,
+            cvdService = cvdService
         )
     }
 

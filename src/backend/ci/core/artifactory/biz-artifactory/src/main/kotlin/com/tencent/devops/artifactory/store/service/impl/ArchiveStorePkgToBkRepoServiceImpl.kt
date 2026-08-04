@@ -9,6 +9,7 @@ import com.tencent.devops.artifactory.util.DefaultPathUtils
 import com.tencent.devops.common.api.constant.STATIC
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.ApiUtil
+import com.tencent.devops.common.api.util.FileUtil
 import com.tencent.devops.common.archive.client.BkRepoClient
 import com.tencent.devops.common.archive.config.BkRepoClientConfig
 import com.tencent.devops.store.pojo.common.CONFIG_YML_NAME
@@ -56,7 +57,8 @@ abstract class ArchiveStorePkgToBkRepoServiceImpl : ArchiveStorePkgServiceImpl()
                 if (pkgLocalPath.isNullOrBlank()) {
                     return@forEach
                 }
-                val file = File(storeArchivePath, pkgLocalPath)
+                // pkgLocalPath 来自 config.yml，仍由外部输入控制，强制 canonical-path 校验防止穿越
+                val file = FileUtil.resolveSafeChildFile(storeArchivePath, pkgLocalPath)
                 if (!file.exists()) {
                     logger.warn("uploadLocalFile file[$pkgLocalPath] not exist!")
                     return@forEach

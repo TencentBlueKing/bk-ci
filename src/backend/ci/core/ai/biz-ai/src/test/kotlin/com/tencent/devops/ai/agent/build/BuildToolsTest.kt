@@ -2,18 +2,18 @@ package com.tencent.devops.ai.agent.build
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.log.pojo.QueryLogsText
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.PipelineVersionWithModel
-import com.tencent.devops.common.log.pojo.QueryLogsText
-import com.tencent.devops.common.pipeline.enums.ChannelCode
-import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.pipeline.container.NormalContainer
+import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.enums.BuildScriptType
+import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
 import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
 import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxScriptElement
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
-import com.tencent.devops.common.pipeline.container.NormalContainer
-import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.test.BkCiAbstractTest
 import com.tencent.devops.log.api.ServiceLogResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
@@ -27,6 +27,40 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
 class BuildToolsTest : BkCiAbstractTest() {
+
+    @Test
+    fun `should clamp long running tool wait seconds to minimum`() {
+        val sleepCalls = mutableListOf<Long>()
+        val tools = BuildTools(client, { "tester" }) { sleepMs ->
+            sleepCalls += sleepMs
+        }
+
+        val json = parseJson(
+            tools.simulateLongRunningTool(waitSeconds = 1)
+        )
+
+        assertEquals(listOf(121_000L), sleepCalls)
+        assertEquals("OK", json["status"].asText())
+        assertEquals(1, json["requestedWaitSeconds"].asInt())
+        assertEquals(121, json["actualWaitSeconds"].asInt())
+    }
+
+    @Test
+    fun `should clamp long running tool wait seconds to maximum`() {
+        val sleepCalls = mutableListOf<Long>()
+        val tools = BuildTools(client, { "tester" }) { sleepMs ->
+            sleepCalls += sleepMs
+        }
+
+        val json = parseJson(
+            tools.simulateLongRunningTool(waitSeconds = 999)
+        )
+
+        assertEquals(listOf(240_000L), sleepCalls)
+        assertEquals("OK", json["status"].asText())
+        assertEquals(999, json["requestedWaitSeconds"].asInt())
+        assertEquals(240, json["actualWaitSeconds"].asInt())
+    }
 
     @Test
     fun `getPipelineStatus should return raw pipeline payload`() {
@@ -341,4 +375,6 @@ class BuildToolsTest : BkCiAbstractTest() {
             latestVersion = 5
         )
     }
+
+    private fun parseJson(value: String) = JsonUtil.getObjectMapper(false).readTree(value)
 }

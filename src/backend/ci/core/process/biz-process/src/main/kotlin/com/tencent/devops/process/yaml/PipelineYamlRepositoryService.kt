@@ -704,7 +704,8 @@ class PipelineYamlRepositoryService @Autowired constructor(
             projectId = projectId,
             userId = userId,
             viewIdEncode = HashUtil.encodeLongId(yamlView.viewId),
-            checkPac = false
+            checkPac = false,
+            checkPermission = false
         )
         pipelineYamlViewService.deleteYamlView(
             projectId = projectId,

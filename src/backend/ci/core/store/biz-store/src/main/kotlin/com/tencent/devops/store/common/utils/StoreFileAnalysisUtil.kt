@@ -36,6 +36,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.FileUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.api.util.YamlUtil
@@ -219,11 +220,11 @@ object StoreFileAnalysisUtil {
         disposition: FormDataContentDisposition
     ): Pair<String, File> {
         try {
-            // 1. 从文件名中提取文件扩展名
-            val fileName = disposition.fileName
+            // 1. 从文件名中提取文件扩展名（先 basename 化阻断 ../、绝对路径等流入扩展名判断与日志）
+            val fileName = FileUtil.getSafeFileName(disposition.fileName)
             val index = fileName.lastIndexOf(".")
             val fileType = fileName.substring(index + 1)
-            if (fileName.isNullOrBlank() || fileType != "zip") {
+            if (fileType != "zip") {
                 throw ErrorCodeException(errorCode = USER_UPLOAD_PACKAGE_INVALID)
             }
 

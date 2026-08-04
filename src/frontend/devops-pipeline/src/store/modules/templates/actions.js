@@ -63,8 +63,13 @@ const actions = {
     deleteTempalteVersion (_, { projectId, templateId, version }) {
         return ajax.delete(`${PROCESS_API_URL_PREFIX}/user/pipeline/template/v2/${projectId}/${templateId}/${version}`)
     },
-    rollbackTemplateVersion (_, { projectId, templateId, version }) {
-        return ajax.post(`${PROCESS_API_URL_PREFIX}/user/pipeline/template/v2/${projectId}/${templateId}/rollbackDraft?version=${version}`).then(response => response.data)
+    async rollbackTemplateVersion (_, { projectId, templateId, version, draftVersion }) {
+        const params = new URLSearchParams({ version })
+        if (draftVersion) params.append('draftVersion', draftVersion)
+        
+        const url = `${PROCESS_API_URL_PREFIX}/user/pipeline/template/v2/${projectId}/${templateId}/rollbackDraft?${params}`
+        const res = await ajax.post(url)
+        return res.data
     },
     requestTemplateVersionList (_, params) {
         return ajax.post(`${PROCESS_API_URL_PREFIX}/user/pipeline/template/v2/${params.projectId}/${params.templateId}/versions`, params).then(response => response.data)

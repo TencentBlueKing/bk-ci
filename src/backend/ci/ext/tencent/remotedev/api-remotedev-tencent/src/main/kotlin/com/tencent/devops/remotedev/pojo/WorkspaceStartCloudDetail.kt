@@ -51,11 +51,11 @@ data class WorkspaceStartCloudDetail(
     val displayName: String? = null,
     @get:Schema(
         title = "单向网络配置",
-        description = "0-未启用单向网络；1-Mesh单向网络；2-SSL单向网络",
+        description = "当前固定返回 2，表示 SSL 单向网络",
         allowableValues = ["0", "1", "2"]
     )
     val cdsMesh: Int? = null,
-    @get:Schema(title = "独立域名")
+    @get:Schema(title = "独立域名", description = "当前固定返回默认域名配置")
     val cdsDomain: String? = null,
     @get:Schema(title = "windows 地域配置")
     val zoneConfig: WindowsResourceZoneConfig? = null,

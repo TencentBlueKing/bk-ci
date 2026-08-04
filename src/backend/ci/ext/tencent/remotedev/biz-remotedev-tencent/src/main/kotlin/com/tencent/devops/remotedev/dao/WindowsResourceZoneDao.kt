@@ -51,12 +51,14 @@ class WindowsResourceZoneDao {
                 ZONE,
                 SHORT_NAME,
                 DESCRIPTION,
-                TYPE
+                TYPE,
+                PROVIDER
             ).values(
                 config.zone,
                 config.zoneShortName,
                 config.description,
-                config.type.name
+                config.type.name,
+                config.provider ?: ""
             ).returning(ID).fetchOne()!!.id
         }
     }
@@ -112,6 +114,7 @@ class WindowsResourceZoneDao {
                 .set(AVAILABLED, if (config.available == true) 1 else 0)
                 .set(DESCRIPTION, config.description)
                 .set(TYPE, config.type.name)
+                .set(PROVIDER, config.provider ?: "")
                 .set(UPDATE_TIME, LocalDateTime.now())
                 .where(ID.eq(id))
                 .execute()
@@ -139,7 +142,8 @@ class WindowsResourceZoneDao {
                     zone = zone,
                     zoneShortName = shortName,
                     description = description,
-                    type = WindowsResourceZoneConfigType.parse(type)
+                    type = WindowsResourceZoneConfigType.parse(type),
+                    provider = provider
                 )
             }
         }

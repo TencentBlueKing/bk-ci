@@ -87,5 +87,7 @@ data class WebhookInfo(
     // 自定义触发材料ID
     val materialId: String?,
     // 自定义触发材料名
-    val materialName: String?
+    val materialName: String?,
+    // 触发渠道
+    val channelCode: String?,
 )

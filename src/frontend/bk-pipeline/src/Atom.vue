@@ -38,9 +38,23 @@
       <img v-else-if="atom.logoUrl" :src="atom.logoUrl" :class="logoCls" />
       <Logo v-else :class="logoCls" :name="svgAtomIcon" size="18" />
       <p class="atom-name">
-        <span :title="atom.name" :class="skipSpanCls">
-          {{ atom.atomCode ? atom.name : t("pendingAtom") }}
+        <span
+          :title="atomDisplayName"
+          :class="[skipSpanCls, 'atom-name-text']"
+        >
+          {{ atomDisplayName }}
         </span>
+        <Logo
+          v-if="showSubPipelineAccess"
+          name="tiaozhuan"
+          :class="{
+            'sub-pipeline-jump-icon': true,
+            'sub-pipeline-jump-icon-disabled': !hasSubPipelineAccessInfo,
+          }"
+          size="16"
+          :title="t('viewSubPipeline')"
+          @click.stop="handleSubPipelineAccess"
+        />
       </p>
       <template v-if="isExecuting">
         <span class="atom-execounter">{{ execTime }}</span>
@@ -50,13 +64,13 @@
         <span @click.stop="reviewAtom" class="atom-reviewing-tips atom-operate-area" :disabled="!hasReviewPerm">
           {{ t("manualCheck") }}
         </span>
-        <template slot="content">
+        <template #content>
           <p>{{ t("checkUser") }}{{ reviewUsers.join(";") }}</p>
         </template>
       </bk-popover>
       <bk-popover :delay="[300, 0]" v-else-if="isReviewAbort" placement="top">
         <span class="atom-review-diasbled-tips">{{ t("aborted") }}</span>
-        <template slot="content">
+        <template #content>
           <p>
             {{ t("abortTips") }}{{ t("checkUser")
             }}{{ reactiveData.cancelUserId }}
@@ -68,7 +82,7 @@
           <span :class="resumeSpanCls" @click.stop="atomExecute(true)">
             {{ t("resume") }}
           </span>
-          <template slot="content">
+          <template #content>
             <p>{{ t("checkUser") }}{{ pauseReviewerStr }}</p>
           </template>
         </bk-popover>
@@ -81,7 +95,7 @@
           <span class="atom-execute-time">
             {{ formatTime }}
           </span>
-          <template slot="content">
+          <template #content>
             <p>{{ formatTime }}</p>
           </template>
         </bk-popover>
@@ -134,6 +148,7 @@ import {
   QUALITY_IN_ATOM_CODE,
   QUALITY_OUT_ATOM_CODE,
   STATUS_MAP,
+  SUB_PIPELINE_ACCESS_EVENT_NAME,
 } from "./constants";
 import { t } from "./locale";
 import {
@@ -313,6 +328,27 @@ const isQualityGateAtom = computed(() => {
   return isQualityGate(props.atom);
 });
 
+const isSubPipelineAtom = computed(() => {
+  return props.atom.atomCode === "SubPipelineExec";
+});
+
+const showSubPipelineAccess = computed(() => {
+  return (
+    reactiveData.isExecDetail
+    && !reactiveData.editable
+    && isSubPipelineAtom.value
+  );
+});
+
+const hasSubPipelineAccessInfo = computed(() => {
+  const {
+    projectId,
+    pipelineId,
+    buildId
+  } = props.atom?.subPipelineBuildInfo ?? {};
+  return !!(projectId && pipelineId && buildId);
+});
+
 const isLastQualityAtom = computed(() => {
   return props.atom.atomCode === QUALITY_OUT_ATOM_CODE && props.isLastAtom;
 });
@@ -349,7 +385,7 @@ const atomCls = computed(() => {
     [qualityStatus.value]: isQualityGateAtom.value && !!qualityStatus.value,
     [atomStatusCls.value]: !!atomStatusCls.value,
     "quality-atom": isQualityGateAtom.value,
-    "is-sub-pipeline-atom": props.atom.atomCode === "SubPipelineExec",
+    "is-sub-pipeline-atom": isSubPipelineAtom.value,
     "is-error": props.atom.isError,
     "is-intercept": isQualityCheckAtom.value,
     "template-compare-atom": props.atom.templateModify,
@@ -375,6 +411,10 @@ const pauseReviewerStr = computed(() => {
     Array.isArray(props.atom.pauseReviewers) &&
     props.atom.pauseReviewers.join(";")
   );
+});
+
+const atomDisplayName = computed(() => {
+  return props.atom.atomCode ? props.atom.name : t("pendingAtom");
 });
 
 const showExecuteTime = computed(() => {
@@ -493,6 +533,13 @@ const handleAtomClick = () => {
     containerIndex: props.containerIndex,
     containerGroupIndex: props.containerGroupIndex,
     elementIndex: props.atomIndex,
+  });
+};
+
+const handleSubPipelineAccess = () => {
+  if (!hasSubPipelineAccessInfo.value) return;
+  eventBus.$emit(SUB_PIPELINE_ACCESS_EVENT_NAME, {
+    atom: props.atom
   });
 };
 
@@ -661,10 +708,15 @@ onBeforeUnmount(() => {
 
   .atom-progress {
     display: inline-flex;
+    flex: 0 0 $serialSize;
     width: 42px;
     height: 42px;
     align-items: center;
     justify-content: center;
+  }
+
+  >.stage-status {
+    flex: 0 0 $serialSize;
   }
 
   .active-atom-location-icon {
@@ -754,6 +806,7 @@ onBeforeUnmount(() => {
   }
 
   .atom-icon {
+    flex-shrink: 0;
     text-align: center;
     margin: 0 14.5px;
     font-size: 18px;
@@ -825,13 +878,36 @@ onBeforeUnmount(() => {
   }
 
   >.atom-name {
-    flex: 1;
-    color: $fontWeightColor;
-    @include ellipsis();
+    display: inline-flex;
+    flex: 1 1 auto;
+    align-items: center;
+    width: auto;
+    min-width: 0;
     max-width: 188px;
-    margin-right: 2px;
+    overflow: hidden;
+    margin-right: 8px;
+    color: $fontWeightColor;
 
-    span:hover {
+    .atom-name-text {
+      flex: 0 1 auto;
+      min-width: 0;
+      @include ellipsis(100%);
+    }
+
+    .sub-pipeline-jump-icon {
+      flex: 0 0 auto;
+      margin-left: 8px;
+      color: $primaryColor;
+      cursor: pointer;
+
+      &.sub-pipeline-jump-icon-disabled {
+        color: $fontLighterColor;
+        cursor: not-allowed;
+      }
+    }
+
+    .atom-name-text:hover,
+    .sub-pipeline-jump-icon:not(.sub-pipeline-jump-icon-disabled):hover {
       color: $primaryColor;
     }
   }
@@ -853,11 +929,11 @@ onBeforeUnmount(() => {
   }
 
   .atom-operate-area {
+    display: inline-flex;
+    align-items: center;
     margin: 0 8px 0 0;
     color: $primaryColor;
     font-size: 12px;
-    display: inline-flex;
-    align-items: center;
     gap: 4px;
   }
 
@@ -980,7 +1056,7 @@ onBeforeUnmount(() => {
     background-color: white;
 
     .atom-name:hover {
-      span {
+      .atom-name-text {
         color: $fontWeightColor;
       }
 

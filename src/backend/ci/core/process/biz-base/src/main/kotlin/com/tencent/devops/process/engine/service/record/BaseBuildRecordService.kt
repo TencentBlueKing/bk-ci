@@ -55,6 +55,7 @@ import com.tencent.devops.process.dao.record.BuildRecordModelDao
 import com.tencent.devops.process.engine.control.lock.PipelineBuildRecordLock
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.dao.PipelineResourceDao
+import com.tencent.devops.process.engine.dao.PipelineResourceDraftVersionDao
 import com.tencent.devops.process.engine.dao.PipelineResourceVersionDao
 import com.tencent.devops.process.engine.pojo.BuildInfo
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildWebSocketPushEvent
@@ -81,7 +82,8 @@ open class BaseBuildRecordService(
     private val stageTagService: StageTagService,
     private val recordModelService: PipelineRecordModelService,
     private val pipelineResourceDao: PipelineResourceDao,
-    private val pipelineResourceVersionDao: PipelineResourceVersionDao
+    private val pipelineResourceVersionDao: PipelineResourceVersionDao,
+    private val pipelineResourceDraftVersionDao: PipelineResourceDraftVersionDao
 ) {
 
     protected fun update(
@@ -232,8 +234,9 @@ open class BaseBuildRecordService(
         // 当debug没有传的时候，从数据库中获取数据判断是否是调试产生的构建
         val debugFlag = debug ?: pipelineBuildDao.getDebugFlag(finalDSLContext, projectId, buildId)
         val resourceStr = if (debugFlag) {
-            pipelineBuildDao.getDebugResourceStr(
+            getDebugResourceStr(
                 dslContext = finalDSLContext,
+                pipelineId = pipelineId,
                 projectId = projectId,
                 buildId = buildId
             )
@@ -392,5 +395,34 @@ open class BaseBuildRecordService(
             }
             return result
         }
+    }
+
+    /**
+     * 先从草稿版本记录中获取资源
+     */
+    private fun getDebugResourceStr(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        buildId: String
+    ): String? {
+        val buildInfo = pipelineBuildDao.getBuildInfo(
+            dslContext = dslContext,
+            projectId = projectId,
+            buildId = buildId
+        )
+        return buildInfo?.draftVersion?.let {
+            pipelineResourceDraftVersionDao.getVersionModelString(
+                dslContext = dslContext,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                version = buildInfo.version,
+                draftVersion = it
+            )
+        } ?: pipelineBuildDao.getDebugResourceStr(
+            dslContext = dslContext,
+            projectId = projectId,
+            buildId = buildId
+        )
     }
 }

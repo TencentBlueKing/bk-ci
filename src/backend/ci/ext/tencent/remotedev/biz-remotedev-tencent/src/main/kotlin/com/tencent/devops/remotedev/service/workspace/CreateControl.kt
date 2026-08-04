@@ -548,16 +548,14 @@ class CreateControl @Autowired constructor(
                 softwareManageService.safeInitialization(ws.projectId, event.userId, event.workspaceName)
             }
 
-            // 创建成功时给 cmdb 添加字段方便监控检索
+            // 创建成功时上报云桌面监控维度到 bkbase
             val ip = event.environmentIp
             if (!ip.isNullOrBlank() && ws.workspaceSystemType.checkWindows()) {
-                workspaceCommon.updateHostMonitor(
+                workspaceCommon.reportWorkspaceDimension(
                     workspaceName = ws.workspaceName,
-                    props = workspaceCommon.genWorkspaceCCInfo(
-                        ws.projectId,
-                        ws.displayName.ifBlank { ws.workspaceName },
-                        null
-                    ),
+                    projectId = ws.projectId,
+                    displayName = ws.displayName.ifBlank { ws.workspaceName },
+                    owner = null,
                     type = ws.workspaceSystemType
                 )
 

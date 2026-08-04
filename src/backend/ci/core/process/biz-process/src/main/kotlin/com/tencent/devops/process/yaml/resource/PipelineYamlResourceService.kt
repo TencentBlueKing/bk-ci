@@ -34,6 +34,7 @@ import com.tencent.devops.common.pipeline.pojo.element.atom.PipelineCheckFailedM
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
+import com.tencent.devops.process.engine.utils.TemplateInstanceUtil
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlFileInfo
 import com.tencent.devops.process.pojo.pipeline.version.PipelineYamlWebhookReq
@@ -152,21 +153,36 @@ class PipelineYamlResourceService @Autowired constructor(
     }
 
     override fun completePullRequest(
+        userId: String,
         projectId: String,
         pipelineId: String,
         pullRequestId: Long,
         pullRequestUrl: String,
         pullRequestNumber: Int,
-        merged: Boolean
+        merged: Boolean,
+        exception: Throwable?
     ) {
-        val (status, instanceErrorInfo) = if (merged) {
-            Pair(TemplatePipelineStatus.UPDATED, null)
-        } else {
-            val message = I18nUtil.getCodeLanMessage(
-                messageCode = ProcessMessageCode.BK_YAML_INSTANCE_PULL_REQUEST_CLOSED,
-                params = arrayOf(pullRequestUrl, pullRequestNumber.toString())
+        val (status, instanceErrorInfo) = when {
+            // 合并后 yaml 处理失败,将异常转换为可展示的失败原因
+            exception != null -> Pair(
+                TemplatePipelineStatus.FAILED,
+                TemplateInstanceUtil.translateInstanceException(
+                    userId = userId,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    exception = exception
+                )
             )
-            Pair(TemplatePipelineStatus.FAILED, PipelineCheckFailedMsg(message))
+            // 正常合并
+            merged -> Pair(TemplatePipelineStatus.UPDATED, null)
+            // 合并请求关闭未合并
+            else -> {
+                val message = I18nUtil.getCodeLanMessage(
+                    messageCode = ProcessMessageCode.BK_YAML_INSTANCE_PULL_REQUEST_CLOSED,
+                    params = arrayOf(pullRequestUrl, pullRequestNumber.toString())
+                )
+                Pair(TemplatePipelineStatus.FAILED, PipelineCheckFailedMsg(message))
+            }
         }
         pipelineTemplateRelatedService.updateStatusByPullRequestId(
             projectId = projectId,
