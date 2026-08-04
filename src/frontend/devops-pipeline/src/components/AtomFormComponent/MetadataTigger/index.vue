@@ -239,7 +239,7 @@
         .param-input {
             margin-bottom: 10px;
             display: flex;
-            align-items: center;
+            align-items: self-start;
 
             .input-com {
                 flex: 1;
@@ -254,6 +254,7 @@
                 font-size: 14px;
                 margin-left: 5px;
                 cursor: pointer;
+                line-height: 32px;
             }
         }
     }
