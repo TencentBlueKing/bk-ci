@@ -33,9 +33,11 @@ import com.tencent.devops.common.auth.api.AuthResourceApi
 import com.tencent.devops.common.auth.code.PublicVarGroupAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
+import com.tencent.devops.process.dao.`var`.PublicVarGroupDao
 import com.tencent.devops.process.permission.`var`.PublicVarGroupPermissionService
 import com.tencent.devops.process.permission.`var`.RbacPublicVarGroupPermissionService
 import com.tencent.devops.process.permission.`var`.SimplePublicVarGroupPermissionService
+import org.jooq.DSLContext
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
@@ -51,7 +53,13 @@ class PublicVarGroupConfiguration {
 
     @Bean
     @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "sample")
-    fun samplePublicVarGroupPermissionService(): PublicVarGroupPermissionService = SimplePublicVarGroupPermissionService()
+    fun samplePublicVarGroupPermissionService(
+        publicVarGroupDao: PublicVarGroupDao,
+        dslContext: DSLContext,
+    ): PublicVarGroupPermissionService = SimplePublicVarGroupPermissionService(
+        publicVarGroupDao = publicVarGroupDao,
+        dslContext = dslContext
+    )
 
     @Bean
     @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "rbac")
