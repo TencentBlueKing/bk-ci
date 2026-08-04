@@ -158,7 +158,7 @@ class PublicVarGroupService @Autowired constructor(
                 val canEdit = editPermissionMap[AuthPermission.EDIT]?.contains(groupName) ?: false
                 if (!canEdit) {
                     throw ErrorCodeException(
-                        errorCode = ProcessMessageCode.ERROR_PUBLIC_VAR_GROUP_EDIT_NO_PERMISSION,
+                        errorCode = ProcessMessageCode.ERROR_PUBLIC_VAR_GROUP_NO_PERMISSION,
                         params = arrayOf(userId, groupName)
                     )
                 }
