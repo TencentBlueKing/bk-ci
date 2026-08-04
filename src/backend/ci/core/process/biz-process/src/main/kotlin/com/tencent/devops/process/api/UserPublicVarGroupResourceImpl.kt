@@ -51,8 +51,7 @@ class UserPublicVarGroupResourceImpl @Autowired constructor(
     override fun addGroup(
         userId: String,
         projectId: String,
-        publicVarGroup: PublicVarGroupVO,
-        allowUpgrade: Boolean?
+        publicVarGroup: PublicVarGroupVO
     ): Result<String> {
         // 校验创建权限
         publicVarGroupPermissionService.checkPublicVarGroupCreatePermission(
@@ -60,13 +59,36 @@ class UserPublicVarGroupResourceImpl @Autowired constructor(
             projectId = projectId
         )
         return Result(
-            publicVarGroupService.addGroup(
+            publicVarGroupService.saveGroup(
                 PublicVarGroupDTO(
                     projectId = projectId,
                     userId = userId,
                     publicVarGroup = publicVarGroup
                 ),
-                allowUpgrade = allowUpgrade ?: false
+                allowUpgrade = false
+            )
+        )
+    }
+
+    override fun updateGroup(
+        userId: String,
+        projectId: String,
+        publicVarGroup: PublicVarGroupVO
+    ): Result<String> {
+        // 校验编辑权限
+        publicVarGroupPermissionService.checkPublicVarGroupPermissionWithMessage(
+            userId = userId,
+            projectId = projectId,
+            permission = AuthPermission.EDIT,
+            groupName = publicVarGroup.groupName
+        )
+        return Result(
+            publicVarGroupService.updateGroup(
+                PublicVarGroupDTO(
+                    projectId = projectId,
+                    userId = userId,
+                    publicVarGroup = publicVarGroup
+                )
             )
         )
     }
