@@ -236,6 +236,16 @@ enum class ErrorCodeEnum(
         errorCode = "2132055",
         formatErrorMessage = "workspace create error: {0}"
     ),
+    TEMPLATE_PROJECT_CONFIG_NOT_FIND(
+        errorType = ErrorType.USER,
+        errorCode = "2132056",
+        formatErrorMessage = "template {0} delivery project config not find"
+    ),
+    NO_AVAILABLE_DISTRIBUTING_WORKSPACE(
+        errorType = ErrorType.USER,
+        errorCode = "2132057",
+        formatErrorMessage = "no available distributing workspace for template {0}"
+    ),
     ;
 
     fun getErrorMessage(): String {

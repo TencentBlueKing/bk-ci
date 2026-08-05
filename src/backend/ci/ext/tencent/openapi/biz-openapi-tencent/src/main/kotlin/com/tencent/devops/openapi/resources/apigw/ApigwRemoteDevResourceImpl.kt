@@ -17,6 +17,7 @@ import com.tencent.devops.remotedev.pojo.OperateCvmData
 import com.tencent.devops.remotedev.pojo.ProjectWorkspace
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
 import com.tencent.devops.remotedev.pojo.TaskStatusResp
+import com.tencent.devops.remotedev.pojo.TemplateWorkspaceAssignResp
 import com.tencent.devops.remotedev.pojo.UserOnePassword
 import com.tencent.devops.remotedev.pojo.WhiteListType
 import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
@@ -178,6 +179,19 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
             operator = operator,
             owner = owner,
             data = data
+        )
+    }
+
+    override fun assignWorkspaceByTemplate(
+        appCode: String?,
+        apigwType: String?,
+        templateId: String,
+        applicant: String
+    ): Result<TemplateWorkspaceAssignResp> {
+        logger.info("assignWorkspaceByTemplate|appCode=$appCode|templateId=$templateId|applicant=$applicant")
+        return client.get(ServiceRemoteDevResource::class).assignWorkspaceByTemplate(
+            templateId = templateId,
+            applicant = applicant
         )
     }
 
@@ -636,7 +650,16 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
 
     override fun fetchWorkspaceDiskList(userId: String, workspaceName: String): Result<List<VmDiskInfo>?> {
         logger.info("fetchWorkspaceDiskList |$userId|$workspaceName")
-        return client.get(ServiceRemoteDevResource::class).fetchDiskList(userId, workspaceName)
+        return client.get(ServiceRemoteDevResource::class).fetchDiskList(userId, workspaceName, null)
+    }
+
+    override fun fetchWorkspaceDiskListProject(
+        userId: String,
+        workspaceName: String,
+        projectId: String
+    ): Result<List<VmDiskInfo>?> {
+        logger.info("fetchWorkspaceDiskList |$userId|$workspaceName|$projectId")
+        return client.get(ServiceRemoteDevResource::class).fetchDiskList(userId, workspaceName, projectId)
     }
 
     override fun deleteDisk(userId: String, data: DeleteDiskData): Result<CreateDiskResp> {
@@ -920,7 +943,7 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
     ): Result<Map<String, String>> {
         logger.info(
             "refreshInstanceStatus" +
-                " |$userId|$projectId|${instanceIds.size}"
+                    " |$userId|$projectId|${instanceIds.size}"
         )
         return client.get(ServiceRemoteDevResource::class)
             .refreshWorkspaceStatus(
@@ -935,7 +958,7 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
     ): Result<List<WeSecProjectWorkspace>> {
         logger.info(
             "batchGetSimpleWorkspaces" +
-                " |$userId|$projectId|${workspaceNames.size}"
+                    " |$userId|$projectId|${workspaceNames.size}"
         )
         return client.get(ServiceRemoteDevResource::class)
             .batchGetSimpleWorkspaces(
@@ -951,7 +974,7 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
     ): Result<Page<Workspace>> {
         logger.info(
             "searchUserWorkspaces" +
-                " |$userId|$page|$pageSize"
+                    " |$userId|$page|$pageSize"
         )
         return client.get(ServiceRemoteDevResource::class)
             .searchUserWorkspaces(
@@ -974,8 +997,8 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
     ): Result<Page<String>> {
         logger.info(
             "batchQueryThumbnailWorkspaces" +
-                " |$appCode|$userId|enable=$enable|page=$page|pageSize=$pageSize" +
-                "|projectId=$projectId|workspaceNames.size=${workspaceNames?.size}"
+                    " |$appCode|$userId|enable=$enable|page=$page|pageSize=$pageSize" +
+                    "|projectId=$projectId|workspaceNames.size=${workspaceNames?.size}"
         )
         return client.get(ServiceRemoteDevResource::class)
             .batchQueryThumbnailWorkspaces(
@@ -997,7 +1020,7 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
     ): Result<Boolean> {
         logger.info(
             "enableWorkspaceThumbnail" +
-                " |$appCode|$userId|enable=$enable|workspaceNames.size=${workspaceNames.size}"
+                    " |$appCode|$userId|enable=$enable|workspaceNames.size=${workspaceNames.size}"
         )
         return client.get(ServiceRemoteDevResource::class)
             .enableWorkspaceThumbnail(

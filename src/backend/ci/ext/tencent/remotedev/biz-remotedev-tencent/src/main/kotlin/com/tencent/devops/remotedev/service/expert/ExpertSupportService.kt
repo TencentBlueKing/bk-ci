@@ -118,7 +118,7 @@ class ExpertSupportService @Autowired constructor(
                 errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
                 params = arrayOf(
                     "We're sorry but you don't have permission" +
-                        " to apply for assistance in ${record.workspaceName}"
+                            " to apply for assistance in ${record.workspaceName}"
                 )
             )
         }
@@ -733,17 +733,23 @@ class ExpertSupportService @Autowired constructor(
 
     fun fetchDiskList(
         userId: String,
-        workspaceName: String
+        workspaceName: String,
+        projectId: String?
     ): List<VmDiskInfo> {
         val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName)
             ?: throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
                 params = arrayOf(workspaceName)
             )
+        val realProjectId = if (projectId.isNullOrBlank()) {
+            workspace.projectId
+        } else {
+            projectId
+        }
 
         if (!permissionService.hasManagerOrOwnerPermission(
                 userId = userId,
-                projectId = workspace.projectId,
+                projectId = realProjectId,
                 workspaceName = workspace.workspaceName,
                 ownerType = workspace.ownerType
             )
@@ -870,7 +876,7 @@ class ExpertSupportService @Autowired constructor(
                 errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
                 params = arrayOf(
                     "We're sorry but you don't have permission to" +
-                        " sync vm in source ${data.sourceWorkspaceName}"
+                            " sync vm in source ${data.sourceWorkspaceName}"
                 )
             )
         }
@@ -885,7 +891,7 @@ class ExpertSupportService @Autowired constructor(
                 errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
                 params = arrayOf(
                     "We're sorry but you don't have permission " +
-                        "to sync vm in target ${data.targetWorkspaceName}"
+                            "to sync vm in target ${data.targetWorkspaceName}"
                 )
             )
         }

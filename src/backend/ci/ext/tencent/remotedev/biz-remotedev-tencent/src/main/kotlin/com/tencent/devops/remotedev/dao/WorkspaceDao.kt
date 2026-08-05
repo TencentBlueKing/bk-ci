@@ -802,6 +802,21 @@ class WorkspaceDao {
         }
     }
 
+    // 查询一台最早创建、且IP已就绪的待分配工作空间(按模版申请交付)
+    fun fetchOldestDistributingWorkspace(
+        dslContext: DSLContext,
+        projectId: String
+    ): WorkspaceRecord? {
+        with(TWorkspace.T_WORKSPACE) {
+            return dslContext.selectFrom(this).where(PROJECT_ID.eq(projectId))
+                .and(STATUS.eq(WorkspaceStatus.DISTRIBUTING.ordinal))
+                .and(IP.isNotNull)
+                .and(IP.ne(""))
+                .orderBy(CREATE_TIME.asc())
+                .fetchAny(workspaceMapper)
+        }
+    }
+
     // 查询一台最早创建的待分配coffeeAi工作空间
     fun fetchOldDistributingAIWorkspace(
         dslContext: DSLContext,
