@@ -79,8 +79,7 @@ class PublicVarGroupConfiguration {
     )
 
     /**
-     * 兜底 Bean：当 auth.idProvider 既非 sample 也非 rbac 时，提供 Simple 实现避免启动失败。
-     * 优先级低于 sample/rbac（@ConditionalOnMissingBean），仅在前两者都未生效时启用。
+     * 兜底 Bean：auth.idProvider 非 sample/rbac 时提供 Simple 实现，避免启动失败
      */
     @Bean
     @ConditionalOnMissingBean(PublicVarGroupPermissionService::class)

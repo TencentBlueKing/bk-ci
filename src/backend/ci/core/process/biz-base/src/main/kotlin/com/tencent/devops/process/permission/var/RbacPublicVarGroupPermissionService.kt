@@ -79,8 +79,7 @@ class RbacPublicVarGroupPermissionService(
             val actions = authPermissions.map { permission ->
                 AuthResourceType.PUBLIC_VAR_GROUP.value + "_" + permission.value
             }
-            // 与全项目其他 RBAC 调用方保持一致（如 RbacCredentialPermissionService、
-            // RbacAuthPermissionApi）：接口签名已强限制 key 为 AuthPermission，直接返回。
+            // key 类型由接口签名强限制（服务端按 action 后缀反查枚举），无需转换，与全项目 RBAC 调用方一致
             return client.get(ServicePermissionAuthResource::class)
                 .getUserResourcesByPermissions(
                     token = tokenService.getSystemToken(),
