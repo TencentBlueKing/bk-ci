@@ -103,6 +103,35 @@ class EnvNodeDao {
         ).execute()
     }
 
+    fun batchStoreEnvNode(
+        dslContext: DSLContext,
+        nodeIdAndEnables: Map<Long, Boolean>,
+        envId: Long,
+        projectId: String
+    ) {
+        if (nodeIdAndEnables.keys.isEmpty()) {
+            return
+        }
+        dslContext.batch(
+            nodeIdAndEnables.map { (nodeId, enable) ->
+                with(TEnvNode.T_ENV_NODE) {
+                    dslContext.insertInto(
+                        this,
+                        ENV_ID,
+                        NODE_ID,
+                        PROJECT_ID,
+                        ENABLE_NODE
+                    ).values(
+                        envId,
+                        nodeId,
+                        projectId,
+                        enable
+                    )
+                }
+            }
+        ).execute()
+    }
+
     fun batchDeleteEnvNode(dslContext: DSLContext, projectId: String, envId: Long, nodeIds: List<Long>) {
         if (nodeIds.isEmpty()) {
             return

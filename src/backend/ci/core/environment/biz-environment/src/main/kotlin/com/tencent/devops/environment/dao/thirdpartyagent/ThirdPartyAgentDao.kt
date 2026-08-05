@@ -108,6 +108,21 @@ class ThirdPartyAgentDao {
         }
     }
 
+    fun updateAgentsGateway(
+        dslContext: DSLContext,
+        agentIdList: List<Long>,
+        gateway: String,
+        fileGateway: String? = null
+    ) {
+        with(TEnvironmentThirdpartyAgent.T_ENVIRONMENT_THIRDPARTY_AGENT) {
+            dslContext.update(this)
+                .set(GATEWAY, gateway)
+                .set(FILE_GATEWAY, fileGateway ?: gateway)
+                .where(ID.`in`(agentIdList))
+                .execute()
+        }
+    }
+
     fun updateProjectIdByNodeId(
         dslContext: DSLContext,
         sourceProjectId: String,
