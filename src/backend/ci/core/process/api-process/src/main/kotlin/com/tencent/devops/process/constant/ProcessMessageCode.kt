@@ -510,10 +510,10 @@ object ProcessMessageCode {
     const val ERROR_PUBLIC_VAR_GROUP_YAML_MISSING_FIELD = "2101387"
     // 公共变量组YAML格式错误
     const val ERROR_PUBLIC_VAR_GROUP_YAML_FORMAT_ERROR = "2101388"
-    // 用户无公共变量组({0})的({1})权限
-    const val ERROR_PUBLIC_VAR_GROUP_NO_PERMISSION = "2101389"
     // 公共变量组名称({0})已存在
     const val ERROR_PUBLIC_VAR_GROUP_NAME_DUPLICATE_CASE_INSENSITIVE = "2101390"
+    // 用户无公共变量组({0})的({1})权限
+    const val ERROR_PUBLIC_VAR_GROUP_NO_PERMISSION = "2101391"
 
     // 构建执行相关错误码（2101500-2101599）
     const val ERROR_PIPELINE_START_NODE_NO_PERMISSION = "2101500" // 用户[{0}]没有节点[{1}]的操作权限，无法启动流水线

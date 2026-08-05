@@ -39,6 +39,7 @@ import com.tencent.devops.process.permission.`var`.RbacPublicVarGroupPermissionS
 import com.tencent.devops.process.permission.`var`.SimplePublicVarGroupPermissionService
 import org.jooq.DSLContext
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
 import org.springframework.context.annotation.Bean
@@ -75,5 +76,19 @@ class PublicVarGroupConfiguration {
         publicVarGroupAuthServiceCode = publicVarGroupAuthServiceCode,
         client = client,
         tokenService = tokenService,
+    )
+
+    /**
+     * 兜底 Bean：当 auth.idProvider 既非 sample 也非 rbac 时，提供 Simple 实现避免启动失败。
+     * 优先级低于 sample/rbac（@ConditionalOnMissingBean），仅在前两者都未生效时启用。
+     */
+    @Bean
+    @ConditionalOnMissingBean(PublicVarGroupPermissionService::class)
+    fun fallbackPublicVarGroupPermissionService(
+        publicVarGroupDao: PublicVarGroupDao,
+        dslContext: DSLContext,
+    ): PublicVarGroupPermissionService = SimplePublicVarGroupPermissionService(
+        publicVarGroupDao = publicVarGroupDao,
+        dslContext = dslContext
     )
 }

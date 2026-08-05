@@ -143,6 +143,8 @@ import com.tencent.devops.store.pojo.common.BK_STORE_CREATIVE_STREAM_MANUAL_TRIG
 import jakarta.ws.rs.core.Response
 import java.time.LocalDateTime
 import java.util.concurrent.atomic.AtomicInteger
+import kotlin.collections.associate
+import kotlin.collections.forEach
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -1868,12 +1870,6 @@ class PipelineRepositoryService constructor(
                             model = "",
                             channelCode = record.channel
                         )
-                    )
-                    publicVarGroupReferManageService.deletePublicVerGroupRefByReferId(
-                        transactionContext = transactionContext,
-                        referId = pipelineId,
-                        projectId = projectId,
-                        referType = PublicVarGroupReferenceTypeEnum.PIPELINE
                     )
                 }
             }
