@@ -17,6 +17,7 @@ import com.tencent.devops.remotedev.pojo.OperateCvmData
 import com.tencent.devops.remotedev.pojo.ProjectWorkspace
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
 import com.tencent.devops.remotedev.pojo.TaskStatusResp
+import com.tencent.devops.remotedev.pojo.TemplateWorkspaceAssignResp
 import com.tencent.devops.remotedev.pojo.UserOnePassword
 import com.tencent.devops.remotedev.pojo.WhiteListType
 import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
@@ -178,6 +179,19 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
             operator = operator,
             owner = owner,
             data = data
+        )
+    }
+
+    override fun assignWorkspaceByTemplate(
+        appCode: String?,
+        apigwType: String?,
+        templateId: String,
+        applicant: String
+    ): Result<TemplateWorkspaceAssignResp> {
+        logger.info("assignWorkspaceByTemplate|appCode=$appCode|templateId=$templateId|applicant=$applicant")
+        return client.get(ServiceRemoteDevResource::class).assignWorkspaceByTemplate(
+            templateId = templateId,
+            applicant = applicant
         )
     }
 

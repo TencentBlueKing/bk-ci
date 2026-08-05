@@ -18,6 +18,7 @@ import com.tencent.devops.remotedev.pojo.WorkspaceCloneReq
 import com.tencent.devops.remotedev.pojo.WorkspaceOpHistory
 import com.tencent.devops.remotedev.pojo.WorkspaceRebuildReq
 import com.tencent.devops.remotedev.pojo.WorkspaceRegistration
+import com.tencent.devops.remotedev.pojo.TemplateWorkspaceAssignResp
 import com.tencent.devops.remotedev.pojo.Workspace
 import com.tencent.devops.remotedev.pojo.WorkspaceSearch
 import com.tencent.devops.remotedev.pojo.WorkspaceStartCloudDetail
@@ -203,6 +204,18 @@ interface ServiceRemoteDevResource {
         @Parameter(description = "分配数据，必填", required = true)
         data: OpProjectWorkspaceAssignData
     ): Result<Boolean>
+
+    @Operation(summary = "按模版申请交付云桌面给用户")
+    @POST
+    @Path("/assignWorkspaceByTemplate")
+    fun assignWorkspaceByTemplate(
+        @Parameter(description = "模版ID，必填", required = true)
+        @QueryParam("templateId")
+        templateId: String,
+        @Parameter(description = "申请人，必填", required = true)
+        @QueryParam("applicant")
+        applicant: String
+    ): Result<TemplateWorkspaceAssignResp>
 
     @Operation(summary = "用来通知蓝盾客户端消息")
     @POST

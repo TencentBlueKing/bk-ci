@@ -16,6 +16,7 @@ import com.tencent.devops.remotedev.pojo.OperateCvmData
 import com.tencent.devops.remotedev.pojo.ProjectWorkspace
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
 import com.tencent.devops.remotedev.pojo.TaskStatusResp
+import com.tencent.devops.remotedev.pojo.TemplateWorkspaceAssignResp
 import com.tencent.devops.remotedev.pojo.UserOnePassword
 import com.tencent.devops.remotedev.pojo.WhiteListType
 import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
@@ -231,6 +232,24 @@ interface ApigwRemoteDevResource {
         @Parameter(description = "分配数据，必填", required = true)
         data: OpProjectWorkspaceAssignData
     ): Result<Boolean>
+
+    @Operation(summary = "按模版申请交付云桌面给用户", tags = ["v4_app_assign_workspace_by_template"])
+    @POST
+    @Path("/assign/workspace_by_template")
+    fun assignWorkspaceByTemplate(
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @Parameter(description = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @Parameter(description = "模版ID", required = true)
+        @QueryParam("templateId")
+        templateId: String,
+        @Parameter(description = "申请人", required = true)
+        @QueryParam("applicant")
+        applicant: String
+    ): Result<TemplateWorkspaceAssignResp>
 
     @Operation(summary = "指定项目获取云桌面信息", tags = ["v4_app_list_workspaces_with_projectId"])
     @GET
