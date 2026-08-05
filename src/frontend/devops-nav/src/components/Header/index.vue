@@ -25,7 +25,7 @@
                 </template>
             </router-link>
 
-            <template v-if="!showProjectList">
+            <template v-if="showProjectList">
                 <bk-select
                     ref="projectDropdown"
                     class="bkdevops-project-selector"
