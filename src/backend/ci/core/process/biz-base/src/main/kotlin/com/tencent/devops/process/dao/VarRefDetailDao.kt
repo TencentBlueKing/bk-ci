@@ -36,18 +36,13 @@ import org.springframework.stereotype.Repository
 class VarRefDetailDao {
 
     /**
-     * 批量保存变量引用详情（支持更新）
-     * 使用 onDuplicateKeyUpdate 处理已存在的记录
-     * @param dslContext 数据库上下文
-     * @param varRefDetails 变量引用详情列表
+     * 批量保存变量引用详情。
      */
     fun batchSave(
         dslContext: DSLContext,
         varRefDetails: List<VarRefDetail>
     ) {
-        if (varRefDetails.isEmpty()) {
-            return
-        }
+        if (varRefDetails.isEmpty()) return
 
         with(TVarRefDetail.T_VAR_REF_DETAIL) {
             val records = varRefDetails.map { detail ->
@@ -82,9 +77,6 @@ class VarRefDetailDao {
                     detail.creator,
                     detail.modifier
                 )
-                .onDuplicateKeyUpdate()
-                .set(POSITION_PATH, detail.positionPath)
-                .set(MODIFIER, detail.modifier)
             }
             dslContext.batch(records).execute()
         }

@@ -50,7 +50,7 @@ class UserPublicVarGroupHistoryResourceImpl @Autowired constructor(
         page: Int,
         pageSize: Int
     ): Result<Page<PublicVarReleaseDO>> {
-        publicVarGroupPermissionService.checkPublicVarGroupPermission(
+        publicVarGroupPermissionService.checkPublicVarGroupPermissionWithMessage(
             userId = userId,
             projectId = projectId,
             groupName = groupName,

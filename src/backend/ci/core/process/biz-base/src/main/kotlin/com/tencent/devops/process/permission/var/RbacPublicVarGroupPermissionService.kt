@@ -1,21 +1,23 @@
 package com.tencent.devops.process.permission.`var`
 
+import com.tencent.devops.auth.api.service.ServicePermissionAuthResource
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.auth.api.AuthPermission
-import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.api.AuthResourceApi
 import com.tencent.devops.common.auth.api.AuthResourceType
-import com.tencent.devops.common.auth.api.pojo.AuthResourceInstance
 import com.tencent.devops.common.auth.code.PublicVarGroupAuthServiceCode
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.pojo.`var`.PublicVarGroupPermissions
 import org.slf4j.LoggerFactory
 
 @Suppress("LongParameterList")
-class RbacPublicVarGroupPermissionService constructor(
-    val authPermissionApi: AuthPermissionApi,
+class RbacPublicVarGroupPermissionService(
     val authResourceApi: AuthResourceApi,
+    val client: Client,
+    val tokenService: ClientTokenService,
     authProjectApi: AuthProjectApi,
     publicVarGroupAuthServiceCode: PublicVarGroupAuthServiceCode
 ) : AbstractPublicVarGroupPermissionService(
@@ -29,15 +31,17 @@ class RbacPublicVarGroupPermissionService constructor(
         permission: AuthPermission,
         groupName: String
     ): Boolean {
-
-        return authPermissionApi.validateUserResourcePermission(
-            user = userId,
-            serviceCode = publicVarGroupAuthServiceCode,
-            resourceType = RESOURCE_TYPE,
-            projectCode = projectId,
-            resourceCode = groupName,
-            permission = permission
-        )
+        val action = AuthResourceType.PUBLIC_VAR_GROUP.value + "_" + permission.value
+        return client.get(ServicePermissionAuthResource::class)
+            .validateUserResourcePermissionByRelation(
+                token = tokenService.getSystemToken(),
+                userId = userId,
+                projectCode = projectId,
+                resourceType = RESOURCE_TYPE.value,
+                resourceCode = groupName,
+                relationResourceType = null,
+                action = action
+            ).data ?: false
     }
 
     override fun checkPublicVarGroupPermissionWithMessage(
@@ -54,11 +58,11 @@ class RbacPublicVarGroupPermissionService constructor(
             )) {
             logger.warn(
                 "User($userId) does not have permission to ${permission.value} " +
-                        "var group under project($projectId)"
+                        "var group($groupName) under project($projectId)"
             )
             throw ErrorCodeException(
-                errorCode = ProcessMessageCode.USER_NEED_PROJECT_X_PERMISSION,
-                params = arrayOf(userId, projectId)
+                errorCode = ProcessMessageCode.ERROR_PUBLIC_VAR_GROUP_NO_PERMISSION,
+                params = arrayOf(groupName, permission.value)
             )
         }
         return true
@@ -67,45 +71,27 @@ class RbacPublicVarGroupPermissionService constructor(
     override fun filterPublicVarGroups(
         userId: String,
         projectId: String,
-        authPermissions: Set<AuthPermission>,
-        groupNames: List<String>
+        authPermissions: Set<AuthPermission>
     ): Map<AuthPermission, List<String>> {
         logger.info("[rbac] filter public var groups|$userId|$projectId|$authPermissions")
         val startEpoch = System.currentTimeMillis()
         try {
-            val resources = publicVarGroups2AuthResources(
-                projectId = projectId,
-                groupNames = groupNames
-            )
-            return authPermissionApi.filterResourcesByPermissions(
-                user = userId,
-                serviceCode = publicVarGroupAuthServiceCode,
-                resourceType = RESOURCE_TYPE,
-                projectCode = projectId,
-                permissions = authPermissions,
-                resources = resources
-            )
+            val actions = authPermissions.map { permission ->
+                AuthResourceType.PUBLIC_VAR_GROUP.value + "_" + permission.value
+            }
+            // key 类型由接口签名强限制（服务端按 action 后缀反查枚举），无需转换，与全项目 RBAC 调用方一致
+            return client.get(ServicePermissionAuthResource::class)
+                .getUserResourcesByPermissions(
+                    token = tokenService.getSystemToken(),
+                    userId = userId,
+                    projectCode = projectId,
+                    action = actions,
+                    resourceType = RESOURCE_TYPE.value
+                ).data ?: emptyMap()
         } finally {
             logger.info(
                 "It take(${System.currentTimeMillis() - startEpoch})ms to filter public var groups|" +
                     "$userId|$projectId|$authPermissions"
-            )
-        }
-    }
-
-    private fun publicVarGroups2AuthResources(
-        projectId: String,
-        groupNames: List<String>
-    ): List<AuthResourceInstance> {
-        val projectInstance = AuthResourceInstance(
-            resourceType = AuthResourceType.PROJECT.value,
-            resourceCode = projectId
-        )
-        return groupNames.map { groupName ->
-            AuthResourceInstance(
-                resourceType = RESOURCE_TYPE.value,
-                resourceCode = groupName,
-                parents = listOf(projectInstance)
             )
         }
     }
@@ -135,26 +121,51 @@ class RbacPublicVarGroupPermissionService constructor(
         )
     }
 
-    override fun checkPublicVarGroupPermissions(
+    override fun checkPublicVarGroupCreatePermission(
         userId: String,
-        projectId: String,
-        permission: AuthPermission
+        projectId: String
     ): Boolean {
-        val resourcePermission = authPermissionApi.validateUserResourcePermission(
-            user = userId,
-            serviceCode = publicVarGroupAuthServiceCode,
-            resourceType = RESOURCE_TYPE,
-            projectCode = projectId,
-            resourceCode = projectId,
-            permission = permission
-        )
+        val resourcePermission =
+            client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
+                token = tokenService.getSystemToken(),
+                userId = userId,
+                projectCode = projectId,
+                relationResourceType = null,
+                resourceType = AuthResourceType.PROJECT.value,
+                resourceCode = projectId,
+                action = AuthResourceType.PUBLIC_VAR_GROUP.value + "_" + AuthPermission.CREATE.value,
+            ).data ?: false
         if (!resourcePermission) {
             throw ErrorCodeException(
                 errorCode = ProcessMessageCode.USER_NEED_PROJECT_X_PERMISSION,
                 params = arrayOf(userId, projectId)
             )
         }
-        return resourcePermission
+        return true
+    }
+
+    override fun checkPublicVarGroupPermissions(
+        userId: String,
+        projectId: String,
+        permission: AuthPermission
+    ): Boolean {
+        val resourcePermission =
+            client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
+                token = tokenService.getSystemToken(),
+                userId = userId,
+                projectCode = projectId,
+                relationResourceType = null,
+                resourceType = AuthResourceType.PUBLIC_VAR_GROUP.value,
+                resourceCode = "*",
+                action = AuthResourceType.PUBLIC_VAR_GROUP.value + "_" + permission.value,
+            ).data ?: false
+        if (!resourcePermission) {
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.USER_NEED_PROJECT_X_PERMISSION,
+                params = arrayOf(userId, projectId)
+            )
+        }
+        return true
     }
 
     override fun getPublicVarGroupPermissions(
@@ -170,8 +181,7 @@ class RbacPublicVarGroupPermissionService constructor(
                 AuthPermission.VIEW,
                 AuthPermission.DELETE,
                 AuthPermission.USE
-            ),
-            groupNames = listOf(groupName)
+            )
         )
         return PublicVarGroupPermissions(
             canEdit = permissionMap[AuthPermission.EDIT]?.contains(groupName) ?: false,

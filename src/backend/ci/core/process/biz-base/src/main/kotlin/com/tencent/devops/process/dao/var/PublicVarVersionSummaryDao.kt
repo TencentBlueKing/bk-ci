@@ -30,7 +30,7 @@ package com.tencent.devops.process.dao.`var`
 import com.tencent.devops.model.process.tables.TResourcePublicVarGroupReferInfo
 import com.tencent.devops.model.process.tables.TResourcePublicVarReferInfo
 import com.tencent.devops.model.process.tables.TResourcePublicVarVersionSummary
-import com.tencent.devops.process.constant.ProcessMessageCode.DYNAMIC_VERSION
+import com.tencent.devops.process.constant.ProcessConstants.DYNAMIC_VERSION
 import com.tencent.devops.process.pojo.`var`.po.PublicVarVersionSummaryPO
 import java.time.LocalDateTime
 import org.jooq.DSLContext
@@ -203,24 +203,6 @@ class PublicVarVersionSummaryDao {
                 )
             }
             delete.execute()
-        }
-    }
-
-    /**
-     * 删除变量的所有版本概要信息
-     */
-    fun deleteByVarName(
-        dslContext: DSLContext,
-        projectId: String,
-        groupName: String,
-        varName: String
-    ) {
-        with(TResourcePublicVarVersionSummary.T_RESOURCE_PUBLIC_VAR_VERSION_SUMMARY) {
-            dslContext.deleteFrom(this)
-                .where(PROJECT_ID.eq(projectId))
-                .and(GROUP_NAME.eq(groupName))
-                .and(VAR_NAME.eq(varName))
-                .execute()
         }
     }
 

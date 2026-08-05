@@ -30,21 +30,12 @@ package com.tencent.devops.process.service.`var`
 import com.tencent.devops.process.dao.`var`.PublicVarReferInfoDao
 import com.tencent.devops.process.pojo.`var`.po.ResourcePublicVarReferPO
 import org.jooq.DSLContext
-import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 /**
  * 公共变量引用写入服务
- *
- * 职责：把 [PublicVarReferInfoService] 计算出来的"需要新增的引用记录"批量写入
- * `T_RESOURCE_PUBLIC_VAR_REFER_INFO` 表。
- *
- * 说明：
- * - 自方案 4 起，`T_RESOURCE_PUBLIC_VAR_VERSION_SUMMARY.REFER_COUNT` 字段不再由代码维护，
- *   referCount 统一通过实时 JOIN 聚合查询得出（见 [PublicVarVersionSummaryDao.batchGetActiveReferCount]）。
- *   因此本服务不再承担"更新计数"职责，仅负责引用记录的批量写入。
  * - 本服务不提供锁保护，锁保护由外层（[PublicVarReferInfoService]）统一控制。
  */
 @Service
@@ -55,20 +46,6 @@ class PublicVarReferWriteService @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(PublicVarReferWriteService::class.java)
-    }
-
-    /**
-     * 批量新增引用记录（自管理事务版本）
-     * @param referInfos 引用信息列表
-     */
-    fun batchAddRefer(referInfos: List<ResourcePublicVarReferPO>) {
-        if (referInfos.isEmpty()) {
-            return
-        }
-        dslContext.transaction { configuration ->
-            val context = DSL.using(configuration)
-            doBatchAddRefer(context, referInfos)
-        }
     }
 
     /**

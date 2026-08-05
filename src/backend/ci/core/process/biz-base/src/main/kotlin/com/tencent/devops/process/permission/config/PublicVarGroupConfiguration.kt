@@ -28,13 +28,16 @@
 
 package com.tencent.devops.process.permission.config
 
-import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.api.AuthResourceApi
 import com.tencent.devops.common.auth.code.PublicVarGroupAuthServiceCode
-import com.tencent.devops.process.permission.`var`.MockPublicVarGroupPermissionService
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.client.ClientTokenService
+import com.tencent.devops.process.dao.`var`.PublicVarGroupDao
 import com.tencent.devops.process.permission.`var`.PublicVarGroupPermissionService
 import com.tencent.devops.process.permission.`var`.RbacPublicVarGroupPermissionService
+import com.tencent.devops.process.permission.`var`.SimplePublicVarGroupPermissionService
+import org.jooq.DSLContext
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
@@ -50,20 +53,41 @@ import org.springframework.core.Ordered
 class PublicVarGroupConfiguration {
 
     @Bean
-    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "rbac")
-    fun rbacPublicVarGroupPermissionService(
-        authPermissionApi: AuthPermissionApi,
-        authResourceApi: AuthResourceApi,
-        authProjectApi: AuthProjectApi,
-        publicVarGroupAuthServiceCode: PublicVarGroupAuthServiceCode
-    ): PublicVarGroupPermissionService = RbacPublicVarGroupPermissionService(
-        authPermissionApi = authPermissionApi,
-        authResourceApi = authResourceApi,
-        authProjectApi = authProjectApi,
-        publicVarGroupAuthServiceCode = publicVarGroupAuthServiceCode
+    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "sample")
+    fun samplePublicVarGroupPermissionService(
+        publicVarGroupDao: PublicVarGroupDao,
+        dslContext: DSLContext,
+    ): PublicVarGroupPermissionService = SimplePublicVarGroupPermissionService(
+        publicVarGroupDao = publicVarGroupDao,
+        dslContext = dslContext
     )
 
     @Bean
+    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "rbac")
+    fun rbacPublicVarGroupPermissionService(
+        authResourceApi: AuthResourceApi,
+        authProjectApi: AuthProjectApi,
+        publicVarGroupAuthServiceCode: PublicVarGroupAuthServiceCode,
+        client: Client,
+        tokenService: ClientTokenService,
+    ): PublicVarGroupPermissionService = RbacPublicVarGroupPermissionService(
+        authResourceApi = authResourceApi,
+        authProjectApi = authProjectApi,
+        publicVarGroupAuthServiceCode = publicVarGroupAuthServiceCode,
+        client = client,
+        tokenService = tokenService,
+    )
+
+    /**
+     * 兜底 Bean：auth.idProvider 非 sample/rbac 时提供 Simple 实现，避免启动失败
+     */
+    @Bean
     @ConditionalOnMissingBean(PublicVarGroupPermissionService::class)
-    fun mockPublicVarGroupPermissionService() = MockPublicVarGroupPermissionService()
+    fun fallbackPublicVarGroupPermissionService(
+        publicVarGroupDao: PublicVarGroupDao,
+        dslContext: DSLContext,
+    ): PublicVarGroupPermissionService = SimplePublicVarGroupPermissionService(
+        publicVarGroupDao = publicVarGroupDao,
+        dslContext = dslContext
+    )
 }

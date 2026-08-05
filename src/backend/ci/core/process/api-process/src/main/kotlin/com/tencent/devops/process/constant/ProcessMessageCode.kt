@@ -461,7 +461,7 @@ object ProcessMessageCode {
     const val ERROR_PIPELINE_COMMON_VAR_GROUP_NOT_EXIST = "2101348"
     // 公共变量组({0})已被引用，无法删除
     const val ERROR_PUBLIC_VAR_GROUP_REFERENCED = "2101349"
-    // 流水线公共变量组中变量名称重复
+    // 流水线公共变量组中变量名称({0})已存在
     const val ERROR_PIPELINE_COMMON_VAR_GROUP_VAR_NAME_DUPLICATE = "2101350"
     // 公共变量组YAML解析失败: {0}
     const val ERROR_PUBLIC_VAR_GROUP_YAML_PARSE_FAILED = "2101351"
@@ -482,6 +482,7 @@ object ProcessMessageCode {
     const val ERROR_PUBLIC_VAR_GROUP_YAML_UNKNOWN_FIELD = "2101359"
     // 公共变量组YAML格式不正确，请检查字段类型
     const val ERROR_PUBLIC_VAR_GROUP_YAML_DESERIALIZE_ERROR = "2101360"
+
     // 触发事件缓存过期已清理。若需重放，请到代码库操作。
     const val ERROR_TRIGGER_EVENT_EXPIRED = "2101361"
     const val ERROR_TEMPLATE_MIGRATING = "2101362" // 模板迁移中，不能操作
@@ -532,8 +533,10 @@ object ProcessMessageCode {
     const val ERROR_PUBLIC_VAR_GROUP_YAML_MISSING_FIELD = "2101387"
     // 公共变量组YAML格式错误
     const val ERROR_PUBLIC_VAR_GROUP_YAML_FORMAT_ERROR = "2101388"
-    // 流水线公共变量组({0})已存在
-    const val ERROR_PUBLIC_VAR_GROUP_IS_EXIST = "2101389"
+    // 公共变量组名称({0})已存在
+    const val ERROR_PUBLIC_VAR_GROUP_NAME_DUPLICATE_CASE_INSENSITIVE = "2101390"
+    // 用户无公共变量组({0})的({1})权限
+    const val ERROR_PUBLIC_VAR_GROUP_NO_PERMISSION = "2101391"
 
     // 构建执行相关错误码（2101500-2101599）
     const val ERROR_PIPELINE_START_NODE_NO_PERMISSION = "2101500" // 用户[{0}]没有节点[{1}]的操作权限，无法启动流水线

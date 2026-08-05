@@ -195,6 +195,23 @@ class PublicVarGroupDao {
     }
 
     /**
+     * 查询项目下与指定名称忽略大小写同名的最新版本变量组名称候选（同名校验用，避免全量加载组名）
+     */
+    fun listNamesConflictByNameIgnoreCase(
+        dslContext: DSLContext,
+        projectId: String,
+        groupName: String
+    ): List<String> {
+        with(TResourcePublicVarGroup.T_RESOURCE_PUBLIC_VAR_GROUP) {
+            return dslContext.select(GROUP_NAME).from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(LATEST_FLAG.eq(true))
+                .and(GROUP_NAME.lower().eq(groupName.lowercase()))
+                .fetchInto(String::class.java)
+        }
+    }
+
+    /**
      * 构建变量组查询的公共条件
      * @param projectId 项目ID
      * @param filterByGroupName 按变量组名过滤（模糊匹配）
