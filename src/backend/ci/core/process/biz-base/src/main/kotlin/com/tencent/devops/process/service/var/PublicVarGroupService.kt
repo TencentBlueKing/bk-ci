@@ -45,7 +45,7 @@ import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
-import com.tencent.devops.process.constant.ProcessMessageCode.DYNAMIC_VERSION
+import com.tencent.devops.process.constant.ProcessConstants.DYNAMIC_VERSION
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_COMMON_VAR_GROUP_CONFLICT
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PUBLIC_VAR_GROUP_YAML_DESERIALIZE_ERROR
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PUBLIC_VAR_GROUP_YAML_FORMAT_ERROR
@@ -115,13 +115,27 @@ class PublicVarGroupService @Autowired constructor(
         private const val IAM_DELETE_RETRY_INTERVAL_MS = 500L
     }
 
-    fun saveGroup(publicVarGroupDTO: PublicVarGroupDTO, allowUpgrade: Boolean = true): String {
+    fun saveGroup(
+        publicVarGroupDTO: PublicVarGroupDTO,
+        allowUpgrade: Boolean = true,
+        requireExisting: Boolean = false
+    ): String {
         val projectId = publicVarGroupDTO.projectId
         val userId = publicVarGroupDTO.userId
         val groupName = publicVarGroupDTO.publicVarGroup.groupName
         if (groupName.isBlank() || !GROUP_NAME_REGEX.matches(groupName)) {
             throw ErrorCodeException(errorCode = ERROR_PUBLIC_VAR_GROUP_YAML_NAME_FORMAT)
         }
+        // ID 远程分配放在锁外，缩短锁持有时间
+        val id = client.get(ServiceAllocIdResource::class)
+            .generateSegmentId("T_RESOURCE_PUBLIC_VAR_GROUP").data
+            ?: throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_PUBLIC_VAR_GROUP_ADD_FAILED,
+                params = arrayOf("ID allocation service unavailable")
+            )
+        val varSegmentIds = publicVarService.batchGenerateVarSegmentIds(
+            publicVarGroupDTO.publicVarGroup.publicVars.size
+        )
         val redisLock = RedisLock(
             redisOperation = redisOperation,
             lockKey = "${ProcessMessageCode.PUBLIC_VAR_GROUP_ADD_LOCK_KEY}_${projectId}_$groupName",
@@ -130,26 +144,38 @@ class PublicVarGroupService @Autowired constructor(
         redisLock.lock()
         try {
             // 同名校验（忽略大小写）
-            val conflictGroupName = publicVarGroupDao.listGroupsNameByProjectId(dslContext, projectId)
-                .firstOrNull { it.equals(groupName, ignoreCase = true) && (!allowUpgrade || it != groupName) }
-            if (conflictGroupName != null) {
+            val conflictNames = publicVarGroupDao.listNamesConflictByNameIgnoreCase(
+                dslContext = dslContext,
+                projectId = projectId,
+                groupName = groupName
+            )
+            val hasConflict = if (allowUpgrade) {
+                conflictNames.any { it != groupName }
+            } else {
+                conflictNames.isNotEmpty()
+            }
+            if (hasConflict) {
                 throw ErrorCodeException(
                     errorCode = ProcessMessageCode.ERROR_PUBLIC_VAR_GROUP_NAME_DUPLICATE_CASE_INSENSITIVE,
                     params = arrayOf(groupName)
                 )
             }
             publicVarService.checkGroupPublicVar(publicVarGroupDTO.publicVarGroup.publicVars)
-            val id = client.get(ServiceAllocIdResource::class)
-                .generateSegmentId("T_RESOURCE_PUBLIC_VAR_GROUP").data
-                ?: throw ErrorCodeException(
-                    errorCode = ProcessMessageCode.ERROR_PUBLIC_VAR_GROUP_ADD_FAILED,
-                    params = arrayOf("ID allocation service unavailable")
-                )
             // 判断是新建还是升级：升级需校验编辑权限
             val existingVersion = publicVarGroupDao.getLatestVersionByGroupName(
-                dslContext, projectId, groupName
+                dslContext = dslContext,
+                projectId = projectId,
+                groupName = groupName
             ) ?: 0
+            // 更新要求变量组已存在
+            if (requireExisting && existingVersion == 0) {
+                throw ErrorCodeException(
+                    errorCode = ERROR_INVALID_PARAM_,
+                    params = arrayOf(groupName)
+                )
+            }
             if (existingVersion > 0) {
+                // 权限校验需用锁内版本查询结果，保留在锁内
                 val editPermissionMap = publicVarGroupPermissionService.filterPublicVarGroups(
                     userId = userId,
                     projectId = projectId,
@@ -169,7 +195,8 @@ class PublicVarGroupService @Autowired constructor(
                 userId = userId,
                 groupName = groupName,
                 publicVarGroupDTO = publicVarGroupDTO,
-                existingVersion = existingVersion
+                existingVersion = existingVersion,
+                varSegmentIds = varSegmentIds
             )
             // 数据库事务成功后，如果是新建变量组（首次创建），注册到权限中心
             if (isCreate) {
@@ -198,18 +225,11 @@ class PublicVarGroupService @Autowired constructor(
      * 变量组必须已存在（不存在则报错，避免误走创建路径）；编辑权限由接口层校验。
      */
     fun updateGroup(publicVarGroupDTO: PublicVarGroupDTO): String {
-        val projectId = publicVarGroupDTO.projectId
-        val groupName = publicVarGroupDTO.publicVarGroup.groupName
-        val existingVersion = publicVarGroupDao.getLatestVersionByGroupName(
-            dslContext, projectId, groupName
-        ) ?: 0
-        if (existingVersion == 0) {
-            throw ErrorCodeException(
-                errorCode = ERROR_INVALID_PARAM_,
-                params = arrayOf(groupName)
-            )
-        }
-        return saveGroup(publicVarGroupDTO, allowUpgrade = true)
+        return saveGroup(
+            publicVarGroupDTO = publicVarGroupDTO,
+            allowUpgrade = true,
+            requireExisting = true
+        )
     }
 
     private fun createOrUpgradeGroupRecord(
@@ -218,12 +238,9 @@ class PublicVarGroupService @Autowired constructor(
         userId: String,
         groupName: String,
         publicVarGroupDTO: PublicVarGroupDTO,
-        existingVersion: Int
+        existingVersion: Int,
+        varSegmentIds: List<Long>
     ): Boolean {
-        // 事务外预生成变量分布式 ID（远程调用），避免在 DB 事务持有连接期间发起 RPC
-        val varSegmentIds = publicVarService.batchGenerateVarSegmentIds(
-            publicVarGroupDTO.publicVarGroup.publicVars.size
-        )
         val isCreate = (existingVersion == 0)
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
@@ -476,7 +493,7 @@ class PublicVarGroupService @Autowired constructor(
         val publicVarGroupVO = parseYamlToPublicVarGroupVO(yaml)
 
         return saveGroup(
-            PublicVarGroupDTO(
+            publicVarGroupDTO = PublicVarGroupDTO(
                 projectId = projectId,
                 userId = userId,
                 publicVarGroup = publicVarGroupVO

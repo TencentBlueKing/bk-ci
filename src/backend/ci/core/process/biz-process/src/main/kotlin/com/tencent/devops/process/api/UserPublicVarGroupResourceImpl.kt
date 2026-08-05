@@ -60,7 +60,7 @@ class UserPublicVarGroupResourceImpl @Autowired constructor(
         )
         return Result(
             publicVarGroupService.saveGroup(
-                PublicVarGroupDTO(
+                publicVarGroupDTO = PublicVarGroupDTO(
                     projectId = projectId,
                     userId = userId,
                     publicVarGroup = publicVarGroup
@@ -104,6 +104,7 @@ class UserPublicVarGroupResourceImpl @Autowired constructor(
         page: Int,
         pageSize: Int
     ): Result<Page<PublicVarGroupDO>> {
+        // 列表接口不设项目级前置校验：返回全量组 + 资源级 permission 标记，由前端按标记过滤展示
         return Result(publicVarGroupService.getGroups(
             userId = userId,
             queryReq = PublicVarGroupInfoQueryReqDTO(
@@ -182,12 +183,11 @@ class UserPublicVarGroupResourceImpl @Autowired constructor(
     }
 
     override fun convertGroupYaml(userId: String, projectId: String, publicVarGroup: PublicVarGroupVO): Result<String> {
-        // 校验查看权限
-        publicVarGroupPermissionService.checkPublicVarGroupPermissionWithMessage(
+        // 纯格式转换不读库，groupName 可能是未创建的新组，用项目级 VIEW 校验
+        publicVarGroupPermissionService.checkPublicVarGroupPermissions(
             userId = userId,
             projectId = projectId,
-            permission = AuthPermission.VIEW,
-            groupName = publicVarGroup.groupName
+            permission = AuthPermission.VIEW
         )
         return Result(publicVarGroupService.convertGroupYaml(
             userId = userId,
