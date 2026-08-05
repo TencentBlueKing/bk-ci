@@ -70,7 +70,6 @@
                 @blur="handleVarBlur"
                 @clear="handleVarClear"
                 :disabled="disabled"
-                :placeholder="pipelineDialect === 'CLASSIC' ? $t('placeholderVar') : $t('placeholderConstraintVar')"
             />
         </div>
     </div>
@@ -374,7 +373,7 @@
         position: relative;
         .change-type {
             display: flex;
-            align-content: center;
+            align-items: center;
             justify-content: space-around;
             flex-shrink: 0;
             margin-right: 4px;
