@@ -52,7 +52,16 @@ class LogProjectIdResolver(
         .expireAfterWrite(LOCAL_CACHE_TTL_MINUTES, TimeUnit.MINUTES)
         .build<String, String>()
 
-    private val negativeCacheExpireAt = ConcurrentHashMap<String, Long>()
+    /**
+     * 查不到 projectId 的 buildId 短期不再回查 db。
+     *
+     * 必须是有界带过期的缓存：未知 buildId 的量级等于并发构建数，
+     * 用普通 Map 记录过期时间的话，不再被访问的条目永远没有机会被清理。
+     */
+    private val negativeCache = Caffeine.newBuilder()
+        .maximumSize(NEGATIVE_CACHE_MAX)
+        .expireAfterWrite(NEGATIVE_CACHE_TTL_MS, TimeUnit.MILLISECONDS)
+        .build<String, Boolean>()
 
     private val inflight = ConcurrentHashMap<String, Any>()
 
@@ -85,14 +94,14 @@ class LogProjectIdResolver(
             return fromRedis
         }
 
-        if (isNegativeCached(buildId)) return null
+        if (negativeCache.getIfPresent(buildId) != null) return null
 
         return lookupFromDb(buildId)
     }
 
     private fun saveToCache(buildId: String, projectId: String) {
         localCache.put(buildId, projectId)
-        negativeCacheExpireAt.remove(buildId)
+        negativeCache.invalidate(buildId)
         try {
             redisOperation.set(redisKey(buildId), projectId, REDIS_TTL_SECONDS)
         } catch (e: Exception) {
@@ -120,7 +129,7 @@ class LogProjectIdResolver(
                     }
                     return fromDb
                 }
-                negativeCacheExpireAt[buildId] = System.currentTimeMillis() + NEGATIVE_CACHE_TTL_MS
+                negativeCache.put(buildId, true)
                 return null
             }
         } finally {
@@ -128,18 +137,12 @@ class LogProjectIdResolver(
         }
     }
 
-    private fun isNegativeCached(buildId: String): Boolean {
-        val expireAt = negativeCacheExpireAt[buildId] ?: return false
-        if (System.currentTimeMillis() < expireAt) return true
-        negativeCacheExpireAt.remove(buildId)
-        return false
-    }
-
     companion object {
         private val logger = LoggerFactory.getLogger(LogProjectIdResolver::class.java)
         private const val LOCAL_CACHE_MAX = 100_000L
         private const val LOCAL_CACHE_TTL_MINUTES = 30L
         private const val REDIS_TTL_SECONDS = 2 * 24 * 3600L
+        private const val NEGATIVE_CACHE_MAX = 100_000L
         private const val NEGATIVE_CACHE_TTL_MS = 10_000L
 
         private fun redisKey(buildId: String) = "log:build:project:id:$buildId"

@@ -62,6 +62,7 @@ class LogStorageDegradeSwitcher(
 
     private val keyStates = ConcurrentHashMap<String, KeyState>()
     private val degradeCount = AtomicLong(0)
+    private val lastEvictMs = AtomicLong(0)
 
     fun shouldDegrade(trafficKey: String? = null): Boolean {
         if (properties.forceStorage) {
@@ -148,21 +149,36 @@ class LogStorageDegradeSwitcher(
         }
     }
 
+    /**
+     * 淘汰最冷的 key。
+     *
+     * 这里位于每批日志都会走到的记录路径上，而 key 数量在回退到 `b:{buildId}` 时等于
+     * 并发构建数，很容易长期高于上限。因此不能每次都做全量排序：先留出一段冗余水位，
+     * 超过后才批量清理到上限以下，并按时间节流，避免持续排序拖慢消费。
+     */
     private fun evictIfNeeded() {
-        val maxSize = properties.maxTrackedProjects
-        if (keyStates.size <= maxSize) return
-        val sortedEntries = keyStates.entries
+        val maxSize = properties.maxTrackedProjects.coerceAtLeast(1)
+        if (keyStates.size <= maxSize + maxSize / EVICT_SLACK_DIVISOR) return
+        val now = System.currentTimeMillis()
+        val last = lastEvictMs.get()
+        if (now - last < EVICT_INTERVAL_MS || !lastEvictMs.compareAndSet(last, now)) return
+        val retain = maxSize - maxSize / EVICT_SLACK_DIVISOR
+        val toRemove = keyStates.size - retain
+        if (toRemove <= 0) return
+        keyStates.entries
             .sortedBy { it.value.lastAccessMs }
-        val toRemove = keyStates.size - maxSize
-        for ((i, entry) in sortedEntries.withIndex()) {
-            if (i >= toRemove) break
-            keyStates.remove(entry.key)
-        }
+            .take(toRemove)
+            .forEach { keyStates.remove(it.key) }
     }
 
     companion object {
         private val logger = LoggerFactory.getLogger(LogStorageDegradeSwitcher::class.java)
         private const val UNKNOWN_KEY = "#unknown"
+
+        /** 上限之上额外容忍 1/8 的冗余，避免在上限附近反复触发淘汰 */
+        private const val EVICT_SLACK_DIVISOR = 8
+
+        private const val EVICT_INTERVAL_MS = 5_000L
 
         private fun normalizeKey(trafficKey: String?): String {
             return trafficKey?.takeIf { it.isNotBlank() } ?: UNKNOWN_KEY

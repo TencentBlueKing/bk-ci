@@ -202,6 +202,27 @@ class LogMetrics(
             .increment()
     }
 
+    /**
+     * 行号回退：行号缓存丢失，且 db 基线落后于本 Pod 已分配到的水位，
+     * 该构建后续日志改用 ES 自动 _id。非零即代表存在日志重复/顺序错乱风险，应当告警。
+     */
+    fun recordLineNumWatermarkLost() {
+        Counter.builder("log_line_num_watermark_lost_total")
+            .description("Builds whose line number rolled back and fell back to auto doc id")
+            .register(meterRegistry)
+            .increment()
+    }
+
+    /**
+     * 构建结束时行号键已不存在，无法把最终行号刷入 db。
+     */
+    fun recordLineNumFlushMissed() {
+        Counter.builder("log_line_num_flush_missed_total")
+            .description("Build finish events that could not flush line number to db")
+            .register(meterRegistry)
+            .increment()
+    }
+
     fun destinationOf(event: ILogEvent): String {
         return when (event) {
             is LogOriginHeavyEvent -> DESTINATION_ORIGIN_HEAVY

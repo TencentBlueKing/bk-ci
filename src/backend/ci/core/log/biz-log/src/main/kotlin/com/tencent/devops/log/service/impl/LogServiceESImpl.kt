@@ -267,13 +267,15 @@ class LogServiceESImpl(
     ): BulkOfferResult {
         val index = indexService.getIndexName(buildId)
         val client = logClient.hashClient(buildId)
+        val deterministicId = indexService.isLineNumReliable(buildId)
         val requests = ArrayList<IndexRequest>(logMessages.size)
         var approxBytes = 0L
         logMessages.forEach { logMessage ->
             val indexRequest = genIndexRequest(
                 buildId = buildId,
                 logMessage = logMessage,
-                index = index
+                index = index,
+                deterministicId = deterministicId
             )
             if (indexRequest != null) {
                 requests.add(indexRequest)
@@ -1255,6 +1257,7 @@ class LogServiceESImpl(
         val currentEpoch = System.currentTimeMillis()
         val index = indexService.getIndexName(buildId)
         val bulkClient = logClient.hashClient(buildId)
+        val deterministicId = indexService.isLineNumReliable(buildId)
         var lines = 0
         var bulkLines = 0
         val bulkRequest = BulkRequest()
@@ -1265,7 +1268,8 @@ class LogServiceESImpl(
             val indexRequest = genIndexRequest(
                 buildId = buildId,
                 logMessage = logMessage,
-                index = index
+                index = index,
+                deterministicId = deterministicId
             )
             if (indexRequest != null) {
                 bulkRequest.add(indexRequest)
@@ -1319,14 +1323,18 @@ class LogServiceESImpl(
     private fun genIndexRequest(
         buildId: String,
         logMessage: LogMessageWithLineNo,
-        index: String
+        index: String,
+        deterministicId: Boolean = true
     ): IndexRequest? {
         val builder = ESIndexUtils.getDocumentObject(buildId, logMessage)
         return try {
-            // 使用确定性 _id 保证 bulk 重试时的写入幂等性，避免出现同 lineNo 的重复文档
-            IndexRequest(index)
-                .id(buildDocId(buildId, logMessage.executeCount, logMessage.lineNo))
-                .source(builder)
+            // 使用确定性 _id 保证 bulk 重试时的写入幂等性，避免出现同 lineNo 的重复文档；
+            // 行号高水位丢失时该前提不再成立，必须让 ES 自动生成 _id，否则会覆盖历史日志
+            val request = IndexRequest(index)
+            if (deterministicId) {
+                request.id(buildDocId(buildId, logMessage.executeCount, logMessage.lineNo))
+            }
+            request.source(builder)
         } catch (e: IOException) {
             logger.error("[$buildId] Convert logMessage to es document failure", e)
             null

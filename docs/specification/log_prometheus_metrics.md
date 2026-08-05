@@ -28,6 +28,7 @@ curl -s "http://localhost/management/prometheus" | grep -E '^log_'
 | 打印线程池背压 | `log_print_*` / `log_print_rejected_total` | Gauge + 拒绝 Counter | ✅ |
 | 热点 build/project 规模 | `log_traffic_heavy_size` | `LogTrafficStatsService.heavySize()` | ✅ |
 | 项目熔断计数 | `log_es_circuit_open_projects` | `LogMetrics` Gauge ← `LogStorageDegradeSwitcher.openCircuitProjectCount()` | ✅ |
+| 行号回退/刷库缺失 | `log_line_num_watermark_lost_total` / `log_line_num_flush_missed_total` | `IndexService` | ✅ |
 
 **当前刻意未做（非判断 Kafka/ES 性能的必要项）：**
 
@@ -95,6 +96,17 @@ curl -s "http://localhost/management/prometheus" | grep -E '^log_'
 | `log_print_rejected_total` | Counter | 异步打印队列满被拒绝次数（HTTP 509） |
 | `log_traffic_heavy_size` | Gauge | 当前仍处于热点粘性窗口的 key（projectId 或 b:buildId）数量 |
 | `log_es_circuit_open_projects` | Gauge | 当前处于 per-project 熔断打开状态的 key 数量 |
+
+### 1.4 行号一致性
+
+行号决定 ES 文档的确定性 `_id`（`buildId#executeCount#lineNo`），一旦行号回退，新日志会覆盖同 `_id` 的历史日志。这两个指标用来发现该风险。
+
+| 代码指标名 | 类型 | 含义 |
+|---|---|---|
+| `log_line_num_watermark_lost_total` | Counter | 检测到行号回退（db 基线落后于本 Pod 已分配水位）的构建数，该构建后续改用 ES 自动 `_id` |
+| `log_line_num_flush_missed_total` | Counter | 构建结束时行号缓存已不存在，最终行号无法刷入 db |
+
+两者**正常应长期为 0**。非零说明 Redis 行号键在构建生命周期内丢失（过期、驱逐或主从切换），此时日志可能出现重复或顺序错乱。
 
 ---
 
@@ -294,6 +306,22 @@ sum(rate(log_print_rejected_total[1m]))
   annotations:
     summary: "log 异步打印队列满，出现拒绝"
 
+- alert: LogLineNumWatermarkLost
+  expr: sum(rate(log_line_num_watermark_lost_total[5m])) > 0
+  for: 1m
+  labels:
+    severity: critical
+  annotations:
+    summary: "log 行号水位回退，存在日志重复/错序风险"
+
+- alert: LogLineNumFlushMissed
+  expr: sum(rate(log_line_num_flush_missed_total[5m])) > 0
+  for: 5m
+  labels:
+    severity: warning
+  annotations:
+    summary: "log 构建结束时行号缓存已丢失，无法刷入 db"
+
 - alert: LogEsQuerySlow
   expr: |
     (
@@ -320,6 +348,7 @@ sum(rate(log_print_rejected_total[1m]))
 | heavy 隔离是否生效 | `origin_heavy` 有量，且普通 `origin`/`storage` 耗时不被拖死 |
 | 多集群单点劣化（腾讯） | `log_es_bulk_*{cluster="xxx"}` 按集群对比失败率/耗时 |
 | 上报入口顶满 | `log_print_queue_size`↑、`log_print_rejected_total`↑ |
+| 日志内容错乱/疑似丢失 | `log_line_num_watermark_lost_total`、`log_line_num_flush_missed_total` 是否非零 |
 | 页面查日志变慢 | `log_es_query_seconds_*`、`log_es_download_seconds_*` |
 
 压测流水线：`bin/log-test-pipeline.yml`（该目录被 gitignore，仅本地/运维使用）。
