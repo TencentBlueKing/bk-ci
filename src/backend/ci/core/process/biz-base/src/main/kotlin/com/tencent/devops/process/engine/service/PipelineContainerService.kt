@@ -705,7 +705,22 @@ class PipelineContainerService @Autowired constructor(
         }
 
         // 构建矩阵永远跟随stage重试，在需要重试的stage中，单独增加重试记录
-        if (container.matrixGroupFlag == true && !context.needSkipWhenStageFailRetry(stage = stage)) {
+        // 仅当该矩阵父容器确实需要在本次运行中(重)执行时才处理，避免局部重试时误动前序/无关矩阵：
+        //  - 全新构建 newBuildFlag：需要建立矩阵父容器；
+        //  - 本stage整体重跑 needRerunTask（全量rebuild / stage重试命中本stage / finally / dependOn跳过后重跑）；
+        //  - 显式矩阵局部重试目标 isRetryMatrixGroup（子Job整体/子插件/矩阵批量）；
+        //  - 尚未进入完成态的矩阵（后续未执行stage的矩阵、或本次待重试的失败矩阵）。
+        // 反之，前序已完成stage的矩阵、以及同stage中其它Job被局部重试时已成功的矩阵（父容器已 isFinish），
+        // 一律不重置、不重新分裂——严格遵循“只向后执行、前序stage任何job/task都不执行”的底层设计。
+        // （历史BUG：任务级重试时 needSkipWhenStageFailRetry 恒为false，前序矩阵会被误清空子容器并重排导致重新分裂执行。）
+        val needProcessMatrixRetry = newBuildFlag ||
+            context.needRerunTask(stage = stage, container = container) ||
+            context.isRetryMatrixGroup(container) ||
+            !BuildStatus.parse(container.status).isFinish()
+        if (container.matrixGroupFlag == true &&
+            !context.needSkipWhenStageFailRetry(stage = stage) &&
+            needProcessMatrixRetry
+        ) {
             // 矩阵局部重试（保留分裂结果，只重跑目标/失败子Job，不整组重新分裂）触发条件：
             //  1) 显式矩阵局部重试（子Job整体/子插件/矩阵批量按钮）：isRetryMatrixGroup
             //  2) Stage级“仅重试失败Job”(retryFailedContainer=true)：矩阵父容器同样按失败子Job做批量局部重试，
