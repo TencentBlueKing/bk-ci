@@ -15,7 +15,6 @@ import com.tencent.devops.dispatch.pojo.thirdpartyagent.AgentPipelineContainerBu
 import com.tencent.devops.dispatch.pojo.thirdpartyagent.JobIdAndName
 import com.tencent.devops.dispatch.pojo.thirdpartyagent.PipelineIdAndName
 import com.tencent.devops.dispatch.pojo.thirdpartyagent.TPAPipelineBuildCountResp
-import com.tencent.devops.dispatch.pojo.thirdpartyagent.TPAPipelineBuildView
 import com.tencent.devops.dispatch.pojo.thirdpartyagent.TPAPipelineReq
 import com.tencent.devops.dispatch.service.ThirdPartyAgentService
 import com.tencent.devops.environment.api.ServiceEnvironmentResource
