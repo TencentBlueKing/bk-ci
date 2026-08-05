@@ -176,20 +176,7 @@
                                                         v-if="isEnterprise"
                                                     >
                                                         <span class="scope-label">{{ $t('store.操作系统：') }}</span>
-                                                        <span v-if="getAgentOsList(scopeConfig.jobTypeConfigs).length > 0">
-                                                            <i
-                                                                class="devops-icon icon-linux-view"
-                                                                v-if="getAgentOsList(scopeConfig.jobTypeConfigs).indexOf('LINUX') !== -1"
-                                                            ></i>
-                                                            <i
-                                                                class="devops-icon icon-windows"
-                                                                v-if="getAgentOsList(scopeConfig.jobTypeConfigs).indexOf('WINDOWS') !== -1"
-                                                            ></i>
-                                                            <i
-                                                                class="devops-icon icon-macos"
-                                                                v-if="getAgentOsList(scopeConfig.jobTypeConfigs).indexOf('MACOS') !== -1"
-                                                            ></i>
-                                                        </span>
+                                                        <os-icon-list :job-type-configs="scopeConfig.jobTypeConfigs" />
                                                     </div>
                                                     <div
                                                         class="scope-info-item"
@@ -198,20 +185,10 @@
                                                         <span class="scope-label">{{ $t('store.适用Job类型：') }}</span>
                                                         <span>
                                                             {{ getJobTypeNames(scopeConfig.jobTypeConfigs) }}
-                                                            <span v-if="getAgentOsList(scopeConfig.jobTypeConfigs).length > 0">（
-                                                                <i
-                                                                    class="devops-icon icon-linux-view"
-                                                                    v-if="getAgentOsList(scopeConfig.jobTypeConfigs).indexOf('LINUX') !== -1"
-                                                                ></i>
-                                                                <i
-                                                                    class="devops-icon icon-windows"
-                                                                    v-if="getAgentOsList(scopeConfig.jobTypeConfigs).indexOf('WINDOWS') !== -1"
-                                                                ></i>
-                                                                <i
-                                                                    class="devops-icon icon-macos"
-                                                                    v-if="getAgentOsList(scopeConfig.jobTypeConfigs).indexOf('MACOS') !== -1"
-                                                                ></i>）
-                                                            </span>
+                                                            <os-icon-list
+                                                                :job-type-configs="scopeConfig.jobTypeConfigs"
+                                                                with-parentheses
+                                                            />
                                                         </span>
                                                     </div>
                                                     <div class="scope-info-item">
@@ -376,6 +353,7 @@
     import breadCrumbs from '@/components/bread-crumbs.vue'
     import codeCheck from '@/components/code-check'
     import BuildLog from '@/components/Log'
+    import osIconList from '@/components/osIconList.vue'
     import webSocketMessage from '@/utils/webSocketMessage'
     import cookie from 'js-cookie'
     import { mapActions } from 'vuex'
@@ -386,7 +364,8 @@
         components: {
             BuildLog,
             breadCrumbs,
-            codeCheck
+            codeCheck,
+            osIconList
         },
 
         filters: {
@@ -718,11 +697,6 @@
                         this.uploadFile(fileObj)
                     }
                 }
-            },
-            getAgentOsList (jobTypeConfigs) {
-                if (!Array.isArray(jobTypeConfigs) || jobTypeConfigs.length === 0) return []
-                const agentConfig = jobTypeConfigs.find(config => config.jobType === 'AGENT')
-                return agentConfig && agentConfig.osList ? agentConfig.osList : []
             },
             uploadFile (fileObj, fieldCheckConfirmFlag = false) {
                 const formData = new FormData()

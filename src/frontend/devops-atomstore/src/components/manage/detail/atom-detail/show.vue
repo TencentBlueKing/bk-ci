@@ -37,20 +37,10 @@
                                     <span class="scope-label">{{ $t('store.适用Job类型：') }}</span>
                                     <span>
                                         {{ getJobTypeNames(scopeConfig.jobTypeConfigs) }}
-                                        <span v-if="getAgentOsList(scopeConfig.jobTypeConfigs).length > 0">（
-                                            <i
-                                                class="devops-icon icon-linux-view"
-                                                v-if="getAgentOsList(scopeConfig.jobTypeConfigs).indexOf('LINUX') !== -1"
-                                            ></i>
-                                            <i
-                                                class="devops-icon icon-windows"
-                                                v-if="getAgentOsList(scopeConfig.jobTypeConfigs).indexOf('WINDOWS') !== -1"
-                                            ></i>
-                                            <i
-                                                class="devops-icon icon-macos"
-                                                v-if="getAgentOsList(scopeConfig.jobTypeConfigs).indexOf('MACOS') !== -1"
-                                            ></i>）
-                                        </span>
+                                        <os-icon-list
+                                            :job-type-configs="scopeConfig.jobTypeConfigs"
+                                            with-parentheses
+                                        />
                                     </span>
                                 </div>
                                 <div class="scope-info-item">
@@ -103,6 +93,7 @@
 <script>
     import defaultPic from '../../../../images/defaultPic.svg'
     import labelList from '../../../labelList'
+    import osIconList from '../../../osIconList'
 
     export default {
         filters: {
@@ -114,7 +105,8 @@
         },
 
         components: {
-            labelList
+            labelList,
+            osIconList
         },
 
         props: {
@@ -148,11 +140,6 @@
             getJobTypeNames (jobTypeConfigs) {
                 if (!jobTypeConfigs || jobTypeConfigs.length === 0) return '--'
                 return jobTypeConfigs.map(config => this.jobTypeMap[config.jobType] || config.jobType).join('、')
-            },
-            getAgentOsList (jobTypeConfigs) {
-                if (!Array.isArray(jobTypeConfigs) || jobTypeConfigs.length === 0) return []
-                const agentConfig = jobTypeConfigs.find(config => config.jobType === 'AGENT')
-                return agentConfig && agentConfig.osList ? agentConfig.osList : []
             },
             getScopeLabelNames (scopeConfig) {
                 if (!scopeConfig.labelList || scopeConfig.labelList.length === 0) return []
