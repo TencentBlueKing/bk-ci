@@ -7,6 +7,7 @@
         :key="false"
         :esc-close="false"
         theme="primary"
+        ext-cls="draft-confirm-dialog"
         @cancel="close"
     >
         <header
@@ -238,6 +239,8 @@
                     return this.$t('resume')
                 } else if (this.showRollbackTips) {
                     return this.$t('rollbackConfirm')
+                } else if ([DRAFT_STATUS.PUBLISHED, DRAFT_STATUS.RELEASE_OUTDATED].includes(this.draftStatus)) {
+                    return this.$t('editBasedOnLatest')
                 }
                 return this.$t('newDraft')
             },
@@ -280,6 +283,11 @@
 </script>
 
 <style lang="scss" scoped>
+    ::v-deep .draft-confirm-dialog .bk-dialog-footer {
+        border-top: none !important;
+        background-color: #fff !important;
+        padding: 7px 24px 33px !important;
+    }
     .draft-hint-title {
         color: #313238;
         font-size: 20px;

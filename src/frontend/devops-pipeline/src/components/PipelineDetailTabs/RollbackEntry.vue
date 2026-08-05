@@ -178,9 +178,19 @@
                         return this.$t('createDraftTips', [this.versionName])
                 }
             },
+            // 优先用 draftStatus 接口返回的最新草稿信息，避免多窗口下详情未刷新导致基线过期
+            latestDraftBaseVersionName () {
+                return this.draftSaveInfo?.draftVersionName || this.draftBaseVersionName
+            },
+            latestDraftCreator () {
+                return this.draftSaveInfo?.updater || this.draftCreator
+            },
+            latestDraftUpdateTime () {
+                return this.draftSaveInfo?.updateTime || this.formatDraftCreateTime
+            },
             activeBranchVersionInfo () {
-                const key = this.draftBaseVersionName === this.versionName ? 'templateOutDateCoverWarningDesc' : 'templateCoverWarningDesc'
-                return this.$t(`template.${key}`, [this.draftCreator, this.formatDraftCreateTime, this.draftBaseVersionName])
+                const key = this.latestDraftBaseVersionName === this.versionName ? 'templateOutDateCoverWarningDesc' : 'templateCoverWarningDesc'
+                return this.$t(`template.${key}`, [this.latestDraftCreator, this.latestDraftUpdateTime, this.latestDraftBaseVersionName])
             },
             isTemplatePipeline () {
                 return this.pipelineInfo?.instanceFromTemplate ?? false
@@ -214,9 +224,25 @@
 
             // 处理编辑操作
             async handleEdit () {
-                // 分支版本且不是当前基准版本，直接确认
+                // 分支版本且不是当前基准版本：先拉最新草稿状态再弹窗，避免多窗口下基线信息过期
                 if (this.isActiveBranchVersion && this.version !== this.pipelineInfo?.baseVersion) {
-                    this.showDraftConfirmDialog()
+                    try {
+                        const result = await this.fetchLatestDraftStatus({
+                            projectId: this.projectId,
+                            id: this.rollbackId,
+                            actionType: 'EDIT',
+                            isTemplate: this.isTemplate,
+                            pipelineInfo: this.pipelineInfo
+                        })
+                        this.draftStatus = result.status
+                        this.draftSaveInfo = result.draftSaveInfo
+                        this.showDraftConfirmDialog()
+                    } catch (error) {
+                        this.$bkMessage({
+                            theme: 'error',
+                            message: error.message || error
+                        })
+                    }
                     return
                 }
                 await this.checkDraftStatusAndEdit()
