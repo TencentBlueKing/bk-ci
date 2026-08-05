@@ -74,7 +74,7 @@ interface UserPublicVarGroupResource {
     ): Result<String>
 
     @Operation(summary = "更新公共变量组")
-    @PUT
+    @POST
     @Path("/projects/{projectId}/update")
     fun updateGroup(
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
