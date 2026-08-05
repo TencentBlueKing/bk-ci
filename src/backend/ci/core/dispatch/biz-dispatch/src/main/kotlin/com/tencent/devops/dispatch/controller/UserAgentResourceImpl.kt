@@ -140,6 +140,54 @@ class UserAgentResourceImpl @Autowired constructor(
         )
     }
 
+    override fun fetchAgentBuildsByPipeline(
+        userId: String,
+        projectId: String,
+        agentId: String?,
+        envId: String?,
+        pipelineId: String,
+        page: Int?,
+        pageSize: Int?
+    ): Result<Page<AgentPipelineContainerBuild>> {
+        val envRId = AllCreateNodeEnv.hashIdToId(envId)
+        checkEnvOrAgentPermission(userId, projectId, agentId, envRId)
+        return Result(
+            thirdPartyAgentService.fetchAgentBuildsByPipeline(
+                userId = userId,
+                projectId = projectId,
+                agentId = agentId,
+                envId = envRId,
+                pipelineId = pipelineId,
+                page = page,
+                pageSize = pageSize
+            )
+        )
+    }
+
+    override fun fetchAgentBuildsByBuild(
+        userId: String,
+        projectId: String,
+        agentId: String?,
+        envId: String?,
+        buildId: String,
+        page: Int?,
+        pageSize: Int?
+    ): Result<Page<AgentPipelineContainerBuild>> {
+        val envRId = AllCreateNodeEnv.hashIdToId(envId)
+        checkEnvOrAgentPermission(userId, projectId, agentId, envRId)
+        return Result(
+            thirdPartyAgentService.fetchAgentBuildsByBuild(
+                userId = userId,
+                projectId = projectId,
+                agentId = agentId,
+                envId = envRId,
+                buildId = buildId,
+                page = page,
+                pageSize = pageSize
+            )
+        )
+    }
+
     private fun checkEnvOrAgentPermission(
         userId: String,
         projectId: String,

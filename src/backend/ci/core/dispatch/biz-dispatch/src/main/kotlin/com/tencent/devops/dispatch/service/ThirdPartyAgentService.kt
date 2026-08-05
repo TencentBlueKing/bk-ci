@@ -59,6 +59,7 @@ import com.tencent.devops.dispatch.exception.ErrorCodeEnum
 import com.tencent.devops.dispatch.pojo.ThirdPartyAgentDispatchData
 import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
 import com.tencent.devops.dispatch.pojo.thirdpartyagent.AgentBuildInfo
+import com.tencent.devops.dispatch.pojo.thirdpartyagent.AgentPipelineBuildTask
 import com.tencent.devops.dispatch.pojo.thirdpartyagent.AgentPipelineContainerBuild
 import com.tencent.devops.dispatch.pojo.thirdpartyagent.BuildJobType
 import com.tencent.devops.dispatch.pojo.thirdpartyagent.JobIdAndName
@@ -586,6 +587,163 @@ class ThirdPartyAgentService @Autowired constructor(
                     },
                     buildNum = build.buildNum ?: 0,
                     creator = build.userId
+                )
+            )
+        }
+        return Page(pageNotNull, pageSizeNotNull, agentBuildCount, result)
+    }
+
+    fun fetchAgentBuildsByPipeline(
+        userId: String,
+        projectId: String,
+        agentId: String?,
+        envId: Long?,
+        pipelineId: String,
+        page: Int?,
+        pageSize: Int?
+    ): Page<AgentPipelineContainerBuild> {
+        val pageNotNull = page ?: 0
+        val pageSizeNotNull = pageSize ?: PageUtil.MAX_PAGE_SIZE
+        val sqlLimit = PageUtil.convertPageSizeToSQLMAXLimit(pageNotNull, pageSizeNotNull)
+        val offset = sqlLimit.offset
+        val limit = sqlLimit.limit
+
+        val agentBuildCount = thirdPartyAgentBuildDao.countAgentBuildGroupsByBuild(
+            dslContext = dslContext,
+            projectId = projectId,
+            agentId = agentId,
+            envId = envId,
+            pipelineId = pipelineId,
+            buildId = null
+        )
+        val agentBuilds = thirdPartyAgentBuildDao.listAgentBuildGroupsByBuild(
+            dslContext = dslContext,
+            projectId = projectId,
+            agentId = agentId,
+            envId = envId,
+            pipelineId = pipelineId,
+            buildId = null,
+            offset = offset,
+            limit = limit
+        )
+        if (agentBuilds.isEmpty()) {
+            return Page(pageNotNull, pageSizeNotNull, agentBuildCount, emptyList())
+        }
+        val builds = client.get(ServiceBuildResource::class).batchGetBuildStatus(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildIdSet = agentBuilds.map { it.buildId }.toSet()
+        ).data?.associateBy { it.id }
+        val result = mutableListOf<AgentPipelineContainerBuild>()
+        agentBuilds.groupBy { it.buildId }.forEach { (buildId, records) ->
+            val build = builds?.get(buildId) ?: return@forEach
+            val record = records.first()
+            result.add(
+                AgentPipelineContainerBuild(
+                    buildId = build.id,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    containerId = (record.vmSeqId ?: 0).toString(),
+                    executeCount = build.executeCount ?: 1,
+                    status = build.status,
+                    startTime = Instant.ofEpochMilli(build.startTime)
+                        .atZone(ZoneId.systemDefault())
+                        .toLocalDateTime(),
+                    endTime = build.endTime?.let { ed ->
+                        Instant.ofEpochMilli(ed)
+                            .atZone(ZoneId.systemDefault())
+                            .toLocalDateTime()
+                    },
+                    buildNum = build.buildNum ?: 0,
+                    creator = build.userId,
+                    tasks = records.map {
+                        AgentPipelineBuildTask(
+                            taskName = it.taskName,
+                            vmSeqId = it.vmSeqId,
+                            stageId = it.stageId
+                        )
+                    }
+                )
+            )
+        }
+        return Page(pageNotNull, pageSizeNotNull, agentBuildCount, result)
+    }
+
+    fun fetchAgentBuildsByBuild(
+        userId: String,
+        projectId: String,
+        agentId: String?,
+        envId: Long?,
+        buildId: String,
+        page: Int?,
+        pageSize: Int?
+    ): Page<AgentPipelineContainerBuild> {
+        val pageNotNull = page ?: 0
+        val pageSizeNotNull = pageSize ?: PageUtil.MAX_PAGE_SIZE
+        val sqlLimit = PageUtil.convertPageSizeToSQLMAXLimit(pageNotNull, pageSizeNotNull)
+        val offset = sqlLimit.offset
+        val limit = sqlLimit.limit
+
+        val agentBuildCount = thirdPartyAgentBuildDao.countAgentBuildGroupsByBuild(
+            dslContext = dslContext,
+            projectId = projectId,
+            agentId = agentId,
+            envId = envId,
+            pipelineId = null,
+            buildId = buildId
+        )
+        val agentBuilds = thirdPartyAgentBuildDao.listAgentBuildGroupsByBuild(
+            dslContext = dslContext,
+            projectId = projectId,
+            agentId = agentId,
+            envId = envId,
+            pipelineId = null,
+            buildId = buildId,
+            offset = offset,
+            limit = limit
+        )
+        if (agentBuilds.isEmpty()) {
+            return Page(pageNotNull, pageSizeNotNull, agentBuildCount, emptyList())
+        }
+        val builds = agentBuilds.groupBy { it.pipelineId }
+            .flatMap { (pipelineId, records) ->
+                client.get(ServiceBuildResource::class).batchGetBuildStatus(
+                    userId = userId,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    buildIdSet = records.map { it.buildId }.toSet()
+                ).data ?: emptyList()
+            }.associateBy { it.id }
+        val result = mutableListOf<AgentPipelineContainerBuild>()
+        agentBuilds.groupBy { it.buildId }.forEach { (buildId, records) ->
+            val build = builds[buildId] ?: return@forEach
+            val record = records.first()
+            result.add(
+                AgentPipelineContainerBuild(
+                    buildId = build.id,
+                    projectId = projectId,
+                    pipelineId = record.pipelineId,
+                    containerId = (record.vmSeqId ?: 0).toString(),
+                    executeCount = build.executeCount ?: 1,
+                    status = build.status,
+                    startTime = Instant.ofEpochMilli(build.startTime)
+                        .atZone(ZoneId.systemDefault())
+                        .toLocalDateTime(),
+                    endTime = build.endTime?.let { ed ->
+                        Instant.ofEpochMilli(ed)
+                            .atZone(ZoneId.systemDefault())
+                            .toLocalDateTime()
+                    },
+                    buildNum = build.buildNum ?: 0,
+                    creator = build.userId,
+                    tasks = records.map {
+                        AgentPipelineBuildTask(
+                            taskName = it.taskName,
+                            vmSeqId = it.vmSeqId,
+                            stageId = it.stageId
+                        )
+                    }
                 )
             )
         }

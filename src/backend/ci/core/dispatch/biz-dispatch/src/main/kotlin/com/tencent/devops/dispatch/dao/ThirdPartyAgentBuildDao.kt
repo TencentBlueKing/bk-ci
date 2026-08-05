@@ -983,4 +983,87 @@ class ThirdPartyAgentBuildDao {
                 }
         }
     }
+
+    fun countAgentBuildGroupsByBuild(
+        dslContext: DSLContext,
+        projectId: String,
+        agentId: String?,
+        envId: Long?,
+        pipelineId: String?,
+        buildId: String?
+    ): Long {
+        with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
+            val dsl = dslContext.select(DSL.countDistinct(BUILD_ID))
+                .from(this)
+                .where(PROJECT_ID.eq(projectId))
+            if (!agentId.isNullOrBlank()) {
+                dsl.and(AGENT_ID.eq(agentId))
+            }
+            if (envId != null) {
+                dsl.and(ENV_ID.eq(envId))
+            }
+            if (!pipelineId.isNullOrBlank()) {
+                dsl.and(PIPELINE_ID.eq(pipelineId))
+            }
+            if (!buildId.isNullOrBlank()) {
+                dsl.and(BUILD_ID.eq(buildId))
+            }
+            return dsl.fetchOne(0, Long::class.java) ?: 0L
+        }
+    }
+
+    fun listAgentBuildGroupsByBuild(
+        dslContext: DSLContext,
+        projectId: String,
+        agentId: String?,
+        envId: Long?,
+        pipelineId: String?,
+        buildId: String?,
+        offset: Int,
+        limit: Int
+    ): List<TDispatchThirdpartyAgentBuildRecord> {
+        with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
+            val groupedBuildDsl = dslContext.select(BUILD_ID, DSL.max(ID).`as`("MAX_ID"))
+                .from(this)
+                .where(PROJECT_ID.eq(projectId))
+            if (!agentId.isNullOrBlank()) {
+                groupedBuildDsl.and(AGENT_ID.eq(agentId))
+            }
+            if (envId != null) {
+                groupedBuildDsl.and(ENV_ID.eq(envId))
+            }
+            if (!pipelineId.isNullOrBlank()) {
+                groupedBuildDsl.and(PIPELINE_ID.eq(pipelineId))
+            }
+            if (!buildId.isNullOrBlank()) {
+                groupedBuildDsl.and(BUILD_ID.eq(buildId))
+            }
+            val buildIds = groupedBuildDsl.groupBy(BUILD_ID)
+                .orderBy(DSL.max(ID).desc())
+                .limit(offset, limit)
+                .fetch()
+                .map { it.value1() }
+            if (buildIds.isEmpty()) {
+                return emptyList()
+            }
+
+            val dsl = dslContext.selectFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+            if (!agentId.isNullOrBlank()) {
+                dsl.and(AGENT_ID.eq(agentId))
+            }
+            if (envId != null) {
+                dsl.and(ENV_ID.eq(envId))
+            }
+            if (!pipelineId.isNullOrBlank()) {
+                dsl.and(PIPELINE_ID.eq(pipelineId))
+            }
+            if (!buildId.isNullOrBlank()) {
+                dsl.and(BUILD_ID.eq(buildId))
+            }
+            return dsl.and(BUILD_ID.`in`(buildIds))
+                .orderBy(ID.desc())
+                .fetch()
+        }
+    }
 }

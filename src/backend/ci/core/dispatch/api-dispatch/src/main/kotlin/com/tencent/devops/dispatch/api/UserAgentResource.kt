@@ -175,4 +175,58 @@ interface UserAgentResource {
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<Page<AgentPipelineContainerBuild>>
+
+    @Operation(summary = "根据PipelineId，获取Agent构建记录")
+    @GET
+    @Path("/fetchAgentBuildsByPipeline")
+    fun fetchAgentBuildsByPipeline(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @QueryParam("projectId")
+        projectId: String,
+        @Parameter(description = "agent Hash ID", required = false)
+        @QueryParam("agentId")
+        agentId: String?,
+        @Parameter(description = "env Hash ID", required = false)
+        @QueryParam("envId")
+        envId: String?,
+        @Parameter(description = "筛选此pipelineId", required = true)
+        @QueryParam("pipelineId")
+        pipelineId: String,
+        @Parameter(description = "第几页", required = false)
+        @QueryParam("page")
+        page: Int?,
+        @Parameter(description = "每页条数", required = false)
+        @QueryParam("pageSize")
+        pageSize: Int?
+    ): Result<Page<AgentPipelineContainerBuild>>
+
+    @Operation(summary = "根据BuildId，获取Agent构建记录")
+    @GET
+    @Path("/fetchAgentBuildsByBuild")
+    fun fetchAgentBuildsByBuild(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @QueryParam("projectId")
+        projectId: String,
+        @Parameter(description = "agent Hash ID", required = false)
+        @QueryParam("agentId")
+        agentId: String?,
+        @Parameter(description = "env Hash ID", required = false)
+        @QueryParam("envId")
+        envId: String?,
+        @Parameter(description = "筛选此buildId", required = true)
+        @QueryParam("buildId")
+        buildId: String,
+        @Parameter(description = "第几页", required = false)
+        @QueryParam("page")
+        page: Int?,
+        @Parameter(description = "每页条数", required = false)
+        @QueryParam("pageSize")
+        pageSize: Int?
+    ): Result<Page<AgentPipelineContainerBuild>>
 }
