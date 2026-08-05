@@ -29,9 +29,14 @@
 package com.tencent.devops.process.permission.`var`
 
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.process.dao.`var`.PublicVarGroupDao
 import com.tencent.devops.process.pojo.`var`.PublicVarGroupPermissions
+import org.jooq.DSLContext
 
-class MockPublicVarGroupPermissionService : PublicVarGroupPermissionService {
+class SimplePublicVarGroupPermissionService constructor(
+    private val publicVarGroupDao: PublicVarGroupDao,
+    private val dslContext: DSLContext
+) : PublicVarGroupPermissionService {
     override fun checkPublicVarGroupPermission(
         userId: String,
         projectId: String,
@@ -44,6 +49,11 @@ class MockPublicVarGroupPermissionService : PublicVarGroupPermissionService {
         projectId: String,
         permission: AuthPermission,
         groupName: String
+    ): Boolean = true
+
+    override fun checkPublicVarGroupCreatePermission(
+        userId: String,
+        projectId: String
     ): Boolean = true
 
     override fun checkPublicVarGroupPermissions(
@@ -68,9 +78,10 @@ class MockPublicVarGroupPermissionService : PublicVarGroupPermissionService {
     override fun filterPublicVarGroups(
         userId: String,
         projectId: String,
-        authPermissions: Set<AuthPermission>,
-        groupNames: List<String>
+        authPermissions: Set<AuthPermission>
     ): Map<AuthPermission, List<String>> {
+        // Simple 模式不校验权限：返回项目下全部变量组，表示所有组均具备所请求的权限
+        val groupNames = publicVarGroupDao.listGroupsNameByProjectId(dslContext, projectId)
         return authPermissions.associateWith { groupNames }
     }
 

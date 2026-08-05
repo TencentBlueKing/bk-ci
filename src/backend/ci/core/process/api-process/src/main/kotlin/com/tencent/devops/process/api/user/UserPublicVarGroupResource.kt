@@ -72,6 +72,20 @@ interface UserPublicVarGroupResource {
         publicVarGroup: PublicVarGroupVO
     ): Result<String>
 
+    @Operation(summary = "更新公共变量组")
+    @POST
+    @Path("/projects/{projectId}/update")
+    fun updateGroup(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "公共变量组请求报文", required = true)
+        publicVarGroup: PublicVarGroupVO
+    ): Result<String>
+
     @Operation(summary = "查询公共变量组列表")
     @GET
     @Path("/projects/{projectId}/list")

@@ -282,10 +282,15 @@ class PublicVarService @Autowired constructor(
         if (publicVars.isEmpty()) {
             return
         }
-        // 检查变量名是否重复
+        // 检查变量名是否重复（忽略大小写）
         val varNames = publicVars.map { it.varName }
-        if (varNames.size != varNames.distinct().size) {
-            throw ErrorCodeException(errorCode = ERROR_PIPELINE_COMMON_VAR_GROUP_VAR_NAME_DUPLICATE)
+        val lowerCasedNames = mutableSetOf<String>()
+        val duplicateVarName = varNames.firstOrNull { !lowerCasedNames.add(it.lowercase()) }
+        if (duplicateVarName != null) {
+            throw ErrorCodeException(
+                errorCode = ERROR_PIPELINE_COMMON_VAR_GROUP_VAR_NAME_DUPLICATE,
+                params = arrayOf(duplicateVarName)
+            )
         }
         // 检查变量名长度是否超出 DB 列 varchar(64) 限制
         val tooLongVarNames = varNames.filter { it.length > MAX_VAR_NAME_LENGTH }

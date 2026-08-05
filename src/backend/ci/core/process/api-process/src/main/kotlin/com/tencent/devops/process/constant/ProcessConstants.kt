@@ -25,30 +25,15 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo.`var`.po
+package com.tencent.devops.process.constant
 
-import com.tencent.devops.common.pipeline.enums.PublicVarGroupReferenceTypeEnum
-import io.swagger.v3.oas.annotations.media.Schema
-import java.time.LocalDateTime
+/**
+ * 流水线常量
+ */
+object ProcessConstants {
 
-@Schema(title = "变量组引用信息更新参数")
-data class VarGroupReferInfoUpdatePO(
-    @get:Schema(title = "项目ID")
-    val projectId: String,
-    @get:Schema(title = "关联ID")
-    val referId: String,
-    @get:Schema(title = "关联类型")
-    val referType: PublicVarGroupReferenceTypeEnum,
-    @get:Schema(title = "变量组名称")
-    val groupName: String,
-    @get:Schema(title = "引用的版本名称")
-    val referVersionName: String? = null,
-    @get:Schema(title = "版本号")
-    val version: Int? = null,
-    @get:Schema(title = "变量位置信息")
-    val positionInfo: String? = null,
-    @get:Schema(title = "修改者")
-    val modifier: String,
-    @get:Schema(title = "更新时间")
-    val updateTime: LocalDateTime
-)
+    /**
+     * 动态版本号（-1）：引用信息中表示"引用最新版本"
+     */
+    const val DYNAMIC_VERSION = -1
+}
