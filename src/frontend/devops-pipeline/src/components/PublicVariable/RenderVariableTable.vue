@@ -72,7 +72,7 @@
                         show-overflow-tooltip
                     >
                         <template slot-scope="{ row }">
-                            {{ row.defaultValue || '--' }}
+                            {{ row.defaultValue != null && row.defaultValue !== '' ? row.defaultValue : '--' }}
                         </template>
                     </bk-table-column>
                     <bk-table-column

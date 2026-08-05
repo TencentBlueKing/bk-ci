@@ -98,7 +98,7 @@
             })
             const groupName =  await proxy.$store.dispatch('publicVar/saveVariableGroup', {
                 projectId: projectId.value,
-                type: operateType.value,
+                isUpdate: operateType.value === OPERATE_TYPE.UPDATE,
                 params: {
                     ...groupData.value,
                     publicVars,

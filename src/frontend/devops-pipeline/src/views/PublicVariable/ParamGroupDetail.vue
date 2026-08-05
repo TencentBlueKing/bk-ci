@@ -345,7 +345,40 @@
                     item.value = item.key
                 }
             })
-            for (const index of sliderEditItem.value?.options?.keys()) {
+            const options = sliderEditItem.value?.options || []
+            // key-options 使用本地校验，不再走 vee-validate 的 option-* scope，这里需要主动校验
+            const keyMap = new Map()
+            const valueMap = new Map()
+            for (let i = 0; i < options.length; i++) {
+                const opt = options[i]
+                if (!opt.key) {
+                    proxy.$bkMessage({
+                        theme: 'error',
+                        message: proxy.$t('editPage.requiredTips', ['value']),
+                        limit: 1
+                    })
+                    return false
+                }
+                if (keyMap.has(opt.key)) {
+                    proxy.$bkMessage({
+                        theme: 'error',
+                        message: proxy.$t('editPage.noRepeatTips', ['value']),
+                        limit: 1
+                    })
+                    return false
+                }
+                if (opt.value && valueMap.has(opt.value)) {
+                    proxy.$bkMessage({
+                        theme: 'error',
+                        message: proxy.$t('editPage.noRepeatTips', ['name']),
+                        limit: 1
+                    })
+                    return false
+                }
+                keyMap.set(opt.key, i)
+                if (opt.value) valueMap.set(opt.value, i)
+            }
+            for (const index of options.keys()) {
                 optionValid = await proxy.$validator.validate(`option-${index}.*`)
                 if (!optionValid) return optionValid
             }
@@ -355,8 +388,9 @@
     async function handleSaveVar () {
         // 单选、复选类型， 需要先校验options
         const optionValid = await validParamOptions()
+        if (!optionValid) return
         proxy.$validator.validate('pipelineParam.*').then((result) => {
-            if (result && optionValid) {
+            if (result) {
                 const newPublicVars = deepClone(publicVars.value)
                 const { id, name, type, defaultValue, desc } = sliderEditItem.value
                 const newVarData = {
