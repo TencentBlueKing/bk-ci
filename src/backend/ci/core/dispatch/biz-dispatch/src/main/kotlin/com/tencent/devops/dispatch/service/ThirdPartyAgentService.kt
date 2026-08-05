@@ -64,6 +64,8 @@ import com.tencent.devops.dispatch.pojo.thirdpartyagent.BuildJobType
 import com.tencent.devops.dispatch.pojo.thirdpartyagent.JobIdAndName
 import com.tencent.devops.dispatch.pojo.thirdpartyagent.PipelineIdAndName
 import com.tencent.devops.dispatch.pojo.thirdpartyagent.TPAPipelineBuildCountResp
+import com.tencent.devops.dispatch.pojo.thirdpartyagent.TPAPipelineBuildView
+import com.tencent.devops.dispatch.pojo.thirdpartyagent.TPAPipelineReq
 import com.tencent.devops.dispatch.pojo.thirdpartyagent.ThirdPartyAskInfo
 import com.tencent.devops.dispatch.pojo.thirdpartyagent.ThirdPartyAskResp
 import com.tencent.devops.dispatch.pojo.thirdpartyagent.ThirdPartyBuildDockerInfo
@@ -82,6 +84,7 @@ import com.tencent.devops.model.dispatch.tables.records.TDispatchThirdpartyAgent
 import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 import com.tencent.devops.process.api.service.ServiceBuildResource
+import com.tencent.devops.process.utils.KEY_STAGE
 import jakarta.ws.rs.NotFoundException
 import java.time.LocalDateTime
 import java.util.concurrent.CancellationException
@@ -1022,6 +1025,106 @@ class ThirdPartyAgentService @Autowired constructor(
         return strategyResult.data!!
     }
 
+    fun fetchBuildPipelineView(
+        projectId: String,
+        envId: Long?,
+        data: TPAPipelineReq
+    ): TPAPipelineBuildCountResp {
+        if (data.agentId.isNullOrBlank() && data.envId == null) {
+            return TPAPipelineBuildCountResp(0L, 0L, 0L, Page(0, 0, 0, emptyList()))
+        }
+        val pageNotNull = data.page ?: 0
+        val pageSizeNotNull = data.pageSize ?: 10
+        val sqlLimit = if (pageSizeNotNull != -1) {
+            PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)
+        } else {
+            null
+        }
+        val offset = sqlLimit?.offset ?: 0
+        val limit = sqlLimit?.limit ?: 100
+        val jobId = if (data.view == TPAPipelineBuildView.JOB) data.jobId else null
+        val (pipelineCount, jobCount, buildCount) = thirdPartyAgentBuildDao.countAgentBuildPipelineJob(
+            dslContext = dslContext,
+            projectId = projectId,
+            agentId = data.agentId,
+            envId = envId,
+            startTime = data.startTime,
+            endTime = data.endTime,
+            pipelineId = data.pipelineId,
+            jobId = jobId,
+            creator = data.creator,
+            status = data.taskStatus
+        )
+        val records = when (data.view) {
+            TPAPipelineBuildView.PIPELINE -> thirdPartyAgentBuildDao.fetchAgentBuildPipeline(
+                dslContext = dslContext,
+                projectId = projectId,
+                agentId = data.agentId,
+                envId = envId,
+                limit = limit,
+                offset = offset,
+                startTime = data.startTime,
+                endTime = data.endTime,
+                pipelineId = data.pipelineId,
+                creator = data.creator,
+                status = data.taskStatus
+            )
+
+            TPAPipelineBuildView.JOB -> thirdPartyAgentBuildDao.fetchAgentBuildPipelineJob(
+                dslContext = dslContext,
+                projectId = projectId,
+                agentId = data.agentId,
+                envId = envId,
+                limit = limit,
+                offset = offset,
+                startTime = data.startTime,
+                endTime = data.endTime,
+                pipelineId = data.pipelineId,
+                jobId = data.jobId,
+                creator = data.creator,
+                status = data.taskStatus
+            ).let { list ->
+                // 处理下stage序号计算
+                list.forEach { item ->
+                    item.stageNumb = item.stageId?.removePrefix(KEY_STAGE)?.toIntOrNull()?.let { it - 1 }?.toString()
+                        ?: item.stageId
+                }
+                list
+            }
+
+            TPAPipelineBuildView.BUILD -> thirdPartyAgentBuildDao.fetchAgentBuildPipelineBuild(
+                dslContext = dslContext,
+                projectId = projectId,
+                agentId = data.agentId,
+                envId = envId,
+                limit = limit,
+                offset = offset,
+                startTime = data.startTime,
+                endTime = data.endTime,
+                pipelineId = data.pipelineId,
+                creator = data.creator,
+                status = data.taskStatus
+            )
+        }
+        val count = when (data.view) {
+            TPAPipelineBuildView.PIPELINE -> pipelineCount
+            TPAPipelineBuildView.JOB -> jobCount
+            TPAPipelineBuildView.BUILD -> buildCount
+        }
+        return TPAPipelineBuildCountResp(
+            pipelineCount = pipelineCount,
+            jobCount = jobCount,
+            buildCount = buildCount,
+            result = Page(
+                page = pageNotNull,
+                pageSize = pageSizeNotNull,
+                count = count,
+                records = records
+            )
+        )
+    }
+
+    @Deprecated("fetchBuildPipelineView")
     fun fetchBuildPipeline(
         projectId: String,
         agentId: String?,
@@ -1036,7 +1139,7 @@ class ThirdPartyAgentService @Autowired constructor(
         status: PipelineTaskStatus?
     ): TPAPipelineBuildCountResp {
         if (agentId.isNullOrBlank() && envId == null) {
-            return TPAPipelineBuildCountResp(0L, 0L, Page(0, 0, 0, emptyList()))
+            return TPAPipelineBuildCountResp(0L, 0L, 0L, Page(0, 0, 0, emptyList()))
         }
         val pageNotNull = page ?: 0
         val pageSizeNotNull = pageSize ?: 10
@@ -1047,7 +1150,7 @@ class ThirdPartyAgentService @Autowired constructor(
         }
         val offset = sqlLimit?.offset ?: 0
         val limit = sqlLimit?.limit ?: 100
-        val (pipelineCount, jobCount) = thirdPartyAgentBuildDao.countAgentBuildPipelineJob(
+        val (pipelineCount, jobCount, buildCount) = thirdPartyAgentBuildDao.countAgentBuildPipelineJob(
             dslContext = dslContext,
             projectId = projectId,
             agentId = agentId,
@@ -1060,7 +1163,10 @@ class ThirdPartyAgentService @Autowired constructor(
             status = status
         )
         return TPAPipelineBuildCountResp(
-            pipelineCount, jobCount, Page(
+            pipelineCount = pipelineCount,
+            jobCount = jobCount,
+            buildCount = buildCount,
+            result = Page(
                 page = pageNotNull,
                 pageSize = pageSizeNotNull,
                 count = jobCount,
@@ -1077,7 +1183,15 @@ class ThirdPartyAgentService @Autowired constructor(
                     jobId = jobId,
                     creator = creator,
                     status = status
-                )
+                ).let { list ->
+                    // 处理下stage序号计算
+                    list.forEach { item ->
+                        item.stageNumb =
+                            item.stageId?.removePrefix(KEY_STAGE)?.toIntOrNull()?.let { it - 1 }?.toString()
+                                ?: item.stageId
+                    }
+                    list
+                }
             )
         )
     }

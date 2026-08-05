@@ -15,6 +15,8 @@ import com.tencent.devops.dispatch.pojo.thirdpartyagent.AgentPipelineContainerBu
 import com.tencent.devops.dispatch.pojo.thirdpartyagent.JobIdAndName
 import com.tencent.devops.dispatch.pojo.thirdpartyagent.PipelineIdAndName
 import com.tencent.devops.dispatch.pojo.thirdpartyagent.TPAPipelineBuildCountResp
+import com.tencent.devops.dispatch.pojo.thirdpartyagent.TPAPipelineBuildView
+import com.tencent.devops.dispatch.pojo.thirdpartyagent.TPAPipelineReq
 import com.tencent.devops.dispatch.service.ThirdPartyAgentService
 import com.tencent.devops.environment.api.ServiceEnvironmentResource
 import com.tencent.devops.environment.api.ServiceNodeResource
@@ -27,6 +29,22 @@ class UserAgentResourceImpl @Autowired constructor(
     private val thirdPartyAgentService: ThirdPartyAgentService,
     private val checkTokenService: ClientTokenService
 ) : UserAgentResource {
+    override fun listAgentPipeline(
+        userId: String,
+        projectId: String,
+        data: TPAPipelineReq
+    ): Result<TPAPipelineBuildCountResp> {
+        val envRId = AllCreateNodeEnv.hashIdToId(data.envId)
+        checkEnvOrAgentPermission(userId, projectId, data.agentId, envRId)
+        return Result(
+            thirdPartyAgentService.fetchBuildPipelineView(
+                projectId = projectId,
+                envId = envRId,
+                data = data
+            )
+        )
+    }
+
     override fun listAgentPipelineJobs(
         userId: String,
         projectId: String,

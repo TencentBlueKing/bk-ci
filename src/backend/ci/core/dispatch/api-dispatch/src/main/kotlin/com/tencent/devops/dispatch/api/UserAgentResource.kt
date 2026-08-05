@@ -15,7 +15,9 @@ import com.tencent.devops.dispatch.pojo.thirdpartyagent.AgentPipelineContainerBu
 import com.tencent.devops.dispatch.pojo.thirdpartyagent.JobIdAndName
 import com.tencent.devops.dispatch.pojo.thirdpartyagent.PipelineIdAndName
 import com.tencent.devops.dispatch.pojo.thirdpartyagent.TPAPipelineBuildCountResp
+import com.tencent.devops.dispatch.pojo.thirdpartyagent.TPAPipelineReq
 import jakarta.ws.rs.HeaderParam
+import jakarta.ws.rs.POST
 import jakarta.ws.rs.Produces
 import jakarta.ws.rs.QueryParam
 import jakarta.ws.rs.core.MediaType
@@ -25,8 +27,21 @@ import jakarta.ws.rs.core.MediaType
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserAgentResource {
-
     @Operation(summary = "获取agent任务详情列表")
+    @POST
+    @Path("/listAgentPipeline")
+    fun listAgentPipeline(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @QueryParam("projectId")
+        projectId: String,
+        data: TPAPipelineReq
+    ): Result<TPAPipelineBuildCountResp>
+
+    @Deprecated("listAgentPipeline")
+    @Operation(summary = "获取agent任务详情列表-JOB视图")
     @GET
     @Path("/listAgentPipelineJobs")
     fun listAgentPipelineJobs(
