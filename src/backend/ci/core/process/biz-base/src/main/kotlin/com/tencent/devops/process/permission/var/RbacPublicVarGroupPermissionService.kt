@@ -76,11 +76,11 @@ class RbacPublicVarGroupPermissionService(
         logger.info("[rbac] filter public var groups|$userId|$projectId|$authPermissions")
         val startEpoch = System.currentTimeMillis()
         try {
-            val actions = mutableListOf<String>()
-            authPermissions.forEach { action ->
-                actions.add(AuthResourceType.PUBLIC_VAR_GROUP.value + "_" + action.value)
+            val actions = authPermissions.map { permission ->
+                AuthResourceType.PUBLIC_VAR_GROUP.value + "_" + permission.value
             }
-
+            // 与全项目其他 RBAC 调用方保持一致（如 RbacCredentialPermissionService、
+            // RbacAuthPermissionApi）：接口签名已强限制 key 为 AuthPermission，直接返回。
             return client.get(ServicePermissionAuthResource::class)
                 .getUserResourcesByPermissions(
                     token = tokenService.getSystemToken(),
