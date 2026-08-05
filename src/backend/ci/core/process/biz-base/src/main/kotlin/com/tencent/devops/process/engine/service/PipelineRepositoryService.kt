@@ -143,6 +143,8 @@ import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import jakarta.ws.rs.core.Response
 import java.time.LocalDateTime
 import java.util.concurrent.atomic.AtomicInteger
+import kotlin.collections.associate
+import kotlin.collections.forEach
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -1905,12 +1907,6 @@ class PipelineRepositoryService constructor(
                             model = "",
                             channelCode = record.channel
                         )
-                    )
-                    publicVarGroupReferManageService.deletePublicVerGroupRefByReferId(
-                        transactionContext = transactionContext,
-                        referId = pipelineId,
-                        projectId = projectId,
-                        referType = PublicVarGroupReferenceTypeEnum.PIPELINE
                     )
                 }
                 // 引用清理复用 transactionContext，与流水线删除同事务，避免孤儿引用（B-2）。
