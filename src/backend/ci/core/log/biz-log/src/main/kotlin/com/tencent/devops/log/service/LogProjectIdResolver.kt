@@ -59,7 +59,7 @@ class LogProjectIdResolver(
     /**
      * 解析 buildId 对应的 projectId。
      *
-     * @param buildId  构建 ID
+     * @param buildId 构建 ID
      * @param reported 调用方报告的 projectId（来自 HTTP header / 事件字段），可为 null
      * @return 已知的 projectId，或 null（表示未知）
      */
