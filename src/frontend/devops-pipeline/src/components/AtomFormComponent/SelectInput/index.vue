@@ -6,7 +6,7 @@
             v-bk-tooltips="{ content: !isVarInputMode ? $t('switchToVarMode') : $t('closeVarMode') }"
         >
             <Logo
-                size="14"
+                size="18"
                 name="isSetAsVariable"
             />
         </span>
@@ -64,7 +64,7 @@
             </bk-select>
             <bk-input
                 v-else
-                :class="['var-input', isError ? 'error-input' : '']"
+                class="var-input"
                 :clearable="!disabled"
                 v-model="displayValue"
                 @blur="handleVarBlur"
@@ -72,12 +72,6 @@
                 :disabled="disabled"
                 :placeholder="pipelineDialect === 'CLASSIC' ? $t('placeholderVar') : $t('placeholderConstraintVar')"
             />
-            <span
-                v-if="isError"
-                class="error-text"
-            >
-                {{ $t('validVariableFormat') }}
-            </span>
         </div>
     </div>
 </template>
@@ -110,7 +104,8 @@
                 loading: this.isLoading,
                 isVarInputMode: false,
                 displayValue: '',
-                isError: false
+                // url 接口拉取的 options 是否已就绪
+                listFetched: false
             }
         },
         computed: {
@@ -184,51 +179,77 @@
             },
             options (newOptions) {
                 this.optionList = newOptions
+                this.listFetched = true
+                this.resolveInputMode()
                 this.addNoPermItems()
             },
             isLoading (isLoading) {
                 this.loading = isLoading
             },
-            value (newVal) {
-                // 存量数据自动识别：如果值为变量格式，自动切换到输入变量模式
-                if (newVal && this.getValidaVar(newVal)) {
-                    this.isVarInputMode = true
-                    this.displayValue = newVal
-                }
+            value () {
+                // 存量数据回显：能匹配 options 则用下拉模式，否则用变量模式
+                this.resolveInputMode()
             }
         },
         created () {
-            // 存量数据自动识别
-            if (this.value && this.getValidaVar(this.value)) {
-                this.isVarInputMode = true
-                this.displayValue = this.value
-            }
             if (this.hasUrl) {
                 this.getOptionList()
                 this.debounceGetOptionList = debounce(this.getOptionList)
+            } else {
+                this.listFetched = true
+                this.resolveInputMode()
             }
         },
         methods: {
+            getOptionIds () {
+                if (this.hasGroup) {
+                    const ids = []
+                    this.optionList.forEach(group => {
+                        (group.children || []).forEach(child => {
+                            ids.push(child.id)
+                        })
+                    })
+                    return ids
+                }
+                return this.optionList.map(item => item.id)
+            },
+
+            isValueInOptions (val) {
+                const ids = this.getOptionIds()
+                if (!ids.length) return false
+                if (Array.isArray(val)) {
+                    return val.length > 0 && val.every(v => ids.some(id => id == v))
+                }
+                return ids.some(id => id == val)
+            },
+
+            resolveInputMode () {
+                const val = this.value
+                const isEmpty = val === '' || val === null || val === undefined || (Array.isArray(val) && !val.length)
+                if (isEmpty) return
+                // url 配置的 options 尚未拉取完成时，暂不判定，避免空列表误判为变量模式
+                if (this.hasUrl && !this.listFetched) return
+
+                if (this.isValueInOptions(val)) {
+                    this.isVarInputMode = false
+                } else {
+                    this.isVarInputMode = true
+                    this.displayValue = Array.isArray(val) ? val.join(',') : val
+                }
+            },
+
             handleChangeType () {
                 if (this.disabled) return
                 this.isVarInputMode = !this.isVarInputMode
-                this.isError = false
                 this.displayValue = ''
                 this.handleChange(this.name, '')
             },
 
             handleVarBlur () {
-                const newValue = this.displayValue
-                if (newValue !== '' && !this.getValidaVar(newValue)) {
-                    this.isError = true
-                } else {
-                    this.isError = false
-                    this.handleChange(this.name, newValue)
-                }
+                this.handleChange(this.name, this.displayValue)
             },
 
             handleVarClear () {
-                this.isError = false
                 this.handleChange(this.name, '')
             },
 
@@ -328,10 +349,15 @@
                         })
                     }
 
-                    // 添加无权限查看项
+                    this.listFetched = true
+                    // 接口 options 就绪后再做存量回显模式识别
+                    this.resolveInputMode()
                     this.addNoPermItems()
                 } catch (e) {
                     console.error(e)
+                    // 接口失败也标记已尝试拉取，避免一直阻塞模式判定
+                    this.listFetched = true
+                    this.resolveInputMode()
                 } finally {
                     this.loading = false
                 }
@@ -347,7 +373,9 @@
         align-items: flex-start;
         position: relative;
         .change-type {
-            display: inline-block;
+            display: flex;
+            align-content: center;
+            justify-content: space-around;
             flex-shrink: 0;
             margin-right: 4px;
             width: 32px;
@@ -393,31 +421,8 @@
         .var-input {
             width: 100%;
         }
-        .error-text {
-            display: block;
-            margin-top: 4px;
-            color: #ff5656;
-            line-height: 16px;
-            font-size: 12px;
-        }
         .bk-select-extension a {
             color: #63656e;
-        }
-    }
-</style>
-<style lang="scss">
-    .select-input {
-        .error-text {
-            display: block;
-            margin-top: 4px;
-            color: #ff5656;
-            line-height: 16px;
-            font-size: 12px;
-        }
-        .error-input {
-            .bk-form-input {
-                border-color: #ff5656 !important;
-            }
         }
     }
 </style>
