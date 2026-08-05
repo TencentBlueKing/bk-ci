@@ -36,7 +36,7 @@ import com.tencent.devops.process.pojo.`var`.po.PublicVarPositionPO
 import com.tencent.devops.process.pojo.`var`.po.ResourcePublicVarGroupReferPO
 import org.jooq.DSLContext
 import org.jooq.Select
-import com.tencent.devops.process.constant.ProcessMessageCode.DYNAMIC_VERSION
+import com.tencent.devops.process.constant.ProcessConstants.DYNAMIC_VERSION
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
 

@@ -31,7 +31,7 @@ import com.tencent.devops.model.process.tables.TResourcePublicVarGroupReferInfo
 import com.tencent.devops.model.process.tables.TResourcePublicVarReferInfo
 import com.tencent.devops.model.process.tables.TResourcePublicVarVersionSummary
 import com.tencent.devops.model.process.tables.records.TResourcePublicVarVersionSummaryRecord
-import com.tencent.devops.process.constant.ProcessMessageCode.DYNAMIC_VERSION
+import com.tencent.devops.process.constant.ProcessConstants.DYNAMIC_VERSION
 import com.tencent.devops.process.pojo.`var`.po.PublicVarVersionSummaryPO
 import org.jooq.DSLContext
 import org.jooq.impl.DSL

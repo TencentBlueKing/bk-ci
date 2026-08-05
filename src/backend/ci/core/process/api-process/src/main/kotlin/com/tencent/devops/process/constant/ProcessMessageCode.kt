@@ -870,8 +870,6 @@ object ProcessMessageCode {
     // [{0}]创作环境下的创作节点为空
     const val BK_CREATIVE_STREAM_ENV_NODE_IS_EMPTY = "bkCreativeStreamEnvNodeIsEmpty"
 
-    const val DYNAMIC_VERSION = -1
-
     // 公共变量组锁相关常量
     const val PUBLIC_VAR_GROUP_ADD_LOCK_KEY = "PUBLIC_VAR_GROUP_ADD_LOCK"
     const val PUBLIC_VAR_GROUP_DELETE_LOCK_KEY = "PUBLIC_VAR_GROUP_DELETE_LOCK"
