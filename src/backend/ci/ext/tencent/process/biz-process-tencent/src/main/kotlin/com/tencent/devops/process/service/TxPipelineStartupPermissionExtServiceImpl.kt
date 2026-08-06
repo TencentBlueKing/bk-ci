@@ -38,7 +38,6 @@ import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.service.PipelineStartupPermissionExtService
 import com.tencent.devops.process.utils.NODE_AGENT_ID
 import com.tencent.devops.project.api.service.ServiceProjectResource
-import com.tencent.devops.support.api.service.ServiceIMateResource
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service

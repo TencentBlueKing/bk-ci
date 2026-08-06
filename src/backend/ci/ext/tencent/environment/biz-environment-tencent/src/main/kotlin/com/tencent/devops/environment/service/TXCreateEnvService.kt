@@ -4,7 +4,6 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.util.AESUtil
 import com.tencent.devops.common.api.util.HashUtil
-import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.environment.constant.EnvironmentMessageCode
@@ -25,7 +24,7 @@ import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Service
 import java.lang.Thread.sleep
 import java.time.LocalDateTime
-import java.util.Base64
+import java.util.*
 
 @Service
 @Primary
