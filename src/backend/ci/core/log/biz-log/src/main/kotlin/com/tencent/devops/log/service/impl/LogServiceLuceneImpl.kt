@@ -85,7 +85,8 @@ class LogServiceLuceneImpl constructor(
             buildLogPrintService.dispatchEvent(
                 event = LogStorageEvent(
                     buildId = event.buildId,
-                    logs = logMessage
+                    logs = logMessage,
+                    projectId = event.projectId
                 ),
                 recordTraffic = false
             )

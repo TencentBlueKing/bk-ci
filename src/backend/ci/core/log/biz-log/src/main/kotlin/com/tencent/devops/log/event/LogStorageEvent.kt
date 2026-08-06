@@ -40,5 +40,6 @@ data class LogStorageEvent(
     override val buildId: String,
     val logs: List<LogMessageWithLineNo>,
     override var retryTime: Int = 2,
-    override var delayMills: Int = 0
-) : ILogEvent(buildId, retryTime, delayMills)
+    override var delayMills: Int = 0,
+    override val projectId: String? = null
+) : ILogEvent(buildId, retryTime, delayMills, projectId)

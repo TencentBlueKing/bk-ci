@@ -32,7 +32,8 @@ import com.tencent.devops.common.event.pojo.IEvent
 open class ILogEvent(
     open val buildId: String,
     override var retryTime: Int,
-    override var delayMills: Int
+    override var delayMills: Int,
+    open val projectId: String? = null
 ) : IEvent(delayMills, retryTime) {
     companion object {
         private const val DELAY_DURATION_MILLS = 3 * 1000

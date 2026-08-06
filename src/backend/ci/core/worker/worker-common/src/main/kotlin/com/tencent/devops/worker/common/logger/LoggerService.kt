@@ -501,7 +501,9 @@ object LoggerService {
                 return
             }
 
-            // 通过上报的结果感知是否需要调整模式
+            // 通过上报的结果感知是否需要调整模式。
+            // projectId 由 AbstractBuildResourceApi 自动带上 X-DEVOPS-PROJECT-ID（AgentEnv.getProjectId()），
+            // log 服务按可空 header 消费；旧 log 服务忽略该 header，新旧可任意顺序发布。
             val result = doWithCircuitBreaker {
                 logResourceApi.addLogMultiLine(buildVariables?.buildId ?: "", logMessages)
             }

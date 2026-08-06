@@ -65,16 +65,19 @@ class BuildLogPrintResourceImpl @Autowired constructor(
     @Value("\${spring.application.name:#{null}}")
     private val applicationName: String? = null
 
-    override fun addLogLine(buildId: String, logMessage: LogMessage): Result<Boolean> {
+    override fun addLogLine(buildId: String, logMessage: LogMessage, projectId: String?): Result<Boolean> {
         if (buildId.isBlank()) {
             logger.warn("Invalid build ID[$buildId]")
             return Result(false)
         }
-        buildLogPrintService.dispatchEvent(LogOriginEvent(buildId, listOf(logMessage)))
+        buildLogPrintService.dispatchEvent(
+            LogOriginEvent(buildId, listOf(logMessage), projectId = projectId),
+            recordTraffic = true
+        )
         return Result(true)
     }
 
-    override fun addRedLogLine(buildId: String, logMessage: LogMessage): Result<Boolean> {
+    override fun addRedLogLine(buildId: String, logMessage: LogMessage, projectId: String?): Result<Boolean> {
         if (buildId.isBlank()) {
             logger.warn("Invalid build ID[$buildId]")
             return Result(false)
@@ -86,13 +89,15 @@ class BuildLogPrintResourceImpl @Autowired constructor(
                     logMessage.copy(
                         message = Ansi().bold().fgRed().a(logMessage.message).reset().toString()
                     )
-                )
-            )
+                ),
+                projectId = projectId
+            ),
+            recordTraffic = true
         )
         return Result(true)
     }
 
-    override fun addYellowLogLine(buildId: String, logMessage: LogMessage): Result<Boolean> {
+    override fun addYellowLogLine(buildId: String, logMessage: LogMessage, projectId: String?): Result<Boolean> {
         if (buildId.isBlank()) {
             logger.warn("Invalid build ID[$buildId]")
             return Result(false)
@@ -104,19 +109,28 @@ class BuildLogPrintResourceImpl @Autowired constructor(
                     logMessage.copy(
                         message = Ansi().bold().fgYellow().a(logMessage.message).reset().toString()
                     )
-                )
-            )
+                ),
+                projectId = projectId
+            ),
+            recordTraffic = true
         )
         return Result(true)
     }
 
     @Timed
-    override fun addLogMultiLine(buildId: String, logMessages: List<LogMessage>): Result<Boolean> {
+    override fun addLogMultiLine(
+        buildId: String,
+        logMessages: List<LogMessage>,
+        projectId: String?
+    ): Result<Boolean> {
         if (buildId.isBlank()) {
             logger.warn("Invalid build ID[$buildId]")
             return Result(false)
         }
-        buildLogPrintService.dispatchEvent(LogOriginEvent(buildId, logMessages))
+        buildLogPrintService.dispatchEvent(
+            LogOriginEvent(buildId, logMessages, projectId = projectId),
+            recordTraffic = true
+        )
         recordMultiLogCount(logMessages.size)
         return Result(true)
     }
@@ -129,13 +143,13 @@ class BuildLogPrintResourceImpl @Autowired constructor(
         executeCount: Int?,
         logMode: String?,
         jobId: String?,
-        stepId: String?
+        stepId: String?,
+        projectId: String?
     ): Result<Boolean> {
         if (buildId.isBlank()) {
             logger.warn("Invalid build ID[$buildId]")
             return Result(false)
         }
-        // #7168 通过一次获取创建记录以及缓存
         val index = indexService.getIndexName(buildId)
         logger.info("Start to print log to index[$index]")
         buildLogPrintService.dispatchEvent(
@@ -148,8 +162,10 @@ class BuildLogPrintResourceImpl @Autowired constructor(
                 executeCount = executeCount,
                 logStorageMode = LogStorageMode.parse(logMode),
                 userJobId = jobId,
-                stepId = stepId
-            )
+                stepId = stepId,
+                projectId = projectId
+            ),
+            recordTraffic = true
         )
         return Result(true)
     }
@@ -163,7 +179,8 @@ class BuildLogPrintResourceImpl @Autowired constructor(
         executeCount: Int?,
         logMode: String?,
         jobId: String?,
-        stepId: String?
+        stepId: String?,
+        projectId: String?
     ): Result<Boolean> {
         if (buildId.isBlank()) {
             logger.warn("Invalid build ID[$buildId]")
@@ -179,8 +196,10 @@ class BuildLogPrintResourceImpl @Autowired constructor(
                 executeCount = executeCount,
                 logStorageMode = LogStorageMode.parse(logMode),
                 userJobId = jobId,
-                stepId = stepId
-            )
+                stepId = stepId,
+                projectId = projectId
+            ),
+            recordTraffic = true
         )
         return Result(false)
     }
@@ -266,9 +285,6 @@ class BuildLogPrintResourceImpl @Autowired constructor(
         return afterLogs
     }
 
-    /**
-     * 记录日志列表函数
-     */
     private fun recordMultiLogCount(count: Number) {
         Counter
             .builder("multi_log_count")
