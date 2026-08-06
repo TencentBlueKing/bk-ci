@@ -1,12 +1,12 @@
 package com.tencent.devops.process.pojo.template.v2
 
 import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
-import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.pipeline.pojo.setting.BuildCancelPolicy
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.common.pipeline.pojo.setting.Subscription
 import com.tencent.devops.common.pipeline.utils.PIPELINE_SETTING_MAX_QUEUE_SIZE_DEFAULT
+import com.tencent.devops.common.pipeline.utils.PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_DEFAULT
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "模板草稿基础配置版本")
@@ -70,7 +70,7 @@ data class PipelineTemplateSettingDraftVersion(
             successSubscriptionList = successSubscriptionList,
             failSubscriptionList = failSubscriptionList,
             runLockType = runLockType ?: PipelineRunLockType.SINGLE_LOCK,
-            waitQueueTimeMinute = DateTimeUtil.secondToMinute(this.waitQueueTimeSecond ?: 600000),
+            waitQueueTimeMinute = waitQueueTimeSecond ?: PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_DEFAULT,
             maxQueueSize = maxQueueSize ?: PIPELINE_SETTING_MAX_QUEUE_SIZE_DEFAULT,
             concurrencyGroup = concurrencyGroup,
             concurrencyCancelInProgress = concurrencyCancelInProgress ?: false,

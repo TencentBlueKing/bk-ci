@@ -27,9 +27,11 @@
 
 package com.tencent.devops.process.service.template.v2.version.convert
 
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.pipeline.enums.PipelineVersionAction
 import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.process.constant.PipelineTemplateConstant
+import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.pojo.template.v2.PTemplateResourceWithoutVersion
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateRollbackReq
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateVersionReq
@@ -77,6 +79,18 @@ class PipelineTemplateRollbackReqConverter @Autowired constructor(
             projectId = projectId,
             templateId = templateId
         )
+        // 以版本主表为准校验目标版本是否存在/已删除,草稿历史表无删除状态
+        val versionResource = pipelineTemplateResourceService.get(
+            projectId = projectId,
+            templateId = templateId,
+            version = version
+        )
+        if (versionResource.status == VersionStatus.DELETE) {
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_TEMPLATE_VERSION_HAS_DELETED,
+                params = arrayOf(version.toString())
+            )
+        }
         val targetResource = if (draftVersion != null) {
             pipelineTemplateResourceService.getByDraftVersion(
                 projectId = projectId,
@@ -85,11 +99,7 @@ class PipelineTemplateRollbackReqConverter @Autowired constructor(
                 draftVersion = draftVersion
             )
         } else {
-            pipelineTemplateResourceService.get(
-                projectId = projectId,
-                templateId = templateId,
-                version = version
-            )
+            versionResource
         }
         val targetSetting = if (draftVersion != null) {
             pipelineTemplateSettingService.getByDraftVersion(

@@ -465,6 +465,7 @@ object ProcessMessageCode {
     const val ERROR_PIPELINE_REF_YAML_FILE_NOT_FOUND = "2101378"
     // 分支版本[{0}]不存在, 请检查分支版本是否被成功创建
     const val ERROR_NOT_FOUND_PIPELINE_VERSION_EXISTS_BY_BRANCH = "2101379"
+    const val ERROR_TEMPLATE_VERSION_HAS_DELETED = "2101380" // 模板版本[{0}]已删除
     const val ERROR_PIPELINE_IS_NOT_PAC = "2101389" // [{0}]不是PAC流水线
 
     // 回调URL[{0}]指向内网/元数据地址，禁止使用以防止SSRF攻击
@@ -484,6 +485,7 @@ object ProcessMessageCode {
     // 构建执行相关错误码（2101500-2101599）
     const val ERROR_PIPELINE_START_NODE_NO_PERMISSION = "2101500" // 用户[{0}]没有节点[{1}]的操作权限，无法启动流水线
     const val ERROR_PIPELINE_VERSION_RECYCLED = "2101501" // 流水线版本[{0}]已被回收，无法启动构建，请使用最新版本重试
+    const val ERROR_PIPELINE_VERSION_HAS_DELETED = "2101502" // 流水线版本[{0}]已删除
 
     // 批量任务
     const val ERROR_PIPELINE_BATCH_TASK_NOT_EXISTS = "2101650" // 流水线批量任务{0}不存在
