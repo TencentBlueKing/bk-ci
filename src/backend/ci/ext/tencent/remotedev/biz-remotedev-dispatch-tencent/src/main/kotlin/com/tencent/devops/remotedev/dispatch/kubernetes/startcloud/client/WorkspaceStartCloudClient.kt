@@ -1,7 +1,10 @@
 package com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.client
 
+import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.ShaUtils
@@ -85,7 +88,7 @@ class WorkspaceStartCloudClient @Autowired constructor(
                     USER_ALREADY_EXISTED -> return true
                     else -> throw WorkspaceDispatchException(
                         " 创建user接口返回异常:" +
-                            "${environmentRsp.code}-${environmentRsp.message}"
+                                "${environmentRsp.code}-${environmentRsp.message}"
                     )
                 }
             }
@@ -127,7 +130,7 @@ class WorkspaceStartCloudClient @Autowired constructor(
                     OK -> return environmentRsp.data.resourceId
                     else -> throw WorkspaceDispatchException(
                         " 分享云桌面接口返回异常:" +
-                            "${environmentRsp.code}-${environmentRsp.message}"
+                                "${environmentRsp.code}-${environmentRsp.message}"
                     )
                 }
             }
@@ -168,7 +171,7 @@ class WorkspaceStartCloudClient @Autowired constructor(
                     OK -> return true
                     else -> throw WorkspaceDispatchException(
                         " 取消分享云桌面接口返回异常:" +
-                            "${environmentRsp.code}-${environmentRsp.message}"
+                                "${environmentRsp.code}-${environmentRsp.message}"
                     )
                 }
             }
@@ -280,15 +283,50 @@ class WorkspaceStartCloudClient @Autowired constructor(
         }
     }
 
+    fun checkTeamAccessible(userId: String, workspaceName: String): Boolean {
+        val url = "$apiUrlAI/openapi/team/check_team_accessible?workspaceName=$workspaceName"
+        val id = UUID.randomUUID()
+        logger.info("$id|User $userId request url: $url")
+        val request = Request.Builder()
+            .url(url)
+            .headers(makeHeaders("", userId).toHeaders())
+            .get()
+            .build()
+
+        try {
+            OkhttpUtils.doHttp(request).use { response ->
+                val responseContent = response.body!!.string()
+                logger.info("$id|User $userId checkTeamAccessible response: ${response.code} || $responseContent")
+                if (!response.isSuccessful) {
+                    throw WorkspaceDispatchException(
+                        "校验用户是否有该环境所属分身的开黑访问权限 接口异常: ${response.code}"
+                    )
+                }
+                return JsonUtil.to(
+                    response.body!!.string(),
+                    object : TypeReference<Result<Boolean>>() {}
+                ).data ?: false
+            }
+        } catch (e: SocketTimeoutException) {
+            logger.error("User $userId checkTeamAccessible get SocketTimeoutException", e)
+            throw WorkspaceDispatchException(
+                errorMessage = "校验用户是否有该环境所属分身的开黑访问权限 接口超时, url: $url"
+            )
+        }
+    }
+
     fun makeHeaders(
-        body: String
+        body: String,
+        userId: String? = null
     ): Map<String, String> {
         val headerBuilder = mutableMapOf<String, String>()
         headerBuilder["x-start-appid"] = appId
         val timestampMillis = System.currentTimeMillis().toString().take(10)
         headerBuilder["x-start-timestamp"] = timestampMillis
         headerBuilder["x-start-signature"] = ShaUtils.sha256("$appId$appKey$timestampMillis$body").uppercase()
-
+        if (userId != null) {
+            headerBuilder[AUTH_HEADER_USER_ID] = userId
+        }
         return headerBuilder
     }
 }
