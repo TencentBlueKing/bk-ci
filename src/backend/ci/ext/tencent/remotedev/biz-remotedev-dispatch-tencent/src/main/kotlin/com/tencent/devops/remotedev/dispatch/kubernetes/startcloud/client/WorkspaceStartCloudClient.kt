@@ -303,7 +303,7 @@ class WorkspaceStartCloudClient @Autowired constructor(
                     )
                 }
                 return JsonUtil.to(
-                    response.body!!.string(),
+                    responseContent,
                     object : TypeReference<Result<Boolean>>() {}
                 ).data ?: false
             }
