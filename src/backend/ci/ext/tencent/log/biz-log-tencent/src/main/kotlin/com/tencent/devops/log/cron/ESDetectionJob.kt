@@ -33,6 +33,7 @@ import com.tencent.devops.common.es.ESClient
 import com.tencent.devops.common.log.pojo.message.LogMessageWithLineNo
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.utils.KubernetesUtils
 import com.tencent.devops.log.client.impl.MultiESLogClient
 import com.tencent.devops.log.util.ESIndexUtils.getDocumentObject
 import com.tencent.devops.log.util.ESIndexUtils.getIndexSettings
@@ -70,8 +71,10 @@ class ESDetectionJob @Autowired constructor(
 
     @Scheduled(initialDelay = 30000, fixedDelay = 30000)
     fun detect() {
-        logger.info("Start to detect es")
-        val redisLock = RedisLock(redisOperation, MULTI_LOG_CLIENT_DETECTION_LOCK_KEY, 30)
+        // #9602 同源：锁 key 增加 namespace，避免多环境共用 Redis 时探测任务互相饿死
+        val namespace = KubernetesUtils.getNamespace()
+        logger.info("[$namespace] Start to detect es")
+        val redisLock = RedisLock(redisOperation, getDetectionRedisKey(namespace), DETECTION_LOCK_EXPIRE_SECONDS)
         try {
             if (redisLock.tryLock()) {
                 val buildId = UUIDUtil.generate()
@@ -109,7 +112,7 @@ class ESDetectionJob @Autowired constructor(
                     }
                 }
             } else {
-                logger.info("Other instance took the key, ignore")
+                logger.info("[$namespace] Other instance took the detection lock, ignore")
             }
         } finally {
             redisLock.unlock()
@@ -117,22 +120,33 @@ class ESDetectionJob @Autowired constructor(
     }
 
     /**
-     * 23 pm every day
+     * 每天 23:00 为各 ES 提前创建次日索引。
+     * 锁按 namespace + ES 逻辑名拆分，避免共用 Redis 时被其它环境抢走后本环境 ES 漏建。
+     * 覆盖本进程全部已配置客户端（含 inactive），防止熔断摘除期间漏预创建。
      */
     @Scheduled(cron = "0 0 23 * * ?")
     fun createNextIndex() {
-        logger.info("Start to create next index index")
-        val redisLock = RedisLock(redisOperation, ES_NEXT_INDEX_CREATE_JOB_KEY, 20)
-        try {
-            if (!redisLock.tryLock()) {
-                logger.info("The other process is processing clean job, ignore")
-                return
+        val namespace = KubernetesUtils.getNamespace()
+        val nextIndex = IndexNameUtils.getNextIndexName()
+        logger.info("[$namespace] Start to create next index: $nextIndex")
+        logClient.getAllClients().forEach { client ->
+            val redisLock = RedisLock(
+                redisOperation,
+                getNextIndexCreateRedisKey(namespace, client.clusterName, nextIndex),
+                NEXT_INDEX_LOCK_EXPIRE_SECONDS
+            )
+            try {
+                if (!redisLock.tryLock()) {
+                    logger.info(
+                        "[$namespace|${client.clusterName}|$nextIndex] " +
+                            "Other process is creating next index, ignore"
+                    )
+                    return@forEach
+                }
+                createIndex(client, nextIndex)
+            } finally {
+                redisLock.unlock()
             }
-            logClient.getActiveClients().forEach {
-                createIndex(it, IndexNameUtils.getNextIndexName())
-            }
-        } finally {
-            redisLock.unlock()
         }
     }
 
@@ -289,6 +303,16 @@ class ESDetectionJob @Autowired constructor(
         private val logger = LoggerFactory.getLogger(ESDetectionJob::class.java)
         private const val MULTI_LOG_CLIENT_DETECTION_LOCK_KEY = "log:multi:log:client:detection:lock:key"
         private const val ES_NEXT_INDEX_CREATE_JOB_KEY = "log:es:next:index:create:job:lock:key"
+        private const val DETECTION_LOCK_EXPIRE_SECONDS = 30L
+        private const val NEXT_INDEX_LOCK_EXPIRE_SECONDS = 60L
         private const val MULTI_LOG_LINES = 10
+
+        private fun getDetectionRedisKey(namespace: String): String {
+            return "$MULTI_LOG_CLIENT_DETECTION_LOCK_KEY:$namespace"
+        }
+
+        private fun getNextIndexCreateRedisKey(namespace: String, clusterName: String, index: String): String {
+            return "$ES_NEXT_INDEX_CREATE_JOB_KEY:$namespace:$clusterName:$index"
+        }
     }
 }
