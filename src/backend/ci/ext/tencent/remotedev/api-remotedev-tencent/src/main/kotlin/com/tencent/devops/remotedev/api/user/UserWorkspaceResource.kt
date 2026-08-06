@@ -311,6 +311,7 @@ interface UserWorkspaceResource {
         @QueryParam("envHashId")
         envHashId: String?,
         @Parameter(description = "是否是团队云桌面", required = false)
+        @QueryParam("multiple")
         multiple: Boolean?
     ): Result<WorkspaceStartCloudDetail?>
 
