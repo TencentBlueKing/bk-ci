@@ -33,9 +33,11 @@ import com.tencent.devops.log.event.LogOriginHeavyEvent
 import com.tencent.devops.log.event.LogStatusEvent
 import com.tencent.devops.log.event.LogStorageEvent
 import com.tencent.devops.log.jmx.LogPrintBean
+import com.tencent.devops.log.service.LogBulkAggregator
 import com.tencent.devops.log.service.LogStorageDegradeSwitcher
 import com.tencent.devops.log.service.LogTrafficStatsService
 import io.micrometer.core.instrument.Counter
+import io.micrometer.core.instrument.DistributionSummary
 import io.micrometer.core.instrument.Gauge
 import io.micrometer.core.instrument.MeterRegistry
 import io.micrometer.core.instrument.Tags
@@ -58,7 +60,9 @@ class LogMetrics(
     private val meterRegistry: MeterRegistry,
     private val logPrintBean: LogPrintBean,
     private val logTrafficStatsService: LogTrafficStatsService,
-    private val logStorageDegradeSwitcher: ObjectProvider<LogStorageDegradeSwitcher>
+    private val logStorageDegradeSwitcher: ObjectProvider<LogStorageDegradeSwitcher>,
+    // 聚合器经 LogStorageBean 反向依赖本类，且仅在 ES 存储下存在，用 ObjectProvider 延迟取用
+    private val logBulkAggregator: ObjectProvider<LogBulkAggregator>
 ) {
 
     @PostConstruct
@@ -84,6 +88,35 @@ class LogMetrics(
             (logStorageDegradeSwitcher.getIfAvailable()?.openCircuitProjectCount() ?: 0).toDouble()
         }
             .description("Number of projects (traffic keys) with open ES circuit")
+            .register(meterRegistry)
+        registerBulkGauges()
+    }
+
+    /**
+     * bulk 聚合器水位。flush 队列非零即代表 ES bulk 执行速度已跟不上攒批速度，
+     * 此时 offer 会因等待超时而降级，但 ES 单次 bulk 耗时仍然正常，
+     * 因此这几个 Gauge 是该瓶颈唯一的直接信号。
+     */
+    private fun registerBulkGauges() {
+        Gauge.builder("log_bulk_flush_active") {
+            (logBulkAggregator.getIfAvailable()?.flushActiveCount() ?: 0).toDouble()
+        }
+            .description("Threads currently executing ES bulk flush")
+            .register(meterRegistry)
+        Gauge.builder("log_bulk_flush_queue_size") {
+            (logBulkAggregator.getIfAvailable()?.flushQueueSize() ?: 0).toDouble()
+        }
+            .description("Batches waiting for a flush thread")
+            .register(meterRegistry)
+        Gauge.builder("log_bulk_flush_pool_size") {
+            (logBulkAggregator.getIfAvailable()?.flushPoolSize() ?: 0).toDouble()
+        }
+            .description("Configured ES bulk flush thread pool size")
+            .register(meterRegistry)
+        Gauge.builder("log_bulk_pending_batches") {
+            (logBulkAggregator.getIfAvailable()?.pendingBatches() ?: 0).toDouble()
+        }
+            .description("Batches buffered in the aggregator waiting to be flushed")
             .register(meterRegistry)
     }
 
@@ -112,6 +145,45 @@ class LogMetrics(
         )
         Counter.builder("log_es_bulk_total")
             .description("ES bulk request count")
+            .tags(tags)
+            .register(meterRegistry)
+            .increment()
+    }
+
+    /**
+     * 单次 flush 的聚合规模：batches 为合并的 offer 数，docs 为写入 ES 的文档数。
+     * batches 偏小说明攒批不充分，可考虑加大 maxWaitMs；
+     * flush 速率（count 的增速）接近 flushPoolSize / bulk 耗时时即将打满线程池。
+     */
+    fun recordBulkFlush(batches: Int, docs: Int, cluster: String? = null) {
+        val tags = Tags.of("cluster", cluster?.takeIf { it.isNotBlank() } ?: "unknown")
+        DistributionSummary.builder("log_bulk_flush_batches")
+            .description("Offers merged into one ES bulk flush")
+            .tags(tags)
+            .register(meterRegistry)
+            .record(batches.toDouble())
+        DistributionSummary.builder("log_bulk_flush_docs")
+            .description("Documents written by one ES bulk flush")
+            .tags(tags)
+            .register(meterRegistry)
+            .record(docs.toDouble())
+    }
+
+    /**
+     * 聚合器 offer 的最终结果与总耗时（含攒批等待）。
+     * reason 见 [com.tencent.devops.log.service.BulkOfferResult]，用于区分
+     * 背压拒绝（queue_full）、等待超时（timeout）与 bulk 执行失败（bulk_failed）。
+     */
+    fun recordBulkOffer(elapseMs: Long, reason: String) {
+        val tags = Tags.of("reason", reason)
+        recordTimer(
+            name = "log_bulk_offer",
+            description = "Aggregator offer latency including batching wait",
+            elapseMs = elapseMs,
+            tags = tags
+        )
+        Counter.builder("log_bulk_offer_total")
+            .description("Aggregator offer count by result reason")
             .tags(tags)
             .register(meterRegistry)
             .increment()
@@ -233,15 +305,22 @@ class LogMetrics(
         }
     }
 
+    /**
+     * 统一发布 P95/P99。平均耗时会掩盖长尾：bulk 平均十几毫秒时 P99 已可能贴近
+     * writeTimeoutMs 而持续降级。这里用客户端分位数（不产生 histogram bucket），
+     * 代价是无法跨 Pod 聚合，观察时取各 Pod 的最大值即可。
+     */
     private fun recordTimer(name: String, description: String, elapseMs: Long, tags: Tags) {
         Timer.builder(name)
             .description(description)
             .tags(tags)
+            .publishPercentiles(*PERCENTILES)
             .register(meterRegistry)
             .record(elapseMs.coerceAtLeast(0), TimeUnit.MILLISECONDS)
     }
 
     companion object {
+        private val PERCENTILES = doubleArrayOf(0.95, 0.99)
         const val DESTINATION_ORIGIN = "origin"
         const val DESTINATION_ORIGIN_HEAVY = "origin_heavy"
         const val DESTINATION_STORAGE = "storage"
