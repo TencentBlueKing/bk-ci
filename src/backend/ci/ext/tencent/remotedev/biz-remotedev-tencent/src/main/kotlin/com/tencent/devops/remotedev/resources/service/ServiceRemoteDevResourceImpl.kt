@@ -59,6 +59,7 @@ import com.tencent.devops.remotedev.pojo.project.EnableRemotedevData
 import com.tencent.devops.remotedev.pojo.project.RemotedevProject
 import com.tencent.devops.remotedev.pojo.project.RemotedevProjectNew
 import com.tencent.devops.remotedev.pojo.project.WeSecProjectWorkspace
+import com.tencent.devops.remotedev.pojo.project.WorkspaceMemberInfo
 import com.tencent.devops.remotedev.pojo.project.WorkspaceProperty
 import com.tencent.devops.remotedev.pojo.record.ThumbnailEncryptedTicketResp
 import com.tencent.devops.remotedev.pojo.remotedev.CreateCvmData
@@ -451,6 +452,18 @@ class ServiceRemoteDevResourceImpl(
                 hasCurrentUser = true,
                 userId = userId
             ).firstOrNull()
+        )
+    }
+
+    override fun getProjectWorkspaceMembers(
+        projectId: String,
+        workspaceName: String
+    ): Result<WorkspaceMemberInfo?> {
+        return Result(
+            workspaceService.getWorkspaceMemberInfo(
+                projectId = projectId,
+                workspaceName = workspaceName
+            )
         )
     }
 

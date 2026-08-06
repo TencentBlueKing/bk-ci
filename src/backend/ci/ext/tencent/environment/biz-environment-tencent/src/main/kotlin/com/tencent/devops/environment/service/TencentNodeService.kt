@@ -17,7 +17,6 @@ import com.tencent.devops.environment.dao.AgentDao
 import com.tencent.devops.environment.dao.NodeDao
 import com.tencent.devops.environment.dao.thirdpartyagent.ThirdPartyAgentDao
 import com.tencent.devops.environment.model.AgentProps
-import com.tencent.devops.environment.model.AgentPropsSource
 import com.tencent.devops.environment.permission.EnvironmentPermissionService
 import com.tencent.devops.environment.pojo.AsyncInstallImateData
 import com.tencent.devops.environment.pojo.NodeAgentDetail
@@ -26,6 +25,7 @@ import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.environment.pojo.imate.ImateListItem
 import com.tencent.devops.environment.pojo.imate.ImateOriginEngine
 import com.tencent.devops.environment.pojo.imate.ImportImageNodeData
+import com.tencent.devops.environment.pojo.thirdpartyagent.create.AgentPropsSource
 import com.tencent.devops.environment.service.thirdpartyagent.BatchInstallAgentService
 import com.tencent.devops.environment.service.thirdpartyagent.ImportService
 import com.tencent.devops.model.environment.tables.records.TNodeRecord
@@ -205,7 +205,8 @@ class TencentNodeService @Autowired constructor(
         return NodeAgentDetail(
             displayName = node.displayName,
             ip = agent.ip,
-            workspaceName = agent.createWorkspaceName
+            workspaceName = agent.createWorkspaceName,
+            nodeId = agent.nodeId
         )
     }
 

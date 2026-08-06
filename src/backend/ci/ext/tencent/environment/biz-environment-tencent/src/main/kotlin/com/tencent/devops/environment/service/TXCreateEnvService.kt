@@ -11,7 +11,7 @@ import com.tencent.devops.environment.constant.EnvironmentMessageCode
 import com.tencent.devops.environment.dao.AgentDao
 import com.tencent.devops.environment.dao.NodeDao
 import com.tencent.devops.environment.model.AgentProps
-import com.tencent.devops.environment.model.AgentPropsSource
+import com.tencent.devops.environment.pojo.thirdpartyagent.create.AgentPropsSource
 import com.tencent.devops.environment.service.thirdpartyagent.DownloadAgentInstallService
 import com.tencent.devops.remotedev.api.service.ServiceRemoteDevResource
 import com.tencent.devops.remotedev.pojo.WorkspaceSearch
@@ -56,26 +56,23 @@ class TXCreateEnvService @Autowired constructor(
         // 优先根据来源判读，没有就兜底使用系统
         val record =
             agentDao.getAgentByWorkspaceIdGlobal(dslContext, workspaceId, projectId) ?: return null
-        val source = if (record.agentProps == null) {
-            null
-        } else {
-            try {
-                JsonUtil.to<AgentProps>(record.agentProps).source
-            } catch (_: Exception) {
+        return when (AgentProps.getSourceFromRecord(record.agentProps, OS.parse(record.os))) {
+            AgentPropsSource.DEVCLOUD -> {
+                client.get(ServiceIMateResource::class)
+                    .queryUserRobots(userId).data?.filter { it.username == userId }
+                    ?.firstOrNull { it.clientUuid == workspaceId }?.botName
+            }
+
+            AgentPropsSource.REMOTEDEV -> {
+                client.get(ServiceRemoteDevResource::class).startCloudWorkspaceDetail(
+                    userId, workspaceId, null
+                ).data?.displayName
+            }
+
+            AgentPropsSource.IEG_IMATE -> {
                 null
             }
         }
-        if (source == AgentPropsSource.DEVCLOUD || (source == null && record.os == OS.LINUX.name)) {
-            return client.get(ServiceIMateResource::class)
-                .queryUserRobots(userId).data?.filter { it.username == userId }
-                ?.firstOrNull { it.clientUuid == workspaceId }?.botName
-        }
-        if (source == AgentPropsSource.REMOTEDEV || (source == null && record.os == OS.WINDOWS.name)) {
-            return client.get(ServiceRemoteDevResource::class).startCloudWorkspaceDetail(
-                userId, workspaceId, null
-            ).data?.displayName
-        }
-        return null
     }
 
     override fun genCreateNodeInstallScript(
@@ -148,7 +145,7 @@ class TXCreateEnvService @Autowired constructor(
                         displayName
                     )
                 }
-            }catch (e:Exception){
+            } catch (e: Exception) {
                 logger.error("refreshCreateDisplayName error", e)
             }
         }
