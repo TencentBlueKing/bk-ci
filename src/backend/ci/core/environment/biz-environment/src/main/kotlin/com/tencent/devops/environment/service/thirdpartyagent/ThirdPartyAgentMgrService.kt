@@ -193,7 +193,8 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                 } else {
                     AuthResourceType.ENVIRONMENT_ENV_NODE
                 }
-            )) {
+            )
+        ) {
             throw PermissionForbiddenException(
                 message = I18nUtil.getCodeLanMessage(ERROR_NODE_NO_VIEW_PERMISSSION)
             )
@@ -1543,13 +1544,25 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
     }
 
     fun updateAgentGateway(updateAgentRequest: UpdateAgentRequest) {
-        with(updateAgentRequest) {
-            thirdPartyAgentDao.updateGateway(
-                dslContext = dslContext,
-                agentId = HashUtil.decodeIdToLong(agentId),
-                gateway = gateway,
-                fileGateway = fileGateway
-            )
+        if (!updateAgentRequest.agentId.isNullOrBlank()) {
+            with(updateAgentRequest) {
+                thirdPartyAgentDao.updateGateway(
+                    dslContext = dslContext,
+                    agentId = HashUtil.decodeIdToLong(agentId!!),
+                    gateway = gateway,
+                    fileGateway = fileGateway
+                )
+            }
+        }
+        if (!updateAgentRequest.agentIdList.isNullOrEmpty()) {
+            with(updateAgentRequest) {
+                thirdPartyAgentDao.updateAgentsGateway(
+                    dslContext = dslContext,
+                    agentIdList = agentIdList!!.map { HashUtil.decodeIdToLong(it) },
+                    gateway = gateway,
+                    fileGateway = fileGateway
+                )
+            }
         }
     }
 
