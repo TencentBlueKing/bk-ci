@@ -1,11 +1,10 @@
 package com.tencent.devops.environment.model
 
 import com.tencent.devops.common.api.pojo.OS
-import com.tencent.devops.common.api.pojo.agent.DockerInitFileInfo
 import com.tencent.devops.common.api.pojo.agent.AgentErrorExitData
+import com.tencent.devops.common.api.pojo.agent.DockerInitFileInfo
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.environment.pojo.thirdpartyagent.create.AgentPropsSource
-import com.tencent.devops.model.environment.tables.records.TEnvironmentThirdpartyAgentRecord
 
 /**
  * Agent 系统属性
