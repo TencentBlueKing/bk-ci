@@ -1324,7 +1324,7 @@ class WorkspaceService @Autowired constructor(
                     params = arrayOf(workspace.hostIp ?: workspaceName)
                 )
             }
-            return startCloudWorkspaceDetail(userId, workspace, multiple ?: false)
+            return startCloudWorkspaceDetail(userId, workspace, false)
         }
         if (envId != null) {
             val userEnvs = getUserEnv4Use(userId)
@@ -1401,7 +1401,7 @@ class WorkspaceService @Autowired constructor(
                     notify = false
                 )
             }
-            return startCloudWorkspaceDetail(userId, workspace, multiple ?: false)
+            return startCloudWorkspaceDetail(userId, workspace, false)
         }
         throw ErrorCodeException(
             errorCode = ErrorCodeEnum.DENIAL_OF_SERVICE.errorCode
