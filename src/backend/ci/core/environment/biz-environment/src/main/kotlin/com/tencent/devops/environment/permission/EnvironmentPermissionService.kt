@@ -77,7 +77,7 @@ interface EnvironmentPermissionService {
         resourceType: AuthResourceType = AuthResourceType.ENVIRONMENT_ENV_NODE
     ): Map<AuthPermission, List<String>>
 
-    fun listNodeByRbacPermission(
+    fun listNodePermission(
         userId: String,
         projectId: String,
         nodeRecordList: List<TNodeRecord>,

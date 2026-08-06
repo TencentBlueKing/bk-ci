@@ -1,7 +1,11 @@
 package com.tencent.devops.environment.model
 
+import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.pojo.agent.DockerInitFileInfo
 import com.tencent.devops.common.api.pojo.agent.AgentErrorExitData
+import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.environment.pojo.thirdpartyagent.create.AgentPropsSource
+import com.tencent.devops.model.environment.tables.records.TEnvironmentThirdpartyAgentRecord
 
 /**
  * Agent 系统属性
@@ -31,11 +35,24 @@ data class AgentProps(
             osVersion = null,
             source = source
         )
-    }
-}
 
-enum class AgentPropsSource {
-    REMOTEDEV, // 云桌面
-    DEVCLOUD, // 团队imate龙虾
-    ;
+        fun getSourceFromRecord(props: String?, os: OS?): AgentPropsSource {
+            val source = if (props == null) {
+                null
+            } else {
+                try {
+                    JsonUtil.to<AgentProps>(props).source
+                } catch (_: Exception) {
+                    null
+                }
+            }
+            if (source == AgentPropsSource.DEVCLOUD || (source == null && os == OS.LINUX)) {
+                return AgentPropsSource.DEVCLOUD
+            }
+            if (source == AgentPropsSource.REMOTEDEV || (source == null && os == OS.WINDOWS)) {
+                return AgentPropsSource.REMOTEDEV
+            }
+            return AgentPropsSource.IEG_IMATE
+        }
+    }
 }
