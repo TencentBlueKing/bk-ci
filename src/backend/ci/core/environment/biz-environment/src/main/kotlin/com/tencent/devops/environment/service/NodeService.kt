@@ -41,6 +41,7 @@ import com.tencent.devops.common.api.constant.LATEST_UPDATE_TIME
 import com.tencent.devops.common.api.constant.USAGE
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
+import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.CsvUtil
 import com.tencent.devops.common.api.util.HashUtil
@@ -78,6 +79,7 @@ import com.tencent.devops.environment.dao.NodeTagDao
 import com.tencent.devops.environment.dao.slave.SlaveGatewayDao
 import com.tencent.devops.environment.dao.thirdpartyagent.ThirdPartyAgentActionDao
 import com.tencent.devops.environment.dao.thirdpartyagent.ThirdPartyAgentDao
+import com.tencent.devops.environment.model.AgentProps
 import com.tencent.devops.environment.permission.EnvironmentPermissionService
 import com.tencent.devops.environment.pojo.NodeBaseInfo
 import com.tencent.devops.environment.pojo.NodeFetchReq
@@ -463,7 +465,7 @@ class NodeService @Autowired constructor(
         resourceType: AuthResourceType = AuthResourceType.ENVIRONMENT_ENV_NODE,
         envId: Long?
     ): List<NodeWithPermission> {
-        val nodeListResult = environmentPermissionService.listNodeByRbacPermission(
+        val nodeListResult = environmentPermissionService.listNodePermission(
             userId = userId,
             projectId = projectId,
             nodeRecordList = nodeRecordList,
@@ -494,7 +496,7 @@ class NodeService @Autowired constructor(
         val canDeleteNodeIds = permissionMap[AuthPermission.DELETE]
             ?.map { HashUtil.decodeIdToLong(it) } ?: emptyList()
         val thirdPartyAgentNodeIds = nodeListResult.filter {
-            it.nodeType == NodeType.THIRDPARTY.name
+            it.nodeType == NodeType.THIRDPARTY.name || it.nodeType == NodeType.CREATE.name
         }.map { it.nodeId }
         val thirdPartyAgentMap = if (thirdPartyAgentNodeIds.isNotEmpty()) {
             thirdPartyAgentDao.getAgentsByNodeIds(dslContext, thirdPartyAgentNodeIds, projectId)
@@ -572,6 +574,11 @@ class NodeService @Autowired constructor(
                 tags = tagMaps[it.nodeId],
                 envEnableNode = nodeIdMaps[it.nodeId] ?: true,
                 createWorkspaceId = thirdPartyAgent?.createWorkspaceName,
+                createWorkspaceSource = if (thirdPartyAgent?.createWorkspaceName != null) {
+                    AgentProps.getSourceFromRecord(thirdPartyAgent.agentProps, OS.parse(thirdPartyAgent.os))
+                } else {
+                    null
+                },
                 operatorStatus = NodeOperatorStatus.valOf(it.operatorStatus)?.name
             )
         }
@@ -621,7 +628,7 @@ class NodeService @Autowired constructor(
                 permissions = setOf(AuthPermission.USE, AuthPermission.EDIT, AuthPermission.DELETE)
             )
 
-            val canViewNodeIds = environmentPermissionService.listNodeByRbacPermission(
+            val canViewNodeIds = environmentPermissionService.listNodePermission(
                 userId = userId,
                 projectId = projectId,
                 nodeRecordList = nodeRecordList,
@@ -643,7 +650,7 @@ class NodeService @Autowired constructor(
             } else {
                 emptyList()
             }
-            val nodeListResult = environmentPermissionService.listNodeByRbacPermission(
+            val nodeListResult = environmentPermissionService.listNodePermission(
                 userId = userId,
                 projectId = projectId,
                 nodeRecordList = nodeRecordList,
@@ -719,6 +726,11 @@ class NodeService @Autowired constructor(
                 serverId = it.serverId,
                 envEnableNode = null,
                 createWorkspaceId = thirdPartyAgent?.createWorkspaceName,
+                createWorkspaceSource = if (thirdPartyAgent?.createWorkspaceName != null) {
+                    AgentProps.getSourceFromRecord(thirdPartyAgent.agentProps, OS.parse(thirdPartyAgent.os))
+                } else {
+                    null
+                },
                 operatorStatus = NodeOperatorStatus.valOf(it.operatorStatus)?.name
             )
         }
@@ -734,7 +746,7 @@ class NodeService @Autowired constructor(
 
         val validRecordList = nodeRecordList.filter { canUseNodeIds.contains(it.nodeId) }
 
-        val canViewNodeIds = environmentPermissionService.listNodeByRbacPermission(
+        val canViewNodeIds = environmentPermissionService.listNodePermission(
             userId = userId,
             projectId = projectId,
             nodeRecordList = nodeRecordList,
@@ -779,6 +791,7 @@ class NodeService @Autowired constructor(
                 serverId = it.serverId,
                 envEnableNode = null,
                 createWorkspaceId = null,
+                createWorkspaceSource = null,
                 operatorStatus = NodeOperatorStatus.valOf(it.operatorStatus)?.name
             )
         }
@@ -1068,7 +1081,7 @@ class NodeService @Autowired constructor(
             .addExtendData("targetProjectId", targetProjectId)
         logger.info(
             "transfer node success|userId=$userId|sourceProjectId=$sourceProjectId|" +
-                "targetProjectId=$targetProjectId|nodeHashId=$nodeHashId"
+                    "targetProjectId=$targetProjectId|nodeHashId=$nodeHashId"
         )
         return true
     }
@@ -1245,7 +1258,8 @@ class NodeService @Autowired constructor(
                 osType = it.osType,
                 serverId = it.serverId,
                 envEnableNode = null,
-                createWorkspaceId = null
+                createWorkspaceId = null,
+                createWorkspaceSource = null
             )
         }
     }
