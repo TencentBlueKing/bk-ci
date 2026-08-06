@@ -140,6 +140,7 @@ class TemplateWorkspaceAssignService @Autowired constructor(
             // 1、添加用户到项目用户组(AnyDev云桌面用户组)：先判断用户是否有项目权限，
             // 没有才创建用户组 + 加人，有“AnyDev云桌面用户组”直接加人，没有才创建；
             if (!permissionService.checkUserVisitPermission(applicant, projectId)) {
+                logger.info("assignByTemplate|checkUserVisitPermission|not visit permission")
                 val gpId = client.get(ServiceResourceGroupResource::class).createCustomGroupAndPermissions(
                     projectCode = projectId,
                     customGroupCreateReq = CustomGroupCreateReq(
@@ -151,6 +152,7 @@ class TemplateWorkspaceAssignService @Autowired constructor(
                     errorCode = ErrorCodeEnum.OPEN_CLAW_WORKSPACE_CREATE_ERROR.errorCode,
                     params = arrayOf("create AnyDev云桌面用户组 error no id")
                 )
+                logger.info("assignByTemplate|createCustomGroupAndPermissions|gpId|$gpId")
                 val res = client.get(ServiceResourceMemberResource::class).batchAddResourceGroupMembers(
                     tokenService.getSystemToken(),
                     projectId,
@@ -165,6 +167,7 @@ class TemplateWorkspaceAssignService @Autowired constructor(
                         resourceCode = null
                     )
                 ).data
+                logger.info("assignByTemplate|batchAddResourceGroupMembers|res|$res")
                 if (res != true) {
                     throw ErrorCodeException(
                         errorCode = ErrorCodeEnum.OPEN_CLAW_WORKSPACE_CREATE_ERROR.errorCode,
