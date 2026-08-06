@@ -671,6 +671,9 @@ object ProcessMessageCode {
     // [只有前面有任务失败时才运行](Only when a previous task has failed)
     const val BK_ONLY_WHEN_PREVIOUS_TASK_HAS_FAILED = "bkOnlyWhenPreviousTaskHasFailed"
 
+    // [只有前面有任务失败时才运行（不包括失败自动跳过）]
+    const val BK_ONLY_WHEN_PREVIOUS_TASK_FAILED_EXCEPT_SKIP = "bkOnlyWhenPreviousTaskFailedExceptSkip"
+
     // [即使前面有插件运行失败也运行，除非被取消才不运行] (Even if a previous task has failed, unless the build was canceled)
     const val BK_IT_DOES_NOT_RUN_UNLESS_IT_IS_CANCELED = "bkItDoesNotRunUnlessItIsCanceled"
 
