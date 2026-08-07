@@ -36,6 +36,8 @@ data class AgentPipelineBuildTask(
     @get:Schema(title = "作业容器ID", required = false)
     val vmSeqId: String?,
     @get:Schema(title = "stageId", required = false)
-    val stageId: String?
+    val stageId: String?,
+    @get:Schema(title = "stageNumb")
+    var stageNumb: String?
 )
 

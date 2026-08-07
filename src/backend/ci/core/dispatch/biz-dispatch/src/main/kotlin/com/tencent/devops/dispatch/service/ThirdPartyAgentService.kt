@@ -661,7 +661,8 @@ class ThirdPartyAgentService @Autowired constructor(
                         AgentPipelineBuildTask(
                             taskName = it.taskName,
                             vmSeqId = it.vmSeqId,
-                            stageId = it.stageId
+                            stageId = it.stageId,
+                            stageNumb = it.stageId?.toStageNumb() ?: it.stageId
                         )
                     }
                 )
@@ -741,7 +742,8 @@ class ThirdPartyAgentService @Autowired constructor(
                         AgentPipelineBuildTask(
                             taskName = it.taskName,
                             vmSeqId = it.vmSeqId,
-                            stageId = it.stageId
+                            stageId = it.stageId,
+                            stageNumb = it.stageId?.toStageNumb() ?: it.stageId
                         )
                     }
                 )
@@ -1344,9 +1346,7 @@ class ThirdPartyAgentService @Autowired constructor(
                 ).let { list ->
                     // 处理下stage序号计算
                     list.forEach { item ->
-                        item.stageNumb =
-                            item.stageId?.removePrefix(KEY_STAGE)?.toIntOrNull()?.let { it - 1 }?.toString()
-                                ?: item.stageId
+                        item.stageNumb = item.stageId?.toStageNumb() ?: item.stageId
                     }
                     list
                 }
@@ -1407,6 +1407,8 @@ class ThirdPartyAgentService @Autowired constructor(
             creator = creator
         )
     }
+
+    private fun String.toStageNumb() = this.removePrefix(KEY_STAGE).toIntOrNull()?.let { it - 1 }?.toString()
 
     companion object {
         private val logger = LoggerFactory.getLogger(ThirdPartyAgentService::class.java)
