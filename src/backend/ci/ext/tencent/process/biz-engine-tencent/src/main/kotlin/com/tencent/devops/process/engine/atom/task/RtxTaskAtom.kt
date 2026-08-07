@@ -292,6 +292,6 @@ class RtxTaskAtom @Autowired constructor(
         "${HomeHostUtil.outerServerHost()}/app/download/devops_app_forward.html?flag=buildArchive&" +
                 "projectId=$projectId&" +
                 "pipelineId=$pipelineId&" +
-                "buildId=$processInstanceId" +
+                "buildId=$processInstanceId&" +
                 "channelCode=$channelCode"
 }
