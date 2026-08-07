@@ -28,6 +28,9 @@
 package com.tencent.devops.process.api.builds
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BUILD_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_CI_TASK_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_EXECUTE_COUNT
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PIPELINE_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.process.pojo.task.PipelineBuildTaskInfo
@@ -37,8 +40,10 @@ import io.swagger.v3.oas.annotations.Parameter
 import jakarta.ws.rs.Consumes
 import jakarta.ws.rs.GET
 import jakarta.ws.rs.HeaderParam
+import jakarta.ws.rs.POST
 import jakarta.ws.rs.Path
 import jakarta.ws.rs.Produces
+import jakarta.ws.rs.QueryParam
 import jakarta.ws.rs.core.MediaType
 
 @Tag(name = "BUILD_TASK", description = "构建-任务资源")
@@ -58,4 +63,28 @@ interface BuildTaskResource {
         @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
         buildId: String
     ): Result<List<PipelineBuildTaskInfo>>
+
+    @Operation(summary = "上报插件外部链接（运行态，用于构建详情页展示跳转入口）")
+    @Path("/external_link")
+    @POST
+    fun reportExternalLink(
+        @Parameter(description = "项目ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
+        projectId: String,
+        @Parameter(description = "流水线ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_PIPELINE_ID)
+        pipelineId: String,
+        @Parameter(description = "构建ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
+        buildId: String,
+        @Parameter(description = "任务ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_CI_TASK_ID)
+        taskId: String,
+        @Parameter(description = "执行次数", required = false)
+        @HeaderParam(AUTH_HEADER_DEVOPS_EXECUTE_COUNT)
+        executeCount: Int?,
+        @Parameter(description = "外部链接（仅支持 http/https）", required = true)
+        @QueryParam("link")
+        link: String
+    ): Result<Boolean>
 }

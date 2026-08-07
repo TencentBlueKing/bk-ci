@@ -55,6 +55,14 @@
           :title="t('viewSubPipeline')"
           @click.stop="handleSubPipelineAccess"
         />
+        <Logo
+          v-if="showExternalLink"
+          name="tiaozhuan"
+          class="sub-pipeline-jump-icon"
+          size="16"
+          :title="t('viewExternalLink')"
+          @click.stop="handleExternalLink"
+        />
       </p>
       <template v-if="isExecuting">
         <span class="atom-execounter">{{ execTime }}</span>
@@ -351,6 +359,14 @@ const hasSubPipelineAccessInfo = computed(() => {
   return !!(projectId && pipelineId && buildId);
 });
 
+const showExternalLink = computed(() => {
+  return (
+    reactiveData.isExecDetail
+    && !reactiveData.editable
+    && !!props.atom?.externalLink
+  );
+});
+
 const isLastQualityAtom = computed(() => {
   return props.atom.atomCode === QUALITY_OUT_ATOM_CODE && props.isLastAtom;
 });
@@ -543,6 +559,12 @@ const handleSubPipelineAccess = () => {
   eventBus.$emit(SUB_PIPELINE_ACCESS_EVENT_NAME, {
     atom: props.atom
   });
+};
+
+const handleExternalLink = () => {
+  const url = props.atom?.externalLink;
+  if (!url) return;
+  window.open(url, "_blank", "noopener,noreferrer");
 };
 
 const copyAtom = () => {
