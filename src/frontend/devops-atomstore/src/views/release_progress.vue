@@ -183,13 +183,21 @@
                                                         v-else
                                                     >
                                                         <span class="scope-label">{{ $t('store.适用Job类型：') }}</span>
-                                                        <span>
-                                                            {{ getJobTypeNames(scopeConfig.jobTypeConfigs) }}
-                                                            <os-icon-list
-                                                                :job-type-configs="scopeConfig.jobTypeConfigs"
-                                                                with-parentheses
-                                                            />
+                                                        <span v-if="scopeConfig.jobTypeConfigs && scopeConfig.jobTypeConfigs.length">
+                                                            <span
+                                                                v-for="(config, index) in scopeConfig.jobTypeConfigs"
+                                                                :key="index"
+                                                            >
+                                                                {{ jobTypeMap[config.jobType] || config.jobType }}
+                                                                <os-icon-list
+                                                                    v-if="config.osList && config.osList.length"
+                                                                    :os-list="config.osList"
+                                                                    with-parentheses
+                                                                />
+                                                                <span v-if="index < scopeConfig.jobTypeConfigs.length - 1">、</span>
+                                                            </span>
                                                         </span>
+                                                        <span v-else>--</span>
                                                     </div>
                                                     <div class="scope-info-item">
                                                         <span class="scope-label">{{ $t('store.功能标签：') }}</span>
@@ -780,10 +788,6 @@
             },
             toggleShow () {
                 this.isDropdownShow = !this.isDropdownShow
-            },
-            getJobTypeNames (jobTypeConfigs) {
-                if (!Array.isArray(jobTypeConfigs) || jobTypeConfigs.length === 0) return '--'
-                return jobTypeConfigs.map(config => this.jobTypeMap[config.jobType] || config.jobType).join('、')
             },
             getScopeLabelNames (scopeConfig) {
                 if (!scopeConfig.labelList || scopeConfig.labelList.length === 0) return []

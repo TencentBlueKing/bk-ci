@@ -1,8 +1,8 @@
 <template>
-    <span v-if="osList.length > 0">
+    <span v-if="displayOsList.length > 0">
         <template v-if="withParentheses">（</template>
         <i
-            v-for="os in osList"
+            v-for="os in displayOsList"
             :key="os"
             class="devops-icon"
             :class="osIconMap[os]"
@@ -17,6 +17,10 @@
             jobTypeConfigs: {
                 type: Array,
                 default: () => []
+            },
+            osList: {
+                type: Array,
+                default: null
             },
             withParentheses: {
                 type: Boolean,
@@ -35,7 +39,10 @@
         },
 
         computed: {
-            osList () {
+            displayOsList () {
+                if (Array.isArray(this.osList)) {
+                    return [...new Set(this.osList)]
+                }
                 if (!Array.isArray(this.jobTypeConfigs) || this.jobTypeConfigs.length === 0) return []
                 return [...new Set(
                     this.jobTypeConfigs.reduce((list, config) => {
