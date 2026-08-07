@@ -167,9 +167,19 @@ class RtxTaskAtom @Autowired constructor(
             } catch (ignore: Exception) {
                 null
             }
-            val detailUrl = detailUrl(projectId, pipelineId, buildId, channelCode)
+            val detailUrl = detailUrl(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                processInstanceId = buildId,
+                channelCode = channelCode
+            )
 
-            val detailOuterUrl = detailOuterUrl(projectId, pipelineId, buildId)
+            val detailOuterUrl = detailOuterUrl(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                processInstanceId = buildId,
+                channelCode = channelCode
+            )
 
             val bodyStrOrigin = parseVariable(param.body, runVariables)
             // 企业微信通知是否加上详情
@@ -259,7 +269,12 @@ class RtxTaskAtom @Autowired constructor(
      * 流水线渠道: /console/pipeline/{projectId}/{pipelineId}/detail/{buildId}
      * 创作流渠道: /console/creative-stream/{projectId}/flow/{pipelineId}/execute/{buildId}/execute-detail
      */
-    private fun detailUrl(projectId: String, pipelineId: String, processInstanceId: String, channelCode: ChannelCode? = null): String {
+    private fun detailUrl(
+        projectId: String,
+        pipelineId: String,
+        processInstanceId: String,
+        channelCode: ChannelCode? = null
+    ): String {
         val host = HomeHostUtil.innerServerHost()
         return if (channelCode == ChannelCode.CREATIVE_STREAM) {
             "$host/console/creative-stream/$projectId/flow/$pipelineId/execute/$processInstanceId/execute-detail"
@@ -268,9 +283,15 @@ class RtxTaskAtom @Autowired constructor(
         }
     }
 
-    private fun detailOuterUrl(projectId: String, pipelineId: String, processInstanceId: String) =
-            "${HomeHostUtil.outerServerHost()}/app/download/devops_app_forward.html?flag=buildArchive&" +
-                    "projectId=$projectId&" +
-                    "pipelineId=$pipelineId&" +
-                    "buildId=$processInstanceId"
+    private fun detailOuterUrl(
+        projectId: String,
+        pipelineId: String,
+        processInstanceId: String,
+        channelCode: ChannelCode?
+    ) =
+        "${HomeHostUtil.outerServerHost()}/app/download/devops_app_forward.html?flag=buildArchive&" +
+                "projectId=$projectId&" +
+                "pipelineId=$pipelineId&" +
+                "buildId=$processInstanceId" +
+                "channelCode=$channelCode"
 }
