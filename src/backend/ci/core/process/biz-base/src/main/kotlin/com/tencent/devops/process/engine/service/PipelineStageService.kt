@@ -679,7 +679,9 @@ class PipelineStageService @Autowired constructor(
     ) {
         val checkIn = stage.checkIn ?: return
         val group = stage.checkIn?.groupToReview() ?: return
-        if (group.reviewers.find { it.isNotBlank() } == null) {
+        // 审核人 ID 去空白/换行，避免污染 markdown 通知正文与 chatid
+        val reviewers = StagePauseCheck.sanitizeIds(group.reviewers)
+        if (reviewers.isEmpty()) {
             /*如果审核人为空，则取消构建*/
             cancelStage(
                 userId = userId,
@@ -707,6 +709,7 @@ class PipelineStageService @Autowired constructor(
         val notifyType = NotifyUtils.checkNotifyType(checkIn.notifyType)
         // 勾选企业微信群消息时，群通知通过 mentioned_list @审核人（与人工审核插件一致）
         val mentionReceivers = notifyType.contains(NotifyType.WEWORK_GROUP.name)
+        val reviewersText = reviewers.joinToString()
         pipelineEventDispatcher.dispatch(
             PipelineBuildReviewBroadCastEvent(
                 source = "s(${stage.stageId}) waiting for REVIEW",
@@ -721,7 +724,7 @@ class PipelineStageService @Autowired constructor(
                 source = "s(${stage.stageId}) waiting for REVIEW",
                 projectId = stage.projectId, pipelineId = stage.pipelineId,
                 userId = userId, buildId = stage.buildId,
-                receivers = group.reviewers,
+                receivers = reviewers,
                 titleParams = mutableMapOf(
                     "projectName" to "need to add in notifyListener",
                     "pipelineName" to pipelineName,
@@ -732,7 +735,7 @@ class PipelineStageService @Autowired constructor(
                     "pipelineName" to pipelineName,
                     "dataTime" to DateTimeUtil.formatDate(Date(), "yyyy-MM-dd HH:mm:ss"),
                     "reviewDesc" to (checkIn.reviewDesc ?: ""),
-                    "reviewers" to group.reviewers.joinToString(),
+                    "reviewers" to reviewersText,
                     "hasRequiredParams" to hasRequiredParams.toString(),
                     // 企业微信组
                     NotifyUtils.WEWORK_GROUP_KEY to (checkIn.notifyGroup?.joinToString(separator = ",") ?: "")
@@ -750,14 +753,14 @@ class PipelineStageService @Autowired constructor(
                     "buildId" to stage.buildId,
                     "stageId" to stage.stageId,
                     "groupId" to (group.id ?: ""),
-                    "reviewUsers" to group.reviewers.joinToString(","),
+                    "reviewUsers" to reviewers.joinToString(","),
                     "hasRequiredParams" to hasRequiredParams.toString(),
                     "signature" to signature
                 )
             )
         )
         // #7971 无指定通知类型时、或者触发人是审核人时，不去通知触发人。
-        if (triggerUserId !in group.reviewers && !checkIn.notifyType.isNullOrEmpty()) {
+        if (triggerUserId !in reviewers && !checkIn.notifyType.isNullOrEmpty()) {
             pipelineEventDispatcher.dispatch(
                 PipelineBuildNotifyEvent(
                     notifyTemplateEnum = PipelineNotifyTemplateEnum
@@ -776,7 +779,7 @@ class PipelineStageService @Autowired constructor(
                         "pipelineName" to pipelineName,
                         "dataTime" to DateTimeUtil.formatDate(Date(), "yyyy-MM-dd HH:mm:ss"),
                         "reviewDesc" to (checkIn.reviewDesc ?: ""),
-                        "reviewers" to group.reviewers.joinToString()
+                        "reviewers" to reviewersText
                     ),
                     position = ControlPointPosition.BEFORE_POSITION,
                     stageId = stage.stageId,

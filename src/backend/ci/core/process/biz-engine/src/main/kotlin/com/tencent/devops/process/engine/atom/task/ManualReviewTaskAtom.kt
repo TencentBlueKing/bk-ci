@@ -131,8 +131,14 @@ class ManualReviewTaskAtom(
             logger.warn("[$buildId]|taskId=$taskId|Review user is empty")
             return AtomResponse(BuildStatus.FAILED)
         }
+        // 变量替换后可能引入换行/空格，清洗后再用于通知与 chatid，避免破坏企微 markdown
         val reviewUsersList = reviewUsers.split(",")
-
+            .map { it.trim() }
+            .filter { it.isNotEmpty() }
+        if (reviewUsersList.isEmpty()) {
+            logger.warn("[$buildId]|taskId=$taskId|Review user is empty after sanitize")
+            return AtomResponse(BuildStatus.FAILED)
+        }
         taskBuildRecordService.updateTaskRecord(
             projectId = projectCode, pipelineId = pipelineId, buildId = buildId,
             taskId = taskId, executeCount = task.executeCount ?: 1, buildStatus = null,
@@ -158,7 +164,7 @@ class ManualReviewTaskAtom(
             jobId = null, stepId = task.stepId
         )
         buildLogPrinter.addLine(
-            buildId = task.buildId, message = "${getI18nByLocal(BK_REVIEWERS)}：$reviewUsers",
+            buildId = task.buildId, message = "${getI18nByLocal(BK_REVIEWERS)}：${reviewUsersList.joinToString(",")}",
             tag = taskId, containerHashId = task.containerHashId, executeCount = task.executeCount ?: 1,
             jobId = null, stepId = task.stepId
         )
@@ -221,7 +227,7 @@ class ManualReviewTaskAtom(
                     "pipelineId" to pipelineId,
                     "buildId" to buildId,
                     "elementId" to (param.id ?: ""),
-                    "reviewUsers" to reviewUsers,
+                    "reviewUsers" to reviewUsersList.joinToString(","),
                     "hasRequiredParams" to (param.params.any { it.required == true }).toString(),
                     "signature" to ShaUtils.sha256(projectCode + buildId + (param.id ?: "") + appSecret)
                 ),
@@ -331,7 +337,7 @@ class ManualReviewTaskAtom(
                 notifyTemplateEnum = PipelineNotifyTemplateEnum.PIPELINE_MANUAL_REVIEW_ATOM_NOTIFY_TEMPLATE.name,
                 source = "ManualReviewTaskAtomFinish", projectId = task.projectId, pipelineId = task.pipelineId,
                 userId = task.starter, buildId = buildId,
-                receivers = reviewUsers.split(","),
+                receivers = reviewUsers.split(",").map { it.trim() }.filter { it.isNotEmpty() },
                 notifyType = NotifyUtils.checkNotifyType(param.notifyType),
                 titleParams = mutableMapOf(),
                 bodyParams = mutableMapOf(),

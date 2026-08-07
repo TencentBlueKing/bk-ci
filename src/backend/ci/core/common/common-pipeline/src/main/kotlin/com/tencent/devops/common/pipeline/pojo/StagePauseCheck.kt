@@ -192,8 +192,9 @@ data class StagePauseCheck(
                     contextMap = variables,
                     onlyExpression = dialect.supportUseExpression(),
                     contextPair = contextPair
-                ).split(",").toList()
-                group.reviewers = realReviewers
+                )
+                // 变量替换后可能引入换行/空格（如「\nuser」），会破坏企微 markdown 渲染，需清洗
+                group.reviewers = splitAndSanitizeIds(realReviewers)
             }
             if (group.groups.isNotEmpty()) {
                 val groups = group.groups.joinToString(",")
@@ -202,8 +203,8 @@ data class StagePauseCheck(
                     contextMap = variables,
                     onlyExpression = dialect.supportUseExpression(),
                     contextPair = contextPair
-                ).split(",").toList()
-                group.groups = realGroups
+                )
+                group.groups = splitAndSanitizeIds(realGroups)
             }
         }
         reviewDesc = EnvReplacementParser.parse(
@@ -218,8 +219,8 @@ data class StagePauseCheck(
                 contextMap = variables,
                 onlyExpression = dialect.supportUseExpression(),
                 contextPair = contextPair
-            )
-        }?.toMutableList()
+            ).trim()
+        }?.filter { it.isNotEmpty() }?.toMutableList()
         reviewParams?.forEach { it.parseValueWithType(variables) }
     }
 
@@ -238,6 +239,20 @@ data class StagePauseCheck(
     }
 
     companion object {
+        /**
+         * 将逗号分隔的用户/角色 ID 列表做 trim，并过滤空串。
+         * 避免变量替换或粘贴引入的 \n/\r/空格进入审核通知正文，导致企微 markdown 整段降级为纯文本。
+         */
+        fun splitAndSanitizeIds(raw: String): List<String> {
+            return raw.split(",")
+                .map { it.trim() }
+                .filter { it.isNotEmpty() }
+        }
+
+        fun sanitizeIds(ids: Collection<String>): List<String> {
+            return ids.map { it.trim() }.filter { it.isNotEmpty() }
+        }
+
         fun convertControlOption(stageControlOption: StageControlOption): StagePauseCheck {
             return StagePauseCheck(
                 manualTrigger = stageControlOption.manualTrigger,
