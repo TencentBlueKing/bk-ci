@@ -32,6 +32,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.bk.audit.annotations.ActionAuditRecord
 import com.tencent.bk.audit.annotations.AuditInstanceRecord
 import com.tencent.bk.audit.context.ActionAuditContext
+import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.enums.SystemModuleEnum
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.InvalidParamException
@@ -1830,6 +1831,23 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             englishName = englishName,
             hidden = hidden
         )
+    }
+
+    override fun updatePipelineLimit(userId: String, englishName: String, pipelineLimit: Int): Boolean {
+        logger.info("update project pipelineLimit|$userId|$englishName|$pipelineLimit")
+        if (pipelineLimit <= 0) {
+            throw ErrorCodeException(
+                errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                params = arrayOf("pipelineLimit")
+            )
+        }
+        projectDao.getByEnglishName(dslContext, englishName)
+            ?: throw ProjectNotExistException("projectCode=$englishName")
+        return projectDao.updatePipelineLimit(
+            dslContext = dslContext,
+            englishName = englishName,
+            pipelineLimit = pipelineLimit
+        ) > 0
     }
 
     private fun validateProperties(properties: ProjectProperties?) {
