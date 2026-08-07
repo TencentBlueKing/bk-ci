@@ -3479,10 +3479,12 @@ class PipelineBuildFacadeService(
         pipelineId: String,
         buildInfo: BuildInfo
     ): String {
-        // 按原有的启动参数组装启动参数
+        // 按原有的启动参数组装启动参数(排除重试次数)
         val startParameters = mutableMapOf<String, String>()
-        buildInfo.buildParameters?.map {
-            startParameters.put(it.key, it.value.toString())
+        buildInfo.buildParameters?.filter {
+            it.key != PIPELINE_RETRY_COUNT
+        }?.forEach {
+            startParameters[it.key] = it.value.toString()
         }
         val startType = StartType.toStartType(buildInfo.trigger)
         // 发起新构建
