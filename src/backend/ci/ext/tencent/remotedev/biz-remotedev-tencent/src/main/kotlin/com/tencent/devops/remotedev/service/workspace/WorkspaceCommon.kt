@@ -148,6 +148,23 @@ class WorkspaceCommon @Autowired constructor(
 
     fun getOpHistory(key: OpHistoryCopyWriting) = I18nUtil.getCodeLanMessage(key.default)
 
+    /**
+     * 校验实例所在地域是否为受限地域（如重庆线下机房 CQ2、CQ12）。
+     * 命中受限地域时抛出异常，用于拦截重装、制作镜像、克隆、磁盘扩容等操作。
+     * zoneId 为空时自动从 Windows 扩展表补齐；配置缺失时不拦截。
+     */
+    fun checkFunctionRestrictedZone(workspaceName: String, zoneId: String? = null) {
+        val zone = (
+            zoneId ?: workspaceWindowsDao.fetchAnyWorkspaceWindowsInfo(dslContext, workspaceName)?.zoneId
+            )?.takeIf { it.isNotBlank() } ?: return
+        if (zone in redisCache.getFunctionRestrictedZones()) {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.FUNCTION_RESTRICTED_ZONE.errorCode,
+                params = arrayOf(workspaceName, zone)
+            )
+        }
+    }
+
     fun updateWorkspaceWinDetail(
         ws: WorkspaceRecordInf?,
         workspaceName: String
