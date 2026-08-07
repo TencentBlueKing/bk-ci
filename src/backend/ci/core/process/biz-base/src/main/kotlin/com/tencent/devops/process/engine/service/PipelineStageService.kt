@@ -131,8 +131,17 @@ class PipelineStageService @Autowired constructor(
         }
     }
 
-    fun listStages(projectId: String, buildId: String): List<PipelineBuildStage> {
-        return pipelineBuildStageDao.listBuildStages(dslContext, projectId, buildId)
+    fun listStages(
+        projectId: String,
+        buildId: String,
+        executeCount: Int? = null
+    ): List<PipelineBuildStage> {
+        return pipelineBuildStageDao.listBuildStages(
+            dslContext = dslContext,
+            projectId = projectId,
+            buildId = buildId,
+            executeCount = executeCount
+        )
     }
 
     fun batchSave(transactionContext: DSLContext?, stageList: Collection<PipelineBuildStage>) {
