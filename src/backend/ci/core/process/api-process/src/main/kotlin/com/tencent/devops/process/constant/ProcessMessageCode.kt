@@ -668,10 +668,10 @@ object ProcessMessageCode {
     const val BK_CHECK_TASK_RUN_CONDITION = "bkCheckTaskRunCondition" // 检查插件运行条件/Check Task Run Condition:
     const val BK_TASK_DISABLED = "bkTaskDisabled" // [插件被禁用](Task disabled) = true
 
-    // [只有前面有任务失败时才运行](Only when a previous task has failed)
+    // [只有前面有任务失败时才运行（包括失败自动跳过情况）](Only when a previous task has failed)
     const val BK_ONLY_WHEN_PREVIOUS_TASK_HAS_FAILED = "bkOnlyWhenPreviousTaskHasFailed"
 
-    // [只有前面有任务失败时才运行（不包括失败自动跳过）]
+    // [只有前面有任务失败时才运行（不包括失败自动跳过情况）]
     const val BK_ONLY_WHEN_PREVIOUS_TASK_FAILED_EXCEPT_SKIP = "bkOnlyWhenPreviousTaskFailedExceptSkip"
 
     // [即使前面有插件运行失败也运行，除非被取消才不运行] (Even if a previous task has failed, unless the build was canceled)

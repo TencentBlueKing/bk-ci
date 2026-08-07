@@ -78,7 +78,7 @@ enum class RunCondition {
     PRE_TASK_FAILED_BUT_CANCEL, // 即使前面有插件运行失败也运行，除非被取消才不运行
     PRE_TASK_FAILED_EVEN_CANCEL, // 即使前面有插件运行失败也运行，即使被取消也运行
     PRE_TASK_FAILED_ONLY, // 只有前面有插件运行失败时才运行（包括失败自动跳过的情况）
-    PRE_TASK_FAILED_ONLY_EXCEPT_SKIP, // 只有前面有插件运行失败时才运行（不包括失败自动跳过）
+    PRE_TASK_FAILED_ONLY_EXCEPT_SKIP, // 只有前面有插件运行失败时才运行（不包括失败自动跳过的情况）
     OTHER_TASK_RUNNING, // 指定插件开始运行时 [未实现]
     CUSTOM_VARIABLE_MATCH, // 自定义变量全部满足时运行
     CUSTOM_VARIABLE_MATCH_NOT_RUN, // 自定义变量全部满足时不运行
