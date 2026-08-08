@@ -512,8 +512,8 @@ class PipelineBuildFacadeService(
             )
             if (readyToBuildPipelineInfo.locked == true) {
                 throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_PIPELINE_LOCK)
-            } else if (startType == StartType.SERVICE &&
-                readyToBuildPipelineInfo.latestVersionStatus == VersionStatus.COMMITTING) {
+            } else if (branch.isNullOrBlank() && startType == StartType.SERVICE &&
+                readyToBuildPipelineInfo.latestVersionStatus?.isNotReleased() == true) {
                 // 服务间的API触发允许执行分支版本，但草稿版本无正式版本，为避免意外产生调试构建，直接拦截
                 throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_NO_RELEASE_PIPELINE_VERSION)
             }
