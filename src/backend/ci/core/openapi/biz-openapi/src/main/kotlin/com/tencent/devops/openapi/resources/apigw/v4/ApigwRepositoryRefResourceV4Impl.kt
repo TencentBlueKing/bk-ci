@@ -5,7 +5,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.v4.ApigwRepositoryRefResourceV4
-import com.tencent.devops.repository.api.scm.UserScmRepositoryApiResource
+import com.tencent.devops.repository.api.scm.ServiceScmRepositoryApiResource
 import com.tencent.devops.scm.api.pojo.Reference
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -28,7 +28,7 @@ class ApigwRepositoryRefResourceV4Impl @Autowired constructor(private val client
         logger.info(
             "OPENAPI_REPOSITORY_REF_V4|$userId|listBranches|$projectId|$repositoryId|$repositoryType|$search"
         )
-        return client.get(UserScmRepositoryApiResource::class).listBranches(
+        return client.get(ServiceScmRepositoryApiResource::class).listBranchesByHashIdOrName(
             userId = userId,
             projectId = projectId,
             repositoryType = repositoryType,
@@ -53,7 +53,7 @@ class ApigwRepositoryRefResourceV4Impl @Autowired constructor(private val client
         logger.info(
             "OPENAPI_REPOSITORY_REF_V4|$userId|listTags|$projectId|$repositoryId|$repositoryType|$search"
         )
-        return client.get(UserScmRepositoryApiResource::class).listTags(
+        return client.get(ServiceScmRepositoryApiResource::class).listTagsByHashIdOrName(
             userId = userId,
             projectId = projectId,
             repositoryType = repositoryType,

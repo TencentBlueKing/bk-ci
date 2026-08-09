@@ -12,6 +12,7 @@ import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.ws.rs.Consumes
+import jakarta.ws.rs.DefaultValue
 import jakarta.ws.rs.GET
 import jakarta.ws.rs.HeaderParam
 import jakarta.ws.rs.Path
@@ -56,12 +57,14 @@ interface ApigwRepositoryRefResourceV4 {
         @Parameter(description = "搜索条件", required = false)
         @QueryParam("search")
         search: String?,
-        @Parameter(description = "页码", required = false)
+        @Parameter(description = "页码，不传默认为1", required = false)
         @QueryParam("page")
-        page: Int = 1,
-        @Parameter(description = "每页数量", required = false)
+        @DefaultValue("1")
+        page: Int,
+        @Parameter(description = "每页数量，不传默认为20", required = false)
         @QueryParam("pageSize")
-        pageSize: Int = 20
+        @DefaultValue("20")
+        pageSize: Int
     ): Result<List<Reference>>
 
     @Operation(
@@ -92,11 +95,13 @@ interface ApigwRepositoryRefResourceV4 {
         @Parameter(description = "搜索条件", required = false)
         @QueryParam("search")
         search: String?,
-        @Parameter(description = "页码", required = false)
+        @Parameter(description = "页码，不传默认为1", required = false)
         @QueryParam("page")
-        page: Int = 1,
-        @Parameter(description = "每页数量", required = false)
+        @DefaultValue("1")
+        page: Int,
+        @Parameter(description = "每页数量，不传默认为20", required = false)
         @QueryParam("pageSize")
-        pageSize: Int = 20
+        @DefaultValue("20")
+        pageSize: Int
     ): Result<List<Reference>>
 }
