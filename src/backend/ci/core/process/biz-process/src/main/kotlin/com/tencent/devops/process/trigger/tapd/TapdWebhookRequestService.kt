@@ -48,7 +48,6 @@ import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_OBJECT_U
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_OWNER
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_PARENT_ID
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_PRIORITY_LABEL
-import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_REFERER
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_SOURCE_ID
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_STATUS
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_STORY_ID
@@ -68,6 +67,7 @@ import com.tencent.devops.process.webhook.pojo.event.commit.ReplayWebhookEvent
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 
@@ -89,6 +89,13 @@ class TapdWebhookRequestService(
     private val sampleEventDispatcher: SampleEventDispatcher,
     private val tapdSupportService: TapdSupportService
 ) {
+
+    /**
+     * TAPD 站点访问地址（scheme://host[:port]）
+     *
+     * */
+    @Value("\${external.webhook.tapd.web-url:}")
+    private val tapdWebUrl: String = ""
 
     companion object {
         private val logger = LoggerFactory.getLogger(TapdWebhookRequestService::class.java)
@@ -112,7 +119,6 @@ class TapdWebhookRequestService(
             return Result(false)
         }
         val triggerUser = body.getHookField(TAPD_KEY_CURRENT_USER)
-        val tapdHost = TapdWebhookUtils.extractHost(body.getHookField(TAPD_KEY_REFERER))
         sampleEventDispatcher.dispatch(
             TapdWebhookRequestEvent(
                 workspaceId = workspaceId,
@@ -120,7 +126,6 @@ class TapdWebhookRequestService(
                 eventAction = eventAction,
                 rawEvent = rawEvent,
                 triggerUser = triggerUser,
-                tapdHost = tapdHost,
                 body = body
             )
         )
@@ -145,8 +150,7 @@ class TapdWebhookRequestService(
             eventType = eventType,
             eventAction = eventAction,
             workspaceId = event.workspaceId,
-            objectId = objectId,
-            tapdHost = event.tapdHost
+            objectId = objectId
         )
         val ctx = TapdWebhookEventContext(
             workspaceId = event.workspaceId,
@@ -228,10 +232,9 @@ class TapdWebhookRequestService(
         eventAction: TapdEventAction,
         workspaceId: String,
         objectId: String,
-        tapdHost: String
     ): Map<String, Any?> {
         val objectUrl = TapdWebhookUtils.buildObjectUrl(
-            tapdHost = tapdHost,
+            tapdWebUrl = tapdWebUrl,
             workspaceId = workspaceId,
             objectId = objectId,
             eventType = eventType
@@ -252,47 +255,51 @@ class TapdWebhookRequestService(
         }
     }
 
-    @SuppressWarnings("NestedBlockDepth")
     private fun getTapdObjectBaseInfo(
         eventType: TapdEventType,
         eventAction: TapdEventAction,
         workspaceId: String,
         objectId: String
-    ) = if (needGetInfo(eventAction)) {
-        when (eventType) {
-            TapdEventType.BUG -> {
-                val bugInfo = getBugInfo(workspaceId, objectId)
-                bugInfo?.let {
-                    val map = mutableMapOf<String, String>()
-                    // tapd bug priority 需要额外转化一下，hook里面是英文，但是界面显示又为中文
-                    if (!it.priorityLabel.isNullOrBlank()) {
-                        map[TAPD_KEY_PRIORITY_LABEL] = getBugFieldsInfo(workspaceId)
-                            ?.priorityLabel
-                            ?.options
-                            ?.get(it.priorityLabel) ?: ""
-                    }
-                    map[TAPD_KEY_LABEL] = it.label ?: ""
-                    map[TAPD_KEY_OWNER] = (it.currentOwner?.removeSuffix(";") ?: "")
-                    map[TAPD_KEY_NAME] = it.title ?: ""
-                    map
-                }
-            }
-
-            TapdEventType.STORY -> {
-                getStoryInfo(workspaceId, objectId)?.let {
-                    mapOf(
-                        TAPD_KEY_LABEL to (it.label ?: ""),
-                        TAPD_KEY_PRIORITY_LABEL to (it.priorityLabel ?: ""),
-                        TAPD_KEY_OWNER to (it.owner?.removeSuffix(";") ?: ""),
-                        TAPD_KEY_NAME to it.name,
-                        TAPD_KEY_PARENT_ID to it.parentId
-                    )
-                }
-            }
-
+    ): Map<String, String>? {
+        if (!needGetInfo(eventAction)) {
+            return null
+        }
+        return when (eventType) {
+            TapdEventType.BUG -> buildBugBaseInfo(workspaceId, objectId)
+            TapdEventType.STORY -> buildStoryBaseInfo(workspaceId, objectId)
             else -> null
         }
-    } else null
+    }
+
+    private fun buildBugBaseInfo(workspaceId: String, objectId: String): Map<String, String>? {
+        val bugInfo = getBugInfo(workspaceId, objectId) ?: return null
+        return buildMap {
+            // tapd bug priority 需要额外转化一下，hook里面是英文，但是界面显示又为中文
+            if (!bugInfo.priorityLabel.isNullOrBlank()) {
+                put(
+                    TAPD_KEY_PRIORITY_LABEL,
+                    getBugFieldsInfo(workspaceId)
+                        ?.priorityLabel
+                        ?.options
+                        ?.get(bugInfo.priorityLabel) ?: ""
+                )
+            }
+            put(TAPD_KEY_LABEL, bugInfo.label ?: "")
+            put(TAPD_KEY_OWNER, bugInfo.currentOwner?.removeSuffix(";") ?: "")
+            put(TAPD_KEY_NAME, bugInfo.title ?: "")
+        }
+    }
+
+    private fun buildStoryBaseInfo(workspaceId: String, objectId: String): Map<String, String>? {
+        val storyInfo = getStoryInfo(workspaceId, objectId) ?: return null
+        return mapOf(
+            TAPD_KEY_LABEL to (storyInfo.label ?: ""),
+            TAPD_KEY_PRIORITY_LABEL to (storyInfo.priorityLabel ?: ""),
+            TAPD_KEY_OWNER to (storyInfo.owner?.removeSuffix(";") ?: ""),
+            TAPD_KEY_NAME to (storyInfo.name ?: ""),
+            TAPD_KEY_PARENT_ID to (storyInfo.parentId ?: "")
+        )
+    }
 
     private fun needGetInfo(eventAction: TapdEventAction) = listOf(
         TapdEventAction.ADD_COMMENT,
