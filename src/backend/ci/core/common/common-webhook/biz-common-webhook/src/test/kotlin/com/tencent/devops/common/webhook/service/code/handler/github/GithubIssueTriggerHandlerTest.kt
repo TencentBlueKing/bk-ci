@@ -29,6 +29,7 @@ package com.tencent.devops.common.webhook.service.code.handler.github
 
 import com.tencent.devops.common.api.enums.RepositoryConfig
 import com.tencent.devops.common.api.enums.RepositoryType
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_ACTION
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_ASSIGNEE
@@ -54,11 +55,12 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
+import org.springframework.core.io.ClassPathResource
 
 class GithubIssueTriggerHandlerTest {
 
     private val handler = GithubIssueTriggerHandler()
-    private val repository = mockk<GithubRepository> {
+    private val repository = mockk<GithubRepository>(relaxed = true) {
         every { htmlUrl } returns "https://github.com/blueking/bk-ci"
         every { fullName } returns "blueking/bk-ci"
         every { defaultBranch } returns "master"
@@ -115,9 +117,9 @@ class GithubIssueTriggerHandlerTest {
     }
 
     @Test
-    fun `should expose changed targets and complete issue state`() {
+    fun `should expose assigned user and all current assignees`() {
         val params = handler.retrieveParams(
-            event = event(action = "assigned", assignee = bob, changedLabel = urgent),
+            event = event(action = "assigned", assignee = bob),
             projectId = null,
             repository = null
         )
@@ -128,6 +130,33 @@ class GithubIssueTriggerHandlerTest {
         assertEquals("alice,bob", params[BK_REPO_GIT_WEBHOOK_ISSUE_ASSIGNEE_LOGINS])
         assertTrue(params[BK_REPO_GIT_WEBHOOK_ISSUE_ASSIGNEES].toString().contains("alice"))
         assertTrue(params[BK_REPO_GIT_WEBHOOK_ISSUE_ASSIGNEES].toString().contains("bob"))
+    }
+
+    @Test
+    fun `should expose unassigned user but exclude it from current assignees`() {
+        val params = handler.retrieveParams(
+            event = event(action = "unassigned", assignee = bob, currentAssignees = listOf(alice)),
+            projectId = null,
+            repository = null
+        )
+
+        assertEquals("unassign", params[PIPELINE_GIT_ACTION])
+        assertEquals("bob", params[BK_REPO_GIT_WEBHOOK_ISSUE_ASSIGNEE])
+        assertEquals(3L, params[BK_REPO_GIT_WEBHOOK_ISSUE_ASSIGNEE_ID])
+        assertEquals("alice", params[BK_REPO_GIT_WEBHOOK_ISSUE_ASSIGNEE_LOGINS])
+        assertTrue(params[BK_REPO_GIT_WEBHOOK_ISSUE_ASSIGNEES].toString().contains("alice"))
+        assertFalse(params[BK_REPO_GIT_WEBHOOK_ISSUE_ASSIGNEES].toString().contains("bob"))
+    }
+
+    @Test
+    fun `should expose added label and all current labels`() {
+        val params = handler.retrieveParams(
+            event = event(action = "labeled", changedLabel = urgent),
+            projectId = null,
+            repository = null
+        )
+
+        assertEquals("label", params[PIPELINE_GIT_ACTION])
         assertEquals("urgent", params[BK_REPO_GIT_WEBHOOK_ISSUE_LABEL])
         assertEquals(11L, params[BK_REPO_GIT_WEBHOOK_ISSUE_LABEL_ID])
         assertEquals("ff0000", params[BK_REPO_GIT_WEBHOOK_ISSUE_LABEL_COLOR])
@@ -137,10 +166,48 @@ class GithubIssueTriggerHandlerTest {
         assertTrue(params[BK_REPO_GIT_WEBHOOK_ISSUE_LABELS].toString().contains("urgent"))
     }
 
+    @Test
+    fun `should expose removed label but exclude it from current labels`() {
+        val params = handler.retrieveParams(
+            event = event(action = "unlabeled", changedLabel = urgent, currentLabels = listOf(bug)),
+            projectId = null,
+            repository = null
+        )
+
+        assertEquals("unlabel", params[PIPELINE_GIT_ACTION])
+        assertEquals("urgent", params[BK_REPO_GIT_WEBHOOK_ISSUE_LABEL])
+        assertEquals(11L, params[BK_REPO_GIT_WEBHOOK_ISSUE_LABEL_ID])
+        assertEquals("bug", params[BK_REPO_GIT_WEBHOOK_ISSUE_LABEL_NAMES])
+        assertTrue(params[BK_REPO_GIT_WEBHOOK_ISSUE_LABELS].toString().contains("bug"))
+        assertFalse(params[BK_REPO_GIT_WEBHOOK_ISSUE_LABELS].toString().contains("urgent"))
+    }
+
+    @Test
+    fun `should deserialize changed assignee from github payload`() {
+        val parsed = githubEvent("GithubIssueAssignedEvent.json")
+
+        assertEquals("assigned", parsed.action)
+        assertEquals("bob", parsed.assignee?.login)
+        assertEquals(3L, parsed.assignee?.id)
+        assertEquals(listOf("alice", "bob"), parsed.issue.assignees?.map { it.login })
+    }
+
+    @Test
+    fun `should deserialize changed label from github payload`() {
+        val parsed = githubEvent("GithubIssueLabeledEvent.json")
+
+        assertEquals("labeled", parsed.action)
+        assertEquals("urgent", parsed.label?.name)
+        assertEquals(11L, parsed.label?.id)
+        assertEquals(listOf("bug", "urgent"), parsed.issue.labels.map { it.name })
+    }
+
     private fun event(
         action: String,
         assignee: GithubUser? = null,
-        changedLabel: GithubLabel? = null
+        changedLabel: GithubLabel? = null,
+        currentAssignees: List<GithubUser> = listOf(alice, bob),
+        currentLabels: List<GithubLabel> = listOf(bug, urgent)
     ) = GithubIssuesEvent(
         action = action,
         issue = GithubIssue(
@@ -153,10 +220,10 @@ class GithubIssueTriggerHandlerTest {
             number = 1L,
             title = "issue title",
             user = author,
-            labels = listOf(bug, urgent),
+            labels = currentLabels,
             state = "open",
             locked = "false",
-            assignees = listOf(alice, bob),
+            assignees = currentAssignees,
             closedAt = null,
             body = "issue body",
             pullRequest = null,
@@ -167,6 +234,12 @@ class GithubIssueTriggerHandlerTest {
         assignee = assignee,
         label = changedLabel
     )
+
+    private fun githubEvent(fileName: String): GithubIssuesEvent {
+        val payload = ClassPathResource("com/tencent/devops/common/webhook/service/code/github/$fileName")
+            .inputStream.bufferedReader().use { it.readText() }
+        return JsonUtil.to(payload, GithubIssuesEvent::class.java)
+    }
 
     private fun webHookParams(includeIssueAction: String) = WebHookParams(
         repositoryConfig = RepositoryConfig(
