@@ -22,7 +22,7 @@
                     v-if="!customTip"
                     :class="{ 'checkbox-tips-content': true,'disabled-color': disabled }"
                 >
-                    {{ tipText }}
+                    <span style="white-space: pre-wrap;">{{ tipText }}</span>
                 </div>
                 <div
                     v-else
@@ -92,6 +92,6 @@
         color: #ccc;
     }
     .checkbox-tips-content {
-        white-space: pre-wrap;
+        text-align: left;
     }
 </style>
