@@ -94,7 +94,7 @@ class TapdWebhookRequestService(
      * TAPD 站点访问地址（scheme://host[:port]）
      *
      * */
-    @Value("\${external.webhook.tapd.web-url:}")
+    @Value("\${external.webhook.tapd.webUrl:}")
     private val tapdWebUrl: String = ""
 
     companion object {
