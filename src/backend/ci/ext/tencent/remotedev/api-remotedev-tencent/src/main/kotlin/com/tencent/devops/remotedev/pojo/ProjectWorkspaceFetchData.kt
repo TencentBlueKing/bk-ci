@@ -13,5 +13,6 @@ data class ProjectWorkspaceFetchData(
     val status: WorkspaceStatus?,
     val zoneId: String?,
     val machineType: String?,
-    val expertSupId: Long?
+    val expertSupId: Long?,
+    val onFuzzyMatch: Boolean = true
 )

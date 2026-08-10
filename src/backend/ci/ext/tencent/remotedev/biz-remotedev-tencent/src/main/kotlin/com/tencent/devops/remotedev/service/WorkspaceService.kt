@@ -585,7 +585,7 @@ class WorkspaceService @Autowired constructor(
                 zoneShortName = zoneId?.let { listOf(it) },
                 size = machineType?.let { listOf(it) },
                 expertSupId = expertSupId?.let { listOf(it) },
-                onFuzzyMatch = true
+                onFuzzyMatch = onFuzzyMatch
             )
         }
         val count = workspaceJoinDao.countProjectWorkspace(
