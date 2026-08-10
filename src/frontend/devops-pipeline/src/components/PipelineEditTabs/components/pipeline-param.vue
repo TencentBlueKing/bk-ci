@@ -284,6 +284,7 @@
                 }
                 this.$validator.validate('pipelineParam.*').then((result) => {
                     const {isInvalid, ...param} = this.sliderEditItem
+                    const normalizedParam = this.normalizeParam(param)
                     if (result && optionValid && formListValid) {
                         // 检查 options 中是否存在重复项，有重复则不允许保存
                         if (normalizedParam.options && normalizedParam.options.length) {
