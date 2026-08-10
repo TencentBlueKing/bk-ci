@@ -172,7 +172,8 @@ export const BUILD_HISTORY_TABLE_DEFAULT_COLUMNS = [
     'artifactQuality',
     'pipelineVersion',
     'remark',
-    'errorCode'
+    'errorCode',
+    'operate'
 ]
 export const BUILD_HISTORY_TABLE_COLUMNS_MAP = {
     buildNum: {
@@ -299,6 +300,13 @@ export const BUILD_HISTORY_TABLE_COLUMNS_MAP = {
         width: 180,
         id: 'buildMsg',
         label: 'history.buildMsg'
+    },
+    operate: {
+        index: 18,
+        id: 'operate',
+        label: 'operate',
+        fixed: 'right',
+        width: localStorage.getItem('operateWidth') ?? 80
     }
 }
 

@@ -102,6 +102,9 @@ export default defineConfig(({ mode }) => {
       ],
       dedupe: ['bkui-vue', 'vue'],
     },
+    define: {
+      global: 'globalThis',
+    },
     optimizeDeps: {
       exclude: ['bkui-pipeline'],
     },
