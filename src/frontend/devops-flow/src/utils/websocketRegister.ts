@@ -21,7 +21,7 @@ function createSessionId() {
 }
 
 function getWebSocketPage(route: RouteLocationNormalized) {
-  return `/console${route.fullPath}`
+  return `/console/creative-stream${route.fullPath}`
 }
 
 class FlowWebSocket {

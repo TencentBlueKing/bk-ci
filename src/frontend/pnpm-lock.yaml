@@ -1042,9 +1042,6 @@ importers:
       jsdom:
         specifier: ^27.0.1
         version: 27.4.0(bufferutil@4.1.0)(utf-8-validate@5.0.10)
-      less:
-        specifier: ^4.5.1
-        version: 4.5.1
       npm-run-all2:
         specifier: ^8.0.4
         version: 8.0.4
