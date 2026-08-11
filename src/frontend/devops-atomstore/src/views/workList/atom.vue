@@ -787,6 +787,7 @@
                         break
                     case 'AUDIT_REJECT':
                     case 'UNDERCARRIAGED':
+                    case 'TESTED':
                         icon = 'info'
                         break
                     case 'INIT':
