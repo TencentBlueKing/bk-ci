@@ -103,6 +103,7 @@ class PipelineYamlFileManager @Autowired constructor(
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineYamlFileManager::class.java)
+        private const val MAX_PULL_REQUEST_TITLE_LENGTH = 255
     }
 
     fun syncYamlFile(
@@ -531,7 +532,8 @@ class PipelineYamlFileManager @Autowired constructor(
         authRepository: AuthRepository
     ): PullRequest? {
 
-        val title = getPullRequestTitle(newFile = newFile)
+        // 优先使用用户输入的描述作为 MR 标题,为空白时回退到平台自动生成标题
+        val title = buildPullRequestTitle(commitMessage = commitMessage, newFile = newFile)
         return client.get(ServiceScmPullRequestApiResource::class).createPullRequestIfAbsent(
             projectId = projectId,
             pullRequestCreateReq = ScmPullRequestCreateReq(
@@ -1428,6 +1430,27 @@ class PipelineYamlFileManager @Autowired constructor(
             filePath = oldFilePath
         )
         return activeBranchList.size == 1 && activeBranchList.contains(ref)
+    }
+
+    /**
+     * 构造 MR 标题
+     *
+     * 优先使用用户输入的描述(commitMessage),为空白时回退到平台自动生成的标题。
+     * MR 标题需为单行,因此仅取描述第一行,并对超长标题进行截断。
+     */
+    private fun PipelineYamlFileReleaseReq.buildPullRequestTitle(
+        commitMessage: String,
+        newFile: Boolean
+    ): String {
+        val userTitle = commitMessage.substringBefore('\n').trim()
+        if (userTitle.isBlank()) {
+            return getPullRequestTitle(newFile = newFile)
+        }
+        return if (userTitle.length > MAX_PULL_REQUEST_TITLE_LENGTH) {
+            userTitle.take(MAX_PULL_REQUEST_TITLE_LENGTH - 3) + "..."
+        } else {
+            userTitle
+        }
     }
 
     private fun PipelineYamlFileReleaseReq.getPullRequestTitle(

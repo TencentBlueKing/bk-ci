@@ -77,7 +77,9 @@ import com.tencent.devops.remotedev.pojo.remotedev.EnvironmentResourceData
 import com.tencent.devops.remotedev.pojo.remotedev.FetchWinPoolData
 import com.tencent.devops.remotedev.resources.op.AssignWorkspacePipelineInfo
 import com.tencent.devops.remotedev.service.ApiGwService
+import com.tencent.devops.remotedev.service.BKBaseService
 import com.tencent.devops.remotedev.service.BKCCService
+import com.tencent.devops.remotedev.service.HostExtraDimensionItem
 import com.tencent.devops.remotedev.service.WhiteListService
 import com.tencent.devops.remotedev.service.redis.ConfigCacheService
 import com.tencent.devops.remotedev.service.redis.RedisKeys.PIPELINE_CONFIG_INFO
@@ -123,6 +125,7 @@ class WorkspaceCommon @Autowired constructor(
     private val notifyControl: NotifyControl,
     private val kafkaClient: KafkaClient,
     private val bkccService: BKCCService,
+    private val bkBaseService: BKBaseService,
     private val projectStartAppLinkDao: ProjectStartAppLinkDao,
     private val config: RemoteDevCommonConfig,
     private val streamBridge: StreamBridge,
@@ -144,6 +147,23 @@ class WorkspaceCommon @Autowired constructor(
     val buildCommitsTopic: String? = null
 
     fun getOpHistory(key: OpHistoryCopyWriting) = I18nUtil.getCodeLanMessage(key.default)
+
+    /**
+     * 校验实例所在地域是否为受限地域（如重庆线下机房 CQ2、CQ12）。
+     * 命中受限地域时抛出异常，用于拦截重装、制作镜像、克隆、磁盘扩容等操作。
+     * zoneId 为空时自动从 Windows 扩展表补齐；配置缺失时不拦截。
+     */
+    fun checkFunctionRestrictedZone(workspaceName: String, zoneId: String? = null) {
+        val zone = (
+            zoneId ?: workspaceWindowsDao.fetchAnyWorkspaceWindowsInfo(dslContext, workspaceName)?.zoneId
+            )?.takeIf { it.isNotBlank() } ?: return
+        if (zone in redisCache.getFunctionRestrictedZones()) {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.FUNCTION_RESTRICTED_ZONE.errorCode,
+                params = arrayOf(workspaceName, zone)
+            )
+        }
+    }
 
     fun updateWorkspaceWinDetail(
         ws: WorkspaceRecordInf?,
@@ -749,23 +769,101 @@ class WorkspaceCommon @Autowired constructor(
         }
     }
 
-    fun genWorkspaceCCInfo(
+    fun genWorkspaceDimension(
         projectId: String,
         workspaceName: String,
         owner: String?
-    ): Map<String, Any> {
+    ): Map<String, String> {
         return mapOf(
-            "devx_meta" to JsonUtil.toJson(
-                listOf(
-                    mapOf(
-                        "projectId" to projectId,
-                        "workspaceName" to workspaceName,
-                        "owner" to (owner ?: "")
-                    )
-                ),
-                formatted = false
-            )
+            "app_for_bkbase_system_rt" to "devx",
+            "projectId" to projectId,
+            "workspaceName" to workspaceName,
+            "owner" to (owner ?: "")
         )
+    }
+
+    /**
+     * 上报单个云桌面监控维度到 bkbase。失败仅告警，不阻塞主流程。
+     */
+    fun reportWorkspaceDimension(
+        workspaceName: String,
+        projectId: String,
+        displayName: String,
+        owner: String?,
+        type: WorkspaceSystemType
+    ) {
+        if (!type.checkWindows()) {
+            return
+        }
+        try {
+            val hostId = resolveHostId(workspaceName) ?: return
+            val dimension = genWorkspaceDimension(
+                projectId = projectId,
+                workspaceName = displayName.ifBlank { workspaceName },
+                owner = owner
+            )
+            val success = bkBaseService.updateHostExtraDimensions(
+                listOf(
+                    HostExtraDimensionItem(
+                        hostId = hostId,
+                        dimensions = listOf(dimension)
+                    )
+                )
+            )
+            if (!success) {
+                logger.warn(
+                    "reportWorkspaceDimension failed|workspaceName={}|hostId={}",
+                    workspaceName, hostId
+                )
+            }
+        } catch (e: Exception) {
+            logger.warn("reportWorkspaceDimension failed for $workspaceName", e)
+        }
+    }
+
+    /**
+     * 清空单个云桌面在 bkbase 的补充维度（整机覆盖为空）。
+     */
+    fun clearWorkspaceDimension(workspaceName: String, type: WorkspaceSystemType) {
+        if (!type.checkWindows()) {
+            return
+        }
+        try {
+            val hostId = resolveHostId(workspaceName) ?: return
+            val success = bkBaseService.updateHostExtraDimensions(
+                listOf(
+                    HostExtraDimensionItem(
+                        hostId = hostId,
+                        dimensions = emptyList()
+                    )
+                )
+            )
+            if (!success) {
+                logger.warn(
+                    "clearWorkspaceDimension failed|workspaceName={}|hostId={}",
+                    workspaceName, hostId
+                )
+            }
+        } catch (e: Exception) {
+            logger.warn("clearWorkspaceDimension failed for $workspaceName", e)
+        }
+    }
+
+    private fun resolveHostId(workspaceName: String): Long? {
+        val detail = workspaceJoinDao.fetchAnyWindowsWorkspace(dslContext, workspaceName) ?: return null
+        val regId = detail.regionId ?: run {
+            logger.warn("resolveHostId|$workspaceName regionId is null")
+            return null
+        }
+        val ip = detail.hostIp?.substringAfter(".") ?: run {
+            logger.warn("resolveHostId|$workspaceName hostIp is null")
+            return null
+        }
+        val hostId = bkccService.fetchHostId(regId, ip)
+        if (hostId == null) {
+            logger.warn("resolveHostId|$workspaceName|$regId|$ip hostId is null")
+        }
+        return hostId
     }
 
     /*

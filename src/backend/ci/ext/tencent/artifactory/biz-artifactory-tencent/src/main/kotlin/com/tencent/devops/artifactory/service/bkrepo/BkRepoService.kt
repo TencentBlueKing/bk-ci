@@ -537,8 +537,15 @@ class BkRepoService @Autowired constructor(
                         buildIdToNameMap.containsKey(buildId)
                     ) {
                         val shortUrl = if (generateShortUrl && (PlatformEnum.isPackage(it.name))) {
+                            val channelCode = client.get(ServicePipelineResource::class)
+                                .getPipelineInfo(projectId, pipelineId, null).data?.channelCode?.name
                             shortUrlService.createShortUrl(
-                                PathUtils.buildArchiveLink(projectId, pipelineId, buildId),
+                                PathUtils.buildArchiveLink(
+                                    projectId = projectId,
+                                    pipelineId = pipelineId,
+                                    buildId = buildId,
+                                    channelCode = channelCode
+                                ),
                                 TimeUnit.DAYS.toSeconds(90L).toInt()
                             )
                         } else {

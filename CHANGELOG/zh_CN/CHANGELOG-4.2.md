@@ -1,4 +1,7 @@
 <!-- BEGIN MUNGE: GENERATED_TOC -->
+- [v4.2.0-rc.5](#v420-rc5)
+   - [Changelog since v4.2.0-rc.4](#changelog-since-v420-rc4)
+
 - [v4.2.0-rc.4](#v420-rc4)
    - [Changelog since v4.2.0-rc.3](#changelog-since-v420-rc3)
 
@@ -16,6 +19,93 @@
 
 
 <!-- NEW RELEASE NOTES ENTRY -->
+# v4.2.0-rc.5
+## 2026-08-04
+### Changelog since v4.2.0-rc.4
+### 变更概述
+当前版本主要变更特性如下:
+
+**特性**
+- 创作流：支持创作流管理，创作流环境与创作环境支持系统属性及指定 OS
+- 支持镜像制品的流水线元数据入库与查询
+- 流水线组管理：提供流水线组管理相关 Apigw 接口，并优化流水线组展示
+- 代码库触发流程由串行改为并行执行流水线
+- 审核插件支持发送特定用户提醒
+- 草稿并发修改交互优化
+- 提供部分云研发 OpenAPI 接口
+- 工蜂 Commit Check（GONGFENGSCAN）使用 CodeCC 结果 URL
+
+**Bug 修复**
+- 修复定时任务删除失效导致 Quartz RAMJobStore 内存泄漏
+- 修复模板实例升级参数类型变更触发无限更新并导致页面崩溃
+- 修复 webhook 构建参数溢出时丢弃整个载荷的问题（改为仅丢弃大型环境变量）
+- 修复 PAC 实例化的 YAML 流水线在删除或格式错误时状态异常的问题
+
+#### 新增
+
+##### 流水线
+- [新增] feat：草稿并发修改交互优化 [链接](http://github.com/TencentBlueKing/bk-ci/issues/10553)
+- [新增] feat：支持镜像制品的流水线元数据入库和查询 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13160)
+- [新增] feat: 工蜂 Commit Check（GONGFENGSCAN）使用 CodeCC 结果 URL [链接](http://github.com/TencentBlueKing/bk-ci/issues/13253)
+- [新增] feat: 优化代码库触发流程：串行改并行执行流水线 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13186)
+
+##### 环境管理
+- [新增] feat: 创作流环境支持系统属性 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13282)
+- [新增] feat：环境管理下环境/节点的任务列表优化 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13269)
+- [新增] feat: 第三方构建机Docker支持不挂载的关键字 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13251)
+
+##### 其他
+- [新增] feat: 审核插件支持发送特定用户提醒 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13382)
+- [新增] feat：创作环境支持指定 OS [链接](http://github.com/TencentBlueKing/bk-ci/issues/13324)
+- [新增] feat：创作流管理 [链接](http://github.com/TencentBlueKing/bk-ci/issues/12414)
+- [新增] feat：提供流水线组管理相关Apigw接口 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13289)
+- [新增] feat: 提供部分云研发的openapi接口 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13279)
+
+#### 优化
+- [优化] pref: 完善商店上传文件名称校验 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13027)
+- [优化] pref：codecc规则集id转换 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13354)
+- [优化] pref: AI 模型 failover 增加单候选总执行时限 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13255)
+- [优化] pref：强化ai定位子流水线构建能力 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13262)
+- [优化] perf：流水线组展示优化 [链接](http://github.com/TencentBlueKing/bk-ci/issues/12943)
+- [优化] perf：UI 方式设置 matrix job 时必填检查策略优化 [链接](http://github.com/TencentBlueKing/bk-ci/issues/12957)
+
+#### 修复
+
+##### 流水线
+- [修复] bug: 修复webhook构建参数溢出处理 - 应丢弃大型环境变量而非整个载荷 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13356)
+- [修复] bug：定时任务删除失效导致 Quartz RAMJobStore 内存泄漏 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13352)
+- [修复] bug: 优化模版实例化时,定时触发代码库不存在的提示信息 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13346)
+- [修复] bug: 代码库分支参数类型使用上一次构建参数时没有回填 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13336)
+- [修复] bug: 【PAC】删除的yaml流水线应该从yaml流水线组删除 [链接](http://github.com/TencentBlueKing/bk-ci/issues/12870)
+- [修复] bug: PAC实例化流水线，如果yaml格式错误，会导致实例化状态一直是升级中 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13261)
+- [修复] bug: 模板实例升级参数类型变更触发无限更新并导致页面崩溃 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13294)
+- [修复] bug: 【PAC】查找默认分支yaml对应的流水线版本,不需要判断版本是否激活 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13295)
+- [修复] 蓝盾构建制品页面，点击下载名字包含'#'的产物，点击无效 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13270)
+
+##### 代码库
+- [修复] bug: 平台管理 github 配置不生效 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13231)
+
+##### 环境管理
+- [修复] bugfix: 添加节点兼容性逻辑修复 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13355)
+- [修复] bug: 作业执行页面滚动条消失 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13254)
+
+##### 日志服务
+- [修复] bug: 日志模块突发流量的异常处理 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13327)
+
+##### 项目管理
+- [修复] bug：蓝盾首页菜单显示的服务总数和实际展示的服务数量对不上 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13322)
+- [修复] bug: 创建项目路由发布批次接口支持传入项目黑名单和项目是否开启参数 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13319)
+
+##### 调度
+- [修复] bugfix: 第三方构建跳转链接问题 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13301)
+
+##### 其他
+- [修复] bug: GitApi触发判断优化 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13392)
+- [修复] bug: 创作流保存草稿偶发回退旧编排，版本删除确认弹窗被侧边栏遮挡 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13386)
+- [修复] bug: 修复v4_user_repository_get和v4_app_repository_get api接口不能查询代码库别名 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13308)
+- [修复] bugfix: 启停节点的openapi修复 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13287)
+- [修复] 创作流「添加变量」面板字段应命名为「变量名」，而非「变量ID」 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13246)
+
 # v4.2.0-rc.4
 ## 2026-07-16
 ### Changelog since v4.2.0-rc.3

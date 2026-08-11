@@ -59,8 +59,18 @@ class TxNotifyUrlCmdImpl @Autowired constructor(
             logger.warn("$projectId|$pipelineId|get channelCode failed", ignore)
             null
         }
-        val detailUrl = detailUrl(projectId, pipelineId, buildId, channelCode)
-        val detailOuterUrl = detailOuterUrl(projectId, pipelineId, buildId)
+        val detailUrl = detailUrl(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            processInstanceId = buildId,
+            channelCode = channelCode
+        )
+        val detailOuterUrl = detailOuterUrl(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            processInstanceId = buildId,
+            channelCode = channelCode
+        )
         val detailShortOuterUrl = client.get(ServiceShortUrlResource::class).createShortUrl(
             CreateShortUrlRequest(url = detailOuterUrl, ttl = SHORT_URL_TTL)).data!!
 
@@ -101,7 +111,11 @@ class TxNotifyUrlCmdImpl @Autowired constructor(
         }
     }
 
-    private fun detailOuterUrl(projectId: String, pipelineId: String, processInstanceId: String) =
-        "${HomeHostUtil.outerServerHost()}/app/download/devops_app_forward.html" +
-            "?flag=buildArchive&projectId=$projectId&pipelineId=$pipelineId&buildId=$processInstanceId"
+    private fun detailOuterUrl(
+        projectId: String,
+        pipelineId: String,
+        processInstanceId: String,
+        channelCode: ChannelCode?
+    ) = "${HomeHostUtil.outerServerHost()}/app/download/devops_app_forward.html?flag=buildArchive&" +
+            "projectId=$projectId&pipelineId=$pipelineId&buildId=$processInstanceId&channelCode=$channelCode"
 }

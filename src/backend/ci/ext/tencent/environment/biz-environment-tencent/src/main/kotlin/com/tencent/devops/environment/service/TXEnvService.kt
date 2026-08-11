@@ -52,6 +52,7 @@ import com.tencent.devops.environment.dao.EnvDao
 import com.tencent.devops.environment.dao.EnvNodeDao
 import com.tencent.devops.environment.dao.EnvShareProjectDao
 import com.tencent.devops.environment.dao.EnvTagDao
+import com.tencent.devops.environment.dao.EnvTagNodeEnableDao
 import com.tencent.devops.environment.dao.NodeDao
 import com.tencent.devops.environment.dao.NodeTagKeyDao
 import com.tencent.devops.environment.dao.thirdpartyagent.ThirdPartyAgentDao
@@ -87,6 +88,7 @@ class TXEnvService @Autowired constructor(
     private val slaveGatewayService: SlaveGatewayService,
     private val environmentPermissionService: EnvironmentPermissionService,
     private val envShareProjectDao: EnvShareProjectDao,
+    private val envTagNodeEnableDao: EnvTagNodeEnableDao,
     private val nodeService: NodeService,
     private val client: Client,
     private val authProjectApi: AuthProjectApi,
@@ -105,6 +107,7 @@ class TXEnvService @Autowired constructor(
     slaveGatewayService = slaveGatewayService,
     environmentPermissionService = environmentPermissionService,
     envShareProjectDao = envShareProjectDao,
+    envTagNodeEnableDao = envTagNodeEnableDao,
     nodeService = nodeService,
     client = client,
     authProjectApi = authProjectApi,

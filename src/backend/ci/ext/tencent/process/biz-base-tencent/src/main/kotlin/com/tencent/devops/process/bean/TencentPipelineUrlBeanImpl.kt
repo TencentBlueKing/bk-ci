@@ -108,7 +108,8 @@ class TencentPipelineUrlBeanImpl constructor(
     ): String {
         val devopsOuterHostGateWay = HomeHostUtil.getHost(commonConfig.devopsOuterHostGateWay!!)
         logger.info("[$buildId]|genAppBuildDetailUrl| outHost=$devopsOuterHostGateWay, channelCode=$channelCode")
-        val url = "$devopsOuterHostGateWay${genDetailPath(projectCode, pipelineId, buildId, channelCode)}"
+        val url = "$devopsOuterHostGateWay/app/download/devops_app_forward.html?flag=buildReport&" +
+                "projectId=$projectCode&pipelineId=$pipelineId&buildId=$buildId&channelCode=$channelCode"
         return try {
             client.get(ServiceShortUrlResource::class).createShortUrl(CreateShortUrlRequest(url, TTL)).data!!
         } catch (ignore: Throwable) {

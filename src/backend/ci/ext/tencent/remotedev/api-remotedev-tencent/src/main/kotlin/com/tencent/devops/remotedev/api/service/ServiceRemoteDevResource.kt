@@ -9,6 +9,7 @@ import com.tencent.devops.remotedev.pojo.IWhiteList
 import com.tencent.devops.remotedev.pojo.OperateCvmData
 import com.tencent.devops.remotedev.pojo.ProjectWorkspace
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
+import com.tencent.devops.remotedev.pojo.ProjectWorkspaceFetchData
 import com.tencent.devops.remotedev.pojo.UserOnePassword
 import com.tencent.devops.remotedev.pojo.WhiteListType
 import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
@@ -18,6 +19,7 @@ import com.tencent.devops.remotedev.pojo.WorkspaceCloneReq
 import com.tencent.devops.remotedev.pojo.WorkspaceOpHistory
 import com.tencent.devops.remotedev.pojo.WorkspaceRebuildReq
 import com.tencent.devops.remotedev.pojo.WorkspaceRegistration
+import com.tencent.devops.remotedev.pojo.TemplateWorkspaceAssignResp
 import com.tencent.devops.remotedev.pojo.Workspace
 import com.tencent.devops.remotedev.pojo.WorkspaceSearch
 import com.tencent.devops.remotedev.pojo.WorkspaceStartCloudDetail
@@ -203,6 +205,18 @@ interface ServiceRemoteDevResource {
         @Parameter(description = "分配数据，必填", required = true)
         data: OpProjectWorkspaceAssignData
     ): Result<Boolean>
+
+    @Operation(summary = "按模版申请交付云桌面给用户")
+    @POST
+    @Path("/assignWorkspaceByTemplate")
+    fun assignWorkspaceByTemplate(
+        @Parameter(description = "模版ID，必填", required = true)
+        @QueryParam("templateId")
+        templateId: String,
+        @Parameter(description = "申请人，必填", required = true)
+        @QueryParam("applicant")
+        applicant: String
+    ): Result<TemplateWorkspaceAssignResp>
 
     @Operation(summary = "用来通知蓝盾客户端消息")
     @POST
@@ -661,7 +675,10 @@ interface ServiceRemoteDevResource {
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @QueryParam("workspaceName")
-        workspaceName: String
+        workspaceName: String,
+        @Parameter(description = "项目ID(项目英文名)", required = true)
+        @QueryParam("projectId")
+        projectId: String?
     ): Result<List<VmDiskInfo>>
 
     @Operation(summary = "卸载并回收磁盘")
@@ -756,6 +773,17 @@ interface ServiceRemoteDevResource {
         @QueryParam("pageSize")
         pageSize: Int?,
         search: WorkspaceSearch
+    ): Result<Page<ProjectWorkspace>>
+
+    @Operation(summary = "获取项目下实例列表(支持地域/状态过滤，供console巡检)")
+    @POST
+    @Path("/project/workspace/list4console")
+    fun getProjectWorkspaceList4Console(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "查询参数")
+        data: ProjectWorkspaceFetchData
     ): Result<Page<ProjectWorkspace>>
 
     @Operation(summary = "获取指定工作空间详情时间线")

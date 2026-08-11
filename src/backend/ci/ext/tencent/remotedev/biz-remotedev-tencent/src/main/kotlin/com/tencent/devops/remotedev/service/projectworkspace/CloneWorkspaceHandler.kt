@@ -101,6 +101,7 @@ class CloneWorkspaceHandler @Autowired constructor(
                 params = arrayOf("We're sorry but you don't have permission to clone $workspaceName")
             )
         }
+        workspaceCommon.checkFunctionRestrictedZone(workspaceName, workspace.zoneId)
 
         RedisCallLimit(
             redisOperation = redisOperation,
@@ -228,6 +229,7 @@ class CloneWorkspaceHandler @Autowired constructor(
                 params = arrayOf("We're sorry but you don't have permission to clone $workspaceName")
             )
         }
+        workspaceCommon.checkFunctionRestrictedZone(workspaceName, workspace.zoneId)
 
         RedisCallLimit(
             redisOperation = redisOperation,

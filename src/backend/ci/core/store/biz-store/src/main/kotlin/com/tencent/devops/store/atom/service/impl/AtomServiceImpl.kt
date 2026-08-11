@@ -526,7 +526,6 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
      * jobType 为空时回退到 serviceScope 推导；
      * AGENT（或均为空）直接从 OS 字段读取（向后兼容）。
      */
-    @Suppress("UNCHECKED_CAST")
     private fun resolveOsForScope(
         osStr: String?,
         osMapStr: String?,
@@ -537,12 +536,11 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         if (osMapKey == null || osMapKey == JobTypeEnum.AGENT.name || osMapStr.isNullOrBlank()) {
             return parseOsJson(osStr)
         }
-        val osFromMap = AtomOsMapUtil.getOsByJobType(
+        return AtomOsMapUtil.getOsByJobType(
             jobType = osMapKey,
             osValue = osStr,
             osMapValue = osMapStr
         )
-        return osFromMap.ifEmpty { parseOsJson(osStr) }
     }
 
     /**

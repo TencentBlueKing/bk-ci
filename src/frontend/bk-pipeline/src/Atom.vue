@@ -879,7 +879,7 @@ onBeforeUnmount(() => {
 
   >.atom-name {
     display: inline-flex;
-    flex: 1 1 auto;
+    flex: 1 1 0;
     align-items: center;
     width: auto;
     min-width: 0;

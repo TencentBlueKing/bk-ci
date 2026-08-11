@@ -90,7 +90,7 @@ class GitCIPipelineUrlBeanImpl constructor(
         val devopsOuterHostGateWay = HomeHostUtil.getHost(commonConfig.devopsOuterHostGateWay!!)
         logger.info("[$buildId]|genGitCIBuildDetailUrl| outHost=$devopsOuterHostGateWay")
         val url = "$devopsOuterHostGateWay/app/download/devops_app_forward.html" +
-            "?flag=buildReport&projectId=$projectCode&pipelineId=$pipelineId&buildId=$buildId"
+            "?flag=buildReport&projectId=$projectCode&pipelineId=$pipelineId&buildId=$buildId&channelCode=$channelCode"
         return client.get(ServiceShortUrlResource::class).createShortUrl(CreateShortUrlRequest(url, TTL)).data!!
     }
 

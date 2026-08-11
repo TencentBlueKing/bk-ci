@@ -79,7 +79,9 @@ data class AsyncUserAuthCheck(
 
 data class AsyncUpdateHostMonitor(
     val workspaceName: String,
-    val props: Map<String, Any>,
+    val projectId: String,
+    val displayName: String,
+    val owner: String?,
     val type: WorkspaceSystemType
 ) : AsyncExecuteEventData {
     override fun toType() = AsyncExecuteEventType.ASYNC_UPDATE_HOST_MONITOR
