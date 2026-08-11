@@ -51,7 +51,9 @@ data class TPAPipelineBuild(
     @get:Schema(title = "stageId")
     val stageId: String?,
     @get:Schema(title = "stageNumb")
-    var stageNumb: String?
+    var stageNumb: String?,
+    @get:Schema(title = "buildId")
+    val buildId: String?
 )
 
 data class TPAPipelineBuildCountResp(

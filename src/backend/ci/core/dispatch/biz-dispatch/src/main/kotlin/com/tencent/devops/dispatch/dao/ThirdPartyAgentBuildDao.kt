@@ -697,7 +697,8 @@ class ThirdPartyAgentBuildDao {
                         avgTimeInterval = it.value5()?.toLong(),
                         lastContainerId = null,
                         stageId = null,
-                        stageNumb = null
+                        stageNumb = null,
+                        buildId = null
                     )
                 }
         }
@@ -724,7 +725,8 @@ class ThirdPartyAgentBuildDao {
                 PIPELINE_ID,
                 PIPELINE_NAME,
                 DSL.max(CREATED_TIME).`as`("LAST_BUILD_TIME"),
-                DSL.avg(TIME_INTERVAL).`as`("AVG_TIME_INTERVAL")
+                DSL.avg(TIME_INTERVAL).`as`("AVG_TIME_INTERVAL"),
+                BUILD_ID
             ).from(this).where(PROJECT_ID.eq(projectId))
             if (!agentId.isNullOrBlank()) {
                 dsl.and(AGENT_ID.eq(agentId))
@@ -778,7 +780,8 @@ class ThirdPartyAgentBuildDao {
                         avgTimeInterval = it.value4()?.toLong(),
                         lastContainerId = null,
                         stageId = null,
-                        stageNumb = null
+                        stageNumb = null,
+                        buildId = it.value5()
                     )
                 }
         }
@@ -879,7 +882,8 @@ class ThirdPartyAgentBuildDao {
                         avgTimeInterval = it.value7()?.toLong(),
                         lastContainerId = it.value8(),
                         stageId = it.value9(),
-                        stageNumb = null
+                        stageNumb = null,
+                        buildId = null
                     )
                 }
         }
