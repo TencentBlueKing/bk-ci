@@ -1246,7 +1246,7 @@ class ThirdPartyAgentService @Autowired constructor(
             ).let { list ->
                 // 处理下stage序号计算
                 list.forEach { item ->
-                    item.stageNumb = item.stageId?.removePrefix(KEY_STAGE)?.toIntOrNull()?.let { it - 1 }?.toString()
+                    item.stageNumb = item.stageId?.removePrefix("$KEY_STAGE-")?.toIntOrNull()?.let { it - 1 }?.toString()
                         ?: item.stageId
                 }
                 list
