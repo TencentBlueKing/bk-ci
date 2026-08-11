@@ -551,7 +551,7 @@
                     "type" : "array",
                     "uniqueItems" : true,
                     "items" : {
-                      "enum" : [ "open", "close", "reopen", "update", "assign", "unassign", "labeled", "unlabeled" ]
+                      "enum" : [ "open", "close", "reopen", "update", "assign", "unassign", "label", "unlabel" ]
                     },
                     "additionalItems" : false
                   },
@@ -568,12 +568,6 @@
                     }
                   },
                   "labels" : {
-                    "type" : "array",
-                    "items" : {
-                      "type" : "string"
-                    }
-                  },
-                  "labels-ignore" : {
                     "type" : "array",
                     "items" : {
                       "type" : "string"
@@ -1469,7 +1463,7 @@
                   "type" : "array",
                   "uniqueItems" : true,
                   "items" : {
-                    "enum" : [ "open", "close", "reopen", "update", "assign", "unassign", "labeled", "unlabeled" ]
+                    "enum" : [ "open", "close", "reopen", "update", "assign", "unassign", "label", "unlabel" ]
                   },
                   "additionalItems" : false
                 },
@@ -1486,12 +1480,6 @@
                   }
                 },
                 "labels" : {
-                  "type" : "array",
-                  "items" : {
-                    "type" : "string"
-                  }
-                },
-                "labels-ignore" : {
                   "type" : "array",
                   "items" : {
                     "type" : "string"

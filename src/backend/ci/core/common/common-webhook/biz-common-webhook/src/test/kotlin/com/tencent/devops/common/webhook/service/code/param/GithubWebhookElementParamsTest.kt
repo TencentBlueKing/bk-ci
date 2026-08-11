@@ -25,7 +25,7 @@ class GithubWebhookElementParamsTest {
                 repositoryHashId = "repo-hash-id",
                 repositoryType = TriggerRepositoryType.ID,
                 eventType = CodeEventType.ISSUES,
-                includeIssueAction = listOf("assign", "unassign", "update", "labeled", "unlabeled"),
+                includeIssueAction = listOf("assign", "unassign", "update", "label", "unlabel"),
                 includeAssignees = "alice,bob",
                 excludeAssignees = "bot",
                 includeLabels = "bug,feature-*",
@@ -34,10 +34,27 @@ class GithubWebhookElementParamsTest {
             variables = emptyMap()
         )!!
 
-        assertEquals("assign,unassign,update,labeled,unlabeled", params.includeIssueAction)
+        assertEquals("assign,unassign,update,label,unlabel", params.includeIssueAction)
         assertEquals("alice,bob", params.includeAssignees)
         assertEquals("bot", params.excludeAssignees)
         assertEquals("bug,feature-*", params.includeLabels)
+        assertEquals("", params.excludeLabels)
+    }
+
+    @Test
+    fun `should preserve excluded labels for pull request`() {
+        val params = GithubWebhookElementParams().getWebhookElementParams(
+            element = CodeGithubWebHookTriggerElement(
+                repositoryHashId = "repo-hash-id",
+                repositoryType = TriggerRepositoryType.ID,
+                eventType = CodeEventType.PULL_REQUEST,
+                includeLabels = "bug",
+                excludeLabels = "wontfix"
+            ),
+            variables = emptyMap()
+        )!!
+
+        assertEquals("bug", params.includeLabels)
         assertEquals("wontfix", params.excludeLabels)
     }
 }

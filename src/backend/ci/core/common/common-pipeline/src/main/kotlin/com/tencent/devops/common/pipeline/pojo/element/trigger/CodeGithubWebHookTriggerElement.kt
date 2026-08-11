@@ -164,8 +164,7 @@ data class CodeGithubWebHookTriggerElement(
                         name = "excludeAssignees",
                         value = excludeAssignees
                     ),
-                    TriggerElementPropUtils.vuexInput(name = "includeLabels", value = includeLabels),
-                    TriggerElementPropUtils.vuexInput(name = "excludeLabels", value = excludeLabels)
+                    TriggerElementPropUtils.vuexInput(name = "includeLabels", value = includeLabels)
                 )
             }
 

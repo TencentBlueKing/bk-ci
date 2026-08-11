@@ -36,11 +36,10 @@ class GithubIssueTriggerTransferTest {
     fun `should deserialize issue filter field names in v2 and v3`() {
         val json = """
             {
-              "action": ["assign", "unassign", "update", "labeled", "unlabeled"],
+              "action": ["assign", "unassign", "update", "label", "unlabel"],
               "assignees": ["alice", "bob"],
               "assignees-ignore": ["bot"],
-              "labels": ["bug", "feature-*"],
-              "labels-ignore": ["wontfix"]
+              "labels": ["bug", "feature-*"]
             }
         """.trimIndent()
 
@@ -50,7 +49,6 @@ class GithubIssueTriggerTransferTest {
         assertEquals(listOf("alice", "bob"), v2.assignees)
         assertEquals(listOf("bot"), v2.assigneesIgnore)
         assertEquals(listOf("bug", "feature-*"), v3.labels)
-        assertEquals(listOf("wontfix"), v3.labelsIgnore)
     }
 
     @Test
@@ -61,11 +59,10 @@ class GithubIssueTriggerTransferTest {
             triggerOn = TriggerOn(
                 repoName = "bk-ci",
                 issue = IssueRule(
-                    action = listOf("assign", "unassign", "update", "labeled", "unlabeled"),
+                    action = listOf("assign", "unassign", "update", "label", "unlabel"),
                     assignees = listOf("alice", "bob"),
                     assigneesIgnore = listOf("bot"),
-                    labels = listOf("bug", "feature-*"),
-                    labelsIgnore = listOf("wontfix")
+                    labels = listOf("bug", "feature-*")
                 )
             ),
             elementQueue = elements
@@ -75,7 +72,7 @@ class GithubIssueTriggerTransferTest {
         assertEquals("alice,bob", element.includeAssignees)
         assertEquals("bot", element.excludeAssignees)
         assertEquals("bug,feature-*", element.includeLabels)
-        assertEquals("wontfix", element.excludeLabels)
+        assertEquals(null, element.excludeLabels)
     }
 
     @Test
@@ -84,7 +81,7 @@ class GithubIssueTriggerTransferTest {
             repositoryType = TriggerRepositoryType.NAME,
             repositoryName = "bk-ci",
             eventType = CodeEventType.ISSUES,
-            includeIssueAction = listOf("assign", "unassign", "update", "labeled", "unlabeled"),
+            includeIssueAction = listOf("assign", "unassign", "update", "label", "unlabel"),
             includeAssignees = "alice,bob",
             excludeAssignees = "bot",
             includeLabels = "bug,feature-*",
@@ -101,6 +98,5 @@ class GithubIssueTriggerTransferTest {
         assertEquals(listOf("alice", "bob"), issue.assignees)
         assertEquals(listOf("bot"), issue.assigneesIgnore)
         assertEquals(listOf("bug", "feature-*"), issue.labels)
-        assertEquals(listOf("wontfix"), issue.labelsIgnore)
     }
 }

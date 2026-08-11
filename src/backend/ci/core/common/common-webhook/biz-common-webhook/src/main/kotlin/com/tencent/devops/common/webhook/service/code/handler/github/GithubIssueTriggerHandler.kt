@@ -182,21 +182,16 @@ class GithubIssueTriggerHandler : CodeWebhookTriggerHandler<GithubIssuesEvent> {
                         ListContainsFilter(
                             pipelineId = pipelineId,
                             filterName = "issueLabel",
-                            triggerOn = event.issue.labels.map { it.name }.toSet(),
+                            triggerOn = setOfNotNull(event.label?.name),
                             included = WebhookUtils.convert(includeLabels),
-                            excluded = WebhookUtils.convert(excludeLabels),
+                            excluded = emptyList(),
                             includeFailedReason = { item ->
                                 I18Variable(
                                     code = WebhookI18nConstants.BK_TRIGGER_LABEL_NOT_MATCH,
                                     params = listOf(item)
                                 ).toJsonStr()
                             },
-                            excludedFailedReason = { item ->
-                                I18Variable(
-                                    code = WebhookI18nConstants.BK_TRIGGER_LABEL_IGNORED,
-                                    params = listOf(item)
-                                ).toJsonStr()
-                            }
+                            excludedFailedReason = { "" }
                         )
                     )
                 }

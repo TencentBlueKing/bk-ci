@@ -41,8 +41,6 @@ data class GithubIssuesEvent(
     val repository: GithubRepository,
     @Schema(title = "操作人信息")
     override val sender: GithubUser,
-    @Schema(title = "受理人")
-    val assignees: List<GithubUser>? = null,
     @Schema(title = "本次指派或取消指派的受理人")
     val assignee: GithubUser? = null,
     @Schema(title = "本次添加或移除的标签")
@@ -59,8 +57,8 @@ data class GithubIssuesEvent(
         GithubIssuesAction.EDITED.value -> "update"
         GithubIssuesAction.ASSIGNED.value -> "assign"
         GithubIssuesAction.UNASSIGNED.value -> "unassign"
-        GithubIssuesAction.LABELED.value -> "labeled"
-        GithubIssuesAction.UNLABELED.value -> "unlabeled"
+        GithubIssuesAction.LABELED.value -> "label"
+        GithubIssuesAction.UNLABELED.value -> "unlabel"
         else -> ""
     }
 }
