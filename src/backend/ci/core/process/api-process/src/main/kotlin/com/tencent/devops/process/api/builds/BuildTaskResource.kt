@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_EXECUTE_COUNT
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PIPELINE_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.process.pojo.task.ExternalLinkReportRequest
 import com.tencent.devops.process.pojo.task.PipelineBuildTaskInfo
 import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
@@ -43,7 +44,6 @@ import jakarta.ws.rs.HeaderParam
 import jakarta.ws.rs.POST
 import jakarta.ws.rs.Path
 import jakarta.ws.rs.Produces
-import jakarta.ws.rs.QueryParam
 import jakarta.ws.rs.core.MediaType
 
 @Tag(name = "BUILD_TASK", description = "构建-任务资源")
@@ -83,8 +83,7 @@ interface BuildTaskResource {
         @Parameter(description = "执行次数", required = false)
         @HeaderParam(AUTH_HEADER_DEVOPS_EXECUTE_COUNT)
         executeCount: Int?,
-        @Parameter(description = "外部链接（仅支持 http/https）", required = true)
-        @QueryParam("link")
-        link: String
+        @Parameter(description = "外部链接上报请求", required = true)
+        request: ExternalLinkReportRequest
     ): Result<Boolean>
 }

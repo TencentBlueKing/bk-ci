@@ -32,6 +32,7 @@ import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.engine.service.PipelineTaskService
 import com.tencent.devops.process.engine.service.record.TaskBuildRecordService
+import com.tencent.devops.process.pojo.task.ExternalLinkReportRequest
 import com.tencent.devops.process.pojo.task.PipelineBuildTaskInfo
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -52,9 +53,9 @@ class BuildTaskResourceImpl @Autowired constructor(
         buildId: String,
         taskId: String,
         executeCount: Int?,
-        link: String
+        request: ExternalLinkReportRequest
     ): Result<Boolean> {
-        val externalLink = link.trim()
+        val externalLink = request.link.trim()
         if (!externalLink.startsWith("http://") && !externalLink.startsWith("https://")) {
             LOG.warn("REPORT_EXTERNAL_LINK_INVALID|$buildId|$taskId|$externalLink")
             return Result(false)
