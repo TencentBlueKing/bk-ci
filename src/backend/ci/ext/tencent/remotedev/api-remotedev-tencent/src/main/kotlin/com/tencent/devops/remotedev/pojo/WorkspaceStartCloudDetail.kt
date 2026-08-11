@@ -27,6 +27,7 @@
 
 package com.tencent.devops.remotedev.pojo
 
+import com.tencent.devops.common.api.pojo.OS
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "start客户端工作空间详情")
@@ -62,5 +63,7 @@ data class WorkspaceStartCloudDetail(
     @get:Schema(title = "机型配置")
     val winConfig: WindowsResourceTypeConfig? = null,
     @get:Schema(title = "enableRecord")
-    val enableRecord: Boolean? = false
+    val enableRecord: Boolean? = false,
+    @get:Schema(title = "os")
+    val os: OS? = null
 )
