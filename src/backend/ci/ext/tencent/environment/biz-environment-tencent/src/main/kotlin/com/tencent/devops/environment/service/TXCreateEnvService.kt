@@ -44,9 +44,7 @@ class TXCreateEnvService @Autowired constructor(
     private val agentDao: AgentDao,
     private val nodeDao: NodeDao,
     private val downloadAgentInstallService: DownloadAgentInstallService,
-    private val nodeService: NodeService,
-    private val batchInstallAgentService: BatchInstallAgentService,
-    private val slaveGatewayService: SlaveGatewayService
+    private val nodeService: NodeService
 ) : CreateEnvService() {
 
     @Value("\${environment.batch-install.aes-key}")
@@ -180,36 +178,6 @@ class TXCreateEnvService @Autowired constructor(
             JsonUtil.toJson(config, true),
             expired = false,
             isDistinguishCluster = true
-        )
-    }
-
-    fun genCreateAgent(
-        userId: String,
-        projectId: String,
-        workspaceName: String
-    ): CreateAgent? {
-        val detail = client.get(ServiceRemoteDevInternalResource::class).getWorkspaceDetail(
-            workspaceName
-        ).data ?: return null
-        val zoneName = getCreateGatewayConfig()?.let { config ->
-            when (detail.zoneConfig?.type) {
-                WindowsResourceZoneConfigType.DEVCLOUD -> config.devnetGateway
-                null -> null
-                else -> config.devxGateway
-            }
-        } ?: return null
-        val agentId = batchInstallAgentService.genNewAgent(
-            projectId = projectId,
-            userId = userId,
-            os = detail.os ?: return null,
-            zoneName = zoneName,
-            agentType = AgentType.CREATE,
-            createWorkspaceName = workspaceName,
-            agentProps = AgentProps.emptyBySource(AgentPropsSource.REMOTEDEV)
-        )
-        return CreateAgent(
-            host = slaveGatewayService.getGateway(zoneName) ?: "",
-            agentId = HashUtil.encodeLongId(agentId)
         )
     }
 
