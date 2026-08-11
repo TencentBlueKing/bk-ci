@@ -87,12 +87,13 @@ class CreativeFlowShareGrantService @Autowired constructor(
 
                 // 3. 不做权限校验（§0）：只记录 GRANTED_BY
 
-                // 4. 版本解析
+                // 4. 版本解析（@get:Schema 自定义 getter，需局部变量才能智能转型）
                 val versionScope: CreativeFlowShareVersionScope
                 val version: Int?
                 val versionNum: Int?
-                if (item.versionNum != null) {
-                    val parsedNum = CreativeFlowVersionNumUtil.parse(item.versionNum)
+                val itemVersionNum = item.versionNum
+                if (itemVersionNum != null) {
+                    val parsedNum = CreativeFlowVersionNumUtil.parse(itemVersionNum)
                     val versionSimple = pipelineResourceVersionDao.getReleasedVersionByVersionNum(
                         dslContext = dslContext,
                         projectId = item.sourceProjectId,
@@ -100,7 +101,7 @@ class CreativeFlowShareGrantService @Autowired constructor(
                         versionNum = parsedNum
                     ) ?: throw ErrorCodeException(
                         errorCode = ProcessMessageCode.ERROR_CREATIVE_FLOW_VERSION_NUM_NOT_FOUND,
-                        params = arrayOf(item.sourceProjectId, item.sourcePipelineId, item.versionNum)
+                        params = arrayOf(item.sourceProjectId, item.sourcePipelineId, itemVersionNum)
                     )
                     versionScope = CreativeFlowShareVersionScope.PINNED
                     version = versionSimple.version
@@ -181,12 +182,16 @@ class CreativeFlowShareGrantService @Autowired constructor(
     }
 
     fun revokeGrants(userId: String, request: CreativeFlowShareGrantRevokeRequest): Int {
+        // @get:Schema 自定义 getter，需局部变量才能智能转型
+        val talentCode = request.talentCode
+        val shareId = request.shareId
+        val flowIds = request.flowIds
         return when {
-            request.talentCode != null -> {
-                pipelineShareGrantDao.revokeByTalentCode(dslContext, request.talentCode, userId)
+            talentCode != null -> {
+                pipelineShareGrantDao.revokeByTalentCode(dslContext, talentCode, userId)
             }
-            request.shareId != null && !request.flowIds.isNullOrEmpty() -> {
-                pipelineShareGrantDao.revoke(dslContext, request.shareId, request.flowIds, userId)
+            shareId != null && !flowIds.isNullOrEmpty() -> {
+                pipelineShareGrantDao.revoke(dslContext, shareId, flowIds, userId)
             }
             else -> throw ErrorCodeException(
                 errorCode = ProcessMessageCode.ERROR_CREATIVE_FLOW_SHARE_REVOKE_PARAM_INVALID,

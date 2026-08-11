@@ -2,6 +2,7 @@ package com.tencent.devops.process.service.creative
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.pipeline.Model
+import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.process.constant.ProcessMessageCode
@@ -21,7 +22,8 @@ class CreativeFlowVariableOverrideService {
     fun applyOverrides(model: Model, overrides: Map<String, String>?): Model {
         if (overrides.isNullOrEmpty()) return model
 
-        val trigger = model.stages.firstOrNull()?.containers?.firstOrNull() ?: return model
+        val trigger = model.stages.firstOrNull()?.containers?.firstOrNull() as? TriggerContainer
+            ?: return model
         val params = trigger.params.toMutableList()
         val paramMap = params.associateBy { it.id }.toMutableMap()
 
@@ -46,8 +48,8 @@ class CreativeFlowVariableOverrideService {
             paramMap[key] = updatedWithOptions
         }
 
-        val updatedParams = params.map { paramMap[it.id] ?: it }
-        val updatedContainer = trigger.copyTrigger(updatedParams)
+        val updatedParams = params.map { paramMap[it.id] ?: it }.toMutableList()
+        val updatedContainer = trigger.copy(params = updatedParams)
         val updatedFirstStage = model.stages.first().copy(
             containers = listOf(updatedContainer) +
                 model.stages.first().containers.drop(1)
@@ -68,14 +70,5 @@ class CreativeFlowVariableOverrideService {
     private fun cleanAndMergeOptions(prop: BuildFormProperty): BuildFormProperty {
         if (prop.options.isNullOrEmpty()) return prop
         return PipelineUtils.cleanOptions(prop)
-    }
-
-    private fun com.tencent.devops.common.pipeline.container.Container.copyTrigger(
-        params: List<BuildFormProperty>
-    ): com.tencent.devops.common.pipeline.container.Container {
-        return when (this) {
-            is com.tencent.devops.common.pipeline.container.TriggerContainer -> this.copy(params = params)
-            else -> this
-        }
     }
 }
