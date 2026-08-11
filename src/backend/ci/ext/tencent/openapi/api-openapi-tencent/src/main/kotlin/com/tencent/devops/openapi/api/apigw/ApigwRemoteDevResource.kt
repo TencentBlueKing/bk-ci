@@ -15,6 +15,7 @@ import com.tencent.devops.remotedev.pojo.IWhiteList
 import com.tencent.devops.remotedev.pojo.OperateCvmData
 import com.tencent.devops.remotedev.pojo.ProjectWorkspace
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
+import com.tencent.devops.remotedev.pojo.ProjectWorkspaceFetchData
 import com.tencent.devops.remotedev.pojo.TaskStatusResp
 import com.tencent.devops.remotedev.pojo.TemplateWorkspaceAssignResp
 import com.tencent.devops.remotedev.pojo.UserOnePassword
@@ -1004,6 +1005,26 @@ interface ApigwRemoteDevResource {
         @QueryParam("pageSize")
         pageSize: Int?,
         search: WorkspaceSearch
+    ): Result<Page<ProjectWorkspace>>
+
+    @Operation(
+        summary = "获取项目下实例列表(支持地域/状态过滤)",
+        tags = ["v4_app_remotedev_project_workspace_list4console"]
+    )
+    @POST
+    @Path("/project/workspace/list4console")
+    fun getProjectWorkspaceList4Console(
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @Parameter(description = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "查询参数")
+        data: ProjectWorkspaceFetchData
     ): Result<Page<ProjectWorkspace>>
 
     @Operation(summary = "查询录屏权限相关信息", tags = ["v4_app_get_user_workspace_record_permission_info"])

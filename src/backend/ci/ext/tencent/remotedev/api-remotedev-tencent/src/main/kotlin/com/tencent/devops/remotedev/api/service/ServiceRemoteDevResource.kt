@@ -9,6 +9,7 @@ import com.tencent.devops.remotedev.pojo.IWhiteList
 import com.tencent.devops.remotedev.pojo.OperateCvmData
 import com.tencent.devops.remotedev.pojo.ProjectWorkspace
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
+import com.tencent.devops.remotedev.pojo.ProjectWorkspaceFetchData
 import com.tencent.devops.remotedev.pojo.UserOnePassword
 import com.tencent.devops.remotedev.pojo.WhiteListType
 import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
@@ -772,6 +773,17 @@ interface ServiceRemoteDevResource {
         @QueryParam("pageSize")
         pageSize: Int?,
         search: WorkspaceSearch
+    ): Result<Page<ProjectWorkspace>>
+
+    @Operation(summary = "获取项目下实例列表(支持地域/状态过滤，供console巡检)")
+    @POST
+    @Path("/project/workspace/list4console")
+    fun getProjectWorkspaceList4Console(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "查询参数")
+        data: ProjectWorkspaceFetchData
     ): Result<Page<ProjectWorkspace>>
 
     @Operation(summary = "获取指定工作空间详情时间线")
