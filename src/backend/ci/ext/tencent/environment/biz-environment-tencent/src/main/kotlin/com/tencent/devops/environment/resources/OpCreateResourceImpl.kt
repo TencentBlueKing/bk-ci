@@ -2,6 +2,7 @@
 
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.environment.api.OpCreateResource
+import com.tencent.devops.environment.pojo.op.CreateAgent
 import com.tencent.devops.environment.pojo.op.CreateGateWayConfig
 import com.tencent.devops.environment.service.TXCreateEnvService
 import com.tencent.devops.environment.service.thirdpartyagent.TencentAgentService
@@ -29,5 +30,17 @@ class OpCreateResourceImpl @Autowired constructor(
         data: CreateGateWayConfig
     ) {
         txEnvCreateService.setCreateGatewayConfig(data)
+    }
+
+    override fun addCreateNode(
+        userId: String,
+        projectId: String,
+        workspaceName: String
+    ): CreateAgent? {
+        return txEnvCreateService.genCreateAgent(
+            userId = userId,
+            projectId = projectId,
+            workspaceName = workspaceName
+        )
     }
 }
