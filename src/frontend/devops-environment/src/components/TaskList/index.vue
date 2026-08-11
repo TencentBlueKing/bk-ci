@@ -673,7 +673,14 @@
                     const firstTask = (i.tasks && i.tasks[0]) || {}
                     return {
                         ...i,
-                        seq: firstTask.vmSeqId || firstTask.stageId || i.containerId || '',
+                        seq: (() => {
+                            const vmSeqId = firstTask.vmSeqId || i.containerId || ''
+                            const stageId = firstTask.stageId
+                            if (!stageId) return vmSeqId
+                            const stageNum = String(stageId)
+                            if (!stageNum) return vmSeqId
+                            return vmSeqId ? `${stageNum}-${vmSeqId}` : stageNum
+                        })(),
                         jobName: firstTask.taskName || '--',
                         statusText: proxy.$t(`environment.statusMap.${i.status}`) || '',
                         startTime: formatTime(i.startTime),
@@ -937,7 +944,6 @@
         justify-content: space-between;
         align-items: center;
         gap: 8px 16px;
-        padding: 0 24px;
         
         .task-header-left {
             display: flex;
@@ -946,11 +952,6 @@
             flex-shrink: 0;
             min-width: 0;
         }
-
-        .view-switcher {
-            flex-shrink: 0;
-        }
-
         .stats-text {
             font-size: 12px;
             color: #63656E;
@@ -973,7 +974,7 @@
     .task-list {
         flex: 1;
         overflow-y: auto;
-        padding: 16px 24px;
+        padding: 16px 0;
         min-height: 0;
         
         .task-item {
@@ -1134,15 +1135,17 @@
                         display: inline-flex;
                         align-items: center;
                         justify-content: center;
-                        height: 16px;
+                        height: 18px;
                         padding: 0 4px;
                         margin-right: 6px;
                         font-size: 12px;
                         line-height: 16px;
-                        color: #3a84ff;
-                        background: #e1ecff;
+                        color: #63656e;
+                        background: #fafbfd;
+                        border: 1px solid #dcdee5;
                         border-radius: 2px;
                         flex-shrink: 0;
+                        box-sizing: border-box;
                     }
                     .job-name {
                         overflow: hidden;
