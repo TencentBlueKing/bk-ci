@@ -66,9 +66,7 @@ data class GithubPullRequestEvent(
             action == "reopened" -> TGitMrEventAction.REOPEN.value
             action == "synchronize" -> TGitMrEventAction.PUSH_UPDATE.value
             action == "closed" -> TGitMrEventAction.CLOSE.value
-            action == "labeled" -> "label"
-            action == "unlabeled" -> "unlabel"
-            else -> null
+            else -> GithubLabelAction.fromGithubAction(action)?.value
         }
     }
 }

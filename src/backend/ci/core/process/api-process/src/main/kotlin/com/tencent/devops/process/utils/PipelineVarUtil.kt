@@ -85,6 +85,10 @@ import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_MIL
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_OWNER
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_STATE
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_TITLE
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_LABEL
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_LABEL_COLOR
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_LABEL_DESCRIPTION
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_LABEL_ID
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_LABELS
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_MILESTONE
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_MILESTONE_ID
@@ -260,6 +264,10 @@ object PipelineVarUtil {
         "ci.mr_desc" to PIPELINE_GIT_MR_DESC,
         "ci.mr_proposer" to PIPELINE_GIT_MR_PROPOSER,
         "ci.mr_action" to PIPELINE_GIT_MR_ACTION,
+        "ci.mr_label" to BK_REPO_GIT_WEBHOOK_MR_LABEL,
+        "ci.mr_label_id" to BK_REPO_GIT_WEBHOOK_MR_LABEL_ID,
+        "ci.mr_label_color" to BK_REPO_GIT_WEBHOOK_MR_LABEL_COLOR,
+        "ci.mr_label_description" to BK_REPO_GIT_WEBHOOK_MR_LABEL_DESCRIPTION,
         "ci.mr_labels" to BK_REPO_GIT_WEBHOOK_MR_LABELS,
         "ci.issue_title" to BK_REPO_GIT_WEBHOOK_ISSUE_TITLE,
         "ci.issue_id" to BK_REPO_GIT_WEBHOOK_ISSUE_ID,

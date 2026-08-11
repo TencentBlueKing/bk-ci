@@ -44,11 +44,16 @@ import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_LAB
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_LABEL_DESCRIPTION
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_LABEL_ID
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_LABEL_NAMES
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_LABEL
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_LABEL_COLOR
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_LABEL_DESCRIPTION
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_LABEL_ID
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_REPO_NAME
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_BRANCH
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_REVISION
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_SOURCE_BRANCH
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_TARGET_BRANCH
+import com.tencent.devops.process.enums.VariableType
 import com.tencent.devops.process.utils.PipelineVarUtil.MAX_VERSION_LEN
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
@@ -163,6 +168,21 @@ class PipelineVarUtilTest {
 
         expected.forEach { (contextVariable, webhookParameter) ->
             assertEquals(webhookParameter, PipelineVarUtil.contextVarMap()[contextVariable])
+        }
+    }
+
+    @Test
+    fun `github pull request changed label variables should map to webhook parameters`() {
+        val expected = mapOf(
+            "ci.mr_label" to BK_REPO_GIT_WEBHOOK_MR_LABEL,
+            "ci.mr_label_id" to BK_REPO_GIT_WEBHOOK_MR_LABEL_ID,
+            "ci.mr_label_color" to BK_REPO_GIT_WEBHOOK_MR_LABEL_COLOR,
+            "ci.mr_label_description" to BK_REPO_GIT_WEBHOOK_MR_LABEL_DESCRIPTION
+        )
+
+        expected.forEach { (contextVariable, webhookParameter) ->
+            assertEquals(webhookParameter, PipelineVarUtil.contextVarMap()[contextVariable])
+            assertEquals(true, VariableType.validate(webhookParameter))
         }
     }
 

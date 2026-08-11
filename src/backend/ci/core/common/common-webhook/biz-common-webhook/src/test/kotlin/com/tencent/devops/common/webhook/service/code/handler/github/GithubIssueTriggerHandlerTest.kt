@@ -46,8 +46,10 @@ import com.tencent.devops.common.webhook.pojo.code.WebHookParams
 import com.tencent.devops.common.webhook.pojo.code.github.GithubIssue
 import com.tencent.devops.common.webhook.pojo.code.github.GithubIssuesEvent
 import com.tencent.devops.common.webhook.pojo.code.github.GithubLabel
+import com.tencent.devops.common.webhook.pojo.code.github.GithubLabelAction
 import com.tencent.devops.common.webhook.pojo.code.github.GithubRepository
 import com.tencent.devops.common.webhook.pojo.code.github.GithubUser
+import com.tencent.devops.common.webhook.pojo.code.github.getLabelChange
 import com.tencent.devops.repository.pojo.Repository
 import io.mockk.every
 import io.mockk.mockk
@@ -77,10 +79,17 @@ class GithubIssueTriggerHandlerTest {
 
     @Test
     fun `should convert assign and label actions`() {
+        val labeled = event("labeled", changedLabel = urgent)
+        val unlabeled = event("unlabeled", changedLabel = urgent, currentLabels = listOf(bug))
+
         assertEquals("assign", event("assigned").convertAction())
         assertEquals("unassign", event("unassigned").convertAction())
-        assertEquals("label", event("labeled").convertAction())
-        assertEquals("unlabel", event("unlabeled").convertAction())
+        assertEquals("label", labeled.convertAction())
+        assertEquals("unlabel", unlabeled.convertAction())
+        assertEquals(GithubLabelAction.LABEL, labeled.getLabelChange()?.action)
+        assertEquals(GithubLabelAction.UNLABEL, unlabeled.getLabelChange()?.action)
+        assertEquals(urgent, unlabeled.getLabelChange()?.changedLabel)
+        assertEquals(listOf(bug), unlabeled.getLabelChange()?.currentLabels)
     }
 
     @Test

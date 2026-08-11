@@ -13,13 +13,23 @@ package com.tencent.devops.common.webhook.service.code.handler.github
 import com.tencent.devops.common.api.enums.RepositoryConfig
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_ACTION
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_MR_ACTION
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_ACTION
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_LABEL
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_LABEL_COLOR
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_LABEL_DESCRIPTION
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_LABEL_ID
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_LABELS
 import com.tencent.devops.common.webhook.pojo.code.WebHookParams
 import com.tencent.devops.common.webhook.pojo.code.github.GithubLabel
+import com.tencent.devops.common.webhook.pojo.code.github.GithubLabelAction
 import com.tencent.devops.common.webhook.pojo.code.github.GithubPullRequest
 import com.tencent.devops.common.webhook.pojo.code.github.GithubPullRequestBranch
 import com.tencent.devops.common.webhook.pojo.code.github.GithubPullRequestEvent
 import com.tencent.devops.common.webhook.pojo.code.github.GithubRepository
 import com.tencent.devops.common.webhook.pojo.code.github.GithubUser
+import com.tencent.devops.common.webhook.pojo.code.github.getLabelChange
 import com.tencent.devops.common.webhook.service.code.EventCacheService
 import com.tencent.devops.repository.pojo.Repository
 import io.mockk.every
@@ -52,6 +62,10 @@ class GithubPrTriggerHandlerTest {
 
         assertEquals("label", labeled.getRealAction())
         assertEquals("unlabel", unlabeled.getRealAction())
+        assertEquals(GithubLabelAction.LABEL, labeled.getLabelChange()?.action)
+        assertEquals(GithubLabelAction.UNLABEL, unlabeled.getLabelChange()?.action)
+        assertEquals(urgent, labeled.getLabelChange()?.changedLabel)
+        assertEquals(emptyList<GithubLabel>(), labeled.getLabelChange()?.currentLabels)
         assertTrue(handler.preMatch(labeled).isMatch)
         assertTrue(handler.preMatch(unlabeled).isMatch)
     }
@@ -116,6 +130,39 @@ class GithubPrTriggerHandlerTest {
                 params = webHookParams(action = "open", includeLabels = "urgent")
             )
         )
+    }
+
+    @Test
+    fun shouldExposeRemovedPullRequestLabelAndNormalizedActions() {
+        val params = handler.retrieveParams(
+            event = event(action = "unlabeled", changedLabel = urgent, currentLabels = listOf(bug)),
+            projectId = null,
+            repository = null
+        )
+
+        assertEquals("unlabel", params[BK_REPO_GIT_WEBHOOK_MR_ACTION])
+        assertEquals("unlabel", params[PIPELINE_GIT_MR_ACTION])
+        assertEquals("unlabel", params[PIPELINE_GIT_ACTION])
+        assertEquals("urgent", params[BK_REPO_GIT_WEBHOOK_MR_LABEL])
+        assertEquals(2L, params[BK_REPO_GIT_WEBHOOK_MR_LABEL_ID])
+        assertEquals("ffffff", params[BK_REPO_GIT_WEBHOOK_MR_LABEL_COLOR])
+        assertEquals("", params[BK_REPO_GIT_WEBHOOK_MR_LABEL_DESCRIPTION])
+        assertEquals("bug", params[BK_REPO_GIT_WEBHOOK_MR_LABELS])
+    }
+
+    @Test
+    fun shouldKeepExistingPullRequestActionVariablesUnchanged() {
+        val params = handler.retrieveParams(
+            event = event(action = "opened", currentLabels = listOf(bug)),
+            projectId = null,
+            repository = null
+        )
+
+        assertEquals("open", params[BK_REPO_GIT_WEBHOOK_MR_ACTION])
+        assertEquals("opened", params[PIPELINE_GIT_MR_ACTION])
+        assertEquals("opened", params[PIPELINE_GIT_ACTION])
+        assertEquals("", params[BK_REPO_GIT_WEBHOOK_MR_LABEL])
+        assertEquals("bug", params[BK_REPO_GIT_WEBHOOK_MR_LABELS])
     }
 
     private fun isMatch(event: GithubPullRequestEvent, params: WebHookParams): Boolean {
