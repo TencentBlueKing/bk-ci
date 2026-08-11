@@ -99,6 +99,10 @@ data class CodeGithubWebHookTriggerElement(
     val includeAssignees: String? = null,
     @get:Schema(title = "用于排除的负责人", required = false)
     val excludeAssignees: String? = null,
+    @get:Schema(title = "用于包含的负责人变更对象", required = false)
+    val includeAssigneeChanges: String? = null,
+    @get:Schema(title = "用于排除的负责人变更对象", required = false)
+    val excludeAssigneeChanges: String? = null,
     @get:Schema(title = "pull request事件action")
     val includeMrAction: List<String>? = listOf(MERGE_ACTION_OPEN, MERGE_ACTION_REOPEN, MERGE_ACTION_PUSH_UPDATE),
     @get:Schema(title = "用于包含的label", required = false)
@@ -142,6 +146,16 @@ data class CodeGithubWebHookTriggerElement(
                     TriggerElementPropUtils.vuexInput(name = "branchName", value = branchName),
                     TriggerElementPropUtils.vuexInput(name = "excludeBranchName", value = excludeBranchName),
                     TriggerElementPropUtils.vuexInput(name = "excludeUsers", value = excludeUsers),
+                    TriggerElementPropUtils.vuexInput(name = "includeAssignees", value = includeAssignees),
+                    TriggerElementPropUtils.vuexInput(name = "excludeAssignees", value = excludeAssignees),
+                    TriggerElementPropUtils.vuexInput(
+                        name = "includeAssigneeChanges",
+                        value = includeAssigneeChanges
+                    ),
+                    TriggerElementPropUtils.vuexInput(
+                        name = "excludeAssigneeChanges",
+                        value = excludeAssigneeChanges
+                    ),
                     TriggerElementPropUtils.vuexInput(name = "includeLabels", value = includeLabels),
                     TriggerElementPropUtils.vuexInput(name = "excludeLabels", value = excludeLabels)
                 )
@@ -156,6 +170,7 @@ data class CodeGithubWebHookTriggerElement(
             CodeEventType.ISSUES -> {
                 listOf(
                     TriggerElementPropUtils.selector(name = "includeIssueAction", value = includeIssueAction),
+                    TriggerElementPropUtils.vuexInput(name = "excludeUsers", value = excludeUsers),
                     TriggerElementPropUtils.vuexInput(
                         name = "includeAssignees",
                         value = includeAssignees
@@ -163,6 +178,14 @@ data class CodeGithubWebHookTriggerElement(
                     TriggerElementPropUtils.vuexInput(
                         name = "excludeAssignees",
                         value = excludeAssignees
+                    ),
+                    TriggerElementPropUtils.vuexInput(
+                        name = "includeAssigneeChanges",
+                        value = includeAssigneeChanges
+                    ),
+                    TriggerElementPropUtils.vuexInput(
+                        name = "excludeAssigneeChanges",
+                        value = excludeAssigneeChanges
                     ),
                     TriggerElementPropUtils.vuexInput(name = "includeLabels", value = includeLabels),
                     TriggerElementPropUtils.vuexInput(name = "excludeLabels", value = excludeLabels)

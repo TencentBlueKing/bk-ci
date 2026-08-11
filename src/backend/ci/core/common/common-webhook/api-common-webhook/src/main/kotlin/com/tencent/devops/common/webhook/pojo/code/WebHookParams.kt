@@ -66,6 +66,10 @@ data class WebHookParams(
     var includeAssignees: String? = null,
     // 事件排除的负责人
     var excludeAssignees: String? = null,
+    // 本次负责人变更包含的负责人
+    var includeAssigneeChanges: String? = null,
+    // 本次负责人变更排除的负责人
+    var excludeAssigneeChanges: String? = null,
     // mr事件action
     var includeMrAction: String? = null,
     // note事件action

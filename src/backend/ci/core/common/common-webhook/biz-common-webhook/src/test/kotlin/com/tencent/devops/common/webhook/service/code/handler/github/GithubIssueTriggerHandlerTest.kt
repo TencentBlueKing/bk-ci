@@ -32,9 +32,9 @@ import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_ACTION
-import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_ASSIGNEE
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_CHANGED_ASSIGNEE
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_ASSIGNEES
-import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_ASSIGNEE_ID
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_CHANGED_ASSIGNEE_ID
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_ASSIGNEE_LOGINS
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_LABEL
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_LABELS
@@ -120,14 +120,14 @@ class GithubIssueTriggerHandlerTest {
     }
 
     @Test
-    fun `should apply label filter only to label events`() {
+    fun `should apply current label filter to every issue action`() {
         assertTrue(
             isMatch(
                 event = event("labeled", changedLabel = urgent),
                 params = webHookParams("label", includeLabels = "urgent")
             )
         )
-        assertTrue(
+        assertFalse(
             isMatch(
                 event = event("edited"),
                 params = webHookParams("update", includeLabels = "missing")
@@ -140,19 +140,19 @@ class GithubIssueTriggerHandlerTest {
         assertTrue(
             isMatch(
                 event = event("assigned", assignee = bob),
-                params = webHookParams("assign", includeAssignees = "bob")
+                params = webHookParams("assign", includeAssigneeChanges = "bob")
             )
         )
         assertFalse(
             isMatch(
                 event = event("assigned", assignee = bob),
-                params = webHookParams("assign", includeAssignees = "alice")
+                params = webHookParams("assign", includeAssigneeChanges = "alice")
             )
         )
         assertTrue(
             isMatch(
                 event = event("unassigned", assignee = bob, currentAssignees = listOf(alice)),
-                params = webHookParams("unassign", includeAssignees = "bob")
+                params = webHookParams("unassign", includeAssigneeChanges = "bob")
             )
         )
     }
@@ -164,9 +164,41 @@ class GithubIssueTriggerHandlerTest {
                 event = event("assigned", assignee = bob),
                 params = webHookParams(
                     includeIssueAction = "assign",
-                    includeAssignees = "bob",
-                    excludeAssignees = "bob"
+                    includeAssigneeChanges = "bob",
+                    excludeAssigneeChanges = "bob"
                 )
+            )
+        )
+    }
+
+    @Test
+    fun `should filter every issue action by current assignees with exact login matching`() {
+        assertTrue(
+            isMatch(
+                event = event("edited", currentAssignees = listOf(alice)),
+                params = webHookParams("update", includeAssignees = "alice")
+            )
+        )
+        assertFalse(
+            isMatch(
+                event = event("edited", currentAssignees = listOf(alice)),
+                params = webHookParams("update", includeAssignees = "ali*")
+            )
+        )
+        assertFalse(
+            isMatch(
+                event = event("edited", currentAssignees = listOf(alice)),
+                params = webHookParams("update", includeAssignees = "alice", excludeAssignees = "alice")
+            )
+        )
+    }
+
+    @Test
+    fun `should exclude issue actions by webhook operator`() {
+        assertFalse(
+            isMatch(
+                event = event("edited"),
+                params = webHookParams("update", excludeUsers = "author")
             )
         )
     }
@@ -214,14 +246,15 @@ class GithubIssueTriggerHandlerTest {
     }
 
     @Test
-    fun `should only apply filters related to current action`() {
+    fun `should apply state filters to all actions and change filter only to assignee actions`() {
         assertTrue(
             isMatch(
                 event = event("assigned", assignee = bob),
                 params = webHookParams(
                     includeIssueAction = "assign,label",
-                    includeAssignees = "bob",
-                    includeLabels = "missing"
+                    includeAssignees = "alice",
+                    includeAssigneeChanges = "bob",
+                    includeLabels = "urgent"
                 )
             )
         )
@@ -230,7 +263,8 @@ class GithubIssueTriggerHandlerTest {
                 event = event("labeled", changedLabel = urgent),
                 params = webHookParams(
                     includeIssueAction = "assign,label",
-                    includeAssignees = "missing",
+                    includeAssignees = "alice",
+                    includeAssigneeChanges = "missing",
                     includeLabels = "urgent"
                 )
             )
@@ -246,8 +280,8 @@ class GithubIssueTriggerHandlerTest {
         )
 
         assertEquals("assign", params[PIPELINE_GIT_ACTION])
-        assertEquals("bob", params[BK_REPO_GIT_WEBHOOK_ISSUE_ASSIGNEE])
-        assertEquals(3L, params[BK_REPO_GIT_WEBHOOK_ISSUE_ASSIGNEE_ID])
+        assertEquals("bob", params[BK_REPO_GIT_WEBHOOK_ISSUE_CHANGED_ASSIGNEE])
+        assertEquals(3L, params[BK_REPO_GIT_WEBHOOK_ISSUE_CHANGED_ASSIGNEE_ID])
         assertEquals("alice,bob", params[BK_REPO_GIT_WEBHOOK_ISSUE_ASSIGNEE_LOGINS])
         assertTrue(params[BK_REPO_GIT_WEBHOOK_ISSUE_ASSIGNEES].toString().contains("alice"))
         assertTrue(params[BK_REPO_GIT_WEBHOOK_ISSUE_ASSIGNEES].toString().contains("bob"))
@@ -262,8 +296,8 @@ class GithubIssueTriggerHandlerTest {
         )
 
         assertEquals("unassign", params[PIPELINE_GIT_ACTION])
-        assertEquals("bob", params[BK_REPO_GIT_WEBHOOK_ISSUE_ASSIGNEE])
-        assertEquals(3L, params[BK_REPO_GIT_WEBHOOK_ISSUE_ASSIGNEE_ID])
+        assertEquals("bob", params[BK_REPO_GIT_WEBHOOK_ISSUE_CHANGED_ASSIGNEE])
+        assertEquals(3L, params[BK_REPO_GIT_WEBHOOK_ISSUE_CHANGED_ASSIGNEE_ID])
         assertEquals("alice", params[BK_REPO_GIT_WEBHOOK_ISSUE_ASSIGNEE_LOGINS])
         assertTrue(params[BK_REPO_GIT_WEBHOOK_ISSUE_ASSIGNEES].toString().contains("alice"))
         assertFalse(params[BK_REPO_GIT_WEBHOOK_ISSUE_ASSIGNEES].toString().contains("bob"))
@@ -377,6 +411,9 @@ class GithubIssueTriggerHandlerTest {
         includeIssueAction: String,
         includeAssignees: String? = null,
         excludeAssignees: String? = null,
+        includeAssigneeChanges: String? = null,
+        excludeAssigneeChanges: String? = null,
+        excludeUsers: String? = null,
         includeLabels: String? = null,
         excludeLabels: String? = null
     ) = WebHookParams(
@@ -386,9 +423,12 @@ class GithubIssueTriggerHandlerTest {
             repositoryType = RepositoryType.ID
         ),
         eventType = CodeEventType.ISSUES,
+        excludeUsers = excludeUsers,
         includeIssueAction = includeIssueAction,
         includeAssignees = includeAssignees,
         excludeAssignees = excludeAssignees,
+        includeAssigneeChanges = includeAssigneeChanges,
+        excludeAssigneeChanges = excludeAssigneeChanges,
         includeLabels = includeLabels,
         excludeLabels = excludeLabels
     )

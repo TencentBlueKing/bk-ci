@@ -43,7 +43,9 @@ data class GithubPullRequestEvent(
     @JsonProperty("repository")
     val repository: GithubRepository,
     @JsonProperty("sender")
-    override val sender: GithubUser
+    override val sender: GithubUser,
+    @JsonProperty("assignee")
+    val assignee: GithubUser? = null
 ) : GithubEvent(sender) {
     companion object {
         const val classType = "pull_request"
@@ -65,6 +67,8 @@ data class GithubPullRequestEvent(
             action == "synchronize" -> TGitMrEventAction.PUSH_UPDATE.value
             action == "closed" -> TGitMrEventAction.CLOSE.value
             action == "edited" || action == "labeled" || action == "unlabeled" -> "edit"
+            action == "assigned" -> "assign"
+            action == "unassigned" -> "unassign"
             else -> null
         }
     }

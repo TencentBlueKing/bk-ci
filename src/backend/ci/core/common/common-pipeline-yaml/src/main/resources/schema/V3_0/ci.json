@@ -230,7 +230,7 @@
                     "type" : "array",
                     "uniqueItems" : true,
                     "items" : {
-                      "enum" : [ "open", "close", "reopen", "push-update", "merge", "edit" ]
+                      "enum" : [ "open", "close", "reopen", "push-update", "merge", "edit", "assign", "unassign" ]
                     },
                     "additionalItems" : false
                   },
@@ -241,6 +241,30 @@
                     }
                   },
                   "users-ignore" : {
+                    "type" : "array",
+                    "items" : {
+                      "type" : "string"
+                    }
+                  },
+                  "assignees" : {
+                    "type" : "array",
+                    "items" : {
+                      "type" : "string"
+                    }
+                  },
+                  "assignees-ignore" : {
+                    "type" : "array",
+                    "items" : {
+                      "type" : "string"
+                    }
+                  },
+                  "assignee-changes" : {
+                    "type" : "array",
+                    "items" : {
+                      "type" : "string"
+                    }
+                  },
+                  "assignee-changes-ignore" : {
                     "type" : "array",
                     "items" : {
                       "type" : "string"
@@ -562,6 +586,24 @@
                     }
                   },
                   "assignees-ignore" : {
+                    "type" : "array",
+                    "items" : {
+                      "type" : "string"
+                    }
+                  },
+                  "assignee-changes" : {
+                    "type" : "array",
+                    "items" : {
+                      "type" : "string"
+                    }
+                  },
+                  "assignee-changes-ignore" : {
+                    "type" : "array",
+                    "items" : {
+                      "type" : "string"
+                    }
+                  },
+                  "users-ignore" : {
                     "type" : "array",
                     "items" : {
                       "type" : "string"
@@ -1148,7 +1190,7 @@
                   "type" : "array",
                   "uniqueItems" : true,
                   "items" : {
-                    "enum" : [ "open", "close", "reopen", "push-update", "merge", "edit" ]
+                    "enum" : [ "open", "close", "reopen", "push-update", "merge", "edit", "assign", "unassign" ]
                   },
                   "additionalItems" : false
                 },
@@ -1159,6 +1201,30 @@
                   }
                 },
                 "users-ignore" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string"
+                  }
+                },
+                "assignees" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string"
+                  }
+                },
+                "assignees-ignore" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string"
+                  }
+                },
+                "assignee-changes" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string"
+                  }
+                },
+                "assignee-changes-ignore" : {
                   "type" : "array",
                   "items" : {
                     "type" : "string"
@@ -1480,6 +1546,24 @@
                   }
                 },
                 "assignees-ignore" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string"
+                  }
+                },
+                "assignee-changes" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string"
+                  }
+                },
+                "assignee-changes-ignore" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string"
+                  }
+                },
+                "users-ignore" : {
                   "type" : "array",
                   "items" : {
                     "type" : "string"

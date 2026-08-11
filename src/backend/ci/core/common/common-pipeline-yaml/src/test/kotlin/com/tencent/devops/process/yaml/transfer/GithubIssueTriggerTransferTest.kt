@@ -18,7 +18,9 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventTy
 import com.tencent.devops.process.yaml.transfer.aspect.PipelineTransferAspectWrapper
 import com.tencent.devops.process.yaml.transfer.pojo.WebHookTriggerElementChanger
 import com.tencent.devops.process.yaml.v2.models.on.IssueRule as IssueRuleV2
+import com.tencent.devops.process.yaml.v2.models.on.MrRule as MrRuleV2
 import com.tencent.devops.process.yaml.v3.models.on.IssueRule
+import com.tencent.devops.process.yaml.v3.models.on.MrRule
 import com.tencent.devops.process.yaml.v3.models.on.TriggerOn
 import io.mockk.mockk
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -39,6 +41,9 @@ class GithubIssueTriggerTransferTest {
               "action": ["assign", "unassign", "update", "label", "unlabel"],
               "assignees": ["alice", "bob"],
               "assignees-ignore": ["bot"],
+              "assignee-changes": ["reviewer"],
+              "assignee-changes-ignore": ["automation"],
+              "users-ignore": ["bot-actor"],
               "labels": ["bug", "feature-*"],
               "labels-ignore": ["wontfix"]
             }
@@ -49,6 +54,9 @@ class GithubIssueTriggerTransferTest {
 
         assertEquals(listOf("alice", "bob"), v2.assignees)
         assertEquals(listOf("bot"), v2.assigneesIgnore)
+        assertEquals(listOf("reviewer"), v2.assigneeChanges)
+        assertEquals(listOf("automation"), v3.assigneeChangesIgnore)
+        assertEquals(listOf("bot-actor"), v3.usersIgnore)
         assertEquals(listOf("bug", "feature-*"), v3.labels)
         assertEquals(listOf("wontfix"), v3.labelsIgnore)
     }
@@ -64,6 +72,9 @@ class GithubIssueTriggerTransferTest {
                     action = listOf("assign", "unassign", "update", "label", "unlabel"),
                     assignees = listOf("alice", "bob"),
                     assigneesIgnore = listOf("bot"),
+                    assigneeChanges = listOf("reviewer"),
+                    assigneeChangesIgnore = listOf("automation"),
+                    usersIgnore = listOf("bot-actor"),
                     labels = listOf("bug", "feature-*"),
                     labelsIgnore = listOf("wontfix")
                 )
@@ -74,6 +85,9 @@ class GithubIssueTriggerTransferTest {
         val element = elements.single() as CodeGithubWebHookTriggerElement
         assertEquals("alice,bob", element.includeAssignees)
         assertEquals("bot", element.excludeAssignees)
+        assertEquals("reviewer", element.includeAssigneeChanges)
+        assertEquals("automation", element.excludeAssigneeChanges)
+        assertEquals("bot-actor", element.excludeUsers)
         assertEquals("bug,feature-*", element.includeLabels)
         assertEquals("wontfix", element.excludeLabels)
     }
@@ -87,6 +101,9 @@ class GithubIssueTriggerTransferTest {
             includeIssueAction = listOf("assign", "unassign", "update", "label", "unlabel"),
             includeAssignees = "alice,bob",
             excludeAssignees = "bot",
+            includeAssigneeChanges = "reviewer",
+            excludeAssigneeChanges = "automation",
+            excludeUsers = "bot-actor",
             includeLabels = "bug,feature-*",
             excludeLabels = "wontfix"
         )
@@ -100,7 +117,64 @@ class GithubIssueTriggerTransferTest {
 
         assertEquals(listOf("alice", "bob"), issue.assignees)
         assertEquals(listOf("bot"), issue.assigneesIgnore)
+        assertEquals(listOf("reviewer"), issue.assigneeChanges)
+        assertEquals(listOf("automation"), issue.assigneeChangesIgnore)
+        assertEquals(listOf("bot-actor"), issue.usersIgnore)
         assertEquals(listOf("bug", "feature-*"), issue.labels)
         assertEquals(listOf("wontfix"), issue.labelsIgnore)
+    }
+
+    @Test
+    fun `should convert github pull request assignee filters in both directions`() {
+        val elements = mutableListOf<Element>()
+        transfer.yaml2TriggerGithub(
+            triggerOn = TriggerOn(
+                repoName = "bk-ci",
+                mr = MrRule(
+                    action = listOf("assign", "unassign"),
+                    assignees = listOf("alice"),
+                    assigneesIgnore = listOf("bot"),
+                    assigneeChanges = listOf("bob"),
+                    assigneeChangesIgnore = listOf("automation")
+                )
+            ),
+            elementQueue = elements
+        )
+
+        val element = elements.single() as CodeGithubWebHookTriggerElement
+        assertEquals("alice", element.includeAssignees)
+        assertEquals("bot", element.excludeAssignees)
+        assertEquals("bob", element.includeAssigneeChanges)
+        assertEquals("automation", element.excludeAssigneeChanges)
+
+        val mr = transfer.git2YamlTriggerOn(
+            elements = listOf(WebHookTriggerElementChanger(element)),
+            projectId = "project",
+            aspectWrapper = mockk<PipelineTransferAspectWrapper>(relaxed = true),
+            defaultName = "GitHub事件触发"
+        ).single().mr!!
+        assertEquals(listOf("alice"), mr.assignees)
+        assertEquals(listOf("bot"), mr.assigneesIgnore)
+        assertEquals(listOf("bob"), mr.assigneeChanges)
+        assertEquals(listOf("automation"), mr.assigneeChangesIgnore)
+    }
+
+    @Test
+    fun `should deserialize pull request assignee filters in v2 and v3`() {
+        val json = """
+            {
+              "assignees": ["alice"],
+              "assignees-ignore": ["bot"],
+              "assignee-changes": ["bob"],
+              "assignee-changes-ignore": ["automation"]
+            }
+        """.trimIndent()
+
+        val v2 = JsonUtil.to(json, MrRuleV2::class.java)
+        val v3 = JsonUtil.to(json, MrRule::class.java)
+        assertEquals(listOf("alice"), v2.assignees)
+        assertEquals(listOf("bot"), v2.assigneesIgnore)
+        assertEquals(listOf("bob"), v3.assigneeChanges)
+        assertEquals(listOf("automation"), v3.assigneeChangesIgnore)
     }
 }

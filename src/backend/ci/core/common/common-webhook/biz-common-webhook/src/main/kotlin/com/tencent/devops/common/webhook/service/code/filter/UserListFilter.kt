@@ -25,35 +25,41 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.yaml.v3.models.on
+package com.tencent.devops.common.webhook.service.code.filter
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties
-import com.fasterxml.jackson.annotation.JsonInclude
-import com.fasterxml.jackson.annotation.JsonProperty
-import io.swagger.v3.oas.annotations.media.Schema
+import org.slf4j.LoggerFactory
 
-@JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonIgnoreProperties(ignoreUnknown = true)
-data class IssueRule(
-    override val id: String? = null,
-    override val name: String? = null,
-    override val enable: Boolean? = true,
-    val action: List<String>? = null,
-    val assignees: List<String>? = null,
-    @get:Schema(title = "assignees-ignore")
-    @JsonProperty("assignees-ignore")
-    val assigneesIgnore: List<String>? = null,
-    @get:Schema(title = "assignee-changes")
-    @JsonProperty("assignee-changes")
-    val assigneeChanges: List<String>? = null,
-    @get:Schema(title = "assignee-changes-ignore")
-    @JsonProperty("assignee-changes-ignore")
-    val assigneeChangesIgnore: List<String>? = null,
-    @get:Schema(title = "users-ignore")
-    @JsonProperty("users-ignore")
-    val usersIgnore: List<String>? = null,
-    val labels: List<String>? = null,
-    @get:Schema(title = "labels-ignore")
-    @JsonProperty("labels-ignore")
-    val labelsIgnore: List<String>? = null
-) : Rule(id, name, enable)
+/**
+ * 用户集合过滤器。用户按登录名精确匹配，不支持通配符。
+ */
+class UserListFilter(
+    private val pipelineId: String,
+    private val triggerOnUsers: Set<String>,
+    private val includedUsers: List<String>,
+    private val excludedUsers: List<String>,
+    private val includedFailedReason: String = "",
+    private val excludedFailedReason: (user: String) -> String = { "" },
+    private val filterName: String = "userList"
+) : WebhookFilter {
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(UserListFilter::class.java)
+    }
+
+    override fun doFilter(response: WebhookFilterResponse): Boolean {
+        logger.info(
+            "$pipelineId|triggerOnUsers:$triggerOnUsers|includedUsers:$includedUsers" +
+                "|excludedUsers:$excludedUsers|$filterName filter"
+        )
+        if (includedUsers.isEmpty() && excludedUsers.isEmpty()) return true
+
+        excludedUsers.firstOrNull(triggerOnUsers::contains)?.let { excludedUser ->
+            response.failedReason = excludedFailedReason(excludedUser)
+            return false
+        }
+
+        if (includedUsers.isEmpty() || includedUsers.any(triggerOnUsers::contains)) return true
+        response.failedReason = includedFailedReason
+        return false
+    }
+}

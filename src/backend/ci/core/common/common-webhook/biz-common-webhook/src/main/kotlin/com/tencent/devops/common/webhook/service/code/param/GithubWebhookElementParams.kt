@@ -71,6 +71,8 @@ class GithubWebhookElementParams : ScmWebhookElementParams<CodeGithubWebHookTrig
             params.includeIssueAction = joinToString(includeIssueAction)
             params.includeAssignees = EnvUtils.parseEnv(element.includeAssignees ?: "", variables)
             params.excludeAssignees = EnvUtils.parseEnv(element.excludeAssignees ?: "", variables)
+            params.includeAssigneeChanges = EnvUtils.parseEnv(element.includeAssigneeChanges ?: "", variables)
+            params.excludeAssigneeChanges = EnvUtils.parseEnv(element.excludeAssigneeChanges ?: "", variables)
             params.includeMrAction = joinToString(includeMrAction)
             params.includeLabels = EnvUtils.parseEnv(element.includeLabels ?: "", variables)
             params.excludeLabels = EnvUtils.parseEnv(element.excludeLabels ?: "", variables)

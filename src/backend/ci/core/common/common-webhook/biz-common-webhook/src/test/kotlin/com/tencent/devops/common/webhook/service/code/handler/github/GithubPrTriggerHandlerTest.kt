@@ -17,6 +17,10 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventTy
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_ACTION
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_MR_ACTION
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_ACTION
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_ASSIGNEES
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_ASSIGNEE_LOGINS
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_CHANGED_ASSIGNEE
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_CHANGED_ASSIGNEE_ID
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_LABELS
 import com.tencent.devops.common.webhook.pojo.code.WebHookParams
 import com.tencent.devops.common.webhook.pojo.code.github.GithubLabel
@@ -46,9 +50,9 @@ class GithubPrTriggerHandlerTest {
     private val pipelineRepository = mockk<Repository> {
         every { url } returns REPOSITORY_URL
     }
-    private val sender = mockk<GithubUser>(relaxed = true) {
-        every { login } returns "author"
-    }
+    private val sender = user(id = 1L, login = "author")
+    private val alice = user(id = 2L, login = "alice")
+    private val bob = user(id = 3L, login = "bob")
     private val bug = label(id = 1L, name = "bug")
     private val urgent = label(id = 2L, name = "urgent")
 
@@ -64,6 +68,12 @@ class GithubPrTriggerHandlerTest {
     }
 
     @Test
+    fun shouldConvertPullRequestAssigneeEvents() {
+        assertEquals("assign", event(action = "assigned", changedAssignee = bob).getRealAction())
+        assertEquals("unassign", event(action = "unassigned", changedAssignee = bob).getRealAction())
+    }
+
+    @Test
     fun shouldDeserializePullRequestLabelEventPayload() {
         val parsed = githubPullRequestEvent()
 
@@ -71,6 +81,14 @@ class GithubPrTriggerHandlerTest {
         assertEquals("edit", parsed.getRealAction())
         assertEquals(listOf("bug", "urgent"), parsed.pullRequest.labels.map { it.name })
         assertNull(parsed.pullRequest.labels.first().description)
+    }
+
+    @Test
+    fun shouldDeserializePullRequestChangedAssignee() {
+        val parsed = githubPullRequestEvent(action = "assigned", withAssignee = true)
+
+        assertEquals("assign", parsed.getRealAction())
+        assertEquals("author", parsed.assignee?.login)
     }
 
     @Test
@@ -136,6 +154,67 @@ class GithubPrTriggerHandlerTest {
     }
 
     @Test
+    fun shouldFilterEveryPullRequestActionByCurrentAssigneesAndOperator() {
+        assertTrue(
+            isMatch(
+                event = event(action = "opened", currentAssignees = listOf(alice)),
+                params = webHookParams(action = "open", includeAssignees = "alice")
+            )
+        )
+        assertFalse(
+            isMatch(
+                event = event(action = "opened", currentAssignees = listOf(alice)),
+                params = webHookParams(action = "open", includeAssignees = "ali*")
+            )
+        )
+        assertFalse(
+            isMatch(
+                event = event(action = "opened", currentAssignees = listOf(alice)),
+                params = webHookParams(action = "open", excludeUsers = "author")
+            )
+        )
+    }
+
+    @Test
+    fun shouldFilterOnlyAssigneeActionsByChangedAssignee() {
+        assertTrue(
+            isMatch(
+                event = event(action = "unassigned", changedAssignee = bob, currentAssignees = listOf(alice)),
+                params = webHookParams(action = "unassign", includeAssigneeChanges = "bob")
+            )
+        )
+        assertFalse(
+            isMatch(
+                event = event(action = "assigned", changedAssignee = bob, currentAssignees = listOf(alice, bob)),
+                params = webHookParams(action = "assign", excludeAssigneeChanges = "bob")
+            )
+        )
+        assertTrue(
+            isMatch(
+                event = event(action = "opened", currentAssignees = listOf(alice)),
+                params = webHookParams(action = "open", includeAssigneeChanges = "missing")
+            )
+        )
+    }
+
+    @Test
+    fun shouldExposePullRequestCurrentAndChangedAssignees() {
+        val params = handler.retrieveParams(
+            event = event(action = "unassigned", changedAssignee = bob, currentAssignees = listOf(alice)),
+            projectId = null,
+            repository = null
+        )
+
+        assertEquals("unassign", params[BK_REPO_GIT_WEBHOOK_MR_ACTION])
+        assertEquals("unassign", params[PIPELINE_GIT_MR_ACTION])
+        assertEquals("bob", params[BK_REPO_GIT_WEBHOOK_MR_CHANGED_ASSIGNEE])
+        assertEquals(3L, params[BK_REPO_GIT_WEBHOOK_MR_CHANGED_ASSIGNEE_ID])
+        assertEquals("alice", params[BK_REPO_GIT_WEBHOOK_MR_ASSIGNEE_LOGINS])
+        assertTrue(params[BK_REPO_GIT_WEBHOOK_MR_ASSIGNEES].toString().contains("alice"))
+        assertFalse(params[BK_REPO_GIT_WEBHOOK_MR_ASSIGNEES].toString().contains("bob"))
+    }
+
+    @Test
     fun shouldNormalizePullRequestLabelEventActionAndExposeCurrentLabels() {
         val params = handler.retrieveParams(
             event = event(action = "unlabeled", currentLabels = listOf(bug)),
@@ -176,7 +255,12 @@ class GithubPrTriggerHandlerTest {
     private fun webHookParams(
         action: String,
         includeLabels: String? = null,
-        excludeLabels: String? = null
+        excludeLabels: String? = null,
+        excludeUsers: String? = null,
+        includeAssignees: String? = null,
+        excludeAssignees: String? = null,
+        includeAssigneeChanges: String? = null,
+        excludeAssigneeChanges: String? = null
     ) = WebHookParams(
         repositoryConfig = RepositoryConfig(
             repositoryHashId = "repo-hash-id",
@@ -185,13 +269,20 @@ class GithubPrTriggerHandlerTest {
         ),
         eventType = CodeEventType.PULL_REQUEST,
         includeMrAction = action,
+        excludeUsers = excludeUsers,
+        includeAssignees = includeAssignees,
+        excludeAssignees = excludeAssignees,
+        includeAssigneeChanges = includeAssigneeChanges,
+        excludeAssigneeChanges = excludeAssigneeChanges,
         includeLabels = includeLabels,
         excludeLabels = excludeLabels
     )
 
     private fun event(
         action: String,
-        currentLabels: List<GithubLabel> = emptyList()
+        currentLabels: List<GithubLabel> = emptyList(),
+        currentAssignees: List<GithubUser> = emptyList(),
+        changedAssignee: GithubUser? = null
     ): GithubPullRequestEvent {
         val baseBranch = branch(refName = "master")
         val headBranch = branch(refName = "feature")
@@ -200,6 +291,7 @@ class GithubPrTriggerHandlerTest {
             every { base } returns baseBranch
             every { head } returns headBranch
             every { labels } returns currentLabels
+            every { assignees } returns currentAssignees
             every { title } returns "PR title"
         }
         return GithubPullRequestEvent(
@@ -207,12 +299,16 @@ class GithubPrTriggerHandlerTest {
             number = 1,
             pullRequest = pullRequest,
             repository = githubRepository,
-            sender = sender
+            sender = sender,
+            assignee = changedAssignee
         )
     }
 
     @Suppress("UNCHECKED_CAST")
-    private fun githubPullRequestEvent(): GithubPullRequestEvent {
+    private fun githubPullRequestEvent(
+        action: String = "labeled",
+        withAssignee: Boolean = false
+    ): GithubPullRequestEvent {
         val payload = ClassPathResource(
             "com/tencent/devops/common/webhook/service/code/github/GithubIssueLabeledEvent.json"
         ).inputStream.bufferedReader().use { it.readText() }
@@ -220,6 +316,8 @@ class GithubPrTriggerHandlerTest {
         val issue = event.remove("issue") as Map<String, Any>
         val repository = event["repository"] as Map<String, Any>
         val sender = event["sender"] as Map<String, Any>
+        event["action"] = action
+        if (withAssignee) event["assignee"] = sender
         val branch = { ref: String ->
             mapOf(
                 "label" to "blueking:$ref",
@@ -281,6 +379,19 @@ class GithubPrTriggerHandlerTest {
         name = name,
         nodeId = "label-$id",
         url = "https://api.github.com/repos/blueking/bk-ci/labels/$name"
+    )
+
+    private fun user(id: Long, login: String) = GithubUser(
+        gravatarId = "",
+        htmlUrl = "https://github.com/$login",
+        id = id,
+        login = login,
+        nodeId = "user-$id",
+        siteAdmin = false,
+        type = "User",
+        url = "https://api.github.com/users/$login",
+        createdAt = null,
+        updatedAt = null
     )
 
     companion object {

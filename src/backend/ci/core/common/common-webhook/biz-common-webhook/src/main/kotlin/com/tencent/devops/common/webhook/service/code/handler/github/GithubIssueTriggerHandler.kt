@@ -37,9 +37,9 @@ import com.tencent.devops.common.webhook.annotation.CodeWebhookHandler
 import com.tencent.devops.common.webhook.enums.WebhookI18nConstants
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_BRANCH
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_ACTION
-import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_ASSIGNEE
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_CHANGED_ASSIGNEE
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_ASSIGNEES
-import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_ASSIGNEE_ID
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_CHANGED_ASSIGNEE_ID
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_ASSIGNEE_LOGINS
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_DESCRIPTION
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_ID
@@ -64,6 +64,7 @@ import com.tencent.devops.common.webhook.service.code.filter.EventTypeFilter
 import com.tencent.devops.common.webhook.service.code.filter.GitUrlFilter
 import com.tencent.devops.common.webhook.service.code.filter.ListContainsFilter
 import com.tencent.devops.common.webhook.service.code.filter.UserFilter
+import com.tencent.devops.common.webhook.service.code.filter.UserListFilter
 import com.tencent.devops.common.webhook.service.code.filter.WebhookFilter
 import com.tencent.devops.common.webhook.service.code.handler.CodeWebhookTriggerHandler
 import com.tencent.devops.common.webhook.service.code.pojo.WebhookMatchResult
@@ -155,15 +156,69 @@ class GithubIssueTriggerHandler : CodeWebhookTriggerHandler<GithubIssuesEvent> {
                     params = listOf()
                 ).toJsonStr()
             )
-            val filters = mutableListOf<WebhookFilter>(urlFilter, eventTypeFilter, actionFilter)
+            val actorFilter = UserFilter(
+                pipelineId = pipelineId,
+                triggerOnUser = event.sender.login,
+                includedUsers = emptyList(),
+                excludedUsers = WebhookUtils.convert(excludeUsers),
+                excludedFailedReason = I18Variable(
+                    code = WebhookI18nConstants.USER_IGNORED,
+                    params = listOf(event.sender.login)
+                ).toJsonStr(),
+                filterName = "issueActor"
+            )
+            val labelFilter = ListContainsFilter(
+                pipelineId = pipelineId,
+                filterName = "issueLabel",
+                triggerOn = event.issue.labels.map { it.name }.toSet(),
+                included = WebhookUtils.convert(includeLabels),
+                excluded = WebhookUtils.convert(excludeLabels),
+                includeFailedReason = { item ->
+                    I18Variable(
+                        code = WebhookI18nConstants.BK_TRIGGER_LABEL_NOT_MATCH,
+                        params = listOf(item)
+                    ).toJsonStr()
+                },
+                excludedFailedReason = { item ->
+                    I18Variable(
+                        code = WebhookI18nConstants.BK_TRIGGER_LABEL_IGNORED,
+                        params = listOf(item)
+                    ).toJsonStr()
+                }
+            )
+            val assigneeFilter = UserListFilter(
+                pipelineId = pipelineId,
+                triggerOnUsers = event.issue.assignees.orEmpty().map { it.login }.toSet(),
+                includedUsers = WebhookUtils.convert(includeAssignees),
+                excludedUsers = WebhookUtils.convert(excludeAssignees),
+                includedFailedReason = I18Variable(
+                    code = WebhookI18nConstants.OWNER_NOT_MATCH,
+                    params = listOf("")
+                ).toJsonStr(),
+                excludedFailedReason = { user ->
+                    I18Variable(
+                        code = WebhookI18nConstants.OWNER_IGNORED,
+                        params = listOf(user)
+                    ).toJsonStr()
+                },
+                filterName = "issueAssignees"
+            )
+            val filters = mutableListOf<WebhookFilter>(
+                urlFilter,
+                eventTypeFilter,
+                actionFilter,
+                actorFilter,
+                labelFilter,
+                assigneeFilter
+            )
             when (event.action) {
                 GithubIssuesAction.ASSIGNED.value,
                 GithubIssuesAction.UNASSIGNED.value -> filters.add(
                     UserFilter(
                         pipelineId = pipelineId,
                         triggerOnUser = event.assignee?.login ?: "",
-                        includedUsers = WebhookUtils.convert(includeAssignees),
-                        excludedUsers = WebhookUtils.convert(excludeAssignees),
+                        includedUsers = WebhookUtils.convert(includeAssigneeChanges),
+                        excludedUsers = WebhookUtils.convert(excludeAssigneeChanges),
                         includedFailedReason = I18Variable(
                             code = WebhookI18nConstants.OWNER_NOT_MATCH,
                             params = listOf(event.assignee?.login ?: "")
@@ -172,35 +227,9 @@ class GithubIssueTriggerHandler : CodeWebhookTriggerHandler<GithubIssuesEvent> {
                             code = WebhookI18nConstants.OWNER_IGNORED,
                             params = listOf(event.assignee?.login ?: "")
                         ).toJsonStr(),
-                        filterName = "issueAssignee"
+                        filterName = "issueAssigneeChange"
                     )
                 )
-
-                GithubIssuesAction.LABELED.value,
-                GithubIssuesAction.UNLABELED.value -> {
-                    filters.add(
-                        ListContainsFilter(
-                            pipelineId = pipelineId,
-                            filterName = "issueLabel",
-                            triggerOn = event.issue.labels.map { it.name }.toSet(),
-                            included = WebhookUtils.convert(includeLabels),
-                            excluded = WebhookUtils.convert(excludeLabels),
-                            includeFailedReason = { item ->
-                                I18Variable(
-                                    code = WebhookI18nConstants.BK_TRIGGER_LABEL_NOT_MATCH,
-                                    params = listOf(item)
-                                ).toJsonStr()
-                            },
-                            excludedFailedReason = { item ->
-                                I18Variable(
-                                    code = WebhookI18nConstants.BK_TRIGGER_LABEL_IGNORED,
-                                    params = listOf(item)
-                                ).toJsonStr()
-                            }
-                        )
-                    )
-                }
-
                 else -> Unit
             }
             return filters
@@ -227,8 +256,8 @@ class GithubIssueTriggerHandler : CodeWebhookTriggerHandler<GithubIssuesEvent> {
             startParams[PIPELINE_GIT_REPO_URL] = event.repository.getRepoUrl()
             startParams[BK_REPO_GIT_WEBHOOK_BRANCH] = event.repository.defaultBranch
             startParams[PIPELINE_GIT_ACTION] = event.convertAction()
-            startParams[BK_REPO_GIT_WEBHOOK_ISSUE_ASSIGNEE] = event.assignee?.login ?: ""
-            startParams[BK_REPO_GIT_WEBHOOK_ISSUE_ASSIGNEE_ID] = event.assignee?.id ?: ""
+            startParams[BK_REPO_GIT_WEBHOOK_ISSUE_CHANGED_ASSIGNEE] = event.assignee?.login ?: ""
+            startParams[BK_REPO_GIT_WEBHOOK_ISSUE_CHANGED_ASSIGNEE_ID] = event.assignee?.id ?: ""
             startParams[BK_REPO_GIT_WEBHOOK_ISSUE_ASSIGNEES] = JsonUtil.toJson(assignees.orEmpty(), false)
             startParams[BK_REPO_GIT_WEBHOOK_ISSUE_ASSIGNEE_LOGINS] =
                 assignees.orEmpty().joinToString(",") { it.login }

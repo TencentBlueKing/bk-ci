@@ -28,6 +28,8 @@ class GithubWebhookElementParamsTest {
                 includeIssueAction = listOf("assign", "unassign", "update", "label", "unlabel"),
                 includeAssignees = "alice,bob",
                 excludeAssignees = "bot",
+                includeAssigneeChanges = "reviewer",
+                excludeAssigneeChanges = "automation",
                 includeLabels = "bug,feature-*",
                 excludeLabels = "wontfix"
             ),
@@ -37,6 +39,8 @@ class GithubWebhookElementParamsTest {
         assertEquals("assign,unassign,update,label,unlabel", params.includeIssueAction)
         assertEquals("alice,bob", params.includeAssignees)
         assertEquals("bot", params.excludeAssignees)
+        assertEquals("reviewer", params.includeAssigneeChanges)
+        assertEquals("automation", params.excludeAssigneeChanges)
         assertEquals("bug,feature-*", params.includeLabels)
         assertEquals("wontfix", params.excludeLabels)
     }

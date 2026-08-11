@@ -28,6 +28,7 @@
 package com.tencent.devops.common.webhook.service.code.handler.github
 
 import com.tencent.devops.common.api.pojo.I18Variable
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_ACTION
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_BASE_REF
@@ -51,6 +52,10 @@ import com.tencent.devops.common.webhook.constants.CodeWebhookConstants.MAX_MR_T
 import com.tencent.devops.common.webhook.enums.WebhookI18nConstants
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_ACTION
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_ASSIGNEE
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_ASSIGNEES
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_ASSIGNEE_LOGINS
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_CHANGED_ASSIGNEE
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_CHANGED_ASSIGNEE_ID
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_AUTHOR
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_CREATE_TIME
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_DESCRIPTION
@@ -91,6 +96,7 @@ import com.tencent.devops.common.webhook.service.code.filter.BranchFilter
 import com.tencent.devops.common.webhook.service.code.filter.ContainsFilter
 import com.tencent.devops.common.webhook.service.code.filter.ListContainsFilter
 import com.tencent.devops.common.webhook.service.code.filter.UserFilter
+import com.tencent.devops.common.webhook.service.code.filter.UserListFilter
 import com.tencent.devops.common.webhook.service.code.filter.WebhookFilter
 import com.tencent.devops.common.webhook.service.code.handler.GitHookTriggerHandler
 import com.tencent.devops.common.webhook.service.code.pojo.WebhookMatchResult
@@ -255,7 +261,50 @@ class GithubPrTriggerHandler @Autowired constructor(
                 excludedFailedReason = excludedFailedReason,
                 includeItemKey = MATCH_LABEL
             )
-            return listOf(actionFilter, userFilter, targetBranchFilter, labelFilter)
+            val assigneeFilter = UserListFilter(
+                pipelineId = pipelineId,
+                triggerOnUsers = event.pullRequest.assignees.map { it.login }.toSet(),
+                includedUsers = WebhookUtils.convert(includeAssignees),
+                excludedUsers = WebhookUtils.convert(excludeAssignees),
+                includedFailedReason = I18Variable(
+                    code = WebhookI18nConstants.OWNER_NOT_MATCH,
+                    params = listOf("")
+                ).toJsonStr(),
+                excludedFailedReason = { user ->
+                    I18Variable(
+                        code = WebhookI18nConstants.OWNER_IGNORED,
+                        params = listOf(user)
+                    ).toJsonStr()
+                },
+                filterName = "prAssignees"
+            )
+            val filters = mutableListOf<WebhookFilter>(
+                actionFilter,
+                userFilter,
+                targetBranchFilter,
+                labelFilter,
+                assigneeFilter
+            )
+            if (event.action == "assigned" || event.action == "unassigned") {
+                filters.add(
+                    UserFilter(
+                        pipelineId = pipelineId,
+                        triggerOnUser = event.assignee?.login ?: "",
+                        includedUsers = WebhookUtils.convert(includeAssigneeChanges),
+                        excludedUsers = WebhookUtils.convert(excludeAssigneeChanges),
+                        includedFailedReason = I18Variable(
+                            code = WebhookI18nConstants.OWNER_NOT_MATCH,
+                            params = listOf(event.assignee?.login ?: "")
+                        ).toJsonStr(),
+                        excludedFailedReason = I18Variable(
+                            code = WebhookI18nConstants.OWNER_IGNORED,
+                            params = listOf(event.assignee?.login ?: "")
+                        ).toJsonStr(),
+                        filterName = "prAssigneeChange"
+                    )
+                )
+            }
+            return filters
         }
     }
 
@@ -316,7 +365,12 @@ class GithubPrTriggerHandler @Autowired constructor(
             startParams[BK_REPO_GIT_WEBHOOK_MR_DESCRIPTION] = pullRequest.commentsUrl ?: ""
             startParams[BK_REPO_GIT_WEBHOOK_MR_TITLE] = pullRequest.title ?: ""
             startParams[BK_REPO_GIT_WEBHOOK_MR_ASSIGNEE] =
-                pullRequest.assignees.joinToString(",") { it.login ?: "" }
+                pullRequest.assignees.joinToString(",") { it.login }
+            startParams[BK_REPO_GIT_WEBHOOK_MR_CHANGED_ASSIGNEE] = assignee?.login ?: ""
+            startParams[BK_REPO_GIT_WEBHOOK_MR_CHANGED_ASSIGNEE_ID] = assignee?.id ?: ""
+            startParams[BK_REPO_GIT_WEBHOOK_MR_ASSIGNEES] = JsonUtil.toJson(pullRequest.assignees, false)
+            startParams[BK_REPO_GIT_WEBHOOK_MR_ASSIGNEE_LOGINS] =
+                pullRequest.assignees.joinToString(",") { it.login }
             startParams[BK_REPO_GIT_WEBHOOK_MR_URL] = pullRequest.url
             startParams[BK_REPO_GIT_WEBHOOK_MR_REVIEWERS] =
                 pullRequest.requestedReviewers.joinToString(",") { it.login ?: "" }
@@ -356,7 +410,8 @@ class GithubPrTriggerHandler @Autowired constructor(
             startParams[PIPELINE_GIT_MR_PROPOSER] = pullRequest.user.login
             startParams[PIPELINE_GIT_EVENT_URL] = pullRequest.htmlUrl ?: ""
         }
-        val pipelineAction = if (event.action == "labeled" || event.action == "unlabeled") {
+        val normalizedActions = setOf("labeled", "unlabeled", "assigned", "unassigned")
+        val pipelineAction = if (event.action in normalizedActions) {
             getAction(event) ?: event.action
         } else {
             event.action
