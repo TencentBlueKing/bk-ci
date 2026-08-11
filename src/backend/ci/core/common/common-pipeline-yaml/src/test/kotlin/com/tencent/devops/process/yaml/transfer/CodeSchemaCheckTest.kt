@@ -36,6 +36,37 @@ class CodeSchemaCheckTest {
     }
 
     @Test
+    fun `test github issue assignee and label filters should pass`() {
+        val validYaml = """
+            version: v3.0
+            name: github-issue-filter
+            on:
+              repo-name: blueking/bk-ci
+              type: github
+              issue:
+                action: [assign, unassign, label, unlabel]
+                assignees: [alice, bob]
+                assignees-ignore: [bot]
+                labels: [bug, 'feature-*']
+                labels-ignore: [wontfix]
+            stages:
+              - name: stage-1
+                jobs:
+                  job1:
+                    runs-on:
+                      pool-name: docker
+                    steps:
+                      - uses: linuxScript@1.*
+                        with:
+                          script: echo issue
+        """.trimIndent()
+
+        Assertions.assertDoesNotThrow {
+            codeSchemaCheck.check(validYaml)
+        }
+    }
+
+    @Test
     fun `test check with invalid yaml syntax should throw exception`() {
         // 准备测试数据 - 从资源文件读取无效的 YAML 语法
         val invalidYaml = readResourceFile("test-yamls/invalid-syntax.yml")

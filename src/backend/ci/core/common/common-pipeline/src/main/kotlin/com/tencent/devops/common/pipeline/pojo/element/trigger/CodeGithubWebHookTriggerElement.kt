@@ -95,6 +95,14 @@ data class CodeGithubWebHookTriggerElement(
     val includeNoteTypes: List<String>? = null,
     @get:Schema(title = "issue事件action")
     val includeIssueAction: List<String>? = null,
+    @get:Schema(title = "用于包含的issue负责人", required = false)
+    val includeIssueAssignees: String? = null,
+    @get:Schema(title = "用于排除的issue负责人", required = false)
+    val excludeIssueAssignees: String? = null,
+    @get:Schema(title = "用于包含的issue label", required = false)
+    val includeIssueLabels: String? = null,
+    @get:Schema(title = "用于排除的issue label", required = false)
+    val excludeIssueLabels: String? = null,
     @get:Schema(title = "pull request事件action")
     val includeMrAction: List<String>? = listOf(MERGE_ACTION_OPEN, MERGE_ACTION_REOPEN, MERGE_ACTION_PUSH_UPDATE),
     @get:Schema(title = "用于包含的label", required = false)
@@ -149,7 +157,17 @@ data class CodeGithubWebHookTriggerElement(
 
             CodeEventType.ISSUES -> {
                 listOf(
-                    TriggerElementPropUtils.selector(name = "includeIssueAction", value = includeIssueAction)
+                    TriggerElementPropUtils.selector(name = "includeIssueAction", value = includeIssueAction),
+                    TriggerElementPropUtils.vuexInput(
+                        name = "includeIssueAssignees",
+                        value = includeIssueAssignees
+                    ),
+                    TriggerElementPropUtils.vuexInput(
+                        name = "excludeIssueAssignees",
+                        value = excludeIssueAssignees
+                    ),
+                    TriggerElementPropUtils.vuexInput(name = "includeIssueLabels", value = includeIssueLabels),
+                    TriggerElementPropUtils.vuexInput(name = "excludeIssueLabels", value = excludeIssueLabels)
                 )
             }
 

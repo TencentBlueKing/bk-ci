@@ -330,7 +330,11 @@ class TriggerTransfer @Autowired(required = false) constructor(
                     id = git.id,
                     name = git.name.nullIfDefault(defaultName),
                     enable = git.enable.nullIfDefault(true),
-                    action = git.includeIssueAction
+                    action = git.includeIssueAction,
+                    assignees = git.includeIssueAssignees?.disjoin(),
+                    assigneesIgnore = git.excludeIssueAssignees?.disjoin(),
+                    labels = git.includeIssueLabels?.disjoin(),
+                    labelsIgnore = git.excludeIssueLabels?.disjoin()
                 )
 
                 CodeEventType.NOTE -> nowExist.note = NoteRule(
@@ -633,6 +637,10 @@ class TriggerTransfer @Autowired(required = false) constructor(
                     stepId = issue.id,
                     name = issue.name ?: "GitHub事件触发",
                     includeIssueAction = issue.action,
+                    includeIssueAssignees = issue.assignees.nonEmptyOrNull()?.join(),
+                    excludeIssueAssignees = issue.assigneesIgnore.nonEmptyOrNull()?.join(),
+                    includeIssueLabels = issue.labels.nonEmptyOrNull()?.join(),
+                    excludeIssueLabels = issue.labelsIgnore.nonEmptyOrNull()?.join(),
                     eventType = CodeEventType.ISSUES,
                     repositoryType = repositoryType,
                     repositoryName = triggerOn.repoName

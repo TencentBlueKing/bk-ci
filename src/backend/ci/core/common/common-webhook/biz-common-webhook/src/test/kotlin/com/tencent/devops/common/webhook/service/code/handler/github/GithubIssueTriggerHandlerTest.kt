@@ -117,6 +117,102 @@ class GithubIssueTriggerHandlerTest {
     }
 
     @Test
+    fun `should filter assigned and unassigned events by changed assignee`() {
+        assertTrue(
+            isMatch(
+                event = event("assigned", assignee = bob),
+                params = webHookParams("assign", includeIssueAssignees = "bob")
+            )
+        )
+        assertFalse(
+            isMatch(
+                event = event("assigned", assignee = bob),
+                params = webHookParams("assign", includeIssueAssignees = "alice")
+            )
+        )
+        assertTrue(
+            isMatch(
+                event = event("unassigned", assignee = bob, currentAssignees = listOf(alice)),
+                params = webHookParams("unassign", includeIssueAssignees = "bob")
+            )
+        )
+    }
+
+    @Test
+    fun `should let excluded assignee override included assignee`() {
+        assertFalse(
+            isMatch(
+                event = event("assigned", assignee = bob),
+                params = webHookParams(
+                    includeIssueAction = "assign",
+                    includeIssueAssignees = "bob",
+                    excludeIssueAssignees = "bob"
+                )
+            )
+        )
+    }
+
+    @Test
+    fun `should filter labeled and unlabeled events by changed label`() {
+        assertTrue(
+            isMatch(
+                event = event("labeled", changedLabel = urgent),
+                params = webHookParams("label", includeIssueLabels = "urg*")
+            )
+        )
+        assertFalse(
+            isMatch(
+                event = event("labeled", changedLabel = urgent),
+                params = webHookParams("label", includeIssueLabels = "bug")
+            )
+        )
+        assertTrue(
+            isMatch(
+                event = event("unlabeled", changedLabel = urgent, currentLabels = listOf(bug)),
+                params = webHookParams("unlabel", includeIssueLabels = "urgent")
+            )
+        )
+    }
+
+    @Test
+    fun `should reject excluded changed label`() {
+        assertFalse(
+            isMatch(
+                event = event("unlabeled", changedLabel = urgent, currentLabels = listOf(bug)),
+                params = webHookParams(
+                    includeIssueAction = "unlabel",
+                    includeIssueLabels = "urgent",
+                    excludeIssueLabels = "urg*"
+                )
+            )
+        )
+    }
+
+    @Test
+    fun `should only apply filters related to current action`() {
+        assertTrue(
+            isMatch(
+                event = event("assigned", assignee = bob),
+                params = webHookParams(
+                    includeIssueAction = "assign,label",
+                    includeIssueAssignees = "bob",
+                    includeIssueLabels = "missing"
+                )
+            )
+        )
+        assertTrue(
+            isMatch(
+                event = event("labeled", changedLabel = urgent),
+                params = webHookParams(
+                    includeIssueAction = "assign,label",
+                    includeIssueAssignees = "missing",
+                    includeIssueLabels = "urgent"
+                )
+            )
+        )
+    }
+
+    @Test
     fun `should expose assigned user and all current assignees`() {
         val params = handler.retrieveParams(
             event = event(action = "assigned", assignee = bob),
@@ -241,14 +337,34 @@ class GithubIssueTriggerHandlerTest {
         return JsonUtil.to(payload, GithubIssuesEvent::class.java)
     }
 
-    private fun webHookParams(includeIssueAction: String) = WebHookParams(
+    private fun isMatch(event: GithubIssuesEvent, params: WebHookParams): Boolean {
+        return handler.isMatch(
+            event = event,
+            projectId = "project",
+            pipelineId = "pipeline",
+            repository = pipelineRepository,
+            webHookParams = params
+        ).isMatch
+    }
+
+    private fun webHookParams(
+        includeIssueAction: String,
+        includeIssueAssignees: String? = null,
+        excludeIssueAssignees: String? = null,
+        includeIssueLabels: String? = null,
+        excludeIssueLabels: String? = null
+    ) = WebHookParams(
         repositoryConfig = RepositoryConfig(
             repositoryHashId = "repo-hash-id",
             repositoryName = null,
             repositoryType = RepositoryType.ID
         ),
         eventType = CodeEventType.ISSUES,
-        includeIssueAction = includeIssueAction
+        includeIssueAction = includeIssueAction,
+        includeIssueAssignees = includeIssueAssignees,
+        excludeIssueAssignees = excludeIssueAssignees,
+        includeIssueLabels = includeIssueLabels,
+        excludeIssueLabels = excludeIssueLabels
     )
 
     private fun user(id: Long, login: String) = GithubUser(

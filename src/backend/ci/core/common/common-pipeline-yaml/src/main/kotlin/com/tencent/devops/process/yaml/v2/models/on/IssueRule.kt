@@ -29,9 +29,19 @@ package com.tencent.devops.process.yaml.v2.models.on
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonInclude
+import com.fasterxml.jackson.annotation.JsonProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class IssueRule(
-    val action: List<String>? = null
+    val action: List<String>? = null,
+    val assignees: List<String>? = null,
+    @get:Schema(title = "assignees-ignore")
+    @JsonProperty("assignees-ignore")
+    val assigneesIgnore: List<String>? = null,
+    val labels: List<String>? = null,
+    @get:Schema(title = "labels-ignore")
+    @JsonProperty("labels-ignore")
+    val labelsIgnore: List<String>? = null
 )
