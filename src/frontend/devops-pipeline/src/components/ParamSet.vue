@@ -256,6 +256,7 @@
                         <template v-if="activeSet?.params?.length || activeSet?.versionParams?.length">
                             <param-group
                                 v-if="activeSet?.versionParams?.length"
+                                class="param-set-preview-group"
                                 :show-header="false"
                                 :editable="false"
                                 v-bind="versionParamGroupObj"
@@ -263,6 +264,7 @@
 
                             <param-group
                                 v-if="activeSet?.params?.length"
+                                class="param-set-preview-group"
                                 :show-header="false"
                                 :editable="false"
                                 v-bind="paramGroupObj"
@@ -1165,6 +1167,33 @@
                 .bk-form-item {
                     &+.bk-form-item {
                         margin-top: 0 !important;
+                    }
+                }
+            }
+            .param-set-preview-group {
+                .variable-item {
+                    height: 44px;
+                    padding: 0 16px;
+                }
+                .var-con {
+                    display: flex;
+                    align-items: center;
+                    gap: 16px;
+                    .var-names {
+                        flex: 0 0 180px;
+                        max-width: 180px;
+                    }
+                    .value-operate-row {
+                        min-width: 0;
+                        flex: 1;
+                        .param-value,
+                        .default-value {
+                            min-width: 0;
+                            flex: 1;
+                        }
+                        .default-value {
+                            max-width: none;
+                        }
                     }
                 }
             }
