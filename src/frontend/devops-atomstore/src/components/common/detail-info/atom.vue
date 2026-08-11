@@ -448,7 +448,10 @@
                 if (!Array.isArray(jobTypeConfigs) || !jobTypeConfigs.length) return ''
                 return jobTypeConfigs.map((config) => {
                     const jobTypeName = this.$options.filters.atomJobType(config.jobType) || config.jobType || ''
-                    const osText = config.osList && config.osList.length ? `(${config.osList.join(',')})` : ''
+                    const osNames = config.osList && config.osList.length
+                        ? this.getJobList(config.osList).map(item => item.name)
+                        : []
+                    const osText = osNames.length ? `(${osNames.join(',')})` : ''
                     return `${jobTypeName}${osText}`
                 }).join('、')
             },
