@@ -176,7 +176,8 @@ class GithubIssueTriggerHandler : CodeWebhookTriggerHandler<GithubIssuesEvent> {
                     )
                 )
 
-                else -> if (event.convertAction() == "update") {
+                GithubIssuesAction.LABELED.value,
+                GithubIssuesAction.UNLABELED.value -> {
                     filters.add(
                         ListContainsFilter(
                             pipelineId = pipelineId,
@@ -199,6 +200,8 @@ class GithubIssueTriggerHandler : CodeWebhookTriggerHandler<GithubIssuesEvent> {
                         )
                     )
                 }
+
+                else -> Unit
             }
             return filters
         }

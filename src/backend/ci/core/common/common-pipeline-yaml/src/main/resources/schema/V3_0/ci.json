@@ -551,7 +551,7 @@
                     "type" : "array",
                     "uniqueItems" : true,
                     "items" : {
-                      "enum" : [ "open", "close", "reopen", "update", "assign", "unassign" ]
+                      "enum" : [ "open", "close", "reopen", "update", "assign", "unassign", "labeled", "unlabeled" ]
                     },
                     "additionalItems" : false
                   },
@@ -1469,7 +1469,7 @@
                   "type" : "array",
                   "uniqueItems" : true,
                   "items" : {
-                    "enum" : [ "open", "close", "reopen", "update", "assign", "unassign" ]
+                    "enum" : [ "open", "close", "reopen", "update", "assign", "unassign", "labeled", "unlabeled" ]
                   },
                   "additionalItems" : false
                 },

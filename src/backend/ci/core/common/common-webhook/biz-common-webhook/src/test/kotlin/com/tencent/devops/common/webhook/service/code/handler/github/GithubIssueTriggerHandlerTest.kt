@@ -76,23 +76,23 @@ class GithubIssueTriggerHandlerTest {
     private val urgent = label(id = 11L, name = "urgent", description = "needs attention")
 
     @Test
-    fun `should convert assign actions and normalize label events to update`() {
+    fun `should convert assignee and label actions`() {
         val labeled = event("labeled", changedLabel = urgent)
         val unlabeled = event("unlabeled", changedLabel = urgent, currentLabels = listOf(bug))
 
         assertEquals("assign", event("assigned").convertAction())
         assertEquals("unassign", event("unassigned").convertAction())
-        assertEquals("update", labeled.convertAction())
-        assertEquals("update", unlabeled.convertAction())
+        assertEquals("labeled", labeled.convertAction())
+        assertEquals("unlabeled", unlabeled.convertAction())
     }
 
     @Test
-    fun `should match configured assign and update actions`() {
+    fun `should match configured assignee and label actions`() {
         mapOf(
             "assigned" to "assign",
             "unassigned" to "unassign",
-            "labeled" to "update",
-            "unlabeled" to "update"
+            "labeled" to "labeled",
+            "unlabeled" to "unlabeled"
         ).forEach { (githubAction, configuredAction) ->
             val result = handler.isMatch(
                 event = event(githubAction),
@@ -117,6 +117,22 @@ class GithubIssueTriggerHandlerTest {
         )
 
         assertFalse(result.isMatch)
+    }
+
+    @Test
+    fun `should distinguish label events from edited events`() {
+        assertFalse(
+            isMatch(
+                event = event("labeled", changedLabel = urgent),
+                params = webHookParams("update")
+            )
+        )
+        assertTrue(
+            isMatch(
+                event = event("edited"),
+                params = webHookParams("update", includeLabels = "missing")
+            )
+        )
     }
 
     @Test
@@ -156,29 +172,29 @@ class GithubIssueTriggerHandlerTest {
     }
 
     @Test
-    fun `should filter label update events by current labels`() {
+    fun `should filter label events by current labels`() {
         assertTrue(
             isMatch(
                 event = event("labeled", changedLabel = urgent),
-                params = webHookParams("update", includeLabels = "urg*")
+                params = webHookParams("labeled", includeLabels = "urg*")
             )
         )
         assertFalse(
             isMatch(
                 event = event("labeled", changedLabel = urgent),
-                params = webHookParams("update", includeLabels = "missing")
+                params = webHookParams("labeled", includeLabels = "missing")
             )
         )
         assertFalse(
             isMatch(
                 event = event("unlabeled", changedLabel = urgent, currentLabels = listOf(bug)),
-                params = webHookParams("update", includeLabels = "urgent")
+                params = webHookParams("unlabeled", includeLabels = "urgent")
             )
         )
         assertTrue(
             isMatch(
                 event = event("unlabeled", changedLabel = urgent, currentLabels = listOf(bug)),
-                params = webHookParams("update", includeLabels = "bug")
+                params = webHookParams("unlabeled", includeLabels = "bug")
             )
         )
     }
@@ -189,7 +205,7 @@ class GithubIssueTriggerHandlerTest {
             isMatch(
                 event = event("labeled", changedLabel = urgent, currentLabels = listOf(bug, urgent)),
                 params = webHookParams(
-                    includeIssueAction = "update",
+                    includeIssueAction = "labeled",
                     includeLabels = "urgent",
                     excludeLabels = "urg*"
                 )
@@ -203,7 +219,7 @@ class GithubIssueTriggerHandlerTest {
             isMatch(
                 event = event("assigned", assignee = bob),
                 params = webHookParams(
-                    includeIssueAction = "assign,update",
+                    includeIssueAction = "assign,labeled",
                     includeAssignees = "bob",
                     includeLabels = "missing"
                 )
@@ -213,7 +229,7 @@ class GithubIssueTriggerHandlerTest {
             isMatch(
                 event = event("labeled", changedLabel = urgent),
                 params = webHookParams(
-                    includeIssueAction = "assign,update",
+                    includeIssueAction = "assign,labeled",
                     includeAssignees = "missing",
                     includeLabels = "urgent"
                 )
@@ -261,7 +277,7 @@ class GithubIssueTriggerHandlerTest {
             repository = null
         )
 
-        assertEquals("update", params[PIPELINE_GIT_ACTION])
+        assertEquals("labeled", params[PIPELINE_GIT_ACTION])
         assertEquals("urgent", params[BK_REPO_GIT_WEBHOOK_ISSUE_LABEL])
         assertEquals(11L, params[BK_REPO_GIT_WEBHOOK_ISSUE_LABEL_ID])
         assertEquals("ff0000", params[BK_REPO_GIT_WEBHOOK_ISSUE_LABEL_COLOR])
@@ -279,7 +295,7 @@ class GithubIssueTriggerHandlerTest {
             repository = null
         )
 
-        assertEquals("update", params[PIPELINE_GIT_ACTION])
+        assertEquals("unlabeled", params[PIPELINE_GIT_ACTION])
         assertEquals("urgent", params[BK_REPO_GIT_WEBHOOK_ISSUE_LABEL])
         assertEquals(11L, params[BK_REPO_GIT_WEBHOOK_ISSUE_LABEL_ID])
         assertEquals("bug", params[BK_REPO_GIT_WEBHOOK_ISSUE_LABEL_NAMES])
