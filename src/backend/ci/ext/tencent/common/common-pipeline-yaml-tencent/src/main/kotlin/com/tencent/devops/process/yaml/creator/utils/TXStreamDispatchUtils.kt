@@ -273,12 +273,24 @@ object TXStreamDispatchUtils {
         }
 
         if (containsMatrix == true) {
+            // 未配置高配时保持原有逻辑，image 仍为纯镜像字符串，避免扩大影响面
             val performanceConfig = hwSpec.toPerformanceConfig()
+                ?: return PublicDevCloudDispathcType(
+                    image = defaultImage,
+                    imageType = ImageType.THIRD,
+                    performanceConfigId = "0"
+                )
+            val containerPool = Pool(
+                container = defaultImage,
+                performanceConfigId = performanceConfig,
+                performanceUid = performanceConfig,
+                buildType = BuildType.DEVCLOUD
+            )
             return PublicDevCloudDispathcType(
-                image = defaultImage,
+                image = objectMapper.writeValueAsString(containerPool),
                 imageType = ImageType.THIRD,
-                performanceConfigId = performanceConfig ?: "0",
-                performanceUid = performanceConfig.orEmpty()
+                performanceConfigId = containerPool.performanceConfigId,
+                performanceUid = containerPool.performanceUid
             )
         } else {
             throw CustomException(
