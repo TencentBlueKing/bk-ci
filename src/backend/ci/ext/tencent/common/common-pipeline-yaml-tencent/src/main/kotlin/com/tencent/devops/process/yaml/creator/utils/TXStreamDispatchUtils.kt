@@ -218,11 +218,12 @@ object TXStreamDispatchUtils {
                 defaultImage,
                 context,
                 buildTemplateAcrossInfo
-            )
+            ).withPerformanceUid(hwSpec)
 
             return PublicDevCloudDispathcType(
-                objectMapper.writeValueAsString(dockerVMContainerPool),
-                "0",
+                image = objectMapper.writeValueAsString(dockerVMContainerPool),
+                performanceConfigId = dockerVMContainerPool.performanceConfigId,
+                performanceUid = dockerVMContainerPool.performanceUid,
                 imageType = ImageType.THIRD
             )
         }
@@ -354,5 +355,12 @@ object TXStreamDispatchUtils {
         }
 
         return containerPool
+    }
+
+    private fun Pool.withPerformanceUid(hwSpec: String?): Pool {
+        if (hwSpec.isNullOrBlank() || hwSpec == "VMware") {
+            return this
+        }
+        return copy(performanceUid = hwSpec)
     }
 }
