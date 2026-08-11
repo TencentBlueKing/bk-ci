@@ -43,15 +43,14 @@ enum class GithubPrEventAction(val value: String) {
     EDITED("edited"), // 修改mr信息
     /**
      * assigned/auto_merge_disabled/auto_merge_enabled/
-     * converted_to_draft/edited/locked/ready_for_review/
-     * review_request_removed/review_requested/unassigned/unlocked
+     * converted_to_draft/edited/labeled/locked/ready_for_review/
+     * review_request_removed/review_requested/unassigned/unlabeled/unlocked
      */
     STREAM_NOT_SUPPORT("other action");
 
     companion object {
         fun get(eventAction: GithubPullRequestEvent): GithubPrEventAction {
             if (eventAction.pullRequest.merged && eventAction.action == CLOSE.value) return MERGE
-            if (eventAction.action == "labeled" || eventAction.action == "unlabeled") return EDITED
             values().forEach {
                 if (eventAction.action == it.value) return it
             }
