@@ -46,6 +46,7 @@ import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.IAtomTask
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.utils.PIPELINE_ID
+import com.tencent.devops.process.utils.PIPELINE_START_CHANNEL
 import com.tencent.devops.process.utils.PROJECT_NAME
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -97,9 +98,10 @@ class SmsTaskAtom @Autowired constructor(
         var bodyStr = parseVariable(param.body, runVariables)
         // 启动短信的查看详情,短信必须是短连接
         if (sendDetailFlag) {
+            val channelCode = runVariables[PIPELINE_START_CHANNEL]
             val url = "${HomeHostUtil.outerServerHost()}/app/download/devops_app_forward.html" +
                 "?flag=buildArchive&projectId=${runVariables[PROJECT_NAME]}" +
-                "&pipelineId=${runVariables[PIPELINE_ID]}&buildId=$buildId"
+                "&pipelineId=${runVariables[PIPELINE_ID]}&buildId=$buildId&channelCode=$channelCode"
             val shortUrl = client.get(ServiceShortUrlResource::class)
                 .createShortUrl(CreateShortUrlRequest(url, 24 * 3600 * 30)).data!!
             bodyStr = "$bodyStr\n\n " + MessageUtil.getMessageByLocale(
