@@ -295,6 +295,7 @@ class GithubIssueTriggerHandlerTest {
         assertEquals("bob", parsed.assignee?.login)
         assertEquals(3L, parsed.assignee?.id)
         assertEquals(listOf("alice", "bob"), parsed.issue.assignees?.map { it.login })
+        assertFalse(parsed.issue.locked.toBoolean())
     }
 
     @Test

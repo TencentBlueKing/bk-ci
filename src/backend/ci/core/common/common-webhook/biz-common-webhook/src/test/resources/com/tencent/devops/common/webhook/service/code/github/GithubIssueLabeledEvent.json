@@ -40,7 +40,7 @@
       }
     ],
     "state": "open",
-    "locked": "false",
+    "locked": false,
     "assignees": [],
     "closed_at": null,
     "body": "issue body",

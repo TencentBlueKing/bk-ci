@@ -49,6 +49,7 @@ import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_BRANCH
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_REVISION
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_SOURCE_BRANCH
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_TARGET_BRANCH
+import com.tencent.devops.process.enums.VariableType
 import com.tencent.devops.process.utils.PipelineVarUtil.MAX_VERSION_LEN
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
@@ -163,6 +164,7 @@ class PipelineVarUtilTest {
 
         expected.forEach { (contextVariable, webhookParameter) ->
             assertEquals(webhookParameter, PipelineVarUtil.contextVarMap()[contextVariable])
+            assertTrue(VariableType.validate(webhookParameter))
         }
     }
 

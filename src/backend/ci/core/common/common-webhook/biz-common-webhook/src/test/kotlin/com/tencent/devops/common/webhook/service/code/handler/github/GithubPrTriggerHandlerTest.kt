@@ -12,6 +12,7 @@ package com.tencent.devops.common.webhook.service.code.handler.github
 
 import com.tencent.devops.common.api.enums.RepositoryConfig
 import com.tencent.devops.common.api.enums.RepositoryType
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_ACTION
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_MR_ACTION
@@ -30,8 +31,10 @@ import io.mockk.every
 import io.mockk.mockk
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
+import org.springframework.core.io.ClassPathResource
 
 class GithubPrTriggerHandlerTest {
 
@@ -58,6 +61,16 @@ class GithubPrTriggerHandlerTest {
         assertEquals("edit", unlabeled.getRealAction())
         assertTrue(handler.preMatch(labeled).isMatch)
         assertTrue(handler.preMatch(unlabeled).isMatch)
+    }
+
+    @Test
+    fun shouldDeserializePullRequestLabelEventPayload() {
+        val parsed = githubPullRequestEvent()
+
+        assertEquals("labeled", parsed.action)
+        assertEquals("edit", parsed.getRealAction())
+        assertEquals(listOf("bug", "urgent"), parsed.pullRequest.labels.map { it.name })
+        assertNull(parsed.pullRequest.labels.first().description)
     }
 
     @Test
@@ -196,6 +209,63 @@ class GithubPrTriggerHandlerTest {
             repository = githubRepository,
             sender = sender
         )
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    private fun githubPullRequestEvent(): GithubPullRequestEvent {
+        val payload = ClassPathResource(
+            "com/tencent/devops/common/webhook/service/code/github/GithubIssueLabeledEvent.json"
+        ).inputStream.bufferedReader().use { it.readText() }
+        val event = JsonUtil.to<MutableMap<String, Any>>(payload)
+        val issue = event.remove("issue") as Map<String, Any>
+        val repository = event["repository"] as Map<String, Any>
+        val sender = event["sender"] as Map<String, Any>
+        val branch = { ref: String ->
+            mapOf(
+                "label" to "blueking:$ref",
+                "ref" to ref,
+                "repo" to repository,
+                "sha" to "commit-$ref",
+                "user" to sender
+            )
+        }
+        event["number"] = 1
+        event["pull_request"] = mapOf(
+            "additions" to 1,
+            "assignees" to emptyList<Any>(),
+            "author_association" to "MEMBER",
+            "base" to branch("master"),
+            "changed_files" to 1,
+            "comments" to 0,
+            "comments_url" to "https://api.github.com/repos/blueking/bk-ci/issues/1/comments",
+            "commits" to 1,
+            "commits_url" to "https://api.github.com/repos/blueking/bk-ci/pulls/1/commits",
+            "created_at" to "2026-08-03T00:00:00Z",
+            "deletions" to 0,
+            "diff_url" to "https://github.com/blueking/bk-ci/pull/1.diff",
+            "draft" to false,
+            "head" to branch("feature"),
+            "html_url" to "https://github.com/blueking/bk-ci/pull/1",
+            "id" to 100L,
+            "issue_url" to "https://api.github.com/repos/blueking/bk-ci/issues/1",
+            "labels" to issue.getValue("labels"),
+            "locked" to false,
+            "merged" to false,
+            "node_id" to "pull-request-node",
+            "number" to 1,
+            "patch_url" to "https://github.com/blueking/bk-ci/pull/1.patch",
+            "requested_reviewers" to emptyList<Any>(),
+            "requested_teams" to emptyList<Any>(),
+            "review_comment_url" to "https://api.github.com/repos/blueking/bk-ci/pulls/comments{/number}",
+            "review_comments" to 0,
+            "review_comments_url" to "https://api.github.com/repos/blueking/bk-ci/pulls/1/comments",
+            "state" to "open",
+            "statuses_url" to "https://api.github.com/repos/blueking/bk-ci/statuses/commit-feature",
+            "title" to "PR title",
+            "url" to "https://api.github.com/repos/blueking/bk-ci/pulls/1",
+            "user" to sender
+        )
+        return JsonUtil.to(JsonUtil.toJson(event), GithubPullRequestEvent::class.java)
     }
 
     private fun branch(refName: String) = mockk<GithubPullRequestBranch>(relaxed = true) {
