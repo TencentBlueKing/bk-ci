@@ -572,6 +572,12 @@
                     "items" : {
                       "type" : "string"
                     }
+                  },
+                  "labels-ignore" : {
+                    "type" : "array",
+                    "items" : {
+                      "type" : "string"
+                    }
                   }
                 }
               } ]
@@ -1480,6 +1486,12 @@
                   }
                 },
                 "labels" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string"
+                  }
+                },
+                "labels-ignore" : {
                   "type" : "array",
                   "items" : {
                     "type" : "string"

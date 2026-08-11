@@ -333,7 +333,8 @@ class TriggerTransfer @Autowired(required = false) constructor(
                     action = git.includeIssueAction,
                     assignees = git.includeAssignees?.disjoin(),
                     assigneesIgnore = git.excludeAssignees?.disjoin(),
-                    labels = git.includeLabels?.disjoin()
+                    labels = git.includeLabels?.disjoin(),
+                    labelsIgnore = git.excludeLabels?.disjoin()
                 )
 
                 CodeEventType.NOTE -> nowExist.note = NoteRule(
@@ -639,6 +640,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
                     includeAssignees = issue.assignees.nonEmptyOrNull()?.join(),
                     excludeAssignees = issue.assigneesIgnore.nonEmptyOrNull()?.join(),
                     includeLabels = issue.labels.nonEmptyOrNull()?.join(),
+                    excludeLabels = issue.labelsIgnore.nonEmptyOrNull()?.join(),
                     eventType = CodeEventType.ISSUES,
                     repositoryType = repositoryType,
                     repositoryName = triggerOn.repoName

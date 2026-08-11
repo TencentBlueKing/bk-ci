@@ -40,5 +40,8 @@ data class IssueRule(
     @get:Schema(title = "assignees-ignore")
     @JsonProperty("assignees-ignore")
     val assigneesIgnore: List<String>? = null,
-    val labels: List<String>? = null
+    val labels: List<String>? = null,
+    @get:Schema(title = "labels-ignore")
+    @JsonProperty("labels-ignore")
+    val labelsIgnore: List<String>? = null
 )

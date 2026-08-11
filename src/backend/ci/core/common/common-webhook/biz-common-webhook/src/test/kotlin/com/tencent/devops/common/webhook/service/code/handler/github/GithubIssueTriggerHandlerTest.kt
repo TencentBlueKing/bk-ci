@@ -172,7 +172,7 @@ class GithubIssueTriggerHandlerTest {
     }
 
     @Test
-    fun `should filter label events by changed label`() {
+    fun `should filter label events by current labels`() {
         assertTrue(
             isMatch(
                 event = event("labeled", changedLabel = urgent, currentLabels = listOf(bug, urgent)),
@@ -182,16 +182,16 @@ class GithubIssueTriggerHandlerTest {
         assertFalse(
             isMatch(
                 event = event("labeled", changedLabel = urgent, currentLabels = listOf(bug, urgent)),
-                params = webHookParams("label", includeLabels = "bug")
+                params = webHookParams("label", includeLabels = "missing")
             )
         )
-        assertTrue(
+        assertFalse(
             isMatch(
                 event = event("unlabeled", changedLabel = urgent, currentLabels = listOf(bug)),
                 params = webHookParams("unlabel", includeLabels = "urgent")
             )
         )
-        assertFalse(
+        assertTrue(
             isMatch(
                 event = event("unlabeled", changedLabel = urgent, currentLabels = listOf(bug)),
                 params = webHookParams("unlabel", includeLabels = "bug")
@@ -200,14 +200,14 @@ class GithubIssueTriggerHandlerTest {
     }
 
     @Test
-    fun `should ignore shared excluded labels for issue events`() {
-        assertTrue(
+    fun `should let excluded current label override included label`() {
+        assertFalse(
             isMatch(
-                event = event("labeled", changedLabel = urgent),
+                event = event("labeled", changedLabel = urgent, currentLabels = listOf(bug, urgent)),
                 params = webHookParams(
                     includeIssueAction = "label",
                     includeLabels = "urgent",
-                    excludeLabels = "urgent"
+                    excludeLabels = "urg*"
                 )
             )
         )

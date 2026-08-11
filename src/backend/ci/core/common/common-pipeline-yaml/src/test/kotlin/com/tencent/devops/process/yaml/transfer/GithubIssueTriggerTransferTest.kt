@@ -39,7 +39,8 @@ class GithubIssueTriggerTransferTest {
               "action": ["assign", "unassign", "update", "label", "unlabel"],
               "assignees": ["alice", "bob"],
               "assignees-ignore": ["bot"],
-              "labels": ["bug", "feature-*"]
+              "labels": ["bug", "feature-*"],
+              "labels-ignore": ["wontfix"]
             }
         """.trimIndent()
 
@@ -49,6 +50,7 @@ class GithubIssueTriggerTransferTest {
         assertEquals(listOf("alice", "bob"), v2.assignees)
         assertEquals(listOf("bot"), v2.assigneesIgnore)
         assertEquals(listOf("bug", "feature-*"), v3.labels)
+        assertEquals(listOf("wontfix"), v3.labelsIgnore)
     }
 
     @Test
@@ -62,7 +64,8 @@ class GithubIssueTriggerTransferTest {
                     action = listOf("assign", "unassign", "update", "label", "unlabel"),
                     assignees = listOf("alice", "bob"),
                     assigneesIgnore = listOf("bot"),
-                    labels = listOf("bug", "feature-*")
+                    labels = listOf("bug", "feature-*"),
+                    labelsIgnore = listOf("wontfix")
                 )
             ),
             elementQueue = elements
@@ -72,7 +75,7 @@ class GithubIssueTriggerTransferTest {
         assertEquals("alice,bob", element.includeAssignees)
         assertEquals("bot", element.excludeAssignees)
         assertEquals("bug,feature-*", element.includeLabels)
-        assertEquals(null, element.excludeLabels)
+        assertEquals("wontfix", element.excludeLabels)
     }
 
     @Test
@@ -98,5 +101,6 @@ class GithubIssueTriggerTransferTest {
         assertEquals(listOf("alice", "bob"), issue.assignees)
         assertEquals(listOf("bot"), issue.assigneesIgnore)
         assertEquals(listOf("bug", "feature-*"), issue.labels)
+        assertEquals(listOf("wontfix"), issue.labelsIgnore)
     }
 }

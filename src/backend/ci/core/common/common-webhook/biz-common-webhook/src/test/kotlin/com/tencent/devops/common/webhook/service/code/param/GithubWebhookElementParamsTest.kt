@@ -38,7 +38,7 @@ class GithubWebhookElementParamsTest {
         assertEquals("alice,bob", params.includeAssignees)
         assertEquals("bot", params.excludeAssignees)
         assertEquals("bug,feature-*", params.includeLabels)
-        assertEquals("", params.excludeLabels)
+        assertEquals("wontfix", params.excludeLabels)
     }
 
     @Test

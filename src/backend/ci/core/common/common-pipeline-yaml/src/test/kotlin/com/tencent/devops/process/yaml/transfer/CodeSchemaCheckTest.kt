@@ -48,6 +48,7 @@ class CodeSchemaCheckTest {
                 assignees: [alice, bob]
                 assignees-ignore: [bot]
                 labels: [bug, 'feature-*']
+                labels-ignore: [wontfix]
             stages:
               - name: stage-1
                 jobs:
