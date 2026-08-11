@@ -29,7 +29,7 @@
                             v-if="!isOver"
                             @click="handlerCancel"
                             :title="permissionMsg"
-                        > {{ $t('store.取消发布') }} </span>
+                        > {{ versionDetail.branchTestFlag ? $t('store.测试结束') : $t('store.取消发布') }} </span>
                     </p>
                     <hr class="cut-line">
                     <div class="progress-step">
@@ -81,7 +81,7 @@
                                     :class="[{ 'small-left': progressStatus.length === 6 }, 'pass-btn']"
                                     theme="primary"
                                     size="small"
-                                    v-if="entry.code === 'test'"
+                                    v-if="entry.code === 'test' && !versionDetail.branchTestFlag"
                                     :disabled="entry.status !== 'doing' || !permission"
                                     @click.stop="passTest"
                                     :title="permissionMsg"
@@ -453,21 +453,52 @@
             handlerCancel () {
                 if (!this.permission) return
 
+                const isBranchTest = this.versionDetail.branchTestFlag
                 const h = this.$createElement
                 const subHeader = h('p', {
                     style: {
                         textAlign: 'center'
                     }
-                }, `${this.$t('store.确定取消发布该插件？')}`)
+                }, `${isBranchTest ? this.$t('store.确定结束该插件测试？') : this.$t('store.确定取消发布该插件？')}`)
 
                 this.$bkInfo({
-                    title: this.$t('store.取消发布'),
+                    title: isBranchTest ? this.$t('store.测试结束') : this.$t('store.取消发布'),
                     subHeader,
                     maskClose: true,
                     confirmFn: async () => {
-                        this.cancelRelease()
+                        if (isBranchTest) {
+                            this.endBranchTest()
+                        } else {
+                            this.cancelRelease()
+                        }
                     }
                 })
+            },
+            async endBranchTest () {
+                let message, theme
+
+                this.loading.isLoading = true
+                try {
+                    await this.$store.dispatch('store/endAtomBranchTest', {
+                        atomId: this.versionDetail.atomId
+                    })
+
+                    message = this.$t('store.测试结束成功')
+                    theme = 'success'
+                    this.toAtomList()
+                } catch (err) {
+                    message = err.message ? err.message : err
+                    theme = 'error'
+                } finally {
+                    this.$bkMessage({
+                        message,
+                        theme
+                    })
+
+                    setTimeout(() => {
+                        this.loading.isLoading = false
+                    }, 1000)
+                }
             },
             async cancelRelease () {
                 let message, theme
