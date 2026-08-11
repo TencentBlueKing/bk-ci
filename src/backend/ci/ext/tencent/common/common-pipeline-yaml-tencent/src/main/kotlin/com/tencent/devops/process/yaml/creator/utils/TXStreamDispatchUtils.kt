@@ -218,11 +218,12 @@ object TXStreamDispatchUtils {
                 defaultImage,
                 context,
                 buildTemplateAcrossInfo
-            )
+            ).withPerformanceConfig(hwSpec)
 
             return PublicDevCloudDispathcType(
-                objectMapper.writeValueAsString(dockerVMContainerPool),
-                "0",
+                image = objectMapper.writeValueAsString(dockerVMContainerPool),
+                performanceConfigId = dockerVMContainerPool.performanceConfigId,
+                performanceUid = dockerVMContainerPool.performanceUid,
                 imageType = ImageType.THIRD
             )
         }
@@ -272,10 +273,12 @@ object TXStreamDispatchUtils {
         }
 
         if (containsMatrix == true) {
+            val performanceConfig = hwSpec.toPerformanceConfig()
             return PublicDevCloudDispathcType(
                 image = defaultImage,
                 imageType = ImageType.THIRD,
-                performanceConfigId = "0"
+                performanceConfigId = performanceConfig ?: "0",
+                performanceUid = performanceConfig.orEmpty()
             )
         } else {
             throw CustomException(
@@ -354,5 +357,17 @@ object TXStreamDispatchUtils {
         }
 
         return containerPool
+    }
+
+    private fun Pool.withPerformanceConfig(hwSpec: String?): Pool {
+        val performanceConfig = hwSpec.toPerformanceConfig() ?: return this
+        return copy(
+            performanceConfigId = performanceConfig,
+            performanceUid = performanceConfig
+        )
+    }
+
+    private fun String?.toPerformanceConfig(): String? {
+        return takeUnless { it.isNullOrBlank() || it == "VMware" }
     }
 }
