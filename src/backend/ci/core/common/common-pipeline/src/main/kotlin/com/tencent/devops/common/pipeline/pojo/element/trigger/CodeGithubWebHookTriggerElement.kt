@@ -95,14 +95,10 @@ data class CodeGithubWebHookTriggerElement(
     val includeNoteTypes: List<String>? = null,
     @get:Schema(title = "issue事件action")
     val includeIssueAction: List<String>? = null,
-    @get:Schema(title = "用于包含的issue负责人", required = false)
-    val includeIssueAssignees: String? = null,
-    @get:Schema(title = "用于排除的issue负责人", required = false)
-    val excludeIssueAssignees: String? = null,
-    @get:Schema(title = "用于包含的issue label", required = false)
-    val includeIssueLabels: String? = null,
-    @get:Schema(title = "用于排除的issue label", required = false)
-    val excludeIssueLabels: String? = null,
+    @get:Schema(title = "用于包含的负责人", required = false)
+    val includeAssignees: String? = null,
+    @get:Schema(title = "用于排除的负责人", required = false)
+    val excludeAssignees: String? = null,
     @get:Schema(title = "pull request事件action")
     val includeMrAction: List<String>? = listOf(MERGE_ACTION_OPEN, MERGE_ACTION_REOPEN, MERGE_ACTION_PUSH_UPDATE),
     @get:Schema(title = "用于包含的label", required = false)
@@ -117,6 +113,8 @@ data class CodeGithubWebHookTriggerElement(
         const val MERGE_ACTION_REOPEN = "reopen"
         const val MERGE_ACTION_PUSH_UPDATE = "push-update"
         const val MERGE_ACTION_MERGE = "merge"
+        const val MERGE_ACTION_LABEL = "label"
+        const val MERGE_ACTION_UNLABEL = "unlabel"
     }
 
     override fun getClassType() = classType
@@ -145,7 +143,9 @@ data class CodeGithubWebHookTriggerElement(
                     TriggerElementPropUtils.selector(name = "action", value = includeMrAction),
                     TriggerElementPropUtils.vuexInput(name = "branchName", value = branchName),
                     TriggerElementPropUtils.vuexInput(name = "excludeBranchName", value = excludeBranchName),
-                    TriggerElementPropUtils.vuexInput(name = "excludeUsers", value = excludeUsers)
+                    TriggerElementPropUtils.vuexInput(name = "excludeUsers", value = excludeUsers),
+                    TriggerElementPropUtils.vuexInput(name = "includeLabels", value = includeLabels),
+                    TriggerElementPropUtils.vuexInput(name = "excludeLabels", value = excludeLabels)
                 )
             }
 
@@ -159,15 +159,15 @@ data class CodeGithubWebHookTriggerElement(
                 listOf(
                     TriggerElementPropUtils.selector(name = "includeIssueAction", value = includeIssueAction),
                     TriggerElementPropUtils.vuexInput(
-                        name = "includeIssueAssignees",
-                        value = includeIssueAssignees
+                        name = "includeAssignees",
+                        value = includeAssignees
                     ),
                     TriggerElementPropUtils.vuexInput(
-                        name = "excludeIssueAssignees",
-                        value = excludeIssueAssignees
+                        name = "excludeAssignees",
+                        value = excludeAssignees
                     ),
-                    TriggerElementPropUtils.vuexInput(name = "includeIssueLabels", value = includeIssueLabels),
-                    TriggerElementPropUtils.vuexInput(name = "excludeIssueLabels", value = excludeIssueLabels)
+                    TriggerElementPropUtils.vuexInput(name = "includeLabels", value = includeLabels),
+                    TriggerElementPropUtils.vuexInput(name = "excludeLabels", value = excludeLabels)
                 )
             }
 

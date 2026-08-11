@@ -162,8 +162,8 @@ class GithubIssueTriggerHandler : CodeWebhookTriggerHandler<GithubIssuesEvent> {
                     UserFilter(
                         pipelineId = pipelineId,
                         triggerOnUser = event.assignee?.login ?: "",
-                        includedUsers = WebhookUtils.convert(includeIssueAssignees),
-                        excludedUsers = WebhookUtils.convert(excludeIssueAssignees),
+                        includedUsers = WebhookUtils.convert(includeAssignees),
+                        excludedUsers = WebhookUtils.convert(excludeAssignees),
                         includedFailedReason = I18Variable(
                             code = WebhookI18nConstants.OWNER_NOT_MATCH,
                             params = listOf(event.assignee?.login ?: "")
@@ -182,8 +182,8 @@ class GithubIssueTriggerHandler : CodeWebhookTriggerHandler<GithubIssuesEvent> {
                         pipelineId = pipelineId,
                         filterName = "issueLabel",
                         triggerOn = setOfNotNull(event.label?.name),
-                        included = WebhookUtils.convert(includeIssueLabels),
-                        excluded = WebhookUtils.convert(excludeIssueLabels),
+                        included = WebhookUtils.convert(includeLabels),
+                        excluded = WebhookUtils.convert(excludeLabels),
                         includeFailedReason = {
                             I18Variable(
                                 code = WebhookI18nConstants.BK_TRIGGER_LABEL_NOT_MATCH,

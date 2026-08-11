@@ -233,10 +233,14 @@ class GithubPrTriggerHandler @Autowired constructor(
                     params = listOf(targetBranch)
                 ).toJsonStr()
             )
+            val triggerLabels = when (event.action) {
+                "labeled", "unlabeled" -> setOfNotNull(event.label?.name)
+                else -> event.pullRequest.labels.mapNotNull { it.name }.toSet()
+            }
             val labelFilter = ListContainsFilter(
                 pipelineId = pipelineId,
-                filterName = "mrAction",
-                triggerOn = event.pullRequest.labels?.mapNotNull { it.name }?.toSet() ?: setOf(),
+                filterName = "mrLabel",
+                triggerOn = triggerLabels,
                 included = WebhookUtils.convert(includeLabels),
                 excluded = WebhookUtils.convert(excludeLabels),
                 includeFailedReason = { item ->

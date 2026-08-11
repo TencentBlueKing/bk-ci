@@ -121,19 +121,19 @@ class GithubIssueTriggerHandlerTest {
         assertTrue(
             isMatch(
                 event = event("assigned", assignee = bob),
-                params = webHookParams("assign", includeIssueAssignees = "bob")
+                params = webHookParams("assign", includeAssignees = "bob")
             )
         )
         assertFalse(
             isMatch(
                 event = event("assigned", assignee = bob),
-                params = webHookParams("assign", includeIssueAssignees = "alice")
+                params = webHookParams("assign", includeAssignees = "alice")
             )
         )
         assertTrue(
             isMatch(
                 event = event("unassigned", assignee = bob, currentAssignees = listOf(alice)),
-                params = webHookParams("unassign", includeIssueAssignees = "bob")
+                params = webHookParams("unassign", includeAssignees = "bob")
             )
         )
     }
@@ -145,8 +145,8 @@ class GithubIssueTriggerHandlerTest {
                 event = event("assigned", assignee = bob),
                 params = webHookParams(
                     includeIssueAction = "assign",
-                    includeIssueAssignees = "bob",
-                    excludeIssueAssignees = "bob"
+                    includeAssignees = "bob",
+                    excludeAssignees = "bob"
                 )
             )
         )
@@ -157,19 +157,19 @@ class GithubIssueTriggerHandlerTest {
         assertTrue(
             isMatch(
                 event = event("labeled", changedLabel = urgent),
-                params = webHookParams("label", includeIssueLabels = "urg*")
+                params = webHookParams("label", includeLabels = "urg*")
             )
         )
         assertFalse(
             isMatch(
                 event = event("labeled", changedLabel = urgent),
-                params = webHookParams("label", includeIssueLabels = "bug")
+                params = webHookParams("label", includeLabels = "bug")
             )
         )
         assertTrue(
             isMatch(
                 event = event("unlabeled", changedLabel = urgent, currentLabels = listOf(bug)),
-                params = webHookParams("unlabel", includeIssueLabels = "urgent")
+                params = webHookParams("unlabel", includeLabels = "urgent")
             )
         )
     }
@@ -181,8 +181,8 @@ class GithubIssueTriggerHandlerTest {
                 event = event("unlabeled", changedLabel = urgent, currentLabels = listOf(bug)),
                 params = webHookParams(
                     includeIssueAction = "unlabel",
-                    includeIssueLabels = "urgent",
-                    excludeIssueLabels = "urg*"
+                    includeLabels = "urgent",
+                    excludeLabels = "urg*"
                 )
             )
         )
@@ -195,8 +195,8 @@ class GithubIssueTriggerHandlerTest {
                 event = event("assigned", assignee = bob),
                 params = webHookParams(
                     includeIssueAction = "assign,label",
-                    includeIssueAssignees = "bob",
-                    includeIssueLabels = "missing"
+                    includeAssignees = "bob",
+                    includeLabels = "missing"
                 )
             )
         )
@@ -205,8 +205,8 @@ class GithubIssueTriggerHandlerTest {
                 event = event("labeled", changedLabel = urgent),
                 params = webHookParams(
                     includeIssueAction = "assign,label",
-                    includeIssueAssignees = "missing",
-                    includeIssueLabels = "urgent"
+                    includeAssignees = "missing",
+                    includeLabels = "urgent"
                 )
             )
         )
@@ -349,10 +349,10 @@ class GithubIssueTriggerHandlerTest {
 
     private fun webHookParams(
         includeIssueAction: String,
-        includeIssueAssignees: String? = null,
-        excludeIssueAssignees: String? = null,
-        includeIssueLabels: String? = null,
-        excludeIssueLabels: String? = null
+        includeAssignees: String? = null,
+        excludeAssignees: String? = null,
+        includeLabels: String? = null,
+        excludeLabels: String? = null
     ) = WebHookParams(
         repositoryConfig = RepositoryConfig(
             repositoryHashId = "repo-hash-id",
@@ -361,10 +361,10 @@ class GithubIssueTriggerHandlerTest {
         ),
         eventType = CodeEventType.ISSUES,
         includeIssueAction = includeIssueAction,
-        includeIssueAssignees = includeIssueAssignees,
-        excludeIssueAssignees = excludeIssueAssignees,
-        includeIssueLabels = includeIssueLabels,
-        excludeIssueLabels = excludeIssueLabels
+        includeAssignees = includeAssignees,
+        excludeAssignees = excludeAssignees,
+        includeLabels = includeLabels,
+        excludeLabels = excludeLabels
     )
 
     private fun user(id: Long, login: String) = GithubUser(

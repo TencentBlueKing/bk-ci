@@ -72,10 +72,10 @@ class GithubIssueTriggerTransferTest {
         )
 
         val element = elements.single() as CodeGithubWebHookTriggerElement
-        assertEquals("alice,bob", element.includeIssueAssignees)
-        assertEquals("bot", element.excludeIssueAssignees)
-        assertEquals("bug,feature-*", element.includeIssueLabels)
-        assertEquals("wontfix", element.excludeIssueLabels)
+        assertEquals("alice,bob", element.includeAssignees)
+        assertEquals("bot", element.excludeAssignees)
+        assertEquals("bug,feature-*", element.includeLabels)
+        assertEquals("wontfix", element.excludeLabels)
     }
 
     @Test
@@ -85,10 +85,10 @@ class GithubIssueTriggerTransferTest {
             repositoryName = "bk-ci",
             eventType = CodeEventType.ISSUES,
             includeIssueAction = listOf("assign", "unassign", "label", "unlabel"),
-            includeIssueAssignees = "alice,bob",
-            excludeIssueAssignees = "bot",
-            includeIssueLabels = "bug,feature-*",
-            excludeIssueLabels = "wontfix"
+            includeAssignees = "alice,bob",
+            excludeAssignees = "bot",
+            includeLabels = "bug,feature-*",
+            excludeLabels = "wontfix"
         )
 
         val issue = transfer.git2YamlTriggerOn(

@@ -41,10 +41,12 @@ enum class GithubPrEventAction(val value: String) {
     PUSH_UPDATE("synchronize"),
     MERGE("also closed"),
     EDITED("edited"), // 修改mr信息
+    LABELED("labeled"),
+    UNLABELED("unlabeled"),
     /**
      * assigned/auto_merge_disabled/auto_merge_enabled/
-     * converted_to_draft/edited/labeled/locked/ready_for_review/
-     * review_request_removed/review_requested/unassigned/unlabeled/unlocked
+     * converted_to_draft/edited/locked/ready_for_review/
+     * review_request_removed/review_requested/unassigned/unlocked
      */
     STREAM_NOT_SUPPORT("other action");
 

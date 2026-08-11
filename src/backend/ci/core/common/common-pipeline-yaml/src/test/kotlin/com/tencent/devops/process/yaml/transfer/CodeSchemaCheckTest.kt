@@ -67,6 +67,35 @@ class CodeSchemaCheckTest {
     }
 
     @Test
+    fun testGithubPullRequestLabelActionsShouldPass() {
+        val validYaml = """
+            version: v3.0
+            name: github-pr-label-action
+            on:
+              repo-name: blueking/bk-ci
+              type: github
+              mr:
+                action: [label, unlabel]
+                labels: [bug, 'feature-*']
+                labels-ignore: [wontfix]
+            stages:
+              - name: stage-1
+                jobs:
+                  job1:
+                    runs-on:
+                      pool-name: docker
+                    steps:
+                      - uses: linuxScript@1.*
+                        with:
+                          script: echo pull-request-label
+        """.trimIndent()
+
+        Assertions.assertDoesNotThrow {
+            codeSchemaCheck.check(validYaml)
+        }
+    }
+
+    @Test
     fun `test check with invalid yaml syntax should throw exception`() {
         // 准备测试数据 - 从资源文件读取无效的 YAML 语法
         val invalidYaml = readResourceFile("test-yamls/invalid-syntax.yml")
