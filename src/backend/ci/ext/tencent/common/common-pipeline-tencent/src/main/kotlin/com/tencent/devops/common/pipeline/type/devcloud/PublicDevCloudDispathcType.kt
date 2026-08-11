@@ -85,6 +85,8 @@ data class PublicDevCloudDispathcType(
     override fun replaceField(variables: Map<String, String>) {
         image = EnvUtils.parseEnv(image!!, variables)
         credentialId = EnvUtils.parseEnv(credentialId, variables)
+        performanceConfigId = EnvUtils.parseEnv(performanceConfigId, variables)
+        performanceUid = EnvUtils.parseEnv(performanceUid, variables)
     }
 
     override fun buildType() = BuildType.valueOf(BuildType.PUBLIC_DEVCLOUD.name)
