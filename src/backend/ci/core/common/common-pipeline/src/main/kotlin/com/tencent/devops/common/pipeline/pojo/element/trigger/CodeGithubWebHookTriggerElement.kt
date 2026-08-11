@@ -113,8 +113,6 @@ data class CodeGithubWebHookTriggerElement(
         const val MERGE_ACTION_REOPEN = "reopen"
         const val MERGE_ACTION_PUSH_UPDATE = "push-update"
         const val MERGE_ACTION_MERGE = "merge"
-        const val MERGE_ACTION_LABEL = "label"
-        const val MERGE_ACTION_UNLABEL = "unlabel"
     }
 
     override fun getClassType() = classType

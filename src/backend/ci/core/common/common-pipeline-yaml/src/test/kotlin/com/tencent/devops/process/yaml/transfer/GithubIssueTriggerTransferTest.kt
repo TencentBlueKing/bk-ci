@@ -36,7 +36,7 @@ class GithubIssueTriggerTransferTest {
     fun `should deserialize issue filter field names in v2 and v3`() {
         val json = """
             {
-              "action": ["assign", "unassign", "label", "unlabel"],
+              "action": ["assign", "unassign", "update"],
               "assignees": ["alice", "bob"],
               "assignees-ignore": ["bot"],
               "labels": ["bug", "feature-*"],
@@ -61,7 +61,7 @@ class GithubIssueTriggerTransferTest {
             triggerOn = TriggerOn(
                 repoName = "bk-ci",
                 issue = IssueRule(
-                    action = listOf("assign", "unassign", "label", "unlabel"),
+                    action = listOf("assign", "unassign", "update"),
                     assignees = listOf("alice", "bob"),
                     assigneesIgnore = listOf("bot"),
                     labels = listOf("bug", "feature-*"),
@@ -84,7 +84,7 @@ class GithubIssueTriggerTransferTest {
             repositoryType = TriggerRepositoryType.NAME,
             repositoryName = "bk-ci",
             eventType = CodeEventType.ISSUES,
-            includeIssueAction = listOf("assign", "unassign", "label", "unlabel"),
+            includeIssueAction = listOf("assign", "unassign", "update"),
             includeAssignees = "alice,bob",
             excludeAssignees = "bot",
             includeLabels = "bug,feature-*",

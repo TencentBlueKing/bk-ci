@@ -55,10 +55,6 @@ import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_AUTHOR
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_CREATE_TIME
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_DESCRIPTION
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_ID
-import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_LABEL
-import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_LABEL_COLOR
-import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_LABEL_DESCRIPTION
-import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_LABEL_ID
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_LABELS
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_LAST_COMMIT
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_LAST_COMMIT_MSG
@@ -90,7 +86,6 @@ import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_TARGET_REPO_
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_TARGET_URL
 import com.tencent.devops.common.webhook.pojo.code.WebHookParams
 import com.tencent.devops.common.webhook.pojo.code.github.GithubPullRequestEvent
-import com.tencent.devops.common.webhook.pojo.code.github.getLabelChange
 import com.tencent.devops.common.webhook.service.code.EventCacheService
 import com.tencent.devops.common.webhook.service.code.filter.BranchFilter
 import com.tencent.devops.common.webhook.service.code.filter.ContainsFilter
@@ -238,7 +233,6 @@ class GithubPrTriggerHandler @Autowired constructor(
                     params = listOf(targetBranch)
                 ).toJsonStr()
             )
-            val labelChange = event.getLabelChange()
             val includeFailedReason = { item: String ->
                 I18Variable(
                     WebhookI18nConstants.MR_LABEL_NOT_MATCH,
@@ -251,15 +245,7 @@ class GithubPrTriggerHandler @Autowired constructor(
                     params = listOf(item)
                 ).toJsonStr()
             }
-            val labelFilter = labelChange?.toFilter(
-                pipelineId = pipelineId,
-                filterName = "mrLabel",
-                included = WebhookUtils.convert(includeLabels),
-                excluded = WebhookUtils.convert(excludeLabels),
-                includeFailedReason = includeFailedReason,
-                excludedFailedReason = excludedFailedReason,
-                includeItemKey = MATCH_LABEL
-            ) ?: ListContainsFilter(
+            val labelFilter = ListContainsFilter(
                 pipelineId = pipelineId,
                 filterName = "mrLabel",
                 triggerOn = event.pullRequest.labels.map { it.name }.toSet(),
@@ -338,15 +324,6 @@ class GithubPrTriggerHandler @Autowired constructor(
             startParams[BK_REPO_GIT_WEBHOOK_MR_MILESTONE_ID] = pullRequest.milestone?.id ?: ""
             startParams[BK_REPO_GIT_WEBHOOK_MR_MILESTONE_DUE_DATE] =
                 pullRequest.milestone?.dueOn ?: ""
-            startParams.putGithubLabelChange(
-                labelChange = event.getLabelChange(),
-                keys = GithubLabelParamKeys(
-                    name = BK_REPO_GIT_WEBHOOK_MR_LABEL,
-                    id = BK_REPO_GIT_WEBHOOK_MR_LABEL_ID,
-                    color = BK_REPO_GIT_WEBHOOK_MR_LABEL_COLOR,
-                    description = BK_REPO_GIT_WEBHOOK_MR_LABEL_DESCRIPTION
-                )
-            )
             startParams[BK_REPO_GIT_WEBHOOK_MR_LABELS] =
                 pullRequest.labels.joinToString(",") { it.name }
             startParams[PIPELINE_WEBHOOK_SOURCE_BRANCH] = pullRequest.head.ref
@@ -379,7 +356,11 @@ class GithubPrTriggerHandler @Autowired constructor(
             startParams[PIPELINE_GIT_MR_PROPOSER] = pullRequest.user.login
             startParams[PIPELINE_GIT_EVENT_URL] = pullRequest.htmlUrl ?: ""
         }
-        val pipelineAction = event.getLabelChange()?.action?.value ?: event.action
+        val pipelineAction = if (event.action == "labeled" || event.action == "unlabeled") {
+            getAction(event) ?: event.action
+        } else {
+            event.action
+        }
         startParams[PIPELINE_GIT_MR_ACTION] = pipelineAction
         startParams[PIPELINE_GIT_ACTION] = pipelineAction
     }

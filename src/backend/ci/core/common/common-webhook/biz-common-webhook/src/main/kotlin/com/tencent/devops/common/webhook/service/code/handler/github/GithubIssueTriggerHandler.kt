@@ -59,10 +59,10 @@ import com.tencent.devops.common.webhook.pojo.code.WebHookParams
 import com.tencent.devops.common.webhook.pojo.code.github.GithubBaseInfo
 import com.tencent.devops.common.webhook.pojo.code.github.GithubIssuesAction
 import com.tencent.devops.common.webhook.pojo.code.github.GithubIssuesEvent
-import com.tencent.devops.common.webhook.pojo.code.github.getLabelChange
 import com.tencent.devops.common.webhook.service.code.filter.ContainsFilter
 import com.tencent.devops.common.webhook.service.code.filter.EventTypeFilter
 import com.tencent.devops.common.webhook.service.code.filter.GitUrlFilter
+import com.tencent.devops.common.webhook.service.code.filter.ListContainsFilter
 import com.tencent.devops.common.webhook.service.code.filter.UserFilter
 import com.tencent.devops.common.webhook.service.code.filter.WebhookFilter
 import com.tencent.devops.common.webhook.service.code.handler.CodeWebhookTriggerHandler
@@ -176,17 +176,18 @@ class GithubIssueTriggerHandler : CodeWebhookTriggerHandler<GithubIssuesEvent> {
                     )
                 )
 
-                else -> event.getLabelChange()?.let { labelChange ->
+                else -> if (event.convertAction() == "update") {
                     filters.add(
-                        labelChange.toFilter(
+                        ListContainsFilter(
                             pipelineId = pipelineId,
                             filterName = "issueLabel",
+                            triggerOn = event.issue.labels.map { it.name }.toSet(),
                             included = WebhookUtils.convert(includeLabels),
                             excluded = WebhookUtils.convert(excludeLabels),
-                            includeFailedReason = {
+                            includeFailedReason = { item ->
                                 I18Variable(
                                     code = WebhookI18nConstants.BK_TRIGGER_LABEL_NOT_MATCH,
-                                    params = listOf(labelChange.changedLabel?.name ?: "")
+                                    params = listOf(item)
                                 ).toJsonStr()
                             },
                             excludedFailedReason = { item ->
@@ -228,15 +229,10 @@ class GithubIssueTriggerHandler : CodeWebhookTriggerHandler<GithubIssuesEvent> {
             startParams[BK_REPO_GIT_WEBHOOK_ISSUE_ASSIGNEES] = JsonUtil.toJson(assignees.orEmpty(), false)
             startParams[BK_REPO_GIT_WEBHOOK_ISSUE_ASSIGNEE_LOGINS] =
                 assignees.orEmpty().joinToString(",") { it.login }
-            startParams.putGithubLabelChange(
-                labelChange = event.getLabelChange(),
-                keys = GithubLabelParamKeys(
-                    name = BK_REPO_GIT_WEBHOOK_ISSUE_LABEL,
-                    id = BK_REPO_GIT_WEBHOOK_ISSUE_LABEL_ID,
-                    color = BK_REPO_GIT_WEBHOOK_ISSUE_LABEL_COLOR,
-                    description = BK_REPO_GIT_WEBHOOK_ISSUE_LABEL_DESCRIPTION
-                )
-            )
+            startParams[BK_REPO_GIT_WEBHOOK_ISSUE_LABEL] = event.label?.name ?: ""
+            startParams[BK_REPO_GIT_WEBHOOK_ISSUE_LABEL_ID] = event.label?.id ?: ""
+            startParams[BK_REPO_GIT_WEBHOOK_ISSUE_LABEL_COLOR] = event.label?.color ?: ""
+            startParams[BK_REPO_GIT_WEBHOOK_ISSUE_LABEL_DESCRIPTION] = event.label?.description ?: ""
             startParams[BK_REPO_GIT_WEBHOOK_ISSUE_LABELS] = JsonUtil.toJson(labels, false)
             startParams[BK_REPO_GIT_WEBHOOK_ISSUE_LABEL_NAMES] = labels.joinToString(",") { it.name }
         }

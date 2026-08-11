@@ -25,7 +25,7 @@ class GithubWebhookElementParamsTest {
                 repositoryHashId = "repo-hash-id",
                 repositoryType = TriggerRepositoryType.ID,
                 eventType = CodeEventType.ISSUES,
-                includeIssueAction = listOf("assign", "unassign", "label", "unlabel"),
+                includeIssueAction = listOf("assign", "unassign", "update"),
                 includeAssignees = "alice,bob",
                 excludeAssignees = "bot",
                 includeLabels = "bug,feature-*",
@@ -34,7 +34,7 @@ class GithubWebhookElementParamsTest {
             variables = emptyMap()
         )!!
 
-        assertEquals("assign,unassign,label,unlabel", params.includeIssueAction)
+        assertEquals("assign,unassign,update", params.includeIssueAction)
         assertEquals("alice,bob", params.includeAssignees)
         assertEquals("bot", params.excludeAssignees)
         assertEquals("bug,feature-*", params.includeLabels)

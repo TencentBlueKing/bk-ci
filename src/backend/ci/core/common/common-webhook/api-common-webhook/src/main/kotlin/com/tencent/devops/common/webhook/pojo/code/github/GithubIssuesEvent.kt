@@ -59,7 +59,9 @@ data class GithubIssuesEvent(
         GithubIssuesAction.EDITED.value -> "update"
         GithubIssuesAction.ASSIGNED.value -> "assign"
         GithubIssuesAction.UNASSIGNED.value -> "unassign"
-        else -> GithubLabelAction.fromGithubAction(action)?.value ?: ""
+        GithubIssuesAction.LABELED.value,
+        GithubIssuesAction.UNLABELED.value -> "update"
+        else -> ""
     }
 }
 

@@ -44,7 +44,7 @@ class CodeSchemaCheckTest {
               repo-name: blueking/bk-ci
               type: github
               issue:
-                action: [assign, unassign, label, unlabel]
+                action: [assign, unassign, update]
                 assignees: [alice, bob]
                 assignees-ignore: [bot]
                 labels: [bug, 'feature-*']
@@ -67,15 +67,15 @@ class CodeSchemaCheckTest {
     }
 
     @Test
-    fun testGithubPullRequestLabelActionsShouldPass() {
+    fun testGithubPullRequestEditLabelFiltersShouldPass() {
         val validYaml = """
             version: v3.0
-            name: github-pr-label-action
+            name: github-pr-edit-label-filter
             on:
               repo-name: blueking/bk-ci
               type: github
               mr:
-                action: [label, unlabel]
+                action: [edit]
                 labels: [bug, 'feature-*']
                 labels-ignore: [wontfix]
             stages:

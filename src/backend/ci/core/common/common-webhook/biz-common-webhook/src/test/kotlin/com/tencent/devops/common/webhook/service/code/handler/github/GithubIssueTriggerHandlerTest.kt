@@ -46,10 +46,8 @@ import com.tencent.devops.common.webhook.pojo.code.WebHookParams
 import com.tencent.devops.common.webhook.pojo.code.github.GithubIssue
 import com.tencent.devops.common.webhook.pojo.code.github.GithubIssuesEvent
 import com.tencent.devops.common.webhook.pojo.code.github.GithubLabel
-import com.tencent.devops.common.webhook.pojo.code.github.GithubLabelAction
 import com.tencent.devops.common.webhook.pojo.code.github.GithubRepository
 import com.tencent.devops.common.webhook.pojo.code.github.GithubUser
-import com.tencent.devops.common.webhook.pojo.code.github.getLabelChange
 import com.tencent.devops.repository.pojo.Repository
 import io.mockk.every
 import io.mockk.mockk
@@ -78,27 +76,23 @@ class GithubIssueTriggerHandlerTest {
     private val urgent = label(id = 11L, name = "urgent", description = "needs attention")
 
     @Test
-    fun `should convert assign and label actions`() {
+    fun `should convert assign actions and normalize label events to update`() {
         val labeled = event("labeled", changedLabel = urgent)
         val unlabeled = event("unlabeled", changedLabel = urgent, currentLabels = listOf(bug))
 
         assertEquals("assign", event("assigned").convertAction())
         assertEquals("unassign", event("unassigned").convertAction())
-        assertEquals("label", labeled.convertAction())
-        assertEquals("unlabel", unlabeled.convertAction())
-        assertEquals(GithubLabelAction.LABEL, labeled.getLabelChange()?.action)
-        assertEquals(GithubLabelAction.UNLABEL, unlabeled.getLabelChange()?.action)
-        assertEquals(urgent, unlabeled.getLabelChange()?.changedLabel)
-        assertEquals(listOf(bug), unlabeled.getLabelChange()?.currentLabels)
+        assertEquals("update", labeled.convertAction())
+        assertEquals("update", unlabeled.convertAction())
     }
 
     @Test
-    fun `should match configured assign and label actions`() {
+    fun `should match configured assign and update actions`() {
         mapOf(
             "assigned" to "assign",
             "unassigned" to "unassign",
-            "labeled" to "label",
-            "unlabeled" to "unlabel"
+            "labeled" to "update",
+            "unlabeled" to "update"
         ).forEach { (githubAction, configuredAction) ->
             val result = handler.isMatch(
                 event = event(githubAction),
@@ -119,7 +113,7 @@ class GithubIssueTriggerHandlerTest {
             projectId = "project",
             pipelineId = "pipeline",
             repository = pipelineRepository,
-            webHookParams = webHookParams("label,unlabel")
+            webHookParams = webHookParams("update")
         )
 
         assertFalse(result.isMatch)
@@ -162,34 +156,40 @@ class GithubIssueTriggerHandlerTest {
     }
 
     @Test
-    fun `should filter labeled and unlabeled events by changed label`() {
+    fun `should filter label update events by current labels`() {
         assertTrue(
             isMatch(
                 event = event("labeled", changedLabel = urgent),
-                params = webHookParams("label", includeLabels = "urg*")
+                params = webHookParams("update", includeLabels = "urg*")
             )
         )
         assertFalse(
             isMatch(
                 event = event("labeled", changedLabel = urgent),
-                params = webHookParams("label", includeLabels = "bug")
+                params = webHookParams("update", includeLabels = "missing")
+            )
+        )
+        assertFalse(
+            isMatch(
+                event = event("unlabeled", changedLabel = urgent, currentLabels = listOf(bug)),
+                params = webHookParams("update", includeLabels = "urgent")
             )
         )
         assertTrue(
             isMatch(
                 event = event("unlabeled", changedLabel = urgent, currentLabels = listOf(bug)),
-                params = webHookParams("unlabel", includeLabels = "urgent")
+                params = webHookParams("update", includeLabels = "bug")
             )
         )
     }
 
     @Test
-    fun `should reject excluded changed label`() {
+    fun `should reject excluded current label`() {
         assertFalse(
             isMatch(
-                event = event("unlabeled", changedLabel = urgent, currentLabels = listOf(bug)),
+                event = event("labeled", changedLabel = urgent, currentLabels = listOf(bug, urgent)),
                 params = webHookParams(
-                    includeIssueAction = "unlabel",
+                    includeIssueAction = "update",
                     includeLabels = "urgent",
                     excludeLabels = "urg*"
                 )
@@ -203,7 +203,7 @@ class GithubIssueTriggerHandlerTest {
             isMatch(
                 event = event("assigned", assignee = bob),
                 params = webHookParams(
-                    includeIssueAction = "assign,label",
+                    includeIssueAction = "assign,update",
                     includeAssignees = "bob",
                     includeLabels = "missing"
                 )
@@ -213,7 +213,7 @@ class GithubIssueTriggerHandlerTest {
             isMatch(
                 event = event("labeled", changedLabel = urgent),
                 params = webHookParams(
-                    includeIssueAction = "assign,label",
+                    includeIssueAction = "assign,update",
                     includeAssignees = "missing",
                     includeLabels = "urgent"
                 )
@@ -261,7 +261,7 @@ class GithubIssueTriggerHandlerTest {
             repository = null
         )
 
-        assertEquals("label", params[PIPELINE_GIT_ACTION])
+        assertEquals("update", params[PIPELINE_GIT_ACTION])
         assertEquals("urgent", params[BK_REPO_GIT_WEBHOOK_ISSUE_LABEL])
         assertEquals(11L, params[BK_REPO_GIT_WEBHOOK_ISSUE_LABEL_ID])
         assertEquals("ff0000", params[BK_REPO_GIT_WEBHOOK_ISSUE_LABEL_COLOR])
@@ -279,7 +279,7 @@ class GithubIssueTriggerHandlerTest {
             repository = null
         )
 
-        assertEquals("unlabel", params[PIPELINE_GIT_ACTION])
+        assertEquals("update", params[PIPELINE_GIT_ACTION])
         assertEquals("urgent", params[BK_REPO_GIT_WEBHOOK_ISSUE_LABEL])
         assertEquals(11L, params[BK_REPO_GIT_WEBHOOK_ISSUE_LABEL_ID])
         assertEquals("bug", params[BK_REPO_GIT_WEBHOOK_ISSUE_LABEL_NAMES])

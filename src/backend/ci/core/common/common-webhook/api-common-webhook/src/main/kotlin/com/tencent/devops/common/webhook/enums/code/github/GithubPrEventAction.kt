@@ -41,8 +41,6 @@ enum class GithubPrEventAction(val value: String) {
     PUSH_UPDATE("synchronize"),
     MERGE("also closed"),
     EDITED("edited"), // 修改mr信息
-    LABELED("labeled"),
-    UNLABELED("unlabeled"),
     /**
      * assigned/auto_merge_disabled/auto_merge_enabled/
      * converted_to_draft/edited/locked/ready_for_review/
@@ -53,6 +51,7 @@ enum class GithubPrEventAction(val value: String) {
     companion object {
         fun get(eventAction: GithubPullRequestEvent): GithubPrEventAction {
             if (eventAction.pullRequest.merged && eventAction.action == CLOSE.value) return MERGE
+            if (eventAction.action == "labeled" || eventAction.action == "unlabeled") return EDITED
             values().forEach {
                 if (eventAction.action == it.value) return it
             }

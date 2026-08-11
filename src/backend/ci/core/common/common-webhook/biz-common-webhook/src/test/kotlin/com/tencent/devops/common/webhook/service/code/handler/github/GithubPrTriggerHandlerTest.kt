@@ -16,20 +16,14 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventTy
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_ACTION
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_MR_ACTION
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_ACTION
-import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_LABEL
-import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_LABEL_COLOR
-import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_LABEL_DESCRIPTION
-import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_LABEL_ID
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_LABELS
 import com.tencent.devops.common.webhook.pojo.code.WebHookParams
 import com.tencent.devops.common.webhook.pojo.code.github.GithubLabel
-import com.tencent.devops.common.webhook.pojo.code.github.GithubLabelAction
 import com.tencent.devops.common.webhook.pojo.code.github.GithubPullRequest
 import com.tencent.devops.common.webhook.pojo.code.github.GithubPullRequestBranch
 import com.tencent.devops.common.webhook.pojo.code.github.GithubPullRequestEvent
 import com.tencent.devops.common.webhook.pojo.code.github.GithubRepository
 import com.tencent.devops.common.webhook.pojo.code.github.GithubUser
-import com.tencent.devops.common.webhook.pojo.code.github.getLabelChange
 import com.tencent.devops.common.webhook.service.code.EventCacheService
 import com.tencent.devops.repository.pojo.Repository
 import io.mockk.every
@@ -56,59 +50,55 @@ class GithubPrTriggerHandlerTest {
     private val urgent = label(id = 2L, name = "urgent")
 
     @Test
-    fun shouldConvertAndAcceptPullRequestLabelActions() {
-        val labeled = event(action = "labeled", changedLabel = urgent)
-        val unlabeled = event(action = "unlabeled", changedLabel = urgent)
+    fun shouldConvertPullRequestLabelEventsToEditAction() {
+        val labeled = event(action = "labeled")
+        val unlabeled = event(action = "unlabeled")
 
-        assertEquals("label", labeled.getRealAction())
-        assertEquals("unlabel", unlabeled.getRealAction())
-        assertEquals(GithubLabelAction.LABEL, labeled.getLabelChange()?.action)
-        assertEquals(GithubLabelAction.UNLABEL, unlabeled.getLabelChange()?.action)
-        assertEquals(urgent, labeled.getLabelChange()?.changedLabel)
-        assertEquals(emptyList<GithubLabel>(), labeled.getLabelChange()?.currentLabels)
+        assertEquals("edit", labeled.getRealAction())
+        assertEquals("edit", unlabeled.getRealAction())
         assertTrue(handler.preMatch(labeled).isMatch)
         assertTrue(handler.preMatch(unlabeled).isMatch)
     }
 
     @Test
-    fun shouldRequirePullRequestLabelActionToBeConfigured() {
+    fun shouldRequirePullRequestEditActionToBeConfigured() {
         assertFalse(
             isMatch(
-                event = event(action = "labeled", changedLabel = urgent),
+                event = event(action = "labeled"),
                 params = webHookParams(action = "open", includeLabels = "urgent")
             )
         )
     }
 
     @Test
-    fun shouldFilterPullRequestLabelActionsByChangedLabel() {
+    fun shouldFilterPullRequestLabelEventsByCurrentLabels() {
         assertTrue(
             isMatch(
-                event = event(action = "labeled", changedLabel = urgent, currentLabels = listOf(bug, urgent)),
-                params = webHookParams(action = "label", includeLabels = "urg*")
-            )
-        )
-        assertTrue(
-            isMatch(
-                event = event(action = "unlabeled", changedLabel = urgent, currentLabels = listOf(bug)),
-                params = webHookParams(action = "unlabel", includeLabels = "urgent")
+                event = event(action = "labeled", currentLabels = listOf(bug, urgent)),
+                params = webHookParams(action = "edit", includeLabels = "urg*")
             )
         )
         assertFalse(
             isMatch(
-                event = event(action = "unlabeled", changedLabel = urgent, currentLabels = listOf(bug)),
-                params = webHookParams(action = "unlabel", includeLabels = "bug")
+                event = event(action = "unlabeled", currentLabels = listOf(bug)),
+                params = webHookParams(action = "edit", includeLabels = "urgent")
+            )
+        )
+        assertTrue(
+            isMatch(
+                event = event(action = "unlabeled", currentLabels = listOf(bug)),
+                params = webHookParams(action = "edit", includeLabels = "bug")
             )
         )
     }
 
     @Test
-    fun shouldLetExcludedChangedLabelOverrideIncludedLabel() {
+    fun shouldLetExcludedCurrentLabelOverrideIncludedLabel() {
         assertFalse(
             isMatch(
-                event = event(action = "labeled", changedLabel = urgent),
+                event = event(action = "labeled", currentLabels = listOf(urgent)),
                 params = webHookParams(
-                    action = "label",
+                    action = "edit",
                     includeLabels = "urgent",
                     excludeLabels = "urg*"
                 )
@@ -133,20 +123,16 @@ class GithubPrTriggerHandlerTest {
     }
 
     @Test
-    fun shouldExposeRemovedPullRequestLabelAndNormalizedActions() {
+    fun shouldNormalizePullRequestLabelEventActionAndExposeCurrentLabels() {
         val params = handler.retrieveParams(
-            event = event(action = "unlabeled", changedLabel = urgent, currentLabels = listOf(bug)),
+            event = event(action = "unlabeled", currentLabels = listOf(bug)),
             projectId = null,
             repository = null
         )
 
-        assertEquals("unlabel", params[BK_REPO_GIT_WEBHOOK_MR_ACTION])
-        assertEquals("unlabel", params[PIPELINE_GIT_MR_ACTION])
-        assertEquals("unlabel", params[PIPELINE_GIT_ACTION])
-        assertEquals("urgent", params[BK_REPO_GIT_WEBHOOK_MR_LABEL])
-        assertEquals(2L, params[BK_REPO_GIT_WEBHOOK_MR_LABEL_ID])
-        assertEquals("ffffff", params[BK_REPO_GIT_WEBHOOK_MR_LABEL_COLOR])
-        assertEquals("", params[BK_REPO_GIT_WEBHOOK_MR_LABEL_DESCRIPTION])
+        assertEquals("edit", params[BK_REPO_GIT_WEBHOOK_MR_ACTION])
+        assertEquals("edit", params[PIPELINE_GIT_MR_ACTION])
+        assertEquals("edit", params[PIPELINE_GIT_ACTION])
         assertEquals("bug", params[BK_REPO_GIT_WEBHOOK_MR_LABELS])
     }
 
@@ -161,7 +147,6 @@ class GithubPrTriggerHandlerTest {
         assertEquals("open", params[BK_REPO_GIT_WEBHOOK_MR_ACTION])
         assertEquals("opened", params[PIPELINE_GIT_MR_ACTION])
         assertEquals("opened", params[PIPELINE_GIT_ACTION])
-        assertEquals("", params[BK_REPO_GIT_WEBHOOK_MR_LABEL])
         assertEquals("bug", params[BK_REPO_GIT_WEBHOOK_MR_LABELS])
     }
 
@@ -193,7 +178,6 @@ class GithubPrTriggerHandlerTest {
 
     private fun event(
         action: String,
-        changedLabel: GithubLabel? = null,
         currentLabels: List<GithubLabel> = emptyList()
     ): GithubPullRequestEvent {
         val baseBranch = branch(refName = "master")
@@ -210,8 +194,7 @@ class GithubPrTriggerHandlerTest {
             number = 1,
             pullRequest = pullRequest,
             repository = githubRepository,
-            sender = sender,
-            label = changedLabel
+            sender = sender
         )
     }
 
