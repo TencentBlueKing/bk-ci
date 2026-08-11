@@ -53,9 +53,14 @@ object PathUtils {
         return Paths.get(relativePath).normalize().toString()
     }
 
-    fun buildArchiveLink(projectId: String, pipelineId: String, buildId: String): String {
+    fun buildArchiveLink(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        channelCode: String? = null
+    ): String {
         return "${HomeHostUtil.outerServerHost()}/app/download/devops_app_forward.html?flag=buildArchive" +
-                "&projectId=$projectId&pipelineId=$pipelineId&buildId=$buildId"
+                "&projectId=$projectId&pipelineId=$pipelineId&buildId=$buildId&channelCode=$channelCode"
     }
 
     fun buildDetailLink(projectId: String, artifactoryType: String, path: String): String {

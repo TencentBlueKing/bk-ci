@@ -90,14 +90,6 @@ object YamlObjects {
                     variable["value"] ?: listOf<Map<String, String>>()
                 }
 
-                VariablePropType.SELECTOR.value, VariablePropType.CHECKBOX.value -> {
-                    // 兼容 value 为数组的场景（如 checkbox 空值 [] 或多选数组），统一转为逗号分隔字符串
-                    when (val v = variable["value"]) {
-                        is Collection<*> -> v.filterNotNull().joinToString(",") { it.toString() }
-                        else -> v?.toString()
-                    }
-                }
-
                 else -> {
 
                     variable["value"]?.toString()
