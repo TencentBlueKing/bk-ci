@@ -8,31 +8,23 @@
                     class="view-switcher"
                     @change="handleViewChange"
                 >
-                    <bk-radio-button value="PIPELINE">{{ $t('environment.viewPipeline') }}</bk-radio-button>
-                    <bk-radio-button value="JOB">{{ $t('environment.viewJob') }}</bk-radio-button>
-                    <bk-radio-button value="BUILD">{{ $t('environment.viewBuild') }}</bk-radio-button>
+                    <template v-if="isCreateResType">
+                        <bk-radio-button value="PIPELINE">{{ $t('environment.viewCreationPipeline') }}</bk-radio-button>
+                        <bk-radio-button value="BUILD">{{ $t('environment.viewCreationTask') }}</bk-radio-button>
+                    </template>
+                    <template v-else>
+                        <bk-radio-button value="PIPELINE">{{ $t('environment.viewPipeline') }}</bk-radio-button>
+                        <bk-radio-button value="JOB">{{ $t('environment.viewJob') }}</bk-radio-button>
+                        <bk-radio-button value="BUILD">{{ $t('environment.viewBuild') }}</bk-radio-button>
+                    </template>
                 </bk-radio-group>
                 <span class="stats-text">
-                    <i18n
-                        v-if="currentView === 'PIPELINE'"
-                        path="environment.pipelineViewCount"
-                    >
-                        <span class="count-number">{{ pipelineCount }}</span>
-                        <span class="count-number">{{ buildCount }}</span>
-                    </i18n>
-                    <i18n
-                        v-else-if="currentView === 'JOB'"
-                        path="environment.totalJobTasks"
-                    >
-                        <span class="count-number">{{ jobCount }}</span>
-                        <span class="count-number">{{ pipelineCount }}</span>
-                    </i18n>
-                    <i18n
-                        v-else
-                        path="environment.buildViewCount"
-                    >
-                        <span class="count-number">{{ buildCount }}</span>
-                        <span class="count-number">{{ pipelineCount }}</span>
+                    <i18n :path="statsConfig.path">
+                        <span
+                            v-for="(value, idx) in statsConfig.values"
+                            :key="idx"
+                            class="count-number"
+                        >{{ value }}</span>
                     </i18n>
                 </span>
             </div>
@@ -84,87 +76,120 @@
                         <!-- 流水线视图头部 -->
                         <div
                             v-if="currentView === 'PIPELINE'"
-                            class="task-title"
+                            class="task-title pipeline-view-title"
                         >
-                            <span class="task-name">
-                                <i class="bk-icon icon-pipeline title-icon" />
-                                <a
-                                    class="pipeline-title text-link"
-                                    v-bk-overflow-tips
-                                    :href="getPipelineHistoryUrl(task)"
-                                    target="_blank"
-                                    @click.stop
-                                >{{ task.pipelineName }}</a>
-                            </span>
-                            <span class="task-sub">
-                                <i18n path="environment.pipelineBuildUsedCount">
-                                    <span>{{ task.buildCount || 0 }}</span>
-                                </i18n>
-                            </span>
+                            <Logo
+                                v-if="isCreateResType"
+                                name="color-logo-creative"
+                                :size="30"
+                                class="title-icon"
+                            />
+                            <i
+                                v-else
+                                class="bk-icon icon-pipeline title-icon"
+                            />
+                            <div class="task-title-content">
+                                <span class="task-name">
+                                    <a
+                                        class="pipeline-title text-link"
+                                        v-bk-overflow-tips
+                                        :href="getPipelineHistoryUrl(task)"
+                                        target="_blank"
+                                        @click.stop
+                                    >{{ task.pipelineName }}</a>
+                                </span>
+                                <span class="task-sub">
+                                    <i18n :path="isCreateResType ? 'environment.creationTaskUsedCount' : 'environment.pipelineBuildUsedCount'">
+                                        <span>{{ task.buildCount || 0 }}</span>
+                                    </i18n>
+                                </span>
+                            </div>
                         </div>
 
                         <!-- Job 视图头部 -->
                         <div
                             v-else-if="currentView === 'JOB'"
-                            class="task-title"
+                            class="task-title pipeline-view-title"
                         >
-                            <span class="task-name">
-                                <bk-tag v-if="task.stageId">{{ task.stageId }}</bk-tag>
-                                {{ task.jobName }}
-                            </span>
-                            <span class="task-pipeline-name">
-                                <i class="bk-icon icon-pipeline" />
-                                <a
-                                    class="pipeline-text text-link"
-                                    v-bk-overflow-tips
-                                    :href="getPipelineHistoryUrl(task)"
-                                    target="_blank"
-                                    @click.stop
-                                >
-                                    {{ task.pipelineName }}
-                                </a>
-                            </span>
+                            <Logo
+                                name="job"
+                                :size="30"
+                                class="title-icon"
+                            />
+                            <div class="task-title-content">
+                                <span class="task-name">
+                                    <bk-tag v-if="task.stageId">{{ task.stageId }}</bk-tag>
+                                    {{ task.jobName }}
+                                </span>
+                                <span class="task-pipeline-name">
+                                    <span class="pipeline-prefix">{{ $t('environment.pipeline') }}：</span>
+                                    <a
+                                        class="pipeline-text text-link"
+                                        v-bk-overflow-tips
+                                        :href="getPipelineHistoryUrl(task)"
+                                        target="_blank"
+                                        @click.stop
+                                    >
+                                        {{ task.pipelineName }}
+                                        <Logo
+                                            name="tiaozhuan"
+                                            :size="12"
+                                            class="jump-icon"
+                                        />
+                                    </a>
+                                </span>
+                            </div>
                         </div>
 
                         <!-- 构建视图头部 -->
                         <div
                             v-else
-                            class="task-title"
+                            class="task-title build-view-title"
                         >
-                            <span class="task-name build-name">
+                            <div class="build-main-info">
                                 <pipeline-status-icon
                                     v-if="task.status"
+                                    class="build-status-icon"
                                     :status="task.status"
+                                    :size="26"
                                 />
-                                <a
-                                    v-if="task.buildId && task.buildNum"
-                                    class="text-link build-num"
-                                    :href="getBuildDetailUrl(task)"
-                                    target="_blank"
-                                    @click.stop
-                                >#{{ task.buildNum }}</a>
-                                <span
-                                    v-else
-                                    class="build-num"
-                                >{{ task.buildNum ? '#' + task.buildNum : task.pipelineName }}</span>
-                                <span
-                                    v-if="task.statusText"
-                                    class="build-status-text"
-                                >{{ task.statusText }}</span>
-                            </span>
-                            <span class="task-pipeline-name">
-                                <i class="bk-icon icon-pipeline" />
-                                <span class="pipeline-prefix">{{ $t('environment.pipeline') }}：</span>
-                                <a
-                                    class="pipeline-text text-link"
-                                    v-bk-overflow-tips
-                                    :href="getPipelineHistoryUrl(task)"
-                                    target="_blank"
-                                    @click.stop
-                                >
-                                    {{ task.pipelineName }}
-                                </a>
-                            </span>
+                                <div class="build-text-info">
+                                    <span class="task-name build-name">
+                                        <a
+                                            v-if="task.buildId && task.buildNum"
+                                            class="text-link build-num"
+                                            :href="getBuildDetailUrl(task)"
+                                            target="_blank"
+                                            @click.stop
+                                        >#{{ task.buildNum }}</a>
+                                        <span
+                                            v-else
+                                            class="build-num"
+                                        >{{ task.buildNum ? '#' + task.buildNum : task.pipelineName }}</span>
+                                        <span
+                                            v-if="task.statusText"
+                                            class="build-status-text"
+                                        >{{ task.statusText }}</span>
+                                    </span>
+                                    <span class="task-pipeline-name">
+                                        <span class="pipeline-prefix">{{ isCreateResType ? $t('environment.creationFlow') : $t('environment.pipeline') }}：</span>
+                                        <a
+                                            class="pipeline-text text-link"
+                                            v-bk-overflow-tips
+                                            :href="getPipelineHistoryUrl(task)"
+                                            target="_blank"
+                                            @click.stop
+                                        >
+                                            {{ task.pipelineName }}
+                                            <Logo
+                                                name="tiaozhuan"
+                                                :size="12"
+                                                class="jump-icon"
+                                            />
+                                        </a>
+                                    </span>
+                                </div>
+                            </div>
                         </div>
 
                         <div class="task-info">
@@ -186,7 +211,7 @@
                     >
                         <!-- 流水线视图明细 -->
                         <bk-table
-                            v-if="currentView === 'PIPELINE'"
+                            v-if="currentView === 'PIPELINE' && !isCreateResType"
                             v-bkloading="{ isLoading: task.isLoadingDetail }"
                             :data="task.records || []"
                             :outer-border="false"
@@ -227,6 +252,59 @@
                                     <associated-jobs :jobs="row.tasks" />
                                 </template>
                             </bk-table-column>
+                            <bk-table-column
+                                :label="$t('environment.startTime')"
+                                prop="startTime"
+                            />
+                            <bk-table-column
+                                :label="$t('environment.endTime')"
+                                prop="endTime"
+                            />
+                            <bk-table-column
+                                :label="$t('environment.trigger')"
+                                prop="creator"
+                            />
+                        </bk-table>
+
+                        <!-- 创作流视图明细 -->
+                        <bk-table
+                            v-else-if="currentView === 'PIPELINE' && isCreateResType"
+                            v-bkloading="{ isLoading: task.isLoadingDetail }"
+                            :data="task.records || []"
+                            :outer-border="false"
+                            :header-border="false"
+                            :pagination="task.pagination"
+                            @page-change="handlePageChange(task, $event)"
+                            @page-limit-change="handlePageSizeChange(task, $event)"
+                        >
+                            <bk-table-column
+                                :label="$t('environment.taskNumber')"
+                                prop="buildNum"
+                                width="80"
+                            >
+                                <template #default="{ row }">
+                                    <a
+                                        class="text-link"
+                                        :href="getBuildDetailUrl(row)"
+                                        target="_blank"
+                                    >#{{ row.buildNum }}</a>
+                                </template>
+                            </bk-table-column>
+                            <bk-table-column
+                                :label="$t('environment.taskStatusLabel')"
+                                prop="status"
+                            >
+                                <template #default="{ row }">
+                                    <span class="status-text-container">
+                                        <pipeline-status-icon :status="row.status" />
+                                        {{ row.statusText }}
+                                    </span>
+                                </template>
+                            </bk-table-column>
+                            <bk-table-column
+                                :label="$t('environment.duration')"
+                                prop="duration"
+                            />
                             <bk-table-column
                                 :label="$t('environment.startTime')"
                                 prop="startTime"
@@ -384,6 +462,7 @@
     import { ref, computed, watch } from 'vue'
     import { convertTime } from '@/utils/util'
     import useInstance from '@/hooks/useInstance'
+    import useEnvAside from '@/hooks/useEnvAside'
     import useEnvDetail from '@/hooks/useEnvDetail'
     import useNodeDetail from '@/hooks/useNodeDetail'
     import useTaskDetail from '@/hooks/useTaskDetail'
@@ -392,17 +471,20 @@
     import '@blueking/search-select/dist/styles/index.css'
     import PipelineStatusIcon from './PipelineStatusIcon'
     import AssociatedJobs from './AssociatedJobs'
+    import Logo from '@/components/Logo'
 
     export default {
         name: 'TaskList',
         components: {
             SearchSelect,
             PipelineStatusIcon,
-            AssociatedJobs
+            AssociatedJobs,
+            Logo
         },
         setup (props) {
             const { proxy } = useInstance()
             const routeName = proxy.$route.name
+            const { isCreateResType } = useEnvAside()
             const { envHashId } = useEnvDetail()
             const { nodeHashId } = useNodeDetail()
             const {
@@ -447,7 +529,7 @@
                 }
             }))
             const pipelineField = computed(() => ({
-                name: proxy.$t('environment.pipeline'),
+                name: isCreateResType.value ? proxy.$t('environment.creationFlow') : proxy.$t('environment.pipeline'),
                 id: 'pipelineId',
                 remoteMethod: async (keyword) => {
                     try {
@@ -492,6 +574,23 @@
                     return [jobField.value, pipelineField.value, statusField.value, creatorField.value]
                 }
                 return [pipelineField.value, statusField.value, creatorField.value]
+            })
+
+            // 顶部统计文案（按资源类型与视图区分）
+            const statsConfig = computed(() => {
+                if (isCreateResType.value) {
+                    if (currentView.value === 'BUILD') {
+                        return { path: 'environment.creationBuildViewCount', values: [buildCount.value, pipelineCount.value] }
+                    }
+                    return { path: 'environment.creationPipelineViewCount', values: [pipelineCount.value, buildCount.value] }
+                }
+                if (currentView.value === 'JOB') {
+                    return { path: 'environment.totalJobTasks', values: [jobCount.value, pipelineCount.value] }
+                }
+                if (currentView.value === 'BUILD') {
+                    return { path: 'environment.buildViewCount', values: [buildCount.value, pipelineCount.value] }
+                }
+                return { path: 'environment.pipelineViewCount', values: [pipelineCount.value, buildCount.value] }
             })
             // 是否还有更多数据
             const hasMore = computed(() => {
@@ -541,7 +640,12 @@
             const getTaskInfoItems = (task) => {
                 if (currentView.value === 'PIPELINE') {
                     return [
-                        { label: proxy.$t('environment.buildCountLabel'), value: task.buildCount || 0 },
+                        {
+                            label: isCreateResType.value
+                                ? proxy.$t('environment.creationTaskCountLabel')
+                                : proxy.$t('environment.buildCountLabel'),
+                            value: task.buildCount || 0
+                        },
                         { label: proxy.$t('environment.nodeInfo.lastRunAs'), value: task.lastBuildTime || '--' }
                     ]
                 }
@@ -584,6 +688,16 @@
                 
                 return parts.join('')
             }
+
+            // 时长格式化：兼容毫秒/秒
+            const formatDuration = (duration) => {
+                if (duration === null || duration === undefined || duration === '') return '--'
+                const durationNum = Number(duration)
+                if (Number.isNaN(durationNum) || durationNum < 0) return '--'
+                // 10 位以上通常是毫秒级时长，转换为秒
+                const seconds = durationNum >= 100000 ? Math.floor(durationNum / 1000) : Math.floor(durationNum)
+                return formatSeconds(seconds)
+            }
             
             // 计算执行耗时
             const calculateDuration = (startTime, endTime) => {
@@ -602,8 +716,10 @@
                 if (typeof time === 'string') {
                     return convertTime(new Date(time).getTime())
                 }
-                // 如果是秒级时间戳
-                return convertTime(time * 1000)
+                // 兼容秒级/毫秒级时间戳
+                const timestamp = Number(time)
+                if (Number.isNaN(timestamp)) return '--'
+                return convertTime(timestamp >= 1000000000000 ? timestamp : timestamp * 1000)
             }
             
             // 流水线编排不展示第一个Stage，转换 stageId 显示：后端从 stage-2 开始，前端显示从 stage-1 开始
@@ -640,19 +756,24 @@
                     }
                 }
                 if (view === 'BUILD') {
-                    // 构建视图：每行是一次构建。注意后端列表当前未返回
-                    // buildId/buildNum/status/creator，缺失时做降级处理（展开会被跳过，见 loadTaskDetail）
+                    // 构建视图
+                    const latestBuild = item.buildHistory || {}
+                    const startTime = latestBuild.startTime || item.startTime || item.lastBuildTime
+                    const endTime = latestBuild.endTime || item.endTime
                     return {
                         ...base,
-                        taskKey: item.buildId || `${item.pipelineId}-${item.lastBuildTime}-${index}`,
-                        buildNum: item.buildNum,
-                        status: item.status,
-                        statusText: item.status ? (proxy.$t(`environment.statusMap.${item.status}`) || '') : '',
-                        creator: item.creator || '--',
-                        startTime: formatTime(item.lastBuildTime),
-                        duration: (item.startTime && item.endTime)
-                            ? calculateDuration(item.startTime, item.endTime)
-                            : formatSeconds(item.avgTimeInterval)
+                        taskKey: item.buildId || latestBuild.buildId || `${item.pipelineId}-${startTime || index}`,
+                        buildId: item.buildId || latestBuild.buildId,
+                        buildNum: latestBuild.buildNum || item.buildNum,
+                        status: latestBuild.status || item.status,
+                        statusText: (latestBuild.status || item.status)
+                            ? (proxy.$t(`environment.statusMap.${latestBuild.status || item.status}`) || (latestBuild.status || item.status))
+                            : '',
+                        creator: latestBuild.userId || item.creator || '--',
+                        startTime: formatTime(startTime),
+                        duration: (startTime && endTime)
+                            ? calculateDuration(startTime, endTime)
+                            : formatDuration(latestBuild.totalTime || latestBuild.executeTime || item.avgTimeInterval)
                     }
                 }
                 // JOB
@@ -884,6 +1005,8 @@
             
             return {
                 // data
+                isCreateResType,
+                statsConfig,
                 currentView,
                 isLoading,
                 isLoadingMore,
@@ -1018,6 +1141,30 @@
                 .task-title {
                     flex: 1;
                     min-width: 0;
+
+                    &.pipeline-view-title {
+                        display: flex;
+                        align-items: center;
+                        min-width: 0;
+
+                        .title-icon {
+                            flex-shrink: 0;
+                            margin-right: 12px;
+
+                            &.bk-icon {
+                                font-size: 30px;
+                                width: 30px;
+                                height: 30px;
+                                line-height: 30px;
+                                color: #3a84ff;
+                            }
+                        }
+
+                        .task-title-content {
+                            min-width: 0;
+                            flex: 1;
+                        }
+                    }
                     
                     .task-name {
                         font-size: 14px;
@@ -1027,14 +1174,10 @@
                         align-items: center;
                         margin-bottom: 8px;
 
-                        .title-icon {
-                            margin-right: 6px;
-                            color: #3a84ff;
-                            flex-shrink: 0;
-                        }
-
                         &.build-name {
                             gap: 6px;
+                            margin-bottom: 6px;
+                            align-items: baseline;
                         }
 
                         .build-num {
@@ -1046,10 +1189,33 @@
                         }
                     }
 
+                    &.build-view-title {
+                        .build-main-info {
+                            display: flex;
+                            align-items: center;
+                            min-width: 0;
+                        }
+
+                        .build-status-icon {
+                            margin-right: 8px;
+                            margin-top: 0;
+                            flex-shrink: 0;
+                            width: 26px;
+                            height: 26px;
+                            line-height: 26px;
+                        }
+
+                        .build-text-info {
+                            min-width: 0;
+                            flex: 1;
+                        }
+                    }
+
                     .pipeline-title {
                         overflow: hidden;
                         white-space: nowrap;
                         text-overflow: ellipsis;
+                        color: #3A84FF;
                     }
 
                     .task-sub {
@@ -1074,6 +1240,8 @@
                         }
                         
                         .pipeline-text {
+                            display: flex;
+                            align-items: center;
                             overflow: hidden;
                             white-space: nowrap;
                             text-overflow: ellipsis;
@@ -1083,6 +1251,12 @@
                             &:hover {
                                 color: #3a84ff;
                             }
+                        }
+
+                        .jump-icon {
+                            margin-left: 8px;
+                            color: #3a84ff;
+                            flex-shrink: 0;
                         }
                     }
                 }
