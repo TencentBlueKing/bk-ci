@@ -17,9 +17,9 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 import {
+    DEVCLOUD_API_URL_PREFIX,
     FETCH_ERROR,
     LOG_API_URL_PREFIX,
-    MACOS_API_URL_PREFIX,
     PROCESS_API_URL_PREFIX,
     STORE_API_URL_PREFIX,
     UPDATE_PIPELINE_MODE
@@ -221,9 +221,9 @@ export default {
             return response.data
         })
     },
-    requestTemplate: async ({ dispatch, commit }, { projectId, templateId, version, query }) => {
+    requestTemplate: async ({ dispatch, commit }, { projectId, templateId, version, source, query }) => {
         const [templateRes, atomPropRes] = await Promise.all([
-            dispatch('fetchTemplateByVersion', { projectId, templateId, version }),
+            dispatch('fetchTemplateByVersion', { projectId, templateId, source, version}),
             request.get(`/${PROCESS_API_URL_PREFIX}/user/template/v2/atoms/projects/${projectId}/templates/${templateId}/atom/prop/list`, {
                 params: {
                     ...query,
@@ -294,8 +294,10 @@ export default {
             return res.data
         })
     },
-    fetchTemplateByVersion ({ commit }, { projectId, templateId, version, draftVersion }) {
-        const query = {}
+    fetchTemplateByVersion ({ commit }, { projectId, templateId, version, source = 'VIEW', draftVersion }) {
+        const query = {
+            source
+        }
         if (draftVersion !== undefined && draftVersion !== null) {
             query.draftVersion = encodeURIComponent(draftVersion)
         }
@@ -962,7 +964,14 @@ export default {
         })
     },
 
-    fetchDevcloudSettings ({ commit }, { projectId, buildType }) {
+    fetchDevcloudSettings ({ commit }, { projectId, pipelineId, templateId }) {
+        return request.get(`${DEVCLOUD_API_URL_PREFIX}/user/dispatchDevcloud/v2/project/${projectId}/pipeline/${pipelineId}/performanceConfig/list?templateId=${templateId}`)
+    },
+    getHistoryDevcloudSettings ({ commit }, { username, projectId, uid }) {
+        return request.get(`${DEVCLOUD_API_URL_PREFIX}/user/dispatchDevcloud/v2/project/${username}/pipeline/${projectId}/uid/${uid}/performanceConfig/info`)
+    },
+    
+    fetchDockerSettings ({ commit }, { projectId, buildType }) {
         return request.get(`/dispatch-docker/api/user/dispatch-docker/resource-config/projects/${projectId}/list?buildType=${buildType}`)
     },
 
@@ -1036,22 +1045,46 @@ export default {
         return request.get('/misc/api/user/gpt_config/is_ok')
     },
 
-    getMacSysVersion () {
-        return request.get(`${MACOS_API_URL_PREFIX}/user/systemVersions/v2`)
+    // getMacSysVersion () {
+    //     return request.get(`${DEVCLOUD_API_URL_PREFIX}/user/macos/systemVersions/v2`)
+    // },
+
+    // getMacXcodeVersion (_, systemVersion = '') {
+    //     return request.get(`${DEVCLOUD_API_URL_PREFIX}/user/macos/xcodeVersions/v2?systemVersion=${systemVersion}`)
+    // },
+
+    getMacvmModel (_, params) {
+        return request.post(`${DEVCLOUD_API_URL_PREFIX}/user/macos/vmModel`, params)
     },
 
-    getMacXcodeVersion (_, systemVersion = '') {
-        return request.get(`${MACOS_API_URL_PREFIX}/user/xcodeVersions/v2?systemVersion=${systemVersion}`)
+    getMacvmModelAll (_, params) {
+        return request.get(`${DEVCLOUD_API_URL_PREFIX}/user/macos/vmModel/all`)
     },
 
     getWinVersion () {
-        return request.get('/dispatch-windows/api/user/systemVersions').then((res) => {
+        return request.get(`${DEVCLOUD_API_URL_PREFIX}/user/windows/systemVersions`).then((res) => {
             return res.data
         })
     },
 
     pausePlugin ({ commit }, { projectId, pipelineId, buildId, taskId, isContinue, stageId, containerId, element }) {
         return request.post(`${PROCESS_API_URL_PREFIX}/user/builds/projects/${projectId}/pipelines/${pipelineId}/builds/${buildId}/taskIds/${taskId}/execution/pause?isContinue=${isContinue}&stageId=${stageId}&containerId=${containerId}`, element)
+    },
+
+    startVmSeqDebug ({ commit }, { pipelineId, containerId, buildId, executeCount }) {
+        const query = Object.entries({ buildId, executeCount })
+            .filter(([, value]) => value !== undefined && value !== null && value !== '')
+            .map(([key, value]) => `${key}=${value}`)
+            .join('&')
+        return request.post(`${DEVCLOUD_API_URL_PREFIX}/user/macos/debug/startDebug/pipeline/${pipelineId}/vmSeq/${containerId}${query ? `?${query}` : ''}`)
+    },
+
+    stopVmSeqDebug ({ commit }, { pipelineId, containerId, buildId, executeCount }) {
+        const query = Object.entries({ buildId, executeCount })
+            .filter(([, value]) => value !== undefined && value !== null && value !== '')
+            .map(([key, value]) => `${key}=${value}`)
+            .join('&')
+        return request.post(`${DEVCLOUD_API_URL_PREFIX}/user/macos/debug/stopDebug/pipeline/${pipelineId}/vmSeq/${containerId}${query ? `?${query}` : ''}`)
     },
 
     download (_, { url, name, params, type }) {
