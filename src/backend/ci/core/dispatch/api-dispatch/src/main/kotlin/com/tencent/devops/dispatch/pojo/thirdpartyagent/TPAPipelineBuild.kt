@@ -1,6 +1,8 @@
 ﻿package com.tencent.devops.dispatch.pojo.thirdpartyagent
 
+import com.tencent.devops.common.api.pojo.ErrorInfo
 import com.tencent.devops.common.api.pojo.Page
+import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
 import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDateTime
@@ -43,7 +45,7 @@ data class TPAPipelineBuild(
     @get:Schema(title = "这个job的构建次数")
     val buildCount: Int,
     @get:Schema(title = "最后构建时间")
-    val lastBuildTime: LocalDateTime,
+    val lastBuildTime: LocalDateTime?,
     @get:Schema(title = "平均耗时")
     val avgTimeInterval: Long?,
     @get:Schema(title = "最后一次构建的containerId")
@@ -53,7 +55,28 @@ data class TPAPipelineBuild(
     @get:Schema(title = "stageNumb")
     var stageNumb: String?,
     @get:Schema(title = "buildId")
-    val buildId: String?
+    val buildId: String?,
+    // 直接从流水线反查，截取一部分
+    @get:Schema(title = "buildHistory")
+    var buildHistory: TPAPipelineBuildHistory? = null
+)
+
+@Schema(title = "历史构建模型")
+data class TPAPipelineBuildHistory(
+    @get:Schema(title = "启动用户", required = true)
+    val userId: String,
+    @get:Schema(title = "构建号", required = true)
+    val buildNum: Int?,
+    @get:Schema(title = "状态", required = true)
+    val status: String,
+    @get:Schema(title = "总耗时(毫秒)", required = false)
+    val totalTime: Long?,
+    @get:Schema(title = "运行耗时(毫秒，不包括人工审核时间)", required = false)
+    val executeTime: Long?,
+    @get:Schema(title = "流水线的执行开始时间", required = true)
+    val startTime: Long,
+    @get:Schema(title = "流水线的执行结束时间", required = true)
+    val endTime: Long?
 )
 
 data class TPAPipelineBuildCountResp(

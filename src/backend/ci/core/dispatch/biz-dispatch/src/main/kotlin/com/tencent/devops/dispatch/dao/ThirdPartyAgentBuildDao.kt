@@ -724,8 +724,6 @@ class ThirdPartyAgentBuildDao {
             val dsl = dslContext.select(
                 PIPELINE_ID,
                 PIPELINE_NAME,
-                DSL.max(CREATED_TIME).`as`("LAST_BUILD_TIME"),
-                DSL.avg(TIME_INTERVAL).`as`("AVG_TIME_INTERVAL"),
                 BUILD_ID
             ).from(this).where(PROJECT_ID.eq(projectId))
             if (!agentId.isNullOrBlank()) {
@@ -776,12 +774,12 @@ class ThirdPartyAgentBuildDao {
                         jobId = null,
                         jobName = null,
                         buildCount = 0,
-                        lastBuildTime = it.value3(),
-                        avgTimeInterval = it.value4()?.toLong(),
+                        lastBuildTime = null,
+                        avgTimeInterval = null,
                         lastContainerId = null,
                         stageId = null,
                         stageNumb = null,
-                        buildId = it.value5()
+                        buildId = it.value3()
                     )
                 }
         }
