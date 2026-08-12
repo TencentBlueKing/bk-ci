@@ -11,10 +11,12 @@ import com.tencent.devops.process.engine.dao.creative.PipelineShareGrantDao
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.enums.CreativeFlowShareGrantStatus
 import com.tencent.devops.process.enums.CreativeFlowShareMode
+import com.tencent.devops.process.enums.CreativeFlowShareScene
 import com.tencent.devops.process.enums.CreativeFlowShareVersionScope
 import com.tencent.devops.process.pojo.creative.CreativeFlowShareExtInfo
 import com.tencent.devops.process.pojo.creative.CreativeFlowShareGrantCondition
 import com.tencent.devops.process.pojo.creative.CreativeFlowShareGrantFailure
+import com.tencent.devops.process.pojo.creative.CreativeFlowShareGrantItem
 import com.tencent.devops.process.pojo.creative.CreativeFlowShareGrantUpsertRequest
 import com.tencent.devops.process.pojo.creative.CreativeFlowShareGrantUpsertResult
 import com.tencent.devops.process.pojo.creative.CreativeFlowShareGrantVo
@@ -55,112 +57,33 @@ class CreativeFlowShareGrantService @Autowired constructor(
 
         for (item in request.flows) {
             try {
-                // 1. 校验源流水线存在且 channelCode == CREATIVE_STREAM
-                val pipelineInfo = pipelineRepositoryService.getPipelineInfo(
-                    projectId = item.sourceProjectId,
-                    pipelineId = item.sourcePipelineId
-                ) ?: throw ErrorCodeException(
-                    errorCode = ProcessMessageCode.ERROR_CREATIVE_FLOW_SHARE_SOURCE_NOT_EXISTS,
-                    params = arrayOf(item.sourceProjectId, item.sourcePipelineId)
-                )
-                if (pipelineInfo.channelCode != ChannelCode.CREATIVE_STREAM) {
-                    throw ErrorCodeException(
-                        errorCode = ProcessMessageCode.ERROR_CREATIVE_FLOW_SHARE_CHANNEL_INVALID,
-                        params = arrayOf(item.sourcePipelineId)
+                granted.add(
+                    upsertOneGrant(
+                        userId = userId,
+                        shareId = request.shareId,
+                        scene = request.scene,
+                        talentCode = request.talentCode,
+                        item = item
                     )
-                }
-
-                // 2. 校验源项目组织形态：非 PERSONAL 直接拒绝
-                //    这里就是未来接团队形态的埋点，改动只需把 throw 换成按形态分流（见设计 §14）
-                val projectResult = client.get(ServiceProjectResource::class).get(item.sourceProjectId)
-                val projectVo = projectResult.data ?: throw ErrorCodeException(
-                    errorCode = ProcessMessageCode.ERROR_CREATIVE_FLOW_SHARE_SOURCE_NOT_EXISTS,
-                    params = arrayOf(item.sourceProjectId, item.sourcePipelineId)
                 )
-                val scopeType = ProjectScopeType.fromValue(projectVo.projectScope)
-                if (scopeType != ProjectScopeType.PERSONAL) {
-                    throw ErrorCodeException(
-                        errorCode = ProcessMessageCode.ERROR_CREATIVE_FLOW_SHARE_TEAM_PROJECT_NOT_SUPPORT,
-                        params = arrayOf(item.sourceProjectId)
-                    )
-                }
-
-                // 3. 不做权限校验（§0）：只记录 GRANTED_BY
-
-                // 4. 版本解析（@get:Schema 自定义 getter，需局部变量才能智能转型）
-                val versionScope: CreativeFlowShareVersionScope
-                val version: Int?
-                val versionNum: Int?
-                val itemVersionNum = item.versionNum
-                if (itemVersionNum != null) {
-                    val parsedNum = CreativeFlowVersionNumUtil.parse(itemVersionNum)
-                    val versionSimple = pipelineResourceVersionDao.getReleasedVersionByVersionNum(
-                        dslContext = dslContext,
-                        projectId = item.sourceProjectId,
-                        pipelineId = item.sourcePipelineId,
-                        versionNum = parsedNum
-                    ) ?: throw ErrorCodeException(
-                        errorCode = ProcessMessageCode.ERROR_CREATIVE_FLOW_VERSION_NUM_NOT_FOUND,
-                        params = arrayOf(item.sourceProjectId, item.sourcePipelineId, itemVersionNum)
-                    )
-                    versionScope = CreativeFlowShareVersionScope.PINNED
-                    version = versionSimple.version
-                    versionNum = parsedNum
-                } else {
-                    versionScope = CreativeFlowShareVersionScope.LATEST
-                    version = null
-                    versionNum = null
-                }
-
-                // 5. 采集 VALIDATE_RULES：读源 envHashId → OS
-                val validateRules = try {
-                    val setting = pipelineRepositoryService.getSetting(item.sourceProjectId, item.sourcePipelineId)
-                    val envHashId = setting?.envHashId
-                    if (!envHashId.isNullOrBlank()) {
-                        val osType = creativeFlowEnvValidator.getEnvOsType(userId, item.sourceProjectId, envHashId)
-                        CreativeFlowShareValidateRules(envOsType = osType)
-                    } else null
-                } catch (e: Exception) {
-                    logger.warn("CreativeFlowShareGrantService|upsertGrants|" +
-                        "failed to collect validateRules for ${item.sourceProjectId}/${item.sourcePipelineId}", e)
-                    null
-                }
-
-                // 6. upsert 落库
-                val grant = CreativeFlowShareGrant(
-                    shareId = request.shareId,
-                    flowId = item.flowId,
-                    scene = request.scene,
-                    shareMode = CreativeFlowShareMode.COPY,
-                    sourceProjectId = item.sourceProjectId,
-                    sourcePipelineId = item.sourcePipelineId,
-                    versionScope = versionScope,
-                    version = version,
-                    versionNum = versionNum,
-                    validateRulesJson = validateRules?.let { JsonUtil.toJson(it) },
-                    extInfoJson = item.extInfo?.let { JsonUtil.toJson(it) },
-                    talentCode = request.talentCode,
-                    status = CreativeFlowShareGrantStatus.ENABLED,
-                    grantedBy = userId,
-                    grantedTime = System.currentTimeMillis()
-                )
-                pipelineShareGrantDao.upsert(dslContext, grant)
-
-                granted.add(toVo(pipelineShareGrantDao.get(dslContext, request.shareId, item.flowId)!!))
             } catch (e: ErrorCodeException) {
                 logger.warn("CreativeFlowShareGrantService|upsertGrants|item failed: ${item.flowId}", e)
-                failed.add(CreativeFlowShareGrantFailure(
-                    flowId = item.flowId,
-                    errorCode = e.errorCode,
-                    message = e.defaultMessage ?: e.errorCode
-                ))
+                failed.add(
+                    CreativeFlowShareGrantFailure(
+                        flowId = item.flowId,
+                        errorCode = e.errorCode,
+                        message = e.defaultMessage ?: e.errorCode
+                    )
+                )
             } catch (e: Exception) {
                 logger.error("CreativeFlowShareGrantService|upsertGrants|item error: ${item.flowId}", e)
-                failed.add(CreativeFlowShareGrantFailure(
-                    flowId = item.flowId,
-                    errorCode = "UNKNOWN",
-                    message = e.message ?: "Unknown error"
-                ))
+                failed.add(
+                    CreativeFlowShareGrantFailure(
+                        flowId = item.flowId,
+                        errorCode = "UNKNOWN",
+                        message = e.message ?: "Unknown error"
+                    )
+                )
             }
         }
         return CreativeFlowShareGrantUpsertResult(granted = granted, failed = failed)
@@ -211,6 +134,117 @@ class CreativeFlowShareGrantService @Autowired constructor(
         return grant
     }
 
+    private fun upsertOneGrant(
+        userId: String,
+        shareId: String,
+        scene: CreativeFlowShareScene,
+        talentCode: String?,
+        item: CreativeFlowShareGrantItem
+    ): CreativeFlowShareGrantVo {
+        // 1. 校验源流水线存在且 channelCode == CREATIVE_STREAM
+        val pipelineInfo = pipelineRepositoryService.getPipelineInfo(
+            projectId = item.sourceProjectId,
+            pipelineId = item.sourcePipelineId
+        ) ?: throw ErrorCodeException(
+            errorCode = ProcessMessageCode.ERROR_CREATIVE_FLOW_SHARE_SOURCE_NOT_EXISTS,
+            params = arrayOf(item.sourceProjectId, item.sourcePipelineId)
+        )
+        if (pipelineInfo.channelCode != ChannelCode.CREATIVE_STREAM) {
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_CREATIVE_FLOW_SHARE_CHANNEL_INVALID,
+                params = arrayOf(item.sourcePipelineId)
+            )
+        }
+
+        // 2. 校验源项目组织形态：非 PERSONAL 直接拒绝
+        //    这里就是未来接团队形态的埋点，改动只需把 throw 换成按形态分流（见设计 §14）
+        val projectResult = client.get(ServiceProjectResource::class).get(item.sourceProjectId)
+        val projectVo = projectResult.data ?: throw ErrorCodeException(
+            errorCode = ProcessMessageCode.ERROR_CREATIVE_FLOW_SHARE_SOURCE_NOT_EXISTS,
+            params = arrayOf(item.sourceProjectId, item.sourcePipelineId)
+        )
+        val scopeType = ProjectScopeType.fromValue(projectVo.projectScope)
+        if (scopeType != ProjectScopeType.PERSONAL) {
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_CREATIVE_FLOW_SHARE_TEAM_PROJECT_NOT_SUPPORT,
+                params = arrayOf(item.sourceProjectId)
+            )
+        }
+
+        // 3. 不做权限校验（§0）：只记录 GRANTED_BY
+
+        // 4. 版本解析（@get:Schema 自定义 getter，需局部变量才能智能转型）
+        val (versionScope, version, versionNum) = resolveShareVersion(item)
+
+        // 5. 采集 VALIDATE_RULES：读源 envHashId → OS
+        val validateRules = collectValidateRules(userId, item)
+
+        // 6. upsert 落库
+        val grant = CreativeFlowShareGrant(
+            shareId = shareId,
+            flowId = item.flowId,
+            scene = scene,
+            shareMode = CreativeFlowShareMode.COPY,
+            sourceProjectId = item.sourceProjectId,
+            sourcePipelineId = item.sourcePipelineId,
+            versionScope = versionScope,
+            version = version,
+            versionNum = versionNum,
+            validateRulesJson = validateRules?.let { JsonUtil.toJson(it) },
+            extInfoJson = item.extInfo?.let { JsonUtil.toJson(it) },
+            talentCode = talentCode,
+            status = CreativeFlowShareGrantStatus.ENABLED,
+            grantedBy = userId,
+            grantedTime = System.currentTimeMillis()
+        )
+        pipelineShareGrantDao.upsert(dslContext, grant)
+
+        return toVo(pipelineShareGrantDao.get(dslContext, shareId, item.flowId)!!)
+    }
+
+    private fun resolveShareVersion(
+        item: CreativeFlowShareGrantItem
+    ): Triple<CreativeFlowShareVersionScope, Int?, Int?> {
+        val itemVersionNum = item.versionNum
+        if (itemVersionNum == null) {
+            return Triple(CreativeFlowShareVersionScope.LATEST, null, null)
+        }
+        val parsedNum = CreativeFlowVersionNumUtil.parse(itemVersionNum)
+        val versionSimple = pipelineResourceVersionDao.getReleasedVersionByVersionNum(
+            dslContext = dslContext,
+            projectId = item.sourceProjectId,
+            pipelineId = item.sourcePipelineId,
+            versionNum = parsedNum
+        ) ?: throw ErrorCodeException(
+            errorCode = ProcessMessageCode.ERROR_CREATIVE_FLOW_VERSION_NUM_NOT_FOUND,
+            params = arrayOf(item.sourceProjectId, item.sourcePipelineId, itemVersionNum)
+        )
+        return Triple(CreativeFlowShareVersionScope.PINNED, versionSimple.version, parsedNum)
+    }
+
+    private fun collectValidateRules(
+        userId: String,
+        item: CreativeFlowShareGrantItem
+    ): CreativeFlowShareValidateRules? {
+        return try {
+            val setting = pipelineRepositoryService.getSetting(item.sourceProjectId, item.sourcePipelineId)
+            val envHashId = setting?.envHashId
+            if (envHashId.isNullOrBlank()) {
+                null
+            } else {
+                val osType = creativeFlowEnvValidator.getEnvOsType(userId, item.sourceProjectId, envHashId)
+                CreativeFlowShareValidateRules(envOsType = osType)
+            }
+        } catch (e: Exception) {
+            logger.warn(
+                "CreativeFlowShareGrantService|upsertGrants|" +
+                    "failed to collect validateRules for ${item.sourceProjectId}/${item.sourcePipelineId}",
+                e
+            )
+            null
+        }
+    }
+
     private fun toVo(grant: CreativeFlowShareGrant): CreativeFlowShareGrantVo {
         return CreativeFlowShareGrantVo(
             shareId = grant.shareId,
@@ -222,14 +256,22 @@ class CreativeFlowShareGrantService @Autowired constructor(
             versionScope = grant.versionScope,
             versionNum = grant.versionNum?.let { CreativeFlowVersionNumUtil.format(it) },
             validateRules = grant.validateRulesJson?.let {
-                try { JsonUtil.to(it, CreativeFlowShareValidateRules::class.java) } catch (_: Exception) { null }
+                try {
+                    JsonUtil.to(it, CreativeFlowShareValidateRules::class.java)
+                } catch (_: Exception) {
+                    null
+                }
             },
             status = grant.status,
             talentCode = grant.talentCode,
             grantedBy = grant.grantedBy,
             grantedTime = grant.grantedTime,
             extInfo = grant.extInfoJson?.let {
-                try { JsonUtil.to(it, CreativeFlowShareExtInfo::class.java) } catch (_: Exception) { null }
+                try {
+                    JsonUtil.to(it, CreativeFlowShareExtInfo::class.java)
+                } catch (_: Exception) {
+                    null
+                }
             }
         )
     }

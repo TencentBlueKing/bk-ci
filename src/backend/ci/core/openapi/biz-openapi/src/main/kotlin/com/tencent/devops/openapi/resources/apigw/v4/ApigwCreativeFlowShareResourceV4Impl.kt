@@ -69,7 +69,10 @@ class ApigwCreativeFlowShareResourceV4Impl @Autowired constructor(
         if (apigwType != "apigw-app" && apigwType != "apigw") {
             throw PermissionForbiddenException("share grant revoke is only allowed via apigw-app")
         }
-        logger.info("OPENAPI_CREATIVE_FLOW_V4|$userId|revokeGrants|shareId=${request.shareId}|talentCode=${request.talentCode}")
+        logger.info(
+            "OPENAPI_CREATIVE_FLOW_V4|$userId|revokeGrants|" +
+                "shareId=${request.shareId}|talentCode=${request.talentCode}"
+        )
         return client.get(ServiceCreativeFlowShareResource::class).revokeGrants(
             userId = userId,
             request = request

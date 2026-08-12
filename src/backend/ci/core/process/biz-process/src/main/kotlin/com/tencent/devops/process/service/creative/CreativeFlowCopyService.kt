@@ -364,5 +364,4 @@ class CreativeFlowCopyService @Autowired constructor(
             "$sourceProjectId/$sourcePipelineId@$versionNum|$shareId#$truncatedFlowId"
         } else raw
     }
-
 }

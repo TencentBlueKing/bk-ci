@@ -27,7 +27,10 @@ class ApigwCreativeFlowCopyResourceV4Impl @Autowired constructor(
         projectId: String,
         request: CreativeFlowCopyRequest
     ): Result<CreativeFlowCopyResult> {
-        logger.info("OPENAPI_CREATIVE_FLOW_V4|$userId|copyAcrossProject|$projectId|shareId=${request.shareId}|flowId=${request.flowId}")
+        logger.info(
+            "OPENAPI_CREATIVE_FLOW_V4|$userId|copyAcrossProject|$projectId|" +
+                "shareId=${request.shareId}|flowId=${request.flowId}"
+        )
         return client.get(ServiceCreativeFlowCopyResource::class).copyAcrossProject(
             userId = userId,
             projectId = projectId,
