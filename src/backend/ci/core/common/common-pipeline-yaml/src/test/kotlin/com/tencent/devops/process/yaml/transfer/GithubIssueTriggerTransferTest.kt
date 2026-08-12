@@ -41,8 +41,6 @@ class GithubIssueTriggerTransferTest {
               "action": ["assign", "unassign", "update", "label", "unlabel"],
               "assignees": ["alice", "bob"],
               "assignees-ignore": ["bot"],
-              "assignee-changes": ["reviewer"],
-              "assignee-changes-ignore": ["automation"],
               "users-ignore": ["bot-actor"],
               "labels": ["bug", "feature-*"],
               "labels-ignore": ["wontfix"]
@@ -54,8 +52,6 @@ class GithubIssueTriggerTransferTest {
 
         assertEquals(listOf("alice", "bob"), v2.assignees)
         assertEquals(listOf("bot"), v2.assigneesIgnore)
-        assertEquals(listOf("reviewer"), v2.assigneeChanges)
-        assertEquals(listOf("automation"), v3.assigneeChangesIgnore)
         assertEquals(listOf("bot-actor"), v3.usersIgnore)
         assertEquals(listOf("bug", "feature-*"), v3.labels)
         assertEquals(listOf("wontfix"), v3.labelsIgnore)
@@ -72,8 +68,6 @@ class GithubIssueTriggerTransferTest {
                     action = listOf("assign", "unassign", "update", "label", "unlabel"),
                     assignees = listOf("alice", "bob"),
                     assigneesIgnore = listOf("bot"),
-                    assigneeChanges = listOf("reviewer"),
-                    assigneeChangesIgnore = listOf("automation"),
                     usersIgnore = listOf("bot-actor"),
                     labels = listOf("bug", "feature-*"),
                     labelsIgnore = listOf("wontfix")
@@ -85,8 +79,6 @@ class GithubIssueTriggerTransferTest {
         val element = elements.single() as CodeGithubWebHookTriggerElement
         assertEquals("alice,bob", element.includeAssignees)
         assertEquals("bot", element.excludeAssignees)
-        assertEquals("reviewer", element.includeAssigneeChanges)
-        assertEquals("automation", element.excludeAssigneeChanges)
         assertEquals("bot-actor", element.excludeUsers)
         assertEquals("bug,feature-*", element.includeLabels)
         assertEquals("wontfix", element.excludeLabels)
@@ -101,8 +93,6 @@ class GithubIssueTriggerTransferTest {
             includeIssueAction = listOf("assign", "unassign", "update", "label", "unlabel"),
             includeAssignees = "alice,bob",
             excludeAssignees = "bot",
-            includeAssigneeChanges = "reviewer",
-            excludeAssigneeChanges = "automation",
             excludeUsers = "bot-actor",
             includeLabels = "bug,feature-*",
             excludeLabels = "wontfix"
@@ -117,8 +107,6 @@ class GithubIssueTriggerTransferTest {
 
         assertEquals(listOf("alice", "bob"), issue.assignees)
         assertEquals(listOf("bot"), issue.assigneesIgnore)
-        assertEquals(listOf("reviewer"), issue.assigneeChanges)
-        assertEquals(listOf("automation"), issue.assigneeChangesIgnore)
         assertEquals(listOf("bot-actor"), issue.usersIgnore)
         assertEquals(listOf("bug", "feature-*"), issue.labels)
         assertEquals(listOf("wontfix"), issue.labelsIgnore)
@@ -134,8 +122,6 @@ class GithubIssueTriggerTransferTest {
                     action = listOf("assign", "unassign"),
                     assignees = listOf("alice"),
                     assigneesIgnore = listOf("bot"),
-                    assigneeChanges = listOf("bob"),
-                    assigneeChangesIgnore = listOf("automation")
                 )
             ),
             elementQueue = elements
@@ -144,8 +130,6 @@ class GithubIssueTriggerTransferTest {
         val element = elements.single() as CodeGithubWebHookTriggerElement
         assertEquals("alice", element.includeAssignees)
         assertEquals("bot", element.excludeAssignees)
-        assertEquals("bob", element.includeAssigneeChanges)
-        assertEquals("automation", element.excludeAssigneeChanges)
 
         val mr = transfer.git2YamlTriggerOn(
             elements = listOf(WebHookTriggerElementChanger(element)),
@@ -155,8 +139,6 @@ class GithubIssueTriggerTransferTest {
         ).single().mr!!
         assertEquals(listOf("alice"), mr.assignees)
         assertEquals(listOf("bot"), mr.assigneesIgnore)
-        assertEquals(listOf("bob"), mr.assigneeChanges)
-        assertEquals(listOf("automation"), mr.assigneeChangesIgnore)
     }
 
     @Test
@@ -164,9 +146,7 @@ class GithubIssueTriggerTransferTest {
         val json = """
             {
               "assignees": ["alice"],
-              "assignees-ignore": ["bot"],
-              "assignee-changes": ["bob"],
-              "assignee-changes-ignore": ["automation"]
+              "assignees-ignore": ["bot"]
             }
         """.trimIndent()
 
@@ -174,7 +154,5 @@ class GithubIssueTriggerTransferTest {
         val v3 = JsonUtil.to(json, MrRule::class.java)
         assertEquals(listOf("alice"), v2.assignees)
         assertEquals(listOf("bot"), v2.assigneesIgnore)
-        assertEquals(listOf("bob"), v3.assigneeChanges)
-        assertEquals(listOf("automation"), v3.assigneeChangesIgnore)
     }
 }

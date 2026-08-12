@@ -43,9 +43,7 @@ data class GithubPullRequestEvent(
     @JsonProperty("repository")
     val repository: GithubRepository,
     @JsonProperty("sender")
-    override val sender: GithubUser,
-    @JsonProperty("assignee")
-    val assignee: GithubUser? = null
+    override val sender: GithubUser
 ) : GithubEvent(sender) {
     companion object {
         const val classType = "pull_request"

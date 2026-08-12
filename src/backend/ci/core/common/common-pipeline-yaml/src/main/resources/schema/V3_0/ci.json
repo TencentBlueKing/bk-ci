@@ -258,18 +258,6 @@
                       "type" : "string"
                     }
                   },
-                  "assignee-changes" : {
-                    "type" : "array",
-                    "items" : {
-                      "type" : "string"
-                    }
-                  },
-                  "assignee-changes-ignore" : {
-                    "type" : "array",
-                    "items" : {
-                      "type" : "string"
-                    }
-                  },
                   "report-commit-check" : {
                     "type" : "boolean"
                   },
@@ -586,18 +574,6 @@
                     }
                   },
                   "assignees-ignore" : {
-                    "type" : "array",
-                    "items" : {
-                      "type" : "string"
-                    }
-                  },
-                  "assignee-changes" : {
-                    "type" : "array",
-                    "items" : {
-                      "type" : "string"
-                    }
-                  },
-                  "assignee-changes-ignore" : {
                     "type" : "array",
                     "items" : {
                       "type" : "string"
@@ -1218,18 +1194,6 @@
                     "type" : "string"
                   }
                 },
-                "assignee-changes" : {
-                  "type" : "array",
-                  "items" : {
-                    "type" : "string"
-                  }
-                },
-                "assignee-changes-ignore" : {
-                  "type" : "array",
-                  "items" : {
-                    "type" : "string"
-                  }
-                },
                 "report-commit-check" : {
                   "type" : "boolean"
                 },
@@ -1546,18 +1510,6 @@
                   }
                 },
                 "assignees-ignore" : {
-                  "type" : "array",
-                  "items" : {
-                    "type" : "string"
-                  }
-                },
-                "assignee-changes" : {
-                  "type" : "array",
-                  "items" : {
-                    "type" : "string"
-                  }
-                },
-                "assignee-changes-ignore" : {
                   "type" : "array",
                   "items" : {
                     "type" : "string"

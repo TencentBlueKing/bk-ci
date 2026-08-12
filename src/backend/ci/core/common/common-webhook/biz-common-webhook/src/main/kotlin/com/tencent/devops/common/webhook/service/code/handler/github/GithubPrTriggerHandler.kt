@@ -54,8 +54,6 @@ import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_ACTION
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_ASSIGNEE
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_ASSIGNEES
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_ASSIGNEE_LOGINS
-import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_CHANGED_ASSIGNEE
-import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_CHANGED_ASSIGNEE_ID
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_AUTHOR
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_CREATE_TIME
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_DESCRIPTION
@@ -278,33 +276,13 @@ class GithubPrTriggerHandler @Autowired constructor(
                 },
                 filterName = "prAssignees"
             )
-            val filters = mutableListOf<WebhookFilter>(
+            return listOf(
                 actionFilter,
                 userFilter,
                 targetBranchFilter,
                 labelFilter,
                 assigneeFilter
             )
-            if (event.action == "assigned" || event.action == "unassigned") {
-                filters.add(
-                    UserFilter(
-                        pipelineId = pipelineId,
-                        triggerOnUser = event.assignee?.login ?: "",
-                        includedUsers = WebhookUtils.convert(includeAssigneeChanges),
-                        excludedUsers = WebhookUtils.convert(excludeAssigneeChanges),
-                        includedFailedReason = I18Variable(
-                            code = WebhookI18nConstants.OWNER_NOT_MATCH,
-                            params = listOf(event.assignee?.login ?: "")
-                        ).toJsonStr(),
-                        excludedFailedReason = I18Variable(
-                            code = WebhookI18nConstants.OWNER_IGNORED,
-                            params = listOf(event.assignee?.login ?: "")
-                        ).toJsonStr(),
-                        filterName = "prAssigneeChange"
-                    )
-                )
-            }
-            return filters
         }
     }
 
@@ -366,8 +344,6 @@ class GithubPrTriggerHandler @Autowired constructor(
             startParams[BK_REPO_GIT_WEBHOOK_MR_TITLE] = pullRequest.title ?: ""
             startParams[BK_REPO_GIT_WEBHOOK_MR_ASSIGNEE] =
                 pullRequest.assignees.joinToString(",") { it.login }
-            startParams[BK_REPO_GIT_WEBHOOK_MR_CHANGED_ASSIGNEE] = assignee?.login ?: ""
-            startParams[BK_REPO_GIT_WEBHOOK_MR_CHANGED_ASSIGNEE_ID] = assignee?.id ?: ""
             startParams[BK_REPO_GIT_WEBHOOK_MR_ASSIGNEES] = JsonUtil.toJson(pullRequest.assignees, false)
             startParams[BK_REPO_GIT_WEBHOOK_MR_ASSIGNEE_LOGINS] =
                 pullRequest.assignees.joinToString(",") { it.login }

@@ -32,9 +32,7 @@ import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_ACTION
-import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_CHANGED_ASSIGNEE
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_ASSIGNEES
-import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_CHANGED_ASSIGNEE_ID
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_ASSIGNEE_LOGINS
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_LABEL
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_LABELS
@@ -136,42 +134,6 @@ class GithubIssueTriggerHandlerTest {
     }
 
     @Test
-    fun `should filter assigned and unassigned events by changed assignee`() {
-        assertTrue(
-            isMatch(
-                event = event("assigned", assignee = bob),
-                params = webHookParams("assign", includeAssigneeChanges = "bob")
-            )
-        )
-        assertFalse(
-            isMatch(
-                event = event("assigned", assignee = bob),
-                params = webHookParams("assign", includeAssigneeChanges = "alice")
-            )
-        )
-        assertTrue(
-            isMatch(
-                event = event("unassigned", assignee = bob, currentAssignees = listOf(alice)),
-                params = webHookParams("unassign", includeAssigneeChanges = "bob")
-            )
-        )
-    }
-
-    @Test
-    fun `should let excluded assignee override included assignee`() {
-        assertFalse(
-            isMatch(
-                event = event("assigned", assignee = bob),
-                params = webHookParams(
-                    includeIssueAction = "assign",
-                    includeAssigneeChanges = "bob",
-                    excludeAssigneeChanges = "bob"
-                )
-            )
-        )
-    }
-
-    @Test
     fun `should filter every issue action by current assignees with exact login matching`() {
         assertTrue(
             isMatch(
@@ -246,14 +208,13 @@ class GithubIssueTriggerHandlerTest {
     }
 
     @Test
-    fun `should apply state filters to all actions and change filter only to assignee actions`() {
+    fun `should apply state filters to all issue actions`() {
         assertTrue(
             isMatch(
-                event = event("assigned", assignee = bob),
+                event = event("assigned"),
                 params = webHookParams(
                     includeIssueAction = "assign,label",
                     includeAssignees = "alice",
-                    includeAssigneeChanges = "bob",
                     includeLabels = "urgent"
                 )
             )
@@ -264,7 +225,6 @@ class GithubIssueTriggerHandlerTest {
                 params = webHookParams(
                     includeIssueAction = "assign,label",
                     includeAssignees = "alice",
-                    includeAssigneeChanges = "missing",
                     includeLabels = "urgent"
                 )
             )
@@ -272,32 +232,28 @@ class GithubIssueTriggerHandlerTest {
     }
 
     @Test
-    fun `should expose assigned user and all current assignees`() {
+    fun `should expose all current assignees after assignment`() {
         val params = handler.retrieveParams(
-            event = event(action = "assigned", assignee = bob),
+            event = event(action = "assigned"),
             projectId = null,
             repository = null
         )
 
         assertEquals("assign", params[PIPELINE_GIT_ACTION])
-        assertEquals("bob", params[BK_REPO_GIT_WEBHOOK_ISSUE_CHANGED_ASSIGNEE])
-        assertEquals(3L, params[BK_REPO_GIT_WEBHOOK_ISSUE_CHANGED_ASSIGNEE_ID])
         assertEquals("alice,bob", params[BK_REPO_GIT_WEBHOOK_ISSUE_ASSIGNEE_LOGINS])
         assertTrue(params[BK_REPO_GIT_WEBHOOK_ISSUE_ASSIGNEES].toString().contains("alice"))
         assertTrue(params[BK_REPO_GIT_WEBHOOK_ISSUE_ASSIGNEES].toString().contains("bob"))
     }
 
     @Test
-    fun `should expose unassigned user but exclude it from current assignees`() {
+    fun `should expose current assignees after unassignment`() {
         val params = handler.retrieveParams(
-            event = event(action = "unassigned", assignee = bob, currentAssignees = listOf(alice)),
+            event = event(action = "unassigned", currentAssignees = listOf(alice)),
             projectId = null,
             repository = null
         )
 
         assertEquals("unassign", params[PIPELINE_GIT_ACTION])
-        assertEquals("bob", params[BK_REPO_GIT_WEBHOOK_ISSUE_CHANGED_ASSIGNEE])
-        assertEquals(3L, params[BK_REPO_GIT_WEBHOOK_ISSUE_CHANGED_ASSIGNEE_ID])
         assertEquals("alice", params[BK_REPO_GIT_WEBHOOK_ISSUE_ASSIGNEE_LOGINS])
         assertTrue(params[BK_REPO_GIT_WEBHOOK_ISSUE_ASSIGNEES].toString().contains("alice"))
         assertFalse(params[BK_REPO_GIT_WEBHOOK_ISSUE_ASSIGNEES].toString().contains("bob"))
@@ -338,12 +294,10 @@ class GithubIssueTriggerHandlerTest {
     }
 
     @Test
-    fun `should deserialize changed assignee from github payload`() {
+    fun `should deserialize current assignees from assigned payload`() {
         val parsed = githubEvent("GithubIssueAssignedEvent.json")
 
         assertEquals("assigned", parsed.action)
-        assertEquals("bob", parsed.assignee?.login)
-        assertEquals(3L, parsed.assignee?.id)
         assertEquals(listOf("alice", "bob"), parsed.issue.assignees?.map { it.login })
         assertFalse(parsed.issue.locked.toBoolean())
     }
@@ -360,7 +314,6 @@ class GithubIssueTriggerHandlerTest {
 
     private fun event(
         action: String,
-        assignee: GithubUser? = null,
         changedLabel: GithubLabel? = null,
         currentAssignees: List<GithubUser> = listOf(alice, bob),
         currentLabels: List<GithubLabel> = listOf(bug, urgent)
@@ -387,7 +340,6 @@ class GithubIssueTriggerHandlerTest {
         ),
         repository = repository,
         sender = author,
-        assignee = assignee,
         label = changedLabel
     )
 
@@ -411,8 +363,6 @@ class GithubIssueTriggerHandlerTest {
         includeIssueAction: String,
         includeAssignees: String? = null,
         excludeAssignees: String? = null,
-        includeAssigneeChanges: String? = null,
-        excludeAssigneeChanges: String? = null,
         excludeUsers: String? = null,
         includeLabels: String? = null,
         excludeLabels: String? = null
@@ -427,8 +377,6 @@ class GithubIssueTriggerHandlerTest {
         includeIssueAction = includeIssueAction,
         includeAssignees = includeAssignees,
         excludeAssignees = excludeAssignees,
-        includeAssigneeChanges = includeAssigneeChanges,
-        excludeAssigneeChanges = excludeAssigneeChanges,
         includeLabels = includeLabels,
         excludeLabels = excludeLabels
     )

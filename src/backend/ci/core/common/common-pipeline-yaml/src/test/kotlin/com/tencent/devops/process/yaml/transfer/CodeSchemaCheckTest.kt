@@ -47,8 +47,6 @@ class CodeSchemaCheckTest {
                 action: [assign, unassign, update, label, unlabel]
                 assignees: [alice, bob]
                 assignees-ignore: [bot]
-                assignee-changes: [reviewer]
-                assignee-changes-ignore: [automation]
                 users-ignore: [bot-actor]
                 labels: [bug, 'feature-*']
                 labels-ignore: [wontfix]
@@ -56,8 +54,6 @@ class CodeSchemaCheckTest {
                 action: [assign, unassign]
                 assignees: [alice]
                 assignees-ignore: [bot]
-                assignee-changes: [bob]
-                assignee-changes-ignore: [automation]
             stages:
               - name: stage-1
                 jobs:

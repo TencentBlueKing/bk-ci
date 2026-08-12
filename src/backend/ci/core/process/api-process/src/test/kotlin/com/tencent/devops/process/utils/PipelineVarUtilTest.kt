@@ -34,13 +34,9 @@ import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
 import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
-import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_CHANGED_ASSIGNEE
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_ASSIGNEES
-import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_CHANGED_ASSIGNEE_ID
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_ASSIGNEES
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_ASSIGNEE_LOGINS
-import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_CHANGED_ASSIGNEE
-import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_CHANGED_ASSIGNEE_ID
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_ASSIGNEE_LOGINS
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_LABEL
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_LABELS
@@ -154,8 +150,6 @@ class PipelineVarUtilTest {
     @Test
     fun `github issue context variables should map to webhook parameters`() {
         val expected = mapOf(
-            "ci.issue_changed_assignee" to BK_REPO_GIT_WEBHOOK_ISSUE_CHANGED_ASSIGNEE,
-            "ci.issue_changed_assignee_id" to BK_REPO_GIT_WEBHOOK_ISSUE_CHANGED_ASSIGNEE_ID,
             "ci.issue_assignees" to BK_REPO_GIT_WEBHOOK_ISSUE_ASSIGNEES,
             "ci.issue_assignee_logins" to BK_REPO_GIT_WEBHOOK_ISSUE_ASSIGNEE_LOGINS,
             "ci.issue_label" to BK_REPO_GIT_WEBHOOK_ISSUE_LABEL,
@@ -175,8 +169,6 @@ class PipelineVarUtilTest {
     @Test
     fun `github pull request assignee context variables should map to webhook parameters`() {
         val expected = mapOf(
-            "ci.mr_changed_assignee" to BK_REPO_GIT_WEBHOOK_MR_CHANGED_ASSIGNEE,
-            "ci.mr_changed_assignee_id" to BK_REPO_GIT_WEBHOOK_MR_CHANGED_ASSIGNEE_ID,
             "ci.mr_assignees" to BK_REPO_GIT_WEBHOOK_MR_ASSIGNEES,
             "ci.mr_assignee_logins" to BK_REPO_GIT_WEBHOOK_MR_ASSIGNEE_LOGINS
         )

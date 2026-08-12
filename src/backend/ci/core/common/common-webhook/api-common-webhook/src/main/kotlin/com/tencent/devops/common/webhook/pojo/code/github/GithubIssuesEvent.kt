@@ -41,8 +41,6 @@ data class GithubIssuesEvent(
     val repository: GithubRepository,
     @Schema(title = "操作人信息")
     override val sender: GithubUser,
-    @Schema(title = "本次指派或取消指派的受理人")
-    val assignee: GithubUser? = null,
     @Schema(title = "本次添加或移除的标签")
     val label: GithubLabel? = null
 ) : GithubEvent(sender) {

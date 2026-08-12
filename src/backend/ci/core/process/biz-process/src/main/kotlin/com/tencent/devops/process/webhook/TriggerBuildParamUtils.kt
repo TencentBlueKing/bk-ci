@@ -67,9 +67,7 @@ import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_FAILED_TASKS
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_HEAD_REF
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_HEAD_REPO_URL
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_ISSUE_DESCRIPTION
-import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_ISSUE_CHANGED_ASSIGNEE
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_ISSUE_ASSIGNEES
-import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_ISSUE_CHANGED_ASSIGNEE_ID
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_ISSUE_ASSIGNEE_LOGINS
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_ISSUE_ID
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_ISSUE_IID
@@ -92,8 +90,6 @@ import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_MR_IID
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_MR_LABELS
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_MR_ASSIGNEES
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_MR_ASSIGNEE_LOGINS
-import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_MR_CHANGED_ASSIGNEE
-import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_MR_CHANGED_ASSIGNEE_ID
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_MR_PROPOSER
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_MR_REVIEWERS
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_MR_TITLE
@@ -392,8 +388,6 @@ object TriggerBuildParamUtils {
             mapOf(
                 CodeEventType.PULL_REQUEST.name to params.plus(
                     listOf(
-                        CI_MR_CHANGED_ASSIGNEE,
-                        CI_MR_CHANGED_ASSIGNEE_ID,
                         CI_MR_ASSIGNEES,
                         CI_MR_ASSIGNEE_LOGINS
                     )
@@ -466,8 +460,6 @@ object TriggerBuildParamUtils {
             CI_ISSUE_MILESTONE_ID
         )
         val githubParams = listOf(
-            CI_ISSUE_CHANGED_ASSIGNEE,
-            CI_ISSUE_CHANGED_ASSIGNEE_ID,
             CI_ISSUE_ASSIGNEES,
             CI_ISSUE_ASSIGNEE_LOGINS,
             CI_ISSUE_LABEL,
