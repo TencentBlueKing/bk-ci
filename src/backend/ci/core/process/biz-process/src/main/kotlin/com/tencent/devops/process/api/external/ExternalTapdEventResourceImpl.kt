@@ -14,7 +14,7 @@ class ExternalTapdEventResourceImpl @Autowired constructor(
     private val tapdWebhookRequestService: TapdWebhookRequestService
 ) : ExternalTapdEventResource {
 
-    @Value("\${tapd.webhook.secret:}")
+    @Value("\${external.webhook.tapd.secret:}")
     private val tapdWebhookSecret: String = ""
 
     override fun webhook(

@@ -516,6 +516,7 @@ class ExpertSupportService @Autowired constructor(
                 params = arrayOf("We're sorry but you don't have permission to expand disk in $workspaceName")
             )
         }
+        workspaceCommon.checkFunctionRestrictedZone(workspaceName)
         ActionAuditContext.current()
             .addAttribute(TencentActionAuditContent.PROJECT_CODE_TEMPLATE, workspace.projectId)
             .scopeId = workspace.projectId

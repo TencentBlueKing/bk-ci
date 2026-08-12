@@ -16,6 +16,7 @@ import com.tencent.devops.remotedev.pojo.IWhiteList
 import com.tencent.devops.remotedev.pojo.OperateCvmData
 import com.tencent.devops.remotedev.pojo.ProjectWorkspace
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
+import com.tencent.devops.remotedev.pojo.ProjectWorkspaceFetchData
 import com.tencent.devops.remotedev.pojo.TaskStatusResp
 import com.tencent.devops.remotedev.pojo.TemplateWorkspaceAssignResp
 import com.tencent.devops.remotedev.pojo.UserOnePassword
@@ -712,6 +713,16 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
             pageSize = pageSize,
             search = search
         )
+    }
+
+    override fun getProjectWorkspaceList4Console(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        data: ProjectWorkspaceFetchData
+    ): Result<Page<ProjectWorkspace>> {
+        logger.info("getProjectWorkspaceList4Console |$appCode|$userId|$data")
+        return client.get(ServiceRemoteDevResource::class).getProjectWorkspaceList4Console(userId, data)
     }
 
     override fun getUserWorkspaceRecordPermission(

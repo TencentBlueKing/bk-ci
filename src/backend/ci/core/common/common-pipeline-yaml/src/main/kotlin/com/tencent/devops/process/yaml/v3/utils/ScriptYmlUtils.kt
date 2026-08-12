@@ -427,7 +427,7 @@ object ScriptYmlUtils {
                     val variable =
                         YamlObjects.transValue<Map<String, Any?>>("extends.template.variables", it.key, it.value)
                     PreTemplateVariable(
-                        value = YamlObjects.getNullValue("value", variable),
+                        value = variable["value"],
                         allowModifyAtStartup = YamlObjects.getNullValue("allow-modify-at-startup", variable)
                             ?.toBoolean() ?: true
                     )

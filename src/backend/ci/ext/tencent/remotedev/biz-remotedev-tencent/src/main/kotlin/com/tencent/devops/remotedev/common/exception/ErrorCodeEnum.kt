@@ -246,6 +246,11 @@ enum class ErrorCodeEnum(
         errorCode = "2132057",
         formatErrorMessage = "no available distributing workspace for template {0}"
     ),
+    FUNCTION_RESTRICTED_ZONE(
+        errorType = ErrorType.USER,
+        errorCode = "2132058",
+        formatErrorMessage = "workspace {0} is in restricted zone {1}, this operation is not allowed"
+    ),
     ;
 
     fun getErrorMessage(): String {

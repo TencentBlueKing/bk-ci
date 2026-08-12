@@ -28,10 +28,16 @@
 package com.tencent.devops.remotedev.service
 
 import com.fasterxml.jackson.core.type.TypeReference
+import com.tencent.devops.auth.api.service.ServiceResourceGroupResource
+import com.tencent.devops.auth.api.service.ServiceResourceMemberResource
+import com.tencent.devops.auth.pojo.request.CustomGroupCreateReq
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.project.pojo.ProjectCreateUserInfo
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.dao.ConfigDao
 import com.tencent.devops.remotedev.dao.WorkspaceDao
@@ -55,7 +61,10 @@ class TemplateWorkspaceAssignService @Autowired constructor(
     private val dslContext: DSLContext,
     private val configDao: ConfigDao,
     private val workspaceDao: WorkspaceDao,
+    private val client: Client,
     private val deliverControl: DeliverControl,
+    private val permissionService: PermissionService,
+    private val tokenService: ClientTokenService,
     private val redisOperation: RedisOperation
 ) {
 
@@ -128,6 +137,45 @@ class TemplateWorkspaceAssignService @Autowired constructor(
         )
         lock.use {
             lock.lock()
+            // 1、添加用户到项目用户组(AnyDev云桌面用户组)：先判断用户是否有项目权限，
+            // 没有才创建用户组 + 加人，有“AnyDev云桌面用户组”直接加人，没有才创建；
+            if (!permissionService.checkUserVisitPermission(applicant, projectId)) {
+                logger.info("assignByTemplate|checkUserVisitPermission|not visit permission")
+                val gpId = client.get(ServiceResourceGroupResource::class).createCustomGroupAndPermissions(
+                    projectCode = projectId,
+                    customGroupCreateReq = CustomGroupCreateReq(
+                        groupName = "AnyDev云桌面用户组",
+                        groupDesc = "AnyDev云桌面用户组，用于控制AnyDev的权限",
+                        actions = listOf("project_visit")
+                    )
+                ).data ?: throw ErrorCodeException(
+                    errorCode = ErrorCodeEnum.OPEN_CLAW_WORKSPACE_CREATE_ERROR.errorCode,
+                    params = arrayOf("create AnyDev云桌面用户组 error no id")
+                )
+                logger.info("assignByTemplate|createCustomGroupAndPermissions|gpId|$gpId")
+                val res = client.get(ServiceResourceMemberResource::class).batchAddResourceGroupMembers(
+                    tokenService.getSystemToken(),
+                    projectId,
+                    ProjectCreateUserInfo(
+                        createUserId = applicant,
+                        groupId = gpId,
+                        userIds = listOf(applicant),
+                        roleName = null,
+                        roleId = null,
+                        deptIds = null,
+                        resourceType = null,
+                        resourceCode = null
+                    )
+                ).data
+                logger.info("assignByTemplate|batchAddResourceGroupMembers|res|$res")
+                if (res != true) {
+                    throw ErrorCodeException(
+                        errorCode = ErrorCodeEnum.OPEN_CLAW_WORKSPACE_CREATE_ERROR.errorCode,
+                        params = arrayOf("add ${applicant} AnyDev云桌面用户组 error")
+                    )
+                }
+            }
+
             // 仅取 IP 已就绪的待分配实例；该项目无可用实例则返回 null，由上层回退到下一个候选项目
             val workspace = workspaceDao.fetchOldestDistributingWorkspace(dslContext, projectId)
             if (workspace == null) {

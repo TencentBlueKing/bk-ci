@@ -5,14 +5,12 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
-import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.EmptyElement
 import com.tencent.devops.common.pipeline.pojo.element.atom.ElementCheckResult
 import com.tencent.devops.common.pipeline.pojo.element.atom.ElementHolder
 import com.tencent.devops.common.pipeline.pojo.element.atom.SubPipelineType
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.process.api.service.ServicePipelineVersionResource
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.SubPipelineRefService
@@ -36,8 +34,7 @@ class SubPipelineCheckService @Autowired constructor(
     private val subPipelineRefService: SubPipelineRefService,
     private val subPipelineTaskService: SubPipelineTaskService,
     @Lazy
-    private val pipelineRepositoryService: PipelineRepositoryService,
-    private val client: Client
+    private val pipelineRepositoryService: PipelineRepositoryService
 ) {
 
     /**
@@ -333,49 +330,6 @@ class SubPipelineCheckService @Autowired constructor(
         }
     }
 
-    fun batchCheckBranchVersion(
-        projectId: String,
-        pipelineId: String,
-        subPipelineElementMap: Map<SubPipelineIdAndName, MutableList<ElementHolder>>
-    ): Set<String> {
-        val errorDetails = mutableSetOf<String>()
-        subPipelineElementMap.filter {
-            !it.key.branch.isNullOrBlank()
-        }.forEach { (subPipeline, holderList) ->
-            val subProjectId = subPipeline.projectId
-            val subPipelineId = subPipeline.pipelineId
-            val subPipelineBranch = subPipeline.branch!!
-            val subPipelineName = subPipeline.pipelineName
-            val branchVersionResource = checkBranchVersion(
-                projectId = subProjectId,
-                pipelineId = subPipelineId,
-                branch = subPipelineBranch
-            )
-            if (branchVersionResource == null) {
-                holderList.sortedWith(
-                    compareBy(
-                        { it.stageIndex },
-                        { it.containerIndex },
-                        { it.elementIndex }
-                    )
-                ).forEach { holder ->
-                    errorDetails.add(
-                        I18nUtil.getCodeLanMessage(
-                            messageCode = ProcessMessageCode.ERROR_NO_PIPELINE_VERSION_EXISTS_BY_BRANCH,
-                            params = arrayOf(
-                                "${holder.stageIndex}-${holder.containerIndex + 1}-${holder.elementIndex + 1}",
-                                "/console/pipeline/$subProjectId/$subPipelineId",
-                                subPipelineName,
-                                subPipelineBranch
-                            )
-                        )
-                    )
-                }
-            }
-        }
-        return errorDetails
-    }
-
     private fun pipelineEditUrl(projectId: String, pipelineId: String) =
         "/console/pipeline/$projectId/$pipelineId/edit"
 
@@ -435,21 +389,6 @@ class SubPipelineCheckService @Autowired constructor(
                 .append("\n")
         }
         return stringBuilder.toString()
-    }
-
-    private fun checkBranchVersion(
-        projectId: String,
-        pipelineId: String,
-        branch: String
-    ) = try {
-        client.get(ServicePipelineVersionResource::class).getVersionByBranch(
-            projectId = projectId,
-            pipelineId = pipelineId,
-            branch = branch
-        ).data
-    } catch (ignored: Exception) {
-        logger.warn("fail to get [$branch]branch version of pipeline[$pipelineId]", ignored)
-        null
     }
 
     companion object {

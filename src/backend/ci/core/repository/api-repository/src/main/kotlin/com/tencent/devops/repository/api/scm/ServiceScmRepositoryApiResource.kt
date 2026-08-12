@@ -27,6 +27,8 @@
 
 package com.tencent.devops.repository.api.scm
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.repository.pojo.Repository
@@ -41,7 +43,9 @@ import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.ws.rs.Consumes
+import jakarta.ws.rs.DefaultValue
 import jakarta.ws.rs.GET
+import jakarta.ws.rs.HeaderParam
 import jakarta.ws.rs.POST
 import jakarta.ws.rs.Path
 import jakarta.ws.rs.PathParam
@@ -147,6 +151,64 @@ interface ServiceScmRepositoryApiResource {
         @Parameter(description = "pageSize", required = true)
         @QueryParam("pageSize")
         pageSize: Int = 20
+    ): Result<List<Reference>>
+
+    @Operation(summary = "获取仓库分支列表(通过代码库HashId或别名)")
+    @GET
+    @Path("/listBranchesByHashIdOrName")
+    fun listBranchesByHashIdOrName(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "代码库类型,ID或Name", required = true)
+        @QueryParam("repositoryType")
+        repositoryType: RepositoryType?,
+        @Parameter(description = "代码库ID或名称", required = true)
+        @QueryParam("repoHashIdOrName")
+        repoHashIdOrName: String,
+        @Parameter(description = "搜索条件", required = false)
+        @QueryParam("search")
+        search: String?,
+        @Parameter(description = "页码，不传默认为1", required = false)
+        @QueryParam("page")
+        @DefaultValue("1")
+        page: Int,
+        @Parameter(description = "每页数量，不传默认为20", required = false)
+        @QueryParam("pageSize")
+        @DefaultValue("20")
+        pageSize: Int
+    ): Result<List<Reference>>
+
+    @Operation(summary = "获取Tag列表(通过代码库HashId或别名)")
+    @GET
+    @Path("/listTagsByHashIdOrName")
+    fun listTagsByHashIdOrName(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "代码库类型,ID或Name", required = true)
+        @QueryParam("repositoryType")
+        repositoryType: RepositoryType?,
+        @Parameter(description = "代码库ID或名称", required = true)
+        @QueryParam("repoHashIdOrName")
+        repoHashIdOrName: String,
+        @Parameter(description = "搜索条件", required = false)
+        @QueryParam("search")
+        search: String?,
+        @Parameter(description = "页码，不传默认为1", required = false)
+        @QueryParam("page")
+        @DefaultValue("1")
+        page: Int,
+        @Parameter(description = "每页数量，不传默认为20", required = false)
+        @QueryParam("pageSize")
+        @DefaultValue("20")
+        pageSize: Int
     ): Result<List<Reference>>
 
     @Operation(summary = "注册webhook")

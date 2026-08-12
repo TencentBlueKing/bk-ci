@@ -20,6 +20,7 @@ import com.tencent.devops.remotedev.pojo.OperateCvmData
 import com.tencent.devops.remotedev.pojo.OperateCvmDataType
 import com.tencent.devops.remotedev.pojo.ProjectWorkspace
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
+import com.tencent.devops.remotedev.pojo.ProjectWorkspaceFetchData
 import com.tencent.devops.remotedev.pojo.RemoteDevGitType
 import com.tencent.devops.remotedev.pojo.TaskStatusResp
 import com.tencent.devops.remotedev.pojo.TemplateWorkspaceAssignResp
@@ -797,6 +798,13 @@ class ServiceRemoteDevResourceImpl(
     ): Result<Page<ProjectWorkspace>> {
         permissionService.checkUserManager(userId, projectId)
         return Result(workspaceService.getProjectWorkspaceList(userId, projectId, page, pageSize, search))
+    }
+
+    override fun getProjectWorkspaceList4Console(
+        userId: String,
+        data: ProjectWorkspaceFetchData
+    ): Result<Page<ProjectWorkspace>> {
+        return Result(workspaceService.getProjectWorkspaceList4Op(userId, data))
     }
 
 
