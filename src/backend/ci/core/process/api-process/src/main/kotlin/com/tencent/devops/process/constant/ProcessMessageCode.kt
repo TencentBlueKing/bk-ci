@@ -381,7 +381,7 @@ object ProcessMessageCode {
     // 同样的触发参数, 已不满足当前流水线最新版本 {0} 的触发条件, 继续运行可能会产生错误, 确认继续吗
     const val ERROR_TRIGGER_CONDITION_NOT_MATCH = "2101272"
     const val ERROR_RETRY_TASK_IN_STAGE_NOT_RUNNING = "2101273" // stage非运行中状态，不能进行插件级重试
-    const val ERROR_FAIL_IF_VARIABLE_INVALID = "2101274" // 参数[{0}]值超过系统限制(4K)，启动失败
+    const val ERROR_FAIL_IF_VARIABLE_INVALID = "2101274" // 参数[{0}]值超过系统限制({1})，启动失败
     const val ERROR_OP_PIPELINE_NUM_INVALID = "2101275" // 处理的流水线数量[{0}]超过系统规定的最大值{1}，请调整参数或咨询助手
     const val ERROR_RUNNING_PIPELINE_ARCHIVE_INVALID = "2101276" // 流水线[{0}]正在运行中，无法归档
     const val ERROR_RETRY_TASK_NOT_FAILED = "2101277" // 重试的插件不是失败状态，不能进行插件级重试
@@ -456,10 +456,23 @@ object ProcessMessageCode {
     const val ERROR_PIPELINE_COMMON_VAR_GROUP_VAR_NAME_TOO_LONG = "2101345"
     // 编排配置公共变量组中存在冲突变量{0}，请调整变量组配置
     const val ERROR_PIPELINE_COMMON_VAR_GROUP_CONFLICT = "2101346"
-    const val ERROR_PIPELINE_COMMON_VAR_GROUP_REFER_UPDATE_FAILED = "2101347" // 变量组引用更新失败
-    const val ERROR_PIPELINE_COMMON_VAR_GROUP_NOT_EXIST = "2101348" // 变量组 {0} 不存在
-    const val ERROR_PUBLIC_VAR_GROUP_REFERENCED = "2101349" // 公共变量组({0})已被引用，无法删除
-    const val ERROR_PIPELINE_COMMON_VAR_GROUP_VAR_NAME_DUPLICATE = "2101350" // 流水线公共变量组中变量名称({0})已存在
+    // 变量组引用更新失败
+    const val ERROR_PIPELINE_COMMON_VAR_GROUP_REFER_UPDATE_FAILED = "2101347"
+    // 变量组 {0} 不存在
+    const val ERROR_PIPELINE_COMMON_VAR_GROUP_NOT_EXIST = "2101348"
+    // 公共变量组({0})已被引用，无法删除
+    const val ERROR_PUBLIC_VAR_GROUP_REFERENCED = "2101349"
+    // 流水线公共变量组中变量名称({0})已存在
+    const val ERROR_PIPELINE_COMMON_VAR_GROUP_VAR_NAME_DUPLICATE = "2101350"
+    // 公共变量组YAML解析失败: {0}
+    const val ERROR_PUBLIC_VAR_GROUP_YAML_PARSE_FAILED = "2101351"
+    // 公共变量组名称只能包含字母、数字、下划线和中划线，长度限制为1-64个字符
+    const val ERROR_PUBLIC_VAR_GROUP_YAML_NAME_FORMAT = "2101355"
+    const val ERROR_PUBLIC_VAR_GROUP_YAML_VARIABLE_NAME_FORMAT = "2101358"
+    // 公共变量组YAML包含未知字段: {0}
+    const val ERROR_PUBLIC_VAR_GROUP_YAML_UNKNOWN_FIELD = "2101359"
+    // 公共变量组YAML格式不正确，请检查字段类型
+    const val ERROR_PUBLIC_VAR_GROUP_YAML_DESERIALIZE_ERROR = "2101360"
 
     // 触发事件缓存过期已清理。若需重放，请到代码库操作。
     const val ERROR_TRIGGER_EVENT_EXPIRED = "2101361"
@@ -470,11 +483,6 @@ object ProcessMessageCode {
     const val ERROR_TEMPLATE_INSTANCE_OPTIONAL_PARAM_OVERRIDDEN = "2101364"
     // YAML文件[{0}]已绑定其他流水线[{1}]，不能重命名
     const val ERROR_PAC_YAML_FILE_BINDTO_OTHER_PIPELINE = "2101365"
-    // 分支版本[{0}]不存在, 目标分支不存在或流水线引用的Yaml文件[{1}]在分支[{0}]不存在或已被删除
-    const val ERROR_PIPELINE_REF_YAML_FILE_NOT_FOUND = "2101378"
-    // 分支版本[{0}]不存在, 请检查分支版本是否被成功创建
-    const val ERROR_NOT_FOUND_PIPELINE_VERSION_EXISTS_BY_BRANCH = "2101379"
-    const val ERROR_PIPELINE_IS_NOT_PAC = "2101389" // [{0}]不是PAC流水线
 
     // 回调URL[{0}]指向内网/元数据地址，禁止使用以防止SSRF攻击
     const val ERROR_CALLBACK_URL_INTERNAL_HOST = "2101366"
@@ -484,14 +492,18 @@ object ProcessMessageCode {
     const val ERROR_PIPELINE_AUTH_USER_NOT_EXISTS = "2101369"
     // 用户({0})不在流水线({1})的可见范围内
     const val ERROR_PIPELINE_USER_NOT_VISIBLE = "2101370"
+    // 分支版本[{0}]不存在, 目标分支不存在或流水线引用的Yaml文件[{1}]在分支[{0}]不存在或已被删除
+    const val ERROR_PIPELINE_REF_YAML_FILE_NOT_FOUND = "2101371"
+    // 分支版本[{0}]不存在, 请检查分支版本是否被成功创建
+    const val ERROR_NOT_FOUND_PIPELINE_VERSION_EXISTS_BY_BRANCH = "2101372"
+    const val ERROR_TEMPLATE_VERSION_HAS_DELETED = "2101373" // 模板版本[{0}]已删除
+    const val ERROR_PIPELINE_IS_NOT_PAC = "2101374" // [{0}]不是PAC流水线
 
     // 模型变量引用表达式不合规：单花括号不得以 context 前缀开头；双花括号须以前缀开头或为合法表达式函数。不合规项：{0}
     const val ERROR_PIPELINE_MODEL_VAR_REF_INVALID = "2101376"
     const val ERROR_TEMPLATE_RESOURCE_DRAFT_VERSION_NOT_EXISTS = "2101377" // 模板草稿版本编排[{0}]记录不存在
     const val ERROR_TEMPLATE_SETTING_DRAFT_VERSION_NOT_EXISTS = "2101378" // 模板草稿版本设置[{0}]不存在
 
-    // 变量组引用计数更新失败
-    const val ERROR_PIPELINE_COMMON_VAR_GROUP_REFER_COUNT_UPDATE_FAILED = "2101379"
     // 变量组引用信息查询失败
     const val ERROR_PIPELINE_COMMON_VAR_GROUP_REFER_QUERY_FAILED = "2101380"
     // 添加公共变量组({0})失败
@@ -518,6 +530,7 @@ object ProcessMessageCode {
     // 构建执行相关错误码（2101500-2101599）
     const val ERROR_PIPELINE_START_NODE_NO_PERMISSION = "2101500" // 用户[{0}]没有节点[{1}]的操作权限，无法启动流水线
     const val ERROR_PIPELINE_VERSION_RECYCLED = "2101501" // 流水线版本[{0}]已被回收，无法启动构建，请使用最新版本重试
+    const val ERROR_PIPELINE_VERSION_HAS_DELETED = "2101502" // 流水线版本[{0}]已删除
 
     // 批量任务
     const val ERROR_PIPELINE_BATCH_TASK_NOT_EXISTS = "2101650" // 流水线批量任务{0}不存在
@@ -878,5 +891,4 @@ object ProcessMessageCode {
     // 变量引用计数锁：以项目ID、变量组名和变量名为粒度，格式为 PUBLIC_VAR_REFER_LOCK:${projectId}:${groupName}:${varName}
     const val PUBLIC_VAR_REFER_LOCK_KEY_PREFIX = "PUBLIC_VAR_REFER_LOCK"
     const val PUBLIC_VAR_GROUP_LOCK_EXPIRED_TIME_IN_SECONDS = 10L
-    const val PUBLIC_VAR_GROUP_REFER_LOCK_MAX_RETRY_TIMES = 3
 }
