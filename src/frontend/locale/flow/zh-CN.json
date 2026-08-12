@@ -895,7 +895,7 @@
       "downloadDisabledTips": "目录下的文件大小超过 10 G，请到制品库分批下载",
       "noDownloadPermTips": "你没有该创作流的下载构件权限，无法下载",
       "needSignTips": "{0} 为内部测试版本，正在准备下载，请稍等",
-      "apkSignDurationTips": "仅首次下载需等待，准备时长和包大小有关，500MB的包大概需要1分钟",
+      "apkSignDurationTips": "仅首次下载需等待，准备时长和包大小有关，500MB 的包大概需要 1分钟",
       "downloadLater": "稍后再下载",
       "serachCustomRepo": "搜索自定义仓库",
       "copyArtifactTo": "将制品 <b>{0}</b> 复制到",

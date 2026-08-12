@@ -287,8 +287,12 @@ class TemplateModelTransfer @Autowired constructor(
             PipelineTransferAspectWrapper.AspectType.BEFORE
         )
         val triggers = (model.getTriggerContainer()).elements
-        val baseTrigger = elementTransfer.baseTriggers2yaml(triggers, modelInput.aspectWrapper)
-            ?.toPre(modelInput.version)
+        val baseTrigger = elementTransfer.baseTriggers2yaml(
+            elements = triggers,
+            aspectWrapper = modelInput.aspectWrapper,
+            userId = modelInput.userId,
+            projectId = modelInput.projectId
+        )?.toPre(modelInput.version)
         val scmTrigger = elementTransfer.scmTriggers2Yaml(
             triggers, modelInput.projectId, modelInput.aspectWrapper
         )

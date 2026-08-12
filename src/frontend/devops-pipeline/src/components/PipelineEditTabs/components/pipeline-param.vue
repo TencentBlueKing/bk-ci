@@ -123,7 +123,8 @@
 
 <script>
     import {
-        getParamsGroupByLabel
+        getParamsGroupByLabel,
+        isBooleanParam
     } from '@/store/modules/atom/paramsConfig'
     import { allVersionKeyList } from '@/utils/pipelineConst'
     import { deepCopy, navConfirm } from '@/utils/util'
@@ -318,12 +319,13 @@
                 this.$validator.validate('pipelineParam.*').then((result) => {
                     const {isInvalid, ...param} = this.sliderEditItem
                     if (result && optionValid) {
+                        const normalizedParam = this.normalizeParam(param)
                         // 检查 options 中是否存在重复项，有重复则不允许保存
-                        if (param.options && param.options.length) {
+                        if (normalizedParam.options && normalizedParam.options.length) {
                             const keyMap = new Map()
                             const valueMap = new Map()
-                            for (let i = 0; i < param.options.length; i++) {
-                                const opt = param.options[i]
+                            for (let i = 0; i < normalizedParam.options.length; i++) {
+                                const opt = normalizedParam.options[i]
                                 if (opt.key && keyMap.has(opt.key)) {
                                     this.$bkMessage({
                                         theme: 'error',
@@ -345,9 +347,9 @@
                             }
                         }
                         if (this.editIndex > -1) {
-                            this.globalParams[this.editIndex] = param
+                            this.globalParams[this.editIndex] = normalizedParam
                         } else {
-                            this.globalParams.push(param)
+                            this.globalParams.push(normalizedParam)
                         }
                         this.updateContainerParams('params', [...this.globalParams, ...this.versions])
                         this.hideSlider(false)
@@ -356,6 +358,23 @@
             },
             handleSaveVariableByGroup (list) {
                 this.updateContainerParams('params', [...list, ...this.versions])
+            },
+            normalizeParam (param) {
+                if (!isBooleanParam(param.type)) return param
+
+                let defaultValue = param.defaultValue
+                if (defaultValue === undefined || defaultValue === null || defaultValue === '') {
+                    defaultValue = true
+                } else if (defaultValue === 'true') {
+                    defaultValue = true
+                } else if (defaultValue === 'false') {
+                    defaultValue = false
+                }
+
+                return {
+                    ...param,
+                    defaultValue
+                }
             },
             validDisplayConditionOperator () {
                 if (this.editIndex < 0) return true

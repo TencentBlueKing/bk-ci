@@ -2,7 +2,7 @@
 
 **数据库名：** devops_ci_environment
 
-**文档版本：** 1.0.22
+**文档版本：** 1.0.23
 
 **文档描述：** devops_ci_environment 的数据库文档
 | 表名                  | 说明       |
@@ -112,6 +112,7 @@
 |  11   | ENV_HASH_ID |   varchar   | 64 |   0    |    Y     |  N   |       | 环境哈希 ID  |
 |  12   | IS_DELETED |   bit   | 1 |   0    |    N     |  N   |       | 是否删除  |
 |  13   | ENV_NODE_TYPE |   varchar   | 32 |   0    |    N     |  N   |   NODE    | 环境节点类型（节点静态环境{NODE}|标签动态环境{TAG}  |
+|  14   | OS |   varchar   | 16 |   0    |    Y     |  N   |       | 环境节点系统类型  |
 
 **表名：** <a>T_ENVIRONMENT_AGENT_PIPELINE</a>
 

@@ -48,14 +48,11 @@ class PipelineNotifyService @Autowired constructor(
         ).toMutableMap()
 
         // #8161 调试中生效调试版本的通知配置
+        // #12697 分支版本执行时生效该分支版本的通知配置,统一按本次构建实际运行的版本读取
         val buildInfo = pipelineRuntimeService.getBuildInfo(projectId, pipelineId, buildId) ?: return
-        val setting = if (buildInfo.debug) {
-            pipelineRepositoryService.getSettingByPipelineVersion(
-                projectId, pipelineId, buildInfo.version
-            ) ?: return
-        } else {
-            pipelineRepositoryService.getSetting(projectId, pipelineId) ?: return
-        }
+        val setting = pipelineRepositoryService.getSettingByPipelineVersion(
+            projectId, pipelineId, buildInfo.version
+        ) ?: return
 
         val context = BuildNotifyContext(
             buildId = buildId,
