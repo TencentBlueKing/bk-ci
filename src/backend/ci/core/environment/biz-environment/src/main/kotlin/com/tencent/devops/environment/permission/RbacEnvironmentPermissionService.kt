@@ -178,7 +178,9 @@ class RbacEnvironmentPermissionService(
         resourceType: AuthResourceType
     ): Set<Long> {
         val channel = ChannelCode.getRequestChannelCode()
-        return if (channel == ChannelCode.CREATIVE_STREAM || resourceType == AuthResourceType.CREATIVE_STREAM) {
+        return if (channel == ChannelCode.CREATIVE_STREAM ||
+            resourceType == AuthResourceType.CREATIVE_STREAM_NODE
+        ) {
             creativeStreamNodePermissionHandler.listNodePermissions(
                 userId = userId,
                 projectId = projectId,
@@ -202,7 +204,7 @@ class RbacEnvironmentPermissionService(
         resourceType: AuthResourceType
     ): Map<AuthPermission, List<String>> {
         if (ChannelCode.getRequestChannelCode() == ChannelCode.CREATIVE_STREAM ||
-            resourceType == AuthResourceType.CREATIVE_STREAM
+            resourceType == AuthResourceType.CREATIVE_STREAM_NODE
         ) {
             return creativeStreamNodePermissionHandler.listNodePermissions(
                 userId = userId,
@@ -227,7 +229,7 @@ class RbacEnvironmentPermissionService(
         resourceType: AuthResourceType
     ): List<TNodeRecord> {
         if (ChannelCode.getRequestChannelCode() == ChannelCode.CREATIVE_STREAM ||
-            resourceType == AuthResourceType.CREATIVE_STREAM
+            resourceType == AuthResourceType.CREATIVE_STREAM_NODE
         ) {
             val permissionNodeIds = creativeStreamNodePermissionHandler.listNodePermissions(
                 userId = userId,
@@ -254,7 +256,7 @@ class RbacEnvironmentPermissionService(
         resourceType: AuthResourceType
     ): Boolean {
         if (ChannelCode.getRequestChannelCode() == ChannelCode.CREATIVE_STREAM ||
-            resourceType == AuthResourceType.CREATIVE_STREAM
+            resourceType == AuthResourceType.CREATIVE_STREAM_NODE
         ) {
             return creativeStreamNodePermissionHandler.checkPermission(
                 userId = userId,
@@ -291,7 +293,7 @@ class RbacEnvironmentPermissionService(
         resourceType: AuthResourceType
     ): Boolean {
         if ((ChannelCode.getRequestChannelCode() == ChannelCode.CREATIVE_STREAM ||
-                    resourceType == AuthResourceType.CREATIVE_STREAM) &&
+                    resourceType == AuthResourceType.CREATIVE_STREAM_NODE) &&
             permission == AuthPermission.CREATE
         ) {
             return true

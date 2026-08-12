@@ -281,7 +281,7 @@ class NodeService @Autowired constructor(
         if (nodeRecordList.isEmpty()) {
             return Page(1, 0, 0, emptyList())
         }
-        val nodeResourceType = if (nodeType == NodeType.CREATE) {
+        val nodeResourceType = if (nodeType == NodeType.CREATE || createMode == true) {
             AuthResourceType.CREATIVE_STREAM_NODE
         } else {
             AuthResourceType.ENVIRONMENT_ENV_NODE
@@ -474,12 +474,12 @@ class NodeService @Autowired constructor(
         )
         if (nodeListResult.isEmpty()) return emptyList()
 
-        val isCreativeStreamNode = resourceType == AuthResourceType.CREATIVE_STREAM_NODE
-        val queryPermissions = if (isCreativeStreamNode) {
-            setOf(AuthPermission.VIEW, AuthPermission.EDIT)
-        } else {
-            setOf(AuthPermission.VIEW, AuthPermission.USE, AuthPermission.EDIT, AuthPermission.DELETE)
-        }
+        val queryPermissions = setOf(
+            AuthPermission.VIEW,
+            AuthPermission.USE,
+            AuthPermission.EDIT,
+            AuthPermission.DELETE
+        )
         val permissionMap = environmentPermissionService.listNodeByPermissions(
             userId = userId,
             projectId = projectId,
