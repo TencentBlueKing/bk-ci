@@ -35,8 +35,8 @@ class RbacEnvironmentPermissionServiceTest {
     }
 
     @Test
-    fun `creative stream list methods share permission handler`() {
-        ChannelContext.setChannel(ChannelCode.CREATIVE_STREAM.name)
+    fun `creative stream node resource type routes list methods to permission handler`() {
+        ChannelContext.setChannel(ChannelCode.BS.name)
         every {
             creativeHandler.listNodePermissions(
                 userId = "user",
@@ -100,7 +100,7 @@ class RbacEnvironmentPermissionServiceTest {
 
     @Test
     fun `creative stream node check delegates but project check keeps rbac`() {
-        ChannelContext.setChannel(ChannelCode.CREATIVE_STREAM.name)
+        ChannelContext.setChannel(ChannelCode.BS.name)
         every {
             creativeHandler.checkPermission("user", "project", 1L, AuthPermission.VIEW)
         } returns true
