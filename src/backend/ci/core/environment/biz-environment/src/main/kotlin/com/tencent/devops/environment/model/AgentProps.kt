@@ -1,5 +1,6 @@
 package com.tencent.devops.environment.model
 
+import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.pojo.agent.AgentErrorExitData
 import com.tencent.devops.common.api.pojo.agent.DockerInitFileInfo
@@ -43,7 +44,7 @@ data class AgentProps(
                 null
             } else {
                 try {
-                    JsonUtil.to(props, AgentProps::class.java).source
+                    JsonUtil.to(props, object : TypeReference<AgentProps>() {}).source
                 } catch (e: Exception) {
                     logger.warn("Failed to parse agent props source|props=$props", e)
                     null
