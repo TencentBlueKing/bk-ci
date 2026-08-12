@@ -9542,3 +9542,128 @@ paths:
         enableWebsocket: false
         isPublic: true
         matchSubpath: false
+  /v4/apigw-app/creative_flows/share_grants/batch_upsert:
+    post:
+      operationId: "v4_app_creative_flow_share_grant_upsert"
+      description: "批量写入创作流分享授权"
+      tags:
+      - "V4应用态"
+      x-bk-apigateway-resource:
+        allowApplyPermission: true
+        authConfig:
+          appVerifiedRequired: true
+          resourcePermissionRequired: false
+          userVerifiedRequired: false
+        backend:
+          matchSubpath: false
+          method: "post"
+          name: "backend-1"
+          path: "/openapi/api/apigw-app/v4/creative_flows/share_grants/batch_upsert"
+          timeout: 30
+        enableWebsocket: false
+        isPublic: true
+        matchSubpath: false
+  /v4/apigw-app/creative_flows/share_grants:
+    get:
+      operationId: "v4_app_creative_flow_share_grant_list"
+      description: "查询创作流分享授权（应用态）"
+      tags:
+      - "V4应用态"
+      x-bk-apigateway-resource:
+        allowApplyPermission: true
+        authConfig:
+          appVerifiedRequired: true
+          resourcePermissionRequired: false
+          userVerifiedRequired: false
+        backend:
+          matchSubpath: false
+          method: "get"
+          name: "backend-1"
+          path: "/openapi/api/apigw-app/v4/creative_flows/share_grants"
+          timeout: 30
+        enableWebsocket: false
+        isPublic: true
+        matchSubpath: false
+    delete:
+      operationId: "v4_app_creative_flow_share_grant_revoke"
+      description: "撤销创作流分享授权"
+      tags:
+      - "V4应用态"
+      x-bk-apigateway-resource:
+        allowApplyPermission: true
+        authConfig:
+          appVerifiedRequired: true
+          resourcePermissionRequired: false
+          userVerifiedRequired: false
+        backend:
+          matchSubpath: false
+          method: "delete"
+          name: "backend-1"
+          path: "/openapi/api/apigw-app/v4/creative_flows/share_grants"
+          timeout: 30
+        enableWebsocket: false
+        isPublic: true
+        matchSubpath: false
+  /v4/apigw-user/creative_flows/share_grants:
+    get:
+      operationId: "v4_user_creative_flow_share_grant_list"
+      description: "查询创作流分享授权（用户态）"
+      tags:
+      - "V4用户态"
+      x-bk-apigateway-resource:
+        allowApplyPermission: true
+        authConfig:
+          appVerifiedRequired: false
+          resourcePermissionRequired: false
+          userVerifiedRequired: true
+        backend:
+          matchSubpath: false
+          method: "get"
+          name: "backend-1"
+          path: "/openapi/api/apigw-user/v4/creative_flows/share_grants"
+          timeout: 30
+        enableWebsocket: false
+        isPublic: true
+        matchSubpath: false
+  /v4/apigw-user/projects/{projectId}/creative_flows/copy_across_project:
+    post:
+      operationId: "v4_user_creative_flow_copy_across_project"
+      description: "按分享授权跨空间复制创作流"
+      tags:
+      - "V4用户态"
+      x-bk-apigateway-resource:
+        allowApplyPermission: true
+        authConfig:
+          appVerifiedRequired: false
+          resourcePermissionRequired: false
+          userVerifiedRequired: true
+        backend:
+          matchSubpath: false
+          method: "post"
+          name: "backend-1"
+          path: "/openapi/api/apigw-user/v4/projects/{projectId}/creative_flows/copy_across_project"
+          timeout: 60
+        enableWebsocket: false
+        isPublic: true
+        matchSubpath: false
+  /v4/apigw-user/projects/{projectId}/creative_flows/copy_traces:
+    get:
+      operationId: "v4_user_creative_flow_copy_traces"
+      description: "查询复制溯源记录"
+      tags:
+      - "V4用户态"
+      x-bk-apigateway-resource:
+        allowApplyPermission: true
+        authConfig:
+          appVerifiedRequired: false
+          resourcePermissionRequired: false
+          userVerifiedRequired: true
+        backend:
+          matchSubpath: false
+          method: "get"
+          name: "backend-1"
+          path: "/openapi/api/apigw-user/v4/projects/{projectId}/creative_flows/copy_traces"
+          timeout: 30
+        enableWebsocket: false
+        isPublic: true
+        matchSubpath: false
