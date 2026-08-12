@@ -28,8 +28,10 @@
 package com.tencent.devops.repository.service.oauth2
 
 import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.security.util.BkCryptoUtil
+import com.tencent.devops.repository.constant.RepositoryMessageCode.ERROR_NOT_OAUTH_PROXY_FORBIDDEN_DELETE
 import com.tencent.devops.repository.dao.TGitTokenDao
 import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.repository.pojo.oauth.OauthTokenInfo
@@ -63,16 +65,16 @@ class CodeTGitOauth2TokenStoreService @Autowired constructor(
                 expiresIn = it.expiresIn,
                 refreshToken = BkCryptoUtil.decryptSm4OrAes(aesKey, it.refreshToken),
                 createTime = it.createTime.timestampmilli(),
-                userId = it.oauthUserId,
-                operator = userId,
+                userId = it.userId,
+                operator = it.operator,
                 updateTime = it.createTime.timestampmilli()
             )
         }
     }
 
     override fun store(scmCode: String, oauthTokenInfo: OauthTokenInfo) {
-        with(oauthTokenInfo) {
-            val gitToken = GitToken(
+        val gitToken = with(oauthTokenInfo) {
+            GitToken(
                 accessToken = BkCryptoUtil.encryptSm4ButAes(aesKey, accessToken),
                 refreshToken = refreshToken?.let { BkCryptoUtil.encryptSm4ButAes(aesKey, it) } ?: "",
                 tokenType = tokenType,
@@ -80,18 +82,34 @@ class CodeTGitOauth2TokenStoreService @Autowired constructor(
                 operator = operator,
                 oauthUserId = userId
             )
-            tGitTokenDao.saveAccessToken(
-                dslContext,
-                userId = operator ?: userId,
-                oauthUserId = userId,
-                token = gitToken
-            )
         }
+        tGitTokenDao.saveAccessToken(dslContext, oauthTokenInfo.userId, gitToken)
     }
 
     override fun delete(userId: String, scmCode: String, username: String) {
+        get(username, scmCode)?.let {
+            // 非OAUTH授权代持人不得删除
+            if (it.operator != userId) {
+                throw ErrorCodeException(
+                    errorCode = ERROR_NOT_OAUTH_PROXY_FORBIDDEN_DELETE
+                )
+            }
+        }
         tGitTokenDao.deleteToken(dslContext = dslContext, userId = username)
     }
 
-    override fun list(userId: String, scmCode: String): List<OauthTokenInfo> = listOf()
+    override fun list(userId: String, scmCode: String): List<OauthTokenInfo> {
+        return tGitTokenDao.listToken(dslContext, userId).map {
+            OauthTokenInfo(
+                accessToken = BkCryptoUtil.decryptSm4OrAes(aesKey, it.accessToken),
+                tokenType = it.tokenType,
+                expiresIn = it.expiresIn,
+                refreshToken = BkCryptoUtil.decryptSm4OrAes(aesKey, it.refreshToken),
+                createTime = it.createTime.timestampmilli(),
+                userId = it.userId,
+                operator = it.operator,
+                updateTime = it.createTime.timestampmilli()
+            )
+        }
+    }
 }
