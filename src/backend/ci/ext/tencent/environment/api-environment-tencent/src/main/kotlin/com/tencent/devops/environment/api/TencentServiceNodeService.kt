@@ -50,4 +50,18 @@ interface TencentServiceNodeService {
         @QueryParam("agentHashId")
         agentHashId: String
     ): Result<NodeAgentDetail?>
+
+    @Operation(summary = "根据WorkspaceName查询 agent信息")
+    @GET
+    @Path("/get_node_agent_detail_by_workspaceName")
+    fun getNodeAgentDetailByWorkspaceName(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @QueryParam("projectId")
+        projectId: String,
+        @QueryParam("workspaceName")
+        workspaceName: String
+    ): Result<NodeAgentDetail?>
 }
