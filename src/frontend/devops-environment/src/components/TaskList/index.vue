@@ -118,7 +118,7 @@
                             />
                             <div class="task-title-content">
                                 <span class="task-name">
-                                    <bk-tag v-if="task.stageId">{{ task.stageId }}</bk-tag>
+                                    <bk-tag v-if="getJobStageLabel(task)">{{ getJobStageLabel(task) }}</bk-tag>
                                     {{ task.jobName }}
                                 </span>
                                 <span class="task-pipeline-name">
@@ -734,6 +734,14 @@
                 return stageId
             }
 
+            const getJobStageLabel = (task) => {
+                const stageNum = task.stageNumb ?? ''
+                const lastContainerId = task.lastContainerId ?? ''
+                if (stageNum && lastContainerId) return `${stageNum}-${lastContainerId}`
+                return stageNum || lastContainerId || ''
+            }
+
+
             // 列表记录映射（按视图区分展示字段）
             const mapListRecord = (view, item, index) => {
                 const base = {
@@ -796,11 +804,9 @@
                         ...i,
                         seq: (() => {
                             const vmSeqId = firstTask.vmSeqId || i.containerId || ''
-                            const stageId = firstTask.stageId
-                            if (!stageId) return vmSeqId
-                            const stageNum = String(stageId)
-                            if (!stageNum) return vmSeqId
-                            return vmSeqId ? `${stageNum}-${vmSeqId}` : stageNum
+                            const stageNumb = firstTask.stageNumb
+                            if (!stageNumb) return vmSeqId
+                            return vmSeqId ? `${stageNumb}-${vmSeqId}` : stageNumb
                         })(),
                         jobName: firstTask.taskName || '--',
                         statusText: proxy.$t(`environment.statusMap.${i.status}`) || '',
@@ -1028,6 +1034,7 @@
                 getPipelineHistoryUrl,
                 getBuildDetailUrl,
                 formatTime,
+                getJobStageLabel,
                 toggleExpand,
                 handleViewChange,
                 handleSearchChange,

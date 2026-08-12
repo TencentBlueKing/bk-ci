@@ -67,15 +67,12 @@
             const restJobs = computed(() => props.jobs.slice(props.maxVisible))
             const restCount = computed(() => restJobs.value.length)
 
-            // 序号徽标：stageId 去掉 stage- 后与 vmSeqId 拼接；无 stageId 时仅展示 vmSeqId
             const getSeq = (job) => {
                 const vmSeqId = job?.vmSeqId || ''
-                const stageId = job?.stageId
-                if (!stageId) return vmSeqId
+                const stageNumb = job?.stageNumb
+                if (!stageNumb) return vmSeqId
 
-                const stageNum = String(stageId).replace(/^stage-/, '')
-                if (!stageNum) return vmSeqId
-                return vmSeqId ? `${stageNum}-${vmSeqId}` : stageNum
+                return vmSeqId ? `${stageNumb}-${vmSeqId}` : stageNumb
             }
             const getName = (job) => job?.taskName || job?.jobName || '--'
 
