@@ -163,16 +163,17 @@ object PipelineTransferAspectLoader {
 
                 override fun after(jp: PipelineTransferJoinPoint) {
                     val job = jp.yamlPreJob()
-                    if (job is PreJob) {
-                        val runsOn = job.runsOn
-                        if (runsOn is RunsOn && runsOn.envProjectId != null) {
-                            pools.add(
-                                ResourcesPools(
-                                    from = "${runsOn.envProjectId}@${runsOn.poolName}",
-                                    name = runsOn.poolName
-                                )
+                    if (job is PreJob && job.runsOn != null &&
+                        job.runsOn is RunsOn &&
+                        job.runsOn.envProjectId != null
+                    ) {
+                        val pool = job.runsOn
+                        pools.add(
+                            ResourcesPools(
+                                from = "${pool.envProjectId}@${pool.poolName}",
+                                name = pool.poolName
                             )
-                        }
+                        )
                     }
                 }
             }
