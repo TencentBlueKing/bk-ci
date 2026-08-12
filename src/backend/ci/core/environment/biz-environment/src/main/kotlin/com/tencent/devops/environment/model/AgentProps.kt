@@ -1,10 +1,12 @@
 package com.tencent.devops.environment.model
 
+import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.pojo.agent.AgentErrorExitData
 import com.tencent.devops.common.api.pojo.agent.DockerInitFileInfo
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.environment.pojo.thirdpartyagent.create.AgentPropsSource
+import org.slf4j.LoggerFactory
 
 /**
  * Agent 系统属性
@@ -25,6 +27,8 @@ data class AgentProps(
     val source: AgentPropsSource? = null
 ) {
     companion object {
+        private val logger = LoggerFactory.getLogger(AgentProps::class.java)
+
         fun emptyBySource(source: AgentPropsSource) = AgentProps(
             arch = "",
             jdkVersion = emptyList(),
@@ -40,8 +44,9 @@ data class AgentProps(
                 null
             } else {
                 try {
-                    JsonUtil.to<AgentProps>(props).source
-                } catch (_: Exception) {
+                    JsonUtil.to(props, object : TypeReference<AgentProps>() {}).source
+                } catch (e: Exception) {
+                    logger.warn("Failed to parse agent props source|props=$props", e)
                     null
                 }
             }
