@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.client.Client
@@ -120,7 +121,7 @@ class StoreProjectServiceImpl @Autowired constructor(
                         projectCode = it.projectCode,
                         projectName = projectCodeMap[it.projectCode]?.projectName,
                         creator = it.creator,
-                        createTime = DateTimeUtil.toDateTime(it.createTime)
+                        createTime = it.createTime.timestampmilli()
                     )
                 )
             }

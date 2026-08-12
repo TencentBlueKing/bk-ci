@@ -67,9 +67,16 @@
                                     --
                                 </template>
                             </template>
-                            <template v-else-if="['namingConvention', 'modificationDetail', 'creatorDetail'].includes(row.key)">
-                                <bk-user-display-name :user-id="row.value"></bk-user-display-name>
+                            <template v-else-if="row.key === 'namingConvention'">
+                                {{ row.value || '--' }}
                                 <span class="base-info-block-row-value-gray">{{ row.grayDesc }}</span>
+                            </template>
+                            <template v-else-if="['modificationDetail', 'creatorDetail'].includes(row.key)">
+                                <bk-user-display-name :user-id="row.value"></bk-user-display-name>
+                                <span class="base-info-block-row-value-gray">
+                                    |
+                                    <time-display :value="row.timeValue" />
+                                </span>
                             </template>
                             <template v-else>
                                 {{ row.value || '--' }}
@@ -84,11 +91,12 @@
 <script>
     import NamingConventionTip from '@/components/namingConventionTip.vue'
     import { mapState, mapActions } from 'vuex'
-    import { convertTime } from '@/utils/util'
+    import TimeDisplay from '../../../../common-lib/time-display'
 
     export default {
         components: {
-            NamingConventionTip
+            NamingConventionTip,
+            TimeDisplay
         },
         props: {
             basicInfo: {
@@ -150,12 +158,12 @@
                     {
                         key: 'modificationDetail',
                         value: basicInfo?.versionUpdater ?? '--',
-                        grayDesc: ` | ${convertTime(basicInfo?.versionUpdateTime)}`
+                        timeValue: basicInfo?.versionUpdateTime
                     },
                     {
                         key: 'creatorDetail',
                         value: basicInfo?.creator ?? '--',
-                        grayDesc: ` | ${convertTime(basicInfo?.createTime)}`
+                        timeValue: basicInfo?.createTime
                     }
                 ]
             },

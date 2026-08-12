@@ -34,3 +34,6 @@ catalogs:
     webpack: "~5.76.1"
   bkMagicVue:
     bk-magic-vue: "2.5.9-beta.9"
+
+minimumReleaseAgeExclude:
+  - '@blueking/login-userinfo@0.0.20'

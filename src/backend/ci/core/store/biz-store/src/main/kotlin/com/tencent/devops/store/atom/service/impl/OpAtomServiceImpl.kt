@@ -35,6 +35,7 @@ import com.tencent.devops.common.api.constant.INIT_VERSION
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.client.Client
@@ -257,9 +258,9 @@ class OpAtomServiceImpl @Autowired constructor(
             },
             version = atomRecord.version,
             creator = atomRecord.creator,
-            createTime = DateTimeUtil.toDateTime(atomRecord.createTime),
+            createTime = atomRecord.createTime.timestampmilli(),
             modifier = atomRecord.modifier,
-            updateTime = DateTimeUtil.toDateTime(atomRecord.updateTime),
+            updateTime = atomRecord.updateTime.timestampmilli(),
             defaultFlag = atomRecord.defaultFlag,
             latestFlag = atomRecord.latestFlag,
             htmlTemplateVersion = atomRecord.htmlTemplateVersion,

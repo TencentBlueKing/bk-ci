@@ -67,7 +67,7 @@
         RESOURCE_ACTION
     } from '@/utils/permission'
     import { pipelineTabIdMap } from '@/utils/pipelineConst'
-    import dayjs from 'dayjs'
+    import { convertTime } from '@/utils/util'
     import { mapActions, mapGetters, mapState } from 'vuex'
 
     export default {
@@ -162,7 +162,7 @@
                 return this.pipelineInfo?.instanceFromTemplate ?? false
             },
             formatDraftCreateTime () {
-                return dayjs(this.draftCreateTime).format('YYYY-MM-DD HH:mm:ss')
+                return convertTime(this.draftCreateTime)
             }
         },
         methods: {

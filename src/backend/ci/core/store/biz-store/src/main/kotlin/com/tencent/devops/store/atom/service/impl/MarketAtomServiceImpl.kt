@@ -49,6 +49,7 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.ThreadLocalUtil
@@ -394,7 +395,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                             } else it[tAtom.BUILD_LESS_RUN_FLAG] as Boolean,
                             docsLink = if (it[tAtom.DOCS_LINK] == null) "" else it[tAtom.DOCS_LINK] as String,
                             modifier = it[tAtom.MODIFIER] as String,
-                            updateTime = DateTimeUtil.toDateTime(it[tAtom.UPDATE_TIME] as LocalDateTime),
+                            updateTime = (it[tAtom.UPDATE_TIME] as LocalDateTime).timestampmilli(),
                             recommendFlag = it[tAtomFeature.RECOMMEND_FLAG],
                             yamlFlag = it[tAtomFeature.YAML_FLAG],
                             recentExecuteNum = statistic?.recentExecuteNum ?: 0,
@@ -662,8 +663,8 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                     releaseFlag = releaseFlag,
                     creator = it[tAtom.CREATOR] as String,
                     modifier = it[tAtom.MODIFIER] as String,
-                    createTime = DateTimeUtil.toDateTime(it[tAtom.CREATE_TIME] as LocalDateTime),
-                    updateTime = DateTimeUtil.toDateTime(it[tAtom.UPDATE_TIME] as LocalDateTime),
+                    createTime = (it[tAtom.CREATE_TIME] as LocalDateTime).timestampmilli(),
+                    updateTime = (it[tAtom.UPDATE_TIME] as LocalDateTime).timestampmilli(),
                     processingVersionInfos = processingVersionInfoMap?.get(atomCode)
                 )
             )
@@ -872,8 +873,8 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                     publisher = record[tAtom.PUBLISHER] as String,
                     modifier = record[tAtom.MODIFIER] as String,
                     creator = record[tAtom.CREATOR] as String,
-                    createTime = DateTimeUtil.toDateTime(record[tAtom.CREATE_TIME] as LocalDateTime),
-                    updateTime = DateTimeUtil.toDateTime(record[tAtom.UPDATE_TIME] as LocalDateTime),
+                    createTime = (record[tAtom.CREATE_TIME] as LocalDateTime).timestampmilli(),
+                    updateTime = (record[tAtom.UPDATE_TIME] as LocalDateTime).timestampmilli(),
                     flag = flag,
                     repositoryAuthorizer = repositoryInfo?.userName,
                     defaultFlag = defaultFlag,
@@ -1083,7 +1084,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                         versionContent = versionMap[it.id].toString(),
                         atomStatus = AtomStatusEnum.getAtomStatus((it.atomStatus as Byte).toInt()),
                         creator = it.creator,
-                        createTime = DateTimeUtil.toDateTime(it.createTime)
+                        createTime = it.createTime.timestampmilli()
                     )
                 )
             }

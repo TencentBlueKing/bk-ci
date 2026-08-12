@@ -164,7 +164,7 @@
                             prop="timestamp"
                         >
                             <template slot-scope="props">
-                                {{ localConvertTime(props.row.timestamp) }}
+                                <time-display :value="props.row.timestamp" />
                             </template>
                         </bk-table-column>
                     </bk-table>
@@ -175,9 +175,12 @@
 </template>
 
 <script>
-    import { convertTime } from '@/utils/util'
+    import TimeDisplay from '../../../common-lib/time-display'
 
     export default {
+        components: {
+            TimeDisplay
+        },
         data () {
             return {
                 showContent: false,
@@ -375,12 +378,6 @@
                 const end = newValue[1]
                 this.searchInfo.startTime = Date.parse(new Date(start)) / 1000
                 this.searchInfo.endTime = Date.parse(new Date(end)) / 1000
-            },
-            /**
-             * 处理时间格式
-             */
-            localConvertTime (timestamp) {
-                return convertTime(timestamp * 1000)
             }
         }
     }

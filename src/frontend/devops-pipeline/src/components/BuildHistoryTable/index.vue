@@ -106,7 +106,7 @@
                     :prop="col.id"
                     :label="$t(col.label)"
                     :key="col.id"
-                    show-overflow-tooltip
+                    :show-overflow-tooltip="!isAbsoluteTimeColumn(col.id)"
                 >
                     <template
                         v-if="col.id === 'buildNum'"
@@ -141,6 +141,12 @@
                             >
                             </i>
                         </span>
+                    </template>
+                    <template
+                        v-else-if="isAbsoluteTimeColumn(col.id)"
+                        v-slot="props"
+                    >
+                        <time-display :value="props.row[col.id]" />
                     </template>
                     <template
                         v-else-if="col.id === 'stageStatus'"
@@ -616,14 +622,16 @@
         errorTypeMap,
         extForFile
     } from '@/utils/pipelineConst'
-    import { convertFileSize, convertMStoString, convertTime, flatSearchKey } from '@/utils/util'
+    import { convertFileSize, convertMStoString, flatSearchKey } from '@/utils/util'
     import webSocketMessage from '@/utils/webSocketMessage'
     import { mapActions, mapGetters, mapState } from 'vuex'
+    import TimeDisplay from '../../../../common-lib/time-display'
 
     import {
         RESOURCE_ACTION
     } from '@/utils/permission'
     const LS_COLUMN_KEY = 'shownColumnsKeys'
+    const ABSOLUTE_TIME_COLUMNS = ['startTime', 'endTime', 'queueTime']
     export default {
         name: 'build-history-table',
         components: {
@@ -634,7 +642,8 @@
             FilterBar,
             TableColumnSetting,
             ArtifactQuality,
-            EmptyException
+            EmptyException,
+            TimeDisplay
         },
         props: {
             showLog: {
@@ -798,9 +807,6 @@
                             !active && Array.isArray(appVersions) && appVersions.length > 1
                                 ? appVersions.slice(0, 1)
                                 : appVersions,
-                        startTime: item.startTime ? convertTime(item.startTime) : '--',
-                        endTime: item.endTime ? convertTime(item.endTime) : '--',
-                        queueTime: item.queueTime ? convertTime(item.queueTime) : '--',
                         totalTime: item.totalTime ? convertMStoString(item.totalTime) : '--',
                         executeTime: item.executeTime ? convertMStoString(item.executeTime) : '--',
                         visibleMaterial:
@@ -892,6 +898,10 @@
                 'setHistoryPageStatus',
                 'resetHistoryFilterCondition'
             ]),
+
+            isAbsoluteTimeColumn (colId) {
+                return ABSOLUTE_TIME_COLUMNS.includes(colId)
+            },
 
             getSlicedData (row) {
                 const keys = Object.keys(row.artifactQuality)

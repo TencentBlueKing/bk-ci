@@ -40,6 +40,12 @@
                     >
                         <bk-user-display-name :user-id="props.row.operator"></bk-user-display-name>
                     </template>
+                    <template
+                        v-else-if="column.prop === 'operateTime'"
+                        v-slot="props"
+                    >
+                        <time-display :value="props.row.operateTime" />
+                    </template>
                 </bk-table-column>
             </bk-table>
         </section>
@@ -47,9 +53,12 @@
 </template>
 
 <script>
-    import { convertTime } from '@/utils/util'
     import { mapActions } from 'vuex'
+    import TimeDisplay from '../../../../common-lib/time-display'
     export default {
+        components: {
+            TimeDisplay
+        },
         data () {
             return {
                 isLoading: false,
@@ -70,10 +79,7 @@
                     label: this.$t('audit.operator')
                 }, {
                     prop: 'operateTime',
-                    label: this.$t('audit.operateTime'),
-                    formatter: (row) => {
-                        return convertTime(row.operateTime)
-                    }
+                    label: this.$t('audit.operateTime')
                 }, {
                     prop: 'operationLogStr',
                     label: this.$t('audit.operateLogDesc')

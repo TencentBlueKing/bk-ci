@@ -30,6 +30,7 @@ package com.tencent.devops.metrics.service.impl
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.metrics.config.MetricsConfig
 import com.tencent.devops.metrics.constant.Constants.BK_ERROR_COUNT_SUM
 import com.tencent.devops.metrics.constant.Constants.BK_ERROR_TYPE
@@ -220,8 +221,8 @@ class PipelineFailServiceImpl @Autowired constructor(
                         branch = it.branch
                     ),
                     startUser = it.startUser,
-                    startTime = it.startTime,
-                    endTime = it.endTime,
+                    startTime = it.startTime?.timestampmilli(),
+                    endTime = it.endTime?.timestampmilli(),
                     errorInfo =
                     ErrorCodeInfoDO(
                         errorType = it.errorType,

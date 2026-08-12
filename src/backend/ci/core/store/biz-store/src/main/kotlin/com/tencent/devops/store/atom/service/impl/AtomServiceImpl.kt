@@ -44,7 +44,6 @@ import com.tencent.devops.common.api.enums.SystemModuleEnum
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.UUIDUtil
@@ -417,8 +416,8 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                 publisher = it[KEY_PUBLISHER] as? String,
                 creator = it[KEY_CREATOR] as String,
                 modifier = it[KEY_MODIFIER] as String,
-                createTime = DateTimeUtil.toDateTime(it[KEY_CREATE_TIME] as LocalDateTime),
-                updateTime = DateTimeUtil.toDateTime(it[KEY_UPDATE_TIME] as LocalDateTime),
+                createTime = (it[KEY_CREATE_TIME] as LocalDateTime).timestampmilli(),
+                updateTime = (it[KEY_UPDATE_TIME] as LocalDateTime).timestampmilli(),
                 defaultFlag = it[KEY_DEFAULT_FLAG] as Boolean,
                 latestFlag = it[KEY_LATEST_FLAG] as Boolean,
                 htmlTemplateVersion = it[KEY_HTML_TEMPLATE_VERSION] as String,
@@ -1208,9 +1207,9 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                     publisher = it[KEY_PUBLISHER] as? String,
                     installer = installer,
                     installTime = if (default) {
-                        ""
+                        0L
                     } else {
-                        DateTimeUtil.toDateTime(it[KEY_INSTALL_TIME] as LocalDateTime)
+                        (it[KEY_INSTALL_TIME] as LocalDateTime).timestampmilli()
                     },
                     installType = if (default) {
                         StoreProjectTypeEnum.COMMON.name
@@ -1270,7 +1269,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                 summary = it[KEY_SUMMARY] as? String,
                 publisher = it[KEY_PUBLISHER] as? String,
                 installer = installer,
-                installTime = DateTimeUtil.toDateTime(it[KEY_INSTALL_TIME] as LocalDateTime),
+                installTime = (it[KEY_INSTALL_TIME] as LocalDateTime).timestampmilli(),
                 installType = StoreProjectTypeEnum.getProjectType((it[KEY_INSTALL_TYPE] as Byte).toInt()),
                 pipelineCnt = 0,
                 hasPermission = true
@@ -1294,7 +1293,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                 summary = it.summary,
                 publisher = it.publisher,
                 installer = "",
-                installTime = "",
+                installTime = 0L,
                 installType = "",
                 pipelineCnt = 0,
                 hasPermission = true

@@ -86,7 +86,11 @@
                     prop="updateTime"
                     width="150"
                     show-overflow-tooltip
-                ></bk-table-column>
+                >
+                    <template slot-scope="props">
+                        <time-display :value="props.row.updateTime" />
+                    </template>
+                </bk-table-column>
                 <bk-table-column
                     :label="$t('store.操作')"
                     width="240"
@@ -538,11 +542,13 @@
     import { atomStatusMap } from '@/store/constants'
     import { debounce } from '@/utils'
     import status from './status'
+    import TimeDisplay from '../../../../common-lib/time-display'
 
     export default {
         components: {
             formTips,
-            status
+            status,
+            TimeDisplay
         },
 
         data () {

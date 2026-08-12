@@ -55,7 +55,8 @@ class UserProjectUserResourceImpl @Autowired constructor(
             ProjectUser(
                 chineseName = staff.chineseName,
                 avatarUrl = "",
-                username = staff.username
+                username = staff.username,
+                timeZone = staff.timeZone
             )
         )
     }
@@ -64,12 +65,22 @@ class UserProjectUserResourceImpl @Autowired constructor(
         return Result(userCacheService.getDetailFromCache(userId))
     }
 
-    override fun tenantInfoForDisplay(userId: String, tenantId: String): Result<TenantInfoForDisplay> {
+    override fun tenantInfoForDisplay(
+        userId: String,
+        tenantId: String,
+        timeZone: String?
+    ): Result<TenantInfoForDisplay> {
+        // 时区由网关鉴权调用蓝鲸 get_bk_token_userinfo 写入 X-BK-USER-TIMEZONE；缺省/空则兜底东八区
         return Result(
             TenantInfoForDisplay(
                 tenantId = tenantId,
-                apiBaseUrl = bkUserWebUrl ?: ""
+                apiBaseUrl = bkUserWebUrl ?: "",
+                timeZone = timeZone?.takeIf { it.isNotBlank() } ?: DEFAULT_DISPLAY_TIME_ZONE
             )
         )
+    }
+
+    companion object {
+        private const val DEFAULT_DISPLAY_TIME_ZONE = "Asia/Shanghai"
     }
 }

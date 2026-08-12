@@ -37,6 +37,7 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.api.util.JsonSchemaUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.ThreadLocalUtil
@@ -420,8 +421,8 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
                     releaseFlag = releaseFlag,
                     creator = it[tStoreBase.CREATOR] as String,
                     modifier = it[tStoreBase.MODIFIER] as String,
-                    createTime = DateTimeUtil.toDateTime(it[tStoreBase.CREATE_TIME] as LocalDateTime),
-                    updateTime = DateTimeUtil.toDateTime(it[tStoreBase.UPDATE_TIME] as LocalDateTime),
+                    createTime = (it[tStoreBase.CREATE_TIME] as LocalDateTime).timestampmilli(),
+                    updateTime = (it[tStoreBase.UPDATE_TIME] as LocalDateTime).timestampmilli(),
                     processingVersionInfos = processingVersionInfoMap[storeCode]
                 )
             )
@@ -481,7 +482,7 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
                 versionContent = versionMap[it.id],
                 status = it.status,
                 creator = it.creator,
-                createTime = DateTimeUtil.toDateTime(it.createTime),
+                createTime = it.createTime.timestampmilli(),
                 extData = baseExtMap[it.id]
             )
         }
@@ -1179,7 +1180,7 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
                 buildLessRunFlag = buildLessRunFlag,
                 docsLink = record[tStoreBase.DOCS_LINK],
                 modifier = record[tStoreBase.MODIFIER],
-                updateTime = DateTimeUtil.toDateTime(record[tStoreBase.UPDATE_TIME] as LocalDateTime),
+                updateTime = (record[tStoreBase.UPDATE_TIME] as LocalDateTime).timestampmilli(),
                 recommendFlag = record[tStoreBaseFeature.RECOMMEND_FLAG],
                 yamlFlag = extData?.get(KEY_YAML_FLAG) as? Boolean,
                 installed = installed,

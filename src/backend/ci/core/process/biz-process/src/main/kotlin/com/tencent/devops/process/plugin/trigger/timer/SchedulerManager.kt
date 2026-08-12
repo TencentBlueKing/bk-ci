@@ -44,6 +44,7 @@ import org.quartz.Scheduler
 import org.quartz.SchedulerException
 import org.quartz.TriggerBuilder.newTrigger
 import org.slf4j.LoggerFactory
+import com.tencent.devops.process.plugin.trigger.util.TimerTimeZoneUtils
 import java.util.Date
 
 /**
@@ -70,10 +71,11 @@ abstract class SchedulerManager {
         projectId: String,
         pipelineId: String,
         taskId: String,
-        md5: String
+        md5: String,
+        timeZone: String? = null
     ): Boolean {
         val trigger = newTrigger().withIdentity(key, this.getTriggerGroup()).withSchedule(
-            cronSchedule(cronExpression)
+            cronSchedule(cronExpression).inTimeZone(TimerTimeZoneUtils.toQuartzTimeZone(timeZone))
         ).build()
         val jobKey = JobKey.jobKey(key, this.getJobGroup())
         val jobDetail = newJob(jobBeanClass).withIdentity(jobKey)
@@ -90,13 +92,13 @@ abstract class SchedulerManager {
                 .build()
         return try {
             val nextFireTime = trigger.getFireTimeAfter(Date()) ?: throw InvalidTimerException()
-            logger.info("[$key]|nextFireTime=$nextFireTime")
+            logger.info("[$key]|nextFireTime=$nextFireTime|timeZone=${TimerTimeZoneUtils.resolve(timeZone)}")
             getScheduler().scheduleJob(jobDetail, trigger)
             true
         } catch (e: ObjectAlreadyExistsException) {
             resetJob(jobKey, jobDetail, trigger)
         } catch (ignored: Exception) {
-            logger.warn("SchedulerManager.addJob fail! e:$ignored, cronExpression:$cronExpression", ignored)
+            logger.warn("SchedulerManager.addJob fail! e:$ignored, cronExpression:$cronExpression, timeZone=$timeZone", ignored)
             try {
                 getScheduler().deleteJob(jobKey)
             } catch (ignored: Exception) {

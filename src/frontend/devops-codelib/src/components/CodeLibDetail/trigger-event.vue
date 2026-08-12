@@ -84,6 +84,15 @@
     import {
         mapActions
     } from 'vuex'
+    import {
+        userTzTodayRange,
+        userTzYesterdayRange,
+        userTzLastDaysRange,
+        recentDaysRangeInUserTz,
+        calendarDateInUserTz,
+        addCalendarDays,
+        zonedDayStartEpochMilli
+    } from '@/utils'
     import EmptyTableStatus from '../empty-table-status.vue'
     import TimelineCollapse from './timeline-collapse.vue'
 
@@ -114,17 +123,10 @@
         },
         data () {
             const setDefaultDaterange = () => {
-                // 获取当前日期
-                const now = new Date()
-
-                // 获取一周前的日期
-                const oneWeekAgo = new Date()
-                oneWeekAgo.setDate(now.getDate() - 7)
-
-                // 创建开始和结束日期对象
-                const start = new Date(oneWeekAgo.setHours(0, 0, 0))
-                const end = new Date(now.setHours(23, 59, 59))
-                return [start, end]
+                const { startMs } = recentDaysRangeInUserTz(7)
+                const today = calendarDateInUserTz()
+                const endOfToday = zonedDayStartEpochMilli(addCalendarDays(today, 1)) - 1
+                return [new Date(startMs), new Date(endOfToday)]
             }
             
             return {
@@ -249,36 +251,25 @@
                 {
                     text: this.$t('codelib.今天'),
                     value () {
-                        const end = new Date()
-                        const start = new Date(end.getFullYear(), end.getMonth(), end.getDate())
-                        return [start, end]
+                        return userTzTodayRange()
                     }
                 },
                 {
                     text: this.$t('codelib.昨天'),
                     value () {
-                        const time = new Date()
-                        const end = new Date(time.getFullYear(), time.getMonth(), time.getDate() - 1, 23, 59, 59)
-                        const start = new Date(time.getFullYear(), time.getMonth(), time.getDate() - 1)
-                        return [start, end]
+                        return userTzYesterdayRange()
                     }
                 },
                 {
                     text: this.$t('codelib.近3天'),
                     value () {
-                        const end = new Date()
-                        const start = new Date()
-                        start.setTime(start.getTime() - 3600 * 1000 * 24 * 3)
-                        return [start, end]
+                        return userTzLastDaysRange(3)
                     }
                 },
                 {
                     text: this.$t('codelib.近7天'),
                     value () {
-                        const end = new Date()
-                        const start = new Date()
-                        start.setTime(start.getTime() - 3600 * 1000 * 24 * 7)
-                        return [start, end]
+                        return userTzLastDaysRange(7)
                     }
                 }
             ]

@@ -197,6 +197,10 @@
                                     >
                                         {{ block.value[row.key] || "--" }}
                                     </span>
+                                    <time-display
+                                        v-else-if="['createdTime', 'modifiedTime'].includes(row.key)"
+                                        :value="block.value[row.key]"
+                                    />
                                     <span
                                         v-else
                                         class="pipeline-exec-output-block-row-value"
@@ -269,8 +273,9 @@
     import ThirdPartyReport from '@/components/Outputs/ThirdPartyReport'
     import ExtMenu from '@/components/pipelineList/extMenu'
     import { extForFile, repoTypeMap, repoTypeNameMap } from '@/utils/pipelineConst'
-    import { convertFileSize, convertTime } from '@/utils/util'
+    import { convertFileSize } from '@/utils/util'
     import { mapActions, mapState } from 'vuex'
+    import TimeDisplay from '../../../../common-lib/time-display'
 
     export default {
         components: {
@@ -280,7 +285,8 @@
             ExtMenu,
             CopyToCustomRepoDialog,
             // ArtifactsList
-            ArtifactDownloadButton
+            ArtifactDownloadButton,
+            TimeDisplay
         },
         props: {
             currentTab: {
@@ -714,8 +720,8 @@
                         ...res,
                         artifactoryTypeTxt: repoTypeMap[output.artifactoryType] ?? '--',
                         size: output.folder ? convertFileSize(this.getFolderSize(output), 'B') : res.size > 0 ? convertFileSize(res.size, 'B') : '--',
-                        createdTime: convertTime(res.createdTime * 1000),
-                        modifiedTime: convertTime(res.modifiedTime * 1000),
+                        createdTime: res.createdTime * 1000,
+                        modifiedTime: res.modifiedTime * 1000,
                         icon: !output.folder ? extForFile(res.name) : 'folder',
                         include: this.getInclude(output)
                     }

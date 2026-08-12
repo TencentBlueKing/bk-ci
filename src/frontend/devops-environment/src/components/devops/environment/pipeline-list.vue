@@ -62,7 +62,7 @@
                 min-width="160"
             >
                 <template slot-scope="props">
-                    {{ localConvertTime(props.row.createdTime) }}
+                    <time-display :value="props.row.createdTime" />
                 </template>
             </bk-table-column>
             <bk-table-column
@@ -71,7 +71,7 @@
                 min-width="160"
             >
                 <template slot-scope="props">
-                    {{ localConvertTime(props.row.updatedTime) }}
+                    <time-display :value="props.row.updatedTime" />
                 </template>
             </bk-table-column>
         </bk-table>
@@ -79,10 +79,13 @@
 </template>
 
 <script>
-    import { convertTime } from '@/utils/util'
     import { bus } from '@/utils/bus'
+    import TimeDisplay from '../../../../../common-lib/time-display'
 
     export default {
+        components: {
+            TimeDisplay
+        },
         data () {
             return {
                 loopTimer: '',
@@ -176,12 +179,6 @@
                         }
                     }, 5000)
                 }
-            },
-            /**
-             * 处理时间格式
-             */
-            localConvertTime (timestamp) {
-                return convertTime(timestamp * 1000)
             },
             getPipelineDetailUrl (row) {
                 return `${window.getRoutePrefix()}/pipeline/${row.projectId}/${row.pipelineId}/detail/${row.buildId}`

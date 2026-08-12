@@ -30,6 +30,7 @@ package com.tencent.devops.store.template.service.impl
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.store.tables.TTemplate
 import com.tencent.devops.store.common.service.ClassifyService
@@ -139,8 +140,8 @@ class OpTemplateServiceImpl @Autowired constructor(
                     pubDescription = it[tTemplate.PUB_DESCRIPTION],
                     creator = it[tTemplate.CREATOR],
                     modifier = it[tTemplate.MODIFIER],
-                    createTime = if (createTime != null) DateTimeUtil.toDateTime(createTime) else "",
-                    updateTime = if (updateTime != null) DateTimeUtil.toDateTime(updateTime) else ""
+                    createTime = createTime?.timestampmilli() ?: 0L,
+                    updateTime = updateTime?.timestampmilli() ?: 0L
                 )
             )
         }

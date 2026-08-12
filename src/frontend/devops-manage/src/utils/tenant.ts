@@ -1,4 +1,5 @@
 import request from '../http/fetch';
+import { applyTenantDisplayInfo, DEFAULT_USER_TIME_ZONE } from '../../../common-lib/time'
 // @ts-ignore
 const userApiPrefix = `${window.BK_APIGW_USER_WEB_URL}/api/v3/open-web/tenant/users/-`
 export default class TenantSingleton {
@@ -47,22 +48,24 @@ export default class TenantSingleton {
 
     static async init (): Promise<{
         tenantId: string,
-        apiBaseUrl: string
+        apiBaseUrl: string,
+        timeZone: string
     }> {
         try {
             const data : {
                 tenantId: string,
-                apiBaseUrl: string
+                apiBaseUrl: string,
+                timeZone?: string
             } = await request.get?.('/project/api/user/users/tenantInfoForDisplay')
 
-            
-            return data
+            return applyTenantDisplayInfo(data)
         } catch (error) {
             console.error(error)
-            return {
+            return applyTenantDisplayInfo({
                 tenantId: '',
-                apiBaseUrl: ''
-            }
+                apiBaseUrl: '',
+                timeZone: DEFAULT_USER_TIME_ZONE
+            })
         }
     }
 }

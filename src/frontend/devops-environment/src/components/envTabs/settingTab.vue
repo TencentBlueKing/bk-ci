@@ -38,7 +38,11 @@
             <bk-table-column
                 :label="$t('environment.operateTime')"
                 prop="updateTime"
-            ></bk-table-column>
+            >
+                <template v-slot="props">
+                    <time-display :value="props.row.updateTime" />
+                </template>
+            </bk-table-column>
             <bk-table-column
                 :label="$t('environment.operation')"
                 width="150"
@@ -74,13 +78,14 @@
 
 <script>
     import { ENV_RESOURCE_ACTION, ENV_RESOURCE_TYPE } from '@/utils/permission'
-    import { convertTime } from '@/utils/util'
     import { mapActions } from 'vuex'
+    import TimeDisplay from '../../../../common-lib/time-display'
     import selectEnvShareDialog from './select-env-share-dialog'
     export default {
         name: 'setting-tab',
         components: {
-            selectEnvShareDialog
+            selectEnvShareDialog,
+            TimeDisplay
         },
         props: {
             projectId: {
@@ -135,10 +140,7 @@
                 const { records, count, page } = res
                 
                 this.shareEnvProjectList = [
-                    ...records.map(record => ({
-                        ...record,
-                        updateTime: convertTime(record.updateTime * 1000)
-                    }))
+                    ...records
                 ]
                 if (page === 1) {
                     this.shareEnvProjectList.unshift({
@@ -147,7 +149,7 @@
                         type: 'PROJECT',
                         creator: this.curEnvDetail.updatedUser,
                         isDefault: true,
-                        updateTime: convertTime(this.curEnvDetail.updatedTime * 1000)
+                        updateTime: this.curEnvDetail.updatedTime
                     })
                 }
                 this.pagination.count = count + 1

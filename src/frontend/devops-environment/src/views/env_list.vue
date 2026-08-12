@@ -71,7 +71,7 @@
                     prop="createdTime"
                 >
                     <template slot-scope="props">
-                        {{ localConvertTime(props.row.createdTime) }}
+                        <time-display :value="props.row.createdTime" />
                     </template>
                 </bk-table-column>
                 <bk-table-column
@@ -128,17 +128,18 @@
 
 <script>
     import emptyNode from './empty_node'
-    import { convertTime } from '@/utils/util'
     import { ENV_RESOURCE_ACTION, ENV_RESOURCE_TYPE } from '@/utils/permission'
     import EmptyTableStatus from '@/components/empty-table-status'
     import SearchSelect from '@blueking/search-select'
     import '@blueking/search-select/dist/styles/index.css'
+    import TimeDisplay from '../../../common-lib/time-display'
 
     export default {
         components: {
             emptyNode,
+            EmptyTableStatus,
             SearchSelect,
-            EmptyTableStatus
+            TimeDisplay
         },
         data () {
             return {
@@ -321,12 +322,6 @@
                         envId: row.envHashId
                     }
                 })
-            },
-            /**
-             * 处理时间格式
-             */
-            localConvertTime (timestamp) {
-                return convertTime(timestamp * 1000)
             },
             clearFilter () {
                 this.searchValue = []

@@ -35,10 +35,10 @@ data class PipelineLatestBuild(
     val buildId: String,
     @get:Schema(title = "启动用户", required = true)
     val startUser: String,
-    @get:Schema(title = "Start time", required = true)
-    val startTime: String,
-    @get:Schema(title = "End time", required = false)
-    val endTime: String?,
+    @get:Schema(title = "Start time（毫秒时间戳）", required = true)
+    val startTime: Long?,
+    @get:Schema(title = "End time（毫秒时间戳）", required = false)
+    val endTime: Long?,
     @get:Schema(title = "Build status", required = false)
     val status: String?
 )

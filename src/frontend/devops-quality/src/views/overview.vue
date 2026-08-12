@@ -151,7 +151,7 @@
                                 prop="interceptTime"
                             >
                                 <template slot-scope="props">
-                                    {{ localConvertTime(props.row.interceptTime) }}
+                                    <time-display :value="props.row.interceptTime" />
                                 </template>
                             </bk-table-column>
                         </bk-table>
@@ -180,8 +180,8 @@
         trendOptions
     } from '@/utils/chart-option'
     import imageEmpty from '@/components/common/imageEmpty'
-    import { convertTime } from '@/utils/util'
     import { RULE_RESOURCE_ACTION, RULE_RESOURCE_TYPE } from '@/utils/permission.js'
+    import TimeDisplay from '../../../common-lib/time-display'
 
     use([
         CanvasRenderer,
@@ -197,7 +197,8 @@
     export default {
         components: {
             chart: VChart,
-            'image-empty': imageEmpty
+            'image-empty': imageEmpty,
+            TimeDisplay
         },
         data () {
             const { projectId } = this.$route.params
@@ -496,12 +497,6 @@
                 })
 
                 return tips
-            },
-            /**
-             * 处理时间格式
-             */
-            localConvertTime (timestamp) {
-                return convertTime(timestamp)
             }
         }
     }

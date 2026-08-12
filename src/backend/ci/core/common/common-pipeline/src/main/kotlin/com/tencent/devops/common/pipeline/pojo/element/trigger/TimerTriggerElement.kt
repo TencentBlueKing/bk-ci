@@ -69,7 +69,12 @@ data class TimerTriggerElement(
     @get:Schema(title = "指定代码库别名", required = false)
     val repoName: String? = null,
     @get:Schema(title = "定时启动参数,格式: [{key:'id',value:1},{key:'name',value:'xxx'}]", required = false)
-    val startParams: String? = null
+    val startParams: String? = null,
+    @get:Schema(
+        title = "定时触发时区（IANA）。缺省时前端写入租户时区；存量无值时调度回落 Asia/Shanghai",
+        required = false
+    )
+    val timeZone: String? = null
 ) : Element(name, id, status) {
     companion object {
         const val classType = "timerTrigger"

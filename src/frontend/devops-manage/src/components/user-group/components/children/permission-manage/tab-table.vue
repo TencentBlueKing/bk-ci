@@ -61,7 +61,7 @@
       <bk-table-column :label="t('有效期')" prop="expiredAtDisplay" />
       <bk-table-column :label="t('加入时间')" prop="joinedTime" >
         <template #default="{row}">
-          {{ timeFormatter(row.joinedTime) }}
+          <time-display :value="row.joinedTime" />
         </template>
       </bk-table-column>
       <bk-table-column :label="t('加入方式')" prop="joinedType">
@@ -158,7 +158,7 @@
 import { useI18n } from 'vue-i18n';
 import { useRoute } from 'vue-router';
 import { ref, defineProps, defineEmits, computed } from 'vue';
-import { timeFormatter } from '@/common/util.ts'
+import TimeDisplay from '../../../../../../../common-lib/time-display';
 import useManageAside from "@/store/manageAside";
 import { storeToRefs } from 'pinia';
 

@@ -340,23 +340,42 @@ function prezero (num) {
     return num
 }
 
-export function convertTime (ms) {
-    if (!ms) return '--'
-    const time = new Date(ms)
+import {
+    convertTime,
+    formatByUserTz,
+    getUserTimeZone,
+    prettyDateTimeFormat,
+    nowInUserTz,
+    userTzTodayRange,
+    userTzYesterdayRange,
+    userTzLastDaysRange,
+    recentDaysRangeInUserTz,
+    calendarDateInUserTz,
+    addCalendarDays,
+    zonedDayStartEpochMilli
+} from '../../../common-lib/time'
 
-    return `${time.getFullYear()}-${prezero(time.getMonth() + 1)}-${prezero(time.getDate())} ${prezero(time.getHours())}:${prezero(time.getMinutes())}:${prezero(time.getSeconds())}`
+export {
+    convertTime,
+    formatByUserTz,
+    getUserTimeZone,
+    prettyDateTimeFormat,
+    nowInUserTz,
+    userTzTodayRange,
+    userTzYesterdayRange,
+    userTzLastDaysRange,
+    recentDaysRangeInUserTz,
+    calendarDateInUserTz,
+    addCalendarDays,
+    zonedDayStartEpochMilli
 }
 
 export function coverStrTimer (ms) {
-    const time = new Date(ms)
-
-    return `${time.getFullYear()}-${time.getMonth() + 1}-${time.getDate()} ${time.getHours()}:${time.getMinutes()}:${time.getSeconds()}`
+    return formatByUserTz(ms)
 }
 
 export function convertMiniTime (ms) {
-    const time = new Date(ms)
-
-    return `${prezero(time.getMonth() + 1)}-${prezero(time.getDate())} ${prezero(time.getHours())}:${prezero(time.getMinutes())}`
+    return formatByUserTz(ms, undefined, 'MM-DD HH:mm')
 }
 
 /**
@@ -775,26 +794,6 @@ export function getMaterialIconByType (type) {
     return materialIconMap[type] ?? 'CODE_GIT'
 }
 
-export const prettyDateTimeFormat = (target) => {
-    if (!target) {
-        return ''
-    }
-    const formatStr = (str) => {
-        if (String(str).length === 1) {
-            return `0${str}`
-        }
-        return str
-    }
-    const d = new Date(target)
-    const year = d.getFullYear()
-    const month = formatStr(d.getMonth() + 1)
-    const date = formatStr(d.getDate())
-    const hours = formatStr(d.getHours())
-    const minutes = formatStr(d.getMinutes())
-    const seconds = formatStr(d.getSeconds())
-    return `${year}-${month}-${date} ${hours}:${minutes}:${seconds}`
-}
-
 export function areDeeplyEqual (obj1, obj2) {
     const stack = [[obj1, obj2]]
     let current, left, right
@@ -845,17 +844,11 @@ export function generateDisplayName (version, versionName) {
 }
 
 export function weekAgo () {
-    // 获取当前日期
-    const now = new Date()
-
-    // 获取一周前的日期
-    const oneWeekAgo = new Date()
-    oneWeekAgo.setDate(now.getDate() - 7)
-
-    // 创建开始和结束日期对象
-    const start = new Date(oneWeekAgo.setHours(0, 0, 0))
-    const end = new Date(now.setHours(23, 59, 59))
-    return [start, end]
+    const { startMs, endMs } = recentDaysRangeInUserTz(7)
+    // end of today in user TZ for datepicker end bound
+    const today = calendarDateInUserTz()
+    const endOfToday = zonedDayStartEpochMilli(addCalendarDays(today, 1)) - 1
+    return [new Date(startMs), new Date(Math.min(endMs, endOfToday))]
 }
 
 export function isEmptyObj (obj) {

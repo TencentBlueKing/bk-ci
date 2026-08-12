@@ -205,7 +205,7 @@
                             width="180"
                         >
                             <template slot-scope="props">
-                                <span>{{ props.row.latestExecTime || '-' }}</span>
+                                <time-display :value="props.row.latestExecTime" />
                             </template>
                         </bk-table-column>
                     </bk-table>
@@ -218,12 +218,14 @@
 <script>
     import Logo from '@/components/Logo'
     import pipelineHeader from '@/components/devops/pipeline-header'
+    import TimeDisplay from '../../../common-lib/time-display'
     import { mapActions } from 'vuex'
 
     export default {
         components: {
             Logo,
-            pipelineHeader
+            pipelineHeader,
+            TimeDisplay
         },
 
         data () {

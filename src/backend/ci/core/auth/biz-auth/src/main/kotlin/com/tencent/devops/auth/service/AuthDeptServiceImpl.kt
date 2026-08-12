@@ -337,7 +337,8 @@ class AuthDeptServiceImpl(
                     )
                 } ?: emptyList()
             },
-            extras = this.extras
+            extras = this.extras,
+            timeZone = this.extras?.timeZone
         )
     }
 

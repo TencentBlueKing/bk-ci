@@ -187,7 +187,8 @@ class ElementTransfer @Autowired(required = false) constructor(
                         branches = element.branches,
                         always = (element.noScm != true).nullIfDefault(false),
                         enable = element.elementEnabled().nullIfDefault(true),
-                        startParams = element.convertStartParams()
+                        startParams = element.convertStartParams(),
+                        timezone = element.timeZone
                     )
                 )
                 return@forEach

@@ -60,15 +60,21 @@
                     <bk-table-column
                         :label="$t('store.创建日期')"
                         prop="createTime"
-                        :formatter="timeFormatter"
                         show-overflow-tooltip
-                    ></bk-table-column>
+                    >
+                        <template v-slot="props">
+                            <time-display :value="props.row.createTime" />
+                        </template>
+                    </bk-table-column>
                     <bk-table-column
                         :label="$t('store.更新日期')"
                         prop="updateTime"
-                        :formatter="timeFormatter"
                         show-overflow-tooltip
-                    ></bk-table-column>
+                    >
+                        <template v-slot="props">
+                            <time-display :value="props.row.updateTime" />
+                        </template>
+                    </bk-table-column>
                     <bk-table-column
                         :label="$t('store.操作')"
                         width="120"
@@ -112,7 +118,7 @@
                         {{ approveRes.content }}
                     </bk-form-item>
                     <bk-form-item :label="$t('store.创建日期')">
-                        {{ timeFormatter({}, {}, approveRes.createTime) }}
+                        <time-display :value="approveRes.createTime" />
                     </bk-form-item>
                     <bk-form-item
                         :label="$t('store.审批结果')"
@@ -160,12 +166,13 @@
 
 <script>
     import formTips from '@/components/common/formTips/index'
-    import { convertTime } from '@/utils/index'
     import { mapGetters } from 'vuex'
+    import TimeDisplay from '../../../../common-lib/time-display'
 
     export default {
         components: {
-            formTips
+            formTips,
+            TimeDisplay
         },
 
         data () {
@@ -266,10 +273,6 @@
                         break
                 }
                 return str
-            },
-
-            timeFormatter (obj, con, val) {
-                return convertTime(val)
             }
         }
     }

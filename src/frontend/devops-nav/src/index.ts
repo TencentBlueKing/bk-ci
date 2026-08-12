@@ -176,6 +176,7 @@ async function main () {
     Vue.prototype.$tenant = TenantSingleton
     Vue.prototype.$tenantId = data.tenantId
     Vue.prototype.$tenantApiBaseUrl = data.apiBaseUrl
+    Vue.prototype.$tenantTimeZone = data.timeZone
     window.devops = new Vue({
         el: '#devops-root',
         i18n,

@@ -45,7 +45,7 @@
     import InfiniteScroll from '@/components/InfiniteScroll'
     import EmptyException from '@/components/common/exception'
     import TenantSingleton from '@/utils/tenant'
-    import { weekAgo } from '@/utils/util'
+    import { weekAgo, userTzTodayRange, userTzYesterdayRange, userTzLastDaysRange } from '@/utils/util'
     import SearchSelect from '@blueking/search-select'
     import { mapActions } from 'vuex'
     import TriggerEventTimeline from './TriggerEventTimeline.vue'
@@ -125,40 +125,29 @@
             },
             shortcuts () {
                 return [{
-                            text: this.$t('今天'),
-                            value () {
-                                const end = new Date()
-                                const start = new Date(end.getFullYear(), end.getMonth(), end.getDate())
-                                return [start, end]
-                            }
-                        },
-                        {
-                            text: this.$t('昨天'),
-                            value () {
-                                const time = new Date()
-                                const end = new Date(time.getFullYear(), time.getMonth(), time.getDate() - 1, 23, 59, 59)
-                                const start = new Date(time.getFullYear(), time.getMonth(), time.getDate() - 1)
-                                return [start, end]
-                            }
-                        },
-                        {
-                            text: this.$t('近3天'),
-                            value () {
-                                const end = new Date()
-                                const start = new Date()
-                                start.setTime(start.getTime() - 3600 * 1000 * 24 * 3)
-                                return [start, end]
-                            }
-                        },
-                        {
-                            text: this.$t('近7天'),
-                            value () {
-                                const end = new Date()
-                                const start = new Date()
-                                start.setTime(start.getTime() - 3600 * 1000 * 24 * 7)
-                                return [start, end]
-                            }
-                        }]
+                    text: this.$t('今天'),
+                    value () {
+                        return userTzTodayRange()
+                    }
+                },
+                {
+                    text: this.$t('昨天'),
+                    value () {
+                        return userTzYesterdayRange()
+                    }
+                },
+                {
+                    text: this.$t('近3天'),
+                    value () {
+                        return userTzLastDaysRange(3)
+                    }
+                },
+                {
+                    text: this.$t('近7天'),
+                    value () {
+                        return userTzLastDaysRange(7)
+                    }
+                }]
             }
         },
         watch: {

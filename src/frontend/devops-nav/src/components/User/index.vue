@@ -1,41 +1,9 @@
 <template>
-    <bk-popover
-        theme="light navigation-message"
-        placement="bottom"
-        trigger="click"
-        :arrow="false"
-        ref="popoverRef"
-        :on-hide="handleHide"
-        :on-show="handleShow"
-    >
-        <div
-            class="user-entry"
-        >
-            <bk-user-display-name :user-id="username"></bk-user-display-name>
-            <i class="devops-icon icon-down-shape ml5" />
-        </div>
-        <template slot="content">
-            <li
-                v-for="(item, index) in menu"
-                :key="index"
-                class="bkci-dropdown-item"
-            >
-                <router-link
-                    v-if="item.to"
-                    class="user-menu-item"
-                    :to="item.to"
-                    @click="hideUserInfo"
-                >
-                    {{ item.label }}
-                </router-link>
-                <span
-                    v-else-if="item.cb"
-                    class="user-menu-item"
-                    @click.stop="item.cb(item.name)"
-                >{{ item.label }}</span>
-            </li>
-        </template>
-    </bk-popover>
+    <BkLoginUserinfo
+        :userinfo="userinfo"
+        :render-slot="renderSlot"
+        :action-list="actionList"
+    />
 </template>
 
 <script lang="ts">
@@ -44,8 +12,30 @@
     import { Action } from 'vuex-class'
     import { clickoutside } from '../../directives/index'
     import { addRoutePrefix } from '@/utils/util'
+    import { getUserTimeZone } from '../../../../common-lib/time.js'
+    import BkLoginUserinfo from '@blueking/login-userinfo/vue2'
+    import '@blueking/login-userinfo/vue2/vue2.css'
+    import projectManageIcon from '@/assets/scss/logo/projectManage.svg'
+    import accessCenterIcon from '@/assets/scss/logo/accessCenter.svg'
+    import oauthManageIcon from '@/assets/scss/logo/oauthManage.svg'
+    import userCircleIcon from '@/assets/scss/logo/userCircle.svg'
+    import logoutIcon from '@/assets/scss/logo/logout.svg'
+
+    const renderActionIcon = (src: string) => (h) => h('i', {
+        style: {
+            width: '14px',
+            height: '14px',
+            display: 'inline-block',
+            backgroundColor: 'currentColor',
+            mask: `url(${src}) no-repeat center / contain`,
+            WebkitMask: `url(${src}) no-repeat center / contain`,
+        }
+    })
 
     @Component({
+        components: {
+            BkLoginUserinfo
+        },
         directives: {
             clickoutside
         }
@@ -65,48 +55,62 @@
 
         @Action togglePopupShow
 
-        hideUserInfo (item): void {
-            this.$refs.popoverRef.hideHandler()
+        get tenantId (): string {
+            const tenantInfo = (window as any).tenantInfoForDisplay
+            return (tenantInfo && tenantInfo.tenantId) || '--'
         }
 
-        handleShow () {
-            this.togglePopupShow(true)
+        get userSettingUrl (): string {
+            return window.LOCALE_DOMAIN ? `https://bkuser.${window.LOCALE_DOMAIN}` : ''
         }
 
-        handleHide () {
-            this.togglePopupShow(false)
+        get actionList () {
+            return [
+                {
+                    text: this.$t('projectManage'),
+                    theme: 'primary',
+                    href: addRoutePrefix('/console/pm'),
+                    renderIcon: renderActionIcon(projectManageIcon)
+                },
+                {
+                    text: this.$t('accessCenter'),
+                    theme: 'primary',
+                    href: addRoutePrefix('/console/permission'),
+                    renderIcon: renderActionIcon(accessCenterIcon)
+                },
+                {
+                    text: this.$t('oauthManage'),
+                    theme: 'primary',
+                    href: addRoutePrefix('/console/permission/auth/oauth'),
+                    renderIcon: renderActionIcon(oauthManageIcon)
+                },
+                {
+                    text: this.$t('userSetting'),
+                    target: '_blank',
+                    theme: 'primary',
+                    href: this.userSettingUrl,
+                    renderIcon: renderActionIcon(userCircleIcon)
+                },
+                {
+                    text: this.$t('logout'),
+                    theme: 'danger',
+                    handle: () => this.logout(),
+                    renderIcon: renderActionIcon(logoutIcon)
+                },
+            ]
         }
-
-        updatePage (name) {
-            window.open(`${window.location.origin}${window.getRoutePrefix()}/${name}`, '_self')
-        }
-
-        get menu (): object[] {
-            try {
-                return [
-                    {
-                        to: addRoutePrefix('/console/pm'),
-                        label: this.$t('projectManage')
-                    },
-                    {
-                        cb: this.updatePage,
-                        label: this.$t('accessCenter'),
-                        name: 'permission'
-                    },
-                    {
-                        cb: this.updatePage,
-                        label: this.$t('oauthManage'),
-                        name: 'permission/auth/oauth'
-                    },
-                    {
-                        cb: this.logout,
-                        label: this.$t('logout')
-                    }
-                ]
-            } catch (e) {
-                console.warn(e)
-                return []
+        get userinfo () {
+            const name = `${this.username}(${this.chineseName})`
+            
+            return {
+                name,
+                organization: this.tenantId,
+                timezone: getUserTimeZone(),
             }
+        }
+
+        renderSlot (h) {
+            return h('bk-user-display-name', { 'user-id': `${this.username}(${this.chineseName})` })
         }
 
         logout (): void {
@@ -133,6 +137,37 @@
         line-height: 32px;
         padding:0 12px;
         align-items: center;
+    }
+
+    .user-tenant-info {
+        padding: 8px 16px 12px;
+        border-bottom: 1px solid #f0f1f5;
+        margin-bottom: 4px;
+        min-width: $dropmenuWidth;
+        box-sizing: border-box;
+    }
+
+    .user-tenant-info-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        line-height: 22px;
+        font-size: 12px;
+        & + .user-tenant-info-row {
+            margin-top: 4px;
+        }
+    }
+
+    .user-tenant-info-label {
+        color: #979ba5;
+        margin-right: 12px;
+        flex-shrink: 0;
+    }
+
+    .user-tenant-info-value {
+        color: #63656e;
+        text-align: right;
+        word-break: break-all;
     }
 
     .user-menu-item {

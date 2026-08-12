@@ -78,12 +78,12 @@ data class Atom(
     val version: String?,
     @get:Schema(title = "创建人", required = true)
     val creator: String,
-    @get:Schema(title = "创建时间", required = true)
-    val createTime: String,
+    @get:Schema(title = "创建时间（毫秒时间戳）", required = true)
+    val createTime: Long,
     @get:Schema(title = "修改人", required = true)
     val modifier: String,
-    @get:Schema(title = "修改时间", required = true)
-    val updateTime: String,
+    @get:Schema(title = "修改时间（毫秒时间戳）", required = true)
+    val updateTime: Long,
     @get:Schema(title = "是否为默认插件（默认插件默认所有项目可见）true：默认插件 false：普通插件", required = false)
     val defaultFlag: Boolean?,
     @get:Schema(title = "是否为最新版本插件 true：最新 false：非最新", required = false)

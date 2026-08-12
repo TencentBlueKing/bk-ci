@@ -752,6 +752,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
                             }
                             JsonUtil.toJson(params, false)
                         },
+                        timeZone = timer.timezone,
                         version = if (timer.newExpression.filterNonEmpty().isEmpty() &&
                                 (timer.advanceExpression?.size ?: 0) == 1
                         ) {

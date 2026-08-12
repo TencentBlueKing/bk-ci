@@ -97,9 +97,12 @@
                     :label="$t('store.修改时间')"
                     prop="updateTime"
                     width="150"
-                    :formatter="timeFormatter"
                     show-overflow-tooltip
-                ></bk-table-column>
+                >
+                    <template slot-scope="props">
+                        <time-display :value="props.row.updateTime" />
+                    </template>
+                </bk-table-column>
                 <bk-table-column
                     :label="$t('store.操作')"
                     width="300"
@@ -344,10 +347,12 @@
     import formTips from '@/components/common/formTips/index'
     import { templateStatusList } from '@/store/constants'
     import { debounce, getQueryString } from '@/utils/index'
+    import TimeDisplay from '../../../../common-lib/time-display'
 
     export default {
         components: {
-            formTips
+            formTips,
+            TimeDisplay
         },
 
         data () {
@@ -451,13 +456,6 @@
                 } finally {
                     this.isLoading = false
                 }
-            },
-
-            timeFormatter (row, column, cellValue, index) {
-                const date = new Date(cellValue)
-                const year = date.toISOString().slice(0, 10)
-                const time = date.toTimeString().split(' ')[0]
-                return `${year} ${time}`
             },
 
             deleteTemplate (row) {

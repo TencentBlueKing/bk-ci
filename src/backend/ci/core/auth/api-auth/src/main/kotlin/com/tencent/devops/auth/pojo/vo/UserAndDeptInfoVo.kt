@@ -24,5 +24,7 @@ data class UserAndDeptInfoVo(
     @get:Schema(title = "水印信息")
     val waterMark: String? = null,
     @get:Schema(title = "是否是项目成员")
-    val belongProjectMember: Boolean? = null
+    val belongProjectMember: Boolean? = null,
+    @get:Schema(title = "用户时区（IANA，来自蓝鲸用户管理）")
+    val timeZone: String? = null
 )
