@@ -389,7 +389,7 @@
                                     {{ $t('environment.setTag') }}
                                 </span>
                                 <span
-                                    v-if="!['TSTACK'].includes(props.row.nodeType) && !isPersonalProject"
+                                    v-if="!['TSTACK'].includes(props.row.nodeType) && !isPersonalProject && props.row.createWorkspaceSource !== 'REMOTEDEV'"
                                     v-perm="{
                                         // 团队项目创作流节点，使用canEdit判断删除权限
                                         hasPermission: !isPersonalProject && isCreateResType ? props.row.canEdit : props.row.canDelete,
