@@ -578,6 +578,19 @@ class ProjectDao {
         }
     }
 
+    fun updatePipelineLimit(
+        dslContext: DSLContext,
+        englishName: String,
+        pipelineLimit: Int
+    ): Int {
+        with(TProject.T_PROJECT) {
+            return dslContext.update(this)
+                .set(PIPELINE_LIMIT, pipelineLimit)
+                .where(ENGLISH_NAME.eq(englishName))
+                .execute()
+        }
+    }
+
     private fun TProject.generateQueryProjectCondition(
         projectName: String?,
         englishName: String?,
