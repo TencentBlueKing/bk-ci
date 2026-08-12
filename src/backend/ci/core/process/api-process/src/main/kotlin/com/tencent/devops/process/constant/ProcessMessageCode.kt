@@ -510,14 +510,10 @@ object ProcessMessageCode {
     const val ERROR_PUBLIC_VAR_GROUP_ADD_FAILED = "2101381"
     // 删除公共变量组({0})失败
     const val ERROR_PUBLIC_VAR_GROUP_DELETE_FAILED = "2101382"
-    // 获取公共变量组({0})的变量失败
-    const val ERROR_PUBLIC_VAR_GROUP_GET_VARIABLES_FAILED = "2101383"
     // 获取流水线变量失败(项目:{0}, 引用ID:{1})
     const val ERROR_PUBLIC_VAR_GROUP_LIST_PIPELINE_VARIABLES_FAILED = "2101384"
     // 获取项目({0})的公共变量组信息失败
     const val ERROR_PUBLIC_VAR_GROUP_LIST_PROJECT_VAR_GROUP_FAILED = "2101385"
-    // 获取公共变量组引用锁失败，请稍后重试
-    const val ERROR_PUBLIC_VAR_GROUP_REFER_LOCK_ACQUIRE_FAILED = "2101386"
     // 公共变量组YAML缺少必填字段: {0}
     const val ERROR_PUBLIC_VAR_GROUP_YAML_MISSING_FIELD = "2101387"
     // 公共变量组YAML格式错误
