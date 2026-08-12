@@ -30,6 +30,7 @@ package com.tencent.devops.common.webhook.pojo.code.github
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitMrEventAction
+import io.swagger.v3.oas.annotations.media.Schema
 
 @Suppress("ALL")
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -43,7 +44,11 @@ data class GithubPullRequestEvent(
     @JsonProperty("repository")
     val repository: GithubRepository,
     @JsonProperty("sender")
-    override val sender: GithubUser
+    override val sender: GithubUser,
+    @get:Schema(title = "本次添加或移除的标签")
+    val label: GithubLabel? = null,
+    @get:Schema(title = "issues受理人")
+    val assignee: GithubUser? = null
 ) : GithubEvent(sender) {
     companion object {
         const val classType = "pull_request"
@@ -64,9 +69,11 @@ data class GithubPullRequestEvent(
             action == "reopened" -> TGitMrEventAction.REOPEN.value
             action == "synchronize" -> TGitMrEventAction.PUSH_UPDATE.value
             action == "closed" -> TGitMrEventAction.CLOSE.value
-            action == "edited" || action == "labeled" || action == "unlabeled" -> "edit"
+            action == "edited" -> "edit"
             action == "assigned" -> "assign"
             action == "unassigned" -> "unassign"
+            action == "labeled" -> "label"
+            action == "unlabeled" -> "unlabel"
             else -> null
         }
     }

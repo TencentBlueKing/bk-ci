@@ -230,7 +230,7 @@
                     "type" : "array",
                     "uniqueItems" : true,
                     "items" : {
-                      "enum" : [ "open", "close", "reopen", "push-update", "merge", "edit", "assign", "unassign" ]
+                      "enum" : [ "open", "close", "reopen", "push-update", "merge", "edit", "assign", "unassign", "label", "unlabel" ]
                     },
                     "additionalItems" : false
                   },
@@ -1166,7 +1166,7 @@
                   "type" : "array",
                   "uniqueItems" : true,
                   "items" : {
-                    "enum" : [ "open", "close", "reopen", "push-update", "merge", "edit", "assign", "unassign" ]
+                    "enum" : [ "open", "close", "reopen", "push-update", "merge", "edit", "assign", "unassign", "label", "unlabel" ]
                   },
                   "additionalItems" : false
                 },

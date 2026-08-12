@@ -76,7 +76,6 @@ import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_TITLE
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_UPDATE_TIME
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_URL
 import com.tencent.devops.common.webhook.pojo.code.GITHUB_PR_NUMBER
-import com.tencent.devops.common.webhook.pojo.code.MATCH_LABEL
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_COMMIT_MESSAGE
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_EVENT_TYPE
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_SOURCE_BRANCH
@@ -92,9 +91,8 @@ import com.tencent.devops.common.webhook.pojo.code.github.GithubPullRequestEvent
 import com.tencent.devops.common.webhook.service.code.EventCacheService
 import com.tencent.devops.common.webhook.service.code.filter.BranchFilter
 import com.tencent.devops.common.webhook.service.code.filter.ContainsFilter
-import com.tencent.devops.common.webhook.service.code.filter.ListContainsFilter
+import com.tencent.devops.common.webhook.service.code.filter.NotContainsFilter
 import com.tencent.devops.common.webhook.service.code.filter.UserFilter
-import com.tencent.devops.common.webhook.service.code.filter.UserListFilter
 import com.tencent.devops.common.webhook.service.code.filter.WebhookFilter
 import com.tencent.devops.common.webhook.service.code.handler.GitHookTriggerHandler
 import com.tencent.devops.common.webhook.service.code.pojo.WebhookMatchResult
@@ -237,52 +235,50 @@ class GithubPrTriggerHandler @Autowired constructor(
                     params = listOf(targetBranch)
                 ).toJsonStr()
             )
-            val includeFailedReason = { item: String ->
-                I18Variable(
-                    WebhookI18nConstants.MR_LABEL_NOT_MATCH,
-                    params = listOf(item)
-                ).toJsonStr()
-            }
-            val excludedFailedReason = { item: String ->
-                I18Variable(
-                    WebhookI18nConstants.MR_LABEL_IGNORED,
-                    params = listOf(item)
-                ).toJsonStr()
-            }
-            val labelFilter = ListContainsFilter(
-                pipelineId = pipelineId,
-                filterName = "mrLabel",
-                triggerOn = event.pullRequest.labels.map { it.name }.toSet(),
-                included = WebhookUtils.convert(includeLabels),
-                excluded = WebhookUtils.convert(excludeLabels),
-                includeFailedReason = includeFailedReason,
-                excludedFailedReason = excludedFailedReason,
-                includeItemKey = MATCH_LABEL
-            )
-            val assigneeFilter = UserListFilter(
-                pipelineId = pipelineId,
-                triggerOnUsers = event.pullRequest.assignees.map { it.login }.toSet(),
-                includedUsers = WebhookUtils.convert(includeAssignees),
-                excludedUsers = WebhookUtils.convert(excludeAssignees),
-                includedFailedReason = I18Variable(
-                    code = WebhookI18nConstants.OWNER_NOT_MATCH,
-                    params = listOf("")
-                ).toJsonStr(),
-                excludedFailedReason = { user ->
-                    I18Variable(
-                        code = WebhookI18nConstants.OWNER_IGNORED,
-                        params = listOf(user)
+            val filters = mutableListOf(actionFilter, userFilter, targetBranchFilter)
+            if (event.label != null) {
+                val labelFilter = ContainsFilter(
+                    pipelineId = pipelineId,
+                    filterName = "mrLabel",
+                    triggerOn = event.label!!.name,
+                    included = WebhookUtils.convert(includeLabels),
+                    failedReason = I18Variable(
+                        code = WebhookI18nConstants.MR_LABEL_NOT_MATCH,
+                        params = listOf()
                     ).toJsonStr()
-                },
-                filterName = "prAssignees"
-            )
-            return listOf(
-                actionFilter,
-                userFilter,
-                targetBranchFilter,
-                labelFilter,
-                assigneeFilter
-            )
+                )
+                val excludeLabelFilter = NotContainsFilter(
+                    pipelineId = pipelineId,
+                    filterName = "mrLabelExclude",
+                    triggerOn = event.label!!.name,
+                    excluded = WebhookUtils.convert(excludeLabels),
+                    failedReason = I18Variable(
+                        code = WebhookI18nConstants.MR_LABEL_IGNORED,
+                        params = listOf(event.label!!.name)
+                    ).toJsonStr()
+                )
+                filters.add(labelFilter)
+                filters.add(excludeLabelFilter)
+            }
+            if (event.assignee != null) {
+                val assigneeFilter = UserFilter(
+                    pipelineId = pipelineId,
+                    triggerOnUser = event.assignee!!.login,
+                    includedUsers = WebhookUtils.convert(includeAssignees),
+                    excludedUsers = WebhookUtils.convert(excludeAssignees),
+                    includedFailedReason = I18Variable(
+                        code = WebhookI18nConstants.OWNER_NOT_MATCH,
+                        params = listOf(event.assignee!!.login)
+                    ).toJsonStr(),
+                    excludedFailedReason = I18Variable(
+                        code = WebhookI18nConstants.OWNER_IGNORED,
+                        params = listOf(event.assignee!!.login)
+                    ).toJsonStr(),
+                    filterName = "mrAssignee"
+                )
+                filters.add(assigneeFilter)
+            }
+            return filters
         }
     }
 

@@ -35,14 +35,16 @@ import io.swagger.v3.oas.annotations.media.Schema
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class GithubIssuesEvent(
     val action: String,
-    @Schema(title = "Issues相关信息")
+    @get:Schema(title = "Issues相关信息")
     val issue: GithubIssue,
-    @Schema(title = "Github仓库相关信息")
+    @get:Schema(title = "Github仓库相关信息")
     val repository: GithubRepository,
-    @Schema(title = "操作人信息")
+    @get:Schema(title = "操作人信息")
     override val sender: GithubUser,
-    @Schema(title = "本次添加或移除的标签")
-    val label: GithubLabel? = null
+    @get:Schema(title = "本次添加或移除的标签")
+    val label: GithubLabel? = null,
+    @get:Schema(title = "issues受理人")
+    val assignee: GithubUser? = null
 ) : GithubEvent(sender) {
     companion object {
         const val classType = "issues"

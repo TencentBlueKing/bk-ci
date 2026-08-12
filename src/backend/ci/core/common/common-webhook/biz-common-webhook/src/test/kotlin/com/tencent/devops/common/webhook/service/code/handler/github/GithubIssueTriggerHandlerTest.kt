@@ -118,7 +118,7 @@ class GithubIssueTriggerHandlerTest {
     }
 
     @Test
-    fun `should apply current label filter to every issue action`() {
+    fun `should include label events by the changed label`() {
         assertTrue(
             isMatch(
                 event = event("labeled", changedLabel = urgent),
@@ -127,30 +127,30 @@ class GithubIssueTriggerHandlerTest {
         )
         assertFalse(
             isMatch(
-                event = event("edited"),
-                params = webHookParams("update", includeLabels = "missing")
+                event = event("labeled", changedLabel = urgent),
+                params = webHookParams("label", includeLabels = "missing")
             )
         )
     }
 
     @Test
-    fun `should filter every issue action by current assignees with exact login matching`() {
+    fun `should filter assignee events by the changed assignee`() {
         assertTrue(
             isMatch(
-                event = event("edited", currentAssignees = listOf(alice)),
-                params = webHookParams("update", includeAssignees = "alice")
+                event = event("assigned", changedAssignee = alice),
+                params = webHookParams("assign", includeAssignees = "alice")
             )
         )
         assertFalse(
             isMatch(
-                event = event("edited", currentAssignees = listOf(alice)),
-                params = webHookParams("update", includeAssignees = "ali*")
+                event = event("assigned", changedAssignee = alice),
+                params = webHookParams("assign", includeAssignees = "bob")
             )
         )
         assertFalse(
             isMatch(
-                event = event("edited", currentAssignees = listOf(alice)),
-                params = webHookParams("update", includeAssignees = "alice", excludeAssignees = "alice")
+                event = event("assigned", changedAssignee = alice),
+                params = webHookParams("assign", excludeAssignees = "alice")
             )
         )
     }
@@ -166,42 +166,49 @@ class GithubIssueTriggerHandlerTest {
     }
 
     @Test
-    fun `should filter label events by current labels`() {
+    fun `should filter labeled and unlabeled events by the changed label`() {
         assertTrue(
             isMatch(
-                event = event("labeled", changedLabel = urgent, currentLabels = listOf(bug, urgent)),
-                params = webHookParams("label", includeLabels = "urg*")
+                event = event("labeled", changedLabel = urgent),
+                params = webHookParams("label", includeLabels = "urgent")
             )
         )
         assertFalse(
             isMatch(
-                event = event("labeled", changedLabel = urgent, currentLabels = listOf(bug, urgent)),
-                params = webHookParams("label", includeLabels = "missing")
+                event = event("labeled", changedLabel = urgent),
+                params = webHookParams("label", includeLabels = "bug")
             )
         )
-        assertFalse(
+        assertTrue(
             isMatch(
-                event = event("unlabeled", changedLabel = urgent, currentLabels = listOf(bug)),
+                event = event("unlabeled", changedLabel = urgent),
                 params = webHookParams("unlabel", includeLabels = "urgent")
-            )
-        )
-        assertTrue(
-            isMatch(
-                event = event("unlabeled", changedLabel = urgent, currentLabels = listOf(bug)),
-                params = webHookParams("unlabel", includeLabels = "bug")
             )
         )
     }
 
     @Test
-    fun `should let excluded current label override included label`() {
+    fun `should let excluded label override included label`() {
         assertFalse(
             isMatch(
-                event = event("labeled", changedLabel = urgent, currentLabels = listOf(bug, urgent)),
+                event = event("labeled", changedLabel = urgent),
                 params = webHookParams(
                     includeIssueAction = "label",
                     includeLabels = "urgent",
-                    excludeLabels = "urg*"
+                    excludeLabels = "urgent"
+                )
+            )
+        )
+    }
+
+    @Test
+    fun `should not exclude label event when changed label is not excluded`() {
+        assertTrue(
+            isMatch(
+                event = event("labeled", changedLabel = urgent),
+                params = webHookParams(
+                    includeIssueAction = "label",
+                    excludeLabels = "bug"
                 )
             )
         )
@@ -315,6 +322,7 @@ class GithubIssueTriggerHandlerTest {
     private fun event(
         action: String,
         changedLabel: GithubLabel? = null,
+        changedAssignee: GithubUser? = null,
         currentAssignees: List<GithubUser> = listOf(alice, bob),
         currentLabels: List<GithubLabel> = listOf(bug, urgent)
     ) = GithubIssuesEvent(
@@ -340,7 +348,8 @@ class GithubIssueTriggerHandlerTest {
         ),
         repository = repository,
         sender = author,
-        label = changedLabel
+        label = changedLabel,
+        assignee = changedAssignee
     )
 
     private fun githubEvent(fileName: String): GithubIssuesEvent {
