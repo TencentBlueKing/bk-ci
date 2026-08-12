@@ -6,12 +6,20 @@
   cursor: pointer;
   transition: all var(--transition-fast);
   margin-bottom: var(--spacing-sm);
+  &:hover {
+    background: var(--bg-secondary);
+  }
 }
 
 .eventCardLoading {
   opacity: 0.7;
   cursor: wait;
   pointer-events: none;
+}
+
+.eventCardDisabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .eventIcon {
@@ -40,6 +48,10 @@
   display: flex;
   align-items: center;
   gap: var(--spacing-sm);
+}
+
+.eventNameText {
+  min-width: 0;
 }
 
 .loadingSpin {
@@ -75,4 +87,8 @@
 
 .eventUsage {
   color: var(--color-text-tertiary);
+}
+
+.highlight {
+  color: var(--color-warning);
 }

@@ -454,6 +454,19 @@
                         "type" : "string"
                       }
                     },
+                    "nodes" : {
+                      "oneOf" : [ {
+                        "enum" : [ "all" ]
+                      }, {
+                        "type" : "string",
+                        "pattern" : "^ins-.+"
+                      }, {
+                        "type" : "array",
+                        "items" : {
+                          "type" : "string"
+                        }
+                      } ]
+                    },
                     "advance-cron" : {
                       "type" : "array"
                     },
@@ -515,6 +528,19 @@
                     "items" : {
                       "type" : "string"
                     }
+                  },
+                  "nodes" : {
+                    "oneOf" : [ {
+                      "enum" : [ "all" ]
+                    }, {
+                      "type" : "string",
+                      "pattern" : "^ins-.+"
+                    }, {
+                      "type" : "array",
+                      "items" : {
+                        "type" : "string"
+                      }
+                    } ]
                   },
                   "advance-cron" : {
                     "type" : "array"
@@ -863,152 +889,140 @@
             "scm-code" : {
               "type" : "string"
             },
-            "tapd" : {
-              "anyOf" : [ {
-                "type" : "array",
-                "items" : {
+            "workspace-id" : {
+              "type" : "string"
+            },
+            "story" : {
+              "type" : "object",
+              "additionalProperties" : false,
+              "required" : [ "action" ],
+              "properties" : {
+                "id" : {
                   "type" : "string"
-                }
-              }, {
-                "type" : "array",
-                "items" : {
-                  "type" : "object",
-                  "additionalProperties" : false,
-                  "properties" : {
-                    "id" : {
-                      "type" : "string"
-                    },
-                    "name" : {
-                      "type" : "string"
-                    },
-                    "enable" : {
-                      "type" : "boolean"
-                    },
-                    "project-id" : {
-                      "type" : "string"
-                    },
-                    "event-type" : {
-                      "type" : "string"
-                    },
-                    "action" : {
-                      "type" : "array",
-                      "items" : {
-                        "type" : "string"
-                      }
-                    },
-                    "users" : {
-                      "type" : "array",
-                      "items" : {
-                        "type" : "string"
-                      }
-                    },
-                    "users-ignore" : {
-                      "type" : "array",
-                      "items" : {
-                        "type" : "string"
-                      }
-                    },
-                    "owners" : {
-                      "type" : "array",
-                      "items" : {
-                        "type" : "string"
-                      }
-                    },
-                    "owners-ignore" : {
-                      "type" : "array",
-                      "items" : {
-                        "type" : "string"
-                      }
-                    },
-                    "priorities" : {
-                      "type" : "array",
-                      "items" : {
-                        "type" : "string"
-                      }
-                    },
-                    "labels" : {
-                      "type" : "array",
-                      "items" : {
-                        "type" : "string"
-                      }
-                    },
-                    "labels-ignore" : {
-                      "type" : "array",
-                      "items" : {
-                        "type" : "string"
-                      }
-                    }
+                },
+                "name" : {
+                  "type" : "string"
+                },
+                "enable" : {
+                  "type" : "boolean"
+                },
+                "action" : {
+                  "uniqueItems" : true,
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string",
+                    "enum" : [ "create", "update", "delete", "status_change", "bug_link", "bug_unlink", "story_link", "story_unlink", "add_comment", "update_comment", "delete_comment" ]
+                  }
+                },
+                "users" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string"
+                  }
+                },
+                "users-ignore" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string"
+                  }
+                },
+                "owners" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string"
+                  }
+                },
+                "owners-ignore" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string"
+                  }
+                },
+                "priorities" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string"
+                  }
+                },
+                "labels" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string"
+                  }
+                },
+                "labels-ignore" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string"
                   }
                 }
-              }, {
-                "type" : "object",
-                "additionalProperties" : false,
-                "properties" : {
-                  "id" : {
+              }
+            },
+            "bug" : {
+              "type" : "object",
+              "additionalProperties" : false,
+              "required" : [ "action" ],
+              "properties" : {
+                "id" : {
+                  "type" : "string"
+                },
+                "name" : {
+                  "type" : "string"
+                },
+                "enable" : {
+                  "type" : "boolean"
+                },
+                "action" : {
+                  "uniqueItems" : true,
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string",
+                    "enum" : [ "create", "update", "delete", "status_change", "add_comment", "update_comment", "delete_comment" ]
+                  }
+                },
+                "users" : {
+                  "type" : "array",
+                  "items" : {
                     "type" : "string"
-                  },
-                  "name" : {
+                  }
+                },
+                "users-ignore" : {
+                  "type" : "array",
+                  "items" : {
                     "type" : "string"
-                  },
-                  "enable" : {
-                    "type" : "boolean"
-                  },
-                  "project-id" : {
+                  }
+                },
+                "owners" : {
+                  "type" : "array",
+                  "items" : {
                     "type" : "string"
-                  },
-                  "event-type" : {
+                  }
+                },
+                "owners-ignore" : {
+                  "type" : "array",
+                  "items" : {
                     "type" : "string"
-                  },
-                  "action" : {
-                    "type" : "array",
-                    "items" : {
-                      "type" : "string"
-                    }
-                  },
-                  "users" : {
-                    "type" : "array",
-                    "items" : {
-                      "type" : "string"
-                    }
-                  },
-                  "users-ignore" : {
-                    "type" : "array",
-                    "items" : {
-                      "type" : "string"
-                    }
-                  },
-                  "owners" : {
-                    "type" : "array",
-                    "items" : {
-                      "type" : "string"
-                    }
-                  },
-                  "owners-ignore" : {
-                    "type" : "array",
-                    "items" : {
-                      "type" : "string"
-                    }
-                  },
-                  "priorities" : {
-                    "type" : "array",
-                    "items" : {
-                      "type" : "string"
-                    }
-                  },
-                  "labels" : {
-                    "type" : "array",
-                    "items" : {
-                      "type" : "string"
-                    }
-                  },
-                  "labels-ignore" : {
-                    "type" : "array",
-                    "items" : {
-                      "type" : "string"
-                    }
+                  }
+                },
+                "priorities" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string"
+                  }
+                },
+                "labels" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string"
+                  }
+                },
+                "labels-ignore" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string"
                   }
                 }
-              } ]
+              }
             }
           }
         }
@@ -1444,6 +1458,19 @@
                       "type" : "string"
                     }
                   },
+                  "nodes" : {
+                    "oneOf" : [ {
+                      "enum" : [ "all" ]
+                    }, {
+                      "type" : "string",
+                      "pattern" : "^ins-.+"
+                    }, {
+                      "type" : "array",
+                      "items" : {
+                        "type" : "string"
+                      }
+                    } ]
+                  },
                   "advance-cron" : {
                     "type" : "array"
                   },
@@ -1505,6 +1532,19 @@
                   "items" : {
                     "type" : "string"
                   }
+                },
+                "nodes" : {
+                  "oneOf" : [ {
+                    "enum" : [ "all" ]
+                  }, {
+                    "type" : "string",
+                    "pattern" : "^ins-.+"
+                  }, {
+                    "type" : "array",
+                    "items" : {
+                      "type" : "string"
+                    }
+                  } ]
                 },
                 "advance-cron" : {
                   "type" : "array"
@@ -1853,152 +1893,140 @@
           "scm-code" : {
             "type" : "string"
           },
-          "tapd" : {
-            "anyOf" : [ {
-              "type" : "array",
-              "items" : {
+          "workspace-id" : {
+            "type" : "string"
+          },
+          "story" : {
+            "type" : "object",
+            "additionalProperties" : false,
+            "required" : [ "action" ],
+            "properties" : {
+              "id" : {
                 "type" : "string"
-              }
-            }, {
-              "type" : "array",
-              "items" : {
-                "type" : "object",
-                "additionalProperties" : false,
-                "properties" : {
-                  "id" : {
-                    "type" : "string"
-                  },
-                  "name" : {
-                    "type" : "string"
-                  },
-                  "enable" : {
-                    "type" : "boolean"
-                  },
-                  "project-id" : {
-                    "type" : "string"
-                  },
-                  "event-type" : {
-                    "type" : "string"
-                  },
-                  "action" : {
-                    "type" : "array",
-                    "items" : {
-                      "type" : "string"
-                    }
-                  },
-                  "users" : {
-                    "type" : "array",
-                    "items" : {
-                      "type" : "string"
-                    }
-                  },
-                  "users-ignore" : {
-                    "type" : "array",
-                    "items" : {
-                      "type" : "string"
-                    }
-                  },
-                  "owners" : {
-                    "type" : "array",
-                    "items" : {
-                      "type" : "string"
-                    }
-                  },
-                  "owners-ignore" : {
-                    "type" : "array",
-                    "items" : {
-                      "type" : "string"
-                    }
-                  },
-                  "priorities" : {
-                    "type" : "array",
-                    "items" : {
-                      "type" : "string"
-                    }
-                  },
-                  "labels" : {
-                    "type" : "array",
-                    "items" : {
-                      "type" : "string"
-                    }
-                  },
-                  "labels-ignore" : {
-                    "type" : "array",
-                    "items" : {
-                      "type" : "string"
-                    }
-                  }
+              },
+              "name" : {
+                "type" : "string"
+              },
+              "enable" : {
+                "type" : "boolean"
+              },
+              "action" : {
+                "uniqueItems" : true,
+                "type" : "array",
+                "items" : {
+                  "type" : "string",
+                  "enum" : [ "create", "update", "delete", "status_change", "bug_link", "bug_unlink", "story_link", "story_unlink", "add_comment", "update_comment", "delete_comment" ]
+                }
+              },
+              "users" : {
+                "type" : "array",
+                "items" : {
+                  "type" : "string"
+                }
+              },
+              "users-ignore" : {
+                "type" : "array",
+                "items" : {
+                  "type" : "string"
+                }
+              },
+              "owners" : {
+                "type" : "array",
+                "items" : {
+                  "type" : "string"
+                }
+              },
+              "owners-ignore" : {
+                "type" : "array",
+                "items" : {
+                  "type" : "string"
+                }
+              },
+              "priorities" : {
+                "type" : "array",
+                "items" : {
+                  "type" : "string"
+                }
+              },
+              "labels" : {
+                "type" : "array",
+                "items" : {
+                  "type" : "string"
+                }
+              },
+              "labels-ignore" : {
+                "type" : "array",
+                "items" : {
+                  "type" : "string"
                 }
               }
-            }, {
-              "type" : "object",
-              "additionalProperties" : false,
-              "properties" : {
-                "id" : {
+            }
+          },
+          "bug" : {
+            "type" : "object",
+            "additionalProperties" : false,
+            "required" : [ "action" ],
+            "properties" : {
+              "id" : {
+                "type" : "string"
+              },
+              "name" : {
+                "type" : "string"
+              },
+              "enable" : {
+                "type" : "boolean"
+              },
+              "action" : {
+                "uniqueItems" : true,
+                "type" : "array",
+                "items" : {
+                  "type" : "string",
+                  "enum" : [ "create", "update", "delete", "status_change", "add_comment", "update_comment", "delete_comment" ]
+                }
+              },
+              "users" : {
+                "type" : "array",
+                "items" : {
                   "type" : "string"
-                },
-                "name" : {
+                }
+              },
+              "users-ignore" : {
+                "type" : "array",
+                "items" : {
                   "type" : "string"
-                },
-                "enable" : {
-                  "type" : "boolean"
-                },
-                "project-id" : {
+                }
+              },
+              "owners" : {
+                "type" : "array",
+                "items" : {
                   "type" : "string"
-                },
-                "event-type" : {
+                }
+              },
+              "owners-ignore" : {
+                "type" : "array",
+                "items" : {
                   "type" : "string"
-                },
-                "action" : {
-                  "type" : "array",
-                  "items" : {
-                    "type" : "string"
-                  }
-                },
-                "users" : {
-                  "type" : "array",
-                  "items" : {
-                    "type" : "string"
-                  }
-                },
-                "users-ignore" : {
-                  "type" : "array",
-                  "items" : {
-                    "type" : "string"
-                  }
-                },
-                "owners" : {
-                  "type" : "array",
-                  "items" : {
-                    "type" : "string"
-                  }
-                },
-                "owners-ignore" : {
-                  "type" : "array",
-                  "items" : {
-                    "type" : "string"
-                  }
-                },
-                "priorities" : {
-                  "type" : "array",
-                  "items" : {
-                    "type" : "string"
-                  }
-                },
-                "labels" : {
-                  "type" : "array",
-                  "items" : {
-                    "type" : "string"
-                  }
-                },
-                "labels-ignore" : {
-                  "type" : "array",
-                  "items" : {
-                    "type" : "string"
-                  }
+                }
+              },
+              "priorities" : {
+                "type" : "array",
+                "items" : {
+                  "type" : "string"
+                }
+              },
+              "labels" : {
+                "type" : "array",
+                "items" : {
+                  "type" : "string"
+                }
+              },
+              "labels-ignore" : {
+                "type" : "array",
+                "items" : {
+                  "type" : "string"
                 }
               }
-            } ]
+            }
           }
         }
       } ]
@@ -2141,7 +2169,7 @@
                   "fields" : {
                     "type" : "object",
                     "patternProperties" : {
-                      "additionalProperties" : {
+                      "^(?!template$)(?!^[A-Z][A-Z0-9_]*$).+$" : {
                         "anyOf" : [ {
                           "type" : "object",
                           "additionalProperties" : false,
@@ -2242,7 +2270,8 @@
                           }
                         } ]
                       }
-                    }
+                    },
+                    "additionalProperties" : false
                   }
                 },
                 "allOf" : [ {
@@ -2428,7 +2457,7 @@
                 "fields" : {
                   "type" : "object",
                   "patternProperties" : {
-                    "additionalProperties" : {
+                    "^(?!template$)(?!^[A-Z][A-Z0-9_]*$).+$" : {
                       "anyOf" : [ {
                         "type" : "object",
                         "additionalProperties" : false,
@@ -2529,7 +2558,8 @@
                         }
                       } ]
                     }
-                  }
+                  },
+                  "additionalProperties" : false
                 }
               },
               "allOf" : [ {
@@ -3084,7 +3114,7 @@
         "queue-length" : {
           "type" : "integer",
           "minimum" : 1,
-          "maximum" : 20
+          "maximum" : 200
         },
         "queue-timeout-minutes" : {
           "type" : "integer",
@@ -3152,19 +3182,16 @@
     },
     "runs-on" : {
       "oneOf" : [ {
-        "type" : "string",
-        "description" : "创作流运行环境，默认为 self 指代我的创作节点，也可按 name 指定"
+        "type" : "string"
       }, {
         "type" : "object",
         "additionalProperties" : false,
         "properties" : {
           "pool-name" : {
-            "type" : "string",
-            "description" : "按名称指定创作流运行环境"
+            "type" : "string"
           },
           "pool-id" : {
-            "type" : "string",
-            "description" : "按 ID 指定创作流运行环境"
+            "type" : "string"
           }
         }
       } ]
@@ -3558,7 +3585,7 @@
                 "max-parallel" : {
                   "type" : "integer",
                   "minimum" : 0,
-                  "maximum" : 20
+                  "maximum" : 50
                 }
               }
             },

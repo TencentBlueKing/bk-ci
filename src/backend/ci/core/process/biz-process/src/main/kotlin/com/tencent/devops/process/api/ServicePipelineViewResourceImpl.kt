@@ -42,6 +42,8 @@ import com.tencent.devops.process.pojo.PipelineCollation
 import com.tencent.devops.process.pojo.PipelineSortType
 import com.tencent.devops.process.pojo.classify.PipelineNewView
 import com.tencent.devops.process.pojo.classify.PipelineNewViewSummary
+import com.tencent.devops.process.pojo.classify.PipelineViewBulkAdd
+import com.tencent.devops.process.pojo.classify.PipelineViewBulkRemove
 import com.tencent.devops.process.pojo.classify.PipelineViewForm
 import com.tencent.devops.process.pojo.classify.PipelineViewId
 import com.tencent.devops.process.pojo.classify.PipelineViewPipelinePage
@@ -216,5 +218,23 @@ class ServicePipelineViewResourceImpl @Autowired constructor(
         return Result(
             pipelineViewGroupService.listPipelineIdsByViewIds(projectId, viewIdsEncode)
         )
+    }
+
+    @AuditEntry(actionId = ActionId.PIPELINE_GROUP_ADD_REMOVE)
+    override fun bulkAdd(
+        userId: String,
+        projectId: String,
+        bulkAdd: PipelineViewBulkAdd
+    ): Result<Boolean> {
+        return Result(pipelineViewGroupService.bulkAdd(userId, projectId, bulkAdd))
+    }
+
+    @AuditEntry(actionId = ActionId.PIPELINE_GROUP_ADD_REMOVE)
+    override fun bulkRemove(
+        userId: String,
+        projectId: String,
+        bulkRemove: PipelineViewBulkRemove
+    ): Result<Boolean> {
+        return Result(pipelineViewGroupService.bulkRemove(userId, projectId, bulkRemove))
     }
 }

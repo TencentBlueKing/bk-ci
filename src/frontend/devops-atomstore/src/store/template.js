@@ -45,62 +45,6 @@ export const actions = {
             return response
         })
     },
-
-    /**
-     * 根据ID获取评论
-     */
-    requestTemplateModifyComment ({ commit }, data) {
-        return vue.$ajax.put(`${prefix}/user/market/template/comment/comments/${data.id}`, data.postData)
-    },
-    /**
-     * 根据ID获取评论
-     */
-    requestTemplateUserComment ({ commit }, id) {
-        return vue.$ajax.get(`${prefix}/user/market/template/comment/comments/${id}`)
-    },
-
-    /**
-     * 评分详情
-     */
-    requestTemplateScoreDetail ({ commit }, code) {
-        return vue.$ajax.get(`${prefix}/user/market/template/comment/score/templateCodes/${code}`)
-    },
-
-    /**
-     * 评论点赞
-     */
-    requestTemplatePraiseComment ({ commit }, commentId) {
-        return vue.$ajax.put(`${prefix}/user/market/template/comment/praise/${commentId}`)
-    },
-
-    /**
-     * 添加评论回复
-     */
-    requestTemplateReplyComment ({ commit }, { id, postData }) {
-        return vue.$ajax.post(`${prefix}/user/market/template/comment/reply/comments/${id}/reply`, postData)
-    },
-
-    /**
-     * 获取评论回复列表
-     */
-    requestTemplateReplyList ({ commit }, commentId) {
-        return vue.$ajax.get(`${prefix}/user/market/template/comment/reply/comments/${commentId}/replys`)
-    },
-
-    /**
-     * 新增评论
-     */
-    requestAddTemplateComment ({ commit }, { id, code, postData }) {
-        return vue.$ajax.post(`${prefix}/user/market/template/comment/templateIds/${id}/templateCodes/${code}/comment`, postData)
-    },
-
-    /**
-     * 评论列表
-     */
-    requestTemplateComments ({ commit }, { code, page, pageSize }) {
-        return vue.$ajax.get(`${prefix}/user/market/template/comment/templateCodes/${code}/comments?page=${page}&pageSize=${pageSize}`)
-    },
-
     /**
      * 模板列表
      */

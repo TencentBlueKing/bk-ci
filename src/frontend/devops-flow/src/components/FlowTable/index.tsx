@@ -243,7 +243,7 @@ export const FlowTable = defineComponent({
       }
 
       if (!tags || !Array.isArray(tags) || tags.length === 0) {
-        return <span>--</span>
+        return <span class={styles.ungrouped}>{t('flow.variable.ungrouped')}</span>
       }
 
       const maxDisplayCount = 2
@@ -334,7 +334,7 @@ export const FlowTable = defineComponent({
                   <b class={canView ? styles.flowCellLink : styles.flowCellLinkDisabled}>#{row.latestBuildNum}</b>
                   <b class={[canView ? styles.flowCellLink : styles.flowCellLinkDisabled, styles.line]}>|</b>
                   {!latestExecIsStageProgress.value ? (
-                    <span class="lastBuildMsg">{row.lastBuildMsg}</span>
+                    <span class={[styles.lastBuildMsg, 'text-ellipsis']}>{row.lastBuildMsg}</span>
                   ) : (
                     <span style={{ display: 'inline-block' }}>
                       {row.latestBuildStageStatus && row.latestBuildId ? (
@@ -534,13 +534,13 @@ export const FlowTable = defineComponent({
             {
               label: t('flow.content.groupName'),
               field: 'viewNames',
-              minWidth: 280,
+              minWidth: 220,
               render: ({ row }: { row: ContentTableItem }) => renderTags(row),
             },
             {
               label: renderLastExecLabel(),
               field: 'latestBuildStatus',
-              minWidth: 300,
+              minWidth: 500,
               render: ({ row }: { row: ContentTableItem }) => renderLastExec(row),
             },
             {
@@ -578,10 +578,13 @@ export const FlowTable = defineComponent({
           : [
             {
               label: t('flow.content.name'),
-              field: 'name',
+              field: 'pipelineName',
               fixed: 'left',
               minWidth: 192,
               sort: sortConfig(FLOW_SORT_FILED.flowName),
+              render: ({ row }: { row: ContentTableItem }) => (
+                <span>{(row as Record<string, any>).pipelineName || (row as Record<string, any>).name || '--'}</span>
+              ),
             },
             {
               label: t('flow.content.createTime'),

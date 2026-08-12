@@ -30,14 +30,17 @@ package com.tencent.devops.store.common.service.impl
 import com.fasterxml.jackson.core.type.TypeReference
 import com.github.benmanes.caffeine.cache.Caffeine
 import com.tencent.devops.common.api.auth.REFERER
+import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.KEY_OS
 import com.tencent.devops.common.api.constant.NUM_ONE
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.ThreadLocalUtil
 import com.tencent.devops.common.api.util.Watcher
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.util.RegexUtils
 import com.tencent.devops.common.web.utils.BkApiUtil
@@ -46,11 +49,13 @@ import com.tencent.devops.model.store.tables.TStoreBase
 import com.tencent.devops.model.store.tables.TStoreBaseFeature
 import com.tencent.devops.model.store.tables.records.TStoreBaseExtRecord
 import com.tencent.devops.model.store.tables.records.TStoreBaseFeatureExtRecord
+import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.store.common.dao.MarketStoreQueryDao
 import com.tencent.devops.store.common.dao.StoreBaseExtQueryDao
 import com.tencent.devops.store.common.dao.StoreBaseFeatureExtQueryDao
 import com.tencent.devops.store.common.dao.StoreBaseFeatureQueryDao
 import com.tencent.devops.store.common.dao.StoreBaseQueryDao
+import com.tencent.devops.store.common.dao.StoreVisibleProjectRelDao
 import com.tencent.devops.store.common.service.CategoryService
 import com.tencent.devops.store.common.service.ClassifyService
 import com.tencent.devops.store.common.service.StoreCommonService
@@ -65,6 +70,7 @@ import com.tencent.devops.store.common.service.StoreUserService
 import com.tencent.devops.store.common.service.action.StoreDecorateFactory
 import com.tencent.devops.store.common.utils.StoreExtFieldUtil
 import com.tencent.devops.store.common.utils.StoreUtils
+import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.pojo.common.HOTTEST
 import com.tencent.devops.store.pojo.common.KEY_BUILD_LESS_RUN_FLAG
 import com.tencent.devops.store.pojo.common.KEY_URL_SCHEME
@@ -90,17 +96,20 @@ import java.util.concurrent.Future
 import java.util.concurrent.TimeUnit
 import org.jooq.DSLContext
 import org.jooq.Record
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
 class StoreComponentMarketQueryServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
+    private val client: Client,
     private val marketStoreQueryDao: MarketStoreQueryDao,
     private val storeBaseQueryDao: StoreBaseQueryDao,
     private val storeBaseFeatureQueryDao: StoreBaseFeatureQueryDao,
     private val storeBaseExtQueryDao: StoreBaseExtQueryDao,
     private val storeBaseFeatureExtQueryDao: StoreBaseFeatureExtQueryDao,
+    private val storeVisibleProjectRelDao: StoreVisibleProjectRelDao,
     private val storeUserService: StoreUserService,
     private val classifyService: ClassifyService,
     private val storeProjectService: StoreProjectService,
@@ -114,6 +123,7 @@ class StoreComponentMarketQueryServiceImpl @Autowired constructor(
 ) : StoreComponentMarketQueryService {
 
     companion object {
+        private val logger = LoggerFactory.getLogger(StoreComponentMarketQueryServiceImpl::class.java)
         private val executor = Executors.newFixedThreadPool(30)
     }
 
@@ -241,6 +251,11 @@ class StoreComponentMarketQueryServiceImpl @Autowired constructor(
         val watcher = Watcher("queryComponents|$userId|$storeInfoQuery")
         try {
             storeInfoQuery.validate()
+            // 查询项目维度组件时，校验用户是否为该项目成员
+            val projectCode = storeInfoQuery.projectCode
+            if (storeInfoQuery.getSpecQueryFlag() && !projectCode.isNullOrBlank()) {
+                verifyUserProjectPermission(userId = userId, projectCode = projectCode)
+            }
             // 获取用户组织架构
             watcher.start("getUserDeptList")
             val userDeptList = storeUserService.getUserDeptList(userId)
@@ -254,6 +269,26 @@ class StoreComponentMarketQueryServiceImpl @Autowired constructor(
         } finally {
             watcher.stop()
             LogUtils.printCostTimeWE(watcher)
+        }
+    }
+
+    /**
+     * 校验用户是否拥有项目查看权限。
+     * 权限服务调用失败抛系统错误，避免误报为无权限。
+     */
+    private fun verifyUserProjectPermission(userId: String, projectCode: String) {
+        val validateFlag: Boolean?
+        try {
+            validateFlag = client.get(ServiceProjectResource::class).verifyUserProjectPermission(
+                projectCode = projectCode,
+                userId = userId
+            ).data
+        } catch (ignored: Throwable) {
+            logger.warn("verifyUserProjectPermission error, params[$userId|$projectCode]", ignored)
+            throw ErrorCodeException(errorCode = CommonMessageCode.SYSTEM_ERROR)
+        }
+        if (validateFlag != true) {
+            throw ErrorCodeException(errorCode = StoreMessageCode.USER_QUERY_PROJECT_PERMISSION_IS_INVALID)
         }
     }
 
@@ -577,6 +612,17 @@ class StoreComponentMarketQueryServiceImpl @Autowired constructor(
                 storeBaseExtQueryDao.getBaseExtByIds(dslContext, storeIds).groupBy { it.storeId }
             }
             watcher.start("handleStoreInfos")
+            // 用于计算安装/可用标识(flag)，避免"因项目授权可见但flag=false导致看得到却装不了"。
+            val projectVisibleStoreCodes = if (projectCode != null && storeCodeList.isNotEmpty()) {
+                storeVisibleProjectRelDao.listStoreCodesByProject(
+                    dslContext = dslContext,
+                    storeType = storeTypeEnum.type.toByte(),
+                    projectCode = projectCode,
+                    storeCodes = storeCodeList
+                )
+            } else {
+                emptySet()
+            }
             val ctx = MarketItemCtx(
                 tStoreBase = tStoreBase,
                 tStoreBaseFeature = tStoreBaseFeature,
@@ -586,6 +632,7 @@ class StoreComponentMarketQueryServiceImpl @Autowired constructor(
                 userDeptList = userDeptList,
                 urlProtocolTrim = urlProtocolTrim,
                 storeInfoQuery = storeInfoQuery,
+                projectVisibleStoreCodes = projectVisibleStoreCodes,
                 storeStatisticData = storeStatisticData,
                 storeVisibleData = storeVisibleData,
                 memberData = memberData,
@@ -614,6 +661,7 @@ class StoreComponentMarketQueryServiceImpl @Autowired constructor(
         val userDeptList: List<Int>,
         val urlProtocolTrim: Boolean,
         val storeInfoQuery: StoreInfoQuery,
+        val projectVisibleStoreCodes: Set<String>,
         val storeStatisticData: HashMap<String, StoreStatistic>,
         val storeVisibleData: HashMap<String, MutableList<Int>>?,
         val memberData: HashMap<String, MutableList<String>>?,
@@ -697,7 +745,7 @@ class StoreComponentMarketQueryServiceImpl @Autowired constructor(
                 userId = ctx.userId,
                 visibleList = ctx.storeVisibleData?.get(storeCode),
                 userDeptList = ctx.userDeptList
-            ),
+            ) || storeCode in ctx.projectVisibleStoreCodes,
             publicFlag = publicFlag,
             buildLessRunFlag = buildLessRunFlag,
             docsLink = record[ctx.tStoreBase.DOCS_LINK],

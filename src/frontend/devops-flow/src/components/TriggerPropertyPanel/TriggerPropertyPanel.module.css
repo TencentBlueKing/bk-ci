@@ -70,8 +70,29 @@
 }
 
 .section {
-  padding: 0 var(--spacing-lg);
+  padding: 0 40px;
   background-color: var(--bg-white);
+  font-size: var(--font-size-xs);
+}
+
+.section :global(.bk-form-label),
+.section :global(.bk-form-content),
+.section :global(.bk-input),
+.section :global(.bk-input input),
+.section :global(.bk-input--text),
+.section :global(.bk-textarea),
+.section :global(.bk-textarea textarea),
+.section :global(.bk-select),
+.section :global(.bk-select-name),
+.section :global(.bk-select-tag),
+.section :global(.bk-select-button),
+.section :global(.bk-radio),
+.section :global(.bk-radio-label),
+.section :global(.bk-checkbox),
+.section :global(.bk-checkbox-label),
+.section :global(.bk-button),
+.section :global(.bk-tag) {
+  font-size: var(--font-size-xs);
 }
 
 .manualForm {
@@ -126,8 +147,7 @@
   display: flex;
   width: 100%;
   gap: var(--spacing-sm);
-  padding: var(--spacing-lg) 0;
-  /* border-top: 1px solid var(--border-color); */
+  padding: var(--spacing-lg) 16px;
   background-color: var(--bg-default);
 }
 
@@ -142,15 +162,26 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: var(--spacing-md);
-  padding: var(--spacing-lg);
+  padding: var(--spacing-xxl) 40px;
   background-color: var(--bg-secondary);
   align-items: start;
-  margin-bottom: 20px;
+  margin-bottom: var(--spacing-xl);
+  font-size: var(--font-size-xs);
 }
 
 .stepIdAndVersionRow.disabled {
   opacity: 0.6;
   pointer-events: none;
+}
+
+.stepIdAndVersionRow :global(.bk-input),
+.stepIdAndVersionRow :global(.bk-input input),
+.stepIdAndVersionRow :global(.bk-input--text),
+.stepIdAndVersionRow :global(.bk-select),
+.stepIdAndVersionRow :global(.bk-select-name),
+.stepIdAndVersionRow :global(.bk-select-tag),
+.stepIdAndVersionRow :global(.bk-select-button) {
+  font-size: var(--font-size-xs);
 }
 
 /* Step ID 列样式 */
@@ -164,7 +195,7 @@
   display: flex;
   align-items: center;
   gap: var(--spacing-xs);
-  font-size: var(--font-size-sm);
+  font-size: var(--font-size-xs);
   color: var(--color-text-secondary);
   margin-bottom: var(--spacing-xs);
 }
@@ -193,7 +224,7 @@
 }
 
 .versionLabel {
-  font-size: var(--font-size-sm);
+  font-size: var(--font-size-xs);
   color: var(--color-text-secondary);
   margin-bottom: var(--spacing-xs);
 }

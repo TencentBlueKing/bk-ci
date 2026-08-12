@@ -27,7 +27,6 @@
                 </bk-tab-panel>
             </bk-tab>
         </div>
-
         <router-view :container-width="containerWidth"></router-view>
     </div>
 </template>
@@ -74,11 +73,8 @@
             }
         },
         created () {
-            if (!this.$route.name) {
-                this.$router.push({
-                    name: 'envList'
-                })
-            }
+            // 初始化资源类型
+            this.initResType()
         },
         mounted () {
             this.updateContainerWidth()
@@ -176,7 +172,8 @@
                     }
                 }
                 this.$router.push({
-                    name: routeMap[name]
+                    name: routeMap[name].name,
+                    params: routeMap[name].params
                 })
             }
         }

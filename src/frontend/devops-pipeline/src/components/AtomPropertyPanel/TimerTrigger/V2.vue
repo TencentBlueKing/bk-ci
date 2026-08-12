@@ -1,6 +1,6 @@
 <template>
     <div class="bk-form bk-form-vertical">
-        <template v-for="(obj, key) in atomPropsModel">
+        <template v-for="(obj, key) in fieldsMap">
             <form-field
                 v-if="!obj.hidden && rely(obj, element)"
                 :class="{ 'changed-prop': atomVersionChangedKeys.includes(key) }"
@@ -40,6 +40,15 @@
         computed: {
             disabled () {
                 return this.element?.disabled ?? false
+            },
+            fieldsMap () {
+                return Object.keys(this.atomPropsModel).reduce((acc, key) => {
+                    // exclude ['agentType', 'agentHashIdList']
+                    if (!['nodeType', 'nodes'].includes(key)) {
+                        acc[key] = this.atomPropsModel[key]
+                    }
+                    return acc
+                }, {})
             }
         },
         watch: {

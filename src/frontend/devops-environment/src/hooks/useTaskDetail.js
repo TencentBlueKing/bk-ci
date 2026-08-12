@@ -1,25 +1,29 @@
 import { computed } from 'vue'
 import useInstance from './useInstance'
+import useNodeDetail from './useNodeDetail'
 
 export default function useTaskDetail () {
     const { proxy } = useInstance()
+    const { currentNode } = useNodeDetail()
     const routeName = computed(() => proxy.$route.name)
     const envHashId = computed(() => proxy.$route.params?.envId)
-    const nodeHashId = computed(() => proxy.$route.params?.nodeHashId)
     const projectId = computed(() => proxy.$route.params?.projectId)
     
     // 根据路由动态获取 ID 参数
     const getIdParams = () => {
         return routeName.value === 'envDetail'
             ? { envId: envHashId.value }
-            : { agentId: nodeHashId.value }
+            : { agentId: currentNode.value?.agentId }
     }
 
     const fetchJobTaskList = async (params) => {
         try {
             const res = await proxy.$store.dispatch('environment/requestAgentJobTaskList', {
                 projectId: projectId.value,
-                params
+                params: {
+                    ...getIdParams(),
+                    ...params
+                }
             })
             return res
         } catch (e) {
@@ -29,15 +33,18 @@ export default function useTaskDetail () {
 
     const fetchPipelineBuildHistory = async ({
         pipelineId,
-        containerId,
+        jobId,
         params
     }) => {
         try {
             const res = await proxy.$store.dispatch('environment/requestPipelineBuildHistory', {
-                projectId: projectId.value,
-                pipelineId,
-                containerId,
-                params
+                params: {
+                    projectId: projectId.value,
+                    ...getIdParams(),
+                    pipelineId,
+                    jobId,
+                    ...params
+                }
             })
             return res
         } catch (e) {

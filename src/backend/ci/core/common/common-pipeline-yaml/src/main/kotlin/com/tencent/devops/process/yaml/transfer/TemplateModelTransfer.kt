@@ -286,11 +286,18 @@ class TemplateModelTransfer @Autowired constructor(
             PipelineTransferAspectWrapper.AspectType.BEFORE
         )
         val triggers = (model.getTriggerContainer()).elements
-        val baseTrigger = elementTransfer.baseTriggers2yaml(triggers, modelInput.aspectWrapper)
-            ?.toPre(modelInput.version)
+        val baseTrigger = elementTransfer.baseTriggers2yaml(
+            elements = triggers,
+            aspectWrapper = modelInput.aspectWrapper,
+            userId = modelInput.userId,
+            projectId = modelInput.projectId
+        )?.toPre(modelInput.version)
         val scmTrigger = elementTransfer.scmTriggers2Yaml(
             triggers, modelInput.projectId, modelInput.aspectWrapper
         )
+        // TAPD 触发独立聚合，与代码库触发平级
+        val tapdTrigger = elementTransfer.tapdTriggers2Yaml(triggers, modelInput.aspectWrapper)
+            .map { it.toPre(modelInput.version) }
         when (modelInput.version) {
             YamlVersion.V2_0 -> {
                 // 融合默认git触发器 + 基础触发器
@@ -330,21 +337,31 @@ class TemplateModelTransfer @Autowired constructor(
                 if (baseTrigger != null) {
                     when (triggerV3.size) {
                         // 只带基础触发器
-                        0 -> return listOf(baseTrigger)
+                        0 -> {
+                            trigger.add(baseTrigger)
+                        }
                         // 融合一个git触发器 + 基础触发器
-                        1 -> return listOf(
+                        1 -> trigger.add(
                             (triggerV3.first() as PreTriggerOnV3).copy(
                                 manual = baseTrigger.manual,
                                 schedules = baseTrigger.schedules,
-                                remote = baseTrigger.remote,
-                                tapd = baseTrigger.tapd
+                                remote = baseTrigger.remote
                             )
                         )
                         // 队列首插入基础触发器
-                        else -> trigger.add(0, baseTrigger)
+                        else -> {
+                            trigger.add(0, baseTrigger)
+                            trigger.addAll(triggerV3)
+                        }
                     }
+                } else {
+                    trigger.addAll(triggerV3)
                 }
-                trigger.addAll(triggerV3)
+                // TAPD 触发条目追加在末尾（每条 = 一个 workspace），补上 type = "tapd"
+                tapdTrigger.forEach { pre ->
+                    (pre as? PreTriggerOnV3)?.type = TriggerType.TAPD.alis
+                    trigger.add(pre)
+                }
                 return trigger
             }
         }

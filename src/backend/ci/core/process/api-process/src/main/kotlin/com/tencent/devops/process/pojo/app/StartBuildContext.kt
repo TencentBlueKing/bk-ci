@@ -77,6 +77,8 @@ import com.tencent.devops.process.utils.DependOnUtils
 import com.tencent.devops.process.utils.PIPELINE_BUILD_MSG
 import com.tencent.devops.process.utils.PIPELINE_RETRY_ALL_FAILED_CONTAINER
 import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
+import com.tencent.devops.process.utils.PIPELINE_RETRY_MATRIX_CONTAINER_ID
+import com.tencent.devops.process.utils.PIPELINE_RETRY_MATRIX_GROUP_ID
 import com.tencent.devops.process.utils.PIPELINE_RETRY_RUNNING_BUILD
 import com.tencent.devops.process.utils.PIPELINE_RETRY_START_TASK_ID
 import com.tencent.devops.process.utils.PIPELINE_RETRY_TASK_IN_CONTAINER_ID
@@ -149,9 +151,27 @@ data class StartBuildContext(
     // 重试插件对应的containerId
     val retryTaskInContainerId: String? = null,
     // 触发事件标识
-    val triggerEventType: String? = null
+    val triggerEventType: String? = null,
+    // 草稿版本号
+    val draftVersion: Int? = null,
+    // 矩阵局部重试：目标父矩阵容器ID，非空表示本次为矩阵组内的局部重试
+    val retryMatrixGroupId: String? = null,
+    // 矩阵局部重试：目标子容器ID，为空且 retryFailedContainer=true 时表示重试该矩阵下所有失败子Job
+    val retryMatrixContainerId: String? = null
 ) {
     val watcher: Watcher = Watcher("startBuild-$buildId")
+
+    /**
+     * 是否为矩阵组内的局部重试（子Job/子插件重试、跳过或矩阵级批量重试）
+     */
+    fun isMatrixPartialRetry(): Boolean = !retryMatrixGroupId.isNullOrBlank()
+
+    /**
+     * 当前[container]是否为本次矩阵局部重试所针对的父矩阵容器
+     */
+    fun isRetryMatrixGroup(container: Container): Boolean {
+        return isMatrixPartialRetry() && retryMatrixGroupId == container.id
+    }
 
     /**
      * 检查Stage是否属于失败重试[stageRetry]时，当前[stage]是否需要跳过
@@ -282,6 +302,11 @@ data class StartBuildContext(
      * 应该跳过刷新container状态当运行时重试时
      */
     fun shouldSkipRefreshWhenRetryRunning(container: Container): Boolean {
+        // 运行中矩阵局部重试豁免：目标失败子容器挂在矩阵父容器的 groupContainers 下，
+        // 模型遍历到的是矩阵父容器（container.id 为父ID，≠ retryTaskInContainerId 子容器ID），
+        // 若按下方普通规则(id不同即跳过)父容器会被整体跳过，导致 prepareBuildContainerTasks 的矩阵分支不执行、
+        // 目标子Job无法在同一执行次数下就地重置并重新下发。故本次为该父矩阵容器下的局部重试时，父容器必须参与刷新。
+        if (retryOnRunningBuild && isRetryMatrixGroup(container)) return false
         // 运行中重试, 如果当前的container依赖失败重试插件所属的container,则需要刷新
         return if (retryOnRunningBuild && container.id != retryTaskInContainerId) {
             val dependOnContainerId2JobIds = when (container) {
@@ -320,7 +345,8 @@ data class StartBuildContext(
             pipelineParamMap: MutableMap<String, BuildParameters>,
             webHookStartParam: MutableMap<String, BuildParameters> = mutableMapOf(),
             triggerReviewers: List<String>? = null,
-            currentBuildNo: Int? = null
+            currentBuildNo: Int? = null,
+            draftVersion: Int? = null
         ): StartBuildContext {
             val buildParam = genOriginStartParamsList(realStartParamKeys, pipelineParamMap)
             val params: Map<String, String> = pipelineParamMap.values.associate { it.key to it.value.toString() }
@@ -397,7 +423,10 @@ data class StartBuildContext(
                 retryTaskInContainerId = params[PIPELINE_RETRY_TASK_IN_CONTAINER_ID],
                 triggerEventType = params[PIPELINE_TRIGGER_EVENT_TYPE]?.let {
                     it.ifBlank { startType.name }
-                } ?: startType.name
+                } ?: startType.name,
+                draftVersion = draftVersion,
+                retryMatrixGroupId = params[PIPELINE_RETRY_MATRIX_GROUP_ID]?.takeIf { it.isNotBlank() },
+                retryMatrixContainerId = params[PIPELINE_RETRY_MATRIX_CONTAINER_ID]?.takeIf { it.isNotBlank() }
             )
         }
 
@@ -465,7 +494,8 @@ data class StartBuildContext(
                     params[PIPELINE_GIT_EVENT_URL]
                 },
                 materialId = params[BK_CI_MATERIAL_ID],
-                materialName = params[BK_CI_MATERIAL_NAME]
+                materialName = params[BK_CI_MATERIAL_NAME],
+                channelCode = channelCode.name
             )
         }
 

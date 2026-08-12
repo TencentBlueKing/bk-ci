@@ -1832,6 +1832,20 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         )
     }
 
+    override fun updatePipelineLimit(userId: String, englishName: String, pipelineLimit: Int): Boolean {
+        logger.info("update project pipelineLimit|$userId|$englishName|$pipelineLimit")
+        if (pipelineLimit <= 1000 || pipelineLimit >= 10000) {
+            throw IllegalArgumentException("pipelineLimit must be greater than 1000 and less than 10000")
+        }
+        projectDao.getByEnglishName(dslContext, englishName)
+            ?: throw ProjectNotExistException("projectCode=$englishName")
+        return projectDao.updatePipelineLimit(
+            dslContext = dslContext,
+            englishName = englishName,
+            pipelineLimit = pipelineLimit
+        ) > 0
+    }
+
     private fun validateProperties(properties: ProjectProperties?) {
         properties?.pipelineNameFormat?.let {
             if (it.length > PIPELINE_NAME_FORMAT_MAX_LENGTH) {

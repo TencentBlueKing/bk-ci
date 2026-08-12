@@ -585,13 +585,17 @@ class ThirdPartyAgentDao {
 
     fun fetchCreateAgent(
         dslContext: DSLContext,
-        projectId: String
+        projectId: String,
+        os: OS?
     ): List<TEnvironmentThirdpartyAgentRecord> {
         with(TEnvironmentThirdpartyAgent.T_ENVIRONMENT_THIRDPARTY_AGENT) {
-            return dslContext.selectFrom(this)
+            val dsl = dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(AGENT_TYPE.eq(AgentType.CREATE.name))
-                .and(STATUS.`in`(AgentStatus.IMPORT_OK.status, AgentStatus.IMPORT_EXCEPTION.status))
+            os?.let {
+                dsl.and(OS.eq(it.name))
+            }
+            return dsl.and(STATUS.`in`(AgentStatus.IMPORT_OK.status, AgentStatus.IMPORT_EXCEPTION.status))
                 .fetch()
         }
     }

@@ -38,6 +38,7 @@ import com.tencent.devops.process.engine.dao.template.TemplateInstanceBaseDao
 import com.tencent.devops.process.engine.dao.template.TemplateInstanceItemDao
 import com.tencent.devops.process.engine.pojo.event.PipelineTemplateInstanceEvent
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
+import com.tencent.devops.process.engine.utils.TemplateInstanceUtil
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
 import com.tencent.devops.process.pojo.pipeline.version.PipelineTemplateInstanceReq
 import com.tencent.devops.process.pojo.template.TemplateInstanceStatus
@@ -69,7 +70,6 @@ class PipelineTemplateInstanceListener @Autowired constructor(
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val pipelineVersionManager: PipelineVersionManager,
     private val pipelineTemplateRelatedService: PipelineTemplateRelatedService,
-    private val pipelineTemplateInstanceService: PipelineTemplateInstanceService,
     private val sampleEventDispatcher: SampleEventDispatcher,
     private val publicVarGroupReferManageService: PublicVarGroupReferManageService,
     private val pipelineResourceVersionDao: PipelineResourceVersionDao
@@ -449,7 +449,7 @@ class PipelineTemplateInstanceListener @Autowired constructor(
         instanceItem: PipelineTemplateInstanceItem,
         exception: Throwable
     ) {
-        val failedReason = pipelineTemplateInstanceService.translateInstanceException(
+        val failedReason = TemplateInstanceUtil.translateInstanceException(
             userId = userId,
             projectId = projectId,
             pipelineId = instanceItem.pipelineId,

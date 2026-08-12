@@ -178,7 +178,7 @@ class UserPipelineResourceImpl @Autowired constructor(
         )
         auditService.createAudit(
             Audit(
-                resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
+                resourceType = AuthResourceType.getAuthResourceTypeByChannel(AuthResourceType.PIPELINE_DEFAULT).value,
                 resourceId = pipelineId.id,
                 resourceName = pipeline.name,
                 userId = userId,
@@ -240,7 +240,7 @@ class UserPipelineResourceImpl @Autowired constructor(
         )
         auditService.createAudit(
             Audit(
-                resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
+                resourceType = AuthResourceType.getAuthResourceTypeByChannel(AuthResourceType.PIPELINE_DEFAULT).value,
                 resourceId = pid.id,
                 resourceName = pipeline.name,
                 userId = userId,
@@ -271,7 +271,7 @@ class UserPipelineResourceImpl @Autowired constructor(
         )
         auditService.createAudit(
             Audit(
-                resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
+                resourceType = AuthResourceType.getAuthResourceTypeByChannel(AuthResourceType.PIPELINE_DEFAULT).value,
                 resourceId = pipelineResult.pipelineId,
                 resourceName = pipeline.name,
                 userId = userId,
@@ -307,7 +307,7 @@ class UserPipelineResourceImpl @Autowired constructor(
         )
         auditService.createAudit(
             Audit(
-                resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
+                resourceType = AuthResourceType.getAuthResourceTypeByChannel(AuthResourceType.PIPELINE_DEFAULT).value,
                 resourceId = pipelineId,
                 resourceName = modelAndSetting.model.name,
                 userId = userId,
@@ -344,7 +344,7 @@ class UserPipelineResourceImpl @Autowired constructor(
         )
         auditService.createAudit(
             Audit(
-                resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
+                resourceType = AuthResourceType.getAuthResourceTypeByChannel(AuthResourceType.PIPELINE_DEFAULT).value,
                 resourceId = pipelineId,
                 resourceName = setting.pipelineName,
                 userId = userId,
@@ -468,7 +468,7 @@ class UserPipelineResourceImpl @Autowired constructor(
         )
         auditService.createAudit(
             Audit(
-                resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
+                resourceType = AuthResourceType.getAuthResourceTypeByChannel(AuthResourceType.PIPELINE_DEFAULT).value,
                 resourceId = pipelineId,
                 resourceName = deletePipeline.pipelineName,
                 userId = userId,
@@ -526,7 +526,7 @@ class UserPipelineResourceImpl @Autowired constructor(
         )
         auditService.createAudit(
             Audit(
-                resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
+                resourceType = AuthResourceType.getAuthResourceTypeByChannel(AuthResourceType.PIPELINE_DEFAULT).value,
                 resourceId = pipelineId,
                 resourceName = pipelineName,
                 userId = userId,
@@ -554,7 +554,7 @@ class UserPipelineResourceImpl @Autowired constructor(
         )
         auditService.createAudit(
             Audit(
-                resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
+                resourceType = AuthResourceType.getAuthResourceTypeByChannel(AuthResourceType.PIPELINE_DEFAULT).value,
                 resourceId = pipelineId,
                 resourceName = restorePipeline.pipelineName,
                 userId = userId,
@@ -732,7 +732,7 @@ class UserPipelineResourceImpl @Autowired constructor(
 
         auditService.createAudit(
             Audit(
-                resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
+                resourceType = AuthResourceType.getAuthResourceTypeByChannel(AuthResourceType.PIPELINE_DEFAULT).value,
                 resourceId = pipelineId,
                 resourceName = pipelineInfo.setting.pipelineName,
                 userId = userId,

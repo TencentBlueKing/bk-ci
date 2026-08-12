@@ -12,6 +12,7 @@
                     {{ currentEnv?.name || '--' }}
                 </span>
                 <bk-tag>{{ envNodeTypeDisplayName }}</bk-tag>
+                <bk-tag v-if="currentEnv?.os">{{ osDisplayName }}</bk-tag>
                 <span
                     v-if="!isCreateResType"
                     class="env-type-tag"
@@ -61,7 +62,8 @@
 <script>
     import { ref, watch, computed, onMounted, onBeforeUnmount } from 'vue'
     import {
-        ENV_TYPE_MAP
+        ENV_TYPE_MAP,
+        OS_LABEL_MAP
     } from '@/store/constants'
     import useInstance from '@/hooks/useInstance'
     import useEnvDetail from '@/hooks/useEnvDetail'
@@ -76,6 +78,7 @@
     import AuthManage from './components/Auth/index.vue'
     import Settings from './components/Settings/index.vue'
     import emptyNode from '../empty_node'
+    import OperateLog from './components/OperateLog/index.vue'
 
     export default {
         name: 'EnvDetail',
@@ -87,7 +90,8 @@
             BuildTask,
             DeployTask,
             Settings,
-            emptyNode
+            emptyNode,
+            OperateLog
         },
         setup () {
             const { proxy } = useInstance()
@@ -96,19 +100,13 @@
                 fetchEnvDetail,
                 envDetailLoaded,
                 setEnvDetailLoaded,
-                projectId
+                projectId,
+                isPersonalProject
             } = useEnvDetail()
             const {
                 envList,
                 isCreateResType
             } = useEnvAside()
-
-            // 获取当前项目的 projectScope
-            const projectScope = computed(() => {
-                const projectList = proxy.$store.state.projectList || []
-                const curProject = projectList.find(p => p.projectCode === projectId.value)
-                return curProject?.projectScope
-            })
 
             const emptyInfo = ref({
                 title: proxy.$t('environment.envInfo.emptyEnv'),
@@ -128,7 +126,8 @@
                     buildTask: BuildTask,
                     deployTask: DeployTask,
                     settings: Settings,
-                    auth: AuthManage
+                    auth: AuthManage,
+                    operateLog: OperateLog
                 }
                 return comMap[tabActive.value]
             })
@@ -139,6 +138,10 @@
                     'NODE': proxy.$t('environment.static')
                 }
                 return envNodeTypeMap[currentEnv.value?.envNodeType]
+            })
+            const osDisplayName = computed(() => {
+                const os = currentEnv.value?.os
+                return os ? (OS_LABEL_MAP[os] || os) : ''
             })
             const envTypeDisplayName = computed(() => {
                 const envTypeMap = {
@@ -182,10 +185,14 @@
                             : proxy.$t('environment.nodeInfo.buildTask')
                     }
                 ] : []),
-                ...(projectScope.value !== 1 ? [{
+                ...(!isPersonalProject.value ? [{
                     name: 'auth',
                     label: proxy.$t('environment.authManage')
-                }] : [])
+                }] : []),
+                {
+                    name: 'operateLog',
+                    label: proxy.$t('environment.operateLog')
+                }
             ])
             
             // 获取可用的 tab 名称列表
@@ -285,6 +292,7 @@
                 envDetailLoaded,
                 envTypeDisplayName,
                 envNodeTypeDisplayName,
+                osDisplayName,
                 isCreateResType,
                 handleCreateEnv
             }

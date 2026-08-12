@@ -38,5 +38,6 @@ data class EnvironmentId(
 data class EnvData(
     val hashId: String,
     val name: String,
-    val agentHashId: String
+    val agentHashId: String,
+    val projectId: String
 )

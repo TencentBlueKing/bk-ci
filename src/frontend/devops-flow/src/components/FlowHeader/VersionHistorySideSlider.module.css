@@ -1,6 +1,13 @@
 .versionSideslider {
 }
 
+/* InfoBox 实际层级在 mask/wrapper（position:fixed）上，需盖过侧边栏 2500 */
+:global(.version-history-delete-infobox),
+:global(.version-history-delete-infobox .bk-modal-mask),
+:global(.version-history-delete-infobox .bk-modal-wrapper) {
+  z-index: 2600 !important;
+}
+
 .sliderHeader {
   display: flex;
   align-items: center;

@@ -641,9 +641,10 @@ class PipelineRuntimeService @Autowired constructor(
                     triggerEventInfo[triggerEventType] ?: ""
                 } else { // 基础触发
                     StartType.toReadableString(
-                        trigger,
-                        channelCode,
-                        I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                        type = trigger,
+                        channelCode = channelCode,
+                        language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
+                        webhookType = webhookType
                     )
                 },
                 buildNum = buildNum,
@@ -969,7 +970,10 @@ class PipelineRuntimeService @Autowired constructor(
                     如果是插件失败重试，并且当前的Job状态是失败的，则检查重试的插件是不是属于该失败Job:
                     如果不属于，则表示该Job在本次重试不会被执行到，则不做处理，保持原状态, 跳过
                  */
+                // 矩阵局部重试豁免：父矩阵容器不含子task，findLastTimeBuildTask 按子task id 必然找不到，
+                // 若不豁免会被整体跳过，导致局部重试的子Job无法下发。矩阵父容器的重置交由 prepareMatrixGroupRetry 处理。
                 if (context.needSkipContainerWhenFailRetry(stage, container) &&
+                    !context.isRetryMatrixGroup(container) &&
                     lastTimeBuildContainers.isNotEmpty()
                 ) {
                     if (null == pipelineContainerService.findLastTimeBuildTask(
@@ -1044,6 +1048,11 @@ class PipelineRuntimeService @Autowired constructor(
                 if (context.needUpdateStage) {
                     afterRetryStage = true
                     stage.resetBuildOption(true)
+                }
+                // 重试点之后的所有 stage 都需要重置状态和执行次数，防止残留的终态（如 CANCELED）
+                // 导致 StageControl 在 judgeStageContainer 中短路返回错误状态。
+                // 但仅当 needUpdateStage 时才同步 checkIn/checkOut，避免重置审核状态后重新触发审核暂停
+                if (context.needUpdateStage || afterRetryStage) {
                     run findHistoryStage@{
                         lastTimeBuildStages.forEach {
                             if (it.stageId == stage.id!!) {
@@ -1051,8 +1060,10 @@ class PipelineRuntimeService @Autowired constructor(
                                 it.startTime = stageStartTime
                                 it.endTime = null
                                 it.executeCount = context.executeCount
-                                it.checkIn = stage.checkIn
-                                it.checkOut = stage.checkOut
+                                if (context.needUpdateStage) {
+                                    it.checkIn = stage.checkIn
+                                    it.checkOut = stage.checkOut
+                                }
                                 it.name = stage.name
                                 updateExistsStage.add(it)
                                 return@findHistoryStage
