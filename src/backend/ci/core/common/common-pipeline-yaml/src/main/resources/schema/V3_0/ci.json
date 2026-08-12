@@ -454,6 +454,19 @@
                         "type" : "string"
                       }
                     },
+                    "nodes" : {
+                      "oneOf" : [ {
+                        "enum" : [ "all" ]
+                      }, {
+                        "type" : "string",
+                        "pattern" : "^ins-.+"
+                      }, {
+                        "type" : "array",
+                        "items" : {
+                          "type" : "string"
+                        }
+                      } ]
+                    },
                     "advance-cron" : {
                       "type" : "array"
                     },
@@ -515,6 +528,19 @@
                     "items" : {
                       "type" : "string"
                     }
+                  },
+                  "nodes" : {
+                    "oneOf" : [ {
+                      "enum" : [ "all" ]
+                    }, {
+                      "type" : "string",
+                      "pattern" : "^ins-.+"
+                    }, {
+                      "type" : "array",
+                      "items" : {
+                        "type" : "string"
+                      }
+                    } ]
                   },
                   "advance-cron" : {
                     "type" : "array"
@@ -887,6 +913,48 @@
                     "type" : "string",
                     "enum" : [ "create", "update", "delete", "status_change", "bug_link", "bug_unlink", "story_link", "story_unlink", "add_comment", "update_comment", "delete_comment" ]
                   }
+                },
+                "users" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string"
+                  }
+                },
+                "users-ignore" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string"
+                  }
+                },
+                "owners" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string"
+                  }
+                },
+                "owners-ignore" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string"
+                  }
+                },
+                "priorities" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string"
+                  }
+                },
+                "labels" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string"
+                  }
+                },
+                "labels-ignore" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string"
+                  }
                 }
               }
             },
@@ -910,6 +978,48 @@
                   "items" : {
                     "type" : "string",
                     "enum" : [ "create", "update", "delete", "status_change", "add_comment", "update_comment", "delete_comment" ]
+                  }
+                },
+                "users" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string"
+                  }
+                },
+                "users-ignore" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string"
+                  }
+                },
+                "owners" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string"
+                  }
+                },
+                "owners-ignore" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string"
+                  }
+                },
+                "priorities" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string"
+                  }
+                },
+                "labels" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string"
+                  }
+                },
+                "labels-ignore" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string"
                   }
                 }
               }
@@ -1348,6 +1458,19 @@
                       "type" : "string"
                     }
                   },
+                  "nodes" : {
+                    "oneOf" : [ {
+                      "enum" : [ "all" ]
+                    }, {
+                      "type" : "string",
+                      "pattern" : "^ins-.+"
+                    }, {
+                      "type" : "array",
+                      "items" : {
+                        "type" : "string"
+                      }
+                    } ]
+                  },
                   "advance-cron" : {
                     "type" : "array"
                   },
@@ -1409,6 +1532,19 @@
                   "items" : {
                     "type" : "string"
                   }
+                },
+                "nodes" : {
+                  "oneOf" : [ {
+                    "enum" : [ "all" ]
+                  }, {
+                    "type" : "string",
+                    "pattern" : "^ins-.+"
+                  }, {
+                    "type" : "array",
+                    "items" : {
+                      "type" : "string"
+                    }
+                  } ]
                 },
                 "advance-cron" : {
                   "type" : "array"
@@ -1781,6 +1917,48 @@
                   "type" : "string",
                   "enum" : [ "create", "update", "delete", "status_change", "bug_link", "bug_unlink", "story_link", "story_unlink", "add_comment", "update_comment", "delete_comment" ]
                 }
+              },
+              "users" : {
+                "type" : "array",
+                "items" : {
+                  "type" : "string"
+                }
+              },
+              "users-ignore" : {
+                "type" : "array",
+                "items" : {
+                  "type" : "string"
+                }
+              },
+              "owners" : {
+                "type" : "array",
+                "items" : {
+                  "type" : "string"
+                }
+              },
+              "owners-ignore" : {
+                "type" : "array",
+                "items" : {
+                  "type" : "string"
+                }
+              },
+              "priorities" : {
+                "type" : "array",
+                "items" : {
+                  "type" : "string"
+                }
+              },
+              "labels" : {
+                "type" : "array",
+                "items" : {
+                  "type" : "string"
+                }
+              },
+              "labels-ignore" : {
+                "type" : "array",
+                "items" : {
+                  "type" : "string"
+                }
               }
             }
           },
@@ -1804,6 +1982,48 @@
                 "items" : {
                   "type" : "string",
                   "enum" : [ "create", "update", "delete", "status_change", "add_comment", "update_comment", "delete_comment" ]
+                }
+              },
+              "users" : {
+                "type" : "array",
+                "items" : {
+                  "type" : "string"
+                }
+              },
+              "users-ignore" : {
+                "type" : "array",
+                "items" : {
+                  "type" : "string"
+                }
+              },
+              "owners" : {
+                "type" : "array",
+                "items" : {
+                  "type" : "string"
+                }
+              },
+              "owners-ignore" : {
+                "type" : "array",
+                "items" : {
+                  "type" : "string"
+                }
+              },
+              "priorities" : {
+                "type" : "array",
+                "items" : {
+                  "type" : "string"
+                }
+              },
+              "labels" : {
+                "type" : "array",
+                "items" : {
+                  "type" : "string"
+                }
+              },
+              "labels-ignore" : {
+                "type" : "array",
+                "items" : {
+                  "type" : "string"
                 }
               }
             }

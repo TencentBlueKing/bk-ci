@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.enums.TriggerRepositoryType
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
 import com.tencent.devops.common.pipeline.pojo.element.RunCondition
@@ -56,6 +57,7 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.TapdWebHookTrigge
 import com.tencent.devops.common.pipeline.pojo.element.trigger.TimerTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.PathFilterType
+import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.TimerNodeType
 import com.tencent.devops.common.pipeline.enums.TapdEventType
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitMrEventAction
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitPushActionType
@@ -757,6 +759,23 @@ class TriggerTransfer @Autowired(required = false) constructor(
                                 )
                             }
                             JsonUtil.toJson(params, false)
+                        },
+                        // nodes 仅创作流通道生效：有值即指定创作节点，否则枚举创作环境全部节点；
+                        // 非创作流通道忽略该关键字
+                        nodeType = when {
+                            yamlInput.channelCode != ChannelCode.CREATIVE_STREAM -> null
+                            !timer.nodes.isNullOrEmpty() -> TimerNodeType.NODE_LIST
+                            else -> TimerNodeType.ENV_ALL
+                        },
+                        // yaml 中存的是 workspaceName，转换为 Model 侧的 agentHashId
+                        nodes = timer.nodes?.takeIf {
+                            yamlInput.channelCode == ChannelCode.CREATIVE_STREAM
+                        }?.mapNotNull { workspaceName ->
+                            transferCache.getAgentHashIdByWorkspace(
+                                userId = yamlInput.userId,
+                                projectId = yamlInput.projectCode,
+                                workspaceName = workspaceName
+                            )
                         },
                         version = if (timer.newExpression.filterNonEmpty().isEmpty() &&
                                 (timer.advanceExpression?.size ?: 0) == 1
