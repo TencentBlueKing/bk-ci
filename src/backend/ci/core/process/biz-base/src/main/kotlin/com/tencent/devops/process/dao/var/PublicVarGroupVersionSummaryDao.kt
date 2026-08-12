@@ -29,7 +29,6 @@ package com.tencent.devops.process.dao.`var`
 
 import com.tencent.devops.model.process.tables.TResourcePublicVarGroupVersionSummary
 import com.tencent.devops.model.process.tables.records.TResourcePublicVarGroupVersionSummaryRecord
-import com.tencent.devops.process.constant.ProcessConstants.DYNAMIC_VERSION
 import com.tencent.devops.process.pojo.`var`.po.PublicVarGroupVersionSummaryPO
 import java.time.LocalDateTime
 import org.jooq.DSLContext
