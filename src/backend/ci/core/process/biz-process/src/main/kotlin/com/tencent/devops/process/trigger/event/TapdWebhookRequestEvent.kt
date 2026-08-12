@@ -48,8 +48,6 @@ data class TapdWebhookRequestEvent(
     val rawEvent: String,
     @get:Schema(description = "触发用户 (current_user)")
     val triggerUser: String,
-    @get:Schema(description = "TAPD 主机地址（schema + host）")
-    val tapdHost: String,
     @get:Schema(description = "原始请求体")
     val body: Map<String, Any?>
 ) : IEvent()
