@@ -22,6 +22,11 @@ allowBuilds:
   yorkie: false
   less: false
 
+onlyBuiltDependencies:
+  - vue-demi
+  - husky
+  - vue-echarts
+
 catalogs:
   vue2:
     vue: "~2.7.16"
