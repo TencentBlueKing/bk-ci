@@ -115,7 +115,8 @@ class GithubIssueTriggerHandler : CodeWebhookTriggerHandler<GithubIssuesEvent> {
             params = listOf(
                 buildIssuesUrl(event),
                 event.issue.number.toString(),
-                getUsername(event)
+                getUsername(event),
+                getEventChangeName(event)
             )
         ).toJsonStr()
     }
@@ -242,6 +243,16 @@ class GithubIssueTriggerHandler : CodeWebhookTriggerHandler<GithubIssuesEvent> {
             startParams[BK_REPO_GIT_WEBHOOK_ISSUE_LABEL_NAMES] = labels.joinToString(",") { it.name }
         }
         return startParams
+    }
+
+    private fun getEventChangeName(event: GithubIssuesEvent): String {
+        return when (event.action) {
+            GithubIssuesAction.ASSIGNED.value,
+            GithubIssuesAction.UNASSIGNED.value -> event.assignee?.login ?: ""
+            GithubIssuesAction.LABELED.value,
+            GithubIssuesAction.UNLABELED.value -> event.label?.name ?: ""
+            else -> ""
+        }
     }
 
     private fun getI18Code(event: GithubIssuesEvent) = when (event.action) {
