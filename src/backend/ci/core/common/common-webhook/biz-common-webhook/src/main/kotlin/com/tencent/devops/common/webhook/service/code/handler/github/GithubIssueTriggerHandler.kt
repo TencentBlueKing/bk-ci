@@ -28,6 +28,7 @@
 package com.tencent.devops.common.webhook.service.code.handler.github
 
 import com.tencent.devops.common.api.pojo.I18Variable
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_ACTION
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_EVENT_URL
@@ -36,9 +37,17 @@ import com.tencent.devops.common.webhook.annotation.CodeWebhookHandler
 import com.tencent.devops.common.webhook.enums.WebhookI18nConstants
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_BRANCH
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_ACTION
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_ASSIGNEES
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_ASSIGNEE_LOGINS
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_DESCRIPTION
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_ID
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_IID
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_LABEL
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_LABELS
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_LABEL_COLOR
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_LABEL_DESCRIPTION
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_LABEL_ID
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_LABEL_NAMES
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_MILESTONE_ID
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_OWNER
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_STATE
@@ -51,6 +60,8 @@ import com.tencent.devops.common.webhook.pojo.code.github.GithubIssuesEvent
 import com.tencent.devops.common.webhook.service.code.filter.ContainsFilter
 import com.tencent.devops.common.webhook.service.code.filter.EventTypeFilter
 import com.tencent.devops.common.webhook.service.code.filter.GitUrlFilter
+import com.tencent.devops.common.webhook.service.code.filter.NotContainsFilter
+import com.tencent.devops.common.webhook.service.code.filter.UserFilter
 import com.tencent.devops.common.webhook.service.code.filter.WebhookFilter
 import com.tencent.devops.common.webhook.service.code.handler.CodeWebhookTriggerHandler
 import com.tencent.devops.common.webhook.service.code.pojo.WebhookMatchResult
@@ -104,7 +115,8 @@ class GithubIssueTriggerHandler : CodeWebhookTriggerHandler<GithubIssuesEvent> {
             params = listOf(
                 buildIssuesUrl(event),
                 event.issue.number.toString(),
-                getUsername(event)
+                getUsername(event),
+                getEventChangeName(event)
             )
         ).toJsonStr()
     }
@@ -142,7 +154,61 @@ class GithubIssueTriggerHandler : CodeWebhookTriggerHandler<GithubIssuesEvent> {
                     params = listOf()
                 ).toJsonStr()
             )
-            return listOf(urlFilter, eventTypeFilter, actionFilter)
+            val actorFilter = UserFilter(
+                pipelineId = pipelineId,
+                triggerOnUser = event.sender.login,
+                includedUsers = emptyList(),
+                excludedUsers = WebhookUtils.convert(excludeUsers),
+                excludedFailedReason = I18Variable(
+                    code = WebhookI18nConstants.USER_IGNORED,
+                    params = listOf(event.sender.login)
+                ).toJsonStr(),
+                filterName = "issueActor"
+            )
+            val filters = mutableListOf(urlFilter, eventTypeFilter, actionFilter, actorFilter)
+            if (event.label != null) {
+                val labelFilter = ContainsFilter(
+                    pipelineId = pipelineId,
+                    filterName = "issueLabel",
+                    triggerOn = event.label!!.name,
+                    included = WebhookUtils.convert(includeLabels),
+                    failedReason = I18Variable(
+                        code = WebhookI18nConstants.BK_TRIGGER_LABEL_NOT_MATCH,
+                        params = listOf()
+                    ).toJsonStr()
+                )
+                val excludeLabelFilter = NotContainsFilter(
+                    pipelineId = pipelineId,
+                    filterName = "issueLabelExclude",
+                    triggerOn = event.label!!.name,
+                    excluded = WebhookUtils.convert(excludeLabels),
+                    failedReason = I18Variable(
+                        code = WebhookI18nConstants.BK_TRIGGER_LABEL_IGNORED,
+                        params = listOf(event.label!!.name)
+                    ).toJsonStr()
+                )
+                filters.add(labelFilter)
+                filters.add(excludeLabelFilter)
+            }
+            if (event.assignee != null) {
+                val assigneeFilter = UserFilter(
+                    pipelineId = pipelineId,
+                    triggerOnUser = event.assignee!!.login,
+                    includedUsers = WebhookUtils.convert(includeAssignees),
+                    excludedUsers = WebhookUtils.convert(excludeAssignees),
+                    includedFailedReason = I18Variable(
+                        code = WebhookI18nConstants.OWNER_NOT_MATCH,
+                        params = listOf(event.assignee!!.login)
+                    ).toJsonStr(),
+                    excludedFailedReason = I18Variable(
+                        code = WebhookI18nConstants.OWNER_IGNORED,
+                        params = listOf(event.assignee!!.login)
+                    ).toJsonStr(),
+                    filterName = "issueAssignee"
+                )
+                filters.add(assigneeFilter)
+            }
+            return filters
         }
     }
 
@@ -166,8 +232,27 @@ class GithubIssueTriggerHandler : CodeWebhookTriggerHandler<GithubIssuesEvent> {
             startParams[PIPELINE_GIT_REPO_URL] = event.repository.getRepoUrl()
             startParams[BK_REPO_GIT_WEBHOOK_BRANCH] = event.repository.defaultBranch
             startParams[PIPELINE_GIT_ACTION] = event.convertAction()
+            startParams[BK_REPO_GIT_WEBHOOK_ISSUE_ASSIGNEES] = JsonUtil.toJson(assignees.orEmpty(), false)
+            startParams[BK_REPO_GIT_WEBHOOK_ISSUE_ASSIGNEE_LOGINS] =
+                assignees.orEmpty().joinToString(",") { it.login }
+            startParams[BK_REPO_GIT_WEBHOOK_ISSUE_LABEL] = event.label?.name ?: ""
+            startParams[BK_REPO_GIT_WEBHOOK_ISSUE_LABEL_ID] = event.label?.id ?: ""
+            startParams[BK_REPO_GIT_WEBHOOK_ISSUE_LABEL_COLOR] = event.label?.color ?: ""
+            startParams[BK_REPO_GIT_WEBHOOK_ISSUE_LABEL_DESCRIPTION] = event.label?.description ?: ""
+            startParams[BK_REPO_GIT_WEBHOOK_ISSUE_LABELS] = JsonUtil.toJson(labels, false)
+            startParams[BK_REPO_GIT_WEBHOOK_ISSUE_LABEL_NAMES] = labels.joinToString(",") { it.name }
         }
         return startParams
+    }
+
+    private fun getEventChangeName(event: GithubIssuesEvent): String {
+        return when (event.action) {
+            GithubIssuesAction.ASSIGNED.value,
+            GithubIssuesAction.UNASSIGNED.value -> event.assignee?.login ?: ""
+            GithubIssuesAction.LABELED.value,
+            GithubIssuesAction.UNLABELED.value -> event.label?.name ?: ""
+            else -> ""
+        }
     }
 
     private fun getI18Code(event: GithubIssuesEvent) = when (event.action) {
@@ -175,6 +260,10 @@ class GithubIssueTriggerHandler : CodeWebhookTriggerHandler<GithubIssuesEvent> {
         GithubIssuesAction.EDITED.value -> WebhookI18nConstants.TGIT_ISSUE_UPDATED_EVENT_DESC
         GithubIssuesAction.CLOSED.value -> WebhookI18nConstants.TGIT_ISSUE_CLOSED_EVENT_DESC
         GithubIssuesAction.REOPENED.value -> WebhookI18nConstants.TGIT_ISSUE_REOPENED_EVENT_DESC
+        GithubIssuesAction.ASSIGNED.value -> WebhookI18nConstants.GITHUB_ISSUE_ASSIGNED_EVENT_DESC
+        GithubIssuesAction.UNASSIGNED.value -> WebhookI18nConstants.GITHUB_ISSUE_UNASSIGNED_EVENT_DESC
+        GithubIssuesAction.LABELED.value -> WebhookI18nConstants.GITHUB_ISSUE_LABELED_EVENT_DESC
+        GithubIssuesAction.UNLABELED.value -> WebhookI18nConstants.GITHUB_ISSUE_UNLABELED_EVENT_DESC
         else -> ""
     }
 

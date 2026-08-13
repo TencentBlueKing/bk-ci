@@ -230,7 +230,7 @@
                     "type" : "array",
                     "uniqueItems" : true,
                     "items" : {
-                      "enum" : [ "open", "close", "reopen", "push-update", "merge", "edit" ]
+                      "enum" : [ "open", "close", "reopen", "push-update", "merge", "edit", "assigned", "unassigned", "labeled", "unlabeled" ]
                     },
                     "additionalItems" : false
                   },
@@ -241,6 +241,18 @@
                     }
                   },
                   "users-ignore" : {
+                    "type" : "array",
+                    "items" : {
+                      "type" : "string"
+                    }
+                  },
+                  "assignees" : {
+                    "type" : "array",
+                    "items" : {
+                      "type" : "string"
+                    }
+                  },
+                  "assignees-ignore" : {
                     "type" : "array",
                     "items" : {
                       "type" : "string"
@@ -577,9 +589,39 @@
                     "type" : "array",
                     "uniqueItems" : true,
                     "items" : {
-                      "enum" : [ "open", "close", "reopen", "update" ]
+                      "enum" : [ "open", "close", "reopen", "update", "assigned", "unassigned", "labeled", "unlabeled" ]
                     },
                     "additionalItems" : false
+                  },
+                  "assignees" : {
+                    "type" : "array",
+                    "items" : {
+                      "type" : "string"
+                    }
+                  },
+                  "assignees-ignore" : {
+                    "type" : "array",
+                    "items" : {
+                      "type" : "string"
+                    }
+                  },
+                  "users-ignore" : {
+                    "type" : "array",
+                    "items" : {
+                      "type" : "string"
+                    }
+                  },
+                  "labels" : {
+                    "type" : "array",
+                    "items" : {
+                      "type" : "string"
+                    }
+                  },
+                  "labels-ignore" : {
+                    "type" : "array",
+                    "items" : {
+                      "type" : "string"
+                    }
                   }
                 }
               } ]
@@ -1234,7 +1276,7 @@
                   "type" : "array",
                   "uniqueItems" : true,
                   "items" : {
-                    "enum" : [ "open", "close", "reopen", "push-update", "merge", "edit" ]
+                    "enum" : [ "open", "close", "reopen", "push-update", "merge", "edit", "assigned", "unassigned", "labeled", "unlabeled" ]
                   },
                   "additionalItems" : false
                 },
@@ -1245,6 +1287,18 @@
                   }
                 },
                 "users-ignore" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string"
+                  }
+                },
+                "assignees" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string"
+                  }
+                },
+                "assignees-ignore" : {
                   "type" : "array",
                   "items" : {
                     "type" : "string"
@@ -1581,9 +1635,39 @@
                   "type" : "array",
                   "uniqueItems" : true,
                   "items" : {
-                    "enum" : [ "open", "close", "reopen", "update" ]
+                    "enum" : [ "open", "close", "reopen", "update", "assigned", "unassigned", "labeled", "unlabeled" ]
                   },
                   "additionalItems" : false
+                },
+                "assignees" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string"
+                  }
+                },
+                "assignees-ignore" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string"
+                  }
+                },
+                "users-ignore" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string"
+                  }
+                },
+                "labels" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string"
+                  }
+                },
+                "labels-ignore" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string"
+                  }
                 }
               }
             } ]
