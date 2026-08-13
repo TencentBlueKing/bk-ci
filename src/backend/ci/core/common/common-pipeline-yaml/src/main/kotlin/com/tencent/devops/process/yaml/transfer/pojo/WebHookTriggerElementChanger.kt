@@ -94,6 +94,10 @@ data class WebHookTriggerElementChanger(
     val enableCheck: Boolean? = true,
     @get:Schema(title = "issue事件action")
     val includeIssueAction: List<String>? = null,
+    @get:Schema(title = "事件包含的负责人")
+    val includeAssignees: String? = null,
+    @get:Schema(title = "事件排除的负责人")
+    val excludeAssignees: String? = null,
     @get:Schema(title = "mr事件action")
     val includeMrAction: List<String>? = null,
     @get:Schema(title = "push事件action")
@@ -219,6 +223,8 @@ data class WebHookTriggerElementChanger(
         includeNoteTypes = data.includeNoteTypes,
         enableCheck = data.enableCheck,
         includeIssueAction = data.includeIssueAction,
+        includeAssignees = data.includeAssignees,
+        excludeAssignees = data.excludeAssignees,
         includeMrAction = data.includeMrAction,
         includePushAction = data.includePushAction,
         enableThirdFilter = data.enableThirdFilter,

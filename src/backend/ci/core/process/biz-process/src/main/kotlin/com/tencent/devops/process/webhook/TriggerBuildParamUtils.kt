@@ -67,8 +67,16 @@ import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_FAILED_TASKS
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_HEAD_REF
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_HEAD_REPO_URL
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_ISSUE_DESCRIPTION
+import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_ISSUE_ASSIGNEES
+import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_ISSUE_ASSIGNEE_LOGINS
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_ISSUE_ID
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_ISSUE_IID
+import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_ISSUE_LABEL
+import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_ISSUE_LABELS
+import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_ISSUE_LABEL_COLOR
+import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_ISSUE_LABEL_DESCRIPTION
+import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_ISSUE_LABEL_ID
+import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_ISSUE_LABEL_NAMES
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_ISSUE_MILESTONE_ID
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_ISSUE_OWNER
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_ISSUE_STATE
@@ -80,6 +88,8 @@ import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_MR_DESC
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_MR_ID
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_MR_IID
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_MR_LABELS
+import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_MR_ASSIGNEES
+import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_MR_ASSIGNEE_LOGINS
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_MR_PROPOSER
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_MR_REVIEWERS
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_MR_TITLE
@@ -375,7 +385,14 @@ object TriggerBuildParamUtils {
             mapOf(CodeEventType.MERGE_REQUEST.name to params.plus(CI_TAPD_ISSUES))
         )
         TRIGGER_BUILD_PARAM_NAME_MAP[CodeGithubWebHookTriggerElement.classType]?.putAll(
-            mapOf(CodeEventType.PULL_REQUEST.name to params)
+            mapOf(
+                CodeEventType.PULL_REQUEST.name to params.plus(
+                    listOf(
+                        CI_MR_ASSIGNEES,
+                        CI_MR_ASSIGNEE_LOGINS
+                    )
+                )
+            )
         )
         TRIGGER_BUILD_PARAM_NAME_MAP[CodeTGitWebHookTriggerElement.classType]?.putAll(
             mapOf(CodeEventType.MERGE_REQUEST.name to params.plus(CI_TAPD_ISSUES))
@@ -442,11 +459,21 @@ object TriggerBuildParamUtils {
             CI_ISSUE_OWNER,
             CI_ISSUE_MILESTONE_ID
         )
+        val githubParams = listOf(
+            CI_ISSUE_ASSIGNEES,
+            CI_ISSUE_ASSIGNEE_LOGINS,
+            CI_ISSUE_LABEL,
+            CI_ISSUE_LABEL_ID,
+            CI_ISSUE_LABEL_COLOR,
+            CI_ISSUE_LABEL_DESCRIPTION,
+            CI_ISSUE_LABELS,
+            CI_ISSUE_LABEL_NAMES
+        )
         TRIGGER_BUILD_PARAM_NAME_MAP[CodeGitWebHookTriggerElement.classType]?.putAll(
             mapOf(CodeEventType.ISSUES.name to params)
         )
         TRIGGER_BUILD_PARAM_NAME_MAP[CodeGithubWebHookTriggerElement.classType]?.putAll(
-            mapOf(CodeEventType.ISSUES.name to params)
+            mapOf(CodeEventType.ISSUES.name to params.plus(githubParams))
         )
         TRIGGER_BUILD_PARAM_NAME_MAP[CodeTGitWebHookTriggerElement.classType]?.putAll(
             mapOf(CodeEventType.ISSUES.name to params)
