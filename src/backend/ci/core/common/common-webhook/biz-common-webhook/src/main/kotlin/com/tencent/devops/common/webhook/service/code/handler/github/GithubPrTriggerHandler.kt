@@ -151,13 +151,15 @@ class GithubPrTriggerHandler @Autowired constructor(
     }
 
     override fun getEventDesc(event: GithubPullRequestEvent): String {
+        val changeName = getEventChangeName(event)
+        val actionName = if (event.isMerged()) "merge" else event.action
         return I18Variable(
-            code = WebhookI18nConstants.GITHUB_PR_EVENT_DESC,
+            code = getI18Code(event),
             params = listOf(
                 event.pullRequest.htmlUrl,
                 event.pullRequest.number.toString(),
                 getUsername(event),
-                if (event.isMerged()) "merge" else event.action
+                changeName.ifEmpty { actionName }
             )
         ).toJsonStr()
     }
@@ -390,5 +392,21 @@ class GithubPrTriggerHandler @Autowired constructor(
         }
         startParams[PIPELINE_GIT_MR_ACTION] = pipelineAction
         startParams[PIPELINE_GIT_ACTION] = pipelineAction
+    }
+
+    private fun getI18Code(event: GithubPullRequestEvent) = when (event.action) {
+        "assigned" -> WebhookI18nConstants.GITHUB_PR_ASSIGNED_EVENT_DESC
+        "unassigned" -> WebhookI18nConstants.GITHUB_PR_UNASSIGNED_EVENT_DESC
+        "labeled" -> WebhookI18nConstants.GITHUB_PR_LABELED_EVENT_DESC
+        "unlabeled" -> WebhookI18nConstants.GITHUB_PR_UNLABELED_EVENT_DESC
+        else -> WebhookI18nConstants.GITHUB_PR_EVENT_DESC
+    }
+
+    private fun getEventChangeName(event: GithubPullRequestEvent): String {
+        return when (event.action) {
+            "assigned", "unassigned" -> event.assignee?.login ?: ""
+            "labeled", "unlabeled" -> event.label?.name ?: ""
+            else -> ""
+        }
     }
 }

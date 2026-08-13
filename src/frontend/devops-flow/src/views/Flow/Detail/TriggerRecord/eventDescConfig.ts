@@ -113,6 +113,11 @@ const githubIssueChangeParams = mapParams({
   user: userParam(2),
   name: textParam(3),
 })
+const githubPrChangeParams = mapParams({
+  pr: linkParam(0, 1, '!'),
+  user: userParam(2),
+  name: textParam(3),
+})
 const tgitMrParams = mapParams({
   mr: linkParam(0, 1, '!'),
   user: userParam(2),
@@ -246,6 +251,10 @@ export const EVENT_DESC_PARAM_MAPPERS: Record<string, ParamMapper> = {
   bkGitPrReopenedEventDesc: tgitMrParams,
   bkGitPrPushUpdatedEventDesc: tgitMrParams,
   bkGitPrMergedEventDesc: tgitMrParams,
+  bkGitPrAssignedEventDesc: githubPrChangeParams,
+  bkGitPrUnassignedEventDesc: githubPrChangeParams,
+  bkGitPrLabeledEventDesc: githubPrChangeParams,
+  bkGitPrUnlabeledEventDesc: githubPrChangeParams,
   bkGitTagPushEventDesc: mapParams({
     source: textParam(0),
     tag: linkParam(1, 2),
