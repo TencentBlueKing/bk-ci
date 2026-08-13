@@ -22,7 +22,35 @@
                     }"
                 ></span>
                 <aside class="exec-detail-summary-header-title">
+                    <build-end-info-popover
+                        v-if="showBuildEndInfoPopover"
+                        :status="execDetail.status"
+                        :build-end-info="execDetail.buildEndInfo"
+                        @locate="handleBuildEndPositionLocate"
+                    >
+                        <bk-tag
+                            class="exec-status-tag"
+                            type="stroke"
+                            :theme="statusTagTheme"
+                        >
+                            <span class="exec-status-label">
+                                {{ statusLabel }}
+                                <span
+                                    v-if="!execDetail.buildEndInfo"
+                                    v-bk-tooltips="`${$t('details.canceller')}：${execDetail.cancelUserId || '--'}`"
+                                    class="devops-icon icon-info-circle"
+                                >
+                                </span>
+                                <span
+                                    v-else
+                                    class="devops-icon icon-info-circle"
+                                >
+                                </span>
+                            </span>
+                        </bk-tag>
+                    </build-end-info-popover>
                     <bk-tag
+                        v-else
                         class="exec-status-tag"
                         type="stroke"
                         :theme="statusTagTheme"
@@ -36,12 +64,6 @@
                                 }]"
                             />
                             {{ statusLabel }}
-                            <span
-                                v-if="execDetail.status === 'CANCELED'"
-                                v-bk-tooltips="`${$t('details.canceller')}：${execDetail.cancelUserId || '--'}`"
-                                class="devops-icon icon-info-circle"
-                            >
-                            </span>
                         </span>
                     </bk-tag>
                     <span
@@ -166,6 +188,8 @@
     import AtomPropertyPanel from '@/components/AtomPropertyPanel'
     import codeRecord from '@/components/codeRecord'
     import emptyTips from '@/components/devops/emptyTips'
+    import BuildEndInfoPopover from '@/components/ExecDetail/BuildEndInfoPopover'
+    import { getBuildEndInfoConfig } from '@/components/ExecDetail/buildEndInfoConfig'
     import job from '@/components/ExecDetail/job'
     import plugin from '@/components/ExecDetail/plugin'
     import stage from '@/components/ExecDetail/stage'
@@ -208,7 +232,8 @@
             stageReviewPanel,
             Logo,
             AtomPropertyPanel,
-            Summary
+            Summary,
+            BuildEndInfoPopover
         },
         mixins: [pipelineOperateMixin],
 
@@ -428,6 +453,9 @@
             },
             startUser () {
                 return this.recordList.find(i => i.id === this.executeCount)?.user || ''
+            },
+            showBuildEndInfoPopover () {
+                return !!getBuildEndInfoConfig(this.execDetail?.status) && !!this.execDetail?.buildEndInfo
             }
         },
 
@@ -538,6 +566,73 @@
                     editingElementPos: args
                 })
             },
+            locateBuildEndPosition (position = {}) {
+                try {
+                    const { stageId, containerId, taskId } = position
+                    const stages = this.execDetail?.model?.stages || []
+                    const stageIndex = stages.findIndex(stage => stage.id === stageId)
+                    if (stageIndex < 0) return null
+
+                    const stage = stages[stageIndex]
+                    let containerIndex
+                    let containerGroupIndex
+                    let container
+
+                    for (let i = 0; i < stage.containers.length; i++) {
+                        const item = stage.containers[i]
+                        if (item.matrixGroupFlag) {
+                            const groupIndex = item.groupContainers?.findIndex?.(group => group.id === containerId)
+                            if (groupIndex > -1) {
+                                containerIndex = i
+                                containerGroupIndex = groupIndex
+                                container = item.groupContainers[groupIndex]
+                                break
+                            }
+                        } else if (item.id === containerId) {
+                            containerIndex = i
+                            container = item
+                            break
+                        }
+                    }
+
+                    if (!container) return null
+
+                    const elementIndex = taskId
+                        ? container.elements?.findIndex?.(element => element.id === taskId)
+                        : undefined
+
+                    return {
+                        stageIndex,
+                        containerIndex: containerIndex > -1 ? containerIndex : undefined,
+                        containerGroupIndex: containerGroupIndex > -1 ? containerGroupIndex : undefined,
+                        elementIndex: elementIndex > -1 ? elementIndex : undefined
+                    }
+                } catch (e) {
+                    console.error(e)
+                    return null
+                }
+            },
+            handleBuildEndPositionLocate (position) {
+                const editingElementPos = this.locateBuildEndPosition(position)
+                if (!editingElementPos) {
+                    const locateFailedKey = getBuildEndInfoConfig(this.execDetail?.status)?.locateFailedKey
+                        || 'details.cancelLocateFailed'
+                    this.$showTips({
+                        message: this.$t(locateFailedKey),
+                        theme: 'warning'
+                    })
+                    return
+                }
+                if (this.curItemTab !== PANELS.executeDetail) {
+                    this.switchTab({ name: PANELS.executeDetail })
+                }
+                this.$nextTick(() => {
+                    this.togglePropertyPanel({
+                        isShow: true,
+                        editingElementPos
+                    })
+                })
+            },
             handleStageCheck ({ type, stageIndex }) {
                 this.toggleStageReviewPanel({
                     showStageReviewPanel: {
@@ -633,6 +728,11 @@
 
       .exec-status-tag {
         margin: 0;
+      }
+
+      .build-end-info-popover-trigger {
+        display: inline-flex;
+        align-items: center;
       }
 
       .exec-status-label {
