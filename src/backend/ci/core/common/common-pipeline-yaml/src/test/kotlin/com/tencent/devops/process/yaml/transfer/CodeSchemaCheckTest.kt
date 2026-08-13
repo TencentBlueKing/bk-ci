@@ -44,14 +44,14 @@ class CodeSchemaCheckTest {
               repo-name: blueking/bk-ci
               type: github
               issue:
-                action: [assign, unassign, update, label, unlabel]
+                action: [assigned, unassigned, update, labeled, unlabeled]
                 assignees: [alice, bob]
                 assignees-ignore: [bot]
                 users-ignore: [bot-actor]
                 labels: [bug, 'feature-*']
                 labels-ignore: [wontfix]
               mr:
-                action: [assign, unassign]
+                action: [assigned, unassigned]
                 assignees: [alice]
                 assignees-ignore: [bot]
             stages:
