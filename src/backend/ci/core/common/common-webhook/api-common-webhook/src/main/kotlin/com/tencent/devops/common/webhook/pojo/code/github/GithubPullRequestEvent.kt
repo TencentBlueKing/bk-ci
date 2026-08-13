@@ -70,10 +70,10 @@ data class GithubPullRequestEvent(
             action == "synchronize" -> TGitMrEventAction.PUSH_UPDATE.value
             action == "closed" -> TGitMrEventAction.CLOSE.value
             action == "edited" -> "edit"
-            action == "assigned" -> "assign"
-            action == "unassigned" -> "unassign"
-            action == "labeled" -> "label"
-            action == "unlabeled" -> "unlabel"
+            action == "assigned" -> "assigned"
+            action == "unassigned" -> "unassigned"
+            action == "labeled" -> "labeled"
+            action == "unlabeled" -> "unlabeled"
             else -> null
         }
     }
