@@ -70,11 +70,5 @@
         ]
       }
     }
-  },
-  "pnpm": {
-    "onlyBuiltDependencies": [ "vue-demi" ],
-    "overrides": {
-      "vue": ">=3.2.29 <4.0.0"
-    }
   }
 }
