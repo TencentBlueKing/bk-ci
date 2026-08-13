@@ -58,16 +58,16 @@ class GithubPrTriggerHandlerTest {
         val labeled = event(action = "labeled")
         val unlabeled = event(action = "unlabeled")
 
-        assertEquals("label", labeled.getRealAction())
-        assertEquals("unlabel", unlabeled.getRealAction())
+        assertEquals("labeled", labeled.getRealAction())
+        assertEquals("unlabeled", unlabeled.getRealAction())
         assertTrue(handler.preMatch(labeled).isMatch)
         assertTrue(handler.preMatch(unlabeled).isMatch)
     }
 
     @Test
     fun shouldConvertPullRequestAssigneeEvents() {
-        assertEquals("assign", event(action = "assigned").getRealAction())
-        assertEquals("unassign", event(action = "unassigned").getRealAction())
+        assertEquals("assigned", event(action = "assigned").getRealAction())
+        assertEquals("unassigned", event(action = "unassigned").getRealAction())
     }
 
     @Test
@@ -75,7 +75,7 @@ class GithubPrTriggerHandlerTest {
         val parsed = githubPullRequestEvent()
 
         assertEquals("labeled", parsed.action)
-        assertEquals("label", parsed.getRealAction())
+        assertEquals("labeled", parsed.getRealAction())
         assertEquals(listOf("bug", "urgent"), parsed.pullRequest.labels.map { it.name })
         assertNull(parsed.pullRequest.labels.first().description)
     }
@@ -95,19 +95,19 @@ class GithubPrTriggerHandlerTest {
         assertTrue(
             isMatch(
                 event = event(action = "labeled", changedLabel = urgent),
-                params = webHookParams(action = "label", includeLabels = "urgent")
+                params = webHookParams(action = "labeled", includeLabels = "urgent")
             )
         )
         assertFalse(
             isMatch(
                 event = event(action = "labeled", changedLabel = urgent),
-                params = webHookParams(action = "label", includeLabels = "bug")
+                params = webHookParams(action = "labeled", includeLabels = "bug")
             )
         )
         assertTrue(
             isMatch(
                 event = event(action = "unlabeled", changedLabel = urgent),
-                params = webHookParams(action = "unlabel", includeLabels = "urgent")
+                params = webHookParams(action = "unlabeled", includeLabels = "urgent")
             )
         )
     }
@@ -118,7 +118,7 @@ class GithubPrTriggerHandlerTest {
             isMatch(
                 event = event(action = "labeled", changedLabel = urgent),
                 params = webHookParams(
-                    action = "label",
+                    action = "labeled",
                     includeLabels = "urgent",
                     excludeLabels = "urgent"
                 )
@@ -141,13 +141,13 @@ class GithubPrTriggerHandlerTest {
         assertTrue(
             isMatch(
                 event = event(action = "assigned", changedAssignee = alice),
-                params = webHookParams(action = "assign", includeAssignees = "alice")
+                params = webHookParams(action = "assigned", includeAssignees = "alice")
             )
         )
         assertFalse(
             isMatch(
                 event = event(action = "assigned", changedAssignee = alice),
-                params = webHookParams(action = "assign", excludeAssignees = "alice")
+                params = webHookParams(action = "assigned", excludeAssignees = "alice")
             )
         )
     }
@@ -160,8 +160,8 @@ class GithubPrTriggerHandlerTest {
             repository = null
         )
 
-        assertEquals("unassign", params[BK_REPO_GIT_WEBHOOK_MR_ACTION])
-        assertEquals("unassign", params[PIPELINE_GIT_MR_ACTION])
+        assertEquals("unassigned", params[BK_REPO_GIT_WEBHOOK_MR_ACTION])
+        assertEquals("unassigned", params[PIPELINE_GIT_MR_ACTION])
         assertEquals("alice", params[BK_REPO_GIT_WEBHOOK_MR_ASSIGNEE_LOGINS])
         assertTrue(params[BK_REPO_GIT_WEBHOOK_MR_ASSIGNEES].toString().contains("alice"))
         assertFalse(params[BK_REPO_GIT_WEBHOOK_MR_ASSIGNEES].toString().contains("bob"))
@@ -175,9 +175,9 @@ class GithubPrTriggerHandlerTest {
             repository = null
         )
 
-        assertEquals("unlabel", params[BK_REPO_GIT_WEBHOOK_MR_ACTION])
-        assertEquals("unlabel", params[PIPELINE_GIT_MR_ACTION])
-        assertEquals("unlabel", params[PIPELINE_GIT_ACTION])
+        assertEquals("unlabeled", params[BK_REPO_GIT_WEBHOOK_MR_ACTION])
+        assertEquals("unlabeled", params[PIPELINE_GIT_MR_ACTION])
+        assertEquals("unlabeled", params[PIPELINE_GIT_ACTION])
         assertEquals("bug", params[BK_REPO_GIT_WEBHOOK_MR_LABELS])
     }
 

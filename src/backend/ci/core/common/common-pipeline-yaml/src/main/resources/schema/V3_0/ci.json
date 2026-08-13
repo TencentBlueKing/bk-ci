@@ -230,7 +230,7 @@
                     "type" : "array",
                     "uniqueItems" : true,
                     "items" : {
-                      "enum" : [ "open", "close", "reopen", "push-update", "merge", "edit", "assign", "unassign", "label", "unlabel" ]
+                      "enum" : [ "open", "close", "reopen", "push-update", "merge", "edit", "assigned", "unassigned", "labeled", "unlabeled" ]
                     },
                     "additionalItems" : false
                   },
@@ -563,7 +563,7 @@
                     "type" : "array",
                     "uniqueItems" : true,
                     "items" : {
-                      "enum" : [ "open", "close", "reopen", "update", "assign", "unassign", "label", "unlabel" ]
+                      "enum" : [ "open", "close", "reopen", "update", "assigned", "unassigned", "labeled", "unlabeled" ]
                     },
                     "additionalItems" : false
                   },
@@ -1166,7 +1166,7 @@
                   "type" : "array",
                   "uniqueItems" : true,
                   "items" : {
-                    "enum" : [ "open", "close", "reopen", "push-update", "merge", "edit", "assign", "unassign", "label", "unlabel" ]
+                    "enum" : [ "open", "close", "reopen", "push-update", "merge", "edit", "assigned", "unassigned", "labeled", "unlabeled" ]
                   },
                   "additionalItems" : false
                 },
@@ -1499,7 +1499,7 @@
                   "type" : "array",
                   "uniqueItems" : true,
                   "items" : {
-                    "enum" : [ "open", "close", "reopen", "update", "assign", "unassign", "label", "unlabel" ]
+                    "enum" : [ "open", "close", "reopen", "update", "assigned", "unassigned", "labeled", "unlabeled" ]
                   },
                   "additionalItems" : false
                 },
