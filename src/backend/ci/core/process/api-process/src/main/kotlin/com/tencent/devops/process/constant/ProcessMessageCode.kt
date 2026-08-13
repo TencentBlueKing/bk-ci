@@ -595,6 +595,21 @@ object ProcessMessageCode {
     const val ERROR_PIPELINE_BATCH_TASK_DETAIL_CAN_NOT_RETRY = "2101680" // 流水线批量任务明细{0}当前状态为{1}，不能重试
     const val ERROR_PIPELINE_BATCH_TASK_NOTHING_TO_RETRY = "2101681" // 流水线批量任务{0}没有可重试的失败项
 
+    // 创作流分享授权
+    const val ERROR_CREATIVE_FLOW_SHARE_GRANT_NOT_EXISTS = "2101682" // 创作流分享授权不存在或已撤销：{0}#{1}
+    const val ERROR_CREATIVE_FLOW_SHARE_SOURCE_NOT_EXISTS = "2101683" // 源创作流不存在：{0}/{1}
+    const val ERROR_CREATIVE_FLOW_SHARE_CHANNEL_INVALID = "2101684" // 流水线{0}不是创作流，不支持分享
+    const val ERROR_CREATIVE_FLOW_VERSION_NUM_INVALID = "2101685" // 发布版本号格式非法：{0}，正确写法形如 V208
+    const val ERROR_CREATIVE_FLOW_VERSION_NUM_NOT_FOUND = "2101686" // 源创作流{0}/{1}不存在已发布的版本号{2}
+    const val ERROR_CREATIVE_FLOW_COPY_ENV_OS_NOT_MATCH = "2101687" // 目标环境操作系统({1})与该分享要求的({0})不一致
+    const val ERROR_CREATIVE_FLOW_COPY_TARGET_ENV_INVALID = "2101688" // 目标环境不存在或不可用：{0}
+    const val ERROR_CREATIVE_FLOW_COPY_TARGET_NOT_TRACED = "2101689" // 目标创作流{0}不是该分享的副本，不允许覆盖
+    const val ERROR_CREATIVE_FLOW_COPY_TARGET_NAME_CONFLICT = "2101690" // 目标项目{0}已存在创作流{1}
+    const val ERROR_CREATIVE_FLOW_COPY_DEPENDENCIES_NOT_SUPPORT = "2101691" // 暂不支持依赖资源迁移
+    const val ERROR_CREATIVE_FLOW_VARIABLE_OVERRIDE_INVALID = "2101692" // 变量{0}不存在或不允许覆盖
+    const val ERROR_CREATIVE_FLOW_SHARE_TEAM_PROJECT_NOT_SUPPORT = "2101693" // 项目{0}不是个人项目，团队创作流分享暂未支持
+    const val ERROR_CREATIVE_FLOW_SHARE_REVOKE_PARAM_INVALID = "2101694" // 撤销授权须提供 shareId+flowIds 或 talentCode
+
     const val BK_SUCCESSFULLY_DISTRIBUTED = "bkSuccessfullyDistributed" // 跨项目构件分发成功，共分发了{0}个文件
     const val BK_SUCCESSFULLY_FAILED = "bkSuccessfullyFailed" // 跨项目构件分发失败，
     const val BK_NO_MATCH_FILE_DISTRIBUTE = "bkNoMatchFileDistribute" // 匹配不到待分发的文件: {0}

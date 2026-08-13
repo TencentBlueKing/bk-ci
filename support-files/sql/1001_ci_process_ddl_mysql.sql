@@ -1927,4 +1927,57 @@ CREATE TABLE IF NOT EXISTS `T_RESOURCE_PUBLIC_VAR_VERSION_SUMMARY` (
    KEY `INX_TPPVS_VAR_PROJECT_NAME` (`PROJECT_ID`,`VAR_NAME`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='流水线公共变量版本基本概要信息表';
 
+CREATE TABLE IF NOT EXISTS `T_PIPELINE_SHARE_GRANT` (
+    `SHARE_ID`           varchar(64)  NOT NULL COMMENT '分享命名空间ID，来自manifest的shareId',
+    `FLOW_ID`            varchar(128) NOT NULL COMMENT '分享条目ID，来自manifest的flows[].id',
+    `SCENE`              varchar(32)  NOT NULL DEFAULT 'TALENT_FOLLOW' COMMENT '分享场景',
+    `SHARE_MODE`         varchar(32)  NOT NULL DEFAULT 'COPY' COMMENT '分享形态，当前恒为COPY-复制副本；预留团队创作流的授权执行形态',
+    `SOURCE_PROJECT_ID`  varchar(64)  NOT NULL COMMENT '源项目ID',
+    `SOURCE_PIPELINE_ID` varchar(34)  NOT NULL COMMENT '源创作流ID',
+    `VERSION_SCOPE`      varchar(32)  NOT NULL COMMENT '版本范围：LATEST-最新已发布 PINNED-钉死版本',
+    `VERSION`            int(11)               DEFAULT NULL COMMENT '授权的内部版本号，PINNED时非空',
+    `VERSION_NUM`        int(11)               DEFAULT NULL COMMENT '授权的发布版本号，PINNED时非空，仅用于展示',
+    `VALIDATE_RULES`     text                  DEFAULT NULL COMMENT '克隆校验规则JSON，对应CreativeFlowShareValidateRules',
+    `EXT_INFO`           text                  DEFAULT NULL COMMENT '扩展信息JSON，对应CreativeFlowShareExtInfo',
+    `TALENT_CODE`        varchar(64)           DEFAULT NULL COMMENT '来源分身编码，仅审计与批量撤销，不参与鉴权',
+    `STATUS`             varchar(32)  NOT NULL DEFAULT 'ENABLED' COMMENT '授权状态：ENABLED|REVOKED',
+    `GRANTED_BY`         varchar(64)  NOT NULL COMMENT '授权人，即分身发布者',
+    `GRANTED_TIME`       timestamp    NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '授权时间',
+    `REVOKED_BY`         varchar(64)           DEFAULT NULL COMMENT '撤销人',
+    `REVOKED_TIME`       timestamp    NULL     DEFAULT NULL COMMENT '撤销时间',
+    `UPDATE_TIME`        timestamp    NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    PRIMARY KEY (`SHARE_ID`, `FLOW_ID`),
+    KEY `IDX_SOURCE_PIPELINE` (`SOURCE_PROJECT_ID`, `SOURCE_PIPELINE_ID`),
+    KEY `IDX_TALENT_CODE` (`TALENT_CODE`)
+) ENGINE = InnoDB
+    DEFAULT CHARSET = utf8mb4 COMMENT ='创作流分享授权表';
+
+CREATE TABLE IF NOT EXISTS `T_PIPELINE_SHARE_COPY_TRACE` (
+    `ID`                   bigint(20)   NOT NULL AUTO_INCREMENT COMMENT '自增ID',
+    `SHARE_ID`             varchar(64)  NOT NULL COMMENT '分享命名空间ID',
+    `FLOW_ID`              varchar(128) NOT NULL COMMENT '分享条目ID',
+    `SCENE`                varchar(32)  NOT NULL COMMENT '分享场景',
+    `SHARE_MODE`           varchar(32)  NOT NULL DEFAULT 'COPY' COMMENT '分享形态，当前恒为COPY',
+    `TALENT_CODE`          varchar(64)           DEFAULT NULL COMMENT '来源分身编码',
+    `SOURCE_PROJECT_ID`    varchar(64)  NOT NULL COMMENT '源项目ID',
+    `SOURCE_PIPELINE_ID`   varchar(34)  NOT NULL COMMENT '源创作流ID',
+    `SOURCE_VERSION`       int(11)      NOT NULL COMMENT '实际复制的源内部版本号',
+    `SOURCE_VERSION_NUM`   int(11)               DEFAULT NULL COMMENT '实际复制的源发布版本号',
+    `TARGET_PROJECT_ID`    varchar(64)  NOT NULL COMMENT '目标项目ID',
+    `TARGET_PIPELINE_ID`   varchar(34)  NOT NULL COMMENT '目标创作流ID',
+    `TARGET_PIPELINE_NAME` varchar(255) NOT NULL COMMENT '目标创作流名称',
+    `TARGET_VERSION`       int(11)      NOT NULL COMMENT '目标创作流版本',
+    `TARGET_VERSION_NUM`   int(11)               DEFAULT NULL COMMENT '目标发布版本号',
+    `TARGET_ENV_HASH_ID`   varchar(256)          DEFAULT NULL COMMENT '目标环境HashId',
+    `COPY_ACTION`          varchar(32)  NOT NULL COMMENT '复制动作：CREATED|OVERWRITTEN',
+    `VARIABLE_OVERRIDES`   text                  DEFAULT NULL COMMENT '变量覆盖快照JSON，敏感值不落库',
+    `OPERATOR`             varchar(64)  NOT NULL COMMENT '操作人，即发起复制的聘用者',
+    `CREATE_TIME`          timestamp    NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    PRIMARY KEY (`ID`),
+    KEY `IDX_TARGET_SHARE` (`TARGET_PROJECT_ID`, `SHARE_ID`, `FLOW_ID`),
+    KEY `IDX_TARGET_PIPELINE` (`TARGET_PROJECT_ID`, `TARGET_PIPELINE_ID`),
+    KEY `IDX_SOURCE_PIPELINE` (`SOURCE_PROJECT_ID`, `SOURCE_PIPELINE_ID`)
+) ENGINE = InnoDB
+    DEFAULT CHARSET = utf8mb4 COMMENT ='创作流分享复制溯源表';
+
 SET FOREIGN_KEY_CHECKS = 1;
