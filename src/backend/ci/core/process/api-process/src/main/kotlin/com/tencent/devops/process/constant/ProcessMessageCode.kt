@@ -894,13 +894,4 @@ object ProcessMessageCode {
 
     // [{0}]创作环境下的创作节点为空
     const val BK_CREATIVE_STREAM_ENV_NODE_IS_EMPTY = "bkCreativeStreamEnvNodeIsEmpty"
-
-    // 公共变量组锁相关常量
-    const val PUBLIC_VAR_GROUP_ADD_LOCK_KEY = "PUBLIC_VAR_GROUP_ADD_LOCK"
-    const val PUBLIC_VAR_GROUP_DELETE_LOCK_KEY = "PUBLIC_VAR_GROUP_DELETE_LOCK"
-    // 引用计数锁：以项目ID和变量组名为粒度，格式为 PUBLIC_VAR_GROUP_REFER_LOCK:${projectId}:${groupName}
-    const val PUBLIC_VAR_GROUP_REFER_LOCK_KEY_PREFIX = "PUBLIC_VAR_GROUP_REFER_LOCK"
-    // 变量引用计数锁：以项目ID、变量组名和变量名为粒度，格式为 PUBLIC_VAR_REFER_LOCK:${projectId}:${groupName}:${varName}
-    const val PUBLIC_VAR_REFER_LOCK_KEY_PREFIX = "PUBLIC_VAR_REFER_LOCK"
-    const val PUBLIC_VAR_GROUP_LOCK_EXPIRED_TIME_IN_SECONDS = 10L
 }
