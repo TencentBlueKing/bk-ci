@@ -1198,6 +1198,11 @@ class PipelineRepositoryService constructor(
                             latestVersionStatus = VersionStatus.RELEASED,
                             locked = pipelineDisable
                         )
+                        // 落库前把 model 里的 latestVersion 对齐到本次写入的资源版本号，与
+                        // PipelineVersionPersistenceService 的写入口径保持一致。灰度环境用它定位
+                        // 公共变量组引用所属的版本，写入历史版本号会让引用查不到。
+                        // 必须放在上面 pipelineInfoDao.update 之后：那里用的是提交时的基准版本号
+                        model.latestVersion = version
                         pipelineResourceDao.updateReleaseVersion(
                             dslContext = transactionContext,
                             projectId = projectId,
@@ -1241,6 +1246,8 @@ class PipelineRepositoryService constructor(
                 }
 
                 watcher.start("updatePipelineResourceVersion")
+                // 草稿/分支版本不走上面的发布分支，同样需要把 latestVersion 对齐到本次资源版本号
+                model.latestVersion = version
                 pipelineResourceVersionDao.create(
                     dslContext = transactionContext,
                     projectId = projectId,
@@ -2399,6 +2406,8 @@ class PipelineRepositoryService constructor(
                 val newModel = releaseResource.model.copy(
                     name = savedSetting.pipelineName, desc = savedSetting.desc
                 )
+                // copy() 不会带上 latestVersion（非构造器属性），需显式对齐到本次写入的资源版本号
+                newModel.latestVersion = version
                 // 用新的流水线名称、描述和旧yaml的格式生成新的yaml
                 val yamlWithVersion = try {
                     transferService.transfer(
