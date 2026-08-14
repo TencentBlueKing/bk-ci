@@ -132,7 +132,16 @@ object ScriptEnvUtils {
         deleteFile(randomContextFilePath, workspace)
         deleteFile(randomSetErrorFilePath, workspace)
         deleteFile(flagFile, workspace)
+        cleanMultilineBlockFiles(buildId, workspace)
         ExecutorUtil.removeThreadLocal()
+    }
+
+    /**
+     * 清理内联多行块语法生成的临时文件（ml_block_<buildId>_<n>.txt）
+     */
+    private fun cleanMultilineBlockFiles(buildId: String, workspace: File) {
+        workspace.listFiles { f -> f.isFile && f.name.startsWith("ml_block_${buildId}_") }
+            ?.forEach { it.delete() }
     }
 
     private fun deleteFile(filePath: String, workspace: File) {

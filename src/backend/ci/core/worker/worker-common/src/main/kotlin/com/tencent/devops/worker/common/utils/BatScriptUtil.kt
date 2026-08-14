@@ -36,6 +36,7 @@ import java.io.File
 import java.io.FileInputStream
 import java.nio.channels.FileLock
 import java.nio.charset.Charset
+import kotlin.text.Charsets
 
 object BatScriptUtil {
 
@@ -93,6 +94,14 @@ object BatScriptUtil {
     private const val RETRY_COUNT = 1
     private const val FLAG_INIT = "init"
     private const val FLAG_SCRIPT = "script"
+
+    /**
+     * 匹配内联多行块开始行：call:format_multiple_lines <KEY> "
+     * 行首仅允许空白，行尾恰为单个引号（引号后无内容）
+     */
+    private val multilineStartRegex = Regex(
+        """^\s*call:format_multiple_lines\s+([a-zA-Z_][a-zA-Z0-9_]*)\s+"\s*$"""
+    )
 
     @Suppress("ALL")
     fun execute(
@@ -211,6 +220,69 @@ object BatScriptUtil {
             null
         }
 
+    /**
+     * 预处理内联多行块语法。
+     *
+     * 输入：
+     *   call:format_multiple_lines KEY "
+     *   line 1
+     *   line 2
+     *   "
+     *
+     * 输出：
+     *   call:format_multiple_lines KEY "C:\...\ml_block_<buildId>_<n>.txt"
+     *
+     * 内容由 Kotlin 直接写入临时文件（UTF-8），不经 cmd 解析，避免换行被当作命令分隔。
+     * 该预处理为纯增量：不满足开始行特征的行一律原样透传。
+     */
+    private fun preprocessMultilineBlocks(
+        script: String,
+        buildId: String,
+        dir: File
+    ): String {
+        val lines = script.split("\n").map { it.removeSuffix("\r") }
+        val out = StringBuilder()
+        var i = 0
+        var counter = 0
+        while (i < lines.size) {
+            val line = lines[i]
+            val start = multilineStartRegex.find(line)
+            if (start != null) {
+                val key = start.groupValues[1]
+                val content = StringBuilder()
+                var closed = false
+                val startLineNum = i + 1
+                i++
+                while (i < lines.size) {
+                    val cur = lines[i]
+                    if (cur.trim() == "\"") {
+                        closed = true
+                        i++
+                        break
+                    }
+                    // 保留原始内容（含行尾空格），统一 CRLF 拼接
+                    if (content.isNotEmpty()) content.append("\r\n")
+                    content.append(cur)
+                    i++
+                }
+                if (!closed) {
+                    throw IllegalArgumentException(
+                        "Unterminated multiline block for key [$key], starting at line $startLineNum"
+                    )
+                }
+                val fileName = "ml_block_${buildId}_${counter++}.txt"
+                val file = File(dir, fileName)
+                file.writeText(content.toString(), Charsets.UTF_8)
+                file.deleteOnExit()
+                out.append("call:format_multiple_lines $key \"${file.absolutePath}\"\r\n")
+            } else {
+                out.append(line).append("\r\n")
+                i++
+            }
+        }
+        return out.toString()
+    }
+
     @Suppress("ALL")
     fun getCommandFile(
         buildId: String,
@@ -253,7 +325,8 @@ object BatScriptUtil {
             .append("call:ciTaskSetFlag $FLAG_SCRIPT\r\n")
             .append("\r\n")
 
-        command.append(script.replace("\n", "\r\n"))
+        val processed = preprocessMultilineBlocks(script, buildId, dir)
+        command.append(processed)
             .append("\r\n")
             .append("exit")
             .append("\r\n")
