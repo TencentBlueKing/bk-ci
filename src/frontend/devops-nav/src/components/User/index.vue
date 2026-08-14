@@ -100,10 +100,8 @@
             ]
         }
         get userinfo () {
-            const name = `${this.username}(${this.chineseName})`
-            
             return {
-                name,
+                name: this.username,
                 organization: this.tenantId,
                 timezone: getUserTimeZone(),
             }
