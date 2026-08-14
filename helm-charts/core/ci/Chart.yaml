@@ -20,7 +20,7 @@ dependencies:
   version: 16.13.2
 - condition: elasticsearch.enabled
   name: elasticsearch
-  repository: https://raw.githubusercontent.com/bitnami/charts/eb5f9a9513d987b519f0ecd732e7031241c50328/bitnami
+  repository: https://raw.githubusercontent.com/bitnami/charts/archive-full-index/bitnami
   version: 17.5.4
 - condition: rabbitmq.enabled
   name: rabbitmq
@@ -28,15 +28,15 @@ dependencies:
   version: 10.3.9
 - condition: influxdb.enabled
   name: influxdb
-  repository: https://raw.githubusercontent.com/bitnami/charts/eb5f9a9513d987b519f0ecd732e7031241c50328/bitnami
+  repository: https://raw.githubusercontent.com/bitnami/charts/archive-full-index/bitnami
   version: 5.3.1
 - condition: nginx-ingress-controller.enabled
   name: nginx-ingress-controller
-  repository: https://raw.githubusercontent.com/bitnami/charts/eb5f9a9513d987b519f0ecd732e7031241c50328/bitnami
+  repository: https://raw.githubusercontent.com/bitnami/charts/archive-full-index/bitnami
   version: 7.6.21
 - condition: mongodb.enabled
   name: mongodb
-  repository: https://raw.githubusercontent.com/bitnami/charts/eb5f9a9513d987b519f0ecd732e7031241c50328/bitnami
+  repository: https://raw.githubusercontent.com/bitnami/charts/archive-full-index/bitnami
   version: 10.30.6
 - condition: kubernetes-manager.enabled
   name: kubernetes-manager
