@@ -411,8 +411,6 @@ class PipelineRepositoryService constructor(
         // 跨 stage 共享的 jobId 生成器种子和已使用的 jobId 集合，确保整个 model 范围内 jobId 唯一
         val randomSeed = AtomicInteger(1)
         val jobIdSet = mutableSetOf<String>()
-        model.projectId = projectId
-        model.pipelineId = pipelineId
         model.stages.forEachIndexed { index, s ->
             s.id = VMUtils.genStageId(index + 1)
             // #4531 对存量的stage审核数据做兼容处理
@@ -1021,7 +1019,7 @@ class PipelineRepositoryService constructor(
                     errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS,
                     params = arrayOf(pipelineId)
                 )
-                model.latestVersion = settingVersion
+                model.latestVersion = releaseResource.version
                 val latestVersion = getLatestVersionResource(
                     transactionContext = transactionContext, projectId = projectId,
                     pipelineId = pipelineId, userId = userId, releaseResource = releaseResource,
@@ -1229,6 +1227,10 @@ class PipelineRepositoryService constructor(
                             latestVersionStatus = VersionStatus.RELEASED,
                             locked = pipelineDisable
                         )
+                        // 落库前对齐到本次写入的资源版本号：Model JSON 中的 latestVersion 是公共变量组
+                        // 引用信息（referVersion）的唯一载体，必须与所在 RESOURCE 记录的 VERSION 一致，
+                        // 否则读取时按错误版本查引用信息，动态变量组将无法展开
+                        model.latestVersion = version
                         pipelineResourceDao.updateReleaseVersion(
                             dslContext = transactionContext,
                             projectId = projectId,
@@ -1271,6 +1273,8 @@ class PipelineRepositoryService constructor(
                     }
                 }
                 watcher.start("updatePipelineResourceVersion")
+                // 草稿/分支版本未走上面的发布分支，同样需要把 latestVersion 对齐到本次资源版本号
+                model.latestVersion = version
                 pipelineResourceVersionDao.create(
                     dslContext = transactionContext,
                     projectId = projectId,
@@ -2455,6 +2459,8 @@ class PipelineRepositoryService constructor(
                 val newModel = releaseResource.model.copy(
                     name = savedSetting.pipelineName, desc = savedSetting.desc
                 )
+                // copy() 不会带上 latestVersion（非构造器属性），需显式对齐到本次写入的资源版本号
+                newModel.latestVersion = version
                 // 用新的流水线名称、描述和旧yaml的格式生成新的yaml
                 val yamlWithVersion = try {
                     transferService.transfer(
