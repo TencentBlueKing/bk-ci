@@ -30,7 +30,6 @@ package com.tencent.devops.process.yaml.v3.parsers.template
 import com.fasterxml.jackson.core.JsonProcessingException
 import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.constant.CommonMessageCode.ERROR_YAML_FORMAT_EXCEPTION_LENGTH_LIMIT_EXCEEDED
-import com.tencent.devops.common.api.constant.VERSION
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.pojo.transfer.IPreStep
 import com.tencent.devops.common.pipeline.pojo.transfer.Repositories
@@ -58,8 +57,6 @@ import com.tencent.devops.process.yaml.v3.models.on.PreTriggerOnV3
 import com.tencent.devops.process.yaml.v3.models.stage.IPreStage
 import com.tencent.devops.process.yaml.v3.parsers.template.models.GetTemplateParam
 import com.tencent.devops.process.yaml.v3.parsers.template.models.TemplateDeepTreeNode
-import org.slf4j.LoggerFactory
-
 @Suppress("ALL")
 class YamlTemplate<T>(
     val extraParameters: T,
@@ -97,10 +94,6 @@ class YamlTemplate<T>(
         param: GetTemplateParam<T>
     ) -> String
 ) {
-    companion object {
-        private val logger = LoggerFactory.getLogger(YamlTemplate::class.java)
-    }
-
     // 存储当前库的模板信息，减少重复获取 key: templatePath value： template
     private val templateLib = TemplateLibrary(extraParameters, getTemplateMethod)
 
@@ -188,7 +181,7 @@ class YamlTemplate<T>(
         variables.forEach { (key, value) ->
             // variables 下的 template 关键字为公共变量组引用，格式为 [{name, version}]，不作为普通变量处理
             if (key == Constants.TEMPLATE_KEY) {
-                preYamlObject.variableTemplates = formatVariableTemplates(value)
+                preYamlObject.variableTemplates = VariableTemplate.parseList(value).ifEmpty { null }
                 return@forEach
             }
             if (value !is Map<*, *>) {
@@ -202,22 +195,6 @@ class YamlTemplate<T>(
             }
         }
         preYamlObject.variables = variableMap
-    }
-
-    /**
-     * 解析 variables.template 声明的公共变量组引用，无法识别的内容按未声明处理，不阻断整个 yaml 的解析
-     */
-    private fun formatVariableTemplates(value: Any?): List<VariableTemplate>? {
-        if (value !is List<*>) {
-            logger.warn("$filePath|variables.template is not a list, ignored|value=$value")
-            return null
-        }
-        return value.mapNotNull { item ->
-            val name = (item as? Map<*, *>)?.get(Constants.OBJECT_TEMPLATE_PATH)?.toString()?.takeIf {
-                it.isNotBlank()
-            } ?: return@mapNotNull null
-            VariableTemplate(name = name, version = item[VERSION]?.toString())
-        }.ifEmpty { null }
     }
 
     private fun replaceStages(
