@@ -184,7 +184,9 @@ class PipelineDraftReleaseHandler @Autowired constructor(
                 referType = PublicVarGroupReferenceTypeEnum.PIPELINE,
                 referName = pipelineBasicInfo.pipelineName,
                 referVersion = resourceOnlyVersion.version,
-                referVersionName = resourceOnlyVersion.versionName
+                referVersionName = resourceOnlyVersion.versionName,
+                // 草稿发布为 RELEASED/BRANCH（生效版本）：需同步 LATEST_FLAG
+                activeVersion = true
             )
         )
 

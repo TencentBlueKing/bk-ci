@@ -38,6 +38,7 @@ import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.event.CallBackEvent
 import com.tencent.devops.common.pipeline.event.PipelineCallbackEvent
 import com.tencent.devops.common.pipeline.event.ProjectPipelineCallBack
+import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.PublicVarGroupRef
 import com.tencent.devops.common.pipeline.pojo.TemplateInstanceField
 import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
@@ -244,6 +245,10 @@ data class Model(
 
     @JsonIgnore
     fun getTriggerContainer() = stages[0].containers[0] as TriggerContainer
+
+    @JsonIgnore
+    fun getTriggerParams(): MutableList<BuildFormProperty> =
+        (stages.firstOrNull()?.containers?.firstOrNull() as? TriggerContainer)?.params ?: mutableListOf()
 
     fun encryptParamsValue() {
         (stages[0].containers[0] as TriggerContainer).params.forEach {

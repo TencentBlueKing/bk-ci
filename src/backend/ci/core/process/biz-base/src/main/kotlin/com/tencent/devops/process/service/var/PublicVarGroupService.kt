@@ -44,8 +44,9 @@ import com.tencent.devops.common.pipeline.pojo.PublicVarGroupVariable
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.constant.ProcessConstants
 import com.tencent.devops.process.constant.ProcessConstants.DYNAMIC_VERSION
+import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_COMMON_VAR_GROUP_CONFLICT
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PUBLIC_VAR_GROUP_YAML_DESERIALIZE_ERROR
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PUBLIC_VAR_GROUP_YAML_FORMAT_ERROR
@@ -102,14 +103,14 @@ class PublicVarGroupService @Autowired constructor(
     private val publicVarReferInfoDao: PublicVarReferInfoDao,
     private val publicVarGroupReleaseRecordService: PublicVarGroupReleaseRecordService,
     private val publicVarGroupPermissionService: PublicVarGroupPermissionService,
-    private val publicVarGroupVersionSummaryDao: PublicVarGroupVersionSummaryDao,
-    private val publicVarVersionSummaryDao: PublicVarVersionSummaryDao
+    private val publicVarVersionSummaryDao: PublicVarVersionSummaryDao,
+    private val publicVarGroupVersionSummaryDao: PublicVarGroupVersionSummaryDao
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(PublicVarGroupService::class.java)
-        // 正则表达式常量
-        private val GROUP_NAME_REGEX = Regex("^[a-zA-Z][a-zA-Z0-9_]{2,31}$")
-        private val VAR_NAME_REGEX = Regex("^[a-zA-Z_][a-zA-Z0-9_]{0,63}$")
+        // 校验规则与对外文案同源，避免二者各改一处后对不上（见 ProcessConstants 注释）
+        private val GROUP_NAME_REGEX = Regex(ProcessConstants.PUBLIC_VAR_GROUP_NAME_PATTERN)
+        private val VAR_NAME_REGEX = Regex(ProcessConstants.PUBLIC_VAR_NAME_PATTERN)
         // 权限中心删除重试配置
         private const val IAM_DELETE_MAX_RETRY = 3
         private const val IAM_DELETE_RETRY_INTERVAL_MS = 500L
@@ -138,8 +139,8 @@ class PublicVarGroupService @Autowired constructor(
         )
         val redisLock = RedisLock(
             redisOperation = redisOperation,
-            lockKey = "${ProcessMessageCode.PUBLIC_VAR_GROUP_ADD_LOCK_KEY}_${projectId}_$groupName",
-            expiredTimeInSeconds = ProcessMessageCode.PUBLIC_VAR_GROUP_LOCK_EXPIRED_TIME_IN_SECONDS
+            lockKey = "${ProcessConstants.PUBLIC_VAR_GROUP_ADD_LOCK_KEY}_${projectId}_$groupName",
+            expiredTimeInSeconds = ProcessConstants.PUBLIC_VAR_GROUP_LOCK_EXPIRED_TIME_IN_SECONDS
         )
         redisLock.lock()
         try {
@@ -277,7 +278,8 @@ class PublicVarGroupService @Autowired constructor(
                     version = publicVarGroupPO.version,
                     versionDesc = publicVarGroupDTO.publicVarGroup.versionDesc ?: "",
                     publicVars = publicVarGroupDTO.publicVarGroup.publicVars
-                )
+                ),
+                preGeneratedIds = varSegmentIds
             )
         }
         return isCreate
@@ -307,7 +309,6 @@ class PublicVarGroupService @Autowired constructor(
                     val ctx = DSL.using(configuration)
                     publicVarGroupDao.deleteByGroupName(ctx, projectId, groupName)
                     publicVarDao.deleteByGroupName(ctx, projectId, groupName)
-                    publicVarGroupVersionSummaryDao.deleteByGroupName(ctx, projectId, groupName)
                     publicVarVersionSummaryDao.deleteByGroupName(ctx, projectId, groupName)
                 }
             } catch (compensationEx: Throwable) {
@@ -400,9 +401,9 @@ class PublicVarGroupService @Autowired constructor(
 
         val groupNameList = groupPOs.map { it.groupName }
 
-        // 批量查询当前有效引用数量
+        // 批量查询当前有效引用数量（读预聚合 summary，点查/小范围，避免明细表实时聚合的开销）
         val referCountMap = if (groupNameList.isNotEmpty()) {
-            publicVarGroupReferInfoDao.batchGetTotalReferCountByLatest(
+            publicVarGroupVersionSummaryDao.batchGetTotalReferCount(
                 dslContext = dslContext,
                 projectId = projectId,
                 groupNames = groupNameList
@@ -413,7 +414,7 @@ class PublicVarGroupService @Autowired constructor(
 
         // 批量查询当前有效动态版本的引用数量
         val dynamicVersionReferCountMap = if (groupNameList.isNotEmpty()) {
-            publicVarGroupReferInfoDao.batchGetDynamicVersionReferCountByLatest(
+            publicVarGroupVersionSummaryDao.batchGetDynamicVersionReferCount(
                 dslContext = dslContext,
                 projectId = projectId,
                 groupNames = groupNameList
@@ -424,7 +425,7 @@ class PublicVarGroupService @Autowired constructor(
 
         // 批量查询当前有效固定版本的引用数量
         val fixedVersionReferCountMap = if (groupNameList.isNotEmpty()) {
-            publicVarGroupReferInfoDao.batchGetFixedVersionReferCountByLatest(
+            publicVarGroupVersionSummaryDao.batchGetFixedVersionReferCount(
                 dslContext = dslContext,
                 projectId = projectId,
                 groupNames = groupNameList
@@ -549,10 +550,18 @@ class PublicVarGroupService @Autowired constructor(
     fun deleteGroup(userId: String, projectId: String, groupName: String): Boolean {
         val redisLock = RedisLock(
             redisOperation = redisOperation,
-            lockKey = "${ProcessMessageCode.PUBLIC_VAR_GROUP_DELETE_LOCK_KEY}_${projectId}_$groupName",
-            expiredTimeInSeconds = ProcessMessageCode.PUBLIC_VAR_GROUP_LOCK_EXPIRED_TIME_IN_SECONDS
+            lockKey = "${ProcessConstants.PUBLIC_VAR_GROUP_DELETE_LOCK_KEY}_${projectId}_$groupName",
+            expiredTimeInSeconds = ProcessConstants.PUBLIC_VAR_GROUP_LOCK_EXPIRED_TIME_IN_SECONDS
+        )
+        // 与引用变更链路的 summary 重算串行化：防止"读到 referCount=0 → 并发保存刚加了引用 → 误删被引用的组"。
+        // 锁 key 必须与 PublicVarGroupReferManageService 的按组 summary 锁一致。
+        val groupSummaryLock = RedisLock(
+            redisOperation = redisOperation,
+            lockKey = "${ProcessConstants.PUBLIC_VAR_GROUP_REFER_LOCK_KEY_PREFIX}:summary:$projectId:$groupName",
+            expiredTimeInSeconds = ProcessConstants.PUBLIC_VAR_GROUP_LOCK_EXPIRED_TIME_IN_SECONDS
         )
         redisLock.lock()
+        groupSummaryLock.lock()
         try {
             publicVarGroupDao.getRecordByGroupName(
                 dslContext = dslContext,
@@ -563,14 +572,37 @@ class PublicVarGroupService @Autowired constructor(
                 params = arrayOf(groupName)
             )
 
-            // 检查变量组是否被引用
-            val referCount = publicVarGroupReferInfoDao.getTotalReferCountByLatest(
+            // 检查变量组是否被引用（读预聚合 summary，与列表口径一致；summary 由引用变更事务内重算保证准确）
+            val referCount = publicVarGroupVersionSummaryDao.getTotalReferCount(
                 dslContext = dslContext,
                 projectId = projectId,
                 groupName = groupName
             )
 
             if (referCount > 0) {
+                logger.warn(
+                    "Delete group blocked by active refer summary: " +
+                        "projectId=$projectId, groupName=$groupName, referCount=$referCount"
+                )
+                throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.ERROR_PUBLIC_VAR_GROUP_REFERENCED,
+                    params = arrayOf(groupName)
+                )
+            }
+
+            // summary 仅统计生效版本（LATEST_FLAG=true），草稿版本的引用不计入。
+            // 若仅依赖 summary，草稿仍在引用该组却被删除，会导致草稿后续无法发布。
+            // 故再补充明细存在性判断：只要仍有任意版本（生效/历史/草稿）引用该组即阻止删除。
+            if (publicVarGroupReferInfoDao.existsAnyReferByGroupName(
+                    dslContext = dslContext,
+                    projectId = projectId,
+                    groupName = groupName
+                )
+            ) {
+                logger.warn(
+                    "Delete group blocked by draft/historical refer detail: " +
+                        "projectId=$projectId, groupName=$groupName"
+                )
                 throw ErrorCodeException(
                     errorCode = ProcessMessageCode.ERROR_PUBLIC_VAR_GROUP_REFERENCED,
                     params = arrayOf(groupName)
@@ -589,14 +621,14 @@ class PublicVarGroupService @Autowired constructor(
                     groupName = groupName
                 )
                 publicVarDao.deleteByGroupName(dslContext = context, projectId = projectId, groupName = groupName)
-                // 删除变量组版本概要信息
-                publicVarGroupVersionSummaryDao.deleteByGroupName(
+                // 删除变量版本概要信息
+                publicVarVersionSummaryDao.deleteByGroupName(
                     dslContext = context,
                     projectId = projectId,
                     groupName = groupName
                 )
-                // 删除变量版本概要信息
-                publicVarVersionSummaryDao.deleteByGroupName(
+                // 删除变量组版本引用数概要（summary）
+                publicVarGroupVersionSummaryDao.deleteByGroupName(
                     dslContext = context,
                     projectId = projectId,
                     groupName = groupName
@@ -614,9 +646,13 @@ class PublicVarGroupService @Autowired constructor(
             // 同步重试覆盖瞬时网络抖动；重试耗尽仍失败则日志告警，不阻断主流程。
             deleteIamResourceWithRetry(projectId, groupName)
 
+            logger.info("Deleted public var group: projectId=$projectId, groupName=$groupName, userId=$userId")
             return true
         } catch (e: ErrorCodeException) {
-            logger.warn("Failed to delete variable group $groupName", e)
+            // 引用拦截已在上方打了具体原因；此处仅对非引用类业务异常补日志，避免重复刷屏
+            if (e.errorCode != ProcessMessageCode.ERROR_PUBLIC_VAR_GROUP_REFERENCED) {
+                logger.warn("Failed to delete variable group $groupName", e)
+            }
             throw e
         } catch (t: Throwable) {
             logger.warn("Failed to delete variable group $groupName", t)
@@ -625,6 +661,7 @@ class PublicVarGroupService @Autowired constructor(
                 params = arrayOf(groupName)
             )
         } finally {
+            runCatching { groupSummaryLock.unlock() }
             redisLock.unlock()
         }
     }
@@ -890,7 +927,7 @@ class PublicVarGroupService @Autowired constructor(
                         params = arrayOf(missingField)
                     )
                 } else {
-                    I18nUtil.getCodeLanMessage(ERROR_PUBLIC_VAR_GROUP_YAML_MISSING_FIELD)
+                    I18nUtil.getCodeLanMessage(ERROR_PUBLIC_VAR_GROUP_YAML_FORMAT_ERROR)
                 }
             }
             else -> e.message ?: I18nUtil.getCodeLanMessage(ERROR_PUBLIC_VAR_GROUP_YAML_FORMAT_ERROR)
@@ -937,8 +974,6 @@ class PublicVarGroupService @Autowired constructor(
         referVersion: Int
     ): Result<List<PipelineRefPublicVarGroupDO>> {
         try {
-            logger.info("[$projectId|$referId] Get pipeline variables for type: $referType")
-
             // 查询流水线关联的变量组信息
             val referInfos = publicVarGroupReferInfoDao.listVarGroupReferInfoByReferId(
                 dslContext = dslContext,
@@ -990,8 +1025,6 @@ class PublicVarGroupService @Autowired constructor(
 
     fun listProjectVarGroupInfo(userId: String, projectId: String): Result<List<PipelineRefPublicVarGroupDO>> {
         try {
-            logger.info("[$projectId] Get all public variable groups info")
-
             // 获取项目中所有的公共变量组
             val varGroups = publicVarGroupDao.listGroupsByProjectId(
                 dslContext = dslContext,

@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.mq
 
+import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.event.listener.EventListener
 import com.tencent.devops.common.pipeline.ModelHandleService
 import com.tencent.devops.common.pipeline.ModelVarReferenceHandleContext
@@ -36,22 +37,24 @@ import org.springframework.stereotype.Service
 
 @Service
 class ModelVarReferenceListener @Autowired constructor(
-    private val modelHandleService: ModelHandleService
+    private val modelHandleService: ModelHandleService,
+    private val sampleEventDispatcher: SampleEventDispatcher
 ) : EventListener<ModelVarReferenceEvent> {
 
     companion object {
         private val logger = LoggerFactory.getLogger(ModelVarReferenceListener::class.java)
+        private const val MAX_RETRY = 3
+        private const val RETRY_DELAY_MILLS = 2000
     }
 
     override fun execute(event: ModelVarReferenceEvent) {
         try {
+            // 入口摘要即可；成功明细由 ModelHandleServiceImpl 打 refCount/varNames，避免 start/success 双份刷屏
             logger.info(
-                "Start processing variable reference event: userId=${event.userId}, " +
-                "projectId=${event.projectId}, resourceId=${event.resourceId}, " +
-                "resourceType=${event.resourceType}, resourceVersion=${event.resourceVersion}"
+                "Process variable reference event: projectId=${event.projectId}, " +
+                    "resourceId=${event.resourceId}, resourceType=${event.resourceType}, " +
+                    "resourceVersion=${event.resourceVersion}, retryTime=${event.retryTime}"
             )
-
-            // 调用 handleModelVarReferences 方法处理变量引用
             modelHandleService.handleModelVarReferences(
                 userId = event.userId,
                 context = ModelVarReferenceHandleContext(
@@ -61,17 +64,27 @@ class ModelVarReferenceListener @Autowired constructor(
                     resourceVersion = event.resourceVersion
                 )
             )
-
-            logger.info(
-                "Successfully processed variable reference event: resourceId=${event.resourceId}, " +
-                "resourceType=${event.resourceType}, resourceVersion=${event.resourceVersion}"
-            )
         } catch (e: Throwable) {
-            logger.warn(
-                "Failed to process variable reference event: resourceId=${event.resourceId}, " +
-                "resourceType=${event.resourceType}, resourceVersion=${event.resourceVersion}",
+            // 不向 MQ 抛出（避免无 DLQ 时无限重投），改为有限次延迟重投；
+            // 耗尽后打 error，「变量用在哪」缺明细必须能被告警发现，不能只留一条 warn。
+            retryOrGiveUp(event, e)
+        }
+    }
+
+    private fun retryOrGiveUp(event: ModelVarReferenceEvent, e: Throwable) {
+        val eventDesc = "resourceId=${event.resourceId}, resourceType=${event.resourceType}, " +
+            "resourceVersion=${event.resourceVersion}"
+        if (event.retryTime >= MAX_RETRY) {
+            logger.error(
+                "Variable reference update failed after $MAX_RETRY retries, reference detail may be stale: " +
+                    eventDesc,
                 e
             )
+            return
         }
+        logger.warn("Failed to process variable reference event, will retry: $eventDesc", e)
+        event.retryTime = event.retryTime + 1
+        event.delayMills = RETRY_DELAY_MILLS
+        sampleEventDispatcher.dispatch(event)
     }
 }
