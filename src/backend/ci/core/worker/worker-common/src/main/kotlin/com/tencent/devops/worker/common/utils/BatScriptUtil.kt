@@ -27,6 +27,9 @@
 
 package com.tencent.devops.worker.common.utils
 
+import com.tencent.devops.common.api.exception.TaskExecuteException
+import com.tencent.devops.common.api.pojo.ErrorCode
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.pipeline.enums.CharsetType
 import com.tencent.devops.worker.common.CommonEnv
 import com.tencent.devops.worker.common.WORKSPACE_ENV
@@ -67,14 +70,12 @@ object BatScriptUtil {
         "    goto:eof\r\n"
 
     private const val formatMultipleLines = ":format_multiple_lines\r\n" +
-        "    setlocal\r\n" +
         "    powershell -NoProfile -Command ^\r\n" +
         "        \"\$c=[System.IO.File]::ReadAllText('%~2');\" ^\r\n" +
         "        \"\$c=\$c -replace '%%','%%25' -replace ([char]13),'%%0D' -replace ([char]10),'%%0A';\" ^\r\n" +
         "        \"\$line='::set-output name=%~1::'+\$c;\" ^\r\n" +
         "        \"\$enc=New-Object System.Text.UTF8Encoding(\$false);\" ^\r\n" +
         "        \"[System.IO.File]::AppendAllText('##multiLineFile##', \$line + [Environment]::NewLine, \$enc)\"\r\n" +
-        "    endlocal\r\n" +
         "    goto:eof\r\n"
 
     private val logger = LoggerFactory.getLogger(BatScriptUtil::class.java)
@@ -145,6 +146,10 @@ object BatScriptUtil {
                 taskId = taskId
             )
         } catch (ignore: Throwable) {
+            // 用户输入错误属确定性错误，直接抛出，不做无意义重试
+            if (ignore is TaskExecuteException) {
+                throw ignore
+            }
             return checkFlag(
                 script = script,
                 buildId = buildId,
@@ -234,6 +239,9 @@ object BatScriptUtil {
      *
      * 内容由 Kotlin 直接写入临时文件（UTF-8），不经 cmd 解析，避免换行被当作命令分隔。
      * 该预处理为纯增量：不满足开始行特征的行一律原样透传。
+     *
+     * 注意：block 临时文件写入 dir，由 ScriptEnvUtils.cleanWhenEnd(workspace) 按前缀清理，
+     * 依赖调用链中 dir == workspace 的不变量（ScriptTask.execute 传入 dir = workspace）。
      */
     private fun preprocessMultilineBlocks(
         script: String,
@@ -266,11 +274,13 @@ object BatScriptUtil {
                     i++
                 }
                 if (!closed) {
-                    throw IllegalArgumentException(
-                        "Unterminated multiline block for key [$key], starting at line $startLineNum"
+                    throw TaskExecuteException(
+                        errorMsg = "Unterminated multiline block for key [$key], starting at line $startLineNum",
+                        errorType = ErrorType.USER,
+                        errorCode = ErrorCode.USER_INPUT_INVAILD
                     )
                 }
-                val fileName = "ml_block_${buildId}_${counter++}.txt"
+                val fileName = "ml_block_${buildId}_${ExecutorUtil.getThreadLocal()}_${counter++}.txt"
                 val file = File(dir, fileName)
                 file.writeText(content.toString(), Charsets.UTF_8)
                 file.deleteOnExit()

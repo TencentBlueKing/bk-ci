@@ -1,5 +1,6 @@
 package com.tencent.devops.worker.common.utils
 
+import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.worker.common.task.script.ScriptEnvUtils
 import java.io.File
 import kotlin.text.Charsets
@@ -234,7 +235,7 @@ class BatScriptUtilTest {
             "line1\n" +
             "line2"
 
-        val exception = Assertions.assertThrows(IllegalArgumentException::class.java) {
+        val exception = Assertions.assertThrows(TaskExecuteException::class.java) {
             BatScriptUtil.getCommandFile(
                 buildId = buildId,
                 script = script,
