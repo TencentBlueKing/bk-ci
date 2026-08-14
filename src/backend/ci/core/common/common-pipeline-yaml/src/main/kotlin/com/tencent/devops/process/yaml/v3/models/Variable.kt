@@ -187,6 +187,23 @@ data class VariableDatasource(
     val itemTargetUrl: String? = null
 )
 
+/**
+ * variables 下 template 关键字的元素，即公共变量组引用
+ *
+ * ```yaml
+ * variables:
+ *   template:
+ *     - name: 变量组名称
+ *       version: v1
+ * ```
+ */
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class VariableTemplate(
+    val name: String,
+    val version: String? = null
+)
+
 enum class VariablePropType(val value: String) {
     VUEX_INPUT("vuex-input"),
     VUEX_TEXTAREA("vuex-textarea"),
