@@ -336,7 +336,7 @@
             // 流水线编排页
             const getPipelineHistoryUrl = (task) => {
                 if (isCreateResType.value) {
-                    return `/console/creative-stream/${task.projectId}/flow/${task.pipelineId}`
+                    return `/console/creative-stream/${projectId.value}/flow/${task.pipelineId}`
                 }
                 return `/console/pipeline/${projectId.value}/${task.pipelineId}/history/pipeline`
             }
