@@ -76,7 +76,6 @@ class PipelineYamlPacManager @Autowired constructor(
                     it.kind == ContentKind.FILE && YamlFileUtils.checkYamlPipelineFile(it.path)
                 }.forEach { tree ->
                     val filePath = YamlFileUtils.getCiFilePath(tree.path)
-                    val oldFilePath = null
                     val yamlFileEvent = PipelineYamlDiff(
                         projectId = projectId,
                         eventId = eventId,
@@ -87,7 +86,6 @@ class PipelineYamlPacManager @Autowired constructor(
                         fileType = YamlFileType.getFileType(filePath),
                         actionType = YamlFileActionType.SYNC,
                         triggerUser = userId,
-                        oldFilePath = oldFilePath,
                         ref = defaultBranch,
                         blobId = tree.blobId,
                         commitId = commit.sha,
@@ -97,7 +95,11 @@ class PipelineYamlPacManager @Autowired constructor(
                     )
                     yamlDiffs.add(yamlFileEvent)
                 }
-                val directories = yamlDiffs.map { YamlFileUtils.getCiDirectory(it.filePath) }.toSet()
+                val directories = yamlDiffs.filter {
+                    it.fileType == YamlFileType.PIPELINE
+                }.map {
+                    YamlFileUtils.getCiDirectory(it.filePath)
+                }.toSet()
                 // 创建yaml流水线组
                 pipelineYamlViewService.createYamlViewIfAbsent(
                     userId = userId,

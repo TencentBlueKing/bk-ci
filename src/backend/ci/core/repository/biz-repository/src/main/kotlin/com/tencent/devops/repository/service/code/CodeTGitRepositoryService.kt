@@ -353,12 +353,29 @@ class CodeTGitRepositoryService @Autowired constructor(
         limit: Int,
         offset: Int
     ): List<Repository>? {
+        // TGit 与 Git 共用同一张表和 DAO,DAO 统一返回 CodeGitRepository,此处需转换为 TGit 模型
         return repositoryCodeGitDao.listByCondition(
             dslContext = dslContext,
             repoCondition = repoCondition,
             limit = limit,
             offset = offset
-        )
+        ).map {
+            CodeTGitRepository(
+                aliasName = it.aliasName,
+                url = it.url,
+                credentialId = it.credentialId,
+                projectName = it.projectName,
+                userName = it.userName,
+                authType = it.authType,
+                projectId = it.projectId,
+                repoHashId = it.repoHashId,
+                gitProjectId = it.gitProjectId,
+                enablePac = it.enablePac,
+                yamlSyncStatus = it.yamlSyncStatus,
+                scmCode = it.scmCode,
+                credentialType = it.credentialType
+            )
+        }
     }
 
     companion object {

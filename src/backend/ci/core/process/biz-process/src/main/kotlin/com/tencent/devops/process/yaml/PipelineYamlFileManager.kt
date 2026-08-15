@@ -122,7 +122,7 @@ class PipelineYamlFileManager @Autowired constructor(
             } catch (ignored: Exception) {
                 logger.error(
                     "[PAC_PIPELINE]|Failed to create or update yaml pipeline|$eventId|" +
-                            "$projectId$repoHashId|$filePath|$ref|${commit?.commitId}|$blobId",
+                            "$projectId|$repoHashId|$filePath|$ref|${commit?.commitId}|$blobId",
                     ignored
                 )
                 webhookTriggerManager.fireChangeError(context = context, exception = ignored)
