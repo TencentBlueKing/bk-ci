@@ -133,6 +133,50 @@ class ServiceScmRepositoryApiResourceImpl @Autowired constructor(
         )
     }
 
+    override fun listBranchesByHashIdOrName(
+        userId: String,
+        projectId: String,
+        repositoryType: RepositoryType?,
+        repoHashIdOrName: String,
+        search: String?,
+        page: Int,
+        pageSize: Int
+    ): Result<List<Reference>> {
+        return Result(
+            repositoryApiService.listBranches(
+                userId = userId,
+                projectId = projectId,
+                repositoryType = repositoryType,
+                repoHashIdOrName = repoHashIdOrName,
+                search = search,
+                page = page,
+                pageSize = pageSize
+            )
+        )
+    }
+
+    override fun listTagsByHashIdOrName(
+        userId: String,
+        projectId: String,
+        repositoryType: RepositoryType?,
+        repoHashIdOrName: String,
+        search: String?,
+        page: Int,
+        pageSize: Int
+    ): Result<List<Reference>> {
+        return Result(
+            repositoryApiService.listTags(
+                userId = userId,
+                projectId = projectId,
+                repositoryType = repositoryType,
+                repoHashIdOrName = repoHashIdOrName,
+                search = search,
+                page = page,
+                pageSize = pageSize
+            )
+        )
+    }
+
     override fun registerWebhook(
         projectId: String,
         eventType: String,

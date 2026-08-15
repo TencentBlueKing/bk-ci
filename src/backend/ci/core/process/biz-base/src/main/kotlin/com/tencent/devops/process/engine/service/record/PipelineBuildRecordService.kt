@@ -70,6 +70,7 @@ import com.tencent.devops.process.engine.common.BuildTimeCostUtils.generateBuild
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.dao.PipelineBuildSummaryDao
 import com.tencent.devops.process.engine.dao.PipelineResourceDao
+import com.tencent.devops.process.engine.dao.PipelineResourceDraftVersionDao
 import com.tencent.devops.process.engine.dao.PipelineResourceVersionDao
 import com.tencent.devops.process.engine.dao.PipelineTriggerReviewDao
 import com.tencent.devops.process.engine.pojo.BuildInfo
@@ -125,7 +126,8 @@ class PipelineBuildRecordService @Autowired constructor(
     pipelineResourceVersionDao: PipelineResourceVersionDao,
     redisOperation: RedisOperation,
     stageTagService: StageTagService,
-    pipelineEventDispatcher: PipelineEventDispatcher
+    pipelineEventDispatcher: PipelineEventDispatcher,
+    pipelineResourceDraftVersionDao: PipelineResourceDraftVersionDao
 ) : BaseBuildRecordService(
     dslContext = dslContext,
     buildRecordModelDao = recordModelDao,
@@ -135,7 +137,8 @@ class PipelineBuildRecordService @Autowired constructor(
     recordModelService = recordModelService,
     pipelineResourceDao = pipelineResourceDao,
     pipelineBuildDao = pipelineBuildDao,
-    pipelineResourceVersionDao = pipelineResourceVersionDao
+    pipelineResourceVersionDao = pipelineResourceVersionDao,
+    pipelineResourceDraftVersionDao = pipelineResourceDraftVersionDao
 ) {
 
     @Value("\${pipeline.build.retry.limit_days:21}")

@@ -98,6 +98,7 @@ import com.tencent.devops.process.engine.dao.PipelineBuildSummaryDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.engine.dao.PipelineModelTaskDao
 import com.tencent.devops.process.engine.dao.PipelineResourceDao
+import com.tencent.devops.process.engine.dao.PipelineResourceDraftVersionDao
 import com.tencent.devops.process.engine.dao.PipelineResourceVersionDao
 import com.tencent.devops.process.engine.dao.template.TemplateDao
 import com.tencent.devops.process.engine.dao.template.TemplatePipelineDao
@@ -115,6 +116,7 @@ import com.tencent.devops.process.pojo.PipelineName
 import com.tencent.devops.process.pojo.PipelineSortType
 import com.tencent.devops.process.pojo.pipeline.DeletePipelineResult
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
+import com.tencent.devops.process.pojo.pipeline.PipelineResourceDraftVersion
 import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlFileInfo
 import com.tencent.devops.process.pojo.pipeline.TemplateInfo
@@ -187,7 +189,8 @@ class PipelineRepositoryService constructor(
     private val pipelineInfoService: PipelineInfoService,
     private val pipelineTemplateInfoDao: PipelineTemplateInfoDao,
     private val pipelineGroupService: PipelineGroupService,
-    private val pipelineVisibilityService: PipelineVisibilityService
+    private val pipelineVisibilityService: PipelineVisibilityService,
+    private val pipelineResourceDraftVersionDao: PipelineResourceDraftVersionDao
 ) {
 
     companion object {
@@ -1510,6 +1513,25 @@ class PipelineRepositoryService constructor(
             projectId = projectId,
             pipelineId = pipelineId
         )
+        decoratePipelineResourceVersion(
+            finalDslContext = finalDslContext,
+            resource = resource,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            encryptedFlag = encryptedFlag,
+            archiveFlag = archiveFlag
+        )
+        return resource
+    }
+
+    private fun decoratePipelineResourceVersion(
+        finalDslContext: DSLContext,
+        resource: PipelineResourceVersion?,
+        projectId: String,
+        pipelineId: String,
+        encryptedFlag: Boolean?,
+        archiveFlag: Boolean?
+    ) {
         // 历史数据兼容：
         // 1 返回时将别名name补全为id
         // 2 填充所有job没有的job id
@@ -1565,7 +1587,6 @@ class PipelineRepositoryService constructor(
                 }
             }
         }
-        return resource
     }
 
     fun getDraftVersionResource(
@@ -1586,6 +1607,33 @@ class PipelineRepositoryService constructor(
             }
         }
         return resource
+    }
+
+    fun getPipelineResourceByDraftVersion(
+        projectId: String,
+        pipelineId: String,
+        version: Int,
+        draftVersion: Int,
+        encryptedFlag: Boolean? = false,
+        archiveFlag: Boolean? = false
+    ): PipelineResourceVersion? {
+        val finalDslContext = CommonUtils.getJooqDslContext(archiveFlag, ARCHIVE_SHARDING_DSL_CONTEXT)
+        val draftVersionResource = pipelineResourceDraftVersionDao.get(
+            dslContext = finalDslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            version = version,
+            draftVersion = draftVersion
+        )?.let { PipelineResourceDraftVersion.convertDraftToVersion(it) }
+        decoratePipelineResourceVersion(
+            finalDslContext = finalDslContext,
+            resource = draftVersionResource,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            encryptedFlag = encryptedFlag,
+            archiveFlag = archiveFlag
+        )
+        return draftVersionResource
     }
 
     fun getBranchVersionResource(
@@ -2481,14 +2529,15 @@ class PipelineRepositoryService constructor(
         dslContext: DSLContext,
         userId: String
     ) {
-        if (events.isNullOrEmpty()) return
         val existEventNames = pipelineCallbackDao.list(
             dslContext = dslContext,
             projectId = projectId,
             pipelineId = pipelineId
         ).map { it.name }.toSet()
-        if (existEventNames.isNotEmpty()) {
-            val needDelNames = existEventNames.subtract(events.keys).toSet()
+        // events 为空时新事件集合为空，差集即为全部已存在事件，实现全量清理
+        val newEventKeys = events?.keys ?: emptySet()
+        val needDelNames = existEventNames.subtract(newEventKeys)
+        if (needDelNames.isNotEmpty()) {
             pipelineCallbackDao.delete(
                 dslContext = dslContext,
                 projectId = projectId,
@@ -2497,15 +2546,17 @@ class PipelineRepositoryService constructor(
             )
         }
         // 保存回调事件
-        pipelineCallbackDao.save(
-            dslContext = dslContext,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            userId = userId,
-            list = events.map { (key, value) ->
-                value.copy(secretToken = value.secretToken?.let { AESUtil.encrypt(aesKey, it) })
-            }
-        )
+        if (!events.isNullOrEmpty()) {
+            pipelineCallbackDao.save(
+                dslContext = dslContext,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                userId = userId,
+                list = events.map { (_, value) ->
+                    value.copy(secretToken = value.secretToken?.let { AESUtil.encrypt(aesKey, it) })
+                }
+            )
+        }
     }
 
     fun getReleaseVersionRecord(projectId: String, pipelineId: String): PipelineResourceVersion? {
@@ -2513,6 +2564,21 @@ class PipelineRepositoryService constructor(
             dslContext = dslContext,
             projectId = projectId,
             pipelineId = pipelineId
+        )
+    }
+
+    fun getPipelineVersionRecord(
+        projectId: String,
+        pipelineId: String,
+        version: Int,
+        includeDraft: Boolean? = null
+    ): PipelineResourceVersion? {
+        return pipelineResourceVersionDao.getVersionResource(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            version = version,
+            includeDraft = includeDraft
         )
     }
 

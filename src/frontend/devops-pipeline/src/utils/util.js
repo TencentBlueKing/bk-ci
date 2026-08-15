@@ -926,7 +926,7 @@ export function parseErrorMsg (msg) {
     }
 }
 
-export function showPipelineCheckMsg (showTooltips, code, message, h) {
+export function showPipelineCheckMsg (showTooltips, message, h) {
     const errorInfo = parseErrorMsg(message)
     if (errorInfo['@type'] === 'errors') {
         showTooltips({

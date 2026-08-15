@@ -116,6 +116,24 @@ class ApigwRepositoryResourceV4Impl @Autowired constructor(private val client: C
         )
     }
 
+    override fun getByName(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        repositoryId: String,
+        repositoryType: RepositoryType?
+    ): Result<Repository> {
+        logger.info(
+            "OPENAPI_REPOSITORY_V4|$userId|getByName repo in project|$projectId|$repositoryId|$repositoryType"
+        )
+        return client.get(ServiceRepositoryResource::class).get(
+            projectId = projectId,
+            repositoryId = repositoryId,
+            repositoryType = repositoryType
+        )
+    }
+
     override fun get(
         appCode: String?,
         apigwType: String?,

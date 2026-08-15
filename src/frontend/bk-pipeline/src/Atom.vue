@@ -55,6 +55,14 @@
           :title="t('viewSubPipeline')"
           @click.stop="handleSubPipelineAccess"
         />
+        <Logo
+          v-if="showExternalLink"
+          name="tiaozhuan"
+          class="sub-pipeline-jump-icon"
+          size="16"
+          :title="t('viewExternalLink')"
+          @click.stop="handleExternalLink"
+        />
       </p>
       <template v-if="isExecuting">
         <span class="atom-execounter">{{ execTime }}</span>
@@ -64,13 +72,13 @@
         <span @click.stop="reviewAtom" class="atom-reviewing-tips atom-operate-area" :disabled="!hasReviewPerm">
           {{ t("manualCheck") }}
         </span>
-        <template slot="content">
+        <template #content>
           <p>{{ t("checkUser") }}{{ reviewUsers.join(";") }}</p>
         </template>
       </bk-popover>
       <bk-popover :delay="[300, 0]" v-else-if="isReviewAbort" placement="top">
         <span class="atom-review-diasbled-tips">{{ t("aborted") }}</span>
-        <template slot="content">
+        <template #content>
           <p>
             {{ t("abortTips") }}{{ t("checkUser")
             }}{{ reactiveData.cancelUserId }}
@@ -82,7 +90,7 @@
           <span :class="resumeSpanCls" @click.stop="atomExecute(true)">
             {{ t("resume") }}
           </span>
-          <template slot="content">
+          <template #content>
             <p>{{ t("checkUser") }}{{ pauseReviewerStr }}</p>
           </template>
         </bk-popover>
@@ -95,7 +103,7 @@
           <span class="atom-execute-time">
             {{ formatTime }}
           </span>
-          <template slot="content">
+          <template #content>
             <p>{{ formatTime }}</p>
           </template>
         </bk-popover>
@@ -351,6 +359,14 @@ const hasSubPipelineAccessInfo = computed(() => {
   return !!(projectId && pipelineId && buildId);
 });
 
+const showExternalLink = computed(() => {
+  return (
+    reactiveData.isExecDetail
+    && !reactiveData.editable
+    && !!props.atom?.externalLink
+  );
+});
+
 const isLastQualityAtom = computed(() => {
   return props.atom.atomCode === QUALITY_OUT_ATOM_CODE && props.isLastAtom;
 });
@@ -543,6 +559,12 @@ const handleSubPipelineAccess = () => {
   eventBus.$emit(SUB_PIPELINE_ACCESS_EVENT_NAME, {
     atom: props.atom
   });
+};
+
+const handleExternalLink = () => {
+  const url = props.atom?.externalLink;
+  if (!url) return;
+  window.open(url, "_blank", "noopener,noreferrer");
 };
 
 const copyAtom = () => {
@@ -881,7 +903,7 @@ onBeforeUnmount(() => {
 
   >.atom-name {
     display: inline-flex;
-    flex: 1 1 auto;
+    flex: 1 1 0;
     align-items: center;
     width: auto;
     min-width: 0;

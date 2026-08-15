@@ -465,6 +465,7 @@ object ProcessMessageCode {
     const val ERROR_PIPELINE_REF_YAML_FILE_NOT_FOUND = "2101378"
     // 分支版本[{0}]不存在, 请检查分支版本是否被成功创建
     const val ERROR_NOT_FOUND_PIPELINE_VERSION_EXISTS_BY_BRANCH = "2101379"
+    const val ERROR_TEMPLATE_VERSION_HAS_DELETED = "2101380" // 模板版本[{0}]已删除
     const val ERROR_PIPELINE_IS_NOT_PAC = "2101389" // [{0}]不是PAC流水线
 
     // 回调URL[{0}]指向内网/元数据地址，禁止使用以防止SSRF攻击
@@ -478,10 +479,13 @@ object ProcessMessageCode {
 
     // 模型变量引用表达式不合规：单花括号不得以 context 前缀开头；双花括号须以前缀开头或为合法表达式函数。不合规项：{0}
     const val ERROR_PIPELINE_MODEL_VAR_REF_INVALID = "2101376"
+    const val ERROR_TEMPLATE_RESOURCE_DRAFT_VERSION_NOT_EXISTS = "2101377" // 模板草稿版本编排[{0}]记录不存在
+    const val ERROR_TEMPLATE_SETTING_DRAFT_VERSION_NOT_EXISTS = "2101378" // 模板草稿版本设置[{0}]不存在
 
     // 构建执行相关错误码（2101500-2101599）
     const val ERROR_PIPELINE_START_NODE_NO_PERMISSION = "2101500" // 用户[{0}]没有节点[{1}]的操作权限，无法启动流水线
     const val ERROR_PIPELINE_VERSION_RECYCLED = "2101501" // 流水线版本[{0}]已被回收，无法启动构建，请使用最新版本重试
+    const val ERROR_PIPELINE_VERSION_HAS_DELETED = "2101502" // 流水线版本[{0}]已删除
 
     // 批量任务
     const val ERROR_PIPELINE_BATCH_TASK_NOT_EXISTS = "2101650" // 流水线批量任务{0}不存在
@@ -534,6 +538,21 @@ object ProcessMessageCode {
     const val ERROR_PIPELINE_BATCH_TASK_STATUS_CAN_NOT_RETRY = "2101679" // 流水线批量任务{0}当前状态为{1}，不能重试
     const val ERROR_PIPELINE_BATCH_TASK_DETAIL_CAN_NOT_RETRY = "2101680" // 流水线批量任务明细{0}当前状态为{1}，不能重试
     const val ERROR_PIPELINE_BATCH_TASK_NOTHING_TO_RETRY = "2101681" // 流水线批量任务{0}没有可重试的失败项
+
+    // 创作流分享授权
+    const val ERROR_CREATIVE_FLOW_SHARE_GRANT_NOT_EXISTS = "2101682" // 创作流分享授权不存在或已撤销：{0}#{1}
+    const val ERROR_CREATIVE_FLOW_SHARE_SOURCE_NOT_EXISTS = "2101683" // 源创作流不存在：{0}/{1}
+    const val ERROR_CREATIVE_FLOW_SHARE_CHANNEL_INVALID = "2101684" // 流水线{0}不是创作流，不支持分享
+    const val ERROR_CREATIVE_FLOW_VERSION_NUM_INVALID = "2101685" // 发布版本号格式非法：{0}，正确写法形如 V208
+    const val ERROR_CREATIVE_FLOW_VERSION_NUM_NOT_FOUND = "2101686" // 源创作流{0}/{1}不存在已发布的版本号{2}
+    const val ERROR_CREATIVE_FLOW_COPY_ENV_OS_NOT_MATCH = "2101687" // 目标环境操作系统({1})与该分享要求的({0})不一致
+    const val ERROR_CREATIVE_FLOW_COPY_TARGET_ENV_INVALID = "2101688" // 目标环境不存在或不可用：{0}
+    const val ERROR_CREATIVE_FLOW_COPY_TARGET_NOT_TRACED = "2101689" // 目标创作流{0}不是该分享的副本，不允许覆盖
+    const val ERROR_CREATIVE_FLOW_COPY_TARGET_NAME_CONFLICT = "2101690" // 目标项目{0}已存在创作流{1}
+    const val ERROR_CREATIVE_FLOW_COPY_DEPENDENCIES_NOT_SUPPORT = "2101691" // 暂不支持依赖资源迁移
+    const val ERROR_CREATIVE_FLOW_VARIABLE_OVERRIDE_INVALID = "2101692" // 变量{0}不存在或不允许覆盖
+    const val ERROR_CREATIVE_FLOW_SHARE_TEAM_PROJECT_NOT_SUPPORT = "2101693" // 项目{0}不是个人项目，团队创作流分享暂未支持
+    const val ERROR_CREATIVE_FLOW_SHARE_REVOKE_PARAM_INVALID = "2101694" // 撤销授权须提供 shareId+flowIds 或 talentCode
 
     const val BK_SUCCESSFULLY_DISTRIBUTED = "bkSuccessfullyDistributed" // 跨项目构件分发成功，共分发了{0}个文件
     const val BK_SUCCESSFULLY_FAILED = "bkSuccessfullyFailed" // 跨项目构件分发失败，

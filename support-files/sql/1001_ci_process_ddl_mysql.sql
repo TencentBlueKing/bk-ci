@@ -155,7 +155,8 @@ CREATE TABLE IF NOT EXISTS `T_PIPELINE_BUILD_HISTORY_DEBUG` (
   `VERSION_CHANGE` bit default null comment '是否发生版本变更',
   `TRIGGER_EVENT_TYPE` varchar(64) DEFAULT NULL COMMENT '触发事件标识',
   `NODE_HASH_ID` varchar(256) COMMENT '运行节点HashId',
-  PRIMARY KEY (`BUILD_ID`),
+  `DRAFT_VERSION` int(11)  NULL COMMENT '来源的草稿版本',
+    PRIMARY KEY (`BUILD_ID`),
   KEY `STATUS_KEY` (`PROJECT_ID`,`PIPELINE_ID`,`STATUS`),
   KEY `INX_TPBH_PROJECT_PIPELINE_NUM` (`PROJECT_ID`,`PIPELINE_ID`,`BUILD_NUM`),
   KEY `INX_TPBH_PROJECT_PIPELINE_START_TIME` (`PROJECT_ID`,`PIPELINE_ID`,`START_TIME`),
@@ -954,6 +955,7 @@ CREATE TABLE IF NOT EXISTS `T_PIPELINE_RESOURCE_VERSION` (
   `UPDATER` varchar(64) DEFAULT NULL COMMENT '最近更新人',
   `UPDATE_TIME` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
   `RELEASE_TIME` TIMESTAMP NULL COMMENT '发布时间',
+  `DRAFT_VERSION` int(11)  NULL COMMENT '来源的草稿版本',
   PRIMARY KEY (`PIPELINE_ID`,`VERSION`),
   KEY `INX_PIPELINE_UPDATE_TIME` (`PROJECT_ID`,`PIPELINE_ID`,`UPDATE_TIME`)
   ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='流水线资源版本表';
@@ -1453,6 +1455,7 @@ CREATE TABLE IF NOT EXISTS `T_PIPELINE_TEMPLATE_RESOURCE_VERSION` (
     `RELEASE_TIME` datetime(3) DEFAULT NULL COMMENT '发布时间',
     `CREATED_TIME` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '创建时间',
     `UPDATE_TIME` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3) COMMENT '更新时间',
+    `DRAFT_VERSION` int(11) DEFAULT NULL COMMENT '来源的草稿版本',
     PRIMARY KEY (`TEMPLATE_ID`,`VERSION`),
     KEY `INX_PROJECT_ID_AND_TEMPLATE_ID` (`PROJECT_ID`,`TEMPLATE_ID`) USING BTREE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin COMMENT='模板资源版本表';
@@ -1499,8 +1502,7 @@ CREATE TABLE IF NOT EXISTS `T_PIPELINE_TEMPLATE_MIGRATION` (
     PRIMARY KEY (`PROJECT_ID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin COMMENT='模板迁移记录表';
 
-CREATE TABLE IF NOT EXISTS `T_PIPELINE_BUILD_PARAM_COMBINATION`
-(
+CREATE TABLE IF NOT EXISTS `T_PIPELINE_BUILD_PARAM_COMBINATION` (
     `ID`               bigint(11)                               NOT NULL COMMENT '主键',
     `PROJECT_ID`       varchar(64)                              not null comment '项目ID',
     `PIPELINE_ID`      varchar(64)                              not null comment '流水线ID',
@@ -1654,5 +1656,168 @@ CREATE TABLE IF NOT EXISTS `T_PIPELINE_COPY_TASK_RESOURCE_REL` (
     KEY `IDX_TASK_RESOURCE` (`PROJECT_ID`, `TASK_ID`, `RESOURCE_TYPE`, `RESOURCE_ID`)
 ) ENGINE = InnoDB
     DEFAULT CHARSET = utf8mb4 COMMENT ='流水线复制任务资源关系表';
+
+CREATE TABLE IF NOT EXISTS `T_PIPELINE_RESOURCE_DRAFT_VERSION`(
+    `PROJECT_ID`         varchar(64) NOT NULL COMMENT '项目ID',
+    `PIPELINE_ID`        varchar(34) NOT NULL COMMENT '流水线ID',
+    `VERSION`            int(11)     NOT NULL DEFAULT '1' COMMENT '版本号',
+    `DRAFT_VERSION`      int(11)     NOT NULL DEFAULT '1' COMMENT '草稿版本',
+    `MODEL`              mediumtext  NOT NULL COMMENT '流水线模型',
+    `YAML`               mediumtext COMMENT 'YAML编排',
+    `YAML_VERSION`       varchar(34)          DEFAULT NULL COMMENT 'YAML的版本标记',
+    `SETTING_VERSION`    int(11)              DEFAULT NULL COMMENT '关联的流水线设置版本号',
+    `BASE_VERSION`       int(11)              DEFAULT NULL COMMENT '来源的正式版本',
+    `BASE_VERSION_NAME`  varchar(64)          DEFAULT NULL COMMENT '来源的正式版本名称',
+    `BASE_DRAFT_VERSION` int(11)              DEFAULT NULL COMMENT '来源的草稿版本',
+    `CREATOR`            varchar(64)          DEFAULT NULL COMMENT '创建者',
+    `CREATE_TIME`        timestamp   NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `UPDATER`            varchar(64)          DEFAULT NULL COMMENT '最近更新人',
+    `UPDATE_TIME`        timestamp   NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    PRIMARY KEY (`PROJECT_ID`, `PIPELINE_ID`, `VERSION`, `DRAFT_VERSION`)
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_bin COMMENT ='流水线草稿资源版本表';
+
+CREATE TABLE IF NOT EXISTS `T_PIPELINE_SETTING_DRAFT_VERSION`(
+    `PROJECT_ID`                         varchar(64)   NOT NULL COMMENT '项目ID',
+    `PIPELINE_ID`                        varchar(34)   NOT NULL COMMENT '流水线ID',
+    `VERSION`                            int(11)       NOT NULL DEFAULT '1' COMMENT '流水线版本号',
+    `DRAFT_VERSION`                      int(11)       NOT NULL DEFAULT '1' COMMENT '草稿版本',
+    `SETTING_VERSION`                    int(11)       NOT NULL DEFAULT '1' COMMENT '版本号',
+    `NAME`                               varchar(255)           DEFAULT NULL COMMENT '名称',
+    `DESC`                               varchar(1024)          DEFAULT NULL COMMENT '描述',
+    `LABELS`                             text                   DEFAULT NULL COMMENT '版本修改的标签',
+    `WAIT_QUEUE_TIME_SECOND`             int(11)                DEFAULT '7200' COMMENT '最大排队时长',
+    `MAX_QUEUE_SIZE`                     int(11)                DEFAULT '10' COMMENT '最大排队数量',
+    `BUILD_NUM_RULE`                     varchar(512)           DEFAULT NULL COMMENT '构建号生成规则',
+    `CONCURRENCY_GROUP`                  varchar(255)           DEFAULT NULL COMMENT '并发时,设定的group',
+    `CONCURRENCY_CANCEL_IN_PROGRESS`     bit(1)                 DEFAULT b'0' COMMENT '并发时,是否相同group取消正在执行的流水线',
+    `PIPELINE_AS_CODE_SETTINGS`          varchar(512)           DEFAULT NULL COMMENT 'YAML流水线相关配置',
+    `SUCCESS_SUBSCRIPTION`               text COMMENT '成功订阅设置',
+    `FAILURE_SUBSCRIPTION`               text COMMENT '失败订阅设置',
+    `RUN_LOCK_TYPE`                      int(11)                DEFAULT '1' COMMENT '运行并发配置',
+    `SUCCESS_RECEIVER`                   mediumtext,
+    `FAIL_RECEIVER`                      mediumtext,
+    `SUCCESS_GROUP`                      mediumtext,
+    `FAIL_GROUP`                         mediumtext,
+    `SUCCESS_TYPE`                       varchar(32)            DEFAULT NULL,
+    `FAIL_TYPE`                          varchar(32)            DEFAULT NULL,
+    `SUCCESS_WECHAT_GROUP_FLAG`          bit(1)        NOT NULL DEFAULT b'0',
+    `SUCCESS_WECHAT_GROUP`               varchar(1024) NOT NULL DEFAULT '',
+    `FAIL_WECHAT_GROUP_FLAG`             bit(1)        NOT NULL DEFAULT b'0',
+    `FAIL_WECHAT_GROUP`                  varchar(1024) NOT NULL DEFAULT '',
+    `SUCCESS_DETAIL_FLAG`                bit(1)                 DEFAULT b'0',
+    `FAIL_DETAIL_FLAG`                   bit(1)                 DEFAULT b'0',
+    `SUCCESS_CONTENT`                    longtext,
+    `FAIL_CONTENT`                       longtext,
+    `SUCCESS_WECHAT_GROUP_MARKDOWN_FLAG` bit(1)        NOT NULL DEFAULT b'0',
+    `FAIL_WECHAT_GROUP_MARKDOWN_FLAG`    bit(1)                 DEFAULT b'0',
+    `MAX_CON_RUNNING_QUEUE_SIZE`         int(11)                DEFAULT NULL COMMENT '并发构建数量限制,值为-1时表示取系统默认值。',
+    `FAIL_IF_VARIABLE_INVALID`           bit(1)                 DEFAULT NULL COMMENT '是否配置流水线变量值超长时终止执行',
+    `BUILD_CANCEL_POLICY`                varchar(32)            DEFAULT 'EXECUTE_PERMISSION' COMMENT '构建取消权限策略:EXECUTE_PERMISSION-执行权限用户可取消,RESTRICTED-仅触发人/拥有流水线管理权限可取消',
+    PRIMARY KEY (`PROJECT_ID`, `PIPELINE_ID`, `VERSION`, `DRAFT_VERSION`)
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_bin COMMENT ='流水线草稿基础配置版本表';
+
+CREATE TABLE IF NOT EXISTS `T_PIPELINE_TEMPLATE_RESOURCE_DRAFT_VERSION` (
+    `PROJECT_ID`              varchar(64) NOT NULL COMMENT '项目ID',
+    `TEMPLATE_ID`             varchar(34) NOT NULL COMMENT '模板ID',
+    `VERSION`                 bigint(20)  NOT NULL COMMENT '模板版本号',
+    `DRAFT_VERSION`           int(11)     NOT NULL DEFAULT '1' COMMENT '草稿版本',
+    `SETTING_VERSION`         int(11)     NOT NULL COMMENT '模板配置版本号',
+    `TYPE`                    varchar(32) NOT NULL DEFAULT 'PIPELINE' COMMENT 'PIPELINE/STAGE/JOB/STEP类型',
+    `SRC_TEMPLATE_PROJECT_ID` varchar(64)          DEFAULT NULL COMMENT '模版的来源项目ID',
+    `SRC_TEMPLATE_ID`         varchar(32)          DEFAULT NULL COMMENT '模版的来源ID',
+    `SRC_TEMPLATE_VERSION`    bigint(20)           DEFAULT NULL COMMENT '模版的来源版本',
+    `BASE_VERSION`            bigint(20)           DEFAULT NULL COMMENT '来源的正式版本',
+    `BASE_VERSION_NAME`       varchar(64)          DEFAULT NULL COMMENT '来源的正式版本名称',
+    `BASE_DRAFT_VERSION`      int(11)              DEFAULT NULL COMMENT '来源的草稿版本',
+    `PARAMS`                  mediumtext COMMENT '模板参数',
+    `MODEL`                   mediumtext NOT NULL COMMENT '模板模型',
+    `YAML`                    mediumtext COMMENT 'YAML编排',
+    `CREATOR`                 varchar(64) NOT NULL COMMENT '创建者',
+    `UPDATER`                 varchar(64)          DEFAULT NULL COMMENT '修改人',
+    `CREATED_TIME`            datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '创建时间',
+    `UPDATE_TIME`             datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3) COMMENT '更新时间',
+    PRIMARY KEY (`PROJECT_ID`, `TEMPLATE_ID`, `VERSION`, `DRAFT_VERSION`)
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_bin COMMENT ='模板资源草稿版本表';
+
+CREATE TABLE IF NOT EXISTS `T_PIPELINE_TEMPLATE_SETTING_DRAFT_VERSION`(
+    `PROJECT_ID`                     varchar(64)  NOT NULL COMMENT '项目ID',
+    `TEMPLATE_ID`                    varchar(34)  NOT NULL COMMENT '模板ID',
+    `VERSION`                        bigint(20)   NOT NULL COMMENT '模板版本号',
+    `DRAFT_VERSION`                  int(11)      NOT NULL DEFAULT '1' COMMENT '草稿版本',
+    `SETTING_VERSION`                int(11)      NOT NULL COMMENT '模板配置版本号',
+    `NAME`                           varchar(255) NOT NULL COMMENT '名称',
+    `DESC`                           varchar(1024)         DEFAULT NULL COMMENT '描述',
+    `LABELS`                         text                  DEFAULT NULL COMMENT '版本修改的标签',
+    `WAIT_QUEUE_TIME_SECOND`         int(11)               DEFAULT '7200' COMMENT '最大排队时长',
+    `MAX_QUEUE_SIZE`                 int(11)               DEFAULT '10' COMMENT '最大排队数量',
+    `BUILD_NUM_RULE`                 varchar(512)          DEFAULT NULL COMMENT '构建号生成规则',
+    `CONCURRENCY_GROUP`              varchar(255)          DEFAULT NULL COMMENT '并发时,设定的group',
+    `CONCURRENCY_CANCEL_IN_PROGRESS` bit(1)                DEFAULT b'0' COMMENT '并发时,是否相同group取消正在执行的流水线',
+    `PIPELINE_AS_CODE_SETTINGS`      varchar(512)          DEFAULT NULL COMMENT 'YAML流水线相关配置',
+    `SUCCESS_SUBSCRIPTION`           text COMMENT '成功订阅设置',
+    `FAILURE_SUBSCRIPTION`           text COMMENT '失败订阅设置',
+    `RUN_LOCK_TYPE`                  int(11)               DEFAULT '1' COMMENT '运行并发配置',
+    `MAX_CON_RUNNING_QUEUE_SIZE`     int(11)               DEFAULT NULL COMMENT '并发构建数量限制,值为-1时表示取系统默认值。',
+    `FAIL_IF_VARIABLE_INVALID`       bit(1)                DEFAULT NULL COMMENT '是否配置流水线变量值超长时终止执行',
+    `BUILD_CANCEL_POLICY`            varchar(32)           DEFAULT 'EXECUTE_PERMISSION' COMMENT '构建取消权限策略:EXECUTE_PERMISSION-执行权限用户可取消,RESTRICTED-仅触发人/拥有流水线管理权限可取消',
+    `CREATOR`                        varchar(64)  NOT NULL COMMENT '创建者',
+    `UPDATER`                        varchar(64)           DEFAULT NULL COMMENT '修改人',
+    `CREATED_TIME`                   datetime     NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `UPDATE_TIME`                    datetime     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    PRIMARY KEY (`PROJECT_ID`, `TEMPLATE_ID`, `VERSION`, `DRAFT_VERSION`)
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_bin COMMENT ='模板基础配置草稿版本表';
+
+CREATE TABLE IF NOT EXISTS `T_PIPELINE_SHARE_GRANT` (
+    `SHARE_ID`           varchar(64)  NOT NULL COMMENT '分享命名空间ID，来自manifest的shareId',
+    `FLOW_ID`            varchar(128) NOT NULL COMMENT '分享条目ID，来自manifest的flows[].id',
+    `SCENE`              varchar(32)  NOT NULL DEFAULT 'TALENT_FOLLOW' COMMENT '分享场景',
+    `SHARE_MODE`         varchar(32)  NOT NULL DEFAULT 'COPY' COMMENT '分享形态，当前恒为COPY-复制副本；预留团队创作流的授权执行形态',
+    `SOURCE_PROJECT_ID`  varchar(64)  NOT NULL COMMENT '源项目ID',
+    `SOURCE_PIPELINE_ID` varchar(34)  NOT NULL COMMENT '源创作流ID',
+    `VERSION_SCOPE`      varchar(32)  NOT NULL COMMENT '版本范围：LATEST-最新已发布 PINNED-钉死版本',
+    `VERSION`            int(11)               DEFAULT NULL COMMENT '授权的内部版本号，PINNED时非空',
+    `VERSION_NUM`        int(11)               DEFAULT NULL COMMENT '授权的发布版本号，PINNED时非空，仅用于展示',
+    `VALIDATE_RULES`     text                  DEFAULT NULL COMMENT '克隆校验规则JSON，对应CreativeFlowShareValidateRules',
+    `EXT_INFO`           text                  DEFAULT NULL COMMENT '扩展信息JSON，对应CreativeFlowShareExtInfo',
+    `TALENT_CODE`        varchar(64)           DEFAULT NULL COMMENT '来源分身编码，仅审计与批量撤销，不参与鉴权',
+    `STATUS`             varchar(32)  NOT NULL DEFAULT 'ENABLED' COMMENT '授权状态：ENABLED|REVOKED',
+    `GRANTED_BY`         varchar(64)  NOT NULL COMMENT '授权人，即分身发布者',
+    `GRANTED_TIME`       timestamp    NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '授权时间',
+    `REVOKED_BY`         varchar(64)           DEFAULT NULL COMMENT '撤销人',
+    `REVOKED_TIME`       timestamp    NULL     DEFAULT NULL COMMENT '撤销时间',
+    `UPDATE_TIME`        timestamp    NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    PRIMARY KEY (`SHARE_ID`, `FLOW_ID`),
+    KEY `IDX_SOURCE_PIPELINE` (`SOURCE_PROJECT_ID`, `SOURCE_PIPELINE_ID`),
+    KEY `IDX_TALENT_CODE` (`TALENT_CODE`)
+) ENGINE = InnoDB
+    DEFAULT CHARSET = utf8mb4 COMMENT ='创作流分享授权表';
+
+CREATE TABLE IF NOT EXISTS `T_PIPELINE_SHARE_COPY_TRACE` (
+    `ID`                   bigint(20)   NOT NULL AUTO_INCREMENT COMMENT '自增ID',
+    `SHARE_ID`             varchar(64)  NOT NULL COMMENT '分享命名空间ID',
+    `FLOW_ID`              varchar(128) NOT NULL COMMENT '分享条目ID',
+    `SCENE`                varchar(32)  NOT NULL COMMENT '分享场景',
+    `SHARE_MODE`           varchar(32)  NOT NULL DEFAULT 'COPY' COMMENT '分享形态，当前恒为COPY',
+    `TALENT_CODE`          varchar(64)           DEFAULT NULL COMMENT '来源分身编码',
+    `SOURCE_PROJECT_ID`    varchar(64)  NOT NULL COMMENT '源项目ID',
+    `SOURCE_PIPELINE_ID`   varchar(34)  NOT NULL COMMENT '源创作流ID',
+    `SOURCE_VERSION`       int(11)      NOT NULL COMMENT '实际复制的源内部版本号',
+    `SOURCE_VERSION_NUM`   int(11)               DEFAULT NULL COMMENT '实际复制的源发布版本号',
+    `TARGET_PROJECT_ID`    varchar(64)  NOT NULL COMMENT '目标项目ID',
+    `TARGET_PIPELINE_ID`   varchar(34)  NOT NULL COMMENT '目标创作流ID',
+    `TARGET_PIPELINE_NAME` varchar(255) NOT NULL COMMENT '目标创作流名称',
+    `TARGET_VERSION`       int(11)      NOT NULL COMMENT '目标创作流版本',
+    `TARGET_VERSION_NUM`   int(11)               DEFAULT NULL COMMENT '目标发布版本号',
+    `TARGET_ENV_HASH_ID`   varchar(256)          DEFAULT NULL COMMENT '目标环境HashId',
+    `COPY_ACTION`          varchar(32)  NOT NULL COMMENT '复制动作：CREATED|OVERWRITTEN',
+    `VARIABLE_OVERRIDES`   text                  DEFAULT NULL COMMENT '变量覆盖快照JSON，敏感值不落库',
+    `OPERATOR`             varchar(64)  NOT NULL COMMENT '操作人，即发起复制的聘用者',
+    `CREATE_TIME`          timestamp    NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    PRIMARY KEY (`ID`),
+    KEY `IDX_TARGET_SHARE` (`TARGET_PROJECT_ID`, `SHARE_ID`, `FLOW_ID`),
+    KEY `IDX_TARGET_PIPELINE` (`TARGET_PROJECT_ID`, `TARGET_PIPELINE_ID`),
+    KEY `IDX_SOURCE_PIPELINE` (`SOURCE_PROJECT_ID`, `SOURCE_PIPELINE_ID`)
+) ENGINE = InnoDB
+    DEFAULT CHARSET = utf8mb4 COMMENT ='创作流分享复制溯源表';
 
 SET FOREIGN_KEY_CHECKS = 1;

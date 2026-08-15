@@ -33,8 +33,11 @@ import com.tencent.devops.log.configuration.LogServiceConfig
 import com.tencent.devops.log.configuration.StorageProperties
 import com.tencent.devops.log.event.ILogEvent
 import com.tencent.devops.log.event.LogOriginEvent
+import com.tencent.devops.log.event.LogOriginHeavyEvent
+import com.tencent.devops.log.event.LogStorageEvent
 import com.tencent.devops.log.jmx.LogPrintBean
 import com.tencent.devops.log.meta.Ansi
+import com.tencent.devops.log.metrics.LogMetrics
 import com.tencent.devops.log.util.LogErrorCodeEnum
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -50,6 +53,8 @@ class BuildLogPrintService @Autowired constructor(
     private val streamBridge: StreamBridge,
     private val logPrintBean: LogPrintBean,
     private val storageProperties: StorageProperties,
+    private val logTrafficStatsService: LogTrafficStatsService,
+    private val logMetrics: LogMetrics,
     logServiceConfig: LogServiceConfig
 ) {
 
@@ -61,23 +66,27 @@ class BuildLogPrintService @Autowired constructor(
         LinkedBlockingQueue(logServiceConfig.taskQueueSize ?: 1000)
     )
 
-    fun dispatchEvent(event: ILogEvent) {
-        event.sendTo(streamBridge)
+    /**
+     * @param recordTraffic 仅上报入口统计流量并决定队列投放；MQ 重试/降级转发传 false
+     */
+    fun dispatchEvent(event: ILogEvent, recordTraffic: Boolean = false) {
+        enrichAndSend(event, recordTraffic)
     }
 
-    fun asyncDispatchEvent(event: ILogEvent): Result<Boolean> {
+    fun asyncDispatchEvent(event: ILogEvent, recordTraffic: Boolean = true): Result<Boolean> {
         if (!isEnabled(storageProperties.enable)) {
             val warnings = "Service refuses to write the log, the log file of the task will be archived."
             if (event is LogOriginEvent && event.logs.isNotEmpty()) {
                 dispatchEvent(
-                    event.copy(
+                    event = event.copy(
                         logs = listOf(
                             event.logs.first().copy(
                                 message = Ansi().fgYellow().a(warnings).reset().toString(),
                                 logType = LogType.WARN
                             )
                         )
-                    )
+                    ),
+                    recordTraffic = false
                 )
             }
             return Result(
@@ -88,7 +97,7 @@ class BuildLogPrintService @Autowired constructor(
         }
         return try {
             logExecutorService.execute {
-                dispatchEvent(event)
+                enrichAndSend(event, recordTraffic)
             }
             Result(true)
         } catch (e: RejectedExecutionException) {
@@ -98,6 +107,7 @@ class BuildLogPrintService @Autowired constructor(
                     "asyncDispatchEvent failed with queue tasks exceed the limit",
                 e
             )
+            logMetrics.recordPrintRejected()
             Result(
                 status = 509,
                 message = LogErrorCodeEnum.PRINT_QUEUE_LIMIT.formatErrorMessage,
@@ -111,6 +121,50 @@ class BuildLogPrintService @Autowired constructor(
         logPrintBean.savePrintTaskCount(logExecutorService.taskCount)
         logPrintBean.savePrintActiveCount(logExecutorService.activeCount)
         logPrintBean.savePrintQueueSize(logExecutorService.queue.size)
+    }
+
+    private fun enrichAndSend(event: ILogEvent, recordTraffic: Boolean) {
+        when {
+            // 已在 heavy 队列内的重试/转发，保持原 destination
+            event is LogOriginHeavyEvent -> sendWithMetrics(event)
+            event is LogOriginEvent && recordTraffic -> {
+                logTrafficStatsService.record(event.buildId, event.logs.size)
+                if (logTrafficStatsService.shouldRouteHeavy(event.buildId)) {
+                    sendWithMetrics(LogOriginHeavyEvent.from(event))
+                } else {
+                    sendWithMetrics(event)
+                }
+            }
+            else -> {
+                if (recordTraffic) {
+                    recordTrafficLines(event)
+                }
+                sendWithMetrics(event)
+            }
+        }
+    }
+
+    private fun sendWithMetrics(event: ILogEvent) {
+        val start = System.currentTimeMillis()
+        var success = false
+        try {
+            event.sendTo(streamBridge)
+            success = true
+        } finally {
+            logMetrics.recordKafkaProduce(event, System.currentTimeMillis() - start, success)
+        }
+    }
+
+    private fun recordTrafficLines(event: ILogEvent) {
+        val lines = when (event) {
+            is LogOriginEvent -> event.logs.size
+            is LogOriginHeavyEvent -> event.logs.size
+            is LogStorageEvent -> event.logs.size
+            else -> 0
+        }
+        if (lines > 0) {
+            logTrafficStatsService.record(event.buildId, lines)
+        }
     }
 
     private fun isEnabled(value: String?): Boolean {

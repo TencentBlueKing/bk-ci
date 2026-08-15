@@ -232,13 +232,9 @@
         }
 
         get serviceCount (): number {
-            // 减去1是因为项目管理服务是隐藏的
-            const count = this.services.reduce((sum, service) => {
-                sum += (service.children.length - 1)
-                return sum
+            return this.services.reduce((sum, service) => {
+                return sum + service.children.filter(child => child.status !== 'planning').length
             }, 0)
-            // 我的项目服务不展示，所以减去1
-            return count - 1
         }
 
         updateShowAllService (show: boolean): void {

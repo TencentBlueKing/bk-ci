@@ -2,7 +2,7 @@ import type { AtomModal } from '@/api/atom'
 import type { Element } from '@/api/flowModel'
 import AtomForm, { DISPLAY_MODE, type AtomPropsModel } from '@/components/AtomForm/AtomForm'
 import { SvgIcon } from '@/components/SvgIcon'
-import { getAtomDefaultValue, getAtomOutputObj } from '@/utils/atom'
+import { getAtomDefaultValue, getAtomOutputObj, isNewAtomTemplate } from '@/utils/atom'
 import { TRIGGER_TYPE } from '@/utils/flowConst'
 import { createDefaultElement } from '@/utils/flowDefaults'
 import { validateAtomElement, validateStepId } from '@/utils/validation'
@@ -121,8 +121,22 @@ export default defineComponent({
       return atomModal.value.props as AtomPropsModel
     })
 
+    // 依据插件的 htmlTemplateVersion 判断是否为新模板：
+    // - 新模板：插件输入存放在 element.data.input 中
+    // - 旧模板：插件输入平铺在 element 顶层
+    const isNewTemplate = computed(() => isNewAtomTemplate(atomModal.value?.htmlTemplateVersion))
+
     const atomValue = computed(() => {
-      const input = localElement.value?.data?.input
+      const element = localElement.value
+      if (!element) return {}
+
+      // 旧模板：字段平铺在 element 顶层，直接使用 element
+      if (!isNewTemplate.value) {
+        return element as unknown as Record<string, any>
+      }
+
+      // 新模板：从 element.data.input 读取
+      const input = element.data?.input
       if (input && Object.keys(input).length > 0) return input
       const inputModel = atomPropsModel.value?.input || atomPropsModel.value || {}
       return getAtomDefaultValue(inputModel)
@@ -130,16 +144,9 @@ export default defineComponent({
 
     const hasAtomFormConfig = computed(() => Object.keys(atomPropsModel.value || {}).length > 0)
     const isDisabled = computed(() => isLoadingModal.value || props.readonly)
-
-    // CDS- 开头的为云桌面触发事件，需要包在 data 里
-    // 代码库事件触发（如 codeGitWebHookTrigger）不需要 data 包装，平铺在 element 上
-    // 需要平铺的插件code ：'codeGitWebHookTrigger', 'codeSVNWebHookTrigger', 'codeGitlabWebHookTrigger', 'codeGithubWebHookTrigger'
-    const codeLists = ['codeGitWebHookTrigger', 'codeSVNWebHookTrigger', 'codeGitlabWebHookTrigger', 'codeGithubWebHookTrigger']
-    const isCodeRepoTrigger = computed(() => {
-      if (!localElement.value) return false
-      const atomCode = localElement.value.atomCode || ''
-      return codeLists.includes(atomCode)
-    })
+    const isPluginEnabled = computed(() => localElement.value?.additionalOptions?.enable ?? true)
+    // 插件禁用时，表单全部不可编辑；启用开关本身仍可操作
+    const isFormDisabled = computed(() => isDisabled.value || !isPluginEnabled.value)
 
     const triggerErrorFields = computed(() => {
       if (!localElement.value) return []
@@ -159,55 +166,33 @@ export default defineComponent({
     // ========== Modal Loading ==========
 
     const applyModalDefaults = (modal: TriggerModal) => {
-      if (!localElement.value?.data) return
+      if (!localElement.value) return
 
       const modalProps = modal.props || {}
       const inputModel = (modalProps as Record<string, any>).input || modalProps
       const outputModel = (modalProps as Record<string, any>).output || {}
+      const defaults = getAtomDefaultValue(inputModel)
 
-      // 收集 inputModel 中所有插件字段名
-      const collectFieldKeys = (model: Record<string, any>): string[] => {
-        const keys: string[] = []
-        const collectFromItem = (key: string, prop: any) => {
-          if (prop?.type === 'group' && Array.isArray(prop.children)) {
-            // group 自身的 key 也是字段
-            if (key) keys.push(key)
-            prop.children.forEach((child: any) => collectFromItem(child?.key, child))
-            return
-          }
-          if (key) keys.push(key)
-          if (Array.isArray(prop.list)) {
-            prop.list.forEach((item: any) => item?.key && keys.push(item.key))
-          }
-        }
-        Object.entries(model).forEach(([key, prop]) => collectFromItem(key, prop))
-        return keys
-      }
-      const fieldKeys = collectFieldKeys(inputModel)
-
-      if (isCodeRepoTrigger.value) {
-        // 代码库事件触发：从 element 顶层提取插件字段到 data.input（仅当 data.input 为空时）
-        if (Object.keys(localElement.value.data.input).length === 0) {
-          const elementAny = localElement.value as any
-          fieldKeys.forEach((key) => {
-            if (key in elementAny) {
-              localElement.value!.data!.input[key] = elementAny[key]
-              delete elementAny[key]
-            }
-          })
-        }
-        // 用 modal 默认值填充字段
-        const defaults = getAtomDefaultValue(inputModel)
+      if (!isNewTemplate.value) {
+        // 旧模板：插件输入平铺在 element 顶层，补齐缺失的默认值
+        const elementAny = localElement.value as Record<string, any>
         Object.entries(defaults).forEach(([key, value]) => {
-          if (!(key in localElement.value!.data!.input)) {
-            localElement.value!.data!.input[key] = value
+          if (!(key in elementAny) || elementAny[key] === undefined) {
+            elementAny[key] = value
           }
         })
-      } else {
-        // 云桌面事件：使用原有逻辑
-        if (Object.keys(localElement.value.data.input).length === 0) {
-          localElement.value.data.input = getAtomDefaultValue(inputModel)
-        }
+        return
+      }
+
+      // 新模板：插件输入存放在 element.data.input
+      if (!localElement.value.data) {
+        localElement.value.data = { input: {}, output: [] }
+      }
+      if (!localElement.value.data.input) {
+        localElement.value.data.input = {}
+      }
+      if (Object.keys(localElement.value.data.input).length === 0) {
+        localElement.value.data.input = defaults
       }
 
       const currentOutput = localElement.value.data.output
@@ -285,9 +270,8 @@ export default defineComponent({
       const elementToSave = JSON.parse(JSON.stringify(localElement.value))
       delete elementToSave.isError
 
-      // 代码库事件触发：将 data.input 平铺到 element 上，删除 data
-      if (isCodeRepoTrigger.value && elementToSave.data?.input) {
-        Object.assign(elementToSave, elementToSave.data.input)
+      // 旧模板：插件输入平铺在 element 顶层，无需 data 包装
+      if (!isNewTemplate.value) {
         delete elementToSave.data
       }
 
@@ -310,11 +294,25 @@ export default defineComponent({
     const handleEnableChange = (value: boolean) => {
       if (!localElement.value?.additionalOptions) return
       localElement.value.additionalOptions.enable = value
+      if (!value) {
+        nameEditing.value = false
+      }
     }
 
     const updateInput = (key: string, value: any) => {
-      if (!localElement.value?.data) return
-      localElement.value.data.input[key] = value
+      const element = localElement.value
+      if (!element) return
+
+      // 旧模板：插件输入平铺在 element 顶层
+      if (!isNewTemplate.value) {
+        ;(element as Record<string, any>)[key] = value
+        return
+      }
+
+      // 新模板：插件输入存放在 element.data.input
+      if (!element.data) element.data = { input: {}, output: [] }
+      if (!element.data.input) element.data.input = {}
+      element.data.input[key] = value
     }
 
     // ========== Render ==========
@@ -336,7 +334,7 @@ export default defineComponent({
               atomValue={atomValue.value}
               element={localElement.value}
               displayMode={DISPLAY_MODE.TRIGGER}
-              disabled={props.readonly}
+              disabled={isFormDisabled.value}
               errorFields={showErrors.value ? triggerErrorFields.value : []}
               onChange={updateInput}
               onFieldError={handleFieldError}
@@ -355,7 +353,7 @@ export default defineComponent({
       return (
         <div class={styles.panelBody}>
           <div class={styles.fieldGroup}>
-            <div class={[styles.stepIdAndVersionRow, isDisabled.value && styles.disabled]}>
+            <div class={[styles.stepIdAndVersionRow, isFormDisabled.value && styles.disabled]}>
               <div class={[styles.stepIdColumn, stepIdErrors.value.length > 0 && styles.stepIdError]}>
                 <div class={styles.labelWithIcon}>
                   <span>{t('flow.orchestration.stepId')}</span>
@@ -368,7 +366,7 @@ export default defineComponent({
                 <Input
                   modelValue={localElement.value.stepId || ''}
                   placeholder={t('flow.orchestration.stepIdPlaceholder')}
-                  disabled={isDisabled.value}
+                  disabled={isFormDisabled.value}
                   onChange={(val: string) => {
                     localElement.value!.stepId = val
                   }}
@@ -387,7 +385,7 @@ export default defineComponent({
                   modelValue={localElement.value.version || '1.latest'}
                   list={versionOptions.value}
                   loading={isLoadingVersions.value}
-                  disabled={isDisabled.value}
+                  disabled={isFormDisabled.value}
                   onChange={(ver: string) => {
                     if (!localElement.value || ver === localElement.value.version) return
                     localElement.value.version = ver
@@ -408,7 +406,7 @@ export default defineComponent({
           header: () => (
             <div class={styles.header}>
               <div class={styles.nameEdit}>
-                {!props.readonly && nameEditing.value ? (
+                {!isFormDisabled.value && nameEditing.value ? (
                   <Input
                     modelValue={editingName.value}
                     maxlength={30}
@@ -425,7 +423,7 @@ export default defineComponent({
                     <p class={styles.nameText} title={triggerName.value}>
                       {triggerName.value}
                     </p>
-                    {!props.readonly && (
+                    {!isFormDisabled.value && (
                       <span class={styles.editIcon} onClick={handleEditIconClick}>
                         <SvgIcon name="edit" size={16} />
                       </span>

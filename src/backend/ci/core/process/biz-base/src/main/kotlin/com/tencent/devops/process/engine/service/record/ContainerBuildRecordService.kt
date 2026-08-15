@@ -46,6 +46,7 @@ import com.tencent.devops.process.engine.common.BuildTimeCostUtils.generateConta
 import com.tencent.devops.process.engine.common.BuildTimeCostUtils.generateMatrixTimeCost
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.dao.PipelineResourceDao
+import com.tencent.devops.process.engine.dao.PipelineResourceDraftVersionDao
 import com.tencent.devops.process.engine.dao.PipelineResourceVersionDao
 import com.tencent.devops.process.engine.utils.ContainerUtils
 import com.tencent.devops.process.pojo.VmInfo
@@ -72,7 +73,8 @@ class ContainerBuildRecordService(
     stageTagService: StageTagService,
     buildRecordModelDao: BuildRecordModelDao,
     pipelineEventDispatcher: PipelineEventDispatcher,
-    redisOperation: RedisOperation
+    redisOperation: RedisOperation,
+    pipelineResourceDraftVersionDao: PipelineResourceDraftVersionDao
 ) : BaseBuildRecordService(
     dslContext = dslContext,
     buildRecordModelDao = buildRecordModelDao,
@@ -82,7 +84,8 @@ class ContainerBuildRecordService(
     recordModelService = recordModelService,
     pipelineResourceDao = pipelineResourceDao,
     pipelineBuildDao = pipelineBuildDao,
-    pipelineResourceVersionDao = pipelineResourceVersionDao
+    pipelineResourceVersionDao = pipelineResourceVersionDao,
+    pipelineResourceDraftVersionDao = pipelineResourceDraftVersionDao
 ) {
 
     fun getRecord(
@@ -140,6 +143,67 @@ class ContainerBuildRecordService(
     ) {
         recordTaskDao.batchSave(transactionContext ?: dslContext, taskList)
         recordContainerDao.batchSave(transactionContext ?: dslContext, containerList)
+    }
+
+    /**
+     * 矩阵局部重试：将矩阵子容器[childContainerId]在[oldExecuteCount]的详情记录
+     * 克隆到[newExecuteCount]，并按[resetTaskIds]/[skipTaskIds]重置对应插件记录状态，
+     * 使子Job在不重新分裂的前提下能在新执行次数下重跑。
+     * 因为运行期的记录更新为"存在才更新"，若不预先补齐新执行次数的记录，
+     * 重跑时的状态刷新会被静默丢弃。
+     *
+     * 重置的子容器/插件记录状态一律置为 null（待运行），而非 QUEUE：
+     * 与普通Job重试新建记录口径对齐（见 PipelineRuntimeService.saveContainerRecords 容器 status=null、
+     * prepareBuildContainerTasks 重试插件 record status=null）。
+     * 前端 StatusIcon 将 QUEUE 与 RUNNING/PREPARE_ENV 同样渲染为“转圈”，
+     * 若此处置 QUEUE 会导致子Job/插件在真正被调度运行前就提前出现“运行中”转圈；
+     * 置 null 时走 defaultStatus 不转圈，待引擎实际下发后再刷新为运行态。
+     */
+    fun cloneMatrixChildRecordsForRetry(
+        transactionContext: DSLContext?,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        childContainerId: String,
+        oldExecuteCount: Int,
+        newExecuteCount: Int,
+        resetTaskIds: Set<String>,
+        skipTaskIds: Set<String>
+    ) {
+        val ctx = transactionContext ?: dslContext
+        val oldContainer = recordContainerDao.getRecord(
+            dslContext = ctx, projectId = projectId, pipelineId = pipelineId,
+            buildId = buildId, containerId = childContainerId, executeCount = oldExecuteCount
+        ) ?: return
+        val newContainerVar = oldContainer.containerVar.toMutableMap().apply {
+            remove(Container::timeCost.name)
+            remove(Container::startEpoch.name)
+            remove(Container::startVMStatus.name)
+        }
+        val newContainer = oldContainer.copy(
+            executeCount = newExecuteCount, status = null,
+            startTime = null, endTime = null, timestamps = mapOf(), containerVar = newContainerVar
+        )
+        val oldTasks = recordTaskDao.getRecords(
+            ctx, projectId, pipelineId, buildId, oldExecuteCount, childContainerId
+        )
+        val newTasks = oldTasks.map { task ->
+            val skip = skipTaskIds.contains(task.taskId)
+            val reset = skip || resetTaskIds.contains(task.taskId)
+            task.copy(
+                executeCount = newExecuteCount,
+                status = when {
+                    skip -> BuildStatus.SKIP.name
+                    reset -> null
+                    else -> task.status
+                },
+                startTime = if (reset) null else task.startTime,
+                endTime = if (reset) null else task.endTime,
+                timestamps = if (reset) mapOf() else task.timestamps,
+                asyncStatus = if (reset) null else task.asyncStatus
+            )
+        }
+        batchSave(ctx, listOf(newContainer), newTasks)
     }
 
 //    fun batchUpdate(transactionContext: DSLContext?, containerList: List<BuildRecordContainer>) {
