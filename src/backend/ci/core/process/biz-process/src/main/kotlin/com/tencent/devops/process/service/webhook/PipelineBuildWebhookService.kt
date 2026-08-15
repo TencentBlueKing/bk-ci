@@ -28,7 +28,6 @@
 package com.tencent.devops.process.service.webhook
 
 import com.tencent.devops.common.api.context.ChannelContext
-import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.util.JsonUtil
