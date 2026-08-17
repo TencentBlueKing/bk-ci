@@ -38,13 +38,13 @@ import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.PublicVarGroupRef
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessConstants.DYNAMIC_VERSION
+import com.tencent.devops.process.constant.ProcessConstants.PUBLIC_VAR_GROUP_LOCK_EXPIRED_TIME_IN_SECONDS
+import com.tencent.devops.process.constant.ProcessConstants.PUBLIC_VAR_GROUP_REFER_LOCK_KEY_PREFIX
+import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_COMMON_VAR_GROUP_CONFLICT
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_COMMON_VAR_GROUP_NOT_EXIST
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_COMMON_VAR_GROUP_REFER_UPDATE_FAILED
-import com.tencent.devops.process.constant.ProcessMessageCode.PUBLIC_VAR_GROUP_LOCK_EXPIRED_TIME_IN_SECONDS
-import com.tencent.devops.process.constant.ProcessMessageCode.PUBLIC_VAR_GROUP_REFER_LOCK_KEY_PREFIX
 import com.tencent.devops.process.dao.VarRefDetailDao
 import com.tencent.devops.process.dao.`var`.PublicVarDao
 import com.tencent.devops.process.dao.`var`.PublicVarGroupDao
@@ -1213,7 +1213,7 @@ class PublicVarGroupReferManageService @Autowired constructor(
 
         if (duplicateIds.isNotEmpty()) {
             throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ERROR_PIPELINE_COMMON_VAR_GROUP_CONFLICT,
+                errorCode = ProcessMessageCode.ERROR_PIPELINE_COMMON_VAR_ID_DUPLICATE,
                 params = arrayOf(duplicateIds.joinToString(", "))
             )
         }

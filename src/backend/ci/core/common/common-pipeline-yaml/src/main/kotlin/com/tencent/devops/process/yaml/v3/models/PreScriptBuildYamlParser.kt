@@ -111,18 +111,8 @@ data class PreScriptBuildYamlParser(
                 this.variableTemplates = null
             }
             is Map<*, *> -> {
-                // 提取template数据
-                val templateList = raw[TEMPLATE_KEY] as? List<Map<String, String>>
-                if (raw["template"] != null && templateList == null) {
-                    logger.warn(
-                        "variables.template type conversion failed, " +
-                            "expected List<Map<String, String>>, actual type: ${raw["template"]?.javaClass?.name}"
-                    )
-                }
-                this.variableTemplates = templateList
-                    ?.filter { !it["name"].isNullOrBlank() }?.map {
-                        VariableTemplate(name = it["name"]!!, version = it["version"])
-                    }
+                // 提取template数据（公共变量组引用），结构不合规会抛错而非静默丢弃
+                this.variableTemplates = VariableTemplate.parseList(raw[TEMPLATE_KEY]).takeIf { it.isNotEmpty() }
                 // 过滤掉 template 字段和 null key，并转换为 String key
                 val regularVariables = raw.filterKeys { key ->
                     if (key == null) {

@@ -482,13 +482,17 @@ class PublicVarService @Autowired constructor(
         }
         val latestGroupVars = latestVars[groupName] ?: emptyList()
         val groupReferInfo = groupReferInfos.find { it.groupName == groupName }
-        if (groupReferInfo == null) {
-            // 常见于 YAML/引用式补充引用：无 positionInfo 可 diff，跳过即可
-            return
-        }
-        val positionInfo = groupReferInfo.positionInfo
-        if (positionInfo == null) {
-            return
+        // 引用记录/位置信息缺失时，用 params 中该组已有成员反推位置信息再 diff。
+        // 缺失场景：YAML/引用式引用无 positionInfo、仅改设置产生的新版本未登记引用、
+        // 历史 Model JSON 无 latestVersion 导致按错误 referVersion 查不到记录。
+        // 此前这些场景直接 return，动态版本变量组静默不展开（保存时的旧成员一直沿用）。
+        val positionInfo = groupReferInfo?.positionInfo?.takeIf { it.isNotEmpty() }
+            ?: buildPositionInfoFromParams(params = params, groupName = groupName)
+        if (groupReferInfo?.positionInfo.isNullOrEmpty()) {
+            logger.info(
+                "Refer position info missing, fallback to params for diff: " +
+                    "groupName=$groupName, memberCount=${positionInfo.size}"
+            )
         }
 
         val latestGroupVarNames = latestGroupVars.map { it.id }.toSet()
@@ -498,7 +502,9 @@ class PublicVarService @Autowired constructor(
         val diffResult = compareVarGroupVersions(savedGroupVarNames, latestGroupVarNames)
         val removedVars = processVarGroupDiff(
             diffResult = diffResult,
-            groupReferInfo = groupReferInfo,
+            groupName = groupName,
+            groupVersion = groupReferInfo?.version,
+            positionInfo = positionInfo,
             latestGroupVars = latestGroupVars,
             params = params,
             pipelineVarNames = pipelineVarNames
@@ -511,6 +517,29 @@ class PublicVarService @Autowired constructor(
 
         // 将已移除的变量设置到 variables 中（用于前端回显）
         varGroup.variables = removedVars
+    }
+
+    /**
+     * 从 params 反推某个变量组的成员位置信息，作为引用表 positionInfo 缺失时的兜底。
+     * params 是该 Model 保存时的真实快照，因此由它推导出的成员集合与下标与保存态一致。
+     */
+    private fun buildPositionInfoFromParams(
+        params: List<BuildFormProperty>,
+        groupName: String
+    ): List<PublicVarPositionPO> {
+        return params.mapIndexedNotNull { index, param ->
+            if (param.varGroupName != groupName) {
+                return@mapIndexedNotNull null
+            }
+            PublicVarPositionPO(
+                groupName = groupName,
+                version = param.varGroupVersion,
+                varName = param.id,
+                index = index,
+                type = if (param.constant == true) PublicVarTypeEnum.CONSTANT else PublicVarTypeEnum.VARIABLE,
+                required = param.required
+            )
+        }
     }
 
     /**
@@ -551,12 +580,13 @@ class PublicVarService @Autowired constructor(
      */
     private fun processVarGroupDiff(
         diffResult: VarGroupDiffResult,
-        groupReferInfo: ResourcePublicVarGroupReferPO,
+        groupName: String,
+        groupVersion: Int?,
+        positionInfo: List<PublicVarPositionPO>,
         latestGroupVars: List<BuildFormProperty>,
         params: MutableList<BuildFormProperty>,
         pipelineVarNames: Set<String>
     ): List<BuildFormProperty> {
-        val positionInfo = groupReferInfo.positionInfo ?: return emptyList()
         val newVarMap = latestGroupVars.associateBy { it.id }
         val positionInfoMap = positionInfo.associateBy { it.varName }
 
@@ -570,7 +600,7 @@ class PublicVarService @Autowired constructor(
         addNewVars(diffResult.varsToAdd, newVarMap, params, pipelineVarNames)
 
         // 构建已移除的变量列表
-        return buildRemovedVarsList(diffResult.varsToRemove, positionInfoMap, groupReferInfo)
+        return buildRemovedVarsList(diffResult.varsToRemove, positionInfoMap, groupName, groupVersion)
     }
 
     /**
@@ -645,7 +675,8 @@ class PublicVarService @Autowired constructor(
     private fun buildRemovedVarsList(
         varsToRemove: Set<String>,
         positionInfoMap: Map<String, PublicVarPositionPO>,
-        groupReferInfo: ResourcePublicVarGroupReferPO
+        groupName: String,
+        groupVersion: Int?
     ): List<BuildFormProperty> {
         return varsToRemove.mapNotNull { varName ->
             positionInfoMap[varName]?.let { pos ->
@@ -662,8 +693,8 @@ class PublicVarService @Autowired constructor(
                     containerType = null,
                     glob = null,
                     properties = null,
-                    varGroupName = groupReferInfo.groupName,
-                    varGroupVersion = groupReferInfo.version,
+                    varGroupName = groupName,
+                    varGroupVersion = groupVersion,
                     constant = pos.type == PublicVarTypeEnum.CONSTANT
                 ).apply {
                     this.removeFlag = true
