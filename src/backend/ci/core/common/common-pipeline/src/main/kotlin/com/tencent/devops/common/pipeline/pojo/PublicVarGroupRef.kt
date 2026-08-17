@@ -40,7 +40,14 @@ data class PublicVarGroupRef(
     var variables: List<BuildFormProperty>? = null
 ) {
     companion object {
-        private val VERSION_NAME_REGEX = Regex("^v(\\d+)$", RegexOption.IGNORE_CASE)
+        /**
+         * 版本名称到版本号的映射规则。
+         *
+         * 同时覆盖 `v3` 与裸数字 `3` 两种写法：YAML 里 `version: 1` 会被解析成数字，
+         * 只认 `vN` 会让它落到 null，被当成动态版本（始终跟随最新），导致固定版本引用被静默改成动态引用。
+         * 其余写法（如 latest、空值）按约定表示动态版本。
+         */
+        private val VERSION_NAME_REGEX = Regex("^v?(\\d+)$", RegexOption.IGNORE_CASE)
 
         fun create(
             groupName: String,
@@ -49,7 +56,7 @@ data class PublicVarGroupRef(
             variables: List<BuildFormProperty>? = null
         ): PublicVarGroupRef {
             val resolvedVersion = version ?: versionName?.let {
-                VERSION_NAME_REGEX.matchEntire(it)?.groupValues?.get(1)?.toIntOrNull()
+                VERSION_NAME_REGEX.matchEntire(it.trim())?.groupValues?.get(1)?.toIntOrNull()
             }
             return PublicVarGroupRef(
                 groupName = groupName,

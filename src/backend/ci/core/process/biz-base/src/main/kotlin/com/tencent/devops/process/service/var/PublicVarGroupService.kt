@@ -44,8 +44,9 @@ import com.tencent.devops.common.pipeline.pojo.PublicVarGroupVariable
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.constant.ProcessConstants
 import com.tencent.devops.process.constant.ProcessConstants.DYNAMIC_VERSION
+import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_COMMON_VAR_GROUP_CONFLICT
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PUBLIC_VAR_GROUP_YAML_DESERIALIZE_ERROR
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PUBLIC_VAR_GROUP_YAML_FORMAT_ERROR
@@ -107,9 +108,9 @@ class PublicVarGroupService @Autowired constructor(
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(PublicVarGroupService::class.java)
-        // 正则表达式常量
-        private val GROUP_NAME_REGEX = Regex("^[a-zA-Z][a-zA-Z0-9_]{2,31}$")
-        private val VAR_NAME_REGEX = Regex("^[a-zA-Z_][a-zA-Z0-9_]{0,63}$")
+        // 校验规则与对外文案同源，避免二者各改一处后对不上（见 ProcessConstants 注释）
+        private val GROUP_NAME_REGEX = Regex(ProcessConstants.PUBLIC_VAR_GROUP_NAME_PATTERN)
+        private val VAR_NAME_REGEX = Regex(ProcessConstants.PUBLIC_VAR_NAME_PATTERN)
         // 权限中心删除重试配置
         private const val IAM_DELETE_MAX_RETRY = 3
         private const val IAM_DELETE_RETRY_INTERVAL_MS = 500L
@@ -138,8 +139,8 @@ class PublicVarGroupService @Autowired constructor(
         )
         val redisLock = RedisLock(
             redisOperation = redisOperation,
-            lockKey = "${ProcessMessageCode.PUBLIC_VAR_GROUP_ADD_LOCK_KEY}_${projectId}_$groupName",
-            expiredTimeInSeconds = ProcessMessageCode.PUBLIC_VAR_GROUP_LOCK_EXPIRED_TIME_IN_SECONDS
+            lockKey = "${ProcessConstants.PUBLIC_VAR_GROUP_ADD_LOCK_KEY}_${projectId}_$groupName",
+            expiredTimeInSeconds = ProcessConstants.PUBLIC_VAR_GROUP_LOCK_EXPIRED_TIME_IN_SECONDS
         )
         redisLock.lock()
         try {
@@ -549,15 +550,15 @@ class PublicVarGroupService @Autowired constructor(
     fun deleteGroup(userId: String, projectId: String, groupName: String): Boolean {
         val redisLock = RedisLock(
             redisOperation = redisOperation,
-            lockKey = "${ProcessMessageCode.PUBLIC_VAR_GROUP_DELETE_LOCK_KEY}_${projectId}_$groupName",
-            expiredTimeInSeconds = ProcessMessageCode.PUBLIC_VAR_GROUP_LOCK_EXPIRED_TIME_IN_SECONDS
+            lockKey = "${ProcessConstants.PUBLIC_VAR_GROUP_DELETE_LOCK_KEY}_${projectId}_$groupName",
+            expiredTimeInSeconds = ProcessConstants.PUBLIC_VAR_GROUP_LOCK_EXPIRED_TIME_IN_SECONDS
         )
         // 与引用变更链路的 summary 重算串行化：防止"读到 referCount=0 → 并发保存刚加了引用 → 误删被引用的组"。
         // 锁 key 必须与 PublicVarGroupReferManageService 的按组 summary 锁一致。
         val groupSummaryLock = RedisLock(
             redisOperation = redisOperation,
-            lockKey = "${ProcessMessageCode.PUBLIC_VAR_GROUP_REFER_LOCK_KEY_PREFIX}:summary:$projectId:$groupName",
-            expiredTimeInSeconds = ProcessMessageCode.PUBLIC_VAR_GROUP_LOCK_EXPIRED_TIME_IN_SECONDS
+            lockKey = "${ProcessConstants.PUBLIC_VAR_GROUP_REFER_LOCK_KEY_PREFIX}:summary:$projectId:$groupName",
+            expiredTimeInSeconds = ProcessConstants.PUBLIC_VAR_GROUP_LOCK_EXPIRED_TIME_IN_SECONDS
         )
         redisLock.lock()
         groupSummaryLock.lock()
@@ -926,7 +927,7 @@ class PublicVarGroupService @Autowired constructor(
                         params = arrayOf(missingField)
                     )
                 } else {
-                    I18nUtil.getCodeLanMessage(ERROR_PUBLIC_VAR_GROUP_YAML_MISSING_FIELD)
+                    I18nUtil.getCodeLanMessage(ERROR_PUBLIC_VAR_GROUP_YAML_FORMAT_ERROR)
                 }
             }
             else -> e.message ?: I18nUtil.getCodeLanMessage(ERROR_PUBLIC_VAR_GROUP_YAML_FORMAT_ERROR)

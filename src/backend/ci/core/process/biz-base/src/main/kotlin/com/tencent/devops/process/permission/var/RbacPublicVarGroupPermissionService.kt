@@ -9,6 +9,7 @@ import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.code.PublicVarGroupAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.pojo.`var`.PublicVarGroupPermissions
 import org.slf4j.LoggerFactory
@@ -62,7 +63,7 @@ class RbacPublicVarGroupPermissionService(
             )
             throw ErrorCodeException(
                 errorCode = ProcessMessageCode.ERROR_PUBLIC_VAR_GROUP_NO_PERMISSION,
-                params = arrayOf(groupName, permission.value)
+                params = arrayOf(groupName, permission.getI18n(I18nUtil.getLanguage()))
             )
         }
         return true

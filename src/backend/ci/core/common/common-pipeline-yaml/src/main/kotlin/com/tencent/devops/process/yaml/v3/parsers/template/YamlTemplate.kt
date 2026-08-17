@@ -30,7 +30,6 @@ package com.tencent.devops.process.yaml.v3.parsers.template
 import com.fasterxml.jackson.core.JsonProcessingException
 import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.constant.CommonMessageCode.ERROR_YAML_FORMAT_EXCEPTION_LENGTH_LIMIT_EXCEEDED
-import com.tencent.devops.common.api.constant.VERSION
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.pojo.transfer.IPreStep
 import com.tencent.devops.common.pipeline.pojo.transfer.Repositories
@@ -182,17 +181,8 @@ class YamlTemplate<T>(
         val variableMap = mutableMapOf<String, Variable>()
         variables.forEach { (key, value) ->
             if (key == Constants.TEMPLATE_KEY) {
-                val templateList = when (value) {
-                    is List<*> -> value.filterIsInstance<Map<String, String>>()
-                    else -> emptyList()
-                }
-                if (templateList.isNotEmpty()) {
-                    preYamlObject.variableTemplates = templateList.mapNotNull { template ->
-                        template["name"]?.let { name ->
-                            VariableTemplate(name = name, version = template[VERSION])
-                        }
-                    }
-                }
+                // template 关键字在 variables 下表示公共变量组引用，结构不合规会抛错而非静默丢弃
+                preYamlObject.variableTemplates = VariableTemplate.parseList(value)
                 return@forEach
             }
             if (value !is Map<*, *>) {

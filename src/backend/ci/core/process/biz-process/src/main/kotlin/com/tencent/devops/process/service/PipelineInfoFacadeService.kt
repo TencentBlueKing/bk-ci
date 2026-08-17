@@ -1597,6 +1597,9 @@ class PipelineInfoFacadeService @Autowired constructor(
             model.name = pipelineInfo.pipelineName
             model.desc = pipelineInfo.pipelineDesc
             model.pipelineCreator = pipelineInfo.creator
+            // latestVersion 是公共变量组引用信息（referVersion）的载体，历史数据可能缺省，
+            // 这里按实际返回的资源版本回填，避免下游按错误版本查引用信息
+            model.latestVersion = resource.version
             val defaultTagId by lazy { stageTagService.getDefaultStageTag().data?.id } // 优化
             model.stages.forEach {
                 if (it.name.isNullOrBlank()) it.name = it.id
