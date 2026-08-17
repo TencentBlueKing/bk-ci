@@ -85,7 +85,11 @@ class BatchInstallAgentService @Autowired constructor(
         iGateway: String? = null
     ): String {
         val now = LocalDateTime.now()
-        val gateway = iGateway ?: slaveGatewayService.getGateway(zoneName)
+        val gateway = iGateway ?: if (reInstallId.isNullOrBlank()) {
+            slaveGatewayService.getGateway(zoneName)
+        } else {
+            thirdPartyAgentDao.getAgentByProject(dslContext, HashUtil.decodeIdToLong(reInstallId), projectId)?.gateway
+        }
         // 先确定下是否已经生成过了，以及有没有过期
         val record = agentBatchInstallTokenDao.getToken(
             dslContext = dslContext,
