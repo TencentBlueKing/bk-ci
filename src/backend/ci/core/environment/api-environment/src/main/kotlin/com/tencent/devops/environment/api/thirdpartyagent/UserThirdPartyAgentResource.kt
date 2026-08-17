@@ -36,7 +36,16 @@ import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.environment.pojo.EnvVar
 import com.tencent.devops.environment.pojo.enums.AgentType
 import com.tencent.devops.environment.pojo.slave.SlaveGateway
-import com.tencent.devops.environment.pojo.thirdpartyagent.*
+import com.tencent.devops.environment.pojo.thirdpartyagent.AgentBuildDetail
+import com.tencent.devops.environment.pojo.thirdpartyagent.BatchUpdateParallelTaskCountData
+import com.tencent.devops.environment.pojo.thirdpartyagent.OfflinePeriod
+import com.tencent.devops.environment.pojo.thirdpartyagent.ReInstallResp
+import com.tencent.devops.environment.pojo.thirdpartyagent.TPAInstallType
+import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentAction
+import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentDetail
+import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentInfo
+import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentLink
+import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentStatusWithInfo
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag

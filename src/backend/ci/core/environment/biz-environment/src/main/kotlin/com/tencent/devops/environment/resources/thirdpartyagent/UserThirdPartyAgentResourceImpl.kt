@@ -39,7 +39,16 @@ import com.tencent.devops.environment.api.thirdpartyagent.UserThirdPartyAgentRes
 import com.tencent.devops.environment.pojo.EnvVar
 import com.tencent.devops.environment.pojo.enums.AgentType
 import com.tencent.devops.environment.pojo.slave.SlaveGateway
-import com.tencent.devops.environment.pojo.thirdpartyagent.*
+import com.tencent.devops.environment.pojo.thirdpartyagent.AgentBuildDetail
+import com.tencent.devops.environment.pojo.thirdpartyagent.BatchUpdateParallelTaskCountData
+import com.tencent.devops.environment.pojo.thirdpartyagent.OfflinePeriod
+import com.tencent.devops.environment.pojo.thirdpartyagent.ReInstallResp
+import com.tencent.devops.environment.pojo.thirdpartyagent.TPAInstallType
+import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentAction
+import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentDetail
+import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentInfo
+import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentLink
+import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentStatusWithInfo
 import com.tencent.devops.environment.service.slave.SlaveGatewayService
 import com.tencent.devops.environment.service.thirdpartyagent.AgentMetricService
 import com.tencent.devops.environment.service.thirdpartyagent.BatchInstallAgentService
