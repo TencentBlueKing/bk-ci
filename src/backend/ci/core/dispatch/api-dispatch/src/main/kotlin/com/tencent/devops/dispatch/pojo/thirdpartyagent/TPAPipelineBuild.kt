@@ -1,8 +1,6 @@
 ﻿package com.tencent.devops.dispatch.pojo.thirdpartyagent
 
-import com.tencent.devops.common.api.pojo.ErrorInfo
 import com.tencent.devops.common.api.pojo.Page
-import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
 import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDateTime
