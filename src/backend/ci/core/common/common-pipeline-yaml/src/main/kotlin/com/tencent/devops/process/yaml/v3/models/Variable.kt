@@ -212,7 +212,7 @@ data class VariableTemplate(val name: String, val version: String? = null) {
                     I18nUtil.getCodeLanMessage(
                         messageCode = ERROR_YAML_FORMAT_EXCEPTION,
                         params = arrayOf(
-                            VARIABLES_KEY, TEMPLATE_KEY, "列表", raw::class.java.simpleName
+                            VARIABLES_KEY, TEMPLATE_KEY, "List", raw::class.java.simpleName
                         )
                     )
                 )
@@ -223,7 +223,7 @@ data class VariableTemplate(val name: String, val version: String? = null) {
                         I18nUtil.getCodeLanMessage(
                             messageCode = ERROR_YAML_FORMAT_EXCEPTION,
                             params = arrayOf(
-                                VARIABLES_KEY, TEMPLATE_KEY, "包含 name 的对象",
+                                VARIABLES_KEY, TEMPLATE_KEY, "an object with the name field",
                                 item?.let { it::class.java.simpleName } ?: "null"
                             )
                         )
@@ -233,7 +233,7 @@ data class VariableTemplate(val name: String, val version: String? = null) {
                     ?: throw YamlFormatException(
                         I18nUtil.getCodeLanMessage(
                             messageCode = ERROR_YAML_FORMAT_EXCEPTION,
-                            params = arrayOf(VARIABLES_KEY, TEMPLATE_KEY, "非空的变量组名称 name", "空")
+                            params = arrayOf(VARIABLES_KEY, TEMPLATE_KEY, "a non-empty variable group name", "empty")
                         )
                     )
                 VariableTemplate(name = name, version = item[VERSION]?.toString())
