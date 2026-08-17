@@ -214,43 +214,49 @@ data class VariableTemplate(
         private const val TEMPLATE_KEY = "template"
 
         /**
-         * 解析 yaml 中的 variables.template（公共变量组引用）
+         * 解析 YAML `variables.template`（公共变量组引用）。
          *
-         * 不能依赖泛型做类型校验：`as? List<Map<String, String>>` 在泛型擦除后只校验到 List/Map，
-         * 元素类型不符时不会被拦下，直到取值才抛 ClassCastException（`version: 1` 会被解析成 Int）。
-         * 这里统一按 toString 取值。
+         * 不能依赖泛型做类型校验：`as? List<Map<String, String>>` / `filterIsInstance<Map<String, String>>()`
+         * 在泛型擦除后只校验到 List/Map，元素类型不符时不会被拦下，直到取值才抛 ClassCastException
+         * （典型用例 `version: 1` 会被 YAML 解析成 Int）。这里统一按 toString 取值。
          *
-         * 结构不合规一律抛错而非静默降级：静默丢弃会让流水线以「未引用任何变量组」的形态保存，
+         * 结构不合规一律抛错，不做静默降级：静默丢弃引用会让流水线以"未引用任何变量组"的形态保存，
          * 组内变量凭空消失且无任何提示。
          */
         fun parseList(raw: Any?): List<VariableTemplate> {
             if (raw == null) return emptyList()
             if (raw !is List<*>) {
                 throw YamlFormatException(
-                    formatError(expected = "列表", actual = raw::class.java.simpleName)
+                    I18nUtil.getCodeLanMessage(
+                        messageCode = ERROR_YAML_FORMAT_EXCEPTION,
+                        params = arrayOf(
+                            VARIABLES_KEY, TEMPLATE_KEY, "List", raw::class.java.simpleName
+                        )
+                    )
                 )
             }
             return raw.map { item ->
                 if (item !is Map<*, *>) {
                     throw YamlFormatException(
-                        formatError(
-                            expected = "包含 name 的对象",
-                            actual = item?.let { it::class.java.simpleName } ?: "null"
+                        I18nUtil.getCodeLanMessage(
+                            messageCode = ERROR_YAML_FORMAT_EXCEPTION,
+                            params = arrayOf(
+                                VARIABLES_KEY, TEMPLATE_KEY, "an object with the name field",
+                                item?.let { it::class.java.simpleName } ?: "null"
+                            )
                         )
                     )
                 }
                 val name = item[NAME]?.toString()?.takeIf { it.isNotBlank() }
                     ?: throw YamlFormatException(
-                        formatError(expected = "非空的变量组名称 name", actual = "空")
+                        I18nUtil.getCodeLanMessage(
+                            messageCode = ERROR_YAML_FORMAT_EXCEPTION,
+                            params = arrayOf(VARIABLES_KEY, TEMPLATE_KEY, "a non-empty variable group name", "empty")
+                        )
                     )
                 VariableTemplate(name = name, version = item[VERSION]?.toString())
             }
         }
-
-        private fun formatError(expected: String, actual: String) = I18nUtil.getCodeLanMessage(
-            messageCode = ERROR_YAML_FORMAT_EXCEPTION,
-            params = arrayOf(VARIABLES_KEY, TEMPLATE_KEY, expected, actual)
-        )
     }
 }
 
