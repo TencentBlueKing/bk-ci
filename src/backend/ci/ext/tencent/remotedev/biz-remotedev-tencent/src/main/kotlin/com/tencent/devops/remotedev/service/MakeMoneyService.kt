@@ -101,8 +101,8 @@ class MakeMoneyService @Autowired constructor(
      */
     @JsonIgnoreProperties(ignoreUnknown = true)
     private data class CmdbAssetInfo(
-        @JsonProperty("bk_inst_name")
-        val bkInstName: String,
+        @JsonProperty("cds_ip")
+        val cdsIp: String?,
         @JsonProperty("start_date")
         val startDate: String?,
         @JsonProperty("property_management_belongs")
@@ -296,7 +296,7 @@ class MakeMoneyService @Autowired constructor(
         try {
             val needUpdateList = workspaces.filter { workspace ->
                 workspace.commissionDate.isNullOrBlank() &&
-                    !cmdbAssetMap[workspace.name]?.commissionDate.isNullOrBlank()
+                    !cmdbAssetMap[workspace.ip]?.commissionDate.isNullOrBlank()
             }
 
             if (needUpdateList.isEmpty()) {
@@ -308,7 +308,7 @@ class MakeMoneyService @Autowired constructor(
 
             var updateCount = 0
             needUpdateList.forEach { workspace ->
-                val commissionDate = cmdbAssetMap[workspace.name]?.commissionDate
+                val commissionDate = cmdbAssetMap[workspace.ip]?.commissionDate
                 if (!commissionDate.isNullOrBlank()) {
                     workspaceDao.updateCommissionDate(
                         dslContext, workspace.name, commissionDate
@@ -422,7 +422,7 @@ class MakeMoneyService @Autowired constructor(
 
     /**
      * 从CMDB API查询资产详情信息，构建实例名到资产详情的映射
-     * @return Map<String, CmdbAssetDetail> - Key为bk_inst_name（实例名），
+     * @return Map<String, CmdbAssetDetail> - Key为cds_ip（实例IP），
      *         Value包含格式化后的启用日期（YYYY-MM）和物管所属
      */
     @Suppress("NestedBlockDepth")
@@ -440,7 +440,7 @@ class MakeMoneyService @Autowired constructor(
                         "bk_biz_id" to (bkConfig.ccBizId ?: 0),
                         "page" to mapOf("start" to start, "limit" to limit),
                         "fields" to listOf(
-                            "bk_inst_name",
+                            "cds_ip",
                             "start_date",
                             "property_management_belongs"
                         )
@@ -476,10 +476,13 @@ class MakeMoneyService @Autowired constructor(
                         hasMore = false
                     } else {
                         currentPageData.forEach { asset ->
-                            resultMap[asset.bkInstName] = CmdbAssetDetail(
-                                commissionDate = formatCommissionDate(asset.startDate),
-                                propertyManagementBelongs = asset.propertyManagementBelongs ?: ""
-                            )
+                            val cdsIp = asset.cdsIp
+                            if (!cdsIp.isNullOrBlank()) {
+                                resultMap[cdsIp] = CmdbAssetDetail(
+                                    commissionDate = formatCommissionDate(asset.startDate),
+                                    propertyManagementBelongs = asset.propertyManagementBelongs ?: ""
+                                )
+                            }
                         }
 
                         // 如果返回的数据量小于limit，说明已经是最后一页
@@ -621,7 +624,7 @@ class MakeMoneyService @Autowired constructor(
                     ?.let { allConfig[it]?.machineFlag } ?: ""
 
                 val hardwareCost = calculateHardwareCost(
-                    cmdbAssetDetail = cmdbAssetMap[name],
+                    cmdbAssetDetail = workspace?.ip?.let { cmdbAssetMap[it] },
                     machineFlag = machineFlag
                 )
 
