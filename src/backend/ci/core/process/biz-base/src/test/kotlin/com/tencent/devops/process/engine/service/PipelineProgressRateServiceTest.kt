@@ -567,6 +567,96 @@ class PipelineProgressRateServiceTest {
     }
 
     @Test
+    fun calculateStageProgressRateSortsJobOrderNumericallyNotLexicographically() {
+        every { pipelineRuntimeService.getBuildInfo(PROJECT_ID, BUILD_ID) } returns buildInfo()
+        every {
+            buildRecordTaskDao.getLatestNormalRecords(
+                dslContext = dslContext,
+                projectId = PROJECT_ID,
+                buildId = BUILD_ID,
+                executeCount = 1,
+                matrixContainerIds = emptyList(),
+                stageId = STAGE_ID
+            )
+        } returns listOf(
+            buildRecordTask(
+                taskId = "task-job10",
+                containerId = "container-job10",
+                status = BuildStatus.RUNNING,
+                taskVar = mutableMapOf("progressRate" to 0.5),
+                taskSeq = 1
+            ),
+            buildRecordTask(
+                taskId = "task-job2",
+                containerId = "container-job2",
+                status = BuildStatus.RUNNING,
+                taskVar = mutableMapOf("progressRate" to 0.5),
+                taskSeq = 1
+            )
+        )
+        every { pipelineTaskService.getAllBuildTask(PROJECT_ID, BUILD_ID) } returns listOf(
+            buildTask(taskId = "task-job2", taskName = "步骤2", containerId = "container-job2", taskSeq = 1),
+            buildTask(taskId = "task-job10", taskName = "步骤10", containerId = "container-job10", taskSeq = 1)
+        )
+        every {
+            buildRecordService.getContainerOrderInStage(
+                projectId = PROJECT_ID,
+                pipelineId = PIPELINE_ID,
+                buildId = BUILD_ID,
+                executeCount = 1,
+                stageId = STAGE_ID,
+                containerId = "container-job2"
+            )
+        } returns 1
+        every {
+            buildRecordService.getContainerOrderInStage(
+                projectId = PROJECT_ID,
+                pipelineId = PIPELINE_ID,
+                buildId = BUILD_ID,
+                executeCount = 1,
+                stageId = STAGE_ID,
+                containerId = "container-job10"
+            )
+        } returns 9
+        every {
+            buildRecordService.getLatestRecord(
+                projectId = PROJECT_ID,
+                pipelineId = PIPELINE_ID,
+                buildId = BUILD_ID,
+                containerId = "container-job2",
+                executeCount = 1
+            )
+        } returns buildRecordContainer(containerId = "container-job2", startVMTaskSeq = null)
+        every {
+            buildRecordService.getLatestRecord(
+                projectId = PROJECT_ID,
+                pipelineId = PIPELINE_ID,
+                buildId = BUILD_ID,
+                containerId = "container-job10",
+                executeCount = 1
+            )
+        } returns buildRecordContainer(containerId = "container-job10", startVMTaskSeq = null)
+
+        val result = service.calculateStageProgressRate(
+            projectId = PROJECT_ID,
+            pipelineId = PIPELINE_ID,
+            buildId = BUILD_ID,
+            stageId = STAGE_ID
+        )
+
+        // 数值序：0-2 应排在 0-10 之前；若按字符串字典序则会得到 0-10 在前
+        Assertions.assertEquals(listOf("步骤2", "步骤10"), result.taskProgressList?.map { it.taskName })
+        Assertions.assertEquals(
+            listOf("0-2", "0-10"),
+            result.taskProgressList?.map { it.jobExecutionOrder }
+        )
+        Assertions.assertEquals(
+            listOf("0-2-1", "0-10-1"),
+            result.taskProgressList?.map { it.taskExecutionOrder }
+        )
+    }
+
+    @Test
     fun calculateStageProgressRateReturnsCompletedTaskWithProgressDetailWhenNoRunningTask() {
         val progressDetail = BuildTaskProgressDetail(
             progress = BuildTaskProgressSummary(value = 0.75)

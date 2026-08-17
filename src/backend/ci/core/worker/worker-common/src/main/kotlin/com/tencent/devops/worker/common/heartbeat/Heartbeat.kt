@@ -122,6 +122,8 @@ object Heartbeat {
         progressRate: Double
     ) {
         task2ProgressRate[taskId] = progressRate
+        // 回退到纯数字进度时，清掉此前的结构化明细，避免心跳把旧明细一并上报后服务端优先用旧明细覆盖新数字
+        task2ProgressDetail.remove(taskId)
     }
 
     fun recordTaskProgressDetail(

@@ -189,54 +189,46 @@ class PipelineProgressRateService constructor(
             buildId = buildId,
             taskIds = taskProgresses.map { it.record.taskId }
         )
-        val jobExecutionOrderCache = mutableMapOf<String, String>()
-        val startVMTaskSeqCache = mutableMapOf<String, Int?>()
-        return taskProgresses
-            .sortedWith(
-                compareBy<RunningTaskProgress> {
-                    jobExecutionOrderCache.getOrPut(it.record.containerId) {
-                        getJobExecutionOrder(
-                            projectId = projectId,
-                            pipelineId = pipelineId,
-                            buildId = buildId,
-                            executeCount = executeCount,
-                            stageId = stageId,
-                            containerId = it.record.containerId
-                        )
-                    }
-                }.thenBy { it.record.taskSeq }
+        // 按去重后的容器预计算每个容器的 job 执行顺序及其数值排序键，避免循环内重复查询/解析
+        val jobExecutionOrderMap = taskProgresses.map { it.record.containerId }.distinct().associateWith {
+            getJobExecutionOrder(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                executeCount = executeCount,
+                stageId = stageId,
+                containerId = it
             )
-            .map {
-                val taskName = taskNameMap[it.record.taskId]
-                val jobExecutionOrder = jobExecutionOrderCache.getOrPut(it.record.containerId) {
-                    getJobExecutionOrder(
-                        projectId = projectId,
-                        pipelineId = pipelineId,
-                        buildId = buildId,
-                        executeCount = executeCount,
-                        stageId = stageId,
-                        containerId = it.record.containerId
-                    )
-                }
-                val taskExecutionOrder = "$jobExecutionOrder-${
-                    getVisibleTaskSeq(
-                        projectId = projectId,
-                        pipelineId = pipelineId,
-                        buildId = buildId,
-                        executeCount = executeCount,
-                        containerId = it.record.containerId,
-                        rawTaskSeq = it.record.taskSeq,
-                        startVMTaskSeqCache = startVMTaskSeqCache
-                    )
-                }"
-                BuildTaskProgressInfo(
-                    taskProgressRete = it.progressRate,
-                    taskName = taskName,
-                    jobExecutionOrder = jobExecutionOrder,
-                    taskExecutionOrder = taskExecutionOrder,
-                    progressDetail = it.progressDetail?.withDefaultTitles(taskName)
+        }
+        val jobOrderSortKeyMap = jobExecutionOrderMap.mapValues { toJobOrderSortKey(it.value) }
+        val startVMTaskSeqCache = mutableMapOf<String, Int?>()
+        return taskProgresses.sortedWith(
+            // 按数值比较 stageOrder/jobOrder，避免 "0-10" 因字典序排到 "0-2" 之前
+            compareBy<RunningTaskProgress> { jobOrderSortKeyMap.getValue(it.record.containerId).first }
+                .thenBy { jobOrderSortKeyMap.getValue(it.record.containerId).second }
+                .thenBy { it.record.taskSeq }
+        ).map {
+            val taskName = taskNameMap[it.record.taskId]
+            val jobExecutionOrder = jobExecutionOrderMap.getValue(it.record.containerId)
+            val taskExecutionOrder = "$jobExecutionOrder-${
+                getVisibleTaskSeq(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    buildId = buildId,
+                    executeCount = executeCount,
+                    containerId = it.record.containerId,
+                    rawTaskSeq = it.record.taskSeq,
+                    startVMTaskSeqCache = startVMTaskSeqCache
                 )
-            }
+            }"
+            BuildTaskProgressInfo(
+                taskProgressRete = it.progressRate,
+                taskName = taskName,
+                jobExecutionOrder = jobExecutionOrder,
+                taskExecutionOrder = taskExecutionOrder,
+                progressDetail = it.progressDetail?.withDefaultTitles(taskName)
+            )
+        }
     }
 
     private fun getVisibleTaskSeq(
@@ -284,6 +276,13 @@ class PipelineProgressRateService constructor(
             containerId = containerId
         ) + 1
         return "$stageOrder-$jobOrder"
+    }
+
+    private fun toJobOrderSortKey(jobExecutionOrder: String): Pair<Int, Int> {
+        val parts = jobExecutionOrder.split("-")
+        val stageOrder = parts.getOrNull(0)?.toIntOrNull() ?: 0
+        val jobOrder = parts.getOrNull(1)?.toIntOrNull() ?: 0
+        return stageOrder to jobOrder
     }
 
     private fun toTaskProgress(record: BuildRecordTask): RunningTaskProgress {
