@@ -1468,16 +1468,6 @@ class PublicVarGroupReferManageService @Autowired constructor(
             .mapNotNull { it.varGroupName }
             .toSet()
 
-        // 换组时清理 params 中已不再被引用的变量组变量
-        val referencedGroupNames = publicVarGroups.map { it.groupName }.toSet()
-        val groupsToRemove = existingGroupNames - referencedGroupNames
-        if (groupsToRemove.isNotEmpty()) {
-            params.removeAll { param ->
-                val groupName = param.varGroupName
-                groupName != null && groupName in groupsToRemove
-            }
-        }
-
         // 对比publicVarGroups，找出params中不存在的变量组
         val groupsToAdd = publicVarGroups.filter { publicVarGroup ->
             !existingGroupNames.contains(publicVarGroup.groupName)
@@ -1511,6 +1501,12 @@ class PublicVarGroupReferManageService @Autowired constructor(
         }
 
         val params = model.getTriggerParams()
+        val referencedGroupNames = publicVarGroups.map { it.groupName }.toSet()
+        // 清理 params 中已不再被引用的变量组变量（换组后残留的旧组）
+        params.removeAll { param ->
+            val groupName = param.varGroupName
+            groupName != null && groupName !in referencedGroupNames
+        }
         // 查出params中已存在的变量组名称
         val existingGroupNames = params
             .mapNotNull { it.varGroupName }
