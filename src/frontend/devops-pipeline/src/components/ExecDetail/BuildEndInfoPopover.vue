@@ -279,6 +279,10 @@
                 window.open(this.relatedPipelineUrl, '_blank')
             },
             handleLocate (item) {
+                if (this.positionAction.type === POSITION_ACTION_TYPE.VIEW) {
+                    this.$emit('view', item)
+                    return
+                }
                 this.$emit('locate', item)
             }
         }

@@ -26,6 +26,7 @@
                         v-if="showBuildEndInfoPopover"
                         :status="execDetail.status"
                         :build-end-info="execDetail.buildEndInfo"
+                        @view="handleBuildEndPositionView"
                         @locate="handleBuildEndPositionLocate"
                     >
                         <bk-tag
@@ -133,6 +134,7 @@
                 }]"
             >
                 <component
+                    ref="execDetailPanel"
                     :is="curPanel.component"
                     v-bind="curPanel.bindData"
                     v-on="curPanel.listeners"
@@ -611,6 +613,28 @@
                     console.error(e)
                     return null
                 }
+            },
+            handleBuildEndPositionView (position) {
+                const editingElementPos = this.locateBuildEndPosition(position)
+                if (!editingElementPos) {
+                    const locateFailedKey = getBuildEndInfoConfig(this.execDetail?.status)?.locateFailedKey
+                    this.$showTips({
+                        message: this.$t(locateFailedKey),
+                        theme: 'warning'
+                    })
+                    return
+                }
+                if (this.curItemTab !== PANELS.executeDetail) {
+                    this.switchTab({ name: PANELS.executeDetail })
+                }
+                this.$nextTick(() => {
+                    this.$refs.execDetailPanel?.setAtomLocate?.({
+                        stageId: position.stageId,
+                        containerId: position.containerId,
+                        taskId: position.taskId,
+                        matrixFlag: position.matrixFlag ?? typeof editingElementPos.containerGroupIndex !== 'undefined'
+                    })
+                })
             },
             handleBuildEndPositionLocate (position) {
                 const editingElementPos = this.locateBuildEndPosition(position)
