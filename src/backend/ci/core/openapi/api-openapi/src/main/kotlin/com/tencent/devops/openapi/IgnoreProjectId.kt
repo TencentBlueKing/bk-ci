@@ -27,7 +27,7 @@
 
 package com.tencent.devops.openapi
 
-@Target(AnnotationTarget.FIELD, AnnotationTarget.VALUE_PARAMETER)
+@Target(AnnotationTarget.FUNCTION, AnnotationTarget.CLASS, AnnotationTarget.FIELD, AnnotationTarget.VALUE_PARAMETER)
 @kotlin.annotation.Retention(AnnotationRetention.RUNTIME)
 @Suppress("LongParameterList")
 annotation class IgnoreProjectId(

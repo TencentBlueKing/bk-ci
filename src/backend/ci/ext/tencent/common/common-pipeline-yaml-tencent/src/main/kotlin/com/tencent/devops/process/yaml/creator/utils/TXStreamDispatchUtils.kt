@@ -218,11 +218,12 @@ object TXStreamDispatchUtils {
                 defaultImage,
                 context,
                 buildTemplateAcrossInfo
-            )
+            ).withPerformanceConfig(hwSpec)
 
             return PublicDevCloudDispathcType(
-                objectMapper.writeValueAsString(dockerVMContainerPool),
-                "0",
+                image = objectMapper.writeValueAsString(dockerVMContainerPool),
+                performanceConfigId = dockerVMContainerPool.performanceConfigId,
+                performanceUid = dockerVMContainerPool.performanceUid,
                 imageType = ImageType.THIRD
             )
         }
@@ -272,10 +273,24 @@ object TXStreamDispatchUtils {
         }
 
         if (containsMatrix == true) {
+            // 未配置高配时保持原有逻辑，image 仍为纯镜像字符串，避免扩大影响面
+            val performanceConfig = hwSpec.toPerformanceConfig()
+                ?: return PublicDevCloudDispathcType(
+                    image = defaultImage,
+                    imageType = ImageType.THIRD,
+                    performanceConfigId = "0"
+                )
+            val containerPool = Pool(
+                container = defaultImage,
+                performanceConfigId = performanceConfig,
+                performanceUid = performanceConfig,
+                buildType = BuildType.DEVCLOUD
+            )
             return PublicDevCloudDispathcType(
-                image = defaultImage,
+                image = objectMapper.writeValueAsString(containerPool),
                 imageType = ImageType.THIRD,
-                performanceConfigId = "0"
+                performanceConfigId = containerPool.performanceConfigId,
+                performanceUid = containerPool.performanceUid
             )
         } else {
             throw CustomException(
@@ -354,5 +369,17 @@ object TXStreamDispatchUtils {
         }
 
         return containerPool
+    }
+
+    private fun Pool.withPerformanceConfig(hwSpec: String?): Pool {
+        val performanceConfig = hwSpec.toPerformanceConfig() ?: return this
+        return copy(
+            performanceConfigId = performanceConfig,
+            performanceUid = performanceConfig
+        )
+    }
+
+    private fun String?.toPerformanceConfig(): String? {
+        return takeUnless { it.isNullOrBlank() || it == "VMware" }
     }
 }

@@ -108,7 +108,8 @@ object PipelineTransferAspectLoader {
                         stack.add(jobId)
 
                         val childJobId = map[jobId]
-                        if (childJobId != null && dfs(childJobId)) {
+                        // 复用目标为变量时无法静态校验，直接忽略，避免误报"依赖节点不存在"
+                        if (childJobId != null && !PipelineVarUtil.isVar(childJobId) && dfs(childJobId)) {
                             return true
                         }
                         if (childJobId == null && jobId !in checked) {

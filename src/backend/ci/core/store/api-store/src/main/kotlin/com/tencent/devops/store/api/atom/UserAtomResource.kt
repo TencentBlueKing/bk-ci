@@ -121,7 +121,7 @@ interface UserAtomResource {
         @QueryParam("pageSize")
         @BkField(patternStyle = BkStyleEnum.PAGE_SIZE_STYLE)
         pageSize: Int = 10,
-        @Parameter(description = "归属应用标识", required = true)
+        @Parameter(description = "归属应用标识", required = false)
         @QueryParam("ownerStoreCode")
         ownerStoreCode: String?
     ): Result<AtomResp<AtomRespItem>?>

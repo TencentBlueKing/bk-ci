@@ -32,7 +32,8 @@ import java.util.concurrent.TimeUnit
 @Service
 class TransferCacheService @Autowired constructor(
     private val client: Client,
-    private val tokenService: ClientTokenService
+    private val tokenService: ClientTokenService,
+    private val workspaceAgentTransferService: WorkspaceAgentTransferService
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(TransferCacheService::class.java)
@@ -161,6 +162,26 @@ class TransferCacheService @Autowired constructor(
             }.onFailure { logger.warn("get $key dockerResource value error.", it) }.getOrNull()
         }
 
+    private val agentToWorkspace = Caffeine.newBuilder()
+        .maximumSize(1000)
+        .expireAfterWrite(1, TimeUnit.MINUTES)
+        .build<String, String?> { key ->
+            kotlin.runCatching {
+                val (userId, projectId, agentHashId) = key.split("@@")
+                workspaceAgentTransferService.getWorkspaceNameByAgent(userId, projectId, agentHashId)
+            }.onFailure { logger.warn("get $key workspaceName by agent error.", it) }.getOrNull()
+        }
+
+    private val workspaceToAgent = Caffeine.newBuilder()
+        .maximumSize(1000)
+        .expireAfterWrite(1, TimeUnit.MINUTES)
+        .build<String, String?> { key ->
+            kotlin.runCatching {
+                val (userId, projectId, workspaceName) = key.split("@@")
+                workspaceAgentTransferService.getAgentByWorkspaceName(userId, projectId, workspaceName)
+            }.onFailure { logger.warn("get $key agentHashId by workspace error.", it) }.getOrNull()
+        }
+
     fun getAtomDefaultValue(key: String) = atomDefaultValueCache.get(key) ?: JSONObject()
 
     fun getStoreImageDetail(userId: String, imageCode: String, imageVersion: String?) =
@@ -186,4 +207,10 @@ class TransferCacheService @Autowired constructor(
 
     fun getDockerResource(userId: String, projectId: String, buildType: BuildType) =
         dockerResource.get("$userId@@$projectId@@${buildType.name}")
+
+    fun getWorkspaceByAgentHashId(userId: String, projectId: String, agentHashId: String): String? =
+        agentToWorkspace.get("$userId@@$projectId@@$agentHashId")
+
+    fun getAgentHashIdByWorkspace(userId: String, projectId: String, workspaceName: String): String? =
+        workspaceToAgent.get("$userId@@$projectId@@$workspaceName")
 }

@@ -117,6 +117,7 @@ class RebuildWorkspaceHandler @Autowired constructor(
                 params = arrayOf("We're sorry but you don't have permission to rebuild $workspaceName")
             )
         }
+        workspaceCommon.checkFunctionRestrictedZone(workspaceName)
         ActionAuditContext.current()
             .addAttribute(TencentActionAuditContent.PROJECT_CODE_TEMPLATE, workspace.projectId)
             .setScopeId(workspace.projectId)

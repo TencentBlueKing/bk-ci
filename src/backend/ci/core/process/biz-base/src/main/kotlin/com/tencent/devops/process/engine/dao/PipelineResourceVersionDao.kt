@@ -263,6 +263,24 @@ class PipelineResourceVersionDao {
         }
     }
 
+    fun getReleasedVersionByVersionNum(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        versionNum: Int
+    ): PipelineVersionSimple? {
+        with(T_PIPELINE_RESOURCE_VERSION) {
+            return dslContext.selectFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(PIPELINE_ID.eq(pipelineId))
+                .and(VERSION_NUM.eq(versionNum))
+                .and(STATUS.eq(VersionStatus.RELEASED.name).or(STATUS.isNull))
+                .orderBy(VERSION.desc())
+                .limit(1)
+                .fetchAny(sampleMapper)
+        }
+    }
+
     fun clearDraftVersion(
         dslContext: DSLContext,
         projectId: String,

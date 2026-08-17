@@ -1,6 +1,8 @@
 package com.tencent.devops.remotedev.service.redis
 
+import com.fasterxml.jackson.core.type.TypeReference
 import com.github.benmanes.caffeine.cache.Caffeine
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.project.api.service.service.ServiceTxUserResource
@@ -34,6 +36,7 @@ class ConfigCacheService @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(ConfigCacheService::class.java)
         private const val WINDOWS_RESOURCE_CACHE_EXPIRE_MINUTES = 5L
+        const val FUNCTION_RESTRICTED_ZONE_KEY = "remotedev:functionRestrictedZone"
     }
 
     fun opFetchAllConfig(): Map<String, String> {
@@ -137,6 +140,17 @@ class ConfigCacheService @Autowired constructor(
         }
 
     fun get(key: String): String? = redisCache.get(key)
+
+    fun getFunctionRestrictedZones(): Set<String> {
+        val raw = get(FUNCTION_RESTRICTED_ZONE_KEY)?.trim()
+        if (raw.isNullOrBlank()) return emptySet()
+        return runCatching {
+            JsonUtil.to(raw, object : TypeReference<List<String>>() {}).toSet()
+        }.getOrElse {
+            logger.warn("parse $FUNCTION_RESTRICTED_ZONE_KEY fail|$raw")
+            emptySet()
+        }
+    }
 
     fun getSetMembers(key: String) = redisCacheSet.get(key)
 

@@ -15,7 +15,9 @@ import com.tencent.devops.remotedev.pojo.IWhiteList
 import com.tencent.devops.remotedev.pojo.OperateCvmData
 import com.tencent.devops.remotedev.pojo.ProjectWorkspace
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
+import com.tencent.devops.remotedev.pojo.ProjectWorkspaceFetchData
 import com.tencent.devops.remotedev.pojo.TaskStatusResp
+import com.tencent.devops.remotedev.pojo.TemplateWorkspaceAssignResp
 import com.tencent.devops.remotedev.pojo.UserOnePassword
 import com.tencent.devops.remotedev.pojo.WhiteListType
 import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
@@ -231,6 +233,24 @@ interface ApigwRemoteDevResource {
         @Parameter(description = "分配数据，必填", required = true)
         data: OpProjectWorkspaceAssignData
     ): Result<Boolean>
+
+    @Operation(summary = "按模版申请交付云桌面给用户", tags = ["v4_app_assign_workspace_by_template"])
+    @POST
+    @Path("/assign/workspace_by_template")
+    fun assignWorkspaceByTemplate(
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @Parameter(description = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @Parameter(description = "模版ID", required = true)
+        @QueryParam("templateId")
+        templateId: String,
+        @Parameter(description = "申请人", required = true)
+        @QueryParam("applicant")
+        applicant: String
+    ): Result<TemplateWorkspaceAssignResp>
 
     @Operation(summary = "指定项目获取云桌面信息", tags = ["v4_app_list_workspaces_with_projectId"])
     @GET
@@ -902,6 +922,21 @@ interface ApigwRemoteDevResource {
         workspaceName: String
     ): Result<List<VmDiskInfo>?>
 
+    @Operation(summary = "获取工作空间磁盘列表-项目", tags = ["v4_app_remotedev_workspace_disk_list_project"])
+    @GET
+    @Path("/workspace_disk_list_project")
+    fun fetchWorkspaceDiskListProject(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "工作空间名称", required = true)
+        @QueryParam("workspaceName")
+        workspaceName: String,
+        @Parameter(description = "项目ID(项目英文名)", required = true)
+        @QueryParam("projectId")
+        projectId: String
+    ): Result<List<VmDiskInfo>?>
+
     @Operation(summary = "卸载并回收磁盘", tags = ["v4_app_remotedev_workspace_delete_disk"])
     @POST
     @Path("/workspace_delete_disk")
@@ -970,6 +1005,26 @@ interface ApigwRemoteDevResource {
         @QueryParam("pageSize")
         pageSize: Int?,
         search: WorkspaceSearch
+    ): Result<Page<ProjectWorkspace>>
+
+    @Operation(
+        summary = "获取项目下实例列表(支持地域/状态过滤)",
+        tags = ["v4_app_remotedev_project_workspace_list4console"]
+    )
+    @POST
+    @Path("/project/workspace/list4console")
+    fun getProjectWorkspaceList4Console(
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @Parameter(description = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "查询参数")
+        data: ProjectWorkspaceFetchData
     ): Result<Page<ProjectWorkspace>>
 
     @Operation(summary = "查询录屏权限相关信息", tags = ["v4_app_get_user_workspace_record_permission_info"])
@@ -1407,7 +1462,7 @@ interface ApigwRemoteDevResource {
             required = true,
             example = AUTH_HEADER_USER_ID_DEFAULT_VALUE
         )
-       @HeaderParam(AUTH_HEADER_USER_ID)
+        @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(
             description = "第几页",

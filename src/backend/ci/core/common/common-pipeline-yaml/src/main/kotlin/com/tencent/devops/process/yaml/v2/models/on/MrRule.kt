@@ -60,6 +60,12 @@ data class MrRule(
     @JsonProperty("users-ignore")
     val usersIgnore: List<String>? = null,
 
+    val assignees: List<String>? = null,
+
+    @get:Schema(title = "assignees-ignore")
+    @JsonProperty("assignees-ignore")
+    val assigneesIgnore: List<String>? = null,
+
     @get:Schema(title = "report-commit-check")
     @JsonProperty("report-commit-check")
     val reportCommitCheck: Boolean? = null,

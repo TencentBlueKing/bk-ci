@@ -561,8 +561,9 @@ class ProjectPipelineCallBackService @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
-        callbackInfo: PipelineCallbackEvent
+        callbackInfoList: List<PipelineCallbackEvent>
     ) {
+        if (callbackInfoList.isEmpty()) return
         // 验证用户是否可以编辑流水线
         pipelinePermissionService.checkPipelinePermission(
             userId = userId,
@@ -570,20 +571,21 @@ class ProjectPipelineCallBackService @Autowired constructor(
             pipelineId = pipelineId,
             permission = AuthPermission.EDIT
         )
-        validateCallbackUrl(projectId = projectId, url = callbackInfo.callbackUrl)
-        val callBackUrl = projectPipelineCallBackUrlGenerator.generateCallBackUrl(
-            region = callbackInfo.region,
-            url = callbackInfo.callbackUrl
-        )
-        callbackInfo.callbackUrl = callBackUrl
+        // 逐个校验回调URL并生成最终回调地址
+        callbackInfoList.forEach { callbackInfo ->
+            validateCallbackUrl(projectId = projectId, url = callbackInfo.callbackUrl)
+            callbackInfo.callbackUrl = projectPipelineCallBackUrlGenerator.generateCallBackUrl(
+                region = callbackInfo.region,
+                url = callbackInfo.callbackUrl
+            )
+        }
         val model = pipelineRepositoryService.getPipelineResourceVersion(projectId, pipelineId)?.model ?: return
         val newEventMap = mutableMapOf<String, PipelineCallbackEvent>()
-
-        if (model.events?.isEmpty() == true) {
-            newEventMap[callbackInfo.callbackName] = callbackInfo
-        } else {
+        if (model.events?.isNotEmpty() == true) {
             newEventMap.putAll(model.events!!)
-            // 若key存在会覆盖原来的value,否则就是追加新key
+        }
+        // 若key存在会覆盖原来的value,否则就是追加新key
+        callbackInfoList.forEach { callbackInfo ->
             newEventMap[callbackInfo.callbackName] = callbackInfo
         }
         dslContext.transaction { transactionContext ->
@@ -593,7 +595,7 @@ class ProjectPipelineCallBackService @Autowired constructor(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 userId = userId,
-                list = newEventMap.map { (key, value) ->
+                list = newEventMap.map { (_, value) ->
                     val encodeToken = value.secretToken?.let { AESUtil.encrypt(aesKey, it) }
                     value.copy(secretToken = encodeToken)
                 }
@@ -601,7 +603,7 @@ class ProjectPipelineCallBackService @Autowired constructor(
         }
     }
 
-    fun getPipelineCallback(
+    fun listPipelineCallback(
         projectId: String,
         pipelineId: String,
         event: String?
@@ -617,6 +619,59 @@ class ProjectPipelineCallBackService @Autowired constructor(
             events = it.eventType,
             secretToken = it.secretToken?.let { AESUtil.decrypt(aesKey, it) },
             name = it.name
+        )
+    }
+
+    /**
+     * 查询流水线级回调，返回与创建入参一致的 [PipelineCallbackEvent] 结构
+     */
+    fun listPipelineCallbackEvent(
+        projectId: String,
+        pipelineId: String,
+        event: String?
+    ): List<PipelineCallbackEvent> = pipelineCallbackDao.list(
+        dslContext = dslContext,
+        projectId = projectId,
+        pipelineId = pipelineId,
+        event = event
+    ).map {
+        PipelineCallbackEvent(
+            callbackEvent = CallBackEvent.valueOf(it.eventType),
+            callbackUrl = it.url,
+            secretToken = it.secretToken?.let { token -> AESUtil.decrypt(aesKey, token) },
+            callbackName = it.name,
+            region = it.region?.let { region -> CallBackNetWorkRegionType.valueOf(region) }
+        )
+    }
+
+    @ActionAuditRecord(
+        actionId = ActionId.PIPELINE_EDIT,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.PIPELINE
+        ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
+        content = ActionAuditContent.PIPELINE_EDIT_BIND_PIPELINE_CALLBACK_CONTENT
+    )
+    fun deletePipelineCallBack(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        callbackName: String
+    ) {
+        // 验证用户是否可以编辑流水线
+        pipelinePermissionService.checkPipelinePermission(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            permission = AuthPermission.EDIT
+        )
+        logger.info("delete pipeline callback|$userId|$projectId|$pipelineId|$callbackName")
+        pipelineCallbackDao.delete(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            names = setOf(callbackName)
         )
     }
 

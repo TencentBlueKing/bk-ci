@@ -39,6 +39,7 @@ import com.tencent.devops.process.pojo.app.PipelinePage
 import com.tencent.devops.process.pojo.app.pipeline.AppPipeline
 import com.tencent.devops.process.pojo.app.pipeline.AppPipelineHistory
 import com.tencent.devops.process.pojo.app.pipeline.AppProject
+import com.tencent.devops.process.service.PipelineInfoFacadeService
 import com.tencent.devops.process.service.app.AppPipelineHistoryQueryReq
 import com.tencent.devops.process.service.app.AppPipelineService
 import com.tencent.devops.process.service.builds.PipelineBuildFacadeService
@@ -50,7 +51,8 @@ import org.springframework.beans.factory.annotation.Value
 class AppPipelineResourceImpl @Autowired constructor(
     private val appPipelineService: AppPipelineService,
     private val pipelineGroupService: PipelineGroupService,
-    private val pipelineBuildFacadeService: PipelineBuildFacadeService
+    private val pipelineBuildFacadeService: PipelineBuildFacadeService,
+    private val pipelineInfoFacadeService: PipelineInfoFacadeService
 ) : AppPipelineResource {
 
     @Value("\${gitCI.tag:#{null}}")
@@ -201,6 +203,23 @@ class AppPipelineResourceImpl @Autowired constructor(
         isCollect: Boolean
     ): Result<Boolean> {
         return Result(0, "", pipelineGroupService.favorPipeline(userId, projectId, pipelineId, isCollect))
+    }
+
+    override fun lockPipeline(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        enable: Boolean
+    ): Result<Boolean> {
+        checkParam(userId, projectId, pipelineId)
+
+        pipelineInfoFacadeService.lockPipeline(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            enable = enable
+        )
+        return Result(true)
     }
 
     private fun checkParam(userId: String, projectId: String, pipelineId: String) {

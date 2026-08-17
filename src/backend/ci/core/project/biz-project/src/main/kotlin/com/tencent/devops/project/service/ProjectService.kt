@@ -301,4 +301,6 @@ interface ProjectService {
     fun isHidden(englishName: String): Boolean
 
     fun updateHiddenStatus(englishName: String, hidden: Boolean)
+
+    fun updatePipelineLimit(userId: String, englishName: String, pipelineLimit: Int): Boolean
 }

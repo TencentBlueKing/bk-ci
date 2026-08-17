@@ -152,11 +152,11 @@ abstract class StartupContainerHandler @Autowired constructor(
 
     fun generateContainerLabels(handlerContext: DcStartupHandlerContext): MutableMap<String, String> {
         with(handlerContext) {
-            // stream项目不添加标签
-            val model = if (channelCode == "GIT") {
-                ""
-            } else {
-                performanceUid.ifBlank { "Standard-S" }
+            // Stream未指定性能配置时保持不添加model标签的历史逻辑
+            val model = when {
+                channelCode == "GIT" -> containerPool?.performanceUid.orEmpty()
+                performanceUid.isNotBlank() -> performanceUid
+                else -> "Standard-S"
             }
 
             val containerLabels = mutableMapOf(
