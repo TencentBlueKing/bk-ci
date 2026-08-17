@@ -331,7 +331,8 @@ class TencentNodeService @Autowired constructor(
             agentHashId = HashUtil.encodeLongId(agent.id),
             displayName = node.displayName,
             ip = agent.ip,
-            workspaceName = agent.createWorkspaceName
+            workspaceName = agent.createWorkspaceName,
+            nodeId = agent.nodeId
         )
     }
 
