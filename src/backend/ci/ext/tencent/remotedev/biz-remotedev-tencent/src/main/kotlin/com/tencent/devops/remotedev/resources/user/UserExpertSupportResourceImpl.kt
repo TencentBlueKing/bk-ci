@@ -25,6 +25,10 @@ class UserExpertSupportResourceImpl @Autowired constructor(
         return Result(expertSupportService.fetchSupportConfig(ExpertSupportConfigType.ERROR).map { it.content })
     }
 
+    override fun generateUserSupportToken(userId: String, workspaceName: String): Result<String> {
+        return Result(expertSupportService.generateUserSupportToken(userId, workspaceName))
+    }
+
     @AuditEntry(actionId = TencentActionId.CGS_EXPAND_DISK)
     override fun expandDisk(userId: String, workspaceName: String, size: String): Result<ExpandDiskValidateResp?> {
         val data = expertSupportService.expandDisk(workspaceName, userId, size, null) ?: return Result(null)
