@@ -616,7 +616,6 @@
                 const editingElementPos = this.locateBuildEndPosition(position)
                 if (!editingElementPos) {
                     const locateFailedKey = getBuildEndInfoConfig(this.execDetail?.status)?.locateFailedKey
-                        || 'details.cancelLocateFailed'
                     this.$showTips({
                         message: this.$t(locateFailedKey),
                         theme: 'warning'

@@ -36,7 +36,7 @@
                     </span>
                     <template v-if="runningDuration">
                         <span class="meta-divider">|</span>
-                        <span>{{ $t('execedTimes') }} {{ runningDuration }}</span>
+                        <span>{{ durationLabel }} {{ runningDuration }}</span>
                     </template>
                 </div>
             </div>
@@ -67,9 +67,9 @@
                         >{{ parentPipelineInfo.pipelineName }}</span>
                         <span class="bei-extra-build-num">#{{ parentPipelineInfo.buildNum }}</span>
                         <span
-                            v-if="buildEndInfo.parentPipelineInfo.operator"
+                            v-if="parentPipelineInfo.operator"
                             class="bei-extra-operator"
-                        >{{ buildEndInfo.parentPipelineInfo.operator }} {{ actionText }}</span>
+                        >{{ parentPipelineInfo.operator }} {{ actionText }}</span>
                     </div>
                     <i
                         v-if="relatedPipelineUrl"
@@ -80,7 +80,7 @@
 
                 <div
                     v-else-if="extraSectionText"
-                    class="bei-extra-text"
+                    class="bei-extra-row"
                 >
                     {{ extraSectionText }}
                 </div>
@@ -111,21 +111,34 @@
                                 v-bk-overflow-tips
                                 class="position-path"
                             >{{ formatComponentPath(item.componentPath) }}</span>
+                            <!-- tag 样式：状态紧跟 path -->
                             <bk-tag
-                                v-if="item.statusAtEndDesc"
+                                v-if="item.statusAtEndDesc && isStatusDescTag"
                                 class="position-status-tag"
                             >
                                 {{ item.statusAtEndDesc }}
                             </bk-tag>
                         </div>
-                        <bk-button
-                            text
-                            theme="primary"
-                            class="position-locate-btn"
-                            @click.stop="handleLocate(item)"
-                        >
-                            {{ $t('details.locate') }}
-                        </bk-button>
+                        <div class="position-tail">
+                            <!-- text 样式：状态跟在行尾操作前 -->
+                            <span
+                                v-if="item.statusAtEndDesc && !isStatusDescTag"
+                                class="position-status-text"
+                            >{{ item.statusAtEndDesc }}</span>
+                            <span
+                                v-if="isOperatorTextAction"
+                                class="position-action-text"
+                            >{{ positionOperatorText }}</span>
+                            <bk-button
+                                v-else
+                                text
+                                theme="primary"
+                                class="position-action-btn"
+                                @click.stop="handleLocate(item)"
+                            >
+                                {{ positionActionLabel }}
+                            </bk-button>
+                        </div>
                     </li>
                 </ul>
             </div>
@@ -138,6 +151,8 @@
     import { convertMStoStringByRule, convertTime } from '@/utils/util'
     import {
         EXTRA_SECTION_TYPE,
+        POSITION_ACTION_TYPE,
+        STATUS_DESC_STYLE,
         getBuildEndInfoConfig,
         getBuildEndTypeRule
     } from './buildEndInfoConfig'
@@ -171,6 +186,31 @@
             endTypeRule () {
                 return getBuildEndTypeRule(this.statusConfig, this.buildEndInfo?.endType)
             },
+            // 位置行尾操作配置：定位 / 定位日志 / 查看 / 操作人文案
+            positionAction () {
+                return this.endTypeRule.positionAction || {
+                    type: POSITION_ACTION_TYPE.LOCATE,
+                    labelKey: 'details.locate'
+                }
+            },
+            // 行尾是否展示「操作人 + 动作」纯文案（如驳回），不可点击
+            isOperatorTextAction () {
+                return this.positionAction.type === POSITION_ACTION_TYPE.OPERATOR_TEXT
+            },
+            // 位置行状态描述：tag 标签（取消）或主题色文字（失败/超时）
+            isStatusDescTag () {
+                return (this.statusConfig.statusDescStyle || STATUS_DESC_STYLE.TAG) === STATUS_DESC_STYLE.TAG
+            },
+            // 行尾可点击按钮文案
+            positionActionLabel () {
+                const key = this.positionAction.labelKey
+                return key ? this.$t(key) : ''
+            },
+            // 行尾操作人文案，如「zhangsan 驳回」
+            positionOperatorText () {
+                const operator = this.buildEndInfo?.operator || '--'
+                return `${operator} ${this.actionText}`.trim()
+            },
             extraSection () {
                 return this.endTypeRule.extraSection
             },
@@ -181,11 +221,8 @@
                 return this.buildEndInfo?.parentPipelineInfo
             },
             extraSectionText () {
-                const field = this.extraSection?.contentField
-                if (this.extraSection?.type !== EXTRA_SECTION_TYPE.TEXT || !field) {
-                    return ''
-                }
-                return this.buildEndInfo?.[field] || ''
+                if (this.extraSection?.type !== EXTRA_SECTION_TYPE.TEXT) return
+                return this.buildEndInfo?.reason || ''
             },
             showExtraSection () {
                 if (!this.extraSection?.titleKey) return false
@@ -215,11 +252,15 @@
                     ? this.$t(this.statusConfig.actionTextKey)
                     : ''
             },
+            durationLabel () {
+                const key = this.statusConfig.durationLabelKey
+                return this.$t(key)
+            },
             formatEndTime () {
                 return convertTime(this.buildEndInfo?.endTime) || '--'
             },
             runningDuration () {
-                const totalCostTime = Number(this.buildEndInfo.totalCostTime)
+                const totalCostTime = Number(this.buildEndInfo?.totalCostTime)
                 if (!totalCostTime || totalCostTime < 0) return ''
                 return convertMStoStringByRule(totalCostTime)
             },
@@ -453,10 +494,29 @@
         flex-shrink: 0;
     }
 
-    .position-locate-btn {
+    .position-tail {
+        display: flex;
+        align-items: center;
+        gap: 8px;
         flex-shrink: 0;
         margin-left: auto;
+    }
+
+    .position-status-text {
+        flex-shrink: 0;
         font-size: 12px;
+        color: var(--bei-accent);
+        white-space: nowrap;
+    }
+
+    .position-action-btn,
+    .position-action-text {
+        flex-shrink: 0;
+        font-size: 12px;
+    }
+
+    .position-action-text {
+        color: #979ba5;
     }
 }
 </style>
