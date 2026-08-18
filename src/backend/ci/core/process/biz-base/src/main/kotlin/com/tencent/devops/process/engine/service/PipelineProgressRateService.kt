@@ -157,14 +157,14 @@ class PipelineProgressRateService constructor(
             errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
             params = arrayOf(buildId)
         )
-        val targetExecuteCount = executeCount ?: buildInfo.executeCount
-        val taskRecord = buildRecordTaskDao.getLatestNormalRecords(
+        val targetExecuteCount = executeCount ?: buildInfo.executeCount ?: 1
+        val taskRecord = buildRecordTaskDao.getLatestNormalRecord(
             dslContext = dslContext,
             projectId = projectId,
             buildId = buildId,
-            executeCount = targetExecuteCount,
-            matrixContainerIds = emptyList()
-        ).firstOrNull { it.taskId == taskId }
+            taskId = taskId,
+            executeCount = targetExecuteCount
+        )
         val taskName = pipelineTaskService.getBuildTask(projectId, buildId, taskId)?.taskName
         return BuildTaskProgressInfo(
             taskProgressRete = taskRecord?.taskVar?.let(::getProgressRate) ?: 0.0,

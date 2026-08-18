@@ -707,6 +707,41 @@ class PipelineProgressRateServiceTest {
         Assertions.assertEquals(0.75, result.taskProgressList?.first()?.progressDetail?.progress?.value)
     }
 
+    @Test
+    fun getTaskProgressDetailQueriesSingleRecordByTaskId() {
+        val progressDetail = BuildTaskProgressDetail(
+            progress = BuildTaskProgressSummary(value = 0.66)
+        )
+        every { pipelineRuntimeService.getBuildInfo(PROJECT_ID, BUILD_ID) } returns buildInfo()
+        every {
+            buildRecordTaskDao.getLatestNormalRecord(
+                dslContext = dslContext,
+                projectId = PROJECT_ID,
+                buildId = BUILD_ID,
+                taskId = TASK_ID,
+                executeCount = 1
+            )
+        } returns buildRecordTask(
+            taskId = TASK_ID,
+            containerId = "container-1",
+            status = BuildStatus.RUNNING,
+            taskVar = mutableMapOf("progressRate" to 0.1, "progressDetail" to progressDetail)
+        )
+        every { pipelineTaskService.getBuildTask(PROJECT_ID, BUILD_ID, TASK_ID) } returns buildTask()
+
+        val result = service.getTaskProgressDetail(
+            projectId = PROJECT_ID,
+            pipelineId = PIPELINE_ID,
+            buildId = BUILD_ID,
+            taskId = TASK_ID
+        )
+
+        Assertions.assertEquals("编译", result.taskName)
+        Assertions.assertEquals(0.66, result.taskProgressRete)
+        Assertions.assertEquals(0.66, result.progressDetail?.progress?.value)
+        Assertions.assertEquals("编译", result.progressDetail?.progress?.title)
+    }
+
     private fun buildInfo() = BuildInfo(
         projectId = PROJECT_ID,
         pipelineId = PIPELINE_ID,
