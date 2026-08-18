@@ -62,9 +62,14 @@ import com.tencent.devops.process.pojo.PipelineDetail
 import com.tencent.devops.process.pojo.PipelineVersionReleaseRequest
 import com.tencent.devops.process.pojo.PipelineYamlBuildVersion
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
+import com.tencent.devops.process.pojo.pipeline.PipelineDraftStatusResult
+import com.tencent.devops.process.pojo.pipeline.PipelineDraftVersionSimple
 import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
 import com.tencent.devops.process.pojo.pipeline.PrefetchReleaseResult
+import com.tencent.devops.process.pojo.pipeline.enums.PipelineDraftActionType
+import com.tencent.devops.process.pojo.pipeline.enums.PipelineDraftStatus
 import com.tencent.devops.process.pojo.pipeline.version.PipelineDraftSaveReq
+import com.tencent.devops.process.pojo.pipeline.version.PipelineRollbackReq
 import com.tencent.devops.process.pojo.setting.PipelineVersionSimple
 import com.tencent.devops.process.service.pipeline.PipelineSettingFacadeService
 import com.tencent.devops.process.service.pipeline.PipelineTransferYamlService
@@ -79,7 +84,9 @@ import com.tencent.devops.scm.api.pojo.repository.git.GitScmServerRepository
 import jakarta.ws.rs.core.Response
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import java.util.concurrent.TimeUnit
 
 @Suppress("ALL")
 @Service
@@ -104,7 +111,15 @@ class PipelineVersionFacadeService @Autowired constructor(
         private const val PAC_BRANCH_PREFIX = "bk-ci-pipeline-"
         fun getReleaseBranchName(pipelineId: String, version: Int): String =
             "$PAC_BRANCH_PREFIX$pipelineId-$version"
+
     }
+
+    /**
+     * 流水线草稿编辑提醒阈值（单位：天）
+     * 当草稿编辑天数超过该阈值时，会触发提醒
+     */
+    @Value("\${pipeline.draft.max_reminder_days:7}")
+    private val maxReminderDays: Long = 7L
 
     fun getPipelineDetailIncludeDraft(
         userId: String,
@@ -186,10 +201,10 @@ class PipelineVersionFacadeService @Autowired constructor(
             }
         }
         // 草稿版本和版本名,如果有草稿版本,则使用草稿版本,否则使用最新版本
-        val (version, versionName) = if (draftResource == null) {
-            Pair(releaseVersion, releaseVersionName)
+        val (version, versionName, versionStatus) = if (draftResource == null) {
+            Triple(releaseVersion, releaseVersionName, releaseResource.status)
         } else {
-            Pair(draftResource.version, null)
+            Triple(draftResource.version, null, draftResource.status)
         }
         val permissions = pipelineListFacadeService.getPipelinePermissions(userId, projectId, pipelineId)
         val yamlExist = archiveFlag.takeUnless { it == true }?.run {
@@ -222,6 +237,7 @@ class PipelineVersionFacadeService @Autowired constructor(
             permissions = permissions,
             version = version,
             versionName = versionName,
+            versionStatus = versionStatus,
             releaseVersion = releaseVersion,
             releaseVersionName = releaseVersionName,
             baseVersion = baseVersion,
@@ -231,7 +247,8 @@ class PipelineVersionFacadeService @Autowired constructor(
             yamlInfo = yamlInfo,
             yamlExist = yamlExist,
             locked = detailInfo.locked,
-            buildCancelPolicy = pipelineSetting?.buildCancelPolicy
+            buildCancelPolicy = pipelineSetting?.buildCancelPolicy,
+            draftVersion = draftResource?.draftVersion
         )
     }
 
@@ -269,7 +286,12 @@ class PipelineVersionFacadeService @Autowired constructor(
                 errorCode = ProcessMessageCode.ERROR_NO_PIPELINE_EXISTS_BY_ID,
                 params = arrayOf(pipelineId)
             )
-        val newVersionNum = (releaseVersion.versionNum ?: releaseVersion.version) + 1
+        // 第一次发布,versionNum不需要+1
+        val newVersionNum = if (draftVersion.version == releaseVersion.version) {
+            releaseVersion.versionNum ?: releaseVersion.version
+        } else {
+            (releaseVersion.versionNum ?: releaseVersion.version) + 1
+        }
         val prefetchVersionName = targetAction?.let {
             getVersionStatusAndName(
                 projectId = projectId,
@@ -384,7 +406,7 @@ class PipelineVersionFacadeService @Autowired constructor(
         request: TemplateInstanceCreateRequest
     ): DeployPipelineResult {
         val templateModel = if (request.emptyTemplate == true) {
-            initializeModel(userId, request.pipelineName)
+            Model.defaultModel(request.pipelineName, userId)
         } else {
             val templateResource = if (request.templateVersion != null) {
                 pipelineTemplateResourceService.get(
@@ -442,25 +464,14 @@ class PipelineVersionFacadeService @Autowired constructor(
         )
     }
 
-    private fun initializeModel(
-        userId: String,
-        pipelineName: String
-    ): Model {
-        val isCreativeStream = ChannelCode.getRequestChannelCode() == ChannelCode.CREATIVE_STREAM
-        return if (isCreativeStream) {
-            Model.creativeStreamDefaultModel(pipelineName, userId)
-        } else {
-            Model.defaultModel(pipelineName, userId)
-        }
-    }
-
     fun getVersion(
         userId: String,
         projectId: String,
         pipelineId: String,
-        version: Int,
+        version: Int?,
         archiveFlag: Boolean? = false,
-        source: PipelineGetVersionSource? = PipelineGetVersionSource.VIEW
+        source: PipelineGetVersionSource? = PipelineGetVersionSource.VIEW,
+        draftVersion: Int? = null
     ): PipelineVersionWithModel {
         val pipelineInfo = pipelineRepositoryService.getPipelineInfo(
             projectId = projectId,
@@ -475,24 +486,42 @@ class PipelineVersionFacadeService @Autowired constructor(
             pipelineId = pipelineId,
             permission = AuthPermission.EDIT
         )
-        val resource = pipelineRepositoryService.getPipelineResourceVersion(
-            projectId = projectId,
-            pipelineId = pipelineId,
-            version = version,
-            includeDraft = true,
-            encryptedFlag = !editPermission,
-            archiveFlag = archiveFlag
-        ) ?: throw ErrorCodeException(
+        val resource = if (version != null && draftVersion != null) {
+            pipelineRepositoryService.getPipelineResourceByDraftVersion(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                version = version,
+                draftVersion = draftVersion
+            )
+        } else {
+            pipelineRepositoryService.getPipelineResourceVersion(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                version = version,
+                includeDraft = true,
+                encryptedFlag = !editPermission,
+                archiveFlag = archiveFlag
+            )
+        } ?: throw ErrorCodeException(
             errorCode = ProcessMessageCode.ERROR_NO_PIPELINE_VERSION_EXISTS_BY_ID,
-            params = arrayOf(version.toString())
+            params = arrayOf(version?.toString() ?: pipelineInfo.version.toString())
         )
-        val setting = pipelineSettingFacadeService.userGetSetting(
-            userId = userId,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            version = resource.settingVersion ?: NUM_ZERO, // 历史没有关联过setting版本应该取正式版本
-            archiveFlag = archiveFlag
-        )
+        val setting = if (version != null && draftVersion != null) {
+            pipelineSettingFacadeService.getPipelineSettingByDraftVersion(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                version = version,
+                draftVersion = draftVersion
+            )
+        } else {
+            pipelineSettingFacadeService.userGetSetting(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                version = resource.settingVersion ?: NUM_ZERO, // 历史没有关联过setting版本应该取正式版本
+                archiveFlag = archiveFlag
+            )
+        }
         val model = pipelineInfoFacadeService.getFixedModel(
             resource = resource,
             projectId = projectId,
@@ -567,7 +596,8 @@ class PipelineVersionFacadeService @Autowired constructor(
             updateTime = resource.updateTime?.timestampmilli(),
             versionStatus = resource.status,
             latestVersion = pipelineInfo.version,
-            envHashId = setting.envHashId
+            envHashId = setting.envHashId,
+            draftVersion = resource.draftVersion
         )
     }
 
@@ -779,37 +809,27 @@ class PipelineVersionFacadeService @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
-        version: Int
+        version: Int,
+        draftVersion: Int? = null
     ): PipelineVersionSimple {
-        val pipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId)
-            ?: throw ErrorCodeException(
-                statusCode = Response.Status.NOT_FOUND.statusCode,
-                errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS
-            )
-        // 获取目标的版本用于更新草稿
-        val targetVersion = pipelineRepositoryService.getPipelineResourceVersion(
+        val deployPipelineResult = pipelineVersionManager.deployPipeline(
+            userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
-            version = version
+            version = version,
+            request = PipelineRollbackReq(draftVersion = draftVersion)
+        )
+        val resource = pipelineRepositoryService.getPipelineResourceVersion(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            version = deployPipelineResult.version,
+            includeDraft = true
         ) ?: throw ErrorCodeException(
             statusCode = Response.Status.NOT_FOUND.statusCode,
             errorCode = ProcessMessageCode.ERROR_NO_PIPELINE_VERSION_EXISTS_BY_ID,
             params = arrayOf(version.toString())
         )
-        // 补全模型信息
-        val fixedModel = pipelineInfoFacadeService.getFixedModel(
-            resource = targetVersion,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            userId = userId,
-            pipelineInfo = pipelineInfo
-        )
-        val resource = pipelineRepositoryService.rollbackDraftFromVersion(
-            userId = userId,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            targetVersion = targetVersion.copy(model = fixedModel)
-        )
+
         return PipelineVersionSimple(
             pipelineId = pipelineId,
             creator = resource.creator,
@@ -1054,5 +1074,355 @@ class PipelineVersionFacadeService @Autowired constructor(
             )
         }
         return list
+    }
+
+    /**
+     * 获取流水线草稿状态，用于前端进入编辑、保存、发布前判断当前版本是否可继续操作。
+     *
+     * 本方法的核心职责是校验前端展示的流水线版本与后端是否一致，不一致则返回对应的提示状态。
+     *
+     * 参数说明：
+     * - [version] 前端当前操作的流水线版本，必传。
+     * - [versionStatus] 前端持有 [version] 时该版本对应的状态，必传，用于识别前端在编辑草稿还是正式版本。
+     * - [releaseVersion] 前端界面当前展示的正式版本号，必传，用于判断前端界面是否落后于最新正式版本。
+     * - [baseDraftVersion] 草稿并发保存校验版本号，SAVE / RELEASE 时需要传入。
+     */
+    fun getPipelineDraftStatus(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        actionType: PipelineDraftActionType,
+        version: Int,
+        versionStatus: VersionStatus,
+        releaseVersion: Int,
+        baseDraftVersion: Int?
+    ): PipelineDraftStatusResult {
+        val pipelineInfo = pipelineRepositoryService.getPipelineInfo(
+            projectId = projectId,
+            pipelineId = pipelineId
+        ) ?: throw ErrorCodeException(
+            statusCode = Response.Status.NOT_FOUND.statusCode,
+            errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS
+        )
+        val versionResource = pipelineRepositoryService.getPipelineVersionRecord(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            version = version,
+            includeDraft = true
+        )
+        val releaseResource = if (version == releaseVersion) {
+            versionResource
+        } else {
+            pipelineRepositoryService.getPipelineVersionRecord(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                version = releaseVersion,
+                includeDraft = false
+            )
+        }
+        val draftResource = pipelineRepositoryService.getDraftVersionResource(
+            projectId = projectId,
+            pipelineId = pipelineId
+        )
+        val latestReleaseResource = pipelineRepositoryService.getPipelineResourceVersion(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            version = pipelineInfo.version
+        )
+
+        return when (actionType) {
+            PipelineDraftActionType.EDIT -> getPipelineDraftStatusWhenEdit(
+                userId = userId,
+                releaseVersion = releaseVersion,
+                releaseResource = releaseResource,
+                draftResource = draftResource,
+                latestReleaseResource = latestReleaseResource
+            )
+            PipelineDraftActionType.SAVE -> getPipelineDraftStatusWhenSave(
+                versionStatus = versionStatus,
+                releaseVersion = releaseVersion,
+                versionResource = versionResource,
+                draftResource = draftResource,
+                baseDraftVersion = baseDraftVersion,
+                latestReleaseResource = latestReleaseResource
+            )
+            PipelineDraftActionType.RELEASE -> getPipelineDraftStatusWhenRelease(
+                versionResource = versionResource,
+                latestReleaseResource = latestReleaseResource,
+                baseDraftVersion = baseDraftVersion
+            )
+        }
+    }
+
+    /**
+     * EDIT 场景状态校验：
+     *
+     * - 后端草稿存在：按草稿状态判断（草稿基线落后 → OUTDATED；保存人不同或超 7 天 → EXISTS；否则 NORMAL）
+     * - 后端草稿不存在：
+     *   - releaseVersion 对应资源是分支版本 → BRANCH
+     *   - releaseVersion 与当前最新正式版本不一致 → RELEASE_OUTDATED
+     *   - 否则 → NORMAL
+     *
+     * 说明：无论前端展示的是草稿还是正式/分支版本，统一按上述规则处理；
+     * 原草稿已被删除或发布时，若仍有新草稿则走草稿校验，否则不单独提示 DELETED/PUBLISHED。
+     */
+    private fun getPipelineDraftStatusWhenEdit(
+        userId: String,
+        releaseVersion: Int,
+        releaseResource: PipelineResourceVersion?,
+        draftResource: PipelineResourceVersion?,
+        latestReleaseResource: PipelineResourceVersion?
+    ): PipelineDraftStatusResult {
+        // 若后端已存在草稿，则先按草稿状态做校验
+        if (draftResource != null) {
+            return checkDraftForEdit(
+                userId = userId,
+                draftResource = draftResource,
+                latestReleaseResource = latestReleaseResource
+            )
+        }
+        // 前端展示的版本视图对应分支版本
+        if (latestReleaseResource?.status == VersionStatus.BRANCH) {
+            return PipelineDraftStatusResult(
+                status = PipelineDraftStatus.BRANCH,
+                release = PipelineVersionSimple(latestReleaseResource)
+            )
+        }
+        // 前端展示的正式版本已不是最新
+        return if (latestReleaseResource != null &&
+            latestReleaseResource.version != releaseVersion
+        ) {
+            PipelineDraftStatusResult(
+                status = PipelineDraftStatus.RELEASE_OUTDATED,
+                draft = releaseResource?.let { PipelineVersionSimple(it) },
+                release = PipelineVersionSimple(latestReleaseResource)
+            )
+        } else {
+            PipelineDraftStatusResult(status = PipelineDraftStatus.NORMAL)
+        }
+    }
+
+    /**
+     * SAVE 场景状态校验：
+     *
+     * 1. versionStatus != 草稿状态（前端展示的不是草稿版本，即基于正式版本 / 分支版本进行保存）
+     *    - 后端草稿存在 → CONFLICT（提示"草稿版本冲突"，避免误覆盖）
+     *    - 后端草稿不存在：前端正式版与最新不一致 → RELEASE_OUTDATED，否则 → NORMAL
+     *
+     * 2. versionStatus == 草稿状态（前端展示的是草稿版本）
+     *    - version 已发布 → PUBLISHED
+     *    - version 已删除：若存在新草稿 → CONFLICT；否则校验正式版 → RELEASE_OUTDATED / NORMAL
+     *    - version 仍是草稿态：比对 draftVersion 与 baseDraftVersion，不一致 → CONFLICT，否则 → NORMAL
+     */
+    private fun getPipelineDraftStatusWhenSave(
+        versionStatus: VersionStatus,
+        releaseVersion: Int,
+        versionResource: PipelineResourceVersion?,
+        draftResource: PipelineResourceVersion?,
+        baseDraftVersion: Int?,
+        latestReleaseResource: PipelineResourceVersion?
+    ): PipelineDraftStatusResult {
+        if (versionStatus != VersionStatus.COMMITTING) {
+            // 前端展示的不是草稿版本进行保存，若后端已存在草稿，则提示草稿冲突
+            return if (draftResource != null) {
+                PipelineDraftStatusResult(
+                    status = PipelineDraftStatus.CONFLICT,
+                    draft = PipelineVersionSimple(draftResource)
+                )
+            } else {
+                buildSaveNormalOrReleaseOutdated(
+                    releaseVersion = releaseVersion,
+                    latestReleaseResource = latestReleaseResource
+                )
+            }
+        }
+        // 前端展示的version是草稿版本，但后端version已不是草稿态（可能被发布或删除）
+        if (versionResource?.status != VersionStatus.COMMITTING) {
+            return when (versionResource?.status) {
+                VersionStatus.DELETE -> {
+                    if (draftResource != null) {
+                        PipelineDraftStatusResult(
+                            status = PipelineDraftStatus.CONFLICT,
+                            draft = PipelineVersionSimple(draftResource)
+                        )
+                    } else {
+                        buildSaveNormalOrReleaseOutdated(
+                            releaseVersion = releaseVersion,
+                            latestReleaseResource = latestReleaseResource
+                        )
+                    }
+                }
+                else -> PipelineDraftStatusResult(
+                    status = PipelineDraftStatus.PUBLISHED,
+                    release = latestReleaseResource?.let { PipelineVersionSimple(it) }
+                )
+            }
+        }
+        // 前端展示的version是草稿版本，且后端version仍是草稿态,这里versionResource和draftResource应该是相同的
+        return if (versionResource.draftVersion != baseDraftVersion) {
+            PipelineDraftStatusResult(
+                status = PipelineDraftStatus.CONFLICT,
+                draft = PipelineVersionSimple(versionResource)
+            )
+        } else {
+            PipelineDraftStatusResult(
+                status = PipelineDraftStatus.NORMAL,
+                draft = PipelineVersionSimple(versionResource)
+            )
+        }
+    }
+
+    /**
+     * RELEASE 场景状态校验：
+     *
+     * - version 不是草稿态（可能被发布或删除）：按 version 状态返回（PUBLISHED / DELETED）
+     * - version 仍是草稿态：
+     *   - 比对 draftVersion 与 baseDraftVersion，不一致 → CONFLICT（并发保存冲突）
+     *   - 草稿基线版本与当前最新正式版本不一致 → OUTDATED
+     *   - 否则 → NORMAL
+     */
+    private fun getPipelineDraftStatusWhenRelease(
+        versionResource: PipelineResourceVersion?,
+        latestReleaseResource: PipelineResourceVersion?,
+        baseDraftVersion: Int?
+    ): PipelineDraftStatusResult {
+        // 前端要发布的版本已不是草稿态（可能被发布或删除）
+        if (versionResource?.status != VersionStatus.COMMITTING) {
+            return if (versionResource?.status == VersionStatus.DELETE) {
+                PipelineDraftStatusResult(
+                    status = PipelineDraftStatus.DELETED,
+                    draft = PipelineVersionSimple(versionResource)
+                )
+            } else {
+                PipelineDraftStatusResult(
+                    status = PipelineDraftStatus.PUBLISHED,
+                    release = versionResource?.let { PipelineVersionSimple(it) }
+                )
+            }
+        }
+        // 检测草稿并发保存冲突
+        if (versionResource.draftVersion != baseDraftVersion) {
+            return PipelineDraftStatusResult(
+                status = PipelineDraftStatus.CONFLICT,
+                draft = PipelineVersionSimple(versionResource)
+            )
+        }
+        // 检查当前待发布草稿的基线版本，是否与当前最新正式版本一致
+        return if (latestReleaseResource != null &&
+            versionResource.baseVersion != null &&
+            latestReleaseResource.version != versionResource.baseVersion
+        ) {
+            val baseResource = versionResource.baseVersion?.let { baseVersion ->
+                pipelineRepositoryService.getPipelineResourceVersion(
+                    projectId = versionResource.projectId,
+                    pipelineId = versionResource.pipelineId,
+                    version = baseVersion
+                )
+            }
+            // 若基线是分支版本，则提示草稿基于分支版本,否则提示版本落后
+            val status = if (baseResource?.status == VersionStatus.BRANCH) {
+                PipelineDraftStatus.BASE_BRANCH
+            } else {
+                PipelineDraftStatus.BASE_OUTDATED
+            }
+            PipelineDraftStatusResult(
+                status = status,
+                draft = PipelineVersionSimple(versionResource).copy(
+                    baseVersionName = baseResource?.versionName
+                ),
+                release = PipelineVersionSimple(latestReleaseResource)
+            )
+        } else {
+            PipelineDraftStatusResult(
+                status = PipelineDraftStatus.NORMAL,
+                draft = PipelineVersionSimple(versionResource)
+            )
+        }
+    }
+
+    private fun buildSaveNormalOrReleaseOutdated(
+        releaseVersion: Int,
+        latestReleaseResource: PipelineResourceVersion?
+    ): PipelineDraftStatusResult {
+        // 保存草稿时,如果没有草稿,但是有最新正式版本,则提示正式版本落后
+        // 场景: 模版实例化流水线,tabA在流水线保存页面,tabB模版实例化更新,tabA去保存流水线时,提示正式版本落后
+        return if (latestReleaseResource != null &&
+            latestReleaseResource.version != releaseVersion
+        ) {
+            PipelineDraftStatusResult(
+                status = PipelineDraftStatus.RELEASE_OUTDATED,
+                release = PipelineVersionSimple(latestReleaseResource)
+            )
+        } else {
+            PipelineDraftStatusResult(status = PipelineDraftStatus.NORMAL)
+        }
+    }
+
+    private fun checkDraftForEdit(
+        userId: String,
+        draftResource: PipelineResourceVersion,
+        latestReleaseResource: PipelineResourceVersion?
+    ): PipelineDraftStatusResult {
+        val baseResource = draftResource.baseVersion?.let { baseVersion ->
+            pipelineRepositoryService.getPipelineResourceVersion(
+                projectId = draftResource.projectId,
+                pipelineId = draftResource.pipelineId,
+                version = baseVersion
+            )
+        }
+        val updateTime = draftResource.updateTime?.timestampmilli()
+            ?: draftResource.createTime.timestampmilli()
+        val updater = draftResource.updater ?: draftResource.creator
+        val releaseTime = latestReleaseResource?.releaseTime
+        val baseReleaseTime = baseResource?.releaseTime
+        return when {
+            // 若草稿基线版本早于当前最新版本,则提示草稿版本落后
+            releaseTime != null && baseReleaseTime != null && releaseTime > baseReleaseTime -> {
+                // 如果草稿基线基于分支版本,则提示草稿基于分支版本
+                val status = if (baseResource.status == VersionStatus.BRANCH) {
+                    PipelineDraftStatus.BASE_BRANCH
+                } else {
+                    PipelineDraftStatus.BASE_OUTDATED
+                }
+                PipelineDraftStatusResult(
+                    status = status,
+                    draft = PipelineVersionSimple(draftResource).copy(
+                        baseVersionName = baseResource.versionName
+                    ),
+                    release = PipelineVersionSimple(latestReleaseResource)
+                )
+            }
+
+            // 1. 若当前操作人和原草稿的保存人不相同
+            // 2. 当前操作人和原草稿的保存人相同，则检查最近保存时间是否超过 7 天，若未超过则不重复提醒
+            updater != userId ||
+                    System.currentTimeMillis() - updateTime > TimeUnit.DAYS.toMillis(maxReminderDays) -> {
+                PipelineDraftStatusResult(
+                    status = PipelineDraftStatus.EXISTS,
+                    draft = PipelineVersionSimple(draftResource)
+                )
+            }
+
+            else -> PipelineDraftStatusResult(
+                status = PipelineDraftStatus.NORMAL,
+                draft = PipelineVersionSimple(draftResource)
+            )
+        }
+    }
+
+    fun listPipelineDraftVersions(
+        projectId: String,
+        pipelineId: String,
+        version: Int,
+        page: Int?,
+        pageSize: Int?
+    ): Page<PipelineDraftVersionSimple> {
+        return repositoryVersionService.listPipelineDraftVersion(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            version = version,
+            page = page,
+            pageSize = pageSize
+        )
     }
 }

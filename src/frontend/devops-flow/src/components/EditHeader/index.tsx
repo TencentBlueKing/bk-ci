@@ -14,6 +14,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useFlowInfo } from '../../hooks/useFlowInfo'
 import { CommonHeader } from '../CommonHeader'
 import FlowSelector from '../FlowHeader/FlowSelector'
+import { SvgIcon } from '../SvgIcon'
 import styles from './EditHeader.module.css'
 
 export const EditHeader = defineComponent({
@@ -181,16 +182,25 @@ export const EditHeader = defineComponent({
           return
         }
 
-        if (response?.version) {
-          router.replace({
+        // 必须用保存接口返回的 version，不能读 route.params.version：
+        // router.replace 异步更新路由，立刻读取仍可能是旧版本，导致重新拉取旧编排
+        const savedVersion =
+          response?.version != null
+            ? String(response.version)
+            : (route.params.version as string)
+
+        if (response?.version != null) {
+          await router.replace({
             name: route.name as string,
             params: {
               ...route.params,
-              version: String(response.version),
+              version: savedVersion,
             },
             query: route.query,
           })
         }
+        // 保存成功后重新加载 flowModel，确保 yamlContent 同步更新
+        await flowModel.loadFlow(projectId.value, flowId.value, savedVersion, true)
         await refreshFlowInfo()
       } catch (error: any) {
         console.error('Failed to save flow:', error)
@@ -264,7 +274,12 @@ export const EditHeader = defineComponent({
               />
             ),
             actions: () => (
-              <div class={styles.headerRight}>
+              <div
+                class={[
+                  styles.headerRight,
+                  !inImportEditMode.value && styles.headerRightWithPublish,
+                ]}
+              >
                 <Button onClick={handleCancel} disabled={isSaving.value}>
                   {t('flow.common.cancel')}
                 </Button>
@@ -282,8 +297,9 @@ export const EditHeader = defineComponent({
                   {t('flow.content.save')}
                 </Button>
                 {!inImportEditMode.value && (
-                  <Button
-                    theme="primary"
+                  <button
+                    type="button"
+                    class={styles.publishBtn}
                     onClick={handlePublish}
                     disabled={isSaving.value}
                     v-bk-tooltips={{
@@ -291,8 +307,9 @@ export const EditHeader = defineComponent({
                       disabled: !flowModel.hasValidationError.value,
                     }}
                   >
+                    <SvgIcon name="check-line" size={14} class={styles.publishIcon} />
                     {t('flow.content.publish')}
-                  </Button>
+                  </button>
                 )}
               </div>
             ),

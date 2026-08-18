@@ -31,12 +31,15 @@ import com.tencent.devops.common.es.ESAutoConfiguration
 import com.tencent.devops.common.es.ESProperties
 import com.tencent.devops.common.es.client.LogClient
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.log.configuration.LogBulkProperties
 import com.tencent.devops.log.jmx.CreateIndexBean
 import com.tencent.devops.log.jmx.LogStorageBean
 import com.tencent.devops.log.service.BuildLogPrintService
 import com.tencent.devops.log.service.IndexService
+import com.tencent.devops.log.service.LogBulkAggregator
 import com.tencent.devops.log.service.LogService
 import com.tencent.devops.log.service.LogStatusService
+import com.tencent.devops.log.service.LogStorageDegradeSwitcher
 import com.tencent.devops.log.service.LogTagService
 import com.tencent.devops.log.service.impl.LogServiceESImpl
 import org.springframework.beans.factory.annotation.Autowired
@@ -65,7 +68,10 @@ class LogESAutoConfiguration {
         @Autowired createIndexBean: CreateIndexBean,
         @Autowired logStorageBean: LogStorageBean,
         @Autowired redisOperation: RedisOperation,
-        @Autowired buildLogPrintService: BuildLogPrintService
+        @Autowired buildLogPrintService: BuildLogPrintService,
+        @Autowired logBulkAggregator: LogBulkAggregator,
+        @Autowired logStorageDegradeSwitcher: LogStorageDegradeSwitcher,
+        @Autowired logBulkProperties: LogBulkProperties
     ): LogService {
         return LogServiceESImpl(
             logClient = logESClient,
@@ -75,7 +81,10 @@ class LogESAutoConfiguration {
             logStorageBean = logStorageBean,
             createIndexBean = createIndexBean,
             buildLogPrintService = buildLogPrintService,
-            redisOperation = redisOperation
+            redisOperation = redisOperation,
+            logBulkAggregator = logBulkAggregator,
+            logStorageDegradeSwitcher = logStorageDegradeSwitcher,
+            logBulkProperties = logBulkProperties
         )
     }
 }

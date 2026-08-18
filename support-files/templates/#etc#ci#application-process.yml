@@ -91,6 +91,15 @@ scm:
     enabled: true # enable auto pull svn repo commit webhook
     interval: 60  # auto pull interval seconds
 
+# 外部系统集成配置
+external:
+  webhook:
+    tapd:
+      # 与 TAPD webhook 配置中一致的密钥；留空时不做合法性校验
+      secret: __BK_CI_TAPD_WEBHOOK_SECRET__
+      # TAPD 站点访问地址（scheme://host[:port]），用于组装工单详情页链接（ci.event_url）
+      webUrl: __BK_CI_TAPD_WEBHOOK_WEB_URL__
+
 sharding:
   databaseShardingStrategy:
     algorithmClassName: "com.tencent.devops.process.sharding.BkProcessDatabaseShardingAlgorithm"

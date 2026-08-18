@@ -187,17 +187,18 @@ class NodeTagService @Autowired constructor(
             nodeId = data.nodeId
         )?.agentType
         val nodeResourceType = if (agentType == AgentType.CREATE.name) {
-                AuthResourceType.CREATIVE_STREAM_NODE
-            } else {
-                AuthResourceType.ENVIRONMENT_ENV_NODE
-            }
+            AuthResourceType.CREATIVE_STREAM_NODE
+        } else {
+            AuthResourceType.ENVIRONMENT_ENV_NODE
+        }
         if (!environmentPermissionService.checkNodePermission(
                 userId = userId,
                 projectId = projectId,
                 nodeId = data.nodeId,
                 permission = AuthPermission.EDIT,
                 resourceType = nodeResourceType
-            )) {
+            )
+        ) {
             throw PermissionForbiddenException(
                 message = I18nUtil.getCodeLanMessage(
                     ERROR_NODE_NO_EDIT_PERMISSSION,
@@ -406,11 +407,13 @@ class NodeTagService @Autowired constructor(
         }
         try {
             // 检验是否重名
-            if (nodeTagKeyDao.fetchNodeKey(
-                    dslContext = dslContext,
-                    projectId = projectId,
-                    keyName = data.tagKeyName
-                ) != null || getInternalKeys().values.contains(data.tagKeyName)
+            val oldRecord = nodeTagKeyDao.fetchNodeKey(
+                dslContext = dslContext,
+                projectId = projectId,
+                keyName = data.tagKeyName
+            )
+            if ((oldRecord != null && oldRecord.id != data.tagKeyId) ||
+                getInternalKeys().values.contains(data.tagKeyName)
             ) {
                 throw ErrorCodeException(
                     errorCode = EnvironmentMessageCode.ERROR_NODE_TAG_EXIST,

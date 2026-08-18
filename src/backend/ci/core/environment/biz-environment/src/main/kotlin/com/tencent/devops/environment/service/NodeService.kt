@@ -203,7 +203,7 @@ class NodeService @Autowired constructor(
             return emptyList()
         }
 
-        return formatNodeWithPermissions(userId, projectId, nodeRecordList)
+        return formatNodeWithPermissions(userId, projectId, nodeRecordList, envId = null)
     }
 
     fun listNew(
@@ -288,7 +288,8 @@ class NodeService @Autowired constructor(
             userId = userId,
             projectId = projectId,
             nodeRecordList = nodeRecordList,
-            resourceType = nodeResourceType
+            resourceType = nodeResourceType,
+            envId = null
         )
         // 查出项目下所有有权限的节点id
         val authorizedNodeIds = environmentPermissionService.listNodeByPermission(
@@ -455,11 +456,13 @@ class NodeService @Autowired constructor(
         CsvUtil.setCsvResponse("$projectId-environment-nodes-data", bytes, response)
     }
 
+    @Deprecated("这个方法如果不传入 envId 那么得到的环境相关的结果不可控，后续修改尽量不使用这个方法")
     fun formatNodeWithPermissions(
         userId: String,
         projectId: String,
         nodeRecordList: List<TNodeRecord>,
-        resourceType: AuthResourceType = AuthResourceType.ENVIRONMENT_ENV_NODE
+        resourceType: AuthResourceType = AuthResourceType.ENVIRONMENT_ENV_NODE,
+        envId: Long?
     ): List<NodeWithPermission> {
         val nodeListResult = environmentPermissionService.listNodeByRbacPermission(
             userId = userId,
@@ -502,7 +505,11 @@ class NodeService @Autowired constructor(
         }
         val nodeIds = nodeListResult.map { it.nodeId }
         val tagMaps = nodeTagService.fetchNodeTags(projectId, nodeIds.toSet())
-        val nodeEnvs = envNodeDao.listNodeIds(dslContext, projectId, nodeIds)
+        val nodeEnvs = if (envId == null) {
+            envNodeDao.listNodeIds(dslContext, projectId, nodeIds)
+        } else {
+            envNodeDao.list(dslContext, projectId, listOf(envId))
+        }
         val envInfos = envDao.listServerEnvByIdsAllType(
             dslContext, nodeEnvs.map { it.envId }.toSet()
         ).associateBy { it.envId }

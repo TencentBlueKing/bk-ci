@@ -19,6 +19,14 @@ export default defineComponent({
       type: Boolean,
       default: false,
     },
+    disabled: {
+      type: Boolean,
+      default: false,
+    },
+    keyword: {
+      type: String,
+      default: '',
+    },
   },
   emits: ['click'],
   setup(props, { emit }) {
@@ -39,14 +47,36 @@ export default defineComponent({
     }
 
     const handleClick = () => {
-      if (!props.loading) {
+      if (!props.loading && !props.disabled) {
         emit('click')
       }
     }
 
+    // 高亮搜索关键字
+    const renderHighlightText = (text: string) => {
+      const keyword = props.keyword.trim()
+      if (!keyword || !text) return text
+
+      const escaped = keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+      const parts = text.split(new RegExp(`(${escaped})`, 'gi'))
+      return parts.map((part, index) =>
+        part.toLowerCase() === keyword.toLowerCase() ? (
+          <span key={index} class={styles.highlight}>
+            {part}
+          </span>
+        ) : (
+          part
+        ),
+      )
+    }
+
     return () => (
       <div
-        class={[styles.eventCard, props.loading && styles.eventCardLoading]}
+        class={[
+          styles.eventCard,
+          props.loading && styles.eventCardLoading,
+          props.disabled && styles.eventCardDisabled,
+        ]}
         onClick={handleClick}
       >
         <div class={styles.eventIcon}>
@@ -59,10 +89,12 @@ export default defineComponent({
 
         <div class={styles.eventInfo}>
           <div class={styles.eventName}>
-            {props.eventAtom.name}
+            <span class={styles.eventNameText}>
+              {renderHighlightText(props.eventAtom.name)}
+            </span>
             {props.loading && <Loading mode="spin" size="mini" class={styles.loadingSpin} />}
           </div>
-          <div class={styles.eventDesc}>{props.eventAtom.summary || ''}</div>
+          <div class={styles.eventDesc}>{renderHighlightText(props.eventAtom.summary || '')}</div>
           <div class={styles.eventMeta}>
             <span class={styles.eventRating}>
               <SvgIcon name="star" size={12} class={styles.starIcon} />

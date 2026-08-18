@@ -3,7 +3,7 @@ package com.tencent.devops.process.engine.service
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.process.engine.pojo.BuildInfo
-import com.tencent.devops.store.api.common.ServiceStoreComponentResource
+import com.tencent.devops.store.api.common.ServiceStoreComponentBaseResource
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -25,7 +25,7 @@ class PipelineTriggerResourceService @Autowired constructor(
             it.isNotBlank()
         }.toSet()
         return try {
-            client.get(ServiceStoreComponentResource::class).getComponentBaseInfoByCodes(
+            client.get(ServiceStoreComponentBaseResource::class).getComponentBaseInfoByCodes(
                 storeType = StoreTypeEnum.TRIGGER_EVENT,
                 storeCodes = storeCodes.joinToString(separator = ",")
             ).data?.associate {

@@ -78,7 +78,11 @@ import com.tencent.devops.process.service.PipelineAutoSummaryService
 import com.tencent.devops.process.service.PipelineListFacadeService
 import com.tencent.devops.process.service.PipelineRemoteAuthService
 import com.tencent.devops.process.service.pipeline.PipelineSettingFacadeService
+import com.tencent.devops.project.constant.ProjectConstant.NAME_MIN_LENGTH
+import com.tencent.devops.project.constant.ProjectConstant.PROJECT_ID_MAX_LENGTH
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import java.util.regex.Pattern
 
 @Suppress("ALL")
 @RestResource
@@ -157,7 +161,7 @@ class ServicePipelineResourceImpl @Autowired constructor(
         )
         auditService.createAudit(
             Audit(
-                resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
+                resourceType = AuthResourceType.getAuthResourceTypeByChannel(AuthResourceType.PIPELINE_DEFAULT).value,
                 resourceId = pipelineId,
                 resourceName = pipeline.name,
                 userId = userId,
@@ -191,7 +195,7 @@ class ServicePipelineResourceImpl @Autowired constructor(
         )
         auditService.createAudit(
             Audit(
-                resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
+                resourceType = AuthResourceType.getAuthResourceTypeByChannel(AuthResourceType.PIPELINE_DEFAULT).value,
                 resourceId = pid.id,
                 resourceName = pipeline.name,
                 userId = userId,
@@ -224,7 +228,7 @@ class ServicePipelineResourceImpl @Autowired constructor(
         )
         auditService.createAudit(
             Audit(
-                resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
+                resourceType = AuthResourceType.getAuthResourceTypeByChannel(AuthResourceType.PIPELINE_DEFAULT).value,
                 resourceId = pipelineId.id,
                 resourceName = modelAndSetting.model.name,
                 userId = userId,
@@ -260,7 +264,7 @@ class ServicePipelineResourceImpl @Autowired constructor(
 
         auditService.createAudit(
             Audit(
-                resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
+                resourceType = AuthResourceType.getAuthResourceTypeByChannel(AuthResourceType.PIPELINE_DEFAULT).value,
                 resourceId = pipelineId,
                 resourceName = modelAndSetting.model.name,
                 userId = userId,
@@ -384,7 +388,7 @@ class ServicePipelineResourceImpl @Autowired constructor(
         )
         auditService.createAudit(
             Audit(
-                resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
+                resourceType = AuthResourceType.getAuthResourceTypeByChannel(AuthResourceType.PIPELINE_DEFAULT).value,
                 resourceId = pipelineId,
                 resourceName = setting.pipelineName,
                 userId = userId,
@@ -524,7 +528,7 @@ class ServicePipelineResourceImpl @Autowired constructor(
 
         auditService.createAudit(
             Audit(
-                resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
+                resourceType = AuthResourceType.getAuthResourceTypeByChannel(AuthResourceType.PIPELINE_DEFAULT).value,
                 resourceId = pipelineId,
                 resourceName = restorePipeline.pipelineName,
                 userId = userId,
@@ -762,6 +766,45 @@ class ServicePipelineResourceImpl @Autowired constructor(
         if (projectId.isBlank()) {
             throw ParamBlankException("Invalid projectId")
         }
+        // 上线观察期：先 warn，确认无存量非法 projectId 后再恢复硬校验
+        // 与 AbsProjectServiceImpl#validate(english_name) 保持一致：2~32 字符，小写字母开头
+        if (projectId.length < NAME_MIN_LENGTH) {
+            logger.warn(
+                "[projectIdEnglishNameCheck] reason=TOO_SHORT | " +
+                    "projectId=$projectId | length=${projectId.length} | " +
+                    "expect=[$NAME_MIN_LENGTH, $PROJECT_ID_MAX_LENGTH] | " +
+                    "pattern=$ENGLISH_NAME_PATTERN"
+            )
+            // throw ErrorCodeException(
+            //     errorCode = ProjectMessageCode.EN_NAME_INTERVAL_ERROR,
+            //     defaultMessage = "Project id length cannot be less than 2 characters!"
+            // )
+        }
+        if (projectId.length > PROJECT_ID_MAX_LENGTH) {
+            logger.warn(
+                "[projectIdEnglishNameCheck] reason=TOO_LONG | " +
+                    "projectId=$projectId | length=${projectId.length} | " +
+                    "expect=[$NAME_MIN_LENGTH, $PROJECT_ID_MAX_LENGTH] | " +
+                    "pattern=$ENGLISH_NAME_PATTERN"
+            )
+            // throw ErrorCodeException(
+            //     errorCode = ProjectMessageCode.EN_NAME_INTERVAL_ERROR,
+            //     defaultMessage = "The length of the project id cannot exceed 32 characters!"
+            // )
+        }
+        if (!Pattern.matches(ENGLISH_NAME_PATTERN, projectId)) {
+            logger.warn(
+                "[projectIdEnglishNameCheck] reason=PATTERN_MISMATCH | " +
+                    "projectId=$projectId | length=${projectId.length} | " +
+                    "expect=[$NAME_MIN_LENGTH, $PROJECT_ID_MAX_LENGTH] | " +
+                    "pattern=$ENGLISH_NAME_PATTERN | " +
+                    "rule=startWithLowerCaseAndOnlyLetterDigitHyphen"
+            )
+            // throw ErrorCodeException(
+            //     errorCode = ProjectMessageCode.EN_NAME_COMBINATION_ERROR,
+            //     defaultMessage = "The project id is illegal!"
+            // )
+        }
     }
 
     private fun checkPipelineId(pipelineId: String) {
@@ -771,12 +814,8 @@ class ServicePipelineResourceImpl @Autowired constructor(
     }
 
     private fun checkParam(userId: String, projectId: String) {
-        if (userId.isBlank()) {
-            throw ParamBlankException("Invalid userId")
-        }
-        if (projectId.isBlank()) {
-            throw ParamBlankException("Invalid projectId")
-        }
+        checkUserId(userId)
+        checkProjectId(projectId)
     }
 
     @Suppress("ALL")
@@ -787,5 +826,12 @@ class ServicePipelineResourceImpl @Autowired constructor(
         if (pipelineIds.size > 100) {
             throw InvalidParamException("Number of pipelines is too large, size:${pipelineIds.size}")
         }
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(ServicePipelineResourceImpl::class.java)
+
+        // 与 AbsProjectServiceImpl#validate(english_name) 一致
+        private const val ENGLISH_NAME_PATTERN = "[a-z][a-zA-Z0-9-]+"
     }
 }

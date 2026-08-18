@@ -270,6 +270,8 @@ export const VersionHistorySideSlider = defineComponent({
 
       const confirmed = await new Promise<boolean>((resolve) => {
         InfoBox({
+          // Sideslider zIndex=2500，InfoBox 默认层级更低会被挡住
+          extCls: 'version-history-delete-infobox',
           title: t('flow.versionHistory.deleteVersionConfirm', [row.displayName]),
           confirmText: t('flow.versionHistory.delete'),
           cancelText: t('flow.common.cancel'),

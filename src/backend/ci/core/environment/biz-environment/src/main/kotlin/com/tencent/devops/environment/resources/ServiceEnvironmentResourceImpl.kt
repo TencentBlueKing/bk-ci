@@ -34,6 +34,7 @@ import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.ActionId
+import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.environment.api.ServiceEnvironmentResource
@@ -311,7 +312,7 @@ class ServiceEnvironmentResourceImpl @Autowired constructor(
         envName: String?,
         nodeName: String?,
         enableNode: Boolean,
-        data: EnableNodeEnvData?
+        data: EnableNodeEnvData
     ): Result<Boolean> {
         if (envHashId.isNullOrBlank() && envName.isNullOrBlank()) {
             throw ErrorCodeException(
@@ -356,7 +357,7 @@ class ServiceEnvironmentResourceImpl @Autowired constructor(
         }
     }
 
-    override fun fetchAllNodeEnvList(
+    override fun fetchAllNodeEnvListByWorkspace(
         userId: String,
         projectId: String?,
         workspaceName: String,
@@ -389,5 +390,14 @@ class ServiceEnvironmentResourceImpl @Autowired constructor(
                 nodeStatus = null
             )
         )
+    }
+
+    override fun checkEnvPermission(
+        userId: String,
+        projectId: String,
+        envId: Long,
+        permission: AuthPermission
+    ): Result<Boolean> {
+        return Result(envService.checkEnvPermission(userId, projectId, envId, permission))
     }
 }

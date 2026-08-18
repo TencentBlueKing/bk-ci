@@ -412,26 +412,22 @@
                         </div>
                         <span v-else>--</span>
                     </template>
+                    <template
+                        v-else-if="col.id === 'operate'"
+                        v-slot="props"
+                    >
+                        <bk-button
+                            v-if="retryable(props.row)"
+                            text
+                            theme="primary"
+                            size="small"
+                            @click.stop="retry(props.row.id)"
+                        >
+                            {{ $t('history.reBuild') }}
+                        </bk-button>
+                    </template>
                 </bk-table-column>
                 <template v-if="!archiveFlag">
-                    <bk-table-column
-                        v-if="!isDebug"
-                        :label="$t('operate')"
-                        fixed="right"
-                        width="80"
-                    >
-                        <template v-slot="props">
-                            <bk-button
-                                v-if="retryable(props.row)"
-                                text
-                                theme="primary"
-                                size="small"
-                                @click.stop="retry(props.row.id)"
-                            >
-                                {{ $t(isDebug ? 'reDebug' : 'history.reBuild') }}
-                            </bk-button>
-                        </template>
-                    </bk-table-column>
                     <bk-table-column
                         type="setting"
                         :tippy-options="{ zIndex: 3000 }"
@@ -685,7 +681,14 @@
         errorTypeMap,
         extForFile
     } from '@/utils/pipelineConst'
-    import { convertFileSize, convertMStoString, convertTime, flatSearchKey, copyToClipboard } from '@/utils/util'
+    import {
+        convertFileSize,
+        convertMStoString,
+        convertTime,
+        flatSearchKey,
+        copyToClipboard,
+        encodeArtifactDownloadUrl
+    } from '@/utils/util'
     import webSocketMessage from '@/utils/webSocketMessage'
     import { mapActions, mapGetters, mapState } from 'vuex'
 
@@ -695,6 +698,19 @@
     } from '@/utils/permission'
 
     const LS_COLUMN_KEY = 'shownColumnsKeys'
+    const LS_COLUMN_VERSION_KEY = 'shownColumnsKeysVersion'
+    const COLUMN_CONFIG_VERSION = '2'
+    function getInitSortedColumns () {
+        const lsColumns = localStorage.getItem(LS_COLUMN_KEY)
+        const lsColumnVersion = localStorage.getItem(LS_COLUMN_VERSION_KEY)
+        const columns = lsColumns ? JSON.parse(lsColumns) : BUILD_HISTORY_TABLE_DEFAULT_COLUMNS
+
+        if (lsColumns && lsColumnVersion !== COLUMN_CONFIG_VERSION && !columns.includes('operate')) {
+            return [...columns, 'operate']
+        }
+
+        return columns
+    }
     export default {
         name: 'build-history-table',
         components: {
@@ -716,8 +732,7 @@
             isDebug: Boolean
         },
         data () {
-            const lsColumns = localStorage.getItem(LS_COLUMN_KEY)
-            const initSortedColumns = lsColumns ? JSON.parse(lsColumns) : BUILD_HISTORY_TABLE_DEFAULT_COLUMNS
+            const initSortedColumns = getInitSortedColumns()
             return {
                 RESOURCE_ACTION,
                 RESOURCE_TYPE,
@@ -763,7 +778,9 @@
                 return BUILD_HISTORY_TABLE_COLUMNS_MAP
             },
             tableColumnFields () {
-                return this.tableColumnKeys.map(key => this.allTableColumnMap[key])
+                return this.tableColumnKeys
+                    .map(key => this.allTableColumnMap[key])
+                    .filter(col => col && !(col.id === 'operate' && (this.archiveFlag || this.isDebug)))
             },
             projectId () {
                 return this.$route.params.projectId
@@ -1030,10 +1047,12 @@
                 this.tableColumnKeys = columns
                 this.$refs.tableSetting.$parent.instance?.hide()
                 localStorage.setItem(LS_COLUMN_KEY, JSON.stringify(columns))
+                localStorage.setItem(LS_COLUMN_VERSION_KEY, COLUMN_CONFIG_VERSION)
             },
             handleColumnReset () {
                 this.tableColumnKeys = [...BUILD_HISTORY_TABLE_DEFAULT_COLUMNS]
                 localStorage.setItem(LS_COLUMN_KEY, JSON.stringify(BUILD_HISTORY_TABLE_DEFAULT_COLUMNS))
+                localStorage.setItem(LS_COLUMN_VERSION_KEY, COLUMN_CONFIG_VERSION)
                 this.$refs.tableSetting.$parent.instance?.hide()
             },
             async requestHistory () {
@@ -1320,7 +1339,7 @@
                         message: `${this.$t('history.downloading')}${name}`,
                         theme: 'success'
                     })
-                    window.open(res.url, '_self')
+                    window.open(encodeArtifactDownloadUrl(res.url, path), '_self')
                 } catch (err) {
                     const { projectId, pipelineId } = this
                     this.handleError(err, {

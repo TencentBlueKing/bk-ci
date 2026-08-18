@@ -43,6 +43,7 @@ import com.tencent.devops.environment.pojo.SharedProjectInfoWrap
 import com.tencent.devops.environment.pojo.enums.EnvType
 import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.environment.pojo.enums.NodeType
+import com.tencent.devops.environment.pojo.envOperate.EnableNodeEnvData
 import com.tencent.devops.environment.pojo.thirdpartyagent.AgentPipelineRef
 import com.tencent.devops.openapi.BkApigwApi
 import io.swagger.v3.oas.annotations.Operation
@@ -564,6 +565,7 @@ interface ApigwEnvironmentResourceV4 {
         nodeName: String?,
         @Parameter(description = "启动true/停用false", required = true)
         @QueryParam("enable")
-        enable: Boolean
+        enable: Boolean,
+        data: EnableNodeEnvData?
     ): Result<Boolean>
 }

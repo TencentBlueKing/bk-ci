@@ -92,7 +92,8 @@ class ExistNodeEnvCreatorImpl @Autowired constructor(
                     envDesc = envCreateInfo.desc,
                     envType = envCreateInfo.envType.name,
                     envNodeType = envCreateInfo.envNodeType,
-                    envVars = ObjectMapper().writeValueAsString(envCreateInfo.envVars)
+                    envVars = ObjectMapper().writeValueAsString(envCreateInfo.envVars),
+                    os = envCreateInfo.os
                 )
                 envTagDao.batchStoreEnvTag(
                     dslContext = context,
@@ -145,7 +146,8 @@ class ExistNodeEnvCreatorImpl @Autowired constructor(
                     envDesc = envCreateInfo.desc,
                     envType = envCreateInfo.envType.name,
                     envNodeType = envCreateInfo.envNodeType,
-                    envVars = ObjectMapper().writeValueAsString(envCreateInfo.envVars)
+                    envVars = ObjectMapper().writeValueAsString(envCreateInfo.envVars),
+                    os = envCreateInfo.os
                 )
                 envNodeDao.batchStoreEnvNode(context, nodeLongIds, envId, projectId)
                 environmentPermissionService.createEnv(userId, projectId, envId, envCreateInfo.name)
@@ -164,7 +166,8 @@ class ExistNodeEnvCreatorImpl @Autowired constructor(
                 envDesc = envCreateInfo.desc,
                 envType = envCreateInfo.envType.name,
                 envNodeType = envCreateInfo.envNodeType,
-                envVars = ObjectMapper().writeValueAsString(envCreateInfo.envVars)
+                envVars = ObjectMapper().writeValueAsString(envCreateInfo.envVars),
+                os = envCreateInfo.os
             )
             environmentPermissionService.createEnv(userId, projectId, envId, envCreateInfo.name)
         }

@@ -4,7 +4,6 @@
   display: flex;
   justify-content: space-between;
   align-items: stretch;
-  margin-bottom: 2px;
   background: var(--bg-primary);
   transition: all var(--transition-normal) ease;
   border: 1px solid var(--bg-hover);
@@ -14,6 +13,11 @@
 .variableItem:hover {
   border-color: var(--color-primary);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.variableItem:hover .valueText {
+  width: 70%;
+  transition: all var(--transition-normal) ease;
 }
 
 .variableInfo {
@@ -31,9 +35,11 @@
     font-size: 11px;
     font-weight: 600;
     color: var(--color-text-primary);
-    font-family: 'Monaco', 'Menlo', 'Consolas', monospace;
     cursor: default;
-
+    max-width: 320px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
     &[data-has-desc] {
       border-bottom: 1px dashed #979BA5;
     }
@@ -53,6 +59,9 @@
     color: var(--color-text-secondary);
     margin-bottom: 1px;
     font-weight: 500;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .variableDesc {
@@ -69,16 +78,18 @@
     display: flex;
     align-items: center;
     gap: 3px;
+    min-width: 0;
   }
 
   .valueLabel {
     color: var(--color-text-secondary);
+    flex-shrink: 0;
   }
 
   .valueText {
     color: var(--color-text-primary);
-    font-family: 'Monaco', 'Menlo', 'Consolas', monospace;
     font-weight: 500;
+    min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -120,11 +131,13 @@
   transition: opacity var(--transition-normal) ease;
   right: calc(var(--spacing-md) + var(--spacing-lg));
   bottom: var(--spacing-sm);
+  
   .actionItem {
     cursor: pointer;
     line-height: 1;
     &:hover {
       color: var(--color-primary);
+    
     }
     .dangerAction:hover {
       color: var(--color-danger);

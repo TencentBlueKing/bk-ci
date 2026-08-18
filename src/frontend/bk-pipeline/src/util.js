@@ -144,6 +144,7 @@ export function pad(n) {
  *  @return {String}
  */
 export function convertMStoString(ms) {
+  
   if (ms < 0) {
     return "--";
   }

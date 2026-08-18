@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.enums.TriggerRepositoryType
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
 import com.tencent.devops.common.pipeline.pojo.element.RunCondition
@@ -56,6 +57,7 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.TapdWebHookTrigge
 import com.tencent.devops.common.pipeline.pojo.element.trigger.TimerTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.PathFilterType
+import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.TimerNodeType
 import com.tencent.devops.common.pipeline.enums.TapdEventType
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitMrEventAction
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitPushActionType
@@ -211,10 +213,6 @@ class TriggerTransfer @Autowired(required = false) constructor(
                 }
             )
         }
-
-        triggerOn.tapd?.let {
-            elementQueue.addAll(it.map { trigger -> yaml2TriggerTapdElement(trigger) })
-        }
     }
 
     @Suppress("ComplexMethod")
@@ -334,7 +332,12 @@ class TriggerTransfer @Autowired(required = false) constructor(
                     id = git.id,
                     name = git.name.nullIfDefault(defaultName),
                     enable = git.enable.nullIfDefault(true),
-                    action = git.includeIssueAction
+                    action = git.includeIssueAction,
+                    assignees = git.includeAssignees?.disjoin(),
+                    assigneesIgnore = git.excludeAssignees?.disjoin(),
+                    usersIgnore = git.excludeUsers,
+                    labels = git.includeLabels?.disjoin(),
+                    labelsIgnore = git.excludeLabels?.disjoin()
                 )
 
                 CodeEventType.NOTE -> nowExist.note = NoteRule(
@@ -392,6 +395,8 @@ class TriggerTransfer @Autowired(required = false) constructor(
                     pathsIgnore = git.excludePaths?.disjoin(),
                     users = git.includeUsers,
                     usersIgnore = git.excludeUsers,
+                    assignees = git.includeAssignees?.disjoin(),
+                    assigneesIgnore = git.excludeAssignees?.disjoin(),
                     pathFilterType = git.pathFilterType?.name.nullIfDefault(PathFilterType.NamePrefixFilter.name),
                     action = git.includeMrAction,
                     labels = git.includeLabels?.disjoin(),
@@ -428,7 +433,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
                             pathFilterType = push.pathFilterType?.let { PathFilterType.valueOf(it) }
                                 ?: PathFilterType.NamePrefixFilter,
                             eventType = CodeEventType.PUSH,
-                            includeMrAction = push.action ?: listOf(
+                            includePushAction = push.action ?: listOf(
                                 TGitPushActionType.PUSH_FILE.value,
                                 TGitPushActionType.NEW_BRANCH.value
                             ),
@@ -603,6 +608,8 @@ class TriggerTransfer @Autowired(required = false) constructor(
                     excludePaths = mr.pathsIgnore.nonEmptyOrNull()?.join(),
                     includeUsers = mr.users,
                     excludeUsers = mr.usersIgnore.nonEmptyOrNull()?.join(),
+                    includeAssignees = mr.assignees.nonEmptyOrNull()?.join(),
+                    excludeAssignees = mr.assigneesIgnore.nonEmptyOrNull()?.join(),
                     webhookQueue = mr.webhookQueue,
                     enableCheck = mr.reportCommitCheck,
                     pathFilterType = mr.pathFilterType?.let { PathFilterType.valueOf(it) }
@@ -637,6 +644,11 @@ class TriggerTransfer @Autowired(required = false) constructor(
                     stepId = issue.id,
                     name = issue.name ?: "GitHub事件触发",
                     includeIssueAction = issue.action,
+                    includeAssignees = issue.assignees.nonEmptyOrNull()?.join(),
+                    excludeAssignees = issue.assigneesIgnore.nonEmptyOrNull()?.join(),
+                    excludeUsers = issue.usersIgnore.nonEmptyOrNull()?.join(),
+                    includeLabels = issue.labels.nonEmptyOrNull()?.join(),
+                    excludeLabels = issue.labelsIgnore.nonEmptyOrNull()?.join(),
                     eventType = CodeEventType.ISSUES,
                     repositoryType = repositoryType,
                     repositoryName = triggerOn.repoName
@@ -762,6 +774,23 @@ class TriggerTransfer @Autowired(required = false) constructor(
                             }
                             JsonUtil.toJson(params, false)
                         },
+                        // nodes 仅创作流通道生效：有值即指定创作节点，否则枚举创作环境全部节点；
+                        // 非创作流通道忽略该关键字
+                        nodeType = when {
+                            yamlInput.channelCode != ChannelCode.CREATIVE_STREAM -> null
+                            !timer.nodes.isNullOrEmpty() -> TimerNodeType.NODE_LIST
+                            else -> TimerNodeType.ENV_ALL
+                        },
+                        // yaml 中存的是 workspaceName，转换为 Model 侧的 agentHashId
+                        nodes = timer.nodes?.takeIf {
+                            yamlInput.channelCode == ChannelCode.CREATIVE_STREAM
+                        }?.mapNotNull { workspaceName ->
+                            transferCache.getAgentHashIdByWorkspace(
+                                userId = yamlInput.userId,
+                                projectId = yamlInput.projectCode,
+                                workspaceName = workspaceName
+                            )
+                        },
                         version = if (timer.newExpression.filterNonEmpty().isEmpty() &&
                                 (timer.advanceExpression?.size ?: 0) == 1
                         ) {
@@ -794,32 +823,59 @@ class TriggerTransfer @Autowired(required = false) constructor(
     }
 
     /**
-     * 将 YAML [TapdRule] 转为 [TapdWebHookTriggerElement]。
-     * 仅当 eventType 为 STORY/BUG 时分别填充对应的 includeAction 字段。
+     * 将 `on:` 条目中的 TAPD 触发转换为对应 [TapdWebHookTriggerElement]。
+     *
+     * 与代码库触发的 `yaml2TriggerGit` 平级：一个 [TriggerOn] 承载一个 workspace 的
+     * story / bug 配置（通过 `type: tapd` 区分）；story / bug 各自最多生成一个触发元素。
      */
-    private fun yaml2TriggerTapdElement(tapd: TapdRule): TapdWebHookTriggerElement {
-        val eventType = tapd.eventType?.let { TapdEventType.parse(it) }
-        val includeStoryAction = tapd.action?.takeIf { eventType == TapdEventType.STORY }
-        val includeBugAction = tapd.action?.takeIf { eventType == TapdEventType.BUG }
+    fun yaml2TriggerTapd(triggerOn: TriggerOn, elementQueue: MutableList<Element>) {
+        val workspaceId = triggerOn.workspaceId ?: return
+        triggerOn.story?.let { story ->
+            elementQueue.add(
+                buildTapdElement(
+                    workspaceId = workspaceId,
+                    eventType = TapdEventType.STORY,
+                    rule = story
+                )
+            )
+        }
+        triggerOn.bug?.let { bug ->
+            elementQueue.add(
+                buildTapdElement(
+                    workspaceId = workspaceId,
+                    eventType = TapdEventType.BUG,
+                    rule = bug
+                )
+            )
+        }
+    }
+
+    private fun buildTapdElement(
+        workspaceId: String,
+        eventType: TapdEventType,
+        rule: TapdRule
+    ): TapdWebHookTriggerElement {
+        val includeStoryAction = rule.action?.takeIf { eventType == TapdEventType.STORY }
+        val includeBugAction = rule.action?.takeIf { eventType == TapdEventType.BUG }
         return TapdWebHookTriggerElement(
-            name = tapd.name ?: "TAPD事件触发",
-            stepId = tapd.id,
+            name = rule.name ?: "TAPD事件触发",
+            stepId = rule.id,
             data = TapdWebHookTriggerData(
                 input = TapdWebHookTriggerInput(
-                    tapdProjectId = tapd.tapdProjectId,
+                    workspaceId = workspaceId,
                     eventType = eventType,
                     includeStoryAction = includeStoryAction,
                     includeBugAction = includeBugAction,
-                    includeUsers = tapd.users,
-                    excludeUsers = tapd.usersIgnore,
-                    includeLabels = tapd.labels?.join(),
-                    excludeLabels = tapd.labelsIgnore?.join(),
-                    includePriority = tapd.priorities?.join(),
-                    includeOwner = tapd.owners,
-                    excludeOwner = tapd.ownersIgnore
+                    includeUsers = rule.users,
+                    excludeUsers = rule.usersIgnore,
+                    includeLabels = rule.labels?.join(),
+                    excludeLabels = rule.labelsIgnore?.join(),
+                    includePriority = rule.priorities?.join(),
+                    includeOwner = rule.owners,
+                    excludeOwner = rule.ownersIgnore
                 )
             )
-        ).checkTriggerElementEnable(tapd.enable) as TapdWebHookTriggerElement
+        ).checkTriggerElementEnable(rule.enable) as TapdWebHookTriggerElement
     }
 
     @Suppress("ComplexMethod")

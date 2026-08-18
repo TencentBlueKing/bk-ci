@@ -54,16 +54,19 @@ class PipelineAiSummaryVersionPostProcessor constructor(
         pipelineSetting: PipelineSetting
     ) {
         with(context) {
-            // 仅对已发布的版本且渠道为 CREATIVE_STREAM 的流水线触发AI摘要生成
+            // 仅对已发布的版本且渠道为 CREATIVE_STREAM 或 BS 的流水线触发AI摘要生成
             if (pipelineResourceVersion.status != VersionStatus.RELEASED) {
                 return
             }
-            if (pipelineBasicInfo.channelCode != ChannelCode.CREATIVE_STREAM) {
+            if (
+                pipelineBasicInfo.channelCode != ChannelCode.CREATIVE_STREAM &&
+                pipelineBasicInfo.channelCode != ChannelCode.BS
+            ) {
                 return
             }
 
             logger.info(
-                "Dispatching AI summary event for CREATIVE_STREAM pipeline[$pipelineId] " +
+                "Dispatching AI summary event for pipeline[$pipelineId] " +
                     "project[$projectId] version[${pipelineResourceVersion.version}]"
             )
 

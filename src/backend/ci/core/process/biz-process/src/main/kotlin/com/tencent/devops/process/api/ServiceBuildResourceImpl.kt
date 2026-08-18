@@ -70,6 +70,7 @@ import com.tencent.devops.process.pojo.pipeline.BuildDetailSimple
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import com.tencent.devops.process.pojo.pipeline.ModelRecord
 import com.tencent.devops.process.pojo.pipeline.PipelineLatestBuild
+import com.tencent.devops.process.pojo.pipeline.SubPipelineBuildLocateResult
 import com.tencent.devops.process.pojo.task.PipelineFailTaskDetail
 import com.tencent.devops.process.service.builds.PipelineBuildFacadeService
 import com.tencent.devops.process.service.builds.PipelineBuildMaintainFacadeService
@@ -380,6 +381,36 @@ class ServiceBuildResourceImpl @Autowired constructor(
                 pipelineId = pipelineId,
                 buildId = buildId,
                 channelCode = channelCode,
+                checkPermission = ChannelCode.isNeedAuth(channelCode)
+            )
+        )
+    }
+
+    override fun locateSubPipelineBuild(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        parentTaskId: String,
+        parentExecuteCount: Int,
+        channelCode: ChannelCode
+    ): Result<SubPipelineBuildLocateResult> {
+        checkUserId(userId)
+        checkParam(projectId, pipelineId)
+        if (buildId.isBlank()) {
+            throw ParamBlankException("Invalid buildId")
+        }
+        if (parentTaskId.isBlank()) {
+            throw ParamBlankException("Invalid parentTaskId")
+        }
+        return Result(
+            pipelineBuildFacadeService.locateSubPipelineBuild(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                parentTaskId = parentTaskId,
+                parentExecuteCount = parentExecuteCount,
                 checkPermission = ChannelCode.isNeedAuth(channelCode)
             )
         )

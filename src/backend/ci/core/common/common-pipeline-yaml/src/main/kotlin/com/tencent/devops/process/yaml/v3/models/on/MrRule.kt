@@ -71,6 +71,12 @@ data class MrRule(
     @JsonProperty("users-ignore")
     val usersIgnore: List<String>? = null,
 
+    val assignees: List<String>? = null,
+
+    @get:Schema(title = "assignees-ignore")
+    @JsonProperty("assignees-ignore")
+    val assigneesIgnore: List<String>? = null,
+
     @get:Schema(title = "block-mr")
     @JsonProperty("block-mr")
     val blockMr: Boolean? = null,

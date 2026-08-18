@@ -54,30 +54,17 @@
         },
 
         computed: {
-            getCommentGenerator () {
-                return {
-                    atom: this.requestAtomUserComment,
-                    template: this.requestTemplateUserComment,
-                    image: this.requestImageUserComment
-                }
-            },
-            modifyCommentGenerator () {
-                return {
-                    atom: this.requestAtomModifyComment,
-                    template: this.requestTemplateModifyComment,
-                    image: this.requestImageModifyComment
-                }
-            },
-            addCommentGenerator () {
-                return {
-                    atom: this.requestAddAtomComment,
-                    template: this.requestAddTemplateComment,
-                    image: this.requestAddImageComment
-                }
-            },
             type () {
                 return this.$route.params.type
-            }
+            },
+            storeType () {
+                const storeTypeMap = {
+                    atom: 'ATOM',
+                    template: 'TEMPLATE',
+                    image: 'IMAGE',
+                }
+                return storeTypeMap[this.type]
+            },
         },
 
         mounted () {
@@ -86,27 +73,19 @@
         
         methods: {
             ...mapActions('store', [
-                'requestAddAtomComment',
-                'requestAddTemplateComment',
-                'requestTemplateModifyComment',
-                'requestTemplateUserComment',
-                'requestAtomModifyComment',
-                'requestAtomUserComment',
-                'requestAddImageComment',
-                'requestImageModifyComment',
-                'requestImageUserComment'
+                'requestAddComment',
+                'requestModifyComment',
+                'requestUserComment',
             ]),
 
             getComment () {
                 if (this.commentId) {
-
-                    if (!Object.keys(this.getCommentGenerator).includes(this.type) || typeof this.getCommentGenerator[this.type] !== 'function') {
-                        this.$bkMessage({ message: this.$t('store.typeError'), theme: 'error' })
-                        return Promise.reject(new Error(this.$t('store.typeError')))
-                    }
                     this.isLoading = true
-                    const method = this.getCommentGenerator[this.type]
-                    method(this.commentId).then((res) => {
+                    const params = {
+                        id: this.commentId,
+                    }
+                    
+                    this.requestUserComment(params).then((res) => {
                         this.rate = res.score || 5
                         this.comment = res.commentContent || ''
                     }).catch((err) => {
@@ -155,15 +134,13 @@
             modifyComment () {
                 const data = {
                     id: this.commentId,
+                    storeType: this.storeType,
                     postData: {
                         commentContent: this.comment,
                         score: this.rate
                     }
                 }
-                if (!Object.keys(this.modifyCommentGenerator).includes(this.type) || typeof this.modifyCommentGenerator[this.type] !== 'function') {
-                    return Promise.reject(new Error(this.$t('store.typeError')))
-                }
-                return this.modifyCommentGenerator[this.type](data).then(() => ({
+                return this.requestModifyComment(data).then(() => ({
                     commentId: this.commentId,
                     commentContent: this.comment,
                     score: this.rate,
@@ -175,15 +152,13 @@
                 const data = {
                     id: this.id,
                     code: this.code,
+                    storeType: this.storeType,
                     postData: {
                         commentContent: this.comment,
                         score: this.rate
                     }
                 }
-                if (!Object.keys(this.addCommentGenerator).includes(this.type) || typeof this.addCommentGenerator[this.type] !== 'function') {
-                    return Promise.reject(new Error(this.$t('store.typeError')))
-                }
-                return this.addCommentGenerator[this.type](data)
+                return this.requestAddComment(data)
             }
         }
     }

@@ -75,7 +75,10 @@ export default function useRelatedNodes () {
                     ...params,
                     ...(isCreateResType.value ? {
                         nodeType: 'CREATE'
-                    }: {})
+                    }: {}),
+                    ...(currentEnv.value?.os ? {
+                        osName: currentEnv.value.os.toLowerCase()
+                    } : {})
                 },
                 tags
             })
