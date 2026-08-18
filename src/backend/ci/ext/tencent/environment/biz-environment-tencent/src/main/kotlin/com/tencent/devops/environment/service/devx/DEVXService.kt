@@ -44,8 +44,8 @@ import com.tencent.devops.environment.dao.devx.DEVXHookDao
 import com.tencent.devops.environment.permission.EnvironmentPermissionService
 import com.tencent.devops.environment.pojo.DEVXHook
 import com.tencent.devops.environment.pojo.EnvWithNodeCount
+import com.tencent.devops.environment.pojo.enums.EnvType
 import com.tencent.devops.environment.pojo.enums.NodeStatus
-import com.tencent.devops.environment.pojo.enums.TXEnvType
 import com.tencent.devops.remotedev.api.service.ServiceRemoteDevResource
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -182,7 +182,7 @@ class DEVXService @Autowired constructor(
             )
         }
         val check = envDao.getOrNull(dslContext, projectId, envId)
-        if (check == null || check.envType != TXEnvType.DEVX.name) {
+        if (check == null || check.envType != EnvType.DEVX.name) {
             throw PermissionForbiddenException(
                 message = I18nUtil.getCodeLanMessage(ERROR_ENV_NOT_EXISTS, params = arrayOf(envHashId))
             )
@@ -199,7 +199,7 @@ class DEVXService @Autowired constructor(
         val envId = envNodeDao.listNodeIds(dslContext, projectId, listOf(nodeId)).firstOrNull()?.envId
             ?: return emptyList()
         val check = envDao.getOrNull(dslContext, projectId, envId)
-        if (check == null || check.envType != TXEnvType.DEVX.name) {
+        if (check == null || check.envType != EnvType.DEVX.name) {
             throw PermissionForbiddenException(
                 message = I18nUtil.getCodeLanMessage(
                     ERROR_ENV_NOT_EXISTS, params = arrayOf(HashUtil.encodeLongId(envId))
@@ -243,7 +243,7 @@ class DEVXService @Autowired constructor(
             )
         }
         val check = envDao.getOrNull(dslContext, projectId, envId)
-        if (check == null || check.envType != TXEnvType.DEVX.name) {
+        if (check == null || check.envType != EnvType.DEVX.name) {
             throw PermissionForbiddenException(
                 message = I18nUtil.getCodeLanMessage(ERROR_ENV_NOT_EXISTS, params = arrayOf(envHashId))
             )
