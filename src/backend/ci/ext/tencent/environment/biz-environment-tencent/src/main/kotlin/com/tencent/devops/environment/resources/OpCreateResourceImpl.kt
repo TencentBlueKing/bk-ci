@@ -2,6 +2,7 @@
 
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.environment.api.OpCreateResource
+import com.tencent.devops.environment.pojo.op.CreateGateWayConfig
 import com.tencent.devops.environment.service.TXCreateEnvService
 import com.tencent.devops.environment.service.thirdpartyagent.TencentAgentService
 import org.springframework.beans.factory.annotation.Autowired
@@ -17,5 +18,16 @@ class OpCreateResourceImpl @Autowired constructor(
 
     override fun refreshCreateNodeDisplayName(userId: String) {
         txEnvCreateService.refreshCreateDisplayName()
+    }
+
+    override fun getCreateInstallConfig(userId: String): CreateGateWayConfig? {
+        return txEnvCreateService.getCreateGatewayConfig()
+    }
+
+    override fun setCreateInstallConfig(
+        userId: String,
+        data: CreateGateWayConfig
+    ) {
+        txEnvCreateService.setCreateGatewayConfig(data)
     }
 }
