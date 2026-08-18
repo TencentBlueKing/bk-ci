@@ -93,6 +93,7 @@ class MakeMoneyService @Autowired constructor(
      */
     @JsonIgnoreProperties(ignoreUnknown = true)
     private data class CmdbAssetData(
+        val count: Int?,
         val info: List<CmdbAssetInfo>?
     )
 
@@ -433,6 +434,7 @@ class MakeMoneyService @Autowired constructor(
             var start = 0
             val limit = 500
             var hasMore = true
+            var expectedCount: Int? = null
 
             while (hasMore) {
                 val requestBody = JsonUtil.toJson(
@@ -472,6 +474,8 @@ class MakeMoneyService @Autowired constructor(
                     }
 
                     val currentPageData = cmdbResponse.data.info
+                    val totalCount = cmdbResponse.data.count
+                    expectedCount = totalCount ?: expectedCount
                     if (currentPageData.isEmpty()) {
                         hasMore = false
                     } else {
@@ -485,17 +489,22 @@ class MakeMoneyService @Autowired constructor(
                             }
                         }
 
-                        // 如果返回的数据量小于limit，说明已经是最后一页
-                        if (currentPageData.size < limit) {
-                            hasMore = false
+                        // 按实际返回条数推进 start，避免某页返回不足 limit 时被误判为最后一页
+                        start += currentPageData.size
+                        // 有总数则按总数判断是否结束；无总数时回退到"返回不足 limit 即结束"
+                        hasMore = if (totalCount != null) {
+                            start < totalCount
                         } else {
-                            start += limit
+                            currentPageData.size >= limit
                         }
                     }
                 }
             }
 
-            logger.info("fetchCmdbAssetInfo completed|total size: ${resultMap.size}")
+            logger.info(
+                "fetchCmdbAssetInfo completed|total size: ${resultMap.size}|" +
+                    "cmdb count: $expectedCount"
+            )
             resultMap
         } catch (e: Exception) {
             logger.error("fetchCmdbAssetInfo exception", e)
