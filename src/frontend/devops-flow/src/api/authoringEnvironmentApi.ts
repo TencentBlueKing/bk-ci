@@ -22,6 +22,7 @@ export interface AuthoringEnvItem {
   desc: string
   envType: string
   envNodeType: string
+  os?: string
   nodeCount: number
   tags: Array<{
     tagKeyId: number
@@ -50,6 +51,17 @@ export interface AuthoringEnvItem {
   canDelete: boolean
   canUse: boolean
   projectName: string
+}
+
+export const OS_LABEL_MAP: Record<string, string> = {
+  LINUX: 'Linux',
+  MACOS: 'macOS',
+  WINDOWS: 'Windows',
+}
+
+export function getEnvOsDisplayName(os?: string): string {
+  if (!os) return ''
+  return OS_LABEL_MAP[os] || os
 }
 
 /**

@@ -206,6 +206,7 @@
     "groups": "ユーザーグループ"
   },
   "execDetail": {
+    "progress": "進捗",
     "log": "ログ",
     "setting": "設定",
     "execTime": "再試行回数",
@@ -2109,6 +2110,27 @@
   "completeness": "完了度：",
   "pacDesc": "Pipeline as Code モード（PACモード）。有効化してパイプラインファイルをコードリポジトリに提出すると、コードリポジトリファイルをメンテナンスすることでパイプラインを管理できます。",
   "delegationPermission": "権限委譲",
+  "progressDetail": {
+    "title": "進捗詳細",
+    "refresh": "更新",
+    "totalProgress": "総進捗",
+    "subtasks": "サブタスク進捗",
+    "timeline": "ステージタイムライン",
+    "currentProgress": "現在の進捗",
+    "completed": "完了",
+    "duration": "所要時間",
+    "running": "実行中",
+    "loadFailed": "進捗詳細の読み込みに失敗しました",
+    "empty": "進捗詳細はありません",
+    "viewDetail": "進捗詳細を表示",
+    "clickToView": "ステータスをクリックで",
+    "status": {
+      "succeeded": "完了",
+      "failed": "失敗",
+      "running": "実行中",
+      "pending": "待機中"
+    }
+  },
   "delegation": {
     "tips1": "以下のシナriโอでは委譲人の権限が使用されます：",
     "tips2": "1. コードリポジトリトリガー、タイマートriガー、サブパイプライントriガー、リモートトリガー（トリガー者が指定されていない場合）など、プラットフォームは委譲人が{0}を持っているか確認します。持っていない場合、トリガーは失敗します。",

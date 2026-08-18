@@ -688,12 +688,6 @@
             dropdownList,
             StatusIcon
         },
-        setup () {
-            const { isPersonalProject } = useEnvDetail()
-            return {
-                isPersonalProject
-            }
-        },
         props: {
             nodeList: {
                 type: Array,
@@ -1204,7 +1198,7 @@
                     projectId: this.projectId,
                     resourceType: this.currentResourceType,
                     resourceCode: node.nodeHashId,
-                    action: this.currentResourceAction.USE
+                    action: this.currentResourceAction.EDIT
                 })
             },
             getCreateNodePermissionTooltips (createWorkspaceSource) {
