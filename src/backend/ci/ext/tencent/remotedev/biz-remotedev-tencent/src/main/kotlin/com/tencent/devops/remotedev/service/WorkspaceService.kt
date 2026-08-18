@@ -80,6 +80,7 @@ import com.tencent.devops.remotedev.dao.WorkspaceSharedDao
 import com.tencent.devops.remotedev.dao.WorkspaceWindowsDao
 import com.tencent.devops.remotedev.dispatch.kubernetes.dao.DispatchWorkspaceDao
 import com.tencent.devops.remotedev.dispatch.kubernetes.interfaces.ServiceStartCloudInterface
+import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.client.WorkspaceStartCloudClient
 import com.tencent.devops.remotedev.pojo.OpHistoryCopyWriting
 import com.tencent.devops.remotedev.pojo.OrganizationGroup
 import com.tencent.devops.remotedev.pojo.ProjectAccessDevicePermissionsResp
@@ -171,7 +172,8 @@ class WorkspaceService @Autowired constructor(
     private val windowsGpuResourceDao: WindowsGpuResourceDao,
     private val whiteListService: WhiteListService,
     private val whiteListDao: WhiteListDao,
-    private val dispatchWorkspaceDao: DispatchWorkspaceDao
+    private val dispatchWorkspaceDao: DispatchWorkspaceDao,
+    private val workspaceStartCloudClient: WorkspaceStartCloudClient
 ) {
     @Value("\${remoteDev.projectMonitorUrl:}")
     val projectMonitorUrl = ""
@@ -1300,7 +1302,12 @@ class WorkspaceService @Autowired constructor(
         ),
         content = TencentActionAuditContent.CGS_VIEW_CONTENT
     )
-    fun startCloudWorkspaceDetail(userId: String, workspaceName: String?, envId: String?): WorkspaceStartCloudDetail {
+    fun startCloudWorkspaceDetail(
+        userId: String,
+        workspaceName: String?,
+        envId: String?,
+        multiple: Boolean? = null
+    ): WorkspaceStartCloudDetail {
         if (workspaceName != null) {
             val workspace = workspaceJoinDao.fetchAnyWindowsWorkspace(dslContext, workspaceName = workspaceName)
                 ?: throw ErrorCodeException(
@@ -1327,13 +1334,22 @@ class WorkspaceService @Autowired constructor(
                 )
             }
             // 优化：如果当前后台记录的用户，跟进入云桌面人不一致，提示有人在用
+            // --story=136579406 【云桌面】支持团队虾和开黑功能 如果是被分享人可以看
             cgsStatus.userInfos?.firstOrNull()?.takeIf { it.account != userId }?.let {
+                if (multiple == true || workspaceSharedDao.fetchWorkspaceSharedInfo(
+                        dslContext = dslContext,
+                        workspaceName = workspaceName,
+                        sharedUsers = listOf(userId)
+                    ).isNotEmpty()
+                ) {
+                    return startCloudWorkspaceDetail(userId, workspace, multiple ?: false)
+                }
                 throw ErrorCodeException(
                     errorCode = ErrorCodeEnum.WORKSPACE_LOGGED_IN.errorCode,
                     params = arrayOf(workspace.hostIp ?: workspaceName)
                 )
             }
-            return startCloudWorkspaceDetail(userId, workspace)
+            return startCloudWorkspaceDetail(userId, workspace, false)
         }
         if (envId != null) {
             val userEnvs = getUserEnv4Use(userId)
@@ -1410,7 +1426,7 @@ class WorkspaceService @Autowired constructor(
                     notify = false
                 )
             }
-            return startCloudWorkspaceDetail(userId, workspace)
+            return startCloudWorkspaceDetail(userId, workspace, false)
         }
         throw ErrorCodeException(
             errorCode = ErrorCodeEnum.DENIAL_OF_SERVICE.errorCode
@@ -1504,18 +1520,43 @@ class WorkspaceService @Autowired constructor(
 
     private fun startCloudWorkspaceDetail(
         userId: String,
-        workspace: WorkspaceRecordWithWindows
+        workspace: WorkspaceRecordWithWindows,
+        multiple: Boolean
     ): WorkspaceStartCloudDetail {
         logger.info("$userId get startCloud workspace from workspaceName ${workspace.workspaceName}")
 
         // 审计
-        ActionAuditContext.current()
-            .addAttribute(TencentActionAuditContent.PROJECT_CODE_TEMPLATE, workspace.projectId)
-            .setScopeId(workspace.projectId)
-            .setInstanceId(workspace.workspaceName)
-            .setInstanceName(workspace.workspaceName)
-        permissionService.checkViewerPermission(userId, workspace.workspaceName, workspace.projectId)
-        ActionAuditContext.current().addAttribute(TencentActionAuditContent.PROJECT_CODE_TEMPLATE, workspace.projectId)
+        if (!multiple) {
+            ActionAuditContext.current()
+                .addAttribute(TencentActionAuditContent.PROJECT_CODE_TEMPLATE, workspace.projectId)
+                .setScopeId(workspace.projectId)
+                .setInstanceId(workspace.workspaceName)
+                .setInstanceName(workspace.workspaceName)
+            permissionService.checkViewerPermission(userId, workspace.workspaceName, workspace.projectId)
+            ActionAuditContext.current()
+                .addAttribute(TencentActionAuditContent.PROJECT_CODE_TEMPLATE, workspace.projectId)
+        } else {
+            val result = try {
+                workspaceStartCloudClient.checkTeamAccessible(userId, workspace.workspaceName)
+            } catch (e: Exception) {
+                throw ErrorCodeException(
+                    errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
+                    params = arrayOf(
+                        "We're sorry but you don't have viewer permission to access workspace " +
+                                workspace.workspaceName
+                    )
+                )
+            }
+            if (!result) {
+                throw ErrorCodeException(
+                    errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
+                    params = arrayOf(
+                        "We're sorry but you don't have viewer permission to access workspace " +
+                                workspace.workspaceName
+                    )
+                )
+            }
+        }
 
         val resourceId = workspace.resourceId
         val owner = if (workspace.ownerType.projectUse()) {
