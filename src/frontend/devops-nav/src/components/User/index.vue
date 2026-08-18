@@ -77,7 +77,9 @@
         }
 
         updatePage (name) {
-            window.open(`${window.location.origin}/console/${name}`, '_self')
+            const projectId = this.$route.params.projectId
+            const query = projectId ? `?projectCode=${projectId}` : ''
+            window.open(`${window.location.origin}/console/${name}${query}`, '_self')
         }
 
         get menu (): object[] {
