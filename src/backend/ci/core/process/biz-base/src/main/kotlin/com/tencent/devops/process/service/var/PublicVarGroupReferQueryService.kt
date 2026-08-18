@@ -591,7 +591,7 @@ class PublicVarGroupReferQueryService @Autowired constructor(
                     referType = referType,
                     referVersion = referVersion,
                     groupName = groupName,
-                    version = version ?: -1
+                    version = groupReferInfo.version
                 )
                 varReferInfos.groupBy { it.varName }.mapValues { it.value.size }
             }

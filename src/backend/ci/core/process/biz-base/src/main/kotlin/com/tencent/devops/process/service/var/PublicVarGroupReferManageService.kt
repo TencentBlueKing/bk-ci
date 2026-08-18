@@ -1450,42 +1450,6 @@ class PublicVarGroupReferManageService @Autowired constructor(
     }
 
     /**
-     * 根据版本名称处理变量组引用
-     */
-    fun handleVarGroupReferByVersionName(
-        publicVarGroupReferDTO: PublicVarGroupReferDTO
-    ) {
-        val model = publicVarGroupReferDTO.model
-        val publicVarGroups = model.publicVarGroups
-
-        if (publicVarGroups.isNullOrEmpty()) {
-            return
-        }
-
-        val params = model.getTriggerParams()
-        // 查出params中已存在的变量组名称
-        val existingGroupNames = params
-            .mapNotNull { it.varGroupName }
-            .toSet()
-
-        // 对比publicVarGroups，找出params中不存在的变量组
-        val groupsToAdd = publicVarGroups.filter { publicVarGroup ->
-            !existingGroupNames.contains(publicVarGroup.groupName)
-        }
-        handleVarGroupReferBus(publicVarGroupReferDTO)
-        if (groupsToAdd.isNotEmpty()) {
-            // 查询这些变量组的变量并添加到params末尾
-            groupsToAdd.forEach { publicVarGroup ->
-                addVarGroupToParams(
-                    projectId = publicVarGroupReferDTO.projectId,
-                    publicVarGroup = publicVarGroup,
-                    params = params
-                )
-            }
-        }
-    }
-
-    /**
      * 仅将公共变量组成员解析写回 TriggerContainer.params，不记录引用关系。
      * 适用于模板 YAML 转 Model 等无有效 referId 的场景。
      * 引用关系记录需在模板保存（持有 templateId）时单独处理。
@@ -1501,6 +1465,12 @@ class PublicVarGroupReferManageService @Autowired constructor(
         }
 
         val params = model.getTriggerParams()
+        val referencedGroupNames = publicVarGroups.map { it.groupName }.toSet()
+        // 清理 params 中已不再被引用的变量组变量（换组后残留的旧组）
+        params.removeAll { param ->
+            val groupName = param.varGroupName
+            groupName != null && groupName !in referencedGroupNames
+        }
         // 查出params中已存在的变量组名称
         val existingGroupNames = params
             .mapNotNull { it.varGroupName }
