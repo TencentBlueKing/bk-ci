@@ -31,21 +31,19 @@ import com.tencent.devops.common.api.enums.EnumModifier
 import com.tencent.devops.common.api.util.EnumUtil
 import com.tencent.devops.environment.pojo.enums.EnvType
 import com.tencent.devops.environment.pojo.enums.NodeType
-import com.tencent.devops.environment.pojo.enums.TXEnvType
-import com.tencent.devops.environment.pojo.enums.TXNodeType
 
 class EnvTypeEnumModifier : EnumModifier {
 
     override fun modified() {
         EnumUtil.addEnum(
             enumType = EnvType::class.java,
-            enumName = TXEnvType.DEVX.name,
+            enumName = EnvType.DEVX.name,
             additionalValues = arrayOf()
         )
         EnumUtil.addEnum(
             enumType = NodeType::class.java,
-            enumName = TXNodeType.DEVX.name,
-            additionalValues = arrayOf(TXNodeType.DEVX.typeName)
+            enumName = NodeType.DEVX.name,
+            additionalValues = arrayOf(NodeType.DEVX.typeName)
         )
     }
 }
