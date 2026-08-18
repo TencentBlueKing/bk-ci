@@ -37,8 +37,6 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.db.pojo.ARCHIVE_SHARDING_DSL_CONTEXT
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.ChannelCode
-import com.tencent.devops.common.pipeline.enums.PublicVarGroupReferenceTypeEnum
-import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
 import com.tencent.devops.common.pipeline.pojo.TemplateModelAndSetting
 import com.tencent.devops.common.pipeline.pojo.element.Element
@@ -70,7 +68,6 @@ import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.engine.service.PipelineInfoService
 import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
-import com.tencent.devops.process.pojo.`var`.dto.PublicVarGroupReferDTO
 import com.tencent.devops.process.service.`var`.PublicVarGroupReferManageService
 import com.tencent.devops.process.yaml.pojo.TemplatePath
 import com.tencent.devops.process.yaml.pojo.YamlVersion
@@ -337,21 +334,10 @@ class PipelineTransferYamlService @Autowired constructor(
                 model = model,
                 projectId = projectId
             )
-            publicVarGroupReferManageService.handleVarGroupReferByVersionName(
-                PublicVarGroupReferDTO(
-                    userId = userId,
-                    projectId = projectId,
-                    model = model,
-                    referId = pipelineInfo.pipelineId,
-                    referType = PublicVarGroupReferenceTypeEnum.PIPELINE,
-                    referName = model.name,
-                    referVersion = pipelineInfo.version,
-                    referVersionName = pipelineInfo.versionName,
-                    // 仅当前版本为 RELEASED/BRANCH（生效版本）时同步 LATEST_FLAG；草稿（COMMITTING）不同步
-                    activeVersion = pipelineInfo.latestVersionStatus?.fix()?.let {
-                        it == VersionStatus.RELEASED || it == VersionStatus.BRANCH
-                    } ?: false
-                )
+            publicVarGroupReferManageService.addPublicVarGroupsToParams(
+                model = model,
+                projectId = projectId,
+                userId = userId
             )
         }
         val setting = modelTransfer.yaml2Setting(input)
