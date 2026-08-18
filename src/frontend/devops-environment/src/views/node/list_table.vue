@@ -389,7 +389,7 @@
                                     {{ $t('environment.setTag') }}
                                 </span>
                                 <span
-                                    v-if="!['TSTACK'].includes(props.row.nodeType) && !isPersonalProject"
+                                    v-if="!['TSTACK'].includes(props.row.nodeType) && !isPersonalProject && props.row.createWorkspaceSource !== 'REMOTEDEV'"
                                     v-perm="{
                                         // 团队项目创作流节点，使用canEdit判断删除权限
                                         hasPermission: !isPersonalProject && isCreateResType ? props.row.canEdit : props.row.canDelete,
@@ -409,14 +409,19 @@
                             </div>
                         </template>
                         <template v-else>
-                            <bk-button
+                            <span
                                 v-if="!['TSTACK'].includes(props.row.nodeType)"
-                                theme="primary"
-                                outline
-                                @click="handleApplyPermission(props.row)"
+                                v-bk-tooltips="getCreateNodePermissionTooltips(props.row?.createWorkspaceSource)"
                             >
-                                {{ $t('environment.applyPermission') }}
-                            </bk-button>
+                                <bk-button
+                                    theme="primary"
+                                    outline
+                                    :disabled="isCreateResType"
+                                    @click="handleApplyPermission(props.row)"
+                                >
+                                    {{ $t('environment.applyPermission') }}
+                                </bk-button>
+                            </span>
                         </template>
                     </template>
                 </bk-table-column>
@@ -529,7 +534,7 @@
         CREATIVE_STREAM_NODE_RESOURCE_ACTION,
         CREATIVE_NODE_RESOURCE_TYPE
     } from '@/utils/permission'
-    import { ENV_ACTIVE_NODE_TYPE, ALLNODE, SERVICE_RESOURCE_TYPE } from '@/store/constants'
+    import { ENV_ACTIVE_NODE_TYPE, ALLNODE, SERVICE_RESOURCE_TYPE, CREATE_WORKSPACE_TYPE } from '@/store/constants'
     import { mapActions } from 'vuex'
     import useEnvDetail from '@/hooks/useEnvDetail'
     const NODE_TABLE_COLUMN_CACHE = 'node_list_columns'
@@ -537,12 +542,6 @@
     export default {
         components: {
             EmptyTableStatus
-        },
-        setup () {
-            const { isPersonalProject } = useEnvDetail()
-            return {
-                isPersonalProject
-            }
         },
         props: {
             nodeList: {
@@ -1042,8 +1041,20 @@
                     projectId: this.projectId,
                     resourceType: this.currentResourceType,
                     resourceCode: node.nodeHashId,
-                    action: this.currentResourceAction.USE
+                    action: this.currentResourceAction.EDIT
                 })
+            },
+            getCreateNodePermissionTooltips (createWorkspaceSource) {
+                const tipMap = {
+                    [CREATE_WORKSPACE_TYPE.DEVCLOUD]: this.$t('environment.createNodeIMatePermissionTip'),
+                    [CREATE_WORKSPACE_TYPE.REMOTEDEV]: this.$t('environment.createNodePersonalPermissionTip')
+                    // IEG_IMATE 文案待确定，暂不处理
+                }
+                const content = tipMap[createWorkspaceSource] || ''
+                return {
+                    content,
+                    disabled: !this.isCreateResType || !content
+                }
             },
             clearFilter () {
                 this.$emit('clear-filter')
