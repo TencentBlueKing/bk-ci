@@ -14,11 +14,7 @@ import com.tencent.devops.environment.dao.AgentDao
 import com.tencent.devops.environment.dao.NodeDao
 import com.tencent.devops.environment.model.AgentProps
 import com.tencent.devops.environment.model.AgentPropsSource
-import com.tencent.devops.environment.pojo.enums.AgentType
-import com.tencent.devops.environment.pojo.op.CreateAgent
 import com.tencent.devops.environment.pojo.op.CreateGateWayConfig
-import com.tencent.devops.environment.service.slave.SlaveGatewayService
-import com.tencent.devops.environment.service.thirdpartyagent.BatchInstallAgentService
 import com.tencent.devops.environment.service.thirdpartyagent.DownloadAgentInstallService
 import com.tencent.devops.remotedev.api.service.ServiceRemoteDevInternalResource
 import com.tencent.devops.remotedev.api.service.ServiceRemoteDevResource
