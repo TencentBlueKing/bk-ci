@@ -112,6 +112,7 @@ import com.tencent.devops.remotedev.pojo.project.DepartmentsInfo
 import com.tencent.devops.remotedev.pojo.project.RemotedevProject
 import com.tencent.devops.remotedev.pojo.project.RemotedevProjectNew
 import com.tencent.devops.remotedev.pojo.project.WeSecProjectWorkspace
+import com.tencent.devops.remotedev.pojo.project.WorkspaceMemberInfo
 import com.tencent.devops.remotedev.pojo.project.WorkspaceProperty
 import com.tencent.devops.remotedev.pojo.tai.CertExchangeCodeReq
 import com.tencent.devops.remotedev.pojo.tai.CertExchangeCodeResp
@@ -1166,6 +1167,30 @@ class WorkspaceService @Autowired constructor(
         workspaceName: String
     ): WorkspaceRecord? {
         return workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName)
+    }
+
+    fun getWorkspaceMemberInfo(
+        projectId: String,
+        workspaceName: String
+    ): WorkspaceMemberInfo? {
+        val workspace = getWorkspaceRecord(workspaceName)
+            ?.takeIf { it.projectId == projectId }
+            ?: return null
+        val sharedInfo = workspaceSharedDao.fetchWorkspaceSharedInfo(
+            dslContext = dslContext,
+            workspaceName = workspaceName
+        )
+        val owner = if (workspace.ownerType.projectUse()) {
+            sharedInfo.firstOrNull { it.type == WorkspaceShared.AssignType.OWNER }?.sharedUser
+                ?: workspace.createUserId
+        } else {
+            workspace.createUserId
+        }
+        val viewers = sharedInfo.asSequence()
+            .filter { it.type == WorkspaceShared.AssignType.VIEWER }
+            .map { it.sharedUser }
+            .toSet()
+        return WorkspaceMemberInfo(owner = owner, viewers = viewers)
     }
 
     fun kickInstance(

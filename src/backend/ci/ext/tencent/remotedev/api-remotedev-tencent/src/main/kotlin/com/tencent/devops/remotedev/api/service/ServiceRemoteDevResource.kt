@@ -47,6 +47,7 @@ import com.tencent.devops.remotedev.pojo.project.EnableRemotedevData
 import com.tencent.devops.remotedev.pojo.project.RemotedevProject
 import com.tencent.devops.remotedev.pojo.project.RemotedevProjectNew
 import com.tencent.devops.remotedev.pojo.project.WeSecProjectWorkspace
+import com.tencent.devops.remotedev.pojo.project.WorkspaceMemberInfo
 import com.tencent.devops.remotedev.pojo.project.WorkspaceProperty
 import com.tencent.devops.remotedev.pojo.record.ThumbnailEncryptedTicketResp
 import com.tencent.devops.remotedev.pojo.remotedev.CreateCvmData
@@ -364,6 +365,18 @@ interface ServiceRemoteDevResource {
         @QueryParam("workspaceName")
         workspaceName: String
     ): Result<WeSecProjectWorkspace?>
+
+    @Operation(summary = "获取项目云桌面的拥有者和共享人")
+    @GET
+    @Path("/project_workspace_members")
+    fun getProjectWorkspaceMembers(
+        @Parameter(description = "项目id", required = true)
+        @QueryParam("projectId")
+        projectId: String,
+        @Parameter(description = "工作空间名", required = true)
+        @QueryParam("workspaceName")
+        workspaceName: String
+    ): Result<WorkspaceMemberInfo?>
 
     @Deprecated("未来fetch_expert_sup_record_any使用会把这个接口废弃")
     @Operation(summary = "获取专家求助单据数据")
