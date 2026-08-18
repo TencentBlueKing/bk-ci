@@ -149,14 +149,14 @@ class PipelineProgressRateService constructor(
         taskId: String,
         executeCount: Int? = null
     ): BuildTaskProgressInfo {
+        // 构建已归档时运行时表已无数据，进度明细属于运行态展示信息，无需报错，返回空进度即可
         val buildInfo = pipelineRuntimeService.getBuildInfo(
             projectId = projectId,
             buildId = buildId
-        ) ?: throw ErrorCodeException(
-            statusCode = Response.Status.NOT_FOUND.statusCode,
-            errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
-            params = arrayOf(buildId)
-        )
+        ) ?: run {
+            logger.info("build not found, likely archived, return empty progress|$projectId|$buildId")
+            return BuildTaskProgressInfo(taskProgressRete = 0.0)
+        }
         val targetExecuteCount = executeCount ?: buildInfo.executeCount ?: 1
         val taskRecord = buildRecordTaskDao.getLatestNormalRecord(
             dslContext = dslContext,

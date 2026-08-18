@@ -742,6 +742,22 @@ class PipelineProgressRateServiceTest {
         Assertions.assertEquals("编译", result.progressDetail?.progress?.title)
     }
 
+    @Test
+    fun getTaskProgressDetailReturnsEmptyWhenBuildArchived() {
+        every { pipelineRuntimeService.getBuildInfo(PROJECT_ID, BUILD_ID) } returns null
+
+        val result = service.getTaskProgressDetail(
+            projectId = PROJECT_ID,
+            pipelineId = PIPELINE_ID,
+            buildId = BUILD_ID,
+            taskId = TASK_ID
+        )
+
+        Assertions.assertEquals(0.0, result.taskProgressRete)
+        Assertions.assertEquals(null, result.taskName)
+        Assertions.assertEquals(null, result.progressDetail)
+    }
+
     private fun buildInfo() = BuildInfo(
         projectId = PROJECT_ID,
         pipelineId = PIPELINE_ID,
