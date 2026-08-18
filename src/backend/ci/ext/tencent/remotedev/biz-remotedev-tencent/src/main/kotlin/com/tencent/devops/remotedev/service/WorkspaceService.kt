@@ -301,7 +301,7 @@ class WorkspaceService @Autowired constructor(
                     workspaceName = ws.workspaceName
 
                 )
-            }catch (e: Exception) {
+            } catch (e: Exception) {
                 logger.error("modifyWorkspaceProperty update create node error", e)
             }
         }
@@ -1155,7 +1155,7 @@ class WorkspaceService @Autowired constructor(
             sleepingCount = status.count { it.checkSleeping() },
             deleteCount = status.count { it.checkDeleted() },
             chargeableTime = endBilling.second +
-                (endBilling.first - discountTime * 60).coerceAtLeast(0),
+                    (endBilling.first - discountTime * 60).coerceAtLeast(0),
             usageTime = usageTime,
             sleepingTime = sleepingTime,
             discountTime = discountTime,
@@ -1374,8 +1374,8 @@ class WorkspaceService @Autowired constructor(
 
             val oneReady = public.filter {
                 loginUserMap[it.value2()]?.loginUsers.isNullOrEmpty() &&
-                    workspaceStatus[it.value1()] in setOf(WorkspaceStatus.RUNNING, WorkspaceStatus.DISTRIBUTING) &&
-                    cgsStatus?.get(it.value2()) == ComputerStatusEnum.NORMAL.status
+                        workspaceStatus[it.value1()] in setOf(WorkspaceStatus.RUNNING, WorkspaceStatus.DISTRIBUTING) &&
+                        cgsStatus?.get(it.value2()) == ComputerStatusEnum.NORMAL.status
             }.randomOrNull() ?: run {
                 logger.warn("there are no idle public cloud desktops|$envId|$loginUserMap|$workspaceStatus")
                 throw ErrorCodeException(
@@ -1449,7 +1449,7 @@ class WorkspaceService @Autowired constructor(
             val normalNodeCount =
                 env.nodeHashIds?.count {
                     workspaceStatus[it] in normalStatuses &&
-                        cgsStatus?.get(node2HostMap[it]) == ComputerStatusEnum.NORMAL.status
+                            cgsStatus?.get(node2HostMap[it]) == ComputerStatusEnum.NORMAL.status
                 } ?: 0
             val abnormalNodeCount = (env.nodeHashIds?.size ?: 0) - normalNodeCount
             val currentLoginUsers = env.nodeHashIds?.flatMap { nodeHashId ->
@@ -1902,6 +1902,50 @@ class WorkspaceService @Autowired constructor(
             ownerDepartments = null,
             currentLoginUsers = null
         )
+
+    fun getWorkspaceDetailNoPermission(workspaceName: String): WorkspaceStartCloudDetail? {
+        val workspace = workspaceJoinDao.fetchAnyWindowsWorkspace(dslContext, workspaceName = workspaceName)
+            ?: return null
+        val resourceId = workspace.resourceId
+        val owner = if (workspace.ownerType.projectUse()) {
+            workspaceSharedDao.fetchWorkspaceSharedInfo(
+                dslContext = dslContext,
+                workspaceName = workspace.workspaceName,
+                assignType = WorkspaceShared.AssignType.OWNER
+            ).firstOrNull()?.sharedUser
+        } else {
+            workspace.createUserId
+        }
+        val gameId = workspaceCommon.getGameIdAndAppId(workspace.projectId, workspace.ownerType)
+        val allConfig = windowsResourceConfigService.getAllType(true, null).associateBy { it.id!! }
+        val defaultZoneConfig = windowsResourceConfigService.getAllZone()
+            .associateBy { it.zoneShortName }
+        val specZoneConfig = windowsResourceConfigService.getAllSpecZone().associateBy { it.zoneShortName }
+        val zone = if (workspace.hostIp != null) {
+            /*后续直接取windows表中的zoneId，不通过ip进行解析*/
+            val zoneId = workspace.hostIp?.substringBefore(".")
+            specZoneConfig[zoneId] ?: defaultZoneConfig[zoneId?.removeSuffixNumb()]
+        } else {
+            null
+        }
+
+        return WorkspaceStartCloudDetail(
+            ip = workspace.hostIp ?: "",
+            curLaunchId = workspace.curLaunchId ?: gameId.second.toInt(),
+            regionId = workspace.regionId,
+            projectId = workspace.projectId,
+            name = workspace.workspaceName,
+            creator = workspace.createUserId,
+            owner = owner,
+            resourceId = resourceId,
+            displayName = workspace.displayName,
+            cdsMesh = whiteListService.checkInCdsMeshWhiteList(workspace.projectId, workspace.workspaceName),
+            cdsDomain = whiteListService.getCdsDomain(workspace.projectId, workspace.workspaceName),
+            zoneConfig = zone,
+            winConfig = allConfig[workspace.winConfigId?.toLong()],
+            enableRecord = workspace.coffeeAi != true && workspace.enableRecord == true
+        )
+    }
 
     companion object {
         private val logger = LoggerFactory.getLogger(WorkspaceService::class.java)

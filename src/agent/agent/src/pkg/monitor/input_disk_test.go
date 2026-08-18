@@ -117,6 +117,55 @@ func TestDisk_Gather_SkipsUsageError(t *testing.T) {
 	}
 }
 
+// TestDisk_Gather_SkipsNetworkFS 验证网络文件系统在调用 usageFn(statfs)
+// 之前就被跳过 —— 这是防卡死的核心：真实挂死的 NFS 会让 statfs 永久阻塞，
+// 所以绝不能对它发起 Usage。这里让 usageFn 在被网络盘调用时直接 fail。
+func TestDisk_Gather_SkipsNetworkFS(t *testing.T) {
+	cases := []string{"nfs", "nfs4", "cifs", "smbfs", "fuse.sshfs", "9p"}
+	for _, fs := range cases {
+		fs := fs
+		t.Run(fs, func(t *testing.T) {
+			d := &Disk{
+				partitionsFn: func(all bool) ([]disk.PartitionStat, error) {
+					return []disk.PartitionStat{
+						{Device: "server:/export", Fstype: fs, Mountpoint: "/mnt/remote"},
+						{Device: "/dev/sda1", Fstype: "ext4", Mountpoint: "/"},
+					}, nil
+				},
+				usageFn: func(path string) (*disk.UsageStat, error) {
+					if path == "/mnt/remote" {
+						t.Errorf("usageFn must NOT be called for network fs %q (would block on hung mount)", fs)
+					}
+					return &disk.UsageStat{Total: 100, Used: 10, Free: 90, UsedPercent: 10}, nil
+				},
+				nowFn: time.Now,
+			}
+			metrics, err := d.Gather()
+			if err != nil {
+				t.Fatal(err)
+			}
+			if len(metrics) != 1 || metrics[0].Tags[TagPath] != "/" {
+				t.Errorf("want only local / mount, got %+v", metrics)
+			}
+		})
+	}
+}
+
+func TestIsNetworkFS(t *testing.T) {
+	network := []string{"nfs", "nfs3", "nfs4", "cifs", "smbfs", "smb2", "afpfs", "fuse.sshfs", "fuse.s3fs", "9p", "glusterfs", "ceph", "webdav", "davfs2"}
+	local := []string{"ext4", "xfs", "btrfs", "apfs", "hfs", "ntfs", "vfat", "zfs"}
+	for _, fs := range network {
+		if !isNetworkFS(fs) {
+			t.Errorf("isNetworkFS(%q) = false, want true", fs)
+		}
+	}
+	for _, fs := range local {
+		if isNetworkFS(fs) {
+			t.Errorf("isNetworkFS(%q) = true, want false", fs)
+		}
+	}
+}
+
 func TestDisk_Gather_PartitionsErrorPropagates(t *testing.T) {
 	sentinel := errors.New("boom")
 	d := &Disk{
