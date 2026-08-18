@@ -19,3 +19,4 @@ src/assets/static/main.dll.js.LICENSE.txt
 *.ntvs*
 *.njsproj
 *.sln
+.aafe.config.json

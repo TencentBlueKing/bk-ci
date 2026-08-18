@@ -79,3 +79,4 @@ test/unit/coverage
 /src/conf/*.key
 
 /src/conf/*.pem
+.aafe.config.json

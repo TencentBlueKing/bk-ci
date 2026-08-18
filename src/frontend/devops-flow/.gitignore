@@ -37,3 +37,4 @@ __screenshots__/
 
 test-results/
 playwright-report/
+.aafe.config.json

@@ -15,3 +15,4 @@ commitInfo.js
 *.ntvs*
 *.njsproj
 *.sln
+.aafe.config.json

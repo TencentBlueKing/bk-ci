@@ -76,3 +76,4 @@ test/unit/coverage
 dist/
 
 .bk.local.env
+.aafe.config.json
