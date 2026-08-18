@@ -48,7 +48,7 @@ class ExpertSupportTokenGenerator {
     @Value("\${expertsupport.appId:anydev}")
     private lateinit var appId: String
 
-    @Value("\${expertsupport.jwtSecret:a-string-secret-at-least-256-bits-long}")
+    @Value("\${expertsupport.jwtSecret}")
     private lateinit var jwtSecret: String
 
     private val signingKey: SecretKey by lazy {
