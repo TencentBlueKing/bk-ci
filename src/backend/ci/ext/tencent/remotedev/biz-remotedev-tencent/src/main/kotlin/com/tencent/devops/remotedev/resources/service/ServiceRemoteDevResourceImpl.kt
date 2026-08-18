@@ -415,7 +415,7 @@ class ServiceRemoteDevResourceImpl(
             logger.warn("delete project workspace with invalid workspace type: $userId|$projectId|$workspaceName")
             return Result(false)
         }
-
+        workspaceCommon.checkFunctionRestrictedZone(workspaceName)
         return Result(
             deleteControl.deleteWorkspace(
                 userId = userId,
