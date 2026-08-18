@@ -28,10 +28,12 @@
 package com.tencent.devops.environment.resources.thirdpartyagent
 
 import com.tencent.devops.common.api.pojo.OS
+import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.pojo.agent.AgentArchType
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.environment.api.thirdpartyagent.ExternalThirdPartyAgentResource
 import com.tencent.devops.environment.pojo.enums.AgentType
+import com.tencent.devops.environment.pojo.thirdpartyagent.RegistryResp
 import com.tencent.devops.environment.pojo.thirdpartyagent.TPAInstallType
 import com.tencent.devops.environment.service.CreateEnvService
 import com.tencent.devops.environment.service.thirdpartyagent.BatchInstallAgentService
@@ -106,5 +108,13 @@ class ExternalThirdPartyAgentResourceImpl @Autowired constructor(
         userId: String
     ): Response {
         return createEnvService.genCreateNodeInstallScript(token, deviceId, userId)
+    }
+
+    override fun registry(
+        token: String,
+        userId: String,
+        deviceId: String?,
+    ): Result<RegistryResp> {
+        TODO("Not yet implemented")
     }
 }

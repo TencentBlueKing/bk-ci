@@ -1,0 +1,33 @@
+{
+  "name": "@bk-ci/agent-sdk",
+  "version": "0.1.0",
+  "description": "BK-CI 第三方构建 Agent 的 Node.js SDK：实现少数几个接口即可复用 agent 主循环（领任务、上报心跳、采集监控）。",
+  "keywords": [
+    "bk-ci",
+    "agent",
+    "sdk",
+    "ci",
+    "devops"
+  ],
+  "license": "MIT",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=16"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "clean": "rimraf dist",
+    "prepublishOnly": "npm run clean && npm run build",
+    "example": "ts-node examples/basic.ts"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "typescript": "^5.4.0"
+  }
+}
