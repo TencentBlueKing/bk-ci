@@ -253,45 +253,52 @@ object BatScriptUtil {
         var i = 0
         var counter = 0
         while (i < lines.size) {
-            val line = lines[i]
-            val start = multilineStartRegex.find(line)
-            if (start != null) {
-                val key = start.groupValues[1]
-                val content = StringBuilder()
-                var closed = false
-                val startLineNum = i + 1
+            val start = multilineStartRegex.find(lines[i])
+            if (start == null) {
+                out.append(lines[i]).append("\r\n")
                 i++
-                while (i < lines.size) {
-                    val cur = lines[i]
-                    if (cur.trim() == "\"") {
-                        closed = true
-                        i++
-                        break
-                    }
-                    // 保留原始内容（含行尾空格），统一 CRLF 拼接
-                    if (content.isNotEmpty()) content.append("\r\n")
-                    content.append(cur)
-                    i++
-                }
-                if (!closed) {
-                    throw TaskExecuteException(
-                        errorMsg = "Unterminated multiline block for key [$key], starting at line $startLineNum",
-                        errorType = ErrorType.USER,
-                        errorCode = ErrorCode.USER_INPUT_INVAILD
-                    )
-                }
-                val fileName = "ml_block_${buildId}_${ExecutorUtil.getThreadLocal()}_${counter++}.txt"
-                val file = File(dir, fileName)
-                file.writeText(content.toString(), Charsets.UTF_8)
-                file.deleteOnExit()
-                out.append("call:format_multiple_lines $key \"${file.absolutePath}\"\r\n")
-            } else {
-                out.append(line).append("\r\n")
-                i++
+                continue
             }
+            val key = start.groupValues[1]
+            val block = extractMultilineBlock(lines, i, key)
+            val fileName = "ml_block_${buildId}_${ExecutorUtil.getThreadLocal()}_${counter++}.txt"
+            val file = File(dir, fileName)
+            file.writeText(block.content, Charsets.UTF_8)
+            file.deleteOnExit()
+            out.append("call:format_multiple_lines $key \"${file.absolutePath}\"\r\n")
+            i = block.nextIndex
         }
         return out.toString()
     }
+
+    /**
+     * 从 call 行之后提取内联块内容，返回内容与块结束后的下一行索引。
+     * 缺少结束引号时抛用户输入错误。
+     */
+    private fun extractMultilineBlock(lines: List<String>, callLineIndex: Int, key: String): MultilineBlock {
+        val content = StringBuilder()
+        var i = callLineIndex + 1
+        while (i < lines.size) {
+            val cur = lines[i]
+            if (cur.trim() == "\"") {
+                return MultilineBlock(content.toString(), i + 1)
+            }
+            // 保留原始内容（含行尾空格），统一 CRLF 拼接
+            if (content.isNotEmpty()) content.append("\r\n")
+            content.append(cur)
+            i++
+        }
+        throw TaskExecuteException(
+            errorMsg = "Unterminated multiline block for key [$key], starting at line ${callLineIndex + 1}",
+            errorType = ErrorType.USER,
+            errorCode = ErrorCode.USER_INPUT_INVAILD
+        )
+    }
+
+    private data class MultilineBlock(
+        val content: String,
+        val nextIndex: Int
+    )
 
     @Suppress("ALL")
     fun getCommandFile(
