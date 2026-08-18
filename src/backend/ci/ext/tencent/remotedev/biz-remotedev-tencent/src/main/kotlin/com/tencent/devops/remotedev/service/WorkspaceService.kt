@@ -1918,7 +1918,8 @@ class WorkspaceService @Autowired constructor(
             cdsDomain = whiteListService.getCdsDomain(workspace.projectId, workspace.workspaceName),
             zoneConfig = zone,
             winConfig = allConfig[workspace.winConfigId?.toLong()],
-            enableRecord = workspace.coffeeAi != true && workspace.enableRecord == true
+            enableRecord = workspace.coffeeAi != true && workspace.enableRecord == true,
+            os = workspace.os
         )
     }
 
