@@ -39,7 +39,6 @@ import com.tencent.devops.environment.pojo.slave.SlaveGateway
 import com.tencent.devops.environment.pojo.thirdpartyagent.AgentBuildDetail
 import com.tencent.devops.environment.pojo.thirdpartyagent.BatchUpdateParallelTaskCountData
 import com.tencent.devops.environment.pojo.thirdpartyagent.OfflinePeriod
-import com.tencent.devops.environment.pojo.thirdpartyagent.RegistryResp
 import com.tencent.devops.environment.pojo.thirdpartyagent.TPAInstallType
 import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentAction
 import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentDetail
@@ -521,25 +520,4 @@ interface UserThirdPartyAgentResource {
         @QueryParam("timeRange")
         timeRange: String
     ): Result<Map<String, List<Map<String, Any>>>>
-
-    @Operation(summary = "注册第三方构建机-SDK使用")
-    @POST
-    @Path("/projects/nodes/registry")
-    fun registry(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @Parameter(description = "项目ID", required = true)
-        @QueryParam("projectId")
-        projectId: String,
-        @Parameter(description = "操作系统", required = true)
-        @QueryParam("os")
-        os: OS,
-        @Parameter(description = "网关地域", required = false)
-        @QueryParam("zoneName")
-        zoneName: String,
-        @Parameter(description = "第三方机节点类型", required = false)
-        @QueryParam("agentType")
-        agentType: AgentType
-    ): Result<String>
 }
