@@ -299,6 +299,7 @@ const columns = [
   },
   {
     label: t('资源实例'),
+    showOverflowTooltip: true,
     render({ cell, row }) {
       return withDirectives(h(
         'div',
@@ -333,6 +334,7 @@ const columns = [
   },
   {
     label: t('描述'),
+    showOverflowTooltip: true,
     render({ cell, row }) {
       return withDirectives(h(
         'div',
@@ -455,3 +457,4 @@ onMounted(() => {
     }
   }
 </style>
+
