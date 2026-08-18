@@ -248,7 +248,12 @@ class MakeMoneyService @Autowired constructor(
         lastDay: LocalDateTime
     ) {
         // 获取CMDB资产信息
-        val cmdbAssetMap = fetchCmdbAssetInfo()
+        val cmdbAssetMap = try {
+            fetchCmdbAssetInfo()
+        } catch (e: Exception) {
+            logger.error("save method - fetchCmdbAssetInfo failed, skip commission date update", e)
+            emptyMap()
+        }
         logger.info("save method - fetchCmdbAssetInfo result size: ${cmdbAssetMap.size}")
 
         use.chunked(99).forEach { chunk ->

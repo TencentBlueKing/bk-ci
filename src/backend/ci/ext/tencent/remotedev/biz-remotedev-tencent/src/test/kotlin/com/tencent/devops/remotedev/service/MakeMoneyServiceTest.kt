@@ -151,9 +151,7 @@ class MakeMoneyServiceTest {
             buildResponse(
                 body = cmdbResponse(
                     count = 501,
-                    assets = (1..500).map { index ->
-                        asset(ip = "10.0.1.$index")
-                    }
+                    assets = fullPageAssets()
                 )
             ),
             buildResponse(
@@ -185,15 +183,16 @@ class MakeMoneyServiceTest {
             buildResponse(
                 body = cmdbResponse(
                     count = 501,
-                    assets = listOf(asset(ip = "10.0.0.1"))
+                    assets = fullPageAssets()
                 )
             ),
             buildResponse(code = 500, body = "internal error")
         )
 
-        assertThrows(RemoteServiceException::class.java) {
+        val exception = assertThrows(RemoteServiceException::class.java) {
             service.fetchCmdbAssetInfo()
         }
+        assertEquals("fetch CMDB asset failed, start=500, code=500", exception.errorMessage)
     }
 
     @Test
@@ -209,15 +208,16 @@ class MakeMoneyServiceTest {
             buildResponse(
                 body = cmdbResponse(
                     count = 501,
-                    assets = listOf(asset(ip = "10.0.0.1"))
+                    assets = fullPageAssets()
                 )
             ),
             buildResponse(body = """{"result":false,"message":"busy","data":null}""")
         )
 
-        assertThrows(RemoteServiceException::class.java) {
+        val exception = assertThrows(RemoteServiceException::class.java) {
             service.fetchCmdbAssetInfo()
         }
+        assertEquals("fetch CMDB asset failed, start=500, message=busy", exception.errorMessage)
     }
 
     @Test
@@ -254,9 +254,7 @@ class MakeMoneyServiceTest {
             buildResponse(
                 body = cmdbResponse(
                     count = 501,
-                    assets = (1..500).map { index ->
-                        asset(ip = "10.0.1.$index")
-                    }
+                    assets = fullPageAssets()
                 )
             ),
             buildResponse(
@@ -311,6 +309,12 @@ class MakeMoneyServiceTest {
 
     private fun cmdbResponse(count: Int, assets: List<String>): String {
         return """{"result":true,"message":"ok","data":{"count":$count,"info":[${assets.joinToString()}]}}"""
+    }
+
+    private fun fullPageAssets(): List<String> {
+        return (1..500).map { index ->
+            asset(ip = "10.0.1.$index")
+        }
     }
 
     private fun asset(
