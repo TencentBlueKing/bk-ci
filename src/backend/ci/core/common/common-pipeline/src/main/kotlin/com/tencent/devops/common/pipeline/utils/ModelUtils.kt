@@ -185,10 +185,7 @@ object ModelUtils {
             } else {
                 childElement.canRetry = null // 自动跳过的不能手动重试
             }
-        } else if (additionalOptions.runCondition == RunCondition.PRE_TASK_FAILED_ONLY ||
-            additionalOptions.runCondition == RunCondition.PRE_TASK_FAILED_BUT_CANCEL ||
-            additionalOptions.runCondition == RunCondition.PRE_TASK_FAILED_EVEN_CANCEL
-        ) {
+        } else if (isFailureAwareCondition(additionalOptions.runCondition)) {
             childElement.canRetry = null
             childElement.canSkip = null
         }
@@ -216,14 +213,18 @@ object ModelUtils {
             } else {
                 element.canRetry = null // 自动跳过的不能手动重试
             }
-        } else if (additionalOptions.runCondition == RunCondition.PRE_TASK_FAILED_ONLY ||
-            additionalOptions.runCondition == RunCondition.PRE_TASK_FAILED_BUT_CANCEL ||
-            additionalOptions.runCondition == RunCondition.PRE_TASK_FAILED_EVEN_CANCEL
-        ) {
+        } else if (isFailureAwareCondition(additionalOptions.runCondition)) {
             // “失败时才运行”的插件自身不放开重试/跳过；但不再影响前序失败插件的重试/跳过按钮
             element.canRetry = null
             element.canSkip = null
         }
+    }
+
+    private fun isFailureAwareCondition(runCondition: RunCondition?): Boolean {
+        return runCondition == RunCondition.PRE_TASK_FAILED_ONLY ||
+            runCondition == RunCondition.PRE_TASK_FAILED_ONLY_EXCEPT_SKIP ||
+            runCondition == RunCondition.PRE_TASK_FAILED_BUT_CANCEL ||
+            runCondition == RunCondition.PRE_TASK_FAILED_EVEN_CANCEL
     }
 
     /**
