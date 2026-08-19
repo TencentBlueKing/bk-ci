@@ -4,4 +4,3 @@ dist
 dist-ssr
 *.local
 package-lock.json
-.aafe.config.json
