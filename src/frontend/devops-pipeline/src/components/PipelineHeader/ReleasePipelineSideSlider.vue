@@ -133,6 +133,7 @@
                                     <bk-radio
                                         v-for="item in pacSupportScmTypeList"
                                         :key="item.id"
+                                        :disabled="disabledScmType"
                                         class="scm-type-radio"
                                         :value="item.id"
                                     >
@@ -784,10 +785,15 @@
                 return this.instanceList.length > 0 && this.instanceList.every(i => i.enabledPac)
             },
             showPacSwitcherConfig () {
-                return this.isTemplateInstanceMode ? !this.templateInstanceEnablePac : !this.pacEnabled
+                return this.isTemplateInstanceMode ? !this.templateInstanceEnablePac : true
             },
             disabledPacSwitcher () {
                 return this.isTemplateInstanceMode ? false : this.pacEnabled
+            },
+            disabledScmType () {
+                if (this.isTemplateInstanceMode) return this.templateInstanceEnablePac
+                // 当前草稿开启 PAC，或历史上已绑定仓库（yamlInfo 存在），代码库源均不可修改
+                return this.pacEnabled || !!this.yamlInfo
             },
             disabledYamlCodeLib () {
                 return this.isTemplateInstanceMode ? this.templateInstanceEnablePac : this.pacEnabled
