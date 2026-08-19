@@ -353,7 +353,11 @@ class ParamFacadeService @Autowired constructor(
             sensitive = property.sensitive,
             constant = property.constant,
             fields = property.fields
-        )
+        ).apply {
+            varGroupName = property.varGroupName
+            varGroupVersion = property.varGroupVersion
+            removeFlag = property.removeFlag
+        }
     }
 
     private fun getPermissionCodelibList(

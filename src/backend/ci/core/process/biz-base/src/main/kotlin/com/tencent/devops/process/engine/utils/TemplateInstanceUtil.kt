@@ -93,7 +93,9 @@ object TemplateInstanceUtil {
             templateId = templateResource.templateId,
             srcTemplateId = templateResource.srcTemplateId,
             template = template,
-            overrideTemplateField = overrideTemplateField
+            overrideTemplateField = overrideTemplateField,
+            // 模板上的公共变量组引用需要随实例化一起带到流水线，否则实例化后引用信息丢失
+            publicVarGroups = templateModel.publicVarGroups
         )
     }
 
