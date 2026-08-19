@@ -1,6 +1,8 @@
 ﻿package com.tencent.devops.environment.api
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.environment.pojo.op.CreateAgent
+import com.tencent.devops.environment.pojo.op.CreateGateWayConfig
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -38,4 +40,35 @@ interface OpCreateResource {
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String
     )
+
+    @Operation(summary = "获取创作流安装配置")
+    @GET
+    @Path("/get_create_install_config")
+    fun getCreateInstallConfig(
+        @Parameter(description = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String
+    ): CreateGateWayConfig?
+
+    @Operation(summary = "设置创作流安装配置")
+    @POST
+    @Path("/set_create_install_config")
+    fun setCreateInstallConfig(
+        @Parameter(description = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        data: CreateGateWayConfig
+    )
+
+    @Operation(summary = "添加创作流节点，给自运维虾用的")
+    @POST
+    @Path("/addCreateNode")
+    fun addCreateNode(
+        @QueryParam("userId")
+        userId: String,
+        @QueryParam("projectId")
+        projectId: String,
+        @QueryParam("workspaceName")
+        workspaceName: String
+    ): CreateAgent?
 }

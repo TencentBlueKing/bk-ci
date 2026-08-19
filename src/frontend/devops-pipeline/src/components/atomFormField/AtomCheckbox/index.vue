@@ -22,7 +22,7 @@
                     v-if="!customTip"
                     :class="{ 'checkbox-tips-content': true,'disabled-color': disabled }"
                 >
-                    {{ desc }}
+                    <span style="white-space: pre-wrap;">{{ tipText }}</span>
                 </div>
                 <div
                     v-else
@@ -67,6 +67,12 @@
                 default: false
             }
         },
+        computed: {
+            tipText () {
+                if (typeof this.desc !== 'string') return this.desc
+                return this.desc.replace(/\\n/g, '\n')
+            }
+        },
         methods: {
             handleSwitch (checked) {
                 const { name, handleChange } = this
@@ -86,6 +92,6 @@
         color: #ccc;
     }
     .checkbox-tips-content {
-        white-space: normal;
+        text-align: left;
     }
 </style>

@@ -55,7 +55,13 @@ interface ApigwTXProjectResourceV4 {
 
     @GET
     @Path("/personal/")
-    @Operation(summary = "获取或创建用户个人项目，不存在时自动创建", tags = ["v4_app_get_or_create_personal_project"])
+    @Operation(
+        summary = "获取或创建用户个人项目，不存在时自动创建",
+        tags = [
+            "v4_app_get_or_create_personal_project",
+            "v4_user_get_or_create_personal_project"
+        ]
+    )
     fun getOrCreatePersonalProject(
         @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)

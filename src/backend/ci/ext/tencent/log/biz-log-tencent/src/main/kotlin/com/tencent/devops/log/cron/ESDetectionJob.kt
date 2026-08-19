@@ -57,6 +57,7 @@ import org.springframework.stereotype.Component
 
 @Component
 @ConditionalOnProperty(prefix = "log.storage", name = ["type"], havingValue = "elasticsearch")
+@Suppress("MaxLineLength")
 class ESDetectionJob @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val logClient: MultiESLogClient
