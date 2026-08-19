@@ -319,6 +319,31 @@ class BuildRecordTaskDao {
         }
     }
 
+    /**
+     * 按 taskId 精确查询「执行次数不超过 [executeCount] 的最新一条」记录，
+     * 与 [getLatestNormalRecords] 的取数口径一致，但只拉单条，避免为查一个 task 全量加载整个构建的记录
+     */
+    fun getLatestNormalRecord(
+        dslContext: DSLContext,
+        projectId: String,
+        buildId: String,
+        taskId: String,
+        executeCount: Int
+    ): BuildRecordTask? {
+        with(TPipelineBuildRecordTask.T_PIPELINE_BUILD_RECORD_TASK) {
+            return dslContext.selectFrom(this)
+                .where(
+                    BUILD_ID.eq(buildId)
+                        .and(PROJECT_ID.eq(projectId))
+                        .and(TASK_ID.eq(taskId))
+                        .and(EXECUTE_COUNT.lessOrEqual(executeCount))
+                )
+                .orderBy(EXECUTE_COUNT.desc())
+                .limit(1)
+                .fetchOne(mapper)
+        }
+    }
+
     fun updateAsyncStatus(
         dslContext: DSLContext,
         projectId: String,

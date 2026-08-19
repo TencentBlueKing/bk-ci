@@ -134,20 +134,21 @@ export default defineComponent({
       if (param?.paramType === 'list' && Array.isArray(param.list)) {
         return 'list'
       }
-
+      
       if (!param?.url) return ''
-
-      const [url] = generateReqUrl(param.url, {
+      const urlQueryParams = {
         ...props.atomValue,
         projectId: route.params.projectId,
         pipelineId: route.params.flowId,
-      })
+        buildId: route.params.buildNo,
+      }
+      const [url] = generateReqUrl(param.url, urlQueryParams)
       if (!url) return ''
 
       const queryParams: Array<[string, unknown]> = []
       const urlQuery = param.urlQuery || {}
       Object.keys(urlQuery).forEach((key) => {
-        const value = props.atomValue[key] ?? urlQuery[key]
+        const value = urlQueryParams[key as keyof typeof urlQueryParams] ?? urlQuery[key]
         queryParams.push([key, value])
       })
 

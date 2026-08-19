@@ -196,12 +196,16 @@ export function useAuthoringEnvironment(options: UseAuthoringEnvironmentOptions 
     }
   })
 
-  function goEnvironment(envHashId?: string) {
+  function getEnvironmentUrl(envHashId?: string) {
     let url = `${location.origin}/console/environment/${route.params.projectId}`
     if (envHashId) {
       url += `/creative-stream/env/ALL/${envHashId}/node`
     }
-    window.open(url, '_blank')
+    return url
+  }
+
+  function goEnvironment(envHashId?: string) {
+    window.open(getEnvironmentUrl(envHashId), '_blank')
   }
 
   // ============ Return ============
@@ -232,6 +236,7 @@ export function useAuthoringEnvironment(options: UseAuthoringEnvironmentOptions 
     refreshNodeList,
     getEnvByHashId,
     resetState,
+    getEnvironmentUrl,
     goEnvironment,
   }
 }

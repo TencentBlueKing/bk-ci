@@ -3,9 +3,8 @@ import type { Container, Element } from '@/api/flowModel'
 import { SvgIcon } from '@/components/SvgIcon'
 import { useAtomManager, RD_STORE_CODE } from '@/hooks/useAtomManager'
 import { useAtomVersion } from '@/hooks/useAtomVersion'
-import { useUIStore } from '@/stores/ui'
+import { useAuthoringBaseOS } from '@/hooks/useAuthoringBaseOS'
 import { Exception, Input, Loading, Message, Tab } from 'bkui-vue'
-import { storeToRefs } from 'pinia'
 import { Transition, computed, defineComponent, ref, watch, type PropType } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
@@ -49,8 +48,7 @@ export default defineComponent({
     const atomVersion = useAtomVersion({
       projectCode: projectCode.value,
     })
-    const uiStore = useUIStore()
-    const { authoringBaseOS } = storeToRefs(uiStore)
+    const { authoringBaseOS } = useAuthoringBaseOS()
 
     // ========== Refs ==========
     const searchKey = ref('')

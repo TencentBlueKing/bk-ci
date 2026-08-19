@@ -140,7 +140,7 @@ class StreamEnvironmentPermissionServiceImp @Autowired constructor(
         return resultMap
     }
 
-    override fun listNodeByRbacPermission(
+    override fun listNodePermission(
         userId: String,
         projectId: String,
         nodeRecordList: List<TNodeRecord>,

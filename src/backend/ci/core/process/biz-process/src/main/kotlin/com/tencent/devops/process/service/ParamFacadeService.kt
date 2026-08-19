@@ -353,8 +353,9 @@ class ParamFacadeService @Autowired constructor(
             constant = property.constant,
             fields = property.fields
         ).apply {
-            this.varGroupName = property.varGroupName
-            this.varGroupVersion = property.varGroupVersion
+            varGroupName = property.varGroupName
+            varGroupVersion = property.varGroupVersion
+            removeFlag = property.removeFlag
         }
     }
 

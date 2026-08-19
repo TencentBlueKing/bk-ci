@@ -37,8 +37,10 @@ import com.tencent.devops.common.pipeline.enums.PipelineVersionAction
 import com.tencent.devops.common.pipeline.enums.TemplateRefType
 import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
+import com.tencent.devops.common.pipeline.pojo.PipelineRunEnvOsChange
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.TemplateInstanceField
+import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.atom.AtomUtils
 import com.tencent.devops.process.engine.cfg.PipelineIdGenerator
@@ -50,6 +52,7 @@ import com.tencent.devops.process.pojo.pipeline.version.PipelineDraftSaveReq
 import com.tencent.devops.process.pojo.pipeline.version.PipelineVersionCreateReq
 import com.tencent.devops.process.service.pipeline.PipelineModelParser
 import com.tencent.devops.process.service.pipeline.version.PipelineResourceFactory
+import com.tencent.devops.process.service.pipeline.version.PipelineRunEnvOsChangeResolver
 import com.tencent.devops.process.service.pipeline.version.PipelineVersionCreateContext
 import com.tencent.devops.process.service.pipeline.version.PipelineVersionCreateContextParam
 import com.tencent.devops.process.service.pipeline.version.PipelineVersionGenerator
@@ -73,7 +76,8 @@ class PipelineDraftSaveReqConverter(
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val pipelineTemplateResourceService: PipelineTemplateResourceService,
     private val client: Client,
-    private val pipelineModelParser: PipelineModelParser
+    private val pipelineModelParser: PipelineModelParser,
+    private val pipelineRunEnvOsChangeResolver: PipelineRunEnvOsChangeResolver
 ) : PipelineVersionCreateReqConverter {
     override fun support(request: PipelineVersionCreateReq): Boolean {
         return request is PipelineDraftSaveReq
@@ -149,11 +153,12 @@ class PipelineDraftSaveReqConverter(
                 projectId = projectId,
                 pipelineId = newPipelineId
             )
+            val channelCode = ChannelCode.getRequestChannelCode()
             val contextParam = PipelineVersionCreateContextParam(
                 userId = userId,
                 projectId = projectId,
                 pipelineId = newPipelineId,
-                channelCode = ChannelCode.getRequestChannelCode(),
+                channelCode = channelCode,
                 version = version,
                 model = modelAndSetting.model,
                 yaml = yamlWithVersion?.yamlStr,
@@ -166,8 +171,17 @@ class PipelineDraftSaveReqConverter(
                         filePath = it.filePath
                     )
                 },
-                repoHashId = pipelineYamlInfo?.repoHashId
-
+                repoHashId = pipelineYamlInfo?.repoHashId,
+                // 仅用户直接编辑保存草稿时校验插件与运行环境操作系统的适配度，
+                // 回滚/发布/YAML同步等非用户编辑的保存入口沿用原有逻辑，避免阻断自动化流程
+                runEnvOsChange = resolveRunEnvOsChange(
+                    userId = userId,
+                    projectId = projectId,
+                    pipelineId = newPipelineId,
+                    isNewPipeline = pipelineId.isNullOrBlank(),
+                    requestChannelCode = channelCode,
+                    setting = pipelineSettingWithoutVersion
+                )
             )
             val context = pipelineVersionCreateContextFactory.create(
                 contextParam = contextParam
@@ -190,6 +204,41 @@ class PipelineDraftSaveReqConverter(
             }
             return context
         }
+    }
+
+    /**
+     * 解析本次草稿保存需要校验的运行环境操作系统。
+     *
+     * 渠道优先取流水线自身记录：openapi 保存草稿时请求渠道由网关部署标签决定
+     * (见 ApiGatewayUtil.getChannelCode)，与流水线实际所属渠道无关，取请求渠道会让校验静默失效。
+     * 新建流水线尚无记录可取，只能以请求渠道为准。
+     */
+    private fun resolveRunEnvOsChange(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        isNewPipeline: Boolean,
+        requestChannelCode: ChannelCode,
+        setting: PipelineSetting
+    ): PipelineRunEnvOsChange? {
+        // envHashId 是「运行环境由设置指定」这类渠道特有的字段，为空即本次保存无运行环境可校验。
+        // 该判断置于最前，普通流水线保存草稿不会为解析渠道产生额外查询
+        if (setting.envHashId.isNullOrBlank()) return null
+        val channelCode = if (isNewPipeline) {
+            requestChannelCode
+        } else {
+            pipelineRepositoryService.getPipelineInfo(
+                projectId = projectId,
+                pipelineId = pipelineId
+            )?.channelCode ?: requestChannelCode
+        }
+        return pipelineRunEnvOsChangeResolver.resolve(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            channelCode = channelCode,
+            setting = setting
+        )
     }
 
     private fun PipelineDraftSaveReq.createPipelineModel(
