@@ -200,9 +200,9 @@
                 if (this.scopeType === 'pipeline' && this.categoryData.jobTypes[0] === 'AGENT') {
                     return true
                 }
-                // Creative 类型所有 job 都显示操作系统选择
+                // Creative：仅选择云任务环境时不展示操作系统，其余情况展示
                 if (this.scopeType === 'creative') {
-                    return true
+                    return this.categoryData.jobTypes.some(jobType => jobType !== 'CLOUD_TASK')
                 }
                 return false
             }
