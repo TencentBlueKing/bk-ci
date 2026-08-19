@@ -45,7 +45,9 @@ export default function useTemplateConstraint () {
         if (field === 'notices') {
             Object.assign(param, {
                 failSubscriptionList: setting.failSubscriptionList,
-                successSubscriptionList: setting.successSubscriptionList
+                successSubscriptionList: setting.successSubscriptionList,
+                cancelSubscriptionList: setting.cancelSubscriptionList,
+                publishSubscriptionList: setting.publishSubscriptionList
             })
         } else if (field === 'parallelSetting') {
             Object.assign(param, [

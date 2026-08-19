@@ -21,6 +21,8 @@ export default defineComponent({
     // Get notification lists from flowSetting
     const successList = computed(() => props.flowSetting?.successSubscriptionList || [])
     const failList = computed(() => props.flowSetting?.failSubscriptionList || [])
+    const cancelList = computed(() => props.flowSetting?.cancelSubscriptionList || [])
+    const publishList = computed(() => props.flowSetting?.publishSubscriptionList || [])
 
     // Notification list configuration
     const notifyList = computed<NotifyItem[]>(() => [
@@ -33,6 +35,16 @@ export default defineComponent({
         type: 'failSubscriptionList',
         name: t('flow.content.runFailed'),
         notifications: failList.value,
+      },
+      {
+        type: 'cancelSubscriptionList',
+        name: t('flow.content.runCanceled'),
+        notifications: cancelList.value,
+      },
+      {
+        type: 'publishSubscriptionList',
+        name: t('flow.content.newVersionPublished'),
+        notifications: publishList.value,
       },
     ])
 
