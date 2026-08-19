@@ -47,6 +47,7 @@ interface PreScriptBuildYamlIParser : YamlVersionParser {
     var name: String?
     var label: List<String>?
     var variables: Map<String, Variable>?
+    var variableTemplates: List<VariableTemplate>?
     var stages: List<IPreStage>?
     var jobs: LinkedHashMap<String, IPreJob>?
     var steps: List<IPreStep>?
@@ -76,6 +77,7 @@ data class PreScriptBuildYamlParser(
     @JsonProperty("on")
     var triggerOn: PreTriggerOn?,
     override var variables: Map<String, Variable>? = null,
+    override var variableTemplates: List<VariableTemplate>? = null,
     override var stages: List<IPreStage>? = null,
     override var jobs: LinkedHashMap<String, IPreJob>? = null,
     override var steps: List<IPreStep>? = null,
