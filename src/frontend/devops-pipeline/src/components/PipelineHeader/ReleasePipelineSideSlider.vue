@@ -126,7 +126,10 @@
                                 <label for="enablePac">
                                     {{ $t("codelibSrc") }}
                                 </label>
-                                <bk-radio-group v-model="releaseParams.scmType">
+                                <bk-radio-group
+                                    v-model="releaseParams.scmType"
+                                    @change="handleScmTypeChange"
+                                >
                                     <bk-radio
                                         v-for="item in pacSupportScmTypeList"
                                         :key="item.id"
@@ -1003,7 +1006,12 @@
                     ])
 
                     if (enablePac && this.hasPacSupportScmTypeList) {
-                        this.releaseParams.scmType = this.pacSupportScmTypeList[0]?.id
+                        // 优先使用 yamlInfo 中的仓库类型（已通过 yamlInfo watch 写入），仅在缺失或不受支持时回退到列表第一项
+                        const scmType = this.releaseParams.scmType
+                        const scmTypeSupported = scmType && this.pacSupportScmTypeList.some(item => item.id === scmType)
+                        this.releaseParams.scmType = scmTypeSupported
+                            ? scmType
+                            : this.pacSupportScmTypeList[0]?.id
                         this.$nextTick(() => {
                             this.fetchPacEnableCodelibList(true)
                             if (this.isDraftBaseBranchVersion) {
@@ -1084,6 +1092,8 @@
                         page: this.scrollLoadmoreConf.page,
                         pageSize: this.scrollLoadmoreConf.pageSize
                     })
+                    // 请求期间切换了代码库源，丢弃过期响应，避免旧数据污染新列表
+                    if (scmType !== this.releaseParams.scmType) return
                     Object.assign(this.scrollLoadmoreConf, {
                         total: response.count,
                         page: response.page,
@@ -1104,6 +1114,18 @@
                 if (show) {
                     this.fetchPacEnableCodelibList(true)
                 }
+            },
+            handleScmTypeChange () {
+                // 切换代码库源后，清空已选代码库并重置分页状态，重新拉取对应类型的代码库列表
+                this.releaseParams.repoHashId = ''
+                this.pacEnableCodelibList = []
+                this.isInitPacRepo = false
+                Object.assign(this.scrollLoadmoreConf, {
+                    page: 1,
+                    total: 0,
+                    isLoading: false
+                })
+                this.fetchPacEnableCodelibList(true)
             },
             async fetchBranchList (search) {
                 try {
