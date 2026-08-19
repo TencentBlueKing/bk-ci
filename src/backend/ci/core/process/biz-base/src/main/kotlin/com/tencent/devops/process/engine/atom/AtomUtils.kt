@@ -36,6 +36,7 @@ import com.tencent.devops.common.api.constant.KEY_INPUT
 import com.tencent.devops.common.api.constant.KEY_TEXTAREA
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.ErrorType
+import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.log.utils.BuildLogPrinter
@@ -44,9 +45,16 @@ import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.pipeline.enums.VMBaseOS
+import com.tencent.devops.common.pipeline.pojo.PipelineRunEnvOsChange
+import com.tencent.devops.common.pipeline.pojo.PipelineRunEnvOsCheckParam
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
+import com.tencent.devops.common.pipeline.template.ITemplateModel
+import com.tencent.devops.common.pipeline.template.JobTemplateModel
+import com.tencent.devops.common.pipeline.template.StageTemplateModel
+import com.tencent.devops.common.pipeline.template.StepTemplateModel
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.exception.BuildTaskException
@@ -66,9 +74,12 @@ import com.tencent.devops.store.pojo.atom.enums.JobTypeEnum
 import com.tencent.devops.store.pojo.common.StoreParam
 import com.tencent.devops.store.pojo.common.enums.ServiceScopeEnum
 import com.tencent.devops.store.pojo.common.version.StoreVersion
+import org.slf4j.LoggerFactory
 import java.util.LinkedList
 
 object AtomUtils {
+
+    private val logger = LoggerFactory.getLogger(AtomUtils::class.java)
 
     /**
      * 解析出Container中的市场插件，如果市场插件相应版本找不到就抛出异常
@@ -187,6 +198,35 @@ object AtomUtils {
         return atomVersions
     }
 
+    /**
+     * 解析出编排中所有市场插件的版本信息，用于批量查询插件运行时信息。
+     */
+    fun getModelAtomVersions(model: Model): Set<StoreVersion> {
+        val atomVersions = mutableSetOf<StoreVersion>()
+        model.stages.forEach { stage ->
+            stage.containers.forEach { container ->
+                atomVersions.addAll(getAtomVersions(container))
+            }
+        }
+        return atomVersions
+    }
+
+    /**
+     * 解析出模板编排中所有市场插件的版本信息，各模板类型的层级不同，逐类展开到 Container 后复用同一份解析。
+     *
+     * 与 [com.tencent.devops.common.pipeline.utils.ModelUtils.getTemplateModelAtoms] 覆盖的类型保持一致，
+     * 新增模板类型时两处需同步。
+     */
+    fun getTemplateModelAtomVersions(templateModel: ITemplateModel): Set<StoreVersion> = when (templateModel) {
+        is Model -> getModelAtomVersions(templateModel)
+        is StageTemplateModel -> templateModel.stages.flatMap { it.containers }.flatMapTo(mutableSetOf()) {
+            getAtomVersions(it)
+        }
+        is JobTemplateModel -> templateModel.containers.flatMapTo(mutableSetOf()) { getAtomVersions(it) }
+        is StepTemplateModel -> getAtomVersions(templateModel.container)
+        else -> emptySet()
+    }
+
     fun isHisAtomElement(element: Element) =
         element !is MarketBuildAtomElement && element !is MarketBuildLessAtomElement
 
@@ -233,16 +273,19 @@ object AtomUtils {
         atomVersions: Set<StoreVersion>,
         atomCheckParams: List<AtomCheckParam>,
         inputTypeConfigMap: Map<String, Int>,
-        client: Client
+        client: Client,
+        runEnvOsCheckParam: PipelineRunEnvOsCheckParam? = null
     ) {
         if (atomVersions.isEmpty()) return
-        // 复用同一次批量查询结果，服务范围/构建环境/参数三类校验共享，避免额外远程调用
+        // 复用同一次批量查询结果，服务范围/构建环境/参数/运行环境操作系统四类校验共享，避免额外远程调用
         val atomRunInfoMap = client.get(ServiceMarketAtomEnvResource::class).batchGetAtomRunInfos(
             projectCode = projectCode,
             atomVersions = atomVersions
         ).data
-        // 保存/校验阶段：渠道取自请求上下文
+        // 服务范围校验的渠道口径不变，仍取自请求上下文
         val channelCode = ChannelCode.getRequestChannelCode()
+        // 不适配插件在本次调用内收集后统一抛出
+        val osIncompatibleAtoms = mutableListOf<OsIncompatibleAtom>()
         atomCheckParams.forEach { checkParam ->
             val storeParam = checkParam.storeParam
             val atomRunInfo = atomRunInfoMap?.get("${storeParam.storeCode}:${storeParam.version}") ?: return@forEach
@@ -258,8 +301,391 @@ object AtomUtils {
                 inputTypeConfigMap = inputTypeConfigMap,
                 atomName = storeParam.storeName
             )
+            // 该插件运行所在节点的操作系统，无从确定时为空，即本项校验跳过
+            val targetOs = runEnvOsCheckParam?.let {
+                resolveRunEnvOs(
+                    settingRunEnvOs = it.settingRunEnvOsChange?.currentOs,
+                    jobRunEnvOs = checkParam.jobRunEnvOs
+                )
+            }
+            if (runEnvOsCheckParam != null && targetOs != null) {
+                findOsIncompatibleAtom(
+                    atomRunInfo = atomRunInfo,
+                    atomCode = storeParam.storeCode,
+                    atomName = storeParam.storeName,
+                    version = storeParam.version,
+                    jobName = checkParam.jobName,
+                    containerEnvType = checkParam.containerEnvType,
+                    osJobTypeName = runEnvOsCheckParam.osJobTypeName,
+                    targetOs = targetOs
+                )?.let { osIncompatibleAtoms.add(it) }
+            }
+        }
+        if (runEnvOsCheckParam != null && osIncompatibleAtoms.isNotEmpty()) {
+            checkOsIncompatibleIntroduced(
+                runEnvOsCheckParam = runEnvOsCheckParam,
+                incompatibleAtoms = osIncompatibleAtoms
+            )
         }
     }
+
+    /**
+     * 解析插件运行所在节点的操作系统，即该与插件声明比对的目标。
+     *
+     * 这是「目标操作系统」唯一的取值规则，编排校验、设置校验、豁免基准三处都经由此处，
+     * 三者口径一旦分叉，同一个组合就会因两侧算出的目标不同而被误判。
+     *
+     * [settingRunEnvOs] 为运行环境由设置指定的渠道(如创作流)所指定的操作系统，该环境适用于编排中所有 Job，
+     * 优先于 Job 自身的声明：这类渠道的 Job 并不自行决定跑在哪台机器上。
+     * 其余渠道取 [jobRunEnvOs]，即 Job 自身声明的构建环境操作系统。两者都为空表示无从确定，跳过校验。
+     */
+    private fun resolveRunEnvOs(settingRunEnvOs: OS?, jobRunEnvOs: OS?): OS? = settingRunEnvOs ?: jobRunEnvOs
+
+    /**
+     * 剔除基准编排中已存在的组合后，若仍有本次新引入的不适配插件则抛出异常。
+     *
+     * 见 [PipelineRunEnvOsCheckParam.exemptedRunEnvOsAtomKeys]：存量编排中的不适配组合不阻断本次保存，
+     * 仅拦本次新引入的。豁免集合在此处才首次读取，未发现不适配项时不会产生任何查询。
+     */
+    private fun checkOsIncompatibleIntroduced(
+        runEnvOsCheckParam: PipelineRunEnvOsCheckParam,
+        incompatibleAtoms: List<OsIncompatibleAtom>
+    ) {
+        val exemptedKeys = runEnvOsCheckParam.exemptedRunEnvOsAtomKeys.value
+        val introducedAtoms = incompatibleAtoms.filterNot { exemptedKeys.contains(it.runEnvOsAtomKey) }
+        if (introducedAtoms.isEmpty()) return
+        val settingRunEnvOsChange = runEnvOsCheckParam.settingRunEnvOsChange
+        throw if (settingRunEnvOsChange != null) {
+            settingOsIncompatibleException(
+                runEnvOsChange = settingRunEnvOsChange,
+                incompatibleAtoms = introducedAtoms
+            )
+        } else {
+            jobOsIncompatibleException(incompatibleAtoms = introducedAtoms)
+        }
+    }
+
+    /**
+     * 渠道到「插件操作系统声明所属 jobType」的映射。
+     *
+     * 与 [resolveRequiredServiceScope] 同为「渠道」的扩展点：插件的 OS 按 jobType 分别声明，
+     * 未来新增需要做运行环境操作系统校验的渠道时，只需在此处补充对应分支。
+     *
+     * 保存校验与前端查询插件适用操作系统时共用该映射，保证两侧读取的是插件同一份声明。
+     * 返回 [JobTypeEnum.AGENT] 表示该渠道沿用插件的遗留 OS 字段语义。
+     */
+    fun resolveOsJobType(channelCode: ChannelCode): JobTypeEnum = when (channelCode) {
+        ChannelCode.CREATIVE_STREAM -> JobTypeEnum.CREATIVE_STREAM
+        else -> JobTypeEnum.AGENT
+    }
+
+    /**
+     * 该渠道的运行环境是否由流水线设置指定，而非由编排里的 Job 各自声明。
+     *
+     * 与 [resolveOsJobType] 同为「渠道」的扩展点，新增渠道时两处需同步补充。
+     *
+     * 返回 true 的渠道不得退而取 Job 的 baseOS 作为校验目标：创作流的 Job 跑在设置所选的创作环境上，
+     * 其 baseOS 并非用户对运行系统的声明，而是 YAML 与编排互转时落下的默认值(见 DispatchTransfer.getBaseOs
+     * 与 ScriptYmlUtils.formatRunsOn，创作流 Job 级 runs-on 为空时会得到 LINUX)，取它比对会得出错误结论。
+     */
+    fun isRunEnvSpecifiedBySetting(channelCode: ChannelCode) = channelCode == ChannelCode.CREATIVE_STREAM
+
+    /**
+     * 该渠道的流水线是否由平台自身维护，而非由用户编排。AM 为研发商店按插件模板生成的指标计算等内置流水线。
+     *
+     * 与 [resolveOsJobType]、[isRunEnvSpecifiedBySetting] 同为「渠道」的扩展点，新增渠道时一并考虑。
+     *
+     * 这类流水线的编排由平台生成与改写(如插件发布后自动改写其中的插件版本)，面向用户的保存期校验对它们
+     * 没有意义：没有用户可以去修正编排，拦下来只会让平台流程失败。
+     */
+    fun isPlatformMaintainedChannel(channelCode: ChannelCode) = channelCode == ChannelCode.AM
+
+    /**
+     * 判断插件是否适用于运行环境的目标操作系统，不适用时返回明细项。
+     *
+     * 仅校验有编译环境的 Job：插件运行在运行环境的节点上，
+     * 无编译环境插件与触发器插件不受运行环境操作系统约束。
+     * 插件未声明当前渠道对应的操作系统范围时默认放行，保证存量插件逻辑不受影响。
+     */
+    private fun findOsIncompatibleAtom(
+        atomRunInfo: AtomRunInfo,
+        atomCode: String,
+        atomName: String,
+        version: String,
+        jobName: String,
+        containerEnvType: AtomContainerEnvType,
+        osJobTypeName: String,
+        targetOs: OS
+    ): OsIncompatibleAtom? {
+        if (containerEnvType != AtomContainerEnvType.BUILD_ENV) return null
+        if (isBuildLessAtomRunInBuildEnv(atomRunInfo)) return null
+        val supportedOsList = atomRunInfo.osMap?.get(osJobTypeName)
+        if (supportedOsList.isNullOrEmpty()) return null
+        if (supportedOsList.any { it.equals(targetOs.name, ignoreCase = true) }) return null
+        return OsIncompatibleAtom(
+            jobName = jobName,
+            targetOs = targetOs,
+            atomName = atomName,
+            supportedOsList = supportedOsList,
+            runEnvOsAtomKey = runEnvOsAtomKey(os = targetOs, atomCode = atomCode, version = version)
+        )
+    }
+
+    /**
+     * 解析 Job 自身声明的构建环境操作系统，无法确定唯一操作系统时返回空，该 Job 内的插件不做适配校验。
+     *
+     * [VMBuildContainer.baseOS] 是用户在编排里的声明，而非调度时的实际结果：未声明(null)、声明为不限制
+     * ([VMBaseOS.ALL]，如第三方构建机环境未指定 agentSelector)、以及构建机由矩阵上下文决定时，
+     * 都取不到唯一确定的操作系统。这些情况一律跳过而不做任何推断：这项校验会阻断保存，
+     * 误拦一条能正常运行的流水线的代价远高于漏拦。
+     */
+    fun resolveJobRunEnvOs(container: Container): OS? {
+        if (container !is VMBuildContainer) return null
+        // 矩阵 Job 的构建机可由矩阵变量决定，baseOS 只是转换期的单一取值，不足以代表每种组合
+        if (container.matrixGroupFlag == true) return null
+        return when (container.baseOS) {
+            VMBaseOS.LINUX -> OS.LINUX
+            VMBaseOS.WINDOWS -> OS.WINDOWS
+            VMBaseOS.MACOS -> OS.MACOS
+            VMBaseOS.ALL, null -> null
+        }
+    }
+
+    /**
+     * 收集编排中「运行环境操作系统 + 插件版本」的组合，作为判断不适配项是否为本次保存新引入的基准。
+     *
+     * 传入的应是上一次落库的编排与其当时的运行环境操作系统，[settingRunEnvOs] 的含义见 [resolveRunEnvOs]。
+     * 与前向校验共用同一次遍历，两侧的操作系统口径与版本归一方式因而必然一致，
+     * 否则同一个组合会因两侧算出的 key 不同而被误判为新引入。
+     */
+    fun collectRunEnvOsAtomKeys(model: Model?, settingRunEnvOs: OS?): Set<String> {
+        if (model == null) return emptySet()
+        return collectRunEnvOsCheckItems(
+            model = model,
+            settingRunEnvOs = settingRunEnvOs,
+            // 基准只用于回答「该组合此前是否已存在于编排中」，与其是否会被调度无关，
+            // 故不跳过被禁用的 Stage / Job：把禁用的 Job 重新启用不该被当作新引入而拦下
+            skipDisabled = false
+        ).mapTo(mutableSetOf()) { it.runEnvOsAtomKey() }
+    }
+
+    /**
+     * 仅校验编排中的插件是否都适用于运行环境的目标操作系统，不做服务范围/构建环境匹配/插件参数等其他校验。
+     *
+     * 供「保存流水线设置」的入口使用：设置里可能指定运行环境(如创作流的创作环境)，改设置即改变了插件的运行系统，
+     * 而这类入口本身不经过编排校验。此处不复用 checkModelIntegrity，因为后者会带上编排的全部完整性校验，
+     * 存量编排里与本次变更无关的历史问题会反过来阻断设置保存。
+     *
+     * 判定口径与 [checkModelAtoms] 完全一致：共用 [resolveRunEnvOs] 取目标操作系统、[findOsIncompatibleAtom]
+     * 做判定、[checkOsIncompatibleIntroduced] 做存量豁免，jobType 同样取自入参而不按请求渠道自行解析。
+     */
+    fun checkModelRunEnvOs(
+        projectCode: String,
+        model: Model,
+        runEnvOsCheckParam: PipelineRunEnvOsCheckParam,
+        client: Client
+    ) {
+        val checkItems = collectRunEnvOsCheckItems(
+            model = model,
+            settingRunEnvOs = runEnvOsCheckParam.settingRunEnvOsChange?.currentOs,
+            // 被禁用的 Stage / Job 运行时不会被调度，与 checkModelAtoms 一样跳过，保证保存校验不严于运行时
+            skipDisabled = true
+        )
+        if (checkItems.isEmpty()) return
+        // 编排中存在项目下已不可用的插件时该查询会抛异常。此处并未改动编排，不应因编排里与本次变更
+        // 无关的历史问题而失败，故降级为跳过本项校验；编排保存入口仍会照常拦截这类插件
+        val atomRunInfoMap = try {
+            client.get(ServiceMarketAtomEnvResource::class).batchGetAtomRunInfos(
+                projectCode = projectCode,
+                atomVersions = checkItems.mapTo(mutableSetOf()) { it.storeVersion }
+            ).data
+        } catch (ignored: Throwable) {
+            logger.warn("Failed to batch get atom run infos on run env os check|$projectCode", ignored)
+            null
+        } ?: return
+        val incompatibleAtoms = checkItems.mapNotNull { checkItem ->
+            val storeVersion = checkItem.storeVersion
+            val atomRunInfo = atomRunInfoMap["${storeVersion.storeCode}:${storeVersion.version}"]
+                ?: return@mapNotNull null
+            findOsIncompatibleAtom(
+                atomRunInfo = atomRunInfo,
+                atomCode = storeVersion.storeCode,
+                atomName = storeVersion.storeName,
+                version = storeVersion.version,
+                jobName = checkItem.jobName,
+                // 收集时已限定为有编译环境的 Job
+                containerEnvType = AtomContainerEnvType.BUILD_ENV,
+                osJobTypeName = runEnvOsCheckParam.osJobTypeName,
+                targetOs = checkItem.targetOs
+            )
+        }
+        if (incompatibleAtoms.isNotEmpty()) {
+            checkOsIncompatibleIntroduced(
+                runEnvOsCheckParam = runEnvOsCheckParam,
+                incompatibleAtoms = incompatibleAtoms
+            )
+        }
+    }
+
+    /**
+     * 收集编排中需要做操作系统适配校验的插件，及其所在 Job 的名称与目标操作系统。
+     *
+     * 只有有编译环境的 Job 才会把插件调度到运行环境的节点上，其余容器(无编译环境、触发器)不受约束。
+     * 目标操作系统无从确定的 Job 一并跳过，规则见 [resolveRunEnvOs] 与 [resolveJobRunEnvOs]。
+     */
+    private fun collectRunEnvOsCheckItems(
+        model: Model,
+        settingRunEnvOs: OS?,
+        skipDisabled: Boolean
+    ): List<RunEnvOsCheckItem> {
+        val checkItems = mutableListOf<RunEnvOsCheckItem>()
+        model.stages.forEach nextStage@{ stage ->
+            if (skipDisabled && !stage.stageEnabled()) return@nextStage
+            stage.containers.forEach nextContainer@{ container ->
+                if (skipDisabled && !container.containerEnabled()) return@nextContainer
+                if (resolveContainerEnvType(container) != AtomContainerEnvType.BUILD_ENV) return@nextContainer
+                val targetOs = resolveRunEnvOs(
+                    settingRunEnvOs = settingRunEnvOs,
+                    jobRunEnvOs = resolveJobRunEnvOs(container)
+                ) ?: return@nextContainer
+                getAtomVersions(container).forEach { storeVersion ->
+                    checkItems.add(
+                        RunEnvOsCheckItem(
+                            jobName = container.name,
+                            targetOs = targetOs,
+                            storeVersion = storeVersion
+                        )
+                    )
+                }
+            }
+        }
+        return checkItems
+    }
+
+    /**
+     * 待做操作系统适配校验的插件及其上下文。
+     */
+    private data class RunEnvOsCheckItem(
+        val jobName: String,
+        val targetOs: OS,
+        val storeVersion: StoreVersion
+    ) {
+        fun runEnvOsAtomKey() = runEnvOsAtomKey(
+            os = targetOs,
+            atomCode = storeVersion.storeCode,
+            version = storeVersion.version
+        )
+    }
+
+    /**
+     * 「运行环境操作系统 + 插件版本」的标识，同一组合在前向校验与豁免基准两侧必须算出同一个值。
+     */
+    private fun runEnvOsAtomKey(os: OS, atomCode: String, version: String) = "${os.name}:$atomCode:$version"
+
+    /**
+     * 判断插件是否为「借助 buildLessRunFlag 运行在有编译环境 Job 中的无编译环境插件」。
+     *
+     * 这类插件自身不具备编译环境 jobType，即使被放进有编译环境的 Job 也不在运行环境的节点上执行，
+     * 不受运行环境操作系统约束，需要排除在操作系统适配校验之外。
+     * 同时声明了编译环境 jobType 的插件按编译环境插件运行，仍需校验操作系统。
+     */
+    private fun isBuildLessAtomRunInBuildEnv(atomRunInfo: AtomRunInfo): Boolean {
+        if (atomRunInfo.buildLessRunFlag != true) return false
+        val allJobTypes = JobTypeEnum.resolveAllFromFields(atomRunInfo.jobType, atomRunInfo.jobTypeMap)
+        return allJobTypes.isNotEmpty() && allJobTypes.none { it.isBuildEnv() }
+    }
+
+    /**
+     * 构造插件与「设置所指定运行环境」的操作系统不适配的异常，文案中列出全部不适配插件及其适用系统。
+     *
+     * 该环境适用于编排中所有 Job，故文案只呈现环境的操作系统，不逐个点出 Job。
+     * 仅在本次确实换过操作系统时呈现「由 A 变更为 B」，否则(环境未变、首次指定环境、变更前系统相同)
+     * 只呈现当前环境的操作系统，避免提示用户一个他本次并未做过的变更。
+     */
+    private fun settingOsIncompatibleException(
+        runEnvOsChange: PipelineRunEnvOsChange,
+        incompatibleAtoms: List<OsIncompatibleAtom>
+    ): ErrorCodeException {
+        val currentOsName = osDisplayName(runEnvOsChange.currentOs.name)
+        // 同一插件被多个 Job 引用时，明细项内容相同，按插件与其适用范围去重
+        val atomDetail = incompatibleAtoms.distinctBy { it.atomName to it.supportedOsList }
+            .joinToString(separator = "\n") { atom ->
+                I18nUtil.getCodeLanMessage(
+                    messageCode = ProcessMessageCode.BK_ATOM_RUN_ENV_OS_INCOMPATIBLE_ITEM,
+                    params = arrayOf(
+                        atom.atomName,
+                        atom.supportedOsList.joinToString(separator = " / ") { osDisplayName(it) },
+                        currentOsName
+                    )
+                )
+            }
+        val previousOs = runEnvOsChange.previousOs?.takeIf { it != runEnvOsChange.currentOs }
+        val messageCode = if (previousOs == null) {
+            ProcessMessageCode.ERROR_ATOM_RUN_ENV_OS_UNSUPPORTED
+        } else {
+            ProcessMessageCode.ERROR_ATOM_RUN_ENV_OS_INCOMPATIBLE
+        }
+        val params = if (previousOs == null) {
+            arrayOf(currentOsName, atomDetail)
+        } else {
+            arrayOf(osDisplayName(previousOs.name), currentOsName, atomDetail)
+        }
+        return ErrorCodeException(
+            errorCode = messageCode,
+            params = params,
+            defaultMessage = I18nUtil.getCodeLanMessage(messageCode = messageCode, params = params)
+        )
+    }
+
+    /**
+     * 构造插件与其所在 Job 的构建环境操作系统不适配的异常。
+     *
+     * 与 [settingOsIncompatibleException] 的区别在于目标操作系统逐 Job 而定，
+     * 同一插件在不同 Job 下结论可能不同，故明细必须点出 Job 名与该 Job 的操作系统，用户才知道去哪改。
+     */
+    private fun jobOsIncompatibleException(incompatibleAtoms: List<OsIncompatibleAtom>): ErrorCodeException {
+        val atomDetail = incompatibleAtoms.distinct().joinToString(separator = "\n") { atom ->
+            I18nUtil.getCodeLanMessage(
+                messageCode = ProcessMessageCode.BK_ATOM_JOB_OS_INCOMPATIBLE_ITEM,
+                params = arrayOf(
+                    atom.jobName,
+                    osDisplayName(atom.targetOs.name),
+                    atom.atomName,
+                    atom.supportedOsList.joinToString(separator = " / ") { osDisplayName(it) }
+                )
+            )
+        }
+        val messageCode = ProcessMessageCode.ERROR_ATOM_JOB_OS_INCOMPATIBLE
+        val params = arrayOf(atomDetail)
+        return ErrorCodeException(
+            errorCode = messageCode,
+            params = params,
+            defaultMessage = I18nUtil.getCodeLanMessage(messageCode = messageCode, params = params)
+        )
+    }
+
+    /**
+     * 操作系统展示名称，为跨语言一致的专有名词，不做国际化。
+     */
+    private fun osDisplayName(osName: String): String = when (osName.uppercase()) {
+        OS.WINDOWS.name -> "Windows"
+        OS.LINUX.name -> "Linux"
+        OS.MACOS.name -> "macOS"
+        else -> osName
+    }
+
+    /**
+     * 与运行环境操作系统不适配的插件明细。
+     *
+     * [jobName] 只在目标操作系统逐 Job 而定时才会呈现给用户：运行环境由设置指定时该环境适用于所有 Job，
+     */
+    private data class OsIncompatibleAtom(
+        val jobName: String,
+        val targetOs: OS,
+        val atomName: String,
+        val supportedOsList: List<String>,
+        val runEnvOsAtomKey: String
+    )
 
     /**
      * 构造保存阶段插件校验失败异常，提示中明确指出不满足运行环境要求的 Stage / Job 及插件名。
@@ -311,12 +737,16 @@ object AtomUtils {
     /**
      * 保存阶段单个插件的校验上下文：插件参数 + 其所在 Stage/Job 名称 + 容器构建环境类型，
      * 其中 Stage/Job 名称用于在校验失败时给出「具体哪个 Job」的精确提示。
+     *
+     * [jobRunEnvOs] 为该插件所在 Job 声明的构建环境操作系统，由 [resolveJobRunEnvOs] 解析，
+     * 无从确定唯一操作系统时为空。运行环境由设置指定的渠道不使用该字段。
      */
     data class AtomCheckParam(
         val storeParam: StoreParam,
         val containerEnvType: AtomContainerEnvType,
         val stageName: String,
-        val jobName: String
+        val jobName: String,
+        val jobRunEnvOs: OS? = null
     )
 
     fun resolveContainerEnvType(container: Container): AtomContainerEnvType = when (container) {

@@ -46,6 +46,7 @@ import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.PipelineAtomInfo
 import com.tencent.devops.common.pipeline.utils.ModelUtils
 import com.tencent.devops.common.service.utils.HomeHostUtil
@@ -54,6 +55,7 @@ import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.GET_PIPELINE_ATOM_INFO_NO_PERMISSION
 import com.tencent.devops.process.dao.PipelineAtomReplaceBaseDao
 import com.tencent.devops.process.dao.PipelineAtomReplaceItemDao
+import com.tencent.devops.process.engine.atom.AtomUtils
 import com.tencent.devops.process.engine.dao.PipelineBuildSummaryDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.engine.dao.PipelineModelTaskDao
@@ -95,6 +97,7 @@ class PipelineAtomService @Autowired constructor(
     private val pipelineAtomReplaceBaseDao: PipelineAtomReplaceBaseDao,
     private val pipelineAtomReplaceItemDao: PipelineAtomReplaceItemDao,
     private val pipelineRepositoryService: PipelineRepositoryService,
+    private val atomPropVersionOsService: AtomPropVersionOsService,
     private val client: Client
 ) {
 
@@ -424,7 +427,17 @@ class PipelineAtomService @Autowired constructor(
         )
         // 获取流水线下插件标识集合
         val atomCodes = ModelUtils.getModelAtoms(model)
-        return client.get(ServiceAtomResource::class).getAtomProps(atomCodes)
+        return atomPropVersionOsService.fillVersionOsMap(
+            projectId = projectId,
+            atomVersions = AtomUtils.getModelAtomVersions(model),
+            atomPropResult = client.get(ServiceAtomResource::class).getAtomProps(atomCodes),
+            // 与保存校验同样以流水线自身记录的渠道为准，两侧口径必须一致，
+            // 取不到记录(如已归档流水线)时才退到请求渠道
+            channelCode = pipelineRepositoryService.getPipelineInfo(
+                projectId = projectId,
+                pipelineId = pipelineId
+            )?.channelCode ?: ChannelCode.getRequestChannelCode()
+        )
     }
 
     fun buildPipelineAtomRelInfoList(
