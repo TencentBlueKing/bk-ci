@@ -82,7 +82,7 @@
                         v-else-if="extraSection.type === EXTRA_SECTION_TYPE.TEXT"
                         class="bei-extra-icon"
                         name="help-document-fill"
-                        size="10"
+                        size="12"
                     />
                     <span>{{ $t(extraSection.titleKey) }}</span>
                 </div>
@@ -496,7 +496,7 @@
     .bei-section-title {
         display: flex;
         align-items: center;
-        gap: 8px;
+        gap: 6px;
         margin-bottom: 6px;
         font-size: 12px;
         line-height: 18px;
@@ -523,7 +523,7 @@
         justify-content: space-between;
         gap: 12px;
         min-height: 24px;
-        padding: 2px 16px;
+        padding: 2px 14px;
         border-radius: 2px;
     }
 
