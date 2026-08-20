@@ -66,6 +66,29 @@ class SlaveGatewayService @Autowired constructor(
         return Zone.SHENZHEN.getI18n(I18nUtil.getLanguage(I18nUtil.getRequestUserId()))
     }
 
+    fun getZoneName(gateway: String): String {
+        val gatewayList = if (cache.isEmpty()) {
+            getGateway()
+        } else {
+            cache
+        }
+        // 先完整匹配
+        gatewayList.forEach {
+            if (it.gateway.trim() == gateway.trim()) {
+                return it.zoneName
+            }
+        }
+        // 再去掉头匹配，因为最后都会修正到默认头，所以这里理论上没有完整匹配，去掉头匹配也是等价的
+        gatewayList.forEach {
+            if (it.gateway.trim().removePrefix("http://").removePrefix("https://") ==
+                gateway.trim().removePrefix("http://").removePrefix("https://")
+            ) {
+                return it.zoneName
+            }
+        }
+        return Zone.SHENZHEN.getI18n(I18nUtil.getLanguage(I18nUtil.getRequestUserId()))
+    }
+
     fun getFileGateway(zoneName: String?): String? {
         if (agentPropsScope.useDefaultFileGateway()) {
             val defaultFileGateway = agentPropsScope.getDefaultFileGateway()

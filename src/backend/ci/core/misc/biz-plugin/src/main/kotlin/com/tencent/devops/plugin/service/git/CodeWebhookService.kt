@@ -430,7 +430,13 @@ class CodeWebhookService @Autowired constructor(
             }
             val channelCode = variables[PIPELINE_START_CHANNEL]?.let { ChannelCode.getChannel(it) }
                 ?: ChannelCode.getRequestChannelCode()
-            val targetUrl = "${HomeHostUtil.innerServerHost()}/console/pipeline/$projectId/$pipelineId/detail/$buildId"
+            val targetUrl = getBuildUrl(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                channelCode = channelCode,
+                variables = variables
+            )
 
             val description = when (state) {
                 GIT_COMMIT_CHECK_STATE_PENDING -> "Your pipeline [$pipelineName] is running"
@@ -759,7 +765,7 @@ class CodeWebhookService @Autowired constructor(
         val codeccTaskId = variables[CodeccUtils.BK_CI_CODECC_TASK_ID]
         val codeccPrefix = "${HomeHostUtil.innerCodeccHost()}/codecc/$projectId/task"
         if (codeccTaskId != null) {
-            "$codeccPrefix/$codeccTaskId/detail"
+            "$codeccPrefix/$codeccTaskId/detail?pipelineId=$pipelineId&buildId=$buildId&from=check_run"
         } else {
             "$codeccPrefix/list?pipelineId=$pipelineId&buildId=$buildId&from=check_run"
         }

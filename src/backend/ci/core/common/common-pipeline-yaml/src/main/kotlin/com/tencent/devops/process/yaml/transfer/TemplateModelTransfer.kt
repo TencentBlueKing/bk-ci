@@ -33,6 +33,7 @@ import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.dialect.PipelineDialectType
+import com.tencent.devops.common.pipeline.pojo.PublicVarGroupRef
 import com.tencent.devops.common.pipeline.pojo.setting.BuildCancelPolicy
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
@@ -53,6 +54,7 @@ import com.tencent.devops.process.yaml.v3.models.on.IPreTriggerOn
 import com.tencent.devops.process.yaml.v3.models.on.PreTriggerOn
 import com.tencent.devops.process.yaml.v3.models.on.PreTriggerOnV3
 import com.tencent.devops.process.yaml.v3.models.stage.PreStage
+import com.tencent.devops.process.yaml.v3.parsers.template.Constants.TEMPLATE_KEY
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
@@ -88,6 +90,9 @@ class TemplateModelTransfer @Autowired constructor(
                     instanceFromTemplate = false,
                     pipelineCreator = yamlInput.userId
                 )
+                model.publicVarGroups = yamlInput.yaml.formatVariableTemplates().map {
+                    PublicVarGroupRef.create(groupName = it.name, versionName = it.version)
+                }.ifEmpty { null }
 
                 // 蓝盾引擎会将stageId从1开始顺序强制重写，因此在生成model时保持一致
                 var stageIndex = 1
@@ -181,7 +186,7 @@ class TemplateModelTransfer @Autowired constructor(
             stages.add(ymlStage)
         }
         baseYaml.stages = stages.ifEmpty { null }?.let { TransferMapper.anyTo(stages) }
-        baseYaml.variables = model.triggerContainer()?.let { variableTransfer.makeVariableFromModel(it) }
+        baseYaml.variables = makeVariablesYaml(modelInput)
         val lastStage = model.stages()?.last()
         val finally = if (lastStage?.finally == true) {
             modelInput.aspectWrapper.setModelStage4Model(lastStage, PipelineTransferAspectWrapper.AspectType.BEFORE)
@@ -214,6 +219,20 @@ class TemplateModelTransfer @Autowired constructor(
         return baseYaml
     }
 
+    /**
+     * 生成 yaml 的 variables 节点，公共变量组引用以 template 关键字输出，组内变量不再重复输出
+     */
+    private fun makeVariablesYaml(modelInput: TemplateModelTransferInput): Map<String, Any>? {
+        val variables = mutableMapOf<String, Any>()
+        variableTransfer.makeVariableTemplatesFromModel(modelInput.model as? Model)?.let {
+            variables[TEMPLATE_KEY] = it
+        }
+        modelInput.model.triggerContainer()?.let { triggerContainer ->
+            variableTransfer.makeVariableFromModel(triggerContainer)?.let { variables.putAll(it) }
+        }
+        return variables.ifEmpty { null }
+    }
+
     private fun ITemplateModel.triggerContainer() = when (this) {
         is Model -> stages[0].containers[0] as TriggerContainer
         is StageTemplateModel -> null
@@ -244,8 +263,12 @@ class TemplateModelTransfer @Autowired constructor(
             PipelineTransferAspectWrapper.AspectType.BEFORE
         )
         val triggers = (model.getTriggerContainer()).elements
-        val baseTrigger = elementTransfer.baseTriggers2yaml(triggers, modelInput.aspectWrapper)
-            ?.toPre(modelInput.version)
+        val baseTrigger = elementTransfer.baseTriggers2yaml(
+            elements = triggers,
+            aspectWrapper = modelInput.aspectWrapper,
+            userId = modelInput.userId,
+            projectId = modelInput.projectId
+        )?.toPre(modelInput.version)
         val scmTrigger = elementTransfer.scmTriggers2Yaml(
             triggers, modelInput.projectId, modelInput.aspectWrapper
         )

@@ -4,9 +4,10 @@ export interface ProjectMeta {
   [key: string]: unknown
 }
 
-export type AuthoringBaseOS = 'WINDOWS' | 'LINUX'
+export type AuthoringBaseOS = 'WINDOWS' | 'LINUX' | 'MACOS'
 
 const PERSONAL_PROJECT_CHANNEL = 'PREBUILD'
+const AUTHORING_BASE_OS_SET = new Set<AuthoringBaseOS>(['WINDOWS', 'LINUX', 'MACOS'])
 
 interface WindowProjectContext {
   $currentProjectId?: string | null
@@ -32,6 +33,23 @@ export function getCurrentProject(
 
 export function isPersonalProject(project?: ProjectMeta | null): boolean {
   return project?.channelCode === PERSONAL_PROJECT_CHANNEL
+}
+
+export function normalizeAuthoringBaseOS(os?: string | null): AuthoringBaseOS | undefined {
+  if (!os) return undefined
+  const normalized = os.toUpperCase() as AuthoringBaseOS
+  return AUTHORING_BASE_OS_SET.has(normalized) ? normalized : undefined
+}
+
+/**
+ * Resolve authoring Job baseOS.
+ * Prefer selected creation environment OS; fallback to project-type default.
+ */
+export function resolveAuthoringBaseOS(
+  envOs?: string | null,
+  project?: ProjectMeta | null,
+): AuthoringBaseOS {
+  return normalizeAuthoringBaseOS(envOs) ?? getAuthoringBaseOS(project)
 }
 
 export function getAuthoringBaseOS(project?: ProjectMeta | null): AuthoringBaseOS {

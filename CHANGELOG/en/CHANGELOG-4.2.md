@@ -16,6 +16,176 @@
 
 
 <!-- NEW RELEASE NOTES ENTRY -->
+# v4.2.0-rc.6
+## 2026-08-18
+### Changelog since v4.2.0-rc.5
+### Summary
+Key changes in this release:
+
+**Features**
+- Creation Flow: support copying to personal projects by following the manifest, add start-node keywords to scheduled-trigger YAML, and optimize OpenAPI routing to no longer distinguish by project
+- Matrix jobs: support manual retry of failed steps, and when retrying a failed job, only rerun the failed job instead of the entire matrix
+- Log Service: add multiple query interfaces
+- Repository: support user-mode interfaces to get branch and tag lists
+- Store: plugin external task links support SDK reporting and canvas navigation
+- Support GitHub issue assignee and label events
+- Version changelog supports separation from the frontend image, with independent mounting across multiple clusters
+- Build history supports hiding the actions column
+
+**Bug Fixes**
+- Fixed cancelled jobs during a retried build leaving a residual CANCELED status that wrongly marked the final build status as cancelled
+- Fixed "pipeline build does not exist" error when cancelling and restarting a build (buildRestart) that replayed an already-retried build
+- Fixed retries mistakenly running prior matrix jobs
+- Fixed pipeline-level callbacks not being cleaned up after the start events were cleared
+
+#### New Features
+
+##### Pipeline
+- [New] feat: steps under a matrix job support manual retry on failure [Link](http://github.com/TencentBlueKing/bk-ci/issues/10780)
+
+##### Repository
+- [New] feat: support user-mode interfaces to get repository branch list / tag list [Link](http://github.com/TencentBlueKing/bk-ci/issues/13013)
+
+##### Store
+- [New] feat: plugin external task link SDK reporting and canvas navigation [Link](http://github.com/TencentBlueKing/bk-ci/issues/13312)
+
+##### Log Service
+- [New] feat: Log Service adds multiple query interfaces [Link](http://github.com/TencentBlueKing/bk-ci/issues/13230)
+
+##### Others
+- [New] bug: support GitHub issue assignee and label events [Link](http://github.com/TencentBlueKing/bk-ci/issues/13404)
+- [New] feat: Creation Flow supports copying to personal projects by following the manifest [Link](http://github.com/TencentBlueKing/bk-ci/issues/13432)
+- [New] feat: add an OP interface to modify the maximum number of pipelines under a project [Link](http://github.com/TencentBlueKing/bk-ci/issues/13423)
+- [New] feat: when retrying a failed job, if it is a matrix job, support rerunning only the failed job instead of the whole matrix [Link](http://github.com/TencentBlueKing/bk-ci/issues/10799)
+- [New] feat: Creation Flow scheduled-trigger YAML adds start-node keywords [Link](http://github.com/TencentBlueKing/bk-ci/issues/13309)
+- [New] Support hiding the actions column in build history table settings [Link](http://github.com/TencentBlueKing/bk-ci/issues/13376)
+- [New] feat: version changelog supports separation from the frontend image, enabling independent mounting across multiple clusters [Link](http://github.com/TencentBlueKing/bk-ci/issues/13363)
+
+#### Improvements
+
+##### Pipeline
+- [Improved] perf: [PAC] use the user-entered description for the MR title when publishing pipelines/templates [Link](http://github.com/TencentBlueKing/bk-ci/issues/13444)
+
+##### Others
+- [Improved] pref: Creation Flow OpenAPI requests no longer route to different clusters by project [Link](http://github.com/TencentBlueKing/bk-ci/issues/13410)
+- [Improved] chore: upgrade devopsScm to 1.1.10 [Link](http://github.com/TencentBlueKing/bk-ci/issues/13373)
+
+#### Bug Fixes
+
+##### Pipeline
+- [Fixed] bug: draftVersion duplication under concurrent/same-second draft saves causes primary key conflict in T_PIPELINE_RESOURCE_DRAFT_VERSION [Link](http://github.com/TencentBlueKing/bk-ci/issues/13459)
+- [Fixed] bug: TAPD API-created requirements/bugs lack the ci.event_url variable [Link](http://github.com/TencentBlueKing/bk-ci/issues/13405)
+- [Fixed] bug: when a PAC template instantiates a pipeline triggered from the repository, checkbox/multi-select dropdown default values are broken into [] [Link](http://github.com/TencentBlueKing/bk-ci/issues/13447)
+- [Fixed] bug: remove sub-pipeline branch version validation when saving pipelines/templates [Link](http://github.com/TencentBlueKing/bk-ci/issues/13412)
+- [Fixed] bug: [PAC] branch version execution should use the branch version settings [Link](http://github.com/TencentBlueKing/bk-ci/issues/12697)
+- [Fixed] bug: optimize text when trigger event has no permission [Link](http://github.com/TencentBlueKing/bk-ci/issues/13103)
+- [Fixed] bug: pipeline-level callback is not cleaned up after the start events are cleared [Link](http://github.com/TencentBlueKing/bk-ci/issues/13313)
+
+##### Others
+- [Fixed] bug: fix draft save validation error showing function source code [Link](http://github.com/TencentBlueKing/bk-ci/issues/13454)
+- [Fixed] Fix real-time updates in the Creative Stream embedded view [Link](http://github.com/TencentBlueKing/bk-ci/issues/13426)
+- [Fixed] bug: cancel API interception of non-formal pipeline versions [Link](http://github.com/TencentBlueKing/bk-ci/issues/13402)
+- [Fixed] bug: resource lock errors when converting YAML to UI with variables [Link](http://github.com/TencentBlueKing/bk-ci/issues/13421)
+- [Fixed] fix: cancelling and restarting a build (buildRestart) that replays an already-retried build reports "pipeline build [xxx] does not exist" [Link](http://github.com/TencentBlueKing/bk-ci/issues/13430)
+- [Fixed] bug: publishing a template with the same name fails when the branch version/version is behind [Link](http://github.com/TencentBlueKing/bk-ci/issues/13427)
+- [Fixed] bug: retries mistakenly run prior matrix jobs [Link](http://github.com/TencentBlueKing/bk-ci/issues/13084)
+- [Fixed] fix: refresh timer trigger start-parameter options after flow variable changes [Link](http://github.com/TencentBlueKing/bk-ci/issues/13413)
+- [Fixed] bugfix: environment management start/stop function overridden, dynamic environments not started/stopped [Link](http://github.com/TencentBlueKing/bk-ci/issues/13398)
+- [Fixed] bug: a cancelled Job during a retried build leaves a residual CANCELED status, causing the final build status to be wrongly marked as cancelled [Link](http://github.com/TencentBlueKing/bk-ci/issues/13407)
+- [Fixed] Fix boolean pipeline variable default value handling [Link](http://github.com/TencentBlueKing/bk-ci/issues/13329)
+- [Fixed] bug: optimize Creation Flow plugin query by specified OS [Link](http://github.com/TencentBlueKing/bk-ci/issues/13396)
+- [Fixed] bug: draft overwrite warning popup fetches an incorrect unpublished draft version number [Link](http://github.com/TencentBlueKing/bk-ci/issues/13387)
+- [Fixed] bug: adjust yaml schema $.concurrency.queue-length default length to 200 [Link](http://github.com/TencentBlueKing/bk-ci/issues/13292)
+- [Fixed] bug: after adding a variable (set runtime read-only) to a template, the instance cannot modify the variable value on update [Link](http://github.com/TencentBlueKing/bk-ci/issues/13369)
+- [Fixed] Optimize artifact download preparation text spacing [Link](http://github.com/TencentBlueKing/bk-ci/issues/13328)
+
+# v4.2.0-rc.5
+## 2026-08-04
+### Changelog since v4.2.0-rc.4
+### Summary
+Key changes in this release:
+
+**Features**
+- Creation Flow: support Creation Flow management; Creation Flow environments and creation environments support system attributes and specified OS
+- Support storage and query of pipeline metadata for image artifacts
+- Pipeline group management: provide Apigw interfaces for pipeline group management and optimize pipeline group display
+- Repository trigger flow changed from serial to parallel pipeline execution
+- Review plugin supports sending reminders to specific users
+- Optimize concurrent draft editing interaction
+- Provide some cloud-dev OpenAPI interfaces
+- GONGFENGSCAN (Gongfeng Commit Check) uses the CodeCC result URL
+
+**Bug Fixes**
+- Fixed timed task deletion failure causing Quartz RAMJobStore memory leak
+- Fixed template instance upgrade with parameter type changes triggering infinite updates and crashing the page
+- Fixed webhook build parameter overflow discarding the entire payload (now only drops oversized environment variables)
+- Fixed PAC-instantiated YAML pipelines showing abnormal status when deleted or when the YAML format is invalid
+
+#### New Features
+
+##### Pipeline
+- [New] feat: optimize concurrent draft editing interaction [Link](http://github.com/TencentBlueKing/bk-ci/issues/10553)
+- [New] feat: support storage and query of pipeline metadata for image artifacts [Link](http://github.com/TencentBlueKing/bk-ci/issues/13160)
+- [New] feat: GONGFENGSCAN (Gongfeng Commit Check) uses the CodeCC result URL [Link](http://github.com/TencentBlueKing/bk-ci/issues/13253)
+- [New] feat: optimize repository trigger flow: serial to parallel pipeline execution [Link](http://github.com/TencentBlueKing/bk-ci/issues/13186)
+
+##### Environment Management
+- [New] feat: Creation Flow environment supports system attributes [Link](http://github.com/TencentBlueKing/bk-ci/issues/13282)
+- [New] feat: optimize task list for environments/nodes under environment management [Link](http://github.com/TencentBlueKing/bk-ci/issues/13269)
+- [New] feat: third-party build machine Docker supports no-mount keywords [Link](http://github.com/TencentBlueKing/bk-ci/issues/13251)
+
+##### Others
+- [New] feat: review plugin supports sending reminders to specific users [Link](http://github.com/TencentBlueKing/bk-ci/issues/13382)
+- [New] feat: creation environment supports specified OS [Link](http://github.com/TencentBlueKing/bk-ci/issues/13324)
+- [New] feat: Creation Flow management [Link](http://github.com/TencentBlueKing/bk-ci/issues/12414)
+- [New] feat: provide Apigw interfaces for pipeline group management [Link](http://github.com/TencentBlueKing/bk-ci/issues/13289)
+- [New] feat: provide some cloud-dev OpenAPI interfaces [Link](http://github.com/TencentBlueKing/bk-ci/issues/13279)
+
+#### Improvements
+- [Improved] pref: improve store upload filename validation [Link](http://github.com/TencentBlueKing/bk-ci/issues/13027)
+- [Improved] pref: CodeCC rule set id conversion [Link](http://github.com/TencentBlueKing/bk-ci/issues/13354)
+- [Improved] pref: add per-candidate total execution timeout to AI model failover [Link](http://github.com/TencentBlueKing/bk-ci/issues/13255)
+- [Improved] pref: strengthen AI's ability to locate sub-pipeline builds [Link](http://github.com/TencentBlueKing/bk-ci/issues/13262)
+- [Improved] perf: optimize pipeline group display [Link](http://github.com/TencentBlueKing/bk-ci/issues/12943)
+- [Improved] perf: optimize required-field check strategy when setting matrix jobs via UI [Link](http://github.com/TencentBlueKing/bk-ci/issues/12957)
+
+#### Bug Fixes
+
+##### Pipeline
+- [Fixed] bug: fix webhook build parameter overflow handling - drop oversized environment variables instead of the whole payload [Link](http://github.com/TencentBlueKing/bk-ci/issues/13356)
+- [Fixed] bug: timed task deletion failure causing Quartz RAMJobStore memory leak [Link](http://github.com/TencentBlueKing/bk-ci/issues/13352)
+- [Fixed] bug: optimize template instantiation message when scheduled trigger repository does not exist [Link](http://github.com/TencentBlueKing/bk-ci/issues/13346)
+- [Fixed] bug: repository branch parameter type not repopulated from previous build parameters [Link](http://github.com/TencentBlueKing/bk-ci/issues/13336)
+- [Fixed] bug: [PAC] deleted YAML pipelines should be removed from the YAML pipeline group [Link](http://github.com/TencentBlueKing/bk-ci/issues/12870)
+- [Fixed] bug: PAC-instantiated pipelines stay in "upgrading" status when YAML format is invalid [Link](http://github.com/TencentBlueKing/bk-ci/issues/13261)
+- [Fixed] bug: template instance upgrade with parameter type changes triggers infinite updates and crashes the page [Link](http://github.com/TencentBlueKing/bk-ci/issues/13294)
+- [Fixed] bug: [PAC] finding the pipeline version for the default branch YAML should not require checking whether the version is active [Link](http://github.com/TencentBlueKing/bk-ci/issues/13295)
+- [Fixed] bug: clicking artifacts whose name contains '#' on the build artifact page has no effect [Link](http://github.com/TencentBlueKing/bk-ci/issues/13270)
+
+##### Repository
+- [Fixed] bug: platform-managed GitHub config not taking effect [Link](http://github.com/TencentBlueKing/bk-ci/issues/13231)
+
+##### Environment Management
+- [Fixed] bugfix: add node compatibility logic fix [Link](http://github.com/TencentBlueKing/bk-ci/issues/13355)
+- [Fixed] bug: job execution page scrollbar disappears [Link](http://github.com/TencentBlueKing/bk-ci/issues/13254)
+
+##### Log Service
+- [Fixed] bug: exception handling for sudden traffic spikes in the log module [Link](http://github.com/TencentBlueKing/bk-ci/issues/13327)
+
+##### Project Management
+- [Fixed] bug: the total service count shown in the homepage menu does not match the actual displayed count [Link](http://github.com/TencentBlueKing/bk-ci/issues/13322)
+- [Fixed] bug: project route publish batch interface supports passing project blacklist and project enable params [Link](http://github.com/TencentBlueKing/bk-ci/issues/13319)
+
+##### Dispatch
+- [Fixed] bugfix: third-party build redirect link issue [Link](http://github.com/TencentBlueKing/bk-ci/issues/13301)
+
+##### Others
+- [Fixed] bug: optimize GitApi trigger judgment [Link](http://github.com/TencentBlueKing/bk-ci/issues/13392)
+- [Fixed] bug: Creation Flow draft save occasionally reverts to old orchestration; version delete confirmation dialog blocked by sidebar [Link](http://github.com/TencentBlueKing/bk-ci/issues/13386)
+- [Fixed] bug: fix v4_user_repository_get and v4_app_repository_get APIs cannot query repository aliases [Link](http://github.com/TencentBlueKing/bk-ci/issues/13308)
+- [Fixed] bugfix: fix start/stop node openapi [Link](http://github.com/TencentBlueKing/bk-ci/issues/13287)
+- [Fixed] bug: the "Add Variable" panel field should be named "Variable Name" instead of "Variable ID" [Link](http://github.com/TencentBlueKing/bk-ci/issues/13246)
+
 # v4.2.0-rc.4
 ## 2026-07-16
 ### Changelog since v4.2.0-rc.3

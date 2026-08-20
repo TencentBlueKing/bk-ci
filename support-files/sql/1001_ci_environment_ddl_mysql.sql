@@ -21,6 +21,7 @@ CREATE TABLE IF NOT EXISTS `T_ENV` (
   `ENV_HASH_ID`  varchar(64) DEFAULT NULL COMMENT '环境哈希ID',
   `IS_DELETED` bit(1) NOT NULL COMMENT '是否删除',
   `ENV_NODE_TYPE` varchar(32) NOT NULL DEFAULT 'NODE' COMMENT '环境节点类型（节点静态环境{NODE}|标签动态环境{TAG}',
+  `OS` varchar(16) NULL COMMENT '环境节点系统类型',
   PRIMARY KEY (`ENV_ID`),
   KEY `PROJECT_ID` (`PROJECT_ID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='环境信息表';
@@ -153,6 +154,19 @@ CREATE TABLE IF NOT EXISTS `T_ENV_TAG` (
   PRIMARY KEY (`PROJECT_ID`, `ENV_ID`, `TAG_VALUE_ID`),
   KEY `IDX_TAG_KEY_ID` (`TAG_KEY_ID`) USING BTREE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='环境-标签映射表';
+
+-- ----------------------------
+-- Table structure for T_ENV_TAG_NODE_ENABLE
+-- ----------------------------
+
+CREATE TABLE IF NOT EXISTS `T_ENV_TAG_NODE_ENABLE` (
+  `ENV_ID` bigint(20) NOT NULL COMMENT '环境ID',
+  `NODE_ID` bigint(20) NOT NULL COMMENT '节点ID',
+  `PROJECT_ID` varchar(64) NOT NULL COMMENT '项目ID',
+  `ENABLE_NODE` bit(1) DEFAULT 1 NOT NULL COMMENT '是否启用节点',
+  PRIMARY KEY (`ENV_ID`,`NODE_ID`),
+  KEY `PROJECT_ID` (`PROJECT_ID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='动态环境-节点开关映射表';
 
 -- ----------------------------
 -- Table structure for T_NODE

@@ -58,7 +58,7 @@ export default defineComponent({
           style={{
             width: props.width ? `${props.width}px` : '100%',
             textAlign: 'center',
-            '--composite-label-width': `${props.labelWidth}px` || undefined,
+            '--composite-label-width': `${props.labelWidth}px` || '105px',
           } as any}
           disabled={props.disabled}
           modelValue={props.value}

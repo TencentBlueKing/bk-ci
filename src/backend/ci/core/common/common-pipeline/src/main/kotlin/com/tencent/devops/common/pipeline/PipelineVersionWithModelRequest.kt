@@ -34,8 +34,10 @@ import io.swagger.v3.oas.annotations.media.Schema
 data class PipelineVersionWithModelRequest(
     @get:Schema(title = "流水线ID（为空时导入并创建流水线）", required = false)
     val pipelineId: String?,
-    @get:Schema(title = "草稿的来源版本（前端保存时传递）", required = true)
+    @get:Schema(title = "来源的正式版本（前端保存时传递）", required = true)
     val baseVersion: Int,
+    @get:Schema(title = "来源的草稿版本（前端保存时传递）", required = true)
+    val baseDraftVersion: Int? = null,
     @get:Schema(title = "流水线模型", required = true)
     val modelAndSetting: PipelineModelAndSetting?,
     @get:Schema(title = "流水线YAML编排（不为空时以YAML为准）", required = false)
