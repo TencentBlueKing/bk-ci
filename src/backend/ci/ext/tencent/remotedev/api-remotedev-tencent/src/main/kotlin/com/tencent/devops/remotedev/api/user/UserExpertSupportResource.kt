@@ -44,6 +44,18 @@ interface UserExpertSupportResource {
         userId: String
     ): Result<List<String>>
 
+    @Operation(summary = "生成一键求助Token")
+    @POST
+    @Path("/generateToken")
+    fun generateUserSupportToken(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "工作空间(实例)名称", required = true)
+        @QueryParam("workspaceName")
+        workspaceName: String
+    ): Result<String>
+
     @Operation(summary = "扩容磁盘大小")
     @POST
     @Path("/expanddisk")

@@ -20,6 +20,7 @@ import com.tencent.devops.remotedev.common.Constansts.ADMIN_NAME
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.dao.ExpertSupportDao
 import com.tencent.devops.remotedev.dao.RemoteDevSettingDao
+import com.tencent.devops.remotedev.dao.WindowsResourceZoneDao
 import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.dao.WorkspaceJoinDao
 import com.tencent.devops.remotedev.dao.WorkspaceOpHistoryDao
@@ -34,6 +35,7 @@ import com.tencent.devops.remotedev.pojo.SupRecordInfo
 import com.tencent.devops.remotedev.pojo.WorkspaceAction
 import com.tencent.devops.remotedev.pojo.WorkspaceMountType
 import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
+import com.tencent.devops.remotedev.pojo.WorkspaceRecordWithWindows
 import com.tencent.devops.remotedev.pojo.WorkspaceShared
 import com.tencent.devops.remotedev.pojo.WorkspaceShared.AssignType
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
@@ -98,8 +100,59 @@ class ExpertSupportService @Autowired constructor(
     private val bkNodemanService: BKNodemanService,
     private val configCacheService: ConfigCacheService,
     private val remoteDevServiceFactory: RemoteDevServiceFactory,
-    private val workspaceService: WorkspaceService
+    private val workspaceService: WorkspaceService,
+    private val windowsResourceZoneDao: WindowsResourceZoneDao,
+    private val expertSupportTokenGenerator: ExpertSupportTokenGenerator
 ) {
+    /**
+     * 瘦终端一键求助：根据工作空间入库求助记录并返回离线 JWT token。
+     */
+    fun generateUserSupportToken(
+        userId: String,
+        workspaceName: String
+    ): String {
+        val record = workspaceJoinDao.fetchAnyWindowsWorkspace(
+            dslContext = dslContext,
+            workspaceName = workspaceName
+        ) ?: throw ErrorCodeException(
+            errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
+            params = arrayOf(workspaceName)
+        )
+
+        val recordId = createSupportNew(
+            userId = userId,
+            data = CreateSupportData(
+                projectId = record.projectId,
+                hostIp = record.hostIp ?: "",
+                creator = userId,
+                content = SUPPORT_CONTENT_THIN_TERMINAL,
+                workspaceName = workspaceName,
+                city = resolveCity(record),
+                machineType = record.winConfigId?.toString() ?: ""
+            )
+        )
+
+        return expertSupportTokenGenerator.generate(userId, recordId)
+    }
+
+    /**
+     * 区域简称转中文城市名：T_WINDOWS_RESOURCE_ZONE 中 ZONE 为中文名、SHORT_NAME 为简称。
+     * hostIp 前缀/zoneId 为带数字的简称(如 GZ2)，先精确匹配，失败则去尾部数字再匹配。
+     */
+    private fun resolveCity(record: WorkspaceRecordWithWindows): String {
+        val shortName = record.zoneId?.takeIf { it.isNotBlank() }
+            ?: record.hostIp?.split(".")?.firstOrNull()?.takeIf { it.isNotBlank() }
+            ?: return ""
+
+        windowsResourceZoneDao.fetchAny(dslContext, shortName)?.zone?.let { return it }
+
+        val normalized = shortName.replace(Regex("\\d+$"), "")
+        if (normalized != shortName && normalized.isNotBlank()) {
+            windowsResourceZoneDao.fetchAny(dslContext, normalized)?.zone?.let { return it }
+        }
+        return shortName
+    }
+
     fun createSupportNew(
         userId: String,
         data: CreateSupportData
@@ -979,5 +1032,6 @@ class ExpertSupportService @Autowired constructor(
         private val logger = LoggerFactory.getLogger(ExpertSupportService::class.java)
         private const val DEFAULT_WAIT_TIME = 3600
         private const val CGS_PORT = "10080"
+        private const val SUPPORT_CONTENT_THIN_TERMINAL = "瘦终端一键求助"
     }
 }
