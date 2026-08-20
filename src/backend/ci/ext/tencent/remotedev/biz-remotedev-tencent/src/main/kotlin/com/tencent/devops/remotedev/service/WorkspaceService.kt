@@ -1175,19 +1175,15 @@ class WorkspaceService @Autowired constructor(
         projectId: String,
         workspaceName: String
     ): WorkspaceMemberInfo? {
-        val workspace = getWorkspaceRecord(workspaceName)
-            ?.takeIf { it.projectId == projectId }
-            ?: return null
+        val workspace = getWorkspaceRecord(workspaceName) ?: return null
         val sharedInfo = workspaceSharedDao.fetchWorkspaceSharedInfo(
             dslContext = dslContext,
             workspaceName = workspaceName
         )
-        val owner = if (workspace.ownerType.projectUse()) {
-            sharedInfo.firstOrNull { it.type == WorkspaceShared.AssignType.OWNER }?.sharedUser
-                ?: workspace.createUserId
-        } else {
-            workspace.createUserId
-        }
+        val owner = sharedInfo.firstOrNull {
+            it.type == WorkspaceShared.AssignType.OWNER
+        }?.sharedUser ?: workspace.createUserId
+
         val viewers = sharedInfo.asSequence()
             .filter { it.type == WorkspaceShared.AssignType.VIEWER }
             .map { it.sharedUser }
