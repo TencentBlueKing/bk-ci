@@ -260,8 +260,8 @@ export interface RegistryResponse {
   agentId: string;
   secretKey: string;
   gateway: string;
-  fileGateway?: string;
-  os?: string;
-  parallelTaskCount?: number;
-  dockerParallelTaskCount?: number;
+  fileGateway: string;
+  parallelTaskCount: number;
+  dockerParallelTaskCount: number;
+  language: string;
 }

@@ -268,8 +268,8 @@ class BatchInstallAgentService @Autowired constructor(
             )
         }
         return RegistryResp(
-            gateway = record.gateway,
-            fileGateway = record.fileGateway,
+            gateway = record.gateway ?: "",
+            fileGateway = record.fileGateway ?: "",
             projectId = record.projectId,
             agentId = HashUtil.encodeLongId(record.id),
             secretKey = SecurityUtil.decrypt(record.secretKey),

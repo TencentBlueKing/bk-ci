@@ -115,6 +115,6 @@ class ExternalThirdPartyAgentResourceImpl @Autowired constructor(
         userId: String,
         deviceId: String?,
     ): Result<RegistryResp> {
-        TODO("Not yet implemented")
+        return Result(batchInstallAgentService.registry(token, userId, deviceId))
     }
 }
