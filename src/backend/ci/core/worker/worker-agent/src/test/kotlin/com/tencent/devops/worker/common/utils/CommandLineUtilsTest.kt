@@ -1,10 +1,26 @@
 package com.tencent.devops.worker.common.utils
 
 import java.io.File
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 
 class CommandLineUtilsTest {
+
+    /** 各用例在 java.io.tmpdir 下写入的临时结果文件，统一清理 */
+    private val resultLogFiles = listOf(
+        "appendVariableToFileTest",
+        "appendRemarkToFileTest",
+        "appendOutputToFileTest",
+        "appendOutputToFileMultiLineTest",
+        "appendGateToFileTest"
+    )
+
+    @AfterEach
+    fun cleanResultLogFiles() {
+        val tmpDir = File(System.getProperty("java.io.tmpdir"))
+        resultLogFiles.forEach { name -> File(tmpDir, name).delete() }
+    }
 
     @Test
     fun reportProgressRateTest() {

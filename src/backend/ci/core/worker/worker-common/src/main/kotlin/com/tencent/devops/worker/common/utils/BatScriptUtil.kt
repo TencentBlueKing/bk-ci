@@ -30,16 +30,18 @@ package com.tencent.devops.worker.common.utils
 import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.pipeline.enums.CharsetType
 import com.tencent.devops.worker.common.CommonEnv
 import com.tencent.devops.worker.common.WORKSPACE_ENV
+import com.tencent.devops.worker.common.constants.WorkerMessageCode
+import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.task.script.ScriptEnvUtils
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.io.FileInputStream
 import java.nio.channels.FileLock
 import java.nio.charset.Charset
-import kotlin.text.Charsets
 
 object BatScriptUtil {
 
@@ -97,6 +99,22 @@ object BatScriptUtil {
     private const val FLAG_SCRIPT = "script"
 
     /**
+     * 内联多行块语法错误（确定性用户输入错误）。
+     * 用于在 execute catch 中区分：语法错误直接抛出（重试无意义），
+     * 其余 TaskExecuteException（如脚本执行失败）仍走 checkFlag 自动重试。
+     */
+    private class MultilineBlockParseException(key: String, line: Int) :
+        TaskExecuteException(
+            errorType = ErrorType.USER,
+            errorCode = ErrorCode.USER_INPUT_INVAILD,
+            errorMsg = MessageUtil.getMessageByLocale(
+                messageCode = WorkerMessageCode.BK_MULTILINE_BLOCK_UNTERMINATED,
+                language = AgentEnv.getLocaleLanguage(),
+                params = arrayOf(key, line.toString())
+            )
+        )
+
+    /**
      * 匹配内联多行块开始行：call:format_multiple_lines <KEY> "
      * 行首仅允许空白，行尾恰为单个引号（引号后无内容）
      */
@@ -146,8 +164,9 @@ object BatScriptUtil {
                 taskId = taskId
             )
         } catch (ignore: Throwable) {
-            // 用户输入错误属确定性错误，直接抛出，不做无意义重试
-            if (ignore is TaskExecuteException) {
+            // 仅内联块语法错误（确定性用户输入错误）直接抛出，不做无意义重试；
+            // 其余 TaskExecuteException（如 CommandLineUtils 脚本执行失败）仍走 checkFlag 自动重试
+            if (ignore is MultilineBlockParseException) {
                 throw ignore
             }
             return checkFlag(
@@ -288,11 +307,7 @@ object BatScriptUtil {
             content.append(cur)
             i++
         }
-        throw TaskExecuteException(
-            errorMsg = "Unterminated multiline block for key [$key], starting at line ${callLineIndex + 1}",
-            errorType = ErrorType.USER,
-            errorCode = ErrorCode.USER_INPUT_INVAILD
-        )
+        throw MultilineBlockParseException(key, callLineIndex + 1)
     }
 
     private data class MultilineBlock(

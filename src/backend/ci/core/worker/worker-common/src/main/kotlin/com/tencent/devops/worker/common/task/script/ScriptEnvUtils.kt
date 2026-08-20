@@ -30,7 +30,6 @@ package com.tencent.devops.worker.common.task.script
 import com.tencent.devops.worker.common.utils.ExecutorUtil
 import org.slf4j.LoggerFactory
 import java.io.File
-import kotlin.text.Charsets
 
 @Suppress("TooManyFunctions")
 object ScriptEnvUtils {

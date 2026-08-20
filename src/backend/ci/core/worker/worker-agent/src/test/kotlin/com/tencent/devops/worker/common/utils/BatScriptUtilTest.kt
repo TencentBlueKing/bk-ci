@@ -244,8 +244,9 @@ class BatScriptUtilTest {
                 workspace = workspace
             )
         }
-        Assertions.assertTrue(exception.message!!.contains("Unterminated multiline block"))
-        Assertions.assertTrue(exception.message!!.contains("line 1"))
+        /* 错误信息经 i18n 渲染，跨语言统一断言：含变量名与起始行号（起始行号为 1） */
+        Assertions.assertTrue(exception.message!!.contains("CONFIG"))
+        Assertions.assertTrue(exception.message!!.contains("1"))
 
         workspace.deleteRecursively()
     }
