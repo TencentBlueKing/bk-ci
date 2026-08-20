@@ -140,7 +140,6 @@ export default defineComponent({
       activeOperation(operation, version, () => {
         switch (operation.id) {
           case OperateName.DELETE:
-            debugger;
             versionList.value = versionList.value.filter(v => v.name !== version.name);
             if (routeParams.value.version === version.name) { // 删除的是当前版本，切换到最新版本
               switchVersion(versionList.value[0]?.name);
