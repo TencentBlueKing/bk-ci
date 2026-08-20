@@ -73,6 +73,8 @@ import org.slf4j.LoggerFactory
 @Suppress("MagicNumber", "TooManyFunctions", "ComplexMethod", "LongMethod")
 object LoggerService {
 
+    private const val LOG_UPLOAD_BATCH_MIN = 200
+
     private val logResourceApi = ApiFactory.create(LogSDKApi::class)
     private val archiveApi = ApiFactory.create(ArchiveSDKApi::class)
     private val logger = LoggerFactory.getLogger(LoggerService::class.java)
@@ -648,9 +650,5 @@ object LoggerService {
                 action()
             }
         }
-    }
-
-    companion object {
-        private const val LOG_UPLOAD_BATCH_MIN = 200
     }
 }
