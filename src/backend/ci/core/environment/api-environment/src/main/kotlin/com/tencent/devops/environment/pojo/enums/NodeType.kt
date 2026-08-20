@@ -33,7 +33,9 @@ enum class NodeType(val typeName: String) {
     THIRDPARTY("第三方构建机"),
     CREATE("创作流机器"),
     OTHER("其他"),
-    UNKNOWN("未知");
+    UNKNOWN("未知"),
+    DEVX("云桌面"),
+    ;
 
     companion object {
         fun coreTypesName() = listOf(CMDB.name, DEVCLOUD.name, THIRDPARTY.name, OTHER.name, UNKNOWN.name)
