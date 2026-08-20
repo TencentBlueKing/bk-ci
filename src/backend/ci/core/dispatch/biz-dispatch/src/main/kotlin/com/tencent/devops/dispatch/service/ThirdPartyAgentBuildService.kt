@@ -29,6 +29,7 @@ class ThirdPartyAgentBuildService @Autowired constructor(
     private val client: Client,
     private val thirdPartyAgentBuildDao: ThirdPartyAgentBuildDao
 ) {
+    @Suppress("NestedBlockDepth")
     fun fetchBuildPipelineView(
         userId: String,
         projectId: String,
