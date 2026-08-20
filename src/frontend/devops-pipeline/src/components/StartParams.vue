@@ -12,6 +12,7 @@
             :build-num="execDetail?.buildNum"
             :all-params="buildParamProperities"
             :resolve-params-for-save="resolveParamsForSave"
+            :resolve-combination-params="resolveCombinationParams"
         />
         <div class="startup-parameter-wrapper">
             <div
@@ -150,7 +151,8 @@
         methods: {
             ...mapActions('atom', [
                 'requestBuildParams',
-                'requestBuildParameterValue'
+                'requestBuildParameterValue',
+                'fetchBuildParamsByBuildId'
             ]),
             showDetail (param) {
                 this.isDetailShow = true
@@ -265,10 +267,25 @@
                     resolved.push({
                         ...param,
                         id: key,
+                        type: param.type ?? param.valueType ?? 'STRING',
                         value
                     })
                 }
                 return resolved
+            },
+            /**
+             * 与 master 一致：保存组合用 getCombinationFromBuild（带 required/constant 和真实值）。
+             * 仅在用户点击保存时调用，进页仍走 /parameters，避免 OOM。
+             * 不要 toStartupParamMeta：那会把超长值收成引用串，组合编辑里无法查看/编辑详情。
+             */
+            async resolveCombinationParams () {
+                const { projectId, pipelineId, buildNo: buildId } = this.$route.params
+                const properties = await this.fetchBuildParamsByBuildId({
+                    projectId,
+                    pipelineId,
+                    buildId
+                })
+                return Array.isArray(properties) ? properties : []
             },
             async init () {
                 try {

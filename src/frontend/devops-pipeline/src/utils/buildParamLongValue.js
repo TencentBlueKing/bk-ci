@@ -67,7 +67,8 @@ export function toStartupParamMeta (param = {}) {
         key: sanitized.key,
         value: sanitized.value,
         valueType: sanitized.valueType,
-        type: sanitized.type,
+        // 构建详情返回 BuildParameters.valueType，参数组合接口接收 BuildFormProperty.type。
+        type: sanitized.type ?? sanitized.valueType ?? 'STRING',
         required: sanitized.required,
         constant: sanitized.constant,
         readOnly: sanitized.readOnly,

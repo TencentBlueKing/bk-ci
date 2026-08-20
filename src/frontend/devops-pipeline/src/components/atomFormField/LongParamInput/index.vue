@@ -1,7 +1,10 @@
 <template>
     <section class="long-param-input">
         <template v-if="showCompact">
-            <div class="long-param-input-compact">
+            <div
+                class="long-param-input-compact"
+                :class="highlightClass"
+            >
                 <span
                     class="long-param-input-compact-text"
                     :title="compactText"
@@ -12,17 +15,9 @@
                     text
                     size="small"
                     :disabled="isOverflowRef"
-                    @click="showDetail = true"
+                    @click="openDetail"
                 >
                     {{ $t('detail') }}
-                </bk-button>
-                <bk-button
-                    text
-                    size="small"
-                    :disabled="disabled"
-                    @click="handleClearAndReenter"
-                >
-                    {{ $t('details.longParamValueClearAndReenter') }}
                 </bk-button>
             </div>
             <bk-sideslider
@@ -30,13 +25,34 @@
                 :width="640"
                 :title="$t('details.paramDetail')"
                 :is-show.sync="showDetail"
+                :before-close="beforeCloseDetail"
             >
                 <div
                     slot="content"
                     class="long-param-input-detail"
                 >
                     <p>{{ name }}</p>
-                    <pre>{{ value }}</pre>
+                    <bk-input
+                        v-if="canEditDetail"
+                        type="textarea"
+                        v-model="draftValue"
+                    />
+                    <pre v-else>{{ value }}</pre>
+                </div>
+                <div
+                    v-if="canEditDetail"
+                    slot="footer"
+                    class="long-param-input-detail-footer"
+                >
+                    <bk-button
+                        theme="primary"
+                        @click="saveDetail"
+                    >
+                        {{ $t('save') }}
+                    </bk-button>
+                    <bk-button @click="showDetail = false">
+                        {{ $t('cancel') }}
+                    </bk-button>
                 </div>
             </bk-sideslider>
         </template>
@@ -49,6 +65,7 @@
             :disabled="disabled"
             :placeholder="placeholder"
             :handle-change="handleChange"
+            :class="highlightClass"
             v-on="$listeners"
         />
     </section>
@@ -95,12 +112,29 @@
             inputType: {
                 type: String,
                 default: 'STRING'
+            },
+            isDiffParam: {
+                type: Boolean,
+                default: false
+            },
+            isChangeParam: {
+                type: Boolean,
+                default: false
+            },
+            isNewParam: {
+                type: Boolean,
+                default: false
+            },
+            isDeleteParam: {
+                type: Boolean,
+                default: false
             }
         },
         data () {
             return {
                 showDetail: false,
-                forceEdit: false
+                draftValue: '',
+                detailSaved: false
             }
         },
         computed: {
@@ -111,9 +145,7 @@
                 return isLongInputValue(this.value)
             },
             showCompact () {
-                // 清空后进入编辑态；引用串始终紧凑展示，避免把 __BK_OVF__ 填进 input
-                if (this.isOverflowRef) return true
-                return this.isLong && !this.forceEdit
+                return this.isLong
             },
             compactText () {
                 const length = getDisplayValueLength(this.value)
@@ -124,21 +156,50 @@
             },
             inputComponent () {
                 return this.inputType === 'TEXTAREA' ? 'VuexTextarea' : 'VuexInput'
-            }
-        },
-        watch: {
-            value (val) {
-                if (!isLongInputValue(val)) {
-                    this.forceEdit = false
+            },
+            canEditDetail () {
+                return !this.disabled && !this.isOverflowRef
+            },
+            isDetailDirty () {
+                return this.canEditDetail && this.draftValue !== String(this.value ?? '')
+            },
+            highlightClass () {
+                return {
+                    'is-diff-param': this.isDiffParam,
+                    'is-change-param': this.isChangeParam,
+                    'is-new-param': this.isNewParam,
+                    'is-delete-param': this.isDeleteParam
                 }
             }
         },
         methods: {
-            handleClearAndReenter () {
-                this.forceEdit = true
+            openDetail () {
+                this.draftValue = String(this.value ?? '')
+                this.detailSaved = false
+                this.showDetail = true
+            },
+            saveDetail () {
+                this.detailSaved = true
+                this.handleChange(this.name, this.draftValue)
+                this.$emit('input', this.draftValue)
                 this.showDetail = false
-                this.handleChange(this.name, '')
-                this.$emit('input', '')
+            },
+            beforeCloseDetail () {
+                if (this.detailSaved || !this.isDetailDirty) {
+                    this.detailSaved = false
+                    return true
+                }
+                return new Promise(resolve => {
+                    this.$bkInfo({
+                        title: this.$t('details.longParamUnsavedTitle'),
+                        subTitle: this.$t('details.longParamUnsavedTips'),
+                        confirmFn: () => {
+                            this.draftValue = String(this.value ?? '')
+                            resolve(true)
+                        },
+                        cancelFn: () => resolve(false)
+                    })
+                })
             }
         }
     }
@@ -188,6 +249,22 @@
         overflow-y: auto;
         white-space: pre-wrap;
         word-wrap: break-word;
+    }
+    > .bk-form-textarea {
+        flex: 1;
+        margin-top: 6px;
+        min-height: 0;
+        textarea {
+            height: 100%;
+            resize: none;
+            font-family: monospace;
+        }
+    }
+}
+.long-param-input-detail-footer {
+    padding: 0 24px;
+    .bk-button + .bk-button {
+        margin-left: 8px;
     }
 }
 </style>

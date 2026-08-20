@@ -7,6 +7,7 @@
                 theme="primary"
                 text
                 :disabled="disabled"
+                :loading="isOperating"
                 @click="saveAsParamSet()"
             >
                 <i class="devops-icon icon-save" />
@@ -256,17 +257,17 @@
                         <template v-if="activeSet?.params?.length || activeSet?.versionParams?.length">
                             <param-group
                                 v-if="activeSet?.versionParams?.length"
-                                class="param-set-preview-group"
                                 :show-header="false"
                                 :editable="false"
+                                :handle-view-long-value="handleViewLongValue"
                                 v-bind="versionParamGroupObj"
                             />
 
                             <param-group
                                 v-if="activeSet?.params?.length"
-                                class="param-set-preview-group"
                                 :show-header="false"
                                 :editable="false"
+                                :handle-view-long-value="handleViewLongValue"
                                 v-bind="paramGroupObj"
                             />
                         </template>
@@ -288,6 +289,23 @@
                 </article>
             </div>
         </bk-sideslider>
+        <bk-sideslider
+            quick-close
+            transfer
+            :width="640"
+            :title="$t('details.paramDetail')"
+            :is-show.sync="isLongValueDetailShow"
+            @hidden="hideLongValueDetail"
+        >
+            <div
+                v-if="activeLongParam"
+                slot="content"
+                class="param-set-long-value-detail"
+            >
+                <p>{{ activeLongParam.id }}</p>
+                <pre>{{ longValueDetailRender }}</pre>
+            </div>
+        </bk-sideslider>
     </span>
 </template>
 
@@ -300,6 +318,12 @@
     import {
         getParamsGroupByLabel
     } from '@/store/modules/atom/paramsConfig'
+    import {
+        getDetailRenderValue,
+        getDisplayValueLength,
+        isLongInputValue,
+        isOverflowReference
+    } from '@/utils/buildParamLongValue'
     import { allVersionKeyList, TEMP_PARAM_SET_ID } from '@/utils/pipelineConst'
     import { randomString } from '@/utils/util'
     import { computed, defineComponent, getCurrentInstance, nextTick, onBeforeMount, onMounted, ref, watch, } from 'vue'
@@ -348,6 +372,14 @@
             resolveParamsForSave: {
                 type: Function,
                 default: null
+            },
+            /**
+             * 可选：点「保存为参数组合」时再取带回 required/constant 的入参。
+             * 执行详情进页不用 getCombinationFromBuild，避免批量 resolve 大值 OOM。
+             */
+            resolveCombinationParams: {
+                type: Function,
+                default: null
             }
         },
         setup (props, ctx) {
@@ -366,6 +398,8 @@
             const paramsFormRef = ref(null)
             const isNameError = ref(false)
             const versionParamFormRef = ref(null)
+            const isLongValueDetailShow = ref(false)
+            const activeLongParam = ref(null)
             const DEFAULT_PARAM_SET = {
                 name: proxy.$t('newParamSet'),
                 params: []
@@ -393,16 +427,12 @@
                 return filteredSets.value.map(set => ({
                     ...set,
                     paramIds: set.params?.filter(param => !allVersionKeyList.includes(param.id)).map(param => param.id),
-                    versionParams: set.params?.filter(param => allVersionKeyList.includes(param.id)).map(version => ({
-                        ...version,
+                    versionParams: set.params?.filter(param => allVersionKeyList.includes(param.id)).map(version => toPreviewParam(version, {
                         category: proxy.$t('versionNum'),
-                        isDeleted: !props.isVisibleVersion,
-                        defaultValue: version.value,
+                        isDeleted: !props.isVisibleVersion
                     })),
-                    params: set.params?.filter(param => !allVersionKeyList.includes(param.id)).map(param => ({
-                        ...param,
-                        isDeleted: !Object.prototype.hasOwnProperty.call(allParamsMap.value, param.id),
-                        defaultValue: param.value,
+                    params: set.params?.filter(param => !allVersionKeyList.includes(param.id)).map(param => toPreviewParam(param, {
+                        isDeleted: !Object.prototype.hasOwnProperty.call(allParamsMap.value, param.id)
                     })),
                 }))
             })
@@ -488,6 +518,9 @@
                     acc[param.id] = param.value
                     return acc
                 }, {}) ?? {}
+            })
+            const longValueDetailRender = computed(() => {
+                return getDetailRenderValue(activeLongParam.value?.value)
             })
 
             watch(() => paramSetId.value, (newVal, oldVal) => {
@@ -642,45 +675,40 @@
                 })
             }
 
-            async function saveAsParamSet (params = props.allParams, values) {
+            async function saveAsParamSet (params, values) {
                 let sourceParams = params
-                if (typeof props.resolveParamsForSave === 'function') {
-                    try {
+                try {
+                    if (sourceParams == null && typeof props.resolveCombinationParams === 'function') {
                         isOperating.value = true
-                        sourceParams = await props.resolveParamsForSave(params) || params
-                    } catch (e) {
-                        console.error(e)
-                        proxy.$bkMessage({
-                            theme: 'error',
-                            message: e.message || proxy.$t('saveAsParamSet')
-                        })
-                        return
-                    } finally {
-                        isOperating.value = false
+                        sourceParams = await props.resolveCombinationParams() || props.allParams
+                    } else if (sourceParams == null) {
+                        sourceParams = props.allParams
                     }
+                    const newSet = {
+                        ...DEFAULT_PARAM_SET,
+                        name: props.isStartUp ? `SET_#${props.buildNum}` : `SET_${randomString(6)}`,
+                        params: sourceParams.map(param => ( {
+                            ...param,
+                            value: values?.[param.id] ?? param.value
+                        })),
+                        isNew: true
+                    }
+                    dispatch('addParamSet', newSet)
+                    switchManageSet(0)
+                    const inputParams = newSet.params.filter(param => !allVersionKeyList.includes(param.id) && param.required && !param.constant)
+                    editingSet.value = {
+                        ...newSet,
+                        paramIds: inputParams.map(param => param.id),
+                        params: inputParams,
+                        versionParams: newSet.params.filter(param => allVersionKeyList.includes(param.id))
+                    }
+                    isEditing.value = true
+                    nextTick(() => {
+                        showParamSetManageSlide()
+                    })
+                } finally {
+                    isOperating.value = false
                 }
-                const newSet = {
-                    ...DEFAULT_PARAM_SET,
-                    name: props.isStartUp ? `SET_#${props.buildNum}` : `SET_${randomString(6)}`,
-                    params: sourceParams.map(param => ( {
-                        ...param,
-                        value: values?.[param.id] ?? param.value
-                    })),
-                    isNew: true
-                }
-                dispatch('addParamSet', newSet)
-                switchManageSet(0)
-                const inputParams = newSet.params.filter(param => !allVersionKeyList.includes(param.id) && param.required && !param.constant)
-                editingSet.value = {
-                    ...newSet,
-                    paramIds: inputParams.map(param => param.id),
-                    params: inputParams,
-                    versionParams: newSet.params.filter(param => allVersionKeyList.includes(param.id))
-                }
-                isEditing.value = true
-                nextTick(() => {
-                    showParamSetManageSlide()
-                })
             }
 
             function addParamSet () {
@@ -835,15 +863,6 @@
 
             async function saveParamSet () {
                 try {
-                    const newSet = {
-                        id: editingSet.value.id,
-                        name: editingSet.value.name,
-                        params: [
-                            ...editingSet.value.params,
-                            ...editingSet.value.versionParams
-                        ],
-                        isNew: editingSet.value.isNew
-                    }
                     if (editingSet.value.name === '') {
                         proxy.$bkMessage({
                             theme: 'error',
@@ -857,16 +876,34 @@
                         return
                     }
                     isLoading.value = true
+                    const editingParams = [
+                        ...editingSet.value.params,
+                        ...editingSet.value.versionParams
+                    ]
+                    // 超长变量仅在最终提交时解析，避免完整值进入响应式表单并被直接展示。
+                    const params = typeof props.resolveParamsForSave === 'function'
+                        ? await props.resolveParamsForSave(editingParams) || editingParams
+                        : editingParams
+                    const requestSet = {
+                        id: editingSet.value.id,
+                        name: editingSet.value.name,
+                        params,
+                        isNew: editingSet.value.isNew
+                    }
                     const { data: id } = await dispatch('saveParamSet', {
                         projectId: proxy.$route.params.projectId,
                         pipelineId: proxy.$route.params.pipelineId,
-                        paramSet: newSet
+                        paramSet: requestSet
                     })
                     isLoading.value = false
                     isEditing.value = false
-                    dispatch('updateParamSet', editingSet.value.isNew ? Object.assign(newSet, {
-                        id,
-                    }) : newSet)
+                    // Store 中仍保留未解析的短引用，提交用完整值不回写组件状态。
+                    const savedSet = {
+                        ...requestSet,
+                        params: editingParams,
+                        ...(editingSet.value.isNew ? { id } : {})
+                    }
+                    dispatch('updateParamSet', savedSet)
                     nextTick(() => {
                         switchManageSet(activeSetIndex.value)
                         proxy.$bkMessage({
@@ -908,6 +945,30 @@
                     return false
                 }
                 return name.toLowerCase().indexOf(keyword.toLowerCase()) > -1
+            }
+
+            function toPreviewParam (param, extra = {}) {
+                const isLong = isLongInputValue(param.value)
+                return {
+                    ...param,
+                    ...extra,
+                    isLongValue: isLong,
+                    overflowLength: isLong ? getDisplayValueLength(param.value) : undefined,
+                    longValueViewable: isLong && !isOverflowReference(param.value),
+                    defaultValue: isLong ? undefined : param.value
+                }
+            }
+
+            function handleViewLongValue (param) {
+                if (!param?.longValueViewable) {
+                    return
+                }
+                activeLongParam.value = param
+                isLongValueDetailShow.value = true
+            }
+
+            function hideLongValueDetail () {
+                activeLongParam.value = null
             }
 
             function clear () {
@@ -956,7 +1017,12 @@
                 handleSearch,
                 paramsFormRef,
                 versionParamFormRef,
-                isNameError
+                isNameError,
+                handleViewLongValue,
+                isLongValueDetailShow,
+                activeLongParam,
+                longValueDetailRender,
+                hideLongValueDetail
             }
         }
     })
@@ -1170,33 +1236,6 @@
                     }
                 }
             }
-            .param-set-preview-group {
-                .variable-item {
-                    height: 44px;
-                    padding: 0 16px;
-                }
-                .var-con {
-                    display: flex;
-                    align-items: center;
-                    gap: 16px;
-                    .var-names {
-                        flex: 0 0 180px;
-                        max-width: 180px;
-                    }
-                    .value-operate-row {
-                        min-width: 0;
-                        flex: 1;
-                        .param-value,
-                        .default-value {
-                            min-width: 0;
-                            flex: 1;
-                        }
-                        .default-value {
-                            max-width: none;
-                        }
-                    }
-                }
-            }
             .icon-minus-circle {
                 cursor: pointer;
                 font-size: 16px;
@@ -1204,6 +1243,27 @@
                     color: $dangerColor;
                 }
             }
+        }
+    }
+    .param-set-long-value-detail {
+        display: flex;
+        flex-direction: column;
+        padding: 24px;
+        font-size: 12px;
+        height: 100%;
+        > p {
+            flex-shrink: 0;
+        }
+        > pre {
+            flex: 1;
+            margin: 6px 0;
+            padding: 6px 10px;
+            background: #fafbfd;
+            border: 1px solid #dcdee5;
+            border-radius: 2px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
         }
     }
 </style>

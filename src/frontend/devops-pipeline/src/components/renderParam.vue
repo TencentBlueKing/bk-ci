@@ -23,6 +23,10 @@
                     :handle-change="handleParamUpdate"
                     :placeholder="param.placeholder"
                     :disabled="disabled || param.isDelete"
+                    :is-diff-param="(highlightChangedParam && param.isChanged) || param.affectedChanged"
+                    :is-change-param="param.isChange"
+                    :is-new-param="param.isNew"
+                    :is-delete-param="param.isDelete"
                     v-validate="{ required: param.required, objectRequired: isObject(param.value) }"
                     :class="{
                         'is-diff-param': (highlightChangedParam && param.isChanged) || param.affectedChanged,
