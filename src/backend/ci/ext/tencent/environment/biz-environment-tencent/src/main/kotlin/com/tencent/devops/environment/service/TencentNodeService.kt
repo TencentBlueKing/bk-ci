@@ -67,8 +67,8 @@ class TencentNodeService @Autowired constructor(
         displayName: String
     ): Boolean {
         val record =
-            agentDao.getAgentByWorkspaceIdGlobal(dslContext, workspaceName, projectId) ?: return false
-        nodeService.updateDisplayName(userId, projectId, HashUtil.encodeLongId(record.nodeId), displayName)
+            agentDao.getAgentByWorkspaceIdGlobal(dslContext, workspaceName, null) ?: return false
+        nodeService.updateDisplayName(userId, record.projectId, HashUtil.encodeLongId(record.nodeId), displayName)
         return true
     }
 
