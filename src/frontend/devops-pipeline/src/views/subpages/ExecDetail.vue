@@ -24,10 +24,12 @@
                 <aside class="exec-detail-summary-header-title">
                     <build-end-info-popover
                         v-if="showBuildEndInfoPopover"
-                        :status="execDetail.status"
                         :build-end-info="execDetail.buildEndInfo"
-                        @view="handleBuildEndPositionView"
-                        @locate="handleBuildEndPositionLocate"
+                        :start-time="buildEndStartTime"
+                        :trigger-user="startUser"
+                        :trigger-type-desc="execDetail.trigger"
+                        @highlight="handleBuildEndPositionHighlight"
+                        @locateLog="handleBuildEndPositionLocate"
                     >
                         <bk-tag
                             class="exec-status-tag"
@@ -456,8 +458,12 @@
             startUser () {
                 return this.recordList.find(i => i.id === this.executeCount)?.user || ''
             },
+            buildEndStartTime () {
+                return this.execDetail?.startTime || this.execDetail?.queueTime
+            },
             showBuildEndInfoPopover () {
-                return !!getBuildEndInfoConfig(this.execDetail?.status) && !!this.execDetail?.buildEndInfo
+                return !!getBuildEndInfoConfig(this.execDetail?.buildEndInfo?.endCategory)
+                    && !!this.execDetail?.buildEndInfo
             }
         },
 
@@ -614,47 +620,44 @@
                     return null
                 }
             },
-            handleBuildEndPositionView (position) {
+            getBuildEndLocateFailedKey () {
+                return getBuildEndInfoConfig(this.execDetail?.buildEndInfo?.endCategory)?.locateFailedKey
+            },
+            runBuildEndPositionAction (position, { openLog = false } = {}) {
                 const editingElementPos = this.locateBuildEndPosition(position)
                 if (!editingElementPos) {
-                    const locateFailedKey = getBuildEndInfoConfig(this.execDetail?.status)?.locateFailedKey
+                    const locateFailedKey = this.getBuildEndLocateFailedKey()
                     this.$showTips({
                         message: this.$t(locateFailedKey),
                         theme: 'warning'
                     })
                     return
                 }
-                if (this.curItemTab !== PANELS.executeDetail) {
+                const needSwitchTab = this.curItemTab !== PANELS.executeDetail
+                if (needSwitchTab) {
                     this.switchTab({ name: PANELS.executeDetail })
                 }
-                this.$nextTick(() => {
-                    this.$refs.execDetailPanel?.setAtomLocate?.({
-                        stageId: position.stageId,
-                        containerId: position.containerId,
-                        taskId: position.taskId,
-                        matrixFlag: position.matrixFlag ?? typeof editingElementPos.containerGroupIndex !== 'undefined'
+                const runAction = () => {
+                    this.$refs.execDetailPanel?.setBuildEndHighlight?.({
+                        editingElementPos,
+                        position
                     })
+                    if (openLog) {
+                        this.togglePropertyPanel({
+                            isShow: true,
+                            editingElementPos
+                        })
+                    }
+                }
+                this.$nextTick(() => {
+                    needSwitchTab ? this.$nextTick(runAction) : runAction()
                 })
             },
+            handleBuildEndPositionHighlight (position) {
+                this.runBuildEndPositionAction(position)
+            },
             handleBuildEndPositionLocate (position) {
-                const editingElementPos = this.locateBuildEndPosition(position)
-                if (!editingElementPos) {
-                    const locateFailedKey = getBuildEndInfoConfig(this.execDetail?.status)?.locateFailedKey
-                    this.$showTips({
-                        message: this.$t(locateFailedKey),
-                        theme: 'warning'
-                    })
-                    return
-                }
-                if (this.curItemTab !== PANELS.executeDetail) {
-                    this.switchTab({ name: PANELS.executeDetail })
-                }
-                this.$nextTick(() => {
-                    this.togglePropertyPanel({
-                        isShow: true,
-                        editingElementPos
-                    })
-                })
+                this.runBuildEndPositionAction(position, { openLog: true })
             },
             handleStageCheck ({ type, stageIndex }) {
                 this.toggleStageReviewPanel({

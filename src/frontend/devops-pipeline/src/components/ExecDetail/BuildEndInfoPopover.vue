@@ -1,4 +1,5 @@
 <template>
+    <!-- 构建终态详情 Popover：取消 / 失败 / 超时 / 成功 -->
     <bk-popover
         class="build-end-info-popover-trigger"
         placement="bottom-start"
@@ -13,12 +14,31 @@
             class="build-end-info-popover-content"
             :style="themeStyle"
         >
+            <!-- 标题：执行失败 / 已取消 / 执行成功 / 阶段成功 / 执行超时 -->
             <h3 class="bei-title">
-                {{ $t(statusConfig.titleKey) }}
+                {{ $t(mergedConfig.titleKey) }}
             </h3>
-            <div class="bei-summary-box">
-                <div class="bei-summary-main">
-                    <span class="bei-type-label">{{ $t(statusConfig.typeLabelKey) }}</span>
+
+            <!-- 摘要区：布局由 summaryLayout 决定（总耗时 / 类型+原因） -->
+            <div
+                :class="['bei-summary-box', {
+                    'bei-summary-duration-only': isDurationOnlyLayout
+                }]"
+            >
+                <!-- 执行成功：仅展示总耗时 -->
+                <div
+                    v-if="isDurationOnlyLayout"
+                    class="bei-duration-main"
+                >
+                    <span class="bei-duration-label">{{ durationLabel }}</span>
+                    <span class="bei-duration-value">{{ runningDuration || '--' }}</span>
+                </div>
+                <!-- 其他：类型标签 + endTypeDesc + 原因/计数 -->
+                <div
+                    v-else
+                    class="bei-summary-main"
+                >
+                    <span class="bei-type-label">{{ $t(mergedConfig.typeLabelKey) }}</span>
                     <span class="bei-type-value">{{ buildEndInfo.endTypeDesc }}</span>
                     <span
                         v-if="summaryExtraText"
@@ -27,21 +47,26 @@
                         {{ summaryExtraText }}
                     </span>
                 </div>
+                <!-- meta：成功=开始+触发人；取消用户=结束+操作人；其余=结束+总耗时 -->
                 <div class="bei-summary-meta">
-                    <span v-if="endTypeRule.metaMode === 'operator'">
-                        {{ formatEndTime }} {{ buildEndInfo.operator || '--' }} {{ actionText }}
-                    </span>
-                    <span v-else>
-                        {{ formatEndTime }} {{ actionText }}
-                    </span>
-                    <template v-if="runningDuration">
-                        <span class="meta-divider">|</span>
-                        <span>{{ durationLabel }} {{ runningDuration }}</span>
+                    <template v-if="isDurationOnlyLayout">
+                        <span>{{ formatStartTime }} {{ $t('details.startExecute') }}</span>
+                        <template v-if="triggerUser || triggerTypeDesc">
+                            <span class="meta-divider">|</span>
+                            <span>{{ triggerUser || '--' }} {{ triggerTypeDesc }}</span>
+                        </template>
+                    </template>
+                    <template v-else>
+                        <span>{{ summaryMetaPrimary }}</span>
+                        <template v-if="showSummaryDuration">
+                            <span class="meta-divider">|</span>
+                            <span>{{ durationLabel }} {{ runningDuration }}</span>
+                        </template>
                     </template>
                 </div>
             </div>
 
-            <!-- 中间扩展区：父流水线 / 驳回原因 / 失败原因 等 -->
+            <!-- 中间扩展区：父流水线 / 失败原因 / 驳回原因 -->
             <div
                 v-if="showExtraSection"
                 class="bei-extra-section"
@@ -52,6 +77,12 @@
                         :name="extraSection.logo"
                         size="10"
                         class="bei-extra-icon"
+                    />
+                    <logo
+                        v-else-if="extraSection.type === EXTRA_SECTION_TYPE.TEXT"
+                        class="bei-extra-icon"
+                        name="help-document-fill"
+                        size="10"
                     />
                     <span>{{ $t(extraSection.titleKey) }}</span>
                 </div>
@@ -69,7 +100,7 @@
                         <span
                             v-if="parentPipelineInfo.operator"
                             class="bei-extra-operator"
-                        >{{ parentPipelineInfo.operator }} {{ actionText }}</span>
+                        >{{ parentPipelineInfo.operator }} {{ $t('cancel') }}</span>
                     </div>
                     <i
                         v-if="relatedPipelineUrl"
@@ -86,57 +117,63 @@
                 </div>
             </div>
 
+            <!-- 位置列表：终止/失败/超时/驳回位置 -->
             <div
-                v-if="positions.length"
+                v-if="positionItems.length"
                 class="bei-positions-section"
             >
                 <div class="bei-section-title">
                     <i class="bei-section-dot" />
-                    <span>{{ $t(statusConfig.positionsTitleKey, [positions.length]) }}</span>
+                    <span>{{ $t(positionsTitleKey, [positionItems.length]) }}</span>
                 </div>
                 <ul class="bei-position-list">
                     <li
-                        v-for="(item, index) in positions"
-                        :key="`${item.stageId}-${item.containerId}-${item.taskId || index}`"
+                        v-for="row in positionItems"
+                        :key="row.key"
                         class="bei-position-item"
                     >
                         <bk-tag
-                            v-if="item.position"
+                            v-if="row.position"
                             class="position-index-tag"
                         >
-                            {{ item.position }}
+                            {{ row.position }}
                         </bk-tag>
                         <div class="position-main">
                             <span
                                 v-bk-overflow-tips
                                 class="position-path"
-                            >{{ formatComponentPath(item.componentPath) }}</span>
-                            <!-- tag 样式：状态紧跟 path -->
+                            >{{ row.path }}</span>
+                            <!-- 取消场景：状态 tag 紧跟 path -->
                             <bk-tag
-                                v-if="item.statusAtEndDesc && isStatusDescTag"
+                                v-if="row.showStatusTag"
                                 class="position-status-tag"
                             >
-                                {{ item.statusAtEndDesc }}
+                                {{ row.statusText }}
                             </bk-tag>
                         </div>
                         <div class="position-tail">
-                            <!-- text 样式：状态跟在行尾操作前 -->
+                            <!-- 失败/超时：红色/灰色状态文字 + 定位/查看按钮 -->
                             <span
-                                v-if="item.statusAtEndDesc && !isStatusDescTag"
-                                class="position-status-text"
-                            >{{ item.statusAtEndDesc }}</span>
+                                v-if="row.showStatusText"
+                                :class="['position-status-text', { 'is-muted': row.statusMuted }]"
+                            >{{ row.statusText }}</span>
+                            <!-- 阶段准入驳回：审核组等信息 -->
                             <span
-                                v-if="isOperatorTextAction"
+                                v-if="row.reviewSuggest"
+                                class="position-review-suggest"
+                            >{{ row.reviewSuggest }}</span>
+                            <span
+                                v-if="row.operatorText"
                                 class="position-action-text"
-                            >{{ positionOperatorText }}</span>
+                            >{{ row.operatorText }}</span>
                             <bk-button
-                                v-else
+                                v-else-if="row.actionLabel"
                                 text
                                 theme="primary"
                                 class="position-action-btn"
-                                @click.stop="handleLocate(item)"
+                                @click.stop="handleLocate(row.item)"
                             >
-                                {{ positionActionLabel }}
+                                {{ row.actionLabel }}
                             </bk-button>
                         </div>
                     </li>
@@ -153,8 +190,14 @@
         EXTRA_SECTION_TYPE,
         POSITION_ACTION_TYPE,
         STATUS_DESC_STYLE,
+        SUMMARY_LAYOUT,
         getBuildEndInfoConfig,
-        getBuildEndTypeRule
+        getBuildEndTypeRule,
+        getMergedEndTypeConfig,
+        getPositionEndTypeRule,
+        resolvePositionAction,
+        resolvePositionOperatorTextKey,
+        resolvePositionStatusText
     } from './buildEndInfoConfig'
 
     const TIPPY_OPTIONS = {
@@ -170,46 +213,55 @@
             Logo
         },
         props: {
-            status: {
-                type: String,
-                required: true
-            },
             buildEndInfo: {
                 type: Object,
                 default: null
+            },
+            /** 构建开始时间，SUCCESS 场景展示「开始执行」用 */
+            startTime: {
+                type: [Number, String],
+                default: null
+            },
+            /** 触发人，SUCCESS 场景 meta 展示用 */
+            triggerUser: {
+                type: String,
+                default: ''
+            },
+            /** 触发方式描述，如「手动触发」 */
+            triggerTypeDesc: {
+                type: String,
+                default: ''
+            }
+        },
+        data () {
+            return {
+                EXTRA_SECTION_TYPE
             }
         },
         computed: {
-            statusConfig () {
-                return getBuildEndInfoConfig(this.status)
+            /** category 级配置（CANCEL / FAIL / TIMEOUT / SUCCESS） */
+            categoryConfig () {
+                return getBuildEndInfoConfig(this.buildEndInfo?.endCategory)
             },
+            /** endType 级展示规则 */
             endTypeRule () {
-                return getBuildEndTypeRule(this.statusConfig, this.buildEndInfo?.endType)
+                return getBuildEndTypeRule(this.categoryConfig, this.buildEndInfo?.endType)
             },
-            // 位置行尾操作配置：定位 / 定位日志 / 查看 / 操作人文案
-            positionAction () {
-                return this.endTypeRule.positionAction || {
-                    type: POSITION_ACTION_TYPE.LOCATE,
-                    labelKey: 'details.locate'
-                }
+            /** category + endType 合并后的完整配置 */
+            mergedConfig () {
+                return getMergedEndTypeConfig(this.categoryConfig, this.buildEndInfo?.endType) || {}
             },
-            // 行尾是否展示「操作人 + 动作」纯文案（如驳回），不可点击
-            isOperatorTextAction () {
-                return this.positionAction.type === POSITION_ACTION_TYPE.OPERATOR_TEXT
+            /** 是否为「仅总耗时」布局（普通执行成功） */
+            isDurationOnlyLayout () {
+                return (this.endTypeRule.summaryLayout || SUMMARY_LAYOUT.TYPE_REASON) === SUMMARY_LAYOUT.DURATION_ONLY
             },
-            // 位置行状态描述：tag 标签（取消）或主题色文字（失败/超时）
+            /** 是否为阶段准入驳回的位置行布局 */
+            isStageReviewPosition () {
+                return this.endTypeRule.positionLayout === 'stageReview'
+            },
+            /** 位置状态是否用 tag 展示（取消场景） */
             isStatusDescTag () {
-                return (this.statusConfig.statusDescStyle || STATUS_DESC_STYLE.TAG) === STATUS_DESC_STYLE.TAG
-            },
-            // 行尾可点击按钮文案
-            positionActionLabel () {
-                const key = this.positionAction.labelKey
-                return key ? this.$t(key) : ''
-            },
-            // 行尾操作人文案，如「zhangsan 驳回」
-            positionOperatorText () {
-                const operator = this.buildEndInfo?.operator || '--'
-                return `${operator} ${this.actionText}`.trim()
+                return (this.mergedConfig.statusDescStyle || STATUS_DESC_STYLE.TAG) === STATUS_DESC_STYLE.TAG
             },
             extraSection () {
                 return this.endTypeRule.extraSection
@@ -220,8 +272,9 @@
             parentPipelineInfo () {
                 return this.buildEndInfo?.parentPipelineInfo
             },
+            /** 扩展区纯文本内容（失败/驳回原因） */
             extraSectionText () {
-                if (this.extraSection?.type !== EXTRA_SECTION_TYPE.TEXT) return
+                if (this.extraSection?.type !== EXTRA_SECTION_TYPE.TEXT) return ''
                 return this.buildEndInfo?.reason || ''
             },
             showExtraSection () {
@@ -229,15 +282,27 @@
                 if (this.isRelatedPipelineSection) return !!this.parentPipelineInfo
                 return !!this.extraSectionText
             },
+            /** 摘要主行额外文案：计数或 reason */
             summaryExtraText () {
                 if (this.endTypeRule.summaryMode === 'count') {
                     const count = this.buildEndInfo.positionCount || this.positions.length
-                    return this.$t(this.statusConfig.summaryCountKey, [count])
+                    return this.$t(this.mergedConfig.summaryCountKey, [count])
                 }
-                return this.buildEndInfo.reason || ''
+                return this.buildEndInfo?.reason || ''
             },
+            /** 摘要 meta 主文案（结束时间 + 结束/取消/操作人） */
+            summaryMetaPrimary () {
+                if (this.endTypeRule.metaMode === 'operator') {
+                    return `${this.formatEndTime} ${this.buildEndInfo?.operator || '--'} ${this.metaActionText}`
+                }
+                return `${this.formatEndTime} ${this.metaActionText}`
+            },
+            showSummaryDuration () {
+                return !!this.runningDuration
+            },
+            /** CSS 变量：摘要背景色、强调色、位置圆点色 */
             themeStyle () {
-                const { summaryBg, accent, sectionDot } = this.statusConfig.theme || {}
+                const { summaryBg, accent, sectionDot } = this.mergedConfig.theme || {}
                 return {
                     '--bei-summary-bg': summaryBg,
                     '--bei-accent': accent,
@@ -247,17 +312,60 @@
             positions () {
                 return this.buildEndInfo?.positions || []
             },
-            actionText () {
-                return this.statusConfig.actionTextKey
-                    ? this.$t(this.statusConfig.actionTextKey)
-                    : ''
+            /**
+             * 位置列表渲染数据（预计算，避免模板内重复调用方法）
+             * highlight 事件 → 画布高亮；locateLog 事件 → 高亮 + 日志侧滑
+             */
+            positionItems () {
+                return this.positions.map((item, index) => {
+                    const rule = getPositionEndTypeRule(this.endTypeRule, item)
+                    const action = resolvePositionAction(this.endTypeRule, item)
+                    const statusText = resolvePositionStatusText(item, rule, {
+                        endType: this.buildEndInfo?.endType,
+                        isStatusDescTag: this.isStatusDescTag,
+                        translate: (key, params) => this.$t(key, params)
+                    })
+                    const isOperatorText = action.type === POSITION_ACTION_TYPE.OPERATOR_TEXT
+                    let operatorText = ''
+                    if (isOperatorText) {
+                        const operator = rule?.positionOperatorFromItem
+                            ? item.operator
+                            : this.buildEndInfo?.operator
+                        const key = resolvePositionOperatorTextKey(rule, this.endTypeRule, this.mergedConfig)
+                        operatorText = `${operator || ''} ${this.$t(key)}`.trim()
+                    }
+                    return {
+                        item,
+                        key: `${item.stageId}-${item.containerId}-${item.taskId || index}`,
+                        position: item.position,
+                        path: String(item.componentPath || '').replace(/\//g, ' - '),
+                        statusText,
+                        statusMuted: !!rule?.positionStatusMuted,
+                        showStatusTag: !!statusText && this.isStatusDescTag,
+                        showStatusText: !!statusText && !this.isStatusDescTag,
+                        reviewSuggest: this.isStageReviewPosition && item.reviewSuggest,
+                        operatorText,
+                        actionLabel: isOperatorText ? '' : (action.labelKey ? this.$t(action.labelKey) : '')
+                    }
+                })
+            },
+            positionsTitleKey () {
+                return this.endTypeRule.positionsTitleKey || this.mergedConfig.positionsTitleKey || ''
+            },
+            /** 摘要 meta 动作文案（结束 / 取消），与位置行 operatorText 可不同 */
+            metaActionText () {
+                const key = this.endTypeRule.metaActionTextKey || this.mergedConfig.actionTextKey
+                return key ? this.$t(key) : ''
             },
             durationLabel () {
-                const key = this.statusConfig.durationLabelKey
-                return this.$t(key)
+                const key = this.mergedConfig.durationLabelKey
+                return key ? this.$t(key) : ''
             },
             formatEndTime () {
                 return convertTime(this.buildEndInfo?.endTime) || '--'
+            },
+            formatStartTime () {
+                return convertTime(this.startTime) || '--'
             },
             runningDuration () {
                 const totalCostTime = Number(this.buildEndInfo?.totalCostTime)
@@ -271,19 +379,18 @@
             }
         },
         methods: {
-            formatComponentPath (path = '') {
-                return String(path).replace(/\//g, ' - ')
-            },
             openRelatedPipeline () {
                 if (!this.relatedPipelineUrl) return
                 window.open(this.relatedPipelineUrl, '_blank')
             },
+            /** view / locate：画布高亮；locateLog：高亮 + 日志 */
             handleLocate (item) {
-                if (this.positionAction.type === POSITION_ACTION_TYPE.VIEW) {
-                    this.$emit('view', item)
-                    return
+                const actionType = resolvePositionAction(this.endTypeRule, item).type
+                if (actionType === POSITION_ACTION_TYPE.LOCATE_LOG) {
+                    this.$emit('locateLog', item)
+                } else {
+                    this.$emit('highlight', item)
                 }
-                this.$emit('locate', item)
             }
         }
     }
@@ -317,6 +424,26 @@
         padding: 12px 16px;
         background: var(--bei-summary-bg);
         border-radius: 4px;
+    }
+
+    .bei-summary-duration-only {
+        .bei-duration-main {
+            display: flex;
+            align-items: baseline;
+            gap: 8px;
+            line-height: 28px;
+        }
+
+        .bei-duration-label {
+            font-size: 12px;
+            color: #979ba5;
+        }
+
+        .bei-duration-value {
+            font-size: 16px;
+            font-weight: 700;
+            color: #313238;
+        }
     }
 
     .bei-summary-main {
@@ -510,6 +637,17 @@
         flex-shrink: 0;
         font-size: 12px;
         color: var(--bei-accent);
+        white-space: nowrap;
+
+        &.is-muted {
+            color: #979ba5;
+        }
+    }
+
+    .position-review-suggest {
+        flex-shrink: 0;
+        font-size: 12px;
+        color: #979ba5;
         white-space: nowrap;
     }
 

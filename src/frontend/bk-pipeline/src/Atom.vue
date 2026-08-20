@@ -661,16 +661,20 @@ watch(isExecuting, (v) => {
   }
 });
 
+const scrollAtomIntoView = () => {
+  const ele = document.getElementById(props.atom.id);
+  ele?.scrollIntoView?.({
+    block: "center",
+    inline: "center",
+    behavior: "smooth",
+  });
+};
+
 watch(
-  () => props.atom.locateActive,
+  () => props.atom.locateActive || props.atom.locateHighlightActive,
   (val) => {
     if (val) {
-      const ele = document.getElementById(props.atom.id);
-      ele?.scrollIntoView?.({
-        block: "center",
-        inline: "center",
-        behavior: "smooth",
-      });
+      scrollAtomIntoView();
     }
   }
 );
