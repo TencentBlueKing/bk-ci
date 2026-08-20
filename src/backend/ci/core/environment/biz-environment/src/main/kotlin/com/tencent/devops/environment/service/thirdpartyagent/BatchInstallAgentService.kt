@@ -267,6 +267,13 @@ class BatchInstallAgentService @Autowired constructor(
                 params = arrayOf(deviceId ?: "", agentHashId)
             )
         }
+        // 标注是 SDK
+        thirdPartyAgentDao.updateAgentProps(
+            dslContext = dslContext,
+            projectId = projectId,
+            agentId = record.id,
+            props = AgentProps.parseAgentProps(record.agentProps)?.copy(sdk = true) ?: AgentProps.emptyBySdk(true)
+        )
         return RegistryResp(
             gateway = record.gateway ?: "",
             fileGateway = record.fileGateway ?: "",

@@ -66,7 +66,7 @@ export async function registry(
   const url = ensureGateway(gateway) + ApiPath.Registry + query;
 
   const result = await client.intoDevopsResult<RegistryResponse>({
-    method: 'GET',
+    method: 'POST',
     url,
   });
   if (isNotOk(result)) {

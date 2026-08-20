@@ -630,4 +630,16 @@ class ThirdPartyAgentDao {
             return dsl.fetchAny()
         }
     }
+
+    fun updateAgentProps(
+        dslContext: DSLContext,
+        projectId: String,
+        agentId: Long,
+        props: AgentProps
+    ) {
+        with(TEnvironmentThirdpartyAgent.T_ENVIRONMENT_THIRDPARTY_AGENT) {
+            dslContext.update(this).set(AGENT_PROPS, JsonUtil.toJson(props, false)).where(ID.eq(agentId))
+                .and(PROJECT_ID.eq(projectId)).execute()
+        }
+    }
 }

@@ -2,6 +2,7 @@ package com.tencent.devops.environment.model
 
 import com.tencent.devops.common.api.pojo.agent.DockerInitFileInfo
 import com.tencent.devops.common.api.pojo.agent.AgentErrorExitData
+import com.tencent.devops.common.api.util.JsonUtil
 
 /**
  * Agent 系统属性
@@ -19,9 +20,22 @@ data class AgentProps(
     val dockerInitFileInfo: DockerInitFileInfo?,
     val exitError: AgentErrorExitData?,
     val osVersion: String?,
-    val source: AgentPropsSource? = null
+    val source: AgentPropsSource? = null,
+    val sdk: Boolean? = false
 ) {
     companion object {
+        fun parseAgentProps(props: String?): AgentProps? {
+            return if (props.isNullOrBlank()) {
+                null
+            } else {
+                try {
+                    JsonUtil.to(props, AgentProps::class.java)
+                } catch (e: Exception) {
+                    // 兼容老数据格式不对的情况
+                    null
+                }
+            }
+        }
         fun emptyBySource(source: AgentPropsSource) = AgentProps(
             arch = "",
             jdkVersion = emptyList(),
@@ -30,6 +44,16 @@ data class AgentProps(
             exitError = null,
             osVersion = null,
             source = source
+        )
+        fun emptyBySdk(sdk: Boolean) = AgentProps(
+            arch = "",
+            jdkVersion = emptyList(),
+            userProps = emptyMap(),
+            dockerInitFileInfo = null,
+            exitError = null,
+            osVersion = null,
+            source = null,
+            sdk = sdk
         )
     }
 }
