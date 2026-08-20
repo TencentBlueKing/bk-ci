@@ -60,9 +60,9 @@ import com.tencent.devops.environment.permission.EnvironmentPermissionService
 import com.tencent.devops.environment.pojo.EnvCreateInfo
 import com.tencent.devops.environment.pojo.EnvironmentId
 import com.tencent.devops.environment.pojo.NodeBaseInfo
+import com.tencent.devops.environment.pojo.enums.EnvType
 import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.environment.pojo.enums.NodeType
-import com.tencent.devops.environment.pojo.enums.TXEnvType
 import com.tencent.devops.environment.pojo.envOperate.EnvOperateOrigin
 import com.tencent.devops.environment.service.slave.SlaveGatewayService
 import com.tencent.devops.project.api.service.ServiceProjectResource
@@ -135,7 +135,7 @@ class TXEnvService @Autowired constructor(
         content = ActionAuditContent.ENVIRONMENT_CREATE_CONTENT
     )
     override fun createEnvironment(userId: String, projectId: String, envCreateInfo: EnvCreateInfo): EnvironmentId {
-        if (envCreateInfo.envType == TXEnvType.DEVX.envType() && !envCreateInfo.nodeHashIds.isNullOrEmpty()) {
+        if (envCreateInfo.envType == EnvType.DEVX && !envCreateInfo.nodeHashIds.isNullOrEmpty()) {
             // 暂时仅支持一个公共云桌面进入一个环境
             val check = envNodeDao.listNodeIds(
                 dslContext = dslContext,
@@ -146,7 +146,7 @@ class TXEnvService @Autowired constructor(
             }
         }
         return super.createEnvironment(userId, projectId, envCreateInfo).also { envHashId ->
-            if (envCreateInfo.envType == TXEnvType.DEVX.envType()) {
+            if (envCreateInfo.envType == EnvType.DEVX) {
                 client.get(ServiceRemoteDevResource::class).reloadEnvHook(
                     userId = userId,
                     projectId = projectId,
@@ -174,7 +174,7 @@ class TXEnvService @Autowired constructor(
         envOperateOrigin: EnvOperateOrigin
     ) {
         val env = envDao.get(dslContext, projectId, HashUtil.decodeIdToLong(envHashId))
-        if (env.envType == TXEnvType.DEVX.name) {
+        if (env.envType == EnvType.DEVX.name) {
             // 暂时仅支持一个公共云桌面进入一个环境
             val check = envNodeDao.listNodeIds(
                 dslContext = dslContext,
@@ -185,7 +185,7 @@ class TXEnvService @Autowired constructor(
             }
         }
         super.addEnvNodes(userId, projectId, envHashId, nodeHashIds, envOperateOrigin)
-        if (env.envType == TXEnvType.DEVX.name) {
+        if (env.envType == EnvType.DEVX.name) {
             client.get(ServiceRemoteDevResource::class).reloadEnvHook(
                 userId = userId,
                 projectId = projectId,
@@ -212,7 +212,7 @@ class TXEnvService @Autowired constructor(
                 message = I18nUtil.getCodeLanMessage(ERROR_ENV_NO_DEL_PERMISSSION)
             )
         }
-        if (env.envType == TXEnvType.DEVX.name) {
+        if (env.envType == EnvType.DEVX.name) {
             client.get(ServiceRemoteDevResource::class).deleteEnvHook(
                 userId = userId,
                 projectId = projectId,
@@ -247,7 +247,7 @@ class TXEnvService @Autowired constructor(
         }
 
         val env = envDao.getOrNull(dslContext, projectId, envId) ?: return
-        if (env.envType == TXEnvType.DEVX.name) {
+        if (env.envType == EnvType.DEVX.name) {
             client.get(ServiceRemoteDevResource::class).deleteEnvHook(
                 userId = userId,
                 projectId = projectId,
