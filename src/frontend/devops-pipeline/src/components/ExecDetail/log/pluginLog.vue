@@ -197,6 +197,7 @@
         mounted () {
             this.getLog()
             this.checkAIStatus()
+            this.refreshLogLayout()
         },
 
         beforeDestroy () {
@@ -220,6 +221,14 @@
                 this.getAIStatus().then(res => {
                     this.enableAI = res.data
                     this.aiTips = this.$t('details.aiAnalysis', [this.$pipelineDocs.AIAnalysis])
+                })
+            },
+
+            refreshLogLayout () {
+                this.$nextTick(() => {
+                    window.requestAnimationFrame(() => {
+                        window.dispatchEvent(new Event('resize'))
+                    })
                 })
             },
 
