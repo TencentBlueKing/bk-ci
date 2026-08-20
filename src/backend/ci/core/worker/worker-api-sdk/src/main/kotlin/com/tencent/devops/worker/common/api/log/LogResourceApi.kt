@@ -55,8 +55,9 @@ class LogResourceApi : AbstractBuildResourceApi(), LogSDKApi {
             request = request,
             errorMessage = MessageUtil.getMessageByLocale(LOGS_REPORT_FAILED, AgentEnv.getLocaleLanguage()),
             connectTimeoutInSec = 5L,
-            readTimeoutInSec = 10L,
-            writeTimeoutInSec = 10L
+            // 大包（千行级）在 log 稍慢时会打满 10s，与熔断叠加后整段日志丢失
+            readTimeoutInSec = 30L,
+            writeTimeoutInSec = 30L
         )
         return objectMapper.readValue(responseContent)
     }
