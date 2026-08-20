@@ -210,7 +210,7 @@
                             tabName: newTab
                         }
                     }).catch(err => {
-                        throw err
+                        console.warn('路由导航被取消:', err?.message || err)
                     })
                 }
             }, {
@@ -237,7 +237,7 @@
                             tabName: 'node'
                         }
                     }).catch(err => {
-                        throw err
+                        console.warn('路由导航被取消:', err?.message || err)
                     })
                 }
             }, {
@@ -257,7 +257,7 @@
                             tabName: tabActive.value
                         }
                     }).catch(err => {
-                        throw err
+                        console.warn('路由导航被取消:', err?.message || err)
                     })
                 }
             })

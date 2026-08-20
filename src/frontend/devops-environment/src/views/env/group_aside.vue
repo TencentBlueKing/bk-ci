@@ -283,15 +283,10 @@
 
             watch(() => resType.value, async (newResType, oldResType) => {
                 if (newResType && newResType !== oldResType) {
-                    await proxy.$router.replace({
-                        name: 'envDetail',
-                        params: {
-                            ...proxy.$route.params,
-                            envType: ENV_TYPE_MAP.ALL,
-                            envId: undefined,
-                            tabName: 'node'
-                        }
-                    })
+                    // URL 重置（resType / envType / envId / tabName）已在
+                    // ResourceTypeSelector.selectResource() 中一次性完成，这里仅刷新数据。
+                    // 保留本监听器是为了处理用户通过浏览器后退/前进或直接编辑 URL
+                    // 切换 resType 的场景。
                     setEnvDetailLoaded(false)
                     await initData()
                 }

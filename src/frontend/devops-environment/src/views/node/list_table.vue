@@ -865,16 +865,9 @@
                 }
             },
             toNodeDetail (node) {
+                if (this.isFlod) return
                 if (this.canShowDetail(node)) {
-                    const currentNodeType = this.$route.params.nodeType || ALLNODE
-                    localStorage.setItem(ENV_ACTIVE_NODE_TYPE, currentNodeType)
-                    this.$router.push({
-                        name: 'nodeDetail',
-                        params: {
-                            projectId: this.projectId,
-                            nodeHashId: node.nodeHashId
-                        }
-                    })
+                    this.$emit('show-detail', node.nodeHashId)
                 }
             },
             editNodeName (node) {

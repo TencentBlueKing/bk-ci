@@ -461,6 +461,8 @@
     "avgDuration": "平均耗时",
     "buildNumber": "构建号",
     "buildStatus": "构建状态",
+    "retryCount": "重试次数",
+    "retryCountLabel": "第 {0} 次重试",
     "duration": "耗时",
     "startTime": "启动时间",
     "endTime": "结束时间",

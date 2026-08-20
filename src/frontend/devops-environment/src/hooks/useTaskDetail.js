@@ -45,6 +45,7 @@ export default function useTaskDetail () {
         pipelineId,
         jobId,
         buildId,
+        executeCount,
         params
     }) => {
         try {
@@ -56,6 +57,8 @@ export default function useTaskDetail () {
                     ...(pipelineId ? { pipelineId } : {}),
                     ...(jobId ? { jobId } : {}),
                     ...(buildId ? { buildId } : {}),
+                    // 仅 BUILD 视图需要 executeCount：始终传值（包括 0），不做 undefined 剔除
+                    ...(view === 'BUILD' ? { executeCount: executeCount ?? '' } : {}),
                     ...params
                 }
             })

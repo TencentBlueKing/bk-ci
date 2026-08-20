@@ -245,6 +245,17 @@
                                 </template>
                             </bk-table-column>
                             <bk-table-column
+                                :label="$t('environment.retryCount')"
+                                min-width="100"
+                            >
+                                <template #default="{ row }">
+                                    <span v-if="Number(row.executeCount) - 1 > 0">
+                                        {{ $t('environment.retryCountLabel', [Number(row.executeCount) - 1]) }}
+                                    </span>
+                                    <span v-else>--</span>
+                                </template>
+                            </bk-table-column>
+                            <bk-table-column
                                 :label="$t('environment.associatedJob')"
                                 min-width="200"
                             >
@@ -302,6 +313,17 @@
                                 </template>
                             </bk-table-column>
                             <bk-table-column
+                                :label="$t('environment.retryCount')"
+                                min-width="100"
+                            >
+                                <template #default="{ row }">
+                                    <span v-if="Number(row.executeCount) - 1 > 0">
+                                        {{ $t('environment.retryCountLabel', [Number(row.executeCount) - 1]) }}
+                                    </span>
+                                    <span v-else>--</span>
+                                </template>
+                            </bk-table-column>
+                            <bk-table-column
                                 :label="$t('environment.duration')"
                                 prop="duration"
                             />
@@ -352,6 +374,17 @@
                                         <pipeline-status-icon :status="row.status" />
                                         {{ row.statusText }}
                                     </span>
+                                </template>
+                            </bk-table-column>
+                            <bk-table-column
+                                :label="$t('environment.retryCount')"
+                                min-width="100"
+                            >
+                                <template #default="{ row }">
+                                    <span v-if="Number(row.executeCount) - 1 > 0">
+                                        {{ $t('environment.retryCountLabel', [Number(row.executeCount) - 1]) }}
+                                    </span>
+                                    <span v-else>--</span>
                                 </template>
                             </bk-table-column>
                             <bk-table-column
@@ -650,11 +683,19 @@
                     ]
                 }
                 if (currentView.value === 'BUILD') {
-                    return [
+                    const items = []
+                    // 重试次数：后端 executeCount 表示总执行次数（含首次），展示值 = executeCount - 1
+                    // 为 0 时不展示该信息项
+                    const retryCount = formatRetryCount(task.executeCount)
+                    if (retryCount !== '') {
+                        items.push({ label: proxy.$t('environment.retryCount'), value: retryCount })
+                    }
+                    items.push(
                         { label: proxy.$t('environment.duration'), value: task.duration || '--' },
                         { label: proxy.$t('environment.trigger'), value: task.creator || '--' },
                         { label: proxy.$t('environment.startTime'), value: task.startTime || '--' }
-                    ]
+                    )
+                    return items
                 }
                 // JOB
                 return [
@@ -710,6 +751,14 @@
                 return formatSeconds(seconds)
             }
             
+            // 重试次数展示：后端 executeCount 表示总执行次数（含首次），展示值 = executeCount - 1
+            // 0、1 时为空；其他情况直接展示数字 N
+            const formatRetryCount = (executeCount) => {
+                const num = Number(executeCount)
+                if (Number.isNaN(num) || num <= 1) return ''
+                return `${num - 1}`
+            }
+
             // 格式化时间
             const formatTime = (time) => {
                 if (!time) return '--'
@@ -779,6 +828,8 @@
                             : '',
                         creator: latestBuild.userId || item.creator || '--',
                         startTime: formatTime(startTime),
+                        // 来源：listAgentPipeline 接口 buildHistory.executeCount，回退为 0
+                        executeCount: latestBuild.executeCount ?? item.executeCount ?? 0,
                         duration: (startTime && endTime)
                             ? calculateDuration(startTime, endTime)
                             : formatDuration(latestBuild.totalTime || latestBuild.executeTime || item.avgTimeInterval)
@@ -862,6 +913,8 @@
                         pipelineId: task.pipelineId,
                         jobId: task.jobId,
                         buildId: task.buildId,
+                        // 数据源：listAgentPipeline 接口里的 executeCount；即使 0/null 也强制传入
+                        executeCount: task.executeCount ?? '',
                         params
                     })
                     task.records = (res.records || []).map(i => mapDetailRecord(currentView.value, i))
