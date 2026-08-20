@@ -230,16 +230,29 @@
                     orderedTabs.push(reportTab)
                 }
 
-                const visibleTabs = orderedTabs.filter(tab => tab.show)
-                if (!visibleTabs.some(tab => tab.name === this.currentTab)) {
-                    this.currentTab = visibleTabs.find(tab => tab.name === this.defaultTab)?.name
-                        ?? visibleTabs[0]?.name
-                }
                 return orderedTabs
+            },
+            visibleTabList () {
+                return this.sortedTabList.filter(tab => tab.show)
+            },
+            visibleTabKey () {
+                return this.visibleTabList.map(tab => tab.name).join('|')
             }
         },
 
         watch: {
+            isGetPluginHeadTab: {
+                immediate: true,
+                handler (visible) {
+                    if (visible) this.ensureCurrentTab()
+                }
+            },
+            visibleTabKey: {
+                immediate: true,
+                handler () {
+                    if (this.isGetPluginHeadTab) this.ensureCurrentTab()
+                }
+            },
             'currentElement.id': function () {
                 this.userSelectedTab = false
                 this.tabList = [
@@ -257,6 +270,13 @@
             selectTab (name) {
                 this.userSelectedTab = true
                 this.currentTab = name
+            },
+
+            ensureCurrentTab () {
+                if (!this.visibleTabList.some(tab => tab.name === this.currentTab)) {
+                    this.currentTab = this.visibleTabList.find(tab => tab.name === this.defaultTab)?.name
+                        ?? this.visibleTabList[0]?.name
+                }
             },
 
             toggleTab (key, show = false) {
