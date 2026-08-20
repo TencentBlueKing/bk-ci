@@ -55,6 +55,8 @@ class MakeMoneyService @Autowired constructor(
         private val logger =
             LoggerFactory.getLogger(MakeMoneyService::class.java)
         private const val BK_CLOUD_DEV_PROPERTY = "蓝盾云研发"
+        private const val CMDB_PAGE_LIMIT = 500
+        private const val CMDB_PAGE_SORT_FIELD = "bk_inst_id"
     }
 
     /**
@@ -93,7 +95,13 @@ class MakeMoneyService @Autowired constructor(
      */
     @JsonIgnoreProperties(ignoreUnknown = true)
     private data class CmdbAssetData(
+        val count: Int?,
         val info: List<CmdbAssetInfo>?
+    )
+
+    private data class CmdbAssetPage(
+        val count: Int?,
+        val info: List<CmdbAssetInfo>
     )
 
     /**
@@ -240,7 +248,12 @@ class MakeMoneyService @Autowired constructor(
         lastDay: LocalDateTime
     ) {
         // 获取CMDB资产信息
-        val cmdbAssetMap = fetchCmdbAssetInfo()
+        val cmdbAssetMap = try {
+            fetchCmdbAssetInfo()
+        } catch (e: Exception) {
+            logger.error("save method - fetchCmdbAssetInfo failed, skip commission date update", e)
+            emptyMap()
+        }
         logger.info("save method - fetchCmdbAssetInfo result size: ${cmdbAssetMap.size}")
 
         use.chunked(99).forEach { chunk ->
@@ -427,80 +440,133 @@ class MakeMoneyService @Autowired constructor(
      */
     @Suppress("NestedBlockDepth")
     fun fetchCmdbAssetInfo(): Map<String, CmdbAssetDetail> {
-        return try {
-            logger.info("start fetchCmdbAssetInfo|url:${bkConfig.cmdbAssetDetailUrl}")
-            val resultMap = mutableMapOf<String, CmdbAssetDetail>()
-            var start = 0
-            val limit = 500
-            var hasMore = true
+        logger.info("start fetchCmdbAssetInfo|url:${bkConfig.cmdbAssetDetailUrl}")
+        var start = 0
+        var hasMore = true
+        var expectedCount: Int? = null
+        var fetchedAssets = emptyList<CmdbAssetInfo>()
 
-            while (hasMore) {
-                val requestBody = JsonUtil.toJson(
-                    mapOf(
-                        "bk_biz_id" to (bkConfig.ccBizId ?: 0),
-                        "page" to mapOf("start" to start, "limit" to limit),
-                        "fields" to listOf(
-                            "cds_ip",
-                            "start_date",
-                            "property_management_belongs"
-                        )
-                    )
+        while (hasMore) {
+            val page = fetchCmdbAssetPage(
+                start = start,
+                limit = CMDB_PAGE_LIMIT
+            )
+            val pageCount = page.count
+            val firstPageCount = expectedCount
+            if (firstPageCount != null && pageCount != null && firstPageCount != pageCount) {
+                throw RemoteServiceException(
+                    "CMDB asset count changed during pagination, " +
+                        "start=$start, expected=$firstPageCount, actual=$pageCount"
                 )
+            }
+            expectedCount = expectedCount ?: pageCount
 
-                OkhttpUtils.doPost(
-                    url = bkConfig.cmdbAssetDetailUrl,
-                    jsonParam = requestBody,
-                    headers = mapOf("X-Bkapi-Authorization" to bkConfig.cmdbHeaderStr())
-                ).use { response ->
-                    if (!response.isSuccessful) {
-                        logger.warn(
-                            "fetchCmdbAssetInfo failed|start: $start|" +
-                                "code: ${response.code}|response: ${response.body?.string()}"
-                        )
-                        hasMore = false
-                        return@use
-                    }
-
-                    val responseBody = response.body?.string() ?: ""
-                    logger.info("fetchCmdbAssetInfo page|start: $start|limit: $limit")
-                    val cmdbResponse: CmdbAssetResponse = jacksonObjectMapper().readValue(responseBody)
-
-                    if (cmdbResponse.result != true || cmdbResponse.data?.info == null) {
-                        logger.warn("fetchCmdbAssetInfo result is false or data is null|start: $start")
-                        hasMore = false
-                        return@use
-                    }
-
-                    val currentPageData = cmdbResponse.data.info
-                    if (currentPageData.isEmpty()) {
-                        hasMore = false
-                    } else {
-                        currentPageData.forEach { asset ->
-                            val cdsIp = asset.cdsIp
-                            if (!cdsIp.isNullOrBlank()) {
-                                resultMap[cdsIp] = CmdbAssetDetail(
-                                    commissionDate = formatCommissionDate(asset.startDate),
-                                    propertyManagementBelongs = asset.propertyManagementBelongs ?: ""
-                                )
-                            }
-                        }
-
-                        // 如果返回的数据量小于limit，说明已经是最后一页
-                        if (currentPageData.size < limit) {
-                            hasMore = false
-                        } else {
-                            start += limit
-                        }
-                    }
+            if (page.info.isEmpty()) {
+                if (expectedCount != null && start < expectedCount) {
+                    throw RemoteServiceException(
+                        "CMDB asset page is unexpectedly empty, start=$start, expected=$expectedCount"
+                    )
                 }
+                hasMore = false
+                continue
             }
 
-            logger.info("fetchCmdbAssetInfo completed|total size: ${resultMap.size}")
-            resultMap
-        } catch (e: Exception) {
-            logger.error("fetchCmdbAssetInfo exception", e)
-            emptyMap()
+            val fetchedCount = start + page.info.size
+            val isLastPage = expectedCount
+                ?.let { fetchedCount >= it }
+                ?: (page.info.size < CMDB_PAGE_LIMIT)
+            if (!isLastPage && page.info.size < CMDB_PAGE_LIMIT) {
+                throw RemoteServiceException(
+                    "CMDB asset page is shorter than limit, " +
+                        "start=$start, size=${page.info.size}, expected=$expectedCount"
+                )
+            }
+
+            fetchedAssets = fetchedAssets + page.info
+            start = fetchedCount
+            hasMore = !isLastPage
         }
+
+        if (expectedCount != null && fetchedAssets.size != expectedCount) {
+            throw RemoteServiceException(
+                "CMDB asset count mismatch, expected=$expectedCount, actual=${fetchedAssets.size}"
+            )
+        }
+
+        return buildCmdbAssetMap(
+            assets = fetchedAssets,
+            expectedCount = expectedCount
+        )
+    }
+
+    private fun fetchCmdbAssetPage(start: Int, limit: Int): CmdbAssetPage {
+        val requestBody = JsonUtil.toJson(
+            mapOf(
+                "bk_biz_id" to (bkConfig.ccBizId ?: 0),
+                "page" to mapOf(
+                    "start" to start,
+                    "limit" to limit,
+                    "sort" to CMDB_PAGE_SORT_FIELD
+                ),
+                "fields" to listOf(
+                    "cds_ip",
+                    "start_date",
+                    "property_management_belongs"
+                )
+            )
+        )
+
+        return OkhttpUtils.doPost(
+            url = bkConfig.cmdbAssetDetailUrl,
+            jsonParam = requestBody,
+            headers = mapOf("X-Bkapi-Authorization" to bkConfig.cmdbHeaderStr())
+        ).use { response ->
+            val responseBody = response.body?.string().orEmpty()
+            if (!response.isSuccessful) {
+                throw RemoteServiceException(
+                    "fetch CMDB asset failed, start=$start, code=${response.code}"
+                )
+            }
+
+            logger.info("fetchCmdbAssetInfo page|start: $start|limit: $limit")
+            val cmdbResponse: CmdbAssetResponse = jacksonObjectMapper().readValue(responseBody)
+            val data = cmdbResponse.data
+            if (cmdbResponse.result != true || data?.info == null) {
+                throw RemoteServiceException(
+                    "fetch CMDB asset failed, start=$start, message=${cmdbResponse.message}"
+                )
+            }
+
+            CmdbAssetPage(
+                count = data.count,
+                info = data.info
+            )
+        }
+    }
+
+    private fun buildCmdbAssetMap(
+        assets: List<CmdbAssetInfo>,
+        expectedCount: Int?
+    ): Map<String, CmdbAssetDetail> {
+        val validAssets = assets.mapNotNull { asset ->
+            asset.cdsIp
+                ?.takeIf { it.isNotBlank() }
+                ?.let { ip -> ip to asset }
+        }
+        val resultMap = validAssets.associate { (ip, asset) ->
+            ip to CmdbAssetDetail(
+                commissionDate = formatCommissionDate(startDate = asset.startDate),
+                propertyManagementBelongs = asset.propertyManagementBelongs.orEmpty()
+            )
+        }
+        val blankIpCount = assets.size - validAssets.size
+        val duplicateIpCount = validAssets.size - resultMap.size
+        logger.info(
+            "fetchCmdbAssetInfo completed|cmdb count: $expectedCount|" +
+                "fetched size: ${assets.size}|blank ip count: $blankIpCount|" +
+                "duplicate ip count: $duplicateIpCount|total size: ${resultMap.size}"
+        )
+        return resultMap
     }
 
     /**
