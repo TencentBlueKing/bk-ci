@@ -85,7 +85,12 @@ class ThirdPartyAgentMonitorService @Autowired constructor(
     }
 
     fun monitor(event: TPAMonitorEvent): Boolean {
-        val record = thirdPartyAgentBuildDao.get(dslContext, event.buildId, event.vmSeqId) ?: return false
+        val record = thirdPartyAgentBuildDao.get(
+            dslContext = dslContext,
+            buildId = event.buildId,
+            vmSeqId = event.vmSeqId,
+            executeCount = event.executeCount
+        ) ?: return false
         if (record.executeCount != event.executeCount) {
             logger.warn("monitor|${event.toLog()}|executeCount not equal ${record.executeCount}")
             return false
@@ -195,7 +200,7 @@ class ThirdPartyAgentMonitorService @Autowired constructor(
 
         if (record.dockerInfo != null) {
             heartbeatInfo.dockerTaskList?.forEach dockerInfoFor@{
-                thirdPartyAgentBuildDao.get(dslContext, it.buildId, it.vmSeqId)?.let { r1 ->
+                thirdPartyAgentBuildDao.getWithExecuteCount(dslContext, it.buildId, it.vmSeqId, null)?.let { r1 ->
                     if (r1.dockerInfo == null) {
                         return@dockerInfoFor
                     }
@@ -210,7 +215,7 @@ class ThirdPartyAgentMonitorService @Autowired constructor(
             }
         } else {
             heartbeatInfo.taskList?.forEach taskInfoFor@{
-                thirdPartyAgentBuildDao.get(dslContext, it.buildId, it.vmSeqId)?.let { r1 ->
+                thirdPartyAgentBuildDao.getWithExecuteCount(dslContext, it.buildId, it.vmSeqId, null)?.let { r1 ->
                     if (r1.dockerInfo != null) {
                         return@taskInfoFor
                     }
@@ -231,7 +236,7 @@ class ThirdPartyAgentMonitorService @Autowired constructor(
     }
 
     fun tryRollBackQueueMonitor(event: AgentStartMonitor) {
-        val record = thirdPartyAgentBuildDao.get(dslContext, event.buildId, event.vmSeqId) ?: return
+        val record = thirdPartyAgentBuildDao.get(dslContext, event.buildId, event.vmSeqId, event.executeCount) ?: return
         if (record.executeCount != event.executeCount) {
             logger.warn("tryRollBackQueueMonitor|$event|executeCount not equal ${record.executeCount}")
             return

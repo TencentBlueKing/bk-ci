@@ -25,7 +25,7 @@ data class TPAPipelineReq(
     @get:Schema(title = "执行人", required = false)
     val creator: String?,
     @get:Schema(title = "状态", required = false)
-    val taskStatus: PipelineTaskStatus?,
+    val taskStatusList: List<PipelineTaskStatus>?,
     @get:Schema(title = "视图", required = false)
     val view: TPAPipelineBuildView
 )

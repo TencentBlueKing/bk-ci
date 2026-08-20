@@ -36,6 +36,7 @@ import com.tencent.devops.dispatch.pojo.thirdpartyagent.AgentBuildInfo
 import com.tencent.devops.dispatch.pojo.thirdpartyagent.BuildJobType
 import com.tencent.devops.model.dispatch.tables.TDispatchThirdpartyAgentBuild
 import com.tencent.devops.model.dispatch.tables.records.TDispatchThirdpartyAgentBuildRecord
+import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.JSON
 import org.jooq.Result
@@ -50,12 +51,22 @@ import java.time.ZoneId
 @Suppress("ALL")
 class ThirdPartyAgentBuildDao {
 
-    fun get(dslContext: DSLContext, buildId: String, vmSeqId: String): TDispatchThirdpartyAgentBuildRecord? {
+    fun get(
+        dslContext: DSLContext,
+        buildId: String,
+        vmSeqId: String,
+        executeCount: Int?
+    ): TDispatchThirdpartyAgentBuildRecord? {
         with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
-            return dslContext.selectFrom(this)
+            val dsl = dslContext.selectFrom(this)
                 .where(BUILD_ID.eq(buildId))
                 .and(VM_SEQ_ID.eq(vmSeqId))
-                .fetchOne()
+            if (executeCount == null) {
+                dsl.and(EXECUTE_COUNT.isNull)
+            } else {
+                dsl.and(EXECUTE_COUNT.eq(executeCount))
+            }
+            return dsl.fetchAny()
         }
     }
 
@@ -123,7 +134,13 @@ class ThirdPartyAgentBuildDao {
             val preRecord = dslContext.selectFrom(this)
                 .where(BUILD_ID.eq(buildId))
                 .and(VM_SEQ_ID.eq(vmSeqId))
-                .and(EXECUTE_COUNT.eq(executeCount))
+                .and(
+                    if (executeCount == null) {
+                        EXECUTE_COUNT.isNull
+                    } else {
+                        EXECUTE_COUNT.eq(executeCount)
+                    }
+                )
                 .fetchAny()
             if (preRecord != null) { // 支持更新，让用户进行步骤重试时继续能使用
                 return dslContext.update(this)
@@ -217,42 +234,6 @@ class ThirdPartyAgentBuildDao {
         }
     }
 
-    /**
-     * 2 天之前的构建如果还在running获取queue的都置为失败
-     */
-    fun updateExpireBuilds(
-        dslContext: DSLContext,
-        ids: Set<Long>
-    ): Int {
-        with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
-            val now = LocalDateTime.now()
-            return dslContext.update(this)
-                .set(STATUS, PipelineTaskStatus.FAILURE.status)
-                .set(UPDATED_TIME, now)
-                .set(
-                    TIME_INTERVAL, field(
-                        "TIMESTAMPDIFF(SECOND, {0}, {1})",
-                        Long::class.java,
-                        CREATED_TIME,
-                        now
-                    )
-                )
-                .where(ID.`in`(ids))
-                .execute()
-        }
-    }
-
-    fun getExpireBuilds(
-        dslContext: DSLContext
-    ): Result<TDispatchThirdpartyAgentBuildRecord> {
-        with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
-            return dslContext.selectFrom(this)
-                .where(STATUS.`in`(PipelineTaskStatus.QUEUE.status, PipelineTaskStatus.RUNNING.status))
-                .and(UPDATED_TIME.lessThan(LocalDateTime.now().minusDays(2)))
-                .fetch()
-        }
-    }
-
     fun getPreBuildAgentIds(
         dslContext: DSLContext,
         projectId: String,
@@ -322,9 +303,15 @@ class ThirdPartyAgentBuildDao {
         hasDocker: Boolean
     ): List<Pair<String, Int>> {
         with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
-            val dsl = dslContext.select(BUILD_ID, STATUS)
-                .from(this.forceIndex("IDX_AGENTID_STATUS_UPDATE"))
+            // 子查询：该 agent 下每个 (buildId, vmSeqId) 取最新一行（ID 自增，最大即最新）
+            val latestIds = dslContext.select(DSL.max(ID))
+                .from(this)
                 .where(AGENT_ID.eq(agentId))
+                .groupBy(BUILD_ID, VM_SEQ_ID)
+
+            val dsl = dslContext.select(BUILD_ID, STATUS)
+                .from(this)
+                .where(ID.`in`(latestIds))
             if (hasDocker) {
                 dsl.and(DOCKER_INFO.isNotNull)
             } else {
@@ -336,6 +323,7 @@ class ThirdPartyAgentBuildDao {
         }
     }
 
+    // 这个方法在有executeCount前就是按build维度的，需要聚合下
     fun listAgentBuilds(
         dslContext: DSLContext,
         agentId: String,
@@ -346,17 +334,28 @@ class ThirdPartyAgentBuildDao {
         limit: Int
     ): List<TDispatchThirdpartyAgentBuildRecord> {
         with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
+            // 过滤条件抽出来，子查询和主查询共用
+            val conditions = mutableListOf<Condition>()
+            conditions.add(AGENT_ID.eq(agentId))
+            if (status != null) {
+                conditions.add(STATUS.eq(PipelineTaskStatus.parse(status).status))
+            }
+            if (pipelineId != null) {
+                conditions.add(PIPELINE_ID.eq(pipelineId))
+            }
+            if (jobId != null) {
+                conditions.add(JOB_ID.eq(jobId))
+            }
+
+            // 子查询：每个 (buildId, vmSeqId) 组取主键最大的一条（最新插入 = 最新执行）
+            val latestIds = dslContext.select(DSL.max(ID))
+                .from(this)
+                .where(conditions)
+                .groupBy(BUILD_ID, VM_SEQ_ID)
+
             return dslContext.selectFrom(this)
-                .where(AGENT_ID.eq(agentId))
-                .let {
-                    if (status != null) it.and(STATUS.eq(PipelineTaskStatus.parse(status).status)) else it
-                }
-                .let {
-                    if (pipelineId != null) it.and(PIPELINE_ID.eq(pipelineId)) else it
-                }
-                .let {
-                    if (jobId != null) it.and(JOB_ID.eq(jobId)) else it
-                }
+                .where(conditions)
+                .and(ID.`in`(latestIds))
                 .orderBy(CREATED_TIME.desc())
                 .limit(offset, limit)
                 .fetch()
@@ -436,6 +435,7 @@ class ThirdPartyAgentBuildDao {
         }
     }
 
+    // 这个方法在有executeCount前就是按build维度的，需要聚合下
     fun countAgentBuilds(
         dslContext: DSLContext,
         agentId: String,
@@ -444,17 +444,21 @@ class ThirdPartyAgentBuildDao {
         jobId: String?
     ): Long {
         with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
-            return dslContext.selectCount().from(this)
-                .where(AGENT_ID.eq(agentId))
-                .let {
-                    if (status != null) it.and(STATUS.eq(PipelineTaskStatus.parse(status).status)) else it
-                }
-                .let {
-                    if (pipelineId != null) it.and(PIPELINE_ID.eq(pipelineId)) else it
-                }
-                .let {
-                    if (jobId != null) it.and(JOB_ID.eq(jobId)) else it
-                }
+            val conditions = mutableListOf<Condition>()
+            conditions.add(AGENT_ID.eq(agentId))
+            if (status != null) {
+                conditions.add(STATUS.eq(PipelineTaskStatus.parse(status).status))
+            }
+            if (pipelineId != null) {
+                conditions.add(PIPELINE_ID.eq(pipelineId))
+            }
+            if (jobId != null) {
+                conditions.add(JOB_ID.eq(jobId))
+            }
+
+            return dslContext.select(DSL.countDistinct(BUILD_ID, VM_SEQ_ID))
+                .from(this)
+                .where(conditions)
                 .fetchOne(0, Long::class.java)!!
         }
     }
@@ -498,7 +502,8 @@ class ThirdPartyAgentBuildDao {
                 .and(PIPELINE_ID.eq(pipelineId))
                 .and(VM_SEQ_ID.eq(vmSeqId))
                 .and(DOCKER_INFO.isNotNull)
-                .orderBy(CREATED_TIME.desc())
+                .orderBy(ID.desc())
+                .limit(1)
                 .fetchAny()
         }
     }
@@ -509,6 +514,8 @@ class ThirdPartyAgentBuildDao {
                 .where(BUILD_ID.eq(buildId))
                 .and(VM_SEQ_ID.eq(vmSeqId))
                 .and(DOCKER_INFO.isNotNull)
+                .orderBy(ID.desc())
+                .limit(1)
                 .fetchAny()
         }
     }
@@ -521,11 +528,19 @@ class ThirdPartyAgentBuildDao {
         projectId: String
     ): Long {
         with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
-            return dslContext.selectCount().from(this)
+            // 子查询：每个 (buildId, vmSeqId) 取最新一行的主键（ID 自增，最大即最新）
+            val latestIds = dslContext.select(DSL.max(ID))
+                .from(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(PIPELINE_ID.eq(pipelineId))
                 .and(JOB_ID.eq(jobId))
                 .and(ENV_ID.eq(envId))
+                .groupBy(BUILD_ID, VM_SEQ_ID)
+
+            // 只在“每组最新行”里数 RUNNING/QUEUE
+            return dslContext.selectCount()
+                .from(this)
+                .where(ID.`in`(latestIds))
                 .and(STATUS.`in`(PipelineTaskStatus.RUNNING.status, PipelineTaskStatus.QUEUE.status))
                 .fetchOne(0, Long::class.java)!!
         }
@@ -540,19 +555,24 @@ class ThirdPartyAgentBuildDao {
         agentIds: Set<String>
     ): Map<String, Int> {
         with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
-            return dslContext.select(
-                AGENT_ID, DSL.count().`as`("COUNT")
-            ).from(this.forceIndex("IDX_AGENTID_STATUS_UPDATE"))
+            // 子查询：命中过滤条件的行里，每个 (buildId, vmSeqId) 取最新一行
+            val latestIds = dslContext.select(DSL.max(ID))
+                .from(this)
                 .where(AGENT_ID.`in`(agentIds))
-                .and(STATUS.`in`(PipelineTaskStatus.RUNNING.status, PipelineTaskStatus.QUEUE.status))
                 .and(PROJECT_ID.eq(projectId))
                 .and(PIPELINE_ID.eq(pipelineId))
                 .and(JOB_ID.eq(jobId))
                 .and(ENV_ID.eq(envId))
+                .groupBy(BUILD_ID, VM_SEQ_ID)
+
+            return dslContext.select(AGENT_ID, DSL.count().`as`("COUNT"))
+                .from(this)
+                .where(ID.`in`(latestIds))
+                .and(STATUS.`in`(PipelineTaskStatus.RUNNING.status, PipelineTaskStatus.QUEUE.status))
                 .groupBy(AGENT_ID)
-                .fetch().map {
-                    it[AGENT_ID] to (it["COUNT"] as Int)
-                }.toMap()
+                .fetch()
+                .map { it[AGENT_ID] to (it["COUNT"] as Int) }
+                .toMap()
         }
     }
 
@@ -569,7 +589,7 @@ class ThirdPartyAgentBuildDao {
         pipelineId: String?,
         jobId: String?,
         creator: String?,
-        status: PipelineTaskStatus?
+        status: List<PipelineTaskStatus>?
     ): Triple<Long, Long, Long> {
         if (agentId.isNullOrBlank() && envId == null) {
             return Triple(0L, 0L, 0L)
@@ -578,7 +598,7 @@ class ThirdPartyAgentBuildDao {
             val dsl = dslContext.select(
                 DSL.countDistinct(PIPELINE_ID).`as`("PIPELINE_COUNT"),
                 DSL.countDistinct(PIPELINE_ID, JOB_ID).`as`("JOB_COUNT"),
-                DSL.countDistinct(BUILD_ID).`as`("BUILD_COUNT")
+                DSL.countDistinct(BUILD_ID, EXECUTE_COUNT).`as`("BUILD_COUNT")
             ).from(this)
                 .where(PROJECT_ID.eq(projectId))
 
@@ -612,7 +632,7 @@ class ThirdPartyAgentBuildDao {
                 dsl.and(START_USER.eq(creator))
             }
             if (status != null) {
-                dsl.and(STATUS.eq(status.status))
+                dsl.and(STATUS.`in`(status.map { it.status }))
             }
 
             val result = dsl.and(JOB_ID.isNotNull).fetchOne()
@@ -635,7 +655,7 @@ class ThirdPartyAgentBuildDao {
         endTime: Long?,
         pipelineId: String?,
         creator: String?,
-        status: PipelineTaskStatus?
+        status: List<PipelineTaskStatus>?
     ): List<TPAPipelineBuild> {
         if (agentId.isNullOrBlank() && envId == null) {
             return emptyList()
@@ -681,7 +701,7 @@ class ThirdPartyAgentBuildDao {
                 dsl.and(START_USER.eq(creator))
             }
             if (status != null) {
-                dsl.and(STATUS.eq(status.status))
+                dsl.and(STATUS.`in`(status.map { it.status }))
             }
             return dsl.and(JOB_ID.isNotNull)
                 .groupBy(PIPELINE_ID)
@@ -719,7 +739,7 @@ class ThirdPartyAgentBuildDao {
         endTime: Long?,
         pipelineId: String?,
         creator: String?,
-        status: PipelineTaskStatus?
+        status: List<PipelineTaskStatus>?
     ): List<TPAPipelineBuild> {
         if (agentId.isNullOrBlank() && envId == null) {
             return emptyList()
@@ -764,7 +784,7 @@ class ThirdPartyAgentBuildDao {
                 dsl.and(START_USER.eq(creator))
             }
             if (status != null) {
-                dsl.and(STATUS.eq(status.status))
+                dsl.and(STATUS.`in`(status.map { it.status }))
             }
             return dsl.and(JOB_ID.isNotNull)
                 .groupBy(PIPELINE_ID, BUILD_ID, EXECUTE_COUNT)
@@ -803,7 +823,7 @@ class ThirdPartyAgentBuildDao {
         pipelineId: String?,
         jobId: String?,
         creator: String?,
-        status: PipelineTaskStatus?
+        status: List<PipelineTaskStatus>?
     ): List<TPAPipelineBuild> {
         if (agentId.isNullOrBlank() && envId == null) {
             return emptyList()
@@ -867,7 +887,7 @@ class ThirdPartyAgentBuildDao {
                 dsl.and(START_USER.eq(creator))
             }
             if (status != null) {
-                dsl.and(STATUS.eq(status.status))
+                dsl.and(STATUS.`in`(status.map { it.status }))
             }
             return dsl.and(JOB_ID.isNotNull)
                 .groupBy(PIPELINE_ID, JOB_ID)

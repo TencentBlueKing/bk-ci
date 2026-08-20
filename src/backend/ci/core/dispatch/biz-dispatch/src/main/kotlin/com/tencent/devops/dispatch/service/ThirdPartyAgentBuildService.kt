@@ -59,7 +59,7 @@ class ThirdPartyAgentBuildService @Autowired constructor(
             pipelineId = data.pipelineId,
             jobId = jobId,
             creator = data.creator,
-            status = data.taskStatus
+            status = data.taskStatusList
         )
         val records = when (data.view) {
             TPAPipelineBuildView.PIPELINE -> thirdPartyAgentBuildDao.fetchAgentBuildPipeline(
@@ -73,7 +73,7 @@ class ThirdPartyAgentBuildService @Autowired constructor(
                 endTime = data.endTime,
                 pipelineId = data.pipelineId,
                 creator = data.creator,
-                status = data.taskStatus
+                status = data.taskStatusList
             )
 
             TPAPipelineBuildView.JOB -> thirdPartyAgentBuildDao.fetchAgentBuildPipelineJob(
@@ -88,7 +88,7 @@ class ThirdPartyAgentBuildService @Autowired constructor(
                 pipelineId = data.pipelineId,
                 jobId = data.jobId,
                 creator = data.creator,
-                status = data.taskStatus
+                status = data.taskStatusList
             ).let { list ->
                 // 处理下stage序号计算
                 list.forEach { item ->
@@ -109,7 +109,7 @@ class ThirdPartyAgentBuildService @Autowired constructor(
                     endTime = data.endTime,
                     pipelineId = data.pipelineId,
                     creator = data.creator,
-                    status = data.taskStatus
+                    status = data.taskStatusList
                 )
                 val buildHistoryMap = client.get(ServiceBuildResource::class).getBatchBuildStatus(
                     projectId = projectId,
@@ -198,7 +198,7 @@ class ThirdPartyAgentBuildService @Autowired constructor(
             pipelineId = pipelineId,
             jobId = jobId,
             creator = creator,
-            status = status
+            status = status?.let { listOf(it) }
         )
         return TPAPipelineBuildCountResp(
             pipelineCount = pipelineCount,
@@ -220,7 +220,7 @@ class ThirdPartyAgentBuildService @Autowired constructor(
                     pipelineId = pipelineId,
                     jobId = jobId,
                     creator = creator,
-                    status = status
+                    status = status?.let { listOf(it) }
                 ).let { list ->
                     // 处理下stage序号计算
                     list.forEach { item ->

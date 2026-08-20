@@ -469,6 +469,7 @@ class ThirdPartyAgentService @Autowired constructor(
         }
     }
 
+    // 这个方法在有executeCount前就是按build维度的，需要聚合下
     fun listAgentBuilds(
         agentId: String,
         status: String?,
@@ -482,6 +483,7 @@ class ThirdPartyAgentService @Autowired constructor(
         val offset = sqlLimit.offset
         val limit = sqlLimit.limit
 
+        // 这个方法在有executeCount前就是按build维度的，需要聚合下
         val agentBuildCount = thirdPartyAgentBuildDao.countAgentBuilds(
             dslContext = dslContext,
             agentId = agentId,
@@ -489,6 +491,7 @@ class ThirdPartyAgentService @Autowired constructor(
             pipelineId = pipelineId,
             jobId = null
         )
+        // 这个方法在有executeCount前就是按build维度的，需要聚合下
         val agentBuilds = thirdPartyAgentBuildDao.listAgentBuilds(
             dslContext = dslContext,
             agentId = agentId,
