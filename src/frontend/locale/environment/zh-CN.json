@@ -391,6 +391,7 @@
     "batchOperation": "批量操作",
     "placeSelectNode": "请选择节点",
     "cannotDeleteNodesTips": "[{0}]无删除权限，请重新选择节点",
+    "cannotEditNodesTips": "[{0}]无编辑权限，请重新选择节点",
     "deleteNodetips": "确定删除 {0} 个节点？",
     "addOrShowTag": "添加/展示标签",
     "tagDisplaySet": "已设置标签展示",

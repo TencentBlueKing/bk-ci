@@ -395,6 +395,7 @@
     "batchOperation": "Batch Operation",
     "placeSelectNode": "Please select nodes",
     "cannotDeleteNodesTips": "[{0}] has no delete permission, please reselect nodes",
+    "cannotEditNodesTips": "[{0}] has no edit permission, please reselect nodes",
     "deleteNodetips": "Are you sure you want to delete {0} nodes?",
     "addOrShowTag": "Add/Show Tags",
     "tagDisplaySet": "Set Tag Display",
