@@ -41,7 +41,7 @@ interface UserAgentResource {
     ): Result<TPAPipelineBuildCountResp>
 
     @Deprecated("listAgentPipeline")
-    @Operation(summary = "获取agent任务详情列表-JOB视图")
+    @Operation(summary = "获取agent任务详情列表-JOB视图，前端没流量了就可以删了")
     @GET
     @Path("/listAgentPipelineJobs")
     fun listAgentPipelineJobs(
@@ -222,6 +222,9 @@ interface UserAgentResource {
         @Parameter(description = "筛选此buildId", required = true)
         @QueryParam("buildId")
         buildId: String,
+        @Parameter(description = "executeCount，必填，为空只是查询数据库为空的情况，而不是不查询", required = true)
+        @QueryParam("executeCount")
+        executeCount: Int?,
         @Parameter(description = "第几页", required = false)
         @QueryParam("page")
         page: Int?,

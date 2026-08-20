@@ -2077,7 +2077,8 @@ class PipelineBuildFacadeService(
         channelCode: ChannelCode,
         startBeginTime: String?,
         endBeginTime: String?,
-        checkPermission: Boolean
+        checkPermission: Boolean,
+        withExecuteCount: Boolean? = false
     ): List<BuildHistory> {
         return pipelineRuntimeService.getBuildHistoryByIds(
             buildIds = buildIdSet,

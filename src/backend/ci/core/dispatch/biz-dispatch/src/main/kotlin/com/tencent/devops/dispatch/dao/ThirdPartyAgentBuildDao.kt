@@ -120,8 +120,11 @@ class ThirdPartyAgentBuildDao {
             } else {
                 JSON.json(JsonUtil.toJson(ignoreEnvAgentIds, false))
             }
-            val preRecord =
-                dslContext.selectFrom(this).where(BUILD_ID.eq(buildId)).and(VM_SEQ_ID.eq(vmSeqId)).fetchAny()
+            val preRecord = dslContext.selectFrom(this)
+                .where(BUILD_ID.eq(buildId))
+                .and(VM_SEQ_ID.eq(vmSeqId))
+                .and(EXECUTE_COUNT.eq(executeCount))
+                .fetchAny()
             if (preRecord != null) { // 支持更新，让用户进行步骤重试时继续能使用
                 return dslContext.update(this)
                     .set(PROJECT_ID, projectId)
@@ -698,7 +701,8 @@ class ThirdPartyAgentBuildDao {
                         lastContainerId = null,
                         stageId = null,
                         stageNumb = null,
-                        buildId = null
+                        buildId = null,
+                        executeCount = null
                     )
                 }
         }
@@ -724,7 +728,8 @@ class ThirdPartyAgentBuildDao {
             val dsl = dslContext.select(
                 PIPELINE_ID,
                 PIPELINE_NAME,
-                BUILD_ID
+                BUILD_ID,
+                EXECUTE_COUNT
             ).from(this).where(PROJECT_ID.eq(projectId))
             if (!agentId.isNullOrBlank()) {
                 dsl.and(AGENT_ID.eq(agentId))
@@ -762,7 +767,7 @@ class ThirdPartyAgentBuildDao {
                 dsl.and(STATUS.eq(status.status))
             }
             return dsl.and(JOB_ID.isNotNull)
-                .groupBy(PIPELINE_ID, BUILD_ID)
+                .groupBy(PIPELINE_ID, BUILD_ID, EXECUTE_COUNT)
                 .orderBy(ID.desc())
                 .limit(limit)
                 .offset(offset)
@@ -779,7 +784,8 @@ class ThirdPartyAgentBuildDao {
                         lastContainerId = null,
                         stageId = null,
                         stageNumb = null,
-                        buildId = it.value3()
+                        buildId = it.value3(),
+                        executeCount = it.value4()
                     )
                 }
         }
@@ -881,7 +887,8 @@ class ThirdPartyAgentBuildDao {
                         lastContainerId = it.value8(),
                         stageId = it.value9(),
                         stageNumb = null,
-                        buildId = null
+                        buildId = null,
+                        executeCount = null
                     )
                 }
         }
@@ -986,13 +993,12 @@ class ThirdPartyAgentBuildDao {
         }
     }
 
-    fun countAgentBuildGroupsByBuild(
+    fun countAgentBuildGroupsByPipeline(
         dslContext: DSLContext,
         projectId: String,
         agentId: String?,
         envId: Long?,
-        pipelineId: String?,
-        buildId: String?
+        pipelineId: String
     ): Long {
         with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
             val dsl = dslContext.select(DSL.countDistinct(BUILD_ID))
@@ -1004,23 +1010,17 @@ class ThirdPartyAgentBuildDao {
             if (envId != null) {
                 dsl.and(ENV_ID.eq(envId))
             }
-            if (!pipelineId.isNullOrBlank()) {
-                dsl.and(PIPELINE_ID.eq(pipelineId))
-            }
-            if (!buildId.isNullOrBlank()) {
-                dsl.and(BUILD_ID.eq(buildId))
-            }
+            dsl.and(PIPELINE_ID.eq(pipelineId))
             return dsl.fetchOne(0, Long::class.java) ?: 0L
         }
     }
 
-    fun listAgentBuildGroupsByBuild(
+    fun listAgentBuildGroupsByPipeline(
         dslContext: DSLContext,
         projectId: String,
         agentId: String?,
         envId: Long?,
-        pipelineId: String?,
-        buildId: String?,
+        pipelineId: String,
         offset: Int,
         limit: Int
     ): List<TDispatchThirdpartyAgentBuildRecord> {
@@ -1034,12 +1034,79 @@ class ThirdPartyAgentBuildDao {
             if (envId != null) {
                 groupedBuildDsl.and(ENV_ID.eq(envId))
             }
-            if (!pipelineId.isNullOrBlank()) {
-                groupedBuildDsl.and(PIPELINE_ID.eq(pipelineId))
+            groupedBuildDsl.and(PIPELINE_ID.eq(pipelineId))
+            val buildIds = groupedBuildDsl.groupBy(BUILD_ID)
+                .orderBy(DSL.max(ID).desc())
+                .limit(offset, limit)
+                .fetch()
+                .map { it.value1() }
+            if (buildIds.isEmpty()) {
+                return emptyList()
             }
-            if (!buildId.isNullOrBlank()) {
-                groupedBuildDsl.and(BUILD_ID.eq(buildId))
+            val dsl = dslContext.selectFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+            if (!agentId.isNullOrBlank()) {
+                dsl.and(AGENT_ID.eq(agentId))
             }
+            if (envId != null) {
+                dsl.and(ENV_ID.eq(envId))
+            }
+            dsl.and(PIPELINE_ID.eq(pipelineId))
+            return dsl.and(BUILD_ID.`in`(buildIds))
+                .orderBy(ID.desc())
+                .fetch()
+        }
+    }
+
+    fun countAgentBuildGroupsByBuild(
+        dslContext: DSLContext,
+        projectId: String,
+        agentId: String?,
+        envId: Long?,
+        buildId: String,
+        executeCount: Int?
+    ): Long {
+        with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
+            val dsl = dslContext.select(DSL.countDistinct(BUILD_ID))
+                .from(this)
+                .where(PROJECT_ID.eq(projectId))
+            if (!agentId.isNullOrBlank()) {
+                dsl.and(AGENT_ID.eq(agentId))
+            }
+            if (envId != null) {
+                dsl.and(ENV_ID.eq(envId))
+            }
+            dsl.and(BUILD_ID.eq(buildId))
+            if (executeCount == null) {
+                dsl.and(EXECUTE_COUNT.isNull)
+            } else {
+                dsl.and(EXECUTE_COUNT.eq(executeCount))
+            }
+            return dsl.fetchOne(0, Long::class.java) ?: 0L
+        }
+    }
+
+    fun listAgentBuildGroupsByBuild(
+        dslContext: DSLContext,
+        projectId: String,
+        agentId: String?,
+        envId: Long?,
+        buildId: String,
+        executeCount: Int?,
+        offset: Int,
+        limit: Int
+    ): List<TDispatchThirdpartyAgentBuildRecord> {
+        with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
+            val groupedBuildDsl = dslContext.select(BUILD_ID, DSL.max(ID).`as`("MAX_ID"))
+                .from(this)
+                .where(PROJECT_ID.eq(projectId))
+            if (!agentId.isNullOrBlank()) {
+                groupedBuildDsl.and(AGENT_ID.eq(agentId))
+            }
+            if (envId != null) {
+                groupedBuildDsl.and(ENV_ID.eq(envId))
+            }
+            groupedBuildDsl.and(BUILD_ID.eq(buildId))
             val buildIds = groupedBuildDsl.groupBy(BUILD_ID)
                 .orderBy(DSL.max(ID).desc())
                 .limit(offset, limit)
@@ -1057,11 +1124,11 @@ class ThirdPartyAgentBuildDao {
             if (envId != null) {
                 dsl.and(ENV_ID.eq(envId))
             }
-            if (!pipelineId.isNullOrBlank()) {
-                dsl.and(PIPELINE_ID.eq(pipelineId))
-            }
-            if (!buildId.isNullOrBlank()) {
-                dsl.and(BUILD_ID.eq(buildId))
+            dsl.and(BUILD_ID.eq(buildId))
+            if (executeCount == null) {
+                dsl.and(EXECUTE_COUNT.isNull)
+            } else {
+                dsl.and(EXECUTE_COUNT.eq(executeCount))
             }
             return dsl.and(BUILD_ID.`in`(buildIds))
                 .orderBy(ID.desc())

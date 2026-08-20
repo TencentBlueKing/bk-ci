@@ -54,6 +54,8 @@ data class TPAPipelineBuild(
     var stageNumb: String?,
     @get:Schema(title = "buildId")
     val buildId: String?,
+    @get:Schema(title = "执行次数")
+    val executeCount: Int?,
     // 直接从流水线反查，截取一部分
     @get:Schema(title = "buildHistory")
     var buildHistory: TPAPipelineBuildHistory? = null
@@ -74,7 +76,9 @@ data class TPAPipelineBuildHistory(
     @get:Schema(title = "流水线的执行开始时间", required = true)
     val startTime: Long,
     @get:Schema(title = "流水线的执行结束时间", required = true)
-    val endTime: Long?
+    val endTime: Long?,
+    @get:Schema(title = "执行次数")
+    val executeCount: Int?
 )
 
 data class TPAPipelineBuildCountResp(

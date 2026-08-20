@@ -112,18 +112,31 @@ class ThirdPartyAgentBuildService @Autowired constructor(
                 )
                 val buildHistoryMap = client.get(ServiceBuildResource::class).getBatchBuildStatus(
                     projectId = projectId,
-                    buildId = buildRecord.filter { !it.buildId.isNullOrBlank() }.map { it.buildId!! }.toSet()
-                ).data?.associateBy { it.id } ?: emptyMap()
-                buildRecord.forEach {
-                    it.buildHistory = buildHistoryMap[it.buildId]?.let { bh ->
+                    buildId = buildRecord.filter { !it.buildId.isNullOrBlank() }.map { it.buildId!! }.toSet(),
+                    withExecuteCount = true
+                ).data?.groupBy { it.id } ?: emptyMap()
+                buildRecord.forEach { record ->
+                    val histories = buildHistoryMap[record.buildId]
+                    val bh = histories?.let { list ->
+                        if (record.executeCount == null) {
+                            // record 的 executeCount 为空：优先取 BuildHistory 中 executeCount 最大的那条
+                            // 没有则取 executeCount 也为空的，
+                            list.maxByOrNull { it.executeCount ?: -1 } ?: list.firstOrNull { it.executeCount == null }
+                        } else {
+                            // record 有 executeCount：一一对应，精确匹配相同 executeCount
+                            list.firstOrNull { it.executeCount == record.executeCount }
+                        }
+                    }
+                    record.buildHistory = bh?.let {
                         TPAPipelineBuildHistory(
-                            userId = bh.userId,
-                            buildNum = bh.buildNum,
-                            status = bh.status,
-                            totalTime = bh.totalTime,
-                            executeTime = bh.executeTime,
-                            startTime = bh.startTime,
-                            endTime = bh.endTime
+                            userId = it.userId,
+                            buildNum = it.buildNum,
+                            status = it.status,
+                            totalTime = it.totalTime,
+                            executeTime = it.executeTime,
+                            startTime = it.startTime,
+                            endTime = it.endTime,
+                            executeCount = it.executeCount
                         )
                     }
                 }
@@ -252,21 +265,32 @@ class ThirdPartyAgentBuildService @Autowired constructor(
             offset = offset,
             limit = limit
         )
-        val builds = client.get(ServiceBuildResource::class).batchGetBuildStatus(
-            userId = userId,
+        // 获取展示信息，不走鉴权，即使看到了跳转也没权限
+        val builds = client.get(ServiceBuildResource::class).getBatchBuildStatus(
             projectId = projectId,
-            pipelineId = pipelineId,
-            buildIdSet = agentBuilds.map { it.buildId }.toSet()
-        ).data?.associateBy { it.id }
+            buildId = agentBuilds.map { it.buildId }.toSet(),
+            withExecuteCount = true
+        ).data?.groupBy { it.id }
         val result = mutableListOf<AgentPipelineContainerBuild>()
-        agentBuilds.forEach {
-            val build = builds?.get(it.buildId) ?: return@forEach
+        agentBuilds.forEach { record ->
+            val buildWithExecuteCount = builds?.get(record.buildId) ?: return@forEach
+            val build = buildWithExecuteCount.let { list ->
+                if (record.executeCount == null) {
+                    // record 的 executeCount 为空：优先取 BuildHistory 中 executeCount 也为空的，
+                    // 没有则取 executeCount 最大的那条
+                    list.firstOrNull { it.executeCount == null }
+                        ?: list.maxByOrNull { it.executeCount ?: -1 }
+                } else {
+                    // record 有 executeCount：一一对应，精确匹配相同 executeCount
+                    list.firstOrNull { it.executeCount == record.executeCount }
+                }
+            } ?: return@forEach
             result.add(
                 AgentPipelineContainerBuild(
                     buildId = build.id,
                     projectId = projectId,
                     pipelineId = pipelineId,
-                    containerId = (it.vmSeqId ?: 0).toString(),
+                    containerId = (record.vmSeqId ?: 0).toString(),
                     executeCount = build.executeCount ?: 1,
                     status = build.status,
                     startTime = Instant.ofEpochMilli(build.startTime)
@@ -300,65 +324,76 @@ class ThirdPartyAgentBuildService @Autowired constructor(
         val offset = sqlLimit.offset
         val limit = sqlLimit.limit
 
-        val agentBuildCount = thirdPartyAgentBuildDao.countAgentBuildGroupsByBuild(
+        val agentBuildCount = thirdPartyAgentBuildDao.countAgentBuildGroupsByPipeline(
             dslContext = dslContext,
             projectId = projectId,
             agentId = agentId,
             envId = envId,
-            pipelineId = pipelineId,
-            buildId = null
+            pipelineId = pipelineId
         )
-        val agentBuilds = thirdPartyAgentBuildDao.listAgentBuildGroupsByBuild(
+        val agentBuilds = thirdPartyAgentBuildDao.listAgentBuildGroupsByPipeline(
             dslContext = dslContext,
             projectId = projectId,
             agentId = agentId,
             envId = envId,
             pipelineId = pipelineId,
-            buildId = null,
             offset = offset,
             limit = limit
         )
         if (agentBuilds.isEmpty()) {
             return Page(pageNotNull, pageSizeNotNull, agentBuildCount, emptyList())
         }
-        val builds = client.get(ServiceBuildResource::class).batchGetBuildStatus(
-            userId = userId,
+        // 获取展示信息，不走鉴权，即使看到了跳转也没权限
+        val builds = client.get(ServiceBuildResource::class).getBatchBuildStatus(
             projectId = projectId,
-            pipelineId = pipelineId,
-            buildIdSet = agentBuilds.map { it.buildId }.toSet()
-        ).data?.associateBy { it.id }
+            buildId = agentBuilds.map { it.buildId }.toSet(),
+            withExecuteCount = true
+        ).data?.groupBy { it.id }
         val result = mutableListOf<AgentPipelineContainerBuild>()
-        agentBuilds.groupBy { it.buildId }.forEach { (buildId, records) ->
-            val build = builds?.get(buildId) ?: return@forEach
-            val record = records.first()
-            result.add(
-                AgentPipelineContainerBuild(
-                    buildId = build.id,
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    containerId = (record.vmSeqId ?: 0).toString(),
-                    executeCount = build.executeCount ?: 1,
-                    status = build.status,
-                    startTime = Instant.ofEpochMilli(build.startTime)
-                        .atZone(ZoneId.systemDefault())
-                        .toLocalDateTime(),
-                    endTime = build.endTime?.let { ed ->
-                        Instant.ofEpochMilli(ed)
-                            .atZone(ZoneId.systemDefault())
-                            .toLocalDateTime()
-                    },
-                    buildNum = build.buildNum ?: 0,
-                    creator = build.userId,
-                    tasks = records.map {
-                        AgentPipelineBuildTask(
-                            taskName = it.taskName,
-                            vmSeqId = it.vmSeqId,
-                            stageId = it.stageId,
-                            stageNumb = it.stageId?.toStageNumb() ?: it.stageId
-                        )
+        agentBuilds.groupBy { it.buildId }.forEach { (buildId, buildRecords) ->
+            buildRecords.groupBy { it.executeCount }.forEach buildRecords@{ (executeCount, records) ->
+                val buildWithExecuteCount = builds?.get(buildId) ?: return@forEach
+                val build = buildWithExecuteCount.let { list ->
+                    if (executeCount == null) {
+                        // record 的 executeCount 为空：优先取 BuildHistory 中 executeCount 也为空的，
+                        // 没有则取 executeCount 最大的那条
+                        list.firstOrNull { it.executeCount == null }
+                            ?: list.maxByOrNull { it.executeCount ?: -1 }
+                    } else {
+                        // record 有 executeCount：一一对应，精确匹配相同 executeCount
+                        list.firstOrNull { it.executeCount == executeCount }
                     }
+                } ?: return@buildRecords
+                val record = records.first()
+                result.add(
+                    AgentPipelineContainerBuild(
+                        buildId = build.id,
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        containerId = (record.vmSeqId ?: 0).toString(),
+                        executeCount = build.executeCount ?: 1,
+                        status = build.status,
+                        startTime = Instant.ofEpochMilli(build.startTime)
+                            .atZone(ZoneId.systemDefault())
+                            .toLocalDateTime(),
+                        endTime = build.endTime?.let { ed ->
+                            Instant.ofEpochMilli(ed)
+                                .atZone(ZoneId.systemDefault())
+                                .toLocalDateTime()
+                        },
+                        buildNum = build.buildNum ?: 0,
+                        creator = build.userId,
+                        tasks = records.map {
+                            AgentPipelineBuildTask(
+                                taskName = it.taskName,
+                                vmSeqId = it.vmSeqId,
+                                stageId = it.stageId,
+                                stageNumb = it.stageId?.toStageNumb() ?: it.stageId
+                            )
+                        }
+                    )
                 )
-            )
+            }
         }
         return Page(pageNotNull, pageSizeNotNull, agentBuildCount, result)
     }
@@ -369,6 +404,7 @@ class ThirdPartyAgentBuildService @Autowired constructor(
         agentId: String?,
         envId: Long?,
         buildId: String,
+        executeCount: Int?,
         page: Int?,
         pageSize: Int?
     ): Page<AgentPipelineContainerBuild> {
@@ -383,35 +419,42 @@ class ThirdPartyAgentBuildService @Autowired constructor(
             projectId = projectId,
             agentId = agentId,
             envId = envId,
-            pipelineId = null,
-            buildId = buildId
+            buildId = buildId,
+            executeCount = executeCount
         )
         val agentBuilds = thirdPartyAgentBuildDao.listAgentBuildGroupsByBuild(
             dslContext = dslContext,
             projectId = projectId,
             agentId = agentId,
             envId = envId,
-            pipelineId = null,
             buildId = buildId,
+            executeCount = executeCount,
             offset = offset,
             limit = limit
         )
         if (agentBuilds.isEmpty()) {
             return Page(pageNotNull, pageSizeNotNull, agentBuildCount, emptyList())
         }
-        val builds = agentBuilds.groupBy { it.pipelineId }
-            .flatMap { (pipelineId, records) ->
-                client.get(ServiceBuildResource::class).batchGetBuildStatus(
-                    userId = userId,
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    buildIdSet = records.map { it.buildId }.toSet()
-                ).data ?: emptyList()
-            }.associateBy { it.id }
+        // 获取展示信息，不走鉴权，即使看到了跳转也没权限
+        val builds = client.get(ServiceBuildResource::class).getBatchBuildStatus(
+            projectId = projectId,
+            buildId = agentBuilds.map { it.buildId }.toSet(),
+            withExecuteCount = true
+        ).data?.groupBy { it.id }
         val result = mutableListOf<AgentPipelineContainerBuild>()
-        agentBuilds.groupBy { it.buildId }.forEach { (buildId, records) ->
-            val build = builds[buildId] ?: return@forEach
-            val record = records.first()
+        agentBuilds.forEach { record ->
+            val buildWithExecuteCount = builds?.get(buildId) ?: return@forEach
+            val build = buildWithExecuteCount.let { list ->
+                if (executeCount == null) {
+                    // record 的 executeCount 为空：优先取 BuildHistory 中 executeCount 也为空的，
+                    // 没有则取 executeCount 最大的那条
+                    list.firstOrNull { it.executeCount == null }
+                        ?: list.maxByOrNull { it.executeCount ?: -1 }
+                } else {
+                    // record 有 executeCount：一一对应，精确匹配相同 executeCount
+                    list.firstOrNull { it.executeCount == executeCount }
+                }
+            } ?: return@forEach
             result.add(
                 AgentPipelineContainerBuild(
                     buildId = build.id,
@@ -430,17 +473,19 @@ class ThirdPartyAgentBuildService @Autowired constructor(
                     },
                     buildNum = build.buildNum ?: 0,
                     creator = build.userId,
-                    tasks = records.map {
+                    tasks = listOf(
                         AgentPipelineBuildTask(
-                            taskName = it.taskName,
-                            vmSeqId = it.vmSeqId,
-                            stageId = it.stageId,
-                            stageNumb = it.stageId?.toStageNumb() ?: it.stageId
+                            taskName = record.taskName,
+                            vmSeqId = record.vmSeqId,
+                            stageId = record.stageId,
+                            stageNumb = record.stageId?.toStageNumb() ?: record.stageId
                         )
-                    }
+
+                    )
                 )
             )
         }
+
         return Page(pageNotNull, pageSizeNotNull, agentBuildCount, result)
     }
 
@@ -499,7 +544,8 @@ class ThirdPartyAgentBuildService @Autowired constructor(
     }
 
     companion object {
-        private fun String.toStageNumb() = this.removePrefix("$KEY_STAGE-").toIntOrNull()?.let { it - 1 }?.toString()
+        private fun String.toStageNumb() =
+            this.removePrefix("$KEY_STAGE-").toIntOrNull()?.let { it - 1 }?.toString()
 
         private val logger = LoggerFactory.getLogger(ThirdPartyAgentBuildService::class.java)
     }

@@ -709,7 +709,8 @@ class ServiceBuildResourceImpl @Autowired constructor(
         buildId: Set<String>,
         channelCode: ChannelCode,
         startBeginTime: String?,
-        endBeginTime: String?
+        endBeginTime: String?,
+        withExecuteCount: Boolean?
     ): Result<List<BuildHistory>> {
         if (buildId.isEmpty()) {
             return Result(listOf())

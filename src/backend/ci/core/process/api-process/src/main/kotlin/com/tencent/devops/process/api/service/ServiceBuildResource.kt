@@ -754,7 +754,7 @@ interface ServiceBuildResource {
         variableNames: List<String>
     ): Result<Map<String, String>>
 
-    @Operation(summary = "批量获取构建详情")
+    @Operation(summary = "批量获取构建详情, 无鉴权")
     @POST
     // @Path("/projects/{projectId}/batchStatus")
     @Path("/{projectId}/batchStatus")
@@ -772,7 +772,9 @@ interface ServiceBuildResource {
         @QueryParam("startBeginTime")
         startBeginTime: String? = null,
         @QueryParam("endBeginTime")
-        endBeginTime: String? = null
+        endBeginTime: String? = null,
+        @QueryParam("withExecuteCount")
+        withExecuteCount: Boolean? = false
     ): Result<List<BuildHistory>>
 
     @Operation(summary = "批量获取构建详情")

@@ -45,6 +45,7 @@ class UserAgentResourceImpl @Autowired constructor(
         )
     }
 
+    @Deprecated("listAgentPipeline")
     override fun listAgentPipelineJobs(
         userId: String,
         projectId: String,
@@ -170,6 +171,7 @@ class UserAgentResourceImpl @Autowired constructor(
         agentId: String?,
         envId: String?,
         buildId: String,
+        executeCount: Int?,
         page: Int?,
         pageSize: Int?
     ): Result<Page<AgentPipelineContainerBuild>> {
@@ -182,6 +184,7 @@ class UserAgentResourceImpl @Autowired constructor(
                 agentId = agentId,
                 envId = envRId,
                 buildId = buildId,
+                executeCount = executeCount,
                 page = page,
                 pageSize = pageSize
             )
