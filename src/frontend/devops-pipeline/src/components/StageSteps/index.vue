@@ -126,7 +126,6 @@
         },
         computed: {
             hasProgressLoader () {
-                debugger
                 return typeof this.progressLoader === 'function'
             },
             progressTooltipConfig () {
