@@ -864,6 +864,10 @@ class PipelineRuntimeService @Autowired constructor(
         // #10082 针对构建容器的第三方构建机组装复用互斥信息
         val agentReuseMutexTree = AgentReuseMutexTree(context.executeCount, mutableListOf())
         fullModel.stages.forEachIndexed nextStage@{ index, stage ->
+            // 先标记是否已到达重试目标 Stage，后续跳过/禁止重置 checkIn 都依赖该标记
+            if (context.isRetryTargetStage(stage)) {
+                context.reachedRetryTargetStage = true
+            }
             // 运行中重试,如果不是重试插件的stage，则不处理
             if (context.shouldSkipRefreshWhenRetryRunning(stage)) {
                 logger.info("${context.buildId}|EXECUTE|#${stage.id!!}|${stage.status}|NOT_RUNNING_STAGE")
@@ -872,7 +876,7 @@ class PipelineRuntimeService @Autowired constructor(
             }
             context.needUpdateStage = stage.finally // final stage 每次重试都会参与执行检查
 
-            // #2318 如果是stage重试不是当前stage且当前stage已经是完成状态，或者该stage被禁用，则直接跳过
+            // #2318 Stage 失败重试 / 任务级局部重试：前序已完成 Stage 整段跳过，禁止刷新以免清空 checkIn 再次审核
             if (context.needSkipWhenStageFailRetry(stage) || stage.stageControlOption?.enable == false) {
                 logger.info("[${context.buildId}|EXECUTE|#${stage.id!!}|${stage.status}|NOT_EXECUTE_STAGE")
                 context.containerSeq += stage.containers.size // Job跳过计数也需要增加
@@ -1045,6 +1049,13 @@ class PipelineRuntimeService @Autowired constructor(
             }
 
             if (lastTimeBuildStages.isNotEmpty()) {
+                // 前序 Stage 即使因 UNEXEC/CANCELED 的 post 被标脏，也禁止 resetBuildOption 清空审核组
+                if (context.needUpdateStage && !context.allowResetStageReview()) {
+                    logger.warn(
+                        "${context.buildId}|SKIP_RESET_STAGE_REVIEW|#${stage.id}|${stage.status}|keep checkIn"
+                    )
+                    context.needUpdateStage = false
+                }
                 if (context.needUpdateStage) {
                     afterRetryStage = true
                     stage.resetBuildOption(true)

@@ -162,6 +162,12 @@ data class StartBuildContext(
     val watcher: Watcher = Watcher("startBuild-$buildId")
 
     /**
+     * 局部重试遍历 Stage 时，是否已经到达重试目标 Stage（含目标本身）。
+     * 用于跳过前序已完成 Stage，避免 UNEXEC/CANCELED 等把 checkIn 清空后再次审核。
+     */
+    var reachedRetryTargetStage: Boolean = false
+
+    /**
      * 是否为矩阵组内的局部重试（子Job/子插件重试、跳过或矩阵级批量重试）
      */
     fun isMatrixPartialRetry(): Boolean = !retryMatrixGroupId.isNullOrBlank()
@@ -174,15 +180,54 @@ data class StartBuildContext(
     }
 
     /**
-     * 检查Stage是否属于失败重试[stageRetry]时，当前[stage]是否需要跳过
+     * 当前[stage]是否为本次局部重试的目标 Stage（Stage 级重试 / 任务所在 Stage / 矩阵所在 Stage）
+     */
+    fun isRetryTargetStage(stage: Stage): Boolean {
+        val stageId = stage.id ?: return false
+        if (stageId == retryStartTaskId) return true
+        if (!retryTaskInStageId.isNullOrBlank()) return stageId == retryTaskInStageId
+        if (retryStartTaskId.isNullOrBlank()) return false
+        return stage.containers.any { containerContainsRetryStart(it) }
+    }
+
+    private fun containerContainsRetryStart(container: Container): Boolean {
+        if (container.id == retryStartTaskId) return true
+        if (container.elements.any { it.id == retryStartTaskId || it.stepId == retryStartTaskId }) return true
+        return container.fetchGroupContainers()?.any { containerContainsRetryStart(it) } == true
+    }
+
+    /**
+     * 前序 Stage 是否已经完成准入审核。status 异常时仍据此跳过，避免再次弹出审核。
+     */
+    fun hasCompletedStageReview(stage: Stage): Boolean {
+        val checkIn = stage.checkIn ?: return false
+        return checkIn.manualTrigger == true &&
+            !checkIn.reviewGroups.isNullOrEmpty() &&
+            checkIn.groupToReview() == null
+    }
+
+    /**
+     * 是否允许 resetBuildOption / 回写 checkIn。全新构建，或已到达重试点之后才允许。
+     * 到达之前一律禁止，避免前序 Stage 因 UNEXEC/CANCELED 被标脏后清空审核组再次弹审核。
+     */
+    fun allowResetStageReview(): Boolean = retryStartTaskId.isNullOrBlank() || reachedRetryTargetStage
+
+    /**
+     * 检查当前[stage]在失败重试时是否需要跳过。
+     * Stage 失败重试：非目标且已完成的 Stage 跳过。
+     * 任务/Job/矩阵局部重试：重试点之前已完成（或已审过）的 Stage 整段跳过，禁止刷新以免清空 checkIn。
      */
     fun needSkipWhenStageFailRetry(stage: Stage): Boolean {
         return if (needRerunStage(stage)) { // finally stage 不会跳过, 当前stage是要失败重试的不会跳过
             false
-        } else if (!stageRetry) { // 不是stage失败重试的动作也不会跳过
+        } else if (stageRetry) {
+            // Stage 失败重试：非目标且已完成（或已审过）的 Stage 跳过
+            BuildStatus.parse(stage.status).isFinish() || hasCompletedStageReview(stage)
+        } else if (!retryStartTaskId.isNullOrBlank() && !reachedRetryTargetStage && !isRetryTargetStage(stage)) {
+            // 任务/Job/矩阵局部重试：重试点之前已完成（或已审过）的 Stage 整段跳过，禁止刷新以免清空 checkIn
+            BuildStatus.parse(stage.status).isFinish() || hasCompletedStageReview(stage)
+        } else {
             false
-        } else { // 如果失败重试的不是当前stage，并且当前stage已经是完成状态，则跳过
-            BuildStatus.parse(stage.status).isFinish()
         }
     }
 
