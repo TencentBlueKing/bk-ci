@@ -62,6 +62,8 @@ import com.tencent.devops.common.pipeline.option.MatrixControlOption
 import com.tencent.devops.common.pipeline.pojo.BuildNo
 import com.tencent.devops.common.pipeline.pojo.MatrixPipelineInfo
 import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
+import com.tencent.devops.common.pipeline.pojo.PipelineRunEnvOsChange
+import com.tencent.devops.common.pipeline.pojo.PipelineRunEnvOsCheckParam
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
@@ -264,7 +266,8 @@ class PipelineRepositoryService constructor(
         branchName: String? = null,
         description: String? = null,
         yamlFileInfo: PipelineYamlFileInfo? = null,
-        pipelineDisable: Boolean? = null
+        pipelineDisable: Boolean? = null,
+        runEnvOsChange: PipelineRunEnvOsChange? = null
     ): DeployPipelineResult {
 
         // 生成流水线ID,新流水线以p-开头，以区分以前旧数据
@@ -288,7 +291,8 @@ class PipelineRepositoryService constructor(
             versionStatus = versionStatus,
             channelCode = channelCode,
             yamlFileInfo = yamlFileInfo,
-            pipelineDialect = pipelineDialect
+            pipelineDialect = pipelineDialect,
+            runEnvOsChange = runEnvOsChange
         )
         val triggerContainer = model.getTriggerContainer()
         val buildNo = triggerContainer.buildNo?.apply {
@@ -372,7 +376,90 @@ class PipelineRepositoryService constructor(
     }
 
     /**
+     * 构造「插件是否适用于其运行所在节点操作系统」的校验入参，是该校验唯一的入参构造点，
+     * 返回空表示本次不做该项校验，判定见 [skipRunEnvOsCheck]。
+     *
+     * 该校验不由调用方开关：无论运行环境由设置指定(创作流的创作环境)还是由编排里的 Job 各自指定
+     * (普通流水线的 baseOS)，编排或运行环境一变更就可能让插件跑在它不支持的系统上，与服务范围、
+     * 构建环境匹配等校验一样属于保存的固有约束。存量编排不被阻断靠的是
+     * [PipelineRunEnvOsCheckParam.exemptedRunEnvOsAtomKeys] 的差集豁免，而非让调用方选择跳过。
+     *
+     * [channelCode] 与 [runEnvOsChange] 都须按流水线自身渠道解析后传入，不能取请求上下文的渠道，
+     * 原因见 [PipelineRunEnvOsCheckParam.osJobTypeName]。
+     */
+    fun buildRunEnvOsCheckParam(
+        projectId: String,
+        pipelineId: String,
+        channelCode: ChannelCode,
+        runEnvOsChange: PipelineRunEnvOsChange?,
+        create: Boolean = false,
+        modelCarriedOver: Boolean = false
+    ): PipelineRunEnvOsCheckParam? {
+        if (skipRunEnvOsCheck(
+                channelCode = channelCode,
+                runEnvOsChange = runEnvOsChange,
+                create = create,
+                modelCarriedOver = modelCarriedOver
+            )) return null
+        return PipelineRunEnvOsCheckParam(
+            settingRunEnvOsChange = runEnvOsChange,
+            osJobTypeName = runEnvOsChange?.osJobTypeName ?: AtomUtils.resolveOsJobType(channelCode).name,
+            exemptedRunEnvOsAtomKeys = lazy {
+                collectExemptedRunEnvOsAtomKeys(projectId, pipelineId, runEnvOsChange)
+            }
+        )
+    }
+
+    /**
+     * 判断本次保存是否需要跳过「插件是否适用于其运行所在节点的操作系统」校验。
+     *
+     * 返回 true 跳过校验，false 执行校验。上层 [buildRunEnvOsCheckParam] 返回 null 即为跳过。
+     */
+    private fun skipRunEnvOsCheck(
+        channelCode: ChannelCode,
+        runEnvOsChange: PipelineRunEnvOsChange?,
+        create: Boolean,
+        modelCarriedOver: Boolean
+    ) = when {
+        // 平台维护类渠道 — 直接跳过
+        AtomUtils.isPlatformMaintainedChannel(channelCode) -> true
+        // 编排承继承(本次编排出非用户主动编辑产生,如模板实例化) — 直接跳过
+        modelCarriedOver -> true
+        // 无运行环境变更信息需判断该渠道的运行环境是否由流水线设置指定和是否是创建场景
+        runEnvOsChange == null -> AtomUtils.isRunEnvSpecifiedBySetting(channelCode) || create
+        else -> false
+    }
+
+    /**
+     * 取差集豁免的基准组合，语义见 [PipelineRunEnvOsCheckParam.exemptedRunEnvOsAtomKeys]。
+     * 仅在本次确实发现不适配项时才会被调用，正常保存不产生这次查询。
+     */
+    private fun collectExemptedRunEnvOsAtomKeys(
+        projectId: String,
+        pipelineId: String,
+        runEnvOsChange: PipelineRunEnvOsChange?
+    ): Set<String> {
+        // 首次为该流水线指定运行环境：此前编排里的插件并没有跑在任何一个环境上，
+        // 不存在「上一次落库时它跑在哪个系统上」这一事实，无可豁免，全量校验
+        if (runEnvOsChange != null && runEnvOsChange.previousOs == null) return emptySet()
+        return AtomUtils.collectRunEnvOsAtomKeys(
+            // 草稿优先：草稿存在时它才是用户上一次保存下来、后续会被发布的编排
+            model = getPipelineResourceVersion(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                includeDraft = true
+            )?.model,
+            // 基准取变更前的运行环境操作系统，本次换过环境时它与 currentOs 不同，于是同一个插件会算出
+            // 不同的 key 而被照常拦下。普通流水线为空，逐 Job 取各自的声明
+            settingRunEnvOs = runEnvOsChange?.previousOs
+        )
+    }
+
+    /**
      * 初始化并检查合法性
+     *
+     * [modelCarriedOver] 由把一份已存在的编排整份写入的入口(如回滚到历史版本)传入，语义见
+     * [buildRunEnvOsCheckParam]。约束模式模板实例无需调用方传入，其编排自带该事实。
      */
     fun initModel(
         model: Model,
@@ -383,7 +470,9 @@ class PipelineRepositoryService constructor(
         versionStatus: VersionStatus? = VersionStatus.RELEASED,
         channelCode: ChannelCode,
         yamlFileInfo: PipelineYamlFileInfo? = null,
-        pipelineDialect: IPipelineDialect? = null
+        pipelineDialect: IPipelineDialect? = null,
+        runEnvOsChange: PipelineRunEnvOsChange? = null,
+        modelCarriedOver: Boolean = false
     ): List<PipelineModelTask> {
         val metaSize = modelCheckPlugin.checkModelIntegrity(
             model = model,
@@ -391,7 +480,16 @@ class PipelineRepositoryService constructor(
             userId = userId,
             oauthUser = getPipelineOauthUser(projectId, pipelineId),
             pipelineDialect = pipelineDialect,
-            pipelineId = pipelineId
+            pipelineId = pipelineId,
+            runEnvOsCheckParam = buildRunEnvOsCheckParam(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                channelCode = channelCode,
+                runEnvOsChange = runEnvOsChange,
+                create = create,
+                // 约束模式模板实例的编排由模板整份覆盖而来，与回滚等入口同属「编排非本次编写」
+                modelCarriedOver = modelCarriedOver || model.instanceFromTemplate == true
+            )
         )
         // 去重id
         val distinctIdSet = HashSet<String>(metaSize, 1F /* loadFactor */)
@@ -1198,6 +1296,11 @@ class PipelineRepositoryService constructor(
                             latestVersionStatus = VersionStatus.RELEASED,
                             locked = pipelineDisable
                         )
+                        // 落库前把 model 里的 latestVersion 对齐到本次写入的资源版本号，与
+                        // PipelineVersionPersistenceService 的写入口径保持一致。灰度环境用它定位
+                        // 公共变量组引用所属的版本，写入历史版本号会让引用查不到。
+                        // 必须放在上面 pipelineInfoDao.update 之后：那里用的是提交时的基准版本号
+                        model.latestVersion = version
                         pipelineResourceDao.updateReleaseVersion(
                             dslContext = transactionContext,
                             projectId = projectId,
@@ -1241,6 +1344,8 @@ class PipelineRepositoryService constructor(
                 }
 
                 watcher.start("updatePipelineResourceVersion")
+                // 草稿/分支版本不走上面的发布分支，同样需要把 latestVersion 对齐到本次资源版本号
+                model.latestVersion = version
                 pipelineResourceVersionDao.create(
                     dslContext = transactionContext,
                     projectId = projectId,
@@ -2399,6 +2504,8 @@ class PipelineRepositoryService constructor(
                 val newModel = releaseResource.model.copy(
                     name = savedSetting.pipelineName, desc = savedSetting.desc
                 )
+                // copy() 不会带上 latestVersion（非构造器属性），需显式对齐到本次写入的资源版本号
+                newModel.latestVersion = version
                 // 用新的流水线名称、描述和旧yaml的格式生成新的yaml
                 val yamlWithVersion = try {
                     transferService.transfer(
@@ -2529,14 +2636,15 @@ class PipelineRepositoryService constructor(
         dslContext: DSLContext,
         userId: String
     ) {
-        if (events.isNullOrEmpty()) return
         val existEventNames = pipelineCallbackDao.list(
             dslContext = dslContext,
             projectId = projectId,
             pipelineId = pipelineId
         ).map { it.name }.toSet()
-        if (existEventNames.isNotEmpty()) {
-            val needDelNames = existEventNames.subtract(events.keys).toSet()
+        // events 为空时新事件集合为空，差集即为全部已存在事件，实现全量清理
+        val newEventKeys = events?.keys ?: emptySet()
+        val needDelNames = existEventNames.subtract(newEventKeys)
+        if (needDelNames.isNotEmpty()) {
             pipelineCallbackDao.delete(
                 dslContext = dslContext,
                 projectId = projectId,
@@ -2545,15 +2653,17 @@ class PipelineRepositoryService constructor(
             )
         }
         // 保存回调事件
-        pipelineCallbackDao.save(
-            dslContext = dslContext,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            userId = userId,
-            list = events.map { (key, value) ->
-                value.copy(secretToken = value.secretToken?.let { AESUtil.encrypt(aesKey, it) })
-            }
-        )
+        if (!events.isNullOrEmpty()) {
+            pipelineCallbackDao.save(
+                dslContext = dslContext,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                userId = userId,
+                list = events.map { (_, value) ->
+                    value.copy(secretToken = value.secretToken?.let { AESUtil.encrypt(aesKey, it) })
+                }
+            )
+        }
     }
 
     fun getReleaseVersionRecord(projectId: String, pipelineId: String): PipelineResourceVersion? {

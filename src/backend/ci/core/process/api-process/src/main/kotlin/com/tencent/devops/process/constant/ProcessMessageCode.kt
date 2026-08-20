@@ -482,6 +482,14 @@ object ProcessMessageCode {
     const val ERROR_TEMPLATE_RESOURCE_DRAFT_VERSION_NOT_EXISTS = "2101377" // 模板草稿版本编排[{0}]记录不存在
     const val ERROR_TEMPLATE_SETTING_DRAFT_VERSION_NOT_EXISTS = "2101378" // 模板草稿版本设置[{0}]不存在
 
+    // 构建执行相关错误码（2101400-2101499）
+    // 运行环境操作系统已由{0}变更为{1}，编排中存在不适用于新系统的插件，暂不能保存，不适配插件明细：{2}
+    const val ERROR_ATOM_RUN_ENV_OS_INCOMPATIBLE = "2101400"
+    // 运行环境操作系统为{0}，编排中存在不适用该系统的插件，暂不能保存，不适配插件明细：{1}
+    const val ERROR_ATOM_RUN_ENV_OS_UNSUPPORTED = "2101401"
+    // 编排中存在不适用于所在Job构建环境操作系统的插件，暂不能保存，不适配插件明细：{0}
+    const val ERROR_ATOM_JOB_OS_INCOMPATIBLE = "2101402"
+
     // 构建执行相关错误码（2101500-2101599）
     const val ERROR_PIPELINE_START_NODE_NO_PERMISSION = "2101500" // 用户[{0}]没有节点[{1}]的操作权限，无法启动流水线
     const val ERROR_PIPELINE_VERSION_RECYCLED = "2101501" // 流水线版本[{0}]已被回收，无法启动构建，请使用最新版本重试
@@ -538,6 +546,21 @@ object ProcessMessageCode {
     const val ERROR_PIPELINE_BATCH_TASK_STATUS_CAN_NOT_RETRY = "2101679" // 流水线批量任务{0}当前状态为{1}，不能重试
     const val ERROR_PIPELINE_BATCH_TASK_DETAIL_CAN_NOT_RETRY = "2101680" // 流水线批量任务明细{0}当前状态为{1}，不能重试
     const val ERROR_PIPELINE_BATCH_TASK_NOTHING_TO_RETRY = "2101681" // 流水线批量任务{0}没有可重试的失败项
+
+    // 创作流分享授权
+    const val ERROR_CREATIVE_FLOW_SHARE_GRANT_NOT_EXISTS = "2101682" // 创作流分享授权不存在或已撤销：{0}#{1}
+    const val ERROR_CREATIVE_FLOW_SHARE_SOURCE_NOT_EXISTS = "2101683" // 源创作流不存在：{0}/{1}
+    const val ERROR_CREATIVE_FLOW_SHARE_CHANNEL_INVALID = "2101684" // 流水线{0}不是创作流，不支持分享
+    const val ERROR_CREATIVE_FLOW_VERSION_NUM_INVALID = "2101685" // 发布版本号格式非法：{0}，正确写法形如 V208
+    const val ERROR_CREATIVE_FLOW_VERSION_NUM_NOT_FOUND = "2101686" // 源创作流{0}/{1}不存在已发布的版本号{2}
+    const val ERROR_CREATIVE_FLOW_COPY_ENV_OS_NOT_MATCH = "2101687" // 目标环境操作系统({1})与该分享要求的({0})不一致
+    const val ERROR_CREATIVE_FLOW_COPY_TARGET_ENV_INVALID = "2101688" // 目标环境不存在或不可用：{0}
+    const val ERROR_CREATIVE_FLOW_COPY_TARGET_NOT_TRACED = "2101689" // 目标创作流{0}不是该分享的副本，不允许覆盖
+    const val ERROR_CREATIVE_FLOW_COPY_TARGET_NAME_CONFLICT = "2101690" // 目标项目{0}已存在创作流{1}
+    const val ERROR_CREATIVE_FLOW_COPY_DEPENDENCIES_NOT_SUPPORT = "2101691" // 暂不支持依赖资源迁移
+    const val ERROR_CREATIVE_FLOW_VARIABLE_OVERRIDE_INVALID = "2101692" // 变量{0}不存在或不允许覆盖
+    const val ERROR_CREATIVE_FLOW_SHARE_TEAM_PROJECT_NOT_SUPPORT = "2101693" // 项目{0}不是个人项目，团队创作流分享暂未支持
+    const val ERROR_CREATIVE_FLOW_SHARE_REVOKE_PARAM_INVALID = "2101694" // 撤销授权须提供 shareId+flowIds 或 talentCode
 
     const val BK_SUCCESSFULLY_DISTRIBUTED = "bkSuccessfullyDistributed" // 跨项目构件分发成功，共分发了{0}个文件
     const val BK_SUCCESSFULLY_FAILED = "bkSuccessfullyFailed" // 跨项目构件分发失败，
@@ -668,8 +691,11 @@ object ProcessMessageCode {
     const val BK_CHECK_TASK_RUN_CONDITION = "bkCheckTaskRunCondition" // 检查插件运行条件/Check Task Run Condition:
     const val BK_TASK_DISABLED = "bkTaskDisabled" // [插件被禁用](Task disabled) = true
 
-    // [只有前面有任务失败时才运行](Only when a previous task has failed)
+    // [只有前面有任务失败时才运行（包括失败自动跳过情况）](Only when a previous task has failed)
     const val BK_ONLY_WHEN_PREVIOUS_TASK_HAS_FAILED = "bkOnlyWhenPreviousTaskHasFailed"
+
+    // [只有前面有任务失败时才运行（不包括失败自动跳过情况）]
+    const val BK_ONLY_WHEN_PREVIOUS_TASK_FAILED_EXCEPT_SKIP = "bkOnlyWhenPreviousTaskFailedExceptSkip"
 
     // [即使前面有插件运行失败也运行，除非被取消才不运行] (Even if a previous task has failed, unless the build was canceled)
     const val BK_IT_DOES_NOT_RUN_UNLESS_IT_IS_CANCELED = "bkItDoesNotRunUnlessItIsCanceled"
@@ -837,4 +863,10 @@ object ProcessMessageCode {
 
     // [{0}]创作环境下的创作节点为空
     const val BK_CREATIVE_STREAM_ENV_NODE_IS_EMPTY = "bkCreativeStreamEnvNodeIsEmpty"
+
+    // 运行环境操作系统不适配插件的明细项：{0} 需要 {1}（所选环境：{2}）
+    const val BK_ATOM_RUN_ENV_OS_INCOMPATIBLE_ITEM = "bkAtomRunEnvOsIncompatibleItem"
+
+    // Job构建环境操作系统不适配插件的明细项：Job[{0}]（{1}）中的 {2} 需要 {3}
+    const val BK_ATOM_JOB_OS_INCOMPATIBLE_ITEM = "bkAtomJobOsIncompatibleItem"
 }
