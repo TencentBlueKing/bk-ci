@@ -23,13 +23,14 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.time.ZoneId
 
+
+@Suppress("NestedBlockDepth")
 @Service
 class ThirdPartyAgentBuildService @Autowired constructor(
     private val dslContext: DSLContext,
     private val client: Client,
     private val thirdPartyAgentBuildDao: ThirdPartyAgentBuildDao
 ) {
-    @Suppress("NestedBlockDepth")
     fun fetchBuildPipelineView(
         userId: String,
         projectId: String,
