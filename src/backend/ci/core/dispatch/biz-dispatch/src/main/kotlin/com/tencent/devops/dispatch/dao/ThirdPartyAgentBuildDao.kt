@@ -1025,17 +1025,16 @@ class ThirdPartyAgentBuildDao {
         pipelineId: String
     ): Long {
         with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
-            val dsl = dslContext.select(BUILD_ID)
+            val dsl = dslContext.selectCount()
                 .from(this)
-                .where(PROJECT_ID.eq(projectId))
+                .where(PIPELINE_ID.eq(pipelineId))
             if (!agentId.isNullOrBlank()) {
                 dsl.and(AGENT_ID.eq(agentId))
             }
             if (envId != null) {
                 dsl.and(ENV_ID.eq(envId))
             }
-            dsl.and(PIPELINE_ID.eq(pipelineId))
-            return dsl.fetchOne(0, Long::class.java) ?: 0L
+            return dsl.and(PROJECT_ID.eq(projectId)).fetchOne(0, Long::class.java) ?: 0L
         }
     }
 
@@ -1072,22 +1071,21 @@ class ThirdPartyAgentBuildDao {
         executeCount: Int?
     ): Long {
         with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
-            val dsl = dslContext.select(BUILD_ID)
+            val dsl = dslContext.selectCount()
                 .from(this)
-                .where(PROJECT_ID.eq(projectId))
+                .where(BUILD_ID.eq(buildId))
             if (!agentId.isNullOrBlank()) {
                 dsl.and(AGENT_ID.eq(agentId))
             }
             if (envId != null) {
                 dsl.and(ENV_ID.eq(envId))
             }
-            dsl.and(BUILD_ID.eq(buildId))
             if (executeCount == null) {
                 dsl.and(EXECUTE_COUNT.isNull)
             } else {
                 dsl.and(EXECUTE_COUNT.eq(executeCount))
             }
-            return dsl.fetchOne(0, Long::class.java) ?: 0L
+            return dsl.and(PROJECT_ID.eq(projectId)).fetchOne(0, Long::class.java) ?: 0L
         }
     }
 
