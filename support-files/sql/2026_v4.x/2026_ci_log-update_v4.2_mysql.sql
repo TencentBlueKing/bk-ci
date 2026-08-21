@@ -1,0 +1,33 @@
+USE devops_ci_log;
+SET NAMES utf8mb4;
+
+DROP PROCEDURE IF EXISTS ci_log_schema_update;
+
+DELIMITER <CI_UBF>
+
+CREATE PROCEDURE ci_log_schema_update()
+BEGIN
+
+    DECLARE db VARCHAR(100);
+    SET AUTOCOMMIT = 0;
+    SELECT DATABASE() INTO db;
+
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.TABLES
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_LOG_BUILD_PROJECT') THEN
+    CREATE TABLE `T_LOG_BUILD_PROJECT` (
+      `BUILD_ID` varchar(64) NOT NULL COMMENT '构建ID',
+      `PROJECT_ID` varchar(64) NOT NULL COMMENT '项目ID',
+      `CREATED_TIME` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+      `UPDATED_TIME` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+      PRIMARY KEY (`BUILD_ID`),
+      KEY `IDX_PROJECT_ID` (`PROJECT_ID`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='构建与项目映射，供日志流量/熔断按项目聚合';
+    END IF;
+
+    COMMIT;
+END <CI_UBF>
+DELIMITER ;
+COMMIT;
+CALL ci_log_schema_update();

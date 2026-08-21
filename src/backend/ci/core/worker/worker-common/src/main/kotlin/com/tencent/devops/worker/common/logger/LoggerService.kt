@@ -56,6 +56,7 @@ import com.tencent.devops.worker.common.utils.WorkspaceUtils
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry
 import java.io.File
+import java.net.SocketTimeoutException
 import java.sql.Date
 import java.text.SimpleDateFormat
 import java.time.Duration
@@ -65,11 +66,14 @@ import java.util.concurrent.Future
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.locks.ReentrantLock
 import org.slf4j.LoggerFactory
 
 @Suppress("MagicNumber", "TooManyFunctions", "ComplexMethod", "LongMethod")
 object LoggerService {
+
+    private const val LOG_UPLOAD_BATCH_MIN = 200
 
     private val logResourceApi = ApiFactory.create(LogSDKApi::class)
     private val archiveApi = ApiFactory.create(ArchiveSDKApi::class)
@@ -82,16 +86,16 @@ object LoggerService {
         CircuitBreakerConfig.custom()
             .enableAutomaticTransitionFromOpenToHalfOpen()
             .writableStackTraceEnabled(false)
-            // 当熔断后等待 300s 放开熔断
-            .waitDurationInOpenState(Duration.ofSeconds(300))
+            // 当熔断后等待 60s 放开熔断，避免短暂超时后长时间丢日志
+            .waitDurationInOpenState(Duration.ofSeconds(60))
             // 熔断放开后，运行通过的请求数，如果达到熔断条件，继续熔断
             .permittedNumberOfCallsInHalfOpenState(100)
             // 当错误率达到 10% 开启熔断
             .failureRateThreshold(10.0F)
             // 慢请求超过 10% 开启熔断
             .slowCallRateThreshold(10.0F)
-            // 请求超过 1s 就是慢请求
-            .slowCallDurationThreshold(Duration.ofSeconds(1))
+            // 请求超过 5s 就是慢请求（大批量上报常超过 1s，避免误伤）
+            .slowCallDurationThreshold(Duration.ofSeconds(5))
             // 滑动窗口大小为 100，默认值
             .slidingWindowSize(100)
             .build()
@@ -111,6 +115,11 @@ object LoggerService {
      * 日志上报缓冲队列
      */
     private val uploadQueue = LinkedBlockingQueue<LogMessage>(2000)
+
+    /**
+     * 单次上报批量，默认 [BULK_BUFFER_SIZE]。超时后降到 [LOG_UPLOAD_BATCH_MIN]，成功后再加倍恢复。
+     */
+    private val uploadBatchSize = AtomicInteger(BULK_BUFFER_SIZE)
 
     /**
      * 每个插件的日志存储属性映射
@@ -205,8 +214,8 @@ object LoggerService {
 
                 val size = logMessages.size
                 val now = System.currentTimeMillis()
-                // 缓冲大于200条或上次保存时间超过3秒
-                if (size >= BULK_BUFFER_SIZE || (size > 0 && (now - lastSaveTime > 3 * 1000))) {
+                // 达到当前上报批量或距上次保存超过 3 秒
+                if (size >= uploadBatchSize.get() || (size > 0 && (now - lastSaveTime > 3 * 1000))) {
                     flush()
                     lastSaveTime = now
                     currentTaskLineNo += size
@@ -493,32 +502,83 @@ object LoggerService {
     private fun addLog(message: LogMessage) = uploadQueue.put(message)
 
     private fun sendMultiLog() {
-        try {
-            logger.info("Start to save the log - ${logMessages.size}")
+        logger.info("Start to save the log - ${logMessages.size}")
 
-            // 如果agent启动时日志模式为本地保存，则不做上报
-            if (LogStorageMode.LOCAL == AgentEnv.getLogMode()) {
-                return
+        // 如果agent启动时日志模式为本地保存，则不做上报
+        if (LogStorageMode.LOCAL == AgentEnv.getLogMode()) {
+            return
+        }
+
+        val batchSize = uploadBatchSize.get().coerceAtLeast(LOG_UPLOAD_BATCH_MIN)
+        var index = 0
+        while (index < logMessages.size) {
+            val end = minOf(index + batchSize, logMessages.size)
+            if (!sendLogChunk(logMessages.subList(index, end))) {
+                break
             }
+            index = end
+        }
+    }
 
-            // 通过上报的结果感知是否需要调整模式
+    private fun sendLogChunk(chunk: List<LogMessage>): Boolean {
+        try {
+            // 通过上报的结果感知是否需要调整模式。
+            // projectId 由 AbstractBuildResourceApi 自动带上 X-DEVOPS-PROJECT-ID（AgentEnv.getProjectId()），
+            // log 服务按可空 header 消费；旧 log 服务忽略该 header，新旧可任意顺序发布。
             val result = doWithCircuitBreaker {
-                logResourceApi.addLogMultiLine(buildVariables?.buildId ?: "", logMessages)
+                logResourceApi.addLogMultiLine(buildVariables?.buildId ?: "", chunk)
             }
             when {
                 // 当log服务返回拒绝请求或者并发量超限制时，自动切换模式为本地保存并归档
                 result.status == 503 || result.status == 509 -> {
                     logger.warn("Log service storage is unable：${result.message}")
                     disableLogUpload()
+                    return false
                 }
 
                 result.isNotOk() -> {
                     logger.error("Fail to send the multi logs：${result.message}")
                 }
             }
+            recoverUploadBatch()
+            return true
         } catch (ignored: Exception) {
-            logger.warn("Fail to send the logs(${logMessages.size})", ignored)
+            logger.warn("Fail to send the logs(${chunk.size})", ignored)
+            if (isTimeout(ignored)) {
+                shrinkUploadBatch(chunk.size)
+            }
+            return false
         }
+    }
+
+    private fun shrinkUploadBatch(failedSize: Int) {
+        val current = uploadBatchSize.get()
+        if (current > LOG_UPLOAD_BATCH_MIN && uploadBatchSize.compareAndSet(current, LOG_UPLOAD_BATCH_MIN)) {
+            logger.warn(
+                "Log upload timed out (size=$failedSize), shrink batch $current -> $LOG_UPLOAD_BATCH_MIN"
+            )
+        }
+    }
+
+    private fun recoverUploadBatch() {
+        val current = uploadBatchSize.get()
+        if (current < BULK_BUFFER_SIZE) {
+            val next = minOf(BULK_BUFFER_SIZE, current * 2)
+            if (uploadBatchSize.compareAndSet(current, next)) {
+                logger.info("Log upload batch recovered to $next")
+            }
+        }
+    }
+
+    private fun isTimeout(error: Throwable): Boolean {
+        var current: Throwable? = error
+        while (current != null) {
+            if (current is SocketTimeoutException) {
+                return true
+            }
+            current = current.cause
+        }
+        return false
     }
 
     private fun saveLocalLog(taskId: String, taskExecuteCount: Int, logMessage: LogMessage) {

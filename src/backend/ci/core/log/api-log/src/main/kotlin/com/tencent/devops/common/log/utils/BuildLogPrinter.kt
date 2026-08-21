@@ -50,7 +50,8 @@ class BuildLogPrinter(
         executeCount: Int,
         subTag: String? = null,
         jobId: String?,
-        stepId: String?
+        stepId: String?,
+        projectId: String? = null
     ) {
         try {
             doWithCircuitBreaker {
@@ -65,7 +66,8 @@ class BuildLogPrinter(
                         executeCount = executeCount,
                         jobId = jobId,
                         stepId = stepId
-                    )
+                    ),
+                    projectId = projectId
                 )
             }
         } catch (e: CallNotPermittedException) {
@@ -75,12 +77,13 @@ class BuildLogPrinter(
         }
     }
 
-    fun addLines(buildId: String, logMessages: List<LogMessage>) {
+    fun addLines(buildId: String, logMessages: List<LogMessage>, projectId: String? = null) {
         try {
             doWithCircuitBreaker {
                 genLogPrintPrintResource().addLogMultiLine(
                     buildId = buildId,
-                    logMessages = logMessages
+                    logMessages = logMessages,
+                    projectId = projectId
                 )
             }
         } catch (e: CallNotPermittedException) {
@@ -98,7 +101,8 @@ class BuildLogPrinter(
         containerHashId: String? = null,
         executeCount: Int,
         jobId: String?,
-        stepId: String?
+        stepId: String?,
+        projectId: String? = null
     ) = addLine(
         buildId = buildId,
         message = "##[group]$groupName",
@@ -107,7 +111,8 @@ class BuildLogPrinter(
         containerHashId = containerHashId,
         executeCount = executeCount,
         jobId = jobId,
-        stepId = stepId
+        stepId = stepId,
+        projectId = projectId
     )
 
     fun addFoldEndLine(
@@ -118,7 +123,8 @@ class BuildLogPrinter(
         containerHashId: String? = null,
         executeCount: Int,
         jobId: String?,
-        stepId: String?
+        stepId: String?,
+        projectId: String? = null
     ) = addLine(
         buildId = buildId,
         message = "##[endgroup]$groupName",
@@ -127,7 +133,8 @@ class BuildLogPrinter(
         containerHashId = containerHashId,
         executeCount = executeCount,
         jobId = jobId,
-        stepId = stepId
+        stepId = stepId,
+        projectId = projectId
     )
 
     fun addAIErrorLine(
@@ -138,7 +145,8 @@ class BuildLogPrinter(
         executeCount: Int,
         subTag: String? = null,
         jobId: String?,
-        stepId: String?
+        stepId: String?,
+        projectId: String? = null
     ) {
         addErrorLine(
             buildId = buildId,
@@ -148,7 +156,8 @@ class BuildLogPrinter(
             executeCount = executeCount,
             subTag = subTag,
             jobId = jobId,
-            stepId = stepId
+            stepId = stepId,
+            projectId = projectId
         )
     }
 
@@ -160,7 +169,8 @@ class BuildLogPrinter(
         executeCount: Int,
         subTag: String? = null,
         jobId: String?,
-        stepId: String?
+        stepId: String?,
+        projectId: String? = null
     ) {
         try {
             doWithCircuitBreaker {
@@ -175,7 +185,8 @@ class BuildLogPrinter(
                         executeCount = executeCount,
                         jobId = jobId,
                         stepId = stepId
-                    )
+                    ),
+                    projectId = projectId
                 )
             }
         } catch (e: CallNotPermittedException) {
@@ -193,7 +204,8 @@ class BuildLogPrinter(
         executeCount: Int,
         subTag: String? = null,
         jobId: String?,
-        stepId: String?
+        stepId: String?,
+        projectId: String? = null
     ) {
         try {
             doWithCircuitBreaker {
@@ -208,7 +220,8 @@ class BuildLogPrinter(
                         executeCount = executeCount,
                         jobId = jobId,
                         stepId = stepId
-                    )
+                    ),
+                    projectId = projectId
                 )
             }
         } catch (e: CallNotPermittedException) {
@@ -226,7 +239,8 @@ class BuildLogPrinter(
         executeCount: Int,
         subTag: String? = null,
         jobId: String?,
-        stepId: String?
+        stepId: String?,
+        projectId: String? = null
     ) {
         try {
             doWithCircuitBreaker {
@@ -241,7 +255,8 @@ class BuildLogPrinter(
                         executeCount = executeCount,
                         jobId = jobId,
                         stepId = stepId
-                    )
+                    ),
+                    projectId = projectId
                 )
             }
         } catch (e: CallNotPermittedException) {
@@ -259,7 +274,8 @@ class BuildLogPrinter(
         executeCount: Int,
         subTag: String? = null,
         jobId: String?,
-        stepId: String?
+        stepId: String?,
+        projectId: String? = null
     ) = addLine(
         buildId = buildId,
         message = Ansi().bold().fgYellow().a(message).reset().toString(),
@@ -268,7 +284,8 @@ class BuildLogPrinter(
         containerHashId = containerHashId,
         executeCount = executeCount,
         jobId = jobId,
-        stepId = stepId
+        stepId = stepId,
+        projectId = projectId
     )
 
     @Suppress("UNUSED")
@@ -280,7 +297,8 @@ class BuildLogPrinter(
         executeCount: Int,
         subTag: String? = null,
         jobId: String?,
-        stepId: String?
+        stepId: String?,
+        projectId: String? = null
     ) = addLine(
         buildId = buildId,
         message = Ansi().bold().fgGreen().a(message).reset().toString(),
@@ -289,7 +307,8 @@ class BuildLogPrinter(
         containerHashId = containerHashId,
         executeCount = executeCount,
         jobId = jobId,
-        stepId = stepId
+        stepId = stepId,
+        projectId = projectId
     )
 
     fun addRedLine(
@@ -300,7 +319,8 @@ class BuildLogPrinter(
         executeCount: Int,
         subTag: String? = null,
         jobId: String?,
-        stepId: String?
+        stepId: String?,
+        projectId: String? = null
     ) = addLine(
         buildId = buildId,
         message = Ansi().bold().fgRed().a(message).reset().toString(),
@@ -309,7 +329,8 @@ class BuildLogPrinter(
         containerHashId = containerHashId,
         executeCount = executeCount,
         jobId = jobId,
-        stepId = stepId
+        stepId = stepId,
+        projectId = projectId
     )
 
     fun stopLog(
@@ -319,7 +340,8 @@ class BuildLogPrinter(
         executeCount: Int? = null,
         subTag: String? = null,
         jobId: String? = null,
-        stepId: String? = null
+        stepId: String? = null,
+        projectId: String? = null
     ) {
         try {
             doWithCircuitBreaker {
@@ -331,7 +353,8 @@ class BuildLogPrinter(
                     containerHashId = containerHashId,
                     executeCount = executeCount,
                     jobId = jobId,
-                    stepId = stepId
+                    stepId = stepId,
+                    projectId = projectId
                 )
             }
         } catch (ignore: Exception) {
@@ -346,7 +369,8 @@ class BuildLogPrinter(
         executeCount: Int? = null,
         subTag: String? = null,
         jobId: String? = null,
-        stepId: String? = null
+        stepId: String? = null,
+        projectId: String? = null
     ) {
         try {
             doWithCircuitBreaker {
@@ -357,7 +381,8 @@ class BuildLogPrinter(
                     containerHashId = containerHashId,
                     executeCount = executeCount,
                     jobId = jobId,
-                    stepId = stepId
+                    stepId = stepId,
+                    projectId = projectId
                 )
             }
         } catch (ignore: Exception) {

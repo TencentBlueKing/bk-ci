@@ -35,7 +35,7 @@ log:
 #    truststore:
 #      filePath:
 #      password:
-  # origin 直写 ES 的 bulk 聚合（#13327）；enabled=false 回退为只投 storage 队列
+  # origin 直写 ES 的 bulk 聚合；enabled=false 回退为只投 storage 队列
   bulk:
     enabled: true
     maxDocs: 3000                 # 单集群缓冲文档数达到后 flush
@@ -44,7 +44,7 @@ log:
     maxBuildsPerBulk: 64          # 单次 bulk 最多混入的 buildId 数
     writeTimeoutMs: 300           # 单次 bulk 写 ES 超时；失败/超时可触发 degrade 熔断
     maxPendingBatches: 2000       # 待写出 batch 上限，达到后背压拒绝新 offer
-  # origin 直写失败/过慢时熔断，降级到 storage 队列
+  # origin 直写失败/过慢时 per-project 熔断，降级到 storage 队列
   degrade:
     enabled: true
     forceStorage: false           # 紧急开关：true 时 origin 全部走 storage，不直写 ES
@@ -53,7 +53,9 @@ log:
     circuitOpenMs: 30000          # 熔断打开持续时间（毫秒）
     circuitMinSamples: 20         # 打开熔断前最少样本数，避免冷启动误伤
     slowMs: 300                   # 直写耗时超过该值计为过慢样本
-  # 本地窗口吞吐统计与热点 build 分流（各 Pod 独立统计）
+    maxTrackedProjects: 1024      # per-project 熔断最多跟踪的 key（projectId 或 b:buildId）数量
+  # 本地窗口吞吐统计与热点 project 分流（各 Pod 独立统计）
+  # key 优先使用 projectId，回退到 b:buildId（兼容旧 worker）
   traffic:
     enabled: true
     topN: 10                      # 定时日志打印的 topN（仅观测）
@@ -61,5 +63,5 @@ log:
     heavyThreshold: 20000         # 窗口内累计行数达到后视为热点
     heavyStickyMs: 60000          # 热点粘性时长，跨计数窗口持续可走 heavy 队列
     routeHeavyEnabled: false      # 是否投独立 heavy origin 队列；开启前需创建对应 MQ topic
-    maxTrackedBuilds: 8192        # 窗口跟踪槽位数；上万并发构建时需远大于 top 热点规模
-    maxHeavyBuilds: 512           # 同时处于热点粘性的 build 上限（不是全量并发数）
+    maxTrackedBuilds: 8192        # 窗口跟踪槽位数（key = projectId 或 b:buildId）
+    maxHeavyBuilds: 512           # 同时处于热点粘性的 key 上限（不是全量并发数）
