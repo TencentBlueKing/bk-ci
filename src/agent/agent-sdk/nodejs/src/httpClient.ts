@@ -53,6 +53,66 @@ export interface RawResponse {
   body: string;
 }
 
+/** 流式请求选项（用于文件下载，不缓冲响应体）。 */
+export interface StreamRequestOptions {
+  method: 'GET' | 'POST' | 'PUT' | 'DELETE';
+  url: string;
+  headers?: Record<string, string>;
+  timeoutMs?: number;
+}
+
+/** 流式响应：暴露状态码、响应头以及可 pipe 的响应流（IncomingMessage）。 */
+export interface StreamResponse {
+  status: number;
+  headers: http.IncomingHttpHeaders;
+  stream: http.IncomingMessage;
+}
+
+/**
+ * 发起一次流式 HTTP 请求，不缓冲响应体，返回状态码 + 响应头 + 可 pipe 的流。
+ * 供文件下载（download.ts）使用。调用方负责消费/销毁 stream。
+ */
+export function requestStream(opts: StreamRequestOptions): Promise<StreamResponse> {
+  return new Promise((resolve, reject) => {
+    let parsed: URL;
+    try {
+      parsed = new URL(opts.url);
+    } catch (e) {
+      reject(new Error(`invalid url: ${opts.url}`));
+      return;
+    }
+
+    const isHttps = parsed.protocol === 'https:';
+    const lib = isHttps ? https : http;
+
+    const req = lib.request(
+      {
+        protocol: parsed.protocol,
+        hostname: parsed.hostname,
+        port: parsed.port || (isHttps ? 443 : 80),
+        path: parsed.pathname + parsed.search,
+        method: opts.method,
+        headers: { ...(opts.headers ?? {}) },
+      },
+      (res) => {
+        resolve({
+          status: res.statusCode ?? 0,
+          headers: res.headers,
+          stream: res,
+        });
+      }
+    );
+
+    const timeout = opts.timeoutMs ?? 300_000;
+    req.setTimeout(timeout, () => {
+      req.destroy(new Error(`request timeout after ${timeout}ms: ${opts.url}`));
+    });
+
+    req.on('error', (err) => reject(err));
+    req.end();
+  });
+}
+
 /**
  * 发起一次 HTTP 请求，返回原始响应文本。基于 Node 内置模块，支持 http/https。
  */

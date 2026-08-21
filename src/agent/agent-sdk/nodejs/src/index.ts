@@ -12,3 +12,8 @@ export * from './httpClient';
 export * from './api';
 export * from './handler';
 export * from './loop';
+export * from './download';
+export * from './worker';
+export * from './dockercli';
+export * from './dockerBuild';
+export * from './buildRunner';
