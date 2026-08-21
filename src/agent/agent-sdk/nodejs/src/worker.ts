@@ -37,6 +37,14 @@ export interface WorkerBuildOptions {
   gateway: string;
   /** 文件网关地址（写入 DEVOPS_FILE_GATEWAY）。 */
   fileGateway?: string;
+  /**
+   * 项目 id / agent id / 密钥。用于在 workDir 下缺少 .agent.properties 时自动补齐该文件，
+   * 因为默认 worker 启动会读取 <cwd>/.agent.properties 获取这些信息。
+   * projectId 不传时回退用 buildInfo.projectId。
+   */
+  projectId?: string;
+  agentId?: string;
+  secretKey?: string;
   /** agent 版本（写入 DEVOPS_AGENT_VERSION）。 */
   agentVersion: string;
   /** worker 版本（写入 DEVOPS_WORKER_VERSION）。 */
@@ -151,6 +159,36 @@ function getEncodedBuildInfo(buildInfo: ThirdPartyBuildInfo): string {
   return Buffer.from(JSON.stringify(buildInfo), 'utf-8').toString('base64');
 }
 
+/**
+ * 确保 <workDir>/.agent.properties 存在。默认 worker 启动时会读取该文件获取项目与鉴权信息，
+ * SDK 直接拉起 worker 时该文件可能缺失。若不存在则用 options 中的配置生成，仅写入
+ * worker 必需的 5 个 key（对应用户约定）：
+ *   devops.project.id / devops.agent.id / devops.agent.secret.key /
+ *   landun.gateway / landun.fileGateway
+ * 已存在则不覆盖（尊重用户/agent 既有配置）。
+ */
+async function ensureAgentProperties(
+  opts: WorkerBuildOptions,
+  log: (msg: string) => void
+): Promise<void> {
+  const propFile = path.join(opts.workDir, '.agent.properties');
+  if (fs.existsSync(propFile)) {
+    return;
+  }
+
+  const projectId = opts.projectId ?? opts.buildInfo.projectId;
+  const lines = [
+    `devops.project.id=${projectId}`,
+    `devops.agent.id=${opts.agentId ?? ''}`,
+    `devops.agent.secret.key=${opts.secretKey ?? ''}`,
+    `landun.gateway=${opts.gateway}`,
+    `landun.fileGateway=${opts.fileGateway ?? ''}`,
+  ];
+  await fs.promises.mkdir(opts.workDir, { recursive: true });
+  await fs.promises.writeFile(propFile, lines.join('\n') + '\n', { mode: 0o644 });
+  log(`generated .agent.properties at ${propFile}`);
+}
+
 /** worker 异常信息文件路径（对应 Go getWorkerErrorMsgFile）。 */
 function getWorkerErrorMsgFile(workDir: string, buildId: string, vmSeqId: string): string {
   return path.join(workDir, 'build_tmp', `${buildId}_${vmSeqId}_build_msg.log`);
@@ -198,6 +236,10 @@ export async function runWorkerBuild(opts: WorkerBuildOptions): Promise<WorkerBu
     log(msg);
     return { success: false, message: msg };
   }
+
+  // 默认 worker 启动会读取 <workDir>/.agent.properties 获取项目/鉴权信息，
+  // SDK 场景该文件可能不存在，这里用 options 中的配置自动补齐。
+  await ensureAgentProperties(opts, log);
 
   // 临时目录（对应 Go MkBuildTmpDir）。
   const tmpDir = path.join(opts.workDir, 'build_tmp');

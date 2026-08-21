@@ -187,6 +187,8 @@ async function main(): Promise<void> {
     gateway: config.getGateway(),
     fileGateway: config.fileGateway,
     projectId: config.projectId,
+    agentId: config.agentId,
+    secretKey: config.secretKey,
     agentVersion: AGENT_VERSION,
     workerVersion: WORKER_VERSION,
     language: config.language,

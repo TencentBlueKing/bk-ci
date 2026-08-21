@@ -44,6 +44,10 @@ export interface BuildRunnerOptions {
   fileGateway?: string;
   /** 项目 id。 */
   projectId: string;
+  /** agent id（用于自动补齐 worker 的 .agent.properties）。 */
+  agentId?: string;
+  /** agent 密钥（用于自动补齐 worker 的 .agent.properties）。 */
+  secretKey?: string;
   /** agent 版本。 */
   agentVersion: string;
   /** worker 版本。 */
@@ -136,6 +140,9 @@ export class DefaultBuildRunner {
         workerJarPath: this.opts.workerJarPath,
         gateway: this.opts.gateway,
         fileGateway: this.opts.fileGateway,
+        projectId: this.opts.projectId,
+        agentId: this.opts.agentId,
+        secretKey: this.opts.secretKey,
         agentVersion: this.opts.agentVersion,
         workerVersion: this.opts.workerVersion,
         language: this.opts.language,
