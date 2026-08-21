@@ -460,7 +460,7 @@
     "avgDuration": "平均所要時間",
     "buildNumber": "ビルド番号",
     "buildStatus": "ビルドステータス",
-    "retryCount": "再試行回数",
+    "retryCount": "X 回目の再試行",
     "retryCountLabel": "{0} 回目の再試行",
     "duration": "所要時間",
     "startTime": "開始時間",

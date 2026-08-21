@@ -465,7 +465,7 @@
     "avgDuration": "Average Duration",
     "buildNumber": "build number",
     "buildStatus": "Build Status",
-    "retryCount": "Retry Count",
+    "retryCount": "Retry X",
     "retryCountLabel": "Retry {0}",
     "duration": "time spent",
     "startTime": "Startup time",
