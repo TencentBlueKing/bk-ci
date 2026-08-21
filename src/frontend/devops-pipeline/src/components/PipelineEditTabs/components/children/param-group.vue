@@ -53,7 +53,7 @@
                                 :class="['variable-item variable-item-editable', {
                                     'variable-item-invalid': param.isInvalid
                                 }]"
-                                @click="handleEdit(param.id)"
+                                @click="handleEdit(param)"
                             >
                                 <div
                                     v-if="editable"

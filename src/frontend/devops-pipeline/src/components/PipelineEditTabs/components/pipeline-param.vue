@@ -250,11 +250,13 @@
                 this.sliderEditItem = {}
                 this.paramType = type
             },
-            handleEdit (paramId) {
-                if (!this.canEditParam) return
+            handleEdit ({ id, removeFlag, varGroupName }) {
+                if (!this.canEditParam || removeFlag) return
                 this.showSlider = true
-                this.editIndex = this.globalParams.findIndex(item => item.id === paramId)
-                this.sliderEditItem = deepCopy(this.globalParams.find(item => item.id === paramId) || {})
+                this.editIndex = varGroupName
+                    ? this.globalParams.findIndex(item => item.varGroupName === varGroupName && item.id === id)
+                    : this.globalParams.findIndex(item => item.id === id)
+                this.sliderEditItem = deepCopy(this.globalParams.find((item, index) => index === this.editIndex) || {})
                 this.paramType = this.sliderEditItem?.constant === true ? 'constant' : 'var'
             },
             async validParamOptions () {
