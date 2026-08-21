@@ -59,11 +59,15 @@ class EnvTagDao {
                 DSL.countDistinct(TNode.T_NODE.NODE_ID).`as`("node_count")
             ).from(this)
                 .leftJoin(TNodeTags.T_NODE_TAGS)
-                .on(TAG_VALUE_ID.eq(TNodeTags.T_NODE_TAGS.TAG_VALUE_ID))
+                .on(
+                    TAG_VALUE_ID.eq(TNodeTags.T_NODE_TAGS.TAG_VALUE_ID)
+                        .and(PROJECT_ID.eq(TNodeTags.T_NODE_TAGS.PROJECT_ID))
+                )
                 .leftJoin(TNode.T_NODE)
                 .on(
                     TNode.T_NODE.NODE_ID.eq(TNodeTags.T_NODE_TAGS.NODE_ID)
                         .and(TNode.T_NODE.NODE_TYPE.`in`(nodeType))
+                        .and(TNode.T_NODE.PROJECT_ID.eq(PROJECT_ID))
                 )
                 .where(PROJECT_ID.eq(projectId))
                 .and(ENV_ID.`in`(envIds))
@@ -198,5 +202,20 @@ class EnvTagDao {
                 .where(PROJECT_ID.eq(projectId))
                 .and(TAG_VALUE_ID.`in`(tagValueIds)).fetch().map { it.value1() }
         }
+    }
+
+    fun fetchEnvTagValueMap(dslContext: DSLContext, projectId: String, envIds: Set<Long>): Map<Long, MutableSet<Long>> {
+        val envTagValueMap = mutableMapOf<Long, MutableSet<Long>>()
+        with(TEnvTag.T_ENV_TAG) {
+            dslContext.select(ENV_ID, TAG_VALUE_ID)
+                .from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(ENV_ID.`in`(envIds))
+                .fetch()
+                .forEach {
+                    envTagValueMap.getOrPut(it[ENV_ID]) { mutableSetOf() }.add(it[TAG_VALUE_ID])
+                }
+        }
+        return envTagValueMap
     }
 }

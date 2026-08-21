@@ -482,7 +482,7 @@ class NodeDao {
         userId: String,
         agentVersion: String?
     ): Long
-        /** Node ID **/
+            /** Node ID **/
     {
         var nodeId = 0L
         with(TNode.T_NODE) {
@@ -790,6 +790,17 @@ class NodeDao {
         with(TNode.T_NODE) {
             return dslContext.select(PROJECT_ID).from(this).where(NODE_TYPE.eq(NodeType.THIRDPARTY.name))
                 .groupBy(PROJECT_ID).fetch().map { it[PROJECT_ID] }.toSet()
+        }
+    }
+
+    fun fetchNodeWithType(dslContext: DSLContext, projectId: String, nodeIds: Set<Long>): Map<Long, String> {
+        with(TNode.T_NODE) {
+            return dslContext.select(NODE_ID, NODE_TYPE)
+                .from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(NODE_ID.`in`(nodeIds))
+                .fetch()
+                .associate { it[NODE_ID] to it[NODE_TYPE] }
         }
     }
 }
