@@ -192,9 +192,32 @@ data class StartBuildContext(
             false
         } else if (!containerStatus.isFailure() && !containerStatus.isCancel()) { // 跳过失败和被取消的其他job
             false
+        } else if (containerStatus.isCancel() && dependOnRetryContainer(stage, container)) {
+            // #13407 上一次被取消的Job，若依赖本次重试插件所在的Job，则其依赖项本次会重新执行，
+            // 它必须跟着唤起重跑。否则该Job会带着上一次残留的CANCELED参与本次Stage状态聚合，
+            // 使构建无论重试多少次都停在取消态
+            false
         } else { // 插件失败重试的，会跳过
             !retryStartTaskId.isNullOrBlank()
         }
+    }
+
+    /**
+     * 判断上一次被取消的[container]是否直接或间接依赖本次重试插件[retryStartTaskId]所在的Job。
+     * dependOn关系只在同一Stage内声明，重试插件不在本[stage]时视为无依赖关系，保持原有跳过逻辑。
+     */
+    private fun dependOnRetryContainer(stage: Stage, container: Container): Boolean {
+        if (retryStartTaskId.isNullOrBlank()) {
+            return false
+        }
+        val retryContainerId = stage.containers.firstOrNull { candidate ->
+            candidate.elements.any { it.id == retryStartTaskId }
+        }?.id ?: return false
+        return DependOnUtils.dependOnContainer(
+            stage = stage,
+            container = container,
+            targetContainerId = retryContainerId
+        )
     }
 
     fun needSkipTaskWhenRetry(stage: Stage, container: Container, taskId: String?): Boolean {
