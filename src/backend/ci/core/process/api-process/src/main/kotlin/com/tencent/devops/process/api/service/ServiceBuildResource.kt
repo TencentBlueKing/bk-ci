@@ -49,6 +49,10 @@ import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.common.web.constant.BkApiHandleType
 import com.tencent.devops.common.web.constant.BkStyleEnum
 import com.tencent.devops.process.engine.pojo.BuildInfo
+import com.tencent.devops.process.pojo.BatchFetchBuildRecordData
+import com.tencent.devops.process.pojo.BatchFetchContainerRecordData
+import com.tencent.devops.process.pojo.BatchFetchContainerRecordResp
+import com.tencent.devops.process.pojo.BatchFetchRecordResp
 import com.tencent.devops.process.pojo.BuildBasicInfo
 import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.process.pojo.BuildHistoryRemark
@@ -754,7 +758,7 @@ interface ServiceBuildResource {
         variableNames: List<String>
     ): Result<Map<String, String>>
 
-    @Operation(summary = "批量获取构建详情, 无鉴权")
+    @Operation(summary = "批量获取构建详情")
     @POST
     // @Path("/projects/{projectId}/batchStatus")
     @Path("/{projectId}/batchStatus")
@@ -772,9 +776,7 @@ interface ServiceBuildResource {
         @QueryParam("startBeginTime")
         startBeginTime: String? = null,
         @QueryParam("endBeginTime")
-        endBeginTime: String? = null,
-        @QueryParam("withExecuteCount")
-        withExecuteCount: Boolean? = false
+        endBeginTime: String? = null
     ): Result<List<BuildHistory>>
 
     @Operation(summary = "批量获取构建详情")
@@ -1137,4 +1139,30 @@ interface ServiceBuildResource {
         @BkField(required = false)
         executeCount: Int?
     ): Result<List<PipelineFailTaskDetail>>
+
+    @Operation(summary = "批量查询构建状态，区分executeCount，内部使用无鉴权")
+    @POST
+    @Path("batchFetchBuildRecordStatus")
+    fun batchFetchBuildRecordStatus(
+        @Parameter(description = "项目ID", required = true)
+        @QueryParam("projectId")
+        projectId: String,
+        @Parameter(description = "渠道号，默认为BS", required = true)
+        @QueryParam("channelCode")
+        channelCode: ChannelCode = ChannelCode.getRequestChannelCode(),
+        data: BatchFetchBuildRecordData
+    ): Result<List<BatchFetchRecordResp>>
+
+    @Operation(summary = "批量查询Job状态，区分executeCount，内部使用无鉴权")
+    @POST
+    @Path("batchFetchContainerRecordStatus")
+    fun fetchContainerRecordStatus(
+        @Parameter(description = "项目ID", required = true)
+        @QueryParam("projectId")
+        projectId: String,
+        @Parameter(description = "渠道号，默认为BS", required = true)
+        @QueryParam("channelCode")
+        channelCode: ChannelCode = ChannelCode.getRequestChannelCode(),
+        data: BatchFetchContainerRecordData
+    ): Result<List<BatchFetchContainerRecordResp>>
 }

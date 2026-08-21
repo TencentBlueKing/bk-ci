@@ -139,6 +139,20 @@ class BuildRecordModelDao {
         }
     }
 
+    fun batchFetchRecord(
+        dslContext: DSLContext,
+        projectId: String,
+        buildIdList: List<String>,
+        executeCount: Int?
+    ): List<BuildRecordModel> {
+        with(TPipelineBuildRecordModel.T_PIPELINE_BUILD_RECORD_MODEL) {
+            val dsl = dslContext.selectFrom(this)
+                .where(BUILD_ID.`in`(buildIdList))
+            executeCount?.let { dsl.and(EXECUTE_COUNT.eq(executeCount)) }
+            return dsl.and(PROJECT_ID.eq(projectId)).fetch(mapper)
+        }
+    }
+
     fun getRecordInfoList(
         dslContext: DSLContext,
         projectId: String,

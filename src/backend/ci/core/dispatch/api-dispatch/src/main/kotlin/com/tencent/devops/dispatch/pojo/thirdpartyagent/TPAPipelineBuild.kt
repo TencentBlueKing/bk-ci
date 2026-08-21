@@ -58,7 +58,9 @@ data class TPAPipelineBuild(
     val executeCount: Int?,
     // 直接从流水线反查，截取一部分
     @get:Schema(title = "buildHistory")
-    var buildHistory: TPAPipelineBuildHistory? = null
+    var buildHistory: TPAPipelineBuildHistory? = null,
+    @get:Schema(title = "构建号", required = true)
+    val buildNum: Int? = null
 )
 
 @Schema(title = "历史构建模型")
@@ -68,13 +70,11 @@ data class TPAPipelineBuildHistory(
     @get:Schema(title = "构建号", required = true)
     val buildNum: Int?,
     @get:Schema(title = "状态", required = true)
-    val status: String,
+    val status: String?,
     @get:Schema(title = "总耗时(毫秒)", required = false)
     val totalTime: Long?,
-    @get:Schema(title = "运行耗时(毫秒，不包括人工审核时间)", required = false)
-    val executeTime: Long?,
     @get:Schema(title = "流水线的执行开始时间", required = true)
-    val startTime: Long,
+    val startTime: Long?,
     @get:Schema(title = "流水线的执行结束时间", required = true)
     val endTime: Long?,
     @get:Schema(title = "执行次数")

@@ -78,6 +78,7 @@ import com.tencent.devops.process.engine.service.PipelineArtifactQualityService
 import com.tencent.devops.process.engine.service.PipelineInfoService
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.utils.ContainerUtils
+import com.tencent.devops.process.pojo.BatchFetchRecordResp
 import com.tencent.devops.process.pojo.BuildStageStatus
 import com.tencent.devops.process.pojo.pipeline.ModelRecord
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordContainer
@@ -854,6 +855,23 @@ class PipelineBuildRecordService @Autowired constructor(
                 stageName = stageNameMap[it.stageId],
                 errorMsg = it.errorMsg,
                 matrixFlag = it.matrixFlag ?: false
+            )
+        }
+    }
+
+    fun batchFetchRecord(
+        projectId: String,
+        buildIdList: List<String>,
+        executeCount: Int?
+    ): List<BatchFetchRecordResp> {
+        return recordModelDao.batchFetchRecord(dslContext, projectId, buildIdList, executeCount).map {
+            BatchFetchRecordResp(
+                startUser = it.startUser,
+                buildId = it.buildId,
+                status = it.status,
+                executeCount = it.executeCount,
+                startTime = it.startTime,
+                endTime = it.endTime
             )
         }
     }
