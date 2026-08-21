@@ -8,11 +8,14 @@ import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
 import com.tencent.devops.dispatch.pojo.thirdpartyagent.AgentPipelineBuildTask
 import com.tencent.devops.dispatch.pojo.thirdpartyagent.AgentPipelineContainerBuild
 import com.tencent.devops.dispatch.pojo.thirdpartyagent.JobIdAndName
+import com.tencent.devops.dispatch.pojo.thirdpartyagent.NodeInfo
 import com.tencent.devops.dispatch.pojo.thirdpartyagent.PipelineIdAndName
 import com.tencent.devops.dispatch.pojo.thirdpartyagent.TPAPipelineBuildCountResp
 import com.tencent.devops.dispatch.pojo.thirdpartyagent.TPAPipelineBuildHistory
 import com.tencent.devops.dispatch.pojo.thirdpartyagent.TPAPipelineBuildView
 import com.tencent.devops.dispatch.pojo.thirdpartyagent.TPAPipelineReq
+import com.tencent.devops.environment.api.thirdpartyagent.ServiceThirdPartyAgentResource
+import com.tencent.devops.environment.pojo.thirdpartyagent.BatchFetchNodeInfoData
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.pojo.BatchFetchBuildRecordData
 import com.tencent.devops.process.pojo.BatchFetchContainerRecordData
@@ -31,9 +34,9 @@ class ThirdPartyAgentBuildService @Autowired constructor(
     private val client: Client,
     private val thirdPartyAgentBuildDao: ThirdPartyAgentBuildDao
 ) {
+    // 支持跨项目引用环境和节点的查询，不用projectId
     fun fetchBuildPipelineView(
         userId: String,
-        projectId: String,
         envId: Long?,
         data: TPAPipelineReq
     ): TPAPipelineBuildCountResp {
@@ -52,7 +55,6 @@ class ThirdPartyAgentBuildService @Autowired constructor(
         val jobId = if (data.view == TPAPipelineBuildView.JOB) data.jobId else null
         val (pipelineCount, jobCount, buildCount) = thirdPartyAgentBuildDao.countAgentBuildPipelineJob(
             dslContext = dslContext,
-            projectId = projectId,
             agentId = data.agentId,
             envId = envId,
             startTime = data.startTime,
@@ -65,7 +67,6 @@ class ThirdPartyAgentBuildService @Autowired constructor(
         val records = when (data.view) {
             TPAPipelineBuildView.PIPELINE -> thirdPartyAgentBuildDao.fetchAgentBuildPipeline(
                 dslContext = dslContext,
-                projectId = projectId,
                 agentId = data.agentId,
                 envId = envId,
                 limit = limit,
@@ -79,7 +80,6 @@ class ThirdPartyAgentBuildService @Autowired constructor(
 
             TPAPipelineBuildView.JOB -> thirdPartyAgentBuildDao.fetchAgentBuildPipelineJob(
                 dslContext = dslContext,
-                projectId = projectId,
                 agentId = data.agentId,
                 envId = envId,
                 limit = limit,
@@ -101,7 +101,6 @@ class ThirdPartyAgentBuildService @Autowired constructor(
             TPAPipelineBuildView.BUILD -> {
                 val buildRecord = thirdPartyAgentBuildDao.fetchAgentBuildPipelineBuild(
                     dslContext = dslContext,
-                    projectId = projectId,
                     agentId = data.agentId,
                     envId = envId,
                     limit = limit,
@@ -113,7 +112,6 @@ class ThirdPartyAgentBuildService @Autowired constructor(
                     status = data.taskStatusList
                 )
                 val buildHistoryMap = client.get(ServiceBuildResource::class).batchFetchBuildRecordStatus(
-                    projectId = projectId,
                     data = BatchFetchBuildRecordData(buildIds = buildRecord.filter { !it.buildId.isNullOrBlank() }
                         .map { it.buildId!! }, executeCount = null)
                 ).data?.groupBy { it.buildId } ?: emptyMap()
@@ -196,7 +194,6 @@ class ThirdPartyAgentBuildService @Autowired constructor(
         val limit = sqlLimit?.limit ?: 100
         val (pipelineCount, jobCount, buildCount) = thirdPartyAgentBuildDao.countAgentBuildPipelineJob(
             dslContext = dslContext,
-            projectId = projectId,
             agentId = agentId,
             envId = envId,
             startTime = startTime,
@@ -216,7 +213,6 @@ class ThirdPartyAgentBuildService @Autowired constructor(
                 count = jobCount,
                 records = thirdPartyAgentBuildDao.fetchAgentBuildPipelineJob(
                     dslContext = dslContext,
-                    projectId = projectId,
                     agentId = agentId,
                     envId = envId,
                     limit = limit,
@@ -256,7 +252,6 @@ class ThirdPartyAgentBuildService @Autowired constructor(
 
         val agentBuildCount = thirdPartyAgentBuildDao.countAgentBuildsByJob(
             dslContext = dslContext,
-            projectId = projectId,
             agentId = agentId,
             envId = envId,
             pipelineId = pipelineId,
@@ -264,7 +259,6 @@ class ThirdPartyAgentBuildService @Autowired constructor(
         )
         val agentBuilds = thirdPartyAgentBuildDao.listAgentBuildsByJob(
             dslContext = dslContext,
-            projectId = projectId,
             agentId = agentId,
             envId = envId,
             pipelineId = pipelineId,
@@ -274,10 +268,18 @@ class ThirdPartyAgentBuildService @Autowired constructor(
         )
         // 获取展示信息，不走鉴权，即使看到了跳转也没权限
         val builds = client.get(ServiceBuildResource::class).batchFetchBuildRecordStatus(
-            projectId = projectId,
             data = BatchFetchBuildRecordData(buildIds = agentBuilds.map { it.buildId }, executeCount = null)
         ).data?.groupBy { it.buildId }
         val result = mutableListOf<AgentPipelineContainerBuild>()
+        // 环境详情需要返回节点信息
+        val nodeInfoMap = if (envId != null) {
+            client.get(ServiceThirdPartyAgentResource::class).batchFetchNodeInfo(
+                projectId = projectId,
+                data = BatchFetchNodeInfoData(agentBuilds.map { it.agentId }.toSet())
+            ).data?.associateBy { it.agentHashId }
+        } else {
+            null
+        }
         agentBuilds.forEach { record ->
             val buildWithExecuteCount = builds?.get(record.buildId) ?: return@forEach
             val build = buildWithExecuteCount.let { list ->
@@ -300,7 +302,9 @@ class ThirdPartyAgentBuildService @Autowired constructor(
                     startTime = build.startTime,
                     endTime = build.endTime,
                     buildNum = record.buildNum ?: 0,
-                    creator = record.startUser
+                    creator = record.startUser,
+                    tasks = null,
+                    nodeInfo = nodeInfoMap?.get(record.agentId)?.let { NodeInfo(it.agentHashId, it.nodeHashId) }
                 )
             )
         }
@@ -324,14 +328,12 @@ class ThirdPartyAgentBuildService @Autowired constructor(
 
         val agentBuildCount = thirdPartyAgentBuildDao.countAgentBuildGroupsByPipeline(
             dslContext = dslContext,
-            projectId = projectId,
             agentId = agentId,
             envId = envId,
             pipelineId = pipelineId
         )
         val agentBuilds = thirdPartyAgentBuildDao.listAgentBuildGroupsByPipeline(
             dslContext = dslContext,
-            projectId = projectId,
             agentId = agentId,
             envId = envId,
             pipelineId = pipelineId,
@@ -343,10 +345,18 @@ class ThirdPartyAgentBuildService @Autowired constructor(
         }
         // 获取展示信息，不走鉴权，即使看到了跳转也没权限
         val builds = client.get(ServiceBuildResource::class).batchFetchBuildRecordStatus(
-            projectId = projectId,
             data = BatchFetchBuildRecordData(buildIds = agentBuilds.map { it.buildId }, executeCount = null)
         ).data?.groupBy { it.buildId }
         val result = mutableListOf<AgentPipelineContainerBuild>()
+        // 环境详情需要返回节点信息
+        val nodeInfoMap = if (envId != null) {
+            client.get(ServiceThirdPartyAgentResource::class).batchFetchNodeInfo(
+                projectId = projectId,
+                data = BatchFetchNodeInfoData(agentBuilds.map { it.agentId }.toSet())
+            ).data?.associateBy { it.agentHashId }
+        } else {
+            null
+        }
         agentBuilds.groupBy { it.buildId }.forEach { (buildId, buildRecords) ->
             buildRecords.groupBy { it.executeCount }.forEach buildRecords@{ (executeCount, records) ->
                 val buildWithExecuteCount = builds?.get(buildId) ?: return@forEach
@@ -379,7 +389,8 @@ class ThirdPartyAgentBuildService @Autowired constructor(
                                 stageId = it.stageId,
                                 stageNumb = it.stageId?.toStageNumb() ?: it.stageId
                             )
-                        }
+                        },
+                        nodeInfo = nodeInfoMap?.get(record.agentId)?.let { NodeInfo(it.agentHashId, it.nodeHashId) }
                     )
                 )
             }
@@ -405,7 +416,6 @@ class ThirdPartyAgentBuildService @Autowired constructor(
 
         val agentBuildCount = thirdPartyAgentBuildDao.countAgentBuildGroupsByBuild(
             dslContext = dslContext,
-            projectId = projectId,
             agentId = agentId,
             envId = envId,
             buildId = buildId,
@@ -413,7 +423,6 @@ class ThirdPartyAgentBuildService @Autowired constructor(
         )
         val agentBuilds = thirdPartyAgentBuildDao.listAgentBuildGroupsByBuild(
             dslContext = dslContext,
-            projectId = projectId,
             agentId = agentId,
             envId = envId,
             buildId = buildId,
@@ -426,13 +435,21 @@ class ThirdPartyAgentBuildService @Autowired constructor(
         }
         // 获取展示信息，不走鉴权，即使看到了跳转也没权限，这里展示job的状态
         val builds = client.get(ServiceBuildResource::class).fetchContainerRecordStatus(
-            projectId = projectId,
             data = BatchFetchContainerRecordData(
                 buildId = buildId,
                 containerIds = agentBuilds.map { it.vmSeqId.toString() },
                 executeCount = executeCount ?: 1
             )
         ).data?.associateBy { it.containerId }
+        // 环境详情需要返回节点信息
+        val nodeInfoMap = if (envId != null) {
+            client.get(ServiceThirdPartyAgentResource::class).batchFetchNodeInfo(
+                projectId = projectId,
+                data = BatchFetchNodeInfoData(agentBuilds.map { it.agentId }.toSet())
+            ).data?.associateBy { it.agentHashId }
+        } else {
+            null
+        }
         val result = mutableListOf<AgentPipelineContainerBuild>()
         agentBuilds.forEach { record ->
             val build = builds?.get(record.vmSeqId.toString()) ?: return@forEach
@@ -455,8 +472,8 @@ class ThirdPartyAgentBuildService @Autowired constructor(
                             stageId = record.stageId,
                             stageNumb = record.stageId?.toStageNumb() ?: record.stageId
                         )
-
-                    )
+                    ),
+                    nodeInfo = nodeInfoMap?.get(record.agentId)?.let { NodeInfo(it.agentHashId, it.nodeHashId) }
                 )
             )
         }
@@ -465,7 +482,6 @@ class ThirdPartyAgentBuildService @Autowired constructor(
     }
 
     fun fetchPipelineIdAndName(
-        projectId: String,
         agentId: String?,
         envId: Long?,
         pipelineName: String?
@@ -475,7 +491,6 @@ class ThirdPartyAgentBuildService @Autowired constructor(
         }
         return thirdPartyAgentBuildDao.fetchPipelineIdAndName(
             dslContext = dslContext,
-            projectId = projectId,
             agentId = agentId,
             envId = envId,
             pipelineName = pipelineName
@@ -483,7 +498,6 @@ class ThirdPartyAgentBuildService @Autowired constructor(
     }
 
     fun fetchJobIdAndName(
-        projectId: String,
         agentId: String?,
         envId: Long?,
         jobName: String?
@@ -493,7 +507,6 @@ class ThirdPartyAgentBuildService @Autowired constructor(
         }
         return thirdPartyAgentBuildDao.fetchJobIdAndName(
             dslContext = dslContext,
-            projectId = projectId,
             agentId = agentId,
             envId = envId,
             jobName = jobName
@@ -501,7 +514,6 @@ class ThirdPartyAgentBuildService @Autowired constructor(
     }
 
     fun fetchCreator(
-        projectId: String,
         agentId: String?,
         envId: Long?,
         creator: String?
@@ -511,7 +523,6 @@ class ThirdPartyAgentBuildService @Autowired constructor(
         }
         return thirdPartyAgentBuildDao.fetchCreator(
             dslContext = dslContext,
-            projectId = projectId,
             agentId = agentId,
             envId = envId,
             creator = creator

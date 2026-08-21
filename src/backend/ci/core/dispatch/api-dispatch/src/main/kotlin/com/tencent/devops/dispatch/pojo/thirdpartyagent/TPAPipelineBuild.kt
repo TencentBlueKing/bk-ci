@@ -32,6 +32,8 @@ data class TPAPipelineReq(
 
 @Schema(title = "第三方构建任务详情")
 data class TPAPipelineBuild(
+    @get:Schema(title = "项目ID")
+    val projectId: String,
     @get:Schema(title = "流水线ID")
     val pipelineId: String,
     @get:Schema(title = "流水线名称")

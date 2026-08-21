@@ -26,7 +26,9 @@ data class AgentPipelineContainerBuild(
     @get:Schema(title = "触发人", required = true)
     val creator: String,
     @get:Schema(title = "构建包含的任务列表", required = false)
-    val tasks: List<AgentPipelineBuildTask>? = null
+    val tasks: List<AgentPipelineBuildTask>?,
+    @get:Schema(title = "构建包含的节点信息", required = false)
+    val nodeInfo: NodeInfo?
 )
 
 @Schema(title = "构建包含的任务")
@@ -41,3 +43,10 @@ data class AgentPipelineBuildTask(
     var stageNumb: String?
 )
 
+
+data class NodeInfo(
+    @get:Schema(title = "agentHashId", required = true)
+    val agentHashId: String,
+    @get:Schema(title = "nodeHashId", required = true)
+    val nodeHashId: String
+)

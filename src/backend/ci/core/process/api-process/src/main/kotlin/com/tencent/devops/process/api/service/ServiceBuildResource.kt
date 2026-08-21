@@ -1140,26 +1140,20 @@ interface ServiceBuildResource {
         executeCount: Int?
     ): Result<List<PipelineFailTaskDetail>>
 
-    @Operation(summary = "批量查询构建状态，区分executeCount，内部使用无鉴权")
+    @Operation(summary = "批量查询构建状态，区分executeCount，内部使用无鉴权，支持跨项目引用环境和节点的查询，不用projectId")
     @POST
     @Path("batchFetchBuildRecordStatus")
     fun batchFetchBuildRecordStatus(
-        @Parameter(description = "项目ID", required = true)
-        @QueryParam("projectId")
-        projectId: String,
         @Parameter(description = "渠道号，默认为BS", required = true)
         @QueryParam("channelCode")
         channelCode: ChannelCode = ChannelCode.getRequestChannelCode(),
         data: BatchFetchBuildRecordData
     ): Result<List<BatchFetchRecordResp>>
 
-    @Operation(summary = "批量查询Job状态，区分executeCount，内部使用无鉴权")
+    @Operation(summary = "批量查询Job状态，区分executeCount，内部使用无鉴权，支持跨项目引用环境和节点的查询，不用projectId")
     @POST
     @Path("batchFetchContainerRecordStatus")
     fun fetchContainerRecordStatus(
-        @Parameter(description = "项目ID", required = true)
-        @QueryParam("projectId")
-        projectId: String,
         @Parameter(description = "渠道号，默认为BS", required = true)
         @QueryParam("channelCode")
         channelCode: ChannelCode = ChannelCode.getRequestChannelCode(),

@@ -19,6 +19,7 @@ import com.tencent.devops.environment.dao.thirdpartyagent.ThirdPartyAgentActionD
 import com.tencent.devops.environment.dao.thirdpartyagent.ThirdPartyAgentDao
 import com.tencent.devops.environment.permission.EnvironmentPermissionService
 import com.tencent.devops.environment.pojo.EnvVar
+import com.tencent.devops.environment.pojo.thirdpartyagent.BatchFetchNodeInfoResp
 import com.tencent.devops.environment.pojo.thirdpartyagent.OfflinePeriod
 import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartAgentUpdateType
 import com.tencent.devops.environment.pojo.thirdpartyagent.UpdateAgentInfo
@@ -358,6 +359,20 @@ class ThirdPartAgentService @Autowired constructor(
     fun checkAgentPermission(userId: String, projectId: String, agentId: Long, permission: AuthPermission): Boolean {
         val nodeId = agentDao.getAgentByProject(dslContext, agentId, projectId)?.nodeId ?: return false
         return environmentPermissionService.checkNodePermission(userId, projectId, nodeId, permission)
+    }
+
+    fun batchFetchNodeInfo(projectId: String, agentHashIdList: Set<String>): List<BatchFetchNodeInfoResp> {
+        return agentDao.getAgentByAgentIds(
+            dslContext = dslContext,
+            ids = agentHashIdList.map { HashUtil.decodeIdToLong(it) }.toSet(),
+            projectId = projectId
+        ).map {
+            BatchFetchNodeInfoResp(
+                agentHashId = HashUtil.encodeLongId(it.id),
+                nodeHashId = HashUtil.encodeLongId(it.nodeId),
+                nodeName = null
+            )
+        }
     }
 
     companion object {

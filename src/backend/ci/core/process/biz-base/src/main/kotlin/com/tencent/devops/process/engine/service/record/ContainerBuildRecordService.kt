@@ -537,14 +537,12 @@ class ContainerBuildRecordService(
     }
 
     fun batchFetchContainerStatus(
-        projectId: String,
         buildId: String,
         containerIdList: List<String>,
         executeCount: Int
     ): List<BatchFetchContainerRecordResp> {
         return recordContainerDao.fetchContainerRecords(
             dslContext = dslContext,
-            projectId = projectId,
             buildId = buildId,
             containerIdList = containerIdList,
             executeCount = executeCount

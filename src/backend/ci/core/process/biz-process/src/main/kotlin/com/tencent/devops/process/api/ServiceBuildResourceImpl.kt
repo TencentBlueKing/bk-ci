@@ -1052,21 +1052,18 @@ class ServiceBuildResourceImpl @Autowired constructor(
     }
 
     override fun batchFetchBuildRecordStatus(
-        projectId: String,
         channelCode: ChannelCode,
         data: BatchFetchBuildRecordData
     ): Result<List<BatchFetchRecordResp>> {
-        return Result(pipelineBuildRecordService.batchFetchRecord(projectId, data.buildIds, data.executeCount))
+        return Result(pipelineBuildRecordService.batchFetchRecord(data.buildIds, data.executeCount))
     }
 
     override fun fetchContainerRecordStatus(
-        projectId: String,
         channelCode: ChannelCode,
         data: BatchFetchContainerRecordData
     ): Result<List<BatchFetchContainerRecordResp>> {
         return Result(
             containerBuildRecordService.batchFetchContainerStatus(
-                projectId = projectId,
                 buildId = data.buildId,
                 containerIdList = data.containerIds,
                 executeCount = data.executeCount

@@ -860,11 +860,10 @@ class PipelineBuildRecordService @Autowired constructor(
     }
 
     fun batchFetchRecord(
-        projectId: String,
         buildIdList: List<String>,
         executeCount: Int?
     ): List<BatchFetchRecordResp> {
-        return recordModelDao.batchFetchRecord(dslContext, projectId, buildIdList, executeCount).map {
+        return recordModelDao.batchFetchRecord(dslContext, buildIdList, executeCount).map {
             BatchFetchRecordResp(
                 startUser = it.startUser,
                 buildId = it.buildId,

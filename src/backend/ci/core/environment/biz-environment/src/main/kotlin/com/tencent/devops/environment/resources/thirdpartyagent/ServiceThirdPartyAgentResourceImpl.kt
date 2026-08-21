@@ -49,6 +49,8 @@ import com.tencent.devops.environment.pojo.thirdpartyagent.AgentBuildDetail
 import com.tencent.devops.environment.pojo.thirdpartyagent.AgentPipelineRef
 import com.tencent.devops.environment.pojo.thirdpartyagent.AskHeartbeatResponse
 import com.tencent.devops.environment.pojo.thirdpartyagent.BatchFetchAgentData
+import com.tencent.devops.environment.pojo.thirdpartyagent.BatchFetchNodeInfoData
+import com.tencent.devops.environment.pojo.thirdpartyagent.BatchFetchNodeInfoResp
 import com.tencent.devops.environment.pojo.thirdpartyagent.BatchUpdateAgentEnvVar
 import com.tencent.devops.environment.pojo.thirdpartyagent.EnvNodeAgent
 import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgent
@@ -375,5 +377,12 @@ class ServiceThirdPartyAgentResourceImpl @Autowired constructor(
         return Result(
             envDispatchStrategyService.getEnabledStrategiesWithTags(projectId, envId, nodeIds)
         )
+    }
+
+    override fun batchFetchNodeInfo(
+        projectId: String,
+        data: BatchFetchNodeInfoData
+    ): Result<List<BatchFetchNodeInfoResp>> {
+        return Result(agentService.batchFetchNodeInfo(projectId, data.agentHashIdList))
     }
 }

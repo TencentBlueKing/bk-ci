@@ -393,7 +393,6 @@ class BuildRecordContainerDao {
 
     fun fetchContainerRecords(
         dslContext: DSLContext,
-        projectId: String,
         buildId: String,
         containerIdList: List<String>,
         executeCount: Int
@@ -403,7 +402,6 @@ class BuildRecordContainerDao {
                 .where(BUILD_ID.eq(buildId))
                 .and(CONTAINER_ID.`in`(containerIdList))
                 .and(EXECUTE_COUNT.eq(executeCount))
-                .and(PROJECT_ID.eq(projectId))
                 .fetch(mapper)
         }
     }
