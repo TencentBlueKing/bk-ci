@@ -27,9 +27,15 @@
 
 package com.tencent.devops.worker.common.utils
 
+import com.tencent.devops.common.api.exception.TaskExecuteException
+import com.tencent.devops.common.api.pojo.ErrorCode
+import com.tencent.devops.common.api.pojo.ErrorType
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.pipeline.enums.CharsetType
 import com.tencent.devops.worker.common.CommonEnv
 import com.tencent.devops.worker.common.WORKSPACE_ENV
+import com.tencent.devops.worker.common.constants.WorkerMessageCode
+import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.task.script.ScriptEnvUtils
 import org.slf4j.LoggerFactory
 import java.io.File
@@ -65,6 +71,15 @@ object BatScriptUtil {
         "    echo %~1 >>%file_save_dir%\r\n" +
         "    goto:eof\r\n"
 
+    private const val formatMultipleLines = ":format_multiple_lines\r\n" +
+        "    powershell -NoProfile -Command ^\r\n" +
+        "        \"\$c=[System.IO.File]::ReadAllText('%~2');\" ^\r\n" +
+        "        \"\$c=\$c -replace '%%','%%25' -replace ([char]13),'%%0D' -replace ([char]10),'%%0A';\" ^\r\n" +
+        "        \"\$line='::set-output name=%~1::'+\$c;\" ^\r\n" +
+        "        \"\$enc=New-Object System.Text.UTF8Encoding(\$false);\" ^\r\n" +
+        "        \"[System.IO.File]::AppendAllText('##multiLineFile##', \$line + [Environment]::NewLine, \$enc)\"\r\n" +
+        "    goto:eof\r\n"
+
     private val logger = LoggerFactory.getLogger(BatScriptUtil::class.java)
 
     // 2021-06-11 batchScript需要过滤掉上下文产生的变量，防止注入到环境变量中
@@ -82,6 +97,30 @@ object BatScriptUtil {
     private const val RETRY_COUNT = 1
     private const val FLAG_INIT = "init"
     private const val FLAG_SCRIPT = "script"
+
+    /**
+     * 内联多行块语法错误（确定性用户输入错误）。
+     * 用于在 execute catch 中区分：语法错误直接抛出（重试无意义），
+     * 其余 TaskExecuteException（如脚本执行失败）仍走 checkFlag 自动重试。
+     */
+    private class MultilineBlockParseException(key: String, line: Int) :
+        TaskExecuteException(
+            errorType = ErrorType.USER,
+            errorCode = ErrorCode.USER_INPUT_INVAILD,
+            errorMsg = MessageUtil.getMessageByLocale(
+                messageCode = WorkerMessageCode.BK_MULTILINE_BLOCK_UNTERMINATED,
+                language = AgentEnv.getLocaleLanguage(),
+                params = arrayOf(key, line.toString())
+            )
+        )
+
+    /**
+     * 匹配内联多行块开始行：call:format_multiple_lines <KEY> "
+     * 行首仅允许空白，行尾恰为单个引号（引号后无内容）
+     */
+    private val multilineStartRegex = Regex(
+        """^\s*call:format_multiple_lines\s+([a-zA-Z_][a-zA-Z0-9_]*)\s+"\s*$"""
+    )
 
     @Suppress("ALL")
     fun execute(
@@ -125,6 +164,11 @@ object BatScriptUtil {
                 taskId = taskId
             )
         } catch (ignore: Throwable) {
+            // 仅内联块语法错误（确定性用户输入错误）直接抛出，不做无意义重试；
+            // 其余 TaskExecuteException（如 CommandLineUtils 脚本执行失败）仍走 checkFlag 自动重试
+            if (ignore is MultilineBlockParseException) {
+                throw ignore
+            }
             return checkFlag(
                 script = script,
                 buildId = buildId,
@@ -200,6 +244,77 @@ object BatScriptUtil {
             null
         }
 
+    /**
+     * 预处理内联多行块语法。
+     *
+     * 输入：
+     *   call:format_multiple_lines KEY "
+     *   line 1
+     *   line 2
+     *   "
+     *
+     * 输出：
+     *   call:format_multiple_lines KEY "C:\...\ml_block_<buildId>_<n>.txt"
+     *
+     * 内容由 Kotlin 直接写入临时文件（UTF-8），不经 cmd 解析，避免换行被当作命令分隔。
+     * 该预处理为纯增量：不满足开始行特征的行一律原样透传。
+     *
+     * 注意：block 临时文件写入 dir，由 ScriptEnvUtils.cleanWhenEnd(workspace) 按前缀清理，
+     * 依赖调用链中 dir == workspace 的不变量（ScriptTask.execute 传入 dir = workspace）。
+     */
+    private fun preprocessMultilineBlocks(
+        script: String,
+        buildId: String,
+        dir: File
+    ): String {
+        val lines = script.split("\n").map { it.removeSuffix("\r") }
+        val out = StringBuilder()
+        var i = 0
+        var counter = 0
+        while (i < lines.size) {
+            val start = multilineStartRegex.find(lines[i])
+            if (start == null) {
+                out.append(lines[i]).append("\r\n")
+                i++
+                continue
+            }
+            val key = start.groupValues[1]
+            val block = extractMultilineBlock(lines, i, key)
+            val fileName = "ml_block_${buildId}_${ExecutorUtil.getThreadLocal()}_${counter++}.txt"
+            val file = File(dir, fileName)
+            file.writeText(block.content, Charsets.UTF_8)
+            file.deleteOnExit()
+            out.append("call:format_multiple_lines $key \"${file.absolutePath}\"\r\n")
+            i = block.nextIndex
+        }
+        return out.toString()
+    }
+
+    /**
+     * 从 call 行之后提取内联块内容，返回内容与块结束后的下一行索引。
+     * 缺少结束引号时抛用户输入错误。
+     */
+    private fun extractMultilineBlock(lines: List<String>, callLineIndex: Int, key: String): MultilineBlock {
+        val content = StringBuilder()
+        var i = callLineIndex + 1
+        while (i < lines.size) {
+            val cur = lines[i]
+            if (cur.trim() == "\"") {
+                return MultilineBlock(content.toString(), i + 1)
+            }
+            // 保留原始内容（含行尾空格），统一 CRLF 拼接
+            if (content.isNotEmpty()) content.append("\r\n")
+            content.append(cur)
+            i++
+        }
+        throw MultilineBlockParseException(key, callLineIndex + 1)
+    }
+
+    private data class MultilineBlock(
+        val content: String,
+        val nextIndex: Int
+    )
+
     @Suppress("ALL")
     fun getCommandFile(
         buildId: String,
@@ -242,7 +357,8 @@ object BatScriptUtil {
             .append("call:ciTaskSetFlag $FLAG_SCRIPT\r\n")
             .append("\r\n")
 
-        command.append(script.replace("\n", "\r\n"))
+        val processed = preprocessMultilineBlocks(script, buildId, dir)
+        command.append(processed)
             .append("\r\n")
             .append("exit")
             .append("\r\n")
@@ -264,6 +380,12 @@ object BatScriptUtil {
                     newValue = File(dir, ScriptEnvUtils.getQualityGatewayEnvFile()).canonicalPath
                 )
             )
+            .append(
+                formatMultipleLines.replace(
+                    oldValue = "##multiLineFile##",
+                    newValue = File(dir, ScriptEnvUtils.getMultipleLineFile(buildId)).absolutePath
+                )
+            )
             /*taskEnvSet模块，挪到batch脚本尾部，能避免一些batch的bug*/
             .append(":taskEnvSet\r\n")
             .append(set)
@@ -278,8 +400,9 @@ object BatScriptUtil {
 
         logger.info("The default charset is $charset")
 
-        file.writeText(command.toString(), charset)
-        logger.info("start to run windows script - ($command)")
+        val finalCommand = command.toString()
+        file.writeText(finalCommand, charset)
+        logger.info("start to run windows script - ($finalCommand)")
         return file
     }
 

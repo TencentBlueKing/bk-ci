@@ -37,8 +37,10 @@ object ScriptEnvUtils {
     private const val FLAG_FILE = "flag.log"
     private const val CONTEXT_FILE = "context.log"
     private const val ERROR_FILE = "setError.log"
+    private const val MULTILINE_FILE = "multiLine.log"
     private const val QUALITY_GATEWAY_FILE = "gatewayValueFile.ini"
     private val keyRegex = Regex("^[a-zA-Z_][a-zA-Z0-9_]*$")
+    private val lineSplitRegex = Regex("\\r\\n|\\r|\\n")
     private val logger = LoggerFactory.getLogger(ScriptEnvUtils::class.java)
 
     fun cleanEnv(buildId: String, workspace: File) {
@@ -77,6 +79,20 @@ object ScriptEnvUtils {
         val randomNum = ExecutorUtil.getThreadLocal()
         return "$buildId-$randomNum-$ERROR_FILE"
     }
+
+    fun getMultipleLineFile(buildId: String): String {
+        val randomNum = ExecutorUtil.getThreadLocal()
+        return "$buildId-$randomNum-$MULTILINE_FILE"
+    }
+
+    fun getMultipleLines(buildId: String, workspace: File): List<String> {
+        val f = File(workspace, getMultipleLineFile(buildId))
+        if (!f.exists() || f.isDirectory) return emptyList()
+        return f.readText(Charsets.UTF_8)
+            .removePrefix("\uFEFF")
+            .split(lineSplitRegex)
+            .let { if (it.isNotEmpty() && it.last().isEmpty()) it.dropLast(1) else it }
+    }
     /*限定文件名*/
     fun getFlagFile(buildId: String): String {
         val randomNum = ExecutorUtil.getThreadLocal()
@@ -108,12 +124,23 @@ object ScriptEnvUtils {
         val randomContextFilePath = getContextFile(buildId)
         val randomSetErrorFilePath = getSetErrorFile(buildId)
         val flagFile = getFlagFile(buildId)
+        val multiLineFilePath = getMultipleLineFile(buildId)
+        deleteFile(multiLineFilePath, workspace)
         deleteFile(defaultEnvFilePath, workspace)
         deleteFile(randomEnvFilePath, workspace)
         deleteFile(randomContextFilePath, workspace)
         deleteFile(randomSetErrorFilePath, workspace)
         deleteFile(flagFile, workspace)
+        cleanMultilineBlockFiles(buildId, workspace)
         ExecutorUtil.removeThreadLocal()
+    }
+
+    /**
+     * 清理内联多行块语法生成的临时文件（ml_block_<buildId>_<n>.txt）
+     */
+    private fun cleanMultilineBlockFiles(buildId: String, workspace: File) {
+        workspace.listFiles { f -> f.isFile && f.name.startsWith("ml_block_${buildId}_") }
+            ?.forEach { it.delete() }
     }
 
     private fun deleteFile(filePath: String, workspace: File) {

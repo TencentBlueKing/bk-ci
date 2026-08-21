@@ -1,10 +1,26 @@
 package com.tencent.devops.worker.common.utils
 
 import java.io.File
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 
 class CommandLineUtilsTest {
+
+    /** 各用例在 java.io.tmpdir 下写入的临时结果文件，统一清理 */
+    private val resultLogFiles = listOf(
+        "appendVariableToFileTest",
+        "appendRemarkToFileTest",
+        "appendOutputToFileTest",
+        "appendOutputToFileMultiLineTest",
+        "appendGateToFileTest"
+    )
+
+    @AfterEach
+    fun cleanResultLogFiles() {
+        val tmpDir = File(System.getProperty("java.io.tmpdir"))
+        resultLogFiles.forEach { name -> File(tmpDir, name).delete() }
+    }
 
     @Test
     fun reportProgressRateTest() {
@@ -113,6 +129,30 @@ class CommandLineUtilsTest {
         Assertions.assertEquals(
             func("::set-output name=RESULT::test"),
             "jobs.$jobId.steps.$stepId.outputs.RESULT=test\n"
+        )
+    }
+
+    @Test
+    fun appendOutputToFileMultiLineTest() {
+        val jobId = "job_xx"
+        val stepId = "step_xx"
+        fun func(str: String) = CommandLineUtils.appendOutputToFile(
+            tmpLine = str,
+            workspace = File(System.getProperty("java.io.tmpdir")),
+            resultLogFile = "appendOutputToFileMultiLineTest",
+            jobId = jobId,
+            stepId = stepId
+        )
+        /*多行内容测试 - Pattern.matches 默认不匹配跨行，::set-output 多行值走 multiLine.log 独立通道*/
+        Assertions.assertEquals(
+            null,
+            func("::set-output name=RESULT::line1\nline2\nline3")
+        )
+
+        /*值中包含 :: 的情况 - 只分割第一个 ::*/
+        Assertions.assertEquals(
+            "jobs.$jobId.steps.$stepId.outputs.RESULT=key1::value1\n",
+            func("::set-output name=RESULT::key1::value1")
         )
     }
 
