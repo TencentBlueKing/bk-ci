@@ -22,7 +22,38 @@
                     }"
                 ></span>
                 <aside class="exec-detail-summary-header-title">
+                    <build-end-info-popover
+                        v-if="showBuildEndInfoPopover"
+                        :build-end-info="execDetail.buildEndInfo"
+                        :start-time="buildEndStartTime"
+                        :trigger-user="startUser"
+                        :trigger-type-desc="execDetail.trigger"
+                        @highlight="handleBuildEndPositionHighlight"
+                        @locateLog="handleBuildEndPositionLocate"
+                    >
+                        <bk-tag
+                            class="exec-status-tag"
+                            type="stroke"
+                            :theme="statusTagTheme"
+                        >
+                            <span class="exec-status-label">
+                                {{ statusLabel }}
+                                <span
+                                    v-if="!execDetail.buildEndInfo"
+                                    v-bk-tooltips="`${$t('details.canceller')}：${execDetail.cancelUserId || '--'}`"
+                                    class="devops-icon icon-info-circle"
+                                >
+                                </span>
+                                <span
+                                    v-else
+                                    class="devops-icon icon-info-circle"
+                                >
+                                </span>
+                            </span>
+                        </bk-tag>
+                    </build-end-info-popover>
                     <bk-tag
+                        v-else
                         class="exec-status-tag"
                         type="stroke"
                         :theme="statusTagTheme"
@@ -36,12 +67,6 @@
                                 }]"
                             />
                             {{ statusLabel }}
-                            <span
-                                v-if="execDetail.status === 'CANCELED'"
-                                v-bk-tooltips="`${$t('details.canceller')}：${execDetail.cancelUserId || '--'}`"
-                                class="devops-icon icon-info-circle"
-                            >
-                            </span>
                         </span>
                     </bk-tag>
                     <span
@@ -111,6 +136,7 @@
                 }]"
             >
                 <component
+                    ref="execDetailPanel"
                     :is="curPanel.component"
                     v-bind="curPanel.bindData"
                     v-on="curPanel.listeners"
@@ -166,6 +192,8 @@
     import AtomPropertyPanel from '@/components/AtomPropertyPanel'
     import codeRecord from '@/components/codeRecord'
     import emptyTips from '@/components/devops/emptyTips'
+    import BuildEndInfoPopover from '@/components/ExecDetail/BuildEndInfoPopover'
+    import { getBuildEndInfoConfig } from '@/components/ExecDetail/buildEndInfoConfig'
     import job from '@/components/ExecDetail/job'
     import plugin from '@/components/ExecDetail/plugin'
     import stage from '@/components/ExecDetail/stage'
@@ -208,7 +236,8 @@
             stageReviewPanel,
             Logo,
             AtomPropertyPanel,
-            Summary
+            Summary,
+            BuildEndInfoPopover
         },
         mixins: [pipelineOperateMixin],
 
@@ -428,6 +457,13 @@
             },
             startUser () {
                 return this.recordList.find(i => i.id === this.executeCount)?.user || ''
+            },
+            buildEndStartTime () {
+                return this.execDetail?.startTime || this.execDetail?.queueTime
+            },
+            showBuildEndInfoPopover () {
+                return !!getBuildEndInfoConfig(this.execDetail?.buildEndInfo?.endCategory)
+                    && !!this.execDetail?.buildEndInfo
             }
         },
 
@@ -538,6 +574,91 @@
                     editingElementPos: args
                 })
             },
+            locateBuildEndPosition (position = {}) {
+                try {
+                    const { stageId, containerId, taskId } = position
+                    const stages = this.execDetail?.model?.stages || []
+                    const stageIndex = stages.findIndex(stage => stage.id === stageId)
+                    if (stageIndex < 0) return null
+
+                    const stage = stages[stageIndex]
+                    let containerIndex
+                    let containerGroupIndex
+                    let container
+
+                    for (let i = 0; i < stage.containers.length; i++) {
+                        const item = stage.containers[i]
+                        if (item.matrixGroupFlag) {
+                            const groupIndex = item.groupContainers?.findIndex?.(group => group.id === containerId)
+                            if (groupIndex > -1) {
+                                containerIndex = i
+                                containerGroupIndex = groupIndex
+                                container = item.groupContainers[groupIndex]
+                                break
+                            }
+                        } else if (item.id === containerId) {
+                            containerIndex = i
+                            container = item
+                            break
+                        }
+                    }
+
+                    if (!container) return null
+
+                    const elementIndex = taskId
+                        ? container.elements?.findIndex?.(element => element.id === taskId)
+                        : undefined
+
+                    return {
+                        stageIndex,
+                        containerIndex: containerIndex > -1 ? containerIndex : undefined,
+                        containerGroupIndex: containerGroupIndex > -1 ? containerGroupIndex : undefined,
+                        elementIndex: elementIndex > -1 ? elementIndex : undefined
+                    }
+                } catch (e) {
+                    console.error(e)
+                    return null
+                }
+            },
+            getBuildEndLocateFailedKey () {
+                return getBuildEndInfoConfig(this.execDetail?.buildEndInfo?.endCategory)?.locateFailedKey
+            },
+            runBuildEndPositionAction (position, { openLog = false } = {}) {
+                const editingElementPos = this.locateBuildEndPosition(position)
+                if (!editingElementPos) {
+                    const locateFailedKey = this.getBuildEndLocateFailedKey()
+                    this.$showTips({
+                        message: this.$t(locateFailedKey),
+                        theme: 'warning'
+                    })
+                    return
+                }
+                const needSwitchTab = this.curItemTab !== PANELS.executeDetail
+                if (needSwitchTab) {
+                    this.switchTab({ name: PANELS.executeDetail })
+                }
+                const runAction = () => {
+                    this.$refs.execDetailPanel?.setBuildEndHighlight?.({
+                        editingElementPos,
+                        position
+                    })
+                    if (openLog) {
+                        this.togglePropertyPanel({
+                            isShow: true,
+                            editingElementPos
+                        })
+                    }
+                }
+                this.$nextTick(() => {
+                    needSwitchTab ? this.$nextTick(runAction) : runAction()
+                })
+            },
+            handleBuildEndPositionHighlight (position) {
+                this.runBuildEndPositionAction(position)
+            },
+            handleBuildEndPositionLocate (position) {
+                this.runBuildEndPositionAction(position, { openLog: true })
+            },
             handleStageCheck ({ type, stageIndex }) {
                 this.toggleStageReviewPanel({
                     showStageReviewPanel: {
@@ -633,6 +754,11 @@
 
       .exec-status-tag {
         margin: 0;
+      }
+
+      .build-end-info-popover-trigger {
+        display: inline-flex;
+        align-items: center;
       }
 
       .exec-status-label {
