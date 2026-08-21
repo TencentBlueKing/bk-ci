@@ -152,6 +152,9 @@ interface UserTGitResource {
         refreshToken: Boolean? = false,
         @Parameter(description = "是否校验token(refreshToken=true时不做校验)", required = false)
         @QueryParam("validationCheck")
-        validationCheck: Boolean? = false
+        validationCheck: Boolean? = false,
+        @Parameter(description = "重置授权类型,前端根据不同代码库类型,在重置授权时跳转不同的弹框", required = false)
+        @QueryParam("resetType")
+        resetType: String?
     ): Result<AuthorizeResult>
 }
