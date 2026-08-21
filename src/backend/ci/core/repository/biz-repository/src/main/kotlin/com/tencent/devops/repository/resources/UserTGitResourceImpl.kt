@@ -51,7 +51,8 @@ class UserTGitResourceImpl @Autowired constructor(
         redirectUrl: String?,
         gitProjectId: Long?,
         refreshToken: Boolean?,
-        validationCheck: Boolean?
+        validationCheck: Boolean?,
+        resetType: String?
     ): Result<AuthorizeResult> {
         return Result(
             tGitOauthService.isOAuth(
