@@ -56,19 +56,21 @@ class JwtManagerTest {
             "/UT8Vtnhar1zpDh8m++9lS1nSfR8SVSyXNRlNspMM6cWyV8CW40="
     private val enable: Boolean = true
 
+    val jwtManager = JwtManager(JwtConfig(authEnable = enable)).apply {
+        addKeyConfig(kid = "devops", privateKey = privateKeyString, publicKey = publicKeyString, active = true)
+    }
     @Test
     fun generateAndVerify() {
         // 生成并验证jwt token
-        val jwtManager = JwtManager(privateKeyString, publicKeyString, enable)
+        jwtManager.generateToken("start")
         val jwtToken = jwtManager.getToken()
-        val verifyResult = jwtManager.verifyJwt(jwtToken!!)
+        val verifyResult = jwtManager.verifyJwt(jwtToken!!).isValid
         Assertions.assertEquals(true, verifyResult)
     }
 
     @Test
     fun isAuthEnable() {
         // 判断是否需要验证
-        val jwtManager = JwtManager(privateKeyString, publicKeyString, enable)
         val isAuthEnable = jwtManager.isAuthEnable()
         Assertions.assertEquals(true, isAuthEnable)
     }
@@ -76,7 +78,6 @@ class JwtManagerTest {
     @Test
     fun isSendEnable() {
         // 判断是否需要发送头部验证
-        val jwtManager = JwtManager(privateKeyString, publicKeyString, enable)
         val isSendEnable = jwtManager.isSendEnable()
         Assertions.assertEquals(true, isSendEnable)
     }
@@ -84,14 +85,14 @@ class JwtManagerTest {
     @Test
     fun refreshToken() {
         // 生成并验证jwt token
-        val jwtManager = JwtManager(privateKeyString, publicKeyString, enable)
+        jwtManager.generateToken("start")
         val jwtToken = jwtManager.getToken()
-        val verifyResult = jwtManager.verifyJwt(jwtToken!!)
+        val verifyResult = jwtManager.verifyJwt(jwtToken!!).isValid
         Assertions.assertEquals(true, verifyResult)
-        jwtManager.refreshToken()
+        jwtManager.generateToken("refresh")
         // 刷新并验证新jwt token
         val refreshJwtToken = jwtManager.getToken()
-        val refreshVerifyResult = jwtManager.verifyJwt(refreshJwtToken!!)
+        val refreshVerifyResult = jwtManager.verifyJwt(refreshJwtToken!!).isValid
         Assertions.assertEquals(true, refreshVerifyResult)
     }
 }
