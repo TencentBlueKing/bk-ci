@@ -93,9 +93,10 @@ import {
     UPDATE_STAGE,
     UPDATE_STORESTATUS,
     UPDATE_TEMPLATE_CONSTRAINT,
+    UPDATE_WHOLE_ATOM_INPUT,
+    UPDATE_PIPELINE_PUBLIC_VAR_GROUPS,
     SAVE_PIPELINE_SNAPSHOT,
-    CLEAR_PIPELINE_SNAPSHOT,
-    UPDATE_WHOLE_ATOM_INPUT
+    CLEAR_PIPELINE_SNAPSHOT
 } from './constants'
 
 export default {
@@ -560,6 +561,10 @@ export default {
     },
     [CLEAR_PIPELINE_SNAPSHOT]: (state) => {
         Vue.set(state, 'originalPipelineSnapshot', null)
+        return state
+    },
+    [UPDATE_PIPELINE_PUBLIC_VAR_GROUPS]: (state, publicVarGroups) => {
+        Object.assign(state.pipeline, { publicVarGroups })
         return state
     }
 }
