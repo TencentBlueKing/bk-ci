@@ -42,6 +42,7 @@ class ServiceAgentResourceImpl @Autowired constructor(
     val thirdPartyAgentService: ThirdPartyAgentService,
     val thirdPartyAgentDockerService: ThirdPartyAgentDockerService
 ) : ServiceAgentResource {
+    @Deprecated("最新的构建表包含了executeCount的情况，但是这个方法是按老逻辑单BuildId返回的，所以后续尽可能不使用，只维持")
     override fun listAgentBuild(
         agentId: String,
         status: String?,
