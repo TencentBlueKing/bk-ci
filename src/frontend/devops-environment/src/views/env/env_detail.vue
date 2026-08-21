@@ -157,6 +157,14 @@
                     name: 'node',
                     label: proxy.$t('environment.node')
                 },
+                ...(currentEnv.value?.envType === ENV_TYPE_MAP.BUILD || isCreateResType.value ? [
+                    {
+                        name: 'buildTask',
+                        label: currentEnv.value?.envType === ENV_TYPE_MAP.CREATE
+                            ? proxy.$t('environment.relatedCreativeFlow')
+                            : proxy.$t('environment.nodeInfo.buildTask')
+                    }
+                ] : []),
                 ...(currentEnv.value?.envType === ENV_TYPE_MAP.BUILD ? [
                     {
                         name: 'variable',
@@ -177,14 +185,6 @@
                 //         label: proxy.$t('environment.settings')
                 //     }
                 // ] : []),
-                ...(currentEnv.value?.envType === ENV_TYPE_MAP.BUILD || isCreateResType.value ? [
-                    {
-                        name: 'buildTask',
-                        label: currentEnv.value?.envType === ENV_TYPE_MAP.CREATE
-                            ? proxy.$t('environment.relatedCreativeFlow')
-                            : proxy.$t('environment.nodeInfo.buildTask')
-                    }
-                ] : []),
                 ...(!isPersonalProject.value ? [{
                     name: 'auth',
                     label: proxy.$t('environment.authManage')

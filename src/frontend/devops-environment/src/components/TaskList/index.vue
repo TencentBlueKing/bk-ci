@@ -227,7 +227,7 @@
                             >
                                 <template #default="{ row }">
                                     <a
-                                        class="text-link"
+                                        class="text-link build-num-link"
                                         :href="getBuildDetailUrl(row)"
                                         target="_blank"
                                     >#{{ row.buildNum }}</a>
@@ -295,7 +295,7 @@
                             >
                                 <template #default="{ row }">
                                     <a
-                                        class="text-link"
+                                        class="text-link build-num-link"
                                         :href="getBuildDetailUrl(row)"
                                         target="_blank"
                                     >#{{ row.buildNum }}</a>
@@ -359,7 +359,7 @@
                             >
                                 <template #default="{ row }">
                                     <a
-                                        class="text-link"
+                                        class="text-link build-num-link"
                                         :href="getBuildDetailUrl(row)"
                                         target="_blank"
                                     >#{{ row.buildNum }}</a>
@@ -1252,6 +1252,10 @@
                             font-weight: 500;
                         }
 
+                        a.build-num {
+                            color: #3A84FF;
+                        }
+
                         .build-status-text {
                             color: #313238;
                         }
@@ -1405,6 +1409,10 @@
             &:hover {
                 color: #3a84ff;
             }
+        }
+
+        a.build-num-link {
+            color: #3A84FF;
         }
         
         .loading-more,
