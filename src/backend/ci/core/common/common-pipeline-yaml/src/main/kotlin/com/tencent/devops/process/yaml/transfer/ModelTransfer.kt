@@ -35,13 +35,13 @@ import com.tencent.devops.common.pipeline.TemplateInstanceDescriptor
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.dialect.PipelineDialectType
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.TemplateRefType
 import com.tencent.devops.common.pipeline.pojo.PublicVarGroupRef
 import com.tencent.devops.common.pipeline.pojo.TemplateInstanceField
 import com.tencent.devops.common.pipeline.pojo.TemplateInstanceRecommendedVersion
 import com.tencent.devops.common.pipeline.pojo.TemplateInstanceTriggerConfig
 import com.tencent.devops.common.pipeline.pojo.TemplateVariable
-import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.setting.BuildCancelPolicy
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
@@ -68,6 +68,7 @@ import com.tencent.devops.process.yaml.v3.models.PacNotices
 import com.tencent.devops.process.yaml.v3.models.PreExtends
 import com.tencent.devops.process.yaml.v3.models.PreTemplateScriptBuildYamlV3Parser
 import com.tencent.devops.process.yaml.v3.models.TriggerType
+import com.tencent.devops.process.yaml.v3.models.VariableTemplate
 import com.tencent.devops.process.yaml.v3.models.on.IPreTriggerOn
 import com.tencent.devops.process.yaml.v3.models.on.PreTriggerOn
 import com.tencent.devops.process.yaml.v3.models.on.PreTriggerOnV3
@@ -193,7 +194,7 @@ class ModelTransfer @Autowired constructor(
         model.latestVersion = yamlInput.pipelineInfo?.version ?: 0
         model.publicVarGroups = yamlInput.yaml.formatVariableTemplates().map {
             PublicVarGroupRef.create(groupName = it.name, versionName = it.version)
-        }.ifEmpty { null }
+        }
 
         // 蓝盾引擎会将stageId从1开始顺序强制重写，因此在生成model时保持一致
         val stageIndex = AtomicInteger(0)
@@ -337,7 +338,19 @@ class ModelTransfer @Autowired constructor(
         }
         yaml.notices = makeNoticesV3(modelInput)
         yaml.stages = makeStages(modelInput).ifEmpty { null }?.let { TransferMapper.anyTo(it) }
-        yaml.variables = makeVariablesYaml(modelInput)
+        val variables = mutableMapOf<String, Any>()
+        modelInput.model.handlePublicVarInfo()
+        val publicVarGroups = modelInput.model.publicVarGroups
+        if (!publicVarGroups.isNullOrEmpty()) {
+            variables[TEMPLATE_KEY] = publicVarGroups.map {
+                VariableTemplate(it.groupName, it.versionName)
+            }
+        }
+        // 模板实例化流水线：仅输出公共变量组引用，不输出模板参数变量
+        if (modelInput.model.template == null) {
+            variableTransfer.makeVariableFromModel(modelInput.model.getTriggerContainer())?.let { variables.putAll(it) }
+        }
+        yaml.variables = if (variables.isEmpty()) null else variables
         yaml.extends = makeExtend(modelInput.model)
         yaml.finally = makeFinally(modelInput)?.ifEmpty { null }
         yaml.concurrency = makeConcurrency(modelInput)
@@ -356,16 +369,6 @@ class ModelTransfer @Autowired constructor(
         }
         modelInput.aspectWrapper.setYaml4Yaml(yaml, PipelineTransferAspectWrapper.AspectType.AFTER)
         return yaml
-    }
-
-    /**
-     * 生成 yaml 的 variables 节点，公共变量组引用以 template 关键字输出，组内变量不再重复输出
-     */
-    private fun makeVariablesYaml(modelInput: ModelTransferInput): Map<String, Any>? {
-        val variables = mutableMapOf<String, Any>()
-        variableTransfer.makeVariableTemplatesFromModel(modelInput.model)?.let { variables[TEMPLATE_KEY] = it }
-        variableTransfer.makeVariableFromModel(getTriggerContainer(modelInput))?.let { variables.putAll(it) }
-        return variables.ifEmpty { null }
     }
 
     private fun makeStages(modelInput: ModelTransferInput): MutableList<PreStage> {

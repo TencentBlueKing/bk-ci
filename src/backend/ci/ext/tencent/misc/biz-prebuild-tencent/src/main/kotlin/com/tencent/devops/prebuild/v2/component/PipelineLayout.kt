@@ -86,9 +86,9 @@ import com.tencent.devops.process.yaml.v2.models.step.Step
 import com.tencent.devops.process.yaml.v2.utils.ScriptYmlUtils
 import com.tencent.devops.store.api.atom.ServiceMarketAtomResource
 import com.tencent.devops.store.pojo.atom.InstallAtomReq
+import jakarta.ws.rs.core.Response
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
-import jakarta.ws.rs.core.Response
 import com.tencent.devops.process.yaml.v2.models.job.Container as V2Container
 import com.tencent.devops.process.yaml.v2.models.stage.Stage as V2Stage
 
@@ -166,9 +166,9 @@ class PipelineLayout private constructor(
     /**
      * 生成构建参数
      */
-    private fun makeBuildProperties(): List<BuildFormProperty> {
+    private fun makeBuildProperties(): MutableList<BuildFormProperty> {
         if (variables.isNullOrEmpty()) {
-            return emptyList()
+            return mutableListOf()
         }
 
         val retList = mutableListOf<BuildFormProperty>()
@@ -764,7 +764,7 @@ class PipelineLayout private constructor(
                 elements = listOf(ManualTriggerElement(
                     I18nUtil.getCodeLanMessage(messageCode = BK_MANUAL_TRIGGER), "T-1-1-1")
                 ),
-                params = emptyList()
+                params = mutableListOf()
             )
             stageList.add(Stage(listOf(triggerContainer), "stage-1"))
             this.stages = stageList

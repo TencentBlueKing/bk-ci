@@ -29,17 +29,21 @@ package com.tencent.devops.process.service.template.v2.version.hander
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.PipelineVersionAction
+import com.tencent.devops.common.pipeline.enums.PublicVarGroupReferenceTypeEnum
 import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.pojo.pipeline.DeployTemplateResult
+import com.tencent.devops.process.pojo.`var`.dto.PublicVarGroupReferDTO
 import com.tencent.devops.process.service.template.v2.PipelineTemplateGenerator
 import com.tencent.devops.process.service.template.v2.PipelineTemplateModelLock
 import com.tencent.devops.process.service.template.v2.PipelineTemplatePersistenceService
 import com.tencent.devops.process.service.template.v2.PipelineTemplateResourceService
 import com.tencent.devops.process.service.template.v2.PipelineTemplateSettingService
 import com.tencent.devops.process.service.template.v2.version.PipelineTemplateVersionCreateContext
+import com.tencent.devops.process.service.`var`.PublicVarGroupReferManageService
 import com.tencent.devops.process.yaml.PipelineYamlReleaseService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -55,7 +59,8 @@ class PipelineTemplateDraftReleaseHandler @Autowired constructor(
     private val pipelineTemplateResourceService: PipelineTemplateResourceService,
     private val pipelineTemplateSettingService: PipelineTemplateSettingService,
     private val redisOperation: RedisOperation,
-    private val pipelineYamlReleaseService: PipelineYamlReleaseService
+    private val pipelineYamlReleaseService: PipelineYamlReleaseService,
+    private val publicVarGroupReferManageService: PublicVarGroupReferManageService
 ) : PipelineTemplateVersionCreateHandler {
     override fun support(context: PipelineTemplateVersionCreateContext) =
         context.versionAction == PipelineVersionAction.RELEASE_DRAFT
@@ -129,6 +134,10 @@ class PipelineTemplateDraftReleaseHandler @Autowired constructor(
             targetAction = targetAction,
             targetBranch = targetBranch
         )
+        // 在所有持久化之前校验公共变量组引用
+        (pTemplateResourceWithoutVersion.model as? Model)?.let {
+            publicVarGroupReferManageService.validateVarGroupReferences(model = it, projectId = projectId)
+        }
         pipelineYamlReleaseService.validateReleaseYamlFile(
             context = this,
             resourceOnlyVersion = resourceOnlyVersion
@@ -142,6 +151,24 @@ class PipelineTemplateDraftReleaseHandler @Autowired constructor(
             pipelineTemplatePersistenceService.releaseDraft2BranchVersion(
                 context = this,
                 resourceOnlyVersion = resourceOnlyVersion
+            )
+        }
+
+        // 同步变量组引用关系（校验已通过）
+        (pTemplateResourceWithoutVersion.model as? Model)?.let {
+            publicVarGroupReferManageService.handleVarGroupReferBus(
+                PublicVarGroupReferDTO(
+                    userId = userId,
+                    projectId = projectId,
+                    model = it,
+                    referId = templateId,
+                    referType = PublicVarGroupReferenceTypeEnum.TEMPLATE,
+                    referName = pipelineTemplateInfo.name,
+                    referVersion = resourceOnlyVersion.version.toInt(),
+                    referVersionName = resourceOnlyVersion.versionName ?: "",
+                    // 模板草稿发布为 RELEASED/BRANCH（生效版本）：需同步 LATEST_FLAG
+                    activeVersion = true
+                )
             )
         }
 

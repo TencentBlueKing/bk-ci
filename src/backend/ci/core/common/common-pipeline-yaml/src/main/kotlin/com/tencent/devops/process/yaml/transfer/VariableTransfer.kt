@@ -29,7 +29,6 @@ package com.tencent.devops.process.yaml.transfer
 
 import com.tencent.devops.common.api.constant.CommonMessageCode.YAML_NOT_VALID
 import com.tencent.devops.common.api.enums.ScmType
-import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.pojo.BuildContainerType
@@ -46,7 +45,6 @@ import com.tencent.devops.process.yaml.v3.models.Variable
 import com.tencent.devops.process.yaml.v3.models.VariablePropOption
 import com.tencent.devops.process.yaml.v3.models.VariablePropType
 import com.tencent.devops.process.yaml.v3.models.VariableProps
-import com.tencent.devops.process.yaml.v3.models.VariableTemplate
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 
@@ -60,12 +58,17 @@ class VariableTransfer {
             listOf(MAJORVERSION, "MajorVersion", MINORVERSION, "MinorVersion", FIXVERSION, "FixVersion")
     }
 
-    fun makeVariableFromModel(triggerContainer: TriggerContainer?): Map<String, Variable>? {
+    fun makeVariableFromModel(triggerContainer: TriggerContainer?): Map<String, Any>? {
+        if (triggerContainer != null) {
+            return makeVariableFromBuildParams(triggerContainer.params, true)
+        }
+        return null
+    }
+
+    fun makeVariableFromBuildParams(params: List<BuildFormProperty>, skipPublicVar: Boolean): Map<String, Variable>? {
         val result = mutableMapOf<String, Variable>()
-        triggerContainer?.params?.forEach {
-            if (it.id in ignoredVariable) return@forEach
-            // 公共变量组内的变量由 variables.template 表达，不能再作为普通流水线变量输出
-            if (it.varGroupName != null) return@forEach
+        params.forEach {
+            if (it.id in ignoredVariable || (skipPublicVar && it.varGroupName != null)) return@forEach
             result[it.id] = convertVariable(it)
         }
         return if (result.isEmpty()) {
@@ -73,25 +76,6 @@ class VariableTransfer {
         } else {
             result
         }
-    }
-
-    /**
-     * 提取model中的公共变量组引用，用于还原 yaml 中的 variables.template
-     *
-     */
-    fun makeVariableTemplatesFromModel(model: Model?): List<VariableTemplate>? {
-        model ?: return null
-        model.publicVarGroups?.takeIf { it.isNotEmpty() }?.let { groups ->
-            return groups.map { VariableTemplate(name = it.groupName, version = it.versionName) }
-        }
-        val params = (model.stages.firstOrNull()?.containers?.firstOrNull() as? TriggerContainer)?.params
-            ?: return null
-        return params.asSequence()
-            .filter { !it.varGroupName.isNullOrBlank() }
-            .distinctBy { it.varGroupName }
-            .map { VariableTemplate(name = it.varGroupName!!, version = it.varGroupVersion?.let { v -> "v$v" }) }
-            .toList()
-            .ifEmpty { null }
     }
 
     fun convertVariable(it: BuildFormProperty, subField: Boolean = false): Variable {

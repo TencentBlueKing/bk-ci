@@ -79,7 +79,7 @@ object TemplateInstanceUtil {
         val triggerContainer = templateTrigger.copy(
             buildNo = buildNo,
             elements = triggerElements,
-            params = pipelineParams,
+            params = pipelineParams.toMutableList(),
             templateParams = null
         )
 
@@ -94,7 +94,6 @@ object TemplateInstanceUtil {
             srcTemplateId = templateResource.srcTemplateId,
             template = template,
             overrideTemplateField = overrideTemplateField,
-            // 模板上的公共变量组引用需要随实例化一起带到流水线，否则实例化后引用信息丢失
             publicVarGroups = templateModel.publicVarGroups
         )
     }
@@ -170,7 +169,7 @@ object TemplateInstanceUtil {
         return templateTrigger.copy(
             buildNo = buildNo,
             elements = triggerElements,
-            params = pipelineParams,
+            params = pipelineParams.toMutableList(),
             templateParams = null
         )
     }

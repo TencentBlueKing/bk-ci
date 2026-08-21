@@ -57,6 +57,7 @@ import com.tencent.devops.process.yaml.v3.models.on.PreTriggerOnV3
 import com.tencent.devops.process.yaml.v3.models.stage.IPreStage
 import com.tencent.devops.process.yaml.v3.parsers.template.models.GetTemplateParam
 import com.tencent.devops.process.yaml.v3.parsers.template.models.TemplateDeepTreeNode
+
 @Suppress("ALL")
 class YamlTemplate<T>(
     val extraParameters: T,
@@ -179,9 +180,9 @@ class YamlTemplate<T>(
     ) {
         val variableMap = mutableMapOf<String, Variable>()
         variables.forEach { (key, value) ->
-            // variables 下的 template 关键字为公共变量组引用，格式为 [{name, version}]，不作为普通变量处理
             if (key == Constants.TEMPLATE_KEY) {
-                preYamlObject.variableTemplates = VariableTemplate.parseList(value).ifEmpty { null }
+                // template 关键字在 variables 下表示公共变量组引用，结构不合规会抛错而非静默丢弃
+                preYamlObject.variableTemplates = VariableTemplate.parseList(value)
                 return@forEach
             }
             if (value !is Map<*, *>) {
