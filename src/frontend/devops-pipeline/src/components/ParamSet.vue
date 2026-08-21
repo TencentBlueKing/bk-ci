@@ -736,12 +736,21 @@
                     return
                 }
                 await switchManageSet(setIndex)
-                const set = paramSetList.value[setIndex]
-                if (!set) {
+                const originSet = filteredSets.value[setIndex]
+                if (!originSet) {
                     return
                 }
+                const sourceParams = originSet.params || []
+                const inputParams = sourceParams
+                    .filter(param => !allVersionKeyList.includes(param.id))
+                    .map(toEditingParam)
                 editingSet.value = {
-                    ...set
+                    ...originSet,
+                    paramIds: inputParams.map(param => param.id),
+                    params: inputParams,
+                    versionParams: sourceParams
+                        .filter(param => allVersionKeyList.includes(param.id))
+                        .map(toEditingParam)
                 }
                 isEditing.value = true
             }
@@ -879,11 +888,12 @@
                     const editingParams = [
                         ...editingSet.value.params,
                         ...editingSet.value.versionParams
-                    ]
+                    ].map(toEditingParam)
                     // 超长变量仅在最终提交时解析，避免完整值进入响应式表单并被直接展示。
-                    const params = typeof props.resolveParamsForSave === 'function'
+                    const resolvedParams = typeof props.resolveParamsForSave === 'function'
                         ? await props.resolveParamsForSave(editingParams) || editingParams
                         : editingParams
+                    const params = resolvedParams.map(toEditingParam)
                     const requestSet = {
                         id: editingSet.value.id,
                         name: editingSet.value.name,
@@ -956,6 +966,20 @@
                     overflowLength: isLong ? getDisplayValueLength(param.value) : undefined,
                     longValueViewable: isLong && !isOverflowReference(param.value),
                     defaultValue: isLong ? undefined : param.value
+                }
+            }
+
+            function toEditingParam (param = {}) {
+                const rest = { ...param }
+                delete rest.isLongValue
+                delete rest.overflowLength
+                delete rest.longValueViewable
+                delete rest.isDeleted
+                const value = rest.value ?? rest.defaultValue
+                return {
+                    ...rest,
+                    value,
+                    defaultValue: rest.defaultValue ?? value
                 }
             }
 

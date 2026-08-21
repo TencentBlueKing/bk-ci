@@ -35,6 +35,7 @@
                     <bk-input
                         v-if="canEditDetail"
                         type="textarea"
+                        :rows="20"
                         v-model="draftValue"
                     />
                     <pre v-else>{{ value }}</pre>
@@ -239,9 +240,13 @@
     > p {
         flex-shrink: 0;
     }
-    > pre {
+    > pre,
+    > .bk-form-control {
         flex: 1;
+        min-height: 0;
         margin: 6px 0;
+    }
+    > pre {
         padding: 6px 10px;
         background: #fafbfd;
         border: 1px solid #dcdee5;
@@ -250,11 +255,16 @@
         white-space: pre-wrap;
         word-wrap: break-word;
     }
-    > .bk-form-textarea {
-        flex: 1;
-        margin-top: 6px;
-        min-height: 0;
-        textarea {
+    > .bk-form-control {
+        display: flex;
+        flex-direction: column;
+        .bk-textarea-wrapper,
+        .bk-form-textarea {
+            flex: 1;
+            min-height: 0;
+            height: 100%;
+        }
+        textarea.bk-form-textarea {
             height: 100%;
             resize: none;
             font-family: monospace;
