@@ -66,7 +66,9 @@ class ThirdPartyAgentBuildDao {
             } else {
                 dsl.and(EXECUTE_COUNT.eq(executeCount))
             }
-            return dsl.fetchAny()
+            return dsl // 通过排序取最新
+                .orderBy(ID.desc())
+                .limit(1).fetchAny()
         }
     }
 
@@ -83,7 +85,9 @@ class ThirdPartyAgentBuildDao {
             if (executeCount != null) {
                 dsl.and(EXECUTE_COUNT.eq(executeCount).or(EXECUTE_COUNT.isNull))
             }
-            return dsl.fetchAny()
+            return dsl// 通过排序取最新
+                .orderBy(ID.desc())
+                .limit(1).fetchAny()
         }
     }
 
@@ -666,7 +670,7 @@ class ThirdPartyAgentBuildDao {
             val dsl = dslContext.select(
                 PIPELINE_ID,
                 PIPELINE_NAME,
-                DSL.countDistinct(BUILD_ID).`as`("BUILD_COUNT"),
+                DSL.countDistinct(BUILD_ID, EXECUTE_COUNT).`as`("BUILD_COUNT"),
                 DSL.max(CREATED_TIME).`as`("LAST_BUILD_TIME"),
                 DSL.avg(TIME_INTERVAL).`as`("AVG_TIME_INTERVAL")
             ).from(this).where(PROJECT_ID.eq(projectId))
@@ -707,7 +711,7 @@ class ThirdPartyAgentBuildDao {
             }
             return dsl.and(JOB_ID.isNotNull)
                 .groupBy(PIPELINE_ID)
-                .orderBy(ID.desc())
+                .orderBy(DSL.max(ID).desc())
                 .limit(limit)
                 .offset(offset)
                 .fetch()
@@ -791,7 +795,7 @@ class ThirdPartyAgentBuildDao {
             }
             return dsl.and(JOB_ID.isNotNull)
                 .groupBy(PIPELINE_ID, BUILD_ID, EXECUTE_COUNT)
-                .orderBy(ID.desc())
+                .orderBy(DSL.max(ID).desc())
                 .limit(limit)
                 .offset(offset)
                 .fetch()
@@ -895,7 +899,7 @@ class ThirdPartyAgentBuildDao {
             }
             return dsl.and(JOB_ID.isNotNull)
                 .groupBy(PIPELINE_ID, JOB_ID)
-                .orderBy(ID.desc())
+                .orderBy(DSL.max(ID).desc())
                 .limit(limit)
                 .offset(offset)
                 .fetch()
@@ -1025,8 +1029,7 @@ class ThirdPartyAgentBuildDao {
         pipelineId: String
     ): Long {
         with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
-            val dsl = dslContext.selectCount()
-                .from(this)
+            val dsl = dslContext.selectCount().from(this)
                 .where(PIPELINE_ID.eq(pipelineId))
             if (!agentId.isNullOrBlank()) {
                 dsl.and(AGENT_ID.eq(agentId))
@@ -1049,16 +1052,14 @@ class ThirdPartyAgentBuildDao {
     ): List<TDispatchThirdpartyAgentBuildRecord> {
         with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
             val dsl = dslContext.selectFrom(this)
-                .where(PROJECT_ID.eq(projectId))
+                .where(PIPELINE_ID.eq(pipelineId))
             if (!agentId.isNullOrBlank()) {
                 dsl.and(AGENT_ID.eq(agentId))
             }
             if (envId != null) {
                 dsl.and(ENV_ID.eq(envId))
             }
-            dsl.and(PIPELINE_ID.eq(pipelineId))
-            return dsl.orderBy(ID.desc())
-                .fetch()
+            return dsl.and(PROJECT_ID.eq(projectId)).orderBy(ID.desc()).limit(limit).offset(offset).fetch()
         }
     }
 
@@ -1071,8 +1072,7 @@ class ThirdPartyAgentBuildDao {
         executeCount: Int?
     ): Long {
         with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
-            val dsl = dslContext.selectCount()
-                .from(this)
+            val dsl = dslContext.selectCount().from(this)
                 .where(BUILD_ID.eq(buildId))
             if (!agentId.isNullOrBlank()) {
                 dsl.and(AGENT_ID.eq(agentId))
@@ -1101,21 +1101,19 @@ class ThirdPartyAgentBuildDao {
     ): List<TDispatchThirdpartyAgentBuildRecord> {
         with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
             val dsl = dslContext.selectFrom(this)
-                .where(PROJECT_ID.eq(projectId))
+                .where(BUILD_ID.eq(buildId))
             if (!agentId.isNullOrBlank()) {
                 dsl.and(AGENT_ID.eq(agentId))
             }
             if (envId != null) {
                 dsl.and(ENV_ID.eq(envId))
             }
-            dsl.and(BUILD_ID.eq(buildId))
             if (executeCount == null) {
                 dsl.and(EXECUTE_COUNT.isNull)
             } else {
                 dsl.and(EXECUTE_COUNT.eq(executeCount))
             }
-            return dsl.orderBy(ID.desc())
-                .fetch()
+            return dsl.and(PROJECT_ID.eq(projectId)).orderBy(ID.desc()).limit(limit).offset(offset).fetch()
         }
     }
 }
