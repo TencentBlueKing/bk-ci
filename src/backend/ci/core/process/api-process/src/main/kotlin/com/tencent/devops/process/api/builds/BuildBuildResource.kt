@@ -35,6 +35,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_VM_SEQ_ID
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.process.pojo.BuildHistory
+import com.tencent.devops.process.pojo.MutexGroupTaskInfo
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import com.tencent.devops.process.pojo.task.PipelineFailTaskDetail
 import io.swagger.v3.oas.annotations.Operation
@@ -192,4 +193,16 @@ interface BuildBuildResource {
         @PathParam("taskId")
         taskId: String
     ): Result<Map<String, Any>?>
+
+    @Operation(summary = "查询互斥组当前任务列表")
+    @GET
+    @Path("/{projectId}/mutexGroup/tasks")
+    fun getMutexGroupTasks(
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "互斥组名称", required = true)
+        @QueryParam("mutexGroupName")
+        mutexGroupName: String
+    ): Result<List<MutexGroupTaskInfo>>
 }
