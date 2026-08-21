@@ -561,6 +561,7 @@
         "QUEUE": "排队中",
         "RUNNING": "运行中",
         "DONE": "执行成功",
-        "FAILURE": "执行失败"
+        "FAILURE": "执行失败",
+        "FINISHED": "运行完成"
     }
 }

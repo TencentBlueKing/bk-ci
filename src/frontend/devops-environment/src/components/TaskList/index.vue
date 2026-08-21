@@ -532,7 +532,7 @@
                 resetPagination,
                 updateCount
             } = usePagination()
-            const currentView = ref('PIPELINE')
+            const currentView = ref('BUILD')
             const pipelineCount = ref(0)
             const jobCount = ref(0)
             const buildCount = ref(0)
@@ -578,12 +578,12 @@
             }))
             const statusField = computed(() => ({
                 name: proxy.$t('environment.taskStatus'),
-                id: 'taskStatus',
+                id: 'taskStatusList',
                 children: [
                     { id: 'QUEUE', name: proxy.$t('environment.pipelineTaskStatusMap.QUEUE') },
                     { id: 'RUNNING', name: proxy.$t('environment.pipelineTaskStatusMap.RUNNING') },
-                    { id: 'DONE', name: proxy.$t('environment.pipelineTaskStatusMap.DONE') },
-                    { id: 'FAILURE', name: proxy.$t('environment.pipelineTaskStatusMap.FAILURE') }
+                    // 运行完成 = DONE + FAILURE，传参时在 filterQuery 中展开为枚举数组
+                    { id: 'FINISHED', name: proxy.$t('environment.pipelineTaskStatusMap.FINISHED') }
                 ]
             }))
             const creatorField = computed(() => ({
@@ -632,6 +632,14 @@
 
             const filterQuery = computed(() => {
                 return searchSelectValue.value.reduce((query, item) => {
+                    // 状态筛选为 List<Enum>：FINISHED（运行完成）展开为 ['DONE', 'FAILURE']，其余状态原样传
+                    if (item.id === 'taskStatusList') {
+                        const statusList = item.values.flatMap(value =>
+                            value.id === 'FINISHED' ? ['DONE', 'FAILURE'] : [value.id]
+                        )
+                        query.taskStatusList = [...new Set(statusList)]
+                        return query
+                    }
                     query[item.id] = item.values.map(value => value.id).join(',')
                     return query
                 }, {})
@@ -1108,11 +1116,11 @@
     flex-direction: column;
     overflow: hidden;
     .date-picker {
-        width: 300px;
+        width: 240px;
         margin-right: 8px;
     }
     .search-input {
-        width: 480px;
+        width: 350px;
         z-index: 1000;
         background: white;
         ::placeholder {

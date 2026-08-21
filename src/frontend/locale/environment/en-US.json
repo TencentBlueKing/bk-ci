@@ -564,6 +564,7 @@
         "QUEUE": "Queued",
         "RUNNING": "Running",
         "DONE": "Succeeded",
-        "FAILURE": "Failed"
+        "FAILURE": "Failed",
+        "FINISHED": "Finished"
     }
 }

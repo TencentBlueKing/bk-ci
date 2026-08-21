@@ -559,6 +559,7 @@
         "QUEUE": "キュー中",
         "RUNNING": "実行中",
         "DONE": "実行成功",
-        "FAILURE": "実行失敗"
+        "FAILURE": "実行失敗",
+        "FINISHED": "実行完了"
     }
 }
