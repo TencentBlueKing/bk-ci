@@ -47,6 +47,14 @@ const actions: ActionTree<RootState, any> = {
     async toggleServiceCollect (_, { serviceId, isCollected }: any) {
         return Request.put(`${PROJECT_API_URL_PREFIX}/user/services/${serviceId}?collector=${isCollected}`)
     },
+    /**
+     * 项目收藏 / 取消收藏
+     * TODO: 接口待后端提供后替换
+     */
+    async toggleProjectCollect (_, { projectCode, isCollected }: any) {
+        // return Request.put(`${PROJECT_API_URL_PREFIX}/user/projects/${projectCode}/collector?collector=${isCollected}`)
+        return Promise.resolve({ projectCode, isCollected })
+    },
     async fetchLinks ({ commit }, { type }) {
         try {
             const links = await Request.get(`${PROJECT_API_URL_PREFIX}/user/activities/types/${type}`)

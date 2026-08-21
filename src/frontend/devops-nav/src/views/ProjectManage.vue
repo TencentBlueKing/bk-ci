@@ -47,6 +47,23 @@
                     @page-limit-change="limitChange"
                 >
                     <bk-table-column
+                        class-name="collect-column"
+                        width="30"
+                        align="center"
+                    >
+                        <template slot-scope="{ row }">
+                            <i
+                                :class="[
+                                    'devops-icon',
+                                    'collect-icon',
+                                    row.collected ? 'icon-star-shape' : 'icon-star'
+                                ]"
+                                :title="row.collected ? $t('collected') : $t('toCollect')"
+                                @click.stop.prevent="handleToggleCollect(row)"
+                            />
+                        </template>
+                    </bk-table-column>
+                    <bk-table-column
                         :label="$t('projectName')"
                         sortable="custom"
                         prop="projectName"
@@ -460,8 +477,32 @@
                 'fetchProjectList',
                 'toggleProjectEnable',
                 'checkMemberExitsProject',
-                'memberExitsProject'
+                'memberExitsProject',
+                'toggleProjectCollect'
             ]),
+            async handleToggleCollect (row) {
+                const isCollected = !row.collected
+                try {
+                    this.$set(row, 'collected', isCollected)
+                    await this.toggleProjectCollect({
+                        projectCode: row.projectCode,
+                        isCollected
+                    })
+                    // 收藏成功后把该项目置顶
+                    if (isCollected) {
+                        const index = this.projectList.findIndex(
+                            item => item.projectCode === row.projectCode
+                        )
+                        if (index > 0) {
+                            const [item] = this.projectList.splice(index, 1)
+                            this.projectList.unshift(item)
+                        }
+                    }
+                } catch (e) {
+                    console.warn(e)
+                    this.$set(row, 'collected', !isCollected)
+                }
+            },
             getkeyByValue (obj, value) {
                 return Object.keys(obj).find(key => obj[key] === value)
             },
@@ -955,9 +996,28 @@
     }
     .biz-table {
         font-weight: normal;
-        td:first-child {
-            display: flex;
-            align-items: center;
+        ::v-deep .collect-column {
+            .cell {
+                padding: 0;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+        }
+        .collect-icon {
+            display: none;
+            font-size: 16px;
+            color: #abb4c3;
+            cursor: pointer;
+            &.icon-star-shape {
+                display: inline-block;
+                color: #f9ce1d;
+            }
+        }
+        ::v-deep .bk-table-row:hover {
+            .collect-icon {
+                display: inline-block;
+            }
         }
         .title {
             color: #7b7d8a;
