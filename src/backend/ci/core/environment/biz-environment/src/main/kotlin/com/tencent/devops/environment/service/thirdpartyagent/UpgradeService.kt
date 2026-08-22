@@ -177,6 +177,8 @@ class UpgradeService @Autowired constructor(
 
         val goAgentCheckFun = fun() = currentGoAgentVersion != info.goAgentVersion
         val goAgentVersion = when {
+            // sdk的不升级，靠其依赖的平台自己升级
+            props?.sdk == true -> false
             currentGoAgentVersion.isBlank() -> false
             agentScope.checkLockUpgrade(agentId, AgentUpgradeType.GO_AGENT) -> false
             agentScope.checkForceUpgrade(agentId, AgentUpgradeType.GO_AGENT) && goAgentCheckFun() -> true
@@ -188,6 +190,8 @@ class UpgradeService @Autowired constructor(
         val jdkCheckFun = fun() = info.jdkVersion.isNullOrEmpty() ||
                 ((info.jdkVersion?.size ?: 0) > 2 && currentJdkVersion?.trim() != info.jdkVersion?.get(2)?.trim())
         val jdkVersion = when {
+            // sdk的不升级，靠其依赖的平台自己升级
+            props?.sdk == true -> false
             currentJdkVersion.isNullOrBlank() -> false
             agentScope.checkLockUpgrade(agentId, AgentUpgradeType.JDK) -> false
             agentScope.checkForceUpgrade(agentId, AgentUpgradeType.JDK) && jdkCheckFun() -> true
@@ -198,6 +202,8 @@ class UpgradeService @Autowired constructor(
 
         val dockerInitFileCheckFun = fun() = info.dockerInitFileInfo?.fileMd5 != currentDockerInitFileMd5
         val dockerInitFile = when {
+            // sdk的不升级，靠其依赖的平台自己升级
+            props?.sdk == true -> false
             currentDockerInitFileMd5.isNullOrBlank() -> false
             // 旧数据或agent不使用docker构建机，所以不校验升级
             info.dockerInitFileInfo == null -> false

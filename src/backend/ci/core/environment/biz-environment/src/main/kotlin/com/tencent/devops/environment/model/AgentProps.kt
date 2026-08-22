@@ -24,10 +24,24 @@ data class AgentProps(
     val dockerInitFileInfo: DockerInitFileInfo?,
     val exitError: AgentErrorExitData?,
     val osVersion: String?,
-    val source: AgentPropsSource? = null
+    val source: AgentPropsSource? = null,
+    val sdk: Boolean? = false
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(AgentProps::class.java)
+
+        fun parseAgentProps(props: String?): AgentProps? {
+            return if (props.isNullOrBlank()) {
+                null
+            } else {
+                try {
+                    JsonUtil.to(props, object : TypeReference<AgentProps>() {})
+                } catch (e: Exception) {
+                    // 兼容老数据格式不对的情况
+                    null
+                }
+            }
+        }
 
         fun emptyBySource(source: AgentPropsSource) = AgentProps(
             arch = "",
@@ -37,6 +51,17 @@ data class AgentProps(
             exitError = null,
             osVersion = null,
             source = source
+        )
+
+        fun emptyBySdk(sdk: Boolean) = AgentProps(
+            arch = "",
+            jdkVersion = emptyList(),
+            userProps = emptyMap(),
+            dockerInitFileInfo = null,
+            exitError = null,
+            osVersion = null,
+            source = null,
+            sdk = sdk
         )
 
         fun getSourceFromRecord(props: String?, os: OS?): AgentPropsSource {
