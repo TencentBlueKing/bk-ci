@@ -17,17 +17,18 @@
     "README.md"
   ],
   "engines": {
-    "node": ">=16"
+    "node": "^22.19.0 || >=24.0.0"
   },
+  "packageManager": "pnpm@11.7.0",
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "clean": "rimraf dist",
-    "prepublishOnly": "npm run clean && npm run build",
+    "prepublishOnly": "pnpm run clean && pnpm run build",
     "example": "ts-node examples/basic.ts"
   },
-  "dependencies": {},
   "devDependencies": {
     "@types/node": "^20.11.0",
-    "typescript": "^5.4.0"
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3"
   }
 }
