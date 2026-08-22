@@ -14,13 +14,15 @@ import com.tencent.devops.environment.constant.EnvironmentMessageCode
 import com.tencent.devops.environment.dao.thirdpartyagent.AgentBatchInstallTokenDao
 import com.tencent.devops.environment.dao.thirdpartyagent.ThirdPartyAgentDao
 import com.tencent.devops.environment.model.AgentProps
-import com.tencent.devops.environment.model.AgentPropsSource
 import com.tencent.devops.environment.pojo.enums.AgentType
+import com.tencent.devops.environment.pojo.thirdpartyagent.ReInstallResp
 import com.tencent.devops.environment.pojo.thirdpartyagent.RegistryResp
 import com.tencent.devops.environment.pojo.thirdpartyagent.TPAInstallType
+import com.tencent.devops.environment.pojo.thirdpartyagent.create.AgentPropsSource
 import com.tencent.devops.environment.service.AgentUrlService
 import com.tencent.devops.environment.service.CreateEnvService
 import com.tencent.devops.environment.service.slave.SlaveGatewayService
+import jakarta.ws.rs.NotFoundException
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -49,6 +51,32 @@ class BatchInstallAgentService @Autowired constructor(
     @Value("\${environment.batch-install.aes-key}")
     private val batchInstallAesKey = ""
 
+    fun genReInstallLink(
+        projectId: String,
+        userId: String,
+        os: OS,
+        reInstallId: String
+    ): ReInstallResp {
+        val record = thirdPartyAgentDao.getAgentByProject(dslContext, HashUtil.decodeIdToLong(reInstallId), projectId)
+            ?: throw NotFoundException("The agent is not exist")
+        val zoneName = slaveGatewayService.getZoneName(record.gateway)
+        return ReInstallResp(
+            zoneName = zoneName,
+            script = genInstallLink(
+                projectId = projectId,
+                userId = userId,
+                os = os,
+                zoneName = null,
+                loginName = null,
+                loginPassword = null,
+                installType = null,
+                reInstallId = reInstallId,
+                agentType = null,
+                iGateway = record.gateway
+            )
+        )
+    }
+
     fun genInstallLink(
         projectId: String,
         userId: String,
@@ -58,10 +86,15 @@ class BatchInstallAgentService @Autowired constructor(
         loginPassword: String?,
         installType: TPAInstallType?,
         reInstallId: String?,
-        agentType: AgentType?
+        agentType: AgentType?,
+        iGateway: String? = null
     ): String {
         val now = LocalDateTime.now()
-        val gateway = slaveGatewayService.getGateway(zoneName)
+        val gateway = iGateway ?: if (reInstallId.isNullOrBlank()) {
+            slaveGatewayService.getGateway(zoneName)
+        } else {
+            thirdPartyAgentDao.getAgentByProject(dslContext, HashUtil.decodeIdToLong(reInstallId), projectId)?.gateway
+        }
         // 先确定下是否已经生成过了，以及有没有过期
         val record = agentBatchInstallTokenDao.getToken(
             dslContext = dslContext,

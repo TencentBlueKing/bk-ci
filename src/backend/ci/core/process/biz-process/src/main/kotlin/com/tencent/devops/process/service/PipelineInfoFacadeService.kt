@@ -66,6 +66,7 @@ import com.tencent.devops.common.pipeline.extend.ModelCheckPlugin
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildNo
 import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
+import com.tencent.devops.common.pipeline.pojo.PipelineRunEnvOsChange
 import com.tencent.devops.common.pipeline.pojo.TemplateInstanceField
 import com.tencent.devops.common.pipeline.pojo.TemplateVariable
 import com.tencent.devops.common.pipeline.pojo.element.atom.BeforeDeleteParam
@@ -108,9 +109,11 @@ import com.tencent.devops.process.pojo.template.TemplateType
 import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.service.pipeline.PipelineSettingFacadeService
 import com.tencent.devops.process.service.pipeline.PipelineTransferYamlService
+import com.tencent.devops.process.service.pipeline.version.PipelineRunEnvOsChangeResolver
 import com.tencent.devops.process.service.template.v2.PipelineTemplateInfoService
 import com.tencent.devops.process.service.template.v2.PipelineTemplateRelatedService
 import com.tencent.devops.process.service.template.v2.PipelineTemplateResourceService
+import com.tencent.devops.process.service.`var`.PublicVarGroupService
 import com.tencent.devops.process.service.view.PipelineViewGroupService
 import com.tencent.devops.process.strategy.context.UserPipelinePermissionCheckContext
 import com.tencent.devops.process.strategy.factory.UserPipelinePermissionCheckStrategyFactory
@@ -122,14 +125,6 @@ import com.tencent.devops.store.api.template.ServiceTemplateResource
 import jakarta.ws.rs.core.MediaType
 import jakarta.ws.rs.core.Response
 import jakarta.ws.rs.core.StreamingOutput
-import org.jooq.DSLContext
-import org.jooq.impl.DSL
-import org.slf4j.LoggerFactory
-import org.slf4j.MDC
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.dao.DuplicateKeyException
-import org.springframework.stereotype.Service
 import java.io.File
 import java.io.FileInputStream
 import java.net.URLEncoder
@@ -138,6 +133,14 @@ import java.util.LinkedList
 import java.util.concurrent.TimeUnit
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
+import org.jooq.DSLContext
+import org.jooq.impl.DSL
+import org.slf4j.LoggerFactory
+import org.slf4j.MDC
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.dao.DuplicateKeyException
+import org.springframework.stereotype.Service
 
 @Suppress("ALL")
 @Service
@@ -165,7 +168,9 @@ class PipelineInfoFacadeService @Autowired constructor(
     private val auditService: AuditService,
     private val pipelineTemplateRelatedService: PipelineTemplateRelatedService,
     private val pipelineTemplateResourceService: PipelineTemplateResourceService,
-    private val pipelineTemplateInfoService: PipelineTemplateInfoService
+    private val pipelineTemplateInfoService: PipelineTemplateInfoService,
+    private val publicVarGroupService: PublicVarGroupService,
+    private val pipelineRunEnvOsChangeResolver: PipelineRunEnvOsChangeResolver
 ) {
 
     @Value("\${process.deletedPipelineStoreDays:30}")
@@ -612,10 +617,10 @@ class PipelineInfoFacadeService @Autowired constructor(
             watcher.stop()
 
             var pipelineId: String? = null
+            val triggerContainer = model.getTriggerContainer()
             try {
                 val instance = if (instanceType == PipelineInstanceTypeEnum.FREEDOM.type) {
                     // 将模版常量变更实例化为流水线变量
-                    val triggerContainer = model.getTriggerContainer()
                     PipelineUtils.instanceModel(
                         templateModel = model,
                         pipelineName = model.name,
@@ -647,7 +652,17 @@ class PipelineInfoFacadeService @Autowired constructor(
                     yaml = yaml,
                     baseVersion = null,
                     yamlFileInfo = yamlFileInfo,
-                    pipelineDisable = pipelineDisable
+                    pipelineDisable = pipelineDisable,
+                    // 新建时首次指定运行环境，编排(如模板带入的插件)未必适用于该环境的操作系统，需要一并校验
+                    runEnvOsChange = setting?.let {
+                        pipelineRunEnvOsChangeResolver.resolve(
+                            userId = userId,
+                            projectId = projectId,
+                            pipelineId = fixPipelineId ?: "",
+                            channelCode = channelCode,
+                            setting = it
+                        )
+                    }
                 )
                 pipelineId = result.pipelineId
                 watcher.stop()
@@ -717,6 +732,7 @@ class PipelineInfoFacadeService @Autowired constructor(
                     pipelineId = pipelineId,
                     userId = userId
                 )
+
                 ActionAuditContext.current()
                     .addInstanceInfo(pipelineId, model.name, null, null)
                 success = true
@@ -1328,7 +1344,14 @@ class PipelineInfoFacadeService @Autowired constructor(
                 yaml = yaml,
                 baseVersion = baseVersion,
                 yamlFileInfo = yamlFileInfo,
-                pipelineDisable = pipelineDisable
+                pipelineDisable = pipelineDisable,
+                runEnvOsChange = resolveRunEnvOsChange(
+                    userId = userId,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    channelCode = channelCode,
+                    setting = savedSetting
+                )
             )
             // 审计
             ActionAuditContext.current()
@@ -1340,6 +1363,33 @@ class PipelineInfoFacadeService @Autowired constructor(
             processJmxApi.execute(ProcessJmxApi.NEW_PIPELINE_EDIT, System.currentTimeMillis() - apiStartEpoch)
             logger.info("EDIT_PIPELINE|$pipelineId|$channelCode|p=$checkPermission|u=$userId")
         }
+    }
+
+    /**
+     * 解析本次保存需要校验的运行环境操作系统。
+     *
+     * [setting] 为本次一并保存的设置，为空时取流水线当前设置：只改编排不改设置时，
+     * 运行环境虽未变，但新增的插件仍可能不适用于当前环境，同样需要校验。
+     */
+    private fun resolveRunEnvOsChange(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        channelCode: ChannelCode,
+        setting: PipelineSetting?
+    ): PipelineRunEnvOsChange? {
+        // 先判渠道再取设置，普通流水线在此返回，不产生额外查询
+        if (!pipelineRunEnvOsChangeResolver.isRunEnvSpecifiedBySetting(channelCode)) return null
+        val effectiveSetting = setting
+            ?: pipelineRepositoryService.getSetting(projectId, pipelineId)
+            ?: return null
+        return pipelineRunEnvOsChangeResolver.resolve(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            channelCode = channelCode,
+            setting = effectiveSetting
+        )
     }
 
     fun renamePipeline(
@@ -1470,7 +1520,10 @@ class PipelineInfoFacadeService @Autowired constructor(
             pipelineId = pipelineId,
             setting = setting,
             checkPermission = checkPermission,
-            dispatchPipelineUpdateEvent = false
+            dispatchPipelineUpdateEvent = false,
+            // 设置先于编排落库，其中的运行环境校验须以本次要保存的编排为准，
+            // 否则用户在同一次里既换了环境又把插件改成适配的，会被上一版编排误判为不适配
+            savingModel = model
         )
         val pipelineResult = editPipeline(
             userId = userId,
@@ -1594,7 +1647,9 @@ class PipelineInfoFacadeService @Autowired constructor(
             model.name = pipelineInfo.pipelineName
             model.desc = pipelineInfo.pipelineDesc
             model.pipelineCreator = pipelineInfo.creator
-            model.latestVersion = pipelineInfo.version
+            // latestVersion 是公共变量组引用信息（referVersion）的载体，历史数据可能缺省，
+            // 这里按实际返回的资源版本回填，避免下游按错误版本查引用信息
+            model.latestVersion = resource.version
             val defaultTagId by lazy { stageTagService.getDefaultStageTag().data?.id } // 优化
             model.stages.forEach {
                 if (it.name.isNullOrBlank()) it.name = it.id

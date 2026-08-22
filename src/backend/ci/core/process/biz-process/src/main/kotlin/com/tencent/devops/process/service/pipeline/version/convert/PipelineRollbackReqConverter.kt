@@ -131,7 +131,9 @@ class PipelineRollbackReqConverter @Autowired constructor(
             versionAction = PipelineVersionAction.SAVE_DRAFT,
             baseDraftVersion = draftVersion,
             // 非草稿历史回滚(从正式/历史版本回滚)时,删除当前草稿并重建
-            overrideDraft = draftVersion == null
+            overrideDraft = draftVersion == null,
+            // 回滚写回的是该流水线自己落库过的编排,不是本次编写的
+            modelCarriedOver = true
         )
 
         return pipelineVersionCreateContextFactory.create(

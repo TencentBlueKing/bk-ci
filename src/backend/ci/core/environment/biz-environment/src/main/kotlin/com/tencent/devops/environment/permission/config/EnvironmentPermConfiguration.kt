@@ -38,6 +38,7 @@ import com.tencent.devops.environment.permission.EnvironmentPermissionService
 import com.tencent.devops.environment.permission.MockEnvironmentPermissionService
 import com.tencent.devops.environment.permission.RbacEnvironmentPermissionService
 import com.tencent.devops.environment.permission.StreamEnvironmentPermissionServiceImp
+import com.tencent.devops.environment.permission.creativestream.CreativeStreamNodePermissionHandler
 import org.jooq.DSLContext
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
@@ -106,9 +107,11 @@ class EnvironmentPermConfiguration {
     @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "rbac")
     fun rbacEnvironmentPermissionService(
         client: Client,
-        tokenCheckService: ClientTokenService
+        tokenCheckService: ClientTokenService,
+        creativeStreamNodePermissionHandler: CreativeStreamNodePermissionHandler
     ): EnvironmentPermissionService = RbacEnvironmentPermissionService(
         client = client,
-        tokenCheckService = tokenCheckService
+        tokenCheckService = tokenCheckService,
+        creativeStreamNodePermissionHandler = creativeStreamNodePermissionHandler
     )
 }

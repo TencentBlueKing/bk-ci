@@ -53,6 +53,7 @@ import com.tencent.devops.common.pipeline.dialect.IPipelineDialect
 import com.tencent.devops.common.pipeline.enums.BranchVersionAction
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.PipelineInstanceTypeEnum
+import com.tencent.devops.common.pipeline.enums.PublicVarGroupReferenceTypeEnum
 import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.pipeline.event.CallBackEvent
 import com.tencent.devops.common.pipeline.event.CallBackNetWorkRegionType
@@ -62,6 +63,8 @@ import com.tencent.devops.common.pipeline.option.MatrixControlOption
 import com.tencent.devops.common.pipeline.pojo.BuildNo
 import com.tencent.devops.common.pipeline.pojo.MatrixPipelineInfo
 import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
+import com.tencent.devops.common.pipeline.pojo.PipelineRunEnvOsChange
+import com.tencent.devops.common.pipeline.pojo.PipelineRunEnvOsCheckParam
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
@@ -121,12 +124,14 @@ import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlFileInfo
 import com.tencent.devops.process.pojo.pipeline.TemplateInfo
 import com.tencent.devops.process.pojo.setting.PipelineModelVersion
+import com.tencent.devops.process.pojo.`var`.dto.PublicVarGroupReferDTO
 import com.tencent.devops.process.service.PipelineAsCodeService
 import com.tencent.devops.process.service.PipelineOperationLogService
-import com.tencent.devops.process.service.PipelineVisibilityService
 import com.tencent.devops.process.service.label.PipelineGroupService
+import com.tencent.devops.process.service.PipelineVisibilityService
 import com.tencent.devops.process.service.pipeline.PipelineSettingVersionService
 import com.tencent.devops.process.service.pipeline.PipelineTransferYamlService
+import com.tencent.devops.process.service.`var`.PublicVarGroupReferManageService
 import com.tencent.devops.process.utils.PIPELINE_MATRIX_CON_RUNNING_SIZE_MAX
 import com.tencent.devops.process.utils.PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX
 import com.tencent.devops.process.utils.PIPELINE_SETTING_MAX_QUEUE_SIZE_MAX
@@ -138,13 +143,15 @@ import com.tencent.devops.process.utils.PipelineVersionUtils
 import com.tencent.devops.process.yaml.utils.NotifyTemplateUtils
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import jakarta.ws.rs.core.Response
+import java.time.LocalDateTime
+import java.util.concurrent.atomic.AtomicInteger
+import kotlin.collections.associate
+import kotlin.collections.forEach
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import java.time.LocalDateTime
-import java.util.concurrent.atomic.AtomicInteger
 
 @Suppress(
     "LongParameterList",
@@ -190,6 +197,7 @@ class PipelineRepositoryService constructor(
     private val pipelineTemplateInfoDao: PipelineTemplateInfoDao,
     private val pipelineGroupService: PipelineGroupService,
     private val pipelineVisibilityService: PipelineVisibilityService,
+    private val publicVarGroupReferManageService: PublicVarGroupReferManageService,
     private val pipelineResourceDraftVersionDao: PipelineResourceDraftVersionDao
 ) {
 
@@ -264,7 +272,8 @@ class PipelineRepositoryService constructor(
         branchName: String? = null,
         description: String? = null,
         yamlFileInfo: PipelineYamlFileInfo? = null,
-        pipelineDisable: Boolean? = null
+        pipelineDisable: Boolean? = null,
+        runEnvOsChange: PipelineRunEnvOsChange? = null
     ): DeployPipelineResult {
 
         // 生成流水线ID,新流水线以p-开头，以区分以前旧数据
@@ -288,7 +297,8 @@ class PipelineRepositoryService constructor(
             versionStatus = versionStatus,
             channelCode = channelCode,
             yamlFileInfo = yamlFileInfo,
-            pipelineDialect = pipelineDialect
+            pipelineDialect = pipelineDialect,
+            runEnvOsChange = runEnvOsChange
         )
         val triggerContainer = model.getTriggerContainer()
         val buildNo = triggerContainer.buildNo?.apply {
@@ -372,7 +382,90 @@ class PipelineRepositoryService constructor(
     }
 
     /**
+     * 构造「插件是否适用于其运行所在节点操作系统」的校验入参，是该校验唯一的入参构造点，
+     * 返回空表示本次不做该项校验，判定见 [skipRunEnvOsCheck]。
+     *
+     * 该校验不由调用方开关：无论运行环境由设置指定(创作流的创作环境)还是由编排里的 Job 各自指定
+     * (普通流水线的 baseOS)，编排或运行环境一变更就可能让插件跑在它不支持的系统上，与服务范围、
+     * 构建环境匹配等校验一样属于保存的固有约束。存量编排不被阻断靠的是
+     * [PipelineRunEnvOsCheckParam.exemptedRunEnvOsAtomKeys] 的差集豁免，而非让调用方选择跳过。
+     *
+     * [channelCode] 与 [runEnvOsChange] 都须按流水线自身渠道解析后传入，不能取请求上下文的渠道，
+     * 原因见 [PipelineRunEnvOsCheckParam.osJobTypeName]。
+     */
+    fun buildRunEnvOsCheckParam(
+        projectId: String,
+        pipelineId: String,
+        channelCode: ChannelCode,
+        runEnvOsChange: PipelineRunEnvOsChange?,
+        create: Boolean = false,
+        modelCarriedOver: Boolean = false
+    ): PipelineRunEnvOsCheckParam? {
+        if (skipRunEnvOsCheck(
+                channelCode = channelCode,
+                runEnvOsChange = runEnvOsChange,
+                create = create,
+                modelCarriedOver = modelCarriedOver
+            )) return null
+        return PipelineRunEnvOsCheckParam(
+            settingRunEnvOsChange = runEnvOsChange,
+            osJobTypeName = runEnvOsChange?.osJobTypeName ?: AtomUtils.resolveOsJobType(channelCode).name,
+            exemptedRunEnvOsAtomKeys = lazy {
+                collectExemptedRunEnvOsAtomKeys(projectId, pipelineId, runEnvOsChange)
+            }
+        )
+    }
+
+    /**
+     * 判断本次保存是否需要跳过「插件是否适用于其运行所在节点的操作系统」校验。
+     *
+     * 返回 true 跳过校验，false 执行校验。上层 [buildRunEnvOsCheckParam] 返回 null 即为跳过。
+     */
+    private fun skipRunEnvOsCheck(
+        channelCode: ChannelCode,
+        runEnvOsChange: PipelineRunEnvOsChange?,
+        create: Boolean,
+        modelCarriedOver: Boolean
+    ) = when {
+        // 平台维护类渠道 — 直接跳过
+        AtomUtils.isPlatformMaintainedChannel(channelCode) -> true
+        // 编排承继承(本次编排出非用户主动编辑产生,如模板实例化) — 直接跳过
+        modelCarriedOver -> true
+        // 无运行环境变更信息需判断该渠道的运行环境是否由流水线设置指定和是否是创建场景
+        runEnvOsChange == null -> AtomUtils.isRunEnvSpecifiedBySetting(channelCode) || create
+        else -> false
+    }
+
+    /**
+     * 取差集豁免的基准组合，语义见 [PipelineRunEnvOsCheckParam.exemptedRunEnvOsAtomKeys]。
+     * 仅在本次确实发现不适配项时才会被调用，正常保存不产生这次查询。
+     */
+    private fun collectExemptedRunEnvOsAtomKeys(
+        projectId: String,
+        pipelineId: String,
+        runEnvOsChange: PipelineRunEnvOsChange?
+    ): Set<String> {
+        // 首次为该流水线指定运行环境：此前编排里的插件并没有跑在任何一个环境上，
+        // 不存在「上一次落库时它跑在哪个系统上」这一事实，无可豁免，全量校验
+        if (runEnvOsChange != null && runEnvOsChange.previousOs == null) return emptySet()
+        return AtomUtils.collectRunEnvOsAtomKeys(
+            // 草稿优先：草稿存在时它才是用户上一次保存下来、后续会被发布的编排
+            model = getPipelineResourceVersion(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                includeDraft = true
+            )?.model,
+            // 基准取变更前的运行环境操作系统，本次换过环境时它与 currentOs 不同，于是同一个插件会算出
+            // 不同的 key 而被照常拦下。普通流水线为空，逐 Job 取各自的声明
+            settingRunEnvOs = runEnvOsChange?.previousOs
+        )
+    }
+
+    /**
      * 初始化并检查合法性
+     *
+     * [modelCarriedOver] 由把一份已存在的编排整份写入的入口(如回滚到历史版本)传入，语义见
+     * [buildRunEnvOsCheckParam]。约束模式模板实例无需调用方传入，其编排自带该事实。
      */
     fun initModel(
         model: Model,
@@ -383,7 +476,9 @@ class PipelineRepositoryService constructor(
         versionStatus: VersionStatus? = VersionStatus.RELEASED,
         channelCode: ChannelCode,
         yamlFileInfo: PipelineYamlFileInfo? = null,
-        pipelineDialect: IPipelineDialect? = null
+        pipelineDialect: IPipelineDialect? = null,
+        runEnvOsChange: PipelineRunEnvOsChange? = null,
+        modelCarriedOver: Boolean = false
     ): List<PipelineModelTask> {
         val metaSize = modelCheckPlugin.checkModelIntegrity(
             model = model,
@@ -391,7 +486,16 @@ class PipelineRepositoryService constructor(
             userId = userId,
             oauthUser = getPipelineOauthUser(projectId, pipelineId),
             pipelineDialect = pipelineDialect,
-            pipelineId = pipelineId
+            pipelineId = pipelineId,
+            runEnvOsCheckParam = buildRunEnvOsCheckParam(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                channelCode = channelCode,
+                runEnvOsChange = runEnvOsChange,
+                create = create,
+                // 约束模式模板实例的编排由模板整份覆盖而来，与回滚等入口同属「编排非本次编写」
+                modelCarriedOver = modelCarriedOver || model.instanceFromTemplate == true
+            )
         )
         // 去重id
         val distinctIdSet = HashSet<String>(metaSize, 1F /* loadFactor */)
@@ -400,6 +504,8 @@ class PipelineRepositoryService constructor(
         val modelTasks = ArrayList<PipelineModelTask>(metaSize)
         // 初始化ID 该构建环境下的ID,旧流水引擎数据无法转换为String，仍然是序号的方式
         val containerSeqId = AtomicInteger(0)
+        model.projectId = projectId
+        model.pipelineId = pipelineId
         // 跨 stage 共享的 jobId 生成器种子和已使用的 jobId 集合，确保整个 model 范围内 jobId 唯一
         val randomSeed = AtomicInteger(1)
         val jobIdSet = mutableSetOf<String>()
@@ -748,6 +854,8 @@ class PipelineRepositoryService constructor(
         val id = client.get(ServiceAllocIdResource::class).generateSegmentId("PIPELINE_INFO").data
         val lock = PipelineModelLock(redisOperation, pipelineId)
         var versionName: String? = null
+        // 事务前校验，避免事务提交后校验失败导致引用缺失。
+        publicVarGroupReferManageService.validateVarGroupReferences(model = model, projectId = projectId)
         try {
             lock.lock()
             dslContext.transaction { configuration ->
@@ -911,6 +1019,23 @@ class PipelineRepositoryService constructor(
             lock.unlock()
         }
 
+        // 引用关系写入在事务提交后执行，避免事务回滚产生孤儿引用。
+        // activeVersion 控制 LATEST_FLAG 同步（引用计数/删除保护来源）：RELEASED/BRANCH 为生效版本需同步；
+        // COMMITTING 为草稿不同步，避免草稿改动误伤已发布版本的引用计数。
+        publicVarGroupReferManageService.handleVarGroupReferBus(
+            PublicVarGroupReferDTO(
+                userId = userId,
+                projectId = projectId,
+                model = model,
+                referId = pipelineId,
+                referType = PublicVarGroupReferenceTypeEnum.PIPELINE,
+                referName = model.name,
+                referVersion = 1,
+                referVersionName = versionName ?: "",
+                activeVersion = versionStatus == VersionStatus.RELEASED || versionStatus == VersionStatus.BRANCH
+            )
+        )
+
         pipelineEventDispatcher.dispatch(
             PipelineCreateEvent(
                 source = "create_pipeline",
@@ -976,6 +1101,8 @@ class PipelineRepositoryService constructor(
         var branchAction: BranchVersionAction? = null
         var versionNum: Int? = null
         var updateBuildNo = false
+        // 事务前校验，避免事务提交后校验失败导致引用缺失（B-1）。
+        publicVarGroupReferManageService.validateVarGroupReferences(model = model, projectId = projectId)
         try {
             lock.lock()
             dslContext.transaction { configuration ->
@@ -1198,6 +1325,10 @@ class PipelineRepositoryService constructor(
                             latestVersionStatus = VersionStatus.RELEASED,
                             locked = pipelineDisable
                         )
+                        // 落库前对齐到本次写入的资源版本号：Model JSON 中的 latestVersion 是公共变量组
+                        // 引用信息（referVersion）的唯一载体，必须与所在 RESOURCE 记录的 VERSION 一致，
+                        // 否则读取时按错误版本查引用信息，动态变量组将无法展开
+                        model.latestVersion = version
                         pipelineResourceDao.updateReleaseVersion(
                             dslContext = transactionContext,
                             projectId = projectId,
@@ -1239,8 +1370,9 @@ class PipelineRepositoryService constructor(
                         )
                     }
                 }
-
                 watcher.start("updatePipelineResourceVersion")
+                // 草稿/分支版本未走上面的发布分支，同样需要把 latestVersion 对齐到本次资源版本号
+                model.latestVersion = version
                 pipelineResourceVersionDao.create(
                     dslContext = transactionContext,
                     projectId = projectId,
@@ -1277,6 +1409,24 @@ class PipelineRepositoryService constructor(
             LogUtils.printCostTimeWE(watcher)
             lock.unlock()
         }
+
+        // 引用关系写入在事务提交后执行，避免事务回滚产生孤儿引用。
+        // activeVersion: RELEASED/BRANCH 为生效版本需同步 LATEST_FLAG；草稿（COMMITTING）不同步，
+        // 走 DraftSaveHandler 且不改动已发布版本的引用计数。
+        publicVarGroupReferManageService.handleVarGroupReferBus(
+            PublicVarGroupReferDTO(
+                userId = userId,
+                projectId = projectId,
+                model = model,
+                referId = pipelineId,
+                referType = PublicVarGroupReferenceTypeEnum.PIPELINE,
+                referName = model.name,
+                referVersion = version,
+                referVersionName = versionName,
+                activeVersion = versionStatus?.fix() == VersionStatus.RELEASED ||
+                    versionStatus?.fix() == VersionStatus.BRANCH
+            )
+        )
 
         // TODO 暂时只有正式发布的版本需要推送，等草稿历史出来后调整消费者再全推送
         if (versionStatus?.fix() == VersionStatus.RELEASED) pipelineEventDispatcher.dispatch(
@@ -1861,7 +2011,15 @@ class PipelineRepositoryService constructor(
                         )
                     )
                 }
+                // 引用清理复用 transactionContext，与流水线删除同事务，避免孤儿引用（B-2）。
+                publicVarGroupReferManageService.deletePublicVerGroupRefByReferId(
+                    transactionContext = transactionContext,
+                    referId = pipelineId,
+                    projectId = projectId,
+                    referType = PublicVarGroupReferenceTypeEnum.PIPELINE
+                )
             }
+
             templatePipelineDao.get(
                 dslContext = dslContext,
                 projectId = projectId,
@@ -2399,6 +2557,8 @@ class PipelineRepositoryService constructor(
                 val newModel = releaseResource.model.copy(
                     name = savedSetting.pipelineName, desc = savedSetting.desc
                 )
+                // copy() 不会带上 latestVersion（非构造器属性），需显式对齐到本次写入的资源版本号
+                newModel.latestVersion = version
                 // 用新的流水线名称、描述和旧yaml的格式生成新的yaml
                 val yamlWithVersion = try {
                     transferService.transfer(
