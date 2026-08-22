@@ -35,7 +35,7 @@ data class AgentProps(
                 null
             } else {
                 try {
-                    JsonUtil.to(props, AgentProps::class.java)
+                    JsonUtil.to(props, object : TypeReference<AgentProps>() {})
                 } catch (e: Exception) {
                     // 兼容老数据格式不对的情况
                     null
