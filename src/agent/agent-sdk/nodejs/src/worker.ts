@@ -72,6 +72,18 @@ export interface WorkerBuildResult {
   message: string;
 }
 
+/** worker-agent.jar 版本检测参数。 */
+export interface DetectWorkerVersionOptions {
+  /** JDK17 的 java 可执行文件路径或 JDK 目录。 */
+  jdk17Path: string;
+  /** worker-agent.jar 路径。 */
+  workerJarPath: string;
+  /** 命令工作目录；默认使用 worker-agent.jar 所在目录。 */
+  workDir?: string;
+  /** 可选日志回调，默认走 console。 */
+  logFn?: (msg: string) => void;
+}
+
 const macosJdkBinPath = path.join('Contents', 'Home', 'bin', 'java');
 
 /**
@@ -111,6 +123,93 @@ export function resolveLatestJava(
   }
   if (jdk8Path) {
     return resolveJavaBin(jdk8Path, platform);
+  }
+  return '';
+}
+
+/**
+ * 使用 JDK17 检测 worker-agent.jar 的版本。
+ *
+ * 执行方式与 Go agent 的 DetectWorkerVersion 一致：
+ *   java -Djava.io.tmpdir=<workDir>/build_tmp -Xmx256m -cp <jar>
+ *     com.tencent.devops.agent.AgentVersionKt
+ *
+ * JVM 可能在版本号前输出临时目录、内存等告警，因此不会直接 trim 整段输出，
+ * 而是逐行查找合法版本。检测失败或输出中没有合法版本时返回空字符串。
+ */
+export async function detectWorkerVersion(opts: DetectWorkerVersionOptions): Promise<string> {
+  const log = opts.logFn ?? ((m: string) => console.info('[agent-sdk][worker]', m));
+  const javaBin = path.resolve(resolveJavaBin(opts.jdk17Path));
+  const workerJarPath = path.resolve(opts.workerJarPath);
+  const workDir = path.resolve(opts.workDir ?? path.dirname(workerJarPath));
+
+  if (!fs.existsSync(javaBin)) {
+    log(`detect worker version failed: jdk17 java missing: ${javaBin}`);
+    return '';
+  }
+  if (!fs.existsSync(workerJarPath)) {
+    log(`detect worker version failed: worker jar missing: ${workerJarPath}`);
+    return '';
+  }
+
+  const tmpDir = path.join(workDir, 'build_tmp');
+  try {
+    await fs.promises.mkdir(tmpDir, { recursive: true });
+  } catch (e) {
+    log(`detect worker version failed: cannot create temp dir ${tmpDir}: ${errorMessage(e)}`);
+    return '';
+  }
+
+  const args = [
+    '-Djava.io.tmpdir=' + tmpDir,
+    '-Xmx256m',
+    '-cp',
+    workerJarPath,
+    'com.tencent.devops.agent.AgentVersionKt',
+  ];
+  const result = await spawnAndCollect(javaBin, args, workDir);
+  if (result.error) {
+    log(
+      `detect worker version failed: ${result.error.message}` +
+        (result.output === '' ? '' : `, output: ${result.output.trim()}`)
+    );
+    return '';
+  }
+
+  const version = parseWorkerVersion(result.output);
+  if (version === '') {
+    log('detect worker version failed: no valid version found in command output');
+  } else {
+    log(`detected worker version: ${version}`);
+  }
+  return version;
+}
+
+/**
+ * 从 AgentVersionKt 的混合输出中解析 worker 版本。
+ * 兼容 v1.2.3、v1.2.3-RELEASE、v1.2.3-SNAPSHOT 和 v1.2.3-beta.4。
+ */
+export function parseWorkerVersion(output: string): string {
+  const legacyVersion = /^v\d+\.\d+\.\d+(?:-RELEASE|-SNAPSHOT)?$/;
+  const basicVersion = /^v\d+\.\d+\.\d+$/;
+  const suffixedVersion = /^v\d+\.\d+\.\d+-([^-\.\s]+)\.(\d+)$/;
+
+  for (const outputLine of output.split(/\r?\n/)) {
+    let line = outputLine.trim();
+    if (line === '' || line.includes(' ') || line.includes('OPTIONS')) {
+      continue;
+    }
+    if (line.length > 64) {
+      line = line.slice(0, 64);
+    }
+
+    const suffixMatch = suffixedVersion.exec(line);
+    const matchesCurrentFormat =
+      basicVersion.test(line) ||
+      (suffixMatch !== null && !/^\d+$/.test(suffixMatch[1]));
+    if (matchesCurrentFormat || legacyVersion.test(line)) {
+      return line;
+    }
   }
   return '';
 }
@@ -341,6 +440,52 @@ export async function runWorkerBuild(opts: WorkerBuildOptions): Promise<WorkerBu
   }
 
   return { success, message: msg };
+}
+
+/** 执行命令并收集 stdout/stderr；非 0 退出码按失败处理。 */
+function spawnAndCollect(
+  command: string,
+  args: string[],
+  cwd: string
+): Promise<{ output: string; error: Error | null }> {
+  return new Promise((resolve) => {
+    const child = spawn(command, args, {
+      cwd,
+      env: process.env,
+      stdio: ['ignore', 'pipe', 'pipe'],
+    });
+    const stdout: Buffer[] = [];
+    const stderr: Buffer[] = [];
+    let spawnError: Error | null = null;
+
+    child.stdout.on('data', (chunk: Buffer | string) => {
+      stdout.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+    });
+    child.stderr.on('data', (chunk: Buffer | string) => {
+      stderr.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+    });
+    child.once('error', (err) => {
+      spawnError = err;
+    });
+    child.once('close', (code, signal) => {
+      const output =
+        Buffer.concat(stdout).toString('utf-8') + '\n' + Buffer.concat(stderr).toString('utf-8');
+      if (spawnError) {
+        resolve({ output, error: spawnError });
+        return;
+      }
+      if (code !== 0) {
+        const desc = signal ? `killed by signal ${signal}` : `exit code ${code ?? -1}`;
+        resolve({ output, error: new Error(desc) });
+        return;
+      }
+      resolve({ output, error: null });
+    });
+  });
+}
+
+function errorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
 }
 
 /**

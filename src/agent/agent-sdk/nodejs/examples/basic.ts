@@ -26,13 +26,12 @@ import {
   AgentApi,
   HttpClient,
   DefaultBuildRunner,
-  downloadWorkerJar,
+  DefaultWorkerJarManager,
   downloadDockerInitFile,
   LogType,
 } from '../src';
 
 const AGENT_VERSION = '1.0.0-nodejs-sdk';
-const WORKER_VERSION = '';
 // ── Agent配置（TODO: 按你的环境填写）──────────────────────────────
 const GATEWAY = ''; // TODO: 填写后台网关地址
 const TOKEN = ''; // TODO: 填写 token/deviceId/userId 鉴权相关
@@ -57,7 +56,11 @@ const DOCKER_PARALLEL_TASK_COUNT = 4;
 class DemoHandler implements AgentHandler {
   private upgrading = false;
 
-  constructor(private readonly runner: DefaultBuildRunner) { }
+  constructor(
+    private readonly runner: DefaultBuildRunner,
+    private readonly workerManager: DefaultWorkerJarManager,
+    private readonly api: AgentApi
+  ) {}
 
   onStartup(): StartupInfo {
     return {
@@ -65,14 +68,14 @@ class DemoHandler implements AgentHandler {
       hostIp: firstNonLoopbackIp(),
       detectOS: `${os.platform()}_${os.release()}`,
       masterVersion: AGENT_VERSION,
-      version: WORKER_VERSION,
+      version: this.workerManager.getVersion(),
     };
   }
 
   collectHeartExtra(_ctx: HeartbeatContext, upgradeEnable: boolean): HeartExtra {
     return {
       masterVersion: AGENT_VERSION,
-      slaveVersion: WORKER_VERSION,
+      slaveVersion: this.workerManager.getVersion(),
       hostName: os.hostname(),
       agentIp: firstNonLoopbackIp(),
       agentInstallPath: WORK_DIR,
@@ -90,7 +93,7 @@ class DemoHandler implements AgentHandler {
       },
       upgrade: upgradeEnable
         ? {
-          workerVersion: WORKER_VERSION,
+          workerVersion: this.workerManager.getVersion(),
           goAgentVersion: AGENT_VERSION,
           jdkVersion: [],
           dockerInitFileInfo: { fileMd5: '', needUpgrade: false },
@@ -126,8 +129,66 @@ class DemoHandler implements AgentHandler {
     console.log(`[demo] 构建结束 buildId=${build.buildId}`);
   }
 
-  onUpgrade(upgrade: UpgradeItem, hasBuild: boolean): void {
+  /**
+   * 默认 worker-agent.jar 升级模式：无构建运行时暂停接单，下载到 upgrade 目录，
+   * 校验候选版本和 MD5 后原子替换，最后向后台确认升级结果。
+   */
+  async onUpgrade(upgrade: UpgradeItem, hasBuild: boolean): Promise<void> {
     console.log('[demo] 收到升级指令', upgrade, 'hasBuild=', hasBuild);
+    const hasUpgradeItem =
+      upgrade.worker || upgrade.agent || upgrade.jdk || upgrade.dockerInitFile;
+    if (!hasUpgradeItem) {
+      return;
+    }
+
+    if (this.upgrading) {
+      console.warn('[demo] 已有升级正在执行，忽略重复升级指令');
+      return;
+    }
+    if (hasBuild) {
+      console.warn('[demo] 本轮同时领取到构建，取消升级');
+      await this.reportUpgrade(false);
+      return;
+    }
+
+    this.upgrading = true;
+    let success = false;
+    try {
+      // 再检查一次，覆盖升级任务开始前已有构建尚未结束的竞态。
+      if (this.runner.hasRunningJob()) {
+        console.warn('[demo] 仍有构建运行，取消升级');
+        return;
+      }
+
+      // 本示例仅提供默认 worker.jar 升级；其它组件应由接入方实现后再确认成功。
+      if (upgrade.agent || upgrade.jdk || upgrade.dockerInitFile) {
+        console.warn('[demo] 收到示例未实现的 agent/jdk/docker init 升级项');
+        return;
+      }
+
+      const result = await this.workerManager.upgrade();
+      console.log(
+        `[demo] worker.jar 升级完成 version=${result.version} changed=${result.changed} ` +
+          `notModified=${result.notModified} md5=${result.md5}`
+      );
+      success = true;
+    } catch (e) {
+      console.error('[demo] worker.jar 升级失败', errorMessage(e));
+    } finally {
+      this.upgrading = false;
+      await this.reportUpgrade(success);
+    }
+  }
+
+  private async reportUpgrade(success: boolean): Promise<void> {
+    try {
+      const result = await this.api.finishUpgrade(success);
+      if (result.status !== 0) {
+        console.error('[demo] 上报升级结果失败', result.message);
+      }
+    } catch (e) {
+      console.error('[demo] 上报升级结果异常', errorMessage(e));
+    }
   }
 
   onPipeline(pipeline: Record<string, unknown>): void {
@@ -174,11 +235,24 @@ async function main(): Promise<void> {
   const client = new HttpClient({ timeoutMs: config.timeoutSec * 1000 });
   const api = new AgentApi(config, client);
 
+  // 启动前检测当前 worker 版本。若正式 jar 缺失或版本非法，管理器会下载默认
+  // worker-agent.jar 到 upgrade 目录，校验通过后再安装到 WORKER_JAR_PATH。
+  const workerManager = new DefaultWorkerJarManager({
+    gateway: config.getGateway(),
+    authHeaders: config.getAuthHeaderMap(),
+    workDir: WORK_DIR,
+    jdk17Path: JDK17_PATH,
+    workerJarPath: WORKER_JAR_PATH,
+    logFn: (msg) => console.log('[demo][worker-manager]', msg),
+  });
+  const workerState = await workerManager.initialize();
+  console.log('[demo] worker.jar 初始化完成 version=', workerState.version, 'md5=', workerState.md5);
+
   // 构造 runner：把日志转发到后台构建日志接口
   const runner = new DefaultBuildRunner({
     api,
     workDir: WORK_DIR,
-    workerJarPath: WORKER_JAR_PATH,
+    workerJarPath: workerManager.getWorkerJarPath(),
     jdk17Path: JDK17_PATH,
     jdk8Path: JDK8_PATH,
     jdk17DirPath: JDK17_DIR_PATH,
@@ -190,7 +264,8 @@ async function main(): Promise<void> {
     agentId: config.agentId,
     secretKey: config.secretKey,
     agentVersion: AGENT_VERSION,
-    workerVersion: WORKER_VERSION,
+    // 使用函数动态读取版本，worker.jar 升级后新构建会自动注入新版本。
+    workerVersion: () => workerManager.getVersion(),
     language: config.language,
     parallelTaskCount: config.parallelTaskCount,
     dockerParallelTaskCount: config.dockerParallelTaskCount,
@@ -217,19 +292,13 @@ async function main(): Promise<void> {
   // 用带 runner 的 handler 构造 loop
   const loop = new AgentLoop({
     config,
-    handler: new DemoHandler(runner),
+    handler: new DemoHandler(runner, workerManager, api),
     intervalMs: 5000,
     monitorFn: () => console.log('[demo] 采集监控指标...'),
     monitorIntervalMs: 60_000,
-    // 可选：启动时准备好 worker.jar / docker init 脚本
+    // worker.jar 已在 startup 前由 workerManager 初始化；这里只准备 docker init 脚本。
     onInit: async () => {
       const auth = config.getAuthHeaderMap();
-      try {
-        const r = await downloadWorkerJar(config.getGateway(), auth, WORK_DIR);
-        console.log('[demo] worker.jar 就绪 md5=', r.md5, 'notModified=', r.notModified);
-      } catch (e) {
-        console.error('[demo] 下载 worker.jar 失败', e);
-      }
       if (ENABLE_DOCKER_BUILD) {
         try {
           const r = await downloadDockerInitFile(config.getGateway(), auth, WORK_DIR);
@@ -247,6 +316,10 @@ async function main(): Promise<void> {
   });
 
   await loop.run();
+}
+
+function errorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
 }
 
 void main();

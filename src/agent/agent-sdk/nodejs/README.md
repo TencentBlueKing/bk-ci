@@ -94,6 +94,29 @@ await api.addLogLine(buildId, { message: 'building...', timestamp: Date.now(), t
 await api.updatePipelineStatus({ seqId, status: 'success', response: '' });
 ```
 
+### 检测 worker-agent.jar 版本
+
+SDK 默认提供 `detectWorkerVersion`。传入 JDK17 和 `worker-agent.jar` 路径后，
+它会调用 jar 中的 `com.tencent.devops.agent.AgentVersionKt` 获取版本：
+
+```ts
+import { detectWorkerVersion } from '@bk-ci/agent-sdk';
+
+const workerVersion = await detectWorkerVersion({
+  jdk17Path: '/data/agent/jdk17', // 也可以直接传 /data/agent/jdk17/bin/java
+  workerJarPath: '/data/agent/worker-agent.jar',
+});
+```
+
+返回值兼容 `v1.2.3`、`v1.2.3-RELEASE`、`v1.2.3-SNAPSHOT`、
+`v1.2.3-beta.4` 等格式；JDK、jar、命令执行或版本解析失败时返回空字符串。
+
+需要使用官方 `worker-agent.jar` 的默认升级模式时，可使用
+`DefaultWorkerJarManager`：启动前调用 `initialize()` 获取当前版本并在文件缺失时自愈；
+收到后台 worker 升级指令后调用 `upgrade()`。候选 jar 会先下载到 `upgrade` 目录，
+通过版本与 MD5 校验后才替换正式文件。完整的暂停接单、动态版本与
+`finishUpgrade` 上报方式见 `examples/basic.ts`。
+
 ## 协议对齐
 
 - 鉴权头：`X-DEVOPS-BUILD-TYPE=AGENT` / `X-DEVOPS-PROJECT-ID` / `X-DEVOPS-AGENT-ID` / `X-DEVOPS-AGENT-SECRET-KEY`；日志接口额外带 `X-DEVOPS-BUILD-ID` / `X-DEVOPS-VM-SID`

@@ -14,6 +14,7 @@ export * from './handler';
 export * from './loop';
 export * from './download';
 export * from './worker';
+export * from './workerUpgrade';
 export * from './dockercli';
 export * from './dockerBuild';
 export * from './buildRunner';

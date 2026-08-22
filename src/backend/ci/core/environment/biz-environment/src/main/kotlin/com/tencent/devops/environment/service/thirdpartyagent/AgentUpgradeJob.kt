@@ -252,10 +252,6 @@ class AgentUpgradeJob @Autowired constructor(
         record: TEnvironmentThirdpartyAgentRecord
     ): Boolean {
         val props = agentPropsScope.parseAgentProps(record.agentProps)
-        // sdk的不升级，靠其依赖的平台自己升级
-        if (props?.sdk == true) {
-            return false
-        }
         AgentUpgradeType.entries.forEach { type ->
             // Agent超过最大升级数量的不能升级
             if (type != AgentUpgradeType.WORKER && agentMasterUpgradeExceed) {
@@ -267,6 +263,10 @@ class AgentUpgradeJob @Autowired constructor(
             }
             val res = when (type) {
                 AgentUpgradeType.GO_AGENT -> {
+                    // sdk的不升级，靠其依赖的平台自己升级
+                    if (props?.sdk == true) {
+                        return@forEach
+                    }
                     goAgentCurrentVersion.trim() != record.masterVersion.trim()
                 }
 
@@ -275,6 +275,10 @@ class AgentUpgradeJob @Autowired constructor(
                 }
 
                 AgentUpgradeType.JDK -> {
+                    // sdk的不升级，靠其依赖的平台自己升级
+                    if (props?.sdk == true) {
+                        return@forEach
+                    }
                     props ?: return@forEach
                     val currentJdkVersion =
                         agentPropsScope.getJdkVersion(record.os, props.arch)?.ifBlank { null } ?: return@forEach
@@ -288,6 +292,10 @@ class AgentUpgradeJob @Autowired constructor(
                 }
 
                 AgentUpgradeType.DOCKER_INIT_FILE -> {
+                    // sdk的不升级，靠其依赖的平台自己升级
+                    if (props?.sdk == true) {
+                        return@forEach
+                    }
                     props ?: return@forEach
                     if (props.dockerInitFileInfo?.needUpgrade != true) {
                         return@forEach

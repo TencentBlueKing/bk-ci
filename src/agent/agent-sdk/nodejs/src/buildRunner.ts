@@ -50,8 +50,8 @@ export interface BuildRunnerOptions {
   secretKey?: string;
   /** agent 版本。 */
   agentVersion: string;
-  /** worker 版本。 */
-  workerVersion: string;
+  /** worker 版本或动态版本提供函数（升级 worker-agent.jar 时推荐使用函数）。 */
+  workerVersion: string | (() => string);
   /** 语言，默认 zh_CN。 */
   language?: string;
   /** 普通构建最大并发，默认 4。 */
@@ -144,7 +144,7 @@ export class DefaultBuildRunner {
         agentId: this.opts.agentId,
         secretKey: this.opts.secretKey,
         agentVersion: this.opts.agentVersion,
-        workerVersion: this.opts.workerVersion,
+        workerVersion: this.getWorkerVersion(),
         language: this.opts.language,
         extraEnv: this.opts.extraEnv,
         detectShell: this.opts.detectShell,
@@ -194,6 +194,12 @@ export class DefaultBuildRunner {
     } finally {
       this.dockerTasks.delete(build.buildId);
     }
+  }
+
+  private getWorkerVersion(): string {
+    return typeof this.opts.workerVersion === 'function'
+      ? this.opts.workerVersion()
+      : this.opts.workerVersion;
   }
 
   /** 上报构建完成：成功时先 sleep 8s（对齐 Go workerBuildFinish）。 */
