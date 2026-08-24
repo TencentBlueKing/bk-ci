@@ -66,9 +66,8 @@ class ThirdPartyAgentBuildDao {
             } else {
                 dsl.and(EXECUTE_COUNT.eq(executeCount))
             }
-            return dsl // 通过排序取最新
-                .orderBy(ID.desc())
-                .limit(1).fetchAny()
+            // 通过排序取最新
+            return dsl.orderBy(ID.desc()).limit(1).fetchAny()
         }
     }
 
@@ -85,9 +84,8 @@ class ThirdPartyAgentBuildDao {
             if (executeCount != null) {
                 dsl.and(EXECUTE_COUNT.eq(executeCount).or(EXECUTE_COUNT.isNull))
             }
-            return dsl// 通过排序取最新
-                .orderBy(ID.desc())
-                .limit(1).fetchAny()
+            // 通过排序取最新
+            return dsl.orderBy(ID.desc()).limit(1).fetchAny()
         }
     }
 
