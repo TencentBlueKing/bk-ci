@@ -81,7 +81,7 @@ data class Variable(
     val value: Any?,
     var readonly: Boolean? = false,
     @JsonProperty("allow-modify-at-startup")
-    val allowModifyAtStartup: Boolean? = true,
+    var allowModifyAtStartup: Boolean? = true,
     @get:JsonProperty("as-instance-input")
     @get:Schema(title = "默认为实例入参,只有模版才有值,流水线没有值", required = false)
     var asInstanceInput: Boolean? = null,
@@ -192,27 +192,9 @@ data class VariableDatasource(
     val itemTargetUrl: String? = null
 )
 
-/**
- * variables 下 template 关键字的元素，即公共变量组引用
- *
- * ```yaml
- * variables:
- *   template:
- *     - name: 变量组名称
- *       version: v1
- * ```
- */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonIgnoreProperties(ignoreUnknown = true)
-data class VariableTemplate(
-    val name: String,
-    val version: String? = null
-) {
+data class VariableTemplate(val name: String, val version: String? = null) {
     companion object {
-
-        private const val VARIABLES_KEY = "variables"
-        private const val TEMPLATE_KEY = "template"
-
         /**
          * 解析 YAML `variables.template`（公共变量组引用）。
          *
@@ -257,6 +239,9 @@ data class VariableTemplate(
                 VariableTemplate(name = name, version = item[VERSION]?.toString())
             }
         }
+
+        private const val VARIABLES_KEY = "variables"
+        private const val TEMPLATE_KEY = "template"
     }
 }
 
