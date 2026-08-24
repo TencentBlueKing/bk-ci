@@ -337,6 +337,23 @@ data class StartBuildContext(
     }
 
     /**
+     * #13500 任务/Job/矩阵局部重试：目标 Stage 内已经成功或跳过的兄弟 Job 整段跳过。
+     * 这些 Job 若再走进 prepareBuildContainerTasks，UNEXEC/CANCELED 残留会把整 Job 重置并再次下发
+     * （例如先跳过 executeCount=N 的 Job，再重试更早一轮失败 Job 时，把 N 已跑完的 Job 重新准备环境）。
+     *
+     * 不改 [needSkipContainerWhenFailRetry]：失败/取消 Job 仍走 #2318，取消+dependOn 留给其它修复。
+     * 本次重试点所在 Job、Stage 级重试、finally、dependOn 被跳过须重评的 Job、矩阵局部重试父容器，都不跳过。
+     */
+    fun needSkipCompletedContainerWhenTaskRetry(stage: Stage, container: Container): Boolean {
+        if (retryStartTaskId.isNullOrBlank()) return false
+        if (needRerunStage(stage)) return false
+        if (isRetryDependOnContainer(container)) return false
+        if (isRetryMatrixGroup(container)) return false
+        if (containerContainsRetryStart(container)) return false
+        return BuildStatus.parse(container.status).isSuccess()
+    }
+
+    /**
      * 应该跳过刷新stage状态当运行时重试时
      */
     fun shouldSkipRefreshWhenRetryRunning(stage: Stage): Boolean {

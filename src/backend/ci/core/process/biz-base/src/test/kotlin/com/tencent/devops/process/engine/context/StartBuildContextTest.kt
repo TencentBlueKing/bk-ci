@@ -35,7 +35,10 @@ import com.tencent.devops.process.TestBase
 import com.tencent.devops.process.engine.cfg.BuildIdGenerator
 import com.tencent.devops.process.engine.cfg.PipelineIdGenerator
 import com.tencent.devops.process.pojo.app.StartBuildContext
+import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildScriptType
+import com.tencent.devops.common.pipeline.enums.DependOnType
+import com.tencent.devops.common.pipeline.option.JobControlOption
 import com.tencent.devops.common.pipeline.pojo.StagePauseCheck
 import com.tencent.devops.common.pipeline.pojo.StageReviewGroup
 import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
@@ -210,6 +213,59 @@ class StartBuildContextTest : TestBase() {
         Assertions.assertEquals(true, context.needSkipWhenStageFailRetry(prepare))
         Assertions.assertEquals(false, context.allowResetStageReview())
         Assertions.assertEquals(false, context.needSkipWhenStageFailRetry(publish))
+    }
+
+    @Test
+    fun needSkipCompletedContainerWhenRetryEarlierFailedJob() {
+        // 同 Stage：executeCount 更高的 Job 已成功/跳过，再重试更早一轮失败 Job 时不得刷新已完成 Job
+        val stage = genStages(stageSize = 1, jobSize = 2, elementSize = 2, needFinally = false)[1]
+        val completedJob = stage.containers[0]
+        val failedJob = stage.containers[1]
+        completedJob.status = BuildStatus.SUCCEED.name
+        failedJob.status = BuildStatus.FAILED.name
+        params[PIPELINE_RETRY_START_TASK_ID] = failedJob.elements[0].id!!
+        params[PIPELINE_RETRY_TASK_IN_STAGE_ID] = stage.id!!
+        val context = initDefaultStartBuildContext()
+
+        Assertions.assertEquals(true, context.needSkipCompletedContainerWhenTaskRetry(stage, completedJob))
+        Assertions.assertEquals(false, context.needSkipCompletedContainerWhenTaskRetry(stage, failedJob))
+        // #2318 路径保持：已完成 Job 不是失败/取消，needSkipContainerWhenFailRetry 仍为 false
+        Assertions.assertEquals(false, context.needSkipContainerWhenFailRetry(stage, completedJob))
+        Assertions.assertEquals(true, context.needSkipContainerWhenFailRetry(stage, failedJob))
+
+        // 手动跳过（无 dependOn）视为已完成，不再刷新；CANCELED 不走本函数，留给失败/取消路径
+        completedJob.status = BuildStatus.SKIP.name
+        Assertions.assertEquals(true, context.needSkipCompletedContainerWhenTaskRetry(stage, completedJob))
+        completedJob.status = BuildStatus.CANCELED.name
+        Assertions.assertEquals(false, context.needSkipCompletedContainerWhenTaskRetry(stage, completedJob))
+    }
+
+    @Test
+    fun needSkipCompletedContainerKeepsDependOnSkipRerunAndStageRetry() {
+        val stage = genStages(stageSize = 1, jobSize = 2, elementSize = 1, needFinally = false)[1]
+        val skippedDependOn = stage.containers[0] as VMBuildContainer
+        val retryJob = stage.containers[1]
+        skippedDependOn.status = BuildStatus.SKIP.name
+        skippedDependOn.jobControlOption = JobControlOption(
+            dependOnType = DependOnType.ID,
+            dependOnId = listOf(retryJob.id ?: "job-retry")
+        )
+        retryJob.status = BuildStatus.FAILED.name
+        params[PIPELINE_RETRY_START_TASK_ID] = retryJob.elements[0].id!!
+        val taskRetryContext = initDefaultStartBuildContext()
+        Assertions.assertEquals(
+            false,
+            taskRetryContext.needSkipCompletedContainerWhenTaskRetry(stage, skippedDependOn)
+        )
+
+        // Stage 级重试：已成功 Job 仍由 #3138 isRetryFailedContainer 决定，不走本跳过
+        params[PIPELINE_RETRY_START_TASK_ID] = stage.id!!
+        skippedDependOn.status = BuildStatus.SUCCEED.name
+        val stageRetryContext = initDefaultStartBuildContext()
+        Assertions.assertEquals(
+            false,
+            stageRetryContext.needSkipCompletedContainerWhenTaskRetry(stage, skippedDependOn)
+        )
     }
 
     @Test

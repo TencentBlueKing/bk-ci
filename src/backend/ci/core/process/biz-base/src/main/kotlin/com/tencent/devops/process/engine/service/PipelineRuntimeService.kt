@@ -969,6 +969,21 @@ class PipelineRuntimeService @Autowired constructor(
                 modelCheckPlugin.checkJobCondition(container, stage.finally, context.variables)
                 modelCheckPlugin.checkMutexGroup(container, context.variables)
 
+                /* #13500
+                    任务级局部重试：同 Stage 内已经成功/跳过的兄弟 Job 不再刷新。
+                    否则 UNEXEC POST 等残留会把更高 executeCount 已跑完的 Job 重置后再下发。
+                    独立于 #2318，避免改动失败/取消 Job 的跳过条件。
+                 */
+                if (context.needSkipCompletedContainerWhenTaskRetry(stage, container) &&
+                    lastTimeBuildContainers.isNotEmpty()
+                ) {
+                    logger.info(
+                        "[${context.buildId}|RETRY_SKIP_COMPLETED_JOB|j(${container.id!!})|${container.name}"
+                    )
+                    context.containerSeq++
+                    return@nextContainer
+                }
+
                 /* #2318
                     原则：当存在多个失败插件时，进行失败插件重试时，一次只能对单个插件进行重试，其他失败插件不会重试，所以：
                     如果是插件失败重试，并且当前的Job状态是失败的，则检查重试的插件是不是属于该失败Job:
