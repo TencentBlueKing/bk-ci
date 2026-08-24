@@ -347,7 +347,7 @@
     "reasonLabel": "原因说明",
     "reasonPlaceholder": "请输入原因说明，不超过 200 个字",
     "enableNodeDefaultReason": "节点已恢复",
-    "disableNodeDefaultReason": "节点故障",
+    "disableNodeDefaultReason": "节点停用",
     "enableBtn": "启用",
     "disableBtn": "停用",
     "reasonRequired": "原因说明不能为空",
