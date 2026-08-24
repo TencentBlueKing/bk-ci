@@ -132,8 +132,7 @@ class PipelineContainerService @Autowired constructor(
         buildId: String,
         stageId: String? = null,
         containsMatrix: Boolean? = true,
-        statusSet: Set<BuildStatus>? = null,
-        executeCount: Int? = null
+        statusSet: Set<BuildStatus>? = null
     ): List<PipelineBuildContainer> {
         return pipelineBuildContainerDao.listByBuildId(
             dslContext = dslContext,
@@ -141,8 +140,7 @@ class PipelineContainerService @Autowired constructor(
             buildId = buildId,
             stageId = stageId,
             containsMatrix = containsMatrix,
-            statusSet = statusSet,
-            executeCount = executeCount
+            statusSet = statusSet
         )
     }
 
