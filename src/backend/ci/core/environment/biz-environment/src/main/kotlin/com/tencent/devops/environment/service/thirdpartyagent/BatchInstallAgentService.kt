@@ -121,7 +121,6 @@ class BatchInstallAgentService @Autowired constructor(
 
         // 没有或者过期则重新生成，过期时间默认为3天后
         val tokenData = "$projectId;$userId;${now.toInstant(ZoneOffset.of("+8")).toEpochMilli()}"
-        logger.debug("genInstallLink token data $tokenData")
         val token = AESUtil.encrypt(batchInstallAesKey, tokenData)
         val expireTime = now.plusDays(3)
         agentBatchInstallTokenDao.createOrUpdateToken(
@@ -272,9 +271,16 @@ class BatchInstallAgentService @Autowired constructor(
         userId: String,
         deviceId: String?,
     ): RegistryResp {
-        val (projectId, agentHashId, errMsg) = verifyRegistryToken(token, deviceId, userId)
+        val (projectId, agentHashId, errMsg) = try {
+            verifyRegistryToken(token, deviceId, userId)
+        } catch (e: Exception) {
+            throw ErrorCodeException(
+                errorCode = EnvironmentMessageCode.ERROR_NODE_NO_CREATE_PERMISSSION,
+                defaultMessage = e.message
+            )
+        }
         if (errMsg != null) {
-            logger.warn("registry $userId|$deviceId token $token check error $errMsg")
+            logger.warn("registry $userId|$deviceId token check error $errMsg")
             throw ErrorCodeException(
                 errorCode = EnvironmentMessageCode.ERROR_NODE_NO_CREATE_PERMISSSION,
                 defaultMessage = errMsg
