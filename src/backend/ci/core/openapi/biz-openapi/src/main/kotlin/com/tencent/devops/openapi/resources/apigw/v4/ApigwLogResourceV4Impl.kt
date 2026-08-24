@@ -222,48 +222,6 @@ class ApigwLogResourceV4Impl @Autowired constructor(
         )
     }
 
-    override fun getMiddleLogs(
-        appCode: String?,
-        apigwType: String?,
-        userId: String,
-        projectId: String,
-        pipelineId: String?,
-        buildId: String,
-        start: Long,
-        end: Long,
-        debug: Boolean?,
-        logType: LogType?,
-        tag: String?,
-        subTag: String?,
-        containerHashId: String?,
-        executeCount: Int?,
-        jobId: String?,
-        stepId: String?,
-        archiveFlag: Boolean?
-    ): Result<QueryLogsText> {
-        logger.info(
-            "OPENAPI_LOG_V4|$userId|get middle logs|$projectId|$pipelineId|$buildId|$start|$end|$debug|$tag|" +
-                "$jobId|$executeCount"
-        )
-        return client.get(ServiceLogResource::class).getMiddleLogs(
-            userId = userId,
-            projectId = projectId,
-            pipelineId = checkPipelineId(projectId, pipelineId, buildId),
-            buildId = buildId,
-            start = start,
-            end = end,
-            debug = debug,
-            logType = logType,
-            tag = tag,
-            subTag = subTag,
-            containerHashId = containerHashId,
-            executeCount = executeCount,
-            jobId = if (tag.isNullOrBlank() && stepId.isNullOrBlank()) jobId else null,
-            stepId = stepId,
-            archiveFlag = archiveFlag
-        )
-    }
-
     override fun downloadLogs(
         appCode: String?,
         apigwType: String?,
