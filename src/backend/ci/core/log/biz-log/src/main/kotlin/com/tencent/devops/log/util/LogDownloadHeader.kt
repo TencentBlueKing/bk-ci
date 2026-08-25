@@ -7,7 +7,6 @@
  *
  * A copy of the MIT License is included in this file.
  *
- *
  * Terms of the MIT License:
  * ---------------------------------------------------
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
@@ -25,22 +24,45 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.log.event
+package com.tencent.devops.log.util
 
-import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.common.log.pojo.message.LogMessage
-import com.tencent.devops.common.stream.constants.StreamBinder
-import com.tencent.devops.common.stream.constants.StreamBinding
+/**
+ * 日志下载 Content-Disposition，避免 query fileName 注入响应头。
+ */
+object LogDownloadHeader {
 
-@Event(
-    destination = StreamBinding.LOG_ORIGIN_EVENT_DESTINATION,
-    binder = StreamBinder.CUSTOM
-)
-data class LogOriginEvent(
-    override val buildId: String,
-    val logs: List<LogMessage>,
-    override var retryTime: Int = 2,
-    override var delayMills: Int = 0,
-    override val projectId: String? = null,
-    override val pipelineId: String? = null
-) : ILogEvent(buildId, retryTime, delayMills, projectId, pipelineId)
+    private val UNSAFE_CHARS = Regex("[^A-Za-z0-9._-]")
+    private const val FALLBACK_NAME = "build-log"
+
+    fun contentDisposition(fileName: String?, pipelineId: String, buildId: String): String {
+        val stem = sanitize(fileName?.takeIf { it.isNotBlank() } ?: "$pipelineId-$buildId-log")
+            .ifBlank { sanitize("$pipelineId-$buildId-log") }
+            .ifBlank { FALLBACK_NAME }
+        val asciiName = "$stem.log"
+        return "attachment; filename=\"$asciiName\"; filename*=UTF-8''${encodeRfc5987(asciiName)}"
+    }
+
+    internal fun sanitize(value: String): String {
+        return value.replace("\r", "")
+            .replace("\n", "")
+            .replace("\"", "")
+            .replace(UNSAFE_CHARS, "")
+    }
+
+    internal fun encodeRfc5987(value: String): String {
+        val bytes = value.toByteArray(Charsets.UTF_8)
+        val sb = StringBuilder(bytes.size)
+        for (b in bytes) {
+            val unsigned = b.toInt() and 0xFF
+            val c = unsigned.toChar()
+            if (isRfc5987AttrChar(c)) {
+                sb.append(c)
+            } else {
+                sb.append('%').append("%02X".format(unsigned))
+            }
+        }
+        return sb.toString()
+    }
+
+    private fun isRfc5987AttrChar(c: Char): Boolean = c.isLetterOrDigit() || c in "._-"
+}

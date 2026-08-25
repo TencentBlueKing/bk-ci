@@ -7,7 +7,6 @@
  *
  * A copy of the MIT License is included in this file.
  *
- *
  * Terms of the MIT License:
  * ---------------------------------------------------
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
@@ -25,22 +24,38 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.log.event
+package com.tencent.devops.log.pojo
 
-import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.common.log.pojo.message.LogMessage
-import com.tencent.devops.common.stream.constants.StreamBinder
-import com.tencent.devops.common.stream.constants.StreamBinding
+/**
+ * log 服务本地维护的 buildId 归属，不依赖 process。
+ *
+ * 字段均可空：旧 Worker 可能只报 projectId、或两者都未报。
+ * 已写入的非空字段禁止覆盖，仅允许把空位补全。
+ */
+data class LogBuildOwner(
+    val projectId: String?,
+    val pipelineId: String?
+) {
+    fun hasAny(): Boolean = !projectId.isNullOrBlank() || !pipelineId.isNullOrBlank()
 
-@Event(
-    destination = StreamBinding.LOG_ORIGIN_EVENT_DESTINATION,
-    binder = StreamBinder.CUSTOM
-)
-data class LogOriginEvent(
-    override val buildId: String,
-    val logs: List<LogMessage>,
-    override var retryTime: Int = 2,
-    override var delayMills: Int = 0,
-    override val projectId: String? = null,
-    override val pipelineId: String? = null
-) : ILogEvent(buildId, retryTime, delayMills, projectId, pipelineId)
+    /**
+     * 只补空，不覆盖已有归属。上报值与已有值冲突时保留已有值。
+     */
+    fun fillEmpty(reported: LogBuildOwner): LogBuildOwner {
+        return LogBuildOwner(
+            projectId = projectId.takeIf { !it.isNullOrBlank() } ?: reported.projectId,
+            pipelineId = pipelineId.takeIf { !it.isNullOrBlank() } ?: reported.pipelineId
+        )
+    }
+
+    companion object {
+        val EMPTY = LogBuildOwner(null, null)
+
+        fun of(projectId: String?, pipelineId: String?): LogBuildOwner {
+            return LogBuildOwner(
+                projectId = projectId?.takeIf { it.isNotBlank() },
+                pipelineId = pipelineId?.takeIf { it.isNotBlank() }
+            )
+        }
+    }
+}
