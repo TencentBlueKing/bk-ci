@@ -527,6 +527,7 @@
     "associatedJob": "Associated Job",
     "buildCountLabel": "Builds",
     "job": "Job",
+    "workerNode": "Worker Node",
     "statusLabel": "Status",
     "relatedStrategies": "Related Strategies",
     "staticRelated": "static association",

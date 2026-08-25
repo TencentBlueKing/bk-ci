@@ -523,6 +523,7 @@
     "associatedJob": "关联 Job",
     "buildCountLabel": "构建次数",
     "job": "Job",
+    "workerNode": "工作节点",
     "statusLabel": "状态",
     "relatedStrategies": "关联策略",
     "staticRelated": "静态关联",

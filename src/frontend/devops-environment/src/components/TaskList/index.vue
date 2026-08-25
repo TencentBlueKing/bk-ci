@@ -377,6 +377,21 @@
                                 </template>
                             </bk-table-column>
                             <bk-table-column
+                                v-if="isEnvDetail"
+                                :label="$t('environment.workerNode')"
+                                min-width="120"
+                            >
+                                <template #default="{ row }">
+                                    <a
+                                        v-if="row.nodeInfo?.nodeHashId"
+                                        class="text-link node-link"
+                                        :href="getNodeDetailUrl(row)"
+                                        target="_blank"
+                                    >{{ row.nodeInfo.nodeHashId }}</a>
+                                    <span v-else>--</span>
+                                </template>
+                            </bk-table-column>
+                            <bk-table-column
                                 :label="$t('environment.retryCount')"
                                 min-width="100"
                             >
@@ -445,6 +460,21 @@
                                 </template>
                             </bk-table-column>
                             <bk-table-column
+                                v-if="isEnvDetail"
+                                :label="$t('environment.workerNode')"
+                                min-width="120"
+                            >
+                                <template #default="{ row }">
+                                    <a
+                                        v-if="row.nodeInfo?.nodeHashId"
+                                        class="text-link node-link"
+                                        :href="getNodeDetailUrl(row)"
+                                        target="_blank"
+                                    >{{ row.nodeInfo.nodeHashId }}</a>
+                                    <span v-else>--</span>
+                                </template>
+                            </bk-table-column>
+                            <bk-table-column
                                 :label="$t('environment.duration')"
                                 prop="duration"
                             />
@@ -494,6 +524,7 @@
 <script>
     import { ref, computed, watch } from 'vue'
     import { convertTime } from '@/utils/util'
+    import { SERVICE_RESOURCE_TYPE } from '@/store/constants'
     import useInstance from '@/hooks/useInstance'
     import useEnvAside from '@/hooks/useEnvAside'
     import useEnvDetail from '@/hooks/useEnvDetail'
@@ -517,7 +548,8 @@
         setup (props) {
             const { proxy } = useInstance()
             const routeName = proxy.$route.name
-            const { isCreateResType } = useEnvAside()
+            const isEnvDetail = routeName === 'envDetail'
+            const { isCreateResType, resType } = useEnvAside()
             const { envHashId } = useEnvDetail()
             const { nodeHashId } = useNodeDetail()
             const {
@@ -675,6 +707,12 @@
             // 构建执行详情页
             const getBuildDetailUrl = (row) => {
                 return `/console/pipeline/${row.projectId || projectId.value}/${row.pipelineId}/detail/${row.buildId}/executeDetail`
+            }
+
+            // 工作节点详情页（resType 区分流水线资源/创作流资源）
+            const getNodeDetailUrl = (row) => {
+                const nodeHashId = row.nodeInfo?.nodeHashId || ''
+                return `/console/environment/${projectId.value}/${resType.value || SERVICE_RESOURCE_TYPE.PIPELINE}/node/allNode?nodeHashId=${nodeHashId}&page=1&pageSize=10&tabName=overview`
             }
             
             // 获取任务信息项（右侧统计），按视图区分
@@ -1073,6 +1111,7 @@
             return {
                 // data
                 isCreateResType,
+                isEnvDetail,
                 statsConfig,
                 currentView,
                 isLoading,
@@ -1094,6 +1133,7 @@
                 getTaskInfoItems,
                 getPipelineHistoryUrl,
                 getBuildDetailUrl,
+                getNodeDetailUrl,
                 formatTime,
                 getJobStageLabel,
                 toggleExpand,
@@ -1412,6 +1452,10 @@
         }
 
         a.build-num-link {
+            color: #3A84FF;
+        }
+
+        a.node-link {
             color: #3A84FF;
         }
         

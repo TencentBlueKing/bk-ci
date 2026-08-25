@@ -522,6 +522,7 @@
     "associatedJob": "関連 Job",
     "buildCountLabel": "ビルド回数",
     "job": "Job",
+    "workerNode": "ワークノード",
     "statusLabel": "ステータス",
     "relatedStrategies": "関連戦略",
     "staticRelated": "静的関連",
