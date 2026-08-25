@@ -112,7 +112,6 @@ class PipelineVersionFacadeService @Autowired constructor(
         private const val PAC_BRANCH_PREFIX = "bk-ci-pipeline-"
         fun getReleaseBranchName(pipelineId: String, version: Int): String =
             "$PAC_BRANCH_PREFIX$pipelineId-$version"
-
     }
 
     /**

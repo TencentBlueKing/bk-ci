@@ -75,15 +75,17 @@ interface ICommand {
         val acrossTargetProjectId by lazy {
             TemplateAcrossInfoUtil.getAcrossInfo(variables, taskId)?.targetProjectId
         }
-        val contextMap = variables.plus(
+        // 按预置映射关系补齐 ci.* 上下文（如 ci.build_id 取自 BK_CI_BUILD_ID），返回值已包含原始构建变量
+        val contextMap = PipelineVarUtil.fillContextVarMap(variables).toMutableMap()
+        // 任务运行期上下文优先级最高，必须在预置填充之后覆盖：
+        // 否则同名构建变量（如 WORKSPACE）会把 ci.workspace 改写成非本任务工作空间的值
+        contextMap.putAll(
             mapOf(
                 WORKSPACE_CONTEXT to dir.absolutePath,
                 CI_TOKEN_CONTEXT to (variables[CI_TOKEN_CONTEXT] ?: ""),
                 JOB_OS_CONTEXT to AgentEnv.getOS().name
             )
-        ).toMutableMap()
-        // 增加上下文的替换
-        PipelineVarUtil.fillContextVarMap(contextMap, contextMap)
+        )
         val dialect = PipelineDialectUtil.getPipelineDialect(variables[PIPELINE_DIALECT])
         return if (dialect.supportUseExpression()) {
             val (overflowKeys, overflowLoader) = BuildVarOverflowExprSupport.resolveOverflowOptions(contextMap)
