@@ -713,7 +713,7 @@
             const getNodeDetailUrl = (row) => {
                 const nodeHashId = row.nodeInfo?.nodeHashId || ''
                 const displayName = row.nodeInfo?.displayName || ''
-                return `/console/environment/${projectId.value}/${resType.value || SERVICE_RESOURCE_TYPE.PIPELINE}/node/allNode?nodeHashId=${nodeHashId}?displayName=${displayName}`
+                return `/console/environment/${projectId.value}/${resType.value || SERVICE_RESOURCE_TYPE.PIPELINE}/node/allNode?nodeHashId=${nodeHashId}&displayName=${displayName}`
             }
             
             // 获取任务信息项（右侧统计），按视图区分
