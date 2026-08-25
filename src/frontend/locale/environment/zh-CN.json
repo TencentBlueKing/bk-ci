@@ -462,7 +462,6 @@
     "buildNumber": "构建号",
     "buildStatus": "构建状态",
     "retryCount": "第X次重试",
-    "retryCountLabel": "第 {0} 次重试",
     "duration": "耗时",
     "startTime": "启动时间",
     "endTime": "结束时间",

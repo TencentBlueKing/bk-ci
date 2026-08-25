@@ -250,7 +250,7 @@
                             >
                                 <template #default="{ row }">
                                     <span v-if="Number(row.executeCount) - 1 > 0">
-                                        {{ $t('environment.retryCountLabel', [Number(row.executeCount) - 1]) }}
+                                        {{ Number(row.executeCount) - 1 }}
                                     </span>
                                     <span v-else>--</span>
                                 </template>
@@ -318,7 +318,7 @@
                             >
                                 <template #default="{ row }">
                                     <span v-if="Number(row.executeCount) - 1 > 0">
-                                        {{ $t('environment.retryCountLabel', [Number(row.executeCount) - 1]) }}
+                                        {{ Number(row.executeCount) - 1 }}
                                     </span>
                                     <span v-else>--</span>
                                 </template>

@@ -466,7 +466,6 @@
     "buildNumber": "build number",
     "buildStatus": "Build Status",
     "retryCount": "Retry X",
-    "retryCountLabel": "Retry {0}",
     "duration": "time spent",
     "startTime": "Startup time",
     "endTime": "End Time",
