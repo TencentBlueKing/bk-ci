@@ -134,7 +134,6 @@
             },
 
             tabChange (tabName) {
-                debugger
                 this.routekey.key = undefined
                 const currentPanel = this.panels.find((panel) => (panel.name === tabName)) || {}
                 const panelChildren = currentPanel.children || []
