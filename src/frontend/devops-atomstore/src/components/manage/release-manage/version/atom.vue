@@ -1,18 +1,31 @@
 <template>
     <section class="show-version g-scroll-pagination-table">
-        <bk-button
-            theme="primary"
-            class="version-button"
-            :disabled="disableAddVersion"
-            @click="editAtom('upgradeAtom', versionList[0].atomId)"
-        >
-            {{ $t('store.新增版本') }}
-        </bk-button>
+        <div class="version-button">
+            <bk-button
+                theme="primary"
+                :disabled="!canAddMainVersion"
+                @click="editAtom('upgradeAtom', versionList[0].atomId)"
+            >
+                {{ $t('store.新增版本') }}
+            </bk-button>
+            <!-- ALL-全部 FORMAL-正式版本 TEST-测试版本，默认正式版本 -->
+            <ul class="version-tab">
+                <li
+                    v-for="(item, idx) in versionTab"
+                    :key="idx"
+                    :class="[versionType === item.type ? 'active' : '']"
+                    @click="handleChangeVersionType(item.type)"
+                >
+                    <span>{{ $t(item.i18nKey) }}</span>
+                </li>
+            </ul>
+        </div>
         <bk-table
             :data="versionList"
             :outer-border="false"
             :header-border="false"
             :header-cell-style="{ background: '#fff' }"
+            v-bkloading="{ isLoading: loading }"
             :pagination="pagination"
             @page-change="(page) => $emit('pageChanged', page)"
             @page-limit-change="(currentLimit, prevLimit) => $emit('pageLimitChanged', currentLimit, prevLimit)"
@@ -178,13 +191,29 @@
 
         props: {
             versionList: Array,
-            pagination: Object
+            pagination: Object,
+            versionType: {
+                type: String,
+                default: 'FORMAL'
+            },
+            loading: {
+                type: Boolean,
+                default: false
+            },
+            canAddMainVersion: {
+                type: Boolean,
+                default: true
+            }
         },
 
         data () {
             return {
                 progressStatus: ['COMMITTING', 'BUILDING', 'BUILD_FAIL', 'TESTING', 'AUDITING'],
-                upgradeStatus: ['UNDERCARRIAGED', 'AUDIT_REJECT', 'RELEASED', 'GROUNDING_SUSPENSION', 'TESTED'],
+                versionTab: [
+                    { i18nKey: '全部', type: 'ALL' },
+                    { i18nKey: '正式版本', type: 'FORMAL' },
+                    { i18nKey: '测试版本', type: 'TEST' }
+                ],
                 offlineObj: {
                     show: false,
                     title: this.$t('store.下架插件版本'),
@@ -215,16 +244,17 @@
                 return atomStatusMap
             },
 
-            disableAddVersion () {
-                const firstVersion = this.versionList[0] || {}
-                return this.upgradeStatus.indexOf(firstVersion.atomStatus) === -1
-            },
             mavenLang () {
                 return this.$i18n.locale === 'en-US' ? 'en' : this.$i18n.locale
             }
         },
 
         methods: {
+            handleChangeVersionType (type) {
+                if (this.versionType === type) return
+                this.$emit('versionTypeChanged', type)
+            },
+
             showDetail (atomId) {
                 this.hasShowDetail = true
                 this.detailLoading = true
@@ -302,6 +332,52 @@
 <style lang="scss" scoped>
     .manage-version-offline, .version-detail {
         padding: 20px;
+    }
+    .version-button {
+        display: flex;
+        align-items: center;
+
+        .version-tab {
+            display: flex;
+            align-items: center;
+            padding: 4px;
+            margin-left: 8px;
+            background: #EAEBF0;
+            height: 32px;
+            border-radius: 2px;
+
+            li {
+                display: flex;
+                align-items: center;
+                height: 24px;
+                font-size: 12px;
+                color: #4D4F56;
+                text-align: center;
+                border-radius: 2px;
+                cursor: pointer;
+
+                span {
+                    display: flex;
+                    align-items: center;
+                    padding: 0 12px;
+                    height: 14px;
+                }
+
+                &:not(:last-child) span {
+                    border-right: 1px solid #e0e2e8;
+                }
+            }
+
+            .active {
+                background-color: #fff;
+                color: #3a84ff;
+                border-radius: 2px;
+
+                &:not(:last-child) span {
+                    border-right: none;
+                }
+            }
+        }
     }
     ::v-deep .bk-sideslider-content {
         max-height: calc(100% - 60px) !important;

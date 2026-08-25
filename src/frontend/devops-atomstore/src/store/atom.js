@@ -382,6 +382,13 @@ export const actions = {
     },
 
     /**
+     * 校验插件是否可以新增主版本
+     */
+    requestCanAddMainVersion ({ commit }, { atomCode }) {
+        return vue.$ajax.get(`${prefix}/user/market/desk/atom/release/check/canAddMainVersion?atomCode=${atomCode}`)
+    },
+
+    /**
      * 上传流水线插件logo
      */
     uploadLogo ({ commit }, { formData, config }) {

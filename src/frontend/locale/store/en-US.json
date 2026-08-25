@@ -185,6 +185,8 @@
   "详细描述：": "Description: ",
   "版本列表": "Version list",
   "新增版本": "New Version",
+  "正式版本": "Formal",
+  "测试版本": "Test",
   "上架": "Publish",
   "进度": "Progress",
   "有新版本正在发布中，请取消发布再编辑，或者等待发布完成后编辑": "There is a new version being released. Please cancel the release before editing, or wait for the release to complete before editing.",
