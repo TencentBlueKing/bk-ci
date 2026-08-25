@@ -64,6 +64,22 @@ export default defineComponent({
         .map(el => el.stepId!)
     })
 
+    // jobId must be unique across the whole flow; collect all other jobIds
+    const siblingJobIds = computed(() => {
+      const stages = flowModel.value?.stages
+      if (!stages) return []
+      const currentContainerId = editingContainer.value?.containerId
+      const ids: string[] = []
+      for (const stage of stages) {
+        for (const container of stage.containers ?? []) {
+          if (currentContainerId && container.containerId === currentContainerId) continue
+          const jobId = container.jobId?.trim()
+          if (jobId) ids.push(jobId)
+        }
+      }
+      return ids
+    })
+
     // ========== Refs ==========
     const isStagePanelVisible = ref(false)
     const isJobPanelVisible = ref(false)
@@ -226,6 +242,7 @@ export default defineComponent({
           containerIndex={editingContainerIndex.value}
           isNew={isNewJob.value}
           isFinally={isEditingFinallyStage.value}
+          siblingJobIds={siblingJobIds.value}
           onConfirm={handleJobConfirm}
           onChange={updateJob}
         />

@@ -2,7 +2,6 @@ import type { AtomModal } from '@/api/atom'
 import type { Container, Element, FlowModel, FlowSettings, Stage } from '@/api/flowModel'
 import { useAtomStore } from '@/stores/atom'
 import { useFlowModelStore } from '@/stores/flowModel'
-import { useUIStore } from '@/stores/ui'
 import {
   diffAtomVersions,
   getAtomDefaultValue,
@@ -19,12 +18,13 @@ import type { AddAtomEventPayload, AddStageEventPayload, ClickEventPayload } fro
 import { storeToRefs } from 'pinia'
 import { computed, ref } from 'vue'
 import { DEFAULT_VERSION } from './useAtomVersion'
+import { useAuthoringBaseOS } from './useAuthoringBaseOS'
 import { useEditingPos } from './useEditingPos'
 
 export function useFlowModel() {
   const store = useFlowModelStore()
   const atomStore = useAtomStore()
-  const uiStore = useUIStore()
+  const { authoringBaseOS } = useAuthoringBaseOS()
 
   // 使用 storeToRefs 确保响应式
   const {
@@ -41,7 +41,6 @@ export function useFlowModel() {
     hasOrchestrationError,
     hasSettingsError,
   } = storeToRefs(store)
-  const { authoringBaseOS } = storeToRefs(uiStore)
 
   // 统一的位置/索引管理
   const {
@@ -216,6 +215,9 @@ export function useFlowModel() {
       stage.containers[containerIndex!] = {
         ...currentContainer,
         ...container,
+        // elements（Job 下的插件列表）由画布/插件面板维护，Job 属性面板不编辑它。
+        // Job 面板持有的是容器快照，可能已过期，若用其覆盖会丢失新增插件，故始终保留最新的 elements。
+        elements: currentContainer.elements,
       }
       emitChange()
     }

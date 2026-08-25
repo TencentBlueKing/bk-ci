@@ -31,11 +31,15 @@ import com.tencent.devops.common.api.context.ChannelContext
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
+import com.tencent.devops.common.pipeline.enums.PublicVarGroupReferenceTypeEnum
+import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.process.engine.dao.PipelineResourceVersionDao
 import com.tencent.devops.process.engine.dao.template.TemplateInstanceBaseDao
 import com.tencent.devops.process.engine.dao.template.TemplateInstanceItemDao
 import com.tencent.devops.process.engine.pojo.event.PipelineTemplateInstanceEvent
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
+import com.tencent.devops.process.engine.utils.TemplateInstanceUtil
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
 import com.tencent.devops.process.pojo.pipeline.version.PipelineTemplateInstanceReq
 import com.tencent.devops.process.pojo.template.TemplateInstanceStatus
@@ -44,7 +48,9 @@ import com.tencent.devops.process.pojo.template.v2.PipelineTemplateInstanceBase
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateInstanceItem
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateInstanceItemCondition
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateInstanceItemUpdate
+import com.tencent.devops.process.pojo.`var`.dto.PublicVarGroupReferDTO
 import com.tencent.devops.process.service.pipeline.version.PipelineVersionManager
+import com.tencent.devops.process.service.`var`.PublicVarGroupReferManageService
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -65,8 +71,9 @@ class PipelineTemplateInstanceListener @Autowired constructor(
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val pipelineVersionManager: PipelineVersionManager,
     private val pipelineTemplateRelatedService: PipelineTemplateRelatedService,
-    private val pipelineTemplateInstanceService: PipelineTemplateInstanceService,
     private val sampleEventDispatcher: SampleEventDispatcher,
+    private val publicVarGroupReferManageService: PublicVarGroupReferManageService,
+    private val pipelineResourceVersionDao: PipelineResourceVersionDao
 ) {
     fun handle(event: PipelineTemplateInstanceEvent) {
         logger.info("consume pipeline template instance event {}", event)
@@ -414,6 +421,31 @@ class PipelineTemplateInstanceListener @Autowired constructor(
                 pullRequestUrl = deployPipelineResult.targetUrl,
                 pullRequestId = deployPipelineResult.pullRequestId
             )
+            val versionResource = pipelineResourceVersionDao.getVersionResource(
+                dslContext = transactionContext,
+                pipelineId = deployPipelineResult.pipelineId,
+                projectId = projectId,
+                version = deployPipelineResult.version
+            )
+            if (versionResource != null) {
+                // 实例化落库版本为 RELEASED/BRANCH 时才是生效版本，需同步 LATEST_FLAG；草稿则不同步
+                val activeVersion = versionResource.status?.fix()?.let {
+                    it == VersionStatus.RELEASED || it == VersionStatus.BRANCH
+                } ?: false
+                publicVarGroupReferManageService.handleVarGroupReferBus(
+                    PublicVarGroupReferDTO(
+                        userId = "system",
+                        projectId = projectId,
+                        referType = PublicVarGroupReferenceTypeEnum.PIPELINE,
+                        referId = deployPipelineResult.pipelineId,
+                        referName = deployPipelineResult.pipelineName,
+                        referVersion = deployPipelineResult.version,
+                        referVersionName = deployPipelineResult.versionName,
+                        model = versionResource.model,
+                        activeVersion = activeVersion
+                    )
+                )
+            }
         }
     }
 
@@ -423,7 +455,7 @@ class PipelineTemplateInstanceListener @Autowired constructor(
         instanceItem: PipelineTemplateInstanceItem,
         exception: Throwable
     ) {
-        val failedReason = pipelineTemplateInstanceService.translateInstanceException(
+        val failedReason = TemplateInstanceUtil.translateInstanceException(
             userId = userId,
             projectId = projectId,
             pipelineId = instanceItem.pipelineId,
@@ -432,7 +464,7 @@ class PipelineTemplateInstanceListener @Autowired constructor(
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
             templateInstanceItemDao.updateErrorMessage(
-                dslContext = dslContext,
+                dslContext = transactionContext,
                 projectId = projectId,
                 baseId = instanceItem.baseId,
                 pipelineId = instanceItem.pipelineId,

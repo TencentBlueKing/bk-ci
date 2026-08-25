@@ -125,6 +125,23 @@ class InitializeMatrixGroupStageCmd(
 
         // 在下发构建机任务前进行构建矩阵计算
         val parentContainer = commandContext.container
+        // 矩阵局部重试：若子容器已存在（局部重试未删除子容器），则跳过重新分裂，
+        // 直接进入命令链后续的 MatrixExecuteContainerCmd 轮询下发被重置回排队的子Job。
+        // 全量/Stage重试已通过 cleanContainersInMatrixGroup 删空子容器 → 走正常分裂逻辑。
+        val existingChildren = pipelineContainerService.listGroupContainers(
+            projectId = parentContainer.projectId,
+            buildId = parentContainer.buildId,
+            matrixGroupId = parentContainer.containerId
+        )
+        if (existingChildren.isNotEmpty()) {
+            LOG.info(
+                "ENGINE|${parentContainer.buildId}|MATRIX_CONTAINER_REUSE|" +
+                    "matrix(${parentContainer.containerId})|reuseChildCount=${existingChildren.size}"
+            )
+            commandContext.buildStatus = BuildStatus.RUNNING
+            commandContext.latestSummary = "Matrix(${parentContainer.containerId}) reuse(${existingChildren.size})"
+            return
+        }
         val count = try {
             buildLogPrinter.addLine(
                 buildId = parentContainer.buildId,
@@ -738,7 +755,7 @@ class InitializeMatrixGroupStageCmd(
     ): List<MatrixStatusElement> {
         val originToNewId = mutableMapOf<String, String>()
         return elements.map { e ->
-            // 每次写入TASK表都要是新获取的taskId，统一调整为不可重试
+            // 每次写入TASK表都要是新获取的taskId（矩阵重新分裂会生成全新taskId）
             val newTaskId = modelTaskIdGenerator.getNextId()
             // 记录所有新ID对应的原ID，并将post-action信息更新父插件的ID
             originToNewId[e.id!!] = newTaskId
@@ -750,9 +767,8 @@ class InitializeMatrixGroupStageCmd(
             }
             matrixTaskIds.add(newTaskId)
 
-            // 刷新ID为新的唯一值，强制设为无法重试
+            // 刷新ID为新的唯一值；canRetry/canSkip 交由详情返回时统一按子容器状态计算
             e.id = newTaskId
-            e.canRetry = false
             MatrixStatusElement(
                 name = e.name,
                 id = e.id,

@@ -150,6 +150,8 @@
                             v-if="props.row.stageStatus"
                             :steps="props.row.stageStatus"
                             :build-id="props.row.id"
+                            :progress-loader="loadStageProgress"
+                            @show-progress-detail="showStageProgressDetail(props.row, $event)"
                         ></stage-steps>
                         <span v-else>--</span>
                     </template>
@@ -410,26 +412,22 @@
                         </div>
                         <span v-else>--</span>
                     </template>
+                    <template
+                        v-else-if="col.id === 'operate'"
+                        v-slot="props"
+                    >
+                        <bk-button
+                            v-if="retryable(props.row)"
+                            text
+                            theme="primary"
+                            size="small"
+                            @click.stop="retry(props.row.id)"
+                        >
+                            {{ $t('history.reBuild') }}
+                        </bk-button>
+                    </template>
                 </bk-table-column>
                 <template v-if="!archiveFlag">
-                    <bk-table-column
-                        v-if="!isDebug"
-                        :label="$t('operate')"
-                        fixed="right"
-                        width="80"
-                    >
-                        <template v-slot="props">
-                            <bk-button
-                                v-if="retryable(props.row)"
-                                text
-                                theme="primary"
-                                size="small"
-                                @click.stop="retry(props.row.id)"
-                            >
-                                {{ $t(isDebug ? 'reDebug' : 'history.reBuild') }}
-                            </bk-button>
-                        </template>
-                    </bk-table-column>
                     <bk-table-column
                         type="setting"
                         :tippy-options="{ zIndex: 3000 }"
@@ -612,6 +610,56 @@
             :build-num="`#${activeBuild?.buildNum}`"
             :build-id="activeBuild?.id"
         />
+        <bk-sideslider
+            :is-show.sync="stageProgressSlider.isShow"
+            :quick-close="true"
+            :width="720"
+            ext-cls="stage-progress-slider"
+            @hidden="hideStageProgressDetail"
+        >
+            <div
+                slot="header"
+                class="stage-progress-slider-title"
+            >
+                <strong>{{ $t('progressDetail.title') }}</strong>
+                <span v-if="stageProgressSlider.meta">{{ stageProgressSlider.meta }}</span>
+                <bk-button
+                    v-if="canRefreshStageProgress"
+                    text
+                    :disabled="stageProgressSlider.loading"
+                    @click="reloadStageProgressDetail"
+                >
+                    <i :class="['devops-icon', 'icon-refresh', { 'spin-icon': stageProgressSlider.loading }]"></i>
+                    {{ $t('progressDetail.refresh') }}
+                </bk-button>
+            </div>
+            <div
+                slot="content"
+                :class="['stage-progress-slider-content', {
+                    'is-empty': !stageProgressTasks.length
+                }]"
+            >
+                <aside
+                    v-if="stageProgressTasks.length"
+                    class="stage-progress-task-list"
+                >
+                    <div
+                        v-for="(task, index) in stageProgressTasks"
+                        :key="`${task.taskName}-${index}`"
+                        :class="['stage-progress-task-item', { active: index === stageProgressSlider.activeTaskIndex }]"
+                        @click="stageProgressSlider.activeTaskIndex = index"
+                    >
+                        <span :title="task.taskName">{{ task.taskName || '--' }}</span>
+                    </div>
+                </aside>
+                <progress-detail-panel
+                    class="stage-progress-detail-panel"
+                    :build-id="stageProgressSlider.row?.id || ''"
+                    :detail-data="activeStageTaskProgressData"
+                    :show-empty="true"
+                />
+            </div>
+        </bk-sideslider>
     </div>
 </template>
 
@@ -621,17 +669,26 @@
     import MaterialItem from '@/components/ExecDetail/MaterialItem'
     import Logo from '@/components/Logo'
     import StageSteps from '@/components/StageSteps'
+    import ProgressDetailPanel from '@/components/ProgressDetailPanel'
     import EmptyException from '@/components/common/exception'
     import qrcode from '@/components/devops/qrcode'
     import ArtifactQuality from '@/components/ExecDetail/artifactQuality'
     import VersionDiffDialog from './VersionDiffDialog'
+    import { PROCESS_API_URL_PREFIX } from '@/store/constants'
     import {
         BUILD_HISTORY_TABLE_COLUMNS_MAP,
         BUILD_HISTORY_TABLE_DEFAULT_COLUMNS,
         errorTypeMap,
         extForFile
     } from '@/utils/pipelineConst'
-    import { convertFileSize, convertMStoString, convertTime, flatSearchKey, copyToClipboard } from '@/utils/util'
+    import {
+        convertFileSize,
+        convertMStoString,
+        convertTime,
+        flatSearchKey,
+        copyToClipboard,
+        encodeArtifactDownloadUrl
+    } from '@/utils/util'
     import webSocketMessage from '@/utils/webSocketMessage'
     import { mapActions, mapGetters, mapState } from 'vuex'
 
@@ -641,12 +698,26 @@
     } from '@/utils/permission'
 
     const LS_COLUMN_KEY = 'shownColumnsKeys'
+    const LS_COLUMN_VERSION_KEY = 'shownColumnsKeysVersion'
+    const COLUMN_CONFIG_VERSION = '2'
+    function getInitSortedColumns () {
+        const lsColumns = localStorage.getItem(LS_COLUMN_KEY)
+        const lsColumnVersion = localStorage.getItem(LS_COLUMN_VERSION_KEY)
+        const columns = lsColumns ? JSON.parse(lsColumns) : BUILD_HISTORY_TABLE_DEFAULT_COLUMNS
+
+        if (lsColumns && lsColumnVersion !== COLUMN_CONFIG_VERSION && !columns.includes('operate')) {
+            return [...columns, 'operate']
+        }
+
+        return columns
+    }
     export default {
         name: 'build-history-table',
         components: {
             Logo,
             qrcode,
             StageSteps,
+            ProgressDetailPanel,
             MaterialItem,
             FilterBar,
             TableColumnSetting,
@@ -661,8 +732,7 @@
             isDebug: Boolean
         },
         data () {
-            const lsColumns = localStorage.getItem(LS_COLUMN_KEY)
-            const initSortedColumns = lsColumns ? JSON.parse(lsColumns) : BUILD_HISTORY_TABLE_DEFAULT_COLUMNS
+            const initSortedColumns = getInitSortedColumns()
             return {
                 RESOURCE_ACTION,
                 RESOURCE_TYPE,
@@ -681,7 +751,17 @@
                 tableColumnKeys: initSortedColumns,
                 tableHeight: null,
                 dialogTopOffset: null,
-                isShowVersionDiffDialog: false
+                isShowVersionDiffDialog: false,
+                hasDownloadPermission: false,
+                stageProgressSlider: {
+                    isShow: false,
+                    loading: false,
+                    row: null,
+                    step: null,
+                    data: null,
+                    activeTaskIndex: 0,
+                    meta: ''
+                }
             }
         },
         computed: {
@@ -698,7 +778,9 @@
                 return BUILD_HISTORY_TABLE_COLUMNS_MAP
             },
             tableColumnFields () {
-                return this.tableColumnKeys.map(key => this.allTableColumnMap[key])
+                return this.tableColumnKeys
+                    .map(key => this.allTableColumnMap[key])
+                    .filter(col => col && !(col.id === 'operate' && (this.archiveFlag || this.isDebug)))
             },
             projectId () {
                 return this.$route.params.projectId
@@ -852,6 +934,34 @@
                 const { buildHistoryList, visibleIndex } = this
                 return buildHistoryList[visibleIndex] ?? null
             },
+            stageProgressTasks () {
+                return this.stageProgressSlider.data?.taskProgressList ?? []
+            },
+            activeStageTask () {
+                return this.stageProgressTasks[this.stageProgressSlider.activeTaskIndex] ?? null
+            },
+            activeStageTaskProgressData () {
+                const task = this.activeStageTask
+                if (!task) return null
+                return {
+                    taskProgressRete: task.taskProgressRete,
+                    taskName: task.taskName,
+                    jobExecutionOrder: task.jobExecutionOrder,
+                    progressDetail: task.progressDetail ?? {
+                        progress: {
+                            title: task.taskName,
+                            value: task.taskProgressRete
+                        },
+                        subtasks: null,
+                        timeline: null
+                    }
+                }
+            },
+            canRefreshStageProgress () {
+                const buildStatus = this.stageProgressSlider.row?.status
+                const stageStatus = this.stageProgressSlider.step?.status
+                return [buildStatus, stageStatus].some(status => ['RUNNING', 'QUEUE'].includes(status))
+            },
             currentBuildId () {
                 return this.activeBuild.id
             },
@@ -937,10 +1047,12 @@
                 this.tableColumnKeys = columns
                 this.$refs.tableSetting.$parent.instance?.hide()
                 localStorage.setItem(LS_COLUMN_KEY, JSON.stringify(columns))
+                localStorage.setItem(LS_COLUMN_VERSION_KEY, COLUMN_CONFIG_VERSION)
             },
             handleColumnReset () {
                 this.tableColumnKeys = [...BUILD_HISTORY_TABLE_DEFAULT_COLUMNS]
                 localStorage.setItem(LS_COLUMN_KEY, JSON.stringify(BUILD_HISTORY_TABLE_DEFAULT_COLUMNS))
+                localStorage.setItem(LS_COLUMN_VERSION_KEY, COLUMN_CONFIG_VERSION)
                 this.$refs.tableSetting.$parent.instance?.hide()
             },
             async requestHistory () {
@@ -1024,6 +1136,65 @@
                         return this.$t('editPage.toCheck')
                     case stage.status === 'SKIP':
                         return this.$t('skipStageDesc')
+                }
+            },
+            async loadStageProgress (buildId, stageId) {
+                const { data } = await this.$ajax.get(`${PROCESS_API_URL_PREFIX}/user/builds/${this.projectId}/${this.pipelineId}/getStageProgressRate`, {
+                    params: {
+                        buildId,
+                        stageId
+                    }
+                })
+                return data
+            },
+            async showStageProgressDetail (row, step) {
+                this.stageProgressSlider.isShow = true
+                this.stageProgressSlider.row = row
+                this.stageProgressSlider.step = step
+                this.stageProgressSlider.meta = `#${row.buildNum} - ${step.name || step.stageId}`
+                this.stageProgressSlider.activeTaskIndex = 0
+                await this.requestStageProgressDetail()
+            },
+            async reloadStageProgressDetail () {
+                await this.requestStageProgressDetail()
+            },
+            async requestStageProgressDetail () {
+                if (this.stageProgressSlider.loading) return
+                const { row, step } = this.stageProgressSlider
+                if (!row || !step) {
+                    this.stageProgressSlider.loading = false
+                    return
+                }
+                try {
+                    this.stageProgressSlider.loading = true
+                    const { data } = await this.$ajax.get(`${PROCESS_API_URL_PREFIX}/user/builds/${this.projectId}/${this.pipelineId}/getStageProgressRate`, {
+                        params: {
+                            buildId: row.id,
+                            stageId: step.stageId
+                        }
+                    })
+                    if (this.stageProgressSlider.isShow) {
+                        this.stageProgressSlider.data = data
+                        this.stageProgressSlider.activeTaskIndex = 0
+                    }
+                } catch (err) {
+                    this.$showTips({
+                        theme: 'error',
+                        message: err.message || this.$t('progressDetail.loadFailed')
+                    })
+                } finally {
+                    this.stageProgressSlider.loading = false
+                }
+            },
+            hideStageProgressDetail () {
+                this.stageProgressSlider = {
+                    isShow: false,
+                    loading: false,
+                    row: null,
+                    step: null,
+                    data: null,
+                    activeTaskIndex: 0,
+                    meta: ''
                 }
             },
             activeRemarkInput (row) {
@@ -1168,7 +1339,7 @@
                         message: `${this.$t('history.downloading')}${name}`,
                         theme: 'success'
                     })
-                    window.open(res.url, '_self')
+                    window.open(encodeArtifactDownloadUrl(res.url, path), '_self')
                 } catch (err) {
                     const { projectId, pipelineId } = this
                     this.handleError(err, {
@@ -1664,5 +1835,98 @@
         top: 50% !important;
         transform: var(--dialog-top-translateY) !important;
     }
+}
+.stage-progress-slider {
+    .bk-sideslider-title {
+        display: flex;
+        align-items: center;
+        padding-left: 12px !important;
+        line-height: normal;
+    }
+    .bk-sideslider-content {
+        background: $bgHoverColor;
+    }
+}
+.stage-progress-slider {
+    .bk-sideslider-title {
+        display: flex;
+        align-items: center;
+        padding-left: 12px !important;
+        line-height: normal;
+    }
+    .bk-sideslider-content {
+        background: $bgHoverColor;
+    }
+}
+.stage-progress-slider-title {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    min-width: 0;
+    gap: 8px;
+    strong {
+        line-height: 22px;
+        font-size: 16px;
+        color: $fontBoldColor;
+    }
+    > span {
+        color: $fontColor;
+        font-size: 12px;
+        line-height: 20px;
+    }
+    .devops-icon {
+        display: inline-block;
+        margin-right: 4px;
+    }
+}
+.stage-progress-slider-content {
+    display: grid;
+    grid-template-columns: 128px 1fr;
+    height: 100%;
+    min-height: 480px;
+    &.is-empty {
+        display: block;
+        .stage-progress-detail-panel {
+            height: 100%;
+        }
+        ::v-deep .progress-detail-body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+        }
+    }
+}
+.stage-progress-task-list {
+    padding: 12px 0;
+    border-right: 1px solid $borderColor;
+    background: #fff;
+}
+.stage-progress-task-item {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    height: 36px;
+    padding: 0 16px;
+    line-height: 36px;
+    font-size: 12px;
+    color: $fontWeightColor;
+    cursor: pointer;
+    box-sizing: border-box;
+    span {
+        flex: 1;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    &:hover,
+    &.active {
+        background: $primaryLightColor;
+        color: $primaryColor;
+    }
+}
+.stage-progress-detail-panel {
+    margin: 0;
 }
 </style>

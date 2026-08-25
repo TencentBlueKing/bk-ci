@@ -17,11 +17,11 @@ import com.tencent.devops.process.pojo.template.v2.PipelineTemplateResource
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateResourceCommonCondition
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateResourceUpdateInfo
 import com.tencent.devops.store.pojo.template.enums.TemplateStatusEnum
+import java.time.LocalDateTime
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
-import java.time.LocalDateTime
 
 @Repository
 class PipelineTemplateResourceDao {
@@ -62,7 +62,8 @@ class PipelineTemplateResourceDao {
                 UPDATER,
                 RELEASE_TIME,
                 CREATED_TIME,
-                UPDATE_TIME
+                UPDATE_TIME,
+                DRAFT_VERSION
             ).values(
                 record.projectId,
                 record.templateId,
@@ -92,7 +93,8 @@ class PipelineTemplateResourceDao {
                 record.updater,
                 record.releaseTime.toLocalDateTimeOrDefault(),
                 record.createdTime.toLocalDateTimeOrDefault(),
-                record.updateTime.toLocalDateTimeOrDefault()
+                record.updateTime.toLocalDateTimeOrDefault(),
+                record.draftVersion
             ).onDuplicateKeyUpdate()
                 .set(STORE_STATUS, record.storeStatus.name)
                 .set(SETTING_VERSION, record.settingVersion)
@@ -114,6 +116,7 @@ class PipelineTemplateResourceDao {
                 .set(UPDATER, record.updater)
                 .set(UPDATE_TIME, record.updateTime.toLocalDateTimeOrDefault())
                 .set(RELEASE_TIME, record.releaseTime?.toLocalDateTime())
+                .set(DRAFT_VERSION, record.draftVersion)
                 .execute()
         }
     }
@@ -145,6 +148,7 @@ class PipelineTemplateResourceDao {
                     record.updater?.let { set(UPDATER, it) }
                     record.sortWeight?.let { set(SORT_WEIGHT, it) }
                     record.storeStatus?.let { set(STORE_STATUS, it.name) }
+                    record.draftVersion?.let { set(DRAFT_VERSION, it) }
                 }
                 .set(UPDATE_TIME, now)
                 .where(buildQueryCondition(commonCondition))
@@ -275,6 +279,45 @@ class PipelineTemplateResourceDao {
         }
     }
 
+    fun getVersionModelString(
+        dslContext: DSLContext,
+        projectId: String,
+        templateId: String,
+        version: Long?,
+        includeDraft: Boolean? = null
+    ): String? {
+        return with(TPipelineTemplateResourceVersion.T_PIPELINE_TEMPLATE_RESOURCE_VERSION) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(TEMPLATE_ID.eq(templateId))
+            conditions.add(PROJECT_ID.eq(projectId))
+
+            if (version != null) {
+                conditions.add(VERSION.eq(version))
+            } else {
+                // 非新的逻辑请求则保持旧逻辑
+                if (includeDraft != true) {
+                    conditions.add(
+                        (
+                            STATUS.ne(VersionStatus.COMMITTING.name)
+                                .and(STATUS.ne(VersionStatus.DELETE.name))
+                        )
+                            .or(STATUS.isNull)
+                    )
+                }
+            }
+
+            val query = dslContext.select(MODEL)
+                .from(this)
+                .where(conditions)
+
+            if (version == null) {
+                query.orderBy(VERSION.desc()).limit(1)
+            }
+
+            query.fetchAny(0, String::class.java)
+        }
+    }
+
     fun getVersions(
         dslContext: DSLContext,
         commonCondition: PipelineTemplateResourceCommonCondition
@@ -300,7 +343,8 @@ class PipelineTemplateResourceDao {
                 CREATED_TIME,
                 UPDATE_TIME,
                 STORE_STATUS,
-                NUMBER
+                NUMBER,
+                DRAFT_VERSION
             ).from(this)
                 .where(buildQueryCondition(commonCondition))
                 .orderBy(SORT_WEIGHT.desc(), RELEASE_TIME.desc(), NUMBER.desc())
@@ -334,7 +378,8 @@ class PipelineTemplateResourceDao {
                         createTime = it.value17().timestampmilli(),
                         updateTime = it.value18().timestampmilli(),
                         storeFlag = it.value19() == TemplateStatusEnum.RELEASED.name,
-                        number = it.value20()
+                        number = it.value20(),
+                        draftVersion = it.value21()
                     )
                 }
         }
@@ -555,7 +600,8 @@ class PipelineTemplateResourceDao {
             updateTime = this.updateTime.timestampmilli(),
             releaseTime = this.releaseTime?.timestampmilli(),
             sortWeight = this.sortWeight,
-            storeStatus = TemplateStatusEnum.valueOf(this.storeStatus)
+            storeStatus = TemplateStatusEnum.valueOf(this.storeStatus),
+            draftVersion = this.draftVersion
         )
     }
 }

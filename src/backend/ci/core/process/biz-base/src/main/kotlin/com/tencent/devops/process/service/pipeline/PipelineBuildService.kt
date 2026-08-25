@@ -308,7 +308,8 @@ class PipelineBuildService(
                     },
                 debug = debug ?: false,
                 versionName = resource.versionName,
-                yamlVersion = resource.yamlVersion
+                yamlVersion = resource.yamlVersion,
+                draftVersion = resource.draftVersion
             )
 
             val interceptResult = pipelineInterceptorChain.filter(

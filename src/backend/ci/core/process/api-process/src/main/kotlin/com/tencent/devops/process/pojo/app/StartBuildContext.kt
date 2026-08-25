@@ -77,6 +77,8 @@ import com.tencent.devops.process.utils.DependOnUtils
 import com.tencent.devops.process.utils.PIPELINE_BUILD_MSG
 import com.tencent.devops.process.utils.PIPELINE_RETRY_ALL_FAILED_CONTAINER
 import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
+import com.tencent.devops.process.utils.PIPELINE_RETRY_MATRIX_CONTAINER_ID
+import com.tencent.devops.process.utils.PIPELINE_RETRY_MATRIX_GROUP_ID
 import com.tencent.devops.process.utils.PIPELINE_RETRY_RUNNING_BUILD
 import com.tencent.devops.process.utils.PIPELINE_RETRY_START_TASK_ID
 import com.tencent.devops.process.utils.PIPELINE_RETRY_TASK_IN_CONTAINER_ID
@@ -149,20 +151,83 @@ data class StartBuildContext(
     // 重试插件对应的containerId
     val retryTaskInContainerId: String? = null,
     // 触发事件标识
-    val triggerEventType: String? = null
+    val triggerEventType: String? = null,
+    // 草稿版本号
+    val draftVersion: Int? = null,
+    // 矩阵局部重试：目标父矩阵容器ID，非空表示本次为矩阵组内的局部重试
+    val retryMatrixGroupId: String? = null,
+    // 矩阵局部重试：目标子容器ID，为空且 retryFailedContainer=true 时表示重试该矩阵下所有失败子Job
+    val retryMatrixContainerId: String? = null
 ) {
     val watcher: Watcher = Watcher("startBuild-$buildId")
 
     /**
-     * 检查Stage是否属于失败重试[stageRetry]时，当前[stage]是否需要跳过
+     * 局部重试遍历 Stage 时，是否已经到达重试目标 Stage（含目标本身）。
+     * 用于跳过前序已完成 Stage，避免 UNEXEC/CANCELED 等把 checkIn 清空后再次审核。
+     */
+    var reachedRetryTargetStage: Boolean = false
+
+    /**
+     * 是否为矩阵组内的局部重试（子Job/子插件重试、跳过或矩阵级批量重试）
+     */
+    fun isMatrixPartialRetry(): Boolean = !retryMatrixGroupId.isNullOrBlank()
+
+    /**
+     * 当前[container]是否为本次矩阵局部重试所针对的父矩阵容器
+     */
+    fun isRetryMatrixGroup(container: Container): Boolean {
+        return isMatrixPartialRetry() && retryMatrixGroupId == container.id
+    }
+
+    /**
+     * 当前[stage]是否为本次局部重试的目标 Stage（Stage 级重试 / 任务所在 Stage / 矩阵所在 Stage）
+     */
+    fun isRetryTargetStage(stage: Stage): Boolean {
+        val stageId = stage.id ?: return false
+        if (stageId == retryStartTaskId) return true
+        if (!retryTaskInStageId.isNullOrBlank()) return stageId == retryTaskInStageId
+        if (retryStartTaskId.isNullOrBlank()) return false
+        return stage.containers.any { containerContainsRetryStart(it) }
+    }
+
+    private fun containerContainsRetryStart(container: Container): Boolean {
+        if (container.id == retryStartTaskId) return true
+        if (container.elements.any { it.id == retryStartTaskId || it.stepId == retryStartTaskId }) return true
+        return container.fetchGroupContainers()?.any { containerContainsRetryStart(it) } == true
+    }
+
+    /**
+     * 前序 Stage 是否已经完成准入审核。status 异常时仍据此跳过，避免再次弹出审核。
+     */
+    fun hasCompletedStageReview(stage: Stage): Boolean {
+        val checkIn = stage.checkIn ?: return false
+        return checkIn.manualTrigger == true &&
+            !checkIn.reviewGroups.isNullOrEmpty() &&
+            checkIn.groupToReview() == null
+    }
+
+    /**
+     * 是否允许 resetBuildOption / 回写 checkIn。全新构建，或已到达重试点之后才允许。
+     * 到达之前一律禁止，避免前序 Stage 因 UNEXEC/CANCELED 被标脏后清空审核组再次弹审核。
+     */
+    fun allowResetStageReview(): Boolean = retryStartTaskId.isNullOrBlank() || reachedRetryTargetStage
+
+    /**
+     * 检查当前[stage]在失败重试时是否需要跳过。
+     * Stage 失败重试：非目标且已完成的 Stage 跳过。
+     * 任务/Job/矩阵局部重试：重试点之前已完成（或已审过）的 Stage 整段跳过，禁止刷新以免清空 checkIn。
      */
     fun needSkipWhenStageFailRetry(stage: Stage): Boolean {
         return if (needRerunStage(stage)) { // finally stage 不会跳过, 当前stage是要失败重试的不会跳过
             false
-        } else if (!stageRetry) { // 不是stage失败重试的动作也不会跳过
+        } else if (stageRetry) {
+            // Stage 失败重试：非目标且已完成（或已审过）的 Stage 跳过
+            BuildStatus.parse(stage.status).isFinish() || hasCompletedStageReview(stage)
+        } else if (!retryStartTaskId.isNullOrBlank() && !reachedRetryTargetStage && !isRetryTargetStage(stage)) {
+            // 任务/Job/矩阵局部重试：重试点之前已完成（或已审过）的 Stage 整段跳过，禁止刷新以免清空 checkIn
+            BuildStatus.parse(stage.status).isFinish() || hasCompletedStageReview(stage)
+        } else {
             false
-        } else { // 如果失败重试的不是当前stage，并且当前stage已经是完成状态，则跳过
-            BuildStatus.parse(stage.status).isFinish()
         }
     }
 
@@ -172,9 +237,32 @@ data class StartBuildContext(
             false
         } else if (!containerStatus.isFailure() && !containerStatus.isCancel()) { // 跳过失败和被取消的其他job
             false
+        } else if (containerStatus.isCancel() && dependOnRetryContainer(stage, container)) {
+            // #13407 上一次被取消的Job，若依赖本次重试插件所在的Job，则其依赖项本次会重新执行，
+            // 它必须跟着唤起重跑。否则该Job会带着上一次残留的CANCELED参与本次Stage状态聚合，
+            // 使构建无论重试多少次都停在取消态
+            false
         } else { // 插件失败重试的，会跳过
             !retryStartTaskId.isNullOrBlank()
         }
+    }
+
+    /**
+     * 判断上一次被取消的[container]是否直接或间接依赖本次重试插件[retryStartTaskId]所在的Job。
+     * dependOn关系只在同一Stage内声明，重试插件不在本[stage]时视为无依赖关系，保持原有跳过逻辑。
+     */
+    private fun dependOnRetryContainer(stage: Stage, container: Container): Boolean {
+        if (retryStartTaskId.isNullOrBlank()) {
+            return false
+        }
+        val retryContainerId = stage.containers.firstOrNull { candidate ->
+            candidate.elements.any { it.id == retryStartTaskId }
+        }?.id ?: return false
+        return DependOnUtils.dependOnContainer(
+            stage = stage,
+            container = container,
+            targetContainerId = retryContainerId
+        )
     }
 
     fun needSkipTaskWhenRetry(stage: Stage, container: Container, taskId: String?): Boolean {
@@ -272,6 +360,23 @@ data class StartBuildContext(
     }
 
     /**
+     * #13500 任务/Job/矩阵局部重试：目标 Stage 内已经成功或跳过的兄弟 Job 整段跳过。
+     * 这些 Job 若再走进 prepareBuildContainerTasks，UNEXEC/CANCELED 残留会把整 Job 重置并再次下发
+     * （例如先跳过 executeCount=N 的 Job，再重试更早一轮失败 Job 时，把 N 已跑完的 Job 重新准备环境）。
+     *
+     * 不改 [needSkipContainerWhenFailRetry]：失败/取消 Job 仍走 #2318，取消+dependOn 留给其它修复。
+     * 本次重试点所在 Job、Stage 级重试、finally、dependOn 被跳过须重评的 Job、矩阵局部重试父容器，都不跳过。
+     */
+    fun needSkipCompletedContainerWhenTaskRetry(stage: Stage, container: Container): Boolean {
+        if (retryStartTaskId.isNullOrBlank()) return false
+        if (needRerunStage(stage)) return false
+        if (isRetryDependOnContainer(container)) return false
+        if (isRetryMatrixGroup(container)) return false
+        if (containerContainsRetryStart(container)) return false
+        return BuildStatus.parse(container.status).isSuccess()
+    }
+
+    /**
      * 应该跳过刷新stage状态当运行时重试时
      */
     fun shouldSkipRefreshWhenRetryRunning(stage: Stage): Boolean {
@@ -282,6 +387,11 @@ data class StartBuildContext(
      * 应该跳过刷新container状态当运行时重试时
      */
     fun shouldSkipRefreshWhenRetryRunning(container: Container): Boolean {
+        // 运行中矩阵局部重试豁免：目标失败子容器挂在矩阵父容器的 groupContainers 下，
+        // 模型遍历到的是矩阵父容器（container.id 为父ID，≠ retryTaskInContainerId 子容器ID），
+        // 若按下方普通规则(id不同即跳过)父容器会被整体跳过，导致 prepareBuildContainerTasks 的矩阵分支不执行、
+        // 目标子Job无法在同一执行次数下就地重置并重新下发。故本次为该父矩阵容器下的局部重试时，父容器必须参与刷新。
+        if (retryOnRunningBuild && isRetryMatrixGroup(container)) return false
         // 运行中重试, 如果当前的container依赖失败重试插件所属的container,则需要刷新
         return if (retryOnRunningBuild && container.id != retryTaskInContainerId) {
             val dependOnContainerId2JobIds = when (container) {
@@ -320,7 +430,8 @@ data class StartBuildContext(
             pipelineParamMap: MutableMap<String, BuildParameters>,
             webHookStartParam: MutableMap<String, BuildParameters> = mutableMapOf(),
             triggerReviewers: List<String>? = null,
-            currentBuildNo: Int? = null
+            currentBuildNo: Int? = null,
+            draftVersion: Int? = null
         ): StartBuildContext {
             val buildParam = genOriginStartParamsList(realStartParamKeys, pipelineParamMap)
             val params: Map<String, String> = pipelineParamMap.values.associate { it.key to it.value.toString() }
@@ -397,7 +508,10 @@ data class StartBuildContext(
                 retryTaskInContainerId = params[PIPELINE_RETRY_TASK_IN_CONTAINER_ID],
                 triggerEventType = params[PIPELINE_TRIGGER_EVENT_TYPE]?.let {
                     it.ifBlank { startType.name }
-                } ?: startType.name
+                } ?: startType.name,
+                draftVersion = draftVersion,
+                retryMatrixGroupId = params[PIPELINE_RETRY_MATRIX_GROUP_ID]?.takeIf { it.isNotBlank() },
+                retryMatrixContainerId = params[PIPELINE_RETRY_MATRIX_CONTAINER_ID]?.takeIf { it.isNotBlank() }
             )
         }
 

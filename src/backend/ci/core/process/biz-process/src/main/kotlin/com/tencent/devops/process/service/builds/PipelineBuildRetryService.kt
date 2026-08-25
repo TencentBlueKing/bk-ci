@@ -64,6 +64,8 @@ import com.tencent.devops.process.service.pipeline.PipelineBuildService
 import com.tencent.devops.process.utils.PIPELINE_RETRY_ALL_FAILED_CONTAINER
 import com.tencent.devops.process.utils.PIPELINE_RETRY_BUILD_ID
 import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
+import com.tencent.devops.process.utils.PIPELINE_RETRY_MATRIX_CONTAINER_ID
+import com.tencent.devops.process.utils.PIPELINE_RETRY_MATRIX_GROUP_ID
 import com.tencent.devops.process.utils.PIPELINE_RETRY_RUNNING_BUILD
 import com.tencent.devops.process.utils.PIPELINE_RETRY_START_TASK_ID
 import com.tencent.devops.process.utils.PIPELINE_RETRY_TASK_IN_CONTAINER_ID
@@ -333,6 +335,24 @@ class PipelineBuildRetryService @Autowired constructor(
                 return
             }
             s.containers.forEach { c ->
+                // 矩阵父容器：支持子Job整体/子插件/矩阵级批量的局部重试（子容器在DB中已存在）。
+                // 未命中局部重试（如对整个矩阵Job做普通重试）时继续走下方普通逻辑（全量重分裂），保持存量行为不变。
+                if (c.matrixGroupFlag == true &&
+                    findRetryInMatrixGroup(
+                        userId = userId,
+                        projectId = projectId,
+                        buildId = buildId,
+                        taskId = taskId,
+                        failedContainer = failedContainer,
+                        skipFailedTask = skipFailedTask,
+                        buildInfo = buildInfo,
+                        paramMap = paramMap,
+                        stage = s,
+                        matrixContainer = c
+                    )
+                ) {
+                    return
+                }
                 val pos = if (c.id == taskId) 0 else -1 // 容器job级别的重试，则找job的第一个原子
                 c.elements.forEachIndexed { index, element ->
                     if (index == pos) {
@@ -344,6 +364,7 @@ class PipelineBuildRetryService @Autowired constructor(
                         paramMap[PIPELINE_RETRY_START_TASK_ID] = BuildParameters(
                             key = PIPELINE_RETRY_START_TASK_ID, value = element.id!!
                         )
+                        putRetryTaskInStageId(paramMap, s.id!!)
                         return
                     }
                     if (element.id == taskId || element.stepId == taskId) {
@@ -363,6 +384,155 @@ class PipelineBuildRetryService @Autowired constructor(
                     }
                 }
             }
+        }
+    }
+
+    /**
+     * 在矩阵组内定位重试目标，命中返回 true。支持：
+     * 1. 矩阵级批量重试：taskId=父矩阵容器ID 且 failedContainer=true，重试该矩阵下所有失败子Job
+     * 2. 子Job整体重试：taskId=子容器ID，重跑该子Job内全部插件
+     * 3. 子插件重试/跳过：taskId=子插件taskId或stepId
+     */
+    @Suppress("LongParameterList", "ReturnCount", "NestedBlockDepth")
+    private fun findRetryInMatrixGroup(
+        userId: String,
+        projectId: String,
+        buildId: String,
+        taskId: String?,
+        failedContainer: Boolean?,
+        skipFailedTask: Boolean?,
+        buildInfo: BuildInfo,
+        paramMap: MutableMap<String, BuildParameters>,
+        stage: Stage,
+        matrixContainer: Container
+    ): Boolean {
+        val matrixGroupId = matrixContainer.id ?: return false
+        // 矩阵级批量重试：重试该矩阵下所有失败/取消的子Job。
+        // 仅当显式勾选"重试所有失败Job"(failedContainer=true)时走局部批量重试；
+        // 否则对整个矩阵Job的普通重试仍走原全量重分裂逻辑，保持存量行为。
+        if (matrixGroupId == taskId) {
+            if (failedContainer != true) return false
+            pipelineContainerService.getContainer(projectId, buildId, stage.id, matrixGroupId)
+                ?: throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_BUILD_EXPIRED_CANT_RETRY)
+            // 以父矩阵容器ID作为重试起点哨兵，避免被识别为整条流水线重跑
+            paramMap[PIPELINE_RETRY_START_TASK_ID] = BuildParameters(
+                key = PIPELINE_RETRY_START_TASK_ID, value = matrixGroupId
+            )
+            paramMap[PIPELINE_RETRY_MATRIX_GROUP_ID] = BuildParameters(
+                key = PIPELINE_RETRY_MATRIX_GROUP_ID, value = matrixGroupId,
+                valueType = BuildFormPropertyType.TEMPORARY
+            )
+            paramMap[PIPELINE_RETRY_ALL_FAILED_CONTAINER] = BuildParameters(
+                key = PIPELINE_RETRY_ALL_FAILED_CONTAINER, value = true,
+                valueType = BuildFormPropertyType.TEMPORARY
+            )
+            paramMap[PIPELINE_SKIP_FAILED_TASK] = BuildParameters(
+                key = PIPELINE_SKIP_FAILED_TASK, value = skipFailedTask ?: false,
+                valueType = BuildFormPropertyType.TEMPORARY
+            )
+            putRetryTaskInStageId(paramMap, stage.id!!)
+            return true
+        }
+        // 子Job/子插件级重试
+        val groupContainers = matrixContainer.fetchGroupContainers() ?: return false
+        groupContainers.forEach { child ->
+            val childId = child.id ?: return@forEach
+            // 子Job整体重试：取子Job第一个插件作为重试起点
+            if (childId == taskId) {
+                val firstElement = child.elements.firstOrNull()
+                    ?: throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_BUILD_EXPIRED_CANT_RETRY)
+                pipelineContainerService.getContainer(projectId, buildId, stage.id, childId)
+                    ?: throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_BUILD_EXPIRED_CANT_RETRY)
+                fillMatrixRetryParams(
+                    paramMap = paramMap,
+                    matrixGroupId = matrixGroupId,
+                    childContainerId = childId,
+                    retryStartTaskId = firstElement.id!!,
+                    skipFailedTask = false,
+                    buildInfo = buildInfo,
+                    stage = stage
+                )
+                return true
+            }
+            // 子插件重试/跳过
+            child.elements.forEachIndexed { index, element ->
+                if (element.id == taskId || element.stepId == taskId) {
+                    // 子元素为MatrixStatusElement无additionalOptions，跳过校验从父模板元素读取manualSkip
+                    if (skipFailedTask == true) {
+                        val templateManualSkip =
+                            matrixContainer.elements.getOrNull(index)?.additionalOptions?.manualSkip
+                        if (!isSkipTask(userId, projectId, templateManualSkip)) {
+                            throw ErrorCodeException(
+                                errorCode = ProcessMessageCode.ERROR_TASK_NOT_ALLOWED_TO_BE_SKIPPED
+                            )
+                        }
+                    }
+                    pipelineTaskService.getByTaskId(
+                        transactionContext = null, projectId = projectId, buildId = buildId, taskId = element.id
+                    ) ?: throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_BUILD_EXPIRED_CANT_RETRY)
+                    fillMatrixRetryParams(
+                        paramMap = paramMap,
+                        matrixGroupId = matrixGroupId,
+                        childContainerId = childId,
+                        retryStartTaskId = element.id!!,
+                        skipFailedTask = skipFailedTask ?: false,
+                        buildInfo = buildInfo,
+                        stage = stage
+                    )
+                    return true
+                }
+            }
+        }
+        return false
+    }
+
+    /**
+     * 填充矩阵子Job/子插件重试参数
+     *
+     * 运行中重试（[buildInfo].isFinish() == false，即整条构建尚未结束、其它兄弟子Job可能仍在运行）时，
+     * 额外补写运行中重试参数，使 [runningBuildRetry]/[checkStatus] 校验通过，并在“同一次执行次数”下
+     * 只对目标失败子Job就地重跑（不新增执行次数、不影响运行中的兄弟子Job）：
+     *  - [PIPELINE_RETRY_TASK_IN_STAGE_ID]     = 矩阵父容器所在 stage.id（该 stage 处于运行中）
+     *  - [PIPELINE_RETRY_TASK_IN_CONTAINER_ID] = 目标“子容器ID”（非矩阵父容器ID）；
+     *    checkStatus 需校验该子容器已结束(失败/取消)，矩阵父容器此刻仍在运行不满足校验，故填子容器ID。
+     */
+    private fun fillMatrixRetryParams(
+        paramMap: MutableMap<String, BuildParameters>,
+        matrixGroupId: String,
+        childContainerId: String,
+        retryStartTaskId: String,
+        skipFailedTask: Boolean,
+        buildInfo: BuildInfo,
+        stage: Stage
+    ) {
+        paramMap[PIPELINE_RETRY_START_TASK_ID] = BuildParameters(
+            key = PIPELINE_RETRY_START_TASK_ID, value = retryStartTaskId
+        )
+        paramMap[PIPELINE_RETRY_MATRIX_GROUP_ID] = BuildParameters(
+            key = PIPELINE_RETRY_MATRIX_GROUP_ID, value = matrixGroupId,
+            valueType = BuildFormPropertyType.TEMPORARY
+        )
+        paramMap[PIPELINE_RETRY_MATRIX_CONTAINER_ID] = BuildParameters(
+            key = PIPELINE_RETRY_MATRIX_CONTAINER_ID, value = childContainerId,
+            valueType = BuildFormPropertyType.TEMPORARY
+        )
+        paramMap[PIPELINE_SKIP_FAILED_TASK] = BuildParameters(
+            key = PIPELINE_SKIP_FAILED_TASK, value = skipFailedTask,
+            valueType = BuildFormPropertyType.TEMPORARY
+        )
+        // 结束后任务级重试也需要目标 StageId，以便 startBuild 跳过前序已完成 Stage、不清空 checkIn
+        putRetryTaskInStageId(paramMap, stage.id!!)
+        // 运行中(其它子Job还在跑)对已失败子Job/子插件做局部重试：补写运行中重试参数
+        if (!buildInfo.isFinish()) {
+            paramMap[PIPELINE_RETRY_RUNNING_BUILD] = BuildParameters(
+                key = PIPELINE_RETRY_RUNNING_BUILD, value = true,
+                valueType = BuildFormPropertyType.TEMPORARY
+            )
+            // 目标是已结束的“子容器”，checkStatus 据此校验子Job已结束；矩阵父容器仍在运行不作为校验对象
+            paramMap[PIPELINE_RETRY_TASK_IN_CONTAINER_ID] = BuildParameters(
+                key = PIPELINE_RETRY_TASK_IN_CONTAINER_ID, value = childContainerId,
+                valueType = BuildFormPropertyType.TEMPORARY
+            )
         }
     }
 
@@ -446,16 +616,13 @@ class PipelineBuildRetryService @Autowired constructor(
             value = skipFailedTask ?: false,
             valueType = BuildFormPropertyType.TEMPORARY
         )
+        // 结束后任务级重试也需要目标 StageId，以便 startBuild 跳过前序已完成 Stage、不清空 checkIn
+        putRetryTaskInStageId(paramMap, stage.id!!)
         // 重试运行中的构建
         if (!buildInfo.isFinish()) {
             paramMap[PIPELINE_RETRY_RUNNING_BUILD] = BuildParameters(
                 key = PIPELINE_RETRY_RUNNING_BUILD,
                 value = true,
-                valueType = BuildFormPropertyType.TEMPORARY
-            )
-            paramMap[PIPELINE_RETRY_TASK_IN_STAGE_ID] = BuildParameters(
-                key = PIPELINE_RETRY_TASK_IN_STAGE_ID,
-                value = stage.id!!,
                 valueType = BuildFormPropertyType.TEMPORARY
             )
             paramMap[PIPELINE_RETRY_TASK_IN_CONTAINER_ID] = BuildParameters(
@@ -464,6 +631,14 @@ class PipelineBuildRetryService @Autowired constructor(
                 valueType = BuildFormPropertyType.TEMPORARY
             )
         }
+    }
+
+    private fun putRetryTaskInStageId(paramMap: MutableMap<String, BuildParameters>, stageId: String) {
+        paramMap[PIPELINE_RETRY_TASK_IN_STAGE_ID] = BuildParameters(
+            key = PIPELINE_RETRY_TASK_IN_STAGE_ID,
+            value = stageId,
+            valueType = BuildFormPropertyType.TEMPORARY
+        )
     }
 
     private  fun isSkipTask(

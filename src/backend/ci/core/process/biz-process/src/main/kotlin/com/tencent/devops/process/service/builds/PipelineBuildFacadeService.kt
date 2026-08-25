@@ -121,6 +121,7 @@ import com.tencent.devops.process.engine.service.PipelineTaskService
 import com.tencent.devops.process.engine.service.WebhookBuildParameterService
 import com.tencent.devops.process.engine.service.record.ContainerBuildRecordService
 import com.tencent.devops.process.engine.service.record.PipelineBuildRecordService
+import com.tencent.devops.process.engine.service.record.TaskBuildRecordService
 import com.tencent.devops.process.engine.utils.BuildUtils
 import com.tencent.devops.process.engine.utils.PipelineUtils
 import com.tencent.devops.process.enums.BuildReplayStatus
@@ -149,6 +150,7 @@ import com.tencent.devops.process.pojo.pipeline.PipelineBuildParamFormProp
 import com.tencent.devops.process.pojo.pipeline.PipelineLatestBuild
 import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
 import com.tencent.devops.process.pojo.pipeline.StartUpInfo
+import com.tencent.devops.process.pojo.pipeline.SubPipelineBuildLocateResult
 import com.tencent.devops.process.pojo.pipeline.toBuildDetailSimple
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.CreateStreamTriggerSupportService
@@ -199,6 +201,7 @@ class PipelineBuildFacadeService(
     private val pipelineStageService: PipelineStageService,
     private val redisOperation: RedisOperation,
     private val buildRecordService: PipelineBuildRecordService,
+    private val taskBuildRecordService: TaskBuildRecordService,
     private val containerBuildRecordService: ContainerBuildRecordService,
     private val jmxApi: ProcessJmxApi,
     private val pipelinePermissionService: PipelinePermissionService,
@@ -320,6 +323,18 @@ class PipelineBuildFacadeService(
 
                     param.defaultValue is Boolean -> {
                         latestParam?.value?.toString()?.toBoolean()
+                    }
+
+                    // 级联参数（如代码库分支参数）存表时被转为JSON字符串，回显时需解析回Map，
+                    // 否则前端读不到子字段（repo-name/branch），导致上一次的参数值无法回显
+                    CascadePropertyUtils.supportCascadeParam(param.type) -> {
+                        latestParam?.value?.let {
+                            CascadePropertyUtils.parseDefaultValue(
+                                key = param.id,
+                                defaultValue = it,
+                                type = param.type
+                            )
+                        }
                     }
 
                     else -> {
@@ -577,9 +592,9 @@ class PipelineBuildFacadeService(
             )
             if (readyToBuildPipelineInfo.locked == true) {
                 throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_PIPELINE_LOCK)
-            } else if (startType == StartType.SERVICE &&
+            } else if (branch.isNullOrBlank() && startType == StartType.SERVICE &&
                 readyToBuildPipelineInfo.latestVersionStatus?.isNotReleased() == true) {
-                // 服务间的API触发需要兼容老用户，为避免意外产生调试构建，直接拦截
+                // 服务间的API触发允许执行分支版本，但草稿版本无正式版本，为避免意外产生调试构建，直接拦截
                 throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_NO_RELEASE_PIPELINE_VERSION)
             }
             // PAC流水线相关参数
@@ -911,7 +926,13 @@ class PipelineBuildFacadeService(
             if (!hasPermissionToCancelBuild(userId, projectId, pipelineId, buildId)) {
                 logger.warn("[$buildId]|User $userId has no permission to cancel build.")
                 // 根据不同的策略抛出不同的错误信息
-                val setting = pipelineRepositoryService.getSetting(projectId, pipelineId)
+                // #12697 按本次构建实际运行的版本读取设置,保证分支版本的取消策略生效
+                val buildInfo = pipelineRuntimeService.getBuildInfo(projectId, buildId)
+                val setting = pipelineRepositoryService.getSettingByPipelineVersion(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    pipelineVersion = buildInfo?.version
+                )
                 val cancelPolicy = setting?.buildCancelPolicy ?: BuildCancelPolicy.EXECUTE_PERMISSION
 
                 if (cancelPolicy == BuildCancelPolicy.RESTRICTED) {
@@ -1201,7 +1222,12 @@ class PipelineBuildFacadeService(
             )
         }
 
-        val setting = pipelineRepositoryService.getSetting(projectId, pipelineId)
+        // #12697 按本次构建实际运行的版本读取设置,保证分支版本/调试版本的并发配置生效
+        val setting = pipelineRepositoryService.getSettingByPipelineVersion(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            pipelineVersion = buildInfo.version
+        )
             ?: throw ErrorCodeException(
                 statusCode = Response.Status.BAD_REQUEST.statusCode,
                 errorCode = ProcessMessageCode.OPERATE_PIPELINE_FAIL,
@@ -1573,6 +1599,77 @@ class PipelineBuildFacadeService(
             channelCode = channelCode,
             checkPermission = checkPermission
         ).toBuildDetailSimple()
+    }
+
+    fun locateSubPipelineBuild(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        parentTaskId: String,
+        parentExecuteCount: Int,
+        checkPermission: Boolean = true
+    ): SubPipelineBuildLocateResult {
+        if (checkPermission) {
+            pipelinePermissionService.validPipelinePermission(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                permission = AuthPermission.VIEW,
+                message = MessageUtil.getMessageByLocale(
+                    ERROR_USER_NO_PERMISSION_GET_PIPELINE_INFO,
+                    I18nUtil.getLanguage(userId),
+                    arrayOf(userId, pipelineId, I18nUtil.getCodeLanMessage(BK_DETAIL))
+                )
+            )
+        }
+        val taskRecord = taskBuildRecordService.getTaskBuildRecord(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            taskId = parentTaskId,
+            executeCount = parentExecuteCount
+        )
+        if (taskRecord == null) {
+            return SubPipelineBuildLocateResult(
+                matchType = "NONE",
+                notices = listOf(
+                    "未找到父构建插件的构建记录，请检查 parentTaskId 和 parentExecuteCount，" +
+                        "不要使用子流水线最新构建代替。"
+                )
+            )
+        }
+        val subPipelineBuildInfo = taskRecord.taskVar["subPipelineBuildInfo"] as? Map<*, *>
+        val subProjectId = subPipelineBuildInfo?.get("projectId")?.toString()
+        val subPipelineId = subPipelineBuildInfo?.get("pipelineId")?.toString()
+        val subBuildId = subPipelineBuildInfo?.get("buildId")?.toString()
+        if (subProjectId.isNullOrBlank() || subPipelineId.isNullOrBlank() || subBuildId.isNullOrBlank()) {
+            return SubPipelineBuildLocateResult(
+                matchType = "NONE",
+                triggerStartEpoch = taskRecord.taskVar["startEpoch"]?.toString()?.toLongOrNull(),
+                parentExecuteCount = taskRecord.executeCount,
+                notices = listOf(
+                    "父构建插件记录的 TASK_VAR 中没有完整的 subPipelineBuildInfo，" +
+                        "不要使用子流水线最新构建代替。"
+                )
+            )
+        }
+        val subBuildInfo = pipelineRuntimeService.getBuildInfo(subProjectId, subBuildId)
+        return SubPipelineBuildLocateResult(
+            matchType = "RECORD_TASK",
+            projectId = subProjectId,
+            pipelineId = subPipelineId,
+            buildId = subBuildId,
+            buildNum = subBuildInfo?.buildNum,
+            status = subBuildInfo?.status?.name,
+            startTime = subBuildInfo?.startTime,
+            triggerStartEpoch = taskRecord.taskVar["startEpoch"]?.toString()?.toLongOrNull(),
+            parentExecuteCount = taskRecord.executeCount,
+            notices = listOf(
+                "已从 T_PIPELINE_BUILD_RECORD_TASK.TASK_VAR.subPipelineBuildInfo 精确定位子构建，" +
+                    "请使用该 buildId 继续诊断。"
+            )
+        )
     }
 
     fun getBuildDetail(
@@ -2705,14 +2802,19 @@ class PipelineBuildFacadeService(
         pipelineId: String,
         buildId: String
     ): Boolean {
-        // 获取流水线配置以检查取消策略
-        val setting = pipelineRepositoryService.getSetting(projectId, pipelineId)
+        // #12697 按本次构建实际运行的版本读取设置,保证分支版本的取消策略生效
+        val buildInfo = pipelineRuntimeService.getBuildInfo(projectId, buildId)
+        val setting = pipelineRepositoryService.getSettingByPipelineVersion(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            pipelineVersion = buildInfo?.version
+        )
         val cancelPolicy = setting?.buildCancelPolicy ?: BuildCancelPolicy.EXECUTE_PERMISSION
 
         return when (cancelPolicy) {
             BuildCancelPolicy.RESTRICTED -> {
                 // 受限策略：仅触发人或管理员可取消
-                val buildInfo = pipelineRuntimeService.getBuildInfo(projectId, buildId) ?: return false
+                if (buildInfo == null) return false
                 val isTriggerUser = userId == buildInfo.triggerUser
                 val hasManagePermission = pipelinePermissionService.checkPipelinePermission(
                     userId = userId,
@@ -3475,11 +3577,13 @@ class PipelineBuildFacadeService(
         pipelineId: String,
         buildInfo: BuildInfo
     ): String {
-        // 按原有的启动参数组装启动参数；大值是引用串，重启前先解析回真实值
+        // 按原有的启动参数组装启动参数(排除重试次数)；大值是引用串，重启前先解析回真实值
         val startParameters = mutableMapOf<String, String>()
         pipelineRuntimeService.resolveStartupParamOverflow(
             projectId = projectId, buildId = buildInfo.buildId, params = buildInfo.buildParameters
-        ).forEach {
+        ).filter {
+            it.key != PIPELINE_RETRY_COUNT
+        }.forEach {
             startParameters[it.key] = it.value.toString()
         }
         val startType = StartType.toStartType(buildInfo.trigger)

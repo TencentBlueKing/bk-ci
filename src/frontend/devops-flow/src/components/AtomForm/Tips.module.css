@@ -9,10 +9,9 @@
   min-width: 44px;
   background-color: #ffb400;
   position: relative;
+  color: #fff;
 
-  :global(.devops-icon) {
-    font-size: 18px;
-    color: #fff;
+  svg {
     display: inline-block;
     position: absolute;
     top: 50%;

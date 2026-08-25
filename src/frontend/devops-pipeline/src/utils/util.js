@@ -35,6 +35,19 @@ export function urlJoin (...args) {
     return args.filter(arg => arg).join('/').replace(/([^:]\/)\/+/g, '$1')
 }
 
+export function encodeArtifactDownloadUrl (url, path) {
+    const encodeSegment = segment => encodeURIComponent(segment).replace(
+        /[!'()*]/g,
+        char => `%${char.charCodeAt(0).toString(16).toUpperCase()}`
+    )
+    const encodedPath = path
+        .split('/')
+        .map(encodeSegment)
+        .join('/')
+
+    return url.replace(path, () => encodedPath)
+}
+
 export function isShallowEqual (obj1, obj2) {
     if (obj1 === obj2) return true
     if (!isObject(obj1) || !isObject(obj2)) {
@@ -470,7 +483,15 @@ export const deepCopy = obj => {
 
 export const deepClone = obj => {
     if (typeof structuredClone === 'function') {
-        return structuredClone(obj)
+        try {
+            return structuredClone(obj)
+        } catch (e) {
+            // 非结构化克隆错误继续抛出，避免隐藏其他问题
+            if (e && e.name !== 'DataCloneError') {
+                throw e
+            }
+            // DataCloneError 时降级为 JSON 方式深拷贝（函数等不可序列化字段会被丢弃）
+        }
     }
     return JSON.parse(JSON.stringify(obj))
 }
@@ -913,7 +934,7 @@ export function parseErrorMsg (msg) {
     }
 }
 
-export function showPipelineCheckMsg (showTooltips, code, message, h) {
+export function showPipelineCheckMsg (showTooltips, message, h) {
     const errorInfo = parseErrorMsg(message)
     if (errorInfo['@type'] === 'errors') {
         showTooltips({
