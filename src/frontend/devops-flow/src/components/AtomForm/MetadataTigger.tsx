@@ -16,18 +16,14 @@ import SelectInput from './SelectInput'
 
 const { Option } = Select
 
-const DEFAULT_DISPLAY_CONDITION_OPERATOR = '=='
+const DEFAULT_DISPLAY_CONDITION_OPERATOR = 'EQ'
 
 const DISPLAY_CONDITION_OPERATORS = [
-  { id: DEFAULT_DISPLAY_CONDITION_OPERATOR, name: DEFAULT_DISPLAY_CONDITION_OPERATOR },
-  { id: '>=', name: '>=' },
-  { id: '<=', name: '<=' },
-  { id: '>', name: '>' },
-  { id: '<', name: '<' },
-  { id: 'IN', name: 'in' },
-  { id: 'CONTAINS', name: 'Contains' },
-  { id: 'STARTS_WITH', name: 'StartWith' },
-  { id: 'ENDS_WITH', name: 'EndWith' },
+  { id: 'EQ', name: 'EQ' },
+  { id: 'NE', name: 'NE' },
+  { id: 'CONTAINS', name: 'CONTAINS' },
+  { id: 'EXISTS', name: 'EXISTS' },
+  { id: 'NOT_EXISTS', name: 'NOT_EXISTS' }
 ]
 
 interface MetadataParam {

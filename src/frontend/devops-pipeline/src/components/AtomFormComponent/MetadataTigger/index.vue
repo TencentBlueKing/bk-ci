@@ -65,10 +65,16 @@
     import SelectInput from '@/components/AtomFormComponent/SelectInput'
     import mixins from '../mixins'
     import selectorMixins from '../selectorMixins'
-    import {
-        DEFAULT_DISPLAY_CONDITION_OPERATOR,
-        DISPLAY_CONDITION_OPERATORS
-    } from '@/store/modules/atom/paramsConfig'
+
+    const DEFAULT_DISPLAY_CONDITION_OPERATOR = 'EQ'
+
+    const DISPLAY_CONDITION_OPERATORS = [
+        { id: 'EQ', name: 'EQ' },
+        { id: 'NE', name: 'NE' },
+        { id: 'CONTAINS', name: 'CONTAINS' },
+        { id: 'EXISTS', name: 'EXISTS' },
+        { id: 'NOT_EXISTS', name: 'NOT_EXISTS' }
+    ]
 
     export default {
         name: 'metadata-tigger',
