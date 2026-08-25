@@ -301,7 +301,7 @@ export default defineStore('userGroupTable', () => {
       activeTableData.tableData?.splice(rowIndex.value as number, 1, res);
       activeTableData.tableData = [...activeTableData.tableData];
     }
-    isPermission.value = sourceList.value.every(item => item.count !== 0)
+    syncPermissionState();
     handleClear(selectedTableGroupType.value);
   }
   /**
@@ -316,9 +316,21 @@ export default defineStore('userGroupTable', () => {
       activeTableData.tableData?.splice(rowIndex.value as number, 1);
       activeTableData.tableData = [...activeTableData.tableData];
       activeTableData.count = activeTableData.count! - 1;
+      // 该类资源已无用户组时，从列表中移除，避免残留空分组
+      if (activeTableData.count <= 0) {
+        sourceList.value = sourceList.value.filter(
+          item => item.resourceType !== selectedTableGroupType.value
+        );
+      }
     }
-    isPermission.value = sourceList.value.every(item => item.count !== 0)
+    syncPermissionState();
     handleClear(selectedTableGroupType.value);
+  }
+  /**
+   * 同步是否仍有权限：仅当所有资源类型均无用户组时才视为无权限
+   */
+  function syncPermissionState() {
+    isPermission.value = sourceList.value.some(item => (item.count ?? 0) > 0);
   }
   /**
    * 获取表格选择的数据
