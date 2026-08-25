@@ -51,7 +51,7 @@ import java.util.concurrent.TimeUnit
  * log 服务 Micrometer 指标：
  * - ES 读写耗时/成败（含 bulk 聚合、直写、查询、下载、降级）
  * - Kafka 投递/消费耗时与成败（按队列 destination 区分）
- * - 打印线程池、熔断、热点 build 规模等 Gauge
+ * - 打印线程池、per-project 熔断、热点 key 规模、查询归属校验等
  *
  * 通过 /management/prometheus 拉取。
  */
@@ -77,7 +77,7 @@ class LogMetrics(
             .description("Log print executor queue size")
             .register(meterRegistry)
         Gauge.builder("log_traffic_heavy_size") { logTrafficStatsService.heavySize().toDouble() }
-            .description("Number of builds currently marked as heavy traffic")
+            .description("Number of traffic keys (projectId or b:buildId) currently marked as heavy")
             .register(meterRegistry)
         Gauge.builder("log_es_circuit_open") {
             if (logStorageDegradeSwitcher.getIfAvailable()?.isCircuitOpen() == true) 1.0 else 0.0
@@ -88,6 +88,16 @@ class LogMetrics(
             (logStorageDegradeSwitcher.getIfAvailable()?.openCircuitProjectCount() ?: 0).toDouble()
         }
             .description("Number of projects (traffic keys) with open ES circuit")
+            .register(meterRegistry)
+        Gauge.builder("log_es_circuit_tracked_projects") {
+            (logStorageDegradeSwitcher.getIfAvailable()?.trackedProjectCount() ?: 0).toDouble()
+        }
+            .description("Number of traffic keys currently tracked by per-project ES circuit")
+            .register(meterRegistry)
+        Gauge.builder("log_es_circuit_max_tracked_projects") {
+            (logStorageDegradeSwitcher.getIfAvailable()?.maxTrackedProjects() ?: 0).toDouble()
+        }
+            .description("Configured maxTrackedProjects for per-project ES circuit")
             .register(meterRegistry)
         registerBulkGauges()
     }
@@ -295,6 +305,18 @@ class LogMetrics(
             .increment()
     }
 
+    /**
+     * 查询鉴权的 build 归属校验结果。
+     * [result] 取值见 [RESULT_OWNER_MATCH] / [RESULT_OWNER_MISMATCH] / [RESULT_OWNER_SKIP]。
+     */
+    fun recordQueryOwnership(result: String) {
+        Counter.builder("log_query_ownership_total")
+            .description("Log query build-ownership check result")
+            .tags("result", result)
+            .register(meterRegistry)
+            .increment()
+    }
+
     fun destinationOf(event: ILogEvent): String {
         return when (event) {
             is LogOriginHeavyEvent -> DESTINATION_ORIGIN_HEAVY
@@ -326,5 +348,14 @@ class LogMetrics(
         const val DESTINATION_STORAGE = "storage"
         const val DESTINATION_STATUS = "status"
         const val DESTINATION_UNKNOWN = "unknown"
+
+        /** URL 与本地归属一致 */
+        const val RESULT_OWNER_MATCH = "match"
+
+        /** URL 与本地归属不一致，已拦截（疑似 IDOR） */
+        const val RESULT_OWNER_MISMATCH = "mismatch"
+
+        /** 无归属记录，降级 URL-RBAC（旧 Worker / 表未建 / 历史构建） */
+        const val RESULT_OWNER_SKIP = "skip_no_owner"
     }
 }
