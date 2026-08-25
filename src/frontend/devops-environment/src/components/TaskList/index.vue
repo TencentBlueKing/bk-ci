@@ -383,11 +383,11 @@
                             >
                                 <template #default="{ row }">
                                     <a
-                                        v-if="row.nodeInfo?.nodeHashId"
+                                        v-if="row.nodeInfo?.displayName"
                                         class="text-link node-link"
                                         :href="getNodeDetailUrl(row)"
                                         target="_blank"
-                                    >{{ row.nodeInfo.nodeHashId }}</a>
+                                    >{{ row.nodeInfo.displayName }}</a>
                                     <span v-else>--</span>
                                 </template>
                             </bk-table-column>
@@ -712,7 +712,7 @@
             // 工作节点详情页（resType 区分流水线资源/创作流资源）
             const getNodeDetailUrl = (row) => {
                 const nodeHashId = row.nodeInfo?.nodeHashId || ''
-                return `/console/environment/${projectId.value}/${resType.value || SERVICE_RESOURCE_TYPE.PIPELINE}/node/allNode?nodeHashId=${nodeHashId}&page=1&pageSize=10&tabName=overview`
+                return `/console/environment/${projectId.value}/${resType.value || SERVICE_RESOURCE_TYPE.PIPELINE}/node/allNode?nodeHashId=${nodeHashId}?displayName=${row.displayName}`
             }
             
             // 获取任务信息项（右侧统计），按视图区分
