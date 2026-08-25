@@ -56,7 +56,6 @@
             return {
                 isLoading: false,
                 searchStr: '',
-                triggerParamList: [],
                 sysParamList: [],
                 noParamsTrigger: ['manualTrigger', 'remoteTrigger', 'timerTrigger']
             }
@@ -89,6 +88,12 @@
         watch: {
             atomCodeList () {
                 this.$nextTick(this.initData)
+            },
+            commonParams () {
+                this.initData()
+            },
+            triggerParams () {
+                this.initData()
             }
         },
         created () {
