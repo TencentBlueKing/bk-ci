@@ -280,7 +280,7 @@
                 return {
                     types: [],
                     groups: [],
-                    users: '${{ci.actor}}',
+                    users: '${{ci.pipeline_owner}}',
                     wechatGroupFlag: false,
                     wechatGroup: '',
                     wechatGroupMarkdownFlag: false,

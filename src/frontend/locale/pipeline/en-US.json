@@ -331,8 +331,8 @@
     "itemPlaceholder": "Please enter",
     "defaultSuc": "【${'{{'}ci.project_name{'}}'}】- 【${'{{'}ci.pipeline_name{'}}'}】#${'{{'}ci.build_num{'}}'} build success, Takes ${'{{'}ci.pipeline_execute_time{'}}'}, Trigger user: ${'{{'}ci.actor}.",
     "defaultFail": "【${'{{'}ci.project_name{'}}'}】- 【${'{{'}ci.pipeline_name{'}}'}】#${'{{'}ci.build_num{'}}'} build fail, Takes ${'{{'}ci.pipeline_execute_time{'}}'}, Trigger user: ${'{{'}ci.actor{'}}'}.",
-    "defaultCancel": "【${'{{'}ci.project_name{'}}'}】- 【${'{{'}ci.pipeline_name{'}}'}】#${'{{'}ci.build_num{'}}'} run canceled, Takes ${'{{'}ci.pipeline_execute_time{'}}'}, Trigger user: ${'{{'}ci.actor{'}}'}.",
-    "defaultPublish": "【${'{{'}ci.project_name{'}}'}】- 【${'{{'}ci.pipeline_name{'}}'}】#${'{{'}ci.build_num{'}}'} new version published, Operator: ${'{{'}ci.actor{'}}'}.",
+    "defaultCancel": "【${'{{'}ci.project_name{'}}'}】- 【${'{{'}ci.pipeline_name{'}}'}】#${'{{'}ci.build_num{'}}'} run canceled! Cancelled by: ${'{{'}ci.operator{'}}'}, Reason: ${'{{'}ci.fail_reason{'}}'}",
+    "defaultPublish": "【${'{{'}ci.project_name{'}}'}】- 【${'{{'}ci.pipeline_name{'}}'}】 version ${'{{'}ci.pipeline_version{'}}'} published successfully. Publisher: ${'{{'}ci.pipeline_modifier{'}}'}, Description: ${'{{'}ci.pipeline_desc{'}}'}",
     "runningOption": {
       "multiple": "Can run concurrently",
       "lock": "Disable the pipeline, it cannot be run by any triggering method",
