@@ -145,6 +145,32 @@
                 />
             </form-field>
             <form-field
+                :label="$t('editPage.dockerCpuLimit')"
+                :desc="$t('editPage.dockerCpuLimitDesc')"
+                :is-error="!isCpuLimitValid"
+                :error-msg="$t('editPage.dockerCpuLimitInvalid')"
+            >
+                <bk-input
+                    :placeholder="$t('editPage.dockerResourceUnlimited')"
+                    :value="buildCpuLimit"
+                    :disabled="!editable"
+                    @change="(val) => changeOptions('cpus', val)"
+                />
+            </form-field>
+            <form-field
+                :label="$t('editPage.dockerMemoryLimit')"
+                :desc="$t('editPage.dockerMemoryLimitDesc')"
+                :is-error="!isMemoryLimitValid"
+                :error-msg="$t('editPage.dockerMemoryLimitInvalid')"
+            >
+                <bk-input
+                    :placeholder="$t('editPage.dockerResourceUnlimited')"
+                    :value="buildMemoryLimit"
+                    :disabled="!editable"
+                    @change="(val) => changeOptions('memory', val)"
+                />
+            </form-field>
+            <form-field
                 label="Network"
             >
                 <input-parameter-array
@@ -226,7 +252,8 @@
         },
         data () {
             return {
-                enableDocker: false
+                enableDocker: false,
+                lastValidationState: false
             }
         },
         computed: {
@@ -266,6 +293,36 @@
             buildGpus () {
                 return this.container.dispatchType?.dockerInfo?.options?.gpus ?? ''
             },
+            buildCpuLimit () {
+                return this.container.dispatchType?.dockerInfo?.options?.cpus ?? ''
+            },
+            buildMemoryLimit () {
+                return this.container.dispatchType?.dockerInfo?.options?.memory ?? ''
+            },
+            isCpuLimitValid () {
+                const value = this.buildCpuLimit
+                if (value === '') return true
+
+                const cpuLimit = Number(value)
+                return /^\d+(?:\.\d+)?$/.test(value)
+                    && Number.isFinite(cpuLimit)
+                    && cpuLimit > 0
+            },
+            isMemoryLimitValid () {
+                const matched = /^([1-9]\d*)([mg])$/.exec(this.buildMemoryLimit)
+                if (this.buildMemoryLimit === '') return true
+                if (!matched) return false
+
+                const [, amount, unit] = matched
+                const memoryAmount = Number(amount)
+                const memoryInMegabytes = memoryAmount * (unit === 'g' ? 1024 : 1)
+                return Number.isSafeInteger(memoryAmount)
+                    && Number.isSafeInteger(memoryInMegabytes)
+                    && memoryInMegabytes >= 6
+            },
+            hasResourceLimitError () {
+                return this.enableDocker && (!this.isCpuLimitValid || !this.isMemoryLimitValid)
+            },
             buildNetwork () {
                 return this.container.dispatchType?.dockerInfo?.options?.network ?? []
             },
@@ -297,8 +354,23 @@
                 ]
             }
         },
-        created () {
-            if (Object.keys(this.dockerInfo).length) this.enableDocker = true
+        watch: {
+            dockerInfo: {
+                immediate: true,
+                deep: true,
+                handler (dockerInfo) {
+                    this.enableDocker = Object.keys(dockerInfo).length > 0
+                }
+            },
+            hasResourceLimitError: {
+                immediate: true,
+                handler (isError) {
+                    if (this.lastValidationState === isError) return
+
+                    this.lastValidationState = isError
+                    this.$emit('validation-change', isError)
+                }
+            }
         },
         methods: {
             handleeEnableDockerChange () {
