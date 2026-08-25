@@ -27,6 +27,8 @@
 
 package com.tencent.devops.log.service
 
+import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
@@ -40,9 +42,11 @@ import com.tencent.devops.common.log.pojo.QueryLogsText
 import com.tencent.devops.common.log.constant.Constants
 import com.tencent.devops.common.log.pojo.enums.LogStatus
 import com.tencent.devops.common.log.pojo.enums.LogType
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.log.jmx.LogStorageBean
 import com.tencent.devops.log.strategy.context.UserLogPermissionCheckContext
 import com.tencent.devops.log.strategy.factory.UserLogPermissionCheckStrategyFactory
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import jakarta.ws.rs.core.Response
@@ -53,7 +57,8 @@ class BuildLogQueryService @Autowired constructor(
     private val logService: LogService,
     private val logStatusService: LogStatusService,
     private val indexService: IndexService,
-    private val logStorageBean: LogStorageBean
+    private val logStorageBean: LogStorageBean,
+    private val logProjectIdResolver: LogProjectIdResolver
 ) {
 
     fun getInitLogs(
@@ -667,6 +672,17 @@ class BuildLogQueryService @Autowired constructor(
         if (buildId.isBlank()) {
             throw ParamBlankException("Invalid buildId")
         }
+        // 有本地归属时，URL 上的 projectId/pipelineId 必须与 buildId 真实归属一致，
+        // 防止「对流水线 A 有 VIEW、却把别人的 buildId 塞进路径」读到他人日志。
+        // 无归属（旧 Worker / 历史构建）降级为现网 URL-RBAC，该窗口仍可能存在 IDOR。
+        // ServiceLogResource.checkPermissionFlag=false 不走本方法，仍由网关认证内部调用。
+        validateBuildOwnership(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            permission = permission
+        )
         val userLogPermissionCheckStrategy =
             UserLogPermissionCheckStrategyFactory.createUserLogPermissionCheckStrategy(archiveFlag)
         UserLogPermissionCheckContext(userLogPermissionCheckStrategy).checkUserLogPermission(
@@ -677,8 +693,46 @@ class BuildLogQueryService @Autowired constructor(
         )
     }
 
+    private fun validateBuildOwnership(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        permission: AuthPermission
+    ) {
+        val owner = logProjectIdResolver.find(buildId) ?: return
+        val projectMismatch = !owner.projectId.isNullOrBlank() && owner.projectId != projectId
+        val pipelineMismatch = !owner.pipelineId.isNullOrBlank() && owner.pipelineId != pipelineId
+        if (!projectMismatch && !pipelineMismatch) {
+            return
+        }
+        logger.warn(
+            "Log query ownership mismatch: userId={} buildId={} url={}/{} owner={}/{}",
+            userId,
+            buildId,
+            projectId,
+            pipelineId,
+            owner.projectId,
+            owner.pipelineId
+        )
+        // 与无权限使用同一错误码，避免把真实归属泄露给越权调用方
+        throw ErrorCodeException(
+            errorCode = CommonMessageCode.USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
+            params = arrayOf(
+                userId,
+                projectId,
+                permission.getI18n(I18nUtil.getLanguage()),
+                pipelineId
+            )
+        )
+    }
+
     private fun logStatusSuccess(logStatus: Int): Boolean {
         return LogStatus.parse(logStatus) == LogStatus.EMPTY ||
             LogStatus.parse(logStatus) == LogStatus.SUCCEED
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(BuildLogQueryService::class.java)
     }
 }

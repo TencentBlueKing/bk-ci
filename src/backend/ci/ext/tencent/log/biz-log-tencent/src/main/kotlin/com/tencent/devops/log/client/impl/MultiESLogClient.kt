@@ -169,6 +169,11 @@ class MultiESLogClient constructor(
         return clients.filter { inactiveESCache.get(it.clusterName) ?: false }
     }
 
+    /**
+     * 返回本进程配置的全部 ES 客户端（含 inactive），用于次日索引预创建等需覆盖全量集群的场景。
+     */
+    fun getAllClients(): List<ESClient> = clients
+
     override fun getActiveClients(): List<ESClient> {
         return clients.filter { inactiveESCache.get(it.clusterName) != true }
     }

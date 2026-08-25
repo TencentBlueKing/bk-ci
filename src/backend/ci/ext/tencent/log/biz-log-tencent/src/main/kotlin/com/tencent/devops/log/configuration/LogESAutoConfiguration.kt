@@ -168,7 +168,7 @@ class LogESAutoConfiguration {
     private val e2MaxConnectPerRoute: Int? = null
 
     /**
-     * 多 ES 直写失败快速熔断总开关（#13327，腾讯多集群）。
+     * 多 ES 直写失败快速熔断总开关（腾讯多集群）。
      * 影响：[com.tencent.devops.log.client.impl.MultiESLogClient] 按集群维度的健康统计与失活。
      * false：不做秒级快速失活，仅依赖既有定时探测（如 ESDetectionJob）。
      */
