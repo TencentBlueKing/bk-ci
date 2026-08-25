@@ -76,46 +76,60 @@ class ESDetectionJob @Autowired constructor(
         logger.info("[$namespace] Start to detect es")
         val redisLock = RedisLock(redisOperation, getDetectionRedisKey(namespace), DETECTION_LOCK_EXPIRE_SECONDS)
         try {
-            if (redisLock.tryLock()) {
-                val buildId = UUIDUtil.generate()
-                val index = IndexNameUtils.getIndexName()
-                logClient.getActiveClients().forEach {
-                    try {
-                        val f = executor.submit(Detection(it, index, buildId))
-                        val documentIds = f.get(60, TimeUnit.SECONDS)
-                        if (documentIds.isEmpty()) {
-                            logger.warn("[${it.clusterName}] Fail to insert data")
-                            logClient.markESInactive(it.clusterName)
-                        } else {
-                            executor.submit(
-                                Deletion(it, index, buildId, documentIds)
-                            )
-                        }
-                    } catch (t: Throwable) {
-                        logger.warn("[${it.clusterName}] Fail to detect es status", t)
-                        logClient.markESInactive(it.clusterName)
-                    }
-                }
-                val inactiveClients = logClient.getInactiveClients()
-                logger.info("Start to check the inactive clients: ${inactiveClients.map { it.clusterName }}")
-                logClient.getInactiveClients().forEach {
-                    try {
-                        val f = executor.submit(Detection(it, index, buildId))
-                        val documentIds = f.get(60, TimeUnit.SECONDS)
-                        if (documentIds.isNotEmpty()) {
-                            logger.warn("[${it.clusterName}] Success to insert data")
-                            logClient.markESActive(it.clusterName)
-                            executor.submit(Deletion(it, index, buildId, documentIds))
-                        }
-                    } catch (t: Throwable) {
-                        logger.warn("[${it.clusterName}] Fail to detect the inactive es", t)
-                    }
-                }
-            } else {
+            if (!redisLock.tryLock()) {
                 logger.info("[$namespace] Other instance took the detection lock, ignore")
+                return
             }
+            detectClients()
         } finally {
             redisLock.unlock()
+        }
+    }
+
+    private fun detectClients() {
+        val buildId = UUIDUtil.generate()
+        val index = IndexNameUtils.getIndexName()
+        logClient.getActiveClients().forEach { probeActiveClient(it, index, buildId) }
+        val inactiveClients = logClient.getInactiveClients()
+        logger.info("Start to check the inactive clients: ${inactiveClients.map { it.clusterName }}")
+        inactiveClients.forEach { probeInactiveClient(it, index, buildId) }
+    }
+
+    private fun probeActiveClient(client: ESClient, index: String, buildId: String) {
+        val documentIds = runDetection(client, index, buildId, "Fail to detect es status")
+        if (documentIds == null) {
+            logClient.markESInactive(client.clusterName)
+            return
+        }
+        if (documentIds.isEmpty()) {
+            logger.warn("[${client.clusterName}] Fail to insert data")
+            logClient.markESInactive(client.clusterName)
+        } else {
+            executor.submit(Deletion(client, index, buildId, documentIds))
+        }
+    }
+
+    private fun probeInactiveClient(client: ESClient, index: String, buildId: String) {
+        val documentIds = runDetection(client, index, buildId, "Fail to detect the inactive es") ?: return
+        if (documentIds.isEmpty()) {
+            return
+        }
+        logger.warn("[${client.clusterName}] Success to insert data")
+        logClient.markESActive(client.clusterName)
+        executor.submit(Deletion(client, index, buildId, documentIds))
+    }
+
+    private fun runDetection(
+        client: ESClient,
+        index: String,
+        buildId: String,
+        failMessage: String
+    ): List<String>? {
+        return try {
+            executor.submit(Detection(client, index, buildId)).get(60, TimeUnit.SECONDS)
+        } catch (t: Throwable) {
+            logger.warn("[${client.clusterName}] $failMessage", t)
+            null
         }
     }
 
