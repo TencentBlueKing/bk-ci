@@ -27,7 +27,6 @@
 
 package com.tencent.devops.store.common.dao
 
-import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.model.store.tables.TStorePkgRunEnvInfo

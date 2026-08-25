@@ -29,7 +29,7 @@ package com.tencent.devops.store.common.service.impl
 import com.tencent.devops.artifactory.api.ServiceArchiveAtomResource
 import com.tencent.devops.artifactory.api.service.ServiceArtifactoryResource
 import com.tencent.devops.artifactory.api.service.ServiceFileResource
-import com.tencent.devops.artifactory.constant.BKREPO_STORE_PROJECT_ID
+import com.tencent.devops.artifactory.constant.bkRepoStoreProjectId
 import com.tencent.devops.artifactory.constant.REPO_NAME_PLUGIN
 import com.tencent.devops.artifactory.pojo.LocalDirectoryInfo
 import com.tencent.devops.artifactory.pojo.enums.FileChannelTypeEnum
@@ -79,7 +79,7 @@ class SampleStoreFileServiceImpl : StoreFileService() {
         i18nDir?.let { filePath = "$filePath/$i18nDir" }
         logger.info("getFileNames by filePath:$filePath")
         return client.get(ServiceArtifactoryResource::class).listFileNamesByPath(
-            projectId = BKREPO_STORE_PROJECT_ID(),
+            projectId = bkRepoStoreProjectId(),
             repoName = REPO_NAME_PLUGIN,
             filePath = URLEncoder.encode(filePath, Charsets.UTF_8.name())
         ).data

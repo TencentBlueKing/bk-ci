@@ -136,7 +136,10 @@ class PipelineQuartzService @Autowired constructor(
                 timeZone = timeZone
             )
         } catch (ignore: Exception) {
-            logger.error("TIMER_RELOAD| add job error|pipelineId=$pipelineId|crontab=$crontab|timeZone=$timeZone", ignore)
+            logger.error(
+                "TIMER_RELOAD| add job error|pipelineId=$pipelineId|crontab=$crontab|timeZone=$timeZone",
+                ignore
+            )
         }
     }
 

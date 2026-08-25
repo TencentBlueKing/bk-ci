@@ -131,7 +131,8 @@ class TenantAuthDeptServiceImpl : DeptService {
             logger.error("listUserInfos error: $e")
             throw ErrorCodeException(
                 errorCode = AuthMessageCode.USER_NOT_EXIST,
-                defaultMessage = "listUserInfos error, page:${searchUserEntity.page}, pageSize:${searchUserEntity.pageSize}"
+                defaultMessage = "listUserInfos error, page:${searchUserEntity.page}, " +
+                    "pageSize:${searchUserEntity.pageSize}"
             )
         }
     }
@@ -394,9 +395,7 @@ class TenantAuthDeptServiceImpl : DeptService {
     data class ListUser(
         val count: Int,
         val results: List<User>
-    ) {
-
-    }
+    )
 
     data class User(
         val bk_username: String,

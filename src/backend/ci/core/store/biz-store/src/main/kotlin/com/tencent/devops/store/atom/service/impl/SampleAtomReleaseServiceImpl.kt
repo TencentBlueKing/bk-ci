@@ -28,7 +28,7 @@
 package com.tencent.devops.store.atom.service.impl
 
 import com.tencent.devops.artifactory.api.service.ServiceReplicaResource
-import com.tencent.devops.artifactory.constant.BKREPO_STORE_PROJECT_ID
+import com.tencent.devops.artifactory.constant.bkRepoStoreProjectId
 import com.tencent.devops.common.api.constant.BEGIN
 import com.tencent.devops.common.api.constant.COMMIT
 import com.tencent.devops.common.api.constant.CommonMessageCode
@@ -155,7 +155,7 @@ class SampleAtomReleaseServiceImpl : SampleAtomReleaseService, AtomReleaseServic
             val atomEnvInfo = marketAtomEnvInfoDao.getAtomEnvInfo(dslContext, atomId)!!
             client.get(ServiceReplicaResource::class).createReplicaTask(
                 userId = userId,
-                projectId = BKREPO_STORE_PROJECT_ID(),
+                projectId = bkRepoStoreProjectId(),
                 repoName = "plugin",
                 fullPath = atomEnvInfo.pkgPath!!
             )

@@ -28,7 +28,6 @@
 package com.tencent.devops.project.pojo
 
 import com.tencent.devops.common.auth.api.pojo.SubjectScopeInfo
-import com.tencent.devops.common.service.tenant.TenantUtils
 import com.tencent.devops.project.pojo.enums.ProjectAuthSecrecyStatus
 import com.tencent.devops.project.pojo.enums.ProjectScopeType
 import io.swagger.v3.oas.annotations.media.Schema

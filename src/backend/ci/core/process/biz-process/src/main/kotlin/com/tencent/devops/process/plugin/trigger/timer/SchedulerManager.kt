@@ -98,7 +98,10 @@ abstract class SchedulerManager {
         } catch (e: ObjectAlreadyExistsException) {
             resetJob(jobKey, jobDetail, trigger)
         } catch (ignored: Exception) {
-            logger.warn("SchedulerManager.addJob fail! e:$ignored, cronExpression:$cronExpression, timeZone=$timeZone", ignored)
+            logger.warn(
+                "SchedulerManager.addJob fail! e:$ignored, cronExpression:$cronExpression, timeZone=$timeZone",
+                ignored
+            )
             try {
                 getScheduler().deleteJob(jobKey)
             } catch (ignored: Exception) {

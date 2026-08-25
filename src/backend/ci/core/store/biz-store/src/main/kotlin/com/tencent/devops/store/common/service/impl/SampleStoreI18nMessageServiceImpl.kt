@@ -28,7 +28,7 @@
 package com.tencent.devops.store.common.service.impl
 
 import com.tencent.devops.artifactory.api.service.ServiceArtifactoryResource
-import com.tencent.devops.artifactory.constant.BKREPO_STORE_PROJECT_ID
+import com.tencent.devops.artifactory.constant.bkRepoStoreProjectId
 import com.tencent.devops.artifactory.constant.REPO_NAME_PLUGIN
 import org.springframework.stereotype.Service
 import java.net.URLEncoder
@@ -46,7 +46,7 @@ class SampleStoreI18nMessageServiceImpl : StoreI18nMessageServiceImpl() {
         val filePath =
             URLEncoder.encode("$projectCode/$fileDir/$fileName", Charsets.UTF_8.name())
         return client.get(ServiceArtifactoryResource::class).getFileContent(
-            projectId = BKREPO_STORE_PROJECT_ID(),
+            projectId = bkRepoStoreProjectId(),
             repoName = REPO_NAME_PLUGIN,
             filePath = filePath
         ).data

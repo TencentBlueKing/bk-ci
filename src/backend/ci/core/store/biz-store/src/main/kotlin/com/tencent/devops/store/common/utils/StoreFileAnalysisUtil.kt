@@ -30,7 +30,7 @@ package com.tencent.devops.store.common.utils
 import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.artifactory.api.ServiceArchiveAtomFileResource
 import com.tencent.devops.artifactory.api.ServiceArchiveComponentFileResource
-import com.tencent.devops.artifactory.constant.BKREPO_STORE_PROJECT_ID
+import com.tencent.devops.artifactory.constant.bkRepoStoreProjectId
 import com.tencent.devops.artifactory.pojo.ArchiveAtomRequest
 import com.tencent.devops.artifactory.pojo.ArchiveStorePkgRequest
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
@@ -199,7 +199,7 @@ object StoreFileAnalysisUtil {
     }
 
     fun buildStoreArchivePath(storeDir: String) =
-        "${getStoreBasePath()}$fileSeparator${BKREPO_STORE_PROJECT_ID()}$fileSeparator$storeDir"
+        "${getStoreBasePath()}$fileSeparator${bkRepoStoreProjectId()}$fileSeparator$storeDir"
 
     fun isDirectoryNotEmpty(path: String?): Boolean {
         if (path == null) {

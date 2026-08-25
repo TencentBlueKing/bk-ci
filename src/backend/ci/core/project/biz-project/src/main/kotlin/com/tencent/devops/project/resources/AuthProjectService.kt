@@ -126,7 +126,12 @@ class AuthProjectService @Autowired constructor(
         return result.buildFetchInstanceResult(entityList)
     }
 
-    fun searchProjectInstances(keyword: String, tenantId: String?, page: PageInfoDTO?, token: String): SearchInstanceResponseDTO {
+    fun searchProjectInstances(
+        keyword: String,
+        tenantId: String?,
+        page: PageInfoDTO?,
+        token: String
+    ): SearchInstanceResponseDTO {
         logger.info("searchInstance keyword[$keyword] page[$page]")
         authTokenApi.checkToken(token)
         val projectRecords = projectService.searchProjectByProjectName(

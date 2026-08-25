@@ -28,7 +28,7 @@
 package com.tencent.devops.artifactory.store.service.impl
 
 import com.tencent.devops.artifactory.constant.BKREPO_DEFAULT_USER
-import com.tencent.devops.artifactory.constant.BKREPO_STORE_PROJECT_ID
+import com.tencent.devops.artifactory.constant.bkRepoStoreProjectId
 import com.tencent.devops.artifactory.constant.BK_CI_ATOM_DIR
 import com.tencent.devops.artifactory.constant.BK_CI_PLUGIN_FE_DIR
 import com.tencent.devops.artifactory.constant.REPO_NAME_PLUGIN
@@ -365,7 +365,7 @@ abstract class ArchiveAtomServiceImpl : ArchiveAtomService {
             logger.info("updateArchiveFile path:$path")
             bkRepoClient.uploadLocalFile(
                 userId = BKREPO_DEFAULT_USER,
-                projectId = BKREPO_STORE_PROJECT_ID(),
+                projectId = bkRepoStoreProjectId(),
                 repoName = REPO_NAME_PLUGIN,
                 path = path,
                 file = file

@@ -27,7 +27,7 @@
 
 package com.tencent.devops.artifactory.store.service.impl
 
-import com.tencent.devops.artifactory.constant.BKREPO_STORE_PROJECT_ID
+import com.tencent.devops.artifactory.constant.bkRepoStoreProjectId
 import com.tencent.devops.artifactory.constant.REALM_BK_REPO
 import com.tencent.devops.artifactory.constant.REPO_NAME_PLUGIN
 import com.tencent.devops.artifactory.pojo.enums.BkRepoEnum
@@ -42,7 +42,7 @@ import org.springframework.stereotype.Service
 class SampleArchiveStorePkgToBkRepoServiceImpl : ArchiveStorePkgToBkRepoServiceImpl() {
 
     override fun getBkRepoProjectId(storeType: StoreTypeEnum): String {
-        return BKREPO_STORE_PROJECT_ID()
+        return bkRepoStoreProjectId()
     }
 
     override fun getBkRepoName(storeType: StoreTypeEnum): String {

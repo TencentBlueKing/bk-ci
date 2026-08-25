@@ -29,9 +29,9 @@ package com.tencent.devops.artifactory.service.impl
 
 import com.tencent.bkrepo.common.api.constant.StringPool
 import com.tencent.devops.artifactory.constant.BKREPO_DEFAULT_USER
-import com.tencent.devops.artifactory.constant.BKREPO_DEVOPS_PROJECT_ID
-import com.tencent.devops.artifactory.constant.BKREPO_STATIC_PROJECT_ID
-import com.tencent.devops.artifactory.constant.BKREPO_STORE_PROJECT_ID
+import com.tencent.devops.artifactory.constant.bkRepoDevopsProjectId
+import com.tencent.devops.artifactory.constant.bkRepoStaticProjectId
+import com.tencent.devops.artifactory.constant.bkRepoStoreProjectId
 import com.tencent.devops.artifactory.constant.REPO_NAME_CUSTOM
 import com.tencent.devops.artifactory.constant.REPO_NAME_IMAGE
 import com.tencent.devops.artifactory.constant.REPO_NAME_PIPELINE
@@ -123,7 +123,7 @@ class BkRepoArchiveFileServiceImpl @Autowired constructor(
             metadata[it.key] = it.value!!
         }
         val repoProjectId = if (filePath == null) {
-            BKREPO_DEVOPS_PROJECT_ID()
+            bkRepoDevopsProjectId()
         } else {
             projectId!!
         }
@@ -131,7 +131,7 @@ class BkRepoArchiveFileServiceImpl @Autowired constructor(
         return if (fileType == FileTypeEnum.BK_STATIC) {
             bkRepoClient.uploadLocalFile(
                 userId = userId,
-                projectId = BKREPO_STATIC_PROJECT_ID(),
+                projectId = bkRepoStaticProjectId(),
                 repoName = REPO_NAME_STATIC,
                 path = destPath,
                 file = file,
@@ -142,7 +142,7 @@ class BkRepoArchiveFileServiceImpl @Autowired constructor(
                 properties = metadata
             )
             val configUrl = bkRepoClientConfig.bkRepoStaticRepoPrefixUrl
-            val staticRepoPrefixUrl = MessageFormat.format(configUrl, BKREPO_STATIC_PROJECT_ID(), REPO_NAME_STATIC)
+            val staticRepoPrefixUrl = MessageFormat.format(configUrl, bkRepoStaticProjectId(), REPO_NAME_STATIC)
             val defaultUrl = "$staticRepoPrefixUrl/$destPath?v=${System.currentTimeMillis() / 1000}"
             if (fileChannelType == FileChannelTypeEnum.WEB_SHOW) {
                 "$defaultUrl&preview=true"
@@ -152,13 +152,16 @@ class BkRepoArchiveFileServiceImpl @Autowired constructor(
         } else if (staticFlag == true) {
             bkRepoClient.uploadLocalFile(
                 userId = BKREPO_DEFAULT_USER,
-                projectId = BKREPO_STORE_PROJECT_ID(),
+                projectId = bkRepoStoreProjectId(),
                 repoName = REPO_NAME_STATIC,
                 path = destPath,
                 file = file,
                 properties = metadata
             )
-            generateFileDownloadUrl(fileChannelType, destPath = "${BKREPO_STORE_PROJECT_ID()}/$REPO_NAME_STATIC/$destPath")
+            generateFileDownloadUrl(
+                fileChannelType,
+                destPath = "${bkRepoStoreProjectId()}/$REPO_NAME_STATIC/$destPath"
+            )
         } else {
             bkRepoClient.uploadLocalFile(userId, repoProjectId, repoName, destPath, file, properties = metadata)
             generateFileDownloadUrl(fileChannelType, "$repoProjectId/$repoName/$destPath")
@@ -203,7 +206,7 @@ class BkRepoArchiveFileServiceImpl @Autowired constructor(
     ) {
         response.contentType = MimeUtil.mediaType(filePath)
         val path = if (logo == true) {
-            "${BKREPO_STORE_PROJECT_ID()}/$REPO_NAME_STATIC/" +
+            "${bkRepoStoreProjectId()}/$REPO_NAME_STATIC/" +
                 URLDecoder.decode(filePath, Charsets.UTF_8.name()).removePrefix("/")
         } else {
             filePath

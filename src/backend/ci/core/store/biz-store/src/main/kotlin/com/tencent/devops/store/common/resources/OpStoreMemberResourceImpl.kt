@@ -48,7 +48,12 @@ class OpStoreMemberResourceImpl : OpStoreMemberResource {
         )
     }
 
-    override fun add(userId: String, tenantId: String?, testProjectCode: String?, storeMemberReq: StoreMemberReq): Result<Boolean> {
+    override fun add(
+        userId: String,
+        tenantId: String?,
+        testProjectCode: String?,
+        storeMemberReq: StoreMemberReq
+    ): Result<Boolean> {
         val storeType = storeMemberReq.storeType
         return getStoreMemberService(storeType).add(
             userId = userId,
@@ -61,7 +66,13 @@ class OpStoreMemberResourceImpl : OpStoreMemberResource {
         )
     }
 
-    override fun delete(userId: String, tenantId: String?, id: String, storeCode: String, storeType: StoreTypeEnum): Result<Boolean> {
+    override fun delete(
+        userId: String,
+        tenantId: String?,
+        id: String,
+        storeCode: String,
+        storeType: StoreTypeEnum
+    ): Result<Boolean> {
         return getStoreMemberService(storeType).delete(
             userId = userId,
             id = id,

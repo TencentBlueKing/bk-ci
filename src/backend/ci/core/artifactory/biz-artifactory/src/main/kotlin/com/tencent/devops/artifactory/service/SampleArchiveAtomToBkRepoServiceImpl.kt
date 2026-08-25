@@ -28,7 +28,7 @@
 package com.tencent.devops.artifactory.service
 
 import com.tencent.devops.artifactory.constant.BKREPO_DEFAULT_USER
-import com.tencent.devops.artifactory.constant.BKREPO_STORE_PROJECT_ID
+import com.tencent.devops.artifactory.constant.bkRepoStoreProjectId
 import com.tencent.devops.artifactory.constant.REALM_BK_REPO
 import com.tencent.devops.artifactory.constant.REPO_NAME_PLUGIN
 import com.tencent.devops.artifactory.store.service.impl.ArchiveAtomToBkRepoServiceImpl
@@ -40,7 +40,7 @@ import org.springframework.stereotype.Service
 class SampleArchiveAtomToBkRepoServiceImpl : ArchiveAtomToBkRepoServiceImpl() {
 
     override fun getBkRepoProjectId(): String {
-        return BKREPO_STORE_PROJECT_ID()
+        return bkRepoStoreProjectId()
     }
 
     override fun getBkRepoName(): String {
@@ -50,7 +50,7 @@ class SampleArchiveAtomToBkRepoServiceImpl : ArchiveAtomToBkRepoServiceImpl() {
     override fun deleteAtom(userId: String, projectCode: String, atomCode: String) {
         bkRepoClient.delete(
             userId = BKREPO_DEFAULT_USER,
-            projectId = BKREPO_STORE_PROJECT_ID(),
+            projectId = bkRepoStoreProjectId(),
             repoName = REPO_NAME_PLUGIN,
             path = "$projectCode/$atomCode"
         )
