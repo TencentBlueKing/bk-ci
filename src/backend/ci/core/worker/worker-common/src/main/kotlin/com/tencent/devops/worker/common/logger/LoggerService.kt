@@ -73,6 +73,8 @@ import org.slf4j.LoggerFactory
 @Suppress("MagicNumber", "TooManyFunctions", "ComplexMethod", "LongMethod")
 object LoggerService {
 
+    private const val LOG_UPLOAD_BATCH_MIN = 200
+
     private val logResourceApi = ApiFactory.create(LogSDKApi::class)
     private val archiveApi = ApiFactory.create(ArchiveSDKApi::class)
     private val logger = LoggerFactory.getLogger(LoggerService::class.java)
@@ -522,7 +524,7 @@ object LoggerService {
         try {
             // 通过上报的结果感知是否需要调整模式。
             // projectId 由 AbstractBuildResourceApi 自动带上 X-DEVOPS-PROJECT-ID（AgentEnv.getProjectId()），
-            // log 服务按可空 header 消费；旧 log 服务忽略该 header，新旧可任意顺序发布。
+            // pipelineId 由同一处可选带上 X-DEVOPS-PIPELINE-ID；旧 log 服务忽略未知 header，新旧可任意顺序发布。
             val result = doWithCircuitBreaker {
                 logResourceApi.addLogMultiLine(buildVariables?.buildId ?: "", chunk)
             }
@@ -648,9 +650,5 @@ object LoggerService {
                 action()
             }
         }
-    }
-
-    companion object {
-        private const val LOG_UPLOAD_BATCH_MIN = 200
     }
 }

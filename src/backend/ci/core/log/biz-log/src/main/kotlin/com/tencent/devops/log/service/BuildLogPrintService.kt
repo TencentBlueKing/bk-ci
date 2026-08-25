@@ -149,14 +149,24 @@ class BuildLogPrintService @Autowired constructor(
         }
     }
 
+    /**
+     * 上报入口记住 buildId 归属（首写优先、空位补全），再把解析结果填回事件。
+     * ES 存取仍只认 buildId；projectId 用于流量聚合，pipelineId 随 MQ 重试保留给后续补全。
+     */
     private fun resolveAndEnrichProjectId(event: ILogEvent): ILogEvent {
-        val resolved = logProjectIdResolver.resolve(event.buildId, event.projectId)
-        if (resolved == event.projectId) return event
+        val owner = logProjectIdResolver.resolve(
+            buildId = event.buildId,
+            reportedProjectId = event.projectId,
+            reportedPipelineId = event.pipelineId
+        )
+        if (owner.projectId == event.projectId && owner.pipelineId == event.pipelineId) {
+            return event
+        }
         return when (event) {
-            is LogOriginEvent -> event.copy(projectId = resolved)
-            is LogOriginHeavyEvent -> event.copy(projectId = resolved)
-            is LogStorageEvent -> event.copy(projectId = resolved)
-            is LogStatusEvent -> event.copy(projectId = resolved)
+            is LogOriginEvent -> event.copy(projectId = owner.projectId, pipelineId = owner.pipelineId)
+            is LogOriginHeavyEvent -> event.copy(projectId = owner.projectId, pipelineId = owner.pipelineId)
+            is LogStorageEvent -> event.copy(projectId = owner.projectId, pipelineId = owner.pipelineId)
+            is LogStatusEvent -> event.copy(projectId = owner.projectId, pipelineId = owner.pipelineId)
             else -> event
         }
     }

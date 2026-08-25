@@ -28,6 +28,7 @@
 package com.tencent.devops.log.api.print
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BUILD_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PIPELINE_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.log.pojo.enums.LogStorageMode
@@ -66,7 +67,10 @@ interface ServiceLogPrintResource {
         logMessage: LogMessage,
         @Parameter(description = "项目ID", required = false)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
-        projectId: String? = null
+        projectId: String? = null,
+        @Parameter(description = "流水线ID，旧客户端可不传", required = false)
+        @HeaderParam(AUTH_HEADER_DEVOPS_PIPELINE_ID)
+        pipelineId: String? = null
     ): Result<Boolean>
 
     @Operation(summary = "写入多条日志")
@@ -80,7 +84,10 @@ interface ServiceLogPrintResource {
         logMessages: List<LogMessage>,
         @Parameter(description = "项目ID", required = false)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
-        projectId: String? = null
+        projectId: String? = null,
+        @Parameter(description = "流水线ID，旧客户端可不传", required = false)
+        @HeaderParam(AUTH_HEADER_DEVOPS_PIPELINE_ID)
+        pipelineId: String? = null
     ): Result<Boolean>
 
     @Operation(summary = "写入日志状态")
@@ -110,7 +117,10 @@ interface ServiceLogPrintResource {
         stepId: String?,
         @Parameter(description = "项目ID", required = false)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
-        projectId: String? = null
+        projectId: String? = null,
+        @Parameter(description = "流水线ID，旧客户端可不传", required = false)
+        @HeaderParam(AUTH_HEADER_DEVOPS_PIPELINE_ID)
+        pipelineId: String? = null
     ): Result<Boolean>
 
     @Operation(summary = "更新日志状态")
@@ -146,6 +156,9 @@ interface ServiceLogPrintResource {
         stepId: String?,
         @Parameter(description = "项目ID", required = false)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
-        projectId: String? = null
+        projectId: String? = null,
+        @Parameter(description = "流水线ID，旧客户端可不传", required = false)
+        @HeaderParam(AUTH_HEADER_DEVOPS_PIPELINE_ID)
+        pipelineId: String? = null
     ): Result<Boolean>
 }
