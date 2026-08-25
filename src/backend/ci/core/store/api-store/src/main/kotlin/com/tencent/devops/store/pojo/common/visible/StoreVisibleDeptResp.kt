@@ -32,5 +32,9 @@ import io.swagger.v3.oas.annotations.media.Schema
 @Schema(title = "store组件可见范围响应报文体")
 data class StoreVisibleDeptResp(
     @get:Schema(title = "机构列表", required = true)
-    val deptInfos: List<DeptInfo>
+    val deptInfos: List<DeptInfo>,
+    @get:Schema(title = "是否全部可见", required = true)
+    val fullScopeVisible: Boolean = false,
+    @get:Schema(title = "项目可见范围列表", required = false)
+    val projectInfos: List<StoreVisibleProjectInfo>? = null
 )

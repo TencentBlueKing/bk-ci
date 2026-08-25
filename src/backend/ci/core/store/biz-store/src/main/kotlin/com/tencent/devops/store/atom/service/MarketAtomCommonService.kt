@@ -30,8 +30,9 @@ package com.tencent.devops.store.atom.service
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.model.store.tables.records.TAtomRecord
 import com.tencent.devops.store.pojo.atom.AtomEnvRequest
+import com.tencent.devops.store.pojo.atom.AtomRunInfo
 import com.tencent.devops.store.pojo.atom.GetAtomConfigResult
-import com.tencent.devops.store.pojo.atom.enums.JobTypeEnum
+import com.tencent.devops.store.pojo.common.ServiceScopeConfig
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 
 interface MarketAtomCommonService {
@@ -40,7 +41,8 @@ interface MarketAtomCommonService {
         atomRecord: TAtomRecord,
         releaseType: ReleaseTypeEnum,
         osList: ArrayList<String>,
-        version: String
+        version: String,
+        serviceScopeConfigs: List<ServiceScopeConfig>? = null
     ): Result<Boolean>
 
     fun validateReleaseType(
@@ -73,16 +75,16 @@ interface MarketAtomCommonService {
         atomCode: String,
         version: String,
         releaseFlag: Boolean
-    )
+    ): AtomRunInfo
 
     fun updateAtomRunInfoCache(
         atomId: String,
         atomName: String? = null,
-        jobType: JobTypeEnum? = null,
         buildLessRunFlag: Boolean? = null,
         latestFlag: Boolean? = null,
         props: String? = null,
-        tenantId: String?
+        tenantId: String? = null,
+        serviceScope: List<String>? = null
     )
 
     fun generateInputTypeInfos(props: String?): Map<String, String>?

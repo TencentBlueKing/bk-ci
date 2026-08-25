@@ -13,7 +13,7 @@
             v-if="info"
             slot="content"
         >
-            <h6 class="pac-enable-tip">{{ $t('pacEnableTips') }}</h6>
+            <h6 class="pac-enable-tip">{{ $t( isTemplate ? 'pacTemplaneEnableTips' : 'pacEnableTips') }}</h6>
             <div class="pac-info">
                 <p class="pac-info-row">
                     <logo
@@ -63,6 +63,10 @@
         props: {
             info: {
                 type: Object
+            },
+            isTemplate: {
+                type: Boolean,
+                default: false
             }
         }
     }

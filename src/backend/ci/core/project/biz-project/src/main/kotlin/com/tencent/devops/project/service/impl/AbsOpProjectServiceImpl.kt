@@ -73,7 +73,6 @@ abstract class AbsOpProjectServiceImpl @Autowired constructor(
 
     override fun updateProjectFromOp(
         userId: String,
-        accessToken: String,
         projectInfoRequest: OpProjectUpdateInfoRequest
     ): Int {
         val projectId = projectInfoRequest.projectId

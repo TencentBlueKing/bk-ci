@@ -169,9 +169,6 @@ interface ServiceProjectResource {
     @Path("/{projectCode}/users/{userId}/verify")
     @Operation(summary = " 校验用户是否项目成员")
     fun verifyUserProjectPermission(
-        @Parameter(description = "accessToken", required = false)
-        @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
-        accessToken: String? = null,
         @Parameter(description = "项目代码", required = true)
         @PathParam("projectCode")
         projectCode: String,
@@ -242,10 +239,7 @@ interface ServiceProjectResource {
         @PathParam("projectId")
         projectId: String,
         @Parameter(description = "项目信息", required = true)
-        projectUpdateInfo: ProjectUpdateInfo,
-        @Parameter(description = "accessToken", required = false)
-        @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
-        accessToken: String? = null
+        projectUpdateInfo: ProjectUpdateInfo
     ): Result<Boolean>
 
     @PUT

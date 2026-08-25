@@ -8,7 +8,7 @@ import com.tencent.devops.common.pipeline.container.AgentReuseMutexType
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.EnvControlTaskType
-import com.tencent.devops.common.pipeline.type.agent.AgentType
+import com.tencent.devops.common.pipeline.type.agent.AgentDispatchType
 import com.tencent.devops.common.pipeline.type.agent.ReusedInfo
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentDispatch
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentEnvDispatchType
@@ -125,7 +125,7 @@ data class AgentReuseMutexTree(
                 errorCode = ProcessMessageCode.ERROR_AGENT_REUSE_MUTEX_DEP_ERROR,
                 params = arrayOf(
                     "Stage-${n.stageSeq}",
-                    "${vRoot.children.first().jobId}|${vRoot.children.first().type}",
+                    "${vRoot.children.firstOrNull()?.jobId ?: ""}|${vRoot.children.firstOrNull()?.type ?: ""}",
                     "${n.jobId}|${n.type}"
                 )
             )
@@ -142,7 +142,7 @@ data class AgentReuseMutexTree(
     ): AgentReuseMutexType? {
         return when (dispatchType) {
             is ThirdPartyAgentIDDispatchType -> {
-                if (dispatchType.agentType == AgentType.ID) {
+                if (dispatchType.agentType == AgentDispatchType.ID) {
                     AgentReuseMutexType.AGENT_ID
                 } else {
                     AgentReuseMutexType.AGENT_NAME
@@ -150,7 +150,7 @@ data class AgentReuseMutexTree(
             }
 
             is ThirdPartyAgentEnvDispatchType -> {
-                if (dispatchType.agentType == AgentType.ID) {
+                if (dispatchType.agentType == AgentDispatchType.ID) {
                     AgentReuseMutexType.AGENT_ENV_ID
                 } else {
                     AgentReuseMutexType.AGENT_ENV_NAME
@@ -413,7 +413,7 @@ abstract class AgentReuseMutexTreeNode(
         val queue = ArrayDeque<AgentReuseMutexTreeNode>()
         queue.add(this)
         while (queue.isNotEmpty()) {
-            val node = queue.removeFirst()
+            val node = queue.removeFirstOrNull() ?: continue
             run(node)
 
             for (child in node.children) {
@@ -428,7 +428,7 @@ abstract class AgentReuseMutexTreeNode(
         stack.addFirst(this)
 
         while (stack.isNotEmpty()) {
-            val node = stack.removeFirst()
+            val node = stack.removeFirstOrNull() ?: continue
 
             val r = run(node)
             if (r != null) {

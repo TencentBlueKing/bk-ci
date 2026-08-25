@@ -29,6 +29,7 @@
 package com.tencent.devops.auth.provider.sample.service
 
 import com.tencent.devops.auth.pojo.AuthResourceInfo
+import com.tencent.devops.auth.pojo.vo.ProjectResourceRelationsDeleteVO
 import com.tencent.devops.common.auth.api.pojo.ResourceAuthorizationDTO
 import com.tencent.devops.auth.service.PermissionAuthorizationService
 import com.tencent.devops.auth.service.iam.PermissionResourceService
@@ -52,7 +53,8 @@ class SamplePermissionResourceService constructor(
         projectCode: String,
         resourceType: String,
         resourceCode: String,
-        resourceName: String
+        resourceName: String,
+        enabled: Boolean?
     ): Boolean {
         permissionAuthorizationService.modifyResourceAuthorization(
             listOf(
@@ -79,6 +81,49 @@ class SamplePermissionResourceService constructor(
         )
         return true
     }
+
+    override fun resourceDeleteRelations(
+        projectCode: String,
+        resourceType: String,
+        dryRun: Boolean,
+        confirm: Boolean
+    ) = ProjectResourceRelationsDeleteVO(
+        projectCode = projectCode,
+        resourceType = resourceType,
+        dryRun = dryRun,
+        confirm = confirm,
+        async = !dryRun && confirm,
+        submitted = !dryRun && confirm,
+        executed = false,
+        totalCount = 0,
+        deletedCount = 0,
+        previewLimit = 20,
+        previewResourceCodes = emptyList()
+    )
+
+    override fun batchDeleteProjectResourceRelations(
+        projectCodes: List<String>,
+        resourceType: String,
+        dryRun: Boolean,
+        confirm: Boolean
+    ) = projectCodes
+        .filter { it.isNotBlank() }
+        .distinct()
+        .map { projectCode ->
+            ProjectResourceRelationsDeleteVO(
+                projectCode = projectCode,
+                resourceType = resourceType,
+                dryRun = dryRun,
+                confirm = confirm,
+                async = !dryRun && confirm,
+                submitted = !dryRun && confirm,
+                executed = false,
+                totalCount = 0,
+                deletedCount = 0,
+                previewLimit = 20,
+                previewResourceCodes = emptyList()
+            )
+        }
 
     override fun resourceCancelRelation(
         userId: String,
@@ -136,4 +181,21 @@ class SamplePermissionResourceService constructor(
         createTime = LocalDateTime.now(),
         updateTime = LocalDateTime.now()
     )
+
+    override fun getResourceByName(
+        projectCode: String,
+        resourceType: String,
+        resourceName: String
+    ): AuthResourceInfo? = null
+
+    override fun getResourceByCode(
+        projectCode: String,
+        resourceType: String,
+        resourceCode: String
+    ): AuthResourceInfo? = null
+
+    override fun modifyProjectEnabled(
+        projectCode: String,
+        enabled: Boolean
+    ) = true
 }

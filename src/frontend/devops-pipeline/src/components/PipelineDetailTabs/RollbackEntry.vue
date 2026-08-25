@@ -11,9 +11,9 @@
                 disablePermissionApi: typeof hasPermission === 'boolean',
                 permissionData: {
                     projectId: projectId,
-                    resourceType: 'pipeline',
-                    resourceCode: pipelineId,
-                    action: RESOURCE_ACTION.EDIT
+                    resourceType,
+                    resourceCode: rollbackId,
+                    action: resourceAction
                 }
             }"
             @click.stop="handleClick"
@@ -22,55 +22,43 @@
                 {{ operateName }}
             </slot>
         </bk-button>
-        <bk-dialog
+        <DraftConfirmDialog
             v-model="isShowConfirmDialog"
-            :width="480"
-            footer-position="center"
-            theme="primary"
-        >
-            <header
-                class="draft-hint-title"
-                slot="header"
-            >
-                <i class="devops-icon icon-exclamation"></i>
-                {{ draftHintTitle }}
-            </header>
-            <div
-                v-if="hasDraftPipeline"
-                :class="['draft-hint-content', { 'is-active-branch-version': isActiveBranchVersion }]"
-            >
-                {{ draftWarningInfo }}
-            </div>
-            <footer slot="footer">
-                <bk-button
-                    theme="primary"
-                    @click="rollback"
-                >
-                    {{ $t(isActiveBranchVersion ? 'resume' : 'newVersion') }}
-                </bk-button>
-                <bk-button
-                    v-if="hasDraftPipeline && !isActiveBranchVersion"
-                    @click="goEdit(draftVersion)"
-                >
-                    {{ $t('editDraft') }}
-                </bk-button>
-                <bk-button @click="close">
-                    {{ $t(isActiveBranchVersion ? 'cancel' : 'thinkthink') }}
-                </bk-button>
-            </footer>
-        </bk-dialog>
+            :has-draft="hasDraft"
+            :draft-status="draftStatus"
+            :draft-save-info="draftSaveInfo"
+            :draft-hint-title="draftHintTitle"
+            :active-branch-version-info="activeBranchVersionInfo"
+            :version-name="versionName"
+            :version="version"
+            :is-active-branch-version="isActiveBranchVersion"
+            :is-rollback="isRollback"
+            :is-template-pipeline="isTemplatePipeline"
+            :draft-version="draftVersion"
+            :click-action-type="clickActionType"
+            @confirm="rollback"
+            @edit-draft="goEdit"
+            @cancel="close"
+        />
     </span>
 </template>
 
 <script>
     import {
-        RESOURCE_ACTION
+        RESOURCE_ACTION,
+        RESOURCE_TYPE,
+        TEMPLATE_RESOURCE_ACTION
     } from '@/utils/permission'
-    import { pipelineTabIdMap } from '@/utils/pipelineConst'
-    import { convertTime } from '@/utils/util'
-    import { mapActions, mapGetters, mapState } from 'vuex'
+    import { pipelineTabIdMap, DRAFT_STATUS } from '@/utils/pipelineConst'
+    import dayjs from 'dayjs'
+    import { mapActions, mapGetters, mapMutations, mapState } from 'vuex'
+    import DraftConfirmDialog from '@/components/PipelineHeader/DraftConfirmDialog'
+    import useDraftStatus from '@/hook/useDraftStatus'
 
     export default {
+        components: {
+            DraftConfirmDialog
+        },
         props: {
             outline: Boolean,
             hasPermission: {
@@ -102,7 +90,7 @@
                 type: String,
                 required: true
             },
-            pipelineId: {
+            rollbackId: {
                 type: String,
                 required: true
             },
@@ -114,13 +102,26 @@
                 type: String,
                 default: ''
             },
+            clickActionType: {
+                type: String,
+                default: ''
+            },
+            isVersionList: Boolean,
             isActiveDraft: Boolean,
             isActiveBranchVersion: Boolean
+        },
+        setup () {
+            const { fetchLatestDraftStatus } = useDraftStatus()
+            return {
+                fetchLatestDraftStatus
+            }
         },
         data () {
             return {
                 loading: false,
                 isShowConfirmDialog: false,
+                draftStatus: DRAFT_STATUS.NORMAL,
+                draftSaveInfo: null,
                 RESOURCE_ACTION
             }
         },
@@ -128,12 +129,25 @@
             ...mapState('atom', [
                 'pipelineInfo'
             ]),
+            ...mapState('common', ['hasDraft']),
             ...mapGetters({
-                hasDraftPipeline: 'atom/hasDraftPipeline'
+                hasDraftPipeline: 'atom/hasDraftPipeline',
+                isTemplate: 'atom/isTemplate'
             }),
+            resourceType () {
+                return this.isTemplate ? RESOURCE_TYPE.TEMPLATE : RESOURCE_TYPE.PIPELINE
+            },
+            resourceAction () {
+                return this.isTemplate
+                    ? TEMPLATE_RESOURCE_ACTION.EDIT
+                    : RESOURCE_ACTION.EDIT
+            },
             isRollback () {
                 const { baseVersion, releaseVersion } = (this.pipelineInfo ?? {})
                 const isReleaseVersion = this.version === releaseVersion
+                // 这里判断不能使用 store 中的 hasDraft：hasDraft 仅在调用草稿状态接口时更新，
+                // 若用户在版本列表页删除了草稿，hasDraft 不会即时刷新，
+                // 会导致按钮错误地显示为"回滚"，直到再次点击触发接口调用后才会修正
                 return !(this.isActiveDraft || baseVersion === this.version || this.isActiveBranchVersion || (isReleaseVersion && !this.hasDraftPipeline))
             },
             operateName () {
@@ -142,135 +156,196 @@
                     : this.$t('edit')
             },
             draftHintTitle () {
+                // 如果是分支版本，要使用hasDraftPipeline来判断草稿
                 switch (true) {
-                    case this.hasDraftPipeline && this.isActiveBranchVersion:
+                    case this.hasDraftPipeline && this.isActiveBranchVersion && this.version !== this.pipelineInfo?.baseVersion:
                         return this.$t('template.templateCoverWarning')
-                    case this.hasDraftPipeline:
-                        return this.$t('hasDraftTips', [this.draftBaseVersionName])
+                    case this.hasDraft:
+                        return this.$t('hasDraft')
                     default:
-                        return this.$t(this.isActiveBranchVersion ? 'createBranchDraftTips' : 'createDraftTips', [this.versionName])
+                        // 1. 分支版本
+                        if (this.isActiveBranchVersion) {
+                            return this.$t('createBranchDraftTips', [this.versionName])
+                        }
+
+                        // 2. 第二个条件：编辑操作
+                        if (this.clickActionType === 'edit') {
+                            // 基线版本落后状态
+                            return this.$t('pipelineUpdated')
+                        }
+
+                        // 3. 默认情况： 基于历史版本新建
+                        return this.$t('createDraftTips', [this.versionName])
                 }
             },
-            draftWarningInfo () {
-                if (this.isActiveBranchVersion) {
-                    const key = this.draftBaseVersionName === this.versionName ? 'templateOutDateCoverWarningDesc' : 'templateCoverWarningDesc'
-                    return this.$t(`template.${key}`, [this.draftCreator, this.formatDraftCreateTime, this.draftBaseVersionName])
-                }
-                return this.$t('dropDraftTips', [this.versionName])
+            // 优先用 draftStatus 接口返回的最新草稿信息，避免多窗口下详情未刷新导致基线过期
+            latestDraftBaseVersionName () {
+                return this.draftSaveInfo?.draftVersionName || this.draftBaseVersionName
+            },
+            latestDraftCreator () {
+                return this.draftSaveInfo?.updater || this.draftCreator
+            },
+            latestDraftUpdateTime () {
+                return this.draftSaveInfo?.updateTime || this.formatDraftCreateTime
+            },
+            activeBranchVersionInfo () {
+                const key = this.latestDraftBaseVersionName === this.versionName ? 'templateOutDateCoverWarningDesc' : 'templateCoverWarningDesc'
+                return this.$t(`template.${key}`, [this.latestDraftCreator, this.latestDraftUpdateTime, this.latestDraftBaseVersionName])
             },
             isTemplatePipeline () {
                 return this.pipelineInfo?.instanceFromTemplate ?? false
             },
             formatDraftCreateTime () {
-                return convertTime(this.draftCreateTime)
+                return dayjs(this.draftCreateTime).format('YYYY-MM-DD HH:mm:ss')
             }
         },
+        created () {
+            this.DRAFT_STATUS = DRAFT_STATUS
+        },
         methods: {
+            ...mapMutations('common', ['SET_HAS_DRAFT']),
             ...mapActions({
                 requestPipelineSummary: 'atom/requestPipelineSummary',
-                rollbackPipelineVersion: 'pipelines/rollbackPipelineVersion'
+                requestTemplateSummary: 'atom/requestTemplateSummary',
+                rollbackPipelineVersion: 'pipelines/rollbackPipelineVersion',
+                rollbackTemplateVersion: 'templates/rollbackTemplateVersion',
+                checkTemplatePipelineRollback: 'templates/checkTemplatePipelineRollback'
             }),
-            handleClick () {
+            async handleClick () {
+                // 回滚操作
                 if (this.isRollback) {
-                    if (this.isTemplatePipeline) {
-                        this.$bkInfo({
-                            subTitle: this.$t('templateRollbackBackTips'),
-                            confirmFn: () => {
-                                this.$router.push({
-                                    name: 'createInstance',
-                                    params: {
-                                        projectId: this.projectId,
-                                        templateId: this.pipelineInfo?.templateId,
-                                        curVersionId: this.pipelineInfo?.templateVersion
-                                    },
-                                    hash: `#${this.pipelineId}`
-                                })
-                            }
+                    await this.checkDraftStatusAndEdit()
+                    return
+                }
+
+                // 编辑操作
+                await this.handleEdit()
+            },
+
+            // 处理编辑操作
+            async handleEdit () {
+                // 分支版本且不是当前基准版本：先拉最新草稿状态再弹窗，避免多窗口下基线信息过期
+                if (this.isActiveBranchVersion && this.version !== this.pipelineInfo?.baseVersion) {
+                    try {
+                        const result = await this.fetchLatestDraftStatus({
+                            projectId: this.projectId,
+                            id: this.rollbackId,
+                            actionType: 'EDIT',
+                            isTemplate: this.isTemplate,
+                            pipelineInfo: this.pipelineInfo
                         })
-                    } else {
+                        this.draftStatus = result.status
+                        this.draftSaveInfo = result.draftSaveInfo
                         this.showDraftConfirmDialog()
+                    } catch (error) {
+                        this.$bkMessage({
+                            theme: 'error',
+                            message: error.message || error
+                        })
                     }
-                } else {
-                    if (this.isActiveBranchVersion && this.version !== this.pipelineInfo?.baseVersion) {
-                        this.showDraftConfirmDialog()
-                    } else {
+                    return
+                }
+                await this.checkDraftStatusAndEdit()
+            },
+
+            // 检查草稿状态并处理编辑逻辑
+            async checkDraftStatusAndEdit () {
+                try {
+                    const result = await this.fetchLatestDraftStatus({
+                        projectId: this.projectId,
+                        id: this.rollbackId,
+                        actionType: 'EDIT',
+                        isTemplate: this.isTemplate,
+                        pipelineInfo: this.pipelineInfo
+                    })
+                    
+                    this.draftStatus = result.status
+                    this.draftSaveInfo = result.draftSaveInfo
+                    
+                    // 状态为NORMAL或BRANCH时，并且是编辑，直接去编辑
+                    // 版本列表用 isRollback 判断，非版本列表用 clickActionType 判断
+                    const isEditAction = this.isVersionList ? !this.isRollback : this.clickActionType === 'edit'
+                    if (isEditAction && (this.draftStatus === DRAFT_STATUS.NORMAL || this.draftStatus === DRAFT_STATUS.BRANCH)) {
                         this.goEdit(this.draftVersion ?? this.version)
+                        return
                     }
+                    // 有草稿冲突/分支版本/基线落后，弹窗确认
+                    this.showDraftConfirmDialog()
+                } catch (error) {
+                    this.$bkMessage({
+                        theme: 'error',
+                        message: error.message || error
+                    })
                 }
             },
             showDraftConfirmDialog () {
                 this.isShowConfirmDialog = true
             },
             close () {
+                this.draftSaveInfo = null
+                this.draftStatus = DRAFT_STATUS.NORMAL
                 this.isShowConfirmDialog = false
+                this.SET_HAS_DRAFT(false)
             },
-            async rollback () {
+            async rollback (rollbackVersion, actionType = '') {
                 try {
                     this.loading = true
 
-                    const { version } = await this.rollbackPipelineVersion({
-                        ...this.$route.params,
-                        version: this.version
-                    })
+                    let res
 
-                    await this.requestPipelineSummary(this.$route.params)
+                    if (this.isTemplate) {
+                        res = await this.rollbackTemplateVersion({
+                            ...this.$route.params,
+                            version: rollbackVersion
+                        })
+                        await this.requestTemplateSummary(this.$route.params)
+                    } else {
+                        res = await this.rollbackPipelineVersion({
+                            ...this.$route.params,
+                            version: rollbackVersion
+                        })
+                        await this.requestPipelineSummary(this.$route.params)
+                    }
 
-                    if (version) {
-                        this.goEdit(version)
+                    if (res.version) {
+                        this.goEdit(res.version, true, actionType)
                     }
                 } catch (error) {
                     this.handleError(error, {
                         projectId: this.projectId,
-                        resourceCode: this.pipelineId,
-                        action: this.$permissionResourceAction.EDIT
+                        resourceType: this.resourceType,
+                        resourceCode: this.rollbackId,
+                        action: this.resourceAction
                     })
                 } finally {
                     this.loading = false
                 }
             },
-            goEdit (version) {
+            goEdit (version, rollback = false, actionType = '') {
+                const routerName = this.isTemplate ? 'templateEdit' : 'pipelinesEdit'
+                const params = {
+                    ...this.$route.params,
+                    version,
+                }
+                const query = {
+                    ...(rollback
+                        ? {
+                            type: 'rollback',
+                            versionName: actionType === 'newDraft' ? this.draftSaveInfo?.releaseVersionName : this.versionName,
+                        } : {}
+                    ),
+                    ...(!this.isTemplate
+                        ? {
+                            tab: pipelineTabIdMap[this.$route.params.type] ?? 'pipeline'
+                        } : {}
+                    )
+                }
                 this.$router.push({
-                    name: 'pipelinesEdit',
-                    params: {
-                        ...this.$route.params,
-                        version
-                    },
-                    query: {
-                        tab: pipelineTabIdMap[this.$route.params.type] ?? 'pipeline'
-                    }
+                    name: routerName,
+                    params,
+                    query
                 })
             }
         }
     }
 </script>
-
-<style lang="scss">
-    .draft-hint-title {
-        color: #313238;
-        font-size: 20px;
-        display: flex;
-        flex-direction: column;
-        grid-gap: 24px;
-        align-items: center;
-        > i {
-            border-radius: 50%;
-            background-color: #ffe8c3;
-            color: #ff9c01;
-            border-radius: 50%;
-            font-size: 24px;
-            height: 42px;
-            line-height: 42px;
-            width: 42px;
-        }
-    }
-    .draft-hint-content {
-        text-align: center;
-        &.is-active-branch-version {
-            background: #F5F6FA;
-            padding: 16px 12px;
-            margin: 0 8px;
-            border-radius: 2px;
-            text-align: left;
-        }
-    }
-</style>

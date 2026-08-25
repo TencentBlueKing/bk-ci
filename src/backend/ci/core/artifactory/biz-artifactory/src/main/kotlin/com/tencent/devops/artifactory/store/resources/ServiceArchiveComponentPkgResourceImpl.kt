@@ -47,7 +47,8 @@ class ServiceArchiveComponentPkgResourceImpl @Autowired constructor(
         version: String,
         instanceId: String?,
         osName: String?,
-        osArch: String?
+        osArch: String?,
+        checkPermissionFlag: Boolean
     ): Result<String> {
         return Result(
             archiveStorePkgService.getComponentPkgDownloadUrl(
@@ -58,7 +59,8 @@ class ServiceArchiveComponentPkgResourceImpl @Autowired constructor(
                 version = version,
                 instanceId = instanceId,
                 osName = osName,
-                osArch = osArch
+                osArch = osArch,
+                checkPermissionFlag = checkPermissionFlag
             )
         )
     }
@@ -74,5 +76,9 @@ class ServiceArchiveComponentPkgResourceImpl @Autowired constructor(
 
     override fun getFileContent(storeType: StoreTypeEnum, filePath: String, repoName: String?): Result<String> {
         return Result(archiveStorePkgService.getStoreFileContent(filePath, storeType, repoName))
+    }
+
+    override fun getFileSize(storeType: StoreTypeEnum, filePath: String, repoName: String?): Result<Long?> {
+        return Result(archiveStorePkgService.getStoreFileSize(filePath, storeType, repoName))
     }
 }

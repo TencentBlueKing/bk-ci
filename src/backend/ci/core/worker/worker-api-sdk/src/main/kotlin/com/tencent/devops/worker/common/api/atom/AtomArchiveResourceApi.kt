@@ -43,6 +43,7 @@ import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
 import com.tencent.devops.store.pojo.atom.AtomDevLanguageEnvVar
 import com.tencent.devops.store.pojo.atom.AtomEnv
 import com.tencent.devops.store.pojo.atom.AtomEnvRequest
+import com.tencent.devops.store.pojo.common.StorePackageInfoReq
 import com.tencent.devops.store.pojo.common.env.StorePkgRunEnvInfo
 import com.tencent.devops.store.pojo.common.sensitive.SensitiveConfResp
 import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
@@ -68,6 +69,7 @@ import java.net.URLEncoder
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
+import okhttp3.RequestBody.Companion.toRequestBody
 
 class AtomArchiveResourceApi : AbstractBuildResourceApi(), AtomArchiveSDKApi {
 
@@ -83,7 +85,8 @@ class AtomArchiveResourceApi : AbstractBuildResourceApi(), AtomArchiveSDKApi {
         atomStatus: Byte?,
         osName: String?,
         osArch: String?,
-        convertOsFlag: Boolean?
+        convertOsFlag: Boolean?,
+        channelCode: String?
     ): Result<AtomEnv> {
         var path = "/ms/store/api/build/market/atom/env/$projectCode/$atomCode/$atomVersion"
         val queryParamSb = StringBuilder()
@@ -91,6 +94,7 @@ class AtomArchiveResourceApi : AbstractBuildResourceApi(), AtomArchiveSDKApi {
         osName?.let { queryParamSb.append("osName=$osName&") }
         osArch?.let { queryParamSb.append("osArch=$osArch&") }
         convertOsFlag?.let { queryParamSb.append("convertOsFlag=$convertOsFlag&") }
+        channelCode?.let { queryParamSb.append("channelCode=$channelCode&") }
         if (queryParamSb.isNotBlank()) {
             path = "$path?${queryParamSb.removeSuffix("&")}"
         }
@@ -160,7 +164,7 @@ class AtomArchiveResourceApi : AbstractBuildResourceApi(), AtomArchiveSDKApi {
             destPath = destPath,
             buildVariables = buildVariables
         )
-        return file.inputStream().use { ShaUtils.sha1InputStream(it) }
+        return file.inputStream().use { ShaUtils.sha256InputStream(it) }
     }
 
     override fun uploadAtomPkgFile(
@@ -248,7 +252,8 @@ class AtomArchiveResourceApi : AbstractBuildResourceApi(), AtomArchiveSDKApi {
         atomFilePath: String,
         file: File,
         authFlag: Boolean,
-        queryCacheFlag: Boolean
+        queryCacheFlag: Boolean,
+        containerType: String?
     ) {
         val storeProjectId = if (TenantWorkerUtils.isMultiTenantMode(projectId)) {
             "${TenantWorkerUtils.DEFAULT_TENANT_ID_FOR_MULTI}.bk-store"
@@ -330,6 +335,44 @@ class AtomArchiveResourceApi : AbstractBuildResourceApi(), AtomArchiveSDKApi {
                 "osName=$osName&osArch=$osArch"
         val request = buildGet(path)
         val responseContent = request(request, "get pkgRunEnvInfo fail")
+        return objectMapper.readValue(responseContent)
+    }
+
+    /**
+     * 检查插件是否在指定类型的白名单中
+     * HTTP 异常时返回 Result(false) fail-close 不放行
+     */
+    override fun isAtomInWhitelist(
+        atomCode: String,
+        whitelistType: String
+    ): Result<Boolean> {
+        return try {
+            val path = "/ms/store/api/build/market/atom/env/whitelist/types/$whitelistType/codes/$atomCode/check"
+            val request = buildGet(path)
+            val responseContent = request(request, "atom whitelist check fail")
+            objectMapper.readValue(responseContent)
+        } catch (e: Throwable) {
+            logger.warn("isAtomInWhitelist fail|atomCode=$atomCode|type=$whitelistType", e)
+            Result(false)
+        }
+    }
+
+    override fun updateAtomVersionPkgSize(
+        atomId: String,
+        storePackageInfoReqs: List<StorePackageInfoReq>
+    ): Result<Boolean> {
+        if (storePackageInfoReqs.isEmpty()) {
+            logger.info("updateAtomVersionPkgSize|storePackageInfoReqs is empty, skip")
+            return Result(true)
+        }
+        val path = "/ms/store/api/build/store/storeIds/$atomId/version/info/update"
+        val jsonBody = objectMapper.writeValueAsString(storePackageInfoReqs)
+        val body = jsonBody.toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull())
+        val request = buildPut(path, body)
+        val responseContent = request(
+            request,
+            "updateAtomVersionPkgSize fail"
+        )
         return objectMapper.readValue(responseContent)
     }
 }

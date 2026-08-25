@@ -43,6 +43,8 @@ data class CodeScmSvnWebHookTriggerElement(
     override var id: String? = null,
     @get:Schema(title = "状态", required = false)
     override var status: String? = null,
+    @get:Schema(title = "插件用户ID", required = false)
+    override var stepId: String? = null,
     @get:Schema(title = "数据", required = true)
     val data: CodeScmSvnWebHookTriggerData
 ) : WebHookTriggerElement(name, id, status) {
@@ -73,12 +75,12 @@ data class CodeScmSvnWebHookTriggerElement(
     }
 }
 
-class CodeScmSvnWebHookTriggerData(
+data class CodeScmSvnWebHookTriggerData(
     @get:Schema(title = "ScmSvn事件触发数据", required = false)
     val input: CodeScmSvnWebHookTriggerInput
 )
 
-class CodeScmSvnWebHookTriggerInput(
+data class CodeScmSvnWebHookTriggerInput(
     @get:Schema(title = "仓库ID", required = true)
     val repositoryHashId: String? = null,
     @get:Schema(title = "事件类型", required = false)

@@ -36,29 +36,34 @@ import com.tencent.devops.model.store.tables.TAtomFeature
 import com.tencent.devops.model.store.tables.TAtomLabelRel
 import com.tencent.devops.model.store.tables.TAtomVersionLog
 import com.tencent.devops.model.store.tables.TClassify
-import com.tencent.devops.model.store.tables.TLabel
 import com.tencent.devops.model.store.tables.TStoreMember
 import com.tencent.devops.model.store.tables.TStoreStatisticsTotal
 import com.tencent.devops.model.store.tables.records.TAtomRecord
-import com.tencent.devops.store.common.utils.VersionUtils
+import com.tencent.devops.store.atom.util.AtomJobTypeUtil
+import com.tencent.devops.store.atom.util.AtomOsMapUtil
+import com.tencent.devops.store.utils.VersionUtils
 import com.tencent.devops.store.pojo.atom.ApproveReq
+import com.tencent.devops.store.pojo.atom.MarketAtomDaoQuery
 import com.tencent.devops.store.pojo.atom.MarketAtomCreateRequest
 import com.tencent.devops.store.pojo.atom.MarketAtomUpdateRequest
 import com.tencent.devops.store.pojo.atom.UpdateAtomInfo
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomTypeEnum
 import com.tencent.devops.store.pojo.atom.enums.MarketAtomSortTypeEnum
+import com.tencent.devops.store.pojo.common.ServiceScopeConfig
+import com.tencent.devops.store.pojo.common.enums.ServiceScopeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import java.math.BigDecimal
-import java.time.LocalDateTime
 import org.jooq.Condition
 import org.jooq.DSLContext
+import org.jooq.Field
 import org.jooq.Record
 import org.jooq.Result
 import org.jooq.SelectOnConditionStep
 import org.jooq.UpdateSetFirstStep
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
+import java.math.BigDecimal
+import java.time.LocalDateTime
 
 @Suppress("ALL")
 @Repository
@@ -67,19 +72,8 @@ class MarketAtomDao : AtomBaseDao() {
     /**
      * 插件商店搜索结果，总数
      */
-    fun count(
-        dslContext: DSLContext,
-        keyword: String?,
-        classifyCode: String?,
-        labelCodeList: List<String>?,
-        score: Int?,
-        rdType: AtomTypeEnum?,
-        yamlFlag: Boolean?,
-        recommendFlag: Boolean?,
-        qualityFlag: Boolean?,
-        tenantId: String?
-    ): Int {
-        val (ta, conditions) = formatConditions(keyword, rdType, classifyCode, dslContext, tenantId)
+    fun count(dslContext: DSLContext, query: MarketAtomDaoQuery): Int {
+        val (ta, conditions) = formatConditions(query)
         val taf = TAtomFeature.T_ATOM_FEATURE
         val baseStep = dslContext.select(DSL.countDistinct(ta.ID)).from(ta).leftJoin(taf)
             .on(ta.ATOM_CODE.eq(taf.ATOM_CODE))
@@ -91,93 +85,55 @@ class MarketAtomDao : AtomBaseDao() {
             taf = taf,
             baseStep = baseStep,
             conditions = conditions,
-            labelCodeList = labelCodeList,
-            storeType = storeType,
-            score = score,
-            yamlFlag = yamlFlag,
-            recommendFlag = recommendFlag,
-            qualityFlag = qualityFlag
+            query = query,
+            storeType = storeType
         )
         return baseStep.where(conditions).fetchOne(0, Int::class.java)!!
     }
 
     private fun formatConditions(
-        keyword: String?,
-        rdType: AtomTypeEnum?,
-        classifyCode: String?,
-        dslContext: DSLContext,
-        tenantId: String?
+        query: MarketAtomDaoQuery
     ): Pair<TAtom, MutableList<Condition>> {
         val ta = TAtom.T_ATOM
-        val storeType = StoreTypeEnum.ATOM.type.toByte()
-        val conditions = setAtomVisibleCondition(ta)
-        conditions.add(ta.DELETE_FLAG.eq(false)) // 只查没有被删除的插件
-        if (!keyword.isNullOrEmpty()) {
-            conditions.add(
-                ta.NAME.contains(keyword)
-                    .or(ta.SUMMARY.contains(keyword))
-                    .or(ta.ATOM_CODE.contains(keyword))
-            )
+        val conditions = setAtomVisibleCondition(ta).apply {
+            add(ta.DELETE_FLAG.eq(false))
+            if (useTenantCondition(query.tenantId)) {
+                add(ta.TENANT_ID.`in`(query.tenantId, TenantUtils.getTenantId()))
+            }
+            query.serviceScope?.let { add(buildServiceScopeCondition(ta, it)) }
+            // 关键字模糊搜索：匹配名称、简介或插件代码
+            query.keyword?.takeIf { it.isNotEmpty() }?.let { keyword ->
+                add(
+                    ta.NAME.contains(keyword)
+                        .or(ta.SUMMARY.contains(keyword))
+                        .or(ta.ATOM_CODE.contains(keyword))
+                )
+            }
+            // 研发类型过滤
+            query.rdType?.let { add(ta.ATOM_TYPE.eq(it.type.toByte())) }
+            // 分类过滤：根据 classifyId 和 serviceScope 构建分类条件
+            query.classifyId?.let {
+                buildClassifyCondition(ta, it, query.serviceScope)?.let(::add)
+            }
         }
-        if (useTenantCondition(tenantId)) {
-            conditions.add(ta.TENANT_ID.`in`(tenantId, TenantUtils.getTenantId()))
-        }
-        if (rdType != null) {
-            conditions.add(ta.ATOM_TYPE.eq(rdType.type.toByte()))
-        }
-        if (!classifyCode.isNullOrEmpty()) {
-            val tClassify = TClassify.T_CLASSIFY
-            val classifyId = dslContext.select(tClassify.ID)
-                .from(tClassify)
-                .where(tClassify.CLASSIFY_CODE.eq(classifyCode).and(tClassify.TYPE.eq(storeType)))
-                .fetchOne(0, String::class.java)
-            conditions.add(ta.CLASSIFY_ID.eq(classifyId))
-        }
-        return Pair(ta, conditions)
+        return ta to conditions
     }
 
     /**
      * 插件商店搜索结果列表
      */
-    fun list(
-        dslContext: DSLContext,
-        keyword: String?,
-        classifyCode: String?,
-        labelCodeList: List<String>?,
-        score: Int?,
-        rdType: AtomTypeEnum?,
-        yamlFlag: Boolean?,
-        recommendFlag: Boolean?,
-        qualityFlag: Boolean?,
-        sortType: MarketAtomSortTypeEnum?,
-        desc: Boolean?,
-        page: Int?,
-        pageSize: Int?,
-        tenantId: String?
-    ): Result<out Record>? {
-        val (ta, conditions) = formatConditions(keyword, rdType, classifyCode, dslContext, tenantId)
+    fun list(dslContext: DSLContext, query: MarketAtomDaoQuery): Result<out Record>? {
+        val (ta, conditions) = formatConditions(query)
         val taf = TAtomFeature.T_ATOM_FEATURE
+        val classifyIdField = buildClassifyIdField(ta, query.serviceScope)
         val baseStep = dslContext.select(
-            ta.ID,
-            ta.NAME,
-            ta.JOB_TYPE,
-            ta.ATOM_TYPE,
-            ta.CLASSIFY_ID,
-            ta.CATEGROY,
-            ta.ATOM_CODE,
-            ta.VERSION,
-            ta.ATOM_STATUS,
-            ta.LOGO_URL,
-            ta.PUBLISHER,
-            ta.SUMMARY,
-            ta.DEFAULT_FLAG,
-            ta.OS,
-            ta.BUILD_LESS_RUN_FLAG,
-            ta.DOCS_LINK,
-            ta.MODIFIER,
-            ta.UPDATE_TIME,
-            taf.RECOMMEND_FLAG,
-            taf.YAML_FLAG
+            ta.ID, ta.NAME, ta.JOB_TYPE, ta.ATOM_TYPE,
+            classifyIdField.`as`("CLASSIFY_ID"),
+            ta.CATEGROY, ta.ATOM_CODE, ta.VERSION, ta.ATOM_STATUS,
+            ta.LOGO_URL, ta.PUBLISHER, ta.SUMMARY, ta.DEFAULT_FLAG,
+            ta.OS, ta.OS_MAP, ta.BUILD_LESS_RUN_FLAG, ta.DOCS_LINK,
+            ta.MODIFIER, ta.UPDATE_TIME,
+            taf.RECOMMEND_FLAG, taf.YAML_FLAG
         ).from(ta)
             .leftJoin(taf)
             .on(ta.ATOM_CODE.eq(taf.ATOM_CODE))
@@ -189,48 +145,55 @@ class MarketAtomDao : AtomBaseDao() {
             taf = taf,
             baseStep = baseStep,
             conditions = conditions,
-            labelCodeList = labelCodeList,
-            storeType = storeType,
-            score = score,
-            yamlFlag = yamlFlag,
-            recommendFlag = recommendFlag,
-            qualityFlag = qualityFlag
+            query = query,
+            storeType = storeType
         )
 
-        if (null != sortType) {
-            val flag =
-                sortType == MarketAtomSortTypeEnum.DOWNLOAD_COUNT || sortType == MarketAtomSortTypeEnum.RECENT_EXECUTE_NUM
-            if (flag && score == null) {
+        // 排序处理
+        val statSortTypes = setOf(
+            MarketAtomSortTypeEnum.DOWNLOAD_COUNT,
+            MarketAtomSortTypeEnum.RECENT_EXECUTE_NUM
+        )
+        query.sortType?.let { sortType ->
+            val isStatSortType = sortType in statSortTypes
+            // 统计排序且未按评分过滤时，需额外关联统计表
+            if (isStatSortType && query.score == null) {
                 val tas = TStoreStatisticsTotal.T_STORE_STATISTICS_TOTAL
-                val t =
-                    dslContext.select(
-                        tas.STORE_CODE,
-                        tas.DOWNLOADS.`as`(MarketAtomSortTypeEnum.DOWNLOAD_COUNT.name),
-                        tas.RECENT_EXECUTE_NUM.`as`(MarketAtomSortTypeEnum.RECENT_EXECUTE_NUM.name)
-                    )
-                        .from(tas).where(tas.STORE_TYPE.eq(storeType)).asTable("t")
+                val t = dslContext.select(
+                    tas.STORE_CODE,
+                    tas.DOWNLOADS.`as`(MarketAtomSortTypeEnum.DOWNLOAD_COUNT.name),
+                    tas.RECENT_EXECUTE_NUM.`as`(MarketAtomSortTypeEnum.RECENT_EXECUTE_NUM.name)
+                ).from(tas).where(tas.STORE_TYPE.eq(storeType)).asTable("t")
                 baseStep.leftJoin(t).on(ta.ATOM_CODE.eq(t.field("STORE_CODE", String::class.java)))
             }
 
-            val realSortType =
-                if (flag) {
-                    DSL.field(sortType.name)
-                } else {
-                    ta.field(sortType.name)
-                }
+            val realSortType = getMarketAtomSortField(ta, sortType)
+            val orderField = if (query.desc == true) realSortType.desc() else realSortType.asc()
+            baseStep.where(conditions).orderBy(orderField)
+        } ?: baseStep.where(conditions)
 
-            if (desc != null && desc) {
-                baseStep.where(conditions).orderBy(realSortType!!.desc())
-            } else {
-                baseStep.where(conditions).orderBy(realSortType!!.asc())
+        // 分页返回
+        return query.page?.let { page ->
+            query.pageSize?.let { pageSize ->
+                baseStep.limit((page - 1) * pageSize, pageSize).fetch()
             }
-        } else {
-            baseStep.where(conditions)
-        }
-        return if (null != page && null != pageSize) {
-            baseStep.limit((page - 1) * pageSize, pageSize).fetch()
-        } else {
-            baseStep.fetch()
+        } ?: baseStep.fetch()
+    }
+
+    private fun getMarketAtomSortField(ta: TAtom, sortType: MarketAtomSortTypeEnum): Field<*> {
+        return when (sortType) {
+            MarketAtomSortTypeEnum.NAME -> ta.NAME
+            MarketAtomSortTypeEnum.CREATE_TIME -> ta.CREATE_TIME
+            MarketAtomSortTypeEnum.UPDATE_TIME -> ta.UPDATE_TIME
+            MarketAtomSortTypeEnum.PUBLISHER -> ta.PUBLISHER
+            MarketAtomSortTypeEnum.DOWNLOAD_COUNT -> DSL.field(
+                DSL.name(MarketAtomSortTypeEnum.DOWNLOAD_COUNT.name),
+                Int::class.java
+            )
+            MarketAtomSortTypeEnum.RECENT_EXECUTE_NUM -> DSL.field(
+                DSL.name(MarketAtomSortTypeEnum.RECENT_EXECUTE_NUM.name),
+                Int::class.java
+            )
         }
     }
 
@@ -240,24 +203,17 @@ class MarketAtomDao : AtomBaseDao() {
         taf: TAtomFeature,
         baseStep: SelectOnConditionStep<out Record>,
         conditions: MutableList<Condition>,
-        labelCodeList: List<String>?,
-        storeType: Byte,
-        score: Int?,
-        yamlFlag: Boolean?,
-        recommendFlag: Boolean?,
-        qualityFlag: Boolean?
+        query: MarketAtomDaoQuery,
+        storeType: Byte
     ) {
-        if (!labelCodeList.isNullOrEmpty()) {
-            val tLabel = TLabel.T_LABEL
-            val labelIdList = dslContext.select(tLabel.ID)
-                .from(tLabel)
-                .where(tLabel.LABEL_CODE.`in`(labelCodeList)).and(tLabel.TYPE.eq(storeType))
-                .fetch().map { it[tLabel.ID] as String }
+        // 标签过滤：关联标签关系表，筛选匹配指定标签的插件
+        query.labelIdList?.takeIf { it.isNotEmpty() }?.let { labelIds ->
             val talr = TAtomLabelRel.T_ATOM_LABEL_REL
             baseStep.leftJoin(talr).on(ta.ID.eq(talr.ATOM_ID))
-            conditions.add(talr.LABEL_ID.`in`(labelIdList))
+            conditions.add(talr.LABEL_ID.`in`(labelIds))
         }
-        if (score != null) {
+        // 评分过滤：关联统计表，筛选平均评分达标的插件
+        query.score?.let { score ->
             val tas = TStoreStatisticsTotal.T_STORE_STATISTICS_TOTAL
             val t = dslContext.select(
                 tas.STORE_CODE,
@@ -268,26 +224,22 @@ class MarketAtomDao : AtomBaseDao() {
             ).from(tas)
             baseStep.leftJoin(t).on(ta.ATOM_CODE.eq(t.field(tas.STORE_CODE.name, String::class.java)))
             conditions.add(
-                t.field(tas.SCORE_AVERAGE.name, BigDecimal::class.java)!!.ge(BigDecimal.valueOf(score.toLong()))
+                t.field(tas.SCORE_AVERAGE.name, BigDecimal::class.java)!!
+                    .ge(BigDecimal.valueOf(score.toLong()))
             )
             conditions.add(t.field(tas.STORE_TYPE.name, Byte::class.java)!!.eq(storeType))
         }
-        if (null != yamlFlag) {
-            conditions.add(taf.YAML_FLAG.eq(yamlFlag))
-        }
-        if (null != recommendFlag) {
-            conditions.add(taf.RECOMMEND_FLAG.eq(recommendFlag))
-        }
-        if (null != qualityFlag) {
-            conditions.add(taf.QUALITY_FLAG.eq(qualityFlag))
-        }
+        // 特性标志过滤
+        query.yamlFlag?.let { conditions.add(taf.YAML_FLAG.eq(it)) }
+        query.recommendFlag?.let { conditions.add(taf.RECOMMEND_FLAG.eq(it)) }
+        query.qualityFlag?.let { conditions.add(taf.QUALITY_FLAG.eq(it)) }
     }
 
     fun countReleaseAtomByCode(
         dslContext: DSLContext,
         atomCode: String,
         version: String? = null,
-        tenantId: String?
+        tenantId: String? = null
     ): Int {
         with(TAtom.T_ATOM) {
             val conditions = mutableListOf<Condition>()
@@ -310,18 +262,18 @@ class MarketAtomDao : AtomBaseDao() {
         userId: String,
         tStoreMember: TStoreMember,
         atomName: String?,
-        tenantId: String?
+        tenantId: String? = null
     ): MutableList<Condition> {
         val conditions = mutableListOf<Condition>()
         conditions.add(tAtom.DELETE_FLAG.eq(false)) // 只查没有被删除的插件
+        if (useTenantCondition(tenantId)) {
+            conditions.add(tAtom.TENANT_ID.`in`(tenantId, TenantUtils.getTenantId()))
+        }
         conditions.add(tAtom.LATEST_FLAG.eq(true))
         conditions.add(tStoreMember.USERNAME.eq(userId))
         conditions.add(tStoreMember.STORE_TYPE.eq(StoreTypeEnum.ATOM.type.toByte()))
         if (null != atomName) {
             conditions.add(tAtom.NAME.contains(atomName))
-        }
-        if (useTenantCondition(tenantId)) {
-            conditions.add(tAtom.TENANT_ID.`in`(tenantId, TenantUtils.getTenantId()))
         }
         return conditions
     }
@@ -330,7 +282,7 @@ class MarketAtomDao : AtomBaseDao() {
         dslContext: DSLContext,
         userId: String,
         atomName: String?,
-        tenantId: String?
+        tenantId: String? = null
     ): Int {
         val tAtom = TAtom.T_ATOM
         val tStoreMember = TStoreMember.T_STORE_MEMBER
@@ -349,7 +301,7 @@ class MarketAtomDao : AtomBaseDao() {
         atomName: String?,
         page: Int?,
         pageSize: Int?,
-        tenantId: String?
+        tenantId: String? = null
     ): Result<out Record>? {
         val tAtom = TAtom.T_ATOM
         val tStoreMember = TStoreMember.T_STORE_MEMBER
@@ -367,7 +319,8 @@ class MarketAtomDao : AtomBaseDao() {
             tAtom.CREATOR,
             tAtom.CREATE_TIME,
             tAtom.MODIFIER,
-            tAtom.UPDATE_TIME
+            tAtom.UPDATE_TIME,
+            tAtom.CODE_SRC
         )
             .from(tAtom)
             .join(tStoreMember)
@@ -392,7 +345,7 @@ class MarketAtomDao : AtomBaseDao() {
         codeSrc: String?,
         docsLink: String,
         marketAtomCreateRequest: MarketAtomCreateRequest,
-        tenantId: String?
+        tenantId: String? = null
     ) {
         with(TAtom.T_ATOM) {
             dslContext.insertInto(
@@ -418,15 +371,14 @@ class MarketAtomDao : AtomBaseDao() {
                 HTML_TEMPLATE_VERSION,
                 PUBLISHER,
                 CREATOR,
-                MODIFIER,
-                TENANT_ID
+                MODIFIER
             )
                 .values(
                     id,
                     marketAtomCreateRequest.name,
                     marketAtomCreateRequest.atomCode,
                     "",
-                    "",
+                    "[ \"${ServiceScopeEnum.PIPELINE.name}\" ]",
                     "",
                     "",
                     "",
@@ -443,8 +395,7 @@ class MarketAtomDao : AtomBaseDao() {
                     marketAtomCreateRequest.frontendType.typeVersion,
                     userId,
                     userId,
-                    userId,
-                    tenantId
+                    userId
                 )
                 .execute()
         }
@@ -458,22 +409,28 @@ class MarketAtomDao : AtomBaseDao() {
         classType: String,
         props: String,
         marketAtomUpdateRequest: MarketAtomUpdateRequest,
-        tenantId: String?
+        tenantId: String? = null
     ) {
-        val a = TClassify.T_CLASSIFY.`as`("a")
-        val classifyId = dslContext.select(a.ID)
-            .from(a)
-            .where(
-                a.CLASSIFY_CODE.eq(marketAtomUpdateRequest.classifyCode)
-                    .and(a.TYPE.eq(0))
-            )
-            .fetchOne(0, String::class.java)
+        val serviceScopeConfigs: List<ServiceScopeConfig> = marketAtomUpdateRequest.toServiceScopeConfigs()
+        val jobTypeResult = AtomJobTypeUtil.buildJobTypeFields(serviceScopeConfigs, marketAtomUpdateRequest.jobType?.name)
+        val osWriteResult = AtomOsMapUtil.buildOsFields(serviceScopeConfigs, marketAtomUpdateRequest.os)
+
+        val classifyIdMap = buildClassifyIdMap(
+            dslContext = dslContext,
+            serviceScopeConfigs = serviceScopeConfigs
+        )
+        val pipelineClassifyCode = serviceScopeConfigs
+            .firstOrNull { it.serviceScope == ServiceScopeEnum.PIPELINE }?.classifyCode
+            ?: marketAtomUpdateRequest.classifyCode
+        val classifyId = getClassifyIdByCode(
+            dslContext = dslContext,
+            classifyCode = pipelineClassifyCode,
+            serviceScope = ServiceScopeEnum.PIPELINE
+        ) ?: classifyIdMap?.get(ServiceScopeEnum.PIPELINE.name)
         with(TAtom.T_ATOM) {
-            dslContext.update(this)
+            val baseStep = dslContext.update(this)
                 .set(NAME, marketAtomUpdateRequest.name)
-                .set(JOB_TYPE, marketAtomUpdateRequest.jobType.name)
-                .set(OS, JsonUtil.toJson(marketAtomUpdateRequest.os, formatted = false))
-                .set(CLASSIFY_ID, classifyId)
+                .set(OS, JsonUtil.toJson(osWriteResult.pipelineOs, formatted = false))
                 .set(SUMMARY, marketAtomUpdateRequest.summary)
                 .set(DESCRIPTION, marketAtomUpdateRequest.description)
                 .set(CATEGROY, marketAtomUpdateRequest.category.category.toByte())
@@ -486,17 +443,54 @@ class MarketAtomDao : AtomBaseDao() {
                 .set(HTML_TEMPLATE_VERSION, marketAtomUpdateRequest.frontendType.typeVersion)
                 .set(UPDATE_TIME, LocalDateTime.now())
                 .set(MODIFIER, userId)
-                .where(ID.eq(id))
-                .let {
-                    if (useTenantCondition(tenantId)) it.and(
-                        TENANT_ID.`in`(
-                            tenantId,
-                            TenantUtils.getTenantId()
-                        )
-                    ) else it
+            classifyId?.let {
+                baseStep.set(CLASSIFY_ID, it)
+            }
+            classifyIdMap?.let {
+                baseStep.set(CLASSIFY_ID_MAP, JsonUtil.toJson(it, formatted = false))
+            }
+            if (jobTypeResult.jobTypeMapJson != null) {
+                baseStep.set(JOB_TYPE, jobTypeResult.pipelineJobType)
+                baseStep.set(JOB_TYPE_MAP, jobTypeResult.jobTypeMapJson)
+            } else {
+                jobTypeResult.pipelineJobType?.let {
+                    baseStep.set(JOB_TYPE, it)
                 }
-                .execute()
+            }
+            baseStep.set(OS_MAP, osWriteResult.osMapJson)
+            val serviceScopeJson = JsonUtil.toJson(
+                serviceScopeConfigs.map { it.serviceScope.name },
+                formatted = false
+            )
+            baseStep.set(SERVICE_SCOPE, serviceScopeJson)
+            baseStep.where(ID.eq(id)).execute()
         }
+    }
+
+    /**
+     * 构建 CLASSIFY_ID_MAP：以用户传入的 serviceScopeConfigs 为准，从零构建新的 map。
+     * 插件升级时，CLASSIFY_ID_MAP 的值应完全以用户传入的服务范围配置为准，
+     * 不再保留旧 map 中多余的 scope 条目。
+     */
+    private fun buildClassifyIdMap(
+        dslContext: DSLContext,
+        serviceScopeConfigs: List<ServiceScopeConfig>?
+    ): Map<String, String>? {
+        if (serviceScopeConfigs.isNullOrEmpty()) {
+            return null
+        }
+        val classifyIdMap = mutableMapOf<String, String>()
+        for (config in serviceScopeConfigs) {
+            val classifyId = getClassifyIdByCode(
+                dslContext = dslContext,
+                classifyCode = config.classifyCode,
+                serviceScope = config.serviceScope
+            )
+            classifyId?.let {
+                classifyIdMap[config.serviceScope.name] = it
+            }
+        }
+        return classifyIdMap.ifEmpty { null }
     }
 
     fun upgradeMarketAtom(
@@ -508,16 +502,35 @@ class MarketAtomDao : AtomBaseDao() {
         props: String,
         atomRecord: TAtomRecord,
         atomRequest: MarketAtomUpdateRequest,
-        tenantId: String?
+        tenantId: String? = null
     ) {
-        val a = TClassify.T_CLASSIFY.`as`("a")
-        val classifyId = dslContext.select(a.ID)
-            .from(a)
-            .where(
-                a.CLASSIFY_CODE.eq(atomRequest.classifyCode)
-                    .and(a.TYPE.eq(0))
-            )
-            .fetchOne(0, String::class.java)
+        val serviceScopeConfigs: List<ServiceScopeConfig> = atomRequest.toServiceScopeConfigs()
+
+        val pipelineClassifyCode = serviceScopeConfigs
+            .firstOrNull { it.serviceScope == ServiceScopeEnum.PIPELINE }?.classifyCode
+            ?: atomRequest.classifyCode
+        val classifyId = getClassifyIdByCode(
+            dslContext = dslContext,
+            classifyCode = pipelineClassifyCode,
+            serviceScope = ServiceScopeEnum.PIPELINE
+        ) ?: atomRecord.classifyId
+
+        val currentJobType = atomRecord.jobType
+        val jobTypeResult = AtomJobTypeUtil.buildJobTypeFields(serviceScopeConfigs, currentJobType)
+        val currentJobTypeMap = atomRecord.jobTypeMap
+        val osWriteResult = AtomOsMapUtil.buildOsFields(serviceScopeConfigs, atomRequest.os)
+        val serviceScopeJson = JsonUtil.toJson(
+            serviceScopeConfigs.map { it.serviceScope.name },
+            formatted = false
+        )
+
+        val classifyIdMap = buildClassifyIdMap(
+            dslContext = dslContext,
+            serviceScopeConfigs = serviceScopeConfigs
+        )
+        val classifyIdMapJson = classifyIdMap?.let { JsonUtil.toJson(it, formatted = false) }
+            ?: atomRecord.classifyIdMap
+
         with(TAtom.T_ATOM) {
             dslContext.insertInto(
                 this,
@@ -526,8 +539,11 @@ class MarketAtomDao : AtomBaseDao() {
                 ATOM_CODE,
                 SERVICE_SCOPE,
                 JOB_TYPE,
+                JOB_TYPE_MAP,
                 OS,
+                OS_MAP,
                 CLASSIFY_ID,
+                CLASSIFY_ID_MAP,
                 DOCS_LINK,
                 ATOM_TYPE,
                 ATOM_STATUS,
@@ -553,17 +569,23 @@ class MarketAtomDao : AtomBaseDao() {
                 WEIGHT,
                 CREATOR,
                 MODIFIER,
-                BRANCH_TEST_FLAG,
-                TENANT_ID
+                BRANCH_TEST_FLAG
             )
                 .values(
                     id,
                     atomRequest.name,
                     atomRecord.atomCode,
-                    atomRecord.serviceScope,
-                    atomRequest.jobType.name,
-                    JsonUtil.toJson(atomRequest.os, formatted = false),
+                    serviceScopeJson,
+                    if (jobTypeResult.jobTypeMapJson != null) {
+                        jobTypeResult.pipelineJobType
+                    } else {
+                        jobTypeResult.pipelineJobType ?: currentJobType
+                    },
+                    jobTypeResult.jobTypeMapJson ?: currentJobTypeMap,
+                    JsonUtil.toJson(osWriteResult.pipelineOs, formatted = false),
+                    osWriteResult.osMapJson,
                     classifyId,
+                    classifyIdMapJson,
                     atomRecord.docsLink,
                     atomRecord.atomType,
                     atomStatus.status.toByte(),
@@ -589,8 +611,7 @@ class MarketAtomDao : AtomBaseDao() {
                     atomRecord.weight,
                     userId,
                     userId,
-                    atomRequest.isBranchTestVersion,
-                    tenantId ?: atomRecord.tenantId
+                    atomRequest.isBranchTestVersion
                 )
                 .execute()
         }
@@ -640,8 +661,7 @@ class MarketAtomDao : AtomBaseDao() {
     fun getAtomsByConditions(
         dslContext: DSLContext,
         atomCodeList: List<String>,
-        atomStatusList: List<Byte>? = null,
-        tenantId: String?
+        atomStatusList: List<Byte>? = null
     ): Result<TAtomRecord>? {
         return with(TAtom.T_ATOM) {
             val conditions = mutableListOf<Condition>()
@@ -649,23 +669,17 @@ class MarketAtomDao : AtomBaseDao() {
             if (atomStatusList != null) {
                 conditions.add(ATOM_STATUS.`in`(atomStatusList))
             }
-            if (useTenantCondition(tenantId)) {
-                conditions.add(TENANT_ID.`in`(tenantId, TenantUtils.getTenantId()))
-            }
             dslContext.selectFrom(this).where(conditions).orderBy(CREATE_TIME.desc()).fetch()
         }
     }
 
-    fun getAtomRecordById(dslContext: DSLContext, atomId: String, tenantId: String?): TAtomRecord? {
+    fun getAtomRecordById(dslContext: DSLContext, atomId: String, tenantId: String? = null): TAtomRecord? {
         return with(TAtom.T_ATOM) {
             dslContext.selectFrom(this)
                 .where(ID.eq(atomId))
                 .let {
                     if (useTenantCondition(tenantId)) it.and(
-                        TENANT_ID.`in`(
-                            tenantId,
-                            TenantUtils.getTenantId()
-                        )
+                        TENANT_ID.`in`(tenantId, TenantUtils.getTenantId())
                     ) else it
                 }
                 .fetchOne()
@@ -687,15 +701,20 @@ class MarketAtomDao : AtomBaseDao() {
         }
     }
 
-    fun getAtomById(dslContext: DSLContext, atomId: String, tenantId: String?): Record? {
+    fun getAtomById(
+        dslContext: DSLContext,
+        atomId: String,
+        tenantId: String? = null,
+        serviceScope: ServiceScopeEnum? = null
+    ): Record? {
         val tAtom = TAtom.T_ATOM
         val tAtomVersionLog = TAtomVersionLog.T_ATOM_VERSION_LOG
         val tClassify = TClassify.T_CLASSIFY
-
         return dslContext.select(
             tAtom.ATOM_CODE,
             tAtom.NAME,
             tAtom.LOGO_URL,
+            tAtom.CLASSIFY_ID,
             tClassify.CLASSIFY_CODE,
             tClassify.CLASSIFY_NAME,
             tAtom.CATEGROY,
@@ -703,6 +722,7 @@ class MarketAtomDao : AtomBaseDao() {
             tAtom.ATOM_TYPE,
             tAtom.JOB_TYPE,
             tAtom.OS,
+            tAtom.OS_MAP,
             tAtom.SUMMARY,
             tAtom.DESCRIPTION,
             tAtom.VERSION,
@@ -720,22 +740,17 @@ class MarketAtomDao : AtomBaseDao() {
             tAtomVersionLog.RELEASE_TYPE,
             tAtomVersionLog.CONTENT,
             tAtom.VISIBILITY_LEVEL,
-            tAtom.PRIVATE_REASON
+            tAtom.PRIVATE_REASON,
+            tAtom.SERVICE_SCOPE,
+            tAtom.CLASSIFY_ID_MAP,
+            tAtom.JOB_TYPE_MAP
         )
             .from(tAtom)
             .leftJoin(tAtomVersionLog)
             .on(tAtom.ID.eq(tAtomVersionLog.ATOM_ID))
             .leftJoin(tClassify)
-            .on(tAtom.CLASSIFY_ID.eq(tClassify.ID))
+            .on(buildClassifyJoinCondition(tAtom, tClassify, serviceScope))
             .where(tAtom.ID.eq(atomId))
-            .let {
-                if (useTenantCondition(tenantId)) it.and(
-                    tAtom.TENANT_ID.`in`(
-                        tenantId,
-                        TenantUtils.getTenantId()
-                    )
-                ) else it
-            }
             .limit(1)
             .fetchOne()
     }
@@ -743,14 +758,7 @@ class MarketAtomDao : AtomBaseDao() {
     /**
      * 设置原子状态（单个版本）
      */
-    fun setAtomStatusById(
-        dslContext: DSLContext,
-        atomId: String,
-        atomStatus: Byte,
-        userId: String,
-        msg: String?,
-        tenantId: String?
-    ) {
+    fun setAtomStatusById(dslContext: DSLContext, atomId: String, atomStatus: Byte, userId: String, msg: String?) {
         with(TAtom.T_ATOM) {
             val baseStep = dslContext.update(this)
                 .set(ATOM_STATUS, atomStatus)
@@ -760,14 +768,6 @@ class MarketAtomDao : AtomBaseDao() {
             baseStep.set(MODIFIER, userId)
                 .set(UPDATE_TIME, LocalDateTime.now())
                 .where(ID.eq(atomId))
-                .let {
-                    if (useTenantCondition(tenantId)) it.and(
-                        TENANT_ID.`in`(
-                            tenantId,
-                            TenantUtils.getTenantId()
-                        )
-                    ) else it
-                }
                 .execute()
         }
     }
@@ -782,8 +782,7 @@ class MarketAtomDao : AtomBaseDao() {
         atomNewStatus: Byte,
         userId: String,
         msg: String?,
-        latestFlag: Boolean?,
-        tenantId: String?
+        latestFlag: Boolean?
     ) {
         with(TAtom.T_ATOM) {
             val baseStep = dslContext.update(this)
@@ -798,39 +797,17 @@ class MarketAtomDao : AtomBaseDao() {
                 .set(UPDATE_TIME, LocalDateTime.now())
                 .where(ATOM_CODE.eq(atomCode))
                 .and(ATOM_STATUS.eq(atomOldStatus))
-                .let {
-                    if (useTenantCondition(tenantId)) it.and(
-                        TENANT_ID.`in`(
-                            tenantId,
-                            TenantUtils.getTenantId()
-                        )
-                    ) else it
-                }
                 .execute()
         }
     }
 
-    fun updateAtomInfoById(
-        dslContext: DSLContext,
-        userId: String,
-        atomId: String,
-        updateAtomInfo: UpdateAtomInfo,
-        tenantId: String?
-    ) {
+    fun updateAtomInfoById(dslContext: DSLContext, userId: String, atomId: String, updateAtomInfo: UpdateAtomInfo) {
         with(TAtom.T_ATOM) {
             val baseStep = dslContext.update(this)
             setUpdateAtomInfo(updateAtomInfo, baseStep)
             baseStep.set(MODIFIER, userId)
                 .set(UPDATE_TIME, LocalDateTime.now())
                 .where(ID.eq(atomId))
-                .let {
-                    if (useTenantCondition(tenantId)) it.and(
-                        TENANT_ID.`in`(
-                            tenantId,
-                            TenantUtils.getTenantId()
-                        )
-                    ) else it
-                }
                 .execute()
         }
     }
@@ -885,44 +862,21 @@ class MarketAtomDao : AtomBaseDao() {
     }
 
     private fun TAtom.setUpdateAtomInfo(updateAtomInfo: UpdateAtomInfo, baseStep: UpdateSetFirstStep<TAtomRecord>) {
-        val atomStatus = updateAtomInfo.atomStatus
-        if (null != atomStatus) {
-            baseStep.set(ATOM_STATUS, atomStatus)
-        }
-        val msg = updateAtomInfo.atomStatusMsg
-        if (!msg.isNullOrEmpty()) {
-            baseStep.set(ATOM_STATUS_MSG, msg)
-        }
-        val latestFlag = updateAtomInfo.latestFlag
-        if (null != latestFlag) {
-            baseStep.set(LATEST_FLAG, latestFlag)
-        }
-        val pubTime = updateAtomInfo.pubTime
-        if (null != pubTime) {
-            baseStep.set(PUB_TIME, pubTime)
-        }
-        val deleteFlag = updateAtomInfo.deleteFlag
-        if (null != deleteFlag) {
-            baseStep.set(DELETE_FLAG, deleteFlag)
-        }
+        updateAtomInfo.atomStatus?.let { baseStep.set(ATOM_STATUS, it) }
+        updateAtomInfo.atomStatusMsg?.takeIf { it.isNotEmpty() }?.let { baseStep.set(ATOM_STATUS_MSG, it) }
+        updateAtomInfo.latestFlag?.let { baseStep.set(LATEST_FLAG, it) }
+        updateAtomInfo.pubTime?.let { baseStep.set(PUB_TIME, it) }
+        updateAtomInfo.deleteFlag?.let { baseStep.set(DELETE_FLAG, it) }
     }
 
     /**
      * 清空LATEST_FLAG
      */
-    fun cleanLatestFlag(dslContext: DSLContext, atomCode: String, tenantId: String?) {
+    fun cleanLatestFlag(dslContext: DSLContext, atomCode: String) {
         with(TAtom.T_ATOM) {
             dslContext.update(this)
                 .set(LATEST_FLAG, false)
                 .where(ATOM_CODE.eq(atomCode))
-                .let {
-                    if (useTenantCondition(tenantId)) it.and(
-                        TENANT_ID.`in`(
-                            tenantId,
-                            TenantUtils.getTenantId()
-                        )
-                    ) else it
-                }
                 .execute()
         }
     }
@@ -952,19 +906,11 @@ class MarketAtomDao : AtomBaseDao() {
         }
     }
 
-    fun getNewestUndercarriagedAtomsByCode(dslContext: DSLContext, atomCode: String, tenantId: String?): TAtomRecord? {
+    fun getNewestUndercarriagedAtomsByCode(dslContext: DSLContext, atomCode: String): TAtomRecord? {
         return with(TAtom.T_ATOM) {
             dslContext.selectFrom(this)
                 .where(ATOM_CODE.eq(atomCode))
                 .and(ATOM_STATUS.eq(AtomStatusEnum.UNDERCARRIAGED.status.toByte()))
-                .let {
-                    if (useTenantCondition(tenantId)) it.and(
-                        TENANT_ID.`in`(
-                            tenantId,
-                            TenantUtils.getTenantId()
-                        )
-                    ) else it
-                }
                 .orderBy(CREATE_TIME.desc())
                 .limit(1)
                 .fetchOne()

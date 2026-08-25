@@ -26,13 +26,10 @@
                     :label="$t('store.成员')"
                     prop="userName"
                     show-overflow-tooltip
-                >
-                    <template v-slot="props">
-                        <bk-user-display-name :user-id="props.row.userName" />
-                    </template>
-                </bk-table-column>
+                ></bk-table-column>
                 <bk-table-column
                     :label="$t('store.调试项目')"
+                    v-if="!isTemplate"
                     show-overflow-tooltip
                 >
                     <template slot-scope="props">
@@ -66,7 +63,7 @@
                             <template v-else>
                                 <span>{{ props.row.projectName }}</span>
                                 <i
-                                    class="bk-icon icon-edit2"
+                                    class="devops-icon icon-edit-line"
                                     @click="startEditProject(props.row)"
                                     v-if="userInfo.isProjectAdmin || userInfo.userName === props.row.userName"
                                 ></i>
@@ -183,6 +180,7 @@
 <script>
     import api from '@/api'
     import labelList from '@/components/labelList.vue'
+    import { TYPE_ENUM } from '@/utils/constants'
     import { mapGetters } from 'vuex'
 
     export default {
@@ -194,10 +192,6 @@
             return {
                 memberCount: 0,
                 memberList: [],
-                memberType: {
-                    ADMIN: 'Owner',
-                    DEVELOPER: 'Developer'
-                },
                 permissionMap: {
                     atom: [
                         { name: this.$t('store.插件开发'), active: false, type: 'DEVELOPER' },
@@ -211,6 +205,13 @@
                         { name: this.$t('store.审批'), active: false, type: 'ADMIN' },
                         { name: this.$t('store.成员管理'), active: false, type: 'ADMIN' },
                         { name: this.$t('store.可见范围'), active: false, type: 'ADMIN' }
+                    ],
+                    template: [
+                        { name: this.$t(this.$t('store.templateSetting')), active: false, type: 'ADMIN' },
+                        { name: this.$t('store.版本发布'), active: false, type: 'ADMIN' },
+                        { name: this.$t('store.可见范围'), active: false, type: 'ADMIN' },
+                        { name: this.$t('store.审批'), active: false, type: 'ADMIN' },
+                        { name: this.$t('store.成员管理'), active: false, type: 'ADMIN' }
                     ]
                 },
                 addMemberObj: {
@@ -239,22 +240,26 @@
             }),
 
             storeType () {
-                const typeMap = {
-                    atom: 'ATOM',
-                    image: 'IMAGE'
-                }
-                const type = this.$route.params.type
-                return typeMap[type]
+                return this.$route.params.type.toUpperCase()
             },
 
             storeCode () {
-                const keyMap = {
-                    atom: 'atomCode',
-                    image: 'imageCode'
+                return this.detail[`${this.$route.params.type}Code`] ?? ''
+            },
+
+            isTemplate () {
+                return this.$route.params.type === TYPE_ENUM.template
+            },
+            memberType () {
+                const basicType = {
+                    ADMIN: 'Owner'
                 }
-                const type = this.$route.params.type
-                const key = keyMap[type]
-                return this.detail[key]
+                return this.isTemplate
+                    ? basicType
+                    : {
+                        ...basicType,
+                        DEVELOPER: 'Developer'
+                    }
             }
         },
 

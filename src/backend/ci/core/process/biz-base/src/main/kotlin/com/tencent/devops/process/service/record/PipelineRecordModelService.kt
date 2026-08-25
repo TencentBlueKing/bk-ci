@@ -188,7 +188,7 @@ class PipelineRecordModelService @Autowired constructor(
         stageNormalRecordContainers.forEach { stageNormalRecordContainer ->
             val containerId = stageNormalRecordContainer.containerId
             val containerVarMap = generateContainerVarMap(stageNormalRecordContainer, containerId)
-            val containerBaseMap = (stageBaseMap[Stage::containers.name] as List<Map<String, Any>>).first {
+            val containerBaseMap = (stageBaseMap[Stage::containers.name] as List<MutableMap<String, Any>>).first {
                 it[Container::id.name] == containerId
             }
             val containerBaseModelMap = containerBaseMap.deepCopy<MutableMap<String, Any>>()
@@ -196,7 +196,8 @@ class PipelineRecordModelService @Autowired constructor(
                 stageRecordTasks = stageRecordTasks,
                 buildRecordContainer = stageNormalRecordContainer,
                 containerVarMap = containerVarMap,
-                containerBaseMap = containerBaseModelMap
+                originContainerBaseMap = containerBaseModelMap,
+                mutableContainerBaseMap = containerBaseMap
             )
             val matrixGroupFlag = stageNormalRecordContainer.matrixGroupFlag
             if (matrixGroupFlag == true) {
@@ -212,7 +213,8 @@ class PipelineRecordModelService @Autowired constructor(
                         stageRecordTasks = stageRecordTasks,
                         buildRecordContainer = matrixRecordContainer,
                         containerVarMap = matrixContainerVarMap,
-                        containerBaseMap = containerBaseModelMap,
+                        originContainerBaseMap = containerBaseModelMap,
+                        mutableContainerBaseMap = containerBaseMap,
                         matrixTaskFlag = true
                     )
                     containerBaseModelMap.remove(VMBuildContainer::matrixControlOption.name)
@@ -243,18 +245,29 @@ class PipelineRecordModelService @Autowired constructor(
         return containerVarMap
     }
 
+    /**
+     * 处理容器任务逻辑
+     * @param stageRecordTasks 当前阶段的构建记录任务列表，包含所有任务的详细信息
+     * @param buildRecordContainer 构建记录容器对象，表示当前处理的容器
+     * @param containerVarMap 容器变量映射，用于存储容器的环境变量和配置信息
+     * @param originContainerBaseMap 原始容器基础映射，包含容器的初始配置
+     * @param mutableContainerBaseMap 可变容器基础映射，用于存储处理后的容器信息
+     * @param matrixTaskFlag 矩阵任务标志，标识是否为矩阵任务（默认为false）
+     */
     private fun handleContainerRecordTask(
         stageRecordTasks: List<BuildRecordTask>,
         buildRecordContainer: BuildRecordContainer,
         containerVarMap: MutableMap<String, Any>,
-        containerBaseMap: MutableMap<String, Any>,
+        originContainerBaseMap: MutableMap<String, Any>,
+        mutableContainerBaseMap: MutableMap<String, Any>,
         matrixTaskFlag: Boolean = false
     ) {
         val containerId = buildRecordContainer.containerId
         // 过滤出job下的task变量数据
         val containerRecordTasks = stageRecordTasks.filter { it.containerId == containerId }.sortedBy { it.taskSeq }
         val tasks = mutableListOf<Map<String, Any>>()
-        val taskBaseMaps = (containerBaseMap[Container::elements.name] as List<Map<String, Any>>).toMutableList()
+        val taskBaseMaps = (originContainerBaseMap[Container::elements.name] as List<Map<String, Any>>).toMutableList()
+        val originTaskSize = taskBaseMaps.size
         // 如果job下的task都被跳过，则使用流水线model的element节点生成task模型
         val containerExecuteCount = buildRecordContainer.executeCount
         if (buildRecordContainer.matrixGroupFlag != true && containerRecordTasks.isEmpty()) {
@@ -265,7 +278,7 @@ class PipelineRecordModelService @Autowired constructor(
             containerVarMap[Container::elements.name] = tasks
             return
         }
-        val lastElementTaskId = taskBaseMaps[taskBaseMaps.size - 1][Element::id.name].toString()
+        val lastElementTaskId = taskBaseMaps[originTaskSize - 1][Element::id.name].toString()
         var supplementSkipTaskFlag = true
         var preContainerRecordTaskSeq = 1
         // 获取开机任务的序号
@@ -274,7 +287,7 @@ class PipelineRecordModelService @Autowired constructor(
             handleTaskSeq(startVMTaskSeq, containerRecordTask)
             val taskVarMap = generateTaskVarMap(
                 containerRecordTask = containerRecordTask, taskId = containerRecordTask.taskId,
-                containerBaseMap = containerBaseMap, matrixTaskFlag = matrixTaskFlag,
+                containerBaseMap = originContainerBaseMap, matrixTaskFlag = matrixTaskFlag,
                 taskBaseMaps = taskBaseMaps
             )
             while (containerRecordTask.taskSeq - preContainerRecordTaskSeq > 1) {
@@ -284,7 +297,7 @@ class PipelineRecordModelService @Autowired constructor(
                     matrixTaskFlag = matrixTaskFlag,
                     taskBaseMap = taskBaseMap,
                     executeCount = containerRecordTask.executeCount,
-                    mergeFlag = containerBaseMap[QUALITY_FLAG] == true
+                    mergeFlag = originContainerBaseMap[QUALITY_FLAG] == true
                 )
                 if (skipTaskVarMap[Element::id.name].toString() == lastElementTaskId) {
                     supplementSkipTaskFlag = false
@@ -308,6 +321,11 @@ class PipelineRecordModelService @Autowired constructor(
                 containerExecuteCount = containerExecuteCount,
                 tasks = tasks
             )
+        }
+        // 检查当前任务集合的大小是否与原始任务集合的大小是否一致
+        if (taskBaseMaps.size != originTaskSize) {
+            // 如果大小发生变化，将更新后的任务集合设置到容器map的elements字段中
+            mutableContainerBaseMap[Container::elements.name] = taskBaseMaps
         }
         if (tasks.isNotEmpty()) {
             // 将转换后的task变量数据放入job中
@@ -426,6 +444,7 @@ class PipelineRecordModelService @Autowired constructor(
             (containerBaseMap[Container::elements.name] as List<Map<String, Any>>)[parentElementJobIndex]
         val taskName = taskBaseMap[Element::name.name]?.toString() ?: ""
         finalTaskVarMap[Element::name.name] = pipelinePostElementService.getPostElementName(taskName)
+        finalTaskVarMap[Element::stepId.name] = "" // 为了避免影响父插件，post任务stepId需置为空
         finalTaskVarMap = ModelUtils.generateBuildModelDetail(taskBaseMap.deepCopy(), finalTaskVarMap)
         return finalTaskVarMap
     }

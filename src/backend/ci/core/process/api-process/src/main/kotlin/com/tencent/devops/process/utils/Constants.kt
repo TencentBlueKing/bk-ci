@@ -44,6 +44,7 @@ const val PIPELINE_START_SERVICE_USER_ID = "BK_CI_START_SERVICE_USER_ID" // "pip
 const val PIPELINE_START_MANUAL_USER_ID = "BK_CI_START_MANUAL_USER_ID" // "pipeline.start.manual.user.id"
 const val PIPELINE_START_TIME_TRIGGER_USER_ID = "BK_CI_START_TIME_TRIGGER_USER_ID"
 const val PIPELINE_START_REMOTE_USER_ID = "BK_CI_START_REMOTE_USER_ID"
+const val PIPELINE_START_TRIGGER_EVENT_USER_ID = "BK_CI_START_TRIGGER_EVENT_USER_ID"
 const val PIPELINE_START_REMOTE_CLIENT_IP = "BK_CI_START_REMOTE_CLIENT_IP"
 const val PIPELINE_START_TYPE = "BK_CI_START_TYPE" // "pipeline.start.type"
 const val PIPELINE_START_CHANNEL = "BK_CI_START_CHANNEL" // "pipeline.start.channel"
@@ -69,6 +70,7 @@ const val WORKSPACE = "WORKSPACE" // "ci.workspace"
 const val PIPELINE_TIME_DURATION = "BK_CI_BUILD_TOTAL_TIME" // "pipeline.time.duration"
 
 const val PIPELINE_BUILD_ID = "BK_CI_BUILD_ID" // "pipeline.build.id"
+const val PIPELINE_BUILD_DEBUG = "ci.debug"
 const val PIPELINE_VMSEQ_ID = "BK_CI_BUILD_JOB_ID" // "pipeline.job.id"
 const val PIPELINE_ELEMENT_ID = "BK_CI_BUILD_TASK_ID" // "pipeline.task.id"
 const val PIPELINE_TURBO_TASK_ID = "BK_CI_TURBO_ID" // "turbo.task.id"
@@ -88,6 +90,12 @@ const val PIPELINE_SKIP_FAILED_TASK = "BK_CI_SKIP_FAILED_TASK"
 const val PIPELINE_RETRY_RUNNING_BUILD = "BK_CI_RETRY_RUNNING_BUILD"
 const val PIPELINE_RETRY_TASK_IN_STAGE_ID = "BK_CI_RETRY_TASK_IN_STAGE_ID"
 const val PIPELINE_RETRY_TASK_IN_CONTAINER_ID = "BK_CI_RETRY_TASK_IN_CONTAINER_ID"
+
+// 矩阵局部重试：目标父矩阵容器ID（存在则表示本次为矩阵组内的局部重试，不做整组重新分裂）
+const val PIPELINE_RETRY_MATRIX_GROUP_ID = "BK_CI_RETRY_MATRIX_GROUP_ID"
+
+// 矩阵局部重试：目标子容器ID（为空时配合 PIPELINE_RETRY_ALL_FAILED_CONTAINER 表示重试该矩阵下所有失败子Job）
+const val PIPELINE_RETRY_MATRIX_CONTAINER_ID = "BK_CI_RETRY_MATRIX_CONTAINER_ID"
 
 const val BK_CI_BUILD_FAIL_TASKS = "BK_CI_BUILD_FAIL_TASKS"
 const val BK_CI_BUILD_FAIL_TASKNAMES = "BK_CI_BUILD_FAIL_TASKNAMES"
@@ -217,7 +225,7 @@ const val PIPELINE_MATRIX_MAX_CON_RUNNING_SIZE_DEFAULT = 5
 /**
  * 流水线设置-矩阵内最大并发数量-最大值
  */
-const val PIPELINE_MATRIX_CON_RUNNING_SIZE_MAX = 20
+const val PIPELINE_MATRIX_CON_RUNNING_SIZE_MAX = 50
 
 /**
  * 流水线设置-Stage内最大分裂后Job数量-最大值
@@ -239,6 +247,14 @@ const val PIPELINE_TIME_START = "BK_CI_BUILD_START_TIME" // "pipeline.time.start
 const val PIPELINE_TIME_END = "BK_CI_BUILD_END_TIME" // "pipeline.time.end"
 
 const val PIPELINE_BUILD_MSG = "BK_CI_BUILD_MSG"
+
+const val NODE_AGENT_ID = "BK_CI_NODE_AGENT_ID"
+
+const val NODE_OS = "BK_CI_NODE_OS"
+
+const val NODE_HASH_ID = "BK_CI_NODE_HASH_ID"
+
+const val NODE_ENV_HASH_ID = "BK_CI_NODE_ENV_HASH_ID"
 
 /**
  * 保存流水线编排的最大个数
@@ -262,3 +278,5 @@ const val KEY_TASK = "task"
 const val KEY_TASK_ATOM = "taskAtom"
 
 const val BK_EMPTY_PIPELINE = "bkEmptyPipeline"
+
+const val BK_EMPTY_CREATIVE_STREAM = "bkEmptyCreativeStream"

@@ -88,7 +88,12 @@ export default {
         yamlHighlightBlockMap: {},
         switchingVersion: false,
         isElementModified: false,
-        isGetPluginHeadTab: false
+        isGetPluginHeadTab: false,
+        paramSets: [],
+        tempParamSet: null,
+        originalPipelineSnapshot: null, // 流水线快照（用于比对是否有实际修改）
+        execInfo: null, // 执行详情的 info 接口数据
+        storeStatus: '',
     },
     mutations,
     actions,

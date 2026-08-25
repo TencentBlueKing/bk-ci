@@ -43,7 +43,6 @@ class SimpleProjectExtService @Autowired constructor(
     override fun createExtProjectInfo(
         userId: String,
         authProjectId: String,
-        accessToken: String?,
         projectCreateInfo: ProjectCreateInfo,
         createExtInfo: ProjectCreateExtInfo,
         logoAddress: String?
@@ -53,11 +52,13 @@ class SimpleProjectExtService @Autowired constructor(
             tenantId = projectCreateInfo.tenantId,
             projectId = projectCreateInfo.englishName
         )
+        // 同步共享制品开关配置到 BkRepo，默认为 true
+        val enableShareArtifact = projectCreateInfo.properties?.enableShareArtifact ?: true
+        updateShareArtifact(userId, projectCreateInfo.englishName, enableShareArtifact)
     }
 
     override fun createOldAuthProject(
         userId: String,
-        accessToken: String?,
         projectCreateInfo: ProjectCreateInfo
     ): String {
         return ""

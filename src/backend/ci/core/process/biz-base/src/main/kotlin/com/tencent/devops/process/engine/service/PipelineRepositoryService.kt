@@ -53,6 +53,7 @@ import com.tencent.devops.common.pipeline.dialect.IPipelineDialect
 import com.tencent.devops.common.pipeline.enums.BranchVersionAction
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.PipelineInstanceTypeEnum
+import com.tencent.devops.common.pipeline.enums.PublicVarGroupReferenceTypeEnum
 import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.pipeline.event.CallBackEvent
 import com.tencent.devops.common.pipeline.event.CallBackNetWorkRegionType
@@ -62,6 +63,8 @@ import com.tencent.devops.common.pipeline.option.MatrixControlOption
 import com.tencent.devops.common.pipeline.pojo.BuildNo
 import com.tencent.devops.common.pipeline.pojo.MatrixPipelineInfo
 import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
+import com.tencent.devops.common.pipeline.pojo.PipelineRunEnvOsChange
+import com.tencent.devops.common.pipeline.pojo.PipelineRunEnvOsCheckParam
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
@@ -70,8 +73,8 @@ import com.tencent.devops.common.pipeline.pojo.setting.Subscription
 import com.tencent.devops.common.pipeline.pojo.transfer.TransferActionType
 import com.tencent.devops.common.pipeline.pojo.transfer.TransferBody
 import com.tencent.devops.common.pipeline.pojo.transfer.YamlWithVersion
-import com.tencent.devops.common.pipeline.utils.CascadePropertyUtils
 import com.tencent.devops.common.pipeline.utils.MatrixYamlCheckUtils
+import com.tencent.devops.common.pipeline.utils.PipelineParamUtils
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.service.utils.LogUtils
@@ -82,6 +85,9 @@ import com.tencent.devops.process.dao.PipelineCallbackDao
 import com.tencent.devops.process.dao.PipelineSettingDao
 import com.tencent.devops.process.dao.PipelineSettingVersionDao
 import com.tencent.devops.process.dao.label.PipelineViewGroupDao
+import com.tencent.devops.process.dao.template.PipelineTemplateInfoDao
+import com.tencent.devops.process.dao.yaml.PipelineYamlInfoDao
+import com.tencent.devops.process.dao.yaml.PipelineYamlVersionDao
 import com.tencent.devops.process.engine.atom.AtomUtils
 import com.tencent.devops.process.engine.cfg.ModelContainerIdGenerator
 import com.tencent.devops.process.engine.cfg.ModelTaskIdGenerator
@@ -90,12 +96,13 @@ import com.tencent.devops.process.engine.cfg.VersionConfigure
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.control.lock.PipelineModelLock
 import com.tencent.devops.process.engine.control.lock.PipelineReleaseLock
+import com.tencent.devops.process.engine.control.lock.PipelineTemplateInstanceCountLock
 import com.tencent.devops.process.engine.dao.PipelineBuildSummaryDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.engine.dao.PipelineModelTaskDao
 import com.tencent.devops.process.engine.dao.PipelineResourceDao
+import com.tencent.devops.process.engine.dao.PipelineResourceDraftVersionDao
 import com.tencent.devops.process.engine.dao.PipelineResourceVersionDao
-import com.tencent.devops.process.engine.dao.PipelineYamlInfoDao
 import com.tencent.devops.process.engine.dao.template.TemplateDao
 import com.tencent.devops.process.engine.dao.template.TemplatePipelineDao
 import com.tencent.devops.process.engine.pojo.PipelineInfo
@@ -112,14 +119,19 @@ import com.tencent.devops.process.pojo.PipelineName
 import com.tencent.devops.process.pojo.PipelineSortType
 import com.tencent.devops.process.pojo.pipeline.DeletePipelineResult
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
+import com.tencent.devops.process.pojo.pipeline.PipelineResourceDraftVersion
 import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
-import com.tencent.devops.process.pojo.pipeline.PipelineYamlVo
+import com.tencent.devops.process.pojo.pipeline.PipelineYamlFileInfo
 import com.tencent.devops.process.pojo.pipeline.TemplateInfo
 import com.tencent.devops.process.pojo.setting.PipelineModelVersion
+import com.tencent.devops.process.pojo.`var`.dto.PublicVarGroupReferDTO
 import com.tencent.devops.process.service.PipelineAsCodeService
 import com.tencent.devops.process.service.PipelineOperationLogService
+import com.tencent.devops.process.service.label.PipelineGroupService
+import com.tencent.devops.process.service.PipelineVisibilityService
 import com.tencent.devops.process.service.pipeline.PipelineSettingVersionService
 import com.tencent.devops.process.service.pipeline.PipelineTransferYamlService
+import com.tencent.devops.process.service.`var`.PublicVarGroupReferManageService
 import com.tencent.devops.process.utils.PIPELINE_MATRIX_CON_RUNNING_SIZE_MAX
 import com.tencent.devops.process.utils.PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX
 import com.tencent.devops.process.utils.PIPELINE_SETTING_MAX_QUEUE_SIZE_MAX
@@ -133,6 +145,8 @@ import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import jakarta.ws.rs.core.Response
 import java.time.LocalDateTime
 import java.util.concurrent.atomic.AtomicInteger
+import kotlin.collections.associate
+import kotlin.collections.forEach
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -175,10 +189,16 @@ class PipelineRepositoryService constructor(
     private val transferService: PipelineTransferYamlService,
     private val redisOperation: RedisOperation,
     private val pipelineYamlInfoDao: PipelineYamlInfoDao,
+    private val pipelineYamlVersionDao: PipelineYamlVersionDao,
     private val pipelineAsCodeService: PipelineAsCodeService,
     private val pipelineCallbackDao: PipelineCallbackDao,
     private val subPipelineTaskService: SubPipelineTaskService,
-    private val pipelineInfoService: PipelineInfoService
+    private val pipelineInfoService: PipelineInfoService,
+    private val pipelineTemplateInfoDao: PipelineTemplateInfoDao,
+    private val pipelineGroupService: PipelineGroupService,
+    private val pipelineVisibilityService: PipelineVisibilityService,
+    private val publicVarGroupReferManageService: PublicVarGroupReferManageService,
+    private val pipelineResourceDraftVersionDao: PipelineResourceDraftVersionDao
 ) {
 
     companion object {
@@ -188,7 +208,8 @@ class PipelineRepositoryService constructor(
 
         @Suppress("ALL")
         fun PipelineSetting.checkParam() {
-            if (maxPipelineResNum < 1) {
+            val maxResNum = maxPipelineResNum
+            if (maxResNum != null && maxResNum < 1) {
                 throw InvalidParamException(
                     message = I18nUtil.getCodeLanMessage(ProcessMessageCode.PIPELINE_ORCHESTRATIONS_NUMBER_ILLEGAL),
                     params = arrayOf("maxPipelineResNum")
@@ -217,9 +238,9 @@ class PipelineRepositoryService constructor(
                 }
             }
             if (maxConRunningQueueSize != null && (
-                        this.maxConRunningQueueSize!! <= PIPELINE_SETTING_MAX_QUEUE_SIZE_MIN ||
-                                this.maxConRunningQueueSize!! > PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX
-                        )
+                    this.maxConRunningQueueSize!! <= PIPELINE_SETTING_MAX_QUEUE_SIZE_MIN ||
+                        this.maxConRunningQueueSize!! > PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX
+                    )
             ) {
                 throw InvalidParamException(
                     I18nUtil.getCodeLanMessage(ProcessMessageCode.MAXIMUM_NUMBER_CONCURRENCY_ILLEGAL),
@@ -229,9 +250,10 @@ class PipelineRepositoryService constructor(
         }
     }
 
-    @Value("\${project.callback.secretParam.aes-key:project_callback_aes_key}")
+    @Value("\${project.callback.aes-key}")
     private val aesKey = ""
 
+    @SuppressWarnings("NestedBlockDepth")
     fun deployPipeline(
         model: Model,
         projectId: String,
@@ -249,8 +271,9 @@ class PipelineRepositoryService constructor(
         versionStatus: VersionStatus? = VersionStatus.RELEASED,
         branchName: String? = null,
         description: String? = null,
-        yamlInfo: PipelineYamlVo? = null,
-        pipelineDisable: Boolean? = null
+        yamlFileInfo: PipelineYamlFileInfo? = null,
+        pipelineDisable: Boolean? = null,
+        runEnvOsChange: PipelineRunEnvOsChange? = null
     ): DeployPipelineResult {
 
         // 生成流水线ID,新流水线以p-开头，以区分以前旧数据
@@ -273,8 +296,9 @@ class PipelineRepositoryService constructor(
             create = create,
             versionStatus = versionStatus,
             channelCode = channelCode,
-            yamlInfo = yamlInfo,
-            pipelineDialect = pipelineDialect
+            yamlFileInfo = yamlFileInfo,
+            pipelineDialect = pipelineDialect,
+            runEnvOsChange = runEnvOsChange
         )
         val triggerContainer = model.getTriggerContainer()
         val buildNo = triggerContainer.buildNo?.apply {
@@ -358,7 +382,90 @@ class PipelineRepositoryService constructor(
     }
 
     /**
+     * 构造「插件是否适用于其运行所在节点操作系统」的校验入参，是该校验唯一的入参构造点，
+     * 返回空表示本次不做该项校验，判定见 [skipRunEnvOsCheck]。
+     *
+     * 该校验不由调用方开关：无论运行环境由设置指定(创作流的创作环境)还是由编排里的 Job 各自指定
+     * (普通流水线的 baseOS)，编排或运行环境一变更就可能让插件跑在它不支持的系统上，与服务范围、
+     * 构建环境匹配等校验一样属于保存的固有约束。存量编排不被阻断靠的是
+     * [PipelineRunEnvOsCheckParam.exemptedRunEnvOsAtomKeys] 的差集豁免，而非让调用方选择跳过。
+     *
+     * [channelCode] 与 [runEnvOsChange] 都须按流水线自身渠道解析后传入，不能取请求上下文的渠道，
+     * 原因见 [PipelineRunEnvOsCheckParam.osJobTypeName]。
+     */
+    fun buildRunEnvOsCheckParam(
+        projectId: String,
+        pipelineId: String,
+        channelCode: ChannelCode,
+        runEnvOsChange: PipelineRunEnvOsChange?,
+        create: Boolean = false,
+        modelCarriedOver: Boolean = false
+    ): PipelineRunEnvOsCheckParam? {
+        if (skipRunEnvOsCheck(
+                channelCode = channelCode,
+                runEnvOsChange = runEnvOsChange,
+                create = create,
+                modelCarriedOver = modelCarriedOver
+            )) return null
+        return PipelineRunEnvOsCheckParam(
+            settingRunEnvOsChange = runEnvOsChange,
+            osJobTypeName = runEnvOsChange?.osJobTypeName ?: AtomUtils.resolveOsJobType(channelCode).name,
+            exemptedRunEnvOsAtomKeys = lazy {
+                collectExemptedRunEnvOsAtomKeys(projectId, pipelineId, runEnvOsChange)
+            }
+        )
+    }
+
+    /**
+     * 判断本次保存是否需要跳过「插件是否适用于其运行所在节点的操作系统」校验。
+     *
+     * 返回 true 跳过校验，false 执行校验。上层 [buildRunEnvOsCheckParam] 返回 null 即为跳过。
+     */
+    private fun skipRunEnvOsCheck(
+        channelCode: ChannelCode,
+        runEnvOsChange: PipelineRunEnvOsChange?,
+        create: Boolean,
+        modelCarriedOver: Boolean
+    ) = when {
+        // 平台维护类渠道 — 直接跳过
+        AtomUtils.isPlatformMaintainedChannel(channelCode) -> true
+        // 编排承继承(本次编排出非用户主动编辑产生,如模板实例化) — 直接跳过
+        modelCarriedOver -> true
+        // 无运行环境变更信息需判断该渠道的运行环境是否由流水线设置指定和是否是创建场景
+        runEnvOsChange == null -> AtomUtils.isRunEnvSpecifiedBySetting(channelCode) || create
+        else -> false
+    }
+
+    /**
+     * 取差集豁免的基准组合，语义见 [PipelineRunEnvOsCheckParam.exemptedRunEnvOsAtomKeys]。
+     * 仅在本次确实发现不适配项时才会被调用，正常保存不产生这次查询。
+     */
+    private fun collectExemptedRunEnvOsAtomKeys(
+        projectId: String,
+        pipelineId: String,
+        runEnvOsChange: PipelineRunEnvOsChange?
+    ): Set<String> {
+        // 首次为该流水线指定运行环境：此前编排里的插件并没有跑在任何一个环境上，
+        // 不存在「上一次落库时它跑在哪个系统上」这一事实，无可豁免，全量校验
+        if (runEnvOsChange != null && runEnvOsChange.previousOs == null) return emptySet()
+        return AtomUtils.collectRunEnvOsAtomKeys(
+            // 草稿优先：草稿存在时它才是用户上一次保存下来、后续会被发布的编排
+            model = getPipelineResourceVersion(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                includeDraft = true
+            )?.model,
+            // 基准取变更前的运行环境操作系统，本次换过环境时它与 currentOs 不同，于是同一个插件会算出
+            // 不同的 key 而被照常拦下。普通流水线为空，逐 Job 取各自的声明
+            settingRunEnvOs = runEnvOsChange?.previousOs
+        )
+    }
+
+    /**
      * 初始化并检查合法性
+     *
+     * [modelCarriedOver] 由把一份已存在的编排整份写入的入口(如回滚到历史版本)传入，语义见
+     * [buildRunEnvOsCheckParam]。约束模式模板实例无需调用方传入，其编排自带该事实。
      */
     fun initModel(
         model: Model,
@@ -368,8 +475,10 @@ class PipelineRepositoryService constructor(
         create: Boolean = true,
         versionStatus: VersionStatus? = VersionStatus.RELEASED,
         channelCode: ChannelCode,
-        yamlInfo: PipelineYamlVo? = null,
-        pipelineDialect: IPipelineDialect? = null
+        yamlFileInfo: PipelineYamlFileInfo? = null,
+        pipelineDialect: IPipelineDialect? = null,
+        runEnvOsChange: PipelineRunEnvOsChange? = null,
+        modelCarriedOver: Boolean = false
     ): List<PipelineModelTask> {
         val metaSize = modelCheckPlugin.checkModelIntegrity(
             model = model,
@@ -377,7 +486,16 @@ class PipelineRepositoryService constructor(
             userId = userId,
             oauthUser = getPipelineOauthUser(projectId, pipelineId),
             pipelineDialect = pipelineDialect,
-            pipelineId = pipelineId
+            pipelineId = pipelineId,
+            runEnvOsCheckParam = buildRunEnvOsCheckParam(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                channelCode = channelCode,
+                runEnvOsChange = runEnvOsChange,
+                create = create,
+                // 约束模式模板实例的编排由模板整份覆盖而来，与回滚等入口同属「编排非本次编写」
+                modelCarriedOver = modelCarriedOver || model.instanceFromTemplate == true
+            )
         )
         // 去重id
         val distinctIdSet = HashSet<String>(metaSize, 1F /* loadFactor */)
@@ -386,6 +504,11 @@ class PipelineRepositoryService constructor(
         val modelTasks = ArrayList<PipelineModelTask>(metaSize)
         // 初始化ID 该构建环境下的ID,旧流水引擎数据无法转换为String，仍然是序号的方式
         val containerSeqId = AtomicInteger(0)
+        model.projectId = projectId
+        model.pipelineId = pipelineId
+        // 跨 stage 共享的 jobId 生成器种子和已使用的 jobId 集合，确保整个 model 范围内 jobId 唯一
+        val randomSeed = AtomicInteger(1)
+        val jobIdSet = mutableSetOf<String>()
         model.stages.forEachIndexed { index, s ->
             s.id = VMUtils.genStageId(index + 1)
             // #4531 对存量的stage审核数据做兼容处理
@@ -404,7 +527,7 @@ class PipelineRepositoryService constructor(
                     create = create,
                     distIds = distinctIdSet,
                     versionStatus = versionStatus,
-                    yamlInfo = yamlInfo
+                    yamlFileInfo = yamlFileInfo
                 )
             } else {
                 initOtherContainer(
@@ -419,12 +542,13 @@ class PipelineRepositoryService constructor(
                     create = create,
                     distIds = distinctIdSet,
                     versionStatus = versionStatus,
-                    yamlInfo = yamlInfo,
-                    stageIndex = index
+                    yamlFileInfo = yamlFileInfo,
+                    stageIndex = index,
+                    randomSeed = randomSeed,
+                    jobIdSet = jobIdSet
                 )
             }
         }
-
         return modelTasks
     }
 
@@ -440,7 +564,7 @@ class PipelineRepositoryService constructor(
         create: Boolean,
         distIds: HashSet<String>,
         versionStatus: VersionStatus? = VersionStatus.RELEASED,
-        yamlInfo: PipelineYamlVo?
+        yamlFileInfo: PipelineYamlFileInfo?
     ) {
         if (stage.containers.size != 1) {
             logger.warn("The trigger stage contain more than one container (${stage.containers.size})")
@@ -449,11 +573,11 @@ class PipelineRepositoryService constructor(
             )
         }
         val c = (
-                stage.containers.getOrNull(0)
-                    ?: throw ErrorCodeException(
-                        errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NEED_JOB
-                    )
-                ) as TriggerContainer
+            stage.containers.getOrNull(0)
+                ?: throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NEED_JOB
+                )
+            ) as TriggerContainer
 
         // #4518 各个容器ID的初始化
         c.id = containerSeqId.get().toString()
@@ -482,7 +606,7 @@ class PipelineRepositoryService constructor(
                     channelCode = channelCode,
                     create = create,
                     container = c,
-                    yamlInfo = yamlInfo
+                    yamlFileInfo = yamlFileInfo
                 )
             }
 
@@ -518,8 +642,10 @@ class PipelineRepositoryService constructor(
         create: Boolean,
         distIds: HashSet<String>,
         versionStatus: VersionStatus? = VersionStatus.RELEASED,
-        yamlInfo: PipelineYamlVo?,
-        stageIndex: Int
+        yamlFileInfo: PipelineYamlFileInfo?,
+        stageIndex: Int,
+        randomSeed: AtomicInteger,
+        jobIdSet: MutableSet<String>
     ) {
         if (stage.containers.isEmpty()) {
             throw ErrorCodeException(
@@ -551,6 +677,8 @@ class PipelineRepositoryService constructor(
 
             var taskSeq = 0
             c.id = containerSeqId.incrementAndGet().toString()
+            if (c.jobId.isNullOrBlank()) c.jobId = VMUtils.getContainerJobId(randomSeed.getAndIncrement(), jobIdSet)
+            c.jobId?.let { jobIdSet.add(it) }
             try {
                 when {
                     c.matrixGroupFlag != true -> {
@@ -597,7 +725,7 @@ class PipelineRepositoryService constructor(
                         channelCode = channelCode,
                         create = create,
                         container = c,
-                        yamlInfo = yamlInfo
+                        yamlFileInfo = yamlFileInfo
                     )
                 }
 
@@ -630,9 +758,9 @@ class PipelineRepositoryService constructor(
         if ((option.maxConcurrency ?: 0) > PIPELINE_MATRIX_CON_RUNNING_SIZE_MAX) {
             throw InvalidParamException(
                 "matrix maxConcurrency number(${option.maxConcurrency}) " +
-                        "exceed $PIPELINE_MATRIX_CON_RUNNING_SIZE_MAX /" +
-                        "matrix maxConcurrency(${option.maxConcurrency}) " +
-                        "is larger than $PIPELINE_MATRIX_CON_RUNNING_SIZE_MAX"
+                    "exceed $PIPELINE_MATRIX_CON_RUNNING_SIZE_MAX /" +
+                    "matrix maxConcurrency(${option.maxConcurrency}) " +
+                    "is larger than $PIPELINE_MATRIX_CON_RUNNING_SIZE_MAX"
             )
         }
         MatrixYamlCheckUtils.checkYaml(
@@ -645,23 +773,29 @@ class PipelineRepositoryService constructor(
     }
 
     /**
-     * 初始化默认的流水线setting
+     * 根据 channelCode 计算 maxPipelineResNum
+     * 如果 channelCode 在特定渠道列表中，返回特定渠道的最大保留数，否则返回默认最大保留数
      */
-    fun createDefaultSetting(
-        projectId: String,
-        pipelineId: String,
-        pipelineName: String,
-        channelCode: ChannelCode
-    ): PipelineSetting {
-        // 空白流水线设置初始化
-        val maxPipelineResNum = if (
-            channelCode.name in versionConfigure.specChannels.split(",")
-        ) {
+    private fun calculateMaxPipelineResNum(channelCode: ChannelCode): Int {
+        return if (channelCode.name in versionConfigure.specChannels.split(",")) {
             versionConfigure.specChannelMaxKeepNum
         } else {
             versionConfigure.maxKeepNum
         }
-        val notifyTypes = if (channelCode == ChannelCode.BS) {
+    }
+
+    /**
+     * 初始化默认的流水线setting
+     */
+    fun createDefaultSetting(
+        projectId: String = "",
+        pipelineId: String = "",
+        pipelineName: String = "",
+        channelCode: ChannelCode
+    ): PipelineSetting {
+        // 空白流水线设置初始化
+        val maxPipelineResNum = calculateMaxPipelineResNum(channelCode)
+            val notifyTypes = if (channelCode == ChannelCode.BS || channelCode == ChannelCode.CREATIVE_STREAM) {
             pipelineInfoExtService.failNotifyChannel()
         } else {
             ""
@@ -720,6 +854,8 @@ class PipelineRepositoryService constructor(
         val id = client.get(ServiceAllocIdResource::class).generateSegmentId("PIPELINE_INFO").data
         val lock = PipelineModelLock(redisOperation, pipelineId)
         var versionName: String? = null
+        // 事务前校验，避免事务提交后校验失败导致引用缺失。
+        publicVarGroupReferManageService.validateVarGroupReferences(model = model, projectId = projectId)
         try {
             lock.lock()
             dslContext.transaction { configuration ->
@@ -869,10 +1005,36 @@ class PipelineRepositoryService constructor(
                     channel = channelCode.name,
                     modelTasks = modelTasks.toList()
                 )
+                // 创作流,可见性默认添加创建者
+                if (channelCode == ChannelCode.CREATIVE_STREAM) {
+                    pipelineVisibilityService.initVisibility(
+                        transactionContext = transactionContext,
+                        userId = userId,
+                        projectId = projectId,
+                        pipelineId = pipelineId
+                    )
+                }
             }
         } finally {
             lock.unlock()
         }
+
+        // 引用关系写入在事务提交后执行，避免事务回滚产生孤儿引用。
+        // activeVersion 控制 LATEST_FLAG 同步（引用计数/删除保护来源）：RELEASED/BRANCH 为生效版本需同步；
+        // COMMITTING 为草稿不同步，避免草稿改动误伤已发布版本的引用计数。
+        publicVarGroupReferManageService.handleVarGroupReferBus(
+            PublicVarGroupReferDTO(
+                userId = userId,
+                projectId = projectId,
+                model = model,
+                referId = pipelineId,
+                referType = PublicVarGroupReferenceTypeEnum.PIPELINE,
+                referName = model.name,
+                referVersion = 1,
+                referVersionName = versionName ?: "",
+                activeVersion = versionStatus == VersionStatus.RELEASED || versionStatus == VersionStatus.BRANCH
+            )
+        )
 
         pipelineEventDispatcher.dispatch(
             PipelineCreateEvent(
@@ -906,7 +1068,7 @@ class PipelineRepositoryService constructor(
         useConcurrencyGroup: Boolean? = false
     ): Boolean {
         return templateId != null &&
-                (useSubscriptionSettings == true || useConcurrencyGroup == true)
+            (useSubscriptionSettings == true || useConcurrencyGroup == true)
     }
 
     private fun update(
@@ -939,6 +1101,8 @@ class PipelineRepositoryService constructor(
         var branchAction: BranchVersionAction? = null
         var versionNum: Int? = null
         var updateBuildNo = false
+        // 事务前校验，避免事务提交后校验失败导致引用缺失（B-1）。
+        publicVarGroupReferManageService.validateVarGroupReferences(model = model, projectId = projectId)
         try {
             lock.lock()
             dslContext.transaction { configuration ->
@@ -1161,6 +1325,10 @@ class PipelineRepositoryService constructor(
                             latestVersionStatus = VersionStatus.RELEASED,
                             locked = pipelineDisable
                         )
+                        // 落库前对齐到本次写入的资源版本号：Model JSON 中的 latestVersion 是公共变量组
+                        // 引用信息（referVersion）的唯一载体，必须与所在 RESOURCE 记录的 VERSION 一致，
+                        // 否则读取时按错误版本查引用信息，动态变量组将无法展开
+                        model.latestVersion = version
                         pipelineResourceDao.updateReleaseVersion(
                             dslContext = transactionContext,
                             projectId = projectId,
@@ -1202,8 +1370,9 @@ class PipelineRepositoryService constructor(
                         )
                     }
                 }
-
                 watcher.start("updatePipelineResourceVersion")
+                // 草稿/分支版本未走上面的发布分支，同样需要把 latestVersion 对齐到本次资源版本号
+                model.latestVersion = version
                 pipelineResourceVersionDao.create(
                     dslContext = transactionContext,
                     projectId = projectId,
@@ -1240,6 +1409,24 @@ class PipelineRepositoryService constructor(
             LogUtils.printCostTimeWE(watcher)
             lock.unlock()
         }
+
+        // 引用关系写入在事务提交后执行，避免事务回滚产生孤儿引用。
+        // activeVersion: RELEASED/BRANCH 为生效版本需同步 LATEST_FLAG；草稿（COMMITTING）不同步，
+        // 走 DraftSaveHandler 且不改动已发布版本的引用计数。
+        publicVarGroupReferManageService.handleVarGroupReferBus(
+            PublicVarGroupReferDTO(
+                userId = userId,
+                projectId = projectId,
+                model = model,
+                referId = pipelineId,
+                referType = PublicVarGroupReferenceTypeEnum.PIPELINE,
+                referName = model.name,
+                referVersion = version,
+                referVersionName = versionName,
+                activeVersion = versionStatus?.fix() == VersionStatus.RELEASED ||
+                    versionStatus?.fix() == VersionStatus.BRANCH
+            )
+        )
 
         // TODO 暂时只有正式发布的版本需要推送，等草稿历史出来后调整消费者再全推送
         if (versionStatus?.fix() == VersionStatus.RELEASED) pipelineEventDispatcher.dispatch(
@@ -1366,6 +1553,14 @@ class PipelineRepositoryService constructor(
         ).map { it.key to str2model(it.value, it.key) }.toMap()
     }
 
+    fun getLatestVersionNames(projectId: String, pipelineIds: List<String>): Map<String, String> {
+        return pipelineResourceDao.getLatestVersionNames(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineIds = pipelineIds
+        )
+    }
+
     /**
      * 获取所有本次构建触发需要的信息
      * 并在获取过程中增加并发锁，防止流水线发布版本期间触发读取脏数据
@@ -1413,6 +1608,7 @@ class PipelineRepositoryService constructor(
                     VersionStatus.COMMITTING -> {
                         Triple(pipelineInfo, targetResource, true)
                     }
+
                     else -> {
                         Triple(pipelineInfo, targetResource, false)
                     }
@@ -1467,6 +1663,25 @@ class PipelineRepositoryService constructor(
             projectId = projectId,
             pipelineId = pipelineId
         )
+        decoratePipelineResourceVersion(
+            finalDslContext = finalDslContext,
+            resource = resource,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            encryptedFlag = encryptedFlag,
+            archiveFlag = archiveFlag
+        )
+        return resource
+    }
+
+    private fun decoratePipelineResourceVersion(
+        finalDslContext: DSLContext,
+        resource: PipelineResourceVersion?,
+        projectId: String,
+        pipelineId: String,
+        encryptedFlag: Boolean?,
+        archiveFlag: Boolean?
+    ) {
         // 历史数据兼容：
         // 1 返回时将别名name补全为id
         // 2 填充所有job没有的job id
@@ -1522,7 +1737,6 @@ class PipelineRepositoryService constructor(
                 }
             }
         }
-        return resource
     }
 
     fun getDraftVersionResource(
@@ -1543,6 +1757,33 @@ class PipelineRepositoryService constructor(
             }
         }
         return resource
+    }
+
+    fun getPipelineResourceByDraftVersion(
+        projectId: String,
+        pipelineId: String,
+        version: Int,
+        draftVersion: Int,
+        encryptedFlag: Boolean? = false,
+        archiveFlag: Boolean? = false
+    ): PipelineResourceVersion? {
+        val finalDslContext = CommonUtils.getJooqDslContext(archiveFlag, ARCHIVE_SHARDING_DSL_CONTEXT)
+        val draftVersionResource = pipelineResourceDraftVersionDao.get(
+            dslContext = finalDslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            version = version,
+            draftVersion = draftVersion
+        )?.let { PipelineResourceDraftVersion.convertDraftToVersion(it) }
+        decoratePipelineResourceVersion(
+            finalDslContext = finalDslContext,
+            resource = draftVersionResource,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            encryptedFlag = encryptedFlag,
+            archiveFlag = archiveFlag
+        )
+        return draftVersionResource
     }
 
     fun getBranchVersionResource(
@@ -1589,16 +1830,10 @@ class PipelineRepositoryService constructor(
         var resultVersion: PipelineResourceVersion? = null
         dslContext.transaction { configuration ->
             val context = transactionContext ?: DSL.using(configuration)
-
-            // 获取发布的版本用于比较差异
-            val releaseResource = pipelineResourceDao.getReleaseVersionResource(
-                dslContext = context,
+            val latestResource = getLatestResource(
+                context = context,
                 projectId = projectId,
                 pipelineId = pipelineId
-            ) ?: throw ErrorCodeException(
-                statusCode = Response.Status.NOT_FOUND.statusCode,
-                errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS,
-                params = arrayOf(pipelineId)
             )
             // 删除草稿并获取最新版本用于版本号计算
             pipelineResourceVersionDao.clearDraftVersion(
@@ -1606,12 +1841,6 @@ class PipelineRepositoryService constructor(
                 projectId = projectId,
                 pipelineId = pipelineId
             )
-            val latestResource = pipelineResourceVersionDao.getLatestVersionResource(
-                dslContext = context,
-                projectId = projectId,
-                pipelineId = pipelineId
-            ) ?: releaseResource
-
             // 计算版本号
             val settingVersion = (latestResource.settingVersion ?: latestResource.version) + 1
             val now = LocalDateTime.now()
@@ -1649,6 +1878,28 @@ class PipelineRepositoryService constructor(
         return resultVersion!!
     }
 
+    fun getLatestResource(
+        context: DSLContext = dslContext,
+        projectId: String,
+        pipelineId: String
+    ): PipelineResourceVersion {
+        // 获取发布的版本用于比较差异
+        val releaseResource = pipelineResourceDao.getReleaseVersionResource(
+            dslContext = context,
+            projectId = projectId,
+            pipelineId = pipelineId
+        ) ?: throw ErrorCodeException(
+            statusCode = Response.Status.NOT_FOUND.statusCode,
+            errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS,
+            params = arrayOf(pipelineId)
+        )
+        return pipelineResourceVersionDao.getLatestVersionResource(
+            dslContext = context,
+            projectId = projectId,
+            pipelineId = pipelineId
+        ) ?: releaseResource
+    }
+
     private fun str2model(
         modelString: String,
         pipelineId: String
@@ -1677,6 +1928,7 @@ class PipelineRepositoryService constructor(
         )
 
         val pipelineResult = DeletePipelineResult(pipelineId, record.pipelineName, record.version)
+
         val lock = PipelineModelLock(redisOperation, pipelineId)
         try {
             lock.lock()
@@ -1689,8 +1941,11 @@ class PipelineRepositoryService constructor(
                     pipelineSettingVersionDao.deleteAllVersion(transactionContext, projectId, pipelineId)
                     pipelineResourceDao.deleteAllVersion(transactionContext, projectId, pipelineId)
                     pipelineSettingDao.delete(transactionContext, projectId, pipelineId)
-                    templatePipelineDao.delete(transactionContext, projectId, pipelineId)
                     pipelineViewGroupDao.delete(transactionContext, projectId, pipelineId)
+                    templatePipelineDao.delete(transactionContext, projectId, pipelineId)
+                    pipelineYamlInfoDao.deleteByPipelineId(transactionContext, projectId, pipelineId)
+                    pipelineYamlVersionDao.deleteByPipelineId(transactionContext, projectId, pipelineId)
+                    pipelineVisibilityService.deleteByPipelineId(transactionContext, projectId, pipelineId)
                 } else {
                     // 删除前改名，防止名称占用
                     val deleteTime = org.joda.time.LocalDateTime.now().toString("yyMMddHHmmSS")
@@ -1736,6 +1991,7 @@ class PipelineRepositoryService constructor(
                 if (archiveFlag != true) {
                     pipelineModelTaskDao.deletePipelineTasks(transactionContext, projectId, pipelineId)
                     pipelineYamlInfoDao.deleteByPipelineId(transactionContext, projectId, pipelineId)
+                    pipelineYamlVersionDao.deleteByPipelineId(transactionContext, projectId, pipelineId)
                     subPipelineTaskService.batchDelete(transactionContext, projectId, pipelineId)
                     pipelineEventDispatcher.dispatch(
                         PipelineDeleteEvent(
@@ -1755,6 +2011,24 @@ class PipelineRepositoryService constructor(
                         )
                     )
                 }
+                // 引用清理复用 transactionContext，与流水线删除同事务，避免孤儿引用（B-2）。
+                publicVarGroupReferManageService.deletePublicVerGroupRefByReferId(
+                    transactionContext = transactionContext,
+                    referId = pipelineId,
+                    projectId = projectId,
+                    referType = PublicVarGroupReferenceTypeEnum.PIPELINE
+                )
+            }
+
+            templatePipelineDao.get(
+                dslContext = dslContext,
+                projectId = projectId,
+                pipelineId = pipelineId
+            )?.let {
+                updateInstancePipelineCount(
+                    projectId = it.projectId,
+                    templateId = it.templateId
+                )
             }
         } finally {
             lock.unlock()
@@ -1765,7 +2039,7 @@ class PipelineRepositoryService constructor(
     fun isPipelineExist(
         projectId: String,
         pipelineName: String,
-        channelCode: ChannelCode = ChannelCode.BS,
+        channelCode: ChannelCode = ChannelCode.getRequestChannelCode(),
         excludePipelineId: String?
     ): Boolean {
         return pipelineInfoDao.isNameExist(dslContext, projectId, pipelineName, channelCode, excludePipelineId)
@@ -1818,6 +2092,27 @@ class PipelineRepositoryService constructor(
 
     fun getSetting(projectId: String, pipelineId: String): PipelineSetting? {
         return pipelineSettingDao.getSetting(dslContext, projectId, pipelineId)
+    }
+
+    /**
+     * settingVersion表中labels字段可能为空(如实例化流水线),需要单独再查询
+     */
+    fun getSettingWithLabels(userId: String, projectId: String, pipelineId: String): PipelineSetting? {
+        val labels = ArrayList<String>()
+        val labelNames = ArrayList<String>()
+        pipelineGroupService.getGroups(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId
+        ).forEach {
+            labels.addAll(it.labels)
+            labelNames.addAll(it.labelNames)
+        }
+        return pipelineSettingDao.getSetting(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId
+        )?.copy(labels = labels, labelNames = labelNames)
     }
 
     fun getSettingByPipelineVersion(
@@ -1877,6 +2172,21 @@ class PipelineRepositoryService constructor(
         }
     }
 
+    /**
+     * 处理 maxPipelineResNum 为空的情况
+     * 如果 maxPipelineResNum 为空，根据 channelCode 和 versionConfigure 计算默认值
+     */
+    private fun processMaxPipelineResNumIfNull(
+        setting: PipelineSetting,
+        channelCode: ChannelCode
+    ): PipelineSetting {
+        if (setting.maxPipelineResNum != null) {
+            return setting
+        }
+        val maxPipelineResNum = calculateMaxPipelineResNum(channelCode)
+        return setting.copy(maxPipelineResNum = maxPipelineResNum)
+    }
+
     private fun transactionSaveSetting(
         context: DSLContext?,
         setting: PipelineSetting,
@@ -1898,30 +2208,47 @@ class PipelineRepositoryService constructor(
             if (old?.pipelineName != null) {
                 oldName = old.pipelineName
             }
-            if (!isTemplate && versionStatus.isReleasing()) pipelineInfoDao.update(
+            // 获取 channelCode 并处理 maxPipelineResNum 为空的情况
+            val pipelineInfo = pipelineInfoDao.getPipelineInfo(
                 dslContext = transactionContext,
                 projectId = setting.projectId,
                 pipelineId = setting.pipelineId,
+                channelCode = null
+            )
+            val channelCode = pipelineInfo?.channel?.let {
+                try {
+                    ChannelCode.valueOf(it)
+                } catch (e: IllegalArgumentException) {
+                    logger.warn("Invalid channel code: $it, using default channel code")
+                    ChannelCode.getRequestChannelCode()
+                }
+            } ?: ChannelCode.getRequestChannelCode()
+            val processedSetting = processMaxPipelineResNumIfNull(setting, channelCode)
+            if (!isTemplate && versionStatus.isReleasing()) pipelineInfoDao.update(
+                dslContext = transactionContext,
+                projectId = processedSetting.projectId,
+                pipelineId = processedSetting.pipelineId,
                 userId = userId,
-                pipelineName = setting.pipelineName,
-                pipelineDesc = setting.desc,
+                pipelineName = processedSetting.pipelineName,
+                pipelineDesc = processedSetting.desc,
                 updateLastModifyUser = updateLastModifyUser,
                 // 单独修改流水线配置不影响版本状态
                 latestVersionStatus = null
             )
             if (version > 0) { // #671 兼容无版本要求的修改入口，比如改名，或者只读流水线的修改操作, version=0
-                if (old?.maxPipelineResNum != null) {
+                val oldMaxPipelineResNum = old?.maxPipelineResNum
+                if (oldMaxPipelineResNum != null) {
                     pipelineSettingVersionDao.deleteEarlyVersion(
                         dslContext = transactionContext,
-                        projectId = setting.projectId,
-                        pipelineId = setting.pipelineId,
+                        projectId = processedSetting.projectId,
+                        pipelineId = processedSetting.pipelineId,
                         currentVersion = version,
-                        maxPipelineResNum = old.maxPipelineResNum
+                        maxPipelineResNum = oldMaxPipelineResNum
                     )
                 }
                 pipelineSettingVersionDao.saveSetting(
                     dslContext = transactionContext,
-                    setting = setting,
+                    setting = processedSetting,
                     version = version,
                     isTemplate = isTemplate,
                     id = client.get(ServiceAllocIdResource::class).generateSegmentId(
@@ -1931,7 +2258,7 @@ class PipelineRepositoryService constructor(
             }
             if (versionStatus.isReleasing()) {
                 pipelineSettingDao.saveSetting(
-                    transactionContext, setting, isTemplate
+                    transactionContext, processedSetting, isTemplate
                 )
             }
         }
@@ -1974,7 +2301,8 @@ class PipelineRepositoryService constructor(
         limit: Int? = null,
         sortType: PipelineSortType,
         collation: PipelineCollation,
-        filterByPipelineName: String?
+        filterByPipelineName: String?,
+        channelCode: ChannelCode? = null
     ): List<PipelineInfo> {
         val result = pipelineInfoDao.listPipelinesByProject(
             dslContext = dslContext,
@@ -1985,7 +2313,8 @@ class PipelineRepositoryService constructor(
             limit = limit,
             sortType = sortType,
             collation = collation,
-            filterByPipelineName = filterByPipelineName
+            filterByPipelineName = filterByPipelineName,
+            channelCode = channelCode
         )
         val list = mutableListOf<PipelineInfo>()
         result?.forEach {
@@ -2102,7 +2431,16 @@ class PipelineRepositoryService constructor(
                 modelTasks = tasks
             )
         }
-
+        templatePipelineDao.get(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId
+        )?.let {
+            updateInstancePipelineCount(
+                projectId = it.projectId,
+                templateId = it.templateId
+            )
+        }
         val version = pipelineInfoDao.getPipelineVersion(
             dslContext = dslContext,
             projectId = projectId,
@@ -2151,6 +2489,7 @@ class PipelineRepositoryService constructor(
             // 2、update settingName
             pipelineSettingDao.updateSettingName(
                 dslContext = transactionContext,
+                projectId = projectId,
                 pipelineIdList = listOf(pipelineId),
                 name = modelName
             )
@@ -2213,18 +2552,20 @@ class PipelineRepositoryService constructor(
                 ) ?: ""
                 logger.info(
                     "PROCESS|updateSettingVersion|version=$version|" +
-                            "versionNum=$versionNum|versionName=$versionName"
+                        "versionNum=$versionNum|versionName=$versionName"
                 )
                 val newModel = releaseResource.model.copy(
                     name = savedSetting.pipelineName, desc = savedSetting.desc
                 )
+                // copy() 不会带上 latestVersion（非构造器属性），需显式对齐到本次写入的资源版本号
+                newModel.latestVersion = version
                 // 用新的流水线名称、描述和旧yaml的格式生成新的yaml
                 val yamlWithVersion = try {
                     transferService.transfer(
                         userId, projectId, pipelineId, TransferActionType.FULL_MODEL2YAML,
                         TransferBody(
-                            PipelineModelAndSetting(newModel, savedSetting),
-                            releaseResource.yaml ?: ""
+                            modelAndSetting = PipelineModelAndSetting(newModel, savedSetting),
+                            oldYaml = releaseResource.yaml ?: ""
                         )
                     ).yamlWithVersion
                 } catch (ignore: Throwable) {
@@ -2329,7 +2670,7 @@ class PipelineRepositoryService constructor(
         return try {
             client.get(ServiceAuthAuthorizationResource::class).getResourceAuthorization(
                 projectId = projectId,
-                resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
+                resourceType = AuthResourceType.getAuthResourceTypeByChannel(AuthResourceType.PIPELINE_DEFAULT).value,
                 resourceCode = pipelineId
             ).data
         } catch (ignored: Exception) {
@@ -2348,14 +2689,15 @@ class PipelineRepositoryService constructor(
         dslContext: DSLContext,
         userId: String
     ) {
-        if (events.isNullOrEmpty()) return
         val existEventNames = pipelineCallbackDao.list(
             dslContext = dslContext,
             projectId = projectId,
             pipelineId = pipelineId
         ).map { it.name }.toSet()
-        if (existEventNames.isNotEmpty()) {
-            val needDelNames = existEventNames.subtract(events.keys).toSet()
+        // events 为空时新事件集合为空，差集即为全部已存在事件，实现全量清理
+        val newEventKeys = events?.keys ?: emptySet()
+        val needDelNames = existEventNames.subtract(newEventKeys)
+        if (needDelNames.isNotEmpty()) {
             pipelineCallbackDao.delete(
                 dslContext = dslContext,
                 projectId = projectId,
@@ -2364,15 +2706,17 @@ class PipelineRepositoryService constructor(
             )
         }
         // 保存回调事件
-        pipelineCallbackDao.save(
-            dslContext = dslContext,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            userId = userId,
-            list = events.map { (key, value) ->
-                value.copy(secretToken = value.secretToken?.let { AESUtil.encrypt(aesKey, it) })
-            }
-        )
+        if (!events.isNullOrEmpty()) {
+            pipelineCallbackDao.save(
+                dslContext = dslContext,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                userId = userId,
+                list = events.map { (_, value) ->
+                    value.copy(secretToken = value.secretToken?.let { AESUtil.encrypt(aesKey, it) })
+                }
+            )
+        }
     }
 
     fun getReleaseVersionRecord(projectId: String, pipelineId: String): PipelineResourceVersion? {
@@ -2383,36 +2727,61 @@ class PipelineRepositoryService constructor(
         )
     }
 
+    fun getPipelineVersionRecord(
+        projectId: String,
+        pipelineId: String,
+        version: Int,
+        includeDraft: Boolean? = null
+    ): PipelineResourceVersion? {
+        return pipelineResourceVersionDao.getVersionResource(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            version = version,
+            includeDraft = includeDraft
+        )
+    }
+
     fun getTemplateVersionRecord(templateId: String, version: Long?) = templateDao.getTemplate(
         dslContext = dslContext,
         templateId = templateId,
         version = version
-    ) ?: throw ErrorCodeException(
-        errorCode = ProcessMessageCode.ERROR_TEMPLATE_NOT_EXISTS
     )
 
     /**
      * 根据model获取触发参数，兼容级联参数
      */
-    fun getTriggerParams(triggerContainer: TriggerContainer): Map<String, String> {
+    fun getTriggerParams(
+        triggerContainer: TriggerContainer,
+        inputParams: Map<String, String>? = null
+    ): Map<String, String> {
         val startParams = mutableMapOf<String, String>()
-        triggerContainer.params.forEach { param ->
-            val paramKey = param.id
-            val paramDefaultValue = param.defaultValue
-            val paramType = param.type
-            if (CascadePropertyUtils.supportCascadeParam(paramType)) {
-                CascadePropertyUtils.parseDefaultValue(
-                    key = paramKey,
-                    defaultValue = paramDefaultValue,
-                    type = paramType
-                ).forEach {
-                    startParams["$paramKey.${it.key}"] = it.value
-                }
-            } else {
-                startParams[paramKey] = paramDefaultValue.toString()
-            }
+        triggerContainer.params.forEach {
+            startParams.putAll(PipelineParamUtils.parseDefaultValue(it, inputParams))
         }
         // 填充前缀
         return PipelineVarUtil.fillVariableMap(startParams)
+    }
+
+    fun updateInstancePipelineCount(
+        projectId: String,
+        templateId: String
+    ) {
+        PipelineTemplateInstanceCountLock(redisOperation = redisOperation, templateId = templateId).use {
+            it.lock()
+            val instanceCount = templatePipelineDao.countByTemplates(
+                dslContext = dslContext,
+                projectId = projectId,
+                instanceType = PipelineInstanceTypeEnum.CONSTRAINT.name,
+                templateIds = listOf(templateId),
+                deleteFlag = false
+            )
+            pipelineTemplateInfoDao.updateInstancePipelineCount(
+                dslContext = dslContext,
+                projectId = projectId,
+                templateId = templateId,
+                count = instanceCount
+            )
+        }
     }
 }

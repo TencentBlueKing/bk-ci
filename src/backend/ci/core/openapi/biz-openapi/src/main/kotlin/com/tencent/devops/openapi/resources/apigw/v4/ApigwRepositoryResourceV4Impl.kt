@@ -65,14 +65,19 @@ class ApigwRepositoryResourceV4Impl @Autowired constructor(private val client: C
         apigwType: String?,
         userId: String,
         projectId: String,
-        repositoryType: ScmType?
+        repositoryType: ScmType?,
+        scmCode: String?
     ): Result<Page<RepositoryInfo>> {
-        logger.info("OPENAPI_REPOSITORY_V4|$userId|get user's use repostitories in project|$projectId|$repositoryType")
+        logger.info(
+            "OPENAPI_REPOSITORY_V4|$userId|get user's use repostitories in project|" +
+                    "$projectId|$repositoryType|$scmCode"
+        )
         return client.get(ServiceRepositoryResource::class).hasPermissionList(
             userId = userId,
             projectId = projectId,
             repositoryType = repositoryType?.name,
-            permission = Permission.USE
+            permission = Permission.USE,
+            scmCode = scmCode
         )
     }
 
@@ -108,6 +113,24 @@ class ApigwRepositoryResourceV4Impl @Autowired constructor(private val client: C
             projectId = projectId,
             repositoryHashId = repositoryHashId,
             repository = repository
+        )
+    }
+
+    override fun getByName(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        repositoryId: String,
+        repositoryType: RepositoryType?
+    ): Result<Repository> {
+        logger.info(
+            "OPENAPI_REPOSITORY_V4|$userId|getByName repo in project|$projectId|$repositoryId|$repositoryType"
+        )
+        return client.get(ServiceRepositoryResource::class).get(
+            projectId = projectId,
+            repositoryId = repositoryId,
+            repositoryType = repositoryType
         )
     }
 

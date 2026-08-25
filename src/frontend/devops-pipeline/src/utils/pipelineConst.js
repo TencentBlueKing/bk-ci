@@ -22,6 +22,8 @@ export const allVersionKeyList = [
     'BK_CI_MINOR_VERSION',
     'BK_CI_FIX_VERSION'
 ]
+
+export const TEMP_PARAM_SET_ID = 'TEMP_REUSE'
 export const semverVersionKeySet = new Set(allVersionKeyList)
 
 export const NAME_FILTER_TYPE = 'filterByName'
@@ -169,7 +171,8 @@ export const BUILD_HISTORY_TABLE_DEFAULT_COLUMNS = [
     'artifactQuality',
     'pipelineVersion',
     'remark',
-    'errorCode'
+    'errorCode',
+    'operate'
 ]
 export const BUILD_HISTORY_TABLE_COLUMNS_MAP = {
     buildNum: {
@@ -293,6 +296,13 @@ export const BUILD_HISTORY_TABLE_COLUMNS_MAP = {
         width: 180,
         id: 'buildMsg',
         label: 'history.buildMsg'
+    },
+    operate: {
+        index: 18,
+        id: 'operate',
+        label: 'operate',
+        fixed: 'right',
+        width: localStorage.getItem('operateWidth') ?? 80
     }
 }
 
@@ -315,4 +325,28 @@ export const TARGET_ACTION_ENUM = {
     COMMIT_TO_SOURCE_BRANCH_AND_REQUEST_MERGE: 'COMMIT_TO_SOURCE_BRANCH_AND_REQUEST_MERGE', // 提交到Dev(源分支)并创建MR
     CHECKOUT_BRANCH_AND_REQUEST_MERGE: 'CHECKOUT_BRANCH_AND_REQUEST_MERGE', // 新增分支并创建 MR 到默认分支
     COMMIT_TO_BRANCH: 'COMMIT_TO_BRANCH' // 提交到指定分支
+}
+
+export const TEMPLATE_TYPE = {
+    PIPELINE: 'PIPELINE'
+    // STAGE: 'STAGE',
+    // JOB: 'JOB',
+    // STEP: 'STEP'
+}
+
+export const STRATEGY_ENUM = {
+    AUTO: 'AUTO',
+    MANUAL: 'MANUAL'
+}
+
+export const DRAFT_STATUS = {
+    NORMAL: 'NORMAL',   // 无草稿
+    EXISTS: 'EXISTS',   // 草稿已存在
+    CONFLICT: 'CONFLICT',   // 草稿冲突
+    BASE_OUTDATED: 'BASE_OUTDATED',   // 草稿版本落后
+    BASE_BRANCH: 'BASE_BRANCH',   // 草稿基线为分支版本
+    PUBLISHED: 'PUBLISHED',   // 已发布
+    BRANCH: 'BRANCH',   // 分支版本-无草稿
+    RELEASE_OUTDATED: 'RELEASE_OUTDATED', // 基线版本落后-无草稿
+    DELETED: 'DELETED' // 已删除
 }

@@ -38,6 +38,7 @@ import com.tencent.devops.common.event.enums.PipelineBuildStatusBroadCastEventTy
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildQualityCheckBroadCastEvent
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildReviewBroadCastEvent
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCastEvent
+import com.tencent.devops.common.notify.enums.NotifyType
 import com.tencent.devops.common.notify.utils.NotifyUtils
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ManualReviewAction
@@ -391,18 +392,16 @@ class PipelineStageService @Autowired constructor(
         }
     }
 
-    fun cancelStageBySystem(
+    fun cancelQualityCheck(
         userId: String,
         buildInfo: BuildInfo,
         buildStage: PipelineBuildStage,
         timeout: Boolean? = false
     ) {
-
         val checkMap: Map<Boolean, StagePauseCheck?> = mapOf(
             true to buildStage.checkIn,
             false to buildStage.checkOut
         )
-
         checkMap.forEach { (inOrOut, pauseCheck) ->
             // #5654 如果是红线待审核状态则取消红线审核
             if (pauseCheck?.status == BuildStatus.QUALITY_CHECK_WAIT.name) {
@@ -419,8 +418,24 @@ class PipelineStageService @Autowired constructor(
                     timeout = timeout
                 )
             }
+        }
+    }
+
+    fun cancelStageBySystem(
+        userId: String,
+        buildInfo: BuildInfo,
+        buildStage: PipelineBuildStage,
+        timeout: Boolean? = false
+    ) {
+
+        val checkMap: Map<Boolean, StagePauseCheck?> = mapOf(
+            true to buildStage.checkIn,
+            false to buildStage.checkOut
+        )
+
+        checkMap.forEach { (inOrOut, pauseCheck) ->
             // #5654 如果是待人工审核则取消人工审核
-            else if (pauseCheck?.groupToReview() != null) {
+            if (pauseCheck?.groupToReview() != null) {
                 val pipelineInfo =
                     pipelineRepositoryService.getPipelineInfo(buildStage.projectId, buildStage.pipelineId)
                 cancelStage(
@@ -680,6 +695,9 @@ class PipelineStageService @Autowired constructor(
             )
             return
         }
+        val notifyType = NotifyUtils.checkNotifyType(checkIn.notifyType)
+        // 勾选企业微信群消息时，群通知通过 mentioned_list @审核人（与人工审核插件一致）
+        val mentionReceivers = notifyType.contains(NotifyType.WEWORK_GROUP.name)
         pipelineEventDispatcher.dispatch(
             PipelineBuildReviewBroadCastEvent(
                 source = "s(${stage.stageId}) waiting for REVIEW",
@@ -712,9 +730,9 @@ class PipelineStageService @Autowired constructor(
                 position = ControlPointPosition.BEFORE_POSITION,
                 stageSeq = stage.seq,
                 stageId = stage.stageId,
-                notifyType = NotifyUtils.checkNotifyType(checkIn.notifyType),
+                notifyType = notifyType,
                 markdownContent = checkIn.markdownContent,
-                mentionReceivers = true
+                mentionReceivers = mentionReceivers
             )
         )
         // #7971 无指定通知类型时、或者触发人是审核人时，不去通知触发人。

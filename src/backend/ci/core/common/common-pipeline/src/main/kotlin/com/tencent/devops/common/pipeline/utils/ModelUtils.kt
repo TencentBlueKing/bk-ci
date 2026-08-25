@@ -41,6 +41,10 @@ import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.RunCondition
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.RemoteTriggerElement
+import com.tencent.devops.common.pipeline.template.ITemplateModel
+import com.tencent.devops.common.pipeline.template.JobTemplateModel
+import com.tencent.devops.common.pipeline.template.StageTemplateModel
+import com.tencent.devops.common.pipeline.template.StepTemplateModel
 
 @Suppress("ComplexMethod")
 object ModelUtils {
@@ -119,7 +123,10 @@ object ModelUtils {
                 initContainerOldData(c)
                 val jobStatus = BuildStatus.parse(c.status)
                 c.canRetry = jobStatus.isFailure() || jobStatus.isCancel()
-                if (c.canRetry == true) {
+                if (c.matrixGroupFlag == true) {
+                    // 矩阵父容器：下钻到分裂后的子容器，按子容器与子插件状态计算 canRetry/canSkip
+                    refreshMatrixGroup(c)
+                } else if (c.canRetry == true) {
                     refreshContainer(c)
                 }
             }
@@ -127,13 +134,64 @@ object ModelUtils {
     }
 
     private fun refreshContainer(container: Container) {
-        val failElements = mutableListOf<Element>()
         container.elements.forEach { e ->
-            refreshElement(element = e, failElements = failElements)
+            refreshElement(element = e)
         }
     }
 
-    private fun refreshElement(element: Element, failElements: MutableList<Element>) {
+    /**
+     * 刷新矩阵父容器下所有子容器及子插件的 canRetry/canSkip 状态，
+     * 使矩阵子Job支持与普通Job对齐的局部重试/跳过。
+     * 子插件为 [com.tencent.devops.common.pipeline.pojo.element.matrix.MatrixStatusElement]，
+     * 自身不含 additionalOptions，需按下标从父模板元素读取重试/跳过配置。
+     */
+    private fun refreshMatrixGroup(matrixContainer: Container) {
+        val groupContainers = matrixContainer.fetchGroupContainers() ?: return
+        val templateElements = matrixContainer.elements
+        groupContainers.forEach { child ->
+            val childStatus = BuildStatus.parse(child.status)
+            child.canRetry = childStatus.isFailure() || childStatus.isCancel()
+            child.elements.forEachIndexed { index, childElement ->
+                refreshMatrixElement(
+                    templateElement = templateElements.getOrNull(index),
+                    childElement = childElement
+                )
+            }
+        }
+    }
+
+    /**
+     * 计算单个矩阵子插件的 canRetry/canSkip，逻辑镜像 [refreshElement]：
+     * 因子插件 MatrixStatusElement 无 additionalOptions，重试/跳过配置从父模板元素 [templateElement] 读取，
+     * 再结合子插件 [childElement] 自身的运行状态判定。
+     */
+    private fun refreshMatrixElement(templateElement: Element?, childElement: Element) {
+        val additionalOptions = templateElement?.additionalOptions
+        if (additionalOptions == null || !additionalOptions.enable) {
+            childElement.canRetry = null
+            childElement.canSkip = null
+            return
+        }
+        val taskStatus = BuildStatus.parse(childElement.status)
+        if (!taskStatus.isFailure() && !taskStatus.isCancel()) {
+            childElement.canRetry = null
+            childElement.canSkip = null
+            return
+        }
+        childElement.canRetry = additionalOptions.manualRetry
+        if (additionalOptions.continueWhenFailed) { // 开启了自动跳过
+            if (additionalOptions.manualSkip == true) { // 开启了手动跳过 会覆盖自动跳过
+                childElement.canSkip = true
+            } else {
+                childElement.canRetry = null // 自动跳过的不能手动重试
+            }
+        } else if (isFailureAwareCondition(additionalOptions.runCondition)) {
+            childElement.canRetry = null
+            childElement.canSkip = null
+        }
+    }
+
+    private fun refreshElement(element: Element) {
 
         val additionalOptions = element.additionalOptions
         if (additionalOptions == null || !additionalOptions.enable) {
@@ -155,22 +213,18 @@ object ModelUtils {
             } else {
                 element.canRetry = null // 自动跳过的不能手动重试
             }
-        } else if (additionalOptions.runCondition == RunCondition.PRE_TASK_FAILED_ONLY ||
-            additionalOptions.runCondition == RunCondition.PRE_TASK_FAILED_BUT_CANCEL ||
-            additionalOptions.runCondition == RunCondition.PRE_TASK_FAILED_EVEN_CANCEL
-        ) {
-            // 前面有失败的插件时也要运行的插件，将前面的失败插件置为不可重试和跳过
+        } else if (isFailureAwareCondition(additionalOptions.runCondition)) {
+            // “失败时才运行”的插件自身不放开重试/跳过；但不再影响前序失败插件的重试/跳过按钮
             element.canRetry = null
             element.canSkip = null
-            failElements.forEach { // 只为了减少传输数据，置空不会被序列化出字段
-                it.canSkip = null
-                it.canRetry = null
-            }
         }
+    }
 
-        if (element.canRetry == true) { // 先记录可重试的执行失败插件
-            failElements.add(element)
-        }
+    private fun isFailureAwareCondition(runCondition: RunCondition?): Boolean {
+        return runCondition == RunCondition.PRE_TASK_FAILED_ONLY ||
+            runCondition == RunCondition.PRE_TASK_FAILED_ONLY_EXCEPT_SKIP ||
+            runCondition == RunCondition.PRE_TASK_FAILED_BUT_CANCEL ||
+            runCondition == RunCondition.PRE_TASK_FAILED_EVEN_CANCEL
     }
 
     /**
@@ -287,5 +341,19 @@ object ModelUtils {
             }
         }
         return atomCodes
+    }
+
+    fun getTemplateModelAtoms(templateModel: ITemplateModel): MutableSet<String> = when (templateModel) {
+        is Model -> getModelAtoms(templateModel)
+        is StageTemplateModel -> templateModel.stages
+            .flatMap { it.containers }
+            .flatMap { it.elements }
+            .mapTo(mutableSetOf()) { it.getAtomCode() }
+        is JobTemplateModel -> templateModel.containers
+            .flatMap { it.elements }
+            .mapTo(mutableSetOf()) { it.getAtomCode() }
+        is StepTemplateModel -> templateModel.container.elements
+            .mapTo(mutableSetOf()) { it.getAtomCode() }
+        else -> mutableSetOf()
     }
 }

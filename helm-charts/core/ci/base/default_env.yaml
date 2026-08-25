@@ -64,6 +64,9 @@ bkApigwCmsiUrl: http://bkapi.example.com
 bkApigwUserWebUrl: http://bkapi.example.com
 bkCiJwtEnable: false
 bkCiNotifyUserBlackListCacheSize: 50000
-bkCiRabbitQuorumEnable: false
-bkCiSyncCronEnabled: false
 bkCiPlatformManager: admin
+bkCiRabbitQuorumEnable: false
+# 旧 key，仅兼容存量 values / bkenv；取值处（helm helper / render_tpl）会回填到新 key
+bkCiSyncCronEnabled: true
+# 权限资源定时同步，实际生效 key
+bkCiAuthSyncCronEnabled: true

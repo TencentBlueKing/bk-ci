@@ -143,7 +143,7 @@ class TGitMrActionGit(
         val event = event()
         // 获取目标分支的文件列表
         val targetRef =
-            GitActionCommon.getTriggerBranch(event.object_attributes.target_branch)
+            GitActionCommon.trimRef(event.object_attributes.target_branch)
         val targetBranchYamlPathList = GitActionCommon.getYamlPathList(
             action = this,
             gitProjectId = getGitProjectIdOrName(),

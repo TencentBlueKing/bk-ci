@@ -133,10 +133,7 @@ interface UserProjectResource {
         userId: String,
         @Parameter(description = "项目ID英文名标识", required = true)
         @PathParam("english_name")
-        projectId: String,
-        @Parameter(description = "access_token")
-        @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
-        accessToken: String?
+        projectId: String
     ): Result<ProjectVO>
 
     @GET
@@ -151,10 +148,7 @@ interface UserProjectResource {
         tenantId: String? = null,
         @Parameter(description = "项目ID英文名标识", required = true)
         @PathParam("english_name")
-        projectId: String,
-        @Parameter(description = "access_token")
-        @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
-        accessToken: String?
+        projectId: String
     ): Result<ProjectVO>
 
     @GET
@@ -166,10 +160,7 @@ interface UserProjectResource {
         userId: String,
         @Parameter(description = "项目ID英文名标识", required = true)
         @PathParam("english_name")
-        projectId: String,
-        @Parameter(description = "access_token")
-        @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
-        accessToken: String?
+        projectId: String
     ): Result<ProjectDiffVO>
 
     @GET
@@ -181,10 +172,7 @@ interface UserProjectResource {
         userId: String,
         @Parameter(description = "项目ID英文名标识", required = true)
         @PathParam("english_name")
-        projectId: String,
-        @Parameter(description = "access_token")
-        @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
-        accessToken: String?
+        projectId: String
     ): Result<ProjectVO?>
 
     @POST
@@ -218,10 +206,7 @@ interface UserProjectResource {
         @PathParam("project_id")
         projectId: String,
         @Parameter(description = "项目信息", required = true)
-        projectUpdateInfo: ProjectUpdateInfo,
-        @Parameter(description = "access_token")
-        @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
-        accessToken: String?
+        projectUpdateInfo: ProjectUpdateInfo
     ): Result<Boolean>
 
     @PUT
@@ -254,10 +239,7 @@ interface UserProjectResource {
         @FormDataParam("logo")
         inputStream: InputStream,
         @FormDataParam("logo")
-        disposition: FormDataContentDisposition,
-        @Parameter(description = "access_token")
-        @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
-        accessToken: String?
+        disposition: FormDataContentDisposition
     ): Result<ProjectLogo>
 
     @POST
@@ -270,10 +252,7 @@ interface UserProjectResource {
         userId: String,
         @Parameter(description = "文件", required = true)
         @FormDataParam("logo")
-        inputStream: InputStream,
-        @Parameter(description = "access_token")
-        @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
-        accessToken: String?
+        inputStream: InputStream
     ): Result<String>
 
     @PUT
@@ -325,9 +304,6 @@ interface UserProjectResource {
     @Path("/{projectCode}/users/{userId}/verify")
     @Operation(summary = " 校验用户是否项目成员")
     fun verifyUserProjectPermission(
-        @Parameter(description = "accessToken", required = false)
-        @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
-        accessToken: String? = null,
         @Parameter(description = "项目代码", required = true)
         @PathParam("projectCode")
         projectCode: String,
@@ -404,4 +380,19 @@ interface UserProjectResource {
         @PathParam("projectId")
         projectId: String
     ): Result<String>
+
+    @GET
+    @Path("/{english_name}/isHidden")
+    @Operation(summary = "判断项目是否隐藏")
+    fun isHidden(
+        @Parameter(description = "userId", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @Parameter(
+            description = "项目ID英文名标识",
+            required = true
+        )
+        @PathParam("english_name")
+        projectId: String
+    ): Result<Boolean>
 }

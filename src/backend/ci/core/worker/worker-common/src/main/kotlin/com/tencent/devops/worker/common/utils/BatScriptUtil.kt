@@ -38,6 +38,16 @@ import java.nio.channels.FileLock
 import java.nio.charset.Charset
 
 object BatScriptUtil {
+
+    private val retryTimes = object : ThreadLocal<Int>() {
+        override fun initialValue(): Int {
+            return 0
+        }
+    }
+
+    fun retryTimes(): Int = retryTimes.get()
+    fun retryClean() = retryTimes.remove()
+
     private const val setEnv = ":setEnv\r\n" +
         "    set file_save_dir=\"##resultFile##\"\r\n" +
         "    echo %~1=%~2 >>%file_save_dir%\r\n" +
@@ -48,6 +58,11 @@ object BatScriptUtil {
         "    set file_save_dir=\"##gateValueFile##\"\r\n" +
         "    echo %~1=%~2 >>%file_save_dir%\r\n" +
         "    set %~1=%~2\r\n" +
+        "    goto:eof\r\n"
+
+    private const val setFlag = ":ciTaskSetFlag\r\n" +
+        "    set file_save_dir=\"##flagFile##\"\r\n" +
+        "    echo %~1 >>%file_save_dir%\r\n" +
         "    goto:eof\r\n"
 
     private val logger = LoggerFactory.getLogger(BatScriptUtil::class.java)
@@ -64,6 +79,10 @@ object BatScriptUtil {
         "\"" to "\\\""
     )
 
+    private const val RETRY_COUNT = 1
+    private const val FLAG_INIT = "init"
+    private const val FLAG_SCRIPT = "script"
+
     @Suppress("ALL")
     fun execute(
         buildId: String,
@@ -77,7 +96,8 @@ object BatScriptUtil {
         jobId: String? = null,
         stepId: String? = null,
         charsetType: String? = null,
-        taskId: String? = null
+        taskId: String? = null,
+        echoOff: Boolean = true
     ): String {
         var fileLock: FileLock? = null
         try {
@@ -87,7 +107,8 @@ object BatScriptUtil {
                 runtimeVariables = runtimeVariables,
                 dir = dir,
                 workspace = workspace,
-                charsetType = charsetType
+                charsetType = charsetType,
+                echoOff = echoOff
             )
 
             fileLock = tryLock(file) // 拿不锁也照样执行
@@ -104,14 +125,69 @@ object BatScriptUtil {
                 taskId = taskId
             )
         } catch (ignore: Throwable) {
-            val errorInfo = errorMessage ?: "Fail to execute bat script $script"
-            logger.warn(errorInfo, ignore)
-            throw ignore
+            return checkFlag(
+                script = script,
+                buildId = buildId,
+                runtimeVariables = runtimeVariables,
+                dir = dir,
+                prefix = prefix,
+                errorMessage = errorMessage,
+                workspace = workspace,
+                print2Logger = print2Logger,
+                jobId = jobId,
+                stepId = stepId,
+                charsetType = charsetType,
+                taskId = taskId,
+                ignore = ignore
+            )
         } finally {
             fileLock?.release()
         }
     }
 
+    private fun checkFlag(
+        buildId: String,
+        script: String,
+        runtimeVariables: Map<String, String>,
+        dir: File,
+        prefix: String = "",
+        errorMessage: String? = null,
+        workspace: File = dir,
+        print2Logger: Boolean = true,
+        jobId: String? = null,
+        stepId: String? = null,
+        charsetType: String? = null,
+        taskId: String? = null,
+        ignore: Throwable
+    ): String {
+        if (!ScriptEnvUtils.readFlagFile(buildId, dir).contains(FLAG_SCRIPT) && retryTimes.get() < RETRY_COUNT) {
+            logger.info(
+                "AUTO Retry to execute bat script, retry times: ${retryTimes.get()}." +
+                    "last error message: ${ignore.message}"
+            )
+            retryTimes.set(retryTimes.get() + 1)
+            ScriptEnvUtils.deleteFlagFile(buildId, dir)
+            return execute(
+                script = script,
+                buildId = buildId,
+                runtimeVariables = runtimeVariables,
+                dir = dir,
+                prefix = prefix,
+                errorMessage = errorMessage,
+                workspace = workspace,
+                print2Logger = print2Logger,
+                jobId = jobId,
+                stepId = stepId,
+                charsetType = charsetType,
+                taskId = taskId,
+                echoOff = retryTimes.get() < RETRY_COUNT
+            )
+        } else {
+            val errorInfo = errorMessage ?: "Fail to execute bat script $script"
+            logger.warn(errorInfo, ignore)
+            throw ignore
+        }
+    }
     /**
      * #5672 补充丢失的代码：feat: 对BatchScript脚本执行过程加锁，防止被系统清理掉 #5527
      */
@@ -131,7 +207,8 @@ object BatScriptUtil {
         runtimeVariables: Map<String, String>,
         dir: File,
         workspace: File = dir,
-        charsetType: String? = null
+        charsetType: String? = null,
+        echoOff: Boolean = true
     ): File {
         val tmpDir = System.getProperty("java.io.tmpdir")
         val file = if (tmpDir.isNullOrBlank()) {
@@ -143,21 +220,27 @@ object BatScriptUtil {
         file.deleteOnExit()
 
         val command = StringBuilder()
-
-        command.append("@echo off")
-            .append("\r\n")
-            .append("set $WORKSPACE_ENV=${workspace.absolutePath}\r\n")
-            .append("set DEVOPS_BUILD_SCRIPT_FILE=${file.absolutePath}\r\n")
-            .append("\r\n")
+        val set = StringBuilder()
 
         runtimeVariables.plus(CommonEnv.getCommonEnv())
             .filter { !specialEnv(it.key, it.value) }
             .forEach { (name, value) ->
                 // 特殊保留字符转义
                 val clean = escapeEnv(value)
-                command.append("set $name=\"$clean\"\r\n") // 双引号防止变量值有空格而意外截断定义
-                command.append("set $name=%$name:~1,-1%\r\n") // 去除双引号，防止被程序读到有双引号的变量值
+                set.append("    set $name=\"$clean\"\r\n") // 双引号防止变量值有空格而意外截断定义
+                set.append("    set $name=%$name:~1,-1%\r\n") // 去除双引号，防止被程序读到有双引号的变量值
             }
+
+        command.let {
+            if (echoOff) {
+                it.append("@echo off\r\n")
+            } else it
+        }.append("call:ciTaskSetFlag $FLAG_INIT\r\n")
+            .append("set $WORKSPACE_ENV=${workspace.absolutePath}\r\n")
+            .append("set DEVOPS_BUILD_SCRIPT_FILE=${file.absolutePath}\r\n")
+            .append("call:taskEnvSet\r\n")
+            .append("call:ciTaskSetFlag $FLAG_SCRIPT\r\n")
+            .append("\r\n")
 
         command.append(script.replace("\n", "\r\n"))
             .append("\r\n")
@@ -170,11 +253,21 @@ object BatScriptUtil {
                 )
             )
             .append(
+                setFlag.replace(
+                    oldValue = "##flagFile##",
+                    newValue = File(dir, ScriptEnvUtils.getFlagFile(buildId)).absolutePath
+                )
+            )
+            .append(
                 setGateValue.replace(
                     oldValue = "##gateValueFile##",
                     newValue = File(dir, ScriptEnvUtils.getQualityGatewayEnvFile()).canonicalPath
                 )
             )
+            /*taskEnvSet模块，挪到batch脚本尾部，能避免一些batch的bug*/
+            .append(":taskEnvSet\r\n")
+            .append(set)
+            .append("    goto:eof\n")
 
         // #4601 没有指定编码字符集时采用获取系统的默认字符集
         val charset = when (charsetType?.let { CharsetType.valueOf(it) }) {

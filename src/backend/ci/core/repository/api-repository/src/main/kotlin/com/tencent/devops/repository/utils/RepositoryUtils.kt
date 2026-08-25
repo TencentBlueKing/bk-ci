@@ -36,6 +36,7 @@ import com.tencent.devops.repository.pojo.CodeTGitRepository
 import com.tencent.devops.repository.pojo.GithubRepository
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.ScmGitRepository
+import com.tencent.devops.repository.pojo.ScmSvnRepository
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import com.tencent.devops.scm.utils.code.svn.SvnUtils
@@ -50,7 +51,8 @@ object RepositoryUtils {
         userName: String,
         scmType: ScmType,
         repositoryUrl: String,
-        credentialId: String?
+        credentialId: String?,
+        scmCode: String? = null
     ): Repository {
         val realCredentialId = credentialId ?: ""
         return when (scmType) {
@@ -129,6 +131,42 @@ object RepositoryUtils {
                     userName = userName,
                     projectId = projectId,
                     repoHashId = null
+                )
+            }
+            ScmType.SCM_GIT -> {
+                if (scmCode.isNullOrBlank()) {
+                    throw IllegalArgumentException("scmCode is blank")
+                }
+                val projectName = GitUtils.getProjectName(repositoryUrl)
+                ScmGitRepository(
+                    aliasName = "$PREFIX_ALIAS_NAME$projectName",
+                    url = repositoryUrl,
+                    credentialId = realCredentialId,
+                    projectName = projectName,
+                    userName = userName,
+                    authType = RepoAuthType.HTTP,
+                    projectId = projectId,
+                    repoHashId = null,
+                    gitProjectId = 0L,
+                    scmCode = scmCode
+                )
+            }
+
+            ScmType.SCM_SVN -> {
+                if (scmCode.isNullOrBlank()) {
+                    throw IllegalArgumentException("scmCode is blank")
+                }
+                val projectName = SvnUtils.getSvnProjectName(repositoryUrl)
+                ScmSvnRepository(
+                    aliasName = "$PREFIX_ALIAS_NAME$projectName",
+                    url = repositoryUrl,
+                    credentialId = realCredentialId,
+                    projectName = projectName,
+                    userName = userName,
+                    projectId = projectId,
+                    repoHashId = null,
+                    svnType = CodeSvnRepository.SVN_TYPE_HTTP,
+                    scmCode = scmCode
                 )
             }
             else -> throw IllegalArgumentException("Unknown repository type")

@@ -29,6 +29,7 @@ package com.tencent.devops.environment.permission
 
 import com.tencent.bk.sdk.iam.util.AuthCacheUtil
 import com.tencent.devops.auth.api.service.ServicePermissionAuthResource
+import com.tencent.devops.auth.api.service.ServiceResourceMemberResource
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
@@ -36,14 +37,17 @@ import com.tencent.devops.common.auth.rbac.utils.RbacAuthUtils
 import com.tencent.devops.common.auth.utils.AuthCacheKeyUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.service.tenant.TenantUtils
+import com.tencent.devops.environment.permission.creativestream.CreativeStreamNodePermissionHandler
 import com.tencent.devops.model.environment.tables.records.TEnvRecord
 import com.tencent.devops.model.environment.tables.records.TNodeRecord
 import org.slf4j.LoggerFactory
 
 class RbacEnvironmentPermissionService(
     private val client: Client,
-    private val tokenCheckService: ClientTokenService
+    private val tokenCheckService: ClientTokenService,
+    private val creativeStreamNodePermissionHandler: CreativeStreamNodePermissionHandler
 ) : EnvironmentPermissionService {
     val envResourceType = AuthResourceType.ENVIRONMENT_ENVIRONMENT.value
     val nodeResourceType = AuthResourceType.ENVIRONMENT_ENV_NODE.value
@@ -169,38 +173,80 @@ class RbacEnvironmentPermissionService(
         )
     }
 
-    override fun listNodeByPermission(userId: String, projectId: String, permission: AuthPermission): Set<Long> {
-        return client.get(ServicePermissionAuthResource::class).getUserResourceByPermission(
-            token = tokenCheckService.getSystemToken()!!,
-            userId = userId,
-            action = buildNodeAction(permission),
-            projectCode = projectId,
-            resourceType = nodeResourceType
-        ).data?.map { HashUtil.decodeIdToLong(it) }?.toSet() ?: emptySet()
+    override fun listNodeByPermission(
+        userId: String,
+        projectId: String,
+        permission: AuthPermission,
+        resourceType: AuthResourceType
+    ): Set<Long> {
+        val channel = ChannelCode.getRequestChannelCode()
+        return if (channel == ChannelCode.CREATIVE_STREAM ||
+            resourceType == AuthResourceType.CREATIVE_STREAM_NODE
+        ) {
+            creativeStreamNodePermissionHandler.listNodePermissions(
+                userId = userId,
+                projectId = projectId,
+                permissions = setOf(permission)
+            )[permission] ?: emptySet()
+        } else {
+            client.get(ServicePermissionAuthResource::class).getUserResourceByPermission(
+                token = tokenCheckService.getSystemToken()!!,
+                userId = userId,
+                action = buildNodeAction(permission, resourceType),
+                projectCode = projectId,
+                resourceType = resourceType.value
+            ).data?.map { HashUtil.decodeIdToLong(it) }?.toSet() ?: emptySet()
+        }
     }
 
     override fun listNodeByPermissions(
         userId: String,
         projectId: String,
-        permissions: Set<AuthPermission>
+        permissions: Set<AuthPermission>,
+        resourceType: AuthResourceType
     ): Map<AuthPermission, List<String>> {
+        if (ChannelCode.getRequestChannelCode() == ChannelCode.CREATIVE_STREAM ||
+            resourceType == AuthResourceType.CREATIVE_STREAM_NODE
+        ) {
+            return creativeStreamNodePermissionHandler.listNodePermissions(
+                userId = userId,
+                projectId = projectId,
+                permissions = permissions
+            ).mapValues { (_, ids) -> ids.map(HashUtil::encodeLongId) }
+        }
         return client.get(ServicePermissionAuthResource::class).getUserResourcesByPermissions(
             token = tokenCheckService.getSystemToken()!!,
             userId = userId,
             projectCode = projectId,
-            resourceType = nodeResourceType,
-            action = RbacAuthUtils.buildActionList(permissions, AuthResourceType.ENVIRONMENT_ENV_NODE)
+            resourceType = resourceType.value,
+            action = RbacAuthUtils.buildActionList(permissions, resourceType)
         ).data ?: emptyMap()
     }
 
-    override fun listNodeByRbacPermission(
+    override fun listNodePermission(
         userId: String,
         projectId: String,
         nodeRecordList: List<TNodeRecord>,
-        authPermission: AuthPermission
+        authPermission: AuthPermission,
+        resourceType: AuthResourceType
     ): List<TNodeRecord> {
-        val hasRbacPermissionNodeIds = listNodeByPermission(userId, projectId, authPermission)
-        val hasRbacPermissionNode = nodeRecordList.filter { hasRbacPermissionNodeIds.contains(it.nodeId) }
+        if (ChannelCode.getRequestChannelCode() == ChannelCode.CREATIVE_STREAM ||
+            resourceType == AuthResourceType.CREATIVE_STREAM_NODE
+        ) {
+            val permissionNodeIds = creativeStreamNodePermissionHandler.listNodePermissions(
+                userId = userId,
+                projectId = projectId,
+                nodeIds = nodeRecordList.map { it.nodeId },
+                permissions = setOf(authPermission)
+            )[authPermission] ?: emptySet()
+            return nodeRecordList.filter { it.nodeId in permissionNodeIds }
+        }
+        val hasRbacPermissionNodeIds = listNodeByPermission(
+            userId, projectId, authPermission, resourceType
+        )
+        val hasRbacPermissionNode = nodeRecordList.filter {
+            hasRbacPermissionNodeIds.contains(it.nodeId)
+        }
         return hasRbacPermissionNode.ifEmpty { emptyList() }
     }
 
@@ -208,82 +254,148 @@ class RbacEnvironmentPermissionService(
         userId: String,
         projectId: String,
         nodeId: Long,
-        permission: AuthPermission
+        permission: AuthPermission,
+        resourceType: AuthResourceType
     ): Boolean {
+        if (ChannelCode.getRequestChannelCode() == ChannelCode.CREATIVE_STREAM ||
+            resourceType == AuthResourceType.CREATIVE_STREAM_NODE
+        ) {
+            return creativeStreamNodePermissionHandler.checkPermission(
+                userId = userId,
+                projectId = projectId,
+                nodeId = nodeId,
+                permission = permission
+            )
+        }
         val cacheKey = AuthCacheKeyUtil.getCacheKey(
             userId = userId,
-            resourceType = nodeResourceType,
-            action = buildNodeAction(permission),
+            resourceType = resourceType.value,
+            action = buildNodeAction(permission, resourceType),
             projectCode = projectId,
             resourceCode = HashUtil.encodeLongId(nodeId)
         )
         return AuthCacheUtil.cachePermission(cacheKey) {
-            client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
-                token = tokenCheckService.getSystemToken()!!,
-                userId = userId,
-                projectCode = projectId,
-                resourceCode = HashUtil.encodeLongId(nodeId),
-                resourceType = nodeResourceType,
-                relationResourceType = null,
-                action = buildNodeAction(permission)
-            ).data ?: false
+            client.get(ServicePermissionAuthResource::class)
+                .validateUserResourcePermissionByRelation(
+                    token = tokenCheckService.getSystemToken()!!,
+                    userId = userId,
+                    projectCode = projectId,
+                    resourceCode = HashUtil.encodeLongId(nodeId),
+                    resourceType = resourceType.value,
+                    relationResourceType = null,
+                    action = buildNodeAction(permission, resourceType)
+                ).data ?: false
         }
     }
 
-    override fun checkNodePermission(userId: String, projectId: String, permission: AuthPermission): Boolean {
+    override fun checkNodePermission(
+        userId: String,
+        projectId: String,
+        permission: AuthPermission,
+        resourceType: AuthResourceType
+    ): Boolean {
+        if ((ChannelCode.getRequestChannelCode() == ChannelCode.CREATIVE_STREAM ||
+                    resourceType == AuthResourceType.CREATIVE_STREAM_NODE) &&
+            permission == AuthPermission.CREATE
+        ) {
+            return true
+        }
         val cacheKey = AuthCacheKeyUtil.getCacheKey(
             userId = userId,
             resourceType = AuthResourceType.PROJECT.value,
-            action = buildNodeAction(permission),
+            action = buildNodeAction(permission, resourceType),
             projectCode = projectId,
             resourceCode = projectId
         )
         return AuthCacheUtil.cachePermission(cacheKey) {
-            client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
-                token = tokenCheckService.getSystemToken()!!,
-                userId = userId,
-                projectCode = projectId,
-                resourceCode = projectId,
-                resourceType = AuthResourceType.PROJECT.value,
-                relationResourceType = null,
-                action = buildNodeAction(permission)
-            ).data ?: false
+            client.get(ServicePermissionAuthResource::class)
+                .validateUserResourcePermissionByRelation(
+                    token = tokenCheckService.getSystemToken()!!,
+                    userId = userId,
+                    projectCode = projectId,
+                    resourceCode = projectId,
+                    resourceType = AuthResourceType.PROJECT.value,
+                    relationResourceType = null,
+                    action = buildNodeAction(permission, resourceType)
+                ).data ?: false
         }
     }
 
-    override fun createNode(userId: String, projectId: String, nodeId: Long, nodeName: String) {
+    override fun createNode(
+        userId: String,
+        projectId: String,
+        nodeId: Long,
+        nodeName: String,
+        resourceType: AuthResourceType
+    ) {
         client.get(ServicePermissionAuthResource::class).resourceCreateRelation(
             userId = userId,
             tenantId = TenantUtils.getTenantIdByEnglishName(projectId),
             token = tokenCheckService.getSystemToken()!!,
             projectCode = projectId,
-            resourceType = nodeResourceType,
+            resourceType = resourceType.value,
             resourceCode = HashUtil.encodeLongId(nodeId),
             resourceName = nodeName
         )
     }
 
-    override fun updateNode(userId: String, projectId: String, nodeId: Long, nodeName: String) {
+    override fun updateNode(
+        userId: String,
+        projectId: String,
+        nodeId: Long,
+        nodeName: String,
+        resourceType: AuthResourceType
+    ) {
         client.get(ServicePermissionAuthResource::class).resourceModifyRelation(
             token = tokenCheckService.getSystemToken()!!,
             projectCode = projectId,
-            resourceType = nodeResourceType,
+            resourceType = resourceType.value,
             resourceCode = HashUtil.encodeLongId(nodeId),
             resourceName = nodeName
         )
     }
 
-    override fun deleteNode(projectId: String, nodeId: Long) {
+    override fun deleteNode(
+        projectId: String,
+        nodeId: Long,
+        resourceType: AuthResourceType
+    ) {
         client.get(ServicePermissionAuthResource::class).resourceDeleteRelation(
             token = tokenCheckService.getSystemToken()!!,
             projectCode = projectId,
-            resourceType = nodeResourceType,
+            resourceType = resourceType.value,
             resourceCode = HashUtil.encodeLongId(nodeId)
         )
     }
 
-    private fun buildNodeAction(authPermission: AuthPermission): String {
-        return RbacAuthUtils.buildAction(authPermission, AuthResourceType.ENVIRONMENT_ENV_NODE)
+    override fun copyNodeGroupMembers(
+        sourceProjectId: String,
+        targetProjectId: String,
+        nodeId: Long
+    ) {
+        val nodeHashId = HashUtil.encodeLongId(nodeId)
+        try {
+            client.get(ServiceResourceMemberResource::class).copyResourceGroupMembers(
+                token = tokenCheckService.getSystemToken() ?: "",
+                sourceProjectCode = sourceProjectId,
+                resourceType = nodeResourceType,
+                sourceResourceCode = nodeHashId,
+                targetProjectCode = targetProjectId,
+                targetResourceCode = nodeHashId
+            )
+        } catch (ignored: Exception) {
+            logger.warn(
+                "copy node group members failed|$sourceProjectId|$targetProjectId|$nodeHashId",
+                ignored
+            )
+        }
+    }
+
+    private fun buildNodeAction(
+        authPermission: AuthPermission,
+        resourceType: AuthResourceType = AuthResourceType.ENVIRONMENT_ENV_NODE
+    ): String {
+        return RbacAuthUtils.buildAction(authPermission, resourceType)
     }
 
     private fun buildEnvAction(authPermission: AuthPermission): String {

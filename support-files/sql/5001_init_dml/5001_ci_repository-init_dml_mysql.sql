@@ -14,6 +14,8 @@ REPLACE INTO T_REPOSITORY_SCM_PROVIDER (ID, PROVIDER_CODE, PROVIDER_TYPE, NAME, 
     VALUES (5, 'PERFORCE', 'P4', 'Perforce', 'Perforce', 'SCM_P4', '/ms/artifactory/api/user/artifactories/file/download?filePath=%2Ffile%2Fpng%2FcodeP4.png&logo=true', '/UserGuide/Setup/guidelines-bkdevops-perforce.md', '["USERNAME_PASSWORD"]', false, false, true, 'REQUEST_HEADER', '{"eventTypeList":["CHANGE_COMMIT","SHELVE_COMMIT"],"eventTypeActionMap":{}}', false, '2025-03-12 00:00:00', '2025-03-12 00:00:00');
 REPLACE INTO T_REPOSITORY_SCM_PROVIDER (ID, PROVIDER_CODE, PROVIDER_TYPE, NAME, `DESC`, SCM_TYPE, LOGO_URL, DOC_URL, CREDENTIAL_TYPE_LIST, API, MERGE, WEBHOOK, WEBHOOK_SECRET_TYPE, WEBHOOK_PROPS, PAC, CREATE_TIME, UPDATE_TIME)
     VALUES (6, 'GITEE', 'GIT', 'Gitee', 'Gitee', 'SCM_GIT', '/ms/artifactory/api/user/artifactories/file/download?filePath=%2Ffile%2Fpng%2FcodeGitee.png&logo=true', '/UserGuide/Setup/guidelines-bkdevops-gitee.md', '["OAUTH", "TOKEN_USERNAME_PASSWORD", "TOKEN_SSH_PRIVATEKEY"]', true, false, true, 'REQUEST_HEADER', '{ "eventTypeList": [ "PUSH", "MERGE_REQUEST" ], "eventTypeActionMap": { "PUSH": [ "NEW_BRANCH", "PUSH_FILE" ], "MERGE_REQUEST": [ "OPEN", "REOPEN", "CLOSE", "MERGE", "PUSH_UPDATE", "UPDATE" ] } }', false, '2025-03-12 00:00:00', '2025-03-12 00:00:00');
+REPLACE INTO T_REPOSITORY_SCM_PROVIDER (ID, PROVIDER_CODE, PROVIDER_TYPE, NAME, `DESC`, SCM_TYPE, LOGO_URL, DOC_URL, CREDENTIAL_TYPE_LIST, API, MERGE, WEBHOOK, WEBHOOK_SECRET_TYPE, WEBHOOK_PROPS, PAC, CREATE_TIME, UPDATE_TIME)
+    VALUES (7, 'BKCODE', 'GIT', 'BKCode', 'BKCode', 'SCM_GIT', '/ms/artifactory/api/user/artifactories/file/download?filePath=%2Ffile%2Fpng%2FcodeBKCode.png&logo=true', '/UserGuide/Setup/guidelines-bkdevops-bkcode.md', '["TOKEN_USERNAME_PASSWORD", "TOKEN_SSH_PRIVATEKEY"]', true, false, true, 'REQUEST_HEADER', '{"eventTypeList":["PUSH","TAG_PUSH","MERGE_REQUEST","ISSUES","NOTE","REVIEW"],"eventTypeActionMap":{"PUSH":["NEW_BRANCH","PUSH_FILE"],"MERGE_REQUEST":["OPEN","REOPEN","CLOSE","MERGE","PUSH_UPDATE","UPDATE"],"ISSUES":["OPEN","REOPEN","CLOSE","UPDATE"]}}', false, '2025-03-12 00:00:00', '2025-03-12 00:00:00');
 
 
 -- 源码管理配置
@@ -29,3 +31,25 @@ INSERT IGNORE  INTO T_REPOSITORY_SCM_CONFIG (ID, SCM_CODE, NAME, PROVIDER_CODE, 
     VALUES (5, 'CODE_P4', 'Perforce', 'P4', 'CODE_P4', null, '/ms/artifactory/api/user/artifactories/file/download?filePath=%2Ffile%2Fpng%2FcodeP4.png&logo=true', '["USERNAME_PASSWORD"]', 'NEW', null, 'SUCCESS', false, false, false, true, '{"providerCode":"P4","providerType":"P4","proxyEnabled":false,"oauth2Enabled":false}', 'system', 'system', '2025-03-12 00:00:00', '2025-03-12 00:00:00');
 INSERT IGNORE  INTO T_REPOSITORY_SCM_CONFIG (ID, SCM_CODE, NAME, PROVIDER_CODE, SCM_TYPE, HOSTS, LOGO_URL, CREDENTIAL_TYPE_LIST, OAUTH_TYPE, OAUTH_SCM_CODE, STATUS, OAUTH2_ENABLED, MERGE_ENABLED, PAC_ENABLED, WEBHOOK_ENABLED, PROVIDER_PROPS, CREATOR, UPDATER, CREATE_TIME, UPDATE_TIME)
     VALUES (6, 'codeGitee', 'Gitee', 'GITEE', 'SCM_GIT', 'gitee.com', '/ms/artifactory/api/user/artifactories/file/download?filePath=%2Ffile%2Fpng%2FcodeGitee.png&logo=true', '["TOKEN_USERNAME_PASSWORD","TOKEN_SSH_PRIVATEKEY"]', 'NEW', null, 'SUCCESS', false, false, false, true, '{"providerCode":"GITEE","providerType":"GIT","proxyEnabled":false,"oauth2Enabled":false,"httpClientProperties":{"apiUrl":"https://gitee.com/api/v5","connectTimeout":5,"readTimeout":30,"writeTimeout":30,"metrics":false}}', 'system', 'system', '2025-03-12 00:00:00', '2025-03-12 00:00:00');
+REPLACE INTO T_REPOSITORY_SCM_CONFIG (ID, SCM_CODE, NAME, PROVIDER_CODE, SCM_TYPE, HOSTS, LOGO_URL, CREDENTIAL_TYPE_LIST, OAUTH_TYPE, OAUTH_SCM_CODE, STATUS, OAUTH2_ENABLED, MERGE_ENABLED, PAC_ENABLED, WEBHOOK_ENABLED, PROVIDER_PROPS, CREATOR, UPDATER, CREATE_TIME, UPDATE_TIME)
+    VALUES (8, 'codeSvnCo', '工蜂合作版 SVN', 'TSVN', 'SCM_SVN', null, '/ms/artifactory/api/user/artifactories/file/download?filePath=%2Ffile%2Fsvg%2Fcode-SVN.svg&logo=true', '["USERNAME_PASSWORD","TOKEN_USERNAME_PASSWORD","TOKEN_SSH_PRIVATEKEY"]', 'NEW', null, 'SUCCESS', false, false, false, true, '{"providerCode":"TSVN","providerType":"SVN","proxyEnabled":false,"oauth2Enabled":false,"httpClientProperties":{"apiUrl":"https://git.tencent.com/api/v3","connectTimeout":5,"readTimeout":30,"writeTimeout":30,"metrics":false}}', 'system', 'system', '2025-03-12 00:00:00', '2025-03-12 00:00:00');
+REPLACE INTO T_REPOSITORY_SCM_CONFIG (ID, SCM_CODE, NAME, PROVIDER_CODE, SCM_TYPE, HOSTS, LOGO_URL, CREDENTIAL_TYPE_LIST, OAUTH_TYPE, OAUTH_SCM_CODE, STATUS, OAUTH2_ENABLED, MERGE_ENABLED, PAC_ENABLED, WEBHOOK_ENABLED, PROVIDER_PROPS, CREATOR, UPDATER, CREATE_TIME, UPDATE_TIME)
+    VALUES (9, 'bkCode', 'BkCode', 'BKCODE', 'SCM_GIT', null, '/ms/artifactory/api/user/artifactories/file/download?filePath=%2Ffile%2Fpng%2FcodeBKCode.png&logo=true', '["TOKEN_USERNAME_PASSWORD","TOKEN_SSH_PRIVATEKEY"]', 'NEW', null, 'SUCCESS', false, false, false, true, '{"providerCode":"BKCODE","providerType":"GIT","proxyEnabled":false,"oauth2Enabled":false,"httpClientProperties":{"apiUrl":"https://bkcode.template.net/api/v1","connectTimeout":5,"readTimeout":30,"writeTimeout":30,"metrics":false}}', 'system', 'system', '2025-11-20 00:00:00', '2025-11-20 00:00:00');
+
+-- 代码源可见范围
+REPLACE INTO T_REPOSITORY_SCM_CONFIG_VISIBILITY (SCM_CODE, DEPT_ID, DEPT_NAME, CREATOR, CREATE_TIME)
+    VALUES ('CODE_SVN' , 0, '全部', 'system', '2025-03-12 00:00:00');
+REPLACE INTO T_REPOSITORY_SCM_CONFIG_VISIBILITY (SCM_CODE, DEPT_ID, DEPT_NAME, CREATOR, CREATE_TIME)
+    VALUES ('GITHUB' , 0, '全部', 'system', '2025-03-12 00:00:00');
+REPLACE INTO T_REPOSITORY_SCM_CONFIG_VISIBILITY (SCM_CODE, DEPT_ID, DEPT_NAME, CREATOR, CREATE_TIME)
+    VALUES ('CODE_GITLAB' , 0, '全部', 'system', '2025-03-12 00:00:00');
+REPLACE INTO T_REPOSITORY_SCM_CONFIG_VISIBILITY (SCM_CODE, DEPT_ID, DEPT_NAME, CREATOR, CREATE_TIME)
+    VALUES ('CODE_TGIT' , 0, '全部', 'system', '2025-03-12 00:00:00');
+REPLACE INTO T_REPOSITORY_SCM_CONFIG_VISIBILITY (SCM_CODE, DEPT_ID, DEPT_NAME, CREATOR, CREATE_TIME)
+    VALUES ('CODE_P4' , 0, '全部', 'system', '2025-03-12 00:00:00');
+REPLACE INTO T_REPOSITORY_SCM_CONFIG_VISIBILITY (SCM_CODE, DEPT_ID, DEPT_NAME, CREATOR, CREATE_TIME)
+    VALUES ('codeGitee' , 0, '全部', 'system', '2025-03-12 00:00:00');
+REPLACE INTO T_REPOSITORY_SCM_CONFIG_VISIBILITY (SCM_CODE, DEPT_ID, DEPT_NAME, CREATOR, CREATE_TIME)
+    VALUES ('codeSvnCo' , 0, '全部', 'system', '2025-03-12 00:00:00');
+REPLACE INTO T_REPOSITORY_SCM_CONFIG_VISIBILITY (SCM_CODE, DEPT_ID, DEPT_NAME, CREATOR, CREATE_TIME)
+    VALUES ('bkcode' , 0, '全部', 'system', '2025-03-12 00:00:00');

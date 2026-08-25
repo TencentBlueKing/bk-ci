@@ -552,7 +552,7 @@
 	.obtained {
 			border: 2px solid #979BA5;
 	}
-	.icon-edit2 {
+	.icon-edit-line {
 			margin-right: 2px;
 			color: #979BA5;
 			font-size: 12px;
@@ -565,6 +565,12 @@
 		margin-right: 16px;
 		cursor: pointer;
 		color: $primaryColor;
+	}
+	.is-disabled {
+		span {
+			cursor: not-allowed;
+			color: #c4c6cc;
+		}
 	}
 }
 

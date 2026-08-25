@@ -27,6 +27,9 @@
 
 package com.tencent.devops.log.service
 
+import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.AuthPermission
@@ -35,11 +38,16 @@ import com.tencent.devops.common.log.pojo.PageQueryLogs
 import com.tencent.devops.common.log.pojo.QueryLogLineNum
 import com.tencent.devops.common.log.pojo.QueryLogStatus
 import com.tencent.devops.common.log.pojo.QueryLogs
+import com.tencent.devops.common.log.pojo.QueryLogsText
+import com.tencent.devops.common.log.constant.Constants
 import com.tencent.devops.common.log.pojo.enums.LogStatus
 import com.tencent.devops.common.log.pojo.enums.LogType
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.log.jmx.LogStorageBean
+import com.tencent.devops.log.metrics.LogMetrics
 import com.tencent.devops.log.strategy.context.UserLogPermissionCheckContext
 import com.tencent.devops.log.strategy.factory.UserLogPermissionCheckStrategyFactory
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import jakarta.ws.rs.core.Response
@@ -50,7 +58,9 @@ class BuildLogQueryService @Autowired constructor(
     private val logService: LogService,
     private val logStatusService: LogStatusService,
     private val indexService: IndexService,
-    private val logStorageBean: LogStorageBean
+    private val logStorageBean: LogStorageBean,
+    private val logProjectIdResolver: LogProjectIdResolver,
+    private val logMetrics: LogMetrics
 ) {
 
     fun getInitLogs(
@@ -209,6 +219,115 @@ class BuildLogQueryService @Autowired constructor(
             logStorageBean.query(System.currentTimeMillis() - startEpoch, success)
         }
         return Result(queryLogs)
+    }
+
+    fun getLatestLogs(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        debug: Boolean?,
+        logType: LogType?,
+        size: Int?,
+        tag: String?,
+        containerHashId: String?,
+        executeCount: Int?,
+        subTag: String? = null,
+        jobId: String?,
+        stepId: String?,
+        archiveFlag: Boolean? = null,
+        checkPermissionFlag: Boolean = true
+    ): Result<QueryLogsText> {
+        if (checkPermissionFlag) {
+            validateAuth(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                permission = AuthPermission.VIEW,
+                archiveFlag = archiveFlag
+            )
+        }
+        val startEpoch = System.currentTimeMillis()
+        var success = false
+        val queryLogs = try {
+            val result = logService.getBottomLogs(
+                pipelineId = pipelineId,
+                buildId = buildId,
+                debug = debug ?: false,
+                logType = logType,
+                tag = tag,
+                subTag = subTag,
+                containerHashId = containerHashId,
+                executeCount = executeCount,
+                size = size,
+                jobId = jobId,
+                stepId = stepId
+            )
+            result.timeUsed = System.currentTimeMillis() - startEpoch
+            success = logStatusSuccess(result.status)
+            result
+        } finally {
+            logStorageBean.query(System.currentTimeMillis() - startEpoch, success)
+        }
+        return Result(QueryLogsText.from(queryLogs))
+    }
+
+    fun getMiddleLogs(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        start: Long,
+        end: Long,
+        debug: Boolean?,
+        logType: LogType?,
+        tag: String?,
+        containerHashId: String?,
+        executeCount: Int?,
+        subTag: String? = null,
+        jobId: String?,
+        stepId: String?,
+        archiveFlag: Boolean? = null,
+        checkPermissionFlag: Boolean = true
+    ): Result<QueryLogsText> {
+        validateMiddleLogRange(start = start, end = end)
+        if (checkPermissionFlag) {
+            validateAuth(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                permission = AuthPermission.VIEW,
+                archiveFlag = archiveFlag
+            )
+        }
+        val startEpoch = System.currentTimeMillis()
+        var success = false
+        val queryLogs = try {
+            val num = (end - start + 1).toInt()
+            val result = logService.queryLogsBetweenLines(
+                buildId = buildId,
+                num = num,
+                fromStart = true,
+                start = start,
+                end = end,
+                debug = debug ?: false,
+                logType = logType,
+                tag = tag,
+                subTag = subTag,
+                containerHashId = containerHashId,
+                executeCount = executeCount,
+                jobId = jobId,
+                stepId = stepId
+            )
+            result.timeUsed = System.currentTimeMillis() - startEpoch
+            success = logStatusSuccess(result.status)
+            result
+        } finally {
+            logStorageBean.query(System.currentTimeMillis() - startEpoch, success)
+        }
+        return Result(QueryLogsText.from(queryLogs))
     }
 
     fun getAfterLogs(
@@ -516,6 +635,25 @@ class BuildLogQueryService @Autowired constructor(
     }
 
     @Suppress("ThrowsCount")
+    private fun validateMiddleLogRange(start: Long, end: Long) {
+        if (start < 1 || end < 1) {
+            throw InvalidParamException("Invalid line number: start and end must be greater than 0")
+        }
+        if (start > end) {
+            throw InvalidParamException(
+                "Invalid line number range: start($start) must be less than or equal to end($end)"
+            )
+        }
+        val rangeSize = end - start + 1
+        if (rangeSize > Constants.NORMAL_MAX_LINES) {
+            throw InvalidParamException(
+                "The line number range size($rangeSize) exceeds the maximum limit " +
+                    "(${Constants.NORMAL_MAX_LINES}), please reduce the range between start and end"
+            )
+        }
+    }
+
+    @Suppress("ThrowsCount")
     private fun validateAuth(
         userId: String,
         projectId: String,
@@ -536,6 +674,17 @@ class BuildLogQueryService @Autowired constructor(
         if (buildId.isBlank()) {
             throw ParamBlankException("Invalid buildId")
         }
+        // 有本地归属时，URL 上的 projectId/pipelineId 必须与 buildId 真实归属一致，
+        // 防止「对流水线 A 有 VIEW、却把别人的 buildId 塞进路径」读到他人日志。
+        // 无归属（旧 Worker / 历史构建）降级为现网 URL-RBAC，该窗口仍可能存在 IDOR。
+        // ServiceLogResource.checkPermissionFlag=false 不走本方法，仍由网关认证内部调用。
+        validateBuildOwnership(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            permission = permission
+        )
         val userLogPermissionCheckStrategy =
             UserLogPermissionCheckStrategyFactory.createUserLogPermissionCheckStrategy(archiveFlag)
         UserLogPermissionCheckContext(userLogPermissionCheckStrategy).checkUserLogPermission(
@@ -546,8 +695,52 @@ class BuildLogQueryService @Autowired constructor(
         )
     }
 
+    private fun validateBuildOwnership(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        permission: AuthPermission
+    ) {
+        val owner = logProjectIdResolver.find(buildId)
+        if (owner == null) {
+            logMetrics.recordQueryOwnership(LogMetrics.RESULT_OWNER_SKIP)
+            return
+        }
+        val projectMismatch = !owner.projectId.isNullOrBlank() && owner.projectId != projectId
+        val pipelineMismatch = !owner.pipelineId.isNullOrBlank() && owner.pipelineId != pipelineId
+        if (!projectMismatch && !pipelineMismatch) {
+            logMetrics.recordQueryOwnership(LogMetrics.RESULT_OWNER_MATCH)
+            return
+        }
+        logMetrics.recordQueryOwnership(LogMetrics.RESULT_OWNER_MISMATCH)
+        logger.warn(
+            "Log query ownership mismatch: userId={} buildId={} url={}/{} owner={}/{}",
+            userId,
+            buildId,
+            projectId,
+            pipelineId,
+            owner.projectId,
+            owner.pipelineId
+        )
+        // 与无权限使用同一错误码，避免把真实归属泄露给越权调用方
+        throw ErrorCodeException(
+            errorCode = CommonMessageCode.USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
+            params = arrayOf(
+                userId,
+                projectId,
+                permission.getI18n(I18nUtil.getLanguage()),
+                pipelineId
+            )
+        )
+    }
+
     private fun logStatusSuccess(logStatus: Int): Boolean {
         return LogStatus.parse(logStatus) == LogStatus.EMPTY ||
             LogStatus.parse(logStatus) == LogStatus.SUCCEED
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(BuildLogQueryService::class.java)
     }
 }

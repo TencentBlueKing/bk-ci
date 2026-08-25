@@ -15,6 +15,8 @@ data class BkUserInfo(
     val displayName: String,
     @get:Schema(title = "是否启用")
     val enabled: Boolean?,
+    @get:Schema(title = "上级")
+    val leader: List<BkUserInfo>? = null,
     @get:Schema(title = "用户额外信息")
     val extras: BkUserExtras?,
     @get:Schema(title = "用户部门")

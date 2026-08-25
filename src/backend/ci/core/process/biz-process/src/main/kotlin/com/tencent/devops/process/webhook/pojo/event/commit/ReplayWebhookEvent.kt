@@ -43,7 +43,8 @@ data class ReplayWebhookEvent(
     val eventId: Long,
     // 重放的请求ID
     val replayRequestId: String,
-    val scmType: ScmType,
+    val scmType: ScmType? = null,
+    val triggerType: String? = null,
     val pipelineId: String? = null,
     override var retryTime: Int = 3,
     override var delayMills: Int = 0,

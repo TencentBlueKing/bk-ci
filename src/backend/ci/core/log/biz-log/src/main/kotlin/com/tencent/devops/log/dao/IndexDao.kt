@@ -83,6 +83,14 @@ class IndexDao {
         return getBuild(dslContext, buildId)?.indexName
     }
 
+    /**
+     * 行号只增不减地持久化。
+     *
+     * 结束事件可能重复投递或乱序到达，若无条件覆盖会把已经推进的高水位改小，
+     * 后续从 db 恢复基线时就会重新分配已用过的行号。
+     *
+     * @return 实际更新的行数，0 表示记录不存在或 db 中的值已不小于 [latestLineNum]
+     */
     fun updateLastLineNum(
         dslContext: DSLContext,
         buildId: String,
@@ -92,6 +100,7 @@ class IndexDao {
             return dslContext.update(this)
                 .set(LAST_LINE_NUM, latestLineNum)
                 .where(BUILD_ID.eq(buildId))
+                .and(LAST_LINE_NUM.lt(latestLineNum))
                 .execute()
         }
     }

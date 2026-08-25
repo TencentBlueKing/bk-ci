@@ -14,6 +14,7 @@ import com.tencent.devops.common.db.pojo.DEFAULT_DATA_SOURCE_NAME
 import com.tencent.devops.common.notify.enums.NotifyType
 import com.tencent.devops.common.service.utils.BkServiceUtil
 import com.tencent.devops.common.service.utils.CommonUtils
+import com.tencent.devops.common.web.utils.ApiAccessLimitCacheManager
 import com.tencent.devops.common.web.utils.BkApiUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.misc.lock.MigrationLock
@@ -214,7 +215,7 @@ class MigrationExecutor(private val config: MigrationExecutorConfig) {
             }
         } finally {
             // 确保资源释放
-            executor.shutdown()
+            executor.shutdownNow()
             // 释放信号量资源
             releaseSemaphorePermits(semaphore, threadNum)
         }
@@ -508,6 +509,8 @@ class MigrationExecutor(private val config: MigrationExecutorConfig) {
             key = BkApiUtil.getApiAccessLimitProjectsKey(),
             item = projectId
         )
+        // 清除本地缓存，立即生效
+        ApiAccessLimitCacheManager.invalidateProjectLimitCache()
         // 清理项目执行计数
         redisOperation.delete(getMigrateProjectExecuteCountKey(projectId))
     }

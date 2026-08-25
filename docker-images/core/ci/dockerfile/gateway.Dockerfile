@@ -21,11 +21,3 @@ RUN rm -rf ${OPENRESTY_PATH}/conf &&\
     mkdir -p ${OPENRESTY_PATH}/run/ &&\
     cp -r /data/workspace/scripts/render_tpl ${OPENRESTY_PATH}/ &&\
     touch ${OPENRESTY_PATH}/bkenv.properties
-
-# WORKDIR ${OPENRESTY_PATH}
-# CMD mkdir -p ${BK_CI_LOGS_DIR}/nginx/ ${BK_CI_HOME} &&\
-#     chown nobody:nobody ${BK_CI_LOGS_DIR}/nginx/ &&\
-#     ln -s /data/workspace/frontend ${BK_CI_HOME}/frontend &&\
-#     ./render_tpl -m . /data/workspace/templates/gateway*
-#     ./render_tpl -m . /data/workspace/templates/frontend* &&\
-#     sbin/nginx -g 'daemon off;'

@@ -26,6 +26,13 @@
                     >
                         {{ $t('newui.pipelineParam.addConst') }}
                     </bk-button>
+                    <bk-button
+                        class="var-btn"
+                        v-enStyle="'min-width:100px'"
+                        @click="handleManageVarGroup('constant')"
+                    >
+                        {{ $t('publicVar.manageGroup') }}
+                    </bk-button>
                 </template>
                 <bk-input
                     class="search-input"
@@ -39,7 +46,7 @@
 
         <div
             class="container-bottom"
-            :style="{ marginTop: `${offsetData}px` }"
+            :style="{ marginTop: `${offsetData}px`, height: `calc(100% - ${(isAlertTips && editable) ? '89' : '54'}px)` }"
             v-if="!showSlider"
         >
             <param-group
@@ -50,11 +57,12 @@
                 :handle-edit="handleEdit"
                 :handle-update="handleUpdate"
                 :handle-sort="handleSort"
+                @show-group="handleViewVarGroup"
             />
         </div>
 
         <div
-            v-else-if="editable"
+            v-else
             class="current-edit-param-item"
         >
             <div class="edit-var-header">
@@ -65,6 +73,12 @@
                     @click="hideSlider"
                 />
                 {{ sliderTitle }}
+                <div
+                    v-if="isPublicVarGroup"
+                    class="public-var-group-name"
+                >
+                    {{ $t('publicVar.varGroupName', [sliderEditItem.varGroupName]) }}
+                </div>
             </div>
             <div class="edit-var-content">
                 <pipeline-param-form
@@ -72,6 +86,8 @@
                     :edit-item="sliderEditItem"
                     :global-params="globalParams"
                     :edit-index="editIndex"
+                    :disabled="!editable || isPublicVarGroup"
+                    :is-public-var="isPublicVarGroup"
                     :param-type="paramType"
                     :update-param="updateEditItem"
                     :reset-edit-item="resetEditItem"
@@ -95,22 +111,36 @@
                 </bk-button>
             </div>
         </div>
+        <manage-variable-group
+            :is-show.sync="showManageVarGroupSlider"
+            :editable="editable"
+            :global-params="globalParams"
+            :group-name="groupName"
+            :save-variable="handleSaveVariableByGroup"
+        />
     </div>
 </template>
 
 <script>
     import {
-        getParamsGroupByLabel
+        getParamsGroupByLabel,
+        isBooleanParam
     } from '@/store/modules/atom/paramsConfig'
     import { allVersionKeyList } from '@/utils/pipelineConst'
     import { deepCopy, navConfirm } from '@/utils/util'
     import ParamGroup from './children/param-group'
+    import {
+        getInvalidDisplayConditionDependentInfos,
+        hasDisplayConditionOperatorSupportChanged
+    } from './displayConditionUtils'
     import PipelineParamForm from './pipeline-param-form'
+    import ManageVariableGroup from '@/components/PublicVariable/ManageVariableGroup/'
 
     export default {
         components: {
             PipelineParamForm,
-            ParamGroup
+            ParamGroup,
+            ManageVariableGroup
         },
         props: {
             params: {
@@ -124,6 +154,10 @@
             editable: {
                 type: Boolean,
                 default: true
+            },
+            canEditParam: {
+                type: Boolean,
+                default: true
             }
         },
         data () {
@@ -135,7 +169,9 @@
                 searchStr: '',
                 confirmMsg: this.$t('editPage.closeConfirmMsg'),
                 cancelText: this.$t('cancel'),
-                isAlertTips: true
+                isAlertTips: true,
+                showManageVarGroupSlider: false,
+                groupName: ''
             }
         },
         computed: {
@@ -174,21 +210,21 @@
                         key: 'requiredParam',
                         title: this.$t('newui.pipelineParam.buildParam'),
                         tips: this.$t('newui.pipelineParam.buildParamTips'),
-                        listNum: this.requiredParamList.length,
+                        itemNum: this.requiredParamList.length,
                         listMap: getParamsGroupByLabel(this.requiredParamList).listMap ?? {},
                         sortedCategories: getParamsGroupByLabel(this.requiredParamList).sortedCategories ?? []
                     },
                     {
                         key: 'constantParam',
                         title: this.$t('newui.pipelineParam.constParam'),
-                        listNum: this.constantParamList.length,
+                        itemNum: this.constantParamList.length,
                         listMap: getParamsGroupByLabel(this.constantParamList).listMap ?? {},
                         sortedCategories: getParamsGroupByLabel(this.constantParamList).sortedCategories ?? []
                     },
                     {
                         key: 'otherParam',
                         title: this.$t('newui.pipelineParam.otherVar'),
-                        listNum: this.otherParamList.length,
+                        itemNum: this.otherParamList.length,
                         listMap: getParamsGroupByLabel(this.otherParamList).listMap ?? {},
                         sortedCategories: getParamsGroupByLabel(this.otherParamList).sortedCategories ?? []
                     }
@@ -203,6 +239,14 @@
                     ...this.flattenMultipleObjects(getParamsGroupByLabel(this.constantParamList)),
                     ...this.flattenMultipleObjects(getParamsGroupByLabel(this.otherParamList))
                 ]
+            },
+            isPublicVarGroup () {
+                return !!this.sliderEditItem.varGroupName
+            }
+        },
+        watch: {
+            showManageVarGroupSlider (isShow) {
+                this.$emit('var-group-slider-change', isShow)
             }
         },
         methods: {
@@ -227,7 +271,7 @@
             },
             // toTop为true，表示移到最前, 为false为delete操作
             handleUpdate (paramId, toTop = false) {
-                if (!this.editable) return
+                if (!this.canEditParam) return
                 const index = this.globalParams.findIndex(item => item.id === paramId)
                 const item = this.globalParams.find(item => item.id === paramId)
                 const preEleIndex = this.globalParams.findIndex(i => i.category === item.category)
@@ -241,11 +285,13 @@
                 this.sliderEditItem = {}
                 this.paramType = type
             },
-            handleEdit (paramId) {
-                if (!this.editable) return
+            handleEdit ({ id, removeFlag, varGroupName }) {
+                if (!this.canEditParam || removeFlag) return
                 this.showSlider = true
-                this.editIndex = this.globalParams.findIndex(item => item.id === paramId)
-                this.sliderEditItem = deepCopy(this.globalParams.find(item => item.id === paramId) || {})
+                this.editIndex = varGroupName
+                    ? this.globalParams.findIndex(item => item.varGroupName === varGroupName && item.id === id)
+                    : this.globalParams.findIndex(item => item.id === id)
+                this.sliderEditItem = deepCopy(this.globalParams.find((item, index) => index === this.editIndex) || {})
                 this.paramType = this.sliderEditItem?.constant === true ? 'constant' : 'var'
             },
             async validParamOptions () {
@@ -267,17 +313,160 @@
             async handleSaveVar () {
                 // 单选、复选类型， 需要先校验options
                 const optionValid = await this.validParamOptions()
+                if (optionValid && !this.validDisplayConditionOperator()) {
+                    return
+                }
                 this.$validator.validate('pipelineParam.*').then((result) => {
                     const {isInvalid, ...param} = this.sliderEditItem
                     if (result && optionValid) {
+                        const normalizedParam = this.normalizeParam(param)
+                        // 检查 options 中是否存在重复项，有重复则不允许保存
+                        if (normalizedParam.options && normalizedParam.options.length) {
+                            const keyMap = new Map()
+                            const valueMap = new Map()
+                            for (let i = 0; i < normalizedParam.options.length; i++) {
+                                const opt = normalizedParam.options[i]
+                                if (opt.key && keyMap.has(opt.key)) {
+                                    this.$bkMessage({
+                                        theme: 'error',
+                                        message: this.$t('editPage.noRepeatTips', ['value']),
+                                        limit: 1
+                                    })
+                                    return
+                                }
+                                if (opt.key) keyMap.set(opt.key, i)
+                                if (opt.value && valueMap.has(opt.value)) {
+                                    this.$bkMessage({
+                                        theme: 'error',
+                                        message: this.$t('editPage.noRepeatTips', ['name']),
+                                        limit: 1
+                                    })
+                                    return
+                                }
+                                if (opt.value) valueMap.set(opt.value, i)
+                            }
+                        }
                         if (this.editIndex > -1) {
-                            this.globalParams[this.editIndex] = param
+                            this.globalParams[this.editIndex] = normalizedParam
                         } else {
-                            this.globalParams.push(param)
+                            this.globalParams.push(normalizedParam)
                         }
                         this.updateContainerParams('params', [...this.globalParams, ...this.versions])
                         this.hideSlider(false)
                     }
+                })
+            },
+            handleSaveVariableByGroup (list) {
+                this.updateContainerParams('params', [...list, ...this.versions])
+            },
+            normalizeParam (param) {
+                if (!isBooleanParam(param.type)) return param
+
+                let defaultValue = param.defaultValue
+                if (defaultValue === undefined || defaultValue === null || defaultValue === '') {
+                    defaultValue = true
+                } else if (defaultValue === 'true') {
+                    defaultValue = true
+                } else if (defaultValue === 'false') {
+                    defaultValue = false
+                }
+
+                return {
+                    ...param,
+                    defaultValue
+                }
+            },
+            validDisplayConditionOperator () {
+                if (this.editIndex < 0) return true
+
+                const prevParam = this.globalParams[this.editIndex]
+                const nextParam = this.sliderEditItem
+                if (!hasDisplayConditionOperatorSupportChanged(prevParam, nextParam)) {
+                    return true
+                }
+
+                const invalidList = getInvalidDisplayConditionDependentInfos(this.globalParams, nextParam)
+                if (!invalidList.length) return true
+
+                const paramName = nextParam.name || nextParam.id
+                this.showDisplayConditionOperatorInvalidDialog(paramName, invalidList)
+                return false
+            },
+            showDisplayConditionOperatorInvalidDialog (paramName, invalidList) {
+                const h = this.$createElement
+                this.$bkInfo({
+                    type: 'warning',
+                    width: 640,
+                    title: this.$t('editPage.displayConditionOperatorInvalidTitle'),
+                    okText: this.$t('confirm'),
+                    cancelText: this.$t('cancel'),
+                    extCls: 'display-condition-invalid-dialog',
+                    subHeader: h('div', {
+                        class: 'display-condition-invalid-content'
+                    }, [
+                        h('div', {
+                            class: 'display-condition-invalid-summary'
+                        }, [
+                            h('p', this.$t('editPage.displayConditionOperatorInvalidDesc', [paramName])),
+                            h('p', this.$t('editPage.displayConditionOperatorInvalidActionTips'))
+                        ]),
+                        h('div', {
+                            class: 'display-condition-invalid-list-title'
+                        }, this.$t('editPage.displayConditionOperatorInvalidListTitle', [invalidList.length])),
+                        h('bk-table', {
+                            class: 'display-condition-invalid-table',
+                            props: {
+                                data: invalidList,
+                                maxHeight: 220,
+                                outerBorder: true,
+                                size: 'small'
+                            }
+                        }, [
+                            h('bk-table-column', {
+                                props: {
+                                    label: this.$t('newui.pipelineParam.varName'),
+                                    minWidth: 180
+                                },
+                                scopedSlots: {
+                                    default: ({ row }) => h('div', {
+                                        class: 'display-condition-invalid-variable'
+                                    }, [
+                                        h('span', {
+                                            class: 'display-condition-invalid-name'
+                                        }, row.varName || '--'),
+                                        row.category
+                                            ? h('span', {
+                                                class: 'display-condition-invalid-category'
+                                            }, `${this.$t('editPage.displayConditionGroupLabel')}：${row.category}`)
+                                            : null
+                                    ])
+                                }
+                            }),
+                            h('bk-table-column', {
+                                props: {
+                                    label: this.$t('newui.pipelineParam.varAlias'),
+                                    minWidth: 150,
+                                    showOverflowTooltip: true
+                                },
+                                scopedSlots: {
+                                    default: ({ row }) => h('span', row.varAlias || '--')
+                                }
+                            }),
+                            h('bk-table-column', {
+                                props: {
+                                    label: this.$t('editPage.displayConditionOperatorLabel'),
+                                    width: 96
+                                },
+                                scopedSlots: {
+                                    default: ({ row }) => h('bk-tag', {
+                                        props: {
+                                            theme: 'info'
+                                        }
+                                    }, row.operator || '--')
+                                }
+                            })
+                        ])
+                    ])
                 })
             },
             updateEditItem (name, value) {
@@ -306,6 +495,15 @@
             },
             alertClose () {
                 this.isAlertTips = false
+            },
+
+            handleManageVarGroup () {
+                this.showManageVarGroupSlider = true
+            },
+
+            handleViewVarGroup (groupName) {
+                this.showManageVarGroupSlider = true
+                this.groupName = groupName
             }
         }
     }
@@ -327,14 +525,20 @@
         .container-bottom {
             width: 100%;
             position: absolute;
-            height: calc(100% - 89px);
             overflow-y: auto;
         }
         
         .current-edit-param-item {
             position: fixed;
             top: 48px;
-
+            .public-var-group-name {
+                color: #63656E;
+                background: #F0F1F5;
+                border-radius: 2px;
+                font-size: 12px;
+                padding: 2px 8px;
+                margin-left: 10px;
+            }
             .edit-var-content {
                 height: calc(100% - 138px);
             }
@@ -356,12 +560,12 @@
             align-items: center;
             justify-content: space-between;
             .var-btn {
-                min-width: 88px;
+                min-width: 78px;
                 width: -webkit-fill-available;
                 margin-right: 8px;
             }
             .search-input {
-                min-width: 215px;
+                min-width: 100px;
             }
         }
         .variable-content {
@@ -426,6 +630,68 @@
                     }
                 }
             }
+        }
+    }
+    .bk-dialog-wrapper.display-condition-invalid-dialog {
+        .bk-dialog-type-header {
+            padding-bottom: 8px;
+        }
+        .bk-dialog-type-sub-header {
+            padding: 0 32px 24px;
+            .header {
+                line-height: 20px;
+            }
+        }
+        .bk-dialog-type-sub-header,
+        .bk-dialog-type-sub-header .header {
+            text-align: left;
+        }
+        .bk-dialog-footer {
+            padding: 0 32px 24px;
+            text-align: right;
+        }
+        .display-condition-invalid-content {
+            color: #63656E;
+            font-size: 12px;
+            line-height: 20px;
+        }
+        .display-condition-invalid-summary {
+            padding: 10px 12px;
+            background: #FFF4E2;
+            border: 1px solid #FFE8C3;
+            border-radius: 4px;
+            p {
+                margin: 0;
+            }
+            p + p {
+                margin-top: 4px;
+            }
+        }
+        .display-condition-invalid-list-title {
+            margin: 14px 0 8px;
+            color: #313238;
+            font-size: 13px;
+            font-weight: 600;
+        }
+        .display-condition-invalid-table {
+            line-height: 20px;
+        }
+        .display-condition-invalid-variable {
+            min-width: 0;
+        }
+        .display-condition-invalid-name {
+            display: block;
+            color: #313238;
+            font-weight: 600;
+            line-height: 20px;
+            word-break: break-all;
+        }
+        .display-condition-invalid-category {
+            display: block;
+            margin-top: 2px;
+            color: #979BA5;
+            line-height: 18px;
+            word-break: break-all;
         }
     }
 </style>

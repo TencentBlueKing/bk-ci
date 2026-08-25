@@ -51,4 +51,4 @@ aes:
 
 sync:
   cron:
-    enabled: __BK_CI_SYNC_CRON_ENABLED__
+    enabled: __BK_CI_AUTH_SYNC_CRON_ENABLED__

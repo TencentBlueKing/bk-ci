@@ -45,6 +45,7 @@ import jakarta.ws.rs.Consumes
 import jakarta.ws.rs.GET
 import jakarta.ws.rs.HeaderParam
 import jakarta.ws.rs.POST
+import jakarta.ws.rs.PUT
 import jakarta.ws.rs.Path
 import jakarta.ws.rs.PathParam
 import jakarta.ws.rs.Produces
@@ -289,4 +290,16 @@ interface ServiceProjectAuthResource {
         @Parameter(description = "用户ID", required = true)
         userId: String
     ): Result<List<AuthProjectVO>>
+
+    @PUT
+    @Path("/{projectCode}/enabled")
+    @Operation(summary = "修改项目启用/禁用状态")
+    fun modifyProjectEnabled(
+        @PathParam("projectCode")
+        @Parameter(description = "项目Code", required = true)
+        projectCode: String,
+        @QueryParam("enabled")
+        @Parameter(description = "是否启用", required = true)
+        enabled: Boolean
+    ): Result<Boolean>
 }

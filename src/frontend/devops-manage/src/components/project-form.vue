@@ -59,6 +59,7 @@ const rules = {
 };
 
 const projectData = ref<any>(props.data);
+const isPersonalProject = computed(() => projectData.value.projectScope === 1)
 const initPipelineDialect = ref();
 const activeCollapse = ref(['baseInfo', 'permission', 'pipeline', 'artifactory']);
 const collapsePanels = computed(() => [
@@ -67,7 +68,7 @@ const collapsePanels = computed(() => [
     title: '基础信息',
     component: BaseInfoContent,
   },
-  ...isRbac.value ? [{
+  ...(isRbac.value && !isPersonalProject.value) ? [{
     name: 'permission',
     title: '权限',
     component: PermissionContent,

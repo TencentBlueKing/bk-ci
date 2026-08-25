@@ -40,7 +40,9 @@ import com.tencent.devops.common.pipeline.PipelineVersionWithModel
 import com.tencent.devops.common.pipeline.PipelineVersionWithModelRequest
 import com.tencent.devops.common.pipeline.enums.CodeTargetAction
 import com.tencent.devops.common.pipeline.enums.PipelineStorageType
+import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.pipeline.pojo.BuildNoUpdateReq
+import com.tencent.devops.common.pipeline.pojo.CreatePipelineAndSaveDraftRequest
 import com.tencent.devops.common.pipeline.pojo.TemplateInstanceCreateRequest
 import com.tencent.devops.common.pipeline.pojo.transfer.PreviewResponse
 import com.tencent.devops.common.service.tenant.TenantUtils
@@ -48,14 +50,19 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.api.user.UserPipelineVersionResource
 import com.tencent.devops.process.audit.service.AuditService
+import com.tencent.devops.process.enums.PipelineGetVersionSource
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.PipelineDetail
 import com.tencent.devops.process.pojo.PipelineOperationDetail
 import com.tencent.devops.process.pojo.PipelineOperator
 import com.tencent.devops.process.pojo.PipelineVersionReleaseRequest
+import com.tencent.devops.process.pojo.PipelineYamlBuildVersion
 import com.tencent.devops.process.pojo.audit.Audit
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
+import com.tencent.devops.process.pojo.pipeline.PipelineDraftStatusResult
+import com.tencent.devops.process.pojo.pipeline.PipelineDraftVersionSimple
 import com.tencent.devops.process.pojo.pipeline.PrefetchReleaseResult
+import com.tencent.devops.process.pojo.pipeline.enums.PipelineDraftActionType
 import com.tencent.devops.process.pojo.setting.PipelineVersionSimple
 import com.tencent.devops.process.service.PipelineInfoFacadeService
 import com.tencent.devops.process.service.PipelineOperationLogService
@@ -198,7 +205,9 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
         projectId: String,
         pipelineId: String,
         version: Int,
-        archiveFlag: Boolean?
+        archiveFlag: Boolean?,
+        source: PipelineGetVersionSource?,
+        draftVersion: Int?
     ): Result<PipelineVersionWithModel> {
         val userPipelinePermissionCheckStrategy =
             UserPipelinePermissionCheckStrategyFactory.createUserPipelinePermissionCheckStrategy(archiveFlag)
@@ -214,7 +223,9 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 version = version,
-                archiveFlag = archiveFlag
+                archiveFlag = archiveFlag,
+                source = source,
+                draftVersion = draftVersion
             )
         )
     }
@@ -260,7 +271,7 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
         )
         auditService.createAudit(
             Audit(
-                resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
+                resourceType = AuthResourceType.getAuthResourceTypeByChannel(AuthResourceType.PIPELINE_DEFAULT).value,
                 resourceId = result.pipelineId,
                 resourceName = result.pipelineName,
                 userId = userId,
@@ -270,6 +281,39 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
             )
         )
         return Result(result)
+    }
+
+    override fun createPipelineAndSaveDraft(
+        userId: String,
+        projectId: String,
+        request: CreatePipelineAndSaveDraftRequest
+    ): Result<DeployPipelineResult> {
+        val templateCreateReq = TemplateInstanceCreateRequest(
+            templateId = request.templateId,
+            templateVersion = request.templateVersion,
+            pipelineName = request.pipelineName,
+            useSubscriptionSettings = request.useSubscriptionSettings,
+            useLabelSettings = request.useLabelSettings,
+            useConcurrencyGroup = request.useConcurrencyGroup,
+            instanceType = request.instanceType,
+            emptyTemplate = request.emptyTemplate,
+            staticViews = request.staticViews,
+            inheritedDialect = request.inheritedDialect,
+            pipelineDialect = request.pipelineDialect,
+            labels = request.labels
+        )
+        val createPipelineResult =
+            createPipelineFromTemplate(userId = userId, projectId = projectId, request = templateCreateReq)
+        val deployPipelineResult = createPipelineResult.data ?: return createPipelineResult
+        val saveDraftReq = PipelineVersionWithModelRequest(
+            pipelineId = deployPipelineResult.pipelineId,
+            baseVersion = deployPipelineResult.version,
+            modelAndSetting = request.modelAndSetting,
+            yaml = request.yaml,
+            storageType = request.storageType,
+            description = request.description
+        )
+        return savePipelineDraft(userId = userId, projectId = projectId, modelAndYaml = saveDraftReq)
     }
 
     override fun versionCreatorList(
@@ -464,7 +508,8 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
-        version: Int
+        version: Int,
+        draftVersion: Int?
     ): Result<PipelineVersionSimple> {
         checkParam(userId, projectId)
         val permission = AuthPermission.EDIT
@@ -487,6 +532,40 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
         return Result(
             pipelineVersionFacadeService.rollbackDraftFromVersion(
                 userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                version = version,
+                draftVersion = draftVersion
+            )
+        )
+    }
+
+    override fun canRollbackFromVersion(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        version: Int
+    ): Result<Boolean> {
+        checkParam(userId, projectId)
+        val permission = AuthPermission.EDIT
+        pipelinePermissionService.validPipelinePermission(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            permission = permission,
+            message = MessageUtil.getMessageByLocale(
+                CommonMessageCode.USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
+                I18nUtil.getLanguage(userId),
+                arrayOf(
+                    userId,
+                    projectId,
+                    permission.getI18n(I18nUtil.getLanguage(userId)),
+                    pipelineId
+                )
+            )
+        )
+        return Result(
+            pipelineVersionFacadeService.canRollbackFromVersion(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 version = version
@@ -523,6 +602,139 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
             targetBuildNo = buildNo.currentBuildNo
         )
         return Result(true)
+    }
+
+    override fun getVersionByBranch(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        branch: String,
+        archiveFlag: Boolean?,
+        source: PipelineGetVersionSource?
+    ): Result<PipelineVersionWithModel> {
+        val userPipelinePermissionCheckStrategy =
+            UserPipelinePermissionCheckStrategyFactory.createUserPipelinePermissionCheckStrategy(archiveFlag)
+        UserPipelinePermissionCheckContext(userPipelinePermissionCheckStrategy).checkUserPipelinePermission(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            permission = AuthPermission.VIEW
+        )
+        return Result(
+            pipelineVersionFacadeService.getVersionByBranch(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                branch = branch,
+                archiveFlag = archiveFlag,
+                source = source
+            )
+        )
+    }
+
+    override fun getVersionByBranchName(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        branch: String,
+        archiveFlag: Boolean?,
+        source: PipelineGetVersionSource?
+    ): Result<PipelineVersionWithModel> {
+        val userPipelinePermissionCheckStrategy =
+            UserPipelinePermissionCheckStrategyFactory.createUserPipelinePermissionCheckStrategy(archiveFlag)
+        UserPipelinePermissionCheckContext(userPipelinePermissionCheckStrategy).checkUserPipelinePermission(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            permission = AuthPermission.VIEW
+        )
+        return Result(
+            pipelineVersionFacadeService.getVersionByBranch(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                branch = branch,
+                archiveFlag = archiveFlag,
+                source = source
+            )
+        )
+    }
+
+    override fun listPacVersions(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        search: String?,
+        page: Int?,
+        pageSize: Int?
+    ): Result<List<PipelineYamlBuildVersion>> {
+        return Result(
+            pipelineVersionFacadeService.listPacVersions(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                search = search,
+                page = page,
+                pageSize = pageSize
+            )
+        )
+    }
+
+    override fun getPipelineDraftStatus(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        actionType: PipelineDraftActionType,
+        version: Int,
+        versionStatus: VersionStatus,
+        releaseVersion: Int,
+        baseDraftVersion: Int?
+    ): Result<PipelineDraftStatusResult> {
+        checkParam(userId, projectId)
+        pipelinePermissionService.checkPipelinePermission(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            permission = AuthPermission.EDIT
+        )
+        return Result(
+            pipelineVersionFacadeService.getPipelineDraftStatus(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                actionType = actionType,
+                version = version,
+                versionStatus = versionStatus,
+                releaseVersion = releaseVersion,
+                baseDraftVersion = baseDraftVersion
+            )
+        )
+    }
+
+    override fun listDraftVersions(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        version: Int,
+        page: Int?,
+        pageSize: Int?
+    ): Result<Page<PipelineDraftVersionSimple>> {
+        checkParam(userId, projectId)
+        pipelinePermissionService.checkPipelinePermission(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            permission = AuthPermission.EDIT
+        )
+        return Result(
+            pipelineVersionFacadeService.listPipelineDraftVersions(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                version = version,
+                page = page,
+                pageSize = pageSize
+            )
+        )
     }
 
     private fun checkParam(userId: String, projectId: String) {

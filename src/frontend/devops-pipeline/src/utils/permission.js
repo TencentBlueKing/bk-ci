@@ -25,7 +25,7 @@ export const handlePipelineNoPermission = (query) => {
     return handleNoPermission(
         BKUI,
         {
-            resourceType: 'pipeline',
+            resourceType: RESOURCE_TYPE.PIPELINE,
             ...query
         },
         global.pipelineVue.$createElement
@@ -49,7 +49,7 @@ export const handleTemplateNoPermission = (query) => {
     return handleNoPermission(
         BKUI,
         {
-            resourceType: 'pipeline_template',
+            resourceType: RESOURCE_TYPE.TEMPLATE,
             ...query
         },
         global.pipelineVue.$createElement
@@ -69,6 +69,7 @@ export const RESOURCE_ACTION = {
     ARCHIVED: 'pipeline_archive'
 }
 
+
 export const PROJECT_RESOURCE_ACTION = {
     MANAGE: 'project_manage',
     VISIT: 'project_visit',
@@ -85,5 +86,21 @@ export const TEMPLATE_RESOURCE_ACTION = {
     VIEW: 'pipeline_template_view',
     CREATE: 'pipeline_template_create',
     EDIT: 'pipeline_template_edit',
-    ENABLE: 'pipeline_template_enable'
+    ENABLE: 'pipeline_template_enable',
+    DELETE: 'pipeline_template_delete'
+}
+
+export const VARIABLE_RESOURCE_ACTION = {
+    CREATE: 'public_variable_create',
+    EDIT: 'public_variable_edit',
+    VIEW: 'public_variable_view',
+    DELETE: 'public_variable_delete',
+    USE: 'public_variable_use'
+}
+
+export const RESOURCE_TYPE = {
+    PROJECT: 'project',
+    PIPELINE: 'pipeline',
+    TEMPLATE: 'pipeline_template',
+    VARIABLE: 'public_variable'
 }

@@ -34,13 +34,14 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo
 import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.common.pipeline.pojo.setting.PipelineSettingGroupType
 import com.tencent.devops.common.pipeline.pojo.transfer.Resources
 import com.tencent.devops.process.yaml.pojo.YamlVersion
 import com.tencent.devops.process.yaml.pojo.YamlVersionParser
-import com.tencent.devops.process.yaml.v3.models.job.Job
+import com.tencent.devops.process.yaml.v3.models.job.IJob
 import com.tencent.devops.process.yaml.v3.models.on.PreTriggerOn
 import com.tencent.devops.process.yaml.v3.models.on.TriggerOn
-import com.tencent.devops.process.yaml.v3.models.stage.Stage
+import com.tencent.devops.process.yaml.v3.models.stage.IStage
 import com.tencent.devops.process.yaml.v3.utils.ScriptYmlUtils
 
 @JsonTypeInfo(
@@ -65,20 +66,30 @@ interface IPreTemplateScriptBuildYamlParser : YamlVersionParser {
     var customBuildNum: String?
     var syntaxDialect: String?
     var failIfVariableInvalid: Boolean?
+    var cancelPolicy: String?
+    var runsOn: Any?
 
     fun replaceTemplate(f: (param: ITemplateFilter) -> PreScriptBuildYamlIParser)
 
     fun formatVariables(): Map<String, Variable>
 
+    fun formatVariableTemplates(): List<VariableTemplate>
+
     fun formatTriggerOn(default: ScmType): List<Pair<TriggerType, TriggerOn>>
 
-    fun formatStages(): List<Stage>
+    fun formatStages(): List<IStage>
 
-    fun formatFinallyStage(): List<Job>
+    fun formatFinallyStage(): List<IJob>
 
     fun formatResources(): Resources?
 
+    fun formatExtends(): Extends?
+
     fun templateFilter(): ITemplateFilter
+
+    fun settingGroups(): List<PipelineSettingGroupType>?
+
+    fun checkForTemplateUse(): Boolean
 }
 
 /*
@@ -99,7 +110,7 @@ interface ITemplateFilter : YamlVersionParser {
     var stages: ArrayList<Map<String, Any>>?
     val jobs: LinkedHashMap<String, Any>?
     val steps: ArrayList<Map<String, Any>>?
-    var extends: Extends?
+    var extends: PreExtends?
     var resources: Resources?
     var finally: LinkedHashMap<String, Any>?
 
@@ -124,7 +135,7 @@ data class PreTemplateScriptBuildYamlParser(
     override var stages: ArrayList<Map<String, Any>>? = null,
     override val jobs: LinkedHashMap<String, Any>? = null,
     override val steps: ArrayList<Map<String, Any>>? = null,
-    override var extends: Extends? = null,
+    override var extends: PreExtends? = null,
     override var resources: Resources? = null,
     override var finally: LinkedHashMap<String, Any>? = null,
     override val notices: List<GitNotices>?,
@@ -138,7 +149,11 @@ data class PreTemplateScriptBuildYamlParser(
     @JsonProperty("syntax-dialect")
     override var syntaxDialect: String? = null,
     @JsonProperty("fail-if-variable-invalid")
-    override var failIfVariableInvalid: Boolean? = null
+    override var failIfVariableInvalid: Boolean? = null,
+    @JsonProperty("cancel-policy")
+    override var cancelPolicy: String? = null,
+    @JsonProperty("runs-on")
+    override var runsOn: Any? = null
 ) : IPreTemplateScriptBuildYamlParser, ITemplateFilter {
 
     init {
@@ -173,17 +188,24 @@ data class PreTemplateScriptBuildYamlParser(
         return preYaml.variables ?: emptyMap()
     }
 
+    override fun formatVariableTemplates(): List<VariableTemplate> {
+        checkInitialized()
+        return preYaml.variableTemplates ?: emptyList()
+    }
+
     override fun formatTriggerOn(default: ScmType): List<Pair<TriggerType, TriggerOn>> {
         val format = ScriptYmlUtils.formatTriggerOn(triggerOn)
         return listOf(TriggerType.BASE to format, TriggerType.parse(default) to format)
     }
 
-    override fun formatStages(): List<Stage> {
+    override fun formatStages(): List<IStage> {
         checkInitialized()
         return ScriptYmlUtils.formatStage(preYaml)
     }
 
-    override fun formatFinallyStage(): List<Job> {
+    override fun formatExtends(): Extends? = null
+
+    override fun formatFinallyStage(): List<IJob> {
         checkInitialized()
         return ScriptYmlUtils.preJobs2Jobs(preYaml.finally)
     }
@@ -193,6 +215,10 @@ data class PreTemplateScriptBuildYamlParser(
     }
 
     override fun templateFilter(): ITemplateFilter = this
+
+    override fun settingGroups(): List<PipelineSettingGroupType>? = null
+
+    override fun checkForTemplateUse() = false
 
     private fun checkInitialized() {
         if (!this::preYaml.isInitialized) throw RuntimeException("need replaceTemplate before")

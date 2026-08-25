@@ -30,7 +30,7 @@ package com.tencent.devops.process.yaml
 
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.process.engine.dao.PipelineWebhookVersionDao
-import com.tencent.devops.process.engine.dao.PipelineYamlVersionDao
+import com.tencent.devops.process.dao.yaml.PipelineYamlVersionDao
 import com.tencent.devops.process.service.webhook.PipelineBuildWebhookService
 import com.tencent.devops.process.webhook.WebhookEventFactory
 import com.tencent.devops.process.yaml.actions.BaseAction

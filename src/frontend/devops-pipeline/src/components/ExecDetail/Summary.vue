@@ -118,6 +118,16 @@
                             </p>
                         </div>
                     </bk-popover>
+                    <span
+                        v-if="execDetail?.versionChange"
+                        class="version-changed-info"
+                        @click="showVersionDiffDialog"
+                    >
+                        <Logo
+                            size="14"
+                            name="warning-circle"
+                        />
+                    </span>
                 </div>
             </div>
             <div class="exec-remark-block">
@@ -186,10 +196,16 @@
                 @goOutputs="goOutputs"
             />
         </div>
+        <VersionDiffDialog
+            :visible.sync="isShowVersionDiffDialog"
+            :build-num="`#${execDetail?.buildNum}`"
+            :build-id="$route.params.buildNo"
+        />
     </header>
 </template>
 
 <script>
+    import VersionDiffDialog from '@/components/BuildHistoryTable/VersionDiffDialog'
     import Logo from '@/components/Logo'
     import { mapActions } from 'vuex'
     import MaterialItem from './MaterialItem'
@@ -199,7 +215,8 @@
         components: {
             MaterialItem,
             Logo,
-            ArtifactQuality
+            ArtifactQuality,
+            VersionDiffDialog
         },
         props: {
             visible: {
@@ -218,7 +235,8 @@
                 remark: this.execDetail.remark,
                 isChangeRemark: false,
                 isShowMoreMaterial: false,
-                curVersionDesc: ''
+                curVersionDesc: '',
+                isShowVersionDiffDialog: false
             }
         },
         computed: {
@@ -281,7 +299,8 @@
         methods: {
             ...mapActions({
                 fetchVersionDetail: 'atom/getPipelineVersionInfo',
-                updateBuildRemark: 'pipelines/updateBuildRemark'
+                updateBuildRemark: 'pipelines/updateBuildRemark',
+                setExecInfo: 'atom/setExecInfo'
             }),
             async updateCurVersionDesc () {
                 try {
@@ -290,6 +309,7 @@
                         ...this.$route.params,
                         ...this.$route.query
                     })
+                    this.setExecInfo(result.data)
                     this.curVersionDesc = result.data.description
                 } catch (error) {
                     this.$showTips({
@@ -349,6 +369,9 @@
                         metadataValues: values.map(item => item.value).join(',')
                     }
                 })
+            },
+            showVersionDiffDialog () {
+                this.isShowVersionDiffDialog = true
             }
         }
     }
@@ -456,11 +479,16 @@
       height: 48px;
       .pipeline-cur-version-span {
         display: inline-block;
+        max-width: 200px;
         line-height: 48px;
         @include ellipsis();
         text-decoration: underline;
         text-decoration-skip-ink: none;
         cursor: pointer;
+      }
+      .version-changed-info {
+        color: $warningColor;
+        margin: -16px 0 0 4px;
       }
 
       .exec-remark {

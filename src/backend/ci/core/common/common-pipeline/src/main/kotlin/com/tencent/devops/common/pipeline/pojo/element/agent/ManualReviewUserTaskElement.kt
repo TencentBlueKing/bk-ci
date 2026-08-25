@@ -45,6 +45,8 @@ data class ManualReviewUserTaskElement(
     override var status: String? = null,
     @get:Schema(title = "审核人", required = true)
     var reviewUsers: MutableList<String> = mutableListOf(),
+    @get:Schema(title = "实际审核人", required = false)
+    var actualReviewUsers: MutableList<String>? = null,
     @get:Schema(title = "描述", required = false)
     var desc: String? = "",
     @get:Schema(title = "审核意见", required = false)
@@ -62,13 +64,16 @@ data class ManualReviewUserTaskElement(
     @get:Schema(title = "企业微信群id", required = false)
     var notifyGroup: MutableList<String>? = null,
     @get:Schema(title = "审核提醒时间（小时），支持每隔x小时提醒一次", required = false)
-    var reminderTime: Int? = null
+    var reminderTime: Int? = null,
+    @get:Schema(title = "审核意见是否必填", required = false)
+    val suggestRequired: Boolean? = false
 ) : Element(name, id, status) {
     companion object {
         const val classType = "manualReviewUserTask"
+        const val TASK_ATOM = "manualReviewTaskAtom"
     }
 
-    override fun getTaskAtom() = "manualReviewTaskAtom"
+    override fun getTaskAtom() = TASK_ATOM
 
     override fun transferYaml(defaultValue: JSONObject?): PreStep {
         val input = mutableMapOf<String, Any>().apply {
@@ -82,6 +87,7 @@ data class ManualReviewUserTaskElement(
             markdownContent?.run { put(::markdownContent.name, this) }
             notifyGroup?.ifEmpty { null }?.run { put(::notifyGroup.name, this) }
             reminderTime?.run { put(::reminderTime.name, this) }
+            suggestRequired?.run { put(::suggestRequired.name, this) }
         }
         return PreStep(
             name = name,

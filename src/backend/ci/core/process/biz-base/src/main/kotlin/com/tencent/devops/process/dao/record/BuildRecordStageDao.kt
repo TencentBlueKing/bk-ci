@@ -159,7 +159,7 @@ class BuildRecordStageDao {
             conditions.add(EXECUTE_COUNT.eq(executeCount))
             buildStatusSet?.let { conditions.add(STATUS.`in`(it.map { status -> status.name })) }
             return dslContext.selectFrom(this)
-                .where(conditions).orderBy(STAGE_ID.asc()).fetch(mapper)
+                .where(conditions).orderBy(SEQ.asc()).fetch(mapper)
         }
     }
 

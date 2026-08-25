@@ -28,6 +28,7 @@
 package com.tencent.devops.process.pojo.setting
 
 import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
+import com.tencent.devops.common.pipeline.pojo.setting.BuildCancelPolicy
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.common.pipeline.pojo.setting.Subscription
@@ -78,7 +79,13 @@ data class PipelineSettingVersion(
     @get:Schema(title = "是否配置流水线变量值超长时终止执行", required = false)
     val failIfVariableInvalid: Boolean? = false,
     @get:Schema(title = "YAML流水线特殊配置", required = false)
-    var pipelineAsCodeSettings: PipelineAsCodeSettings? = null
+    var pipelineAsCodeSettings: PipelineAsCodeSettings? = null,
+    @get:Schema(title = "构建取消权限策略", required = false)
+    var buildCancelPolicy: BuildCancelPolicy? = null,
+    @get:Schema(title = "环境hashId", required = false)
+    var envHashId: String? = null,
+    @get:Schema(title = "环境名称", required = false)
+    var envName: String? = null
 ) {
     companion object {
 
@@ -99,7 +106,11 @@ data class PipelineSettingVersion(
             concurrencyCancelInProgress = setting.concurrencyCancelInProgress,
             concurrencyGroup = setting.concurrencyGroup,
             maxConRunningQueueSize = setting.maxConRunningQueueSize,
-            pipelineAsCodeSettings = setting.pipelineAsCodeSettings
+            pipelineAsCodeSettings = setting.pipelineAsCodeSettings,
+            failIfVariableInvalid = setting.failIfVariableInvalid,
+            buildCancelPolicy = setting.buildCancelPolicy,
+            envHashId = setting.envHashId,
+            envName = setting.envName
         )
     }
 }

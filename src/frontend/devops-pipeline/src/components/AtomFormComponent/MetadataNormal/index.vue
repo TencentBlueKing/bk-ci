@@ -94,28 +94,6 @@
     import { debounce, isObject } from '@/utils/util'
     import { Validator } from 'vee-validate'
 
-    Validator.extend('validVariable', {
-        getMessage: () => window.pipelineVue.$i18n.t('validVariableFormat'),
-        validate: function (value, params) {
-            const { valueList } = params
-            
-            if (!value) return true
-            const isInOptions = valueList.some(option => option.name === value)
-            if (isInOptions) return true
-            
-            return value.isBkVar()
-        }
-    })
-
-    Validator.extend('required', {
-        getMessage: (field) => window.pipelineVue.$i18n.t('editPage.requiredTips', [field]),
-        validate: (value) => {
-            return {
-                valid: value !== undefined && value !== null && value !== ''
-            }
-        }
-    })
-
     export default {
         name: 'metadata-normal',
         components: {
@@ -180,6 +158,27 @@
             }
         },
         created () {
+            Validator.extend('validVariable', {
+                getMessage: () => window.pipelineVue.$i18n.t('validVariableFormat'),
+                validate: (value, params) => {
+                    const { valueList } = params
+                    
+                    if (!value) return true
+                    const isInOptions = valueList.some(option => option.name === value)
+                    if (isInOptions) return true
+                    return this.getValidaVar(value)
+                }
+            })
+
+            Validator.extend('required', {
+                getMessage: (field) => window.pipelineVue.$i18n.t('editPage.requiredTips', [field]),
+                validate: (value) => {
+                    return {
+                        valid: value !== undefined && value !== null && value !== ''
+                    }
+                }
+            })
+
             if (this.hasUrl) {
                 this.getOptionList()
                 this.debounceGetOptionList = debounce(this.getOptionList)

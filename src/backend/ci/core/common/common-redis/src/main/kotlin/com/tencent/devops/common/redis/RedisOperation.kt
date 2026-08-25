@@ -27,7 +27,7 @@
 
 package com.tencent.devops.common.redis
 
-import com.tencent.devops.common.redis.split.RedisSplitProperties
+import com.tencent.devops.common.redis.properties.RedisSplitProperties
 import io.micrometer.core.instrument.util.NamedThreadFactory
 import java.util.Date
 import java.util.concurrent.ThreadPoolExecutor
@@ -43,6 +43,7 @@ import org.springframework.data.redis.core.script.RedisScript
 class RedisOperation(
     private val masterRedisTemplate: RedisTemplate<String, String>,
     private val slaveRedisTemplate: RedisTemplate<String, String>? = null,
+    private val lockRedisTemplate: RedisTemplate<String, String>? = null,
     private val splitMode: RedisSplitProperties.Mode,
     private val redisName: String? = null
 ) {
@@ -433,12 +434,25 @@ class RedisOperation(
         return masterRedisTemplate.execute(action)
     }
 
-    fun <T> execute(script: RedisScript<T>, keys: List<String>, vararg args: Any?): T {
-        // 双写
-        writeSlaveIfNeed {
-            slaveRedisTemplate!!.execute(script, keys, *args)
+    /**
+     * 执行 Redis Lua 脚本
+     *
+     * @param script Redis 脚本对象
+     * @param keys 键列表
+     * @param args 参数列表
+     * @param isRedisLock 是否为 Redis 锁操作，注意锁操作使用RedisLock，不要自己实现
+     * @return 脚本执行结果
+     */
+    fun <T> execute(script: RedisScript<T>, keys: List<String>, vararg args: Any?, isRedisLock: Boolean = false): T? {
+        if (isRedisLock) {
+            return lockRedisTemplate?.execute(script, keys, *args)
+        } else {
+            // 双写
+            writeSlaveIfNeed {
+                slaveRedisTemplate!!.execute(script, keys, *args)
+            }
+            return masterRedisTemplate.execute(script, keys, *args)
         }
-        return masterRedisTemplate.execute(script, keys, *args)
     }
 
     fun listSize(key: String, isDistinguishCluster: Boolean? = false): Long? {
@@ -481,12 +495,31 @@ class RedisOperation(
         masterRedisTemplate.opsForList().trim(key, start, end)
     }
 
-    fun setNxEx(key: String, value: String, expiredInSecond: Long): Boolean {
-        // 双写
-        writeSlaveIfNeed {
-            slaveRedisTemplate!!.opsForValue().setIfAbsent(key, value, expiredInSecond, TimeUnit.SECONDS)
+    /**
+     * 设置 key 的值，仅当 key 不存在时
+     * 同时设置过期时间，原子操作
+     *
+     * @param key 键
+     * @param value 值
+     * @param expiredInSecond 过期时间（秒）
+     * @param isRedisLock 是否为 Redis 锁操作，注意锁操作使用RedisLock，不要自己实现
+     * @return 设置成功返回 true，否则返回 false
+     */
+    fun setNxEx(key: String, value: String, expiredInSecond: Long, isRedisLock: Boolean = false): Boolean {
+        if (isRedisLock) {
+            if (lockRedisTemplate == null) {
+                return true // 没有开启lock redis , 默认返回true
+            } else {
+                return lockRedisTemplate.opsForValue().setIfAbsent(key, value, expiredInSecond, TimeUnit.SECONDS)
+                    ?: false
+            }
+        } else {
+            // 双写
+            writeSlaveIfNeed {
+                slaveRedisTemplate!!.opsForValue().setIfAbsent(key, value, expiredInSecond, TimeUnit.SECONDS)
+            }
+            return masterRedisTemplate.opsForValue().setIfAbsent(key, value, expiredInSecond, TimeUnit.SECONDS) ?: false
         }
-        return masterRedisTemplate.opsForValue().setIfAbsent(key, value, expiredInSecond, TimeUnit.SECONDS) ?: false
     }
 
     fun getRedisName(): String? {

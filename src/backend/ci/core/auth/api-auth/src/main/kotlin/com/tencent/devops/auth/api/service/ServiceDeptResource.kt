@@ -27,6 +27,7 @@
 
 package com.tencent.devops.auth.api.service
 
+import com.tencent.devops.auth.pojo.BkUserInfo
 import com.tencent.devops.auth.pojo.vo.DeptInfoVo
 import com.tencent.devops.auth.pojo.vo.UserAndDeptInfoVo
 import com.tencent.devops.common.api.auth.AUTH_HEADER_BK_TENANT_ID
@@ -109,8 +110,26 @@ interface ServiceDeptResource {
     fun listUserInfos(
         @Parameter(description = "用户ID列表", required = true)
         memberIds: List<String>,
-        @Parameter(description = "租户ID", required = true)
+        @Parameter(description = "租户ID", required = false)
         @HeaderParam(AUTH_HEADER_BK_TENANT_ID)
         tenantId: String?
     ): Result<List<UserAndDeptInfoVo>>
+
+    @GET
+    @Path("/getLeader")
+    @Operation(summary = "获取用户的直属 Leader")
+    fun getLeader(
+        @QueryParam("userId")
+        @Parameter(description = "用户名称", required = true)
+        userId: String
+    ): Result<BkUserInfo?>
+
+    @GET
+    @Path("/getUserDeptIds")
+    @Operation(summary = "获取用户部门ID集合")
+    fun getUserDeptIds(
+        @QueryParam("userId")
+        @Parameter(description = "用户名称", required = true)
+        userId: String
+    ): Result<Set<String>>
 }

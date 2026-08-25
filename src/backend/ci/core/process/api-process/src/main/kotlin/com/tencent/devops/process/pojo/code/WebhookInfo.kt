@@ -32,7 +32,7 @@ import io.swagger.v3.oas.annotations.media.Schema
 data class WebhookInfo(
     @get:Schema(title = "代码库类型", required = true)
     val codeType: String?, // CodeType.name
-    @get:Schema(title = "代码库完整名称", required = true)
+    @get:Schema(title = "代码库完整名称", required = false)
     val nameWithNamespace: String?,
     @get:Schema(title = "仓库url链接", required = false)
     val webhookRepoUrl: String?,
@@ -87,5 +87,7 @@ data class WebhookInfo(
     // 自定义触发材料ID
     val materialId: String?,
     // 自定义触发材料名
-    val materialName: String?
+    val materialName: String?,
+    // 触发渠道
+    val channelCode: String?,
 )

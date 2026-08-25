@@ -36,6 +36,7 @@ import com.tencent.devops.common.service.tenant.TenantUtils
 import com.tencent.devops.model.project.tables.TProject
 import com.tencent.devops.model.project.tables.records.TProjectRecord
 import com.tencent.devops.project.pojo.OpProjectUpdateInfoRequest
+import com.tencent.devops.project.pojo.PaasProject
 import com.tencent.devops.project.pojo.ProjectCollation
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectOrganizationInfo
@@ -46,6 +47,7 @@ import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.enums.ProjectApproveStatus
 import com.tencent.devops.project.pojo.enums.ProjectAuthSecrecyStatus
 import com.tencent.devops.project.pojo.enums.ProjectChannelCode
+import com.tencent.devops.project.pojo.enums.ProjectScopeType
 import com.tencent.devops.project.pojo.user.UserDeptDetail
 import com.tencent.devops.project.util.ProjectUtils
 import java.net.URLDecoder
@@ -156,6 +158,17 @@ class ProjectDao {
         }
     }
 
+    fun countByCondition(
+        dslContext: DSLContext,
+        projectConditionDTO: ProjectConditionDTO
+    ): Int {
+        return with(TProject.T_PROJECT) {
+            dslContext.selectCount().from(this)
+                .where(buildProjectCondition(projectConditionDTO))
+                .fetchOne(0, Int::class.java)!!
+        }
+    }
+
     fun buildProjectCondition(
         projectConditionDTO: ProjectConditionDTO
     ): MutableList<Condition> {
@@ -204,6 +217,9 @@ class ProjectDao {
                             ROUTER_TAG.like("%${projectConditionDTO.routerTag!!.value}%")
                         )
                     }
+                }
+                if (!dbRouteTag.isNullOrBlank()) {
+                    conditions.add(ROUTER_TAG.eq(dbRouteTag))
                 }
                 if (queryRemoteDevFlag == true) {
                     conditions.add(JooqUtils.jsonExtractAny<Boolean>(PROPERTIES, "\$.remotedev").isTrue)
@@ -307,6 +323,96 @@ class ProjectDao {
         }
     }
 
+    fun getFirstPersonalProjectByCreator(dslContext: DSLContext, creator: String): TProjectRecord? {
+        with(TProject.T_PROJECT) {
+            return dslContext.selectFrom(this)
+                .where(CREATOR.eq(creator))
+                .and(PROJECT_SCOPE.eq(ProjectScopeType.PERSONAL.value))
+                .and(APPROVAL_STATUS.notIn(UNSUCCESSFUL_CREATE_STATUS))
+                .orderBy(CREATED_AT.desc())
+                .limit(1)
+                .fetchOne()
+        }
+    }
+
+    fun updateProjectScopeByCode(dslContext: DSLContext, projectCode: String, projectScope: Int): Int {
+        with(TProject.T_PROJECT) {
+            return dslContext.update(this)
+                .set(PROJECT_SCOPE, projectScope)
+                .where(ENGLISH_NAME.eq(projectCode))
+                .execute()
+        }
+    }
+
+    fun create(dslContext: DSLContext, paasProject: PaasProject): Int {
+        with(TProject.T_PROJECT) {
+            return dslContext.insertInto(
+                this,
+                APPROVAL_STATUS,
+                APPROVAL_TIME,
+                APPROVER,
+                BG_ID,
+                BG_NAME,
+                CC_APP_ID,
+                CENTER_ID,
+                CENTER_NAME,
+                CREATED_AT,
+                CREATOR,
+                DATA_ID,
+                DEPLOY_TYPE,
+                DEPT_ID,
+                DEPT_NAME,
+                DESCRIPTION,
+                ENGLISH_NAME,
+                EXTRA,
+                IS_OFFLINED,
+                IS_SECRECY,
+                KIND,
+                LOGO_ADDR,
+                PROJECT_ID,
+                PROJECT_NAME,
+                PROJECT_TYPE,
+                REMARK,
+                UPDATED_AT,
+                USE_BK,
+                APPROVAL_STATUS,
+                ENABLED
+            )
+                .values(
+                    paasProject.approval_status,
+                    paasProject.approval_time,
+                    paasProject.approver,
+                    paasProject.bg_id,
+                    paasProject.bg_name,
+                    paasProject.cc_app_id,
+                    paasProject.center_id,
+                    paasProject.center_name,
+                    paasProject.created_at.time,
+                    paasProject.creator,
+                    paasProject.data_id,
+                    paasProject.deploy_type,
+                    paasProject.dept_id,
+                    paasProject.dept_name,
+                    paasProject.description,
+                    paasProject.english_name,
+                    paasProject.extra,
+                    paasProject.is_offlined,
+                    paasProject.is_secrecy,
+                    paasProject.kind,
+                    paasProject.logo_addr,
+                    paasProject.project_id,
+                    paasProject.project_name,
+                    paasProject.project_type,
+                    paasProject.remark,
+                    paasProject.updated_at?.time,
+                    paasProject.use_bk,
+                    ProjectApproveStatus.APPROVED.status,
+                    true
+                )
+                .execute()
+        }
+    }
+
     fun delete(dslContext: DSLContext, projectId: String): Int {
         with(TProject.T_PROJECT) {
             return dslContext.delete(this).where(PROJECT_ID.eq(projectId)).execute()
@@ -357,7 +463,9 @@ class ProjectDao {
                 AUTH_SECRECY,
                 PRODUCT_ID,
                 TENANT_ID,
-                TENANT_ENGLISH_NAME
+                TENANT_ENGLISH_NAME,
+                HIDDEN,
+                PROJECT_SCOPE
             ).values(
                 projectCreateInfo.projectName,
                 projectId,
@@ -390,7 +498,9 @@ class ProjectDao {
                 projectCreateInfo.authSecrecy ?: ProjectAuthSecrecyStatus.PUBLIC.value,
                 projectCreateInfo.productId,
                 projectCreateInfo.tenantId,
-                projectCreateInfo.englishName
+                projectCreateInfo.englishName,
+                projectCreateInfo.hidden,
+                projectCreateInfo.projectScope
             ).execute()
         }
     }
@@ -430,6 +540,7 @@ class ProjectDao {
                 .set(TENANT_ID, projectUpdateInfo.tenantId)
                 .set(TENANT_ENGLISH_NAME, projectUpdateInfo.englishName)
             projectUpdateInfo.authSecrecy?.let { update.set(AUTH_SECRECY, it) }
+            projectUpdateInfo.hidden?.let { update.set(HIDDEN, it) }
             logoAddress?.let { update.set(LOGO_ADDR, logoAddress) }
             projectUpdateInfo.properties?.let { update.set(PROPERTIES, JsonUtil.toJson(it, false)) }
             return update.where(PROJECT_ID.eq(projectId)).execute()
@@ -467,6 +578,33 @@ class ProjectDao {
                 .set(UPDATED_AT, LocalDateTime.now())
                 .let { if (userId == null) it else it.set(UPDATOR, userId) }
                 .where(PROJECT_ID.eq(projectId))
+                .execute()
+        }
+    }
+
+    fun updateHiddenStatus(
+        dslContext: DSLContext,
+        englishName: String,
+        hidden: Boolean
+    ): Int {
+        with(TProject.T_PROJECT) {
+            return dslContext.update(this)
+                .set(HIDDEN, hidden)
+                .set(UPDATED_AT, LocalDateTime.now())
+                .where(ENGLISH_NAME.eq(englishName))
+                .execute()
+        }
+    }
+
+    fun updatePipelineLimit(
+        dslContext: DSLContext,
+        englishName: String,
+        pipelineLimit: Int
+    ): Int {
+        with(TProject.T_PROJECT) {
+            return dslContext.update(this)
+                .set(PIPELINE_LIMIT, pipelineLimit)
+                .where(ENGLISH_NAME.eq(englishName))
                 .execute()
         }
     }
@@ -558,6 +696,7 @@ class ProjectDao {
         limit: Int? = null,
         searchName: String? = null,
         enabled: Boolean? = null,
+        hidden: Boolean? = null,
         authSecrecyStatus: ProjectAuthSecrecyStatus? = null,
         sortType: ProjectSortType? = null,
         collation: ProjectCollation? = ProjectCollation.DEFAULT,
@@ -571,6 +710,7 @@ class ProjectDao {
                 .and(IS_OFFLINED.eq(false))
                 .let { if (null == searchName) it else it.and(PROJECT_NAME.like("%$searchName%")) }
                 .let { if (null == enabled) it else it.and(ENABLED.eq(enabled)) }
+                .let { if (null == hidden) it else it.and(HIDDEN.eq(hidden)) }
                 .let { if (null == authSecrecyStatus) it else it.and(AUTH_SECRECY.eq(authSecrecyStatus.value)) }
                 .let { if (productIds.isEmpty()) it else it.and(PRODUCT_ID.`in`(productIds)) }
                 .let { if (channelCodes.isEmpty()) it else it.and(CHANNEL.`in`(channelCodes)) }
@@ -663,7 +803,8 @@ class ProjectDao {
 
     private fun TProject.generateQueryProjectForApplyCondition(): MutableList<Condition> {
         val conditions = mutableListOf<Condition>()
-        conditions.add(CHANNEL.eq(ProjectChannelCode.BS.name).or(CHANNEL.eq(ProjectChannelCode.PREBUILD.name)))
+        conditions.add(CHANNEL.eq(ProjectChannelCode.BS.name))
+        conditions.add(PROJECT_SCOPE.eq(ProjectScopeType.TEAM.value))
         conditions.add(IS_OFFLINED.eq(false))
         conditions.add(ENABLED.eq(true))
         conditions.add(APPROVAL_STATUS.notIn(UNSUCCESSFUL_CREATE_STATUS))
@@ -822,7 +963,7 @@ class ProjectDao {
         with(TProject.T_PROJECT) {
             return dslContext.selectFrom(this)
                 .where(PROJECT_NAME.like("%$projectName%"))
-                .let { if (useTenantCondition(tenantId)) it else it.and(TENANT_ID.eq(tenantId)) }
+                .let { if (useTenantCondition(tenantId)) it.and(TENANT_ID.eq(tenantId)) else it }
                 .and(APPROVAL_STATUS.notIn(UNSUCCESSFUL_CREATE_STATUS))
                 .and(AUTH_SECRECY.eq(ProjectAuthSecrecyStatus.PUBLIC.value))
                 .and(CHANNEL.`in`(channelCodes))
@@ -839,7 +980,7 @@ class ProjectDao {
         with(TProject.T_PROJECT) {
             return dslContext.selectCount().from(this)
                 .where(PROJECT_NAME.like("%$projectName%"))
-                .let { if (useTenantCondition(tenantId)) it else it.and(TENANT_ID.eq(tenantId)) }
+                .let { if (useTenantCondition(tenantId)) it.and(TENANT_ID.eq(tenantId)) else it }
                 .and(APPROVAL_STATUS.notIn(UNSUCCESSFUL_CREATE_STATUS))
                 .and(AUTH_SECRECY.eq(ProjectAuthSecrecyStatus.PUBLIC.value))
                 .and(CHANNEL.`in`(channelCodes))
@@ -894,7 +1035,7 @@ class ProjectDao {
         with(TProject.T_PROJECT) {
             val record = dslContext.selectFrom(this)
                 .where(PROJECT_NAME.eq(projectName))
-                .let { if (useTenantCondition(tenantId)) it else it.and(TENANT_ID.eq(tenantId)) }
+                .let { if (useTenantCondition(tenantId)) it.and(TENANT_ID.eq(tenantId)) else it }
                 .and(APPROVAL_STATUS.notIn(UNSUCCESSFUL_CREATE_STATUS))
                 .fetchAny()
                 ?: return null
@@ -1025,7 +1166,8 @@ class ProjectDao {
         }
     }
 
-    private fun useTenantCondition(tenantId: String?) = TenantUtils.isMultiTenantMode() && null != tenantId
+    private fun useTenantCondition(tenantId: String?) =
+        TenantUtils.isMultiTenantMode() && !tenantId.isNullOrBlank()
 
     fun listAllTenantIds(dslContext: DSLContext): List<String> {
         with(TProject.T_PROJECT) {

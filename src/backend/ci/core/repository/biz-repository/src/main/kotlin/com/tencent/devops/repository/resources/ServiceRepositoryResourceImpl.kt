@@ -125,7 +125,8 @@ class ServiceRepositoryResourceImpl @Autowired constructor(
         permission: Permission,
         page: Int?,
         pageSize: Int?,
-        aliasName: String?
+        aliasName: String?,
+        scmCode: String?
     ): Result<Page<RepositoryInfo>> {
         if (userId.isBlank()) {
             throw ParamBlankException("Invalid userId")
@@ -150,7 +151,8 @@ class ServiceRepositoryResourceImpl @Autowired constructor(
             authPermission = bkAuthPermission,
             offset = limit.offset,
             limit = limit.limit,
-            aliasName = aliasName
+            aliasName = aliasName,
+            scmCode = scmCode
         )
         return Result(Page(pageNotNull, pageSizeNotNull, result.count, result.records))
     }

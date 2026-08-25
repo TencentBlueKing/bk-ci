@@ -37,11 +37,13 @@ import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.STATIC
 import com.tencent.devops.common.api.enums.OSType
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.util.FileUtil
 import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.ZipUtil
 import com.tencent.devops.store.api.common.ServiceStoreArchiveResource
+import com.tencent.devops.store.api.common.ServiceStoreComponentVersionResource
 import com.tencent.devops.store.api.common.ServiceStoreResource
 import com.tencent.devops.store.pojo.common.CONFIG_YML_NAME
 import com.tencent.devops.store.pojo.common.QueryComponentPkgEnvInfoParam
@@ -49,6 +51,7 @@ import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.publication.StorePkgEnvInfo
 import com.tencent.devops.store.pojo.common.publication.StorePkgInfoUpdateRequest
+import com.tencent.devops.store.utils.VersionUtils
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -83,6 +86,8 @@ abstract class ArchiveStorePkgServiceImpl : ArchiveStorePkgService {
         val storeCode = archiveStorePkgRequest.storeCode
         val storeType = archiveStorePkgRequest.storeType
         val version = archiveStorePkgRequest.version
+        // 判断版本号是否合法
+        VersionUtils.validateVersion(version, storeType)
         val releaseType = archiveStorePkgRequest.releaseType
         // 校验上传的包是否合法
         val verifyPackageResult = client.get(ServiceStoreArchiveResource::class)
@@ -101,10 +106,12 @@ abstract class ArchiveStorePkgServiceImpl : ArchiveStorePkgService {
         }
         val storePkgEnvInfos: List<StorePkgEnvInfo>?
         var packageFileInfos: MutableList<PackageFileInfo>? = null
+        // 上传 multipart 的 filename 由客户端控制，必须先 basename 化以阻断 ../、绝对路径、盘符等路径穿越
+        val safeFileName = FileUtil.getSafeFileName(disposition.fileName)
         try {
             // 解压上传的包
             handlePkgFile(
-                disposition = disposition,
+                fileName = safeFileName,
                 inputStream = inputStream,
                 storeType = storeType,
                 storeCode = storeCode,
@@ -114,7 +121,7 @@ abstract class ArchiveStorePkgServiceImpl : ArchiveStorePkgService {
             val bkConfigFile = File(storeArchivePath, CONFIG_YML_NAME)
             storePkgEnvInfos = if (bkConfigFile.exists()) {
                 // 如果上传的文件是压缩包需要删除原压缩包
-                File(storeArchivePath, disposition.fileName).deleteRecursively()
+                File(storeArchivePath, safeFileName).deleteRecursively()
                 client.get(ServiceStoreArchiveResource::class).getComponentPkgEnvInfo(
                     userId = userId,
                     storeType = storeType,
@@ -128,7 +135,7 @@ abstract class ArchiveStorePkgServiceImpl : ArchiveStorePkgService {
                 listOf(
                     StorePkgEnvInfo(
                         osName = OSType.WINDOWS.name.lowercase(),
-                        pkgLocalPath = disposition.fileName,
+                        pkgLocalPath = safeFileName,
                         defaultFlag = true
                     )
                 )
@@ -152,15 +159,18 @@ abstract class ArchiveStorePkgServiceImpl : ArchiveStorePkgService {
                     packageFileInfos = mutableListOf()
                 }
                 if (pkgLocalPath.isNullOrBlank()) {
-                    pkgLocalPath = disposition.fileName
+                    pkgLocalPath = safeFileName
                 }
-                val packageFile = File("$storeArchivePath/$pkgLocalPath")
+                // pkgLocalPath 在 bkConfigFile 存在分支下来自 getComponentPkgEnvInfo（解析自 config.yml），
+                // 仍由攻击者控制，必须做 canonical-path 校验防止 ../ 等穿越逃离 storeArchivePath
+                val packageFile = FileUtil.resolveSafeChildFile(storeArchivePath, pkgLocalPath)
                 val packageFileName = packageFile.name
                 val packageFileInfo = PackageFileInfo(
                     packageFileName = packageFileName,
                     packageFilePath = packageFile.absolutePath.removePrefix(getStoreArchiveBasePath()),
                     packageFileSize = packageFile.length(),
-                    shaContent = packageFile.inputStream().use { ShaUtils.sha1InputStream(it) }
+                    shaContent = packageFile.inputStream().use { ShaUtils.sha1InputStream(it) },
+                    sha256Content = packageFile.inputStream().use { ShaUtils.sha256InputStream(it) }
                 )
                 val pkgRepoPath = generatePkgRepoPath(
                     storeCode = storeCode,
@@ -171,6 +181,7 @@ abstract class ArchiveStorePkgServiceImpl : ArchiveStorePkgService {
                 )
                 storePkgEnvInfo.pkgRepoPath = pkgRepoPath
                 storePkgEnvInfo.shaContent = packageFileInfo.shaContent
+                storePkgEnvInfo.sha256Content = packageFileInfo.sha256Content
                 storePkgEnvInfo.pkgName = packageFileName
                 packageFileInfos!!.add(packageFileInfo)
             }
@@ -215,7 +226,10 @@ abstract class ArchiveStorePkgServiceImpl : ArchiveStorePkgService {
                     dslContext = context,
                     userId = userId,
                     fileId = fileId,
-                    props = mapOf(PackageFileInfo::shaContent.name to packageFileInfo.shaContent)
+                    props = mapOf(
+                        PackageFileInfo::shaContent.name to packageFileInfo.shaContent,
+                        PackageFileInfo::sha256Content.name to packageFileInfo.sha256Content
+                    )
                 )
             }
         }
@@ -242,13 +256,12 @@ abstract class ArchiveStorePkgServiceImpl : ArchiveStorePkgService {
     }
 
     private fun handlePkgFile(
-        disposition: FormDataContentDisposition,
+        fileName: String,
         inputStream: InputStream,
         storeType: StoreTypeEnum,
         storeCode: String,
         version: String
     ) {
-        val fileName = disposition.fileName
         val storeArchivePath = buildStoreArchivePath(storeType, storeCode, version)
         val file = File(storeArchivePath, fileName)
         val parentDir = file.parentFile
@@ -345,22 +358,27 @@ abstract class ArchiveStorePkgServiceImpl : ArchiveStorePkgService {
         version: String,
         instanceId: String?,
         osName: String?,
-        osArch: String?
+        osArch: String?,
+        checkPermissionFlag: Boolean
     ): String {
-        val validateResult = client.get(ServiceStoreResource::class).validateComponentDownloadPermission(
-            storeCode = storeCode,
-            storeType = storeType,
-            version = version,
-            projectCode = projectId,
-            userId = userId,
-            instanceId = instanceId
-        )
-        val storeBaseInfo = validateResult.data
-        if (validateResult.isNotOk() || storeBaseInfo == null) {
-            throw ErrorCodeException(
-                errorCode = validateResult.status.toString(),
-                defaultMessage = validateResult.message
+        var storeStatus: String? = null
+        if (checkPermissionFlag) {
+            val validateResult = client.get(ServiceStoreResource::class).validateComponentDownloadPermission(
+                storeCode = storeCode,
+                storeType = storeType,
+                version = version,
+                projectCode = projectId,
+                userId = userId,
+                instanceId = instanceId
             )
+            val storeBaseInfo = validateResult.data
+            if (validateResult.isNotOk() || storeBaseInfo == null) {
+                throw ErrorCodeException(
+                    errorCode = validateResult.status.toString(),
+                    defaultMessage = validateResult.message
+                )
+            }
+            storeStatus = storeBaseInfo.status
         }
         var finalOsName = osName
         if (storeType == StoreTypeEnum.DEVX && osName.isNullOrBlank()) {
@@ -378,7 +396,17 @@ abstract class ArchiveStorePkgServiceImpl : ArchiveStorePkgService {
             throw ErrorCodeException(errorCode = CommonMessageCode.ERROR_CLIENT_REST_ERROR)
         }
         val storePkgEnvInfo = storePkgEnvInfos[0]
-        val queryCacheFlag = storeBaseInfo.status !in StoreStatusEnum.getTestStatusList()
+        val queryCacheFlag = if (storeStatus != null) {
+            storeStatus !in StoreStatusEnum.getTestStatusList()
+        } else {
+            val status = client.get(ServiceStoreComponentVersionResource::class).getStoreUpgradeStatusInfo(
+                userId = userId,
+                storeCode = storeCode,
+                storeType = storeType.name,
+                version = version
+            ).data ?: throw ErrorCodeException(errorCode = CommonMessageCode.ERROR_CLIENT_REST_ERROR)
+            status !in StoreStatusEnum.getTestStatusList()
+        }
         return createPkgShareUri(
             userId = userId,
             storeType = storeType,

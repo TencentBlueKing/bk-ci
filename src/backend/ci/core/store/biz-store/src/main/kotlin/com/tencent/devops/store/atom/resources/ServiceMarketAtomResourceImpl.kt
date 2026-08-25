@@ -45,6 +45,7 @@ import com.tencent.devops.store.pojo.atom.AtomVersion
 import com.tencent.devops.store.pojo.atom.ElementThirdPartySearchParam
 import com.tencent.devops.store.pojo.atom.GetRelyAtom
 import com.tencent.devops.store.pojo.atom.InstallAtomReq
+import com.tencent.devops.store.pojo.atom.MyAtomResp
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.springframework.beans.factory.annotation.Autowired
@@ -103,7 +104,22 @@ class ServiceMarketAtomResourceImpl @Autowired constructor(
         channelCode: ChannelCode?,
         installAtomReq: InstallAtomReq
     ): Result<Boolean> {
-        return marketAtomService.installAtom(userId, channelCode ?: ChannelCode.BS, installAtomReq, tenantId)
+        return marketAtomService.installAtom(
+            userId = userId,
+            channelCode = channelCode ?: ChannelCode.getRequestChannelCode(),
+            installAtomReq = installAtomReq,
+            tenantId = tenantId
+        )
+    }
+
+    override fun getAtomYmlV2Info(atomCode: String, defaultShowFlag: Boolean?): Result<String?> {
+        return Result(
+            marketAtomService.generateCiV2Yaml(
+                atomCode = atomCode,
+                defaultShowFlag = defaultShowFlag ?: false,
+                tenantId = null
+            )
+        )
     }
 
     override fun getPostAtoms(projectCode: String, atomItems: Set<AtomPostReqItem>): Result<AtomPostResp> {
@@ -116,5 +132,14 @@ class ServiceMarketAtomResourceImpl @Autowired constructor(
 
     override fun getAtomsDefaultValue(atom: ElementThirdPartySearchParam): Result<Map<String, Any>> {
         return Result(marketAtomService.getAtomsDefaultValue(atom = atom))
+    }
+
+    override fun listMyAtoms(
+        userId: String,
+        atomName: String?,
+        page: Int,
+        pageSize: Int
+    ): Result<MyAtomResp?> {
+        return marketAtomService.getMyAtoms(userId, atomName, page, pageSize, tenantId = null)
     }
 }

@@ -31,4 +31,11 @@ var (
 	AgentVersion string
 	GitCommit    string
 	BuildTime    string
+
+	// WinCertOrgName 通过 -ldflags "-X" 注入的 Windows 代码签名证书信任锚，
+	// 匹配证书 Subject 中的 O 字段（组织名）。为空时跳过签名校验（开发/社区构建）。
+	WinCertOrgName string
+	// MacosTeamId 通过 -ldflags "-X" 注入的 macOS 开发者 Team ID，
+	// 10 位字符。为空时跳过签名校验（开发/社区构建）。
+	MacosTeamId string
 )

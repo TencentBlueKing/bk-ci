@@ -69,12 +69,23 @@ import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GITHUB_WEBHOOK_CREATE
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GITHUB_WEBHOOK_CREATE_REF_TYPE
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_BRANCH
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_DESCRIPTION
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_ASSIGNEES
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_ASSIGNEE_LOGINS
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_ID
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_IID
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_LABEL
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_LABELS
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_LABEL_COLOR
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_LABEL_DESCRIPTION
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_LABEL_ID
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_LABEL_NAMES
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_MILESTONE_ID
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_OWNER
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_STATE
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_TITLE
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_LABELS
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_ASSIGNEES
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_ASSIGNEE_LOGINS
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_MILESTONE
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_MILESTONE_ID
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_REVIEWERS
@@ -91,6 +102,7 @@ import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_REVIEW_ST
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_WEBHOOK_REPO_ALIAS_NAME
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_WEBHOOK_REPO_TYPE
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_REPO_NAME
+import com.tencent.devops.common.webhook.pojo.code.PIPELINE_TRIGGER_EVENT_TYPE
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_BLOCK
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_BRANCH
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_EVENT_TYPE
@@ -249,6 +261,9 @@ object PipelineVarUtil {
         "ci.mr_desc" to PIPELINE_GIT_MR_DESC,
         "ci.mr_proposer" to PIPELINE_GIT_MR_PROPOSER,
         "ci.mr_action" to PIPELINE_GIT_MR_ACTION,
+        "ci.mr_labels" to BK_REPO_GIT_WEBHOOK_MR_LABELS,
+        "ci.mr_assignees" to BK_REPO_GIT_WEBHOOK_MR_ASSIGNEES,
+        "ci.mr_assignee_logins" to BK_REPO_GIT_WEBHOOK_MR_ASSIGNEE_LOGINS,
         "ci.issue_title" to BK_REPO_GIT_WEBHOOK_ISSUE_TITLE,
         "ci.issue_id" to BK_REPO_GIT_WEBHOOK_ISSUE_ID,
         "ci.issue_iid" to BK_REPO_GIT_WEBHOOK_ISSUE_IID,
@@ -256,6 +271,14 @@ object PipelineVarUtil {
         "ci.issue_state" to BK_REPO_GIT_WEBHOOK_ISSUE_STATE,
         "ci.issue_owner" to BK_REPO_GIT_WEBHOOK_ISSUE_OWNER,
         "ci.issue_milestone_id" to BK_REPO_GIT_WEBHOOK_ISSUE_MILESTONE_ID,
+        "ci.issue_assignees" to BK_REPO_GIT_WEBHOOK_ISSUE_ASSIGNEES,
+        "ci.issue_assignee_logins" to BK_REPO_GIT_WEBHOOK_ISSUE_ASSIGNEE_LOGINS,
+        "ci.issue_label" to BK_REPO_GIT_WEBHOOK_ISSUE_LABEL,
+        "ci.issue_label_id" to BK_REPO_GIT_WEBHOOK_ISSUE_LABEL_ID,
+        "ci.issue_label_color" to BK_REPO_GIT_WEBHOOK_ISSUE_LABEL_COLOR,
+        "ci.issue_label_description" to BK_REPO_GIT_WEBHOOK_ISSUE_LABEL_DESCRIPTION,
+        "ci.issue_labels" to BK_REPO_GIT_WEBHOOK_ISSUE_LABELS,
+        "ci.issue_label_names" to BK_REPO_GIT_WEBHOOK_ISSUE_LABEL_NAMES,
         "ci.review_id" to BK_REPO_GIT_WEBHOOK_REVIEW_ID,
         "ci.review_iid" to BK_REPO_GIT_WEBHOOK_REVIEW_IID,
         "ci.review_owner" to BK_REPO_GIT_WEBHOOK_REVIEW_OWNER,
@@ -273,6 +296,7 @@ object PipelineVarUtil {
         "ci.repo_alias_name" to BK_REPO_WEBHOOK_REPO_ALIAS_NAME,
         "ci.build_msg" to PIPELINE_BUILD_MSG,
         "ci.event" to PIPELINE_WEBHOOK_EVENT_TYPE,
+        "ci.event_type" to PIPELINE_TRIGGER_EVENT_TYPE,
         "ci.milestone_name" to BK_REPO_GIT_WEBHOOK_MR_MILESTONE,
         "ci.milestone_id" to BK_REPO_GIT_WEBHOOK_MR_MILESTONE_ID,
         "ci.note_type" to BK_REPO_GIT_WEBHOOK_NOTE_NOTEABLE_TYPE,
@@ -280,7 +304,8 @@ object PipelineVarUtil {
         "ci.create_time" to BK_REPO_GIT_WEBHOOK_NOTE_CREATED_AT,
         "ci.modify_time" to BK_REPO_GIT_WEBHOOK_NOTE_UPDATED_AT,
         "ci.review_type" to BK_REPO_GIT_WEBHOOK_REVIEW_REVIEWABLE_TYPE,
-        "ci.build-no" to BUILD_NO,
+        "ci.build-no" to BUILD_NO, // 旧语法，仅保留映射关系，但前端界面不展示此变量
+        "ci.build_no" to BUILD_NO,
         "ci.pipeline_creator" to PIPELINE_CREATE_USER,
         "ci.pipeline_creator_name" to PIPELINE_CREATE_USER_NAME,
         "ci.pipeline_modifier" to PIPELINE_UPDATE_USER,
@@ -379,6 +404,15 @@ object PipelineVarUtil {
             }
         }
         return allVars
+    }
+
+    /**
+     * 获取variable变量名
+     */
+    fun getVariableKey(key: String) = if (key.startsWith(CONTEXT_PREFIX)) {
+        key
+    } else {
+        CONTEXT_PREFIX + key
     }
 
     /**

@@ -45,6 +45,7 @@ jobs:
       - run: |
           pnpm install
           export NODE_OPTIONS=--openssl-legacy-provider
+          export VITE_CSS_TIMEOUT=180000  # 180 seconds for LESS compilation
           pnpm public
         working-directory: src/frontend
       - name: generate version log

@@ -50,17 +50,6 @@ spec:
       {{- if .Values.gateway.podSecurityContext.enabled }}
       securityContext: {{- omit .Values.gateway.podSecurityContext "enabled" | toYaml | nindent 8 }}
       {{- end }}
-      initContainers:
-        - name: frontend
-          image: {{ include "bkci-frontend.image" . }}
-          volumeMounts:
-          - mountPath: /tmp/frontend
-            name: frontend
-          command:
-            - "/bin/sh"
-            - "-c"
-            - |
-              cp -r /data/workspace/frontend/* /tmp/frontend/
       containers:
         - name: gateway
           image: {{ include "bkci-gateway.image" . }}
@@ -99,9 +88,7 @@ spec:
             - |
               mkdir -p ${BK_CI_LOGS_DIR}/nginx/ ${BK_CI_HOME};
               chown nobody:nobody ${BK_CI_LOGS_DIR}/nginx/;
-              ln -s /data/workspace/frontend ${BK_CI_HOME}/frontend;
               ./render_tpl -m . /data/workspace/templates/gateway*;
-              ./render_tpl -m . /data/workspace/templates/frontend*;
               sbin/nginx -g 'daemon off;';
           lifecycle:
             preStop:
@@ -131,11 +118,5 @@ spec:
           envFrom:
             - configMapRef:
                 name: {{ include "bkci.names.fullname" . }}-gateway
-          volumeMounts:
-          - mountPath: /data/workspace/frontend
-            name: frontend
       terminationGracePeriodSeconds: 40
-      volumes:
-      - name: frontend
-        emptyDir: {}
 {{- end -}}

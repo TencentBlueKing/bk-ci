@@ -94,6 +94,9 @@ data class BuildRecordContainer(
             startVMTaskSeq?.let {
                 containerVar[Container::startVMTaskSeq.name] = it
             }
+            container.jobId?.let { jobId ->
+                containerVar[Container::jobId.name] = jobId
+            }
             if (container is TriggerContainer) {
                 containerVar[container::params.name] = container.params
                 container.buildNo?.let {
@@ -114,9 +117,10 @@ data class BuildRecordContainer(
                     resourceVersion = context.resourceVersion,
                     buildId = context.buildId,
                     stageId = stageId,
-                    containerId = container.id!!,
+                    containerId = container.id ?: "",
                     containerType = container.getClassType(),
                     executeCount = context.executeCount,
+                    containPostTaskFlag = container.containPostTaskFlag,
                     matrixGroupFlag = container.matrixGroupFlag,
                     status = buildStatus?.name,
                     containerVar = containerVar,
@@ -148,8 +152,8 @@ data class BuildRecordContainer(
                         pipelineId = context.pipelineId,
                         buildId = context.buildId,
                         stageId = stageId,
-                        containerId = container.id!!,
-                        taskId = element.id!!,
+                        containerId = container.id ?: "",
+                        taskId = element.id ?: "",
                         classType = element.getClassType(),
                         atomCode = element.getAtomCode(),
                         executeCount = context.executeCount,

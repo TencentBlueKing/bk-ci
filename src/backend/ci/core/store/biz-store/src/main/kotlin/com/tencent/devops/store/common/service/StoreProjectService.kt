@@ -75,7 +75,7 @@ interface StoreProjectService {
         storeCode: String,
         storeType: StoreTypeEnum,
         projectCodeList: ArrayList<String>,
-        channelCode: ChannelCode = ChannelCode.BS,
+        channelCode: ChannelCode = ChannelCode.getRequestChannelCode(),
         tenantId: String?
     ): Result<Boolean>
 

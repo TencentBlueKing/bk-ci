@@ -144,20 +144,20 @@ class DefaultModelCheckPluginTest : TestBase() {
                 atomVersions = any()
             )
         } returns (
-                Result(
-                    mapOf(
-                        "manualTrigger:1.*" to AtomRunInfo(
-                            atomCode = "manualTrigger",
-                            atomName = "手动触发",
-                            version = "1.*",
-                            initProjectCode = projectId,
-                            jobType = JobTypeEnum.AGENT,
-                            buildLessRunFlag = false,
-                            inputTypeInfos = null
-                        )
+            Result(
+                mapOf(
+                    "manualTrigger:1.*" to AtomRunInfo(
+                        atomCode = "manualTrigger",
+                        atomName = "手动触发",
+                        version = "1.*",
+                        initProjectCode = projectId,
+                        jobType = JobTypeEnum.AGENT.name,
+                        buildLessRunFlag = false,
+                        inputTypeInfos = null
                     )
                 )
-                )
+            )
+        )
         every { pipelineCommonSettingConfig.maxModelSize } returns (16777215)
         every { pipelineCommonSettingConfig.maxStageNum } returns (20)
         every { pipelineCommonSettingConfig.maxPipelineNameSize } returns (255)

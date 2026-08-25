@@ -30,6 +30,8 @@ package com.tencent.devops.process.engine.service
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.constant.KEY_VERSION
+import com.tencent.devops.common.api.constant.NAME
+import com.tencent.devops.common.api.model.SQLLimit
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.JsonUtil
@@ -37,7 +39,6 @@ import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.db.utils.JooqUtils
 import com.tencent.devops.common.log.utils.BuildLogPrinter
-import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
@@ -47,6 +48,7 @@ import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.process.tables.records.TPipelineInfoRecord
 import com.tencent.devops.model.process.tables.records.TPipelineModelTaskRecord
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_BUILD_TASK_RETRY_NOTICE
+import com.tencent.devops.process.dao.record.BuildRecordContainerDao
 import com.tencent.devops.process.engine.control.ControlUtils
 import com.tencent.devops.process.engine.dao.PipelineBuildTaskDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
@@ -54,12 +56,12 @@ import com.tencent.devops.process.engine.dao.PipelineModelTaskDao
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.pojo.PipelineModelTask
 import com.tencent.devops.process.engine.pojo.UpdateTaskInfo
-import com.tencent.devops.process.engine.service.detail.TaskBuildDetailService
 import com.tencent.devops.process.engine.service.record.ContainerBuildRecordService
 import com.tencent.devops.process.engine.service.record.PipelineBuildRecordService
 import com.tencent.devops.process.engine.service.record.TaskBuildRecordService
 import com.tencent.devops.process.pojo.PipelineProjectRel
 import com.tencent.devops.process.pojo.task.PipelineBuildTaskInfo
+import com.tencent.devops.process.pojo.task.PipelineContainerBuild
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.util.TaskUtils
 import com.tencent.devops.process.utils.BK_CI_BUILD_FAIL_TASKNAMES
@@ -92,8 +94,8 @@ class PipelineTaskService @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val objectMapper: ObjectMapper,
     private val pipelineInfoDao: PipelineInfoDao,
-    private val taskBuildDetailService: TaskBuildDetailService,
     private val taskBuildRecordService: TaskBuildRecordService,
+    private val buildRecordContainerDao: BuildRecordContainerDao,
     private val pipelineModelTaskDao: PipelineModelTaskDao,
     private val pipelineBuildTaskDao: PipelineBuildTaskDao,
     private val buildLogPrinter: BuildLogPrinter,
@@ -361,7 +363,8 @@ class PipelineTaskService @Autowired constructor(
                     buildId = updateTaskInfo.buildId,
                     taskId = updateTaskInfo.taskId,
                     additionalOptions = taskRecord?.additionalOptions,
-                    executeCount = taskRecord?.executeCount
+                    executeCount = taskRecord?.executeCount,
+                    taskAtom = task?.taskAtom
                 )
             ) {
                 // 如果是自动重试则不重置task的时间
@@ -538,7 +541,14 @@ class PipelineTaskService @Autowired constructor(
     fun createFailTaskVar(buildId: String, projectId: String, pipelineId: String, taskId: String) {
         val taskRecord = getBuildTask(projectId, buildId, taskId)
             ?: return
-        val model = taskBuildDetailService.getBuildModel(projectId, buildId)
+        val buildRecordContainer = containerBuildRecordService.getRecord(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            containerId = taskRecord.containerId,
+            executeCount = taskRecord.executeCount
+        ) ?: return
+        val containerName = buildRecordContainer.containerVar[NAME]?.toString() ?: taskRecord.containerId
         val failTask = pipelineVariableService.getVariable(
             projectId, pipelineId, buildId, BK_CI_BUILD_FAIL_TASKS
         )
@@ -546,7 +556,7 @@ class PipelineTaskService @Autowired constructor(
             projectId, pipelineId, buildId, BK_CI_BUILD_FAIL_TASKNAMES
         )
         try {
-            val errorElement = findElementMsg(model, taskRecord)
+            val errorElement = findElementMsg(containerName, taskRecord)
 
             // 存在的不重复添加 fix：流水线设置的变量重试一次就会叠加一次变量值 #6058
             if (inFailTasks(failTasks = failTask, failTask = errorElement.first)) {
@@ -631,10 +641,9 @@ class PipelineTaskService @Autowired constructor(
     }
 
     private fun findElementMsg(
-        model: Model?,
+        containerName: String,
         taskRecord: PipelineBuildTask
     ): Pair<String, String> {
-        val containerName = model?.getContainer(taskRecord.containerId)?.name ?: ""
         val failTask = "[${taskRecord.stageId}][$containerName]${taskRecord.taskName} \n"
         val failTaskName = taskRecord.taskName
 
@@ -687,7 +696,7 @@ class PipelineTaskService @Autowired constructor(
         val executeCount = task.executeCount ?: 1
         logger.info(
             "${task.buildId}|UPDATE_TASK_STATUS|$taskName|$taskStatus|$userId|$errorCode" +
-                "|opt_change=${task.additionalOptions?.change}"
+                    "|opt_change=${task.additionalOptions?.change}"
         )
         updateTaskStatusInfo(
             userId = userId,
@@ -786,6 +795,39 @@ class PipelineTaskService @Autowired constructor(
             val taskName = modelTask.taskName
             logger.warn("update pipelineId:$pipelineId,taskName:$taskName version fail:", ignored)
         }
+    }
+
+    fun getPipelineContainerBuilds(
+        projectId: String,
+        pipelineId: String,
+        containerId: String,
+        page: Int?,
+        pageSize: Int?
+    ): Page<PipelineContainerBuild> {
+        val pageNotNull = page ?: 1
+        val pageSizeNotNull = pageSize ?: 10
+        var slqLimit: SQLLimit? = null
+        if (pageSizeNotNull != -1) slqLimit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)
+        val offset = slqLimit?.offset ?: 0
+        val limit = slqLimit?.limit ?: -1
+        val count = buildRecordContainerDao.fetchContainerRecordsCount(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            containerId = containerId
+        )
+        if (count == 0L) {
+            return Page(page = pageNotNull, pageSize = pageSizeNotNull, count = 0, records = emptyList())
+        }
+        val records = buildRecordContainerDao.fetchContainerRecords(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            containerId = containerId,
+            offset = offset,
+            limit = limit
+        )
+        return Page(page = pageNotNull, pageSize = pageSizeNotNull, count = count, records = records)
     }
 
     companion object {

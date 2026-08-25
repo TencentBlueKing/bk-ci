@@ -17,6 +17,16 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+import { hasAnyMatrixRuleValue } from './matrixRule'
+
+function getPipelineI18nText (key, fallback, params) {
+    const i18n = window?.pipelineVue?.$i18n
+    if (i18n?.t) {
+        return i18n.t(key, params)
+    }
+    return fallback
+}
+
 const customeRules = {
     string: {
         validate: function (value, args) {
@@ -37,24 +47,18 @@ const customeRules = {
     },
     notInList: {
         validate: function (value, args) {
-            if (args.indexOf(value) === -1) {
-                return true
-            } else {
-                return false
+            if (Array.isArray(args)) {
+                return !args.some(item => decodeURIComponent(item) === value)
             }
-        }
+            return true
+        },
     },
     // 不同时为空
-    atlestNotEmpty: {
+    atLeastNotEmpty: {
+        getMessage: () => getPipelineI18nText('editPage.matrixAnyRequiredTips', 'At least one field is required'),
         validate: function (value, args) {
-            console.log(args, 'not')
-            let notEmptyNum = 0
-            for (const i in args) {
-                if (args[i]) {
-                    notEmptyNum++
-                }
-            }
-            return notEmptyNum > 0
+            const values = Array.isArray(args) ? args : (args || {})
+            return hasAnyMatrixRuleValue(values)
         }
     },
     pullmode: {
@@ -114,7 +118,11 @@ const customeRules = {
     },
     timeoutsRule: {
         validate: function (value, args) {
-            return /\b([1-9]|[1-9]\d{1,3}|10080|100[0-7][0-9]|10079|10000)\b/.test(value) || value.isBkVar()
+            const numberPattern = /\b([1-9]|[1-9]\d{1,3}|10080|100[0-7][0-9]|10079|10000)\b/
+            const isValidNumber = numberPattern.test(value)
+            const isValidVar = args[0] === 'CLASSIC' ? String(value).isBkVar() : String(value).isBKConstraintVar()
+    
+            return isValidNumber || isValidVar
         }
     },
     reminderTimeRule: {
@@ -131,8 +139,29 @@ const customeRules = {
         validate: function (value, args) {
             return Object.values(value).every(val => !!val)
         }
+    },
+    // cron 表达式数组校验规则 - 检查是否为空数组
+    crontabArrayRule: {
+        validate: function (value, args) {
+            // 检查是否为数组且不为空
+            if (Array.isArray(value)) {
+                return value.length > 0
+            }
+            // 支持字符串格式（用于组件内部错误标记）
+            if (typeof value === 'string') {
+                try {
+                    const parsed = JSON.parse(value)
+                    return Array.isArray(parsed) && parsed.length > 0
+                } catch (e) {
+                    return false
+                }
+            }
+            return false
+        }
     }
 }
+
+customeRules.atlestNotEmpty = customeRules.atLeastNotEmpty
 
 function ExtendsCustomRules (_extends) {
     if (typeof _extends !== 'function') {

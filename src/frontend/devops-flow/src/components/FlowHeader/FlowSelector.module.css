@@ -1,0 +1,78 @@
+.flowSelector {
+  border: none;
+}
+
+.flowSelector :global(.bk-select-trigger) {
+  border: none;
+  box-shadow: none;
+  padding: 0;
+  background: transparent;
+}
+
+.flowSelectorPopover :global(.bk-select-option) {
+  font-size: 12px;
+}
+
+.flowOption {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: var(--spacing-xs);
+  min-width: 0;
+}
+
+.flowOptionName {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.checkIcon {
+  flex-shrink: 0;
+  color: var(--color-primary);
+}
+
+.flowSelectorTrigger {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  cursor: pointer;
+}
+
+.flowName {
+  color: var(--color-text-primary);
+  font-weight: 500;
+  max-width: 222px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: inline-block;
+  line-height: 18px;
+}
+
+.flowName.clickable {
+  cursor: pointer;
+  color: var(--color-text-secondary);
+}
+
+.flowName.clickable:hover {
+  color: var(--color-primary);
+}
+
+.exchangeIcon {
+  background-color: var(--bg-hover);
+  color: var(--color-text-tertiary);
+  padding: 2px;
+  border-radius: var(--border-radius);
+  flex-shrink: 0;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.exchangeIcon:hover {
+  background-color: var(--bg-hover-active);
+  color: var(--color-primary);
+}

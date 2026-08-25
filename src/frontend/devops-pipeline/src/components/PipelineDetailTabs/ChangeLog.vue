@@ -11,11 +11,10 @@
             >
                 <bk-option
                     v-for="creator in operatorList"
-                    :key="creator.userId"
-                    :id="creator.userId"
-                    :name="creator.userName"
-                >
-                </bk-option>
+                    :key="creator"
+                    :id="creator"
+                    :name="creator"
+                />
             </bk-select>
         </header>
         <section
@@ -35,13 +34,7 @@
                     v-bind="column"
                 >
                     <template
-                        v-if="column.prop === 'operator'"
-                        v-slot="props"
-                    >
-                        <bk-user-display-name :user-id="props.row.operator"></bk-user-display-name>
-                    </template>
-                    <template
-                        v-else-if="column.prop === 'operateTime'"
+                        v-if="column.prop === 'operateTime'"
                         v-slot="props"
                     >
                         <time-display :value="props.row.operateTime" />
@@ -53,7 +46,7 @@
 </template>
 
 <script>
-    import { mapActions } from 'vuex'
+    import { mapActions, mapGetters } from 'vuex'
     import TimeDisplay from '../../../../common-lib/time-display'
     export default {
         components: {
@@ -73,6 +66,9 @@
             }
         },
         computed: {
+            ...mapGetters({
+                isTemplate: 'atom/isTemplate'
+            }),
             columns () {
                 return [{
                     prop: 'operator',
@@ -101,19 +97,29 @@
                 'requestPipelineChangelogs',
                 'requestPipelineOperatorList'
             ]),
-            async getChangelogs (page, limit) {
+            ...mapActions('templates', [
+                'requestTemplateChangelogs',
+                'requestTemplateOperatorList'
+            ]),
+
+            async getChangelogs (page = this.pagination.current, limit = this.pagination.limit) {
+                this.isLoading = true
                 try {
-                    this.isLoading = true
-                    const { projectId, pipelineId } = this.$route.params
-                    const { limit: pageSize, current } = this.pagination
-                    const changeLogs = await this.requestPipelineChangelogs({
+                    const { projectId, pipelineId, templateId } = this.$route.params
+
+                    const params = {
                         projectId,
-                        pipelineId,
                         creator: this.filterCreator,
-                        page: page ?? current,
-                        pageSize: limit ?? pageSize,
-                        archiveFlag: this.$route.query.archiveFlag
-                    })
+                        page,
+                        pageSize: limit,
+                        archiveFlag: this.$route.query.archiveFlag,
+                        ...(this.isTemplate ? { templateId } : { pipelineId })
+                    }
+                
+                    const changeLogs = pipelineId
+                        ? await this.requestPipelineChangelogs(params)
+                        : await this.requestTemplateChangelogs(params)
+                
                     Object.assign(this.pagination, {
                         current: changeLogs.page,
                         limit: changeLogs.pageSize,
@@ -126,17 +132,22 @@
                     this.isLoading = false
                 }
             },
-            async init (page, limit) {
+
+            async init (page = this.pagination.current, limit = this.pagination.limit) {
+                const { projectId, pipelineId, templateId } = this.$route.params
+                const params = {
+                    projectId,
+                    archiveFlag: this.$route.query.archiveFlag,
+                    ...(this.isTemplate ? { templateId } : { pipelineId })
+                }
                 try {
-                    const { projectId, pipelineId } = this.$route.params
+                    const fetchOperatorList = templateId
+                        ? this.requestTemplateOperatorList(params)
+                        : this.requestPipelineOperatorList(params)
 
                     const [, operatorList] = await Promise.all([
                         this.getChangelogs(page, limit),
-                        this.requestPipelineOperatorList({
-                            projectId,
-                            pipelineId,
-                            archiveFlag: this.$route.query.archiveFlag
-                        })
+                        fetchOperatorList
                     ])
                     this.operatorList = operatorList
                 } catch (error) {

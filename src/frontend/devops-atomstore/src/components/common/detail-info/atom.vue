@@ -128,7 +128,11 @@
                 </template>
             </bk-popover>
             <button
-                class="detail-install"
+                :class="{
+                    'detail-install': true,
+                    'is-disabled': detail.atomStatus === 'TESTING'
+                }"
+                v-bk-tooltips="{ content: $t('store.插件正在发布测试，不可安装'), disabled: detail.atomStatus !== 'TESTING' }"
                 @click="goToInstall"
                 v-else
             >
@@ -386,9 +390,11 @@
             },
 
             goToInstall () {
+                if (this.detail.atomStatus === 'TESTING') return
                 this.$router.push({
                     name: 'install',
                     query: {
+                        name: this.detail.name,
                         code: this.detail.atomCode,
                         type: 'atom',
                         from: 'details'
@@ -442,6 +448,14 @@
         color: $white;
         line-height: 40px;
         text-align: center;
+        &.is-disabled {
+            background: #dcdee5;
+            color: #fff;
+            cursor: not-allowed;
+            &:hover {
+                background: #dcdee5;
+            }
+        }
         &.opicity-hidden {
             opacity: 0;
             user-select: none;

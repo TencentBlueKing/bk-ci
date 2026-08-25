@@ -27,6 +27,9 @@
 
 package com.tencent.devops.common.pipeline
 
+import com.fasterxml.jackson.annotation.JsonIgnore
+import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.constant.HIDDEN_SYMBOL
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.Stage
@@ -35,8 +38,15 @@ import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.event.CallBackEvent
 import com.tencent.devops.common.pipeline.event.PipelineCallbackEvent
 import com.tencent.devops.common.pipeline.event.ProjectPipelineCallBack
+import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
+import com.tencent.devops.common.pipeline.pojo.PublicVarGroupRef
+import com.tencent.devops.common.pipeline.pojo.TemplateInstanceField
+import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
+import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.common.pipeline.pojo.time.BuildRecordTimeCost
 import com.tencent.devops.common.pipeline.pojo.transfer.Resources
+import com.tencent.devops.common.pipeline.template.ITemplateModel
+import com.tencent.devops.common.web.utils.I18nUtil
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Suppress("ALL")
@@ -55,10 +65,14 @@ data class Model(
     val instanceFromTemplate: Boolean? = null,
     @get:Schema(title = "创建人", required = false)
     var pipelineCreator: String? = null,
+    @get:Schema(title = "项目ID", required = false)
+    var projectId: String? = null,
     @get:Schema(title = "当前模板对应的被复制的模板或安装的研发商店的模板对应的ID", required = false)
     var srcTemplateId: String? = null,
     @get:Schema(title = "当前模板的ID", required = false)
     var templateId: String? = null,
+    @get:Schema(title = "流水线ID", required = false)
+    var pipelineId: String? = null,
     @get:Schema(title = "提示", required = false)
     var tips: String? = null,
     @get:Schema(title = "流水线事件回调", required = false)
@@ -67,15 +81,15 @@ data class Model(
     var staticViews: List<String> = emptyList(),
     @get:Schema(title = "各项耗时", required = true)
     var timeCost: BuildRecordTimeCost? = null,
-    @get:Schema(title = "模板地址", required = true)
-    override var template: String? = null,
-    @get:Schema(title = "模板版本", required = true)
-    override var ref: String? = null,
-    @get:Schema(title = "模板入参", required = true)
-    override var variables: Map<String, String>? = null,
     @get:Schema(title = "模板资源", required = true)
-    val resources: Resources? = null
-) : IModelTemplate {
+    val resources: Resources? = null,
+    @get:Schema(title = "实例化模版信息", required = true)
+    var template: TemplateInstanceDescriptor? = null,
+    @get:Schema(title = "实例化流水线自定义的参数、触发器和设置", required = false)
+    var overrideTemplateField: TemplateInstanceField? = null,
+    @get:Schema(title = "公共变量组引用", required = false)
+    var publicVarGroups: List<PublicVarGroupRef>? = null
+) : ITemplateModel {
     @get:Schema(title = "提交时流水线最新版本号", required = false)
     var latestVersion: Int = 0
 
@@ -175,7 +189,8 @@ data class Model(
             instanceFromTemplate = instanceFromTemplate,
             pipelineCreator = pipelineCreator,
             srcTemplateId = null,
-            templateId = templateId
+            templateId = templateId,
+            publicVarGroups = publicVarGroups
         )
     }
 
@@ -228,5 +243,123 @@ data class Model(
         return pipelineCallBack
     }
 
+    @JsonIgnore
     fun getTriggerContainer() = stages[0].containers[0] as TriggerContainer
+
+    @JsonIgnore
+    fun getTriggerParams(): MutableList<BuildFormProperty> =
+        (stages.firstOrNull()?.containers?.firstOrNull() as? TriggerContainer)?.params ?: mutableListOf()
+
+    fun encryptParamsValue() {
+        (stages[0].containers[0] as TriggerContainer).params.forEach {
+            if (it.sensitive == true) {
+                it.value = HIDDEN_SYMBOL
+                it.defaultValue = HIDDEN_SYMBOL
+            }
+        }
+    }
+
+    companion object {
+        const val classType = "model"
+
+        fun defaultModel(
+            pipelineName: String = "",
+            userId: String? = null
+        ): Model {
+            return Model(
+                name = pipelineName,
+                desc = "",
+                stages = listOf(
+                    Stage(
+                        id = "stage-1",
+                        containers = listOf(
+                            TriggerContainer(
+                                id = "0",
+                                name = "trigger",
+                                elements = listOf(
+                                    ManualTriggerElement(
+                                        id = "T-1-1-1",
+                                        name = I18nUtil.getCodeLanMessage(
+                                            messageCode = CommonMessageCode.BK_MANUAL_TRIGGER,
+                                            language = userId?.let { I18nUtil.getLanguage(userId) }
+                                        )
+                                    ).apply {
+                                        additionalOptions = ElementAdditionalOptions(enable = true)
+                                    },
+                                )
+                            )
+                        )
+                    )
+                ),
+                pipelineCreator = userId
+            )
+        }
+
+        fun creativeStreamDefaultModel(
+            pipelineName: String = "",
+            userId: String? = null
+        ): Model {
+            return Model(
+                name = pipelineName,
+                desc = "",
+                stages = listOf(
+                    Stage(
+                        id = "stage-1",
+                        containers = listOf(
+                            TriggerContainer(
+                                id = "0",
+                                name = I18nUtil.getCodeLanMessage(
+                                    messageCode = CommonMessageCode.BK_BUILD_TRIGGER
+                                ),
+                                elements = listOf(
+                                    ManualTriggerElement(
+                                        id = "T-1-1-1",
+                                        name = I18nUtil.getCodeLanMessage(
+                                            messageCode = CommonMessageCode.BK_MANUAL_TRIGGER,
+                                            language = userId?.let { I18nUtil.getLanguage(userId) }
+                                        ),
+                                        canElementSkip = true,
+                                        useLatestParameters = true
+                                    ).apply {
+                                        additionalOptions = ElementAdditionalOptions(enable = true)
+                                    }
+                                )
+                            )
+                        )
+                    )
+                ),
+                pipelineCreator = userId
+            )
+        }
+    }
+
+    fun handlePublicVarInfo() {
+        val groups = publicVarGroups
+        if (!groups.isNullOrEmpty()) {
+            groups.forEach { it.variables = null }
+            return
+        }
+        val triggerParams = (stages.firstOrNull()?.containers?.firstOrNull() as? TriggerContainer)?.params
+        triggerParams ?: run {
+            publicVarGroups = emptyList()
+            return
+        }
+        publicVarGroups = triggerParams
+            .asSequence() // 转换为序列进行惰性操作
+            .mapNotNull { param ->
+                val varGroupName = param.varGroupName
+                if (varGroupName.isNullOrBlank()) {
+                    return@mapNotNull null
+                }
+                val varGroupVersion = param.varGroupVersion
+                val versionName = varGroupVersion?.let { "v$it" }
+                PublicVarGroupRef.create(
+                    groupName = varGroupName,
+                    version = varGroupVersion,
+                    versionName = versionName
+                )
+            }
+            .distinctBy { it.groupName } // 根据 groupName 去重
+            .toList() // 将序列转换回 List
+    }
 }

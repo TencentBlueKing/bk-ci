@@ -37,6 +37,9 @@ import org.springframework.stereotype.Repository
 @Repository
 class EnvNodeDao {
     fun list(dslContext: DSLContext, projectId: String, envIds: List<Long>): List<TEnvNodeRecord> {
+        if (envIds.isEmpty()) {
+            return emptyList()
+        }
         with(TEnvNode.T_ENV_NODE) {
             return dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
@@ -66,6 +69,9 @@ class EnvNodeDao {
     }
 
     fun batchCount(dslContext: DSLContext, projectId: String, envIds: List<Long>): List<Record2<Long, Int>> {
+        if (envIds.isEmpty()) {
+            return emptyList()
+        }
         with(TEnvNode.T_ENV_NODE) {
             return dslContext.select(ENV_ID, count())
                 .from(this)
@@ -95,6 +101,35 @@ class EnvNodeDao {
                 }
             }
         ).execute()
+    }
+
+    fun batchStoreEnvNode(
+        dslContext: DSLContext,
+        nodeIdAndEnables: Map<Long, Boolean>,
+        envId: Long,
+        projectId: String
+    ) {
+        if (nodeIdAndEnables.keys.isEmpty()) {
+            return
+        }
+        with(TEnvNode.T_ENV_NODE) {
+            val insertStep = dslContext.insertInto(
+                this,
+                ENV_ID,
+                NODE_ID,
+                PROJECT_ID,
+                ENABLE_NODE
+            )
+            nodeIdAndEnables.forEach { (nodeId, enable) ->
+                insertStep.values(
+                    envId,
+                    nodeId,
+                    projectId,
+                    enable
+                )
+            }
+            insertStep.execute()
+        }
     }
 
     fun batchDeleteEnvNode(dslContext: DSLContext, projectId: String, envId: Long, nodeIds: List<Long>) {
@@ -131,14 +166,29 @@ class EnvNodeDao {
         }
     }
 
-    fun disableOrEnableNode(dslContext: DSLContext, projectId: String, envId: Long, nodeId: Long, enable: Boolean) {
+    fun disableOrEnableNode(dslContext: DSLContext, projectId: String, envId: Long, nodeId: Long, enable: Boolean) =
         with(TEnvNode.T_ENV_NODE) {
             dslContext.update(this)
                 .set(ENABLE_NODE, enable)
                 .where(PROJECT_ID.eq(projectId))
                 .and(ENV_ID.eq(envId))
                 .and(NODE_ID.eq(nodeId))
-                .execute()
+                .execute() == 1
+        }
+
+    fun exists(dslContext: DSLContext, projectId: String, envId: Long, nodeId: Long): Boolean {
+        // 参数校验，避免无效查询
+        if (projectId.isBlank() || envId <= 0 || nodeId <= 0) {
+            return false
+        }
+
+        return with(TEnvNode.T_ENV_NODE) {
+            dslContext.fetchExists(
+                /* table = */ this,
+                /* condition = */ PROJECT_ID.eq(projectId)
+                    .and(ENV_ID.eq(envId))
+                    .and(NODE_ID.eq(nodeId))
+            )
         }
     }
 }

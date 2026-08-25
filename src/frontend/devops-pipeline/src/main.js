@@ -29,6 +29,7 @@ import focus from './directives/focus/index.js'
 import createRouter from './router'
 import store from './store'
 
+import createLocale from '@locale'
 import mavonEditor from 'mavon-editor'
 import 'mavon-editor/dist/css/index.css'
 import PortalVue from "portal-vue"; // eslint-disable-line
@@ -36,10 +37,10 @@ import VeeValidate from 'vee-validate'
 import validationENMessages from 'vee-validate/dist/locale/en'
 import validationJAMessages from 'vee-validate/dist/locale/ja'
 import validationCNMessages from 'vee-validate/dist/locale/zh_CN'
-import createLocale from '@locale'
 import ExtendsCustomRules from './utils/customRules'
 import validDictionary from './utils/validDictionary'
 import TenantSingleton from './utils/tenant'
+import { BkXssFilterDirective } from '@blueking/xss-filter'
 
 import {
     handlePipelineNoPermission,
@@ -54,7 +55,8 @@ import { BkPermission, PermissionDirective } from 'bk-permission'
 import 'bk-permission/dist/main.css'
 
 const { lang, i18n, setLocale } = createLocale(
-    require.context('@locale/pipeline/', false, /\.json$/)
+    require.context('@locale/pipeline/', false, /\.json$/),
+    Vue
 )
 const { pipelineDocs } = createDocs(lang, window.BK_CI_VERSION)
 const isInIframe = window.self !== window.parent
@@ -64,11 +66,11 @@ Vue.use(enClass)
 Vue.use(enStyle)
 Vue.use(PortalVue)
 Vue.use(mavonEditor)
+Vue.use(BkXssFilterDirective)
 Vue.use(PermissionDirective(handlePipelineNoPermission, window.PUBLIC_URL_PREFIX))
 Vue.use(BkPermission, {
     i18n
 })
-
 Vue.use(VeeValidate, {
     i18nRootKey: 'validations', // customize the root path for validation messages.
     i18n,
@@ -90,12 +92,16 @@ Vue.prototype.$bkMessage = function (config) {
     bkMagic.bkMessage(config)
 }
 /* eslint-disable */
-// 扩展字符串，判断是否为蓝盾变量格式
+// 扩展字符串，判断是否为蓝盾变量格式（传统模式变量格式）
 String.prototype.isBkVar = function () {
     return (
         /\$\{\{([\w_.-]+)\}\}/.test(this) || 
         /\$\{([\w_.-]+)\}/.test(this)
       )
+}
+// 制约模式下的变量格式
+String.prototype.isBKConstraintVar = function () {
+    return /\$\{\{([\w_.-]+)\}\}/.test(this)
 }
 // 提取蓝盾变量名
 String.prototype.extractBkVar = function () {
@@ -132,12 +138,11 @@ Vue.mixin({
 // }
 
 new TenantSingleton().init().then(() => {
-    
     global.pipelineVue = new Vue({
         el: "#app",
         router: createRouter(store, isInIframe),
-        i18n,
         store,
+        i18n,
         components: {
             App
         },

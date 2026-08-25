@@ -1,5 +1,6 @@
 package com.tencent.devops.process.yaml.actions
 
+import com.tencent.devops.process.pojo.pipeline.enums.YamlResourceType
 import com.tencent.devops.process.yaml.common.Constansts
 import com.tencent.devops.process.yaml.git.pojo.ApiRequestRetryInfo
 import com.tencent.devops.process.yaml.git.pojo.PacGitCred
@@ -42,7 +43,7 @@ object GitActionCommon {
             gitProjectId = gitProjectId,
             cred = cred ?: action.getGitCred(),
             path = Constansts.ciFileDirectoryName,
-            ref = ref?.let { getTriggerBranch(it) },
+            ref = ref?.let { trimRef(it) },
             recursive = true,
             retry = ApiRequestRetryInfo(true)
         ).filter { (it.type == "blob") && checkYamlPipelineFile(it.name) && !checkYamlTemplateFile(it.name) }
@@ -75,11 +76,26 @@ object GitActionCommon {
         }
     }
 
-    fun getTriggerBranch(branch: String): String {
+    fun trimRef(branch: String): String {
         return when {
             branch.startsWith("refs/heads/") -> branch.removePrefix("refs/heads/")
             branch.startsWith("refs/tags/") -> branch.removePrefix("refs/tags/")
             else -> branch
+        }
+    }
+
+    /**
+     * 扩展引用名称
+     * @param name 原始名称
+     * @param prefix 前缀
+     * @return 扩展后的名称
+     */
+    fun expandRef(name: String, prefix: String): String {
+        val trimmedPrefix = prefix.removeSuffix("/")
+        return if (name.startsWith(trimmedPrefix)) {
+            name
+        } else {
+            "$trimmedPrefix/$name"
         }
     }
 
@@ -123,6 +139,10 @@ object GitActionCommon {
         return filePath.removePrefix(".ci/")
     }
 
+    fun getCiTemplateName(filePath: String): String {
+        return filePath.removePrefix("${Constansts.ciTemplateDirectoryName}${File.separator}")
+    }
+
     fun getCiFilePath(fileName: String): String {
         return "${Constansts.ciFileDirectoryName}${File.separator}$fileName"
     }
@@ -137,5 +157,14 @@ object GitActionCommon {
 
     fun isTemplateFile(filePath: String): Boolean {
         return filePath.startsWith(".ci/templates")
+    }
+
+    fun getYamlResourceType(filePath: String, fileContent: String): YamlResourceType {
+        // TODO PAC 局部模版时,需要读取文件内容判断
+        return if (isTemplateFile(filePath)) {
+            YamlResourceType.PIPELINE_TEMPLATE
+        } else {
+            YamlResourceType.PIPELINE
+        }
     }
 }

@@ -77,12 +77,13 @@ open class PipelineTimerService @Autowired constructor(
         taskId: String,
         noScm: Boolean?,
         startParam: Map<String, String>?,
-        timeZone: String? = null
+        timeZone: String? = null,
+        transaction: DSLContext = dslContext
     ): Result<Boolean> {
         val crontabJson = JsonUtil.toJson(crontabExpressions, formatted = false)
         val resolvedTimeZone = TimerTimeZoneUtils.resolve(timeZone)
         return if (0 < pipelineTimerDao.save(
-                dslContext,
+                transaction,
                 projectId,
                 pipelineId,
                 userId,

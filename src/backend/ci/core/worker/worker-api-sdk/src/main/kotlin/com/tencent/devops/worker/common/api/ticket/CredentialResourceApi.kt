@@ -43,7 +43,7 @@ class CredentialResourceApi : AbstractBuildResourceApi(), CredentialSDKApi {
         val signHeaders = if (signToken.isNotBlank()) {
             ApiSignUtil.generateSignHeader(
                 method = "GET",
-                url = "/api/build/credentials/$credentialId?publicKey=${encode(publicKey)}",
+                url = path.removePrefix("/ms/ticket"),
                 token = signToken
             )
         } else {

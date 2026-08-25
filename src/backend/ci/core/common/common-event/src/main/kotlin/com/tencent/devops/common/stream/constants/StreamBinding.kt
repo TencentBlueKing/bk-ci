@@ -31,6 +31,9 @@ object StreamBinding {
     // 日志预处理事件
     const val LOG_ORIGIN_EVENT_DESTINATION = "build.log.origin.event"
 
+    // 热点构建日志预处理事件（与 origin 同构，独立 topic 隔离）
+    const val LOG_ORIGIN_HEAVY_EVENT_DESTINATION = "build.log.origin.heavy.event"
+
     // 日志预处理事件
     const val LOG_STORAGE_EVENT_DESTINATION = "build.log.storage.event"
 
@@ -48,6 +51,12 @@ object StreamBinding {
     const val PIPELINE_DELETE = "engine.pipeline.delete"
 
     const val PIPELINE_RESTORE = "engine.pipeline.restore"
+
+    const val PIPELINE_BATCH_TASK_CREATE = "engine.pipeline.task.create"
+
+    const val PIPELINE_BATCH_TASK_ANALYZE = "engine.pipeline.task.analyze"
+
+    const val PIPELINE_BATCH_TASK_EXECUTE = "engine.pipeline.task.execute"
 
     const val PIPELINE_TIMER = "engine.pipeline.timer"
 
@@ -73,11 +82,22 @@ object StreamBinding {
 
     const val PIPELINE_BATCH_ARCHIVE_FINISH = "engine.pipeline.batch.archive.finish"
 
+    const val PIPELINE_TEMPLATE_INSTANCE = "engine.pipeline.template.instance"
+
+    const val PIPELINE_TEMPLATE_TRIGGER_UPDATES = "engine.pipeline.template.trigger.updates"
+
+    const val PIPELINE_TEMPLATE_MIGRATE = "engine.pipeline.template.migrate"
+
+    // AI摘要生成事件
+    const val PIPELINE_AI_SUMMARY = "engine.pipeline.ai.summary"
+
     // 监控相关的队列
     const val PIPELINE_BUILD_MONITOR = "engine.pipeline.listener.monitor"
     const val PIPELINE_BUILD_HEART_BEAT = "engine.pipeline.build.hb"
+
     // 构建产生的审核通知类队列
     const val PIPELINE_BUILD_NOTIFY = "engine.pipeline.build.notify"
+
     // 构建状态Websocket推送解耦
     const val PIPELINE_BUILD_WEBSOCKET = "engine.pipeline.build.websocket"
 
@@ -104,6 +124,9 @@ object StreamBinding {
 
     // 定时变更广播exchange ====================================
     const val PIPELINE_TIMER_CHANGE_FANOUT = "engine.pipeline.timer.change"
+
+    // 流水线构建历史数据清理 ====================================
+    const val PIPELINE_BUILD_HISTORY_DATA_CLEAR = "engine.pipeline.build.history.data.clear"
 
     // 流水线扩展交换器 ====================================
     const val PIPELINE_EXTENDS_FANOUT = "engine.pipeline.extends.fanout"
@@ -148,11 +171,26 @@ object StreamBinding {
     // P4代码仓库webhook请求回调
     const val P4_BUILD_REQUEST_EVENT = "engine.pipeline.hook.p4.event"
 
-    // P4代码仓库webhook请求回调
+    // 重放代码仓库webhook
     const val REPLAY_BUILD_REQUEST_EVENT = "engine.pipeline.hook.replay.event"
 
-    // scm webhook请求回调
+    // scm webhook请求事件
     const val SCM_HOOK_BUILD_REQUEST_EVENT = "engine.pipeline.hook.scm.event"
+
+    // scm webhook触发事件
+    const val SCM_HOOK_BUILD_TRIGGER_EVENT = "engine.pipeline.scm.hook.trigger.event"
+
+    const val CDS_WEBHOOK_REQUEST_EVENT = "engine.pipeline.cds.webhook.event"
+
+    const val CDS_WEBHOOK_TRIGGER_EVENT = "engine.pipeline.cds.webhook.trigger.event"
+
+    const val GENERIC_WEBHOOK_REQUEST_EVENT = "engine.pipeline.generic.webhook.event"
+
+    // TAPD webhook 请求事件
+    const val TAPD_WEBHOOK_REQUEST_EVENT = "engine.pipeline.tapd.webhook.event"
+
+    // TAPD webhook 触发事件（单流水线）
+    const val TAPD_WEBHOOK_TRIGGER_EVENT = "engine.pipeline.tapd.webhook.trigger.event"
 
     // 流水线构建check-run事件
     const val PIPELINE_BUILD_CHECK_RUN = "engine.pipeline.build.check.run"
@@ -175,6 +213,7 @@ object StreamBinding {
 
     // 蓝盾构建结束后metrics数据上报事件广播
     const val BUILD_END_METRICS_DATA_REPORT_FANOUT = "metrics.engine.build.end.data.report.fanout"
+
     // 流水线标签变化metrics数据同步广播
     const val PIPELINE_LABEL_CHANGE_METRICS_DATA_SYNC_FANOUT =
         "metrics.pipeline.label.change.data.sync.fanout"
@@ -225,4 +264,15 @@ object StreamBinding {
     const val PIPELINE_YAML_LISTENER_DISABLE = "pipeline.yaml.listener.disable"
     const val PIPELINE_YAML_LISTENER_TRIGGER = "pipeline.yaml.listener.trigger"
     const val PIPELINE_YAML_LISTENER_FILE = "pipeline.yaml.listener.file"
+
+    // yaml文件调度事件
+    const val PIPELINE_YAML_FILE_SCHEDULER = "pipeline.yaml.file.scheduler"
+    // yaml文件执行事件
+    const val PIPELINE_YAML_FILE_EXECUTOR = "pipeline.yaml.file.executor"
+
+    // AI智能体运行停止广播exchange ====================================
+    const val AI_RUN_STOP_FANOUT = "ai.run.stop.fanout"
+
+    // 变量引用事件监听器
+    const val MODEL_VAR_REFERENCE_FANOUT = "model.var.reference.fanout"
 }

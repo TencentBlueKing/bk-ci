@@ -68,7 +68,7 @@ object TransferMapper {
 
         override fun needToQuoteValue(value: String): Boolean {
             // Only consider reserved keywords but not numbers?
-            return isReservedKeyword(value) || valueHasQuotableChar(value)
+            return isReservedKeyword(value) || valueHasQuotableChar(value) || looksLikeHexNumber(value)
         }
 
         /*
@@ -79,6 +79,15 @@ object TransferMapper {
             return if (value.isEmpty()) {
                 true
             } else _isReservedKeyword(value[0].code, value)
+        }
+
+        /*
+        * 检查字符串是否看起来像十六进制数字（0x开头）
+        * 如果是，则需要加引号以避免被YAML解析为数字
+        */
+        private fun looksLikeHexNumber(value: String): Boolean {
+            if (value.length < 3) return false
+            return value.startsWith("0x", ignoreCase = true) || value.startsWith("0X")
         }
     }
 
@@ -532,14 +541,12 @@ object TransferMapper {
         node.value.forEach { nodeTuple ->
             if (nodeTuple.keyNode.nodeId != NodeId.scalar) return@forEach
             val kn = nodeTuple.keyNode as ScalarNode
-            /* 目前页面只关心行坐标，暂对列坐标归零处理 */
-            val markFlag = if (nodeTuple.valueNode.endMark.column == 0) 1 else 0
             res[kn.value] = TransferMark(
                 startMark = TransferMark.Mark(
-                    nodeTuple.valueNode.startMark.line, 0
+                    nodeTuple.valueNode.startMark.line, nodeTuple.valueNode.startMark.column
                 ),
                 endMark = TransferMark.Mark(
-                    nodeTuple.valueNode.endMark.line - markFlag, 0
+                    nodeTuple.valueNode.endMark.line, nodeTuple.valueNode.endMark.column
                 )
             )
         }

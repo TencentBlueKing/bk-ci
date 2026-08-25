@@ -47,7 +47,9 @@ object ProjectUtils {
         showUserManageIcon: Boolean? = null,
         viewPermission: Boolean? = null,
         pipelineTemplateInstallPerm: Boolean? = null,
-        projectOrganizationInfo: ProjectOrganizationInfo? = null
+        projectOrganizationInfo: ProjectOrganizationInfo? = null,
+        kpiCode: String? = null,
+        kpiName: String? = null
     ): ProjectVO {
         val isUseFixedOrganization = projectOrganizationInfo != null
         return with(tProjectRecord) {
@@ -92,6 +94,8 @@ object ProjectUtils {
                 extra = extra ?: "",
                 offlined = isOfflined,
                 secrecy = isSecrecy,
+                hidden = hidden,
+                projectScope = projectScope,
                 helmChartEnabled = isHelmChartEnabled,
                 kind = kind,
                 logoAddr = logoAddr ?: "",
@@ -123,7 +127,9 @@ object ProjectUtils {
                 productId = productId,
                 canView = viewPermission,
                 pipelineTemplateInstallPerm = pipelineTemplateInstallPerm,
-                tenantId = tenantId
+                tenantId = tenantId,
+                kpiCode = kpiCode,
+                kpiName = kpiName
             )
         }
     }
@@ -132,7 +138,9 @@ object ProjectUtils {
         tProjectRecord: TProjectRecord,
         projectApprovalInfo: ProjectApprovalInfo?,
         projectOrganizationInfo: ProjectOrganizationInfo? = null,
-        beforeProductName: String? = null
+        beforeProductName: String? = null,
+        beforeKpiCode: String? = null,
+        beforeKpiName: String? = null
     ): ProjectDiffVO {
         val isUseFixedOrganization = projectOrganizationInfo != null
         val subjectScopes = tProjectRecord.subjectScopes?.let {
@@ -204,7 +212,11 @@ object ProjectUtils {
                 afterPipelineNameFormat = projectApprovalProperties?.pipelineNameFormat,
                 loggingLineLimit = projectProperties?.loggingLineLimit,
                 afterLoggingLineLimit = projectApprovalProperties?.loggingLineLimit,
-                tenantId = tenantId
+                tenantId = tenantId,
+                kpiCode = beforeKpiCode,
+                afterKpiCode = projectApprovalInfo?.kpiCode,
+                kpiName = beforeKpiName,
+                afterKpiName = projectApprovalInfo?.kpiName
             )
         }
     }

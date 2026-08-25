@@ -42,19 +42,22 @@ import com.tencent.devops.model.process.tables.records.TPipelineTriggerEventReco
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerDetail
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerEvent
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerEventVo
+import com.tencent.devops.process.pojo.trigger.PipelineTriggerEventWithoutBody
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerFailedFix
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerReason
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerReasonDetail
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerReasonStatistics
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerStatus
 import com.tencent.devops.process.pojo.trigger.RepoTriggerEventDetail
+import com.tencent.devops.process.pojo.trigger.ScmWebhookEventBody
+import com.tencent.devops.process.pojo.trigger.TriggerEventBody
 import com.tencent.devops.scm.api.pojo.webhook.Webhook
 import org.jooq.Condition
 import org.jooq.DSLContext
-import org.jooq.Result
 import org.jooq.impl.DSL.count
 import org.jooq.impl.DSL.countDistinct
 import org.jooq.impl.DSL.`when`
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
 import java.sql.Timestamp
 import java.time.LocalDateTime
@@ -68,7 +71,7 @@ class PipelineTriggerEventDao {
         triggerEvent: PipelineTriggerEvent
     ) {
         with(T_PIPELINE_TRIGGER_EVENT) {
-            dslContext.insertInto(
+            val insert = dslContext.insertInto(
                 this,
                 REQUEST_ID,
                 PROJECT_ID,
@@ -95,19 +98,30 @@ class PipelineTriggerEventDao {
                 triggerEvent.requestParams?.let { JsonUtil.toJson(it, false) },
                 triggerEvent.createTime,
                 triggerEvent.eventBody?.let { JsonUtil.toJson(it, false) }
-            ).onDuplicateKeyIgnore().execute()
+            )
+            if (triggerEvent.eventBody != null) {
+                insert.onDuplicateKeyUpdate().set(
+                    EVENT_BODY,
+                    triggerEvent.eventBody?.let { JsonUtil.toJson(it, false) }
+                )
+            } else {
+                insert.onDuplicateKeyIgnore()
+            }
+            insert.execute()
         }
     }
 
-    fun update(
+    fun updateEventBody(
         dslContext: DSLContext,
-        triggerEvent: PipelineTriggerEvent
+        projectId: String,
+        eventId: Long,
+        eventBody: TriggerEventBody
     ) {
         with(T_PIPELINE_TRIGGER_EVENT) {
             dslContext.update(this)
-                .set(EVENT_BODY, triggerEvent.eventBody?.let { JsonUtil.toJson(it, false) })
-                .where(PROJECT_ID.eq(triggerEvent.projectId))
-                .and(EVENT_ID.eq(triggerEvent.eventId))
+                .set(EVENT_BODY, JsonUtil.toJson(eventBody, false))
+                .where(PROJECT_ID.eq(projectId))
+                .and(EVENT_ID.eq(eventId))
                 .execute()
         }
     }
@@ -208,7 +222,7 @@ class PipelineTriggerEventDao {
                     eventSource = it.value5(),
                     eventType = it.value6(),
                     triggerUser = it.value7(),
-                    eventDesc = it.value8(),
+                    eventDesc = I18Variable(code = "", defaultMessage = it.value8()),
                     eventTime = it.value9().timestampmilli(),
                     status = it.value10(),
                     pipelineId = it.value11(),
@@ -254,17 +268,6 @@ class PipelineTriggerEventDao {
             .on(t1.EVENT_ID.eq(t2.EVENT_ID)).and(t1.PROJECT_ID.eq(t2.PROJECT_ID))
             .where(conditions)
             .fetchOne(0, Long::class.java)!!
-    }
-
-    fun listByEventIds(
-        dslContext: DSLContext,
-        eventIds: List<String>
-    ): Result<TPipelineTriggerEventRecord> {
-        return with(T_PIPELINE_TRIGGER_EVENT) {
-            dslContext.selectFrom(this)
-                .where(EVENT_ID.`in`(eventIds))
-                .fetch()
-        }
     }
 
     fun getEventIdsByEvent(
@@ -418,15 +421,45 @@ class PipelineTriggerEventDao {
             .fetch().distinct().map { it.value1() }.toSet()
     }
 
-    fun listRepoTriggerEvent(
+    fun listRepoTriggerEventWithoutBody(
         dslContext: DSLContext,
+        projectId: String,
         eventIds: Set<Long>
-    ): List<TPipelineTriggerEventRecord> {
+    ): List<PipelineTriggerEventWithoutBody> {
         return with(T_PIPELINE_TRIGGER_EVENT) {
-            dslContext.selectFrom(this)
+            dslContext.select(
+                REQUEST_ID,
+                PROJECT_ID,
+                EVENT_ID,
+                TRIGGER_TYPE,
+                EVENT_SOURCE,
+                EVENT_TYPE,
+                TRIGGER_USER,
+                EVENT_DESC,
+                REPLAY_REQUEST_ID,
+                REQUEST_PARAMS,
+                CREATE_TIME
+            ).from(this)
                 .where(EVENT_ID.`in`(eventIds))
+                .and(PROJECT_ID.eq(projectId))
                 .orderBy(CREATE_TIME.desc())
-                .fetch()
+                .fetch().map {
+                    PipelineTriggerEventWithoutBody(
+                        requestId = it.value1(),
+                        projectId = it.value2(),
+                        eventId = it.value3(),
+                        triggerType = it.value4(),
+                        eventSource = it.value5(),
+                        eventType = it.value6(),
+                        triggerUser = it.value7(),
+                        eventDesc = it.value8(),
+                        replayRequestId = it.value9(),
+                        requestParams = it.value10()?.let { param ->
+                            JsonUtil.to(param, object : TypeReference<Map<String, String>>() {})
+                        },
+                        createTime = it.value11()
+                    )
+                }
         }
     }
 
@@ -510,6 +543,20 @@ class PipelineTriggerEventDao {
                 .fetchOne()
         }
         return record?.let { convertDetail(it) }
+    }
+
+    fun getTriggerDetail(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        buildId: String
+    ) = with(T_PIPELINE_TRIGGER_DETAIL) {
+        dslContext.selectFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(PIPELINE_ID.eq(pipelineId))
+                .and(BUILD_ID.eq(buildId))
+                .fetchOne()
+                ?.let { convertDetail(it) }
     }
 
     private fun buildDetailCondition(
@@ -642,8 +689,17 @@ class PipelineTriggerEventDao {
                         object : TypeReference<Map<String, String>>() {})
                 },
                 createTime = createTime,
-                eventBody = eventBody?.let {
-                    JsonUtil.to(it, Webhook::class.java)
+                eventBody = try {
+                    eventBody?.let {
+                        JsonUtil.to(it, TriggerEventBody::class.java)
+                    }
+                } catch (ignored: Exception) {
+                    logger.warn("convert event body failed, eventBody: $eventBody", ignored)
+                    eventBody?.let {
+                        ScmWebhookEventBody(
+                            webhook = JsonUtil.to(it, Webhook::class.java)
+                        )
+                    }
                 }
             )
         }
@@ -713,5 +769,9 @@ class PipelineTriggerEventDao {
                     )
                 }
         }
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(PipelineTriggerEventDao::class.java)
     }
 }

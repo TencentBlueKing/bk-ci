@@ -27,6 +27,9 @@
 
 package com.tencent.devops.log.jmx
 
+import com.tencent.devops.log.metrics.LogMetrics
+import com.tencent.devops.log.service.BulkOfferResult
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.jmx.export.annotation.ManagedAttribute
 import org.springframework.jmx.export.annotation.ManagedResource
 import org.springframework.stereotype.Component
@@ -35,7 +38,9 @@ import java.util.concurrent.atomic.AtomicLong
 @Suppress("TooManyFunctions")
 @Component
 @ManagedResource(objectName = "com.tencent.devops.log.v2:type=logs", description = "log performance")
-class LogStorageBean {
+class LogStorageBean @Autowired constructor(
+    private val logMetrics: LogMetrics
+) {
 
     private val batchWriteCount = AtomicLong(0)
     private val batchWriteElapse = AtomicLong(0)
@@ -45,6 +50,7 @@ class LogStorageBean {
     private val bulkRequestCount = AtomicLong(0)
     private val bulkRequestElapse = AtomicLong(0)
     private val bulkRequestFailureCount = AtomicLong(0)
+    private val bulkOfferFailureCount = AtomicLong(0)
 
     private val queryLogCount = AtomicLong(0)
     private val queryLogElapse = AtomicLong(0)
@@ -56,6 +62,10 @@ class LogStorageBean {
     private val downloadCalculateCount = AtomicLong(0)
     private val downloadFailureCount = AtomicLong(0)
 
+    private val degradeToStorageCount = AtomicLong(0)
+    private val directWriteSuccessCount = AtomicLong(0)
+    private val directWriteFailureCount = AtomicLong(0)
+
     @Synchronized
     fun download(elapse: Long, success: Boolean) {
         downloadLogCount.incrementAndGet()
@@ -64,6 +74,7 @@ class LogStorageBean {
         if (!success) {
             downloadFailureCount.incrementAndGet()
         }
+        logMetrics.recordEsDownload(elapse, success)
     }
 
     @Synchronized
@@ -74,15 +85,34 @@ class LogStorageBean {
         if (!success) {
             failureCount.incrementAndGet()
         }
+        logMetrics.recordEsBatchWrite(elapse, success)
     }
 
     @Synchronized
-    fun bulkRequest(elapse: Long, success: Boolean) {
+    fun bulkRequest(elapse: Long, success: Boolean, cluster: String? = null) {
         bulkRequestCount.incrementAndGet()
         bulkRequestElapse.addAndGet(elapse)
         if (!success) {
             bulkRequestFailureCount.incrementAndGet()
         }
+        logMetrics.recordEsBulk(elapse, success, cluster)
+    }
+
+    /**
+     * 单次 flush 的聚合规模，用于判断 maxWaitMs / maxDocs 的攒批效果。
+     */
+    fun bulkFlush(batches: Int, docs: Int, cluster: String? = null) {
+        logMetrics.recordBulkFlush(batches, docs, cluster)
+    }
+
+    /**
+     * 聚合器 offer 的最终结果，reason 区分背压拒绝、等待超时与 bulk 失败。
+     */
+    fun bulkOffer(elapse: Long, reason: String) {
+        if (reason != BulkOfferResult.REASON_OK) {
+            bulkOfferFailureCount.incrementAndGet()
+        }
+        logMetrics.recordBulkOffer(elapse, reason)
     }
 
     @Synchronized
@@ -93,6 +123,21 @@ class LogStorageBean {
         if (!success) {
             queryFailureCount.incrementAndGet()
         }
+        logMetrics.recordEsQuery(elapse, success)
+    }
+
+    fun degradeToStorage() {
+        degradeToStorageCount.incrementAndGet()
+        logMetrics.recordEsDegradeToStorage()
+    }
+
+    fun directWrite(success: Boolean) {
+        if (success) {
+            directWriteSuccessCount.incrementAndGet()
+        } else {
+            directWriteFailureCount.incrementAndGet()
+        }
+        logMetrics.recordEsDirectWrite(success)
     }
 
     @Synchronized
@@ -153,6 +198,9 @@ class LogStorageBean {
     fun getBulkFailureCount() = bulkRequestFailureCount.get()
 
     @ManagedAttribute
+    fun getBulkOfferFailureCount() = bulkOfferFailureCount.get()
+
+    @ManagedAttribute
     fun getQueryCount() = queryLogCount.get()
 
     @ManagedAttribute
@@ -160,4 +208,13 @@ class LogStorageBean {
 
     @ManagedAttribute
     fun getDownloadFailureCount() = downloadFailureCount.get()
+
+    @ManagedAttribute
+    fun getDegradeToStorageCount() = degradeToStorageCount.get()
+
+    @ManagedAttribute
+    fun getDirectWriteSuccessCount() = directWriteSuccessCount.get()
+
+    @ManagedAttribute
+    fun getDirectWriteFailureCount() = directWriteFailureCount.get()
 }

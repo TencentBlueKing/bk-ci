@@ -77,12 +77,13 @@ class UserProjectResourceImpl @Autowired constructor(
         return Result(
             projectService.list(
                 userId = userId,
-                accessToken = accessToken,
                 enabled = enabled,
                 unApproved = unApproved ?: false,
                 sortType = sortType ?: ProjectSortType.PROJECT_NAME,
                 collation = collation ?: ProjectCollation.DEFAULT,
-                tenantId = tenantId
+                tenantId = tenantId,
+                hidden = false,
+                accessToken = accessToken
             )
         )
     }
@@ -99,46 +100,43 @@ class UserProjectResourceImpl @Autowired constructor(
         return Result(
             projectService.listProjectsForApply(
                 userId = userId,
-                accessToken = accessToken,
                 projectName = projectName,
                 projectId = projectId,
                 page = page,
                 pageSize = pageSize,
-                tenantId = tenantId
+                tenantId = tenantId,
+                accessToken = accessToken
             )
         )
     }
 
-    override fun get(userId: String, projectId: String, accessToken: String?): Result<ProjectVO> {
+    override fun get(userId: String, projectId: String): Result<ProjectVO> {
         return Result(
             projectService.getByEnglishName(
                 userId = userId,
-                englishName = projectId,
-                accessToken = accessToken
-            )
-                ?: throw OperationException("project $projectId not found")
-        )
-    }
-
-    override fun show(userId: String, tenantId: String?, projectId: String, accessToken: String?): Result<ProjectVO> {
-        return Result(
-            projectService.show(
-                userId = userId,
-                englishName = TenantUtils.parseEnglishName(tenantId, projectId),
-                accessToken = accessToken
+                englishName = projectId
             ) ?: throw OperationException("project $projectId not found")
         )
     }
 
-    override fun diff(userId: String, projectId: String, accessToken: String?): Result<ProjectDiffVO> {
+    override fun show(userId: String, tenantId: String?, projectId: String): Result<ProjectVO> {
         return Result(
-            projectService.diff(userId, projectId, accessToken)
+            projectService.show(
+                userId = userId,
+                englishName = TenantUtils.parseEnglishName(tenantId, projectId)
+            ) ?: throw OperationException("project $projectId not found")
+        )
+    }
+
+    override fun diff(userId: String, projectId: String): Result<ProjectDiffVO> {
+        return Result(
+            projectService.diff(userId, projectId)
                 ?: throw OperationException(I18nUtil.getCodeLanMessage(PROJECT_NOT_EXIST))
         )
     }
 
-    override fun getContainEmpty(userId: String, projectId: String, accessToken: String?): Result<ProjectVO?> {
-        return Result(projectService.getByEnglishName(userId, projectId, accessToken))
+    override fun getContainEmpty(userId: String, projectId: String): Result<ProjectVO?> {
+        return Result(projectService.getByEnglishName(userId, projectId))
     }
 
     @AuditEntry(actionId = PROJECT_CREATE)
@@ -153,7 +151,6 @@ class UserProjectResourceImpl @Autowired constructor(
         projectService.create(
             userId = userId,
             projectCreateInfo = projectCreateInfo,
-            accessToken = accessToken,
             createExtInfo = ProjectCreateExtInfo(needValidate = true, needAuth = true, needApproval = true),
             projectChannel = ProjectChannelCode.BS
         )
@@ -174,8 +171,7 @@ class UserProjectResourceImpl @Autowired constructor(
         userId: String,
         tenantId: String?,
         projectId: String,
-        projectUpdateInfo: ProjectUpdateInfo,
-        accessToken: String?
+        projectUpdateInfo: ProjectUpdateInfo
     ): Result<Boolean> {
         projectUpdateInfo.tenantId = TenantUtils.getTenantId(tenantId)
         return Result(
@@ -183,7 +179,6 @@ class UserProjectResourceImpl @Autowired constructor(
                 userId = userId,
                 englishName = projectId,
                 projectUpdateInfo = projectUpdateInfo,
-                accessToken = accessToken,
                 needApproval = true
             )
         )
@@ -203,18 +198,16 @@ class UserProjectResourceImpl @Autowired constructor(
         userId: String,
         englishName: String,
         inputStream: InputStream,
-        disposition: FormDataContentDisposition,
-        accessToken: String?
+        disposition: FormDataContentDisposition
     ): Result<ProjectLogo> {
-        return projectService.updateLogo(userId, englishName, inputStream, disposition, accessToken)
+        return projectService.updateLogo(userId, englishName, inputStream, disposition)
     }
 
     override fun uploadLogo(
         userId: String,
-        inputStream: InputStream,
-        accessToken: String?
+        inputStream: InputStream
     ): Result<String> {
-        return projectService.uploadLogo(userId, inputStream, accessToken)
+        return projectService.uploadLogo(userId, inputStream)
     }
 
     override fun validate(
@@ -235,7 +228,6 @@ class UserProjectResourceImpl @Autowired constructor(
     override fun hasPermission(userId: String, projectId: String, permission: AuthPermission): Result<Boolean> {
         return Result(
             projectService.verifyUserProjectPermission(
-                accessToken = null,
                 userId = userId,
                 projectId = projectId,
                 permission = permission
@@ -244,13 +236,11 @@ class UserProjectResourceImpl @Autowired constructor(
     }
 
     override fun verifyUserProjectPermission(
-        accessToken: String?,
         projectCode: String,
         userId: String
     ): Result<Boolean> {
         return Result(
             projectPermissionService.verifyUserProjectPermission(
-                accessToken = accessToken,
                 projectCode = projectCode,
                 userId = userId
             )
@@ -298,5 +288,9 @@ class UserProjectResourceImpl @Autowired constructor(
 
     override fun getPipelineDialect(userId: String, projectId: String): Result<String> {
         return Result(projectService.getPipelineDialect(projectId = projectId))
+    }
+
+    override fun isHidden(userId: String, projectId: String): Result<Boolean> {
+        return Result(projectService.isHidden(englishName = projectId))
     }
 }

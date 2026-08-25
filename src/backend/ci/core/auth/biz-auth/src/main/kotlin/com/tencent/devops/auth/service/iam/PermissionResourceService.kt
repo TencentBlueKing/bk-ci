@@ -29,6 +29,7 @@
 package com.tencent.devops.auth.service.iam
 
 import com.tencent.devops.auth.pojo.AuthResourceInfo
+import com.tencent.devops.auth.pojo.vo.ProjectResourceRelationsDeleteVO
 import com.tencent.devops.common.api.pojo.Pagination
 
 /**
@@ -57,7 +58,8 @@ interface PermissionResourceService {
         projectCode: String,
         resourceType: String,
         resourceCode: String,
-        resourceName: String
+        resourceName: String,
+        enabled: Boolean? = true
     ): Boolean
 
     /**
@@ -68,6 +70,23 @@ interface PermissionResourceService {
         resourceType: String,
         resourceCode: String
     ): Boolean
+
+    /**
+     * 删除项目下某类资源在权限中心的关联
+     */
+    fun resourceDeleteRelations(
+        projectCode: String,
+        resourceType: String,
+        dryRun: Boolean = false,
+        confirm: Boolean = false
+    ): ProjectResourceRelationsDeleteVO
+
+    fun batchDeleteProjectResourceRelations(
+        projectCodes: List<String>,
+        resourceType: String,
+        dryRun: Boolean = false,
+        confirm: Boolean = false
+    ): List<ProjectResourceRelationsDeleteVO>
 
     /**
      * 取消权限中心资源
@@ -124,4 +143,32 @@ interface PermissionResourceService {
         resourceType: String,
         resourceCode: String
     ): AuthResourceInfo
+
+    /**
+     * 根据资源名称精确查询资源
+     * @return 资源信息，如果未找到返回 null，如果存在多个同名资源抛出异常
+     */
+    fun getResourceByName(
+        projectCode: String,
+        resourceType: String,
+        resourceName: String
+    ): AuthResourceInfo?
+
+    /**
+     * 根据资源code精确查询资源
+     * @return 资源信息，如果未找到返回 null，如果存在多个同名资源抛出异常
+     */
+    fun getResourceByCode(
+        projectCode: String,
+        resourceType: String,
+        resourceCode: String
+    ): AuthResourceInfo?
+
+    /**
+     * 修改项目启用/禁用状态
+     */
+    fun modifyProjectEnabled(
+        projectCode: String,
+        enabled: Boolean
+    ): Boolean
 }

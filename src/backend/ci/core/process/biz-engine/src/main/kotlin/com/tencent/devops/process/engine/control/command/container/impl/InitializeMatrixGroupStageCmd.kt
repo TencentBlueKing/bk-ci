@@ -39,6 +39,7 @@ import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.dialect.PipelineDialectUtil
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.pipeline.enums.VMBaseOS
 import com.tencent.devops.common.pipeline.matrix.MatrixConfig
 import com.tencent.devops.common.pipeline.option.JobControlOption
 import com.tencent.devops.common.pipeline.option.MatrixControlOption
@@ -64,12 +65,12 @@ import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.service.PipelineContainerService
 import com.tencent.devops.process.engine.service.PipelineTaskService
-import com.tencent.devops.process.engine.service.detail.ContainerBuildDetailService
 import com.tencent.devops.process.engine.service.record.ContainerBuildRecordService
 import com.tencent.devops.process.pojo.TemplateAcrossInfoType
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordContainer
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordTask
 import com.tencent.devops.process.service.PipelineBuildTemplateAcrossInfoService
+import com.tencent.devops.process.utils.NODE_OS
 import com.tencent.devops.process.utils.PIPELINE_DIALECT
 import com.tencent.devops.process.utils.PIPELINE_MATRIX_CON_RUNNING_SIZE_MAX
 import com.tencent.devops.process.utils.PIPELINE_MATRIX_MAX_CON_RUNNING_SIZE_DEFAULT
@@ -95,7 +96,6 @@ import kotlin.math.min
 @Service
 class InitializeMatrixGroupStageCmd(
     private val dslContext: DSLContext,
-    private val containerBuildDetailService: ContainerBuildDetailService,
     private val containerBuildRecordService: ContainerBuildRecordService,
     private val templateAcrossInfoService: PipelineBuildTemplateAcrossInfoService,
     private val pipelineContainerService: PipelineContainerService,
@@ -122,6 +122,23 @@ class InitializeMatrixGroupStageCmd(
 
         // 在下发构建机任务前进行构建矩阵计算
         val parentContainer = commandContext.container
+        // 矩阵局部重试：若子容器已存在（局部重试未删除子容器），则跳过重新分裂，
+        // 直接进入命令链后续的 MatrixExecuteContainerCmd 轮询下发被重置回排队的子Job。
+        // 全量/Stage重试已通过 cleanContainersInMatrixGroup 删空子容器 → 走正常分裂逻辑。
+        val existingChildren = pipelineContainerService.listGroupContainers(
+            projectId = parentContainer.projectId,
+            buildId = parentContainer.buildId,
+            matrixGroupId = parentContainer.containerId
+        )
+        if (existingChildren.isNotEmpty()) {
+            LOG.info(
+                "ENGINE|${parentContainer.buildId}|MATRIX_CONTAINER_REUSE|" +
+                    "matrix(${parentContainer.containerId})|reuseChildCount=${existingChildren.size}"
+            )
+            commandContext.buildStatus = BuildStatus.RUNNING
+            commandContext.latestSummary = "Matrix(${parentContainer.containerId}) reuse(${existingChildren.size})"
+            return
+        }
         val count = try {
             buildLogPrinter.addLine(
                 buildId = parentContainer.buildId,
@@ -179,17 +196,6 @@ class InitializeMatrixGroupStageCmd(
 
         val event = commandContext.event
         val variables = commandContext.variables
-        val modelStage = containerBuildDetailService.getBuildModel(
-            projectId = parentContainer.projectId,
-            buildId = parentContainer.buildId
-        )?.getStage(parentContainer.stageId) ?: throw DependNotFoundException(
-            "stage(${parentContainer.stageId}) cannot be found in model"
-        )
-        val modelContainer = modelStage.getContainer(
-            vmSeqId = parentContainer.seq.toString()
-        ) ?: throw DependNotFoundException(
-            "container(${parentContainer.containerId}) cannot be found in model"
-        )
         val recordContainer = containerBuildRecordService.getRecord(
             transactionContext = null,
             projectId = parentContainer.projectId,
@@ -197,6 +203,20 @@ class InitializeMatrixGroupStageCmd(
             buildId = parentContainer.buildId,
             containerId = parentContainer.containerId,
             executeCount = parentContainer.executeCount
+        )
+        val modelStage = containerBuildRecordService.getRecordModel(
+            projectId = parentContainer.projectId,
+            pipelineId = parentContainer.pipelineId,
+            version = recordContainer?.resourceVersion ?: 1,
+            buildId = parentContainer.buildId,
+            executeCount = parentContainer.executeCount
+        )?.getStage(parentContainer.stageId) ?: throw DependNotFoundException(
+            "stage(${parentContainer.stageId}) cannot be found in model"
+        )
+        val modelContainer = modelStage.getContainer(
+            vmSeqId = parentContainer.seq.toString()
+        ) ?: throw DependNotFoundException(
+            "container(${parentContainer.containerId}) cannot be found in model"
         )
         val dialect = PipelineDialectUtil.getPipelineDialect(variables[PIPELINE_DIALECT])
         // #4518 待生成的分裂后container表和task表记录
@@ -233,7 +253,7 @@ class InitializeMatrixGroupStageCmd(
         when (modelContainer) {
             is VMBuildContainer -> {
 
-                jobControlOption = modelContainer.jobControlOption!!.copy(
+                jobControlOption = (modelContainer.jobControlOption ?: JobControlOption()).copy(
                     dependOnType = null,
                     dependOnId = null,
                     dependOnName = null,
@@ -242,7 +262,11 @@ class InitializeMatrixGroupStageCmd(
                 matrixOption = checkAndFetchOption(modelContainer.matrixControlOption)
                 matrixConfig = matrixOption.convertMatrixConfig(variables)
                 contextCaseList = matrixConfig.getAllCombinations()
-
+                variables[NODE_OS]
+                    ?.takeIf { it.isNotBlank() && modelContainer.baseOS != null }
+                    ?.let { nodeOs ->
+                        modelContainer.baseOS = VMBaseOS.valueOf(nodeOs)
+                    }
                 if (contextCaseList.size > MATRIX_CASE_MAX_COUNT) {
                     throw ExecuteException(
                         "Matrix case(${contextCaseList.size}) exceeds " +
@@ -384,6 +408,9 @@ class InitializeMatrixGroupStageCmd(
                         modelContainer.mutexGroup?.let {
                             containerVar[newContainer::mutexGroup.name] = it
                         }
+                        newContainer.jobId?.let {
+                            containerVar[newContainer::jobId.name] = it
+                        }
                         recordContainerList.add(
                             BuildRecordContainer(
                                 projectId = event.projectId,
@@ -394,6 +421,7 @@ class InitializeMatrixGroupStageCmd(
                                 containerId = newContainer.containerId!!,
                                 containerType = recordContainer.containerType,
                                 executeCount = context.executeCount,
+                                containPostTaskFlag = newContainer.containPostTaskFlag,
                                 matrixGroupFlag = false,
                                 matrixGroupId = matrixGroupId,
                                 containerVar = containerVar,
@@ -419,7 +447,7 @@ class InitializeMatrixGroupStageCmd(
             }
             is NormalContainer -> {
 
-                jobControlOption = modelContainer.jobControlOption!!.copy(
+                jobControlOption = (modelContainer.jobControlOption ?: JobControlOption()).copy(
                     dependOnType = null,
                     dependOnId = null,
                     dependOnName = null,
@@ -508,6 +536,9 @@ class InitializeMatrixGroupStageCmd(
                         modelContainer.mutexGroup?.let {
                             containerVar[newContainer::mutexGroup.name] = it
                         }
+                        newContainer.jobId?.let {
+                            containerVar[newContainer::jobId.name] = it
+                        }
                         recordContainerList.add(
                             BuildRecordContainer(
                                 projectId = event.projectId,
@@ -518,6 +549,7 @@ class InitializeMatrixGroupStageCmd(
                                 containerId = newContainer.containerId!!,
                                 containerType = recordContainer.containerType,
                                 executeCount = context.executeCount,
+                                containPostTaskFlag = newContainer.containPostTaskFlag,
                                 matrixGroupFlag = false,
                                 matrixGroupId = matrixGroupId,
                                 containerVar = containerVar,
@@ -675,7 +707,7 @@ class InitializeMatrixGroupStageCmd(
     ): List<MatrixStatusElement> {
         val originToNewId = mutableMapOf<String, String>()
         return elements.map { e ->
-            // 每次写入TASK表都要是新获取的taskId，统一调整为不可重试
+            // 每次写入TASK表都要是新获取的taskId（矩阵重新分裂会生成全新taskId）
             val newTaskId = modelTaskIdGenerator.getNextId()
             // 记录所有新ID对应的原ID，并将post-action信息更新父插件的ID
             originToNewId[e.id!!] = newTaskId
@@ -687,9 +719,8 @@ class InitializeMatrixGroupStageCmd(
             }
             matrixTaskIds.add(newTaskId)
 
-            // 刷新ID为新的唯一值，强制设为无法重试
+            // 刷新ID为新的唯一值；canRetry/canSkip 交由详情返回时统一按子容器状态计算
             e.id = newTaskId
-            e.canRetry = false
             MatrixStatusElement(
                 name = e.name,
                 id = e.id,
@@ -716,6 +747,7 @@ class InitializeMatrixGroupStageCmd(
                         reviewUsers = e.reviewUsers.toMutableList()
                         desc = e.desc
                         params = e.params
+                        suggestRequired = e.suggestRequired
                     }
 
                     else -> {}

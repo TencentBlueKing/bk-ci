@@ -122,7 +122,29 @@ enum class PipelineNotifyTemplateEnum(val templateCode: String) {
      */
     UNKNOWN("NULL");
 
+    /**
+     * 判断是否属于审核通知类模板（需要走审核通知流程，包含生成审核 URL、补充项目信息等）
+     */
+    fun isReviewNotifyTemplate(): Boolean = this in REVIEW_NOTIFY_TEMPLATES
+
+    /**
+     * 判断是否需要跳转到审核页面的模板类型（人工审核插件 / stage 阶段审核）
+     */
+    fun isReviewPageTemplate(): Boolean = this == PIPELINE_MANUAL_REVIEW_STAGE_NOTIFY_TEMPLATE ||
+        this == PIPELINE_MANUAL_REVIEW_ATOM_NOTIFY_TEMPLATE
+
     companion object {
+
+        /**
+         * 审核通知类模板集合
+         */
+        private val REVIEW_NOTIFY_TEMPLATES = setOf(
+            PIPELINE_MANUAL_REVIEW_STAGE_NOTIFY_TEMPLATE,
+            PIPELINE_MANUAL_REVIEW_ATOM_NOTIFY_TEMPLATE,
+            PIPELINE_TRIGGER_REVIEW_NOTIFY_TEMPLATE,
+            PIPELINE_MANUAL_REVIEW_STAGE_NOTIFY_TO_TRIGGER_TEMPLATE,
+            PIPELINE_MANUAL_REVIEW_STAGE_REJECT_TO_TRIGGER_TEMPLATE
+        )
 
         fun parse(name: String?): PipelineNotifyTemplateEnum {
             return try {

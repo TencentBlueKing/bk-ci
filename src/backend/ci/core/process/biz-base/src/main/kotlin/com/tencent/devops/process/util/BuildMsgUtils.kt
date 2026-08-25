@@ -35,6 +35,7 @@ import com.tencent.devops.common.pipeline.enums.StartType.PIPELINE
 import com.tencent.devops.common.pipeline.enums.StartType.REMOTE
 import com.tencent.devops.common.pipeline.enums.StartType.SERVICE
 import com.tencent.devops.common.pipeline.enums.StartType.TIME_TRIGGER
+import com.tencent.devops.common.pipeline.enums.StartType.TRIGGER_EVENT
 import com.tencent.devops.common.pipeline.enums.StartType.WEB_HOOK
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_TRIGGER
@@ -42,6 +43,7 @@ import com.tencent.devops.process.constant.ProcessMessageCode.BUILD_MSG_PIPELINE
 import com.tencent.devops.process.constant.ProcessMessageCode.BUILD_MSG_REMOTE
 import com.tencent.devops.process.constant.ProcessMessageCode.BUILD_MSG_SERVICE
 import com.tencent.devops.process.constant.ProcessMessageCode.BUILD_MSG_TIME
+import com.tencent.devops.process.constant.ProcessMessageCode.BUILD_MSG_TRIGGER_EVENT
 import com.tencent.devops.process.constant.ProcessMessageCode.BUILD_MSG_WEBHOOK
 
 object BuildMsgUtils {
@@ -67,6 +69,7 @@ object BuildMsgUtils {
                 }
             PIPELINE -> I18nUtil.getCodeLanMessage(messageCode = BUILD_MSG_PIPELINE)
             WEB_HOOK -> I18nUtil.getCodeLanMessage(messageCode = BUILD_MSG_WEBHOOK)
+            TRIGGER_EVENT -> I18nUtil.getCodeLanMessage(messageCode = BUILD_MSG_TRIGGER_EVENT)
         }
     }
 

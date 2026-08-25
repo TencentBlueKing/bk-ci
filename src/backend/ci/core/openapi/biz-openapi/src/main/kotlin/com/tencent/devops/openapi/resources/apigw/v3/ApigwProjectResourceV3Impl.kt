@@ -78,8 +78,7 @@ class ApigwProjectResourceV3Impl @Autowired constructor(
 
         return client.get(ServiceProjectResource::class).create(
             userId = userId,
-            projectCreateInfo = projectCreateInfo,
-            accessToken = accessToken
+            projectCreateInfo = projectCreateInfo
         )
     }
 
@@ -89,16 +88,14 @@ class ApigwProjectResourceV3Impl @Autowired constructor(
         userId: String,
         tenantId: String?,
         projectId: String,
-        projectUpdateInfo: ProjectUpdateInfo,
-        accessToken: String?
+        projectUpdateInfo: ProjectUpdateInfo
     ): Result<Boolean> {
-        logger.info("OPENAPI_PROJECT_V3|$userId|update|$projectId|$projectUpdateInfo|$accessToken|$tenantId")
+        logger.info("OPENAPI_PROJECT_V3|$userId|update|$projectId|$projectUpdateInfo|$tenantId")
         projectUpdateInfo.tenantId = TenantUtils.getTenantId(tenantId)
         return client.get(ServiceProjectResource::class).update(
             userId = userId,
             projectId = projectId,
-            projectUpdateInfo = projectUpdateInfo,
-            accessToken = accessToken
+            projectUpdateInfo = projectUpdateInfo
         )
     }
 
@@ -106,8 +103,7 @@ class ApigwProjectResourceV3Impl @Autowired constructor(
         appCode: String?,
         apigwType: String?,
         userId: String,
-        projectId: String,
-        accessToken: String?
+        projectId: String
     ): Result<ProjectVO?> {
         logger.info("OPENAPI_PROJECT_V3|$userId|get|$projectId")
         return client.get(ServiceProjectResource::class).get(

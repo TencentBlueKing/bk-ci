@@ -42,6 +42,7 @@ import com.tencent.devops.store.pojo.common.KEY_CLASSIFY_NAME
 import com.tencent.devops.store.pojo.common.KEY_CREATE_TIME
 import com.tencent.devops.store.pojo.common.KEY_ID
 import com.tencent.devops.store.pojo.common.KEY_UPDATE_TIME
+import com.tencent.devops.store.pojo.common.enums.ServiceScopeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import java.time.LocalDateTime
 import org.jooq.DSLContext
@@ -75,10 +76,10 @@ class MarketAtomClassifyServiceImpl : MarketAtomClassifyService, AbstractClassif
     /**
      * 获取所有插件分类信息
      */
-    override fun getAllAtomClassify(): Result<List<MarketAtomClassify>> {
+    override fun getAllAtomClassify(serviceScope: ServiceScopeEnum?): Result<List<MarketAtomClassify>> {
         val marketAtomClassifyList = mutableListOf<MarketAtomClassify>()
-        val marketAtomClassifyRecords = marketAtomClassifyDao.getAllAtomClassify(dslContext)
-        marketAtomClassifyRecords?.forEach {
+        val marketAtomClassifyRecords = marketAtomClassifyDao.getAllAtomClassify(dslContext, serviceScope)
+        marketAtomClassifyRecords.forEach {
             val id = it[KEY_ID] as String
             val classifyCode = it[KEY_CLASSIFY_CODE] as String
             val classifyName = it[KEY_CLASSIFY_NAME] as String
@@ -121,18 +122,25 @@ class MarketAtomClassifyServiceImpl : MarketAtomClassifyService, AbstractClassif
         }
     }
 
-    override fun getDeleteClassifyFlag(classifyId: String, storeType: StoreTypeEnum): Boolean {
+    override fun getDeleteClassifyFlag(
+        classifyId: String,
+        storeType: StoreTypeEnum,
+        serviceScope: ServiceScopeEnum?
+    ): Boolean {
         // 允许删除分类是条件：1、该分类下的原子插件都不处于上架状态 2、该分类下的原子插件如果处于下架中或者已下架状态但已经没人在用
-        var flag = false
-        val releaseAtomNum = atomDao.countReleaseAtomNumByClassifyId(dslContext, classifyId)
+        val releaseAtomNum = atomDao.countReleaseAtomNumByClassifyId(
+            dslContext = dslContext,
+            classifyId = classifyId,
+            serviceScope = serviceScope
+        )
         logger.info("$classifyId releaseAtomNum is :$releaseAtomNum")
-        if (releaseAtomNum == 0) {
-            val undercarriageAtomNum = atomDao.countUndercarriageAtomNumByClassifyId(dslContext, classifyId)
-            logger.info("$classifyId undercarriageAtomNum is :$undercarriageAtomNum")
-            if (undercarriageAtomNum == 0) {
-                flag = true
-            }
-        }
-        return flag
+        if (releaseAtomNum != 0) return false
+        val undercarriageAtomNum = atomDao.countUndercarriageAtomNumByClassifyId(
+            dslContext = dslContext,
+            classifyId = classifyId,
+            serviceScope = serviceScope
+        )
+        logger.info("$classifyId undercarriageAtomNum is :$undercarriageAtomNum")
+        return undercarriageAtomNum == 0
     }
 }

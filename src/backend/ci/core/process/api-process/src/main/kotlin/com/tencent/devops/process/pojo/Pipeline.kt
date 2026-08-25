@@ -43,6 +43,8 @@ data class Pipeline(
     var pipelineName: String,
     @get:Schema(title = "流水线描述", required = false)
     var pipelineDesc: String? = null,
+    @get:Schema(title = "AI自动摘要", required = false)
+    var autoSummary: String? = null,
     @get:Schema(title = "流水线任务数量", required = true)
     val taskCount: Int,
     @get:Schema(title = "构建次数", required = true)
@@ -133,5 +135,7 @@ data class Pipeline(
     @get:Schema(title = "yaml在默认分支是否存在", required = false)
     var yamlExist: Boolean? = false,
     @get:Schema(title = "是否处于归档中", required = false)
-    var archivingFlag: Boolean? = null
+    var archivingFlag: Boolean? = null,
+    @get:Schema(title = "最后一次构建各阶段状态", required = true)
+    var latestBuildStageStatus: List<BuildStageStatus>? = null
 )

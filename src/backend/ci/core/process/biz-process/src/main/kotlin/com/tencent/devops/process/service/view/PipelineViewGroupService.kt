@@ -57,7 +57,7 @@ import com.tencent.devops.process.dao.label.PipelineViewDao
 import com.tencent.devops.process.dao.label.PipelineViewGroupDao
 import com.tencent.devops.process.dao.label.PipelineViewTopDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
-import com.tencent.devops.process.engine.dao.PipelineYamlViewDao
+import com.tencent.devops.process.dao.yaml.PipelineYamlViewDao
 import com.tencent.devops.process.enums.OperationLogType
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.classify.PipelineNewView
@@ -293,7 +293,8 @@ class PipelineViewGroupService @Autowired constructor(
         projectId: String,
         userId: String,
         viewIdEncode: String,
-        checkPac: Boolean = true
+        checkPac: Boolean = true,
+        checkPermission: Boolean = true
     ): Boolean {
         val viewId = HashUtil.decodeIdToLong(viewIdEncode)
         val oldView = pipelineViewDao.get(dslContext, projectId, viewId) ?: throw ErrorCodeException(
@@ -307,7 +308,9 @@ class PipelineViewGroupService @Autowired constructor(
                 )
             }
         }
-        checkPermission(userId, projectId, oldView.isProject, oldView.createUser)
+        if (checkPermission) {
+            checkPermission(userId, projectId, oldView.isProject, oldView.createUser)
+        }
         ActionAuditContext.current()
             .setInstanceId(viewId.toString())
             .setInstanceName(oldView.name)
@@ -654,7 +657,7 @@ class PipelineViewGroupService @Autowired constructor(
                     offset = offset,
                     limit = step,
                     deleteFlag = if (includeDelete) null else false,
-                    channelCode = ChannelCode.BS
+                    channelCode = ChannelCode.getRequestChannelCode()
                 ) ?: emptyList<TPipelineInfoRecord>()
                 if (subPipelineInfos.isEmpty()) {
                     break
@@ -818,12 +821,27 @@ class PipelineViewGroupService @Autowired constructor(
             .setInstanceName(view.name)
             .addExtendData("pipelineIds", bulkRemove.pipelineIds)
         pipelineYamlViewDao.getByViewId(dslContext = dslContext, projectId = projectId, viewId = viewId)?.let {
-            throw ErrorCodeException(
-                errorCode = ProcessMessageCode.YAML_VIEW_CANNOT_BULK_REMOVE
-            )
+            if (!canRemoveFromPacView(projectId = projectId, pipelineIds = bulkRemove.pipelineIds)) {
+                throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.YAML_VIEW_CANNOT_BULK_REMOVE
+                )
+            }
         }
         pipelineViewGroupDao.batchRemove(dslContext, projectId, viewId, bulkRemove.pipelineIds)
         return true
+    }
+
+    private fun canRemoveFromPacView(projectId: String, pipelineIds: List<String>): Boolean {
+        if (pipelineIds.isEmpty()) {
+            return false
+        }
+        val pipelineInfos = pipelineInfoDao.listInfoByPipelineIds(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineIds = pipelineIds.toSet(),
+            filterDelete = false
+        )
+        return pipelineInfos.none { !it.delete }
     }
 
     fun hasProjectPermission(userId: String, projectId: String) =
@@ -858,7 +876,7 @@ class PipelineViewGroupService @Autowired constructor(
                     dslContext = dslContext,
                     projectId = projectId,
                     excludePipelineIds = classifiedPipelineIds,
-                    channelCode = ChannelCode.BS,
+                    channelCode = ChannelCode.getRequestChannelCode(),
                     filterPipelineIds = authPipelines
                 )
             summaries.add(

@@ -27,18 +27,20 @@
 
 package com.tencent.devops.log.event
 
-import com.tencent.devops.common.log.pojo.message.LogMessageWithLineNo
 import com.tencent.devops.common.event.annotation.Event
+import com.tencent.devops.common.log.pojo.message.LogMessageWithLineNo
 import com.tencent.devops.common.stream.constants.StreamBinder
 import com.tencent.devops.common.stream.constants.StreamBinding
 
 @Event(
     destination = StreamBinding.LOG_STORAGE_EVENT_DESTINATION,
-    binder = StreamBinder.EXTEND_RABBIT
+    binder = StreamBinder.CUSTOM
 )
 data class LogStorageEvent(
     override val buildId: String,
     val logs: List<LogMessageWithLineNo>,
     override var retryTime: Int = 2,
-    override var delayMills: Int = 0
-) : ILogEvent(buildId, retryTime, delayMills)
+    override var delayMills: Int = 0,
+    override val projectId: String? = null,
+    override val pipelineId: String? = null
+) : ILogEvent(buildId, retryTime, delayMills, projectId, pipelineId)

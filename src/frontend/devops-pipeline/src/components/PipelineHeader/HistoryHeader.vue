@@ -1,6 +1,9 @@
 <template>
     <div class="pipeline-history-header">
-        <pipeline-bread-crumb :is-loading="isSwitchPipeline || switchingVersion">
+        <component
+            :is="breadCrumb"
+            v-bind="breadCrumbProps"
+        >
             <bk-popover :delay="[666, 0]">
                 <VersionSelector
                     :value="currentVersion"
@@ -9,6 +12,8 @@
                     @showAllVersion="showVersionSideSlider"
                     :include-draft="false"
                     refresh-list-on-expand
+                    :is-template="isTemplate"
+                    :unique-id="uniqueId"
                 />
                 <div slot="content">
                     <p>{{ $t('versionRuleP') }}</p>
@@ -26,13 +31,13 @@
                 <i class="devops-icon icon-shift"></i>
                 {{ $t("switchToReleaseVersion") }}
             </bk-button>
-            <!-- <badge
-                v-if="isReleaseVersion"
+            <badge
+                v-if="!isTemplate && isReleaseVersion"
                 class="pipeline-exec-badge"
                 :project-id="projectId"
-                :pipeline-id="pipelineId"
-            /> -->
-        </pipeline-bread-crumb>
+                :pipeline-id="uniqueId"
+            />
+        </component>
 
         <aside
             v-show="!(isSwitchPipeline || switchingVersion)"
@@ -53,14 +58,17 @@
                 :has-permission="canEdit"
                 :version="currentVersion"
                 :draft-version="pipelineInfo?.version"
-                :pipeline-id="pipelineId"
+                :pipeline-id="uniqueId"
                 :project-id="projectId"
+                :theme="isTemplate ? 'default' : 'primary'"
                 :version-name="activePipelineVersion?.versionName"
                 :draft-base-version-name="draftBaseVersionName"
                 :is-active-draft="activePipelineVersion?.isDraft"
                 :is-active-branch-version="isActiveBranchVersion"
                 :draft-creator="activePipelineVersion?.creator"
                 :draft-create-time="activePipelineVersion?.createTime"
+                :rollback-id="uniqueId"
+                :click-action-type="actionType"
             >
                 {{ operateName }}
             </RollbackEntry>
@@ -73,41 +81,70 @@
                     disablePermissionApi: true,
                     permissionData: {
                         projectId,
-                        resourceType: 'pipeline',
-                        resourceCode: pipelineId,
-                        action: RESOURCE_ACTION.EDIT
+                        resourceType,
+                        resourceCode: uniqueId,
+                        action: resourceEditAction
                     }
                 }"
-                @click="goEdit"
+                @click="handleEdit"
             >
-                {{ $t("edit") }}
+                {{ isTemplate ? $t('template.editTemplate') : $t('edit') }}
             </bk-button>
-            <template v-if="editAndExecutable">
-                <span
-                    v-if="!archiveFlag"
-                    v-bk-tooltips="tooltip"
-                >
-                    <bk-button
-                        :disabled="!executable"
-                        theme="primary"
-                        v-perm="{
-                            hasPermission: canExecute,
-                            disablePermissionApi: true,
-                            permissionData: {
-                                projectId,
-                                resourceType: 'pipeline',
-                                resourceCode: pipelineId,
-                                action: RESOURCE_ACTION.EXECUTE
-                            }
-                        }"
-                        @click="goExecPreview"
+
+            <instance-release-btn
+                v-if="isTemplate && canInstantiate"
+                :perm-data="{
+                    disablePermissionApi: false,
+                    permissionData: {
+                        projectId,
+                        resourceType: RESOURCE_TYPE.PROJECT,
+                        resourceCode: projectId,
+                        action: RESOURCE_ACTION.CREATE
+                    }
+                }"
+                @click="handleToInstanceEntry"
+            />
+            <template v-else-if="!isTemplate">
+                <template v-if="editAndExecutable">
+                    <span
+                        v-if="!archiveFlag"
+                        v-bk-tooltips="tooltip"
                     >
-                        {{ $t(isActiveDraftVersion ? 'debug' : 'exec') }}
-                    </bk-button>
-                </span>
-                <more-actions />
+                        <bk-button
+                            :disabled="!executable"
+                            theme="primary"
+                            v-perm="{
+                                hasPermission: canExecute,
+                                disablePermissionApi: true,
+                                permissionData: {
+                                    projectId,
+                                    resourceType,
+                                    resourceCode: uniqueId,
+                                    action: RESOURCE_ACTION.EXECUTE
+                                }
+                            }"
+                            @click="goExecPreview"
+                        >
+                            {{ $t(isActiveDraftVersion ? 'debug' : 'exec') }}
+                        </bk-button>
+                    </span>
+                    <more-actions />
+                </template>
             </template>
         </aside>
+        <DraftConfirmDialog
+            v-model="isShowConfirmDialog"
+            :has-draft="hasDraft"
+            :draft-status="draftStatus"
+            :draft-save-info="draftSaveInfo"
+            :draft-hint-title="draftHintTitle"
+            :version="currentVersion"
+            :version-name="activePipelineVersion?.versionName"
+            :draft-version="pipelineInfo?.version"
+            @confirm="confirmEdit"
+            @edit-draft="goEditDraft"
+            @cancel="closeDialog"
+        />
         <VersionHistorySideSlider
             :show-version-sideslider="showVersionSideslider"
             @close="closeVersionSideSlider"
@@ -116,36 +153,56 @@
 </template>
 
 <script>
-    // import Badge from '@/components/Badge.vue'
-
+    import Badge from '@/components/Badge.vue'
     import RollbackEntry from '@/components/PipelineDetailTabs/RollbackEntry'
     import VersionDiffEntry from '@/components/PipelineDetailTabs/VersionDiffEntry'
     import VersionHistorySideSlider from '@/components/PipelineDetailTabs/VersionHistorySideSlider'
     import VersionSelector from '@/components/PipelineDetailTabs/VersionSelector'
+    import InstanceReleaseBtn from '@/components/Template/InstanceReleaseBtn.vue'
+    import TemplateBreadCrumb from '@/components/Template/TemplateBreadCrumb.vue'
     import {
-        RESOURCE_ACTION
+        RESOURCE_ACTION,
+        RESOURCE_TYPE,
+        TEMPLATE_RESOURCE_ACTION,
     } from '@/utils/permission'
-    import { pipelineTabIdMap } from '@/utils/pipelineConst'
-    import { mapActions, mapGetters, mapState } from 'vuex'
+    import { pipelineTabIdMap, DRAFT_STATUS } from '@/utils/pipelineConst'
+    import { mapActions, mapGetters, mapMutations, mapState } from 'vuex'
     import MoreActions from './MoreActions.vue'
     import PipelineBreadCrumb from './PipelineBreadCrumb.vue'
+    import DraftConfirmDialog from './DraftConfirmDialog.vue'
+    import useDraftStatus from '@/hook/useDraftStatus'
 
     export default {
         components: {
             PipelineBreadCrumb,
-            // Badge,
+            TemplateBreadCrumb,
+            Badge,
             MoreActions,
             VersionSelector,
             VersionHistorySideSlider,
             VersionDiffEntry,
-            RollbackEntry
+            RollbackEntry,
+            DraftConfirmDialog,
+            InstanceReleaseBtn
         },
         props: {
             isSwitchPipeline: Boolean
         },
+        setup () {
+            const { fetchLatestDraftStatus } = useDraftStatus()
+            return {
+                fetchLatestDraftStatus
+            }
+        },
         data () {
             return {
+                RESOURCE_TYPE,
+                RESOURCE_ACTION,
                 showVersionSideslider: false,
+                isShowConfirmDialog: false,
+                draftStatus: DRAFT_STATUS.NORMAL,
+                draftSaveInfo: null,
+                loading: false,
                 isPipelineIdChanged: false
             }
         },
@@ -156,6 +213,7 @@
                 'activePipelineVersion',
                 'switchingVersion'
             ]),
+            ...mapState('common', ['hasDraft']),
             ...mapGetters({
                 isCurPipelineLocked: 'atom/isCurPipelineLocked',
                 isReleasePipeline: 'atom/isReleasePipeline',
@@ -164,8 +222,23 @@
                 isOutdatedVersion: 'atom/isOutdatedVersion',
                 draftBaseVersionName: 'atom/getDraftBaseVersionName',
                 pipelineHistoryViewable: 'atom/pipelineHistoryViewable',
-                onlyBranchPipeline: 'atom/onlyBranchPipeline'
+                onlyBranchPipeline: 'atom/onlyBranchPipeline',
+                isTemplate: 'atom/isTemplate'
             }),
+            
+            breadCrumb () {
+                return this.isTemplate ? 'template-bread-crumb' : 'pipeline-bread-crumb'
+            },
+            breadCrumbProps () {
+                return this.isTemplate
+                    ? {
+                        templateName: this.pipelineInfo?.name ?? this.pipeline?.name,
+                        isLoading: !this.pipeline
+                    }
+                    : {
+                        isLoading: this.isSwitchPipeline || this.switchingVersion
+                    }
+            },
             editAndExecutable () {
                 return this.isReleaseVersion || this.activePipelineVersion?.isBranchVersion
             },
@@ -187,8 +260,14 @@
             projectId () {
                 return this.$route.params.projectId
             },
-            pipelineId () {
-                return this.$route.params.pipelineId
+            uniqueId () {
+                return this.$route.params?.[this.isTemplate ? 'templateId' : 'pipelineId']
+            },
+            resourceType () {
+                return this.isTemplate ? RESOURCE_TYPE.TEMPLATE : RESOURCE_TYPE.PIPELINE
+            },
+            resourceEditAction () {
+                return this.isTemplate ? TEMPLATE_RESOURCE_ACTION.EDIT : RESOURCE_ACTION.EDIT
             },
             yamlInfo () {
                 return this.pipelineInfo?.yamlInfo
@@ -205,15 +284,36 @@
             canManualStartup () {
                 return this.pipelineInfo?.canManualStartup ?? true
             },
+            isEditCurrentDraft (){
+                return this.pipelineInfo?.baseVersion && this.activePipelineVersion?.version === this.pipelineInfo?.baseVersion
+            },
+            draftHintTitle () {
+                switch (true) {
+                    case this.hasDraft && this.isActiveBranchVersion:
+                        return this.$t('template.templateCoverWarning')
+                    case this.hasDraft:
+                        return this.$t('hasDraft')
+                    default:
+                        // 1. 分支版本
+                        if (this.isActiveBranchVersion) {
+                            return this.$t('createBranchDraftTips', [this.pipelineInfo?.versionName])
+                        }
+                        // 基线版本落后状态
+                        return this.$t('pipelineUpdated')
+                }
+            },
             operateName () {
                 switch (true) {
                     case this.editAndExecutable:
-                        return this.$t('edit')
-                    case this.pipelineInfo?.baseVersion && this.activePipelineVersion?.version === this.pipelineInfo?.baseVersion:
+                        return this.isTemplate ? this.$t('template.editTemplate') : this.$t('edit')
+                    case this.isEditCurrentDraft:
                         return this.$t('editCurDraft')
                     default:
                         return this.$t('rollback')
                 }
+            },
+            actionType () {
+                return this.editAndExecutable || this.isEditCurrentDraft ? 'edit' : 'rollback'
             },
             tooltip () {
                 return this.executable
@@ -225,8 +325,11 @@
                         delay: [300, 0]
                     }
             },
-            RESOURCE_ACTION () {
-                return RESOURCE_ACTION
+            editRouteName () {
+                return this.isTemplate ? 'templateEdit' : 'pipelinesEdit'
+            },
+            canInstantiate () {
+                return this.releaseVersion === this.currentVersion || this.isBranchVersion
             },
             archiveFlag () {
                 return this.$route.query.archiveFlag
@@ -240,27 +343,120 @@
         created () {
             if (!this.pipelineHistoryViewable) {
                 this.$router.replace({
-                    name: 'pipelinesEdit'
+                    name: this.editRouteName
                 })
             }
-            if (this.releaseVersion !== this.currentVersion) {
+            if (this.releaseVersion !== this.currentVersion && !this.currentVersion) {
                 this.handleVersionChange(this.releaseVersion)
             } else {
                 this.init()
             }
         },
         methods: {
+            ...mapMutations('common', ['SET_HAS_DRAFT']),
             ...mapActions('atom', [
                 'selectPipelineVersion',
                 'requestPipeline',
                 'setSwitchingPipelineVersion',
-                'setShowVariable'
+                'setShowVariable',
+                'requestPipelineSummary',
+                'requestTemplateSummary'
             ]),
-            goEdit () {
+            ...mapActions({
+                rollbackPipelineVersion: 'pipelines/rollbackPipelineVersion',
+                rollbackTemplateVersion: 'templates/rollbackTemplateVersion'
+            }),
+            async handleEdit () {
+                try {
+                    const result = await this.fetchLatestDraftStatus({
+                        projectId: this.projectId,
+                        id: this.uniqueId,
+                        actionType: 'EDIT',
+                        isTemplate: this.isTemplate,
+                        pipelineInfo: this.pipelineInfo
+                    })
+                    
+                    this.draftStatus = result.status
+                    this.draftSaveInfo = result.draftSaveInfo
+                    // 状态为NORMAL时，直接编辑
+                    if (this.draftStatus === DRAFT_STATUS.NORMAL) {
+                        this.goEdit()
+                        return
+                    }
+                    // 有草稿冲突/分支版本/基线落后，弹窗确认
+                    this.isShowConfirmDialog = true
+                } catch (error) {
+                    this.$bkMessage({
+                        theme: 'error',
+                        message: error.message || error
+                    })
+                }
+            },
+            async confirmEdit () {
+                try {
+                    this.loading = true
+                    let res
+                    
+                    if (this.isTemplate) {
+                        res = await this.rollbackTemplateVersion({
+                            ...this.$route.params,
+                            version: this.draftSaveInfo.releaseVersion
+                        })
+                        await this.requestTemplateSummary(this.$route.params)
+                    } else {
+                        res = await this.rollbackPipelineVersion({
+                            ...this.$route.params,
+                            version: this.draftSaveInfo.releaseVersion
+                        })
+                        await this.requestPipelineSummary(this.$route.params)
+                    }
+                    
+                    if (res.version) {
+                        this.goEdit(res.version)
+                    }
+                } catch (error) {
+                    this.$bkMessage({
+                        theme: 'error',
+                        message: error.message || error
+                    })
+                } finally {
+                    this.loading = false
+                }
+            },
+            goEditDraft (version) {
                 this.$router.push({
-                    name: 'pipelinesEdit',
+                    name: this.editRouteName,
+                    params: {
+                        ...this.$route.params,
+                        version
+                    },
                     query: {
                         tab: pipelineTabIdMap[this.$route.params.type] ?? 'pipeline'
+                    }
+                })
+            },
+            closeDialog () {
+                this.draftSaveInfo = null
+                this.draftStatus = DRAFT_STATUS.NORMAL
+                this.isShowConfirmDialog = false
+                this.SET_HAS_DRAFT(false)
+            },
+            goEdit (version) {
+                this.$router.push({
+                    name: this.editRouteName,
+                    query: {
+                        tab: pipelineTabIdMap[this.$route.params.type] ?? 'pipeline',
+                        version
+                    }
+                })
+            },
+            handleToInstanceEntry () {
+                this.$router.push({
+                    name: 'instanceEntry',
+                    params: {
+                        ...this.$route.params,
+                        version: this.releaseVersion,
+                        type: 'create'
                     }
                 })
             },
@@ -278,7 +474,7 @@
                         this.setSwitchingPipelineVersion(true)
                         const urlParams = {
                             projectId: this.projectId,
-                            pipelineId: this.pipelineId,
+                            [this.isTemplate ? 'templateId' : 'pipelineId']: this.uniqueId,
                             version: this.currentVersion,
                             archiveFlag: this.archiveFlag
                         }
@@ -294,11 +490,17 @@
                 }
             },
             goExecPreview () {
+                const query = {
+                    ...(this.isActiveDraftVersion ? { debug: '' } : {})
+                }
+                // 将 versionName 保存到 sessionStorage，用于 PAC 分支选择器匹配
+                if (this.activePipelineVersion?.versionName) {
+                    const cacheKey = `pac_branch_${this.$route.params.projectId}_${this.$route.params.pipelineId}`
+                    sessionStorage.setItem(cacheKey, this.activePipelineVersion.versionName)
+                }
                 this.$router.push({
                     name: 'executePreview',
-                    query: {
-                        ...(this.isActiveDraftVersion ? { debug: '' } : {})
-                    },
+                    query,
                     params: {
                         ...this.$route.params,
                         version: this.currentVersion
@@ -308,17 +510,19 @@
             switchToReleaseVersion () {
                 this.handleVersionChange(this.releaseVersion)
             },
+
             handleVersionChange (versionId, version) {
-                let routeType = this.$route.params.type || 'history'
+                let routeType = this.$route.params.type || this.isTemplate ? 'instanceList' : 'history'
+                const noRecordVersionTab = this.isTemplate ? ['instanceList'] : ['history', 'triggerEvent']
 
                 if (version) {
                     this.selectPipelineVersion(version)
                     if (this.releaseVersion) {
-                        const noRecordVersion = ['history', 'triggerEvent'].includes(this.$route.params.type) && !(versionId === this.releaseVersion || version.isBranchVersion)
+                        const noRecordVersion = noRecordVersionTab.includes(this.$route.params.type) && !(versionId === this.releaseVersion || version.isBranchVersion)
                         routeType = noRecordVersion ? pipelineTabIdMap.pipeline : this.$route.params.type
                     }
                 }
-                console.log('handleVersionChange', this.pipelineInfo, this.pipelineHistoryViewable, versionId)
+
                 this.$router.replace({
                     query: this.$route.query,
                     params: {

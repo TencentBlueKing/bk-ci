@@ -141,7 +141,12 @@ class TGitPushTriggerHandler(
 
     override fun getAction(event: GitPushEvent): String? {
         return when {
-            !event.action_kind.isNullOrBlank() -> event.action_kind
+            !event.action_kind.isNullOrBlank() -> if (event.operation_kind == TGitPushOperationKind.CREAT.value) {
+                // 兼容本地推送新分支
+                TGitPushActionKind.CREATE_BRANCH.value
+            } else {
+                event.action_kind
+            }
             event.before == EMPTY_COMMIT_ID -> TGitPushActionKind.CREATE_BRANCH.value
             else -> TGitPushActionKind.CLIENT_PUSH.value
         }

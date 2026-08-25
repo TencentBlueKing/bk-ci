@@ -40,6 +40,7 @@ import com.tencent.devops.common.api.constant.UNDO
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.store.pojo.common.publication.ReleaseProcessItem
 import com.tencent.devops.store.pojo.template.MarketTemplateRelRequest
+import com.tencent.devops.store.pojo.common.visible.DeptInfo
 import com.tencent.devops.store.pojo.template.enums.TemplateStatusEnum
 import com.tencent.devops.store.template.service.SampleTemplateReleaseService
 import org.slf4j.LoggerFactory
@@ -55,6 +56,7 @@ class SampleTemplateReleaseServiceImpl : SampleTemplateReleaseService, TemplateR
             TemplateStatusEnum.INIT.status -> {
                 storeCommonService.setProcessInfo(processInfo, NUM_THREE, NUM_TWO, DOING)
             }
+
             TemplateStatusEnum.RELEASED.status -> {
                 storeCommonService.setProcessInfo(processInfo, NUM_THREE, NUM_THREE, SUCCESS)
             }
@@ -64,6 +66,23 @@ class SampleTemplateReleaseServiceImpl : SampleTemplateReleaseService, TemplateR
     }
 
     override fun validateTemplateVisibleDept(templateCode: String) {
+        // 开源版没有权限概念，无需校验
+    }
+
+    override fun validateTemplateVisibleDept(
+        templateCode: String,
+        fullScopeVisible: Boolean?,
+        deptInfos: List<DeptInfo>?
+    ) {
+        // 开源版没有权限概念，无需校验
+    }
+
+    override fun addTemplateVisibleDept(
+        userId: String,
+        templateCode: String,
+        fullScopeVisible: Boolean?,
+        deptInfos: List<DeptInfo>?
+    ) {
         // 开源版没有权限概念，无需校验
     }
 

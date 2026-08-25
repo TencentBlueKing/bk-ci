@@ -1,8 +1,10 @@
 package com.tencent.devops.process.service
 
+import com.tencent.devops.common.api.context.ChannelContext
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.EmptyElement
 import com.tencent.devops.common.pipeline.pojo.element.atom.ElementCheckResult
@@ -10,16 +12,17 @@ import com.tencent.devops.common.pipeline.pojo.element.atom.ElementHolder
 import com.tencent.devops.common.pipeline.pojo.element.atom.SubPipelineType
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.engine.service.PipelineRepositoryService
+import com.tencent.devops.process.engine.service.SubPipelineRefService
 import com.tencent.devops.process.engine.service.SubPipelineTaskService
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.pipeline.SubPipelineIdAndName
 import com.tencent.devops.process.pojo.pipeline.SubPipelineRef
-import com.tencent.devops.process.engine.service.SubPipelineRefService
+import jakarta.ws.rs.core.Response
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.context.annotation.Lazy
 import org.springframework.stereotype.Service
-import java.util.HashMap
-import jakarta.ws.rs.core.Response
 
 /**
  * 子流水线合法性检查服务
@@ -29,7 +32,9 @@ import jakarta.ws.rs.core.Response
 class SubPipelineCheckService @Autowired constructor(
     private val pipelinePermissionService: PipelinePermissionService,
     private val subPipelineRefService: SubPipelineRefService,
-    private val subPipelineTaskService: SubPipelineTaskService
+    private val subPipelineTaskService: SubPipelineTaskService,
+    @Lazy
+    private val pipelineRepositoryService: PipelineRepositoryService
 ) {
 
     /**
@@ -38,13 +43,15 @@ class SubPipelineCheckService @Autowired constructor(
      * @param pipelineId 流水线id
      * @param userId 目标用户id
      * @param permission 目标权限
+     * @param authResourceType 资源类型
      */
     @SuppressWarnings("NestedBlockDepth")
     fun checkSubPipelinePermission(
         projectId: String,
         pipelineId: String,
         userId: String,
-        permission: AuthPermission
+        permission: AuthPermission,
+        authResourceType: AuthResourceType? = null
     ): Set<String> {
         val model = subPipelineTaskService.getModel(projectId, pipelineId) ?: throw ErrorCodeException(
             statusCode = Response.Status.NOT_FOUND.statusCode,
@@ -67,7 +74,8 @@ class SubPipelineCheckService @Autowired constructor(
             elements = elements,
             contextMap = contextMap,
             userId = userId,
-            permission = permission
+            permission = permission,
+            authResourceType = authResourceType
         )
     }
 
@@ -111,13 +119,15 @@ class SubPipelineCheckService @Autowired constructor(
         elements: List<ElementHolder>,
         contextMap: Map<String, String>,
         userId: String,
-        permission: AuthPermission
+        permission: AuthPermission,
+        authResourceType: AuthResourceType? = null
     ): Set<String> {
         val subPipelineElementMap = distinctSubPipeline(projectId = projectId, elements = elements, contextMap)
         return batchCheckPermission(
             subPipelineElementMap = subPipelineElementMap,
             userId = userId,
-            permission = permission
+            permission = permission,
+            authResourceType = authResourceType
         )
     }
 
@@ -129,7 +139,8 @@ class SubPipelineCheckService @Autowired constructor(
     fun batchCheckPermission(
         userId: String,
         permission: AuthPermission,
-        subPipelineElementMap: Map<SubPipelineIdAndName, MutableList<ElementHolder>>
+        subPipelineElementMap: Map<SubPipelineIdAndName, MutableList<ElementHolder>>,
+        authResourceType: AuthResourceType? = null
     ): Set<String> {
         val errorDetails = mutableSetOf<String>()
         subPipelineElementMap.forEach { (subPipeline, elements) ->
@@ -137,12 +148,27 @@ class SubPipelineCheckService @Autowired constructor(
             val subPipelineId = subPipeline.pipelineId
             val subPipelineName = subPipeline.pipelineName
             // 校验流水线修改人是否有子流水线执行权限
-            val checkPermission = pipelinePermissionService.checkPipelinePermission(
-                userId = userId,
-                projectId = subPipeline.projectId,
-                pipelineId = subPipeline.pipelineId,
-                permission = permission
-            )
+            // 按子流水线自身渠道校验(如创作流调用子创作流/子流水线),命中权限中心正确资源类型;
+            // 查不到子流水线信息时回退到入参渠道逻辑
+            val subChannelCode = pipelineRepositoryService.getPipelineInfo(subProjectId, subPipelineId)?.channelCode
+            val checkPermission = if (subChannelCode != null) {
+                ChannelContext.withChannel(subChannelCode.name) {
+                    pipelinePermissionService.checkPipelinePermission(
+                        userId = userId,
+                        projectId = subProjectId,
+                        pipelineId = subPipelineId,
+                        permission = permission
+                    )
+                }
+            } else {
+                pipelinePermissionService.checkPipelinePermission(
+                    userId = userId,
+                    projectId = subProjectId,
+                    pipelineId = subPipelineId,
+                    permission = permission,
+                    authResourceType = authResourceType
+                )
+            }
             val pipelinePermissionUrl = "/console/pipeline/$subProjectId/$subPipelineId/history"
             if (!checkPermission) {
                 elements.forEach { elementHolder ->
@@ -305,40 +331,6 @@ class SubPipelineCheckService @Autowired constructor(
         }
     }
 
-    fun batchCheckBranchVersion(
-        projectId: String,
-        pipelineId: String,
-        subPipelineElementMap: Map<SubPipelineIdAndName, MutableList<ElementHolder>>
-    ): Set<String> {
-        val errorDetails = mutableSetOf<String>()
-        subPipelineElementMap.filter {
-            !it.key.branch.isNullOrBlank()
-        }.forEach { (subPipeline, _) ->
-            val subProjectId = subPipeline.projectId
-            val subPipelineId = subPipeline.pipelineId
-            val subPipelineBranch = subPipeline.branch!!
-            val subPipelineName = subPipeline.pipelineName
-            val branchVersionResource = checkBranchVersion(
-                projectId = subProjectId,
-                pipelineId = subPipelineId,
-                branch = subPipelineBranch
-            )
-            if (branchVersionResource == null) {
-                errorDetails.add(
-                    I18nUtil.getCodeLanMessage(
-                        messageCode = ProcessMessageCode.ERROR_NO_PIPELINE_VERSION_EXISTS_BY_BRANCH,
-                        params = arrayOf(
-                            "/console/pipeline/$subProjectId/$subPipelineId",
-                            subPipelineName,
-                            subPipelineBranch
-                        )
-                    )
-                )
-            }
-        }
-        return errorDetails
-    }
-
     private fun pipelineEditUrl(projectId: String, pipelineId: String) =
         "/console/pipeline/$projectId/$pipelineId/edit"
 
@@ -399,16 +391,6 @@ class SubPipelineCheckService @Autowired constructor(
         }
         return stringBuilder.toString()
     }
-
-    private fun checkBranchVersion(
-        projectId: String,
-        pipelineId: String,
-        branch: String
-    ) = subPipelineTaskService.getBranchVersionResource(
-        projectId = projectId,
-        pipelineId = pipelineId,
-        branchName = branch
-    )
 
     companion object {
         private val logger = LoggerFactory.getLogger(SubPipelineCheckService::class.java)

@@ -27,5 +27,9 @@ export const ADD_TO_PIPELINE_GROUP = 'showAddToPipelineGroup'
 export const REFRESH_PIPELINE_LIST = 'refreshPipelineList'
 export const SHOW_VERSION_HISTORY_SIDESLIDER = 'SHOW_VERSION_HISTORY_SIDESLIDER'
 export const UPDATE_PREVIEW_PIPELINE_NAME = 'UPDATE_PREVIEW_PIPELINE_NAME'
+export const PAC_BRANCH_CHANGE = 'PAC_BRANCH_CHANGE'
+export const UPDATE_PAC_ERROR_STATUS = 'UPDATE_PAC_ERROR_STATUS'
+export const PAC_BRANCH_LOADING = 'PAC_BRANCH_LOADING'
+export const PAC_BRANCH_INIT_DONE = 'PAC_BRANCH_INIT_DONE'
 // Use a bus for components communication,
 export const bus = new Vue()

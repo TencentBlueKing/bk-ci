@@ -41,5 +41,7 @@ enum class DispatchRouteKeySuffix(val routeKeySuffix: String) {
     STREAM_DEMOTE(".stream.docker.demote"),
     CODECC(".codecc.scan"),
     MACOS(".macos"),
-    WINDOWS(".windows")
+    WINDOWS(".windows"),
+    // 第三方构建机无后缀
+    THIRD_PARTY("")
 }

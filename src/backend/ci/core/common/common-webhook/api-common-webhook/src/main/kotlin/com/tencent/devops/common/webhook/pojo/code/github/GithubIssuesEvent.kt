@@ -27,20 +27,24 @@
 
 package com.tencent.devops.common.webhook.pojo.code.github
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "Github Issues 事件")
+@JsonIgnoreProperties(ignoreUnknown = true)
 data class GithubIssuesEvent(
     val action: String,
-    @Schema(title = "Issues相关信息")
+    @get:Schema(title = "Issues相关信息")
     val issue: GithubIssue,
-    @Schema(title = "Github仓库相关信息")
+    @get:Schema(title = "Github仓库相关信息")
     val repository: GithubRepository,
-    @Schema(title = "操作人信息")
+    @get:Schema(title = "操作人信息")
     override val sender: GithubUser,
-    @Schema(title = "受理人")
-    val assignees: List<GithubUser>?
+    @get:Schema(title = "本次添加或移除的标签")
+    val label: GithubLabel? = null,
+    @get:Schema(title = "issues受理人")
+    val assignee: GithubUser? = null
 ) : GithubEvent(sender) {
     companion object {
         const val classType = "issues"
@@ -51,6 +55,10 @@ data class GithubIssuesEvent(
         GithubIssuesAction.CLOSED.value -> "close"
         GithubIssuesAction.REOPENED.value -> "reopen"
         GithubIssuesAction.EDITED.value -> "update"
+        GithubIssuesAction.ASSIGNED.value -> "assigned"
+        GithubIssuesAction.UNASSIGNED.value -> "unassigned"
+        GithubIssuesAction.LABELED.value -> "labeled"
+        GithubIssuesAction.UNLABELED.value -> "unlabeled"
         else -> ""
     }
 }
@@ -131,8 +139,14 @@ enum class GithubIssuesAction(val value: String) {
     @Schema(title = "指派受理人")
     ASSIGNED("assigned"),
 
+    @Schema(title = "取消指派受理人")
+    UNASSIGNED("unassigned"),
+
     @Schema(title = "标记")
     LABELED("labeled"),
+
+    @Schema(title = "移除标记")
+    UNLABELED("unlabeled"),
 
     @Schema(title = "修改")
     EDITED("edited"),

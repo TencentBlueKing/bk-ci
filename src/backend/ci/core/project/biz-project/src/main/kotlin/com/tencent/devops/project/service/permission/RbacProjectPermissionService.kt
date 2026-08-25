@@ -42,6 +42,7 @@ import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.pojo.AuthProjectCreateInfo
 import com.tencent.devops.project.pojo.ResourceUpdateInfo
 import com.tencent.devops.project.pojo.enums.ProjectApproveStatus
+import com.tencent.devops.project.pojo.enums.ProjectScopeType
 import com.tencent.devops.project.pojo.enums.ProjectTipsStatus
 import com.tencent.devops.project.service.ProjectApprovalService
 import com.tencent.devops.project.service.ProjectExtService
@@ -66,7 +67,7 @@ class RbacProjectPermissionService(
     @Value("\${auth.project.approval:#{false}}")
     private val authProjectApproval: Boolean = false
 
-    override fun verifyUserProjectPermission(accessToken: String?, projectCode: String, userId: String): Boolean {
+    override fun verifyUserProjectPermission(projectCode: String, userId: String): Boolean {
         return authProjectApi.checkProjectUser(
             user = userId,
             serviceCode = projectAuthServiceCode,
@@ -75,7 +76,6 @@ class RbacProjectPermissionService(
     }
 
     override fun verifyUserProjectPermission(
-        accessToken: String?,
         projectCode: String,
         userId: String,
         permission: AuthPermission
@@ -106,7 +106,8 @@ class RbacProjectPermissionService(
                 projectCreateInfo = projectCreateInfo,
                 approvalStatus = approvalStatus,
                 subjectScopes = subjectScopes,
-                tipsStatus = tipsStatus
+                tipsStatus = tipsStatus,
+                projectScope = projectScope
             )
         }
         authResourceApi.createResource(
@@ -234,7 +235,9 @@ class RbacProjectPermissionService(
         )
     }
 
-    override fun needApproval(needApproval: Boolean?) = needApproval == true && authProjectApproval
+    override fun needApproval(needApproval: Boolean?, projectScope: Int): Boolean {
+        return needApproval == true && authProjectApproval && projectScope != ProjectScopeType.PERSONAL.value
+    }
 
     override fun isShowUserManageIcon(): Boolean = true
 

@@ -40,21 +40,24 @@ import com.tencent.devops.model.store.tables.TTemplateLabelRel
 import com.tencent.devops.model.store.tables.records.TTemplateRecord
 import com.tencent.devops.store.pojo.common.KEY_CREATE_TIME
 import com.tencent.devops.store.pojo.common.KEY_PROJECT_CODE
+import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.pojo.template.MarketTemplateInfo
 import com.tencent.devops.store.pojo.template.MarketTemplateRelRequest
 import com.tencent.devops.store.pojo.template.MarketTemplateUpdateRequest
 import com.tencent.devops.store.pojo.template.enums.MarketTemplateSortTypeEnum
 import com.tencent.devops.store.pojo.template.enums.TemplateRdTypeEnum
 import com.tencent.devops.store.pojo.template.enums.TemplateStatusEnum
-import java.math.BigDecimal
-import java.time.LocalDateTime
 import org.jooq.Condition
 import org.jooq.DSLContext
+import org.jooq.Field
 import org.jooq.Record
 import org.jooq.Result
 import org.jooq.SelectJoinStep
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
+import java.math.BigDecimal
+import java.time.LocalDateTime
 
 @Suppress("ALL")
 @Repository
@@ -71,7 +74,8 @@ class MarketTemplateDao {
         labelCodeList: List<String>?,
         score: Int?,
         rdType: TemplateRdTypeEnum?,
-        tenantId: String?
+        excludeProjectCode: String? = null,
+        tenantId: String? = null
     ): Int {
         val (tt, conditions) = formatConditions(
             keyword = keyword,
@@ -89,7 +93,8 @@ class MarketTemplateDao {
             tTemplate = tt,
             conditions = conditions,
             labelCodeList = labelCodeList,
-            score = score
+            score = score,
+            excludeProjectCode = excludeProjectCode
         )
 
         return baseStep.where(conditions).fetchOne(0, Int::class.java)!!
@@ -102,7 +107,8 @@ class MarketTemplateDao {
         tTemplate: TTemplate,
         conditions: MutableList<Condition>,
         labelCodeList: List<String>?,
-        score: Int?
+        score: Int?,
+        excludeProjectCode: String? = null
     ) {
         val storeType = StoreTypeEnum.TEMPLATE.type.toByte()
         // 根据应用范畴和功能标签筛选
@@ -142,6 +148,26 @@ class MarketTemplateDao {
             )
             conditions.add(t.field(tStoreStatisticsTotal.STORE_TYPE.name, Byte::class.java)!!.eq(storeType))
         }
+        if (!excludeProjectCode.isNullOrBlank()) {
+            val storeProjectRelationshipTable = TStoreProjectRel.T_STORE_PROJECT_REL
+            val storeCodeField = storeProjectRelationshipTable.STORE_CODE
+            val projectCodeField = storeProjectRelationshipTable.PROJECT_CODE
+            val storeTypeField = storeProjectRelationshipTable.STORE_TYPE
+            val typeField = storeProjectRelationshipTable.TYPE
+            val storeProjectRelationships = dslContext.select(
+                storeCodeField,
+                projectCodeField,
+                storeTypeField,
+                typeField
+            ).from(storeProjectRelationshipTable).asTable("spr")
+            baseStep.leftJoin(storeProjectRelationships)
+                .on(tTemplate.TEMPLATE_CODE.eq(storeProjectRelationships.field(storeCodeField)))
+            conditions.add(storeProjectRelationships.field(storeTypeField)!!.eq(storeType))
+            conditions.add(
+                storeProjectRelationships.field(projectCodeField)!!.notEqual(excludeProjectCode)
+                    .and(storeProjectRelationships.field(typeField)!!.eq(StoreProjectTypeEnum.INIT.type.toByte()))
+            )
+        }
     }
 
     private fun formatConditions(
@@ -149,7 +175,7 @@ class MarketTemplateDao {
         rdType: TemplateRdTypeEnum?,
         classifyCode: String?,
         dslContext: DSLContext,
-        tenantId: String?
+        tenantId: String? = null
     ): Pair<TTemplate, MutableList<Condition>> {
         val tTemplate = TTemplate.T_TEMPLATE
         val conditions = mutableListOf<Condition>()
@@ -191,9 +217,10 @@ class MarketTemplateDao {
         rdType: TemplateRdTypeEnum?,
         sortType: MarketTemplateSortTypeEnum?,
         desc: Boolean?,
+        excludeProjectCode: String? = null,
         page: Int?,
         pageSize: Int?,
-        tenantId: String?
+        tenantId: String? = null
     ): Result<out Record>? {
         val (tt, conditions) = formatConditions(
             keyword = keyword,
@@ -226,7 +253,8 @@ class MarketTemplateDao {
             tTemplate = tt,
             conditions = conditions,
             labelCodeList = labelCodeList,
-            score = score
+            score = score,
+            excludeProjectCode = excludeProjectCode
         )
 
         if (null != sortType) {
@@ -240,20 +268,16 @@ class MarketTemplateDao {
                     .on(tt.TEMPLATE_CODE.eq(t.field(tStoreStatisticsTotal.STORE_CODE.name, String::class.java)))
             }
 
-            val realSortType = if (sortType == MarketTemplateSortTypeEnum.DOWNLOAD_COUNT) {
-                DSL.field(MarketTemplateSortTypeEnum.getSortType(sortType.name))
-            } else {
-                tt.field(MarketTemplateSortTypeEnum.getSortType(sortType.name))
-            }
+            val realSortType = getMarketTemplateSortField(tt, sortType)
 
             if (desc != null && desc) {
-                baseStep.where(conditions).orderBy(realSortType!!.desc())
+                baseStep.where(conditions).orderBy(realSortType.desc())
             } else {
-                baseStep.where(conditions).orderBy(realSortType!!.asc())
+                baseStep.where(conditions).orderBy(realSortType.asc())
             }
         } else {
             baseStep.where(conditions)
-                .orderBy(tt.field(MarketTemplateSortTypeEnum.getSortType(MarketTemplateSortTypeEnum.NAME.name)))
+                .orderBy(tt.TEMPLATE_NAME)
         }
         return if (null != page && null != pageSize) {
             baseStep.limit((page - 1) * pageSize, pageSize).fetch()
@@ -262,13 +286,28 @@ class MarketTemplateDao {
         }
     }
 
+    private fun getMarketTemplateSortField(
+        tt: TTemplate,
+        sortType: MarketTemplateSortTypeEnum
+    ): Field<*> {
+        return when (sortType) {
+            MarketTemplateSortTypeEnum.NAME -> tt.TEMPLATE_NAME
+            MarketTemplateSortTypeEnum.CREATE_TIME -> tt.CREATE_TIME
+            MarketTemplateSortTypeEnum.UPDATE_TIME -> tt.UPDATE_TIME
+            MarketTemplateSortTypeEnum.PUBLISHER -> tt.PUBLISHER
+            MarketTemplateSortTypeEnum.DOWNLOAD_COUNT -> DSL.field(
+                DSL.name(MarketTemplateSortTypeEnum.DOWNLOAD_COUNT.name),
+                Int::class.java
+            )
+        }
+    }
+
     fun addMarketTemplate(
         dslContext: DSLContext,
         userId: String,
         templateId: String,
         templateCode: String,
-        marketTemplateRelRequest: MarketTemplateRelRequest,
-        tenantId: String?
+        marketTemplateRelRequest: MarketTemplateRelRequest
     ) {
         with(TTemplate.T_TEMPLATE) {
             dslContext.insertInto(
@@ -282,8 +321,7 @@ class MarketTemplateDao {
                 TEMPLATE_STATUS,
                 PUBLISHER,
                 CREATOR,
-                MODIFIER,
-                TENANT_ID
+                MODIFIER
             )
                 .values(
                     templateId,
@@ -295,8 +333,7 @@ class MarketTemplateDao {
                     TemplateStatusEnum.INIT.status.toByte(),
                     "",
                     userId,
-                    userId,
-                    tenantId
+                    userId
                 )
                 .execute()
         }
@@ -307,8 +344,7 @@ class MarketTemplateDao {
         userId: String,
         templateId: String,
         version: String,
-        marketTemplateUpdateRequest: MarketTemplateUpdateRequest,
-        tenantId: String?
+        marketTemplateUpdateRequest: MarketTemplateUpdateRequest
     ) {
         val tClassify = TClassify.T_CLASSIFY
         val classifyId = dslContext.select(tClassify.ID).from(tClassify)
@@ -331,14 +367,6 @@ class MarketTemplateDao {
                 .set(UPDATE_TIME, LocalDateTime.now())
                 .set(MODIFIER, userId)
                 .where(ID.eq(templateId))
-                .let {
-                    if (useTenantCondition(tenantId)) it.and(
-                        TENANT_ID.`in`(
-                            tenantId,
-                            TenantUtils.getTenantId()
-                        )
-                    ) else it
-                }
                 .execute()
         }
     }
@@ -350,8 +378,7 @@ class MarketTemplateDao {
         templateStatus: Byte,
         version: String,
         templateRecord: TTemplateRecord,
-        marketTemplateUpdateRequest: MarketTemplateUpdateRequest,
-        tenantId: String?
+        marketTemplateUpdateRequest: MarketTemplateUpdateRequest
     ) {
         val tClassify = TClassify.T_CLASSIFY
         val classifyId = dslContext.select(tClassify.ID)
@@ -378,8 +405,7 @@ class MarketTemplateDao {
                 PUBLIC_FLAG,
                 LATEST_FLAG,
                 CREATOR,
-                MODIFIER,
-                TENANT_ID
+                MODIFIER
             )
                 .values(
                     templateId,
@@ -396,43 +422,72 @@ class MarketTemplateDao {
                     templateRecord.publicFlag,
                     false,
                     userId,
-                    userId,
-                    tenantId
+                    userId
                 )
                 .execute()
         }
     }
 
-    fun delete(dslContext: DSLContext, templateCode: String, tenantId: String?): Int {
+    fun insert(
+        dslContext: DSLContext,
+        marketTemplateInfo: MarketTemplateInfo
+    ) {
+        with(TTemplate.T_TEMPLATE) {
+            dslContext.insertInto(
+                this,
+                ID,
+                TEMPLATE_NAME,
+                TEMPLATE_CODE,
+                CLASSIFY_ID,
+                VERSION,
+                TEMPLATE_STATUS,
+                TEMPLATE_STATUS_MSG,
+                LOGO_URL,
+                SUMMARY,
+                DESCRIPTION,
+                PUBLISHER,
+                PUB_DESCRIPTION,
+                PUBLIC_FLAG,
+                LATEST_FLAG,
+                CREATOR,
+                MODIFIER,
+                PUB_TIME
+            ).values(
+                marketTemplateInfo.id,
+                marketTemplateInfo.templateName,
+                marketTemplateInfo.templateCode,
+                marketTemplateInfo.classifyId,
+                marketTemplateInfo.version,
+                marketTemplateInfo.templateStatus.status.toByte(),
+                marketTemplateInfo.templateStatusMsg,
+                marketTemplateInfo.logoUrl,
+                marketTemplateInfo.summary,
+                marketTemplateInfo.description,
+                marketTemplateInfo.publisher,
+                marketTemplateInfo.pubDescription,
+                marketTemplateInfo.publicFlag,
+                marketTemplateInfo.latestFlag,
+                marketTemplateInfo.creator,
+                marketTemplateInfo.modifier,
+                marketTemplateInfo.pubTime
+            ).execute()
+        }
+    }
+
+    fun delete(dslContext: DSLContext, templateCode: String): Int {
         with(TTemplate.T_TEMPLATE) {
             return dslContext.deleteFrom(this)
                 .where(TEMPLATE_CODE.eq(templateCode))
-                .let {
-                    if (useTenantCondition(tenantId)) it.and(
-                        TENANT_ID.`in`(
-                            tenantId,
-                            TenantUtils.getTenantId()
-                        )
-                    ) else it
-                }
                 .execute()
         }
     }
 
-    fun countByName(
-        dslContext: DSLContext,
-        templateName: String,
-        templateCode: String? = null,
-        tenantId: String?
-    ): Int {
+    fun countByName(dslContext: DSLContext, templateName: String, templateCode: String? = null): Int {
         with(TTemplate.T_TEMPLATE) {
             val conditions = mutableListOf<Condition>()
             conditions.add(TEMPLATE_NAME.eq(templateName))
             if (templateCode != null) {
                 conditions.add(TEMPLATE_CODE.eq(templateCode))
-            }
-            if (useTenantCondition(tenantId)) {
-                conditions.add(TENANT_ID.`in`(tenantId, TenantUtils.getTenantId()))
             }
             return dslContext.selectCount()
                 .from(this)
@@ -441,18 +496,10 @@ class MarketTemplateDao {
         }
     }
 
-    fun countByCode(dslContext: DSLContext, templateCode: String, tenantId: String?): Int {
+    fun countByCode(dslContext: DSLContext, templateCode: String): Int {
         with(TTemplate.T_TEMPLATE) {
             return dslContext.selectCount().from(this)
                 .where(TEMPLATE_CODE.eq(templateCode))
-                .let {
-                    if (useTenantCondition(tenantId)) it.and(
-                        TENANT_ID.`in`(
-                            tenantId,
-                            TenantUtils.getTenantId()
-                        )
-                    ) else it
-                }
                 .fetchOne(0, Int::class.java)!!
         }
     }
@@ -468,54 +515,30 @@ class MarketTemplateDao {
         }
     }
 
-    fun countReleaseTemplateByCode(dslContext: DSLContext, templateCode: String, tenantId: String?): Int {
+    fun countReleaseTemplateByCode(dslContext: DSLContext, templateCode: String): Int {
         with(TTemplate.T_TEMPLATE) {
             return dslContext.selectCount().from(this)
                 .where(
                     TEMPLATE_CODE.eq(templateCode)
                         .and(TEMPLATE_STATUS.eq(TemplateStatusEnum.RELEASED.status.toByte()))
                 )
-                .let {
-                    if (useTenantCondition(tenantId)) it.and(
-                        TENANT_ID.`in`(
-                            tenantId,
-                            TenantUtils.getTenantId()
-                        )
-                    ) else it
-                }
                 .fetchOne(0, Int::class.java)!!
         }
     }
 
-    fun getLatestTemplateByCode(dslContext: DSLContext, templateCode: String, tenantId: String?): TTemplateRecord? {
+    fun getLatestTemplateByCode(dslContext: DSLContext, templateCode: String): TTemplateRecord? {
         return with(TTemplate.T_TEMPLATE) {
             dslContext.selectFrom(this)
                 .where(TEMPLATE_CODE.eq(templateCode))
                 .and(LATEST_FLAG.eq(true))
-                .let {
-                    if (useTenantCondition(tenantId)) it.and(
-                        TENANT_ID.`in`(
-                            tenantId,
-                            TenantUtils.getTenantId()
-                        )
-                    ) else it
-                }
                 .fetchOne()
         }
     }
 
-    fun getUpToDateTemplateByCode(dslContext: DSLContext, templateCode: String, tenantId: String?): TTemplateRecord? {
+    fun getUpToDateTemplateByCode(dslContext: DSLContext, templateCode: String): TTemplateRecord? {
         return with(TTemplate.T_TEMPLATE) {
             dslContext.selectFrom(this)
                 .where(TEMPLATE_CODE.eq(templateCode))
-                .let {
-                    if (useTenantCondition(tenantId)) it.and(
-                        TENANT_ID.`in`(
-                            tenantId,
-                            TenantUtils.getTenantId()
-                        )
-                    ) else it
-                }
                 .orderBy(CREATE_TIME.desc())
                 .limit(1)
                 .fetchOne()
@@ -531,85 +554,39 @@ class MarketTemplateDao {
         }
     }
 
-    fun getReleaseTemplatesByCode(
-        dslContext: DSLContext,
-        templateCode: String,
-        tenantId: String?
-    ): Result<TTemplateRecord>? {
+    fun getReleaseTemplatesByCode(dslContext: DSLContext, templateCode: String): Result<TTemplateRecord>? {
         return with(TTemplate.T_TEMPLATE) {
             dslContext.selectFrom(this)
                 .where(TEMPLATE_CODE.eq(templateCode))
                 .and(TEMPLATE_STATUS.eq(TemplateStatusEnum.RELEASED.status.toByte()))
-                .let {
-                    if (useTenantCondition(tenantId)) it.and(
-                        TENANT_ID.`in`(
-                            tenantId,
-                            TenantUtils.getTenantId()
-                        )
-                    ) else it
-                }
                 .orderBy(CREATE_TIME.desc())
                 .fetch()
         }
     }
 
-    fun getNewestUndercarriagedTemplatesByCode(
-        dslContext: DSLContext,
-        templateCode: String,
-        tenantId: String?
-    ): TTemplateRecord? {
+    fun getNewestUndercarriagedTemplatesByCode(dslContext: DSLContext, templateCode: String): TTemplateRecord? {
         return with(TTemplate.T_TEMPLATE) {
             dslContext.selectFrom(this)
                 .where(TEMPLATE_CODE.eq(templateCode))
                 .and(TEMPLATE_STATUS.eq(TemplateStatusEnum.UNDERCARRIAGED.status.toByte()))
-                .let {
-                    if (useTenantCondition(tenantId)) it.and(
-                        TENANT_ID.`in`(
-                            tenantId,
-                            TenantUtils.getTenantId()
-                        )
-                    ) else it
-                }
                 .orderBy(CREATE_TIME.desc())
                 .limit(1)
                 .fetchOne()
         }
     }
 
-    fun getTemplate(dslContext: DSLContext, templateId: String, tenantId: String?): TTemplateRecord? {
+    fun getTemplate(dslContext: DSLContext, templateId: String): TTemplateRecord? {
         return with(TTemplate.T_TEMPLATE) {
             dslContext.selectFrom(this)
                 .where(ID.eq(templateId))
-                .let {
-                    if (useTenantCondition(tenantId)) it.and(
-                        TENANT_ID.`in`(
-                            tenantId,
-                            TenantUtils.getTenantId()
-                        )
-                    ) else it
-                }
                 .fetchOne()
         }
     }
 
-    fun getTemplate(
-        dslContext: DSLContext,
-        templateCode: String,
-        version: String,
-        tenantId: String?
-    ): TTemplateRecord? {
+    fun getTemplate(dslContext: DSLContext, templateCode: String, version: String): TTemplateRecord? {
         return with(TTemplate.T_TEMPLATE) {
             dslContext.selectFrom(this)
-                .where(TEMPLATE_CODE.eq(templateCode))
-                .and(VERSION.eq(version))
-                .let {
-                    if (useTenantCondition(tenantId)) it.and(
-                        TENANT_ID.`in`(
-                            tenantId,
-                            TenantUtils.getTenantId()
-                        )
-                    ) else it
-                }
+                .where(TEMPLATE_CODE.eq(templateCode).and(VERSION.eq(version)))
                 .fetchOne()
         }
     }
@@ -636,8 +613,7 @@ class MarketTemplateDao {
         templateStatus: Byte,
         templateStatusMsg: String,
         latestFlag: Boolean,
-        pubTime: LocalDateTime? = null,
-        tenantId: String?
+        pubTime: LocalDateTime? = null
     ) {
         with(TTemplate.T_TEMPLATE) {
             dslContext.update(this)
@@ -648,14 +624,6 @@ class MarketTemplateDao {
                 .set(MODIFIER, userId)
                 .set(UPDATE_TIME, LocalDateTime.now())
                 .where(ID.eq(templateId))
-                .let {
-                    if (useTenantCondition(tenantId)) it.and(
-                        TENANT_ID.`in`(
-                            tenantId,
-                            TenantUtils.getTenantId()
-                        )
-                    ) else it
-                }
                 .execute()
         }
     }
@@ -664,10 +632,15 @@ class MarketTemplateDao {
         dslContext: DSLContext,
         userId: String,
         templateName: String?,
+        projectCodes: List<String>?,
+        status: TemplateStatusEnum?,
+        modifier: String?,
+        description: String?,
+        excludeStatus: TemplateStatusEnum? = null,
         page: Int,
         pageSize: Int,
-        tenantId: String?
-    ): Result<out Record>? {
+        tenantId: String? = null
+    ): Result<out Record> {
         val tTemplate = TTemplate.T_TEMPLATE
         val tStoreMember = TStoreMember.T_STORE_MEMBER
         val tStoreProjectRel = TStoreProjectRel.T_STORE_PROJECT_REL
@@ -677,13 +650,25 @@ class MarketTemplateDao {
         )
             .from(tTemplate)
             .groupBy(tTemplate.TEMPLATE_CODE) // 查找每组templateCode最新的记录
-        val conditions =
-            generateGetMyTemplatesConditions(tTemplate, userId, tStoreMember, tStoreProjectRel, templateName, tenantId)
+        val conditions = generateGetMyTemplatesConditions(
+            tTemplate = tTemplate,
+            userId = userId,
+            tStoreMember = tStoreMember,
+            tStoreProjectRel = tStoreProjectRel,
+            templateName = templateName,
+            projectCodes = projectCodes,
+            status = status,
+            modifier = modifier,
+            description = description,
+            excludeStatus = excludeStatus,
+            tenantId = tenantId
+        )
         return dslContext.select(
             tTemplate.ID,
             tTemplate.TEMPLATE_CODE,
             tTemplate.TEMPLATE_NAME,
             tTemplate.LOGO_URL,
+            tTemplate.DESCRIPTION,
             tTemplate.VERSION,
             tTemplate.TEMPLATE_STATUS,
             tTemplate.CREATOR,
@@ -713,7 +698,12 @@ class MarketTemplateDao {
         dslContext: DSLContext,
         userId: String,
         templateName: String?,
-        tenantId: String?
+        projectCodes: List<String>? = emptyList(),
+        status: TemplateStatusEnum?,
+        modifier: String?,
+        description: String?,
+        excludeStatus: TemplateStatusEnum? = null,
+        tenantId: String? = null
     ): Long {
         val tTemplate = TTemplate.T_TEMPLATE
         val tStoreMember = TStoreMember.T_STORE_MEMBER
@@ -724,6 +714,11 @@ class MarketTemplateDao {
             tStoreMember = tStoreMember,
             tStoreProjectRel = tStoreProjectRel,
             templateName = templateName,
+            projectCodes = projectCodes,
+            status = status,
+            modifier = modifier,
+            description = description,
+            excludeStatus = excludeStatus,
             tenantId = tenantId
         )
         return dslContext.select(
@@ -744,17 +739,37 @@ class MarketTemplateDao {
         tStoreMember: TStoreMember,
         tStoreProjectRel: TStoreProjectRel,
         templateName: String?,
-        tenantId: String?
+        projectCodes: List<String>? = emptyList(),
+        status: TemplateStatusEnum?,
+        excludeStatus: TemplateStatusEnum?,
+        modifier: String?,
+        description: String?,
+        tenantId: String? = null
     ): MutableList<Condition> {
         val conditions = mutableListOf<Condition>()
-        conditions.add(tTemplate.CREATOR.eq(userId).or(tStoreMember.USERNAME.eq(userId)))
         if (useTenantCondition(tenantId)) {
             conditions.add(tTemplate.TENANT_ID.`in`(tenantId, TenantUtils.getTenantId()))
         }
+        conditions.add(tTemplate.CREATOR.eq(userId).or(tStoreMember.USERNAME.eq(userId)))
         conditions.add(tStoreProjectRel.TYPE.eq(0))
         conditions.add(tStoreProjectRel.STORE_TYPE.eq(StoreTypeEnum.TEMPLATE.type.toByte()))
         if (null != templateName) {
             conditions.add(tTemplate.TEMPLATE_NAME.contains(templateName))
+        }
+        if (!projectCodes.isNullOrEmpty()) {
+            conditions.add(tStoreProjectRel.PROJECT_CODE.`in`(projectCodes))
+        }
+        if (status != null) {
+            conditions.add(tTemplate.TEMPLATE_STATUS.eq(status.status.toByte()))
+        }
+        if (excludeStatus != null) {
+            conditions.add(tTemplate.TEMPLATE_STATUS.ne(excludeStatus.status.toByte()))
+        }
+        if (!modifier.isNullOrBlank()) {
+            conditions.add(tTemplate.MODIFIER.like("%$modifier%"))
+        }
+        if (!description.isNullOrBlank()) {
+            conditions.add(tTemplate.DESCRIPTION.like("%$description%"))
         }
         conditions.add(tStoreMember.STORE_TYPE.eq(StoreTypeEnum.TEMPLATE.type.toByte()))
         return conditions
@@ -766,8 +781,7 @@ class MarketTemplateDao {
         templateStatus: Byte,
         userId: String,
         msg: String? = null,
-        latestFlag: Boolean? = null,
-        tenantId: String?
+        latestFlag: Boolean? = null
     ) {
         with(TTemplate.T_TEMPLATE) {
             val baseStep = dslContext.update(this)
@@ -781,14 +795,6 @@ class MarketTemplateDao {
             baseStep.set(MODIFIER, userId)
                 .set(UPDATE_TIME, LocalDateTime.now())
                 .where(ID.eq(templateId))
-                .let {
-                    if (useTenantCondition(tenantId)) it.and(
-                        TENANT_ID.`in`(
-                            tenantId,
-                            TenantUtils.getTenantId()
-                        )
-                    ) else it
-                }
                 .execute()
         }
     }
@@ -819,5 +825,6 @@ class MarketTemplateDao {
         }
     }
 
-    private fun useTenantCondition(tenantId: String?) = TenantUtils.isMultiTenantMode() && null != tenantId
+    private fun useTenantCondition(tenantId: String?) =
+        TenantUtils.isMultiTenantMode() && !tenantId.isNullOrBlank()
 }

@@ -17,7 +17,7 @@
                 ref="iframeEle"
                 allowfullscreen
                 allow="clipboard-read; clipboard-write"
-                :src="iframeSrc"
+                :src="src"
                 @load="onLoad"
             />
         </div>
@@ -97,13 +97,6 @@
             return this.$route.name === 'job'
         }
 
-        get iframeSrc () {
-            if (this.src.startsWith('http') || this.src.startsWith('https')) {
-                return this.src
-            }
-            return `${window.PUBLIC_URL_PREFIX}${this.src}`
-        }
-
         backHome () {
             if (this.needLoading) {
                 this.isLoading = true
@@ -119,16 +112,15 @@
             const query = queryStringify(this.$route.query)
             const path = this.$route.path.replace(window.getRoutePrefix(), '')
             const hash = this.$route.hash
+            
             if (showProjectList) {
-                const reg = /^\/?\w+\/(([\w-.]+)\/?)(\S*)\/?$/
+                const reg = /^\/?[\w\-]+\/(([\w\-]+)\/?)(\S*)\/?$/
                 const matchResult = path.match(reg)
                 const { projectId } = this.$route.params
                 const initPath = matchResult ? matchResult[3] : ''
-                
 
                 if (projectIdType === 'path') {
                     this.src = urlJoin(this.currentPage.iframe_url, projectId, initPath) + `${query ? '?' + query : ''}` + hash
-                    
                 } else {
                     const query = Object.assign(this.$route.query, {
                         projectId
@@ -136,7 +128,7 @@
                     this.src = urlJoin(this.currentPage.iframe_url, initPath) + '?' + queryStringify(query) + hash
                 }
             } else {
-                const reg = /^\/?\w+\/(\S*)\/?$/
+                const reg = /^\/?[\w\-]+\/(\S*)\/?$/
                 const initPath = path.match(reg) ? path.replace(reg, '$1') : ''
                 const query = Object.assign(
                     this.currentPage.link === '/permission/' ? {} : { project_code: cookie.get(X_DEVOPS_PROJECT_ID) },

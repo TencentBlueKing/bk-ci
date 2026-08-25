@@ -12,23 +12,31 @@
                 <i :style="`background: ${statusColorMap[event.status]}`"></i>
             </span>
             <p class="trigger-event-desc">
-                <!-- [{{event.branch}}] commit
-                [<span class="text-link">{{event.commitId}}</span>]
-                pushed -->
-                <span v-html="event.eventDesc"></span>
+                <EventDesc :event-desc="event.eventDesc" />
                 <span class="trigger-event-item-lighter-field"><time-display :value="event.eventTime" /></span>
             </p>
             <p class="trigger-event-reason">
                 <span>{{ event.reason }}</span>  |
                 <em
                     v-if="event.buildNum"
-                    v-html="event.buildNum"
-                ></em>
+                >
+                    <a
+                        v-if="getBuildNumLink(event.buildNum)"
+                        class="text-link"
+                        :href="getBuildNumLink(event.buildNum).href"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                    >
+                        {{ getBuildNumLink(event.buildNum).text }}
+                    </a>
+                    <span v-else>{{ event.buildNum }}</span>
+                </em>
                 <em
                     v-bk-overflow-tips
                     v-else-if="Array.isArray(event.reasonDetailList)"
-                    v-html="event.reasonDetailList.join(' | ')"
-                ></em>
+                >
+                    {{ event.reasonDetailList.join(' | ') }}
+                </em>
             </p>
             <bk-button
                 text
@@ -40,7 +48,7 @@
                     disablePermissionApi: true,
                     permissionData: {
                         projectId,
-                        resourceType: 'pipeline',
+                        resourceType: RESOURCE_TYPE.PIPELINE,
                         resourceCode: pipelineId,
                         action: RESOURCE_ACTION.EXECUTE
                     }
@@ -53,14 +61,18 @@
 </template>
 <script>
     import {
-        RESOURCE_ACTION
+        RESOURCE_ACTION,
+        RESOURCE_TYPE
     } from '@/utils/permission'
     import { statusColorMap } from '@/utils/pipelineStatus'
     import { mapActions, mapState } from 'vuex'
-    import { convertTime } from '@/utils/util'
     import TimeDisplay from '../../../../common-lib/time-display'
+    import { BUILD_NUM_LINK_REG, safeUrl, toText } from './eventDescConfig'
+    import EventDesc from './EventDesc.vue'
+
     export default {
         components: {
+            EventDesc,
             TimeDisplay
         },
         props: {
@@ -73,6 +85,9 @@
             ...mapState('atom', ['pipelineInfo']),
             RESOURCE_ACTION () {
                 return RESOURCE_ACTION
+            },
+            RESOURCE_TYPE () {
+                return RESOURCE_TYPE
             },
             statusColorMap () {
                 return statusColorMap
@@ -92,7 +107,14 @@
             ...mapActions('pipelines', [
                 'reTriggerEvent'
             ]),
-            convertTime,
+            getBuildNumLink (buildNum) {
+                const match = toText(buildNum).match(BUILD_NUM_LINK_REG)
+                if (!match) {
+                    return null
+                }
+                const href = safeUrl(match[1])
+                return href ? { href, text: match[2] } : null
+            },
             async triggerEvent (event) {
                 try {
                     const res = await this.reTriggerEvent({

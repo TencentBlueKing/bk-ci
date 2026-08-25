@@ -17,7 +17,7 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-import { hashID } from '@/utils/util'
+import { hashID, randomString } from '@/utils/util'
 import Vue from 'vue'
 import {
     diffAtomVersions,
@@ -42,13 +42,13 @@ import {
     RESET_ATOM_MODAL_MAP,
     RESET_PIPELINE_SETTING_MUNTATION,
     SELECT_PIPELINE_VERSION,
-    SET_ATOMS,
-    SET_ATOMS_CLASSIFY,
     SET_ATOM_EDITING,
     SET_ATOM_MODAL,
     SET_ATOM_MODAL_FETCHING,
     SET_ATOM_PAGE_OVER,
     SET_ATOM_VERSION_LIST,
+    SET_ATOMS,
+    SET_ATOMS_CLASSIFY,
     SET_ATOMS_OUTPUT_MAP,
     SET_COMMEND_ATOM_COUNT,
     SET_COMMEND_ATOM_PAGE_OVER,
@@ -61,13 +61,16 @@ import {
     SET_GLOBAL_ENVS,
     SET_HIDE_SKIP_EXEC_TASK,
     SET_INSERT_STAGE_STATE,
+    SET_PARAM_SET_LIST,
     SET_PIPELINE,
     SET_PIPELINE_EDITING,
     SET_PIPELINE_EXEC_DETAIL,
     SET_PIPELINE_INFO,
+    SET_EXEC_INFO,
     SET_PIPELINE_WITHOUT_TRIGGER,
     SET_PIPELINE_YAML,
     SET_PIPELINE_YAML_HIGHLIGHT_MAP,
+    SET_PLUGIN_HEAD_TAB,
     SET_REMOTE_TRIGGER_TOKEN,
     SET_REQUEST_ATOM_DATA,
     SET_SAVE_STATUS,
@@ -75,8 +78,8 @@ import {
     SET_STAGE_TAG_LIST,
     SET_STORE_LOADING,
     SET_STORE_SEARCH,
+    SET_TEMP_PARAM_SET,
     SET_TEMPLATE,
-    SET_PLUGIN_HEAD_TAB,
     SWITCHING_PIPELINE_VERSION,
     TOGGLE_ATOM_SELECTOR_POPUP,
     TOGGLE_STAGE_REVIEW_PANEL,
@@ -88,7 +91,12 @@ import {
     UPDATE_PIPELINE_INFO,
     UPDATE_PIPELINE_SETTING_MUNTATION,
     UPDATE_STAGE,
-    UPDATE_WHOLE_ATOM_INPUT
+    UPDATE_STORESTATUS,
+    UPDATE_TEMPLATE_CONSTRAINT,
+    UPDATE_WHOLE_ATOM_INPUT,
+    UPDATE_PIPELINE_PUBLIC_VAR_GROUPS,
+    SAVE_PIPELINE_SNAPSHOT,
+    CLEAR_PIPELINE_SNAPSHOT
 } from './constants'
 
 export default {
@@ -139,17 +147,19 @@ export default {
      */
     [SET_PIPELINE_INFO]: (state, obj) => {
         Vue.set(state, 'pipelineInfo', obj)
-        console.log(obj, 'set123')
     },
     [UPDATE_PIPELINE_INFO]: (state, partOfInfo) => {
         const pipelineInfo = {
             ...(state.pipelineInfo ?? {})
         }
         Object.assign(pipelineInfo, partOfInfo)
-        console.log(pipelineInfo, 123, partOfInfo)
         Vue.set(state, 'pipelineInfo', pipelineInfo)
     },
     [SET_PIPELINE]: (state, pipeline = null) => {
+        // if (pipeline && !pipeline.overrideTemplateField) {
+        //     Object.assign(pipeline, { overrideTemplateField: {} })
+        // }
+
         if (!state.pipeline || !pipeline) {
             Vue.set(state, 'pipeline', pipeline)
             return state
@@ -179,7 +189,12 @@ export default {
         })
     },
     [UPDATE_PIPELINE_SETTING_MUNTATION]: (state, { setting, param }) => {
-        Object.assign(setting, param)
+        // 使用 Vue.set 或解构赋值确保响应式更新
+        Object.keys(param).forEach(key => {
+            if (setting[key] !== param[key]) {
+                Vue.set(setting, key, param[key])
+            }
+        })
         return state
     },
     [SET_EDIT_FROM]: (state, editfromImport = false) => {
@@ -262,8 +277,6 @@ export default {
             const canPause = atomModal.props.config?.canPauseBeforeRun === true
 
             atom = {
-                id: `e-${hashID(32)}`,
-                '@type': atomModal.classType !== atomCode ? atomModal.classType : atomCode,
                 atomCode,
                 name: isChangeAtom ? atomModal.name : preVerEle.name,
                 version,
@@ -288,11 +301,7 @@ export default {
         } else {
             const diffRes = diffAtomVersions(preVerEle, preVerAtomModal.props, atomModal.props, isChangeAtom)
             atomVersionChangedKeys = diffRes.atomVersionChangedKeys
-            console.log(atomModal)
             atom = {
-                id: `e-${hashID(32)}`,
-                '@type': atomModal.classType !== atomCode ? atomModal.classType : atomCode,
-                atomCode,
                 version,
                 name: isChangeAtom ? atomModal.name : preVerEle.name,
                 ...getAtomDefaultValue(atomModal.props),
@@ -307,6 +316,10 @@ export default {
         }, 5000)
         container.elements.splice(atomIndex, 1, {
             ...atom,
+            atomCode,
+            id: `e-${hashID(32)}`,
+            '@type': atomModal.classType !== atomCode ? atomModal.classType : atomCode,
+            stepId: randomString(6, true),
             os: atomModal.os,
             buildLessRunFlag: atomModal.buildLessRunFlag,
             logoUrl: atomModal.logoUrl,
@@ -379,7 +392,9 @@ export default {
         containers.push(newContainer)
     },
     [UPDATE_CONTAINER]: (state, { container, newParam }) => {
-        Object.assign(container, newParam)
+        Object.keys(newParam).forEach(key => {
+            Vue.set(container, key, newParam[key])
+        })
     },
     [INSERT_ATOM]: (state, { elements, insertIndex }) => {
         elements.splice(insertIndex, 0, {
@@ -405,6 +420,10 @@ export default {
     [SET_PIPELINE_EXEC_DETAIL]: (state, execDetail = null) => {
         if (execDetail?.model?.stages) {
             execDetail.model.stages = execDetail.model.stages.slice(1)
+        }
+        // Ensure cancelBuildPerm exists
+        if (execDetail && !Object.prototype.hasOwnProperty.call(execDetail, 'cancelBuildPerm')) {
+            execDetail.cancelBuildPerm = state.execDetail?.cancelBuildPerm ?? true
         }
         Object.assign(state, {
             execDetail
@@ -510,5 +529,43 @@ export default {
         return Object.assign(state, {
             isGetPluginHeadTab
         })
+    },
+    [SET_PARAM_SET_LIST]: (state, paramSets) => {
+        return Object.assign(state, {
+            paramSets
+        })
+    },
+    [SET_TEMP_PARAM_SET]: (state, tempParamSet) => {
+        return Object.assign(state, {
+            tempParamSet
+        })
+    },
+    [UPDATE_TEMPLATE_CONSTRAINT]: (state, { classify, constraintList }) => {
+        Object.assign(state.pipeline, { overrideTemplateField: {
+            ...state.pipeline.overrideTemplateField,
+            [classify]: constraintList
+        } })
+        return state
+    },
+    [UPDATE_STORESTATUS]: (state, storeStatus) => {
+        return Object.assign(state, {
+            storeStatus
+        })
+    },
+    [SAVE_PIPELINE_SNAPSHOT]: (state, { snapshot }) => {
+        Vue.set(state, 'originalPipelineSnapshot', snapshot)
+        return state
+    },
+    [SET_EXEC_INFO]: (state, infoData) => {
+        Vue.set(state, 'execInfo', infoData)
+        return state
+    },
+    [CLEAR_PIPELINE_SNAPSHOT]: (state) => {
+        Vue.set(state, 'originalPipelineSnapshot', null)
+        return state
+    },
+    [UPDATE_PIPELINE_PUBLIC_VAR_GROUPS]: (state, publicVarGroups) => {
+        Object.assign(state.pipeline, { publicVarGroups })
+        return state
     }
 }

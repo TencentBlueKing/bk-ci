@@ -33,11 +33,13 @@ import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.api.AuthResourceApi
 import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.process.dao.template.PipelineTemplateInfoDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.permission.template.MockPipelineTemplatePermissionService
 import com.tencent.devops.process.permission.template.PipelineTemplatePermissionService
 import com.tencent.devops.process.permission.template.RbacPipelineTemplatePermissionService
+import com.tencent.devops.process.service.template.v2.PipelineTemplateInfoService
 import com.tencent.devops.process.service.view.PipelineViewGroupService
 import org.jooq.DSLContext
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
@@ -65,7 +67,8 @@ class PipelineTemplatePermConfiguration {
         pipelineViewGroupService: PipelineViewGroupService,
         client: Client,
         authResourceApi: AuthResourceApi,
-        pipelinePermissionService: PipelinePermissionService
+        pipelinePermissionService: PipelinePermissionService,
+        pipelineTemplateInfoService: PipelineTemplateInfoService
     ): PipelineTemplatePermissionService = RbacPipelineTemplatePermissionService(
         authPermissionApi = authPermissionApi,
         authProjectApi = authProjectApi,
@@ -74,16 +77,21 @@ class PipelineTemplatePermConfiguration {
         pipelineInfoDao = pipelineInfoDao,
         client = client,
         authResourceApi = authResourceApi,
-        pipelinePermissionService = pipelinePermissionService
+        pipelinePermissionService = pipelinePermissionService,
+        pipelineTemplateInfoService = pipelineTemplateInfoService
     )
 
     @Bean
     @ConditionalOnMissingBean(PipelineTemplatePermissionService::class)
     fun mockPipelineTemplatePermissionService(
         authProjectApi: AuthProjectApi,
-        pipelineAuthServiceCode: PipelineAuthServiceCode
+        pipelineAuthServiceCode: PipelineAuthServiceCode,
+        templateDao: PipelineTemplateInfoDao,
+        dslContext: DSLContext
     ) = MockPipelineTemplatePermissionService(
         authProjectApi = authProjectApi,
-        pipelineAuthServiceCode = pipelineAuthServiceCode
+        pipelineAuthServiceCode = pipelineAuthServiceCode,
+        templateDao = templateDao,
+        dslContext = dslContext
     )
 }

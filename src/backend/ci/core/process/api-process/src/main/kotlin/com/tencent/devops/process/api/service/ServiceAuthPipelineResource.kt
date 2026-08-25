@@ -64,7 +64,7 @@ interface ServiceAuthPipelineResource {
         limit: Int? = null,
         @Parameter(description = "渠道号，默认为BS", required = false)
         @QueryParam("channelCode")
-        channelCode: ChannelCode? = ChannelCode.BS
+        channelCode: ChannelCode? = ChannelCode.getRequestChannelCode()
     ): Result<PipelineViewPipelinePage<PipelineInfo>>
 
     @Operation(summary = "流水线信息")

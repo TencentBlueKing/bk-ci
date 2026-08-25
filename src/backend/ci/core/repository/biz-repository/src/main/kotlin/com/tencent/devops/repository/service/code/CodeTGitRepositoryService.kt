@@ -31,10 +31,8 @@ import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.HashUtil
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.repository.tables.records.TRepositoryRecord
-import com.tencent.devops.repository.constant.RepositoryMessageCode
 import com.tencent.devops.repository.constant.RepositoryMessageCode.REPO_TYPE_NO_NEED_CERTIFICATION
 import com.tencent.devops.repository.constant.RepositoryMessageCode.TGIT_INVALID
 import com.tencent.devops.repository.constant.RepositoryMessageCode.USER_SECRET_EMPTY
@@ -115,16 +113,6 @@ class CodeTGitRepositoryService @Autowired constructor(
         // 提交的参数与数据库中类型不匹配
         if (!StringUtils.equals(record.type, ScmType.CODE_TGIT.name)) {
             throw OperationException(I18nUtil.getCodeLanMessage(TGIT_INVALID))
-        }
-        // 不得切换代码库
-        if (GitUtils.diffRepoUrl(record.url, repository.url)) {
-            logger.warn("can not switch repo url|sourceUrl[${record.url}]|targetUrl[${repository.url}]")
-            throw OperationException(
-                MessageUtil.getMessageByLocale(
-                    RepositoryMessageCode.CAN_NOT_SWITCH_REPO_URL,
-                    I18nUtil.getLanguage(userId)
-                )
-            )
         }
         // 凭证信息
         val credentialInfo = checkCredentialInfo(projectId = projectId, repository = repository)

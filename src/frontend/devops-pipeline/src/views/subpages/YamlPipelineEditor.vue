@@ -1,6 +1,9 @@
 <template>
     <div class="edit-pipeline-yaml">
-        <header class="edit-pipeline-yaml-header">
+        <header
+            v-if="pipelineEditable"
+            class="edit-pipeline-yaml-header"
+        >
             <bk-button @click="addPlugin">
                 {{ $t('addPlugin') }}
             </bk-button>
@@ -145,7 +148,6 @@
                 return this.element?.atomCode && !this.isPreviewingAtomYAML && !this.isAdding
             },
             pipelineEditable () {
-                console.log(this.instanceFromTemplate)
                 return this.editable && !this.instanceFromTemplate
             }
         },

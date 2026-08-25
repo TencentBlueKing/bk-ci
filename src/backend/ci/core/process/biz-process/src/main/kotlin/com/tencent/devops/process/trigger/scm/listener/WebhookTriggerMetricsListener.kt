@@ -43,7 +43,7 @@ import java.time.LocalDate
 @Service
 class WebhookTriggerMetricsListener(
     private val measureEventDispatcher: SampleEventDispatcher
-) : WebhookTriggerListenerSupport() {
+) : WebhookTriggerListener {
     override fun onBuildSuccess(context: WebhookTriggerContext) {
         with(context) {
             // 上报项目用户度量

@@ -80,6 +80,7 @@
                         :disabled="disabled"
                         :is-loading="isLoading"
                         :handle-change="handleChange"
+                        :pipeline-dialect="pipelineDialect"
                         :options="nodeList"
                         @focus="handleFocus"
                         @blur="handleBlur"
@@ -188,6 +189,10 @@
             stage: {
                 type: Object,
                 default: () => () => {}
+            },
+            pipelineDialect: {
+                type: String,
+                default: "CLASSIC"
             }
         },
         data () {
@@ -306,7 +311,7 @@
                             id: this.showAgentById ? resource.id : resource.name,
                             isShared: !!resource.sharedProjectId && !!resource.sharedUserId,
                             name: resource.name + (resource.label ? resource.label : ''),
-                            envInfoHref: `${WEB_URL_PREFIX}/environment/${resource.sharedProjectId || this.projectId}/envDetail/${resource.id}/`,
+                            envInfoHref: `${WEB_URL_PREFIX}/environment/${resource.sharedProjectId || this.projectId}/pipeline/env/ALL/${resource.id}`,
                             disalbed: !resource.name
                         }))
                     }

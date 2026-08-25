@@ -42,6 +42,8 @@ import com.tencent.devops.common.webhook.util.WebhookUtils
 import io.swagger.v3.oas.annotations.media.Schema
 
 data class WebHookTriggerElementChanger(
+    @get:Schema(title = "触发器step id", required = false)
+    val id: String? = null,
     @get:Schema(title = "任务名称", required = true)
     val name: String = "Git变更触发",
     @get:Schema(title = "仓库ID", required = true)
@@ -92,6 +94,10 @@ data class WebHookTriggerElementChanger(
     val enableCheck: Boolean? = true,
     @get:Schema(title = "issue事件action")
     val includeIssueAction: List<String>? = null,
+    @get:Schema(title = "事件包含的负责人")
+    val includeAssignees: String? = null,
+    @get:Schema(title = "事件排除的负责人")
+    val excludeAssignees: String? = null,
     @get:Schema(title = "mr事件action")
     val includeMrAction: List<String>? = null,
     @get:Schema(title = "push事件action")
@@ -107,9 +113,16 @@ data class WebHookTriggerElementChanger(
     @get:Schema(title = "跳过WIP")
     val skipWip: Boolean? = false,
     @get:Schema(title = "代码库标识")
-    val scmCode: String? = null
+    val scmCode: String? = null,
+    @get:Schema(title = "tag事件action")
+    val includeTagAction: List<String>? = null,
+    @get:Schema(title = "用于包含的label", required = false)
+    val includeLabels: String? = null,
+    @get:Schema(title = "用于排除的label", required = false)
+    val excludeLabels: String? = null
 ) {
     constructor(data: CodeGitWebHookTriggerElement) : this(
+        id = data.stepId,
         name = data.name,
         repositoryHashId = data.repositoryHashId,
         branchName = data.branchName,
@@ -141,10 +154,14 @@ data class WebHookTriggerElementChanger(
         thirdUrl = data.thirdUrl,
         thirdSecretToken = data.thirdSecretToken,
         enable = data.elementEnabled(),
-        skipWip = data.skipWip
+        skipWip = data.skipWip,
+        includeTagAction = data.includeTagAction,
+        includeLabels = data.includeLabels,
+        excludeLabels = data.excludeLabels
     )
 
     constructor(data: CodeTGitWebHookTriggerElement) : this(
+        id = data.stepId,
         name = data.name,
         repositoryHashId = data.data.input.repositoryHashId,
         branchName = data.data.input.branchName,
@@ -174,10 +191,14 @@ data class WebHookTriggerElementChanger(
         includePushAction = data.data.input.includePushAction,
         enableThirdFilter = data.data.input.enableThirdFilter,
         enable = data.elementEnabled(),
-        skipWip = data.data.input.skipWip
+        skipWip = data.data.input.skipWip,
+        includeTagAction = data.data.input.includeTagAction,
+        includeLabels = data.data.input.includeLabels,
+        excludeLabels = data.data.input.excludeLabels
     )
 
     constructor(data: CodeGithubWebHookTriggerElement) : this(
+        id = data.stepId,
         name = data.name,
         repositoryHashId = data.repositoryHashId,
         branchName = data.branchName,
@@ -202,13 +223,18 @@ data class WebHookTriggerElementChanger(
         includeNoteTypes = data.includeNoteTypes,
         enableCheck = data.enableCheck,
         includeIssueAction = data.includeIssueAction,
+        includeAssignees = data.includeAssignees,
+        excludeAssignees = data.excludeAssignees,
         includeMrAction = data.includeMrAction,
         includePushAction = data.includePushAction,
         enableThirdFilter = data.enableThirdFilter,
-        enable = data.elementEnabled()
+        enable = data.elementEnabled(),
+        includeLabels = data.includeLabels,
+        excludeLabels = data.excludeLabels
     )
 
     constructor(data: CodeSVNWebHookTriggerElement) : this(
+        id = data.stepId,
         name = data.name,
         repositoryHashId = data.repositoryHashId,
         pathFilterType = data.pathFilterType,
@@ -223,6 +249,7 @@ data class WebHookTriggerElementChanger(
     )
 
     constructor(data: CodeP4WebHookTriggerElement) : this(
+        id = data.stepId,
         name = data.name,
         repositoryHashId = data.data.input.repositoryHashId,
         includePaths = data.data.input.includePaths,
@@ -234,6 +261,7 @@ data class WebHookTriggerElementChanger(
     )
 
     constructor(data: CodeGitlabWebHookTriggerElement) : this(
+        id = data.stepId,
         name = data.name,
         repositoryHashId = data.repositoryHashId,
         branchName = data.branchName,
@@ -253,10 +281,13 @@ data class WebHookTriggerElementChanger(
         includeSourceBranchName = data.includeSourceBranchName,
         includeMrAction = data.includeMrAction,
         includePushAction = data.includePushAction,
-        enable = data.elementEnabled()
+        enable = data.elementEnabled(),
+        includeLabels = data.includeLabels,
+        excludeLabels = data.excludeLabels
     )
 
     constructor(data: CodeScmGitWebHookTriggerElement) : this(
+        id = data.stepId,
         name = data.name,
         repositoryHashId = data.data.input.repositoryHashId,
         branchName = data.data.input.branchName,
@@ -283,10 +314,17 @@ data class WebHookTriggerElementChanger(
             data.data.input.actions
         } else listOf(),
         enable = data.elementEnabled(),
-        scmCode = data.data.input.scmCode
+        scmCode = data.data.input.scmCode,
+        includeIssueAction = if (data.data.input.eventType == CodeEventType.ISSUES) {
+            data.data.input.actions
+        } else listOf(),
+        includeNoteTypes = data.data.input.includeNoteTypes,
+        includeNoteComment = data.data.input.includeNoteComment,
+        includeCrState = data.data.input.includeCrState
     )
 
     constructor(data: CodeScmSvnWebHookTriggerElement) : this(
+        id = data.stepId,
         name = data.name,
         repositoryHashId = data.data.input.repositoryHashId,
         pathFilterType = data.data.input.pathFilterType,

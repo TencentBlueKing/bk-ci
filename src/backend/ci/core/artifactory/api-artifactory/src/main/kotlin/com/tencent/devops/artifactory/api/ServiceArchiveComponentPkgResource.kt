@@ -38,6 +38,7 @@ import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.ws.rs.Consumes
 import jakarta.ws.rs.DELETE
+import jakarta.ws.rs.DefaultValue
 import jakarta.ws.rs.GET
 import jakarta.ws.rs.HeaderParam
 import jakarta.ws.rs.Path
@@ -82,7 +83,11 @@ interface ServiceArchiveComponentPkgResource {
         osName: String? = null,
         @Parameter(description = "操作系统架构", required = false)
         @QueryParam("osArch")
-        osArch: String? = null
+        osArch: String? = null,
+        @Parameter(description = "是否校验组件项目id", required = false)
+        @QueryParam("checkPermissionFlag")
+        @DefaultValue("true")
+        checkPermissionFlag: Boolean = true
     ): Result<String>
 
     @Operation(summary = "删除组件包文件")
@@ -116,4 +121,20 @@ interface ServiceArchiveComponentPkgResource {
         @QueryParam("repoName")
         repoName: String? = null
     ): Result<String>
+
+    @Operation(summary = "获取组件包文件大小")
+    @GET
+    @Path("/types/{storeType}/file/size")
+    fun getFileSize(
+        @Parameter(description = "组件类型", required = true)
+        @PathParam("storeType")
+        @BkField(patternStyle = BkStyleEnum.CODE_STYLE)
+        storeType: StoreTypeEnum,
+        @Parameter(description = "文件路径", required = true)
+        @QueryParam("filePath")
+        filePath: String,
+        @Parameter(description = "仓库名称", required = false)
+        @QueryParam("repoName")
+        repoName: String? = null
+    ): Result<Long?>
 }

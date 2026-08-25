@@ -29,7 +29,6 @@ package com.tencent.devops.process.api.builds
 
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.web.annotation.BkApiPermission
 import com.tencent.devops.common.web.constant.BkApiHandleType
@@ -37,6 +36,7 @@ import com.tencent.devops.process.bean.PipelineUrlBean
 import com.tencent.devops.process.engine.service.vmbuild.EngineVMBuildService
 import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
+import com.tencent.devops.process.pojo.task.PipelineFailTaskDetail
 import com.tencent.devops.process.service.SubPipelineStartUpService
 import com.tencent.devops.process.service.builds.PipelineBuildFacadeService
 import org.springframework.beans.factory.annotation.Autowired
@@ -54,16 +54,14 @@ class BuildBuildResourceImpl @Autowired constructor(
         projectId: String,
         pipelineId: String,
         buildNum: String,
-        buildId: String?,
-        channelCode: ChannelCode?
+        buildId: String?
     ): Result<BuildHistory?> {
         return Result(
             data = pipelineBuildFacadeService.getSingleHistoryBuild(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 buildNum = buildNum.toInt(),
-                buildId = buildId,
-                channelCode = channelCode ?: ChannelCode.BS
+                buildId = buildId
             )
         )
     }
@@ -72,15 +70,13 @@ class BuildBuildResourceImpl @Autowired constructor(
     override fun getLatestSuccessBuild(
         projectId: String,
         pipelineId: String,
-        buildId: String?,
-        channelCode: ChannelCode?
+        buildId: String?
     ): Result<BuildHistory?> {
         return Result(
             data = pipelineBuildFacadeService.getLatestSuccessBuild(
                 projectId = projectId,
                 pipelineId = pipelineId,
-                buildId = buildId,
-                channelCode = channelCode ?: ChannelCode.BS
+                buildId = buildId
             )
         )
     }
@@ -89,8 +85,7 @@ class BuildBuildResourceImpl @Autowired constructor(
     override fun getBuildDetail(
         projectId: String,
         pipelineId: String,
-        buildId: String,
-        channelCode: ChannelCode
+        buildId: String
     ): Result<ModelDetail> {
         if (buildId.isBlank()) {
             throw ParamBlankException("Invalid buildId")
@@ -99,8 +94,7 @@ class BuildBuildResourceImpl @Autowired constructor(
             data = pipelineBuildFacadeService.getBuildDetail(
                 projectId = projectId,
                 pipelineId = pipelineId,
-                buildId = buildId,
-                channelCode = channelCode
+                buildId = buildId
             )
         )
     }
@@ -121,5 +115,36 @@ class BuildBuildResourceImpl @Autowired constructor(
     ): Result<String?> {
         val container = vMBuildService.getBuildContainer(projectId, pipelineId, buildId, vmSeqId)
         return Result(container?.dispatchType?.buildType()?.name)
+    }
+
+    override fun getBuildFailedTasks(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        executeCount: Int?
+    ): Result<List<PipelineFailTaskDetail>> {
+        return Result(
+            pipelineBuildFacadeService.getBuildFailedTasks(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                executeCount = executeCount
+            )
+        )
+    }
+
+    override fun getTaskParams(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        taskId: String
+    ): Result<Map<String, Any>?> {
+        val task = pipelineBuildFacadeService.getByTaskId(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            taskId = taskId
+        )
+        return Result(task?.taskParams ?: mapOf())
     }
 }

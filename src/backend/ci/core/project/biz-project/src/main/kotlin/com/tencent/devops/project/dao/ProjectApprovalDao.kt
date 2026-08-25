@@ -53,7 +53,8 @@ class ProjectApprovalDao {
         projectCreateInfo: ProjectCreateInfo,
         approvalStatus: Int,
         subjectScopes: List<SubjectScopeInfo>,
-        tipsStatus: Int
+        tipsStatus: Int,
+        projectScope: Int
     ): Int {
         with(TProjectApproval.T_PROJECT_APPROVAL) {
             return dslContext.insertInto(
@@ -83,7 +84,10 @@ class ProjectApprovalDao {
                 PRODUCT_NAME,
                 PROPERTIES,
                 TENANT_ID,
-                TENANT_ENGLISH_NAME
+                TENANT_ENGLISH_NAME,
+                KPI_CODE,
+                KPI_NAME,
+                PROJECT_SCOPE
             ).values(
                 projectCreateInfo.projectName,
                 TenantUtils.parseEnglishName(projectCreateInfo.tenantId, projectCreateInfo.englishName),
@@ -112,7 +116,10 @@ class ProjectApprovalDao {
                     JsonUtil.toJson(it, false)
                 },
                 projectCreateInfo.tenantId,
-                projectCreateInfo.englishName
+                projectCreateInfo.englishName,
+                projectCreateInfo.kpiCode,
+                projectCreateInfo.kpiName,
+                projectScope
             ).onDuplicateKeyUpdate()
                 .set(PROJECT_NAME, projectCreateInfo.projectName)
                 .set(DESCRIPTION, projectCreateInfo.description)
@@ -136,6 +143,9 @@ class ProjectApprovalDao {
                     JsonUtil.toJson(it, false)
                 })
                 .set(TENANT_ID, projectCreateInfo.tenantId)
+                .set(KPI_CODE, projectCreateInfo.kpiCode)
+                .set(KPI_NAME, projectCreateInfo.kpiName)
+                .set(PROJECT_SCOPE, projectScope)
                 .execute()
         }
     }
@@ -172,6 +182,8 @@ class ProjectApprovalDao {
                 .set(PROPERTIES, projectUpdateInfo.properties?.let {
                     JsonUtil.toJson(it, false)
                 })
+                .set(KPI_CODE, projectUpdateInfo.kpiCode)
+                .set(KPI_NAME, projectUpdateInfo.kpiName)
                 .where(ENGLISH_NAME.eq(projectUpdateInfo.englishName))
                 .execute()
         }
@@ -206,6 +218,8 @@ class ProjectApprovalDao {
                 .set(PROPERTIES, projectApprovalInfo.properties?.let {
                     JsonUtil.toJson(it, false)
                 })
+                .set(KPI_CODE, projectApprovalInfo.kpiCode)
+                .set(KPI_NAME, projectApprovalInfo.kpiName)
                 .where(ENGLISH_NAME.eq(projectApprovalInfo.englishName))
                 .execute()
         }
@@ -308,7 +322,10 @@ class ProjectApprovalDao {
                 productId = productId,
                 productName = productName,
                 properties = properties?.let { JsonUtil.to(it, ProjectProperties::class.java) },
-                tenantId = tenantId
+                tenantId = tenantId,
+                kpiCode = kpiCode,
+                kpiName = kpiName,
+                projectScope = projectScope
             )
         }
     }

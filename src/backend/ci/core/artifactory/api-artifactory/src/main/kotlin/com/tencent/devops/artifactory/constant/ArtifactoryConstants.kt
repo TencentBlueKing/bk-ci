@@ -43,6 +43,7 @@ const val REPO_NAME_IMAGE = "image"
 const val REPO_NAME_REPORT = "report"
 const val REPO_NAME_PLUGIN = "plugin"
 const val REPO_NAME_STATIC = "static"
+const val REPO_NAME_CREATIVE = "creative_stream_repo"
 
 private const val BKREPO_DEVOPS_PROJECT_ID = "devops"
 private const val BKREPO_STORE_PROJECT_ID = "bk-store"

@@ -20,9 +20,12 @@
 import {
     ALL_PIPELINE_VIEW_ID
 } from '@/store/constants'
+import { isBooleanParam, isFileParam } from '@/store/modules/atom/paramsConfig'
+import {
+    ALL_TEMPLATE_VIEW_ID,
+    TEMPLATE_VIEW_ID_CACHE
+} from '@/store/modules/templates/constants'
 import { v4 as uuidv4 } from 'uuid'
-import { isFileParam } from '@/store/modules/atom/paramsConfig'
-import { VAR_MAX_LENGTH } from '@/store/constants'
 
 export function isVNode (node) {
     return typeof node === 'object' && Object.prototype.hasOwnProperty.call(node, 'componentOptions')
@@ -32,7 +35,21 @@ export function urlJoin (...args) {
     return args.filter(arg => arg).join('/').replace(/([^:]\/)\/+/g, '$1')
 }
 
+export function encodeArtifactDownloadUrl (url, path) {
+    const encodeSegment = segment => encodeURIComponent(segment).replace(
+        /[!'()*]/g,
+        char => `%${char.charCodeAt(0).toString(16).toUpperCase()}`
+    )
+    const encodedPath = path
+        .split('/')
+        .map(encodeSegment)
+        .join('/')
+
+    return url.replace(path, () => encodedPath)
+}
+
 export function isShallowEqual (obj1, obj2) {
+    if (obj1 === obj2) return true
     if (!isObject(obj1) || !isObject(obj2)) {
         return false
     }
@@ -340,42 +357,23 @@ function prezero (num) {
     return num
 }
 
-import {
-    convertTime,
-    formatByUserTz,
-    getUserTimeZone,
-    prettyDateTimeFormat,
-    nowInUserTz,
-    userTzTodayRange,
-    userTzYesterdayRange,
-    userTzLastDaysRange,
-    recentDaysRangeInUserTz,
-    calendarDateInUserTz,
-    addCalendarDays,
-    zonedDayStartEpochMilli
-} from '../../../common-lib/time'
+export function convertTime (ms) {
+    if (!ms) return '--'
+    const time = new Date(ms)
 
-export {
-    convertTime,
-    formatByUserTz,
-    getUserTimeZone,
-    prettyDateTimeFormat,
-    nowInUserTz,
-    userTzTodayRange,
-    userTzYesterdayRange,
-    userTzLastDaysRange,
-    recentDaysRangeInUserTz,
-    calendarDateInUserTz,
-    addCalendarDays,
-    zonedDayStartEpochMilli
+    return `${time.getFullYear()}-${prezero(time.getMonth() + 1)}-${prezero(time.getDate())} ${prezero(time.getHours())}:${prezero(time.getMinutes())}:${prezero(time.getSeconds())}`
 }
 
 export function coverStrTimer (ms) {
-    return formatByUserTz(ms)
+    const time = new Date(ms)
+
+    return `${time.getFullYear()}-${time.getMonth() + 1}-${time.getDate()} ${time.getHours()}:${time.getMinutes()}:${time.getSeconds()}`
 }
 
 export function convertMiniTime (ms) {
-    return formatByUserTz(ms, undefined, 'MM-DD HH:mm')
+    const time = new Date(ms)
+
+    return `${prezero(time.getMonth() + 1)}-${prezero(time.getDate())} ${prezero(time.getHours())}:${prezero(time.getMinutes())}`
 }
 
 /**
@@ -485,7 +483,15 @@ export const deepCopy = obj => {
 
 export const deepClone = obj => {
     if (typeof structuredClone === 'function') {
-        return structuredClone(obj)
+        try {
+            return structuredClone(obj)
+        } catch (e) {
+            // 非结构化克隆错误继续抛出，避免隐藏其他问题
+            if (e && e.name !== 'DataCloneError') {
+                throw e
+            }
+            // DataCloneError 时降级为 JSON 方式深拷贝（函数等不可序列化字段会被丢弃）
+        }
     }
     return JSON.parse(JSON.stringify(obj))
 }
@@ -494,12 +500,18 @@ export const hashID = () => {
     const uuid = uuidv4().replace(/-/g, '')
     return uuid
 }
+// 随机字符串
+export const randomString = (len, startWithAplha = false) => {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
 
-export const randomString = (len) => {
-    const chars = 'ABCDEFGHJKLMNPQRSTWXYZabcdefhijklmnprstwxyz012345678'
     const tempLen = chars.length
     let tempStr = ''
     for (let i = 0; i < len; ++i) {
+        if (i === 0 && startWithAplha) {
+            const alphaChars = chars.replace(/\d/g, '')
+            tempStr += alphaChars.charAt(Math.floor(Math.random() * alphaChars.length))
+            continue
+        }
         tempStr += chars.charAt(Math.floor(Math.random() * tempLen))
     }
     return tempStr
@@ -662,7 +674,13 @@ export function getParamsValuesMap (params = [], valueKey = 'defaultValue', init
                 latestRandomStringInPath: (valueKey === 'defaultValue' ? param.randomStringInPath : param.latestRandomStringInPath) || ''
             }
         } else {
-            values[param.id] = initValues[param.id] ?? param[valueKey]
+            const val = initValues[param.id] ?? param[valueKey]
+            if (isBooleanParam(param.type)) {
+                values[param.id] = val === 'true' || val === true
+            } else {
+                values[param.id] = val
+            }
+            
         }
         return values
     }, {})
@@ -780,6 +798,10 @@ export function getCacheViewId (projectId) {
     return localStorage.getItem(cacheViewIdKey(projectId)) ?? ALL_PIPELINE_VIEW_ID
 }
 
+export function getTemplateCacheViewId () {
+    return localStorage.getItem(TEMPLATE_VIEW_ID_CACHE) ?? ALL_TEMPLATE_VIEW_ID
+}
+
 export function getMaterialIconByType (type) {
     const materialIconMap = {
         CODE_SVN: 'CODE_SVN',
@@ -792,6 +814,26 @@ export function getMaterialIconByType (type) {
         CODE_SERVICE: 'openApi'
     }
     return materialIconMap[type] ?? 'CODE_GIT'
+}
+
+export const prettyDateTimeFormat = (target) => {
+    if (!target) {
+        return ''
+    }
+    const formatStr = (str) => {
+        if (String(str).length === 1) {
+            return `0${str}`
+        }
+        return str
+    }
+    const d = new Date(target)
+    const year = d.getFullYear()
+    const month = formatStr(d.getMonth() + 1)
+    const date = formatStr(d.getDate())
+    const hours = formatStr(d.getHours())
+    const minutes = formatStr(d.getMinutes())
+    const seconds = formatStr(d.getSeconds())
+    return `${year}-${month}-${date} ${hours}:${minutes}:${seconds}`
 }
 
 export function areDeeplyEqual (obj1, obj2) {
@@ -844,11 +886,17 @@ export function generateDisplayName (version, versionName) {
 }
 
 export function weekAgo () {
-    const { startMs, endMs } = recentDaysRangeInUserTz(7)
-    // end of today in user TZ for datepicker end bound
-    const today = calendarDateInUserTz()
-    const endOfToday = zonedDayStartEpochMilli(addCalendarDays(today, 1)) - 1
-    return [new Date(startMs), new Date(Math.min(endMs, endOfToday))]
+    // 获取当前日期
+    const now = new Date()
+
+    // 获取一周前的日期
+    const oneWeekAgo = new Date()
+    oneWeekAgo.setDate(now.getDate() - 7)
+
+    // 创建开始和结束日期对象
+    const start = new Date(oneWeekAgo.setHours(0, 0, 0))
+    const end = new Date(now.setHours(23, 59, 59))
+    return [start, end]
 }
 
 export function isEmptyObj (obj) {
@@ -888,25 +936,34 @@ export function parseErrorMsg (msg) {
 
 export function showPipelineCheckMsg (showTooltips, message, h) {
     const errorInfo = parseErrorMsg(message)
-    showTooltips({
-        theme: 'error',
-        delay: 0,
-        ellipsisLine: 0,
-        message: h('div', {
-            class: 'pipeline-save-error-list-box'
-        }, errorInfo.errors.map(item => h('div', {
-            class: 'pipeline-save-error-list-item'
-        }, [
-            h('p', {}, item.errorTitle),
-            h('ul', {
-                class: 'pipeline-save-error-list'
-            }, item.errorDetails.map(err => h('li', {
-                domProps: {
-                    innerHTML: err
-                }
-            })))
-        ])))
-    })
+    if (errorInfo['@type'] === 'errors') {
+        showTooltips({
+            theme: 'error',
+            delay: 0,
+            ellipsisLine: 0,
+            message: h('div', {
+                class: 'pipeline-save-error-list-box'
+            }, errorInfo.errors.map(item => h('div', {
+                class: 'pipeline-save-error-list-item'
+            }, [
+                h('p', {}, item.errorTitle),
+                h('ul', {
+                    class: 'pipeline-save-error-list'
+                }, item.errorDetails.map(err => h('li', {
+                    domProps: {
+                        innerHTML: err
+                    }
+                })))
+            ])))
+        })
+    } else {
+        showTooltips({
+            theme: 'error',
+            delay: 0,
+            ellipsisLine: 0,
+            message: errorInfo.message
+        })
+    }
 }
 
 export async function copyToClipboard (text) {
@@ -922,3 +979,14 @@ export async function copyToClipboard (text) {
     }
 }
 
+/**
+ * 获取时间戳字符串，格式：yyyyMMddHHmm
+ * @returns {String}
+ */
+export function getTimestamp () {
+    const now = new Date()
+    const prezero = (num) => num < 10 ? '0' + num : num
+    return `${now.getFullYear()}${prezero(now.getMonth() + 1)}${prezero(now.getDate())}${prezero(now.getHours())}${prezero(now.getMinutes())}`
+}
+
+export const COMMON_PARAM_PREFIX = 'COMMON_PARAM_'

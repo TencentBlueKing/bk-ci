@@ -26,6 +26,7 @@ import com.tencent.devops.auth.pojo.vo.AuthApplyRedirectInfoVo
 import com.tencent.devops.auth.pojo.vo.AuthRedirectGroupInfoVo
 import com.tencent.devops.auth.pojo.vo.ManagerRoleGroupVO
 import com.tencent.devops.auth.pojo.vo.ResourceTypeInfoVo
+import com.tencent.devops.auth.service.AuthResourceGroupFactory
 import com.tencent.devops.auth.service.DeptService
 import com.tencent.devops.auth.service.iam.PermissionApplyService
 import com.tencent.devops.auth.service.iam.PermissionResourceMemberService
@@ -42,7 +43,6 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.tenant.TenantUtils
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.process.api.user.UserPipelineViewResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.project.api.service.ServiceProjectTagResource
 import com.tencent.devops.project.constant.ProjectMessageCode
@@ -70,14 +70,15 @@ class RbacPermissionApplyService @Autowired constructor(
     val itsmService: ItsmService,
     val deptService: DeptService,
     val authResourceGroupApplyDao: AuthResourceGroupApplyDao,
-    val permissionResourceMemberService: PermissionResourceMemberService
+    val permissionResourceMemberService: PermissionResourceMemberService,
+    val authResourceGroupFactory: AuthResourceGroupFactory
 ) : PermissionApplyService {
     @Value("\${auth.iamSystem:}")
     private val systemId = ""
 
     private val authApplyRedirectUrl = "${config.devopsHostGateway}/console/permission/apply?" +
             "project_code=%s&projectName=%s&resourceType=%s&resourceName=%s" +
-            "&iamResourceCode=%s&action=%s&groupName=%s&groupId=%s&iamRelatedResourceType=%s"
+            "&iamResourceCode=%s&action=%s&groupName=%s&groupId=%s&iamRelatedResourceType=%s&redirect=true"
     private val pipelineDetailRedirectUri = "${config.devopsHostGateway}/console/pipeline/%s/%s/history"
     private val environmentDetailRedirectUri = "${config.devopsHostGateway}/console/environment/%s/envDetail/%s"
     private val codeccTaskDetailRedirectUri =
@@ -113,11 +114,24 @@ class RbacPermissionApplyService @Autowired constructor(
             projectCode = projectId,
             permission = AuthPermission.VISIT
         )
+        searchGroupInfo.iamResourceCode = when {
+            searchGroupInfo.iamResourceCode != null -> searchGroupInfo.iamResourceCode
+            searchGroupInfo.resourceCode != null && searchGroupInfo.resourceType != null -> {
+                authResourceService.get(
+                    projectCode = projectId,
+                    resourceType = searchGroupInfo.resourceType!!,
+                    resourceCode = searchGroupInfo.resourceCode!!
+                ).iamResourceCode
+            }
 
-        val iamResourceCode = searchGroupInfo.iamResourceCode
+            else -> null
+        }
         val resourceType = searchGroupInfo.resourceType
-        // 如果没有访问权限，不允许访问资源级别的组，只允许访问项目级别的组
-        if (!visitProjectPermission && searchGroupInfo.groupLevel == GroupLevel.OTHER) {
+        // 如果没有访问权限并且非跳转申请权限场景，不允许访问资源级别的组，只允许访问项目级别的组
+        if (!visitProjectPermission &&
+            searchGroupInfo.groupLevel == GroupLevel.OTHER &&
+            searchGroupInfo.redirect != true
+        ) {
             return ManagerRoleGroupVO(
                 count = 0,
                 results = emptyList()
@@ -127,7 +141,7 @@ class RbacPermissionApplyService @Autowired constructor(
         val bkIamPath = buildBkIamPath(
             userId = userId,
             resourceType = resourceType,
-            iamResourceCode = iamResourceCode,
+            iamResourceCode = searchGroupInfo.iamResourceCode,
             projectId = projectId,
             visitProjectPermission = visitProjectPermission
         )
@@ -189,21 +203,24 @@ class RbacPermissionApplyService @Autowired constructor(
             if (!visitProjectPermission)
                 return ""
             bkIamPath = StringBuilder("/$systemId,${AuthResourceType.PROJECT.value},$projectId/")
-            if (resourceType == AuthResourceType.PIPELINE_DEFAULT.value) {
-                val pipelineId = authResourceCodeConverter.iamCode2Code(
+
+            // 获取资源的上级资源类型组（流水线组/云桌面组）
+            val resourceGroupType = authResourceGroupFactory.getResourceGroupType(resourceType)
+            if (resourceGroupType != null) {
+                val resourceCode = authResourceCodeConverter.iamCode2Code(
                     projectCode = projectId,
                     resourceType = resourceType,
                     iamResourceCode = iamResourceCode
                 )
-                // 获取包含该流水线的所有流水线组
-                val viewIds = client.get(UserPipelineViewResource::class).listViewIdsByPipelineId(
-                    userId = userId,
-                    projectId = projectId,
-                    pipelineId = pipelineId
-                ).data
-                if (viewIds != null && viewIds.isNotEmpty()) {
-                    viewIds.forEach {
-                        bkIamPath.append("$systemId,${AuthResourceType.PIPELINE_GROUP.value},$it/")
+                // 获取资源所属的资源组（流水线组/云桌面组）
+                val resourceGroupIds = authResourceGroupFactory.getResourceGroupsByResource(
+                    projectCode = projectId,
+                    resourceGroupType = resourceGroupType,
+                    resourceCode = resourceCode
+                )
+                if (resourceGroupIds.isNotEmpty()) {
+                    resourceGroupIds.forEach { resourceGroupId ->
+                        bkIamPath.append("$systemId,$resourceGroupType,$resourceGroupId/")
                     }
                 }
             }
@@ -300,7 +317,8 @@ class RbacPermissionApplyService @Autowired constructor(
                 resourceType = resourceType,
                 resourceTypeName = resourceTypeName,
                 resourceName = resourceName,
-                resourceCode = resourceCode
+                resourceCode = resourceCode,
+                applyDisable = gInfo.applyDisable,
             )
         }.sortedBy { it.resourceType }
     }

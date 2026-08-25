@@ -580,7 +580,10 @@
                 const nodeType = localStorage.getItem(ENV_ACTIVE_NODE_TYPE)
                 this.$router.push({
                     name: 'nodeList',
-                    params: { nodeType }
+                    params: {
+                        ...this.$route.params,
+                        nodeType
+                    }
                 })
             },
 

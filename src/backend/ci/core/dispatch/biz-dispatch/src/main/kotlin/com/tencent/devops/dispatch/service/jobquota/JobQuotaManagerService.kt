@@ -33,6 +33,7 @@ import com.tencent.devops.dispatch.dao.JobQuotaProjectDao
 import com.tencent.devops.dispatch.dao.JobQuotaSystemDao
 import com.tencent.devops.dispatch.dao.RunningJobsDao
 import com.tencent.devops.dispatch.pojo.JobQuotaProject
+import com.tencent.devops.dispatch.pojo.JobQuotaStatus
 import com.tencent.devops.dispatch.pojo.JobQuotaSystem
 import com.tencent.devops.dispatch.pojo.enums.JobQuotaVmType
 import org.jooq.DSLContext
@@ -55,6 +56,7 @@ class JobQuotaManagerService @Autowired constructor(
             result.add(JobQuotaProject(
                 projectId = it!!.projectId,
                 vmType = JobQuotaVmType.parse(it.vmType)!!,
+                channelCode = it.channelCode,
                 runningJobMax = it.runningJobsMax,
                 runningTimeJobMax = it.runningTimeJobMax,
                 runningTimeProjectMax = it.runningTimeProjectMax,
@@ -92,12 +94,12 @@ class JobQuotaManagerService @Autowired constructor(
     }
 
     /**
-     * 获取job的某类构件机配额，如果没有，则取系统默认值
+     * 获取job的某类构建机配额，如果没有，则取系统默认值
      */
     fun getProjectQuota(
         projectId: String,
         jobQuotaVmType: JobQuotaVmType,
-        channelCode: String = ChannelCode.BS.name
+        channelCode: String = ChannelCode.getRequestChannelCode().name
     ): JobQuotaProject {
         val now = System.currentTimeMillis()
         val record = jobQuotaProjectDao.get(dslContext, projectId, jobQuotaVmType, channelCode)
@@ -106,6 +108,7 @@ class JobQuotaManagerService @Autowired constructor(
             return JobQuotaProject(
                 projectId = projectId,
                 vmType = jobQuotaVmType,
+                channelCode = channelCode,
                 runningJobMax = systemDefault.runningJobMaxProject,
                 runningTimeJobMax = systemDefault.runningTimeJobMax,
                 runningTimeProjectMax = systemDefault.runningTimeJobMaxProject,
@@ -118,6 +121,7 @@ class JobQuotaManagerService @Autowired constructor(
         return JobQuotaProject(
             projectId = projectId,
             vmType = jobQuotaVmType,
+            channelCode = record.channelCode,
             runningJobMax = record.runningJobsMax,
             runningTimeJobMax = record.runningTimeJobMax,
             runningTimeProjectMax = record.runningTimeProjectMax,
@@ -125,6 +129,41 @@ class JobQuotaManagerService @Autowired constructor(
             updatedTime = record.updatedTime.timestamp(),
             operator = record.operator
         )
+    }
+
+    /**
+     * 获取job的某类构建机配额状态，如果没有，则取系统默认值
+     * 使用本地缓存提升性能
+     */
+    fun getProjectQuotaStatus(
+        projectId: String,
+        jobQuotaVmType: JobQuotaVmType,
+        channelCode: String = ChannelCode.getRequestChannelCode().name
+    ): JobQuotaStatus {
+        return JobProjectQuotaCache.get(projectId, jobQuotaVmType, channelCode) {
+            // 缓存未命中时，从数据库加载
+            val record = jobQuotaProjectDao.get(dslContext, projectId, jobQuotaVmType, channelCode)
+            val systemDefault = getSystemQuota(jobQuotaVmType, channelCode)
+            if (null == record) {
+                JobQuotaStatus(
+                    jobQuota = systemDefault.runningJobMaxProject,
+                    runningJobCount = 0,
+                    jobThreshold = systemDefault.projectRunningJobThreshold,
+                    timeQuota = systemDefault.runningTimeJobMaxProject.toLong(),
+                    runningJobTime = 0,
+                    timeThreshold = systemDefault.projectRunningTimeThreshold
+                )
+            } else {
+                JobQuotaStatus(
+                    jobQuota = record.runningJobsMax,
+                    runningJobCount = 0,
+                    jobThreshold = systemDefault.projectRunningJobThreshold,
+                    timeQuota = record.runningTimeProjectMax.toLong(),
+                    runningJobTime = 0,
+                    timeThreshold = systemDefault.projectRunningTimeThreshold
+                )
+            }
+        }
     }
 
     /**
@@ -137,6 +176,8 @@ class JobQuotaManagerService @Autowired constructor(
         } else {
             jobQuotaProjectDao.update(dslContext, projectId, jobQuota.vmType, jobQuota)
         }
+        // 清除缓存
+        JobProjectQuotaCache.invalidate(projectId, jobQuota.vmType, jobQuota.channelCode)
         return true
     }
 
@@ -146,9 +187,11 @@ class JobQuotaManagerService @Autowired constructor(
     fun deleteProjectQuota(
         projectId: String,
         jobQuotaVmType: JobQuotaVmType,
-        channelCode: String = ChannelCode.BS.name
+        channelCode: String = ChannelCode.getRequestChannelCode().name
     ): Boolean {
         jobQuotaProjectDao.delete(dslContext, projectId, jobQuotaVmType, channelCode)
+        // 清除缓存
+        JobProjectQuotaCache.invalidate(projectId, jobQuotaVmType, channelCode)
         return true
     }
 
@@ -156,7 +199,10 @@ class JobQuotaManagerService @Autowired constructor(
      * 更新项目配额
      */
     fun updateProjectQuota(projectId: String, jobQuotaVmType: JobQuotaVmType, jobQuota: JobQuotaProject): Boolean {
-        return jobQuotaProjectDao.update(dslContext, projectId, jobQuotaVmType, jobQuota)
+        val result = jobQuotaProjectDao.update(dslContext, projectId, jobQuotaVmType, jobQuota)
+        // 清除缓存
+        JobProjectQuotaCache.invalidate(projectId, jobQuotaVmType, jobQuota.channelCode)
+        return result
     }
 
     /**
@@ -230,7 +276,7 @@ class JobQuotaManagerService @Autowired constructor(
         projectId: String,
         vmType: JobQuotaVmType,
         createTime: String,
-        channelCode: String = ChannelCode.BS.name
+        channelCode: String = ChannelCode.getRequestChannelCode().name
     ) {
         runningJobsDao.clearRunningJobs(
             dslContext = dslContext,

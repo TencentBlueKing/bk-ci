@@ -13,7 +13,7 @@
                 :error-msg="errors.first(`pipelineParam.id`)"
             >
                 <vuex-input
-                    :disabled="disabled"
+                    :disabled="disabled || param.published"
                     :handle-change="(name, value) => handleUpdateParam(name, value)"
                     :data-vv-scope="'pipelineParam'"
                     v-validate="idValidRule"
@@ -47,7 +47,7 @@
             >
                 <selector
                     :popover-min-width="246"
-                    :disabled="disabled"
+                    :disabled="disabled || param.published"
                     name="type"
                     :clearable="false"
                     :list="paramsList"
@@ -55,12 +55,12 @@
                     :value="param.type"
                 />
             </form-field>
-
             <param-value-option
                 :param="param"
                 :disabled="disabled"
                 :value-required="paramType === 'constant'"
                 :handle-change="handleUpdateParam"
+                :init-param-item="initParamItem"
             >
             </param-value-option>
 
@@ -78,6 +78,7 @@
             </form-field>
 
             <form-field
+                v-if="!isPublicVar"
                 :hide-colon="true"
                 :label="$t('groupLabel')"
                 :desc="$t('groupLabelTips')"
@@ -97,7 +98,7 @@
                     <atom-checkbox
                         name="required"
                         :text="$t('editPage.showOnExec')"
-                        :desc="$t('newui.pipelineParam.buildParamTips')"
+                        :desc="requiredTips"
                         :disabled="disabled"
                         :value="param.required"
                         :handle-change="(name, value) => handleUpdateParam(name, value)"
@@ -111,6 +112,17 @@
                         :value="param.valueNotEmpty"
                         :handle-change="(name, value) => handleUpdateParam(name, value)"
                     />
+                    <atom-checkbox
+                        v-if="!!templateId"
+                        name="asInstanceInput"
+                        class="ml10"
+                        v-show="param.required"
+                        :disabled="disabled"
+                        :desc="$t('editPage.instanceRequiredTips')"
+                        :text="$t('editPage.instanceRequired')"
+                        :value="param.asInstanceInput"
+                        :handle-change="(name, value) => handleUpdateParam(name, value)"
+                    />
                 </div>
                 <div class="param-checkbox-row">
                     <atom-checkbox
@@ -122,8 +134,20 @@
                         :handle-change="(name, value) => handleUpdateParam(name, value)"
                     />
                 </div>
+                <div class="param-checkbox-row">
+                    <atom-checkbox
+                        name="sensitive"
+                        :disabled="disabled"
+                        :text="$t('editPage.sensitive')"
+                        :desc="sensitiveTips"
+                        :custom-tip="true"
+                        :value="param.sensitive"
+                        :handle-change="(name, value) => handleUpdateParam(name, value)"
+                    />
+                </div>
             </template>
             <Accordion
+                v-if="!isPublicVar"
                 show-content
                 show-checkbox
             >
@@ -133,8 +157,12 @@
                 <article slot="content">
                     <SubParameter
                         :title="$t('editPage.displayCondition')"
+                        :desc="$t('editPage.displayConditionTips')"
                         name="displayCondition"
+                        :disabled="disabled"
                         :param="displayConditionList"
+                        :add-btn-text="$t('editPage.addDisplayCondition')"
+                        :operator-list="displayConditionOperatorList"
                         v-bind="displayConditionSetting"
                         :handle-change="handleUpdateDisplayCondition"
                     />
@@ -154,15 +182,28 @@
     import VuexTextarea from '@/components/atomFormField/VuexTextarea'
     import FormField from '@/components/AtomPropertyPanel/FormField'
     import validMixins from '@/components/validMixins'
-    import { deepCopy } from '@/utils/util'
+    import { deepCopy, isObject } from '@/utils/util'
+    import { mapState } from 'vuex'
     import ParamValueOption from './children/param-value-option'
-
     import {
         CONST_TYPE_LIST,
         DEFAULT_PARAM,
         PARAM_LIST,
         STRING
     } from '@/store/modules/atom/paramsConfig'
+
+    const DEFAULT_DISPLAY_CONDITION_OPERATOR = '=='
+    const DISPLAY_CONDITION_OPERATORS = [
+        { id: DEFAULT_DISPLAY_CONDITION_OPERATOR, name: DEFAULT_DISPLAY_CONDITION_OPERATOR },
+        { id: '>=', name: '>=' },
+        { id: '<=', name: '<=' },
+        { id: '>', name: '>' },
+        { id: '<', name: '<' },
+        { id: 'IN', name: 'in' },
+        { id: 'CONTAINS', name: 'Contains' },
+        { id: 'STARTS_WITH', name: 'StartWith' },
+        { id: 'ENDS_WITH', name: 'EndWith' }
+    ]
 
     export default {
         components: {
@@ -178,11 +219,20 @@
         },
         mixins: [validMixins],
         props: {
+            isPublicVar: {
+                type: Boolean,
+                default: false
+            },
             editIndex: {
                 type: Number,
                 default: -1
             },
             paramType: {
+                /**
+                 * var 入参
+                 * constant 常量
+                 * other 其他变量
+                 */
                 type: String,
                 default: 'var'
             },
@@ -229,6 +279,9 @@
             typeLabel () {
                 return this.paramType === 'constant' ? this.$t('newui.pipelineParam.constType') : this.$t('editPage.paramsType')
             },
+            sensitiveTips () {
+                return Array(4).fill(0).map((_, i) => this.$t(`editPage.sensitiveTips${i + 1}`))
+            },
             paramsList () {
                 const list = PARAM_LIST.map(item => {
                     return {
@@ -262,7 +315,7 @@
                         ...item,
                         key: item.id
                     }))
-                    
+
                 }
             },
             displayConditionSetting () {
@@ -274,6 +327,17 @@
                         }))
                     }
                 }
+            },
+            displayConditionOperatorList () {
+                return DISPLAY_CONDITION_OPERATORS
+            },
+            templateId () {
+                return this.$route.params.templateId
+            },
+            requiredTips () {
+                return this.templateId
+                    ? this.$t('editPage.templateBuildParamTips')
+                    : this.$t('newui.pipelineParam.buildParamTips')
             }
         },
         created () {
@@ -281,7 +345,13 @@
                 this.param = deepCopy(DEFAULT_PARAM[STRING])
                 if (this.paramType === 'constant') {
                     Object.assign(this.param, { constant: true, required: false })
+                } else if (this.paramType === 'other') {
+                    Object.assign(this.param, { required: false })
                 }
+                this.resetEditItem(this.param)
+            } else if(this.editIndex === -2) {
+                console.log(this.editItem)
+                this.param = deepCopy(this.editItem)
                 this.resetEditItem(this.param)
             } else {
                 this.param = deepCopy(this.editItem)
@@ -290,12 +360,15 @@
         },
         methods: {
             handleParamTypeChange (key, value) {
+                const newParam = deepCopy(DEFAULT_PARAM[value])
                 this.param = {
-                    ...deepCopy(DEFAULT_PARAM[value]),
+                    ...newParam,
                     id: this.param.id,
                     name: this.param.name,
                     constant: this.paramType === 'constant'
                 }
+                // 切换类型时，同步更新 initParamItem，确保 defaultValue 等字段使用新类型的默认值
+                this.initParamItem = deepCopy(this.param)
                 this.resetEditItem(this.param)
             },
             handleUpdateParam (key, value) {
@@ -303,18 +376,39 @@
                 this.updateParam(key, value)
             },
             getUniqueArgs (field) {
-                // 新增跟编辑时，list不一样
-                return this.globalParams.map(p => p[field]).filter(item => item !== this.initParamItem[field]).join(',')
+                return this.globalParams.map(p => p?.buildFormProperty?.[field] || p?.[field])?.filter(item => item !== this.initParamItem[field]).join(',')
             },
             isParamChanged () {
                 return JSON.stringify(this.initParamItem) !== JSON.stringify(this.param)
             },
             handleUpdateDisplayCondition (key, value) {
                 const displayCondition = JSON.parse(value).reduce((acc, cur) => {
-                    acc[cur.key] = cur.value
+                    if (cur.key) {
+                        acc[cur.key] = this.formatDisplayConditionValue(cur)
+                    }
                     return acc
                 }, {})
                 this.handleUpdateParam(key, displayCondition)
+            },
+            validateFormList () {
+                const paramValueOption = this.$refs.paramValueOptionRef
+                if (paramValueOption && typeof paramValueOption.validateFormList === 'function') {
+                    return paramValueOption.validateFormList()
+                }
+                return true
+            },
+            formatDisplayConditionValue (condition) {
+                const operator = condition.operator || DEFAULT_DISPLAY_CONDITION_OPERATOR
+                const value = isObject(condition.value)
+                    ? JSON.stringify(condition.value)
+                    : condition.value
+                if (operator === DEFAULT_DISPLAY_CONDITION_OPERATOR) {
+                    return value
+                }
+                return JSON.stringify({
+                    operator,
+                    value
+                })
             }
         }
     }
@@ -326,8 +420,8 @@
         line-height: 20px;
     }
     .neccessary-checkbox {
-        margin-left: 24px;
+        margin-left: 15px;
         border-left: 1px solid #D8D8D8;
-        padding-left: 24px;
+        padding-left: 15px;
     }
 </style>

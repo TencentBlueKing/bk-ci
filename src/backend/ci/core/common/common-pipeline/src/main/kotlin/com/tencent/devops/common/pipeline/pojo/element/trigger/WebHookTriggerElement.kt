@@ -33,7 +33,8 @@ import com.tencent.devops.common.pipeline.pojo.element.ElementProp
 abstract class WebHookTriggerElement(
     override val name: String = "webhook base class",
     override var id: String? = null,
-    override var status: String? = null
+    override var status: String? = null,
+    override var stepId: String? = null
 ) : Element(name, id, status) {
 
     open fun triggerCondition(): List<ElementProp> = emptyList()

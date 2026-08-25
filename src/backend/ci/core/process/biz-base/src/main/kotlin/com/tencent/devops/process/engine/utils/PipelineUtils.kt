@@ -41,14 +41,19 @@ import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.compatibility.BuildPropertyCompatibilityTools
+import com.tencent.devops.process.utils.FIXVERSION
+import com.tencent.devops.process.utils.MAJORVERSION
+import com.tencent.devops.process.utils.MINORVERSION
 import com.tencent.devops.process.utils.PIPELINE_VARIABLES_STRING_LENGTH_MAX
-import java.util.regex.Pattern
 import jakarta.ws.rs.core.Response
+import java.util.regex.Pattern
 import org.slf4j.LoggerFactory
 
 object PipelineUtils {
 
     private val logger = LoggerFactory.getLogger(PipelineUtils::class.java)
+
+    val VERSION_PARAMS = listOf(MAJORVERSION, MINORVERSION, FIXVERSION)
 
     private const val ENGLISH_NAME_PATTERN = "[A-Za-z_][A-Za-z_0-9.]*"
 
@@ -63,10 +68,15 @@ object PipelineUtils {
         }
     }
 
-    fun checkPipelineParams(params: List<BuildFormProperty>): MutableMap<String, BuildFormProperty> {
+    fun checkPipelineParams(
+        params: List<BuildFormProperty>,
+        supportChineseVarName: Boolean? = false,
+        isTemplate: Boolean = false
+    ): MutableMap<String, BuildFormProperty> {
         val map = mutableMapOf<String, BuildFormProperty>()
         params.forEach { param ->
-            if (!Pattern.matches(ENGLISH_NAME_PATTERN, param.id)) {
+            // 不支持中文变量名时,需校验参数名必须符合英文格式
+            if (supportChineseVarName == false && !Pattern.matches(ENGLISH_NAME_PATTERN, param.id)) {
                 logger.warn("Pipeline's start params[${param.id}] is illegal")
                 throw OperationException(
                     message = I18nUtil.getCodeLanMessage(
@@ -85,6 +95,12 @@ object PipelineUtils {
                 // 常量一定不作为入参，且只读不可覆盖
                 param.required = false
                 param.readOnly = true
+            }
+            // 只有模版asInstanceInput才有值,流水线应该都为null
+            param.asInstanceInput = when {
+                !isTemplate -> null
+                !param.required -> false
+                else -> param.asInstanceInput ?: false
             }
             map[param.id] = param
         }
@@ -191,6 +207,7 @@ object PipelineUtils {
                 stages.add(stage)
             }
         }
+        model.pipelineId = null
         return model.copy(stages = stages)
     }
 
@@ -232,7 +249,7 @@ object PipelineUtils {
 
         return Model(
             name = pipelineName,
-            desc = "",
+            desc = templateModel.desc,
             stages = getFixedStages(templateModel, triggerContainer, defaultStageTagId),
             labels = labels ?: templateModel.labels,
             instanceFromTemplate = instanceFromTemplate
@@ -245,23 +262,23 @@ object PipelineUtils {
      * 当参数类型为GIT/SNV分支、代码库、子流水线时,流水线保存、模板保存和模板实例化时,需要清空options参数,减少model大小.
      * options需在运行时实时计算
      */
-    fun cleanOptions(params: List<BuildFormProperty>): List<BuildFormProperty> {
-        val filterParams = mutableListOf<BuildFormProperty>()
-        params.forEach {
-            when (it.type) {
-                BuildFormPropertyType.SVN_TAG,
-                BuildFormPropertyType.GIT_REF,
-                BuildFormPropertyType.CODE_LIB,
-                BuildFormPropertyType.SUB_PIPELINE,
-                BuildFormPropertyType.CONTAINER_TYPE -> {
-                    filterParams.add(it.copy(options = emptyList(), replaceKey = null, searchUrl = null))
-                }
+    fun cleanOptions(params: List<BuildFormProperty>): MutableList<BuildFormProperty> {
+        return params.map { cleanOptions(it) }.toMutableList()
+    }
 
-                else ->
-                    filterParams.add(it)
+    fun cleanOptions(param: BuildFormProperty): BuildFormProperty {
+        return when (param.type) {
+            BuildFormPropertyType.SVN_TAG,
+            BuildFormPropertyType.GIT_REF,
+            BuildFormPropertyType.CODE_LIB,
+            BuildFormPropertyType.SUB_PIPELINE,
+            BuildFormPropertyType.CONTAINER_TYPE -> {
+                param.copy(options = emptyList(), replaceKey = null, searchUrl = null)
             }
+
+            else ->
+                param
         }
-        return filterParams
     }
 
     fun isPipelineId(pipelineId: String): Boolean {

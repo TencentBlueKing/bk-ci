@@ -1,31 +1,40 @@
 <template>
     <main class="pipeline-list-main">
-        <div
-            class="recycle-bin-header"
-            v-if="isDeleteView"
-        >
-            <h5>{{ $t('restore.recycleBin') }}</h5>
-            <bk-input
-                clearable
-                :placeholder="$t('restore.restoreSearchTips')"
-                right-icon="bk-icon icon-search"
-                :value="filters.filterByPipelineName"
-                @enter="handleSearch"
-                @clear="handleSearch"
-                @right-icon-click="handleSearch"
-            />
-        </div>
+        <template v-if="isDeleteView">
+            <bk-alert
+                class="recycle-bin-clean-alert"
+                type="info"
+            >
+                <div slot="title">
+                    {{ $t('restore.recycleBinCleanTips') }}
+                </div>
+            </bk-alert>
+            <div class="recycle-bin-header">
+                <h5>{{ $t('restore.recycleBin') }}</h5>
+                <bk-input
+                    clearable
+                    :placeholder="$t('restore.restoreSearchTips')"
+                    right-icon="bk-icon icon-search"
+                    :value="filters.filterByPipelineName"
+                    @enter="handleSearch"
+                    @clear="handleSearch"
+                    @right-icon-click="handleSearch"
+                />
+            </div>
+        </template>
         <template v-else>
             <h5 class="current-pipeline-group-name">
-                <bk-tag
-                    v-bk-tooltips="pipelineGroupType.tips"
-                    v-if="pipelineGroupType"
-                    type="stroke"
-                >
-                    {{ pipelineGroupType.label }}
-                </bk-tag>
-                <ArchiveViewName v-if="isArchiveView" />
-                <span v-else>{{ currentViewName }}</span>
+                <p>
+                    <bk-tag
+                        v-bk-tooltips="pipelineGroupType.tips"
+                        v-if="pipelineGroupType"
+                        type="stroke"
+                    >
+                        {{ pipelineGroupType.label }}
+                    </bk-tag>
+                    <ArchiveViewName v-if="isArchiveView" />
+                    <span v-else>{{ currentViewName }}</span>
+                </p>
             </h5>
             <header class="pipeline-list-main-header">
                 <div class="pipeline-list-main-header-left-area">
@@ -39,7 +48,7 @@
                                 disablePermissionApi: true,
                                 permissionData: {
                                     projectId: projectId,
-                                    resourceType: 'pipeline',
+                                    resourceType: RESOURCE_TYPE.PIPELINE,
                                     resourceCode: projectId,
                                     action: RESOURCE_ACTION.CREATE
                                 }
@@ -243,15 +252,15 @@
     import ImportPipelinePopup from '@/components/pipelineList/ImportPipelinePopup'
     import PipelineTableView from '@/components/pipelineList/PipelineTableView'
     import PipelinesCardView from '@/components/pipelineList/PipelinesCardView'
+    import ArchiveViewName from '@/components/pipelineList/archiveViewName'
     import webSocketMessage from '@/utils/webSocketMessage'
     import AddToGroupDialog from '@/views/PipelineList/AddToGroupDialog'
+    import ArchiveDialog from '@/views/PipelineList/ArchiveDialog'
+    import DeleteArchivedDialog from '@/views/PipelineList/DeleteArchivedDialog'
     import PipelineGroupEditDialog from '@/views/PipelineList/PipelineGroupEditDialog'
     import RemoveConfirmDialog from '@/views/PipelineList/RemoveConfirmDialog'
     import { mapActions, mapState } from 'vuex'
     import PipelineSearcher from './PipelineSearcher'
-    import ArchiveViewName from '@/components/pipelineList/archiveViewName'
-    import ArchiveDialog from '@/views/PipelineList/ArchiveDialog'
-    import DeleteArchivedDialog from '@/views/PipelineList/DeleteArchivedDialog'
 
     import Logo from '@/components/Logo'
     import piplineActionMixin from '@/mixins/pipeline-action-mixin'
@@ -264,6 +273,7 @@
     import {
         PROJECT_RESOURCE_ACTION,
         RESOURCE_ACTION,
+        RESOURCE_TYPE,
         handlePipelineNoPermission
     } from '@/utils/permission'
     import { ORDER_ENUM, PIPELINE_SORT_FILED } from '@/utils/pipelineConst'
@@ -308,6 +318,7 @@
                     action: this.toggleImportPipelinePopup
                 }],
                 RESOURCE_ACTION,
+                RESOURCE_TYPE,
                 PROJECT_RESOURCE_ACTION,
                 tableHeight: null
             }
@@ -405,6 +416,7 @@
             },
             '$route.params.viewId' () {
                 this.filters = {}
+                this.$nextTick(this.updateTableHeight)
             }
         },
 
@@ -433,7 +445,7 @@
                 'requestHasCreatePermission'
             ]),
             updateTableHeight () {
-                this.tableHeight = this.$refs.tableBox.offsetHeight
+                this.tableHeight = this.$refs.tableBox?.offsetHeight
             },
             isActiveSort (sortType) {
                 return this.$route.query.sortType === sortType
@@ -534,7 +546,7 @@
                 this.filters = {
                     filterByPipelineName
                 }
-            }
+            },
         }
     }
 
@@ -547,9 +559,13 @@
         display: grid;
         grid-template-columns: 1fr 6fr;
         align-items: center;
+        margin-bottom: 16px;
         > h5 {
             color: #313238;
         }
+    }
+    .recycle-bin-clean-alert {
+        margin-bottom: 16px;
     }
     .pipeline-sort-dropdown-menu {
         margin: 0 8px;

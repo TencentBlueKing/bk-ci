@@ -69,14 +69,14 @@ class WebsocketService @Autowired constructor(
                 return
             }
         }
+        if (!checkParams(changePage.userId, changePage.sessionId)) {
+            logger.warn("changPage checkFail: userId:$changePage.userId,sessionId:$changePage.sessionId")
+            return
+        }
         val redisLock = lockUser(changePage.sessionId)
 
         redisLock.use {
             redisLock.lock()
-            if (!checkParams(changePage.userId, changePage.sessionId)) {
-                logger.warn("changPage checkFail: userId:$changePage.userId,sessionId:$changePage.sessionId")
-                return
-            }
 
             val normalPage = WebsocketPageUtils.buildNormalPage(changePage.page)
             WsRedisUtils.writeSessionIdByRedis(redisOperation, changePage.userId, changePage.sessionId)
@@ -220,11 +220,11 @@ class WebsocketService @Autowired constructor(
     }
 
     private fun checkParams(userId: String?, sessionId: String?): Boolean {
-        if (userId == null) {
+        if (userId.isNullOrBlank()) {
             return false
         }
 
-        if (sessionId == null) {
+        if (sessionId.isNullOrBlank()) {
             return false
         }
         return true

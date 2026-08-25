@@ -27,10 +27,13 @@
 
 package com.tencent.devops.process.service.webhook
 
+import com.tencent.devops.common.api.context.ChannelContext
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.Watcher
+import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
@@ -40,23 +43,28 @@ import com.tencent.devops.common.event.pojo.measure.ProjectUserOperateMetricsEve
 import com.tencent.devops.common.event.pojo.measure.UserOperateCounterData
 import com.tencent.devops.common.log.pojo.message.LogMessage
 import com.tencent.devops.common.log.utils.BuildLogPrinter
-import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
+import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.pipeline.pojo.element.trigger.WebHookTriggerElement
 import com.tencent.devops.common.pipeline.utils.CascadePropertyUtils
 import com.tencent.devops.common.pipeline.utils.PIPELINE_PAC_REPO_HASH_ID
 import com.tencent.devops.common.service.prometheus.BkTimed
+import com.tencent.devops.common.service.trace.TraceTag
+import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_START_WEBHOOK_USER_ID
 import com.tencent.devops.common.webhook.service.code.loader.WebhookElementParamsRegistrar
 import com.tencent.devops.common.webhook.service.code.loader.WebhookStartParamsRegistrar
 import com.tencent.devops.common.webhook.service.code.matcher.ScmWebhookMatcher
+import com.tencent.devops.common.webhook.service.code.pojo.EventRepositoryCache
 import com.tencent.devops.common.webhook.util.EventCacheUtil
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServiceScmWebhookResource
+import com.tencent.devops.process.constant.MeasureConstant
 import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.engine.compatibility.BuildParametersCompatibilityTransformer
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineWebHookQueueService
 import com.tencent.devops.process.engine.service.PipelineWebhookService
@@ -75,24 +83,34 @@ import com.tencent.devops.process.pojo.trigger.PipelineTriggerFailedMsg
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerReason
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerStatus
 import com.tencent.devops.process.pojo.webhook.WebhookTriggerPipeline
+import com.tencent.devops.process.service.CreateStreamTriggerSupportService
 import com.tencent.devops.process.service.builds.PipelineBuildCommitService
 import com.tencent.devops.process.service.pipeline.PipelineBuildService
 import com.tencent.devops.process.trigger.PipelineTriggerEventService
+import com.tencent.devops.process.trigger.PipelineTriggerMeasureService
 import com.tencent.devops.process.utils.PIPELINE_START_TASK_ID
 import com.tencent.devops.process.utils.PipelineVarUtil
 import com.tencent.devops.process.yaml.PipelineYamlService
 import com.tencent.devops.repository.api.ServiceRepositoryResource
+import io.micrometer.core.instrument.Tags
+import jakarta.ws.rs.core.Response
 import org.slf4j.LoggerFactory
+import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.time.LocalDate
-import jakarta.ws.rs.core.Response
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.Semaphore
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.TimeoutException
 
 @Suppress("ALL")
 @Service
 class PipelineBuildWebhookService @Autowired constructor(
     private val client: Client,
     private val pipelineWebhookService: PipelineWebhookService,
+    private val buildParamCompatibilityTransformer: BuildParametersCompatibilityTransformer,
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val pipelineBuildService: PipelineBuildService,
     private val gitWebhookUnlockDispatcher: GitWebhookUnlockDispatcher,
@@ -103,53 +121,93 @@ class PipelineBuildWebhookService @Autowired constructor(
     private val pipelineTriggerEventService: PipelineTriggerEventService,
     private val measureEventDispatcher: SampleEventDispatcher,
     private val pipelineYamlService: PipelineYamlService,
-    private val pipelinePermissionService: PipelinePermissionService
+    private val pipelinePermissionService: PipelinePermissionService,
+    private val pipelineTriggerMeasureService: PipelineTriggerMeasureService,
+    private val creativeStreamTriggerSupportService: CreateStreamTriggerSupportService,
+    private val webhookTriggerExecutor: PipelineBuildWebhookExecutor
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineBuildWebhookService::class.java)
         private const val WEBHOOK_COMMIT_TRIGGER = "webhook_commit_trigger"
+
+        // 单条流水线触发超时上限，防止 MQ 消费线程被卡死的 worker 永久阻塞
+        private const val TRIGGER_TIMEOUT_MINUTES = 3L
     }
+
+    /**
+     * 单次 Webhook 事件内允许并行触发的流水线数量上限
+     *
+     * 落地为 dispatchTriggerPipelines 内部的本地信号量，避免一次 Webhook
+     * 因触发的流水线过多而占满整个 [PipelineBuildWebhookExecutor] 线程池，
+     * 影响其他 Webhook 事件的处理
+     */
+    @Value("\${scm.webhook.trigger.max-concurrent-per-request:2}")
+    private var maxConcurrentPerRequest: Int = 2
 
     fun dispatchTriggerPipelines(
         matcher: ScmWebhookMatcher,
         triggerEvent: PipelineTriggerEvent,
         triggerPipelines: List<WebhookTriggerPipeline>
     ): Boolean {
+        val watcher = Watcher(
+            "old WebhookDispatch|${matcher.getRepoName()}|${triggerPipelines.size}"
+        )
+        // 主线程只持有共享 Map，不绑定 ThreadLocal，避免 CallerRunsPolicy 场景污染主线程状态
+        val sharedEventCache = ConcurrentHashMap<String, EventRepositoryCache>()
+        val traceId = MDC.get(TraceTag.BIZID)
         try {
             logger.info("dispatch pipeline webhook subscriber|repo(${matcher.getRepoName()})")
-            EventCacheUtil.initEventCache()
             if (triggerPipelines.isEmpty()) {
                 gitWebhookUnlockDispatcher.dispatchUnlockHookLockEvent(matcher)
                 return false
             }
 
             // 代码库触发的事件ID,一个代码库会触发多条流水线,但应该只有一条触发事件
-            val repoEventIdMap = mutableMapOf<String, Long>()
-            triggerPipelines.forEach outside@{ subscriber ->
-                val projectId = subscriber.projectId
-                val pipelineId = subscriber.pipelineId
-                try {
-                    logger.info("pipelineId is $pipelineId")
-                    val builder = PipelineTriggerDetailBuilder()
-                        .projectId(projectId)
-                        .pipelineId(pipelineId)
-
-                    webhookTriggerPipelineBuild(
-                        projectId = projectId,
-                        pipelineId = pipelineId,
-                        matcher = matcher,
-                        builder = builder
-                    )
-                    saveTriggerEvent(
-                        projectId = projectId,
-                        builder = builder,
-                        triggerEvent = triggerEvent,
-                        repoEventIdMap = repoEventIdMap
-                    )
-                } catch (e: Throwable) {
-                    logger.warn("[$pipelineId]|webhookTriggerPipelineBuild fail: $e", e)
+            val repoEventIdMap = ConcurrentHashMap<String, Long>()
+            if (triggerPipelines.size >= 50) {
+                logger.warn(
+                    "Repository webhook triggered too many pipelines|" +
+                        "${matcher.getRepoName()}|${triggerPipelines.size} pipelines triggered"
+                )
+            }
+            // 本次 Webhook 事件内的并发闸门：单次 dispatch 最多 maxConcurrentPerRequest 条流水线并行触发
+            // 使用 fair 模式保证 FIFO，避免某些流水线长时间饥饿
+            val perRequestLimiter = Semaphore(maxConcurrentPerRequest, true)
+            watcher.start("dispatch trigger pipelines")
+            // 主线程在 acquire 阻塞：限制提交到线程池的并发数 = maxConcurrentPerRequest，避免单个事件吃满线程池
+            // 等待者只可能是本次 dispatch 内已提交的同伴，无超时是为了保证所有流水线都能被触发
+            val futures = triggerPipelines.map { subscriber ->
+                perRequestLimiter.acquire()
+                webhookTriggerExecutor.submit {
+                    MDC.put(TraceTag.BIZID, traceId)
+                    EventCacheUtil.bindSharedEventCache(sharedEventCache)
+                    try {
+                        triggerSinglePipeline(
+                            subscriber = subscriber,
+                            matcher = matcher,
+                            triggerEvent = triggerEvent,
+                            repoEventIdMap = repoEventIdMap
+                        )
+                    } finally {
+                        EventCacheUtil.remove()
+                        perRequestLimiter.release()
+                    }
                 }
             }
+            // 单条触发加超时兜底，防止 worker 被下游卡死时 MQ 消费线程永久阻塞
+            futures.forEach { future ->
+                try {
+                    future.get(TRIGGER_TIMEOUT_MINUTES, TimeUnit.MINUTES)
+                } catch (e: TimeoutException) {
+                    logger.warn(
+                        "webhook trigger timeout|repo(${matcher.getRepoName()})|" +
+                            "timeout=${TRIGGER_TIMEOUT_MINUTES}min",
+                        e
+                    )
+                    future.cancel(true)
+                }
+            }
+            watcher.stop()
             /* #3131,当对mr的commit check有强依赖，但是蓝盾与git的commit check交互存在一定的时延，可以增加双重锁。
                 git发起mr时锁住mr,称为webhook锁，由蓝盾主动发起解锁，解锁有三种情况：
                 1. 仓库没有配置蓝盾的流水线，需要解锁
@@ -160,12 +218,75 @@ class PipelineBuildWebhookService @Autowired constructor(
             gitWebhookUnlockDispatcher.dispatchUnlockHookLockEvent(matcher)
             return true
         } finally {
+            LogUtils.printCostTimeWE(watcher)
             if (logger.isDebugEnabled) {
                 logger.debug(
-                    "webhook event repository cache: ${JsonUtil.toJson(EventCacheUtil.getAll(), false)}"
+                    "webhook event repository cache: ${JsonUtil.toJson(sharedEventCache, false)}"
                 )
             }
-            EventCacheUtil.remove()
+        }
+    }
+
+    private fun triggerSinglePipeline(
+        subscriber: WebhookTriggerPipeline,
+        matcher: ScmWebhookMatcher,
+        triggerEvent: PipelineTriggerEvent,
+        repoEventIdMap: ConcurrentHashMap<String, Long>
+    ) {
+        val pipelineWatcher = Watcher(
+            "old WebhookTrigger|${subscriber.projectId}|${subscriber.pipelineId}"
+        )
+        var status = PipelineTriggerReason.TRIGGER_SUCCESS
+        val projectId = subscriber.projectId
+        val pipelineId = subscriber.pipelineId
+        try {
+            try {
+                logger.info("pipelineId is $pipelineId")
+                val builder = PipelineTriggerDetailBuilder()
+                    .projectId(projectId)
+                    .pipelineId(pipelineId)
+
+                pipelineWatcher.start("trigger pipeline build")
+                val triggerResult = webhookTriggerPipelineBuild(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    matcher = matcher,
+                    builder = builder
+                )
+                pipelineWatcher.stop()
+                if (!triggerResult) {
+                    status = PipelineTriggerReason.TRIGGER_NOT_MATCH
+                }
+                pipelineWatcher.start("save trigger event")
+                saveTriggerEvent(
+                    projectId = projectId,
+                    builder = builder,
+                    triggerEvent = triggerEvent,
+                    repoEventIdMap = repoEventIdMap
+                )
+                pipelineWatcher.stop()
+            } catch (e: Throwable) {
+                status = PipelineTriggerReason.TRIGGER_FAILED
+                logger.warn("[$pipelineId]|webhookTriggerPipelineBuild fail: $e", e)
+            }
+            val totalCostMills = System.currentTimeMillis() - triggerEvent.createTime.timestampmilli()
+            if (totalCostMills >= 60 * 1000) {
+                logger.warn(
+                    "old Webhook trigger execution time exceeds threshold|" +
+                        "${matcher.getRepoName()}|$projectId|$pipelineId|$totalCostMills"
+                )
+            }
+            pipelineTriggerMeasureService.recordTaskExecutionTime(
+                name = MeasureConstant.PIPELINE_SCM_WEBHOOK_EXECUTE_TIME,
+                tags = Tags.of(MeasureConstant.TAG_SCM_WEBHOOK_TRIGGER_STATUS, status.name)
+                    .and(MeasureConstant.TAG_SCM_WEBHOOK_TRIGGER_YAML, "false")
+                    .and(MeasureConstant.TAG_SCM_WEBHOOK_TRIGGER_OLD, "true")
+                    .and(MeasureConstant.TAG_SCM_WEBHOOK_SCM_CODE, triggerEvent.triggerType)
+                    .toList(),
+                timeConsumingMills = totalCostMills
+            )
+        } finally {
+            LogUtils.printCostTimeWE(pipelineWatcher)
         }
     }
 
@@ -173,26 +294,28 @@ class PipelineBuildWebhookService @Autowired constructor(
         projectId: String,
         builder: PipelineTriggerDetailBuilder,
         triggerEvent: PipelineTriggerEvent,
-        repoEventIdMap: MutableMap<String, Long>
+        repoEventIdMap: ConcurrentHashMap<String, Long>
     ) {
         if (!builder.getEventSource().isNullOrBlank()) {
             val eventSource = builder.getEventSource()!!
             val eventType = triggerEvent.eventType
-            triggerEvent.eventSource = eventSource
-            triggerEvent.projectId = projectId
-            val eventId = repoEventIdMap[builder.getEventSource()] ?: run {
-                val eventId = pipelineTriggerEventService.getEventId(
-                    projectId = projectId, requestId = triggerEvent.requestId, eventSource = triggerEvent.eventSource!!
+            val eventId = repoEventIdMap.computeIfAbsent(eventSource) {
+                pipelineTriggerEventService.getEventId(
+                    projectId = projectId,
+                    requestId = triggerEvent.requestId,
+                    eventSource = eventSource
                 )
-                repoEventIdMap[builder.getEventSource()!!] = eventId
-                eventId
             }
-            triggerEvent.eventId = eventId
             builder.eventId(eventId)
             builder.detailId(pipelineTriggerEventService.getDetailId())
             val triggerDetail = builder.build()
+            val eventToSave = triggerEvent.copy(
+                projectId = projectId,
+                eventSource = eventSource,
+                eventId = eventId
+            )
             pipelineTriggerEventService.saveEvent(
-                triggerEvent = triggerEvent,
+                triggerEvent = eventToSave,
                 triggerDetail = triggerDetail
             )
             // 判断刷新的eventType和repository_hash_id字段的准确性,为后期优化做准备
@@ -271,10 +394,19 @@ class PipelineBuildWebhookService @Autowired constructor(
             val matchResult = matcher.isMatch(projectId, pipelineId, repo, webHookParams)
             if (matchResult.isMatch) {
                 try {
-                    checkPermission(
-                        userId = userId,
-                        projectId = projectId,
-                        pipelineId = pipelineId
+                    // webhook由外部事件经MQ触发,当前线程无渠道上下文,以流水线自身渠道恢复,
+                    // 确保创作流等渠道的权限校验能命中正确的权限中心资源类型
+                    ChannelContext.withChannel(pipelineInfo.channelCode.name) {
+                        checkPermission(
+                            userId = userId,
+                            projectId = projectId,
+                            pipelineId = pipelineId
+                        )
+                    }
+                    // 创作流相关参数，触发成功时才去校验创作流运行环境，避免重复查询创作流环境信息
+                    val externalStartParams = creativeStreamTriggerSupportService.externalWebhookStartParams(
+                        pipelineInfo = pipelineInfo,
+                        userId = userId
                     )
                     val webhookCommit = WebhookCommit(
                         userId = userId,
@@ -288,7 +420,7 @@ class PipelineBuildWebhookService @Autowired constructor(
                             variables = variables,
                             params = webHookParams,
                             matchResult = matchResult
-                        ),
+                        ).plus(externalStartParams),
                         repositoryConfig = repositoryConfig,
                         repoName = matcher.getRepoName(),
                         commitId = matcher.getRevision(),
@@ -305,14 +437,15 @@ class PipelineBuildWebhookService @Autowired constructor(
                             pipelineId = pipelineId,
                             buildId = buildId,
                             matcher = matcher,
-                            repo = repo
+                            repo = repo,
+                            channelCode = pipelineInfo.channelCode
                         )
                         val buildDetail = client.getGateway(ServiceBuildResource::class).getBuildDetail(
                             userId = userId,
                             buildId = buildId,
                             pipelineId = pipelineId,
                             projectId = projectId,
-                            channelCode = ChannelCode.BS
+                            channelCode = pipelineInfo.channelCode
                         ).data
                         builder.buildId(buildId)
                             .status(PipelineTriggerStatus.SUCCEED.name)
@@ -526,10 +659,10 @@ class PipelineBuildWebhookService @Autowired constructor(
         if (pipelineInfo.locked == true) {
             throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_PIPELINE_LOCK)
         }
-        // 代码库触发支持仅有分支版本的情况，如果仅有草稿不需要在这里拦截
-//        if (pipelineInfo.latestVersionStatus == VersionStatus.COMMITTING) throw ErrorCodeException(
-//            errorCode = ProcessMessageCode.ERROR_NO_RELEASE_PIPELINE_VERSION
-//        )
+        // 代码库触发支持仅有分支版本的情况，如果仅有草稿需要在这里拦截
+        if (pipelineInfo.latestVersionStatus == VersionStatus.COMMITTING) throw ErrorCodeException(
+            errorCode = ProcessMessageCode.ERROR_NO_RELEASE_PIPELINE_VERSION
+        )
         val version = webhookCommit.version ?: pipelineInfo.version
 
         val resource = pipelineRepositoryService.getPipelineResourceVersion(
@@ -543,28 +676,37 @@ class PipelineBuildWebhookService @Autowired constructor(
         }
 
         // 兼容从旧v1版本下发过来的请求携带旧的变量命名
-        val params = mutableMapOf<String, Any>()
-        val pipelineParamMap = HashMap<String, BuildParameters>(startParams.size, 1F)
+        val paramMap = buildParamCompatibilityTransformer.parseTriggerParam(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            paramProperties = resource.model.getTriggerContainer().params,
+            paramValues = startParams.mapValues { it.value.toString() }
+        )
+        val pipelineParamMap = mutableMapOf<String, BuildParameters>()
+        pipelineParamMap.putAll(paramMap)
         startParams.forEach {
+            if (paramMap.containsKey(it.key)) {
+                return@forEach
+            }
             // 从旧转新: 兼容从旧入口写入的数据转到新的流水线运行
             val newVarName = PipelineVarUtil.oldVarToNewVar(it.key)
             if (newVarName == null) { // 为空表示该变量是新的，或者不需要兼容，直接加入，能会覆盖旧变量转换而来的新变量
-                params[it.key] = it.value
                 pipelineParamMap[it.key] = BuildParameters(key = it.key, value = it.value)
-            } else if (!params.contains(newVarName)) { // 新变量还不存在，加入
-                params[newVarName] = it.value
+            } else if (!pipelineParamMap.contains(newVarName)) { // 新变量还不存在，加入
                 pipelineParamMap[newVarName] = BuildParameters(key = newVarName, value = it.value)
             }
         }
 
         val startEpoch = System.currentTimeMillis()
+        val channelCode = pipelineInfo.channelCode
         try {
             val buildId = pipelineBuildService.startPipeline(
                 userId = userId,
                 pipeline = pipelineInfo,
                 startType = StartType.WEB_HOOK,
                 pipelineParamMap = HashMap(pipelineParamMap),
-                channelCode = pipelineInfo.channelCode,
+                channelCode = channelCode,
                 isMobile = false,
                 resource = resource,
                 signPipelineVersion = version,
@@ -574,7 +716,8 @@ class PipelineBuildWebhookService @Autowired constructor(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 buildId = buildId.id,
-                variables = webhookCommit.params
+                variables = webhookCommit.params,
+                channelCode = channelCode
             )
             // #2958 webhook触发在触发原子上输出变量
             buildLogPrinter.addLines(
@@ -659,7 +802,7 @@ class PipelineBuildWebhookService @Autowired constructor(
         val variables = mutableMapOf<String, String>()
         params.forEach { param ->
             variables[param.id] = if (CascadePropertyUtils.supportCascadeParam(param.type) &&
-                    param.defaultValue is Map<*, *>
+                param.defaultValue is Map<*, *>
             ) {
                 JsonUtil.toJson(param.defaultValue, false)
             } else {

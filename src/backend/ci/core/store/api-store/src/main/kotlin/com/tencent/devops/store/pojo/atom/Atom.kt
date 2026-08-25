@@ -29,6 +29,7 @@ package com.tencent.devops.store.pojo.atom
 
 import com.tencent.devops.common.api.annotation.BkFieldI18n
 import com.tencent.devops.common.api.enums.I18nSourceEnum
+import com.tencent.devops.store.pojo.common.ServiceScopeDetail
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "流水线-插件信息")
@@ -110,5 +111,7 @@ data class Atom(
     @get:Schema(title = "项目可视范围,PRIVATE:私有 LOGIN_PUBLIC:登录用户开源")
     val visibilityLevel: String?,
     @get:Schema(title = "插件代码库不开源原因")
-    val privateReason: String?
+    val privateReason: String?,
+    @get:Schema(title = "服务范围详情列表（当serviceScope不传时返回所有服务范围的详情）", required = false)
+    val serviceScopeDetails: List<ServiceScopeDetail>? = null
 )

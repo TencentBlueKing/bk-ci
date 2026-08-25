@@ -27,6 +27,8 @@
 
 package com.tencent.devops.process.engine.service
 
+import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.auth.api.pojo.ProjectConditionDTO
@@ -36,15 +38,20 @@ import com.tencent.devops.common.db.pojo.ARCHIVE_SHARDING_DSL_CONTEXT
 import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.CommonUtils
+import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.control.lock.PipelineModelLock
 import com.tencent.devops.process.engine.control.lock.PipelineVersionLock
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.engine.dao.PipelineResourceDao
+import com.tencent.devops.process.engine.dao.PipelineResourceDraftVersionDao
 import com.tencent.devops.process.engine.dao.PipelineResourceVersionDao
 import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.engine.pojo.PipelineVersionWithInfo
+import com.tencent.devops.process.enums.OperationLogType
+import com.tencent.devops.process.pojo.pipeline.PipelineDraftVersionSimple
 import com.tencent.devops.process.pojo.setting.PipelineVersionSimple
+import com.tencent.devops.process.service.PipelineOperationLogService
 import com.tencent.devops.process.utils.PipelineVersionUtils
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.jooq.DSLContext
@@ -61,7 +68,9 @@ class PipelineRepositoryVersionService(
     private val pipelineBuildDao: PipelineBuildDao,
     private val pipelineInfoDao: PipelineInfoDao,
     private val redisOperation: RedisOperation,
-    private val client: Client
+    private val client: Client,
+    private val pipelineOperationLogService: PipelineOperationLogService,
+    private val pipelineResourceDraftVersionDao: PipelineResourceDraftVersionDao
 ) {
 
     companion object {
@@ -88,7 +97,6 @@ class PipelineRepositoryVersionService(
                     version = resourceVersion
                 )
             }
-
             // 更新流水线版本关联构建记录信息
             pipelineResourceVersionDao.updatePipelineVersionReferInfo(
                 dslContext = dslContext,
@@ -101,12 +109,32 @@ class PipelineRepositoryVersionService(
         }
     }
 
-    fun deletePipelineVersion(projectId: String, pipelineId: String, version: Int) {
+    fun deletePipelineVersion(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        version: Int
+    ) {
         // 判断该流水线版本是否还有关联的构建记录，没有记录才能删除
         val pipelineVersionLock = PipelineVersionLock(redisOperation, pipelineId, version)
         try {
             pipelineVersionLock.lock()
             // #8161 软删除数据，前端无法查询到该版本
+            val resource = pipelineResourceVersionDao.getVersionResource(dslContext, projectId, pipelineId, version)
+            if (resource?.referFlag == true) {
+                throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.ERROR_PIPELINE_CAN_NOT_DELETE_WHEN_HAVE_BUILD_RECORD,
+                )
+            }
+            pipelineOperationLogService.addOperationLog(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                version = version,
+                operationLogType = OperationLogType.DELETE_PIPELINE_VERSION,
+                params = resource?.versionName ?: "",
+                description = null
+            )
             pipelineResourceVersionDao.deleteByVersion(dslContext, projectId, pipelineId, version)
         } finally {
             pipelineVersionLock.unlock()
@@ -523,5 +551,55 @@ class PipelineRepositoryVersionService(
         } finally {
             lock.unlock()
         }
+    }
+
+    fun listPipelineDraftVersion(
+        projectId: String,
+        pipelineId: String,
+        version: Int,
+        page: Int?,
+        pageSize: Int?
+    ): Page<PipelineDraftVersionSimple> {
+        val pageNotNull = page ?: 0
+        val pageSizeNotNull = pageSize ?: 5
+        val limit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)
+        val pipelineVersionSimple = pipelineResourceVersionDao.getPipelineVersionSimple(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            version = version
+        ) ?: throw ErrorCodeException(
+            errorCode = ProcessMessageCode.ERROR_PIPELINE_BASE_VERSION_NOT_FOUND,
+            params = arrayOf(version.toString())
+        )
+        // 不是草稿版本, 返回空列表
+        if (pipelineVersionSimple.status != VersionStatus.COMMITTING) {
+            return Page(
+                page = pageNotNull,
+                pageSize = pageSizeNotNull,
+                count = 0,
+                records = emptyList()
+            )
+        }
+        val count = pipelineResourceDraftVersionDao.count(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            version = version
+        )
+        val records = pipelineResourceDraftVersionDao.list(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            version = version,
+            limit = limit.limit,
+            offset = limit.offset
+        )
+        return Page(
+            page = pageNotNull,
+            pageSize = pageSizeNotNull,
+            count = count,
+            records = records
+        )
     }
 }

@@ -34,11 +34,22 @@ import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
 import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_ASSIGNEES
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_ASSIGNEES
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_ASSIGNEE_LOGINS
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_ASSIGNEE_LOGINS
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_LABEL
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_LABELS
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_LABEL_COLOR
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_LABEL_DESCRIPTION
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_LABEL_ID
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_LABEL_NAMES
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_REPO_NAME
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_BRANCH
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_REVISION
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_SOURCE_BRANCH
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_TARGET_BRANCH
+import com.tencent.devops.process.enums.VariableType
 import com.tencent.devops.process.utils.PipelineVarUtil.MAX_VERSION_LEN
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
@@ -134,6 +145,38 @@ class PipelineVarUtilTest {
         println(mixOldVarAndNewVar)
         assertEquals(vars[PIPELINE_REPO_NAME], "tencent/bk-ci")
         assertEquals(vars[PIPELINE_REPO_NAME], mixOldVarAndNewVar["repoName"])
+    }
+
+    @Test
+    fun `github issue context variables should map to webhook parameters`() {
+        val expected = mapOf(
+            "ci.issue_assignees" to BK_REPO_GIT_WEBHOOK_ISSUE_ASSIGNEES,
+            "ci.issue_assignee_logins" to BK_REPO_GIT_WEBHOOK_ISSUE_ASSIGNEE_LOGINS,
+            "ci.issue_label" to BK_REPO_GIT_WEBHOOK_ISSUE_LABEL,
+            "ci.issue_label_id" to BK_REPO_GIT_WEBHOOK_ISSUE_LABEL_ID,
+            "ci.issue_label_color" to BK_REPO_GIT_WEBHOOK_ISSUE_LABEL_COLOR,
+            "ci.issue_label_description" to BK_REPO_GIT_WEBHOOK_ISSUE_LABEL_DESCRIPTION,
+            "ci.issue_labels" to BK_REPO_GIT_WEBHOOK_ISSUE_LABELS,
+            "ci.issue_label_names" to BK_REPO_GIT_WEBHOOK_ISSUE_LABEL_NAMES
+        )
+
+        expected.forEach { (contextVariable, webhookParameter) ->
+            assertEquals(webhookParameter, PipelineVarUtil.contextVarMap()[contextVariable])
+            assertTrue(VariableType.validate(webhookParameter))
+        }
+    }
+
+    @Test
+    fun `github pull request assignee context variables should map to webhook parameters`() {
+        val expected = mapOf(
+            "ci.mr_assignees" to BK_REPO_GIT_WEBHOOK_MR_ASSIGNEES,
+            "ci.mr_assignee_logins" to BK_REPO_GIT_WEBHOOK_MR_ASSIGNEE_LOGINS
+        )
+
+        expected.forEach { (contextVariable, webhookParameter) ->
+            assertEquals(webhookParameter, PipelineVarUtil.contextVarMap()[contextVariable])
+            assertTrue(VariableType.validate(webhookParameter))
+        }
     }
 
     @Test

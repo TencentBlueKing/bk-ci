@@ -83,7 +83,7 @@
                 class="select-atom-btn"
                 :class="{ 'disabled': atom.disabled }"
                 @click="handleUpdateAtomType(atom.atomCode)"
-                :disabled="atom.disabled || atom.atomCode === atomCode"
+                :disabled="atom.disabled || atom.atomCode === atomCode || atom.existed"
                 v-if="atom.installed || atom.defaultFlag"
             >
                 {{ atom.atomCode === atomCode ? $t('editPage.selected') : $t('editPage.select') }}
@@ -187,7 +187,9 @@
                 const { atom } = this
                 const os = atom.os || []
                 let context
-                if (os.length && !os.includes('NONE')) {
+                if (atom.existed) {
+                    context = this.$t('newlist.atomExistedTips', [atom.name])
+                } else if (os.length && !os.includes('NONE')) {
                     const osListStr = os.map(val => jobConst[val]).join('、')
                     context = this.$t('editPage.envUseTips', [osListStr])
                 } else {
@@ -195,7 +197,7 @@
                 }
                 return {
                     delay: [500, 0],
-                    disabled: !atom.disabled,
+                    disabled: !(atom.disabled || atom.existed),
                     content: context,
                     zIndex: 10001,
                     maxWidth: 300

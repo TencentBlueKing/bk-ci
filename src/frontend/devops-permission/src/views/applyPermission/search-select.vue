@@ -327,7 +327,7 @@ export default {
       if (resourceType && iamResourceCode && action) {
         this.resourceType = resourceType;
         if (groupId) {
-          await this.getResourceList(1, 200, resourceName);
+          await this.getResourceList(1, 2000, resourceName);
           await this.getActionsList();
           const resourceTypeName = this.resourcesTypeList.find(i => i.resourceType === resourceType).name
           const resourceValue = this.resourceList.find(i => i.iamResourceCode === iamResourceCode);
@@ -336,14 +336,14 @@ export default {
           }
           const resourceCodeParams = {
             id: 'resourceCode',
-            name: this.$t('资源实例'),
+            name: this.t('资源实例'),
             values: [resourceValue],
           };
           this.searchSelectValue.push(resourceCodeParams);
           const actionValue = this.actionsList.find(i => i.action === action)
           const actionParams = {
             id: 'actionId',
-            name: this.$t('操作'),
+            name: this.t('操作'),
             values: [actionValue],
           }
           this.searchSelectValue.push(actionParams);
@@ -354,7 +354,7 @@ export default {
           actionValue.name = `${resourceTypeName}/${actionValue.actionName}`
           const actionParams = {
             id: 'actionId',
-            name: this.$t('操作'),
+            name: this.t('操作'),
             values: [actionValue],
           }
           this.searchSelectValue.push(actionParams);
@@ -363,21 +363,21 @@ export default {
         if (groupName) {
           const nameParams = {
             id: 'name',
-            name: this.$t('用户组名'),
+            name: this.t('用户组名'),
             values: [groupName]
           }
           this.searchSelectValue.push(nameParams);
         }
       } else if (resourceType && iamResourceCode) {
         this.resourceType = resourceType;
-        await this.getResourceList(1, 200, resourceName);
+        await this.getResourceList(1, 2000, resourceName);
         await this.getActionsList();
         const resourceTypeName = this.resourcesTypeList.find(i => i.resourceType === resourceType).name
         const resourceValue = this.resourceList.find(i => i.iamResourceCode === iamResourceCode);
         resourceValue.name = `${resourceTypeName}/${resourceValue?.resourceName}`
         const resourceCodeParams = {
           id: 'resourceCode',
-          name: this.$t('资源实例'),
+          name: this.t('资源实例'),
           values: [resourceValue],
         };
         this.searchSelectValue.push(resourceCodeParams);
@@ -404,7 +404,7 @@ export default {
       if (!this.projectCode) {
         Message({
           theme: 'error',
-          message: this.$t('请选择项目'),
+          message: this.t('请选择项目'),
         });
         return;
       };

@@ -27,12 +27,14 @@
 package com.tencent.devops.openapi.aspect
 
 import com.github.benmanes.caffeine.cache.Caffeine
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_CHANNEL
 import com.tencent.devops.common.api.constant.HTTP_500
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.client.consul.ConsulConstants.PROJECT_TAG_REDIS_KEY
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.common.web.utils.I18nUtil
@@ -46,7 +48,7 @@ import com.tencent.devops.openapi.service.op.AppCodeService
 import com.tencent.devops.openapi.utils.ApiGatewayUtil
 import io.swagger.v3.oas.annotations.Operation
 import jakarta.ws.rs.core.Response
-import kotlin.reflect.jvm.kotlinFunction
+import java.util.concurrent.TimeUnit
 import org.aspectj.lang.JoinPoint
 import org.aspectj.lang.ProceedingJoinPoint
 import org.aspectj.lang.annotation.Around
@@ -57,6 +59,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import org.springframework.web.context.request.RequestContextHolder
 import org.springframework.web.context.request.ServletRequestAttributes
+import kotlin.reflect.jvm.kotlinFunction
 
 @Aspect
 @Component
@@ -79,6 +82,11 @@ class ApiAspect(
     private val apiTagCache = Caffeine.newBuilder()
         .maximumSize(500)
         .build<String/*method-name*/, String/*api-tag*/>()
+
+    private val projectConsulTagCache = Caffeine.newBuilder()
+        .expireAfterWrite(1, TimeUnit.MINUTES)
+        .maximumSize(30000)
+        .build<String/*projectId*/, String/*tag*/>()
 
     /**
      * 前置增强：目标方法执行之前执行
@@ -164,10 +172,18 @@ class ApiAspect(
         }
 
         if (projectId != null) {
-            // openAPI 网关无法判别项目信息, 切面捕获project信息。 剩余一种URI内无${projectId}的情况,接口自行处理
-            val projectConsulTag = redisOperation.hget(PROJECT_TAG_REDIS_KEY, projectId)
-            if (!projectConsulTag.isNullOrEmpty()) {
-                bkTag.setGatewayTag(projectConsulTag)
+            val attributes = RequestContextHolder.getRequestAttributes() as? ServletRequestAttributes
+                ?: throw IllegalStateException("No active ServletRequestAttributes")
+            val request = attributes.request
+            val channelCode = request.getHeader(AUTH_HEADER_DEVOPS_CHANNEL)
+            if (channelCode != ChannelCode.CREATIVE_STREAM.name) {
+                // openAPI 网关无法判别项目信息, 切面捕获project信息。 剩余一种URI内无${projectId}的情况,接口自行处理
+                val projectConsulTag = projectConsulTagCache.get(projectId) {
+                    redisOperation.hget(PROJECT_TAG_REDIS_KEY, projectId)
+                }
+                if (!projectConsulTag.isNullOrEmpty()) {
+                    bkTag.setGatewayTag(projectConsulTag)
+                }
             }
             permissionService.validProjectPermission(
                 appCode = appCode,
@@ -185,7 +201,7 @@ class ApiAspect(
             if (appCode != null && apigwType == "apigw-app" && !appCodeService.validAppCode(appCode, projectId)) {
                 throw PermissionForbiddenException(
                     message = "Permission denied: apigwType[$apigwType]," +
-                        "appCode[$appCode],ProjectId[$projectId] " + I18nUtil.getCodeLanMessage(
+                            "appCode[$appCode],ProjectId[$projectId] " + I18nUtil.getCodeLanMessage(
                         messageCode = OpenAPIMessageCode.APP_CODE_PERMISSION_DENIED_MESSAGE,
                         language = I18nUtil.getLanguage(userId)
                     )

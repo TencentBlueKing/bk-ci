@@ -35,6 +35,7 @@ import com.tencent.devops.common.pipeline.pojo.element.ElementPostInfo
 import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
 import com.tencent.devops.model.process.tables.TPipelineBuildRecordTask
 import com.tencent.devops.model.process.tables.records.TPipelineBuildRecordTaskRecord
+import com.tencent.devops.process.pojo.KEY_CONTAINER_ID
 import com.tencent.devops.process.pojo.KEY_EXECUTE_COUNT
 import com.tencent.devops.process.pojo.KEY_TASK_ID
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordTask
@@ -145,7 +146,8 @@ class BuildRecordTaskDao {
         executeCount: Int,
         buildStatus: BuildStatus,
         stageId: String? = null,
-        containerId: String? = null
+        containerId: String? = null,
+        taskIds: Set<String>? = null
     ) {
         with(TPipelineBuildRecordTask.T_PIPELINE_BUILD_RECORD_TASK) {
             val update = dslContext.update(this)
@@ -158,6 +160,7 @@ class BuildRecordTaskDao {
                 )
             stageId?.let { update.and(STAGE_ID.eq(stageId)) }
             containerId?.let { update.and(CONTAINER_ID.eq(containerId)) }
+            taskIds?.let { update.and(TASK_ID.`in`(taskIds)) }
             update.execute()
         }
     }
@@ -169,7 +172,8 @@ class BuildRecordTaskDao {
         buildId: String,
         executeCount: Int,
         containerId: String? = null,
-        buildStatusSet: Set<BuildStatus>? = null
+        buildStatusSet: Set<BuildStatus>? = null,
+        queryPostTaskFlag: Boolean? = null
     ): List<BuildRecordTask> {
         with(TPipelineBuildRecordTask.T_PIPELINE_BUILD_RECORD_TASK) {
             val conditions = mutableListOf<Condition>()
@@ -179,8 +183,12 @@ class BuildRecordTaskDao {
             conditions.add(EXECUTE_COUNT.eq(executeCount))
             containerId?.let { conditions.add(CONTAINER_ID.eq(containerId)) }
             buildStatusSet?.let { conditions.add(STATUS.`in`(it.map { status -> status.name })) }
-            return dslContext.selectFrom(this)
-                .where(conditions).orderBy(TASK_SEQ.asc()).fetch(mapper)
+            if (queryPostTaskFlag == true) {
+                conditions.add(POST_INFO.isNotNull)
+            } else if (queryPostTaskFlag == false) {
+                conditions.add(POST_INFO.isNull)
+            }
+            return dslContext.selectFrom(this).where(conditions).orderBy(TASK_SEQ.asc()).fetch(mapper)
         }
     }
 
@@ -231,15 +239,27 @@ class BuildRecordTaskDao {
         matrixContainerIds: List<String>
     ): List<BuildRecordTask> {
         with(TPipelineBuildRecordTask.T_PIPELINE_BUILD_RECORD_TASK) {
+            // 按“子容器”取其不超过当前执行次数下的最新一次执行的任务集合（与矩阵子容器记录聚合口径保持一致）。
+            // 不能按 TASK_ID 聚合：矩阵重新分裂会为同一子容器生成全新的 taskId，若按 taskId 取 max，
+            // 会把分裂前历史执行次数的旧任务一并返回，导致详情里出现重复插件/“待选择插件”占位。
+            // 按 CONTAINER_ID 取该子容器最新执行次数，再回表取该执行次数下的全部任务，即可只返回当前有效任务，
+            // 同时兼容局部重试后兄弟子Job按其历史执行次数正常展示。
             val conditions = BUILD_ID.eq(buildId)
                 .and(PROJECT_ID.eq(projectId))
-                .and(EXECUTE_COUNT.eq(executeCount))
+                .and(EXECUTE_COUNT.lessOrEqual(executeCount))
                 .and(CONTAINER_ID.`in`(matrixContainerIds))
+            val max = DSL.select(
+                CONTAINER_ID.`as`(KEY_CONTAINER_ID),
+                DSL.max(EXECUTE_COUNT).`as`(KEY_EXECUTE_COUNT)
+            ).from(this).where(conditions).groupBy(CONTAINER_ID)
             val result = dslContext.select(
                 BUILD_ID, PROJECT_ID, PIPELINE_ID, RESOURCE_VERSION, STAGE_ID, CONTAINER_ID, TASK_ID,
                 TASK_SEQ, EXECUTE_COUNT, TASK_VAR, CLASS_TYPE, ATOM_CODE, STATUS, ORIGIN_CLASS_TYPE,
                 START_TIME, END_TIME, TIMESTAMPS, POST_INFO, ASYNC_STATUS
-            ).from(this).where(conditions).orderBy(TASK_SEQ.asc()).fetch()
+            ).from(this).join(max).on(
+                CONTAINER_ID.eq(max.field(KEY_CONTAINER_ID, String::class.java))
+                    .and(EXECUTE_COUNT.eq(max.field(KEY_EXECUTE_COUNT, Int::class.java)))
+            ).where(conditions).orderBy(TASK_SEQ.asc()).fetch()
             return result.map { record ->
                 generateBuildRecordTask(record)
             }
@@ -296,6 +316,31 @@ class BuildRecordTaskDao {
                         .and(TASK_ID.eq(taskId))
                         .and(EXECUTE_COUNT.eq(executeCount))
                 ).fetchOne(mapper)
+        }
+    }
+
+    /**
+     * 按 taskId 精确查询「执行次数不超过 [executeCount] 的最新一条」记录，
+     * 与 [getLatestNormalRecords] 的取数口径一致，但只拉单条，避免为查一个 task 全量加载整个构建的记录
+     */
+    fun getLatestNormalRecord(
+        dslContext: DSLContext,
+        projectId: String,
+        buildId: String,
+        taskId: String,
+        executeCount: Int
+    ): BuildRecordTask? {
+        with(TPipelineBuildRecordTask.T_PIPELINE_BUILD_RECORD_TASK) {
+            return dslContext.selectFrom(this)
+                .where(
+                    BUILD_ID.eq(buildId)
+                        .and(PROJECT_ID.eq(projectId))
+                        .and(TASK_ID.eq(taskId))
+                        .and(EXECUTE_COUNT.lessOrEqual(executeCount))
+                )
+                .orderBy(EXECUTE_COUNT.desc())
+                .limit(1)
+                .fetchOne(mapper)
         }
     }
 

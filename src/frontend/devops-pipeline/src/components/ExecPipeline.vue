@@ -113,7 +113,7 @@
                         :user-name="userName"
                         :pipeline="curPipeline"
                         v-bind="$attrs"
-                        @click="handlePiplineClick"
+                        @click="handlePipelineClick"
                         @stage-check="handleStageCheck"
                         @stage-retry="handleRetry"
                         @atom-quality-check="qualityCheck"
@@ -121,6 +121,7 @@
                         @atom-continue="handleContinue"
                         @atom-exec="handleExec"
                         @debug-container="debugDocker"
+                        @sub-pipeline-access="handleSubPipelineAccess"
                     />
                 </div>
             </simplebar>
@@ -289,11 +290,25 @@
     import MiniMap from '@/components/MiniMap'
     import { errorTypeMap } from '@/utils/pipelineConst'
     import { convertMillSec } from '@/utils/util'
-    import BkPipeline, { loadI18nMessages } from 'bkui-pipeline'
+    import TimeDisplay from '../../../common-lib/time-display'
+    import BkPipeline, { loadI18nMessages } from 'bkui-pipeline/vue2'
     import simplebar from 'simplebar-vue'
     import 'simplebar-vue/dist/simplebar.min.css'
+    import 'bkui-pipeline/dist/bk-pipeline.css'
     import { mapActions, mapState, mapGetters } from 'vuex'
-    import TimeDisplay from '../../../common-lib/time-display'
+
+    const getSubPipelineAccessUrl = (atom) => {
+        const {
+            projectId,
+            pipelineId,
+            buildId
+        } = atom?.subPipelineBuildInfo ?? {}
+        if (!projectId || !pipelineId || !buildId) {
+            return ''
+        }
+        return `${WEB_URL_PREFIX}/pipeline/${projectId}/${pipelineId}/detail/${buildId}`
+    }
+    
     export default {
         components: {
             simplebar,
@@ -579,7 +594,7 @@
             ...mapActions('pipelines', ['requestRetryPipeline']),
             handleRouteParams () {
                 const { reviewTaskId, reviewStageSeq } = this.$route.query
-    
+
                 if (reviewTaskId) {
                     const targetElement = this.curPipelineAllElements.find(element => element.id === reviewTaskId)
                     if (targetElement && targetElement.status === 'REVIEWING') {
@@ -687,7 +702,7 @@
                 this.showErrors = true
             },
 
-            handlePiplineClick (args) {
+            handlePipelineClick (args) {
                 this.toggleAsidePropertyPanel({
                     isShow: true,
                     editingElementPos: args
@@ -960,10 +975,18 @@
                 const { projectId, pipelineId, buildNo: buildId } = this.$route.params
                 const buildResourceType = container.dispatchType?.buildType
                 const buildIdStr = buildId ? `&buildId=${buildId}` : ''
-
                 const tab = window.open('about:blank')
                 const url = `${WEB_URL_PREFIX}/pipeline/${projectId}/dockerConsole/?pipelineId=${pipelineId}&dispatchType=${buildResourceType}&vmSeqId=${vmSeqId}${buildIdStr}`
                 tab.location = url
+            },
+            handleSubPipelineAccess ({ atom }) {
+                const url = getSubPipelineAccessUrl(atom)
+                if (!url) return
+
+                const tab = window.open('about:blank')
+                if (tab) {
+                    tab.location = url
+                }
             },
             expandAllMatrix () {
                 try {

@@ -33,8 +33,10 @@ import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.consul.ConsulConstants
 import com.tencent.devops.common.log.utils.BuildLogPrinter
+import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
+import com.tencent.devops.common.pipeline.pojo.element.trigger.RemoteTriggerElement
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.common.web.utils.I18nUtil
@@ -108,14 +110,15 @@ class PipelineRemoteAuthService @Autowired constructor(
                 I18nUtil.getCodeLanMessage(ERROR_NO_MATCHING_PIPELINE)
             )
         }
+        val pipelineInfo = pipelineReportService.getPipelineInfo(
+            projectId = pipeline.projectId,
+            pipelineId = pipeline.pipelineId
+        )
         // 获取授权人
         var userId = pipelineReportService.getPipelineOauthUser(
             pipelineId = pipeline.pipelineId,
             projectId = pipeline.projectId
-        ) ?: pipelineReportService.getPipelineInfo(
-            projectId = pipeline.projectId,
-            pipelineId = pipeline.pipelineId
-        )?.lastModifyUser
+        ) ?: pipelineInfo?.lastModifyUser
 
         if (userId.isNullOrBlank()) {
             logger.info("Fail to get the userId of the pipeline, use ${pipeline.createUser}")
@@ -141,7 +144,7 @@ class PipelineRemoteAuthService @Autowired constructor(
                 projectId = pipeline.projectId,
                 pipelineId = pipeline.pipelineId,
                 values = vals.toMap(),
-                channelCode = ChannelCode.BS,
+                channelCode = pipelineInfo?.channelCode ?: ChannelCode.getRequestChannelCode(),
                 startType = StartType.REMOTE,
                 buildNo = null
             ).data!!
@@ -174,6 +177,16 @@ class PipelineRemoteAuthService @Autowired constructor(
                 num = buildId.num
             )
         }
+    }
+
+    fun addRemoteAuth(model: Model, projectId: String, pipelineId: String, userId: String) {
+        val elementList = model.stages[0].containers[0].elements
+        elementList.any { it is RemoteTriggerElement }
+            .takeIf { it }
+            ?.let {
+                logger.info("Model has RemoteTriggerElement project[$projectId] pipeline[$pipelineId]")
+                generateAuth(pipelineId, projectId, userId)
+            }
     }
 
     companion object {

@@ -50,11 +50,13 @@ import com.tencent.devops.store.template.service.impl.SampleTemplateNotifyServic
 import com.tencent.devops.store.template.service.impl.SampleTemplateReleaseServiceImpl
 import com.tencent.devops.store.template.service.impl.TemplateReleaseServiceImpl
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
+import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
 @Configuration
 @Suppress("ALL")
+@EnableConfigurationProperties(StoreNotifyProperties::class)
 class SampleStoreServiceConfig {
 
     @Bean

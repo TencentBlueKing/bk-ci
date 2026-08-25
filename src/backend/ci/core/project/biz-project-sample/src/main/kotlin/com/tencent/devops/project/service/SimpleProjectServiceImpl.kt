@@ -132,7 +132,7 @@ class SimpleProjectServiceImpl @Autowired constructor(
         return result.data!!
     }
 
-    override fun deleteAuth(projectId: String, accessToken: String?) {
+    override fun deleteAuth(projectId: String) {
         projectPermissionService.deleteResource(projectId)
     }
 
@@ -142,7 +142,6 @@ class SimpleProjectServiceImpl @Autowired constructor(
 
     override fun getProjectFromAuth(
         userId: String,
-        accessToken: String?,
         permission: AuthPermission,
         resourceType: String?,
         tenantId: String?
@@ -258,6 +257,8 @@ class SimpleProjectServiceImpl @Autowired constructor(
     override fun buildRouterTag(routerTag: String?): String? = null
 
     override fun updateProjectRouterTag(englishName: String) = Unit
+
+    override fun getRealtimeKpiInfo(englishName: String): Pair<String?, String?>? = null
 
     override fun validateProjectRelateProduct(
         projectProductValidateDTO: ProjectProductValidateDTO

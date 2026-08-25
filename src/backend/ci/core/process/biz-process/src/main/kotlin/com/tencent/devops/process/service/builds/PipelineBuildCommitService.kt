@@ -1,5 +1,6 @@
 package com.tencent.devops.process.service.builds
 
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.webhook.service.code.matcher.ScmWebhookMatcher
 import com.tencent.devops.process.pojo.code.PipelineBuildCommit
 import com.tencent.devops.repository.pojo.Repository
@@ -15,7 +16,8 @@ class PipelineBuildCommitService {
         pipelineId: String,
         buildId: String,
         matcher: ScmWebhookMatcher,
-        repo: Repository
+        repo: Repository,
+        channelCode: ChannelCode
     ) {
         logger.info("start create pipeline build commits|$projectId|$pipelineId|$buildId|$repo")
     }

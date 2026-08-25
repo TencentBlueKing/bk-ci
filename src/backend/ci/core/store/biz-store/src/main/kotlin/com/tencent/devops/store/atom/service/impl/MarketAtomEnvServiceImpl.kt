@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestampmilli
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.tenant.TenantUtils
 import com.tencent.devops.common.service.utils.CommonUtils
@@ -47,31 +48,33 @@ import com.tencent.devops.store.atom.factory.AtomBusHandleFactory
 import com.tencent.devops.store.atom.service.AtomService
 import com.tencent.devops.store.atom.service.MarketAtomCommonService
 import com.tencent.devops.store.atom.service.MarketAtomEnvService
+import com.tencent.devops.store.atom.util.AtomOsMapUtil
 import com.tencent.devops.store.common.configuration.StoreInnerPipelineConfig
 import com.tencent.devops.store.common.dao.ClassifyDao
 import com.tencent.devops.store.common.dao.StoreProjectRelDao
 import com.tencent.devops.store.common.service.StoreI18nMessageService
 import com.tencent.devops.store.common.utils.StoreUtils
-import com.tencent.devops.store.common.utils.VersionUtils
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.pojo.atom.AtomEnv
 import com.tencent.devops.store.pojo.atom.AtomEnvRequest
 import com.tencent.devops.store.pojo.atom.AtomPostInfo
 import com.tencent.devops.store.pojo.atom.AtomRunInfo
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
-import com.tencent.devops.store.pojo.atom.enums.JobTypeEnum
 import com.tencent.devops.store.pojo.common.ATOM_POST_CONDITION
 import com.tencent.devops.store.pojo.common.ATOM_POST_ENTRY_PARAM
 import com.tencent.devops.store.pojo.common.ATOM_POST_FLAG
 import com.tencent.devops.store.pojo.common.ATOM_POST_NORMAL_PROJECT_FLAG_KEY_PREFIX
 import com.tencent.devops.store.pojo.common.ATOM_POST_VERSION_TEST_FLAG_KEY_PREFIX
+import com.tencent.devops.store.pojo.common.enums.ServiceScopeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.version.StoreVersion
-import java.time.LocalDateTime
+import com.tencent.devops.store.util.ServiceScopeUtil
+import com.tencent.devops.store.utils.VersionUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
 
 /**
  * 插件执行环境逻辑类
@@ -144,7 +147,8 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
     private fun queryAtomRunInfos(
         projectCode: String,
         atomCodeList: List<String>,
-        atomVersions: Set<StoreVersion>
+        atomVersions: Set<StoreVersion>,
+        historyBuildQueryFlag: Boolean = false
     ): Map<String, AtomRunInfo> {
         // 2、根据插件代码和版本号查找插件运行时信息
         // 判断当前项目是否是插件的调试项目
@@ -175,28 +179,54 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
                     atomCode = atomCode,
                     atomName = atomName,
                     version = version,
-                    testFlag = testFlag
+                    testFlag = testFlag,
+                    historyBuildQueryFlag = historyBuildQueryFlag
                 )
             } else {
-                // 去缓存中获取插件运行时信息
+                // 去缓存中获取插件运行时信息，命中且非旧结构时直接复用，否则回退 DB（并在 DB 查询中刷新缓存）
                 val atomRunInfoKey = StoreUtils.getStoreRunInfoKey(StoreTypeEnum.ATOM.name, atomCode)
-                val atomRunInfoJson = redisOperation.hget(atomRunInfoKey, version)
-                if (!atomRunInfoJson.isNullOrEmpty()) {
-                    val atomRunInfo = JsonUtil.to(atomRunInfoJson, AtomRunInfo::class.java)
-                    atomRunInfoMap[atomRunInfoName] = atomRunInfo
-                } else {
-                    atomRunInfoMap[atomRunInfoName] = queryAtomRunInfoFromDb(
-                        projectCode = projectCode,
-                        atomCode = atomCode,
-                        atomName = atomName,
-                        version = version,
-                        testFlag = testFlag
-                    )
-                }
+                val cachedAtomRunInfo = redisOperation.hget(atomRunInfoKey, version)
+                    ?.takeIf { it.isNotEmpty() }
+                    ?.let { JsonUtil.to(it, AtomRunInfo::class.java) }
+                    ?.takeUnless { legacy ->
+                        isLegacyAtomRunInfoCache(legacy).also { isLegacy ->
+                            if (isLegacy) {
+                                logger.info(
+                                    "atomRunInfo cache is legacy(missing jobType/jobTypeMap/serviceScope/osMap), " +
+                                            "fallback to db: atomCode=$atomCode, version=$version"
+                                )
+                            }
+                        }
+                    }
+                atomRunInfoMap[atomRunInfoName] = cachedAtomRunInfo ?: queryAtomRunInfoFromDb(
+                    projectCode = projectCode,
+                    atomCode = atomCode,
+                    atomName = atomName,
+                    version = version,
+                    testFlag = testFlag,
+                    historyBuildQueryFlag = historyBuildQueryFlag
+                )
             }
         }
         return atomRunInfoMap
     }
+
+    /**
+     * 判断缓存中的插件运行时信息是否为旧版本代码写入的过期结构，命中任一条件即需回退 DB 重建缓存：
+     * 1. jobType 与 jobTypeMap 同时为空：缺少构建环境匹配（isAtomJobTypeMatch）所需字段，
+     *    会被误判为「与 Job 运行环境不匹配」；
+     * 2. serviceScope 为空：插件在 DB 中一定声明了服务范围，缓存中为空说明是旧结构，
+     *    会导致服务范围校验（isAtomServiceScopeAllowed）因「空即放行」而绕过渠道隔离。
+     * 3. osMap 为 null：该字段是后加的，旧代码写入的缓存里没有这个 key，
+     *    会导致运行环境操作系统校验因「空即放行」而漏判。
+     *    注意这里只能判 null 不能判空map：插件确实可以没有任何 OS 声明，
+     *    而 [queryAtomRunInfoFromDb] 回写时对这种情况写入的是空map，
+     *    因此每个插件版本最多只会因该条件回查一次 DB，不会造成缓存长期失效。
+     */
+    private fun isLegacyAtomRunInfoCache(atomRunInfo: AtomRunInfo): Boolean =
+        atomRunInfo.serviceScope.isNullOrEmpty() ||
+            atomRunInfo.osMap == null ||
+            (atomRunInfo.jobType.isNullOrBlank() && atomRunInfo.jobTypeMap.isNullOrBlank())
 
     private fun handleAtomVersions(
         atomVersions: Set<StoreVersion>,
@@ -223,9 +253,15 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
         atomCode: String,
         atomName: String,
         version: String,
-        testFlag: Boolean
+        testFlag: Boolean,
+        historyBuildQueryFlag: Boolean = false
     ): AtomRunInfo {
-        val atomEnvResult = getMarketAtomEnvInfo(projectCode, atomCode, version)
+        val atomEnvResult = doGetMarketAtomEnvInfo(
+            projectCode = projectCode,
+            atomCode = atomCode,
+            version = version,
+            historyBuildQueryFlag = historyBuildQueryFlag
+        )
         if (atomEnvResult.isNotOk()) {
             val params = arrayOf(projectCode, atomName)
             throw ErrorCodeException(
@@ -246,14 +282,19 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
             atomCode = atomCode,
             atomName = atomEnv.atomName,
             version = atomEnv.version,
+            atomStatus = AtomStatusEnum.getAtomStatus(atomEnv.atomStatus)?.status?.toByte(),
             initProjectCode = atomEnv.projectCode ?: "",
             jobType = atomEnv.jobType,
+            jobTypeMap = atomEnv.jobTypeMap,
             buildLessRunFlag = atomEnv.buildLessRunFlag,
             inputTypeInfos = marketAtomCommonService.generateInputTypeInfos(atomEnv.props),
             sensitiveParams = sensitiveParams?.joinToString(","),
-            canPauseBeforeRun = props?.let { marketAtomCommonService.getAtomCanPauseBeforeRun(props) }
+            canPauseBeforeRun = props?.let { marketAtomCommonService.getAtomCanPauseBeforeRun(props) },
+            serviceScope = atomEnv.serviceScope,
+            // 插件确实没有 OS 声明时写入空map而非null，使缓存中「字段缺失(null)」可作为旧结构的判据
+            osMap = atomEnv.osMap ?: emptyMap()
         )
-        if (!testFlag) {
+        if (!testFlag && !historyBuildQueryFlag) {
             // 将db中的环境信息写入缓存
             val atomRunInfoKey = StoreUtils.getStoreRunInfoKey(StoreTypeEnum.ATOM.name, atomCode)
             redisOperation.hset(atomRunInfoKey, version, JsonUtil.toJson(atomRunInfo))
@@ -271,25 +312,58 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
         atomStatus: Byte?,
         osName: String?,
         osArch: String?,
-        convertOsFlag: Boolean?
+        convertOsFlag: Boolean?,
+        channelCode: ChannelCode?
     ): Result<AtomEnv?> {
-        logger.info("getMarketAtomEnvInfo $projectCode,$atomCode,$version,$atomStatus,$osName,$osArch,$convertOsFlag")
+        return doGetMarketAtomEnvInfo(
+            projectCode = projectCode,
+            atomCode = atomCode,
+            version = version,
+            atomStatus = atomStatus,
+            osName = osName,
+            osArch = osArch,
+            convertOsFlag = convertOsFlag,
+            historyBuildQueryFlag = false,
+            channelCode = channelCode
+        )
+    }
+
+    private fun doGetMarketAtomEnvInfo(
+        projectCode: String,
+        atomCode: String,
+        version: String,
+        atomStatus: Byte? = null,
+        osName: String? = null,
+        osArch: String? = null,
+        convertOsFlag: Boolean? = null,
+        historyBuildQueryFlag: Boolean,
+        channelCode: ChannelCode? = null
+    ): Result<AtomEnv?> {
+        logger.info(
+            "getMarketAtomEnvInfo $projectCode,$atomCode,$version,$atomStatus," +
+                "$osName,$osArch,$convertOsFlag,$historyBuildQueryFlag"
+        )
         // 普通项目的查已发布、下架中和已下架（需要兼容那些还在使用已下架插件插件的项目）的插件
         val normalStatusList = listOf(
             AtomStatusEnum.RELEASED.status.toByte(),
             AtomStatusEnum.UNDERCARRIAGING.status.toByte(),
             AtomStatusEnum.UNDERCARRIAGED.status.toByte()
         )
-        val buildingFlag =
-            projectCode == storeInnerPipelineConfig.innerPipelineProject && atomStatus == AtomStatusEnum.BUILDING.status.toByte()
-        val atomStatusList = getAtomStatusList(
-            atomStatus = atomStatus,
-            version = version,
-            normalStatusList = normalStatusList,
-            atomCode = atomCode,
-            projectCode = projectCode,
-            queryTestFlag = buildingFlag
-        )
+        val buildingFlag = projectCode == storeInnerPipelineConfig.innerPipelineProject &&
+            atomStatus == AtomStatusEnum.BUILDING.status.toByte()
+        // 历史构建详情查的是当时构建用的版本，不做状态过滤
+        val atomStatusList: List<Byte>? = if (historyBuildQueryFlag) {
+            null
+        } else {
+            getAtomStatusList(
+                atomStatus = atomStatus,
+                version = version,
+                normalStatusList = normalStatusList,
+                atomCode = atomCode,
+                projectCode = projectCode,
+                queryTestFlag = buildingFlag
+            )
+        }
         val atomDefaultFlag = marketAtomCommonService.isPublicAtom(atomCode)
         val atomBaseInfoRecord = marketAtomEnvInfoDao.getProjectAtomBaseInfo(
             dslContext = dslContext,
@@ -354,6 +428,7 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
         )
         logger.info("$atomCode initProjectCode is :$initProjectCode")
         val jobType = atomBaseInfoRecord[tAtom.JOB_TYPE]
+        val jobTypeMap = atomBaseInfoRecord[tAtom.JOB_TYPE_MAP]
         val classifyId = atomBaseInfoRecord[tAtom.CLASSIFY_ID]
         val classifyRecord = classifyDao.getClassify(dslContext, classifyId)
         val atomEnv = AtomEnv(
@@ -365,7 +440,12 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
             version = atomBaseInfoRecord[tAtom.VERSION],
             publicFlag = atomBaseInfoRecord[tAtom.DEFAULT_FLAG] as Boolean,
             summary = atomBaseInfoRecord[tAtom.SUMMARY],
-            docsLink = atomBaseInfoRecord[tAtom.DOCS_LINK],
+            // 仅当当次构建为创作流渠道时，才将文档链接转换为创作流对应的地址
+            docsLink = StoreUtils.transformDocsLink(
+                atomBaseInfoRecord[tAtom.DOCS_LINK],
+                StoreTypeEnum.ATOM,
+                if (channelCode == ChannelCode.CREATIVE_STREAM) ServiceScopeEnum.CREATIVE_STREAM else null
+            ),
             props = atomBaseInfoRecord[tAtom.PROPS]?.let {
                 storeI18nMessageService.parseJsonStrI18nInfo(
                     jsonStr = it,
@@ -386,13 +466,23 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
             target = atomEnvInfoRecord?.target,
             shaContent = atomEnvInfoRecord?.shaContent,
             preCmd = atomEnvInfoRecord?.preCmd,
-            jobType = if (jobType == null) null else JobTypeEnum.valueOf(jobType),
+            jobType = jobType,
+            jobTypeMap = jobTypeMap,
             atomPostInfo = atomPostInfo,
             classifyCode = classifyRecord?.classifyCode,
             classifyName = classifyRecord?.classifyName,
             runtimeVersion = atomEnvInfoRecord?.runtimeVersion,
             finishKillFlag = atomEnvInfoRecord?.finishKillFlag,
-            authFlag = atomBaseInfoRecord[tAtom.VISIBILITY_LEVEL] != VisibilityLevelEnum.LOGIN_PUBLIC.level
+            authFlag = atomBaseInfoRecord[tAtom.VISIBILITY_LEVEL] != VisibilityLevelEnum.LOGIN_PUBLIC.level,
+            serviceScope = ServiceScopeUtil.parseServiceScopes(atomBaseInfoRecord[tAtom.SERVICE_SCOPE])
+                .ifEmpty { null },
+            // 完整的 jobType -> OS 映射，供保存/校验阶段判断插件与运行环境操作系统的适配度。
+            // OS_MAP 为空的旧插件记录需由 OS/JOB_TYPE 兜底还原出映射，故三者一并传入
+            osMap = AtomOsMapUtil.getAllOs(
+                osValue = atomBaseInfoRecord[tAtom.OS],
+                osMapValue = atomBaseInfoRecord[tAtom.OS_MAP],
+                jobTypeValue = jobType
+            ).ifEmpty { null }
         )
         return Result(atomEnv)
     }
@@ -545,7 +635,8 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
         val atomRunInfos = queryAtomRunInfos(
             projectCode = projectCode,
             atomCodeList = atomVersions.map { it.storeCode },
-            atomVersions = atomVersions
+            atomVersions = atomVersions,
+            historyBuildQueryFlag = true
         )
         val atomSensitiveParamInfos = mutableMapOf<String, String>()
         atomRunInfos.forEach { key, atomRunInfo ->

@@ -32,7 +32,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.process.engine.dao.PipelineYamlSyncDao
+import com.tencent.devops.process.dao.yaml.PipelineYamlSyncDao
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlSyncInfo
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerReasonDetail
 import com.tencent.devops.process.yaml.pojo.YamlPathListEntry

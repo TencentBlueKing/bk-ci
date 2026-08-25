@@ -37,6 +37,7 @@ import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.element.Element
+import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.TimerNodeType
 import io.swagger.v3.oas.annotations.media.Schema
 import org.slf4j.LoggerFactory
 
@@ -50,6 +51,8 @@ data class TimerTriggerElement(
     override var status: String? = null,
     @get:Schema(title = "插件版本", required = false)
     override var version: String = "1.*",
+    @get:Schema(title = "插件用户ID", required = false)
+    override var stepId: String? = null,
     // express是老的接口数据， 后面要废弃掉
     @get:Schema(title = "定时表达式", required = false)
     @Deprecated(message = "@see advanceExpression")
@@ -71,10 +74,14 @@ data class TimerTriggerElement(
     @get:Schema(title = "定时启动参数,格式: [{key:'id',value:1},{key:'name',value:'xxx'}]", required = false)
     val startParams: String? = null,
     @get:Schema(
-        title = "定时触发时区（IANA）。缺省时前端写入租户时区；存量无值时调度回落 Asia/Shanghai",
+        title = "定时触发时区（IANA）。缺省时前端默认东八区；存量无值时调度回落 Asia/Shanghai",
         required = false
     )
-    val timeZone: String? = null
+    val timeZone: String? = null,
+    @get:Schema(title = "启动节点类型（仅创作流通道使用）", required = false)
+    val nodeType: TimerNodeType? = null,
+    @get:Schema(title = "启动节点 agentHashId 列表（仅当 nodeType=NODE_LIST 时生效）", required = false)
+    val nodes: List<String>? = null
 ) : Element(name, id, status) {
     companion object {
         const val classType = "timerTrigger"

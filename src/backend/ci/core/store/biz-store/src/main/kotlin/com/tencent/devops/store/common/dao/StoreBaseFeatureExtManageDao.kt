@@ -27,12 +27,12 @@
 
 package com.tencent.devops.store.common.dao
 
+import com.tencent.devops.common.db.utils.JooqUtils.values
 import com.tencent.devops.model.store.tables.TStoreBaseFeatureExt
 import com.tencent.devops.store.pojo.common.publication.StoreBaseFeatureExtDataPO
-import java.time.LocalDateTime
 import org.jooq.DSLContext
-import org.jooq.util.mysql.MySQLDSL
 import org.springframework.stereotype.Repository
+import java.time.LocalDateTime
 
 @Repository
 class StoreBaseFeatureExtManageDao {
@@ -71,9 +71,9 @@ class StoreBaseFeatureExtManageDao {
                 }
             }
                 .onDuplicateKeyUpdate()
-                .set(FIELD_NAME, MySQLDSL.values(FIELD_NAME))
-                .set(FIELD_VALUE, MySQLDSL.values(FIELD_VALUE))
-                .set(MODIFIER, MySQLDSL.values(MODIFIER))
+                .set(FIELD_NAME, values(FIELD_NAME))
+                .set(FIELD_VALUE, values(FIELD_VALUE))
+                .set(MODIFIER, values(MODIFIER))
                 .set(UPDATE_TIME, LocalDateTime.now())
                 .execute()
         }

@@ -40,6 +40,7 @@ data class Pool(
     val credentialId: String? = null,
     val third: Boolean? = null,
     val performanceConfigId: String? = "0",
+    val performanceUid: String? = "",
     val env: Map<String, String>? = mapOf(),
     val type: PoolType? = null,
     val agentName: String? = null,

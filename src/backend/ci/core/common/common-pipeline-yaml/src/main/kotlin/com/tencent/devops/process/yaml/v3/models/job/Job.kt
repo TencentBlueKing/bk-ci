@@ -29,11 +29,15 @@ package com.tencent.devops.process.yaml.v3.models.job
 
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonProperty
+import com.tencent.devops.common.pipeline.pojo.transfer.CodeTemplate
+import com.tencent.devops.common.pipeline.pojo.transfer.PreTemplateVariable
 import com.tencent.devops.common.pipeline.type.agent.DockerOptions
 import com.tencent.devops.common.pipeline.type.docker.ImageType
 import com.tencent.devops.process.yaml.v3.models.IfField
-import com.tencent.devops.process.yaml.v3.models.step.Step
+import com.tencent.devops.process.yaml.v3.models.step.IStep
 import io.swagger.v3.oas.annotations.media.Schema
+
+interface IJob
 
 /**
  * WARN: 请谨慎修改这个类 , 不要随意添加或者删除变量 , 否则可能导致依赖yaml的功能(gitci,prebuild等)异常
@@ -55,7 +59,7 @@ data class Job(
     @get:Schema(title = "if")
     @JsonProperty("if")
     val ifField: IfField? = null,
-    val steps: List<Step>? = null,
+    val steps: List<IStep>? = null,
     @get:Schema(title = "if-modify")
     @JsonProperty("if-modify")
     val ifModify: List<String>? = null,
@@ -70,7 +74,15 @@ data class Job(
     @get:Schema(title = "depend-on")
     @JsonProperty("depend-on")
     val dependOn: List<String>? = emptyList()
-)
+) : IJob
+
+data class JobTemplate(
+    override val templatePath: String?,
+    override val templateRef: String?,
+    override val templateId: String?,
+    override val templateVersionName: String?,
+    override val variables: Map<String, PreTemplateVariable>?
+) : IJob, CodeTemplate
 
 interface IContainer {
     val image: String?

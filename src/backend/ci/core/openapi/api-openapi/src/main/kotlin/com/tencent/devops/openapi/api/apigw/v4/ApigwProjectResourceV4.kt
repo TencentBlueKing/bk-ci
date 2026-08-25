@@ -109,10 +109,7 @@ interface ApigwProjectResourceV4 {
         @PathParam("projectId")
         projectId: String,
         @Parameter(description = "项目信息", required = true)
-        projectUpdateInfo: ProjectUpdateInfo,
-        @Parameter(description = "access_token")
-        @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
-        accessToken: String?
+        projectUpdateInfo: ProjectUpdateInfo
     ): Result<Boolean>
 
     @GET
@@ -131,10 +128,7 @@ interface ApigwProjectResourceV4 {
         userId: String,
         @Parameter(description = "项目ID英文名标识", required = true)
         @PathParam("projectId")
-        projectId: String,
-        @Parameter(description = "access_token")
-        @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
-        accessToken: String?
+        projectId: String
     ): Result<ProjectVO?>
 
     @GET

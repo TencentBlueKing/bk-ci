@@ -32,19 +32,26 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.google.gson.JsonParser
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.constant.CommonMessageCode.ERROR_QUERY_COUNT_RANGE
+import com.tencent.devops.common.api.constant.CommonMessageCode.PARAMETER_IS_NULL
 import com.tencent.devops.common.api.constant.ID
+import com.tencent.devops.common.api.constant.MASTER
 import com.tencent.devops.common.api.enums.FrontendTypeEnum
 import com.tencent.devops.common.api.exception.CustomException
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.OkhttpUtils.stringLimit
+import com.tencent.devops.common.security.util.BkCryptoUtil
 import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.service.utils.RetryUtils
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.repository.constant.RepositoryMessageCode
+import com.tencent.devops.repository.constant.RepositoryMessageCode.NOT_AUTHORIZED_BY_OAUTH
+import com.tencent.devops.repository.dao.GitTokenDao
 import com.tencent.devops.repository.pojo.enums.GitCodeBranchesSort
 import com.tencent.devops.repository.pojo.enums.GitCodeProjectsOrder
 import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
@@ -92,14 +99,6 @@ import com.tencent.devops.scm.pojo.Project
 import com.tencent.devops.scm.pojo.TapdWorkItem
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import com.tencent.devops.store.pojo.common.BK_FRONTEND_DIR_NAME
-import java.io.File
-import java.net.URLDecoder
-import java.net.URLEncoder
-import java.nio.charset.Charset
-import java.nio.file.Files
-import java.time.LocalDateTime
-import java.util.Base64
-import java.util.concurrent.Executors
 import jakarta.servlet.http.HttpServletResponse
 import jakarta.ws.rs.core.Response
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
@@ -110,18 +109,29 @@ import org.eclipse.jgit.storage.file.FileRepositoryBuilder
 import org.eclipse.jgit.transport.CredentialsProvider
 import org.eclipse.jgit.transport.RefSpec
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider
+import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import org.springframework.util.FileSystemUtils
 import org.springframework.util.StringUtils
+import java.io.File
+import java.net.URLDecoder
+import java.net.URLEncoder
+import java.nio.charset.Charset
+import java.nio.file.Files
+import java.time.LocalDateTime
+import java.util.Base64
+import java.util.concurrent.Executors
 
 @Service
 @Suppress("ALL")
 class GitService @Autowired constructor(
     private val gitConfig: GitConfig,
-    private val objectMapper: ObjectMapper
+    private val objectMapper: ObjectMapper,
+    private val gitTokenDao: GitTokenDao,
+    private val dslContext: DSLContext
 ) : IGitService {
 
     companion object {
@@ -138,6 +148,15 @@ class GitService @Autowired constructor(
 
     @Value("\${scm.git.public.secret}")
     private lateinit var gitPublicSecret: String
+
+    @Value("\${scm.git.queryCommitNumLimit.min:1}")
+    private var min: Int = 1
+
+    @Value("\${scm.git.queryCommitNumLimit.max:10}")
+    private var max: Int = 10
+
+    @Value("\${aes.git:#{null}}")
+    private val aesKey: String = ""
 
     private val redirectUrl = gitConfig.redirectUrl
 
@@ -2106,5 +2125,70 @@ class GitService @Autowired constructor(
             .setCredentialsProvider(credentialsProvider)
             .call()
         cloneRepo.close()
+    }
+
+    override fun getRecentGitCommitMessages(
+        userId: String,
+        branch: String?,
+        codeSrc: String?,
+        gitProjectId: Long?,
+        commitNumber: Int,
+        prefixes: String?,
+        keywords: String?
+    ): Result<String> {
+        if (commitNumber !in min..max) {
+            throw ErrorCodeException(
+                errorCode = ERROR_QUERY_COUNT_RANGE,
+                params = arrayOf(min.toString(), max.toString()),
+                defaultMessage = "commitNumber must be" +
+                        " between $min and $max, but got $commitNumber"
+            )
+        }
+        val tokenRecord = gitTokenDao.getAccessToken(dslContext, userId) ?: throw ErrorCodeException(
+            errorCode = NOT_AUTHORIZED_BY_OAUTH, params = arrayOf(userId)
+        )
+        val accessToken = BkCryptoUtil.decryptSm4OrAes(aesKey, tokenRecord.accessToken)
+        val projectId = gitProjectId ?: run {
+            if (codeSrc.isNullOrBlank()) {
+                throw ErrorCodeException(
+                    errorCode = PARAMETER_IS_NULL,
+                    params = arrayOf("codeSrc"),
+                    defaultMessage = "codeSrc parameter is invalid"
+                )
+            }
+            val projectName = GitUtils.getProjectName(codeSrc)
+            getGitProjectInfo(projectName, accessToken, TokenTypeEnum.OAUTH)
+                .data?.id ?: throw ErrorCodeException(
+                errorCode = CommonMessageCode.ENGINEERING_REPO_NOT_EXIST,
+                params = arrayOf(projectName),
+                defaultMessage = "Cannot find git projectId for codeSrc($codeSrc)"
+            )
+        }
+        val commits = getCommits(
+            gitProjectId = projectId,
+            branch = branch ?: MASTER,
+            token = accessToken,
+            tokenType = TokenTypeEnum.OAUTH,
+            page = 1,
+            perPage = commitNumber,
+            since = null,
+            until = null,
+            filePath = null
+        ).data ?: emptyList()
+
+        return Result(processCommits(commits = commits, prefixes = prefixes, keywords = keywords))
+    }
+
+    fun processCommits(commits: List<Commit>, prefixes: String?, keywords: String?): String {
+        // 根据请求条件过滤
+        val filteredCommits = commits.filter { commit ->
+            !GitUtils.isFilterCommitMessage(message = commit.message, prefixes = prefixes, keywords = keywords)
+        }
+
+        return filteredCommits.mapIndexed { index, commit ->
+            val message = commit.message ?: ""
+            val trimmedMessage = message.trimEnd('\n')
+            "${index + 1}. $trimmedMessage\n"
+        }.joinToString("")
     }
 }

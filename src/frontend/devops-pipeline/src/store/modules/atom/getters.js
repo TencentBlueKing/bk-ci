@@ -18,6 +18,7 @@
  */
 
 import { buildEnvMap, jobConst, semverVersionKeySet, VERSION_STATUS_ENUM } from '@/utils/pipelineConst'
+import { buildPipelineSnapshot, isPipelineModified } from '@/utils/pipelineSnapshotUtil'
 import Vue from 'vue'
 import { getAtomModalKey, isCodePullAtom, isNewAtomTemplate, isNormalContainer, isTriggerContainer, isVmContainer } from './atomUtil'
 import { buildNoRules, defaultBuildNo, platformList } from './constants'
@@ -28,14 +29,17 @@ function isSkip (status) {
 }
 
 export default {
+    instanceFromTemplate: state => state.pipelineInfo?.instanceFromTemplate ?? false,
+    isTemplate: state => state.pipelineInfo?.isTemplate ?? false,
     isCurPipelineLocked: state => {
         return state.pipelineInfo?.locked ?? false
     },
+    // 这个仅在编辑页中判断是否可以进行草稿差异对比以及版本列表操作栏编辑和回滚按钮展示的判断
     hasDraftPipeline: state => {
         return state.pipelineInfo?.version !== state.pipelineInfo?.releaseVersion
     },
     getDraftBaseVersionName: (state, getters) => {
-        return getters.hasDraftPipeline ? state.pipelineInfo?.baseVersionName : '--'
+        return getters.hasDraftPipeline ? (state.pipelineInfo?.baseVersionName ?? '--') : '--'
     },
     pipelineHistoryViewable: state => {
         return [
@@ -185,8 +189,25 @@ export default {
         })
     },
     getEditingElementPos: state => state.editingElementPos,
-    isEditing: state => {
-        return state.isPipelineEditing
+    isEditing: (state, getters, rootState) => {
+        if (!state.originalPipelineSnapshot) {
+            return false
+        }
+        
+        // 显式访问响应式属性，让 Vue 追踪依赖
+        const _ = {
+            pipeline: state.pipeline,
+            pipelineSetting: state.pipelineSetting,
+            pipelineWithoutTrigger: state.pipelineWithoutTrigger,
+            mode: rootState.pipelineMode
+        }
+        
+        // 构建当前快照
+        const currentSnapshot = buildPipelineSnapshot(state, _.mode)
+        
+        // 直接深度对比快照
+        const result = isPipelineModified(currentSnapshot, state.originalPipelineSnapshot)
+        return result
     },
     checkPipelineInvalid: (state, getters) => (stages, pipelineSetting) => {
         try {
@@ -208,8 +229,8 @@ export default {
 
             stages.forEach((stage, index) => {
                 if (index !== 0 && stage.checkIn) {
-                    const { notifyType = [], notifyGroup = [] } = stage && stage.checkIn
-                    if (notifyType.length && notifyType.includes('WEWORK_GROUP') && !notifyGroup.length) {
+                    const { notifyType = [], notifyGroup = [], manualTrigger } = stage && stage.checkIn
+                    if (manualTrigger && notifyType.length && notifyType.includes('WEWORK_GROUP') && !notifyGroup.length) {
                         Vue.set(stage.checkIn, 'isReviewError', true)
                         throw new Error(window.pipelineVue.$i18n && window.pipelineVue.$i18n.t('storeMap.correctPipeline'))
                     }
@@ -307,7 +328,7 @@ export default {
     },
     getAllElements: state => stages => {
         const allElements = []
-        stages.map(stage => stage.containers.map(container => allElements.splice(0, 0, ...container.elements)))
+        stages.map(stage => stage?.containers?.map(container => allElements.splice(0, 0, ...container.elements)))
         return allElements
     },
     getAllContainers: state => stages => {

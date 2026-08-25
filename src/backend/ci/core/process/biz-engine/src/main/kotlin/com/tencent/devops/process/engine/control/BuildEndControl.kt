@@ -40,12 +40,15 @@ import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatch
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.event.enums.PipelineBuildStatusBroadCastEventType
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
+import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildHistoryDataClearEvent
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCastEvent
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.container.AgentReuseMutex
 import com.tencent.devops.common.pipeline.container.Container
+import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.pipeline.pojo.BuildNo
 import com.tencent.devops.common.pipeline.pojo.BuildNoType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentDispatch
 import com.tencent.devops.common.pipeline.utils.BuildStatusSwitcher
@@ -67,7 +70,6 @@ import com.tencent.devops.process.engine.pojo.event.PipelineBuildAtomTaskEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildFinishEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildStartEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildWebSocketPushEvent
-import com.tencent.devops.process.engine.service.PipelineBuildDetailService
 import com.tencent.devops.process.engine.service.PipelineRedisService
 import com.tencent.devops.process.engine.service.PipelineRuntimeExtService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
@@ -84,10 +86,10 @@ import com.tencent.devops.process.utils.PIPELINE_TIME_DURATION
 import com.tencent.devops.process.utils.PIPELINE_TIME_END
 import io.micrometer.core.instrument.Counter
 import io.micrometer.core.instrument.MeterRegistry
-import java.time.LocalDateTime
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
 
 /**
  * 构建控制器
@@ -101,7 +103,6 @@ class BuildEndControl @Autowired constructor(
     private val pipelineRuntimeService: PipelineRuntimeService,
     private val pipelineTaskService: PipelineTaskService,
     private val pipelineStageService: PipelineStageService,
-    private val pipelineBuildDetailService: PipelineBuildDetailService,
     private val containerBuildRecordService: ContainerBuildRecordService,
     private val pipelineBuildRecordService: PipelineBuildRecordService,
     private val pipelineRuntimeExtService: PipelineRuntimeExtService,
@@ -116,6 +117,11 @@ class BuildEndControl @Autowired constructor(
         private const val FAIL_PIPELINE_COUNT = "fail_pipeline_count"
         private const val SUCCESS_PIPELINE_COUNT = "success_pipeline_count"
         private const val FINISH_PIPELINE_COUNT = "finish_pipeline_count"
+        // 流水线构建历史数据清理事件 dispatch 端节流 key 前缀
+        private const val PIPELINE_BUILD_HISTORY_DATA_CLEAR_DISPATCH_KEY_PREFIX =
+            "pipeline_build_history_data_clear_dispatch:"
+        // dispatch 端节流窗口(秒)：同一流水线在该窗口内仅派发一次清理事件，控制 MQ 入队速率，避免 MQ 入队速率过高
+        private const val PIPELINE_BUILD_HISTORY_DATA_CLEAR_DISPATCH_EXPIRED_SECOND = 300L
         private val LOG = LoggerFactory.getLogger(BuildEndControl::class.java)
     }
 
@@ -172,7 +178,7 @@ class BuildEndControl @Autowired constructor(
             buildStatus = buildStatus,
             errorInfoList = buildInfo.errorInfoList,
             errorMsg = errorMsg,
-            executeCount = buildInfo.executeCount ?: 1
+            executeCount = buildInfo.executeCount
         )
 
         // 记录本流水线最后一次构建的状态
@@ -181,7 +187,7 @@ class BuildEndControl @Autowired constructor(
             latestRunningBuild = LatestRunningBuild(
                 projectId = projectId, pipelineId = pipelineId, buildId = buildId,
                 userId = buildInfo.startUser, status = buildStatus, taskCount = buildInfo.taskCount,
-                endTime = endTime, buildNum = buildInfo.buildNum, executeCount = buildInfo.executeCount ?: 1,
+                endTime = endTime, buildNum = buildInfo.buildNum, executeCount = buildInfo.executeCount,
                 debug = buildInfo.debug
             ),
             currentBuildStatus = buildInfo.status,
@@ -193,7 +199,11 @@ class BuildEndControl @Autowired constructor(
         val retryFlag = buildInfo.executeCount?.let { it > 1 } == true
         if (!retryFlag && !buildStatus.isCancel() && !buildStatus.isFailure()) {
             setBuildNoWhenBuildSuccess(
-                projectId = projectId, pipelineId = pipelineId, buildId = buildId, debug = buildInfo.debug
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                debug = buildInfo.debug,
+                executeCount = buildInfo.executeCount
             )
         }
 
@@ -211,6 +221,7 @@ class BuildEndControl @Autowired constructor(
                 buildId = buildId,
                 likeStr = "%${AgentReuseMutex.CONTEXT_KEY_SUFFIX}"
             ).forEach { agentId ->
+                LOG.info("ENGINE|$buildId|$source|BUILD_FINISH|$pipelineId|UNLOCK_REUSE_LOCK|$agentId")
                 RedisLockByValue(
                     redisOperation = redisOperation,
                     lockKey = AgentReuseMutex.genAgentReuseMutexLockKey(projectId, agentId),
@@ -240,7 +251,7 @@ class BuildEndControl @Autowired constructor(
         buildDurationTime(buildInfo.startTime ?: 0L)
         callBackParentPipeline(buildInfo)
 
-        // 广播结束事件
+        // 广播结束事件（将构建的渠道信息注入事件，确保下游MQ消费者能正确恢复ChannelContext）
         pipelineEventDispatcher.dispatch(
             PipelineBuildFinishBroadCastEvent(
                 source = "build_finish_$buildId", projectId = projectId, pipelineId = pipelineId,
@@ -249,7 +260,7 @@ class BuildEndControl @Autowired constructor(
                 errorInfoList = if (buildInfo.errorInfoList != null) {
                     JsonUtil.toJson(buildInfo.errorInfoList!!)
                 } else null
-            ),
+            ).apply { channelCode = buildInfo.channelCode.name },
             // build 结束
             PipelineBuildStatusBroadCastEvent(
                 source = source,
@@ -292,6 +303,32 @@ class BuildEndControl @Autowired constructor(
             )
         )
 
+        // 异步驱动misc服务检查并清理当前流水线的过期/超量构建记录
+        // 高频构建场景下不必每次构建结束都派发，dispatch 端先做一次轻量节流，
+        // 同一流水线在 PIPELINE_BUILD_HISTORY_DATA_CLEAR_DISPATCH_EXPIRED_SECOND 内只派发一次，
+        // 减少 MQ 入队压力；下游监听器自身仍会用流水线级 RedisLock 串行化处理。
+        try {
+            val throttleKey = "$PIPELINE_BUILD_HISTORY_DATA_CLEAR_DISPATCH_KEY_PREFIX$projectId:$pipelineId"
+            if (redisOperation.setIfAbsent(
+                    key = throttleKey,
+                    value = "1",
+                    expiredInSecond = PIPELINE_BUILD_HISTORY_DATA_CLEAR_DISPATCH_EXPIRED_SECOND
+                )
+            ) {
+                pipelineEventDispatcher.dispatch(
+                    PipelineBuildHistoryDataClearEvent(
+                        source = BuildEndControl::class.java.simpleName,
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        userId = userId
+                    )
+                )
+            }
+        } catch (ignored: Throwable) {
+            // 这里 catch 住所有异常，避免清理事件派发失败影响构建结束主流程
+            LOG.warn("ENGINE|$buildId|dispatch PipelineBuildHistoryDataClearEvent failed", ignored)
+        }
+
         // 发送metrics统计数据消息
         metricsService.postMetricsData(buildInfo, model)
         // 记录日志
@@ -299,12 +336,24 @@ class BuildEndControl @Autowired constructor(
         return buildInfo
     }
 
-    private fun setBuildNoWhenBuildSuccess(projectId: String, pipelineId: String, buildId: String, debug: Boolean) {
-        val model = pipelineBuildDetailService.getBuildModel(projectId, buildId) ?: return
-        val triggerContainer = model.getTriggerContainer()
-        val buildNoObj = triggerContainer.buildNo ?: return
-
-        if (buildNoObj.buildNoType == BuildNoType.SUCCESS_BUILD_INCREMENT) {
+    private fun setBuildNoWhenBuildSuccess(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        debug: Boolean,
+        executeCount: Int
+    ) {
+        val triggerRecordContainer = containerBuildRecordService.getLatestRecord(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            containerId = "0",
+            executeCount = executeCount
+        ) ?: return
+        val buildNoMap =
+            triggerRecordContainer.containerVar[TriggerContainer::buildNo.name] as? Map<*, *> ?: return
+        val buildNoTypeStr = buildNoMap[BuildNo::buildNoType.name]?.toString()
+        if (buildNoTypeStr == BuildNoType.SUCCESS_BUILD_INCREMENT.name) {
             // 使用分布式锁防止并发更新
             PipelineBuildNoLock(redisOperation = redisOperation, pipelineId = pipelineId).use { buildNoLock ->
                 buildNoLock.lock()
@@ -441,12 +490,18 @@ class BuildEndControl @Autowired constructor(
             }
 
             LOG.info("ENGINE|$buildId|$source|FETCH_QUEUE|next build: ${nextBuild.buildId} ${nextBuild.status}")
-            val model = pipelineBuildDetailService.getBuildModel(nextBuild.projectId, nextBuild.buildId)
-                ?: throw ErrorCodeException(
-                    errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
-                    params = arrayOf(nextBuild.buildId)
-                )
-            val triggerContainer = model.getTriggerContainer()
+            val triggerRecordContainer = containerBuildRecordService.getLatestRecord(
+                projectId = nextBuild.projectId,
+                pipelineId = nextBuild.pipelineId,
+                buildId = nextBuild.buildId,
+                containerId = "0",
+                executeCount = nextBuild.executeCount
+            ) ?: throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID, params = arrayOf(nextBuild.buildId)
+            )
+            val buildNoMap =
+                triggerRecordContainer.containerVar[TriggerContainer::buildNo.name] as? Map<*, *>
+            val buildNoTypeStr = buildNoMap?.get(BuildNo::buildNoType.name)?.toString()
             pipelineEventDispatcher.dispatch(
                 PipelineBuildStartEvent(
                     source = "build_finish_$buildId",
@@ -458,8 +513,8 @@ class BuildEndControl @Autowired constructor(
                     status = nextBuild.status,
                     actionType = ActionType.START,
                     executeCount = nextBuild.executeCount,
-                    buildNoType = triggerContainer.buildNo?.buildNoType
-                )
+                    buildNoType = buildNoTypeStr?.let { BuildNoType.valueOf(it) }
+                ).apply { this.channelCode = this@startNextBuild.channelCode }
             )
         }
     }

@@ -3,6 +3,7 @@ package com.tencent.devops.auth.pojo.vo
 import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum
 import com.tencent.devops.auth.pojo.BkUserDeptInfo
 import com.tencent.devops.auth.pojo.BkUserExtras
+import com.tencent.devops.auth.pojo.BkUserInfo
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "用户和组织信息返回实体")
@@ -21,10 +22,14 @@ data class UserAndDeptInfoVo(
     val deptInfo: List<BkUserDeptInfo>? = null,
     @get:Schema(title = "用户额外详细信息")
     val extras: BkUserExtras? = null,
+    @get:Schema(title = "上级")
+    val leader: List<BkUserInfo>? = null,
     @get:Schema(title = "水印信息")
     val waterMark: String? = null,
     @get:Schema(title = "是否是项目成员")
     val belongProjectMember: Boolean? = null,
     @get:Schema(title = "用户时区（IANA，来自蓝鲸用户管理）")
-    val timeZone: String? = null
+    val timeZone: String? = null,
+    @get:Schema(title = "是否离职")
+    val departed: Boolean? = null
 )

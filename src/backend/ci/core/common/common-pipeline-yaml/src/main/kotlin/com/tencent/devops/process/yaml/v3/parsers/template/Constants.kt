@@ -32,6 +32,8 @@ object Constants {
 
     // 引用模板的关键字
     const val TEMPLATE_KEY = "template"
+    const val TEMPLATE_KEY_NAME = "template-id"
+    const val TEMPLATE_KEY_ID = "template-name"
     const val REF = "ref"
 
     //  模板变量关键字
@@ -65,7 +67,7 @@ object Constants {
 //        const val TEMPLATE_DEEP_BEYOND = "[%s]The template nesting depth exceeds the threshold [$MAX_TEMPLATE_DEEP]"
 //        const val TEMPLATE_FORMAT_ERROR = "[%s]Template YAML does not meet the specification"
     const val YAML_FORMAT_ERROR = "[%s] Format error: %s"
-    const val ATTR_MISSING_ERROR = "[%s]Required attributes [%s] are missing"
+    const val ATTR_MISSING_ERROR = "[%s] Required attributes [%s] are missing"
 
     //        const val TEMPLATE_KEYWORDS_ERROR = "[%s]Template YAML does not meet the specification. " +
 //            "The %s template can only contain parameters, resources and %s keywords"

@@ -43,6 +43,7 @@ import com.tencent.devops.common.event.enums.PipelineBuildStatusBroadCastEventTy
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildReviewBroadCastEvent
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCastEvent
 import com.tencent.devops.common.log.utils.BuildLogPrinter
+import com.tencent.devops.common.notify.enums.NotifyType
 import com.tencent.devops.common.notify.utils.NotifyUtils
 import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
 import com.tencent.devops.common.pipeline.enums.BuildStatus
@@ -150,7 +151,7 @@ class ManualReviewTaskAtom(
         taskBuildRecordService.updateTaskRecord(
             projectId = projectCode, pipelineId = pipelineId, buildId = buildId,
             taskId = taskId, executeCount = task.executeCount ?: 1, buildStatus = null,
-            taskVar = mapOf(ManualReviewUserTaskElement::reviewUsers.name to reviewUsers),
+            taskVar = mapOf(ManualReviewUserTaskElement::actualReviewUsers.name to reviewUsersList),
             operation = "manualReviewTaskStart#${task.taskId}",
             timestamps = mapOf(
                 BuildTimestampType.TASK_REVIEW_PAUSE_WAITING to
@@ -192,6 +193,9 @@ class ManualReviewTaskAtom(
         val pipelineName = runVariables[PIPELINE_NAME] ?: pipelineId
         val projectName = runVariables[PROJECT_NAME_CHINESE] ?: projectCode
         val buildNum = runVariables[PIPELINE_BUILD_NUM] ?: "1"
+        val notifyType = NotifyUtils.checkNotifyType(param.notifyType)
+        // 勾选企业微信群消息时，群通知通过 mentioned_list @审核人（receivers）
+        val mentionReceivers = notifyType.contains(NotifyType.WEWORK_GROUP.name)
         pipelineEventDispatcher.dispatch(
             PipelineBuildReviewBroadCastEvent(
                 source = "ManualReviewTaskAtom",
@@ -206,7 +210,7 @@ class ManualReviewTaskAtom(
                 source = "ManualReviewTaskAtom", projectId = projectCode, pipelineId = pipelineId,
                 userId = task.starter, buildId = buildId,
                 receivers = reviewUsersList,
-                notifyType = NotifyUtils.checkNotifyType(param.notifyType),
+                notifyType = notifyType,
                 titleParams = mutableMapOf(
                     "content" to notifyTitle
                 ),
@@ -232,7 +236,8 @@ class ManualReviewTaskAtom(
                     "reviewUsers" to reviewUsers,
                     "signature" to ShaUtils.sha256(projectCode + buildId + (param.id ?: "") + appSecret)
                 ),
-                markdownContent = param.markdownContent
+                markdownContent = param.markdownContent,
+                mentionReceivers = mentionReceivers
             )
         )
 

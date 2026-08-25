@@ -181,7 +181,6 @@ object CommonMessageCode {
     const val YAML_NOT_VALID = "2100130" // yaml不合法 {0}
     const val GIT_INVALID_PRIVATE_KEY = "2100131" // 不支持的SSH私钥格式，仅支持rsa格式私钥
     const val THIRD_PARTY_SERVICE_OPERATION_FAILED = "2100132" // 第三方服务[{0}]操作失败，失败详情：{1}
-    const val MR_ACCEPT_EVENT_NOT_SUPPORT_TRANSFER = "2100133" // mr accept事件类型不支持code转换
 
     const val SVN_TOKEN_FAIL = "2100135" // SVN Token 不正确
     const val SVN_TOKEN_EMPTY = "2100136" // SVN Token 为空, 请检查代码库的凭证类型
@@ -189,9 +188,25 @@ object CommonMessageCode {
     const val CUSTOM_MESSAGE_EXCEPTION = "2100138" // 自定义错误信息异常
     const val ERROR_ARCHIVE_PAC_PIPELINE_YAML_EXIST = "2100139" // 已开启PAC模式的流水线[{0}]进行归档需将默认分支上的yaml文件删除
     const val ERROR_USER_NOT_EXIST_IN_PROJECT = "2100140" // 项目{0}中不存在用户{1}
+    const val ERROR_QUERY_COUNT_RANGE = "2100142" // 查询条数需要在{}到{}之间
+    const val ERROR_PERMISSION_NOT_PROJECT_MANAGER = "2100143" // 用户{0}非项目{1}管理员
+
+    // YAML JSON Schema 校验错误的友好化描述
+    const val YAML_SCHEMA_REQUIRED = "2100144" // [{0}] 缺少必填字段 [{1}]
+    // 覆盖 additionalProperties / not(可识别到字段名) 两种"不受支持关键字"场景
+    const val YAML_SCHEMA_UNSUPPORTED_FIELD = "2100145" // [{0}] 不支持的字段 [{1}]，请检查是否用错位置
+    // 覆盖 not(未能识别到具体字段) 的"整段配置不受支持"场景
+    const val YAML_SCHEMA_UNSUPPORTED_CONFIG = "2100146" // [{0}] 不支持的配置，请检查是否与当前上下文匹配
+    const val YAML_SCHEMA_ENUM = "2100147" // [{0}] 取值不在允许范围 [{1}]
+    const val YAML_SCHEMA_TYPE = "2100148" // [{0}] 字段类型错误，期望类型 [{1}]
+    const val YAML_SCHEMA_PATTERN = "2100149" // [{0}] 值格式不符合规则 [{1}]
+    const val YAML_SCHEMA_LENGTH = "2100150" // [{0}] 长度不符合要求 ({1}={2})
+    const val YAML_SCHEMA_RANGE = "2100151" // [{0}] 数值不符合要求 ({1}={2})
+    const val MR_ACCEPT_EVENT_NOT_SUPPORT_TRANSFER = "2100152" // mr accept事件类型不支持code转换
     const val BK_CONTAINER_TIMED_OUT = "bkContainerTimedOut" // 创建容器超时
     const val BK_CREATION_FAILED_EXCEPTION_INFORMATION = "bkCreationFailedExceptionInformation" // 创建失败，异常信息
 
+    const val BK_JOB_MATRIX_STR_ERROR = "bkJobMatrixStrError" // 当前矩阵YAML/JSON配置有误，请仔细检查格式、语法是否符合要求。当前配置为: {0}
     const val BK_FILE_NAME = "bkFileName" // 文件名
     const val BK_BELONG_TO_THE_PROJECT = "bkBelongToTheProject" // 所属项目
     const val BK_OPERATING = "bkOperating" // 操作

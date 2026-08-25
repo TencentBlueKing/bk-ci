@@ -29,6 +29,7 @@ package com.tencent.devops.auth.resources.service
 
 import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum
 import com.tencent.devops.auth.api.service.ServiceDeptResource
+import com.tencent.devops.auth.pojo.BkUserInfo
 import com.tencent.devops.auth.pojo.vo.DeptInfoVo
 import com.tencent.devops.auth.pojo.vo.UserAndDeptInfoVo
 import com.tencent.devops.auth.service.DeptService
@@ -61,5 +62,13 @@ class ServiceDeptResourceImpl @Autowired constructor(
         tenantId: String?
     ): Result<List<UserAndDeptInfoVo>> {
         return Result(deptService.listMemberInfos(memberIds, ManagerScopesEnum.USER, tenantId))
+    }
+
+    override fun getLeader(userId: String): Result<BkUserInfo?> {
+        return Result(deptService.getLeader(userId))
+    }
+
+    override fun getUserDeptIds(userId: String): Result<Set<String>> {
+        return Result(deptService.getUserDeptInfo(userId))
     }
 }

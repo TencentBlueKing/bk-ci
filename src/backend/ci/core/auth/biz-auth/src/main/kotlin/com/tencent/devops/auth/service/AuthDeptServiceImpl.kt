@@ -232,7 +232,8 @@ class AuthDeptServiceImpl(
         return if (departedMembersCache.getIfPresent(userId) == true) {
             true
         } else {
-            getUserInfo(userId, tenantId) == null
+            val userInfo = getUserInfo(userId, tenantId)
+            userInfo == null || userInfo.departed == true
         }.also {
             if (it) {
                 departedMembersCache.put(userId, true)
@@ -282,6 +283,10 @@ class AuthDeptServiceImpl(
             logger.warn("User does not exist $userId |$ex")
             null
         }
+    }
+
+    override fun getLeader(userId: String): BkUserInfo? {
+        return getUserInfoFromExternal(userId, null)?.leader?.firstOrNull()
     }
 
     private fun fetchMemberInfos(
@@ -338,7 +343,8 @@ class AuthDeptServiceImpl(
                 } ?: emptyList()
             },
             extras = this.extras,
-            timeZone = this.extras?.timeZone
+            timeZone = this.extras?.timeZone,
+            leader = this.leader
         )
     }
 
@@ -359,7 +365,8 @@ class AuthDeptServiceImpl(
                 name = it.userId,
                 displayName = it.userName,
                 type = ManagerScopesEnum.USER,
-                deptInfo = it.departments
+                deptInfo = it.departments,
+                departed = it.departed
             )
         } ?: getUserInfoFromExternal(userId, null).also {
             if (it != null) userInfoCache.put(userId, it)
@@ -484,6 +491,7 @@ class AuthDeptServiceImpl(
 
     fun getUserDeptTreeIds(responseData: String): Set<String> {
         val deptInfo = JsonUtil.to(responseData, object : TypeReference<List<UserDeptTreeInfo>>() {})
+        if (deptInfo.isEmpty()) return emptySet()
         val deptTreeId = mutableSetOf<String>()
         val deptTree = deptInfo[0]
         deptTreeId.add(deptTree.id)

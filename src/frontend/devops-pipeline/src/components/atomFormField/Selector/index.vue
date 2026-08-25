@@ -23,6 +23,7 @@
 </template>
 
 <script>
+    import { isObject, isShallowEqual } from '@/utils/util'
     import atomFieldMixin from '../atomFieldMixin'
     export default {
         name: 'selector',
@@ -76,11 +77,13 @@
             },
             searchUrl: String,
             replaceKey: String,
+            onSearch: Function,
             dataPath: String
         },
         data () {
             return {
-                listData: []
+                listData: [],
+                timeId: null
             }
         },
         computed: {
@@ -100,7 +103,7 @@
                 const props = {
                     value: this.value,
                     loading: this.isLoading,
-                    disabled: this.disabled || this.readOnly,
+                    disabled: this.disabled || (this.readOnly && this.readOnlyCheck),
                     searchable: this.searchable,
                     multiple: this.multiSelect,
                     clearable: this.clearable,
@@ -114,7 +117,11 @@
                     'display-key': this.displayKey,
                     'show-select-all': this.showSelectAll
                 }
-                if (this.searchUrl) props['remote-method'] = this.remoteMethod
+                if (typeof this.onSearch === 'function') {
+                    props['remote-method'] = this.onSearch
+                } else if (this.searchUrl) {
+                    props['remote-method'] = this.remoteMethod
+                }
                 return props
             }
         },
@@ -126,19 +133,28 @@
                 immediate: true
             }
         },
+        beforeDestroy () {
+            clearTimeout(this.timeId)
+        },
         methods: {
             onChange (val, oldVal) {
-                if (val !== oldVal) {
-                    this.handleChange(this.name, val)
-                }
+                const isSameObject = isObject(val) && isObject(oldVal) && isShallowEqual(val, oldVal)
+                const isSameArray = Array.isArray(val)
+                    && Array.isArray(oldVal)
+                    && val.length === oldVal.length
+                    && val.every((item, index) => item === oldVal[index]
+                        || (isObject(item) && isObject(oldVal[index]) && isShallowEqual(item, oldVal[index])))
+                if (val === oldVal || isSameObject || isSameArray) return
+
+                this.handleChange(this.name, val)
             },
             editItem (index) {
                 this.edit(index)
             },
             remoteMethod (name) {
                 return new Promise((resolve, reject) => {
-                    clearTimeout(this.remoteMethod.timeId)
-                    this.remoteMethod.timeId = setTimeout(async () => {
+                    clearTimeout(this.timeId)
+                    this.timeId = setTimeout(async () => {
                         try {
                             const regExp = new RegExp(this.replaceKey, 'g')
                             const url = this.searchUrl.replace(regExp, name)

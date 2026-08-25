@@ -144,7 +144,7 @@ interface ApigwAtomResourceV3 {
         tenantId: String? = null,
         @Parameter(description = "渠道类型", required = false)
         @QueryParam("channelCode")
-        channelCode: ChannelCode? = ChannelCode.BS,
+        channelCode: ChannelCode? = ChannelCode.getRequestChannelCode(),
         @Parameter(description = "安装插件到项目请求报文体", required = true)
         installAtomReq: InstallAtomReq
     ): Result<Boolean>

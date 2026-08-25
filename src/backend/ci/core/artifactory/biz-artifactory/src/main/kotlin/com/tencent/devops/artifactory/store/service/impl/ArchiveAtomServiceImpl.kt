@@ -43,6 +43,7 @@ import com.tencent.devops.common.api.constant.KEY_SHA_CONTENT
 import com.tencent.devops.common.api.constant.STATIC
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.FileUtil
 import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.archive.client.BkRepoClient
@@ -150,14 +151,15 @@ abstract class ArchiveAtomServiceImpl : ArchiveAtomService {
                     )
                 }
                 val packageFilePathPrefix = buildAtomArchivePath(projectCode, atomCode, version)
-                val packageFile = File("$packageFilePathPrefix/$pkgLocalPath")
+                // pkgLocalPath 来自 task.json，仍由外部输入控制，强制 canonical-path 校验防止穿越
+                val packageFile = FileUtil.resolveSafeChildFile(packageFilePathPrefix, pkgLocalPath)
                 val packageFileInfo = PackageFileInfo(
                     packageFileName = packageFile.name,
                     packageFilePath = "$BK_CI_ATOM_DIR/$pkgLocalPath",
                     packageFileSize = packageFile.length(),
-                    shaContent = packageFile.inputStream().use { ShaUtils.sha1InputStream(it) }
+                    sha256Content = packageFile.inputStream().use { ShaUtils.sha256InputStream(it) }
                 )
-                atomEnvRequest.shaContent = packageFileInfo.shaContent
+                atomEnvRequest.shaContent = packageFileInfo.sha256Content
                 atomEnvRequest.pkgName = packageFileInfo.packageFileName
                 packageFileInfos.add(packageFileInfo)
             }
@@ -220,7 +222,7 @@ abstract class ArchiveAtomServiceImpl : ArchiveAtomService {
                     dslContext = context,
                     userId = userId,
                     fileId = fileId,
-                    props = mapOf(KEY_SHA_CONTENT to packageFileInfo.shaContent)
+                    props = mapOf(KEY_SHA_CONTENT to packageFileInfo.sha256Content)
                 )
             }
         }
@@ -295,7 +297,8 @@ abstract class ArchiveAtomServiceImpl : ArchiveAtomService {
         atomCode: String,
         version: String
     ) {
-        val fileName = disposition.fileName
+        // multipart filename 由客户端控制，先 basename 化阻断 ../、绝对路径等路径穿越输入
+        val fileName = FileUtil.getSafeFileName(disposition.fileName)
         val index = fileName.lastIndexOf(".")
         val fileType = fileName.substring(index + 1)
         val file = Files.createTempFile(UUIDUtil.generate(), ".$fileType").toFile()
@@ -351,7 +354,9 @@ abstract class ArchiveAtomServiceImpl : ArchiveAtomService {
         content: String
     ): Boolean {
         val atomArchivePath = buildAtomArchivePath(projectCode, atomCode, version)
-        val file = File(atomArchivePath, fileName)
+        // fileName 由 PUT /atoms/{atomCode}/file/content 接口的请求体传入，外部可控，
+        // 必须做 canonical-path 校验防止穿越写出 atomArchivePath
+        val file = FileUtil.resolveSafeChildFile(atomArchivePath, fileName)
         try {
             file.printWriter().use {
                 it.write(content)

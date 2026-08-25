@@ -269,11 +269,7 @@
                 :width="tableWidthMap.creator"
                 :label="$t('creator')"
                 prop="creator"
-            >
-                <template v-slot="props">
-                    <bk-user-display-name :user-id="props.row.creator" />
-                </template>
-            </bk-table-column>
+            />
         </template>
         <template v-else-if="isDeleteView">
             <bk-table-column
@@ -304,11 +300,7 @@
                 key="lastModifyUser"
                 :label="$t('restore.deleter')"
                 prop="lastModifyUser"
-            >
-                <template v-slot="props">
-                    <bk-user-display-name :user-id="props.row.lastModifyUser" />
-                </template>
-            </bk-table-column>
+            ></bk-table-column>
         </template>
         <template v-else>
             <!-- 最近执行 -->
@@ -317,6 +309,7 @@
                 :width="tableWidthMap.latestExec"
                 min-width="180"
                 :label="$t('latestExec')"
+                :render-header="latestExecHeader"
                 prop="latestExec"
             >
                 <span
@@ -334,14 +327,14 @@
                     <div class="pipeline-exec-msg">
                         <template v-if="props.row.latestBuildNum">
                             <span
-                                class="pipeline-cell-link pipeline-exec-msg-title"
+                                class="pipeline-exec-msg-title"
                                 :disabled="props.row.permissions && !props.row.permissions.canView"
                                 v-perm="{
                                     hasPermission: (props.row.permissions && props.row.permissions.canView) || isArchiveView,
                                     disablePermissionApi: true,
                                     permissionData: {
                                         projectId,
-                                        resourceType: 'pipeline',
+                                        resourceType: RESOURCE_TYPE.PIPELINE,
                                         resourceCode: props.row.pipelineId,
                                         action: RESOURCE_ACTION.VIEW
                                     }
@@ -349,9 +342,27 @@
                                 :event="props.row.permissions && props.row.permissions.canView ? 'click' : ''"
                                 @click="$router.push(props.row.latestBuildRoute)"
                             >
-                                <b>#{{ props.row.latestBuildNum }}</b>
-                                |
-                                <span>{{ props.row.lastBuildMsg }}</span>
+                                <b class="pipeline-cell-link">#{{ props.row.latestBuildNum }}</b>
+                                <b
+                                    class="pipeline-cell-link"
+                                    style="width: 10px; text-align: center;"
+                                >|</b>
+                                <span
+                                    v-if="!latestExecIsStageProgress || isArchiveView"
+                                    class="last-build-msg"
+                                >{{ props.row.lastBuildMsg }}</span>
+                                <span
+                                    v-else
+                                    style="display: inline-block;"
+                                >
+                                    <stage-steps
+                                        class="latest-stage-status"
+                                        v-if="props.row.latestBuildStageStatus"
+                                        :steps="props.row.latestBuildStageStatus"
+                                        :build-id="props.row.latestBuildId"
+                                    ></stage-steps>
+                                    <span v-else>--</span>
+                                </span>
                             </span>
                             <p class="pipeline-exec-msg-desc">
                                 <span class="desc">
@@ -359,7 +370,7 @@
                                         :name="props.row.startType"
                                         size="16"
                                     />
-                                    <bk-user-display-name :user-id="props.row.latestBuildUserId" />
+                                    <span>{{ props.row.latestBuildUserId }}</span>
                                 </span>
                                 <span
                                     v-if="props.row.webhookAliasName"
@@ -425,26 +436,21 @@
                 prop="updateTime"
                 sort
             >
-                <template v-slot="props">
-                    <div
-                        class="latest-build-multiple-row"
-                        v-if="!props.row.delete || isArchiveView"
-                    >
-                        <bk-user-display-name :user-id="props.row.updater" />
-                        <p class="desc"><time-display :value="props.row.updateTime" /></p>
-                    </div>
-                </template>
+                <div
+                    class="latest-build-multiple-row"
+                    v-if="!props.row.delete || isArchiveView"
+                    slot-scope="props"
+                >
+                    <p>{{ props.row.updater }}</p>
+                    <p class="desc">{{ props.row.updateDate }}</p>
+                </div>
             </bk-table-column>
             <bk-table-column
                 v-if="allRenderColumnMap.creator"
                 :width="tableWidthMap.creator"
                 :label="$t('creator')"
                 prop="creator"
-            >
-                <template v-slot="props">
-                    <bk-user-display-name :user-id="props.row.creator" />
-                </template>
-            </bk-table-column>
+            />
             <bk-table-column
                 v-if="allRenderColumnMap.createTime"
                 :width="tableWidthMap.createTime"
@@ -526,7 +532,7 @@
                                 disablePermissionApi: true,
                                 permissionData: {
                                     projectId: projectId,
-                                    resourceType: 'pipeline',
+                                    resourceType: RESOURCE_TYPE.PIPELINE,
                                     resourceCode: props.row.pipelineId,
                                     action: RESOURCE_ACTION.EDIT
                                 }
@@ -549,7 +555,7 @@
                                 disablePermissionApi: true,
                                 permissionData: {
                                     projectId: projectId,
-                                    resourceType: 'pipeline',
+                                    resourceType: RESOURCE_TYPE.PIPELINE,
                                     resourceCode: props.row.pipelineId,
                                     action: RESOURCE_ACTION.EXECUTE
                                 }
@@ -606,15 +612,11 @@
     import {
         PROJECT_RESOURCE_ACTION,
         RESOURCE_ACTION,
+        RESOURCE_TYPE,
         handlePipelineNoPermission
     } from '@/utils/permission'
-    // import {
-    //     ,
-    //     PIPELINE_FILTER_LABELS,
-    //     PIPELINE_FILTER_PIPELINENAME,
-    //     PIPELINE_FILTER_VIEWIDS
-    // } from '@/utils/pipelineConst'
     import { ORDER_ENUM, PIPELINE_SORT_FILED } from '@/utils/pipelineConst'
+    import StageSteps from '@/components/StageSteps'
     import { isShallowEqual } from '@/utils/util'
     import TimeDisplay from '../../../../common-lib/time-display'
     import { mapGetters, mapState } from 'vuex'
@@ -624,6 +626,7 @@
             Logo,
             ExtMenu,
             PipelineStatusIcon,
+            StageSteps,
             PipelineListEmpty,
             TimeDisplay
         },
@@ -651,6 +654,7 @@
                 },
                 visibleTagCountList: {},
                 RESOURCE_ACTION,
+                RESOURCE_TYPE,
                 PROJECT_RESOURCE_ACTION,
                 tableWidthMap: {},
                 tableSize: 'medium',
@@ -658,7 +662,8 @@
                 selectedTableColumn: [],
                 showCollectIndex: -1,
                 visibleLabelCountList: {},
-                isShowDeleteMigrateArchiveDialog: false
+                isShowDeleteMigrateArchiveDialog: false,
+                latestExecIsStageProgress: localStorage.getItem('latestExecIsStageProgress') === 'true' || false,
             }
         },
         computed: {
@@ -857,6 +862,51 @@
             this.requestList()
         },
         methods: {
+            latestExecHeader () {
+                const h = this.$createElement
+                if (this.isArchiveView) {
+                    return h('span',this.$t('latestExec'))
+                }
+                return h('div',{style: {
+                    display: 'flex',
+                    alignItems: 'center',
+                }}, [
+                    h('span',
+                      this.$t('latestExec')
+                    ),
+                    h('p',{
+                        on: {
+                            click: this.switchExecView
+                        },
+                        style: {
+                            display: 'flex',
+                            alignItems: 'center',
+                            color: '#3a84ff',
+                            cursor: 'pointer',
+                            margin: '0 10px'
+                        }
+                    },[
+                        h('i', {
+                            style: {
+                                paddingBottom: '10px',
+                                margin: '0 10px',
+                                marginRight: '15px',
+                                borderBottom: '1px solid #C4C6CC',
+                                transform: 'rotate(90deg)',
+                            },
+                            attrs: {
+                                class: 'bk-icon icon-sort'
+                            }
+                        }),
+                        h('span', {}, `${!this.latestExecIsStageProgress ? this.$t('showStageProgress') : this.$t('showBuildInfo')}`)
+                    ]
+                    ),
+                ])
+            },
+            async switchExecView () {
+                this.latestExecIsStageProgress = !this.latestExecIsStageProgress
+                localStorage.setItem('latestExecIsStageProgress', this.latestExecIsStageProgress)
+            },
             getkeyByValue (obj, value) {
                 return Object.keys(obj).find(key => obj[key] === value)
             },
@@ -932,7 +982,6 @@
 
                 try {
                     this.pipelineList = []
-
                     const { count, page, records } = await this.getPipelines({
                         page: String(this.pagination.current),
                         pageSize: String(this.pagination.limit),
@@ -1124,7 +1173,6 @@
         .template-mode-icon {
             flex-shrink: 0;
             position: relative;
-            top: 2px;
         }
         .exec-pipeline-btn {
             width: 55px;
@@ -1169,12 +1217,20 @@
                     @include ellipsis();
                     flex: 1;
                     cursor: pointer;
-                    > span {
+                    display: inline-flex;
+                    align-items: center;
+                    vertical-align: middle;
+                    line-height: normal;
+
+                    .last-build-msg {
                         color: #63656e;
                         &:hover {
                             color: $primaryColor;
                         }
                     }
+                }
+                .latest-stage-status {
+                    line-height: 1;
                 }
                 .pipeline-exec-msg-desc {
                     display: grid;

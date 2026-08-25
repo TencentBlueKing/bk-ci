@@ -21,7 +21,7 @@ import createLocale from '../../locale'
 import '@/assets/scss/index.scss'
 import Undeploy from '@/components/Undeploy/index.vue'
 import bsWebSocket from '@/utils/bsWebSocket.js'
-// @ts-ignore
+// @ts-ignore next-line
 import { BkPermission, PermissionDirective, handleNoPermission } from 'bk-permission'
 import 'bk-permission/dist/main.css'
 import VeeValidate from 'vee-validate'
@@ -64,7 +64,7 @@ Vue.component('DevopsFormItem', DevopsFormItem)
 Vue.component('BigSelect', BigSelect)
 Vue.component('undeploy', Undeploy)
 
-const { lang, i18n, dynamicLoadModule, setLocale, localeList } = createLocale(require.context('@locale/nav/', false, /\.json$/), true)
+const { lang, i18n, dynamicLoadModule, setLocale, localeList } = createLocale(require.context('@locale/nav/', false, /\.json$/), Vue, true)
 const { BkciDocs } = createDocs(lang, window.BK_CI_VERSION)
 
 // @ts-ignore
@@ -179,6 +179,7 @@ async function main () {
     Vue.prototype.$tenantTimeZone = data.timeZone
     window.devops = new Vue({
         el: '#devops-root',
+        // @ts-ignore next-line
         i18n,
         router,
         store,

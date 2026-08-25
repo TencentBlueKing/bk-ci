@@ -34,12 +34,12 @@ const getters = {
 }
 
 const mutations = {
-   
+
 }
 
 const actions = {
     installPipelineTemplate (_, params) {
-        return ajax.post(`${STORE_API_URL_PREFIX}/user/market/template/install`, params).then(response => {
+        return ajax.post(`${STORE_API_URL_PREFIX}/user/market/template/install/v2`, params).then(response => {
         })
     },
     requestInstallTemplate (_, params) {
@@ -48,7 +48,7 @@ const actions = {
         })
     },
     requestInstanceList (_, { projectId, templateId, params }) {
-        return ajax.get(`${prefix}/templateInstances/projects/${projectId}/templates/${templateId}`, { params }).then(response => {
+        return ajax.get(`${prefix}/template/Instances/v2/projects/${projectId}/templates/${templateId}`, { params }).then(response => {
             return response.data
         })
     },
@@ -77,13 +77,8 @@ const actions = {
             return response.data
         })
     },
-    requestVersionCompare (_, { projectId, templateId, versionId, pipelineId }) {
-        return ajax.post(`${prefix}/templateInstances/projects/${projectId}/templates/${templateId}/pipelines/${pipelineId}/compare?version=${versionId}`).then(response => {
-            return response.data
-        })
-    },
-    requestTemplateList (_, { projectId, pageIndex, pageSize, params }) {
-        return ajax.get(`${prefix}/templates/projects/${projectId}/templates?page=${pageIndex}&pageSize=${pageSize}`, { params }).then(response => {
+    requestTemplateList (_, params) {
+        return ajax.post(`${prefix}/pipeline/template/v2/${params.projectId}/list`, params).then(response => {
             return response.data
         })
     },

@@ -146,7 +146,10 @@ interface ServiceRepositoryResource {
         pageSize: Int? = null,
         @Parameter(description = "别名", required = false)
         @QueryParam("aliasName")
-        aliasName: String? = null
+        aliasName: String? = null,
+        @Parameter(description = "代码库标识", required = false)
+        @QueryParam("scmCode")
+        scmCode: String? = null
     ): Result<Page<RepositoryInfo>>
 
     @Operation(summary = "获取项目代码库列表")

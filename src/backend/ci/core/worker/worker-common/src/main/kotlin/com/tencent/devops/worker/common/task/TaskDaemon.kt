@@ -28,15 +28,19 @@
 package com.tencent.devops.worker.common.task
 
 import com.tencent.devops.common.api.exception.TaskExecuteException
+import com.tencent.devops.common.api.pojo.AtomMonitorData
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildTaskResult
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.utils.PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX
+import com.tencent.devops.worker.common.heartbeat.Heartbeat
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.service.SensitiveValueService
+import com.tencent.devops.worker.common.utils.BatScriptUtil
 import com.tencent.devops.worker.common.utils.TaskUtil
 import java.io.File
 import java.util.concurrent.Callable
@@ -51,11 +55,30 @@ class TaskDaemon(
     private val workspace: File
 ) : Callable<Map<String, String>> {
     override fun call(): Map<String, String> {
+        // 绑定本插件的日志上下文到当前线程：
+        // 1) 让插件执行线程内的所有日志归属到正确的elementId；
+        // 2) 让插件派生的子线程（例如commons-exec的PumpStreamHandler读取流的线程）
+        //    通过InheritableThreadLocal继承上下文，即使主循环已切到下一个插件，
+        //    本插件残余的异步日志仍然以本elementId上报，不会污染后续插件。
+        LoggerService.setTaskContext(
+            LoggerService.TaskExecutionContext(
+                elementId = buildTask.taskId ?: LoggerService.elementId,
+                stepId = buildTask.stepId ?: LoggerService.stepId,
+                elementName = buildTask.elementName
+                    ?: buildTask.taskId
+                    ?: LoggerService.elementName,
+                containerHashId = buildVariables.containerHashId,
+                jobId = buildVariables.jobId ?: LoggerService.jobId,
+                executeCount = buildTask.executeCount ?: LoggerService.executeCount
+            )
+        )
         return try {
             task.run(buildTask, buildVariables, workspace)
             task.getAllEnv()
         } catch (e: InterruptedException) {
             task.getAllEnv()
+        } finally {
+            LoggerService.clearTaskContext()
         }
     }
 
@@ -80,6 +103,7 @@ class TaskDaemon(
             executor.shutdownNow()
             if (taskId != null) {
                 TaskExecutorCache.invalidate(taskId)
+                Heartbeat.clearTaskProgress(taskId)
             }
         }
     }
@@ -88,8 +112,16 @@ class TaskDaemon(
         return task.getAllEnv()
     }
 
+    private fun addMonitorData(monitorDataMap: Map<String, Any>) {
+        task.addMonitorData(monitorDataMap)
+    }
+
     private fun getMonitorData(): Map<String, Any> {
         return task.getMonitorData()
+    }
+
+    private fun getSensitiveKeys(): Set<String> {
+        return task.getSensitiveKeys()
     }
 
     fun getBuildResult(
@@ -101,6 +133,7 @@ class TaskDaemon(
 
         val allEnv = getAllEnv()
         val buildResult = mutableMapOf<String, String>()
+        val sensitiveKeys = getSensitiveKeys().toMutableSet()
         if (allEnv.isNotEmpty()) {
             allEnv.forEach { (key, value) ->
                 if (value.length > PARAM_MAX_LENGTH) {
@@ -118,6 +151,15 @@ class TaskDaemon(
             }
         }
 
+        // 对内置bat脚本执行失败进行监控
+        if (BatScriptUtil.retryTimes() > 0) {
+            val extData: MutableMap<String, Any> = getMonitorData()[AtomMonitorData::extData.name]?.let {
+                JsonUtil.toMutableMap(it)
+            } ?: mutableMapOf()
+            extData["task-daemon-bat-auto-retry-times"] = BatScriptUtil.retryTimes()
+            addMonitorData(mapOf(AtomMonitorData::extData.name to extData))
+            BatScriptUtil.retryClean()
+        }
         return BuildTaskResult(
             taskId = buildTask.taskId!!,
             elementId = buildTask.taskId!!,
@@ -137,7 +179,8 @@ class TaskDaemon(
             errorCode = errorCode,
             platformCode = task.getPlatformCode(),
             platformErrorCode = task.getPlatformErrorCode(),
-            monitorData = getMonitorData()
+            monitorData = getMonitorData(),
+            sensitiveKeys = sensitiveKeys.takeIf { it.isNotEmpty() }
         )
     }
 

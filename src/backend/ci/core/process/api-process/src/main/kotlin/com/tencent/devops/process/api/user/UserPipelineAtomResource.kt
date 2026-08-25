@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.process.pojo.PipelineAtomRel
+import com.tencent.devops.process.pojo.PipelineAtomRelCount
 import com.tencent.devops.store.pojo.atom.AtomProp
 import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
@@ -124,4 +125,16 @@ interface UserPipelineAtomResource {
         @QueryParam("archiveFlag")
         archiveFlag: Boolean? = false
     ): Result<Map<String, AtomProp>?>
+
+    @Operation(summary = "获取插件流水线相关信息列表")
+    @GET
+    @Path("/atoms/{storeCode}/rel/count")
+    fun getAtomRelCount(
+        @Parameter(description = "插件代码", required = true)
+        @QueryParam("storeCode")
+        storeCode: String,
+        @Parameter(description = "项目代码", required = false)
+        @QueryParam("projectCode")
+        projectCode: String?
+    ): Result<PipelineAtomRelCount>
 }

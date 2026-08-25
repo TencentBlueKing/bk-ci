@@ -79,6 +79,7 @@
                 ref="detailSummary"
                 :visible="summaryVisible"
                 :exec-detail="execDetail"
+                :version-change="pipelineInfo?.versionChange"
             ></Summary>
 
             <p class="pipeline-exec-gap">
@@ -184,6 +185,14 @@
     import webSocketMessage from '@/utils/webSocketMessage'
     import { mapActions, mapGetters, mapState } from 'vuex'
 
+    const PANELS = {
+        executeDetail: 'executeDetail',
+        outputs: 'outputs',
+        reports: 'reports',
+        codeRecords: 'codeRecords',
+        startupParams: 'startupParams'
+    }
+
     export default {
         components: {
             StagePropertyPanel,
@@ -238,6 +247,7 @@
 
         computed: {
             ...mapState('atom', [
+                'pipelineInfo',
                 'editingElementPos',
                 'isPropertyPanelVisible',
                 'isShowCompleteLog',
@@ -261,7 +271,7 @@
             panels () {
                 return [
                     {
-                        name: 'executeDetail',
+                        name: PANELS.executeDetail,
                         label: this.$t('details.executeDetail'),
                         component: 'exec-pipeline',
                         className: 'exec-pipeline',
@@ -273,7 +283,7 @@
                         }
                     },
                     {
-                        name: 'outputs',
+                        name: PANELS.outputs,
                         label: this.$t('details.artifact'),
                         className: '',
                         component: 'outputs',
@@ -282,7 +292,7 @@
                         }
                     },
                     {
-                        name: 'reports',
+                        name: PANELS.reports,
                         label: this.$t('details.report'),
                         className: '',
                         component: 'outputs',
@@ -291,14 +301,14 @@
                         }
                     },
                     {
-                        name: 'codeRecords',
+                        name: PANELS.codeRecords,
                         label: this.$t('details.codeRecords'),
                         className: '',
                         component: 'code-record',
                         bindData: {}
                     },
                     {
-                        name: 'startupParams',
+                        name: PANELS.startupParams,
                         label: this.$t('details.startupParams'),
                         className: '',
                         component: 'start-params',
@@ -383,7 +393,10 @@
                 }
             },
             curItemTab () {
-                return this.routerParams.type || 'executeDetail'
+                if (PANELS[this.routerParams.type]) {
+                    return this.routerParams.type
+                }
+                return PANELS.executeDetail
             },
             curPanel () {
                 return this.panels.find(panel => panel.name === this.curItemTab)
@@ -451,12 +464,13 @@
             }
         },
         beforeRouteEnter (to, from, next) {
-            if (!to.params.type) {
+            
+            if (!PANELS[to.params.type]) {
                 next({
                     name: 'pipelinesDetail',
                     params: {
                         ...to.params,
-                        type: 'executeDetail'
+                        type: PANELS.executeDetail
                     },
                     query: to.query
                 })
@@ -517,7 +531,7 @@
             hideSidePanel () {
                 this.showLog = false
             },
-            handlePiplineClick (args) {
+            handlePipelineClick (args) {
                 this.togglePropertyPanel({
                     isShow: true,
                     editingElementPos: args
