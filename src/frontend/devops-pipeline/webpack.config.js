@@ -83,13 +83,5 @@ module.exports = (env, argv) => {
             { from: /^\/bkci\/pipeline/, to: '/bkci/pipeline/index.html' }
         ]
     }
-
-    config.devServer.proxy = [
-        {
-            context: ['/ms'],
-            target: 'https://devops.bk-tenant-dev.woa.com',
-            changeOrigin: true,
-        }
-    ]
     return config
 }

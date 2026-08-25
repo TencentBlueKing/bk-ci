@@ -40,15 +40,6 @@ module.exports = {
         alias: {
           vue$: path.join(__dirname, 'node_modules/vue/index.js'),
         },
-      },
-      devServer: {
-          server: { 
-            type: 'https',
-            options: {
-              key: '../local.bk-tenant-dev.woa.com+3-key.pem',
-              cert: '../local.bk-tenant-dev.woa.com+3.pem',
-            }
-          }
       }
     })
 
