@@ -106,6 +106,11 @@ class LogStorageDegradeSwitcher(
         return keyStates.values.count { now < it.circuitOpenUntil.get() }
     }
 
+    /** 当前熔断器正在跟踪的 trafficKey 数量，用于对照 [LogDegradeProperties.maxTrackedProjects] */
+    fun trackedProjectCount(): Int = keyStates.size
+
+    fun maxTrackedProjects(): Int = properties.maxTrackedProjects.coerceAtLeast(1)
+
     private fun getOrCreateState(key: String): KeyState {
         val state = keyStates.computeIfAbsent(key) { KeyState() }
         state.lastAccessMs = System.currentTimeMillis()

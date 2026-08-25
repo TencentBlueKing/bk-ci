@@ -44,6 +44,7 @@ import com.tencent.devops.common.log.pojo.enums.LogStatus
 import com.tencent.devops.common.log.pojo.enums.LogType
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.log.jmx.LogStorageBean
+import com.tencent.devops.log.metrics.LogMetrics
 import com.tencent.devops.log.strategy.context.UserLogPermissionCheckContext
 import com.tencent.devops.log.strategy.factory.UserLogPermissionCheckStrategyFactory
 import org.slf4j.LoggerFactory
@@ -58,7 +59,8 @@ class BuildLogQueryService @Autowired constructor(
     private val logStatusService: LogStatusService,
     private val indexService: IndexService,
     private val logStorageBean: LogStorageBean,
-    private val logProjectIdResolver: LogProjectIdResolver
+    private val logProjectIdResolver: LogProjectIdResolver,
+    private val logMetrics: LogMetrics
 ) {
 
     fun getInitLogs(
@@ -700,12 +702,18 @@ class BuildLogQueryService @Autowired constructor(
         buildId: String,
         permission: AuthPermission
     ) {
-        val owner = logProjectIdResolver.find(buildId) ?: return
+        val owner = logProjectIdResolver.find(buildId)
+        if (owner == null) {
+            logMetrics.recordQueryOwnership(LogMetrics.RESULT_OWNER_SKIP)
+            return
+        }
         val projectMismatch = !owner.projectId.isNullOrBlank() && owner.projectId != projectId
         val pipelineMismatch = !owner.pipelineId.isNullOrBlank() && owner.pipelineId != pipelineId
         if (!projectMismatch && !pipelineMismatch) {
+            logMetrics.recordQueryOwnership(LogMetrics.RESULT_OWNER_MATCH)
             return
         }
+        logMetrics.recordQueryOwnership(LogMetrics.RESULT_OWNER_MISMATCH)
         logger.warn(
             "Log query ownership mismatch: userId={} buildId={} url={}/{} owner={}/{}",
             userId,

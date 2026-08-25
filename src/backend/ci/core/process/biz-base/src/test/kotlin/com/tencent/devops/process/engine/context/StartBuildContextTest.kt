@@ -35,8 +35,19 @@ import com.tencent.devops.process.TestBase
 import com.tencent.devops.process.engine.cfg.BuildIdGenerator
 import com.tencent.devops.process.engine.cfg.PipelineIdGenerator
 import com.tencent.devops.process.pojo.app.StartBuildContext
+import com.tencent.devops.common.pipeline.container.VMBuildContainer
+import com.tencent.devops.common.pipeline.enums.BuildScriptType
+import com.tencent.devops.common.pipeline.enums.DependOnType
+import com.tencent.devops.common.pipeline.option.JobControlOption
+import com.tencent.devops.common.pipeline.pojo.StagePauseCheck
+import com.tencent.devops.common.pipeline.pojo.StageReviewGroup
+import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
+import com.tencent.devops.common.pipeline.pojo.element.ElementPostInfo
+import com.tencent.devops.common.pipeline.pojo.element.RunCondition
+import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxScriptElement
 import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
 import com.tencent.devops.process.utils.PIPELINE_RETRY_START_TASK_ID
+import com.tencent.devops.process.utils.PIPELINE_RETRY_TASK_IN_STAGE_ID
 import com.tencent.devops.process.utils.PIPELINE_SKIP_FAILED_TASK
 import com.tencent.devops.process.utils.PIPELINE_START_CHANNEL
 import com.tencent.devops.process.utils.PIPELINE_START_PARENT_BUILD_ID
@@ -79,6 +90,182 @@ class StartBuildContextTest : TestBase() {
         val needSkipWhenStageFailRetry = context.needSkipWhenStageFailRetry(stage)
         println("needSkipWhenStageFailRetry=$needSkipWhenStageFailRetry")
         Assertions.assertEquals(false, needSkipWhenStageFailRetry)
+    }
+
+    @Test
+    fun needSkipWhenTaskRetryPriorFinishedStage() {
+        // 任务级重试后续 Stage 时，前序已完成 Stage 必须整段跳过，避免 checkIn 被清空后再次审核
+        val stages = genStages(stageSize = 2, jobSize = 1, elementSize = 2, needFinally = false)
+        val stage1 = stages[1]
+        val stage2 = stages[2]
+        stage1.status = BuildStatus.SUCCEED.name
+        stage1.checkIn = StagePauseCheck(
+            manualTrigger = true,
+            status = BuildStatus.REVIEW_PROCESSED.name,
+            reviewGroups = mutableListOf(
+                StageReviewGroup(id = "g1", name = "生产", reviewers = listOf("u1"), status = "PROCESS")
+            )
+        )
+        stage2.status = BuildStatus.FAILED.name
+        params[PIPELINE_RETRY_START_TASK_ID] = stage2.containers[0].elements[0].id!!
+        params[PIPELINE_RETRY_TASK_IN_STAGE_ID] = stage2.id!!
+        val context = initDefaultStartBuildContext()
+
+        Assertions.assertEquals(false, context.isRetryTargetStage(stage1))
+        Assertions.assertEquals(true, context.isRetryTargetStage(stage2))
+        Assertions.assertEquals(false, context.allowResetStageReview())
+        Assertions.assertEquals(true, context.needSkipWhenStageFailRetry(stage1))
+        Assertions.assertEquals(true, context.hasCompletedStageReview(stage1))
+        // 目标 Stage 即使已失败、且尚未打上 reached 标记，也不能被跳过
+        Assertions.assertEquals(false, context.needSkipWhenStageFailRetry(stage2))
+
+        // 到达目标 Stage 后不再跳过，且允许重置审核（只作用于目标及之后）
+        context.reachedRetryTargetStage = true
+        Assertions.assertEquals(false, context.needSkipWhenStageFailRetry(stage2))
+        Assertions.assertEquals(true, context.allowResetStageReview())
+    }
+
+    @Test
+    fun needSkipWhenTaskRetryPriorReviewedEvenIfStatusNotFinish() {
+        // status 未落成终态时，只要准入审核已完成，前序 Stage 仍跳过
+        val stages = genStages(stageSize = 2, jobSize = 1, elementSize = 1, needFinally = false)
+        val stage1 = stages[1]
+        val stage2 = stages[2]
+        stage1.status = BuildStatus.QUEUE.name
+        stage1.checkIn = StagePauseCheck(
+            manualTrigger = true,
+            reviewGroups = mutableListOf(
+                StageReviewGroup(id = "g1", name = "生产", status = "PROCESS")
+            )
+        )
+        params[PIPELINE_RETRY_START_TASK_ID] = stage2.containers[0].elements[0].id!!
+        val context = initDefaultStartBuildContext()
+        Assertions.assertEquals(true, context.hasCompletedStageReview(stage1))
+        Assertions.assertEquals(true, context.needSkipWhenStageFailRetry(stage1))
+        // 未传 TASK_IN_STAGE_ID 时，按插件 id 扫描仍能识别目标 Stage
+        Assertions.assertEquals(true, context.isRetryTargetStage(stage2))
+    }
+
+    /**
+     * 用 run 脚本只模拟执行关系：父脚本成功，依赖脚本是「仅取消/超时时才跑」且保持 UNEXEC。
+     * 对后续 Stage 的失败脚本做任务级跳过时：
+     * - 旧逻辑会走进准备 Stage 刷新 UNEXEC，清空 checkIn 再次审核
+     * - 修复后必须整段跳过准备 Stage
+     */
+    @Test
+    fun reproduceTaskRetryUnexecPostOnPriorReviewedStage() {
+        val stages = genStages(stageSize = 2, jobSize = 1, elementSize = 1, needFinally = false)
+        val prepare = stages[1]
+        val publish = stages[2]
+        val parent = linuxRun(
+            name = "父任务",
+            id = "e-parent-run",
+            script = "echo parent-ok",
+            status = BuildStatus.SUCCEED.name
+        )
+        val post = linuxRun(
+            name = "仅取消或超时时执行",
+            id = "e-post-run",
+            script = "echo post-on-cancel",
+            status = BuildStatus.UNEXEC.name,
+            additionalOptions = elementAdditionalOptions(
+                runCondition = RunCondition.PARENT_TASK_CANCELED_OR_TIMEOUT,
+                elementPostInfo = ElementPostInfo(
+                    postEntryParam = "",
+                    postCondition = "canceledOrTimeOut()",
+                    parentElementId = parent.id!!,
+                    parentElementName = parent.name,
+                    parentElementJobIndex = 0
+                )
+            )
+        )
+        val skipTask = linuxRun(
+            name = "故意失败后点跳过",
+            id = "e-skip-run",
+            script = "exit 1",
+            status = BuildStatus.FAILED.name
+        )
+        prepare.containers[0].elements = listOf(parent, post)
+        publish.containers[0].elements = listOf(skipTask)
+        prepare.status = BuildStatus.SUCCEED.name
+        prepare.checkIn = StagePauseCheck(
+            manualTrigger = true,
+            status = BuildStatus.REVIEW_PROCESSED.name,
+            reviewGroups = mutableListOf(
+                StageReviewGroup(id = "g1", name = "生产", reviewers = listOf("u1"), status = "PROCESS")
+            )
+        )
+        params[PIPELINE_RETRY_START_TASK_ID] = skipTask.id!!
+        params[PIPELINE_RETRY_TASK_IN_STAGE_ID] = publish.id!!
+        params[PIPELINE_SKIP_FAILED_TASK] = true.toString()
+        val context = initDefaultStartBuildContext()
+
+        // 内层脏点：UNEXEC 既不是成功也不是失败，准备 Stage 一旦走进去就会 refresh 这条依赖脚本
+        val postStatus = BuildStatus.parse(post.status)
+        Assertions.assertEquals(false, postStatus.isSuccess())
+        Assertions.assertEquals(false, postStatus.isFailure())
+        Assertions.assertEquals(true, context.needSkipTaskWhenRetry(prepare, prepare.containers[0], post.id))
+
+        // 修复后：整段跳过准备，不再走 resetBuildOption
+        Assertions.assertEquals(false, context.isRetryTargetStage(prepare))
+        Assertions.assertEquals(true, context.isRetryTargetStage(publish))
+        Assertions.assertEquals(true, context.hasCompletedStageReview(prepare))
+        Assertions.assertEquals(true, context.needSkipWhenStageFailRetry(prepare))
+        Assertions.assertEquals(false, context.allowResetStageReview())
+        Assertions.assertEquals(false, context.needSkipWhenStageFailRetry(publish))
+    }
+
+    @Test
+    fun needSkipCompletedContainerWhenRetryEarlierFailedJob() {
+        // 同 Stage：executeCount 更高的 Job 已成功/跳过，再重试更早一轮失败 Job 时不得刷新已完成 Job
+        val stage = genStages(stageSize = 1, jobSize = 2, elementSize = 2, needFinally = false)[1]
+        val completedJob = stage.containers[0]
+        val failedJob = stage.containers[1]
+        completedJob.status = BuildStatus.SUCCEED.name
+        failedJob.status = BuildStatus.FAILED.name
+        params[PIPELINE_RETRY_START_TASK_ID] = failedJob.elements[0].id!!
+        params[PIPELINE_RETRY_TASK_IN_STAGE_ID] = stage.id!!
+        val context = initDefaultStartBuildContext()
+
+        Assertions.assertEquals(true, context.needSkipCompletedContainerWhenTaskRetry(stage, completedJob))
+        Assertions.assertEquals(false, context.needSkipCompletedContainerWhenTaskRetry(stage, failedJob))
+        // #2318 路径保持：已完成 Job 不是失败/取消，needSkipContainerWhenFailRetry 仍为 false
+        Assertions.assertEquals(false, context.needSkipContainerWhenFailRetry(stage, completedJob))
+        Assertions.assertEquals(true, context.needSkipContainerWhenFailRetry(stage, failedJob))
+
+        // 手动跳过（无 dependOn）视为已完成，不再刷新；CANCELED 不走本函数，留给失败/取消路径
+        completedJob.status = BuildStatus.SKIP.name
+        Assertions.assertEquals(true, context.needSkipCompletedContainerWhenTaskRetry(stage, completedJob))
+        completedJob.status = BuildStatus.CANCELED.name
+        Assertions.assertEquals(false, context.needSkipCompletedContainerWhenTaskRetry(stage, completedJob))
+    }
+
+    @Test
+    fun needSkipCompletedContainerKeepsDependOnSkipRerunAndStageRetry() {
+        val stage = genStages(stageSize = 1, jobSize = 2, elementSize = 1, needFinally = false)[1]
+        val skippedDependOn = stage.containers[0] as VMBuildContainer
+        val retryJob = stage.containers[1]
+        skippedDependOn.status = BuildStatus.SKIP.name
+        skippedDependOn.jobControlOption = JobControlOption(
+            dependOnType = DependOnType.ID,
+            dependOnId = listOf(retryJob.id ?: "job-retry")
+        )
+        retryJob.status = BuildStatus.FAILED.name
+        params[PIPELINE_RETRY_START_TASK_ID] = retryJob.elements[0].id!!
+        val taskRetryContext = initDefaultStartBuildContext()
+        Assertions.assertEquals(
+            false,
+            taskRetryContext.needSkipCompletedContainerWhenTaskRetry(stage, skippedDependOn)
+        )
+
+        // Stage 级重试：已成功 Job 仍由 #3138 isRetryFailedContainer 决定，不走本跳过
+        params[PIPELINE_RETRY_START_TASK_ID] = stage.id!!
+        skippedDependOn.status = BuildStatus.SUCCEED.name
+        val stageRetryContext = initDefaultStartBuildContext()
+        Assertions.assertEquals(
+            false,
+            stageRetryContext.needSkipCompletedContainerWhenTaskRetry(stage, skippedDependOn)
+        )
     }
 
     @Test
@@ -126,6 +313,22 @@ class StartBuildContextTest : TestBase() {
             yamlVersion = "v3.0"
         )
     }
+
+    private fun linuxRun(
+        name: String,
+        id: String,
+        script: String,
+        status: String? = null,
+        additionalOptions: ElementAdditionalOptions? = null
+    ) = LinuxScriptElement(
+        name = name,
+        id = id,
+        status = status,
+        scriptType = BuildScriptType.SHELL,
+        script = script,
+        continueNoneZero = false,
+        additionalOptions = additionalOptions
+    )
 
     @Test
     fun needSkipTaskWhenRetry() {

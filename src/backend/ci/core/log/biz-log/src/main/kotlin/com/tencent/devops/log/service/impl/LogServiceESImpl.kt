@@ -62,6 +62,7 @@ import com.tencent.devops.log.service.LogTagService
 import com.tencent.devops.common.log.constant.Constants
 import com.tencent.devops.log.util.ESIndexUtils
 import com.tencent.devops.log.util.IndexNameUtils
+import com.tencent.devops.log.util.LogDownloadHeader
 import java.io.IOException
 import java.sql.Date
 import java.text.SimpleDateFormat
@@ -560,10 +561,12 @@ class LogServiceESImpl(
             }
         }
 
-        val resultName = fileName ?: "$pipelineId-$buildId-log"
         return Response
             .ok(fileStream, MediaType.APPLICATION_OCTET_STREAM_TYPE)
-            .header("content-disposition", "attachment; filename = \"$resultName.log\"")
+            .header(
+                "content-disposition",
+                LogDownloadHeader.contentDisposition(fileName, pipelineId, buildId)
+            )
             .header("Cache-Control", "no-cache")
             .build()
     }

@@ -35,6 +35,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.log.pojo.QueryLogLineNum
 import com.tencent.devops.common.log.pojo.QueryLogStatus
 import com.tencent.devops.common.log.pojo.QueryLogs
+import com.tencent.devops.common.log.pojo.QueryLogsText
 import com.tencent.devops.common.log.pojo.enums.LogType
 import com.tencent.devops.openapi.BkApigwApi
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -91,6 +92,9 @@ interface ApigwLogResourceV4 {
         @Parameter(description = "执行次数", required = false)
         @QueryParam("executeCount")
         executeCount: Int?,
+        @Parameter(description = "指定subTag", required = false)
+        @QueryParam("subTag")
+        subTag: String? = null,
         @Parameter(description = "对应jobId", required = false)
         @QueryParam("jobId")
         jobId: String?,
@@ -133,6 +137,9 @@ interface ApigwLogResourceV4 {
         @Parameter(description = "是否包含调试日志", required = false)
         @QueryParam("debug")
         debug: Boolean? = false,
+        @Parameter(description = "过滤日志级别", required = false)
+        @QueryParam("logType")
+        logType: LogType? = null,
         @Parameter(description = "日志行数", required = false)
         @QueryParam("num")
         num: Int? = 100,
@@ -193,6 +200,9 @@ interface ApigwLogResourceV4 {
         @Parameter(description = "是否包含调试日志", required = false)
         @QueryParam("debug")
         debug: Boolean? = false,
+        @Parameter(description = "过滤日志级别", required = false)
+        @QueryParam("logType")
+        logType: LogType? = null,
         @Parameter(description = "对应elementId (e-开头)", required = false)
         @QueryParam("tag")
         tag: String?,
@@ -212,6 +222,60 @@ interface ApigwLogResourceV4 {
         @QueryParam("archiveFlag")
         archiveFlag: Boolean? = false
     ): Result<QueryLogs>
+
+    @Operation(summary = "获取当前查询条件下行号最大的N条日志", tags = ["v4_app_log_latest", "v4_user_log_latest"])
+    @GET
+    @Path("/latest_logs")
+    fun getLatestLogs(
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @Parameter(description = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID(项目英文名)", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "流水线ID (p-开头)", required = false)
+        @QueryParam("pipelineId")
+        pipelineId: String?,
+        @Parameter(description = "构建ID (b-开头)", required = true)
+        @QueryParam("buildId")
+        buildId: String,
+        @Parameter(description = "是否包含调试日志", required = false)
+        @QueryParam("debug")
+        debug: Boolean? = false,
+        @Parameter(description = "过滤日志级别", required = false)
+        @QueryParam("logType")
+        logType: LogType? = null,
+        @Parameter(description = "返回日志条数", required = false)
+        @QueryParam("size")
+        size: Int? = 100,
+        @Parameter(description = "对应elementId (e-开头)", required = false)
+        @QueryParam("tag")
+        tag: String?,
+        @Parameter(description = "指定subTag", required = false)
+        @QueryParam("subTag")
+        subTag: String? = null,
+        @Parameter(description = "对应containerHashId (c-开头)", required = false)
+        @QueryParam("containerHashId")
+        containerHashId: String?,
+        @Parameter(description = "执行次数", required = false)
+        @QueryParam("executeCount")
+        executeCount: Int?,
+        @Parameter(description = "对应jobId", required = false)
+        @QueryParam("jobId")
+        jobId: String?,
+        @Parameter(description = "对应stepId", required = false)
+        @QueryParam("stepId")
+        stepId: String?,
+        @Parameter(description = "是否查询归档数据", required = false)
+        @QueryParam("archiveFlag")
+        archiveFlag: Boolean? = false
+    ): Result<QueryLogsText>
 
     @Operation(
         summary = "下载日志接口(注意: 接口返回application/octet-stream数据，Request Header Accept 类型不一致将导致错误)",
