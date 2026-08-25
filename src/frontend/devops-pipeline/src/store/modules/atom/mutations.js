@@ -322,7 +322,6 @@ export default {
     },
 
     [UPDATE_ATOM_INPUT]: (state, { atom, newParam }) => {
-        debugger
         try {
             Vue.set(atom.data, 'input', {
                 ...atom.data.input,
