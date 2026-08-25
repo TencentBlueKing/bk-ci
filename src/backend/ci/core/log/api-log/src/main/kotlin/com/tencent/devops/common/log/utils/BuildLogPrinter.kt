@@ -51,7 +51,8 @@ class BuildLogPrinter(
         subTag: String? = null,
         jobId: String?,
         stepId: String?,
-        projectId: String? = null
+        projectId: String? = null,
+        pipelineId: String? = null
     ) {
         try {
             doWithCircuitBreaker {
@@ -67,7 +68,8 @@ class BuildLogPrinter(
                         jobId = jobId,
                         stepId = stepId
                     ),
-                    projectId = projectId
+                    projectId = projectId,
+                    pipelineId = pipelineId
                 )
             }
         } catch (e: CallNotPermittedException) {
@@ -77,13 +79,19 @@ class BuildLogPrinter(
         }
     }
 
-    fun addLines(buildId: String, logMessages: List<LogMessage>, projectId: String? = null) {
+    fun addLines(
+        buildId: String,
+        logMessages: List<LogMessage>,
+        projectId: String? = null,
+        pipelineId: String? = null
+    ) {
         try {
             doWithCircuitBreaker {
                 genLogPrintPrintResource().addLogMultiLine(
                     buildId = buildId,
                     logMessages = logMessages,
-                    projectId = projectId
+                    projectId = projectId,
+                    pipelineId = pipelineId
                 )
             }
         } catch (e: CallNotPermittedException) {
@@ -102,7 +110,8 @@ class BuildLogPrinter(
         executeCount: Int,
         jobId: String?,
         stepId: String?,
-        projectId: String? = null
+        projectId: String? = null,
+        pipelineId: String? = null
     ) = addLine(
         buildId = buildId,
         message = "##[group]$groupName",
@@ -112,7 +121,8 @@ class BuildLogPrinter(
         executeCount = executeCount,
         jobId = jobId,
         stepId = stepId,
-        projectId = projectId
+        projectId = projectId,
+        pipelineId = pipelineId
     )
 
     fun addFoldEndLine(
@@ -124,7 +134,8 @@ class BuildLogPrinter(
         executeCount: Int,
         jobId: String?,
         stepId: String?,
-        projectId: String? = null
+        projectId: String? = null,
+        pipelineId: String? = null
     ) = addLine(
         buildId = buildId,
         message = "##[endgroup]$groupName",
@@ -134,7 +145,8 @@ class BuildLogPrinter(
         executeCount = executeCount,
         jobId = jobId,
         stepId = stepId,
-        projectId = projectId
+        projectId = projectId,
+        pipelineId = pipelineId
     )
 
     fun addAIErrorLine(
@@ -146,7 +158,8 @@ class BuildLogPrinter(
         subTag: String? = null,
         jobId: String?,
         stepId: String?,
-        projectId: String? = null
+        projectId: String? = null,
+        pipelineId: String? = null
     ) {
         addErrorLine(
             buildId = buildId,
@@ -157,7 +170,8 @@ class BuildLogPrinter(
             subTag = subTag,
             jobId = jobId,
             stepId = stepId,
-            projectId = projectId
+            projectId = projectId,
+            pipelineId = pipelineId
         )
     }
 
@@ -170,7 +184,8 @@ class BuildLogPrinter(
         subTag: String? = null,
         jobId: String?,
         stepId: String?,
-        projectId: String? = null
+        projectId: String? = null,
+        pipelineId: String? = null
     ) {
         try {
             doWithCircuitBreaker {
@@ -186,7 +201,8 @@ class BuildLogPrinter(
                         jobId = jobId,
                         stepId = stepId
                     ),
-                    projectId = projectId
+                    projectId = projectId,
+                    pipelineId = pipelineId
                 )
             }
         } catch (e: CallNotPermittedException) {
@@ -205,7 +221,8 @@ class BuildLogPrinter(
         subTag: String? = null,
         jobId: String?,
         stepId: String?,
-        projectId: String? = null
+        projectId: String? = null,
+        pipelineId: String? = null
     ) {
         try {
             doWithCircuitBreaker {
@@ -221,7 +238,8 @@ class BuildLogPrinter(
                         jobId = jobId,
                         stepId = stepId
                     ),
-                    projectId = projectId
+                    projectId = projectId,
+                    pipelineId = pipelineId
                 )
             }
         } catch (e: CallNotPermittedException) {
@@ -240,7 +258,8 @@ class BuildLogPrinter(
         subTag: String? = null,
         jobId: String?,
         stepId: String?,
-        projectId: String? = null
+        projectId: String? = null,
+        pipelineId: String? = null
     ) {
         try {
             doWithCircuitBreaker {
@@ -256,7 +275,8 @@ class BuildLogPrinter(
                         jobId = jobId,
                         stepId = stepId
                     ),
-                    projectId = projectId
+                    projectId = projectId,
+                    pipelineId = pipelineId
                 )
             }
         } catch (e: CallNotPermittedException) {
@@ -275,7 +295,8 @@ class BuildLogPrinter(
         subTag: String? = null,
         jobId: String?,
         stepId: String?,
-        projectId: String? = null
+        projectId: String? = null,
+        pipelineId: String? = null
     ) = addLine(
         buildId = buildId,
         message = Ansi().bold().fgYellow().a(message).reset().toString(),
@@ -285,7 +306,8 @@ class BuildLogPrinter(
         executeCount = executeCount,
         jobId = jobId,
         stepId = stepId,
-        projectId = projectId
+        projectId = projectId,
+        pipelineId = pipelineId
     )
 
     @Suppress("UNUSED")
@@ -298,7 +320,8 @@ class BuildLogPrinter(
         subTag: String? = null,
         jobId: String?,
         stepId: String?,
-        projectId: String? = null
+        projectId: String? = null,
+        pipelineId: String? = null
     ) = addLine(
         buildId = buildId,
         message = Ansi().bold().fgGreen().a(message).reset().toString(),
@@ -308,7 +331,8 @@ class BuildLogPrinter(
         executeCount = executeCount,
         jobId = jobId,
         stepId = stepId,
-        projectId = projectId
+        projectId = projectId,
+        pipelineId = pipelineId
     )
 
     fun addRedLine(
@@ -320,7 +344,8 @@ class BuildLogPrinter(
         subTag: String? = null,
         jobId: String?,
         stepId: String?,
-        projectId: String? = null
+        projectId: String? = null,
+        pipelineId: String? = null
     ) = addLine(
         buildId = buildId,
         message = Ansi().bold().fgRed().a(message).reset().toString(),
@@ -330,7 +355,8 @@ class BuildLogPrinter(
         executeCount = executeCount,
         jobId = jobId,
         stepId = stepId,
-        projectId = projectId
+        projectId = projectId,
+        pipelineId = pipelineId
     )
 
     fun stopLog(
@@ -341,7 +367,8 @@ class BuildLogPrinter(
         subTag: String? = null,
         jobId: String? = null,
         stepId: String? = null,
-        projectId: String? = null
+        projectId: String? = null,
+        pipelineId: String? = null
     ) {
         try {
             doWithCircuitBreaker {
@@ -354,7 +381,8 @@ class BuildLogPrinter(
                     executeCount = executeCount,
                     jobId = jobId,
                     stepId = stepId,
-                    projectId = projectId
+                    projectId = projectId,
+                    pipelineId = pipelineId
                 )
             }
         } catch (ignore: Exception) {
@@ -370,7 +398,8 @@ class BuildLogPrinter(
         subTag: String? = null,
         jobId: String? = null,
         stepId: String? = null,
-        projectId: String? = null
+        projectId: String? = null,
+        pipelineId: String? = null
     ) {
         try {
             doWithCircuitBreaker {
@@ -382,7 +411,8 @@ class BuildLogPrinter(
                     executeCount = executeCount,
                     jobId = jobId,
                     stepId = stepId,
-                    projectId = projectId
+                    projectId = projectId,
+                    pipelineId = pipelineId
                 )
             }
         } catch (ignore: Exception) {

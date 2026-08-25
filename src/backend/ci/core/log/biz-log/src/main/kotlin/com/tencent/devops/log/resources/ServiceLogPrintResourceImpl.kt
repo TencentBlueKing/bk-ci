@@ -45,27 +45,33 @@ class ServiceLogPrintResourceImpl @Autowired constructor(
     private val buildLogPrintService: BuildLogPrintService
 ) : ServiceLogPrintResource {
 
-    override fun addLogLine(buildId: String, logMessage: LogMessage, projectId: String?): Result<Boolean> {
+    override fun addLogLine(
+        buildId: String,
+        logMessage: LogMessage,
+        projectId: String?,
+        pipelineId: String?
+    ): Result<Boolean> {
         if (buildId.isBlank()) {
             logger.warn("Invalid build ID[$buildId]")
             return Result(false)
         }
         return buildLogPrintService.asyncDispatchEvent(
-            LogOriginEvent(buildId, listOf(logMessage), projectId = projectId)
+            LogOriginEvent(buildId, listOf(logMessage), projectId = projectId, pipelineId = pipelineId)
         )
     }
 
     override fun addLogMultiLine(
         buildId: String,
         logMessages: List<LogMessage>,
-        projectId: String?
+        projectId: String?,
+        pipelineId: String?
     ): Result<Boolean> {
         if (buildId.isBlank()) {
             logger.warn("Invalid build ID[$buildId]")
             return Result(false)
         }
         buildLogPrintService.asyncDispatchEvent(
-            LogOriginEvent(buildId, logMessages, projectId = projectId)
+            LogOriginEvent(buildId, logMessages, projectId = projectId, pipelineId = pipelineId)
         )
         return Result(true)
     }
@@ -78,7 +84,8 @@ class ServiceLogPrintResourceImpl @Autowired constructor(
         executeCount: Int?,
         jobId: String?,
         stepId: String?,
-        projectId: String?
+        projectId: String?,
+        pipelineId: String?
     ): Result<Boolean> {
         if (buildId.isBlank()) {
             logger.warn("Invalid build ID[$buildId]")
@@ -97,7 +104,8 @@ class ServiceLogPrintResourceImpl @Autowired constructor(
                 logStorageMode = null,
                 userJobId = jobId,
                 stepId = stepId,
-                projectId = projectId
+                projectId = projectId,
+                pipelineId = pipelineId
             )
         )
         return Result(true)
@@ -113,7 +121,8 @@ class ServiceLogPrintResourceImpl @Autowired constructor(
         logStorageMode: LogStorageMode?,
         jobId: String?,
         stepId: String?,
-        projectId: String?
+        projectId: String?,
+        pipelineId: String?
     ): Result<Boolean> {
         if (buildId.isBlank()) {
             logger.warn("Invalid build ID[$buildId]")
@@ -130,7 +139,8 @@ class ServiceLogPrintResourceImpl @Autowired constructor(
                 logStorageMode = logStorageMode,
                 userJobId = jobId,
                 stepId = stepId,
-                projectId = projectId
+                projectId = projectId,
+                pipelineId = pipelineId
             )
         )
         return Result(true)

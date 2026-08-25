@@ -86,7 +86,8 @@ class LogServiceLuceneImpl constructor(
                 event = LogStorageEvent(
                     buildId = event.buildId,
                     logs = logMessage,
-                    projectId = event.projectId
+                    projectId = event.projectId,
+                    pipelineId = event.pipelineId
                 ),
                 recordTraffic = false
             )

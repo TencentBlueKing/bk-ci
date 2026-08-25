@@ -43,7 +43,7 @@ import okhttp3.RequestBody
 
 class LogResourceApi : AbstractBuildResourceApi(), LogSDKApi {
 
-    // projectId is sent automatically via X-DEVOPS-PROJECT-ID header (set by AbstractBuildResourceApi)
+    // projectId / pipelineId 由 AbstractBuildResourceApi 自动带上 X-DEVOPS-* header
     override fun addLogMultiLine(buildId: String, logMessages: List<LogMessage>): Result<Boolean> {
         val path = "/log/api/build/logs/multi?buildId=$buildId"
         val requestBody = RequestBody.create(

@@ -44,15 +44,17 @@ data class LogOriginHeavyEvent(
     val logs: List<LogMessage>,
     override var retryTime: Int = 2,
     override var delayMills: Int = 0,
-    override val projectId: String? = null
-) : ILogEvent(buildId, retryTime, delayMills, projectId) {
+    override val projectId: String? = null,
+    override val pipelineId: String? = null
+) : ILogEvent(buildId, retryTime, delayMills, projectId, pipelineId) {
 
     fun toOriginEvent() = LogOriginEvent(
         buildId = buildId,
         logs = logs,
         retryTime = retryTime,
         delayMills = delayMills,
-        projectId = projectId
+        projectId = projectId,
+        pipelineId = pipelineId
     )
 
     companion object {
@@ -61,7 +63,8 @@ data class LogOriginHeavyEvent(
             logs = event.logs,
             retryTime = event.retryTime,
             delayMills = event.delayMills,
-            projectId = event.projectId
+            projectId = event.projectId,
+            pipelineId = event.pipelineId
         )
     }
 }

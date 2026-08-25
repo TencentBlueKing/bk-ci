@@ -33,7 +33,9 @@ open class ILogEvent(
     open val buildId: String,
     override var retryTime: Int,
     override var delayMills: Int,
-    open val projectId: String? = null
+    open val projectId: String? = null,
+    // 查询鉴权用的流水线归属；ES 存取仍只认 buildId，本字段不进入索引
+    open val pipelineId: String? = null
 ) : IEvent(delayMills, retryTime) {
     companion object {
         private const val DELAY_DURATION_MILLS = 3 * 1000

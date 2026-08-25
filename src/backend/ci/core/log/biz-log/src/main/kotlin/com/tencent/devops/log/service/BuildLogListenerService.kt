@@ -69,7 +69,8 @@ class BuildLogListenerService @Autowired constructor(
                             logs = logs,
                             retryTime = retryTime - 1,
                             delayMills = getNextDelayMills(retryTime),
-                            projectId = projectId
+                            projectId = projectId,
+                            pipelineId = pipelineId
                         ),
                         recordTraffic = false
                     )
@@ -103,7 +104,8 @@ class BuildLogListenerService @Autowired constructor(
                             logs = logs,
                             retryTime = retryTime - 1,
                             delayMills = getNextDelayMills(retryTime),
-                            projectId = projectId
+                            projectId = projectId,
+                            pipelineId = pipelineId
                         ),
                         recordTraffic = false
                     )
@@ -137,7 +139,8 @@ class BuildLogListenerService @Autowired constructor(
                             logs = logs,
                             retryTime = retryTime - 1,
                             delayMills = getNextDelayMills(retryTime),
-                            projectId = projectId
+                            projectId = projectId,
+                            pipelineId = pipelineId
                         ),
                         recordTraffic = false
                     )
@@ -182,7 +185,8 @@ class BuildLogListenerService @Autowired constructor(
                             delayMills = getNextDelayMills(retryTime),
                             userJobId = userJobId,
                             stepId = stepId,
-                            projectId = projectId
+                            projectId = projectId,
+                            pipelineId = pipelineId
                         ),
                         recordTraffic = false
                     )
