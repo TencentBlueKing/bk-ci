@@ -118,6 +118,32 @@ export default defineComponent({
       return item?.name || ''
     }
 
+    // Get default notification content by notify type (for new notification)
+    const getDefaultContent = (type: string): string => {
+      switch (type) {
+        case 'successSubscriptionList':
+          return t('flow.content.defaultRunSuccess')
+        case 'failSubscriptionList':
+          return t('flow.content.defaultRunFailed')
+        case 'cancelSubscriptionList':
+          return t('flow.content.defaultRunCanceled')
+        case 'publishSubscriptionList':
+          return t('flow.content.defaultNewVersionPublished')
+        default:
+          return ''
+      }
+    }
+
+    // Get default notification receivers by notify type (for new notification)
+    const getDefaultUsers = (type: string): string => {
+      switch (type) {
+        case 'publishSubscriptionList':
+          return '${{ci.pipeline_owner}}'
+        default:
+          return '${{ci.actor}}'
+      }
+    }
+
     // Handle add notification
     const handleAddNotification = (type: string) => {
       currentNotifyType.value = type
@@ -193,6 +219,8 @@ export default defineComponent({
           notification={currentNotification.value}
           notifyTypeName={currentNotifyTypeName.value}
           isEdit={isEditMode.value}
+          defaultContent={getDefaultContent(currentNotifyType.value)}
+          defaultUsers={getDefaultUsers(currentNotifyType.value)}
           onUpdate:visible={(val: boolean) => {
             sidesliderVisible.value = val
           }}

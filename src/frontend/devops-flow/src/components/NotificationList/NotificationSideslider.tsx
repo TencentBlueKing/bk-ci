@@ -31,14 +31,14 @@ const NOTIFICATION_TYPES = [
 ]
 
 // Default subscription object
-const createDefaultSubscription = (): Subscription => ({
+const createDefaultSubscription = (defaultContent = '', defaultUsers = ''): Subscription => ({
   types: [],
   groups: [],
-  users: '',
+  users: defaultUsers,
   wechatGroupFlag: false,
   wechatGroup: '',
   wechatGroupMarkdownFlag: false,
-  content: '',
+  content: defaultContent,
 })
 
 export default defineComponent({
@@ -59,6 +59,14 @@ export default defineComponent({
     isEdit: {
       type: Boolean,
       default: false,
+    },
+    defaultContent: {
+      type: String,
+      default: '',
+    },
+    defaultUsers: {
+      type: String,
+      default: '',
     },
   },
   emits: ['update:visible', 'save'],
@@ -128,7 +136,7 @@ export default defineComponent({
         if (newVal) {
           localNotification.value = JSON.parse(JSON.stringify(newVal))
         } else {
-          localNotification.value = createDefaultSubscription()
+          localNotification.value = createDefaultSubscription(props.defaultContent, props.defaultUsers)
         }
       },
       { immediate: true },
@@ -142,7 +150,7 @@ export default defineComponent({
           if (props.notification) {
             localNotification.value = JSON.parse(JSON.stringify(props.notification))
           } else {
-            localNotification.value = createDefaultSubscription()
+            localNotification.value = createDefaultSubscription(props.defaultContent, props.defaultUsers)
           }
         }
       },
