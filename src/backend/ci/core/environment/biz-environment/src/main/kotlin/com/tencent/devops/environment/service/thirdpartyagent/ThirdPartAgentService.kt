@@ -362,15 +362,18 @@ class ThirdPartAgentService @Autowired constructor(
     }
 
     fun batchFetchNodeInfo(projectId: String, agentHashIdList: Set<String>): List<BatchFetchNodeInfoResp> {
-        return agentDao.getAgentByAgentIds(
+        val records = agentDao.getAgentByAgentIds(
             dslContext = dslContext,
             ids = agentHashIdList.map { HashUtil.decodeIdToLong(it) }.toSet(),
             projectId = projectId
-        ).map {
+        )
+        val nodeNameMap = nodeDao.listByIds(dslContext, projectId, records.map { it.nodeId })
+            .associate { it.nodeId to it.displayName }
+        return records.map {
             BatchFetchNodeInfoResp(
                 agentHashId = HashUtil.encodeLongId(it.id),
                 nodeHashId = HashUtil.encodeLongId(it.nodeId),
-                nodeName = null
+                nodeName = nodeNameMap[it.nodeId]
             )
         }
     }

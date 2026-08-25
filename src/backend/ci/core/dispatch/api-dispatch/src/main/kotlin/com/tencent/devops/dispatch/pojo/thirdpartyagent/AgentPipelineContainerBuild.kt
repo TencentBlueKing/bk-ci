@@ -48,5 +48,7 @@ data class NodeInfo(
     @get:Schema(title = "agentHashId", required = true)
     val agentHashId: String,
     @get:Schema(title = "nodeHashId", required = true)
-    val nodeHashId: String
+    val nodeHashId: String,
+    @get:Schema(title = "别名", required = true)
+    val displayName: String?
 )

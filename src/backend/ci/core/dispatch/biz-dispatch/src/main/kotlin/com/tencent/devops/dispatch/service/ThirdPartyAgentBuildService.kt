@@ -304,7 +304,13 @@ class ThirdPartyAgentBuildService @Autowired constructor(
                     buildNum = record.buildNum ?: 0,
                     creator = record.startUser,
                     tasks = null,
-                    nodeInfo = nodeInfoMap?.get(record.agentId)?.let { NodeInfo(it.agentHashId, it.nodeHashId) }
+                    nodeInfo = nodeInfoMap?.get(record.agentId)?.let {
+                            NodeInfo(
+                                agentHashId = it.agentHashId,
+                                nodeHashId = it.nodeHashId,
+                                displayName = it.nodeName
+                            )
+                        }
                 )
             )
         }
@@ -390,7 +396,13 @@ class ThirdPartyAgentBuildService @Autowired constructor(
                                 stageNumb = it.stageId?.toStageNumb() ?: it.stageId
                             )
                         },
-                        nodeInfo = nodeInfoMap?.get(record.agentId)?.let { NodeInfo(it.agentHashId, it.nodeHashId) }
+                        nodeInfo = nodeInfoMap?.get(record.agentId)?.let {
+                            NodeInfo(
+                                agentHashId = it.agentHashId,
+                                nodeHashId = it.nodeHashId,
+                                displayName = it.nodeName
+                            )
+                        }
                     )
                 )
             }
@@ -473,7 +485,13 @@ class ThirdPartyAgentBuildService @Autowired constructor(
                             stageNumb = record.stageId?.toStageNumb() ?: record.stageId
                         )
                     ),
-                    nodeInfo = nodeInfoMap?.get(record.agentId)?.let { NodeInfo(it.agentHashId, it.nodeHashId) }
+                    nodeInfo = nodeInfoMap?.get(record.agentId)?.let {
+                        NodeInfo(
+                            agentHashId = it.agentHashId,
+                            nodeHashId = it.nodeHashId,
+                            displayName = it.nodeName
+                        )
+                    }
                 )
             )
         }
