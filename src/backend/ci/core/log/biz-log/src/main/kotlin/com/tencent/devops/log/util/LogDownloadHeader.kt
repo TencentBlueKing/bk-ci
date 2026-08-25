@@ -55,7 +55,7 @@ object LogDownloadHeader {
         for (b in bytes) {
             val unsigned = b.toInt() and 0xFF
             val c = unsigned.toChar()
-            if (c.isLetterOrDigit() || c == '.' || c == '_' || c == '-') {
+            if (isRfc5987AttrChar(c)) {
                 sb.append(c)
             } else {
                 sb.append('%').append("%02X".format(unsigned))
@@ -63,4 +63,6 @@ object LogDownloadHeader {
         }
         return sb.toString()
     }
+
+    private fun isRfc5987AttrChar(c: Char): Boolean = c.isLetterOrDigit() || c in "._-"
 }

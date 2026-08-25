@@ -30,6 +30,6 @@ class LogDownloadHeaderTest {
     @Test
     fun sanitize_keepsSafeCharsOnly() {
         assertEquals("p-1_build.log", LogDownloadHeader.sanitize("p-1_build.log"))
-        assertEquals("ab", LogDownloadHeader.sanitize("a b/c"))
+        assertEquals("abc", LogDownloadHeader.sanitize("a b/c"))
     }
 }
