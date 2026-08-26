@@ -108,7 +108,7 @@
         }
 
         renderSlot (h) {
-            return h('bk-user-display-name', { 'user-id': `${this.username}(${this.chineseName})` })
+            return h('bk-user-display-name', { 'user-id': this.username })
         }
 
         logout (): void {
