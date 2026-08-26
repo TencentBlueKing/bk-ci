@@ -34,6 +34,7 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.event.CallBackEvent
 import com.tencent.devops.common.pipeline.event.CallBackNetWorkRegionType
+import com.tencent.devops.common.pipeline.event.PipelineCallbackEvent
 import com.tencent.devops.common.pipeline.event.ProjectPipelineCallBack
 import com.tencent.devops.openapi.BkApigwApi
 import com.tencent.devops.process.pojo.CreateCallBackResult
@@ -220,5 +221,85 @@ interface ApigwCallBackResourceV4 {
         @Parameter(description = "id", required = true)
         @QueryParam("id")
         id: Long
+    ): Result<Boolean>
+
+    @Operation(
+        summary = "创建/更新流水线级callback回调(按回调名称维度更新，不存在则新增)",
+        tags = ["v4_user_pipeline_callback_create", "v4_app_pipeline_callback_create"]
+    )
+    @POST
+    @Path("/pipelines/{pipelineId}")
+    fun createPipelineCallBack(
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @Parameter(description = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "projectId", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "pipelineId", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @Parameter(description = "回调信息列表", required = true)
+        callbackInfoList: List<PipelineCallbackEvent>
+    ): Result<Boolean>
+
+    @Operation(
+        summary = "查询流水线级callback回调",
+        tags = ["v4_user_pipeline_callback_get", "v4_app_pipeline_callback_get"]
+    )
+    @GET
+    @Path("/pipelines/{pipelineId}")
+    fun listPipelineCallBack(
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @Parameter(description = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "projectId", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "pipelineId", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @Parameter(description = "事件类型", required = false)
+        @QueryParam("event")
+        event: CallBackEvent?
+    ): Result<List<PipelineCallbackEvent>>
+
+    @Operation(
+        summary = "删除流水线级callback回调",
+        tags = ["v4_user_pipeline_callback_delete", "v4_app_pipeline_callback_delete"]
+    )
+    @DELETE
+    @Path("/pipelines/{pipelineId}")
+    fun deletePipelineCallBack(
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @Parameter(description = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "projectId", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "pipelineId", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @Parameter(description = "回调名称", required = true)
+        @QueryParam("callbackName")
+        callbackName: String
     ): Result<Boolean>
 }

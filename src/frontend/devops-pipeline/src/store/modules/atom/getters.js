@@ -328,7 +328,7 @@ export default {
     },
     getAllElements: state => stages => {
         const allElements = []
-        stages.map(stage => stage.containers.map(container => allElements.splice(0, 0, ...container.elements)))
+        stages.map(stage => stage?.containers?.map(container => allElements.splice(0, 0, ...container.elements)))
         return allElements
     },
     getAllContainers: state => stages => {

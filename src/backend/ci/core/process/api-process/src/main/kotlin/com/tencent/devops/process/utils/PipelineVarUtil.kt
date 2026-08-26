@@ -69,13 +69,23 @@ import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GITHUB_WEBHOOK_CREATE
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GITHUB_WEBHOOK_CREATE_REF_TYPE
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_BRANCH
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_DESCRIPTION
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_ASSIGNEES
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_ASSIGNEE_LOGINS
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_ID
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_IID
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_LABEL
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_LABELS
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_LABEL_COLOR
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_LABEL_DESCRIPTION
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_LABEL_ID
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_LABEL_NAMES
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_MILESTONE_ID
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_OWNER
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_STATE
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_TITLE
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_LABELS
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_ASSIGNEES
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_ASSIGNEE_LOGINS
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_MILESTONE
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_MILESTONE_ID
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_REVIEWERS
@@ -251,6 +261,8 @@ object PipelineVarUtil {
         "ci.mr_proposer" to PIPELINE_GIT_MR_PROPOSER,
         "ci.mr_action" to PIPELINE_GIT_MR_ACTION,
         "ci.mr_labels" to BK_REPO_GIT_WEBHOOK_MR_LABELS,
+        "ci.mr_assignees" to BK_REPO_GIT_WEBHOOK_MR_ASSIGNEES,
+        "ci.mr_assignee_logins" to BK_REPO_GIT_WEBHOOK_MR_ASSIGNEE_LOGINS,
         "ci.issue_title" to BK_REPO_GIT_WEBHOOK_ISSUE_TITLE,
         "ci.issue_id" to BK_REPO_GIT_WEBHOOK_ISSUE_ID,
         "ci.issue_iid" to BK_REPO_GIT_WEBHOOK_ISSUE_IID,
@@ -258,6 +270,14 @@ object PipelineVarUtil {
         "ci.issue_state" to BK_REPO_GIT_WEBHOOK_ISSUE_STATE,
         "ci.issue_owner" to BK_REPO_GIT_WEBHOOK_ISSUE_OWNER,
         "ci.issue_milestone_id" to BK_REPO_GIT_WEBHOOK_ISSUE_MILESTONE_ID,
+        "ci.issue_assignees" to BK_REPO_GIT_WEBHOOK_ISSUE_ASSIGNEES,
+        "ci.issue_assignee_logins" to BK_REPO_GIT_WEBHOOK_ISSUE_ASSIGNEE_LOGINS,
+        "ci.issue_label" to BK_REPO_GIT_WEBHOOK_ISSUE_LABEL,
+        "ci.issue_label_id" to BK_REPO_GIT_WEBHOOK_ISSUE_LABEL_ID,
+        "ci.issue_label_color" to BK_REPO_GIT_WEBHOOK_ISSUE_LABEL_COLOR,
+        "ci.issue_label_description" to BK_REPO_GIT_WEBHOOK_ISSUE_LABEL_DESCRIPTION,
+        "ci.issue_labels" to BK_REPO_GIT_WEBHOOK_ISSUE_LABELS,
+        "ci.issue_label_names" to BK_REPO_GIT_WEBHOOK_ISSUE_LABEL_NAMES,
         "ci.review_id" to BK_REPO_GIT_WEBHOOK_REVIEW_ID,
         "ci.review_iid" to BK_REPO_GIT_WEBHOOK_REVIEW_IID,
         "ci.review_owner" to BK_REPO_GIT_WEBHOOK_REVIEW_OWNER,

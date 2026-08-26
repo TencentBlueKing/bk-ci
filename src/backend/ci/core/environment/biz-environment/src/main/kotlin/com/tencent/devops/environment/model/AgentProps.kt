@@ -1,7 +1,12 @@
 package com.tencent.devops.environment.model
 
-import com.tencent.devops.common.api.pojo.agent.DockerInitFileInfo
+import com.fasterxml.jackson.core.type.TypeReference
+import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.pojo.agent.AgentErrorExitData
+import com.tencent.devops.common.api.pojo.agent.DockerInitFileInfo
+import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.environment.pojo.thirdpartyagent.create.AgentPropsSource
+import org.slf4j.LoggerFactory
 
 /**
  * Agent 系统属性
@@ -22,6 +27,8 @@ data class AgentProps(
     val source: AgentPropsSource? = null
 ) {
     companion object {
+        private val logger = LoggerFactory.getLogger(AgentProps::class.java)
+
         fun emptyBySource(source: AgentPropsSource) = AgentProps(
             arch = "",
             jdkVersion = emptyList(),
@@ -31,11 +38,25 @@ data class AgentProps(
             osVersion = null,
             source = source
         )
-    }
-}
 
-enum class AgentPropsSource {
-    REMOTEDEV, // 云桌面
-    DEVCLOUD, // 团队imate龙虾
-    ;
+        fun getSourceFromRecord(props: String?, os: OS?): AgentPropsSource {
+            val source = if (props == null) {
+                null
+            } else {
+                try {
+                    JsonUtil.to(props, object : TypeReference<AgentProps>() {}).source
+                } catch (e: Exception) {
+                    logger.warn("Failed to parse agent props source|props=$props", e)
+                    null
+                }
+            }
+            if (source == AgentPropsSource.DEVCLOUD || (source == null && os == OS.LINUX)) {
+                return AgentPropsSource.DEVCLOUD
+            }
+            if (source == AgentPropsSource.REMOTEDEV || (source == null && os == OS.WINDOWS)) {
+                return AgentPropsSource.REMOTEDEV
+            }
+            return AgentPropsSource.IEG_IMATE
+        }
+    }
 }

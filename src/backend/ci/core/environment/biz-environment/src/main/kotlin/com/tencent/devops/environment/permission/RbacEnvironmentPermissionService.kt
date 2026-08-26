@@ -37,13 +37,16 @@ import com.tencent.devops.common.auth.rbac.utils.RbacAuthUtils
 import com.tencent.devops.common.auth.utils.AuthCacheKeyUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
+import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.environment.permission.creativestream.CreativeStreamNodePermissionHandler
 import com.tencent.devops.model.environment.tables.records.TEnvRecord
 import com.tencent.devops.model.environment.tables.records.TNodeRecord
 import org.slf4j.LoggerFactory
 
 class RbacEnvironmentPermissionService(
     private val client: Client,
-    private val tokenCheckService: ClientTokenService
+    private val tokenCheckService: ClientTokenService,
+    private val creativeStreamNodePermissionHandler: CreativeStreamNodePermissionHandler
 ) : EnvironmentPermissionService {
     val envResourceType = AuthResourceType.ENVIRONMENT_ENVIRONMENT.value
     val nodeResourceType = AuthResourceType.ENVIRONMENT_ENV_NODE.value
@@ -174,13 +177,24 @@ class RbacEnvironmentPermissionService(
         permission: AuthPermission,
         resourceType: AuthResourceType
     ): Set<Long> {
-        return client.get(ServicePermissionAuthResource::class).getUserResourceByPermission(
-            token = tokenCheckService.getSystemToken()!!,
-            userId = userId,
-            action = buildNodeAction(permission, resourceType),
-            projectCode = projectId,
-            resourceType = resourceType.value
-        ).data?.map { HashUtil.decodeIdToLong(it) }?.toSet() ?: emptySet()
+        val channel = ChannelCode.getRequestChannelCode()
+        return if (channel == ChannelCode.CREATIVE_STREAM ||
+            resourceType == AuthResourceType.CREATIVE_STREAM_NODE
+        ) {
+            creativeStreamNodePermissionHandler.listNodePermissions(
+                userId = userId,
+                projectId = projectId,
+                permissions = setOf(permission)
+            )[permission] ?: emptySet()
+        } else {
+            client.get(ServicePermissionAuthResource::class).getUserResourceByPermission(
+                token = tokenCheckService.getSystemToken()!!,
+                userId = userId,
+                action = buildNodeAction(permission, resourceType),
+                projectCode = projectId,
+                resourceType = resourceType.value
+            ).data?.map { HashUtil.decodeIdToLong(it) }?.toSet() ?: emptySet()
+        }
     }
 
     override fun listNodeByPermissions(
@@ -189,6 +203,15 @@ class RbacEnvironmentPermissionService(
         permissions: Set<AuthPermission>,
         resourceType: AuthResourceType
     ): Map<AuthPermission, List<String>> {
+        if (ChannelCode.getRequestChannelCode() == ChannelCode.CREATIVE_STREAM ||
+            resourceType == AuthResourceType.CREATIVE_STREAM_NODE
+        ) {
+            return creativeStreamNodePermissionHandler.listNodePermissions(
+                userId = userId,
+                projectId = projectId,
+                permissions = permissions
+            ).mapValues { (_, ids) -> ids.map(HashUtil::encodeLongId) }
+        }
         return client.get(ServicePermissionAuthResource::class).getUserResourcesByPermissions(
             token = tokenCheckService.getSystemToken()!!,
             userId = userId,
@@ -198,13 +221,24 @@ class RbacEnvironmentPermissionService(
         ).data ?: emptyMap()
     }
 
-    override fun listNodeByRbacPermission(
+    override fun listNodePermission(
         userId: String,
         projectId: String,
         nodeRecordList: List<TNodeRecord>,
         authPermission: AuthPermission,
         resourceType: AuthResourceType
     ): List<TNodeRecord> {
+        if (ChannelCode.getRequestChannelCode() == ChannelCode.CREATIVE_STREAM ||
+            resourceType == AuthResourceType.CREATIVE_STREAM_NODE
+        ) {
+            val permissionNodeIds = creativeStreamNodePermissionHandler.listNodePermissions(
+                userId = userId,
+                projectId = projectId,
+                nodeIds = nodeRecordList.map { it.nodeId },
+                permissions = setOf(authPermission)
+            )[authPermission] ?: emptySet()
+            return nodeRecordList.filter { it.nodeId in permissionNodeIds }
+        }
         val hasRbacPermissionNodeIds = listNodeByPermission(
             userId, projectId, authPermission, resourceType
         )
@@ -221,6 +255,16 @@ class RbacEnvironmentPermissionService(
         permission: AuthPermission,
         resourceType: AuthResourceType
     ): Boolean {
+        if (ChannelCode.getRequestChannelCode() == ChannelCode.CREATIVE_STREAM ||
+            resourceType == AuthResourceType.CREATIVE_STREAM_NODE
+        ) {
+            return creativeStreamNodePermissionHandler.checkPermission(
+                userId = userId,
+                projectId = projectId,
+                nodeId = nodeId,
+                permission = permission
+            )
+        }
         val cacheKey = AuthCacheKeyUtil.getCacheKey(
             userId = userId,
             resourceType = resourceType.value,
@@ -248,6 +292,12 @@ class RbacEnvironmentPermissionService(
         permission: AuthPermission,
         resourceType: AuthResourceType
     ): Boolean {
+        if ((ChannelCode.getRequestChannelCode() == ChannelCode.CREATIVE_STREAM ||
+                    resourceType == AuthResourceType.CREATIVE_STREAM_NODE) &&
+            permission == AuthPermission.CREATE
+        ) {
+            return true
+        }
         val cacheKey = AuthCacheKeyUtil.getCacheKey(
             userId = userId,
             resourceType = AuthResourceType.PROJECT.value,

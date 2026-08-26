@@ -229,6 +229,21 @@ interface OPProjectResource {
     ): Result<Boolean>
 
     @PUT
+    @Path("/{projectId}/pipelineLimit")
+    @Operation(summary = "修改项目下流水线最大条数")
+    fun updatePipelineLimit(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @Parameter(description = "项目code", required = true)
+        @PathParam("projectId")
+        projectCode: String,
+        @Parameter(description = "流水线数量上限", required = true)
+        @QueryParam("pipelineLimit")
+        pipelineLimit: Int
+    ): Result<Boolean>
+
+    @PUT
     @Path("/hidden")
     @Operation(summary = "设置项目隐藏状态")
     fun setHidden(

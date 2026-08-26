@@ -5,7 +5,7 @@
             :value="value"
             :name="name"
         >
-            <template v-for="item in list">
+            <template v-for="item in enumList">
                 <bk-popover
                     v-if="!item.hidden"
                     :style="`width: calc(${100 / lineNumber}% - 10px)`"
