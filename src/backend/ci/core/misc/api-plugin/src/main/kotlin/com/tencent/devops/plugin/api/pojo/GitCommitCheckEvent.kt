@@ -28,6 +28,7 @@
 package com.tencent.devops.plugin.api.pojo
 
 import com.tencent.devops.common.api.enums.RepositoryConfig
+import com.tencent.devops.common.api.pojo.CommitCheckApproval
 import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.common.event.pojo.pipeline.IPipelineEvent
 import com.tencent.devops.common.stream.constants.StreamBinding
@@ -50,9 +51,7 @@ data class GitCommitCheckEvent(
     val startTime: Long = 0L,
     val mergeRequestId: Long? = null,
     val targetBranch: String?,
-    val approveUrl: String? = null,
-    val approverUsers: String? = null,
-    val quickApproveEnabled: Int? = null,
+    val approvals: List<CommitCheckApproval>? = null,
     override var actionType: ActionType = ActionType.REFRESH,
     override val source: String,
     override val userId: String,

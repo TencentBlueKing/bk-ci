@@ -30,6 +30,7 @@ package com.tencent.devops.plugin.service.git
 import com.tencent.devops.common.api.enums.BuildReviewType
 import com.tencent.devops.common.api.enums.RepositoryConfig
 import com.tencent.devops.common.api.enums.RepositoryType
+import com.tencent.devops.common.api.pojo.CommitCheckApproval
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
@@ -272,9 +273,10 @@ class CodeWebhookService @Autowired constructor(
     }
 
     /**
-     * 流水线进入/离开人工审核（stage 准入审核、人工审核插件）时，联动回写工蜂 commit check。
-     * - 进入待审(REVIEWING)：回写 need_approve，并带上审批链接、审批人
+     * 流水线进入/离开 stage 准入审核时，联动回写工蜂 commit check。
+     * - 进入待审(REVIEWING)：回写 need_approve，approvals 带上该 stage 的审批人、快速审批标志
      * - 审核通过(REVIEW_PROCESSED)：恢复为 pending（运行中），最终态由构建结束事件回写
+     * - 审核驳回/超时(REVIEW_ABORT)：回写 failure
      */
     fun onBuildReview(event: PipelineBuildReviewBroadCastEvent) {
         logger.info("Code web hook on review [${event.buildId}|${event.reviewType}|${event.status}]")
@@ -285,7 +287,6 @@ class CodeWebhookService @Autowired constructor(
             val reviewState = when (status) {
                 BuildStatus.REVIEWING.name -> GIT_COMMIT_CHECK_STATE_NEED_APPROVE
                 BuildStatus.REVIEW_PROCESSED.name -> GIT_COMMIT_CHECK_STATE_PENDING
-                // 审核驳回/超时，回写失败
                 BuildStatus.REVIEW_ABORT.name -> GIT_COMMIT_CHECK_STATE_FAILURE
                 else -> {
                     logger.info("$buildId|review status $status ignored")
@@ -307,6 +308,19 @@ class CodeWebhookService @Autowired constructor(
                     // 审核联动仅针对 MR 触发
                     val eventCondition = webhookEventType == CodeEventType.MERGE_REQUEST
                     if (enableCheck && repoCondition && eventCondition) {
+                        // 仅在进入待审时携带审批项
+                        val approvals = if (reviewState == GIT_COMMIT_CHECK_STATE_NEED_APPROVE) {
+                            listOf(
+                                CommitCheckApproval(
+                                    approveUsers = event.reviewers?.filter { it.isNotBlank() }
+                                        ?.joinToString(",")?.takeIf { it.isNotBlank() },
+                                    // 无审核参数时支持快速审批（0:不支持 1:支持）
+                                    quickApproveEnabled = event.hasReviewParams?.let { if (it) 0 else 1 }
+                                )
+                            )
+                        } else {
+                            null
+                        }
                         logger.info(
                             "$buildId|WebHook_REVIEW_GIT_COMMIT_CHECK|$pipelineId|$repositoryConfig|$commitId|$reviewState"
                         )
@@ -322,10 +336,7 @@ class CodeWebhookService @Autowired constructor(
                                 state = reviewState,
                                 block = block,
                                 targetBranch = targetBranch,
-                                approverUsers = event.reviewers?.filter { it.isNotBlank() }
-                                    ?.joinToString(",")?.takeIf { it.isNotBlank() },
-                                // 无审核参数时支持快速审批（0:不支持 1:支持）
-                                quickApproveEnabled = event.hasReviewParams?.let { if (it) 0 else 1 }
+                                approvals = approvals
                             )
                         )
                     }
@@ -335,7 +346,7 @@ class CodeWebhookService @Autowired constructor(
     }
 
     /**
-     * 需回写工蜂审核状态的审核类型（stage 准入审核、人工审核插件）
+     * 需回写工蜂审核状态的审核类型（当前仅 stage 准入审核）
      */
     private fun supportReviewType(reviewType: BuildReviewType) = when (reviewType) {
         BuildReviewType.STAGE_REVIEW -> true
