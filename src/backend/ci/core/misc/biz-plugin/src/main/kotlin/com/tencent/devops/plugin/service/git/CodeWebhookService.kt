@@ -323,7 +323,9 @@ class CodeWebhookService @Autowired constructor(
                                 block = block,
                                 targetBranch = targetBranch,
                                 approverUsers = event.reviewers?.filter { it.isNotBlank() }
-                                    ?.joinToString(",")?.takeIf { it.isNotBlank() }
+                                    ?.joinToString(",")?.takeIf { it.isNotBlank() },
+                                // 无审核参数时支持快速审批（0:不支持 1:支持）
+                                quickApproveEnabled = event.hasReviewParams?.let { if (it) 0 else 1 }
                             )
                         )
                     }

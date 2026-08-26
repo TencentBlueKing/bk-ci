@@ -149,7 +149,11 @@ class ScmCheckService @Autowired constructor(private val client: Client) {
                 } else {
                     null
                 },
-                quickApproveEnabled = event.quickApproveEnabled
+                quickApproveEnabled = if (state == GIT_COMMIT_CHECK_STATE_NEED_APPROVE) {
+                    event.quickApproveEnabled
+                } else {
+                    null
+                }
             )
             if (isOauth) {
                 client.get(ServiceScmOauthResource::class).addCommitCheck(request)
