@@ -454,6 +454,7 @@
             justify-content: space-between;
             align-items: center;
             flex: 1;
+            min-width: 0;
             margin-right: 8px;
         }
         
@@ -478,6 +479,7 @@
         }
         .env-name {
             flex: 1;
+            min-width: 0;
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
