@@ -30,6 +30,7 @@ package com.tencent.devops.scm.code.git.api
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.HTTP_403
+import com.tencent.devops.common.api.pojo.CommitCheckApproval
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.service.prometheus.BkTimedAspect
@@ -205,9 +206,7 @@ open class GitApi {
         description: String,
         block: Boolean,
         targetBranch: List<String>?,
-        approveUrl: String? = null,
-        approverUsers: String? = null,
-        quickApproveEnabled: Int? = null
+        approvals: List<CommitCheckApproval>? = null
     ) {
         val params = mutableMapOf<String, Any?>(
             "state" to state,
@@ -217,15 +216,15 @@ open class GitApi {
             "block" to block,
             "target_branches" to targetBranch
         )
-        // 需人工审核场景下，回写审批状态、审批链接、审批人给工蜂
-        if (!approveUrl.isNullOrBlank()) {
-            params["approve_url"] = approveUrl
-        }
-        if (!approverUsers.isNullOrBlank()) {
-            params["approver_users"] = approverUsers
-        }
-        if (quickApproveEnabled != null) {
-            params["quick_approve_enabled"] = quickApproveEnabled
+        // 需人工审核场景下，将所有待审步骤的审批链接、审批人、快速审批标志汇总回写给工蜂
+        if (!approvals.isNullOrEmpty()) {
+            params["approvals"] = approvals.map {
+                mapOf(
+                    "approve_url" to it.approveUrl,
+                    "approve_users" to it.approveUsers,
+                    "quickApproveEnabled" to it.quickApproveEnabled
+                )
+            }
         }
 
         val body = JsonUtil.getObjectMapper().writeValueAsString(params)

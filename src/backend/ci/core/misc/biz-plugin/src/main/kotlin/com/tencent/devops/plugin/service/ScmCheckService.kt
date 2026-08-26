@@ -138,18 +138,12 @@ class ScmCheckService @Autowired constructor(private val client: Client) {
                     channelCode = channelCode
                 ),
                 targetBranch = targetBranch,
-                // 仅在需人工审核场景下回写审批信息，审批链接缺省复用构建详情页链接
-                approveUrl = if (state == GIT_COMMIT_CHECK_STATE_NEED_APPROVE) {
-                    event.approveUrl ?: targetUrl
+                // 仅在需人工审核场景下回写审批列表，审批链接缺省复用构建详情页链接
+                approvals = if (state == GIT_COMMIT_CHECK_STATE_NEED_APPROVE) {
+                    event.approvals?.map { it.copy(approveUrl = it.approveUrl ?: targetUrl) }
                 } else {
                     null
-                },
-                approverUsers = if (state == GIT_COMMIT_CHECK_STATE_NEED_APPROVE) {
-                    event.approverUsers
-                } else {
-                    null
-                },
-                quickApproveEnabled = event.quickApproveEnabled
+                }
             )
             if (isOauth) {
                 client.get(ServiceScmOauthResource::class).addCommitCheck(request)

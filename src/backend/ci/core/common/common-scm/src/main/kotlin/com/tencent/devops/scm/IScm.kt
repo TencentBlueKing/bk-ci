@@ -27,6 +27,7 @@
 
 package com.tencent.devops.scm
 
+import com.tencent.devops.common.api.pojo.CommitCheckApproval
 import com.tencent.devops.scm.code.git.api.GitHook
 import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.GitCommitReviewInfo
@@ -77,9 +78,7 @@ interface IScm {
         description: String,
         block: Boolean,
         targetBranch: List<String>?,
-        approveUrl: String? = null,
-        approverUsers: String? = null,
-        quickApproveEnabled: Int? = null
+        approvals: List<CommitCheckApproval>? = null
     )
 
     fun addMRComment(mrId: Long, comment: String)
