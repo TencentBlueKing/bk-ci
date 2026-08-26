@@ -4,6 +4,7 @@
 package monitor
 
 import (
+	"context"
 	"strings"
 	"time"
 
@@ -68,8 +69,8 @@ func isNetworkFS(fstype string) bool {
 // Disk 对齐 telegraf plugins/inputs/disk。每个 physical mountpoint 产出
 // 一条 metric，tag 含 device / fstype / path / mode。
 type Disk struct {
-	partitionsFn func(all bool) ([]disk.PartitionStat, error)
-	usageFn      func(path string) (*disk.UsageStat, error)
+	partitionsFn func(ctx context.Context, all bool) ([]disk.PartitionStat, error)
+	usageFn      func(ctx context.Context, path string) (*disk.UsageStat, error)
 	nowFn        func() time.Time
 
 	// IgnoreFS 为 nil 时使用 defaultDiskIgnoreFS。
@@ -79,8 +80,8 @@ type Disk struct {
 // NewDisk 返回默认 disk 采集器。
 func NewDisk() *Disk {
 	return &Disk{
-		partitionsFn: disk.Partitions,
-		usageFn:      disk.Usage,
+		partitionsFn: disk.PartitionsWithContext,
+		usageFn:      disk.UsageWithContext,
 		nowFn:        time.Now,
 	}
 }
@@ -98,8 +99,8 @@ func (d *Disk) Name() string { return MeasurementDisk }
 //
 // 对于本地盘的 Usage 失败（权限等），记录跳过不影响其他挂载点，对齐
 // telegraf 的降级行为。
-func (d *Disk) Gather() ([]Metric, error) {
-	parts, err := d.partitionsFn(false)
+func (d *Disk) Gather(ctx context.Context) ([]Metric, error) {
+	parts, err := d.partitionsFn(ctx, false)
 	if err != nil {
 		return nil, errors.Wrap(err, "disk: Partitions failed")
 	}
@@ -119,7 +120,7 @@ func (d *Disk) Gather() ([]Metric, error) {
 		if isNetworkFS(p.Fstype) {
 			continue
 		}
-		usage, uerr := d.usageFn(p.Mountpoint)
+		usage, uerr := d.usageFn(ctx, p.Mountpoint)
 		if uerr != nil || usage == nil {
 			// 本地挂载点不可读（权限等）跳过，不影响其他挂载点上报
 			continue

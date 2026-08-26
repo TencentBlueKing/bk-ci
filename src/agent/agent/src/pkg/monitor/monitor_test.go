@@ -23,7 +23,7 @@ type stubInput struct {
 
 func (s *stubInput) Name() string { return s.name }
 
-func (s *stubInput) Gather() ([]Metric, error) {
+func (s *stubInput) Gather(_ context.Context) ([]Metric, error) {
 	s.calls.Add(1)
 	if s.err != nil {
 		return nil, s.err

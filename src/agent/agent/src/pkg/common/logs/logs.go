@@ -19,12 +19,20 @@ var Logs *logrus.Entry
 var logWriter io.Closer
 
 func Init(filepath string, isDebug bool, logStd bool) error {
+	// 默认轮转策略：保留 7 天 / 7 个备份，与历史行为一致。
+	return InitWithRotate(filepath, isDebug, logStd, 7, 7)
+}
+
+// InitWithRotate 与 Init 相同，但允许自定义 lumberjack 的 MaxAge / MaxBackups，
+// 便于单独的日志文件（如 monitor 子进程的 devopsMonitor.log 只保留 1 天）
+// 使用不同于主日志的保留策略。
+func InitWithRotate(filepath string, isDebug bool, logStd bool, maxAge int, maxBackups int) error {
 	logInfo := logrus.WithFields(logrus.Fields{})
 
 	lumLog := &lumberjack.Logger{
 		Filename:   filepath,
-		MaxAge:     7,
-		MaxBackups: 7,
+		MaxAge:     maxAge,
+		MaxBackups: maxBackups,
 		LocalTime:  true,
 	}
 	logWriter = lumLog

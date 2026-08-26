@@ -4,6 +4,7 @@
 package monitor
 
 import (
+	"context"
 	"time"
 
 	"github.com/pkg/errors"
@@ -22,19 +23,23 @@ import (
 //	T -> stopped
 //	Z -> zombies
 type Processes struct {
-	processesFn func() ([]*process.Process, error)
-	statusFn    func(*process.Process) ([]string, error)
-	threadsFn   func(*process.Process) (int32, error)
+	processesFn func(ctx context.Context) ([]*process.Process, error)
+	statusFn    func(ctx context.Context, p *process.Process) ([]string, error)
+	threadsFn   func(ctx context.Context, p *process.Process) (int32, error)
 	nowFn       func() time.Time
 }
 
 // NewProcesses 返回默认采集器。
 func NewProcesses() *Processes {
 	return &Processes{
-		processesFn: process.Processes,
-		statusFn:    func(p *process.Process) ([]string, error) { return p.Status() },
-		threadsFn:   func(p *process.Process) (int32, error) { return p.NumThreads() },
-		nowFn:       time.Now,
+		processesFn: process.ProcessesWithContext,
+		statusFn: func(ctx context.Context, p *process.Process) ([]string, error) {
+			return p.StatusWithContext(ctx)
+		},
+		threadsFn: func(ctx context.Context, p *process.Process) (int32, error) {
+			return p.NumThreadsWithContext(ctx)
+		},
+		nowFn: time.Now,
 	}
 }
 
@@ -43,8 +48,8 @@ func (p *Processes) Name() string { return MeasurementProcesses }
 
 // Gather 遍历所有进程，按状态分桶。
 // 个别进程在遍历过程中可能退出导致 Status() 返回 error，忽略该进程继续。
-func (p *Processes) Gather() ([]Metric, error) {
-	procs, err := p.processesFn()
+func (p *Processes) Gather(ctx context.Context) ([]Metric, error) {
+	procs, err := p.processesFn(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "processes: Processes failed")
 	}
@@ -52,7 +57,7 @@ func (p *Processes) Gather() ([]Metric, error) {
 	total := int64(len(procs))
 
 	for _, proc := range procs {
-		statuses, err := p.statusFn(proc)
+		statuses, err := p.statusFn(ctx, proc)
 		if err != nil || len(statuses) == 0 {
 			continue
 		}
@@ -68,7 +73,7 @@ func (p *Processes) Gather() ([]Metric, error) {
 			zombies++
 		}
 
-		if n, err := p.threadsFn(proc); err == nil {
+		if n, err := p.threadsFn(ctx, proc); err == nil {
 			totalThreads += int64(n)
 		}
 	}

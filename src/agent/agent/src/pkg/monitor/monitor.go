@@ -48,6 +48,16 @@ const (
 	stackDumpInterval = 10 * time.Minute
 )
 
+// perInputTimeout 单个 input 的 Gather 超时。对齐 gopsutil 内部 shell-out
+// 命令超时（internal/common.Timeout = 3s）与 telegraf 的预期：正常采集应在
+// 毫秒级完成，卡到秒级即视为异常。透传到 gopsutil 的 *WithContext API 后，
+// 能打断"已 exec 成功但在跑"的外部命令（netstat/lsof/ps）。注意：对"fork
+// 尚未返回"的内核级冻结（mac 休眠）仍打不断，那部分由 monitor 独立子进程 +
+// inflightHardCap 兜底。
+//
+// 用 var 而非 const 便于单测调小以加速。
+var perInputTimeout = 3 * time.Second
+
 // lastStackDumpUnixNano 上次 dump goroutine stack 的时间戳（UnixNano）。
 // 与 stackDumpInterval 配合做节流，用 atomic 避免多轮之间竞争。
 var lastStackDumpUnixNano atomic.Int64
@@ -186,6 +196,15 @@ func runGatherLoop(ctx context.Context, ins []Input, reporter *Reporter, dumper 
 //     后台跑完后把结果发到同一 channel（channel 容量 = len(ins) 确保不阻塞），
 //     不再额外新建"等待者"。
 func doOneGather(ctx context.Context, ins []Input, reporter *Reporter, dumper *Dumper) {
+	// 每轮刷新一次 agent IP：monitor 作为独立子进程运行时，无法通过父进程的
+	// config.EBus 收到 IP 变更事件，故主动重载，保证上报 header / global tag
+	// 里的 IP 是最新的。开销极小（读网卡列表），放在轮首。
+	// 仅在 config 已完整初始化时刷新（GAgentEnv 由 config.LoadAgentEnv 建立）；
+	// 未初始化时（如单测直接调 doOneGather）跳过，避免空指针。
+	if config.GAgentConfig != nil && config.GAgentEnv != nil {
+		config.LoadAgentIp()
+	}
+
 	if n := inflightInputs.Load(); n >= inflightHardCap {
 		logs.Warnf("monitor|skip round: inflight input goroutines=%d >= cap=%d (some inputs may be stuck)", n, inflightHardCap)
 		// 超阈值大概率有 input 卡在 syscall/cgo，dump 一次 goroutine
@@ -218,7 +237,11 @@ func doOneGather(ctx context.Context, ins []Input, reporter *Reporter, dumper *D
 					}
 				}
 			}()
-			metrics, err := in.Gather()
+			// 每个 input 单独派生 perInputTimeout 超时的 ctx，透传到底层
+			// gopsutil *WithContext，卡死的 input 不会拖累整轮 gatherTimeout。
+			inCtx, inCancel := context.WithTimeout(gatherCtx, perInputTimeout)
+			defer inCancel()
+			metrics, err := in.Gather(inCtx)
 			if err != nil {
 				logs.WithError(err).Warnf("monitor|input %s gather failed", in.Name())
 				resCh <- nil

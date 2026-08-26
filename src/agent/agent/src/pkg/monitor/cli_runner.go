@@ -90,7 +90,7 @@ func gatherAll(ctx context.Context, ins []Input) []Metric {
 					fmt.Fprintf(os.Stderr, "[monitor] input %s panic: %v\n", in.Name(), r)
 				}
 			}()
-			metrics, err := in.Gather()
+			metrics, err := in.Gather(ctx)
 			if err != nil {
 				fmt.Fprintf(os.Stderr, "[monitor] input %s gather failed: %v\n", in.Name(), err)
 				return

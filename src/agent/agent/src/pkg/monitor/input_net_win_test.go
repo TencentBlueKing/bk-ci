@@ -4,6 +4,7 @@
 package monitor
 
 import (
+	"context"
 	"errors"
 	"testing"
 	"time"
@@ -23,7 +24,7 @@ func TestNet_TwinSample_BasicRate(t *testing.T) {
 	clk := newFakeClock()
 	calls := 0
 	n := &Net{
-		ioCountersFn: func(pernic bool) ([]net.IOCountersStat, error) {
+		ioCountersFn: func(_ context.Context, pernic bool) ([]net.IOCountersStat, error) {
 			if !pernic {
 				t.Errorf("IOCounters called with pernic=false")
 			}
@@ -45,7 +46,7 @@ func TestNet_TwinSample_BasicRate(t *testing.T) {
 		sleepFn: clk.Sleep,
 	}
 
-	metrics, err := n.Gather()
+	metrics, err := n.Gather(context.Background())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -104,7 +105,7 @@ func TestNet_TwinSample_CounterReset(t *testing.T) {
 	clk := newFakeClock()
 	calls := 0
 	n := &Net{
-		ioCountersFn: func(pernic bool) ([]net.IOCountersStat, error) {
+		ioCountersFn: func(_ context.Context, pernic bool) ([]net.IOCountersStat, error) {
 			calls++
 			if calls == 1 {
 				return []net.IOCountersStat{{
@@ -120,7 +121,7 @@ func TestNet_TwinSample_CounterReset(t *testing.T) {
 		sleepFn: clk.Sleep,
 	}
 
-	metrics, _ := n.Gather()
+	metrics, _ := n.Gather(context.Background())
 	if len(metrics) != 1 {
 		t.Fatalf("want 1 metric, got %d", len(metrics))
 	}
@@ -144,7 +145,7 @@ func TestNet_TwinSample_NewInterfaceOnlyInSecond(t *testing.T) {
 	clk := newFakeClock()
 	calls := 0
 	n := &Net{
-		ioCountersFn: func(pernic bool) ([]net.IOCountersStat, error) {
+		ioCountersFn: func(_ context.Context, pernic bool) ([]net.IOCountersStat, error) {
 			calls++
 			if calls == 1 {
 				return []net.IOCountersStat{
@@ -160,7 +161,7 @@ func TestNet_TwinSample_NewInterfaceOnlyInSecond(t *testing.T) {
 		sleepFn: clk.Sleep,
 	}
 
-	metrics, _ := n.Gather()
+	metrics, _ := n.Gather(context.Background())
 	if len(metrics) != 2 {
 		t.Fatalf("want 2 metrics, got %d", len(metrics))
 	}
@@ -192,7 +193,7 @@ func TestNet_TwinSample_FiltersAllPseudoInterface(t *testing.T) {
 	clk := newFakeClock()
 	calls := 0
 	n := &Net{
-		ioCountersFn: func(pernic bool) ([]net.IOCountersStat, error) {
+		ioCountersFn: func(_ context.Context, pernic bool) ([]net.IOCountersStat, error) {
 			calls++
 			base := []net.IOCountersStat{
 				{Name: "Ethernet", BytesRecv: 100},
@@ -207,7 +208,7 @@ func TestNet_TwinSample_FiltersAllPseudoInterface(t *testing.T) {
 		nowFn:   clk.Now,
 		sleepFn: clk.Sleep,
 	}
-	metrics, _ := n.Gather()
+	metrics, _ := n.Gather(context.Background())
 	if len(metrics) != 1 {
 		t.Fatalf("want 1 metric (all filtered), got %d", len(metrics))
 	}
@@ -221,14 +222,14 @@ func TestNet_TwinSample_FiltersAllPseudoInterface(t *testing.T) {
 func TestNet_TwinSample_NoSleepInTest(t *testing.T) {
 	clk := newFakeClock()
 	n := &Net{
-		ioCountersFn: func(pernic bool) ([]net.IOCountersStat, error) {
+		ioCountersFn: func(_ context.Context, pernic bool) ([]net.IOCountersStat, error) {
 			return []net.IOCountersStat{{Name: "Ethernet"}}, nil
 		},
 		nowFn:   clk.Now,
 		sleepFn: clk.Sleep,
 	}
 	start := time.Now()
-	_, _ = n.Gather()
+	_, _ = n.Gather(context.Background())
 	if elapsed := time.Since(start); elapsed > 200*time.Millisecond {
 		t.Errorf("Gather took %v; fake sleepFn should avoid real 1s sleep", elapsed)
 	}
@@ -237,11 +238,11 @@ func TestNet_TwinSample_NoSleepInTest(t *testing.T) {
 func TestNet_TwinSample_FirstSampleErrPropagates(t *testing.T) {
 	sentinel := errors.New("boom-first")
 	n := &Net{
-		ioCountersFn: func(pernic bool) ([]net.IOCountersStat, error) { return nil, sentinel },
+		ioCountersFn: func(_ context.Context, pernic bool) ([]net.IOCountersStat, error) { return nil, sentinel },
 		nowFn:        time.Now,
 		sleepFn:      func(time.Duration) {},
 	}
-	if _, err := n.Gather(); err == nil || !errors.Is(err, sentinel) {
+	if _, err := n.Gather(context.Background()); err == nil || !errors.Is(err, sentinel) {
 		t.Errorf("err = %v, want wrap of sentinel", err)
 	}
 }
@@ -250,7 +251,7 @@ func TestNet_TwinSample_SecondSampleErrPropagates(t *testing.T) {
 	sentinel := errors.New("boom-second")
 	calls := 0
 	n := &Net{
-		ioCountersFn: func(pernic bool) ([]net.IOCountersStat, error) {
+		ioCountersFn: func(_ context.Context, pernic bool) ([]net.IOCountersStat, error) {
 			calls++
 			if calls == 1 {
 				return []net.IOCountersStat{{Name: "Ethernet"}}, nil
@@ -260,7 +261,7 @@ func TestNet_TwinSample_SecondSampleErrPropagates(t *testing.T) {
 		nowFn:   time.Now,
 		sleepFn: func(time.Duration) {},
 	}
-	if _, err := n.Gather(); err == nil || !errors.Is(err, sentinel) {
+	if _, err := n.Gather(context.Background()); err == nil || !errors.Is(err, sentinel) {
 		t.Errorf("err = %v, want wrap of sentinel", err)
 	}
 }
@@ -268,13 +269,13 @@ func TestNet_TwinSample_SecondSampleErrPropagates(t *testing.T) {
 func TestNet_TwinSample_NonPositiveDt(t *testing.T) {
 	frozen := time.Unix(1_700_000_000, 0)
 	n := &Net{
-		ioCountersFn: func(pernic bool) ([]net.IOCountersStat, error) {
+		ioCountersFn: func(_ context.Context, pernic bool) ([]net.IOCountersStat, error) {
 			return []net.IOCountersStat{{Name: "Ethernet"}}, nil
 		},
 		nowFn:   func() time.Time { return frozen },
 		sleepFn: func(time.Duration) {},
 	}
-	if _, err := n.Gather(); err == nil {
+	if _, err := n.Gather(context.Background()); err == nil {
 		t.Error("want error on non-positive dt, got nil")
 	}
 }
@@ -285,7 +286,7 @@ func TestNet_TwinSample_NonPositiveDt(t *testing.T) {
 func TestNet_TwinSample_InstanceFromDescription(t *testing.T) {
 	clk := newFakeClock()
 	n := &Net{
-		ioCountersFn: func(pernic bool) ([]net.IOCountersStat, error) {
+		ioCountersFn: func(_ context.Context, pernic bool) ([]net.IOCountersStat, error) {
 			return []net.IOCountersStat{
 				{Name: "以太网 5", BytesRecv: 1, BytesSent: 2},
 			}, nil
@@ -298,7 +299,7 @@ func TestNet_TwinSample_InstanceFromDescription(t *testing.T) {
 			}, nil
 		},
 	}
-	metrics, _ := n.Gather()
+	metrics, _ := n.Gather(context.Background())
 	if len(metrics) != 1 {
 		t.Fatalf("want 1 metric, got %d", len(metrics))
 	}
@@ -318,7 +319,7 @@ func TestNet_TwinSample_InstanceFromDescription(t *testing.T) {
 func TestNet_TwinSample_InstanceFallbackOnMissingKey(t *testing.T) {
 	clk := newFakeClock()
 	n := &Net{
-		ioCountersFn: func(pernic bool) ([]net.IOCountersStat, error) {
+		ioCountersFn: func(_ context.Context, pernic bool) ([]net.IOCountersStat, error) {
 			return []net.IOCountersStat{
 				{Name: "以太网 5", BytesRecv: 1, BytesSent: 2},
 			}, nil
@@ -329,7 +330,7 @@ func TestNet_TwinSample_InstanceFallbackOnMissingKey(t *testing.T) {
 			return map[string]string{"Ethernet 99": "other"}, nil
 		},
 	}
-	metrics, _ := n.Gather()
+	metrics, _ := n.Gather(context.Background())
 	if got := metrics[0].Tags[TagInstance]; got != "以太网 5" {
 		t.Errorf("instance missing key fallback = %q, want FriendlyName", got)
 	}
@@ -340,7 +341,7 @@ func TestNet_TwinSample_InstanceFallbackOnMissingKey(t *testing.T) {
 func TestNet_TwinSample_InstanceFallbackOnError(t *testing.T) {
 	clk := newFakeClock()
 	n := &Net{
-		ioCountersFn: func(pernic bool) ([]net.IOCountersStat, error) {
+		ioCountersFn: func(_ context.Context, pernic bool) ([]net.IOCountersStat, error) {
 			return []net.IOCountersStat{
 				{Name: "以太网 3", BytesRecv: 1, BytesSent: 2},
 			}, nil
@@ -351,7 +352,7 @@ func TestNet_TwinSample_InstanceFallbackOnError(t *testing.T) {
 			return nil, errors.New("GetAdaptersAddresses failed")
 		},
 	}
-	metrics, err := n.Gather()
+	metrics, err := n.Gather(context.Background())
 	if err != nil {
 		t.Fatalf("gather should not fail on adapter desc err: %v", err)
 	}

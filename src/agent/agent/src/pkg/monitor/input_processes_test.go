@@ -4,6 +4,7 @@
 package monitor
 
 import (
+	"context"
 	"errors"
 	"testing"
 	"time"
@@ -33,14 +34,14 @@ func TestProcesses_Gather_CountsByStatus(t *testing.T) {
 	// 让每个进程有不同状态：R, S, T, Z, I
 	statuses := [][]string{{"R"}, {"S"}, {"T"}, {"Z"}, {"I"}}
 	p := &Processes{
-		processesFn: func() ([]*process.Process, error) { return procs, nil },
-		statusFn: func(pr *process.Process) ([]string, error) {
+		processesFn: func(_ context.Context) ([]*process.Process, error) { return procs, nil },
+		statusFn: func(_ context.Context, pr *process.Process) ([]string, error) {
 			return statuses[pr.Pid-1], nil
 		},
-		threadsFn: func(pr *process.Process) (int32, error) { return 2, nil },
+		threadsFn: func(_ context.Context, pr *process.Process) (int32, error) { return 2, nil },
 		nowFn:     time.Now,
 	}
-	metrics, err := p.Gather()
+	metrics, err := p.Gather(context.Background())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -69,17 +70,17 @@ func TestProcesses_Gather_SkipsErroredProcesses(t *testing.T) {
 	// 某进程 Status() 出错（可能已退出）不应影响其他
 	procs := fakeProcs(3)
 	p := &Processes{
-		processesFn: func() ([]*process.Process, error) { return procs, nil },
-		statusFn: func(pr *process.Process) ([]string, error) {
+		processesFn: func(_ context.Context) ([]*process.Process, error) { return procs, nil },
+		statusFn: func(_ context.Context, pr *process.Process) ([]string, error) {
 			if pr.Pid == 2 {
 				return nil, errors.New("no such proc")
 			}
 			return []string{"R"}, nil
 		},
-		threadsFn: func(pr *process.Process) (int32, error) { return 1, nil },
+		threadsFn: func(_ context.Context, pr *process.Process) (int32, error) { return 1, nil },
 		nowFn:     time.Now,
 	}
-	metrics, _ := p.Gather()
+	metrics, _ := p.Gather(context.Background())
 	if v, _ := metrics[0].Fields[FieldRunning].(int64); v != 2 {
 		t.Errorf("running = %v, want 2 (skipping errored)", v)
 	}
@@ -88,10 +89,10 @@ func TestProcesses_Gather_SkipsErroredProcesses(t *testing.T) {
 func TestProcesses_Gather_ListError(t *testing.T) {
 	sentinel := errors.New("boom")
 	p := &Processes{
-		processesFn: func() ([]*process.Process, error) { return nil, sentinel },
+		processesFn: func(_ context.Context) ([]*process.Process, error) { return nil, sentinel },
 		nowFn:       time.Now,
 	}
-	if _, err := p.Gather(); err == nil || !errors.Is(err, sentinel) {
+	if _, err := p.Gather(context.Background()); err == nil || !errors.Is(err, sentinel) {
 		t.Errorf("err = %v", err)
 	}
 }
