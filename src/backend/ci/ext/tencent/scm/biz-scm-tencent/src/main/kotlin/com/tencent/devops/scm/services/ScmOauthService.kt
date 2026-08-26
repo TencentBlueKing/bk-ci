@@ -334,9 +334,7 @@ class ScmOauthService @Autowired constructor(
                 description = description,
                 block = block,
                 targetBranch = targetBranch,
-                approveUrl = approveUrl,
-                approverUsers = approverUsers,
-                quickApproveEnabled = quickApproveEnabled
+                approvals = approvals
             )
             if (mrRequestId != null) {
                 if (reportData.second.isEmpty()) return

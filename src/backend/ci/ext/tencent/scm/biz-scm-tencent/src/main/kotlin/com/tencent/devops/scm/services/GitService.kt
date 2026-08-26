@@ -1873,9 +1873,7 @@ class GitService @Autowired constructor(
                     description = description,
                     block = block,
                     targetBranch = request.targetBranch,
-                    approveUrl = approveUrl,
-                    approverUsers = approverUsers,
-                    quickApproveEnabled = quickApproveEnabled
+                    approvals = approvals
                 )
             }
         } catch (e: ScmException) {
