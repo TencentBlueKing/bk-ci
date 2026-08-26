@@ -204,9 +204,12 @@ open class GitApi {
         context: String,
         description: String,
         block: Boolean,
-        targetBranch: List<String>?
+        targetBranch: List<String>?,
+        approveUrl: String? = null,
+        approverUsers: String? = null,
+        quickApproveEnabled: Int? = null
     ) {
-        val params = mapOf(
+        val params = mutableMapOf<String, Any?>(
             "state" to state,
             "target_url" to detailUrl,
             "description" to description,
@@ -214,6 +217,16 @@ open class GitApi {
             "block" to block,
             "target_branches" to targetBranch
         )
+        // 需人工审核场景下，回写审批状态、审批链接、审批人给工蜂
+        if (!approveUrl.isNullOrBlank()) {
+            params["approve_url"] = approveUrl
+        }
+        if (!approverUsers.isNullOrBlank()) {
+            params["approver_users"] = approverUsers
+        }
+        if (quickApproveEnabled != null) {
+            params["quick_approve_enabled"] = quickApproveEnabled
+        }
 
         val body = JsonUtil.getObjectMapper().writeValueAsString(params)
         val request = post(host, token, "projects/${urlEncode(projectName)}/commit/$commitId/statuses", body)

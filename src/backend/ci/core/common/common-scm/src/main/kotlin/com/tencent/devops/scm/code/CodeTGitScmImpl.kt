@@ -215,7 +215,10 @@ class CodeTGitScmImpl constructor(
         context: String,
         description: String,
         block: Boolean,
-        targetBranch: List<String>?
+        targetBranch: List<String>?,
+        approveUrl: String?,
+        approverUsers: String?,
+        quickApproveEnabled: Int?
     ) {
         if (token.isEmpty()) {
             throw ScmException(
@@ -236,7 +239,10 @@ class CodeTGitScmImpl constructor(
                 context = context,
                 description = description,
                 block = block,
-                targetBranch = targetBranch
+                targetBranch = targetBranch,
+                approveUrl = approveUrl,
+                approverUsers = approverUsers,
+                quickApproveEnabled = quickApproveEnabled
             )
         } catch (ignored: Throwable) {
             logger.warn("Fail to add commit check of git", ignored)

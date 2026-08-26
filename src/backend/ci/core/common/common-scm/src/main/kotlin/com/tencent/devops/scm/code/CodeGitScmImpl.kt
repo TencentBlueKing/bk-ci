@@ -284,7 +284,10 @@ class CodeGitScmImpl constructor(
         context: String,
         description: String,
         block: Boolean,
-        targetBranch: List<String>?
+        targetBranch: List<String>?,
+        approveUrl: String?,
+        approverUsers: String?,
+        quickApproveEnabled: Int?
     ) {
         if (token.isEmpty()) {
             throw ScmException(
@@ -305,7 +308,10 @@ class CodeGitScmImpl constructor(
                 context = context,
                 description = description,
                 block = block,
-                targetBranch = targetBranch
+                targetBranch = targetBranch,
+                approveUrl = approveUrl,
+                approverUsers = approverUsers,
+                quickApproveEnabled = quickApproveEnabled
             )
         } catch (e: GitApiException) {
             throw e

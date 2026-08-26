@@ -177,7 +177,10 @@ class CodeGitlabScmImpl constructor(
         context: String,
         description: String,
         block: Boolean,
-        targetBranch: List<String>?
+        targetBranch: List<String>?,
+        approveUrl: String?,
+        approverUsers: String?,
+        quickApproveEnabled: Int?
     ) = Unit
 
     override fun addMRComment(mrId: Long, comment: String) = Unit

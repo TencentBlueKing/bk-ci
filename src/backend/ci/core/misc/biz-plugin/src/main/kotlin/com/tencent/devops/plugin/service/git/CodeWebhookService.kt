@@ -27,6 +27,7 @@
 
 package com.tencent.devops.plugin.service.git
 
+import com.tencent.devops.common.api.enums.BuildReviewType
 import com.tencent.devops.common.api.enums.RepositoryConfig
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.util.timestamp
@@ -34,6 +35,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildQueueBroadCastEvent
+import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildReviewBroadCastEvent
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
@@ -68,12 +70,14 @@ import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
 import com.tencent.devops.process.utils.PIPELINE_START_CHANNEL
+import com.tencent.devops.process.utils.PIPELINE_START_TYPE
 import com.tencent.devops.scm.code.git.api.GITHUB_CHECK_RUNS_CONCLUSION_FAILURE
 import com.tencent.devops.scm.code.git.api.GITHUB_CHECK_RUNS_CONCLUSION_SUCCESS
 import com.tencent.devops.scm.code.git.api.GITHUB_CHECK_RUNS_STATUS_COMPLETED
 import com.tencent.devops.scm.code.git.api.GITHUB_CHECK_RUNS_STATUS_IN_PROGRESS
 import com.tencent.devops.scm.code.git.api.GIT_COMMIT_CHECK_STATE_ERROR
 import com.tencent.devops.scm.code.git.api.GIT_COMMIT_CHECK_STATE_FAILURE
+import com.tencent.devops.scm.code.git.api.GIT_COMMIT_CHECK_STATE_NEED_APPROVE
 import com.tencent.devops.scm.code.git.api.GIT_COMMIT_CHECK_STATE_PENDING
 import com.tencent.devops.scm.code.git.api.GIT_COMMIT_CHECK_STATE_SUCCESS
 import org.jooq.DSLContext
@@ -100,6 +104,21 @@ class CodeWebhookService @Autowired constructor(
         private val logger = LoggerFactory.getLogger(CodeWebhookService::class.java)
         // GIT无目标分支，用于工蜂PUSH事件check回写
         const val GIT_COMMIT_CHECK_NONE_TARGET_BRANCH = "~NONE"
+        // execute 判定 commit check 所需的构建变量
+        private val EXECUTE_REQUIRED_VARIABLES = listOf(
+            PIPELINE_START_TYPE,
+            PIPELINE_START_CHANNEL,
+            PIPELINE_WEBHOOK_REVISION,
+            PIPELINE_WEBHOOK_REPO,
+            "hookRepo",
+            PIPELINE_WEBHOOK_REPO_TYPE,
+            PIPELINE_WEBHOOK_TYPE,
+            PIPELINE_WEBHOOK_EVENT_TYPE,
+            PIPELINE_WEBHOOK_BLOCK,
+            PIPELINE_WEBHOOK_MR_ID,
+            BK_REPO_GIT_WEBHOOK_MR_TARGET_BRANCH,
+            BK_REPO_GIT_WEBHOOK_ENABLE_CHECK
+        )
     }
 
     fun onBuildQueue(event: PipelineBuildQueueBroadCastEvent) {
@@ -252,34 +271,112 @@ class CodeWebhookService @Autowired constructor(
         }
     }
 
+    /**
+     * 流水线进入/离开人工审核（stage 准入审核、人工审核插件）时，联动回写工蜂 commit check。
+     * - 进入待审(REVIEWING)：回写 need_approve，并带上审批链接、审批人
+     * - 审核通过(REVIEW_PROCESSED)：恢复为 pending（运行中），最终态由构建结束事件回写
+     */
+    fun onBuildReview(event: PipelineBuildReviewBroadCastEvent) {
+        logger.info("Code web hook on review [${event.buildId}|${event.reviewType}|${event.status}]")
+        with(event) {
+            if (!supportReviewType(reviewType)) {
+                return
+            }
+            val reviewState = when (status) {
+                BuildStatus.REVIEWING.name -> GIT_COMMIT_CHECK_STATE_NEED_APPROVE
+                BuildStatus.REVIEW_PROCESSED.name -> GIT_COMMIT_CHECK_STATE_PENDING
+                // 审核驳回/超时，回写失败
+                BuildStatus.REVIEW_ABORT.name -> GIT_COMMIT_CHECK_STATE_FAILURE
+                else -> {
+                    logger.info("$buildId|review status $status ignored")
+                    return
+                }
+            }
+            // 审核事件不携带触发类型，传 null 由 execute 从构建变量兜底判定
+            execute(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                userId = userId,
+                triggerType = null
+            ) { info ->
+                with(info) {
+                    val webhookType = CodeType.valueOf(webhookType)
+                    val webhookEventType = CodeEventType.valueOf(webhookEventType)
+                    val repoCondition = webhookType == CodeType.GIT || webhookType == CodeType.TGIT
+                    // 审核联动仅针对 MR 触发
+                    val eventCondition = webhookEventType == CodeEventType.MERGE_REQUEST
+                    if (enableCheck && repoCondition && eventCondition) {
+                        logger.info(
+                            "$buildId|WebHook_REVIEW_GIT_COMMIT_CHECK|$pipelineId|$repositoryConfig|$commitId|$reviewState"
+                        )
+                        addGitCommitCheckEvent(
+                            GitCommitCheckEvent(
+                                source = "codeWebhook_pipeline_build_review",
+                                userId = event.userId,
+                                projectId = projectId,
+                                pipelineId = pipelineId,
+                                buildId = buildId,
+                                repositoryConfig = repositoryConfig,
+                                commitId = commitId,
+                                state = reviewState,
+                                block = block,
+                                targetBranch = targetBranch,
+                                approverUsers = event.reviewers?.filter { it.isNotBlank() }
+                                    ?.joinToString(",")?.takeIf { it.isNotBlank() }
+                            )
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * 需回写工蜂审核状态的审核类型（stage 准入审核、人工审核插件）
+     */
+    private fun supportReviewType(reviewType: BuildReviewType) = when (reviewType) {
+        BuildReviewType.STAGE_REVIEW -> true
+        else -> false
+    }
+
     private fun execute(
         projectId: String,
         pipelineId: String,
         buildId: String,
         userId: String,
-        triggerType: String,
+        triggerType: String?,
         action: (GitCommitCheckInfo) -> Unit
     ) {
-        if (triggerType != StartType.WEB_HOOK.name) {
+        // triggerType 为空时（如审核事件不携带触发类型），后续从构建变量兜底判定
+        if (triggerType != null && triggerType != StartType.WEB_HOOK.name) {
             logger.info("Process instance($buildId) is not web hook triggered")
             return
         }
 
         try {
-            val buildHistoryResult = client.get(ServiceBuildResource::class).getBuildVars(
+            // 仅拉取判定 commit check 所需的变量，避免获取全量构建变量
+            val buildVarsResult = client.get(ServiceBuildResource::class).getBuildVariableValue(
                 userId = userId, projectId = projectId,
-                pipelineId = pipelineId, buildId = buildId, channelCode = ChannelCode.GIT
+                pipelineId = pipelineId, buildId = buildId, channelCode = ChannelCode.GIT,
+                variableNames = EXECUTE_REQUIRED_VARIABLES
             )
 
-            if (buildHistoryResult.isNotOk() || buildHistoryResult.data == null) {
-                logger.warn("Process instance($buildId) not exist: ${buildHistoryResult.message}")
+            if (buildVarsResult.isNotOk() || buildVarsResult.data == null) {
+                logger.warn("Process instance($buildId) not exist: ${buildVarsResult.message}")
                 return
             }
-            val buildInfo = buildHistoryResult.data!!
 
-            val variables = buildInfo.variables
+            val variables = buildVarsResult.data!!
             if (variables.isEmpty()) {
                 logger.warn("Process instance($buildId) variables is empty")
+                return
+            }
+
+            // 兜底触发类型：调用方未传入时，从构建变量中取真实的启动类型
+            val realTriggerType = triggerType ?: variables[PIPELINE_START_TYPE]
+            if (realTriggerType != StartType.WEB_HOOK.name) {
+                logger.info("Process instance($buildId) is not web hook triggered")
                 return
             }
 
@@ -343,7 +440,7 @@ class CodeWebhookService @Autowired constructor(
                     repositoryConfig = repositoryConfig,
                     commitId = commitId!!,
                     block = block,
-                    triggerType = triggerType,
+                    triggerType = realTriggerType,
                     mergeRequestId = mrId,
                     userId = userId,
                     webhookType = webhookTypeStr,
@@ -443,6 +540,7 @@ class CodeWebhookService @Autowired constructor(
                 GIT_COMMIT_CHECK_STATE_ERROR -> "Your pipeline [$pipelineName] is failed"
                 GIT_COMMIT_CHECK_STATE_FAILURE -> "Your pipeline [$pipelineName] is failed"
                 GIT_COMMIT_CHECK_STATE_SUCCESS -> "Your pipeline [$pipelineName] is succeed"
+                GIT_COMMIT_CHECK_STATE_NEED_APPROVE -> "Your pipeline [$pipelineName] is waiting for approval"
                 else -> ""
             }
 

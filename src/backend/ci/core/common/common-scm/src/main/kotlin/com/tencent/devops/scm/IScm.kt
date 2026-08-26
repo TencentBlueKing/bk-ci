@@ -76,7 +76,10 @@ interface IScm {
         context: String,
         description: String,
         block: Boolean,
-        targetBranch: List<String>?
+        targetBranch: List<String>?,
+        approveUrl: String? = null,
+        approverUsers: String? = null,
+        quickApproveEnabled: Int? = null
     )
 
     fun addMRComment(mrId: Long, comment: String)

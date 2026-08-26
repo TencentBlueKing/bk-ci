@@ -56,6 +56,7 @@ import com.tencent.devops.repository.pojo.GithubRepository
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.sdk.github.pojo.CheckRunOutput
+import com.tencent.devops.scm.code.git.api.GIT_COMMIT_CHECK_STATE_NEED_APPROVE
 import com.tencent.devops.scm.pojo.CommitCheckRequest
 import com.tencent.devops.scm.pojo.RepoSessionRequest
 import com.tencent.devops.ticket.api.ServiceCredentialResource
@@ -136,7 +137,19 @@ class ScmCheckService @Autowired constructor(private val client: Client) {
                     triggerType = triggerType,
                     channelCode = channelCode
                 ),
-                targetBranch = targetBranch
+                targetBranch = targetBranch,
+                // 仅在需人工审核场景下回写审批信息，审批链接缺省复用构建详情页链接
+                approveUrl = if (state == GIT_COMMIT_CHECK_STATE_NEED_APPROVE) {
+                    event.approveUrl ?: targetUrl
+                } else {
+                    null
+                },
+                approverUsers = if (state == GIT_COMMIT_CHECK_STATE_NEED_APPROVE) {
+                    event.approverUsers
+                } else {
+                    null
+                },
+                quickApproveEnabled = event.quickApproveEnabled
             )
             if (isOauth) {
                 client.get(ServiceScmOauthResource::class).addCommitCheck(request)
