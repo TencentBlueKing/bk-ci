@@ -41,9 +41,9 @@ import com.tencent.devops.process.engine.control.ControlUtils
 import com.tencent.devops.process.engine.control.command.CmdFlowState
 import com.tencent.devops.process.engine.control.command.container.ContainerCmd
 import com.tencent.devops.process.engine.control.command.container.ContainerContext
+import com.tencent.devops.process.service.BuildVarExprOverflowHelper
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.PipelineContextService
-import com.tencent.devops.process.utils.BuildVarOverflowUtils
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
@@ -128,22 +128,18 @@ class CheckConditionalSkipContainerCmd constructor(
                 variables = containerContext.variables,
                 executeCount = containerContext.executeCount
             )
-            val conditionVariables = containerContext.variables.plus(contextMap)
-            val overflowKeys = BuildVarOverflowUtils.collectOverflowKeys(conditionVariables)
-            val overflowLoader: ((String) -> String?)? = if (overflowKeys.isEmpty()) {
-                null
-            } else {
-                { key -> buildVariableService.getVariableValue(container.projectId, container.buildId, key) }
-            }
             ControlUtils.checkJobSkipCondition(
                 conditions = conditions,
-                variables = conditionVariables,
+                session = BuildVarExprOverflowHelper.session(
+                    buildVariableService = buildVariableService,
+                    projectId = container.projectId,
+                    buildId = container.buildId,
+                    variables = containerContext.variables.plus(contextMap)
+                ),
                 buildId = container.buildId,
                 runCondition = jobControlOption.runCondition,
                 customCondition = jobControlOption.customCondition,
-                message = message,
-                overflowKeys = overflowKeys,
-                overflowLoader = overflowLoader
+                message = message
             )
         }
 

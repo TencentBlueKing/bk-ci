@@ -39,6 +39,7 @@ import com.tencent.devops.process.engine.common.Timeout
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.control.ControlUtils
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
+import com.tencent.devops.process.service.BuildVarExprSession
 
 object TaskUtils {
 
@@ -222,17 +223,15 @@ object TaskUtils {
      */
     fun parseTimeout(
         task: PipelineBuildTask,
-        contextMap: Map<String, String>,
-        overflowKeys: Set<String> = emptySet(),
-        overflowLoader: ((String) -> String?)? = null
+        session: BuildVarExprSession
     ): String {
         val timeoutStr = task.additionalOptions?.timeoutVar
         return if (!timeoutStr.isNullOrBlank()) {
             val obj = Timeout.decTimeout(
                 timeoutVar = timeoutStr,
-                contextMap = contextMap,
-                overflowKeys = overflowKeys,
-                overflowLoader = overflowLoader
+                contextMap = session.variables,
+                overflowKeys = session.overflowKeys,
+                overflowLoader = session.overflowLoader
             )
             task.additionalOptions!!.change = true
             task.additionalOptions!!.timeout = obj.minutes.toLong() // 替换成真正的超时分钟数

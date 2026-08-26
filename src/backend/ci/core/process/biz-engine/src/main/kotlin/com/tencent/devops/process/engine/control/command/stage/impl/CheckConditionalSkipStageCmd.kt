@@ -36,9 +36,9 @@ import com.tencent.devops.process.engine.control.command.CmdFlowState
 import com.tencent.devops.process.engine.control.command.stage.StageCmd
 import com.tencent.devops.process.engine.control.command.stage.StageContext
 import com.tencent.devops.process.engine.pojo.PipelineBuildStage
+import com.tencent.devops.process.service.BuildVarExprOverflowHelper
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.PipelineContextService
-import com.tencent.devops.process.utils.BuildVarOverflowUtils
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
@@ -115,21 +115,17 @@ class CheckConditionalSkipStageCmd constructor(
                 variables = variables,
                 executeCount = commandContext.executeCount
             )
-            val conditionVariables = variables.plus(contextMap)
-            val overflowKeys = BuildVarOverflowUtils.collectOverflowKeys(conditionVariables)
-            val overflowLoader: ((String) -> String?)? = if (overflowKeys.isEmpty()) {
-                null
-            } else {
-                { key -> buildVariableService.getVariableValue(stage.projectId, stage.buildId, key) }
-            }
             skip = ControlUtils.checkStageSkipCondition(
                 conditions = conditions,
-                variables = conditionVariables,
+                session = BuildVarExprOverflowHelper.session(
+                    buildVariableService = buildVariableService,
+                    projectId = stage.projectId,
+                    buildId = stage.buildId,
+                    variables = variables.plus(contextMap)
+                ),
                 buildId = stage.buildId,
                 runCondition = controlOption.runCondition,
-                customCondition = controlOption.customCondition,
-                overflowKeys = overflowKeys,
-                overflowLoader = overflowLoader
+                customCondition = controlOption.customCondition
             ) // #6366 增加日志明确展示跳过的原因  stage 没有相关可展示的地方，暂时不加
             if (message.isNotBlank()) {
                 // #6366 增加日志明确展示跳过的原因

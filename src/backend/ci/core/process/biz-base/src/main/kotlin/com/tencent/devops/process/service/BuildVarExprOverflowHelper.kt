@@ -58,6 +58,34 @@ object BuildVarExprOverflowHelper {
     }
 
     /**
+     * 组装一次求值会话：把变量表与 overflowKeys / loader 绑成单个入参。
+     *
+     * 供 process 侧业务入口（如 [com.tencent.devops.process.engine.control.ControlUtils] 的跳过判断、
+     * [com.tencent.devops.process.util.TaskUtils.parseTimeout]）使用，避免这两个参数被逐个透传——
+     * 漏传时不会编译报错，只会让大变量停留在引用串 `__BK_OVF__:<len>` 上导致条件/超时静默算错。
+     *
+     * 无大变量时等价于 [BuildVarExprSession.empty]，不产生任何溢出表 IO。
+     */
+    fun session(
+        buildVariableService: BuildVariableService,
+        projectId: String,
+        buildId: String,
+        variables: Map<String, String>
+    ): BuildVarExprSession {
+        val (overflowKeys, overflowLoader) = options(
+            buildVariableService = buildVariableService,
+            projectId = projectId,
+            buildId = buildId,
+            variables = variables
+        )
+        return BuildVarExprSession(
+            variables = variables,
+            overflowKeys = overflowKeys,
+            overflowLoader = overflowLoader
+        )
+    }
+
+    /**
      * 传统方言(不走表达式引擎)在引擎侧 claim 时对任务参数做变量替换的入口。
      *
      * 与直接调用 [ObjectReplaceEnvVarUtil.replaceEnvVar] 的差异**仅**在于：被 `${{ key }}` 引用到、
