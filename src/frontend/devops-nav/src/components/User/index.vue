@@ -100,17 +100,15 @@
             ]
         }
         get userinfo () {
-            const name = `${this.username}(${this.chineseName})`
-            
             return {
-                name,
+                name: this.username,
                 organization: this.tenantId,
                 timezone: getUserTimeZone(),
             }
         }
 
         renderSlot (h) {
-            return h('bk-user-display-name', { 'user-id': `${this.username}(${this.chineseName})` })
+            return h('bk-user-display-name', { 'user-id': this.username })
         }
 
         logout (): void {
