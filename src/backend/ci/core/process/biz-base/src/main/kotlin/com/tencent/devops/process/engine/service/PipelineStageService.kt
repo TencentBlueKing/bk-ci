@@ -705,7 +705,8 @@ class PipelineStageService @Autowired constructor(
                 buildId = stage.buildId, userId = userId,
                 reviewType = BuildReviewType.STAGE_REVIEW,
                 status = BuildStatus.REVIEWING.name,
-                stageId = stage.stageId, taskId = null
+                stageId = stage.stageId, taskId = null,
+                reviewers = group.reviewers.filter { it.isNotBlank() }
             ),
             PipelineBuildNotifyEvent(
                 notifyTemplateEnum = PipelineNotifyTemplateEnum.PIPELINE_MANUAL_REVIEW_STAGE_NOTIFY_TEMPLATE.name,

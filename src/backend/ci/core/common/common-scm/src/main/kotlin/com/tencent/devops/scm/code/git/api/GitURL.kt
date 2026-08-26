@@ -31,6 +31,7 @@ const val GIT_COMMIT_CHECK_STATE_PENDING = "pending"
 const val GIT_COMMIT_CHECK_STATE_SUCCESS = "success"
 const val GIT_COMMIT_CHECK_STATE_ERROR = "error"
 const val GIT_COMMIT_CHECK_STATE_FAILURE = "failure"
+const val GIT_COMMIT_CHECK_STATE_NEED_APPROVE = "need_approve"
 
 const val GITHUB_CHECK_RUNS_STATUS_QUEUED = "queued" // default
 const val GITHUB_CHECK_RUNS_STATUS_IN_PROGRESS = "in_progress"
