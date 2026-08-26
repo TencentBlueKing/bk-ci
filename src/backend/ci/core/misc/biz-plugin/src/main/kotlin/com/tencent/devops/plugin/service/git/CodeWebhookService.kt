@@ -105,21 +105,6 @@ class CodeWebhookService @Autowired constructor(
         private val logger = LoggerFactory.getLogger(CodeWebhookService::class.java)
         // GIT无目标分支，用于工蜂PUSH事件check回写
         const val GIT_COMMIT_CHECK_NONE_TARGET_BRANCH = "~NONE"
-        // execute 判定 commit check 所需的构建变量
-        private val EXECUTE_REQUIRED_VARIABLES = listOf(
-            PIPELINE_START_TYPE,
-            PIPELINE_START_CHANNEL,
-            PIPELINE_WEBHOOK_REVISION,
-            PIPELINE_WEBHOOK_REPO,
-            "hookRepo",
-            PIPELINE_WEBHOOK_REPO_TYPE,
-            PIPELINE_WEBHOOK_TYPE,
-            PIPELINE_WEBHOOK_EVENT_TYPE,
-            PIPELINE_WEBHOOK_BLOCK,
-            PIPELINE_WEBHOOK_MR_ID,
-            BK_REPO_GIT_WEBHOOK_MR_TARGET_BRANCH,
-            BK_REPO_GIT_WEBHOOK_ENABLE_CHECK
-        )
     }
 
     fun onBuildQueue(event: PipelineBuildQueueBroadCastEvent) {
@@ -368,19 +353,20 @@ class CodeWebhookService @Autowired constructor(
         }
 
         try {
-            // 仅拉取判定 commit check 所需的变量，避免获取全量构建变量
-            val buildVarsResult = client.get(ServiceBuildResource::class).getBuildVariableValue(
-                userId = userId, projectId = projectId,
-                pipelineId = pipelineId, buildId = buildId, channelCode = ChannelCode.GIT,
-                variableNames = EXECUTE_REQUIRED_VARIABLES
+            val buildHistoryResult = client.get(ServiceBuildResource::class).getBuildVars(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                channelCode = ChannelCode.GIT
             )
 
-            if (buildVarsResult.isNotOk() || buildVarsResult.data == null) {
-                logger.warn("Process instance($buildId) not exist: ${buildVarsResult.message}")
+            if (buildHistoryResult.isNotOk() || buildHistoryResult.data == null) {
+                logger.warn("Process instance($buildId) not exist: ${buildHistoryResult.message}")
                 return
             }
 
-            val variables = buildVarsResult.data!!
+            val variables = buildHistoryResult.data!!.variables
             if (variables.isEmpty()) {
                 logger.warn("Process instance($buildId) variables is empty")
                 return
