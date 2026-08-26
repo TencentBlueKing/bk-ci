@@ -53,5 +53,7 @@ data class PipelineBuildReviewBroadCastEvent(
     val timeout: Boolean? = false,
     val reviewers: List<String>? = null,
     // 审核是否需要填写审核参数
-    val hasReviewParams: Boolean? = null
+    val hasReviewParams: Boolean? = null,
+    // stage 序号，用于生成审核跳转链接（reviewStageSeq）
+    val stageSeq: Int? = null
 ) : IPipelineEvent(actionType, source, projectId, pipelineId, userId, delayMills)

@@ -297,6 +297,7 @@ class CodeWebhookService @Autowired constructor(
                         val approvals = if (reviewState == GIT_COMMIT_CHECK_STATE_NEED_APPROVE) {
                             listOf(
                                 CommitCheckApproval(
+                                    approveUrl = getBuildReviewUrl(buildUrl, event.stageSeq),
                                     approveUsers = event.reviewers?.filter { it.isNotBlank() }
                                         ?.joinToString(",")?.takeIf { it.isNotBlank() },
                                     // 无审核参数时支持快速审批（0:不支持 1:支持）
@@ -307,7 +308,8 @@ class CodeWebhookService @Autowired constructor(
                             null
                         }
                         logger.info(
-                            "$buildId|WebHook_REVIEW_GIT_COMMIT_CHECK|$pipelineId|$repositoryConfig|$commitId|$reviewState"
+                            "$buildId|WebHook_REVIEW_GIT_COMMIT_CHECK|$pipelineId|$repositoryConfig|" +
+                                    "$commitId|$reviewState"
                         )
                         addGitCommitCheckEvent(
                             GitCommitCheckEvent(
@@ -423,6 +425,15 @@ class CodeWebhookService @Autowired constructor(
             val mrId = variables[PIPELINE_WEBHOOK_MR_ID]?.toLong()
             val targetBranch = variables[BK_REPO_GIT_WEBHOOK_MR_TARGET_BRANCH]
             val enableCheck = variables[BK_REPO_GIT_WEBHOOK_ENABLE_CHECK]?.toBoolean() ?: true
+            val channelCode = variables[PIPELINE_START_CHANNEL]?.let { ChannelCode.getChannel(it) }
+                ?: ChannelCode.getRequestChannelCode()
+            val buildUrl = getBuildUrl(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                channelCode = channelCode,
+                variables = variables
+            )
             if (CodeEventType.valueOf(webhookEventTypeStr) == CodeEventType.MERGE_REQUEST && targetBranch == null) {
                 logger.warn(
                     "the webhook info miss targetBranch,commit check may not be added," +
@@ -445,7 +456,8 @@ class CodeWebhookService @Autowired constructor(
                     webhookType = webhookTypeStr,
                     webhookEventType = webhookEventTypeStr,
                     enableCheck = enableCheck,
-                    targetBranch = targetBranch
+                    targetBranch = targetBranch,
+                    buildUrl = buildUrl
                 )
             )
         } catch (ignore: Throwable) {
@@ -866,8 +878,22 @@ class CodeWebhookService @Autowired constructor(
         } else {
             "$codeccPrefix/list?pipelineId=$pipelineId&buildId=$buildId&from=check_run"
         }
+    } else if (channelCode == ChannelCode.CREATIVE_STREAM) {
+        "${HomeHostUtil.innerServerHost()}/console/creative-stream/$projectId/flow/" +
+            "$pipelineId/execute/$buildId/execute-detail"
     } else {
         "${HomeHostUtil.innerServerHost()}/console/pipeline/$projectId/$pipelineId/detail/$buildId"
+    }
+
+    /**
+     * 审核跳转链接：构建详情页 + reviewStageSeq，与通知侧 genBuildReviewUrl 保持一致
+     */
+    private fun getBuildReviewUrl(targetUrl: String, stageSeq: Int?): String {
+        if (stageSeq == null) {
+            return targetUrl
+        }
+        val separator = if (targetUrl.contains("?")) "&" else "?"
+        return "$targetUrl${separator}reviewStageSeq=$stageSeq"
     }
 
     /**
