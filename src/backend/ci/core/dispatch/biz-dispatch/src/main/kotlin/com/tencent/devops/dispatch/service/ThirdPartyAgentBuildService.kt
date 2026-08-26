@@ -16,6 +16,7 @@ import com.tencent.devops.dispatch.pojo.thirdpartyagent.TPAPipelineBuildView
 import com.tencent.devops.dispatch.pojo.thirdpartyagent.TPAPipelineReq
 import com.tencent.devops.environment.api.thirdpartyagent.ServiceThirdPartyAgentResource
 import com.tencent.devops.environment.pojo.thirdpartyagent.BatchFetchNodeInfoData
+import com.tencent.devops.model.dispatch.tables.records.TDispatchThirdpartyAgentBuildRecord
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.pojo.BatchFetchBuildRecordData
 import com.tencent.devops.process.pojo.BatchFetchContainerRecordData
@@ -24,7 +25,8 @@ import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.time.ZoneId
+import java.time.Duration
+import java.time.LocalDateTime
 
 
 @Suppress("NestedBlockDepth")
@@ -111,6 +113,13 @@ class ThirdPartyAgentBuildService @Autowired constructor(
                     creator = data.creator,
                     status = data.taskStatusList
                 )
+                // 用来计算耗时
+                val buildRecordList = thirdPartyAgentBuildDao.fetchAgentBuildsByBuildId(
+                    dslContext = dslContext,
+                    agentId = data.agentId,
+                    envId = envId,
+                    buildIdList = buildRecord.filter { !it.buildId.isNullOrBlank() }.map { it.buildId!! }.toSet()
+                ).groupBy { it.buildId to it.executeCount }
                 val buildHistoryMap = client.get(ServiceBuildResource::class).batchFetchBuildRecordStatus(
                     data = BatchFetchBuildRecordData(buildIds = buildRecord.filter { !it.buildId.isNullOrBlank() }
                         .map { it.buildId!! }, executeCount = null)
@@ -128,19 +137,15 @@ class ThirdPartyAgentBuildService @Autowired constructor(
                     }
 
                     record.buildHistory = bh?.let {
-                        val startTime = it.startTime?.atZone(ZoneId.systemDefault())?.toInstant()?.toEpochMilli()
-                        val endTime = it.endTime?.atZone(ZoneId.systemDefault())?.toInstant()?.toEpochMilli()
+                        val startTimeAndTotal = calcTotalElapsedSeconds(
+                            buildRecordList[Pair(record.buildId, record.executeCount)]
+                        )
                         TPAPipelineBuildHistory(
                             userId = it.startUser,
                             buildNum = record.buildNum,
                             status = it.status,
-                            totalTime = if (startTime == null || endTime == null) {
-                                null
-                            } else {
-                                startTime - endTime
-                            },
-                            startTime = startTime,
-                            endTime = endTime,
+                            totalTime = startTimeAndTotal?.second,
+                            startTime = startTimeAndTotal?.first,
                             executeCount = it.executeCount
                         )
                     }
@@ -164,6 +169,53 @@ class ThirdPartyAgentBuildService @Autowired constructor(
                 records = records
             )
         )
+    }
+
+    /**
+     * 计算一批构建记录(同一 build、executeCount 下的所有 job)的总耗时(秒)。
+     *
+     * 规则:
+     * 1. 未结束的记录(非 DONE/FAILURE,即仍在排队或运行中)没有真实结束时间,按 0 计(跳过);
+     * 2. 其余记录用 [CREATED_TIME, UPDATED_TIME] 作为区间,做并集合并去掉重叠部分,
+     *    再累加,得到实际墙钟总耗时(避免并行 job 被重复统计)。
+     *
+     * @return firstStartTime. total
+     */
+    fun calcTotalElapsedSeconds(records: List<TDispatchThirdpartyAgentBuildRecord>?): Pair<LocalDateTime, Long>? {
+        records ?: return null
+        val finished = setOf(PipelineTaskStatus.DONE.status, PipelineTaskStatus.FAILURE.status)
+
+        // 1. 过滤出已结束且时间合法的区间,按开始时间排序
+        val intervals = records.asSequence()
+            .filter { it.status in finished }
+            .mapNotNull { r ->
+                val start = r.createdTime ?: return@mapNotNull null
+                val end = r.updatedTime ?: return@mapNotNull null
+                if (end.isBefore(start)) null else start to end
+            }
+            .sortedBy { it.first }
+            .toList()
+
+        if (intervals.isEmpty()) return null
+
+        // 2. 合并重叠/相邻区间,累加各段长度
+        var total = 0L
+        var curStart = intervals[0].first
+        var curEnd = intervals[0].second
+        for (i in 1 until intervals.size) {
+            val (s, e) = intervals[i]
+            if (!s.isAfter(curEnd)) {
+                // 与当前段重叠或相接,向后扩展
+                if (e.isAfter(curEnd)) curEnd = e
+            } else {
+                // 出现空档,结算当前段,开启新段
+                total += Duration.between(curStart, curEnd).seconds
+                curStart = s
+                curEnd = e
+            }
+        }
+        total += Duration.between(curStart, curEnd).seconds
+        return Pair(intervals.first().second, total)
     }
 
     @Deprecated("fetchBuildPipelineView")
@@ -299,18 +351,18 @@ class ThirdPartyAgentBuildService @Autowired constructor(
                     containerId = (record.vmSeqId ?: 0).toString(),
                     executeCount = build.executeCount,
                     status = build.status,
-                    startTime = build.startTime,
-                    endTime = build.endTime,
+                    startTime = record.createdTime,
+                    endTime = record.updatedTime,
                     buildNum = record.buildNum ?: 0,
                     creator = record.startUser,
                     tasks = null,
                     nodeInfo = nodeInfoMap?.get(record.agentId)?.let {
-                            NodeInfo(
-                                agentHashId = it.agentHashId,
-                                nodeHashId = it.nodeHashId,
-                                displayName = it.nodeName
-                            )
-                        }
+                        NodeInfo(
+                            agentHashId = it.agentHashId,
+                            nodeHashId = it.nodeHashId,
+                            displayName = it.nodeName
+                        )
+                    }
                 )
             )
         }
@@ -473,8 +525,8 @@ class ThirdPartyAgentBuildService @Autowired constructor(
                     containerId = (record.vmSeqId ?: 0).toString(),
                     executeCount = build.executeCount,
                     status = build.status,
-                    startTime = build.startTime,
-                    endTime = build.endTime,
+                    startTime = record.createdTime,
+                    endTime = record.updatedTime,
                     buildNum = record.buildNum ?: 0,
                     creator = record.startUser,
                     tasks = listOf(

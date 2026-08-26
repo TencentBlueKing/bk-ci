@@ -1123,4 +1123,23 @@ class ThirdPartyAgentBuildDao {
             return dsl.orderBy(ID.desc()).limit(limit).offset(offset).fetch()
         }
     }
+
+    fun fetchAgentBuildsByBuildId(
+        dslContext: DSLContext,
+        agentId: String?,
+        envId: Long?,
+        buildIdList: Set<String>
+    ): List<TDispatchThirdpartyAgentBuildRecord> {
+        with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
+            val dsl = dslContext.selectFrom(this)
+                .where(BUILD_ID.`in`(buildIdList))
+            if (!agentId.isNullOrBlank()) {
+                dsl.and(AGENT_ID.eq(agentId))
+            }
+            if (envId != null) {
+                dsl.and(ENV_ID.eq(envId))
+            }
+            return dsl.fetch()
+        }
+    }
 }

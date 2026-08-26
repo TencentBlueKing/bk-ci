@@ -76,9 +76,7 @@ data class TPAPipelineBuildHistory(
     @get:Schema(title = "总耗时(毫秒)", required = false)
     val totalTime: Long?,
     @get:Schema(title = "流水线的执行开始时间", required = true)
-    val startTime: Long?,
-    @get:Schema(title = "流水线的执行结束时间", required = true)
-    val endTime: Long?,
+    val startTime: LocalDateTime?,
     @get:Schema(title = "执行次数")
     val executeCount: Int?
 )
