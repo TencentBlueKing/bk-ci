@@ -198,7 +198,18 @@
                                 :key="item.label"
                                 class="info-item"
                             >
-                                <span class="info-label">{{ item.label }}</span>
+                                <span class="info-label">
+                                    {{ item.label }}
+                                    <i
+                                        v-if="item.tip"
+                                        v-bk-tooltips="{
+                                            content: item.tip,
+                                            placement: 'top',
+                                            allowHtml: false
+                                        }"
+                                        class="bk-icon icon-help info-tip-icon"
+                                    />
+                                </span>
                                 <span class="info-value">{{ item.value }}</span>
                             </div>
                         </div>
@@ -748,7 +759,13 @@
                         items.push({ label: proxy.$t('environment.retryCount'), value: retryCount })
                     }
                     items.push(
-                        { label: proxy.$t('environment.duration'), value: task.duration || '--' },
+                        {
+                            label: proxy.$t('environment.duration'),
+                            value: task.duration || '--',
+                            tip: proxy.$t(isEnvDetail
+                                ? 'environment.durationEnvTip'
+                                : 'environment.durationNodeTip')
+                        },
                         { label: proxy.$t('environment.trigger'), value: task.creator || '--' },
                         { label: proxy.$t('environment.startTime'), value: task.startTime || '--' }
                     )
@@ -1402,6 +1419,20 @@
                             color: #979BA5;
                             margin-bottom: 8px;
                             white-space: nowrap;
+                            display: inline-flex;
+                            align-items: center;
+                            gap: 4px;
+
+                            .info-tip-icon {
+                                font-size: 14px;
+                                color: #C4C6CC;
+                                cursor: help;
+                                transition: color 0.15s ease;
+
+                                &:hover {
+                                    color: #3A84FF;
+                                }
+                            }
                         }
                         
                         .info-value {

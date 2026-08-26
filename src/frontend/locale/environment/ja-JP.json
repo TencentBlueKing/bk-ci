@@ -465,6 +465,8 @@
     "buildStatus": "ビルドステータス",
     "retryCount": "X 回目の再試行",
     "duration": "所要時間",
+    "durationEnvTip": "現在の環境を使用している Job のみを集計します。並列実行は重複カウントせず、Job 間のアイドル時間は含めません。",
+    "durationNodeTip": "現在のノードを使用している Job のみを集計します。並列実行は重複カウントせず、Job 間のアイドル時間は含めません。",
     "startTime": "開始時間",
     "endTime": "終了時間",
     "trigger": "トリガー者",

@@ -470,6 +470,8 @@
     "buildStatus": "Build Status",
     "retryCount": "Retry X",
     "duration": "time spent",
+    "durationEnvTip": "Only count Jobs that use the current environment. Parallel Jobs are not double-counted and idle time between Jobs is not included.",
+    "durationNodeTip": "Only count Jobs that use the current node. Parallel Jobs are not double-counted and idle time between Jobs is not included.",
     "startTime": "Startup time",
     "endTime": "End Time",
     "trigger": "trigger person",

@@ -466,6 +466,8 @@
     "buildStatus": "构建状态",
     "retryCount": "第X次重试",
     "duration": "耗时",
+    "durationEnvTip": "仅统计使用当前环境的 Job。并行不重复计算，Job 之间的空闲不计入。",
+    "durationNodeTip": "仅统计使用当前节点的 Job。并行不重复计算，Job 之间的空闲不计入。",
     "startTime": "启动时间",
     "endTime": "结束时间",
     "trigger": "触发人",
