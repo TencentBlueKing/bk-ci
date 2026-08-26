@@ -60,7 +60,6 @@ import com.tencent.devops.model.remotedev.tables.TWorkspaceWindows
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.project.api.service.service.ServiceSignatureManageResource
 import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
-import com.tencent.devops.project.api.service.service.ServiceTxUserResource
 import com.tencent.devops.project.pojo.UserSignatureStatusResponse
 import com.tencent.devops.remotedev.common.Constansts.ADMIN_NAME
 import com.tencent.devops.remotedev.common.exception.ErrorCode.NOT_FIND_NODE_FOR_ENV_ID
@@ -126,6 +125,7 @@ import com.tencent.devops.remotedev.pojo.windows.ComputerStatusRespV2
 import com.tencent.devops.remotedev.service.client.StartCloudClient
 import com.tencent.devops.remotedev.service.client.TaiClient
 import com.tencent.devops.remotedev.service.client.TaiUserInfoRequest
+import com.tencent.devops.remotedev.service.redis.ConfigCacheService
 import com.tencent.devops.remotedev.service.redis.RedisCallLimit
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_CALL_LIMIT_KEY_PREFIX
 import com.tencent.devops.remotedev.service.tai.TaiService
@@ -160,6 +160,7 @@ class WorkspaceService @Autowired constructor(
     private val remoteDevSettingDao: RemoteDevSettingDao,
     private val remoteDevSettingService: RemoteDevSettingService,
     private val windowsResourceConfigService: WindowsResourceConfigService,
+    private val configCacheService: ConfigCacheService,
     private val workspaceWindowsDao: WorkspaceWindowsDao,
     private val workspaceCommon: WorkspaceCommon,
     private val workspaceJoinDao: WorkspaceJoinDao,
@@ -858,7 +859,7 @@ class WorkspaceService @Autowired constructor(
                         )
                     }
                 } else {
-                    val info = client.get(ServiceTxUserResource::class).get(owner).data
+                    val info = configCacheService.getUserDeptDetail(owner)
                     listOf(
                         DepartmentsInfo(
                             bgId = info?.bgId,
