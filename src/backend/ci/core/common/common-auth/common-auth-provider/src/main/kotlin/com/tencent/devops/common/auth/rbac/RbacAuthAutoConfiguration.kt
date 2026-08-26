@@ -120,10 +120,6 @@ class RbacAuthAutoConfiguration {
         tokenService: ClientTokenService
     ) = RbacAuthPermissionApi(client = client, tokenService = tokenService)
 
-    // TODO: 特殊处理 , 等mingshewhe解决
-    @Bean
-    fun authPlatformApi() = MockAuthPlatformApi()
-
     @Bean
     @ConditionalOnMissingBean(AuthPlatformApi::class)
     fun authPlatformApi() = MockAuthPlatformApi()

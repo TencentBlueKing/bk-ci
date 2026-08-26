@@ -161,7 +161,7 @@ class RbacPermissionResourceService(
                 iamResourceCode = iamResourceCode,
                 relationId = managerId.toString(),
                 cleanup = {
-                    val cleanupTenantId = TenantUtils.getTenantId(finalProjectCode)
+                    val cleanupTenantId = TenantUtils.iamTenantId(finalProjectCode)
                     if (resourceType == AuthResourceType.PROJECT.value) {
                         iamV2ManagerService.deleteManagerV2(managerId.toString(), cleanupTenantId)
                     } else {
@@ -213,7 +213,7 @@ class RbacPermissionResourceService(
                 cleanup = {
                     iamV2ManagerService.deleteManagerV2(
                         gradeManagerId.toString(),
-                        TenantUtils.getTenantId(projectCode)
+                        TenantUtils.iamTenantId(projectCode)
                     )
                 }
             )

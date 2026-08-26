@@ -291,8 +291,8 @@ class PermissionGradeManagerService @Autowired constructor(
             }
         } ?: listOf(ManagerScopes(ALL_MEMBERS, ALL_MEMBERS))
 
-        val gradeManagerDetail = iamV2ManagerService.getGradeManagerDetail(gradeManagerId)
-        val tenantId = TenantUtils.getTenantIdByEnglishName(projectCode)
+        val tenantId = TenantUtils.iamTenantId(projectCode)
+        val gradeManagerDetail = iamV2ManagerService.getGradeManagerDetail(gradeManagerId, tenantId)
         val finalMembers = gradeManagerDetail.members.filterNot {
             deptService.isUserDeparted(it, tenantId)
         }

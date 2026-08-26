@@ -77,7 +77,7 @@ class RbacPermissionService(
         logger.info("[rbac] validateUserActionPermission :  userId = $userId | action = $action")
         val startEpoch = System.currentTimeMillis()
         try {
-            return authHelper.isAllowed(userId, action, tenantId)
+            return authHelper.isAllowed(userId, action, TenantUtils.iamTenantId(tenantId = tenantId))
         } finally {
             logger.info(
                 "It take(${System.currentTimeMillis() - startEpoch})ms to validate user action permission|" +

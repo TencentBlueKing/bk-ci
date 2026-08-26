@@ -43,8 +43,8 @@ object Versions {
     const val mockk = "1.12.2"
     const val Resilience4j = "2.2.0"
     const val jgit = "5.13.3.202401111512-r"
-    // TODO: 待 IAM SDK 发布同时兼容多租户扩展与主干 2.0.3 能力的版本后再升级
-    const val iam = "2.0.3"
+    // 2.0.5 保留主干无租户重载，并增加 tenantId 重载；单租户不传租户头，行为与 2.0.3/2.0.4 一致
+    const val iam = "2.0.5-SNAPSHOT"
     const val disklrucache = "2.0.2"
     const val BkCrypto = "1.1.3"
     const val audit = "2.0.1"

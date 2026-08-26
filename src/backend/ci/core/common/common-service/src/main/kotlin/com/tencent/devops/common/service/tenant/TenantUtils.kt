@@ -96,6 +96,25 @@ class TenantUtils : ApplicationContextAware, InitializingBean {
         }
 
         /**
+         * IAM Java SDK 2.0.5 请求使用的租户 ID。
+         * 单租户恒为 null，不写 X-Bk-Tenant-Id，与 2.0.3/2.0.4 一致。
+         * 多租户必须非空：SDK 在 enableMultiTenantMode 下若 ThreadLocal 无租户会丢掉鉴权头。
+         *
+         * @param projectEnglishName 项目英文名，优先按英文名解析租户
+         * @param tenantId 已解析的租户 ID；无项目名时使用，空则回落 system
+         */
+        fun iamTenantId(projectEnglishName: String? = null, tenantId: String? = null): String? {
+            if (!enableMultiTenantMode) {
+                return null
+            }
+            return if (!projectEnglishName.isNullOrBlank()) {
+                getTenantIdByEnglishName(projectEnglishName)
+            } else {
+                getTenantId(tenantId)
+            }
+        }
+
+        /**
          * 调用api网关
          */
         fun <T> callApigw(
