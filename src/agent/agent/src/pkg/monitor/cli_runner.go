@@ -10,7 +10,6 @@ import (
 	"io"
 	"os"
 	"sort"
-	"sync"
 	"time"
 )
 
@@ -38,9 +37,10 @@ func runOnceWithInputs(ctx context.Context, out io.Writer, ins []Input, warmupGa
 	if out == nil {
 		out = os.Stdout
 	}
+	runners := newInputRunners(ins)
 
 	// 1. warmup：让 CPU 采集器填充 "last" 缓存
-	gatherAll(ctx, ins)
+	gatherAll(ctx, runners)
 	if warmupGap > 0 {
 		select {
 		case <-ctx.Done():
@@ -50,7 +50,7 @@ func runOnceWithInputs(ctx context.Context, out io.Writer, ins []Input, warmupGa
 	}
 
 	// 2. 正式采集
-	all := gatherAll(ctx, ins)
+	all := gatherAll(ctx, runners)
 	if len(all) == 0 {
 		fmt.Fprintln(out, "[monitor] no metrics gathered")
 		return 0, nil
@@ -75,39 +75,39 @@ func runOnceWithInputs(ctx context.Context, out io.Writer, ins []Input, warmupGa
 }
 
 // gatherAll 与 doOneGather 结构一致但不做上报 / dump，便于 CLI 复用。
-func gatherAll(ctx context.Context, ins []Input) []Metric {
-	var wg sync.WaitGroup
-	var mu sync.Mutex
-	all := make([]Metric, 0, 64)
-	for _, in := range ins {
-		in := in
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-			defer func() {
-				// cli 路径下 panic 直接打印到 stderr，不抢占 stdout
-				if r := recover(); r != nil {
-					fmt.Fprintf(os.Stderr, "[monitor] input %s panic: %v\n", in.Name(), r)
-				}
-			}()
-			metrics, err := in.Gather(ctx)
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "[monitor] input %s gather failed: %v\n", in.Name(), err)
-				return
-			}
-			mu.Lock()
-			all = append(all, metrics...)
-			mu.Unlock()
-		}()
+// 同一 runner 未完成时不会重入，避免 warmup 后再次启动一个已卡住的 input。
+func gatherAll(ctx context.Context, runners []*inputRunner) []Metric {
+	gatherCtx, cancel := context.WithTimeout(ctx, perInputTimeout)
+	defer cancel()
+
+	results := make(chan inputResult, len(runners))
+	started := 0
+	for _, runner := range runners {
+		if !runner.start(gatherCtx, results) {
+			fmt.Fprintf(os.Stderr, "[monitor] input %s previous collection still running; skipped\n", runner.input.Name())
+			continue
+		}
+		started++
 	}
-	done := make(chan struct{})
-	go func() {
-		wg.Wait()
-		close(done)
-	}()
-	select {
-	case <-done:
-	case <-ctx.Done():
+
+	all := make([]Metric, 0, 64)
+	for received := 0; received < started; {
+		select {
+		case result := <-results:
+			received++
+			if result.panicValue != nil {
+				fmt.Fprintf(os.Stderr, "[monitor] input %s panic: %v\n", result.name, result.panicValue)
+				continue
+			}
+			if result.err != nil {
+				fmt.Fprintf(os.Stderr, "[monitor] input %s gather failed: %v\n", result.name, result.err)
+				continue
+			}
+			all = append(all, result.metrics...)
+		case <-gatherCtx.Done():
+			fmt.Fprintf(os.Stderr, "[monitor] gather deadline reached after %s; unfinished inputs will not be started again\n", perInputTimeout)
+			return all
+		}
 	}
 	return all
 }

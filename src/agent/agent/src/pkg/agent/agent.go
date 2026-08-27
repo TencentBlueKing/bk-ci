@@ -28,7 +28,6 @@
 package agent
 
 import (
-	"context"
 	"sync"
 	"time"
 
@@ -76,9 +75,9 @@ func Run(isDebug bool) {
 		}
 	}
 
-	// 数据采集：monitor 作为独立子进程运行，主进程只做看护 + 退避重启。
-	// 采集卡死/崩溃只影响子进程，绝不干扰主链路（心跳/构建）。
-	safeGo("monitorSupervisor", func() { monitor.Supervise(context.Background()) })
+	// 数据采集。每个 monitor input 独立运行且不重入；单项卡住时只跳过
+	// 该项的后续采集，不影响主链路（心跳/构建）和其他采集项。
+	safeGo("monitor", monitor.Collect)
 
 	// 定期清理
 	go cron.CleanJob()

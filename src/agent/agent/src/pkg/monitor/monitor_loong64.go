@@ -21,21 +21,6 @@ func Collect() {
 	logs.Info("monitor not supported on loong64, skip")
 }
 
-// RunDaemon 在 loong64 平台为空操作。保留签名以便 agentcli monitor --daemon
-// 子命令在该架构下仍可链接。
-func RunDaemon(workDir string, isDebug bool) error {
-	_ = workDir
-	_ = isDebug
-	logs.Info("monitor daemon not supported on loong64, skip")
-	return nil
-}
-
-// Supervise 在 loong64 平台为空操作。保留签名以便主 agent 启动流程链接。
-func Supervise(ctx context.Context) {
-	_ = ctx
-	logs.Info("monitor supervisor not supported on loong64, skip")
-}
-
 // RunOnceStdout 在 loong64 平台直接返回 0 / nil。
 // 保留签名以便 agentcli monitor 子命令在该架构下仍可链接。
 func RunOnceStdout(ctx context.Context, out io.Writer, duration time.Duration) (int, error) {

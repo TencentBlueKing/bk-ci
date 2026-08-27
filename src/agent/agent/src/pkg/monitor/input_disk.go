@@ -31,7 +31,7 @@ var defaultDiskIgnoreFS = map[string]struct{}{
 // 关键：这类挂载点一旦后端不可达（NFS server 宕机、网络分区、SMB 掉线），
 // 底层 statfs/statvfs syscall 会进入不可中断睡眠（D 状态）永不返回，连
 // SIGKILL 都杀不掉——这正是 monitor input goroutine 累积卡死（触发
-// inflightHardCap 告警）的根因。Go 层无法打断已进入内核的 syscall，
+// input 长期 running）的根因。Go 层无法打断已进入内核的 syscall，
 // 唯一可靠的办法是「根本不对它们发起 statfs」。
 //
 // 对齐 telegraf「ignore_fs 从源头绕开」的思路；telegraf 靠运维手动配置
@@ -46,8 +46,8 @@ var networkFSPrefixes = []string{
 	"smb",   // smb2/smb3 变体
 	"afpfs", // macOS AFP
 	"afp",
-	"fuse",     // fuse.sshfs / fuse.s3fs / fuse.glusterfs 等，后端多为网络
-	"9p",       // Plan9 / 虚拟机共享目录
+	"fuse", // fuse.sshfs / fuse.s3fs / fuse.glusterfs 等，后端多为网络
+	"9p",   // Plan9 / 虚拟机共享目录
 	"glusterfs",
 	"ceph",
 	"webdav",
@@ -80,7 +80,7 @@ type Disk struct {
 // NewDisk 返回默认 disk 采集器。
 func NewDisk() *Disk {
 	return &Disk{
-		partitionsFn: disk.PartitionsWithContext,
+		partitionsFn: safeDiskPartitions,
 		usageFn:      disk.UsageWithContext,
 		nowFn:        time.Now,
 	}

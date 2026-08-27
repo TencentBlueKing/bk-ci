@@ -96,3 +96,52 @@ func TestProcesses_Gather_ListError(t *testing.T) {
 		t.Errorf("err = %v", err)
 	}
 }
+
+func TestProcesses_Gather_PSOnce(t *testing.T) {
+	calls := 0
+	p := &Processes{
+		execPSFn: func(_ context.Context) ([]byte, error) {
+			calls++
+			return []byte("STAT\nSs\nR+\nU\nI\nT\nZ\n?\n"), nil
+		},
+		nowFn: time.Now,
+	}
+
+	metrics, err := p.Gather(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if calls != 1 {
+		t.Fatalf("ps calls = %d, want exactly 1", calls)
+	}
+
+	fields := metrics[0].Fields
+	checks := map[string]int64{
+		FieldRunning:  1,
+		FieldSleeping: 3,
+		FieldStopped:  1,
+		FieldZombies:  1,
+		FieldTotal:    7,
+	}
+	for field, want := range checks {
+		if got, _ := fields[field].(int64); got != want {
+			t.Errorf("%s = %v, want %d", field, fields[field], want)
+		}
+	}
+	if _, exists := fields[FieldTotalThreads]; exists {
+		t.Error("Darwin ps path should not emit Linux-only total_threads")
+	}
+}
+
+func TestProcesses_Gather_PSError(t *testing.T) {
+	sentinel := errors.New("ps failed")
+	p := &Processes{
+		execPSFn: func(_ context.Context) ([]byte, error) {
+			return nil, sentinel
+		},
+		nowFn: time.Now,
+	}
+	if _, err := p.Gather(context.Background()); err == nil || !errors.Is(err, sentinel) {
+		t.Errorf("err = %v", err)
+	}
+}

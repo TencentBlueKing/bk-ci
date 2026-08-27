@@ -15,10 +15,6 @@ type DataEventType string
 
 const (
 	IpEvent DataEventType = "IP"
-	// MonitorConfigEvent 监控相关配置（gateway / 鉴权 / projectId / 忽略IP）
-	// 发生变更时发布。monitor supervisor 订阅后立即重启子进程，让其以新配置
-	// 重新加载，替代子进程周期性轮询 .agent.properties 的方案。
-	MonitorConfigEvent DataEventType = "MONITOR_CONFIG"
 )
 
 // DataChannel 是一个能接收 DataEvent 的 channel
