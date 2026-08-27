@@ -624,9 +624,16 @@ class PipelineTriggerEventService @Autowired constructor(
             reason = getI18nReason(eventParam.reason)
             if (id2NameMap != null) {
                 val username = id2NameMap[triggerUser] ?: triggerUser
-                if (eventDesc.contains(triggerUser)) {
-                    eventDesc = eventDesc.replace(triggerUser, username)
-                }
+                val descText = eventDesc.defaultMessage ?: eventDesc.toJsonStr()
+                val replacedParams = eventDesc.params?.map { it.replace(triggerUser, username) }
+                eventDesc = eventDesc.copy(
+                    defaultMessage = if (descText.contains(triggerUser)) {
+                        descText.replace(triggerUser, username)
+                    } else {
+                        eventDesc.defaultMessage
+                    },
+                    params = replacedParams
+                )
                 triggerUser = username
             }
             this
