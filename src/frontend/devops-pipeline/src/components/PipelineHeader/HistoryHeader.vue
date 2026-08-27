@@ -149,6 +149,71 @@
             :show-version-sideslider="showVersionSideslider"
             @close="closeVersionSideSlider"
         />
+        <!-- 禁用态执行按钮 tooltip 模板：三种禁用场景 -->
+        <div style="display: none;">
+            <div
+                id="pipelineDisabledTooltip"
+                class="pipeline-disabled-tooltip"
+            >
+                <p class="disabled-tooltip-title">{{ $t('pacPipelineLockTips') }}</p>
+                <!-- 场景三：页面与 YAML 均禁用 -->
+                <template v-if="isPageAndYamlDisabled">
+                    <p class="disabled-tooltip-sub-title">{{ $t('resolveBothDisabledTips') }}</p>
+                    <p class="disabled-tooltip-group-title">{{ $t('pageDisabledLabel') }}</p>
+                    <p class="disabled-tooltip-item">
+                        <span class="item-label">{{ $t('disabledByLabel') }}</span>
+                        <span class="item-value">{{ pageDisabledInfo.operator }}</span>
+                    </p>
+                    <p class="disabled-tooltip-item">
+                        <span class="item-label">{{ $t('disabledAtLabel') }}</span>
+                        <span class="item-value">{{ pageDisabledInfo.time }}</span>
+                    </p>
+                    <p class="disabled-tooltip-item">
+                        <span class="item-label">{{ $t('disableReasonLabel') }}</span>
+                        <span class="item-value">{{ pageDisabledInfo.reason }}</span>
+                    </p>
+                    <p class="disabled-tooltip-group-title">{{ $t('yamlDisabledLabel') }}</p>
+                    <p class="disabled-tooltip-item">
+                        <span class="item-label">{{ $t('submitterLabel') }}</span>
+                        <span class="item-value">{{ yamlDisabledInfo.operator }}</span>
+                    </p>
+                    <p class="disabled-tooltip-item">
+                        <span class="item-label">{{ $t('submitTimeLabel') }}</span>
+                        <span class="item-value">{{ yamlDisabledInfo.time }}</span>
+                    </p>
+                </template>
+                <!-- 场景二：仅代码库 YAML 声明禁用 -->
+                <template v-else-if="isOnlyYamlDisabled">
+                    <p class="disabled-tooltip-item">
+                        <span class="item-label">{{ $t('disabledSourceLabel') }}</span>
+                        <span class="item-value">{{ $t('yamlDisabledSourceDesc') }}</span>
+                    </p>
+                    <p class="disabled-tooltip-item">
+                        <span class="item-label">{{ $t('submitterLabel') }}</span>
+                        <span class="item-value">{{ yamlDisabledInfo.operator }}</span>
+                    </p>
+                    <p class="disabled-tooltip-item">
+                        <span class="item-label">{{ $t('submitTimeLabel') }}</span>
+                        <span class="item-value">{{ yamlDisabledInfo.time }}</span>
+                    </p>
+                </template>
+                <!-- 场景一：仅页面禁用 -->
+                <template v-else>
+                    <p class="disabled-tooltip-item">
+                        <span class="item-label">{{ $t('disabledByLabel') }}</span>
+                        <span class="item-value">{{ pageDisabledInfo.operator }}</span>
+                    </p>
+                    <p class="disabled-tooltip-item">
+                        <span class="item-label">{{ $t('disabledAtLabel') }}</span>
+                        <span class="item-value">{{ pageDisabledInfo.time }}</span>
+                    </p>
+                    <p class="disabled-tooltip-item">
+                        <span class="item-label">{{ $t('disableReasonLabel') }}</span>
+                        <span class="item-value">{{ pageDisabledInfo.reason }}</span>
+                    </p>
+                </template>
+            </div>
+        </div>
     </div>
 </template>
 
@@ -203,7 +268,23 @@
                 draftStatus: DRAFT_STATUS.NORMAL,
                 draftSaveInfo: null,
                 loading: false,
-                isPipelineIdChanged: false
+                isPipelineIdChanged: false,
+
+                // ↓↓↓ TODO: 以下为 PAC 三种禁用场景的占位判断/展示数据，待后端字段确认后替换 ↓↓↓
+                // 代码库默认分支 YAML 声明了 disable-pipeline: true 导致的禁用
+                isYamlDeclaredDisabled: false,
+                // 页面（UI）禁用信息
+                pageDisabledInfo: {
+                    operator: 'lisi',
+                    time: '2026-08-20 15:30',
+                    reason: '下游环境维护中，预计周五恢复'
+                },
+                // YAML 声明禁用信息
+                yamlDisabledInfo: {
+                    operator: 'zhaoliu',
+                    time: '2026-08-17 09:12'
+                }
+                // ↑↑↑ 占位数据结束 ↑↑↑
             }
         },
         computed: {
@@ -216,6 +297,7 @@
             ...mapState('common', ['hasDraft']),
             ...mapGetters({
                 isCurPipelineLocked: 'atom/isCurPipelineLocked',
+                pacEnabled: 'atom/pacEnabled',
                 isReleasePipeline: 'atom/isReleasePipeline',
                 isReleaseVersion: 'atom/isReleaseVersion',
                 isActiveDraftVersion: 'atom/isActiveDraftVersion',
@@ -315,15 +397,37 @@
             actionType () {
                 return this.editAndExecutable || this.isEditCurrentDraft ? 'edit' : 'rollback'
             },
+            // 仅页面（UI）禁用
+            isOnlyPageDisabled () {
+                return this.isCurPipelineLocked && !this.isYamlDeclaredDisabled
+            },
+            // 仅代码库 YAML 声明禁用
+            isOnlyYamlDisabled () {
+                return !this.isCurPipelineLocked && this.isYamlDeclaredDisabled
+            },
+            // 页面与 YAML 均禁用
+            isPageAndYamlDisabled () {
+                return this.isCurPipelineLocked && this.isYamlDeclaredDisabled
+            },
             tooltip () {
-                return this.executable
-                    ? {
-                        disabled: true
-                    }
-                    : {
-                        content: this.$t(this.isCurPipelineLocked ? 'pipelineLockTips' : !(this.isReleasePipeline || this.onlyBranchPipeline) ? 'draftPipelineExecTips' : 'pipelineManualDisable'),
+                if (this.executable) {
+                    return { disabled: true }
+                }
+                // PAC 流水线禁用态：展示禁用人/时间/原因等详细信息
+                if (this.pacEnabled && (this.isCurPipelineLocked || this.isYamlDeclaredDisabled)) {
+                    return {
+                        allowHTML: true,
+                        width: 300,
+                        theme: 'dark',
+                        content: '#pipelineDisabledTooltip',
+                        placement: 'bottom-end',
                         delay: [300, 0]
                     }
+                }
+                return {
+                    content: this.$t(this.isCurPipelineLocked ? 'pipelineLockTips' : !(this.isReleasePipeline || this.onlyBranchPipeline) ? 'draftPipelineExecTips' : 'pipelineManualDisable'),
+                    delay: [300, 0]
+                }
             },
             editRouteName () {
                 return this.isTemplate ? 'templateEdit' : 'pipelinesEdit'
@@ -550,6 +654,32 @@
         align-items: center;
         grid-gap: 10px;
         grid-auto-flow: column;
+    }
+}
+.pipeline-disabled-tooltip {
+    font-size: 12px;
+    line-height: 20px;
+    .disabled-tooltip-title {
+        font-weight: bold;
+        margin-bottom: 4px;
+    }
+    .disabled-tooltip-sub-title {
+        margin-bottom: 8px;
+    }
+    .disabled-tooltip-group-title {
+        font-weight: bold;
+        margin: 8px 0 4px;
+    }
+    .disabled-tooltip-item {
+        display: flex;
+        .item-label {
+            width: 64px;
+            flex-shrink: 0;
+            color: #979ba5;
+        }
+        .item-value {
+            word-break: break-all;
+        }
     }
 }
 </style>
