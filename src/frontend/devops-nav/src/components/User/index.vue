@@ -57,7 +57,7 @@
 
         get tenantId (): string {
             const tenantInfo = (window as any).tenantInfoForDisplay
-            return (tenantInfo && tenantInfo.tenantId) || '--'
+            return (tenantInfo && tenantInfo.tenantId) || ''
         }
 
         get userSettingUrl (): string {
@@ -108,7 +108,7 @@
         }
 
         renderSlot (h) {
-            return h('bk-user-display-name', { 'user-id': this.username })
+            return h('bk-user-display-name', { props: { userId: this.username } })
         }
 
         logout (): void {

@@ -63,6 +63,49 @@ export function getTenantUserApiPrefix (info) {
 }
 
 /**
+ * 单租户 / 未配用户网关时，把 bk-user-display-name 换成纯文本，避免组件默认打同源 display_info 404。
+ */
+export function createUserDisplayNameFallback () {
+    return {
+        name: 'bk-user-display-name',
+        props: {
+            userId: {
+                type: [String, Array, Number],
+                default: ''
+            }
+        },
+        render (h) {
+            const raw = this.userId || (this.$attrs && (this.$attrs.userId || this.$attrs['user-id'])) || ''
+            const text = Array.isArray(raw) ? raw.filter(Boolean).join(', ') : String(raw || '')
+            return h('span', text)
+        }
+    }
+}
+
+/**
+ * @param {import('vue').VueConstructor | { component: Function, use?: Function }} vueOrApp
+ * @param {{ install?: Function, configure?: Function }} BkUserDisplayName
+ */
+export function applyBkUserDisplayName (vueOrApp, BkUserDisplayName, tenantInfo) {
+    if (hasTenantUserApi(tenantInfo) && BkUserDisplayName) {
+        if (typeof vueOrApp.use === 'function' && typeof BkUserDisplayName.install === 'function') {
+            vueOrApp.use(BkUserDisplayName)
+        }
+        if (typeof BkUserDisplayName.configure === 'function') {
+            BkUserDisplayName.configure({
+                tenantId: tenantInfo.tenantId,
+                apiBaseUrl: tenantInfo.apiBaseUrl,
+                emptyText: 'unkown_user'
+            })
+        }
+        return
+    }
+    if (vueOrApp && typeof vueOrApp.component === 'function') {
+        vueOrApp.component('bk-user-display-name', createUserDisplayNameFallback())
+    }
+}
+
+/**
  * Resolve IANA timezone for display:
  * window.tenantInfoForDisplay.timeZone → window.userInfo.timeZone → browser → Asia/Shanghai
  */
@@ -441,6 +484,8 @@ export default {
     hasTenantUserApi,
     hasTenantId,
     getTenantUserApiPrefix,
+    createUserDisplayNameFallback,
+    applyBkUserDisplayName,
     getUserTimeZone,
     toEpochMilli,
     formatByUserTz,

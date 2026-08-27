@@ -1,10 +1,11 @@
 import BkUserDisplayName from '@blueking/bk-user-display-name'
+import Vue from 'vue'
 import {
+    applyBkUserDisplayName,
     applyTenantDisplayInfo,
     DEFAULT_USER_TIME_ZONE,
     getTenantUserApiPrefix,
-    hasTenantId,
-    hasTenantUserApi
+    hasTenantId
 } from '../../../common-lib/time'
 import request from './request'
 export default class TenantSingleton {
@@ -74,21 +75,17 @@ export default class TenantSingleton {
             if (hasTenantId(tenantInfo)) {
                 request.defaults.headers.common['X-Bk-Tenant-Id'] = tenantInfo.tenantId
             }
-            if (hasTenantUserApi(tenantInfo)) {
-                BkUserDisplayName.configure({
-                    tenantId: tenantInfo.tenantId,
-                    apiBaseUrl: tenantInfo.apiBaseUrl,
-                    emptyText: 'unkown_user'
-                })
-            }
+            applyBkUserDisplayName(Vue, BkUserDisplayName, tenantInfo)
             return tenantInfo
         } catch (error) {
             console.error(error)
-            return applyTenantDisplayInfo({
+            const tenantInfo = applyTenantDisplayInfo({
                 tenantId: '',
                 apiBaseUrl: '',
                 timeZone: DEFAULT_USER_TIME_ZONE
             })
+            applyBkUserDisplayName(Vue, BkUserDisplayName, tenantInfo)
+            return tenantInfo
         }
     }
 }
