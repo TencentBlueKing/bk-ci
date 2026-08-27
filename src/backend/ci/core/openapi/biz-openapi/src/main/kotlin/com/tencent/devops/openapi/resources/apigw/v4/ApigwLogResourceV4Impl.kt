@@ -116,6 +116,7 @@ class ApigwLogResourceV4Impl @Autowired constructor(
         tag: String?,
         containerHashId: String?,
         executeCount: Int?,
+        subTag: String?,
         jobId: String?,
         stepId: String?,
         archiveFlag: Boolean?
@@ -138,6 +139,7 @@ class ApigwLogResourceV4Impl @Autowired constructor(
             tag = tag,
             containerHashId = containerHashId,
             executeCount = executeCount,
+            subTag = subTag,
             jobId = if (tag.isNullOrBlank() && stepId.isNullOrBlank()) jobId else null,
             stepId = stepId,
             archiveFlag = archiveFlag
@@ -157,6 +159,7 @@ class ApigwLogResourceV4Impl @Autowired constructor(
         tag: String?,
         containerHashId: String?,
         executeCount: Int?,
+        subTag: String?,
         jobId: String?,
         stepId: String?,
         archiveFlag: Boolean?
@@ -176,6 +179,7 @@ class ApigwLogResourceV4Impl @Autowired constructor(
             tag = tag,
             containerHashId = containerHashId,
             executeCount = executeCount,
+            subTag = subTag,
             jobId = if (tag.isNullOrBlank() && stepId.isNullOrBlank()) jobId else null,
             stepId = stepId,
             archiveFlag = archiveFlag
@@ -232,6 +236,7 @@ class ApigwLogResourceV4Impl @Autowired constructor(
         tag: String?,
         containerHashId: String?,
         executeCount: Int?,
+        subTag: String?,
         jobId: String?,
         stepId: String?,
         archiveFlag: Boolean?
@@ -244,6 +249,7 @@ class ApigwLogResourceV4Impl @Autowired constructor(
 
         if (!tag.isNullOrBlank()) path.append("&tag=$tag")
         if (!containerHashId.isNullOrBlank()) path.append("&containerHashId=$containerHashId")
+        if (!subTag.isNullOrBlank()) path.append("&subTag=$subTag")
         if (!jobId.isNullOrBlank() && tag.isNullOrBlank() && stepId.isNullOrBlank()) path.append("&jobId=$jobId")
         if (!stepId.isNullOrBlank()) path.append("&stepId=$stepId")
         if (archiveFlag != null) path.append("&archiveFlag=$archiveFlag")

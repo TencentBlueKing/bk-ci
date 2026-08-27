@@ -1411,6 +1411,27 @@ paths:
         enableWebsocket: false
         isPublic: true
         matchSubpath: false
+  /v4/apigw-app/creative_stream/stage_review_content:
+    get:
+      operationId: "v4_app_creative_stream_stage_review_content"
+      description: "CDS 预定义接口：拉取创作流 Stage 审核卡片"
+      tags:
+      - "V4应用态"
+      x-bk-apigateway-resource:
+        allowApplyPermission: true
+        authConfig:
+          appVerifiedRequired: true
+          resourcePermissionRequired: true
+          userVerifiedRequired: false
+        backend:
+          matchSubpath: false
+          method: "get"
+          name: "backend-1"
+          path: "/openapi/api/apigw-app/v4/creative_stream/stage_review_content"
+          timeout: 30
+        enableWebsocket: false
+        isPublic: true
+        matchSubpath: false
   /v4/apigw-app/environment/projects/{projectId}/enable_env_node:
     put:
       operationId: "v4_app_enable_env_node"
@@ -2539,6 +2560,48 @@ paths:
           method: "post"
           name: "backend-1"
           path: "/openapi/api/apigw-app/v4/projects/{projectId}/build_start"
+          timeout: 30
+        enableWebsocket: false
+        isPublic: true
+        matchSubpath: false
+  /v4/apigw-app/projects/{projectId}/imate_build_start:
+    post:
+      operationId: "v4_app_imate_build_start"
+      description: "IMate消息提醒启动流水线"
+      tags:
+      - "V4应用态"
+      x-bk-apigateway-resource:
+        allowApplyPermission: true
+        authConfig:
+          appVerifiedRequired: true
+          resourcePermissionRequired: true
+          userVerifiedRequired: false
+        backend:
+          matchSubpath: false
+          method: "post"
+          name: "backend-1"
+          path: "/openapi/api/apigw-app/v4/projects/{projectId}/imate_build_start"
+          timeout: 30
+        enableWebsocket: false
+        isPublic: true
+        matchSubpath: false
+  /v4/apigw-app/projects/{projectId}/visibility_build_manual_startup_info:
+    get:
+      operationId: "v4_app_visibility_build_startInfo"
+      description: "获取可见性流水线手动启动参数"
+      tags:
+      - "V4应用态"
+      x-bk-apigateway-resource:
+        allowApplyPermission: true
+        authConfig:
+          appVerifiedRequired: true
+          resourcePermissionRequired: true
+          userVerifiedRequired: false
+        backend:
+          matchSubpath: false
+          method: "get"
+          name: "backend-1"
+          path: "/openapi/api/apigw-app/v4/projects/{projectId}/visibility_build_manual_startup_info"
           timeout: 30
         enableWebsocket: false
         isPublic: true
@@ -7315,6 +7378,48 @@ paths:
           method: "post"
           name: "backend-1"
           path: "/openapi/api/apigw-user/v4/projects/{projectId}/build_start"
+          timeout: 30
+        enableWebsocket: false
+        isPublic: true
+        matchSubpath: false
+  /v4/apigw-user/projects/{projectId}/imate_build_start:
+    post:
+      operationId: "v4_user_imate_build_start"
+      description: "IMate消息提醒启动流水线"
+      tags:
+      - "V4用户态"
+      x-bk-apigateway-resource:
+        allowApplyPermission: true
+        authConfig:
+          appVerifiedRequired: false
+          resourcePermissionRequired: false
+          userVerifiedRequired: true
+        backend:
+          matchSubpath: false
+          method: "post"
+          name: "backend-1"
+          path: "/openapi/api/apigw-user/v4/projects/{projectId}/imate_build_start"
+          timeout: 30
+        enableWebsocket: false
+        isPublic: true
+        matchSubpath: false
+  /v4/apigw-user/projects/{projectId}/visibility_build_manual_startup_info:
+    get:
+      operationId: "v4_user_visibility_build_startInfo"
+      description: "获取可见性流水线手动启动参数"
+      tags:
+      - "V4用户态"
+      x-bk-apigateway-resource:
+        allowApplyPermission: true
+        authConfig:
+          appVerifiedRequired: false
+          resourcePermissionRequired: false
+          userVerifiedRequired: true
+        backend:
+          matchSubpath: false
+          method: "get"
+          name: "backend-1"
+          path: "/openapi/api/apigw-user/v4/projects/{projectId}/visibility_build_manual_startup_info"
           timeout: 30
         enableWebsocket: false
         isPublic: true

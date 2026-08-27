@@ -128,6 +128,26 @@ class CreativeFlowCopyService @Autowired constructor(
             }
         }
 
+        // 同人克隆自己上架的分身：目标个人项目 == 源项目，且源 pipeline 仍在 →
+        // 按同一 pipelineId 复用，禁止再 create 出第二条流。
+        if (traced == null && grant.sourceProjectId == targetProjectId) {
+            val sourceInfo = pipelineRepositoryService.getPipelineInfo(
+                projectId = grant.sourceProjectId,
+                pipelineId = grant.sourcePipelineId,
+                channelCode = ChannelCode.CREATIVE_STREAM
+            )
+            if (sourceInfo != null) {
+                return reuseSameProjectSource(
+                    userId = userId,
+                    targetProjectId = targetProjectId,
+                    request = request,
+                    grant = grant,
+                    sourcePipelineName = sourceInfo.pipelineName,
+                    sourcePipelineVersion = sourceInfo.version
+                )
+            }
+        }
+
         // 4. 版本解析
         val sourceVersion = resolveSourceVersion(grant)
 
@@ -259,6 +279,59 @@ class CreativeFlowCopyService @Autowired constructor(
             targetVersionNum = deployResult.versionNum?.let { CreativeFlowVersionNumUtil.format(it) },
             resolvedSourceVersion = sourceVersion.first,
             resolvedSourceVersionNum = sourceVersion.second?.let { CreativeFlowVersionNumUtil.format(it) }
+        )
+    }
+
+    /**
+     * 源项目 == 目标项目且源创作流仍存在时：复用同一 pipelineId，登记一条 SKIPPED 溯源，避免再次 create。
+     * 同人克隆自己上架的分身走此路径；OVERWRITE 也不改写源流本身（避免把自己的正式流当「副本」覆盖）。
+     */
+    private fun reuseSameProjectSource(
+        userId: String,
+        targetProjectId: String,
+        request: CreativeFlowCopyRequest,
+        grant: CreativeFlowShareGrant,
+        sourcePipelineName: String,
+        sourcePipelineVersion: Int
+    ): CreativeFlowCopyResult {
+        val sourceVersion = resolveSourceVersion(grant)
+        val skippedReason =
+            "源与目标为同一项目下的同一创作流(${grant.sourcePipelineId})，复用不复制"
+        logger.info(
+            "CreativeFlowCopyService|reuse same project source|" +
+                "$targetProjectId|${grant.sourcePipelineId}|shareId=${grant.shareId}|flowId=${grant.flowId}"
+        )
+        traceService.record(
+            CreativeFlowCopyTrace(
+                shareId = grant.shareId,
+                flowId = grant.flowId,
+                scene = grant.scene,
+                shareMode = grant.shareMode,
+                talentCode = grant.talentCode,
+                sourceProjectId = grant.sourceProjectId,
+                sourcePipelineId = grant.sourcePipelineId,
+                sourceVersion = sourceVersion.first,
+                sourceVersionNum = sourceVersion.second,
+                targetProjectId = targetProjectId,
+                targetPipelineId = grant.sourcePipelineId,
+                targetPipelineName = sourcePipelineName,
+                targetVersion = sourcePipelineVersion,
+                targetVersionNum = sourceVersion.second,
+                targetEnvHashId = request.targetEnvHashId,
+                copyAction = CreativeFlowCopyStatus.SKIPPED,
+                variableOverrides = null,
+                operator = userId
+            )
+        )
+        return CreativeFlowCopyResult(
+            status = CreativeFlowCopyStatus.SKIPPED,
+            targetPipelineId = grant.sourcePipelineId,
+            targetPipelineName = sourcePipelineName,
+            targetVersion = sourcePipelineVersion,
+            targetVersionNum = sourceVersion.second?.let { CreativeFlowVersionNumUtil.format(it) },
+            resolvedSourceVersion = sourceVersion.first,
+            resolvedSourceVersionNum = sourceVersion.second?.let { CreativeFlowVersionNumUtil.format(it) },
+            skippedReason = skippedReason
         )
     }
 
