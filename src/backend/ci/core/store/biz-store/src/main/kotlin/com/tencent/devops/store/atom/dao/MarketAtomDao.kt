@@ -29,7 +29,6 @@ package com.tencent.devops.store.atom.dao
 
 import com.tencent.devops.common.api.constant.INIT_VERSION
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.service.tenant.TenantUtils
 import com.tencent.devops.model.store.tables.TAtom
 import com.tencent.devops.model.store.tables.TAtomEnvInfo
 import com.tencent.devops.model.store.tables.TAtomFeature

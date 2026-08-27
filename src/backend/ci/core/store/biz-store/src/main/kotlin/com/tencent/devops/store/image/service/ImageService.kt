@@ -115,7 +115,6 @@ import com.tencent.devops.store.pojo.image.response.MarketImageMain
 import com.tencent.devops.store.pojo.image.response.MarketImageResp
 import com.tencent.devops.store.pojo.image.response.MyImage
 import java.time.LocalDateTime
-import java.util.Date
 import kotlin.math.ceil
 import org.jooq.DSLContext
 import org.jooq.Record
