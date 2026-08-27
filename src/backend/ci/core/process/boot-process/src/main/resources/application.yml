@@ -29,3 +29,10 @@ queueConcurrency:
 
 server:
   port: 21921
+
+# 创作流 IMATE Stage 审核对接 CDS 开放审批。发布后由管理员在 CDS 登记 saasId=bk-ci-creative-stream。
+cds:
+  approval:
+    host: https://cds-sz.bkdevops.qq.com
+    appId: bk-ci-creative-stream
+    appSecret: ${CDS_APPROVAL_APP_SECRET:}

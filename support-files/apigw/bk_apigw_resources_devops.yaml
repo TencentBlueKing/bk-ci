@@ -1411,6 +1411,27 @@ paths:
         enableWebsocket: false
         isPublic: true
         matchSubpath: false
+  /v4/apigw-app/creative_stream/stage_review_content:
+    get:
+      operationId: "v4_app_creative_stream_stage_review_content"
+      description: "CDS 预定义接口：拉取创作流 Stage 审核卡片"
+      tags:
+      - "V4应用态"
+      x-bk-apigateway-resource:
+        allowApplyPermission: true
+        authConfig:
+          appVerifiedRequired: true
+          resourcePermissionRequired: true
+          userVerifiedRequired: false
+        backend:
+          matchSubpath: false
+          method: "get"
+          name: "backend-1"
+          path: "/openapi/api/apigw-app/v4/creative_stream/stage_review_content"
+          timeout: 30
+        enableWebsocket: false
+        isPublic: true
+        matchSubpath: false
   /v4/apigw-app/environment/projects/{projectId}/enable_env_node:
     put:
       operationId: "v4_app_enable_env_node"
