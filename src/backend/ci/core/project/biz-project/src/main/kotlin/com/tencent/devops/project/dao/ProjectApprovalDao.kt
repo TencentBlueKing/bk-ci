@@ -32,6 +32,9 @@ import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.auth.api.pojo.SubjectScopeInfo
+import com.tencent.devops.common.db.utils.TenantTableFields.TENANT_ENGLISH_NAME
+import com.tencent.devops.common.db.utils.TenantTableFields.TENANT_ID
+import com.tencent.devops.common.db.utils.optionalTenantId
 import com.tencent.devops.common.service.tenant.TenantUtils
 import com.tencent.devops.model.project.tables.TProjectApproval
 import com.tencent.devops.model.project.tables.records.TProjectApprovalRecord
@@ -57,7 +60,7 @@ class ProjectApprovalDao {
         projectScope: Int
     ): Int {
         with(TProjectApproval.T_PROJECT_APPROVAL) {
-            return dslContext.insertInto(
+            val affected = dslContext.insertInto(
                 this,
                 PROJECT_NAME,
                 ENGLISH_NAME,
@@ -83,8 +86,6 @@ class ProjectApprovalDao {
                 PRODUCT_ID,
                 PRODUCT_NAME,
                 PROPERTIES,
-                TENANT_ID,
-                TENANT_ENGLISH_NAME,
                 KPI_CODE,
                 KPI_NAME,
                 PROJECT_SCOPE
@@ -115,8 +116,6 @@ class ProjectApprovalDao {
                 projectCreateInfo.properties?.let {
                     JsonUtil.toJson(it, false)
                 },
-                projectCreateInfo.tenantId,
-                projectCreateInfo.englishName,
                 projectCreateInfo.kpiCode,
                 projectCreateInfo.kpiName,
                 projectScope
@@ -142,11 +141,20 @@ class ProjectApprovalDao {
                 .set(PROPERTIES, projectCreateInfo.properties?.let {
                     JsonUtil.toJson(it, false)
                 })
-                .set(TENANT_ID, projectCreateInfo.tenantId)
                 .set(KPI_CODE, projectCreateInfo.kpiCode)
                 .set(KPI_NAME, projectCreateInfo.kpiName)
                 .set(PROJECT_SCOPE, projectScope)
                 .execute()
+            if (TenantUtils.isMultiTenantMode()) {
+                dslContext.update(this)
+                    .set(TENANT_ID, projectCreateInfo.tenantId)
+                    .set(TENANT_ENGLISH_NAME, projectCreateInfo.englishName)
+                    .where(ENGLISH_NAME.eq(
+                        TenantUtils.parseEnglishName(projectCreateInfo.tenantId, projectCreateInfo.englishName)
+                    ))
+                    .execute()
+            }
+            return affected
         }
     }
 
@@ -322,7 +330,7 @@ class ProjectApprovalDao {
                 productId = productId,
                 productName = productName,
                 properties = properties?.let { JsonUtil.to(it, ProjectProperties::class.java) },
-                tenantId = tenantId,
+                tenantId = optionalTenantId(),
                 kpiCode = kpiCode,
                 kpiName = kpiName,
                 projectScope = projectScope

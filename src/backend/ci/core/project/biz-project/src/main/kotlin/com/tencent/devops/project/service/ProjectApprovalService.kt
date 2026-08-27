@@ -30,6 +30,7 @@ package com.tencent.devops.project.service
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.db.utils.optionalTenantId
 import com.tencent.devops.common.auth.api.pojo.SubjectScopeInfo
 import com.tencent.devops.common.auth.callback.AuthConstants
 import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
@@ -168,7 +169,7 @@ class ProjectApprovalService @Autowired constructor(
                 centerName = centerName ?: "",
                 kind = kind ?: 0,
                 logoAddress = logoAddr,
-                tenantId = tenantId,
+                tenantId = optionalTenantId(),
                 productId = productId,
                 productName = projectApprovalInfo?.productName,
                 kpiCode = projectApprovalInfo?.kpiCode,
@@ -293,7 +294,7 @@ class ProjectApprovalService @Autowired constructor(
                 kpiCode = projectApprovalInfo.kpiCode,
                 kpiName = projectApprovalInfo.kpiName,
                 properties = updateProjectProperties,
-                tenantId = projectInfo.tenantId
+                tenantId = projectInfo.optionalTenantId()
             )
         }
         val logoAddress = projectUpdateInfo.logoAddress
@@ -416,7 +417,7 @@ class ProjectApprovalService @Autowired constructor(
                 centerName = centerName ?: "",
                 kind = kind ?: 0,
                 logoAddress = logoAddr,
-                tenantId = tenantId
+                tenantId = optionalTenantId()
             )
         }
         create(

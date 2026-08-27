@@ -63,6 +63,7 @@ import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
 import java.math.BigDecimal
 import java.time.LocalDateTime
+import com.tencent.devops.common.db.utils.TenantTableFields.TENANT_ID as STORE_TENANT_ID
 
 @Suppress("ALL")
 @Repository
@@ -97,7 +98,7 @@ class MarketAtomDao : AtomBaseDao() {
         val conditions = setAtomVisibleCondition(ta).apply {
             add(ta.DELETE_FLAG.eq(false))
             if (useTenantCondition(query.tenantId)) {
-                add(tenantVisibleCondition(ta.TENANT_ID, query.tenantId))
+                add(tenantVisibleCondition(STORE_TENANT_ID, query.tenantId))
             }
             query.serviceScope?.let { add(buildServiceScopeCondition(ta, it)) }
             // 关键字模糊搜索：匹配名称、简介或插件代码
@@ -248,7 +249,7 @@ class MarketAtomDao : AtomBaseDao() {
                 conditions.add(VERSION.like(VersionUtils.generateQueryVersion(version)))
             }
             if (useTenantCondition(tenantId)) {
-                conditions.add(tenantVisibleCondition(TENANT_ID, tenantId))
+                conditions.add(tenantVisibleCondition(STORE_TENANT_ID, tenantId))
             }
             return dslContext.selectCount().from(this)
                 .where(conditions)
@@ -266,7 +267,7 @@ class MarketAtomDao : AtomBaseDao() {
         val conditions = mutableListOf<Condition>()
         conditions.add(tAtom.DELETE_FLAG.eq(false)) // 只查没有被删除的插件
         if (useTenantCondition(tenantId)) {
-            conditions.add(tenantVisibleCondition(tAtom.TENANT_ID, tenantId))
+            conditions.add(tenantVisibleCondition(STORE_TENANT_ID, tenantId))
         }
         conditions.add(tAtom.LATEST_FLAG.eq(true))
         conditions.add(tStoreMember.USERNAME.eq(userId))
@@ -678,7 +679,7 @@ class MarketAtomDao : AtomBaseDao() {
                 .where(ID.eq(atomId))
                 .let {
                     if (useTenantCondition(tenantId)) it.and(
-                        tenantVisibleCondition(TENANT_ID, tenantId)
+                        tenantVisibleCondition(STORE_TENANT_ID, tenantId)
                     ) else it
                 }
                 .fetchOne()
@@ -798,7 +799,7 @@ class MarketAtomDao : AtomBaseDao() {
                 ATOM_STATUS.eq(atomOldStatus)
             )
             if (useTenantCondition(tenantId)) {
-                conditions.add(tenantVisibleCondition(TENANT_ID, tenantId))
+                conditions.add(tenantVisibleCondition(STORE_TENANT_ID, tenantId))
             }
             baseStep.set(MODIFIER, userId)
                 .set(UPDATE_TIME, LocalDateTime.now())
@@ -882,7 +883,7 @@ class MarketAtomDao : AtomBaseDao() {
         with(TAtom.T_ATOM) {
             val conditions = mutableListOf<Condition>(ATOM_CODE.eq(atomCode))
             if (useTenantCondition(tenantId)) {
-                conditions.add(tenantVisibleCondition(TENANT_ID, tenantId))
+                conditions.add(tenantVisibleCondition(STORE_TENANT_ID, tenantId))
             }
             dslContext.update(this)
                 .set(LATEST_FLAG, false)
@@ -926,7 +927,7 @@ class MarketAtomDao : AtomBaseDao() {
                 .where(ATOM_CODE.eq(atomCode))
                 .and(ATOM_STATUS.eq(AtomStatusEnum.UNDERCARRIAGED.status.toByte()))
                 .let {
-                    if (useTenantCondition(tenantId)) it.and(tenantVisibleCondition(TENANT_ID, tenantId)) else it
+                    if (useTenantCondition(tenantId)) it.and(tenantVisibleCondition(STORE_TENANT_ID, tenantId)) else it
                 }
                 .orderBy(CREATE_TIME.desc())
                 .limit(1)

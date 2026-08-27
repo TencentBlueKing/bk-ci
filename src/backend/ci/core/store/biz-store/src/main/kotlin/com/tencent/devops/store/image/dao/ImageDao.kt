@@ -89,6 +89,7 @@ import org.jooq.Result
 import org.jooq.SelectOnConditionStep
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
+import com.tencent.devops.common.db.utils.TenantTableFields.TENANT_ID as STORE_TENANT_ID
 
 @Suppress("ALL")
 @Repository
@@ -170,7 +171,7 @@ class ImageDao {
             conditions.add(tStoreMember.USERNAME.eq(userId))
             conditions.add(DELETE_FLAG.eq(false))
             if (useTenantCondition(tenantId)) {
-                conditions.add(tenantVisibleCondition(TENANT_ID, tenantId))
+                conditions.add(tenantVisibleCondition(STORE_TENANT_ID, tenantId))
             }
             conditions.add(tStoreMember.STORE_TYPE.eq(StoreTypeEnum.IMAGE.type.toByte()))
             baseStep.where(conditions)
@@ -191,7 +192,7 @@ class ImageDao {
                 .where(IMAGE_CODE.eq(imageCode))
                 .let {
                     if (useTenantCondition(tenantId)) it.and(
-                        tenantVisibleCondition(TENANT_ID, tenantId)
+                        tenantVisibleCondition(STORE_TENANT_ID, tenantId)
                     ) else it
                 }
                 .fetchOne(0, Int::class.java)!!
@@ -225,7 +226,7 @@ class ImageDao {
                 .where(ID.eq(imageId))
                 .let {
                     if (useTenantCondition(tenantId)) it.and(
-                        tenantVisibleCondition(TENANT_ID, tenantId)
+                        tenantVisibleCondition(STORE_TENANT_ID, tenantId)
                     ) else it
                 }
                 .fetchOne()
@@ -255,7 +256,7 @@ class ImageDao {
                 .where(IMAGE_CODE.eq(imageCode))
                 .let {
                     if (useTenantCondition(tenantId)) it.and(
-                        tenantVisibleCondition(TENANT_ID, tenantId)
+                        tenantVisibleCondition(STORE_TENANT_ID, tenantId)
                     ) else it
                 }
                 .and(LATEST_FLAG.eq(true))
@@ -302,7 +303,7 @@ class ImageDao {
                 .and(VERSION.like(VersionUtils.generateQueryVersion(version)))
                 .let {
                     if (useTenantCondition(tenantId)) it.and(
-                        tenantVisibleCondition(TENANT_ID, tenantId)
+                        tenantVisibleCondition(STORE_TENANT_ID, tenantId)
                     ) else it
                 }
                 .orderBy(CREATE_TIME.desc())
@@ -675,7 +676,7 @@ class ImageDao {
         val tStoreMember = TStoreMember.T_STORE_MEMBER
         val conditions = generateGetMyImageConditions(tImage, userId, tStoreMember, imageName)
         if (useTenantCondition(tenantId)) {
-            conditions.add(tenantVisibleCondition(tImage.TENANT_ID, tenantId))
+            conditions.add(tenantVisibleCondition(STORE_TENANT_ID, tenantId))
         }
         val t =
             dslContext.select(tImage.IMAGE_CODE.`as`(KEY_IMAGE_CODE), DSL.max(tImage.CREATE_TIME).`as`(KEY_CREATE_TIME))

@@ -30,6 +30,7 @@ package com.tencent.devops.project.util
 import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.db.utils.optionalTenantId
 import com.tencent.devops.common.auth.api.pojo.SubjectScopeInfo
 import com.tencent.devops.model.project.tables.records.TProjectRecord
 import com.tencent.devops.project.pojo.ProjectApprovalInfo
@@ -127,7 +128,7 @@ object ProjectUtils {
                 productId = productId,
                 canView = viewPermission,
                 pipelineTemplateInstallPerm = pipelineTemplateInstallPerm,
-                tenantId = tenantId,
+                tenantId = optionalTenantId(),
                 kpiCode = kpiCode,
                 kpiName = kpiName
             )
@@ -212,7 +213,7 @@ object ProjectUtils {
                 afterPipelineNameFormat = projectApprovalProperties?.pipelineNameFormat,
                 loggingLineLimit = projectProperties?.loggingLineLimit,
                 afterLoggingLineLimit = projectApprovalProperties?.loggingLineLimit,
-                tenantId = tenantId,
+                tenantId = optionalTenantId(),
                 kpiCode = beforeKpiCode,
                 afterKpiCode = projectApprovalInfo?.kpiCode,
                 kpiName = beforeKpiName,

@@ -28,6 +28,7 @@
 package com.tencent.devops.store.atom.dao
 
 import com.tencent.devops.common.db.utils.JooqUtils
+import com.tencent.devops.common.db.utils.TenantTableFields.TENANT_ID as STORE_TENANT_ID
 import com.tencent.devops.common.service.tenant.TenantUtils
 import com.tencent.devops.model.store.tables.TAtom
 import com.tencent.devops.model.store.tables.TClassify
@@ -127,7 +128,7 @@ abstract class AtomBaseDao {
                 .where(ATOM_CODE.eq(atomCode))
                 .and(LATEST_FLAG.eq(true))
                 .let {
-                    if (useTenantCondition(tenantId)) it.and(tenantVisibleCondition(TENANT_ID, tenantId)) else it
+                    if (useTenantCondition(tenantId)) it.and(tenantVisibleCondition(STORE_TENANT_ID, tenantId)) else it
                 }
                 .fetchOne()
         }
@@ -153,7 +154,7 @@ abstract class AtomBaseDao {
                 .where(ATOM_CODE.eq(atomCode))
                 .and(BRANCH_TEST_FLAG.eq(branchTestFlag))
                 .let {
-                    if (useTenantCondition(tenantId)) it.and(tenantVisibleCondition(TENANT_ID, tenantId)) else it
+                    if (useTenantCondition(tenantId)) it.and(tenantVisibleCondition(STORE_TENANT_ID, tenantId)) else it
                 }
                 .orderBy(CREATE_TIME.desc())
                 .limit(1)
@@ -171,7 +172,7 @@ abstract class AtomBaseDao {
             val conditions = mutableListOf<Condition>()
             conditions.add(ATOM_CODE.eq(atomCode))
             if (useTenantCondition(tenantId)) {
-                conditions.add(tenantVisibleCondition(TENANT_ID, tenantId))
+                conditions.add(tenantVisibleCondition(STORE_TENANT_ID, tenantId))
             }
             if (atomStatus != null) {
                 conditions.add(ATOM_STATUS.eq(atomStatus.status.toByte()))
@@ -219,7 +220,7 @@ abstract class AtomBaseDao {
             conditions.add(ta.CLASS_TYPE.eq(classType))
         }
         if (useTenantCondition(tenantId)) {
-            conditions.add(tenantVisibleCondition(ta.TENANT_ID, tenantId))
+            conditions.add(tenantVisibleCondition(STORE_TENANT_ID, tenantId))
         }
         buildJobTypeCondition(ta, JobTypeEnum.AGENT.name, ServiceScopeEnum.PIPELINE)?.let {
             conditions.add(it)

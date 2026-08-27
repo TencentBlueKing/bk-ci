@@ -62,6 +62,7 @@ import com.tencent.devops.common.auth.code.ProjectAuthServiceCode
 import com.tencent.devops.common.auth.enums.SubjectScopeType
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
+import com.tencent.devops.common.db.utils.optionalTenantId
 import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.pipeline.dialect.PipelineDialectType
 import com.tencent.devops.common.redis.RedisOperation
@@ -1233,7 +1234,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                         properties, ProjectProperties::class.java
                     )
                 }?.remotedevManager,
-                tenantId = it.tenantId
+                tenantId = it.optionalTenantId()
             )
         }
     }

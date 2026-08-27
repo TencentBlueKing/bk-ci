@@ -28,6 +28,7 @@ package com.tencent.devops.store.image.dao
 
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.db.utils.JooqUtils
+import com.tencent.devops.common.db.utils.TenantTableFields.TENANT_ID as STORE_TENANT_ID
 import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.common.pipeline.type.docker.ImageType
 import com.tencent.devops.common.service.tenant.TenantUtils
@@ -176,7 +177,7 @@ class MarketImageDao @Autowired constructor() {
         val conditions = mutableListOf<Condition>()
         // 根据租户过滤
         if (useTenantCondition(tenantId)) {
-            conditions.add(tenantVisibleCondition(tImage.TENANT_ID, tenantId))
+            conditions.add(tenantVisibleCondition(STORE_TENANT_ID, tenantId))
         }
         // 隐含条件
         conditions.add(tImage.IMAGE_STATUS.eq(ImageStatusEnum.RELEASED.status.toByte())) // 已发布的
@@ -452,8 +453,7 @@ class MarketImageDao @Autowired constructor() {
                 IMAGE_TAG,
                 PUBLISHER,
                 CREATOR,
-                MODIFIER,
-                TENANT_ID
+                MODIFIER
             )
                 .values(
                     imageId,
@@ -471,10 +471,15 @@ class MarketImageDao @Autowired constructor() {
                     "",
                     "",
                     userId,
-                    userId,
-                    tenantId
+                    userId
                 )
                 .execute()
+            if (TenantUtils.isMultiTenantMode()) {
+                dslContext.update(this)
+                    .set(STORE_TENANT_ID, tenantId)
+                    .where(ID.eq(imageId))
+                    .execute()
+            }
         }
     }
 
@@ -604,7 +609,7 @@ class MarketImageDao @Autowired constructor() {
                 .and(LATEST_FLAG.eq(true))
                 .let {
                     if (useTenantCondition(tenantId)) it.and(
-                        tenantVisibleCondition(TENANT_ID, tenantId)
+                        tenantVisibleCondition(STORE_TENANT_ID, tenantId)
                     ) else it
                 }
                 .fetchOne()
@@ -689,7 +694,7 @@ class MarketImageDao @Autowired constructor() {
                 .and(IMAGE_STATUS.eq(ImageStatusEnum.RELEASED.status.toByte()))
                 .let {
                     if (useTenantCondition(tenantId)) it.and(
-                        tenantVisibleCondition(TENANT_ID, tenantId)
+                        tenantVisibleCondition(STORE_TENANT_ID, tenantId)
                     ) else it
                 }
                 .fetchOne(0, Int::class.java)!!
@@ -883,7 +888,7 @@ class MarketImageDao @Autowired constructor() {
                 .and(IMAGE_STATUS.eq(ImageStatusEnum.UNDERCARRIAGED.status.toByte()))
                 .let {
                     if (useTenantCondition(tenantId)) it.and(
-                        tenantVisibleCondition(TENANT_ID, tenantId)
+                        tenantVisibleCondition(STORE_TENANT_ID, tenantId)
                     ) else it
                 }
                 .orderBy(CREATE_TIME.desc())
@@ -949,7 +954,7 @@ class MarketImageDao @Autowired constructor() {
                 .and(IMAGE_STATUS.eq(ImageStatusEnum.RELEASED.status.toByte()))
                 .let {
                     if (useTenantCondition(tenantId)) it.and(
-                        tenantVisibleCondition(TENANT_ID, tenantId)
+                        tenantVisibleCondition(STORE_TENANT_ID, tenantId)
                     ) else it
                 }
                 .orderBy(CREATE_TIME.desc())

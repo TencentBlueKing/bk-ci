@@ -58,6 +58,7 @@ import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
 import java.math.BigDecimal
 import java.time.LocalDateTime
+import com.tencent.devops.common.db.utils.TenantTableFields.TENANT_ID as STORE_TENANT_ID
 
 @Suppress("ALL")
 @Repository
@@ -180,7 +181,7 @@ class MarketTemplateDao {
         val tTemplate = TTemplate.T_TEMPLATE
         val conditions = mutableListOf<Condition>()
         if (useTenantCondition(tenantId)) {
-            conditions.add(tenantVisibleCondition(tTemplate.TENANT_ID, tenantId))
+            conditions.add(tenantVisibleCondition(STORE_TENANT_ID, tenantId))
         }
         conditions.add(tTemplate.TEMPLATE_STATUS.eq(TemplateStatusEnum.RELEASED.status.toByte())) // 已发布的
         conditions.add(tTemplate.LATEST_FLAG.eq(true)) // 最新版本
@@ -536,7 +537,7 @@ class MarketTemplateDao {
                 .where(TEMPLATE_CODE.eq(templateCode))
                 .and(LATEST_FLAG.eq(true))
                 .let {
-                    if (useTenantCondition(tenantId)) it.and(tenantVisibleCondition(TENANT_ID, tenantId)) else it
+                    if (useTenantCondition(tenantId)) it.and(tenantVisibleCondition(STORE_TENANT_ID, tenantId)) else it
                 }
                 .fetchOne()
         }
@@ -755,7 +756,7 @@ class MarketTemplateDao {
     ): MutableList<Condition> {
         val conditions = mutableListOf<Condition>()
         if (useTenantCondition(tenantId)) {
-            conditions.add(tenantVisibleCondition(tTemplate.TENANT_ID, tenantId))
+            conditions.add(tenantVisibleCondition(STORE_TENANT_ID, tenantId))
         }
         conditions.add(tTemplate.CREATOR.eq(userId).or(tStoreMember.USERNAME.eq(userId)))
         conditions.add(tStoreProjectRel.TYPE.eq(0))

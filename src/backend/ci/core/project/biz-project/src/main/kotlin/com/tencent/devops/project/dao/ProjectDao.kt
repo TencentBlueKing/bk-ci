@@ -32,6 +32,8 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.auth.api.pojo.ProjectConditionDTO
 import com.tencent.devops.common.auth.enums.AuthSystemType
 import com.tencent.devops.common.db.utils.JooqUtils
+import com.tencent.devops.common.db.utils.TenantTableFields.PROJECT_TENANT_ENGLISH_NAME
+import com.tencent.devops.common.db.utils.TenantTableFields.PROJECT_TENANT_ID
 import com.tencent.devops.common.service.tenant.TenantUtils
 import com.tencent.devops.model.project.tables.TProject
 import com.tencent.devops.model.project.tables.records.TProjectRecord
@@ -92,7 +94,7 @@ class ProjectDao {
                 step.and(ENGLISH_NAME.ne(projectId))
             }
             if (!tenantId.isNullOrBlank()) {
-                step.and(TENANT_ID.eq(tenantId))
+                step.and(PROJECT_TENANT_ID.eq(tenantId))
             }
             return step.fetchOne() != null
         }
@@ -103,7 +105,7 @@ class ProjectDao {
             dslContext.select(ENGLISH_NAME)
                 .from(this)
                 .where(APPROVAL_STATUS.notIn(UNSUCCESSFUL_CREATE_STATUS))
-                .let { if (useTenantCondition(tenantId)) it.and(tenantVisibleCondition(TENANT_ID, tenantId)) else it }
+                .let { if (useTenantCondition(tenantId)) it.and(tenantVisibleCondition(PROJECT_TENANT_ID, tenantId)) else it }
                 .fetch(ENGLISH_NAME, String::class.java)
         }
     }
@@ -432,7 +434,7 @@ class ProjectDao {
         properties: ProjectProperties?
     ): Int {
         with(TProject.T_PROJECT) {
-            return dslContext.insertInto(
+            val affected = dslContext.insertInto(
                 this,
                 PROJECT_NAME,
                 PROJECT_ID,
@@ -462,8 +464,6 @@ class ProjectDao {
                 SUBJECT_SCOPES,
                 AUTH_SECRECY,
                 PRODUCT_ID,
-                TENANT_ID,
-                TENANT_ENGLISH_NAME,
                 HIDDEN,
                 PROJECT_SCOPE
             ).values(
@@ -497,11 +497,17 @@ class ProjectDao {
                 subjectScopesStr,
                 projectCreateInfo.authSecrecy ?: ProjectAuthSecrecyStatus.PUBLIC.value,
                 projectCreateInfo.productId,
-                projectCreateInfo.tenantId,
-                projectCreateInfo.englishName,
                 projectCreateInfo.hidden,
                 projectCreateInfo.projectScope
             ).execute()
+            if (TenantUtils.isMultiTenantMode()) {
+                dslContext.update(this)
+                    .set(PROJECT_TENANT_ID, projectCreateInfo.tenantId)
+                    .set(PROJECT_TENANT_ENGLISH_NAME, projectCreateInfo.englishName)
+                    .where(PROJECT_ID.eq(projectId))
+                    .execute()
+            }
+            return affected
         }
     }
 
@@ -537,8 +543,10 @@ class ProjectDao {
                 .set(SUBJECT_SCOPES, subjectScopesStr)
                 .set(PROJECT_TYPE, projectUpdateInfo.projectType)
                 .set(PRODUCT_ID, projectUpdateInfo.productId)
-                .set(TENANT_ID, projectUpdateInfo.tenantId)
-                .set(TENANT_ENGLISH_NAME, projectUpdateInfo.englishName)
+            if (TenantUtils.isMultiTenantMode()) {
+                update.set(PROJECT_TENANT_ID, projectUpdateInfo.tenantId)
+                    .set(PROJECT_TENANT_ENGLISH_NAME, projectUpdateInfo.englishName)
+            }
             projectUpdateInfo.authSecrecy?.let { update.set(AUTH_SECRECY, it) }
             projectUpdateInfo.hidden?.let { update.set(HIDDEN, it) }
             logoAddress?.let { update.set(LOGO_ADDR, logoAddress) }
@@ -775,7 +783,13 @@ class ProjectDao {
         tenantId: String?
     ): Result<Record4<String, String, String, String>> {
         return with(TProject.T_PROJECT) {
-            dslContext.select(PROJECT_NAME, ENGLISH_NAME, ROUTER_TAG, TENANT_ID).from(this)
+            dslContext.select(
+                PROJECT_NAME,
+                ENGLISH_NAME,
+                ROUTER_TAG,
+                if (TenantUtils.isMultiTenantMode()) PROJECT_TENANT_ID
+                else DSL.inline(null, String::class.java)
+            ).from(this)
                 .where(generateQueryProjectForApplyCondition())
                 .and(AUTH_SECRECY.eq(ProjectAuthSecrecyStatus.PUBLIC.value))
                 .or(
@@ -786,7 +800,7 @@ class ProjectDao {
                             .and(AUTH_SECRECY.eq(ProjectAuthSecrecyStatus.PRIVATE.value))
                     )
                 )
-                .let { if (useTenantCondition(tenantId)) it.and(tenantVisibleCondition(TENANT_ID, tenantId)) else it }
+                .let { if (useTenantCondition(tenantId)) it.and(tenantVisibleCondition(PROJECT_TENANT_ID, tenantId)) else it }
                 .let {
                     it.takeIf { projectName != null }?.and(
                         lower(PROJECT_NAME).like("%${projectName!!.trim().lowercase(Locale.getDefault())}%")
@@ -902,7 +916,7 @@ class ProjectDao {
                         it.and(PROJECT_NAME.like("%$searchName%"))
                     }
                     if (useTenantCondition(tenantId)) {
-                        it.and(tenantVisibleCondition(TENANT_ID, tenantId))
+                        it.and(tenantVisibleCondition(PROJECT_TENANT_ID, tenantId))
                     } else it
                 }.fetchOne()!!.value1()
         }
@@ -947,7 +961,7 @@ class ProjectDao {
             dslContext.select(ID, ENGLISH_NAME, PROJECT_NAME, ENABLED)
                 .from(this)
                 .where(PRODUCT_ID.eq(productId))
-                .let { if (useTenantCondition(tenantId)) it.and(tenantVisibleCondition(TENANT_ID, tenantId)) else it }
+                .let { if (useTenantCondition(tenantId)) it.and(tenantVisibleCondition(PROJECT_TENANT_ID, tenantId)) else it }
                 .fetch()
         }
     }
@@ -963,7 +977,7 @@ class ProjectDao {
         with(TProject.T_PROJECT) {
             return dslContext.selectFrom(this)
                 .where(PROJECT_NAME.like("%$projectName%"))
-                .let { if (useTenantCondition(tenantId)) it.and(tenantVisibleCondition(TENANT_ID, tenantId)) else it }
+                .let { if (useTenantCondition(tenantId)) it.and(tenantVisibleCondition(PROJECT_TENANT_ID, tenantId)) else it }
                 .and(APPROVAL_STATUS.notIn(UNSUCCESSFUL_CREATE_STATUS))
                 .and(AUTH_SECRECY.eq(ProjectAuthSecrecyStatus.PUBLIC.value))
                 .and(CHANNEL.`in`(channelCodes))
@@ -980,7 +994,7 @@ class ProjectDao {
         with(TProject.T_PROJECT) {
             return dslContext.selectCount().from(this)
                 .where(PROJECT_NAME.like("%$projectName%"))
-                .let { if (useTenantCondition(tenantId)) it.and(tenantVisibleCondition(TENANT_ID, tenantId)) else it }
+                .let { if (useTenantCondition(tenantId)) it.and(tenantVisibleCondition(PROJECT_TENANT_ID, tenantId)) else it }
                 .and(APPROVAL_STATUS.notIn(UNSUCCESSFUL_CREATE_STATUS))
                 .and(AUTH_SECRECY.eq(ProjectAuthSecrecyStatus.PUBLIC.value))
                 .and(CHANNEL.`in`(channelCodes))
@@ -1035,7 +1049,7 @@ class ProjectDao {
         with(TProject.T_PROJECT) {
             val record = dslContext.selectFrom(this)
                 .where(PROJECT_NAME.eq(projectName))
-                .let { if (useTenantCondition(tenantId)) it.and(tenantVisibleCondition(TENANT_ID, tenantId)) else it }
+                .let { if (useTenantCondition(tenantId)) it.and(tenantVisibleCondition(PROJECT_TENANT_ID, tenantId)) else it }
                 .and(APPROVAL_STATUS.notIn(UNSUCCESSFUL_CREATE_STATUS))
                 .fetchAny()
                 ?: return null
@@ -1173,11 +1187,14 @@ class ProjectDao {
         field.eq(tenantId).or(field.isNull)
 
     fun listAllTenantIds(dslContext: DSLContext): List<String> {
+        if (!TenantUtils.isMultiTenantMode()) {
+            return emptyList()
+        }
         with(TProject.T_PROJECT) {
-            return dslContext.select(TENANT_ID)
+            return dslContext.select(PROJECT_TENANT_ID)
                 .from(this)
-                .where(TENANT_ID.isNotNull)
-                .fetch(TENANT_ID, String::class.java)
+                .where(PROJECT_TENANT_ID.isNotNull)
+                .fetch(PROJECT_TENANT_ID, String::class.java)
         }
     }
 
