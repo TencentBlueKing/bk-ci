@@ -27,7 +27,10 @@ interface ServiceCreativeStreamStageReviewResource {
         @Parameter(description = "调用方用户（CDS 透传 X-Bk-Username，可空）")
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String?,
-        @Parameter(description = "审批 taskId，格式 cs-stage|{projectId}|{buildId}|{stageId}|{executeCount}", required = true)
+        @Parameter(
+            description = "审批 taskId，格式 cs-stage|{projectId}|{buildId}|{stageId}|{executeCount}",
+            required = true
+        )
         @QueryParam("taskId")
         taskId: String
     ): Result<CreativeStreamStageReviewContent>
