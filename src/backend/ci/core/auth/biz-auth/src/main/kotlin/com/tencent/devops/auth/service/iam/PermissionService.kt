@@ -34,7 +34,7 @@ interface PermissionService {
     fun validateUserActionPermission(
         userId: String,
         action: String,
-        tenantId: String?
+        tenantId: String? = null
     ): Boolean
 
     fun validateUserProjectPermission(
@@ -134,6 +134,6 @@ interface PermissionService {
         userId: String,
         action: String,
         resourceType: String? = null,
-        tenantId: String?
+        tenantId: String? = null
     ): List<String>
 }

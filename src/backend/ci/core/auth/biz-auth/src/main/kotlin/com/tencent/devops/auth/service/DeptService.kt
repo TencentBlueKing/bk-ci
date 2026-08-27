@@ -86,7 +86,7 @@ interface DeptService {
      */
     fun isUserDeparted(
         userId: String,
-        tenantId: String?
+        tenantId: String? = null
     ): Boolean
 
     fun listDeptInfos(searchUserEntity: SearchUserAndDeptEntity, tenantId: String?): DeptInfoVo
