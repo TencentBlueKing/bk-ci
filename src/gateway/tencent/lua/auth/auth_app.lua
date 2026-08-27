@@ -15,8 +15,15 @@
 -- NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
 -- WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 -- SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-local x_gw_token = ngx.var.http_x_devops_token -- 二进制网关转发
-if x_gw_token == config.gw_token and ngx.var.http_x_devops_uid ~= nil then
+local x_gw_token = ngx.var.http_x_devops_token -- 二进制网关转发（仅容器化内网）
+local in_container = ngx.var.namespace ~= nil and ngx.var.namespace ~= ''
+local is_external = ngx.var.devops_region == "EXTERNAL"
+if x_gw_token ~= nil and x_gw_token ~= ""
+    and config.gw_token ~= nil and config.gw_token ~= ""
+    and x_gw_token == config.gw_token
+    and ngx.var.http_x_devops_uid ~= nil
+    and in_container
+    and not is_external then
     ngx.header["X-DEVOPS-UID"] = ngx.var.http_x_devops_uid
     if ngx.var.http_x_devops_organization_name ~= nil then
         ngx.header["X-DEVOPS-ORGANIZATION-NAME"] = ngx.var.http_x_devops_organization_name
@@ -34,13 +41,8 @@ if nil == x_credentialKey then
     x_credentialKey = urlUtil:parseUrl(ngx.var.request_uri)["credentialKey"]
 end
 
-local x_otoken = ngx.var.http_x_otoken -- 外部用户
-if nil == x_otoken then
-    x_otoken = urlUtil:parseUrl(ngx.var.request_uri)["oToken"]
-end
-
-if x_ckey == nil and x_credentialKey == nil and x_otoken == nil then
-    ngx.log(ngx.STDERR, "request does not has header=x-ckey or header=x-otoken")
+if x_ckey == nil and x_credentialKey == nil then
+    ngx.log(ngx.STDERR, "request does not has header=x-ckey or header=x-credentialKey")
     ngx.exit(401)
     return
 end
@@ -48,7 +50,7 @@ end
 if x_ckey ~= nil then
     local staff_info = itloginUtil:get_staff_info(x_ckey)
     ngx.header["X-DEVOPS-UID"] = staff_info.EnglishName
-elseif x_credentialKey ~= nil then
+else
     local staff_info_new = itloginUtil:get_staff_info_new(x_credentialKey)
     if staff_info_new.IsOuter then
         ngx.header["X-DEVOPS-UID"] = staff_info_new.EnglishName .. "@tai"
@@ -56,8 +58,4 @@ elseif x_credentialKey ~= nil then
     else
         ngx.header["X-DEVOPS-UID"] = staff_info_new.EnglishName
     end
-else
-    local outer_profile = outerloginUtil:getProfile(x_otoken)
-    ngx.header["X-DEVOPS-UID"] = outer_profile.data.username
-    ngx.header["X-DEVOPS-ORGANIZATION-NAME"] = "outer"
 end
