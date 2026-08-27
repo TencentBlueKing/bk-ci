@@ -19,9 +19,6 @@ data class AiOverviewCountsVO(
     val systemMcpServers: Int,
     val skills: Int,
     val systemSkills: Int,
-    val kbSources: Int,
-    val kbEntries: Int,
-    val projectKbSources: Int,
     val externalAgents: Int,
     val userPrompts: Int,
     val userLlmConfigs: Int

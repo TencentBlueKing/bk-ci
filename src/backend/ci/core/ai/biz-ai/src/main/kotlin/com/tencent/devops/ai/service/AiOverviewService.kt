@@ -11,7 +11,6 @@ class AiOverviewService @Autowired constructor(
     private val welcomeGuideService: WelcomeGuideService,
     private val mcpServerService: AiMcpServerService,
     private val skillService: AiSkillService,
-    private val kbCatalogService: AiKbCatalogService,
     private val externalAgentService: ExternalAgentService,
     private val promptService: AiPromptService,
     private val userLlmConfigService: UserLlmConfigService,
@@ -21,9 +20,6 @@ class AiOverviewService @Autowired constructor(
     fun getOverview(): AiOverviewVO {
         val mcp = mcpServerService.listAllForOp()
         val skills = skillService.listAllForOp()
-        val catalog = runCatching { kbCatalogService.list() }.getOrElse {
-            com.tencent.devops.ai.pojo.AiKbCatalogVO(emptyList(), emptyList())
-        }
         return AiOverviewVO(
             counts = AiOverviewCountsVO(
                 sysPrompts = agentSysPromptService.listAllAgentSysPrompts().size,
@@ -33,9 +29,6 @@ class AiOverviewService @Autowired constructor(
                 systemMcpServers = mcp.count { it.scope == "SYSTEM" },
                 skills = skills.size,
                 systemSkills = skills.count { it.scope == "SYSTEM" },
-                kbSources = catalog.sources.size,
-                kbEntries = catalog.entries.size,
-                projectKbSources = catalog.sources.count { !it.projectId.isNullOrBlank() },
                 externalAgents = externalAgentService.listAllForOp().size,
                 userPrompts = promptService.listAllForOp().size,
                 userLlmConfigs = userLlmConfigService.listAllForOp().size
