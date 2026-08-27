@@ -516,7 +516,40 @@ func (a *AgentConfig) SaveConfig() error {
 		return fmt.Errorf("read-back verify: content mismatch")
 	}
 
+	// 配置成功落盘后，若 monitor 关心的字段发生变化，则通知 monitor supervisor
+	// 立即重启子进程（子进程重启会重新加载新配置）。以此替代子进程轮询配置文件。
+	notifyMonitorIfConfigChanged()
+
 	return nil
+}
+
+// lastMonitorFingerprint 记录上一次落盘时 monitor 关心字段的指纹。
+// 仅在主 agent 进程内使用（monitor 子进程只读配置、不会调 SaveConfig）。
+var lastMonitorFingerprint string
+
+// monitorConfigFingerprint 计算 monitor 子进程真正依赖的配置字段指纹。
+// 只包含影响上报（gateway）、鉴权（agentId/secretKey）、路由（projectId）
+// 与本机 IP 计算（ignoreLocalIps）的字段；其余字段变更不必重启监控子进程。
+func monitorConfigFingerprint() string {
+	return strings.Join([]string{
+		GAgentConfig.Gateway,
+		GAgentConfig.ProjectId,
+		GAgentConfig.AgentId,
+		GAgentConfig.SecretKey,
+		GAgentConfig.IgnoreLocalIps,
+	}, "\x00")
+}
+
+// notifyMonitorIfConfigChanged 比较本次与上次的 monitor 配置指纹，发生变化时
+// 发布 MonitorConfigEvent。首次落盘（lastMonitorFingerprint 为空）只记录指纹、
+// 不发事件，避免 agent 启动阶段误触发一次无谓的子进程重启。
+func notifyMonitorIfConfigChanged() {
+	fp := monitorConfigFingerprint()
+	if lastMonitorFingerprint != "" && lastMonitorFingerprint != fp {
+		logs.Info("monitor-related config changed, notify supervisor to restart monitor child")
+		EBus.Publish(MonitorConfigEvent, "changed")
+	}
+	lastMonitorFingerprint = fp
 }
 
 // validateConfigContent 解析配置字节内容，检查必填字段是否完整有效。

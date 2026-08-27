@@ -25,19 +25,17 @@ import (
 //
 // 子进程自初始化 config 与独立日志（devopsMonitor.log，只保留 1 天），
 // 然后进入 Collect 常驻循环。
+//
+// 存活与配置：
+//   - 检活走父子 stdin 管道：父进程退出（正常/崩溃）→ 写端关闭 → 本进程
+//     stdin 读到 EOF → 自退（watchParentPipe），跨平台一致、不依赖 ppid。
+//   - 配置变更由父进程 SaveConfig 检测并重启本子进程，重启后重新加载新配置，
+//     因此这里不再轮询 .agent.properties。
 
 const (
 	// MonitorLogName monitor 子进程的独立日志文件名。与主日志 devopsAgent.log
 	// 隔离，且只保留 1 天（见 RunDaemon 里的 InitWithRotate 参数）。
 	MonitorLogName = "devopsMonitor.log"
-	// parentWatchInterval 轮询父进程存活的间隔。父进程若异常退出（未来得及
-	// kill 子进程），子进程会被 init(pid=1) 收养；探测到即自退，避免变成
-	// 长期占用资源的孤儿采集进程。
-	parentWatchInterval = 10 * time.Second
-	// configReloadInterval 周期性重载 agent 配置的间隔。gateway / 鉴权信息
-	// 变更后需要刷新，否则上报会持续失败（原本靠父进程 EBus 通知，子进程
-	// 没有该通道，改为定时自查）。
-	configReloadInterval = 5 * time.Minute
 )
 
 // RunDaemon 是 monitor 子进程的主入口，由 `agent monitor --daemon` 调起。
@@ -46,7 +44,7 @@ const (
 // 流程：
 //  1. 初始化独立日志 devopsMonitor.log（保留 1 天）
 //  2. 加载 agent 配置（gateway / 鉴权），失败重试
-//  3. 启动父进程存活看护 + 周期性配置重载
+//  3. 启动父进程存活看护（stdin 管道 EOF 检测）
 //  4. 进入 Collect 常驻采集循环（阻塞，直到进程被 kill）
 func RunDaemon(workDir string, isDebug bool) error {
 	logFilePath := filepath.Join(systemutil.GetLogDir(), MonitorLogName)
@@ -64,14 +62,13 @@ func RunDaemon(workDir string, isDebug bool) error {
 
 	// 加载配置（gateway / 鉴权）。失败重试而非退出：主 agent 刚启动时
 	// .agent.properties 一定已存在（父进程先于本子进程启动），但网络证书
-	// 等初始化偶发失败时给几次机会。
+	// 等初始化偶发失败时给几次机会。配置后续变更由父进程重启本子进程刷新，
+	// 因此这里只需加载一次。
 	loadConfigWithRetry()
 
-	// 父进程存活看护：父死则自退，防止孤儿。
-	go watchParent()
-
-	// 周期性重载配置，替代父进程 EBus 通知。
-	go reloadConfigLoop()
+	// 父进程存活看护：读 stdin 管道，父进程退出后写端关闭、读到 EOF 即自退，
+	// 防止遗留孤儿采集进程。
+	go watchParentPipe()
 
 	// 进入常驻采集循环（阻塞）。Collect 内部自带 panic 自愈与退避。
 	Collect()
@@ -93,28 +90,19 @@ func loadConfigWithRetry() {
 	}
 }
 
-// reloadConfigLoop 周期性重载配置，保证 gateway / 鉴权信息变更后仍能上报。
-func reloadConfigLoop() {
-	ticker := time.NewTicker(configReloadInterval)
-	defer ticker.Stop()
-	for range ticker.C {
-		if err := config.LoadAgentConfig(); err != nil {
-			logs.WithError(err).Warn("monitor daemon|reload agent config failed")
-		}
-	}
-}
-
-// watchParent 轮询父进程 pid。父进程退出后，本子进程会被 init(pid=1) 收养，
-// 此时 os.Getppid() 返回 1，探测到即主动退出，避免遗留孤儿采集进程。
+// watchParentPipe 通过父子 stdin 管道检测父进程存活。父进程（supervisor）在
+// spawn 时持有本进程 stdin 的写端并一直保持打开；父进程一旦退出（正常或崩溃），
+// OS 关闭该写端，本处的 Read 立即返回 EOF/错误，据此主动退出，避免变成长期
+// 占用资源的孤儿采集进程。
 //
-// 说明：windows 上没有 pid=1 的 init 语义，Getppid 行为不同；但主 agent
-// 退出时 supervise_win.go 会显式 kill 子进程，故 windows 下本看护为兜底。
-func watchParent() {
-	ticker := time.NewTicker(parentWatchInterval)
-	defer ticker.Stop()
-	for range ticker.C {
-		if os.Getppid() == 1 {
-			logs.Warn("monitor daemon|parent process gone (ppid=1), exiting")
+// 相比轮询 ppid==1：无轮询延迟、跨平台一致、且不受容器内 init 非 pid=1 影响。
+func watchParentPipe() {
+	buf := make([]byte, 1)
+	for {
+		// 正常情况下父进程不会向管道写数据；这里会一直阻塞在 Read。
+		// 父进程退出后 Read 返回 EOF（或错误），随即退出。
+		if _, err := os.Stdin.Read(buf); err != nil {
+			logs.WithError(err).Warn("monitor daemon|parent pipe closed, exiting")
 			logs.Close()
 			os.Exit(0)
 		}
