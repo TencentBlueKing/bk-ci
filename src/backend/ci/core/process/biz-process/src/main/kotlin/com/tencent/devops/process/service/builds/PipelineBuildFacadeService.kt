@@ -155,6 +155,7 @@ import com.tencent.devops.process.pojo.pipeline.toBuildDetailSimple
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.CreateStreamTriggerSupportService
 import com.tencent.devops.process.service.ParamFacadeService
+import com.tencent.devops.process.service.creative.CreativeStreamImateStageReviewService
 import com.tencent.devops.process.service.pipeline.PipelineBuildService
 import com.tencent.devops.process.service.record.PipelineRecordModelService
 import com.tencent.devops.process.service.template.v2.PipelineTemplateResourceService
@@ -219,7 +220,8 @@ class PipelineBuildFacadeService(
     private val pipelineTriggerEventService: PipelineTriggerEventService,
     private val pipelineRecordModelService: PipelineRecordModelService,
     private val historyConditionQueryStrategyFactory: HistoryConditionQueryStrategyFactory,
-    private val createStreamService: CreateStreamTriggerSupportService
+    private val createStreamService: CreateStreamTriggerSupportService,
+    private val creativeStreamImateStageReviewService: CreativeStreamImateStageReviewService
 ) {
 
     @Value("\${pipeline.build.cancel.intervalLimitTime:60}")
@@ -1132,6 +1134,16 @@ class PipelineBuildFacadeService(
                 params = arrayOf(stageId)
             )
         }
+        creativeStreamImateStageReviewService.assertLock(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            stageId = stageId,
+            isCancel = isCancel,
+            buildStage = buildStage,
+            channelCode = buildInfo.channelCode
+        )
         PipelineUtils.checkStageReviewParam(reviewRequest?.reviewParams)
         if (!reviewRequest?.reviewParams.isNullOrEmpty()) {
             reviewParamsCheck(
@@ -1979,7 +1991,12 @@ class PipelineBuildFacadeService(
             retry = buildHistory.retry,
             errorInfoList = buildHistory.errorInfoList,
             buildNumAlias = buildHistory.buildNumAlias,
-            webhookInfo = buildHistory.webhookInfo
+            webhookInfo = buildHistory.webhookInfo,
+            imateStageReview = if (buildHistory.status == BuildStatus.STAGE_SUCCESS.name) {
+                creativeStreamImateStageReviewService.hint(projectId, pipelineId, buildId)
+            } else {
+                null
+            }
         )
     }
 
