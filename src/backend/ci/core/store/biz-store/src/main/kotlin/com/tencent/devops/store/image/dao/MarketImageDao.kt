@@ -597,7 +597,7 @@ class MarketImageDao @Autowired constructor() {
         }
     }
 
-    fun getLatestImageByCode(dslContext: DSLContext, imageCode: String, tenantId: String?): TImageRecord? {
+    fun getLatestImageByCode(dslContext: DSLContext, imageCode: String, tenantId: String? = null): TImageRecord? {
         return with(TImage.T_IMAGE) {
             dslContext.selectFrom(this)
                 .where(IMAGE_CODE.eq(imageCode))

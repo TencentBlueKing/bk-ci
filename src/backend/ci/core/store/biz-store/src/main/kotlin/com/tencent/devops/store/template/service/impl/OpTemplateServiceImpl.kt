@@ -176,7 +176,7 @@ class OpTemplateServiceImpl @Autowired constructor(
     ): Result<Boolean> {
         logger.info("approveTemplate userId is :$userId,templateId is :$templateId,approveReq is :$approveReq")
         // 判断模版是否存在
-        val template = marketTemplateDao.getTemplate(dslContext, templateId, tenantId)
+        val template = marketTemplateDao.getTemplate(dslContext, templateId)
             ?: return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                 params = arrayOf(templateId),

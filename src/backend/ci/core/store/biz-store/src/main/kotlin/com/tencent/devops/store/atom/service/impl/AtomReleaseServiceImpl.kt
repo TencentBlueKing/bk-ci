@@ -1139,8 +1139,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             atomId = atomId,
             atomStatus = status,
             userId = userId,
-            msg = I18nUtil.getCodeLanMessage(UN_RELEASE),
-            tenantId = tenantId
+            msg = I18nUtil.getCodeLanMessage(UN_RELEASE)
         )
         // 更新插件当前大版本内是否有测试版本标识
         redisOperation.hset(
@@ -1267,8 +1266,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                         atomStatus = atomStatus,
                         latestFlag = latestFlag,
                         pubTime = pubTime
-                    ),
-                    tenantId = tenantId
+                    )
                 )
                 // 处理插件缓存
                 marketAtomCommonService.handleAtomCache(
@@ -1295,8 +1293,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                 atomId = atomId,
                 atomStatus = atomStatus,
                 userId = userId,
-                msg = "",
-                tenantId = tenantId
+                msg = ""
             )
             // 通过websocket推送状态变更消息
             storeWebsocketService.sendWebsocketMessage(userId, atomId)
@@ -1383,8 +1380,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                         userId = userId,
                         updateAtomInfo = UpdateAtomInfo(
                             latestFlag = true
-                        ),
-                        tenantId = tenantId
+                        )
                     )
                 }
             }
@@ -1440,8 +1436,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                 atomStatus = AtomStatusEnum.UNDERCARRIAGED.status.toByte(),
                 atomStatusMsg = reason,
                 latestFlag = false
-            ),
-            tenantId = tenantId
+            )
         )
         redisOperation.delete(StoreUtils.getStoreRunInfoKey(StoreTypeEnum.ATOM.name, atomCode))
         // 获取插件已发布版本数量
@@ -1486,8 +1481,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                 atomId = tmpAtomId,
                 updateAtomInfo = UpdateAtomInfo(
                     latestFlag = true
-                ),
-                tenantId = tenantId
+                )
             )
         }
     }

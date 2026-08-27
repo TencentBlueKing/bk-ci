@@ -30,6 +30,7 @@ package com.tencent.devops.store.template.resources
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.service.tenant.TenantUtils
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.template.ServiceTemplateResource
 import com.tencent.devops.store.pojo.template.InstallTemplateReq
@@ -117,7 +118,7 @@ class ServiceTemplateResourceImpl @Autowired constructor(
         userId: String,
         templateCode: String
     ): Result<TemplateDetail?> {
-        return marketTemplateService.getTemplateDetailByCode(userId, templateCode)
+        return marketTemplateService.getTemplateDetailByCode(userId, templateCode, TenantUtils.getTenantId())
     }
 
     override fun getMarketTemplateStatus(templateCode: String): Result<TemplateStatusEnum> {

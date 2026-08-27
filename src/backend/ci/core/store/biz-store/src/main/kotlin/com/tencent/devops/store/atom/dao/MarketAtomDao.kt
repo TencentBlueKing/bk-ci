@@ -782,7 +782,8 @@ class MarketAtomDao : AtomBaseDao() {
         atomNewStatus: Byte,
         userId: String,
         msg: String?,
-        latestFlag: Boolean?
+        latestFlag: Boolean?,
+        tenantId: String? = null
     ) {
         with(TAtom.T_ATOM) {
             val baseStep = dslContext.update(this)
@@ -793,10 +794,16 @@ class MarketAtomDao : AtomBaseDao() {
             if (null != latestFlag) {
                 baseStep.set(LATEST_FLAG, latestFlag)
             }
+            val conditions = mutableListOf<Condition>(
+                ATOM_CODE.eq(atomCode),
+                ATOM_STATUS.eq(atomOldStatus)
+            )
+            if (useTenantCondition(tenantId)) {
+                conditions.add(tenantVisibleCondition(TENANT_ID, tenantId))
+            }
             baseStep.set(MODIFIER, userId)
                 .set(UPDATE_TIME, LocalDateTime.now())
-                .where(ATOM_CODE.eq(atomCode))
-                .and(ATOM_STATUS.eq(atomOldStatus))
+                .where(conditions)
                 .execute()
         }
     }
@@ -872,11 +879,15 @@ class MarketAtomDao : AtomBaseDao() {
     /**
      * 清空LATEST_FLAG
      */
-    fun cleanLatestFlag(dslContext: DSLContext, atomCode: String) {
+    fun cleanLatestFlag(dslContext: DSLContext, atomCode: String, tenantId: String? = null) {
         with(TAtom.T_ATOM) {
+            val conditions = mutableListOf<Condition>(ATOM_CODE.eq(atomCode))
+            if (useTenantCondition(tenantId)) {
+                conditions.add(tenantVisibleCondition(TENANT_ID, tenantId))
+            }
             dslContext.update(this)
                 .set(LATEST_FLAG, false)
-                .where(ATOM_CODE.eq(atomCode))
+                .where(conditions)
                 .execute()
         }
     }
@@ -906,11 +917,18 @@ class MarketAtomDao : AtomBaseDao() {
         }
     }
 
-    fun getNewestUndercarriagedAtomsByCode(dslContext: DSLContext, atomCode: String): TAtomRecord? {
+    fun getNewestUndercarriagedAtomsByCode(
+        dslContext: DSLContext,
+        atomCode: String,
+        tenantId: String? = null
+    ): TAtomRecord? {
         return with(TAtom.T_ATOM) {
             dslContext.selectFrom(this)
                 .where(ATOM_CODE.eq(atomCode))
                 .and(ATOM_STATUS.eq(AtomStatusEnum.UNDERCARRIAGED.status.toByte()))
+                .let {
+                    if (useTenantCondition(tenantId)) it.and(tenantVisibleCondition(TENANT_ID, tenantId)) else it
+                }
                 .orderBy(CREATE_TIME.desc())
                 .limit(1)
                 .fetchOne()

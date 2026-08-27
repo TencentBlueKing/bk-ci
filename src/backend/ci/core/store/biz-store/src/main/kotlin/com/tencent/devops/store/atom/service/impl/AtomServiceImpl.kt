@@ -1510,9 +1510,9 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
             )
         }
         // 查询插件的最新记录
-        val newestAtomRecord = atomDao.getNewestAtomByCode(dslContext, atomCode)
+        val newestAtomRecord = atomDao.getNewestAtomByCode(dslContext, atomCode, tenantId = tenantId)
             ?: throw ErrorCodeException(errorCode = CommonMessageCode.PARAMETER_IS_INVALID, params = arrayOf(atomCode))
-        val editFlag = marketAtomCommonService.checkEditCondition(atomCode)
+        val editFlag = marketAtomCommonService.checkEditCondition(atomCode, tenantId)
         if (!editFlag) {
             throw ErrorCodeException(
                 errorCode = StoreMessageCode.USER_ATOM_VERSION_IS_NOT_FINISH,

@@ -574,7 +574,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
      * 根据插件标识获取插件回显版本信息
      */
     override fun getAtomShowVersionInfo(userId: String, atomCode: String, tenantId: String?): Result<StoreShowVersionInfo> {
-        val record = marketAtomDao.getNewestAtomByCode(dslContext, atomCode) ?: throw ErrorCodeException(
+        val record = marketAtomDao.getNewestAtomByCode(dslContext, atomCode, tenantId = tenantId) ?: throw ErrorCodeException(
             errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
             params = arrayOf(atomCode)
         )
@@ -582,7 +582,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         val showVersion = if (cancelFlag) {
             record.version
         } else {
-            marketAtomDao.getMaxVersionAtomByCode(dslContext, atomCode)?.version
+            marketAtomDao.getMaxVersionAtomByCode(dslContext, atomCode, tenantId = tenantId)?.version
         }
 
         val isAtomInitStatus = record.atomStatus == AtomStatusEnum.INIT.status.toByte()
@@ -764,7 +764,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                 frontendType = FrontendTypeEnum.getFrontendTypeObj(htmlTemplateVersion),
                 yamlFlag = true,
                 dailyStatisticList = getRecentDailyStatisticList(atomCode),
-                editFlag = marketAtomCommonService.checkEditCondition(atomCode),
+                editFlag = marketAtomCommonService.checkEditCondition(atomCode, tenantId),
                 honorInfos = storeHonorService.getStoreHonor(userId, StoreTypeEnum.ATOM, atomCode),
                 indexInfos = storeIndexManageService.getStoreIndexInfosByStoreCode(StoreTypeEnum.ATOM, atomCode),
                 serviceScopeDetails = serviceScopeDetails
@@ -907,7 +907,8 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                 storeType = StoreTypeEnum.ATOM
             ),
             publicFlag = atom.defaultFlag,
-            channelCode = channelCode
+            channelCode = channelCode,
+            tenantId = tenantId
         )
     }
 

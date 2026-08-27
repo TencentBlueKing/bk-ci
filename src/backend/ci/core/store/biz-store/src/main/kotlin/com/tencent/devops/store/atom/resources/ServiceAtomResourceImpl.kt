@@ -27,6 +27,7 @@
 package com.tencent.devops.store.atom.resources
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.service.tenant.TenantUtils
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.atom.ServiceAtomResource
 import com.tencent.devops.store.atom.dao.AtomQueryParam
@@ -154,6 +155,7 @@ class ServiceAtomResourceImpl @Autowired constructor(
         page: Int,
         pageSize: Int
     ): Result<AtomResp<AtomRespItem>?> {
+        val tenantId = TenantUtils.getTenantIdByEnglishName(projectCode)
         return atomService.serviceGetPipelineAtoms(
             userId = userId,
             AtomQueryParam(
@@ -167,10 +169,12 @@ class ServiceAtomResourceImpl @Autowired constructor(
                 keyword = keyword,
                 queryProjectAtomFlag = queryProjectAtomFlag,
                 fitOsFlag = fitOsFlag,
-                queryFitAgentBuildLessAtomFlag = queryFitAgentBuildLessAtomFlag
+                queryFitAgentBuildLessAtomFlag = queryFitAgentBuildLessAtomFlag,
+                tenantId = tenantId
             ),
             page = page,
-            pageSize = pageSize
+            pageSize = pageSize,
+            tenantId = tenantId
         )
     }
 }

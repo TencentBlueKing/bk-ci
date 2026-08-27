@@ -92,7 +92,7 @@ class UserTemplateReleaseResourceImpl @Autowired constructor(
     }
 
     override fun cancelReleaseByCode(userId: String, templateCode: String): Result<Boolean> {
-        return templateReleaseService.cancelRelease(userId, templateCode)
+        return templateReleaseService.cancelReleaseByCode(userId, templateCode)
     }
 
     override fun offlineTemplate(

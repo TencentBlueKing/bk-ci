@@ -28,6 +28,7 @@
 package com.tencent.devops.store.common.resources
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.service.tenant.TenantUtils
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.common.ServiceStoreResource
 import com.tencent.devops.store.atom.service.AtomReleaseService
@@ -145,7 +146,7 @@ class ServiceStoreResourceImpl @Autowired constructor(
     }
 
     override fun addMarketAtom(userId: String, marketAtomCreateRequest: MarketAtomCreateRequest): Result<String> {
-        return atomReleaseService.addMarketAtom(userId, marketAtomCreateRequest)
+        return atomReleaseService.addMarketAtom(userId, marketAtomCreateRequest, TenantUtils.getTenantId())
     }
 
     override fun updateMarketAtomTest(

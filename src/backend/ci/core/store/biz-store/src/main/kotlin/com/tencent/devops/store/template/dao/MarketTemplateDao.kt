@@ -526,11 +526,18 @@ class MarketTemplateDao {
         }
     }
 
-    fun getLatestTemplateByCode(dslContext: DSLContext, templateCode: String): TTemplateRecord? {
+    fun getLatestTemplateByCode(
+        dslContext: DSLContext,
+        templateCode: String,
+        tenantId: String? = null
+    ): TTemplateRecord? {
         return with(TTemplate.T_TEMPLATE) {
             dslContext.selectFrom(this)
                 .where(TEMPLATE_CODE.eq(templateCode))
                 .and(LATEST_FLAG.eq(true))
+                .let {
+                    if (useTenantCondition(tenantId)) it.and(tenantVisibleCondition(TENANT_ID, tenantId)) else it
+                }
                 .fetchOne()
         }
     }

@@ -48,7 +48,7 @@ import com.tencent.devops.store.common.service.StoreCommonService
 import com.tencent.devops.store.common.service.StoreProjectService
 import com.tencent.devops.store.common.service.StoreUserService
 import com.tencent.devops.store.common.service.action.StoreDecorateFactory
-import com.tencent.devops.store.common.utils.VersionUtils
+import com.tencent.devops.store.utils.VersionUtils
 import com.tencent.devops.store.common.utils.image.MultiSourceDataPaginator
 import com.tencent.devops.store.common.utils.image.PagableDataSource
 import com.tencent.devops.store.constant.StoreMessageCode

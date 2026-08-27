@@ -1201,7 +1201,8 @@ abstract class ImageReleaseService {
                 recommendFlag = approveImageReq.recommendFlag,
                 certificationFlag = approveImageReq.certificationFlag,
                 rdType = approveImageReq.rdType,
-                weight = approveImageReq.weight
+                weight = approveImageReq.weight,
+                tenantId = tenantId
             )
         }
         return type
@@ -1246,7 +1247,8 @@ abstract class ImageReleaseService {
         recommendFlag: Boolean,
         certificationFlag: Boolean,
         rdType: ImageRDTypeEnum?,
-        weight: Int?
+        weight: Int?,
+        tenantId: String? = null
     ) {
         var latestFlag: Boolean? = null
         var pubTime: LocalDateTime? = null
@@ -1263,7 +1265,7 @@ abstract class ImageReleaseService {
                     latestUpgradeTime = pubTime
                 )
             )
-            val newestVersionFlag = marketImageDao.getLatestImageByCode(context, image.imageCode)?.let {
+            val newestVersionFlag = marketImageDao.getLatestImageByCode(context, image.imageCode, tenantId)?.let {
                 StoreUtils.isGreaterVersion(image.version, it.version)
             } ?: true
             val imageVersion = marketImageVersionLogDao.getImageVersion(context, image.id)

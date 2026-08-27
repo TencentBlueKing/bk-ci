@@ -146,7 +146,7 @@ abstract class AtomBaseDao {
         dslContext: DSLContext,
         atomCode: String,
         branchTestFlag: Boolean = false,
-        tenantId: String?
+        tenantId: String? = null
     ): TAtomRecord? {
         return with(TAtom.T_ATOM) {
             dslContext.selectFrom(this)
@@ -165,7 +165,7 @@ abstract class AtomBaseDao {
         dslContext: DSLContext,
         atomCode: String,
         atomStatus: AtomStatusEnum? = null,
-        tenantId: String?
+        tenantId: String? = null
     ): TAtomRecord? {
         return with(TAtom.T_ATOM) {
             val conditions = mutableListOf<Condition>()

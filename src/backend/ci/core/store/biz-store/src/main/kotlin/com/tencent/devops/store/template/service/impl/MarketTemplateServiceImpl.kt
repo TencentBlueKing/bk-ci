@@ -48,6 +48,7 @@ import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.type.StoreDispatchType
+import com.tencent.devops.common.service.tenant.TenantUtils
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.web.utils.BkApiUtil
 import com.tencent.devops.common.web.utils.I18nUtil
@@ -565,7 +566,7 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
 
     override fun getTemplateDetailByCode(userId: String, templateCode: String, tenantId: String?): Result<TemplateDetail?> {
         logger.info("getTemplateDetailByCode userId is :$userId, templateCode is :$templateCode")
-        val templateRecord = marketTemplateDao.getLatestTemplateByCode(dslContext, templateCode)
+        val templateRecord = marketTemplateDao.getLatestTemplateByCode(dslContext, templateCode, tenantId)
             ?: return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                 params = arrayOf(templateCode),
@@ -775,7 +776,7 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
         logger.info("installTemplate userId: $userId,channelCode: $channelCode,installTemplateReq: $installTemplateReq")
         val templateCode = installTemplateReq.templateCode
         val projectCodeList = installTemplateReq.projectCodeList
-        val template = marketTemplateDao.getLatestTemplateByCode(dslContext, templateCode)
+        val template = marketTemplateDao.getLatestTemplateByCode(dslContext, templateCode, tenantId)
         if (template == null) {
             val templateNotExistResponse = I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
@@ -805,7 +806,8 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
             storeCode = template.templateCode,
             storeType = StoreTypeEnum.TEMPLATE,
             projectCodeList = projectCodeList,
-            channelCode = channelCode
+            channelCode = channelCode,
+            tenantId = tenantId
         )
         logger.info("validateInstallResult is: $validateInstallResult")
         if (validateInstallResult.isNotOk()) {
@@ -888,7 +890,8 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
                 storeType = StoreTypeEnum.TEMPLATE
             ),
             publicFlag = template.publicFlag,
-            channelCode = channelCode
+            channelCode = channelCode,
+            tenantId = tenantId
         )
         val result = if (projectCodeList.isEmpty()) {
             installStoreComponentResult
@@ -921,7 +924,8 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
         with(installTemplateReq) {
             logger.info("install Template v2 userId={}, channel={}, req={}", userId, channelCode, this)
             // 获取模板并校验存在性
-            val template = marketTemplateDao.getLatestTemplateByCode(dslContext, templateCode) ?: run {
+            val tenantId = TenantUtils.getTenantId()
+            val template = marketTemplateDao.getLatestTemplateByCode(dslContext, templateCode, tenantId) ?: run {
                 val language = I18nUtil.getLanguage(userId)
                 throw ErrorCodeException(
                     errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
@@ -950,7 +954,8 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
                 storeCode = template.templateCode,
                 storeType = StoreTypeEnum.TEMPLATE,
                 projectCodeList = projectCodeList,
-                channelCode = channelCode
+                channelCode = channelCode,
+                tenantId = tenantId
             ).takeIf { it.isNotOk() }?.let {
                 return Result(InstallTemplateResp(result = false, installProjectTemplateDTO = emptyList()))
             }
@@ -982,7 +987,8 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
                     storeType = StoreTypeEnum.TEMPLATE
                 ),
                 publicFlag = template.publicFlag,
-                channelCode = channelCode
+                channelCode = channelCode,
+                tenantId = tenantId
             )
             // 结果处理
             val templateInfos = client.get(ServicePTemplateResource::class)
@@ -1215,7 +1221,8 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
                         storeType = storeType
                     ),
                     publicFlag = storeBaseInfo.publicFlag,
-                    channelCode = ChannelCode.getRequestChannelCode()
+                    channelCode = ChannelCode.getRequestChannelCode(),
+                    tenantId = TenantUtils.getTenantIdByEnglishName(projectCode)
                 )
             }
         }

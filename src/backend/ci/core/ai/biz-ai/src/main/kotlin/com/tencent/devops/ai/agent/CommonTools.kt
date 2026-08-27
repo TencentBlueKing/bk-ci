@@ -29,6 +29,7 @@ package com.tencent.devops.ai.agent
 
 import com.tencent.devops.auth.api.service.ServiceAuthAiResource
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.service.tenant.TenantUtils
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import io.agentscope.core.tool.Tool
 import io.agentscope.core.tool.ToolParam
@@ -87,6 +88,7 @@ class CommonTools(
             val byName = try {
                 projectResource.getProjectByName(
                     userId = userId,
+                    tenantId = TenantUtils.getTenantId(),
                     projectName = projectNameOrCode
                 ).data
             } catch (_: Exception) {
