@@ -224,7 +224,7 @@ interface ApigwAtomResourceV4 {
         @Parameter(description = "租户ID", required = false)
         @HeaderParam(AUTH_HEADER_BK_TENANT_ID)
         tenantId: String? = null,
-        @Parameter(description = "支持的服务范围", required = false)
+        @Parameter(description = "支持的服务范围：PIPELINE / QUALITY / CREATIVE_STREAM（默认 PIPELINE）", required = false)
         @QueryParam("serviceScope")
         @DefaultValue("PIPELINE")
         serviceScope: ServiceScopeEnum? = ServiceScopeEnum.PIPELINE,
@@ -282,10 +282,10 @@ interface ApigwAtomResourceV4 {
         @Parameter(description = "项目编码", required = true)
         @QueryParam("projectCode")
         projectCode: String,
-        @Parameter(description = "支持的服务范围（pipeline/quality/all 分别表示流水线/质量红线/全部）", required = false)
+        @Parameter(description = "支持的服务范围：PIPELINE / QUALITY / CREATIVE_STREAM", required = false)
         @QueryParam("serviceScope")
         serviceScope: String?,
-        @Parameter(description = "job类型，AGENT： 编译环境，AGENT_LESS：无编译环境", required = false)
+        @Parameter(description = "job类型。流水线：AGENT（编译环境）/ AGENT_LESS（无编译环境）；创作流：CREATIVE_STREAM（创作任务）/ CLOUD_TASK（云任务）", required = false)
         @QueryParam("jobType")
         jobType: String?,
         @Parameter(description = "操作系统（ALL/WINDOWS/LINUX/MACOS）", required = false)
