@@ -156,14 +156,16 @@ class ServiceProjectResourceImpl @Autowired constructor(
     @AuditEntry(actionId = PROJECT_CREATE)
     override fun create(
         userId: String,
-        projectCreateInfo: ProjectCreateInfo
+        projectCreateInfo: ProjectCreateInfo,
+        accessToken: String?
     ): Result<Boolean> {
         // 创建项目
         projectService.create(
             userId = userId,
             projectCreateInfo = projectCreateInfo,
             createExtInfo = ProjectCreateExtInfo(needAuth = true, needValidate = true),
-            projectChannel = ProjectChannelCode.BS
+            projectChannel = ProjectChannelCode.BS,
+            accessToken = accessToken
         )
 
         return Result(true)

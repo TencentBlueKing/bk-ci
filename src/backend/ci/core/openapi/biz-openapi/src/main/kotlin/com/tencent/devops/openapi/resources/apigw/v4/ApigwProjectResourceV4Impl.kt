@@ -83,7 +83,8 @@ class ApigwProjectResourceV4Impl @Autowired constructor(
 
         return client.get(ServiceProjectResource::class).create(
             userId = userId,
-            projectCreateInfo = projectCreateInfo
+            projectCreateInfo = projectCreateInfo,
+            accessToken = accessToken
         )
     }
 
