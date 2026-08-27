@@ -98,9 +98,13 @@ class DateTimeUtilTest {
 
     @Test
     fun formatEpochMilliWithTimeZoneTest() {
-        val epoch = 1594005599000L // 2020-07-06 01:59:59 UTC
+        val epoch = LocalDateTime.of(2020, 7, 6, 1, 59, 59).toInstant(UTC).toEpochMilli()
         val formatted = DateTimeUtil.formatEpochMilli(epoch, "UTC", DateTimeUtil.YYYY_MM_DD_HH_MM_SS)
         Assertions.assertEquals("2020-07-06 01:59:59", formatted)
+        Assertions.assertEquals(
+            "2020-07-06 09:59:59",
+            DateTimeUtil.formatEpochMilli(epoch, "Asia/Shanghai", DateTimeUtil.YYYY_MM_DD_HH_MM_SS)
+        )
     }
 
     @Test
