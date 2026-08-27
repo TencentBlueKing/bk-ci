@@ -55,9 +55,11 @@ import com.tencent.devops.auth.pojo.vo.DeptInfoVo
 import com.tencent.devops.auth.pojo.vo.UserAndDeptInfoVo
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.common.api.auth.AUTH_HEADER_BK_TENANT_ID
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.auth.api.pojo.EsbBaseReq
+import com.tencent.devops.common.service.tenant.TenantUtils
 import com.tencent.devops.common.web.utils.I18nUtil
 import java.util.concurrent.TimeUnit
 import okhttp3.Headers.Companion.toHeaders
@@ -252,8 +254,10 @@ class AuthDeptServiceImpl(
                 fields = USER_LABEL,
                 lookupField = USERNAME
             )
+            val headers = searchEntity.toMap().toMutableMap()
+            TenantUtils.getTenantId(tenantId)?.let { headers[AUTH_HEADER_BK_TENANT_ID] = it }
             val request = Request.Builder().url(url)
-                .headers(searchEntity.toMap().toHeaders())
+                .headers(headers.toHeaders())
                 .get()
                 .build()
             OkhttpUtils.doHttp(request).use {
@@ -285,8 +289,8 @@ class AuthDeptServiceImpl(
         }
     }
 
-    override fun getLeader(userId: String): BkUserInfo? {
-        return getUserInfoFromExternal(userId, null)?.leader?.firstOrNull()
+    override fun getLeader(userId: String, tenantId: String?): BkUserInfo? {
+        return getUserInfoFromExternal(userId, tenantId)?.leader?.firstOrNull()
     }
 
     private fun fetchMemberInfos(

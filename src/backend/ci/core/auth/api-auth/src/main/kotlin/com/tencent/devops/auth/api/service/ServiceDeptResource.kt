@@ -121,7 +121,10 @@ interface ServiceDeptResource {
     fun getLeader(
         @QueryParam("userId")
         @Parameter(description = "用户名称", required = true)
-        userId: String
+        userId: String,
+        @HeaderParam(AUTH_HEADER_BK_TENANT_ID)
+        @Parameter(description = "租户ID", required = false)
+        tenantId: String? = null
     ): Result<BkUserInfo?>
 
     @GET
@@ -130,6 +133,9 @@ interface ServiceDeptResource {
     fun getUserDeptIds(
         @QueryParam("userId")
         @Parameter(description = "用户名称", required = true)
-        userId: String
+        userId: String,
+        @HeaderParam(AUTH_HEADER_BK_TENANT_ID)
+        @Parameter(description = "租户ID", required = false)
+        tenantId: String? = null
     ): Result<Set<String>>
 }

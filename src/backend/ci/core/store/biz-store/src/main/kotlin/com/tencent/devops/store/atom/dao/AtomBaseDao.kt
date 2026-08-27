@@ -121,18 +121,13 @@ abstract class AtomBaseDao {
         return conditions
     }
 
-    fun getLatestAtomByCode(dslContext: DSLContext, atomCode: String, tenantId: String?): TAtomRecord? {
+    fun getLatestAtomByCode(dslContext: DSLContext, atomCode: String, tenantId: String? = null): TAtomRecord? {
         return with(TAtom.T_ATOM) {
             dslContext.selectFrom(this)
                 .where(ATOM_CODE.eq(atomCode))
                 .and(LATEST_FLAG.eq(true))
                 .let {
-                    if (useTenantCondition(tenantId)) it.and(
-                        TENANT_ID.`in`(
-                            tenantId,
-                            TenantUtils.getTenantId()
-                        )
-                    ) else it
+                    if (useTenantCondition(tenantId)) it.and(tenantVisibleCondition(TENANT_ID, tenantId)) else it
                 }
                 .fetchOne()
         }
@@ -158,12 +153,7 @@ abstract class AtomBaseDao {
                 .where(ATOM_CODE.eq(atomCode))
                 .and(BRANCH_TEST_FLAG.eq(branchTestFlag))
                 .let {
-                    if (useTenantCondition(tenantId)) it.and(
-                        TENANT_ID.`in`(
-                            tenantId,
-                            TenantUtils.getTenantId()
-                        )
-                    ) else it
+                    if (useTenantCondition(tenantId)) it.and(tenantVisibleCondition(TENANT_ID, tenantId)) else it
                 }
                 .orderBy(CREATE_TIME.desc())
                 .limit(1)
@@ -181,7 +171,7 @@ abstract class AtomBaseDao {
             val conditions = mutableListOf<Condition>()
             conditions.add(ATOM_CODE.eq(atomCode))
             if (useTenantCondition(tenantId)) {
-                conditions.add(TENANT_ID.`in`(tenantId, TenantUtils.getTenantId()))
+                conditions.add(tenantVisibleCondition(TENANT_ID, tenantId))
             }
             if (atomStatus != null) {
                 conditions.add(ATOM_STATUS.eq(atomStatus.status.toByte()))
@@ -218,7 +208,7 @@ abstract class AtomBaseDao {
         dslContext: DSLContext,
         os: String?,
         classType: String?,
-        tenantId: String?
+        tenantId: String? = null
     ): Result<Record1<String>> {
         val ta = TAtom.T_ATOM
         val conditions = mutableListOf<Condition>()
@@ -229,7 +219,7 @@ abstract class AtomBaseDao {
             conditions.add(ta.CLASS_TYPE.eq(classType))
         }
         if (useTenantCondition(tenantId)) {
-            conditions.add(ta.TENANT_ID.`in`(tenantId, TenantUtils.getTenantId()))
+            conditions.add(tenantVisibleCondition(ta.TENANT_ID, tenantId))
         }
         buildJobTypeCondition(ta, JobTypeEnum.AGENT.name, ServiceScopeEnum.PIPELINE)?.let {
             conditions.add(it)
@@ -443,4 +433,7 @@ abstract class AtomBaseDao {
 
     protected fun useTenantCondition(tenantId: String?) =
         TenantUtils.isMultiTenantMode() && !tenantId.isNullOrBlank()
+
+    protected fun tenantVisibleCondition(field: Field<String>, tenantId: String?) =
+        field.`in`(tenantId, TenantUtils.getTenantId()).or(field.isNull)
 }

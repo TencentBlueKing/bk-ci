@@ -168,7 +168,10 @@ interface ServiceMarketAtomResource {
         atomCode: String,
         @Parameter(description = "是否展示系统自带的yml信息", required = false)
         @QueryParam("defaultShowFlag")
-        defaultShowFlag: Boolean?
+        defaultShowFlag: Boolean?,
+        @Parameter(description = "租户ID", required = false)
+        @HeaderParam(AUTH_HEADER_BK_TENANT_ID)
+        tenantId: String? = null
     ): Result<String?>
 
     @Operation(summary = "获取带post属性的插件")
@@ -216,6 +219,9 @@ interface ServiceMarketAtomResource {
         @Parameter(description = "每页数量", required = true)
         @QueryParam("pageSize")
         @BkField(patternStyle = BkStyleEnum.PAGE_SIZE_STYLE, required = true)
-        pageSize: Int = 10
+        pageSize: Int = 10,
+        @Parameter(description = "租户ID", required = false)
+        @HeaderParam(AUTH_HEADER_BK_TENANT_ID)
+        tenantId: String? = null
     ): Result<MyAtomResp?>
 }

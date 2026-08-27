@@ -75,7 +75,7 @@ class DefaultDeptServiceImpl : DeptService {
         return null
     }
 
-    override fun getLeader(userId: String): BkUserInfo? {
+    override fun getLeader(userId: String, tenantId: String?): BkUserInfo? {
         return null
     }
 

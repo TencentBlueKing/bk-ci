@@ -297,7 +297,7 @@ class AtomDao : AtomBaseDao() {
                 conditions.add(ATOM_CODE.eq(atomCode))
             }
         if (useTenantCondition(tenantId)) {
-            conditions.add(TENANT_ID.`in`(tenantId, TenantUtils.getTenantId()))
+            conditions.add(tenantVisibleCondition(TENANT_ID, tenantId))
         }
             return dslContext.selectCount().from(this).where(conditions).fetchOne(0, Int::class.java)!!
         }
@@ -308,7 +308,7 @@ class AtomDao : AtomBaseDao() {
             return dslContext.selectCount().from(this).where(ATOM_CODE.eq(atomCode))
                 .let {
                     if (useTenantCondition(tenantId)) it.and(
-                        TENANT_ID.`in`(tenantId, TenantUtils.getTenantId())
+                        tenantVisibleCondition(TENANT_ID, tenantId)
                     ) else it
                 }
                 .fetchOne(0, Int::class.java)!!
@@ -418,7 +418,7 @@ class AtomDao : AtomBaseDao() {
             val conditions = mutableListOf<Condition>()
             conditions.add(ATOM_CODE.eq(atomCode))
             if (useTenantCondition(tenantId)) {
-                conditions.add(TENANT_ID.`in`(tenantId, TenantUtils.getTenantId()))
+                conditions.add(tenantVisibleCondition(TENANT_ID, tenantId))
             }
             if (version != null) {
                 conditions.add(VERSION.like(VersionUtils.generateQueryVersion(version)))
@@ -472,7 +472,7 @@ class AtomDao : AtomBaseDao() {
         val conditions = mutableListOf<Condition>()
         conditions.add(tAtom.ATOM_CODE.eq(atomCode))
         if (useTenantCondition(tenantId)) {
-            conditions.add(tAtom.TENANT_ID.`in`(tenantId, TenantUtils.getTenantId()))
+            conditions.add(tenantVisibleCondition(tAtom.TENANT_ID, tenantId))
         }
 
         if (version != null) {
@@ -1030,7 +1030,7 @@ class AtomDao : AtomBaseDao() {
     ): MutableList<Condition> {
         val conditions = mutableListOf<Condition>()
         if (useTenantCondition(param.tenantId)) {
-            conditions.add(tAtom.TENANT_ID.`in`(param.tenantId, TenantUtils.getTenantId()))
+            conditions.add(tenantVisibleCondition(tAtom.TENANT_ID, param.tenantId))
         }
         buildServiceScopeCondition(tAtom.SERVICE_SCOPE, param.serviceScope)?.let { conditions.add(it) }
         buildClassifyCondition(tAtom, param.classifyId, param.serviceScope)?.let { conditions.add(it) }

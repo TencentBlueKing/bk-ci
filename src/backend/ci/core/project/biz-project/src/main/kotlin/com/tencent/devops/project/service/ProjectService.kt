@@ -71,7 +71,8 @@ interface ProjectService {
         projectCreateInfo: ProjectCreateInfo,
         createExtInfo: ProjectCreateExtInfo,
         defaultProjectId: String? = null,
-        projectChannel: ProjectChannelCode
+        projectChannel: ProjectChannelCode,
+        accessToken: String? = null
     ): String
 
     fun createExtProject(

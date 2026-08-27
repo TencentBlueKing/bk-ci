@@ -64,11 +64,11 @@ class ServiceDeptResourceImpl @Autowired constructor(
         return Result(deptService.listMemberInfos(memberIds, ManagerScopesEnum.USER, tenantId))
     }
 
-    override fun getLeader(userId: String): Result<BkUserInfo?> {
-        return Result(deptService.getLeader(userId))
+    override fun getLeader(userId: String, tenantId: String?): Result<BkUserInfo?> {
+        return Result(deptService.getLeader(userId, tenantId))
     }
 
-    override fun getUserDeptIds(userId: String): Result<Set<String>> {
-        return Result(deptService.getUserDeptInfo(userId))
+    override fun getUserDeptIds(userId: String, tenantId: String?): Result<Set<String>> {
+        return Result(deptService.getUserDeptInfo(userId, tenantId))
     }
 }

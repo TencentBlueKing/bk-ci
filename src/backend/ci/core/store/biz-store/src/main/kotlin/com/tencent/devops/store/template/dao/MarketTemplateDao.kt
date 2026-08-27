@@ -180,7 +180,7 @@ class MarketTemplateDao {
         val tTemplate = TTemplate.T_TEMPLATE
         val conditions = mutableListOf<Condition>()
         if (useTenantCondition(tenantId)) {
-            conditions.add(tTemplate.TENANT_ID.`in`(tenantId, TenantUtils.getTenantId()))
+            conditions.add(tenantVisibleCondition(tTemplate.TENANT_ID, tenantId))
         }
         conditions.add(tTemplate.TEMPLATE_STATUS.eq(TemplateStatusEnum.RELEASED.status.toByte())) // 已发布的
         conditions.add(tTemplate.LATEST_FLAG.eq(true)) // 最新版本
@@ -748,7 +748,7 @@ class MarketTemplateDao {
     ): MutableList<Condition> {
         val conditions = mutableListOf<Condition>()
         if (useTenantCondition(tenantId)) {
-            conditions.add(tTemplate.TENANT_ID.`in`(tenantId, TenantUtils.getTenantId()))
+            conditions.add(tenantVisibleCondition(tTemplate.TENANT_ID, tenantId))
         }
         conditions.add(tTemplate.CREATOR.eq(userId).or(tStoreMember.USERNAME.eq(userId)))
         conditions.add(tStoreProjectRel.TYPE.eq(0))
@@ -827,4 +827,7 @@ class MarketTemplateDao {
 
     private fun useTenantCondition(tenantId: String?) =
         TenantUtils.isMultiTenantMode() && !tenantId.isNullOrBlank()
+
+    private fun tenantVisibleCondition(field: Field<String>, tenantId: String?) =
+        field.`in`(tenantId, TenantUtils.getTenantId()).or(field.isNull)
 }

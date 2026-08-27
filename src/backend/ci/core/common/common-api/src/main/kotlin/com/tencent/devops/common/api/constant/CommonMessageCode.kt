@@ -202,7 +202,6 @@ object CommonMessageCode {
     const val YAML_SCHEMA_PATTERN = "2100149" // [{0}] 值格式不符合规则 [{1}]
     const val YAML_SCHEMA_LENGTH = "2100150" // [{0}] 长度不符合要求 ({1}={2})
     const val YAML_SCHEMA_RANGE = "2100151" // [{0}] 数值不符合要求 ({1}={2})
-    const val MR_ACCEPT_EVENT_NOT_SUPPORT_TRANSFER = "2100152" // mr accept事件类型不支持code转换
     const val BK_CONTAINER_TIMED_OUT = "bkContainerTimedOut" // 创建容器超时
     const val BK_CREATION_FAILED_EXCEPTION_INFORMATION = "bkCreationFailedExceptionInformation" // 创建失败，异常信息
 

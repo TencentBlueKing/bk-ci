@@ -384,7 +384,7 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
                         buildLessRunFlag = false,
                         docsLink = "",
                         modifier = it[tTemplate.MODIFIER] as String,
-                        updateTime = DateTimeUtil.toDateTime(it[tTemplate.UPDATE_TIME] as LocalDateTime),
+                        updateTime = (it[tTemplate.UPDATE_TIME] as LocalDateTime).timestampmilli(),
                         installed = installed,
                         honorInfos = honorInfos,
                         indexInfos = indexInfos,

@@ -228,9 +228,10 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         projectCreateInfo: ProjectCreateInfo,
         createExtInfo: ProjectCreateExtInfo,
         defaultProjectId: String?,
-        projectChannel: ProjectChannelCode
+        projectChannel: ProjectChannelCode,
+        accessToken: String?
     ): String {
-        logger.info("create project| $userId | $createExtInfo | $projectCreateInfo")
+        logger.info("create project| $userId | $createExtInfo | $projectCreateInfo | hasAccessToken=${!accessToken.isNullOrBlank()}")
         val createInfo = projectCreateInfo.copy()
         createInfo.properties?.let { it.enableShareArtifact = false }
 

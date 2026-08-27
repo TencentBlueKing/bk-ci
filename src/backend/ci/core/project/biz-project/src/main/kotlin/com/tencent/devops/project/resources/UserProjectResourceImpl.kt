@@ -152,7 +152,8 @@ class UserProjectResourceImpl @Autowired constructor(
             userId = userId,
             projectCreateInfo = projectCreateInfo,
             createExtInfo = ProjectCreateExtInfo(needValidate = true, needAuth = true, needApproval = true),
-            projectChannel = ProjectChannelCode.BS
+            projectChannel = ProjectChannelCode.BS,
+            accessToken = accessToken
         )
 
         return Result(

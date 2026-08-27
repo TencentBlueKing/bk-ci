@@ -59,7 +59,7 @@ interface DeptService {
 
     fun getUserInfoFromExternal(userId: String, tenantId: String?): UserAndDeptInfoVo?
 
-    fun getLeader(userId: String): BkUserInfo?
+    fun getLeader(userId: String, tenantId: String?): BkUserInfo?
 
     // 获取成员信息
     fun getMemberInfo(

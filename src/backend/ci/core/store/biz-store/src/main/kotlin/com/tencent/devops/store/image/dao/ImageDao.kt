@@ -170,7 +170,7 @@ class ImageDao {
             conditions.add(tStoreMember.USERNAME.eq(userId))
             conditions.add(DELETE_FLAG.eq(false))
             if (useTenantCondition(tenantId)) {
-                conditions.add(TENANT_ID.`in`(tenantId, TenantUtils.getTenantId()))
+                conditions.add(tenantVisibleCondition(TENANT_ID, tenantId))
             }
             conditions.add(tStoreMember.STORE_TYPE.eq(StoreTypeEnum.IMAGE.type.toByte()))
             baseStep.where(conditions)
@@ -191,10 +191,7 @@ class ImageDao {
                 .where(IMAGE_CODE.eq(imageCode))
                 .let {
                     if (useTenantCondition(tenantId)) it.and(
-                        TENANT_ID.`in`(
-                            tenantId,
-                            TenantUtils.getTenantId()
-                        )
+                        tenantVisibleCondition(TENANT_ID, tenantId)
                     ) else it
                 }
                 .fetchOne(0, Int::class.java)!!
@@ -228,10 +225,7 @@ class ImageDao {
                 .where(ID.eq(imageId))
                 .let {
                     if (useTenantCondition(tenantId)) it.and(
-                        TENANT_ID.`in`(
-                            tenantId,
-                            TenantUtils.getTenantId()
-                        )
+                        tenantVisibleCondition(TENANT_ID, tenantId)
                     ) else it
                 }
                 .fetchOne()
@@ -261,10 +255,7 @@ class ImageDao {
                 .where(IMAGE_CODE.eq(imageCode))
                 .let {
                     if (useTenantCondition(tenantId)) it.and(
-                        TENANT_ID.`in`(
-                            tenantId,
-                            TenantUtils.getTenantId()
-                        )
+                        tenantVisibleCondition(TENANT_ID, tenantId)
                     ) else it
                 }
                 .and(LATEST_FLAG.eq(true))
@@ -311,10 +302,7 @@ class ImageDao {
                 .and(VERSION.like(VersionUtils.generateQueryVersion(version)))
                 .let {
                     if (useTenantCondition(tenantId)) it.and(
-                        TENANT_ID.`in`(
-                            tenantId,
-                            TenantUtils.getTenantId()
-                        )
+                        tenantVisibleCondition(TENANT_ID, tenantId)
                     ) else it
                 }
                 .orderBy(CREATE_TIME.desc())
@@ -687,7 +675,7 @@ class ImageDao {
         val tStoreMember = TStoreMember.T_STORE_MEMBER
         val conditions = generateGetMyImageConditions(tImage, userId, tStoreMember, imageName)
         if (useTenantCondition(tenantId)) {
-            conditions.add(tImage.TENANT_ID.`in`(tenantId, TenantUtils.getTenantId()))
+            conditions.add(tenantVisibleCondition(tImage.TENANT_ID, tenantId))
         }
         val t =
             dslContext.select(tImage.IMAGE_CODE.`as`(KEY_IMAGE_CODE), DSL.max(tImage.CREATE_TIME).`as`(KEY_CREATE_TIME))
@@ -1049,4 +1037,7 @@ class ImageDao {
 
     private fun useTenantCondition(tenantId: String?) =
         TenantUtils.isMultiTenantMode() && !tenantId.isNullOrBlank()
+
+    private fun tenantVisibleCondition(field: Field<String>, tenantId: String?) =
+        field.`in`(tenantId, TenantUtils.getTenantId()).or(field.isNull)
 }

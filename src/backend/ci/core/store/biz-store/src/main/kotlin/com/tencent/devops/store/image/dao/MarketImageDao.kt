@@ -176,7 +176,7 @@ class MarketImageDao @Autowired constructor() {
         val conditions = mutableListOf<Condition>()
         // 根据租户过滤
         if (useTenantCondition(tenantId)) {
-            conditions.add(tImage.TENANT_ID.`in`(tenantId, TenantUtils.getTenantId()))
+            conditions.add(tenantVisibleCondition(tImage.TENANT_ID, tenantId))
         }
         // 隐含条件
         conditions.add(tImage.IMAGE_STATUS.eq(ImageStatusEnum.RELEASED.status.toByte())) // 已发布的
@@ -604,10 +604,7 @@ class MarketImageDao @Autowired constructor() {
                 .and(LATEST_FLAG.eq(true))
                 .let {
                     if (useTenantCondition(tenantId)) it.and(
-                        TENANT_ID.`in`(
-                            tenantId,
-                            TenantUtils.getTenantId()
-                        )
+                        tenantVisibleCondition(TENANT_ID, tenantId)
                     ) else it
                 }
                 .fetchOne()
@@ -692,10 +689,7 @@ class MarketImageDao @Autowired constructor() {
                 .and(IMAGE_STATUS.eq(ImageStatusEnum.RELEASED.status.toByte()))
                 .let {
                     if (useTenantCondition(tenantId)) it.and(
-                        TENANT_ID.`in`(
-                            tenantId,
-                            TenantUtils.getTenantId()
-                        )
+                        tenantVisibleCondition(TENANT_ID, tenantId)
                     ) else it
                 }
                 .fetchOne(0, Int::class.java)!!
@@ -889,10 +883,7 @@ class MarketImageDao @Autowired constructor() {
                 .and(IMAGE_STATUS.eq(ImageStatusEnum.UNDERCARRIAGED.status.toByte()))
                 .let {
                     if (useTenantCondition(tenantId)) it.and(
-                        TENANT_ID.`in`(
-                            tenantId,
-                            TenantUtils.getTenantId()
-                        )
+                        tenantVisibleCondition(TENANT_ID, tenantId)
                     ) else it
                 }
                 .orderBy(CREATE_TIME.desc())
@@ -958,10 +949,7 @@ class MarketImageDao @Autowired constructor() {
                 .and(IMAGE_STATUS.eq(ImageStatusEnum.RELEASED.status.toByte()))
                 .let {
                     if (useTenantCondition(tenantId)) it.and(
-                        TENANT_ID.`in`(
-                            tenantId,
-                            TenantUtils.getTenantId()
-                        )
+                        tenantVisibleCondition(TENANT_ID, tenantId)
                     ) else it
                 }
                 .orderBy(CREATE_TIME.desc())
@@ -1555,4 +1543,7 @@ class MarketImageDao @Autowired constructor() {
 
     private fun useTenantCondition(tenantId: String?) =
         TenantUtils.isMultiTenantMode() && !tenantId.isNullOrBlank()
+
+    private fun tenantVisibleCondition(field: Field<String>, tenantId: String?) =
+        field.`in`(tenantId, TenantUtils.getTenantId()).or(field.isNull)
 }

@@ -98,7 +98,7 @@ class MarketAtomDao : AtomBaseDao() {
         val conditions = setAtomVisibleCondition(ta).apply {
             add(ta.DELETE_FLAG.eq(false))
             if (useTenantCondition(query.tenantId)) {
-                add(ta.TENANT_ID.`in`(query.tenantId, TenantUtils.getTenantId()))
+                add(tenantVisibleCondition(ta.TENANT_ID, query.tenantId))
             }
             query.serviceScope?.let { add(buildServiceScopeCondition(ta, it)) }
             // 关键字模糊搜索：匹配名称、简介或插件代码
@@ -249,7 +249,7 @@ class MarketAtomDao : AtomBaseDao() {
                 conditions.add(VERSION.like(VersionUtils.generateQueryVersion(version)))
             }
             if (useTenantCondition(tenantId)) {
-                conditions.add(TENANT_ID.`in`(tenantId, TenantUtils.getTenantId()))
+                conditions.add(tenantVisibleCondition(TENANT_ID, tenantId))
             }
             return dslContext.selectCount().from(this)
                 .where(conditions)
@@ -267,7 +267,7 @@ class MarketAtomDao : AtomBaseDao() {
         val conditions = mutableListOf<Condition>()
         conditions.add(tAtom.DELETE_FLAG.eq(false)) // 只查没有被删除的插件
         if (useTenantCondition(tenantId)) {
-            conditions.add(tAtom.TENANT_ID.`in`(tenantId, TenantUtils.getTenantId()))
+            conditions.add(tenantVisibleCondition(tAtom.TENANT_ID, tenantId))
         }
         conditions.add(tAtom.LATEST_FLAG.eq(true))
         conditions.add(tStoreMember.USERNAME.eq(userId))
@@ -679,7 +679,7 @@ class MarketAtomDao : AtomBaseDao() {
                 .where(ID.eq(atomId))
                 .let {
                     if (useTenantCondition(tenantId)) it.and(
-                        TENANT_ID.`in`(tenantId, TenantUtils.getTenantId())
+                        tenantVisibleCondition(TENANT_ID, tenantId)
                     ) else it
                 }
                 .fetchOne()

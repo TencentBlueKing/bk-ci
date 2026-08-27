@@ -61,6 +61,11 @@ class TenantAuthDeptServiceImpl : DeptService {
         return getUserInfo(userId, tenantId)
     }
 
+    override fun getLeader(userId: String, tenantId: String?): BkUserInfo? {
+        logger.warn("getLeader isn`t support in tenant environment: $userId, $tenantId")
+        return null
+    }
+
     override fun getMemberInfo(
         memberId: String,
         memberType: ManagerScopesEnum,
