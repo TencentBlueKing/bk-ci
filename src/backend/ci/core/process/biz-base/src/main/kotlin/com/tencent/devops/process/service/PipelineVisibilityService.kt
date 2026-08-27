@@ -48,7 +48,11 @@ class PipelineVisibilityService @Autowired constructor(
         pipelineId: String
     ) {
         val userInfo = userInfoCache.get(userId) {
-            client.get(ServiceDeptResource::class).getUserInfo(userId = userId, name = userId).data
+            client.get(ServiceDeptResource::class).getUserInfo(
+                userId = userId,
+                tenantId = TenantUtils.getTenantId(),
+                name = userId
+            ).data
         } ?: return
         val userDepartments = userInfo.deptInfo?.lastOrNull {
             !it.fullName.isNullOrBlank()
