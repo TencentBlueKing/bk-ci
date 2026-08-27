@@ -2213,7 +2213,8 @@
     "everyDay": "Per day",
     "everyWeek": "Per week",
     "everyMonth": "Per month",
-    "errorTips": "The timing rule cannot be empty or the format is incorrect"
+    "errorTips": "The timing rule cannot be empty or the format is incorrect",
+    "nextRuns": "Next 5 runs in {0}"
   },
   "validVariableFormat": "Please enter a valid variable format",
   "enterRepoAlias": "Please enter the repository alias",

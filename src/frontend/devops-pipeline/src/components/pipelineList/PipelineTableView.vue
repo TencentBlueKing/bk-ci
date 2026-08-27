@@ -254,7 +254,11 @@
                 sortable="custom"
                 :label="$t('lastExecTime')"
                 prop="latestBuildStartDate"
-            />
+            >
+                <template slot-scope="props">
+                    <time-display :value="props.row.latestBuildStartTime" />
+                </template>
+            </bk-table-column>
             <bk-table-column
                 :width="tableWidthMap.createTime"
                 sortable="custom"
@@ -269,7 +273,11 @@
                 :width="tableWidthMap.creator"
                 :label="$t('creator')"
                 prop="creator"
-            />
+            >
+                <template slot-scope="props">
+                    <bk-user-display-name :user-id="props.row.creator" />
+                </template>
+            </bk-table-column>
         </template>
         <template v-else-if="isDeleteView">
             <bk-table-column
@@ -300,7 +308,11 @@
                 key="lastModifyUser"
                 :label="$t('restore.deleter')"
                 prop="lastModifyUser"
-            ></bk-table-column>
+            >
+                <template slot-scope="props">
+                    <bk-user-display-name :user-id="props.row.lastModifyUser" />
+                </template>
+            </bk-table-column>
         </template>
         <template v-else>
             <!-- 最近执行 -->
@@ -370,7 +382,7 @@
                                         :name="props.row.startType"
                                         size="16"
                                     />
-                                    <span>{{ props.row.latestBuildUserId }}</span>
+                                    <bk-user-display-name :user-id="props.row.latestBuildUserId" />
                                 </span>
                                 <span
                                     v-if="props.row.webhookAliasName"
@@ -412,7 +424,7 @@
                     v-if="!props.row.delete || isArchiveView"
                     slot-scope="props"
                 >
-                    <p>{{ props.row.latestBuildStartDate }}</p>
+                    <p><time-display :value="props.row.latestBuildStartTime" /></p>
                     <p
                         v-if="props.row.progress"
                         class="primary"
@@ -441,8 +453,10 @@
                     v-if="!props.row.delete || isArchiveView"
                     slot-scope="props"
                 >
-                    <p>{{ props.row.updater }}</p>
-                    <p class="desc">{{ props.row.updateDate }}</p>
+                    <p><bk-user-display-name :user-id="props.row.updater" /></p>
+                    <p class="desc">
+                        <time-display :value="props.row.updateTime" />
+                    </p>
                 </div>
             </bk-table-column>
             <bk-table-column
@@ -450,7 +464,11 @@
                 :width="tableWidthMap.creator"
                 :label="$t('creator')"
                 prop="creator"
-            />
+            >
+                <template slot-scope="props">
+                    <bk-user-display-name :user-id="props.row.creator" />
+                </template>
+            </bk-table-column>
             <bk-table-column
                 v-if="allRenderColumnMap.createTime"
                 :width="tableWidthMap.createTime"

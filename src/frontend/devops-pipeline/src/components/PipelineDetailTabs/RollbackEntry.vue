@@ -50,7 +50,7 @@
         TEMPLATE_RESOURCE_ACTION
     } from '@/utils/permission'
     import { pipelineTabIdMap, DRAFT_STATUS } from '@/utils/pipelineConst'
-    import dayjs from 'dayjs'
+    import { formatByUserTz } from '../../../../common-lib/time'
     import { mapActions, mapGetters, mapMutations, mapState } from 'vuex'
     import DraftConfirmDialog from '@/components/PipelineHeader/DraftConfirmDialog'
     import useDraftStatus from '@/hook/useDraftStatus'
@@ -196,7 +196,7 @@
                 return this.pipelineInfo?.instanceFromTemplate ?? false
             },
             formatDraftCreateTime () {
-                return dayjs(this.draftCreateTime).format('YYYY-MM-DD HH:mm:ss')
+                return formatByUserTz(this.draftCreateTime)
             }
         },
         created () {

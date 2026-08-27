@@ -2209,7 +2209,8 @@
     "everyDay": "每天",
     "everyWeek": "每周",
     "everyMonth": "每月",
-    "errorTips": "定时规则不能为空或格式不正确"
+    "errorTips": "定时规则不能为空或格式不正确",
+    "nextRuns": "按 {0} 时区，接下来 5 次执行"
   },
   "validVariableFormat": "请输入有效的变量格式",
   "enterRepoAlias": "请输入代码库别名",

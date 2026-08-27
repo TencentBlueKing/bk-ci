@@ -2206,7 +2206,8 @@
     "everyDay": "毎日",
     "everyWeek": "毎週",
     "everyMonth": "毎月",
-    "errorTips": "タイミングルールは空にできないか、形式が正しくありません"
+    "errorTips": "タイミングルールは空にできないか、形式が正しくありません",
+    "nextRuns": "{0} での次回 5 回の実行"
   },
   "validVariableFormat": "有効な変数形式を入力してください",
   "enterRepoAlias": "コードリポジトリの別名を入力してください",
