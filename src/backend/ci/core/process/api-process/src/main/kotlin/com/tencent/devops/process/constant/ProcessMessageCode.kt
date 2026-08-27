@@ -784,6 +784,10 @@ object ProcessMessageCode {
     const val BK_IMATE_STAGE_REVIEW_PASSED = "bkImateStageReviewPassed"
     // 拒绝执行 Stage 审核：{0}
     const val BK_IMATE_STAGE_REVIEW_DENIED = "bkImateStageReviewDenied"
+    // 创作流审核：{0} #{1} / {2}
+    const val BK_IMATE_STAGE_REVIEW_CARD_TITLE = "bkImateStageReviewCardTitle"
+    // CDS 锁定卡片 Markdown 正文
+    const val BK_IMATE_STAGE_REVIEW_CARD_CONTENT = "bkImateStageReviewCardContent"
 
     // [SystemLog]收到终止指令(UnExecute PostAction Task)
     const val BK_UNEXECUTE_POSTACTION_TASK = "bkUnexecutePostactionTask"

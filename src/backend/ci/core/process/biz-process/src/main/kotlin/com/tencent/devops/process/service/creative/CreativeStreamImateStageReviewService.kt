@@ -8,6 +8,8 @@ import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.bean.PipelineUrlBean
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_IMATE_SESSION_ID
 import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_IMATE_STAGE_REVIEW_CARD_CONTENT
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_IMATE_STAGE_REVIEW_CARD_TITLE
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_IMATE_STAGE_REVIEW_DENIED
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_IMATE_STAGE_REVIEW_PASSED
 import com.tencent.devops.process.engine.pojo.PipelineBuildStage
@@ -133,7 +135,7 @@ class CreativeStreamImateStageReviewService(
         )
     }
 
-    fun getContent(taskId: String): CreativeStreamStageReviewContent {
+    fun getContent(taskId: String, userId: String? = null): CreativeStreamStageReviewContent {
         val parts = ImateStageReview.parseTaskId(taskId)
             ?: throw ErrorCodeException(
                 statusCode = Response.Status.BAD_REQUEST.statusCode,
@@ -170,20 +172,26 @@ class CreativeStreamImateStageReviewService(
         val timeoutHours = (stage.checkIn?.timeout ?: 24).coerceAtLeast(1)
         val expireAt = (stage.startTime ?: LocalDateTime.now()).plusHours(timeoutHours.toLong())
         val stageLabel = stage.name?.takeIf { it.isNotBlank() } ?: parts.stageId
-        val title = "创作流审核：$pipelineName #${buildInfo.buildNum} / $stageLabel"
-        val content = buildString {
-            appendLine("## 创作流 Stage 审核")
-            appendLine()
-            appendLine("- 创作流：**$pipelineName**")
-            appendLine("- 构建：#${buildInfo.buildNum}")
-            appendLine("- 阶段：$stageLabel (`${parts.stageId}`)")
-            appendLine("- 审核组：${group?.name ?: ImateStageReview.GROUP_NAME}")
-            appendLine("- 审核说明：${stage.checkIn?.reviewDesc?.takeIf { it.isNotBlank() } ?: "-"}")
-            appendLine("- 审核人：$reviewers")
-            appendLine("- 详情：[$detailUrl]($detailUrl)")
-            appendLine()
-            appendLine("请在 **imate** 会话中点击锁定完成审核。通过后 Agent 将继续执行本 Stage；驳回则终止。")
-        }
+        val language = I18nUtil.getLanguage(userId)
+        val title = I18nUtil.getCodeLanMessage(
+            messageCode = BK_IMATE_STAGE_REVIEW_CARD_TITLE,
+            language = language,
+            params = arrayOf(pipelineName, buildInfo.buildNum.toString(), stageLabel)
+        )
+        val content = I18nUtil.getCodeLanMessage(
+            messageCode = BK_IMATE_STAGE_REVIEW_CARD_CONTENT,
+            language = language,
+            params = arrayOf(
+                pipelineName,
+                buildInfo.buildNum.toString(),
+                stageLabel,
+                parts.stageId,
+                group?.name ?: ImateStageReview.GROUP_NAME,
+                stage.checkIn?.reviewDesc?.takeIf { it.isNotBlank() } ?: "-",
+                reviewers,
+                detailUrl
+            )
+        )
         return CreativeStreamStageReviewContent(
             title = title,
             approvalContent = content.trim(),

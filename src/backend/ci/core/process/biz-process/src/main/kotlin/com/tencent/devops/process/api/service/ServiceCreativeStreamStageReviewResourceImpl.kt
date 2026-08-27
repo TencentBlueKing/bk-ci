@@ -12,6 +12,6 @@ class ServiceCreativeStreamStageReviewResourceImpl @Autowired constructor(
 ) : ServiceCreativeStreamStageReviewResource {
 
     override fun getContent(userId: String?, taskId: String): Result<CreativeStreamStageReviewContent> {
-        return Result(creativeStreamImateStageReviewService.getContent(taskId))
+        return Result(creativeStreamImateStageReviewService.getContent(taskId = taskId, userId = userId))
     }
 }
