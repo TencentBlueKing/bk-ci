@@ -71,6 +71,28 @@ class PipelineEventSubscriptionDao {
         }
     }
 
+    fun listSubscribedTaskIds(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        eventSource: String,
+        eventType: String,
+        eventCode: String
+    ): Set<String> {
+        with(TPipelineEventSubscription.T_PIPELINE_EVENT_SUBSCRIPTION) {
+            return dslContext.select(TASK_ID)
+                .from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(PIPELINE_ID.eq(pipelineId))
+                .and(EVENT_SOURCE.eq(eventSource))
+                .and(EVENT_TYPE.eq(eventType))
+                .and(EVENT_CODE.eq(eventCode))
+                .fetch()
+                .mapNotNull { it.value1() }
+                .toSet()
+        }
+    }
+
     fun listEventSubscriber(
         dslContext: DSLContext,
         eventSource: String,

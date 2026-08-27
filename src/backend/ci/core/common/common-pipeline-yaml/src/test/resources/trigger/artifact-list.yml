@@ -1,0 +1,30 @@
+version: v3.0
+name: artifact-trigger-list-test
+on:
+  - manual: true
+  - type: artifact
+    arrived:
+      name: MSI 归档触发
+      repository: pipeline
+      kind: file
+      artifacts-name:
+        - "*.msi"
+  - type: artifact
+    arrived:
+      name: 镜像到达触发
+      repository: image
+      image: bk-ci/backend
+      tags:
+        - "v*"
+stages:
+  - name: stage-1
+    jobs:
+      job1:
+        name: test-job
+        runs-on:
+          pool-name: docker
+        steps:
+          - name: test-step
+            uses: linuxScript@1.*
+            with:
+              script: "echo hello"

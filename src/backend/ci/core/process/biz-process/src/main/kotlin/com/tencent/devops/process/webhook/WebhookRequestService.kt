@@ -48,6 +48,7 @@ import com.tencent.devops.process.trigger.scm.WebhookGrayCompareService
 import com.tencent.devops.process.trigger.scm.WebhookGrayService
 import com.tencent.devops.process.trigger.scm.WebhookManager
 import com.tencent.devops.process.trigger.market.MarketEventRequestService
+import com.tencent.devops.process.trigger.artifact.ArtifactWebhookRequestService
 import com.tencent.devops.process.trigger.tapd.TapdWebhookRequestService
 import com.tencent.devops.process.webhook.pojo.event.commit.ReplayWebhookEvent
 import com.tencent.devops.repository.api.ServiceRepositoryResource
@@ -74,7 +75,8 @@ class WebhookRequestService(
     private val webhookManager: WebhookManager,
     private val pipelineInfoDao: PipelineInfoDao,
     private val marketEventRequestService: MarketEventRequestService,
-    private val tapdWebhookRequestService: TapdWebhookRequestService
+    private val tapdWebhookRequestService: TapdWebhookRequestService,
+    private val artifactWebhookRequestService: ArtifactWebhookRequestService
 ) {
 
     companion object {
@@ -183,6 +185,13 @@ class WebhookRequestService(
 
             replayEvent.triggerType == PipelineTriggerType.TAPD.name -> {
                 tapdWebhookRequestService.replay(
+                    replayEvent = replayEvent,
+                    sourceTriggerEvent = triggerEvent
+                )
+            }
+
+            replayEvent.triggerType == PipelineTriggerType.ARTIFACT.name -> {
+                artifactWebhookRequestService.replay(
                     replayEvent = replayEvent,
                     sourceTriggerEvent = triggerEvent
                 )

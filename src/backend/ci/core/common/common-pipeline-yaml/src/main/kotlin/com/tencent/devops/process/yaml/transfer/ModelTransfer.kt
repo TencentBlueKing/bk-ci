@@ -550,6 +550,10 @@ class ModelTransfer @Autowired constructor(
         // TAPD 触发独立聚合，与代码库触发平级
         val tapdTrigger = elementTransfer.tapdTriggers2Yaml(triggers, modelInput.aspectWrapper)
             .map { it.toPre(modelInput.version) }
+        // 统一框架触发器（如制品到达）：注册表驱动，已带 type 标识，与代码库触发平级
+        val registryTrigger = elementTransfer.registryTriggers2Yaml(
+            triggers, modelInput.version, modelInput.aspectWrapper
+        )
         when (modelInput.version) {
             YamlVersion.V2_0 -> {
                 // 融合默认git触发器 + 基础触发器
@@ -590,18 +594,27 @@ class ModelTransfer @Autowired constructor(
                     (pre as? PreTriggerOnV3)?.type = TriggerType.TAPD.alis
                     triggerV3.add(pre)
                 }
+                triggerV3.addAll(registryTrigger)
                 if (baseTrigger != null) {
                     when (triggerV3.size) {
                         // 只带基础触发器
                         0 -> return listOf(baseTrigger)
-                        // 融合一个git触发器 + 基础触发器
-                        1 -> return listOf(
-                            (triggerV3.first() as PreTriggerOnV3).copy(
-                                manual = baseTrigger.manual,
-                                schedules = baseTrigger.schedules,
-                                remote = baseTrigger.remote
+                        1 -> {
+                            val only = triggerV3.first() as PreTriggerOnV3
+                            if (TriggerType.parse(only.type)?.generic == true) {
+                                // 嵌套式触发器（如 artifact）：事件放入 events，再加上基础类型
+                                (baseTrigger as PreTriggerOnV3).events[only.type!!] = only.events
+                                return listOf(baseTrigger)
+                            }
+                            // 融合唯一代码库触发器 + 基础触发器
+                            return listOf(
+                                (triggerV3.first() as PreTriggerOnV3).copy(
+                                    manual = baseTrigger.manual,
+                                    schedules = baseTrigger.schedules,
+                                    remote = baseTrigger.remote
+                                )
                             )
-                        )
+                        }
                         // 队列首插入基础触发器
                         else -> trigger.add(0, baseTrigger)
                     }

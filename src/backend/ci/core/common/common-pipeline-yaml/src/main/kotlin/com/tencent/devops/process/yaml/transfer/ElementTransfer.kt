@@ -66,12 +66,14 @@ import com.tencent.devops.common.pipeline.pojo.transfer.PreStep
 import com.tencent.devops.common.pipeline.pojo.transfer.RunAtomParam
 import com.tencent.devops.common.pipeline.utils.TransferUtil
 import com.tencent.devops.process.yaml.creator.ModelCreateException
+import com.tencent.devops.process.yaml.pojo.YamlVersion
 import com.tencent.devops.process.yaml.transfer.VariableDefault.nullIfDefault
 import com.tencent.devops.process.yaml.transfer.aspect.PipelineTransferAspectWrapper
 import com.tencent.devops.process.yaml.transfer.inner.TransferCreator
 import com.tencent.devops.process.yaml.transfer.pojo.CheckoutAtomParam
 import com.tencent.devops.process.yaml.transfer.pojo.WebHookTriggerElementChanger
 import com.tencent.devops.process.yaml.transfer.pojo.YamlTransferInput
+import com.tencent.devops.process.yaml.transfer.trigger.TriggerConverterRegistry
 import com.tencent.devops.process.yaml.utils.ModelCreateUtil
 import com.tencent.devops.process.yaml.v3.models.IfField
 import com.tencent.devops.process.yaml.v3.models.IfField.Mode
@@ -79,6 +81,8 @@ import com.tencent.devops.process.yaml.v3.models.TriggerType
 import com.tencent.devops.process.yaml.v3.models.job.Job
 import com.tencent.devops.process.yaml.v3.models.job.JobRunsOnType
 import com.tencent.devops.process.yaml.v3.models.on.EnableType
+import com.tencent.devops.process.yaml.v3.models.on.IPreTriggerOn
+import com.tencent.devops.process.yaml.v3.models.on.PreTriggerOnV3
 import com.tencent.devops.process.yaml.v3.models.on.ManualRule
 import com.tencent.devops.process.yaml.v3.models.on.RemoteRule
 import com.tencent.devops.process.yaml.v3.models.on.SchedulesRule
@@ -99,7 +103,8 @@ class ElementTransfer @Autowired(required = false) constructor(
     @Autowired(required = false)
     val creator: TransferCreator,
     val transferCache: TransferCacheService,
-    val triggerTransfer: TriggerTransfer
+    val triggerTransfer: TriggerTransfer,
+    val triggerConverterRegistry: TriggerConverterRegistry = TriggerConverterRegistry()
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(ElementTransfer::class.java)
@@ -108,23 +113,57 @@ class ElementTransfer @Autowired(required = false) constructor(
     fun yaml2Triggers(yamlInput: YamlTransferInput, elements: MutableList<Element>) {
         yamlInput.yaml.formatTriggerOn(yamlInput.defaultScmType).forEach {
             yamlInput.aspectWrapper.setYamlTriggerOn(it.second, PipelineTransferAspectWrapper.AspectType.BEFORE)
-            when (it.first) {
-                TriggerType.BASE -> triggerTransfer.yaml2TriggerBase(yamlInput, it.second, elements)
-                TriggerType.CODE_GIT -> triggerTransfer.yaml2TriggerGit(it.second, elements)
-                TriggerType.CODE_TGIT -> triggerTransfer.yaml2TriggerTGit(it.second, elements)
-                TriggerType.GITHUB -> triggerTransfer.yaml2TriggerGithub(it.second, elements)
-                TriggerType.CODE_SVN -> triggerTransfer.yaml2TriggerSvn(it.second, elements)
-                TriggerType.CODE_P4 -> triggerTransfer.yaml2TriggerP4(it.second, elements)
-                TriggerType.CODE_GITLAB -> triggerTransfer.yaml2TriggerGitlab(it.second, elements)
-                TriggerType.SCM_GIT -> triggerTransfer.yaml2TriggerScmGit(it.second, elements)
-                TriggerType.SCM_SVN -> triggerTransfer.yaml2TriggerScmSvn(it.second, elements)
-                TriggerType.TAPD -> triggerTransfer.yaml2TriggerTapd(it.second, elements)
+            val before = elements.size
+            // 注册表优先：统一框架触发器；查不到则回落存量 when 分支
+            val converter = triggerConverterRegistry.byType(it.first)
+            if (converter != null) {
+                converter.yaml2Elements(it.second, elements)
+            } else {
+                when (it.first) {
+                    TriggerType.BASE -> triggerTransfer.yaml2TriggerBase(yamlInput, it.second, elements)
+                    TriggerType.CODE_GIT -> triggerTransfer.yaml2TriggerGit(it.second, elements)
+                    TriggerType.CODE_TGIT -> triggerTransfer.yaml2TriggerTGit(it.second, elements)
+                    TriggerType.GITHUB -> triggerTransfer.yaml2TriggerGithub(it.second, elements)
+                    TriggerType.CODE_SVN -> triggerTransfer.yaml2TriggerSvn(it.second, elements)
+                    TriggerType.CODE_P4 -> triggerTransfer.yaml2TriggerP4(it.second, elements)
+                    TriggerType.CODE_GITLAB -> triggerTransfer.yaml2TriggerGitlab(it.second, elements)
+                    TriggerType.SCM_GIT -> triggerTransfer.yaml2TriggerScmGit(it.second, elements)
+                    TriggerType.SCM_SVN -> triggerTransfer.yaml2TriggerScmSvn(it.second, elements)
+                    TriggerType.TAPD -> triggerTransfer.yaml2TriggerTapd(it.second, elements)
+                    // 由注册表处理，无匹配转换器时忽略
+                    TriggerType.ARTIFACT -> Unit
+                }
             }
-            yamlInput.aspectWrapper.setModelElement4Model(
-                elements.last(),
-                PipelineTransferAspectWrapper.AspectType.AFTER
-            )
+            if (elements.size > before) {
+                yamlInput.aspectWrapper.setModelElement4Model(
+                    elements.last(),
+                    PipelineTransferAspectWrapper.AspectType.AFTER
+                )
+            }
         }
+    }
+
+    /**
+     * Model -> YAML：遍历已注册的 [TriggerConverter]，将归属的触发器 [Element] 聚合为
+     * 带 type 标识的 [IPreTriggerOn] 列表（与代码库触发、基础触发平级）。
+     */
+    fun registryTriggers2Yaml(
+        elements: List<Element>,
+        version: YamlVersion,
+        aspectWrapper: PipelineTransferAspectWrapper
+    ): List<IPreTriggerOn> {
+        val res = mutableListOf<IPreTriggerOn>()
+        triggerConverterRegistry.supportedTypes().forEach { type ->
+            val converter = triggerConverterRegistry.byType(type) ?: return@forEach
+            converter.elements2Yaml(elements, aspectWrapper).forEach { on ->
+                res.add(
+                    on.toPre(version).also { pre ->
+                        (pre as? PreTriggerOnV3)?.type = type.alis
+                    }
+                )
+            }
+        }
+        return res
     }
 
     fun baseTriggers2yaml(

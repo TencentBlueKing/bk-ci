@@ -27,14 +27,11 @@
 
 package com.tencent.devops.process.yaml.parsers.utils
 
-import com.fasterxml.jackson.core.type.TypeReference
-import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.process.yaml.v2.models.PreScriptBuildYaml
 import com.tencent.devops.process.yaml.v2.models.PreTemplateScriptBuildYaml
 import com.tencent.devops.process.yaml.v2.utils.ScriptYmlUtils
 import com.tencent.devops.process.yaml.v3.models.PreTemplateScriptBuildYamlV3Parser
-import com.tencent.devops.process.yaml.v3.models.on.PreTriggerOnV3
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 import org.springframework.core.io.ClassPathResource
@@ -116,16 +113,14 @@ class ScriptYmlUtilsTest {
     }
 
     @Test
-    fun formatTriggerOnTapd() {
-        val classPathResource = ClassPathResource("TapdTrigger.yml")
-        val inputStream: InputStream = classPathResource.inputStream
-        val isReader = InputStreamReader(inputStream)
-
-        val reader = BufferedReader(isReader)
+    fun preExtend2ExtendKeepVariableRawValue() {
+        val classPathResource = ClassPathResource("Extend.yaml")
         val sb = StringBuffer()
-        var str: String?
-        while (reader.readLine().also { str = it } != null) {
-            sb.append(str).append("\n")
+        BufferedReader(InputStreamReader(classPathResource.inputStream)).use { reader ->
+            var str: String?
+            while (reader.readLine().also { str = it } != null) {
+                sb.append(str).append("\n")
+            }
         }
 
         val preYaml = YamlUtil.getObjectMapper().readValue(
@@ -133,31 +128,34 @@ class ScriptYmlUtilsTest {
             PreTemplateScriptBuildYamlV3Parser::class.java
         )
 
-        val triggerList = JsonUtil.anyTo(
-            preYaml.triggerOn,
-            object : TypeReference<List<PreTriggerOnV3>>() {}
-        )
-        val tapdPre = triggerList.first { it.type == "tapd" }
+        val extends = com.tencent.devops.process.yaml.v3.utils.ScriptYmlUtils
+            .preExtend2Extend(preYaml.extends)
 
-        Assertions.assertEquals("tapd", tapdPre.type)
-        Assertions.assertEquals("12345", tapdPre.workspaceId)
+        // 模板实例变量:各类型都应保留原始类型,不被强制 toString
+        val variables = extends?.template?.variables
+        Assertions.assertNotNull(variables)
+        // 核心用例:复选框数组值应保留为 List,而不是被 toString 破坏成 "[]"
+        val checkbox = variables!!["v_checkbox"]
+        Assertions.assertNotNull(checkbox)
+        Assertions.assertTrue(checkbox!!.value is List<*>)
+        Assertions.assertEquals(listOf(""), checkbox.value)
+        Assertions.assertEquals("dd", variables["v_text"]?.value)
+        Assertions.assertEquals("", variables["v_selector"]?.value)
+        Assertions.assertEquals(true, variables["v_bool"]?.value)
+        Assertions.assertTrue(variables["v_repo_ref"]?.value is Map<*, *>)
 
-        val triggerOn = com.tencent.devops.process.yaml.v3.utils.ScriptYmlUtils
-            .formatTriggerOn(tapdPre)
-
-        Assertions.assertEquals("12345", triggerOn.workspaceId)
-
-        Assertions.assertNotNull(triggerOn.story)
-        Assertions.assertEquals("trigger_story", triggerOn.story?.id)
-        Assertions.assertEquals(listOf("create", "update"), triggerOn.story?.action)
-        Assertions.assertEquals(listOf("u1"), triggerOn.story?.users)
-        Assertions.assertEquals(listOf("o1"), triggerOn.story?.owners)
-        Assertions.assertEquals(listOf("label1", "label2"), triggerOn.story?.labels)
-        Assertions.assertEquals(listOf("high"), triggerOn.story?.priorities)
-
-        Assertions.assertNotNull(triggerOn.bug)
-        Assertions.assertEquals("trigger_bug", triggerOn.bug?.id)
-        Assertions.assertEquals(listOf("create"), triggerOn.bug?.action)
+        // 定时任务(trigger-conf)的启动参数也应保留原始值
+        val triggerConfig = extends?.template?.triggerConfig
+        Assertions.assertNotNull(triggerConfig)
+        val timer = triggerConfig!!["y9i5eU"]
+        Assertions.assertNotNull(timer)
+        Assertions.assertEquals(false, timer!!.disabled)
+        Assertions.assertEquals("0 0 1 * *", timer.cron)
+        val timerVariables = timer.variables
+        Assertions.assertNotNull(timerVariables)
+        Assertions.assertEquals("dd", timerVariables!!["v_text"])
+        Assertions.assertEquals("1,2,3", timerVariables["v_checkbox"])
+        Assertions.assertEquals("master", timerVariables["v_git_ref"])
     }
 
     @Test
