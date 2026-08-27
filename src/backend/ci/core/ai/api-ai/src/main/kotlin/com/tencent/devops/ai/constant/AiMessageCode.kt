@@ -72,4 +72,10 @@ object AiMessageCode {
     const val USER_LLM_CONFIG_SAVE_FAILED = "2133071"
     const val USER_LLM_CONFIG_INVALID = "2133072"
     const val USER_LLM_CONFIG_AES_KEY_MISSING = "2133073"
+
+    // ── 知识库目录 (081-090) ──
+    const val CREATE_KB_SOURCE_FAILED = "2133081"
+    const val KB_SOURCE_NOT_FOUND = "2133082"
+    const val CREATE_KB_ENTRY_FAILED = "2133083"
+    const val KB_ENTRY_NOT_FOUND = "2133084"
 }
