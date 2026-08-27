@@ -63,7 +63,7 @@ interface StoreProjectService {
         installStoreReq: InstallStoreReq,
         publicFlag: Boolean,
         channelCode: ChannelCode,
-        tenantId: String?
+        tenantId: String? = null
     ): Result<Boolean>
 
     /**
@@ -76,7 +76,7 @@ interface StoreProjectService {
         storeType: StoreTypeEnum,
         projectCodeList: ArrayList<String>,
         channelCode: ChannelCode = ChannelCode.getRequestChannelCode(),
-        tenantId: String?
+        tenantId: String? = null
     ): Result<Boolean>
 
     /**

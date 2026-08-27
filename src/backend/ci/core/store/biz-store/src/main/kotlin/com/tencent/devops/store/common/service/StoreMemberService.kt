@@ -81,7 +81,7 @@ interface StoreMemberService {
         storeCode: String,
         storeType: StoreTypeEnum,
         checkPermissionFlag: Boolean = true,
-        tenantId: String?
+        tenantId: String? = null
     ): Result<Boolean>
 
     /**
