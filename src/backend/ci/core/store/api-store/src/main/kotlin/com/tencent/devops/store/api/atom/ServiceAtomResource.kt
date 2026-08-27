@@ -205,10 +205,10 @@ interface ServiceAtomResource {
         @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "支持的服务范围（pipeline/quality/all 分别表示流水线/质量红线/全部）", required = false)
+        @Parameter(description = "支持的服务范围：PIPELINE / QUALITY / CREATIVE_STREAM", required = false)
         @QueryParam("serviceScope")
         serviceScope: String?,
-        @Parameter(description = "job类型，AGENT： 编译环境，AGENT_LESS：无编译环境", required = false)
+        @Parameter(description = "job类型。流水线：AGENT / AGENT_LESS；创作流：CREATIVE_STREAM / CLOUD_TASK", required = false)
         @QueryParam("jobType")
         jobType: String?,
         @Parameter(description = "操作系统（ALL/WINDOWS/LINUX/MACOS）", required = false)
