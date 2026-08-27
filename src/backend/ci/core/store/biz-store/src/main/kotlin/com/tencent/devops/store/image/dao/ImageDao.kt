@@ -220,7 +220,7 @@ class ImageDao {
         }
     }
 
-    fun getImage(dslContext: DSLContext, imageId: String, tenantId: String?): TImageRecord? {
+    fun getImage(dslContext: DSLContext, imageId: String, tenantId: String? = null): TImageRecord? {
         return with(TImage.T_IMAGE) {
             dslContext.selectFrom(this)
                 .where(ID.eq(imageId))
@@ -296,7 +296,7 @@ class ImageDao {
             .fetch()
     }
 
-    fun getImage(dslContext: DSLContext, imageCode: String, version: String, tenantId: String?): TImageRecord? {
+    fun getImage(dslContext: DSLContext, imageCode: String, version: String, tenantId: String? = null): TImageRecord? {
         return with(TImage.T_IMAGE) {
             dslContext.selectFrom(this)
                 .where(IMAGE_CODE.eq(imageCode))

@@ -190,7 +190,7 @@ abstract class ImageReleaseService {
         imageCode: String,
         marketImageRelRequest: MarketImageRelRequest,
         needAuth: Boolean = true,
-        tenantId: String?
+        tenantId: String? = null
     ): Result<String> {
         logger.info("addMarketImage params:[$userId|$imageCode|$marketImageRelRequest|$needAuth|$tenantId]")
         // 判断镜像代码是否存在
@@ -316,7 +316,7 @@ abstract class ImageReleaseService {
         checkLatest: Boolean = false,
         sendCheckResultNotify: Boolean = true,
         runCheckPipeline: Boolean = true,
-        tenantId: String?
+        tenantId: String? = null
     ): Result<String?> {
         logger.info("updateMarketImage params:[$userId|$marketImageUpdateRequest|$checkLatest|$sendCheckResultNotify]")
         if (marketImageUpdateRequest.category.equals(CATEGORY_PIPELINE_JOB) &&
@@ -535,7 +535,7 @@ abstract class ImageReleaseService {
         userId: String,
         imageId: String,
         validateUserFlag: Boolean = true,
-        tenantId: String?
+        tenantId: String? = null
     ): Result<Boolean> {
         logger.info("recheck params:[$userId|$imageId|$validateUserFlag]")
         // 判断是否可以重新验证镜像
@@ -565,7 +565,7 @@ abstract class ImageReleaseService {
         userId: String,
         imageId: String,
         validateUserFlag: Boolean = true,
-        tenantId: String?
+        tenantId: String? = null
     ): Result<Boolean> {
         logger.info("passTest params:[$userId|$imageId|$validateUserFlag]")
         val imageRecord = imageDao.getImage(dslContext, imageId, tenantId)
@@ -644,7 +644,7 @@ abstract class ImageReleaseService {
         userId: String,
         imageId: String,
         sendCheckResultNotify: Boolean = true,
-        tenantId: String?
+        tenantId: String? = null
     ) {
         runCheckImagePipeline(
             context = context,
@@ -1021,7 +1021,7 @@ abstract class ImageReleaseService {
         reason: String?,
         validateUserFlag: Boolean = true,
         interfaceName: String? = "Anon interface",
-        tenantId: String?
+        tenantId: String? = null
     ): Result<Boolean> {
         logger.info("$interfaceName:offlineMarketImage:Input:($userId,$imageCode,$version,$reason)")
         // 参数校验
@@ -1153,7 +1153,7 @@ abstract class ImageReleaseService {
         imageId: String,
         approveImageReq: ApproveImageReq,
         checkCurrentStatus: Boolean = true,
-        tenantId: String?
+        tenantId: String? = null
     ): AuditTypeEnum {
         // 参数校验
         // 判断镜像是否存在

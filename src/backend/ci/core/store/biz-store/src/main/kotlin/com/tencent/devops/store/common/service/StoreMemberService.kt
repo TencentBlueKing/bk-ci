@@ -69,7 +69,7 @@ interface StoreMemberService {
         sendNotify: Boolean = true,
         checkPermissionFlag: Boolean = true,
         testProjectCode: String? = null,
-        tenantId: String?
+        tenantId: String? = null
     ): Result<Boolean>
 
     /**

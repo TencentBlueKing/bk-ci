@@ -219,7 +219,7 @@ abstract class ImageService @Autowired constructor() {
         pageSize: Int?,
         interfaceName: String? = "Anon interface",
         validationFlag: Boolean = true,
-        tenantId: String?
+        tenantId: String? = null
     ): Result<Page<ImageDetail>> {
         logger.info("$interfaceName:getImageVersionListByCode:Input:($userId,$imageCode,$page,$pageSize)")
         if (validationFlag) {
@@ -716,7 +716,7 @@ abstract class ImageService @Autowired constructor() {
         userId: String,
         imageId: String,
         interfaceName: String? = "Anon interface",
-        tenantId: String?
+        tenantId: String? = null
     ): ImageDetail {
         logger.info("$interfaceName:getImageDetailById:Input:($userId,$imageId)")
         val imageRecord =
@@ -891,7 +891,7 @@ abstract class ImageService @Autowired constructor() {
         imageCode: String,
         imageVersion: String?,
         interfaceName: String? = "Anon interface",
-        tenantId: String?
+        tenantId: String? = null
     ): ImageDetail {
         logger.info("$interfaceName:getLatestImageDetailByCode:Input:($userId,$imageCode,$imageVersion)")
         return if (null == imageVersion) {
@@ -1088,7 +1088,7 @@ abstract class ImageService @Autowired constructor() {
         userId: String,
         imageId: String,
         interfaceName: String? = "Anon interface",
-        tenantId: String?
+        tenantId: String? = null
     ): Result<Boolean> {
         val imageRecord =
             imageDao.getImage(dslContext, imageId, tenantId) ?: throw ImageNotExistException("imageId=$imageId")
