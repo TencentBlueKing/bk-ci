@@ -200,14 +200,15 @@
                             >
                                 <span class="info-label">
                                     {{ item.label }}
-                                    <i
+                                    <Logo
                                         v-if="item.tip"
                                         v-bk-tooltips="{
                                             content: item.tip,
-                                            placement: 'top',
-                                            allowHtml: false
+                                            placement: 'top'
                                         }"
-                                        class="bk-icon icon-help info-tip-icon"
+                                        :size="14"
+                                        name="info-circle"
+                                        class="info-tip-icon"
                                     />
                                 </span>
                                 <span class="info-value">{{ item.value }}</span>
@@ -542,7 +543,6 @@
     import useNodeDetail from '@/hooks/useNodeDetail'
     import useTaskDetail from '@/hooks/useTaskDetail'
     import usePagination from '@/hooks/usePagination'
-    import useEnvAside from '@/hooks/useEnvAside'
     import SearchSelect from '@blueking/search-select'
     import '@blueking/search-select/dist/styles/index.css'
     import PipelineStatusIcon from './PipelineStatusIcon'
@@ -571,9 +571,6 @@
                 searchPipelineByName,
                 searchByCreator
             } = useTaskDetail()
-            const {
-                isCreateResType
-            } = useEnvAside()
             const {
                 pagination,
                 resetPagination,
@@ -758,13 +755,15 @@
                     if (retryCount !== '') {
                         items.push({ label: proxy.$t('environment.retryCount'), value: retryCount })
                     }
+                    // 耗时统计口径提示：节点详情页与环境详情页均展示，仅文案按页面区分
+                    const durationTip = proxy.$t(isEnvDetail
+                        ? 'environment.durationEnvTip'
+                        : 'environment.durationNodeTip')
                     items.push(
                         {
                             label: proxy.$t('environment.duration'),
                             value: task.duration || '--',
-                            tip: proxy.$t(isEnvDetail
-                                ? 'environment.durationEnvTip'
-                                : 'environment.durationNodeTip')
+                            tip: durationTip
                         },
                         { label: proxy.$t('environment.trigger'), value: task.creator || '--' },
                         { label: proxy.$t('environment.startTime'), value: task.startTime || '--' }
@@ -1424,14 +1423,8 @@
                             gap: 4px;
 
                             .info-tip-icon {
-                                font-size: 14px;
-                                color: #C4C6CC;
-                                cursor: help;
-                                transition: color 0.15s ease;
-
-                                &:hover {
-                                    color: #3A84FF;
-                                }
+                                color: #979BA5;
+                                flex-shrink: 0;
                             }
                         }
                         
