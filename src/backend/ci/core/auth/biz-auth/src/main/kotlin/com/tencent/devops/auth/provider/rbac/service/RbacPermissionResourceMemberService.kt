@@ -875,9 +875,10 @@ class RbacPermissionResourceMemberService(
     ): List<Int> {
         logger.info("[RBAC-IAM] get member groups in project: $projectCode|$memberId")
         // 获取用户的所属组织
-        val memberDeptInfos = deptService.getUserInfo(memberId)?.deptInfo?.let {
+        val tenantId = TenantUtils.getTenantIdByEnglishName(projectCode)
+        val memberDeptInfos = deptService.getUserInfo(memberId, tenantId)?.deptInfo?.let {
             if (it.isNotEmpty()) {
-                deptService.getUserDeptInfo(memberId).toList()
+                deptService.getUserDeptInfo(memberId, tenantId).toList()
             } else {
                 emptyList()
             }

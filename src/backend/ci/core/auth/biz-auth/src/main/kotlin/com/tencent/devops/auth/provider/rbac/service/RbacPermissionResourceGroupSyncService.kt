@@ -381,7 +381,7 @@ class RbacPermissionResourceGroupSyncService @Autowired constructor(
                     dslContext = dslContext,
                     projectCode = projectCode
                 ).filter { it.departed == true }.map { it.id }
-                userService.syncUserInfoData(departedMembers)
+                userService.syncUserInfoData(departedMembers, TenantUtils.getTenantIdByEnglishName(projectCode))
                 // 记录完成状态
                 authResourceSyncDao.updateStatus(
                     dslContext = dslContext,

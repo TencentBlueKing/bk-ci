@@ -1992,7 +1992,7 @@ class RbacPermissionManageFacadeServiceImpl(
 
     private fun ResourceMemberInfo.fillNameIfAbsent() {
         if (name == null) {
-            name = deptService.getUserInfo(id)?.name
+            name = deptService.getUserInfo(id, TenantUtils.getTenantId())?.name
         }
     }
 

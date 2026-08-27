@@ -409,7 +409,8 @@ class RbacPermissionResourceGroupService @Autowired constructor(
             managerId = projectInfo.relationId.toInt(),
             resourceType = AuthResourceType.PROJECT.value,
             groupName = groupAddDTO.groupName,
-            description = groupAddDTO.groupDesc
+            description = groupAddDTO.groupDesc,
+            tenantId = TenantUtils.getTenantIdByEnglishName(projectId)
         )
         authResourceGroupDao.create(
             dslContext = dslContext,
