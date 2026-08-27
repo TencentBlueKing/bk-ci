@@ -33,10 +33,33 @@ export function applyTenantDisplayInfo (info = {}) {
         window.userInfo = {
             ...(window.userInfo || {}),
             timeZone,
-            tenantId: tenantInfo.tenantId || (window.userInfo && window.userInfo.tenantId)
+            tenantId: tenantInfo.tenantId
         }
     }
     return tenantInfo
+}
+
+/**
+ * 蓝鲸用户展示名 / 选人接口仅在后端下发了真实用户网关地址时启用。
+ * 单租户或未配 BK 用户网关时必须跳过，避免打到同源 /api/v3/open-web/tenant/... 404。
+ */
+export function hasTenantUserApi (info) {
+    const src = info || (typeof window !== 'undefined' ? window.tenantInfoForDisplay : null)
+    return !!(src && String(src.apiBaseUrl || '').trim())
+}
+
+export function hasTenantId (info) {
+    const src = info || (typeof window !== 'undefined' ? window.tenantInfoForDisplay : null)
+    return !!(src && String(src.tenantId || '').trim())
+}
+
+export function getTenantUserApiPrefix (info) {
+    const src = info || (typeof window !== 'undefined' ? window.tenantInfoForDisplay : null)
+    const base = src && String(src.apiBaseUrl || '').trim()
+    if (!base) {
+        return ''
+    }
+    return `${base.replace(/\/$/, '')}/api/v3/open-web/tenant/users/-`
 }
 
 /**
@@ -415,6 +438,9 @@ export function userTzTrendRange (unit, timeZone) {
 export default {
     DEFAULT_USER_TIME_ZONE,
     applyTenantDisplayInfo,
+    hasTenantUserApi,
+    hasTenantId,
+    getTenantUserApiPrefix,
     getUserTimeZone,
     toEpochMilli,
     formatByUserTz,

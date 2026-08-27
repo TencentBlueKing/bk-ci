@@ -1,7 +1,5 @@
 import request from '../http/fetch';
-import { applyTenantDisplayInfo, DEFAULT_USER_TIME_ZONE } from '../../../common-lib/time'
-// @ts-ignore
-const userApiPrefix = `${window.BK_APIGW_USER_WEB_URL}/api/v3/open-web/tenant/users/-`
+import { applyTenantDisplayInfo, DEFAULT_USER_TIME_ZONE, getTenantUserApiPrefix } from '../../../common-lib/time'
 export default class TenantSingleton {
     static instance: any
     
@@ -28,8 +26,11 @@ export default class TenantSingleton {
     }
 
     static async fetchTenantUsers (keyword = 'a') {
+        const userApiPrefix = getTenantUserApiPrefix()
+        if (!userApiPrefix) {
+            return []
+        }
         try {
-            console.log(keyword, 123)
             const res = await request.get?.(`${userApiPrefix}/search/?keyword=${keyword || 'a'}`)
             return TenantSingleton.formatData(res)
         } catch (e) {
@@ -37,6 +38,10 @@ export default class TenantSingleton {
         }
     }
     static async  fetchTenantDisplayNames (uids) {
+        const userApiPrefix = getTenantUserApiPrefix()
+        if (!userApiPrefix) {
+            return []
+        }
         try {
             const res = await request.get?.(`${userApiPrefix}/lookup/?lookups=${uids}&lookup_fields=bk_username`)
             return TenantSingleton.formatData(res)

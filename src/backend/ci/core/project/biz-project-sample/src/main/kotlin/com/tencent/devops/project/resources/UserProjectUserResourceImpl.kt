@@ -27,6 +27,7 @@
 
 package com.tencent.devops.project.resources
 
+import com.tencent.devops.common.service.tenant.TenantUtils
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.project.api.user.UserProjectUserResource
 import com.tencent.devops.project.pojo.Result
@@ -66,14 +67,16 @@ class UserProjectUserResourceImpl @Autowired constructor(
 
     override fun tenantInfoForDisplay(
         userId: String,
-        tenantId: String,
+        tenantId: String?,
         timeZone: String?
     ): Result<TenantInfoForDisplay> {
         // 时区由网关鉴权调用蓝鲸 get_bk_token_userinfo 写入 X-BK-USER-TIMEZONE；缺省/空则兜底东八区
+        // 用户展示名网关仅多租户开启时下发；单租户保持与主干一致，不触发 /api/v3/open-web/tenant/...
+        val multiTenant = TenantUtils.isMultiTenantMode()
         return Result(
             TenantInfoForDisplay(
-                tenantId = tenantId,
-                apiBaseUrl = bkUserWebUrl ?: "",
+                tenantId = if (multiTenant) (tenantId ?: "") else "",
+                apiBaseUrl = if (multiTenant) (bkUserWebUrl?.takeIf { it.isNotBlank() } ?: "") else "",
                 timeZone = timeZone?.takeIf { it.isNotBlank() } ?: DEFAULT_DISPLAY_TIME_ZONE
             )
         )

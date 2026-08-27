@@ -27,10 +27,10 @@
         },
         computed: {
             apiBaseUrl () {
-                return this.$tenantApiBaseUrl
+                return this.$tenantApiBaseUrl || undefined
             },
             tenantId () {
-                return this.$tenantId
+                return this.$tenantId || undefined
             }
         },
         created () {

@@ -46,10 +46,10 @@
         },
         computed: {
             apiBaseUrl () {
-                return TenantSingleton.getInstance().apiBaseUrl
+                return TenantSingleton.getInstance().apiBaseUrl || undefined
             },
             tenantId () {
-                return TenantSingleton.getInstance().tenantId
+                return TenantSingleton.getInstance().tenantId || undefined
             },
             isMultiple () {
                 return Array.isArray(this.value)

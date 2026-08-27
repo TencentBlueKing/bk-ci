@@ -1,8 +1,12 @@
 import BkUserDisplayName from '@blueking/bk-user-display-name'
-import { applyTenantDisplayInfo, DEFAULT_USER_TIME_ZONE } from '../../../common-lib/time'
+import {
+    applyTenantDisplayInfo,
+    DEFAULT_USER_TIME_ZONE,
+    getTenantUserApiPrefix,
+    hasTenantId,
+    hasTenantUserApi
+} from '../../../common-lib/time'
 import request from './request'
-
-const userApiPrefix = `${window.BK_APIGW_USER_WEB_URL}/api/v3/open-web/tenant/users/-`
 export default class TenantSingleton {
     static instance: any
     
@@ -29,8 +33,11 @@ export default class TenantSingleton {
     }
 
     static async fetchTenantUsers (keyword = 'a') {
+        const userApiPrefix = getTenantUserApiPrefix()
+        if (!userApiPrefix) {
+            return []
+        }
         try {
-            console.log(keyword, 123)
             const res = await request.get(`${userApiPrefix}/search/?keyword=${keyword || 'a'}`)
             return TenantSingleton.formatData(res)
         } catch (e) {
@@ -38,6 +45,10 @@ export default class TenantSingleton {
         }
     }
     static async  fetchTenantDisplayNames (uids) {
+        const userApiPrefix = getTenantUserApiPrefix()
+        if (!userApiPrefix) {
+            return []
+        }
         try {
             const res = await request.get(`${userApiPrefix}/lookup/?lookups=${uids}&lookup_fields=bk_username`)
             return TenantSingleton.formatData(res)
@@ -60,12 +71,16 @@ export default class TenantSingleton {
             } = await request.get('project/api/user/users/tenantInfoForDisplay')
 
             const tenantInfo = applyTenantDisplayInfo(data)
-            request.defaults.headers.common['X-Bk-Tenant-Id'] = tenantInfo.tenantId
-            BkUserDisplayName.configure({
-                tenantId: tenantInfo.tenantId,
-                apiBaseUrl: tenantInfo.apiBaseUrl,
-                emptyText: 'unkown_user'
-            })
+            if (hasTenantId(tenantInfo)) {
+                request.defaults.headers.common['X-Bk-Tenant-Id'] = tenantInfo.tenantId
+            }
+            if (hasTenantUserApi(tenantInfo)) {
+                BkUserDisplayName.configure({
+                    tenantId: tenantInfo.tenantId,
+                    apiBaseUrl: tenantInfo.apiBaseUrl,
+                    emptyText: 'unkown_user'
+                })
+            }
             return tenantInfo
         } catch (error) {
             console.error(error)

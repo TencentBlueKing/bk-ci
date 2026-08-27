@@ -1,8 +1,11 @@
 import BkUserDisplayName from '@blueking/bk-user-display-name'
-import { applyTenantDisplayInfo, DEFAULT_USER_TIME_ZONE } from '../../../common-lib/time'
+import {
+    applyTenantDisplayInfo,
+    DEFAULT_USER_TIME_ZONE,
+    getTenantUserApiPrefix,
+    hasTenantUserApi
+} from '../../../common-lib/time'
 import fetch from '../http/fetch'
-
-const userApiPrefix = `${window.BK_APIGW_USER_WEB_URL}/api/v3/open-web/tenant/users/-`
 export default class TenantSingleton {
     static instance: any
     static tenantId: string
@@ -32,8 +35,11 @@ export default class TenantSingleton {
     }
 
     static async fetchTenantUsers (keyword = 'a') {
+        const userApiPrefix = getTenantUserApiPrefix()
+        if (!userApiPrefix) {
+            return []
+        }
         try {
-            console.log(keyword, 123)
             const res = await fetch.get?.(`${userApiPrefix}/search/?keyword=${keyword || 'a'}`, null, {
                 headers: {
                     'X-Bk-Tenant-Id': TenantSingleton.tenantId
@@ -45,6 +51,10 @@ export default class TenantSingleton {
         }
     }
     static async  fetchTenantDisplayNames (uids) {
+        const userApiPrefix = getTenantUserApiPrefix()
+        if (!userApiPrefix) {
+            return []
+        }
         try {
             const res = await fetch.get?.(`${userApiPrefix}/lookup/?lookups=${uids}&lookup_fields=bk_username`, null, {
                 headers: {
@@ -71,11 +81,13 @@ export default class TenantSingleton {
             } = await fetch.get?.('/project/api/user/users/tenantInfoForDisplay')
 
             const tenantInfo = applyTenantDisplayInfo(data)
-            BkUserDisplayName.configure({
-                tenantId: tenantInfo.tenantId,
-                apiBaseUrl: tenantInfo.apiBaseUrl,
-                emptyText: 'unkown_user'
-            })
+            if (hasTenantUserApi(tenantInfo)) {
+                BkUserDisplayName.configure({
+                    tenantId: tenantInfo.tenantId,
+                    apiBaseUrl: tenantInfo.apiBaseUrl,
+                    emptyText: 'unkown_user'
+                })
+            }
             TenantSingleton.tenantId = tenantInfo.tenantId
             TenantSingleton.apiBaseUrl = tenantInfo.apiBaseUrl
             TenantSingleton.timeZone = tenantInfo.timeZone

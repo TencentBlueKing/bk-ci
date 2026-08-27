@@ -271,8 +271,8 @@
                     <div class="bk-form-content atom-item-content">
                         <BkUserSelector
                             v-model="atomForm.publisher"
-                            :api-base-url="$tenantApiBaseUrl"
-                            :tenant-id="$tenantId"
+                            :api-base-url="$tenantApiBaseUrl || undefined"
+                            :tenant-id="$tenantId || undefined"
                             :placeholder="$t('store.请输入发布者')"
                         />
                     </div>
