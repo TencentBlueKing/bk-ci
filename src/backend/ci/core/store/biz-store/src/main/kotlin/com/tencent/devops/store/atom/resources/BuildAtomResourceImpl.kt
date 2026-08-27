@@ -31,6 +31,7 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.web.annotation.SensitiveApiPermission
 import com.tencent.devops.store.api.atom.BuildAtomResource
 import com.tencent.devops.store.pojo.atom.MarketAtomUpdateRequest
+import com.tencent.devops.store.pojo.atom.PipelineAtom
 import com.tencent.devops.store.pojo.common.publication.StoreProcessInfo
 import com.tencent.devops.store.pojo.common.version.VersionInfo
 import com.tencent.devops.store.atom.service.AtomReleaseService
@@ -62,5 +63,9 @@ class BuildAtomResourceImpl @Autowired constructor(
 
     override fun getProcessInfo(userId: String, atomId: String): Result<StoreProcessInfo> {
         return atomReleaseService.getProcessInfo(userId, atomId)
+    }
+
+    override fun getAtomVersionInfoById(userId: String, atomId: String): Result<PipelineAtom?> {
+        return atomService.getPipelineAtomById(id = atomId)
     }
 }

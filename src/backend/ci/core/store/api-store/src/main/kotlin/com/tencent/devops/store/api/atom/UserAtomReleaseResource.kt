@@ -33,9 +33,9 @@ import com.tencent.devops.store.pojo.atom.AtomOfflineReq
 import com.tencent.devops.store.pojo.atom.MarketAtomCreateRequest
 import com.tencent.devops.store.pojo.atom.MarketAtomUpdateRequest
 import com.tencent.devops.store.pojo.common.publication.StoreProcessInfo
-import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.Valid
 import jakarta.ws.rs.Consumes
 import jakarta.ws.rs.GET
@@ -91,6 +91,30 @@ interface UserAtomReleaseResource {
         @PathParam("atomId")
         atomId: String
     ): Result<StoreProcessInfo>
+
+    @Operation(summary = "结束插件分支测试版本测试")
+    @GET
+    @Path("/desk/atom/{atomId}/test/version/end")
+    fun endBranchVersionTest(
+        @Parameter(description = "userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "atomId", required = true)
+        @PathParam("atomId")
+        atomId: String
+    ): Result<Boolean>
+
+    @Operation(summary = "判断插件是否能新增主版本")
+    @GET
+    @Path("/desk/atom/release/check/canAddMainVersion")
+    fun checkCanAddMainVersion(
+        @Parameter(description = "userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "插件代码", required = true)
+        @QueryParam("atomCode")
+        atomCode: String
+    ): Result<Boolean>
 
     @Operation(summary = "取消发布")
     @PathParam("atomId")

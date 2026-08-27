@@ -123,7 +123,8 @@ interface MarketAtomService {
         userId: String,
         atomCode: String,
         page: Int,
-        pageSize: Int
+        pageSize: Int,
+        versionType: String? = null
     ): Result<Page<AtomVersionListItem>>
 
     /**

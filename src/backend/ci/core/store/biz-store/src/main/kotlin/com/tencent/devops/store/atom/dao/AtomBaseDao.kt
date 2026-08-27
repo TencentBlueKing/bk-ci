@@ -120,10 +120,20 @@ abstract class AtomBaseDao {
         return conditions
     }
 
+    /**
+     * 正式版本查询条件（排除分支测试版本），所有只应返回正式版本的查询统一走这里，避免遗漏过滤
+     */
+    protected fun formalVersionConditions(atomCode: String): MutableList<Condition> {
+        return mutableListOf(
+            TAtom.T_ATOM.ATOM_CODE.eq(atomCode),
+            TAtom.T_ATOM.BRANCH_TEST_FLAG.eq(false)
+        )
+    }
+
     fun getLatestAtomByCode(dslContext: DSLContext, atomCode: String): TAtomRecord? {
         return with(TAtom.T_ATOM) {
             dslContext.selectFrom(this)
-                .where(ATOM_CODE.eq(atomCode))
+                .where(formalVersionConditions(atomCode))
                 .and(LATEST_FLAG.eq(true))
                 .fetchOne()
         }
@@ -133,6 +143,7 @@ abstract class AtomBaseDao {
         return with(TAtom.T_ATOM) {
             dslContext.selectFrom(this)
                 .where(ATOM_CODE.`in`(atomCodes))
+                .and(BRANCH_TEST_FLAG.eq(false))
                 .and(LATEST_FLAG.eq(true))
                 .fetch()
         }
@@ -154,8 +165,7 @@ abstract class AtomBaseDao {
         atomStatus: AtomStatusEnum? = null
     ): TAtomRecord? {
         return with(TAtom.T_ATOM) {
-            val conditions = mutableListOf<Condition>()
-            conditions.add(ATOM_CODE.eq(atomCode))
+            val conditions = formalVersionConditions(atomCode)
             if (atomStatus != null) {
                 conditions.add(ATOM_STATUS.eq(atomStatus.status.toByte()))
             }

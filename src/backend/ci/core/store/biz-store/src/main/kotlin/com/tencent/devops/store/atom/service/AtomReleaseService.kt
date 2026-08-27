@@ -109,5 +109,15 @@ interface AtomReleaseService {
      */
     fun endBranchVersionTest(userId: String, atomCode: String, branch: String): Result<Boolean>
 
+    /**
+     * 根据插件版本ID结束分支版本测试
+     */
+    fun endBranchVersionTestById(userId: String, atomId: String): Result<Boolean>
+
+    /**
+     * 判断插件是否能新增主版本（存在发布中的版本或仅存在非下架的1.0.0版本时不可新增）
+     */
+    fun checkCanAddMainVersion(userId: String, atomCode: String): Result<Boolean>
+
     fun updateAtomLatestTestFlag(userId: String, atomCode: String, atomId: String)
 }

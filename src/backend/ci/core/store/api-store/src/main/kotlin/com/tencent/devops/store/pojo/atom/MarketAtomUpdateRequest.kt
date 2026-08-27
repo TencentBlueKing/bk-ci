@@ -83,7 +83,7 @@ data class MarketAtomUpdateRequest(
     @get:Schema(title = "分支", required = false)
     var branch: String? = null,
     @get:Schema(title = "是否属于分支测试版本", required = false)
-    var isBranchTestVersion: Boolean = false
+    var branchTestFlag: Boolean = false
 ) {
     fun toServiceScopeConfigs(): List<ServiceScopeConfig> {
         if (!serviceScopeConfigs.isNullOrEmpty()) {

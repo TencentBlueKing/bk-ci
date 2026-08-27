@@ -122,8 +122,13 @@ class SampleAtomReleaseServiceImpl : SampleAtomReleaseService, AtomReleaseServic
         userId: String,
         atomId: String,
         isNormalUpgrade: Boolean,
-        status: Int
+        status: Int,
+        branchTestFlag: Boolean
     ): List<ReleaseProcessItem> {
+        // 分支测试版本：仅展示到测试环节，不展示测试之后的发布流程
+        if (branchTestFlag) {
+            return handleBranchTestProcessInfo(status)
+        }
         val processInfo = initProcessInfo()
         val totalStep = NUM_FOUR
         when (status) {
@@ -135,6 +140,30 @@ class SampleAtomReleaseServiceImpl : SampleAtomReleaseService, AtomReleaseServic
             }
             AtomStatusEnum.RELEASED.status -> {
                 storeCommonService.setProcessInfo(processInfo, totalStep, NUM_FOUR, SUCCESS)
+            }
+        }
+        return processInfo
+    }
+
+    /**
+     * 分支测试版本进度：仅包含提交、测试环节，不展示测试之后的发布流程
+     */
+    private fun handleBranchTestProcessInfo(status: Int): List<ReleaseProcessItem> {
+        val processInfo = mutableListOf<ReleaseProcessItem>()
+        processInfo.add(ReleaseProcessItem(I18nUtil.getCodeLanMessage(BEGIN), BEGIN, NUM_ONE, SUCCESS))
+        processInfo.add(ReleaseProcessItem(I18nUtil.getCodeLanMessage(COMMIT), COMMIT, NUM_TWO, UNDO))
+        processInfo.add(ReleaseProcessItem(I18nUtil.getCodeLanMessage(TEST), TEST, NUM_THREE, UNDO))
+        when (status) {
+            AtomStatusEnum.INIT.status, AtomStatusEnum.COMMITTING.status -> {
+                storeCommonService.setProcessInfo(processInfo, NUM_THREE, NUM_TWO, DOING)
+            }
+            AtomStatusEnum.TESTING.status -> {
+                // 测试进行中：先标记前序步骤完成，再手动将测试步骤置为进行中（避免末步被置为完成）
+                storeCommonService.setProcessInfo(processInfo, NUM_THREE, NUM_TWO, SUCCESS)
+                processInfo.first { it.step == NUM_THREE }.status = DOING
+            }
+            AtomStatusEnum.TESTED.status, AtomStatusEnum.GROUNDING_SUSPENSION.status -> {
+                storeCommonService.setProcessInfo(processInfo, NUM_THREE, NUM_THREE, SUCCESS)
             }
         }
         return processInfo
@@ -247,4 +276,6 @@ class SampleAtomReleaseServiceImpl : SampleAtomReleaseService, AtomReleaseServic
         atomCode: String,
         branch: String
     ): Result<Boolean> = Result(true)
+
+    override fun endBranchVersionTestById(userId: String, atomId: String): Result<Boolean> = Result(true)
 }

@@ -725,6 +725,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                 version = record[tAtom.VERSION],
                 atomStatus = AtomStatusEnum.getAtomStatus((record[tAtom.ATOM_STATUS] as Byte).toInt()),
                 releaseType = releaseType?.name,
+                branchTestFlag = record[tAtom.BRANCH_TEST_FLAG] as Boolean,
                 versionContent = record[tAtomVersionLog.CONTENT],
                 language = marketAtomEnvInfoDao.getDefaultAtomEnvInfo(dslContext, atomId)
                     ?.language?.let { I18nUtil.getCodeLanMessage(it) },
@@ -930,7 +931,8 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         userId: String,
         atomCode: String,
         page: Int,
-        pageSize: Int
+        pageSize: Int,
+        versionType: String?
     ): Result<Page<AtomVersionListItem>> {
         // 判断当前用户是否是该插件的成员
         if (!storeMemberDao.isStoreMember(
@@ -945,13 +947,23 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                 params = arrayOf(atomCode)
             )
         }
-        val totalCount = atomDao.countByCode(dslContext, atomCode)
-        val records = marketAtomDao.getAtomsByAtomCode(dslContext, atomCode, page, pageSize)
+        // 版本类型筛选：按分支测试版本标识区分，ALL-全部，TEST-测试版本，其余（含默认）为正式版本
+        val branchTestFlag = when (versionType?.uppercase()) {
+            "ALL" -> null
+            "TEST" -> true
+            else -> false
+        }
+        val totalCount = atomDao.countByCode(dslContext, atomCode, branchTestFlag)
+        val records = marketAtomDao.getAtomsByAtomCode(dslContext, atomCode, page, pageSize, branchTestFlag)
         val atomVersions = mutableListOf<AtomVersionListItem>()
         if (records != null) {
             val atomIds = records.map { it.id }
-            // 批量获取版本内容
-            val versionRecords = marketAtomVersionLogDao.getAtomVersions(dslContext, atomIds)
+            // 批量获取版本内容（含分支测试版本的版本日志）
+            val versionRecords = marketAtomVersionLogDao.getAtomVersions(
+                dslContext = dslContext,
+                atomIds = atomIds,
+                getTestVersionFlag = true
+            )
             val versionMap = mutableMapOf<String, String>()
             versionRecords?.forEach { versionRecord ->
                 versionMap[versionRecord.atomId] = versionRecord.content

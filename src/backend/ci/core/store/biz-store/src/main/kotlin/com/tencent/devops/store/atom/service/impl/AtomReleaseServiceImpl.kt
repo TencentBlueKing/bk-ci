@@ -34,6 +34,7 @@ import com.tencent.devops.common.api.constant.DEFAULT_LOCALE_LANGUAGE
 import com.tencent.devops.common.api.constant.DEPLOY
 import com.tencent.devops.common.api.constant.DEVELOP
 import com.tencent.devops.common.api.constant.IN_READY_TEST
+import com.tencent.devops.common.api.constant.INIT_VERSION
 import com.tencent.devops.common.api.constant.KEY_DEFAULT_LOCALE_LANGUAGE
 import com.tencent.devops.common.api.constant.KEY_REPOSITORY_HASH_ID
 import com.tencent.devops.common.api.constant.MASTER
@@ -1038,13 +1039,16 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                 )
             }
             val status = record.atomStatus.toInt()
+            // 分支测试版本仅展示到测试环节，不展示测试之后的发布流程
+            val branchTestFlag = record.branchTestFlag
             // 查看当前版本之前的版本是否有已发布的，如果有已发布的版本则只是普通的升级操作而不需要审核
             val isNormalUpgrade = marketAtomCommonService.getNormalUpgradeFlag(atomCode, status)
             val processInfo = handleProcessInfo(
                 userId = userId,
                 atomId = atomId,
                 isNormalUpgrade = isNormalUpgrade,
-                status = status
+                status = status,
+                branchTestFlag = branchTestFlag
             )
             val storeProcessInfo = storeCommonService.generateStoreProcessInfo(
                 userId = userId,
@@ -1058,11 +1062,41 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         }
     }
 
+    override fun checkCanAddMainVersion(userId: String, atomCode: String): Result<Boolean> {
+        // 判断用户是否有查询权限
+        if (!storeMemberDao.isStoreMember(
+                dslContext = dslContext,
+                userId = userId,
+                storeCode = atomCode,
+                storeType = StoreTypeEnum.ATOM.type.toByte()
+            )
+        ) {
+            throw ErrorCodeException(
+                errorCode = GET_INFO_NO_PERMISSION,
+                params = arrayOf(atomCode)
+            )
+        }
+        // 存在发布中的正式版本时不可新增
+        if (marketAtomDao.countPublishingAtomByCode(dslContext, atomCode) > 0) {
+            return Result(false)
+        }
+        // 仅存在一个1.0.0版本且处于初始或发布流程中时不可新增（已发布/下架等已结束状态允许新增）
+        val formalRecords = marketAtomDao.getAtomsByAtomCode(dslContext, atomCode, null, null, false)
+        if (formalRecords != null && formalRecords.size == 1 &&
+            formalRecords[0].version == INIT_VERSION &&
+            formalRecords[0].atomStatus in AtomStatusEnum.getProcessingStatusList()
+        ) {
+            return Result(false)
+        }
+        return Result(true)
+    }
+
     abstract fun handleProcessInfo(
         userId: String,
         atomId: String,
         isNormalUpgrade: Boolean,
-        status: Int
+        status: Int,
+        branchTestFlag: Boolean
     ): List<ReleaseProcessItem>
 
     /**
@@ -1435,7 +1469,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             ),
             version = version
         )
-        if (!convertUpdateRequest.isBranchTestVersion) {
+        if (!convertUpdateRequest.branchTestFlag) {
             // 校验插件发布类型
             marketAtomCommonService.validateReleaseType(
                 atomId = atomRecord.id,
@@ -1540,7 +1574,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                     packageSize = packageSize
                 )
             }
-            if (!convertUpdateRequest.isBranchTestVersion && atomStatus == AtomStatusEnum.TESTING) {
+            if (!convertUpdateRequest.branchTestFlag && atomStatus == AtomStatusEnum.TESTING) {
                 // 插件大版本内有测试版本则写入缓存
                 redisOperation.hset(
                     key = "$ATOM_POST_VERSION_TEST_FLAG_KEY_PREFIX:$atomCode",
@@ -1554,7 +1588,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             // 为每个服务范围创建标签关联
             serviceScopeConfigs.forEach { config ->
                 val labelIdList = config.labelIdList?.filter { !it.isNullOrBlank() }
-                if (!convertUpdateRequest.isBranchTestVersion && !labelIdList.isNullOrEmpty()) {
+                if (!convertUpdateRequest.branchTestFlag && !labelIdList.isNullOrEmpty()) {
                     atomLabelRelDao.batchAdd(context, userId = userId, atomId = atomId, labelIdList = labelIdList)
                 }
             }
@@ -1566,15 +1600,17 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                 userId = userId,
                 atomFeatureRequest = AtomFeatureRequest(atomCode = atomCode, qualityFlag = qualityFlag)
             )
-            asyncHandleUpdateAtom(
-                context = context,
-                atomId = atomId,
-                userId = userId,
-                branch = branch,
-                validOsNameFlag = marketAtomCommonService.getValidOsNameFlag(atomEnvRequests),
-                validOsArchFlag = marketAtomCommonService.getValidOsArchFlag(atomEnvRequests)
-            )
         }
+        // 事务提交后启动构建流水线（避免事务内多 RPC 拖长事务占用连接）
+        // 注意：构建启动失败不再回滚版本记录（数据已提交），调用方可重试
+        asyncHandleUpdateAtom(
+            context = dslContext,
+            atomId = atomId,
+            userId = userId,
+            branch = branch,
+            validOsNameFlag = marketAtomCommonService.getValidOsNameFlag(atomEnvRequests),
+            validOsArchFlag = marketAtomCommonService.getValidOsArchFlag(atomEnvRequests)
+        )
         return Result(atomId)
     }
 

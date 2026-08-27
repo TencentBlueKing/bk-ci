@@ -179,4 +179,8 @@ object StoreMessageCode {
     const val TRIGGER_EVENT_CONFIG_EXIST = "2120942" // 应用[{0}]下已存在[{1}]触发事件配置
     // 研发商店：项目[{0}]不存在或你没有该项目的权限，请填写你有权限的项目
     const val USER_STORE_VISIBLE_PROJECT_INVALID = "2120943"
+    const val STORE_BRANCH_TEST_CREATE_FAIL = "2120944" // 研发商店：分支测试版本创建失败，请稍后重试
+    const val STORE_ATOM_INIT_PROJECT_NOT_FOUND = "2120945" // 研发商店：插件未初始化项目
+    const val STORE_ATOM_NOT_BRANCH_TEST_VERSION = "2120946" // 研发商店：仅分支测试版本可结束测试
+    const val STORE_BRANCH_TEST_END_STATUS_INVALID = "2120947" // 研发商店：仅测试中的分支测试版本可结束测试
 }

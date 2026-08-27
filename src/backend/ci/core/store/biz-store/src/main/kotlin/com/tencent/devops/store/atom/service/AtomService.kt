@@ -107,6 +107,11 @@ interface AtomService {
     ): Result<PipelineAtom?>
 
     /**
+     * 根据插件版本ID获取插件信息（任意状态均可查询，含分支测试版本）
+     */
+    fun getPipelineAtomById(id: String, serviceScope: ServiceScopeEnum? = null): Result<PipelineAtom?>
+
+    /**
      * 根据项目代码、插件代码和版本号获取插件信息
      */
     fun getPipelineAtomVersions(projectCode: String? = null, atomCode: String): Result<List<VersionInfo>>

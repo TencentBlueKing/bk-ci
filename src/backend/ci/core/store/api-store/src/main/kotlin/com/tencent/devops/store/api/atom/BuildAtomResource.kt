@@ -30,6 +30,7 @@ package com.tencent.devops.store.api.atom
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.pojo.atom.MarketAtomUpdateRequest
+import com.tencent.devops.store.pojo.atom.PipelineAtom
 import com.tencent.devops.store.pojo.common.publication.StoreProcessInfo
 import com.tencent.devops.store.pojo.common.version.VersionInfo
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -100,4 +101,16 @@ interface BuildAtomResource {
         @PathParam("atomId")
         atomId: String
     ): Result<StoreProcessInfo>
+
+    @Operation(summary = "根据插件版本ID获取插件版本信息")
+    @GET
+    @Path("/atoms/ids/{atomId}/version/info")
+    fun getAtomVersionInfoById(
+        @Parameter(description = "userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "atomId", required = true)
+        @PathParam("atomId")
+        atomId: String
+    ): Result<PipelineAtom?>
 }
