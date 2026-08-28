@@ -50,6 +50,35 @@ class CredentialCryptoKeyRefreshWriter(
         }
     }
 
+    override fun fetchMissingKeyShaBatch(limit: Int): List<CryptoKeyRefreshRow> {
+        return with(TCredential.T_CREDENTIAL) {
+            dslContext.select(
+                PROJECT_ID,
+                CREDENTIAL_ID,
+                CREDENTIAL_V1,
+                CREDENTIAL_V2,
+                CREDENTIAL_V3,
+                CREDENTIAL_V4,
+                AES_KEY_SHA
+            ).from(this)
+                .where(AES_KEY_SHA.isNull)
+                .limit(limit)
+                .fetch()
+                .map(::toRow)
+        }
+    }
+
+    override fun updateAesKeySha(row: CryptoKeyRefreshRow) {
+        val credentialRow = row as CredentialCryptoKeyRefreshRow
+        with(TCredential.T_CREDENTIAL) {
+            dslContext.update(this)
+                .set(AES_KEY_SHA, currentKeySha)
+                .where(PROJECT_ID.eq(credentialRow.projectId))
+                .and(CREDENTIAL_ID.eq(credentialRow.credentialId))
+                .execute()
+        }
+    }
+
     private fun toRow(record: Record): CredentialCryptoKeyRefreshRow {
         return with(TCredential.T_CREDENTIAL) {
             CredentialCryptoKeyRefreshRow(

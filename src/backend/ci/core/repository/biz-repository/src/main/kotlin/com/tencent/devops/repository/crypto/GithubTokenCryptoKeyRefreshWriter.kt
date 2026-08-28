@@ -37,6 +37,28 @@ class GithubTokenCryptoKeyRefreshWriter(
         }
     }
 
+    override fun fetchMissingKeyShaBatch(limit: Int): List<CryptoKeyRefreshRow> {
+        return with(TRepositoryGithubToken.T_REPOSITORY_GITHUB_TOKEN) {
+            dslContext.select(USER_ID, TYPE, ACCESS_TOKEN, AES_KEY_SHA)
+                .from(this)
+                .where(AES_KEY_SHA.isNull)
+                .limit(limit)
+                .fetch()
+                .map(::toRow)
+        }
+    }
+
+    override fun updateAesKeySha(row: CryptoKeyRefreshRow) {
+        val githubTokenRow = row as GithubTokenCryptoKeyRefreshRow
+        with(TRepositoryGithubToken.T_REPOSITORY_GITHUB_TOKEN) {
+            dslContext.update(this)
+                .set(AES_KEY_SHA, githubTokenCryptoHelper.currentKeySha())
+                .where(USER_ID.eq(githubTokenRow.userId))
+                .and(TYPE.eq(githubTokenRow.type))
+                .execute()
+        }
+    }
+
     private fun toRow(record: Record): GithubTokenCryptoKeyRefreshRow {
         return with(TRepositoryGithubToken.T_REPOSITORY_GITHUB_TOKEN) {
             GithubTokenCryptoKeyRefreshRow(

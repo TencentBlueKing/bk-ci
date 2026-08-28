@@ -1,7 +1,6 @@
 package com.tencent.devops.common.security.crypto
 
 import org.springframework.boot.context.properties.ConfigurationProperties
-import org.springframework.boot.context.properties.ConstructorBinding
 
 /**
  * 加密密钥刷新任务配置。
@@ -11,7 +10,6 @@ import org.springframework.boot.context.properties.ConstructorBinding
  * @property batchSize 每批最多处理的数据行数。
  * @property sleepMsBetweenBatch 每批处理完成后的休眠毫秒数，用于控制迁移速率。
  */
-@ConstructorBinding
 @ConfigurationProperties(prefix = "aes.refresh")
 data class CryptoKeyRefreshProperties(
     val enabled: Boolean = false,

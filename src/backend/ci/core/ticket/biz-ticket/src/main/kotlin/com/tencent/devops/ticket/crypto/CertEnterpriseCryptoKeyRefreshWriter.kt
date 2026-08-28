@@ -44,6 +44,32 @@ class CertEnterpriseCryptoKeyRefreshWriter(
         }
     }
 
+    override fun fetchMissingKeyShaBatch(limit: Int): List<CryptoKeyRefreshRow> {
+        return with(TCertEnterprise.T_CERT_ENTERPRISE) {
+            dslContext.select(
+                PROJECT_ID,
+                CERT_ID,
+                CERT_MP_FILE_CONTENT,
+                AES_KEY_SHA
+            ).from(this)
+                .where(AES_KEY_SHA.isNull)
+                .limit(limit)
+                .fetch()
+                .map(::toRow)
+        }
+    }
+
+    override fun updateAesKeySha(row: CryptoKeyRefreshRow) {
+        val certRow = row as CertEnterpriseCryptoKeyRefreshRow
+        with(TCertEnterprise.T_CERT_ENTERPRISE) {
+            dslContext.update(this)
+                .set(AES_KEY_SHA, currentKeySha)
+                .where(PROJECT_ID.eq(certRow.projectId))
+                .and(CERT_ID.eq(certRow.certId))
+                .execute()
+        }
+    }
+
     private fun toRow(record: Record): CertEnterpriseCryptoKeyRefreshRow {
         return with(TCertEnterprise.T_CERT_ENTERPRISE) {
             CertEnterpriseCryptoKeyRefreshRow(

@@ -37,6 +37,28 @@ class PipelineCallbackCryptoKeyRefreshWriter(
         }
     }
 
+    override fun fetchMissingKeyShaBatch(limit: Int): List<CryptoKeyRefreshRow> {
+        return with(TProjectPipelineCallback.T_PROJECT_PIPELINE_CALLBACK) {
+            dslContext.select(ID, SECRET_PARAM, AES_KEY_SHA)
+                .from(this)
+                .where(SECRET_PARAM.isNotNull)
+                .and(AES_KEY_SHA.isNull)
+                .limit(limit)
+                .fetch()
+                .map(::toRow)
+        }
+    }
+
+    override fun updateAesKeySha(row: CryptoKeyRefreshRow) {
+        val callbackRow = row as PipelineCallbackCryptoKeyRefreshRow
+        with(TProjectPipelineCallback.T_PROJECT_PIPELINE_CALLBACK) {
+            dslContext.update(this)
+                .set(AES_KEY_SHA, pipelineCallbackCryptoHelper.currentKeySha())
+                .where(ID.eq(callbackRow.id))
+                .execute()
+        }
+    }
+
     private fun toRow(record: Record): PipelineCallbackCryptoKeyRefreshRow {
         return with(TProjectPipelineCallback.T_PROJECT_PIPELINE_CALLBACK) {
             PipelineCallbackCryptoKeyRefreshRow(

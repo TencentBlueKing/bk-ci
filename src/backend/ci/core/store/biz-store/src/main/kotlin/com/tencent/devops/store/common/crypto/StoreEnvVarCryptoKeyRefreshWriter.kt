@@ -39,6 +39,28 @@ class StoreEnvVarCryptoKeyRefreshWriter(
         }
     }
 
+    override fun fetchMissingKeyShaBatch(limit: Int): List<CryptoKeyRefreshRow> {
+        return with(TStoreEnvVar.T_STORE_ENV_VAR) {
+            dslContext.select(ID, VAR_VALUE, AES_KEY_SHA)
+                .from(this)
+                .where(ENCRYPT_FLAG.eq(true))
+                .and(AES_KEY_SHA.isNull)
+                .limit(limit)
+                .fetch()
+                .map(::toRow)
+        }
+    }
+
+    override fun updateAesKeySha(row: CryptoKeyRefreshRow) {
+        val envVarRow = row as StoreEnvVarCryptoKeyRefreshRow
+        with(TStoreEnvVar.T_STORE_ENV_VAR) {
+            dslContext.update(this)
+                .set(AES_KEY_SHA, currentKeySha)
+                .where(ID.eq(envVarRow.id))
+                .execute()
+        }
+    }
+
     private fun toRow(record: Record): StoreEnvVarCryptoKeyRefreshRow {
         return with(TStoreEnvVar.T_STORE_ENV_VAR) {
             StoreEnvVarCryptoKeyRefreshRow(

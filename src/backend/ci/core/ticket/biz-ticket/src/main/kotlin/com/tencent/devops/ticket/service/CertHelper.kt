@@ -151,7 +151,6 @@ class CertHelper {
     fun decryptBytes(bytes: ByteArray?): ByteArray? {
         return if (bytes != null) {
             AESUtil.decrypt(aesKey, bytes)
-            BkCryptoUtil.decryptSm4OrAes(aesKey, usedAesKeys, bytes)
             BkCryptoUtil.decryptSm4OrAes(aesKey, BkCryptoUtil.parseAesKeys(usedAesKeys), bytes)
         } else null
     }

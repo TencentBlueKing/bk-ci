@@ -35,6 +35,28 @@ class CryptoKeyRefreshExecutor(
     }
 
     /**
+     * 分页给存量行补 `AES_KEY_SHA`，不重加密密文。供 OP 使用。
+     */
+    fun updateAesKeySha(applicationName: String, writers: List<CryptoKeyRefreshWriter>) {
+        RedisLock(
+            redisOperation = redisOperation,
+            lockKey = "crypto:aes-key-sha:$applicationName",
+            expiredTimeInSeconds = LOCK_SECONDS
+        ).use { lock ->
+            if (!lock.tryLock()) {
+                logger.info("Crypto aes key sha update is already running|applicationName=$applicationName")
+                return
+            }
+            writers.forEach { writer ->
+                logger.info(
+                    "Crypto aes key sha update started|applicationName=$applicationName|writer=${writer.name}"
+                )
+                updateWriterAesKeySha(applicationName = applicationName, writer = writer)
+            }
+        }
+    }
+
+    /**
      * 循环执行单个刷新器，直到该刷新器不再返回待处理数据。
      */
     private fun runWriterUntilDone(applicationName: String, writer: CryptoKeyRefreshWriter) {
@@ -76,6 +98,55 @@ class CryptoKeyRefreshExecutor(
             if (batchSuccess == 0) {
                 logger.error(
                     "Crypto key refresh writer stopped without progress|applicationName=$applicationName|" +
+                        "writer=${writer.name}|page=$page|rows=${rows.size}|totalFailed=$totalFailed"
+                )
+                return
+            }
+            if (properties.sleepMsBetweenBatch > 0) {
+                Thread.sleep(properties.sleepMsBetweenBatch)
+            }
+        }
+    }
+
+    private fun updateWriterAesKeySha(applicationName: String, writer: CryptoKeyRefreshWriter) {
+        var page = 0
+        var totalSuccess = 0
+        var totalFailed = 0
+        while (true) {
+            val rows = writer.fetchMissingKeyShaBatch(properties.batchSize)
+            if (rows.isEmpty()) {
+                logger.info(
+                    "Crypto aes key sha update done|applicationName=$applicationName|writer=${writer.name}|" +
+                        "pages=$page|success=$totalSuccess|failed=$totalFailed"
+                )
+                return
+            }
+            page++
+            var batchSuccess = 0
+            var batchFailed = 0
+            rows.forEach { row ->
+                try {
+                    writer.updateAesKeySha(row)
+                    batchSuccess++
+                } catch (e: Throwable) {
+                    batchFailed++
+                    logger.error(
+                        "Crypto aes key sha update row failed|applicationName=$applicationName|" +
+                            "writer=${writer.name}|row=${row.rowKey()}",
+                        e
+                    )
+                }
+            }
+            totalSuccess += batchSuccess
+            totalFailed += batchFailed
+            logger.info(
+                "Crypto aes key sha update batch done|applicationName=$applicationName|writer=${writer.name}|" +
+                    "page=$page|rows=${rows.size}|success=$batchSuccess|failed=$batchFailed|" +
+                    "totalSuccess=$totalSuccess|totalFailed=$totalFailed"
+            )
+            if (batchSuccess == 0) {
+                logger.error(
+                    "Crypto aes key sha update stopped without progress|applicationName=$applicationName|" +
                         "writer=${writer.name}|page=$page|rows=${rows.size}|totalFailed=$totalFailed"
                 )
                 return

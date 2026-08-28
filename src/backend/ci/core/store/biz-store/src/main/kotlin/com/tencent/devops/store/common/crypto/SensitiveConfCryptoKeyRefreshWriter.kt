@@ -40,6 +40,28 @@ class SensitiveConfCryptoKeyRefreshWriter(
         }
     }
 
+    override fun fetchMissingKeyShaBatch(limit: Int): List<CryptoKeyRefreshRow> {
+        return with(TStoreSensitiveConf.T_STORE_SENSITIVE_CONF) {
+            dslContext.select(ID, FIELD_VALUE, AES_KEY_SHA)
+                .from(this)
+                .where(FIELD_TYPE.eq(FieldTypeEnum.BACKEND.name))
+                .and(AES_KEY_SHA.isNull)
+                .limit(limit)
+                .fetch()
+                .map(::toRow)
+        }
+    }
+
+    override fun updateAesKeySha(row: CryptoKeyRefreshRow) {
+        val sensitiveConfRow = row as SensitiveConfCryptoKeyRefreshRow
+        with(TStoreSensitiveConf.T_STORE_SENSITIVE_CONF) {
+            dslContext.update(this)
+                .set(AES_KEY_SHA, currentKeySha)
+                .where(ID.eq(sensitiveConfRow.id))
+                .execute()
+        }
+    }
+
     private fun toRow(record: Record): SensitiveConfCryptoKeyRefreshRow {
         return with(TStoreSensitiveConf.T_STORE_SENSITIVE_CONF) {
             SensitiveConfCryptoKeyRefreshRow(
