@@ -34,9 +34,13 @@ class DelegatingPermissionServiceDecorator(
             .register(meterRegistry)
     }
 
-    override fun validateUserActionPermission(userId: String, action: String): Boolean {
+    override fun validateUserActionPermission(userId: String, action: String, tenantId: String?): Boolean {
         // 此方法未使用过，暂不处理
-        return rbacPermissionService.validateUserActionPermission(userId = userId, action = action)
+        return rbacPermissionService.validateUserActionPermission(
+            userId = userId,
+            action = action,
+            tenantId = tenantId
+        )
     }
 
     override fun validateUserProjectPermission(
@@ -315,7 +319,8 @@ class DelegatingPermissionServiceDecorator(
     override fun getUserProjectsByPermission(
         userId: String,
         action: String,
-        resourceType: String?
+        resourceType: String?,
+        tenantId: String?
     ): List<String> {
         return executeWithRouting(
             context = this::getUserProjectsByPermission.name,
@@ -323,7 +328,8 @@ class DelegatingPermissionServiceDecorator(
                 rbacPermissionService.getUserProjectsByPermission(
                     userId = userId,
                     action = action,
-                    resourceType = resourceType
+                    resourceType = resourceType,
+                    tenantId = tenantId
                 )
             },
             internalCall = {

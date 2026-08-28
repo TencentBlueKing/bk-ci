@@ -34,7 +34,6 @@ import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
 import com.tencent.devops.common.auth.code.AuthServiceCode
 
 class MockAuthResourceApi : AuthResourceApi {
-
     override fun createGrantResource(
         user: String,
         serviceCode: AuthServiceCode,
@@ -42,7 +41,8 @@ class MockAuthResourceApi : AuthResourceApi {
         projectCode: String,
         resourceCode: String,
         resourceName: String,
-        authGroupList: List<BkAuthGroup>?
+        authGroupList: List<BkAuthGroup>?,
+        tenantId: String?
     ) = Unit
 
     override fun batchCreateResource(
@@ -89,7 +89,8 @@ class MockAuthResourceApi : AuthResourceApi {
         resourceType: AuthResourceType,
         projectCode: String,
         resourceCode: String,
-        resourceName: String
+        resourceName: String,
+        tenantId: String?
     ) = Unit
 
     override fun modifyResource(
@@ -128,6 +129,7 @@ class MockAuthResourceApi : AuthResourceApi {
         resourceType: AuthResourceType,
         projectCode: String,
         user: String,
-        resourceList: List<ResourceRegisterInfo>
+        resourceList: List<ResourceRegisterInfo>,
+        tenantId: String?
     ) = Unit
 }

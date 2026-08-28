@@ -73,7 +73,7 @@
                                     >
                                         <a
                                             target="_blank"
-                                            :href="`/console/pipeline/${versionDetail.projectCode}`"
+                                            :href="`${window.getRoutePrefix()}/pipeline/${versionDetail.projectCode}`"
                                         > {{ $t('store.测试') }} </a>
                                     </span>
                                 </div>

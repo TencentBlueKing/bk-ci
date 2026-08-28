@@ -51,7 +51,8 @@ interface MarketAtomCommonService {
         version: String,
         releaseType: ReleaseTypeEnum,
         taskDataMap: Map<String, Any>,
-        fieldCheckConfirmFlag: Boolean? = false
+        fieldCheckConfirmFlag: Boolean? = false,
+        tenantId: String? = null
     )
 
     fun parseBaseTaskJson(
@@ -63,10 +64,11 @@ interface MarketAtomCommonService {
     ): GetAtomConfigResult
 
     fun checkEditCondition(
-        atomCode: String
+        atomCode: String,
+        tenantId: String? = null
     ): Boolean
 
-    fun getNormalUpgradeFlag(atomCode: String, status: Int): Boolean
+    fun getNormalUpgradeFlag(atomCode: String, status: Int, tenantId: String? = null): Boolean
 
     fun handleAtomCache(
         atomId: String,
@@ -81,6 +83,7 @@ interface MarketAtomCommonService {
         buildLessRunFlag: Boolean? = null,
         latestFlag: Boolean? = null,
         props: String? = null,
+        tenantId: String? = null,
         serviceScope: List<String>? = null
     )
 

@@ -307,11 +307,12 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
         version: String,
         releaseType: ReleaseTypeEnum,
         taskDataMap: Map<String, Any>,
-        fieldCheckConfirmFlag: Boolean?
+        fieldCheckConfirmFlag: Boolean?,
+        tenantId: String?
     ) {
         val validateReleaseTypeList = listOf(ReleaseTypeEnum.COMPATIBILITY_FIX, ReleaseTypeEnum.COMPATIBILITY_UPGRADE)
         val validateFlag = releaseType in validateReleaseTypeList
-        val dbAtomProps = marketAtomDao.getLatestAtomByCode(dslContext, atomCode)?.props
+        val dbAtomProps = marketAtomDao.getLatestAtomByCode(dslContext, atomCode, tenantId)?.props
         if (dbAtomProps != null && (validateFlag || getCancelValidateFlag(
                 atomId = atomId,
                 releaseType = releaseType,
@@ -761,9 +762,13 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
             ""
         }
 
-    override fun checkEditCondition(atomCode: String): Boolean {
+    override fun checkEditCondition(atomCode: String, tenantId: String?): Boolean {
         // 查询插件的最新记录
-        val newestAtomRecord = atomDao.getNewestAtomByCode(dslContext, atomCode)
+        val newestAtomRecord = atomDao.getNewestAtomByCode(
+            dslContext = dslContext,
+            atomCode = atomCode,
+            tenantId = tenantId
+        )
             ?: throw ErrorCodeException(errorCode = CommonMessageCode.PARAMETER_IS_INVALID, params = arrayOf(atomCode))
         val atomFinalStatusList = listOf(
             AtomStatusEnum.AUDIT_REJECT.status.toByte(),
@@ -776,8 +781,12 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
         return atomFinalStatusList.contains(newestAtomRecord.atomStatus)
     }
 
-    override fun getNormalUpgradeFlag(atomCode: String, status: Int): Boolean {
-        val releaseTotalNum = marketAtomDao.countReleaseAtomByCode(dslContext, atomCode)
+    override fun getNormalUpgradeFlag(atomCode: String, status: Int, tenantId: String?): Boolean {
+        val releaseTotalNum = marketAtomDao.countReleaseAtomByCode(
+            dslContext = dslContext,
+            atomCode = atomCode,
+            tenantId = tenantId
+        )
         val currentNum = if (status == AtomStatusEnum.RELEASED.status) 1 else 0
         return releaseTotalNum > currentNum
     }
@@ -861,6 +870,7 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
         buildLessRunFlag: Boolean?,
         latestFlag: Boolean?,
         props: String?,
+        tenantId: String?,
         serviceScope: List<String>?
     ) {
         val atomRecord = atomDao.getPipelineAtom(dslContext, atomId) ?: return
@@ -888,7 +898,7 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
             val updateLatestAtomCacheFlag = if (latestFlag == true) {
                 true
             } else {
-                val latestAtomRecord = marketAtomDao.getLatestAtomByCode(dslContext, atomCode)
+                val latestAtomRecord = marketAtomDao.getLatestAtomByCode(dslContext, atomCode, tenantId)
                 atomId == latestAtomRecord?.id
             }
             if (updateLatestAtomCacheFlag) {

@@ -27,6 +27,8 @@
 
 package com.tencent.devops.project.api.service
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_BK_TENANT_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ACCESS_TOKEN
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
@@ -88,7 +90,10 @@ interface ServiceProjectResource {
         page: Int? = null,
         @Parameter(description = "每页条数(默认10)", required = false, example = "10")
         @QueryParam("pageSize")
-        pageSize: Int? = null
+        pageSize: Int? = null,
+        @Parameter(description = "租户ID", required = false)
+        @HeaderParam(AUTH_HEADER_BK_TENANT_ID)
+        tenantId: String? = null
     ): Result<List<ProjectVO>>
 
     @GET
@@ -154,7 +159,10 @@ interface ServiceProjectResource {
     fun getProjectByUser(
         @Parameter(description = "userId", required = true)
         @QueryParam("userId")
-        userName: String
+        userName: String,
+        @Parameter(description = "租户ID", required = false)
+        @HeaderParam(AUTH_HEADER_BK_TENANT_ID)
+        tenantId: String? = null
     ): Result<List<ProjectVO>>
 
     @GET
@@ -195,7 +203,10 @@ interface ServiceProjectResource {
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
         @Parameter(description = "项目信息", required = true)
-        projectCreateInfo: ProjectCreateInfo
+        projectCreateInfo: ProjectCreateInfo,
+        @Parameter(description = "accessToken", required = false)
+        @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
+        accessToken: String? = null
     ): Result<Boolean>
 
     @POST
@@ -242,7 +253,10 @@ interface ServiceProjectResource {
         projectCode: String,
         @Parameter(description = "项目名称", required = true)
         @QueryParam("projectName")
-        projectName: String
+        projectName: String,
+        @Parameter(description = "租户ID", required = false)
+        @HeaderParam(AUTH_HEADER_BK_TENANT_ID)
+        tenantId: String? = null
     ): Result<Boolean>
 
     @PUT
@@ -261,6 +275,9 @@ interface ServiceProjectResource {
         @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
+        @Parameter(description = "租户ID", required = false)
+        @HeaderParam(AUTH_HEADER_BK_TENANT_ID)
+        tenantId: String? = null,
         @Parameter(description = "projectName", required = true)
         @PathParam("projectName")
         projectName: String
@@ -278,7 +295,10 @@ interface ServiceProjectResource {
         name: String,
         @Parameter(description = "项目ID")
         @QueryParam("english_name")
-        projectId: String?
+        projectId: String?,
+        @Parameter(description = "租户ID", required = false)
+        @HeaderParam(AUTH_HEADER_BK_TENANT_ID)
+        tenantId: String? = null
     ): Result<Boolean>
 
     @POST
@@ -314,7 +334,7 @@ interface ServiceProjectResource {
         maxId: Long
     ): Result<List<ProjectBaseInfo>>
 
-    @Operation(summary = "查看灰度项目列表")
+    @Operation(summary = "查看保密项目列表")
     @GET
     @Path("/listSecrecyProject")
     fun listSecrecyProject(): Result<Set<String>?>
@@ -388,7 +408,10 @@ interface ServiceProjectResource {
     fun getProjectListByProductId(
         @Parameter(description = "产品ID", required = true)
         @QueryParam("productId")
-        productId: Int
+        productId: Int,
+        @Parameter(description = "租户ID", required = true)
+        @HeaderParam(AUTH_HEADER_BK_TENANT_ID)
+        tenantId: String?
     ): Result<List<ProjectBaseInfo>>
 
     @GET
@@ -410,4 +433,9 @@ interface ServiceProjectResource {
         @Parameter(description = "插件展示顺序", required = true)
         pluginDetailsDisplayOrder: List<PluginDetailsDisplayOrder>
     ): Result<Boolean>
+
+    @GET
+    @Path("/listAllTenantIds")
+    @Operation(summary = "获取所有项目的租户ID列表")
+    fun listAllTenantIds(): Result<List<String>>
 }

@@ -35,6 +35,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.tenant.TenantUtils
 import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.store.tables.TAtom
@@ -532,7 +533,12 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
         } else {
             normalStatusList.toMutableList().apply {
                 if (VersionUtils.isLatestVersion(version)) {
-                    val releaseCount = marketAtomDao.countReleaseAtomByCode(dslContext, atomCode, version)
+                    val releaseCount = marketAtomDao.countReleaseAtomByCode(
+                        dslContext = dslContext,
+                        atomCode = atomCode,
+                        version = version,
+                        tenantId = TenantUtils.getTenantIdByEnglishName(projectCode)
+                    )
                     if (releaseCount > 0) {
                         // 如果当前大版本内还有已发布的版本，则xx.latest只对应最新已发布的版本
                         this.clear()
@@ -568,7 +574,12 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
         atomEnvRequest: AtomEnvRequest
     ): Result<Boolean> {
         logger.info("updateMarketAtomEnvInfo params:[$projectCode,$atomCode,$version,$atomEnvRequest]")
-        val atomResult = atomService.getPipelineAtom(projectCode, atomCode, version) // 判断插件查看的权限
+        val atomResult = atomService.getPipelineAtom(
+            projectCode = projectCode,
+            atomCode = atomCode,
+            version = version,
+            tenantId = TenantUtils.getTenantIdByEnglishName(projectCode)
+        ) // 判断插件查看的权限
         val status = atomResult.status
         if (0 != status) {
             return Result(atomResult.status, atomResult.message ?: "", false)

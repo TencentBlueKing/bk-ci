@@ -30,6 +30,7 @@ package com.tencent.devops.project.service
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.db.utils.optionalTenantId
 import com.tencent.devops.common.auth.api.pojo.SubjectScopeInfo
 import com.tencent.devops.common.auth.callback.AuthConstants
 import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
@@ -92,8 +93,7 @@ class ProjectApprovalService @Autowired constructor(
     fun update(
         userId: String,
         projectUpdateInfo: ProjectUpdateInfo,
-        approvalStatus: Int,
-        subjectScopes: List<SubjectScopeInfo>
+        approvalStatus: Int
     ): Int {
         val tipsStatus = when (approvalStatus) {
             ProjectApproveStatus.CREATE_PENDING.status -> ProjectTipsStatus.SHOW_CREATE_PENDING.status
@@ -105,7 +105,6 @@ class ProjectApprovalService @Autowired constructor(
             userId = userId,
             projectUpdateInfo = projectUpdateInfo,
             approvalStatus = approvalStatus,
-            subjectScopes = subjectScopes,
             tipsStatus = tipsStatus
         )
     }
@@ -170,6 +169,7 @@ class ProjectApprovalService @Autowired constructor(
                 centerName = centerName ?: "",
                 kind = kind ?: 0,
                 logoAddress = logoAddr,
+                tenantId = optionalTenantId(),
                 productId = productId,
                 productName = projectApprovalInfo?.productName,
                 kpiCode = projectApprovalInfo?.kpiCode,
@@ -293,7 +293,8 @@ class ProjectApprovalService @Autowired constructor(
                 productName = projectApprovalInfo.productName,
                 kpiCode = projectApprovalInfo.kpiCode,
                 kpiName = projectApprovalInfo.kpiName,
-                properties = updateProjectProperties
+                properties = updateProjectProperties,
+                tenantId = projectInfo.optionalTenantId()
             )
         }
         val logoAddress = projectUpdateInfo.logoAddress
@@ -408,14 +409,15 @@ class ProjectApprovalService @Autowired constructor(
                 englishName = englishName,
                 projectType = projectType ?: 0,
                 description = description ?: "",
-                bgId = bgId?.toLong() ?: 0L,
+                bgId = bgId ?: 0L,
                 bgName = bgName ?: "",
-                deptId = deptId?.toLong() ?: 0L,
+                deptId = deptId ?: 0L,
                 deptName = deptName ?: "",
-                centerId = centerId?.toLong() ?: 0L,
+                centerId = centerId ?: 0L,
                 centerName = centerName ?: "",
                 kind = kind ?: 0,
-                logoAddress = logoAddr
+                logoAddress = logoAddr,
+                tenantId = optionalTenantId()
             )
         }
         create(

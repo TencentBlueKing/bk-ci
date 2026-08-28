@@ -88,7 +88,7 @@
                 </p>
                 <p>
                     <label class="block-row-label">{{ $t('delegation.authTime') }}</label>
-                    <span class="block-row-value">{{ convertTime(resourceAuthData.handoverTime) }}</span>
+                    <span class="block-row-value"><time-display :value="resourceAuthData.handoverTime" /></span>
                 </p>
             </div>
         </section>
@@ -170,11 +170,12 @@
         RESOURCE_ACTION,
         RESOURCE_TYPE
     } from '@/utils/permission'
-    import { convertTime } from '@/utils/util'
     import { mapActions, mapState } from 'vuex'
+    import TimeDisplay from '../../../../common-lib/time-display'
     export default {
         components: {
-            Logo
+            Logo,
+            TimeDisplay
         },
         data () {
             return {
@@ -208,7 +209,6 @@
             this.fetchResourceAuth()
         },
         methods: {
-            convertTime,
             ...mapActions('pipelines', [
                 'getResourceAuthorization',
                 'resetPipelineAuthorization'

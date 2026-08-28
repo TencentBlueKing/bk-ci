@@ -79,6 +79,8 @@ data class ProjectUpdateInfo(
     val productId: Int? = null,
     @get:Schema(title = "运营产品名称")
     val productName: String? = null,
+    @get:Schema(title = "租户ID")
+    var tenantId: String? = null,
     @get:Schema(title = "KPI代码")
     val kpiCode: String? = null,
     @get:Schema(title = "KPI名称")

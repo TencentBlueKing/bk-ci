@@ -150,6 +150,58 @@ BEGIN
     ALTER TABLE T_ATOM ADD `OWNER_STORE_CODE` varchar(64) DEFAULT NULL COMMENT '归属应用标识';
     END IF;
 
+    -- 存量 TENANT_ID='default' 刷成 NULL，列默认改为可空（单租户不过滤）
+    IF EXISTS(SELECT 1
+              FROM information_schema.COLUMNS
+              WHERE TABLE_SCHEMA = db
+                AND TABLE_NAME = 'T_ATOM'
+                AND COLUMN_NAME = 'TENANT_ID') THEN
+        IF EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_ATOM'
+                    AND COLUMN_NAME = 'TENANT_ID'
+                    AND COLUMN_DEFAULT = 'default') THEN
+            ALTER TABLE T_ATOM
+                MODIFY COLUMN `TENANT_ID` varchar(32) DEFAULT NULL COMMENT '租户ID，存量单租户可为空';
+        END IF;
+        UPDATE T_ATOM SET `TENANT_ID` = NULL WHERE `TENANT_ID` = 'default';
+    END IF;
+
+    IF EXISTS(SELECT 1
+              FROM information_schema.COLUMNS
+              WHERE TABLE_SCHEMA = db
+                AND TABLE_NAME = 'T_TEMPLATE'
+                AND COLUMN_NAME = 'TENANT_ID') THEN
+        IF EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_TEMPLATE'
+                    AND COLUMN_NAME = 'TENANT_ID'
+                    AND COLUMN_DEFAULT = 'default') THEN
+            ALTER TABLE T_TEMPLATE
+                MODIFY COLUMN `TENANT_ID` varchar(32) DEFAULT NULL COMMENT '租户ID，存量单租户可为空';
+        END IF;
+        UPDATE T_TEMPLATE SET `TENANT_ID` = NULL WHERE `TENANT_ID` = 'default';
+    END IF;
+
+    IF EXISTS(SELECT 1
+              FROM information_schema.COLUMNS
+              WHERE TABLE_SCHEMA = db
+                AND TABLE_NAME = 'T_IMAGE'
+                AND COLUMN_NAME = 'TENANT_ID') THEN
+        IF EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_IMAGE'
+                    AND COLUMN_NAME = 'TENANT_ID'
+                    AND COLUMN_DEFAULT = 'default') THEN
+            ALTER TABLE T_IMAGE
+                MODIFY COLUMN `TENANT_ID` varchar(32) DEFAULT NULL COMMENT '租户ID，存量单租户可为空';
+        END IF;
+        UPDATE T_IMAGE SET `TENANT_ID` = NULL WHERE `TENANT_ID` = 'default';
+    END IF;
+
     COMMIT;
 END <CI_UBF>
 DELIMITER ;

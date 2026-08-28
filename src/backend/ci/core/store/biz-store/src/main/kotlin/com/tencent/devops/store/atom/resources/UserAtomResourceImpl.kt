@@ -29,6 +29,7 @@ package com.tencent.devops.store.atom.resources
 
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.service.tenant.TenantUtils
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.atom.UserAtomResource
 import com.tencent.devops.store.atom.dao.AtomQueryParam
@@ -64,6 +65,7 @@ class UserAtomResourceImpl @Autowired constructor(
             atomCode = atomCode,
             version = version,
             queryOfflineFlag = queryOfflineFlag ?: true,
+            tenantId = TenantUtils.getTenantIdByEnglishName(projectCode),
             serviceScope = serviceScope
         )
     }
@@ -105,12 +107,17 @@ class UserAtomResourceImpl @Autowired constructor(
             userId = userId,
             queryParam = queryParam,
             page = page,
-            pageSize = pageSize
+            pageSize = pageSize,
+            tenantId = TenantUtils.getTenantIdByEnglishName(projectCode)
         )
     }
 
     override fun getPipelineAtomVersions(projectCode: String, atomCode: String): Result<List<VersionInfo>> {
-        return atomService.getPipelineAtomVersions(projectCode, atomCode)
+        return atomService.getPipelineAtomVersions(
+            projectCode = projectCode,
+            atomCode = atomCode,
+            tenantId = TenantUtils.getTenantIdByEnglishName(projectCode)
+        )
     }
 
     override fun getInstalledAtoms(
@@ -130,17 +137,19 @@ class UserAtomResourceImpl @Autowired constructor(
                 serviceScope = serviceScope,
                 name = name,
                 page = page,
-                pageSize = pageSize
+                pageSize = pageSize,
+                tenantId = TenantUtils.getTenantIdByEnglishName(projectCode)
             )
         )
     }
 
     override fun updateAtomBaseInfo(
         userId: String,
+        tenantId: String?,
         atomCode: String,
         atomBaseInfoUpdateRequest: AtomBaseInfoUpdateRequest
     ): Result<Boolean> {
-        return atomService.updateAtomBaseInfo(userId, atomCode, atomBaseInfoUpdateRequest)
+        return atomService.updateAtomBaseInfo(userId, atomCode, atomBaseInfoUpdateRequest, tenantId)
     }
 
     override fun uninstallAtom(
@@ -149,7 +158,12 @@ class UserAtomResourceImpl @Autowired constructor(
         atomCode: String,
         unInstallReq: UnInstallReq
     ): Result<Boolean> {
-        return atomService.uninstallAtom(userId, projectCode, atomCode, unInstallReq)
+        return atomService.uninstallAtom(
+            userId = userId,
+            projectCode = projectCode,
+            atomCode = atomCode,
+            unInstallReq = unInstallReq
+        )
     }
 
     override fun getAtomOutputInfos(atomInfos: Set<String>): Result<Map<String, String>?> {

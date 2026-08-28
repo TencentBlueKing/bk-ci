@@ -36,8 +36,8 @@ import com.tencent.devops.common.web.RestResource
 class ServiceBkRepoResourceImpl(
     private val bkRepoClient: BkRepoClient
 ) : ServiceBkRepoResource {
-    override fun createProjectResource(userId: String, projectId: String): Result<Boolean> {
-        return Result(bkRepoClient.createBkRepoResource(userId, projectId))
+    override fun createProjectResource(userId: String, tenantId: String?, projectId: String): Result<Boolean> {
+        return Result(bkRepoClient.createBkRepoResource(userId, projectId, tenantId))
     }
 
     override fun enableProject(

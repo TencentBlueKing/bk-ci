@@ -117,8 +117,8 @@
     import {
         CODE_REPOSITORY_CACHE,
         CODE_REPOSITORY_SEARCH_VAL,
-        getCodelibConfig,
         convertToCamelCase,
+        getCodelibConfig,
         isGit,
         isGitLab,
         isGithub,

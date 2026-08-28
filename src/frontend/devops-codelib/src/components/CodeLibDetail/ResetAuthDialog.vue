@@ -582,7 +582,7 @@
                     this.refreshGitOauth({
                         type: this.isGit ? 'git' : 'tgit',
                         resetType: this.isGit ? 'resetGitOauth' : 'resetTGitOauth',
-                        redirectUrl: window.location.href,
+                        redirectUrl: encodeURIComponent(window.location.href),
                         refreshToken: true
                     }).then(res => {
                         window.location.href = res.url
@@ -640,7 +640,7 @@
                 const { projectId, credentialList } = this
                 const { credentialId } = credentialList[index]
                 window.open(
-                    `/console/ticket/${projectId}/editCredential/${credentialId}`,
+                    this.getTicketEditUrl(projectId, credentialId),
                     '_blank'
                 )
             },
@@ -648,7 +648,7 @@
                 const { projectId, codelibConfig } = this
                 const credentialType = this.isScmConfig ? this.newRepoInfo.credentialType : codelibConfig.addType
                 window.open(
-                    `/console/ticket/${projectId}/createCredential/${credentialType}/true`,
+                    this.getTicketCreateUrl(projectId, credentialType),
                     '_blank'
                 )
             },
@@ -697,6 +697,12 @@
                         ...this.cacheRepoInfo
                     }
                 }
+            },
+            getTicketEditUrl (projectId, credentialId) {
+                return `${window.getRoutePrefix()}/ticket/${projectId}/editCredential/${credentialId}`
+            },
+            getTicketCreateUrl (projectId, credentialType) {
+                return `${window.getRoutePrefix()}/ticket/${projectId}/createCredential/${credentialType}/true`
             }
         }
     }

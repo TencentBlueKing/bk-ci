@@ -29,12 +29,12 @@ package com.tencent.devops.store.image.resources
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.image.UserImageReleaseResource
+import com.tencent.devops.store.image.service.ImageReleaseService
 import com.tencent.devops.store.pojo.common.publication.StoreProcessInfo
 import com.tencent.devops.store.pojo.image.request.MarketImageRelRequest
 import com.tencent.devops.store.pojo.image.request.MarketImageUpdateRequest
 import com.tencent.devops.store.pojo.image.request.OfflineMarketImageReq
 import com.tencent.devops.store.pojo.image.response.ImageAgentTypeInfo
-import com.tencent.devops.store.image.service.ImageReleaseService
 import com.tencent.devops.store.image.service.MarketImageService
 import com.tencent.devops.store.pojo.common.version.StoreShowVersionInfo
 import org.springframework.beans.factory.annotation.Autowired
@@ -47,6 +47,7 @@ class UserImageReleaseResourceImpl @Autowired constructor(
 
     override fun offlineMarketImage(
         userId: String,
+        tenantId: String?,
         imageCode: String,
         offlineMarketImageReq: OfflineMarketImageReq
     ): Result<Boolean> {
@@ -55,39 +56,51 @@ class UserImageReleaseResourceImpl @Autowired constructor(
             imageCode = imageCode,
             version = offlineMarketImageReq.version,
             reason = offlineMarketImageReq.reason,
-            interfaceName = "/user/market/desk/image/offline/imageCodes/{imageCode}/versions"
+            interfaceName = "/user/market/desk/image/offline/imageCodes/{imageCode}/versions",
+            tenantId = tenantId
         )
     }
 
     override fun addMarketImage(
         userId: String,
+        tenantId: String?,
         imageCode: String,
         marketImageRelRequest: MarketImageRelRequest
     ): Result<String> {
-        return imageReleaseService.addMarketImage(userId, imageCode, marketImageRelRequest)
+        return imageReleaseService.addMarketImage(
+            userId = userId,
+            imageCode = imageCode,
+            marketImageRelRequest = marketImageRelRequest,
+            tenantId = tenantId
+        )
     }
 
     override fun updateMarketImage(
         userId: String,
+        tenantId: String?,
         marketImageUpdateRequest: MarketImageUpdateRequest
     ): Result<String?> {
-        return imageReleaseService.updateMarketImage(userId, marketImageUpdateRequest)
+        return imageReleaseService.updateMarketImage(
+            userId = userId,
+            marketImageUpdateRequest = marketImageUpdateRequest,
+            tenantId = tenantId
+        )
     }
 
-    override fun getProcessInfo(userId: String, imageId: String): Result<StoreProcessInfo> {
-        return imageReleaseService.getProcessInfo(userId, imageId)
+    override fun getProcessInfo(userId: String, tenantId: String?, imageId: String): Result<StoreProcessInfo> {
+        return imageReleaseService.getProcessInfo(userId, imageId, tenantId)
     }
 
-    override fun cancelRelease(userId: String, imageId: String): Result<Boolean> {
-        return imageReleaseService.cancelRelease(userId, imageId)
+    override fun cancelRelease(userId: String, tenantId: String?, imageId: String): Result<Boolean> {
+        return imageReleaseService.cancelRelease(userId, imageId, tenantId)
     }
 
-    override fun recheck(userId: String, imageId: String): Result<Boolean> {
-        return imageReleaseService.recheck(userId, imageId)
+    override fun recheck(userId: String, tenantId: String?, imageId: String): Result<Boolean> {
+        return imageReleaseService.recheck(userId = userId, imageId = imageId, tenantId = tenantId)
     }
 
-    override fun passTest(userId: String, imageId: String): Result<Boolean> {
-        return imageReleaseService.passTest(userId, imageId)
+    override fun passTest(userId: String, tenantId: String?, imageId: String): Result<Boolean> {
+        return imageReleaseService.passTest(userId = userId, imageId = imageId, tenantId = tenantId)
     }
 
     override fun getImageAgentTypes(userId: String): Result<List<ImageAgentTypeInfo>> {

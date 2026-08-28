@@ -23,6 +23,7 @@ import com.tencent.devops.store.api.atom.ServiceMarketAtomResource
 import com.tencent.devops.store.api.image.ServiceStoreImageResource
 import com.tencent.devops.store.pojo.atom.ElementThirdPartySearchParam
 import com.tencent.devops.store.pojo.image.response.ImageDetail
+import org.apache.commons.lang3.StringUtils
 import org.json.JSONObject
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -55,10 +56,11 @@ class TransferCacheService @Autowired constructor(
         .expireAfterWrite(10, TimeUnit.MINUTES)
         .build<String, ImageDetail?> { key ->
             kotlin.runCatching {
-                val (userId, imageCode, imageVersion) = key.split("@@")
+                val (userId, imageCode, imageVersion, tenantId) = key.split("@@")
                 client.get(ServiceStoreImageResource::class)
                     .getImagesByCodeAndVersion(
                         userId = userId,
+                        tenantId = if (StringUtils.isBlank(tenantId)) null else tenantId,
                         imageCode = imageCode,
                         version = imageVersion
                     ).data
@@ -184,8 +186,8 @@ class TransferCacheService @Autowired constructor(
 
     fun getAtomDefaultValue(key: String) = atomDefaultValueCache.get(key) ?: JSONObject()
 
-    fun getStoreImageDetail(userId: String, imageCode: String, imageVersion: String?) =
-        storeImageInfoCache.get("$userId@@$imageCode@@${imageVersion ?: ""}")
+    fun getStoreImageDetail(userId: String, imageCode: String, imageVersion: String?, tenantId: String? = null) =
+        storeImageInfoCache.get("$userId@@$imageCode@@${imageVersion ?: ""}@${tenantId ?: ""}")
 
     fun getProjectGroupAndUsers(projectId: String) = projectGroupAndUsersCache.get(projectId)
 

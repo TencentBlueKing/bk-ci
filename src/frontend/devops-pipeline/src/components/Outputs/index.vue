@@ -197,6 +197,10 @@
                                     >
                                         {{ block.value[row.key] || "--" }}
                                     </span>
+                                    <time-display
+                                        v-else-if="['createdTime', 'modifiedTime'].includes(row.key)"
+                                        :value="block.value[row.key]"
+                                    />
                                     <span
                                         v-else
                                         class="pipeline-exec-output-block-row-value"
@@ -269,8 +273,9 @@
     import ThirdPartyReport from '@/components/Outputs/ThirdPartyReport'
     import ExtMenu from '@/components/pipelineList/extMenu'
     import { extForFile, repoTypeMap, repoTypeNameMap } from '@/utils/pipelineConst'
-    import { convertFileSize, convertTime } from '@/utils/util'
+    import { convertFileSize } from '@/utils/util'
     import { mapActions, mapState } from 'vuex'
+    import TimeDisplay from '../../../../common-lib/time-display'
 
     export default {
         components: {
@@ -280,7 +285,8 @@
             ExtMenu,
             CopyToCustomRepoDialog,
             // ArtifactsList
-            ArtifactDownloadButton
+            ArtifactDownloadButton,
+            TimeDisplay
         },
         props: {
             currentTab: {
@@ -466,119 +472,6 @@
                     { key: 'md5', name: 'MD5' }
                 ]
             }
-        // filterConditionLength () {
-        //     if (!this.filtering) return 0
-        //     return Object.keys(this.filterConditionMap).filter(key => {
-        //         if (Array.isArray(this.filterConditionMap[key])) {
-        //             return this.filterConditionMap[key].length > 0
-        //         }
-        //         return !!this.filterConditionMap[key]
-        //     }).length
-        // },
-        // conditions () {
-        //     return [
-        //         {
-        //             id: 'triggerTime',
-        //             label: this.$t('details.triggerTime'),
-        //             component: 'bk-date-picker',
-        //             props: {
-        //                 type: 'datetimerange',
-        //                 shortcuts: this.shortcuts,
-        //                 value: this.filterConditionMap.timeRange
-        //             },
-        //             listeners: {
-        //                 change: (range) => {
-        //                     this.filterConditionMap.timeRange = range
-        //                 }
-        //             }
-        //         },
-        //         {
-        //             id: 'buildNo',
-        //             label: this.$t('构建号'),
-        //             component: 'bk-input',
-        //             props: {
-        //                 value: this.filterConditionMap.buildNo
-        //             },
-        //             listeners: {
-        //                 change: (buildNo) => {
-        //                     this.filterConditionMap.buildNo = buildNo
-        //                 }
-        //             }
-        //         },
-        //         {
-        //             id: 'filename',
-        //             label: this.$t('文件名'),
-        //             component: 'bk-input',
-        //             props: {
-        //                 value: this.filterConditionMap.filename
-        //             },
-        //             listeners: {
-        //                 change: (filename) => {
-        //                     this.filterConditionMap.filename = filename
-        //                 }
-        //             }
-        //         },
-        //         {
-        //             id: 'creator',
-        //             label: this.$t('触发人'),
-        //             component: 'bk-input',
-        //             props: {
-        //                 value: this.filterConditionMap.creator
-        //             },
-        //             listeners: {
-        //                 change: (creator) => {
-        //                     this.filterConditionMap.creator = creator
-        //                 }
-        //             }
-        //         },
-        //         {
-        //             id: 'property',
-        //             label: this.$t('元数据'),
-        //             component: 'bk-input',
-        //             props: {
-        //                 value: this.filterConditionMap.property
-        //             },
-        //             listeners: {
-        //                 change: (property) => {
-        //                     this.filterConditionMap.property = property
-        //                 }
-        //             }
-        //         }
-        //     ]
-        // },
-        // shortcuts () {
-        //     return [
-        //         {
-        //             text: '今天',
-        //             value () {
-        //                 const end = new Date()
-        //                 const start = new Date(end.getFullYear(), end.getMonth(), end.getDate())
-        //                 return [start, end]
-        //             },
-        //             onClick: picker => {
-        //                 console.log(picker)
-        //             }
-        //         },
-        //         {
-        //             text: '近7天',
-        //             value () {
-        //                 const end = new Date()
-        //                 const start = new Date()
-        //                 start.setTime(start.getTime() - 3600 * 1000 * 24 * 7)
-        //                 return [start, end]
-        //             }
-        //         },
-        //         {
-        //             text: '近15天',
-        //             value () {
-        //                 const end = new Date()
-        //                 const start = new Date()
-        //                 start.setTime(start.getTime() - 3600 * 1000 * 24 * 15)
-        //                 return [start, end]
-        //             }
-        //         }
-        //     ]
-        // }
         },
         watch: {
             visibleOutputs (outputs) {
@@ -830,8 +723,8 @@
                         ...res,
                         artifactoryTypeTxt: repoTypeMap[output.artifactoryType] ?? '--',
                         size: output.folder ? convertFileSize(this.getFolderSize(output), 'B') : res.size > 0 ? convertFileSize(res.size, 'B') : '--',
-                        createdTime: convertTime(res.createdTime * 1000),
-                        modifiedTime: convertTime(res.modifiedTime * 1000),
+                        createdTime: res.createdTime * 1000,
+                        modifiedTime: res.modifiedTime * 1000,
                         icon: !output.folder ? extForFile(res.name) : 'folder',
                         include: this.getInclude(output)
                     }

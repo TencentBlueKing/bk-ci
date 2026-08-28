@@ -41,6 +41,7 @@ data class MarketAtomDaoQuery(
     val recommendFlag: Boolean? = null,
     val qualityFlag: Boolean? = null,
     val serviceScope: ServiceScopeEnum? = null,
+    val tenantId: String? = null,
     val sortType: MarketAtomSortTypeEnum? = null,
     val desc: Boolean? = null,
     val page: Int? = null,

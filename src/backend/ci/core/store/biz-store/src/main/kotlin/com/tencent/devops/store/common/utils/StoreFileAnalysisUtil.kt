@@ -30,6 +30,7 @@ package com.tencent.devops.store.common.utils
 import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.artifactory.api.ServiceArchiveAtomFileResource
 import com.tencent.devops.artifactory.api.ServiceArchiveComponentFileResource
+import com.tencent.devops.artifactory.constant.bkRepoStoreProjectId
 import com.tencent.devops.artifactory.pojo.ArchiveAtomRequest
 import com.tencent.devops.artifactory.pojo.ArchiveStorePkgRequest
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
@@ -66,7 +67,6 @@ object StoreFileAnalysisUtil {
 
     private val logger = LoggerFactory.getLogger(StoreFileAnalysisUtil::class.java)
 
-    private const val BK_CI_STORE_DIR = "bk-store"
     private const val BK_CI_PATH_REGEX = "(\\\$\\{\\{indexFile\\()(\"[^\"]*\")"
     private val fileSeparator: String = FileSystems.getDefault().getSeparator()
 
@@ -199,7 +199,7 @@ object StoreFileAnalysisUtil {
     }
 
     fun buildStoreArchivePath(storeDir: String) =
-        "${getStoreBasePath()}$fileSeparator$BK_CI_STORE_DIR$fileSeparator$storeDir"
+        "${getStoreBasePath()}$fileSeparator${bkRepoStoreProjectId()}$fileSeparator$storeDir"
 
     fun isDirectoryNotEmpty(path: String?): Boolean {
         if (path == null) {

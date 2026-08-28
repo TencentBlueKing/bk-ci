@@ -225,7 +225,7 @@
                         </bk-option>
                         <a
                             v-if="form.projectCode"
-                            :href="`/console/ticket/${form.projectCode}/createCredential/USERNAME_PASSWORD/true`"
+                            :href="`${window.getRoutePrefix()}/ticket/${form.projectCode}/createCredential/USERNAME_PASSWORD/true`"
                             slot="extension"
                             target="_blank"
                         > {{ $t('store.新增凭证') }} </a>

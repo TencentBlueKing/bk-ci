@@ -22,7 +22,7 @@ class SampleAuthMonitorSpaceService : AuthMonitorSpaceService {
 
     override fun getMonitorSpaceDetail(spaceUid: String): MonitorSpaceDetailVO? = null
 
-    override fun getMonitorGroupConfig(groupCode: String): String? = null
+    override fun getMonitorGroupConfig(groupCode: String, tenantId: String?): String? = null
 
     override fun getMonitorActionName(action: String): String? = null
 }

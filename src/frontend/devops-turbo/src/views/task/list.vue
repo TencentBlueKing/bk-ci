@@ -106,7 +106,7 @@
                                     {{ props.row.pipelineName }}
                                     <a
                                         @click.stop
-                                        :href="`/console/pipeline/${projectId}/${props.row.pipelineId}/edit`"
+                                        :href="pipelineHref"
                                         target="_blank"
                                         class="g-turbo-click-text"
                                     ><logo
@@ -192,6 +192,9 @@
         computed: {
             projectId () {
                 return this.$route.params.projectId
+            },
+            pipelineHref () {
+                return `${window.getRoutePrefix()}/pipeline/${this.projectId}/${this.pipelineId}/edit`
             }
         },
 

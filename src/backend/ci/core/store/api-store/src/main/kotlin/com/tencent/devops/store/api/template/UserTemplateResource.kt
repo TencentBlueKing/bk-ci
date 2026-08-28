@@ -27,6 +27,7 @@
 
 package com.tencent.devops.store.api.template
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_BK_TENANT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Page
@@ -44,9 +45,9 @@ import com.tencent.devops.store.pojo.template.TemplatePublishedVersionInfo
 import com.tencent.devops.store.pojo.template.enums.MarketTemplateSortTypeEnum
 import com.tencent.devops.store.pojo.template.enums.TemplateRdTypeEnum
 import com.tencent.devops.store.pojo.template.enums.TemplateStatusEnum
-import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.ws.rs.Consumes
 import jakarta.ws.rs.DELETE
 import jakarta.ws.rs.GET
@@ -73,6 +74,9 @@ interface UserTemplateResource {
         @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
+        @Parameter(description = "租户ID", required = false)
+        @HeaderParam(AUTH_HEADER_BK_TENANT_ID)
+        tenantId: String? = null,
         @Parameter(description = "页码", required = false)
         @QueryParam("page")
         page: Int?,
@@ -88,6 +92,9 @@ interface UserTemplateResource {
         @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
+        @Parameter(description = "租户ID", required = false)
+        @HeaderParam(AUTH_HEADER_BK_TENANT_ID)
+        tenantId: String? = null,
         @Parameter(description = "搜索关键字", required = false)
         @QueryParam("keyword")
         keyword: String?,
@@ -130,6 +137,9 @@ interface UserTemplateResource {
         @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
+        @Parameter(description = "租户ID", required = false)
+        @HeaderParam(AUTH_HEADER_BK_TENANT_ID)
+        tenantId: String? = null,
         @Parameter(description = "模板Code", required = true)
         @PathParam("templateCode")
         templateCode: String
@@ -142,6 +152,9 @@ interface UserTemplateResource {
         @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
+        @Parameter(description = "租户ID", required = false)
+        @HeaderParam(AUTH_HEADER_BK_TENANT_ID)
+        tenantId: String? = null,
         @Parameter(description = "模板ID", required = true)
         @PathParam("templateId")
         templateId: String
@@ -154,6 +167,9 @@ interface UserTemplateResource {
         @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
+        @Parameter(description = "租户ID", required = false)
+        @HeaderParam(AUTH_HEADER_BK_TENANT_ID)
+        tenantId: String? = null,
         @Parameter(description = "模板代码", required = true)
         @PathParam("templateCode")
         templateCode: String
@@ -166,6 +182,9 @@ interface UserTemplateResource {
         @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
+        @Parameter(description = "租户ID", required = false)
+        @HeaderParam(AUTH_HEADER_BK_TENANT_ID)
+        tenantId: String? = null,
         @Parameter(description = "安装模板到项目请求报文体", required = true)
         installTemplateReq: InstallTemplateReq
     ): Result<Boolean>
@@ -177,6 +196,9 @@ interface UserTemplateResource {
         @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
+        @Parameter(description = "租户ID", required = false)
+        @HeaderParam(AUTH_HEADER_BK_TENANT_ID)
+        tenantId: String? = null,
         @Parameter(description = "安装模板到项目请求报文体", required = true)
         installTemplateReq: InstallTemplateReq
     ): Result<InstallTemplateResp>
@@ -213,6 +235,9 @@ interface UserTemplateResource {
         @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
+        @Parameter(description = "租户ID", required = false)
+        @HeaderParam(AUTH_HEADER_BK_TENANT_ID)
+        tenantId: String? = null,
         @Parameter(description = "模版代码", required = true)
         @PathParam("templateCode")
         templateCode: String
@@ -225,6 +250,9 @@ interface UserTemplateResource {
         @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
+        @Parameter(description = "租户ID", required = false)
+        @HeaderParam(AUTH_HEADER_BK_TENANT_ID)
+        tenantId: String? = null,
         @Parameter(description = "模版名称", required = false)
         @QueryParam("templateName")
         templateName: String?,

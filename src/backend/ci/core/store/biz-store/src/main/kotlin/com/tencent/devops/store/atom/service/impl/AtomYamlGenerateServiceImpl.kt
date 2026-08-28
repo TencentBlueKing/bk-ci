@@ -71,17 +71,18 @@ class AtomYamlGenerateServiceImpl @Autowired constructor(
         atomCode: String?,
         os: String?,
         classType: String?,
-        defaultShowFlag: Boolean?
+        defaultShowFlag: Boolean?,
+        tenantId: String?
     ): String {
         val atomCodeList = if (atomCode.isNullOrBlank()) {
-            marketAtomDao.getSupportGitCiAtom(dslContext, os, classType).map { it.value1() }
+            marketAtomDao.getSupportGitCiAtom(dslContext, os, classType, tenantId).map { it.value1() }
         } else {
             listOf(atomCode)
         }
 
         return buildString {
             atomCodeList.forEach {
-                val atom = marketAtomDao.getLatestAtomByCode(dslContext, it) ?: return@forEach
+                val atom = marketAtomDao.getLatestAtomByCode(dslContext, it, tenantId) ?: return@forEach
                 val feature = marketAtomFeatureDao.getAtomFeature(dslContext, it) ?: return@forEach
                 if (feature.recommendFlag == null || feature.recommendFlag) {
                     append(generateYaml(atom, defaultShowFlag))
@@ -95,9 +96,10 @@ class AtomYamlGenerateServiceImpl @Autowired constructor(
         atomCode: String,
         os: String?,
         classType: String?,
-        defaultShowFlag: Boolean?
+        defaultShowFlag: Boolean?,
+        tenantId: String?
     ): String {
-        val atom = marketAtomDao.getLatestAtomByCode(dslContext, atomCode) ?: return ""
+        val atom = marketAtomDao.getLatestAtomByCode(dslContext, atomCode, tenantId) ?: return ""
         val feature = marketAtomFeatureDao.getAtomFeature(dslContext, atomCode) ?: return ""
         return if (feature.recommendFlag == null || feature.recommendFlag) {
             generateV2Yaml(atom, defaultShowFlag)

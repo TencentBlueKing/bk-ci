@@ -44,7 +44,6 @@ import com.tencent.devops.common.api.enums.SystemModuleEnum
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.UUIDUtil
@@ -252,7 +251,8 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         userId: String,
         queryParam: AtomQueryParam,
         page: Int,
-        pageSize: Int
+        pageSize: Int,
+        tenantId: String?
     ): Result<AtomResp<AtomRespItem>?> {
         val projectCode = queryParam.projectCode
         if (queryParam.queryProjectAtomFlag && !projectCode.isNullOrBlank()) {
@@ -279,9 +279,10 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         }
         return serviceGetPipelineAtoms(
             userId = userId,
-            queryParam = queryParam,
+            queryParam = queryParam.copy(tenantId = tenantId ?: queryParam.tenantId),
             page = page,
-            pageSize = pageSize
+            pageSize = pageSize,
+            tenantId = tenantId
         )
     }
 
@@ -289,7 +290,8 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         userId: String,
         queryParam: AtomQueryParam,
         page: Int?,
-        pageSize: Int?
+        pageSize: Int?,
+        tenantId: String?
     ): Result<AtomResp<AtomRespItem>?> {
         val projectCode = queryParam.projectCode.orEmpty()
         val queryProjectAtomFlag = queryParam.queryProjectAtomFlag
@@ -496,8 +498,8 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
             publisher = record[KEY_PUBLISHER] as? String,
             creator = record[KEY_CREATOR] as? String ?: "",
             modifier = record[KEY_MODIFIER] as? String ?: "",
-            createTime = (record[KEY_CREATE_TIME] as? LocalDateTime)?.let { DateTimeUtil.toDateTime(it) } ?: "",
-            updateTime = (record[KEY_UPDATE_TIME] as? LocalDateTime)?.let { DateTimeUtil.toDateTime(it) } ?: "",
+            createTime = (record[KEY_CREATE_TIME] as? LocalDateTime)?.timestampmilli() ?: 0L,
+            updateTime = (record[KEY_UPDATE_TIME] as? LocalDateTime)?.timestampmilli() ?: 0L,
             defaultFlag = defaultFlag,
             latestFlag = record[KEY_LATEST_FLAG] as? Boolean ?: false,
             htmlTemplateVersion = record[KEY_HTML_TEMPLATE_VERSION] as? String ?: "",
@@ -650,15 +652,17 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         version: String,
         atomStatus: Byte?,
         queryOfflineFlag: Boolean,
+        tenantId: String?,
         serviceScope: ServiceScopeEnum?
     ): Result<PipelineAtom?> {
-        logger.info("getPipelineAtom $projectCode,$atomCode,$version,$atomStatus,$queryOfflineFlag,$serviceScope")
+        logger.info("getPipelineAtom $projectCode,$atomCode,$version,$atomStatus,$queryOfflineFlag,$tenantId,$serviceScope")
         val atomResult = getPipelineAtomDetail(
             projectCode = projectCode,
             atomCode = atomCode,
             version = version,
             atomStatus = atomStatus,
             queryOfflineFlag = queryOfflineFlag,
+            tenantId = tenantId,
             serviceScope = serviceScope
         )
         val atom = atomResult.data
@@ -746,9 +750,10 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         version: String,
         atomStatus: Byte?,
         queryOfflineFlag: Boolean,
+        tenantId: String?,
         serviceScope: ServiceScopeEnum?
     ): Result<PipelineAtom?> {
-        logger.info("getPipelineAtomDetail $projectCode,$atomCode,$version,$atomStatus,$queryOfflineFlag,$serviceScope")
+        logger.info("getPipelineAtomDetail $projectCode,$atomCode,$version,$atomStatus,$queryOfflineFlag,$tenantId,$serviceScope")
         val atomStatusList = if (atomStatus != null) {
             mutableListOf(atomStatus)
         } else {
@@ -883,7 +888,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
      * 根据项目代码、插件代码和版本号获取插件信息
      */
     @BkTimed(extraTags = ["get", "getPipelineAtom"], value = "store_get_pipeline_atom")
-    override fun getPipelineAtomVersions(projectCode: String?, atomCode: String): Result<List<VersionInfo>> {
+    override fun getPipelineAtomVersions(projectCode: String?, atomCode: String, tenantId: String?): Result<List<VersionInfo>> {
         logger.info("getPipelineAtomVersions projectCode is: $projectCode,atomCode is: $atomCode")
         val atomStatusList = if (projectCode != null) {
             generateAtomStatusList(atomCode, projectCode)
@@ -941,7 +946,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
     /**
      * 添加插件信息
      */
-    override fun savePipelineAtom(userId: String, atomRequest: AtomCreateRequest): Result<Boolean> {
+    override fun savePipelineAtom(userId: String, atomRequest: AtomCreateRequest, tenantId: String?): Result<Boolean> {
         val id = UUIDUtil.generate()
         logger.info("savePipelineAtom userId=$userId|atomRequest=$atomRequest")
         // 判断插件代码是否存在
@@ -1021,7 +1026,8 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
     override fun updatePipelineAtom(
         userId: String,
         id: String,
-        atomUpdateRequest: AtomUpdateRequest
+        atomUpdateRequest: AtomUpdateRequest,
+        tenantId: String?
     ): Result<Boolean> {
         logger.info("updatePipelineAtom userId=$userId|id=$id|atomUpdateRequest=$atomUpdateRequest")
         // 校验插件分类是否合法：优先校验 serviceScopeConfigs，兼容旧 classifyId
@@ -1196,7 +1202,8 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         name: String?,
         serviceScope: ServiceScopeEnum?,
         page: Int,
-        pageSize: Int
+        pageSize: Int,
+        tenantId: String?
     ): Page<InstalledAtom> {
         // 项目下已安装插件记录
         val result = mutableListOf<InstalledAtom>()
@@ -1329,9 +1336,9 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                     publisher = it[KEY_PUBLISHER] as? String,
                     installer = installer,
                     installTime = if (default) {
-                        ""
+                        0L
                     } else {
-                        DateTimeUtil.toDateTime(it[KEY_INSTALL_TIME] as LocalDateTime)
+                        (it[KEY_INSTALL_TIME] as LocalDateTime).timestampmilli()
                     },
                     installType = if (default) {
                         StoreProjectTypeEnum.COMMON.name
@@ -1385,7 +1392,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                 summary = it[KEY_SUMMARY] as? String,
                 publisher = it[KEY_PUBLISHER] as? String,
                 installer = installer,
-                installTime = DateTimeUtil.toDateTime(it[KEY_INSTALL_TIME] as LocalDateTime),
+                installTime = (it[KEY_INSTALL_TIME] as LocalDateTime).timestampmilli(),
                 installType = StoreProjectTypeEnum.getProjectType((it[KEY_INSTALL_TYPE] as Byte).toInt()),
                 pipelineCnt = 0,
                 hasPermission = true
@@ -1409,7 +1416,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                 summary = it.summary,
                 publisher = it.publisher,
                 installer = "",
-                installTime = "",
+                installTime = 0L,
                 installType = "",
                 pipelineCnt = 0,
                 hasPermission = true
@@ -1490,7 +1497,8 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
     override fun updateAtomBaseInfo(
         userId: String,
         atomCode: String,
-        atomBaseInfoUpdateRequest: AtomBaseInfoUpdateRequest
+        atomBaseInfoUpdateRequest: AtomBaseInfoUpdateRequest,
+        tenantId: String?
     ): Result<Boolean> {
         logger.info("updateAtomBaseInfo userId:$userId,atomCode:$atomCode,updateRequest:$atomBaseInfoUpdateRequest")
         // 判断当前用户是否是该插件的成员
@@ -1502,9 +1510,9 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
             )
         }
         // 查询插件的最新记录
-        val newestAtomRecord = atomDao.getNewestAtomByCode(dslContext, atomCode)
+        val newestAtomRecord = atomDao.getNewestAtomByCode(dslContext, atomCode, tenantId = tenantId)
             ?: throw ErrorCodeException(errorCode = CommonMessageCode.PARAMETER_IS_INVALID, params = arrayOf(atomCode))
-        val editFlag = marketAtomCommonService.checkEditCondition(atomCode)
+        val editFlag = marketAtomCommonService.checkEditCondition(atomCode, tenantId)
         if (!editFlag) {
             throw ErrorCodeException(
                 errorCode = StoreMessageCode.USER_ATOM_VERSION_IS_NOT_FINISH,
@@ -1523,7 +1531,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
             return updateRepoInfoResult
         }
         val atomIdList = mutableListOf(newestAtomRecord.id)
-        val latestAtomRecord = atomDao.getLatestAtomByCode(dslContext, atomCode)
+        val latestAtomRecord = atomDao.getLatestAtomByCode(dslContext, atomCode, tenantId)
         if (null != latestAtomRecord) {
             atomIdList.add(latestAtomRecord.id)
         }

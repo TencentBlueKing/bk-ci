@@ -34,10 +34,12 @@ import com.tencent.devops.common.auth.api.ActionId.PROJECT_CREATE
 import com.tencent.devops.common.auth.api.ActionId.PROJECT_EDIT
 import com.tencent.devops.common.auth.api.ActionId.PROJECT_ENABLE
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.service.tenant.TenantUtils
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.project.api.user.UserProjectResource
 import com.tencent.devops.project.constant.ProjectMessageCode.PROJECT_NOT_EXIST
+import com.tencent.devops.project.pojo.CreateProjectVO
 import com.tencent.devops.project.pojo.OperationalProductVO
 import com.tencent.devops.project.pojo.ProjectByConditionDTO
 import com.tencent.devops.project.pojo.ProjectCollation
@@ -53,9 +55,9 @@ import com.tencent.devops.project.pojo.enums.ProjectChannelCode
 import com.tencent.devops.project.pojo.enums.ProjectValidateType
 import com.tencent.devops.project.service.ProjectPermissionService
 import com.tencent.devops.project.service.ProjectService
+import java.io.InputStream
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.springframework.beans.factory.annotation.Autowired
-import java.io.InputStream
 
 @RestResource
 class UserProjectResourceImpl @Autowired constructor(
@@ -65,6 +67,8 @@ class UserProjectResourceImpl @Autowired constructor(
 
     override fun list(
         userId: String,
+        tenantId: String?,
+        accessToken: String?,
         enabled: Boolean?,
         unApproved: Boolean?,
         sortType: ProjectSortType?,
@@ -77,13 +81,17 @@ class UserProjectResourceImpl @Autowired constructor(
                 unApproved = unApproved ?: false,
                 sortType = sortType ?: ProjectSortType.PROJECT_NAME,
                 collation = collation ?: ProjectCollation.DEFAULT,
-                hidden = false
+                tenantId = tenantId,
+                hidden = false,
+                accessToken = accessToken
             )
         )
     }
 
     override fun listProjectsForApply(
         userId: String,
+        tenantId: String?,
+        accessToken: String?,
         projectName: String?,
         projectId: String?,
         page: Int,
@@ -95,7 +103,9 @@ class UserProjectResourceImpl @Autowired constructor(
                 projectName = projectName,
                 projectId = projectId,
                 page = page,
-                pageSize = pageSize
+                pageSize = pageSize,
+                tenantId = tenantId,
+                accessToken = accessToken
             )
         )
     }
@@ -109,11 +119,11 @@ class UserProjectResourceImpl @Autowired constructor(
         )
     }
 
-    override fun show(userId: String, projectId: String): Result<ProjectVO> {
+    override fun show(userId: String, tenantId: String?, projectId: String): Result<ProjectVO> {
         return Result(
             projectService.show(
                 userId = userId,
-                englishName = projectId
+                englishName = TenantUtils.parseEnglishName(tenantId, projectId)
             ) ?: throw OperationException("project $projectId not found")
         )
     }
@@ -130,24 +140,41 @@ class UserProjectResourceImpl @Autowired constructor(
     }
 
     @AuditEntry(actionId = PROJECT_CREATE)
-    override fun create(userId: String, projectCreateInfo: ProjectCreateInfo): Result<Boolean> {
+    override fun create(
+        userId: String,
+        tenantId: String?,
+        projectCreateInfo: ProjectCreateInfo,
+        accessToken: String?
+    ): Result<CreateProjectVO> {
         // 创建项目
+        projectCreateInfo.tenantId = TenantUtils.getTenantId(tenantId)
         projectService.create(
             userId = userId,
             projectCreateInfo = projectCreateInfo,
             createExtInfo = ProjectCreateExtInfo(needValidate = true, needAuth = true, needApproval = true),
-            projectChannel = ProjectChannelCode.BS
+            projectChannel = ProjectChannelCode.BS,
+            accessToken = accessToken
         )
 
-        return Result(true)
+        return Result(
+            CreateProjectVO(
+                status = true,
+                projectId = TenantUtils.parseEnglishName(
+                    tenantId = projectCreateInfo.tenantId,
+                    tenantEnglishName = projectCreateInfo.englishName
+                )
+            )
+        )
     }
 
     @AuditEntry(actionId = PROJECT_EDIT)
     override fun update(
         userId: String,
+        tenantId: String?,
         projectId: String,
         projectUpdateInfo: ProjectUpdateInfo
     ): Result<Boolean> {
+        projectUpdateInfo.tenantId = TenantUtils.getTenantId(tenantId)
         return Result(
             projectService.update(
                 userId = userId,
@@ -186,11 +213,12 @@ class UserProjectResourceImpl @Autowired constructor(
 
     override fun validate(
         userId: String,
+        tenantId: String?,
         validateType: ProjectValidateType,
         name: String,
         projectId: String?
     ): Result<Boolean> {
-        projectService.validate(validateType, name, projectId)
+        projectService.validate(validateType, name, projectId, tenantId)
         return Result(true)
     }
 

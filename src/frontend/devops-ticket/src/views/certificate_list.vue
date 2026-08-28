@@ -34,12 +34,19 @@
                     <bk-table-column
                         :label="$t('ticket.cert.uploader')"
                         prop="creator"
-                    ></bk-table-column>
+                    >
+                        <template v-slot="props">
+                            <bk-user-display-name :user-id="props.row.creator" />
+                        </template>
+                    </bk-table-column>
                     <bk-table-column
                         :label="$t('ticket.cert.expireDate')"
                         prop="expireTime"
-                        :formatter="convertToTime"
-                    ></bk-table-column>
+                    >
+                        <template v-slot="props">
+                            <time-display :value="props.row.expireTime" />
+                        </template>
+                    </bk-table-column>
                     <bk-table-column
                         :label="$t('ticket.remark')"
                         prop="certRemark"
@@ -111,13 +118,14 @@
 </template>
 
 <script>
-    import { convertTime } from '@/utils/util'
     import emptyTips from '@/components/devops/emptyTips'
     import { CERT_RESOURCE_ACTION, CERT_RESOURCE_TYPE } from '../utils/permission'
+    import TimeDisplay from '../../../common-lib/time-display'
 
     export default {
         components: {
-            emptyTips
+            emptyTips,
+            TimeDisplay
         },
         data () {
             return {
@@ -164,9 +172,6 @@
             await this.init()
         },
         methods: {
-            convertToTime (row, cell, time) {
-                return convertTime(time * 1000)
-            },
             getShowType (row, cell, type) {
                 switch (type) {
                     case 'android':

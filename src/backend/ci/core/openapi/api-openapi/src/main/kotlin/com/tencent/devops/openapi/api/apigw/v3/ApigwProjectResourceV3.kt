@@ -26,6 +26,8 @@
  */
 package com.tencent.devops.openapi.api.apigw.v3
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_BK_TENANT_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ACCESS_TOKEN
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
@@ -36,9 +38,9 @@ import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.enums.ProjectValidateType
-import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.ws.rs.Consumes
 import jakarta.ws.rs.GET
 import jakarta.ws.rs.HeaderParam
@@ -71,8 +73,14 @@ interface ApigwProjectResourceV3 {
         @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
+        @Parameter(description = "租户ID", required = false)
+        @HeaderParam(AUTH_HEADER_BK_TENANT_ID)
+        tenantId: String? = null,
         @Parameter(description = "项目信息", required = true)
-        projectCreateInfo: ProjectCreateInfo
+        projectCreateInfo: ProjectCreateInfo,
+        @Parameter(description = "access_token")
+        @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
+        accessToken: String?
     ): Result<Boolean>
 
     @PUT
@@ -88,6 +96,9 @@ interface ApigwProjectResourceV3 {
         @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
+        @Parameter(description = "租户ID", required = false)
+        @HeaderParam(AUTH_HEADER_BK_TENANT_ID)
+        tenantId: String? = null,
         @Parameter(description = "项目ID(项目英文名)", required = true)
         @PathParam("projectId")
         projectId: String,
@@ -125,7 +136,13 @@ interface ApigwProjectResourceV3 {
         apigwType: String?,
         @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
-        userId: String
+        userId: String,
+        @Parameter(description = "租户ID", required = false)
+        @HeaderParam(AUTH_HEADER_BK_TENANT_ID)
+        tenantId: String? = null,
+        @Parameter(description = "access_token")
+        @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
+        accessToken: String?
     ): Result<List<ProjectVO>>
 
     @GET
@@ -141,6 +158,9 @@ interface ApigwProjectResourceV3 {
         @Parameter(description = "userId")
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String?,
+        @Parameter(description = "租户ID", required = false)
+        @HeaderParam(AUTH_HEADER_BK_TENANT_ID)
+        tenantId: String? = null,
         @Parameter(description = "校验的是项目名称或者项目英文名")
         @PathParam("validateType")
         validateType: ProjectValidateType,

@@ -237,9 +237,9 @@ class RbacPipelinePermissionService(
     override fun createResource(userId: String, projectId: String, pipelineId: String, pipelineName: String) {
         return authResourceApi.createResource(
             user = userId,
-            projectCode = projectId,
             serviceCode = pipelineAuthServiceCode,
             resourceType = AuthResourceType.getAuthResourceTypeByChannel(resourceType),
+            projectCode = projectId,
             resourceCode = pipelineId,
             resourceName = pipelineName
         )

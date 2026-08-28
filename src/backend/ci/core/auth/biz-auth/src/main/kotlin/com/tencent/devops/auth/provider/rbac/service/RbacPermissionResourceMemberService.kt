@@ -34,14 +34,15 @@ import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroupAndUserList
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.trace.TraceEventDispatcher
+import com.tencent.devops.common.service.tenant.TenantUtils
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.project.constant.ProjectMessageCode
+import java.time.LocalDateTime
+import java.util.concurrent.TimeUnit
 import org.apache.commons.lang3.RandomUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
-import java.time.LocalDateTime
-import java.util.concurrent.TimeUnit
 
 @Suppress("SpreadOperator", "LongParameterList")
 class RbacPermissionResourceMemberService(
@@ -137,7 +138,8 @@ class RbacPermissionResourceMemberService(
                 getMembersUnderGroupByIam(
                     projectCode = projectCode,
                     groupId = it.relationId.toInt(),
-                    groupName = it.groupName
+                    groupName = it.groupName,
+                    tenantId = TenantUtils.getTenantIdByEnglishName(projectCode)
                 )
             }
         }
@@ -194,7 +196,8 @@ class RbacPermissionResourceMemberService(
         }.map { it.id }
         val departedMembers = if (userMembers.isNotEmpty()) {
             deptService.listDepartedMembers(
-                memberIds = userMembers
+                memberIds = userMembers,
+                tenantId = null
             )
         } else {
             return records
@@ -216,7 +219,9 @@ class RbacPermissionResourceMemberService(
         expiredAt: Long,
         iamGroupId: Int
     ): Boolean {
-        if (memberType == MemberType.USER.type && deptService.isUserDeparted(memberId)) {
+        val tenantId = TenantUtils.getTenantIdByEnglishName(projectCode)
+        if (memberType == MemberType.USER.type && deptService.isUserDeparted(memberId, tenantId)
+        ) {
             return true
         }
         // 获取对应的资源组
@@ -231,12 +236,14 @@ class RbacPermissionResourceMemberService(
         addIamGroupMember(
             groupId = iamGroupId,
             members = listOf(managerMember),
-            expiredAt = expiredAt
+            expiredAt = expiredAt,
+            tenantId = tenantId
         )
 
         val memberDetails = deptService.getMemberInfo(
             memberId = memberId,
-            memberType = ManagerScopesEnum.valueOf(memberType.uppercase())
+            memberType = ManagerScopesEnum.valueOf(memberType.uppercase()),
+            tenantId = tenantId
         )
         with(authResourceGroup) {
             authResourceGroupMemberDao.create(
@@ -265,13 +272,14 @@ class RbacPermissionResourceMemberService(
     override fun addIamGroupMember(
         groupId: Int,
         members: List<ManagerMember>,
-        expiredAt: Long
+        expiredAt: Long,
+        tenantId: String?
     ): Boolean {
-        val membersOfNeedToAdd = members.toMutableList().removeDepartedMembers()
+        val membersOfNeedToAdd = members.toMutableList().removeDepartedMembers(tenantId)
         if (membersOfNeedToAdd.isNotEmpty()) {
             val managerMemberGroup =
                 ManagerMemberGroupDTO.builder().members(membersOfNeedToAdd).expiredAt(expiredAt).build()
-            iamV2ManagerService.createRoleGroupMemberV2(groupId, managerMemberGroup)
+            iamV2ManagerService.createRoleGroupMemberV2(groupId, managerMemberGroup, tenantId)
         }
         return true
     }
@@ -293,7 +301,8 @@ class RbacPermissionResourceMemberService(
         // 获取用户组中用户以及部门
         val userType = MemberType.USER.type
         val deptType = MemberType.DEPARTMENT.type
-        val groupMembers = getAllRoleGroupMembersV2(iamGroupId)
+        val tenantId = TenantUtils.getTenantIdByEnglishName(projectCode)
+        val groupMembers = getAllRoleGroupMembersV2(iamGroupId, tenantId)
         val groupUserMap = groupMembers.filter { it.type == userType }.associateBy { it.id }
         val groupDepartmentSet = groupMembers.filter {
             it.type == deptType && it.expiredAt > LocalDateTime.now().timestamp()
@@ -306,7 +315,8 @@ class RbacPermissionResourceMemberService(
         val skippedDepartments = mutableListOf<String>()
         if (!members.isNullOrEmpty()) {
             val departedMembers = deptService.listDepartedMembers(
-                memberIds = members
+                memberIds = members,
+                tenantId = tenantId
             )
             members.forEach { member ->
                 if (departedMembers.contains(member)) {
@@ -359,7 +369,8 @@ class RbacPermissionResourceMemberService(
             addIamGroupMember(
                 groupId = iamGroupId,
                 members = iamMemberInfos,
-                expiredAt = expiredTime
+                expiredAt = expiredTime,
+                tenantId = tenantId
             )
             // 获取对应的资源组
             val authResourceGroup = authResourceGroupDao.get(
@@ -373,7 +384,8 @@ class RbacPermissionResourceMemberService(
             iamMemberInfos.forEach {
                 val memberDetails = deptService.getMemberInfo(
                     memberId = it.id,
-                    memberType = ManagerScopesEnum.valueOf(it.type.uppercase())
+                    memberType = ManagerScopesEnum.valueOf(it.type.uppercase()),
+                    tenantId = tenantId
                 )
                 groupMembersList.add(
                     AuthResourceGroupMember(
@@ -449,7 +461,10 @@ class RbacPermissionResourceMemberService(
         }
         // 校验用户的部门是否已经加入组，若部门已经加入，则不再添加该用户
         try {
-            val userDeptInfoSet = deptService.getUserDeptInfo(userId = member)
+            val userDeptInfoSet = deptService.getUserDeptInfo(
+                userId = member,
+                tenantId = TenantUtils.getTenantIdByEnglishName(projectCode)
+            )
             val isUserBelongGroupByDepartments = groupDepartmentSet.intersect(userDeptInfoSet).isNotEmpty()
             if (isUserBelongGroupByDepartments) {
                 logger.warn(
@@ -572,11 +587,13 @@ class RbacPermissionResourceMemberService(
         val userType = MemberType.USER.type
         val deptType = MemberType.DEPARTMENT.type
         val allMemberIds = mutableListOf<String>()
+        val tenantId = TenantUtils.getTenantIdByEnglishName(projectCode)
         if (!members.isNullOrEmpty()) {
             deleteIamGroupMembers(
                 groupId = iamGroupId,
                 type = userType,
-                memberIds = members
+                memberIds = members,
+                tenantId = tenantId
             )
             allMemberIds.addAll(members)
         }
@@ -584,7 +601,8 @@ class RbacPermissionResourceMemberService(
             deleteIamGroupMembers(
                 groupId = iamGroupId,
                 type = deptType,
-                memberIds = departments
+                memberIds = departments,
+                tenantId = tenantId
             )
             allMemberIds.addAll(departments)
         }
@@ -609,7 +627,8 @@ class RbacPermissionResourceMemberService(
 
     private fun getGroupInfoList(
         resourceType: String,
-        managerId: String
+        managerId: String,
+        tenantId: String?
     ): List<V2ManagerRoleGroupInfo> {
         return if (resourceType == AuthResourceType.PROJECT.value) {
             val searchGroupDTO = SearchGroupDTO.builder().inherit(false).build()
@@ -619,7 +638,8 @@ class RbacPermissionResourceMemberService(
             val iamGroupInfoList = iamV2ManagerService.getGradeManagerRoleGroupV2(
                 managerId,
                 searchGroupDTO,
-                pageInfoDTO
+                pageInfoDTO,
+                tenantId
             )
             iamGroupInfoList.results
         } else {
@@ -629,7 +649,8 @@ class RbacPermissionResourceMemberService(
             }
             iamV2ManagerService.getSubsetManagerRoleGroup(
                 managerId.toInt(),
-                v2PageInfoDTO
+                v2PageInfoDTO,
+                tenantId
             ).results
         }
     }
@@ -637,10 +658,11 @@ class RbacPermissionResourceMemberService(
     private fun getMembersUnderGroupByIam(
         projectCode: String,
         groupId: Int,
-        groupName: String
+        groupName: String,
+        tenantId: String?
     ): BkAuthGroupAndUserList {
         // 获取组成员信息
-        val groupMemberInfoList = getAllRoleGroupMembersV2(groupId)
+        val groupMemberInfoList = getAllRoleGroupMembersV2(groupId, tenantId)
         // 获取组信息
         val gradeManagerId = authResourceService.get(
             projectCode = projectCode,
@@ -654,7 +676,8 @@ class RbacPermissionResourceMemberService(
             V2PageInfoDTO().apply {
                 this.pageSize = 10
                 this.page = 1
-            }
+            },
+            tenantId
         ).results.firstOrNull()
         val nowTimestamp = System.currentTimeMillis() / 1000
         val (members, deptInfoList) = groupMemberInfoList
@@ -718,9 +741,11 @@ class RbacPermissionResourceMemberService(
             resourceCode = resourceCode
         ).relationId
         // 2、获取分级管理员下所有的用户组
+        val tenantId = TenantUtils.getTenantIdByEnglishName(projectCode)
         val iamGroupInfoList = getGroupInfoList(
             resourceType = resourceType,
-            managerId = managerId
+            managerId = managerId,
+            tenantId = tenantId
         )
         // 3. 获取由蓝盾创建的用户组列表
         val resourceGroupInfoList = authResourceGroupDao.listByRelationId(
@@ -734,7 +759,7 @@ class RbacPermissionResourceMemberService(
         val autoRenewalMembers = mutableSetOf<String>()
         resourceGroupInfoList.forEach group@{ resourceGroup ->
             val iamGroupId = resourceGroup.relationId.toInt()
-            val groupMemberInfoList = getAllRoleGroupMembersV2(iamGroupId)
+            val groupMemberInfoList = getAllRoleGroupMembersV2(iamGroupId, tenantId)
             groupMemberInfoList.forEach member@{ member ->
                 // 已过期或者小于自动续期范围内的不做续期
                 if (member.expiredAt < currentTime ||
@@ -782,23 +807,28 @@ class RbacPermissionResourceMemberService(
             .expiredAt(expiredAt)
             .reason("renewal user group")
             .applicant(userId).build()
-        iamV2ManagerService.renewalRoleGroupMemberApplication(managerMemberGroupDTO)
+        iamV2ManagerService.renewalRoleGroupMemberApplication(
+            managerMemberGroupDTO,
+            TenantUtils.getTenantIdByEnglishName(projectCode)
+        )
         return true
     }
 
     override fun renewalIamGroupMembers(
         groupId: Int,
         members: List<ManagerMember>,
-        expiredAt: Long
+        expiredAt: Long,
+        tenantId: String?
     ): Boolean {
-        val membersOfNeedToRenewal = members.toMutableList().removeDepartedMembers()
+        val membersOfNeedToRenewal = members.toMutableList().removeDepartedMembers(tenantId)
         if (membersOfNeedToRenewal.isNotEmpty()) {
             iamV2ManagerService.renewalRoleGroupMemberV2(
                 groupId,
                 ManagerMemberGroupDTO.builder()
                     .members(membersOfNeedToRenewal)
                     .expiredAt(expiredAt)
-                    .build()
+                    .build(),
+                tenantId
             )
         }
         return true
@@ -807,14 +837,16 @@ class RbacPermissionResourceMemberService(
     override fun deleteIamGroupMembers(
         groupId: Int,
         type: String,
-        memberIds: List<String>
+        memberIds: List<String>,
+        tenantId: String?
     ): Boolean {
         if (memberIds.isNotEmpty()) {
             try {
                 iamV2ManagerService.deleteRoleGroupMemberV2(
                     groupId,
                     type,
-                    memberIds.joinToString(",")
+                    memberIds.joinToString(","),
+                    tenantId
                 )
             } catch (e: Exception) {
                 logger.warn("delete iam group member failed, groupId=$groupId, type=$type, memberIds=$memberIds", e)
@@ -823,12 +855,13 @@ class RbacPermissionResourceMemberService(
         return true
     }
 
-    private fun MutableList<ManagerMember>.removeDepartedMembers(): List<ManagerMember> {
+    private fun MutableList<ManagerMember>.removeDepartedMembers(tenantId: String?): List<ManagerMember> {
         val userMemberIds = this.filter { it.type == MemberType.USER.type }.map { it.id }
         if (userMemberIds.isEmpty()) return this
         // 获取离职的人员
         val departedMembers = deptService.listDepartedMembers(
-            memberIds = userMemberIds
+            memberIds = userMemberIds,
+            tenantId = tenantId
         )
         return this.filterNot {
             it.type == MemberType.USER.type &&
@@ -842,9 +875,10 @@ class RbacPermissionResourceMemberService(
     ): List<Int> {
         logger.info("[RBAC-IAM] get member groups in project: $projectCode|$memberId")
         // 获取用户的所属组织
-        val memberDeptInfos = deptService.getUserInfo(memberId)?.deptInfo?.let {
+        val tenantId = TenantUtils.getTenantIdByEnglishName(projectCode)
+        val memberDeptInfos = deptService.getUserInfo(memberId, tenantId)?.deptInfo?.let {
             if (it.isNotEmpty()) {
-                deptService.getUserDeptInfo(memberId).toList()
+                deptService.getUserDeptInfo(memberId, tenantId).toList()
             } else {
                 emptyList()
             }
@@ -984,7 +1018,8 @@ class RbacPermissionResourceMemberService(
     }
 
     private fun getAllRoleGroupMembersV2(
-        iamGroupId: Int
+        iamGroupId: Int,
+        tenantId: String? = null
     ): List<RoleGroupMemberInfo> {
         val allMembers = mutableListOf<RoleGroupMemberInfo>()
         val pageSize = 1000
@@ -995,7 +1030,7 @@ class RbacPermissionResourceMemberService(
                 this.page = page
             }
             val pageResult = iamV2ManagerService
-                .getRoleGroupMemberV2(iamGroupId, pageInfoDTO)
+                .getRoleGroupMemberV2(iamGroupId, pageInfoDTO, tenantId)
             allMembers.addAll(pageResult.results)
             page++
         } while (pageResult.results.size == pageSize)

@@ -26,6 +26,7 @@
  */
 package com.tencent.devops.openapi.api.apigw.v4
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_BK_TENANT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
@@ -85,7 +86,10 @@ interface ApigwAtomResourceV4 {
         atomCode: String,
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
-        userId: String
+        userId: String,
+        @Parameter(description = "租户ID", required = false)
+        @HeaderParam(AUTH_HEADER_BK_TENANT_ID)
+        tenantId: String? = null
     ): Result<AtomVersion?>
 
     @Operation(summary = "根据插件代码获取插件统计信息", tags = ["v4_app_atom_statistic", "v4_user_atom_statistic"])
@@ -146,6 +150,9 @@ interface ApigwAtomResourceV4 {
         @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
+        @Parameter(description = "租户ID", required = false)
+        @HeaderParam(AUTH_HEADER_BK_TENANT_ID)
+        tenantId: String? = null,
         @Parameter(description = "渠道类型", required = false)
         @QueryParam("channelCode")
         channelCode: ChannelCode? = ChannelCode.getRequestChannelCode(),
@@ -193,6 +200,9 @@ interface ApigwAtomResourceV4 {
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
+        @Parameter(description = "租户ID", required = false)
+        @HeaderParam(AUTH_HEADER_BK_TENANT_ID)
+        tenantId: String? = null,
         @Parameter(description = "支持的服务范围", required = false)
         @QueryParam("serviceScope")
         serviceScope: ServiceScopeEnum? = null
@@ -211,6 +221,9 @@ interface ApigwAtomResourceV4 {
         @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
+        @Parameter(description = "租户ID", required = false)
+        @HeaderParam(AUTH_HEADER_BK_TENANT_ID)
+        tenantId: String? = null,
         @Parameter(description = "支持的服务范围：PIPELINE / QUALITY / CREATIVE_STREAM（默认 PIPELINE）", required = false)
         @QueryParam("serviceScope")
         @DefaultValue("PIPELINE")

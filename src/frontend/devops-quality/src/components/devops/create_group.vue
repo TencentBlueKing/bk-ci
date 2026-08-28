@@ -50,9 +50,8 @@
                             :property="'internal_list'"
                         >
                             <user-input
-                                :handle-change="onChange"
-                                name="innerList"
-                                :value="createGroupForm.internal_list"
+                                multiple
+                                v-model="createGroupForm.internal_list"
                                 :placeholder="$t('quality.请输入通知人员')"
                             ></user-input>
                         </bk-form-item>
@@ -100,7 +99,6 @@
             createGroupForm: Object,
             loading: Object,
             errorHandler: Object,
-            onChange: Function,
             onInit: Function,
             confirmFn: Function,
             cancelFn: Function,

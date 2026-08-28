@@ -43,9 +43,9 @@ import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroupAndUserList
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.project.api.service.ServiceProjectResource
+import java.util.concurrent.TimeUnit
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
-import java.util.concurrent.TimeUnit
 
 @Suppress("LongParameterList")
 class RbacPermissionProjectService(
@@ -83,23 +83,26 @@ class RbacPermissionProjectService(
         )
     }
 
-    override fun getUserProjects(userId: String): List<String> {
-        logger.info("[rbac] get user projects|userId = $userId")
+    override fun getUserProjects(userId: String, tenantId: String?): List<String> {
+        logger.info("[rbac] get user projects|userId = $userId|tenantId = $tenantId")
         return getUserProjectsByPermission(
             userId = userId,
-            action = AuthPermission.VISIT.value
+            action = AuthPermission.VISIT.value,
+            tenantId = tenantId
         )
     }
 
     override fun getUserProjectsByPermission(
         userId: String,
         action: String,
-        resourceType: String?
+        resourceType: String?,
+        tenantId: String?
     ): List<String> {
         return permissionService.getUserProjectsByPermission(
             userId = userId,
             action = action,
-            resourceType = resourceType
+            resourceType = resourceType,
+            tenantId = tenantId
         )
     }
 

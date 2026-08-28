@@ -44,7 +44,8 @@ interface TemplateReleaseService {
     fun addMarketTemplate(
         userId: String,
         templateCode: String,
-        marketTemplateRelRequest: MarketTemplateRelRequest
+        marketTemplateRelRequest: MarketTemplateRelRequest,
+        tenantId: String?
     ): Result<Boolean>
 
     /**
@@ -52,7 +53,8 @@ interface TemplateReleaseService {
      */
     fun updateMarketTemplate(
         userId: String,
-        marketTemplateUpdateRequest: MarketTemplateUpdateRequest
+        marketTemplateUpdateRequest: MarketTemplateUpdateRequest,
+        tenantId: String?
     ): Result<String?>
 
     /**
@@ -80,7 +82,7 @@ interface TemplateReleaseService {
     /**
      * 获取发布进度
      */
-    fun getProcessInfo(userId: String, templateId: String): Result<StoreProcessInfo>
+    fun getProcessInfo(userId: String, templateId: String, tenantId: String?): Result<StoreProcessInfo>
 
     /**
      * 获取发布进度-根据模板CODE
@@ -90,7 +92,7 @@ interface TemplateReleaseService {
     /**
      * 取消发布
      */
-    fun cancelRelease(userId: String, templateId: String): Result<Boolean>
+    fun cancelRelease(userId: String, templateId: String, tenantId: String?): Result<Boolean>
 
     /**
      * 取消发布-根据CODE
@@ -104,7 +106,8 @@ interface TemplateReleaseService {
         userId: String,
         templateCode: String,
         version: String?,
-        reason: String?
+        reason: String?,
+        tenantId: String?
     ): Result<Boolean>
 
     /**

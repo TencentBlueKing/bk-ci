@@ -108,5 +108,7 @@ data class OpProjectUpdateInfoRequest(
     @get:Schema(title = "项目相关配置")
     val properties: ProjectProperties? = null,
     @get:Schema(title = "运营产品id")
-    val productId: Int? = null
+    val productId: Int? = null,
+    @get:Schema(title = "租花ID")
+    val tenantId: String? = null
 )

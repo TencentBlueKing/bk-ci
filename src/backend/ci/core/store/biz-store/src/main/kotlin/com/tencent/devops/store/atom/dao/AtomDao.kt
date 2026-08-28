@@ -40,6 +40,7 @@ import com.tencent.devops.common.api.constant.NAME
 import com.tencent.devops.common.api.constant.VERSION
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.db.utils.JooqUtils
+import com.tencent.devops.common.db.utils.TenantTableFields.TENANT_ID as STORE_TENANT_ID
 import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.model.store.tables.TAtom
 import com.tencent.devops.model.store.tables.TAtomFeature
@@ -131,7 +132,8 @@ data class AtomQueryParam(
     val queryFitAgentBuildLessAtomFlag: Boolean?,
     val queryProjectAtomFlag: Boolean = true,
     val installed: Boolean? = null,
-    val ownerStoreCode: String? = null
+    val ownerStoreCode: String? = null,
+    val tenantId: String? = null
 )
 
 /**
@@ -287,20 +289,29 @@ class AtomDao : AtomBaseDao() {
         }
     }
 
-    fun countByName(dslContext: DSLContext, name: String, atomCode: String? = null): Int {
+    fun countByName(dslContext: DSLContext, name: String, atomCode: String? = null, tenantId: String? = null): Int {
         with(TAtom.T_ATOM) {
             val conditions = mutableListOf<Condition>()
             conditions.add(NAME.eq(name))
             if (atomCode != null) {
                 conditions.add(ATOM_CODE.eq(atomCode))
             }
+        if (useTenantCondition(tenantId)) {
+            conditions.add(tenantVisibleCondition(STORE_TENANT_ID, tenantId))
+        }
             return dslContext.selectCount().from(this).where(conditions).fetchOne(0, Int::class.java)!!
         }
     }
 
-    fun countByCode(dslContext: DSLContext, atomCode: String): Int {
+    fun countByCode(dslContext: DSLContext, atomCode: String, tenantId: String? = null): Int {
         with(TAtom.T_ATOM) {
-            return dslContext.selectCount().from(this).where(ATOM_CODE.eq(atomCode)).fetchOne(0, Int::class.java)!!
+            return dslContext.selectCount().from(this).where(ATOM_CODE.eq(atomCode))
+                .let {
+                    if (useTenantCondition(tenantId)) it.and(
+                        tenantVisibleCondition(STORE_TENANT_ID, tenantId)
+                    ) else it
+                }
+                .fetchOne(0, Int::class.java)!!
         }
     }
 
@@ -400,11 +411,15 @@ class AtomDao : AtomBaseDao() {
         dslContext: DSLContext,
         atomCode: String,
         version: String? = null,
-        atomStatusList: List<Byte>? = null
+        atomStatusList: List<Byte>? = null,
+        tenantId: String? = null
     ): TAtomRecord? {
         return with(TAtom.T_ATOM) {
             val conditions = mutableListOf<Condition>()
             conditions.add(ATOM_CODE.eq(atomCode))
+            if (useTenantCondition(tenantId)) {
+                conditions.add(tenantVisibleCondition(STORE_TENANT_ID, tenantId))
+            }
             if (version != null) {
                 conditions.add(VERSION.like(VersionUtils.generateQueryVersion(version)))
             }
@@ -425,7 +440,8 @@ class AtomDao : AtomBaseDao() {
         atomCode: String,
         version: String,
         defaultFlag: Boolean,
-        atomStatusList: List<Byte>? = null
+        atomStatusList: List<Byte>? = null,
+        tenantId: String? = null
     ): TAtomRecord? {
         val tAtom = TAtom.T_ATOM
         val conditions = generateGetPipelineAtomCondition(
@@ -433,7 +449,8 @@ class AtomDao : AtomBaseDao() {
             atomCode = atomCode,
             version = version,
             defaultFlag = defaultFlag,
-            atomStatusList = atomStatusList
+            atomStatusList = atomStatusList,
+            tenantId = tenantId
         )
         if (!defaultFlag) {
             conditions.add(
@@ -449,10 +466,14 @@ class AtomDao : AtomBaseDao() {
         atomCode: String,
         defaultFlag: Boolean? = null,
         version: String? = null,
-        atomStatusList: List<Byte>? = null
+        atomStatusList: List<Byte>? = null,
+        tenantId: String? = null
     ): MutableList<Condition> {
         val conditions = mutableListOf<Condition>()
         conditions.add(tAtom.ATOM_CODE.eq(atomCode))
+        if (useTenantCondition(tenantId)) {
+            conditions.add(tenantVisibleCondition(STORE_TENANT_ID, tenantId))
+        }
 
         if (version != null) {
             conditions.add(tAtom.VERSION.like(VersionUtils.generateQueryVersion(version)))
@@ -1008,6 +1029,9 @@ class AtomDao : AtomBaseDao() {
         param: AtomQueryParam
     ): MutableList<Condition> {
         val conditions = mutableListOf<Condition>()
+        if (useTenantCondition(param.tenantId)) {
+            conditions.add(tenantVisibleCondition(STORE_TENANT_ID, param.tenantId))
+        }
         buildServiceScopeCondition(tAtom.SERVICE_SCOPE, param.serviceScope)?.let { conditions.add(it) }
         buildClassifyCondition(tAtom, param.classifyId, param.serviceScope)?.let { conditions.add(it) }
         buildJobTypeCondition(

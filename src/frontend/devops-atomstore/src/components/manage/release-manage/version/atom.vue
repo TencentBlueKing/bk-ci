@@ -35,7 +35,11 @@
                 :label="$t('store.创建人')"
                 prop="creator"
                 show-overflow-tooltip
-            ></bk-table-column>
+            >
+                <template v-slot="props">
+                    <bk-user-display-name :user-id="props.row.creator" />
+                </template>
+            </bk-table-column>
             <bk-table-column
                 :label="$t('store.创建时间')"
                 prop="createTime"
@@ -137,8 +141,9 @@
                 >
                     <li class="detail-item">
                         <span class="detail-label">{{ $t('store.发布者：') }}</span>
-                        <span>{{ detail.publisher || '--' }}</span>
+                        <bk-user-display-name :user-id="detail.publisher" />
                     </li>
+
                     <li class="detail-item">
                         <span class="detail-label">{{ $t('store.发布类型：') }}</span>
                         <span>{{ releaseMap[detail.releaseType] || '--' }}</span>

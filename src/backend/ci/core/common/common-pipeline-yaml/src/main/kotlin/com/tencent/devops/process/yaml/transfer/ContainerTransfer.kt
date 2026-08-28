@@ -52,6 +52,7 @@ import com.tencent.devops.common.pipeline.type.BuildType
 import com.tencent.devops.common.pipeline.type.StoreDispatchType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentDispatch
 import com.tencent.devops.common.pipeline.type.docker.ImageType
+import com.tencent.devops.common.service.tenant.TenantUtils
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.pojo.BuildTemplateAcrossInfo
 import com.tencent.devops.process.yaml.transfer.VariableDefault.DEFAULT_CONTINUE_WHEN_FAILED
@@ -129,7 +130,10 @@ class ContainerTransfer @Autowired(required = false) constructor(
         // 获取imageName展示用
         if (dispatchType is StoreDispatchType && dispatchType.imageType == ImageType.BKSTORE) {
             val imageName = transferCache.getStoreImageDetail(
-                userId, dispatchType.imageCode!!, dispatchType.imageVersion
+                userId = userId,
+                imageCode = dispatchType.imageCode!!,
+                imageVersion = dispatchType.imageVersion,
+                tenantId = TenantUtils.getTenantIdByEnglishName(projectCode)
             )?.name
             dispatchType.imageName = imageName
         }
@@ -140,7 +144,8 @@ class ContainerTransfer @Autowired(required = false) constructor(
             val imageName = transferCache.getStoreImageDetail(
                 userId = userId,
                 imageCode = dispatchType.dockerInfo!!.storeImage!!.imageCode,
-                imageVersion = dispatchType.dockerInfo!!.storeImage!!.imageVersion
+                imageVersion = dispatchType.dockerInfo!!.storeImage!!.imageVersion,
+                tenantId = TenantUtils.getTenantIdByEnglishName(projectCode)
             )?.name
             dispatchType.dockerInfo!!.storeImage!!.imageName = imageName
         }
@@ -461,7 +466,7 @@ class ContainerTransfer @Autowired(required = false) constructor(
                     IfType.SUCCESS.name == job.ifField.expression -> JobRunCondition.PREVIOUS_STAGE_SUCCESS
                     IfType.FAILURE.name == job.ifField.expression -> JobRunCondition.PREVIOUS_STAGE_FAILED
                     IfType.CANCELLED.name == job.ifField.expression ||
-                        IfType.CANCELED.name == job.ifField.expression -> JobRunCondition.PREVIOUS_STAGE_CANCEL
+                            IfType.CANCELED.name == job.ifField.expression -> JobRunCondition.PREVIOUS_STAGE_CANCEL
 
                     else -> JobRunCondition.STAGE_RUNNING
                 },

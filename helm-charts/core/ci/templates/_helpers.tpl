@@ -345,3 +345,15 @@ Return the bkci turbo image name
 {{- define "bkci-turbo.image" -}}
 {{ include "common.images.image" (dict "imageRoot" .Values.turbo.image "global" .Values.global) }}
 {{- end -}}
+
+{{/*
+auth sync cron 开关：优先新 key bkCiAuthSyncCronEnabled；未配置时用旧 key bkCiSyncCronEnabled。
+不用 default，避免 false 被当成空值。
+*/}}
+{{- define "bkci.authSyncCronEnabled" -}}
+{{- if hasKey .Values.config "bkCiAuthSyncCronEnabled" -}}
+{{- index .Values.config "bkCiAuthSyncCronEnabled" -}}
+{{- else -}}
+{{- index .Values.config "bkCiSyncCronEnabled" -}}
+{{- end -}}
+{{- end -}}

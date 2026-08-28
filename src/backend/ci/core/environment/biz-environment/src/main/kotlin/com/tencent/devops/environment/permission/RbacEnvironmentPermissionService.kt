@@ -38,6 +38,7 @@ import com.tencent.devops.common.auth.utils.AuthCacheKeyUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.service.tenant.TenantUtils
 import com.tencent.devops.environment.permission.creativestream.CreativeStreamNodePermissionHandler
 import com.tencent.devops.model.environment.tables.records.TEnvRecord
 import com.tencent.devops.model.environment.tables.records.TNodeRecord
@@ -144,6 +145,7 @@ class RbacEnvironmentPermissionService(
     override fun createEnv(userId: String, projectId: String, envId: Long, envName: String) {
         client.get(ServicePermissionAuthResource::class).resourceCreateRelation(
             userId = userId,
+            tenantId = TenantUtils.getTenantIdByEnglishName(projectId),
             token = tokenCheckService.getSystemToken()!!,
             projectCode = projectId,
             resourceType = envResourceType,
@@ -328,6 +330,7 @@ class RbacEnvironmentPermissionService(
     ) {
         client.get(ServicePermissionAuthResource::class).resourceCreateRelation(
             userId = userId,
+            tenantId = TenantUtils.getTenantIdByEnglishName(projectId),
             token = tokenCheckService.getSystemToken()!!,
             projectCode = projectId,
             resourceType = resourceType.value,

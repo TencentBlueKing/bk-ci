@@ -99,7 +99,7 @@ CREATE TABLE IF NOT EXISTS `T_FAVORITE` (
 ) ENGINE=InnoDB AUTO_INCREMENT=109 DEFAULT CHARSET=utf8 COMMENT='关注收藏表';
 
 -- ----------------------------
--- Table structure for T_PROJECTS
+-- Table structure for T_PROJECT
 -- ----------------------------
 
 CREATE TABLE IF NOT EXISTS `T_PROJECT` (
@@ -153,12 +153,15 @@ CREATE TABLE IF NOT EXISTS `T_PROJECT` (
   `SUBJECT_SCOPES` text DEFAULT NULL COMMENT '最大可授权人员范围',
   `AUTH_SECRECY` int(10) DEFAULT b'0' COMMENT '项目性质,0-公开，1-保密,2-机密',
   `product_id` int(10) DEFAULT NULL comment '运营产品ID',
+  `tenant_english_name` varchar(32) DEFAULT NULL COMMENT '租户英文名',
+  `tenant_id` varchar(32) DEFAULT NULL COMMENT '租户ID，存量单租户可为空',
   `HIDDEN` bit(1) DEFAULT b'0' COMMENT '是否隐藏',
   `project_scope` int(10) NOT NULL DEFAULT '0' COMMENT '项目组织形态：0-团队项目，1-个人项目',
   PRIMARY KEY (`id`) USING BTREE,
-  UNIQUE KEY `project_name` (`project_name`) USING BTREE,
+  UNIQUE KEY `project_name_tenant_id` (`project_name`,`tenant_id`) USING BTREE,
   UNIQUE KEY `project_id` (`project_id`) USING BTREE,
-  UNIQUE KEY `english_name` (`english_name`) USING BTREE
+  UNIQUE KEY `english_name` (`english_name`) USING BTREE,
+  UNIQUE KEY `tenant_id_tenant_english_name` (`tenant_id`,`tenant_english_name`) USING BTREE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='项目信息表';
 
 -- ----------------------------
@@ -378,12 +381,15 @@ CREATE TABLE IF NOT EXISTS `T_PROJECT_APPROVAL` (
    `PRODUCT_ID` int(10) DEFAULT NULL COMMENT '运营产品ID',
    `PRODUCT_NAME` VARCHAR(64) DEFAULT NULL comment '运营产品名称',
    `PROPERTIES` text null comment '项目其他配置',
+   `TENANT_ENGLISH_NAME` varchar(32) DEFAULT NULL COMMENT '租户英文名',
+   `TENANT_ID` varchar(32) DEFAULT NULL COMMENT '租户ID，存量单租户可为空',
    `KPI_CODE` varchar(64) DEFAULT NULL COMMENT 'KPI产品编码',
    `KPI_NAME` varchar(128) DEFAULT NULL COMMENT 'KPI产品名称',
    `PROJECT_SCOPE` int(10) NOT NULL DEFAULT '0' COMMENT '项目组织形态：0-团队项目，1-个人项目',
    PRIMARY KEY (`ID`) USING BTREE,
-   UNIQUE KEY `project_name` (`PROJECT_NAME`) USING BTREE,
-   UNIQUE KEY `english_name` (`ENGLISH_NAME`) USING BTREE
+   UNIQUE KEY `project_name_tenant_id` (`PROJECT_NAME`,`TENANT_ID`) USING BTREE,
+   UNIQUE KEY `english_name` (`ENGLISH_NAME`) USING BTREE,
+   UNIQUE KEY `tenant_id_tenant_english_name` (`TENANT_ID`,`TENANT_ENGLISH_NAME`) USING BTREE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='项目审批表';
 
 CREATE TABLE IF NOT EXISTS `T_PROJECT_DATA_MIGRATE_HISTORY` (

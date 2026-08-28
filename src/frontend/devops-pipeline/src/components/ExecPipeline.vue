@@ -60,7 +60,7 @@
                     </span>
                     <!-- <p v-bk-tooltips="step.popup" class="time-step-divider"></p> -->
                     <p class="constant-width-num">
-                        {{ step.description }}
+                        <time-display :value="step.timeValue" />
                     </p>
                 </li>
             </ul>
@@ -289,7 +289,8 @@
     import Logo from '@/components/Logo'
     import MiniMap from '@/components/MiniMap'
     import { errorTypeMap } from '@/utils/pipelineConst'
-    import { convertMillSec, convertTime } from '@/utils/util'
+    import { convertMillSec } from '@/utils/util'
+    import TimeDisplay from '../../../common-lib/time-display'
     import BkPipeline, { loadI18nMessages } from 'bkui-pipeline/vue2'
     import simplebar from 'simplebar-vue'
     import 'simplebar-vue/dist/simplebar.min.css'
@@ -315,7 +316,8 @@
             CompleteLog,
             Logo,
             MiniMap,
-            BkPipeline
+            BkPipeline,
+            TimeDisplay
         },
         props: {
             execDetail: {
@@ -448,7 +450,7 @@
                 return [
                     {
                         title: this.$t('details.triggerTime'),
-                        description: convertTime(this.execDetail?.queueTime),
+                        timeValue: this.execDetail?.queueTime,
                         popup: {
                             ...this.timeDetailConf,
                             content: '.queue-time-detail-popup'
@@ -456,7 +458,7 @@
                     },
                     {
                         title: this.$t('details.startTime'),
-                        description: convertTime(this.execDetail?.startTime),
+                        timeValue: this.execDetail?.startTime,
                         popup: {
                             ...this.timeDetailConf,
                             content: '.time-detail-popup'
@@ -464,7 +466,7 @@
                     },
                     {
                         title: this.$t('details.endTime'),
-                        description: convertTime(this.execDetail?.endTime),
+                        timeValue: this.execDetail?.endTime,
                         popup: {
                             disabled: true
                         }

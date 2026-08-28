@@ -6,7 +6,7 @@ import com.tencent.devops.common.auth.api.pojo.AuthResourceInstance
 import org.slf4j.LoggerFactory
 
 class SampleAuthPermissionService : PermissionService {
-    override fun validateUserActionPermission(userId: String, action: String): Boolean {
+    override fun validateUserActionPermission(userId: String, action: String, tenantId: String?): Boolean {
         return true
     }
 
@@ -132,7 +132,8 @@ class SampleAuthPermissionService : PermissionService {
     override fun getUserProjectsByPermission(
         userId: String,
         action: String,
-        resourceType: String?
+        resourceType: String?,
+        tenantId: String?
     ): List<String> {
         return emptyList()
     }

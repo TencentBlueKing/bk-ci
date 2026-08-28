@@ -37,6 +37,7 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.api.util.ThreadLocalUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
@@ -291,6 +292,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                     recommendFlag = query.recommendFlag,
                     qualityFlag = query.qualityFlag,
                     serviceScope = query.serviceScope,
+                    tenantId = query.tenantId,
                     sortType = query.sortType,
                     desc = desc,
                     page = query.page,
@@ -393,7 +395,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                 serviceScope = query.serviceScope
             ) ?: "",
             modifier = record[tAtom.MODIFIER] as String,
-            updateTime = DateTimeUtil.toDateTime(record[tAtom.UPDATE_TIME] as LocalDateTime),
+            updateTime = (record[tAtom.UPDATE_TIME] as LocalDateTime).timestampmilli(),
             recommendFlag = record[tAtomFeature.RECOMMEND_FLAG],
             yamlFlag = record[tAtomFeature.YAML_FLAG],
             recentExecuteNum = statistic?.recentExecuteNum ?: 0,
@@ -421,6 +423,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         page: Int?,
         pageSize: Int?,
         urlProtocolTrim: Boolean,
+        tenantId: String?,
         serviceScope: ServiceScopeEnum?
     ): Result<List<MarketMainItem>> {
         val userDeptList = storeUserService.getUserDeptList(userId)
@@ -429,7 +432,8 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
             page = page,
             pageSize = pageSize,
             urlProtocolTrim = urlProtocolTrim,
-            serviceScope = serviceScope
+            serviceScope = serviceScope,
+            tenantId = tenantId
         )
         // 辅助函数：构建标签与异步查询的配对
         fun buildEntry(key: String, label: String, sortType: MarketAtomSortTypeEnum, classifyCode: String? = null) =
@@ -480,11 +484,12 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         userId: String,
         atomName: String?,
         page: Int,
-        pageSize: Int
+        pageSize: Int,
+        tenantId: String?
     ): Result<MyAtomResp?> {
-        logger.info("getMyAtoms params:[$userId|$atomName|$page|$pageSize]")
-        val records = marketAtomDao.getMyAtoms(dslContext, userId, atomName, page, pageSize)
-        val count = marketAtomDao.countMyAtoms(dslContext, userId, atomName)
+        logger.info("getMyAtoms params:[$userId|$atomName|$page|$pageSize|$tenantId]")
+        val records = marketAtomDao.getMyAtoms(dslContext, userId, atomName, page, pageSize, tenantId)
+        val count = marketAtomDao.countMyAtoms(dslContext, userId, atomName, tenantId)
         val tAtom = TAtom.T_ATOM
         val tAtomEnvInfo = TAtomEnvInfo.T_ATOM_ENV_INFO
 
@@ -521,8 +526,8 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                 releaseFlag = marketAtomDao.countReleaseAtomByCode(dslContext, atomCode) > 0,
                 creator = record[tAtom.CREATOR] as String,
                 modifier = record[tAtom.MODIFIER] as String,
-                createTime = DateTimeUtil.toDateTime(record[tAtom.CREATE_TIME] as LocalDateTime),
-                updateTime = DateTimeUtil.toDateTime(record[tAtom.UPDATE_TIME] as LocalDateTime),
+                createTime = (record[tAtom.CREATE_TIME] as LocalDateTime).timestampmilli(),
+                updateTime = (record[tAtom.UPDATE_TIME] as LocalDateTime).timestampmilli(),
                 processingVersionInfos = processingVersionInfoMap?.get(atomCode),
                 codeSrc = record[tAtom.CODE_SRC]
             )
@@ -556,15 +561,20 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
     /**
      * 根据插件版本ID获取版本基本信息、发布信息
      */
-    override fun getAtomById(atomId: String, userId: String, serviceScope: ServiceScopeEnum?): Result<AtomVersion?> {
-        return getAtomVersion(atomId, userId, serviceScope)
+    override fun getAtomById(
+        atomId: String,
+        userId: String,
+        tenantId: String?,
+        serviceScope: ServiceScopeEnum?
+    ): Result<AtomVersion?> {
+        return getAtomVersion(atomId, userId, serviceScope, tenantId)
     }
 
     /**
      * 根据插件标识获取插件回显版本信息
      */
-    override fun getAtomShowVersionInfo(userId: String, atomCode: String): Result<StoreShowVersionInfo> {
-        val record = marketAtomDao.getNewestAtomByCode(dslContext, atomCode) ?: throw ErrorCodeException(
+    override fun getAtomShowVersionInfo(userId: String, atomCode: String, tenantId: String?): Result<StoreShowVersionInfo> {
+        val record = marketAtomDao.getNewestAtomByCode(dslContext, atomCode, tenantId = tenantId) ?: throw ErrorCodeException(
             errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
             params = arrayOf(atomCode)
         )
@@ -572,7 +582,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         val showVersion = if (cancelFlag) {
             record.version
         } else {
-            marketAtomDao.getMaxVersionAtomByCode(dslContext, atomCode)?.version
+            marketAtomDao.getMaxVersionAtomByCode(dslContext, atomCode, tenantId = tenantId)?.version
         }
 
         val isAtomInitStatus = record.atomStatus == AtomStatusEnum.INIT.status.toByte()
@@ -601,7 +611,8 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
     override fun updateAtomErrorCodeInfo(
         userId: String,
         projectCode: String,
-        storeErrorCodeInfo: StoreErrorCodeInfo
+        storeErrorCodeInfo: StoreErrorCodeInfo,
+        tenantId: String?
     ): Result<Boolean> {
         val atomCode = storeErrorCodeInfo.storeCode ?: throw ErrorCodeException(
             errorCode = CommonMessageCode.PARAMETER_IS_NULL,
@@ -668,9 +679,10 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
     private fun getAtomVersion(
         atomId: String,
         userId: String,
-        serviceScope: ServiceScopeEnum? = null
+        serviceScope: ServiceScopeEnum? = null,
+        tenantId: String? = null
     ): Result<AtomVersion?> {
-        val record = marketAtomDao.getAtomById(dslContext, atomId, serviceScope) ?: return Result(data = null)
+        val record = marketAtomDao.getAtomById(dslContext, atomId, tenantId, serviceScope) ?: return Result(data = null)
 
         val tAtom = TAtom.T_ATOM
         val tAtomVersionLog = TAtomVersionLog.T_ATOM_VERSION_LOG
@@ -732,8 +744,8 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                 publisher = record[tAtom.PUBLISHER] as String,
                 modifier = record[tAtom.MODIFIER] as String,
                 creator = record[tAtom.CREATOR] as String,
-                createTime = DateTimeUtil.toDateTime(record[tAtom.CREATE_TIME] as LocalDateTime),
-                updateTime = DateTimeUtil.toDateTime(record[tAtom.UPDATE_TIME] as LocalDateTime),
+                createTime = (record[tAtom.CREATE_TIME] as LocalDateTime).timestampmilli(),
+                updateTime = (record[tAtom.UPDATE_TIME] as LocalDateTime).timestampmilli(),
                 flag = storeUserService.isCanInstallStoreComponent(
                     defaultFlag, userId, atomCode, StoreTypeEnum.ATOM
                 ),
@@ -752,7 +764,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                 frontendType = FrontendTypeEnum.getFrontendTypeObj(htmlTemplateVersion),
                 yamlFlag = true,
                 dailyStatisticList = getRecentDailyStatisticList(atomCode),
-                editFlag = marketAtomCommonService.checkEditCondition(atomCode),
+                editFlag = marketAtomCommonService.checkEditCondition(atomCode, tenantId),
                 honorInfos = storeHonorService.getStoreHonor(userId, StoreTypeEnum.ATOM, atomCode),
                 indexInfos = storeIndexManageService.getStoreIndexInfosByStoreCode(StoreTypeEnum.ATOM, atomCode),
                 serviceScopeDetails = serviceScopeDetails
@@ -823,12 +835,17 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
     /**
      * 根据插件标识获取插件最新、正式版本息
      */
-    override fun getAtomByCode(userId: String, atomCode: String, serviceScope: ServiceScopeEnum?): Result<AtomVersion?> {
-        val record = marketAtomDao.getLatestAtomByCode(dslContext, atomCode)
+    override fun getAtomByCode(
+        userId: String,
+        atomCode: String,
+        tenantId: String?,
+        serviceScope: ServiceScopeEnum?
+    ): Result<AtomVersion?> {
+        val record = marketAtomDao.getLatestAtomByCode(dslContext, atomCode, tenantId)
         return (if (null == record) {
             Result(data = null)
         } else {
-            getAtomVersion(record.id, userId, serviceScope)
+            getAtomVersion(record.id, userId, serviceScope, tenantId)
         })
     }
 
@@ -838,10 +855,11 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
     override fun getNewestAtomByCode(
         userId: String,
         atomCode: String,
+        tenantId: String?,
         serviceScope: ServiceScopeEnum?
     ): Result<AtomVersion?> {
-        val newest = marketAtomDao.getNewestAtomByCode(dslContext, atomCode)
-        val latest = marketAtomDao.getLatestAtomByCode(dslContext, atomCode)
+        val newest = marketAtomDao.getNewestAtomByCode(dslContext, atomCode, tenantId = tenantId)
+        val latest = marketAtomDao.getLatestAtomByCode(dslContext, atomCode, tenantId)
         return if (null == newest || null == latest) {
             I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
@@ -856,7 +874,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
             } else {
                 latest
             }
-            getAtomVersion(record.id, userId, serviceScope)
+            getAtomVersion(record.id, userId, serviceScope, tenantId)
         }
     }
 
@@ -867,11 +885,12 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
     override fun installAtom(
         userId: String,
         channelCode: ChannelCode,
-        installAtomReq: InstallAtomReq
+        installAtomReq: InstallAtomReq,
+        tenantId: String?
     ): Result<Boolean> {
         // 判断插件标识是否合法
         logger.info("installAtom params:[$userId|$channelCode|$installAtomReq]")
-        val atom = marketAtomDao.getLatestAtomByCode(dslContext, installAtomReq.atomCode)
+        val atom = marketAtomDao.getLatestAtomByCode(dslContext, installAtomReq.atomCode, tenantId)
         if (null == atom || atom.deleteFlag == true) {
             return I18nUtil.generateResponseDataObject(
                 messageCode = StoreMessageCode.USER_INSTALL_ATOM_CODE_IS_INVALID,
@@ -888,7 +907,8 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                 storeType = StoreTypeEnum.ATOM
             ),
             publicFlag = atom.defaultFlag,
-            channelCode = channelCode
+            channelCode = channelCode,
+            tenantId = tenantId
         )
     }
 
@@ -900,7 +920,8 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         version: String,
         userId: String,
         atomStatus: AtomStatusEnum,
-        msg: String?
+        msg: String?,
+        tenantId: String?
     ): Result<Boolean> {
         logger.info("setAtomBuildStatus|$userId,atomCode:$atomCode,version:$version,atomStatus:$atomStatus,msg:$msg")
         val atomRecord = atomDao.getPipelineAtom(dslContext, atomCode, version)
@@ -930,7 +951,8 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         userId: String,
         atomCode: String,
         page: Int,
-        pageSize: Int
+        pageSize: Int,
+        tenantId: String?
     ): Result<Page<AtomVersionListItem>> {
         // 判断当前用户是否是该插件的成员
         if (!storeMemberDao.isStoreMember(
@@ -967,7 +989,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                         versionContent = versionMap[it.id].toString(),
                         atomStatus = AtomStatusEnum.getAtomStatus((it.atomStatus as Byte).toInt()),
                         creator = it.creator,
-                        createTime = DateTimeUtil.toDateTime(it.createTime)
+                        createTime = it.createTime.timestampmilli()
                     )
                 )
             }
@@ -995,7 +1017,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
     /**
      * 删除插件
      */
-    override fun deleteAtom(userId: String, atomCode: String): Result<Boolean> {
+    override fun deleteAtom(userId: String, atomCode: String, tenantId: String?): Result<Boolean> {
         logger.info("deleteAtom userId: $userId , atomCode: $atomCode")
         val type = StoreTypeEnum.ATOM.type.toByte()
         val typeName = StoreTypeEnum.ATOM.name
@@ -1038,7 +1060,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
             .deleteAtomFile(userId, initProjectCode, atomCode)
             .takeIf { it.isNotOk() }?.let { return it }
         // 删除代码库
-        val atomRecord = marketAtomDao.getLatestAtomByCode(dslContext, atomCode)
+        val atomRecord = marketAtomDao.getLatestAtomByCode(dslContext, atomCode, tenantId)
         deleteAtomRepository(
             userId = userId,
             projectCode = initProjectCode,
@@ -1070,18 +1092,20 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         atomCode: String?,
         os: String?,
         classType: String?,
-        defaultShowFlag: Boolean?
-    ): String = atomYamlGenerateService.generateCiYaml(atomCode, os, classType, defaultShowFlag)
+        defaultShowFlag: Boolean?,
+        tenantId: String?
+    ): String = atomYamlGenerateService.generateCiYaml(atomCode, os, classType, defaultShowFlag, tenantId)
 
     override fun generateCiV2Yaml(
         atomCode: String,
         os: String?,
         classType: String?,
-        defaultShowFlag: Boolean?
-    ): String = atomYamlGenerateService.generateCiV2Yaml(atomCode, os, classType, defaultShowFlag)
+        defaultShowFlag: Boolean?,
+        tenantId: String?
+    ): String = atomYamlGenerateService.generateCiV2Yaml(atomCode, os, classType, defaultShowFlag, tenantId)
 
-    override fun getAtomOutput(atomCode: String): List<AtomOutput> =
-        atomPropsService.getAtomOutput(atomCode)
+    override fun getAtomOutput(atomCode: String, tenantId: String?): List<AtomOutput> =
+        atomPropsService.getAtomOutput(atomCode, tenantId)
 
     override fun getAtomsRely(getRelyAtom: GetRelyAtom): Map<String, Map<String, Any>> =
         atomPropsService.getAtomsRely(getRelyAtom)

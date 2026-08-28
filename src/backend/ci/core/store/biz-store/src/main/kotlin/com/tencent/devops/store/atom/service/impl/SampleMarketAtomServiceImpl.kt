@@ -29,6 +29,7 @@ package com.tencent.devops.store.atom.service.impl
 
 import com.tencent.devops.artifactory.api.ServiceArchiveAtomResource
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.service.tenant.TenantUtils
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.store.atom.service.SampleMarketAtomService
@@ -57,15 +58,19 @@ class SampleMarketAtomServiceImpl : SampleMarketAtomService, MarketAtomServiceIm
         projectCode: String,
         atomCode: String,
         content: String,
-        fileName: String
+        filePath: String
     ): Result<Boolean> {
-        val atomRecord = atomDao.getMaxVersionAtomByCode(dslContext, atomCode)!!
+        val atomRecord = atomDao.getMaxVersionAtomByCode(
+            dslContext = dslContext,
+            atomCode = atomCode,
+            tenantId = TenantUtils.getTenantId()
+        )!!
         return client.get(ServiceArchiveAtomResource::class)
             .updateArchiveFile(
                 projectCode = projectCode,
                 atomCode = atomCode,
                 version = atomRecord.version,
-                fileName = fileName,
+                fileName = filePath,
                 content = content
             )
     }

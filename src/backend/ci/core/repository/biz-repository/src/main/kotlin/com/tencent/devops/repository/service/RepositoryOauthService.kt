@@ -1,17 +1,20 @@
 package com.tencent.devops.repository.service
 
+import com.tencent.devops.auth.api.service.ServiceDeptResource
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.service.tenant.TenantUtils
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.repository.constant.RepositoryMessageCode
 import com.tencent.devops.repository.pojo.Oauth2State
 import com.tencent.devops.repository.pojo.RepoCondition
 import com.tencent.devops.repository.pojo.RepoOauthRefVo
-import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
 import com.tencent.devops.repository.pojo.RepositoryScmConfigVo
+import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.pojo.enums.ScmConfigStatus
 import com.tencent.devops.repository.pojo.oauth.Oauth2Url
@@ -23,11 +26,11 @@ import com.tencent.devops.repository.service.github.GithubOAuthService
 import com.tencent.devops.repository.service.hub.ScmTokenApiService
 import com.tencent.devops.repository.service.hub.ScmUserApiService
 import com.tencent.devops.repository.service.oauth2.Oauth2TokenStoreManager
+import java.util.Base64
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import org.springframework.web.util.UriComponentsBuilder
-import java.util.Base64
 
 /**
  * OAUTH授权代码库服务类
@@ -39,7 +42,8 @@ class RepositoryOauthService @Autowired constructor(
     private val scmConfigService: RepositoryScmConfigService,
     private val scmTokenApiService: ScmTokenApiService,
     private val scmUserApiService: ScmUserApiService,
-    val githubOAuthService: GithubOAuthService
+    private val githubOAuthService: GithubOAuthService,
+    private val client: Client
 ) {
     fun list(
         userId: String,
@@ -195,26 +199,37 @@ class RepositoryOauthService @Autowired constructor(
         }
         oauth2TokenStoreManager.store(scmCode = scmCode, oauthTokenInfo = oauthTokenInfo)
         return UriComponentsBuilder.fromUriString(oauth2State.redirectUrl)
-                .replaceQueryParam("userId", user.username)
-                .build()
-                .toUriString()
+            .replaceQueryParam("userId", user.username)
+            .build()
+            .toUriString()
     }
 
     fun oauthUserList(
         userId: String,
-        scmCode: String
+        scmCode: String,
+        tenantId: String?
     ): List<OauthUserVo> {
-        return oauth2TokenStoreManager.list(userId = userId, scmCode = scmCode)
-                .sortedWith(
-                    compareByDescending<OauthTokenInfo> { it.userId == userId }
-                            .thenBy { it.userId }
+        val oauthTokenInfos = oauth2TokenStoreManager.list(userId = userId, scmCode = scmCode)
+        val displayNameMap = if (TenantUtils.isMultiTenantMode()) {
+            client.get(ServiceDeptResource::class).listUserInfos(
+                memberIds = oauthTokenInfos.map { it.userId },
+                tenantId = tenantId
+            ).data?.associate { it.name to it.displayName } ?: emptyMap<String, String>()
+        } else {
+            emptyMap()
+        }
+        return oauthTokenInfos
+            .sortedWith(
+                compareByDescending<OauthTokenInfo> { it.userId == userId }
+                    .thenBy { it.userId }
+            )
+            .map {
+                OauthUserVo(
+                    username = it.userId,
+                    userDisplayName = displayNameMap[it.userId] ?: it.userId,
+                    operator = it.operator ?: it.userId
                 )
-                .map {
-                    OauthUserVo(
-                        username = it.userId,
-                        operator = it.operator ?: it.userId
-                    )
-                }
+            }
     }
 
     private fun encodeOauthState(

@@ -34,11 +34,12 @@ import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.INIT_VERSION
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.tenant.TenantUtils
 import com.tencent.devops.common.util.ThreadPoolUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.store.tables.TAtom
@@ -272,9 +273,9 @@ class OpAtomServiceImpl @Autowired constructor(
             },
             version = atomRecord.version,
             creator = atomRecord.creator,
-            createTime = DateTimeUtil.toDateTime(atomRecord.createTime),
+            createTime = atomRecord.createTime.timestampmilli(),
             modifier = atomRecord.modifier,
-            updateTime = DateTimeUtil.toDateTime(atomRecord.updateTime),
+            updateTime = atomRecord.updateTime.timestampmilli(),
             defaultFlag = atomRecord.defaultFlag,
             latestFlag = atomRecord.latestFlag,
             htmlTemplateVersion = atomRecord.htmlTemplateVersion,
@@ -309,9 +310,14 @@ class OpAtomServiceImpl @Autowired constructor(
     /**
      * 审核插件
      */
-    override fun approveAtom(userId: String, atomId: String, approveReq: ApproveReq): Result<Boolean> {
+    override fun approveAtom(
+        userId: String,
+        atomId: String,
+        approveReq: ApproveReq,
+        tenantId: String?
+    ): Result<Boolean> {
         // 判断插件是否存在
-        val atom = marketAtomDao.getAtomRecordById(dslContext, atomId)
+        val atom = marketAtomDao.getAtomRecordById(dslContext, atomId, tenantId)
             ?: return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                 params = arrayOf(atomId),
@@ -365,7 +371,8 @@ class OpAtomServiceImpl @Autowired constructor(
                     repositoryHashId = atom.repositoryHashId,
                     branch = atom.branch,
                     publisher = atom.modifier
-                )
+                ),
+                tenantId = tenantId
             )
         } else {
             // 更新质量红线信息
@@ -394,7 +401,8 @@ class OpAtomServiceImpl @Autowired constructor(
         disposition: FormDataContentDisposition,
         publisher: String?,
         releaseType: ReleaseTypeEnum?,
-        version: String?
+        version: String?,
+        tenantId: String?
     ): Result<Boolean> {
         val (atomPath, file) = StoreFileAnalysisUtil.extractStorePackage(
             storeCode = atomCode,
@@ -430,6 +438,7 @@ class OpAtomServiceImpl @Autowired constructor(
             // 如果接口query参数的发布者不为空，发布者以接口query参数的发布者为准
             versionInfo.publisher = publisher
         }
+        releaseInfo.projectId = TenantUtils.parseEnglishName(tenantId, releaseInfo.projectId)
         releaseType?.let {
             // 如果接口query参数的发布类型不为空，发布类型以接口query参数的发布类型为准
             versionInfo.releaseType = releaseType
@@ -438,6 +447,7 @@ class OpAtomServiceImpl @Autowired constructor(
             // 如果接口query参数的版本号不为空，发布者以接口query参数的版本号为准
             versionInfo.version = version
         }
+        val finalTenantId = tenantId ?: TenantUtils.getTenantIdByEnglishName(releaseInfo.projectId)
         if (versionInfo.releaseType == ReleaseTypeEnum.NEW && atomDao.getPipelineAtom(
                 dslContext = dslContext,
                 atomCode = atomCode,
@@ -454,7 +464,8 @@ class OpAtomServiceImpl @Autowired constructor(
                     language = releaseInfo.language,
                     frontendType = releaseInfo.configInfo.frontendType,
                     packageSourceType = PackageSourceTypeEnum.UPLOAD
-                )
+                ),
+                tenantId = finalTenantId
             )
             if (addMarketAtomResult.isNotOk()) {
                 return Result(data = false, message = addMarketAtomResult.message)
@@ -474,7 +485,7 @@ class OpAtomServiceImpl @Autowired constructor(
             val relativePath = logoUrlAnalysisResult.data
             val logoFile = File(
                 "$atomPath${File.separator}file" +
-                    "${File.separator}${relativePath?.removePrefix(File.separator)}"
+                        "${File.separator}${relativePath?.removePrefix(File.separator)}"
             )
             if (logoFile.exists()) {
                 val result = storeLogoService.uploadStoreLogo(
@@ -569,7 +580,8 @@ class OpAtomServiceImpl @Autowired constructor(
                 frontendType = releaseInfo.configInfo.frontendType,
                 logoUrl = releaseInfo.logoUrl,
                 classifyCode = releaseInfo.classifyCode
-            )
+            ),
+            tenantId = finalTenantId
         )
         if (updateMarketAtomResult.isNotOk()) {
             return Result(
@@ -583,7 +595,7 @@ class OpAtomServiceImpl @Autowired constructor(
         }
         val atomId = updateMarketAtomResult.data!!
         // 确认测试通过
-        return atomReleaseService.passTest(userId, atomId)
+        return atomReleaseService.passTest(userId, atomId, finalTenantId)
     }
 
     override fun setDefault(userId: String, atomCode: String): Boolean {

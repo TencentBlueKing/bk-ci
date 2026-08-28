@@ -4,12 +4,19 @@
         :title="sliderOpt.title"
         :quick-close="sliderOpt.quickClose"
         :width="sliderOpt.width"
-        @hidden="hideSlide">
-        <div slot="content" class="filter-wrapper">
+        @hidden="hideSlide"
+    >
+        <div
+            slot="content"
+            class="filter-wrapper"
+        >
             <div class="filter-content">
                 <div>
                     <div class="form-group">
-                        <label for="pipelineName" class="filter-label">{{ $t('pipelineName') }}：</label>
+                        <label
+                            for="pipelineName"
+                            class="filter-label"
+                        >{{ $t('pipelineName') }}：</label>
                         <bk-input
                             v-validate.initial="'max:40'"
                             name="pipelineName"
@@ -23,29 +30,53 @@
                             v-model.trim="currentFilter.filterByPipelineName"
                             @enter="filterCommit"
                         />
-                        <p :class="errors.has('pipelineName') ? 'error-tips' : 'normal-tips'">{{errors.first("pipelineName")}}</p>
+                        <p :class="errors.has('pipelineName') ? 'error-tips' : 'normal-tips'">{{ errors.first("pipelineName") }}</p>
                     </div>
                     <div class="form-group">
                         <form-field :label="$t('creator')">
-                            <user-input :handle-change="handleChange"
+                            <user-input
+                                :handle-change="handleChange"
                                 name="users"
-                                v-model="currentFilter.filterByCreator">
+                                v-model="currentFilter.filterByCreator"
+                            >
                             </user-input>
                         </form-field>
                     </div>
-                    <div class="form-group"
-                        v-for="(group, index) in tagGroupList" :key="index">
-                        <label class="filter-label">{{group.name}}：</label>
+                    <div
+                        class="form-group"
+                        v-for="(group, index) in tagGroupList"
+                        :key="index"
+                    >
+                        <label class="filter-label">{{ group.name }}：</label>
                         <bk-select
                             v-model="currentFilter[group.id]"
-                            multiple="true">
-                            <bk-option v-for="(option, oindex) in group.labels" :key="oindex" :id="option.id" :name="option.name">
+                            multiple="true"
+                        >
+                            <bk-option
+                                v-for="(option, oindex) in group.labels"
+                                :key="oindex"
+                                :id="option.id"
+                                :name="option.name"
+                            >
                             </bk-option>
                         </bk-select>
                     </div>
                     <div class="form-group filter-modify">
-                        <bk-button theme="primary" size="small" :disabled="isDisabled" @click.stop.prevent="filterCommit">{{ $t('newlist.filter') }}</bk-button>
-                        <bk-button text class="btn" @click="resetFilter">{{ $t('newlist.reset') }}</bk-button>
+                        <bk-button
+                            theme="primary"
+                            size="small"
+                            :disabled="isDisabled"
+                            @click.stop.prevent="filterCommit"
+                        >
+                            {{ $t('newlist.filter') }}
+                        </bk-button>
+                        <bk-button
+                            text
+                            class="btn"
+                            @click="resetFilter"
+                        >
+                            {{ $t('newlist.reset') }}
+                        </bk-button>
                     </div>
                 </div>
             </div>
@@ -54,9 +85,9 @@
 </template>
 
 <script>
-    import { mapGetters } from 'vuex'
     import FormField from '@/components/AtomPropertyPanel/FormField.vue'
     import UserInput from '@/components/atomFormField/UserInput/index.vue'
+    import { mapGetters } from 'vuex'
 
     export default {
         components: {

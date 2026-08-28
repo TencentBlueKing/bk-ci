@@ -923,7 +923,7 @@
     "noBranchAvailable": "選択可能なブランチがありません"
   },
   "details": {
-    "executorInfo": "{0} {1}が{2}にトリガー",
+    "executorInfo": "が{0}にトリガー",
     "pipelineVersionDiffTips": "パイプライン編成バージョン番号が変更されました",
     "executeDetail": "実行詳細",
     "outputs": "成果物",
@@ -1247,6 +1247,9 @@
     "archived": "カスタムレポートはアーカイブされています",
     "baseRule": "基本ルール",
     "crontabTitle": "詳細（カスタムcrontab式）",
+    "timerTimeZone": "トリガータイムゾーン",
+    "timerTimeZoneDesc": "Cronの壁時計時刻は選択したIANAタイムゾーンで解釈されます。新規はテナント時区を既定とし、未設定の既存タスクはAsia/Shanghaiを使用します。",
+    "timerTimeZonePlaceholder": "タイムゾーンを選択",
     "cronWeekHint": "毎週のトリガー時間をチェックしてください",
     "planRule": "計画タスクルール",
     "crontabExpression": "構文が正しいcrontab式を入力してください。複数の式は改行で入力してください",
@@ -1820,6 +1823,7 @@
   "refreshOauthStatus": "認証状態を更新",
   "oauthPacTips": "未だ認証されていません。先にボタンをクリックして認証してください。<br/>認証後、あなたの身分を使用してYAMLファイルをコードリポジトリに送信します。コードリポジトリの開発者以上の権限が必要です。",
   "withoutOauthCodelib": "現在の環境でサポートされているコードリポジトリソースは、PAC機能に未だ接続されていません。お問い合わせください",
+  "unSupportPACTips": "現在の環境でサポートされているコードベースソースが、まだPAC機能に接続されていません。管理者にご相談ください。",
   "reExec": "再実行",
   "reDebug": "再デバッグ",
   "pipelineConf": "パイプライン設定",
@@ -2202,7 +2206,8 @@
     "everyDay": "毎日",
     "everyWeek": "毎週",
     "everyMonth": "毎月",
-    "errorTips": "タイミングルールは空にできないか、形式が正しくありません"
+    "errorTips": "タイミングルールは空にできないか、形式が正しくありません",
+    "nextRuns": "{0} での次回 5 回の実行"
   },
   "validVariableFormat": "有効な変数形式を入力してください",
   "enterRepoAlias": "コードリポジトリの別名を入力してください",

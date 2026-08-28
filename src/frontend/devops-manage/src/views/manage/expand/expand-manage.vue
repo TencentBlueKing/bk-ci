@@ -7,6 +7,7 @@ import { useI18n } from 'vue-i18n';
 import {
   useRoute,
 } from 'vue-router';
+import TimeDisplay from '../../../../../common-lib/time-display';
 const { t } = useI18n();
 const route = useRoute();
 
@@ -88,13 +89,6 @@ const getIcon = (id: string | number) => {
   return link.replace(/\/?(devops\/)?(\w+)\S*$/, '$2');
 };
 
-const timeFormatter = (cellValue: string | number) => {
-  const date = new Date(+cellValue);
-  const year = date.toISOString().slice(0, 10);
-  const time = date.toTimeString().split(' ')[0];
-  return `${year} ${time}`;
-};
-
 const statusFormatter = (cellValue: string | number) => serviceStatusMap[cellValue];
 
 onMounted(() => {
@@ -150,7 +144,7 @@ onMounted(() => {
           <bk-table-column :label="t('操作人')" prop="publisher"></bk-table-column>
           <bk-table-column :label="t('操作时间')" prop="publishTime" width="180">
             <template #default="{ data }">
-              {{ timeFormatter(data.publishTime || '') }}
+              <time-display :value="data.publishTime" />
             </template>
           </bk-table-column>
           <bk-table-column :label="t('操作')">

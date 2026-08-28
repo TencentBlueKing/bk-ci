@@ -110,7 +110,7 @@
                         <a
                             class="add-indicator"
                             target="_blank"
-                            :href="`/console/quality/${projectId}/metadataList`"
+                            :href="metadataListHref"
                         >{{ $t('quality.缺少需要的指标？') }}</a>
                     </p>
                     <hr>
@@ -404,14 +404,14 @@
                                                 class="add-btn"
                                                 v-if="props.row.type === 'pipeline' && (props.row.lackPointElement.length || checkAtomAsync(props.row.existElement) || checkAtomCount(props.row.existElement)) && !props.row.isRefresh"
                                                 target="_blank"
-                                                :href="`/console/pipeline/${projectId}/${props.row.pipelineId}/edit`"
+                                                :href="goToPipelineHref(props.row)"
                                                 @click="updatePipelineStatus(props.row.pipelineId)"
                                             >{{ $t('quality.去修改') }}</a>
                                             <a
                                                 class="add-btn"
                                                 v-else-if="props.row.type === 'template' && (props.row.lackPointElement.length || checkAtomAsync(props.row.existElement) || checkAtomCount(props.row.existElement)) && !props.row.isRefresh"
                                                 target="_blank"
-                                                :href="`/console/pipeline/${projectId}/template/${props.row.templateId}/edit`"
+                                                :href="goToTemplateHref(props.row)"
                                                 @click="updateTemplateStatus(props.row.templateId)"
                                             >{{ $t('quality.去修改') }}</a>
                                             <span
@@ -510,9 +510,8 @@
                                             :desc="$t('quality.请输入通知人员，支持输入流水线变量，默认发给流水线触发人')"
                                         >
                                             <user-input
-                                                :handle-change="handleChange"
-                                                name="attacher"
-                                                :value="createRuleForm.notifyUserList"
+                                                multiple
+                                                v-model="createRuleForm.notifyUserList"
                                                 :placeholder="$t('quality.请输入通知人员，支持输入流水线变量，默认发给流水线触发人')"
                                             ></user-input>
                                         </bk-form-item>
@@ -530,9 +529,8 @@
                                             :required="true"
                                         >
                                             <user-input
-                                                :handle-change="handleChange"
-                                                name="reviewer"
-                                                :value="createRuleForm.auditUserList"
+                                                multiple
+                                                v-model="createRuleForm.auditUserList"
                                                 :placeholder="$t('quality.请输入审核人，支持输入流水线变量')"
                                             ></user-input>
                                         </bk-form-item>
@@ -672,7 +670,6 @@
             :node-select-conf="nodeSelectConf"
             :create-group-form="createGroupForm"
             :loading="dialogLoading"
-            :on-change="handleChange"
             :error-handler="errorHandler"
             @confirmFn="confirmFn"
             :cancel-fn="cancelFn"
@@ -825,6 +822,15 @@
             ...mapGetters('quality', [
                 'getUserGroup'
             ]),
+            metadataListHref () {
+                return `${window.getRoutePrefix()}/quality/${this.projectId}/metadataList`
+            },
+            goToPipelineHref (row) {
+                return `${window.getRoutePrefix()}/pipeline/${this.projectId}/${row.pipelineId}/edit`
+            },
+            goToTemplateHref (row) {
+                return `${window.getRoutePrefix()}/pipeline/${this.projectId}/template/${row.templateId}/edit`
+            },
             projectId () {
                 return this.$route.params.projectId
             },
@@ -1240,7 +1246,7 @@
 
                     this.createRuleForm = JSON.parse(JSON.stringify(this.baseForm))
                     Object.assign(this.createRuleForm, res)
-
+                    
                     // 指标处理
                     this.createRuleForm.indicators.forEach(item => {
                         item.operationList = item.operationList.map(operation => {
@@ -1406,15 +1412,6 @@
             },
             closePipelineList () {
                 this.showPipelineList = false
-            },
-            handleChange (name, value) {
-                if (name === 'reviewer') {
-                    this.createRuleForm.auditUserList = value
-                } else if (name === 'attacher') {
-                    this.createRuleForm.notifyUserList = value
-                } else if (name === 'innerList') {
-                    this.createGroupForm.internal_list = value
-                }
             },
             toCreateGroup () {
                 this.createGroupForm = {

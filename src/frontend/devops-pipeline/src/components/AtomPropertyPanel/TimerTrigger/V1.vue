@@ -1,5 +1,18 @@
 <template>
     <div class="bk-form bk-form-vertical">
+        <form-field
+            :required="true"
+            :label="$t('editPage.timerTimeZone')"
+            :desc="$t('editPage.timerTimeZoneDesc')"
+        >
+            <time-zone-select
+                name="timeZone"
+                :value="element.timeZone"
+                :disabled="disabled"
+                :handle-change="handleUpdateElement"
+                :placeholder="$t('editPage.timerTimeZonePlaceholder')"
+            />
+        </form-field>
         <accordion
             show-checkbox
             :show-content="isShowBasicRule"
@@ -151,12 +164,14 @@
     import validMixins from '../../validMixins'
     import atomMixin from '../atomMixin'
     import CodelibSelector from './CodelibSelector'
+    import TimeZoneSelect from './TimeZoneSelect'
 
     export default {
         name: 'timer-trigger',
         components: {
             BranchParameterArray,
-            CodelibSelector
+            CodelibSelector,
+            TimeZoneSelect
         },
         mixins: [atomMixin, validMixins],
         data () {

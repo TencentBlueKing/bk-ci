@@ -37,6 +37,7 @@ import com.tencent.devops.common.auth.utils.AuthCacheKeyUtil
 import com.tencent.devops.common.auth.rbac.utils.RbacAuthUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
+import com.tencent.devops.common.service.tenant.TenantUtils
 import com.tencent.devops.ticket.dao.CertDao
 import com.tencent.devops.ticket.service.CertPermissionService
 import org.jooq.DSLContext
@@ -179,7 +180,8 @@ class RbacCertPermissionService constructor(
             projectCode = projectId,
             resourceType = AuthResourceType.TICKET_CERT.value,
             resourceCode = certId,
-            resourceName = certId
+            resourceName = certId,
+            tenantId = TenantUtils.getTenantIdByEnglishName(projectId)
         )
     }
 

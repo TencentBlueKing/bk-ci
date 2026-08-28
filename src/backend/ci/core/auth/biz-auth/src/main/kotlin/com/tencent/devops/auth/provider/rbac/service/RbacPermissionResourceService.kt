@@ -45,8 +45,10 @@ import com.tencent.devops.common.api.pojo.Pagination
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.auth.api.AuthResourceType
+import com.tencent.devops.common.auth.api.ResourceTypeId
 import com.tencent.devops.common.auth.api.pojo.ResourceAuthorizationDTO
 import com.tencent.devops.common.event.dispatcher.trace.TraceEventDispatcher
+import com.tencent.devops.common.service.tenant.TenantUtils
 import com.tencent.devops.common.service.trace.TraceTag
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
@@ -80,24 +82,32 @@ class RbacPermissionResourceService(
         resourceType: String,
         resourceCode: String,
         resourceName: String,
+        tenantId: String?,
         async: Boolean
     ): Boolean {
-        logger.info("resource create relation|$userId|$projectCode|$resourceType|$resourceCode|$resourceName")
+        val finalProjectCode = TenantUtils.parseEnglishName(tenantId, projectCode)
+        val finalResourceCode = if (resourceType == ResourceTypeId.PROJECT && TenantUtils.isMultiTenantMode()) {
+            finalProjectCode
+        } else {
+            resourceCode
+        }
+
+        logger.info("resource create relation|$userId|$finalProjectCode|$resourceType|$resourceCode|$resourceName")
         val resource = authResourceService.getOrNull(
-            projectCode = projectCode,
+            projectCode = finalProjectCode,
             resourceType = resourceType,
-            resourceCode = resourceCode
+            resourceCode = finalResourceCode
         )
         if (resource != null) {
             logger.info(
                 "This resource has been registered. no need to register again" +
-                        ":$projectCode|$resourceType$resourceCode"
+                        ":$finalProjectCode|$resourceType$finalResourceCode"
             )
             return true
         }
         val iamResourceCode = authResourceCodeConverter.generateIamCode(
             resourceType = resourceType,
-            resourceCode = resourceCode
+            resourceCode = finalResourceCode
         )
         var projectName = resourceName
         val personalProject = personalProjectService.isPersonalProject(projectCode)
@@ -115,26 +125,26 @@ class RbacPermissionResourceService(
         val managerId = if (resourceType == AuthResourceType.PROJECT.value) {
             permissionGradeManagerService.createGradeManager(
                 userId = userId,
-                projectCode = projectCode,
+                projectCode = finalProjectCode,
                 projectName = resourceName,
                 resourceType = AuthResourceType.PROJECT.value,
-                resourceCode = resourceCode,
+                resourceCode = finalResourceCode,
                 resourceName = resourceName
             )
         } else {
             val projectInfo = authResourceService.get(
-                projectCode = projectCode,
+                projectCode = finalProjectCode,
                 resourceType = AuthResourceType.PROJECT.value,
-                resourceCode = projectCode
+                resourceCode = finalProjectCode
             )
             projectName = projectInfo.resourceName
             permissionSubsetManagerService.createSubsetManager(
                 gradeManagerId = projectInfo.relationId,
                 userId = userId,
-                projectCode = projectCode,
+                projectCode = finalProjectCode,
                 projectName = projectInfo.resourceName,
                 resourceType = resourceType,
-                resourceCode = resourceCode,
+                resourceCode = finalResourceCode,
                 resourceName = resourceName,
                 iamResourceCode = iamResourceCode
             )
@@ -144,27 +154,28 @@ class RbacPermissionResourceService(
         if (isCreateResourceAndGroup) {
             createLocalResource(
                 userId = userId,
-                projectCode = projectCode,
+                projectCode = finalProjectCode,
                 resourceType = resourceType,
                 resourceName = resourceName,
-                resourceCode = resourceCode,
+                resourceCode = finalResourceCode,
                 iamResourceCode = iamResourceCode,
                 relationId = managerId.toString(),
                 cleanup = {
+                    val cleanupTenantId = TenantUtils.iamTenantId(finalProjectCode)
                     if (resourceType == AuthResourceType.PROJECT.value) {
-                        iamV2ManagerService.deleteManagerV2(managerId.toString())
+                        iamV2ManagerService.deleteManagerV2(managerId.toString(), cleanupTenantId)
                     } else {
-                        iamV2ManagerService.deleteSubsetManager(managerId.toString())
+                        iamV2ManagerService.deleteSubsetManager(managerId.toString(), cleanupTenantId)
                     }
                 }
             )
             createResourceDefaultGroup(
                 userId = userId,
-                projectCode = projectCode,
+                projectCode = finalProjectCode,
                 projectName = projectName,
                 resourceType = resourceType,
                 resourceName = resourceName,
-                resourceCode = resourceCode,
+                resourceCode = finalResourceCode,
                 iamResourceCode = iamResourceCode,
                 async = async,
                 managerId = managerId
@@ -199,7 +210,12 @@ class RbacPermissionResourceService(
                 resourceCode = resourceCode,
                 iamResourceCode = iamResourceCode,
                 relationId = gradeManagerId.toString(),
-                cleanup = { iamV2ManagerService.deleteManagerV2(gradeManagerId.toString()) }
+                cleanup = {
+                    iamV2ManagerService.deleteManagerV2(
+                        gradeManagerId.toString(),
+                        TenantUtils.iamTenantId(projectCode)
+                    )
+                }
             )
             permissionResourceGroupService.syncManagerGroup(
                 projectCode = projectCode,
@@ -416,7 +432,10 @@ class RbacPermissionResourceService(
                         resourceName = deleteResourceName,
                         iamResourceCode = resourceInfo.iamResourceCode
                     )
-                    permissionSubsetManagerService.deleteSubsetManager(resourceInfo.relationId)
+                    permissionSubsetManagerService.deleteSubsetManager(
+                        resourceInfo.relationId,
+                        TenantUtils.getTenantIdByEnglishName(projectCode)
+                    )
                 }
             }
         }

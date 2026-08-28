@@ -33,10 +33,11 @@ import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
-import com.tencent.devops.common.auth.utils.AuthCacheKeyUtil
 import com.tencent.devops.common.auth.rbac.utils.RbacAuthUtils
+import com.tencent.devops.common.auth.utils.AuthCacheKeyUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
+import com.tencent.devops.common.service.tenant.TenantUtils
 import com.tencent.devops.quality.service.QualityPermissionService
 import org.jooq.DSLContext
 
@@ -109,7 +110,8 @@ class RbacQualityPermissionServiceImpl(
                 userId = userId,
                 projectId = projectId,
                 authPermission = authPermission
-            )) {
+            )
+        ) {
             throw PermissionForbiddenException(message)
         }
     }
@@ -117,6 +119,7 @@ class RbacQualityPermissionServiceImpl(
     override fun createGroupResource(userId: String, projectId: String, groupId: Long, groupName: String) {
         client.get(ServicePermissionAuthResource::class).resourceCreateRelation(
             userId = userId,
+            tenantId = TenantUtils.getTenantIdByEnglishName(projectId),
             token = tokenService.getSystemToken()!!,
             projectCode = projectId,
             resourceType = AuthResourceType.QUALITY_GROUP_NEW.value,
@@ -240,6 +243,7 @@ class RbacQualityPermissionServiceImpl(
     override fun createRuleResource(userId: String, projectId: String, ruleId: Long, ruleName: String) {
         client.get(ServicePermissionAuthResource::class).resourceCreateRelation(
             userId = userId,
+            tenantId = TenantUtils.getTenantIdByEnglishName(projectId),
             token = tokenService.getSystemToken()!!,
             projectCode = projectId,
             resourceType = AuthResourceType.QUALITY_RULE.value,

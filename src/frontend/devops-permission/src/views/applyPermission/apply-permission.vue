@@ -208,7 +208,7 @@ const handleToProjectManage = (project) => {
   const { routerTag, englishName } = project;
   switch (routerTag) {
     case 'v0':
-        window.open(`/console/perm/apply-join-project?project_code=${englishName}`)
+        window.open(`${window.getRoutePrefix()}/perm/apply-join-project?project_code=${englishName}`)
         break
     case 'v3':
         window.open(`${window.BK_IAM_URL_PREFIX}/apply-join-user-group`)
@@ -256,19 +256,11 @@ onMounted(async () => {
                 <bk-option
                     v-show="!project.hide"
                     :value="project.englishName"
-                    :disabled="['v0', 'v3'].includes(project.routerTag)"
                     :label="project.projectName"
                 >
                   <div
                     class="option-item">
                     {{ project.projectName }}
-                    <i
-                      v-if="['v0', 'v3'].includes(project.routerTag)"
-                      v-bk-tooltips="t('项目尚未升级到新版权限系统，点击前往旧版权限中心申请')"
-                      class="permission-icon permission-icon-edit edit-icon"
-                      @click="handleToProjectManage(project)"
-                    >
-                    </i>
                   </div>
                 </bk-option>
               </div>

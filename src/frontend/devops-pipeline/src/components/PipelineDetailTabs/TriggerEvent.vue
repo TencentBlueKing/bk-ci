@@ -44,9 +44,10 @@
 <script>
     import InfiniteScroll from '@/components/InfiniteScroll'
     import EmptyException from '@/components/common/exception'
+    import TenantSingleton from '@/utils/tenant'
+    import { weekAgo, userTzTodayRange, userTzYesterdayRange, userTzLastDaysRange } from '@/utils/util'
     import SearchSelect from '@blueking/search-select'
     import { mapActions } from 'vuex'
-    import { weekAgo } from '@/utils/util'
     import TriggerEventTimeline from './TriggerEventTimeline.vue'
 
     import '@blueking/search-select/dist/styles/index.css'
@@ -90,7 +91,8 @@
                     },
                     {
                         name: this.$t('details.trigger'),
-                        id: 'triggerUser'
+                        id: 'triggerUser',
+                        remoteMethod: TenantSingleton.fetchTenantUsers
                     },
                     {
                         name: this.$t('details.triggerResult'),
@@ -123,40 +125,29 @@
             },
             shortcuts () {
                 return [{
-                            text: this.$t('今天'),
-                            value () {
-                                const end = new Date()
-                                const start = new Date(end.getFullYear(), end.getMonth(), end.getDate())
-                                return [start, end]
-                            }
-                        },
-                        {
-                            text: this.$t('昨天'),
-                            value () {
-                                const time = new Date()
-                                const end = new Date(time.getFullYear(), time.getMonth(), time.getDate() - 1, 23, 59, 59)
-                                const start = new Date(time.getFullYear(), time.getMonth(), time.getDate() - 1)
-                                return [start, end]
-                            }
-                        },
-                        {
-                            text: this.$t('近3天'),
-                            value () {
-                                const end = new Date()
-                                const start = new Date()
-                                start.setTime(start.getTime() - 3600 * 1000 * 24 * 3)
-                                return [start, end]
-                            }
-                        },
-                        {
-                            text: this.$t('近7天'),
-                            value () {
-                                const end = new Date()
-                                const start = new Date()
-                                start.setTime(start.getTime() - 3600 * 1000 * 24 * 7)
-                                return [start, end]
-                            }
-                        }]
+                    text: this.$t('今天'),
+                    value () {
+                        return userTzTodayRange()
+                    }
+                },
+                {
+                    text: this.$t('昨天'),
+                    value () {
+                        return userTzYesterdayRange()
+                    }
+                },
+                {
+                    text: this.$t('近3天'),
+                    value () {
+                        return userTzLastDaysRange(3)
+                    }
+                },
+                {
+                    text: this.$t('近7天'),
+                    value () {
+                        return userTzLastDaysRange(7)
+                    }
+                }]
             }
         },
         watch: {
@@ -177,17 +168,27 @@
                 'getTriggerTypeList',
                 'getEventTypeList'
             ]),
+            handleQuery () {
+                return Promise.all(
+                    this.filterData.filter(cur => this.$route.query[cur.id]).map(async cur => {
+                        let valuesText = this.$route.query[cur.id]
+                        if (cur.id === 'triggerUser') {
+                            valuesText = await TenantSingleton.fetchTenantDisplayNames(valuesText)
+                            return {
+                                ...cur,
+                                values: valuesText ?? []
+                            }
+                        }
+                        return {
+                            ...cur,
+                            values: valuesText ? [{ id: valuesText, name: valuesText }] : []
+                        }
+                    })
+                )
+            },
             async init () {
                 try {
-                    this.searchKey = this.filterData.reduce((acc, cur) => {
-                        const valuesText = this.$route.query[cur.id]
-                        if (valuesText) {
-                            acc.push({
-                                ...cur, values: [{ id: valuesText, name: valuesText }]
-                            })
-                        }
-                        return acc
-                    }, [])
+                    this.searchKey = await this.handleQuery()
 
                     const [
                         triggerTypeList,

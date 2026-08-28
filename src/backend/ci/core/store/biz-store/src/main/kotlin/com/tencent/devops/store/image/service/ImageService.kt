@@ -34,7 +34,6 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.timestampmilli
@@ -116,7 +115,6 @@ import com.tencent.devops.store.pojo.image.response.MarketImageMain
 import com.tencent.devops.store.pojo.image.response.MarketImageResp
 import com.tencent.devops.store.pojo.image.response.MyImage
 import java.time.LocalDateTime
-import java.util.Date
 import kotlin.math.ceil
 import org.jooq.DSLContext
 import org.jooq.Record
@@ -132,57 +130,83 @@ import org.springframework.cloud.context.config.annotation.RefreshScope
 abstract class ImageService @Autowired constructor() {
     @Autowired
     lateinit var dslContext: DSLContext
+
     @Autowired
     lateinit var imageDao: ImageDao
+
     @Autowired
     lateinit var imageCategoryRelDao: ImageCategoryRelDao
+
     @Autowired
     lateinit var classifyDao: ClassifyDao
+
     @Autowired
     lateinit var categoryDao: CategoryDao
+
     @Autowired
     lateinit var imageFeatureDao: ImageFeatureDao
+
     @Autowired
     lateinit var imageAgentTypeDao: ImageAgentTypeDao
+
     @Autowired
     lateinit var imageVersionLogDao: ImageVersionLogDao
+
     @Autowired
     lateinit var imageLabelRelDao: ImageLabelRelDao
+
     @Autowired
     lateinit var marketImageDao: MarketImageDao
+
     @Autowired
     lateinit var marketImageFeatureDao: MarketImageFeatureDao
+
     @Autowired
     lateinit var storeMemberDao: StoreMemberDao
+
     @Autowired
     lateinit var storeHonorDao: StoreHonorDao
+
     @Autowired
     lateinit var storeIndexManageService: StoreIndexManageService
+
     @Autowired
     lateinit var storeHonorService: StoreHonorService
+
     @Autowired
     lateinit var storeProjectRelDao: StoreProjectRelDao
+
     @Autowired
     lateinit var imageCommonService: ImageCommonService
+
     @Autowired
     lateinit var storeCommentService: StoreCommentService
+
     @Autowired
     lateinit var storeUserService: StoreUserService
+
     @Autowired
     @Qualifier("imageMemberService")
     lateinit var storeMemberService: StoreMemberService
+
     @Autowired
     lateinit var classifyService: ClassifyService
+
     @Autowired
     lateinit var supportService: SupportService
+
     @Autowired
     lateinit var storeTotalStatisticService: StoreTotalStatisticService
+
     @Autowired
     lateinit var imageLabelService: ImageLabelService
+
     @Autowired
     lateinit var imageCategoryService: ImageCategoryService
+
     @Autowired
     lateinit var storeCommonService: StoreCommonService
+
     @Autowired
     lateinit var client: Client
 
@@ -194,7 +218,8 @@ abstract class ImageService @Autowired constructor() {
         page: Int?,
         pageSize: Int?,
         interfaceName: String? = "Anon interface",
-        validationFlag: Boolean = true
+        validationFlag: Boolean = true,
+        tenantId: String? = null
     ): Result<Page<ImageDetail>> {
         logger.info("$interfaceName:getImageVersionListByCode:Input:($userId,$imageCode,$page,$pageSize)")
         if (validationFlag) {
@@ -216,7 +241,7 @@ abstract class ImageService @Autowired constructor() {
         // 默认拉取所有
         val validPageSize = pageSize ?: -1
         // 查数据库
-        val count = imageDao.countByCode(dslContext, imageCode)
+        val count = imageDao.countByCode(dslContext, imageCode, tenantId)
         val imageVersionList = imageDao.listImageByCode(
             dslContext = dslContext,
             imageCode = imageCode,
@@ -224,7 +249,7 @@ abstract class ImageService @Autowired constructor() {
             pageSize = pageSize
         )?.map { it ->
             val imageId = it.get(KEY_IMAGE_ID) as String
-            getImageDetailById(userId, imageId, interfaceName)
+            getImageDetailById(userId, imageId, interfaceName, tenantId)
         } ?: emptyList()
         val pageObj = Page(
             count = count.toLong(),
@@ -248,7 +273,8 @@ abstract class ImageService @Autowired constructor() {
         score: Int?,
         imageSourceType: ImageType?,
         interfaceName: String? = "Anon interface",
-        recommendFlag: Boolean? = null
+        recommendFlag: Boolean? = null,
+        tenantId: String?
     ): Int {
         // 获取镜像
         val labelCodeList = if (labelCode.isNullOrEmpty()) listOf() else labelCode.split(",")
@@ -261,7 +287,8 @@ abstract class ImageService @Autowired constructor() {
             labelCodeList = labelCodeList,
             score = score,
             imageSourceType = imageSourceType,
-            recommendFlag = recommendFlag
+            recommendFlag = recommendFlag,
+            tenantId = tenantId
         )
     }
 
@@ -281,7 +308,8 @@ abstract class ImageService @Autowired constructor() {
         page: Int?,
         pageSize: Int?,
         interfaceName: String? = "Anon interface",
-        recommendFlag: Boolean? = null
+        recommendFlag: Boolean? = null,
+        tenantId: String?
     ): List<MarketImageItem> {
         val results = mutableListOf<MarketImageItem>()
 
@@ -300,7 +328,8 @@ abstract class ImageService @Autowired constructor() {
             desc = desc,
             page = page,
             pageSize = pageSize,
-            recommendFlag = recommendFlag
+            recommendFlag = recommendFlag,
+            tenantId = tenantId
         )
             ?: return emptyList()
 
@@ -415,7 +444,8 @@ abstract class ImageService @Autowired constructor() {
         recommendFlag: Boolean?,
         page: Int?,
         pageSize: Int?,
-        interfaceName: String? = "Anon interface"
+        interfaceName: String? = "Anon interface",
+        tenantId: String?
     ): Result<MarketImageResp> {
         // 获取用户组织架构
         val userDeptList = storeUserService.getUserDeptList(userId)
@@ -430,7 +460,8 @@ abstract class ImageService @Autowired constructor() {
                 labelCode = labelCode,
                 score = score,
                 imageSourceType = imageSourceType,
-                recommendFlag = recommendFlag
+                recommendFlag = recommendFlag,
+                tenantId = tenantId
             ),
             page = page,
             pageSize = pageSize,
@@ -449,7 +480,8 @@ abstract class ImageService @Autowired constructor() {
                 page = page,
                 pageSize = pageSize,
                 interfaceName = interfaceName,
-                recommendFlag = recommendFlag
+                recommendFlag = recommendFlag,
+                tenantId = tenantId
             ).map {
                 val categories = imageCategoryRelDao.getCategorysByImageId(dslContext, it.id)?.map { categoryRecord ->
                     categoryRecord.get(KEY_CATEGORY_CODE) as String
@@ -478,7 +510,7 @@ abstract class ImageService @Autowired constructor() {
                     buildLessRunFlag = false,
                     docsLink = storeCommonService.getStoreDetailUrl(StoreTypeEnum.IMAGE, it.code),
                     modifier = it.modifier,
-                    updateTime = DateTimeUtil.formatDate(Date(it.updateTime)),
+                    updateTime = it.updateTime,
                     recommendFlag = it.recommendFlag,
                     hotFlag = it.hotFlag
                 )
@@ -494,7 +526,8 @@ abstract class ImageService @Autowired constructor() {
         userId: String,
         page: Int?,
         pageSize: Int?,
-        interfaceName: String? = "Anon interface"
+        interfaceName: String? = "Anon interface",
+        tenantId: String?
     ): Result<List<MarketImageMain>> {
         logger.info("$interfaceName:mainPageList:Input:($userId,$page,$pageSize)")
         val result = mutableListOf<MarketImageMain>()
@@ -519,7 +552,8 @@ abstract class ImageService @Autowired constructor() {
                     desc = true,
                     page = page,
                     pageSize = pageSize,
-                    interfaceName = interfaceName
+                    interfaceName = interfaceName,
+                    tenantId = tenantId
                 )
             )
         )
@@ -541,7 +575,8 @@ abstract class ImageService @Autowired constructor() {
                     desc = true,
                     page = page,
                     pageSize = pageSize,
-                    interfaceName = interfaceName
+                    interfaceName = interfaceName,
+                    tenantId = tenantId
                 )
             )
         )
@@ -572,7 +607,8 @@ abstract class ImageService @Autowired constructor() {
                             desc = true,
                             page = page,
                             pageSize = pageSize,
-                            interfaceName = interfaceName
+                            interfaceName = interfaceName,
+                            tenantId = tenantId
                         )
                     )
                 )
@@ -587,7 +623,8 @@ abstract class ImageService @Autowired constructor() {
         imageName: String?,
         page: Int?,
         pageSize: Int?,
-        interfaceName: String? = "Anon interface"
+        interfaceName: String? = "Anon interface",
+        tenantId: String?
     ): Result<Page<MyImage>> {
         logger.info("$interfaceName:getMyImageList:Input:($userId:$imageName:$page:$pageSize)")
         // 参数校验
@@ -598,14 +635,15 @@ abstract class ImageService @Autowired constructor() {
         val myImageCodeList = mutableListOf<String>()
         // 查数据库，弱一致，无需事务
         // 1.查总数
-        val count = imageDao.countByUserIdAndName(dslContext, userId, imageName)
+        val count = imageDao.countByUserIdAndName(dslContext, userId, imageName, tenantId)
         // 2.查分页列表
         val myImageRecords = imageDao.listImageByNameLike(
             dslContext = dslContext,
             userId = userId,
             imageName = imageName,
             page = validPage,
-            pageSize = validPageSize
+            pageSize = validPageSize,
+            tenantId = tenantId
         )
         myImageRecords?.forEach {
             val imageCode = it.get(KEY_IMAGE_CODE) as String
@@ -613,7 +651,8 @@ abstract class ImageService @Autowired constructor() {
                 dslContext = dslContext,
                 userId = userId,
                 storeCode = imageCode,
-                storeType = StoreTypeEnum.IMAGE) ?: ""
+                storeType = StoreTypeEnum.IMAGE
+            ) ?: ""
             myImageCodeList.add(imageCode)
             projectCodeList.add(projectCode)
         }
@@ -676,15 +715,16 @@ abstract class ImageService @Autowired constructor() {
     fun getImageDetailById(
         userId: String,
         imageId: String,
-        interfaceName: String? = "Anon interface"
+        interfaceName: String? = "Anon interface",
+        tenantId: String? = null
     ): ImageDetail {
         logger.info("$interfaceName:getImageDetailById:Input:($userId,$imageId)")
         val imageRecord =
-            imageDao.getImage(dslContext, imageId) ?: throw InvalidParamException(
+            imageDao.getImage(dslContext, imageId, tenantId) ?: throw InvalidParamException(
                 "image is null,imageId=$imageId",
                 params = arrayOf(imageId)
             )
-        return getImageDetail(userId, imageRecord)
+        return getImageDetail(userId, imageRecord, tenantId)
     }
 
     @Value("\${store.buildResultBaseUrl}")
@@ -774,16 +814,22 @@ abstract class ImageService @Autowired constructor() {
 
     @Value("\${store.defaultImageSourceType}")
     private lateinit var defaultImageSourceType: String
+
     @Value("\${store.defaultImageRepoUrl}")
     private lateinit var defaultImageRepoUrl: String
+
     @Value("\${store.defaultImageRepoName}")
     private lateinit var defaultImageRepoName: String
+
     @Value("\${store.defaultImageTag}")
     private lateinit var defaultImageTag: String
+
     @Value("\${store.defaultTicketId}")
     private lateinit var defaultTicketId: String
+
     @Value("\${store.defaultTicketProject}")
     private lateinit var defaultTicketProject: String
+
     @Value("\${store.defaultImageRDType}")
     private lateinit var defaultImageRDType: String
 
@@ -844,12 +890,13 @@ abstract class ImageService @Autowired constructor() {
         userId: String,
         imageCode: String,
         imageVersion: String?,
-        interfaceName: String? = "Anon interface"
+        interfaceName: String? = "Anon interface",
+        tenantId: String? = null
     ): ImageDetail {
         logger.info("$interfaceName:getLatestImageDetailByCode:Input:($userId,$imageCode,$imageVersion)")
         return if (null == imageVersion) {
             // 不传version默认返回最新版本
-            getLatestImageDetailByCode(userId, imageCode, interfaceName)
+            getLatestImageDetailByCode(userId, tenantId, imageCode, interfaceName)
         } else {
             val imageRecord =
                 imageDao.getImageByCodeAndVersion(dslContext, imageCode, imageVersion) ?: throw ErrorCodeException(
@@ -857,17 +904,18 @@ abstract class ImageService @Autowired constructor() {
                     defaultMessage = "image is null,imageCode=$imageCode, imageVersion=$imageVersion",
                     params = arrayOf(imageCode, imageVersion)
                 )
-            getImageDetail(userId, imageRecord)
+            getImageDetail(userId, imageRecord, tenantId)
         }
     }
 
     fun getImageStatusByCodeAndVersion(
         imageCode: String,
-        imageVersion: String
+        imageVersion: String,
+        tenantId: String?
     ): String {
         logger.info("getImageStatusByCodeAndVersion:Input:($imageCode,$imageVersion)")
         val imageRecord =
-            imageDao.getImage(dslContext, imageCode, imageVersion) ?: throw ErrorCodeException(
+            imageDao.getImage(dslContext, imageCode, imageVersion, tenantId) ?: throw ErrorCodeException(
                 errorCode = USER_IMAGE_VERSION_NOT_EXIST,
                 defaultMessage = "image is null,imageCode=$imageCode, imageVersion=$imageVersion",
                 params = arrayOf(imageCode, imageVersion)
@@ -877,16 +925,17 @@ abstract class ImageService @Autowired constructor() {
 
     fun getLatestImageDetailByCode(
         userId: String,
+        tenantId: String?,
         imageCode: String,
         interfaceName: String? = "Anon interface"
     ): ImageDetail {
         logger.info("$interfaceName:getLatestImageDetailByCode:Input:($userId,$imageCode)")
         val imageRecord =
-            imageDao.getLatestImageByCode(dslContext, imageCode) ?: throw InvalidParamException(
+            imageDao.getLatestImageByCode(dslContext, imageCode, tenantId) ?: throw InvalidParamException(
                 message = "image is null,imageCode=$imageCode",
                 params = arrayOf(imageCode)
             )
-        return getImageDetail(userId, imageRecord)
+        return getImageDetail(userId, imageRecord, tenantId)
     }
 
     /**
@@ -911,7 +960,7 @@ abstract class ImageService @Autowired constructor() {
         return Pair(imageSizeNum, imageSize)
     }
 
-    private fun getImageDetail(userId: String, imageRecord: TImageRecord): ImageDetail {
+    private fun getImageDetail(userId: String, imageRecord: TImageRecord, tenantId: String?): ImageDetail {
         val imageId = imageRecord.id
         val imageCode = imageRecord.imageCode
         val storeStatistic = storeTotalStatisticService.getStatisticByCode(
@@ -937,7 +986,7 @@ abstract class ImageService @Autowired constructor() {
             ) // 是否能安装
         // 判断releaseFlag
         var releaseFlag = false
-        val count = marketImageDao.countReleaseImageByCode(dslContext, imageCode)
+        val count = marketImageDao.countReleaseImageByCode(dslContext, imageCode, tenantId)
         if (count > 0) {
             releaseFlag = true
         }
@@ -953,10 +1002,12 @@ abstract class ImageService @Autowired constructor() {
             storeType = StoreTypeEnum.IMAGE
         )
         // 查关联镜像时的调试项目
-        val projectCode = storeProjectRelDao.getUserStoreTestProjectCode(dslContext = dslContext,
+        val projectCode = storeProjectRelDao.getUserStoreTestProjectCode(
+            dslContext = dslContext,
             userId = userId,
             storeCode = imageCode,
-            storeType = StoreTypeEnum.IMAGE)
+            storeType = StoreTypeEnum.IMAGE
+        )
         val (imageSizeNum, imageSize) = getImageSizeInfoByStr(imageRecord.imageSize as String)
         val agentTypeScope = if (ImageStatusEnum.getInprocessStatusSet().contains(imageRecord.imageStatus.toInt())) {
             // 非终止态镜像应采用当前版本范畴与适用机器类型
@@ -1036,16 +1087,19 @@ abstract class ImageService @Autowired constructor() {
     fun deleteById(
         userId: String,
         imageId: String,
-        interfaceName: String? = "Anon interface"
+        interfaceName: String? = "Anon interface",
+        tenantId: String? = null
     ): Result<Boolean> {
-        val imageRecord = imageDao.getImage(dslContext, imageId) ?: throw ImageNotExistException("imageId=$imageId")
-        return delete(userId, imageRecord.imageCode, interfaceName)
+        val imageRecord =
+            imageDao.getImage(dslContext, imageId, tenantId) ?: throw ImageNotExistException("imageId=$imageId")
+        return delete(userId, imageRecord.imageCode, interfaceName, tenantId)
     }
 
     fun delete(
         userId: String,
         imageCode: String,
-        interfaceName: String? = "Anon interface"
+        interfaceName: String? = "Anon interface",
+        tenantId: String?
     ): Result<Boolean> {
         logger.info("$interfaceName:delete:Input:($userId,$imageCode)")
         val type = StoreTypeEnum.IMAGE.type.toByte()
@@ -1058,7 +1112,7 @@ abstract class ImageService @Autowired constructor() {
             )
         }
 
-        val releasedCnt = marketImageDao.countReleaseImageByCode(dslContext, imageCode)
+        val releasedCnt = marketImageDao.countReleaseImageByCode(dslContext, imageCode, tenantId)
         if (releasedCnt > 0) {
             return I18nUtil.generateResponseDataObject(
                 messageCode = StoreMessageCode.USER_IMAGE_RELEASED,
@@ -1197,7 +1251,8 @@ abstract class ImageService @Autowired constructor() {
         userId: String,
         imageCode: String,
         imageBaseInfoUpdateRequest: ImageBaseInfoUpdateRequest,
-        interfaceName: String? = "Anon interface"
+        interfaceName: String? = "Anon interface",
+        tenantId: String?
     ): Result<Boolean> {
         logger.info("$interfaceName:updateImageBaseInfo:Input($userId,$imageCode,$imageBaseInfoUpdateRequest")
         // 判断当前用户是否是该镜像的成员
@@ -1218,7 +1273,7 @@ abstract class ImageService @Autowired constructor() {
             )
         }
         val imageIdList = mutableListOf(newestImageRecord.id)
-        val latestImageRecord = imageDao.getLatestImageByCode(dslContext, imageCode)
+        val latestImageRecord = imageDao.getLatestImageByCode(dslContext, imageCode, tenantId)
         if (null != latestImageRecord) {
             imageIdList.add(latestImageRecord.id)
         }

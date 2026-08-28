@@ -28,6 +28,7 @@
 package com.tencent.devops.process.websocket.page
 
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.websocket.page.IPath
 import com.tencent.devops.common.websocket.pojo.BuildPageInfo
 
@@ -43,9 +44,9 @@ abstract class HistoryPageBuild : IPath {
         PagePathStrategies.historyStrategies
             .firstOrNull { it.supports(channel) }
             ?.build(buildPageInfo)
-            ?.let { return it }
+            ?.let { return HomeHostUtil.withPublicPath(it) }
         extHistoryPage(buildPageInfo)?.takeIf { it.isNotBlank() }?.let { return it }
-        return defaultHistoryPath(buildPageInfo)
+        return HomeHostUtil.withPublicPath(defaultHistoryPath(buildPageInfo))
     }
 
     private fun defaultHistoryPath(info: BuildPageInfo): String =

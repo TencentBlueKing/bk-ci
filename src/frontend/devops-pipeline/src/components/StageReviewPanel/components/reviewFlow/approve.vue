@@ -21,7 +21,8 @@
         <bk-divider></bk-divider>
 
         <span class="review-subtitle mt12">
-            {{ $t('stageReview.currentStatus') }}<span class="gray-color ml20">{{ computedStatusTxt }}</span>
+            {{ $t('stageReview.currentStatus') }}<span class="gray-color ml20">{{ computedStatus.i18nLabel }}</span>
+            <bk-user-display-name :user-id="computedStatus.users"></bk-user-display-name>
         </span>
         <bk-radio-group
             v-model="isCancel"
@@ -107,15 +108,20 @@
                 }
             },
 
-            computedStatusTxt () {
+            computedStatus () {
                 const curExecIndex = this.reviewGroups.findIndex(x => x.status === undefined) + 1
                 const { reviewers, operator } = this.showReviewGroup
+                if (curExecIndex <= this.curStep) {
+                    return {
+                        i18nLabel: this.$t(curExecIndex < this.curStep ? 'stageReview.waitApproval' : 'stageReview.pendingApproval'),
+                        users: reviewers
+                    }
+                }
 
-                let statusTxt = this.$t('stageReview.approved', [operator])
-                if (curExecIndex < this.curStep) statusTxt = this.$t('stageReview.waitApproval', [reviewers.join(', ')])
-                if (curExecIndex === this.curStep) statusTxt = this.$t('stageReview.pendingApproval', [reviewers.join(', ')])
-
-                return statusTxt
+                return {
+                    i18nLabel: this.$t('stageReview.approved'),
+                    users: operator
+                }
             }
         },
 

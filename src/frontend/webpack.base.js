@@ -1,5 +1,5 @@
 const path = require('path')
-// const fs = require('fs')
+const fs = require('fs')
 const MiniCssExtractPlugin = require('mini-css-extract-plugin')
 const CssMinimizerPlugin = require('css-minimizer-webpack-plugin')
 const { VueLoaderPlugin } = require('vue-loader')
@@ -7,7 +7,7 @@ const CopyWebpackPlugin = require('copy-webpack-plugin')
 const BundleWebpackPlugin = require('./webpackPlugin/bundle-webpack-plugin')
 // const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin
 
-module.exports = ({ entry, publicPath, dist, port = 8080, argv, env }) => {
+module.exports = ({ entry, isConsole, publicPath, dist, port = 8080, argv, env }) => {
     const isDev = argv.mode === 'development'
     const envDist = env && env.dist ? env.dist : 'frontend'
     const buildDist = path.join(__dirname, envDist, dist)
@@ -52,14 +52,12 @@ module.exports = ({ entry, publicPath, dist, port = 8080, argv, env }) => {
                 },
                 {
                     test: /\.scss$/,
-                    use: [isDev
-                        ? 'style-loader'
-                        : {
-                            loader: MiniCssExtractPlugin.loader,
-                            options: {
-                                publicPath: (resourcePath, context) => ''
-                            }
-                        }, 'css-loader', 'sass-loader']
+                    use: [{
+                        loader: MiniCssExtractPlugin.loader,
+                        options: {
+                            publicPath: (resourcePath, context) => ''
+                        }
+                    }, 'css-loader', 'sass-loader']
                 },
                 {
                     test: /\.(js|vue)$/,
@@ -177,7 +175,7 @@ module.exports = ({ entry, publicPath, dist, port = 8080, argv, env }) => {
             allowedHosts: 'all',
             historyApiFallback: true,
             client: {
-                webSocketURL: 'ws://127.0.0.1:' + port + '/ws'
+                webSocketURL: 'wss://127.0.0.1:' + port + '/ws'
             },
             // https: {
             //     key: fs.readFileSync(path.join(__dirname, 'localhost+2-key.pem')),

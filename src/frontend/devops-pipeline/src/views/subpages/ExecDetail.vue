@@ -62,10 +62,9 @@
                         size="24"
                     />
                     <span v-if="startUser">
+                        <bk-user-display-name :user-id="startUser" />
                         {{
                             $t("details.executorInfo", [
-                                startUser,
-                                execDetail.trigger,
                                 execFormatStartTime
                             ])
                         }}
@@ -216,7 +215,7 @@
             return {
                 isLoading: true,
                 hasNoPermission: false,
-                linkUrl: WEB_URL_PREFIX + location.pathname,
+                linkUrl: WEB_URL_PREFIX + (window.PUBLIC_URL_PREFIX && location.pathname.indexOf(window.PUBLIC_URL_PREFIX) === 0 ? location.pathname.slice(window.PUBLIC_URL_PREFIX.length) : location.pathname),
                 show: false,
                 summaryVisible: true,
                 noPermissionTipsConfig: {
@@ -772,7 +771,6 @@
     margin: 0 24px;
     flex: 1;
     box-shadow: 0 2px 2px 0 #00000026;
-    height: calc(100% - 205px);
     &.is-outputs-panel {
         overflow: hidden;
     }

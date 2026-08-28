@@ -44,7 +44,9 @@ import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.CsvUtil
+import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.HashUtil
+import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.audit.ActionAuditContent
@@ -101,7 +103,6 @@ import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.time.format.DateTimeFormatter
 import java.util.concurrent.Executors
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.ThreadPoolExecutor
@@ -434,9 +435,9 @@ class NodeService @Autowired constructor(
                     I18nUtil.getCodeLanMessage(NODE_USAGE_DEPLOYMENT)
                 dataArray[6] = record.createdUser
                 dataArray[7] = record.lastModifyUser ?: ""
-                dataArray[8] = record.lastModifyTime ?: ""
+                dataArray[8] = record.lastModifyTime?.let { DateTimeUtil.formatEpochMilli(it) } ?: ""
                 dataArray[9] = record.latestBuildDetail?.pipelineName ?: ""
-                dataArray[10] = record.lastBuildTime ?: ""
+                dataArray[10] = record.lastBuildTime?.let { DateTimeUtil.formatEpochMilli(it) } ?: ""
                 dataList.add(dataArray)
             }
         }
@@ -543,16 +544,8 @@ class NodeService @Autowired constructor(
                 canView = canViewNodeIds.contains(it.nodeId),
                 gateway = gatewayShowName,
                 displayName = NodeStringIdUtils.getRefineDisplayName(nodeStringId, it.displayName),
-                createTime = if (null == it.createdTime) {
-                    ""
-                } else {
-                    DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(it.createdTime)
-                },
-                lastModifyTime = if (null == it.lastModifyTime) {
-                    ""
-                } else {
-                    DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(it.lastModifyTime)
-                },
+                createTime = it.createdTime?.timestampmilli(),
+                lastModifyTime = it.lastModifyTime?.timestampmilli(),
                 lastModifyUser = it.lastModifyUser ?: "",
                 agentStatus = getAgentStatus(it),
                 agentVersion = it.agentVersion,
@@ -567,11 +560,7 @@ class NodeService @Autowired constructor(
                 serverId = it.serverId,
                 size = it.size,
                 envNames = nodeEnvsGroups[it.nodeId],
-                lastBuildTime = if (null == it.lastBuildTime) {
-                    ""
-                } else {
-                    DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(it.lastBuildTime)
-                },
+                lastBuildTime = it.lastBuildTime?.timestampmilli(),
                 tags = tagMaps[it.nodeId],
                 envEnableNode = nodeIdMaps[it.nodeId] ?: true,
                 createWorkspaceId = thirdPartyAgent?.createWorkspaceName,
@@ -581,6 +570,7 @@ class NodeService @Autowired constructor(
                     null
                 },
                 operatorStatus = NodeOperatorStatus.valOf(it.operatorStatus)?.name
+
             )
         }
     }
@@ -707,16 +697,8 @@ class NodeService @Autowired constructor(
                 canView = canViewNodeIds.contains(it.nodeId),
                 gateway = gatewayShowName,
                 displayName = NodeStringIdUtils.getRefineDisplayName(nodeStringId, it.displayName),
-                createTime = if (null == it.createdTime) {
-                    ""
-                } else {
-                    DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(it.createdTime)
-                },
-                lastModifyTime = if (null == it.lastModifyTime) {
-                    ""
-                } else {
-                    DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(it.lastModifyTime)
-                },
+                createTime = it.createdTime?.timestampmilli(),
+                lastModifyTime = it.lastModifyTime?.timestampmilli(),
                 lastModifyUser = it.lastModifyUser ?: "",
                 agentStatus = getAgentStatus(it),
                 agentVersion = it.agentVersion,
@@ -773,16 +755,8 @@ class NodeService @Autowired constructor(
                 canView = canViewNodeIds.contains(it.nodeId),
                 gateway = "",
                 displayName = NodeStringIdUtils.getRefineDisplayName(nodeStringId, it.displayName),
-                createTime = if (null == it.createdTime) {
-                    ""
-                } else {
-                    DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(it.createdTime)
-                },
-                lastModifyTime = if (null == it.lastModifyTime) {
-                    ""
-                } else {
-                    DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(it.lastModifyTime)
-                },
+                createTime = it.createdTime?.timestampmilli(),
+                lastModifyTime = it.lastModifyTime?.timestampmilli(),
                 agentStatus = getAgentStatus(it),
                 agentVersion = it.agentVersion,
                 lastModifyUser = it.lastModifyUser ?: "",
@@ -1237,23 +1211,11 @@ class NodeService @Autowired constructor(
                 canView = false,
                 gateway = "",
                 displayName = NodeStringIdUtils.getRefineDisplayName(nodeStringId, it.displayName),
-                createTime = if (null == it.createdTime) {
-                    ""
-                } else {
-                    DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(it.createdTime)
-                },
-                lastModifyTime = if (null == it.lastModifyTime) {
-                    ""
-                } else {
-                    DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(it.lastModifyTime)
-                },
+                createTime = it.createdTime?.timestampmilli(),
+                lastModifyTime = it.lastModifyTime?.timestampmilli(),
                 lastModifyUser = it.lastModifyUser ?: "",
                 pipelineRefCount = it.pipelineRefCount ?: 0,
-                lastBuildTime = if (null == it.lastBuildTime) {
-                    ""
-                } else {
-                    DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(it.lastBuildTime)
-                },
+                lastBuildTime = it.lastBuildTime?.timestampmilli(),
                 cloudAreaId = it.cloudAreaId,
                 taskId = null,
                 osType = it.osType,

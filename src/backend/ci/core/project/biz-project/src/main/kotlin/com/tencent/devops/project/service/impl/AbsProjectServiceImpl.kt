@@ -62,10 +62,12 @@ import com.tencent.devops.common.auth.code.ProjectAuthServiceCode
 import com.tencent.devops.common.auth.enums.SubjectScopeType
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
+import com.tencent.devops.common.db.utils.optionalTenantId
 import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.pipeline.dialect.PipelineDialectType
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.Profile
+import com.tencent.devops.common.service.tenant.TenantUtils
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.project.tables.records.TProjectRecord
@@ -150,7 +152,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
     private val projectUpdateHistoryDao: ProjectUpdateHistoryDao
 ) : ProjectService {
 
-    override fun validate(validateType: ProjectValidateType, name: String, projectId: String?) {
+    override fun validate(validateType: ProjectValidateType, name: String, projectId: String?, tenantId: String?) {
         if (name.isBlank()) {
             throw ErrorCodeException(
                 errorCode = ProjectMessageCode.NAME_EMPTY,
@@ -165,7 +167,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                         defaultMessage = "The length of the project name cannot exceed 64 characters!"
                     )
                 }
-                if (projectDao.existByProjectName(dslContext, name, projectId)) {
+                if (projectDao.existByProjectName(dslContext, name, projectId, tenantId)) {
                     throw ErrorCodeException(
                         errorCode = ProjectMessageCode.PROJECT_NAME_EXIST,
                         defaultMessage = "The name of the project already exists!"
@@ -205,6 +207,10 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         }
     }
 
+    override fun listAllTenantIds(): List<String> {
+        return projectDao.listAllTenantIds(dslContext)
+    }
+
     /**
      * 创建项目信息
      */
@@ -223,9 +229,10 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         projectCreateInfo: ProjectCreateInfo,
         createExtInfo: ProjectCreateExtInfo,
         defaultProjectId: String?,
-        projectChannel: ProjectChannelCode
+        projectChannel: ProjectChannelCode,
+        accessToken: String?
     ): String {
-        logger.info("create project| $userId | $createExtInfo | $projectCreateInfo")
+        logger.info("create project| $userId | $createExtInfo | $projectCreateInfo | hasAccessToken=${!accessToken.isNullOrBlank()}")
         val createInfo = projectCreateInfo.copy()
         createInfo.properties?.let { it.enableShareArtifact = false }
 
@@ -347,8 +354,16 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
     ) {
         with(projectCreateInfo) {
             if (needValidate) {
-                validate(ProjectValidateType.project_name, projectName)
-                validate(ProjectValidateType.english_name, englishName)
+                validate(
+                    validateType = ProjectValidateType.project_name,
+                    name = projectName,
+                    tenantId = projectCreateInfo.tenantId
+                )
+                validate(
+                    validateType = ProjectValidateType.english_name,
+                    name = englishName,
+                    tenantId = projectCreateInfo.tenantId
+                )
             }
             if (projectCreateInfo.projectScope == ProjectScopeType.PERSONAL.value)
                 return
@@ -431,7 +446,11 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             englishName = englishName
         ) ?: throw OperationException("project $englishName not found")
         val projectVO = ProjectUtils.packagingBean(record)
-        val englishNames = getProjectFromAuth(userId)
+        val englishNames = getProjectFromAuth(
+            userId = userId,
+            accessToken = null,
+            tenantId = TenantUtils.getTenantIdByEnglishName(englishName)
+        )
         if (englishNames.isEmpty() || !englishNames.contains(projectVO.englishName)) {
             logger.warn("The user don't have the permission to visit the project")
             throw OperationException("The user don't have the permission to visit the project")
@@ -732,7 +751,8 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             validate(
                 validateType = ProjectValidateType.project_name,
                 name = projectUpdateInfo.projectName,
-                projectId = projectUpdateInfo.englishName
+                projectId = projectUpdateInfo.englishName,
+                tenantId = projectUpdateInfo.tenantId
             )
             if (projectInfo.projectScope == ProjectScopeType.PERSONAL.value)
                 return
@@ -898,13 +918,17 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         unApproved: Boolean,
         sortType: ProjectSortType?,
         collation: ProjectCollation?,
-        hidden: Boolean?
+        tenantId: String?,
+        hidden: Boolean?,
+        accessToken: String?
     ): List<ProjectVO> {
         val startEpoch = System.currentTimeMillis()
         var success = false
         try {
             val projectsWithVisitPermission = getProjectFromAuth(
-                userId = userId
+                userId = userId,
+                accessToken = accessToken,
+                tenantId = tenantId
             ).toSet()
             if (projectsWithVisitPermission.isEmpty() && !unApproved) {
                 return emptyList()
@@ -913,20 +937,23 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             if (projectsWithVisitPermission.isNotEmpty()) {
                 val projectsWithManagePermission = getProjectFromAuth(
                     userId = userId,
-                    permission = AuthPermission.MANAGE
+                    permission = AuthPermission.MANAGE,
+                    tenantId = tenantId
                 )
                 val projectsWithPipelineTemplateCreatePerm = try {
                     getProjectFromAuth(
                         userId = userId,
                         permission = AuthPermission.CREATE,
-                        resourceType = AuthResourceType.PIPELINE_TEMPLATE.value
+                        resourceType = AuthResourceType.PIPELINE_TEMPLATE.value,
+                        tenantId = tenantId
                     )
                 } catch (ex: Exception) {
                     emptyList()
                 }
                 val projectsWithViewPermission = getProjectFromAuth(
                     userId = userId,
-                    permission = AuthPermission.VIEW
+                    permission = AuthPermission.VIEW,
+                    tenantId = tenantId
                 )
                 projectDao.listByEnglishName(
                     dslContext = dslContext,
@@ -1008,26 +1035,34 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         projectName: String?,
         projectId: String?,
         page: Int,
-        pageSize: Int
+        pageSize: Int,
+        tenantId: String?,
+        accessToken: String?
     ): Pagination<ProjectByConditionDTO> {
         val sqlLimit = PageUtil.convertPageSizeToSQLLimit(page, pageSize)
         val projectsResp = mutableListOf<ProjectByConditionDTO>()
         // 拉取出该用户有访问权限的项目
-        val hasVisitPermissionProjectIds = getProjectFromAuth(userId)
+        val hasVisitPermissionProjectIds = getProjectFromAuth(
+            userId = userId,
+            accessToken = accessToken,
+            tenantId = tenantId
+        )
         projectDao.listProjectsForApply(
             dslContext = dslContext,
             projectName = projectName,
-            projectId = projectId,
+            projectId = projectId?.let { TenantUtils.parseEnglishName(tenantId, it) },
             authEnglishNameList = hasVisitPermissionProjectIds,
             offset = sqlLimit.offset,
-            limit = sqlLimit.limit
+            limit = sqlLimit.limit,
+            tenantId = tenantId
         ).forEach {
             projectsResp.add(
                 ProjectByConditionDTO(
                     projectName = it.value1(),
                     englishName = it.value2(),
                     permission = hasVisitPermissionProjectIds.contains(it.value2()),
-                    routerTag = buildRouterTag(it.value3())
+                    routerTag = buildRouterTag(it.value3()),
+                    tenantId = it.value4()
                 )
             )
         }
@@ -1084,7 +1119,8 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         channelCodes: String?,
         sort: ProjectSortType?,
         page: Int?,
-        pageSize: Int?
+        pageSize: Int?,
+        tenantId: String?
     ): List<ProjectVO> {
         val startEpoch = System.currentTimeMillis()
         var success = false
@@ -1096,14 +1132,16 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         }
         try {
 
-            val projects = getProjectFromAuth(userId)
+            val projects = getProjectFromAuth(userId = userId, accessToken = null, tenantId = tenantId)
             val projectsWithManagePermission = getProjectFromAuth(
                 userId = userId,
-                permission = AuthPermission.MANAGE
+                permission = AuthPermission.MANAGE,
+                tenantId = tenantId
             )
             val projectsWithViewPermission = getProjectFromAuth(
                 userId = userId,
-                permission = AuthPermission.VIEW
+                permission = AuthPermission.VIEW,
+                tenantId = tenantId
             )
             logger.info("projects：$projects")
             val list = ArrayList<ProjectVO>()
@@ -1195,7 +1233,8 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                     JsonUtil.to(
                         properties, ProjectProperties::class.java
                     )
-                }?.remotedevManager
+                }?.remotedevManager,
+                tenantId = it.optionalTenantId()
             )
         }
     }
@@ -1259,11 +1298,11 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
     /**
      * 获取用户已的可访问项目列表
      */
-    override fun getProjectByUser(userName: String): List<ProjectVO> {
+    override fun getProjectByUser(userName: String, tenantId: String?): List<ProjectVO> {
         val startEpoch = System.currentTimeMillis()
         var success = false
         try {
-            val projectList = projectPermissionService.getUserProjectsAvailable(userName)
+            val projectList = projectPermissionService.getUserProjectsAvailable(userName, tenantId)
 
             val list = ArrayList<ProjectVO>()
             val projectCodes = projectList.map { it.key }
@@ -1347,13 +1386,13 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         }
     }
 
-    override fun updateProjectName(userId: String, projectId: String, projectName: String): Boolean {
+    override fun updateProjectName(userId: String, projectId: String, projectName: String, tenantId: String?): Boolean {
         if (projectName.isEmpty() || projectName.length > MAX_PROJECT_NAME_LENGTH) {
             throw ErrorCodeException(
                 errorCode = ProjectMessageCode.NAME_TOO_LONG
             )
         }
-        if (projectDao.existByProjectName(dslContext, projectName, projectId)) {
+        if (projectDao.existByProjectName(dslContext, projectName, projectId, tenantId)) {
             throw ErrorCodeException(
                 errorCode = ProjectMessageCode.PROJECT_NAME_EXIST
             )
@@ -1440,21 +1479,28 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         )
     }
 
-    override fun searchProjectByProjectName(projectName: String, limit: Int, offset: Int): Page<ProjectVO> {
+    override fun searchProjectByProjectName(
+        projectName: String,
+        limit: Int,
+        offset: Int,
+        tenantId: String?
+    ): Page<ProjectVO> {
         val startTime = System.currentTimeMillis()
         val projectList = projectDao.searchByProjectName(
             dslContext = dslContext,
             projectName = projectName,
             channelCodes = listOf(ProjectChannelCode.BS.name, ProjectChannelCode.PREBUILD.name),
             limit = limit,
-            offset = offset
+            offset = offset,
+            tenantId = TenantUtils.getTenantId(tenantId)
         ).map {
             ProjectUtils.packagingBean(it)
         }
         val count = projectDao.countByProjectName(
             dslContext = dslContext,
             projectName = projectName,
-            channelCodes = listOf(ProjectChannelCode.BS.name, ProjectChannelCode.PREBUILD.name)
+            channelCodes = listOf(ProjectChannelCode.BS.name, ProjectChannelCode.PREBUILD.name),
+            tenantId = TenantUtils.getTenantId(tenantId)
         ).toLong()
         LogUtils.costTime("search project by projectName", startTime)
         return Page(
@@ -1603,8 +1649,8 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         return true
     }
 
-    override fun getProjectByName(projectName: String): ProjectVO? {
-        return projectDao.getProjectByName(dslContext, projectName)
+    override fun getProjectByName(projectName: String, tenantId: String?): ProjectVO? {
+        return projectDao.getProjectByName(dslContext, projectName, TenantUtils.getTenantId(tenantId))
     }
 
     override fun setDisableWhenInactiveFlag(projectCodes: List<String>): Boolean {
@@ -1702,10 +1748,11 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         )
     }
 
-    override fun getProjectListByProductId(productId: Int): List<ProjectBaseInfo> {
+    override fun getProjectListByProductId(productId: Int, tenantId: String?): List<ProjectBaseInfo> {
         return projectDao.getProjectListByProductId(
             dslContext = dslContext,
-            productId = productId
+            productId = productId,
+            tenantId = TenantUtils.getTenantId(tenantId)
         ).map {
             ProjectBaseInfo(
                 id = it.value1(),
@@ -1728,13 +1775,33 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
 
     abstract fun deleteAuth(projectId: String)
 
-    abstract fun getProjectFromAuth(userId: String?): List<String>
+    abstract fun getProjectFromAuth(
+        userId: String?,
+        accessToken: String? = null
+    ): List<String>
+
+    open fun getProjectFromAuth(
+        userId: String?,
+        accessToken: String? = null,
+        tenantId: String?
+    ): List<String> {
+        return getProjectFromAuth(userId, accessToken)
+    }
 
     abstract fun getProjectFromAuth(
         userId: String,
         permission: AuthPermission,
         resourceType: String? = null
     ): List<String>?
+
+    open fun getProjectFromAuth(
+        userId: String,
+        permission: AuthPermission,
+        resourceType: String? = null,
+        tenantId: String?
+    ): List<String>? {
+        return getProjectFromAuth(userId, permission, resourceType)
+    }
 
     abstract fun isShowUserManageIcon(routerTag: String?): Boolean
 
@@ -1798,7 +1865,8 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             PluginDetailsDisplayOrder.CONFIG
         )
 
-        val isParamsLegal = pluginDetailsDisplayOrder.size == 3 && pluginDetailsDisplayOrder.toSet() == validDisplayOrder
+        val isParamsLegal =
+            pluginDetailsDisplayOrder.size == 3 && pluginDetailsDisplayOrder.toSet() == validDisplayOrder
 
         if (isParamsLegal) {
             val properties = projectInfo.properties ?: ProjectProperties()

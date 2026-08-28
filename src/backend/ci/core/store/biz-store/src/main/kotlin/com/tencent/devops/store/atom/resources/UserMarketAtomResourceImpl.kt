@@ -61,6 +61,7 @@ class UserMarketAtomResourceImpl @Autowired constructor(
 
     override fun mainPageList(
         userId: String,
+        tenantId: String?,
         serviceScope: ServiceScopeEnum?,
         page: Int?,
         pageSize: Int?
@@ -70,12 +71,14 @@ class UserMarketAtomResourceImpl @Autowired constructor(
             page = page,
             pageSize = pageSize,
             urlProtocolTrim = true,
+            tenantId = tenantId,
             serviceScope = serviceScope
         )
     }
 
     override fun list(
         userId: String,
+        tenantId: String?,
         keyword: String?,
         classifyCode: String?,
         labelCode: String?,
@@ -105,7 +108,8 @@ class UserMarketAtomResourceImpl @Autowired constructor(
                     page = page,
                     pageSize = pageSize,
                     urlProtocolTrim = true,
-                    serviceScope = serviceScope
+                    serviceScope = serviceScope,
+                    tenantId = tenantId
                 )
             )
         )
@@ -113,77 +117,115 @@ class UserMarketAtomResourceImpl @Autowired constructor(
 
     override fun listMyAtoms(
         userId: String,
+        tenantId: String?,
         atomName: String?,
         page: Int,
         pageSize: Int
     ): Result<MyAtomResp?> {
-        return marketAtomService.getMyAtoms(userId, atomName, page, pageSize)
+        return marketAtomService.getMyAtoms(userId, atomName, page, pageSize, tenantId)
     }
 
-    override fun getAtomById(userId: String, atomId: String, serviceScope: ServiceScopeEnum?): Result<AtomVersion?> {
-        return marketAtomService.getAtomById(atomId, userId, serviceScope)
+    override fun getAtomById(
+        userId: String,
+        tenantId: String?,
+        atomId: String,
+        serviceScope: ServiceScopeEnum?
+    ): Result<AtomVersion?> {
+        return marketAtomService.getAtomById(atomId, userId, tenantId, serviceScope)
     }
 
     override fun getAtomByCode(
         userId: String,
+        tenantId: String?,
         atomCode: String,
         serviceScope: ServiceScopeEnum?
     ): Result<AtomVersion?> {
-        return marketAtomService.getAtomByCode(userId, atomCode, serviceScope)
+        return marketAtomService.getAtomByCode(userId, atomCode, tenantId, serviceScope)
     }
 
     override fun getAtomVersionsByCode(
         userId: String,
+        tenantId: String?,
         atomCode: String,
         page: Int,
         pageSize: Int
     ): Result<Page<AtomVersionListItem>> {
-        return marketAtomService.getAtomVersionsByCode(userId, atomCode, page, pageSize)
+        return marketAtomService.getAtomVersionsByCode(userId, atomCode, page, pageSize, tenantId)
     }
 
-    override fun installAtom(userId: String, installAtomReq: InstallAtomReq): Result<Boolean> {
-        return marketAtomService.installAtom(userId, ChannelCode.getRequestChannelCode(), installAtomReq)
+    override fun installAtom(userId: String, tenantId: String?, installAtomReq: InstallAtomReq): Result<Boolean> {
+        return marketAtomService.installAtom(
+            userId,
+            ChannelCode.getRequestChannelCode(),
+            installAtomReq,
+            tenantId
+        )
     }
 
     override fun getInstalledProjects(
         userId: String,
+        tenantId: String?,
         atomCode: String
     ): Result<List<InstalledProjRespItem?>> {
-        return storeProjectService.getInstalledProjects(userId, atomCode, StoreTypeEnum.ATOM)
+        return storeProjectService.getInstalledProjects(userId, atomCode, StoreTypeEnum.ATOM, tenantId)
     }
 
     override fun listLanguage(): Result<List<AtomDevLanguage?>> {
         return marketAtomService.listLanguage()
     }
 
-    override fun deleteAtom(userId: String, atomCode: String): Result<Boolean> {
-        return marketAtomService.deleteAtom(userId, atomCode)
+    override fun deleteAtom(userId: String, tenantId: String?, atomCode: String): Result<Boolean> {
+        return marketAtomService.deleteAtom(userId, atomCode, tenantId)
     }
 
-    override fun getAtomShowVersionInfo(userId: String, atomCode: String): Result<StoreShowVersionInfo> {
-        return marketAtomService.getAtomShowVersionInfo(userId, atomCode)
+    override fun getAtomShowVersionInfo(
+        userId: String,
+        tenantId: String?,
+        atomCode: String
+    ): Result<StoreShowVersionInfo> {
+        return marketAtomService.getAtomShowVersionInfo(userId, atomCode, tenantId)
     }
 
-    override fun getAtomYmlInfo(userId: String, atomCode: String, defaultShowFlag: Boolean?): Result<String?> {
-        return Result(marketAtomService.generateCiYaml(atomCode = atomCode, defaultShowFlag = defaultShowFlag ?: false))
-    }
-
-    override fun getAtomYmlV2Info(userId: String, atomCode: String, defaultShowFlag: Boolean?): Result<String?> {
-        return Result(marketAtomService.generateCiV2Yaml(
-            atomCode = atomCode,
-            defaultShowFlag = defaultShowFlag ?: false)
+    override fun getAtomYmlInfo(
+        userId: String,
+        tenantId: String?,
+        atomCode: String,
+        defaultShowFlag: Boolean?
+    ): Result<String?> {
+        return Result(
+            marketAtomService.generateCiYaml(
+                atomCode = atomCode,
+                defaultShowFlag = defaultShowFlag ?: false,
+                tenantId = tenantId
+            )
         )
     }
 
-    override fun getAtomOutput(userId: String, atomCode: String): Result<List<AtomOutput>> {
-        return Result(marketAtomService.getAtomOutput(atomCode))
+    override fun getAtomYmlV2Info(
+        userId: String,
+        tenantId: String?,
+        atomCode: String,
+        defaultShowFlag: Boolean?
+    ): Result<String?> {
+        return Result(
+            marketAtomService.generateCiV2Yaml(
+                atomCode = atomCode,
+                defaultShowFlag = defaultShowFlag ?: false,
+                tenantId = tenantId
+            )
+        )
+    }
+
+    override fun getAtomOutput(userId: String, tenantId: String?, atomCode: String): Result<List<AtomOutput>> {
+        return Result(marketAtomService.getAtomOutput(atomCode, tenantId))
     }
 
     override fun updateAtomErrorCodeInfo(
         userId: String,
+        tenantId: String?,
         projectCode: String,
         storeErrorCodeInfo: StoreErrorCodeInfo
     ): Result<Boolean> {
-        return marketAtomService.updateAtomErrorCodeInfo(userId, projectCode, storeErrorCodeInfo)
+        return marketAtomService.updateAtomErrorCodeInfo(userId, projectCode, storeErrorCodeInfo, tenantId)
     }
 }
