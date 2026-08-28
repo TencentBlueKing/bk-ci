@@ -66,6 +66,19 @@
                     :name="option.name"
                 >
                 </bk-option>
+                <div
+                    v-if="hasAddItem"
+                    slot="extension"
+                    class="bk-selector-create-item"
+                >
+                    <a
+                        :href="addItemUrl"
+                        target="_blank"
+                    >
+                        <i class="bk-icon icon-plus-circle" />
+                        {{ itemText }}
+                    </a>
+                </div>
             </bk-select>
             <bk-input
                 v-else-if="isVarInputMode"
@@ -89,6 +102,7 @@
     import mixins from '../mixins'
     import Logo from '@/components/Logo'
     import EnumInput from '@/components/atomFormField/EnumInput'
+    import { pluginUrlParse } from '@/utils/pipelineConst'
 
     export default {
         components: {
@@ -147,6 +161,18 @@
             },
             hyphen: {
                 type: String
+            },
+            hasAddItem: {
+                type: Boolean,
+                default: false
+            },
+            itemText: {
+                type: String,
+                default: ''
+            },
+            itemTargetUrl: {
+                type: String,
+                default: ''
             }
         },
 
@@ -167,6 +193,14 @@
         computed: {
             showTypeSwitcher () {
                 return ['select', 'enum-input'].includes(this.type)
+            },
+            addItemUrl () {
+                if (!this.itemTargetUrl) return ''
+                const originUrl = /^(http|https):\/\//.test(this.itemTargetUrl)
+                    ? this.itemTargetUrl
+                    : WEB_URL_PREFIX + this.itemTargetUrl
+
+                return pluginUrlParse(originUrl, this.paramValues)
             }
         },
 
@@ -380,6 +414,16 @@
     .error-input {
         .bk-form-input {
             border-color: #ff5656 !important;
+        }
+    }
+    .bk-selector-create-item {
+        a {
+            display: block;
+            color: #63656e;
+        }
+        &:hover,
+        &:hover a {
+            color: #3a84ff !important;
         }
     }
 }
