@@ -52,10 +52,10 @@ interface DeptService {
     fun getUserDeptInfo(userId: String, tenantId: String?): Set<String>
 
     @Deprecated("老接口，已废弃")
-    fun getUserInfo(userId: String, name: String, tenantId: String?): UserAndDeptInfoVo?
+    fun getUserInfo(userId: String, name: String, tenantId: String? = null): UserAndDeptInfoVo?
 
     // 获取单个用户信息
-    fun getUserInfo(userId: String, tenantId: String?): UserAndDeptInfoVo?
+    fun getUserInfo(userId: String, tenantId: String? = null): UserAndDeptInfoVo?
 
     fun getUserInfoFromExternal(userId: String, tenantId: String?): UserAndDeptInfoVo?
 
