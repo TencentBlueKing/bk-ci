@@ -93,7 +93,7 @@ interface ServiceProjectResource {
         pageSize: Int? = null,
         @Parameter(description = "租户ID", required = false)
         @HeaderParam(AUTH_HEADER_BK_TENANT_ID)
-        tenantId: String?
+        tenantId: String? = null
     ): Result<List<ProjectVO>>
 
     @GET
@@ -162,7 +162,7 @@ interface ServiceProjectResource {
         userName: String,
         @Parameter(description = "租户ID", required = false)
         @HeaderParam(AUTH_HEADER_BK_TENANT_ID)
-        tenantId: String?
+        tenantId: String? = null
     ): Result<List<ProjectVO>>
 
     @GET
@@ -256,7 +256,7 @@ interface ServiceProjectResource {
         projectName: String,
         @Parameter(description = "租户ID", required = false)
         @HeaderParam(AUTH_HEADER_BK_TENANT_ID)
-        tenantId: String?
+        tenantId: String? = null
     ): Result<Boolean>
 
     @PUT
@@ -277,7 +277,7 @@ interface ServiceProjectResource {
         userId: String,
         @Parameter(description = "租户ID", required = false)
         @HeaderParam(AUTH_HEADER_BK_TENANT_ID)
-        tenantId: String?,
+        tenantId: String? = null,
         @Parameter(description = "projectName", required = true)
         @PathParam("projectName")
         projectName: String
@@ -298,7 +298,7 @@ interface ServiceProjectResource {
         projectId: String?,
         @Parameter(description = "租户ID", required = false)
         @HeaderParam(AUTH_HEADER_BK_TENANT_ID)
-        tenantId: String?
+        tenantId: String? = null
     ): Result<Boolean>
 
     @POST
