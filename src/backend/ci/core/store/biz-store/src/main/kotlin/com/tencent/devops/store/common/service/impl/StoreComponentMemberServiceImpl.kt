@@ -51,6 +51,10 @@ class StoreComponentMemberServiceImpl @Autowired constructor(
     private val storeBaseFeatureExtQueryDao: StoreBaseFeatureExtQueryDao
 ) : StoreMemberServiceImpl() {
 
+    override fun getStoreName(storeCode: String, storeType: StoreTypeEnum): String {
+        return getStoreName(storeCode, storeType, null)
+    }
+
     override fun getStoreName(storeCode: String, storeType: StoreTypeEnum, tenantId: String?): String {
         return storeBaseQueryDao.getLatestComponentByCode(
             dslContext = dslContext,

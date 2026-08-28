@@ -40,7 +40,7 @@ interface StoreBuildService {
         pipelineId: String,
         buildId: String,
         storeBuildResultRequest: StoreBuildResultRequest,
-        tenantId: String?
+        tenantId: String? = null
     ): Result<Boolean>
 
     /**
@@ -51,6 +51,6 @@ interface StoreBuildService {
         buildId: String,
         pipelineId: String,
         status: BuildStatus,
-        tenantId: String?
+        tenantId: String? = null
     ): Result<Boolean>
 }

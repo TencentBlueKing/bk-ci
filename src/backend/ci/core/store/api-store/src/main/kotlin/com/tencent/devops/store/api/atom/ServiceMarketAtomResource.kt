@@ -159,6 +159,17 @@ interface ServiceMarketAtomResource {
         installAtomReq: InstallAtomReq
     ): Result<Boolean>
 
+    fun installAtom(
+        userId: String,
+        channelCode: ChannelCode?,
+        installAtomReq: InstallAtomReq
+    ): Result<Boolean> = installAtom(
+        userId = userId,
+        tenantId = null,
+        channelCode = channelCode,
+        installAtomReq = installAtomReq
+    )
+
     @Operation(summary = "查看插件的yml 2.0信息")
     @GET
     @Path("/atoms/{atomCode}/yml/2.0/detail")

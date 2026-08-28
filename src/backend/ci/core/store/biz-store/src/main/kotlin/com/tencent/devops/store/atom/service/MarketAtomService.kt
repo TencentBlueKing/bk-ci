@@ -116,7 +116,7 @@ interface MarketAtomService {
         userId: String,
         channelCode: ChannelCode,
         installAtomReq: InstallAtomReq,
-        tenantId: String?
+        tenantId: String? = null
     ): Result<Boolean>
 
     /**

@@ -62,6 +62,19 @@ class AtomHandleBuildResultServiceImpl @Autowired constructor(
     override fun handleStoreBuildResult(
         pipelineId: String,
         buildId: String,
+        storeBuildResultRequest: StoreBuildResultRequest
+    ): Result<Boolean> {
+        return handleStoreBuildResult(
+            pipelineId = pipelineId,
+            buildId = buildId,
+            storeBuildResultRequest = storeBuildResultRequest,
+            tenantId = null
+        )
+    }
+
+    override fun handleStoreBuildResult(
+        pipelineId: String,
+        buildId: String,
         storeBuildResultRequest: StoreBuildResultRequest,
         tenantId: String?
     ): Result<Boolean> {

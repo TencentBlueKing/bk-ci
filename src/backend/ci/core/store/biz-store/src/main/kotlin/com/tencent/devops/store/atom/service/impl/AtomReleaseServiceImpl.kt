@@ -548,9 +548,27 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         userId: String,
         branch: String? = null,
         validOsNameFlag: Boolean? = null,
+        validOsArchFlag: Boolean? = null
+    )
+
+    open fun asyncHandleUpdateAtom(
+        context: DSLContext,
+        atomId: String,
+        userId: String,
+        branch: String? = null,
+        validOsNameFlag: Boolean? = null,
         validOsArchFlag: Boolean? = null,
         tenantId: String?
-    )
+    ) {
+        asyncHandleUpdateAtom(
+            context = context,
+            atomId = atomId,
+            userId = userId,
+            branch = branch,
+            validOsNameFlag = validOsNameFlag,
+            validOsArchFlag = validOsArchFlag
+        )
+    }
 
     protected fun updateMarketAtom(
         context: DSLContext,
@@ -1322,9 +1340,23 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         userId: String,
         atomId: String,
         status: Byte,
+        isNormalUpgrade: Boolean? = null
+    ): Triple<Boolean, String, Array<String>?>
+
+    open fun checkAtomVersionOptRight(
+        userId: String,
+        atomId: String,
+        status: Byte,
         isNormalUpgrade: Boolean? = null,
         tenantId: String?
-    ): Triple<Boolean, String, Array<String>?>
+    ): Triple<Boolean, String, Array<String>?> {
+        return checkAtomVersionOptRight(
+            userId = userId,
+            atomId = atomId,
+            status = status,
+            isNormalUpgrade = isNormalUpgrade
+        )
+    }
 
     /**
      * 处理用户提交的下架插件请求
@@ -1493,7 +1525,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         updateAtomPackageInfo: UpdateAtomPackageInfo,
         convertUpdateRequest: MarketAtomUpdateRequest,
         getAtomConfResult: GetAtomConfigResult,
-        tenantId: String?
+        tenantId: String? = null
     ): Result<String> {
         val atomId = updateAtomPackageInfo.atomId
         val atomCode = convertUpdateRequest.atomCode

@@ -42,6 +42,7 @@ import com.tencent.devops.common.api.constant.SUCCESS
 import com.tencent.devops.common.api.constant.TEST
 import com.tencent.devops.common.api.constant.UNDO
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.service.tenant.TenantUtils
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.store.atom.service.SampleAtomReleaseService
@@ -87,6 +88,25 @@ class SampleAtomReleaseServiceImpl : SampleAtomReleaseService, AtomReleaseServic
         val fileStr = marketAtomArchiveService.getFileStr(projectCode, atomCode, atomVersion, fileName)
         logger.info("getFileStr fileStr is:$fileStr")
         return fileStr
+    }
+
+    override fun asyncHandleUpdateAtom(
+        context: DSLContext,
+        atomId: String,
+        userId: String,
+        branch: String?,
+        validOsNameFlag: Boolean?,
+        validOsArchFlag: Boolean?
+    ) {
+        asyncHandleUpdateAtom(
+            context = context,
+            atomId = atomId,
+            userId = userId,
+            branch = branch,
+            validOsNameFlag = validOsNameFlag,
+            validOsArchFlag = validOsArchFlag,
+            tenantId = TenantUtils.getTenantId()
+        )
     }
 
     override fun asyncHandleUpdateAtom(
@@ -178,6 +198,21 @@ class SampleAtomReleaseServiceImpl : SampleAtomReleaseService, AtomReleaseServic
      * 检查版本发布过程中的操作权限
      */
     @Suppress("ALL")
+    override fun checkAtomVersionOptRight(
+        userId: String,
+        atomId: String,
+        status: Byte,
+        isNormalUpgrade: Boolean?
+    ): Triple<Boolean, String, Array<String>?> {
+        return checkAtomVersionOptRight(
+            userId = userId,
+            atomId = atomId,
+            status = status,
+            isNormalUpgrade = isNormalUpgrade,
+            tenantId = TenantUtils.getTenantId()
+        )
+    }
+
     override fun checkAtomVersionOptRight(
         userId: String,
         atomId: String,

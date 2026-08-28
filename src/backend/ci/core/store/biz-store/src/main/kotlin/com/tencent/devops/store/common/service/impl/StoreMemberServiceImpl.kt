@@ -195,6 +195,25 @@ abstract class StoreMemberServiceImpl : StoreMemberService {
     /**
      * 添加store组件成员
      */
+    open fun add(
+        userId: String,
+        storeMemberReq: StoreMemberReq,
+        storeType: StoreTypeEnum,
+        collaborationFlag: Boolean?,
+        sendNotify: Boolean,
+        checkPermissionFlag: Boolean,
+        testProjectCode: String?
+    ): Result<Boolean> = add(
+        userId = userId,
+        storeMemberReq = storeMemberReq,
+        storeType = storeType,
+        collaborationFlag = collaborationFlag,
+        sendNotify = sendNotify,
+        checkPermissionFlag = checkPermissionFlag,
+        testProjectCode = testProjectCode,
+        tenantId = null
+    )
+
     override fun add(
         userId: String,
         storeMemberReq: StoreMemberReq,
@@ -295,6 +314,21 @@ abstract class StoreMemberServiceImpl : StoreMemberService {
     /**
      * 删除store组件成员
      */
+    open fun delete(
+        userId: String,
+        id: String,
+        storeCode: String,
+        storeType: StoreTypeEnum,
+        checkPermissionFlag: Boolean
+    ): Result<Boolean> = delete(
+        userId = userId,
+        id = id,
+        storeCode = storeCode,
+        storeType = storeType,
+        checkPermissionFlag = checkPermissionFlag,
+        tenantId = null
+    )
+
     override fun delete(
         userId: String,
         id: String,
@@ -348,7 +382,11 @@ abstract class StoreMemberServiceImpl : StoreMemberService {
     /**
      * 获取组件名称
      */
-    abstract fun getStoreName(storeCode: String, storeType: StoreTypeEnum, tenantId: String?): String
+    abstract fun getStoreName(storeCode: String, storeType: StoreTypeEnum): String
+
+    open fun getStoreName(storeCode: String, storeType: StoreTypeEnum, tenantId: String?): String {
+        return getStoreName(storeCode, storeType)
+    }
 
     /**
      * 更改store组件成员的调试项目

@@ -186,7 +186,7 @@ class TransferCacheService @Autowired constructor(
 
     fun getAtomDefaultValue(key: String) = atomDefaultValueCache.get(key) ?: JSONObject()
 
-    fun getStoreImageDetail(userId: String, imageCode: String, imageVersion: String?, tenantId: String?) =
+    fun getStoreImageDetail(userId: String, imageCode: String, imageVersion: String?, tenantId: String? = null) =
         storeImageInfoCache.get("$userId@@$imageCode@@${imageVersion ?: ""}@${tenantId ?: ""}")
 
     fun getProjectGroupAndUsers(projectId: String) = projectGroupAndUsersCache.get(projectId)

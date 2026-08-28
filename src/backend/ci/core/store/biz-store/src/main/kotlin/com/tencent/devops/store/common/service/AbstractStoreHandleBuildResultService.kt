@@ -39,7 +39,19 @@ abstract class AbstractStoreHandleBuildResultService {
     abstract fun handleStoreBuildResult(
         pipelineId: String,
         buildId: String,
+        storeBuildResultRequest: StoreBuildResultRequest
+    ): Result<Boolean>
+
+    open fun handleStoreBuildResult(
+        pipelineId: String,
+        buildId: String,
         storeBuildResultRequest: StoreBuildResultRequest,
         tenantId: String?
-    ): Result<Boolean>
+    ): Result<Boolean> {
+        return handleStoreBuildResult(
+            pipelineId = pipelineId,
+            buildId = buildId,
+            storeBuildResultRequest = storeBuildResultRequest
+        )
+    }
 }

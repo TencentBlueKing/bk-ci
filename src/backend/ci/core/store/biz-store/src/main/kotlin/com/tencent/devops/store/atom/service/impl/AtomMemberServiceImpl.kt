@@ -154,6 +154,10 @@ abstract class AtomMemberServiceImpl : StoreMemberServiceImpl() {
 
     abstract fun deleteRepoMember(userId: String, username: String, repositoryHashId: String): Result<Boolean>
 
+    override fun getStoreName(storeCode: String, storeType: StoreTypeEnum): String {
+        return getStoreName(storeCode, storeType, null)
+    }
+
     override fun getStoreName(storeCode: String, storeType: StoreTypeEnum, tenantId: String?): String {
         return marketAtomDao.getLatestAtomByCode(dslContext, storeCode, tenantId)?.name ?: ""
     }
