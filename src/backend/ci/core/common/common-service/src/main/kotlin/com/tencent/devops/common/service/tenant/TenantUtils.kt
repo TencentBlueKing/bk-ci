@@ -17,7 +17,6 @@ import org.springframework.core.env.get
 class TenantUtils : ApplicationContextAware, InitializingBean {
     private var applicationContext: ApplicationContext? = null
 
-
     override fun setApplicationContext(applicationContext: ApplicationContext) {
         this.applicationContext = applicationContext
     }
@@ -171,6 +170,5 @@ class TenantUtils : ApplicationContextAware, InitializingBean {
             headers.add("X-Bk-Tenant-Id", getTenantId(tenantId) ?: DEFAULT_TENANT_ID_FOR_SINGLE)
             return headers.build()
         }
-
     }
 }

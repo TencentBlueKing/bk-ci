@@ -49,7 +49,7 @@ class OpAtomReplaceResourceImpl @Autowired constructor(
         projectId: String?,
         atomReplaceRequest: AtomReplaceRequest
     ): Result<String> {
-        return atomReplaceService.replacePipelineAtom(userId, projectId, atomReplaceRequest,tenantId)
+        return atomReplaceService.replacePipelineAtom(userId, projectId, atomReplaceRequest, tenantId)
     }
 
     override fun atomReplaceRollBack(userId: String, atomReplaceRollBack: AtomReplaceRollBack): Result<Boolean> {

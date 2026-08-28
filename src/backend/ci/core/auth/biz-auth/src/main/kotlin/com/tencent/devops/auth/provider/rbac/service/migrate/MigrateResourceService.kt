@@ -216,8 +216,9 @@ class MigrateResourceService @Autowired constructor(
                             resourceCode = resourceCode,
                             resourceName = instance.displayName,
                             async = false,
-                        tenantId = TenantUtils.getTenantId()
-                    )}
+                            tenantId = TenantUtils.getTenantId()
+                        )
+                    }
                 } catch (ex: Exception) {
                     if (throwException) {
                         throw ex

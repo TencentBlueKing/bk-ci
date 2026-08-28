@@ -275,7 +275,7 @@ class DocumentService {
                 // 组装所有已使用的模型
                 loadMarkdown.addAll(parseAllModel(onLoadModel, loadedModel))
                 loadMarkdown.add(Text(0, getI18n(BK_STATEMENT), "statement"))
-                operation.tags.forEach tag@ { tag ->
+                operation.tags.forEach tag@{ tag ->
                     if (!tag.contains("user") && !tag.contains("app")) {
                         return@tag
                     }

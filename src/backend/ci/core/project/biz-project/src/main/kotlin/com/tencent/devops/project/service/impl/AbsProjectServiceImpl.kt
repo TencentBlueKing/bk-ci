@@ -208,7 +208,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
     }
 
     override fun listAllTenantIds(): List<String> {
-       return projectDao.listAllTenantIds(dslContext)
+        return projectDao.listAllTenantIds(dslContext)
     }
 
     /**

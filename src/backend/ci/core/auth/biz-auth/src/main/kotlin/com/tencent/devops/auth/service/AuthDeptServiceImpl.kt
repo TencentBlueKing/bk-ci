@@ -109,7 +109,6 @@ class AuthDeptServiceImpl(
         .expireAfterWrite(10, TimeUnit.MINUTES)
         .build<String/*userId*/, Boolean/*是否不存在/离职*/>()
 
-
     override fun getUserParentDept(userId: String, tenantId: String?): Int {
         val deptSearchResponse = getUserDeptFamily(userId)
         val deptId = getUserLastDeptId(deptSearchResponse)

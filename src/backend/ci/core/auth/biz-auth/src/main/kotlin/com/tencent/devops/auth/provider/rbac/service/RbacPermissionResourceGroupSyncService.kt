@@ -399,7 +399,6 @@ class RbacPermissionResourceGroupSyncService @Autowired constructor(
                     projectCode = projectCode,
                     totalTime = System.currentTimeMillis() - startEpoch
                 )
-
             }
         }
     }

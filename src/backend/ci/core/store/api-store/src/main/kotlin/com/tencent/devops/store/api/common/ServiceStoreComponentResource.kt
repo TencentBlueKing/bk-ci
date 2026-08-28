@@ -217,7 +217,7 @@ interface ServiceStoreComponentResource {
         userId: String,
         @Parameter(description = "租户ID", required = false)
         @HeaderParam(AUTH_HEADER_BK_TENANT_ID)
-        tenantId: String? ,
+        tenantId: String?,
         @Parameter(description = "安装组件到项目请求报文体", required = true)
         installStoreReq: InstallStoreReq
     ): Result<Boolean>
