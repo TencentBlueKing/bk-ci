@@ -29,14 +29,21 @@ package com.tencent.devops.remotedev.service
 
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.process.api.service.ServiceVarResource
+import com.tencent.devops.process.utils.BK_CI_AUTHORIZER
+import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
+import com.tencent.devops.process.utils.PIPELINE_UPDATE_USER
 import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
 import com.tencent.devops.project.api.service.service.ServiceTxUserResource
+import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.dao.WindowsResourceZoneDao
 import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.dao.WorkspaceJoinDao
 import com.tencent.devops.remotedev.dispatch.kubernetes.dao.DispatchWorkspaceDao
 import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.client.WorkspaceStartCloudClient
 import com.tencent.devops.remotedev.pojo.CoffeeAIToken
+import com.tencent.devops.remotedev.pojo.ImateWorkspaceInspect
 import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfigType
 import com.tencent.devops.remotedev.pojo.WorkspaceAiInfo
 import com.tencent.devops.remotedev.pojo.WorkspaceRecordWithWindows
@@ -116,6 +123,142 @@ class CoffeeAIService @Autowired constructor(
             )
         })
         return token
+    }
+
+    /**
+     * 构建态换 CDS token：username 必须是本构建的触发人、流水线最后保存人或权限代持人，
+     * 且 workspaceName 必须属于该用户已开启 AI 且 RUNNING 的分身。
+     */
+    fun generateBuildUserToken(
+        projectId: String,
+        buildId: String,
+        username: String,
+        workspaceName: String
+    ): String {
+        val inspect = inspectBuildWorkspace(
+            projectId = projectId,
+            buildId = buildId,
+            username = username,
+            workspaceName = workspaceName
+        )
+        if (!inspect.exists) {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
+                params = arrayOf(workspaceName)
+            )
+        }
+        if (!inspect.belongsToUser) {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
+                params = arrayOf(
+                    "workspace $workspaceName owner is ${inspect.owner ?: "unknown"}, not $username"
+                )
+            )
+        }
+        if (!inspect.usable) {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
+                params = arrayOf(
+                    "workspace $workspaceName owner=${inspect.owner} status=${inspect.status} " +
+                        "imateEnabled=${inspect.imateEnabled} reason=${inspect.reason}"
+                )
+            )
+        }
+        return generateUserToken(username)
+    }
+
+    /**
+     * 查 remotedev 工作区归属，不访问 CDS。
+     * 个人桌面所属者是 createUserId；项目桌面所属者是共享表 OWNER。
+     */
+    fun inspectBuildWorkspace(
+        projectId: String,
+        buildId: String,
+        username: String,
+        workspaceName: String
+    ): ImateWorkspaceInspect {
+        assertAllowedBuildIdentity(projectId, buildId, username)
+        val inspect = lookupWorkspaceOwner(username, workspaceName)
+        logger.info(
+            "imate分身归属检查：workspaceName={} displayName={} exists={} owner={} createUserId={} " +
+                "identityUser={} status={} imateEnabled={} belongsToUser={} usable={} reason={} " +
+                "projectId={} buildId={}",
+            inspect.workspaceName,
+            inspect.displayName,
+            inspect.exists,
+            inspect.owner,
+            inspect.createUserId,
+            username,
+            inspect.status,
+            inspect.imateEnabled,
+            inspect.belongsToUser,
+            inspect.usable,
+            inspect.reason,
+            projectId,
+            buildId
+        )
+        return inspect
+    }
+
+    private fun assertAllowedBuildIdentity(projectId: String, buildId: String, username: String) {
+        val vars = client.get(ServiceVarResource::class).getBuildVar(
+            projectId = projectId,
+            buildId = buildId,
+            varName = null,
+            pipelineId = null
+        ).data ?: emptyMap()
+        val allowed = setOfNotNull(
+            vars[PIPELINE_START_USER_ID]?.takeIf { it.isNotBlank() },
+            vars[PIPELINE_UPDATE_USER]?.takeIf { it.isNotBlank() },
+            vars[BK_CI_AUTHORIZER]?.takeIf { it.isNotBlank() }
+        )
+        if (username !in allowed) {
+            logger.warn(
+                "拒绝代开CDS身份：username={} allowed={} projectId={} buildId={}",
+                username,
+                allowed,
+                projectId,
+                buildId
+            )
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
+                params = arrayOf("username $username is not starter/last-modifier/authorizer of this build")
+            )
+        }
+    }
+
+    private fun lookupWorkspaceOwner(username: String, workspaceName: String): ImateWorkspaceInspect {
+        val record = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName)
+            ?: return ImateWorkspaceInspect(
+                workspaceName = workspaceName,
+                exists = false,
+                belongsToUser = false,
+                usable = false,
+                reason = "WORKSPACE_NOT_FOUND"
+            )
+        val owner = workspaceService.getWorkspaceMemberInfo(record.projectId, workspaceName)?.owner
+            ?: record.createUserId
+        val belongsToUser = owner == username
+        val imateEnabled = record.coffeeAi == true
+        val running = record.status == WorkspaceStatus.RUNNING
+        val reason = when {
+            !belongsToUser -> "OWNER_MISMATCH"
+            !imateEnabled -> "IMATE_DISABLED"
+            !running -> "NOT_RUNNING"
+            else -> null
+        }
+        return ImateWorkspaceInspect(
+            workspaceName = record.workspaceName,
+            displayName = record.displayName.takeIf { it != "NO_CHECK" } ?: record.workspaceName,
+            exists = true,
+            owner = owner,
+            createUserId = record.createUserId,
+            status = record.status.name,
+            imateEnabled = imateEnabled,
+            belongsToUser = belongsToUser,
+            usable = belongsToUser && imateEnabled && running,
+            reason = reason
+        )
     }
 
     fun getAiWorkspaceList(userId: String): List<WorkspaceAiInfo> {

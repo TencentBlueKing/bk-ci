@@ -1,0 +1,30 @@
+package com.tencent.devops.remotedev.api.user
+
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.remotedev.pojo.WorkspaceAiInfo
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
+import jakarta.ws.rs.Consumes
+import jakarta.ws.rs.GET
+import jakarta.ws.rs.HeaderParam
+import jakarta.ws.rs.Path
+import jakarta.ws.rs.Produces
+import jakarta.ws.rs.core.MediaType
+
+@Tag(name = "USER_REMOTEDEV_IMATE", description = "用户-imate")
+@Path("/user/imate")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface UserImateResource {
+
+    @Operation(summary = "查询当前用户已开启 imate 的 CDS 分身列表")
+    @GET
+    @Path("/workspaces")
+    fun listImateWorkspaces(
+        @Parameter(description = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String
+    ): Result<List<WorkspaceAiInfo>>
+}

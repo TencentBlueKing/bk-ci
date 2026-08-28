@@ -1,0 +1,2348 @@
+[
+    {
+        "table_name": "group_default",
+        "table_desc": "默认分组",
+        "fields": [],
+        "rule_list": [],
+        "dimensions": []
+    },
+    {
+        "table_name": "overview",
+        "table_desc": "集群总览",
+        "fields": [
+            {
+                "description": "集群消息总数",
+                "is_active": true,
+                "is_diff_metric": false,
+                "monitor_type": "metric",
+                "name": "rabbitmq_overview_messages",
+                "type": "double",
+                "unit": "none",
+                "dimensions": [
+                    "clusterName",
+                    "nodeName"
+                ],
+                "tag_list": [
+                    {
+                        "field_name": "clusterName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "RabbitMQ 集群名（overview.cluster_name）"
+                    },
+                    {
+                        "field_name": "nodeName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "上报节点 / Erlang 节点名"
+                    }
+                ]
+            },
+            {
+                "description": "集群 Ready",
+                "is_active": true,
+                "is_diff_metric": false,
+                "monitor_type": "metric",
+                "name": "rabbitmq_overview_messages_ready",
+                "type": "double",
+                "unit": "none",
+                "dimensions": [
+                    "clusterName",
+                    "nodeName"
+                ],
+                "tag_list": [
+                    {
+                        "field_name": "clusterName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "RabbitMQ 集群名（overview.cluster_name）"
+                    },
+                    {
+                        "field_name": "nodeName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "上报节点 / Erlang 节点名"
+                    }
+                ]
+            },
+            {
+                "description": "集群 Unacked",
+                "is_active": true,
+                "is_diff_metric": false,
+                "monitor_type": "metric",
+                "name": "rabbitmq_overview_messages_unacked",
+                "type": "double",
+                "unit": "none",
+                "dimensions": [
+                    "clusterName",
+                    "nodeName"
+                ],
+                "tag_list": [
+                    {
+                        "field_name": "clusterName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "RabbitMQ 集群名（overview.cluster_name）"
+                    },
+                    {
+                        "field_name": "nodeName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "上报节点 / Erlang 节点名"
+                    }
+                ]
+            },
+            {
+                "description": "通道数",
+                "is_active": true,
+                "is_diff_metric": false,
+                "monitor_type": "metric",
+                "name": "rabbitmq_overview_channels",
+                "type": "double",
+                "unit": "none",
+                "dimensions": [
+                    "clusterName",
+                    "nodeName"
+                ],
+                "tag_list": [
+                    {
+                        "field_name": "clusterName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "RabbitMQ 集群名（overview.cluster_name）"
+                    },
+                    {
+                        "field_name": "nodeName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "上报节点 / Erlang 节点名"
+                    }
+                ]
+            },
+            {
+                "description": "连接数",
+                "is_active": true,
+                "is_diff_metric": false,
+                "monitor_type": "metric",
+                "name": "rabbitmq_overview_connections",
+                "type": "double",
+                "unit": "none",
+                "dimensions": [
+                    "clusterName",
+                    "nodeName"
+                ],
+                "tag_list": [
+                    {
+                        "field_name": "clusterName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "RabbitMQ 集群名（overview.cluster_name）"
+                    },
+                    {
+                        "field_name": "nodeName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "上报节点 / Erlang 节点名"
+                    }
+                ]
+            },
+            {
+                "description": "消费者数",
+                "is_active": true,
+                "is_diff_metric": false,
+                "monitor_type": "metric",
+                "name": "rabbitmq_overview_consumers",
+                "type": "double",
+                "unit": "none",
+                "dimensions": [
+                    "clusterName",
+                    "nodeName"
+                ],
+                "tag_list": [
+                    {
+                        "field_name": "clusterName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "RabbitMQ 集群名（overview.cluster_name）"
+                    },
+                    {
+                        "field_name": "nodeName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "上报节点 / Erlang 节点名"
+                    }
+                ]
+            },
+            {
+                "description": "Exchange 数",
+                "is_active": true,
+                "is_diff_metric": false,
+                "monitor_type": "metric",
+                "name": "rabbitmq_overview_exchanges",
+                "type": "double",
+                "unit": "none",
+                "dimensions": [
+                    "clusterName",
+                    "nodeName"
+                ],
+                "tag_list": [
+                    {
+                        "field_name": "clusterName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "RabbitMQ 集群名（overview.cluster_name）"
+                    },
+                    {
+                        "field_name": "nodeName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "上报节点 / Erlang 节点名"
+                    }
+                ]
+            },
+            {
+                "description": "队列数",
+                "is_active": true,
+                "is_diff_metric": false,
+                "monitor_type": "metric",
+                "name": "rabbitmq_overview_queues",
+                "type": "double",
+                "unit": "none",
+                "dimensions": [
+                    "clusterName",
+                    "nodeName"
+                ],
+                "tag_list": [
+                    {
+                        "field_name": "clusterName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "RabbitMQ 集群名（overview.cluster_name）"
+                    },
+                    {
+                        "field_name": "nodeName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "上报节点 / Erlang 节点名"
+                    }
+                ]
+            },
+            {
+                "description": "累计 ack",
+                "is_active": true,
+                "is_diff_metric": false,
+                "monitor_type": "metric",
+                "name": "rabbitmq_overview_messages_acked",
+                "type": "double",
+                "unit": "none",
+                "dimensions": [
+                    "clusterName",
+                    "nodeName"
+                ],
+                "tag_list": [
+                    {
+                        "field_name": "clusterName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "RabbitMQ 集群名（overview.cluster_name）"
+                    },
+                    {
+                        "field_name": "nodeName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "上报节点 / Erlang 节点名"
+                    }
+                ]
+            },
+            {
+                "description": "累计 deliver",
+                "is_active": true,
+                "is_diff_metric": false,
+                "monitor_type": "metric",
+                "name": "rabbitmq_overview_messages_delivered",
+                "type": "double",
+                "unit": "none",
+                "dimensions": [
+                    "clusterName",
+                    "nodeName"
+                ],
+                "tag_list": [
+                    {
+                        "field_name": "clusterName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "RabbitMQ 集群名（overview.cluster_name）"
+                    },
+                    {
+                        "field_name": "nodeName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "上报节点 / Erlang 节点名"
+                    }
+                ]
+            },
+            {
+                "description": "累计 deliver+get",
+                "is_active": true,
+                "is_diff_metric": false,
+                "monitor_type": "metric",
+                "name": "rabbitmq_overview_messages_delivered_get",
+                "type": "double",
+                "unit": "none",
+                "dimensions": [
+                    "clusterName",
+                    "nodeName"
+                ],
+                "tag_list": [
+                    {
+                        "field_name": "clusterName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "RabbitMQ 集群名（overview.cluster_name）"
+                    },
+                    {
+                        "field_name": "nodeName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "上报节点 / Erlang 节点名"
+                    }
+                ]
+            },
+            {
+                "description": "累计 publish",
+                "is_active": true,
+                "is_diff_metric": false,
+                "monitor_type": "metric",
+                "name": "rabbitmq_overview_messages_published",
+                "type": "double",
+                "unit": "none",
+                "dimensions": [
+                    "clusterName",
+                    "nodeName"
+                ],
+                "tag_list": [
+                    {
+                        "field_name": "clusterName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "RabbitMQ 集群名（overview.cluster_name）"
+                    },
+                    {
+                        "field_name": "nodeName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "上报节点 / Erlang 节点名"
+                    }
+                ]
+            },
+            {
+                "description": "ack 速率",
+                "is_active": true,
+                "is_diff_metric": false,
+                "monitor_type": "metric",
+                "name": "rabbitmq_overview_messages_ack_rate",
+                "type": "double",
+                "unit": "none",
+                "dimensions": [
+                    "clusterName",
+                    "nodeName"
+                ],
+                "tag_list": [
+                    {
+                        "field_name": "clusterName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "RabbitMQ 集群名（overview.cluster_name）"
+                    },
+                    {
+                        "field_name": "nodeName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "上报节点 / Erlang 节点名"
+                    }
+                ]
+            },
+            {
+                "description": "deliver 速率",
+                "is_active": true,
+                "is_diff_metric": false,
+                "monitor_type": "metric",
+                "name": "rabbitmq_overview_messages_deliver_rate",
+                "type": "double",
+                "unit": "none",
+                "dimensions": [
+                    "clusterName",
+                    "nodeName"
+                ],
+                "tag_list": [
+                    {
+                        "field_name": "clusterName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "RabbitMQ 集群名（overview.cluster_name）"
+                    },
+                    {
+                        "field_name": "nodeName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "上报节点 / Erlang 节点名"
+                    }
+                ]
+            },
+            {
+                "description": "publish 速率",
+                "is_active": true,
+                "is_diff_metric": false,
+                "monitor_type": "metric",
+                "name": "rabbitmq_overview_messages_publish_rate",
+                "type": "double",
+                "unit": "none",
+                "dimensions": [
+                    "clusterName",
+                    "nodeName"
+                ],
+                "tag_list": [
+                    {
+                        "field_name": "clusterName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "RabbitMQ 集群名（overview.cluster_name）"
+                    },
+                    {
+                        "field_name": "nodeName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "上报节点 / Erlang 节点名"
+                    }
+                ]
+            },
+            {
+                "description": "无法路由消息",
+                "is_active": true,
+                "is_diff_metric": false,
+                "monitor_type": "metric",
+                "name": "rabbitmq_overview_return_unroutable",
+                "type": "double",
+                "unit": "none",
+                "dimensions": [
+                    "clusterName",
+                    "nodeName"
+                ],
+                "tag_list": [
+                    {
+                        "field_name": "clusterName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "RabbitMQ 集群名（overview.cluster_name）"
+                    },
+                    {
+                        "field_name": "nodeName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "上报节点 / Erlang 节点名"
+                    }
+                ]
+            },
+            {
+                "description": "无法路由速率",
+                "is_active": true,
+                "is_diff_metric": false,
+                "monitor_type": "metric",
+                "name": "rabbitmq_overview_return_unroutable_rate",
+                "type": "double",
+                "unit": "none",
+                "dimensions": [
+                    "clusterName",
+                    "nodeName"
+                ],
+                "tag_list": [
+                    {
+                        "field_name": "clusterName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "RabbitMQ 集群名（overview.cluster_name）"
+                    },
+                    {
+                        "field_name": "nodeName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "上报节点 / Erlang 节点名"
+                    }
+                ]
+            },
+            {
+                "description": "clustering listener",
+                "is_active": true,
+                "is_diff_metric": false,
+                "monitor_type": "metric",
+                "name": "rabbitmq_overview_clustering_listeners",
+                "type": "double",
+                "unit": "none",
+                "dimensions": [
+                    "clusterName",
+                    "nodeName"
+                ],
+                "tag_list": [
+                    {
+                        "field_name": "clusterName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "RabbitMQ 集群名（overview.cluster_name）"
+                    },
+                    {
+                        "field_name": "nodeName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "上报节点 / Erlang 节点名"
+                    }
+                ]
+            },
+            {
+                "description": "amqp listener",
+                "is_active": true,
+                "is_diff_metric": false,
+                "monitor_type": "metric",
+                "name": "rabbitmq_overview_amqp_listeners",
+                "type": "double",
+                "unit": "none",
+                "dimensions": [
+                    "clusterName",
+                    "nodeName"
+                ],
+                "tag_list": [
+                    {
+                        "field_name": "clusterName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "RabbitMQ 集群名（overview.cluster_name）"
+                    },
+                    {
+                        "field_name": "nodeName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "上报节点 / Erlang 节点名"
+                    }
+                ]
+            },
+            {
+                "description": "RabbitMQ 集群名（overview.cluster_name）",
+                "monitor_type": "dimension",
+                "name": "clusterName",
+                "type": "string",
+                "unit": "none",
+                "is_active": true
+            },
+            {
+                "description": "上报节点 / Erlang 节点名",
+                "monitor_type": "dimension",
+                "name": "nodeName",
+                "type": "string",
+                "unit": "none",
+                "is_active": true
+            }
+        ],
+        "rule_list": [],
+        "dimensions": [
+            "clusterName",
+            "nodeName"
+        ]
+    },
+    {
+        "table_name": "node",
+        "table_desc": "节点资源",
+        "fields": [
+            {
+                "description": "节点剩余磁盘",
+                "is_active": true,
+                "is_diff_metric": false,
+                "monitor_type": "metric",
+                "name": "rabbitmq_node_disk_free",
+                "type": "double",
+                "unit": "bytes",
+                "dimensions": [
+                    "clusterName",
+                    "nodeName"
+                ],
+                "tag_list": [
+                    {
+                        "field_name": "clusterName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "RabbitMQ 集群名（overview.cluster_name）"
+                    },
+                    {
+                        "field_name": "nodeName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "上报节点 / Erlang 节点名"
+                    }
+                ]
+            },
+            {
+                "description": "磁盘水位",
+                "is_active": true,
+                "is_diff_metric": false,
+                "monitor_type": "metric",
+                "name": "rabbitmq_node_disk_free_limit",
+                "type": "double",
+                "unit": "bytes",
+                "dimensions": [
+                    "clusterName",
+                    "nodeName"
+                ],
+                "tag_list": [
+                    {
+                        "field_name": "clusterName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "RabbitMQ 集群名（overview.cluster_name）"
+                    },
+                    {
+                        "field_name": "nodeName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "上报节点 / Erlang 节点名"
+                    }
+                ]
+            },
+            {
+                "description": "磁盘告警 0/1",
+                "is_active": true,
+                "is_diff_metric": false,
+                "monitor_type": "metric",
+                "name": "rabbitmq_node_disk_free_alarm",
+                "type": "double",
+                "unit": "none",
+                "dimensions": [
+                    "clusterName",
+                    "nodeName"
+                ],
+                "tag_list": [
+                    {
+                        "field_name": "clusterName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "RabbitMQ 集群名（overview.cluster_name）"
+                    },
+                    {
+                        "field_name": "nodeName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "上报节点 / Erlang 节点名"
+                    }
+                ]
+            },
+            {
+                "description": "已用文件描述符",
+                "is_active": true,
+                "is_diff_metric": false,
+                "monitor_type": "metric",
+                "name": "rabbitmq_node_fd_used",
+                "type": "double",
+                "unit": "none",
+                "dimensions": [
+                    "clusterName",
+                    "nodeName"
+                ],
+                "tag_list": [
+                    {
+                        "field_name": "clusterName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "RabbitMQ 集群名（overview.cluster_name）"
+                    },
+                    {
+                        "field_name": "nodeName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "上报节点 / Erlang 节点名"
+                    }
+                ]
+            },
+            {
+                "description": "文件描述符上限",
+                "is_active": true,
+                "is_diff_metric": false,
+                "monitor_type": "metric",
+                "name": "rabbitmq_node_fd_total",
+                "type": "double",
+                "unit": "none",
+                "dimensions": [
+                    "clusterName",
+                    "nodeName"
+                ],
+                "tag_list": [
+                    {
+                        "field_name": "clusterName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "RabbitMQ 集群名（overview.cluster_name）"
+                    },
+                    {
+                        "field_name": "nodeName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "上报节点 / Erlang 节点名"
+                    }
+                ]
+            },
+            {
+                "description": "MQ 进程内存",
+                "is_active": true,
+                "is_diff_metric": false,
+                "monitor_type": "metric",
+                "name": "rabbitmq_node_mem_used",
+                "type": "double",
+                "unit": "bytes",
+                "dimensions": [
+                    "clusterName",
+                    "nodeName"
+                ],
+                "tag_list": [
+                    {
+                        "field_name": "clusterName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "RabbitMQ 集群名（overview.cluster_name）"
+                    },
+                    {
+                        "field_name": "nodeName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "上报节点 / Erlang 节点名"
+                    }
+                ]
+            },
+            {
+                "description": "内存上限",
+                "is_active": true,
+                "is_diff_metric": false,
+                "monitor_type": "metric",
+                "name": "rabbitmq_node_mem_limit",
+                "type": "double",
+                "unit": "bytes",
+                "dimensions": [
+                    "clusterName",
+                    "nodeName"
+                ],
+                "tag_list": [
+                    {
+                        "field_name": "clusterName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "RabbitMQ 集群名（overview.cluster_name）"
+                    },
+                    {
+                        "field_name": "nodeName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "上报节点 / Erlang 节点名"
+                    }
+                ]
+            },
+            {
+                "description": "内存告警 0/1",
+                "is_active": true,
+                "is_diff_metric": false,
+                "monitor_type": "metric",
+                "name": "rabbitmq_node_mem_alarm",
+                "type": "double",
+                "unit": "none",
+                "dimensions": [
+                    "clusterName",
+                    "nodeName"
+                ],
+                "tag_list": [
+                    {
+                        "field_name": "clusterName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "RabbitMQ 集群名（overview.cluster_name）"
+                    },
+                    {
+                        "field_name": "nodeName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "上报节点 / Erlang 节点名"
+                    }
+                ]
+            },
+            {
+                "description": "Erlang 进程数",
+                "is_active": true,
+                "is_diff_metric": false,
+                "monitor_type": "metric",
+                "name": "rabbitmq_node_proc_used",
+                "type": "double",
+                "unit": "none",
+                "dimensions": [
+                    "clusterName",
+                    "nodeName"
+                ],
+                "tag_list": [
+                    {
+                        "field_name": "clusterName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "RabbitMQ 集群名（overview.cluster_name）"
+                    },
+                    {
+                        "field_name": "nodeName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "上报节点 / Erlang 节点名"
+                    }
+                ]
+            },
+            {
+                "description": "Erlang 进程上限",
+                "is_active": true,
+                "is_diff_metric": false,
+                "monitor_type": "metric",
+                "name": "rabbitmq_node_proc_total",
+                "type": "double",
+                "unit": "none",
+                "dimensions": [
+                    "clusterName",
+                    "nodeName"
+                ],
+                "tag_list": [
+                    {
+                        "field_name": "clusterName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "RabbitMQ 集群名（overview.cluster_name）"
+                    },
+                    {
+                        "field_name": "nodeName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "上报节点 / Erlang 节点名"
+                    }
+                ]
+            },
+            {
+                "description": "调度运行队列",
+                "is_active": true,
+                "is_diff_metric": false,
+                "monitor_type": "metric",
+                "name": "rabbitmq_node_run_queue",
+                "type": "double",
+                "unit": "none",
+                "dimensions": [
+                    "clusterName",
+                    "nodeName"
+                ],
+                "tag_list": [
+                    {
+                        "field_name": "clusterName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "RabbitMQ 集群名（overview.cluster_name）"
+                    },
+                    {
+                        "field_name": "nodeName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "上报节点 / Erlang 节点名"
+                    }
+                ]
+            },
+            {
+                "description": "已用 socket",
+                "is_active": true,
+                "is_diff_metric": false,
+                "monitor_type": "metric",
+                "name": "rabbitmq_node_sockets_used",
+                "type": "double",
+                "unit": "none",
+                "dimensions": [
+                    "clusterName",
+                    "nodeName"
+                ],
+                "tag_list": [
+                    {
+                        "field_name": "clusterName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "RabbitMQ 集群名（overview.cluster_name）"
+                    },
+                    {
+                        "field_name": "nodeName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "上报节点 / Erlang 节点名"
+                    }
+                ]
+            },
+            {
+                "description": "socket 上限",
+                "is_active": true,
+                "is_diff_metric": false,
+                "monitor_type": "metric",
+                "name": "rabbitmq_node_sockets_total",
+                "type": "double",
+                "unit": "none",
+                "dimensions": [
+                    "clusterName",
+                    "nodeName"
+                ],
+                "tag_list": [
+                    {
+                        "field_name": "clusterName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "RabbitMQ 集群名（overview.cluster_name）"
+                    },
+                    {
+                        "field_name": "nodeName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "上报节点 / Erlang 节点名"
+                    }
+                ]
+            },
+            {
+                "description": "节点运行时长",
+                "is_active": true,
+                "is_diff_metric": false,
+                "monitor_type": "metric",
+                "name": "rabbitmq_node_uptime",
+                "type": "double",
+                "unit": "ms",
+                "dimensions": [
+                    "clusterName",
+                    "nodeName"
+                ],
+                "tag_list": [
+                    {
+                        "field_name": "clusterName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "RabbitMQ 集群名（overview.cluster_name）"
+                    },
+                    {
+                        "field_name": "nodeName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "上报节点 / Erlang 节点名"
+                    }
+                ]
+            },
+            {
+                "description": "节点运行中 0/1",
+                "is_active": true,
+                "is_diff_metric": false,
+                "monitor_type": "metric",
+                "name": "rabbitmq_node_running",
+                "type": "double",
+                "unit": "none",
+                "dimensions": [
+                    "clusterName",
+                    "nodeName"
+                ],
+                "tag_list": [
+                    {
+                        "field_name": "clusterName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "RabbitMQ 集群名（overview.cluster_name）"
+                    },
+                    {
+                        "field_name": "nodeName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "上报节点 / Erlang 节点名"
+                    }
+                ]
+            },
+            {
+                "description": "GC 次数",
+                "is_active": true,
+                "is_diff_metric": false,
+                "monitor_type": "metric",
+                "name": "rabbitmq_node_gc_num",
+                "type": "double",
+                "unit": "none",
+                "dimensions": [
+                    "clusterName",
+                    "nodeName"
+                ],
+                "tag_list": [
+                    {
+                        "field_name": "clusterName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "RabbitMQ 集群名（overview.cluster_name）"
+                    },
+                    {
+                        "field_name": "nodeName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "上报节点 / Erlang 节点名"
+                    }
+                ]
+            },
+            {
+                "description": "GC 速率",
+                "is_active": true,
+                "is_diff_metric": false,
+                "monitor_type": "metric",
+                "name": "rabbitmq_node_gc_num_rate",
+                "type": "double",
+                "unit": "none",
+                "dimensions": [
+                    "clusterName",
+                    "nodeName"
+                ],
+                "tag_list": [
+                    {
+                        "field_name": "clusterName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "RabbitMQ 集群名（overview.cluster_name）"
+                    },
+                    {
+                        "field_name": "nodeName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "上报节点 / Erlang 节点名"
+                    }
+                ]
+            },
+            {
+                "description": "磁盘读平均耗时",
+                "is_active": true,
+                "is_diff_metric": false,
+                "monitor_type": "metric",
+                "name": "rabbitmq_node_io_read_avg_time",
+                "type": "double",
+                "unit": "none",
+                "dimensions": [
+                    "clusterName",
+                    "nodeName"
+                ],
+                "tag_list": [
+                    {
+                        "field_name": "clusterName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "RabbitMQ 集群名（overview.cluster_name）"
+                    },
+                    {
+                        "field_name": "nodeName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "上报节点 / Erlang 节点名"
+                    }
+                ]
+            },
+            {
+                "description": "磁盘写平均耗时",
+                "is_active": true,
+                "is_diff_metric": false,
+                "monitor_type": "metric",
+                "name": "rabbitmq_node_io_write_avg_time",
+                "type": "double",
+                "unit": "none",
+                "dimensions": [
+                    "clusterName",
+                    "nodeName"
+                ],
+                "tag_list": [
+                    {
+                        "field_name": "clusterName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "RabbitMQ 集群名（overview.cluster_name）"
+                    },
+                    {
+                        "field_name": "nodeName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "上报节点 / Erlang 节点名"
+                    }
+                ]
+            },
+            {
+                "description": "RabbitMQ 集群名（overview.cluster_name）",
+                "monitor_type": "dimension",
+                "name": "clusterName",
+                "type": "string",
+                "unit": "none",
+                "is_active": true
+            },
+            {
+                "description": "上报节点 / Erlang 节点名",
+                "monitor_type": "dimension",
+                "name": "nodeName",
+                "type": "string",
+                "unit": "none",
+                "is_active": true
+            }
+        ],
+        "rule_list": [],
+        "dimensions": [
+            "clusterName",
+            "nodeName"
+        ]
+    },
+    {
+        "table_name": "queue",
+        "table_desc": "队列明细",
+        "fields": [
+            {
+                "description": "队列消息总数",
+                "is_active": true,
+                "is_diff_metric": false,
+                "monitor_type": "metric",
+                "name": "rabbitmq_queue_messages",
+                "type": "double",
+                "unit": "none",
+                "dimensions": [
+                    "clusterName",
+                    "nodeName",
+                    "vhostName",
+                    "queueName",
+                    "queueNode",
+                    "queueType"
+                ],
+                "tag_list": [
+                    {
+                        "field_name": "clusterName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "RabbitMQ 集群名（overview.cluster_name）"
+                    },
+                    {
+                        "field_name": "nodeName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "上报节点 / Erlang 节点名"
+                    },
+                    {
+                        "field_name": "vhostName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "vhost"
+                    },
+                    {
+                        "field_name": "queueName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "队列名"
+                    },
+                    {
+                        "field_name": "queueNode",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "队列所在节点"
+                    },
+                    {
+                        "field_name": "queueType",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "队列类型 classic/quorum"
+                    }
+                ]
+            },
+            {
+                "description": "队列 Ready",
+                "is_active": true,
+                "is_diff_metric": false,
+                "monitor_type": "metric",
+                "name": "rabbitmq_queue_messages_ready",
+                "type": "double",
+                "unit": "none",
+                "dimensions": [
+                    "clusterName",
+                    "nodeName",
+                    "vhostName",
+                    "queueName",
+                    "queueNode",
+                    "queueType"
+                ],
+                "tag_list": [
+                    {
+                        "field_name": "clusterName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "RabbitMQ 集群名（overview.cluster_name）"
+                    },
+                    {
+                        "field_name": "nodeName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "上报节点 / Erlang 节点名"
+                    },
+                    {
+                        "field_name": "vhostName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "vhost"
+                    },
+                    {
+                        "field_name": "queueName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "队列名"
+                    },
+                    {
+                        "field_name": "queueNode",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "队列所在节点"
+                    },
+                    {
+                        "field_name": "queueType",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "队列类型 classic/quorum"
+                    }
+                ]
+            },
+            {
+                "description": "队列 Unacked",
+                "is_active": true,
+                "is_diff_metric": false,
+                "monitor_type": "metric",
+                "name": "rabbitmq_queue_messages_unacked",
+                "type": "double",
+                "unit": "none",
+                "dimensions": [
+                    "clusterName",
+                    "nodeName",
+                    "vhostName",
+                    "queueName",
+                    "queueNode",
+                    "queueType"
+                ],
+                "tag_list": [
+                    {
+                        "field_name": "clusterName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "RabbitMQ 集群名（overview.cluster_name）"
+                    },
+                    {
+                        "field_name": "nodeName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "上报节点 / Erlang 节点名"
+                    },
+                    {
+                        "field_name": "vhostName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "vhost"
+                    },
+                    {
+                        "field_name": "queueName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "队列名"
+                    },
+                    {
+                        "field_name": "queueNode",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "队列所在节点"
+                    },
+                    {
+                        "field_name": "queueType",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "队列类型 classic/quorum"
+                    }
+                ]
+            },
+            {
+                "description": "队列消费者",
+                "is_active": true,
+                "is_diff_metric": false,
+                "monitor_type": "metric",
+                "name": "rabbitmq_queue_consumers",
+                "type": "double",
+                "unit": "none",
+                "dimensions": [
+                    "clusterName",
+                    "nodeName",
+                    "vhostName",
+                    "queueName",
+                    "queueNode",
+                    "queueType"
+                ],
+                "tag_list": [
+                    {
+                        "field_name": "clusterName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "RabbitMQ 集群名（overview.cluster_name）"
+                    },
+                    {
+                        "field_name": "nodeName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "上报节点 / Erlang 节点名"
+                    },
+                    {
+                        "field_name": "vhostName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "vhost"
+                    },
+                    {
+                        "field_name": "queueName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "队列名"
+                    },
+                    {
+                        "field_name": "queueNode",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "队列所在节点"
+                    },
+                    {
+                        "field_name": "queueType",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "队列类型 classic/quorum"
+                    }
+                ]
+            },
+            {
+                "description": "消费者利用率 0-1",
+                "is_active": true,
+                "is_diff_metric": false,
+                "monitor_type": "metric",
+                "name": "rabbitmq_queue_consumer_utilisation",
+                "type": "double",
+                "unit": "none",
+                "dimensions": [
+                    "clusterName",
+                    "nodeName",
+                    "vhostName",
+                    "queueName",
+                    "queueNode",
+                    "queueType"
+                ],
+                "tag_list": [
+                    {
+                        "field_name": "clusterName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "RabbitMQ 集群名（overview.cluster_name）"
+                    },
+                    {
+                        "field_name": "nodeName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "上报节点 / Erlang 节点名"
+                    },
+                    {
+                        "field_name": "vhostName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "vhost"
+                    },
+                    {
+                        "field_name": "queueName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "队列名"
+                    },
+                    {
+                        "field_name": "queueNode",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "队列所在节点"
+                    },
+                    {
+                        "field_name": "queueType",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "队列类型 classic/quorum"
+                    }
+                ]
+            },
+            {
+                "description": "队列内存",
+                "is_active": true,
+                "is_diff_metric": false,
+                "monitor_type": "metric",
+                "name": "rabbitmq_queue_memory",
+                "type": "double",
+                "unit": "bytes",
+                "dimensions": [
+                    "clusterName",
+                    "nodeName",
+                    "vhostName",
+                    "queueName",
+                    "queueNode",
+                    "queueType"
+                ],
+                "tag_list": [
+                    {
+                        "field_name": "clusterName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "RabbitMQ 集群名（overview.cluster_name）"
+                    },
+                    {
+                        "field_name": "nodeName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "上报节点 / Erlang 节点名"
+                    },
+                    {
+                        "field_name": "vhostName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "vhost"
+                    },
+                    {
+                        "field_name": "queueName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "队列名"
+                    },
+                    {
+                        "field_name": "queueNode",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "队列所在节点"
+                    },
+                    {
+                        "field_name": "queueType",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "队列类型 classic/quorum"
+                    }
+                ]
+            },
+            {
+                "description": "队列消息字节",
+                "is_active": true,
+                "is_diff_metric": false,
+                "monitor_type": "metric",
+                "name": "rabbitmq_queue_message_bytes",
+                "type": "double",
+                "unit": "bytes",
+                "dimensions": [
+                    "clusterName",
+                    "nodeName",
+                    "vhostName",
+                    "queueName",
+                    "queueNode",
+                    "queueType"
+                ],
+                "tag_list": [
+                    {
+                        "field_name": "clusterName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "RabbitMQ 集群名（overview.cluster_name）"
+                    },
+                    {
+                        "field_name": "nodeName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "上报节点 / Erlang 节点名"
+                    },
+                    {
+                        "field_name": "vhostName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "vhost"
+                    },
+                    {
+                        "field_name": "queueName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "队列名"
+                    },
+                    {
+                        "field_name": "queueNode",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "队列所在节点"
+                    },
+                    {
+                        "field_name": "queueType",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "队列类型 classic/quorum"
+                    }
+                ]
+            },
+            {
+                "description": "Ready 字节",
+                "is_active": true,
+                "is_diff_metric": false,
+                "monitor_type": "metric",
+                "name": "rabbitmq_queue_message_bytes_ready",
+                "type": "double",
+                "unit": "bytes",
+                "dimensions": [
+                    "clusterName",
+                    "nodeName",
+                    "vhostName",
+                    "queueName",
+                    "queueNode",
+                    "queueType"
+                ],
+                "tag_list": [
+                    {
+                        "field_name": "clusterName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "RabbitMQ 集群名（overview.cluster_name）"
+                    },
+                    {
+                        "field_name": "nodeName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "上报节点 / Erlang 节点名"
+                    },
+                    {
+                        "field_name": "vhostName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "vhost"
+                    },
+                    {
+                        "field_name": "queueName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "队列名"
+                    },
+                    {
+                        "field_name": "queueNode",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "队列所在节点"
+                    },
+                    {
+                        "field_name": "queueType",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "队列类型 classic/quorum"
+                    }
+                ]
+            },
+            {
+                "description": "Unacked 字节",
+                "is_active": true,
+                "is_diff_metric": false,
+                "monitor_type": "metric",
+                "name": "rabbitmq_queue_message_bytes_unacked",
+                "type": "double",
+                "unit": "bytes",
+                "dimensions": [
+                    "clusterName",
+                    "nodeName",
+                    "vhostName",
+                    "queueName",
+                    "queueNode",
+                    "queueType"
+                ],
+                "tag_list": [
+                    {
+                        "field_name": "clusterName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "RabbitMQ 集群名（overview.cluster_name）"
+                    },
+                    {
+                        "field_name": "nodeName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "上报节点 / Erlang 节点名"
+                    },
+                    {
+                        "field_name": "vhostName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "vhost"
+                    },
+                    {
+                        "field_name": "queueName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "队列名"
+                    },
+                    {
+                        "field_name": "queueNode",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "队列所在节点"
+                    },
+                    {
+                        "field_name": "queueType",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "队列类型 classic/quorum"
+                    }
+                ]
+            },
+            {
+                "description": "队列累计 publish",
+                "is_active": true,
+                "is_diff_metric": false,
+                "monitor_type": "metric",
+                "name": "rabbitmq_queue_messages_publish",
+                "type": "double",
+                "unit": "none",
+                "dimensions": [
+                    "clusterName",
+                    "nodeName",
+                    "vhostName",
+                    "queueName",
+                    "queueNode",
+                    "queueType"
+                ],
+                "tag_list": [
+                    {
+                        "field_name": "clusterName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "RabbitMQ 集群名（overview.cluster_name）"
+                    },
+                    {
+                        "field_name": "nodeName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "上报节点 / Erlang 节点名"
+                    },
+                    {
+                        "field_name": "vhostName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "vhost"
+                    },
+                    {
+                        "field_name": "queueName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "队列名"
+                    },
+                    {
+                        "field_name": "queueNode",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "队列所在节点"
+                    },
+                    {
+                        "field_name": "queueType",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "队列类型 classic/quorum"
+                    }
+                ]
+            },
+            {
+                "description": "队列 publish 速率",
+                "is_active": true,
+                "is_diff_metric": false,
+                "monitor_type": "metric",
+                "name": "rabbitmq_queue_messages_publish_rate",
+                "type": "double",
+                "unit": "none",
+                "dimensions": [
+                    "clusterName",
+                    "nodeName",
+                    "vhostName",
+                    "queueName",
+                    "queueNode",
+                    "queueType"
+                ],
+                "tag_list": [
+                    {
+                        "field_name": "clusterName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "RabbitMQ 集群名（overview.cluster_name）"
+                    },
+                    {
+                        "field_name": "nodeName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "上报节点 / Erlang 节点名"
+                    },
+                    {
+                        "field_name": "vhostName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "vhost"
+                    },
+                    {
+                        "field_name": "queueName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "队列名"
+                    },
+                    {
+                        "field_name": "queueNode",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "队列所在节点"
+                    },
+                    {
+                        "field_name": "queueType",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "队列类型 classic/quorum"
+                    }
+                ]
+            },
+            {
+                "description": "队列累计 deliver",
+                "is_active": true,
+                "is_diff_metric": false,
+                "monitor_type": "metric",
+                "name": "rabbitmq_queue_messages_deliver",
+                "type": "double",
+                "unit": "none",
+                "dimensions": [
+                    "clusterName",
+                    "nodeName",
+                    "vhostName",
+                    "queueName",
+                    "queueNode",
+                    "queueType"
+                ],
+                "tag_list": [
+                    {
+                        "field_name": "clusterName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "RabbitMQ 集群名（overview.cluster_name）"
+                    },
+                    {
+                        "field_name": "nodeName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "上报节点 / Erlang 节点名"
+                    },
+                    {
+                        "field_name": "vhostName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "vhost"
+                    },
+                    {
+                        "field_name": "queueName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "队列名"
+                    },
+                    {
+                        "field_name": "queueNode",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "队列所在节点"
+                    },
+                    {
+                        "field_name": "queueType",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "队列类型 classic/quorum"
+                    }
+                ]
+            },
+            {
+                "description": "队列 deliver 速率",
+                "is_active": true,
+                "is_diff_metric": false,
+                "monitor_type": "metric",
+                "name": "rabbitmq_queue_messages_deliver_rate",
+                "type": "double",
+                "unit": "none",
+                "dimensions": [
+                    "clusterName",
+                    "nodeName",
+                    "vhostName",
+                    "queueName",
+                    "queueNode",
+                    "queueType"
+                ],
+                "tag_list": [
+                    {
+                        "field_name": "clusterName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "RabbitMQ 集群名（overview.cluster_name）"
+                    },
+                    {
+                        "field_name": "nodeName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "上报节点 / Erlang 节点名"
+                    },
+                    {
+                        "field_name": "vhostName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "vhost"
+                    },
+                    {
+                        "field_name": "queueName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "队列名"
+                    },
+                    {
+                        "field_name": "queueNode",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "队列所在节点"
+                    },
+                    {
+                        "field_name": "queueType",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "队列类型 classic/quorum"
+                    }
+                ]
+            },
+            {
+                "description": "队列累计 ack",
+                "is_active": true,
+                "is_diff_metric": false,
+                "monitor_type": "metric",
+                "name": "rabbitmq_queue_messages_ack",
+                "type": "double",
+                "unit": "none",
+                "dimensions": [
+                    "clusterName",
+                    "nodeName",
+                    "vhostName",
+                    "queueName",
+                    "queueNode",
+                    "queueType"
+                ],
+                "tag_list": [
+                    {
+                        "field_name": "clusterName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "RabbitMQ 集群名（overview.cluster_name）"
+                    },
+                    {
+                        "field_name": "nodeName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "上报节点 / Erlang 节点名"
+                    },
+                    {
+                        "field_name": "vhostName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "vhost"
+                    },
+                    {
+                        "field_name": "queueName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "队列名"
+                    },
+                    {
+                        "field_name": "queueNode",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "队列所在节点"
+                    },
+                    {
+                        "field_name": "queueType",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "队列类型 classic/quorum"
+                    }
+                ]
+            },
+            {
+                "description": "队列 ack 速率",
+                "is_active": true,
+                "is_diff_metric": false,
+                "monitor_type": "metric",
+                "name": "rabbitmq_queue_messages_ack_rate",
+                "type": "double",
+                "unit": "none",
+                "dimensions": [
+                    "clusterName",
+                    "nodeName",
+                    "vhostName",
+                    "queueName",
+                    "queueNode",
+                    "queueType"
+                ],
+                "tag_list": [
+                    {
+                        "field_name": "clusterName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "RabbitMQ 集群名（overview.cluster_name）"
+                    },
+                    {
+                        "field_name": "nodeName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "上报节点 / Erlang 节点名"
+                    },
+                    {
+                        "field_name": "vhostName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "vhost"
+                    },
+                    {
+                        "field_name": "queueName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "队列名"
+                    },
+                    {
+                        "field_name": "queueNode",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "队列所在节点"
+                    },
+                    {
+                        "field_name": "queueType",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "队列类型 classic/quorum"
+                    }
+                ]
+            },
+            {
+                "description": "队列累计 redeliver",
+                "is_active": true,
+                "is_diff_metric": false,
+                "monitor_type": "metric",
+                "name": "rabbitmq_queue_messages_redeliver",
+                "type": "double",
+                "unit": "none",
+                "dimensions": [
+                    "clusterName",
+                    "nodeName",
+                    "vhostName",
+                    "queueName",
+                    "queueNode",
+                    "queueType"
+                ],
+                "tag_list": [
+                    {
+                        "field_name": "clusterName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "RabbitMQ 集群名（overview.cluster_name）"
+                    },
+                    {
+                        "field_name": "nodeName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "上报节点 / Erlang 节点名"
+                    },
+                    {
+                        "field_name": "vhostName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "vhost"
+                    },
+                    {
+                        "field_name": "queueName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "队列名"
+                    },
+                    {
+                        "field_name": "queueNode",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "队列所在节点"
+                    },
+                    {
+                        "field_name": "queueType",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "队列类型 classic/quorum"
+                    }
+                ]
+            },
+            {
+                "description": "队列 redeliver 速率",
+                "is_active": true,
+                "is_diff_metric": false,
+                "monitor_type": "metric",
+                "name": "rabbitmq_queue_messages_redeliver_rate",
+                "type": "double",
+                "unit": "none",
+                "dimensions": [
+                    "clusterName",
+                    "nodeName",
+                    "vhostName",
+                    "queueName",
+                    "queueNode",
+                    "queueType"
+                ],
+                "tag_list": [
+                    {
+                        "field_name": "clusterName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "RabbitMQ 集群名（overview.cluster_name）"
+                    },
+                    {
+                        "field_name": "nodeName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "上报节点 / Erlang 节点名"
+                    },
+                    {
+                        "field_name": "vhostName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "vhost"
+                    },
+                    {
+                        "field_name": "queueName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "队列名"
+                    },
+                    {
+                        "field_name": "queueNode",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "队列所在节点"
+                    },
+                    {
+                        "field_name": "queueType",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "队列类型 classic/quorum"
+                    }
+                ]
+            },
+            {
+                "description": "镜像从节点数",
+                "is_active": true,
+                "is_diff_metric": false,
+                "monitor_type": "metric",
+                "name": "rabbitmq_queue_slave_nodes",
+                "type": "double",
+                "unit": "none",
+                "dimensions": [
+                    "clusterName",
+                    "nodeName",
+                    "vhostName",
+                    "queueName",
+                    "queueNode",
+                    "queueType"
+                ],
+                "tag_list": [
+                    {
+                        "field_name": "clusterName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "RabbitMQ 集群名（overview.cluster_name）"
+                    },
+                    {
+                        "field_name": "nodeName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "上报节点 / Erlang 节点名"
+                    },
+                    {
+                        "field_name": "vhostName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "vhost"
+                    },
+                    {
+                        "field_name": "queueName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "队列名"
+                    },
+                    {
+                        "field_name": "queueNode",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "队列所在节点"
+                    },
+                    {
+                        "field_name": "queueType",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "队列类型 classic/quorum"
+                    }
+                ]
+            },
+            {
+                "description": "已同步从节点数",
+                "is_active": true,
+                "is_diff_metric": false,
+                "monitor_type": "metric",
+                "name": "rabbitmq_queue_synchronised_slave_nodes",
+                "type": "double",
+                "unit": "none",
+                "dimensions": [
+                    "clusterName",
+                    "nodeName",
+                    "vhostName",
+                    "queueName",
+                    "queueNode",
+                    "queueType"
+                ],
+                "tag_list": [
+                    {
+                        "field_name": "clusterName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "RabbitMQ 集群名（overview.cluster_name）"
+                    },
+                    {
+                        "field_name": "nodeName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "上报节点 / Erlang 节点名"
+                    },
+                    {
+                        "field_name": "vhostName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "vhost"
+                    },
+                    {
+                        "field_name": "queueName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "队列名"
+                    },
+                    {
+                        "field_name": "queueNode",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "队列所在节点"
+                    },
+                    {
+                        "field_name": "queueType",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "队列类型 classic/quorum"
+                    }
+                ]
+            },
+            {
+                "description": "RabbitMQ 集群名（overview.cluster_name）",
+                "monitor_type": "dimension",
+                "name": "clusterName",
+                "type": "string",
+                "unit": "none",
+                "is_active": true
+            },
+            {
+                "description": "上报节点 / Erlang 节点名",
+                "monitor_type": "dimension",
+                "name": "nodeName",
+                "type": "string",
+                "unit": "none",
+                "is_active": true
+            },
+            {
+                "description": "vhost",
+                "monitor_type": "dimension",
+                "name": "vhostName",
+                "type": "string",
+                "unit": "none",
+                "is_active": true
+            },
+            {
+                "description": "队列名",
+                "monitor_type": "dimension",
+                "name": "queueName",
+                "type": "string",
+                "unit": "none",
+                "is_active": true
+            },
+            {
+                "description": "队列所在节点",
+                "monitor_type": "dimension",
+                "name": "queueNode",
+                "type": "string",
+                "unit": "none",
+                "is_active": true
+            },
+            {
+                "description": "队列类型 classic/quorum",
+                "monitor_type": "dimension",
+                "name": "queueType",
+                "type": "string",
+                "unit": "none",
+                "is_active": true
+            }
+        ],
+        "rule_list": [],
+        "dimensions": [
+            "clusterName",
+            "nodeName",
+            "vhostName",
+            "queueName",
+            "queueNode",
+            "queueType"
+        ]
+    },
+    {
+        "table_name": "collector",
+        "table_desc": "采集自检",
+        "fields": [
+            {
+                "description": "采集成功 0/1",
+                "is_active": true,
+                "is_diff_metric": false,
+                "monitor_type": "metric",
+                "name": "rabbitmq_collector_up",
+                "type": "double",
+                "unit": "none",
+                "dimensions": [
+                    "clusterName",
+                    "nodeName"
+                ],
+                "tag_list": [
+                    {
+                        "field_name": "clusterName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "RabbitMQ 集群名（overview.cluster_name）"
+                    },
+                    {
+                        "field_name": "nodeName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "上报节点 / Erlang 节点名"
+                    }
+                ]
+            },
+            {
+                "description": "采集失败 0/1",
+                "is_active": true,
+                "is_diff_metric": false,
+                "monitor_type": "metric",
+                "name": "rabbitmq_collector_error",
+                "type": "double",
+                "unit": "none",
+                "dimensions": [
+                    "clusterName",
+                    "nodeName",
+                    "reason"
+                ],
+                "tag_list": [
+                    {
+                        "field_name": "clusterName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "RabbitMQ 集群名（overview.cluster_name）"
+                    },
+                    {
+                        "field_name": "nodeName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "上报节点 / Erlang 节点名"
+                    },
+                    {
+                        "field_name": "reason",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "采集失败原因"
+                    }
+                ]
+            },
+            {
+                "description": "本机节点匹配成功 0/1",
+                "is_active": true,
+                "is_diff_metric": false,
+                "monitor_type": "metric",
+                "name": "rabbitmq_collector_local_node_found",
+                "type": "double",
+                "unit": "none",
+                "dimensions": [
+                    "clusterName",
+                    "nodeName"
+                ],
+                "tag_list": [
+                    {
+                        "field_name": "clusterName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "RabbitMQ 集群名（overview.cluster_name）"
+                    },
+                    {
+                        "field_name": "nodeName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "上报节点 / Erlang 节点名"
+                    }
+                ]
+            },
+            {
+                "description": "本机上报队列条数",
+                "is_active": true,
+                "is_diff_metric": false,
+                "monitor_type": "metric",
+                "name": "rabbitmq_collector_queue_series",
+                "type": "double",
+                "unit": "none",
+                "dimensions": [
+                    "clusterName",
+                    "nodeName"
+                ],
+                "tag_list": [
+                    {
+                        "field_name": "clusterName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "RabbitMQ 集群名（overview.cluster_name）"
+                    },
+                    {
+                        "field_name": "nodeName",
+                        "unit": "--",
+                        "type": "string",
+                        "description": "上报节点 / Erlang 节点名"
+                    }
+                ]
+            },
+            {
+                "description": "RabbitMQ 集群名（overview.cluster_name）",
+                "monitor_type": "dimension",
+                "name": "clusterName",
+                "type": "string",
+                "unit": "none",
+                "is_active": true
+            },
+            {
+                "description": "上报节点 / Erlang 节点名",
+                "monitor_type": "dimension",
+                "name": "nodeName",
+                "type": "string",
+                "unit": "none",
+                "is_active": true
+            },
+            {
+                "description": "采集失败原因",
+                "monitor_type": "dimension",
+                "name": "reason",
+                "type": "string",
+                "unit": "none",
+                "is_active": true
+            }
+        ],
+        "rule_list": [],
+        "dimensions": [
+            "clusterName",
+            "nodeName",
+            "reason"
+        ]
+    }
+]
