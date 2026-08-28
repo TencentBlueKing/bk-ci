@@ -2,6 +2,7 @@
 import http from '@/http/api';
 import tools from '@/utils/tools';
 import { cacheProjectCode } from '@/store/useCacheProjectCode'
+import { resolveDefaultProjectCode } from '@/utils/resolveDefaultProjectCode'
 import PermissionHeader from '@/components/permission-header.vue';
 import GroupSearch from './group-search.vue';
 import {
@@ -217,7 +218,11 @@ const handleToProjectManage = (project) => {
 
 onMounted(async () => {
   formData.value.expiredAt = formatTimes(2592000);
-  formData.value.projectCode = route?.params.projectCode || route?.query.projectCode || route?.query.project_code || cacheProjectCode.get() || tools.getCookie('X-DEVOPS-PROJECT-ID') || '';
+  formData.value.projectCode = resolveDefaultProjectCode({
+    routeProjectCode: route?.params.projectCode || route?.query.projectCode || route?.query.project_code,
+    cookieProjectCode: tools.getCookie('X-DEVOPS-PROJECT-ID'),
+    cachedProjectCode: cacheProjectCode.get(),
+  });
   await getUserInfo();
   await getAllProjectList();
   await getProjectByName();

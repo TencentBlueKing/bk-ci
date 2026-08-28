@@ -646,7 +646,8 @@
 <style scoped lang="scss">
   .node-group-tree {
     padding-top: 4px;
-    height: 100%;
+    flex: 1;
+    min-height: 0;
     background-color: #fff;
     box-shadow: 1px 0 0 0 #EAEBF0;
   }
