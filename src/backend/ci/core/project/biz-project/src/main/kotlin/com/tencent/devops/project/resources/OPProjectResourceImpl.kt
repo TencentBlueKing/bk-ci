@@ -180,6 +180,20 @@ class OPProjectResourceImpl @Autowired constructor(
         )
     }
 
+    override fun updatePipelineLimit(
+        userId: String,
+        projectCode: String,
+        pipelineLimit: Int
+    ): Result<Boolean> {
+        return Result(
+            projectService.updatePipelineLimit(
+                userId = userId,
+                englishName = projectCode,
+                pipelineLimit = pipelineLimit
+            )
+        )
+    }
+
     override fun setHidden(
         hidden: Boolean,
         englishNames: List<String>

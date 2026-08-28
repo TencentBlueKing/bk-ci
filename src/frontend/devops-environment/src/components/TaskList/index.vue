@@ -186,6 +186,7 @@
     import useNodeDetail from '@/hooks/useNodeDetail'
     import useTaskDetail from '@/hooks/useTaskDetail'
     import usePagination from '@/hooks/usePagination'
+    import useEnvAside from '@/hooks/useEnvAside'
     import SearchSelect from '@blueking/search-select'
     import '@blueking/search-select/dist/styles/index.css'
     import PipelineStatusIcon from './PipelineStatusIcon'
@@ -208,6 +209,9 @@
                 searchPipelineByName,
                 searchByCreator
             } = useTaskDetail()
+            const {
+                isCreateResType
+            } = useEnvAside()
             const {
                 pagination,
                 resetPagination,
@@ -331,11 +335,17 @@
 
             // 流水线编排页
             const getPipelineHistoryUrl = (task) => {
+                if (isCreateResType.value) {
+                    return `/console/creative-stream/${projectId.value}/flow/${task.pipelineId}`
+                }
                 return `/console/pipeline/${projectId.value}/${task.pipelineId}/history/pipeline`
             }
 
             // 构建执行详情页
             const getBuildDetailUrl = (row) => {
+                if (isCreateResType.value) {
+                    return `/console/creative-stream/${row.projectId}/flow/${row.pipelineId}/execute/${row.buildId}/execute-detail`
+                }
                 return `/console/pipeline/${row.projectId || projectId.value}/${row.pipelineId}/detail/${row.buildId}/executeDetail`
             }
             

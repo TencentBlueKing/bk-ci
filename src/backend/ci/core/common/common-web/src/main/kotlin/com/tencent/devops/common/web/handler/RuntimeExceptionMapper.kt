@@ -46,6 +46,7 @@ class RuntimeExceptionMapper : ExceptionMapper<RuntimeException> {
     }
 
     override fun toResponse(exception: RuntimeException): Response {
+        // 堆栈只落服务日志；生产响应不回传 exception.message，避免带出 ES/SQL/内部路径
         logger.error("Failed with runtime exception", exception)
         val status = Response.Status.INTERNAL_SERVER_ERROR
         val message = if (SpringContextUtil.getBean(Profile::class.java).isDebug()) {
@@ -55,6 +56,6 @@ class RuntimeExceptionMapper : ExceptionMapper<RuntimeException> {
         }
         JmxExceptions.encounter(exception)
         return Response.status(status).type(MediaType.APPLICATION_JSON_TYPE)
-            .entity(Result(status = status.statusCode, message = message, data = exception.message)).build()
+            .entity(Result<Void>(status.statusCode, message)).build()
     }
 }

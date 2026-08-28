@@ -310,6 +310,8 @@
 <style lang="scss" scoped>
     .job-log {
         height: calc(100% - 59px);
+        flex: 1 1 auto;
+        min-width: 0;
         .log-tools {
             position: absolute;
             right: 20px;
