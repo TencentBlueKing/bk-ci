@@ -12,7 +12,7 @@
     import { Action } from 'vuex-class'
     import { clickoutside } from '../../directives/index'
     import { addRoutePrefix } from '@/utils/util'
-    import { getUserTimeZone } from '../../../../common-lib/time.js'
+    import { getUserTimeZone, hasTenantId, hasTenantUserApi } from '../../../../common-lib/time.js'
     import BkLoginUserinfo from '@blueking/login-userinfo/vue2'
     import '@blueking/login-userinfo/vue2/vue2.css'
     import projectManageIcon from '@/assets/scss/logo/projectManage.svg'
@@ -100,15 +100,34 @@
             ]
         }
         get userinfo () {
-            return {
+            const info: Record<string, string> = {
                 name: this.username,
-                organization: this.tenantId,
-                timezone: getUserTimeZone(),
+                timezone: getUserTimeZone()
             }
+            if (this.avatarUrl) {
+                info.avatar = this.avatarUrl
+            }
+            if (hasTenantId() && this.tenantId) {
+                info.organization = this.tenantId
+            }
+            return info
         }
 
-        renderSlot (h) {
-            return h('bk-user-display-name', { props: { userId: this.username } })
+        get renderSlot () {
+            const username = this.username
+            return (h) => {
+                if (!username) {
+                    return ''
+                }
+                if (!hasTenantUserApi()) {
+                    return h('span', [username])
+                }
+                return h('bk-user-display-name', {
+                    props: { userId: username },
+                    userId: username,
+                    'user-id': username
+                })
+            }
         }
 
         logout (): void {
