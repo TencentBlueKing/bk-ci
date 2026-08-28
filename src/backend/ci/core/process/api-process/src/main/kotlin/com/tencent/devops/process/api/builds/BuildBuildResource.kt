@@ -35,6 +35,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_VM_SEQ_ID
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.process.pojo.BuildHistory
+import com.tencent.devops.process.pojo.BuildHistoryWithVars
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import com.tencent.devops.process.pojo.task.PipelineFailTaskDetail
 import io.swagger.v3.oas.annotations.Operation
@@ -103,6 +104,21 @@ interface BuildBuildResource {
         @PathParam("buildId")
         buildId: String
     ): Result<ModelDetail>
+
+    @Operation(summary = "获取构建状态信息")
+    @GET
+    @Path("/{projectId}/{pipelineId}/{buildId}/status")
+    fun getBuildStatus(
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @Parameter(description = "构建ID", required = true)
+        @PathParam("buildId")
+        buildId: String
+    ): Result<BuildHistoryWithVars>
 
     @Operation(summary = "获取子流水线变量")
     @GET

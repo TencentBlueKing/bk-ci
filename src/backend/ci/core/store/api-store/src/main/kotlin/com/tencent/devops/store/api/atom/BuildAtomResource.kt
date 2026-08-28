@@ -27,15 +27,17 @@
 
 package com.tencent.devops.store.api.atom
 
+import com.tencent.devops.common.api.annotation.BkInterfaceI18n
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.store.pojo.atom.AtomVersion
 import com.tencent.devops.store.pojo.atom.MarketAtomUpdateRequest
 import com.tencent.devops.store.pojo.atom.PipelineAtom
 import com.tencent.devops.store.pojo.common.publication.StoreProcessInfo
 import com.tencent.devops.store.pojo.common.version.VersionInfo
-import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.ws.rs.Consumes
 import jakarta.ws.rs.GET
 import jakarta.ws.rs.HeaderParam
@@ -113,4 +115,19 @@ interface BuildAtomResource {
         @PathParam("atomId")
         atomId: String
     ): Result<PipelineAtom?>
+
+    @Operation(summary = "根据插件代码获取插件版本信息")
+    @GET
+    @Path("/atoms/{atomCode}/version/info")
+    @BkInterfaceI18n(
+        keyPrefixNames = ["ATOM", "{data.atomCode}", "{data.version}", "releaseInfo"]
+    )
+    fun getAtomVersionInfoByCode(
+        @Parameter(description = "插件代码", required = true)
+        @PathParam("atomCode")
+        atomCode: String,
+        @Parameter(description = "用户名", required = true)
+        @QueryParam("username")
+        username: String
+    ): Result<AtomVersion?>
 }
