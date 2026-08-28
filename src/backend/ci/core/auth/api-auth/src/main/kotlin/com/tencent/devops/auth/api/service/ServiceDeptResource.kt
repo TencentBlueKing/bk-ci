@@ -59,7 +59,7 @@ interface ServiceDeptResource {
         userId: String,
         @HeaderParam(AUTH_HEADER_BK_TENANT_ID)
         @Parameter(description = "租户ID", required = false)
-        tenantId: String?
+        tenantId: String? = null
     ): Result<Int>
 
     @GET
@@ -71,7 +71,7 @@ interface ServiceDeptResource {
         userId: String,
         @HeaderParam(AUTH_HEADER_BK_TENANT_ID)
         @Parameter(description = "租户ID", required = false)
-        tenantId: String?,
+        tenantId: String? = null,
         @QueryParam("deptName")
         @Parameter(description = "组织名称", required = true)
         deptName: String
@@ -86,7 +86,7 @@ interface ServiceDeptResource {
         userId: String,
         @HeaderParam(AUTH_HEADER_BK_TENANT_ID)
         @Parameter(description = "租户ID", required = false)
-        tenantId: String?,
+        tenantId: String? = null,
         @QueryParam("name")
         @Parameter(description = "用户名称", required = true)
         name: String
@@ -101,7 +101,7 @@ interface ServiceDeptResource {
         name: String,
         @HeaderParam(AUTH_HEADER_BK_TENANT_ID)
         @Parameter(description = "租户ID", required = false)
-        tenantId: String?
+        tenantId: String? = null
     ): Result<Boolean>
 
     @POST
@@ -112,7 +112,7 @@ interface ServiceDeptResource {
         memberIds: List<String>,
         @Parameter(description = "租户ID", required = false)
         @HeaderParam(AUTH_HEADER_BK_TENANT_ID)
-        tenantId: String?
+        tenantId: String? = null
     ): Result<List<UserAndDeptInfoVo>>
 
     @GET

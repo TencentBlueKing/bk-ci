@@ -1777,16 +1777,31 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
 
     abstract fun getProjectFromAuth(
         userId: String?,
-        accessToken: String? = null,
-        tenantId: String? = null
+        accessToken: String? = null
     ): List<String>
+
+    open fun getProjectFromAuth(
+        userId: String?,
+        accessToken: String? = null,
+        tenantId: String?
+    ): List<String> {
+        return getProjectFromAuth(userId, accessToken)
+    }
 
     abstract fun getProjectFromAuth(
         userId: String,
         permission: AuthPermission,
-        resourceType: String? = null,
-        tenantId: String? = null
+        resourceType: String? = null
     ): List<String>?
+
+    open fun getProjectFromAuth(
+        userId: String,
+        permission: AuthPermission,
+        resourceType: String? = null,
+        tenantId: String?
+    ): List<String>? {
+        return getProjectFromAuth(userId, permission, resourceType)
+    }
 
     abstract fun isShowUserManageIcon(routerTag: String?): Boolean
 

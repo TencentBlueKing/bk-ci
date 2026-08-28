@@ -291,7 +291,7 @@ interface ServicePermissionAuthResource {
         userId: String,
         @HeaderParam(AUTH_HEADER_BK_TENANT_ID)
         @Parameter(description = "租户ID", required = false)
-        tenantId: String?,
+        tenantId: String? = null,
         @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
         @Parameter(description = "认证token", required = true)
         token: String,

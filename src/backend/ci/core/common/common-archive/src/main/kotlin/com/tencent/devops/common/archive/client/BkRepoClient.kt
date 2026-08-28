@@ -142,7 +142,7 @@ class BkRepoClient constructor(
         return BKREPO_REALM == bkRepoClientConfig.artifactoryRealm
     }
 
-    fun createBkRepoResource(userId: String, projectId: String, tenantId: String?): Boolean {
+    fun createBkRepoResource(userId: String, projectId: String, tenantId: String? = null): Boolean {
         val logRepoCredentialsKey = bkRepoClientConfig.logRepoCredentialsKey.ifBlank { null }
         return try {
             createProject(userId, projectId, tenantId)

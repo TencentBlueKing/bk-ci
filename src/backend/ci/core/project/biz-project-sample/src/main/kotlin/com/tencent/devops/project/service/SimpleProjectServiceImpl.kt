@@ -136,8 +136,20 @@ class SimpleProjectServiceImpl @Autowired constructor(
         projectPermissionService.deleteResource(projectId)
     }
 
+    override fun getProjectFromAuth(userId: String?, accessToken: String?): List<String> {
+        return getProjectFromAuth(userId, accessToken, tenantId = null)
+    }
+
     override fun getProjectFromAuth(userId: String?, accessToken: String?, tenantId: String?): List<String> {
         return projectPermissionService.getUserProjects(userId!!, tenantId)
+    }
+
+    override fun getProjectFromAuth(
+        userId: String,
+        permission: AuthPermission,
+        resourceType: String?
+    ): List<String>? {
+        return getProjectFromAuth(userId, permission, resourceType, tenantId = null)
     }
 
     override fun getProjectFromAuth(

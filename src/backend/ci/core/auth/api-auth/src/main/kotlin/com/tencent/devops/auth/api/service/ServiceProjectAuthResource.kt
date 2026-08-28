@@ -99,7 +99,7 @@ interface ServiceProjectAuthResource {
         userId: String,
         @HeaderParam(AUTH_HEADER_BK_TENANT_ID)
         @Parameter(description = "租户ID", required = false)
-        tenantId: String?
+        tenantId: String? = null
     ): Result<List<String>>
 
     @GET
@@ -114,7 +114,7 @@ interface ServiceProjectAuthResource {
         userId: String,
         @Parameter(description = "租户ID", required = false)
         @HeaderParam(AUTH_HEADER_BK_TENANT_ID)
-        tenantId: String?,
+        tenantId: String? = null,
         @PathParam("action")
         @Parameter(description = "项目资源类型action", required = true)
         action: String,

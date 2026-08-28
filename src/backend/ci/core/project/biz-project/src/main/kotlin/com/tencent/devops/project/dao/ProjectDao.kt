@@ -85,7 +85,7 @@ class ProjectDao {
         dslContext: DSLContext,
         projectName: String,
         projectId: String?,
-        tenantId: String?
+        tenantId: String? = null
     ): Boolean {
         with(TProject.T_PROJECT) {
             val step = dslContext.selectFrom(this)
