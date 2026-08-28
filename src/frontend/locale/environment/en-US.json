@@ -353,7 +353,7 @@
     "reasonLabel": "Reason",
     "reasonPlaceholder": "Please enter the reason, no more than 200 characters",
     "enableNodeDefaultReason": "Node recovered",
-    "disableNodeDefaultReason": "Node failure",
+    "disableNodeDefaultReason": "Node disabled",
     "enableBtn": "Enable",
     "disableBtn": "Disable",
     "reasonRequired": "Reason is required",

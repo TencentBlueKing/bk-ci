@@ -348,7 +348,7 @@
     "reasonLabel": "理由",
     "reasonPlaceholder": "理由を入力してください（200文字以内）",
     "enableNodeDefaultReason": "ノードが復旧しました",
-    "disableNodeDefaultReason": "ノード障害",
+    "disableNodeDefaultReason": "ノード無効化",
     "enableBtn": "有効化",
     "disableBtn": "無効化",
     "reasonRequired": "理由は必須です",
