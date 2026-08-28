@@ -124,6 +124,15 @@ interface ServiceMarketAtomResource {
         username: String
     ): Result<AtomVersion?>
 
+    fun getAtomByCode(
+        atomCode: String,
+        username: String
+    ): Result<AtomVersion?> = getAtomByCode(
+        tenantId = null,
+        atomCode = atomCode,
+        username = username
+    )
+
     @Operation(summary = "根据插件代码获取使用的流水线详情")
     @GET
     @Path("/{atomCode}/pipelines")

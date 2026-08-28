@@ -222,6 +222,15 @@ interface ServiceStoreComponentResource {
         installStoreReq: InstallStoreReq
     ): Result<Boolean>
 
+    fun installComponent(
+        userId: String,
+        installStoreReq: InstallStoreReq
+    ): Result<Boolean> = installComponent(
+        userId = userId,
+        tenantId = null,
+        installStoreReq = installStoreReq
+    )
+
     @Operation(summary = "卸载组件")
     @Path("/projects/{projectCode}/types/{storeType}/codes/{storeCode}/component/uninstall")
     @DELETE
