@@ -1,7 +1,5 @@
 package com.tencent.devops.process.trigger.artifact.pojo
 
-import com.tencent.devops.process.pojo.trigger.artifact.ArtifactEvent
-
 /**
  * 制品事件抽取出的匹配事实
  *

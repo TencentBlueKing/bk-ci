@@ -550,7 +550,6 @@ object ProcessMessageCode {
     const val ERROR_PIPELINE_VERSION_HAS_DELETED = "2101502" // 流水线版本[{0}]已删除
     const val ERROR_ARTIFACT_BKREPO_API = "2101503" // 调用制品库【{0}】接口失败，异常信息: {1}
 
-
     // 批量任务
     const val ERROR_PIPELINE_BATCH_TASK_NOT_EXISTS = "2101650" // 流水线批量任务{0}不存在
     const val ERROR_PIPELINE_BATCH_TASK_STATUS_CAN_NOT_DELETE = "2101651" // 流水线批量任务{0}当前状态为{1}，不能删除
