@@ -124,15 +124,6 @@ interface ServiceMarketAtomResource {
         username: String
     ): Result<AtomVersion?>
 
-    fun getAtomByCode(
-        atomCode: String,
-        username: String
-    ): Result<AtomVersion?> = getAtomByCode(
-        tenantId = null,
-        atomCode = atomCode,
-        username = username
-    )
-
     @Operation(summary = "根据插件代码获取使用的流水线详情")
     @GET
     @Path("/{atomCode}/pipelines")
@@ -167,17 +158,6 @@ interface ServiceMarketAtomResource {
         @Parameter(description = "安装插件到项目请求报文体", required = true)
         installAtomReq: InstallAtomReq
     ): Result<Boolean>
-
-    fun installAtom(
-        userId: String,
-        channelCode: ChannelCode?,
-        installAtomReq: InstallAtomReq
-    ): Result<Boolean> = installAtom(
-        userId = userId,
-        tenantId = null,
-        channelCode = channelCode,
-        installAtomReq = installAtomReq
-    )
 
     @Operation(summary = "查看插件的yml 2.0信息")
     @GET

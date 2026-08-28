@@ -70,8 +70,6 @@ interface ServiceTemplateResource {
         tenantId: String?
     ): Result<MarketTemplateResp>
 
-    fun list(userId: String): Result<MarketTemplateResp> = list(userId, null)
-
     @Operation(summary = "安装模板到项目")
     @POST
     @Path("/template/install")
@@ -85,15 +83,6 @@ interface ServiceTemplateResource {
         @Parameter(description = "安装模板到项目请求报文体", required = true)
         installTemplateReq: InstallTemplateReq
     ): Result<Boolean>
-
-    fun installTemplate(
-        userId: String,
-        installTemplateReq: InstallTemplateReq
-    ): Result<Boolean> = installTemplate(
-        userId = userId,
-        tenantId = null,
-        installTemplateReq = installTemplateReq
-    )
 
     @Operation(summary = "校验模板内组件可见范围")
     @GET

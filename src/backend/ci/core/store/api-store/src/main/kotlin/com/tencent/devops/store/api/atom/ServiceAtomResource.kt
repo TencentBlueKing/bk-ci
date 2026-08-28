@@ -149,17 +149,6 @@ interface ServiceAtomResource {
         serviceScope: ServiceScopeEnum? = null
     ): Result<PipelineAtom?>
 
-    fun getAtomVersionInfo(
-        atomCode: String,
-        version: String,
-        serviceScope: ServiceScopeEnum? = null
-    ): Result<PipelineAtom?> = getAtomVersionInfo(
-        tenantId = null,
-        atomCode = atomCode,
-        version = version,
-        serviceScope = serviceScope
-    )
-
     @Operation(summary = "根据插件代码和版本号集合批量获取插件信息")
     @POST
     @Path("/list/atomInfos")
