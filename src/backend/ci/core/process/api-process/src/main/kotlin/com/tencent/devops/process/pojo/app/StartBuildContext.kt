@@ -32,9 +32,7 @@ import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.pipeline.container.Container
-import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.Stage
-import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
@@ -386,26 +384,20 @@ data class StartBuildContext(
     /**
      * 应该跳过刷新container状态当运行时重试时
      */
-    fun shouldSkipRefreshWhenRetryRunning(container: Container): Boolean {
+    fun shouldSkipRefreshWhenRetryRunning(stage: Stage, container: Container): Boolean {
         // 运行中矩阵局部重试豁免：目标失败子容器挂在矩阵父容器的 groupContainers 下，
         // 模型遍历到的是矩阵父容器（container.id 为父ID，≠ retryTaskInContainerId 子容器ID），
         // 若按下方普通规则(id不同即跳过)父容器会被整体跳过，导致 prepareBuildContainerTasks 的矩阵分支不执行、
         // 目标子Job无法在同一执行次数下就地重置并重新下发。故本次为该父矩阵容器下的局部重试时，父容器必须参与刷新。
         if (retryOnRunningBuild && isRetryMatrixGroup(container)) return false
-        // 运行中重试, 如果当前的container依赖失败重试插件所属的container,则需要刷新
-        return if (retryOnRunningBuild && container.id != retryTaskInContainerId) {
-            val dependOnContainerId2JobIds = when (container) {
-                is VMBuildContainer -> {
-                    container.jobControlOption?.dependOnContainerId2JobIds
-                }
-
-                is NormalContainer -> {
-                    container.jobControlOption?.dependOnContainerId2JobIds
-                }
-
-                else -> null
-            } ?: emptyMap()
-            !dependOnContainerId2JobIds.keys.contains(retryTaskInContainerId)
+        // 运行中重试：直接或间接依赖被重试Job的container需要一起刷新
+        val targetContainerId = retryTaskInContainerId
+        return if (retryOnRunningBuild && container.id != targetContainerId && !targetContainerId.isNullOrBlank()) {
+            !DependOnUtils.dependOnContainer(
+                stage = stage,
+                container = container,
+                targetContainerId = targetContainerId
+            )
         } else {
             false
         }

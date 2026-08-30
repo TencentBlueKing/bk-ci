@@ -785,6 +785,8 @@ class PipelineContainerService @Autowired constructor(
                                 controlOption.agentReuseMutex?.runtimeAgentOrEnvId = null
                                 /*重试时重置互斥组名称，以便变量更改时能生效*/
                                 controlOption.mutexGroup?.runtimeMutexGroup = null
+                                /*重试时清空dependOn映射，Stage启动时用最新变量重算*/
+                                controlOption.jobControlOption.dependOnContainerId2JobIds = null
                                 updateExistsContainer.add(Pair(this, container))
                             }
                             return@findHistoryContainer

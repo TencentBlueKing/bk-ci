@@ -35,6 +35,8 @@ import com.tencent.devops.process.TestBase
 import com.tencent.devops.process.engine.cfg.BuildIdGenerator
 import com.tencent.devops.process.engine.cfg.PipelineIdGenerator
 import com.tencent.devops.process.pojo.app.StartBuildContext
+import com.tencent.devops.common.pipeline.container.NormalContainer
+import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildScriptType
 import com.tencent.devops.common.pipeline.enums.DependOnType
@@ -46,7 +48,9 @@ import com.tencent.devops.common.pipeline.pojo.element.ElementPostInfo
 import com.tencent.devops.common.pipeline.pojo.element.RunCondition
 import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxScriptElement
 import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
+import com.tencent.devops.process.utils.PIPELINE_RETRY_RUNNING_BUILD
 import com.tencent.devops.process.utils.PIPELINE_RETRY_START_TASK_ID
+import com.tencent.devops.process.utils.PIPELINE_RETRY_TASK_IN_CONTAINER_ID
 import com.tencent.devops.process.utils.PIPELINE_RETRY_TASK_IN_STAGE_ID
 import com.tencent.devops.process.utils.PIPELINE_SKIP_FAILED_TASK
 import com.tencent.devops.process.utils.PIPELINE_START_CHANNEL
@@ -266,6 +270,56 @@ class StartBuildContextTest : TestBase() {
             false,
             stageRetryContext.needSkipCompletedContainerWhenTaskRetry(stage, skippedDependOn)
         )
+    }
+
+    @Test
+    fun shouldSkipRefreshWhenRetryRunningKeepsCascadeDependOn() {
+        val jobA = NormalContainer(
+            id = "1",
+            enableSkip = false,
+            conditions = null,
+            jobId = "job_a",
+            jobControlOption = JobControlOption()
+        )
+        val jobB = NormalContainer(
+            id = "2",
+            enableSkip = false,
+            conditions = null,
+            jobId = "job_b",
+            jobControlOption = JobControlOption(
+                dependOnType = DependOnType.ID,
+                dependOnId = listOf("job_a"),
+                dependOnContainerId2JobIds = mapOf("1" to "job_a")
+            )
+        )
+        val jobC = NormalContainer(
+            id = "3",
+            enableSkip = false,
+            conditions = null,
+            jobId = "job_c",
+            jobControlOption = JobControlOption(
+                dependOnType = DependOnType.ID,
+                dependOnId = listOf("job_b"),
+                dependOnContainerId2JobIds = mapOf("2" to "job_b")
+            )
+        )
+        val other = NormalContainer(
+            id = "4",
+            enableSkip = false,
+            conditions = null,
+            jobId = "job_other",
+            jobControlOption = JobControlOption()
+        )
+        val stage = Stage(id = "stage-1", containers = listOf(jobA, jobB, jobC, other))
+        params[PIPELINE_RETRY_RUNNING_BUILD] = true.toString()
+        params[PIPELINE_RETRY_TASK_IN_CONTAINER_ID] = "1"
+        params[PIPELINE_RETRY_TASK_IN_STAGE_ID] = "stage-1"
+        val context = initDefaultStartBuildContext()
+
+        Assertions.assertEquals(false, context.shouldSkipRefreshWhenRetryRunning(stage, jobA))
+        Assertions.assertEquals(false, context.shouldSkipRefreshWhenRetryRunning(stage, jobB))
+        Assertions.assertEquals(false, context.shouldSkipRefreshWhenRetryRunning(stage, jobC))
+        Assertions.assertEquals(true, context.shouldSkipRefreshWhenRetryRunning(stage, other))
     }
 
     @Test
