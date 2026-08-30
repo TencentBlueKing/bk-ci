@@ -600,7 +600,8 @@ class ProjectPipelineCallBackService @Autowired constructor(
                 list = newEventMap.map { (_, value) ->
                     val encodeToken = value.secretToken?.let { pipelineCallbackCryptoHelper.encryptSm4ButAes(it) }
                     value.copy(secretToken = encodeToken)
-                }
+                },
+                aesKeySha = pipelineCallbackCryptoHelper.currentKeySha()
             )
         }
     }

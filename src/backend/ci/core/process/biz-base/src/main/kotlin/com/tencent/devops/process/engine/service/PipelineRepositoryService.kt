@@ -33,7 +33,6 @@ import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.DependNotFoundException
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.InvalidParamException
-import com.tencent.devops.common.api.util.AESUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.Watcher
@@ -81,6 +80,7 @@ import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_FIRST_STAGE_ENV_NOT_EMPTY
+import com.tencent.devops.process.crypto.PipelineCallbackCryptoHelper
 import com.tencent.devops.process.dao.PipelineCallbackDao
 import com.tencent.devops.process.dao.PipelineSettingDao
 import com.tencent.devops.process.dao.PipelineSettingVersionDao
@@ -150,7 +150,6 @@ import kotlin.collections.forEach
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 @Suppress(
@@ -192,6 +191,7 @@ class PipelineRepositoryService constructor(
     private val pipelineYamlVersionDao: PipelineYamlVersionDao,
     private val pipelineAsCodeService: PipelineAsCodeService,
     private val pipelineCallbackDao: PipelineCallbackDao,
+    private val pipelineCallbackCryptoHelper: PipelineCallbackCryptoHelper,
     private val subPipelineTaskService: SubPipelineTaskService,
     private val pipelineInfoService: PipelineInfoService,
     private val pipelineTemplateInfoDao: PipelineTemplateInfoDao,
@@ -249,9 +249,6 @@ class PipelineRepositoryService constructor(
             }
         }
     }
-
-    @Value("\${project.callback.aes-key}")
-    private val aesKey = ""
 
     @SuppressWarnings("NestedBlockDepth")
     fun deployPipeline(
@@ -1729,7 +1726,9 @@ class PipelineRepositoryService constructor(
                         it.name to PipelineCallbackEvent(
                             callbackEvent = CallBackEvent.valueOf(it.eventType),
                             callbackUrl = it.url,
-                            secretToken = it.secretToken?.let { AESUtil.decrypt(aesKey, it) },
+                            secretToken = it.secretToken?.let { token ->
+                                pipelineCallbackCryptoHelper.decryptSm4OrAes(token)
+                            },
                             region = CallBackNetWorkRegionType.valueOf(it.region),
                             callbackName = it.name
                         )
@@ -2713,8 +2712,13 @@ class PipelineRepositoryService constructor(
                 pipelineId = pipelineId,
                 userId = userId,
                 list = events.map { (_, value) ->
-                    value.copy(secretToken = value.secretToken?.let { AESUtil.encrypt(aesKey, it) })
-                }
+                    value.copy(
+                        secretToken = value.secretToken?.let {
+                            pipelineCallbackCryptoHelper.encryptSm4ButAes(it)
+                        }
+                    )
+                },
+                aesKeySha = pipelineCallbackCryptoHelper.currentKeySha()
             )
         }
     }

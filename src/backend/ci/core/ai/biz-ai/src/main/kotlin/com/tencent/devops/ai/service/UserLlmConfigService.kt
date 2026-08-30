@@ -1,18 +1,17 @@
 package com.tencent.devops.ai.service
 
 import com.tencent.devops.ai.constant.AiMessageCode
+import com.tencent.devops.ai.crypto.UserLlmConfigCryptoHelper
 import com.tencent.devops.ai.dao.UserLlmConfigDao
 import com.tencent.devops.ai.pojo.UserLlmConfigInfo
 import com.tencent.devops.ai.pojo.UserLlmConfigUpsertRequest
 import com.tencent.devops.ai.properties.AiLlmModelProperties
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.api.util.AESUtil
 import com.tencent.devops.model.ai.tables.TAiUserLlmConfig
 import com.tencent.devops.model.ai.tables.records.TAiUserLlmConfigRecord
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.time.ZoneOffset
 
@@ -20,8 +19,7 @@ import java.time.ZoneOffset
 class UserLlmConfigService @Autowired constructor(
     private val dslContext: DSLContext,
     private val dao: UserLlmConfigDao,
-    @Value("\${aes.aesKey}")
-    private val aesKey: String = ""
+    private val userLlmConfigCryptoHelper: UserLlmConfigCryptoHelper
 ) {
 
     fun get(userId: String): UserLlmConfigInfo? {
@@ -66,7 +64,11 @@ class UserLlmConfigService @Autowired constructor(
             createdTime = existing?.createdTime ?: now
             updatedTime = now
         }
-        dao.upsert(dslContext, record)
+        dao.upsert(
+            dslContext = dslContext,
+            record = record,
+            aesKeySha = userLlmConfigCryptoHelper.currentKeySha()
+        )
         logger.info(
             "[UserLlmConfig] Upserted config: userId={}, modelName={}, enabled={}",
             userId,
@@ -137,7 +139,10 @@ class UserLlmConfigService @Autowired constructor(
         existingValue: String
     ): String {
         return when (incomingValue) {
-            null -> existingValue
+            null -> if (existingValue.isBlank()) existingValue else {
+                requireAesKey()
+                userLlmConfigCryptoHelper.refreshSm4OrAes(existingValue)
+            }
             "" -> ""
             else -> encrypt(incomingValue)
         }
@@ -145,17 +150,17 @@ class UserLlmConfigService @Autowired constructor(
 
     private fun encrypt(value: String): String {
         requireAesKey()
-        return AESUtil.encrypt(aesKey, value)
+        return userLlmConfigCryptoHelper.encryptSm4ButAes(value)
     }
 
     private fun decryptIfPresent(value: String): String {
         if (value.isBlank()) return ""
         requireAesKey()
-        return AESUtil.decrypt(aesKey, value)
+        return userLlmConfigCryptoHelper.decryptSm4OrAes(value)
     }
 
     private fun requireAesKey() {
-        if (aesKey.isBlank()) {
+        if (!userLlmConfigCryptoHelper.hasAesKey()) {
             throw ErrorCodeException(
                 errorCode = AiMessageCode.USER_LLM_CONFIG_AES_KEY_MISSING,
                 defaultMessage = "config[aes.ai] is not found"

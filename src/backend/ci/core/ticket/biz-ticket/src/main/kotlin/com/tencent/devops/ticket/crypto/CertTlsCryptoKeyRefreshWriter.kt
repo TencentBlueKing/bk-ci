@@ -39,8 +39,8 @@ class CertTlsCryptoKeyRefreshWriter(
         val certRow = row as CertTlsCryptoKeyRefreshRow
         with(TCertTls.T_CERT_TLS) {
             dslContext.update(this)
-                .set(CERT_SERVER_CRT_FILE, certHelper.refreshBytes(certRow.serverCrtFile)!!)
-                .set(CERT_SERVER_KEY_FILE, certHelper.refreshBytes(certRow.serverKeyFile)!!)
+                .set(CERT_SERVER_CRT_FILE, certHelper.refreshBytes(certRow.serverCrtFile))
+                .set(CERT_SERVER_KEY_FILE, certHelper.refreshBytes(certRow.serverKeyFile))
                 .set(CERT_CLIENT_CRT_FILE, certHelper.refreshBytes(certRow.clientCrtFile))
                 .set(CERT_CLIENT_KEY_FILE, certHelper.refreshBytes(certRow.clientKeyFile))
                 .set(AES_KEY_SHA, currentKeySha)
@@ -97,8 +97,8 @@ class CertTlsCryptoKeyRefreshWriter(
 data class CertTlsCryptoKeyRefreshRow(
     val projectId: String,
     val certId: String,
-    val serverCrtFile: ByteArray,
-    val serverKeyFile: ByteArray,
+    val serverCrtFile: ByteArray?,
+    val serverKeyFile: ByteArray?,
     val clientCrtFile: ByteArray?,
     val clientKeyFile: ByteArray?,
     val aesKeySha: String?

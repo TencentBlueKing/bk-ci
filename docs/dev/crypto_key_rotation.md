@@ -84,6 +84,9 @@ Spring 会注入本模块所有 Writer，**同一服务再新增 Writer 不用�
 | 模块 | 表 | Writer | Helper / 当前密钥 | 历史密钥配置 |
 |------|----|--------|-------------------|--------------|
 | process | `T_PROJECT_PIPELINE_CALLBACK` | `PipelineCallbackCryptoKeyRefreshWriter` | `PipelineCallbackCryptoHelper` | `project.callback.used-aes-keys` |
+| process | `T_PIPELINE_CALLBACK` | `PipelineCallbackTokenCryptoKeyRefreshWriter` | `PipelineCallbackCryptoHelper` | `project.callback.used-aes-keys` |
+| auth | `T_AUTH_OAUTH2_ACCESS_TOKEN` | `Oauth2AccessTokenCryptoKeyRefreshWriter` | `Oauth2AccessTokenCryptoHelper` / `aes.auth` | `aes.used-auth-keys` |
+| ai | `T_AI_USER_LLM_CONFIG` | `UserLlmConfigCryptoKeyRefreshWriter` | `UserLlmConfigCryptoHelper` / `aes.ai` | `aes.used-ai-keys` |
 | repository | `T_REPOSITORY_GIT_TOKEN` | `GitTokenCryptoKeyRefreshWriter` | `GitTokenCryptoHelper` / `aes.git` | `aes.used-git-keys` |
 | repository | `T_REPOSITORY_TGIT_TOKEN` | `TGitTokenCryptoKeyRefreshWriter` | 同上 | 同上 |
 | repository | `T_REPOSITORY_GITHUB_TOKEN` | `GithubTokenCryptoKeyRefreshWriter` | `GithubTokenCryptoHelper` / `aes.github` | `aes.used-github-keys` |

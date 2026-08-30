@@ -36,7 +36,7 @@ class CertEnterpriseCryptoKeyRefreshWriter(
         val certRow = row as CertEnterpriseCryptoKeyRefreshRow
         with(TCertEnterprise.T_CERT_ENTERPRISE) {
             dslContext.update(this)
-                .set(CERT_MP_FILE_CONTENT, certHelper.refreshBytes(certRow.certMpFileContent)!!)
+                .set(CERT_MP_FILE_CONTENT, certHelper.refreshBytes(certRow.certMpFileContent))
                 .set(AES_KEY_SHA, currentKeySha)
                 .where(PROJECT_ID.eq(certRow.projectId))
                 .and(CERT_ID.eq(certRow.certId))
@@ -85,7 +85,7 @@ class CertEnterpriseCryptoKeyRefreshWriter(
 data class CertEnterpriseCryptoKeyRefreshRow(
     val projectId: String,
     val certId: String,
-    val certMpFileContent: ByteArray,
+    val certMpFileContent: ByteArray?,
     val aesKeySha: String?
 ) : CryptoKeyRefreshRow {
     override fun rowKey(): String = "cert-enterprise:$projectId:$certId"

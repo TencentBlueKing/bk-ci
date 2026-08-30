@@ -1,4 +1,4 @@
-package com.tencent.devops.process.crypto
+package com.tencent.devops.ai.crypto
 
 import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.common.security.util.BkCryptoUtil
@@ -6,16 +6,20 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 
 @Component
-class PipelineCallbackCryptoHelper {
-    @Value("\${project.callback.aes-key}")
-    private lateinit var aesKey: String
+class UserLlmConfigCryptoHelper {
+    @Value("\${aes.ai:}")
+    private var aesKey: String = ""
 
-    @Value("\${project.callback.used-aes-keys:}")
+    @Value("\${aes.used-ai-keys:}")
     private var usedAesKeys: String = ""
+
+    fun hasAesKey(): Boolean = aesKey.isNotBlank()
 
     fun currentKeySha(): String = ShaUtils.sha256Fingerprint(aesKey)
 
-    fun encryptSm4ButAes(content: String): String = BkCryptoUtil.encryptSm4ButAes(aesKey, content)
+    fun encryptSm4ButAes(content: String): String {
+        return BkCryptoUtil.encryptSm4ButAes(aesKey = aesKey, content = content)
+    }
 
     fun decryptSm4OrAes(content: String): String {
         return BkCryptoUtil.decryptSm4OrAes(
@@ -30,8 +34,12 @@ class PipelineCallbackCryptoHelper {
      */
     fun refreshSm4OrAes(content: String): String {
         return BkCryptoUtil.encryptSm4ButAes(
-            aesKey,
-            BkCryptoUtil.decryptSm4OrAesForRefresh(aesKey, BkCryptoUtil.parseAesKeys(usedAesKeys), content)
+            aesKey = aesKey,
+            content = BkCryptoUtil.decryptSm4OrAesForRefresh(
+                aesKey = aesKey,
+                usedAesKeys = BkCryptoUtil.parseAesKeys(usedAesKeys),
+                content = content
+            )
         )
     }
 }
