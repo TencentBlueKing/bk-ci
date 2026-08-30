@@ -47,8 +47,8 @@ import org.springframework.core.io.ClassPathResource
  * 制品触发器「YAML 资源文件驱动」的转换验证测试。
  *
  * 覆盖统一「触发器 -> 事件类型」结构的两种 YAML 形态：
- * - 单触发器嵌套形态：[ArtifactTrigger.yml]（`on.artifact.arrived`）
- * - 多触发器列表形态：[ArtifactTriggerList.yml]（`on[].type = artifact`）
+ * - 单触发器嵌套形态：[trigger/artifact.yml]（`on.artifact.arrived`）
+ * - 多触发器列表形态：[trigger/artifact-list.yml]（`on[].type = artifact`）
  *
  * 每个用例都验证完整往返：YAML -> TriggerOn -> Element（yaml2Model）-> TriggerOn（model2Yaml）。
  */
@@ -83,7 +83,7 @@ class ArtifactTriggerTransferTest {
 
     @Test
     fun `nested artifact yaml resource converts correctly (format 1)`() {
-        val triggers = parseTriggers("ArtifactTrigger.yml")
+        val triggers = parseTriggers("trigger/artifact.yml")
 
         val artifact = triggers.single { it.first == TriggerType.ARTIFACT }.second
         val arrived = arrivedOf(artifact)
@@ -114,7 +114,7 @@ class ArtifactTriggerTransferTest {
 
     @Test
     fun `list artifact yaml resource converts correctly (format 2)`() {
-        val triggers = parseTriggers("ArtifactTriggerList.yml")
+        val triggers = parseTriggers("trigger/artifact-list.yml")
 
         // 基础触发器（manual）单独成条目
         assertEquals(1, triggers.count { it.first == TriggerType.BASE })
