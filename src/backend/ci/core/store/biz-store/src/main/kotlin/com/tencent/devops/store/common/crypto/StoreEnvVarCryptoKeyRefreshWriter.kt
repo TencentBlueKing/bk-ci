@@ -32,7 +32,7 @@ class StoreEnvVarCryptoKeyRefreshWriter(
         val envVarRow = row as StoreEnvVarCryptoKeyRefreshRow
         with(TStoreEnvVar.T_STORE_ENV_VAR) {
             dslContext.update(this)
-                .set(VAR_VALUE, storeCryptoHelper.refreshAes(envVarRow.varValue))
+                .set(VAR_VALUE, storeCryptoHelper.refreshSm4OrAes(envVarRow.varValue))
                 .set(AES_KEY_SHA, currentKeySha)
                 .where(ID.eq(envVarRow.id))
                 .execute()

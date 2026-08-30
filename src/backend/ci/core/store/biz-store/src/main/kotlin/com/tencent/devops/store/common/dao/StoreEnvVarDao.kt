@@ -28,11 +28,11 @@
 package com.tencent.devops.store.common.dao
 
 import com.tencent.devops.common.api.constant.KEY_VERSION
-import com.tencent.devops.common.api.util.AESUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.model.store.tables.TStoreEnvVar
 import com.tencent.devops.model.store.tables.records.TStoreEnvVarRecord
+import com.tencent.devops.store.common.crypto.StoreCryptoHelper
 import com.tencent.devops.store.pojo.common.KEY_CREATE_TIME
 import com.tencent.devops.store.pojo.common.KEY_CREATOR
 import com.tencent.devops.store.pojo.common.KEY_ENCRYPT_FLAG
@@ -52,15 +52,13 @@ import org.jooq.DSLContext
 import org.jooq.Record
 import org.jooq.Result
 import org.jooq.impl.DSL
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Repository
 
 @Suppress("ALL")
 @Repository
-class StoreEnvVarDao {
-
-    @Value("\${aes.aesKey}")
-    private lateinit var aesKey: String
+class StoreEnvVarDao(
+    private val storeCryptoHelper: StoreCryptoHelper
+) {
 
     fun create(
         dslContext: DSLContext,
@@ -91,10 +89,11 @@ class StoreEnvVarDao {
                     storeEnvVarRequest.storeCode,
                     StoreTypeEnum.valueOf(storeEnvVarRequest.storeType).type.toByte(),
                     storeEnvVarRequest.varName,
-                    if (encryptFlag) AESUtil.encrypt(
-                        aesKey,
+                    if (encryptFlag) {
+                        storeCryptoHelper.encryptSm4ButAes(storeEnvVarRequest.varValue)
+                    } else {
                         storeEnvVarRequest.varValue
-                    ) else storeEnvVarRequest.varValue,
+                    },
                     storeEnvVarRequest.varDesc,
                     storeEnvVarRequest.scope,
                     encryptFlag,

@@ -145,9 +145,9 @@ class CredentialHelper {
         }
         try {
             val credential = BkCryptoUtil.decryptSm4OrAes(
-                aesKey,
-                BkCryptoUtil.parseAesKeys(usedAesKeys),
-                aesEncryptedCredential
+                aesKey = aesKey,
+                usedAesKeys = BkCryptoUtil.parseAesKeys(usedAesKeys),
+                content = aesEncryptedCredential
             )
             val credentialEncryptedContent =
                 DHUtil.encrypt(
@@ -166,7 +166,11 @@ class CredentialHelper {
         if (aesCredential.isNullOrBlank()) {
             return null
         }
-        return BkCryptoUtil.decryptSm4OrAes(aesKey, BkCryptoUtil.parseAesKeys(usedAesKeys), aesCredential)
+        return BkCryptoUtil.decryptSm4OrAes(
+            aesKey = aesKey,
+            usedAesKeys = BkCryptoUtil.parseAesKeys(usedAesKeys),
+            content = aesCredential
+        )
     }
 
     fun encryptCredential(credential: String?): String? {

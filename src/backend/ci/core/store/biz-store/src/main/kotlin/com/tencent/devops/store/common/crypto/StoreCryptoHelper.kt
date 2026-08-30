@@ -1,6 +1,5 @@
 package com.tencent.devops.store.common.crypto
 
-import com.tencent.devops.common.api.util.AESUtil
 import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.common.security.util.BkCryptoUtil
 import org.springframework.beans.factory.annotation.Value
@@ -31,40 +30,12 @@ class StoreCryptoHelper {
      */
     fun refreshSm4OrAes(content: String): String {
         return BkCryptoUtil.encryptSm4ButAes(
-            aesKey,
-            BkCryptoUtil.decryptSm4OrAesForRefresh(
+            aesKey = aesKey,
+            content = BkCryptoUtil.decryptSm4OrAesForRefresh(
                 aesKey = aesKey,
                 usedAesKeys = BkCryptoUtil.parseAesKeys(usedAesKeys),
                 content = content
             )
         )
-    }
-
-    fun encryptAes(content: String): String = AESUtil.encrypt(aesKey, content)
-
-    fun decryptAes(content: String): String {
-        return decryptAesByKeys(listOf(aesKey) + BkCryptoUtil.parseAesKeys(usedAesKeys), content)
-    }
-
-    /**
-     * 仅用于历史 AES 数据的密钥轮换，优先用历史密钥解密后再用当前密钥加密。
-     */
-    fun refreshAes(content: String): String {
-        return AESUtil.encrypt(
-            aesKey,
-            decryptAesByKeys(keys = BkCryptoUtil.parseAesKeys(usedAesKeys) + aesKey, content = content)
-        )
-    }
-
-    private fun decryptAesByKeys(keys: List<String>, content: String): String {
-        var lastError: Throwable? = null
-        keys.distinct().forEach { key ->
-            try {
-                return AESUtil.decrypt(key, content)
-            } catch (ignored: Throwable) {
-                lastError = ignored
-            }
-        }
-        throw lastError ?: IllegalArgumentException("No available aes key")
     }
 }

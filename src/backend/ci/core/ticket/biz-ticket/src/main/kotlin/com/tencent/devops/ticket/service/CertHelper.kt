@@ -28,7 +28,6 @@
 package com.tencent.devops.ticket.service
 
 import com.tencent.devops.common.api.exception.EncryptException
-import com.tencent.devops.common.api.util.AESUtil
 import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.common.security.util.BkCryptoUtil
 import org.springframework.beans.factory.annotation.Value
@@ -144,14 +143,17 @@ class CertHelper {
 
     fun encryptBytes(bytes: ByteArray?): ByteArray? {
         return if (bytes != null) {
-            AESUtil.encrypt(aesKey, bytes)
+            BkCryptoUtil.encryptSm4ButAes(aesKey, bytes)
         } else null
     }
 
     fun decryptBytes(bytes: ByteArray?): ByteArray? {
         return if (bytes != null) {
-            AESUtil.decrypt(aesKey, bytes)
-            BkCryptoUtil.decryptSm4OrAes(aesKey, BkCryptoUtil.parseAesKeys(usedAesKeys), bytes)
+            BkCryptoUtil.decryptSm4OrAes(
+                aesKey = aesKey,
+                usedAesKeys = BkCryptoUtil.parseAesKeys(usedAesKeys),
+                content = bytes
+            )
         } else null
     }
 

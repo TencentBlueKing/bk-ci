@@ -219,9 +219,11 @@ class StoreEnvVarServiceImpl @Autowired constructor(
                 } else {
                     // 判断变量值是否需要进行加密或解密
                     val value = if (storeEnvVarRequest.encryptFlag != maxVersionData.encryptFlag) {
-                        if (storeEnvVarRequest.encryptFlag)
-                            storeCryptoHelper.encryptAes(maxVersionData.varValue)
-                        else storeCryptoHelper.decryptAes(maxVersionData.varValue)
+                        if (storeEnvVarRequest.encryptFlag) {
+                            storeCryptoHelper.encryptSm4ButAes(maxVersionData.varValue)
+                        } else {
+                            storeCryptoHelper.decryptSm4OrAes(maxVersionData.varValue)
+                        }
                     } else maxVersionData.varValue
                     storeEnvVarDao.updateVariable(
                         dslContext = dslContext,
@@ -317,7 +319,11 @@ class StoreEnvVarServiceImpl @Autowired constructor(
             latestEnvVarRecords.forEach {
                 val encryptFlag = it[KEY_ENCRYPT_FLAG] as Boolean
                 val varValue = if (encryptFlag) {
-                    if (isDecrypt) storeCryptoHelper.decryptAes(it[KEY_VAR_VALUE] as String) else aesMock
+                    if (isDecrypt) {
+                        storeCryptoHelper.decryptSm4OrAes(it[KEY_VAR_VALUE] as String)
+                    } else {
+                        aesMock
+                    }
                 } else {
                     it[KEY_VAR_VALUE] as String
                 }
