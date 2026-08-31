@@ -259,7 +259,7 @@ export const actions = {
      * 结束分支测试版本测试
      */
     endAtomBranchTest ({ commit }, { atomId }) {
-        return vue.$ajax.get(`${prefix}/user/market/desk/atom/${atomId}/test/version/end`)
+        return vue.$ajax.put(`${prefix}/user/market/desk/atom/${atomId}/test/version/end`)
     },
 
     /**
