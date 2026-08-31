@@ -28,7 +28,7 @@ interface ServiceCreativeStreamStageReviewResource {
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String?,
         @Parameter(
-            description = "审批 taskId，格式 cs-stage|{projectId}|{buildId}|{stageId}|{executeCount}",
+            description = "审批 taskId，格式 cs-stage~{projectId}~{buildId}~{stageId}~{executeCount}",
             required = true
         )
         @QueryParam("taskId")
