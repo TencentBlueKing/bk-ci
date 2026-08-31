@@ -48,15 +48,11 @@ class UserInfoResourceImpl @Autowired constructor(
         data: UserInfoCheckData
     ): Result<UserInfoCheckResult> {
         // 获取工作空间基本信息（轻量查询）
-        val ws = workspaceService.getWorkspaceDetail(userId, data.workspaceName, false)
+        workspaceService.getWorkspaceDetail(userId, data.workspaceName, false)
             ?: throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
                 params = arrayOf("Workspace ${data.workspaceName} not found")
             )
-        // TODO 公共云桌面打开时候也会调用，这里客户端要改，不然加上校验后会失败。先只对团队个人云桌面做校验。
-        if (ws.ownerType == WorkspaceOwnerType.PROJECT) {
-            permissionService.checkViewerPermission(userId, data.workspaceName, ws.projectId)
-        }
 
         val res = userInfoCertService.multipleCert(data)
         // 产品要求：集团员工跳过人脸识别
