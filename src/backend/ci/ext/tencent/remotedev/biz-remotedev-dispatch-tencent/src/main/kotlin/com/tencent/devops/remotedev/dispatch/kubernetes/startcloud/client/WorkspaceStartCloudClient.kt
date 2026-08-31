@@ -17,8 +17,11 @@ import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.Environm
 import com.tencent.devops.remotedev.dispatch.kubernetes.utils.WorkspaceDispatchException
 import com.tencent.devops.remotedev.pojo.CoffeeAIDelete
 import com.tencent.devops.remotedev.pojo.CoffeeAIToken
+import com.tencent.devops.remotedev.pojo.ImateAvatar
 import com.tencent.devops.remotedev.pojo.WorkspaceRegistration
 import java.net.SocketTimeoutException
+import java.net.URLEncoder
+import java.nio.charset.StandardCharsets
 import java.util.UUID
 import okhttp3.Headers.Companion.toHeaders
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
@@ -279,6 +282,81 @@ class WorkspaceStartCloudClient @Autowired constructor(
             logger.error("User $userId set coffee workspaces get SocketTimeoutException", e)
             throw WorkspaceDispatchException(
                 errorMessage = "delete AI workspaces 接口超时, url: $url"
+            )
+        }
+    }
+
+    fun listCoffeeDigitalAvatars(userId: String): List<ImateAvatar> {
+        val url = "$apiUrlAI/openapi/coffee/digital_avatars"
+        val id = UUID.randomUUID()
+        logger.info("$id|User $userId request url: $url")
+        val request = Request.Builder()
+            .url(url)
+            .headers(makeHeaders("", userId).toHeaders())
+            .get()
+            .build()
+        try {
+            OkhttpUtils.doHttp(request).use { response ->
+                val responseContent = response.body!!.string()
+                logger.info("$id|User $userId list digital avatars response: ${response.code} || $responseContent")
+                if (!response.isSuccessful) {
+                    throw WorkspaceDispatchException(
+                        "列出数字分身接口异常: ${response.code}"
+                    )
+                }
+                val result = JsonUtil.to(
+                    responseContent,
+                    object : TypeReference<Result<List<ImateAvatar>>>() {}
+                )
+                if (result.isNotOk()) {
+                    throw WorkspaceDispatchException(
+                        "列出数字分身接口返回异常: ${result.status}-${result.message}"
+                    )
+                }
+                return result.data ?: emptyList()
+            }
+        } catch (e: SocketTimeoutException) {
+            logger.error("User $userId list digital avatars get SocketTimeoutException", e)
+            throw WorkspaceDispatchException(
+                errorMessage = "列出数字分身接口超时, url: $url"
+            )
+        }
+    }
+
+    fun getCoffeeDigitalAvatar(userId: String, digitalAvatarId: String): ImateAvatar {
+        val encodedId = URLEncoder.encode(digitalAvatarId, StandardCharsets.UTF_8.name())
+        val url = "$apiUrlAI/openapi/coffee/digital_avatars/$encodedId"
+        val id = UUID.randomUUID()
+        logger.info("$id|User $userId request url: $url")
+        val request = Request.Builder()
+            .url(url)
+            .headers(makeHeaders("", userId).toHeaders())
+            .get()
+            .build()
+        try {
+            OkhttpUtils.doHttp(request).use { response ->
+                val responseContent = response.body!!.string()
+                logger.info("$id|User $userId get digital avatar response: ${response.code} || $responseContent")
+                if (!response.isSuccessful) {
+                    throw WorkspaceDispatchException(
+                        "解析数字分身接口异常: ${response.code}"
+                    )
+                }
+                val result = JsonUtil.to(
+                    responseContent,
+                    object : TypeReference<Result<ImateAvatar>>() {}
+                )
+                if (result.isNotOk() || result.data == null) {
+                    throw WorkspaceDispatchException(
+                        "解析数字分身接口返回异常: ${result.status}-${result.message}"
+                    )
+                }
+                return result.data!!
+            }
+        } catch (e: SocketTimeoutException) {
+            logger.error("User $userId get digital avatar get SocketTimeoutException", e)
+            throw WorkspaceDispatchException(
+                errorMessage = "解析数字分身接口超时, url: $url"
             )
         }
     }
