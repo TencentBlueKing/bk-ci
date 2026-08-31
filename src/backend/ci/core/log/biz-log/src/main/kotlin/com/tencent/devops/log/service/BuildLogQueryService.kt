@@ -512,7 +512,8 @@ class BuildLogQueryService @Autowired constructor(
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,
-            permission = AuthPermission.DOWNLOAD,
+            // 日志下载与页面查看同一 VIEW 动作，不走制品 DOWNLOAD
+            permission = AuthPermission.VIEW,
             archiveFlag = archiveFlag
         )
         val startEpoch = System.currentTimeMillis()
