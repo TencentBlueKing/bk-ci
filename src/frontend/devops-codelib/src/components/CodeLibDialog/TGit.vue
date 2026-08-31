@@ -19,7 +19,15 @@
                     class="mr20"
                     value="OAUTH"
                 >
-                    OAUTH
+                    <bk-popover
+                        placement="top"
+                        theme="light"
+                    >
+                        <span class="oauth-radio-text">OAUTH</span>
+                        <div slot="content">
+                            <p>{{ $t('codelib.oauth仅支持git.tencent.com域名') }}</p>
+                        </div>
+                    </bk-popover>
                 </bk-radio>
                 <bk-radio
                     value="HTTPS"
@@ -255,5 +263,9 @@
         margin-top: 10px;
         font-size: 12px;
         color: #979ba5ff;
+    }
+
+    .oauth-radio-text {
+        border-bottom: 1px dashed #c4c6cc;
     }
 </style>

@@ -281,5 +281,6 @@
     "bkYamlPipelineDeleteVersionFailed": "Pipeline [{pipeline} | {version}] version deletion failed",
     "bkYamlPipelineDeleteFailed": "Pipeline [{pipeline}] deletion failed",
     "bkYamlPipelineCloseFailed": "Pipeline [{pipeline}] failed to update instantiation status",
-    "bkYamlInstancePullRequestClosed": "MR [{mr}] has been closed, changes not published to default branch"
+    "bkYamlInstancePullRequestClosed": "MR [{mr}] has been closed, changes not published to default branch",
+    "oauth仅支持git.tencent.com域名": "OAUTH only supports the git.tencent.com domain"
 }

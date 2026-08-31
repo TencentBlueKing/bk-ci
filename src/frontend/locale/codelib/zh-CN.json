@@ -279,5 +279,6 @@
   "bkYamlPipelineDeleteVersionFailed": "流水线 [{pipeline} | {version}] 版本删除失败",
   "bkYamlPipelineDeleteFailed": "流水线 [{pipeline}] 删除失败",
   "bkYamlPipelineCloseFailed": "流水线 [{pipeline}] 更新实例化状态失败",
-  "bkYamlInstancePullRequestClosed": "MR [{mr}]已关闭，变更未发布到默认分支"
+  "bkYamlInstancePullRequestClosed": "MR [{mr}]已关闭，变更未发布到默认分支",
+  "oauth仅支持git.tencent.com域名": "oauth仅支持git.tencent.com域名"
 }
