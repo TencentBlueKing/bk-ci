@@ -4,6 +4,7 @@ import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.remotedev.api.user.UserImateResource
+import com.tencent.devops.remotedev.pojo.ImateAvatar
 import com.tencent.devops.remotedev.pojo.ImateWorkspaceInspect
 import com.tencent.devops.remotedev.pojo.WorkspaceAiInfo
 import com.tencent.devops.remotedev.service.CoffeeAIService
@@ -24,37 +25,59 @@ class UserImateResourceImpl @Autowired constructor(
         return Result(coffeeAIService.getAiWorkspaceList(userId))
     }
 
+    override fun listImateAvatars(userId: String): Result<List<ImateAvatar>> {
+        logger.info("用户查询已登记数字分身：userId={}", userId)
+        return Result(coffeeAIService.listImateAvatars(userId))
+    }
+
     override fun inspectImateWorkspace(
         userId: String,
-        workspaceName: String
+        workspaceName: String?,
+        digitalAvatarId: String?
     ): Result<ImateWorkspaceInspect> {
-        if (workspaceName.isBlank()) {
-            throw ParamBlankException("Invalid workspaceName")
-        }
-        logger.info("用户检查imate分身归属：userId={} workspaceName={}", userId, workspaceName)
-        return Result(coffeeAIService.inspectUserWorkspace(userId, workspaceName))
+        requireWorkspaceOrAvatar(workspaceName, digitalAvatarId)
+        logger.info(
+            "用户检查imate分身归属：userId={} workspaceName={} digitalAvatarId={}",
+            userId,
+            workspaceName,
+            digitalAvatarId
+        )
+        return Result(
+            coffeeAIService.inspectUserWorkspace(
+                userId = userId,
+                workspaceName = workspaceName,
+                digitalAvatarId = digitalAvatarId
+            )
+        )
     }
 
     override fun getImateToken(
         userId: String,
-        workspaceName: String,
-        expirationMinutes: Long?
+        workspaceName: String?,
+        expirationMinutes: Long?,
+        digitalAvatarId: String?
     ): Result<String> {
-        if (workspaceName.isBlank()) {
-            throw ParamBlankException("Invalid workspaceName")
-        }
+        requireWorkspaceOrAvatar(workspaceName, digitalAvatarId)
         logger.info(
-            "用户请求imate令牌：userId={} workspaceName={} expirationMinutes={}",
+            "用户请求imate令牌：userId={} workspaceName={} digitalAvatarId={} expirationMinutes={}",
             userId,
             workspaceName,
+            digitalAvatarId,
             expirationMinutes
         )
         return Result(
             coffeeAIService.generateUserWorkspaceToken(
                 userId = userId,
                 workspaceName = workspaceName,
-                expirationMinutes = expirationMinutes
+                expirationMinutes = expirationMinutes,
+                digitalAvatarId = digitalAvatarId
             )
         )
+    }
+
+    private fun requireWorkspaceOrAvatar(workspaceName: String?, digitalAvatarId: String?) {
+        if (workspaceName.isNullOrBlank() && digitalAvatarId.isNullOrBlank()) {
+            throw ParamBlankException("Invalid workspaceName")
+        }
     }
 }

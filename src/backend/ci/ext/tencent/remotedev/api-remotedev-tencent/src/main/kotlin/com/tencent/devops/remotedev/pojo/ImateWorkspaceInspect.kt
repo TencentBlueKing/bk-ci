@@ -33,5 +33,11 @@ data class ImateWorkspaceInspect(
     @get:Schema(title = "云桌面环境 ID")
     val envId: String? = null,
     @get:Schema(title = "云桌面 IP")
-    val ip: String? = null
+    val ip: String? = null,
+    @get:Schema(title = "数字分身 ID")
+    val digitalAvatarId: String? = null,
+    @get:Schema(title = "Agent ID")
+    val agentId: String? = null,
+    @get:Schema(title = "Agent 名称")
+    val agentName: String? = null
 )

@@ -17,5 +17,11 @@ data class ImateTokenSession(
     @get:Schema(title = "展示名")
     val displayName: String? = null,
     @get:Schema(title = "分身实际所属者")
-    val owner: String? = null
+    val owner: String? = null,
+    @get:Schema(title = "数字分身 ID")
+    val digitalAvatarId: String? = null,
+    @get:Schema(title = "Agent ID")
+    val agentId: String? = null,
+    @get:Schema(title = "Agent 名称")
+    val agentName: String? = null
 )

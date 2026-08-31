@@ -4,6 +4,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BUILD_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_VM_SEQ_ID
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.remotedev.pojo.ImateAvatar
 import com.tencent.devops.remotedev.pojo.ImateTokenSession
 import com.tencent.devops.remotedev.pojo.ImateWorkspaceInspect
 import com.tencent.devops.remotedev.pojo.WorkspaceAiInfo
@@ -41,10 +42,31 @@ interface BuildImateResource {
         @Parameter(description = "用户名", required = true)
         @PathParam("username")
         username: String,
-        @Parameter(description = "CDS 分身 workspaceName", required = true)
+        @Parameter(description = "CDS 分身 workspaceName；与 digitalAvatarId 至少传一个")
         @QueryParam("workspaceName")
-        workspaceName: String
+        workspaceName: String?,
+        @Parameter(description = "数字分身 ID，优先于 workspaceName")
+        @QueryParam("digitalAvatarId")
+        digitalAvatarId: String?
     ): Result<ImateWorkspaceInspect>
+
+    @Operation(summary = "列出指定构建身份已登记的数字分身")
+    @GET
+    @Path("/{username}/avatars")
+    fun listAvatars(
+        @Parameter(description = "项目ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
+        projectId: String,
+        @Parameter(description = "构建ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
+        buildId: String,
+        @Parameter(description = "构建环境ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_VM_SEQ_ID)
+        vmSeqId: String,
+        @Parameter(description = "用户名", required = true)
+        @PathParam("username")
+        username: String
+    ): Result<List<ImateAvatar>>
 
     @Operation(summary = "列出指定构建身份已开启 imate 且 RUNNING 的分身")
     @GET
@@ -80,12 +102,15 @@ interface BuildImateResource {
         @Parameter(description = "用户名", required = true)
         @PathParam("username")
         username: String,
-        @Parameter(description = "CDS 分身 workspaceName", required = true)
+        @Parameter(description = "CDS 分身 workspaceName；与 digitalAvatarId 至少传一个")
         @QueryParam("workspaceName")
-        workspaceName: String,
+        workspaceName: String?,
         @Parameter(description = "JWT 有效分钟数，默认 60，最大 240")
         @QueryParam("expirationMinutes")
-        expirationMinutes: Long?
+        expirationMinutes: Long?,
+        @Parameter(description = "数字分身 ID，优先于 workspaceName")
+        @QueryParam("digitalAvatarId")
+        digitalAvatarId: String?
     ): Result<ImateTokenSession>
 
     @Operation(summary = "构建机获取 imate / CDS Agent 用户 Token")
@@ -104,11 +129,14 @@ interface BuildImateResource {
         @Parameter(description = "用户名", required = true)
         @PathParam("username")
         username: String,
-        @Parameter(description = "CDS 分身 workspaceName", required = true)
+        @Parameter(description = "CDS 分身 workspaceName；与 digitalAvatarId 至少传一个")
         @QueryParam("workspaceName")
-        workspaceName: String,
+        workspaceName: String?,
         @Parameter(description = "JWT 有效分钟数，默认 60，最大 240")
         @QueryParam("expirationMinutes")
-        expirationMinutes: Long?
+        expirationMinutes: Long?,
+        @Parameter(description = "数字分身 ID，优先于 workspaceName")
+        @QueryParam("digitalAvatarId")
+        digitalAvatarId: String?
     ): Result<String>
 }
