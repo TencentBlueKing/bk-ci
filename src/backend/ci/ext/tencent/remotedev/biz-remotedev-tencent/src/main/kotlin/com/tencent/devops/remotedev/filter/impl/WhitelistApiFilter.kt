@@ -27,6 +27,7 @@ class WhitelistApiFilter constructor(
 
         USER("/api/user/", true),
         DESKTOP("/api/desktop/", true),
+        BUILD("/api/build/", false),
         EXTERNAL("/api/external/", false),
         REMOTEDEV("/api/remotedev/", false),
         SERVICE("/api/service/", false),
@@ -51,7 +52,10 @@ class WhitelistApiFilter constructor(
         // path为为空的时候，直接退出
         val path = requestContext.uriInfo.requestUri.path
         // 判断是否为合法的路径
-        val apiType = ApiType.parseType(path) ?: return false
+        val apiType = ApiType.parseType(path) ?: run {
+            logger.info("unknown api path($path) is blocked by whitelist filter.")
+            return false
+        }
         // 如果是op的接口访问直接跳过jwt认证
         if (!apiType.verify) return true
 
