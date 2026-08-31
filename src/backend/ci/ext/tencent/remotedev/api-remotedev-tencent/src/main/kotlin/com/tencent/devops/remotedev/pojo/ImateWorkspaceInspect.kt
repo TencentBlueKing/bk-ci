@@ -23,5 +23,15 @@ data class ImateWorkspaceInspect(
     @get:Schema(title = "是否可发起会话（属于目标用户且运行中且已开 imate）")
     val usable: Boolean,
     @get:Schema(title = "不可用原因码")
-    val reason: String? = null
+    val reason: String? = null,
+    @get:Schema(title = "蓝盾/云桌面项目 ID")
+    val projectId: String? = null,
+    @get:Schema(title = "归属类型 PERSONAL / PROJECT / PROJECT_PUBLIC")
+    val ownerType: String? = null,
+    @get:Schema(title = "工作区数字 ID")
+    val workspaceId: Long? = null,
+    @get:Schema(title = "云桌面环境 ID")
+    val envId: String? = null,
+    @get:Schema(title = "云桌面 IP")
+    val ip: String? = null
 )

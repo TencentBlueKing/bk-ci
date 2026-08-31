@@ -2,6 +2,7 @@ package com.tencent.devops.remotedev.api.user
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.remotedev.pojo.ImateWorkspaceInspect
 import com.tencent.devops.remotedev.pojo.WorkspaceAiInfo
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
@@ -11,6 +12,7 @@ import jakarta.ws.rs.GET
 import jakarta.ws.rs.HeaderParam
 import jakarta.ws.rs.Path
 import jakarta.ws.rs.Produces
+import jakarta.ws.rs.QueryParam
 import jakarta.ws.rs.core.MediaType
 
 @Tag(name = "USER_REMOTEDEV_IMATE", description = "用户-imate")
@@ -27,4 +29,31 @@ interface UserImateResource {
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String
     ): Result<List<WorkspaceAiInfo>>
+
+    @Operation(summary = "检查当前用户对指定分身的归属（不访问 CDS）")
+    @GET
+    @Path("/inspect")
+    fun inspectImateWorkspace(
+        @Parameter(description = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "CDS 分身 workspaceName", required = true)
+        @QueryParam("workspaceName")
+        workspaceName: String
+    ): Result<ImateWorkspaceInspect>
+
+    @Operation(summary = "当前用户换取指定分身的 CDS Agent Token")
+    @GET
+    @Path("/token")
+    fun getImateToken(
+        @Parameter(description = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "CDS 分身 workspaceName", required = true)
+        @QueryParam("workspaceName")
+        workspaceName: String,
+        @Parameter(description = "JWT 有效分钟数，默认 60，最大 240")
+        @QueryParam("expirationMinutes")
+        expirationMinutes: Long?
+    ): Result<String>
 }

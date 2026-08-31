@@ -5,6 +5,7 @@
 .gradle
 .settings
 bin/
+docs/monitor/
 docs/node_modules
 docs/_book
 docs/package-lock.json
