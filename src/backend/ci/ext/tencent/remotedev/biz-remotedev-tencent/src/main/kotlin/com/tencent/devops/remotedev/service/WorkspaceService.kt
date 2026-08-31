@@ -1346,7 +1346,7 @@ class WorkspaceService @Autowired constructor(
                     params = arrayOf(workspace.hostIp ?: workspaceName)
                 )
             }
-            return startCloudWorkspaceDetail(userId, workspace, false)
+            return startCloudWorkspaceDetail(userId, workspace, multiple ?: false)
         }
         if (envId != null) {
             val userEnvs = getUserEnv4Use(userId)
