@@ -21,11 +21,10 @@
                 >
                     <bk-popover
                         placement="top"
-                        theme="light"
                     >
                         <span class="oauth-radio-text">OAUTH</span>
                         <div slot="content">
-                            <p>{{ $t('codelib.oauth仅支持git.tencent.com域名') }}</p>
+                            <p>{{ $t('codelib.oauth仅支持Tgit域名') }}</p>
                         </div>
                     </bk-popover>
                 </bk-radio>

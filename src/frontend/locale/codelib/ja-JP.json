@@ -278,5 +278,5 @@
     "bkYamlPipelineDeleteFailed": "パイプライン [{pipeline}] の削除に失敗しました",
     "bkYamlPipelineCloseFailed": "パイプライン [{pipeline}] のインスタンス化状態の更新に失敗しました",
     "bkYamlInstancePullRequestClosed": "MR [{mr}] がクローズされました。変更はデフォルトブランチに公開されていません",
-    "oauth仅支持git.tencent.com域名": "OAUTHはgit.tencent.comドメインのみサポートしています"
+    "oauth仅支持Tgit域名": "OAUTHはgit.tencent.comドメインのみサポートしています"
 }
