@@ -27,7 +27,7 @@
                         :build-end-info="execDetail.buildEndInfo"
                         :start-time="buildEndStartTime"
                         :trigger-user="startUser"
-                        :trigger-type-desc="execDetail.trigger"
+                        :trigger-type-desc="execDetail.buildMsg"
                         @highlight="handleBuildEndPositionHighlight"
                         @locateLog="handleBuildEndPositionLocate"
                     >
@@ -624,6 +624,8 @@
                 return getBuildEndInfoConfig(this.execDetail?.buildEndInfo?.endCategory)?.locateFailedKey
             },
             runBuildEndPositionAction (position, { openLog = false } = {}) {
+                console.log(position,'???????')
+                
                 const editingElementPos = this.locateBuildEndPosition(position)
                 if (!editingElementPos) {
                     const locateFailedKey = this.getBuildEndLocateFailedKey()

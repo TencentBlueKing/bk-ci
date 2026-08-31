@@ -47,13 +47,20 @@
                         {{ summaryExtraText }}
                     </span>
                 </div>
-                <!-- meta：成功=开始+触发人；取消用户=结束+操作人；其余=结束+总耗时 -->
+                <!-- meta：成功=开始+触发人；审核中=开始+已等待；取消用户=结束+操作人；其余=结束+总耗时 -->
                 <div class="bei-summary-meta">
                     <template v-if="isDurationOnlyLayout">
                         <span>{{ formatStartTime }} {{ $t('details.startExecute') }}</span>
                         <template v-if="triggerUser || triggerTypeDesc">
                             <span class="meta-divider">|</span>
                             <span>{{ triggerUser || '--' }} {{ triggerTypeDesc }}</span>
+                        </template>
+                    </template>
+                    <template v-else-if="isStartWaitMeta">
+                        <span>{{ formatStartTime }} {{ $t('details.startExecute') }}</span>
+                        <template v-if="waitDuration">
+                            <span class="meta-divider">|</span>
+                            <span>{{ $t('details.waited') }} {{ waitDuration }}</span>
                         </template>
                     </template>
                     <template v-else>
@@ -66,31 +73,21 @@
                 </div>
             </div>
 
-            <!-- 中间扩展区：父流水线 / 失败原因 / 驳回原因 -->
+            <!-- 中间扩展区：父流水线取消 -->
             <div
                 v-if="showExtraSection"
                 class="bei-extra-section"
             >
                 <div class="bei-section-title">
                     <logo
-                        v-if="extraSection.logo"
                         :name="extraSection.logo"
                         size="10"
                         class="bei-extra-icon"
                     />
-                    <logo
-                        v-else-if="extraSection.type === EXTRA_SECTION_TYPE.TEXT"
-                        class="bei-extra-icon"
-                        name="help-document-fill"
-                        size="12"
-                    />
                     <span>{{ $t(extraSection.titleKey) }}</span>
                 </div>
 
-                <div
-                    v-if="isRelatedPipelineSection"
-                    class="bei-extra-row"
-                >
+                <div class="bei-extra-row">
                     <div class="bei-extra-info">
                         <span
                             v-bk-overflow-tips
@@ -108,13 +105,6 @@
                         @click.stop="openRelatedPipeline"
                     />
                 </div>
-
-                <div
-                    v-else-if="extraSectionText"
-                    class="bei-extra-row"
-                >
-                    {{ extraSectionText }}
-                </div>
             </div>
 
             <!-- 位置列表：终止/失败/超时/驳回位置 -->
@@ -130,51 +120,88 @@
                     <li
                         v-for="row in positionItems"
                         :key="row.key"
-                        class="bei-position-item"
+                        class="bei-position-entry"
                     >
-                        <bk-tag
-                            v-if="row.position"
-                            class="position-index-tag"
-                        >
-                            {{ row.position }}
-                        </bk-tag>
-                        <div class="position-main">
-                            <span
-                                v-bk-overflow-tips
-                                class="position-path"
-                            >{{ row.path }}</span>
-                            <!-- 取消场景：状态 tag 紧跟 path -->
+                        <div class="bei-position-item">
                             <bk-tag
-                                v-if="row.showStatusTag"
-                                class="position-status-tag"
+                                v-if="row.position"
+                                class="position-index-tag"
                             >
-                                {{ row.statusText }}
+                                {{ row.position }}
                             </bk-tag>
+                            <div class="position-main">
+                                <span
+                                    v-bk-overflow-tips
+                                    class="position-path"
+                                >{{ row.path }}</span>
+                                <!-- 取消场景：状态 tag 紧跟 path -->
+                                <bk-tag
+                                    v-if="buildEndInfo?.endCategory === BUILD_END_CATEGORY.CANCEL && row.item.statusAtEndDesc"
+                                    class="position-status-tag"
+                                >
+                                    {{ row.item.statusAtEndDesc }}
+                                </bk-tag>
+                            </div>
+                            <div class="position-tail">
+                                <!-- 超时：有 errorCode 才展示 + 定位日志 -->
+                                <span
+                                    v-if="buildEndInfo?.endCategory === BUILD_END_CATEGORY.TIMEOUT && row.item.errorCode"
+                                    class="position-status-text"
+                                >{{ $t('details.errorCode', [row.item.errorCode]) }}</span>
+                                <!-- 阶段成功：审核组 | 待审核人 / 操作人 + 驳回 -->
+                                <template v-if="isStageReviewPosition || isStageReviewPendingPosition">
+                                    <span
+                                        v-if="row.item.reviewGroupSeq || row.item.reviewGroupName"
+                                        v-bk-overflow-tips
+                                        class="position-review-suggest"
+                                    >{{ formatReviewGroupLabel(row.item.reviewGroupSeq, row.item.reviewGroupName) }}</span>
+                                    <span
+                                        v-if="(row.item.reviewGroupSeq || row.item.reviewGroupName) && (isStageReviewPendingPosition ? row.item.reviewers?.length : row.item.operator)"
+                                        class="meta-divider"
+                                    >|</span>
+                                    <span
+                                        v-if="isStageReviewPendingPosition && row.item.reviewers?.length"
+                                        v-bk-overflow-tips
+                                        class="position-action-text"
+                                    >{{ $t('details.reviewersReview', [joinReviewers(row.item.reviewers)]) }}</span>
+                                    <span
+                                        v-if="isStageReviewPosition && row.item.operator"
+                                        class="position-action-text"
+                                    >{{ row.item.operator }} {{ $t('details.reject') }}</span>
+                                </template>
+                                <!-- 失败-人工审核驳回：操作人 -->
+                                <span
+                                    v-else-if="row.item.endType === BUILD_END_TYPE.FAIL_REVIEW && row.item.operator"
+                                    class="position-action-text"
+                                >{{ row.item.operator }} {{ $t('details.reject') }}</span>
+                                <bk-button
+                                    v-if="row.actionLabel"
+                                    text
+                                    theme="primary"
+                                    class="position-action-btn"
+                                    @click.stop="handleLocate(row.item)"
+                                >
+                                    {{ row.actionLabel }}
+                                </bk-button>
+                            </div>
                         </div>
-                        <div class="position-tail">
-                            <!-- 失败/超时：红色/灰色状态文字 + 定位/查看按钮 -->
-                            <span
-                                v-if="row.showStatusText"
-                                :class="['position-status-text', { 'is-muted': row.statusMuted }]"
-                            >{{ row.statusText }}</span>
-                            <!-- 阶段准入驳回：审核组等信息 -->
-                            <span
-                                v-if="row.reviewSuggest"
-                                class="position-review-suggest"
-                            >{{ row.reviewSuggest }}</span>
-                            <span
-                                v-if="row.operatorText"
-                                class="position-action-text"
-                            >{{ row.operatorText }}</span>
-                            <bk-button
-                                v-else-if="row.actionLabel"
-                                text
-                                theme="primary"
-                                class="position-action-btn"
-                                @click.stop="handleLocate(row.item)"
-                            >
-                                {{ row.actionLabel }}
-                            </bk-button>
+                        <div
+                            v-if="buildEndInfo?.endCategory === BUILD_END_CATEGORY.FAIL"
+                            class="position-fail-detail"
+                        >
+                            <template v-if="buildEndInfo.endType === BUILD_END_TYPE.FAIL_EXEC">
+                                <span class="position-fail-detail-accent">{{ $t('details.errorCode', [row.item.errorCode]) }}</span>
+                            </template>
+                            <template v-else>
+                                <span
+                                    v-if="row.item.endTypeDesc"
+                                    class="position-fail-detail-accent"
+                                >{{ row.item.endTypeDesc }}<template v-if="row.item.reason">：</template></span>
+                                <span
+                                    v-if="row.item.reason"
+                                    class="position-fail-detail-reason"
+                                >{{ row.item.reason }}</span>
+                            </template>
                         </div>
                     </li>
                 </ul>
@@ -187,17 +214,16 @@
     import Logo from '@/components/Logo'
     import { convertMStoStringByRule, convertTime } from '@/utils/util'
     import {
-        EXTRA_SECTION_TYPE,
+        BUILD_END_CATEGORY,
+        BUILD_END_TYPE,
         POSITION_ACTION_TYPE,
-        STATUS_DESC_STYLE,
         SUMMARY_LAYOUT,
         getBuildEndInfoConfig,
         getBuildEndTypeRule,
         getMergedEndTypeConfig,
-        getPositionEndTypeRule,
+        formatReviewGroupLabel as buildReviewGroupLabel,
         resolvePositionAction,
-        resolvePositionOperatorTextKey,
-        resolvePositionStatusText
+        resolvePositionActionLabel
     } from './buildEndInfoConfig'
 
     const TIPPY_OPTIONS = {
@@ -233,11 +259,6 @@
                 default: ''
             }
         },
-        data () {
-            return {
-                EXTRA_SECTION_TYPE
-            }
-        },
         computed: {
             /** category 级配置（CANCEL / FAIL / TIMEOUT / SUCCESS） */
             categoryConfig () {
@@ -259,31 +280,29 @@
             isStageReviewPosition () {
                 return this.endTypeRule.positionLayout === 'stageReview'
             },
-            /** 位置状态是否用 tag 展示（取消场景） */
-            isStatusDescTag () {
-                return (this.mergedConfig.statusDescStyle || STATUS_DESC_STYLE.TAG) === STATUS_DESC_STYLE.TAG
+            /** 是否为阶段准入审核中的位置行布局 */
+            isStageReviewPendingPosition () {
+                return this.endTypeRule.positionLayout === 'stageReviewPending'
+            },
+            /** 摘要 meta 是否为「开始执行 + 已等待」 */
+            isStartWaitMeta () {
+                return this.endTypeRule.metaMode === 'startWait'
             },
             extraSection () {
                 return this.endTypeRule.extraSection
             },
-            isRelatedPipelineSection () {
-                return this.extraSection?.type === EXTRA_SECTION_TYPE.RELATED_PIPELINE
-            },
             parentPipelineInfo () {
                 return this.buildEndInfo?.parentPipelineInfo
             },
-            /** 扩展区纯文本内容（失败/驳回原因） */
-            extraSectionText () {
-                if (this.extraSection?.type !== EXTRA_SECTION_TYPE.TEXT) return ''
-                return this.buildEndInfo?.reason || ''
-            },
+            /** 仅父流水线取消展示扩展区 */
             showExtraSection () {
-                if (!this.extraSection?.titleKey) return false
-                if (this.isRelatedPipelineSection) return !!this.parentPipelineInfo
-                return !!this.extraSectionText
+                return !!this.extraSection && !!this.parentPipelineInfo
             },
             /** 摘要主行额外文案：计数或 reason */
             summaryExtraText () {
+                if (this.buildEndInfo?.endCategory === BUILD_END_CATEGORY.FAIL) {
+                    return ''
+                }
                 if (this.endTypeRule.summaryMode === 'count') {
                     const count = this.buildEndInfo.positionCount || this.positions.length
                     return this.$t(this.mergedConfig.summaryCountKey, [count])
@@ -298,7 +317,7 @@
                 return `${this.formatEndTime} ${this.metaActionText}`
             },
             showSummaryDuration () {
-                return !!this.runningDuration
+                return !this.isStartWaitMeta && !!this.runningDuration
             },
             /** CSS 变量：摘要背景色、强调色、位置圆点色 */
             themeStyle () {
@@ -317,37 +336,17 @@
              * highlight 事件 → 画布高亮；locateLog 事件 → 高亮 + 日志侧滑
              */
             positionItems () {
-                return this.positions.map((item, index) => {
-                    const rule = getPositionEndTypeRule(this.endTypeRule, item)
-                    const action = resolvePositionAction(this.endTypeRule, item)
-                    const statusText = resolvePositionStatusText(item, rule, {
-                        endType: this.buildEndInfo?.endType,
-                        isStatusDescTag: this.isStatusDescTag,
-                        translate: (key, params) => this.$t(key, params)
-                    })
-                    const isOperatorText = action.type === POSITION_ACTION_TYPE.OPERATOR_TEXT
-                    let operatorText = ''
-                    if (isOperatorText) {
-                        const operator = rule?.positionOperatorFromItem
-                            ? item.operator
-                            : this.buildEndInfo?.operator
-                        const key = resolvePositionOperatorTextKey(rule, this.endTypeRule, this.mergedConfig)
-                        operatorText = `${operator || ''} ${this.$t(key)}`.trim()
-                    }
-                    return {
+                return this.positions.map((item, index) => ({
+                    item,
+                    key: `${item.stageId}-${item.containerId}-${item.taskId || index}`,
+                    position: item.position,
+                    path: String(item.componentPath || '').replace(/\//g, ' - '),
+                    actionLabel: resolvePositionActionLabel(
+                        this.endTypeRule,
                         item,
-                        key: `${item.stageId}-${item.containerId}-${item.taskId || index}`,
-                        position: item.position,
-                        path: String(item.componentPath || '').replace(/\//g, ' - '),
-                        statusText,
-                        statusMuted: !!rule?.positionStatusMuted,
-                        showStatusTag: !!statusText && this.isStatusDescTag,
-                        showStatusText: !!statusText && !this.isStatusDescTag,
-                        reviewSuggest: this.isStageReviewPosition && item.reviewSuggest,
-                        operatorText,
-                        actionLabel: isOperatorText ? '' : (action.labelKey ? this.$t(action.labelKey) : '')
-                    }
-                })
+                        (key) => this.$t(key)
+                    )
+                }))
             },
             positionsTitleKey () {
                 return this.endTypeRule.positionsTitleKey || this.mergedConfig.positionsTitleKey || ''
@@ -372,20 +371,42 @@
                 if (!totalCostTime || totalCostTime < 0) return ''
                 return convertMStoStringByRule(totalCostTime)
             },
+            waitDuration () {
+                const waitCostTime = Number(this.buildEndInfo?.waitCostTime)
+                if (!waitCostTime || waitCostTime < 0) return ''
+                return convertMStoStringByRule(waitCostTime)
+            },
             relatedPipelineUrl () {
                 const info = this.parentPipelineInfo
                 if (!info?.pipelineId || !info?.buildId || !info.projectId) return ''
                 return `${WEB_URL_PREFIX}/pipeline/${info.projectId}/${info.pipelineId}/detail/${info.buildId}`
             }
         },
+        created () {
+            this.BUILD_END_CATEGORY = BUILD_END_CATEGORY
+            this.BUILD_END_TYPE = BUILD_END_TYPE
+        },
         methods: {
             openRelatedPipeline () {
                 if (!this.relatedPipelineUrl) return
                 window.open(this.relatedPipelineUrl, '_blank')
             },
+            formatReviewGroupLabel (seq, name) {
+                return buildReviewGroupLabel(
+                    seq,
+                    name,
+                    (key, params) => this.$t(key, params)
+                )
+            },
+            joinReviewers (reviewers) {
+                const list = Array.isArray(reviewers) ? reviewers.filter(Boolean) : []
+                const separator = String(this.$i18n?.locale).startsWith('zh') ? '、' : ', '
+                return list.join(separator)
+            },
             /** view / locate：画布高亮；locateLog：高亮 + 日志 */
             handleLocate (item) {
                 const actionType = resolvePositionAction(this.endTypeRule, item).type
+                if (!actionType) return
                 if (actionType === POSITION_ACTION_TYPE.LOCATE_LOG) {
                     this.$emit('locateLog', item)
                 } else {
@@ -583,6 +604,13 @@
         gap: 8px;
     }
 
+    .bei-position-entry {
+        border: 1px solid #EAEBF0;
+        border-radius: 4px;
+        background: #FAFBFD;
+        overflow: hidden;
+    }
+
     .bei-position-item {
         display: flex;
         align-items: center;
@@ -590,9 +618,22 @@
         gap: 4px;
         min-height: 38px;
         padding: 8px 16px;
-        border: 1px solid #EAEBF0;
-        border-radius: 4px;
-        background: #FAFBFD;
+    }
+
+    .position-fail-detail {
+        padding: 8px 16px;
+        border-top: 1px solid #EAEBF0;
+        font-size: 12px;
+        line-height: 18px;
+        word-break: break-word;
+    }
+
+    .position-fail-detail-accent {
+        color: var(--bei-accent);
+    }
+
+    .position-fail-detail-reason {
+        color: #4D4F56;
     }
 
     .position-index-tag {
@@ -629,8 +670,13 @@
         display: flex;
         align-items: center;
         gap: 8px;
-        flex-shrink: 0;
+        min-width: 0;
+        flex: 0 1 auto;
         margin-left: auto;
+
+        .meta-divider {
+            color: #c4c6cc;
+        }
     }
 
     .position-status-text {
@@ -638,17 +684,14 @@
         font-size: 12px;
         color: var(--bei-accent);
         white-space: nowrap;
-
-        &.is-muted {
-            color: #979ba5;
-        }
     }
 
     .position-review-suggest {
-        flex-shrink: 0;
+        @include ellipsis();
+        min-width: 0;
+        max-width: 140px;
         font-size: 12px;
         color: #979ba5;
-        white-space: nowrap;
     }
 
     .position-action-btn,

@@ -35,15 +35,10 @@ export const BUILD_END_TYPE = {
     TIMEOUT_QUEUE: 'TIMEOUT_QUEUE',
     TIMEOUT_HEARTBEAT: 'TIMEOUT_HEARTBEAT',
 
-    // 成功：普通成功 / 阶段准入驳回（构建仍成功）
+    // 成功：普通成功 / 阶段准入驳回 / 阶段准入审核中
     SUCCESS: 'SUCCESS',
-    SUCCESS_STAGE_ABORT: 'SUCCESS_STAGE_ABORT'
-}
-
-/** 中间扩展区类型 */
-export const EXTRA_SECTION_TYPE = {
-    RELATED_PIPELINE: 'relatedPipeline', // 父流水线信息 + 跳转
-    TEXT: 'text' // 失败原因 / 驳回原因等纯文本
+    SUCCESS_STAGE_ABORT: 'SUCCESS_STAGE_ABORT',
+    SUCCESS_STAGE_REVIEWING: 'SUCCESS_STAGE_REVIEWING'
 }
 
 /** 位置行尾操作类型 */
@@ -93,11 +88,6 @@ const VIEW_ACTION = {
 const OPERATOR_TEXT_ACTION = {
     type: POSITION_ACTION_TYPE.OPERATOR_TEXT
 }
-
-const TEXT_EXTRA = titleKey => ({
-    type: EXTRA_SECTION_TYPE.TEXT,
-    titleKey
-})
 
 /** 四类超时 endType 共用规则 */
 const TIMEOUT_END_TYPE_RULE = {
@@ -178,7 +168,6 @@ export const BUILD_END_INFO_CONFIG = {
                 summaryMode: 'reason',
                 metaMode: 'action',
                 extraSection: {
-                    type: EXTRA_SECTION_TYPE.RELATED_PIPELINE,
                     titleKey: 'details.cancelParentPipeline',
                     logo: 'pipeline'
                 },
@@ -210,14 +199,14 @@ export const BUILD_END_INFO_CONFIG = {
             [BUILD_END_TYPE.FAIL_QUALITY]: {
                 summaryMode: 'reason',
                 metaMode: 'action',
-                extraSection: TEXT_EXTRA('details.failReason'),
+                extraSection: null,
                 positionAction: LOCATE_LOG_ACTION,
                 positionStatusMode: POSITION_STATUS_MODE.ERROR_CODE
             },
             [BUILD_END_TYPE.FAIL_REVIEW]: {
                 summaryMode: 'reason',
                 metaMode: 'action',
-                extraSection: TEXT_EXTRA('details.rejectReason'),
+                extraSection: null,
                 positionsTitleKey: 'details.rejectPositions',
                 positionAction: OPERATOR_TEXT_ACTION,
                 positionOperatorFromItem: true, // 操作人读 position.operator
@@ -284,15 +273,46 @@ export const BUILD_END_INFO_CONFIG = {
                 positionAction: OPERATOR_TEXT_ACTION,
                 positionOperatorFromItem: true,
                 positionOperatorTextKey: 'details.reject', // 位置行用「驳回」，与 meta「结束」区分
-                positionLayout: 'stageReview', // 展示 reviewSuggest + 审核组信息
+                positionLayout: 'stageReview', // 展示 reviewGroup + operator 驳回
                 theme: {
                     summaryBg: '#FDF4E8',
                     accent: '#FF9C01',
                     sectionDot: '#F59500'
                 }
+            },
+            [BUILD_END_TYPE.SUCCESS_STAGE_REVIEWING]: {
+                titleKey: 'details.stageSuccessTitle',
+                summaryLayout: SUMMARY_LAYOUT.STAGE_GATE,
+                metaMode: 'startWait', // 开始时间 + 已等待，不展示总耗时
+                typeLabelKey: 'details.stageGateType',
+                positionsTitleKey: 'details.reviewPositions',
+                positionAction: null, // 审核中无定位操作
+                positionLayout: 'stageReviewPending', // 审核组 + 待审核人
+                theme: {
+                    summaryBg: '#EDF4FF',
+                    accent: '#3A84FF',
+                    sectionDot: '#F59500'
+                }
             }
         }
     }
+}
+
+/** 审核组序号转展示文案（1–10 走 i18n，超出则回退数字） */
+export function formatReviewGroupSeq (seq, translate) {
+    const num = Number(seq)
+    if (!num || num < 1) return ''
+    const key = `details.reviewLevelNumeral.${num}`
+    const text = translate(key)
+    return text && text !== key ? text : String(num)
+}
+
+/** 审核组展示：二级：运维审核组 */
+export function formatReviewGroupLabel (seq, name, translate) {
+    if (!name && !seq) return ''
+    const level = formatReviewGroupSeq(seq, translate)
+    if (!level) return name || ''
+    return translate('details.reviewGroupLevel', [level, name])
 }
 
 /** 按 buildEndInfo.endCategory 取 category 配置；无配置返回 null */
@@ -339,43 +359,17 @@ const DEFAULT_POSITION_ACTION = {
 /** 解析位置行尾按钮类型与文案 key */
 export function resolvePositionAction (endTypeRule, position) {
     const rule = getPositionEndTypeRule(endTypeRule, position)
+    if (rule?.positionAction === null) {
+        return { type: null, labelKey: '' }
+    }
     return rule?.positionAction || DEFAULT_POSITION_ACTION
 }
 
 /**
- * 解析位置行「操作人 + 动作」的 i18n key
- * 优先级：行级 > endType 级 > category 级 > actionTextKey
+ * 解析位置行尾按钮文案；OPERATOR_TEXT / 无操作时不展示按钮
  */
-export function resolvePositionOperatorTextKey (rule, endTypeRule, mergedConfig) {
-    return rule?.positionOperatorTextKey
-        || endTypeRule?.positionOperatorTextKey
-        || mergedConfig?.positionOperatorTextKey
-        || mergedConfig?.actionTextKey
-}
-
-/**
- * 解析位置行状态文案（错误码 / 成因 / 终态描述）
- * @param translate - i18n 函数，如 (key, params) => vm.$t(key, params)
- */
-export function resolvePositionStatusText (item, rule, { endType, isStatusDescTag, translate }) {
-    const mode = rule?.positionStatusMode
-    if (mode === POSITION_STATUS_MODE.ERROR_CODE && item.errorCode) {
-        return translate('details.errorCode', [item.errorCode])
-    }
-    if (mode === POSITION_STATUS_MODE.END_TYPE_DESC && item.endTypeDesc) {
-        return item.endTypeDesc
-    }
-    if (mode === POSITION_STATUS_MODE.STATUS_AT_END_DESC && item.statusAtEndDesc) {
-        return item.statusAtEndDesc
-    }
-    if (endType === BUILD_END_TYPE.FAIL_MULTIPLE) {
-        if (item.errorCode) {
-            return translate('details.errorCode', [item.errorCode])
-        }
-        if (item.endTypeDesc) return item.endTypeDesc
-    }
-    if (!isStatusDescTag && item.errorCode) {
-        return translate('details.errorCode', [item.errorCode])
-    }
-    return item.statusAtEndDesc || ''
+export function resolvePositionActionLabel (endTypeRule, item, translate) {
+    const action = resolvePositionAction(endTypeRule, item)
+    if (!action.type || action.type === POSITION_ACTION_TYPE.OPERATOR_TEXT) return ''
+    return action.labelKey ? translate(action.labelKey) : ''
 }
