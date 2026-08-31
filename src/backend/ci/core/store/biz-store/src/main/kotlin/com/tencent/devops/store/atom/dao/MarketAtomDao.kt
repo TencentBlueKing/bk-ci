@@ -676,6 +676,47 @@ class MarketAtomDao : AtomBaseDao() {
         }
     }
 
+    fun getAtomBranchTestVersion(
+        dslContext: DSLContext,
+        atomCode: String,
+        versionPrefix: String
+    ): TAtomRecord? {
+        with(TAtom.T_ATOM) {
+            return dslContext.selectFrom(this)
+                .where(ATOM_CODE.eq(atomCode))
+                .and(VERSION.startsWith(versionPrefix))
+                .and(ATOM_STATUS.eq(AtomStatusEnum.TESTING.status.toByte()))
+                .orderBy(UPDATE_TIME.desc())
+                .fetchOne()
+        }
+    }
+
+    /**
+     * 根据插件标识与分支获取最新的分支测试版本
+     * @param atomStatus 指定状态过滤，null 表示不限制状态
+     */
+    fun getLatestBranchTestVersion(
+        dslContext: DSLContext,
+        atomCode: String,
+        branch: String,
+        atomStatus: Byte? = null
+    ): TAtomRecord? {
+        with(TAtom.T_ATOM) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(ATOM_CODE.eq(atomCode))
+            conditions.add(BRANCH.eq(branch))
+            conditions.add(BRANCH_TEST_FLAG.eq(true))
+            if (atomStatus != null) {
+                conditions.add(ATOM_STATUS.eq(atomStatus))
+            }
+            return dslContext.selectFrom(this)
+                .where(conditions)
+                .orderBy(UPDATE_TIME.desc())
+                .limit(1)
+                .fetchOne()
+        }
+    }
+
     fun getAtomById(
         dslContext: DSLContext,
         atomId: String,
