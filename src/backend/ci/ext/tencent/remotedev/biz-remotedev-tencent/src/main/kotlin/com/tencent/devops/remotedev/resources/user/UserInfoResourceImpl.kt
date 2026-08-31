@@ -9,7 +9,6 @@ import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.pojo.TrustDeviceInfo
 import com.tencent.devops.remotedev.pojo.TrustDeviceTokenGetData
 import com.tencent.devops.remotedev.pojo.VerifyResult
-import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
 import com.tencent.devops.remotedev.pojo.WorkspaceShared
 import com.tencent.devops.remotedev.pojo.userinfo.FaceRecognition
 import com.tencent.devops.remotedev.pojo.userinfo.FaceRecognitionData
