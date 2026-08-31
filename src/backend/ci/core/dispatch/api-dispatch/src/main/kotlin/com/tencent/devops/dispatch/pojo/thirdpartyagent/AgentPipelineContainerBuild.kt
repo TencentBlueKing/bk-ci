@@ -24,7 +24,7 @@ data class AgentPipelineContainerBuild(
     @get:Schema(title = "构建号", required = true)
     val buildNum: Int,
     @get:Schema(title = "触发人", required = true)
-    val creator: String,
+    val creator: String?,
     @get:Schema(title = "构建包含的任务列表", required = false)
     val tasks: List<AgentPipelineBuildTask>?,
     @get:Schema(title = "构建包含的节点信息", required = false)

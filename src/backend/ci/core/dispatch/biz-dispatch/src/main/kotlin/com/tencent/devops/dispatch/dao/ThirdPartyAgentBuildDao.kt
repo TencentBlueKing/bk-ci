@@ -902,7 +902,7 @@ class ThirdPartyAgentBuildDao {
                 .fetch()
                 .map {
                     TPAPipelineBuild(
-                        projectId = it.value9(),
+                        projectId = it.value10(),
                         pipelineId = it.value1(),
                         pipelineName = it.value2(),
                         jobId = it.value3(),

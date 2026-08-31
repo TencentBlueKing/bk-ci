@@ -68,7 +68,7 @@ data class TPAPipelineBuild(
 @Schema(title = "历史构建模型")
 data class TPAPipelineBuildHistory(
     @get:Schema(title = "启动用户", required = true)
-    val userId: String,
+    val userId: String?,
     @get:Schema(title = "构建号", required = true)
     val buildNum: Int?,
     @get:Schema(title = "状态", required = true)
