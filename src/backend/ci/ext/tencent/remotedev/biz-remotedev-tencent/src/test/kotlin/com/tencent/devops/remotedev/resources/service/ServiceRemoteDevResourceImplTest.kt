@@ -61,6 +61,6 @@ class ServiceRemoteDevResourceImplTest {
 
     companion object {
         // 与下方 fingerprint、sign 固定值对应的测试 token，用于校验 md5 与 hmacSha1 算法
-        private const val DESKTOP_SDK_TOKEN = "D1oXVCZnVQ9Vu65eXG5R"
+        private const val DESKTOP_SDK_TOKEN = "1111"
     }
 }
