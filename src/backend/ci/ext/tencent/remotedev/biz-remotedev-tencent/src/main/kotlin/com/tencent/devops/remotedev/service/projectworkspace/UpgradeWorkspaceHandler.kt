@@ -90,9 +90,9 @@ class UpgradeWorkspaceHandler @Autowired constructor(
         if (!permissionService.hasOwnerPermission(
                 userId = userId,
                 workspaceName = workspaceName,
-                projectId = projectId,
+                projectId = workspace.projectId,
                 ownerType = workspace.ownerType
-            ) && !permissionService.hasUserManager(userId, projectId)
+            ) && !permissionService.hasUserManager(userId, workspace.projectId)
         ) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
