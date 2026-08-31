@@ -5,12 +5,15 @@ import com.tencent.devops.remotedev.pojo.DesktopTokenSign
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.project.WeSecProjectWorkspace
 import com.tencent.devops.remotedev.service.RemotedevSdkService
+import io.mockk.every
 import io.mockk.mockk
 import org.junit.jupiter.api.Test
 
 class ServiceRemoteDevResourceImplTest {
 
-    private val bkConfig = BkConfig(mockk())
+    private val bkConfig = mockk<BkConfig>().also {
+        every { it.desktopSdkToken } returns DESKTOP_SDK_TOKEN
+    }
 
     private val workspaceTemplate = RemotedevSdkService(
         kafkaClient = mockk(),
@@ -54,5 +57,10 @@ class ServiceRemoteDevResourceImplTest {
             sign = "EF988B15567B548C72F290BE01418840DECE8514"
         )
         workspaceTemplate.check(ws, sign, ws.innerIp!!)
+    }
+
+    companion object {
+        // 与下方 fingerprint、sign 固定值对应的测试 token，用于校验 md5 与 hmacSha1 算法
+        private const val DESKTOP_SDK_TOKEN = "D1oXVCZnVQ9Vu65eXG5R"
     }
 }
