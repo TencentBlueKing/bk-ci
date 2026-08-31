@@ -56,11 +56,11 @@ import com.tencent.devops.repository.pojo.GithubRepository
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.sdk.github.pojo.CheckRunOutput
-import com.tencent.devops.scm.code.git.api.GIT_COMMIT_CHECK_STATE_NEED_APPROVE
 import com.tencent.devops.scm.pojo.CommitCheckRequest
 import com.tencent.devops.scm.pojo.RepoSessionRequest
 import com.tencent.devops.ticket.api.ServiceCredentialResource
 import com.tencent.devops.ticket.pojo.enums.CredentialType
+import jakarta.ws.rs.NotFoundException
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -69,7 +69,6 @@ import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Base64
-import jakarta.ws.rs.NotFoundException
 
 @Service
 @Suppress("ALL")
@@ -138,12 +137,7 @@ class ScmCheckService @Autowired constructor(private val client: Client) {
                     channelCode = channelCode
                 ),
                 targetBranch = targetBranch,
-                // 仅在需人工审核场景下回写审批列表，审批链接缺省复用构建详情页链接
-                approvals = if (state == GIT_COMMIT_CHECK_STATE_NEED_APPROVE) {
-                    event.approvals?.map { it.copy(approveUrl = it.approveUrl ?: targetUrl) }
-                } else {
-                    null
-                }
+                approvals = event.approvals
             )
             if (isOauth) {
                 client.get(ServiceScmOauthResource::class).addCommitCheck(request)
