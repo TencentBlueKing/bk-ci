@@ -48,7 +48,10 @@ class ApigwProjectResourceImpl @Autowired constructor(private val client: Client
         deptName: String?,
         centerName: String
     ): Result<List<ProjectVO>> {
-        logger.info("Get  projects info by group ,userId:$userId,bgName:$bgName,deptName:$deptName,centerName:$centerName")
+        logger.info(
+            "Get projects info by group, userId:$userId, bgName:$bgName, " +
+                "deptName:$deptName, centerName:$centerName"
+        )
         return client.get(ServiceTxProjectResource::class).getProjectByGroup(
             userId = userId,
             bgName = bgName,
