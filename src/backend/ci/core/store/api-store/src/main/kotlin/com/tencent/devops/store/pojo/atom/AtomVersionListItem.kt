@@ -54,6 +54,8 @@ data class AtomVersionListItem(
         required = true
     )
     val atomStatus: String,
+    @get:Schema(title = "是否为分支测试版本", required = false)
+    val branchTestFlag: Boolean = false,
     @get:Schema(title = "创建人")
     val creator: String,
     @get:Schema(title = "创建时间")

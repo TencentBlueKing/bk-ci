@@ -725,7 +725,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                 version = record[tAtom.VERSION],
                 atomStatus = AtomStatusEnum.getAtomStatus((record[tAtom.ATOM_STATUS] as Byte).toInt()),
                 releaseType = releaseType?.name,
-                branchTestFlag = record[tAtom.BRANCH_TEST_FLAG] as Boolean,
+                branchTestFlag = record[tAtom.BRANCH_TEST_FLAG] ?: false,
                 versionContent = record[tAtomVersionLog.CONTENT],
                 language = marketAtomEnvInfoDao.getDefaultAtomEnvInfo(dslContext, atomId)
                     ?.language?.let { I18nUtil.getCodeLanMessage(it) },
@@ -947,11 +947,15 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                 params = arrayOf(atomCode)
             )
         }
-        // 版本类型筛选：按分支测试版本标识区分，ALL-全部，TEST-测试版本，其余（含默认）为正式版本
+        // 版本类型筛选：按分支测试版本标识区分，ALL-全部，TEST-测试版本，FORMAL-正式版本，非法值直接报错
         val branchTestFlag = when (versionType?.uppercase()) {
+            null, "FORMAL" -> false
             "ALL" -> null
             "TEST" -> true
-            else -> false
+            else -> throw ErrorCodeException(
+                errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                params = arrayOf(versionType ?: "")
+            )
         }
         val totalCount = atomDao.countByCode(dslContext, atomCode, branchTestFlag)
         val records = marketAtomDao.getAtomsByAtomCode(dslContext, atomCode, page, pageSize, branchTestFlag)
@@ -978,6 +982,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                         version = it.version,
                         versionContent = versionMap[it.id].toString(),
                         atomStatus = AtomStatusEnum.getAtomStatus((it.atomStatus as Byte).toInt()),
+                        branchTestFlag = it.branchTestFlag,
                         creator = it.creator,
                         createTime = DateTimeUtil.toDateTime(it.createTime)
                     )

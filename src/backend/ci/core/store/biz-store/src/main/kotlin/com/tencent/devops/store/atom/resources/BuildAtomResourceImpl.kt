@@ -69,10 +69,10 @@ class BuildAtomResourceImpl @Autowired constructor(
     }
 
     override fun getAtomVersionInfoById(userId: String, atomId: String): Result<PipelineAtom?> {
-        return atomService.getPipelineAtomById(id = atomId)
+        return atomService.getPipelineAtomByIdWithPermissionCheck(userId = userId, id = atomId)
     }
 
-    override fun getAtomVersionInfoByCode(atomCode: String, username: String): Result<AtomVersion?> {
+    override fun getAtomVersionInfoByCode(username: String, atomCode: String): Result<AtomVersion?> {
         return marketAtomService.getNewestAtomByCode(username, atomCode)
     }
 }

@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.constant.COMMIT
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.DOING
 import com.tencent.devops.common.api.constant.END
+import com.tencent.devops.common.api.constant.FAIL
 import com.tencent.devops.common.api.constant.NUM_FOUR
 import com.tencent.devops.common.api.constant.NUM_ONE
 import com.tencent.devops.common.api.constant.NUM_THREE
@@ -157,6 +158,13 @@ class SampleAtomReleaseServiceImpl : SampleAtomReleaseService, AtomReleaseServic
             AtomStatusEnum.INIT.status, AtomStatusEnum.COMMITTING.status -> {
                 storeCommonService.setProcessInfo(processInfo, NUM_THREE, NUM_TWO, DOING)
             }
+            // 仓库来源升级提交后进入构建/代码检查阶段，归入提交环节的进行中/失败展示
+            AtomStatusEnum.BUILDING.status, AtomStatusEnum.CODECCING.status, AtomStatusEnum.AUDITING.status -> {
+                storeCommonService.setProcessInfo(processInfo, NUM_THREE, NUM_TWO, DOING)
+            }
+            AtomStatusEnum.BUILD_FAIL.status, AtomStatusEnum.CODECC_FAIL.status -> {
+                storeCommonService.setProcessInfo(processInfo, NUM_THREE, NUM_TWO, FAIL)
+            }
             AtomStatusEnum.TESTING.status -> {
                 // 测试进行中：先标记前序步骤完成，再手动将测试步骤置为进行中（避免末步被置为完成）
                 storeCommonService.setProcessInfo(processInfo, NUM_THREE, NUM_TWO, SUCCESS)
@@ -276,6 +284,4 @@ class SampleAtomReleaseServiceImpl : SampleAtomReleaseService, AtomReleaseServic
         atomCode: String,
         branch: String
     ): Result<Boolean> = Result(true)
-
-    override fun endBranchVersionTestById(userId: String, atomId: String): Result<Boolean> = Result(true)
 }

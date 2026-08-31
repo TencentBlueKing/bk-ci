@@ -27,25 +27,28 @@
 
 package com.tencent.devops.process.api.builds
 
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.web.annotation.BkApiPermission
 import com.tencent.devops.common.web.constant.BkApiHandleType
 import com.tencent.devops.process.bean.PipelineUrlBean
+import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.vmbuild.EngineVMBuildService
 import com.tencent.devops.process.pojo.BuildHistory
-import com.tencent.devops.process.pojo.BuildHistoryWithVars
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import com.tencent.devops.process.pojo.task.PipelineFailTaskDetail
 import com.tencent.devops.process.service.SubPipelineStartUpService
 import com.tencent.devops.process.service.builds.PipelineBuildFacadeService
+import jakarta.ws.rs.core.Response
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class BuildBuildResourceImpl @Autowired constructor(
     private val pipelineBuildFacadeService: PipelineBuildFacadeService,
+    private val pipelineRuntimeService: PipelineRuntimeService,
     private val subPipelineStartUpService: SubPipelineStartUpService,
     private val vMBuildService: EngineVMBuildService,
     private val pipelineUrlBean: PipelineUrlBean
@@ -106,20 +109,24 @@ class BuildBuildResourceImpl @Autowired constructor(
         projectId: String,
         pipelineId: String,
         buildId: String
-    ): Result<BuildHistoryWithVars> {
+    ): Result<BuildHistory> {
         if (buildId.isBlank()) {
             throw ParamBlankException("Invalid buildId")
         }
-        return Result(
-            data = pipelineBuildFacadeService.getBuildStatusWithVars(
-                userId = "",
-                projectId = projectId,
-                pipelineId = pipelineId,
-                buildId = buildId,
-                channelCode = ChannelCode.BS,
-                checkPermission = false
+        // 按项目+流水线+构建三要素精确查询，避免路径参数不一致时也能查到构建
+        pipelineRuntimeService.getBuildInfo(projectId, pipelineId, buildId)
+            ?: throw ErrorCodeException(
+                statusCode = Response.Status.NOT_FOUND.statusCode,
+                errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
+                params = arrayOf(buildId)
             )
-        )
+        val buildHistory = pipelineRuntimeService.getBuildHistoryById(projectId, buildId)
+            ?: throw ErrorCodeException(
+                statusCode = Response.Status.NOT_FOUND.statusCode,
+                errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
+                params = arrayOf(buildId)
+            )
+        return Result(data = buildHistory)
     }
 
     override fun getSubBuildVars(projectId: String, buildId: String, taskId: String): Result<Map<String, String>> {

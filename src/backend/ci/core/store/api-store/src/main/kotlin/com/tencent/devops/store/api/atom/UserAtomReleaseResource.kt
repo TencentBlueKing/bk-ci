@@ -93,7 +93,7 @@ interface UserAtomReleaseResource {
     ): Result<StoreProcessInfo>
 
     @Operation(summary = "结束插件分支测试版本测试")
-    @GET
+    @PUT
     @Path("/desk/atom/{atomId}/test/version/end")
     fun endBranchVersionTest(
         @Parameter(description = "userId", required = true)

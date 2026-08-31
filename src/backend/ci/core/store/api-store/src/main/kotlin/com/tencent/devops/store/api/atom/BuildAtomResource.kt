@@ -123,11 +123,11 @@ interface BuildAtomResource {
         keyPrefixNames = ["ATOM", "{data.atomCode}", "{data.version}", "releaseInfo"]
     )
     fun getAtomVersionInfoByCode(
+        @Parameter(description = "用户名", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        username: String,
         @Parameter(description = "插件代码", required = true)
         @PathParam("atomCode")
-        atomCode: String,
-        @Parameter(description = "用户名", required = true)
-        @QueryParam("username")
-        username: String
+        atomCode: String
     ): Result<AtomVersion?>
 }
