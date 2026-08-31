@@ -43,9 +43,11 @@ import com.tencent.devops.remotedev.dao.WorkspaceJoinDao
 import com.tencent.devops.remotedev.dispatch.kubernetes.dao.DispatchWorkspaceDao
 import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.client.WorkspaceStartCloudClient
 import com.tencent.devops.remotedev.pojo.CoffeeAIToken
+import com.tencent.devops.remotedev.pojo.ImateTokenSession
 import com.tencent.devops.remotedev.pojo.ImateWorkspaceInspect
 import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfigType
 import com.tencent.devops.remotedev.pojo.WorkspaceAiInfo
+import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
 import com.tencent.devops.remotedev.pojo.WorkspaceRecordWithWindows
 import com.tencent.devops.remotedev.pojo.WorkspaceRegistration
 import com.tencent.devops.remotedev.pojo.WorkspaceSearch
@@ -76,7 +78,8 @@ class CoffeeAIService @Autowired constructor(
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(CoffeeAIService::class.java)
-        private const val TOKEN_EXPIRATION_MINUTES = 60L
+        const val TOKEN_EXPIRATION_MINUTES = 60L
+        const val TOKEN_MAX_EXPIRATION_MINUTES = 240L
     }
 
     @Value("\${ai.jwt.secret:bk-cds-ai-agent-secret-key-change-in-production}")
@@ -86,9 +89,13 @@ class CoffeeAIService @Autowired constructor(
         Keys.hmacShaKeyFor(jwtSecret.toByteArray())
     }
 
-    fun generateUserToken(userId: String): String {
+    fun generateUserToken(
+        userId: String,
+        expirationMinutes: Long = TOKEN_EXPIRATION_MINUTES
+    ): String {
+        val minutes = normalizeExpirationMinutes(expirationMinutes)
         val now = Date()
-        val expirationDate = Date(now.time + TimeUnit.MINUTES.toMillis(TOKEN_EXPIRATION_MINUTES))
+        val expirationDate = Date(now.time + TimeUnit.MINUTES.toMillis(minutes))
 
         val token = Jwts.builder()
             .subject(userId)
@@ -99,8 +106,8 @@ class CoffeeAIService @Autowired constructor(
             .signWith(signingKey)
             .compact()
 
-        workspaceStartCloudClient.setCoffeeAIToken(userId, CoffeeAIToken(userId, token, TOKEN_EXPIRATION_MINUTES))
-        logger.info("生成用户WebSocket令牌：userId={}", userId)
+        workspaceStartCloudClient.setCoffeeAIToken(userId, CoffeeAIToken(userId, token, minutes))
+        logger.info("生成用户WebSocket令牌：userId={} expirationMinutes={}", userId, minutes)
         val workspaces = getAiWorkspaceList(userId)
 
         val organization = kotlin.runCatching {
@@ -133,7 +140,8 @@ class CoffeeAIService @Autowired constructor(
         projectId: String,
         buildId: String,
         username: String,
-        workspaceName: String
+        workspaceName: String,
+        expirationMinutes: Long? = null
     ): String {
         val inspect = inspectBuildWorkspace(
             projectId = projectId,
@@ -141,30 +149,73 @@ class CoffeeAIService @Autowired constructor(
             username = username,
             workspaceName = workspaceName
         )
-        if (!inspect.exists) {
-            throw ErrorCodeException(
-                errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
-                params = arrayOf(workspaceName)
-            )
-        }
-        if (!inspect.belongsToUser) {
-            throw ErrorCodeException(
-                errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
-                params = arrayOf(
-                    "workspace $workspaceName owner is ${inspect.owner ?: "unknown"}, not $username"
-                )
-            )
-        }
-        if (!inspect.usable) {
-            throw ErrorCodeException(
-                errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
-                params = arrayOf(
-                    "workspace $workspaceName owner=${inspect.owner} status=${inspect.status} " +
-                        "imateEnabled=${inspect.imateEnabled} reason=${inspect.reason}"
-                )
-            )
-        }
-        return generateUserToken(username)
+        assertWorkspaceUsable(inspect, username, workspaceName)
+        return generateUserToken(username, normalizeExpirationMinutes(expirationMinutes))
+    }
+
+    fun generateBuildUserSession(
+        projectId: String,
+        buildId: String,
+        username: String,
+        workspaceName: String,
+        expirationMinutes: Long? = null
+    ): ImateTokenSession {
+        val inspect = inspectBuildWorkspace(
+            projectId = projectId,
+            buildId = buildId,
+            username = username,
+            workspaceName = workspaceName
+        )
+        assertWorkspaceUsable(inspect, username, workspaceName)
+        val minutes = normalizeExpirationMinutes(expirationMinutes)
+        val token = generateUserToken(username, minutes)
+        return ImateTokenSession(
+            token = token,
+            expirationMinutes = minutes,
+            expiresAt = System.currentTimeMillis() + TimeUnit.MINUTES.toMillis(minutes),
+            username = username,
+            workspaceName = inspect.workspaceName,
+            displayName = inspect.displayName,
+            owner = inspect.owner
+        )
+    }
+
+    fun inspectUserWorkspace(userId: String, workspaceName: String): ImateWorkspaceInspect {
+        val inspect = lookupWorkspaceOwner(userId, workspaceName)
+        logger.info(
+            "用户态imate分身归属检查：workspaceName={} displayName={} exists={} owner={} " +
+                "identityUser={} status={} imateEnabled={} belongsToUser={} usable={} reason={}",
+            inspect.workspaceName,
+            inspect.displayName,
+            inspect.exists,
+            inspect.owner,
+            userId,
+            inspect.status,
+            inspect.imateEnabled,
+            inspect.belongsToUser,
+            inspect.usable,
+            inspect.reason
+        )
+        return inspect
+    }
+
+    fun generateUserWorkspaceToken(
+        userId: String,
+        workspaceName: String,
+        expirationMinutes: Long? = null
+    ): String {
+        val inspect = inspectUserWorkspace(userId, workspaceName)
+        assertWorkspaceUsable(inspect, userId, workspaceName)
+        return generateUserToken(userId, normalizeExpirationMinutes(expirationMinutes))
+    }
+
+    fun listBuildWorkspaces(
+        projectId: String,
+        buildId: String,
+        username: String
+    ): List<WorkspaceAiInfo> {
+        assertAllowedBuildIdentity(projectId, buildId, username)
+        return getAiWorkspaceList(username)
     }
 
     /**
@@ -247,6 +298,10 @@ class CoffeeAIService @Autowired constructor(
             !running -> "NOT_RUNNING"
             else -> null
         }
+        val envId = dispatchWorkspaceDao.getEnvIdsByWorkspaceNames(
+            listOf(record.workspaceName),
+            dslContext
+        )[record.workspaceName]
         return ImateWorkspaceInspect(
             workspaceName = record.workspaceName,
             displayName = record.displayName.takeIf { it != "NO_CHECK" } ?: record.workspaceName,
@@ -257,18 +312,25 @@ class CoffeeAIService @Autowired constructor(
             imateEnabled = imateEnabled,
             belongsToUser = belongsToUser,
             usable = belongsToUser && imateEnabled && running,
-            reason = reason
+            reason = reason,
+            projectId = record.projectId.takeIf { it != "NO_CHECK" },
+            ownerType = record.ownerType.name,
+            workspaceId = record.workspaceId,
+            envId = envId?.takeIf { it.isNotBlank() },
+            ip = record.ip?.takeIf { it.isNotBlank() }
         )
     }
 
     fun getAiWorkspaceList(userId: String): List<WorkspaceAiInfo> {
         logger.info("查询用户开启AI功能的云桌面列表：userId={}", userId)
-        val records = workspaceJoinDao.fetchWindowsWorkspacesSimple(
+        val owned = workspaceJoinDao.fetchWindowsWorkspacesSimple(
             dslContext = dslContext,
             owner = userId,
             status = WorkspaceStatus.RUNNING,
             coffeeAi = true
         )
+        val personalFallback = personalAiWorkspacesWithoutSharedOwner(userId, owned.map { it.workspaceName }.toSet())
+        val records = (owned + personalFallback).distinctBy { it.workspaceName }
         if (records.isEmpty()) return emptyList()
 
         val workspaceNames = records.map { it.workspaceName }
@@ -282,16 +344,83 @@ class CoffeeAIService @Autowired constructor(
             }
         logger.info("return records workspace names: ${records.map { it.workspaceName }}")
         return records.map { record ->
+            val displayName = record.displayName.takeIf { it != "NO_CHECK" } ?: record.workspaceName
             WorkspaceAiInfo(
                 workspaceName = record.workspaceName,
-                displayName = record.displayName.takeIf { it != "NO_CHECK" } ?: record.workspaceName,
+                displayName = displayName,
                 ip = record.ip ?: "",
                 envId = envIdMap[record.workspaceName]?.takeIf { it.isNotBlank() } ?: "",
                 projectId = record.projectId.takeIf { it != "NO_CHECK" } ?: "",
                 zoneConfigType = record.zoneId?.let { zoneTypeMap[it] } ?: "",
-                os = record.os
+                os = record.os,
+                owner = if (record.ownerType == WorkspaceOwnerType.PERSONAL) record.createUserId else userId,
+                createUserId = record.createUserId,
+                ownerType = record.ownerType.name,
+                status = record.status.name,
+                imateEnabled = record.coffeeAi == true
             )
         }
+    }
+
+    private fun personalAiWorkspacesWithoutSharedOwner(
+        userId: String,
+        alreadyListed: Set<String>
+    ): List<WorkspaceRecordWithWindows> {
+        val personalNames = workspaceDao.limitFetchUserWorkspace(
+            dslContext = dslContext,
+            userId = userId,
+            ownerType = WorkspaceOwnerType.PERSONAL
+        )?.asSequence()
+            ?.filter {
+                it.status == WorkspaceStatus.RUNNING &&
+                    it.coffeeAi == true &&
+                    it.workspaceName !in alreadyListed
+            }
+            ?.map { it.workspaceName }
+            ?.toSet()
+            .orEmpty()
+        if (personalNames.isEmpty()) {
+            return emptyList()
+        }
+        return workspaceJoinDao.fetchWindowsWorkspaces(
+            dslContext = dslContext,
+            workspaceNames = personalNames
+        ).filter { it.status == WorkspaceStatus.RUNNING && it.coffeeAi == true }
+    }
+
+    private fun assertWorkspaceUsable(
+        inspect: ImateWorkspaceInspect,
+        username: String,
+        workspaceName: String
+    ) {
+        if (!inspect.exists) {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
+                params = arrayOf(workspaceName)
+            )
+        }
+        if (!inspect.belongsToUser) {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
+                params = arrayOf(
+                    "workspace $workspaceName owner is ${inspect.owner ?: "unknown"}, not $username"
+                )
+            )
+        }
+        if (!inspect.usable) {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
+                params = arrayOf(
+                    "workspace $workspaceName owner=${inspect.owner} status=${inspect.status} " +
+                        "imateEnabled=${inspect.imateEnabled} reason=${inspect.reason}"
+                )
+            )
+        }
+    }
+
+    private fun normalizeExpirationMinutes(expirationMinutes: Long?): Long {
+        val requested = expirationMinutes ?: TOKEN_EXPIRATION_MINUTES
+        return requested.coerceIn(1, TOKEN_MAX_EXPIRATION_MINUTES)
     }
 
     fun enableCoffeeAI(workspaceNames: List<String>) {

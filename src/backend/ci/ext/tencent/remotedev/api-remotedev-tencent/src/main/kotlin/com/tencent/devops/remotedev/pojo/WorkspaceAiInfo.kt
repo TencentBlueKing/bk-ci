@@ -18,5 +18,15 @@ data class WorkspaceAiInfo(
     @get:Schema(title = "云桌面地域类型", required = false)
     val zoneConfigType: String,
     @get:Schema(title = "操作系统", required = false)
-    val os: OS?
+    val os: OS?,
+    @get:Schema(title = "分身实际所属者", required = false)
+    val owner: String? = null,
+    @get:Schema(title = "创建人", required = false)
+    val createUserId: String? = null,
+    @get:Schema(title = "归属类型 PERSONAL / PROJECT / PROJECT_PUBLIC", required = false)
+    val ownerType: String? = null,
+    @get:Schema(title = "分身状态", required = false)
+    val status: String? = null,
+    @get:Schema(title = "是否开启 imate", required = false)
+    val imateEnabled: Boolean? = null
 )
