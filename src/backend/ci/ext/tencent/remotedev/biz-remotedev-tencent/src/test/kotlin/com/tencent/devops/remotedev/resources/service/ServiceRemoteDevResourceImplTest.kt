@@ -4,9 +4,11 @@ import com.tencent.devops.remotedev.config.BkConfig
 import com.tencent.devops.remotedev.pojo.DesktopTokenSign
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.project.WeSecProjectWorkspace
+import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.remotedev.service.RemotedevSdkService
 import io.mockk.every
 import io.mockk.mockk
+import org.apache.commons.codec.digest.DigestUtils
 import org.junit.jupiter.api.Test
 
 class ServiceRemoteDevResourceImplTest {
@@ -43,8 +45,10 @@ class ServiceRemoteDevResourceImplTest {
             machineType = "",
             macAddress = ""
         )
-        val sign = DesktopTokenSign(
-            fingerprint = "3E919A2223D81E2DD558F29692461351",
+        // 用与生产相同的算法动态生成指纹与签名，避免在代码中硬编码真实 token 及其派生值
+        val fingerprint = DigestUtils.md5Hex("${ws.macAddress}$DESKTOP_SDK_TOKEN").uppercase()
+        val baseSign = DesktopTokenSign(
+            fingerprint = fingerprint,
             appId = "appId",
             fileName = "fileName",
             fileVersion = "fileVersion",
@@ -54,13 +58,29 @@ class ServiceRemoteDevResourceImplTest {
             sha1 = "sha1",
             timestamp = 123,
             publicKey = "publicKey",
-            sign = "EF988B15567B548C72F290BE01418840DECE8514"
+            sign = ""
+        )
+        val unsigned = "${baseSign.fingerprint}," +
+            "${baseSign.appId}," +
+            "${baseSign.fileName}," +
+            "${baseSign.fileVersion}," +
+            "${baseSign.fileUpdateTime}," +
+            "${baseSign.productName}," +
+            "${baseSign.productVersion}," +
+            "${baseSign.sha1}," +
+            "${baseSign.timestamp}," +
+            baseSign.publicKey
+        val sign = baseSign.copy(
+            sign = ShaUtils.hmacSha1(
+                DESKTOP_SDK_TOKEN.toByteArray(),
+                unsigned.toByteArray()
+            ).uppercase()
         )
         workspaceTemplate.check(ws, sign, ws.innerIp!!)
     }
 
     companion object {
-        // 与下方 fingerprint、sign 固定值对应的测试 token，用于校验 md5 与 hmacSha1 算法
-        private const val DESKTOP_SDK_TOKEN = "1111"
+        // 仅用于测试的任意 token，签名逻辑通过动态计算校验，与真实 token 无关
+        private const val DESKTOP_SDK_TOKEN = "123456"
     }
 }
