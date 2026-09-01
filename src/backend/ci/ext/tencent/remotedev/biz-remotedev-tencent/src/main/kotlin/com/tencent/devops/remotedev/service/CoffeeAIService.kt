@@ -50,6 +50,7 @@ import com.tencent.devops.remotedev.pojo.ImateTokenSession
 import com.tencent.devops.remotedev.pojo.ImateWorkspaceInspect
 import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfigType
 import com.tencent.devops.remotedev.pojo.WorkspaceAiInfo
+import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
 import com.tencent.devops.remotedev.pojo.WorkspaceRecordWithWindows
 import com.tencent.devops.remotedev.pojo.WorkspaceRegistration
 import com.tencent.devops.remotedev.pojo.WorkspaceSearch
@@ -336,14 +337,11 @@ class CoffeeAIService @Autowired constructor(
         val enriched = if (avatar == null) {
             inspect
         } else {
-            CoffeeAIAvatarSupport.applyAvatarReadiness(
-                inspect.copy(
-                    digitalAvatarId = avatar.digitalAvatarId,
-                    agentId = avatar.agentId,
-                    agentName = avatar.agentName,
-                    displayName = inspect.displayName ?: CoffeeAIAvatarSupport.displayNameOf(avatar)
-                ),
-                avatar
+            inspect.copy(
+                digitalAvatarId = avatar.digitalAvatarId,
+                agentId = avatar.agentId,
+                agentName = avatar.agentName,
+                displayName = inspect.displayName ?: CoffeeAIAvatarSupport.displayNameOf(avatar)
             )
         }
         return if (explicitAvatar == null && listed.listed && avatar == null) {
@@ -483,12 +481,20 @@ class CoffeeAIService @Autowired constructor(
 
     fun getAiWorkspaceList(userId: String): List<WorkspaceAiInfo> {
         logger.info("查询用户开启AI功能的云桌面列表：userId={}", userId)
-        val workspaceNames = workspaceDao.fetchWorkspaceNamesByCreator(
+        val workspaceNames = workspaceDao.limitFetchUserWorkspace(
             dslContext = dslContext,
             userId = userId,
-            status = WorkspaceStatus.RUNNING,
-            coffeeAi = true
-        )
+            ownerType = WorkspaceOwnerType.PERSONAL
+        ).orEmpty()
+            .asSequence()
+            .filter {
+                it.createUserId == userId &&
+                    it.ownerType == WorkspaceOwnerType.PERSONAL &&
+                    it.status == WorkspaceStatus.RUNNING &&
+                    it.coffeeAi == true
+            }
+            .map { it.workspaceName }
+            .toSet()
         if (workspaceNames.isEmpty()) return emptyList()
         val records = workspaceJoinDao.fetchWindowsWorkspaces(
             dslContext = dslContext,
@@ -518,7 +524,7 @@ class CoffeeAIService @Autowired constructor(
                 projectId = record.projectId.takeIf { it != "NO_CHECK" } ?: "",
                 zoneConfigType = record.zoneId?.let { zoneTypeMap[it] } ?: "",
                 os = record.os,
-                owner = record.createUserId,
+                owner = userId,
                 createUserId = record.createUserId,
                 ownerType = record.ownerType.name,
                 status = record.status.name,

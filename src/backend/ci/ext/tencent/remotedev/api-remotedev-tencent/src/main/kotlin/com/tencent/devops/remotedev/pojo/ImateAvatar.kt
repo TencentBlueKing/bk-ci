@@ -17,11 +17,5 @@ data class ImateAvatar(
     @get:Schema(title = "展示名")
     val displayName: String? = null,
     @get:Schema(title = "登记所属者")
-    val owner: String? = null,
-    @get:Schema(title = "Agent 运行模式")
-    val agentMode: String? = null,
-    @get:Schema(title = "Hermes 对话通道是否就绪")
-    val chatReady: Boolean? = null,
-    @get:Schema(title = "Hermes 插件是否就绪")
-    val pluginReady: Boolean? = null
+    val owner: String? = null
 )

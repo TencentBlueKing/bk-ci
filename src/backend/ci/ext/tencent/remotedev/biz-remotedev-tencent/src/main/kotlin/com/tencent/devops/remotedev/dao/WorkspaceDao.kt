@@ -845,27 +845,6 @@ class WorkspaceDao {
         }
     }
 
-    /**
-     * 只按工作区创建人查，不走分享表。
-     */
-    fun fetchWorkspaceNamesByCreator(
-        dslContext: DSLContext,
-        userId: String,
-        status: WorkspaceStatus? = null,
-        coffeeAi: Boolean? = null
-    ): Set<String> {
-        with(TWorkspace.T_WORKSPACE) {
-            var query = dslContext.select(NAME).from(this).where(CREATOR.eq(userId))
-            if (status != null) {
-                query = query.and(STATUS.eq(status.ordinal))
-            }
-            if (coffeeAi != null) {
-                query = query.and(COFFEE_AI.eq(ByteUtils.bool2Byte(coffeeAi)))
-            }
-            return query.fetch(NAME).toSet()
-        }
-    }
-
     companion object {
         private const val BATCH_QUERY_SIZE = 50
         val workspaceMapper = TWorkspaceRecordJooqMapper()
