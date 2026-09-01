@@ -39,6 +39,7 @@ import com.tencent.devops.environment.pojo.slave.SlaveGateway
 import com.tencent.devops.environment.pojo.thirdpartyagent.AgentBuildDetail
 import com.tencent.devops.environment.pojo.thirdpartyagent.BatchUpdateParallelTaskCountData
 import com.tencent.devops.environment.pojo.thirdpartyagent.OfflinePeriod
+import com.tencent.devops.environment.pojo.thirdpartyagent.ReInstallResp
 import com.tencent.devops.environment.pojo.thirdpartyagent.TPAInstallType
 import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentAction
 import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentDetail
@@ -131,6 +132,24 @@ interface UserThirdPartyAgentResource {
         @QueryParam("agentType")
         agentType: AgentType?
     ): Result<String>
+
+    @Operation(summary = "生成重新安装链接")
+    @GET
+    @Path("/projects/{projectId}/os/{os}/generateReInstallLink")
+    fun generateReInstallLink(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "操作系统", required = true)
+        @PathParam("os")
+        os: OS,
+        @Parameter(description = "重装使用的AgentHashId", required = false)
+        @QueryParam("reInstallId")
+        reInstallId: String
+    ): Result<ReInstallResp>
 
     @Operation(summary = "获取网关列表")
     @GET

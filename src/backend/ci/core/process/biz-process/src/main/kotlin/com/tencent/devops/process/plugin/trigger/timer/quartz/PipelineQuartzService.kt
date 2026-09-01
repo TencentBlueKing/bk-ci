@@ -30,6 +30,7 @@ package com.tencent.devops.process.plugin.trigger.timer.quartz
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.service.utils.SpringContextUtil
@@ -217,11 +218,14 @@ class PipelineJobBean(
             }
 
             watcher.start("projectRouterTagCheck")
-            val projectRouterTagCheck = client.get(ServiceProjectTagResource::class)
-                .checkProjectRouter(pipelineTimer.projectId).data ?: return
-            if (!projectRouterTagCheck) {
-                logger.warn("timePipeline ${pipelineTimer.projectId} router tag is not this cluster")
-                return
+            // 创作流部署集群与项目所属集群不一致，跳过集群校验，否则定时任务不会触发
+            if (pipelineTimer.channelCode != ChannelCode.CREATIVE_STREAM) {
+                val projectRouterTagCheck = client.get(ServiceProjectTagResource::class)
+                    .checkProjectRouter(pipelineTimer.projectId).data ?: return
+                if (!projectRouterTagCheck) {
+                    logger.warn("timePipeline ${pipelineTimer.projectId} router tag is not this cluster")
+                    return
+                }
             }
 
             var find = false

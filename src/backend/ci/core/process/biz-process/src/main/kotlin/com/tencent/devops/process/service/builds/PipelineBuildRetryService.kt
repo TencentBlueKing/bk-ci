@@ -360,6 +360,7 @@ class PipelineBuildRetryService @Autowired constructor(
                         paramMap[PIPELINE_RETRY_START_TASK_ID] = BuildParameters(
                             key = PIPELINE_RETRY_START_TASK_ID, value = element.id!!
                         )
+                        putRetryTaskInStageId(paramMap, s.id!!)
                         return
                     }
                     if (element.id == taskId || element.stepId == taskId) {
@@ -425,6 +426,7 @@ class PipelineBuildRetryService @Autowired constructor(
                 key = PIPELINE_SKIP_FAILED_TASK, value = skipFailedTask ?: false,
                 valueType = BuildFormPropertyType.TEMPORARY
             )
+            putRetryTaskInStageId(paramMap, stage.id!!)
             return true
         }
         // 子Job/子插件级重试
@@ -514,14 +516,12 @@ class PipelineBuildRetryService @Autowired constructor(
             key = PIPELINE_SKIP_FAILED_TASK, value = skipFailedTask,
             valueType = BuildFormPropertyType.TEMPORARY
         )
+        // 结束后任务级重试也需要目标 StageId，以便 startBuild 跳过前序已完成 Stage、不清空 checkIn
+        putRetryTaskInStageId(paramMap, stage.id!!)
         // 运行中(其它子Job还在跑)对已失败子Job/子插件做局部重试：补写运行中重试参数
         if (!buildInfo.isFinish()) {
             paramMap[PIPELINE_RETRY_RUNNING_BUILD] = BuildParameters(
                 key = PIPELINE_RETRY_RUNNING_BUILD, value = true,
-                valueType = BuildFormPropertyType.TEMPORARY
-            )
-            paramMap[PIPELINE_RETRY_TASK_IN_STAGE_ID] = BuildParameters(
-                key = PIPELINE_RETRY_TASK_IN_STAGE_ID, value = stage.id!!,
                 valueType = BuildFormPropertyType.TEMPORARY
             )
             // 目标是已结束的“子容器”，checkStatus 据此校验子Job已结束；矩阵父容器仍在运行不作为校验对象
@@ -612,16 +612,13 @@ class PipelineBuildRetryService @Autowired constructor(
             value = skipFailedTask ?: false,
             valueType = BuildFormPropertyType.TEMPORARY
         )
+        // 结束后任务级重试也需要目标 StageId，以便 startBuild 跳过前序已完成 Stage、不清空 checkIn
+        putRetryTaskInStageId(paramMap, stage.id!!)
         // 重试运行中的构建
         if (!buildInfo.isFinish()) {
             paramMap[PIPELINE_RETRY_RUNNING_BUILD] = BuildParameters(
                 key = PIPELINE_RETRY_RUNNING_BUILD,
                 value = true,
-                valueType = BuildFormPropertyType.TEMPORARY
-            )
-            paramMap[PIPELINE_RETRY_TASK_IN_STAGE_ID] = BuildParameters(
-                key = PIPELINE_RETRY_TASK_IN_STAGE_ID,
-                value = stage.id!!,
                 valueType = BuildFormPropertyType.TEMPORARY
             )
             paramMap[PIPELINE_RETRY_TASK_IN_CONTAINER_ID] = BuildParameters(
@@ -630,6 +627,14 @@ class PipelineBuildRetryService @Autowired constructor(
                 valueType = BuildFormPropertyType.TEMPORARY
             )
         }
+    }
+
+    private fun putRetryTaskInStageId(paramMap: MutableMap<String, BuildParameters>, stageId: String) {
+        paramMap[PIPELINE_RETRY_TASK_IN_STAGE_ID] = BuildParameters(
+            key = PIPELINE_RETRY_TASK_IN_STAGE_ID,
+            value = stageId,
+            valueType = BuildFormPropertyType.TEMPORARY
+        )
     }
 
     private  fun isSkipTask(
