@@ -68,7 +68,7 @@ class PipelineTemplateVersionDeleteHandler @Autowired constructor(
     private val dslContext: DSLContext,
     private val pipelineTemplateResourceService: PipelineTemplateResourceService,
     private val pipelineTemplateInfoService: PipelineTemplateInfoService,
-    private val pipelineYamlFacadeService: PipelineYamlFacadeService
+    private val pipelineYamlFacadeService: PipelineYamlFacadeService,
 private val publicVarGroupReferManageService: PublicVarGroupReferManageService
 
 ) {
