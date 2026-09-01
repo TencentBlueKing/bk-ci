@@ -1,21 +1,19 @@
 package com.tencent.devops.auth.service.oauth2
 
 import com.tencent.devops.auth.constant.AuthMessageCode
+import com.tencent.devops.auth.crypto.Oauth2AccessTokenCryptoHelper
 import com.tencent.devops.auth.dao.AuthOauth2AccessTokenDao
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.api.util.AESUtil
 import com.tencent.devops.model.auth.tables.records.TAuthOauth2AccessTokenRecord
 import org.jooq.DSLContext
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 @Service
 class Oauth2AccessTokenService(
     private val oauth2AccessTokenDao: AuthOauth2AccessTokenDao,
-    private val dslContext: DSLContext
+    private val dslContext: DSLContext,
+    private val oauth2AccessTokenCryptoHelper: Oauth2AccessTokenCryptoHelper
 ) {
-    @Value("\${aes.auth:#{null}}")
-    private val aesKey = ""
 
     fun get(
         clientId: String,
@@ -44,7 +42,7 @@ class Oauth2AccessTokenService(
             clientId = clientId,
             refreshToken = refreshToken,
             userName = userName,
-            passWord = passWord?.let { AESUtil.encrypt(aesKey, passWord) },
+            passWord = passWord?.let(oauth2AccessTokenCryptoHelper::encryptSm4ButAes),
             grantType = grantType
         )
     }
@@ -64,12 +62,13 @@ class Oauth2AccessTokenService(
             dslContext = dslContext,
             clientId = clientId,
             userName = userName,
-            passWord = passWord?.let { AESUtil.encrypt(aesKey, passWord) },
+            passWord = passWord?.let(oauth2AccessTokenCryptoHelper::encryptSm4ButAes),
             grantType = grantType,
             accessToken = accessToken,
             refreshToken = refreshToken,
             expiredTime = expiredTime,
-            scopeId = scopeId
+            scopeId = scopeId,
+            aesKeySha = oauth2AccessTokenCryptoHelper.currentKeySha()
         )
     }
 
