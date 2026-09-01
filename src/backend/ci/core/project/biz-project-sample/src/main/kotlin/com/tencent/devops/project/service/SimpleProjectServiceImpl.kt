@@ -45,7 +45,6 @@ import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.project.tables.records.TProjectRecord
 import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.dao.ProjectDao
-import com.tencent.devops.project.dao.ProjectFavorDao
 import com.tencent.devops.project.dao.ProjectUpdateHistoryDao
 import com.tencent.devops.project.jmx.api.ProjectJmxApi
 import com.tencent.devops.project.pojo.OperationalProductVO
@@ -82,8 +81,7 @@ class SimpleProjectServiceImpl @Autowired constructor(
     projectApprovalService: ProjectApprovalService,
     clientTokenService: ClientTokenService,
     profile: Profile,
-    projectUpdateHistoryDao: ProjectUpdateHistoryDao,
-    projectFavorDao: ProjectFavorDao
+    projectUpdateHistoryDao: ProjectUpdateHistoryDao
 ) : AbsProjectServiceImpl(
     projectPermissionService = projectPermissionService,
     dslContext = dslContext,
@@ -100,8 +98,7 @@ class SimpleProjectServiceImpl @Autowired constructor(
     projectApprovalService = projectApprovalService,
     clientTokenService = clientTokenService,
     profile = profile,
-    projectUpdateHistoryDao = projectUpdateHistoryDao,
-    projectFavorDao = projectFavorDao
+    projectUpdateHistoryDao = projectUpdateHistoryDao
 ) {
 
     override fun getDeptInfo(userId: String): UserDeptDetail {

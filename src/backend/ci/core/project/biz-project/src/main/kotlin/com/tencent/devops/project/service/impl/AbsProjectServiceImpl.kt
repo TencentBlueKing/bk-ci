@@ -127,6 +127,7 @@ import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.context.annotation.Lazy
 import org.springframework.dao.DuplicateKeyException
 import java.io.File
 import java.io.InputStream
@@ -149,9 +150,12 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
     private val projectApprovalService: ProjectApprovalService,
     private val clientTokenService: ClientTokenService,
     private val profile: Profile,
-    private val projectUpdateHistoryDao: ProjectUpdateHistoryDao,
-    private val projectFavorDao: ProjectFavorDao
+    private val projectUpdateHistoryDao: ProjectUpdateHistoryDao
 ) : ProjectService {
+
+    @Autowired
+    @Lazy
+    private lateinit var projectFavorDao: ProjectFavorDao
 
     override fun validate(validateType: ProjectValidateType, name: String, projectId: String?) {
         if (name.isBlank()) {
