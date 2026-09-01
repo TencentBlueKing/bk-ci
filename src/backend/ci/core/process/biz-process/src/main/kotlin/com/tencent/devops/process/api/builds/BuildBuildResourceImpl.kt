@@ -113,14 +113,7 @@ class BuildBuildResourceImpl @Autowired constructor(
         if (buildId.isBlank()) {
             throw ParamBlankException("Invalid buildId")
         }
-        // 按项目+流水线+构建三要素精确查询，避免路径参数不一致时也能查到构建
-        pipelineRuntimeService.getBuildInfo(projectId, pipelineId, buildId)
-            ?: throw ErrorCodeException(
-                statusCode = Response.Status.NOT_FOUND.statusCode,
-                errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
-                params = arrayOf(buildId)
-            )
-        val buildHistory = pipelineRuntimeService.getBuildHistoryById(projectId, buildId)
+        val buildHistory = pipelineRuntimeService.getBuildHistoryById(projectId, pipelineId, buildId)
             ?: throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
                 errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
