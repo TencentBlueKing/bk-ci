@@ -48,17 +48,46 @@ class CoffeeAIAvatarSupportTest {
         assertFalse(CoffeeAIAvatarSupport.markMissingAvatar(alreadyBad).usable)
     }
 
+    @Test
+    fun `hermes chatReady false marks otherwise usable inspect`() {
+        val marked = CoffeeAIAvatarSupport.applyAvatarReadiness(
+            inspect(usable = true, reason = null),
+            avatar(chatReady = false, pluginReady = false, agentMode = "HERMES")
+        )
+        assertFalse(marked.usable)
+        assertEquals(CoffeeAIAvatarSupport.REASON_AGENT_CHAT_NOT_READY, marked.reason)
+        assertEquals(false, marked.chatReady)
+        assertEquals("HERMES", marked.agentMode)
+    }
+
+    @Test
+    fun `null chatReady does not flip usable`() {
+        val kept = CoffeeAIAvatarSupport.applyAvatarReadiness(
+            inspect(usable = true, reason = null),
+            avatar(chatReady = null, agentMode = "OPENCLAW")
+        )
+        assertEquals(true, kept.usable)
+        assertEquals(null, kept.reason)
+        assertEquals("OPENCLAW", kept.agentMode)
+    }
+
     private fun avatar(
         id: String = "av-1",
         workspaceName: String = "ins-1",
         displayName: String? = null,
-        agentName: String? = null
+        agentName: String? = null,
+        agentMode: String? = null,
+        chatReady: Boolean? = null,
+        pluginReady: Boolean? = null
     ) = ImateAvatar(
         digitalAvatarId = id,
         agentId = "agent-$id",
         agentName = agentName,
         workspaceName = workspaceName,
-        displayName = displayName
+        displayName = displayName,
+        agentMode = agentMode,
+        chatReady = chatReady,
+        pluginReady = pluginReady
     )
 
     private fun inspect(usable: Boolean, reason: String?) = ImateWorkspaceInspect(

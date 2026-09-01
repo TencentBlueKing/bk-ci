@@ -39,5 +39,11 @@ data class ImateWorkspaceInspect(
     @get:Schema(title = "Agent ID")
     val agentId: String? = null,
     @get:Schema(title = "Agent 名称")
-    val agentName: String? = null
+    val agentName: String? = null,
+    @get:Schema(title = "Agent 运行模式")
+    val agentMode: String? = null,
+    @get:Schema(title = "Hermes 对话通道是否就绪")
+    val chatReady: Boolean? = null,
+    @get:Schema(title = "Hermes 插件是否就绪")
+    val pluginReady: Boolean? = null
 )

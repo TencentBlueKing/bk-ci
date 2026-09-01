@@ -8,6 +8,7 @@ import com.tencent.devops.remotedev.pojo.ImateWorkspaceInspect
  */
 object CoffeeAIAvatarSupport {
     const val REASON_NO_DIGITAL_AVATAR = "NO_DIGITAL_AVATAR"
+    const val REASON_AGENT_CHAT_NOT_READY = "AGENT_CHAT_NOT_READY"
 
     fun displayNameOf(avatar: ImateAvatar): String {
         return avatar.displayName?.takeIf { it.isNotBlank() }
@@ -27,5 +28,24 @@ object CoffeeAIAvatarSupport {
             return inspect
         }
         return inspect.copy(usable = false, reason = REASON_NO_DIGITAL_AVATAR)
+    }
+
+    /**
+     * Hermes 明确 chatReady=false 时，构建态不要当成可会话。
+     * chatReady 为 null（非 Hermes 或尚未上报）保持原 usable。
+     */
+    fun applyAvatarReadiness(
+        inspect: ImateWorkspaceInspect,
+        avatar: ImateAvatar
+    ): ImateWorkspaceInspect {
+        val withFields = inspect.copy(
+            agentMode = avatar.agentMode,
+            chatReady = avatar.chatReady,
+            pluginReady = avatar.pluginReady
+        )
+        if (avatar.chatReady != false || !withFields.usable) {
+            return withFields
+        }
+        return withFields.copy(usable = false, reason = REASON_AGENT_CHAT_NOT_READY)
     }
 }
