@@ -30,6 +30,7 @@ package com.tencent.devops.log.cron.impl
 import com.tencent.devops.common.es.client.LogClient
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.utils.KubernetesUtils
 import com.tencent.devops.log.configuration.StorageProperties
 import com.tencent.devops.log.cron.IndexCleanJob
 import com.tencent.devops.log.util.IndexNameUtils.LOG_INDEX_PREFIX
@@ -66,37 +67,47 @@ class IndexCleanJobESImpl @Autowired constructor(
      */
     @Scheduled(cron = "0 0 2 * * ?")
     override fun cleanIndex() {
-        logger.info("Start to clean index")
-        // #9602 每个实例轮流获得锁进行幂等清理操作
-        RedisLock(redisOperation, ES_INDEX_CLOSE_JOB_KEY, 20).use { lock ->
-            if (lock.tryLock()) {
-                try {
-                    makeColdESIndexes()
-                    deleteESIndexes()
-                } catch (ignore: Throwable) {
-                    logger.warn("Fail to clean the index", ignore)
-                }
+        val namespace = KubernetesUtils.getNamespace()
+        logger.info("[$namespace] Start to clean index")
+        // #9602 锁 key 增加 namespace 后缀，避免多环境共用 Redis 时互相饿死
+        RedisLock(redisOperation, getCleanIndexJobRedisKey(namespace), LOCK_EXPIRE_SECONDS).use { lock ->
+            if (!lock.tryLock()) {
+                logger.info("[$namespace] The other process is processing clean job, ignore")
+                return
             }
+            // 降冷与删除互不影响，单边异常不应连带跳过另一边
+            runCatching { makeColdESIndexes() }
+                .onFailure { logger.warn("[$namespace] Fail to make cold indices", it) }
+            runCatching { deleteESIndexes() }
+                .onFailure { logger.warn("[$namespace] Fail to delete indices", it) }
         }
     }
 
     private fun makeColdESIndexes() {
+        val deathLine = LocalDateTime.now()
+            .minus(coldIndexInDay.toLong(), ChronoUnit.DAYS)
+        logger.info("Get the cold death line - ($deathLine)")
         client.getActiveClients().forEach { c ->
-            val response = c.restClient
-                .indices()
-                .get(GetIndexRequest("$LOG_INDEX_PREFIX*"), RequestOptions.DEFAULT)
-            val indexNames = response.indices
-            logger.info("Get all indices in es[${c.clusterName}] line: $indexNames")
-            if (indexNames.isEmpty()) {
-                return
+            val indexNames = try {
+                c.restClient
+                    .indices()
+                    .get(GetIndexRequest("$LOG_INDEX_PREFIX*"), RequestOptions.DEFAULT)
+                    .indices
+            } catch (e: Throwable) {
+                logger.warn("[${c.clusterName}] Fail to list indices for cold", e)
+                return@forEach
             }
-
-            val deathLine = LocalDateTime.now()
-                .minus(coldIndexInDay.toLong(), ChronoUnit.DAYS)
-            logger.info("Get the death line - ($deathLine)")
+            if (indexNames.isEmpty()) {
+                return@forEach
+            }
+            logger.info("Get all indices in es[${c.clusterName}] count=${indexNames.size}")
             indexNames.forEach { index ->
-                if (expire(deathLine, index)) {
+                if (!expire(deathLine, index)) return@forEach
+                // 单个索引失败不影响后续索引继续被处理
+                try {
                     makeColdESIndex(c.restClient, index)
+                } catch (e: Throwable) {
+                    logger.warn("[${c.clusterName}][$index] Fail to make cold, skip", e)
                 }
             }
         }
@@ -113,21 +124,29 @@ class IndexCleanJobESImpl @Autowired constructor(
     }
 
     private fun deleteESIndexes() {
+        val deathLine = LocalDateTime.now()
+            .minus(deleteIndexInDay.toLong(), ChronoUnit.DAYS)
+        logger.info("Get the delete death line - ($deathLine)")
         client.getActiveClients().forEach { c ->
-            val response = c.restClient
-                .indices()
-                .get(GetIndexRequest("$LOG_INDEX_PREFIX*"), RequestOptions.DEFAULT)
-
-            if (response.indices.isEmpty()) {
-                return
+            val indexNames = try {
+                c.restClient
+                    .indices()
+                    .get(GetIndexRequest("$LOG_INDEX_PREFIX*"), RequestOptions.DEFAULT)
+                    .indices
+            } catch (e: Throwable) {
+                logger.warn("[${c.clusterName}] Fail to list indices for delete", e)
+                return@forEach
             }
-
-            val deathLine = LocalDateTime.now()
-                .minus(deleteIndexInDay.toLong(), ChronoUnit.DAYS)
-            logger.info("Get the death line - ($deathLine)")
-            response.indices.forEach { index ->
-                if (expire(deathLine, index)) {
+            if (indexNames.isEmpty()) {
+                return@forEach
+            }
+            indexNames.forEach { index ->
+                if (!expire(deathLine, index)) return@forEach
+                // 单个索引删除失败不影响后续索引继续被处理
+                try {
                     deleteESIndex(c.restClient, index)
+                } catch (e: Throwable) {
+                    logger.warn("[${c.clusterName}][$index] Fail to delete, skip", e)
                 }
             }
         }
@@ -143,5 +162,9 @@ class IndexCleanJobESImpl @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(IndexCleanJobESImpl::class.java)
         private const val ES_INDEX_CLOSE_JOB_KEY = "log:es:index:close:job:lock:key"
+        private const val LOCK_EXPIRE_SECONDS = 20L
+        private fun getCleanIndexJobRedisKey(namespace: String): String {
+            return "$ES_INDEX_CLOSE_JOB_KEY:$namespace"
+        }
     }
 }

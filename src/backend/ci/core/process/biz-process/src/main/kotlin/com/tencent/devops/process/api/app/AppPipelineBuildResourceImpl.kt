@@ -41,6 +41,7 @@ import com.tencent.devops.common.pipeline.pojo.StageReviewRequest
 import com.tencent.devops.common.pipeline.pojo.cascade.BuildCascadeProps
 import com.tencent.devops.common.quality.pojo.request.QualityReviewRequest
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.process.engine.pojo.builds.BuildHistoryQueryParam
 import com.tencent.devops.process.engine.service.PipelineBuildQualityService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.pojo.BuildHistory
@@ -77,7 +78,7 @@ class AppPipelineBuildResourceImpl @Autowired constructor(
         if (elementId.isBlank()) {
             throw ParamBlankException("Invalid buildId")
         }
-        val channelCode = if (projectId.startsWith("git_")) ChannelCode.GIT else ChannelCode.BS
+        val channelCode = if (projectId.startsWith("git_")) ChannelCode.GIT else ChannelCode.getRequestChannelCode()
         pipelineBuildQualityService.buildManualQualityGateReview(
             userId = userId,
             projectId = projectId,
@@ -106,7 +107,7 @@ class AppPipelineBuildResourceImpl @Autowired constructor(
         if (elementId.isBlank()) {
             throw ParamBlankException("Invalid buildId")
         }
-        val channelCode = if (projectId.startsWith("git_")) ChannelCode.GIT else ChannelCode.BS
+        val channelCode = if (projectId.startsWith("git_")) ChannelCode.GIT else ChannelCode.getRequestChannelCode()
         pipelineBuildFacadeService.buildManualReview(
             userId = userId,
             projectId = projectId,
@@ -114,7 +115,7 @@ class AppPipelineBuildResourceImpl @Autowired constructor(
             buildId = buildId,
             elementId = elementId,
             params = params,
-            channelCode = ChannelCode.BS,
+            channelCode = channelCode,
             checkPermission = ChannelCode.isNeedAuth(channelCode),
             stepId = null
         )
@@ -203,15 +204,14 @@ class AppPipelineBuildResourceImpl @Autowired constructor(
         debug: Boolean?,
         triggerAlias: List<String>?,
         triggerBranch: List<String>?,
-        triggerUser: List<String>?
+        triggerUser: List<String>?,
+        triggerEventTypes: List<String>?,
+        triggerNodeHashIds: List<String>?
     ): Result<BuildHistoryPage<BuildHistory>> {
         checkParam(userId, projectId, pipelineId, pageSize)
-        val result = pipelineBuildFacadeService.getHistoryBuild(
-            userId = userId,
+        val queryParam = BuildHistoryQueryParam(
             projectId = projectId,
             pipelineId = pipelineId,
-            page = page,
-            pageSize = pageSize,
             materialAlias = materialAlias,
             materialUrl = materialUrl,
             materialBranch = materialBranch,
@@ -234,7 +234,15 @@ class AppPipelineBuildResourceImpl @Autowired constructor(
             debug = debug,
             triggerAlias = triggerAlias,
             triggerBranch = triggerBranch,
-            triggerUser = triggerUser
+            triggerUser = triggerUser,
+            triggerEventTypes = triggerEventTypes,
+            triggerNodeHashIds = triggerNodeHashIds
+        )
+        val result = pipelineBuildFacadeService.getHistoryBuild(
+            userId = userId,
+            page = page,
+            pageSize = pageSize,
+            queryParam = queryParam
         )
         return Result(result)
     }
@@ -295,7 +303,7 @@ class AppPipelineBuildResourceImpl @Autowired constructor(
     ): Result<BuildManualStartupInfo> {
         checkParam(userId, projectId, pipelineId)
 
-        val channelCode = if (projectId.startsWith("git_")) ChannelCode.GIT else ChannelCode.BS
+        val channelCode = if (projectId.startsWith("git_")) ChannelCode.GIT else ChannelCode.getRequestChannelCode()
 
         return Result(
             pipelineBuildFacadeService.buildManualStartupInfo(
@@ -345,7 +353,7 @@ class AppPipelineBuildResourceImpl @Autowired constructor(
     ): Result<BuildId> {
         checkParam(userId, projectId, pipelineId)
 
-        val channelCode = if (projectId.startsWith("git_")) ChannelCode.GIT else ChannelCode.BS
+        val channelCode = if (projectId.startsWith("git_")) ChannelCode.GIT else ChannelCode.getRequestChannelCode()
 
         val buildNo = values["buildNo"]?.let { NumberUtils.toInt(it) }
 
@@ -375,7 +383,7 @@ class AppPipelineBuildResourceImpl @Autowired constructor(
             throw ParamBlankException("Invalid buildId")
         }
 
-        val channelCode = if (projectId.startsWith("git_")) ChannelCode.GIT else ChannelCode.BS
+        val channelCode = if (projectId.startsWith("git_")) ChannelCode.GIT else ChannelCode.getRequestChannelCode()
 
         pipelineBuildFacadeService.buildManualShutdown(
             userId = userId,
@@ -402,7 +410,7 @@ class AppPipelineBuildResourceImpl @Autowired constructor(
             throw ParamBlankException("Invalid buildId")
         }
 
-        val channelCode = if (projectId.startsWith("git_")) ChannelCode.GIT else ChannelCode.BS
+        val channelCode = if (projectId.startsWith("git_")) ChannelCode.GIT else ChannelCode.getRequestChannelCode()
 
         return Result(
             pipelineBuildFacadeService.retry(

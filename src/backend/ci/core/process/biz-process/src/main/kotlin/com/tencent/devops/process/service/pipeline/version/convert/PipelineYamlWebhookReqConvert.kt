@@ -37,6 +37,7 @@ import com.tencent.devops.process.engine.cfg.PipelineIdGenerator
 import com.tencent.devops.process.pojo.pipeline.version.PipelineVersionCreateReq
 import com.tencent.devops.process.pojo.pipeline.version.PipelineYamlWebhookReq
 import com.tencent.devops.process.service.pipeline.version.PipelineVersionCreateContext
+import com.tencent.devops.process.service.pipeline.version.PipelineVersionCreateContextParam
 import com.tencent.devops.process.service.pipeline.version.PipelineVersionGenerator
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -70,7 +71,8 @@ class PipelineYamlWebhookReqConvert @Autowired constructor(
             }
             logger.info(
                 "Start to convert yaml webhook request|$projectId|$pipelineId|" +
-                        "$branchName|$yamlFileName|yaml=$yaml"
+                        "${yamlFileInfo?.repoHashId}|${yamlFileInfo?.filePath}|" +
+                        "$branchName|$yamlFileName|$isDefaultBranch|$pullRequestUrl"
             )
             val (modelAndSetting, yamlWithVersion) = pipelineVersionGenerator.yaml2model(
                 userId = userId,
@@ -81,7 +83,11 @@ class PipelineYamlWebhookReqConvert @Autowired constructor(
             )
 
             // 生成流水线ID
-            val newPipelineId = pipelineId ?: pipelineIdGenerator.getNextId()
+            val newPipelineId = if (pipelineId.isNullOrBlank()) {
+                pipelineIdGenerator.getNextId()
+            } else {
+                pipelineId
+            }
             // 流水线名称实际取值优先级：setting > model > fileName
             val pipelineName = modelAndSetting.setting.pipelineName.takeIf {
                 it.isNotBlank()
@@ -89,16 +95,10 @@ class PipelineYamlWebhookReqConvert @Autowired constructor(
                 yamlFileName
             }
 
-            val versionStatus = if (isDefaultBranch) {
-                VersionStatus.RELEASED
+            val (versionStatus, versionAction) = if (isDefaultBranch) {
+                Pair(VersionStatus.RELEASED, PipelineVersionAction.CREATE_RELEASE)
             } else {
-                VersionStatus.BRANCH
-            }
-
-            val versionAction = if (isDefaultBranch) {
-                PipelineVersionAction.CREATE_RELEASE
-            } else {
-                PipelineVersionAction.CREATE_BRANCH
+                Pair(VersionStatus.BRANCH, PipelineVersionAction.CREATE_BRANCH)
             }
 
             val pipelineAsCodeSettings = modelAndSetting.setting.pipelineAsCodeSettings?.copy(
@@ -111,11 +111,11 @@ class PipelineYamlWebhookReqConvert @Autowired constructor(
                 pipelineAsCodeSettings = pipelineAsCodeSettings
             )
 
-            return pipelineVersionCreateContextFactory.create(
+            val contextParam = PipelineVersionCreateContextParam(
                 userId = userId,
                 projectId = projectId,
                 pipelineId = newPipelineId,
-                channelCode = ChannelCode.BS,
+                channelCode = ChannelCode.getRequestChannelCode(),
                 version = version,
                 model = modelAndSetting.model.copy(
                     name = pipelineName
@@ -125,11 +125,14 @@ class PipelineYamlWebhookReqConvert @Autowired constructor(
                 pipelineSettingWithoutVersion = pipelineSettingWithoutVersion,
                 versionStatus = versionStatus,
                 versionAction = versionAction,
+                yamlFileInfo = yamlFileInfo,
                 repoHashId = yamlFileInfo!!.repoHashId,
                 branchName = branchName
+            )
+            return pipelineVersionCreateContextFactory.create(
+                contextParam = contextParam
             ).copy(
                 enablePac = true,
-                yamlFileInfo = yamlFileInfo,
                 pullRequestUrl = pullRequestUrl,
                 pullRequestId = pullRequestId
             )

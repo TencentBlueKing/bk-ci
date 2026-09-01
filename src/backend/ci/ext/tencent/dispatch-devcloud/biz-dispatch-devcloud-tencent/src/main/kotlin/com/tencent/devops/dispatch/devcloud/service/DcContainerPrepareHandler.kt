@@ -237,16 +237,20 @@ class DcContainerPrepareHandler @Autowired constructor(
             val containerPoolFixed = if (containerPool.container!!.startsWith(registryHost!!)) {
                 Pool(
                     container = containerPool.container,
-                    Credential(registryUser!!, registryPwd!!),
-                    containerPool.performanceConfigId,
-                    containerPool.third
+                    credential = Credential(registryUser!!, registryPwd!!),
+                    performanceConfigId = containerPool.performanceConfigId,
+                    third = containerPool.third,
+                    persistence = containerPool.persistence,
+                    performanceUid = containerPool.performanceUid
                 )
             } else {
                 Pool(
-                    registryHost + "/" + containerPool.container,
-                    Credential(registryUser!!, registryPwd!!),
-                    containerPool.performanceConfigId,
-                    containerPool.third
+                    container = registryHost + "/" + containerPool.container,
+                    credential = Credential(registryUser!!, registryPwd!!),
+                    performanceConfigId = containerPool.performanceConfigId,
+                    third = containerPool.third,
+                    persistence = containerPool.persistence,
+                    performanceUid = containerPool.performanceUid
                 )
             }
 

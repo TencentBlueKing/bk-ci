@@ -1,6 +1,5 @@
 package com.tencent.devops.openapi.resources.apigw.desktop
 
-import com.tencent.devops.artifactory.api.ServiceArchiveComponentPkgResource
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.DateTimeUtil
@@ -10,12 +9,14 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.desktop.ApigwDeskTopStoreComponentResource
 import com.tencent.devops.openapi.api.apigw.pojo.StoreDailyStatisticInfo
 import com.tencent.devops.store.api.common.ServiceStoreComponentResource
+import com.tencent.devops.store.api.common.ServiceStoreInstalledComponentResource
 import com.tencent.devops.store.api.common.ServiceStoreStatisticResource
 import com.tencent.devops.store.pojo.common.InstallStoreReq
+import com.tencent.devops.store.pojo.common.InstalledComponentInfo
 import com.tencent.devops.store.pojo.common.MarketItem
 import com.tencent.devops.store.pojo.common.MarketMainItem
-import com.tencent.devops.store.pojo.common.StoreDetailInfo
 import com.tencent.devops.store.pojo.common.UnInstallReq
+import com.tencent.devops.store.pojo.common.deploy.UserComponentDeployInfo
 import com.tencent.devops.store.pojo.common.enums.RdTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreSortTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
@@ -90,14 +91,46 @@ class ApigwDeskTopStoreComponentResourceImpl @Autowired constructor(private val 
         )
     }
 
-    override fun getComponentDetailInfoById(
+    override fun getUserComponentDeployInfos(
         appCode: String?,
         apigwType: String?,
         userId: String,
         storeType: String,
-        storeId: String
-    ): Result<StoreDetailInfo?> {
-        return client.get(ServiceStoreComponentResource::class).getComponentDetailInfoById(userId, storeType, storeId)
+        projectCode: String?,
+        instanceId: String?,
+        keyword: String?,
+        page: Int,
+        pageSize: Int
+    ): Result<Page<UserComponentDeployInfo>> {
+        return client.get(ServiceStoreComponentResource::class).getUserComponentDeployInfos(
+            userId = userId,
+            storeType = storeType,
+            projectCode = projectCode,
+            instanceId = instanceId,
+            keyword = keyword,
+            page = page,
+            pageSize = pageSize
+        )
+    }
+
+    override fun getInstalledComponents(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectCode: String,
+        storeType: StoreTypeEnum,
+        instanceIds: Set<String>?,
+        page: Int,
+        pageSize: Int
+    ): Result<Page<InstalledComponentInfo>> {
+        return client.get(ServiceStoreInstalledComponentResource::class).getInstalledComponents(
+            userId = userId,
+            projectCode = projectCode,
+            storeType = storeType,
+            instanceIds = instanceIds,
+            page = page,
+            pageSize = pageSize
+        )
     }
 
     override fun installComponent(
@@ -124,28 +157,6 @@ class ApigwDeskTopStoreComponentResourceImpl @Autowired constructor(private val 
             storeType = storeType,
             storeCode = storeCode,
             unInstallReq = unInstallReq
-        )
-    }
-
-    override fun getComponentPkgDownloadUrl(
-        appCode: String?,
-        apigwType: String?,
-        userId: String,
-        projectCode: String,
-        storeType: StoreTypeEnum,
-        storeCode: String,
-        version: String,
-        osName: String?,
-        osArch: String?
-    ): Result<String> {
-        return client.get(ServiceArchiveComponentPkgResource::class).getComponentPkgDownloadUrl(
-            userId = userId,
-            projectId = projectCode,
-            storeType = storeType,
-            storeCode = storeCode,
-            version = version,
-            osName = osName,
-            osArch = osArch
         )
     }
 

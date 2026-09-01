@@ -25,6 +25,7 @@
                 :header-border="false"
                 :header-cell-style="{ background: '#fff' }"
                 :data="renderList"
+                :max-height="542"
                 :pagination="pagination"
                 @page-change="pageChanged"
                 @page-limit-change="pageCountChanged"

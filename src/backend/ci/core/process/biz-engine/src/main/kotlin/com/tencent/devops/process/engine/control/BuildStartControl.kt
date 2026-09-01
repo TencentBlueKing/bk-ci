@@ -228,7 +228,12 @@ class BuildStartControl @Autowired constructor(
                 retry()
                 return false
             }
-            val setting = pipelineRepositoryService.getSetting(projectId, pipelineId)
+            // #12697 按本次构建实际运行的版本读取设置,保证分支版本/调试版本的并发配置生效
+            val setting = pipelineRepositoryService.getSettingByPipelineVersion(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                pipelineVersion = buildInfo.version
+            )
 
             if (setting?.runLockType == PipelineRunLockType.MULTIPLE) {
                 if (buildInfo.status != BuildStatus.QUEUE_CACHE) {
@@ -506,8 +511,8 @@ class BuildStartControl @Autowired constructor(
                 userId = buildInfo.startUser,
                 buildId = buildId,
                 startTime = buildInfo.startTime,
-                triggerType = buildInfo.trigger
-            ),
+                triggerType = buildInfo.trigger,
+            ).apply { channelCode = buildInfo.channelCode.name },
             // build 启动，根据状态做响应的扩展广播消息给订阅者
             PipelineBuildStatusBroadCastEvent(
                 source = source,

@@ -39,6 +39,7 @@ import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.common.service.utils.SpringContextUtil
+import com.tencent.devops.environment.api.thirdpartyagent.ServiceAgentResource
 import com.tencent.devops.remotedev.common.Constansts.ADMIN_NAME
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.dao.WorkspaceDao
@@ -46,6 +47,8 @@ import com.tencent.devops.remotedev.dao.WorkspaceJoinDao
 import com.tencent.devops.remotedev.dao.WorkspaceOpHistoryDao
 import com.tencent.devops.remotedev.dao.WorkspaceWindowsDao
 import com.tencent.devops.remotedev.dispatch.kubernetes.interfaces.ServiceWorkspaceDispatchInterface
+import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.client.WorkspaceStartCloudClient
+import com.tencent.devops.remotedev.pojo.CoffeeAIDelete
 import com.tencent.devops.remotedev.pojo.OpHistoryCopyWriting
 import com.tencent.devops.remotedev.pojo.WebSocketActionType
 import com.tencent.devops.remotedev.pojo.WorkspaceAction
@@ -91,7 +94,8 @@ class DeleteControl @Autowired constructor(
     private val gitProxyTGitService: GitProxyTGitService,
     private val bkBaseService: BKBaseService,
     private val workspaceJoinDao: WorkspaceJoinDao,
-    private val workspaceWindowsDao: WorkspaceWindowsDao
+    private val workspaceWindowsDao: WorkspaceWindowsDao,
+    private val workspaceStartCloudClient: WorkspaceStartCloudClient
 ) {
 
     companion object {
@@ -112,9 +116,10 @@ class DeleteControl @Autowired constructor(
     fun deleteWorkspace(
         userId: String,
         workspaceName: String,
-        needPermission: Boolean = true
+        needPermission: Boolean = true,
+        delaySeconds: Int? = null
     ): Boolean {
-        logger.info("$userId delete workspace $workspaceName")
+        logger.info("$userId delete workspace $workspaceName with delaySeconds=$delaySeconds")
         val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName)
             ?: throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
@@ -151,7 +156,8 @@ class DeleteControl @Autowired constructor(
                     type = UpdateEventType.DELETE,
                     workspaceName = workspace.workspaceName,
                     mountType = workspace.workspaceMountType,
-                    appName = gameId.first
+                    appName = gameId.first,
+                    deleteDelaySeconds = delaySeconds
                 )
             )
 
@@ -175,14 +181,15 @@ class DeleteControl @Autowired constructor(
 
     fun deleteWorkspace4OP(
         userId: String,
-        workspaceName: String
+        workspaceName: String,
+        delaySeconds: Int? = null
     ): Boolean {
         val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName)
             ?: throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
                 params = arrayOf(workspaceName)
             )
-        val res = deleteWorkspace4System(userId, workspaceName)
+        val res = deleteWorkspace4System(userId, workspaceName, delaySeconds)
         if (res && workspace.status != WorkspaceStatus.DELIVERING_FAILED) {
 
             // 修复待分配的机器销毁时，拥有者为空发送通知没有相关人
@@ -209,11 +216,12 @@ class DeleteControl @Autowired constructor(
 
     fun batchDeleteWindowsWorkspace4OP(
         userId: String,
-        workspaceNames: Set<String>
+        workspaceNames: Set<String>,
+        delaySeconds: Int? = null
     ): Map<String, Boolean> {
         val result = mutableMapOf<String, Boolean>()
         workspaceNames.forEach {
-            result[it] = deleteWorkspace4System(userId, it)
+            result[it] = deleteWorkspace4System(userId, it, delaySeconds)
         }
         // 只发送删除成功的机器
         val deletedWorkspaces = result.filter { it.value }.keys
@@ -313,9 +321,10 @@ class DeleteControl @Autowired constructor(
     )
     fun deleteWorkspace4System(
         userId: String,
-        workspaceName: String
+        workspaceName: String,
+        delaySeconds: Int? = null
     ): Boolean {
-        logger.info("$userId delete workspace $workspaceName")
+        logger.info("$userId delete workspace $workspaceName with delaySeconds=$delaySeconds")
         RedisCallLimit(
             redisOperation,
             "$REDIS_CALL_LIMIT_KEY_PREFIX:workspace:$workspaceName",
@@ -352,7 +361,8 @@ class DeleteControl @Autowired constructor(
                     type = UpdateEventType.DELETE,
                     workspaceName = workspace.workspaceName,
                     mountType = workspace.workspaceMountType,
-                    appName = gameId.first
+                    appName = gameId.first,
+                    deleteDelaySeconds = delaySeconds
                 )
             )
             return true
@@ -438,6 +448,20 @@ class DeleteControl @Autowired constructor(
         // 删除时给 cmdb 去掉字段方便监控检索
         if (workspace.workspaceSystemType == WorkspaceSystemType.WINDOWS_GPU) {
             windowsAfterDelete(workspaceName, workspace)
+            kotlin.runCatching {
+                workspaceStartCloudClient.deleteCoffeeAIWorkspace(
+                    workspace.createUserId, CoffeeAIDelete(
+                        workspaceName = workspaceName
+                    )
+                )
+            }
+        }
+
+        // 删除时同时删除创作流节点，云桌面项目可能和创作流不一样，不传项目ID
+        try {
+            client.get(ServiceAgentResource::class).deleteCreateNode(operator, null, workspaceName)
+        } catch (e: Exception) {
+            logger.warn("delete workspace $workspaceName create node error", e)
         }
 
         notifyControl.dispatchWebsocketPushEvent(
@@ -467,9 +491,8 @@ class DeleteControl @Autowired constructor(
             )
         )
         val hostIdSub = windowsInfo?.hostIp?.split(".") ?: return
-        workspaceCommon.updateHostMonitor(
+        workspaceCommon.clearWorkspaceDimension(
             workspaceName = workspaceName,
-            props = mapOf("devx_meta" to ""),
             type = workspace.workspaceSystemType
         )
 
@@ -512,7 +535,7 @@ class DeleteControl @Autowired constructor(
         }
 
         var deleteImmediately = false
-        kotlin.runCatching {
+        runCatching {
             workspaceCommon.checkAndFixExceptionWS(
                 status = workspace.status,
                 userId = userId,

@@ -45,18 +45,8 @@ class OpTxPipelineResourceImpl @Autowired constructor(
             stages.forEach { buildStage ->
                 logger.info("cancel build with stage(buildId=${buildStage.buildId}, stageId=${buildStage.stageId}), " +
                     "status=${buildStage.status}, checkOut=${buildStage.checkOut}")
-                try {
-                    pipelineBuildFacadeService.buildManualShutdown(
-                        userId = "SYSTEM",
-                        projectId = buildStage.projectId,
-                        pipelineId = buildStage.pipelineId,
-                        buildId = buildStage.buildId,
-                        channelCode = ChannelCode.GIT,
-                        checkPermission = false
-                    )
+                if (cancelBuild(buildStage.projectId, buildStage.pipelineId, buildStage.buildId)) {
                     count++
-                } catch (ignore: Throwable) {
-                    logger.warn("cancel stage failed: ", ignore)
                 }
             }
         }
@@ -64,19 +54,9 @@ class OpTxPipelineResourceImpl @Autowired constructor(
             val builds = tencentPipelineBuildDao.listRunningErrorBuild(dslContext, buildTimeoutDays)
             builds.forEach { build ->
                 logger.info("cancel build with stage(buildId=${build.buildId}, " +
-                    "status=${build.status}")
-                try {
-                    pipelineBuildFacadeService.buildManualShutdown(
-                        userId = "SYSTEM",
-                        projectId = build.projectId,
-                        pipelineId = build.pipelineId,
-                        buildId = build.buildId,
-                        channelCode = ChannelCode.GIT,
-                        checkPermission = false
-                    )
+                    "status=${build.status})")
+                if (cancelBuild(build.projectId, build.pipelineId, build.buildId)) {
                     count++
-                } catch (ignore: Throwable) {
-                    logger.warn("cancel build failed: ", ignore)
                 }
             }
         }
@@ -110,5 +90,25 @@ class OpTxPipelineResourceImpl @Autowired constructor(
             )
         }
         return Result(deleted)
+    }
+
+    private fun cancelBuild(projectId: String, pipelineId: String, buildId: String): Boolean {
+        return try {
+            val channelCode = pipelineInfoDao.getPipelineInfo(
+                dslContext, projectId, pipelineId
+            )?.channel?.let { ChannelCode.getChannel(it) } ?: ChannelCode.GIT
+            pipelineBuildFacadeService.buildManualShutdown(
+                userId = "SYSTEM",
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                channelCode = channelCode,
+                checkPermission = false
+            )
+            true
+        } catch (ignore: Throwable) {
+            logger.warn("cancel build failed: ", ignore)
+            false
+        }
     }
 }

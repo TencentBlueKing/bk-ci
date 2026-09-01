@@ -6,13 +6,16 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.remotedev.api.user.UserRemoteDevStoreResource
 import com.tencent.devops.store.api.common.ServiceStoreComponentResource
+import com.tencent.devops.store.api.common.ServiceStoreComponentVersionResource
 import com.tencent.devops.store.pojo.common.InstallStoreReq
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.version.VersionInfo
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class UserRemoteDevStoreResourceImpl @Autowired constructor(private val client: Client) :
+class UserRemoteDevStoreResourceImpl @Autowired constructor(
+    private val client: Client
+) :
     UserRemoteDevStoreResource {
 
     override fun getStoreUpgradeVersionInfo(
@@ -24,7 +27,7 @@ class UserRemoteDevStoreResourceImpl @Autowired constructor(private val client: 
         osName: String?,
         osArch: String?
     ): Result<VersionInfo?> {
-        return client.get(ServiceStoreComponentResource::class).getStoreUpgradeVersionInfo(
+        return client.get(ServiceStoreComponentVersionResource::class).getStoreUpgradeVersionInfo(
             userId = userId,
             storeType = storeType,
             storeCode = storeCode,

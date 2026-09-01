@@ -30,6 +30,7 @@ package com.tencent.devops.store.atom.service
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.pojo.atom.AtomClassifyInfo
 import com.tencent.devops.store.pojo.atom.MarketAtomClassify
+import com.tencent.devops.store.pojo.common.enums.ServiceScopeEnum
 
 /**
  * 插件市场-插件分类业务逻辑类
@@ -41,7 +42,7 @@ interface MarketAtomClassifyService {
     /**
      * 获取所有插件分类信息
      */
-    fun getAllAtomClassify(): Result<List<MarketAtomClassify>>
+    fun getAllAtomClassify(serviceScope: ServiceScopeEnum?): Result<List<MarketAtomClassify>>
 
     /**
      * 获取插件分类信息

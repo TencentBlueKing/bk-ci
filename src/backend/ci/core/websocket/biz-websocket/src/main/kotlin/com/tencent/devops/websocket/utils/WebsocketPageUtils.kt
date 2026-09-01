@@ -27,21 +27,62 @@
 
 package com.tencent.devops.websocket.utils
 
+/**
+ * 将前端/推送传入的页面 URL 规范化为 WebSocket 注册与推送使用的 key。
+ * 约定：process 侧 buildPage() 产出的 key 须与本方法对“同一逻辑页”的规范化结果一致，
+ * 否则 changePage 注册的 key 与 push 查找的 key 不一致，会导致收不到推送。
+ */
 object WebsocketPageUtils {
 
-    @Suppress("ALL")
+    private const val CREATIVE_STREAM_PREFIX = "/console/creative-stream"
+
+    class PathNormalizer {
+        companion object {
+            // 顺序敏感：更具体的规则（如 creative-stream）放前面，避免被通用规则误截断
+            private val NORMALIZATION_RULES = listOf(
+                // creative-stream：列表详情页 .../detail/1/execution-record 只保留 .../detail 作为注册 key
+                NormalizationRule(
+                    pattern = Regex("""^(.*/flow/[^/]+/detail)/[^/?#]+/execution-record.*$"""),
+                    transform = { it.groupValues[1] },
+                    condition = { p -> p.startsWith(CREATIVE_STREAM_PREFIX) }
+                ),
+                // pipeline：history 相关
+                NormalizationRule(
+                    pattern = Regex("""^(.+?)/history/history/(.+)$"""),
+                    transform = { match -> "${match.groupValues[1]}/history" },
+                    condition = { !it.endsWith("/history") }
+                ),
+                NormalizationRule(
+                    pattern = Regex("""^(.+?)/draftDebug/(.+)$"""),
+                    transform = { match -> "${match.groupValues[1]}/history" }
+                ),
+                // 通用 list：.../list/xxx 或 .../list?xxx 只保留 .../list（含 creative-stream list）
+                NormalizationRule(
+                    pattern = Regex("""^(.+?)/list/(.+)$"""),
+                    transform = { match -> "${match.groupValues[1]}/list" },
+                    condition = { !it.endsWith("/list") }
+                )
+            )
+        }
+
+        fun normalize(page: String): String {
+            for (rule in NORMALIZATION_RULES) {
+                val match = rule.pattern.matchEntire(page)
+                if (match != null && rule.condition?.invoke(page) != false) {
+                    return rule.transform(match)
+                }
+            }
+            return page
+        }
+
+        private data class NormalizationRule(
+            val pattern: Regex,
+            val transform: (MatchResult) -> String,
+            val condition: ((String) -> Boolean)? = null
+        )
+    }
+
     fun buildNormalPage(page: String): String {
-        if (page.contains("/history/history/") && !page.endsWith("/history")) {
-            val index = page.indexOf("/history")
-            return page.substring(0, index + 8)
-        } else if (page.contains("/draftDebug/")) {
-            val index = page.indexOf("/draftDebug/")
-            return page.substring(0, index + 11).replace("draftDebug", "history")
-        }
-        if (page.contains("/list/") && !page.endsWith("/list")) {
-            val index = page.indexOf("/list")
-            return page.substring(0, index + 5)
-        }
-        return page
+        return PathNormalizer().normalize(page)
     }
 }

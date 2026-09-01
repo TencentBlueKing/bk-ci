@@ -4,26 +4,23 @@ import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.bk.audit.annotations.ActionAuditRecord
 import com.tencent.bk.audit.annotations.AuditInstanceRecord
 import com.tencent.bk.audit.context.ActionAuditContext
-import com.tencent.devops.common.api.constant.HTTP_400
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.audit.TencentActionAuditContent
 import com.tencent.devops.common.auth.api.TencentActionId
 import com.tencent.devops.common.auth.api.TencentResourceTypeId
-import com.tencent.devops.common.ci.UserUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.process.api.service.ServiceBuildResource
-import com.tencent.devops.project.api.service.ServiceProjectResource
+import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.remotedev.common.Constansts.ADMIN_NAME
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
-import com.tencent.devops.remotedev.config.async.AsyncExecute
 import com.tencent.devops.remotedev.dao.ExpertSupportDao
 import com.tencent.devops.remotedev.dao.RemoteDevSettingDao
+import com.tencent.devops.remotedev.dao.WindowsResourceZoneDao
 import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.dao.WorkspaceJoinDao
 import com.tencent.devops.remotedev.dao.WorkspaceOpHistoryDao
@@ -38,10 +35,10 @@ import com.tencent.devops.remotedev.pojo.SupRecordInfo
 import com.tencent.devops.remotedev.pojo.WorkspaceAction
 import com.tencent.devops.remotedev.pojo.WorkspaceMountType
 import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
+import com.tencent.devops.remotedev.pojo.WorkspaceRecordWithWindows
 import com.tencent.devops.remotedev.pojo.WorkspaceShared
 import com.tencent.devops.remotedev.pojo.WorkspaceShared.AssignType
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
-import com.tencent.devops.remotedev.pojo.async.AsyncPipelineEvent
 import com.tencent.devops.remotedev.pojo.common.RemoteDevNotifyType
 import com.tencent.devops.remotedev.pojo.expert.CreateDiskResp
 import com.tencent.devops.remotedev.pojo.expert.CreateExpertSupportConfigData
@@ -68,14 +65,12 @@ import com.tencent.devops.remotedev.pojo.remotedev.VmDiskInfo
 import com.tencent.devops.remotedev.resources.op.AssignWorkspacePipelineInfo
 import com.tencent.devops.remotedev.service.BKNodemanService
 import com.tencent.devops.remotedev.service.PermissionService
+import com.tencent.devops.remotedev.service.WorkspaceService
 import com.tencent.devops.remotedev.service.client.StartCloudClient
 import com.tencent.devops.remotedev.service.redis.ConfigCacheService
-import com.tencent.devops.remotedev.service.redis.RedisKeys.PIPELINE_EXPORT_CONFIG_INFO
 import com.tencent.devops.remotedev.service.redis.RedisKeys.PIPELINE_QUERY_CGS_PWD
 import com.tencent.devops.remotedev.service.workspace.NotifyControl
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
-import java.time.Duration
-import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -83,6 +78,8 @@ import org.springframework.cloud.stream.function.StreamBridge
 import org.springframework.stereotype.Service
 import org.springframework.web.context.request.RequestContextHolder
 import org.springframework.web.context.request.ServletRequestAttributes
+import java.time.Duration
+import java.time.LocalDateTime
 
 @Service
 class ExpertSupportService @Autowired constructor(
@@ -102,179 +99,58 @@ class ExpertSupportService @Autowired constructor(
     private val startCloudClient: StartCloudClient,
     private val bkNodemanService: BKNodemanService,
     private val configCacheService: ConfigCacheService,
-    private val remoteDevServiceFactory: RemoteDevServiceFactory
+    private val remoteDevServiceFactory: RemoteDevServiceFactory,
+    private val workspaceService: WorkspaceService,
+    private val windowsResourceZoneDao: WindowsResourceZoneDao,
+    private val expertSupportTokenGenerator: ExpertSupportTokenGenerator
 ) {
-    @Deprecated("等客户端版本都升级到支持createNew接口后，当前接口废弃")
-    @Suppress("ComplexMethod")
-    fun createSupport(
+    /**
+     * 瘦终端一键求助：根据工作空间入库求助记录并返回离线 JWT token。
+     */
+    fun generateUserSupportToken(
         userId: String,
-        data: CreateSupportData
-    ) {
-        // 校验机器在不在
+        workspaceName: String
+    ): String {
         val record = workspaceJoinDao.fetchAnyWindowsWorkspace(
             dslContext = dslContext,
-            workspaceName = data.workspaceName
+            workspaceName = workspaceName
         ) ?: throw ErrorCodeException(
             errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
-            params = arrayOf(data.workspaceName)
+            params = arrayOf(workspaceName)
         )
 
-        if (!permissionService.hasManagerOrViewerPermission(userId, record.projectId, record.workspaceName)) {
-            throw ErrorCodeException(
-                errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
-                params = arrayOf(
-                    "We're sorry but you don't have permission to " +
-                        "apply for assistance in ${record.workspaceName}"
-                )
-            )
-        }
-        if (record.status.checkDeleted() || record.status.checkInProcess()) {
-            throw ErrorCodeException(
-                errorCode = ErrorCodeEnum.WORKSPACE_NOT_RUNNING.errorCode,
-                params = arrayOf(data.workspaceName)
-            )
-        }
-
-        val fetchExpertSupportData = expertSupportDao.fetchSupports(
-            dslContext = dslContext,
-            projectId = data.projectId,
-            hostIp = data.hostIp,
-            creator = data.creator,
-            status = ExpertSupportStatus.CREATE,
-            content = data.content,
-            internalTime = DEFAULT_WAIT_TIME
-        )
-        if (fetchExpertSupportData.isNotEmpty()) {
-            throw ErrorCodeException(
-                errorCode = ErrorCodeEnum.REAPPLY_EXPERT_SUPPORT_ERROR.errorCode,
-                params = arrayOf(data.content)
-            )
-        }
-
-        val attributes = RequestContextHolder.getRequestAttributes() as? ServletRequestAttributes
-        val requestIp = attributes?.request?.getHeader("X-Forwarded-For")?.split(",")
-            ?.firstOrNull { it.isNotBlank() }?.trim()
-        val clientVersion = attributes?.request?.getHeader("Bk-Ci-Client-Version")
-        val projectInfo = kotlin.runCatching {
-            client.get(ServiceProjectResource::class).get(data.projectId)
-        }.onFailure { logger.warn("get project ${data.projectId} info error|${it.message}") }
-            .getOrElse { null }?.data ?: throw RemoteServiceException(
-            "not find project ${data.projectId}", HTTP_400
-        )
-        val owner: String?
-        var viewers: Set<String>? = null
-        if (record.ownerType == WorkspaceOwnerType.PERSONAL) {
-            owner = record.createUserId
-        } else {
-            val sharedInfo = workspaceSharedDao.fetchWorkspaceSharedInfo(dslContext, data.workspaceName)
-            owner = sharedInfo.firstOrNull { it.type == AssignType.OWNER }?.sharedUser
-            viewers = sharedInfo.filter { it.type == AssignType.VIEWER }.map { it.sharedUser }.toSet().ifEmpty { null }
-        }
-        val projectManager = permissionService.managers(data.projectId).toSet()
-        val recordInfo = SupRecordInfo(
-            requestIp = requestIp,
-            projectManager = projectManager,
-            clientVersion = clientVersion,
-            machineStatus = record.status.name,
-            cdsVersion = null,
-            cdsRegion = null,
-            cdsStatus = null,
-            cdsPort = null,
-            agentStatus = null,
-            owner = owner,
-            viewers = viewers
-        )
-
-        val id = expertSupportDao.addSupport(
-            dslContext = dslContext,
-            projectId = data.projectId,
-            hostIp = data.hostIp,
-            workspaceName = data.workspaceName,
-            creator = data.creator,
-            status = ExpertSupportStatus.CREATE,
-            content = data.content,
-            city = data.city,
-            machineType = data.machineType,
-            info = recordInfo
-        )
-        val taiUserCN = remoteDevSettingDao.fetchTaiUserInfo(dslContext, userIds = mutableSetOf(data.creator))
-            .mapValues {
-                if ((it.value["USER_NAME"] as String).isNotBlank()) {
-                    Triple(
-                        "${it.value["USER_NAME"]}@${it.value["COMPANY_NAME"]}",
-                        it.value["PHONE"] as String,
-                        it.value["PHONE_COUNTRY_CODE"] as String
-                    )
-                } else {
-                    Triple(it.key, "", "")
-                }
-            }
-
-        // 异步执行流水线完成其他动作
-        /**
-         * redis 中，xxx 为需要替换
-         * {
-         *     "userId": "xxx",
-         *     "projectId": "xxx",
-         *     "pipelineId": "xxx",
-         *     "buildParam": {
-         *         "xxx": "ip",
-         *         "xxx": "projectId",
-         *         "xxx": "projectName",
-         *         "xxx": "ticketId",
-         *         "xxx": "creator",
-         *         "xxx": "content",
-         *         "xxx": "city",
-         *         "xxx": "machineType"
-         *     }
-         * }
-         */
-        val infoS = configCacheService.get(PIPELINE_EXPORT_CONFIG_INFO) ?: return
-        val info = JsonUtil.to(infoS, AssignWorkspacePipelineInfo::class.java)
-        val newParam = mutableMapOf<String, String>()
-        val hostIdSub = data.hostIp.split(".")
-        val ip = hostIdSub.subList(1, hostIdSub.size).joinToString(separator = ".")
-
-        info.buildParam.forEach { (k, v) ->
-            when (v) {
-                "ip" -> newParam[k] = record.regionId.toString().plus(":").plus(ip)
-                "projectId" -> newParam[k] = data.projectId
-                "projectName" -> newParam[k] = projectInfo.projectName
-                "ticketId" -> newParam[k] = id.toString()
-                "creator" -> newParam[k] = taiUserCN[data.creator]?.first ?: data.creator
-                "content" -> newParam[k] = data.content
-                "city" -> newParam[k] = data.city
-                "machineType" -> newParam[k] = data.machineType
-                "createTime" -> newParam[k] = DateTimeUtil.toDateTime(
-                    LocalDateTime.now(), DateTimeUtil.YYYY_MM_DD_HH_MM_SS
-                )
-
-                "zone" -> newParam[k] = record.regionId.toString()
-                "workspaceName" -> newParam[k] = data.workspaceName
-                "phone" -> newParam[k] = taiUserCN[data.creator]?.second ?: ""
-                "phoneCountryCode" -> newParam[k] = taiUserCN[data.creator]?.third ?: ""
-                "taiUser" -> newParam[k] = if (UserUtil.isTaiUser(data.creator)) {
-                    UserUtil.removeTaiSuffix(data.creator)
-                } else {
-                    ""
-                }
-
-                "managers" -> newParam[k] = projectManager.joinToString(separator = ";")
-                "requestIp" -> newParam[k] = requestIp ?: ""
-                "displayName" -> newParam[k] = record.displayName
-
-                else -> newParam[k] = v
-            }
-        }
-        AsyncExecute.dispatch(
-            streamBridge,
-            AsyncPipelineEvent(
-                userId = info.userId ?: "",
-                projectId = info.projectId,
-                pipelineId = info.pipelineId,
-                values = newParam
+        val recordId = createSupportNew(
+            userId = userId,
+            data = CreateSupportData(
+                projectId = record.projectId,
+                hostIp = record.hostIp ?: "",
+                creator = userId,
+                content = SUPPORT_CONTENT_THIN_TERMINAL,
+                workspaceName = workspaceName,
+                city = resolveCity(record),
+                machineType = record.winConfigId?.toString() ?: ""
             )
         )
+
+        return expertSupportTokenGenerator.generate(userId, recordId)
+    }
+
+    /**
+     * 区域简称转中文城市名：T_WINDOWS_RESOURCE_ZONE 中 ZONE 为中文名、SHORT_NAME 为简称。
+     * hostIp 前缀/zoneId 为带数字的简称(如 GZ2)，先精确匹配，失败则去尾部数字再匹配。
+     */
+    private fun resolveCity(record: WorkspaceRecordWithWindows): String {
+        val shortName = record.zoneId?.takeIf { it.isNotBlank() }
+            ?: record.hostIp?.split(".")?.firstOrNull()?.takeIf { it.isNotBlank() }
+            ?: return ""
+
+        windowsResourceZoneDao.fetchAny(dslContext, shortName)?.zone?.let { return it }
+
+        val normalized = shortName.replace(Regex("\\d+$"), "")
+        if (normalized != shortName && normalized.isNotBlank()) {
+            windowsResourceZoneDao.fetchAny(dslContext, normalized)?.zone?.let { return it }
+        }
+        return shortName
     }
 
     fun createSupportNew(
@@ -295,7 +171,7 @@ class ExpertSupportService @Autowired constructor(
                 errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
                 params = arrayOf(
                     "We're sorry but you don't have permission" +
-                        " to apply for assistance in ${record.workspaceName}"
+                            " to apply for assistance in ${record.workspaceName}"
                 )
             )
         }
@@ -495,13 +371,17 @@ class ExpertSupportService @Autowired constructor(
                     else -> newParam[k] = v
                 }
             }
-
+            val projectId = info.projectId
+            val pipelineId = info.pipelineId
+            val channelCode = client.get(ServicePipelineResource::class)
+                .getPipelineInfoByPipelineId(pipelineId, projectId)?.data?.channelCode
+                ?: ChannelCode.getRequestChannelCode()
             client.get(ServiceBuildResource::class).manualStartupNew(
                 userId = info.userId ?: "",
-                projectId = info.projectId,
-                pipelineId = info.pipelineId,
+                projectId = projectId,
+                pipelineId = pipelineId,
                 values = newParam,
-                channelCode = ChannelCode.BS,
+                channelCode = channelCode,
                 buildNo = null,
                 startType = StartType.SERVICE
             )
@@ -689,6 +569,7 @@ class ExpertSupportService @Autowired constructor(
                 params = arrayOf("We're sorry but you don't have permission to expand disk in $workspaceName")
             )
         }
+        workspaceCommon.checkFunctionRestrictedZone(workspaceName)
         ActionAuditContext.current()
             .addAttribute(TencentActionAuditContent.PROJECT_CODE_TEMPLATE, workspace.projectId)
             .scopeId = workspace.projectId
@@ -772,7 +653,14 @@ class ExpertSupportService @Autowired constructor(
         )
     }
 
-    fun expandDiskDetail(workspaceName: String): ExpandDiskTaskDetail? {
+    fun expandDiskDetail(userId: String, workspaceName: String): ExpandDiskTaskDetail? {
+        val wr = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName) ?: return null
+        if (!permissionService.hasManagerOrViewerPermission(userId, wr.projectId, workspaceName)) {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
+                params = arrayOf("We're sorry but you don't have permission to access project ${wr.projectId}")
+            )
+        }
         val record =
             workspaceOpHistoryDao.fetchLastOp(dslContext, workspaceName, WorkspaceAction.EXPAND_DISK) ?: return null
         val (status, updateTime) = remoteDevService.getLastExpandDiskStatusAndTime(workspaceName)
@@ -899,17 +787,23 @@ class ExpertSupportService @Autowired constructor(
 
     fun fetchDiskList(
         userId: String,
-        workspaceName: String
+        workspaceName: String,
+        projectId: String?
     ): List<VmDiskInfo> {
         val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName)
             ?: throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
                 params = arrayOf(workspaceName)
             )
+        val realProjectId = if (projectId.isNullOrBlank()) {
+            workspace.projectId
+        } else {
+            projectId
+        }
 
         if (!permissionService.hasManagerOrOwnerPermission(
                 userId = userId,
-                projectId = workspace.projectId,
+                projectId = realProjectId,
                 workspaceName = workspace.workspaceName,
                 ownerType = workspace.ownerType
             )
@@ -1036,7 +930,7 @@ class ExpertSupportService @Autowired constructor(
                 errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
                 params = arrayOf(
                     "We're sorry but you don't have permission to" +
-                        " sync vm in source ${data.sourceWorkspaceName}"
+                            " sync vm in source ${data.sourceWorkspaceName}"
                 )
             )
         }
@@ -1051,7 +945,7 @@ class ExpertSupportService @Autowired constructor(
                 errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
                 params = arrayOf(
                     "We're sorry but you don't have permission " +
-                        "to sync vm in target ${data.targetWorkspaceName}"
+                            "to sync vm in target ${data.targetWorkspaceName}"
                 )
             )
         }
@@ -1138,5 +1032,6 @@ class ExpertSupportService @Autowired constructor(
         private val logger = LoggerFactory.getLogger(ExpertSupportService::class.java)
         private const val DEFAULT_WAIT_TIME = 3600
         private const val CGS_PORT = "10080"
+        private const val SUPPORT_CONTENT_THIN_TERMINAL = "瘦终端一键求助"
     }
 }

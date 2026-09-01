@@ -74,7 +74,15 @@ data class PreTriggerOnV3(
     override var shelveCommit: Any? = null,
     @JsonProperty("shelve-submit")
     @get:Schema(title = "shelve-submit")
-    override var shelveSubmit: Any? = null
+    override var shelveSubmit: Any? = null,
+    // 以下三个字段为 TAPD 触发（type == "tapd"）的顶层配置，与代码库触发的 push/tag/mr 平级。
+    @JsonProperty("workspace-id")
+    @get:Schema(title = "workspace-id")
+    val workspaceId: String? = null,
+    @get:Schema(title = "story")
+    override val story: Any? = null,
+    @get:Schema(title = "bug")
+    override val bug: Any? = null
 ) : IPreTriggerOn {
     override fun yamlVersion() = YamlVersion.V3_0
 }

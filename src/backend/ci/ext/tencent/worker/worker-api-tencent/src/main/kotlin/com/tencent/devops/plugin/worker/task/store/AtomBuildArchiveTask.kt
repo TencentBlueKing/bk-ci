@@ -42,6 +42,8 @@ import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
 import com.tencent.devops.store.pojo.atom.AtomEnv
 import com.tencent.devops.store.pojo.atom.AtomEnvRequest
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
+import com.tencent.devops.store.pojo.common.StorePackageInfoReq
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.worker.common.api.ApiFactory
 import com.tencent.devops.worker.common.api.atom.AtomArchiveSDKApi
 import com.tencent.devops.worker.common.logger.LoggerService
@@ -49,6 +51,7 @@ import com.tencent.devops.worker.common.task.ITask
 import com.tencent.devops.worker.common.task.TaskClassType
 import com.tencent.devops.worker.common.task.market.AtomRunConditionFactory
 import com.tencent.devops.worker.common.utils.ArchiveUtils
+import com.tencent.devops.worker.common.utils.TaskUtil
 import java.io.File
 import java.nio.file.Paths
 
@@ -60,18 +63,29 @@ class AtomBuildArchiveTask : ITask() {
 
     override fun execute(buildTask: BuildTask, buildVariables: BuildVariables, workspace: File) {
         val taskParams = buildTask.params ?: mapOf()
-        val destPath = taskParams["destPath"] ?: throw TaskExecuteException(
+        val buildVariable = buildTask.buildVariable ?: mapOf()
+        // 使用公共方法解析任务参数（包含变量合并、steps.xxx 短格式处理、表达式替换）
+        val resolvedTaskParams = TaskUtil.resolveTaskParams(
+            buildVariables = buildVariables,
+            buildVariable = buildVariable,
+            taskParams = taskParams
+        )
+        val destPath = resolvedTaskParams["destPath"] ?: throw TaskExecuteException(
             errorMsg = "param [destPath] is empty",
             errorType = ErrorType.USER,
             errorCode = ErrorCode.USER_TASK_OPERATE_FAIL
         )
-        val filePath = taskParams["filePath"] ?: throw TaskExecuteException(
+        val filePath = resolvedTaskParams["filePath"] ?: throw TaskExecuteException(
             errorMsg = "param [filePath] is empty",
             errorType = ErrorType.USER,
             errorCode = ErrorCode.USER_TASK_OPERATE_FAIL
         )
-        val buildVariable = buildTask.buildVariable
-        val atomCode = buildVariable!!["atomCode"] ?: throw TaskExecuteException(
+        val packageName = resolvedTaskParams["packageName"] ?: throw TaskExecuteException(
+            errorMsg = "need packageName param",
+            errorType = ErrorType.USER,
+            errorCode = ErrorCode.USER_TASK_OPERATE_FAIL
+        )
+        val atomCode = buildVariable["atomCode"] ?: throw TaskExecuteException(
             errorMsg = "need atomCode param",
             errorType = ErrorType.USER,
             errorCode = ErrorCode.USER_TASK_OPERATE_FAIL
@@ -81,13 +95,8 @@ class AtomBuildArchiveTask : ITask() {
             errorType = ErrorType.USER,
             errorCode = ErrorCode.USER_TASK_OPERATE_FAIL
         )
-        val packageName = buildVariable["packageName"] ?: throw TaskExecuteException(
-            errorMsg = "need packageName param",
-            errorType = ErrorType.USER,
-            errorCode = ErrorCode.USER_TASK_OPERATE_FAIL
-        )
         val preCmd = buildVariable["preCmd"] ?: ""
-        val target = buildVariable["target"]
+        val target = resolvedTaskParams["target"]
 
         val fileSha = archiveAtom(
             atomCode = atomCode,
@@ -120,8 +129,8 @@ class AtomBuildArchiveTask : ITask() {
                 )
             }
         }
-        val osName = taskParams[KEY_OS_NAME]
-        val osArch = taskParams[KEY_OS_ARCH]
+        val osName = resolvedTaskParams[KEY_OS_NAME]
+        val osArch = resolvedTaskParams[KEY_OS_ARCH]
         val validOsNameFlag = buildVariable[KEY_VALID_OS_NAME_FLAG]?.toBoolean()
         val validOsArchFlag = buildVariable[KEY_VALID_OS_ARCH_FLAG]?.toBoolean()
         val finalOsName = if (validOsNameFlag == true) {
@@ -169,6 +178,17 @@ class AtomBuildArchiveTask : ITask() {
             osArch = finalOsArch
         )
         val result = atomApi.updateAtomEnv(buildVariables.projectId, atomCode, atomVersion, request)
+        asyncHandleAtomPkgSize(
+            storePackageInfoReqs = listOf(
+                StorePackageInfoReq(
+                    storeType = StoreTypeEnum.ATOM,
+                    osName = osName,
+                    arch = osArch,
+                    size = File(workspace, filePath).length()
+                )
+            ),
+            atomId = atomEnv.atomId
+        )
         if (result.data != null && result.data == true) {
             LoggerService.addNormalLine("update Atom Env ok!")
         } else {
@@ -225,5 +245,25 @@ class AtomBuildArchiveTask : ITask() {
             )
         }
         return fileSha
+    }
+
+    private fun asyncHandleAtomPkgSize(
+        storePackageInfoReqs: List<StorePackageInfoReq>,
+        atomId: String?
+    ) {
+        Thread {
+            if (atomId == null) {
+                LoggerService.addNormalLine("atomId is null!")
+            } else {
+                try {
+                    atomApi.updateAtomVersionPkgSize(
+                        atomId = atomId,
+                        storePackageInfoReqs = storePackageInfoReqs
+                    )
+                } catch (ignored: Throwable) {
+                    LoggerService.addNormalLine("asyncHandleAtomPkgSize execute error: ${ignored.message}")
+                }
+            }
+        }.start()
     }
 }

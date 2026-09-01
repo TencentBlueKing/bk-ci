@@ -1,9 +1,12 @@
 package com.tencent.devops.remotedev.service.redis
 
+import com.fasterxml.jackson.core.type.TypeReference
 import com.github.benmanes.caffeine.cache.Caffeine
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.project.api.service.service.ServiceTxUserResource
+import com.tencent.devops.project.pojo.user.UserDeptDetail
 import com.tencent.devops.remotedev.dao.ConfigDao
 import com.tencent.devops.remotedev.dao.ExpertSupportDao
 import com.tencent.devops.remotedev.dao.WhiteListDao
@@ -34,6 +37,8 @@ class ConfigCacheService @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(ConfigCacheService::class.java)
         private const val WINDOWS_RESOURCE_CACHE_EXPIRE_MINUTES = 5L
+        private const val USER_DEPT_CACHE_EXPIRE_MINUTES = 5L
+        const val FUNCTION_RESTRICTED_ZONE_KEY = "remotedev:functionRestrictedZone"
     }
 
     fun opFetchAllConfig(): Map<String, String> {
@@ -60,6 +65,26 @@ class ConfigCacheService @Autowired constructor(
             }.getOrNull() ?: ""
         }
 
+    private val userBgNameCache = Caffeine.newBuilder()
+        .maximumSize(1000)
+        .expireAfterWrite(1, TimeUnit.MINUTES)
+        .build<String, String> { key ->
+            runCatching {
+                client.get(ServiceTxUserResource::class).get(key).data?.bgName
+            }.onFailure { logger.warn("get $key bg name error|${it.message}") }
+                .getOrNull() ?: ""
+        }
+
+    private val userDeptDetailCache = Caffeine.newBuilder()
+        .maximumSize(1000)
+        .expireAfterWrite(USER_DEPT_CACHE_EXPIRE_MINUTES, TimeUnit.MINUTES)
+        .build<String, UserDeptDetail?> { key ->
+            runCatching {
+                client.get(ServiceTxUserResource::class).get(key).data
+            }.onFailure { logger.warn("get $key dept info error|${it.message}") }
+                .getOrNull()
+        }
+
     private val redisCache = Caffeine.newBuilder()
         .maximumSize(200)
         .expireAfterWrite(1, TimeUnit.MINUTES)
@@ -75,6 +100,13 @@ class ConfigCacheService @Autowired constructor(
         .expireAfterWrite(1, TimeUnit.MINUTES)
         .build<String, Boolean> { key ->
             whiteListDao.get(dslContext, key, WhiteListType.API) != null
+        }
+
+    private val coffeeAIWhiteListCache = Caffeine.newBuilder()
+        .maximumSize(1000)
+        .expireAfterWrite(1, TimeUnit.MINUTES)
+        .build<String, Boolean> { key ->
+            whiteListDao.get(dslContext, key, WhiteListType.COFFEE_AI) != null
         }
 
     private val windowsGpuWhiteListCache = Caffeine.newBuilder()
@@ -121,9 +153,22 @@ class ConfigCacheService @Autowired constructor(
 
     fun get(key: String): String? = redisCache.get(key)
 
+    fun getFunctionRestrictedZones(): Set<String> {
+        val raw = get(FUNCTION_RESTRICTED_ZONE_KEY)?.trim()
+        if (raw.isNullOrBlank()) return emptySet()
+        return runCatching {
+            JsonUtil.to(raw, object : TypeReference<List<String>>() {}).toSet()
+        }.getOrElse {
+            logger.warn("parse $FUNCTION_RESTRICTED_ZONE_KEY fail|$raw")
+            emptySet()
+        }
+    }
+
     fun getSetMembers(key: String) = redisCacheSet.get(key)
 
     fun checkApiWhiteList(name: String) = apiWhiteListCache.get(name) ?: false
+
+    fun checkApiCoffeeAIWhiteList(name: String) = coffeeAIWhiteListCache.get(name) ?: false
 
     fun checkWindowsGpuLimit(name: String) = windowsGpuWhiteListCache.get(name) ?: 0
 
@@ -131,6 +176,10 @@ class ConfigCacheService @Autowired constructor(
         expertSupportCache.get(ExpertSupportConfigType.SUPPORTER)?.contains(userId) ?: false
 
     fun getUserName(key: String): String = userNameCache.get(key)
+
+    fun getUserBgName(key: String): String = userBgNameCache.get(key)
+
+    fun getUserDeptDetail(key: String): UserDeptDetail? = userDeptDetailCache.get(key)
 
     // Windows 资源配置缓存相关方法
     fun getWindowsResourceType(withUnavailable: Boolean, onlySpecModel: Boolean?): List<WindowsResourceTypeConfig> {

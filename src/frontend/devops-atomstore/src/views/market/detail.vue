@@ -21,7 +21,7 @@
             v-if="!isLoading"
         >
             <component
-                :is="`${type}Info`"
+                :is="detailInfoComponent"
                 :detail="detail"
                 class="detail-info"
                 :current-tab.sync="currentTab"
@@ -61,6 +61,7 @@
     import errorCodeDetail from '../../components/common/detailTab/errorCodeDetail'
     import outputDetail from '../../components/common/detailTab/outputDetail'
     import qualityDetail from '../../components/common/detailTab/qualityDetail'
+    import versionLogDetail from '../../components/common/detailTab/versionLogDetail'
     import yamlDetail from '../../components/common/detailTab/yamlDetail'
 
     export default {
@@ -76,7 +77,9 @@
             yamlDetail,
             outputDetail,
             qualityDetail,
-            errorCodeDetail
+            errorCodeDetail,
+            versionLogDetail,
+            qualityDetail
         },
 
         data () {
@@ -96,7 +99,19 @@
             type () {
                 return this.$route.params.type
             },
-
+            // atom 和 creative 都使用 atomInfo 组件
+            detailInfoComponent () {
+                const componentMap = {
+                    atom: 'atomInfo',
+                    creative: 'atomInfo',
+                    template: 'templateInfo',
+                    ide: 'ideInfo',
+                    image: 'imageInfo',
+                    service: 'serviceInfo'
+                }
+                return componentMap[this.type] || 'atomInfo'
+            },
+            // 这是详情页的
             tabList () {
                 return {
                     atom: [
@@ -104,21 +119,32 @@
                         // { componentName: 'codeSection', label: this.$t('store.YAMLV1'), name: 'YAML', bindData: { code: this.detail.codeSection, limitHeight: false, name: 'YAML', currentTab: this.currentTab, getDataFunc: this.getAtomYaml }, hidden: (!this.detail.yamlFlag || !this.detail.recommendFlag) },
                         { componentName: 'yamlDetail', label: this.$t('store.YAMLV2'), name: 'YAMLV2', bindData: { code: this.detail.codeSectionV2, limitHeight: false, name: 'YAMLV2', currentTab: this.currentTab, getDataFunc: this.getAtomYamlV2 }, hidden: (!this.detail.yamlFlag || !this.detail.recommendFlag) },
                         { componentName: 'outputDetail', label: this.$t('store.输出参数'), name: 'output', bindData: { outputData: this.detail.outputData, name: 'output', currentTab: this.currentTab, classifyCode: this.detail.classifyCode } },
-                        { componentName: 'qualityDetail', label: this.$t('store.质量红线指标'), name: 'quality', bindData: { qualityData: this.detail.qualityData }, hidden: this.detail.qualityData && !this.detail.qualityData.length }
+                        { componentName: 'qualityDetail', label: this.$t('store.质量红线指标'), name: 'quality', bindData: { qualityData: this.detail.qualityData }, hidden: this.detail.qualityData && !this.detail.qualityData.length },
+                        { componentName: 'versionLogDetail', label: this.$t('store.版本日志'), name: 'versionLog', bindData: { name: 'versionLog', currentTab: this.currentTab } }
                         // { componentName: 'errorCodeDetail', label: this.$t('store.错误码'), name: 'errorCode', bindData: { errorCodeData: this.detail.errorCodeData, name: 'errorCode', currentTab: this.currentTab } }
                     ],
+                    creative: [
+                        { componentName: 'detailScore', label: this.$t('store.概述'), name: 'des' },
+                        { componentName: 'yamlDetail', label: this.$t('store.YAMLV2'), name: 'YAMLV2', bindData: { code: this.detail.codeSectionV2, limitHeight: false, name: 'YAMLV2', currentTab: this.currentTab, getDataFunc: this.getAtomYamlV2 }, hidden: (!this.detail.yamlFlag || !this.detail.recommendFlag) },
+                        { componentName: 'outputDetail', label: this.$t('store.输出参数'), name: 'output', bindData: { outputData: this.detail.outputData, name: 'output', currentTab: this.currentTab, classifyCode: this.detail.classifyCode } },
+                        { componentName: 'qualityDetail', label: this.$t('store.质量红线指标'), name: 'quality', bindData: { qualityData: this.detail.qualityData }, hidden: this.detail.qualityData && !this.detail.qualityData.length },
+                    ],
                     template: [
-                        { componentName: 'detailScore', label: this.$t('store.概述'), name: 'des' }
+                        { componentName: 'detailScore', label: this.$t('store.概述'), name: 'des' },
+                        { componentName: 'versionLogDetail', label: this.$t('store.版本日志'), name: 'versionLog', bindData: { name: 'versionLog', currentTab: this.currentTab } }
                     ],
                     ide: [
-                        { componentName: 'detailScore', label: this.$t('概述'), name: 'des' }
+                        { componentName: 'detailScore', label: this.$t('store.概述'), name: 'des' },
+                        { componentName: 'versionLogDetail', label: this.$t('store.版本日志'), name: 'versionLog', bindData: { name: 'versionLog', currentTab: this.currentTab } }
                     ],
                     image: [
                         { componentName: 'detailScore', label: this.$t('store.概述'), name: 'des' },
-                        { componentName: 'codeSection', label: 'Dockerfile', name: 'Dockerfile', bindData: { code: this.detail.codeSection, limitHeight: false } }
+                        { componentName: 'codeSection', label: 'Dockerfile', name: 'Dockerfile', bindData: { code: this.detail.codeSection, limitHeight: false } },
+                        { componentName: 'versionLogDetail', label: this.$t('store.版本日志'), name: 'versionLog', bindData: { name: 'versionLog', currentTab: this.currentTab } }
                     ],
                     service: [
-                        { componentName: 'detailScore', label: this.$t('概述'), name: 'des' }
+                        { componentName: 'detailScore', label: this.$t('store.概述'), name: 'des' },
+                        { componentName: 'versionLogDetail', label: this.$t('store.版本日志'), name: 'versionLog', bindData: { name: 'versionLog', currentTab: this.currentTab } }
                     ]
                 }
             },
@@ -128,6 +154,9 @@
                 switch (this.type) {
                     case 'template':
                         name = this.$t('store.流水线模板')
+                        break
+                    case 'creative':
+                        name = this.$t('store.创作流插件')
                         break
                     case 'image':
                         name = this.$t('store.容器镜像')
@@ -177,6 +206,7 @@
                 const type = this.$route.params.type
                 const funObj = {
                     atom: () => this.getAtomDetail(),
+                    creative: () => this.getCreativeDetail(),
                     template: () => this.getTemplateDetail(),
                     ide: () => this.getIDEDetail(),
                     image: () => this.getImageDetail(),
@@ -195,9 +225,10 @@
 
             getAtomDetail () {
                 const atomCode = this.detailCode
+                const serviceScope = 'PIPELINE'
 
                 return Promise.all([
-                    this.requestAtom(atomCode),
+                    this.requestAtom({ atomCode, serviceScope }),
                     this.requestAtomStatistic({ storeCode: atomCode, storeType: 'ATOM' }),
                     this.getUserApprovalInfo(atomCode),
                     this.getQualityData(atomCode)
@@ -208,6 +239,16 @@
                     detail.hotFlag = atomStatic.hotFlag
                     detail.approveStatus = (userAppInfo || {}).approveStatus
                     detail.qualityData = quality
+                    this.setDetail(detail)
+                })
+            },
+            getCreativeDetail () {
+                const atomCode = this.detailCode
+                const serviceScope = 'CREATIVE_STREAM'
+
+                return this.requestAtom({ atomCode, serviceScope }).then((atomDetail) => {
+                    const detail = atomDetail || {}
+                    detail.detailId = atomDetail.atomId
                     this.setDetail(detail)
                 })
             },

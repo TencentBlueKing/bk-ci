@@ -114,6 +114,86 @@ function _M:get_ticket(bk_ticket)
     return result.data
 end
 
+function _M:get_info(bk_ticket)
+    local user_cache = ngx.shared.user_info_store
+    local cache_key = "get_info_" .. bk_ticket
+    local user_cache_value = user_cache:get(cache_key)
+
+    --- 命中缓存
+    if user_cache_value then
+        local cached_result = json.decode(user_cache_value)
+        if cached_result == nil then
+            ngx.log(ngx.WARN, "failed to decode get_info cached value, removing cache")
+            user_cache:delete(cache_key)
+        else
+            local cached_ret = cached_result.ret
+            if cached_ret == nil then
+                cached_ret = cached_result.code
+            end
+            if cached_ret == 0 then
+                return cached_result.data
+            end
+            ngx.log(ngx.WARN, "cached invalid get_info, bk_ticket: ", bk_ticket)
+            ngx.exit(401)
+            return
+        end
+    end
+
+    --- 初始化HTTP连接
+    local httpc = http.new()
+    httpc:set_timeout(3000)
+    local get_info_ip = config.oauth.get_info_ip or config.oauth.ip
+    local get_info_port = config.oauth.get_info_port or config.oauth.port
+    httpc:connect(get_info_ip, get_info_port)
+
+    local get_info_url = config.oauth.get_info_url or "/user/get_info"
+    local request_path = get_info_url .. "?" .. ngx.encode_args({["bk_ticket"] = bk_ticket})
+
+    --- 发送请求
+    local res, err = httpc:request({
+        path = request_path,
+        method = "GET",
+        headers = {
+            ["Host"] = config.oauth.get_info_host or config.oauth.host,
+            ["Accept"] = "application/json"
+        }
+    })
+    if not res then
+        ngx.log(ngx.ERR, "failed to request get_info: ", err)
+        ngx.exit(401)
+        return
+    end
+
+    local responseBody = res:read_body()
+    if res.status ~= 200 then
+        ngx.log(ngx.ERR, "failed to request get_info, status: ", res.status, " , responseBody: ", responseBody)
+        ngx.exit(401)
+        return
+    end
+    httpc:set_keepalive(60000, 5)
+
+    local result = json.decode(responseBody)
+    if result == nil then
+        ngx.log(ngx.ERR, "failed to parse get_info response: ", responseBody)
+        ngx.exit(500)
+        return
+    end
+
+    user_cache:set(cache_key, responseBody, config.oauth.get_info_cache_expire or 180)
+
+    local ret = result.ret
+    if ret == nil then
+        ret = result.code
+    end
+    if ret ~= 0 then
+        ngx.log(ngx.WARN, "invalid get_info: ", result.msg or result.message, " , bk_ticket: ", bk_ticket)
+        ngx.exit(401)
+        return
+    end
+
+    return result.data
+end
+
 function _M:get_prebuild_ticket(bk_ticket)
     -- 通过bk_ticket获取用户信息
     local user_info_http = http.new()
@@ -338,6 +418,55 @@ function _M:verify_token(access_token)
     end
     result.data.access_token = access_token
     return result.data
+end
+
+--- BKAuth OAuth 2.0 Token Introspection (RFC 7662)
+--- @return result table|nil, aud_mismatch boolean
+function _M:introspect_token(access_token)
+    local httpc = http.new()
+    httpc:set_timeout(3000)
+
+    local path = "https://" .. config.bkauth.host .. ":" .. tostring(config.bkauth.port) ..
+        "/realms/" .. config.bkauth.realm .. "/oauth2/introspect"
+    local body = "token=" .. ngx.escape_uri(access_token)
+
+    local res, err = httpc:request_uri(path, {
+        method = "POST",
+        ssl_verify = false,
+        headers = {
+            ["Host"] = config.bkauth.host,
+            ["Content-Type"] = "application/x-www-form-urlencoded",
+            ["X-Bk-App-Code"] = config.bkauth.app_code,
+            ["X-Bk-App-Secret"] = config.bkauth.app_secret
+        },
+        body = body
+    })
+
+    if not res then
+        ngx.log(ngx.STDERR, "failed to request introspect_token: ", err)
+        return nil
+    end
+
+    local responseBody = res.body
+
+    if res.status ~= 200 then
+        ngx.log(ngx.STDERR, "failed to request introspect_token, status: ", res.status, " , responseBody: ", responseBody)
+        return nil
+    end
+
+    local result = json.decode(responseBody)
+    if result == nil then
+        ngx.log(ngx.STDERR, "failed to parse introspect_token response: ", responseBody)
+        return nil
+    end
+
+    if not result.active then
+        local err_msg = result.error and result.error.message or "unknown"
+        ngx.log(ngx.STDERR, "introspect_token inactive, error: ", err_msg, " , access_token: ", access_token)
+        return nil
+    end
+
+    return result
 end
 
 function _M:verify_tai_token(bk_token)

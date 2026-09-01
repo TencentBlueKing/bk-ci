@@ -42,6 +42,39 @@ class BKCCService @Autowired constructor(
         updateHost(hostIds, props)
     }
 
+    /**
+     * 通过云区域 + 内网 IP 解析 CMDB host_id
+     */
+    fun fetchHostId(regionId: Int, ip: String): Long? {
+        return fetchHostIds(regionId, setOf(ip))[ip]
+    }
+
+    /**
+     * 批量通过云区域 + 内网 IP 解析 CMDB host_id，返回 innerip -> host_id
+     */
+    fun fetchHostIds(regionId: Int, ips: Set<String>): Map<String, Long> {
+        if (ips.isEmpty()) {
+            return emptyMap()
+        }
+        val (page, filter) = genHostIdFilter(regionId, ips)
+        val info = listBizHosts(
+            fields = listOf("bk_host_id", "bk_host_innerip"),
+            page = page,
+            hostPropertyFilter = filter
+        )?.info
+        if (info.isNullOrEmpty()) {
+            logger.warn("fetchHostIds|$regionId|$ips hostids is empty")
+            return emptyMap()
+        }
+        val result = mutableMapOf<String, Long>()
+        info.forEach { item ->
+            val innerIp = item["bk_host_innerip"]?.toString() ?: return@forEach
+            val hostId = item["bk_host_id"]?.toString()?.toLongOrNull() ?: return@forEach
+            result[innerIp] = hostId
+        }
+        return result
+    }
+
     private fun genHostIdFilter(
         regId: Int,
         ips: Set<String>

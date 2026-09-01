@@ -14,6 +14,14 @@ data class ProjectUpdateHistoryInfo(
     val beforeProductId: Int?,
     @get:Schema(title = "变更后运营产品ID")
     val afterProductId: Int?,
+    @get:Schema(title = "变更前KPI产品编码")
+    val beforeKpiCode: String? = null,
+    @get:Schema(title = "变更后KPI产品编码")
+    val afterKpiCode: String? = null,
+    @get:Schema(title = "变更前KPI产品名称")
+    val beforeKpiName: String? = null,
+    @get:Schema(title = "变更后KPI产品名称")
+    val afterKpiName: String? = null,
     @get:Schema(title = "变更前组织架构")
     val beforeOrganization: String,
     @get:Schema(title = "变更后组织架构")

@@ -30,10 +30,11 @@ package com.tencent.devops.process.plugin.trigger.timer.quartz
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.service.utils.SpringContextUtil
-import com.tencent.devops.common.web.utils.BkApiUtil
+import com.tencent.devops.common.web.utils.ApiAccessLimitCacheManager
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.plugin.trigger.lock.PipelineTimerTriggerLock
 import com.tencent.devops.process.plugin.trigger.pojo.event.PipelineTimerBuildEvent
@@ -195,11 +196,17 @@ class PipelineJobBean(
         }
         val watcher = Watcher(id = "timer|[$comboKey]")
         try {
-            if (redisOperation.isMember(BkApiUtil.getApiAccessLimitPipelinesKey(), pipelineId)) {
+            // 使用缓存管理器优化查询（使用本地缓存）
+            val result = ApiAccessLimitCacheManager.checkPipelineLimitStatus(
+                redisOperation = redisOperation,
+                pipelineIds = arrayOf(pipelineId)
+            )
+            if (result[pipelineId] == true) {
                 logger.warn("Pipeline[$pipelineId] has restricted build permissions,please try again later!")
                 return
             }
-            if (redisOperation.isMember(BkApiUtil.getApiAccessLimitProjectsKey(), projectId)) {
+            val projectLimitSet = ApiAccessLimitCacheManager.getProjectLimitSet(redisOperation)
+            if (projectLimitSet.contains(projectId)) {
                 logger.warn("Project[$projectId] has restricted build permissions,please try again later!")
                 return
             }
@@ -211,11 +218,14 @@ class PipelineJobBean(
             }
 
             watcher.start("projectRouterTagCheck")
-            val projectRouterTagCheck = client.get(ServiceProjectTagResource::class)
-                .checkProjectRouter(pipelineTimer.projectId).data ?: return
-            if (!projectRouterTagCheck) {
-                logger.warn("timePipeline ${pipelineTimer.projectId} router tag is not this cluster")
-                return
+            // 创作流部署集群与项目所属集群不一致，跳过集群校验，否则定时任务不会触发
+            if (pipelineTimer.channelCode != ChannelCode.CREATIVE_STREAM) {
+                val projectRouterTagCheck = client.get(ServiceProjectTagResource::class)
+                    .checkProjectRouter(pipelineTimer.projectId).data ?: return
+                if (!projectRouterTagCheck) {
+                    logger.warn("timePipeline ${pipelineTimer.projectId} router tag is not this cluster")
+                    return
+                }
             }
 
             var find = false
@@ -248,7 +258,7 @@ class PipelineJobBean(
                                 projectId = projectId,
                                 pipelineId = pipelineId
                             ) ?: pipelineTimer.startUser,
-                            channelCode = pipelineTimer.channelCode,
+                            timerChannelCode = pipelineTimer.channelCode,
                             taskId = taskId,
                             startParam = pipelineTimer.startParam,
                             expectedStartTime = context.scheduledFireTime.time

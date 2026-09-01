@@ -30,6 +30,7 @@ package com.tencent.devops.project.service
 
 import com.tencent.devops.project.pojo.ProjectCreateExtInfo
 import com.tencent.devops.project.pojo.ProjectCreateInfo
+import com.tencent.devops.project.pojo.ProjectProperties
 
 /**
  * 外部项目服务类
@@ -40,7 +41,6 @@ interface ProjectExtService {
     fun createExtProjectInfo(
         userId: String,
         authProjectId: String,
-        accessToken: String?,
         projectCreateInfo: ProjectCreateInfo,
         createExtInfo: ProjectCreateExtInfo,
         logoAddress: String?
@@ -53,7 +53,6 @@ interface ProjectExtService {
      */
     fun createOldAuthProject(
         userId: String,
-        accessToken: String?,
         projectCreateInfo: ProjectCreateInfo
     ): String?
 
@@ -62,4 +61,23 @@ interface ProjectExtService {
         projectId: String,
         enabled: Boolean
     ): Boolean
+
+    /**
+     * 更新项目共享制品开关
+     */
+    fun updateShareArtifact(
+        userId: String,
+        projectId: String,
+        enabled: Boolean
+    ): Boolean
+
+    /**
+     * 检测并同步共享制品开关变更到 BkRepo
+     */
+    fun syncShareArtifactIfChanged(
+        userId: String,
+        projectId: String,
+        oldProperties: ProjectProperties?,
+        newProperties: ProjectProperties?
+    )
 }

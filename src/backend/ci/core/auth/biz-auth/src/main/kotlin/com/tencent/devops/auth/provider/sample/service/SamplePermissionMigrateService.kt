@@ -29,6 +29,10 @@
 package com.tencent.devops.auth.provider.sample.service
 
 import com.tencent.devops.auth.pojo.dto.MigrateResourceDTO
+import com.tencent.devops.auth.pojo.dto.ProjectGroupIncrementalMigrationDTO
+import com.tencent.devops.auth.pojo.dto.ProjectGroupMigrationDTO
+import com.tencent.devops.auth.pojo.dto.ProjectGroupMigrationResultDTO
+import com.tencent.devops.auth.pojo.enum.ProjectGroupMigrationStatus
 import com.tencent.devops.auth.service.iam.PermissionMigrateService
 import com.tencent.devops.common.auth.api.pojo.ProjectConditionDTO
 import com.tencent.devops.auth.pojo.dto.PermissionHandoverDTO
@@ -59,6 +63,30 @@ class SamplePermissionMigrateService(
 
     override fun resetProjectPermissions(migrateResourceDTO: MigrateResourceDTO): Boolean {
         return true
+    }
+
+    override fun migrateProjectGroups(
+        migrationDTO: ProjectGroupMigrationDTO
+    ): ProjectGroupMigrationResultDTO {
+        return ProjectGroupMigrationResultDTO(
+            sourceProjectCode = migrationDTO.sourceProjectCode,
+            targetProjectCode = migrationDTO.targetProjectCode,
+            dryRun = migrationDTO.dryRun,
+            status = ProjectGroupMigrationStatus.FAILED,
+            errors = listOf("sample auth migrate service does not support project group migration")
+        )
+    }
+
+    override fun migrateProjectGroupsIncremental(
+        migrationDTO: ProjectGroupIncrementalMigrationDTO
+    ): ProjectGroupMigrationResultDTO {
+        return ProjectGroupMigrationResultDTO(
+            sourceProjectCode = migrationDTO.sourceProjectCode,
+            targetProjectCode = migrationDTO.targetProjectCode,
+            dryRun = migrationDTO.dryRun,
+            status = ProjectGroupMigrationStatus.FAILED,
+            errors = listOf("sample auth migrate service does not support project group incremental migration")
+        )
     }
 
     override fun resetPermissionsWhenEnabledProject(projectCode: String): Boolean {

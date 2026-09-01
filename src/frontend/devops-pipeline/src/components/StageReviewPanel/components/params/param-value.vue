@@ -29,7 +29,7 @@
     </bk-select>
 
     <div
-        v-else-if="isCheakboxParam(form.valueType)"
+        v-else-if="isCheckboxParam(form.valueType)"
         class="clear"
     >
         <bk-checkbox
@@ -61,12 +61,12 @@
 
 <script>
     import {
+        isBooleanParam,
+        isCheckboxParam,
         isEnumParam,
         isMultipleParam,
-        isTextareaParam,
         isStringParam,
-        isBooleanParam,
-        isCheakboxParam
+        isTextareaParam
     } from '@/store/modules/atom/paramsConfig'
 
     export default {
@@ -80,7 +80,7 @@
             isStringParam,
             isTextareaParam,
             isMultipleParam,
-            isCheakboxParam,
+            isCheckboxParam,
 
             isSelectorParam (type) {
                 return isMultipleParam(type) || isEnumParam(type)

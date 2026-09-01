@@ -29,6 +29,7 @@ package com.tencent.devops.process.engine.pojo.event
 
 import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.common.event.pojo.IEvent
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.stream.constants.StreamBinding
 import com.tencent.devops.process.pojo.template.v2.TemplateInstanceType
 
@@ -44,5 +45,6 @@ data class PipelineTemplateInstanceEvent(
     val templateId: String,
     val baseId: String,
     val templateInstanceType: TemplateInstanceType,
+    val channelCode: ChannelCode = ChannelCode.getRequestChannelCode(),
     override var delayMills: Int = 0
 ) : IEvent(delayMills)

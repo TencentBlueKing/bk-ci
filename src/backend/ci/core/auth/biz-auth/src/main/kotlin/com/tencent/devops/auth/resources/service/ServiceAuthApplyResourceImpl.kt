@@ -2,7 +2,9 @@ package com.tencent.devops.auth.resources.service
 
 import com.tencent.devops.auth.api.service.ServiceAuthApplyResource
 import com.tencent.devops.auth.pojo.ApplyJoinGroupInfo
+import com.tencent.devops.auth.pojo.SearchGroupInfo
 import com.tencent.devops.auth.pojo.vo.AuthApplyRedirectInfoVo
+import com.tencent.devops.auth.pojo.vo.ManagerRoleGroupVO
 import com.tencent.devops.auth.service.iam.PermissionApplyService
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
@@ -12,6 +14,20 @@ import org.springframework.beans.factory.annotation.Autowired
 class ServiceAuthApplyResourceImpl @Autowired constructor(
     val permissionApplyService: PermissionApplyService
 ) : ServiceAuthApplyResource {
+    override fun listGroupsForApply(
+        userId: String,
+        projectId: String,
+        searchGroupInfo: SearchGroupInfo
+    ): Result<ManagerRoleGroupVO> {
+        return Result(
+            permissionApplyService.listGroupsForApply(
+                userId = userId,
+                projectId = projectId,
+                searchGroupInfo = searchGroupInfo
+            )
+        )
+    }
+
     override fun applyToJoinGroup(userId: String, applyJoinGroupInfo: ApplyJoinGroupInfo): Result<Boolean> {
         return Result(
             permissionApplyService.applyToJoinGroup(

@@ -1,0 +1,545 @@
+// 跨项目复制-处理资源依赖通用样式
+.detail-item {
+    padding: 12px 0 12px 16px;
+
+    
+    .jump-icon {
+        vertical-align: middle;
+        margin-left: 8px;
+        cursor: pointer;
+        color: #979BA5;
+
+        &:hover {
+            color: #3A84FF;
+        }
+    }
+
+    &:last-child {
+        margin-bottom: 0;
+    }
+
+    .detail-item-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-left: 8px;
+        position: relative;
+
+        .pending-icon {
+            position: absolute;
+            top: 8px;
+            left: -18px;
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: #F59500;
+        }
+
+        .header-name {
+            font-size: 14px;
+            color: #4D4F56;
+            font-weight: 700;
+        }
+
+        .affected-pipeline-count {
+            cursor: pointer;
+            display: inline-flex;
+            font-size: 12px;
+            color: #979BA5;
+            padding: 4px 12px;
+            align-items: center;
+            gap: 8px;
+            border-radius: 2px;
+            border: 1px solid #DCDEE5;
+            background-color:  #FAFBFD;
+
+            .list-line {
+                color: #4D4F56;
+                vertical-align: middle;
+            }
+        }
+
+        .repo-url {
+            font-size: 12px;
+            color: #979BA5;
+        }
+
+        .auto-id-tip {
+            font-size: 12px;
+            color: #979BA5;
+        }
+
+        .arrow-right {
+            text-align: right;
+            margin: 6px 16px 4px 0;
+            align-items: end;
+            flex-shrink: 0;
+        }
+
+    }
+
+    // 流水线冲突特殊样式
+    .conflict-header {
+        align-items: normal;
+
+        .pipeline-info {
+            display: flex;
+            align-items: baseline;
+
+            .pipeline-info-content {
+                display: flex;
+                flex-direction: column;
+            }
+        }
+
+        .source-label,
+        .target-label {
+            font-size: 10px;
+            padding: 0 6px;
+            align-items: center;
+            align-content: center;
+            border-radius: 8px;
+            margin-right: 8px;
+        }
+
+        .source-label {
+            background: #D2F0FF;
+            color: #0A8CCD;
+        }
+
+        .target-label {
+            background: #DCE1FF;
+            color: #2319D2;
+        }
+
+        .target-name {
+            font-size: 14px;
+        }
+
+        .name-conflict {
+            color: #FF9C01;
+        }
+
+        .id-conflict {
+            color: #EA3636;
+        }
+
+        .target-content {
+            display: flex;
+            flex: 1;
+            padding: 0 100px;
+
+            .target-pipelines {
+                display: flex;
+                flex-direction: column;
+                gap: 8px;
+
+                .target-item {
+                    display: flex;
+                    align-items: center;
+                }
+            }
+        }
+
+        // 冲突标签容器
+        .conflict-badges {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            justify-content: center;
+            align-items: center;
+            
+            .conflict-badge {
+                display: inline-flex;
+                align-items: center;
+                padding: 2px 8px;
+                font-size: 12px;
+                line-height: 16px;
+                border-radius: 2px;
+                font-weight: 400;
+                
+                &.name-conflict-badge {
+                    background: #FDEED8;
+                    color: #E38B02;
+                }
+                
+                &.id-conflict-badge {
+                    background: #FFEBEB;
+                    color: #E71818;
+                }
+            }
+        }
+    }
+
+    .strategy-group {
+        display: flex;
+        gap: 16px;
+        margin-top: 15px;
+
+        .strategy-item {
+            display: flex;
+            flex: 1;
+            flex-direction: column;
+            padding: 12px;
+            background: #F5F7FA;
+            border-radius: 2px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid transparent;
+
+            &:hover:not(.disabled) {
+                border-color: #3A84FF;
+            }
+
+            &.active {
+                border-color: #3A84FF;
+                background: #F0F5FF;
+            }
+
+            &.high-risk {
+                .high-risk-badge {
+                    display: inline-flex;
+                    align-items: center;
+                    margin-left: 4px;
+                    padding: 0 8px;
+                    border-radius: 2px;
+                    background: #FEEBEA;
+                    border: 1px solid #F8B4B4;
+                    color: #E71818;
+                    font-size: 12px;
+                    line-height: 20px;
+                    font-weight: 400;
+                }
+            }
+
+            .recommend-badge {
+                display: inline-flex;
+                align-items: center;
+                margin-left: 4px;
+                padding: 0 6px;
+                height: 18px;
+                border-radius: 2px;
+                background: #E4FAF0;
+                color: #14A568;
+                font-size: 12px;
+                line-height: 18px;
+                font-weight: 400;
+            }
+
+            &.disabled {
+                cursor: not-allowed;
+                color: #C4C6CC;
+                background-color: #FAFBFD;
+
+                ::v-deep .bk-radio-text {
+                    color: #C4C6CC;
+                }
+
+                .strategy-desc {
+                    color: #C4C6CC,
+                }
+
+                .no-same-name {
+                    display: inline-flex;
+                    align-items: center;
+                    margin-left: 8px;
+                    gap: 4px;
+                    font-size: 12px;
+                    color: #4D4F56;
+                    border-radius: 2px;
+                    border: 1px solid #DCDEE5;
+                    background-color: #F0F1F5;
+                    padding: 0 8px;
+                    line-height: 22px;
+
+                    .icon-info-circle {
+                        color: #FF9C01;
+                    }
+                }
+            }
+
+            ::v-deep .bk-radio-text {
+                font-size: 12px;
+                margin: 0 8px;
+                color: #313238;
+            }
+
+            .strategy-desc {
+                margin: 8px 0 0 24px;
+                font-size: 12px;
+                color: #979BA5;
+                line-height: 20px;
+            }
+        }
+    }
+
+    
+    .credential-select-wrapper {
+        display: flex;
+        align-items: center;
+        margin: 12px 0;
+        
+        .credential-label {
+            display: flex;
+            flex-shrink: 0;
+            padding: 6px 8px;
+            align-items: center;
+            font-size: 12px;
+            color: #4D4F56;
+            line-height: 20px;
+            border: 1px solid #F0F1F5;
+            border-radius: 2px 0 0 2px;
+            background: #F0F1F5;
+
+            .required-star {
+                color: #EA3636;
+                margin-left: 6px;
+            }
+        }
+
+        .bk-select {
+            flex: 1;
+            border: 2px solid #F5F7FA;
+            background-color: #F5F7FA;
+            box-shadow: none;
+        }
+    }
+
+    // 固定策略展示样式
+    .fixed-strategy-section {
+        margin-top: 12px;
+
+        .strategy-label {
+            font-size: 12px;
+            color: #63656E;
+            line-height: 20px;
+            margin-bottom: 8px;
+
+            .required-star {
+                color: #EA3636;
+                margin-left: 2px;
+            }
+        }
+
+        .fixed-strategy-item {
+            padding: 12px;
+            background: #E1ECFF;
+            border-radius: 2px;
+            border: 1px solid #3A84FF;
+
+            .strategy-header {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                margin-bottom: 8px;
+
+                .strategy-name {
+                    font-size: 12px;
+                    color: #313238;
+                    line-height: 20px;
+                    font-weight: 500;
+                }
+
+                .recommend-badge {
+                    display: inline-flex;
+                    padding: 0 6px;
+                    height: 18px;
+                    align-items: center;
+                    font-size: 12px;
+                    color: #14A568;
+                    line-height: 18px;
+                    background: #E4FAF0;
+                    border-radius: 2px;
+                }
+            }
+
+            .strategy-desc {
+                font-size: 12px;
+                color: #63656E;
+                line-height: 20px;
+                margin: 0;
+            }
+        }
+    }
+
+    // 固定策略容器样式（用于流水线标签和流水线分组）
+    .fixed-strategy-container {
+        padding: 16px;
+
+        .strategy-title {
+            font-size: 12px;
+            color: #63656E;
+            line-height: 20px;
+            margin-bottom: 12px;
+
+            .required-star {
+                color: #EA3636;
+                margin-left: 2px;
+            }
+        }
+
+        .strategy-option-card {
+            padding: 12px;
+            margin-bottom: 8px;
+            border: 1px solid #DCDEE5;
+            border-radius: 2px;
+            background: #FFFFFF;
+            cursor: pointer;
+            transition: all 0.3s;
+
+            &:hover {
+                border-color: #3A84FF;
+            }
+
+            &.active {
+                background: #E1ECFF;
+                border-color: #3A84FF;
+            }
+
+            &:last-child {
+                margin-bottom: 0;
+            }
+
+            .strategy-option-header {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                margin-bottom: 4px;
+
+                .strategy-option-name {
+                    font-size: 12px;
+                    color: #313238;
+                    line-height: 20px;
+                    font-weight: 500;
+                }
+
+                .recommend-badge {
+                    display: inline-flex;
+                    padding: 0 6px;
+                    height: 18px;
+                    align-items: center;
+                    font-size: 12px;
+                    color: #14A568;
+                    line-height: 18px;
+                    background: #E4FAF0;
+                    border-radius: 2px;
+                }
+            }
+
+            .strategy-option-desc {
+                font-size: 12px;
+                color: #63656E;
+                line-height: 20px;
+                margin: 0;
+                padding-left: 24px;
+            }
+        }
+    }
+
+    // 分组类型标签样式
+    .group-type-tag {
+        display: inline-flex;
+        padding: 0 6px;
+        height: 18px;
+        align-items: center;
+        font-size: 12px;
+        color: #63656E;
+        line-height: 18px;
+        background: #F0F1F5;
+        border-radius: 2px;
+        margin-left: 8px;
+    }
+
+    .auth-config-section {
+        margin-top: 12px;
+
+        .auth-warning {
+            display: flex;
+            align-items: center;
+            padding-left: 8px;
+            margin-bottom: 8px;
+            border-radius: 2px;
+            font-size: 12px;
+            color: #299E56;
+
+            &.has-error {
+                color: #E38B02;
+            }
+
+            svg {
+                vertical-align: middle;
+                margin-right: 5px;
+            }
+
+            .refresh-icon {
+                color: #3A84FF;
+                margin-left: 10px;
+            }
+        }
+
+        .auth-config-table {
+            width: 100%;
+            table-layout: fixed;
+            border-collapse: collapse;
+            background: #FFFFFF;
+            font-size: 12px;
+            border-color: #DCDEE5;
+
+            thead {
+                tr {
+                    background: #FAFBFD;
+                    height: 36px;
+                }
+
+                th {
+                    padding: 12px;
+                    text-align: left;
+                    font-weight: 400;
+                    color: #313238;
+
+                    &.auth-config-cell-title {
+                        width: 200px;
+                        font-weight: 700;
+                        background-color: #F0F1F5;
+                    }
+
+                    &.auth-config-cell {
+                        width: calc((100% - 200px) / 2);
+                    }
+                }
+            }
+
+            tbody {
+                tr {
+                    height: 36px;
+
+                    &:last-child {
+                        border-bottom: none;
+                    }
+                }
+
+                td {
+                    padding: 12px;
+                    color: #313238;
+                    vertical-align: middle;
+
+                    &.auth-config-cell-title {
+                        width: 200px;
+                        background-color: #F0F1F5;
+                    }
+
+                    &.auth-config-cell {
+                        width: calc((100% - 200px) / 2);
+
+                        ::v-deep .bk-radio-text {
+                            font-size: 12px;
+                            margin: 0 24px 0 4px;
+                            color: #313238;
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

@@ -270,6 +270,30 @@
                             </bk-select>
                         </bk-form-item>
                         <bk-form-item
+                            v-if="isWindowsPlatform"
+                            :label="$t('experience.experience_env')"
+                        >
+                            <div class="bkdevop-checkbox-group">
+                                <bk-checkbox v-model="createReleaseForm.enableDevxAccess">
+                                    {{ $t('experience.allow_dev_cloud_access') }}
+                                </bk-checkbox>
+                                <bk-checkbox
+                                    v-if="showPublicAccessCheckbox"
+                                    v-model="createReleaseForm.enablePublicAccess"
+                                >
+                                    {{ $t('experience.allow_public_access') }}
+                                    <span
+                                        v-bk-tooltips="{
+                                            content: $t('experience.allow_public_access_tip'),
+                                            maxWidth: 300
+                                        }"
+                                    >
+                                        <i class="bk-icon icon-info-circle" />
+                                    </span>
+                                </bk-checkbox>
+                            </div>
+                        </bk-form-item>
+                        <bk-form-item
                             :label="$t('experience.notification_method')"
                             v-bind="notifyDesc"
                         >
@@ -435,7 +459,9 @@
                     wechatGroups: '',
                     enableWechatGroups: false,
                     experienceGroups: [],
-                    classify: ''
+                    classify: '',
+                    enableDevxAccess: false,
+                    enablePublicAccess: false
                 },
                 packageLoading: {
                     isLoading: false,
@@ -630,6 +656,9 @@
             isAlphaApk () {
                 return !!this.metaList.find(item => item.key === 'BK-CI-APP-STAGE' && item.value === 'Alpha')
             },
+            showPublicAccessCheckbox () {
+                return this.experienceRange === 'internals'
+            },
             
             createInnerApkExpTips () {
                 return this.$t(`experience.${this.isPublicExp ? 'publicExpTips' : 'innerExpTips'}`, [this.createReleaseForm.name])
@@ -654,18 +683,25 @@
                     this.metaList = []
                     this.query.initDate = ''
                     this.createReleaseForm = {
+                        platform: platformMap.ANDROID,
                         name: '',
                         version_no: '',
+                        versionTitle: '',
                         desc: '',
+                        experienceName: '',
+                        bundleIdentifier: '',
+                        categoryId: null,
+                        productOwner: [],
                         end_date: '',
                         internal_list: [],
                         external_list: [],
                         notice_list: '',
-                        versionTitle: '',
-                        experienceName: '',
-                        categoryId: null,
-                        productOwner: [],
-                        experienceGroups: []
+                        wechatGroups: '',
+                        enableWechatGroups: false,
+                        experienceGroups: [],
+                        classify: '',
+                        enableDevxAccess: false,
+                        enablePublicAccess: false
                     }
                 }
             },
@@ -755,6 +791,8 @@
                     this.createReleaseForm.enableWechatGroups = res.enableWechatGroups
                     this.createReleaseForm.experienceGroups = res.experienceGroups
                     this.createReleaseForm.classify = res.classify
+                    this.createReleaseForm.enableDevxAccess = res.enableDevxAccess
+                    this.createReleaseForm.enablePublicAccess = res.enablePublicAccess
                     // 体验组如果为kygplomw,选中公开体验
                     const publicGroup = this.createReleaseForm.experienceGroups.find(item => item.groupHashId === 'kygplomw')
                     this.experienceRange = publicGroup ? 'public' : 'internals'

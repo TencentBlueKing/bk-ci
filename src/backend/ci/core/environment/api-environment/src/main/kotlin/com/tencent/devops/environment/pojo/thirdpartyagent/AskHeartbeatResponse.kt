@@ -51,7 +51,9 @@ data class AskHeartbeatResponse(
     @get:Schema(title = "docker最大任务数量")
     val dockerParallelTaskCount: Int,
     @get:Schema(title = "用户国际化语言")
-    val language: String
+    val language: String,
+    @get:Schema(title = "创作流模式")
+    val createMod: Boolean? = false
 ) {
     constructor(resp: HeartbeatResponse) : this(
         masterVersion = resp.masterVersion,
@@ -63,6 +65,7 @@ data class AskHeartbeatResponse(
         fileGateway = resp.fileGateway,
         props = resp.props,
         dockerParallelTaskCount = resp.dockerParallelTaskCount,
-        language = resp.language
+        language = resp.language,
+        createMod = resp.createMod
     )
 }

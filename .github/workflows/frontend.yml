@@ -29,11 +29,11 @@ jobs:
           fetch-depth: 0
       - uses: pnpm/action-setup@v2
         with:
-          version: 9.5.0
+          version: 11.4.0
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22.22.3
           cache: "pnpm"
           cache-dependency-path: src/frontend/pnpm-lock.yaml
       - uses: nrwl/nx-set-shas@v4
@@ -45,6 +45,7 @@ jobs:
       - run: |
           pnpm install
           export NODE_OPTIONS=--openssl-legacy-provider
+          export VITE_CSS_TIMEOUT=180000  # 180 seconds for LESS compilation
           pnpm public
         working-directory: src/frontend
       - name: generate version log

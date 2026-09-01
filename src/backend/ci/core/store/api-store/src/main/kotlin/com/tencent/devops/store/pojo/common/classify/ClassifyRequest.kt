@@ -27,6 +27,7 @@
 
 package com.tencent.devops.store.pojo.common.classify
 
+import com.tencent.devops.store.pojo.common.enums.ServiceScopeEnum
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "分类信息请求报文体")
@@ -35,6 +36,8 @@ data class ClassifyRequest(
     val classifyCode: String,
     @get:Schema(title = "分类名称", required = true)
     val classifyName: String,
+    @get:Schema(title = "服务范围", required = false)
+    val serviceScope: ServiceScopeEnum? = null,
     @get:Schema(title = "权重（数值越大代表权重越高）", required = false)
-    val weight: Int?
+    val weight: Int? = null
 )

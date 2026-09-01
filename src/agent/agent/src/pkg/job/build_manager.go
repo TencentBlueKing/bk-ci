@@ -33,9 +33,8 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/TencentBlueKing/bk-ci/agentcommon/logs"
-
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/api"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/logs"
 )
 
 // buildManager 二进制构建对象管理
@@ -75,6 +74,18 @@ func (b *buildManager) GetInstances() []api.ThirdPartyBuildInfo {
 	result := make([]api.ThirdPartyBuildInfo, 0)
 	b.instances.Range(func(_, value interface{}) bool {
 		result = append(result, *value.(*api.ThirdPartyBuildInfo))
+		return true
+	})
+	return result
+}
+
+// GetInstancesWithPid 获取所有运行中的构建实例，返回 pid -> buildInfo 的映射
+func (b *buildManager) GetInstancesWithPid() map[int]*api.ThirdPartyBuildInfo {
+	result := make(map[int]*api.ThirdPartyBuildInfo)
+	b.instances.Range(func(key, value interface{}) bool {
+		pid := key.(int)
+		info := value.(*api.ThirdPartyBuildInfo)
+		result[pid] = info
 		return true
 	})
 	return result

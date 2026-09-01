@@ -1,0 +1,86 @@
+.variableForm {
+  padding: var(--spacing-lg);
+  font-size: var(--font-size-xs);
+}
+
+.variableForm :global(.bk-form-label),
+.variableForm :global(.bk-form-content),
+.variableForm :global(.bk-input),
+.variableForm :global(.bk-input input),
+.variableForm :global(.bk-input--text),
+.variableForm :global(.bk-textarea),
+.variableForm :global(.bk-textarea textarea),
+.variableForm :global(.bk-select),
+.variableForm :global(.bk-select-name),
+.variableForm :global(.bk-select-tag),
+.variableForm :global(.bk-select-button),
+.variableForm :global(.bk-radio),
+.variableForm :global(.bk-radio-label),
+.variableForm :global(.bk-checkbox),
+.variableForm :global(.bk-checkbox-label),
+.variableForm :global(.bk-button) {
+  font-size: var(--font-size-xs);
+}
+
+.formActions {
+  display: flex;
+  gap: var(--spacing-sm);
+}
+
+.optionsEditor {
+  width: 100%;
+}
+
+.optionItem {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-sm);
+}
+
+.optionInput {
+  flex: 1;
+}
+
+.optionItem i {
+  font-size: var(--font-size-md);
+  color: var(--color-text-tertiary);
+  cursor: pointer;
+  transition: color var(--transition-slow);
+}
+
+.optionItem i:hover {
+  color: var(--color-danger);
+}
+
+/* 复选框行布局 */
+.checkboxRow {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-lg);
+}
+
+.checkboxItem {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.separator {
+  width: 1px;
+  height: var(--spacing-lg);
+  background-color: var(--border-color);
+  flex-shrink: 0;
+}
+
+.infoIcon {
+  display: inline-flex;
+  align-items: center;
+  color: var(--color-text-light-gray);
+  cursor: pointer;
+  font-size: var(--font-size-xs);
+
+  &:hover {
+    color: var(--color-text-tertiary);
+  }
+}

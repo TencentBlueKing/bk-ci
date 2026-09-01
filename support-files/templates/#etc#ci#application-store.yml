@@ -39,6 +39,12 @@ store:
     project: demo
     user: admin
 
+  notify:
+    wework:
+      groupIds:
+        - "ww123"
+        - "ww456"
+
 logo:
   allowUploadLogoTypes: jpg,png
   allowUploadLogoWidth: 200
@@ -47,7 +53,7 @@ logo:
 
 aes:
   # 部署前修改好，后续升级如果再修改，会导致历史数据读取不了，所以如果修改需要先解密重新入库
-  aesKey: "J%k^yO{?vt}3tXpG"
+  aesKey: __BK_CI_STORE_AES_KEY__
   aesMock: "******"
   
 statistics:

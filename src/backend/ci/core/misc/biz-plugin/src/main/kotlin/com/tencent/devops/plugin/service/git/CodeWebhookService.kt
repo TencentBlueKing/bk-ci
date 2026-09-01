@@ -65,6 +65,7 @@ import com.tencent.devops.plugin.dao.PluginGitCheckDao
 import com.tencent.devops.plugin.dao.PluginGithubCheckDao
 import com.tencent.devops.plugin.service.ScmCheckService
 import com.tencent.devops.process.api.service.ServiceBuildResource
+import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
 import com.tencent.devops.process.utils.PIPELINE_START_CHANNEL
 import com.tencent.devops.scm.code.git.api.GITHUB_CHECK_RUNS_CONCLUSION_FAILURE
@@ -283,9 +284,10 @@ class CodeWebhookService @Autowired constructor(
             }
 
             if (variables[PIPELINE_START_CHANNEL] != ChannelCode.BS.name &&
-                variables[PIPELINE_START_CHANNEL] != ChannelCode.GONGFENGSCAN.name
+                variables[PIPELINE_START_CHANNEL] != ChannelCode.GONGFENGSCAN.name &&
+                variables[PIPELINE_START_CHANNEL] != ChannelCode.CREATIVE_STREAM.name
             ) {
-                logger.warn("Process instance($buildId) is not bs or gongfengscan channel")
+                logger.warn("Process instance($buildId) is not bs, gongfengscan or creative_stream channel")
                 return
             }
 
@@ -426,8 +428,15 @@ class CodeWebhookService @Autowired constructor(
                 logger.warn("Build($buildId) number is null")
                 return
             }
-            val channelCode = variables[PIPELINE_START_CHANNEL]?.let { ChannelCode.getChannel(it) } ?: ChannelCode.BS
-            val targetUrl = "${HomeHostUtil.innerServerHost()}/console/pipeline/$projectId/$pipelineId/detail/$buildId"
+            val channelCode = variables[PIPELINE_START_CHANNEL]?.let { ChannelCode.getChannel(it) }
+                ?: ChannelCode.getRequestChannelCode()
+            val targetUrl = getBuildUrl(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                channelCode = channelCode,
+                variables = variables
+            )
 
             val description = when (state) {
                 GIT_COMMIT_CHECK_STATE_PENDING -> "Your pipeline [$pipelineName] is running"
@@ -610,12 +619,18 @@ class CodeWebhookService @Autowired constructor(
             "Code web hook add pr check [projectId=$projectId, pipelineId=$pipelineId, buildId=$buildId, " +
                 "repo=$repositoryConfig, commitId=$commitId, status=$status]"
         )
-
+        val pipelineInfo =
+            client.get(ServicePipelineResource::class).getPipelineInfoByPipelineId(pipelineId, projectId)?.data
+        if (pipelineInfo == null) {
+            logger.warn("Process pipeline($pipelineId) not exist")
+            return
+        }
         val buildHistoryResult = client.get(ServiceBuildResource::class).getBuildVars(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
-            buildId = buildId
+            buildId = buildId,
+            channelCode = pipelineInfo.channelCode
         )
 
         if (buildHistoryResult.isNotOk() || buildHistoryResult.data == null) {
@@ -640,7 +655,8 @@ class CodeWebhookService @Autowired constructor(
         val webhookEventType = variables[BK_REPO_GIT_WEBHOOK_EVENT_TYPE]
         val name = "$pipelineName@$webhookEventType"
 
-        val channelCode = variables[PIPELINE_START_CHANNEL]?.let { ChannelCode.getChannel(it) } ?: ChannelCode.BS
+        val channelCode =
+            variables[PIPELINE_START_CHANNEL]?.let { ChannelCode.getChannel(it) } ?: ChannelCode.getRequestChannelCode()
         // 构建任务链接
         val detailUrl = getBuildUrl(
             projectId = projectId,
@@ -749,7 +765,7 @@ class CodeWebhookService @Autowired constructor(
         val codeccTaskId = variables[CodeccUtils.BK_CI_CODECC_TASK_ID]
         val codeccPrefix = "${HomeHostUtil.innerCodeccHost()}/codecc/$projectId/task"
         if (codeccTaskId != null) {
-            "$codeccPrefix/$codeccTaskId/detail"
+            "$codeccPrefix/$codeccTaskId/detail?pipelineId=$pipelineId&buildId=$buildId&from=check_run"
         } else {
             "$codeccPrefix/list?pipelineId=$pipelineId&buildId=$buildId&from=check_run"
         }

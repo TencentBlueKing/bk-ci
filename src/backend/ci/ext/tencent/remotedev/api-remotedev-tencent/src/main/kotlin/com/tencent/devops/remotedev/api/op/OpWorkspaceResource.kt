@@ -30,6 +30,7 @@ package com.tencent.devops.remotedev.api.op
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.remotedev.pojo.ShareWorkspace
+import com.tencent.devops.remotedev.pojo.WorkspaceKind
 import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
 import com.tencent.devops.remotedev.pojo.WorkspaceShared
 import com.tencent.devops.remotedev.pojo.WorkspaceSharedOpUse
@@ -172,6 +173,20 @@ interface OpWorkspaceResource {
         type: String?
     ): Result<Boolean>
 
+    @Operation(summary = "批量更新云桌面实例类型")
+    @POST
+    @Path("/update_workspace_kind")
+    fun updateWorkspaceKind(
+        @Parameter(description = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "工作空间名称列表", required = true)
+        workspaceNames: List<String>,
+        @Parameter(description = "云桌面实例类型，取值 cvd-personal / cvd-team", required = true)
+        @QueryParam("workspaceKind")
+        workspaceKind: WorkspaceKind
+    ): Result<Boolean>
+
     @Operation(summary = "由于取消了任务轮询，现在状态流转依赖于回调，所以增加此监控手段")
     @GET
     @Path("/pending_check")
@@ -200,5 +215,16 @@ interface OpWorkspaceResource {
         @Parameter(description = "是否启用", required = true)
         @QueryParam("enable")
         enable: Boolean
+    ): Result<Boolean>
+
+    @Operation(summary = "批量开启工作空间CoffeeAI功能")
+    @POST
+    @Path("/enable_coffee_ai")
+    fun enableCoffeeAI(
+        @Parameter(description = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "工作空间名称列表", required = true)
+        workspaceNames: List<String>
     ): Result<Boolean>
 }

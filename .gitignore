@@ -5,6 +5,7 @@
 .gradle
 .settings
 bin/
+docs/monitor/
 docs/node_modules
 docs/_book
 docs/package-lock.json
@@ -61,10 +62,15 @@ CHANGELOG/bundledVersionLog*.json
 pre-*-bkcodeai
 
 .codebuddy/
+bkcodeai.json
 .cursor/
 specs/
 .specify/
 .cursorrules
 CODEBUDDY.md
 AGENTS.md
-openspec/
+openspec/*
+!openspec/changes/
+openspec/changes/*
+!openspec/changes/archive/
+!openspec/specs/

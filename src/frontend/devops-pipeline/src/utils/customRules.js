@@ -17,6 +17,16 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+import { hasAnyMatrixRuleValue } from './matrixRule'
+
+function getPipelineI18nText (key, fallback, params) {
+    const i18n = window?.pipelineVue?.$i18n
+    if (i18n?.t) {
+        return i18n.t(key, params)
+    }
+    return fallback
+}
+
 const customeRules = {
     string: {
         validate: function (value, args) {
@@ -44,16 +54,11 @@ const customeRules = {
         },
     },
     // 不同时为空
-    atlestNotEmpty: {
+    atLeastNotEmpty: {
+        getMessage: () => getPipelineI18nText('editPage.matrixAnyRequiredTips', 'At least one field is required'),
         validate: function (value, args) {
-            console.log(args, 'not')
-            let notEmptyNum = 0
-            for (const i in args) {
-                if (args[i]) {
-                    notEmptyNum++
-                }
-            }
-            return notEmptyNum > 0
+            const values = Array.isArray(args) ? args : (args || {})
+            return hasAnyMatrixRuleValue(values)
         }
     },
     pullmode: {
@@ -115,7 +120,7 @@ const customeRules = {
         validate: function (value, args) {
             const numberPattern = /\b([1-9]|[1-9]\d{1,3}|10080|100[0-7][0-9]|10079|10000)\b/
             const isValidNumber = numberPattern.test(value)
-            const isValidVar = args[0] === 'CLASSIC' ? value.isBkVar() : value.isBKConstraintVar()
+            const isValidVar = args[0] === 'CLASSIC' ? String(value).isBkVar() : String(value).isBKConstraintVar()
     
             return isValidNumber || isValidVar
         }
@@ -132,7 +137,21 @@ const customeRules = {
     },
     objectRequired: {
         validate: function (value, args) {
-            return Object.values(value).every(val => !!val)
+            const isEmpty = (val) => {
+                if (Array.isArray(val)) return val.length === 0
+                if (val === false || val === 0) return false
+                if (val && typeof val === 'object') {
+                    return Object.values(val).every(item => isEmpty(item))
+                }
+                return val === undefined || val === null || String(val).trim() === ''
+            }
+            if (Array.isArray(value)) {
+                return value.length > 0 && value.every(row => !isEmpty(row))
+            }
+            if (value && typeof value === 'object') {
+                return Object.values(value).every(val => !isEmpty(val))
+            }
+            return !isEmpty(value)
         }
     },
     // cron 表达式数组校验规则 - 检查是否为空数组
@@ -155,6 +174,8 @@ const customeRules = {
         }
     }
 }
+
+customeRules.atlestNotEmpty = customeRules.atLeastNotEmpty
 
 function ExtendsCustomRules (_extends) {
     if (typeof _extends !== 'function') {

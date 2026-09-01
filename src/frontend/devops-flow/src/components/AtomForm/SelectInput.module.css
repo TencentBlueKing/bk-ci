@@ -1,0 +1,141 @@
+.selectInput {
+  position: relative;
+}
+
+.inputWrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.inputWrapper :global(.bk-input) {
+  padding-right: 40px;
+}
+
+.clearIcon,
+.loadingIcon {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #c4c6cc;
+  font-size: 14px;
+  z-index: 1;
+}
+
+.clearIcon {
+  cursor: pointer;
+}
+
+.clearIcon:hover {
+  color: #979ba5;
+}
+
+.loadingIcon {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: translateY(-50%) rotate(0deg);
+  }
+  to {
+    transform: translateY(-50%) rotate(360deg);
+  }
+}
+
+.dropdownContainer {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 100%;
+  max-height: 216px;
+  margin-top: 4px;
+  background: #fff;
+  border: 1px solid #dcdee5;
+  border-radius: 2px;
+  box-shadow: 0 2px 6px 0 rgba(0, 0, 0, 0.1);
+  z-index: 1111;
+  overflow: auto;
+}
+
+.optionList {
+  margin: 0;
+  padding: 4px 0;
+  list-style: none;
+}
+
+.optionItem {
+  padding: 0 12px;
+  line-height: 32px;
+  font-size: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+  color: #63656e;
+}
+
+.optionItem:hover,
+.optionItem.highlighted {
+  background-color: #e1ecff;
+  color: #3a84ff;
+}
+
+.optionItem.active {
+  background-color: #f4f6fa;
+  color: #3a84ff;
+}
+
+.optionItem.disabled {
+  color: #c4c6cc;
+  cursor: not-allowed;
+}
+
+.optionItem.disabled:hover {
+  background-color: transparent;
+  color: #c4c6cc;
+}
+
+.groupName {
+  padding: 0 12px;
+  line-height: 32px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #979ba5;
+  border-bottom: 1px solid #dcdee5;
+}
+
+.groupItem {
+  padding: 0 18px;
+  line-height: 32px;
+  font-size: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+  color: #63656e;
+}
+
+.groupItem:hover,
+.groupItem.highlighted {
+  background-color: #e1ecff;
+  color: #3a84ff;
+}
+
+.groupItem.active {
+  background-color: #f4f6fa;
+  color: #3a84ff;
+}
+
+.groupItem.disabled {
+  color: #c4c6cc;
+  cursor: not-allowed;
+}
+
+.noData {
+  padding: 8px 12px;
+  font-size: 12px;
+  color: #c4c6cc;
+  text-align: center;
+}

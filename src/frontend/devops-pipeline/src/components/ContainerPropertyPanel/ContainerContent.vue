@@ -486,6 +486,15 @@
             :build-resource-type="buildResourceType"
             @choose="choose"
         ></image-selector>
+        <MacDebugDialog
+            ref="macDebugDialog"
+            :is-show="isShowDebug"
+            :pipeline-id="pipelineId"
+            :container-id="container.containerId"
+            :build-id="buildId"
+            :execute-count="container.executeCount"
+            @close="closeDebugDialog"
+        />
     </section>
 </template>
 
@@ -507,6 +516,7 @@
     import JobMutual from './JobMutual'
     import JobOption from './JobOption'
     import LinuxOsDockerImage from './LinuxOsDockerImage'
+    import MacDebugDialog from '../MacDebugDialog.vue'
 
     export default {
         name: 'container-content',
@@ -525,6 +535,7 @@
             ImageSelector,
             SelectInput,
             CustomEnvField,
+            MacDebugDialog,
             LinuxOsDockerImage
         },
         props: {
@@ -554,6 +565,7 @@
                 isLoadingWin: false,
                 windowsVersionList: [],
                 macOSHwSpecList: [],
+                isShowDebug: false,
                 isShowPerformance: false
             }
         },
@@ -1034,14 +1046,15 @@
                         this.macOSHwSpecList = res.data
 
                         const defaultHwSpec = res.data.find(i => i.uid === 'VMware')
-                        const defaultImage = defaultHwSpec.images[0]
-                        const defaultXcode = defaultImage.xcodes?.[0]
+                        const firstHwSpec = res.data[0]
+                        const firstImage = firstHwSpec?.images?.[0]
+                        const firstXcode = firstImage?.xcodes?.[0]
 
-                        // 新建流水线：初始化默认值
+                        // 新建流水线：新建默认取接口返回第一条为初始化默认值
                         if (this.macOSHwSpec === undefined || (this.systemVersion === undefined && this.xcodeVersion === undefined)) {
-                            this.chooseMacOSHwSpec(defaultHwSpec.uid)
-                            this.chooseMacSystem(defaultImage.uid)
-                            this.chooseXcode('xcodeVersion', defaultXcode)
+                            this.chooseMacOSHwSpec(firstHwSpec.uid)
+                            this.chooseMacSystem(firstImage.uid)
+                            this.chooseXcode('xcodeVersion', firstXcode)
                         } else if (this.macOSHwSpec === '') {
                             // 存量数据兼容：macOSHwSpec 为空字符串，但已有 systemVersion 和 xcodeVersion
                             // 先填充下拉列表数据
@@ -1070,7 +1083,6 @@
                     if (res.data) {
                         this.macOSHwSpecList = res.data.models
                         this.systemVersionList = res.data.images
-                        
                         // 如果是存量数据，没有 macOSHwSpec 或者 macOSHwSpec 为空，设置macOSHwSpec默认值为VMware
                         if (!this.macOSHwSpec && res.data.models.length > 0) {
                             const defaultMacOSHwSpec = res.data.models.find(i => i.uid === 'VMware')
@@ -1184,7 +1196,6 @@
             },
 
             changeBuildResource (name, value, envProjectId) {
-                console.log(name, value, envProjectId)
                 const emptyValueObj
                     = name === 'imageType' || name === 'agentType'
                         ? { value: '', envProjectId: '' }
@@ -1272,6 +1283,12 @@
                 const url = `${WEB_URL_PREFIX}/pipeline/${this.projectId}/dockerConsole/?pipelineId=${this.pipelineId}&dispatchType=${this.buildResourceType}&vmSeqId=${vmSeqId}${buildIdStr}`
                 tab.location = url
             },
+            openDebug () {
+                this.isShowDebug = true
+            },
+            closeDebugDialog () {
+                this.isShowDebug = false
+            },
             handleNfsSwitchChange (name, value) {
                 if (!value) {
                     this.handleContainerChange('buildEnv', {})
@@ -1310,7 +1327,7 @@
                     : `export ${env.name}=/data/soda/apps/${key}/${value}/${env.path}`
             },
             addThirdSlave () {
-                const url = `${WEB_URL_PREFIX}/environment/${this.projectId}/node/allNode?type=${this.container.baseOS}`
+                const url = `${WEB_URL_PREFIX}/environment/${this.projectId}/pipeline/node/allNode?type=${this.container.baseOS}`
                 window.open(url, '_blank')
             },
             changeShowPerformance (isShow = false) {

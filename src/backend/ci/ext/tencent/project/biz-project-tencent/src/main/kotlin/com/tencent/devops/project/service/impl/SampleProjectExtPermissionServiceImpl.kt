@@ -4,7 +4,6 @@ import com.tencent.devops.project.service.ProjectExtPermissionService
 
 class SampleProjectExtPermissionServiceImpl : ProjectExtPermissionService {
     override fun verifyUserProjectPermission(
-        accessToken: String,
         projectCode: String,
         userId: String
     ) = false

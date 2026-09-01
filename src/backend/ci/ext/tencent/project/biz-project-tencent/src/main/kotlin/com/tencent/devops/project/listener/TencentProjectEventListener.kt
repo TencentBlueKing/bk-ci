@@ -33,6 +33,8 @@ import com.tencent.devops.project.pojo.mq.ProjectBroadCastEvent
 import com.tencent.devops.project.pojo.mq.ProjectCreateBroadCastEvent
 import com.tencent.devops.project.pojo.mq.ProjectUpdateBroadCastEvent
 import com.tencent.devops.project.pojo.mq.ProjectUpdateLogoBroadCastEvent
+import com.tencent.devops.project.service.ProjectNotifyService
+import com.tencent.devops.project.service.ProjectOperationalProductService
 import com.tencent.devops.project.service.ProjectPaasCCService
 import com.tencent.devops.project.service.impl.AbsOpProjectServiceImpl.Companion.logger
 import org.springframework.beans.factory.annotation.Autowired
@@ -44,7 +46,9 @@ import org.springframework.beans.factory.annotation.Autowired
 @Suppress("UNUSED", "TooGenericExceptionCaught")
 class TencentProjectEventListener @Autowired constructor(
     val projectPaasCCService: ProjectPaasCCService,
-    val bkAccessTokenApi: BkAccessTokenApi
+    val bkAccessTokenApi: BkAccessTokenApi,
+    val projectOperationalProductService: ProjectOperationalProductService,
+    val projectNotifyService: ProjectNotifyService
 ) : ProjectEventListener {
 
     override fun execute(event: ProjectBroadCastEvent) {
@@ -80,6 +84,46 @@ class TencentProjectEventListener @Autowired constructor(
             projectUpdateInfo = event.projectInfo,
             accessToken = accessToken
         )
+
+        val newKpiCode = event.projectInfo.kpiCode
+        val oldKpiCode = getOldKpiCode(event.projectInfo.englishName)
+
+        // 同步 KPI 产品绑定到 bkCosts
+        projectOperationalProductService.syncKpiProductOnUpdate(event.projectInfo)
+
+        if (!newKpiCode.isNullOrBlank() && newKpiCode != oldKpiCode) {
+            val needMonetization = projectOperationalProductService.checkNeedMonetization(
+                bgId = event.projectInfo.bgId.toString(),
+                businessLineId = event.projectInfo.businessLineId?.toString(),
+                deptId = event.projectInfo.deptId?.toString(),
+                centerId = event.projectInfo.centerId?.toString()
+            )
+            if (needMonetization) {
+                projectNotifyService.sendEmailForKpiCodeChange(
+                    userId = event.userId,
+                    projectName = event.projectInfo.projectName,
+                    englishName = event.projectInfo.englishName,
+                    kpiCode = newKpiCode,
+                    kpiName = event.projectInfo.kpiName,
+                    productId = event.projectInfo.productId,
+                    productName = event.projectInfo.productName
+                )
+            }
+        }
+    }
+
+    private fun getOldKpiCode(englishName: String): String? {
+        return try {
+            val existing = projectOperationalProductService
+                .getBkCostsProjectInfo(englishName)
+                .list.firstOrNull()
+            existing?.icosProductCode
+        } catch (e: Exception) {
+            logger.warn(
+                "getOldKpiCode fail|$englishName|${e.message}"
+            )
+            null
+        }
     }
 
     override fun onReceiveProjectUpdateLogo(event: ProjectUpdateLogoBroadCastEvent) {

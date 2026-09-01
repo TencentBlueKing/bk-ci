@@ -71,7 +71,7 @@ class JobQuotaBusinessService @Autowired constructor(
         executeCount: Int,
         containerId: String,
         containerHashId: String?,
-        channelCode: String = ChannelCode.BS.name
+        channelCode: String = ChannelCode.getRequestChannelCode().name
     ): Boolean {
         var message = ""
         var finalRunningJobCount = 0

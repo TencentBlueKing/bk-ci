@@ -29,9 +29,11 @@ package com.tencent.devops.environment.resources
 
 import com.tencent.bk.audit.annotations.AuditEntry
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.service.prometheus.BkTimed
@@ -39,8 +41,10 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.environment.api.UserEnvironmentResource
 import com.tencent.devops.environment.constant.EnvironmentMessageCode
 import com.tencent.devops.environment.permission.EnvironmentPermissionService
+import com.tencent.devops.environment.pojo.EnvAddNodesData
 import com.tencent.devops.environment.pojo.EnvCreateInfo
 import com.tencent.devops.environment.pojo.EnvUpdateInfo
+import com.tencent.devops.environment.pojo.EnvVar
 import com.tencent.devops.environment.pojo.EnvWithNodeCount
 import com.tencent.devops.environment.pojo.EnvWithPermission
 import com.tencent.devops.environment.pojo.EnvironmentId
@@ -48,6 +52,11 @@ import com.tencent.devops.environment.pojo.NodeBaseInfo
 import com.tencent.devops.environment.pojo.SharedProjectInfo
 import com.tencent.devops.environment.pojo.SharedProjectInfoWrap
 import com.tencent.devops.environment.pojo.enums.EnvType
+import com.tencent.devops.environment.pojo.enums.NodeStatus
+import com.tencent.devops.environment.pojo.envOperate.EnableNodeEnvData
+import com.tencent.devops.environment.pojo.envOperate.EnvOperateLog
+import com.tencent.devops.environment.pojo.envOperate.EnvOperateOrigin
+import com.tencent.devops.environment.service.EnvOperateLogService
 import com.tencent.devops.environment.service.EnvService
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -55,7 +64,8 @@ import org.springframework.beans.factory.annotation.Autowired
 @RestResource
 class UserEnvironmentResourceImpl @Autowired constructor(
     private val envService: EnvService,
-    private val environmentPermissionService: EnvironmentPermissionService
+    private val environmentPermissionService: EnvironmentPermissionService,
+    private val envOperateLogService: EnvOperateLogService
 ) : UserEnvironmentResource {
 
     @BkTimed(extraTags = ["operate", "getEnv"])
@@ -76,6 +86,9 @@ class UserEnvironmentResourceImpl @Autowired constructor(
         if (environment.name.isBlank()) {
             throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_ENV_NAME_TOO_LONG)
         }
+        if (environment.envType == EnvType.CREATE && environment.os == null) {
+            throw InvalidParamException("create env need os")
+        }
 
         return Result(envService.createEnvironment(userId, projectId, environment))
     }
@@ -95,7 +108,7 @@ class UserEnvironmentResourceImpl @Autowired constructor(
             throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_ENV_NAME_NULL)
         }
 
-        envService.updateEnvironment(userId, projectId, envHashId, environment)
+        envService.updateEnvironment(userId, projectId, envHashId, environment, EnvOperateOrigin.WEB)
         return Result(true)
     }
 
@@ -105,7 +118,8 @@ class UserEnvironmentResourceImpl @Autowired constructor(
         projectId: String,
         envName: String?,
         envType: EnvType?,
-        nodeHashId: String?
+        nodeHashId: String?,
+        createMode: Boolean?
     ): Result<List<EnvWithPermission>> {
         return Result(
             envService.listEnvironment(
@@ -113,7 +127,8 @@ class UserEnvironmentResourceImpl @Autowired constructor(
                 projectId = projectId,
                 envName = envName,
                 envType = envType,
-                nodeHashId = nodeHashId
+                nodeHashId = nodeHashId,
+                createMode = createMode
             )
         )
     }
@@ -138,6 +153,29 @@ class UserEnvironmentResourceImpl @Autowired constructor(
         return Result(envService.getEnvironment(userId, projectId, envHashId))
     }
 
+    override fun getEnvEnvs(
+        userId: String,
+        projectId: String,
+        envHashId: String,
+        envName: String?,
+        envValue: String?,
+        source: Boolean?,
+        lastUpdateUser: String?
+    ): Result<List<EnvVar>> {
+        checkParam(userId, projectId, envHashId)
+        return Result(
+            envService.getEnvEnvVar(
+                userId = userId,
+                projectId = projectId,
+                envHashId = envHashId,
+                envName = envName,
+                envValue = envValue,
+                secure = source,
+                lastUpdateUser = lastUpdateUser
+            )
+        )
+    }
+
     @AuditEntry(actionId = ActionId.ENVIRONMENT_DELETE)
     override fun delete(userId: String, projectId: String, envHashId: String): Result<Boolean> {
         if (envHashId.isBlank()) {
@@ -160,6 +198,10 @@ class UserEnvironmentResourceImpl @Autowired constructor(
     override fun listNodesNew(
         userId: String,
         projectId: String,
+        nodeIp: String?,
+        displayName: String?,
+        createdUser: String?,
+        nodeStatus: NodeStatus?,
         page: Int?,
         pageSize: Int?,
         envHashId: String
@@ -167,7 +209,46 @@ class UserEnvironmentResourceImpl @Autowired constructor(
         if (envHashId.isBlank()) {
             throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_ENV_ID_NULL)
         }
-        return Result(envService.listAllEnvNodesNew(userId, projectId, page, pageSize, listOf(envHashId)))
+        return Result(
+            envService.listAllEnvNodesNew(
+                userId = userId,
+                projectId = projectId,
+                page = page,
+                pageSize = pageSize,
+                envHashIds = listOf(envHashId),
+                envName = null,
+                nodeIp = nodeIp,
+                displayName = displayName,
+                createdUser = createdUser,
+                nodeStatus = nodeStatus
+            )
+        )
+    }
+
+    override fun listNodesNewByName(
+        userId: String,
+        projectId: String,
+        page: Int?,
+        pageSize: Int?,
+        envName: String
+    ): Result<Page<NodeBaseInfo>> {
+        if (envName.isBlank()) {
+            throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_ENV_ID_NULL)
+        }
+        return Result(
+            envService.listAllEnvNodesNew(
+                userId = userId,
+                projectId = projectId,
+                page = page,
+                pageSize = pageSize,
+                envHashIds = null,
+                envName = envName,
+                nodeIp = null,
+                displayName = null,
+                createdUser = null,
+                nodeStatus = null
+            )
+        )
     }
 
     @BkTimed(extraTags = ["operate", "createNode"])
@@ -186,7 +267,23 @@ class UserEnvironmentResourceImpl @Autowired constructor(
             throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_ENV_NODE_HASH_ID_ILLEGAL)
         }
 
-        envService.addEnvNodes(userId, projectId, envHashId, nodeHashIds)
+        envService.addEnvNodes(userId, projectId, envHashId, nodeHashIds, EnvOperateOrigin.WEB)
+        return Result(true)
+    }
+
+    override fun addNodesNew(
+        userId: String,
+        projectId: String,
+        envHashId: String,
+        data: EnvAddNodesData
+    ): Result<Boolean> {
+        if (envHashId.isBlank()) {
+            throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_ENV_ID_NULL)
+        }
+        if (data.nodeHashIds == null && data.tags == null) {
+            throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_ENV_NODE_HASH_ID_ILLEGAL)
+        }
+        envService.addEnvNodesNew(userId, projectId, envHashId, data, EnvOperateOrigin.WEB)
         return Result(true)
     }
 
@@ -205,7 +302,7 @@ class UserEnvironmentResourceImpl @Autowired constructor(
             throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_ENV_NODE_HASH_ID_ILLEGAL)
         }
 
-        envService.deleteEnvNodes(userId, projectId, envHashId, nodeHashIds)
+        envService.deleteEnvNodes(userId, projectId, envHashId, nodeHashIds, EnvOperateOrigin.WEB)
         return Result(true)
     }
 
@@ -237,18 +334,20 @@ class UserEnvironmentResourceImpl @Autowired constructor(
         projectId: String,
         envHashId: String,
         name: String?,
+        creator: String?,
         page: Int?,
         pageSize: Int?
     ): Result<Page<SharedProjectInfo>> {
         checkParam(userId, projectId, envHashId)
         return Result(
             envService.listShareEnv(
-                userId,
-                projectId,
-                envHashId,
-                name,
-                page ?: 1,
-                pageSize ?: 20
+                userId = userId,
+                projectId = projectId,
+                envHashId = envHashId,
+                name = name,
+                creator = creator,
+                page = page ?: 1,
+                pageSize = pageSize ?: 20
             )
         )
     }
@@ -261,7 +360,7 @@ class UserEnvironmentResourceImpl @Autowired constructor(
         sharedProjects: SharedProjectInfoWrap
     ): Result<Boolean> {
         checkParam(userId, projectId, envHashId)
-        envService.setShareEnv(userId, projectId, envHashId, sharedProjects.sharedProjects)
+        envService.setShareEnv(userId, projectId, envHashId, sharedProjects.sharedProjects, EnvOperateOrigin.WEB)
         return Result(true)
     }
 
@@ -280,7 +379,7 @@ class UserEnvironmentResourceImpl @Autowired constructor(
         sharedProjectId: String
     ): Result<Boolean> {
         checkParam(userId, projectId, envHashId)
-        envService.deleteShareEnvBySharedProj(userId, projectId, envHashId, sharedProjectId)
+        envService.deleteShareEnvBySharedProj(userId, projectId, envHashId, sharedProjectId, EnvOperateOrigin.WEB)
         return Result(true)
     }
 
@@ -290,7 +389,8 @@ class UserEnvironmentResourceImpl @Autowired constructor(
         projectId: String,
         envHashId: String,
         nodeHashId: String,
-        enableNode: Boolean
+        enableNode: Boolean,
+        data: EnableNodeEnvData?
     ): Result<Boolean> {
         return envService.enableNodeEnv(
             projectId = projectId,
@@ -299,7 +399,39 @@ class UserEnvironmentResourceImpl @Autowired constructor(
             nodeHashId = nodeHashId,
             envName = null,
             nodeName = null,
-            enableNode = enableNode
+            enableNode = enableNode,
+            data = data,
+            operateOrigin = EnvOperateOrigin.WEB
+        )
+    }
+
+    override fun getEnvCount(
+        userId: String,
+        projectId: String,
+        createEnv: Boolean?
+    ): Result<Map<String, Int>> {
+        return Result(envService.getEnvCount(projectId, createEnv))
+    }
+
+    override fun fetchEnvOperateLog(
+        userId: String,
+        projectId: String,
+        envHashId: String,
+        operator: String?,
+        page: Int?,
+        pageSize: Int?
+    ): Result<Page<EnvOperateLog>> {
+        checkParam(userId, projectId, envHashId)
+        val envId = HashUtil.decodeIdToLong(envHashId)
+        environmentPermissionService.checkEnvPermission(userId, projectId, envId, AuthPermission.VIEW)
+        return Result(
+            envOperateLogService.fetchOperateLog(
+                projectId = projectId,
+                envId = envId,
+                operator = operator,
+                page = page ?: 1,
+                pageSize = pageSize ?: 10
+            )
         )
     }
 

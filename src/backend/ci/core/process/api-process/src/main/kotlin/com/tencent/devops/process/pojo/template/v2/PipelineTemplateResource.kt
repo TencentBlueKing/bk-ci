@@ -94,7 +94,9 @@ data class PipelineTemplateResource(
     @get:Schema(title = "创建时间", required = false)
     val createdTime: Long? = null,
     @get:Schema(title = "更新时间", required = false)
-    val updateTime: Long? = null
+    val updateTime: Long? = null,
+    @get:Schema(title = "该版本来源的草稿版本,草稿保存时传入", required = false)
+    val draftVersion: Int? = null
 ) {
     constructor(
         pTemplateResourceWithoutVersion: PTemplateResourceWithoutVersion,
@@ -114,10 +116,8 @@ data class PipelineTemplateResource(
         srcTemplateProjectId = pTemplateResourceWithoutVersion.srcTemplateProjectId,
         srcTemplateId = pTemplateResourceWithoutVersion.srcTemplateId,
         srcTemplateVersion = pTemplateResourceWithoutVersion.srcTemplateVersion,
-        // 如果请求有传递基准版本,则使用基准版本,否则使用最新版本
-        baseVersion = pTemplateResourceWithoutVersion.baseVersion ?: pTemplateResourceOnlyVersion.baseVersion,
-        baseVersionName = pTemplateResourceWithoutVersion.baseVersionName
-            ?: pTemplateResourceOnlyVersion.baseVersionName,
+        baseVersion = pTemplateResourceOnlyVersion.baseVersion,
+        baseVersionName = pTemplateResourceOnlyVersion.baseVersionName,
         params = pTemplateResourceWithoutVersion.params,
         model = pTemplateResourceWithoutVersion.model,
         yaml = pTemplateResourceWithoutVersion.yaml,
@@ -126,6 +126,7 @@ data class PipelineTemplateResource(
         description = pTemplateResourceWithoutVersion.description,
         sortWeight = pTemplateResourceWithoutVersion.sortWeight,
         creator = pTemplateResourceWithoutVersion.creator,
-        updater = pTemplateResourceWithoutVersion.updater
+        updater = pTemplateResourceWithoutVersion.updater,
+        draftVersion = pTemplateResourceOnlyVersion.draftVersion
     )
 }

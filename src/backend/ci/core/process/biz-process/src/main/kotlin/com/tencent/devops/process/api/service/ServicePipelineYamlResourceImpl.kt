@@ -33,11 +33,13 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlFileSyncReq
 import com.tencent.devops.process.yaml.PipelineYamlFacadeService
+import com.tencent.devops.process.yaml.PipelineYamlFileManager
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ServicePipelineYamlResourceImpl @Autowired constructor(
-    private val pipelineYamlFacadeService: PipelineYamlFacadeService
+    private val pipelineYamlFacadeService: PipelineYamlFacadeService,
+    private val pipelineYamlFileManager: PipelineYamlFileManager
 ) : ServicePipelineYamlResource {
     override fun enable(
         userId: String,
@@ -59,7 +61,7 @@ class ServicePipelineYamlResourceImpl @Autowired constructor(
         projectId: String,
         yamlFileSyncReq: PipelineYamlFileSyncReq
     ): Result<Boolean> {
-        pipelineYamlFacadeService.syncYamlFile(
+        pipelineYamlFileManager.syncYamlFile(
             userId = userId,
             projectId = projectId,
             yamlFileSyncReq = yamlFileSyncReq

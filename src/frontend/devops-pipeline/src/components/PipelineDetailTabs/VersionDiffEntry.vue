@@ -1,6 +1,7 @@
 <template>
     <span class="version-diff-entry-wrapper">
         <bk-button
+            v-if="type === 'button'"
             :text="text"
             :outline="outline"
             :theme="theme"
@@ -13,6 +14,18 @@
                 {{ isTemplate ? $t('template.diff') : $t('diff') }}
             </slot>
         </bk-button>
+        <span
+            v-else
+            class="diff-icon-button"
+            @click="initDiff"
+        >
+            <logo
+                class="diff-icon"
+                name="diff"
+                size="14"
+            />
+            {{ $t('preview.viewDiff') }}
+        </span>
         <bk-dialog
             render-directive="if"
             v-model="showVersionDiffDialog"
@@ -63,6 +76,9 @@
                         :editable="canSwitchVersion"
                         :show-draft-tag="!canSwitchVersion"
                         :show-extension="false"
+                        :draft-version="(diffMode && currentEditingData) ? draftVersion : undefined"
+                        :need-draft-list="!!draftVersion"
+                        :auto-update-pipeline-info="false"
                         v-model="activeVersion"
                         @change="diffActiveVersion"
                         v-bind="baseVersionSelectorConf"
@@ -75,6 +91,8 @@
                             :editable="canSwitchVersion"
                             :show-draft-tag="!canSwitchVersion"
                             :show-extension="false"
+                            :draft-version="draftVersion"
+                            :auto-update-pipeline-info="false"
                             v-model="currentVersion"
                             @change="diffCurrentVersion"
                             v-bind="versionSelectorConf"
@@ -93,6 +111,7 @@
                     <yaml-diff
                         :old-yaml="activeYaml"
                         height="100%"
+                        read-only
                         :new-yaml="currentYaml"
                     />
                 </div>
@@ -112,11 +131,15 @@
 <script>
     import VersionSelector from '@/components/PipelineDetailTabs/VersionSelector'
     import YamlDiff from '@/components/YamlDiff'
+    import Logo from '@/components/Logo'
     import { mapActions, mapGetters } from 'vuex'
+    import { DRAFT_STATUS } from '@/utils/pipelineConst'
+    import dayjs from 'dayjs'
     export default {
         components: {
             YamlDiff,
-            VersionSelector
+            VersionSelector,
+            Logo
         },
         props: {
             text: {
@@ -132,13 +155,17 @@
                 type: String,
                 default: 'normal'
             },
+            // 左侧最新版本
             version: {
                 type: Number,
-                required: true
             },
+            // 右侧版本
             latestVersion: {
                 type: Number,
-                required: true
+            },
+            // 草稿版本
+            draftVersion: {
+                type: Number,
             },
             canSwitchVersion: {
                 type: Boolean,
@@ -156,7 +183,11 @@
                 type: Boolean,
                 default: false
             },
-            type: String,
+            type: {
+                // button, icon 用于展示按钮形态
+                type: String,
+                default: 'button'
+            },
             pipelineId: String,
             templateId: String,
             archiveFlag: Boolean,
@@ -164,7 +195,17 @@
                 type: Boolean,
                 default: false
             },
-            
+            // 当前正在编辑的数据（用于对比）
+            currentEditingData: {
+                type: Object,
+                default: null
+            },
+            // 差异对比模式：CONFLICT（冲突）或 PUBLISHED（已发布）
+            diffMode: {
+                type: String,
+                default: null,
+                validator: (value) => !value || [DRAFT_STATUS.CONFLICT, DRAFT_STATUS.PUBLISHED].includes(value)
+            }
         },
         data () {
             return {
@@ -209,10 +250,21 @@
             ...mapActions('atom', [
                 'fetchPipelineByVersion',
                 'fetchTemplateByVersion',
+                'canSwitchToYaml',
                 'compareYamlWithTemplate'
             ]),
             ...mapActions('templates', ['requestVersionCompare']),
-            async fetchPipelineYaml (version) {
+            handleYamlChange (newVal, oldVal) {
+                if (newVal && newVal !== oldVal && this.showVersionDiffDialog) {
+                    this.$nextTick(() => {
+                        this.initDiff()
+                    })
+                }
+            },
+            formatDate (data) {
+                return dayjs(data).format('YYYY-MM-DD HH:mm:ss')
+            },
+            async fetchPipelineYaml (version, draftVersion) {
                 try {
                     const isTemplate = this.isTemplate || !!this.templateId
                     const fn = isTemplate ? this.fetchTemplateByVersion : this.fetchPipelineByVersion
@@ -220,7 +272,9 @@
                         ...this.$route.params,
                         ...(isTemplate ? {templateId: this.uniqueId} : {}),
                         version,
-                        archiveFlag: this.archiveFlag
+                        ...(draftVersion ? {draftVersion} : {}),
+                        archiveFlag: this.archiveFlag,
+                        source: 'COMPARE'
                     })
                     if (res?.yamlSupported) {
                         return res.yamlPreview.yaml
@@ -235,48 +289,115 @@
                     return ''
                 }
             },
-            async initDiff () {
-                this.activeVersion = this.version
-                this.currentVersion = this.latestVersion
-                this.showVersionDiffDialog = true
-
-                this.isLoadYaml = true
-                if (this.instanceCompareWithTemplate) {
-                    const { templateVersionName, instanceName, baseVersionYaml, comparedVersionYaml } = await this.compareYamlWithTemplate({
+            // 获取当前正在编辑的内容的 YAML
+            async fetchCurrentEditingYaml () {
+                try {
+                    if (!this.currentEditingData) {
+                        return
+                    }
+                    
+                    // 调用 canSwitchToYaml 接口将当前编辑中的 modelAndSetting 转换为 YAML
+                    const res = await this.canSwitchToYaml({
                         projectId: this.$route.params.projectId,
-                        templateId: this.$route.params.templateId,
-                        pipelineId: this.pipelineId,
-                        templateVersion: this.latestVersion,
-                        pipelineVersion: this.activeVersion,
-                        useTemplateSettings: this.useTemplateSettings
+                        pipelineId: this.uniqueId,
+                        actionType: 'FULL_MODEL2YAML',
+                        modelAndSetting: this.currentEditingData
                     })
-                    this.activeYaml = baseVersionYaml
-                    this.currentYaml = comparedVersionYaml
-                    this.instanceName = instanceName
-                    this.templateVersionName = templateVersionName
-                } else {
+                    
+                    if (res?.newYaml) {
+                        return res.newYaml
+                    }
+                    
+                } catch (error) {
+                    this.$bkMessage({
+                        theme: 'error',
+                        message: error.message
+                    })
+                    return
+                }
+            },
+            async initDiff (version) {
+                this.activeVersion = this.version
+                // 如果存在 draftVersion，传递父草稿版本号，VersionSelector 会自动选中最新的子草稿
+                // 注意：草稿版本需要转换为 "draft-{draftVersion}" 格式，以匹配 VersionSelector 中转换后的版本格式
+                this.currentVersion = this.draftVersion ? `draft-${this.draftVersion}` : this.latestVersion
+                this.showVersionDiffDialog = true
+                this.isLoadYaml = true
+                
+                // 处理特殊的差异对比模式（CONFLICT 或 PUBLISHED）
+                if (this.diffMode && this.currentEditingData) {
+                    // CONFLICT冲突状态：对比最后保存的草稿 vs 当前编辑内容
+                    // PUBLISHED已发布状态：对比最新发布版本 vs 当前编辑内容
+                    const draftVersion = this.diffMode === DRAFT_STATUS.CONFLICT ? (this.draftVersion || undefined) : undefined
                     const [activeYaml, currentYaml] = await Promise.all([
-                        this.fetchPipelineYaml(this.activeVersion),
-                        this.fetchPipelineYaml(this.currentVersion)
+                        this.fetchPipelineYaml(this.version, draftVersion),
+                        this.fetchCurrentEditingYaml()
                     ])
                     this.activeYaml = activeYaml
                     this.currentYaml = currentYaml
+                    this.isLoadYaml = false
+                    return
+                }
+
+                if (this.instanceCompareWithTemplate) {
+                    try {
+                        const { templateVersionName, instanceName, baseVersionYaml, comparedVersionYaml } = await this.compareYamlWithTemplate({
+                            projectId: this.$route.params.projectId,
+                            templateId: this.$route.params.templateId,
+                            pipelineId: this.pipelineId,
+                            templateVersion: ['string', 'number'].includes(typeof version) ? version : this.latestVersion,
+                            pipelineVersion: this.activeVersion,
+                            useTemplateSettings: this.useTemplateSettings
+                        })
+                        this.activeYaml = baseVersionYaml
+                        this.currentYaml = comparedVersionYaml
+                        this.instanceName = instanceName
+                        this.templateVersionName = templateVersionName
+                    } catch (error) {
+                        this.$bkMessage({
+                            theme: 'error',
+                            message: error.message,
+                            zIndex: 3000
+                        })
+                    }
+                } else {
+                    try {
+                        const [activeYaml, currentYaml] = await Promise.all([
+                            this.fetchPipelineYaml(this.activeVersion),
+                            this.fetchPipelineYaml(this.latestVersion, this.draftVersion || undefined)
+                        ])
+                        this.activeYaml = activeYaml
+                        this.currentYaml = currentYaml
+                    } catch (error) {
+                        this.$bkMessage({
+                            theme: 'error',
+                            message: error.message,
+                            zIndex: 3000
+                        })
+                    }
                 }
                 this.isLoadYaml = false
             },
-            async diffActiveVersion (version, old) {
-                if (version !== this.activeVersion) {
-                    this.activeVersion = version
+            async diffActiveVersion (versionId, versionData) {
+                // versionId 是唯一标识（草稿时为 "draft-1"，发布时为版本号）
+                if (versionId !== this.activeVersion) {
+                    this.activeVersion = versionId
                     this.isLoadYaml = true
-                    this.activeYaml = await this.fetchPipelineYaml(this.activeVersion)
+                    // 如果是草稿，传递 initialVersion 和 draftVersion；否则只传 versionId
+                    const version = versionData.isDraftVersion ? versionData.initialVersion : versionId
+                    this.activeYaml = await this.fetchPipelineYaml(version, versionData.draftVersion || undefined)
                     this.isLoadYaml = false
                 }
             },
-            async diffCurrentVersion (version, old) {
-                if (version !== this.currentVersion) {
-                    this.currentVersion = version
+            async diffCurrentVersion (versionId, versionData) {
+                if (versionId === this.currentVersion) return
+                if (this.instanceCompareWithTemplate) {
+                    this.initDiff(versionId)
+                } else {
+                    this.currentVersion = versionId
                     this.isLoadYaml = true
-                    this.currentYaml = await this.fetchPipelineYaml(this.currentVersion)
+                    const version = versionData.isDraftVersion ? versionData.initialVersion : versionId
+                    this.currentYaml = await this.fetchPipelineYaml(version, versionData.draftVersion || undefined)
                     this.isLoadYaml = false
                 }
             }
@@ -350,6 +471,26 @@
                     }
                 }
             }
+        }
+    }
+    .draft-editing {
+        padding: 2px 4px;
+        margin-left: 6px;
+        line-height: 21px;
+        background: #1F472E;
+        border: 1px solid #27633D;
+        font-size: 10px;
+        color: #3FC362;
+        border-radius: 2px;
+    }
+    .diff-icon-button {
+        display: flex;
+        align-items: center;
+        cursor: pointer;
+        color: #3A84FF;
+        .diff-icon {
+            color: #3A84FF;
+            margin-right: 2px;
         }
     }
 </style>

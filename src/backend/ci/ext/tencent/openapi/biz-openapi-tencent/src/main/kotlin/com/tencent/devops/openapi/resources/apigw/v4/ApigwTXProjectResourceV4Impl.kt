@@ -5,7 +5,9 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.v4.ApigwTXProjectResourceV4
 import com.tencent.devops.project.api.pojo.ProjectProductInfo
 import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
+import com.tencent.devops.project.pojo.CrosProductVO
 import com.tencent.devops.project.pojo.OperationalProductVO
+import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.Result
 import org.slf4j.LoggerFactory
 
@@ -13,6 +15,16 @@ import org.slf4j.LoggerFactory
 class ApigwTXProjectResourceV4Impl constructor(
     val client: Client
 ) : ApigwTXProjectResourceV4 {
+    override fun getOrCreatePersonalProject(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        description: String?
+    ): Result<ProjectVO> {
+        logger.info("OPENAPI_TX_PROJECT_V4|$appCode|$apigwType|get_or_create_personal_project|$userId")
+        return client.get(ServiceTxProjectResource::class).getOrCreatePersonalProject(userId, description)
+    }
+
     override fun listProjectProductInfos(
         appCode: String?,
         apigwType: String?,
@@ -39,6 +51,16 @@ class ApigwTXProjectResourceV4Impl constructor(
     ): Result<OperationalProductVO?> {
         logger.info("OPENAPI_TX_PROJECT_V4|$appCode|$apigwType|get_product_by_product_id|$productId")
         return client.get(ServiceTxProjectResource::class).getProductByProductId(productId)
+    }
+
+    override fun getKpiProducts(
+        appCode: String?,
+        apigwType: String?,
+        userId: String?,
+        kpiName: String?
+    ): Result<List<CrosProductVO>> {
+        logger.info("OPENAPI_TX_PROJECT_V4|$appCode|$apigwType|get_kpi_products|$userId|$kpiName")
+        return client.get(ServiceTxProjectResource::class).getKpiProducts(kpiName)
     }
 
     companion object {

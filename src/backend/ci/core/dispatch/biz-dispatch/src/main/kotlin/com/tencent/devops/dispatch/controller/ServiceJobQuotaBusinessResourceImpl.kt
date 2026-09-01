@@ -57,7 +57,7 @@ class ServiceJobQuotaBusinessResourceImpl @Autowired constructor(
             executeCount = executeCount,
             containerId = containerId,
             containerHashId = containerHashId,
-            channelCode = channelCode ?: ChannelCode.BS.name
+            channelCode = channelCode ?: ChannelCode.getRequestChannelCode().name
         )
         return Result(result)
     }

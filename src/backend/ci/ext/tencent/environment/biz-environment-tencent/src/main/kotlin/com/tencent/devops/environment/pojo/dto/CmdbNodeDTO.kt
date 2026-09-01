@@ -1,6 +1,8 @@
 package com.tencent.devops.environment.pojo.dto
 
 import com.tencent.devops.environment.pojo.cmdb.common.CmdbServerDTO
+import com.tencent.devops.environment.pojo.enums.NodeType
+import com.tencent.devops.environment.utils.CmdbNodeUtils
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "类型为CMDB的节点信息")
@@ -13,30 +15,35 @@ data class CmdbNodeDTO(
     var osName: String? = null,
     var cloudAreaId: Long? = null,
     var hostId: Long? = null,
-    var createdUser: String? = null
+    var createdUser: String? = null,
+    var operatorStatus: Byte? = null
 ) {
-    fun operatorOrServerIdOrOsNameChanged(cmdbServerDTO: CmdbServerDTO?): Boolean {
+    /**
+     * 是否需要更新DB中的节点信息
+     * 判断条件：
+     *   1. DB中operator_status为空（未被计算） 或不正确
+     *   2. 主备份负责人变化
+     *   3. 服务器ID变化
+     *   4. 操作系统名称变化
+     *
+     * @param cmdbServerDTO 新查询的CMDB服务器信息
+     */
+    fun needToModifyCmdbNodeInDB(cmdbServerDTO: CmdbServerDTO?): Boolean {
         if (cmdbServerDTO == null) {
             return false
         }
-        return operator != cmdbServerDTO.operator ||
-            bakOperator != cmdbServerDTO.getBakOperatorStr() ||
+        val operatorStatusIndeed = CmdbNodeUtils.calcOperatorStatus(
+            nodeType = NodeType.CMDB.name,
+            createdUser = createdUser ?: "",
+            operator = cmdbServerDTO.operator,
+            bakOperator = cmdbServerDTO.getBakOperatorStrLessThanMaxLength()
+        )?.code
+
+        return  operatorStatus != operatorStatusIndeed ||
+            operator != cmdbServerDTO.operator ||
+            bakOperator != cmdbServerDTO.getBakOperatorStrLessThanMaxLength() ||
             serverId != cmdbServerDTO.serverId ||
             osName != cmdbServerDTO.osName
     }
 
-    private fun hasBakOperator(userId: String): Boolean {
-        if (null == bakOperator) {
-            return false
-        }
-        val bakOperatorSet = bakOperator!!.split(";").toSet()
-        return bakOperatorSet.contains(userId)
-    }
-
-    /**
-     * 当前用户是否为该机器的运维负责人或备份负责人
-     */
-    fun hasOperatorOrBak(userId: String): Boolean {
-        return operator == userId || hasBakOperator(userId)
-    }
 }

@@ -273,7 +273,7 @@ class ProjectRemoteDevService @Autowired constructor(
                         projectCode = record.englishName,
                         bgId = record.bgId.toString(),
                         bgName = record.bgName,
-                        centerId = record.centerId.toString(),
+                        centerId = record.centerId?.toString(),
                         centerName = record.centerName,
                         deptId = record.deptId.toString(),
                         deptName = record.deptName,

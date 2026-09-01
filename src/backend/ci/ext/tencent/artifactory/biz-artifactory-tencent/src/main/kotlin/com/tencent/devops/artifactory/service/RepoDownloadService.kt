@@ -44,7 +44,8 @@ interface RepoDownloadService {
         projectId: String,
         artifactoryType: ArtifactoryType,
         path: String,
-        ttl: Int
+        ttl: Int,
+        authorizedUserList: List<String>? = null
     ): Url
 
     /**
@@ -67,7 +68,7 @@ interface RepoDownloadService {
         projectId: String,
         artifactoryType: ArtifactoryType,
         argPath: String,
-        channelCode: ChannelCode? = ChannelCode.BS,
+        channelCode: ChannelCode? = ChannelCode.getRequestChannelCode(),
         fullUrl: Boolean = true /*是否返回全路径（包含域名）*/
     ): Url
 

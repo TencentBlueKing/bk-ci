@@ -16,11 +16,11 @@ data class PTemplateResourceWithoutVersion(
     @get:Schema(title = "模板类型", required = true)
     val type: PipelineTemplateType,
     @get:Schema(title = "源模板项目ID", required = false)
-    val srcTemplateProjectId: String? = null,
+    var srcTemplateProjectId: String? = null,
     @get:Schema(title = "源模板ID", required = false)
-    val srcTemplateId: String? = null,
+    var srcTemplateId: String? = null,
     @get:Schema(title = "源模板版本", required = false)
-    val srcTemplateVersion: Long? = null,
+    var srcTemplateVersion: Long? = null,
     @get:Schema(title = "构建参数", required = false)
     val params: List<BuildFormProperty>? = emptyList(),
     @get:Schema(title = "编排", required = false)

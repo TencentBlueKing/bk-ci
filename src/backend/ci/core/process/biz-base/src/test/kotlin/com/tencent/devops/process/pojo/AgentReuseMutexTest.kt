@@ -7,7 +7,7 @@ import com.tencent.devops.common.pipeline.container.AgentReuseMutexType
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.VMBaseOS
 import com.tencent.devops.common.pipeline.option.JobControlOption
-import com.tencent.devops.common.pipeline.type.agent.AgentType
+import com.tencent.devops.common.pipeline.type.agent.AgentDispatchType
 import com.tencent.devops.common.pipeline.type.agent.ReusedInfo
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentDispatch
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentEnvDispatchType
@@ -26,10 +26,10 @@ class AgentReuseMutexTest {
         val stages = mutableListOf<Map<String, ThirdPartyAgentDispatch>>()
         stages.add(
             mapOf(
-                "job_1" to ThirdPartyAgentIDDispatchType("agent_1", null, AgentType.ID, null, null),
+                "job_1" to ThirdPartyAgentIDDispatchType("agent_1", null, AgentDispatchType.ID, null, null),
                 "job_id_dep_1" to initReuseId("job_1"),
                 "job_env_dep_1" to initReuseEnv("job_env_1"),
-                "job_env_1" to ThirdPartyAgentEnvDispatchType("env_1", null, null, AgentType.NAME, null, null),
+                "job_env_1" to ThirdPartyAgentEnvDispatchType("env_1", null, null, AgentDispatchType.NAME, null, null),
                 "job_env_dep_2" to initReuseEnv("job_env_dep_1"),
                 "job_id_dep_8" to initReuseEnv("\${{variables.TEST_JOB_ID}}")
             )
@@ -84,9 +84,9 @@ class AgentReuseMutexTest {
                 AgentReuseMutex("job_1", null, "agent_1", AgentReuseMutexType.AGENT_ID, false),
                 false,
                 ThirdPartyAgentIDDispatchType(
-                    "agent_1", null, AgentType.ID, null, ReusedInfo(
+                    "agent_1", null, AgentDispatchType.ID, null, ReusedInfo(
                         "agent_1",
-                        AgentType.ID,
+                        AgentDispatchType.ID,
                         null
                     )
                 )
@@ -101,9 +101,9 @@ class AgentReuseMutexTest {
                 ),
                 true,
                 ThirdPartyAgentIDDispatchType(
-                    "job_1", null, AgentType.REUSE_JOB_ID, null, ReusedInfo(
+                    "job_1", null, AgentDispatchType.REUSE_JOB_ID, null, ReusedInfo(
                         "agent_1",
-                        AgentType.ID,
+                        AgentDispatchType.ID,
                         "job_1"
                     )
                 )
@@ -113,9 +113,9 @@ class AgentReuseMutexTest {
                 true,
                 ThirdPartyAgentEnvDispatchType(
                     envName = "job_env_1",
-                    null, null, AgentType.REUSE_JOB_ID, null, ReusedInfo(
+                    null, null, AgentDispatchType.REUSE_JOB_ID, null, ReusedInfo(
                         "env_1",
-                        AgentType.NAME,
+                        AgentDispatchType.NAME,
                         "job_env_1"
                     )
                 )
@@ -125,9 +125,9 @@ class AgentReuseMutexTest {
                 false,
                 ThirdPartyAgentEnvDispatchType(
                     envName = "env_1",
-                    null, null, AgentType.NAME, null, ReusedInfo(
+                    null, null, AgentDispatchType.NAME, null, ReusedInfo(
                         "env_1",
-                        AgentType.NAME,
+                        AgentDispatchType.NAME,
                         null
                     )
                 )
@@ -137,9 +137,9 @@ class AgentReuseMutexTest {
                 true,
                 ThirdPartyAgentEnvDispatchType(
                     envName = "job_env_1",
-                    null, null, AgentType.REUSE_JOB_ID, null, ReusedInfo(
+                    null, null, AgentDispatchType.REUSE_JOB_ID, null, ReusedInfo(
                         "env_1",
-                        AgentType.NAME,
+                        AgentDispatchType.NAME,
                         "job_env_1"
                     )
                 )
@@ -218,12 +218,12 @@ class AgentReuseMutexTest {
         stages.add(
             mapOf(
                 "job_env_dep_1" to initReuseId("job_env_1"),
-                "job_env_1" to ThirdPartyAgentEnvDispatchType("job_1", null, null, AgentType.NAME, null, null)
+                "job_env_1" to ThirdPartyAgentEnvDispatchType("job_1", null, null, AgentDispatchType.NAME, null, null)
             )
         )
         stages.add(
             mapOf(
-                "job_1" to ThirdPartyAgentIDDispatchType("agent_1", null, AgentType.ID, null, null),
+                "job_1" to ThirdPartyAgentIDDispatchType("agent_1", null, AgentDispatchType.ID, null, null),
                 "job_id_dep_1" to initReuseEnv("job_1")
             )
         )
@@ -251,12 +251,12 @@ class AgentReuseMutexTest {
         stages.add(
             mapOf(
                 "job_env_dep_1" to initReuseId("\${{variables.TEST_JOB_ID}}"),
-                "job_env_1" to ThirdPartyAgentEnvDispatchType("job_1", null, null, AgentType.NAME, null, null)
+                "job_env_1" to ThirdPartyAgentEnvDispatchType("job_1", null, null, AgentDispatchType.NAME, null, null)
             )
         )
         stages.add(
             mapOf(
-                "job_1" to ThirdPartyAgentIDDispatchType("agent_1", null, AgentType.ID, null, null),
+                "job_1" to ThirdPartyAgentIDDispatchType("agent_1", null, AgentDispatchType.ID, null, null),
                 "job_id_dep_1" to initReuseEnv("\${{variables.TEST_JOB_ID_2}}")
             )
         )
@@ -285,7 +285,7 @@ class AgentReuseMutexTest {
         stages.add(
             mapOf(
                 "job_env_dep_1" to initReuseId("job_env_dep_2"),
-                "job_env_1" to ThirdPartyAgentEnvDispatchType("job_1", null, null, AgentType.NAME, null, null),
+                "job_env_1" to ThirdPartyAgentEnvDispatchType("job_1", null, null, AgentDispatchType.NAME, null, null),
                 "job_env_dep_2" to initReuseId("job_env_dep_1")
             )
         )
@@ -301,8 +301,8 @@ class AgentReuseMutexTest {
     }
 
     private fun initReuseId(reuseName: String) =
-        ThirdPartyAgentIDDispatchType(reuseName, null, AgentType.REUSE_JOB_ID, null, null)
+        ThirdPartyAgentIDDispatchType(reuseName, null, AgentDispatchType.REUSE_JOB_ID, null, null)
 
     private fun initReuseEnv(reuseName: String) =
-        ThirdPartyAgentEnvDispatchType(reuseName, null, null, AgentType.REUSE_JOB_ID, null, null)
+        ThirdPartyAgentEnvDispatchType(reuseName, null, null, AgentDispatchType.REUSE_JOB_ID, null, null)
 }

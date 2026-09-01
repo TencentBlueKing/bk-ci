@@ -47,10 +47,9 @@ class ImageLabelService @Autowired constructor(
      * 查找镜像标签
      */
     fun getLabelsByImageId(imageId: String): Result<List<Label>?> {
-        val imageLabelList = mutableListOf<Label>()
-        val imageLabelRecords = imageLabelRelDao.getLabelsByImageId(dslContext, imageId) // 查询镜像标签信息
-        imageLabelRecords?.forEach {
-            labelService.addLabelToLabelList(it, imageLabelList)
+        val imageLabelRecords = imageLabelRelDao.getLabelsByImageId(dslContext, imageId)
+        val imageLabelList = mutableListOf<Label>().apply {
+            imageLabelRecords?.forEach { labelService.addLabelToLabelList(it, this) }
         }
         return Result(imageLabelList)
     }

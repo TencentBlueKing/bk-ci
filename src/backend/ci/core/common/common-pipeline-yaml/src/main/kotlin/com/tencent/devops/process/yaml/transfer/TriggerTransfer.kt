@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.enums.TriggerRepositoryType
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
 import com.tencent.devops.common.pipeline.pojo.element.RunCondition
@@ -50,9 +51,14 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeTGitWebHookTr
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeTGitWebHookTriggerInput
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.RemoteTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.TapdWebHookTriggerData
+import com.tencent.devops.common.pipeline.pojo.element.trigger.TapdWebHookTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.TapdWebHookTriggerInput
 import com.tencent.devops.common.pipeline.pojo.element.trigger.TimerTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.PathFilterType
+import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.TimerNodeType
+import com.tencent.devops.common.pipeline.enums.TapdEventType
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitMrEventAction
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitPushActionType
 import com.tencent.devops.process.yaml.transfer.VariableDefault.nullIfDefault
@@ -68,6 +74,7 @@ import com.tencent.devops.process.yaml.v3.models.on.NoteRule
 import com.tencent.devops.process.yaml.v3.models.on.PushRule
 import com.tencent.devops.process.yaml.v3.models.on.ReviewRule
 import com.tencent.devops.process.yaml.v3.models.on.TagRule
+import com.tencent.devops.process.yaml.v3.models.on.TapdRule
 import com.tencent.devops.process.yaml.v3.models.on.TriggerOn
 import com.tencent.devops.scm.api.enums.EventAction
 import org.slf4j.LoggerFactory
@@ -133,7 +140,8 @@ class TriggerTransfer @Autowired(required = false) constructor(
                     excludeUsers = tag.usersIgnore,
                     eventType = CodeEventType.TAG_PUSH,
                     repositoryType = repositoryType,
-                    repositoryName = triggerOn.repoName
+                    repositoryName = triggerOn.repoName,
+                    includeTagAction = tag.action
                 ).checkTriggerElementEnable(tag.enable).apply {
                     version = "2.*"
                 }
@@ -264,7 +272,8 @@ class TriggerTransfer @Autowired(required = false) constructor(
                     tagsIgnore = git.excludeTagName?.disjoin(),
                     fromBranches = git.fromBranches?.disjoin(),
                     users = git.includeUsers,
-                    usersIgnore = git.excludeUsers
+                    usersIgnore = git.excludeUsers,
+                    action = git.includeTagAction
                 )
 
                 CodeEventType.MERGE_REQUEST -> nowExist.mr = MrRule(
@@ -288,7 +297,9 @@ class TriggerTransfer @Autowired(required = false) constructor(
                         url = git.thirdUrl,
                         credentials = git.thirdSecretToken
                     ) else null,
-                    skipWip = git.skipWip
+                    skipWip = git.skipWip,
+                    labels = git.includeLabels?.disjoin(),
+                    labelsIgnore = git.excludeLabels?.disjoin()
                 )
                 CodeEventType.MERGE_REQUEST_ACCEPT -> nowExist.mrMerged = MrRule(
                     id = git.id,
@@ -304,7 +315,9 @@ class TriggerTransfer @Autowired(required = false) constructor(
                     usersIgnore = git.excludeUsers,
                     reportCommitCheck = git.enableCheck.nullIfDefault(true),
                     pathFilterType = git.pathFilterType?.name.nullIfDefault(PathFilterType.NamePrefixFilter.name),
-                    skipWip = git.skipWip
+                    skipWip = git.skipWip,
+                    labels = git.includeLabels?.disjoin(),
+                    labelsIgnore = git.excludeLabels?.disjoin()
                 )
 
                 CodeEventType.REVIEW -> nowExist.review = ReviewRule(
@@ -319,7 +332,12 @@ class TriggerTransfer @Autowired(required = false) constructor(
                     id = git.id,
                     name = git.name.nullIfDefault(defaultName),
                     enable = git.enable.nullIfDefault(true),
-                    action = git.includeIssueAction
+                    action = git.includeIssueAction,
+                    assignees = git.includeAssignees?.disjoin(),
+                    assigneesIgnore = git.excludeAssignees?.disjoin(),
+                    usersIgnore = git.excludeUsers,
+                    labels = git.includeLabels?.disjoin(),
+                    labelsIgnore = git.excludeLabels?.disjoin()
                 )
 
                 CodeEventType.NOTE -> nowExist.note = NoteRule(
@@ -377,8 +395,12 @@ class TriggerTransfer @Autowired(required = false) constructor(
                     pathsIgnore = git.excludePaths?.disjoin(),
                     users = git.includeUsers,
                     usersIgnore = git.excludeUsers,
+                    assignees = git.includeAssignees?.disjoin(),
+                    assigneesIgnore = git.excludeAssignees?.disjoin(),
                     pathFilterType = git.pathFilterType?.name.nullIfDefault(PathFilterType.NamePrefixFilter.name),
-                    action = git.includeMrAction
+                    action = git.includeMrAction,
+                    labels = git.includeLabels?.disjoin(),
+                    labelsIgnore = git.excludeLabels?.disjoin()
                 )
 
                 else -> {}
@@ -411,7 +433,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
                             pathFilterType = push.pathFilterType?.let { PathFilterType.valueOf(it) }
                                 ?: PathFilterType.NamePrefixFilter,
                             eventType = CodeEventType.PUSH,
-                            includeMrAction = push.action ?: listOf(
+                            includePushAction = push.action ?: listOf(
                                 TGitPushActionType.PUSH_FILE.value,
                                 TGitPushActionType.NEW_BRANCH.value
                             ),
@@ -439,7 +461,8 @@ class TriggerTransfer @Autowired(required = false) constructor(
                             excludeUsers = tag.usersIgnore,
                             eventType = CodeEventType.TAG_PUSH,
                             repositoryType = repositoryType,
-                            repositoryName = triggerOn.repoName
+                            repositoryName = triggerOn.repoName,
+                            includeTagAction = tag.action
                         )
                     )
                 ).checkTriggerElementEnable(tag.enable).apply {
@@ -585,6 +608,8 @@ class TriggerTransfer @Autowired(required = false) constructor(
                     excludePaths = mr.pathsIgnore.nonEmptyOrNull()?.join(),
                     includeUsers = mr.users,
                     excludeUsers = mr.usersIgnore.nonEmptyOrNull()?.join(),
+                    includeAssignees = mr.assignees.nonEmptyOrNull()?.join(),
+                    excludeAssignees = mr.assigneesIgnore.nonEmptyOrNull()?.join(),
                     webhookQueue = mr.webhookQueue,
                     enableCheck = mr.reportCommitCheck,
                     pathFilterType = mr.pathFilterType?.let { PathFilterType.valueOf(it) }
@@ -592,7 +617,9 @@ class TriggerTransfer @Autowired(required = false) constructor(
                     includeMrAction = mr.action,
                     eventType = CodeEventType.PULL_REQUEST,
                     repositoryType = repositoryType,
-                    repositoryName = triggerOn.repoName
+                    repositoryName = triggerOn.repoName,
+                    includeLabels = mr.labels.nonEmptyOrNull()?.join(),
+                    excludeLabels = mr.labelsIgnore.nonEmptyOrNull()?.join()
                 ).checkTriggerElementEnable(mr.enable)
             )
         }
@@ -617,6 +644,11 @@ class TriggerTransfer @Autowired(required = false) constructor(
                     stepId = issue.id,
                     name = issue.name ?: "GitHub事件触发",
                     includeIssueAction = issue.action,
+                    includeAssignees = issue.assignees.nonEmptyOrNull()?.join(),
+                    excludeAssignees = issue.assigneesIgnore.nonEmptyOrNull()?.join(),
+                    excludeUsers = issue.usersIgnore.nonEmptyOrNull()?.join(),
+                    includeLabels = issue.labels.nonEmptyOrNull()?.join(),
+                    excludeLabels = issue.labelsIgnore.nonEmptyOrNull()?.join(),
                     eventType = CodeEventType.ISSUES,
                     repositoryType = repositoryType,
                     repositoryName = triggerOn.repoName
@@ -742,6 +774,23 @@ class TriggerTransfer @Autowired(required = false) constructor(
                             }
                             JsonUtil.toJson(params, false)
                         },
+                        // nodes 仅创作流通道生效：有值即指定创作节点，否则枚举创作环境全部节点；
+                        // 非创作流通道忽略该关键字
+                        nodeType = when {
+                            yamlInput.channelCode != ChannelCode.CREATIVE_STREAM -> null
+                            !timer.nodes.isNullOrEmpty() -> TimerNodeType.NODE_LIST
+                            else -> TimerNodeType.ENV_ALL
+                        },
+                        // yaml 中存的是 workspaceName，转换为 Model 侧的 agentHashId
+                        nodes = timer.nodes?.takeIf {
+                            yamlInput.channelCode == ChannelCode.CREATIVE_STREAM
+                        }?.mapNotNull { workspaceName ->
+                            transferCache.getAgentHashIdByWorkspace(
+                                userId = yamlInput.userId,
+                                projectId = yamlInput.projectCode,
+                                workspaceName = workspaceName
+                            )
+                        },
                         version = if (timer.newExpression.filterNonEmpty().isEmpty() &&
                                 (timer.advanceExpression?.size ?: 0) == 1
                         ) {
@@ -771,6 +820,62 @@ class TriggerTransfer @Autowired(required = false) constructor(
                 ).checkTriggerElementEnable(remote.enable == EnableType.TRUE.value)
             )
         }
+    }
+
+    /**
+     * 将 `on:` 条目中的 TAPD 触发转换为对应 [TapdWebHookTriggerElement]。
+     *
+     * 与代码库触发的 `yaml2TriggerGit` 平级：一个 [TriggerOn] 承载一个 workspace 的
+     * story / bug 配置（通过 `type: tapd` 区分）；story / bug 各自最多生成一个触发元素。
+     */
+    fun yaml2TriggerTapd(triggerOn: TriggerOn, elementQueue: MutableList<Element>) {
+        val workspaceId = triggerOn.workspaceId ?: return
+        triggerOn.story?.let { story ->
+            elementQueue.add(
+                buildTapdElement(
+                    workspaceId = workspaceId,
+                    eventType = TapdEventType.STORY,
+                    rule = story
+                )
+            )
+        }
+        triggerOn.bug?.let { bug ->
+            elementQueue.add(
+                buildTapdElement(
+                    workspaceId = workspaceId,
+                    eventType = TapdEventType.BUG,
+                    rule = bug
+                )
+            )
+        }
+    }
+
+    private fun buildTapdElement(
+        workspaceId: String,
+        eventType: TapdEventType,
+        rule: TapdRule
+    ): TapdWebHookTriggerElement {
+        val includeStoryAction = rule.action?.takeIf { eventType == TapdEventType.STORY }
+        val includeBugAction = rule.action?.takeIf { eventType == TapdEventType.BUG }
+        return TapdWebHookTriggerElement(
+            name = rule.name ?: "TAPD事件触发",
+            stepId = rule.id,
+            data = TapdWebHookTriggerData(
+                input = TapdWebHookTriggerInput(
+                    workspaceId = workspaceId,
+                    eventType = eventType,
+                    includeStoryAction = includeStoryAction,
+                    includeBugAction = includeBugAction,
+                    includeUsers = rule.users,
+                    excludeUsers = rule.usersIgnore,
+                    includeLabels = rule.labels?.join(),
+                    excludeLabels = rule.labelsIgnore?.join(),
+                    includePriority = rule.priorities?.join(),
+                    includeOwner = rule.owners,
+                    excludeOwner = rule.ownersIgnore
+                )
+            )
+        ).checkTriggerElementEnable(rule.enable) as TapdWebHookTriggerElement
     }
 
     @Suppress("ComplexMethod")
@@ -1032,7 +1137,9 @@ class TriggerTransfer @Autowired(required = false) constructor(
             enableThirdFilter = !mr.custom?.url.isNullOrBlank(),
             thirdUrl = mr.custom?.url,
             thirdSecretToken = mr.custom?.credentials,
-            skipWip = mr.skipWip
+            skipWip = mr.skipWip,
+            includeLabels = mr.labels.nonEmptyOrNull()?.join(),
+            excludeLabels = mr.labelsIgnore.nonEmptyOrNull()?.join()
         ).checkTriggerElementEnable(mr.enable).apply {
             version = elementVersion
         }
@@ -1078,7 +1185,9 @@ class TriggerTransfer @Autowired(required = false) constructor(
                     eventType = eventType,
                     repositoryType = repositoryType,
                     repositoryName = repoName,
-                    skipWip = mr.skipWip
+                    skipWip = mr.skipWip,
+                    includeLabels = mr.labels.nonEmptyOrNull()?.join(),
+                    excludeLabels = mr.labelsIgnore.nonEmptyOrNull()?.join()
                 )
             )
         ).checkTriggerElementEnable(mr.enable).apply {
@@ -1119,7 +1228,9 @@ class TriggerTransfer @Autowired(required = false) constructor(
             includeMrAction = includeMrAction,
             eventType = eventType,
             repositoryType = repositoryType,
-            repositoryName = repoName
+            repositoryName = repoName,
+            includeLabels = mr.labels.nonEmptyOrNull()?.join(),
+            excludeLabels = mr.labelsIgnore.nonEmptyOrNull()?.join()
         ).checkTriggerElementEnable(mr.enable).apply {
             version = "1.*"
         }

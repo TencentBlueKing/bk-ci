@@ -270,10 +270,6 @@ class TencentAgentMetricService @Autowired constructor(
             projectId = projectId
         ) ?: throw NotFoundException("The agent is not exist")
 
-        if (!checkAgentProject(projectId)) {
-            return super.queryCpuUsageMetrix(userId, projectId, nodeHashId, timeRange)
-        }
-
         return bkMonitorMetricsService.queryCpuUsageMetrics(
             userId = userId,
             projectId = projectId,
@@ -293,10 +289,6 @@ class TencentAgentMetricService @Autowired constructor(
             projectId = projectId
         ) ?: throw NotFoundException("The agent is not exist")
 
-        if (!checkAgentProject(projectId)) {
-            return super.queryMemoryUsageMetrix(userId, projectId, nodeHashId, timeRange)
-        }
-
         return bkMonitorMetricsService.queryMemoryUsageMetrics(
             userId = userId,
             projectId = projectId,
@@ -315,10 +307,6 @@ class TencentAgentMetricService @Autowired constructor(
             nodeHashId = nodeHashId,
             projectId = projectId
         ) ?: throw NotFoundException("The agent is not exist")
-
-        if (!checkAgentProject(projectId)) {
-            return super.queryDiskioMetrix(userId, projectId, nodeHashId, timeRange)
-        }
 
         return bkMonitorMetricsService.queryDiskioMetrics(
             userId = userId,
@@ -340,10 +328,6 @@ class TencentAgentMetricService @Autowired constructor(
             projectId = projectId
         ) ?: throw NotFoundException("The agent is not exist")
 
-        if (!checkAgentProject(projectId)) {
-            return super.queryNetMetrix(userId, projectId, nodeHashId, timeRange)
-        }
-
         return bkMonitorMetricsService.queryNetMetrics(
             userId = userId,
             projectId = projectId,
@@ -354,9 +338,6 @@ class TencentAgentMetricService @Autowired constructor(
     }
 
     override fun queryHostInfo(projectId: String, agentHashId: String): AgentHostInfo {
-        if (!checkAgentProject(projectId)) {
-            return super.queryHostInfo(projectId, agentHashId)
-        }
         return bkMonitorMetricsService.queryHostInfo(projectId, agentHashId)
     }
 
@@ -370,11 +351,6 @@ class TencentAgentMetricService @Autowired constructor(
             nodeId = id,
             projectId = projectId
         )
-    }
-
-    // 区分 stream 项目使用模板分割，PAC 上线后删除
-    private fun checkAgentProject(projectId: String): Boolean {
-        return !projectId.startsWith("git_")
     }
 }
 

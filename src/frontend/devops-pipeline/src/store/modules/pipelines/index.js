@@ -26,7 +26,7 @@ import pipelinesRestore from './pipelinesRestore'
 import pipelinesTemplate from './pipelinesTemplate'
 import pipelinesView from './pipelinesView'
 import staticList from './staticList'
-
+import realTimeMonitor from './realTimeMonitor'
 const assign = Object.assign
 
 const modules = [
@@ -39,7 +39,8 @@ const modules = [
     pipelinesView,
     pipelinesTemplate,
     pipelinesRestore,
-    pipelinesAudit
+    pipelinesAudit,
+    realTimeMonitor
 ]
 
 const state = {

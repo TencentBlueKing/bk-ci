@@ -33,6 +33,7 @@ import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.dialect.PipelineDialectType
+import com.tencent.devops.common.pipeline.pojo.PublicVarGroupRef
 import com.tencent.devops.common.pipeline.pojo.setting.BuildCancelPolicy
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
@@ -48,10 +49,13 @@ import com.tencent.devops.process.yaml.transfer.pojo.YamlTransferInput
 import com.tencent.devops.process.yaml.v3.enums.SyntaxDialectType
 import com.tencent.devops.process.yaml.v3.models.IPreTemplateScriptBuildYamlParser
 import com.tencent.devops.process.yaml.v3.models.PreTemplateScriptBuildYamlV3Parser
+import com.tencent.devops.process.yaml.v3.models.TriggerType
+import com.tencent.devops.process.yaml.v3.models.VariableTemplate
 import com.tencent.devops.process.yaml.v3.models.on.IPreTriggerOn
 import com.tencent.devops.process.yaml.v3.models.on.PreTriggerOn
 import com.tencent.devops.process.yaml.v3.models.on.PreTriggerOnV3
 import com.tencent.devops.process.yaml.v3.models.stage.PreStage
+import com.tencent.devops.process.yaml.v3.parsers.template.Constants.TEMPLATE_KEY
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
@@ -87,6 +91,10 @@ class TemplateModelTransfer @Autowired constructor(
                     instanceFromTemplate = false,
                     pipelineCreator = yamlInput.userId
                 )
+                model.projectId = yamlInput.projectCode
+                model.publicVarGroups = yamlInput.yaml.formatVariableTemplates().map {
+                    PublicVarGroupRef.create(groupName = it.name, versionName = it.version)
+                }
 
                 // 蓝盾引擎会将stageId从1开始顺序强制重写，因此在生成model时保持一致
                 var stageIndex = 1
@@ -180,7 +188,9 @@ class TemplateModelTransfer @Autowired constructor(
             stages.add(ymlStage)
         }
         baseYaml.stages = stages.ifEmpty { null }?.let { TransferMapper.anyTo(stages) }
-        baseYaml.variables = model.triggerContainer()?.let { variableTransfer.makeVariableFromModel(it) }
+        baseYaml.variables = model.triggerContainer()?.let { triggerContainer ->
+            makeVariablesYaml(modelInput, triggerContainer)
+        }
         val lastStage = model.stages()?.last()
         val finally = if (lastStage?.finally == true) {
             modelInput.aspectWrapper.setModelStage4Model(lastStage, PipelineTransferAspectWrapper.AspectType.BEFORE)
@@ -213,12 +223,46 @@ class TemplateModelTransfer @Autowired constructor(
         return baseYaml
     }
 
+    private fun makeVariablesYaml(
+        modelInput: TemplateModelTransferInput,
+        triggerContainer: TriggerContainer
+    ): Map<String, Any>? {
+        modelInput.model.handlePublicVarInfo()
+        val variables = mutableMapOf<String, Any>()
+        val publicVarGroups = modelInput.model.getPublicVarGroups()
+        if (!publicVarGroups.isNullOrEmpty()) {
+            variables[TEMPLATE_KEY] = publicVarGroups.map {
+                VariableTemplate(it.groupName, it.versionName)
+            }
+        }
+        // 模板实例化流水线：仅输出公共变量组引用，不输出模板参数变量
+        if ((modelInput.model as? Model)?.template == null) {
+            variableTransfer.makeVariableFromModel(triggerContainer)?.let { variables.putAll(it) }
+        }
+        return variables.ifEmpty { null }
+    }
+
     private fun ITemplateModel.triggerContainer() = when (this) {
         is Model -> stages[0].containers[0] as TriggerContainer
         is StageTemplateModel -> null
         is JobTemplateModel -> null
         is StepTemplateModel -> null
         else -> null
+    }
+
+    private fun ITemplateModel.handlePublicVarInfo() = when (this) {
+        is Model -> handlePublicVarInfo()
+        is StageTemplateModel -> null
+        is JobTemplateModel -> null
+        is StepTemplateModel -> null
+        else -> null
+    }
+
+    private fun ITemplateModel.getPublicVarGroups(): List<PublicVarGroupRef>? {
+        if (this !is Model) {
+            return null
+        }
+        return publicVarGroups
     }
 
     private fun ITemplateModel.stages() = when (this) {
@@ -243,11 +287,18 @@ class TemplateModelTransfer @Autowired constructor(
             PipelineTransferAspectWrapper.AspectType.BEFORE
         )
         val triggers = (model.getTriggerContainer()).elements
-        val baseTrigger = elementTransfer.baseTriggers2yaml(triggers, modelInput.aspectWrapper)
-            ?.toPre(modelInput.version)
+        val baseTrigger = elementTransfer.baseTriggers2yaml(
+            elements = triggers,
+            aspectWrapper = modelInput.aspectWrapper,
+            userId = modelInput.userId,
+            projectId = modelInput.projectId
+        )?.toPre(modelInput.version)
         val scmTrigger = elementTransfer.scmTriggers2Yaml(
             triggers, modelInput.projectId, modelInput.aspectWrapper
         )
+        // TAPD 触发独立聚合，与代码库触发平级
+        val tapdTrigger = elementTransfer.tapdTriggers2Yaml(triggers, modelInput.aspectWrapper)
+            .map { it.toPre(modelInput.version) }
         when (modelInput.version) {
             YamlVersion.V2_0 -> {
                 // 融合默认git触发器 + 基础触发器
@@ -287,9 +338,11 @@ class TemplateModelTransfer @Autowired constructor(
                 if (baseTrigger != null) {
                     when (triggerV3.size) {
                         // 只带基础触发器
-                        0 -> return listOf(baseTrigger)
+                        0 -> {
+                            trigger.add(baseTrigger)
+                        }
                         // 融合一个git触发器 + 基础触发器
-                        1 -> return listOf(
+                        1 -> trigger.add(
                             (triggerV3.first() as PreTriggerOnV3).copy(
                                 manual = baseTrigger.manual,
                                 schedules = baseTrigger.schedules,
@@ -297,10 +350,19 @@ class TemplateModelTransfer @Autowired constructor(
                             )
                         )
                         // 队列首插入基础触发器
-                        else -> trigger.add(0, baseTrigger)
+                        else -> {
+                            trigger.add(0, baseTrigger)
+                            trigger.addAll(triggerV3)
+                        }
                     }
+                } else {
+                    trigger.addAll(triggerV3)
                 }
-                trigger.addAll(triggerV3)
+                // TAPD 触发条目追加在末尾（每条 = 一个 workspace），补上 type = "tapd"
+                tapdTrigger.forEach { pre ->
+                    (pre as? PreTriggerOnV3)?.type = TriggerType.TAPD.alis
+                    trigger.add(pre)
+                }
                 return trigger
             }
         }

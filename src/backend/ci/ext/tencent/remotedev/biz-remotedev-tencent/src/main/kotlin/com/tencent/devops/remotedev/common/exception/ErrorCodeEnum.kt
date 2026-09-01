@@ -230,7 +230,28 @@ enum class ErrorCodeEnum(
         errorType = ErrorType.SYSTEM,
         errorCode = "2132054",
         formatErrorMessage = "workspace logged in: {0}"
-    );
+    ),
+    OPEN_CLAW_WORKSPACE_CREATE_ERROR(
+        errorType = ErrorType.USER,
+        errorCode = "2132055",
+        formatErrorMessage = "workspace create error: {0}"
+    ),
+    TEMPLATE_PROJECT_CONFIG_NOT_FIND(
+        errorType = ErrorType.USER,
+        errorCode = "2132056",
+        formatErrorMessage = "template {0} delivery project config not find"
+    ),
+    NO_AVAILABLE_DISTRIBUTING_WORKSPACE(
+        errorType = ErrorType.USER,
+        errorCode = "2132057",
+        formatErrorMessage = "no available distributing workspace for template {0}"
+    ),
+    FUNCTION_RESTRICTED_ZONE(
+        errorType = ErrorType.USER,
+        errorCode = "2132058",
+        formatErrorMessage = "workspace {0} is in restricted zone {1}, this operation is not allowed"
+    ),
+    ;
 
     fun getErrorMessage(): String {
         return I18nUtil.getCodeLanMessage(this.errorCode)

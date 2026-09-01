@@ -20,7 +20,9 @@ _M = {}
 
 function _M:new()
     local redisConfig = config.redis
-    if config.redis.auto_redis ~= nil then
+    if config.redis.creative_redis ~= nil and creativeUtil:is_creative_host() then
+        redisConfig = config.redis.creative_redis
+    elseif config.redis.auto_redis ~= nil then
         -- 特殊tag处理
         local tag = specialTagUtil:get_special_tag(ngx.var.project, ngx.var.project_id, nil)
         if tag == config.redis.auto_redis.tag then

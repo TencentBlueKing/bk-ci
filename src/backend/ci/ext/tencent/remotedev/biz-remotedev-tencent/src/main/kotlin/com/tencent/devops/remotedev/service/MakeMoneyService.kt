@@ -52,7 +52,32 @@ class MakeMoneyService @Autowired constructor(
     )
 
     companion object {
-        private val logger = LoggerFactory.getLogger(MakeMoneyService::class.java)
+        private val logger =
+            LoggerFactory.getLogger(MakeMoneyService::class.java)
+        private const val BK_CLOUD_DEV_PROPERTY = "蓝盾云研发"
+        private const val CMDB_PAGE_LIMIT = 500
+        private const val CMDB_PAGE_SORT_FIELD = "bk_inst_id"
+    }
+
+    /**
+     * 硬件成本判定：
+     * 1. 在 CMDB 资产系统中
+     * 2. machineFlag 非空（高配机型）
+     * 3. 物管所属为"蓝盾云研发"
+     * 三者同时满足才收取硬件成本
+     */
+    fun calculateHardwareCost(
+        cmdbAssetDetail: CmdbAssetDetail?,
+        machineFlag: String
+    ): Int {
+        val isInCmdb = cmdbAssetDetail != null
+        val isHighEndMachine = machineFlag.isNotBlank()
+        val isBkCloudDev = cmdbAssetDetail
+            ?.propertyManagementBelongs ==
+            BK_CLOUD_DEV_PROPERTY
+        return if (
+            isInCmdb && isHighEndMachine && isBkCloudDev
+        ) 1 else 0
     }
 
     /**
@@ -70,7 +95,13 @@ class MakeMoneyService @Autowired constructor(
      */
     @JsonIgnoreProperties(ignoreUnknown = true)
     private data class CmdbAssetData(
+        val count: Int?,
         val info: List<CmdbAssetInfo>?
+    )
+
+    private data class CmdbAssetPage(
+        val count: Int?,
+        val info: List<CmdbAssetInfo>
     )
 
     /**
@@ -78,10 +109,20 @@ class MakeMoneyService @Autowired constructor(
      */
     @JsonIgnoreProperties(ignoreUnknown = true)
     private data class CmdbAssetInfo(
-        @JsonProperty("bk_inst_name")
-        val bkInstName: String,
+        @JsonProperty("cds_ip")
+        val cdsIp: String?,
         @JsonProperty("start_date")
-        val startDate: String?
+        val startDate: String?,
+        @JsonProperty("property_management_belongs")
+        val propertyManagementBelongs: String?
+    )
+
+    /**
+     * CMDB资产聚合数据，包含启用日期和物管所属
+     */
+    data class CmdbAssetDetail(
+        val commissionDate: String,
+        val propertyManagementBelongs: String
     )
 
     /*
@@ -207,7 +248,12 @@ class MakeMoneyService @Autowired constructor(
         lastDay: LocalDateTime
     ) {
         // 获取CMDB资产信息
-        val cmdbAssetMap = fetchCmdbAssetInfo()
+        val cmdbAssetMap = try {
+            fetchCmdbAssetInfo()
+        } catch (e: Exception) {
+            logger.error("save method - fetchCmdbAssetInfo failed, skip commission date update", e)
+            emptyMap()
+        }
         logger.info("save method - fetchCmdbAssetInfo result size: ${cmdbAssetMap.size}")
 
         use.chunked(99).forEach { chunk ->
@@ -249,7 +295,7 @@ class MakeMoneyService @Autowired constructor(
      */
     private fun batchUpdateCommissionDateFromRecords(
         chunk: List<String>,
-        cmdbAssetMap: Map<String, String>
+        cmdbAssetMap: Map<String, CmdbAssetDetail>
     ) {
         val workspaces = workspaceDao.limitFetchWorkspace(
             dslContext = dslContext,
@@ -261,27 +307,32 @@ class MakeMoneyService @Autowired constructor(
         }
 
         try {
-            // 筛选出需要更新的工作空间（COMMISSION_DATE为空且CMDB中有对应数据）
             val needUpdateList = workspaces.filter { workspace ->
-                workspace.commissionDate.isNullOrBlank() && !cmdbAssetMap[workspace.name].isNullOrBlank()
+                workspace.commissionDate.isNullOrBlank() &&
+                    !cmdbAssetMap[workspace.ip]?.commissionDate.isNullOrBlank()
             }
 
             if (needUpdateList.isEmpty()) {
-                logger.info("No workspace needs to update COMMISSION_DATE in current batch")
+                logger.info(
+                    "No workspace needs to update COMMISSION_DATE in current batch"
+                )
                 return
             }
 
-            // 批量更新
             var updateCount = 0
             needUpdateList.forEach { workspace ->
-                val commissionDate = cmdbAssetMap[workspace.name]
+                val commissionDate = cmdbAssetMap[workspace.ip]?.commissionDate
                 if (!commissionDate.isNullOrBlank()) {
-                    workspaceDao.updateCommissionDate(dslContext, workspace.name, commissionDate)
+                    workspaceDao.updateCommissionDate(
+                        dslContext, workspace.name, commissionDate
+                    )
                     updateCount++
                 }
             }
 
-            logger.info("Batch updated COMMISSION_DATE for $updateCount workspaces")
+            logger.info(
+                "Batch updated COMMISSION_DATE for $updateCount workspaces"
+            )
         } catch (e: Exception) {
             logger.error("Failed to batch update COMMISSION_DATE", e)
         }
@@ -383,75 +434,139 @@ class MakeMoneyService @Autowired constructor(
     }
 
     /**
-     * 从CMDB API查询资产详情信息，构建实例名到启用日期的映射
-     * @return Map<String, String> - Key为bk_inst_name（实例名），Value为格式化后的启用日期（YYYY-MM）
+     * 从CMDB API查询资产详情信息，构建实例名到资产详情的映射
+     * @return Map<String, CmdbAssetDetail> - Key为cds_ip（实例IP），
+     *         Value包含格式化后的启用日期（YYYY-MM）和物管所属
      */
     @Suppress("NestedBlockDepth")
-    fun fetchCmdbAssetInfo(): Map<String, String> {
-        return try {
-            logger.info("start fetchCmdbAssetInfo|url:${bkConfig.cmdbAssetDetailUrl}")
-            val resultMap = mutableMapOf<String, String>()
-            var start = 0
-            val limit = 500
-            var hasMore = true
+    fun fetchCmdbAssetInfo(): Map<String, CmdbAssetDetail> {
+        logger.info("start fetchCmdbAssetInfo|url:${bkConfig.cmdbAssetDetailUrl}")
+        var start = 0
+        var hasMore = true
+        var expectedCount: Int? = null
+        var fetchedAssets = emptyList<CmdbAssetInfo>()
 
-            while (hasMore) {
-                val requestBody = JsonUtil.toJson(
-                    mapOf(
-                        "bk_biz_id" to (bkConfig.ccBizId ?: 0),
-                        "page" to mapOf("start" to start, "limit" to limit),
-                        "fields" to listOf("bk_inst_name", "start_date")
-                    )
+        while (hasMore) {
+            val page = fetchCmdbAssetPage(
+                start = start,
+                limit = CMDB_PAGE_LIMIT
+            )
+            val pageCount = page.count
+            val firstPageCount = expectedCount
+            if (firstPageCount != null && pageCount != null && firstPageCount != pageCount) {
+                throw RemoteServiceException(
+                    "CMDB asset count changed during pagination, " +
+                        "start=$start, expected=$firstPageCount, actual=$pageCount"
                 )
+            }
+            expectedCount = expectedCount ?: pageCount
 
-                OkhttpUtils.doPost(
-                    url = bkConfig.cmdbAssetDetailUrl,
-                    jsonParam = requestBody,
-                    headers = mapOf("X-Bkapi-Authorization" to bkConfig.cmdbHeaderStr())
-                ).use { response ->
-                    if (!response.isSuccessful) {
-                        logger.warn(
-                            "fetchCmdbAssetInfo failed|start: $start|" +
-                                "code: ${response.code}|response: ${response.body?.string()}"
-                        )
-                        hasMore = false
-                        return@use
-                    }
-
-                    val responseBody = response.body?.string() ?: ""
-                    logger.info("fetchCmdbAssetInfo page|start: $start|limit: $limit")
-                    val cmdbResponse: CmdbAssetResponse = jacksonObjectMapper().readValue(responseBody)
-
-                    if (cmdbResponse.result != true || cmdbResponse.data?.info == null) {
-                        logger.warn("fetchCmdbAssetInfo result is false or data is null|start: $start")
-                        hasMore = false
-                        return@use
-                    }
-
-                    val currentPageData = cmdbResponse.data.info
-                    if (currentPageData.isEmpty()) {
-                        hasMore = false
-                    } else {
-                        currentPageData.forEach { asset ->
-                            resultMap[asset.bkInstName] = formatCommissionDate(asset.startDate)
-                        }
-
-                        // 如果返回的数据量小于limit，说明已经是最后一页
-                        if (currentPageData.size < limit) {
-                            hasMore = false
-                        } else {
-                            start += limit
-                        }
-                    }
+            if (page.info.isEmpty()) {
+                if (expectedCount != null && start < expectedCount) {
+                    throw RemoteServiceException(
+                        "CMDB asset page is unexpectedly empty, start=$start, expected=$expectedCount"
+                    )
                 }
+                hasMore = false
+                continue
             }
 
-            logger.info("fetchCmdbAssetInfo completed|total size: ${resultMap.size}")
-            resultMap
-        } catch (e: Exception) {
-            logger.error("fetchCmdbAssetInfo exception", e)
-            emptyMap()
+            val fetchedCount = start + page.info.size
+            val isLastPage = expectedCount
+                ?.let { fetchedCount >= it }
+                ?: (page.info.size < CMDB_PAGE_LIMIT)
+            if (!isLastPage && page.info.size < CMDB_PAGE_LIMIT) {
+                throw RemoteServiceException(
+                    "CMDB asset page is shorter than limit, " +
+                        "start=$start, size=${page.info.size}, expected=$expectedCount"
+                )
+            }
+
+            fetchedAssets = fetchedAssets + page.info
+            start = fetchedCount
+            hasMore = !isLastPage
         }
+
+        if (expectedCount != null && fetchedAssets.size != expectedCount) {
+            throw RemoteServiceException(
+                "CMDB asset count mismatch, expected=$expectedCount, actual=${fetchedAssets.size}"
+            )
+        }
+
+        return buildCmdbAssetMap(
+            assets = fetchedAssets,
+            expectedCount = expectedCount
+        )
+    }
+
+    private fun fetchCmdbAssetPage(start: Int, limit: Int): CmdbAssetPage {
+        val requestBody = JsonUtil.toJson(
+            mapOf(
+                "bk_biz_id" to (bkConfig.ccBizId ?: 0),
+                "page" to mapOf(
+                    "start" to start,
+                    "limit" to limit,
+                    "sort" to CMDB_PAGE_SORT_FIELD
+                ),
+                "fields" to listOf(
+                    "cds_ip",
+                    "start_date",
+                    "property_management_belongs"
+                )
+            )
+        )
+
+        return OkhttpUtils.doPost(
+            url = bkConfig.cmdbAssetDetailUrl,
+            jsonParam = requestBody,
+            headers = mapOf("X-Bkapi-Authorization" to bkConfig.cmdbHeaderStr())
+        ).use { response ->
+            val responseBody = response.body?.string().orEmpty()
+            if (!response.isSuccessful) {
+                throw RemoteServiceException(
+                    "fetch CMDB asset failed, start=$start, code=${response.code}"
+                )
+            }
+
+            logger.info("fetchCmdbAssetInfo page|start: $start|limit: $limit")
+            val cmdbResponse: CmdbAssetResponse = jacksonObjectMapper().readValue(responseBody)
+            val data = cmdbResponse.data
+            if (cmdbResponse.result != true || data?.info == null) {
+                throw RemoteServiceException(
+                    "fetch CMDB asset failed, start=$start, message=${cmdbResponse.message}"
+                )
+            }
+
+            CmdbAssetPage(
+                count = data.count,
+                info = data.info
+            )
+        }
+    }
+
+    private fun buildCmdbAssetMap(
+        assets: List<CmdbAssetInfo>,
+        expectedCount: Int?
+    ): Map<String, CmdbAssetDetail> {
+        val validAssets = assets.mapNotNull { asset ->
+            asset.cdsIp
+                ?.takeIf { it.isNotBlank() }
+                ?.let { ip -> ip to asset }
+        }
+        val resultMap = validAssets.associate { (ip, asset) ->
+            ip to CmdbAssetDetail(
+                commissionDate = formatCommissionDate(startDate = asset.startDate),
+                propertyManagementBelongs = asset.propertyManagementBelongs.orEmpty()
+            )
+        }
+        val blankIpCount = assets.size - validAssets.size
+        val duplicateIpCount = validAssets.size - resultMap.size
+        logger.info(
+            "fetchCmdbAssetInfo completed|cmdb count: $expectedCount|" +
+                "fetched size: ${assets.size}|blank ip count: $blankIpCount|" +
+                "duplicate ip count: $duplicateIpCount|total size: ${resultMap.size}"
+        )
+        return resultMap
     }
 
     /**
@@ -526,7 +641,9 @@ class MakeMoneyService @Autowired constructor(
             }
         }
         val dateList = getDateList(start, end)
-        val allConfig = windowsResourceConfigService.getAllType(true, null).associateBy { it.id!! }
+        val allConfig = windowsResourceConfigService
+            .getAllType(true, null).associateBy { it.id!! }
+        val cmdbAssetMap = fetchCmdbAssetInfo()
         val res = mutableListOf<Bill.BillDetail>()
         // 分块处理减少性能压力
         total.keys.chunked(99).forEach { chunk ->
@@ -562,16 +679,20 @@ class MakeMoneyService @Autowired constructor(
                 val usage = bitCount(checkNotNull(total[name]))
                 val dayDetail = dayDetail(checkNotNull(total[name]), dateList)
 
-                // 从已查询的记录中获取COMMISSION_DATE字段
-                val commissionDate = workspaceCommissionDateMap[name] ?: ""
-                val hardwareCost = if (commissionDate.isNotEmpty()) 1 else 0
+                val commissionDate =
+                    workspaceCommissionDateMap[name] ?: ""
+                val commissionYears =
+                    calculateCommissionYears(commissionDate)
 
-                // 计算启用年数
-                val commissionYears = calculateCommissionYears(commissionDate)
+                val winConfigId =
+                    allWindows[name]?.winConfigId?.toLong()
+                val machineFlag = winConfigId
+                    ?.let { allConfig[it]?.machineFlag } ?: ""
 
-                // 获取机型标识
-                val winConfigId = allWindows[name]?.winConfigId?.toLong()
-                val machineFlag = winConfigId?.let { allConfig[it]?.machineFlag } ?: ""
+                val hardwareCost = calculateHardwareCost(
+                    cmdbAssetDetail = workspace?.ip?.let { cmdbAssetMap[it] },
+                    machineFlag = machineFlag
+                )
 
                 res.add(
                     Bill.BillDetail(

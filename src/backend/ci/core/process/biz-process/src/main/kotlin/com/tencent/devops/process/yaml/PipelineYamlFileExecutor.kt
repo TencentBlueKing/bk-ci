@@ -1,7 +1,7 @@
 package com.tencent.devops.process.yaml
 
 import com.tencent.devops.process.pojo.pipeline.enums.YamlFileActionType
-import com.tencent.devops.process.trigger.scm.WebhookTriggerBuildService
+import com.tencent.devops.process.trigger.scm.ScmWebhookTriggerBuildService
 import com.tencent.devops.process.trigger.scm.listener.WebhookTriggerContext
 import com.tencent.devops.process.trigger.scm.listener.WebhookTriggerManager
 import com.tencent.devops.process.yaml.exception.hanlder.YamlTriggerExceptionUtil
@@ -13,7 +13,7 @@ import org.springframework.stereotype.Service
 @Service
 class PipelineYamlFileExecutor @Autowired constructor(
     private val pipelineYamlSyncService: PipelineYamlSyncService,
-    private val webhookTriggerBuildService: WebhookTriggerBuildService,
+    private val scmWebhookTriggerBuildService: ScmWebhookTriggerBuildService,
     private val pipelineYamlFileManager: PipelineYamlFileManager,
     private val webhookTriggerManager: WebhookTriggerManager
 ) {
@@ -57,7 +57,7 @@ class PipelineYamlFileExecutor @Autowired constructor(
                     pipelineYamlFileManager.createOrUpdateYamlFile(this)
                     // 只有流水线才需要触发
                     if (!isTemplate) {
-                        webhookTriggerBuildService.yamlTrigger(this)
+                        scmWebhookTriggerBuildService.yamlTrigger(this)
                     }
                 }
 
@@ -69,12 +69,12 @@ class PipelineYamlFileExecutor @Autowired constructor(
                     pipelineYamlFileManager.renameYamlFile(event = this)
                     // 只有流水线才需要触发
                     if (!isTemplate) {
-                        webhookTriggerBuildService.yamlTrigger(this)
+                        scmWebhookTriggerBuildService.yamlTrigger(this)
                     }
                 }
 
                 YamlFileActionType.TRIGGER -> {
-                    webhookTriggerBuildService.yamlTrigger(this)
+                    scmWebhookTriggerBuildService.yamlTrigger(this)
                 }
 
                 YamlFileActionType.CLOSE -> {

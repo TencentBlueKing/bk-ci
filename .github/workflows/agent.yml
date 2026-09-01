@@ -33,7 +33,7 @@ jobs:
           ~/.cache/go-build
           ~/go/pkg/mod
         key: ${{ runner.os }}-go-${{ hashFiles('src/agent/agent/go.sum') }}
-    - run: make BUILD_OUT_TAG=out clean all
+    - run: go mod tidy && make BUILD_OUT_TAG=out clean all
       working-directory: src/agent/agent/
     - uses: actions/upload-artifact@v4
       if: ${{ inputs.upload == 'true'  }}

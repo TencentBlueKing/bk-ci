@@ -162,28 +162,6 @@
     import { deepCopy } from '@/utils/util'
     import { mapGetters, mapActions } from 'vuex'
 
-    const defaultSuc = {
-        types: [],
-        groups: [],
-        users: '${{ci.actor}}',
-        wechatGroupFlag: false,
-        wechatGroup: '',
-        wechatGroupMarkdownFlag: false,
-        detailFlag: false,
-        content: window.pipelineVue?.$i18n?.t('settings.defaultSuc')
-    }
-
-    const defaultFail = {
-        types: [],
-        groups: [],
-        users: '${{ci.actor}}',
-        wechatGroupFlag: false,
-        wechatGroup: '',
-        wechatGroupMarkdownFlag: false,
-        detailFlag: false,
-        content: window.pipelineVue?.$i18n?.t('settings.defaultFail')
-    }
-
     export default {
         name: 'notify-tab',
         components: {
@@ -252,6 +230,30 @@
             ...mapGetters('atom', [
                 'isTemplate'
             ]),
+            defaultSuc () {
+                return {
+                    types: [],
+                    groups: [],
+                    users: '${{ci.actor}}',
+                    wechatGroupFlag: false,
+                    wechatGroup: '',
+                    wechatGroupMarkdownFlag: false,
+                    detailFlag: false,
+                    content: this.$t('settings.defaultSuc')
+                }
+            },
+            defaultFail () {
+                return {
+                    types: [],
+                    groups: [],
+                    users: '${{ci.actor}}',
+                    wechatGroupFlag: false,
+                    wechatGroup: '',
+                    wechatGroupMarkdownFlag: false,
+                    detailFlag: false,
+                    content: this.$t('settings.defaultFail')
+                }
+            },
             slideTitle () {
                 const actionType = this.editIndex > -1 ? this.$t('newui.editNotice') : this.$t('newui.addNotice')
                 const targetType = this.editType === 'failSubscriptionList' ? this.$t('settings.whenFail') : this.$t('settings.whenSuc')
@@ -282,8 +284,9 @@
                 return res
             },
             handleDelete (type, index) {
-                this[type].splice(index, 1)
-                this.updateSubscription(type, this[type])
+                const newList = [...this[type]]
+                newList.splice(index, 1)
+                this.updateSubscription(type, newList)
             },
             handleEdit (type, index) {
                 this.showSlider = true
@@ -292,7 +295,7 @@
                 if (index > -1 && this[type][index]) {
                     this.sliderEditItem = deepCopy(this[type][index])
                 } else {
-                    this.sliderEditItem = deepCopy(type === 'failSubscriptionList' ? defaultFail : defaultSuc)
+                    this.sliderEditItem = deepCopy(type === 'failSubscriptionList' ? this.defaultFail : this.defaultSuc)
                     if (this.isTemplate) {
                         this.sliderEditItem.detailFlag = true
                     }
@@ -300,12 +303,13 @@
             },
             handleSaveNotify () {
                 this.$refs?.notifySettingTab?.$refs?.notifyForm?.validate().then(() => {
+                    const newList = [...this[this.editType]]
                     if (this.editIndex > -1) {
-                        this[this.editType][this.editIndex] = this.sliderEditItem
+                        newList[this.editIndex] = this.sliderEditItem
                     } else {
-                        this[this.editType].push(this.sliderEditItem)
+                        newList.push(this.sliderEditItem)
                     }
-                    this.updateSubscription(this.editType, this[this.editType])
+                    this.updateSubscription(this.editType, newList)
                     this.hideSlider()
                 })
             },

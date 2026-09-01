@@ -35,6 +35,7 @@ import com.tencent.devops.remotedev.pojo.common.QuotaType
 import com.tencent.devops.remotedev.pojo.image.StandardVmImage
 import com.tencent.devops.remotedev.pojo.kubernetes.TaskStatus
 import com.tencent.devops.remotedev.pojo.kubernetes.WorkspaceInfo
+import com.tencent.devops.remotedev.pojo.remotedev.AvailableResource
 import com.tencent.devops.remotedev.pojo.remotedev.EnvironmentResourceData
 import com.tencent.devops.remotedev.pojo.remotedev.FetchWinPoolData
 import com.tencent.devops.remotedev.pojo.remotedev.ResourceEstimateByVmResponse
@@ -84,6 +85,10 @@ class StartCloudService @Autowired constructor(
 
     override fun getResourceVm(data: ResourceVmReq): Result<List<ResourceVmRespData>?> {
         return Result(workspaceBcsClient.startGetResourceVm(data))
+    }
+
+    override fun getAvailableResource(provider: String): Result<List<AvailableResource>?> {
+        return Result(workspaceBcsClient.startGetAvailableResource(provider))
     }
 
     override fun startGetResourceEstimateByVm(

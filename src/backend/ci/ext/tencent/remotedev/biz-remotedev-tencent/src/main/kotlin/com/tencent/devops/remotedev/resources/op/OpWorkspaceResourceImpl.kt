@@ -9,11 +9,13 @@ import com.tencent.devops.remotedev.api.op.OpWorkspaceResource
 import com.tencent.devops.remotedev.dispatch.kubernetes.interfaces.ServiceStartCloudInterface
 import com.tencent.devops.remotedev.pojo.ShareWorkspace
 import com.tencent.devops.remotedev.pojo.WorkspaceAction
+import com.tencent.devops.remotedev.pojo.WorkspaceKind
 import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
 import com.tencent.devops.remotedev.pojo.WorkspaceShared
 import com.tencent.devops.remotedev.pojo.WorkspaceSharedOpUse
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.record.WorkspaceRecordTicketType
+import com.tencent.devops.remotedev.service.CoffeeAIService
 import com.tencent.devops.remotedev.service.WorkspaceRecordService
 import com.tencent.devops.remotedev.service.WorkspaceService
 import com.tencent.devops.remotedev.service.workspace.CreateControl
@@ -28,7 +30,8 @@ class OpWorkspaceResourceImpl @Autowired constructor(
     private val workspaceCommon: WorkspaceCommon,
     private val createControl: CreateControl,
     private val workspaceRecordService: WorkspaceRecordService,
-    private val notifyControl: NotifyControl
+    private val notifyControl: NotifyControl,
+    private val coffeeAIService: CoffeeAIService
 ) : OpWorkspaceResource {
 
     companion object {
@@ -72,7 +75,12 @@ class OpWorkspaceResourceImpl @Autowired constructor(
         workspaceName: String,
         workspaceStatus: WorkspaceStatus
     ): Result<Boolean> {
-        workspaceCommon.updateStatusAndCreateHistory(workspaceName, workspaceStatus, WorkspaceAction.SYSTEM_CHANGES)
+        workspaceCommon.updateStatusAndCreateHistory(
+            workspaceName = workspaceName,
+            newStatus = workspaceStatus,
+            action = WorkspaceAction.SYSTEM_CHANGES,
+            allowUpdateDeleted = true  // OP 管理接口允许修改 DELETED 状态，主要用于捞回已删除实例。
+        )
         return Result(true)
     }
 
@@ -138,6 +146,19 @@ class OpWorkspaceResourceImpl @Autowired constructor(
         return Result(true)
     }
 
+    override fun updateWorkspaceKind(
+        userId: String,
+        workspaceNames: List<String>,
+        workspaceKind: WorkspaceKind
+    ): Result<Boolean> {
+        workspaceService.updateWorkspaceKind(
+            operator = userId,
+            workspaceNames = workspaceNames,
+            workspaceKind = workspaceKind
+        )
+        return Result(true)
+    }
+
     override fun pendingCheck(userId: String, ww: String?): Result<String> {
         val data = SpringContextUtil.getBean(ServiceStartCloudInterface::class.java).pendingCheck(userId).data!!
         if (!ww.isNullOrBlank() && data.isNotBlank()) {
@@ -169,5 +190,11 @@ class OpWorkspaceResourceImpl @Autowired constructor(
                 enable = enable
             )
         )
+    }
+
+    override fun enableCoffeeAI(userId: String, workspaceNames: List<String>): Result<Boolean> {
+        logger.info("enableCoffeeAI|$userId|$workspaceNames")
+        coffeeAIService.enableCoffeeAI(workspaceNames)
+        return Result(true)
     }
 }

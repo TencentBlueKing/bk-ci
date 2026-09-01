@@ -52,14 +52,14 @@ import com.tencent.devops.notify.wework.pojo.TextSendMessageRequest
 import com.tencent.devops.notify.wework.pojo.UploadMediaResp
 import com.tencent.devops.notify.wework.pojo.VideoSendMessageRequest
 import com.tencent.devops.notify.wework.pojo.VoiceSendMessageRequest
-import org.slf4j.LoggerFactory
-import org.springframework.cloud.stream.function.StreamBridge
 import java.io.InputStream
 import java.nio.file.Files
 import java.nio.file.Paths
 import java.nio.file.StandardCopyOption
 import java.util.Optional
 import java.util.concurrent.TimeUnit
+import org.slf4j.LoggerFactory
+import org.springframework.cloud.stream.function.StreamBridge
 
 @Suppress("TooManyFunctions", "LongMethod", "LongParameterList")
 class WeworkServiceImpl(

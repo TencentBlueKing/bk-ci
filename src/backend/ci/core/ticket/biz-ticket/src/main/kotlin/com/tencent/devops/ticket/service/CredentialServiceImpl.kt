@@ -57,6 +57,7 @@ import com.tencent.devops.ticket.constant.TicketMessageCode
 import com.tencent.devops.ticket.constant.TicketMessageCode.USER_NO_ENGINEERING_CREDENTIAL_OPERATE_PERMISSIONS
 import com.tencent.devops.ticket.dao.CredentialDao
 import com.tencent.devops.ticket.pojo.Credential
+import com.tencent.devops.ticket.pojo.CredentialBasicInfo
 import com.tencent.devops.ticket.pojo.CredentialCreate
 import com.tencent.devops.ticket.pojo.CredentialInfo
 import com.tencent.devops.ticket.pojo.CredentialItemVo
@@ -827,6 +828,32 @@ class CredentialServiceImpl @Autowired constructor(
             v3 = credentialHelper.decryptCredential(record.credentialV3),
             v4 = credentialHelper.decryptCredential(record.credentialV4),
             updateUser = record.updateUser
+        )
+    }
+
+    @AuditEntry(actionId = ActionId.CREDENTIAL_VIEW)
+    @ActionAuditRecord(
+        actionId = ActionId.CREDENTIAL_VIEW,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.CREDENTIAL,
+            instanceNames = "#credentialId",
+            instanceIds = "#credentialId"
+        ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
+        content = ActionAuditContent.CREDENTIAL_VIEW_CONTENT
+    )
+    override fun serviceGetBasicInfo(projectId: String, credentialId: String): CredentialBasicInfo {
+        val record = credentialDao.get(dslContext, projectId, credentialId)
+
+        return CredentialBasicInfo(
+            credentialId = record.credentialId,
+            credentialName = record.credentialName ?: record.credentialId,
+            credentialType = CredentialType.valueOf(record.credentialType),
+            credentialRemark = record.credentialRemark,
+            updatedTime = record.updatedTime.timestamp(),
+            updateUser = record.updateUser,
+            createUser = record.credentialUserId
         )
     }
 

@@ -27,6 +27,7 @@
 
 package com.tencent.devops.remotedev.pojo
 
+import com.tencent.devops.common.api.pojo.OS
 import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDateTime
 
@@ -49,6 +50,8 @@ interface WorkspaceRecordInf {
     val lastStatusUpdateTime: LocalDateTime?
     val workspaceMountType: WorkspaceMountType
     val ownerType: WorkspaceOwnerType
+    val workspaceKind: WorkspaceKind
+    val os: OS?
     val remark: String?
     val labels: List<String>?
     val bakWorkspaceName: String?
@@ -93,6 +96,10 @@ data class WorkspaceRecord(
     override val workspaceSystemType: WorkspaceSystemType,
     @get:Schema(title = "工作空间归属")
     override val ownerType: WorkspaceOwnerType,
+    @get:Schema(title = "云桌面实例类型")
+    override val workspaceKind: WorkspaceKind,
+    @get:Schema(title = "系统")
+    override val os: OS? = null,
     @get:Schema(title = "工作空间备注")
     override val remark: String?,
     @get:Schema(title = "标签")
@@ -100,7 +107,9 @@ data class WorkspaceRecord(
     @get:Schema(title = "备份的workspace name")
     override var bakWorkspaceName: String? = null,
     @get:Schema(title = "无区域ip地址,比如:11.11.11.111")
-    override var ip: String?
+    override var ip: String?,
+    @get:Schema(title = "是否开启AI功能")
+    val coffeeAi: Boolean? = false
 ) : WorkspaceRecordInf
 
 /**
@@ -143,6 +152,10 @@ data class WorkspaceRecordWithWindows(
     override val workspaceSystemType: WorkspaceSystemType,
     @get:Schema(title = "工作空间归属")
     override val ownerType: WorkspaceOwnerType,
+    @get:Schema(title = "云桌面实例类型")
+    override val workspaceKind: WorkspaceKind,
+    @get:Schema(title = "系统")
+    override val os: OS? = null,
     @get:Schema(title = "工作空间备注")
     override val remark: String?,
     @get:Schema(title = "标签")
@@ -170,5 +183,7 @@ data class WorkspaceRecordWithWindows(
     @get:Schema(title = "resourceId")
     val resourceId: String?,
     @get:Schema(title = "enableRecord")
-    val enableRecord: Boolean? = false
+    val enableRecord: Boolean? = false,
+    @get:Schema(title = "是否开启AI功能")
+    val coffeeAi: Boolean? = false
 ) : WorkspaceRecordInf

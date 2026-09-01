@@ -20,6 +20,7 @@ class MacVmTypeService @Autowired constructor(
         private val logger = LoggerFactory.getLogger(MacVmTypeService::class.java)
         private const val STREAM_DEFAULT_SYSTEM_VERSION = "Monterey12.4"
         private const val STREAM_DEFAULT_XCODE_VERSION = "14.1"
+        private val MACOS_LEGACY_VERSION_REGEX = Regex("[0-9]+(\\.[0-9]+)*")
     }
 
     fun listSystemVersion(): List<String> {
@@ -83,24 +84,34 @@ class MacVmTypeService @Autowired constructor(
     }
 
     fun getStreamSystemVersionByVersion(version: String?, xcodeVersion: String?): Pair<String, String> {
+        val formattedXcodeVersion = xcodeVersion?.takeIf { it.isNotBlank() } ?: STREAM_DEFAULT_XCODE_VERSION
         // 兼容stream旧版语法
         if (version == "latest" || version.isNullOrBlank()) {
-            val formatXcodeVersion = if (xcodeVersion.isNullOrBlank()) {
-                STREAM_DEFAULT_XCODE_VERSION
-            } else {
-                xcodeVersion
-            }
-            return Pair(STREAM_DEFAULT_SYSTEM_VERSION, formatXcodeVersion)
+            return Pair(STREAM_DEFAULT_SYSTEM_VERSION, formattedXcodeVersion)
         }
 
-        // 不存在的系统版本默认macos12
-        val systemVersionRecord = virtualMachineTypeDao.getSystemVersionByVersion(dslContext, version)
-            ?: return Pair(STREAM_DEFAULT_SYSTEM_VERSION, STREAM_DEFAULT_XCODE_VERSION)
+        // 对于mac1.0不存在的系统版本默认macos12，mac2.0直接使用用户输入的系统版本
+        // 判断version是否是由数字和小数点组成，mac1.0特征,比如：10.15.4，15
+        if (version.matches(MACOS_LEGACY_VERSION_REGEX)) {
+            val systemVersionRecord = virtualMachineTypeDao.getSystemVersionByVersion(dslContext, version)
+                ?: return Pair(STREAM_DEFAULT_SYSTEM_VERSION, STREAM_DEFAULT_XCODE_VERSION)
 
-        return Pair(
-            systemVersionRecord.systemVersion,
-            systemVersionRecord.xcodeVersion.trim().split(";").first { it.isNotEmpty() }
-        )
+            val recordDefaultXcodeVersionList = systemVersionRecord.xcodeVersion
+                .trim(';')
+                .split(";")
+
+            if (recordDefaultXcodeVersionList.isNotEmpty() &&
+                recordDefaultXcodeVersionList.contains(formattedXcodeVersion)) {
+                return Pair(systemVersionRecord.systemVersion, formattedXcodeVersion)
+            }
+
+            return Pair(
+                systemVersionRecord.systemVersion,
+                systemVersionRecord.xcodeVersion.trim().split(";").first { it.isNotEmpty() }
+            )
+        }
+
+        return Pair(version, formattedXcodeVersion)
     }
 
     fun listVMType(): List<VMType>? {

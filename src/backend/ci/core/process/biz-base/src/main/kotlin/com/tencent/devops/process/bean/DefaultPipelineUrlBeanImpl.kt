@@ -27,10 +27,48 @@
 
 package com.tencent.devops.process.bean
 
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.utils.HomeHostUtil
 
 class DefaultPipelineUrlBeanImpl constructor(private val commonConfig: CommonConfig) : PipelineUrlBean {
+
+    companion object {
+        // 创作流渠道 URL 前缀
+        private const val CREATIVE_STREAM_PREFIX = "creative-stream"
+        // 流水线渠道 URL 前缀
+        private const val PIPELINE_PREFIX = "pipeline"
+    }
+
+    /**
+     * 根据渠道获取 URL 中的模块路径前缀
+     */
+    private fun getModulePrefix(channelCode: ChannelCode?): String {
+        return if (channelCode == ChannelCode.CREATIVE_STREAM) {
+            CREATIVE_STREAM_PREFIX
+        } else {
+            PIPELINE_PREFIX
+        }
+    }
+
+    /**
+     * 根据渠道生成构建详情路径
+     * 流水线渠道: /console/pipeline/{projectCode}/{pipelineId}/detail/{buildId}
+     * 创作流渠道: /console/creative-stream/{projectCode}/flow/{pipelineId}/execute/{buildId}/execute-detail
+     */
+    private fun genDetailPath(
+        projectCode: String,
+        pipelineId: String,
+        buildId: String,
+        channelCode: ChannelCode?
+    ): String {
+        val prefix = getModulePrefix(channelCode)
+        return if (channelCode == ChannelCode.CREATIVE_STREAM) {
+            "/console/$prefix/$projectCode/flow/$pipelineId/execute/$buildId/execute-detail"
+        } else {
+            "/console/$prefix/$projectCode/$pipelineId/detail/$buildId"
+        }
+    }
 
     @Suppress("LongParameterList")
     override fun genBuildDetailUrl(
@@ -39,19 +77,23 @@ class DefaultPipelineUrlBeanImpl constructor(private val commonConfig: CommonCon
         buildId: String,
         position: String?,
         stageId: String?,
-        needShortUrl: Boolean
+        needShortUrl: Boolean,
+        channelCode: ChannelCode?
     ): String {
-        return "${
-            HomeHostUtil
-                .getHost(commonConfig.devopsHostGateway!!)
-        }/console/pipeline/$projectCode/$pipelineId/detail/$buildId"
+        return "${HomeHostUtil.getHost(commonConfig.devopsHostGateway!!)}${
+            genDetailPath(projectCode, pipelineId, buildId, channelCode)
+        }"
     }
 
-    override fun genAppBuildDetailUrl(projectCode: String, pipelineId: String, buildId: String): String {
-        return "${
-            HomeHostUtil
-                .getHost(commonConfig.devopsHostGateway!!)
-        }/console/pipeline/$projectCode/$pipelineId/detail/$buildId"
+    override fun genAppBuildDetailUrl(
+        projectCode: String,
+        pipelineId: String,
+        buildId: String,
+        channelCode: ChannelCode?
+    ): String {
+        return "${HomeHostUtil.getHost(commonConfig.devopsHostGateway!!)}${
+            genDetailPath(projectCode, pipelineId, buildId, channelCode)
+        }"
     }
 
     override fun genBuildReviewUrl(
@@ -60,10 +102,12 @@ class DefaultPipelineUrlBeanImpl constructor(private val commonConfig: CommonCon
         buildId: String,
         stageSeq: Int?,
         taskId: String?,
-        needShortUrl: Boolean
+        needShortUrl: Boolean,
+        channelCode: ChannelCode?
     ): String {
-        val baseUrl = HomeHostUtil.getHost(commonConfig.devopsHostGateway!!) +
-            "/console/pipeline/$projectCode/$pipelineId/detail/$buildId"
+        val baseUrl = "${HomeHostUtil.getHost(commonConfig.devopsHostGateway!!)}${
+            genDetailPath(projectCode, pipelineId, buildId, channelCode)
+        }"
 
         val queryParams = mutableListOf<String>()
         stageSeq?.let { queryParams.add("reviewStageSeq=$it") }

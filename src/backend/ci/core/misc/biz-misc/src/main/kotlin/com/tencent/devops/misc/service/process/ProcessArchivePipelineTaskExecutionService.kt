@@ -88,7 +88,12 @@ class ProcessArchivePipelineTaskExecutionService @Autowired constructor(
                 success = false,
                 result = I18nUtil.getCodeLanMessage(
                     messageCode = CommonMessageCode.USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
-                    params = arrayOf(userId, projectId, pipelineId)
+                    params = arrayOf(
+                        userId,
+                        projectId,
+                        AuthPermission.ARCHIVE.getI18n(I18nUtil.getRequestUserLanguage()),
+                        pipelineId
+                    )
                 )
             )
         }

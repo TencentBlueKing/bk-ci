@@ -31,6 +31,9 @@ package com.tencent.devops.auth.resources.op
 import com.tencent.devops.auth.api.migrate.OpAuthMigrateResource
 import com.tencent.devops.auth.pojo.dto.MigrateResourceDTO
 import com.tencent.devops.auth.pojo.dto.PermissionHandoverDTO
+import com.tencent.devops.auth.pojo.dto.ProjectGroupIncrementalMigrationDTO
+import com.tencent.devops.auth.pojo.dto.ProjectGroupMigrationDTO
+import com.tencent.devops.auth.pojo.dto.ProjectGroupMigrationResultDTO
 import com.tencent.devops.auth.service.iam.PermissionMigrateService
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.pojo.ProjectConditionDTO
@@ -70,6 +73,18 @@ class OpAuthMigrateResourceImpl @Autowired constructor(
         return Result(
             permissionMigrateService.resetProjectPermissions(migrateResourceDTO)
         )
+    }
+
+    override fun migrateProjectGroups(
+        migrationDTO: ProjectGroupMigrationDTO
+    ): Result<ProjectGroupMigrationResultDTO> {
+        return Result(permissionMigrateService.migrateProjectGroups(migrationDTO))
+    }
+
+    override fun migrateProjectGroupsIncremental(
+        migrationDTO: ProjectGroupIncrementalMigrationDTO
+    ): Result<ProjectGroupMigrationResultDTO> {
+        return Result(permissionMigrateService.migrateProjectGroupsIncremental(migrationDTO))
     }
 
     override fun grantGroupAdditionalAuthorization(projectCodes: List<String>): Result<Boolean> {

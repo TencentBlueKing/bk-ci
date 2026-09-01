@@ -43,6 +43,7 @@ class EnvShareProjectDao {
         projectId: String,
         envId: Long,
         name: String?,
+        creator: String?,
         offset: Int,
         limit: Int
     ): List<TEnvShareProjectInfo> {
@@ -63,6 +64,9 @@ class EnvShareProjectDao {
             .and((a.ENV_ID.eq(envId)))
         if (!name.isNullOrBlank()) {
             dsl.and(a.SHARED_PROJECT_NAME.like("%$name%"))
+        }
+        if (!creator.isNullOrBlank()) {
+            dsl.and(a.CREATOR.eq(creator))
         }
         return dsl.orderBy(a.UPDATE_TIME.desc()).limit(limit).offset(offset)
             .fetch().map {

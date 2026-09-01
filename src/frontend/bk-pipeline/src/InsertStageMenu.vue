@@ -26,7 +26,7 @@
     import { localeMixins } from './locale'
     
     export default {
-        name: 'insert-stage-menu',
+        name: 'InsertStageMenu',
         mixins: [localeMixins],
         props: {
             editStage: {

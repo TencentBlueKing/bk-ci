@@ -30,6 +30,9 @@ package com.tencent.devops.auth.api.migrate
 
 import com.tencent.devops.auth.pojo.dto.MigrateResourceDTO
 import com.tencent.devops.auth.pojo.dto.PermissionHandoverDTO
+import com.tencent.devops.auth.pojo.dto.ProjectGroupIncrementalMigrationDTO
+import com.tencent.devops.auth.pojo.dto.ProjectGroupMigrationDTO
+import com.tencent.devops.auth.pojo.dto.ProjectGroupMigrationResultDTO
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.pojo.ProjectConditionDTO
 import io.swagger.v3.oas.annotations.Operation
@@ -93,6 +96,22 @@ interface OpAuthMigrateResource {
         @Parameter(description = "迁移资源实体类", required = true)
         migrateResourceDTO: MigrateResourceDTO
     ): Result<Boolean>
+
+    @POST
+    @Path("/projectGroups/migrate")
+    @Operation(summary = "迁移项目级用户组")
+    fun migrateProjectGroups(
+        @Parameter(description = "项目级用户组迁移请求", required = true)
+        migrationDTO: ProjectGroupMigrationDTO
+    ): Result<ProjectGroupMigrationResultDTO>
+
+    @POST
+    @Path("/projectGroups/migrate/incremental")
+    @Operation(summary = "增量补齐项目级用户组权限")
+    fun migrateProjectGroupsIncremental(
+        @Parameter(description = "项目级用户组增量迁移请求", required = true)
+        migrationDTO: ProjectGroupIncrementalMigrationDTO
+    ): Result<ProjectGroupMigrationResultDTO>
 
     @POST
     @Path("/grantGroupAdditionalAuthorization")

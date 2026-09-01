@@ -41,14 +41,11 @@ import com.tencent.devops.model.process.tables.records.TPipelineSettingVersionRe
 import com.tencent.devops.process.pojo.setting.PipelineSettingVersion
 import org.jooq.DSLContext
 import org.jooq.RecordMapper
-import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
 
 @Suppress("LongParameterList")
 @Repository
 class PipelineSettingVersionDao {
-
-    private val logger = LoggerFactory.getLogger(PipelineSettingVersionDao::class.java)
 
     fun saveSetting(
         dslContext: DSLContext,
@@ -60,7 +57,7 @@ class PipelineSettingVersionDao {
         val successSubscriptionList = setting.successSubscriptionList ?: emptyList()
         val failSubscriptionList = setting.failSubscriptionList ?: emptyList()
         with(TPipelineSettingVersion.T_PIPELINE_SETTING_VERSION) {
-            return dslContext.insertInto(
+            val insert = dslContext.insertInto(
                 this,
                 ID,
                 PROJECT_ID,
@@ -81,7 +78,9 @@ class PipelineSettingVersionDao {
                 VERSION,
                 MAX_CON_RUNNING_QUEUE_SIZE,
                 FAIL_IF_VARIABLE_INVALID,
-                BUILD_CANCEL_POLICY
+                BUILD_CANCEL_POLICY,
+                ENV_HASH_ID,
+                ENV_NAME
             ).values(
                 id,
                 setting.projectId,
@@ -106,7 +105,9 @@ class PipelineSettingVersionDao {
                 version,
                 setting.maxConRunningQueueSize ?: -1,
                 setting.failIfVariableInvalid,
-                setting.buildCancelPolicy.value
+                setting.buildCancelPolicy.value,
+                setting.envHashId,
+                setting.envName
             ).onDuplicateKeyUpdate()
                 .set(NAME, setting.pipelineName)
                 .set(DESC, setting.desc)
@@ -125,7 +126,14 @@ class PipelineSettingVersionDao {
                 })
                 .set(FAIL_IF_VARIABLE_INVALID, setting.failIfVariableInvalid)
                 .set(BUILD_CANCEL_POLICY, setting.buildCancelPolicy.value)
-                .execute()
+
+            setting.envHashId?.let { envHashId ->
+                insert.set(ENV_HASH_ID, envHashId)
+            }
+            setting.envName?.let { envName ->
+                insert.set(ENV_NAME, envName)
+            }
+            return insert.execute()
         }
     }
 
@@ -136,7 +144,7 @@ class PipelineSettingVersionDao {
         val successSubscriptionList = setting.successSubscriptionList ?: emptyList()
         val failSubscriptionList = setting.failSubscriptionList ?: emptyList()
         with(TPipelineSettingVersion.T_PIPELINE_SETTING_VERSION) {
-            dslContext.update(this)
+            val updateStep = dslContext.update(this)
                 .set(NAME, setting.pipelineName)
                 .set(DESC, setting.desc)
                 .set(LABELS, setting.labels.let { self -> JsonUtil.toJson(self, false) })
@@ -153,7 +161,13 @@ class PipelineSettingVersionDao {
                     JsonUtil.toJson(self, false)
                 })
                 .set(FAIL_IF_VARIABLE_INVALID, setting.failIfVariableInvalid)
-                .where(PROJECT_ID.eq(setting.projectId))
+            setting.envHashId?.let { envHashId ->
+                updateStep.set(ENV_HASH_ID, envHashId)
+            }
+            setting.envName?.let { envName ->
+                updateStep.set(ENV_NAME, envName)
+            }
+            updateStep.where(PROJECT_ID.eq(setting.projectId))
                 .and(PIPELINE_ID.eq(setting.pipelineId))
                 .and(VERSION.eq(setting.version))
                 .execute()
@@ -278,7 +292,9 @@ class PipelineSettingVersionDao {
                         JsonUtil.to(self, PipelineAsCodeSettings::class.java)
                     },
                     failIfVariableInvalid = t.failIfVariableInvalid,
-                    buildCancelPolicy = BuildCancelPolicy.parse(t.buildCancelPolicy)
+                    buildCancelPolicy = BuildCancelPolicy.parse(t.buildCancelPolicy),
+                    envHashId = t.envHashId,
+                    envName = t.envName
                 )
             }
         }

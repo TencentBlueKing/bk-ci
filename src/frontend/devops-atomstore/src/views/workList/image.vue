@@ -24,6 +24,7 @@
                 :header-cell-style="{ background: '#fff' }"
                 :data="renderList"
                 :pagination="pagination"
+                :max-height="542"
                 @page-change="pageChanged"
                 @page-limit-change="pageCountChanged"
                 v-bkloading="{ isLoading }"

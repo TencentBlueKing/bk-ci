@@ -1,0 +1,12 @@
+.atomCheckbox {
+  display: flex;
+  align-items: center;
+}
+
+.infoIcon {
+  margin-left: 6px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+}

@@ -60,5 +60,5 @@ interface BuildExtServiceEnvResource {
         version: String,
         @Parameter(description = "更新扩展服务环境信息请求报文体", required = true)
         updateExtServiceEnvInfo: UpdateExtServiceEnvInfoDTO
-    ): Result<Boolean>
+    ): Result<String?>
 }

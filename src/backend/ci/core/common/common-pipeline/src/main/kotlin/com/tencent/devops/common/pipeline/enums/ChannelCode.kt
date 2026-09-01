@@ -27,6 +27,7 @@
 
 package com.tencent.devops.common.pipeline.enums
 
+import com.tencent.devops.common.api.context.ChannelContext
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "渠道代码")
@@ -44,16 +45,18 @@ enum class ChannelCode {
     @Schema(title = "开源扫描")
     GONGFENGSCAN,
     @Schema(title = "codecc回迁")
-    CODECC_EE;
+    CODECC_EE,
+    @Schema(title = "创作流")
+    CREATIVE_STREAM;
 
     companion object {
         // Only BS need to check the authentication for now
         fun isNeedAuth(channelCode: ChannelCode) =
-                channelCode == BS
+                channelCode == BS || channelCode == CREATIVE_STREAM
 
         // 页面可见channel
         fun webChannel(channelCode: ChannelCode): Boolean {
-            return channelCode == BS || channelCode == GIT
+            return channelCode == BS || channelCode == GIT || channelCode == CREATIVE_STREAM
         }
 
         fun getChannel(channel: String): ChannelCode? {
@@ -63,6 +66,21 @@ enum class ChannelCode {
                 }
             }
             return null
+        }
+
+        /**
+         * 获取请求的渠道代码
+         *
+         * 该方法从ChannelContext中获取渠道标识，并将其转换为对应的ChannelCode枚举值。
+         * 如果渠道标识为空或空白，或者无法转换为有效的ChannelCode，则返回默认的渠道代码。
+         *
+         * @return ChannelCode 请求的渠道代码，如果无法确定则返回返回默认的渠道代码
+         */
+        fun getRequestChannelCode(defaultChannelCode: ChannelCode = BS): ChannelCode {
+            val channel = ChannelContext.getChannel()
+            return channel?.takeIf { it.isNotBlank() }?.let {
+                runCatching { ChannelCode.valueOf(it) }.getOrDefault(defaultChannelCode)
+            } ?: defaultChannelCode
         }
     }
 }

@@ -77,6 +77,13 @@ class PipelineTemplateInfoService @Autowired constructor(
         )
     }
 
+    fun getOrNull(commonCondition: PipelineTemplateCommonCondition): PipelineTemplateInfoV2? {
+        return pipelineTemplateInfoDao.get(
+            dslContext = dslContext,
+            commonCondition = commonCondition
+        )
+    }
+
     fun getType2Count(
         projectId: String,
         templateIds: List<String>

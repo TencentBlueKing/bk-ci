@@ -29,9 +29,11 @@ package com.tencent.devops.artifactory.store.service.impl
 
 import com.tencent.devops.artifactory.constant.REALM_BK_REPO
 import com.tencent.devops.artifactory.pojo.enums.BkRepoEnum
+import com.tencent.devops.artifactory.store.config.TxBkRepoStoreConfig
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Service
@@ -40,6 +42,9 @@ import org.springframework.stereotype.Service
 @Service
 @ConditionalOnProperty(prefix = "artifactory", name = ["realm"], havingValue = REALM_BK_REPO)
 class TxArchiveStorePkgToBkRepoServiceImpl : ArchiveStorePkgToBkRepoServiceImpl() {
+
+    @Autowired
+    private lateinit var txBkRepoStoreConfig: TxBkRepoStoreConfig
 
     override fun getBkRepoProjectId(storeType: StoreTypeEnum): String {
         return bkRepoStoreConfig.bkrepoStoreProjectName

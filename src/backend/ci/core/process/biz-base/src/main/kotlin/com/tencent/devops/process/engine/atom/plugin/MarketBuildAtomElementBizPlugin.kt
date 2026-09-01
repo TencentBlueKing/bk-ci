@@ -33,7 +33,7 @@ import com.tencent.devops.common.pipeline.pojo.element.atom.BeforeDeleteParam
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.process.plugin.ElementBizPlugin
 import com.tencent.devops.process.plugin.annotation.ElementBiz
-import com.tencent.devops.process.pojo.pipeline.PipelineYamlVo
+import com.tencent.devops.process.pojo.pipeline.PipelineYamlFileInfo
 import org.springframework.beans.factory.annotation.Autowired
 
 @ElementBiz
@@ -54,7 +54,7 @@ class MarketBuildAtomElementBizPlugin @Autowired constructor(
         channelCode: ChannelCode,
         create: Boolean,
         container: Container,
-        yamlInfo: PipelineYamlVo?
+        yamlFileInfo: PipelineYamlFileInfo?
     ) = Unit
 
     @Suppress("UNCHECKED_CAST")

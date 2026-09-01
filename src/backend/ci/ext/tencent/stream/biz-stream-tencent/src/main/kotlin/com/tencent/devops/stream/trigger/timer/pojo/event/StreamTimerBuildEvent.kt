@@ -44,7 +44,7 @@ data class StreamTimerBuildEvent(
     override val projectId: String,
     override val pipelineId: String,
     override val userId: String,
-    val channelCode: ChannelCode,
+    val timerChannelCode: ChannelCode,
     val gitProjectId: Long,
     val branchs: List<String>?,
     val always: Boolean,
@@ -52,4 +52,9 @@ data class StreamTimerBuildEvent(
     val originYaml: String,
     override var actionType: ActionType = ActionType.START,
     override var delayMills: Int = 0
-) : IPipelineEvent(actionType, source, projectId, pipelineId, userId, delayMills)
+) : IPipelineEvent(actionType, source, projectId, pipelineId, userId, delayMills) {
+    init {
+        // 将渠道标识同步到父类字段，确保MQ消费线程中ChannelContext能正确恢复
+        channelCode = timerChannelCode.name
+    }
+}

@@ -105,7 +105,7 @@ class DevCloudBuildListener @Autowired constructor(
                     containerHashId = containerHashId,
                     jobId = jobId,
                     persistence = (dispatchType as? PublicDevCloudDispathcType)?.persistence ?: false,
-                    channelCode = channelCode
+                    channelCode = dispatchMessage.event.channelCode.orEmpty()
                 )
             )
         }

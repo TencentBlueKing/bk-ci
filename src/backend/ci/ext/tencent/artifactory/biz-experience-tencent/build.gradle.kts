@@ -45,4 +45,5 @@ dependencies {
     api(project(":core:notify:api-notify"))
     api(project(":ext:tencent:project:api-project-tencent"))
     api(project(":ext:tencent:artifactory:model-experience-tencent"))
+    api(project(":ext:tencent:common:common-pipeline-tencent"))
 }

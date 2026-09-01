@@ -25,5 +25,7 @@ data class ManagerRoleGroupInfo(
     @get:Schema(title = "用户组关联的资源实例名称")
     val resourceName: String,
     @get:Schema(title = "用户组关联的资源实例code")
-    val resourceCode: String
+    val resourceCode: String,
+    @get:Schema(title = "是否禁止申请")
+    val applyDisable: Boolean? = null
 )

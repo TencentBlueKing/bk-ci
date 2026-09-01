@@ -66,7 +66,7 @@ class RbacPipelinePermissionService(
         return authPermissionApi.validateUserResourcePermission(
             user = userId,
             serviceCode = pipelineAuthServiceCode,
-            resourceType = authResourceType ?: resourceType,
+            resourceType = AuthResourceType.getAuthResourceTypeByChannel(authResourceType ?: resourceType),
             permission = permission,
             projectCode = projectId
         )
@@ -79,10 +79,11 @@ class RbacPipelinePermissionService(
         permission: AuthPermission,
         authResourceType: AuthResourceType?
     ): Boolean {
-        logger.info("[rbac] check pipeline permission|$userId|$projectId|$pipelineId|$permission|$authResourceType")
+        val finalResourceType = AuthResourceType.getAuthResourceTypeByChannel(authResourceType ?: resourceType)
+        logger.info("[rbac] check pipeline permission|$userId|$projectId|$pipelineId|$permission|$finalResourceType")
         val startEpoch = System.currentTimeMillis()
         try {
-            val pipelineInstance = pipeline2AuthResource(projectId, pipelineId, authResourceType)
+            val pipelineInstance = pipeline2AuthResource(projectId, pipelineId, finalResourceType)
             return authPermissionApi.validateUserResourcePermission(
                 user = userId,
                 serviceCode = pipelineAuthServiceCode,
@@ -93,7 +94,7 @@ class RbacPipelinePermissionService(
         } finally {
             logger.info(
                 "It take(${System.currentTimeMillis() - startEpoch})ms to check pipeline permission|" +
-                    "$userId|$projectId|$pipelineId|$permission|$authResourceType"
+                        "$userId|$projectId|$pipelineId|$permission|$finalResourceType"
             )
         }
     }
@@ -149,7 +150,7 @@ class RbacPipelinePermissionService(
                 parents.add(pipelineGroupInstance)
             }
             AuthResourceInstance(
-                resourceType = resourceType.value,
+                resourceType = AuthResourceType.getAuthResourceTypeByChannel(resourceType).value,
                 resourceCode = pipelineId,
                 parents = parents
             )
@@ -194,7 +195,7 @@ class RbacPipelinePermissionService(
         return authPermissionApi.getUserResourceByPermission(
             user = userId,
             serviceCode = pipelineAuthServiceCode,
-            resourceType = resourceType,
+            resourceType = AuthResourceType.getAuthResourceTypeByChannel(resourceType),
             projectCode = projectId,
             permission = permission,
             supplier = null
@@ -214,7 +215,7 @@ class RbacPipelinePermissionService(
             return authPermissionApi.filterResourcesByPermissions(
                 user = userId,
                 serviceCode = pipelineAuthServiceCode,
-                resourceType = resourceType,
+                resourceType = AuthResourceType.getAuthResourceTypeByChannel(resourceType),
                 projectCode = projectId,
                 permissions = authPermissions,
                 resources = resources
@@ -222,7 +223,7 @@ class RbacPipelinePermissionService(
         } finally {
             logger.info(
                 "It take(${System.currentTimeMillis() - startEpoch})ms to filter pipeline|" +
-                    "$userId|$projectId|$authPermissions"
+                        "$userId|$projectId|$authPermissions"
             )
         }
     }
@@ -238,7 +239,7 @@ class RbacPipelinePermissionService(
             user = userId,
             projectCode = projectId,
             serviceCode = pipelineAuthServiceCode,
-            resourceType = resourceType,
+            resourceType = AuthResourceType.getAuthResourceTypeByChannel(resourceType),
             resourceCode = pipelineId,
             resourceName = pipelineName
         )
@@ -247,7 +248,7 @@ class RbacPipelinePermissionService(
     override fun modifyResource(projectId: String, pipelineId: String, pipelineName: String) {
         authResourceApi.modifyResource(
             serviceCode = pipelineAuthServiceCode,
-            resourceType = resourceType,
+            resourceType = AuthResourceType.getAuthResourceTypeByChannel(resourceType),
             projectCode = projectId,
             resourceCode = pipelineId,
             resourceName = pipelineName
@@ -257,7 +258,7 @@ class RbacPipelinePermissionService(
     override fun deleteResource(projectId: String, pipelineId: String) {
         authResourceApi.deleteResource(
             serviceCode = pipelineAuthServiceCode,
-            resourceType = resourceType,
+            resourceType = AuthResourceType.getAuthResourceTypeByChannel(resourceType),
             projectCode = projectId,
             resourceCode = pipelineId
         )

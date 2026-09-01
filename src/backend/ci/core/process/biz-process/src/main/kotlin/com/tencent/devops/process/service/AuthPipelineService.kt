@@ -142,7 +142,7 @@ class AuthPipelineService @Autowired constructor(
         authTokenApi.checkToken(token)
         val pipelineInfos = pipelineListFacadeService.getPipelinePage(
             projectId = projectId,
-            channelCode = ChannelCode.BS,
+            channelCode = ChannelCode.getRequestChannelCode(),
             limit = limit,
             offset = offset
         )
@@ -156,7 +156,7 @@ class AuthPipelineService @Autowired constructor(
         pipelineInfos.records.map {
             val entity = ResourceAuthorizationResponse(
                 projectCode = projectId,
-                resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
+                resourceType = AuthResourceType.getAuthResourceTypeByChannel(AuthResourceType.PIPELINE_DEFAULT).value,
                 resourceName = it.pipelineName,
                 resourceCode = it.pipelineId,
                 handoverTime = it.updateTime,

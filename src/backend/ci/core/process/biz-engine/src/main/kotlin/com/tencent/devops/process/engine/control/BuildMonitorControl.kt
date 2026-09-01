@@ -513,7 +513,7 @@ class BuildMonitorControl @Autowired constructor(
                         actionType = ActionType.START,
                         executeCount = buildInfo.executeCount,
                         buildNoType = buildNoTypeStr?.let { BuildNoType.valueOf(it) }
-                    )
+                    ).apply { this.channelCode = event.channelCode }
                 )
             }
             // next time to loop monitor

@@ -41,18 +41,28 @@ enum class RemoteDevNotifyType {
     DESKTOP_MARQUEE,
 
     // 云桌面-复杂消息
-    DESKTOP_COMPLEX;
+    DESKTOP_COMPLEX,
+
+    // 云桌面-tips
+    DESKTOP_TIPS,
+
+    // 云桌面-常驻TIPS
+    DESKTOP_LONG_TIPS,
+
+    ;
 
     fun getDesktopType() = when (this) {
         DESKTOP_MARQUEE -> 1
         DESKTOP_COMPLEX -> 2
+        DESKTOP_TIPS -> 3
+        DESKTOP_LONG_TIPS -> 4
         else -> 0
     }
 
     enum class Status {
         SUCCESS,
         FAIL,
-        FAIL_RESEND, /*失败消息已重发*/
-        FAIL_EXPIRED /*失败消息已过期不重发*/
+        FAIL_RESEND, // 失败消息已重发
+        FAIL_EXPIRED, // 失败消息已过期不重发
     }
 }

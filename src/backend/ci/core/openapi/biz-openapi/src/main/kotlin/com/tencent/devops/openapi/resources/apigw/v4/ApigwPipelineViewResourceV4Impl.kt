@@ -38,6 +38,8 @@ import com.tencent.devops.process.pojo.PipelineCollation
 import com.tencent.devops.process.pojo.PipelineSortType
 import com.tencent.devops.process.pojo.classify.PipelineNewView
 import com.tencent.devops.process.pojo.classify.PipelineNewViewSummary
+import com.tencent.devops.process.pojo.classify.PipelineViewBulkAdd
+import com.tencent.devops.process.pojo.classify.PipelineViewBulkRemove
 import com.tencent.devops.process.pojo.classify.PipelineViewForm
 import com.tencent.devops.process.pojo.classify.PipelineViewId
 import com.tencent.devops.process.pojo.classify.PipelineViewPipelinePage
@@ -164,6 +166,32 @@ class ApigwPipelineViewResourceV4Impl @Autowired constructor(private val client:
             viewName = viewName,
             isProject = isProject,
             pipelineView = pipelineView
+        )
+    }
+
+    override fun bulkAdd(
+        userId: String,
+        projectId: String,
+        bulkAdd: PipelineViewBulkAdd
+    ): Result<Boolean> {
+        logger.info("OPENAPI_PIPELINE_VIEW_V4|$userId|bulk add|$projectId|$bulkAdd")
+        return client.get(ServicePipelineViewResource::class).bulkAdd(
+            userId = userId,
+            projectId = projectId,
+            bulkAdd = bulkAdd
+        )
+    }
+
+    override fun bulkRemove(
+        userId: String,
+        projectId: String,
+        bulkRemove: PipelineViewBulkRemove
+    ): Result<Boolean> {
+        logger.info("OPENAPI_PIPELINE_VIEW_V4|$userId|bulk remove|$projectId|$bulkRemove")
+        return client.get(ServicePipelineViewResource::class).bulkRemove(
+            userId = userId,
+            projectId = projectId,
+            bulkRemove = bulkRemove
         )
     }
 

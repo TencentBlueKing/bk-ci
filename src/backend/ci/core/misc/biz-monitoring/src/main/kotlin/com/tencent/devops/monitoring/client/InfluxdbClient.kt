@@ -63,6 +63,10 @@ class InfluxdbClient {
     @Value("\${influxdb.password:}")
     val influxdbPassword: String = ""
 
+    // 是否将监控数据写入influxdb的开关，默认开启写入。关闭后insert操作将被跳过，查询不受影响。
+    @Value("\${influxdb.writeEnabled:true}")
+    val writeEnabled: Boolean = true
+
     private val dbName = "monitoring"
     private val monitoringRetentionPolicy = "monitoring_retention"
     private val atomInt = AtomicInteger()
@@ -131,11 +135,19 @@ class InfluxdbClient {
     }
 
     fun insert(any: Any) {
+        if (!writeEnabled) {
+            logger.debug("influxdb writeEnabled is false, skip insert ${any::class.java.simpleName}")
+            return
+        }
         val (fields, tags) = getFieldTagMap(any)
         insert(any::class.java.simpleName, tags, fields)
     }
 
     fun insert(measurement: String, tags: Map<String, String>, fields: Map<String, Any?>) {
+        if (!writeEnabled) {
+            logger.debug("influxdb writeEnabled is false, skip insert measurement $measurement")
+            return
+        }
         val builder: Point.Builder = measurement(measurement)
         builder.tag(tags)
         builder.fields(fields)
@@ -144,7 +156,13 @@ class InfluxdbClient {
     }
 
     fun select(sql: String): QueryResult? {
-        return influxDB.query(Query(sql, dbName))
+        // influxdb可能被下线，查询失败时返回null，由调用方按空结果处理，避免抛异常导致接口报错
+        return try {
+            influxDB.query(Query(sql, dbName))
+        } catch (ignored: Throwable) {
+            logger.error("BKSystemErrorMonitor|influxdb select failed, sql=$sql", ignored)
+            null
+        }
     }
 
     private fun getFieldTagMap(any: Any): Pair<Map<String, Any?>/*field*/, Map<String, String>/*tag*/> {

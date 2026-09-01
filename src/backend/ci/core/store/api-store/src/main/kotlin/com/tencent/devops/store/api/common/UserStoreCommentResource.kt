@@ -34,6 +34,7 @@ import com.tencent.devops.common.web.constant.BkStyleEnum
 import com.tencent.devops.store.pojo.common.comment.StoreCommentInfo
 import com.tencent.devops.store.pojo.common.comment.StoreCommentRequest
 import com.tencent.devops.store.pojo.common.comment.StoreCommentScoreInfo
+import com.tencent.devops.store.pojo.common.enums.ServiceScopeEnum
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -80,7 +81,6 @@ interface UserStoreCommentResource {
         storeType: String,
         @Parameter(description = "组件代码", required = true)
         @PathParam("storeCode")
-        @BkField(patternStyle = BkStyleEnum.CODE_STYLE)
         storeCode: String,
         @Parameter(description = "页码", required = true)
         @QueryParam("page")
@@ -102,24 +102,29 @@ interface UserStoreCommentResource {
         storeType: String,
         @Parameter(description = "组件代码", required = true)
         @PathParam("storeCode")
-        @BkField(patternStyle = BkStyleEnum.CODE_STYLE)
         storeCode: String
     ): Result<StoreCommentScoreInfo>
 
     @Operation(summary = "新增组件评论")
     @POST
-    @Path("/ids/{storeId}/codes/{storeCode}/add")
+    @Path("/types/{storeType}/ids/{storeId}/codes/{storeCode}/add")
     fun addStoreComment(
         @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
+        @Parameter(description = "组件类型", required = true)
+        @PathParam("storeType")
+        @BkField(patternStyle = BkStyleEnum.CODE_STYLE)
+        storeType: String,
         @Parameter(description = "组件ID", required = true)
         @PathParam("storeId")
         storeId: String,
         @Parameter(description = "组件代码", required = true)
         @PathParam("storeCode")
-        @BkField(patternStyle = BkStyleEnum.CODE_STYLE)
         storeCode: String,
+        @Parameter(description = "服务范围", required = false)
+        @QueryParam("serviceScope")
+        serviceScope: ServiceScopeEnum?,
         @Parameter(description = "评论信息请求报文体", required = true)
         storeCommentRequest: StoreCommentRequest
     ): Result<StoreCommentInfo?>

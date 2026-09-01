@@ -34,9 +34,12 @@ import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.pipeline.utils.ModelVarRefValidator
+import com.tencent.devops.common.pipeline.extend.ModelCheckPlugin
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_MAX_PIPELINE_COUNT_PER_PROJECT
+import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_MODEL_VAR_REF_INVALID
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.service.ProjectCacheService
@@ -49,7 +52,8 @@ import org.springframework.stereotype.Service
 class PipelineVersionValidator @Autowired constructor(
     private val pipelinePermissionService: PipelinePermissionService,
     private val pipelineRepositoryService: PipelineRepositoryService,
-    private val projectCacheService: ProjectCacheService
+    private val projectCacheService: ProjectCacheService,
+    private val modelCheckPlugin: ModelCheckPlugin
 ) {
 
     fun validate(context: PipelineVersionCreateContext) {
@@ -57,6 +61,7 @@ class PipelineVersionValidator @Autowired constructor(
             validateBasicInfo()
             validateModelBasicInfo()
             validatePermission()
+            validateSetting()
         }
     }
 
@@ -64,6 +69,16 @@ class PipelineVersionValidator @Autowired constructor(
         if (pipelineBasicInfo.pipelineName.isBlank()) {
             logger.warn("The pipeline name is empty")
             throw CustomMessageException("The pipeline name cannot be empty.")
+        }
+        val model = pipelineResourceWithoutVersion.model
+        // 检查model中表达式是否合法
+        val invalidRefs = ModelVarRefValidator.getInvalidRefs(model, projectId)
+        if (invalidRefs.isNotEmpty()) {
+            val invalidRefsMsg = ModelVarRefValidator.formatInvalidRefsMessage(invalidRefs)
+            throw ErrorCodeException(
+                errorCode = ERROR_PIPELINE_MODEL_VAR_REF_INVALID,
+                params = arrayOf(invalidRefsMsg)
+            )
         }
         val nameExist = pipelineRepositoryService.isPipelineExist(
             projectId = projectId,
@@ -81,8 +96,10 @@ class PipelineVersionValidator @Autowired constructor(
         if (pipelineInfo == null) {
             // 检查用户流水线是否达到上限
             val projectVO = projectCacheService.getProject(projectId)
-            if (projectVO?.pipelineLimit != null) {
-                val preCount = pipelineRepositoryService.countByProjectIds(setOf(projectId), ChannelCode.BS)
+            // codecc等无需注册鉴权的渠道不受项目流水线数量上限约束
+            if (ChannelCode.isNeedAuth(pipelineBasicInfo.channelCode) && projectVO?.pipelineLimit != null) {
+                val preCount =
+                    pipelineRepositoryService.countByProjectIds(setOf(projectId), pipelineBasicInfo.channelCode)
                 if (preCount >= projectVO.pipelineLimit!!) {
                     throw OperationException(
                         MessageUtil.getMessageByLocale(
@@ -126,8 +143,8 @@ class PipelineVersionValidator @Autowired constructor(
                 permission = permission,
                 message = MessageUtil.getMessageByLocale(
                     USER_NOT_PERMISSIONS_OPERATE_PIPELINE, language, arrayOf(
-                    userId, projectId, permission.getI18n(I18nUtil.getLanguage(userId)), "*"
-                )
+                        userId, projectId, permission.getI18n(I18nUtil.getLanguage(userId)), "*"
+                    )
                 )
             )
         } else {
@@ -139,11 +156,16 @@ class PipelineVersionValidator @Autowired constructor(
                 permission = permission,
                 message = MessageUtil.getMessageByLocale(
                     USER_NOT_PERMISSIONS_OPERATE_PIPELINE, I18nUtil.getLanguage(userId), arrayOf(
-                    userId, projectId, permission.getI18n(I18nUtil.getLanguage(userId)), pipelineId
-                )
+                        userId, projectId, permission.getI18n(I18nUtil.getLanguage(userId)), pipelineId
+                    )
                 )
             )
         }
+    }
+
+    fun PipelineVersionCreateContext.validateSetting() {
+        pipelineSettingWithoutVersion.fixSubscriptions()
+        modelCheckPlugin.checkSettingIntegrity(pipelineSettingWithoutVersion, projectId)
     }
 
     companion object {

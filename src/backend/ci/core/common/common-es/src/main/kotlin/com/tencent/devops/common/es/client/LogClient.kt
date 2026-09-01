@@ -34,4 +34,16 @@ interface LogClient {
     fun getActiveClients(): List<ESClient>
 
     fun hashClient(buildId: String): ESClient
+
+    /**
+     * 直写链路回传一次 ES 写入结果，供多集群实现按集群维度做健康统计与快速熔断。
+     * 默认空实现：社区单 ES（LogClientImpl）无需感知，保持原有行为。
+     *
+     * @param clusterName 本次写入命中的集群名（[hashClient] 返回集群的 clusterName）
+     * @param success 本次 ES 写入是否成功
+     * @param latencyMs 本次写入耗时（毫秒），慢写同样可作为熔断依据
+     */
+    fun reportWriteResult(clusterName: String, success: Boolean, latencyMs: Long) {
+        // no-op by default
+    }
 }

@@ -8,7 +8,7 @@ data class ResourceMemberInfo(
     @get:Schema(title = "成员id")
     val id: String,
     @get:Schema(title = "成员名称")
-    val name: String? = null,
+    var name: String? = null,
     @get:Schema(title = "成员类型")
     val type: String,
     @get:Schema(title = "是否离职")

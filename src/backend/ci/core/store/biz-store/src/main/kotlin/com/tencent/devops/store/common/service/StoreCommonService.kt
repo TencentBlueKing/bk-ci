@@ -28,6 +28,7 @@
 package com.tencent.devops.store.common.service
 
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
+import com.tencent.devops.store.pojo.common.enums.ServiceScopeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.publication.ReleaseProcessItem
@@ -101,7 +102,7 @@ interface StoreCommonService {
     /**
      * 获取store组件详情页地址
      */
-    fun getStoreDetailUrl(storeType: StoreTypeEnum, storeCode: String): String
+    fun getStoreDetailUrl(storeType: StoreTypeEnum, storeCode: String, serviceScope: ServiceScopeEnum? = null): String
 
     /**
      * 删除store组件信息

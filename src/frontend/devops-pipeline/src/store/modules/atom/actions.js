@@ -77,6 +77,7 @@ import {
     SET_STAGE_TAG_LIST,
     SET_STORE_SEARCH,
     SET_TRIGGER_PARAMS,
+    SET_TEMP_PARAM_SET,
     SWITCHING_PIPELINE_VERSION,
     TOGGLE_ATOM_SELECTOR_POPUP,
     TOGGLE_STAGE_REVIEW_PANEL,
@@ -89,8 +90,13 @@ import {
     UPDATE_STAGE,
     UPDATE_STORESTATUS,
     UPDATE_TEMPLATE_CONSTRAINT,
-    UPDATE_WHOLE_ATOM_INPUT
+    UPDATE_WHOLE_ATOM_INPUT,
+    UPDATE_PIPELINE_PUBLIC_VAR_GROUPS,
+    SAVE_PIPELINE_SNAPSHOT,
+    CLEAR_PIPELINE_SNAPSHOT,
+    SET_EXEC_INFO
 } from './constants'
+import { buildPipelineSnapshot } from '@/utils/pipelineSnapshotUtil'
 
 function rootCommit (commit, ACTION_CONST, payload) {
     commit(ACTION_CONST, payload, { root: true })
@@ -140,6 +146,10 @@ export function dealPipelineRes ({ getters, dispatch, commit, state }, {
         }
         commit(SET_PIPELINE_YAML_HIGHLIGHT_MAP, highlightMap)
     }
+
+    setTimeout(() => {
+        dispatch('savePipelineSnapshot')
+    }, 500) // 延迟500ms确保所有组件初始化和副作用完成
 }
 
 export default {
@@ -212,9 +222,9 @@ export default {
             return response.data
         })
     },
-    requestTemplate: async ({ dispatch, commit }, { projectId, templateId, version, query }) => {
+    requestTemplate: async ({ dispatch, commit }, { projectId, templateId, version, source, query }) => {
         const [templateRes, atomPropRes] = await Promise.all([
-            dispatch('fetchTemplateByVersion', { projectId, templateId, version }),
+            dispatch('fetchTemplateByVersion', { projectId, templateId, source, version}),
             request.get(`/${PROCESS_API_URL_PREFIX}/user/template/v2/atoms/projects/${projectId}/templates/${templateId}/atom/prop/list`, {
                 params: {
                     ...query,
@@ -268,13 +278,15 @@ export default {
             rootCommit(commit, FETCH_ERROR, e)
         }
     },
-    fetchPipelineByVersion ({ commit }, { projectId, pipelineId, version, archiveFlag, editMode }) {
-        const query = {}
+    fetchPipelineByVersion ({ commit }, { projectId, pipelineId, version, archiveFlag, source = 'VIEW', draftVersion  }) {
+        const query = {
+            source
+        }
         if (archiveFlag !== undefined && archiveFlag !== null) {
             query.archiveFlag = encodeURIComponent(archiveFlag)
         }
-        if (editMode) {
-            query.editMode = true
+        if (draftVersion !== undefined && draftVersion !== null) {
+            query.draftVersion = encodeURIComponent(draftVersion)
         }
         const url = `${PROCESS_API_URL_PREFIX}/user/version/projects/${projectId}/pipelines/${pipelineId}/versions/${version ?? ''}`
         return request.get(url, {
@@ -283,8 +295,16 @@ export default {
             return res.data
         })
     },
-    fetchTemplateByVersion ({ commit }, { projectId, templateId, version }) {
-        return request.get(`${PROCESS_API_URL_PREFIX}/user/pipeline/template/v2/${projectId}/${templateId}/${version}/details/`).then(res => {
+    fetchTemplateByVersion ({ commit }, { projectId, templateId, version, source = 'VIEW', draftVersion }) {
+        const query = {
+            source
+        }
+        if (draftVersion !== undefined && draftVersion !== null) {
+            query.draftVersion = encodeURIComponent(draftVersion)
+        }
+        return request.get(`${PROCESS_API_URL_PREFIX}/user/pipeline/template/v2/${projectId}/${templateId}/${version}/details/`, {
+            params: query
+        }).then(res => {
             return res.data
         })
     },
@@ -468,10 +488,21 @@ export default {
     setPipelineYaml: actionCreator(SET_PIPELINE_YAML),
     updatePipelineSetting: PipelineEditActionCreator(UPDATE_PIPELINE_SETTING_MUNTATION),
     updatePipelineConstraintGroup: PipelineEditActionCreator(UPDATE_TEMPLATE_CONSTRAINT),
+    updatePipelinePublicVarGroups: PipelineEditActionCreator(UPDATE_PIPELINE_PUBLIC_VAR_GROUPS),
     resetPipelineSetting: actionCreator(RESET_PIPELINE_SETTING_MUNTATION),
     setPipelineSetting: actionCreator(PIPELINE_SETTING_MUTATION),
     setEditFrom: actionCreator(SET_EDIT_FROM),
     setPipelineEditing: actionCreator(SET_PIPELINE_EDITING),
+    // 保存流水线快照
+    savePipelineSnapshot ({ commit, state, rootState }) {
+        const currentMode = rootState.pipelineMode
+        const snapshot = buildPipelineSnapshot(state, currentMode)
+        commit(SAVE_PIPELINE_SNAPSHOT, { snapshot })
+    },
+    // 清除流水线快照
+    clearPipelineSnapshot ({ commit }) {
+        commit(CLEAR_PIPELINE_SNAPSHOT)
+    },
     fetchContainers: async ({ commit }, { projectCode }) => {
         try {
             const { data: containers } = await request.get(`${STORE_API_URL_PREFIX}/user/pipeline/container/${projectCode}`)
@@ -637,6 +668,54 @@ export default {
         } finally {
             commit(FETCHING_ATOM_MORE_LOADING, false)
             commit(FETCHING_ATOM_LIST, false)
+        }
+    },
+
+    /**
+     * 搜索模式专用：支持 installed 参数，分页加载已安装/未安装插件列表
+     */
+    fetchSearchAtoms: async ({ commit, state, getters }, {
+        projectCode,
+        category,
+        searchKey,
+        installed,
+        os,
+        page = 1,
+        pageSize = 100
+    }) => {
+        try {
+            const res = await request.get(`${STORE_API_URL_PREFIX}/user/pipeline/atom`, {
+                params: {
+                    page,
+                    pageSize,
+                    projectCode,
+                    jobType: undefined,
+                    category,
+                    classifyId: undefined,
+                    os: undefined,
+                    keyword: searchKey,
+                    queryProjectAtomFlag: false,
+                    fitOsFlag: false,
+                    installed
+                }
+            })
+            // 为当前页记录添加 disabled 属性
+            const curOs = os
+            const processedRecords = getters.getAtomDisabled(res.data.records || [], curOs, category)
+            // 将搜索结果合并进 atomMap，保证选中搜索到的插件时能取到 defaultVersion 等信息
+            const [curAtomCodeList, curAtomMap] = getMapByKey(processedRecords, 'atomCode')
+            commit(SET_ATOMS, {
+                atomCodeList: [...new Set([...state.atomCodeList, ...curAtomCodeList])],
+                atomMap: Object.assign({}, state.atomMap, curAtomMap),
+                atomList: state.atomList
+            })
+            return {
+                ...res.data,
+                records: processedRecords
+            }
+        } catch (e) {
+            rootCommit(commit, FETCH_ERROR, e)
+            throw e
         }
     },
 
@@ -844,8 +923,8 @@ export default {
     },
 
     // 获取已安装的插件详情
-    getInstallAtomDetail ({ commit }, { projectCode, atomCode }) {
-        return request.get(`${STORE_API_URL_PREFIX}/user/market/atom/statistic/projectCodes/${projectCode}/atomCodes/${atomCode}/pipelines`)
+    getInstallAtomDetail ({ commit }, { page, pageSize, projectCode, atomCode }) {
+        return request.get(`${STORE_API_URL_PREFIX}/user/market/atom/statistic/projectCodes/${projectCode}/atomCodes/${atomCode}/pipelines?page=${page}&pageSize=${pageSize}`)
     },
 
     // 卸载插件
@@ -892,10 +971,10 @@ export default {
     },
 
     fetchDevcloudSettings ({ commit }, { projectId, pipelineId, templateId }) {
-        return request.get(`/dispatch-devcloud/api/user/dispatchDevcloud/v2/project/${projectId}/pipeline/${pipelineId}/performanceConfig/list?templateId=${templateId}`)
+        return request.get(`${DEVCLOUD_API_URL_PREFIX}/user/dispatchDevcloud/v2/project/${projectId}/pipeline/${pipelineId}/performanceConfig/list?templateId=${templateId}`)
     },
     getHistoryDevcloudSettings ({ commit }, { username, projectId, uid }) {
-        return request.get(`/dispatch-devcloud/api/user/dispatchDevcloud/v2/project/${username}/pipeline/${projectId}/uid/${uid}/performanceConfig/info`)
+        return request.get(`${DEVCLOUD_API_URL_PREFIX}/user/dispatchDevcloud/v2/project/${username}/pipeline/${projectId}/uid/${uid}/performanceConfig/info`)
     },
     
     fetchDockerSettings ({ commit }, { projectId, buildType }) {
@@ -971,7 +1050,7 @@ export default {
     getAIStatus () {
         return request.get('/misc/api/user/gpt_config/is_ok')
     },
-    //
+
     // getMacSysVersion () {
     //     return request.get(`${DEVCLOUD_API_URL_PREFIX}/user/macos/systemVersions/v2`)
     // },
@@ -979,7 +1058,7 @@ export default {
     // getMacXcodeVersion (_, systemVersion = '') {
     //     return request.get(`${DEVCLOUD_API_URL_PREFIX}/user/macos/xcodeVersions/v2?systemVersion=${systemVersion}`)
     // },
-    //
+
     getMacvmModel (_, params) {
         return request.post(`${DEVCLOUD_API_URL_PREFIX}/user/macos/vmModel`, params)
     },
@@ -996,6 +1075,22 @@ export default {
 
     pausePlugin ({ commit }, { projectId, pipelineId, buildId, taskId, isContinue, stageId, containerId, element }) {
         return request.post(`${PROCESS_API_URL_PREFIX}/user/builds/projects/${projectId}/pipelines/${pipelineId}/builds/${buildId}/taskIds/${taskId}/execution/pause?isContinue=${isContinue}&stageId=${stageId}&containerId=${containerId}`, element)
+    },
+
+    startVmSeqDebug ({ commit }, { pipelineId, containerId, buildId, executeCount }) {
+        const query = Object.entries({ buildId, executeCount })
+            .filter(([, value]) => value !== undefined && value !== null && value !== '')
+            .map(([key, value]) => `${key}=${value}`)
+            .join('&')
+        return request.post(`${DEVCLOUD_API_URL_PREFIX}/user/macos/debug/startDebug/pipeline/${pipelineId}/vmSeq/${containerId}${query ? `?${query}` : ''}`)
+    },
+
+    stopVmSeqDebug ({ commit }, { pipelineId, containerId, buildId, executeCount }) {
+        const query = Object.entries({ buildId, executeCount })
+            .filter(([, value]) => value !== undefined && value !== null && value !== '')
+            .map(([key, value]) => `${key}=${value}`)
+            .join('&')
+        return request.post(`${DEVCLOUD_API_URL_PREFIX}/user/macos/debug/stopDebug/pipeline/${pipelineId}/vmSeq/${containerId}${query ? `?${query}` : ''}`)
     },
 
     download (_, { url, name, params, type }) {
@@ -1110,6 +1205,9 @@ export default {
         }
         return request.get(url)
     },
+    setExecInfo ({ commit }, infoData) {
+        commit(SET_EXEC_INFO, infoData)
+    },
     setAtomEditing ({ commit }, isEditing) {
         return commit(SET_ATOM_EDITING, isEditing)
     },
@@ -1183,6 +1281,9 @@ export default {
             ...state.paramSets.slice(index + 1)
         ])
     },
+    setTempParamSet ({ commit }, tempParamSet) {
+        commit(SET_TEMP_PARAM_SET, tempParamSet)
+    },
     async saveParamSet ({ commit, state }, { projectId, pipelineId, paramSet }) {
         try {
             const method = paramSet.id ? 'put' : 'post'
@@ -1211,6 +1312,16 @@ export default {
         const res = await request.get(`/${PROCESS_API_URL_PREFIX}/user/template/instances/v2/projects/${projectId}/${templateId}/compareYaml`, {
             params: query
         })
+        return res.data
+    },
+    /**
+     * 获取 PAC 分支编排
+     * @param {String} projectId 项目ID
+     * @param {String} pipelineId 流水线ID
+     * @param {String} branch 分支名
+     */
+    async fetchPacBranchPipeline (_, { projectId, pipelineId, branch }) {
+        const res = await request.get(`/${PROCESS_API_URL_PREFIX}/user/version/projects/${projectId}/pipelines/${pipelineId}/getVersionByBranch?branch=${encodeURIComponent(branch)}`)
         return res.data
     }
 }

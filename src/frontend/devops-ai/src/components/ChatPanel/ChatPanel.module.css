@@ -1,0 +1,7 @@
+/* message-tools-container ai-user-message-tools hidden in devops-ai */
+:global(
+  .message-tools-container.ai-user-message-tools .ai-common-icon.ai-edit-icon,
+  .message-tools-container.ai-user-message-tools .ai-common-icon.ai-delete-icon
+) {
+  display: none !important;
+}

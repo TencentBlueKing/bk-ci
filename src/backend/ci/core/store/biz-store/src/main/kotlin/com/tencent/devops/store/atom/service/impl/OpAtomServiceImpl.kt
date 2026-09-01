@@ -46,6 +46,9 @@ import com.tencent.devops.model.store.tables.records.TAtomRecord
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
 import com.tencent.devops.store.atom.dao.AtomDao
+import com.tencent.devops.store.atom.util.AtomServiceScopeUtil
+import com.tencent.devops.store.common.utils.StoreUtils
+import com.tencent.devops.store.util.ServiceScopeUtil
 import com.tencent.devops.store.atom.dao.MarketAtomDao
 import com.tencent.devops.store.atom.dao.MarketAtomFeatureDao
 import com.tencent.devops.store.atom.dao.MarketAtomVersionLogDao
@@ -61,8 +64,8 @@ import com.tencent.devops.store.common.service.StoreI18nMessageService
 import com.tencent.devops.store.common.service.StoreLogoService
 import com.tencent.devops.store.common.service.StoreWebsocketService
 import com.tencent.devops.store.common.service.action.StoreDecorateFactory
+import com.tencent.devops.store.common.utils.PublicComponentCacheManager
 import com.tencent.devops.store.common.utils.StoreFileAnalysisUtil
-import com.tencent.devops.store.common.utils.StoreUtils
 import com.tencent.devops.store.utils.VersionUtils
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.constant.StoreMessageCode.USER_UPLOAD_FILE_PATH_ERROR
@@ -87,6 +90,7 @@ import com.tencent.devops.store.pojo.common.classify.Classify
 import com.tencent.devops.store.pojo.common.enums.AuditTypeEnum
 import com.tencent.devops.store.pojo.common.enums.PackageSourceTypeEnum
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
+import com.tencent.devops.store.pojo.common.enums.ServiceScopeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import java.io.File
 import java.io.InputStream
@@ -120,7 +124,8 @@ class OpAtomServiceImpl @Autowired constructor(
     private val storeFileService: StoreFileService,
     private val redisOperation: RedisOperation,
     private val client: Client,
-    private val marketAtomService: MarketAtomService
+    private val marketAtomService: MarketAtomService,
+    private val atomServiceScopeUtil: AtomServiceScopeUtil
 ) : OpAtomService {
 
     private val logger = LoggerFactory.getLogger(OpAtomServiceImpl::class.java)
@@ -138,7 +143,7 @@ class OpAtomServiceImpl @Autowired constructor(
         atomName: String?,
         atomCode: String?,
         atomType: AtomTypeEnum?,
-        serviceScope: String?,
+        serviceScope: ServiceScopeEnum?,
         os: String?,
         category: String?,
         classifyId: String?,
@@ -160,12 +165,12 @@ class OpAtomServiceImpl @Autowired constructor(
             category = category,
             classifyId = classifyId,
             atomStatus = atomStatus,
-            sortType = sortType?.sortType,
+            sortType = sortType,
             desc = desc,
             page = page,
             pageSize = pageSize
         ).map {
-            generatePipelineAtom(it)
+            generatePipelineAtom(it, serviceScope)
         }
         // 处理分页逻辑
         val totalSize = atomDao.getOpPipelineAtomCount(
@@ -194,13 +199,13 @@ class OpAtomServiceImpl @Autowired constructor(
     /**
      * 根据id获取插件信息
      */
-    override fun getPipelineAtom(id: String): Result<Atom?> {
+    override fun getPipelineAtom(id: String, serviceScope: ServiceScopeEnum?): Result<Atom?> {
         val pipelineAtomRecord = atomDao.getPipelineAtom(dslContext, id)
         return Result(
             if (pipelineAtomRecord == null) {
                 null
             } else {
-                generatePipelineAtom(pipelineAtomRecord)
+                generatePipelineAtom(pipelineAtomRecord, serviceScope)
             }
         )
     }
@@ -223,14 +228,25 @@ class OpAtomServiceImpl @Autowired constructor(
     /**
      * 生成插件对象
      */
-    private fun generatePipelineAtom(it: TAtomRecord): Atom {
+    private fun generatePipelineAtom(it: TAtomRecord, requestServiceScope: ServiceScopeEnum? = null): Atom {
         val classify = classifyService.getClassify(it.classifyId).data
-        return convert(it, classify)
+        return convert(it, classify, requestServiceScope)
     }
 
     @Suppress("UNCHECKED_CAST")
-    private fun convert(atomRecord: TAtomRecord, classify: Classify?): Atom {
+    private fun convert(atomRecord: TAtomRecord, classify: Classify?, requestServiceScope: ServiceScopeEnum?): Atom {
         val atomFeature = atomFeatureDao.getAtomFeature(dslContext, atomRecord.atomCode)
+        // 构建服务范围详情
+        val serviceScopeDetails = atomServiceScopeUtil.buildServiceScopeDetails(
+            atomId = atomRecord.id,
+            serviceScopeStr = atomRecord.serviceScope,
+            classifyIdMapJson = atomRecord.classifyIdMap,
+            pipelineClassifyIdFallback = atomRecord.classifyId,
+            jobTypeValue = atomRecord.jobType,
+            jobTypeMapValue = atomRecord.jobTypeMap,
+            osValue = atomRecord.os,
+            osMapValue = atomRecord.osMap
+        )
         return Atom(
             id = atomRecord.id,
             name = atomRecord.name,
@@ -241,13 +257,13 @@ class OpAtomServiceImpl @Autowired constructor(
             },
             icon = atomRecord.icon,
             summary = atomRecord.summary,
-            serviceScope = JsonUtil.toOrNull(atomRecord.serviceScope, List::class.java) as List<String>?,
+            serviceScope = ServiceScopeUtil.parseServiceScopes(atomRecord.serviceScope).ifEmpty { null },
             jobType = atomRecord.jobType,
             os = JsonUtil.toOrNull(atomRecord.os, List::class.java) as List<String>?,
             classifyId = classify?.id,
             classifyCode = classify?.classifyCode,
             classifyName = classify?.classifyName,
-            docsLink = atomRecord.docsLink,
+            docsLink = StoreUtils.transformDocsLink(atomRecord.docsLink, StoreTypeEnum.ATOM, requestServiceScope),
             category = AtomCategoryEnum.getAtomCategory(atomRecord.categroy.toInt()),
             atomType = AtomTypeEnum.getAtomType(atomRecord.atomType.toInt()),
             atomStatus = AtomStatusEnum.getAtomStatus(atomRecord.atomStatus.toInt()),
@@ -285,7 +301,8 @@ class OpAtomServiceImpl @Autowired constructor(
             certificationFlag = atomFeature?.certificationFlag,
             publisher = atomRecord.publisher,
             visibilityLevel = VisibilityLevelEnum.getVisibilityLevel(atomRecord.visibilityLevel as Int),
-            privateReason = atomRecord.privateReason
+            privateReason = atomRecord.privateReason,
+            serviceScopeDetails = serviceScopeDetails
         )
     }
 
@@ -362,6 +379,8 @@ class OpAtomServiceImpl @Autowired constructor(
         } else {
             redisOperation.removeSetMember(StoreUtils.getStorePublicFlagKey(StoreTypeEnum.ATOM.name), atomCode)
         }
+        // 清除公共组件集合缓存，立即生效
+        PublicComponentCacheManager.invalidateCache(StoreTypeEnum.ATOM.name)
         // 通过websocket推送状态变更消息,推送所有有该插件权限的用户
         storeWebsocketService.sendWebsocketMessageByAtomCodeAndAtomId(atomCode, atomId)
         return Result(true)
@@ -573,6 +592,8 @@ class OpAtomServiceImpl @Autowired constructor(
                 val context = DSL.using(t)
                 atomDao.updateAtomByCode(context, userId, atomCode, AtomFeatureUpdateRequest(defaultFlag = true))
                 redisOperation.delete(StoreUtils.getStorePublicFlagKey(StoreTypeEnum.ATOM.name)) // 直接删除重建
+                // 清除公共组件集合缓存，立即生效
+                PublicComponentCacheManager.invalidateCache(StoreTypeEnum.ATOM.name)
             }
             true
         } catch (e: Exception) {

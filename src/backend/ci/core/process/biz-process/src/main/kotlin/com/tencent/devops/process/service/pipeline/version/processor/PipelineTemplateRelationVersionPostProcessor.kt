@@ -30,10 +30,13 @@ package com.tencent.devops.process.service.pipeline.version.processor
 import com.tencent.devops.common.pipeline.enums.PipelineInstanceTypeEnum
 import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
+import com.tencent.devops.process.engine.dao.template.TemplateInstanceItemDao
 import com.tencent.devops.process.engine.dao.template.TemplatePipelineDao
 import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
 import com.tencent.devops.process.pojo.template.TemplateInstanceUpdate
 import com.tencent.devops.process.pojo.template.TemplateType
+import com.tencent.devops.process.pojo.template.v2.PipelineTemplateInstanceItemCondition
+import com.tencent.devops.process.pojo.template.v2.PipelineTemplateInstanceItemUpdate
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateRelatedCommonCondition
 import com.tencent.devops.process.service.pipeline.version.PipelineVersionCreateContext
 import com.tencent.devops.process.service.template.v2.PipelineTemplateRelatedService
@@ -47,7 +50,8 @@ import org.springframework.stereotype.Service
 @Service
 class PipelineTemplateRelationVersionPostProcessor @Autowired constructor(
     private val pipelineTemplateRelatedService: PipelineTemplateRelatedService,
-    private val templatePipelineDao: TemplatePipelineDao
+    private val templatePipelineDao: TemplatePipelineDao,
+    private val templateInstanceItemDao: TemplateInstanceItemDao
 ) : PipelineVersionCreatePostProcessor {
 
     override fun postProcessInTransactionVersionCreate(
@@ -61,10 +65,38 @@ class PipelineTemplateRelationVersionPostProcessor @Autowired constructor(
                 // 只有在【创建新流水线】或【实例化时】的情况下，T_TEMPLATE_PIPELINE 关联才存储数据
                 createOrUpdateRelation(transactionContext)
             }
-        } ?: run {
-            if (pipelineInfo == null || pipelineResourceVersion.status == VersionStatus.RELEASED) {
-                unbindRelation(transactionContext)
-            }
+            // 更新模板实例化任务记录
+            updateTemplateInstanceItem(transactionContext, pipelineResourceVersion)
+        } ?: return@with
+    }
+
+    /**
+     * 更新模板实例化任务记录
+     */
+    private fun PipelineVersionCreateContext.updateTemplateInstanceItem(
+        transactionContext: DSLContext,
+        pipelineResourceVersion: PipelineResourceVersion
+    ) {
+        if (templateInstanceBasicInfo?.baseId != null) {
+            val beforePipelineVersion = pipelineInfo?.version
+            val afterPipelineVersion = pipelineResourceVersion.version
+            val beforeTemplateVersion = templateInstanceBasicInfo!!.beforeTemplateVersion
+            val afterTemplateVersion = templateInstanceBasicInfo!!.templateSrcTemplateVersion
+                ?: templateInstanceBasicInfo!!.templateVersion
+            templateInstanceItemDao.update(
+                dslContext = transactionContext,
+                record = PipelineTemplateInstanceItemUpdate(
+                    beforePipelineVersion = beforePipelineVersion,
+                    afterPipelineVersion = afterPipelineVersion,
+                    beforeTemplateVersion = beforeTemplateVersion,
+                    afterTemplateVersion = afterTemplateVersion
+                ),
+                condition = PipelineTemplateInstanceItemCondition(
+                    projectId = projectId,
+                    baseId = templateInstanceBasicInfo!!.baseId!!,
+                    pipelineId = pipelineId
+                )
+            )
         }
     }
 

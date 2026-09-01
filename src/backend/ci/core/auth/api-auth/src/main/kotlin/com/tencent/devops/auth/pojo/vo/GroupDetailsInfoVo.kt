@@ -29,6 +29,10 @@ data class GroupDetailsInfoVo(
     val removeMemberButtonControl: RemoveMemberButtonControl,
     @get:Schema(title = "加入方式")
     val joinedType: JoinedType,
+    @get:Schema(title = "加入来源成员ID，直接加入时为用户ID，组织加入时为组织ID")
+    val joinedMemberId: String? = null,
+    @get:Schema(title = "加入来源成员名称，组织加入时为组织名称")
+    val joinedMemberName: String? = null,
     @get:Schema(title = "操作人")
     val operator: String,
     @get:Schema(title = "是否正在交接")

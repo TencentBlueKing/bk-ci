@@ -31,13 +31,14 @@ import com.tencent.devops.auth.service.ManagerService
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
+import com.tencent.devops.process.engine.service.PipelineChannelCacheService
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.permission.StreamPipelinePermissionServiceImpl
 import com.tencent.devops.process.websocket.page.DefaultRecordPageBuild
-import com.tencent.devops.process.ws.GitCIDetailPageBuild
 import com.tencent.devops.process.ws.GitCIHistoryPageBuild
 import com.tencent.devops.process.ws.GitCIStatusPageBuild
 import org.jooq.DSLContext
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
@@ -61,19 +62,21 @@ class TxPipelineProcessConfiguration {
 
     @Bean
     @ConditionalOnProperty(prefix = "cluster", name = ["tag"], havingValue = "stream")
-    fun detailPage() = GitCIDetailPageBuild()
+    fun historyPage(
+        @Autowired pipelineChannelCacheService: PipelineChannelCacheService
+    ) = GitCIHistoryPageBuild(pipelineChannelCacheService)
 
     @Bean
     @ConditionalOnProperty(prefix = "cluster", name = ["tag"], havingValue = "stream")
-    fun historyPage() = GitCIHistoryPageBuild()
+    fun statusPage(
+        @Autowired pipelineChannelCacheService: PipelineChannelCacheService
+    ) = GitCIStatusPageBuild(pipelineChannelCacheService)
 
     @Bean
     @ConditionalOnProperty(prefix = "cluster", name = ["tag"], havingValue = "stream")
-    fun statusPage() = GitCIStatusPageBuild()
-
-    @Bean
-    @ConditionalOnProperty(prefix = "cluster", name = ["tag"], havingValue = "stream")
-    fun recordPage() = DefaultRecordPageBuild()
+    fun recordPage(
+        @Autowired pipelineChannelCacheService: PipelineChannelCacheService
+    ) = DefaultRecordPageBuild(pipelineChannelCacheService)
 
     @Bean
     @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "git")

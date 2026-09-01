@@ -27,16 +27,20 @@
 
 package com.tencent.devops.environment.service
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.bk.audit.annotations.ActionAuditRecord
 import com.tencent.bk.audit.annotations.AuditAttribute
 import com.tencent.bk.audit.annotations.AuditInstanceRecord
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.audit.ActionAuditContent
 import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.api.ResourceTypeId
+import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_ENV_NO_DEL_PERMISSSION
@@ -47,14 +51,23 @@ import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE
 import com.tencent.devops.environment.dao.EnvDao
 import com.tencent.devops.environment.dao.EnvNodeDao
 import com.tencent.devops.environment.dao.EnvShareProjectDao
+import com.tencent.devops.environment.dao.EnvTagDao
+import com.tencent.devops.environment.dao.EnvTagNodeEnableDao
 import com.tencent.devops.environment.dao.NodeDao
+import com.tencent.devops.environment.dao.NodeTagKeyDao
 import com.tencent.devops.environment.dao.thirdpartyagent.ThirdPartyAgentDao
 import com.tencent.devops.environment.permission.EnvironmentPermissionService
 import com.tencent.devops.environment.pojo.EnvCreateInfo
 import com.tencent.devops.environment.pojo.EnvironmentId
-import com.tencent.devops.environment.pojo.enums.TXEnvType
+import com.tencent.devops.environment.pojo.NodeBaseInfo
+import com.tencent.devops.environment.pojo.enums.EnvType
+import com.tencent.devops.environment.pojo.enums.NodeStatus
+import com.tencent.devops.environment.pojo.enums.NodeType
+import com.tencent.devops.environment.pojo.envOperate.EnvOperateOrigin
 import com.tencent.devops.environment.service.slave.SlaveGatewayService
+import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.remotedev.api.service.ServiceRemoteDevResource
+import com.tencent.devops.support.api.service.ServiceIMateResource
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Primary
@@ -65,26 +78,42 @@ import org.springframework.stereotype.Service
 @Suppress("ALL")
 class TXEnvService @Autowired constructor(
     private val dslContext: DSLContext,
+    private val objectMapper: ObjectMapper,
     private val envDao: EnvDao,
     private val nodeDao: NodeDao,
     private val envNodeDao: EnvNodeDao,
+    private val envTagDao: EnvTagDao,
+    private val nodeTagKeyDao: NodeTagKeyDao,
     private val thirdPartyAgentDao: ThirdPartyAgentDao,
     private val slaveGatewayService: SlaveGatewayService,
     private val environmentPermissionService: EnvironmentPermissionService,
     private val envShareProjectDao: EnvShareProjectDao,
+    private val envTagNodeEnableDao: EnvTagNodeEnableDao,
     private val nodeService: NodeService,
-    private val client: Client
+    private val client: Client,
+    private val authProjectApi: AuthProjectApi,
+    private val pipelineAuthServiceCode: PipelineAuthServiceCode,
+    private val createEnvService: CreateEnvService,
+    private val envOperateLogService: EnvOperateLogService
 ) : EnvService(
     dslContext = dslContext,
+    objectMapper = objectMapper,
     envDao = envDao,
     nodeDao = nodeDao,
     envNodeDao = envNodeDao,
+    envTagDao = envTagDao,
+    nodeTagKeyDao = nodeTagKeyDao,
     thirdPartyAgentDao = thirdPartyAgentDao,
     slaveGatewayService = slaveGatewayService,
     environmentPermissionService = environmentPermissionService,
     envShareProjectDao = envShareProjectDao,
+    envTagNodeEnableDao = envTagNodeEnableDao,
     nodeService = nodeService,
-    client = client
+    client = client,
+    authProjectApi = authProjectApi,
+    pipelineAuthServiceCode = pipelineAuthServiceCode,
+    createEnvService = createEnvService,
+    envOperateLogService = envOperateLogService
 ) {
 
     override fun checkName(projectId: String, envId: Long?, envName: String) {
@@ -106,7 +135,7 @@ class TXEnvService @Autowired constructor(
         content = ActionAuditContent.ENVIRONMENT_CREATE_CONTENT
     )
     override fun createEnvironment(userId: String, projectId: String, envCreateInfo: EnvCreateInfo): EnvironmentId {
-        if (envCreateInfo.envType == TXEnvType.DEVX.envType() && !envCreateInfo.nodeHashIds.isNullOrEmpty()) {
+        if (envCreateInfo.envType == EnvType.DEVX && !envCreateInfo.nodeHashIds.isNullOrEmpty()) {
             // 暂时仅支持一个公共云桌面进入一个环境
             val check = envNodeDao.listNodeIds(
                 dslContext = dslContext,
@@ -117,7 +146,7 @@ class TXEnvService @Autowired constructor(
             }
         }
         return super.createEnvironment(userId, projectId, envCreateInfo).also { envHashId ->
-            if (envCreateInfo.envType == TXEnvType.DEVX.envType()) {
+            if (envCreateInfo.envType == EnvType.DEVX) {
                 client.get(ServiceRemoteDevResource::class).reloadEnvHook(
                     userId = userId,
                     projectId = projectId,
@@ -141,10 +170,11 @@ class TXEnvService @Autowired constructor(
         userId: String,
         projectId: String,
         envHashId: String,
-        nodeHashIds: List<String>
+        nodeHashIds: List<String>,
+        envOperateOrigin: EnvOperateOrigin
     ) {
         val env = envDao.get(dslContext, projectId, HashUtil.decodeIdToLong(envHashId))
-        if (env.envType == TXEnvType.DEVX.name) {
+        if (env.envType == EnvType.DEVX.name) {
             // 暂时仅支持一个公共云桌面进入一个环境
             val check = envNodeDao.listNodeIds(
                 dslContext = dslContext,
@@ -154,8 +184,8 @@ class TXEnvService @Autowired constructor(
                 throw ErrorCodeException(errorCode = ERROR_NODE_HAD_BEEN_ASSIGN)
             }
         }
-        super.addEnvNodes(userId, projectId, envHashId, nodeHashIds)
-        if (env.envType == TXEnvType.DEVX.name) {
+        super.addEnvNodes(userId, projectId, envHashId, nodeHashIds, envOperateOrigin)
+        if (env.envType == EnvType.DEVX.name) {
             client.get(ServiceRemoteDevResource::class).reloadEnvHook(
                 userId = userId,
                 projectId = projectId,
@@ -182,7 +212,7 @@ class TXEnvService @Autowired constructor(
                 message = I18nUtil.getCodeLanMessage(ERROR_ENV_NO_DEL_PERMISSSION)
             )
         }
-        if (env.envType == TXEnvType.DEVX.name) {
+        if (env.envType == EnvType.DEVX.name) {
             client.get(ServiceRemoteDevResource::class).deleteEnvHook(
                 userId = userId,
                 projectId = projectId,
@@ -202,7 +232,13 @@ class TXEnvService @Autowired constructor(
         scopeId = "#projectId",
         content = ActionAuditContent.ENVIRONMENT_EDIT_DELETE_NODES_CONTENT
     )
-    override fun deleteEnvNodes(userId: String, projectId: String, envHashId: String, nodeHashIds: List<String>) {
+    override fun deleteEnvNodes(
+        userId: String,
+        projectId: String,
+        envHashId: String,
+        nodeHashIds: List<String>,
+        envOperateOrigin: EnvOperateOrigin
+    ) {
         val envId = HashUtil.decodeIdToLong(envHashId)
         if (!environmentPermissionService.checkEnvPermission(userId, projectId, envId, AuthPermission.EDIT)) {
             throw PermissionForbiddenException(
@@ -211,7 +247,7 @@ class TXEnvService @Autowired constructor(
         }
 
         val env = envDao.getOrNull(dslContext, projectId, envId) ?: return
-        if (env.envType == TXEnvType.DEVX.name) {
+        if (env.envType == EnvType.DEVX.name) {
             client.get(ServiceRemoteDevResource::class).deleteEnvHook(
                 userId = userId,
                 projectId = projectId,
@@ -219,6 +255,48 @@ class TXEnvService @Autowired constructor(
                 nodeHashIds = nodeHashIds
             )
         }
-        super.deleteEnvNodes(userId, projectId, envHashId, nodeHashIds)
+        super.deleteEnvNodes(userId, projectId, envHashId, nodeHashIds, envOperateOrigin)
+    }
+
+    override fun listAllEnvNodesNew(
+        userId: String,
+        projectId: String,
+        page: Int?,
+        pageSize: Int?,
+        envHashIds: List<String>?,
+        envName: String?,
+        nodeIp: String?,
+        displayName: String?,
+        createdUser: String?,
+        nodeStatus: NodeStatus?
+    ): Page<NodeBaseInfo> {
+        val result = super.listAllEnvNodesNew(
+            userId = userId,
+            projectId = projectId,
+            page = page,
+            pageSize = pageSize,
+            envHashIds = envHashIds,
+            envName = envName,
+            nodeIp = nodeIp,
+            displayName = displayName,
+            createdUser = createdUser,
+            nodeStatus = nodeStatus
+        )
+        // 团队云桌面过滤下不存在的龙虾
+        if (result.records.all { it.nodeType != NodeType.CREATE.name }) {
+            return result
+        }
+        if (client.get(ServiceProjectResource::class).get(projectId).data?.projectScope != 0) {
+            return result
+        }
+        val imateMap =
+            client.get(ServiceIMateResource::class).queryUserRobots(userId).data?.filter { it.username == userId }
+                ?.map { it.clientUuid }
+        return Page(
+            page = result.page,
+            pageSize = result.pageSize,
+            count = result.count,
+            records = result.records.filter { it.createWorkspaceId in (imateMap ?: emptyList()) }
+        )
     }
 }

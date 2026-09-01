@@ -135,7 +135,9 @@ class PipelineBuildParamCombinationDao {
             query.andExists(
                 dslContext.selectOne()
                     .from(detail)
-                    .where(detail.COMBINATION_ID.eq(combination.ID))
+                    .where(combination.PROJECT_ID.eq(projectId))
+                    .and(combination.PIPELINE_ID.eq(pipelineId))
+                    .and(detail.COMBINATION_ID.eq(combination.ID))
                     .and(detail.VAR_NAME.like("%$it%"))
             )
         }
@@ -170,7 +172,9 @@ class PipelineBuildParamCombinationDao {
             query.andExists(
                 dslContext.selectOne()
                     .from(detail)
-                    .where(detail.COMBINATION_ID.eq(combination.ID))
+                    .where(combination.PROJECT_ID.eq(projectId))
+                    .and(combination.PIPELINE_ID.eq(pipelineId))
+                    .and(detail.COMBINATION_ID.eq(combination.ID))
                     .and(detail.VAR_NAME.like("%$it%"))
             )
         }

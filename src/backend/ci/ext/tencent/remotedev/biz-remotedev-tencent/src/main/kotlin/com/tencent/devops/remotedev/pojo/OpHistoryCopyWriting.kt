@@ -17,5 +17,6 @@ enum class OpHistoryCopyWriting(
     MODIFY_REMARK("opHistoryCopyWriting.modifyRemark"), // 修改备注：修改了备注信息
     MODIFY_LABELS("opHistoryCopyWriting.modifyLabels"), // 修改标签：修改了标签信息
     ASSIGN_VIEWER("opHistoryCopyWriting.assignViewer"), // 分配查看者：添加了查看者 %s
-    UNSHARE("opHistoryCopyWriting.unshare") // 取消共享：取消了与 %s 的共享
+    UNSHARE("opHistoryCopyWriting.unshare"), // 取消共享：取消了与 %s 的共享
+    AGREE_RECORD("opHistoryCopyWriting.agreeRecord") // 同意开启云录制
 }

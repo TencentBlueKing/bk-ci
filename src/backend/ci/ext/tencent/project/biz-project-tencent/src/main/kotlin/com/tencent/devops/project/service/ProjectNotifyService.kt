@@ -1,6 +1,7 @@
 package com.tencent.devops.project.service
 
 import com.github.benmanes.caffeine.cache.Caffeine
+import com.tencent.devops.auth.api.service.ServiceDeptResource
 import com.tencent.devops.auth.api.service.ServiceProjectAuthResource
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
@@ -8,6 +9,7 @@ import com.tencent.devops.common.auth.api.pojo.ProjectConditionDTO
 import com.tencent.devops.common.auth.enums.AuthSystemType
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
+import com.tencent.devops.common.notify.enums.NotifyType
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.trace.TraceTag
@@ -23,7 +25,10 @@ import com.tencent.devops.project.service.tof.TOFService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import jakarta.ws.rs.NotFoundException
@@ -39,22 +44,32 @@ class ProjectNotifyService constructor(
     val projectUserService: ProjectUserService,
     val dslContext: DSLContext,
     val projectUpdateHistoryDao: ProjectUpdateHistoryDao,
-    val redisOperation: RedisOperation
+    val redisOperation: RedisOperation,
+    val projectOperationalProductService: ProjectOperationalProductService
 ) {
     companion object {
         private val projectNotifyThreadPool = Executors.newFixedThreadPool(10)
         private val logger = LoggerFactory.getLogger(ProjectNotifyService::class.java)
-        private const val NOTIFY_USER_TO_RELATED_OBS_PRODUCT_TEMPLATE_CODE = "NOTIFY_USER_TO_RELATED_OBS_PRODUCT_TEMPLATE"
+        private const val NOTIFY_USER_TO_RELATED_OBS_PRODUCT_TEMPLATE_CODE =
+            "NOTIFY_USER_TO_RELATED_OBS_PRODUCT_TEMPLATE"
         private const val PROJECT_ACTIVITY_CHECK_TEMPLATE_CODE = "PROJECT_ACTIVITY_CHECK_TEMPLATE_CODE"
         private const val NOTIFY_USER_TO_PROJECT_INFO_CHANGE = "NOTIFY_USER_TO_PROJECT_INFO_CHANGE"
 
-        private const val PROJECT_INFO_CHANGE_TABLE_HEADER = """<tr><td style="border: 1px solid black; text-align: center">%s</td><td style="border: 1px solid black; text-align: center">%s</td><td style="border: 1px solid black; text-align: center">%s</td><td style="border: 1px solid black; text-align: center">%s</td><td style="border: 1px solid black; text-align: center">%s</td><td style="border: 1px solid black; text-align: center">%s</td></tr>"""
-        private const val PROJECT_INFO_CHANGE_TABLE_CONTENT_TEMPLATE = """<tr><td style="border: 1px solid black; text-align: center">%s</td><td style="border: 1px solid black; text-align: center">%s</td><td style="border: 1px solid black; text-align: center">%s</td><td style="border: 1px solid black; text-align: center">%s</td><td style="border: 1px solid black; text-align: center">%s</td><td style="border: 1px solid black; text-align: center">%s</td></tr>"""
-        private const val PROJECT_ORGANIZATION_VERIFY_TEMPLATE = """<tr><td style="border: 1px solid black; text-align: center; max-width:300px;word-wrap: break-word; white-space: normal; ">%s</td><td style="border: 1px solid black;text-align: center; max-width:300px;word-wrap: break-word; white-space: normal; ">%s</td><td style="border: 1px solid black;text-align: center; max-width:300px;word-wrap: break-word; white-space: normal; ">%s</td><td style="border: 1px solid black;text-align: center; max-width:300px;word-wrap: break-word; white-space: normal; ">%s</td><td style="border: 1px solid black;text-align: center ; max-width:300px;word-wrap: break-word; white-space: normal;">%s</td></tr>"""
+        private const val PROJECT_INFO_CHANGE_TABLE_HEADER =
+            """<tr><td style="border: 1px solid black; text-align: center">%s</td><td style="border: 1px solid black; text-align: center">%s</td><td style="border: 1px solid black; text-align: center">%s</td><td style="border: 1px solid black; text-align: center">%s</td><td style="border: 1px solid black; text-align: center">%s</td><td style="border: 1px solid black; text-align: center">%s</td></tr>"""
+        private const val PROJECT_INFO_CHANGE_TABLE_CONTENT_TEMPLATE =
+            """<tr><td style="border: 1px solid black; text-align: center">%s</td><td style="border: 1px solid black; text-align: center">%s</td><td style="border: 1px solid black; text-align: center">%s</td><td style="border: 1px solid black; text-align: center">%s</td><td style="border: 1px solid black; text-align: center">%s</td><td style="border: 1px solid black; text-align: center">%s</td></tr>"""
+        private const val PROJECT_ORGANIZATION_VERIFY_TEMPLATE =
+            """<tr><td style="border: 1px solid black; text-align: center; max-width:300px;word-wrap: break-word; white-space: normal; ">%s</td><td style="border: 1px solid black;text-align: center; max-width:300px;word-wrap: break-word; white-space: normal; ">%s</td><td style="border: 1px solid black;text-align: center; max-width:300px;word-wrap: break-word; white-space: normal; ">%s</td><td style="border: 1px solid black;text-align: center; max-width:300px;word-wrap: break-word; white-space: normal; ">%s</td><td style="border: 1px solid black;text-align: center ; max-width:300px;word-wrap: break-word; white-space: normal;">%s</td></tr>"""
         private const val VERIFY_PROJECT_MANAGER_ORGANIZATION_BG = "send_email_for_verify_project_organization"
         private const val PROJECT_NOTIFY_USER = "project_notify_user"
         private const val IS_SEND_EMAIL_FLAG = "is_send_email_flag"
+        private const val KPI_CODE_CHANGE_NOTIFY_TEMPLATE = "KPI_CODE_CHANGE_NOTIFY_TEMPLATE"
+        private val KPI_CHANGE_OPERATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
     }
+
+    @Value("\${notify.kpiChange.fixedCc:}")
+    private val kpiChangeFixedCc: String = ""
 
     private val projectInfoShowUri = "${config.devopsHostGateway}/console/manage/%s/show"
     private val projectEditUri = "${config.devopsHostGateway}/console/manage/%s/edit"
@@ -176,7 +191,7 @@ class ProjectNotifyService constructor(
             )
             logger.info(
                 "get project for related obs by bg condition:$sendEmailForProjectByConditionDTO|" +
-                    "$offset|$limit|$projectInfos"
+                        "$offset|$limit|$projectInfos"
             )
             if (projectInfos.isEmpty()) break
             projectInfos.forEach forEach@{
@@ -275,10 +290,12 @@ class ProjectNotifyService constructor(
                 String.format(
                     PROJECT_INFO_CHANGE_TABLE_CONTENT_TEMPLATE,
                     projectInfo.afterProjectName, projectInfo.englishName,
-                    projectService.getOperationalProducts().firstOrNull { it.productId == projectInfo.beforeProductId }?.productName +
-                        "[${projectInfo.beforeProductId}]",
-                    projectService.getOperationalProducts().firstOrNull { it.productId == projectInfo.afterProductId }?.productName +
-                        "[${projectInfo.afterProductId}]",
+                    projectService.getOperationalProducts()
+                        .firstOrNull { it.productId == projectInfo.beforeProductId }?.productName +
+                            "[${projectInfo.beforeProductId}]",
+                    projectService.getOperationalProducts()
+                        .firstOrNull { it.productId == projectInfo.afterProductId }?.productName +
+                            "[${projectInfo.afterProductId}]",
                     projectInfo.operator, projectInfo.updatedAt
                 )
             )
@@ -319,8 +336,10 @@ class ProjectNotifyService constructor(
                 // 全部管理员都归属某个BG，但项目所属组织架构不属于该BG的项目
                 val wrongOrganizationalProjectList = mutableListOf<String>()
                 // 项目所属组织架构不属于某个BG.但部分管理员的bg属于某个BG的项目
-                val projectID2ManagerBelongVerifyBgId = mutableMapOf<String/*项目ID*/, List<String>/*管理员所属Bg为校验的verifyBgId*/>()
-                val projectID2ManagerNotBelongVerifyBgId = mutableMapOf<String/*项目ID*/, List<String>/*管理员所属Bg不为校验的verifyBgId*/>()
+                val projectID2ManagerBelongVerifyBgId =
+                    mutableMapOf<String/*项目ID*/, List<String>/*管理员所属Bg为校验的verifyBgId*/>()
+                val projectID2ManagerNotBelongVerifyBgId =
+                    mutableMapOf<String/*项目ID*/, List<String>/*管理员所属Bg不为校验的verifyBgId*/>()
                 do {
                     val projectInfos = projectService.listProjectsByCondition(
                         projectConditionDTO = ProjectConditionDTO(
@@ -436,12 +455,14 @@ class ProjectNotifyService constructor(
     ) {
         if (managerBgIds.contains(verifyBgId.toString())) {
             if (verifyBgId != projectInfo.bgId) {
-                projectID2ManagerBelongVerifyBgId[projectInfo.englishName] = managerDeptInfos.filter { it.bgId == verifyBgId.toString() }.map { it.userId!! }
-                projectID2ManagerNotBelongVerifyBgId[projectInfo.englishName] = managerDeptInfos.filterNot { it.bgId == verifyBgId.toString() }.map { it.userId!! }
+                projectID2ManagerBelongVerifyBgId[projectInfo.englishName] =
+                    managerDeptInfos.filter { it.bgId == verifyBgId.toString() }.map { it.userId!! }
+                projectID2ManagerNotBelongVerifyBgId[projectInfo.englishName] =
+                    managerDeptInfos.filterNot { it.bgId == verifyBgId.toString() }.map { it.userId!! }
                 logger.info(
                     "process manager bg not same :$managerBgIds" +
-                        "|${projectID2ManagerBelongVerifyBgId[projectInfo.englishName]}" +
-                        "|${projectID2ManagerNotBelongVerifyBgId[projectInfo.englishName]}"
+                            "|${projectID2ManagerBelongVerifyBgId[projectInfo.englishName]}" +
+                            "|${projectID2ManagerNotBelongVerifyBgId[projectInfo.englishName]}"
                 )
             }
         }
@@ -463,7 +484,7 @@ class ProjectNotifyService constructor(
     ) {
         logger.info(
             "send email for verify project manager organization:$wrongOrganizationalProjectList|" +
-                "$projectID2ManagerBelongVerifyBgId|$projectID2ManagerNotBelongVerifyBgId "
+                    "$projectID2ManagerBelongVerifyBgId|$projectID2ManagerNotBelongVerifyBgId "
         )
         val bgName = tofService.getDeptInfo(id = verifyBgId.toInt()).name
 
@@ -500,7 +521,11 @@ class ProjectNotifyService constructor(
             val title2 = "项目监控-%s个项目部分管理员为$bgName，但项目所属组织架构不属于$bgName"
             var table2 = String.format(
                 PROJECT_ORGANIZATION_VERIFY_TEMPLATE,
-                "项目名称", "项目ID", "项目所属组织架构", "所属组织架构为${bgName}的管理员", "所属组织架构为非${bgName}的管理员"
+                "项目名称",
+                "项目ID",
+                "项目所属组织架构",
+                "所属组织架构为${bgName}的管理员",
+                "所属组织架构为非${bgName}的管理员"
             )
             projectID2ManagerBelongVerifyBgId.forEach forEach@{ (projectCode, managers) ->
                 val projectInfo = projectService.getByEnglishName(projectCode) ?: return@forEach
@@ -569,6 +594,158 @@ class ProjectNotifyService constructor(
                 receives = mutableSetOf(manager),
                 templateCode = templateCode
             )
+        }
+    }
+
+    @Suppress("LongMethod")
+    fun sendEmailForKpiCodeChange(
+        userId: String,
+        projectName: String,
+        englishName: String,
+        kpiCode: String,
+        kpiName: String?,
+        productId: Int?,
+        productName: String?
+    ) {
+        val traceId = MDC.get(TraceTag.BIZID)
+        projectNotifyThreadPool.submit {
+            MDC.put(TraceTag.BIZID, traceId)
+            try {
+                doSendEmailForKpiCodeChange(
+                    userId = userId,
+                    projectName = projectName,
+                    englishName = englishName,
+                    kpiCode = kpiCode,
+                    kpiName = kpiName,
+                    productId = productId,
+                    productName = productName
+                )
+            } catch (e: Exception) {
+                logger.warn(
+                    "sendEmailForKpiCodeChange fail|" +
+                            "$englishName|$kpiCode|${e.message}", e
+                )
+            }
+        }
+    }
+
+    private fun doSendEmailForKpiCodeChange(
+        userId: String,
+        projectName: String,
+        englishName: String,
+        kpiCode: String,
+        kpiName: String?,
+        productId: Int?,
+        productName: String?
+    ) {
+        logger.info("doSendEmailForKpiCodeChange start|project=$englishName|operator=$userId|kpiCode=$kpiCode")
+
+        val receivers = mutableSetOf<String>()
+        val kpiProducts = projectOperationalProductService.getKpiProducts()
+        val kpiProduct = kpiProducts.firstOrNull { it.kpiCode == kpiCode }
+
+        // kpi负责人
+        if (kpiProduct != null) {
+            logger.info(
+                "doSendEmailForKpiCodeChange|found kpi product|kpiCode=$kpiCode|principal=${kpiProduct.principal}"
+            )
+            val principals = kpiProduct.principal
+                .split(";")
+                .map { it.trim() }
+                .filter { it.isNotBlank() }
+            receivers.addAll(principals)
+            logger.info(
+                "doSendEmailForKpiCodeChange|add principals to receivers " +
+                        "|kpiCode=$kpiCode|kpiName=$kpiName|principals=$principals"
+            )
+        } else {
+            logger.warn(
+                "doSendEmailForKpiCodeChange|kpi product not found|" +
+                        "kpiCode=$kpiCode"
+            )
+        }
+        // 上级
+        val leader = getOperatorLeader(userId)
+        if (leader != null) {
+            receivers.add(leader)
+            logger.info("doSendEmailForKpiCodeChange|add operator leader|operator=$userId|leader=$leader")
+        } else {
+            logger.warn(
+                "doSendEmailForKpiCodeChange|operator leader not found|operator=$userId"
+            )
+        }
+
+        if (receivers.isEmpty()) {
+            logger.warn(
+                "doSendEmailForKpiCodeChange|no receivers, skip sending|" +
+                        "project=$englishName|kpiCode=$kpiCode"
+            )
+            return
+        }
+
+        val cc = mutableSetOf(userId)
+        val fixedCc = kpiChangeFixedCc
+            .split(",")
+            .map { it.trim() }
+            .filter { it.isNotBlank() }
+        cc.addAll(fixedCc)
+        logger.info("doSendEmailForKpiCodeChange|cc list|operator=$userId|fixedCc=$fixedCc|totalCc=$cc")
+
+        val operateTime = LocalDateTime.now().format(KPI_CHANGE_OPERATE_TIME_FORMATTER)
+        val productDisplay = if (productId != null) {
+            "[$productId]${productName.orEmpty()}"
+        } else {
+            ""
+        }
+        val kpiDisplay = "[${kpiName.orEmpty()}]"
+        val bodyParams = mapOf(
+            "userId" to userId,
+            "operateTime" to operateTime,
+            "projectName" to projectName,
+            "englishName" to englishName,
+            "productDisplay" to productDisplay,
+            "kpiDisplay" to kpiDisplay
+        )
+        logger.debug("doSendEmailForKpiCodeChange|bodyParams|{}", bodyParams)
+        logger.info(
+            "doSendEmailForKpiCodeChange|sending notification|" +
+                    "project=$englishName|kpiCode=$kpiCode|" +
+                    "receivers=$receivers|cc=$cc|" +
+                    "template=$KPI_CODE_CHANGE_NOTIFY_TEMPLATE"
+        )
+
+
+        val isSendEmail = redisOperation.get(IS_SEND_EMAIL_FLAG)?.toBoolean() ?: true
+        if (!isSendEmail) return
+
+        val request = SendNotifyMessageTemplateRequest(
+            templateCode = KPI_CODE_CHANGE_NOTIFY_TEMPLATE,
+            bodyParams = bodyParams,
+            notifyType = mutableSetOf(NotifyType.EMAIL.name, NotifyType.WEWORK.name),
+            receivers = receivers,
+            cc = cc
+        )
+
+        kotlin.runCatching {
+            client.get(ServiceNotifyMessageTemplateResource::class).sendNotifyMessageByTemplate(request)
+        }.onSuccess {
+            logger.info("doSendEmailForKpiCodeChange success|project=$englishName|receivers=$receivers")
+        }.onFailure {
+            logger.error("doSendEmailForKpiCodeChange failed|project=$englishName|error=${it.message}", it)
+        }
+    }
+
+    private fun getOperatorLeader(userId: String): String? {
+        return try {
+            client.get(ServiceDeptResource::class)
+                .getLeader(userId)
+                .data
+                ?.userName
+        } catch (e: Exception) {
+            logger.warn(
+                "getOperatorLeader fail|$userId|${e.message}"
+            )
+            null
         }
     }
 

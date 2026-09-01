@@ -40,11 +40,29 @@ class PipelineTriggerDetailCombination(
         const val classType = "combination"
     }
 
+    /**
+     * 渲染规则：
+     * - 每个子明细的"首行"共同拼接成本组合的首行（使用 [separator] 分隔），
+     *   保留"业务标题: 具体原因"这种老展示效果；
+     * - 子明细如果本身返回多行（例如流水线转换失败带多条 details），
+     *   除首行进入前缀外，其余行独立成行展开，避免被压成一行难以阅读。
+     */
     override fun getReasonDetailList(): List<String> {
-        val messages = mutableListOf<String>()
+        val singleLine = mutableListOf<String>()
+        val multiLines = mutableListOf<String>()
         details.forEach { detail ->
-            detail.getReasonDetailList()?.let { messages.addAll(it) }
+            val subList = detail.getReasonDetailList().orEmpty()
+            if (subList.isEmpty()) return@forEach
+            singleLine.add(subList.first())
+            if (subList.size > 1) {
+                multiLines.addAll(subList.drop(1))
+            }
         }
-        return listOf(messages.joinToString(separator))
+        val result = mutableListOf<String>()
+        if (singleLine.isNotEmpty()) {
+            result.add(singleLine.joinToString(separator))
+        }
+        result.addAll(multiLines)
+        return result
     }
 }

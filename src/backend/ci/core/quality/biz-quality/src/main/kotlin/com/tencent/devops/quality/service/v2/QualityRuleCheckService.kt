@@ -521,16 +521,21 @@ class QualityRuleCheckService @Autowired constructor(
                 }
 
                 // 如果指标不是拦截的控制点上输出的，以最后输出的为准
+                // 一个指标可能由多条元数据组合计算，所以需要先按指标名分组，再按创建时间排序
                 if (metadata.isEmpty()) {
                     if (bCodeccElement) {
                         metadataList.filter { m ->
                             m.elementType in ElementUtils.QUALITY_CODECC_METATYPE &&
                             indicator.metadataList.any { i -> i.enName == m.enName }
-                        }.maxByOrNull { m -> m.createTime ?: 0L }?.let { m -> metadataMutableList.add(m) }
+                        }.groupBy { it.enName }
+                            .mapNotNull { (_, group) -> group.maxByOrNull { m -> m.createTime ?: 0L } }
+                            .let { metadataMutableList.addAll(it) }
                     } else {
                         metadataList.filter { m ->
                             m.enName == indicator.enName && m.elementType == indicator.elementType
-                        }.maxByOrNull { m -> m.createTime ?: 0L }?.let { m -> metadataMutableList.add(m) }
+                        }.groupBy { it.enName }
+                            .mapNotNull { (_, group) -> group.maxByOrNull { m -> m.createTime ?: 0L } }
+                            .let { metadataMutableList.addAll(it) }
                     }
                 } else {
                     metadataMutableList.addAll(metadata)

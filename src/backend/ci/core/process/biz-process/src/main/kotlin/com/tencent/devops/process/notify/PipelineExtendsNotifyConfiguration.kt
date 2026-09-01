@@ -34,6 +34,7 @@ import com.tencent.devops.common.stream.ScsConsumerBuilder
 import com.tencent.devops.process.bean.PipelineUrlBean
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildNotifyEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildReviewReminderEvent
+import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.service.ProjectCacheService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Bean
@@ -49,8 +50,12 @@ class PipelineExtendsNotifyConfiguration {
         @Autowired client: Client,
         @Autowired pipelineUrlBean: PipelineUrlBean,
         @Autowired projectCacheService: ProjectCacheService,
+        @Autowired pipelineRepositoryService: PipelineRepositoryService,
         @Autowired pipelineEventDispatcher: PipelineEventDispatcher
-    ) = PipelineBuildNotifyListener(client, pipelineUrlBean, projectCacheService, pipelineEventDispatcher)
+    ) = PipelineBuildNotifyListener(
+        client, pipelineUrlBean, projectCacheService,
+        pipelineRepositoryService, pipelineEventDispatcher
+    )
 
     /**
      * webhook构建触发广播监听
@@ -58,7 +63,7 @@ class PipelineExtendsNotifyConfiguration {
     @EventConsumer
     fun pipelineBuildNotifyConsumer(
         @Autowired pipelineBuildNotifyListener: PipelineBuildNotifyListener
-    ) = ScsConsumerBuilder.build<PipelineBuildNotifyEvent> { pipelineBuildNotifyListener.run(it) }
+    ) = ScsConsumerBuilder.build<PipelineBuildNotifyEvent> { pipelineBuildNotifyListener.execute(it) }
 
     /**
      * 审核提醒广播监听

@@ -33,9 +33,9 @@ md5 = require("resty.md5")
 arrayUtil = require("util.array_util")
 cookieUtil = require("util.cookie_util")
 itloginUtil = require("util.itlogin_util")
-outerloginUtil = require("util.outerlogin_util")
 urlUtil = require("util.url_util")
 tagUtil = require("util.tag_util")
+creativeUtil = require("util.creative_util")
 loadBalanceUtil = require("util.loadbalance_util")
 accessControlUtil = require("util.access_control_util")
 securityUtil = require("util.security_util")
@@ -50,7 +50,7 @@ buildExternalAuthUtil = require("util.build_external_auth_util")
 
 local ok_table = {status = 0, data = true}
 
-no_container_svr = {"sign", "config"}
+no_container_svr = {"sign", "config","ios-sign"}
 
 response_ok = json.encode(ok_table)
 

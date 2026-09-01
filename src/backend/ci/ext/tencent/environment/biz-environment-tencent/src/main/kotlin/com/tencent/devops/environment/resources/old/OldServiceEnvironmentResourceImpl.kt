@@ -81,7 +81,18 @@ class OldServiceEnvironmentResourceImpl @Autowired constructor(
         if (envHashIds.isEmpty()) {
             throw ErrorCodeException(errorCode = CommonMessageCode.ERROR_NEED_PARAM_, params = arrayOf("envHashIds"))
         }
-        return Result(envService.listAllEnvNodesNew(userId, projectId, page, pageSize, envHashIds))
+        return Result(envService.listAllEnvNodesNew(
+            userId = userId,
+            projectId = projectId,
+            page = page,
+            pageSize = pageSize,
+            envHashIds = envHashIds,
+            envName = null,
+            nodeIp = null,
+            displayName = null,
+            createdUser = null,
+            nodeStatus = null
+        ))
     }
 
     override fun listRawByEnvNames(

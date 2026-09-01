@@ -30,6 +30,7 @@ package com.tencent.devops.process.yaml.transfer
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.CommonMessageCode.YAML_NOT_VALID
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.NameAndValue
 import com.tencent.devops.common.pipeline.TemplateDescriptor
@@ -108,7 +109,6 @@ class StageTransfer @Autowired(required = false) constructor(
         // 第一个stage，触发类
         val triggerElementList = mutableListOf<Element>()
         elementTransfer.yaml2Triggers(yamlInput, triggerElementList)
-
         val triggerContainer = TriggerContainer(
             id = "0",
             name = I18nUtil.getCodeLanMessage(CommonMessageCode.BK_BUILD_TRIGGER),
@@ -117,14 +117,15 @@ class StageTransfer @Autowired(required = false) constructor(
             startEpoch = null,
             systemElapsed = null,
             elementElapsed = null,
-            params = variableTransfer.makeVariableFromYaml(makeVariables(yamlInput.yaml))
+            params = variableTransfer.makeVariableFromYaml(makeVariables(yamlInput.yaml)).toMutableList()
         )
         with(yamlInput.yaml.recommendedVersion) {
             if (this != null && this.enabled) {
                 triggerContainer.buildNo = BuildNo(
-                    this.buildNo.initialValue,
-                    RecommendedVersion.Strategy.parse(this.buildNo.strategy).toBuildNoType(),
-                    this.allowModifyAtStartup
+                    buildNo = this.buildNo.initialValue,
+                    buildNoType = RecommendedVersion.Strategy.parse(this.buildNo.strategy).toBuildNoType(),
+                    required = this.allowModifyAtStartup,
+                    asInstanceInput = this.asInstanceInput
                 )
             }
         }
@@ -245,7 +246,8 @@ class StageTransfer @Autowired(required = false) constructor(
                             finalStage = finalStage,
                             jobEnable = jobEnable,
                             resources = yamlInput.yaml.formatResources(),
-                            buildTemplateAcrossInfo = yamlInput.jobTemplateAcrossInfo?.get(job.id)
+                            buildTemplateAcrossInfo = yamlInput.jobTemplateAcrossInfo?.get(job.id),
+                            channelCode = yamlInput.channelCode
                         )
                     }
                     yamlInput.aspectWrapper.setModelJob4Model(
@@ -371,7 +373,8 @@ class StageTransfer @Autowired(required = false) constructor(
         stage: Stage,
         userId: String,
         projectId: String,
-        aspectWrapper: PipelineTransferAspectWrapper
+        aspectWrapper: PipelineTransferAspectWrapper,
+        channelCode: ChannelCode = ChannelCode.BS
     ): PreStage {
         val jobs = stage.containers.associateTo(LinkedHashMap()) { job ->
             aspectWrapper.setModelJob4Model(job, PipelineTransferAspectWrapper.AspectType.BEFORE)
@@ -383,7 +386,8 @@ class StageTransfer @Autowired(required = false) constructor(
                     userId = userId,
                     projectId = projectId,
                     job = job as VMBuildContainer,
-                    steps = steps
+                    steps = steps,
+                    channelCode = channelCode
                 )
 
                 else -> throw ModelCreateException("unknown classType:(${job.getClassType()})")

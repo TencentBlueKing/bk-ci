@@ -34,6 +34,8 @@ import com.tencent.devops.common.pipeline.enums.BranchVersionAction
 import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.process.constant.PipelineTemplateConstant
+import com.tencent.devops.process.dao.PipelineTemplateResourceDraftVersionDao
+import com.tencent.devops.process.dao.PipelineTemplateSettingDraftVersionDao
 import com.tencent.devops.process.dao.yaml.PipelineYamlInfoDao
 import com.tencent.devops.process.dao.yaml.PipelineYamlVersionDao
 import com.tencent.devops.process.engine.dao.template.TemplatePipelineDao
@@ -75,7 +77,9 @@ class PipelineTemplatePersistenceService @Autowired constructor(
     private val templatePipelineDao: TemplatePipelineDao,
     private val versionCreatePostProcessors: List<PTemplateVersionCreatePostProcessor>,
     private val pipelineYamlInfoDao: PipelineYamlInfoDao,
-    private val pipelineYamlVersionDao: PipelineYamlVersionDao
+    private val pipelineYamlVersionDao: PipelineYamlVersionDao,
+    private val pipelineTemplateResourceDraftVersionDao: PipelineTemplateResourceDraftVersionDao,
+    private val pipelineTemplateSettingDraftVersionDao: PipelineTemplateSettingDraftVersionDao
 ) {
 
     /**
@@ -137,7 +141,7 @@ class PipelineTemplatePersistenceService @Autowired constructor(
                     templateId = pipelineTemplateInfo.id,
                     templateName = pipelineTemplateInfo.name
                 )
-                postProcessInTransactionVersionCreate(
+                postProcessInTransactionAfterVersionCreate(
                     transactionContext = transactionContext,
                     context = context,
                     pipelineTemplateResource = pipelineTemplateResource,
@@ -169,11 +173,6 @@ class PipelineTemplatePersistenceService @Autowired constructor(
             val pipelineTemplateSetting = pTemplateSettingWithoutVersion.copy(
                 version = resourceOnlyVersion.settingVersion
             )
-            postProcessBeforeVersionCreate(
-                context = context,
-                pipelineTemplateResource = pipelineTemplateResource,
-                pipelineTemplateSetting = pipelineTemplateSetting
-            )
             operationLogType = OperationLogType.RELEASE_MASTER_VERSION
             operationLogParams = resourceOnlyVersion.versionName!!
 
@@ -192,6 +191,12 @@ class PipelineTemplatePersistenceService @Autowired constructor(
             )
             dslContext.transaction { configuration ->
                 val transactionContext = DSL.using(configuration)
+                postProcessInTransactionBeforeVersionCreate(
+                    transactionContext = transactionContext,
+                    context = context,
+                    pipelineTemplateResource = pipelineTemplateResource,
+                    pipelineTemplateSetting = pipelineTemplateSetting
+                )
                 pipelineTemplateInfoService.update(
                     transactionContext = transactionContext,
                     record = pipelineTemplateInfoUpdateInfo,
@@ -211,7 +216,7 @@ class PipelineTemplatePersistenceService @Autowired constructor(
                     templateId = templateId,
                     templateName = pipelineTemplateSetting.pipelineName
                 )
-                postProcessInTransactionVersionCreate(
+                postProcessInTransactionAfterVersionCreate(
                     transactionContext = transactionContext,
                     context = context,
                     pipelineTemplateResource = pipelineTemplateResource,
@@ -276,7 +281,8 @@ class PipelineTemplatePersistenceService @Autowired constructor(
 
     fun createDraftVersion(
         context: PipelineTemplateVersionCreateContext,
-        resourceOnlyVersion: PTemplateResourceOnlyVersion
+        resourceOnlyVersion: PTemplateResourceOnlyVersion,
+        oldDraftVersion: Long? = null
     ) {
         with(context) {
             if (pTemplateResourceWithoutVersion.model is Model) {
@@ -294,6 +300,18 @@ class PipelineTemplatePersistenceService @Autowired constructor(
 
             dslContext.transaction { configuration ->
                 val transactionContext = DSL.using(configuration)
+                // 删除当前草稿(逻辑删,STATUS->DELETE),再重建新草稿
+                oldDraftVersion?.let {
+                    pipelineTemplateResourceService.update(
+                        transactionContext = transactionContext,
+                        record = PipelineTemplateResourceUpdateInfo(status = VersionStatus.DELETE),
+                        commonCondition = PipelineTemplateResourceCommonCondition(
+                            projectId = projectId,
+                            templateId = templateId,
+                            version = it
+                        )
+                    )
+                }
                 pipelineTemplateResourceService.create(
                     transactionContext = transactionContext,
                     pipelineTemplateResource = pipelineTemplateResource
@@ -302,7 +320,23 @@ class PipelineTemplatePersistenceService @Autowired constructor(
                     transactionContext = transactionContext,
                     pipelineTemplateSetting = pipelineTemplateSetting
                 )
-                postProcessInTransactionVersionCreate(
+                pipelineTemplateResourceDraftVersionDao.create(
+                    dslContext = transactionContext,
+                    userId = userId,
+                    pipelineTemplateResource = pipelineTemplateResource,
+                    draftVersion = pipelineTemplateResource.draftVersion!!,
+                    baseDraftVersion = baseDraftVersion
+                )
+
+                pipelineTemplateSettingDraftVersionDao.create(
+                    dslContext = transactionContext,
+                    userId = userId,
+                    templateId = pipelineTemplateResource.templateId,
+                    setting = pipelineTemplateSetting,
+                    version = pipelineTemplateResource.version,
+                    draftVersion = pipelineTemplateResource.draftVersion!!
+                )
+                postProcessInTransactionAfterVersionCreate(
                     transactionContext = transactionContext,
                     context = context,
                     pipelineTemplateResource = pipelineTemplateResource,
@@ -368,7 +402,7 @@ class PipelineTemplatePersistenceService @Autowired constructor(
                     transactionContext = transactionContext,
                     pipelineTemplateSetting = pipelineTemplateSetting
                 )
-                postProcessInTransactionVersionCreate(
+                postProcessInTransactionAfterVersionCreate(
                     transactionContext = transactionContext,
                     context = context,
                     pipelineTemplateResource = pipelineTemplateResource,
@@ -406,7 +440,8 @@ class PipelineTemplatePersistenceService @Autowired constructor(
                 baseVersion = pipelineTemplateResource.baseVersion,
                 baseVersionName = pipelineTemplateResource.baseVersionName,
                 updater = userId,
-                sortWeight = PipelineTemplateConstant.COMMITTING_STATUS_VERSION_SORT_WIGHT
+                sortWeight = PipelineTemplateConstant.COMMITTING_STATUS_VERSION_SORT_WIGHT,
+                draftVersion = pipelineTemplateResource.draftVersion
             )
             val templateResourceCondition = PipelineTemplateResourceCommonCondition(
                 projectId = projectId,
@@ -434,7 +469,23 @@ class PipelineTemplatePersistenceService @Autowired constructor(
                     record = templateSettingUpdateInfo,
                     commonCondition = templateSettingCondition
                 )
-                postProcessInTransactionVersionCreate(
+                pipelineTemplateResourceDraftVersionDao.create(
+                    dslContext = transactionContext,
+                    userId = userId,
+                    pipelineTemplateResource = pipelineTemplateResource,
+                    draftVersion = pipelineTemplateResource.draftVersion!!,
+                    baseDraftVersion = baseDraftVersion
+                )
+
+                pipelineTemplateSettingDraftVersionDao.create(
+                    dslContext = transactionContext,
+                    userId = userId,
+                    templateId = pipelineTemplateResource.templateId,
+                    setting = pipelineTemplateSetting,
+                    version = pipelineTemplateResource.version,
+                    draftVersion = pipelineTemplateResource.draftVersion!!
+                )
+                postProcessInTransactionAfterVersionCreate(
                     transactionContext = transactionContext,
                     context = context,
                     pipelineTemplateResource = pipelineTemplateResource,
@@ -500,6 +551,12 @@ class PipelineTemplatePersistenceService @Autowired constructor(
             )
             dslContext.transaction { configuration ->
                 val transactionContext = DSL.using(configuration)
+                postProcessInTransactionBeforeVersionCreate(
+                    transactionContext = transactionContext,
+                    context = context,
+                    pipelineTemplateResource = pipelineTemplateResource,
+                    pipelineTemplateSetting = pipelineTemplateSetting
+                )
                 pipelineTemplateInfoService.update(
                     transactionContext = transactionContext,
                     record = templateInfoUpdateInfo,
@@ -516,7 +573,7 @@ class PipelineTemplatePersistenceService @Autowired constructor(
                     templateId = templateId,
                     templateName = pipelineTemplateSetting.pipelineName
                 )
-                postProcessInTransactionVersionCreate(
+                postProcessInTransactionAfterVersionCreate(
                     transactionContext = transactionContext,
                     context = context,
                     pipelineTemplateResource = pipelineTemplateResource,
@@ -601,7 +658,7 @@ class PipelineTemplatePersistenceService @Autowired constructor(
                     record = templateResourceUpdateInfo,
                     commonCondition = templateResourceCondition
                 )
-                postProcessInTransactionVersionCreate(
+                postProcessInTransactionAfterVersionCreate(
                     transactionContext = transactionContext,
                     context = context,
                     pipelineTemplateResource = pipelineTemplateResource,
@@ -656,7 +713,10 @@ class PipelineTemplatePersistenceService @Autowired constructor(
     ) {
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
-            val templateInfo = pipelineTemplateInfoService.get(templateId)
+            val templateInfo = pipelineTemplateInfoService.get(
+                projectId = projectId,
+                templateId = templateId
+            )
             pipelineTemplateRelatedService.delete(
                 transactionContext = context,
                 condition = PipelineTemplateRelatedCommonCondition(
@@ -688,6 +748,16 @@ class PipelineTemplatePersistenceService @Autowired constructor(
             )
             pipelineYamlInfoDao.deleteByPipelineId(context, projectId, templateId)
             pipelineYamlVersionDao.deleteByPipelineId(context, projectId, templateId)
+            pipelineTemplateResourceDraftVersionDao.delete(
+                dslContext = context,
+                projectId = projectId,
+                templateId = templateId
+            )
+            pipelineTemplateSettingDraftVersionDao.delete(
+                dslContext = context,
+                projectId = projectId,
+                templateId = templateId
+            )
             if (templateInfo.mode == TemplateType.CONSTRAINT) {
                 client.get(ServiceStoreResource::class).uninstall(
                     storeCode = templateInfo.srcTemplateId!!,
@@ -783,14 +853,30 @@ class PipelineTemplatePersistenceService @Autowired constructor(
         }
     }
 
-    private fun postProcessInTransactionVersionCreate(
+    private fun postProcessInTransactionBeforeVersionCreate(
         transactionContext: DSLContext,
         context: PipelineTemplateVersionCreateContext,
         pipelineTemplateResource: PipelineTemplateResource,
         pipelineTemplateSetting: PipelineSetting
     ) {
         versionCreatePostProcessors.forEach {
-            it.postProcessInTransactionVersionCreate(
+            it.postProcessInTransactionBeforeVersionCreate(
+                transactionContext = transactionContext,
+                context = context,
+                pipelineTemplateResource = pipelineTemplateResource,
+                pipelineTemplateSetting = pipelineTemplateSetting
+            )
+        }
+    }
+
+    private fun postProcessInTransactionAfterVersionCreate(
+        transactionContext: DSLContext,
+        context: PipelineTemplateVersionCreateContext,
+        pipelineTemplateResource: PipelineTemplateResource,
+        pipelineTemplateSetting: PipelineSetting
+    ) {
+        versionCreatePostProcessors.forEach {
+            it.postProcessInTransactionAfterVersionCreate(
                 transactionContext = transactionContext,
                 context = context,
                 pipelineTemplateResource = pipelineTemplateResource,

@@ -79,7 +79,7 @@ class AppPipelineViewResourceImpl @Autowired constructor(
                 page = page,
                 pageSize = pageSize,
                 sortType = sortType ?: PipelineSortType.CREATE_TIME,
-                channelCode = ChannelCode.BS,
+                channelCode = ChannelCode.getRequestChannelCode(),
                 viewId = viewId,
                 checkPermission = true,
                 filterByPipelineName = filterByPipelineName,
@@ -100,10 +100,9 @@ class AppPipelineViewResourceImpl @Autowired constructor(
         filterByPipelineName: String?,
         filterByCreator: String?,
         filterByLabels: String?,
-        viewId: String,
-        filterInvalid: Boolean?
+        viewId: String
     ): Result<Pagination<Pipeline>> {
-        val channelCode = if (projectId.startsWith("git_")) ChannelCode.GIT else ChannelCode.BS
+        val channelCode = if (projectId.startsWith("git_")) ChannelCode.GIT else ChannelCode.getRequestChannelCode()
 
         // 兼容我的流水线
         val finalViewId = if (viewId == PIPELINE_VIEW_MY_PIPELINES) {
@@ -121,8 +120,7 @@ class AppPipelineViewResourceImpl @Autowired constructor(
             viewId = finalViewId,
             checkPermission = true,
             filterByPipelineName = if (channelCode == ChannelCode.GIT) null else filterByPipelineName,
-            filterByCreator = filterByCreator, filterByLabels = filterByLabels,
-            filterInvalid = filterInvalid ?: true
+            filterByCreator = filterByCreator, filterByLabels = filterByLabels
         )
 
         // gitci 返回值兼容

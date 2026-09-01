@@ -32,7 +32,9 @@ import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_COMMIT_ID
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_EVENT_TYPE
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_EXCLUDE_BRANCHS
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_EXCLUDE_USERS
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_FINAL_INCLUDE_LABEL
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_INCLUDE_BRANCHS
+import com.tencent.devops.common.webhook.pojo.code.MATCH_LABEL
 import com.tencent.devops.common.webhook.pojo.code.WebHookParams
 import com.tencent.devops.common.webhook.service.code.matcher.ScmWebhookMatcher
 import com.tencent.devops.common.webhook.service.code.pojo.WebhookMatchResult
@@ -60,6 +62,8 @@ class GithubWebHookStartParam : ScmWebhookStartParams<CodeGithubWebHookTriggerEl
         startParams[BK_REPO_GIT_WEBHOOK_INCLUDE_BRANCHS] = element.branchName ?: ""
         startParams[BK_REPO_GIT_WEBHOOK_EXCLUDE_BRANCHS] = element.excludeBranchName ?: ""
         startParams[BK_REPO_GIT_WEBHOOK_EXCLUDE_USERS] = element.excludeUsers ?: ""
+        startParams[BK_REPO_GIT_WEBHOOK_FINAL_INCLUDE_LABEL] =
+            matchResult.extra[MATCH_LABEL] ?: ""
         matcher?.let {
             startParams[BK_REPO_GIT_WEBHOOK_COMMIT_ID] = matcher.getRevision()
             startParams.putAll(matcher.retrieveParams(projectId = projectId, repository = repo))

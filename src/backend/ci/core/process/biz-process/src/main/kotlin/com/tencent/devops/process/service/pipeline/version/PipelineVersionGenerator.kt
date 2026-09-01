@@ -28,10 +28,10 @@
 package com.tencent.devops.process.service.pipeline.version
 
 import com.tencent.devops.common.api.check.Preconditions
-import com.tencent.devops.common.api.enums.RepositoryType
+import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.CodeTargetAction
 import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
@@ -41,6 +41,7 @@ import com.tencent.devops.common.pipeline.pojo.transfer.YamlWithVersion
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.dao.PipelineResourceDao
 import com.tencent.devops.process.engine.dao.PipelineResourceVersionDao
+import com.tencent.devops.process.engine.dao.PipelineResourceDraftVersionDao
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.utils.TemplateInstanceUtil
 import com.tencent.devops.process.pojo.pipeline.PipelineResourceOnlyVersion
@@ -52,9 +53,8 @@ import com.tencent.devops.process.service.pipeline.PipelineSettingVersionService
 import com.tencent.devops.process.service.pipeline.PipelineTransferYamlService
 import com.tencent.devops.process.service.template.v2.PipelineTemplateResourceService
 import com.tencent.devops.process.utils.PipelineVersionUtils
+import com.tencent.devops.process.yaml.PipelineYamlCommonService
 import com.tencent.devops.process.yaml.transfer.aspect.IPipelineTransferAspect
-import com.tencent.devops.repository.api.scm.ServiceScmRepositoryApiResource
-import com.tencent.devops.scm.api.pojo.repository.git.GitScmServerRepository
 import jakarta.ws.rs.core.Response
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -70,11 +70,12 @@ class PipelineVersionGenerator constructor(
     private val pipelineResourceVersionDao: PipelineResourceVersionDao,
     private val pipelineResourceDao: PipelineResourceDao,
     private val pipelineSettingVersionService: PipelineSettingVersionService,
-    private val client: Client,
     private val pipelineTemplateResourceService: PipelineTemplateResourceService,
     private val stageTagService: StageTagService,
     private val transferService: PipelineTransferYamlService,
-    private val pipelineRepositoryService: PipelineRepositoryService
+    private val pipelineRepositoryService: PipelineRepositoryService,
+    private val pipelineYamlCommonService: PipelineYamlCommonService,
+    private val pipelineResourceDraftVersionDao: PipelineResourceDraftVersionDao
 ) {
 
     /**
@@ -88,7 +89,8 @@ class PipelineVersionGenerator constructor(
             VersionStatus.COMMITTING -> {
                 PipelineResourceOnlyVersion(
                     version = INIT_VERSION,
-                    settingVersion = INIT_VERSION
+                    settingVersion = INIT_VERSION,
+                    draftVersion = INIT_VERSION
                 )
             }
 
@@ -124,7 +126,8 @@ class PipelineVersionGenerator constructor(
      */
     fun generateDraftVersion(
         projectId: String,
-        pipelineId: String
+        pipelineId: String,
+        baseVersion: Int?
     ): PipelineResourceOnlyVersion {
         val releaseResource = pipelineResourceDao.getReleaseVersionResource(
             dslContext = dslContext,
@@ -146,14 +149,36 @@ class PipelineVersionGenerator constructor(
             projectId = projectId,
             pipelineId = pipelineId
         )
+        val baseResource = baseVersion?.let {
+            pipelineResourceVersionDao.getPipelineVersionSimple(
+                dslContext = dslContext,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                version = it
+            )
+        }
         return PipelineResourceOnlyVersion(
             version = (latestResource?.version ?: releaseResource.version) + 1,
             settingVersion = latestSetting?.let { it.version + 1 } ?: 1,
-            baseVersion = releaseResource.version,
-            baseVersionName = releaseResource.versionName,
-            releaseVersion = releaseResource.version,
-            releaseVersionName = releaseResource.versionName
+            baseVersion = baseResource?.version ?: releaseResource.version,
+            baseVersionName = baseResource?.versionName ?: releaseResource.versionName,
+            draftVersion = INIT_VERSION
         )
+    }
+
+    fun incrementDraftVersion(
+        projectId: String,
+        pipelineId: String,
+        version: Int
+    ): Int {
+        // 获取当前的draftVersion，如果存在则+1，否则为1
+        val latestDraftVersion = pipelineResourceDraftVersionDao.getLatest(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            version = version
+        )
+        return (latestDraftVersion?.draftVersion ?: 0) + 1
     }
 
     /**
@@ -200,14 +225,21 @@ class PipelineVersionGenerator constructor(
         } else {
             Pair(draftResource.version, draftResource.settingVersion)
         }
+        val baseResource = draftResource?.baseVersion?.let {
+            pipelineResourceVersionDao.getPipelineVersionSimple(
+                dslContext = dslContext,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                version = it
+            )
+        }
         return PipelineResourceOnlyVersion(
             version = version,
             settingVersion = settingVersion,
-            baseVersion = branchResource?.version ?: releaseResource.version,
-            baseVersionName = branchResource?.versionName ?: releaseResource.versionName,
+            baseVersion = baseResource?.version ?: branchResource?.version ?: releaseResource.version,
+            baseVersionName = baseResource?.versionName ?: branchResource?.versionName ?: releaseResource.versionName,
             versionName = branchName,
-            releaseVersion = releaseResource.version,
-            releaseVersionName = releaseResource.versionName
+            draftVersion = draftResource?.draftVersion
         )
     }
 
@@ -258,6 +290,14 @@ class PipelineVersionGenerator constructor(
         } else {
             Pair(draftResource.version, draftResource.settingVersion)
         }
+        val baseResource = draftResource?.baseVersion?.let {
+            pipelineResourceVersionDao.getPipelineVersionSimple(
+                dslContext = dslContext,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                version = it
+            )
+        }
         // 如果没有正式版本,说明是第一次生成正式版本
         return if (latestReleaseResource == null) {
             val versionNum = INIT_VERSION
@@ -276,9 +316,7 @@ class PipelineVersionGenerator constructor(
                 versionNum = versionNum,
                 pipelineVersion = pipelineVersion,
                 triggerVersion = triggerVersion,
-                settingVersion = settingVersion,
-                releaseVersion = version,
-                releaseVersionName = versionName
+                settingVersion = settingVersion
             )
         } else {
             val versionNum = latestReleaseResource.versionNum?.let { it + 1 } ?: INIT_VERSION
@@ -305,10 +343,9 @@ class PipelineVersionGenerator constructor(
                 pipelineVersion = pipelineVersion,
                 triggerVersion = triggerVersion,
                 settingVersion = settingVersion,
-                baseVersion = latestReleaseResource.version,
-                baseVersionName = latestReleaseResource.versionName,
-                releaseVersion = version,
-                releaseVersionName = versionName
+                baseVersion = baseResource?.version ?: latestReleaseResource.version,
+                baseVersionName = baseResource?.versionName ?: latestReleaseResource.versionName,
+                draftVersion = draftResource?.draftVersion
             )
         }
     }
@@ -331,7 +368,10 @@ class PipelineVersionGenerator constructor(
     ): PipelineResourceOnlyVersion {
         return if (enablePac) {
             if (repoHashId.isNullOrEmpty()) {
-                throw IllegalArgumentException("repoHashId is empty")
+                throw ErrorCodeException(
+                    errorCode = CommonMessageCode.PARAMETER_IS_NULL,
+                    params = arrayOf("repoHashId")
+                )
             }
             val checkoutBranch = "$PAC_TEMPLATE_INSTANCE_BRANCH_PREFIX$templateId-$templateVersion"
             generateVersionWithPac(
@@ -354,7 +394,7 @@ class PipelineVersionGenerator constructor(
         }
     }
 
-    fun generateDratReleaseVersion(
+    fun generateDraftReleaseVersion(
         projectId: String,
         pipelineId: String,
         draftResource: PipelineResourceVersion,
@@ -365,7 +405,10 @@ class PipelineVersionGenerator constructor(
     ): PipelineResourceOnlyVersion {
         return if (enablePac) {
             if (repoHashId.isNullOrEmpty()) {
-                throw IllegalArgumentException("repoHashId is empty")
+                throw ErrorCodeException(
+                    errorCode = CommonMessageCode.PARAMETER_IS_NULL,
+                    params = arrayOf("repoHashId")
+                )
             }
             val checkoutBranch = "$PAC_BRANCH_PREFIX$pipelineId-${draftResource.version}"
             generateVersionWithPac(
@@ -376,7 +419,7 @@ class PipelineVersionGenerator constructor(
                 repoHashId = repoHashId,
                 targetAction = targetAction,
                 checkoutBranch = checkoutBranch,
-                baseVersion = draftResource.version,
+                baseVersion = draftResource.baseVersion,
                 targetBranch = targetBranch
             )
         } else {
@@ -422,7 +465,10 @@ class PipelineVersionGenerator constructor(
 
             CodeTargetAction.CHECKOUT_BRANCH_AND_REQUEST_MERGE -> {
                 if (checkoutBranch.isNullOrEmpty()) {
-                    throw IllegalArgumentException("checkoutBranch is null")
+                    throw ErrorCodeException(
+                        errorCode = CommonMessageCode.PARAMETER_IS_NULL,
+                        params = arrayOf("checkoutBranch")
+                    )
                 }
                 generateBranchVersion(
                     projectId = projectId,
@@ -435,7 +481,10 @@ class PipelineVersionGenerator constructor(
             CodeTargetAction.COMMIT_TO_SOURCE_BRANCH,
             CodeTargetAction.COMMIT_TO_SOURCE_BRANCH_AND_REQUEST_MERGE -> {
                 if (baseVersion == null) {
-                    throw IllegalArgumentException("baseBranch is null")
+                    throw ErrorCodeException(
+                        errorCode = CommonMessageCode.PARAMETER_IS_NULL,
+                        params = arrayOf("baseBranch")
+                    )
                 }
                 val pipelineVersionSimple = pipelineResourceVersionDao.getPipelineVersionSimple(
                     dslContext = dslContext,
@@ -456,9 +505,12 @@ class PipelineVersionGenerator constructor(
 
             CodeTargetAction.COMMIT_TO_BRANCH -> {
                 if (targetBranch == null) {
-                    throw IllegalArgumentException("targetBranch is null")
+                    throw ErrorCodeException(
+                        errorCode = CommonMessageCode.PARAMETER_IS_NULL,
+                        params = arrayOf("targetBranch")
+                    )
                 }
-                val finalDefaultBranch = defaultBranch ?: getDefaultBranch(
+                val finalDefaultBranch = defaultBranch ?: pipelineYamlCommonService.getDefaultBranch(
                     projectId = projectId, repoHashId = repoHashId
                 )
                 // 如果选择的是默认分支,则应该发布正式版本
@@ -525,6 +577,7 @@ class PipelineVersionGenerator constructor(
         enablePac: Boolean,
         repoHashId: String?,
         targetAction: CodeTargetAction?,
+        baseVersion: Int? = null,
         targetBranch: String? = null,
     ): Pair<VersionStatus, String?> {
         return if (enablePac) {
@@ -535,6 +588,7 @@ class PipelineVersionGenerator constructor(
                 repoHashId = repoHashId,
                 targetAction = targetAction,
                 checkoutBranch = checkoutBranch,
+                baseVersion = baseVersion,
                 targetBranch = targetBranch,
             )
         } else {
@@ -556,7 +610,10 @@ class PipelineVersionGenerator constructor(
         defaultBranch: String? = null,
     ): Pair<VersionStatus, String?> {
         if (repoHashId.isNullOrBlank()) {
-            throw IllegalArgumentException("repoHashId is null")
+            throw ErrorCodeException(
+                errorCode = CommonMessageCode.PARAMETER_IS_NULL,
+                params = arrayOf("repoHashId")
+            )
         }
         return when (targetAction) {
 
@@ -566,7 +623,10 @@ class PipelineVersionGenerator constructor(
 
             CodeTargetAction.CHECKOUT_BRANCH_AND_REQUEST_MERGE -> {
                 if (checkoutBranch.isNullOrEmpty()) {
-                    throw IllegalArgumentException("checkoutBranch is null")
+                    throw ErrorCodeException(
+                        errorCode = CommonMessageCode.PARAMETER_IS_NULL,
+                        params = arrayOf("checkoutBranch")
+                    )
                 }
                 Pair(VersionStatus.BRANCH, checkoutBranch)
             }
@@ -574,10 +634,16 @@ class PipelineVersionGenerator constructor(
             CodeTargetAction.COMMIT_TO_SOURCE_BRANCH,
             CodeTargetAction.COMMIT_TO_SOURCE_BRANCH_AND_REQUEST_MERGE -> {
                 if (pipelineId.isNullOrEmpty()) {
-                    throw IllegalArgumentException("pipelineId is null")
+                    throw ErrorCodeException(
+                        errorCode = CommonMessageCode.PARAMETER_IS_NULL,
+                        params = arrayOf("pipelineId")
+                    )
                 }
                 if (baseVersion == null) {
-                    throw IllegalArgumentException("baseBranch is null")
+                    throw ErrorCodeException(
+                        errorCode = CommonMessageCode.PARAMETER_IS_NULL,
+                        params = arrayOf("baseBranch")
+                    )
                 }
                 val pipelineVersionSimple = pipelineResourceVersionDao.getPipelineVersionSimple(
                     dslContext = dslContext,
@@ -592,9 +658,11 @@ class PipelineVersionGenerator constructor(
             }
 
             CodeTargetAction.COMMIT_TO_BRANCH -> {
-                val finalDefaultBranch =
-                    defaultBranch ?: getDefaultBranch(projectId = projectId, repoHashId = repoHashId)
-                if (defaultBranch == finalDefaultBranch) {
+                val finalDefaultBranch = defaultBranch ?: pipelineYamlCommonService.getDefaultBranch(
+                    projectId = projectId,
+                    repoHashId = repoHashId
+                )
+                if (targetBranch == finalDefaultBranch) {
                     Pair(VersionStatus.RELEASED, null)
                 } else {
                     Pair(VersionStatus.BRANCH, targetBranch)
@@ -620,7 +688,7 @@ class PipelineVersionGenerator constructor(
         )
         with(request) {
             val defaultBranch = targetAction?.takeIf { enablePac && it == CodeTargetAction.COMMIT_TO_BRANCH }?.let {
-                getDefaultBranch(projectId = projectId, repoHashId = repoHashId)
+                pipelineYamlCommonService.getDefaultBranch(projectId = projectId, repoHashId = repoHashId)
             }
             val defaultStageTagId = stageTagService.getDefaultStageTag().data?.id
             val pipelineId2Name = pipelineRepositoryService.listPipelineNameByIds(
@@ -681,33 +749,14 @@ class PipelineVersionGenerator constructor(
         }
     }
 
-    private fun getDefaultBranch(
-        projectId: String,
-        repoHashId: String?
-    ): String? {
-        if (repoHashId.isNullOrBlank()) {
-            throw IllegalArgumentException("repoHashId is null")
-        }
-        val serverRepository = client.get(ServiceScmRepositoryApiResource::class).getServerRepositoryById(
-            projectId = projectId,
-            repositoryType = RepositoryType.ID,
-            repoHashIdOrName = repoHashId
-        ).data
-        if (serverRepository !is GitScmServerRepository) {
-            throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ERROR_NOT_SUPPORT_REPOSITORY_TYPE_ENABLE_PAC
-            )
-        }
-        return serverRepository.defaultBranch
-    }
-
     fun yaml2model(
         userId: String,
         projectId: String,
         pipelineId: String?,
         yaml: String,
         yamlFileName: String? = null,
-        aspects: LinkedList<IPipelineTransferAspect>? = null
+        aspects: LinkedList<IPipelineTransferAspect>? = null,
+        channelCode: ChannelCode = ChannelCode.BS
     ): Pair<PipelineModelAndSetting, YamlWithVersion?> {
         return try {
             val result = transferService.transfer(
@@ -716,20 +765,26 @@ class PipelineVersionGenerator constructor(
                 pipelineId = pipelineId,
                 actionType = TransferActionType.FULL_YAML2MODEL,
                 data = TransferBody(oldYaml = yaml, yamlFileName = yamlFileName),
-                aspects = aspects ?: LinkedList()
+                aspects = aspects ?: LinkedList(),
+                channelCode = channelCode
             )
             if (result.modelAndSetting == null) {
-                logger.warn("TRANSFER_YAML|$projectId|$userId|yml=\n$yaml")
+                logger.warn("TRANSFER_YAML|$projectId|$userId|modelAndSetting is null")
+                logger.warn("TRANSFER_YAML|$projectId|$userId|yml=\n${truncateForLog(yaml)}")
                 throw ErrorCodeException(
-                    errorCode = ProcessMessageCode.ERROR_OCCURRED_IN_TRANSFER
+                    errorCode = ProcessMessageCode.ERROR_OCCURRED_IN_TRANSFER,
+                    params = arrayOf("modelAndSetting is null")
                 )
             }
             Pair(result.modelAndSetting!!, result.yamlWithVersion)
         } catch (ignore: Throwable) {
             if (ignore is ErrorCodeException) throw ignore
-            logger.warn("TRANSFER_YAML|$projectId|$userId|yml=\n$yaml", ignore)
+            // yaml不在这里输出,主要是因为yaml太长,会导致日志平台截断,导致关键定位信息（如异常栈）搜不到
+            logger.warn("TRANSFER_YAML|$projectId|$userId|transfer failed", ignore)
+            logger.warn("TRANSFER_YAML|$projectId|$userId|yml=\n${truncateForLog(yaml)}")
             throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ERROR_OCCURRED_IN_TRANSFER
+                errorCode = ProcessMessageCode.ERROR_OCCURRED_IN_TRANSFER,
+                params = arrayOf(ignore.message ?: "")
             )
         }
     }
@@ -740,7 +795,8 @@ class PipelineVersionGenerator constructor(
         pipelineId: String?,
         modelAndSetting: PipelineModelAndSetting,
         oldYaml: String?,
-        aspects: LinkedList<IPipelineTransferAspect> = LinkedList()
+        aspects: LinkedList<IPipelineTransferAspect> = LinkedList(),
+        channelCode: ChannelCode = ChannelCode.BS
     ): YamlWithVersion? {
         // MODEL形式的保存需要兼容旧数据
         Preconditions.checkNotNull(
@@ -759,7 +815,8 @@ class PipelineVersionGenerator constructor(
                     modelAndSetting = modelAndSetting,
                     oldYaml = oldYaml ?: "",
                 ),
-                aspects = aspects
+                aspects = aspects,
+                channelCode = channelCode
             )
             result.yamlWithVersion
         } catch (ignore: Throwable) {
@@ -769,10 +826,25 @@ class PipelineVersionGenerator constructor(
         }
     }
 
+    /**
+     * 对超长文本做截断，避免长 yaml 把日志撑爆被日志平台按长度截掉，
+     * 导致关键定位信息（如异常栈）搜不到。保留头尾各一半，中间省略部分标注省略字符数。
+     */
+    private fun truncateForLog(text: String, maxLen: Int = MAX_YAML_LOG_LENGTH): String {
+        if (text.length <= maxLen) return text
+        val headLen = maxLen / 2
+        val tailLen = maxLen - headLen
+        val omitted = text.length - maxLen
+        return text.substring(0, headLen) +
+            "\n...[truncated $omitted chars of ${text.length} total]...\n" +
+            text.substring(text.length - tailLen)
+    }
+
     companion object {
         const val INIT_VERSION = 1
         private const val PAC_TEMPLATE_INSTANCE_BRANCH_PREFIX = "bk-ci-template-instance-"
         private const val PAC_BRANCH_PREFIX = "bk-ci-pipeline-"
+        private const val MAX_YAML_LOG_LENGTH = 8000
         private val logger = LoggerFactory.getLogger(PipelineVersionGenerator::class.java)
     }
 }

@@ -299,7 +299,8 @@
         methods: {
             ...mapActions({
                 fetchVersionDetail: 'atom/getPipelineVersionInfo',
-                updateBuildRemark: 'pipelines/updateBuildRemark'
+                updateBuildRemark: 'pipelines/updateBuildRemark',
+                setExecInfo: 'atom/setExecInfo'
             }),
             async updateCurVersionDesc () {
                 try {
@@ -308,6 +309,7 @@
                         ...this.$route.params,
                         ...this.$route.query
                     })
+                    this.setExecInfo(result.data)
                     this.curVersionDesc = result.data.description
                 } catch (error) {
                     this.$showTips({
@@ -477,6 +479,7 @@
       height: 48px;
       .pipeline-cur-version-span {
         display: inline-block;
+        max-width: 200px;
         line-height: 48px;
         @include ellipsis();
         text-decoration: underline;

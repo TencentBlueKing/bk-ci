@@ -32,7 +32,7 @@ import org.slf4j.LoggerFactory
 @Suppress("ALL")
 object EvalExpress {
     private val logger = LoggerFactory.getLogger(EvalExpress::class.java)
-    private val contextPrefix = listOf("variables.", "settings", "envs.", "ci.", "job.", "jobs.", "steps.", "matrix.")
+    val contextPrefix = listOf("variables.", "settings.", "envs.", "ci.", "job.", "jobs.", "step.", "steps.", "matrix.")
 
     fun eval(
         buildId: String,

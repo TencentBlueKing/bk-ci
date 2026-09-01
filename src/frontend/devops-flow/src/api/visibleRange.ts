@@ -1,0 +1,105 @@
+/**
+ * 可用范围相关 API
+ */
+import { get, post, del } from '@/utils/http'
+import { PROCESS_API_URL_PREFIX } from '@/utils/apiUrlPrefix'
+
+export interface VisibleRangeRecord {
+  type: 'ORG' | 'USER'
+  scopeId: string
+  scopeName: string
+  fullName: string
+  userDepartments: string[]
+}
+
+export interface VisibleRangeQueryParams {
+  projectId: string
+  pipelineId: string
+  page?: number
+  pageSize?: number
+  keyword?: string
+}
+
+export interface VisibleRangeListResponse {
+  records: VisibleRangeRecord[]
+  count: number
+}
+
+export interface AddVisibleRangeItem {
+  type: 'ORG' | 'USER'
+  scopeId: string
+  scopeName: string
+  fullName: string
+  userDepartments: string[] | null
+}
+
+export interface AddVisibleRangeParams {
+  projectId: string
+  pipelineId: string
+  items: AddVisibleRangeItem[]
+}
+
+export interface RemoveVisibleRangeParams {
+  projectId: string
+  pipelineId: string
+  ids: string[] // 可见范围ID列表
+}
+
+/**
+ * 获取可用范围列表
+ * @param params 查询参数
+ */
+export async function getVisibleRangeList(
+  params: VisibleRangeQueryParams,
+): Promise<VisibleRangeListResponse> {
+  try {
+    const { projectId, pipelineId, page, pageSize, keyword } = params
+    const response = await get<VisibleRangeListResponse>(
+      `${PROCESS_API_URL_PREFIX}/user/pipeline/visibility/${projectId}/${pipelineId}`,
+      { 
+        params: { 
+          page,
+          pageSize,
+          keyword,
+        } 
+      },
+    )
+    return response
+  } catch (error) {
+    throw error
+  }
+}
+
+/**
+ * 添加可用范围
+ * @param params 添加参数
+ */
+export async function addVisibleRangeAPI(params: AddVisibleRangeParams): Promise<void> {
+  try {
+    const { projectId, pipelineId, items } = params
+    await post(
+      `${PROCESS_API_URL_PREFIX}/user/pipeline/visibility/${projectId}/${pipelineId}`,
+      items,
+    )
+  } catch (error) {
+    throw error
+  }
+}
+
+/**
+ * 移除可用范围
+ * @param params 移除参数
+ */
+export async function removeVisibleRangeAPI(params: RemoveVisibleRangeParams): Promise<void> {
+  try {
+    const { projectId, pipelineId, ids } = params
+    await del(
+      `${PROCESS_API_URL_PREFIX}/user/pipeline/visibility/${projectId}/${pipelineId}`,
+      {
+        data: ids,
+      },
+    )
+  } catch (error) {
+    throw error
+  }
+}

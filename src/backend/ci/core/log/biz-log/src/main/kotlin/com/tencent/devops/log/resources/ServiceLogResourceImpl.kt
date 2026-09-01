@@ -33,6 +33,7 @@ import com.tencent.devops.common.log.pojo.QueryLogStatus
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.log.api.ServiceLogResource
 import com.tencent.devops.common.log.pojo.QueryLogs
+import com.tencent.devops.common.log.pojo.QueryLogsText
 import com.tencent.devops.common.log.pojo.enums.LogType
 import com.tencent.devops.log.service.BuildLogQueryService
 import org.springframework.beans.factory.annotation.Autowired
@@ -101,6 +102,7 @@ class ServiceLogResourceImpl @Autowired constructor(
         tag: String?,
         containerHashId: String?,
         executeCount: Int?,
+        subTag: String?,
         jobId: String?,
         stepId: String?,
         archiveFlag: Boolean?,
@@ -120,6 +122,7 @@ class ServiceLogResourceImpl @Autowired constructor(
             tag = tag,
             containerHashId = containerHashId,
             executeCount = executeCount,
+            subTag = subTag,
             jobId = jobId,
             stepId = stepId,
             archiveFlag = archiveFlag,
@@ -138,6 +141,7 @@ class ServiceLogResourceImpl @Autowired constructor(
         tag: String?,
         containerHashId: String?,
         executeCount: Int?,
+        subTag: String?,
         jobId: String?,
         stepId: String?,
         archiveFlag: Boolean?,
@@ -152,6 +156,81 @@ class ServiceLogResourceImpl @Autowired constructor(
             debug = debug,
             logType = logType,
             tag = tag,
+            containerHashId = containerHashId,
+            executeCount = executeCount,
+            subTag = subTag,
+            jobId = jobId,
+            stepId = stepId,
+            archiveFlag = archiveFlag,
+            checkPermissionFlag = checkPermissionFlag
+        )
+    }
+
+    override fun getLatestLogs(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        debug: Boolean?,
+        logType: LogType?,
+        size: Int?,
+        tag: String?,
+        subTag: String?,
+        containerHashId: String?,
+        executeCount: Int?,
+        jobId: String?,
+        stepId: String?,
+        archiveFlag: Boolean?,
+        checkPermissionFlag: Boolean
+    ): Result<QueryLogsText> {
+        return buildLogQueryService.getLatestLogs(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            debug = debug,
+            logType = logType,
+            size = size ?: defaultNum,
+            tag = tag,
+            subTag = subTag,
+            containerHashId = containerHashId,
+            executeCount = executeCount,
+            jobId = jobId,
+            stepId = stepId,
+            archiveFlag = archiveFlag,
+            checkPermissionFlag = checkPermissionFlag
+        )
+    }
+
+    override fun getMiddleLogs(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        start: Long,
+        end: Long,
+        debug: Boolean?,
+        logType: LogType?,
+        tag: String?,
+        subTag: String?,
+        containerHashId: String?,
+        executeCount: Int?,
+        jobId: String?,
+        stepId: String?,
+        archiveFlag: Boolean?,
+        checkPermissionFlag: Boolean
+    ): Result<QueryLogsText> {
+        return buildLogQueryService.getMiddleLogs(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            start = start,
+            end = end,
+            debug = debug,
+            logType = logType,
+            tag = tag,
+            subTag = subTag,
             containerHashId = containerHashId,
             executeCount = executeCount,
             jobId = jobId,
@@ -169,6 +248,7 @@ class ServiceLogResourceImpl @Autowired constructor(
         tag: String?,
         containerHashId: String?,
         executeCount: Int?,
+        subTag: String?,
         jobId: String?,
         stepId: String?,
         archiveFlag: Boolean?
@@ -182,6 +262,7 @@ class ServiceLogResourceImpl @Autowired constructor(
             containerHashId = containerHashId,
             executeCount = executeCount,
             fileName = null,
+            subTag = subTag,
             jobId = jobId,
             stepId = stepId,
             archiveFlag = archiveFlag

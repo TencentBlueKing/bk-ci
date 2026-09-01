@@ -34,7 +34,7 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.web.service.BkApiHandleService
-import com.tencent.devops.common.web.utils.BkApiUtil
+import com.tencent.devops.common.web.utils.ApiAccessLimitCacheManager
 import org.slf4j.LoggerFactory
 import org.springframework.web.context.request.RequestContextHolder
 import org.springframework.web.context.request.ServletRequestAttributes
@@ -62,8 +62,9 @@ class BkApiHandleProjectAccessServiceImpl : BkApiHandleService {
             return
         }
         val redisOperation: RedisOperation = SpringContextUtil.getBean(RedisOperation::class.java)
-        // 判断项目是否在限制接口访问的列表中
-        if (redisOperation.isMember(BkApiUtil.getApiAccessLimitProjectsKey(), projectId)) {
+        // 判断项目是否在限制接口访问的列表中（使用缓存管理器优化）
+        val limitSet = ApiAccessLimitCacheManager.getProjectLimitSet(redisOperation)
+        if (limitSet.contains(projectId)) {
             val requestURI = request.requestURI
             logger.info("Project[$projectId] does not have access permission for interface[$requestURI]")
             throw ErrorCodeException(

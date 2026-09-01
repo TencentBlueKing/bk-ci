@@ -39,13 +39,13 @@ import com.tencent.devops.store.pojo.atom.AtomVersionListItem
 import com.tencent.devops.store.pojo.atom.ElementThirdPartySearchParam
 import com.tencent.devops.store.pojo.atom.GetRelyAtom
 import com.tencent.devops.store.pojo.atom.InstallAtomReq
+import com.tencent.devops.store.pojo.atom.MarketAtomListQuery
 import com.tencent.devops.store.pojo.atom.MarketAtomResp
 import com.tencent.devops.store.pojo.atom.MyAtomResp
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
-import com.tencent.devops.store.pojo.atom.enums.AtomTypeEnum
-import com.tencent.devops.store.pojo.atom.enums.MarketAtomSortTypeEnum
 import com.tencent.devops.store.pojo.common.MarketMainItem
 import com.tencent.devops.store.pojo.common.StoreErrorCodeInfo
+import com.tencent.devops.store.pojo.common.enums.ServiceScopeEnum
 import com.tencent.devops.store.pojo.common.version.StoreShowVersionInfo
 
 @Suppress("ALL")
@@ -56,29 +56,16 @@ interface MarketAtomService {
      */
     fun mainPageList(
         userId: String,
-        page: Int?,
-        pageSize: Int?,
-        urlProtocolTrim: Boolean = false
+        page: Int? = 1,
+        pageSize: Int? = 100,
+        urlProtocolTrim: Boolean = false,
+        serviceScope: ServiceScopeEnum? = null
     ): Result<List<MarketMainItem>>
 
     /**
      * 插件市场，查询插件列表
      */
-    fun list(
-        userId: String,
-        keyword: String?,
-        classifyCode: String?,
-        labelCode: String?,
-        score: Int?,
-        rdType: AtomTypeEnum?,
-        yamlFlag: Boolean?,
-        recommendFlag: Boolean?,
-        qualityFlag: Boolean?,
-        sortType: MarketAtomSortTypeEnum?,
-        page: Int?,
-        pageSize: Int?,
-        urlProtocolTrim: Boolean = false
-    ): MarketAtomResp
+    fun list(query: MarketAtomListQuery): MarketAtomResp
 
     /**
      * 根据用户和插件名称获取插件信息
@@ -93,17 +80,21 @@ interface MarketAtomService {
     /**
      * 根据插件版本ID获取版本基本信息、发布信息
      */
-    fun getAtomById(atomId: String, userId: String): Result<AtomVersion?>
+    fun getAtomById(atomId: String, userId: String, serviceScope: ServiceScopeEnum? = null): Result<AtomVersion?>
 
     /**
      * 根据插件标识获取插件最新、正式版本息
      */
-    fun getAtomByCode(userId: String, atomCode: String): Result<AtomVersion?>
+    fun getAtomByCode(userId: String, atomCode: String, serviceScope: ServiceScopeEnum? = null): Result<AtomVersion?>
 
     /**
      * 根据标识获取最新版本信息（若最新版本为测试中，取最新版本，否则取最新正式版本）
      */
-    fun getNewestAtomByCode(userId: String, atomCode: String): Result<AtomVersion?>
+    fun getNewestAtomByCode(
+        userId: String,
+        atomCode: String,
+        serviceScope: ServiceScopeEnum? = null
+    ): Result<AtomVersion?>
 
     /**
      * 安装插件到项目

@@ -1,0 +1,74 @@
+﻿package com.tencent.devops.environment.api
+
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.environment.pojo.op.CreateAgent
+import com.tencent.devops.environment.pojo.op.CreateGateWayConfig
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
+import jakarta.ws.rs.Consumes
+import jakarta.ws.rs.GET
+import jakarta.ws.rs.HeaderParam
+import jakarta.ws.rs.POST
+import jakarta.ws.rs.Path
+import jakarta.ws.rs.Produces
+import jakarta.ws.rs.QueryParam
+import jakarta.ws.rs.core.MediaType
+
+@Tag(name = "OP_CREATE", description = "创作环境管理")
+@Path("/op/create")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface OpCreateResource {
+    @Operation(summary = "删除节点")
+    @POST
+    @Path("/delete_create_node")
+    fun deleteNodes(
+        @Parameter(description = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "工作空间名称", required = true)
+        @QueryParam("workspaceName")
+        workspaceName: String
+    )
+
+    @Operation(summary = "刷新创作流节点别名")
+    @GET
+    @Path("/refresh_create_node_display_name")
+    fun refreshCreateNodeDisplayName(
+        @Parameter(description = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String
+    )
+
+    @Operation(summary = "获取创作流安装配置")
+    @GET
+    @Path("/get_create_install_config")
+    fun getCreateInstallConfig(
+        @Parameter(description = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String
+    ): CreateGateWayConfig?
+
+    @Operation(summary = "设置创作流安装配置")
+    @POST
+    @Path("/set_create_install_config")
+    fun setCreateInstallConfig(
+        @Parameter(description = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        data: CreateGateWayConfig
+    )
+
+    @Operation(summary = "添加创作流节点，给自运维虾用的")
+    @POST
+    @Path("/addCreateNode")
+    fun addCreateNode(
+        @QueryParam("userId")
+        userId: String,
+        @QueryParam("projectId")
+        projectId: String,
+        @QueryParam("workspaceName")
+        workspaceName: String
+    ): CreateAgent?
+}

@@ -1,0 +1,6 @@
+.loadingMore {
+  display: flex;
+  height: 36px;
+  justify-content: center;
+  align-items: center;
+}

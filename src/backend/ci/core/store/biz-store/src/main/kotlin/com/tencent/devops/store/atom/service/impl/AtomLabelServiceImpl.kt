@@ -32,6 +32,7 @@ import com.tencent.devops.store.pojo.common.KEY_ID
 import com.tencent.devops.store.pojo.common.label.Label
 import com.tencent.devops.store.atom.service.AtomLabelService
 import com.tencent.devops.store.common.service.LabelService
+import com.tencent.devops.store.pojo.common.enums.ServiceScopeEnum
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -48,14 +49,14 @@ class AtomLabelServiceImpl @Autowired constructor(
     private val labelService: LabelService
 ) : AtomLabelService {
 
-    override fun getLabelsByAtomId(atomId: String): List<Label>? {
-        return getLabelsByAtomIds(setOf(atomId))?.get(atomId)
+    override fun getLabelsByAtomId(atomId: String, serviceScope: ServiceScopeEnum?): List<Label>? {
+        return getLabelsByAtomIds(setOf(atomId), serviceScope)?.get(atomId)
     }
 
-    override fun getLabelsByAtomIds(atomIds: Set<String>): Map<String, List<Label>>? {
+    override fun getLabelsByAtomIds(atomIds: Set<String>, serviceScope: ServiceScopeEnum?): Map<String, List<Label>>? {
         var atomLabelInfoMap: MutableMap<String, MutableList<Label>>? = null
-        // 批量查询插件标签信息
-        val atomLabelRecords = atomLabelRelDao.getLabelsByAtomIds(dslContext, atomIds)
+        // 批量查询插件标签信息（支持服务范围过滤）
+        val atomLabelRecords = atomLabelRelDao.getLabelsByAtomIds(dslContext, atomIds, serviceScope)
         atomLabelRecords?.forEach { atomLabelRecord ->
             if (atomLabelInfoMap == null) {
                 atomLabelInfoMap = mutableMapOf()

@@ -39,5 +39,13 @@ data class PipelineTemplateInstanceItemUpdate(
     @get:Schema(title = "流水线版本名称", required = true)
     val pipelineVersionName: String? = null,
     @get:Schema(title = "实例化错误信息", required = true)
-    val errorMessage: String? = null
+    val errorMessage: String? = null,
+    @get:Schema(title = "实例化前流水线版本", required = false)
+    val beforePipelineVersion: Int? = null,
+    @get:Schema(title = "实例化后流水线版本", required = false)
+    val afterPipelineVersion: Int? = null,
+    @get:Schema(title = "实例化前模板版本", required = false)
+    val beforeTemplateVersion: Long? = null,
+    @get:Schema(title = "实例化后模板版本", required = false)
+    val afterTemplateVersion: Long? = null
 )

@@ -17,16 +17,22 @@ import com.tencent.devops.common.pipeline.pojo.TemplateVariable
 import com.tencent.devops.common.pipeline.pojo.cascade.BuildCascadeProps
 import com.tencent.devops.common.pipeline.pojo.cascade.RepoRefCascadeParam
 import com.tencent.devops.common.pipeline.pojo.element.Element
+import com.tencent.devops.common.pipeline.pojo.element.atom.PipelineCheckFailedErrors
+import com.tencent.devops.common.pipeline.pojo.element.atom.PipelineCheckFailedMsg
+import com.tencent.devops.common.pipeline.pojo.element.atom.PipelineCheckFailedReason
 import com.tencent.devops.common.pipeline.pojo.element.trigger.TimerTriggerElement
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSettingGroupType
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_ELEMENT_CHECK_FAILED
 import com.tencent.devops.process.engine.utils.PipelineUtils.getFixedStages
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateResource
 import com.tencent.devops.process.utils.FIXVERSION
 import com.tencent.devops.process.utils.MAJORVERSION
 import com.tencent.devops.process.utils.MINORVERSION
 import org.slf4j.LoggerFactory
+import org.springframework.dao.DuplicateKeyException
 
 /**
  *  模板实例工具类
@@ -73,7 +79,8 @@ object TemplateInstanceUtil {
         val triggerContainer = templateTrigger.copy(
             buildNo = buildNo,
             elements = triggerElements,
-            params = pipelineParams
+            params = pipelineParams.toMutableList(),
+            templateParams = null
         )
 
         return Model(
@@ -84,8 +91,10 @@ object TemplateInstanceUtil {
             instanceFromTemplate = true,
             staticViews = staticViews,
             templateId = templateResource.templateId,
+            srcTemplateId = templateResource.srcTemplateId,
             template = template,
-            overrideTemplateField = overrideTemplateField
+            overrideTemplateField = overrideTemplateField,
+            publicVarGroups = templateModel.publicVarGroups
         )
     }
 
@@ -160,7 +169,8 @@ object TemplateInstanceUtil {
         return templateTrigger.copy(
             buildNo = buildNo,
             elements = triggerElements,
-            params = pipelineParams
+            params = pipelineParams.toMutableList(),
+            templateParams = null
         )
     }
 
@@ -282,9 +292,18 @@ object TemplateInstanceUtil {
         pipelineParam: BuildFormProperty?,
         overrideTemplateField: TemplateInstanceField?
     ): BuildFormProperty {
-        // 如果没有对应的流水线参数，直接返回模板参数
+        // 如果没有传入流水线参数，也直接返回模板参数
         if (pipelineParam == null) {
-            return templateParam
+            // 常量或其他变量直接使用模版的值;入参类型(required=true)则用asInstanceInput覆盖required
+            val asInstanceInput = templateParam.asInstanceInput
+            return if (templateParam.constant == true || !templateParam.required || asInstanceInput == null) {
+                templateParam.copy(asInstanceInput = null)
+            } else {
+                templateParam.copy(
+                    required = asInstanceInput,
+                    asInstanceInput = null
+                )
+            }
         }
 
         val overrideParam = overrideTemplateField?.overrideParam(templateParam.id) == true
@@ -297,7 +316,9 @@ object TemplateInstanceUtil {
             overrideBuildNo = overrideBuildNo
         )
 
+        val name = templateParam.name ?: templateParam.id
         return templateParam.copy(
+            name = name,
             defaultValue = defaultValue,
             required = pipelineParam.required,
             asInstanceInput = null
@@ -308,17 +329,16 @@ object TemplateInstanceUtil {
         templateVariableMap: Map<String, TemplateVariable>,
         templateParam: BuildFormProperty
     ): BuildFormProperty {
-        // 如果是常量参数或者其他变量,则直接反正模版参数
-        if (templateParam.constant == true || !templateParam.required) {
-            return templateParam
-        }
         val templateVariable = templateVariableMap[templateParam.id] ?: run {
-            // 如果yaml中变量没有声明,表示值和入参都跟随模版,不能直接使用模版的require,应该使用asInstanceInput
+            // 常量或其他变量直接使用模版的值;入参类型(required=true)则用asInstanceInput覆盖required
             val asInstanceInput = templateParam.asInstanceInput
-            return if (asInstanceInput == null) {
-                templateParam
+            return if (templateParam.constant == true || !templateParam.required || asInstanceInput == null) {
+                templateParam.copy(asInstanceInput = null)
             } else {
-                templateParam.copy(required = asInstanceInput)
+                templateParam.copy(
+                    required = asInstanceInput,
+                    asInstanceInput = null
+                )
             }
         }
 
@@ -326,8 +346,10 @@ object TemplateInstanceUtil {
             templateParam = templateParam,
             templateVariable = templateVariable
         )
+        val name = templateParam.name ?: templateParam.id
         // 用templateVariable覆盖模板的默认值
         return templateParam.copy(
+            name = name,
             defaultValue = defaultValue,
             required = templateVariable.allowModifyAtStartup ?: templateParam.required,
             asInstanceInput = null
@@ -393,12 +415,15 @@ object TemplateInstanceUtil {
         }
         return when (triggerElement) {
             is TimerTriggerElement -> {
-                triggerElement.copy(
+                val newTimeTrigger = triggerElement.copy(
                     advanceExpression = triggerConfig.cron ?: triggerElement.advanceExpression,
                     startParams = triggerConfig.variables?.let {
                         JsonUtil.toJson(it, false)
                     } ?: triggerElement.startParams
                 )
+                // 因为TimerTriggerElement是data class对象,copy时不会复制父类的属性,所以需要重新赋值
+                newTimeTrigger.additionalOptions = triggerElement.additionalOptions
+                newTimeTrigger
             }
 
             else -> triggerElement
@@ -499,7 +524,10 @@ object TemplateInstanceUtil {
         } else {
             templateBuildNo.buildNo
         }
-        return pipelineBuildNo.copy(buildNo = buildNo)
+        return pipelineBuildNo.copy(
+            buildNo = buildNo,
+            asInstanceInput = null
+        )
     }
 
     @Suppress("CyclomaticComplexMethod")
@@ -516,19 +544,20 @@ object TemplateInstanceUtil {
         pipelineParams.forEach { param ->
             when (param.id) {
                 MAJORVERSION -> param.defaultValue =
-                    recommendedVersion.major ?: templateParamMap[MAJORVERSION]?.defaultValue ?: 0
+                    recommendedVersion.major?.toString() ?: templateParamMap[MAJORVERSION]?.defaultValue ?: "0"
 
                 MINORVERSION -> param.defaultValue =
-                    recommendedVersion.minor ?: templateParamMap[MINORVERSION]?.defaultValue ?: 0
+                    recommendedVersion.minor?.toString() ?: templateParamMap[MINORVERSION]?.defaultValue ?: "0"
 
                 FIXVERSION -> param.defaultValue =
-                    recommendedVersion.fix ?: templateParamMap[FIXVERSION]?.defaultValue ?: 0
+                    recommendedVersion.fix?.toString() ?: templateParamMap[FIXVERSION]?.defaultValue ?: "0"
             }
         }
 
         return templateBuildNo.copy(
             required = recommendedVersion.allowModifyAtStartup ?: templateBuildNo.required,
-            buildNo = recommendedVersion.buildNo?.buildNo ?: templateBuildNo.buildNo
+            buildNo = recommendedVersion.buildNo?.buildNo ?: templateBuildNo.buildNo,
+            asInstanceInput = null
         )
     }
 
@@ -576,7 +605,7 @@ object TemplateInstanceUtil {
         val templateVariables = mutableListOf<TemplateVariable>()
         val pipelineParamMap = pipelineParams.associateBy { it.id }
         templateParams.filterNot {
-            it.constant == true || !it.required || VERSION_PARAMS.contains(it.id)
+            it.constant == true || !it.required || PipelineUtils.VERSION_PARAMS.contains(it.id)
         }.forEach { templateParam ->
             val pipelineParam = pipelineParamMap[templateParam.id] ?: return@forEach
             // 是否覆盖模版的值
@@ -639,10 +668,32 @@ object TemplateInstanceUtil {
                     pipelineProps = pipelineParam.cascadeProps,
                     templateProps = templateParam.cascadeProps
                 )
-                pipelineParam.options = templateParam.options
+                pipelineParam.options = mergeOptions(
+                    templateOptions = templateParam.options,
+                    defaultValue = pipelineParam.defaultValue
+                )
+                pipelineParam.searchUrl = templateParam.searchUrl
+                pipelineParam.replaceKey = templateParam.replaceKey
             }
             pipelineParam
         }
+    }
+
+    /**
+     * 合并模版options与流水线默认值:
+     * 如果模版options中不包含流水线的默认值,则将默认值追加到options中
+     */
+    private fun mergeOptions(
+        templateOptions: List<BuildFormValue>?,
+        defaultValue: Any
+    ): List<BuildFormValue>? {
+        if (templateOptions == null) return null
+        if (defaultValue !is String) return templateOptions
+        if (templateOptions.any { it.key == defaultValue }) return templateOptions
+        val merged = mutableListOf<BuildFormValue>()
+        merged.addAll(templateOptions)
+        merged.add(BuildFormValue(key = defaultValue, value = defaultValue))
+        return merged
     }
 
     /**
@@ -684,38 +735,29 @@ object TemplateInstanceUtil {
      *
      * 断言参数: 转换的的参数应该与前端传入参数值和属性相同
      */
-    fun assertParams(
+    fun assertInstanceParamProps(
         projectId: String,
         pipelineId: String,
         inputParams: List<BuildFormProperty>,
         instanceParams: List<BuildFormProperty>
     ) {
-        if (inputParams.size != instanceParams.size) {
-            logger.warn(
-                "input params size is not equal to instance params size|$projectId|$pipelineId|" +
-                        "${inputParams.size}|${instanceParams.size}"
-            )
-            throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ERROR_INSTANCE_PARAM_COUNT_EXCEPTION
-            )
-        }
         val requiredExceptions = mutableListOf<String>()
         val constantExceptions = mutableListOf<String>()
         val defaultValueExceptions = mutableListOf<String>()
         instanceParams.forEach { instanceParam ->
-            val inputParam = inputParams.find { it.id == instanceParam.id } ?: run {
-                logger.warn("input param is not found|$projectId|$pipelineId|${instanceParam.id}")
-                throw ErrorCodeException(
-                    errorCode = ProcessMessageCode.ERROR_INSTANCE_PARAM_PROP_EXCEPTION
-                )
-            }
-            if (inputParam.required != instanceParam.required) {
+            val inputParam = inputParams.find { it.id == instanceParam.id } ?: return@forEach
+            // 常量和推荐版本号因为历史原因,required的值可能不准,所以不校验
+            if (
+                inputParam.required != instanceParam.required &&
+                instanceParam.id !in PipelineUtils.VERSION_PARAMS &&
+                instanceParam.constant != true
+            ) {
                 requiredExceptions.add(instanceParam.id)
             }
             if (inputParam.constant != instanceParam.constant) {
                 constantExceptions.add(instanceParam.id)
             }
-            if (inputParam.defaultValue != instanceParam.defaultValue) {
+            if (!isSameDefaultValue(inputParam, instanceParam)) {
                 defaultValueExceptions.add(instanceParam.id)
             }
         }
@@ -748,6 +790,117 @@ object TemplateInstanceUtil {
         }
     }
 
+    private fun isSameDefaultValue(
+        inputParam: BuildFormProperty,
+        instanceParam: BuildFormProperty
+    ): Boolean {
+        if (inputParam.defaultValue == instanceParam.defaultValue) {
+            return true
+        }
+        // 历史数据里 流水线boolean 默认值可能以字符串形式存储，需要按布尔值比较。
+        if (
+            inputParam.type == BuildFormPropertyType.BOOLEAN &&
+            inputParam.defaultValue is String
+        ) {
+            val defaultValue = inputParam.defaultValue as String
+            return defaultValue.toBoolean() == instanceParam.defaultValue
+        }
+        return false
+    }
+
+    /**
+     * 校验流水线"其他变量"（required=false）在实例化时是否被异常覆盖。
+     *
+     * 调用方需在调用前自行获取 beforeTemplateParams（旧模板参数）和 beforePipelineParams（旧流水线参数），
+     * 本方法只负责纯参数比对逻辑。
+     *
+     * 检测条件（三者同时满足才视为异常）：
+     * 1. 模板未改动该参数（旧模板默认值 == 新模板默认值）
+     * 2. 流水线有自定义值（旧流水线默认值 != 旧模板默认值）
+     * 3. 实例化后该值被改掉（instanceParam 默认值 != 旧流水线默认值）
+     *
+     * @param projectId            项目ID（用于日志）
+     * @param pipelineId           流水线ID（用于日志）
+     * @param beforeTemplateParams 实例化前的旧模板参数列表
+     * @param currentTemplateParams 本次实例化使用的新模板参数列表
+     * @param beforePipelineParams 实例化前的旧流水线参数列表
+     * @param instanceParams       实例化后生成的流水线参数列表
+     */
+    fun assertOptionalParamsNotOverridden(
+        projectId: String,
+        pipelineId: String,
+        beforeTemplateParams: List<BuildFormProperty>,
+        currentTemplateParams: List<BuildFormProperty>,
+        beforePipelineParams: List<BuildFormProperty>,
+        instanceParams: List<BuildFormProperty>
+    ) {
+        val beforeTemplateParamMap = beforeTemplateParams.associateBy { it.id }
+        val currentTemplateParamMap = currentTemplateParams.associateBy { it.id }
+        val instanceParamMap = instanceParams.associateBy { it.id }
+        val beforePipelineParamMap = beforePipelineParams.associateBy { it.id }
+
+        val overriddenParamIds = beforeTemplateParamMap.values
+            .filter { !it.required && it.id !in PipelineUtils.VERSION_PARAMS }
+            .mapNotNull { beforeTemplateParam ->
+                val paramId = beforeTemplateParam.id
+                val currentTemplateParam = currentTemplateParamMap[paramId] ?: return@mapNotNull null
+                val beforePipelineParam = beforePipelineParamMap[paramId] ?: return@mapNotNull null
+                val instanceParam = instanceParamMap[paramId] ?: return@mapNotNull null
+                val templateParamUnchanged =
+                    beforeTemplateParam.defaultValue == currentTemplateParam.defaultValue
+                val pipelineHasCustomValue =
+                    beforePipelineParam.defaultValue != beforeTemplateParam.defaultValue
+                val instanceValueChanged =
+                    instanceParam.defaultValue != beforePipelineParam.defaultValue
+                paramId.takeIf { templateParamUnchanged && pipelineHasCustomValue && instanceValueChanged }
+            }
+
+        if (overriddenParamIds.isNotEmpty()) {
+            logger.warn(
+                "optional params overridden during template instance|$projectId|$pipelineId|$overriddenParamIds"
+            )
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_TEMPLATE_INSTANCE_OPTIONAL_PARAM_OVERRIDDEN,
+                params = arrayOf(overriddenParamIds.joinToString { "[$it]" })
+            )
+        }
+    }
+
+    /**
+     * 将模板实例化过程中的异常转换为可展示的失败原因
+     */
+    fun translateInstanceException(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        exception: Throwable
+    ): PipelineCheckFailedReason {
+        logger.warn("Failed to instance template|$userId|$projectId|$pipelineId|${exception.message}")
+        return when (exception) {
+            is DuplicateKeyException -> {
+                PipelineCheckFailedMsg("duplicate!")
+            }
+
+            is ErrorCodeException -> {
+                val message = I18nUtil.generateResponseDataObject(
+                    messageCode = exception.errorCode,
+                    params = exception.params,
+                    data = null,
+                    defaultMessage = exception.defaultMessage
+                ).message ?: exception.defaultMessage ?: "unknown!"
+                // ERROR_PIPELINE_ELEMENT_CHECK_FAILED输出的是一个json,需要格式化输出
+                if (exception.errorCode == ERROR_PIPELINE_ELEMENT_CHECK_FAILED) {
+                    JsonUtil.to(message, PipelineCheckFailedErrors::class.java)
+                } else {
+                    PipelineCheckFailedMsg(message)
+                }
+            }
+
+            else -> {
+                PipelineCheckFailedMsg(exception.message ?: "template instance fail")
+            }
+        }
+    }
+
     private val logger = LoggerFactory.getLogger(TemplateInstanceUtil::class.java)
-    private val VERSION_PARAMS = listOf(MAJORVERSION, MINORVERSION, FIXVERSION)
 }

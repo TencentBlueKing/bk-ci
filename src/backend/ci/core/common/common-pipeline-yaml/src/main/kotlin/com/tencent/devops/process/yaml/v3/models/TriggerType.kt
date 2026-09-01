@@ -38,7 +38,8 @@ enum class TriggerType(val alis: String) {
     CODE_P4("p4"),
     BASE("base"),
     SCM_GIT("scm_git"),
-    SCM_SVN("scm_svn")
+    SCM_SVN("scm_svn"),
+    TAPD("tapd")
     ;
 
     companion object {

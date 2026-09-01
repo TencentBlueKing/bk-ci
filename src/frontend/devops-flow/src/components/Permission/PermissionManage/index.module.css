@@ -1,0 +1,10 @@
+/**
+ * PermissionManage Component Styles
+ * Uses CSS variables from /src/styles/variables.css
+ */
+
+.permissionManage {
+  display: flex;
+  height: 100%;
+  box-shadow: var(--shadow-sm);
+}

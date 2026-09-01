@@ -175,7 +175,7 @@ class YamlIndexService @Autowired constructor(
             TransferVMBaseOS.BUILD_LESS
         } else {
             val (_, os) = dispatchTransfer.makeDispatchType(Job(runsOn = runsOn), null)
-            TransferVMBaseOS.valueOf(os.name)
+            os?.name?.let { TransferVMBaseOS.valueOf(it) }
         }
         if (nodeIndex?.key == PreJob::steps.name) {
             val steps = job[PreJob::steps.name] as List<Any>

@@ -174,11 +174,22 @@
 
                 const apiFun = {
                     atom: this.requestMarketAtom,
+                    creative: this.requestMarketAtom,
                     template: this.requestMarketTemplate,
                     image: this.requestMarketImage,
                     ide: this.requestMarketIDE,
                     service: this.requestMarketService
                 }
+                
+                // 为 atom 和 creative 类型添加 serviceScope 参数
+                const serviceScopeMap = {
+                    atom: 'PIPELINE',
+                    creative: 'CREATIVE_STREAM'
+                }
+                if (serviceScopeMap[pipeType]) {
+                    postData.serviceScope = serviceScopeMap[pipeType]
+                }
+                
                 if (!Object.keys(apiFun).includes(pipeType) || typeof apiFun[pipeType] !== 'function') {
                     this.$bkMessage({ message: this.$t('store.typeError'), theme: 'error' })
                     return

@@ -32,7 +32,7 @@ import com.tencent.devops.common.api.constant.CommonMessageCode.PARAMETER_IS_EMP
 import com.tencent.devops.common.api.constant.DANG
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.pipeline.type.DispatchType
-import com.tencent.devops.common.pipeline.type.agent.AgentType
+import com.tencent.devops.common.pipeline.type.agent.AgentDispatchType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentDockerInfo
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentEnvDispatchType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentIDDispatchType
@@ -219,7 +219,7 @@ enum class PoolType {
                     envName = pool.envName,
                     envProjectId = pool.envProjectId,
                     workspace = pool.workspace,
-                    agentType = AgentType.NAME,
+                    agentType = AgentDispatchType.NAME,
                     dockerInfo = ThirdPartyAgentDockerInfo(
                         image = pool.container ?: "",
                         credential = null,
@@ -234,7 +234,7 @@ enum class PoolType {
                     envName = pool.envId,
                     envProjectId = pool.envProjectId,
                     workspace = pool.workspace,
-                    agentType = AgentType.ID,
+                    agentType = AgentDispatchType.ID,
                     dockerInfo = ThirdPartyAgentDockerInfo(
                         image = pool.container ?: "",
                         credential = null,
@@ -248,7 +248,7 @@ enum class PoolType {
                 return ThirdPartyAgentIDDispatchType(
                     displayName = pool.agentId,
                     workspace = pool.workspace,
-                    agentType = AgentType.ID,
+                    agentType = AgentDispatchType.ID,
                     dockerInfo = ThirdPartyAgentDockerInfo(
                         image = pool.container ?: "",
                         credential = null,
@@ -262,7 +262,7 @@ enum class PoolType {
                 return ThirdPartyAgentIDDispatchType(
                     displayName = pool.agentName!!,
                     workspace = pool.workspace,
-                    agentType = AgentType.NAME,
+                    agentType = AgentDispatchType.NAME,
                     dockerInfo = ThirdPartyAgentDockerInfo(
                         image = pool.container ?: "",
                         credential = null,

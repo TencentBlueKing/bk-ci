@@ -4,9 +4,10 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.pojo.transfer.Resources
 import com.tencent.devops.common.pipeline.pojo.transfer.ResourcesPools
-import com.tencent.devops.common.pipeline.type.agent.AgentType
+import com.tencent.devops.common.pipeline.type.agent.AgentDispatchType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentDispatch
 import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.utils.PipelineVarUtil
 import com.tencent.devops.process.yaml.v3.models.PreTemplateScriptBuildYamlV3Parser
 import com.tencent.devops.process.yaml.v3.models.job.Job
 import com.tencent.devops.process.yaml.v3.models.job.PreJob
@@ -73,7 +74,7 @@ object PipelineTransferAspectLoader {
                     val job = jp.modelJob()
                     if (job != null && job is VMBuildContainer && job.dispatchType is ThirdPartyAgentDispatch) {
                         when ((job.dispatchType as ThirdPartyAgentDispatch).agentType) {
-                            AgentType.REUSE_JOB_ID -> {
+                            AgentDispatchType.REUSE_JOB_ID -> {
                                 jobsNotCheck[job.jobId!!] = (job.dispatchType as ThirdPartyAgentDispatch).value
                             }
 
@@ -107,7 +108,8 @@ object PipelineTransferAspectLoader {
                         stack.add(jobId)
 
                         val childJobId = map[jobId]
-                        if (childJobId != null && dfs(childJobId)) {
+                        // 复用目标为变量时无法静态校验，直接忽略，避免误报"依赖节点不存在"
+                        if (childJobId != null && !PipelineVarUtil.isVar(childJobId) && dfs(childJobId)) {
                             return true
                         }
                         if (childJobId == null && jobId !in checked) {
@@ -119,6 +121,10 @@ object PipelineTransferAspectLoader {
                     }
 
                     map.forEach { (k, v) ->
+                        // 保存时不校验变量
+                        if (PipelineVarUtil.isVar(v)) {
+                            return@forEach
+                        }
                         if (!visited.contains(k) && dfs(k)) {
                             throw ErrorCodeException(
                                 errorCode = ProcessMessageCode.ERROR_AGENT_REUSE_MUTEX_DEP_NULL_NODE,

@@ -35,5 +35,7 @@ data class WeworkGroupMessageTemplate(
     @get:Schema(title = "标题", required = false)
     var title: String?,
     @get:Schema(title = "内容", required = true)
-    var body: String
+    var body: String,
+    @get:Schema(title = "发送人", required = true)
+    var sender: String?,
 )

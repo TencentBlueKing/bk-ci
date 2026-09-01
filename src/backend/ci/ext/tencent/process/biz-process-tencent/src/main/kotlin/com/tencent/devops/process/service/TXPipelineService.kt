@@ -71,7 +71,7 @@ import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAto
 import com.tencent.devops.common.pipeline.type.BuildType
 import com.tencent.devops.common.pipeline.type.DispatchType
 import com.tencent.devops.common.pipeline.type.StoreDispatchType
-import com.tencent.devops.common.pipeline.type.agent.AgentType
+import com.tencent.devops.common.pipeline.type.agent.AgentDispatchType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentEnvDispatchType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentIDDispatchType
 import com.tencent.devops.common.pipeline.type.devcloud.PublicDevCloudDispathcType
@@ -768,7 +768,7 @@ class TXPipelineService @Autowired constructor(
                     ) + "! \n"
         )
         return if (dispatchType is ThirdPartyAgentEnvDispatchType) {
-            val agentsResult = if (dispatchType.agentType == AgentType.ID) {
+            val agentsResult = if (dispatchType.agentType == AgentDispatchType.ID) {
                 client.get(ServiceThirdPartyAgentResource::class)
                     .getAgentsByEnvId(projectId, dispatchType.value)
             } else {
@@ -801,13 +801,13 @@ class TXPipelineService @Autowired constructor(
                 type = PoolType.SelfHosted,
                 agentName = null,
                 agentId = null,
-                envName = if (dispatchType.agentType == AgentType.NAME) {
+                envName = if (dispatchType.agentType == AgentDispatchType.NAME) {
                     dispatchType.value
                 } else {
                     null
                 },
                 envProjectId = dispatchType.envProjectId,
-                envId = if (dispatchType.agentType == AgentType.ID) {
+                envId = if (dispatchType.agentType == AgentDispatchType.ID) {
                     dispatchType.value
                 } else {
                     null
@@ -836,7 +836,7 @@ class TXPipelineService @Autowired constructor(
             ) + "！ \n"
         )
         return if (dispatchType is ThirdPartyAgentIDDispatchType) {
-            val agentResult = if (dispatchType.agentType == AgentType.ID) {
+            val agentResult = if (dispatchType.agentType == AgentDispatchType.ID) {
                 client.get(ServiceThirdPartyAgentResource::class)
                     .getAgentById(projectId, dispatchType.value)
             } else {
@@ -865,12 +865,12 @@ class TXPipelineService @Autowired constructor(
                 performanceConfigId = null,
                 env = null,
                 type = PoolType.SelfHosted,
-                agentName = if (dispatchType.agentType == AgentType.NAME) {
+                agentName = if (dispatchType.agentType == AgentDispatchType.NAME) {
                     dispatchType.value
                 } else {
                     null
                 },
-                agentId = if (dispatchType.agentType == AgentType.ID) {
+                agentId = if (dispatchType.agentType == AgentDispatchType.ID) {
                     dispatchType.value
                 } else {
                     null

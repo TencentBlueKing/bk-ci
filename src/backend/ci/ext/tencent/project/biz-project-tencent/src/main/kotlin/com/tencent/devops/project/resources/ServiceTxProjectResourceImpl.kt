@@ -40,6 +40,7 @@ import com.tencent.devops.project.api.pojo.PipelinePermissionInfo
 import com.tencent.devops.project.api.pojo.ProjectProductInfo
 import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
 import com.tencent.devops.project.pojo.AddManagerRequest
+import com.tencent.devops.project.pojo.CrosProductVO
 import com.tencent.devops.project.pojo.OperationalProductVO
 import com.tencent.devops.project.pojo.ProjectCreateExtInfo
 import com.tencent.devops.project.pojo.ProjectCreateInfo
@@ -54,6 +55,7 @@ import com.tencent.devops.project.pojo.enums.ProjectValidateType
 import com.tencent.devops.project.service.ProjectExtPermissionService
 import com.tencent.devops.project.service.ProjectLocalService
 import com.tencent.devops.project.service.ProjectMemberService
+import com.tencent.devops.project.service.ProjectOperationalProductService
 import com.tencent.devops.project.service.ProjectService
 import com.tencent.devops.project.service.ProjectTagService
 import com.tencent.devops.project.service.ProjectTxInfoService
@@ -74,7 +76,8 @@ class ServiceTxProjectResourceImpl @Autowired constructor(
     private val projectMemberService: ProjectMemberService,
     private val projectTagService: ProjectTagService,
     private val projectTxService: ProjectTxInfoService,
-    private val remoteDevService: ProjectRemoteDevService
+    private val remoteDevService: ProjectRemoteDevService,
+    private val projectOperationalProductService: ProjectOperationalProductService
 ) : ServiceTxProjectResource {
 
     @Value("\${tag.auto:#{null}}")
@@ -210,22 +213,25 @@ class ServiceTxProjectResourceImpl @Autowired constructor(
         )
     }
 
-    override fun list(userId: String?, accessToken: String?): Result<List<ProjectVO>> {
+    override fun list(userId: String?): Result<List<ProjectVO>> {
         return Result(
             projectService.list(
                 userId = userId ?: "",
-                accessToken = accessToken,
                 unApproved = false
             )
         )
     }
 
-    override fun getPreUserProject(userId: String, accessToken: String): Result<ProjectVO?> {
-        return Result(projectLocalService.getOrCreatePreProject(userId = userId, accessToken = accessToken))
+    override fun getPreUserProject(userId: String): Result<ProjectVO?> {
+        return Result(projectLocalService.getOrCreatePreProject(userId = userId))
     }
 
     override fun getRemoteDevUserProject(userId: String): Result<ProjectVO?> {
         return Result(projectLocalService.getOrCreateRemoteDevProject(userId))
+    }
+
+    override fun getOrCreatePersonalProject(userId: String, description: String?): Result<ProjectVO> {
+        return Result(projectLocalService.getOrCreatePersonalProject(userId, description))
     }
 
     override fun getOrCreateRdsProject(userId: String, projectId: String, projectName: String): Result<ProjectVO?> {
@@ -234,7 +240,6 @@ class ServiceTxProjectResourceImpl @Autowired constructor(
 
     override fun create(
         userId: String,
-        accessToken: String,
         projectCreateInfo: ProjectCreateInfo,
         routerTag: String?
     ): Result<String> {
@@ -250,7 +255,6 @@ class ServiceTxProjectResourceImpl @Autowired constructor(
 
         val createResult = projectService.create(
             userId = userId,
-            accessToken = accessToken,
             projectCreateInfo = projectCreateInfo,
             createExtInfo = createExtInfo,
             projectChannel = channelCode
@@ -268,13 +272,11 @@ class ServiceTxProjectResourceImpl @Autowired constructor(
     }
 
     override fun verifyUserProjectPermission(
-        accessToken: String,
         projectCode: String,
         userId: String
     ): Result<Boolean> {
         return Result(
             projectExtPermissionService.verifyUserProjectPermission(
-                accessToken = accessToken,
                 projectCode = projectCode,
                 userId = userId
             )
@@ -448,6 +450,10 @@ class ServiceTxProjectResourceImpl @Autowired constructor(
 
     override fun getProductByProductId(productId: Int): Result<OperationalProductVO?> {
         return Result(projectService.getProductByProductId(productId))
+    }
+
+    override fun getKpiProducts(kpiName: String?): Result<List<CrosProductVO>> {
+        return Result(projectOperationalProductService.getKpiProducts(kpiName))
     }
 
     companion object {

@@ -68,7 +68,7 @@ class PipelineTemplateCompatibilityCreateReqConverter @Autowired constructor(
     ): PipelineTemplateVersionCreateContext {
         request as PipelineTemplateCompatibilityCreateReq
         with(request) {
-            logger.info("compatibility create converter:$userId|$projectId|$templateId|$version|$request")
+            logger.info("compatibility create converter:$userId|$projectId|$templateId|$version|$v1VersionName")
             if (templateId == null) {
                 throw IllegalArgumentException("templateId is null")
             }
@@ -121,7 +121,6 @@ class PipelineTemplateCompatibilityCreateReqConverter @Autowired constructor(
                 userId = userId,
                 projectId = projectId,
                 templateId = templateId,
-                v1VersionName = v1VersionName,
                 customVersionName = v1VersionName,
                 versionAction = PipelineVersionAction.CREATE_RELEASE,
                 pipelineTemplateInfo = pipelineTemplateInfo,

@@ -28,8 +28,24 @@
 package com.tencent.devops.environment.pojo.enums
 
 enum class EnvType {
+    // 部署环境
     DEV,
     TEST,
     PROD,
-    BUILD
+    // 构建环境
+    BUILD,
+    // 创作流
+    CREATE,
+    // 云桌面
+    DEVX,
+    ;
+
+    companion object {
+        fun noCreateMode(): List<EnvType> = listOf(DEV, TEST, PROD, BUILD, DEVX)
+    }
+}
+
+enum class EnvNodeType {
+    NODE,
+    TAG
 }

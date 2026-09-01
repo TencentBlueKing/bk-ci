@@ -39,6 +39,7 @@ import com.tencent.devops.process.pojo.template.TemplateListModel
 import com.tencent.devops.process.pojo.template.TemplateModelDetail
 import com.tencent.devops.process.pojo.template.TemplateType
 import com.tencent.devops.process.service.template.TemplateFacadeService
+import com.tencent.devops.process.service.template.v2.PipelineTemplateCompatibilityAdapter
 import com.tencent.devops.process.template.service.PipelineTemplateService
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -46,7 +47,8 @@ import org.springframework.beans.factory.annotation.Autowired
 @RestResource
 class ServicePTemplateResourceImpl @Autowired constructor(
     private val pipelineTemplateService: PipelineTemplateService,
-    private val templateFacadeService: TemplateFacadeService
+    private val templateFacadeService: TemplateFacadeService,
+    private val templateCompatibilityAdapter: PipelineTemplateCompatibilityAdapter
 ) : ServicePTemplateResource {
 
     override fun addMarketTemplate(
@@ -107,7 +109,7 @@ class ServicePTemplateResourceImpl @Autowired constructor(
         pageSize: Int?
     ): Result<TemplateListModel> {
         return Result(
-            templateFacadeService.listTemplate(
+            templateCompatibilityAdapter.listTemplate(
                 projectId = projectId,
                 userId = userId,
                 templateType = templateType,
@@ -128,7 +130,7 @@ class ServicePTemplateResourceImpl @Autowired constructor(
         versionName: String?
     ): Result<TemplateModelDetail> {
         return Result(
-            templateFacadeService.getTemplate(
+            templateCompatibilityAdapter.getTemplate(
                 projectId = projectId,
                 userId = userId,
                 templateId = templateId,
@@ -146,13 +148,9 @@ class ServicePTemplateResourceImpl @Autowired constructor(
         pageSize: Int?
     ): Result<OptionalTemplateList> {
         return Result(
-            templateFacadeService.listAllTemplate(
+            templateCompatibilityAdapter.listAllTemplates(
                 userId = userId,
-                projectId = projectId,
-                templateType = templateType,
-                templateIds = null,
-                page = page ?: 1,
-                pageSize = pageSize ?: 1000
+                projectId = projectId
             )
         )
     }

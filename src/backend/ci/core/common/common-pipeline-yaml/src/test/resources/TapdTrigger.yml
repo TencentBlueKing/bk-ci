@@ -1,0 +1,35 @@
+version: v3.0
+name: tapd-trigger-test
+on:
+  - type: tapd
+    workspace-id: "12345"
+    story:
+      id: trigger_story
+      action:
+        - create
+        - update
+      users:
+        - u1
+      owners:
+        - o1
+      labels:
+        - label1
+        - label2
+      priorities:
+        - high
+    bug:
+      id: trigger_bug
+      action:
+        - create
+stages:
+  - name: stage-1
+    jobs:
+      job1:
+        name: test-job
+        runs-on:
+          pool-name: docker
+        steps:
+          - name: test-step
+            uses: linuxScript@1.*
+            with:
+              script: "echo hello"

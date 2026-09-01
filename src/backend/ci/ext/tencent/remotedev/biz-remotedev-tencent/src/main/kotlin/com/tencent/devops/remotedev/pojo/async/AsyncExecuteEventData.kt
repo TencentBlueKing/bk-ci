@@ -3,6 +3,7 @@ package com.tencent.devops.remotedev.pojo.async
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.remotedev.config.async.AsyncExecuteEventType
+import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
 import com.tencent.devops.remotedev.pojo.job.PipelineParam
 import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyData
 
@@ -15,7 +16,7 @@ data class AsyncPipelineEvent(
     val projectId: String,
     val pipelineId: String,
     val values: Map<String, String>,
-    val channelCode: ChannelCode = ChannelCode.BS,
+    val channelCode: ChannelCode = ChannelCode.getRequestChannelCode(),
     val buildNo: Int? = null,
     val startType: StartType = StartType.SERVICE
 ) : AsyncExecuteEventData {
@@ -74,4 +75,14 @@ data class AsyncUserAuthCheck(
     val userId: String
 ) : AsyncExecuteEventData {
     override fun toType() = AsyncExecuteEventType.ASYNC_USER_AUTH_CHECK
+}
+
+data class AsyncUpdateHostMonitor(
+    val workspaceName: String,
+    val projectId: String,
+    val displayName: String,
+    val owner: String?,
+    val type: WorkspaceSystemType
+) : AsyncExecuteEventData {
+    override fun toType() = AsyncExecuteEventType.ASYNC_UPDATE_HOST_MONITOR
 }

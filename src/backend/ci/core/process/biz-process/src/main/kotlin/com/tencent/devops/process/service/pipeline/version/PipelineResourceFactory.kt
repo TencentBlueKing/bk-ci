@@ -36,6 +36,7 @@ import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.PipelineInstanceTypeEnum
 import com.tencent.devops.common.pipeline.enums.TemplateRefType
 import com.tencent.devops.common.pipeline.enums.VersionStatus
+import com.tencent.devops.common.pipeline.pojo.PipelineRunEnvOsChange
 import com.tencent.devops.common.pipeline.pojo.TemplateInstanceField
 import com.tencent.devops.common.pipeline.pojo.TemplateInstanceRecommendedVersion
 import com.tencent.devops.common.pipeline.pojo.TemplateInstanceTriggerConfig
@@ -48,7 +49,7 @@ import com.tencent.devops.process.engine.utils.TemplateInstanceUtil
 import com.tencent.devops.process.pojo.pipeline.PipelineBasicInfo
 import com.tencent.devops.process.pojo.pipeline.PipelineModelBasicInfo
 import com.tencent.devops.process.pojo.pipeline.PipelineTemplateInstanceBasicInfo
-import com.tencent.devops.process.pojo.pipeline.PipelineYamlVo
+import com.tencent.devops.process.pojo.pipeline.PipelineYamlFileInfo
 import com.tencent.devops.process.service.pipeline.PipelineModelParser
 import com.tencent.devops.process.service.template.v2.PipelineTemplateInfoService
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
@@ -83,6 +84,7 @@ class PipelineResourceFactory @Autowired constructor(
         )
     }
 
+    @Suppress("NestedBlockDepth")
     fun createPipelineModelBasicInfo(
         userId: String,
         projectId: String,
@@ -91,8 +93,10 @@ class PipelineResourceFactory @Autowired constructor(
         create: Boolean = true,
         versionStatus: VersionStatus? = VersionStatus.RELEASED,
         channelCode: ChannelCode,
-        yamlInfo: PipelineYamlVo? = null,
-        pipelineDialect: IPipelineDialect? = null
+        yamlFileInfo: PipelineYamlFileInfo? = null,
+        pipelineDialect: IPipelineDialect? = null,
+        runEnvOsChange: PipelineRunEnvOsChange? = null,
+        modelCarriedOver: Boolean = false
     ): PipelineModelBasicInfo {
         val triggerContainer = model.getTriggerContainer()
         var canManualStartup = false
@@ -122,8 +126,10 @@ class PipelineResourceFactory @Autowired constructor(
             create = create,
             versionStatus = versionStatus,
             channelCode = channelCode,
-            yamlInfo = yamlInfo,
-            pipelineDialect = pipelineDialect
+            yamlFileInfo = yamlFileInfo,
+            pipelineDialect = pipelineDialect,
+            runEnvOsChange = runEnvOsChange,
+            modelCarriedOver = modelCarriedOver
         )
         return PipelineModelBasicInfo(
             canManualStartup = canManualStartup,

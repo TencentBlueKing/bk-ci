@@ -39,19 +39,17 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/jaypipes/ghw"
 	"github.com/pkg/errors"
-
 	languageUtil "golang.org/x/text/language"
-	"gopkg.in/ini.v1"
+	ini "gopkg.in/ini.v1"
 
-	"github.com/TencentBlueKing/bk-ci/agentcommon/logs"
-
-	exitcode "github.com/TencentBlueKing/bk-ci/agent/src/pkg/exiterror"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/logs"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/utils/fileutil"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/envs"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/command"
+	innerFileUtil "github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/fileutil"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/systemutil"
-	"github.com/TencentBlueKing/bk-ci/agentcommon/utils/fileutil"
 )
 
 const (
@@ -67,7 +65,6 @@ const (
 	KeyRequestTimeoutSec = "devops.agent.request.timeout.sec"
 	KeyDetectShell       = "devops.agent.detect.shell"
 	KeyIgnoreLocalIps    = "devops.agent.ignoreLocalIps"
-	KeyBatchInstall      = "devops.agent.batch.install"
 	KeyLogsKeepHours     = "devops.agent.logs.keep.hours"
 	// KeyJdkDirPath 这个key不会预先出现在配置文件中，因为workdir未知，需要第一次动态获取
 	KeyJdkDirPath = "devops.agent.jdk.dir.path"
@@ -78,6 +75,10 @@ const (
 	KeyLanguage            = "devops.language"
 	KeyImageDebugPortRange = "devops.imagedebug.portrange"
 	KeyEnablePipeline      = "devops.pipeline.enable"
+	KeyMcpServerPort       = "devops.mcp.server.port"
+	KeyHTTPProxy           = "HTTP_PROXY"
+	KeyHTTPSProxy          = "HTTPS_PROXY"
+	KeyNOProxy             = "NO_PROXY"
 )
 
 // AgentConfig Agent 配置
@@ -95,7 +96,6 @@ type AgentConfig struct {
 	TimeoutSec              int64
 	DetectShell             bool
 	IgnoreLocalIps          string
-	BatchInstallKey         string
 	LogsKeepHours           int
 	JdkDirPath              string
 	Jdk17DirPath            string
@@ -104,6 +104,10 @@ type AgentConfig struct {
 	Language                string
 	ImageDebugPortRange     string
 	EnablePipeline          bool
+	McpServerPort           int
+	HTTPProxy               string
+	HTTPSProxy              string
+	NOProxy                 string
 }
 
 // AgentEnv Agent 环境配置
@@ -113,14 +117,14 @@ type AgentEnv struct {
 	HostName         string
 	AgentVersion     string
 	AgentInstallPath string
-	// WinTask 启动windows进程的组件如 服务/执行计划
-	WinTask string
 	// OsVersion 系统版本信息
 	OsVersion string
 	// cpu 型号信息
 	CPUProductInfo string
 	// gpu 型号信息
 	GPUProductInfo string
+	// InstallType 安装模式 (读取自 .install_type 文件)
+	InstallType string
 }
 
 func (e *AgentEnv) GetAgentIp() string {
@@ -139,8 +143,11 @@ func (e *AgentEnv) SetAgentIp(ip string) {
 }
 
 var GAgentEnv *AgentEnv
+
 var GAgentConfig *AgentConfig
+
 var UseCert bool
+
 var IsDebug = false
 
 // Init 加载和初始化配置
@@ -153,10 +160,11 @@ func Init(isDebug bool) {
 	}
 	initCert()
 	LoadAgentEnv()
-
-	GApiEnvVars = &GEnvVarsT{
-		envs: make(map[string]string),
-		lock: sync.RWMutex{},
+	envs.Init()
+	persistedProxyEnvs := GAgentConfig.GetPersistedProxyEnvs()
+	if len(persistedProxyEnvs) > 0 {
+		envs.GApiEnvVars.SetEnvs(persistedProxyEnvs)
+		logs.Infof("loaded persisted proxy envs from .agent.properties, count=%d", len(persistedProxyEnvs))
 	}
 }
 
@@ -167,7 +175,7 @@ func LoadAgentEnv() {
 	GAgentEnv.HostName = systemutil.GetHostName()
 	GAgentEnv.OsName = systemutil.GetOsName()
 	GAgentEnv.AgentVersion = DetectAgentVersion()
-	GAgentEnv.WinTask = GetWinTaskType()
+	GAgentEnv.InstallType = loadInstallType()
 	if osVersion, err := GetOsVersion(); err != nil {
 		logs.WithError(err).Warn("get os version err")
 		GAgentEnv.OsVersion = ""
@@ -187,6 +195,16 @@ func LoadAgentIp() {
 		splitIps = util.SplitAndTrimSpace(GAgentConfig.IgnoreLocalIps, ",")
 	}
 	GAgentEnv.SetAgentIp(systemutil.GetAgentIp(splitIps))
+}
+
+// loadInstallType 读取 .install_type 文件内容，返回大写的安装模式字符串。
+// 文件不存在或内容为空时返回空字符串。
+func loadInstallType() string {
+	data, err := os.ReadFile(filepath.Join(systemutil.GetWorkDir(), ".install_type"))
+	if err != nil {
+		return ""
+	}
+	return strings.ToUpper(strings.TrimSpace(string(data)))
 }
 
 // DetectAgentVersion 检测Agent版本
@@ -232,10 +250,20 @@ func BuildAgentJarPath() string {
 func LoadAgentConfig() error {
 	GAgentConfig = new(AgentConfig)
 
-	conf, err := ini.Load(filepath.Join(systemutil.GetWorkDir(), ".agent.properties"))
+	configPath := filepath.Join(systemutil.GetWorkDir(), ".agent.properties")
+	bakPath := configPath + ".bak"
+
+	conf, err := ini.Load(configPath)
 	if err != nil {
-		logs.Error("load agent config failed, ", err)
-		return errors.New("load agent config failed")
+		logs.Errorf("load agent config failed: %s, attempting recovery from backup", err)
+
+		// 主配置加载失败，尝试从 .bak 备份恢复
+		conf, err = loadConfigFromBackup(configPath, bakPath)
+		if err != nil {
+			logs.Errorf("load agent config from backup also failed: %s", err)
+			return errors.New("load agent config failed and no valid backup available")
+		}
+		logs.Warn("successfully recovered agent config from backup file")
 	}
 
 	parallelTaskCount, err := conf.Section("").Key(KeyTaskCount).Int()
@@ -299,13 +327,13 @@ func LoadAgentConfig() error {
 	}
 
 	jdkDirPath := conf.Section("").Key(KeyJdkDirPath).String()
-	// 如果路径为空，是第一次，需要主动去拿一次
 	if jdkDirPath == "" {
 		workDir := systemutil.GetWorkDir()
 		if _, err := os.Stat(workDir + "/jdk"); err != nil && !os.IsExist(err) {
 			jdkDirPath = workDir + "/jre"
+		} else {
+			jdkDirPath = workDir + "/jdk"
 		}
-		jdkDirPath = workDir + "/jdk"
 	}
 	jdk17DirPath := conf.Section("").Key(KeyJdk17DirPath).String()
 	if jdk17DirPath == "" {
@@ -336,6 +364,11 @@ func LoadAgentConfig() error {
 	imageDebugPortRange := conf.Section("").Key(KeyImageDebugPortRange).MustString(DEFAULT_IMAGE_DEBUG_PORT_RANGE)
 
 	enablePipeline := conf.Section("").Key(KeyEnablePipeline).MustBool(false)
+
+	mcpServerPort := conf.Section("").Key(KeyMcpServerPort).MustInt(0)
+	httpProxy := strings.TrimSpace(conf.Section("").Key(KeyHTTPProxy).String())
+	httpsProxy := strings.TrimSpace(conf.Section("").Key(KeyHTTPSProxy).String())
+	noProxy := strings.TrimSpace(conf.Section("").Key(KeyNOProxy).String())
 
 	// -----------
 
@@ -379,9 +412,6 @@ func LoadAgentConfig() error {
 	GAgentConfig.IgnoreLocalIps = ignoreLocalIps
 	logs.Info("IgnoreLocalIps: ", GAgentConfig.IgnoreLocalIps)
 
-	GAgentConfig.BatchInstallKey = strings.TrimSpace(conf.Section("").Key(KeyBatchInstall).String())
-	logs.Info("BatchInstallKey: ", GAgentConfig.BatchInstallKey)
-
 	GAgentConfig.LogsKeepHours = logsKeepHours
 	logs.Info("logsKeepHours: ", GAgentConfig.LogsKeepHours)
 
@@ -405,6 +435,15 @@ func LoadAgentConfig() error {
 
 	GAgentConfig.EnablePipeline = enablePipeline
 	logs.Info("EnablePipeline: ", GAgentConfig.EnablePipeline)
+
+	GAgentConfig.McpServerPort = mcpServerPort
+	logs.Info("McpServerPort: ", GAgentConfig.McpServerPort)
+
+	GAgentConfig.HTTPProxy = httpProxy
+	GAgentConfig.HTTPSProxy = httpsProxy
+	GAgentConfig.NOProxy = noProxy
+	logs.Infof("Proxy config loaded, http=%t https=%t no_proxy=%t", GAgentConfig.HTTPProxy != "", GAgentConfig.HTTPSProxy != "", GAgentConfig.NOProxy != "")
+
 	// 初始化 GAgentConfig 写入一次配置, 往文件中写入一次程序中新添加的 key
 	return GAgentConfig.SaveConfig()
 }
@@ -441,13 +480,147 @@ func (a *AgentConfig) SaveConfig() error {
 	content.WriteString(KeyLanguage + "=" + GAgentConfig.Language + "\n")
 	content.WriteString(KeyImageDebugPortRange + "=" + GAgentConfig.ImageDebugPortRange + "\n")
 	content.WriteString(KeyEnablePipeline + "=" + strconv.FormatBool(GAgentConfig.EnablePipeline) + "\n")
+	content.WriteString(KeyMcpServerPort + "=" + strconv.Itoa(GAgentConfig.McpServerPort) + "\n")
+	content.WriteString(KeyHTTPProxy + "=" + GAgentConfig.HTTPProxy + "\n")
+	content.WriteString(KeyHTTPSProxy + "=" + GAgentConfig.HTTPSProxy + "\n")
+	content.WriteString(KeyNOProxy + "=" + GAgentConfig.NOProxy + "\n")
 
-	err := exitcode.WriteFileWithCheck(filePath, []byte(content.String()), 0666)
+	// 写前校验：解析即将写入的内容，确保必填字段完整有效，防止写入损坏的配置
+	if err := validateConfigContent(content.Bytes()); err != nil {
+		logs.Error("config content validation before write failed: ", err.Error())
+		return fmt.Errorf("config pre-write validation failed: %w", err)
+	}
+
+	// 备份已有文件到 .bak（best-effort，失败不阻塞主流程）
+	bakPath := filePath + ".bak"
+	if existing, readErr := os.ReadFile(filePath); readErr == nil && len(existing) > 0 {
+		_ = os.WriteFile(bakPath, existing, 0666)
+	}
+
+	// 原子写入：复用 innerFileUtil.AtomicWriteFile（临时文件 → fsync → rename）
+	data := content.Bytes()
+	err := innerFileUtil.AtomicWriteFile(filePath, bytes.NewReader(data), 0666)
 	if err != nil {
-		logs.Error("write config failed:", err.Error())
+		logs.Error("atomic write config failed:", err.Error())
 		return errors.New("write config failed")
 	}
+
+	// 回读验证，确保写入内容与预期一致
+	written, err := os.ReadFile(filePath)
+	if err != nil {
+		logs.Errorf("read-back verify config failed: %s", err.Error())
+		return fmt.Errorf("read-back verify failed: %w", err)
+	}
+	if !bytes.Equal(written, data) {
+		logs.Errorf("read-back verify config mismatch: wrote %d bytes, read %d bytes", len(data), len(written))
+		return fmt.Errorf("read-back verify: content mismatch")
+	}
+
 	return nil
+}
+
+// validateConfigContent 解析配置字节内容，检查必填字段是否完整有效。
+// 用于写前校验，防止将损坏或不完整的配置写入磁盘。
+func validateConfigContent(data []byte) error {
+	conf, err := ini.Load(data)
+	if err != nil {
+		return fmt.Errorf("parse config content: %w", err)
+	}
+	s := conf.Section("")
+
+	checks := []struct {
+		key  string
+		name string
+	}{
+		{KeyProjectId, "projectId"},
+		{KeyAgentId, "agentId"},
+		{KeySecretKey, "secretKey"},
+		{KeyDevopsGateway, "gateway"},
+	}
+	for _, c := range checks {
+		if strings.TrimSpace(s.Key(c.key).String()) == "" {
+			return fmt.Errorf("invalid %s: empty value for key %s", c.name, c.key)
+		}
+	}
+
+	taskCount, err := s.Key(KeyTaskCount).Int()
+	if err != nil || taskCount < 0 {
+		return fmt.Errorf("invalid parallelTaskCount")
+	}
+
+	return nil
+}
+
+// loadConfigFromBackup 尝试从 .bak 备份文件加载配置。
+// 加载成功后会将备份内容恢复到主配置文件路径，实现自愈。
+func loadConfigFromBackup(configPath, bakPath string) (*ini.File, error) {
+	if _, err := os.Stat(bakPath); err != nil {
+		return nil, fmt.Errorf("backup file does not exist: %w", err)
+	}
+
+	conf, err := ini.Load(bakPath)
+	if err != nil {
+		return nil, fmt.Errorf("backup file is also corrupt: %w", err)
+	}
+
+	// 校验备份文件的必填字段是否完整
+	bakData, err := os.ReadFile(bakPath)
+	if err != nil {
+		return nil, fmt.Errorf("read backup file: %w", err)
+	}
+	if err := validateConfigContent(bakData); err != nil {
+		return nil, fmt.Errorf("backup file fails validation: %w", err)
+	}
+
+	// 将备份内容恢复到主配置文件（使用原子写入保证安全）
+	if restoreErr := innerFileUtil.AtomicWriteFile(configPath, bytes.NewReader(bakData), 0666); restoreErr != nil {
+		logs.Warnf("failed to restore backup to main config: %s (proceeding with in-memory backup)", restoreErr)
+	} else {
+		logs.Info("restored config from backup file to main config path")
+	}
+
+	return conf, nil
+}
+
+// GetAuthHeaderMap 生成鉴权头部
+func (a *AgentConfig) GetPersistedProxyEnvs() map[string]string {
+	proxyEnvs := make(map[string]string)
+	if a.HTTPProxy != "" {
+		proxyEnvs[KeyHTTPProxy] = a.HTTPProxy
+	}
+	if a.HTTPSProxy != "" {
+		proxyEnvs[KeyHTTPSProxy] = a.HTTPSProxy
+	}
+	if a.NOProxy != "" {
+		proxyEnvs[KeyNOProxy] = a.NOProxy
+	}
+	return proxyEnvs
+}
+
+func (a *AgentConfig) SyncPersistedProxyEnvs(envMap map[string]string) bool {
+	getValue := func(keys ...string) string {
+		for _, key := range keys {
+			if v, ok := envMap[key]; ok {
+				return strings.TrimSpace(v)
+			}
+		}
+		return ""
+	}
+
+	changed := false
+	if httpProxy := getValue(KeyHTTPProxy, strings.ToLower(KeyHTTPProxy)); a.HTTPProxy != httpProxy {
+		a.HTTPProxy = httpProxy
+		changed = true
+	}
+	if httpsProxy := getValue(KeyHTTPSProxy, strings.ToLower(KeyHTTPSProxy)); a.HTTPSProxy != httpsProxy {
+		a.HTTPSProxy = httpsProxy
+		changed = true
+	}
+	if noProxy := getValue(KeyNOProxy, strings.ToLower(KeyNOProxy)); a.NOProxy != noProxy {
+		a.NOProxy = noProxy
+		changed = true
+	}
+	return changed
 }
 
 // GetAuthHeaderMap 生成鉴权头部
@@ -472,46 +645,18 @@ func GetGateWay() string {
 	}
 }
 
-func GetCpuAndGpuInfo() (string, string) {
-	cpu, err := ghw.CPU()
-	cpuInfoBuf := bytes.Buffer{}
-	if err != nil {
-		logs.WithError(err).Error("get cpu info error")
-	} else {
-		for _, c := range cpu.Processors {
-			cpuInfoBuf.WriteString(c.Model)
-			cpuInfoBuf.WriteString(";")
-		}
-	}
-	cpuInfo := strings.TrimSuffix(cpuInfoBuf.String(), ";")
-
-	gpuInfoBuf := bytes.Buffer{}
-	gpu, err := ghw.GPU()
-	if err != nil {
-		logs.WithError(err).Error("get gpu info error")
-	} else {
-		for _, card := range gpu.GraphicsCards {
-			gpuInfoBuf.WriteString(card.DeviceInfo.Product.Name)
-			gpuInfoBuf.WriteString(";")
-		}
-	}
-	gpuInfo := strings.TrimSuffix(cpuInfoBuf.String(), ";")
-	logs.Infof("cpu: %s, gpu: %s", cpuInfo, gpuInfo)
-	return cpuInfo, gpuInfo
-}
-
 // initCert 初始化证书
 func initCert() {
 	AbsCertFilePath := systemutil.GetWorkDir() + "/" + CertFilePath
 	fileInfo, err := os.Stat(AbsCertFilePath)
 	if err != nil {
 		// 证书不一定需要存在
-		logs.Warn("stat cert file error", err.Error())
+		logs.Infof("no cert file %s", err.Error())
 		return
 	}
 	if fileInfo.IsDir() {
 		// 证书不一定需要存在
-		logs.Warn("cert file is dir, skip")
+		logs.Info("cert file is dir, skip")
 		return
 	}
 	// Load client cert

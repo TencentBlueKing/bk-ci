@@ -29,7 +29,6 @@ package com.tencent.devops.misc.service.dispatch
 
 import com.tencent.devops.misc.dao.dispatch.DispatchDataClearDao
 import org.jooq.DSLContext
-import org.jooq.impl.DSL
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -42,13 +41,14 @@ class DispatchDataClearService @Autowired constructor(
     /**
      * 清除分发调度构建数据
      * @param buildId 构建ID
+     *
+     * 三张表均按 BUILD_ID 维度删除，互相之间无跨表一致性约束，
+     * 单步失败可由下一轮 cron / 重试补救。故不再使用事务包裹，
+     * 避免长事务持锁影响运行时构建调度。
      */
     fun clearBuildData(buildId: String) {
-        dslContext.transaction { t ->
-            val context = DSL.using(t)
-            dispatchDataClearDao.deletePipelineBuildByBuildId(context, buildId)
-            dispatchDataClearDao.deletePipelineDockerBuildByBuildId(context, buildId)
-            dispatchDataClearDao.deleteThirdpartyAgentBuildByBuildId(context, buildId)
-        }
+        dispatchDataClearDao.deletePipelineBuildByBuildId(dslContext, buildId)
+        dispatchDataClearDao.deletePipelineDockerBuildByBuildId(dslContext, buildId)
+        dispatchDataClearDao.deleteThirdpartyAgentBuildByBuildId(dslContext, buildId)
     }
 }

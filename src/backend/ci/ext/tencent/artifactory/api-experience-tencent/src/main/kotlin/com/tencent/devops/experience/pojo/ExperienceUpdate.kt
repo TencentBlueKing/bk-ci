@@ -58,5 +58,9 @@ data class ExperienceUpdate(
     @get:Schema(title = "产品负责人", required = false)
     val productOwner: List<String>?,
     @get:Schema(title = "分类", required = false)
-    val classify: String? = null
+    val classify: String? = null,
+    @get:Schema(title = "允许合研环境访问", required = false)
+    val enableDevxAccess: Boolean?,
+    @get:Schema(title = "允许基地公网访问", required = false)
+    val enablePublicAccess: Boolean?
 )

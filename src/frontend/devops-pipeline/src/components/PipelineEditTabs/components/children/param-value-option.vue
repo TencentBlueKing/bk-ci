@@ -44,13 +44,13 @@
             :label="$t('editPage.repoName')"
             :desc="$t('editPage.referencedTips', ['${{ variables.' + `${param.id}` + '.repo-name }}'])"
             :required="true"
-            :is-error="!param.defaultValue['repo-name']"
-            :error-msg="errors.first(`pipelineParam.defaultValue`)"
+            :is-error="errors.has(`pipelineParam.repoName`)"
+            :error-msg="errors.first(`pipelineParam.repoName`)"
         >
             <request-selector
                 v-bind="getRepoOption('CODE_GIT,CODE_GITLAB,GITHUB,CODE_TGIT,CODE_SVN', 'aliasName')"
                 :disabled="disabled"
-                name="defaultValue"
+                name="repoName"
                 :value="param.defaultValue['repo-name']"
                 :handle-change="(name, value) => handleChangeCodeRepo(name, value)"
                 v-validate="'required'"
@@ -66,14 +66,14 @@
             :label="$t('editPage.branchName')"
             :desc="$t('editPage.referencedTips', ['${{ variables.' + `${param.id}` + '.branch }}'])"
             :required="true"
-            :is-error="!param.defaultValue.branch"
-            :error-msg="errors.first(`pipelineParam.defaultValue`)"
+            :is-error="errors.has(`pipelineParam.branchName`)"
+            :error-msg="errors.first(`pipelineParam.branchName`)"
             :key="param.defaultValue['repo-name']"
         >
             <request-selector
                 v-bind="getBranchOption(param.defaultValue['repo-name'])"
                 :disabled="disabled || !param.defaultValue"
-                name="defaultValue"
+                name="branchName"
                 :value="param.defaultValue.branch"
                 :handle-change="handleChangeBranch"
                 v-validate="'required'"
@@ -112,21 +112,96 @@
             :handle-update-payload="handleUpdatePayload"
             :reset-default-val="handleResetDefaultVal"
         />
+        <div
+            v-if="isFormListParam(param.type) && hasFormListFields"
+            class="form-field bk-form-item"
+        >
+            <label class="bk-label atom-form-label form-list-default-label">
+                <span>{{ $t('storeMap.formListObjectConfig') }}</span>
+                <span
+                    :class="['form-list-label-actions', 'field-config-icon', { 'is-disabled': disabled }]"
+                    @click="!disabled && handleShowFieldConfigDialog()"
+                >
+                    <Logo
+                        name="config"
+                        size="16"
+                    />
+                </span>
+            </label>
+            <div class="bk-form-content">
+                <form-list-param-input
+                    ref="formListInput"
+                    :disabled="disabled"
+                    :value="param.defaultValue || []"
+                    :fields="param.fields || []"
+                    :handle-change="handleChange"
+                    name="defaultValue"
+                />
+            </div>
+        </div>
+        <div
+            v-else-if="isFormListParam(param.type) && !hasFormListFields"
+            class="form-field bk-form-item form-list-empty-state"
+        >
+            <label class="bk-label atom-form-label form-list-empty-label">
+                <span>{{ $t('storeMap.formListFieldObjectConfig') }}<span class="required-star">*</span></span>
+                <a
+                    class="form-list-config-link"
+                    @click.stop="!disabled && handleShowFieldConfigDialog()"
+                >
+                    {{ $t('storeMap.formListFieldConfigProperty') }}
+                </a>
+            </label>
+            <div class="bk-form-content">
+                <p class="form-list-empty-desc">{{ $t('storeMap.formListEmptyConfigTip') }}</p>
+                <bk-button
+                    theme="primary"
+                    size="small"
+                    :disabled="disabled"
+                    @click.stop="handleShowFieldConfigDialog"
+                >
+                    {{ $t('storeMap.formListEmptyConfigNow') }}
+                </bk-button>
+            </div>
+        </div>
+        <bk-dialog
+            v-model="fieldConfigDialogVisible"
+            width="960"
+            :title="$t('storeMap.formListFieldObjectConfig')"
+            header-position="left"
+            :close-on-esc="false"
+            :mask-close="false"
+            :confirm-fn="handleFieldConfigConfirm"
+            custom-class="form-list-config-dialog"
+            @cancel="handleFieldConfigCancel"
+        >
+            <div class="form-list-editor-container">
+                <form-list-field-editor
+                    :key="fieldConfigDialogKey"
+                    ref="fieldEditor"
+                    :disabled="disabled"
+                    :fields="editingFields"
+                    :handle-change="handleEditingFieldsChange"
+                />
+            </div>
+        </bk-dialog>
         <constraint-wraper
+            v-if="!isFormListParam(param.type) && !isRepoParam(param.type)"
+            class="form-field bk-form-item"
             :label="valueRequired ? $t('newui.pipelineParam.constValue') : $t(`editPage.${getParamsDefaultValueLabel(param.type)}`)"
             :classify="CLASSIFY_ENUM.PARAM"
             :field="param.id"
-            :disabled="valueRequired"
+            :required="valueRequired"
+            :disabled="valueRequired || disabled"
             @toggleConstraint="handleToggleConstraint"
         >
-            <template #constraint-area="{ props: { isOverride } }">
+            <template #constraint-area="{ props: { isOverride, isTemplateInstance } }">
                 <form-field
-                    v-if="!isRepoParam(param.type)"
                     :hide-colon="true"
                     :required="valueRequired"
                     :is-error="errors.has(`pipelineParam.defaultValue`)"
                     :error-msg="errors.first(`pipelineParam.defaultValue`)"
-                    :disabled="!isOverride"
+                    :disabled="isTemplateInstance && !isOverride"
                     :desc="valueRequired ? undefined : $t(`editPage.${getParamsDefaultValueLabelTips(param.type)}`)"
                 >
                     <template v-if="isSelectorParam(param.type)">
@@ -135,7 +210,7 @@
                             v-bind="remoteParamOption"
                             v-validate.initial="{ required: valueRequired }"
                             :popover-min-width="250"
-                            :disabled="disabled && !isOverride"
+                            :disabled="isTemplateInstance ? disabled || !isOverride : disabled"
                             name="defaultValue"
                             :multi-select="isMultipleParam(param.type)"
                             :data-vv-scope="'pipelineParam'"
@@ -153,7 +228,7 @@
                             v-validate="{ required: valueRequired }"
                             :data-vv-scope="'pipelineParam'"
                             :placeholder="$t('editPage.defaultValueTips')"
-                            :disabled="disabled && !isOverride"
+                            :disabled="isTemplateInstance ? disabled || !isOverride : disabled"
                             show-select-all
                             :key="param.type"
                             :value="selectDefautVal"
@@ -164,14 +239,15 @@
                         v-if="isBooleanParam(param.type)"
                         name="defaultValue"
                         :list="boolList"
-                        :disabled="disabled && !isOverride"
+                        :disabled="isTemplateInstance ? disabled || !isOverride : disabled"
                         :handle-change="handleChange"
                         :value="param.defaultValue"
                     >
                     </enum-input>
+                  
                     <vuex-input
                         v-if="isStringParam(param.type) || isSvnParam(param.type) || isGitParam(param.type) || isArtifactoryParam(param.type) || isRepoParam(param.type)"
-                        :disabled="disabled && !isOverride"
+                        :disabled="isTemplateInstance ? disabled || !isOverride : disabled"
                         :handle-change="handleChange"
                         name="defaultValue"
                         v-validate="{ required: valueRequired }"
@@ -184,7 +260,7 @@
                         v-if="isFileParam(param.type)"
                         name="defaultValue"
                         :required="valueRequired"
-                        :disabled="disabled && !isOverride"
+                        :disabled="isTemplateInstance ? disabled || !isOverride : disabled"
                         :value="param.defaultValue"
                         :enable-version-control="param.enableVersionControl"
                         :random-sub-path="param.randomStringInPath"
@@ -192,7 +268,7 @@
                     />
                     <vuex-textarea
                         v-if="isTextareaParam(param.type)"
-                        :disabled="disabled && !isOverride"
+                        :disabled="isTemplateInstance ? disabled || !isOverride : disabled"
                         :handle-change="handleChange"
                         name="defaultValue"
                         v-validate="{ required: valueRequired }"
@@ -205,7 +281,7 @@
                         :popover-min-width="250"
                         :url="getCodeUrl(param.scmType)"
                         v-bind="codelibOption"
-                        :disabled="disabled && !isOverride"
+                        :disabled="isTemplateInstance ? disabled || !isOverride : disabled"
                         name="defaultValue"
                         v-validate="{ required: valueRequired }"
                         :data-vv-scope="'pipelineParam'"
@@ -235,7 +311,7 @@
                         v-if="isSubPipelineParam(param.type)"
                         :popover-min-width="250"
                         v-bind="subPipelineOption"
-                        :disabled="disabled && !isOverride"
+                        :disabled="isTemplateInstance ? disabled || !isOverride : disabled"
                         name="defaultValue"
                         v-validate="{ required: valueRequired }"
                         :data-vv-scope="'pipelineParam'"
@@ -245,6 +321,17 @@
                         :search-url="param.searchUrl"
                     >
                     </request-selector>
+                    <p
+                        v-if="param.published"
+                        class="public-var-published-tips"
+                    >
+                        <logo
+                            size="12"
+                            class="warning-icon"
+                            name="warning-circle"
+                        />
+                        {{ param.constant ? $t('publicVar.constantDefaultValueChangeTips') : $t('publicVar.paramDefaultValueChangeTips') }}
+                    </p>
                 </form-field>
             </template>
         </constraint-wraper>
@@ -304,10 +391,12 @@
 </template>
 
 <script>
+    import Logo from '@/components/Logo'
     import FormField from '@/components/AtomPropertyPanel/FormField'
     import ConstraintWraper from '@/components/ConstraintWraper.vue'
     import EnumInput from '@/components/atomFormField/EnumInput'
     import FileParamInput from '@/components/atomFormField/FileParamInput'
+    import FormListParamInput from '@/components/atomFormField/FormListParamInput'
     import KeyValueNormal from '@/components/atomFormField/KeyValueNormal'
     import RequestSelector from '@/components/atomFormField/RequestSelector'
     import Selector from '@/components/atomFormField/Selector'
@@ -329,6 +418,7 @@
         isCodelibParam,
         isEnumParam,
         isFileParam,
+        isFormListParam,
         isGitParam,
         isMultipleParam,
         isRepoParam,
@@ -336,26 +426,20 @@
         isSubPipelineParam,
         isSvnParam,
         isTextareaParam,
-        SUB_PIPELINE_OPTION
+        SUB_PIPELINE_OPTION,
+        BOOLEAN_LIST
     } from '@/store/modules/atom/paramsConfig'
-    import { getParamsValuesMap } from '@/utils/util'
+    import { getFormListFieldDefaultValue, getParamsValuesMap } from '@/utils/util'
     import { mapGetters } from 'vuex'
+    import FormListFieldEditor from './form-list-field-editor'
     import SelectTypeParam from './select-type-param'
-    
-    const BOOLEAN = [
-        {
-            value: true,
-            label: true
-        },
-        {
-            value: false,
-            label: false
-        }
-    ]
 
     export default {
         components: {
+            Logo,
             SelectTypeParam,
+            FormListFieldEditor,
+            FormListParamInput,
             FormField,
             VuexInput,
             EnumInput,
@@ -364,7 +448,8 @@
             RequestSelector,
             FileParamInput,
             KeyValueNormal,
-            ConstraintWraper
+            ConstraintWraper,
+            Logo
         },
         mixins: [validMixins],
         props: {
@@ -399,7 +484,10 @@
                 CLASSIFY_ENUM,
                 optionList: [],
                 selectDefautVal: '',
-                remoteParamOption: {}
+                remoteParamOption: {},
+                fieldConfigDialogVisible: false,
+                fieldConfigDialogKey: 0,
+                editingFields: []
             }
         },
         computed: {
@@ -417,6 +505,10 @@
                     max: VAR_MAX_LENGTH
                 } : {})
             },
+            hasFormListFields () {
+                const fields = this.param.fields
+                return Array.isArray(fields) && fields.length > 0
+            },
             baseOSList () {
                 return this.osList.filter(os => os.value !== 'NONE').map(os => ({
                     id: os.value,
@@ -424,7 +516,7 @@
                 }))
             },
             boolList () {
-                return BOOLEAN
+                return BOOLEAN_LIST
             },
             codelibOption () {
                 return CODE_LIB_OPTION
@@ -467,6 +559,7 @@
             isArtifactoryParam,
             isSubPipelineParam,
             isFileParam,
+            isFormListParam,
             isRepoParam,
             isBuildResourceParam,
             getParamsDefaultValueLabel,
@@ -578,18 +671,19 @@
                 }
             },
             handleChangeCodeRepo (key, value) {
-                this.handleChange(key, {
+                this.handleChange('defaultValue', {
                     'repo-name': value,
                     branch: ''
                 })
             },
             handleChangeBranch (key, value) {
-                this.handleChange(key, {
+                this.handleChange('defaultValue', {
                     ...this.param.defaultValue,
                     branch: value
                 })
             },
             handleToggleConstraint (isOverride) {
+                if (!this.pipeline) return
                 if (!isOverride) {
                     const param = this.allPipelineParams.find(item => item.id === this.param.id)
                     this.handleChange('defaultValue', param.defaultValue)
@@ -597,7 +691,210 @@
                     this.handleChange('defaultValue', this.initParamItem.defaultValue)
                 }
                 
+            },
+            handleShowFieldConfigDialog () {
+                this.editingFields = (this.param.fields || []).map(f => ({ ...f }))
+                this.fieldConfigDialogKey += 1
+                this.fieldConfigDialogVisible = true
+            },
+            handleEditingFieldsChange (name, value) {
+                if (name === 'fields') {
+                    this.editingFields = value
+                }
+            },
+            handleFieldConfigConfirm () {
+                const editor = this.$refs.fieldEditor
+                if (editor && typeof editor.validateAllFields === 'function') {
+                    const isValid = editor.validateAllFields()
+                    if (!isValid) {
+                        const errorMessage = editor.getFirstError?.()
+                        if (errorMessage) {
+                            this.$bkMessage({
+                                theme: 'error',
+                                message: errorMessage,
+                                limit: 1
+                            })
+                        }
+                        return false
+                    }
+                }
+                const newFields = typeof editor?.getFields === 'function'
+                    ? editor.getFields()
+                    : [...this.editingFields]
+                this.handleChange('fields', newFields)
+                // 字段定义变更后，同步对齐 defaultValue 中各行的 key
+                this.syncDefaultValueWithFields(newFields)
+                this.fieldConfigDialogVisible = false
+                return true
+            },
+            syncDefaultValueWithFields (newFields) {
+                const currentDefaultValue = this.param.defaultValue
+                const validFields = newFields.filter(f => f.id)
+                if (!validFields.length) return
+
+                const buildItem = (source = {}) => validFields.reduce((acc, field) => {
+                    acc[field.id] = Object.prototype.hasOwnProperty.call(source, field.id)
+                        ? source[field.id]
+                        : getFormListFieldDefaultValue(field)
+                    return acc
+                }, {})
+
+                const nextDefaultValue = Array.isArray(currentDefaultValue) && currentDefaultValue.length
+                    ? currentDefaultValue.map(item => buildItem(item))
+                    : [buildItem()]
+                this.handleChange('defaultValue', nextDefaultValue)
+            },
+            handleFieldConfigCancel () {
+                this.fieldConfigDialogVisible = false
+            },
+            validateFormList () {
+                if (!isFormListParam(this.param.type)) return true
+                if (!this.hasFormListFields) {
+                    this.$bkMessage({
+                        theme: 'error',
+                        message: this.$t('storeMap.formListFieldConfigRequiredTip'),
+                        limit: 1
+                    })
+                    return false
+                }
+                return true
+            },
+            handleProperties (key, value, index) {
+                const properties = {}
+                value.forEach((val) => {
+                    properties[val.key] = val.value
+                })
+                this.handleChange(key, properties)
             }
         }
     }
 </script>
+
+<style lang="scss" scoped>
+    .form-list-default-label {
+        display: flex !important;
+        align-items: center;
+        justify-content: space-between;
+        width: 100% !important;
+        padding-right: 0 !important;
+        gap: 4px;
+
+        .field-config-icon {
+            font-size: 14px;
+            color: #3A84FF;
+            cursor: pointer;
+            flex-shrink: 0;
+
+            &:hover {
+                color: #699DF4;
+            }
+
+            &.is-disabled {
+                color: #C4C6CC;
+                cursor: not-allowed;
+            }
+        }
+    }
+    .form-list-empty-desc {
+        font-size: 12px;
+        color: #979BA5;
+        margin: 0 0 12px;
+        line-height: 20px;
+    }
+    .form-list-config-link {
+        font-size: 12px;
+        color: #3A84FF;
+        cursor: pointer;
+        white-space: nowrap;
+
+        &:hover {
+            color: #699DF4;
+        }
+    }
+    .form-list-empty-state {
+        .bk-form-content {
+            display: flex;
+            padding: 16px 0;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            align-self: stretch;
+            border-radius: var(--bk-radius-small, 2px);
+            background: var(--Neutral-9, #F5F7FA);
+        }
+        .form-list-empty-label {
+            display: flex !important;
+            flex-direction: row !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+            width: 100% !important;
+            padding-right: 0 !important;
+        }
+    }
+    .required-star {
+        color: #EA3636;
+        margin-left: 2px;
+    }
+    .form-list-label-actions {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .form-list-editor-container {
+        min-height: 550px;
+        height: 100%;
+        overflow: hidden;
+    }
+</style>
+
+<style lang="scss">
+    // Global styles for dialog customization (cannot be scoped)
+    .form-list-config-dialog {
+        .bk-dialog-content.bk-dialog-content-drag {
+            position: relative;
+            min-height: 550px;
+            overflow: hidden;
+        }
+
+        .bk-dialog-body {
+            overflow: visible;
+            min-height: 550px;
+        }
+
+        // Override bk-sideslider positioning to work within the dialog
+        .form-list-option-sideslider {
+            position: absolute !important;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 10;
+
+            .bk-sideslider-wrapper {
+                position: absolute !important;
+                top: 0;
+                right: 0;
+                bottom: 0;
+                left: auto;
+                width: 100%;
+                height: 100% !important;
+            }
+
+            .bk-sideslider-content {
+                height: 100% !important;
+            }
+        }
+    }
+</style>
+<style lang="scss">
+    .public-var-published-tips {
+        font-size: 12px;
+        color: #979BA5;
+        .warning-icon {
+            display: inline-block;
+            vertical-align: -1px;
+            color: #f6b026;
+            font-size: 0;
+        }
+    }
+</style>

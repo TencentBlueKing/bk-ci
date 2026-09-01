@@ -29,15 +29,18 @@ package com.tencent.devops.remotedev.dao
 
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.model.SQLLimit
+import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.db.utils.fetchCountFix
 import com.tencent.devops.common.db.utils.skipCheck
+import com.tencent.devops.common.service.utils.ByteUtils
 import com.tencent.devops.model.remotedev.tables.TWorkspace
 import com.tencent.devops.model.remotedev.tables.TWorkspaceLabels
 import com.tencent.devops.model.remotedev.tables.TWorkspaceShared
 import com.tencent.devops.model.remotedev.tables.TWorkspaceWindows
 import com.tencent.devops.model.remotedev.tables.records.TWorkspaceRecord
 import com.tencent.devops.remotedev.pojo.Workspace
+import com.tencent.devops.remotedev.pojo.WorkspaceKind
 import com.tencent.devops.remotedev.pojo.WorkspaceMountType
 import com.tencent.devops.remotedev.pojo.WorkspaceOrganization
 import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
@@ -104,9 +107,11 @@ class WorkspaceDao {
                 WORKSPACE_MOUNT_TYPE,
                 SYSTEM_TYPE,
                 OWNER_TYPE,
+                WORKSPACE_KIND,
                 PROJECT_NAME,
                 BUSINESS_LINE_NAME,
-                BAK_NAME
+                BAK_NAME,
+                OS
             )
                 .values(
                     workspace.projectId,
@@ -123,9 +128,12 @@ class WorkspaceDao {
                     workspace.workspaceMountType.name,
                     workspace.workspaceSystemType.name,
                     workspace.ownerType.name,
+                    (workspace.workspaceKind
+                        ?: WorkspaceKind.defaultByOwnerType(workspace.ownerType)).value,
                     organization.projectName,
                     organization.businessLineName ?: "",
-                    workspace.bakWorkspaceName
+                    workspace.bakWorkspaceName,
+                    workspace.os?.name ?: com.tencent.devops.common.api.pojo.OS.WINDOWS.name
                 )
                 .returning(ID)
                 .fetchOne()!!.id
@@ -418,7 +426,8 @@ class WorkspaceDao {
     fun updateWorkspaceStatus(
         dslContext: DSLContext,
         workspaceName: String,
-        status: WorkspaceStatus
+        status: WorkspaceStatus,
+        allowUpdateDeleted: Boolean = false
     ) {
         with(TWorkspace.T_WORKSPACE) {
             dslContext.update(this)
@@ -426,7 +435,15 @@ class WorkspaceDao {
                 .set(UPDATE_TIME, LocalDateTime.now())
                 .set(LAST_STATUS_UPDATE_TIME, LocalDateTime.now())
                 .where(NAME.eq(workspaceName))
-                .and(STATUS.notEqual(WorkspaceStatus.DELETED.ordinal))
+                .let {
+                    if (allowUpdateDeleted) {
+                        // 管理员场景：允许更新任何状态的工作空间
+                        it
+                    } else {
+                        // 普通场景：不允许更新已删除的工作空间
+                        it.and(STATUS.notEqual(WorkspaceStatus.DELETED.ordinal))
+                    }
+                }
                 .execute()
         }
     }
@@ -457,6 +474,36 @@ class WorkspaceDao {
                 .set(OWNER_TYPE, new.name)
                 .where(NAME.eq(workspaceName))
                 .and(OWNER_TYPE.eq(old.name))
+                .execute()
+        }
+    }
+
+    fun updateWorkspaceKind(
+        dslContext: DSLContext,
+        workspaceNames: List<String>,
+        workspaceKind: WorkspaceKind
+    ) {
+        if (workspaceNames.isEmpty()) {
+            return
+        }
+        with(TWorkspace.T_WORKSPACE) {
+            dslContext.update(this)
+                .set(WORKSPACE_KIND, workspaceKind.value)
+                .set(UPDATE_TIME, LocalDateTime.now())
+                .where(NAME.`in`(workspaceNames))
+                .execute()
+        }
+    }
+
+    fun enableCoffeeAI(
+        dslContext: DSLContext,
+        workspaceNames: List<String>,
+    ) {
+        with(TWorkspace.T_WORKSPACE) {
+            dslContext.update(this)
+                .set(COFFEE_AI, ByteUtils.bool2Byte(true))
+                .set(UPDATE_TIME, LocalDateTime.now())
+                .where(NAME.`in`(workspaceNames))
                 .execute()
         }
     }
@@ -624,6 +671,7 @@ class WorkspaceDao {
     class TWorkspaceRecordJooqMapper : RecordMapper<TWorkspaceRecord, WorkspaceRecord> {
         override fun map(record: TWorkspaceRecord?): WorkspaceRecord? {
             return record?.run {
+                val parsedOwnerType = WorkspaceOwnerType.parse(ownerType)
                 WorkspaceRecord(
                     workspaceId = id,
                     projectId = projectId,
@@ -642,13 +690,16 @@ class WorkspaceDao {
                     lastStatusUpdateTime = lastStatusUpdateTime,
                     workspaceMountType = WorkspaceMountType.parse(workspaceMountType),
                     workspaceSystemType = WorkspaceSystemType.parse(systemType),
-                    ownerType = WorkspaceOwnerType.parse(ownerType),
+                    ownerType = parsedOwnerType,
+                    workspaceKind = WorkspaceKind.fromDb(workspaceKind, parsedOwnerType),
+                    os = OS.parse(os),
                     remark = remark,
                     labels = labels?.let { self ->
                         JsonUtil.getObjectMapper().readValue(self) as List<String>
                     },
                     bakWorkspaceName = bakName,
-                    ip = ip
+                    ip = ip,
+                    coffeeAi = coffeeAi?.let { it != 0.toByte() } ?: false
                 )
             }
         }
@@ -660,6 +711,9 @@ class WorkspaceDao {
             if (record == null) {
                 return null
             }
+            val parsedOwnerType = WorkspaceOwnerType.parse(
+                record.getOrNull(TWorkspace.T_WORKSPACE.OWNER_TYPE) as String? ?: "PROJECT"
+            )
             return WorkspaceRecordWithWindows(
                 workspaceId = record.getOrNull(TWorkspace.T_WORKSPACE.ID) as Long? ?: -1,
                 projectId = record.getOrNull(TWorkspace.T_WORKSPACE.PROJECT_ID) as String? ?: "NO_CHECK",
@@ -680,16 +734,21 @@ class WorkspaceDao {
                     ?: LocalDateTime.now(),
                 updateTime = record.getOrNull(TWorkspace.T_WORKSPACE.UPDATE_TIME) as LocalDateTime?
                     ?: LocalDateTime.now(),
-                lastStatusUpdateTime = record.getOrNull(TWorkspace.T_WORKSPACE.LAST_STATUS_UPDATE_TIME) as LocalDateTime?,
+                lastStatusUpdateTime = record.getOrNull(
+                    TWorkspace.T_WORKSPACE.LAST_STATUS_UPDATE_TIME
+                ) as LocalDateTime?,
                 workspaceMountType = WorkspaceMountType.parse(
                     record.getOrNull(TWorkspace.T_WORKSPACE.WORKSPACE_MOUNT_TYPE) as String? ?: "START"
                 ),
                 workspaceSystemType = WorkspaceSystemType.parse(
                     record.getOrNull(TWorkspace.T_WORKSPACE.SYSTEM_TYPE) as String? ?: "WINDOWS_GPU"
                 ),
-                ownerType = WorkspaceOwnerType.parse(
-                    record.getOrNull(TWorkspace.T_WORKSPACE.OWNER_TYPE) as String? ?: "PROJECT"
+                ownerType = parsedOwnerType,
+                workspaceKind = WorkspaceKind.fromDb(
+                    record.getOrNull(TWorkspace.T_WORKSPACE.WORKSPACE_KIND) as String?,
+                    parsedOwnerType
                 ),
+                os = OS.parse(record.getOrNull(TWorkspace.T_WORKSPACE.OS) as String?),
                 remark = record.getOrNull(TWorkspace.T_WORKSPACE.REMARK) as String?,
                 hostIp = record.getOrNull(TWorkspaceWindows.T_WORKSPACE_WINDOWS.HOST_IP) as String?,
                 macAddress = record.getOrNull(TWorkspaceWindows.T_WORKSPACE_WINDOWS.MAC_ADDRESS) as String?,
@@ -706,7 +765,9 @@ class WorkspaceDao {
                 nodeHashId = record.getOrNull(TWorkspaceWindows.T_WORKSPACE_WINDOWS.NODE_HASH_ID) as String?,
                 resourceId = record.getOrNull(TWorkspaceWindows.T_WORKSPACE_WINDOWS.RESOURCE_ID) as String?,
                 enableRecord = (record.getOrNull(TWorkspaceWindows.T_WORKSPACE_WINDOWS.ENABLE_RECORD_USER) as? String)
-                    ?.isNotBlank() ?: false
+                    ?.isNotBlank() ?: false,
+                coffeeAi = (record.getOrNull(TWorkspace.T_WORKSPACE.COFFEE_AI) as? Byte)?.let { it != 0.toByte() }
+                    ?: false
             )
         }
 
@@ -717,8 +778,77 @@ class WorkspaceDao {
         }
     }
 
+    fun fetchByProjectAndNames(
+        dslContext: DSLContext,
+        projectId: String,
+        workspaceNames: List<String>
+    ): List<WorkspaceRecord> {
+        if (workspaceNames.isEmpty()) return emptyList()
+        with(TWorkspace.T_WORKSPACE) {
+            return workspaceNames
+                .chunked(BATCH_QUERY_SIZE)
+                .flatMap { chunk ->
+                    dslContext.selectFrom(this)
+                        .where(PROJECT_ID.eq(projectId))
+                        .and(NAME.`in`(chunk))
+                        .and(
+                            STATUS.notIn(
+                                WorkspaceStatus.DELETED.ordinal,
+                                WorkspaceStatus.UNUSED.ordinal
+                            )
+                        )
+                        .fetch(workspaceMapper)
+                }
+        }
+    }
+
+    // 查询一台最早创建、且IP已就绪的待分配工作空间(按模版申请交付)
+    fun fetchOldestDistributingWorkspace(
+        dslContext: DSLContext,
+        projectId: String
+    ): WorkspaceRecord? {
+        with(TWorkspace.T_WORKSPACE) {
+            return dslContext.selectFrom(this).where(PROJECT_ID.eq(projectId))
+                .and(STATUS.eq(WorkspaceStatus.DISTRIBUTING.ordinal))
+                .and(IP.isNotNull)
+                .and(IP.ne(""))
+                .orderBy(CREATE_TIME.asc())
+                .fetchAny(workspaceMapper)
+        }
+    }
+
+    // 查询一台最早创建的待分配coffeeAi工作空间
+    fun fetchOldDistributingAIWorkspace(
+        dslContext: DSLContext,
+        projectId: String
+    ): WorkspaceRecord? {
+        with(TWorkspace.T_WORKSPACE) {
+            return dslContext.selectFrom(this).where(PROJECT_ID.eq(projectId))
+                .and(COFFEE_AI.eq(1))
+                .and(STATUS.eq(WorkspaceStatus.DISTRIBUTING.ordinal))
+                .orderBy(CREATE_TIME.asc())
+                .fetchAny(workspaceMapper)
+        }
+    }
+
+    fun fetchAIWorkspaceByIp(
+        dslContext: DSLContext,
+        projectId: String,
+        ip: String
+    ): WorkspaceRecord? {
+        with(TWorkspace.T_WORKSPACE) {
+            return dslContext.selectFrom(this).where(PROJECT_ID.eq(projectId))
+                .and(COFFEE_AI.eq(1))
+                .and(IP.eq(ip))
+                .and(STATUS.notEqual(WorkspaceStatus.DELETED.ordinal))
+                .fetchAny(workspaceMapper)
+        }
+    }
+
     companion object {
+        private const val BATCH_QUERY_SIZE = 50
         val workspaceMapper = TWorkspaceRecordJooqMapper()
-        val workspaceWithWindowsMapper = TWorkspaceRecordWithWindowsJooqMapper()
+        val workspaceWithWindowsMapper =
+            TWorkspaceRecordWithWindowsJooqMapper()
     }
 }

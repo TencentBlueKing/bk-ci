@@ -29,7 +29,7 @@
     import Logo from './Logo'
     import { eventBus } from './util'
     export default {
-        name: 'stage-check-icon',
+        name: 'StageCheckIcon',
         components: {
             Logo
         },

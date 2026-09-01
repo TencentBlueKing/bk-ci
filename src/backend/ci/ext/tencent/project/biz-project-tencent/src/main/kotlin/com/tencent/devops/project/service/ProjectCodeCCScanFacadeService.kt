@@ -63,7 +63,6 @@ class ProjectCodeCCScanFacadeService @Autowired constructor(
             projectService.create(
                 userId = userId,
                 projectCreateInfo = projectCreateInfo,
-                accessToken = null,
                 createExtInfo = ProjectCreateExtInfo(needValidate = false, needAuth = false),
                 defaultProjectId = projectCreateInfo.englishName,
                 projectChannel = ProjectChannelCode.CODECC

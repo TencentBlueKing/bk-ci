@@ -32,6 +32,7 @@ dependencies {
     api(project(":core:common:common-dispatch-sdk"))
     api(project(":core:common:common-service"))
     api(project(":core:common:common-redis"))
+    api(project(":core:common:common-auth:common-auth-api"))
 
     api(project(":ext:tencent:common:common-devcloud"))
     api(project(":ext:tencent:common:common-pipeline-tencent"))

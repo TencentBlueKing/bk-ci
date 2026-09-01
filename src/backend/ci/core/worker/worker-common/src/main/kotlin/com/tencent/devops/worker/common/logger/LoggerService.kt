@@ -56,6 +56,7 @@ import com.tencent.devops.worker.common.utils.WorkspaceUtils
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry
 import java.io.File
+import java.net.SocketTimeoutException
 import java.sql.Date
 import java.text.SimpleDateFormat
 import java.time.Duration
@@ -65,11 +66,14 @@ import java.util.concurrent.Future
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.locks.ReentrantLock
 import org.slf4j.LoggerFactory
 
 @Suppress("MagicNumber", "TooManyFunctions", "ComplexMethod", "LongMethod")
 object LoggerService {
+
+    private const val LOG_UPLOAD_BATCH_MIN = 200
 
     private val logResourceApi = ApiFactory.create(LogSDKApi::class)
     private val archiveApi = ApiFactory.create(ArchiveSDKApi::class)
@@ -82,16 +86,16 @@ object LoggerService {
         CircuitBreakerConfig.custom()
             .enableAutomaticTransitionFromOpenToHalfOpen()
             .writableStackTraceEnabled(false)
-            // 当熔断后等待 300s 放开熔断
-            .waitDurationInOpenState(Duration.ofSeconds(300))
+            // 当熔断后等待 60s 放开熔断，避免短暂超时后长时间丢日志
+            .waitDurationInOpenState(Duration.ofSeconds(60))
             // 熔断放开后，运行通过的请求数，如果达到熔断条件，继续熔断
             .permittedNumberOfCallsInHalfOpenState(100)
             // 当错误率达到 10% 开启熔断
             .failureRateThreshold(10.0F)
             // 慢请求超过 10% 开启熔断
             .slowCallRateThreshold(10.0F)
-            // 请求超过 1s 就是慢请求
-            .slowCallDurationThreshold(Duration.ofSeconds(1))
+            // 请求超过 5s 就是慢请求（大批量上报常超过 1s，避免误伤）
+            .slowCallDurationThreshold(Duration.ofSeconds(5))
             // 滑动窗口大小为 100，默认值
             .slidingWindowSize(100)
             .build()
@@ -113,12 +117,21 @@ object LoggerService {
     private val uploadQueue = LinkedBlockingQueue<LogMessage>(2000)
 
     /**
+     * 单次上报批量，默认 [BULK_BUFFER_SIZE]。超时后降到 [LOG_UPLOAD_BATCH_MIN]，成功后再加倍恢复。
+     */
+    private val uploadBatchSize = AtomicInteger(BULK_BUFFER_SIZE)
+
+    /**
      * 每个插件的日志存储属性映射
      */
     private val elementId2LogProperty = mutableMapOf<String, TaskBuildLogProperty>()
 
     /**
      * 当前执行插件的各类构建信息
+     *
+     * 注意：这些字段是Job级别的兜底值，仅在没有[threadLocalContext]时使用。
+     * 真正的"当前插件"应优先从[threadLocalContext]中读取，避免主循环切换插件后，
+     * 上一个插件残留的pump线程把日志打到下一个插件名下。
      */
     var elementId = ""
     var stepId = ""
@@ -129,6 +142,52 @@ object LoggerService {
     var buildVariables: BuildVariables? = null
     var pipelineLogDir: File? = null
     var loggingLineLimit: Int = LOG_TASK_LINE_LIMIT
+
+    /**
+     * 单个插件执行期间的不变上下文，仅供日志归属使用。
+     *
+     * 由[com.tencent.devops.worker.common.task.TaskDaemon.call]在插件执行线程入口
+     * 设置、出口清理，通过[InheritableThreadLocal]使插件派生的子线程（如commons-exec
+     * 的PumpStreamHandler）自动继承，从而保证残余/异步日志始终以正确的elementId上报。
+     */
+    data class TaskExecutionContext(
+        val elementId: String,
+        val stepId: String,
+        val elementName: String,
+        val containerHashId: String,
+        val jobId: String,
+        val executeCount: Int
+    )
+
+    private val threadLocalContext = InheritableThreadLocal<TaskExecutionContext?>()
+
+    /**
+     * 由插件执行线程入口调用，绑定当前线程及其后续派生子线程的日志归属。
+     */
+    fun setTaskContext(ctx: TaskExecutionContext) {
+        threadLocalContext.set(ctx)
+    }
+
+    /**
+     * 由插件执行线程出口调用，清理本线程绑定的上下文。
+     */
+    fun clearTaskContext() {
+        threadLocalContext.remove()
+    }
+
+    /**
+     * 获取当前生效的日志上下文：优先取线程绑定值，无则回退到Job级单例字段。
+     */
+    private fun effectiveContext(): TaskExecutionContext {
+        return threadLocalContext.get() ?: TaskExecutionContext(
+            elementId = elementId,
+            stepId = stepId,
+            elementName = elementName,
+            containerHashId = containerHashId,
+            jobId = jobId,
+            executeCount = executeCount
+        )
+    }
 
     private val lock = ReentrantLock()
 
@@ -155,8 +214,8 @@ object LoggerService {
 
                 val size = logMessages.size
                 val now = System.currentTimeMillis()
-                // 缓冲大于200条或上次保存时间超过3秒
-                if (size >= BULK_BUFFER_SIZE || (size > 0 && (now - lastSaveTime > 3 * 1000))) {
+                // 达到当前上报批量或距上次保存超过 3 秒
+                if (size >= uploadBatchSize.get() || (size > 0 && (now - lastSaveTime > 3 * 1000))) {
                     flush()
                     lastSaveTime = now
                     currentTaskLineNo += size
@@ -240,9 +299,13 @@ object LoggerService {
         }
     }
 
-    fun finishTask() = finishLog(elementId, containerHashId, executeCount)
+    fun finishTask() {
+        val ctx = effectiveContext()
+        finishLog(ctx.elementId, ctx.containerHashId, ctx.executeCount)
+    }
 
     fun addNormalLine(message: String) {
+        val ctx = effectiveContext()
         var subTag: String? = null
         var realMessage = message
 
@@ -255,7 +318,7 @@ object LoggerService {
                 realMessage = list.last()
             }
             if (realMessage.startsWith(LOG_SUBTAG_FINISH_FLAG)) {
-                finishLog(elementId, containerHashId, executeCount, subTag)
+                finishLog(ctx.elementId, ctx.containerHashId, ctx.executeCount, subTag)
                 realMessage = realMessage.removePrefix(LOG_SUBTAG_FINISH_FLAG)
             }
             realMessage = prefix + realMessage
@@ -273,19 +336,19 @@ object LoggerService {
         val logMessage = LogMessage(
             message = realMessage,
             timestamp = System.currentTimeMillis(),
-            tag = elementId,
+            tag = ctx.elementId,
             subTag = subTag,
-            containerHashId = containerHashId,
+            containerHashId = ctx.containerHashId,
             logType = logType,
-            executeCount = executeCount,
-            jobId = jobId,
-            stepId = stepId
+            executeCount = ctx.executeCount,
+            jobId = ctx.jobId,
+            stepId = ctx.stepId
         )
         logger.info(logMessage.toString())
 
         // #3772 如果已经进入Job执行任务，则可以做日志本地落盘
-        if (elementId.isNotBlank() && pipelineLogDir != null) {
-            saveLocalLog(logMessage)
+        if (ctx.elementId.isNotBlank() && pipelineLogDir != null) {
+            saveLocalLog(ctx.elementId, ctx.executeCount, logMessage)
         }
 
         try {
@@ -299,9 +362,9 @@ object LoggerService {
                     this.uploadQueue.put(logMessage.copy(message = chunk))
                     offset += LOG_MESSAGE_LENGTH_LIMIT
                 }
-            } else if (elementId2LogProperty[elementId]?.logStorageMode != LogStorageMode.LOCAL) {
+            } else if (elementId2LogProperty[ctx.elementId]?.logStorageMode != LogStorageMode.LOCAL) {
                 logger.warn(
-                    "The number of Task[$elementId] log lines exceeds the limit, " +
+                    "The number of Task[${ctx.elementId}] log lines exceeds the limit, " +
                         "the log file will be archived."
                 )
                 this.uploadQueue.put(
@@ -311,7 +374,7 @@ object LoggerService {
                         logType = LogType.WARN
                     )
                 )
-                elementId2LogProperty[elementId]?.logStorageMode = LogStorageMode.LOCAL
+                elementId2LogProperty[ctx.elementId]?.logStorageMode = LogStorageMode.LOCAL
             }
         } catch (ignored: InterruptedException) {
             logger.error("Writing to a $logType log line failed：", ignored)
@@ -337,29 +400,31 @@ object LoggerService {
     }
 
     fun addFoldStartLine(foldName: String) {
+        val ctx = effectiveContext()
         val logMessage = LogMessage(
             message = "##[group]$foldName",
             timestamp = System.currentTimeMillis(),
-            tag = elementId,
-            containerHashId = containerHashId,
+            tag = ctx.elementId,
+            containerHashId = ctx.containerHashId,
             logType = LogType.LOG,
-            executeCount = executeCount,
-            jobId = jobId,
-            stepId = stepId
+            executeCount = ctx.executeCount,
+            jobId = ctx.jobId,
+            stepId = ctx.stepId
         )
         addLog(logMessage)
     }
 
     fun addFoldEndLine(foldName: String) {
+        val ctx = effectiveContext()
         val logMessage = LogMessage(
             message = "##[endgroup]$foldName",
             timestamp = System.currentTimeMillis(),
-            tag = elementId,
-            containerHashId = containerHashId,
+            tag = ctx.elementId,
+            containerHashId = ctx.containerHashId,
             logType = LogType.LOG,
-            executeCount = executeCount,
-            jobId = jobId,
-            stepId = stepId
+            executeCount = ctx.executeCount,
+            jobId = ctx.jobId,
+            stepId = ctx.stepId
         )
         addLog(logMessage)
     }
@@ -437,49 +502,100 @@ object LoggerService {
     private fun addLog(message: LogMessage) = uploadQueue.put(message)
 
     private fun sendMultiLog() {
-        try {
-            logger.info("Start to save the log - ${logMessages.size}")
+        logger.info("Start to save the log - ${logMessages.size}")
 
-            // 如果agent启动时日志模式为本地保存，则不做上报
-            if (LogStorageMode.LOCAL == AgentEnv.getLogMode()) {
-                return
+        // 如果agent启动时日志模式为本地保存，则不做上报
+        if (LogStorageMode.LOCAL == AgentEnv.getLogMode()) {
+            return
+        }
+
+        val batchSize = uploadBatchSize.get().coerceAtLeast(LOG_UPLOAD_BATCH_MIN)
+        var index = 0
+        while (index < logMessages.size) {
+            val end = minOf(index + batchSize, logMessages.size)
+            if (!sendLogChunk(logMessages.subList(index, end))) {
+                break
             }
+            index = end
+        }
+    }
 
-            // 通过上报的结果感知是否需要调整模式
+    private fun sendLogChunk(chunk: List<LogMessage>): Boolean {
+        try {
+            // 通过上报的结果感知是否需要调整模式。
+            // projectId 由 AbstractBuildResourceApi 自动带上 X-DEVOPS-PROJECT-ID（AgentEnv.getProjectId()），
+            // pipelineId 由同一处可选带上 X-DEVOPS-PIPELINE-ID；旧 log 服务忽略未知 header，新旧可任意顺序发布。
             val result = doWithCircuitBreaker {
-                logResourceApi.addLogMultiLine(buildVariables?.buildId ?: "", logMessages)
+                logResourceApi.addLogMultiLine(buildVariables?.buildId ?: "", chunk)
             }
             when {
                 // 当log服务返回拒绝请求或者并发量超限制时，自动切换模式为本地保存并归档
                 result.status == 503 || result.status == 509 -> {
                     logger.warn("Log service storage is unable：${result.message}")
                     disableLogUpload()
+                    return false
                 }
 
                 result.isNotOk() -> {
                     logger.error("Fail to send the multi logs：${result.message}")
                 }
             }
+            recoverUploadBatch()
+            return true
         } catch (ignored: Exception) {
-            logger.warn("Fail to send the logs(${logMessages.size})", ignored)
+            logger.warn("Fail to send the logs(${chunk.size})", ignored)
+            if (isTimeout(ignored)) {
+                shrinkUploadBatch(chunk.size)
+            }
+            return false
         }
     }
 
-    private fun saveLocalLog(logMessage: LogMessage) {
+    private fun shrinkUploadBatch(failedSize: Int) {
+        val current = uploadBatchSize.get()
+        if (current > LOG_UPLOAD_BATCH_MIN && uploadBatchSize.compareAndSet(current, LOG_UPLOAD_BATCH_MIN)) {
+            logger.warn(
+                "Log upload timed out (size=$failedSize), shrink batch $current -> $LOG_UPLOAD_BATCH_MIN"
+            )
+        }
+    }
+
+    private fun recoverUploadBatch() {
+        val current = uploadBatchSize.get()
+        if (current < BULK_BUFFER_SIZE) {
+            val next = minOf(BULK_BUFFER_SIZE, current * 2)
+            if (uploadBatchSize.compareAndSet(current, next)) {
+                logger.info("Log upload batch recovered to $next")
+            }
+        }
+    }
+
+    private fun isTimeout(error: Throwable): Boolean {
+        var current: Throwable? = error
+        while (current != null) {
+            if (current is SocketTimeoutException) {
+                return true
+            }
+            current = current.cause
+        }
+        return false
+    }
+
+    private fun saveLocalLog(taskId: String, taskExecuteCount: Int, logMessage: LogMessage) {
         try {
             // 必要的本地保存
-            var logProperty = elementId2LogProperty[elementId]
+            var logProperty = elementId2LogProperty[taskId]
             if (null == logProperty) {
                 logProperty = WorkspaceUtils.getBuildLogProperty(
                     pipelineLogDir = pipelineLogDir!!,
                     pipelineId = buildVariables?.pipelineId!!,
                     buildId = buildVariables?.buildId!!,
-                    elementId = elementId,
-                    executeCount = executeCount,
+                    elementId = taskId,
+                    executeCount = taskExecuteCount,
                     logStorageMode = AgentEnv.getLogMode()
                 )
                 logger.info("Create new build log file(${logProperty.logFile.absolutePath})")
-                elementId2LogProperty[elementId] = logProperty
+                elementId2LogProperty[taskId] = logProperty
             }
             val dateTime = sdf.format(Date(logMessage.timestamp))
             logProperty.logFile.appendText("$dateTime : ${logMessage.message}\n")

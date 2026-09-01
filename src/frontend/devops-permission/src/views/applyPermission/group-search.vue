@@ -26,7 +26,7 @@ const props = defineProps({
 });
 
 const { t } = useI18n();
-const bkEllipsis = resolveDirective('bk-ellipsis');
+const bkTooltips = resolveDirective('bk-tooltips');
 const showDetail = ref(false);
 const tableRef = ref();
 const groupInfo = ref([]);
@@ -168,15 +168,18 @@ const handleChangeSearch = (data) => {
   }, 100);
 };
 
-const fetchGroupList = async (payload = []) => {
+const fetchGroupList = async (payload: any[] = []) => {
   const projectId = props.projectCode || route?.query.project_code;
   if (!projectId) return;
-  const params = {
+  const params: Record<string, any> = {
     page: pagination.value.current,
     pageSize: pagination.value.limit,
     groupLevel: groupLevel.value,
     projectId,
   };
+  if (route?.query?.redirect) {
+    params.redirect = true;
+  }
   payload.forEach((i) => {
     if (i.id === 'actionId') {
       const { values } = i;
@@ -244,18 +247,30 @@ const handleSelectAllGroup = (val) => {
   }
 };
 
-const renderSelectionCell = ({ row, column }) => h(
-  BkCheckbox,
-  {
-    modelValue: row.joined ? row.joined : selections.value.some(item => item.id === row.id),
-    disabled: row.joined,
-    class: 'label-text',
-    title: row.joined ? t('你已获得该权限') : '',
-    onChange(val) {
-      handleSelectRow(val, row);
+const renderSelectionCell = ({ row, column }) => {
+  const tipContent = getDisableGroupTitle(row);
+  const checkbox = h(
+    BkCheckbox,
+    {
+      modelValue: row.joined ? row.joined : selections.value.some(item => item.id === row.id),
+      disabled: row.joined || row.applyDisable,
+      class: 'label-text',
+      onChange(val) {
+        handleSelectRow(val, row);
+      },
     },
-  },
-);
+  );
+  if (tipContent) {
+    return withDirectives(checkbox, [[bkTooltips, tipContent]]);
+  }
+  return checkbox;
+};
+
+const getDisableGroupTitle = (row: any) => {
+  if (row.joined) return t('你已获得该权限');
+  if (row.applyDisable) return t('该组不可被申请，请联系管理员主动授权');
+  return ''
+}
 
 const renderSelectionHeader = (col: any) => h(
   BkCheckbox,
@@ -283,14 +298,10 @@ const columns = [
   },
   {
     label: t('资源实例'),
-    render({ cell, row }) {
-      return withDirectives(h(
-        'div',
-        {
-          class: 'bk-ellipsis',
-        },
-        `${row.resourceTypeName}:${row.resourceName}`,
-      ), [[bkEllipsis]]);
+    field: 'resourceName',
+    showOverflowTooltip: true,
+    render({ row }) {
+      return `${row.resourceTypeName}:${row.resourceName}`;
     },
   },
   {
@@ -317,15 +328,8 @@ const columns = [
   },
   {
     label: t('描述'),
-    render({ cell, row }) {
-      return withDirectives(h(
-        'div',
-        {
-          class: 'bk-ellipsis',
-        },
-        row.description,
-      ), [[bkEllipsis]]);
-    },
+    field: 'description',
+    showOverflowTooltip: true,
   },
 ];
 
@@ -418,12 +422,6 @@ onMounted(() => {
 </style>
 
 <style lang="postcss">
-  .bk-ellipsis {
-    width: 100%;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    overflow: hidden;
-  }
   .group-table {
     .hover-highlight td:nth-child(1) {
       .cell {
@@ -439,3 +437,4 @@ onMounted(() => {
     }
   }
 </style>
+

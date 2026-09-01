@@ -77,13 +77,6 @@ data class CmdbServerDTO(
         return ip
     }
 
-    fun getBakOperatorStr(): String {
-        if (bakOperatorList.isNullOrEmpty()) {
-            return ""
-        }
-        return bakOperatorList.joinToString(";")
-    }
-
     /**
      * 获取备份负责人字符串，如果超过256个字符，则截取拼接后不超过256个字符的前N个备份负责人组成字符串
      */

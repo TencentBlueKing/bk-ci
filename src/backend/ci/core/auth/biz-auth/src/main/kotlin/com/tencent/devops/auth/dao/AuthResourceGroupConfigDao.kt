@@ -31,6 +31,7 @@ package com.tencent.devops.auth.dao
 import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.model.auth.tables.TAuthResourceGroupConfig
 import com.tencent.devops.model.auth.tables.records.TAuthResourceGroupConfigRecord
+import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.stereotype.Repository
@@ -113,6 +114,145 @@ class AuthResourceGroupConfigDao {
                 .limit(pageSize).offset((page - 1) * pageSize)
                 .skipCheck()
                 .fetch()
+        }
+    }
+
+    fun listAll(
+        dslContext: DSLContext
+    ): Result<TAuthResourceGroupConfigRecord> {
+        return with(TAuthResourceGroupConfig.T_AUTH_RESOURCE_GROUP_CONFIG) {
+            dslContext.selectFrom(this)
+                .orderBy(ID.asc())
+                .skipCheck()
+                .fetch()
+        }
+    }
+
+    fun getMaxId(dslContext: DSLContext): Long {
+        return with(TAuthResourceGroupConfig.T_AUTH_RESOURCE_GROUP_CONFIG) {
+            dslContext.select(ID.max())
+                .from(this)
+                .fetchOne(0, Long::class.java) ?: 0L
+        }
+    }
+
+    fun create(
+        dslContext: DSLContext,
+        resourceType: String,
+        groupCode: String,
+        groupName: String,
+        description: String?,
+        createMode: Boolean,
+        groupType: Int,
+        actions: String,
+        authorizationScopes: String?
+    ): Long {
+        val now = LocalDateTime.now()
+        val newId = getMaxId(dslContext) + 1
+        with(TAuthResourceGroupConfig.T_AUTH_RESOURCE_GROUP_CONFIG) {
+            dslContext.insertInto(
+                this,
+                ID,
+                RESOURCE_TYPE,
+                GROUP_CODE,
+                GROUP_NAME,
+                DESCRIPTION,
+                CREATE_MODE,
+                GROUP_TYPE,
+                ACTIONS,
+                AUTHORIZATION_SCOPES,
+                CREATE_TIME,
+                UPDATE_TIME
+            ).values(
+                newId,
+                resourceType,
+                groupCode,
+                groupName,
+                description,
+                createMode,
+                groupType,
+                actions,
+                authorizationScopes,
+                now,
+                now
+            ).execute()
+        }
+        return newId
+    }
+
+    fun batchCreate(
+        dslContext: DSLContext,
+        configs: List<TAuthResourceGroupConfigRecord>
+    ): Int {
+        if (configs.isEmpty()) {
+            return 0
+        }
+        val now = LocalDateTime.now()
+        var currentMaxId = getMaxId(dslContext)
+        return with(TAuthResourceGroupConfig.T_AUTH_RESOURCE_GROUP_CONFIG) {
+            var count = 0
+            configs.forEach { record ->
+                currentMaxId++
+                val result = dslContext.insertInto(
+                    this,
+                    ID,
+                    RESOURCE_TYPE,
+                    GROUP_CODE,
+                    GROUP_NAME,
+                    DESCRIPTION,
+                    CREATE_MODE,
+                    GROUP_TYPE,
+                    ACTIONS,
+                    AUTHORIZATION_SCOPES,
+                    CREATE_TIME,
+                    UPDATE_TIME
+                ).values(
+                    currentMaxId,
+                    record.resourceType,
+                    record.groupCode,
+                    record.groupName,
+                    record.description,
+                    record.createMode,
+                    record.groupType,
+                    record.actions,
+                    record.authorizationScopes,
+                    now,
+                    now
+                ).onDuplicateKeyUpdate()
+                    .set(GROUP_NAME, record.groupName)
+                    .set(DESCRIPTION, record.description)
+                    .set(ACTIONS, record.actions)
+                    .set(AUTHORIZATION_SCOPES, record.authorizationScopes)
+                    .set(UPDATE_TIME, now)
+                    .execute()
+                count += result
+            }
+            count
+        }
+    }
+
+    fun updateAuthorizationScopes(
+        dslContext: DSLContext,
+        id: Long,
+        authorizationScopes: String
+    ): Boolean {
+        return with(TAuthResourceGroupConfig.T_AUTH_RESOURCE_GROUP_CONFIG) {
+            dslContext.update(this)
+                .set(AUTHORIZATION_SCOPES, authorizationScopes)
+                .set(UPDATE_TIME, LocalDateTime.now())
+                .where(ID.eq(id))
+                .execute() > 0
+        }
+    }
+
+    fun delete(
+        dslContext: DSLContext,
+        id: Long
+    ): Boolean {
+        return with(TAuthResourceGroupConfig.T_AUTH_RESOURCE_GROUP_CONFIG) {
+            dslContext.deleteFrom(this)
+                .where(ID.eq(id))
+                .execute() > 0
         }
     }
 

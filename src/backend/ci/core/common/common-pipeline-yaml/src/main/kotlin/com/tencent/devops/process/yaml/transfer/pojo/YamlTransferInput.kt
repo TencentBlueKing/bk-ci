@@ -1,6 +1,7 @@
 package com.tencent.devops.process.yaml.transfer.pojo
 
 import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.template.ITemplateModel
 import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.pojo.BuildTemplateAcrossInfo
@@ -16,5 +17,6 @@ data class YamlTransferInput(
     val aspectWrapper: PipelineTransferAspectWrapper,
     val defaultScmType: ScmType = ScmType.CODE_GIT,
     val jobTemplateAcrossInfo: Map<String, BuildTemplateAcrossInfo>? = null,
-    val templateType: Class<out ITemplateModel>? = null
+    val templateType: Class<out ITemplateModel>? = null,
+    val channelCode: ChannelCode = ChannelCode.BS
 )

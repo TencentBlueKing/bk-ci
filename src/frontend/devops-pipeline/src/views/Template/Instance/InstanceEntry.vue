@@ -6,7 +6,7 @@
         <template>
             <header class="instance-entry-header">
                 <TemplateBreadCrumb
-                    :template-name="pipeline?.name"
+                    :template-name="templateName"
                     :is-loading="!pipeline"
                 />
                 <aside
@@ -26,7 +26,7 @@
                     >
                         <bk-button
                             theme="primary"
-                            :disabled="(templateRefTypeById ? !templateVersion : !templateRef) || (isInstanceCreateViewType && !instanceList.length) || isEditing"
+                            :disabled="(templateRefTypeById ? !templateVersion : !templateRef) || (isInstanceCreateViewType && !instanceList.length) || isEditing || fetchPipelinesError"
                             @click="handleBatchUpgrade"
                         >
                             {{ releaseBtnText }}
@@ -67,6 +67,7 @@
             </main>
         </template>
         <ReleasePipelineSideSlider
+            ref="releaseSideSlider"
             v-model="showRelease"
             is-template-instance-mode
             :version="currentVersionId"
@@ -96,7 +97,7 @@
         UPDATE_TEMPLATE_REF_TYPE,
         INSTANCE_OPERATE_TYPE
     } from '@/store/modules/templates/constants'
-    import { deepClone } from '@/utils/util'
+    import { deepClone, isParamValueEqual } from '@/utils/util'
     import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
     import BatchEditConfig from './BatchEditConfig'
     import InstanceAside from './InstanceAside'
@@ -105,6 +106,7 @@
 
     const { proxy } = UseInstance()
     const instanceConfigRef = ref(null)
+    const releaseSideSlider = ref(null)
     const isLoading = ref(false)
     const showRelease = ref(false)
     const showBatchEdit = ref(false)
@@ -123,6 +125,8 @@
     const templateRefType = computed(() => proxy.$store?.state?.templates?.templateRefType)
     const templateRefTypeById = computed(() => templateRefType.value === 'ID')
     const curTemplateDetail = computed(() => proxy.$store?.state?.templates?.templateDetail)
+    const fetchPipelinesError = computed(() => proxy.$store?.state?.templates?.fetchPipelinesError)
+    const templateName =  computed(() => pipelineInfo.value?.name ?? pipeline.value?.name)
 
     const releaseBtnText = computed(() => {
         const type = proxy.$route.params?.type
@@ -218,6 +222,7 @@
                 theme: 'error',
                 message: proxy.$t(`unknown type, ${type}`)
             })
+            releaseSideSlider.value?.resetReleasing?.()
             return
         }
         const { valid, message } = checkInstanceListInValid()
@@ -226,6 +231,7 @@
                 theme: 'error',
                 message
             })
+            releaseSideSlider.value?.resetReleasing?.()
             throw new Error(message)
         }
         try {
@@ -233,7 +239,7 @@
                 return {
                     pipelineId: item.pipelineId,
                     pipelineName: item.pipelineName,
-                    ...(item.buildNo ? {
+                    ...(item.buildNo && !item.buildNo.isDelete ? {
                         buildNo: {
                             ...item?.buildNo,
                             required: item.buildNo?.isRequiredParam
@@ -262,10 +268,17 @@
                     ...value
                 }
             })
-            proxy.$store.commit(`templates/${SET_RELEASE_BASE_ID}`, res.data)
-            proxy.$store.commit(`templates/${SET_RELEASE_ING}`, true)
+            releaseSideSlider.value?.resetReleasing?.()
+            proxy.$nextTick(() => {
+                proxy.$store.commit(`templates/${SET_RELEASE_BASE_ID}`, res.data)
+                proxy.$store.commit(`templates/${SET_RELEASE_ING}`, true)
+            })
         } catch (e) {
-            console.error(e)
+            proxy.$showTips({
+                theme: 'error',
+                message: e.message || e
+            })
+            releaseSideSlider.value?.resetReleasing?.()
         }
     }
     function handleBatchEdit () {
@@ -302,8 +315,8 @@
                     return {
                         ...p,
                         defaultValue: newValue,
-                        isChange: newValue !== p.defaultValue,
-                        hasChange: newValue !== templateDefaultValue,
+                        isChange: !isParamValueEqual(newValue, p.defaultValue),
+                        hasChange: !isParamValueEqual(newValue, templateDefaultValue),
                         propertyUpdates
                     }
                 }

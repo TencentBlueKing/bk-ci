@@ -65,7 +65,7 @@ const jobOptionConfigMixin = {
             },
             JOB_MATRIX: {
                 strategyStr: {
-                    required: true,
+                    required: false,
                     rule: {},
                     component: 'atom-ace-editor',
                     lang: 'yaml',

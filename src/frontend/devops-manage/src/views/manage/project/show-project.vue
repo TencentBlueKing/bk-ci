@@ -16,7 +16,9 @@ import {
   onMounted,
   ref,
   computed,
-  watch
+  watch,
+  onUnmounted,
+  nextTick
 } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRoute, useRouter } from 'vue-router';
@@ -41,18 +43,22 @@ const exceptionObj = ref({
 const showFailedEnableDialog = ref(false);
 const showDisableProjectDialog = ref(false);
 const activeTab = ref('projectSettings');
+const isPersonalProject = computed(() => projectData.value.projectScope === 1)
 const tabPanels = computed(() => [
   {
     name: 'projectSettings',
     label: '项目信息',
     activeCollapse: ['baseInfo', 'permission'],
-    panels: [{
-      name: 'baseInfo',
-      title: '基础信息',
-    }, {
-      name: 'permission',
-      title: '权限',
-    }]
+    panels: [
+      {
+        name: 'baseInfo',
+        title: '基础信息',
+      },
+      ...(!isPersonalProject.value ? [{
+        name: 'permission',
+        title: '权限',
+      }] : [])
+    ]
   },
   {
     name: 'pipelineSettings',
@@ -75,6 +81,7 @@ const tabPanels = computed(() => [
 ])
 
 const projectList: any[] = [];
+
 const fetchProjectData = async () => {
   isLoading.value = true;
   await http
@@ -176,6 +183,10 @@ const fieldMap = [
     current: 'productName',
     after: 'afterProductName'
   },
+  {
+    current: 'kpiName',
+    after: 'afterKpiName'
+  },
 
 ];
 const propertiesFieldMap = [
@@ -267,7 +278,7 @@ const handleCancelUpdate = () => {
         theme: 'success',
         message: t('取消更新成功'),
       });
-      fetchProjectData();
+      await fetchProjectData();
       projectDiffData.value = {};
     }
   };
@@ -410,6 +421,23 @@ const projectTypeNameMap = {
   4: t('平台产品'),
   5: t('支撑产品'),
 }
+
+// 按钮吸底状态
+const isBtnFixed = ref(false);
+const projectInfoContentRef = ref<HTMLElement | null>(null);
+const resizeObserver = ref<ResizeObserver | null>(null);
+
+const checkContentOverflow = () => {
+  const contentEl = projectInfoContentRef.value;
+  if (!contentEl) return;
+  
+  // 获取容器可视高度和内容实际高度
+  const containerHeight = contentEl.clientHeight;
+  const scrollHeight = contentEl.scrollHeight;
+  
+  isBtnFixed.value = scrollHeight > containerHeight;
+};
+
 watch(() => projectData.value.approvalStatus, (status) => {
   if (status === 4) fetchDiffProjectData();
 }, {
@@ -423,6 +451,21 @@ onMounted(async () => {
   await getUserInfo();
   await fetchProjectData();
   await fetchOperationalList(projectData.value.bgName);
+
+  await nextTick();
+  checkContentOverflow();
+  resizeObserver.value = new ResizeObserver(checkContentOverflow);
+  if (projectInfoContentRef.value) {
+    resizeObserver.value.observe(projectInfoContentRef.value);
+  }
+});
+
+onUnmounted(() => {
+  if (resizeObserver.value) {
+    resizeObserver.value.disconnect();
+  }
+  // 移除窗口大小变化监听
+  window.removeEventListener('resize', checkContentOverflow);
 });
 </script>
 
@@ -440,7 +483,7 @@ onMounted(async () => {
         <span v-if="projectData.approvalMsg">{{ t('拒绝理由：') }}{{ projectData.approvalMsg }}</span>
       </template>
     </bk-alert>
-    <div class="project-info-content">
+    <div class="project-info-content" ref="projectInfoContentRef">
       <bk-tab
         class="content-wrapper"
         v-model:active="activeTab"
@@ -518,6 +561,15 @@ onMounted(async () => {
                               {{ t('本次更新：') }}
                             </p>
                             <span>{{ projectData.afterProductName || projectData.afterProductId }}</span>
+                          </div>
+                        </bk-form-item>
+                        <bk-form-item :label="t('KPI代码')" property="bg" v-if="projectData.kpiName">
+                          <span>{{ projectData.kpiName || projectData.kpiCode }}</span>
+                          <div class="diff-content" v-if="projectData.afterKpiName">
+                            <p class="update-title">
+                              {{ t('本次更新：') }}
+                            </p>
+                            <span>{{ projectData.afterKpiName || projectData.afterKpiCode }}</span>
                           </div>
                         </bk-form-item>
                         <bk-form-item :label="t('项目所属组织')" property="bg">
@@ -640,6 +692,28 @@ onMounted(async () => {
               </template>
               <template v-if="panel.name === 'artifactory'">
                 <bk-form label-position="right" :label-width="200">
+                  <bk-form-item
+                    v-if="projectData.properties"
+                    :label="t('允许共享制品')"
+                    :label-width="120"
+                    property="enableShareArtifact"
+                    :description="t('开启后，允许「共享」制品，可生成不鉴权的制品分享链接。获得链接的用户登录平台后，可通过链接下载对应制品。')"
+                  >
+                    <div>
+                      <bk-switcher
+                        v-model="projectData.properties.enableShareArtifact"
+                        size="small"
+                        disabled
+                        theme="primary"
+                      />
+                      <div class="diff-content" v-if="projectData.afterEnableShareArtifact">
+                        <p class="update-title">
+                          {{ t('本次更新：') }}
+                        </p>
+                        <span>{{ t(projectData.afterEnableShareArtifact) }}</span>
+                      </div>
+                    </div>
+                  </bk-form-item>
                   <ArtifactoryContent 
                     :data="projectData"
                     type="show"
@@ -663,8 +737,9 @@ onMounted(async () => {
           {{ t('去申请') }}
         </bk-button>
       </bk-exception>
-
-      <div class="btn-group">
+    </div>
+    <div :class="['btn-group', { 'fixed-bottom': isBtnFixed }]">
+      <div class="btns">
         <!--
           approvalStatus
           0-创建成功/修改成功,最终态
@@ -787,10 +862,11 @@ onMounted(async () => {
   .project-info {
     display: flex;
     flex-direction: column;
-    padding: 24px;
+    padding: 24px 0 0;
     height: 100%;
     width: 100%;
-    overflow: auto;
+    position: relative;
+    overflow: hidden;
     &::-webkit-scrollbar-thumb {
       background-color: #c4c6cc !important;
       border-radius: 5px !important;
@@ -803,16 +879,11 @@ onMounted(async () => {
       height: 8px !important;
     }
   }
-  .content-wrapper {
-    flex: 1;
-    width: 100%;
-  }
   .project-info-content {
-    display: flex;
-    flex-direction: column;
     width: 1200px;
-    height: 100%;
     margin: 0 auto;
+    height: max-content;
+    overflow: auto;
     &::-webkit-scrollbar-thumb {
       background-color: #c4c6cc !important;
       border-radius: 5px !important;
@@ -827,7 +898,7 @@ onMounted(async () => {
   }
   .status-tips {
     width: 1200px;
-    margin: auto;
+    margin: 0 auto;
     margin-bottom: 16px;
   }
   .approval-details {
@@ -844,7 +915,7 @@ onMounted(async () => {
     box-shadow: 0 2px 2px 0 rgb(0 0 0 / 15%);
   }
   .detail-content-form {
-    margin-bottom: 20px;
+    margin-bottom: 16px;
     padding: 16px 18px 16px 32px;
     background-color: #fff;
     box-shadow: 0 2px 2px 0 rgb(0 0 0 / 15%);
@@ -934,7 +1005,21 @@ onMounted(async () => {
     }
   }
   .btn-group {
-    margin-top: 20px;
+    height: 48px;
+    line-height: 48px;
+
+    .btns {
+      width: 1200px;
+      margin: 0 auto;
+    }
+    
+    &.fixed-bottom {
+      position: sticky;
+      bottom: 0;
+      z-index: 10;
+      background: #fafbfd;
+      border-top: 1px solid #EAEBF0;
+    }
   }
 </style>
 <style lang="postcss">

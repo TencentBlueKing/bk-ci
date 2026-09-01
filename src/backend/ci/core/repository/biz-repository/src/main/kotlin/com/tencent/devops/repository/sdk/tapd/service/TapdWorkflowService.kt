@@ -28,7 +28,7 @@
 package com.tencent.devops.repository.sdk.tapd.service
 
 import com.tencent.devops.repository.sdk.tapd.AutoRetryTapdClient
-import com.tencent.devops.repository.sdk.tapd.TapdResult
+import com.tencent.devops.scm.pojo.tapd.TapdResult
 import com.tencent.devops.repository.sdk.tapd.request.StatusMapRequest
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service

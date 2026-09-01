@@ -116,6 +116,12 @@ class CommonConfig {
     val devopsShortUrlGateway: String? = null
 
     /**
+     * Devops devx API地址
+     */
+    @Value("\${devopsGateway.devxApi:#{null}}")
+    val devopsDevxApiHostGateway: String? = null
+
+    /**
      * 微服务端口
      */
     @Value("\${server.port:80}")

@@ -98,11 +98,12 @@ const actions = {
      *
      * @return {Promise} promise 对象
      */
-    requestExecPipeline ({ commit, state, dispatch }, { projectId, pipelineId, version, params }) {
+    requestExecPipeline ({ commit, state, dispatch }, { projectId, pipelineId, version, branch, params }) {
         const url = `${prefix}${projectId}/${pipelineId}`
-        const query = {
-            version
-        }
+        // PAC 分支模式使用 branch 参数，其他情况使用 version 参数
+        const query = branch
+            ? { branch }
+            : { version }
         if (params.buildNo && typeof params.buildNo.currentBuildNo !== 'undefined') {
             Object.assign(query, {
                 buildNo: params.buildNo.currentBuildNo

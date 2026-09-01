@@ -39,7 +39,6 @@ import java.time.LocalDateTime
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
-import org.jooq.Record18
 import org.jooq.Result
 import org.jooq.SelectJoinStep
 import org.springframework.stereotype.Repository
@@ -137,7 +136,7 @@ class MarketAtomEnvInfoDao {
     private fun getAtomBaseInfoStep(
         dslContext: DSLContext,
         tAtom: TAtom
-    ): SelectJoinStep<Record18<String, String, Byte, String, String, String, Boolean, String, String, Boolean, String, String, Int, String, String, String, LocalDateTime, LocalDateTime>> {
+    ): SelectJoinStep<out Record> {
         return dslContext.select(
             tAtom.ID,
             tAtom.ATOM_CODE,
@@ -150,11 +149,17 @@ class MarketAtomEnvInfoDao {
             tAtom.DOCS_LINK,
             tAtom.BUILD_LESS_RUN_FLAG,
             tAtom.JOB_TYPE,
+            tAtom.JOB_TYPE_MAP,
             tAtom.PROPS,
             tAtom.VISIBILITY_LEVEL,
             tAtom.CLASSIFY_ID,
+            tAtom.CLASSIFY_ID_MAP,
             tAtom.HTML_TEMPLATE_VERSION,
             tAtom.CLASS_TYPE,
+            tAtom.SERVICE_SCOPE,
+            // OS 是 OS_MAP 为空的旧插件记录还原 jobType -> OS 映射的兜底来源，二者需一并查出
+            tAtom.OS,
+            tAtom.OS_MAP,
             tAtom.CREATE_TIME,
             tAtom.UPDATE_TIME
         ).from(tAtom)

@@ -8,7 +8,7 @@
         :handle-res-code="handleUploadRes"
         with-credentials
         :multiple="false"
-        :size="100"
+        :size="size"
         :custom-request="handleUploadFile"
         @on-error="handleUploadError"
     >

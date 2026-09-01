@@ -34,6 +34,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VAL
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.environment.constant.Constants
+import com.tencent.devops.environment.exception.CCApiException
 import com.tencent.devops.environment.pojo.job.ccreq.CCAddHostReq
 import com.tencent.devops.environment.pojo.job.ccreq.CCDeleteHostReq
 import com.tencent.devops.environment.pojo.job.ccreq.CCFindHostBizRelationsReq
@@ -151,23 +152,21 @@ class TencentCCService {
         val resBody = executePostRequest(
             getAuthHeaders(), url, ccListHostWithoutBizReq
         )
-        return mapper.readValue(resBody!!)
+        return parseCCResp(resBody, url)
     }
 
     fun addHostToCiBiz(svrIdList: List<Long>): CCResp<CCBkHost> {
         val ccAddHostReq = CCAddHostReq(svrIdList)
-        val resBody = executePostRequest(
-            getAuthHeaders(), bkccExecuteBaseUrl + bkccAddHostToCiBizPath, ccAddHostReq
-        )
-        return mapper.readValue(resBody!!)
+        val url = bkccExecuteBaseUrl + bkccAddHostToCiBizPath
+        val resBody = executePostRequest(getAuthHeaders(), url, ccAddHostReq)
+        return parseCCResp(resBody, url)
     }
 
     fun deleteHostFromCiBiz(hostIdList: Set<Long>): CCResp<Nothing> {
         val ccDeleteHostReq = CCDeleteHostReq(hostIdList)
-        val resBody = executeDeleteRequest(
-            getAuthHeaders(), bkccExecuteBaseUrl + bkccDeleteHostFromCiBizPath, ccDeleteHostReq
-        )
-        return mapper.readValue(resBody!!)
+        val url = bkccExecuteBaseUrl + bkccDeleteHostFromCiBizPath
+        val resBody = executeDeleteRequest(getAuthHeaders(), url, ccDeleteHostReq)
+        return parseCCResp(resBody, url)
     }
 
     fun queryCCFindHostBizRelations(hostIdList: List<Int>): CCResp<List<HostBizRelation>> {
@@ -177,10 +176,54 @@ class TencentCCService {
             bkUsername = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE,
             bkHostId = hostIdList
         )
-        val resBody = executePostRequest(
-            getAuthHeaders(), bkccQueryBaseUrl + bkccFindHostBizRelationsPath, ccFindHostBizRelationsReq
-        )
-        return mapper.readValue(resBody!!)
+        val url = bkccQueryBaseUrl + bkccFindHostBizRelationsPath
+        val resBody = executePostRequest(getAuthHeaders(), url, ccFindHostBizRelationsReq)
+        return parseCCResp(resBody, url)
+    }
+
+    /**
+     * 反序列化 CC 响应并校验业务级 `result`，失败时统一抛 [CCApiException]。
+     *
+     * 蓝鲸 Open API 业务失败时 HTTP 仍可能为 200，但响应体中 `result=false`、`data=null`，
+     * 失败原因由 `code`/`code_name`/`message` 体现（例：限频返回
+     * `code=1642902`、`code_name=RATE_LIMIT_RESTRICTION`）。不主动校验会让上层把失败
+     * 误当成"成功但数据为空"，引发删错节点之类的下游事故。
+     *
+     * 类型参数取外层 `R : CCResp<*>` 而非内层 `T`：reified 不允许被替换为 `Nothing`，
+     * 而 [deleteHostFromCiBiz] 的 `CCResp<Nothing>` 会反推出 `T = Nothing` 触发该限制。
+     */
+    private inline fun <reified R : CCResp<*>> parseCCResp(resBody: String?, url: String): R {
+        if (resBody.isNullOrBlank()) {
+            logger.warn("[bkccAPI]CC API failed|url={}|reason=blank response body", url)
+            throw CCApiException(url = url, message = "Response body is blank")
+        }
+        val resp: R = try {
+            mapper.readValue(resBody)
+        } catch (e: Exception) {
+            logger.warn(
+                "[bkccAPI]CC API failed|url={}|reason=deserialize error|body={}",
+                url, logWithLengthLimit(resBody)
+            )
+            throw CCApiException(
+                url = url,
+                message = "Deserialize CC response failed: ${e.message}",
+                cause = e
+            )
+        }
+        if (resp.result != true) {
+            logger.warn(
+                "[bkccAPI]CC API failed|url={}|code={}|codeName={}|requestId={}|message={}",
+                url, resp.code, resp.codeName, resp.requestId, resp.message
+            )
+            throw CCApiException(
+                url = url,
+                code = resp.code,
+                codeName = resp.codeName,
+                requestId = resp.requestId,
+                message = resp.message
+            )
+        }
+        return resp
     }
 
     private fun getAuthHeaders(): Map<String, String> {
@@ -195,16 +238,16 @@ class TencentCCService {
 
     private fun <T : Any> executePostRequest(headers: Map<String, String>, url: String, req: T): String? {
         val requestContent = mapper.writeValueAsString(req)
-        logger.info("POST url: $url, req: ${logWithLengthLimit(JsonUtil.skipLogFields(req) ?: "")}")
+        logger.info("[bkccAPI]Post url: $url, req: ${logWithLengthLimit(JsonUtil.skipLogFields(req) ?: "")}")
 
         val ccPostResBody = OkhttpUtils.doPost(url, requestContent, headers).body?.string()
-        logger.info("POST res: ${logWithLengthLimit(ccPostResBody ?: "")}")
+        logger.info("[bkccAPI]Post url: $url, resp: ${logWithLengthLimit(ccPostResBody ?: "")}")
         return ccPostResBody
     }
 
     private fun <T> executeDeleteRequest(headers: Map<String, String>, url: String, req: T): String? {
         val requestContent = mapper.writeValueAsString(req)
-        logger.info("DELETE url: $url, req: ${logWithLengthLimit(requestContent)}")
+        logger.info("[bkccAPI]Delete url: $url, req: ${logWithLengthLimit(requestContent)}")
         val requestBody = requestContent.toRequestBody("text/plain".toMediaTypeOrNull())
         val deleteReq: Request = Request.Builder()
             .url(url)
@@ -213,7 +256,7 @@ class TencentCCService {
             .build()
 
         val deleteResBody = OkhttpUtils.doHttp(deleteReq).body?.string()
-        logger.info("DELETE res: ${logWithLengthLimit(deleteResBody ?: "")}")
+        logger.info("[bkccAPI]Delete url: $url, resp: ${logWithLengthLimit(deleteResBody ?: "")}")
         return deleteResBody
     }
 

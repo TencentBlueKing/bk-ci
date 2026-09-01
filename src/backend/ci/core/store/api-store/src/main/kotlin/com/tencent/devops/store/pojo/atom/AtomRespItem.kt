@@ -115,5 +115,7 @@ data class AtomRespItem(
     @get:Schema(title = "指标信息列表")
     val indexInfos: List<StoreIndexInfo>? = null,
     @get:Schema(title = "hotFlag")
-    val hotFlag: Boolean? = null
+    val hotFlag: Boolean? = null,
+    @get:Schema(title = "归属应用标识")
+    val ownerStoreCode: String? = null
 )

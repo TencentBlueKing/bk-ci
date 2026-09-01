@@ -139,7 +139,7 @@
                 }"
                 :disabled="loading"
                 key="edit"
-                @click="goEdit"
+                @click="handleEdit"
             >
                 {{ $t("edit") }}
             </bk-button>
@@ -167,6 +167,54 @@
                     {{ $t(isDebugExec ? "debug" : "exec") }}
                 </bk-button>
             </span>
+            <bk-dropdown-menu
+                v-if="!isDebugExec"
+                trigger="click"
+                :disabled="reuseParamsLoading"
+            >
+                <div
+                    class="more-action-dropdown-trigger"
+                    slot="dropdown-trigger"
+                >
+                    <i
+                        v-if="reuseParamsLoading"
+                        class="devops-icon icon-circle-2-1 spin-icon"
+                    />
+                    <i
+                        v-else
+                        class="devops-icon icon-more"
+                    />
+                </div>
+                <ul
+                    class="more-action-dropdown-content"
+                    slot="dropdown-content"
+                >
+                    <li
+                        :class="['dropdown-item', {
+                            'disabled': reuseParamsLoading || isCurPipelineLocked
+                        }]"
+                        v-perm="{
+                            hasPermission: canExecute,
+                            disablePermissionApi: true,
+                            permissionData: {
+                                projectId,
+                                resourceType: RESOURCE_TYPE.PIPELINE,
+                                resourceCode: pipelineId,
+                                action: RESOURCE_ACTION.EXECUTE
+                            }
+                        }"
+                        @click="handleReuseParamsExecute"
+                    >
+                        {{ $t("reuseParamsExecute") }}
+                        <bk-popover :z-index="3000">
+                            <i class="bk-icon icon-info-circle" />
+                            <template slot="content">
+                                <p>{{ $t('reuseParamsExecuteTips') }}</p>
+                            </template>
+                        </bk-popover>
+                    </li>
+                </ul>
+            </bk-dropdown-menu>
             <release-button
                 v-if="isDebugExec"
                 :can-release="canRelease"
@@ -174,6 +222,20 @@
                 :id="pipelineId"
             />
         </aside>
+        <DraftConfirmDialog
+            v-model="isShowConfirmDialog"
+            :has-draft="hasDraft"
+            :draft-status="draftStatus"
+            :draft-save-info="draftSaveInfo"
+            :draft-hint-title="draftHintTitle"
+            :version="execDetai?.curVersion"
+            :version-name="pipelineInfo?.versionName"
+            :draft-version="pipelineInfo?.version"
+            :click-action-type="'edit'"
+            @confirm="confirmEdit"
+            @edit-draft="goEditDraft"
+            @cancel="closeDialog"
+        />
     </div>
     <i
         v-else
@@ -188,9 +250,12 @@
         RESOURCE_ACTION,
         RESOURCE_TYPE
     } from '@/utils/permission'
-    import { mapActions, mapGetters, mapState } from 'vuex'
+    import { TEMP_PARAM_SET_ID, DRAFT_STATUS, VERSION_STATUS_ENUM } from '@/utils/pipelineConst'
+    import { mapActions, mapGetters, mapMutations, mapState } from 'vuex'
     import PipelineBreadCrumb from './PipelineBreadCrumb'
     import ReleaseButton from './ReleaseButton'
+    import DraftConfirmDialog from './DraftConfirmDialog.vue'
+    import useDraftStatus from '@/hook/useDraftStatus'
     const PIPELINE_REPLAY_STATUS = {
         REPLAYING: 'REPLAYING',
         REPLAY_SUCCESS: 'REPLAY_SUCCESS',
@@ -200,17 +265,29 @@
     export default {
         components: {
             PipelineBreadCrumb,
+            DraftConfirmDialog,
             ReleaseButton
+        },
+        setup () {
+            const { fetchLatestDraftStatus } = useDraftStatus()
+            return {
+                fetchLatestDraftStatus
+            }
         },
         data () {
             return {
                 loading: false,
+                reuseParamsLoading: false,
                 timesNum: 1,
+                isShowConfirmDialog: false,
+                draftStatus: DRAFT_STATUS.NORMAL,
+                draftSaveInfo: null,
                 canReplay: true
             }
         },
         computed: {
-            ...mapState('atom', ['execDetail', 'pipelineInfo', 'saveStatus']),
+            ...mapState('atom', ['execDetail', 'pipelineInfo', 'saveStatus', 'execInfo']),
+            ...mapState('common', ['hasDraft']),
             ...mapGetters({
                 isCurPipelineLocked: 'atom/isCurPipelineLocked'
             }),
@@ -248,6 +325,24 @@
             isDebugExec () {
                 return this.execDetail?.debug ?? false
             },
+            isActiveBranchVersion (){
+                return this.execInfo?.status === VERSION_STATUS_ENUM.BRANCH
+            },
+            draftHintTitle () {
+                switch (true) {
+                    case this.hasDraft && this.isActiveBranchVersion:
+                        return this.$t('template.templateCoverWarning')
+                    case this.hasDraft:
+                        return this.$t('hasDraft')
+                    default:
+                        // 分支版本
+                        if (this.isActiveBranchVersion) {
+                            return this.$t('createBranchDraftTips', [this.pipelineInfo?.versionName])
+                        }
+                        // 基线版本落后状态
+                        return this.$t('pipelineUpdated')
+                }
+            },
             archiveFlag () {
                 return this.$route.query.archiveFlag
             }
@@ -265,9 +360,12 @@
             }
         },
         mounted () {
-            this.fetchPipelineRePlayStatus()
+            if (!this.archiveFlag) {
+                this.fetchPipelineRePlayStatus()
+            }
         },
         methods: {
+            ...mapMutations('common', ['SET_HAS_DRAFT']),
             ...mapActions(
                 'pipelines',
                 [
@@ -275,9 +373,12 @@
                     'requestTerminatePipeline',
                     'requestRePlayPipeline',
                     'requestPipelineRePlayStatus',
+                    'rollbackPipelineVersion',
+                    'requestPipelineSummary',
                     'requestRePlayEventDetail'
                 ]
             ),
+            ...mapActions('atom', ['fetchBuildParamsByBuildId', 'setTempParamSet']),
             async handleCancel () {
                 try {
                     this.loading = true
@@ -421,9 +522,73 @@
                     }
                 })
             },
-            goEdit () {
+            async handleEdit () {
+                try {
+                    const result = await this.fetchLatestDraftStatus({
+                        projectId: this.projectId,
+                        id: this.pipelineId,
+                        actionType: 'EDIT',
+                        isTemplate: false,
+                        pipelineInfo: this.pipelineInfo
+                    })
+                    
+                    this.draftStatus = result.status
+                    this.draftSaveInfo = result.draftSaveInfo
+                    
+                    // 状态为NORMAL时，直接编辑
+                    if (this.draftStatus === DRAFT_STATUS.NORMAL) {
+                        this.goEdit()
+                        return
+                    }
+                    // 有草稿冲突/分支版本/基线落后，弹窗确认
+                    this.isShowConfirmDialog = true
+                } catch (error) {
+                    this.$bkMessage({
+                        theme: 'error',
+                        message: error.message || error
+                    })
+                }
+            },
+            async confirmEdit () {
+                try {
+                    this.loading = true
+                    const res = await this.rollbackPipelineVersion({
+                        ...this.$route.params,
+                        version: this.pipelineInfo?.releaseVersion
+                    })
+                    await this.requestPipelineSummary(this.$route.params)
+                    
+                    if (res.version) {
+                        this.goEdit(res.version)
+                    }
+                } catch (error) {
+                    this.$bkMessage({
+                        theme: 'error',
+                        message: error.message || error
+                    })
+                } finally {
+                    this.loading = false
+                }
+            },
+            goEditDraft (version) {
                 this.$router.push({
-                    name: 'pipelinesEdit'
+                    name: 'pipelinesEdit',
+                    params: {
+                        ...this.$route.params,
+                        version
+                    }
+                })
+            },
+            closeDialog () {
+                this.draftSaveInfo = null
+                this.draftStatus = DRAFT_STATUS.NORMAL
+                this.isShowConfirmDialog = false
+                this.SET_HAS_DRAFT(false)
+            },
+            goEdit (version) {
+                this.$router.push({
+                    name: 'pipelinesEdit',
+                    version
                 })
             },
 
@@ -440,6 +605,43 @@
                 }
             },
             
+            async handleReuseParamsExecute () {
+                if (this.reuseParamsLoading || this.isCurPipelineLocked) return
+                try {
+                    this.reuseParamsLoading = true
+                    const { projectId, pipelineId, buildNo: buildId } = this.$route.params
+                    const buildParamProperties = await this.fetchBuildParamsByBuildId({
+                        projectId,
+                        pipelineId,
+                        buildId
+                    })
+                    const buildNum = this.execDetail?.buildNum
+                    const tempParamSet = {
+                        id: TEMP_PARAM_SET_ID,
+                        name: `${this.$t('reuseParamsExecute')} - #${buildNum}`,
+                        params: buildParamProperties,
+                        isTemp: true,
+                        sourceBuildNum: buildNum
+                    }
+                    this.setTempParamSet(tempParamSet)
+                    const version = this.pipelineInfo?.releaseVersion
+                    this.$router.push({
+                        name: 'executePreview',
+                        params: {
+                            ...this.$route.params,
+                            version
+                        }
+                    })
+                } catch (err) {
+                    console.error(err)
+                    this.$showTips({
+                        message: err.message || this.$t('reuseParamsExecuteFailed'),
+                        theme: 'error'
+                    })
+                } finally {
+                    this.reuseParamsLoading = false
+                }
+            },
             async fetchRePlayEventDetail (eventId) {
                 try {
                     this.loading = true
@@ -536,6 +738,53 @@
         margin-right: 5px;
         color: #458bff;
         z-index: 2000;
+    }
+  }
+  .more-action-dropdown-trigger {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 32px;
+    width: 32px;
+    font-size: 18px;
+    border-radius: 2px;
+    color: #63656E;
+    transform: translateZ(0);
+    &:hover {
+        cursor: pointer;
+        color: #3a84ff;
+        background-color: #f0f1f5;
+    }
+    .spin-icon {
+        font-size: 14px;
+        color: #458bff;
+    }
+  }
+  .more-action-dropdown-content {
+    min-width: 160px;
+    .dropdown-item {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        height: 32px;
+        line-height: 32px;
+        font-size: 14px;
+        white-space: nowrap;
+        padding: 0 12px;
+
+        &:hover {
+            background-color: #f0f1f5;
+            color: #3a84ff;
+        }
+        &.disabled {
+            cursor: not-allowed;
+            color: #dcdee5;
+        }
+        .icon-info-circle {
+            margin-left: 5px;
+            font-size: 12px;
+        }
     }
   }
   .rebuild-dropdown-content {

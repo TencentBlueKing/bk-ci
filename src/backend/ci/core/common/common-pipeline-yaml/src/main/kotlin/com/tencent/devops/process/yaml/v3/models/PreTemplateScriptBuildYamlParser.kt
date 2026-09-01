@@ -67,10 +67,13 @@ interface IPreTemplateScriptBuildYamlParser : YamlVersionParser {
     var syntaxDialect: String?
     var failIfVariableInvalid: Boolean?
     var cancelPolicy: String?
+    var runsOn: Any?
 
     fun replaceTemplate(f: (param: ITemplateFilter) -> PreScriptBuildYamlIParser)
 
     fun formatVariables(): Map<String, Variable>
+
+    fun formatVariableTemplates(): List<VariableTemplate>
 
     fun formatTriggerOn(default: ScmType): List<Pair<TriggerType, TriggerOn>>
 
@@ -148,7 +151,9 @@ data class PreTemplateScriptBuildYamlParser(
     @JsonProperty("fail-if-variable-invalid")
     override var failIfVariableInvalid: Boolean? = null,
     @JsonProperty("cancel-policy")
-    override var cancelPolicy: String? = null
+    override var cancelPolicy: String? = null,
+    @JsonProperty("runs-on")
+    override var runsOn: Any? = null
 ) : IPreTemplateScriptBuildYamlParser, ITemplateFilter {
 
     init {
@@ -181,6 +186,11 @@ data class PreTemplateScriptBuildYamlParser(
     override fun formatVariables(): Map<String, Variable> {
         checkInitialized()
         return preYaml.variables ?: emptyMap()
+    }
+
+    override fun formatVariableTemplates(): List<VariableTemplate> {
+        checkInitialized()
+        return preYaml.variableTemplates ?: emptyList()
     }
 
     override fun formatTriggerOn(default: ScmType): List<Pair<TriggerType, TriggerOn>> {

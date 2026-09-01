@@ -28,16 +28,21 @@
 package com.tencent.devops.store.atom.resources
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.atom.BuildMarketAtomEnvResource
+import com.tencent.devops.store.atom.service.MarketAtomEnvService
+import com.tencent.devops.store.common.service.StoreWhitelistConfigService
 import com.tencent.devops.store.pojo.atom.AtomEnv
 import com.tencent.devops.store.pojo.atom.AtomEnvRequest
-import com.tencent.devops.store.atom.service.MarketAtomEnvService
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class BuildMarketAtomEnvResourceImpl @Autowired constructor(private val marketAtomEnvService: MarketAtomEnvService) :
-    BuildMarketAtomEnvResource {
+class BuildMarketAtomEnvResourceImpl @Autowired constructor(
+    private val marketAtomEnvService: MarketAtomEnvService,
+    private val storeWhitelistConfigService: StoreWhitelistConfigService
+) : BuildMarketAtomEnvResource {
 
     override fun getAtomEnv(
         projectCode: String,
@@ -46,7 +51,8 @@ class BuildMarketAtomEnvResourceImpl @Autowired constructor(private val marketAt
         atomStatus: Byte?,
         osName: String?,
         osArch: String?,
-        convertOsFlag: Boolean?
+        convertOsFlag: Boolean?,
+        channelCode: ChannelCode?
     ): Result<AtomEnv?> {
         return marketAtomEnvService.getMarketAtomEnvInfo(
             projectCode = projectCode,
@@ -55,7 +61,8 @@ class BuildMarketAtomEnvResourceImpl @Autowired constructor(private val marketAt
             atomStatus = atomStatus,
             osName = osName,
             osArch = osArch,
-            convertOsFlag = convertOsFlag
+            convertOsFlag = convertOsFlag,
+            channelCode = channelCode
         )
     }
 
@@ -66,5 +73,13 @@ class BuildMarketAtomEnvResourceImpl @Autowired constructor(private val marketAt
         atomEnvRequest: AtomEnvRequest
     ): Result<Boolean> {
         return marketAtomEnvService.updateMarketAtomEnvInfo(projectCode, atomCode, version, atomEnvRequest)
+    }
+
+    override fun isAtomInWhitelist(whitelistType: String, atomCode: String): Result<Boolean> {
+        return Result(storeWhitelistConfigService.isInWhitelist(
+            storeType = StoreTypeEnum.ATOM,
+            code = atomCode,
+            whitelistType = whitelistType
+        ))
     }
 }

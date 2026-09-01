@@ -20,7 +20,7 @@
 import {
     ALL_PIPELINE_VIEW_ID
 } from '@/store/constants'
-import { isBooleanParam, isFileParam } from '@/store/modules/atom/paramsConfig'
+import { BOOLEAN, CHECKBOX, MULTIPLE, isBooleanParam, isFileParam, isFormListParam } from '@/store/modules/atom/paramsConfig'
 import {
     ALL_TEMPLATE_VIEW_ID,
     TEMPLATE_VIEW_ID_CACHE
@@ -35,6 +35,19 @@ export function urlJoin (...args) {
     return args.filter(arg => arg).join('/').replace(/([^:]\/)\/+/g, '$1')
 }
 
+export function encodeArtifactDownloadUrl (url, path) {
+    const encodeSegment = segment => encodeURIComponent(segment).replace(
+        /[!'()*]/g,
+        char => `%${char.charCodeAt(0).toString(16).toUpperCase()}`
+    )
+    const encodedPath = path
+        .split('/')
+        .map(encodeSegment)
+        .join('/')
+
+    return url.replace(path, () => encodedPath)
+}
+
 export function isShallowEqual (obj1, obj2) {
     if (obj1 === obj2) return true
     if (!isObject(obj1) || !isObject(obj2)) {
@@ -47,6 +60,134 @@ export function isShallowEqual (obj1, obj2) {
     }
 
     return obj1Keys.every(key => obj1[key] === obj2[key])
+}
+
+/**
+ * 比较两个流水线参数值是否相等
+ * - 原始类型：直接 ===
+ * - 普通对象（如 REPO_REF.defaultValue）：浅比较
+ * - 数组（如 FORM_LIST.defaultValue）：稳定序列化后比较，避免对象 key 顺序导致的误判
+ * - 其余情况：!==
+ */
+export function isParamValueEqual (a, b) {
+    if (a === b) return true
+    const normalizedA = normalizeJsonArrayValue(a)
+    const normalizedB = normalizeJsonArrayValue(b)
+    if (Array.isArray(normalizedA) && Array.isArray(normalizedB)) {
+        return stableSerialize(normalizedA) === stableSerialize(normalizedB)
+    }
+    if (isObject(a) && isObject(b)) {
+        return isShallowEqual(a, b)
+    }
+    return false
+}
+
+function normalizeJsonArrayValue (value) {
+    if (Array.isArray(value)) return value
+    if (typeof value === 'string' && value.trim().startsWith('[')) {
+        try {
+            const parsed = JSON.parse(value)
+            return Array.isArray(parsed) ? parsed : value
+        } catch (e) {
+            return value
+        }
+    }
+    return value
+}
+
+export function stableSerialize (value) {
+    if (Array.isArray(value)) {
+        return `[${value.map(item => stableSerialize(item)).join(',')}]`
+    }
+    if (isObject(value)) {
+        return `{${Object.keys(value).sort().map(key => `${JSON.stringify(key)}:${stableSerialize(value[key])}`).join(',')}}`
+    }
+    return JSON.stringify(value)
+}
+
+export function parseFormListValue (value) {
+    if (Array.isArray(value)) return value
+    if (typeof value === 'string' && value.trim() !== '') {
+        try {
+            const parsed = JSON.parse(value)
+            return Array.isArray(parsed) ? parsed : []
+        } catch (e) {
+            return []
+        }
+    }
+    return []
+}
+
+export function getFormListDefaultRow (fields = [], defaultValue = []) {
+    const defaultItem = parseFormListValue(defaultValue)[0] || {}
+    return getValidFormListFields(fields).reduce((acc, field) => {
+        const fieldValue = Object.prototype.hasOwnProperty.call(defaultItem, field.id)
+            ? defaultItem[field.id]
+            : getFormListFieldDefaultValue(field)
+        acc[field.id] = normalizeFormListFieldValue(field, fieldValue)
+        return acc
+    }, {})
+}
+
+export function normalizeFormListValue (value, fields = [], options = {}) {
+    const { filterDefaultRows = true } = options
+    const validFields = getValidFormListFields(fields)
+    const normalizedList = parseFormListValue(value)
+        .filter(item => isObject(item))
+        .map(item => {
+            if (!validFields.length) {
+                return Object.keys(item).sort().reduce((acc, key) => {
+                    acc[key] = item[key]
+                    return acc
+                }, {})
+            }
+            return normalizeFormListRow(item, validFields)
+        })
+    return filterDefaultRows
+        ? normalizedList.filter(item => validFields.length === 0 || !isDefaultFormListRow(item, validFields))
+        : normalizedList
+}
+
+function getValidFormListFields (fields = []) {
+    return (fields || []).filter(field => field && field.id)
+}
+
+function normalizeFormListRow (item, fields) {
+    return fields.reduce((acc, field) => {
+        const fieldValue = Object.prototype.hasOwnProperty.call(item, field.id)
+            ? item[field.id]
+            : getFormListFieldDefaultValue(field)
+        acc[field.id] = normalizeFormListFieldValue(field, fieldValue)
+        return acc
+    }, {})
+}
+
+export function getFormListFieldDefaultValue (field) {
+    if (field.defaultValue !== undefined) return field.defaultValue
+    if (field.type === BOOLEAN || field.type === CHECKBOX) return false
+    if (field.type === MULTIPLE) return []
+    return ''
+}
+
+function normalizeFormListFieldValue (field, value) {
+    if (field.type === BOOLEAN || field.type === CHECKBOX) {
+        if (Array.isArray(value)) return value.filter(Boolean)
+        return value === true || value === 'true'
+    }
+    if (field.type === MULTIPLE) {
+        if (Array.isArray(value)) return value.filter(item => item !== '')
+        if (typeof value === 'string') return value.split(',').filter(item => item !== '')
+        return []
+    }
+    return value ?? ''
+}
+
+function isDefaultFormListRow (row, fields) {
+    return fields.every(field => {
+        const value = row[field.id]
+        const defaultValue = normalizeFormListFieldValue(field, getFormListFieldDefaultValue(field))
+        return stableSerialize(value) === stableSerialize(defaultValue)
+    })
 }
 
 export function isInArray (ele, array) {
@@ -470,7 +611,15 @@ export const deepCopy = obj => {
 
 export const deepClone = obj => {
     if (typeof structuredClone === 'function') {
-        return structuredClone(obj)
+        try {
+            return structuredClone(obj)
+        } catch (e) {
+            // 非结构化克隆错误继续抛出，避免隐藏其他问题
+            if (e && e.name !== 'DataCloneError') {
+                throw e
+            }
+            // DataCloneError 时降级为 JSON 方式深拷贝（函数等不可序列化字段会被丢弃）
+        }
     }
     return JSON.parse(JSON.stringify(obj))
 }
@@ -656,6 +805,10 @@ export function getParamsValuesMap (params = [], valueKey = 'defaultValue', init
                 directory: initValues[param.id] ?? param[valueKey],
                 latestRandomStringInPath: (valueKey === 'defaultValue' ? param.randomStringInPath : param.latestRandomStringInPath) || ''
             }
+        } else if (isFormListParam(param.type)) {
+            values[param.id] = normalizeFormListValue(initValues[param.id] ?? param[valueKey], param.fields, {
+                filterDefaultRows: false
+            })
         } else {
             const val = initValues[param.id] ?? param[valueKey]
             if (isBooleanParam(param.type)) {
@@ -919,25 +1072,34 @@ export function parseErrorMsg (msg) {
 
 export function showPipelineCheckMsg (showTooltips, message, h) {
     const errorInfo = parseErrorMsg(message)
-    showTooltips({
-        theme: 'error',
-        delay: 0,
-        ellipsisLine: 0,
-        message: h('div', {
-            class: 'pipeline-save-error-list-box'
-        }, errorInfo.errors.map(item => h('div', {
-            class: 'pipeline-save-error-list-item'
-        }, [
-            h('p', {}, item.errorTitle),
-            h('ul', {
-                class: 'pipeline-save-error-list'
-            }, item.errorDetails.map(err => h('li', {
-                domProps: {
-                    innerHTML: err
-                }
-            })))
-        ])))
-    })
+    if (errorInfo['@type'] === 'errors') {
+        showTooltips({
+            theme: 'error',
+            delay: 0,
+            ellipsisLine: 0,
+            message: h('div', {
+                class: 'pipeline-save-error-list-box'
+            }, errorInfo.errors.map(item => h('div', {
+                class: 'pipeline-save-error-list-item'
+            }, [
+                h('p', {}, item.errorTitle),
+                h('ul', {
+                    class: 'pipeline-save-error-list'
+                }, item.errorDetails.map(err => h('li', {
+                    domProps: {
+                        innerHTML: err
+                    }
+                })))
+            ])))
+        })
+    } else {
+        showTooltips({
+            theme: 'error',
+            delay: 0,
+            ellipsisLine: 0,
+            message: errorInfo.message
+        })
+    }
 }
 
 export async function copyToClipboard (text) {
@@ -973,6 +1135,16 @@ export function findItemById (list, id) {
     } catch (error) {
         return false
     }
+}
+
+/**
+ * 获取时间戳字符串，格式：yyyyMMddHHmm
+ * @returns {String}
+ */
+export function getTimestamp () {
+    const now = new Date()
+    const prezero = (num) => num < 10 ? '0' + num : num
+    return `${now.getFullYear()}${prezero(now.getMonth() + 1)}${prezero(now.getDate())}${prezero(now.getHours())}${prezero(now.getMinutes())}`
 }
 
 export const COMMON_PARAM_PREFIX = 'COMMON_PARAM_'

@@ -27,6 +27,7 @@
 
 package com.tencent.devops.ticket.resources
 
+import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.PageUtil
@@ -34,13 +35,15 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.ticket.api.OpCredentialResource
 import com.tencent.devops.ticket.pojo.CredentialWithPermission
 import com.tencent.devops.ticket.pojo.enums.CredentialType
+import com.tencent.devops.ticket.service.CredentialCopyService
 import com.tencent.devops.ticket.service.CredentialService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 @Suppress("ALL")
 class OpCredentialResourceImpl @Autowired constructor(
-    private val credentialService: CredentialService
+    private val credentialService: CredentialService,
+    private val credentialCopyService: CredentialCopyService
 ) : OpCredentialResource {
 
     override fun list(
@@ -59,5 +62,24 @@ class OpCredentialResourceImpl @Autowired constructor(
         val limit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)
         val result = credentialService.userList(userId, projectId, credentialTypes, limit.offset, limit.limit, keyword)
         return Result(Page(pageNotNull, pageSizeNotNull, result.count, result.records))
+    }
+
+    override fun copyAcrossProject(
+        userId: String,
+        sourceProjectId: String,
+        targetProjectId: String,
+        credentialId: String?
+    ): Result<Boolean> {
+        if (userId.isBlank()) {
+            throw ParamBlankException("Invalid userId")
+        }
+        if (sourceProjectId.isBlank()) {
+            throw ParamBlankException("Invalid sourceProjectId")
+        }
+        if (targetProjectId.isBlank()) {
+            throw ParamBlankException("Invalid targetProjectId")
+        }
+        credentialCopyService.copyAcrossProject(userId, sourceProjectId, targetProjectId, credentialId)
+        return Result(true)
     }
 }

@@ -41,6 +41,7 @@ import {
     REPOSITORY_MUTATION,
     SET_PAC_SUPPORT_SCM_TYPE_LIST,
     SET_PROJECT_PERM,
+    SET_HAS_DRAFT,
     STORE_TEMPLATE_MUTATION,
     TEMPLATE_CATEGORY_MUTATION,
     TEMPLATE_MUTATION
@@ -48,6 +49,16 @@ import {
 
 function rootCommit (commit, ACTION_CONST, payload) {
     commit(ACTION_CONST, payload, { root: true })
+}
+
+/**
+ * 更新草稿状态
+ * @param {Function} commit - Vuex commit 函数
+ * @param {Object} data - 响应数据
+ */
+function updateHasDraftStatus (commit, data) {
+    const hasDraft = data?.status && !['NORMAL', 'BRANCH', 'PUBLISHED', 'RELEASE_OUTDATED'].includes(data.status)
+    commit('SET_HAS_DRAFT', hasDraft)
 }
 
 export const state = {
@@ -65,6 +76,7 @@ export const state = {
     qualityAtom: [],
     pacSupportScmTypeList: [],
     dockerWhiteList: [],
+    hasDraft: false, // 编辑/回滚/保存草稿/发布 时点击，调用draftStatus接口获得当前流水线/模板的草稿状态
     hasProjectPermission: false
 }
 
@@ -158,6 +170,11 @@ export const mutations = {
         Object.assign(state, {
             hasProjectPermission
         })
+    },
+    [SET_HAS_DRAFT]: (state, hasDraft) => {
+        Object.assign(state, {
+            hasDraft
+        })
     }
 }
 
@@ -218,6 +235,9 @@ export const actions = {
     },
     requestInterceptAtom: async ({ commit }, { projectId, ...params }) => {
         try {
+            if (!projectId || !params.pipelineId) {
+                return
+            }
             const response = await request.get(`/${QUALITY_API_URL_PREFIX}/user/rules/v2/${projectId}/matchRuleList`, { params })
 
             commit(INTERCEPT_ATOM_MUTATION, {
@@ -410,6 +430,38 @@ export const actions = {
             console.log(e)
         }
     },
+    getDraftStatus: async ({ commit }, { projectId, pipelineId, actionType, version, versionStatus, baseDraftVersion, releaseVersion }) => {
+        const params = new URLSearchParams({ actionType, version, versionStatus, releaseVersion})
+        baseDraftVersion && params.append('baseDraftVersion', baseDraftVersion)
+        
+        const url = `${PROCESS_API_URL_PREFIX}/user/version/projects/${projectId}/pipelines/${pipelineId}/draftStatus?${params}`
+        const { data } = await request.get(url)
+        
+        updateHasDraftStatus(commit, data)
+        
+        return data
+    },
+    getDraftVersion: async ({ commit }, { projectId, pipelineId, version, page, pageSize }) => {
+        return request.get(`${PROCESS_API_URL_PREFIX}/user/version/projects/${projectId}/pipelines/${pipelineId}/draftVersions?version=${version}&page=${page}&pageSize=${pageSize}`).then(response => {
+            return response.data
+        })
+    },
+    getTemplateDraftStatus: async ({ commit }, { projectId, templateId, actionType, version, versionStatus, baseDraftVersion, releaseVersion }) => {
+        const params = new URLSearchParams({ actionType, version, versionStatus, releaseVersion})
+        baseDraftVersion && params.append('baseDraftVersion', baseDraftVersion)
+        
+        const url = `${PROCESS_API_URL_PREFIX}/user/pipeline/template/v2/${projectId}/${templateId}/draftStatus?${params}`
+        const { data } = await request.get(url)
+        
+        updateHasDraftStatus(commit, data)
+        
+        return data
+    },
+    getTemplateDraftVersion: async ({ commit }, { projectId, templateId, version, page, pageSize }) => {
+        return request.get(`${PROCESS_API_URL_PREFIX}/user/pipeline/template/v2/${projectId}/${templateId}/draftVersions?version=${version}&page=${page}&pageSize=${pageSize}`).then(response => {
+            return response.data
+        })
+    },
     isPACOAuth: async (_, { projectId, ...query }) => {
         const { data } = await request.get(`${REPOSITORY_API_URL_PREFIX}/user/repositories/${projectId}/isOauth`, {
             params: query
@@ -444,6 +496,20 @@ export const actions = {
     summaryRate: async (_, { projectName, processId, type }) => {
         const { data } = await request.post(`${REPOSITORY_API_URL_PREFIX}/user/copilot/summary/rate?projectName=${projectName}&processId=${processId}&type=${type}`)
         return data
+    },
+    /**
+     * 获取PAC分支列表
+     * @param {String} projectId 项目ID
+     * @param {String} pipelineId 流水线ID
+     * @param {String} search 搜索关键字
+     * @returns {Promise}
+     */
+    getPACBranchList: (_, { projectId, pipelineId, search = '', page, pageSize }) => {
+        return request.get(`${PROCESS_API_URL_PREFIX}/user/version/projects/${projectId}/pipelines/${pipelineId}/listPacVersions?page=${page}&pageSize=${pageSize}`, {
+            params: {
+                search
+            }
+        }).then(response => response.data)
     },
     validatePermission: async (_, { projectId, ...params }) => {
         return request.post(`${AUTH_URL_PREFIX}/user/auth/permission/batch/validate`, params, {

@@ -38,6 +38,11 @@ if service_name == "bkrepo" then
     return
 end
 
+if service_name == "scc" then
+    ngx.var.target = config.scc.domain
+    return
+end
+
 -- 服务重写
 if service_name == "dispatch-docker" or service_name == "dispatch-kubernetes" then
     service_name = "dispatch"

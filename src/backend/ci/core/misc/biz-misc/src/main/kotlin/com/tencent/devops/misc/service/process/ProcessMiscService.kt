@@ -55,7 +55,8 @@ class ProcessMiscService @Autowired constructor(
         maxBuildNum: Int? = null,
         maxStartTime: LocalDateTime? = null,
         geTimeFlag: Boolean? = null,
-        archiveFlag: Boolean? = null
+        archiveFlag: Boolean? = null,
+        clearAllStatus: Boolean = false
     ): List<String>? {
         val historyBuildIdRecords = processDao.getHistoryBuildIdList(
             dslContext = generateQueryDslContext(archiveFlag),
@@ -66,7 +67,8 @@ class ProcessMiscService @Autowired constructor(
             isCompletelyDelete = isCompletelyDelete,
             maxBuildNum = maxBuildNum,
             maxStartTime = maxStartTime,
-            geTimeFlag = geTimeFlag
+            geTimeFlag = geTimeFlag,
+            clearAllStatus = clearAllStatus
         )
         return generateIdList(historyBuildIdRecords)
     }
@@ -117,7 +119,10 @@ class ProcessMiscService @Autowired constructor(
         } else {
             val idList = mutableListOf<String>()
             records.forEach { record ->
-                idList.add(record.getValue(0) as String)
+                val value = record.getValue(0) as? String
+                if (!value.isNullOrEmpty()) {
+                    idList.add(value)
+                }
             }
             idList
         }
@@ -137,17 +142,29 @@ class ProcessMiscService @Autowired constructor(
 
     fun getMaxPipelineBuildNum(
         projectId: String,
-        pipelineId: String
+        pipelineId: String,
+        clearAllStatus: Boolean = false
     ): Long {
-        return processDao.getMaxPipelineBuildNum(dslContext, projectId, pipelineId)
+        return processDao.getMaxPipelineBuildNum(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            clearAllStatus = clearAllStatus
+        )
     }
 
     fun getMinPipelineBuildNum(
         projectId: String,
         pipelineId: String,
-        archiveFlag: Boolean? = null
+        archiveFlag: Boolean? = null,
+        clearAllStatus: Boolean = false
     ): Long {
-        return processDao.getMinPipelineBuildNum(generateQueryDslContext(archiveFlag), projectId, pipelineId)
+        return processDao.getMinPipelineBuildNum(
+            dslContext = generateQueryDslContext(archiveFlag),
+            projectId = projectId,
+            pipelineId = pipelineId,
+            clearAllStatus = clearAllStatus
+        )
     }
 
     fun getMaxPipelineBuildNum(
@@ -156,7 +173,8 @@ class ProcessMiscService @Autowired constructor(
         maxBuildNum: Int? = null,
         maxStartTime: LocalDateTime? = null,
         geTimeFlag: Boolean? = null,
-        archiveFlag: Boolean? = null
+        archiveFlag: Boolean? = null,
+        clearAllStatus: Boolean = false
     ): Long {
         return processDao.getMaxPipelineBuildNum(
             dslContext = generateQueryDslContext(archiveFlag),
@@ -164,7 +182,69 @@ class ProcessMiscService @Autowired constructor(
             pipelineId = pipelineId,
             maxBuildNum = maxBuildNum,
             maxStartTime = maxStartTime,
-            geTimeFlag = geTimeFlag
+            geTimeFlag = geTimeFlag,
+            clearAllStatus = clearAllStatus
+        )
+    }
+
+    fun getTemplateIdsByProjectId(
+        projectId: String,
+        limit: Int,
+        offset: Int
+    ): List<String> {
+        return processDao.listTemplateIdsByProjectId(
+            dslContext = dslContext,
+            projectId = projectId,
+            limit = limit,
+            offset = offset
+        )
+    }
+
+    fun listPipelineDraftVersions(
+        projectId: String,
+        pipelineId: String,
+        limit: Int,
+        offset: Int
+    ): List<Int> {
+        return processDao.listPipelineDraftVersions(
+            dslContext = dslContext, projectId = projectId,
+            pipelineId = pipelineId, limit = limit, offset = offset
+        )
+    }
+
+    fun getExpiredPipelineVersions(
+        projectId: String,
+        pipelineId: String,
+        versions: List<Int>,
+        expireTime: LocalDateTime
+    ): List<Int> {
+        return processDao.getExpiredPipelineVersions(
+            dslContext = dslContext, projectId = projectId,
+            pipelineId = pipelineId, versions = versions, expireTime = expireTime
+        )
+    }
+
+    fun listTemplateDraftVersions(
+        projectId: String,
+        templateId: String,
+        limit: Int,
+        offset: Int
+    ): List<Long> {
+        return processDao.listTemplateDraftVersions(
+            dslContext = dslContext, projectId = projectId,
+            templateId = templateId, limit = limit, offset = offset
+        )
+    }
+
+    fun getExpiredTemplateVersions(
+        projectId: String,
+        templateId: String,
+        versions: List<Long>,
+        expireTime: LocalDateTime
+    ): List<Long> {
+        return processDao.getExpiredTemplateVersions(
+            dslContext = dslContext, projectId = projectId,
+            templateId = templateId, versions = versions, expireTime = expireTime
         )
     }
 }

@@ -28,17 +28,19 @@
 package com.tencent.devops.process.pojo.pipeline.version
 
 import com.tencent.devops.common.pipeline.enums.CodeTargetAction
+import com.tencent.devops.common.pipeline.enums.TemplateRefType
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildNo
 import com.tencent.devops.common.pipeline.pojo.TemplateInstanceField
 import com.tencent.devops.common.pipeline.pojo.TemplateInstanceTriggerConfig
-import com.tencent.devops.common.pipeline.enums.TemplateRefType
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "流水线模版实例创建请求")
 data class PipelineTemplateInstanceReq(
     @get:Schema(title = "项目ID", required = false)
     val projectId: String,
+    @get:Schema(title = "实例任务ID", required = true)
+    val baseId: String? = null,
     @get:Schema(title = "模版ID", required = false)
     val templateId: String,
     @get:Schema(title = "模版版本", required = false)

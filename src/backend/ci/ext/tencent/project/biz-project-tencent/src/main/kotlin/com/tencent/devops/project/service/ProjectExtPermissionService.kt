@@ -33,7 +33,6 @@ interface ProjectExtPermissionService {
      * 校验用户是否有这个项目的权限
      */
     fun verifyUserProjectPermission(
-        accessToken: String,
         projectCode: String,
         userId: String
     ): Boolean

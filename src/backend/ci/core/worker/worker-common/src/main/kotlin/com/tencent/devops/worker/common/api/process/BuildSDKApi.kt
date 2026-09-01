@@ -28,7 +28,6 @@
 package com.tencent.devops.worker.common.api.process
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildTaskResult
@@ -47,15 +46,13 @@ interface BuildSDKApi : WorkerRestApiSDK {
         projectId: String,
         pipelineId: String,
         buildNum: String,
-        channelCode: ChannelCode?,
         buildId: String
     ): Result<BuildHistory?>
 
     fun getBuildDetail(
         projectId: String,
         pipelineId: String,
-        buildId: String,
-        channelCode: ChannelCode = ChannelCode.BS
+        buildId: String
     ): Result<ModelDetail?>
 
     fun timeout(): Result<Boolean>

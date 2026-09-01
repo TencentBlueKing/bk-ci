@@ -45,15 +45,15 @@ class BuildEngineExtendConfiguration {
     @EventConsumer
     fun subPipelineBuildFinishConsumer(
         @Autowired buildListener: SubPipelineBuildFinishListener
-    ) = ScsConsumerBuilder.build<PipelineBuildFinishBroadCastEvent> { buildListener.run(it) }
+    ) = ScsConsumerBuilder.build<PipelineBuildFinishBroadCastEvent> { buildListener.execute(it) }
 
     @EventConsumer
     fun subPipelineQueueFinishConsumer(
         @Autowired buildListener: SubPipelineBuildQueueListener
-    ) = ScsConsumerBuilder.build<PipelineBuildQueueBroadCastEvent> { buildListener.run(it) }
+    ) = ScsConsumerBuilder.build<PipelineBuildQueueBroadCastEvent> { buildListener.execute(it) }
 
     @EventConsumer
     fun buildVersionDiffRecordListenerConsumer(
         @Autowired buildListener: PipelineBuildVersionDiffRecordListener
-    ) = ScsConsumerBuilder.build<PipelineBuildQueueBroadCastEvent> { buildListener.run(it) }
+    ) = ScsConsumerBuilder.build<PipelineBuildQueueBroadCastEvent> { buildListener.execute(it) }
 }

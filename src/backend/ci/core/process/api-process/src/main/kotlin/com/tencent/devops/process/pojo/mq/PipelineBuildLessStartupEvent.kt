@@ -45,7 +45,7 @@ data class PipelineBuildLessStartupEvent(
     val containerHashId: String?,
     val os: String,
     val startTime: Long,
-    val channelCode: String,
+    override var channelCode: String? = null,
     val zone: Zone?,
     val atoms: Map<String, String> = mapOf(), // 用插件框架开发的插件信息 key为插件code，value为下载路径
     val executeCount: Int?,

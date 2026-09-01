@@ -34,7 +34,7 @@ import com.tencent.devops.model.environment.tables.records.TNodeRecord
 object AgentStatusUtils {
 
     fun getAgentStatus(nodeRecord: TNodeRecord) =
-        if (nodeRecord.nodeType == NodeType.THIRDPARTY.name) {
+        if (nodeRecord.nodeType == NodeType.THIRDPARTY.name || nodeRecord.nodeType == NodeType.CREATE.name) {
             NodeStatus.valueOf(nodeRecord.nodeStatus) == NodeStatus.NORMAL
         } else {
             nodeRecord.agentStatus ?: false

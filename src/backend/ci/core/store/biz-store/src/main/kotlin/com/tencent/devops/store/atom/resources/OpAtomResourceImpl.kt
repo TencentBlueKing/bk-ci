@@ -44,6 +44,7 @@ import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomTypeEnum
 import com.tencent.devops.store.pojo.atom.enums.OpSortTypeEnum
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
+import com.tencent.devops.store.pojo.common.enums.ServiceScopeEnum
 import java.io.InputStream
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.springframework.beans.factory.annotation.Autowired
@@ -68,7 +69,7 @@ class OpAtomResourceImpl @Autowired constructor(
         atomName: String?,
         atomCode: String?,
         atomType: AtomTypeEnum?,
-        serviceScope: String?,
+        serviceScope: ServiceScopeEnum?,
         os: String?,
         category: String?,
         classifyId: String?,
@@ -94,8 +95,8 @@ class OpAtomResourceImpl @Autowired constructor(
         )
     }
 
-    override fun getPipelineAtomById(id: String): Result<Atom?> {
-        return opAtomService.getPipelineAtom(id)
+    override fun getPipelineAtomById(id: String, serviceScope: ServiceScopeEnum?): Result<Atom?> {
+        return opAtomService.getPipelineAtom(id, serviceScope)
     }
 
     override fun deletePipelineAtomById(id: String): Result<Boolean> {

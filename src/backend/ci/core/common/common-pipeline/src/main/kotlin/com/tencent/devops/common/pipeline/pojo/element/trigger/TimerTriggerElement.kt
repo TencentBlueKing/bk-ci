@@ -37,6 +37,7 @@ import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.element.Element
+import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.TimerNodeType
 import io.swagger.v3.oas.annotations.media.Schema
 import org.slf4j.LoggerFactory
 
@@ -71,7 +72,11 @@ data class TimerTriggerElement(
     @get:Schema(title = "指定代码库别名", required = false)
     val repoName: String? = null,
     @get:Schema(title = "定时启动参数,格式: [{key:'id',value:1},{key:'name',value:'xxx'}]", required = false)
-    val startParams: String? = null
+    val startParams: String? = null,
+    @get:Schema(title = "启动节点类型（仅创作流通道使用）", required = false)
+    val nodeType: TimerNodeType? = null,
+    @get:Schema(title = "启动节点 agentHashId 列表（仅当 nodeType=NODE_LIST 时生效）", required = false)
+    val nodes: List<String>? = null
 ) : Element(name, id, status) {
     companion object {
         const val classType = "timerTrigger"
@@ -164,6 +169,17 @@ data class TimerTriggerElement(
             logger.warn("startParams is not a valid json, skip it: $startParams")
             listOf()
         }.filter { it.containsKey("key") }
-                .associate { it["key"].toString() to (it["value"]?.toString() ?: "") }
+                .associate { it["key"].toString() to convertStartParamValue(it["value"]) }
+    }
+
+    /**
+     * 转换启动参数值
+     * 复选框等多选类型的值会存成数组(如 [1])，需转为逗号分隔字符串(如 "1")，
+     * 避免直接 toString 得到 "[1]"
+     */
+    private fun convertStartParamValue(value: Any?): String = when (value) {
+        null -> ""
+        is Collection<*> -> value.joinToString(",") { it?.toString() ?: "" }
+        else -> value.toString()
     }
 }

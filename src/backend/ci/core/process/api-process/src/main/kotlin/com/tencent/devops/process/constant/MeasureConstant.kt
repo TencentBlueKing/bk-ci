@@ -19,4 +19,6 @@ object MeasureConstant {
 
     // 是否是老的webhook
     const val TAG_SCM_WEBHOOK_TRIGGER_OLD = "old"
+    // webhook触发代码源
+    const val TAG_SCM_WEBHOOK_SCM_CODE = "scmCode"
 }

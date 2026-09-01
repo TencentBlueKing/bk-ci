@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.transfer.ElementInsertBody
 import com.tencent.devops.common.pipeline.pojo.transfer.ElementInsertResponse
@@ -90,7 +91,8 @@ class UserPipelineTransferResourceImpl @Autowired constructor(
                 actionType = actionType,
                 data = data,
                 editPermission = editPermission,
-                archiveFlag = archiveFlag
+                archiveFlag = archiveFlag,
+                channelCode = ChannelCode.getRequestChannelCode()
             )
         } catch (e: PipelineTransferException) {
             val elementMsg = I18nUtil.getCodeLanMessage(

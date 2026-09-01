@@ -66,6 +66,7 @@ import com.tencent.devops.process.pojo.PipelineNotifyTemplateEnum
 import com.tencent.devops.process.pojo.ProjectPipelineCallBackHistory
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
+import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
@@ -94,11 +95,26 @@ class ProjectPipelineCallBackService @Autowired constructor(
     private val pipelineCallbackDao: PipelineCallbackDao
 ) {
 
-    @Value("\${project.callback.secretParam.aes-key:project_callback_aes_key}")
-    private val aesKey = ""
+    @Value("\${project.callback.aes-key}")
+    private lateinit var aesKey: String
 
     @Value("\${project.callback.black-ports:#{null}}")
     private val blackPorts: List<Int> = listOf()
+
+    /**
+     * 是否允许回调 URL 指向 RFC1918 站点本地地址（10.x / 172.16-31.x / 192.168.x）。
+     *
+     * - 默认 `false`：拒绝所有内网回调，适合公网 / SaaS 部署。
+     * - 私有云 / IDC 部署可设为 `true`，业务 callback 即可继续指向内网服务。
+     *
+     * **无论该开关如何配置**，下列目标永远被拒绝（L1 强制拦截，详见 [OkhttpUtils.isAlwaysBlockedHost]）：
+     * - 回环地址 `127.0.0.1` / `::1` / `localhost` —— 会暴露 bk-ci 自身后端的 actuator 等端点；
+     * - 链路本地 `169.254.0.0/16` —— 涵盖各云平台元数据服务；
+     * - 元数据 host：`metadata.google.internal`、`kubernetes.default` 等；
+     * - 任意本地 `0.0.0.0`、组播地址。
+     */
+    @Value("\${project.callback.allow-internal-url:false}")
+    private val allowInternalCallbackUrl: Boolean = false
 
     companion object {
         private val logger = LoggerFactory.getLogger(ProjectPipelineCallBackService::class.java)
@@ -119,19 +135,7 @@ class ProjectPipelineCallBackService @Autowired constructor(
         if (needCheckPermission) {
             validProjectManager(userId, projectId)
         }
-        if (!OkhttpUtils.validUrl(url)) {
-            logger.warn("$projectId|callback url Invalid")
-            throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_CALLBACK_URL_INVALID)
-        }
-        val port = OkhttpUtils.getPort(url) ?: -1
-        if (blackPorts.contains(port)) {
-            // url 存在高危端口号
-            logger.warn("url[$url] with high-risk port detected")
-            throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ERROR_CALLBACK_URL_CONTAINS_HIGH_RISK_PORT,
-                params = arrayOf(port.toString())
-            )
-        }
+        validateCallbackUrl(projectId = projectId, url = url)
         val callBackUrl = projectPipelineCallBackUrlGenerator.generateCallBackUrl(
             region = region,
             url = url
@@ -474,6 +478,9 @@ class ProjectPipelineCallBackService @Autowired constructor(
             params = arrayOf(id.toString())
         )
 
+        // SSRF：重试前再次校验目标 URL，防止历史记录中存有指向内网的回调地址
+        validateCallbackUrl(projectId = projectId, url = record.callBackUrl)
+
         val requestBuilder = Request.Builder()
             .url(record.callBackUrl)
             .post(RequestBody.create(JSON, record.requestBody))
@@ -490,7 +497,14 @@ class ProjectPipelineCallBackService @Autowired constructor(
         var errorMsg: String? = null
         var status = ProjectPipelineCallbackStatus.SUCCESS
         try {
-            OkhttpUtils.doHttp(request).use { response ->
+            // 始终走带 DNS pinning 的安全客户端，防御 DNS rebinding；
+            // 当允许内网回调时使用元数据安全客户端（仅拦截 L1），否则使用严格客户端（L1+L2 全拦截）。
+            val response = if (allowInternalCallbackUrl) {
+                OkhttpUtils.doMetadataSafeHttp(request)
+            } else {
+                OkhttpUtils.doSsrfSafeHttp(request)
+            }
+            response.use { response ->
                 if (response.code != 200) {
                     logger.warn("[${record.projectId}]|CALL_BACK|url=${record.callBackUrl}| code=${response.code}")
                     throw ErrorCodeException(
@@ -547,8 +561,9 @@ class ProjectPipelineCallBackService @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
-        callbackInfo: PipelineCallbackEvent
+        callbackInfoList: List<PipelineCallbackEvent>
     ) {
+        if (callbackInfoList.isEmpty()) return
         // 验证用户是否可以编辑流水线
         pipelinePermissionService.checkPipelinePermission(
             userId = userId,
@@ -556,22 +571,21 @@ class ProjectPipelineCallBackService @Autowired constructor(
             pipelineId = pipelineId,
             permission = AuthPermission.EDIT
         )
-        if (!OkhttpUtils.validUrl(callbackInfo.callbackUrl)) {
-            throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_CALLBACK_URL_INVALID)
+        // 逐个校验回调URL并生成最终回调地址
+        callbackInfoList.forEach { callbackInfo ->
+            validateCallbackUrl(projectId = projectId, url = callbackInfo.callbackUrl)
+            callbackInfo.callbackUrl = projectPipelineCallBackUrlGenerator.generateCallBackUrl(
+                region = callbackInfo.region,
+                url = callbackInfo.callbackUrl
+            )
         }
-        val callBackUrl = projectPipelineCallBackUrlGenerator.generateCallBackUrl(
-            region = callbackInfo.region,
-            url = callbackInfo.callbackUrl
-        )
-        callbackInfo.callbackUrl = callBackUrl
         val model = pipelineRepositoryService.getPipelineResourceVersion(projectId, pipelineId)?.model ?: return
         val newEventMap = mutableMapOf<String, PipelineCallbackEvent>()
-
-        if (model.events?.isEmpty() == true) {
-            newEventMap[callbackInfo.callbackName] = callbackInfo
-        } else {
+        if (model.events?.isNotEmpty() == true) {
             newEventMap.putAll(model.events!!)
-            // 若key存在会覆盖原来的value,否则就是追加新key
+        }
+        // 若key存在会覆盖原来的value,否则就是追加新key
+        callbackInfoList.forEach { callbackInfo ->
             newEventMap[callbackInfo.callbackName] = callbackInfo
         }
         dslContext.transaction { transactionContext ->
@@ -581,7 +595,7 @@ class ProjectPipelineCallBackService @Autowired constructor(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 userId = userId,
-                list = newEventMap.map { (key, value) ->
+                list = newEventMap.map { (_, value) ->
                     val encodeToken = value.secretToken?.let { AESUtil.encrypt(aesKey, it) }
                     value.copy(secretToken = encodeToken)
                 }
@@ -589,7 +603,7 @@ class ProjectPipelineCallBackService @Autowired constructor(
         }
     }
 
-    fun getPipelineCallback(
+    fun listPipelineCallback(
         projectId: String,
         pipelineId: String,
         event: String?
@@ -605,6 +619,59 @@ class ProjectPipelineCallBackService @Autowired constructor(
             events = it.eventType,
             secretToken = it.secretToken?.let { AESUtil.decrypt(aesKey, it) },
             name = it.name
+        )
+    }
+
+    /**
+     * 查询流水线级回调，返回与创建入参一致的 [PipelineCallbackEvent] 结构
+     */
+    fun listPipelineCallbackEvent(
+        projectId: String,
+        pipelineId: String,
+        event: String?
+    ): List<PipelineCallbackEvent> = pipelineCallbackDao.list(
+        dslContext = dslContext,
+        projectId = projectId,
+        pipelineId = pipelineId,
+        event = event
+    ).map {
+        PipelineCallbackEvent(
+            callbackEvent = CallBackEvent.valueOf(it.eventType),
+            callbackUrl = it.url,
+            secretToken = it.secretToken?.let { token -> AESUtil.decrypt(aesKey, token) },
+            callbackName = it.name,
+            region = it.region?.let { region -> CallBackNetWorkRegionType.valueOf(region) }
+        )
+    }
+
+    @ActionAuditRecord(
+        actionId = ActionId.PIPELINE_EDIT,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.PIPELINE
+        ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
+        content = ActionAuditContent.PIPELINE_EDIT_BIND_PIPELINE_CALLBACK_CONTENT
+    )
+    fun deletePipelineCallBack(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        callbackName: String
+    ) {
+        // 验证用户是否可以编辑流水线
+        pipelinePermissionService.checkPipelinePermission(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            permission = AuthPermission.EDIT
+        )
+        logger.info("delete pipeline callback|$userId|$projectId|$pipelineId|$callbackName")
+        pipelineCallbackDao.delete(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            names = setOf(callbackName)
         )
     }
 
@@ -634,6 +701,53 @@ class ProjectPipelineCallBackService @Autowired constructor(
             throw ErrorCodeException(
                 errorCode = ProcessMessageCode.ERROR_PERMISSION_NOT_PROJECT_MANAGER,
                 params = arrayOf(userId, projectId)
+            )
+        }
+    }
+
+    /**
+     * 对回调 URL 做统一 SSRF 校验：
+     * 1) URL 格式合法；
+     * 2) 端口不在高危端口黑名单内；
+     * 3) **L1（强制）**：拒绝回环 / 链路本地 / 元数据 host —— 任何部署形态下都没有合法用例；
+     * 4) **L2（可配置）**：默认拒绝 RFC1918 站点本地地址，私有云可通过
+     *    `project.callback.allow-internal-url=true` 放开。
+     */
+    private fun validateCallbackUrl(projectId: String, url: String) {
+        if (!OkhttpUtils.validUrl(url)) {
+            logger.warn("$projectId|callback url[$url] format invalid")
+            throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_CALLBACK_URL_INVALID)
+        }
+        val port = OkhttpUtils.getPort(url) ?: -1
+        if (blackPorts.contains(port)) {
+            logger.warn("$projectId|callback url[$url] with high-risk port[$port] detected")
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_CALLBACK_URL_CONTAINS_HIGH_RISK_PORT,
+                params = arrayOf(port.toString())
+            )
+        }
+        // L1：始终拒绝回环 / 链路本地 / 元数据 host（即便 allow-internal-url=true 也不放行）
+        val host = try {
+            url.toHttpUrl().host
+        } catch (ignored: IllegalArgumentException) {
+            throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_CALLBACK_URL_INVALID)
+        }
+        if (OkhttpUtils.isAlwaysBlockedHost(host)) {
+            logger.warn("$projectId|callback url[$url] points to loopback/metadata host, blocked by SSRF protection")
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_CALLBACK_URL_INTERNAL_HOST,
+                params = arrayOf(url)
+            )
+        }
+        // L2：默认拒绝 RFC1918 站点本地，私有云可通过 allow-internal-url=true 放开
+        if (!allowInternalCallbackUrl && !OkhttpUtils.isExternalUrl(url)) {
+            logger.warn(
+                "$projectId|callback url[$url] points to site-local(RFC1918) host, " +
+                        "blocked by SSRF protection (set project.callback.allow-internal-url=true to allow)"
+            )
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_CALLBACK_URL_INTERNAL_HOST,
+                params = arrayOf(url)
             )
         }
     }

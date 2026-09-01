@@ -250,6 +250,14 @@
                 this.getInterceptAtom()
                 if (val && val.instanceFromTemplate) this.requestMatchTemplateRules(val.templateId)
             },
+            currentTab (val, oldVal) {
+                // 切换 tab 时关闭属性面板，避免触发器等面板的全局状态泄漏到其他 tab 导致出现空白的待选择插件面板
+                if (val !== oldVal) {
+                    this.togglePropertyPanel({
+                        isShow: false
+                    })
+                }
+            },
             'pipelineInfo.permissions.canEdit': {
                 handler (val) {
                     if (typeof val === 'boolean') {
@@ -293,7 +301,9 @@
             this.togglePropertyPanel({
                 isShow: false
             })
+            this.clearPipelineSnapshot() // 清除流水线快照，防止内存泄漏
             this.errors.clear()
+            this.$store.commit('common/SET_HAS_DRAFT', false)  // 清除草稿状态
         },
         beforeRouteUpdate (to, from, next) {
             if (from.name !== to.name) {
@@ -313,19 +323,42 @@
                 'setSaveStatus',
                 'setEditFrom',
                 'updatePipelineSetting',
-                'setAtomEditing'
+                'setAtomEditing',
+                'requestPipelineSummary',
+                'requestTemplateSummary',
+                'clearPipelineSnapshot'
             ]),
             ...mapActions('common', [
                 'requestQualityAtom',
                 'requestInterceptAtom',
                 'requestMatchTemplateRuleList'
             ]),
+            async getDetail () {
+                try {
+                    if (this.isTemplate) {
+                        await this.requestTemplateSummary(this.$route.params)
+                    } else {
+                        await this.requestPipelineSummary(this.$route.params)
+                    }
+                } catch (error) {
+                    this.$bkMessage({
+                        theme: 'error',
+                        message: error.message ?? error
+                    })
+                }
+            },
             async init () {
                 if (this.pipelineVersion) {
                     this.isLoading = true
+                    
+                    // 保证编辑页一直是最新的detail
+                    await this.getDetail()
+                    
                     await this.requestPipeline({
+                        pipelineId: this.pipelineId,
+                        projectId: this.projectId,
                         ...this.$route.params,
-                        editMode: true,
+                        source: 'EDIT',
                         version: this.pipelineVersion
                     })
                     this.isLoading = false

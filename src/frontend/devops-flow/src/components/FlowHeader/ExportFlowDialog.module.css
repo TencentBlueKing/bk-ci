@@ -1,0 +1,72 @@
+.exportList {
+  padding: 0 18px 16px;
+  display: flex;
+  justify-content: space-around;
+  font-size: 12px;
+  gap: 24px;
+}
+
+.exportItem {
+  flex: 1;
+  min-width: 200px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 24px 20px;
+  border-radius: 4px;
+  border: 1px solid transparent;
+  transition: all 0.2s;
+}
+
+.exportItem:hover {
+  background: #f5f6fa;
+  border-color: #dcdee5;
+}
+
+.exportItem:hover .exportButton {
+  background: #3a84ff;
+  border: 1px solid #3a84ff;
+  color: #ffffff;
+}
+
+.exportIcon {
+  width: 48px;
+  height: 48px;
+  margin-bottom: 16px;
+  color: #979ba5;
+}
+
+.exportTitle {
+  font-weight: 600;
+  font-size: 14px;
+  line-height: 22px;
+  margin-bottom: 8px;
+  margin-top: 0;
+  color: #313238;
+}
+
+.exportTip {
+  flex: 1;
+  color: #63656e;
+  line-height: 20px;
+  text-align: center;
+  margin: 0 0 16px;
+}
+
+.exportButton {
+  width: 140px;
+  height: 32px;
+  text-align: center;
+  line-height: 30px;
+  border: 1px solid #c4c6cc;
+  color: #63656e;
+  border-radius: 2px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.exportButton:hover {
+  background: #3a84ff;
+  border-color: #3a84ff;
+  color: #fff;
+}

@@ -1,0 +1,30 @@
+.flowLabelSelector {
+  :global(.bk-nested-loading) {
+    display: grid;
+    grid-gap: 16px;
+  }
+  li {
+    width: 100%;
+    display: flex;
+  }
+}
+
+.flowLabelSelectorLabel {
+  width: 80px;
+  text-align: right;
+  font-size: 12px;
+  margin-right: 22px;
+}
+
+.subLabelSelect {
+  flex: 1;
+  overflow: hidden;
+}
+
+.noLabelPlaceholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #979ba5;
+  font-size: 12px;
+}

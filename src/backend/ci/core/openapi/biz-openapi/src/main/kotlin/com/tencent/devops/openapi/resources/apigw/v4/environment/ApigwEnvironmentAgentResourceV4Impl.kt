@@ -185,11 +185,12 @@ class ApigwEnvironmentAgentResourceV4Impl @Autowired constructor(
         )
     }
 
-    override fun fetchTag(userId: String, projectId: String): Result<List<NodeTag>> {
+    override fun fetchTag(userId: String, projectId: String, createMode: Boolean?): Result<List<NodeTag>> {
         logger.info("OPENAPI_ENVIRONMENT_AGENT_V4|$userId|fetchTag|$projectId")
         return client.get(ServiceThirdPartyAgentResource::class).fetchTag(
             userId = userId,
-            projectId = projectId
+            projectId = projectId,
+            createMode = createMode
         )
     }
 

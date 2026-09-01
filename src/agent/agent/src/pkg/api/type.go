@@ -89,6 +89,8 @@ type DockerOptions struct {
 	Gpus       string   `json:"gpus"`
 	Mounts     []string `json:"mounts"`
 	Privileged bool     `json:"privileged"`
+	Network    []string `json:"network"`
+	User       string   `json:"user"`
 }
 
 type ThirdPartyBuildWithStatus struct {
@@ -156,6 +158,7 @@ type AgentHeartbeatResponse struct {
 	Props                   AgentPropsResp    `json:"props"`
 	DockerParallelTaskCount int               `json:"dockerParallelTaskCount"`
 	Language                string            `json:"language"`
+	CreateMod               *bool             `json:"createMod"`
 }
 
 type AgentPropsResp struct {

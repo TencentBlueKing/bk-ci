@@ -6,6 +6,7 @@
         <router-view />
         <AnnouncementDialog />
         <NonDisclosureAgreement />
+        <AiFloatButton />
     </div>
 </template>
 
@@ -13,12 +14,14 @@
     import Vue from 'vue'
     import { Component, Watch } from 'vue-property-decorator'
     import { Action, State } from 'vuex-class'
+    import AiFloatButton from '../components/AiFloatButton/index.vue'
     import AnnouncementDialog from '../components/AnnouncementDialog/index.vue'
     
     import NonDisclosureAgreement from '../components/NonDisclosureAgreement/index.vue'
     
     @Component({
         components: {
+            AiFloatButton,
             AnnouncementDialog,
             NonDisclosureAgreement
         }

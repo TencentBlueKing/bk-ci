@@ -936,7 +936,7 @@ class GitService @Autowired constructor(
                         ""
                     }
                 )
-                append("&recursive=$recursive&access_token=$token")
+                append("&recursive=$recursive")
             }
             logger.info("request url: $url")
             val request = Request.Builder()
@@ -945,14 +945,21 @@ class GitService @Autowired constructor(
                 .build()
             return RetryUtils.retryFun("getGitCIFileTree") {
                 RetryUtils.doRetryHttp(request).use {
-                    if (!it.isSuccessful) {
-                        throw CustomException(
-                            status = Response.Status.fromStatusCode(it.code) ?: Response.Status.BAD_REQUEST,
-                            message = "(${it.code})${it.message}"
-                        )
+                    // 兼容文件不存在工蜂返回400的情况
+                    if (it.code == Response.Status.BAD_REQUEST.statusCode ||
+                        it.code == Response.Status.NOT_FOUND.statusCode
+                    ) {
+                        emptyList()
+                    } else {
+                        if (!it.isSuccessful) {
+                            throw CustomException(
+                                status = Response.Status.fromStatusCode(it.code) ?: Response.Status.BAD_REQUEST,
+                                message = "(${it.code})${it.message}"
+                            )
+                        }
+                        val data = it.body!!.string()
+                        JsonUtil.getObjectMapper().readValue(data) as List<GitFileInfo>
                     }
-                    val data = it.body!!.string()
-                    JsonUtil.getObjectMapper().readValue(data) as List<GitFileInfo>
                 }
             }
         } finally {

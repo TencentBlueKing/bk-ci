@@ -1,167 +1,43 @@
 ---
 name: unit-testing
-description: 单元测试编写指南，涵盖 JUnit5/MockK 使用、测试命名规范、Mock 技巧、测试覆盖率要求、TDD 实践。当用户编写单元测试、Mock 依赖、提高测试覆盖率或进行测试驱动开发时使用。
-core_files:
-  - "src/backend/ci/core/common/common-test/"
-  - "src/test/kotlin/"
-related_skills:
-  - 01-backend-microservice-development
-token_estimate: 2800
+description: 为 BK-CI 代码编写单元测试时使用，例如 JUnit5、MockK、测试组织、依赖 Mock、异常校验和 TDD 场景。当用户要补测试或用测试驱动实现时优先使用。
 ---
 
-# 单元测试编写
+# 单元测试
 
-## Quick Reference
+## 适用场景
 
-```
-框架：JUnit 5 (Jupiter) + MockK 1.12.2
-测试基类：BkCiAbstractTest（提供 dslContext、objectMapper）
-文件命名：*Test.kt
-测试模式：AAA（Arrange-Act-Assert）
-```
+- 编写 Service / DAO / 工具类单元测试
+- Mock 外部依赖和边界条件
+- 验证正常路径、异常路径和回归场景
+- 采用 TDD 或补测试防回归
 
-### 最简示例
+## 不适用场景
 
-```kotlin
-class PipelineServiceTest : BkCiAbstractTest() {
-    private val pipelineDao = mockk<PipelineDao>()
-    private val service = PipelineService(pipelineDao)
+- 集成测试、端到端测试
+- 只是实现业务逻辑，不准备补测试
+- 只是排查运行环境问题
 
-    @Test
-    fun `should return pipeline when exists`() {
-        // Arrange
-        every { pipelineDao.get(any(), any()) } returns mockPipeline
-        
-        // Act
-        val result = service.getPipeline(PROJECT_ID, PIPELINE_ID)
-        
-        // Assert
-        Assertions.assertNotNull(result)
-        verify { pipelineDao.get(PROJECT_ID, PIPELINE_ID) }
-    }
-    
-    companion object {
-        const val PROJECT_ID = "test-project"
-        const val PIPELINE_ID = "p-12345678901234567890123456789012"
-    }
-}
-```
+## 快速指导
 
-## When to Use
+1. 这个 skill 关注的是 BK-CI 项目里的单元测试写法，不是测试理论总览。
+2. 测试先保证意图清晰，再考虑覆盖率；重点是关键分支和回归风险。
+3. 常见模式仍然是 AAA、Mock 外部依赖、显式断言结果和交互。
+4. 写测试前先确认你测的是业务规则，不是把实现细节机械复述一遍。
+5. 如果测试涉及后端接口或服务结构，再联动看 `backend-microservice-development`。
 
-- 编写 Service/DAO 层单元测试
-- Mock 外部依赖
-- 验证业务逻辑正确性
-- 进行 TDD 开发
+## 高信号规则
 
-## When NOT to Use
+- 正常路径和失败路径都要有代表性覆盖
+- Mock 应该服务于隔离边界，而不是掩盖设计问题
+- 测试命名要能直接表达行为和预期
 
-- 集成测试 → 需要启动完整服务
-- E2E 测试 → 需要部署完整环境
+## 关键陷阱
 
----
+- 只测 happy path
+- Mock 过度，导致测试几乎失去行为价值
+- 断言太弱，只证明代码跑过，没有证明结果正确
 
-## 测试基类
+## 延伸阅读
 
-```kotlin
-abstract class BkCiAbstractTest {
-    protected val dslContext: DSLContext = DSL.using(
-        MockConnection(Mock.of(0)),
-        SQLDialect.MYSQL
-    )
-    protected val objectMapper: ObjectMapper = JsonUtil.getObjectMapper()
-}
-```
-
-## Mock 创建方式
-
-```kotlin
-// 基础 Mock
-private val dao = mockk<PipelineDao>()
-
-// Relaxed Mock（自动返回默认值）
-private val service = mockk<PipelineService>(relaxed = true)
-
-// Spy（部分 Mock）
-private val self = spyk(MyService(), recordPrivateCalls = true)
-
-// Spring Bean Mock
-mockkObject(SpringContextUtil)
-every { SpringContextUtil.getBean(CommonConfig::class.java) } returns config
-```
-
-## Stub 行为定义
-
-```kotlin
-// 简单返回
-every { dao.get(any(), any()) } returns mockData
-
-// 条件应答
-every { redis.execute(any<RedisScript<*>>(), any(), any()) } answers {
-    val script = args[0] as DefaultRedisScript<*>
-    if (script.resultType == Long::class.java) 1L else throw RuntimeException()
-}
-
-// 抛出异常
-every { service.doSomething() } throws ErrorCodeException(...)
-```
-
-## 断言与验证
-
-```kotlin
-// 基本断言
-Assertions.assertEquals(expected, actual)
-Assertions.assertTrue(condition)
-Assertions.assertNull(value)
-
-// 异常断言
-val ex = assertThrows<ErrorCodeException> { service.doSomething() }
-Assertions.assertEquals("2100013", ex.errorCode)
-
-// 验证调用
-verify { dao.get(any(), any()) }
-verify(exactly = 1) { service.save(any()) }
-verify(exactly = 0) { service.delete(any()) }
-```
-
-## 测试组织
-
-```kotlin
-class MyServiceTest {
-    @Nested
-    inner class GetPipelineTests {
-        @Test
-        @DisplayName("流水线存在时返回数据")
-        fun `returns pipeline when exists`() { }
-        
-        @Test
-        @DisplayName("流水线不存在时抛出异常")
-        fun `throws exception when not found`() { }
-    }
-}
-```
-
-## 测试数据构建
-
-```kotlin
-// Builder 模式
-fun buildOptions(
-    enable: Boolean = true,
-    runCondition: RunCondition = RunCondition.PRE_TASK_SUCCESS
-) = ElementAdditionalOptions(enable = enable, runCondition = runCondition)
-
-// 从资源文件加载
-val resource = ClassPathResource("test-data/pipeline.json")
-val data = JsonUtil.to(resource.inputStream, PipelineInfo::class.java)
-```
-
----
-
-## Checklist
-
-编写测试前确认：
-- [ ] 继承 `BkCiAbstractTest` 基类
-- [ ] 使用 AAA 模式组织测试代码
-- [ ] Mock 所有外部依赖
-- [ ] 覆盖正常和异常场景
-- [ ] 测试方法名清晰描述测试意图
+- 如果你在改后端服务：再看 `backend-microservice-development`

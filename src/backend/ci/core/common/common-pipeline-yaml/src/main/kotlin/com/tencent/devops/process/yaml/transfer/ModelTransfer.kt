@@ -35,7 +35,9 @@ import com.tencent.devops.common.pipeline.TemplateInstanceDescriptor
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.dialect.PipelineDialectType
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.TemplateRefType
+import com.tencent.devops.common.pipeline.pojo.PublicVarGroupRef
 import com.tencent.devops.common.pipeline.pojo.TemplateInstanceField
 import com.tencent.devops.common.pipeline.pojo.TemplateInstanceRecommendedVersion
 import com.tencent.devops.common.pipeline.pojo.TemplateInstanceTriggerConfig
@@ -58,16 +60,20 @@ import com.tencent.devops.process.yaml.transfer.pojo.ModelTransferInput
 import com.tencent.devops.process.yaml.transfer.pojo.YamlTransferInput
 import com.tencent.devops.process.yaml.v3.enums.SyntaxDialectType
 import com.tencent.devops.process.yaml.v3.models.Concurrency
+import com.tencent.devops.process.yaml.v3.models.CreativeRunsOn
 import com.tencent.devops.process.yaml.v3.models.ExtendsTemplate
 import com.tencent.devops.process.yaml.v3.models.IPreTemplateScriptBuildYamlParser
 import com.tencent.devops.process.yaml.v3.models.Notices
 import com.tencent.devops.process.yaml.v3.models.PacNotices
 import com.tencent.devops.process.yaml.v3.models.PreExtends
 import com.tencent.devops.process.yaml.v3.models.PreTemplateScriptBuildYamlV3Parser
+import com.tencent.devops.process.yaml.v3.models.TriggerType
+import com.tencent.devops.process.yaml.v3.models.VariableTemplate
 import com.tencent.devops.process.yaml.v3.models.on.IPreTriggerOn
 import com.tencent.devops.process.yaml.v3.models.on.PreTriggerOn
 import com.tencent.devops.process.yaml.v3.models.on.PreTriggerOnV3
 import com.tencent.devops.process.yaml.v3.models.stage.PreStage
+import com.tencent.devops.process.yaml.v3.parsers.template.Constants.TEMPLATE_KEY
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
@@ -123,7 +129,13 @@ class ModelTransfer @Autowired constructor(
                 notices = yaml.notices?.filter { it.checkNotifyForFail() }
             ),
             failIfVariableInvalid = yaml.failIfVariableInvalid.nullIfDefault(false),
-            buildCancelPolicy = BuildCancelPolicy.codeParse(yaml.cancelPolicy)
+            buildCancelPolicy = BuildCancelPolicy.codeParse(yaml.cancelPolicy),
+            envHashId = if (yamlInput.channelCode == ChannelCode.CREATIVE_STREAM) {
+                CreativeRunsOn.parse(yaml.runsOn).poolId
+            } else null,
+            envName = if (yamlInput.channelCode == ChannelCode.CREATIVE_STREAM) {
+                CreativeRunsOn.parse(yaml.runsOn).poolName
+            } else null
         )
     }
 
@@ -180,6 +192,9 @@ class ModelTransfer @Autowired constructor(
             pipelineCreator = yamlInput.pipelineInfo?.creator ?: yamlInput.userId
         )
         model.latestVersion = yamlInput.pipelineInfo?.version ?: 0
+        model.publicVarGroups = yamlInput.yaml.formatVariableTemplates().map {
+            PublicVarGroupRef.create(groupName = it.name, versionName = it.version)
+        }
 
         // 蓝盾引擎会将stageId从1开始顺序强制重写，因此在生成model时保持一致
         val stageIndex = AtomicInteger(0)
@@ -323,7 +338,19 @@ class ModelTransfer @Autowired constructor(
         }
         yaml.notices = makeNoticesV3(modelInput)
         yaml.stages = makeStages(modelInput).ifEmpty { null }?.let { TransferMapper.anyTo(it) }
-        yaml.variables = variableTransfer.makeVariableFromModel(getTriggerContainer(modelInput))
+        val variables = mutableMapOf<String, Any>()
+        modelInput.model.handlePublicVarInfo()
+        val publicVarGroups = modelInput.model.publicVarGroups
+        if (!publicVarGroups.isNullOrEmpty()) {
+            variables[TEMPLATE_KEY] = publicVarGroups.map {
+                VariableTemplate(it.groupName, it.versionName)
+            }
+        }
+        // 模板实例化流水线：仅输出公共变量组引用，不输出模板参数变量
+        if (modelInput.model.template == null) {
+            variableTransfer.makeVariableFromModel(modelInput.model.getTriggerContainer())?.let { variables.putAll(it) }
+        }
+        yaml.variables = if (variables.isEmpty()) null else variables
         yaml.extends = makeExtend(modelInput.model)
         yaml.finally = makeFinally(modelInput)?.ifEmpty { null }
         yaml.concurrency = makeConcurrency(modelInput)
@@ -334,6 +361,12 @@ class ModelTransfer @Autowired constructor(
         yaml.failIfVariableInvalid = modelInput.setting.failIfVariableInvalid.nullIfDefault(false)
         yaml.cancelPolicy =
             modelInput.setting.buildCancelPolicy.nullIfDefault(BuildCancelPolicy.EXECUTE_PERMISSION)?.yamlCode()
+        if (modelInput.channelCode == ChannelCode.CREATIVE_STREAM) {
+            yaml.runsOn = CreativeRunsOn.fromSetting(
+                envHashId = modelInput.setting.envHashId,
+                envName = modelInput.setting.envName
+            ).toYaml()
+        }
         modelInput.aspectWrapper.setYaml4Yaml(yaml, PipelineTransferAspectWrapper.AspectType.AFTER)
         return yaml
     }
@@ -348,7 +381,8 @@ class ModelTransfer @Autowired constructor(
                 stage = stage,
                 userId = modelInput.userId,
                 projectId = modelInput.setting.projectId,
-                aspectWrapper = modelInput.aspectWrapper
+                aspectWrapper = modelInput.aspectWrapper,
+                channelCode = modelInput.channelCode
             )
             modelInput.aspectWrapper.setYamlStage4Yaml(
                 yamlPreStage = ymlStage,
@@ -368,7 +402,8 @@ class ModelTransfer @Autowired constructor(
                 stage = lastStage,
                 userId = modelInput.userId,
                 projectId = modelInput.setting.projectId,
-                aspectWrapper = modelInput.aspectWrapper
+                aspectWrapper = modelInput.aspectWrapper,
+                channelCode = modelInput.channelCode
             ).jobs
         } else null
         return finally as LinkedHashMap<String, Any>?
@@ -502,11 +537,19 @@ class ModelTransfer @Autowired constructor(
             PipelineTransferAspectWrapper.AspectType.BEFORE
         )
         val triggers = getTriggerContainer(modelInput)?.elements ?: return emptyList()
-        val baseTrigger = elementTransfer.baseTriggers2yaml(triggers, modelInput.aspectWrapper)
-            ?.toPre(modelInput.version)
+        val baseTrigger = elementTransfer.baseTriggers2yaml(
+            elements = triggers,
+            aspectWrapper = modelInput.aspectWrapper,
+            channelCode = modelInput.channelCode,
+            userId = modelInput.userId,
+            projectId = modelInput.setting.projectId
+        )?.toPre(modelInput.version)
         val scmTrigger = elementTransfer.scmTriggers2Yaml(
             triggers, modelInput.setting.projectId, modelInput.aspectWrapper
         )
+        // TAPD 触发独立聚合，与代码库触发平级
+        val tapdTrigger = elementTransfer.tapdTriggers2Yaml(triggers, modelInput.aspectWrapper)
+            .map { it.toPre(modelInput.version) }
         when (modelInput.version) {
             YamlVersion.V2_0 -> {
                 // 融合默认git触发器 + 基础触发器
@@ -542,6 +585,10 @@ class ModelTransfer @Autowired constructor(
                             }
                         })
                     }
+                }
+                tapdTrigger.forEach { pre ->
+                    (pre as? PreTriggerOnV3)?.type = TriggerType.TAPD.alis
+                    triggerV3.add(pre)
                 }
                 if (baseTrigger != null) {
                     when (triggerV3.size) {

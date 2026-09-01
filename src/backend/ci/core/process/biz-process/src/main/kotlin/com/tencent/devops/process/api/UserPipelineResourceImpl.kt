@@ -30,6 +30,7 @@ package com.tencent.devops.process.api
 import com.tencent.bk.audit.annotations.AuditEntry
 import com.tencent.bk.audit.annotations.AuditRequestBody
 import com.tencent.devops.common.api.constant.CommonMessageCode.USER_NOT_PERMISSIONS_OPERATE_PIPELINE
+import com.tencent.devops.common.api.context.ChannelContext
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.exception.ParamBlankException
@@ -120,7 +121,7 @@ class UserPipelineResourceImpl @Autowired constructor(
         checkParam(userId, projectId)
         return Result(
             data = pipelineInfoFacadeService.isPipelineExist(
-                projectId = projectId, name = pipelineName, channelCode = ChannelCode.BS
+                projectId = projectId, name = pipelineName, channelCode = ChannelCode.getRequestChannelCode()
             )
         )
     }
@@ -131,18 +132,22 @@ class UserPipelineResourceImpl @Autowired constructor(
         permission: Permission,
         excludePipelineId: String?,
         page: Int?,
-        pageSize: Int?
+        pageSize: Int?,
+        channelCode: ChannelCode?
     ): Result<Page<Pipeline>> {
         checkParam(userId, projectId)
-        val result = pipelineListFacadeService.hasPermissionList(
-            userId = userId,
-            projectId = projectId,
-            permission = permission,
-            excludePipelineId = excludePipelineId,
-            filterByPipelineName = null,
-            page = page,
-            pageSize = pageSize
-        )
+        // query 传了渠道则以其为准设置渠道上下文，统一作用于权限校验、i18n、下游服务透传等
+        val result = ChannelContext.withChannel(channelCode?.name ?: ChannelContext.getChannel()) {
+            pipelineListFacadeService.hasPermissionList(
+                userId = userId,
+                projectId = projectId,
+                permission = permission,
+                excludePipelineId = excludePipelineId,
+                filterByPipelineName = null,
+                page = page,
+                pageSize = pageSize
+            )
+        }
         return Result(
             data = Page(
                 page = page ?: 0,
@@ -167,13 +172,13 @@ class UserPipelineResourceImpl @Autowired constructor(
                 userId = userId,
                 projectId = projectId,
                 model = pipeline,
-                channelCode = ChannelCode.BS,
+                channelCode = ChannelCode.getRequestChannelCode(),
                 useSubscriptionSettings = useTemplateSettings
             ).pipelineId
         )
         auditService.createAudit(
             Audit(
-                resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
+                resourceType = AuthResourceType.getAuthResourceTypeByChannel(AuthResourceType.PIPELINE_DEFAULT).value,
                 resourceId = pipelineId.id,
                 resourceName = pipeline.name,
                 userId = userId,
@@ -230,12 +235,12 @@ class UserPipelineResourceImpl @Autowired constructor(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 pipelineCopy = pipeline,
-                channelCode = ChannelCode.BS
+                channelCode = ChannelCode.getRequestChannelCode()
             )
         )
         auditService.createAudit(
             Audit(
-                resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
+                resourceType = AuthResourceType.getAuthResourceTypeByChannel(AuthResourceType.PIPELINE_DEFAULT).value,
                 resourceId = pid.id,
                 resourceName = pipeline.name,
                 userId = userId,
@@ -262,11 +267,11 @@ class UserPipelineResourceImpl @Autowired constructor(
             model = pipeline,
             yaml = null,
             versionStatus = VersionStatus.RELEASED,
-            channelCode = ChannelCode.BS
+            channelCode = ChannelCode.getRequestChannelCode()
         )
         auditService.createAudit(
             Audit(
-                resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
+                resourceType = AuthResourceType.getAuthResourceTypeByChannel(AuthResourceType.PIPELINE_DEFAULT).value,
                 resourceId = pipelineResult.pipelineId,
                 resourceName = pipeline.name,
                 userId = userId,
@@ -298,11 +303,11 @@ class UserPipelineResourceImpl @Autowired constructor(
             pipelineId = pipelineId,
             model = modelAndSetting.model,
             setting = modelAndSetting.setting,
-            channelCode = ChannelCode.BS
+            channelCode = ChannelCode.getRequestChannelCode()
         )
         auditService.createAudit(
             Audit(
-                resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
+                resourceType = AuthResourceType.getAuthResourceTypeByChannel(AuthResourceType.PIPELINE_DEFAULT).value,
                 resourceId = pipelineId,
                 resourceName = modelAndSetting.model.name,
                 userId = userId,
@@ -339,7 +344,7 @@ class UserPipelineResourceImpl @Autowired constructor(
         )
         auditService.createAudit(
             Audit(
-                resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
+                resourceType = AuthResourceType.getAuthResourceTypeByChannel(AuthResourceType.PIPELINE_DEFAULT).value,
                 resourceId = pipelineId,
                 resourceName = setting.pipelineName,
                 userId = userId,
@@ -376,7 +381,7 @@ class UserPipelineResourceImpl @Autowired constructor(
             projectId = projectId,
             pipelineId = pipelineId,
             name = name.name,
-            channelCode = ChannelCode.BS
+            channelCode = ChannelCode.getRequestChannelCode()
         )
         return Result(true)
     }
@@ -394,7 +399,7 @@ class UserPipelineResourceImpl @Autowired constructor(
             projectId = projectId,
             pipelineId = pipelineId,
             includeDraft = includeDraft,
-            channelCode = ChannelCode.BS
+            channelCode = ChannelCode.getRequestChannelCode()
         )
         pipelineRecentUseService.record(userId, projectId, pipelineId)
         return Result(pipeline)
@@ -408,7 +413,7 @@ class UserPipelineResourceImpl @Autowired constructor(
                 userId = userId,
                 projectId = projectId,
                 pipelineId = pipelineId,
-                channelCode = ChannelCode.BS,
+                channelCode = ChannelCode.getRequestChannelCode(),
                 version = version
             )
         )
@@ -458,12 +463,12 @@ class UserPipelineResourceImpl @Autowired constructor(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
-            channelCode = ChannelCode.BS,
+            channelCode = ChannelCode.getRequestChannelCode(),
             archiveFlag = archiveFlag
         )
         auditService.createAudit(
             Audit(
-                resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
+                resourceType = AuthResourceType.getAuthResourceTypeByChannel(AuthResourceType.PIPELINE_DEFAULT).value,
                 resourceId = pipelineId,
                 resourceName = deletePipeline.pipelineName,
                 userId = userId,
@@ -521,7 +526,7 @@ class UserPipelineResourceImpl @Autowired constructor(
         )
         auditService.createAudit(
             Audit(
-                resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
+                resourceType = AuthResourceType.getAuthResourceTypeByChannel(AuthResourceType.PIPELINE_DEFAULT).value,
                 resourceId = pipelineId,
                 resourceName = pipelineName,
                 userId = userId,
@@ -545,11 +550,11 @@ class UserPipelineResourceImpl @Autowired constructor(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
-            channelCode = ChannelCode.BS
+            channelCode = ChannelCode.getRequestChannelCode()
         )
         auditService.createAudit(
             Audit(
-                resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
+                resourceType = AuthResourceType.getAuthResourceTypeByChannel(AuthResourceType.PIPELINE_DEFAULT).value,
                 resourceId = pipelineId,
                 resourceName = restorePipeline.pipelineName,
                 userId = userId,
@@ -577,7 +582,7 @@ class UserPipelineResourceImpl @Autowired constructor(
                 projectId = projectId,
                 page = page,
                 pageSize = pageSize,
-                sortType = sortType ?: PipelineSortType.CREATE_TIME, ChannelCode.BS,
+                sortType = sortType ?: PipelineSortType.CREATE_TIME, ChannelCode.getRequestChannelCode(),
                 collation = collation ?: PipelineCollation.DEFAULT,
                 filterByPipelineName = filterByPipelineName
             )
@@ -617,7 +622,7 @@ class UserPipelineResourceImpl @Autowired constructor(
                 page = page,
                 pageSize = pageSize,
                 sortType = sortType ?: PipelineSortType.CREATE_TIME,
-                channelCode = ChannelCode.BS,
+                channelCode = ChannelCode.getRequestChannelCode(),
                 viewId = viewId,
                 checkPermission = true,
                 filterByPipelineName = filterByPipelineName,
@@ -646,7 +651,8 @@ class UserPipelineResourceImpl @Autowired constructor(
                 projectId = projectId,
                 page = page,
                 pageSize = pageSize,
-                sortType = sortType ?: PipelineSortType.CREATE_TIME, ChannelCode.BS,
+                sortType = sortType ?: PipelineSortType.CREATE_TIME,
+                channelCode = ChannelCode.getRequestChannelCode(),
                 checkPermission = true,
                 filterByPipelineName = filterByPipelineName
             )
@@ -726,7 +732,7 @@ class UserPipelineResourceImpl @Autowired constructor(
 
         auditService.createAudit(
             Audit(
-                resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
+                resourceType = AuthResourceType.getAuthResourceTypeByChannel(AuthResourceType.PIPELINE_DEFAULT).value,
                 resourceId = pipelineId,
                 resourceName = pipelineInfo.setting.pipelineName,
                 userId = userId,

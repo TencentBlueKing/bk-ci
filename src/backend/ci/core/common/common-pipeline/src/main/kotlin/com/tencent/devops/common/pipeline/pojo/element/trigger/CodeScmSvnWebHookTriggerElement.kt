@@ -75,12 +75,12 @@ data class CodeScmSvnWebHookTriggerElement(
     }
 }
 
-class CodeScmSvnWebHookTriggerData(
+data class CodeScmSvnWebHookTriggerData(
     @get:Schema(title = "ScmSvn事件触发数据", required = false)
     val input: CodeScmSvnWebHookTriggerInput
 )
 
-class CodeScmSvnWebHookTriggerInput(
+data class CodeScmSvnWebHookTriggerInput(
     @get:Schema(title = "仓库ID", required = true)
     val repositoryHashId: String? = null,
     @get:Schema(title = "事件类型", required = false)

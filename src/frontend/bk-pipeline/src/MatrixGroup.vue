@@ -54,11 +54,11 @@
 
 <script>
     import Job from './Job'
-    import Logo from './Logo'
-    import StatusIcon from './StatusIcon'
-    import { CLICK_EVENT_NAME, STATUS_MAP } from './constants'
-    import { localeMixins } from './locale'
-    import { eventBus, getDependOnDesc, isTriggerContainer } from './util'
+import Logo from './Logo'
+import StatusIcon from './StatusIcon'
+import { CLICK_EVENT_NAME, STATUS_MAP } from './constants'
+import { localeMixins } from './locale'
+import { eventBus, getDependOnDesc, isTriggerContainer } from './util'
     
     export default {
         components: {
@@ -196,8 +196,10 @@
           margin-right: 10px;
           transition: all 0.3s ease;
           flex-shrink: 0;
+          transform: rotate(-90deg);
           &.open {
-            transform: rotate(-180deg);
+            background: transparent;
+            transform: rotate(0deg);
           }
         }
         > span {

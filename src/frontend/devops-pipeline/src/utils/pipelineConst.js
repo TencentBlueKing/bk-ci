@@ -22,6 +22,8 @@ export const allVersionKeyList = [
     'BK_CI_MINOR_VERSION',
     'BK_CI_FIX_VERSION'
 ]
+
+export const TEMP_PARAM_SET_ID = 'TEMP_REUSE'
 export const semverVersionKeySet = new Set(allVersionKeyList)
 
 export const NAME_FILTER_TYPE = 'filterByName'
@@ -170,7 +172,8 @@ export const BUILD_HISTORY_TABLE_DEFAULT_COLUMNS = [
     'artifactQuality',
     'pipelineVersion',
     'remark',
-    'errorCode'
+    'errorCode',
+    'operate'
 ]
 export const BUILD_HISTORY_TABLE_COLUMNS_MAP = {
     buildNum: {
@@ -297,6 +300,13 @@ export const BUILD_HISTORY_TABLE_COLUMNS_MAP = {
         width: 180,
         id: 'buildMsg',
         label: 'history.buildMsg'
+    },
+    operate: {
+        index: 18,
+        id: 'operate',
+        label: 'operate',
+        fixed: 'right',
+        width: localStorage.getItem('operateWidth') ?? 80
     }
 }
 
@@ -331,4 +341,17 @@ export const TEMPLATE_TYPE = {
 export const STRATEGY_ENUM = {
     AUTO: 'AUTO',
     MANUAL: 'MANUAL'
+}
+
+export const MAX_FILE_SIZE_MB = 500
+export const DRAFT_STATUS = {
+    NORMAL: 'NORMAL',   // 无草稿
+    EXISTS: 'EXISTS',   // 草稿已存在
+    CONFLICT: 'CONFLICT',   // 草稿冲突
+    BASE_OUTDATED: 'BASE_OUTDATED',   // 草稿版本落后
+    BASE_BRANCH: 'BASE_BRANCH',   // 草稿基线为分支版本
+    PUBLISHED: 'PUBLISHED',   // 已发布
+    BRANCH: 'BRANCH',   // 分支版本-无草稿
+    RELEASE_OUTDATED: 'RELEASE_OUTDATED', // 基线版本落后-无草稿
+    DELETED: 'DELETED' // 已删除
 }

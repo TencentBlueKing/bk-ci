@@ -71,5 +71,7 @@ data class StoreBaseDataPO(
     @get:Schema(title = "创建时间")
     val createTime: LocalDateTime = LocalDateTime.now(),
     @get:Schema(title = "更新时间")
-    val updateTime: LocalDateTime = LocalDateTime.now()
+    val updateTime: LocalDateTime = LocalDateTime.now(),
+    @get:Schema(title = "归属应用标识", required = false)
+    val ownerStoreCode: String? = null
 )

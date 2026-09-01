@@ -79,6 +79,7 @@ import com.tencent.devops.environment.service.cmdb.EsbCmdbClient
 import com.tencent.devops.environment.service.cmdb.TencentCmdbService
 import com.tencent.devops.environment.service.gseagent.utils.NodeStatusUtils
 import com.tencent.devops.environment.service.job.QueryAgentStatusService
+import com.tencent.devops.environment.utils.CmdbNodeUtils
 import com.tencent.devops.environment.utils.ComputeTimeUtils
 import com.tencent.devops.environment.utils.ImportServerNodeUtils
 import com.tencent.devops.environment.utils.NodeStringIdUtils
@@ -117,6 +118,7 @@ class CmdbNodeService @Autowired constructor(
         const val NODE_AGENT_STATUS_ABNORMAL = 0
         const val NODE_AGENT_STATUS_NORMAL = 1
         const val NODE_AGENT_STATUS_NOT_INSTALLED = 2
+
     }
 
     fun getUserCmdbNodesNew(
@@ -434,6 +436,7 @@ class CmdbNodeService @Autowired constructor(
         }.map {
             val cmdbNode = cmdbIpToNodeMap[it]!!
             val nodeIp = cmdbNode.getFirstIp()
+            val bakOperatorStr = cmdbNode.getBakOperatorStrLessThanMaxLength()
             CreateNodeModel(
                 nodeStringId = "",
                 projectId = projectId,
@@ -448,12 +451,18 @@ class CmdbNodeService @Autowired constructor(
                 createdUser = userId,
                 osName = cmdbNode.getOsNameLessThanMaxLength(),
                 operator = cmdbNode.operator,
-                bakOperator = cmdbNode.getBakOperatorStrLessThanMaxLength(),
+                bakOperator = bakOperatorStr,
                 agentVersion = ipToAgentVersionMap?.get(nodeIp)?.version,
                 hostId = queryCCIpToCCInfoMap[nodeIp]?.bkHostId,
                 cloudAreaId = queryCCIpToCCInfoMap[nodeIp]?.bkCloudId?.toLong(),
                 osType = queryCCIpToCCInfoMap[nodeIp]?.osType,
-                serverId = cmdbNode.serverId
+                serverId = cmdbNode.serverId,
+                operatorStatus = CmdbNodeUtils.calcOperatorStatus(
+                    nodeType = NodeType.CMDB.name,
+                    createdUser = userId,
+                    operator = cmdbNode.operator,
+                    bakOperator = bakOperatorStr
+                )?.code
             )
         }
         val time6 = LocalDateTime.now()
@@ -550,6 +559,7 @@ class CmdbNodeService @Autowired constructor(
         }.map {
             val cmdbNode = serverIdToCmdbServerMap[it]!!
             val ccInfo = queryCCServerIdToCCInfoMap[cmdbNode.serverId]
+            val bakOperatorStr = cmdbNode.getBakOperatorStrLessThanMaxLength()
             CreateNodeModel(
                 nodeStringId = "",
                 projectId = projectId,
@@ -564,12 +574,18 @@ class CmdbNodeService @Autowired constructor(
                 createdUser = userId,
                 osName = cmdbNode.getOsNameLessThanMaxLength(),
                 operator = cmdbNode.operator,
-                bakOperator = cmdbNode.getBakOperatorStrLessThanMaxLength(),
+                bakOperator = bakOperatorStr,
                 agentVersion = serverIdToAgentVersionMap?.get(cmdbNode.serverId)?.version,
                 hostId = ccInfo?.bkHostId,
                 cloudAreaId = ccInfo?.bkCloudId?.toLong(),
                 osType = ccInfo?.osType,
-                serverId = cmdbNode.serverId
+                serverId = cmdbNode.serverId,
+                operatorStatus = CmdbNodeUtils.calcOperatorStatus(
+                    nodeType = NodeType.CMDB.name,
+                    createdUser = userId,
+                    operator = cmdbNode.operator,
+                    bakOperator = bakOperatorStr
+                )?.code
             )
         }
         val time5 = LocalDateTime.now()

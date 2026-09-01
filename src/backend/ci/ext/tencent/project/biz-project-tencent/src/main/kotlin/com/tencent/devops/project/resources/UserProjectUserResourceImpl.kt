@@ -79,12 +79,16 @@ class UserProjectUserResourceImpl @Autowired constructor(
         return Result(tofService.getUserDeptDetail(userId, bkToken))
     }
 
-    override fun getProjectUsers(accessToken: String, userId: String, projectCode: String): Result<List<String>?> {
-        return projectLocalService.getProjectUsers(accessToken, userId, projectCode)
+    override fun getPersonalProject(userId: String): Result<String> {
+        return Result(projectLocalService.getOrCreatePersonalProject(userId).englishName)
     }
 
-    override fun getProjectUserRoles(accessToken: String, userId: String, projectCode: String): Result<List<UserRole>> {
-        return Result(projectLocalService.getProjectUserRoles(accessToken, userId, projectCode, serviceCode))
+    override fun getProjectUsers(userId: String, projectCode: String): Result<List<String>?> {
+        return projectLocalService.getProjectUsers(userId, projectCode)
+    }
+
+    override fun getProjectUserRoles(userId: String, projectCode: String): Result<List<UserRole>> {
+        return Result(projectLocalService.getProjectUserRoles(userId, projectCode, serviceCode))
     }
 
     override fun mangerRoleCheck(userId: String, projectCode: String): Result<Boolean> {
@@ -92,7 +96,6 @@ class UserProjectUserResourceImpl @Autowired constructor(
             projectService.verifyUserProjectPermission(
                 userId = userId,
                 projectId = projectCode,
-                accessToken = null,
                 permission = AuthPermission.MANAGE
             )
         )

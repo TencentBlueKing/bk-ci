@@ -27,9 +27,13 @@
 
 package com.tencent.devops.repository.service
 
+import com.tencent.devops.common.api.enums.RepositoryConfig
+import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.util.HashUtil
+import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.util.ThreadPoolUtil
 import com.tencent.devops.model.repository.tables.records.TRepositoryRecord
 import com.tencent.devops.repository.dao.GitTokenDao
@@ -40,6 +44,14 @@ import com.tencent.devops.repository.dao.RepositoryCodeSvnDao
 import com.tencent.devops.repository.dao.RepositoryDao
 import com.tencent.devops.repository.dao.RepositoryGithubDao
 import com.tencent.devops.repository.pojo.CodeGitRepository
+import com.tencent.devops.repository.pojo.CodeGitlabRepository
+import com.tencent.devops.repository.pojo.CodeP4Repository
+import com.tencent.devops.repository.pojo.CodeSvnRepository
+import com.tencent.devops.repository.pojo.CodeTGitRepository
+import com.tencent.devops.repository.pojo.GithubRepository
+import com.tencent.devops.repository.pojo.Repository
+import com.tencent.devops.repository.pojo.ScmGitRepository
+import com.tencent.devops.repository.pojo.ScmSvnRepository
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.sdk.github.request.GetRepositoryRequest
 import com.tencent.devops.repository.sdk.github.service.GithubRepositoryService
@@ -49,6 +61,7 @@ import com.tencent.devops.repository.service.scm.IScmOauthService
 import com.tencent.devops.repository.service.scm.IScmService
 import com.tencent.devops.scm.code.git.CodeGitWebhookEvent
 import com.tencent.devops.scm.pojo.GitProjectInfo
+import com.tencent.devops.auth.api.service.ServiceResourceMemberResource
 import com.tencent.devops.ticket.api.ServiceCredentialResource
 import org.jooq.DSLContext
 import org.jooq.Record
@@ -77,7 +90,9 @@ class OPRepositoryService @Autowired constructor(
     private val repoPipelineRefDao: RepoPipelineRefDao,
     private val codeSvnDao: RepositoryCodeSvnDao,
     private val client: Client,
-    private val gitTokenDao: GitTokenDao
+    private val gitTokenDao: GitTokenDao,
+    private val repositoryService: RepositoryService,
+    private val clientTokenService: ClientTokenService
 ) {
     fun addHashId() {
         val startTime = System.currentTimeMillis()
@@ -751,6 +766,190 @@ class OPRepositoryService @Autowired constructor(
             },
             actionTitle = "add git operator"
         )
+    }
+
+    fun copyAcrossProject(
+        userId: String,
+        sourceProjectId: String,
+        targetProjectId: String,
+        repoHashId: String?,
+        repositoryName: String?
+    ) {
+        when {
+            !repoHashId.isNullOrBlank() -> {
+                try {
+                    copySingleRepository(
+                        userId = userId,
+                        sourceProjectId = sourceProjectId,
+                        targetProjectId = targetProjectId,
+                        sourceRecord = repositoryDao.get(
+                            dslContext = dslContext,
+                            repositoryId = HashUtil.decodeOtherIdToLong(repoHashId),
+                            projectId = sourceProjectId
+                        )
+                    )
+                } catch (ignored: Exception) {
+                    logger.warn("get source repository failed|$sourceProjectId|$repoHashId", ignored)
+                }
+            }
+            !repositoryName.isNullOrBlank() -> {
+                try {
+                    copySingleRepository(
+                        userId = userId,
+                        sourceProjectId = sourceProjectId,
+                        targetProjectId = targetProjectId,
+                        sourceRecord = repositoryDao.getByName(dslContext, sourceProjectId, repositoryName)
+                    )
+                } catch (ignored: Exception) {
+                    logger.warn("get source repository failed|$sourceProjectId|$repositoryName", ignored)
+                }
+            }
+            else -> copyAllRepositoriesByPage(userId, sourceProjectId, targetProjectId)
+        }
+    }
+
+    private fun copyAllRepositoriesByPage(
+        userId: String,
+        sourceProjectId: String,
+        targetProjectId: String
+    ) {
+        val pageSize = 100
+        var offset = 0
+        val total = repositoryDao.countByProject(
+            dslContext = dslContext,
+            projectIds = listOf(sourceProjectId),
+            repositoryTypes = null,
+            aliasName = null,
+            repositoryIds = null
+        )
+        while (offset < total) {
+            repositoryDao.listByProject(
+                dslContext = dslContext,
+                projectId = sourceProjectId,
+                repositoryTypes = null,
+                aliasName = null,
+                repositoryIds = null,
+                offset = offset,
+                limit = pageSize
+            ).forEach { sourceRecord ->
+                copySingleRepository(
+                    userId = userId,
+                    sourceProjectId = sourceProjectId,
+                    targetProjectId = targetProjectId,
+                    sourceRecord = sourceRecord
+                )
+            }
+            offset += pageSize
+        }
+    }
+
+    private fun copySingleRepository(
+        userId: String,
+        sourceProjectId: String,
+        targetProjectId: String,
+        sourceRecord: TRepositoryRecord
+    ) {
+        val aliasName = sourceRecord.aliasName
+        val sourceRepoHashId = HashUtil.encodeOtherLongId(sourceRecord.repositoryId)
+        try {
+            if (repositoryService.hasAliasName(targetProjectId, null, aliasName)) {
+                logger.warn(
+                    "repository already exists, skip copy|$sourceProjectId|$targetProjectId|$aliasName"
+                )
+                return
+            }
+            val sourceRepository = repositoryService.serviceGet(
+                projectId = sourceProjectId,
+                repositoryConfig = RepositoryConfig(
+                    repositoryHashId = sourceRepoHashId,
+                    repositoryName = null,
+                    repositoryType = RepositoryType.ID
+                )
+            )
+            val (authType, targetRepository) = buildTargetRepository(sourceRepository)
+            val createUserId = if (authType == RepoAuthType.OAUTH) {
+                sourceRepository.userName
+            } else {
+                userId
+            }
+            val targetRepoHashId = repositoryService.serviceCreate(
+                userId = createUserId,
+                projectId = targetProjectId,
+                repository = targetRepository
+            )
+            copyRepositoryGroupMembersSafely(
+                sourceProjectId = sourceProjectId,
+                targetProjectId = targetProjectId,
+                sourceRepoHashId = sourceRepoHashId,
+                targetRepoHashId = targetRepoHashId
+            )
+        } catch (ignored: Exception) {
+            logger.warn(
+                "copy repository failed|$sourceProjectId|$targetProjectId|$aliasName",
+                ignored
+            )
+        }
+    }
+
+    private fun buildTargetRepository(repository: Repository): Pair<RepoAuthType, Repository> {
+        val authTypeName = repository.getRepoAuthTypeName()
+        return if (authTypeName == RepoAuthType.OAUTH.name) {
+            Pair(RepoAuthType.OAUTH, repository.disablePac())
+        } else {
+            Pair(RepoAuthType.SSH, repository.disablePac())
+        }
+    }
+
+    private fun Repository.getRepoAuthTypeName(): String? {
+        return when (this) {
+            is CodeGitRepository -> (authType ?: RepoAuthType.SSH).name
+            is CodeTGitRepository -> (authType ?: RepoAuthType.SSH).name
+            is CodeGitlabRepository -> (authType ?: RepoAuthType.HTTP).name
+            is ScmGitRepository -> (authType ?: RepoAuthType.SSH).name
+            is CodeSvnRepository -> svnType?.uppercase() ?: RepoAuthType.SSH.name
+            is ScmSvnRepository -> svnType?.uppercase() ?: RepoAuthType.SSH.name
+            is GithubRepository -> RepoAuthType.OAUTH.name
+            is CodeP4Repository -> RepoAuthType.HTTP.name
+            else -> null
+        }
+    }
+
+    private fun Repository.disablePac(): Repository {
+        return when (this) {
+            is CodeGitRepository -> copy(enablePac = false, repoHashId = null)
+            is CodeTGitRepository -> copy(enablePac = false, repoHashId = null)
+            is CodeGitlabRepository -> copy(enablePac = false, repoHashId = null)
+            is ScmGitRepository -> copy(enablePac = false, repoHashId = null)
+            is CodeSvnRepository -> copy(enablePac = false, repoHashId = null)
+            is ScmSvnRepository -> copy(enablePac = false, repoHashId = null)
+            is GithubRepository -> copy(enablePac = false, repoHashId = null)
+            is CodeP4Repository -> copy(enablePac = false, repoHashId = null)
+            else -> this
+        }
+    }
+
+    private fun copyRepositoryGroupMembersSafely(
+        sourceProjectId: String,
+        targetProjectId: String,
+        sourceRepoHashId: String,
+        targetRepoHashId: String
+    ) {
+        try {
+            client.get(ServiceResourceMemberResource::class).copyResourceGroupMembers(
+                token = clientTokenService.getSystemToken() ?: "",
+                sourceProjectCode = sourceProjectId,
+                resourceType = AuthResourceType.CODE_REPERTORY.value,
+                sourceResourceCode = sourceRepoHashId,
+                targetProjectCode = targetProjectId,
+                targetResourceCode = targetRepoHashId
+            )
+        } catch (ignored: Exception) {
+            logger.warn(
+                "copy repository group members failed|$sourceProjectId|$targetProjectId|" +
+                    "$sourceRepoHashId|$targetRepoHashId",
+                ignored
+            )
+        }
     }
 
     companion object {

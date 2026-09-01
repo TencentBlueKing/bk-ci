@@ -171,6 +171,14 @@ class SleepControl @Autowired constructor(
             )
         }
 
+        if (workspace.status == WorkspaceStatus.EXCEPTION_CDS_OFFLINE) {
+            logger.info(
+                "${workspace.workspaceName} is EXCEPTION_CDS_OFFLINE, " +
+                    "allow stop operation."
+            )
+            return
+        }
+
         // 处理异常的情况
         workspaceCommon.checkAndFixExceptionWS(
             status = workspace.status,

@@ -31,13 +31,16 @@ package com.tencent.devops.auth.provider.rbac.config
 import com.tencent.bk.sdk.iam.config.IamConfiguration
 import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
 import com.tencent.devops.auth.dao.AuthActionDao
+import com.tencent.devops.auth.dao.AuthAuthorizationDao
 import com.tencent.devops.auth.dao.AuthItsmCallbackDao
 import com.tencent.devops.auth.dao.AuthMonitorSpaceDao
 import com.tencent.devops.auth.dao.AuthResourceDao
 import com.tencent.devops.auth.dao.AuthResourceGroupConfigDao
 import com.tencent.devops.auth.dao.AuthResourceGroupDao
 import com.tencent.devops.auth.dao.AuthResourceGroupMemberDao
+import com.tencent.devops.auth.dao.AuthResourceGroupPermissionDao
 import com.tencent.devops.auth.dao.AuthResourceTypeDao
+import com.tencent.devops.auth.dao.UserInfoDao
 import com.tencent.devops.auth.provider.rbac.service.AuthResourceCodeConverter
 import com.tencent.devops.auth.provider.rbac.service.AuthResourceNameConverter
 import com.tencent.devops.auth.provider.rbac.service.AuthResourceService
@@ -45,12 +48,20 @@ import com.tencent.devops.auth.provider.rbac.service.ItsmService
 import com.tencent.devops.auth.provider.rbac.service.PermissionGradeManagerService
 import com.tencent.devops.auth.provider.rbac.service.PermissionSubsetManagerService
 import com.tencent.devops.auth.provider.rbac.service.RbacCommonService
+import com.tencent.devops.auth.service.AuthAiService
+import com.tencent.devops.auth.service.AuthAiServiceImpl
 import com.tencent.devops.auth.service.AuthAuthorizationScopesService
 import com.tencent.devops.auth.service.BkHttpRequestService
 import com.tencent.devops.auth.service.DeptService
+import com.tencent.devops.auth.service.PermissionAuthorizationService
+import com.tencent.devops.auth.service.iam.PermissionApplyService
+import com.tencent.devops.auth.service.iam.PermissionManageFacadeService
+import com.tencent.devops.auth.service.iam.PermissionProjectService
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupPermissionService
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupService
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupSyncService
+import com.tencent.devops.auth.service.iam.PermissionResourceMemberService
+import com.tencent.devops.auth.service.iam.PermissionResourceService
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.trace.TraceEventDispatcher
 import org.jooq.DSLContext
@@ -161,4 +172,39 @@ class RbacServiceConfiguration {
 
     @Bean
     fun authResourceNameConverter() = AuthResourceNameConverter()
+
+    @Bean
+    fun authAiService(
+        dslContext: DSLContext,
+        rbacCommonService: RbacCommonService,
+        permissionResourceService: PermissionResourceService,
+        permissionResourceMemberService: PermissionResourceMemberService,
+        permissionResourceGroupPermissionService: PermissionResourceGroupPermissionService,
+        permissionManageFacadeService: PermissionManageFacadeService,
+        permissionProjectService: PermissionProjectService,
+        permissionAuthorizationService: PermissionAuthorizationService,
+        permissionApplyService: PermissionApplyService,
+        authResourceDao: AuthResourceDao,
+        authResourceGroupDao: AuthResourceGroupDao,
+        authAuthorizationDao: AuthAuthorizationDao,
+        authResourceGroupMemberDao: AuthResourceGroupMemberDao,
+        authResourceGroupPermissionDao: AuthResourceGroupPermissionDao,
+        userInfoDao: UserInfoDao
+    ): AuthAiService = AuthAiServiceImpl(
+        dslContext = dslContext,
+        rbacCommonService = rbacCommonService,
+        permissionResourceService = permissionResourceService,
+        permissionResourceMemberService = permissionResourceMemberService,
+        permissionResourceGroupPermissionService = permissionResourceGroupPermissionService,
+        permissionManageFacadeService = permissionManageFacadeService,
+        permissionProjectService = permissionProjectService,
+        permissionAuthorizationService = permissionAuthorizationService,
+        permissionApplyService = permissionApplyService,
+        authResourceDao = authResourceDao,
+        authResourceGroupDao = authResourceGroupDao,
+        authAuthorizationDao = authAuthorizationDao,
+        authResourceGroupMemberDao = authResourceGroupMemberDao,
+        authResourceGroupPermissionDao = authResourceGroupPermissionDao,
+        userInfoDao = userInfoDao
+    )
 }

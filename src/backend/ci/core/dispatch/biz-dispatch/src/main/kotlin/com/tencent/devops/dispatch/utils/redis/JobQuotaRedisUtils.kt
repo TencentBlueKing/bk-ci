@@ -130,7 +130,7 @@ class JobQuotaRedisUtils {
     fun restoreProjectJobTime(
         projectId: String?,
         vmType: JobQuotaVmType,
-        channelCode: String = ChannelCode.BS.name
+        channelCode: String = ChannelCode.getRequestChannelCode().name
     ) {
         if (projectId == null && vmType != JobQuotaVmType.ALL) {
             // 直接删除当月的hash主key

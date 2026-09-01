@@ -27,11 +27,14 @@
 
 package com.tencent.devops.repository.api
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import jakarta.ws.rs.Consumes
 import jakarta.ws.rs.DELETE
+import jakarta.ws.rs.HeaderParam
 import jakarta.ws.rs.POST
 import jakarta.ws.rs.PUT
 import jakarta.ws.rs.Path
@@ -138,5 +141,26 @@ interface OPRepositoryResource {
         @Parameter(description = "代码库ID", required = false)
         @QueryParam("repoHashId")
         repoHashId: String?
+    ): Result<Boolean>
+
+    @Operation(summary = "跨项目复制代码库")
+    @POST
+    @Path("/projects/{sourceProjectId}/copyAcrossProject")
+    fun copyAcrossProject(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "源项目ID", required = true)
+        @PathParam("sourceProjectId")
+        sourceProjectId: String,
+        @Parameter(description = "目标项目ID", required = true)
+        @QueryParam("targetProjectId")
+        targetProjectId: String,
+        @Parameter(description = "源代码库HashId，为空则复制源项目下全部代码库", required = false)
+        @QueryParam("repoHashId")
+        repoHashId: String?,
+        @Parameter(description = "源代码库别名，为空则复制源项目下全部代码库", required = false)
+        @QueryParam("repositoryName")
+        repositoryName: String?
     ): Result<Boolean>
 }

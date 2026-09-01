@@ -26,6 +26,7 @@ import com.tencent.devops.remotedev.pojo.bkrepo.RepoToggleRequest
 import com.tencent.devops.remotedev.pojo.bkrepo.TemporaryTokenCreateRequest
 import com.tencent.devops.remotedev.pojo.bkrepo.TemporaryTokenCreateResponse
 import com.tencent.devops.remotedev.pojo.gitproxy.CreateProjectData
+import com.tencent.devops.remotedev.pojo.record.WorkspaceLiveResolution
 import okhttp3.Headers.Companion.toHeaders
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
@@ -47,16 +48,19 @@ class RemotedevBkRepoClient @Autowired constructor(
         projectId: String,
         repoName: String,
         userId: String,
-        media: Boolean
+        media: Boolean,
+        gray: Boolean?,
+        mediaMod: MediaMod
     ): String? {
         val config = bkRepoConfig.getRegionConfig(region, media)
-        var url = "${config.url}/media/api/user/stream/create/$projectId/$repoName?display=false"
+        var url = "${config.url}/media/api/user/stream/create/$projectId/$repoName" +
+                "?display=false&mediaMod=${mediaMod.name}"
         if (media && config.proxyUrl.isNotBlank()) {
             url = "${config.proxyUrl}${URLEncoder.encode(url, "UTF8")}"
         }
         val request = Request.Builder()
             .url(url)
-            .headers(getCommonHeaders(region, userId, media).toHeaders())
+            .headers(getCommonHeaders(region, userId, media, gray).toHeaders())
             .post(
                 objectMapper.writeValueAsString(JsonUtil.toJson(mapOf<String, String>()))
                     .toRequestBody(MediaTypes.APPLICATION_JSON.toMediaTypeOrNull())
@@ -304,15 +308,50 @@ class RemotedevBkRepoClient @Autowired constructor(
         return response?.data?.firstOrNull()?.token ?: throw RemoteServiceException("create temporary token failed")
     }
 
+    /**
+     * 获取仓库的rtc链接
+     *
+     * @param region BkRepo区域配置
+     * @param projectId 项目ID
+     * @param repoName 仓库名称
+     * @param userId 用户ID
+     * @param resolution 分辨率
+     * @return 链接
+     */
+    fun getRepoRtc(
+        region: BkRepoRegion,
+        projectId: String,
+        repoName: String,
+        userId: String,
+        resolution: WorkspaceLiveResolution
+    ): String {
+        val config = bkRepoConfig.getRegionConfig(region, true)
+        var url = "${config.url}/media/api/user/stream/$projectId/$repoName/${resolution.value}/rtc"
+        if (config.proxyUrl.isNotBlank()) {
+            url = "${config.proxyUrl}${URLEncoder.encode(url, "UTF8")}"
+        }
+        val request = Request.Builder()
+            .url(url)
+            .headers(getCommonHeaders(region, userId).toHeaders())
+            .get()
+            .build()
+        val response = doRequest(config, request).resolveResponse<Response<String>>()
+        return response?.data ?: ""
+    }
+
     private fun getCommonHeaders(
         region: BkRepoRegion,
         userId: String,
-        media: Boolean = false
+        media: Boolean = false,
+        gray: Boolean? = null
     ): MutableMap<String, String> {
         val config = bkRepoConfig.getRegionConfig(region, media)
         val headers = mutableMapOf<String, String>()
         headers["Authorization"] = config.headerUserAuth
         headers["X-BKREPO-UID"] = userId
+        if (gray == true) {
+            headers["X-GATEWAY-TAG"] = "GRAY"
+        }
         return headers
     }
 
@@ -403,3 +442,9 @@ data class NodeSearchRulesItem(
     val value: Any,
     val operation: String
 )
+
+enum class MediaMod {
+    RECORD,
+    LIVE,
+    ALL
+}

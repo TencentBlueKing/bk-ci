@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.environment.constant.BATCH_TOKEN_HEADER
+import com.tencent.devops.environment.pojo.enums.AgentType
 import com.tencent.devops.environment.pojo.thirdpartyagent.TPAInstallType
 import com.tencent.devops.model.environment.tables.records.TEnvironmentThirdpartyAgentRecord
 import java.net.URLEncoder
@@ -91,7 +92,8 @@ open class TencentAgentUrlServiceImpl constructor(
         loginName: String?,
         loginPassword: String?,
         installType: TPAInstallType?,
-        reInstallId: String?
+        reInstallId: String?,
+        agentType: AgentType?
     ): String {
         var gw = fixGateway(gateway)
         if (!gw.startsWith("http")) {
@@ -120,6 +122,10 @@ open class TencentAgentUrlServiceImpl constructor(
             }
             if (reInstallId != null) {
                 sc += "${t}reInstallId=$reInstallId"
+                t = "&"
+            }
+            if (agentType != null) {
+                sc += "${t}agentType=${agentType.name}"
                 t = "&"
             }
             sc += "\";\$webClient = New-Object System.Net.WebClient;" +

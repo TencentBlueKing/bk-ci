@@ -121,6 +121,7 @@
                         @atom-continue="handleContinue"
                         @atom-exec="handleExec"
                         @debug-container="debugDocker"
+                        @sub-pipeline-access="handleSubPipelineAccess"
                     />
                 </div>
             </simplebar>
@@ -279,6 +280,15 @@
                 :exec-detail="execDetail"
             ></complete-log>
         </template>
+        <MacDebugDialog
+            ref="macDebugDialog"
+            :is-show="isShowDebug"
+            :pipeline-id="routerParams.pipelineId"
+            :container-id="MACDebugContainerId"
+            :build-id="buildId"
+            :execute-count="executeCount"
+            @close="closeDebugDialog"
+        />
     </div>
 </template>
 
@@ -289,10 +299,26 @@
     import MiniMap from '@/components/MiniMap'
     import { errorTypeMap } from '@/utils/pipelineConst'
     import { convertMillSec, convertTime } from '@/utils/util'
-    import BkPipeline, { loadI18nMessages } from 'bkui-pipeline'
+    import BkPipeline, { loadI18nMessages } from 'bkui-pipeline/vue2'
     import simplebar from 'simplebar-vue'
     import 'simplebar-vue/dist/simplebar.min.css'
+    import 'bkui-pipeline/dist/bk-pipeline.css'
+    
     import { mapActions, mapGetters, mapState } from 'vuex'
+    import MacDebugDialog from '@/components/MacDebugDialog.vue'
+
+    const getSubPipelineAccessUrl = (atom) => {
+        const {
+            projectId,
+            pipelineId,
+            buildId
+        } = atom?.subPipelineBuildInfo ?? {}
+        if (!projectId || !pipelineId || !buildId) {
+            return ''
+        }
+        return `${WEB_URL_PREFIX}/pipeline/${projectId}/${pipelineId}/detail/${buildId}`
+    }
+    
     export default {
         components: {
             simplebar,
@@ -300,6 +326,7 @@
             CompleteLog,
             Logo,
             MiniMap,
+            MacDebugDialog,
             BkPipeline
         },
         props: {
@@ -329,6 +356,8 @@
                 element: {},
                 scrollElement: '.pipeline-detail-wrapper.biz-content',
                 isShowCheckDialog: false,
+                isShowDebug: false,
+                MACDebugContainerId: null,
                 hasHandledRouteParams: false
             }
         },
@@ -578,7 +607,7 @@
             ...mapActions('pipelines', ['requestRetryPipeline']),
             handleRouteParams () {
                 const { reviewTaskId, reviewStageSeq } = this.$route.query
-    
+
                 if (reviewTaskId) {
                     const targetElement = this.curPipelineAllElements.find(element => element.id === reviewTaskId)
                     if (targetElement && targetElement.status === 'REVIEWING') {
@@ -991,15 +1020,37 @@
                     })
                 })
             },
+            openDebug (container) {
+                console.log("🚀 ~ container:", container)
+                this.MACDebugContainerId = container.containerId
+                this.isShowDebug = true
+            },
+            closeDebugDialog () {
+                this.isShowDebug = false
+            },
             debugDocker ({ container }) {
-                const vmSeqId = container.id
-                const { projectId, pipelineId, buildNo: buildId } = this.$route.params
-                const buildResourceType = container.dispatchType?.buildType
-                const buildIdStr = buildId ? `&buildId=${buildId}` : ''
+                this.MACDebugContainerId = container.containerId
+                if (container.baseOS === "MACOS") {
+                    this.openDebug(container)
+                } else {
+                    const vmSeqId = container.id
+                    const { projectId, pipelineId, buildNo: buildId } = this.$route.params
+                    const buildResourceType = container.dispatchType?.buildType
+                    const buildIdStr = buildId ? `&buildId=${buildId}` : ''
+    
+                    const tab = window.open('about:blank')
+                    const url = `${WEB_URL_PREFIX}/pipeline/${projectId}/dockerConsole/?pipelineId=${pipelineId}&dispatchType=${buildResourceType}&vmSeqId=${vmSeqId}${buildIdStr}`
+                    tab.location = url
+                }
+            },
+            handleSubPipelineAccess ({ atom }) {
+                const url = getSubPipelineAccessUrl(atom)
+                if (!url) return
 
                 const tab = window.open('about:blank')
-                const url = `${WEB_URL_PREFIX}/pipeline/${projectId}/dockerConsole/?pipelineId=${pipelineId}&dispatchType=${buildResourceType}&vmSeqId=${vmSeqId}${buildIdStr}`
-                tab.location = url
+                if (tab) {
+                    tab.location = url
+                }
             },
             expandAllMatrix () {
                 try {

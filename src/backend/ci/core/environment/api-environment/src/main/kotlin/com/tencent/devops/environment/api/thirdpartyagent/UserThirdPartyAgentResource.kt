@@ -34,9 +34,12 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.environment.pojo.EnvVar
+import com.tencent.devops.environment.pojo.enums.AgentType
 import com.tencent.devops.environment.pojo.slave.SlaveGateway
 import com.tencent.devops.environment.pojo.thirdpartyagent.AgentBuildDetail
 import com.tencent.devops.environment.pojo.thirdpartyagent.BatchUpdateParallelTaskCountData
+import com.tencent.devops.environment.pojo.thirdpartyagent.OfflinePeriod
+import com.tencent.devops.environment.pojo.thirdpartyagent.ReInstallResp
 import com.tencent.devops.environment.pojo.thirdpartyagent.TPAInstallType
 import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentAction
 import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentDetail
@@ -91,7 +94,10 @@ interface UserThirdPartyAgentResource {
         os: OS,
         @Parameter(description = "网关地域", required = false)
         @QueryParam("zoneName")
-        zoneName: String?
+        zoneName: String?,
+        @Parameter(description = "第三方机节点类型", required = false)
+        @QueryParam("agentType")
+        agentType: AgentType?
     ): Result<ThirdPartyAgentLink>
 
     @Operation(summary = "生成批量安装链接")
@@ -121,8 +127,29 @@ interface UserThirdPartyAgentResource {
         installType: TPAInstallType?,
         @Parameter(description = "重装使用的AgentHashId", required = false)
         @QueryParam("reInstallId")
-        reInstallId: String?
+        reInstallId: String?,
+        @Parameter(description = "第三方机节点类型", required = false)
+        @QueryParam("agentType")
+        agentType: AgentType?
     ): Result<String>
+
+    @Operation(summary = "生成重新安装链接")
+    @GET
+    @Path("/projects/{projectId}/os/{os}/generateReInstallLink")
+    fun generateReInstallLink(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "操作系统", required = true)
+        @PathParam("os")
+        os: OS,
+        @Parameter(description = "重装使用的AgentHashId", required = false)
+        @QueryParam("reInstallId")
+        reInstallId: String
+    ): Result<ReInstallResp>
 
     @Operation(summary = "获取网关列表")
     @GET
@@ -280,7 +307,19 @@ interface UserThirdPartyAgentResource {
         projectId: String,
         @Parameter(description = "Node Hash ID", required = true)
         @PathParam("nodeHashId")
-        nodeHashId: String
+        nodeHashId: String,
+        @Parameter(description = "环境变量名", required = false)
+        @QueryParam("envName")
+        envName: String?,
+        @Parameter(description = "环境变量值", required = false)
+        @QueryParam("envValue")
+        envValue: String?,
+        @Parameter(description = "是否安全变量", required = false)
+        @QueryParam("source")
+        source: Boolean?,
+        @Parameter(description = "最后修改人", required = false)
+        @QueryParam("lastUpdateUser")
+        lastUpdateUser: String?
     ): Result<List<EnvVar>>
 
     @Operation(summary = "设置agent构建并发数")
@@ -386,6 +425,7 @@ interface UserThirdPartyAgentResource {
         pageSize: Int?
     ): Result<Page<AgentBuildDetail>>
 
+    @Deprecated("会被 listAgentOfflinePeriod 取代")
     @Operation(summary = "获取第三方构建机活动")
     @GET
     @Path("/projects/{projectId}/nodes/{nodeHashId}/listAgentActions")
@@ -406,6 +446,27 @@ interface UserThirdPartyAgentResource {
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<Page<ThirdPartyAgentAction>>
+
+    @Operation(summary = "获取第三方构建机离线时间段")
+    @GET
+    @Path("/projects/{projectId}/nodes/{agentHashId}/listAgentOfflinePeriod")
+    fun listAgentOfflinePeriod(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "Agent Hash ID", required = true)
+        @PathParam("agentHashId")
+        agentHashId: String,
+        @Parameter(description = "第几页", required = false)
+        @QueryParam("page")
+        page: Int?,
+        @Parameter(description = "每页条数", required = false)
+        @QueryParam("pageSize")
+        pageSize: Int?
+    ): Result<Page<OfflinePeriod>>
 
     @Operation(summary = "获取 CPU 使用率图表数据")
     @GET

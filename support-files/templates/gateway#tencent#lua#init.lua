@@ -52,6 +52,16 @@ config = {
             backlog = 10,           -- 连接等待队列
             ssl = false,
             tag = "kubernetes-auto"
+        },
+        creative_redis = {
+            host = "__CREATIVE_REDIS_IP0__",
+            port = __CREATIVE_REDIS_PORT__,
+            pass = "__CREATIVE_REDIS_PASS__", -- redis 密码，没有密码的话，把这行注释掉
+            database = __CREATIVE_REDIS_DB__, -- 默认选择db0
+            max_idle_time = 30000,  -- 保留在连接池的时间
+            pool_size = 10,           -- 连接池的大小
+            backlog = 10,           -- 连接等待队列
+            ssl = false
         }
     },
     oauth = { -- 对接蓝鲸权限中心才需要的配置
@@ -60,6 +70,18 @@ config = {
         port = "__IAM_HTTP_PORT__",
         host = "__IAM_HOST__",
         url = "__IAM_TOKEN_URL__", -- 接口路径
+        app_code = "__APP_CODE__",
+        app_secret = "__APP_TOKEN__",
+        get_info_ip = "__GET_INFO_IP__",
+        get_info_port = "__GET_INFO_PORT__",
+        get_info_host = "__GET_INFO_HOST__",
+        get_info_url = "__GET_INFO_URL__"
+    },
+    bkauth = {
+        ip = "__BK_CI_BKAUTH_IP__",
+        port = __BK_CI_BKAUTH_PORT__,
+        host = "__BK_CI_BKAUTH_HOST__",
+        realm = "bk-devops",
         app_code = "__APP_CODE__",
         app_secret = "__APP_TOKEN__"
     },
@@ -119,7 +141,9 @@ config = {
             token = "__BK_CI_KUBERNETES_API_TOKEN__"
         },
         special_domain = {},
-        auto_prefix = "__BK_CI_KUBERNETES_AUTO_PREFIX__"
+        auto_prefix = "__BK_CI_KUBERNETES_AUTO_PREFIX__",
+        creative_host_suffix = "__BK_CI_CREATIVE_HOST_SUFFIX__",
+        creative_namespace = "__BK_CI_CREATIVE_NAMESPACE__"
     },
     external_auth = {
         base_url = "http://__BKCI_FQDN__",
@@ -137,7 +161,10 @@ config = {
         host = "frontend-bk-ci-frontend"
     },
     tag_service_table = __BK_CI_TAG_SERVICE_TABLE__,
-    tag_project_table = __BK_CI_TAG_PROJECT_TABLE__
+    tag_project_table = __BK_CI_TAG_PROJECT_TABLE__,
+    scc = {
+        domain = "__SCC_FQDN__"
+    }
 }
 
 -- 特殊域名

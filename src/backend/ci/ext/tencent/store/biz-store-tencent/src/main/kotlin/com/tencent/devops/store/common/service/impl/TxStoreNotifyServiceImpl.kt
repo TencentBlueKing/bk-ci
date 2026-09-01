@@ -32,6 +32,8 @@ import com.tencent.devops.common.api.constant.NAME
 import com.tencent.devops.common.api.constant.VERSION
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.notify.enums.NotifyType
+import com.tencent.devops.common.notify.utils.NotifyUtils
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
@@ -102,6 +104,28 @@ class TxStoreNotifyServiceImpl @Autowired constructor() : StoreNotifyService {
         val sendNotifyResult = client.get(ServiceNotifyMessageTemplateResource::class)
             .sendNotifyMessageByTemplate(sendNotifyMessageTemplateRequest)
         logger.info("sendNotifyResult is:$sendNotifyResult")
+        return Result(true)
+    }
+
+    override fun sendNotifyMessageToWeworkGroup(
+        userId: String,
+        templateCode: String,
+        weworkGroupIds: Set<String>,
+        titleParams: Map<String, String>?,
+        bodyParams: Map<String, String>?
+    ): Result<Boolean> {
+        val mergedBodyParams = bodyParams?.toMutableMap() ?: mutableMapOf()
+        mergedBodyParams[NotifyUtils.WEWORK_GROUP_KEY] = weworkGroupIds.joinToString(",")
+        val request = SendNotifyMessageTemplateRequest(
+            templateCode = templateCode,
+            receivers = mutableSetOf(userId),
+            notifyType = mutableSetOf(NotifyType.WEWORK_GROUP.name),
+            titleParams = titleParams,
+            bodyParams = mergedBodyParams
+        )
+        val sendNotifyResult = client.get(ServiceNotifyMessageTemplateResource::class)
+            .sendNotifyMessageByTemplate(request)
+        logger.info("sendNotifyMessageToWeworkGroup result is:$sendNotifyResult")
         return Result(true)
     }
 

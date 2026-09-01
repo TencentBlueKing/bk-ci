@@ -1,0 +1,67 @@
+/* DynamicParameterSimple styles - using variables from /src/styles/variables.css */
+
+.paramMain {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.paramRow {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-sm);
+}
+
+.paramField {
+  flex: 1;
+  min-width: 0;
+}
+
+.fieldLabel {
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  margin: 0 0 var(--spacing-xs);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+}
+
+.fieldLabel > label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fieldDesc {
+  margin-left: var(--spacing-xs);
+  flex-shrink: 0;
+  color: var(--color-text-tertiary);
+}
+
+.inputCom {
+  width: 100%;
+}
+
+.actionIcons {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  height: 32px;
+  flex-shrink: 0;
+}
+
+/* When fields show a label on top, push the action icons down to align with inputs */
+.actionWithLabel {
+  margin-top: 22px;
+}
+
+.iconBtn {
+  cursor: pointer;
+  color: var(--color-text-tertiary);
+  transition: var(--transition-all);
+}
+
+.iconBtn:hover {
+  color: var(--color-primary);
+}

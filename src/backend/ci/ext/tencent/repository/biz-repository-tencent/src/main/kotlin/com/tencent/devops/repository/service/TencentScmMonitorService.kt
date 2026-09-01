@@ -138,8 +138,12 @@ class TencentScmMonitorService @Autowired constructor(
                 ChannelCode.GONGFENGSCAN
             }
 
+            consulTag.contains("creative") -> {
+                ChannelCode.CREATIVE_STREAM
+            }
+
             else -> {
-                ChannelCode.BS
+                ChannelCode.getRequestChannelCode()
             }
         }
     }

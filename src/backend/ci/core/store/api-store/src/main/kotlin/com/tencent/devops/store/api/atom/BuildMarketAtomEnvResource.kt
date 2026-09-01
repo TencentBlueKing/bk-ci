@@ -28,6 +28,7 @@
 package com.tencent.devops.store.api.atom
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.store.pojo.atom.AtomEnv
 import com.tencent.devops.store.pojo.atom.AtomEnvRequest
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -72,7 +73,10 @@ interface BuildMarketAtomEnvResource {
         osArch: String? = null,
         @Parameter(description = "是否需要转换操作系统相关信息", required = false)
         @QueryParam("convertOsFlag")
-        convertOsFlag: Boolean? = null
+        convertOsFlag: Boolean? = null,
+        @Parameter(description = "当次构建的渠道代码", required = false)
+        @QueryParam("channelCode")
+        channelCode: ChannelCode? = null
     ): Result<AtomEnv?>
 
     @Operation(summary = "插件工作台-更新插件执行环境信息")
@@ -90,5 +94,17 @@ interface BuildMarketAtomEnvResource {
         version: String,
         @Parameter(description = "插件市场工作台-更新插件执行环境信息请求报文体", required = true)
         atomEnvRequest: AtomEnvRequest
+    ): Result<Boolean>
+
+    @Operation(summary = "判断插件是否在指定类型的白名单中")
+    @GET
+    @Path("/whitelist/types/{whitelistType}/codes/{atomCode}/check")
+    fun isAtomInWhitelist(
+        @Parameter(description = "白名单类型", required = true)
+        @PathParam("whitelistType")
+        whitelistType: String,
+        @Parameter(description = "插件代码", required = true)
+        @PathParam("atomCode")
+        atomCode: String
     ): Result<Boolean>
 }

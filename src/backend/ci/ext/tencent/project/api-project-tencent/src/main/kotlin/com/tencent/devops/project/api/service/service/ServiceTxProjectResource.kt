@@ -27,7 +27,6 @@
 
 package com.tencent.devops.project.api.service.service
 
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ACCESS_TOKEN
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BG_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_DEPT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ORGANIZATION_ID
@@ -40,6 +39,7 @@ import com.tencent.devops.common.auth.api.pojo.BKAuthProjectRolesResources
 import com.tencent.devops.project.api.pojo.PipelinePermissionInfo
 import com.tencent.devops.project.api.pojo.ProjectProductInfo
 import com.tencent.devops.project.pojo.AddManagerRequest
+import com.tencent.devops.project.pojo.CrosProductVO
 import com.tencent.devops.project.pojo.OperationalProductVO
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectCreateUserDTO
@@ -75,10 +75,7 @@ interface ServiceTxProjectResource {
     fun list(
         @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
-        userId: String?,
-        @Parameter(description = "PAAS_CC Token", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
-        accessToken: String?
+        userId: String?
     ): Result<List<ProjectVO>>
 
     @GET
@@ -168,10 +165,7 @@ interface ServiceTxProjectResource {
     fun getPreUserProject(
         @Parameter(description = "用户ID", required = true)
         @PathParam("userId")
-        userId: String,
-        @Parameter(description = "accessToken", required = true)
-        @QueryParam("accessToken")
-        accessToken: String
+        userId: String
     ): Result<ProjectVO?>
 
     @GET
@@ -182,6 +176,18 @@ interface ServiceTxProjectResource {
         @PathParam("userId")
         userId: String
     ): Result<ProjectVO?>
+
+    @GET
+    @Path("/personal/userProject")
+    @Operation(summary = "获取或创建用户个人项目，不存在时自动创建")
+    fun getOrCreatePersonalProject(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @Parameter(description = "项目描述", required = false)
+        @QueryParam("description")
+        description: String?
+    ): Result<ProjectVO>
 
     @GET
     @Path("/enNames/organization")
@@ -250,9 +256,6 @@ interface ServiceTxProjectResource {
         @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(description = "PAAS_CC Token", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
-        accessToken: String,
         @Parameter(description = "项目信息", required = true)
         projectCreateInfo: ProjectCreateInfo,
         @QueryParam("routerTag")
@@ -272,9 +275,6 @@ interface ServiceTxProjectResource {
     @Path("/{projectCode}/users/{userId}/verifyWithToken")
     @Operation(summary = " 校验用户是否项目成员")
     fun verifyUserProjectPermission(
-        @Parameter(description = "PAAS_CC Token", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
-        accessToken: String,
         @Parameter(description = "项目代码", required = true)
         @PathParam("projectCode")
         projectCode: String,
@@ -492,4 +492,13 @@ interface ServiceTxProjectResource {
         @PathParam("productId")
         productId: Int
     ): Result<OperationalProductVO?>
+
+    @GET
+    @Path("/kpiProducts/list")
+    @Operation(summary = "获取KPI产品列表")
+    fun getKpiProducts(
+        @Parameter(description = "KPI产品名称（模糊搜索）", required = false)
+        @QueryParam("kpiName")
+        kpiName: String? = null
+    ): Result<List<CrosProductVO>>
 }

@@ -39,7 +39,7 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
         >
         </div>
         <ul
-            v-if="!readOnly"
+            v-if="!readOnly && errorList.length > 0"
             class="yaml-error-summary"
         >
             <li

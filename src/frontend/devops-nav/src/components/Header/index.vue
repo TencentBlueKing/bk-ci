@@ -136,6 +136,7 @@
             </h3>
         </div>
         <div class="header-right-bar">
+            <qrcode class="feed-back-icon" />
             <bk-popover
                 v-if="!isInIframe"
                 theme="light navigation-message"
@@ -168,7 +169,6 @@
                     </li>
                 </template>
             </bk-popover>
-            <qrcode class="feed-back-icon" />
             <bk-popover
                 theme="light navigation-message"
                 placement="bottom"

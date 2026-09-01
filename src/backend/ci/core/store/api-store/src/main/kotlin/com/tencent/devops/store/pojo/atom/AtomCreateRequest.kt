@@ -27,9 +27,11 @@
 
 package com.tencent.devops.store.pojo.atom
 
+import com.fasterxml.jackson.annotation.JsonIgnore
 import com.tencent.devops.store.pojo.atom.enums.AtomCategoryEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomTypeEnum
 import com.tencent.devops.store.pojo.atom.enums.JobTypeEnum
+import com.tencent.devops.store.pojo.common.ServiceScopeConfig
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "流水线-插件信息请求报文体")
@@ -38,14 +40,19 @@ data class AtomCreateRequest(
     val name: String,
     @get:Schema(title = "插件代码", required = true)
     val atomCode: String,
+    @get:Schema(title = "服务范围配置列表（优先使用，替代 serviceScope + jobType + classifyId）", required = false)
+    val serviceScopeConfigs: List<ServiceScopeConfig>? = null,
     @get:Schema(title = "服务范围", required = true)
-    val serviceScope: ArrayList<String>,
-    @get:Schema(title = "适用Job类型，AGENT： 编译环境，AGENT_LESS：无编译环境", required = true)
-    val jobType: JobTypeEnum,
+    @Deprecated("使用 serviceScopeConfigs 替代")
+    val serviceScope: ArrayList<String> = arrayListOf(),
+    @get:Schema(title = "适用Job类型，AGENT： 编译环境，AGENT_LESS：无编译环境", required = false)
+    @Deprecated("使用 serviceScopeConfigs 替代")
+    val jobType: JobTypeEnum? = null,
     @get:Schema(title = "支持的操作系统", required = true)
     val os: ArrayList<String>,
     @get:Schema(title = "所属分类ID", required = true)
-    val classifyId: String,
+    @Deprecated("使用 serviceScopeConfigs 替代")
+    val classifyId: String = "",
     @get:Schema(title = "插件说明文档链接", required = false)
     val docsLink: String?,
     @get:Schema(title = "插件类型，SELF_DEVELOPED：自研 THIRD_PARTY：第三方开发", required = true)
@@ -62,4 +69,13 @@ data class AtomCreateRequest(
     val props: String?,
     @get:Schema(title = "预留字段（设置规则等信息的json串）", required = false)
     val data: String?
-)
+) {
+    /**
+     * 获取生效的服务范围列表（字符串形式）。
+     * 优先从 serviceScopeConfigs 获取，兼容旧的 serviceScope。
+     */
+    @JsonIgnore
+    fun getEffectiveServiceScope(): List<String> {
+        return serviceScopeConfigs?.map { it.serviceScope.name } ?: serviceScope
+    }
+}

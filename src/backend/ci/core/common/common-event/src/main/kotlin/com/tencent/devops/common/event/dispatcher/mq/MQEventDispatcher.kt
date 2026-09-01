@@ -27,6 +27,7 @@
 
 package com.tencent.devops.common.event.dispatcher.mq
 
+import com.tencent.devops.common.api.context.ChannelContext
 import com.tencent.devops.common.event.pojo.pipeline.IPipelineEvent
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import org.slf4j.LoggerFactory
@@ -42,8 +43,13 @@ class MQEventDispatcher constructor(
 ) : PipelineEventDispatcher {
 
     override fun dispatch(vararg events: IPipelineEvent) {
+        // 自动将当前线程的渠道上下文注入到事件中，确保MQ跨线程传递时不丢失channelCode
+        val currentChannel = ChannelContext.getChannel()
         events.forEach { event ->
             try {
+                if (event.channelCode.isNullOrBlank() && !currentChannel.isNullOrBlank()) {
+                    event.channelCode = currentChannel
+                }
                 event.sendTo(bridge = streamBridge)
             } catch (ignored: Exception) {
                 logger.error("[ENGINE_MQ_SEVERE] Fail to dispatch the event($event)", ignored)

@@ -31,6 +31,7 @@ import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.pipeline.enums.VMBaseOS
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_MUTEX_WAITING
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_PENDING
@@ -100,5 +101,12 @@ object ContainerUtils {
 
     fun isOriginMatrixContainer(container: Container): Boolean {
         return container.fetchGroupContainers() != null
+    }
+
+    fun getContainerOs(
+        modelOs: String? = null,
+        nodeOs: String? = null
+    ): String {
+        return modelOs?.takeIf { it.isNotBlank() } ?: nodeOs?.takeIf { it.isNotBlank() } ?: VMBaseOS.WINDOWS.name
     }
 }

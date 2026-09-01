@@ -50,7 +50,7 @@ class ProjectPermissionServiceImpl @Autowired constructor(
     private val projectAuthServiceCode: ProjectAuthServiceCode
 ) : ProjectPermissionService {
 
-    override fun verifyUserProjectPermission(accessToken: String?, projectCode: String, userId: String): Boolean {
+    override fun verifyUserProjectPermission(projectCode: String, userId: String): Boolean {
         return projectDao.countByEnglishName(dslContext, listOf(projectCode)) > 0
     }
 
@@ -117,7 +117,6 @@ class ProjectPermissionServiceImpl @Autowired constructor(
     }
 
     override fun verifyUserProjectPermission(
-        accessToken: String?,
         projectCode: String,
         userId: String,
         permission: AuthPermission
@@ -129,7 +128,7 @@ class ProjectPermissionServiceImpl @Autowired constructor(
 
     override fun cancelUpdateAuthProject(userId: String, projectCode: String) = Unit
 
-    override fun needApproval(needApproval: Boolean?) = false
+    override fun needApproval(needApproval: Boolean?, projectScope: Int) = false
 
     override fun isShowUserManageIcon(): Boolean = false
 

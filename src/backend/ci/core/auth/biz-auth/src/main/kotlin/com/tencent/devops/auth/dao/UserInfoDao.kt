@@ -82,6 +82,19 @@ class UserInfoDao {
         }
     }
 
+    fun listByUserName(
+        dslContext: DSLContext,
+        userName: String
+    ): List<UserInfo> {
+        return with(TUserInfo.T_USER_INFO) {
+            dslContext.selectFrom(this)
+                .where(USER_NAME.eq(userName))
+                .orderBy(USER_ID.asc())
+                .fetch()
+                .map { it.convert() }
+        }
+    }
+
     fun list(
         dslContext: DSLContext,
         excludeTaskId: String

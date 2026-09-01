@@ -188,15 +188,20 @@
                     {
                         title: this.$t('more'),
                         children: [
-                            {
-                                title: this.$t('authSetting'),
-                                disableTooltip: {
-                                    content: this.$refs.disableToolTips?.[2],
-                                    disabled: this.isReleaseVersion,
-                                    delay: [300, 0]
-                                },
-                                name: 'permission'
-                            },
+                            ...(this.$store.state.curProject.projectScope !== 1
+                                ? [
+                                    {
+                                        title: this.$t('authSetting'),
+                                        disableTooltip: {
+                                            content: this.$refs.disableToolTips?.[2],
+                                            disabled: this.isReleaseVersion,
+                                            delay: [300, 0]
+                                        },
+                                        name: 'permission'
+                                    }
+                                ]
+                                : []
+                            ),
                             {
                                 title: this.$t('delegationPermission'),
                                 name: 'delegation'
@@ -223,6 +228,7 @@
             }
         },
         beforeDestroy () {
+            this.$store.commit('common/SET_HAS_DRAFT', false)
             this.resetHistoryFilterCondition({ retainArchiveFlag: this.shouldRetainArchiveFlag })
             this.selectPipelineVersion(null)
             this.resetAtomModalMap()

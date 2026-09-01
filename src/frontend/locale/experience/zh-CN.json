@@ -203,5 +203,9 @@
     "versionCreateTime": "体验包创建时间",
     "bundleIdentifier": "应用标识",
     "bundleIdentifierPlaceholder": "应用的唯一标识，如Microsoft.Office.OneNote_8wekyb3d8bbwe",
-    "noEmptyTips": "{0}不能为空"
+    "noEmptyTips": "{0}不能为空",
+    "experience_env": "体验环境",
+    "allow_dev_cloud_access": "允许合研环境访问（云桌面内）",
+    "allow_public_access": "允许基地公网访问",
+    "allow_public_access_tip": "仅开通了白名单的基地可访问，新基地请联系助手加白"
 }

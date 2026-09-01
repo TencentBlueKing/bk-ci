@@ -1,191 +1,44 @@
 ---
 name: go-agent-development
-description: Go Agent 开发指南，涵盖 Agent 架构设计、心跳机制、任务执行、日志上报、升级流程、与 Dispatch 模块交互。当用户开发构建机 Agent、实现任务执行逻辑、处理 Agent 通信或进行 Go 语言开发时使用。
-core_files:
-  - "src/agent/agent/src/pkg/"
-  - "src/agent/agent-slim/"
-related_skills:
-  - dispatch-module-architecture
-  - agent-module-architecture
-token_estimate: 2500
+description: 编写 BK-CI Go Agent 代码时使用，例如 Agent API 调用、任务处理、并发模式、错误处理、日志记录和宿主侧工具开发。当用户要写 Go 构建机侧代码而不是后端 Kotlin 服务时优先使用。
 ---
 
 # Go Agent 开发
 
-## Quick Reference
+## 适用场景
 
-```
-Go 版本：1.19+
-进程组成：DevopsDaemon（守护进程） + DevopsAgent（主进程）
-核心包：api/（API 调用）| config/（配置）| job/（任务）| pipeline/（流水线）
-日志：logs.Debug/Info/Error/WithError
-```
+- 编写或修改 Go Agent 代码
+- 处理 Agent 与后端的 API 通信
+- 实现任务处理、并发执行、错误恢复和日志记录
+- 开发构建机侧辅助工具
 
-### 最简示例
+## 不适用场景
 
-```go
-// API 调用
-func AgentStartup() (*httputil.DevopsResult, error) {
-    url := buildUrl("/ms/environment/api/buildAgent/agent/thirdPartyAgent/startup")
-    startInfo := &ThirdPartyAgentStartInfo{
-        HostName:      systemutil.GetHostName(),
-        HostIp:        systemutil.GetAgentIp(),
-        DetectOs:      systemutil.GetOsName(),
-        MasterVersion: config.AgentVersion,
-    }
-    return httputil.NewHttpClient().Post(url).Body(startInfo, false).
-        SetHeaders(config.GAgentConfig.GetAuthHeaderMap()).Execute(nil).IntoDevopsResult()
-}
-```
+- 后端 Kotlin / Java 微服务开发
+- Dispatch 调度策略设计
+- Worker 任务执行细节
 
-## When to Use
+## 快速指导
 
-- 开发构建机 Agent
-- 实现任务执行逻辑
-- 处理 Agent 与后端通信
-- 编写 Go 工具函数
+1. 这个 skill 关注的是 Go 侧开发习惯和实现方式，不替代 `agent-module-architecture` 的架构视角。
+2. 写 Go Agent 代码时优先保证稳定性：错误处理、日志、重试、清理和并发边界要先想清楚。
+3. 进程、任务、网络调用、goroutine 生命周期要一起看，不要只改局部函数。
+4. 如果问题是 Agent 整体运行形态、Ask、升级或宿主侧链路，联动看 `agent-module-architecture`。
+5. 如果问题是调度资源选择，联动看 `dispatch-module-architecture`。
 
-## When NOT to Use
+## 高信号规则
 
-- 后端 Kotlin/Java 开发 → 使用 `backend-microservice-development`
-- 调度模块业务逻辑 → 使用 `dispatch-module-architecture`
+- Go Agent 代码更偏宿主侧稳定性和长期运行能力
+- 网络调用和后台 goroutine 一旦失控，影响通常比业务逻辑错误更大
+- 日志要能帮助定位问题，而不是只留下表面现象
 
----
+## 关键陷阱
 
-## 项目结构
+- 只改 happy path，不补错误恢复和资源清理
+- goroutine 启动容易，退出和异常恢复没管
+- 把宿主侧问题和调度 / Worker 问题混在一起
 
-```
-src/agent/
-├── agent/                 # 主代理
-│   └── src/pkg/
-│       ├── api/           # API 调用
-│       ├── config/        # 配置管理
-│       ├── collector/     # 数据采集
-│       ├── job/           # 任务执行
-│       └── util/          # 工具函数
-├── agent-slim/            # 轻量版代理
-└── common/                # 通用库
-```
+## 延伸阅读
 
-## 命名规范
-
-```go
-// 包命名：小写单词，不使用下划线
-package api
-package config
-
-// 结构体：PascalCase
-type ThirdPartyAgentStartInfo struct {
-    HostName      string `json:"hostname"`
-    HostIp        string `json:"hostIp"`
-}
-
-// 常量：驼峰命名
-const (
-    KeyProjectId     = "devops.project.id"
-    KeyAgentId       = "devops.agent.id"
-)
-
-// 枚举
-type BuildJobType string
-const (
-    AllBuildType    BuildJobType = "ALL"
-    DockerBuildType BuildJobType = "DOCKER"
-)
-```
-
-## 配置管理
-
-```go
-type AgentConfig struct {
-    Gateway           string
-    ProjectId         string
-    AgentId           string
-    SecretKey         string
-    ParallelTaskCount int
-}
-
-var GAgentConfig *AgentConfig
-
-func GetGateWay() string {
-    return GAgentConfig.Gateway
-}
-```
-
-## 错误处理
-
-```go
-// 标准错误检查
-if err != nil {
-    logs.WithError(err).Error("agent startup failed")
-    return
-}
-
-// 重试模式
-for {
-    _, err = job.AgentStartup()
-    if err == nil {
-        break
-    }
-    logs.WithError(err).Error("retry startup")
-    time.Sleep(5 * time.Second)
-}
-
-// Panic 恢复
-defer func() {
-    if err := recover(); err != nil {
-        logs.Error("panic recovered: ", err)
-    }
-}()
-```
-
-## 日志规范
-
-```go
-logs.Debug("debug message")
-logs.Info("info message")
-logs.Infof("formatted: %s", data)
-logs.Error("error message")
-logs.WithError(err).Error("with error context")
-```
-
-## 并发模式
-
-```go
-// 启动 goroutine
-go collector.Collect()
-go cron.CleanJob()
-
-// 使用 defer 清理
-defer config.EBus.Unsubscribe(config.IpEvent, eBusId)
-
-// Channel 通信
-done := make(chan bool)
-go func() {
-    // do work
-    done <- true
-}()
-<-done
-```
-
-## HTTP 客户端
-
-```go
-httputil.NewHttpClient().
-    Post(url).
-    Body(data, false).
-    SetHeaders(headers).
-    Execute(nil).
-    IntoDevopsResult()
-```
-
----
-
-## Checklist
-
-开发 Agent 功能前确认：
-- [ ] 使用标准错误处理模式
-- [ ] 添加适当的日志记录
-- [ ] goroutine 有 panic 恢复
-- [ ] 网络调用有重试机制
-- [ ] 资源使用 defer 清理
+- 如果你在看 Agent 架构：再看 `agent-module-architecture`
+- 如果你在看调度边界：再看 `dispatch-module-architecture`

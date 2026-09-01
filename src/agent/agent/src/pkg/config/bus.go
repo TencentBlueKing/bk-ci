@@ -3,7 +3,7 @@ package config
 import (
 	"sync"
 
-	"github.com/TencentBlueKing/bk-ci/agentcommon/logs"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/logs"
 )
 
 type DataEvent struct {
@@ -36,16 +36,25 @@ func (eb *EventBus) Publish(topic DataEventType, data any) {
 		defer eb.rwLock.RUnlock()
 
 		if chs, found := eb.subscribers[topic]; found {
+			event := DataEvent{Data: data, Topic: topic}
 			for _, ch := range chs {
+				// 先尝试非阻塞发送
 				select {
-				case ch.DChan <- DataEvent{Data: data, Topic: topic}:
+				case ch.DChan <- event:
 					logs.Debugf("EventBus Publish send %s %v", topic, data)
 				default:
-					// 管道满了需要丢弃后写入不然会阻塞
-					<-ch.DChan
-					ch.DChan <- DataEvent{Data: data, Topic: topic}
+					// channel 满了，丢弃最旧的一条再重试
+					select {
+					case <-ch.DChan:
+					default:
+					}
+					select {
+					case ch.DChan <- event:
+						logs.Debugf("EventBus Publish send (after discard) %s %v", topic, data)
+					default:
+						logs.Warnf("EventBus Publish drop %s %v", topic, data)
+					}
 				}
-
 			}
 		}
 		logs.Debugf("EventBus Publish send over %s %v", topic, data)

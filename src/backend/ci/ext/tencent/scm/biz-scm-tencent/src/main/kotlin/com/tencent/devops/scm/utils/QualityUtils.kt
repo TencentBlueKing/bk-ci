@@ -40,11 +40,16 @@ object QualityUtils {
         val (status, timeCost, triggerType, pipelineName, url) = titleData
         val pipelineNameTitle = titleData[5]
         val ruleName = titleData[6]
+        val (showTitle, pipelineLinkElement) = if (url.isBlank()) {
+            Pair(false, pipelineName)
+        } else {
+            Pair(true, "<a href='$url' style=\"color: #03A9F4\">$pipelineName</a>")
+        }
 
         // 生成报表
         val title = "<table><tr>" +
                 "<td style=\"border:none;padding-right: 0;\">$pipelineNameTitle：</td>" +
-                "<td style=\"border:none;padding-left:0;\"><a href='$url' style=\"color: #03A9F4\">$pipelineName</a></td>" +
+                "<td style=\"border:none;padding-left:0;\">$pipelineLinkElement</td>" +
                 "<td style=\"border:none;padding-right: 0\">" +
                 I18nUtil.getCodeLanMessage(messageCode = BK_TRIGGER_METHOD) + "：</td>" +
                 "<td style=\"border:none;padding-left:0;\">$triggerType</td>" +
@@ -86,6 +91,10 @@ object QualityUtils {
         }
         body.append("</table>")
 
-        return title + body.toString()
+        return if (showTitle) {
+            title + body.toString()
+        } else {
+            body.toString()
+        }
     }
 }

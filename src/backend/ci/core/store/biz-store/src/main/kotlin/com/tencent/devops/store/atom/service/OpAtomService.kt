@@ -35,6 +35,7 @@ import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomTypeEnum
 import com.tencent.devops.store.pojo.atom.enums.OpSortTypeEnum
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
+import com.tencent.devops.store.pojo.common.enums.ServiceScopeEnum
 import java.io.InputStream
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 
@@ -47,7 +48,7 @@ interface OpAtomService {
         atomName: String?,
         atomCode: String?,
         atomType: AtomTypeEnum?,
-        serviceScope: String?,
+        serviceScope: ServiceScopeEnum?,
         os: String?,
         category: String?,
         classifyId: String?,
@@ -61,7 +62,7 @@ interface OpAtomService {
     /**
      * 根据id获取插件信息
      */
-    fun getPipelineAtom(id: String): Result<Atom?>
+    fun getPipelineAtom(id: String, serviceScope: ServiceScopeEnum?): Result<Atom?>
 
     /**
      * 根据插件代码和版本号获取插件信息

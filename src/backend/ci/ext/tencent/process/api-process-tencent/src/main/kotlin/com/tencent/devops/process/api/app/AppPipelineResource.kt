@@ -151,7 +151,13 @@ interface AppPipelineResource {
         triggerBranch: List<String>?,
         @Parameter(description = "触发人", required = false)
         @QueryParam("triggerUser")
-        triggerUser: List<String>? = null
+        triggerUser: List<String>? = null,
+        @Parameter(description = "触发事件", required = false)
+        @QueryParam("triggerEventTypes")
+        triggerEventTypes: List<String>? = null,
+        @Parameter(description = "触发节点HashId", required = false)
+        @QueryParam("triggerNodeHashIds")
+        triggerNodeHashIds: List<String>? = null
     ): Result<Page<AppPipelineHistory>>
 
     @Operation(summary = "获取流水线构建中的查询条件-分支")
@@ -251,5 +257,23 @@ interface AppPipelineResource {
         @Parameter(description = "是否收藏（false表示取消收藏）", required = true)
         @QueryParam("isCollect")
         isCollect: Boolean
+    ): Result<Boolean>
+
+    @Operation(summary = "启用/禁用流水线（修改流水线的并发设置）")
+    @POST
+    @Path("/projects/{projectId}/pipelines/{pipelineId}/lock")
+    fun lockPipeline(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @Parameter(description = "开启true/锁定false", required = true)
+        @QueryParam("enable")
+        enable: Boolean
     ): Result<Boolean>
 }

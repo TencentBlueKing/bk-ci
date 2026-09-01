@@ -15,4 +15,6 @@ object RemoteDevMQ {
     const val BCS_CALLBACK = "remotedev.bcs.callback"
 
     const val REMOTE_DEV_ASYNC_EXECUTE = "remotedev.async.execute"
+
+    const val REMOTE_CDS_WEBHOOK = "remotedev.cds.webhook"
 }

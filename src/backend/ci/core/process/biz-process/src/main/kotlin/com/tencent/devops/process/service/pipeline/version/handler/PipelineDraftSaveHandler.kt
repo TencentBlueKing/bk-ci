@@ -28,8 +28,8 @@
 package com.tencent.devops.process.service.pipeline.version.handler
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.enums.PipelineVersionAction
+import com.tencent.devops.common.pipeline.enums.PublicVarGroupReferenceTypeEnum
 import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.constant.ProcessMessageCode
@@ -37,9 +37,11 @@ import com.tencent.devops.process.engine.control.lock.PipelineModelLock
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
 import com.tencent.devops.process.pojo.pipeline.PipelineResourceOnlyVersion
+import com.tencent.devops.process.pojo.`var`.dto.PublicVarGroupReferDTO
 import com.tencent.devops.process.service.pipeline.version.PipelineVersionCreateContext
 import com.tencent.devops.process.service.pipeline.version.PipelineVersionGenerator
 import com.tencent.devops.process.service.pipeline.version.PipelineVersionPersistenceService
+import com.tencent.devops.process.service.`var`.PublicVarGroupReferManageService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -49,15 +51,16 @@ class PipelineDraftSaveHandler @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val pipelineVersionGenerator: PipelineVersionGenerator,
     private val pipelineVersionPersistenceService: PipelineVersionPersistenceService,
-    private val pipelineRepositoryService: PipelineRepositoryService
+    private val pipelineRepositoryService: PipelineRepositoryService,
+    private val publicVarGroupReferManageService: PublicVarGroupReferManageService
 ) : PipelineVersionCreateHandler {
     override fun support(context: PipelineVersionCreateContext): Boolean {
         return context.versionAction == PipelineVersionAction.SAVE_DRAFT
     }
 
     override fun handle(context: PipelineVersionCreateContext): DeployPipelineResult {
-        logger.info("save draft version with context={}", JsonUtil.toJson(context, false))
         with(context) {
+            logger.info("handle pipeline draft version|$projectId|$pipelineId|$version")
             if (pipelineResourceWithoutVersion.status != VersionStatus.COMMITTING) {
                 throw ErrorCodeException(
                     errorCode = ProcessMessageCode.ERROR_STATUS_NOT_MATCHED,
@@ -75,6 +78,9 @@ class PipelineDraftSaveHandler @Autowired constructor(
     }
 
     private fun PipelineVersionCreateContext.doHandle(): DeployPipelineResult {
+        publicVarGroupReferManageService.validateVarGroupReferences(
+            model = pipelineResourceWithoutVersion.model, projectId = projectId
+        )
         val resourceOnlyVersion = if (pipelineInfo == null) {
             val resourceOnlyVersion = pipelineVersionGenerator.getDefaultVersion(
                 versionStatus = pipelineResourceWithoutVersion.status
@@ -91,15 +97,48 @@ class PipelineDraftSaveHandler @Autowired constructor(
             if (draftVersionResource == null) {
                 val resourceOnlyVersion = pipelineVersionGenerator.generateDraftVersion(
                     projectId = projectId,
-                    pipelineId = pipelineId
+                    pipelineId = pipelineId,
+                    baseVersion = pipelineResourceWithoutVersion.baseVersion
                 )
                 pipelineVersionPersistenceService.createDraftVersion(
                     context = this,
                     resourceOnlyVersion = resourceOnlyVersion
                 )
                 resourceOnlyVersion
+            } else if (overrideDraft) {
+                // 非草稿历史回滚:删除当前草稿(逻辑删),用新版本号重建草稿
+                val resourceOnlyVersion = pipelineVersionGenerator.generateDraftVersion(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    baseVersion = pipelineResourceWithoutVersion.baseVersion
+                )
+                pipelineVersionPersistenceService.createDraftVersion(
+                    context = this,
+                    resourceOnlyVersion = resourceOnlyVersion,
+                    oldDraftVersion = draftVersionResource.version
+                )
+                resourceOnlyVersion
             } else {
-                val resourceOnlyVersion = PipelineResourceOnlyVersion(draftVersionResource)
+                val draftVersion = pipelineVersionGenerator.incrementDraftVersion(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    version = draftVersionResource.version
+                )
+                // 保存草稿时,pipelineResourceWithoutVersion没有传入baseVersion,回滚的时候会传入
+                val baseVersion = pipelineResourceWithoutVersion.baseVersion ?: draftVersionResource.baseVersion
+                val baseResource = baseVersion?.let {
+                    pipelineRepositoryService.getPipelineVersionRecord(
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        version = it
+                    )
+                }
+                val resourceOnlyVersion = PipelineResourceOnlyVersion(
+                    pipelineResource = draftVersionResource,
+                    draftVersion = draftVersion,
+                    baseVersion = baseVersion,
+                    baseVersionName = baseResource?.versionName
+                )
                 pipelineVersionPersistenceService.updateDraftVersion(
                     context = this,
                     resourceOnlyVersion = resourceOnlyVersion
@@ -107,6 +146,20 @@ class PipelineDraftSaveHandler @Autowired constructor(
                 resourceOnlyVersion
             }
         }
+        publicVarGroupReferManageService.handleVarGroupReferBus(
+            PublicVarGroupReferDTO(
+                userId = userId,
+                projectId = projectId,
+                model = pipelineResourceWithoutVersion.model,
+                referId = pipelineId,
+                referType = PublicVarGroupReferenceTypeEnum.PIPELINE,
+                referName = pipelineBasicInfo.pipelineName,
+                referVersion = resourceOnlyVersion.version,
+                referVersionName = resourceOnlyVersion.versionName,
+                // 草稿保存（COMMITTING）：只写引用明细，不同步 LATEST_FLAG
+                activeVersion = false
+            )
+        )
 
         return DeployPipelineResult(
             pipelineId = pipelineId,

@@ -9,6 +9,7 @@ import com.tencent.devops.remotedev.pojo.IWhiteList
 import com.tencent.devops.remotedev.pojo.OperateCvmData
 import com.tencent.devops.remotedev.pojo.ProjectWorkspace
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
+import com.tencent.devops.remotedev.pojo.ProjectWorkspaceFetchData
 import com.tencent.devops.remotedev.pojo.UserOnePassword
 import com.tencent.devops.remotedev.pojo.WhiteListType
 import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
@@ -17,7 +18,11 @@ import com.tencent.devops.remotedev.pojo.WindowsWorkspaceCreate
 import com.tencent.devops.remotedev.pojo.WorkspaceCloneReq
 import com.tencent.devops.remotedev.pojo.WorkspaceOpHistory
 import com.tencent.devops.remotedev.pojo.WorkspaceRebuildReq
+import com.tencent.devops.remotedev.pojo.WorkspaceRegistration
+import com.tencent.devops.remotedev.pojo.TemplateWorkspaceAssignResp
+import com.tencent.devops.remotedev.pojo.Workspace
 import com.tencent.devops.remotedev.pojo.WorkspaceSearch
+import com.tencent.devops.remotedev.pojo.WorkspaceStartCloudDetail
 import com.tencent.devops.remotedev.pojo.WorkspaceUpgradeReq
 import com.tencent.devops.remotedev.pojo.common.QuotaType
 import com.tencent.devops.remotedev.pojo.expert.CreateDiskResp
@@ -35,16 +40,16 @@ import com.tencent.devops.remotedev.pojo.itsm.BKItsmCreateTicketRespData
 import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceDesktopNotifyData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyData
+import com.tencent.devops.remotedev.pojo.CreateOpenClawData
+import com.tencent.devops.remotedev.pojo.CreateOpenClawDataResp
+import com.tencent.devops.remotedev.pojo.TaskStatusResp
 import com.tencent.devops.remotedev.pojo.project.EnableRemotedevData
 import com.tencent.devops.remotedev.pojo.project.RemotedevProject
 import com.tencent.devops.remotedev.pojo.project.RemotedevProjectNew
 import com.tencent.devops.remotedev.pojo.project.WeSecProjectWorkspace
+import com.tencent.devops.remotedev.pojo.project.WorkspaceMemberInfo
 import com.tencent.devops.remotedev.pojo.project.WorkspaceProperty
-import com.tencent.devops.remotedev.pojo.record.CheckWorkspaceRecordData
-import com.tencent.devops.remotedev.pojo.record.FetchMetaDataParam
 import com.tencent.devops.remotedev.pojo.record.ThumbnailEncryptedTicketResp
-import com.tencent.devops.remotedev.pojo.record.UserWorkspaceRecordPermissionInfo
-import com.tencent.devops.remotedev.pojo.record.WorkspaceRecordMetadata
 import com.tencent.devops.remotedev.pojo.remotedev.CreateCvmData
 import com.tencent.devops.remotedev.pojo.remotedev.CreateCvmResp
 import com.tencent.devops.remotedev.pojo.remotedev.SyncVmData
@@ -125,7 +130,10 @@ interface ServiceRemoteDevResource {
         ownerName: String?,
         @Parameter(description = "workspaceName", required = false)
         @QueryParam("workspaceName")
-        workspaceName: String?
+        workspaceName: String?,
+        @Parameter(description = "是否包含部门信息", required = false)
+        @QueryParam("hasDepartmentsInfo")
+        hasDepartmentsInfo: Boolean? = null
     ): Result<List<WeSecProjectWorkspace>>
 
     @Operation(summary = "提供给wesec获取项目下云桌面信息")
@@ -198,6 +206,18 @@ interface ServiceRemoteDevResource {
         @Parameter(description = "分配数据，必填", required = true)
         data: OpProjectWorkspaceAssignData
     ): Result<Boolean>
+
+    @Operation(summary = "按模版申请交付云桌面给用户")
+    @POST
+    @Path("/assignWorkspaceByTemplate")
+    fun assignWorkspaceByTemplate(
+        @Parameter(description = "模版ID，必填", required = true)
+        @QueryParam("templateId")
+        templateId: String,
+        @Parameter(description = "申请人，必填", required = true)
+        @QueryParam("applicant")
+        applicant: String
+    ): Result<TemplateWorkspaceAssignResp>
 
     @Operation(summary = "用来通知蓝盾客户端消息")
     @POST
@@ -325,7 +345,10 @@ interface ServiceRemoteDevResource {
         projectId: String,
         @Parameter(description = "工作空间名", required = true)
         @QueryParam("workspaceName")
-        workspaceName: String
+        workspaceName: String,
+        @Parameter(description = "延迟销毁时间（秒），为空表示正常销毁，缓冲24h", required = false)
+        @QueryParam("delaySeconds")
+        delaySeconds: Int? = null
     ): Result<Boolean>
 
     @Operation(summary = "获取windows工作空间-项目")
@@ -342,6 +365,18 @@ interface ServiceRemoteDevResource {
         @QueryParam("workspaceName")
         workspaceName: String
     ): Result<WeSecProjectWorkspace?>
+
+    @Operation(summary = "获取项目云桌面的拥有者和共享人")
+    @GET
+    @Path("/project_workspace_members")
+    fun getProjectWorkspaceMembers(
+        @Parameter(description = "项目id", required = true)
+        @QueryParam("projectId")
+        projectId: String,
+        @Parameter(description = "工作空间名", required = true)
+        @QueryParam("workspaceName")
+        workspaceName: String
+    ): Result<WorkspaceMemberInfo?>
 
     @Deprecated("未来fetch_expert_sup_record_any使用会把这个接口废弃")
     @Operation(summary = "获取专家求助单据数据")
@@ -482,6 +517,8 @@ interface ServiceRemoteDevResource {
         @Parameter(description = "工作空间名称", required = true)
         @QueryParam("workspaceName")
         workspaceName: String,
+        @QueryParam("projectId")
+        projectId: String?,
         @Parameter(description = "请求报文", required = true)
         rebuildReq: WorkspaceRebuildReq
     ): Result<Boolean>
@@ -493,6 +530,8 @@ interface ServiceRemoteDevResource {
         @Parameter(description = "用户", required = true)
         @QueryParam("userId")
         userId: String,
+        @QueryParam("projectId")
+        projectId: String?,
         @Parameter(description = "工作空间名称", required = true)
         @QueryParam("workspaceName")
         workspaceName: String
@@ -505,6 +544,8 @@ interface ServiceRemoteDevResource {
         @Parameter(description = "用户", required = true)
         @QueryParam("userId")
         userId: String,
+        @QueryParam("projectId")
+        projectId: String?,
         @Parameter(description = "工作空间名称", required = true)
         @QueryParam("workspaceName")
         workspaceName: String
@@ -520,6 +561,8 @@ interface ServiceRemoteDevResource {
         @Parameter(description = "工作空间名称", required = true)
         @QueryParam("workspaceName")
         workspaceName: String,
+        @QueryParam("projectId")
+        projectId: String?,
         @Parameter(description = "是否强制重启", required = false)
         @QueryParam("force")
         force: Boolean?
@@ -535,6 +578,8 @@ interface ServiceRemoteDevResource {
         @Parameter(description = "工作空间名称", required = true)
         @QueryParam("workspaceName")
         workspaceName: String,
+        @QueryParam("projectId")
+        projectId: String?,
         @Parameter(description = "请求报文", required = true)
         makeImageReq: MakeWorkspaceImageReq
     ): Result<Boolean>
@@ -590,39 +635,6 @@ interface ServiceRemoteDevResource {
         data: OperateCvmData
     ): Result<Boolean>
 
-    @Operation(summary = "开启或关闭工作空间录屏")
-    @PUT
-    @Path("/enable_workspace_record")
-    fun enableWorkspaceRecord(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @Parameter(description = "projectId", required = true)
-        @QueryParam("projectId")
-        projectId: String,
-        @Parameter(description = "工作空间名称", required = true)
-        @QueryParam("workspaceName")
-        workspaceName: String,
-        @Parameter(description = "开启或关闭录屏", required = true)
-        @QueryParam("enable")
-        enable: Boolean
-    ): Result<Boolean>
-
-    @Operation(summary = "检查是否开启录屏并获取推流地址")
-    @GET
-    @Path("/check_workspace_record_enable_address")
-    fun checkWorkspaceEnableAddress(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @Parameter(description = "appId", required = true)
-        @QueryParam("appId")
-        appId: Long,
-        @Parameter(description = "实例IP", required = true)
-        @QueryParam("ip")
-        ip: String
-    ): Result<CheckWorkspaceRecordData>
-
     @Deprecated("有了token后这个方法可能不会再使用，观察下如果不使用可以废弃")
     @Operation(summary = "检查用户是否有产看当前工作空间录像的权限")
     @GET
@@ -647,6 +659,8 @@ interface ServiceRemoteDevResource {
         workspaceName: String,
         @QueryParam("size")
         size: String,
+        @QueryParam("projectId")
+        projectId: String?,
         @QueryParam("pvcId")
         pvcId: String?
     ): Result<ExpandDiskValidateResp?>
@@ -674,7 +688,10 @@ interface ServiceRemoteDevResource {
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @QueryParam("workspaceName")
-        workspaceName: String
+        workspaceName: String,
+        @Parameter(description = "项目ID(项目英文名)", required = true)
+        @QueryParam("projectId")
+        projectId: String?
     ): Result<List<VmDiskInfo>>
 
     @Operation(summary = "卸载并回收磁盘")
@@ -771,34 +788,16 @@ interface ServiceRemoteDevResource {
         search: WorkspaceSearch
     ): Result<Page<ProjectWorkspace>>
 
-    @Operation(summary = "查询录屏权限相关信息")
-    @GET
-    @Path("/get_user_workspace_record_permission_info")
-    fun getUserWorkspaceRecordPermission(
+    @Operation(summary = "获取项目下实例列表(支持地域/状态过滤，供console巡检)")
+    @POST
+    @Path("/project/workspace/list4console")
+    fun getProjectWorkspaceList4Console(
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @QueryParam("workspaceName")
-        workspaceName: String
-    ): Result<UserWorkspaceRecordPermissionInfo>
-
-    @Operation(summary = "录屏权限续期")
-    @POST
-    @Path("/update_user_workspace_record_permission_info")
-    fun updateUserWorkspaceRecordPermission(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @QueryParam("workspaceName")
-        workspaceName: String
-    ): Result<Boolean>
-
-    @Operation(summary = "查看当前工作空间录屏元数据")
-    @POST
-    @Path("/get_user_workspace_record_metadata")
-    fun getViewRecordMetadata(
-        data: FetchMetaDataParam
-    ): Result<Page<WorkspaceRecordMetadata>>
+        @Parameter(description = "查询参数")
+        data: ProjectWorkspaceFetchData
+    ): Result<Page<ProjectWorkspace>>
 
     @Operation(summary = "获取指定工作空间详情时间线")
     @GET
@@ -817,21 +816,6 @@ interface ServiceRemoteDevResource {
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<Page<WorkspaceOpHistory>>
-
-    @Operation(summary = "获取工作空间录屏密钥")
-    @GET
-    @Path("/get_workspace_record_ticket")
-    fun getWorkspaceRecordTicket(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @Parameter(description = "工作空间名称", required = true)
-        @QueryParam("workspaceName")
-        workspaceName: String,
-        @Parameter(description = "skToken", required = true)
-        @QueryParam("token")
-        token: String
-    ): Result<String>
 
     @Operation(summary = "获取工作空间缩略图加密密钥")
     @GET
@@ -880,6 +864,8 @@ interface ServiceRemoteDevResource {
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
+        @QueryParam("projectId")
+        projectId: String?,
         data: ListImagesData
     ): Result<ListImagesResp?>
 
@@ -1013,4 +999,207 @@ interface ServiceRemoteDevResource {
         userId: String,
         data: TGitBindRemotedevData
     ): Result<Map<String, Boolean>>
+
+    @Operation(summary = "cds后台状态上报")
+    @POST
+    @Path("/cds_webhook_event")
+    fun cdsWebhookEvent(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "类型", required = true)
+        @QueryParam("type")
+        type: String,
+        @Parameter(description = "工作空间名称", required = false)
+        @QueryParam("workspaceName")
+        workspaceName: String?,
+        @Parameter(description = "envId", required = true)
+        @QueryParam("envId")
+        envId: String?
+    ): Result<Boolean>
+
+    @Operation(summary = "龙虾云桌面一键加白")
+    @POST
+    @Path("/openClaw_on")
+    fun openClawOn(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "工作空间名称", required = false)
+        @QueryParam("workspaceName")
+        workspaceName: String?,
+        @Parameter(description = "ip", required = false)
+        @QueryParam("ip")
+        ip: String?
+    ): Result<WorkspaceRegistration?>
+
+    @Operation(summary = "实例转公共云桌面")
+    @POST
+    @Path("/convert_to_public_workspace")
+    fun convertToPublicWorkspace(
+        @Parameter(description = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(
+            description = "workspaceName",
+            required = true
+        )
+        @QueryParam("workspaceName")
+        workspaceName: String
+    ): Result<Boolean>
+
+    @Operation(summary = "批量刷新实例状态")
+    @POST
+    @Path("/refresh_instance_status")
+    fun refreshWorkspaceStatus(
+        @Parameter(description = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @QueryParam("projectId")
+        projectId: String,
+        @Parameter(
+            description = "实例ID列表",
+            required = true
+        )
+        instanceIds: List<String>
+    ): Result<Map<String, String>>
+
+    @Operation(summary = "批量获取简易工作空间信息")
+    @POST
+    @Path("/batch_get_simple_workspaces")
+    fun batchGetSimpleWorkspaces(
+        @Parameter(description = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @QueryParam("projectId")
+        projectId: String,
+        @Parameter(
+            description = "工作空间名称列表",
+            required = true
+        )
+        workspaceNames: List<String>
+    ): Result<List<WeSecProjectWorkspace>>
+
+    @Operation(summary = "按用户查询云桌面列表")
+    @POST
+    @Path("/user/workspaces/search")
+    fun searchUserWorkspaces(
+        @Parameter(
+            description = "用户ID",
+            required = true,
+            example = AUTH_HEADER_USER_ID_DEFAULT_VALUE
+        )
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(
+            description = "第几页",
+            required = false,
+            example = "1"
+        )
+        @QueryParam("page")
+        page: Int?,
+        @Parameter(
+            description = "每页多少条",
+            required = false,
+            example = "100"
+        )
+        @QueryParam("pageSize")
+        pageSize: Int?,
+        @Parameter(
+            description = "搜索条件",
+            required = true
+        )
+        search: WorkspaceSearch
+    ): Result<Page<Workspace>>
+
+    @Operation(summary = "分页批量获取THUMBNAIL的实例id列表")
+    @POST
+    @Path("/batch_query_thumbnail_workspaces")
+    fun batchQueryThumbnailWorkspaces(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(
+            description = "ENABLE状态：true=开启THUMBNAIL，false=关闭THUMBNAIL",
+            required = true
+        )
+        @QueryParam("enable")
+        enable: Boolean,
+        @Parameter(description = "第几页（从1开始）", required = true, example = "1")
+        @QueryParam("page")
+        page: Int,
+        @Parameter(description = "每页多少条（最大1000）", required = true, example = "100")
+        @QueryParam("pageSize")
+        pageSize: Int,
+        @Parameter(description = "项目ID（可选过滤条件，不传则不限定项目）", required = false)
+        @QueryParam("projectId")
+        projectId: String?,
+        @Parameter(
+            description = "工作空间名称列表（可选过滤条件，不传则不限定实例；最多1000个）",
+            required = false
+        )
+        workspaceNames: List<String>?
+    ): Result<Page<String>>
+
+    @Operation(summary = "批量开启或关闭工作空间缩略图")
+    @POST
+    @Path("/enable_workspace_thumbnail")
+    fun enableWorkspaceThumbnail(
+        @Parameter(
+            description = "用户ID",
+            required = true,
+            example = AUTH_HEADER_USER_ID_DEFAULT_VALUE
+        )
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(
+            description = "是否启用：true=开启，false=关闭",
+            required = true
+        )
+        @QueryParam("enable")
+        enable: Boolean,
+        @Parameter(
+            description = "工作空间名称列表（最多1000个）",
+            required = true
+        )
+        workspaceNames: List<String>
+    ): Result<Boolean>
+
+    @Operation(summary = "获取指定工作空间详情")
+    @GET
+    @Path("/start_cloud_workspace_detail")
+    fun startCloudWorkspaceDetail(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "工作空间名称", required = true)
+        @QueryParam("workspaceName")
+        workspaceName: String?,
+        @Parameter(description = "环境id", required = true)
+        @QueryParam("envHashId")
+        envHashId: String?
+    ): Result<WorkspaceStartCloudDetail?>
+
+    @Operation(summary = "分配龙虾云桌面")
+    @POST
+    @Path("/create_openclaw")
+    fun createOpenClaw(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        data: CreateOpenClawData
+    ): Result<CreateOpenClawDataResp>
+
+    @Operation(summary = "获取分配龙虾云桌面去任务状态")
+    @GET
+    @Path("/openclaw_task_status")
+    fun openClawTaskStatus(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @QueryParam("taskId")
+        taskId: String
+    ): Result<TaskStatusResp>
 }

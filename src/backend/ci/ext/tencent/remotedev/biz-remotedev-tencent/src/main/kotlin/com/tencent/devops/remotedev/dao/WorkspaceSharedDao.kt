@@ -85,8 +85,27 @@ class WorkspaceSharedDao {
         dslContext: DSLContext,
         workspaceNames: Set<String>
     ): List<WorkspaceShared> {
+        if (workspaceNames.isEmpty()) return emptyList()
         with(TWorkspaceShared.T_WORKSPACE_SHARED) {
-            return dslContext.selectFrom(this).where(WORKSPACE_NAME.`in`(workspaceNames)).fetch(sharedMapper)
+            return workspaceNames.chunked(BATCH_QUERY_SIZE).flatMap { chunk ->
+                // 只查覆盖索引字段(WORKSPACE_NAME, SHARED_USER, ASSIGN_TYPE)
+                // 避免回表，走 Using index
+                dslContext.select(WORKSPACE_NAME, SHARED_USER, ASSIGN_TYPE)
+                    .from(this)
+                    .where(WORKSPACE_NAME.`in`(chunk))
+                    .fetch { record ->
+                        WorkspaceShared(
+                            id = null,
+                            workspaceName = record[WORKSPACE_NAME],
+                            operator = "",
+                            sharedUser = record[SHARED_USER],
+                            type = WorkspaceShared.AssignType.parse(
+                                record[ASSIGN_TYPE]
+                            ),
+                            resourceId = ""
+                        )
+                    }
+            }
         }
     }
 
@@ -164,11 +183,20 @@ class WorkspaceSharedDao {
         dslContext: DSLContext,
         workspaceNames: Set<String>
     ): Map<String, String> {
+        if (workspaceNames.isEmpty()) return emptyMap()
         with(TWorkspaceShared.T_WORKSPACE_SHARED) {
-            return dslContext.selectFrom(this)
-                .where(WORKSPACE_NAME.`in`(workspaceNames))
-                .and(ASSIGN_TYPE.eq(WorkspaceShared.AssignType.OWNER.name))
-                .fetch().associateBy({ it.workspaceName }, { it.sharedUser })
+            // 只查覆盖索引字段，避免回表
+            return workspaceNames.chunked(BATCH_QUERY_SIZE).flatMap { chunk ->
+                dslContext.select(WORKSPACE_NAME, SHARED_USER)
+                    .from(this)
+                    .where(WORKSPACE_NAME.`in`(chunk))
+                    .and(
+                        ASSIGN_TYPE.eq(
+                            WorkspaceShared.AssignType.OWNER.name
+                        )
+                    )
+                    .fetch()
+            }.associate { it[WORKSPACE_NAME] to it[SHARED_USER] }
         }
     }
 
@@ -260,6 +288,7 @@ class WorkspaceSharedDao {
     }
 
     companion object {
+        private const val BATCH_QUERY_SIZE = 50
         val sharedMapper = TSharedRecordJooqMapper()
     }
 }

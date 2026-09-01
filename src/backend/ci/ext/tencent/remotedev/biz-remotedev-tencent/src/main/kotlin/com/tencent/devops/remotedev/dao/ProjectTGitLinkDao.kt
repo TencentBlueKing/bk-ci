@@ -90,6 +90,7 @@ class ProjectTGitLinkDao {
                         .set(CRED, it.cred)
                         .set(CRED_TYPE, it.credType.name)
                         .set(URL, it.url)
+                        .set(GIT_TYPE, it.gitType)
                 }
             ).execute()
         }

@@ -42,6 +42,13 @@ const TemplateOverview = () => import(/* webpackChunkName: "pipelinesTemplate" *
 const TemplateEdit = () => import(/* webpackChunkName: "pipelinesTemplate" */'../views/Template/TemplateEdit.vue')
 const InstanceEntry = () => import(/* webpackChunkName: "pipelinesTemplate" */'../views/Template/Instance/InstanceEntry.vue')
 
+// 流水线公共变量
+const PublicVarList = () => import(/* webpackChunkName: "pipelinesNewList" */'../views/PublicVariable/')
+
+// const templateSetting = () => import(/* webpackChunkName: "pipelinesTemplate" */'../views/template/setting.vue')
+// const templateInstanceCreate = () => import(/* webpackChunkName: "pipelinesTemplate" */'../views/template/instance_create.vue')
+// const templatePermission = () => import(/* webpackChunkName: "pipelinesTemplate" */'../views/template/permission.vue')
+
 // 客户端流水线任务子页 - subpages
 const pipelinesEntry = () => import(/* webpackChunkName: "pipelinesEntry" */'../views/subpages')
 
@@ -60,7 +67,14 @@ const pipelinesEdit = () => import(/* webpackChunkName: "pipelinesEdit" */'../vi
 const DraftDebugRecord = () => import(/* webpackChunkName: "draftDebug" */'../views/subpages/DraftDebugRecord.vue')
 const DraftDebugHeader = () => import(/* webpackChunkName: "draftDebug" */'../components/PipelineHeader/DraftDebugHeader.vue')
 
-// 客户端流水线执行预览 - preview
+
+// 跨项目复制
+const CrossProjectCopy = () => import(/* webpackChunkName: "crossProjectCopy" */'../views/CrossProjectCopy')
+
+// 批量历史任务
+const BatchHistoricalTask = () => import(/* webpackChunkName: "batchHistoricalTask" */'../views/BatchHistoricalTask')
+
+// 客户端流水线执行预览 - edit
 const pipelinesPreview = () => import(/* webpackChunkName: "pipelinesPreview" */'../views/subpages/preview.vue')
 const PreviewHeader = () => import(/* webpackChunkName: "pipelinesPreview" */'../components/PipelineHeader/PreviewHeader.vue')
 
@@ -72,6 +86,9 @@ const pipelinesDocker = () => import(/* webpackChunkName: "pipelinesDocker" */'.
 const ImportPipelineEdit = () => import(/* webpackChunkName: "importPipeline" */'../views/ImportEdit.vue')
 const PipelineDataBoard = () => import(/* webpackChunkName: "pipelineDataBoard" */'../views/PipelineList/EplusBoard.vue')
 
+// 支持流水线实时监控 - 概览界面
+const pipelineRealTimeMonitorEntry = () => import(/* webpackChunkName: "pipelineRealTimeMonitorEntry" */'../views/pipelineRealTimeMonitor/entryLayout.vue')
+
 const routes = [
     {
         path: '/pipeline/:projectId',
@@ -81,6 +98,7 @@ const routes = [
             name: 'PipelineManageList'
         },
         children: [
+
             {
                 path: 'create',
                 component: CreatePipeline,
@@ -92,7 +110,10 @@ const routes = [
                 children: [{
                     path: ':tab',
                     name: 'pipelineImportEdit',
-                    component: pipelinesEdit
+                    component: pipelinesEdit,
+                    meta: {
+                        edit: true
+                    }
                 }]
             },
             {
@@ -111,6 +132,12 @@ const routes = [
                         ]
                     },
                     {
+                        path: 'publicVariable',
+                        name: 'PublicVarList',
+                        component: PublicVarList,
+                        
+                    },
+                    {
                         path: 'listAuth/:id/:groupName',
                         name: 'PipelineListAuth',
                         component: PipelineListAuth
@@ -119,6 +146,11 @@ const routes = [
                         path: 'metrics',
                         name: 'PipelineDataBoard',
                         component: PipelineDataBoard
+                    },
+                    {
+                        path: 'realTimeMonitor',
+                        component: pipelineRealTimeMonitorEntry,
+                        name: 'realTimeMonitor',
                     },
                     {
                         path: ':viewId?/:type?',
@@ -180,6 +212,30 @@ const routes = [
                 path: 'atomDebug',
                 name: 'atomDebug',
                 component: AtomDebug
+            },
+            {
+                // 跨项目复制
+                path: 'crossProjectCopy/:taskId/:tab?',
+                name: 'crossProjectCopy',
+                component: CrossProjectCopy,
+                meta: {
+                    title: 'crossProjectCopy',
+                    header: 'pipeline',
+                    icon: 'pipeline',
+                    to: 'PipelineManageList'
+                }
+            },
+            {
+                // 批量历史任务
+                path: 'batchHistoricalTask',
+                name: 'batchHistoricalTask',
+                component: BatchHistoricalTask,
+                meta: {
+                    title: 'batchHistoricalTask',
+                    header: 'pipeline',
+                    icon: 'pipeline',
+                    to: 'PipelineManageList'
+                }
             },
             {
                 path: ':pipelineId',

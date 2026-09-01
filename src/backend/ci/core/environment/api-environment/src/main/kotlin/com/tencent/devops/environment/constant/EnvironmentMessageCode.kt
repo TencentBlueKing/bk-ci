@@ -47,7 +47,7 @@ package com.tencent.devops.environment.constant
  */
 object EnvironmentMessageCode {
     const val ERROR_ENV_NOT_EXISTS = "2105000" // 环境管理：[{0}] 环境不存在
-    const val ERROR_NODE_INSUFFICIENT_PERMISSIONS = "2105001" // 环境管理：环境权限不足 [{0}]
+    const val ERROR_NODE_INSUFFICIENT_PERMISSIONS = "2105001" // 环境管理：节点权限不足 [{0}]
     const val ERROR_NODE_NOT_EXISTS = "2105002" // 环境管理：[{0}] 节点不存在
     const val ERROR_NODE_NAME_DUPLICATE = "2105003" // 环境管理：环境名称已存在: [{0}]
     const val ERROR_ENV_BUILD_2_DEPLOY_DENY = "2105004" // 环境管理：构建环境不能修改为部署环境
@@ -117,6 +117,14 @@ object EnvironmentMessageCode {
     // 环境管理：修改节点导入人仅支持节点类型为CMDB，非CMDB类型的节点：[{0}]
     const val ERROR_NODE_TYPE_TO_CHANGE_CREATOR_ONLY_SUPPORT_CMDB = "2105067"
     const val ERROR_NODE_NO_IMPORT_PERMISSION_NODES = "2105068" // 环境管理：没有节点[{0}]导入权限，仅有节点的主备份负责人才可导入
+    const val ERROR_NODE_NOT_CMDB_PRIMARY_BAK_OPERATOR = "2105069" // 环境管理：当前用户不是该 CMDB 节点的主备负责人
+    const val ERROR_ENV_STRATEGY_NOW_USING = "2105070" // 环境管理：当前环境相关策略正在被操作，请稍等尝试
+    const val ERROR_ENV_NODETAG_KEY_COUNT_EXCEEDED = "2105071" // 环境管理：节点标签数量超过了项目限制{0}
+    const val ERROR_ENV_NODETAG_KEY_VALUE_COUNT_EXCEEDED = "2105072" // 环境管理：节点标签{0}值数量超过了项目限制{1}
+    const val ERROR_ENV_STRATEGY_COUNT_EXCEEDED = "2105073" // 环境管理：环境{0}下策略数量超过了项目限制{1}
+    const val ERROR_ENV_STRATEGY_TAG_COUNT_EXCEEDED = "2105074" // 环境管理：环境{0}下策略{1}的标签选择器数量超过了项目限制{1}
+
+    const val ERROR_ENV_ADD_NODE_OS_ERROR = "2105075" // 环境管理：环境{0}仅支持系统{1}，节点{2}不支持
 
     const val BK_NORMAL_VERSION = "bkNormalVersion" // 8核16G（普通版）
     const val BK_INTEL_XEON_SKYLAKE_PROCESSOR = "bkIntelXeonSkylakeProcessor" // 2.5GHz 64核 Intel Xeon Skylake 6133处理器

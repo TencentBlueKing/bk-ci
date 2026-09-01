@@ -38,6 +38,10 @@ import com.tencent.devops.model.process.tables.TPipelineBuildHistoryDebug
 import com.tencent.devops.model.process.tables.TPipelineDataClear
 import com.tencent.devops.model.process.tables.TPipelineInfo
 import com.tencent.devops.model.process.tables.TPipelineOperationLog
+import com.tencent.devops.model.process.tables.TPipelineResourceDraftVersion
+import com.tencent.devops.model.process.tables.TPipelineTemplateInfo
+import com.tencent.devops.model.process.tables.TPipelineTemplateResourceDraftVersion
+import com.tencent.devops.model.process.tables.TPipelineTemplateResourceVersion
 import com.tencent.devops.model.process.tables.records.TPipelineInfoRecord
 import com.tencent.devops.process.pojo.PipelineOperationLog
 import org.jooq.Condition
@@ -52,6 +56,15 @@ import java.time.LocalDateTime
 @Suppress("LongParameterList", "TooManyFunctions")
 @Repository
 class ProcessDao {
+
+    companion object {
+        /**
+         * 可被清理的构建状态（T_PIPELINE_BUILD_HISTORY.STATUS 列存储 BuildStatus 枚举 ordinal）
+         */
+        private val DELETABLE_BUILD_STATUS = BuildStatus.entries
+            .filter { it.isFinish() || it == BuildStatus.STAGE_SUCCESS || it == BuildStatus.UNEXEC }
+            .map { it.ordinal }
+    }
 
     fun addBuildHisDataClear(
         dslContext: DSLContext,
@@ -147,33 +160,47 @@ class ProcessDao {
             return dslContext.select(DSL.min(ID))
                 .from(this)
                 .where(PROJECT_ID.eq(projectId))
-                .fetchOne(0, Long::class.java)!!
+                .fetchOne(0, Long::class.java) ?: 0L
         }
     }
 
     fun getMaxPipelineBuildNum(
         dslContext: DSLContext,
         projectId: String,
-        pipelineId: String
+        pipelineId: String,
+        clearAllStatus: Boolean = false
     ): Long {
         with(TPipelineBuildHistory.T_PIPELINE_BUILD_HISTORY) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(PROJECT_ID.eq(projectId))
+            conditions.add(PIPELINE_ID.eq(pipelineId))
+            if (!clearAllStatus) {
+                conditions.add(STATUS.`in`(DELETABLE_BUILD_STATUS))
+            }
             return dslContext.select(DSL.max(BUILD_NUM))
                 .from(this)
-                .where(PROJECT_ID.eq(projectId).and(PIPELINE_ID.eq(pipelineId)))
-                .fetchOne(0, Long::class.java)!!
+                .where(conditions)
+                .fetchOne(0, Long::class.java) ?: 0L
         }
     }
 
     fun getMinPipelineBuildNum(
         dslContext: DSLContext,
         projectId: String,
-        pipelineId: String
+        pipelineId: String,
+        clearAllStatus: Boolean = false
     ): Long {
         with(TPipelineBuildHistory.T_PIPELINE_BUILD_HISTORY) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(PROJECT_ID.eq(projectId))
+            conditions.add(PIPELINE_ID.eq(pipelineId))
+            if (!clearAllStatus) {
+                conditions.add(STATUS.`in`(DELETABLE_BUILD_STATUS))
+            }
             return dslContext.select(DSL.min(BUILD_NUM))
                 .from(this)
-                .where(PROJECT_ID.eq(projectId).and(PIPELINE_ID.eq(pipelineId)))
-                .fetchOne(0, Long::class.java)!!
+                .where(conditions)
+                .fetchOne(0, Long::class.java) ?: 0L
         }
     }
 
@@ -183,7 +210,8 @@ class ProcessDao {
         pipelineId: String,
         maxBuildNum: Int? = null,
         maxStartTime: LocalDateTime? = null,
-        geTimeFlag: Boolean? = null
+        geTimeFlag: Boolean? = null,
+        clearAllStatus: Boolean = false
     ): Long {
         with(TPipelineBuildHistory.T_PIPELINE_BUILD_HISTORY) {
             val conditions = getQueryBuildHistoryCondition(
@@ -191,12 +219,13 @@ class ProcessDao {
                 pipelineId = pipelineId,
                 maxBuildNum = maxBuildNum,
                 maxStartTime = maxStartTime,
-                geTimeFlag = geTimeFlag
+                geTimeFlag = geTimeFlag,
+                clearAllStatus = clearAllStatus
             )
             return dslContext.select(DSL.max(BUILD_NUM))
                 .from(this)
                 .where(conditions)
-                .fetchOne(0, Long::class.java)!!
+                .fetchOne(0, Long::class.java) ?: 0L
         }
     }
 
@@ -205,11 +234,16 @@ class ProcessDao {
         pipelineId: String,
         maxBuildNum: Int?,
         maxStartTime: LocalDateTime?,
-        geTimeFlag: Boolean?
+        geTimeFlag: Boolean?,
+        clearAllStatus: Boolean = false
     ): MutableList<Condition> {
         val conditions = mutableListOf<Condition>()
         conditions.add(PROJECT_ID.eq(projectId))
         conditions.add(PIPELINE_ID.eq(pipelineId))
+        // 已删除/已归档流水线整体清理时(clearAllStatus=true)，需要把所有状态的构建记录都清掉，避免遗留孤儿数据
+        if (!clearAllStatus) {
+            conditions.add(STATUS.`in`(DELETABLE_BUILD_STATUS))
+        }
         if (maxBuildNum != null) {
             conditions.add(BUILD_NUM.le(maxBuildNum))
         }
@@ -233,7 +267,8 @@ class ProcessDao {
         isCompletelyDelete: Boolean,
         maxBuildNum: Int? = null,
         maxStartTime: LocalDateTime? = null,
-        geTimeFlag: Boolean? = null
+        geTimeFlag: Boolean? = null,
+        clearAllStatus: Boolean = false
     ): Result<out Record>? {
         with(TPipelineBuildHistory.T_PIPELINE_BUILD_HISTORY) {
             val conditions = getQueryBuildHistoryCondition(
@@ -241,7 +276,8 @@ class ProcessDao {
                 pipelineId = pipelineId,
                 maxBuildNum = maxBuildNum,
                 maxStartTime = maxStartTime,
-                geTimeFlag = geTimeFlag
+                geTimeFlag = geTimeFlag,
+                clearAllStatus = clearAllStatus
             )
             val baseStep = dslContext.select(BUILD_ID)
                 .from(this)
@@ -435,6 +471,96 @@ class ProcessDao {
                 pipelineOperationLog.params,
                 pipelineOperationLog.description
             ).execute()
+        }
+    }
+
+    fun listPipelineDraftVersions(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        limit: Int,
+        offset: Int
+    ): List<Int> {
+        with(TPipelineResourceDraftVersion.T_PIPELINE_RESOURCE_DRAFT_VERSION) {
+            return dslContext.selectDistinct(VERSION)
+                .from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(PIPELINE_ID.eq(pipelineId))
+                .orderBy(VERSION)
+                .limit(limit).offset(offset)
+                .fetch(VERSION)
+        }
+    }
+
+    fun getExpiredPipelineVersions(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        versions: List<Int>,
+        expireTime: LocalDateTime
+    ): List<Int> {
+        with(T_PIPELINE_RESOURCE_VERSION) {
+            return dslContext.selectDistinct(VERSION)
+                .from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(PIPELINE_ID.eq(pipelineId))
+                .and(VERSION.`in`(versions))
+                .and(RELEASE_TIME.isNotNull)
+                .and(RELEASE_TIME.lt(expireTime))
+                .fetch(VERSION)
+        }
+    }
+
+    fun listTemplateIdsByProjectId(
+        dslContext: DSLContext,
+        projectId: String,
+        limit: Int,
+        offset: Int
+    ): List<String> {
+        with(TPipelineTemplateInfo.T_PIPELINE_TEMPLATE_INFO) {
+            return dslContext.select(ID)
+                .from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .orderBy(UPDATE_TIME.asc())
+                .limit(limit).offset(offset)
+                .fetch(ID)
+        }
+    }
+
+    fun listTemplateDraftVersions(
+        dslContext: DSLContext,
+        projectId: String,
+        templateId: String,
+        limit: Int,
+        offset: Int
+    ): List<Long> {
+        with(TPipelineTemplateResourceDraftVersion.T_PIPELINE_TEMPLATE_RESOURCE_DRAFT_VERSION) {
+            return dslContext.selectDistinct(VERSION)
+                .from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(TEMPLATE_ID.eq(templateId))
+                .orderBy(VERSION)
+                .limit(limit).offset(offset)
+                .fetch(VERSION)
+        }
+    }
+
+    fun getExpiredTemplateVersions(
+        dslContext: DSLContext,
+        projectId: String,
+        templateId: String,
+        versions: List<Long>,
+        expireTime: LocalDateTime
+    ): List<Long> {
+        with(TPipelineTemplateResourceVersion.T_PIPELINE_TEMPLATE_RESOURCE_VERSION) {
+            return dslContext.selectDistinct(VERSION)
+                .from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(TEMPLATE_ID.eq(templateId))
+                .and(VERSION.`in`(versions))
+                .and(RELEASE_TIME.isNotNull)
+                .and(RELEASE_TIME.lt(expireTime))
+                .fetch(VERSION)
         }
     }
 }

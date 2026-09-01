@@ -51,6 +51,7 @@ import com.tencent.devops.process.pojo.PipelineOperationDetail
 import com.tencent.devops.process.pojo.PipelineVersionReleaseRequest
 import com.tencent.devops.process.pojo.audit.Audit
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
+import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
 import com.tencent.devops.process.pojo.pipeline.PrefetchReleaseResult
 import com.tencent.devops.process.pojo.setting.PipelineVersionSimple
 import com.tencent.devops.process.service.PipelineInfoFacadeService
@@ -210,6 +211,39 @@ class ServicePipelineVersionResourceImpl @Autowired constructor(
         )
     }
 
+    override fun getVersionModel(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        version: Int?
+    ): Result<PipelineVersionWithModel> {
+        val permission = AuthPermission.VIEW
+        pipelinePermissionService.validPipelinePermission(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            permission = permission,
+            message = MessageUtil.getMessageByLocale(
+                CommonMessageCode.USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
+                I18nUtil.getLanguage(userId),
+                arrayOf(
+                    userId,
+                    projectId,
+                    permission.getI18n(I18nUtil.getLanguage(userId)),
+                    pipelineId
+                )
+            )
+        )
+        return Result(
+            pipelineVersionFacadeService.getVersion(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                version = version
+            )
+        )
+    }
+
     override fun previewCode(
         userId: String,
         projectId: String,
@@ -251,7 +285,7 @@ class ServicePipelineVersionResourceImpl @Autowired constructor(
         )
         auditService.createAudit(
             Audit(
-                resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
+                resourceType = AuthResourceType.getAuthResourceTypeByChannel(AuthResourceType.PIPELINE_DEFAULT).value,
                 resourceId = result.pipelineId,
                 resourceName = result.pipelineName,
                 userId = userId,
@@ -481,6 +515,20 @@ class ServicePipelineVersionResourceImpl @Autowired constructor(
             projectId = projectId,
             storageType = storageType ?: PipelineStorageType.YAML,
             page = page ?: 1
+        )
+    }
+
+    override fun getVersionByBranch(
+        projectId: String,
+        pipelineId: String,
+        branch: String
+    ): Result<PipelineResourceVersion?> {
+        return Result(
+            pipelineVersionFacadeService.getVersionByBranch(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                branch = branch
+            )
         )
     }
 

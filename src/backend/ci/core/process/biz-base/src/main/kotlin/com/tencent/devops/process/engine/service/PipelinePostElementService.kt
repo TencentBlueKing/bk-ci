@@ -84,12 +84,19 @@ class PipelinePostElementService @Autowired constructor(
         val allPostElements = mutableListOf<ElementPostInfo>()
         val noCacheAtomItems = mutableSetOf<AtomPostReqItem>()
         val noCacheElementMap = mutableMapOf<String, ElementBaseInfo>()
+        val versionTestFlagCache = mutableMapOf<String, String?>()
+        val postInfoCache = mutableMapOf<String, String?>()
         elementItemList.forEach { elementItem ->
             val elementId = elementItem.elementId
             val atomCode = elementItem.atomCode
             val version = elementItem.version
-            val atomVersionTestFlag = redisOperation.hget("$ATOM_POST_VERSION_TEST_FLAG_KEY_PREFIX:$atomCode", version)
-            val atomPostInfo = redisOperation.hget("$ATOM_POST_NORMAL_PROJECT_FLAG_KEY_PREFIX:$atomCode", version)
+            val cacheKey = "$atomCode:$version"
+            val atomVersionTestFlag = versionTestFlagCache.getOrPut(cacheKey) {
+                redisOperation.hget("$ATOM_POST_VERSION_TEST_FLAG_KEY_PREFIX:$atomCode", version)
+            }
+            val atomPostInfo = postInfoCache.getOrPut(cacheKey) {
+                redisOperation.hget("$ATOM_POST_NORMAL_PROJECT_FLAG_KEY_PREFIX:$atomCode", version)
+            }
             val flag = version.contains("*") && (atomVersionTestFlag == null || atomVersionTestFlag.toBoolean())
             if (flag || atomPostInfo == null) {
                 // 如果插件在redis中没有其版本对应普通项目的post标识或者当前插件大版本内有测试版本，则通过接口获取post标识
@@ -148,7 +155,7 @@ class PipelinePostElementService @Autowired constructor(
         }
         val atomPostResp = getPostAtomsResult.data
         val atomPostAtoms = atomPostResp?.postAtoms
-        if (atomPostAtoms != null && atomPostAtoms.isNotEmpty()) {
+        if (!atomPostAtoms.isNullOrEmpty()) {
             addNoCachePostElement(noCacheElementMap, atomPostAtoms, allPostElements)
         }
     }

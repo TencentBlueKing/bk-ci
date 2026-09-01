@@ -8,7 +8,7 @@ open class ResourceAuthorizationDTO(
     @get:Schema(title = "项目ID")
     open val projectCode: String,
     @get:Schema(title = "资源类型")
-    open val resourceType: String,
+    open var resourceType: String,
     @get:Schema(title = "资源名称")
     open val resourceName: String,
     @get:Schema(title = "资源code")

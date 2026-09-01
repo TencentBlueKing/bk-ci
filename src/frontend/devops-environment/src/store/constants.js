@@ -18,7 +18,33 @@
  */
 
 export const SET_ENVIRONMENT_EXTENSIONS = 'SET_ENVIRONMENT_EXTENSIONS'
-export const NODE_LIST_ASIDE_WIDTH_CACHE = 'node_list_aside_width_cache'
-export const NODE_LIST_ASIDE_PANEL_TOGGLE = 'node_list_aside_panel_toggle'
 export const ENV_ACTIVE_NODE_TYPE = 'ENV_ACTIVE_NODE_TYPE'
 export const ALLNODE = 'allNode'
+export const RESIZE_LAYOUT_CONFIG_STORAGE_KEY = 'bk_devops_resize_layout_config' // ResizeLayout组件的配置存储key，存储不同页面的配置
+export const RES_TYPE_STORAGE_KEY = 'bk_devops_environment_res_type'
+
+export const SERVICE_RESOURCE_TYPE = {
+    PIPELINE: 'pipeline',
+    CREATE: 'creative-stream'
+}
+
+// 创作流节点工作空间类型
+export const CREATE_WORKSPACE_TYPE = {
+    REMOTEDEV: 'REMOTEDEV', // 普通云桌面
+    DEVCLOUD: 'DEVCLOUD', // TEG iMate Linux
+    IEG_IMATE: 'IEG_IMATE' // IEG iMate linux/windows 云桌面
+}
+export const ENV_TYPE_MAP = {
+    ALL: 'ALL',
+    BUILD: 'BUILD',
+    PROD: 'PROD',
+    DEV: 'DEV',
+    DEVX: 'DEVX',
+    CREATE: 'CREATE'
+}
+
+export const OS_LABEL_MAP = {
+    LINUX: 'Linux',
+    MACOS: 'macOS',
+    WINDOWS: 'Windows'
+}

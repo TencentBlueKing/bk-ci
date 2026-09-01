@@ -29,7 +29,7 @@ class UserProjectGitProxyResourceImpl @Autowired constructor(
 
     @AuditEntry(actionId = TencentActionId.TGIT_LINK_LIST)
     override fun tgitList(userId: String, projectId: String): Result<List<TGitRepoData>> {
-        return Result(gitProxyTGitService.tgitLinkList(projectId))
+        return Result(gitProxyTGitService.tgitLinkList(userId, projectId))
     }
 
     @AuditEntry(actionId = TencentActionId.TGIT_LINK_DELETE)

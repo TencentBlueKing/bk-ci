@@ -31,3 +31,12 @@ artifactory:
 
 bkrepo:
   dockerRegistry: __BK_REPO_DOCKER_REGISTRY__
+
+# 各平台允许的安装包后缀白名单（可选，支持 /actuator/refresh 热更新；不配置时使用 PlatformEnum 默认值）。
+#experience:
+#  platform:
+#    tails:
+#      android: .apk,.apks
+#      ios: .ipa
+#      hap: .hap
+#      win: .zip,.tar

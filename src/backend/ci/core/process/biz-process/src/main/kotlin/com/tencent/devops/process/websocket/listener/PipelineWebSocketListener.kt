@@ -51,11 +51,9 @@ class PipelineWebSocketListener @Autowired constructor(
         // 非页面类的流水线,直接返回。 不占用redis资源
         if (channelCode != null && !ChannelCode.webChannel(channelCode)) return
 
-        when {
-            event.refreshTypes.contains(RefreshType.HISTORY) -> dispatchHistoryMessage(event)
-            event.refreshTypes.contains(RefreshType.STATUS) -> dispatchStatusMessage(event)
-            event.refreshTypes.contains(RefreshType.RECORD) -> dispatchRecordMessage(event)
-        }
+        if (event.refreshTypes.contains(RefreshType.HISTORY)) dispatchHistoryMessage(event)
+        if (event.refreshTypes.contains(RefreshType.STATUS)) dispatchStatusMessage(event)
+        if (event.refreshTypes.contains(RefreshType.RECORD)) dispatchRecordMessage(event)
     }
 
     private fun dispatchHistoryMessage(event: PipelineBuildWebSocketPushEvent) {

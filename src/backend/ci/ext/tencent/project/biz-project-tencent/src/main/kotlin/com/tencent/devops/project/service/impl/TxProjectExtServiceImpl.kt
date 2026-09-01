@@ -13,11 +13,14 @@ import com.tencent.devops.project.pojo.ProjectCreateExtInfo
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.mq.ProjectCreateBroadCastEvent
+import com.tencent.devops.project.service.ProjectNotifyService
+import com.tencent.devops.project.service.ProjectOperationalProductService
 import com.tencent.devops.project.service.ProjectPaasCCService
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.slf4j.LoggerFactory
+import org.springframework.context.annotation.Lazy
 import org.springframework.stereotype.Service
 
 @Service
@@ -28,7 +31,9 @@ class TxProjectExtServiceImpl(
     private val bkAccessTokenApi: BkAccessTokenApi,
     private val projectDispatcher: SampleEventDispatcher,
     private val authProperties: BkAuthProperties,
-    private val objectMapper: ObjectMapper
+    private val objectMapper: ObjectMapper,
+    private val projectOperationalProductService: ProjectOperationalProductService,
+    @param:Lazy private val projectNotifyService: ProjectNotifyService
 ) : AbsProjectExtServiceImpl() {
 
     companion object {
@@ -38,7 +43,6 @@ class TxProjectExtServiceImpl(
     override fun createExtProjectInfo(
         userId: String,
         authProjectId: String,
-        accessToken: String?,
         projectCreateInfo: ProjectCreateInfo,
         createExtInfo: ProjectCreateExtInfo,
         logoAddress: String?
@@ -64,21 +68,41 @@ class TxProjectExtServiceImpl(
                 projectInfo = projectCreateInfo
             )
         )
+
+        // 同步 KPI 产品绑定到 bkCosts
+        projectOperationalProductService.syncKpiProductOnCreate(projectCreateInfo)
+
+        if (!projectCreateInfo.kpiCode.isNullOrBlank()) {
+            val needMonetization = projectOperationalProductService.checkNeedMonetization(
+                bgId = projectCreateInfo.bgId.toString(),
+                businessLineId = projectCreateInfo.businessLineId?.toString(),
+                deptId = projectCreateInfo.deptId.toString(),
+                centerId = projectCreateInfo.centerId.toString()
+            )
+            if (needMonetization) {
+                projectNotifyService.sendEmailForKpiCodeChange(
+                    userId = userId,
+                    projectName = projectCreateInfo.projectName,
+                    englishName = projectCreateInfo.englishName,
+                    kpiCode = projectCreateInfo.kpiCode!!,
+                    kpiName = projectCreateInfo.kpiName,
+                    productId = projectCreateInfo.productId,
+                    productName = projectCreateInfo.productName
+                )
+            }
+        }
     }
 
     override fun createOldAuthProject(
         userId: String,
-        accessToken: String?,
         projectCreateInfo: ProjectCreateInfo
     ): String? {
         val param: MutableMap<String, String> = mutableMapOf("project_code" to projectCreateInfo.englishName)
         // 创建AUTH项目
-        val newAccessToken = if (accessToken.isNullOrBlank()) {
-            param["creator"] = userId
-            bkAccessTokenApi.getProjectAccessToken()
-        } else accessToken
-        val authUrl = "${authProperties.url}/projects?access_token=$newAccessToken"
-        logger.info("create project $authUrl $userId,use userAccessToken${newAccessToken == accessToken}")
+        param["creator"] = userId
+        val accessToken = bkAccessTokenApi.getProjectAccessToken()
+        val authUrl = "${authProperties.url}/projects?access_token=$accessToken"
+        logger.info("create project $authUrl $userId")
         param["bg_id"] = projectCreateInfo.bgId.toString()
         param["dept_id"] = projectCreateInfo.deptId.toString()
         param["center_id"] = projectCreateInfo.centerId.toString()

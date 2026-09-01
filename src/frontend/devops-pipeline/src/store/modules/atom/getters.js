@@ -19,6 +19,7 @@
 
 import { VAR_MAX_LENGTH } from '@/store/constants'
 import { buildEnvMap, jobConst, semverVersionKeySet, VERSION_STATUS_ENUM } from '@/utils/pipelineConst'
+import { buildPipelineSnapshot, isPipelineModified } from '@/utils/pipelineSnapshotUtil'
 import Vue from 'vue'
 import { getAtomModalKey, isCodePullAtom, isNewAtomTemplate, isNormalContainer, isTriggerContainer, isVmContainer } from './atomUtil'
 import { buildNoRules, defaultBuildNo, platformList } from './constants'
@@ -33,6 +34,7 @@ export default {
     isCurPipelineLocked: state => {
         return state.pipelineInfo?.locked ?? false
     },
+    // 这个仅在编辑页中判断是否可以进行草稿差异对比以及版本列表操作栏编辑和回滚按钮展示的判断
     hasDraftPipeline: state => {
         return state.pipelineInfo?.version !== state.pipelineInfo?.releaseVersion
     },
@@ -191,8 +193,25 @@ export default {
         })
     },
     getEditingElementPos: state => state.editingElementPos,
-    isEditing: state => {
-        return state.isPipelineEditing
+    isEditing: (state, getters, rootState) => {
+        if (!state.originalPipelineSnapshot) {
+            return false
+        }
+        
+        // 显式访问响应式属性，让 Vue 追踪依赖
+        const _ = {
+            pipeline: state.pipeline,
+            pipelineSetting: state.pipelineSetting,
+            pipelineWithoutTrigger: state.pipelineWithoutTrigger,
+            mode: rootState.pipelineMode
+        }
+        
+        // 构建当前快照
+        const currentSnapshot = buildPipelineSnapshot(state, _.mode)
+        
+        // 直接深度对比快照
+        const result = isPipelineModified(currentSnapshot, state.originalPipelineSnapshot)
+        return result
     },
     checkPipelineInvalid: (state, getters) => (stages, pipelineSetting) => {
         try {
@@ -313,7 +332,7 @@ export default {
     },
     getAllElements: state => stages => {
         const allElements = []
-        stages.map(stage => stage.containers.map(container => allElements.splice(0, 0, ...container.elements)))
+        stages.map(stage => stage?.containers?.map(container => allElements.splice(0, 0, ...container.elements)))
         return allElements
     },
     getAllContainers: state => stages => {
@@ -383,6 +402,14 @@ export default {
             return acc
         }, 0) + containerIndex
     },
+    // 是否是MacOS on DevCloud
+    isMacOSContainer: state => container => {
+        return container && container.dispatchType && typeof container.dispatchType.buildType === 'string' && container.dispatchType.buildType === 'MACOS'
+    },
+    // 是否是MacOS 2.0
+    isMacOSNonVMware: state => container => {
+        return container && container.dispatchType && typeof container.dispatchType.macOSHwSpec === 'string' && container.dispatchType.macOSHwSpec !== 'VMware'
+    },
     isDockerBuildResource: state => container => {
         return container && ((container.dispatchType && container.dispatchType.buildType === 'DOCKER') || container.dockerBuildVersion)
     },
@@ -402,13 +429,15 @@ export default {
         return container?.dispatchType?.buildType?.indexOf('THIRD_PARTY_') > -1 && container?.dispatchType?.dockerInfo && Object.keys(container?.dispatchType?.dockerInfo).length
     },
     checkShowDebugDockerBtn: (state, getters) => (container, routeName, execDetail) => {
+        const isMacOS = getters.isMacOSContainer(container)
+        const isMacOSNonVMware = getters.isMacOSNonVMware(container)
         const isDocker = getters.isDockerBuildResource(container)
         const isPublicDevCloud = getters.isPublicDevCloudContainer(container)
         const isBcsContainer = getters.isBcsContainer(container)
         const isThirdDocker = getters.isThirdDockerContainer(container)
         const isLatestExecDetail = execDetail && execDetail.buildNum === execDetail.latestBuildNum
 
-        return routeName !== 'templateEdit' && container.baseOS === 'LINUX' && (isDocker || isPublicDevCloud || isBcsContainer || isThirdDocker) && (['pipelinesEdit', 'pipelinesHistory'].includes(routeName) || container.status === 'RUNNING' || (routeName === 'pipelinesDetail' && isLatestExecDetail))
+        return routeName !== 'templateEdit' && (container.baseOS === 'LINUX' && (isDocker || isPublicDevCloud || isBcsContainer || isThirdDocker) || (isMacOS && isMacOSNonVMware)) && (['pipelinesEdit', 'pipelinesHistory'].includes(routeName) || container.status === 'RUNNING' || (routeName === 'pipelinesDetail' && isLatestExecDetail))
     },
     getElements: state => container => {
         return container && Array.isArray(container.elements)

@@ -2,10 +2,10 @@
 /.github @irwinsun @mingshewhe @stubenhuang 
 /CODEOWNERS @irwinsun @zanyzhao @stubenhuang 
 /docs @zanyzhao @irwinsun @stubenhuang 
-/*.md @zanyzhao @irwinsun
+/*.md @zanyzhao @irwinsun @mingshewhe
 /scripts @fighter-liu @irwinsun @stubenhuang
 /src/agent @irwinsun @tangruotian
 /src/gateway @stubenhuang @irwinsun
-/src/frontend @lockiechen @terlinhe @zhanxu33 
+/src/frontend @lockiechen @terlinhe
 /support-files @irwinsun @mingshewhe @stubenhuang
 /src/backend/ci @irwinsun @mingshewhe @stubenhuang @carlyin0801 @royalhuang @randychen2046 @tangruotian

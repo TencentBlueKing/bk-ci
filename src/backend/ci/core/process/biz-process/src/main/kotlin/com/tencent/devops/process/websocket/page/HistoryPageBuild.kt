@@ -27,18 +27,29 @@
 
 package com.tencent.devops.process.websocket.page
 
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.websocket.page.IPath
 import com.tencent.devops.common.websocket.pojo.BuildPageInfo
 
 abstract class HistoryPageBuild : IPath {
 
+    /**
+     * 解析渠道（MQ 等链路可能丢失请求头，优先从流水线信息/缓存获取）。
+     */
+    protected abstract fun getChannel(buildPageInfo: BuildPageInfo): ChannelCode
+
     override fun buildPage(buildPageInfo: BuildPageInfo): String {
-        val defaultPage = "/console/pipeline/${buildPageInfo.projectId}/${buildPageInfo.pipelineId}/history"
-        if (!extHistoryPage(buildPageInfo).isNullOrEmpty()) {
-            return extHistoryPage(buildPageInfo)!!
-        }
-        return defaultPage
+        val channel = getChannel(buildPageInfo)
+        PagePathStrategies.historyStrategies
+            .firstOrNull { it.supports(channel) }
+            ?.build(buildPageInfo)
+            ?.let { return it }
+        extHistoryPage(buildPageInfo)?.takeIf { it.isNotBlank() }?.let { return it }
+        return defaultHistoryPath(buildPageInfo)
     }
+
+    private fun defaultHistoryPath(info: BuildPageInfo): String =
+        "/console/pipeline/${info.projectId}/${info.pipelineId}/history"
 
     abstract fun extHistoryPage(buildPageInfo: BuildPageInfo): String?
 }

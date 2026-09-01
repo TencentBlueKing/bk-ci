@@ -27,14 +27,19 @@
 
 package com.tencent.devops.process.service.template.v2
 
+import com.tencent.devops.common.api.context.ChannelContext
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
+import com.tencent.devops.common.pipeline.enums.PublicVarGroupReferenceTypeEnum
+import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.process.engine.dao.PipelineResourceVersionDao
 import com.tencent.devops.process.engine.dao.template.TemplateInstanceBaseDao
 import com.tencent.devops.process.engine.dao.template.TemplateInstanceItemDao
 import com.tencent.devops.process.engine.pojo.event.PipelineTemplateInstanceEvent
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
+import com.tencent.devops.process.engine.utils.TemplateInstanceUtil
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
 import com.tencent.devops.process.pojo.pipeline.version.PipelineTemplateInstanceReq
 import com.tencent.devops.process.pojo.template.TemplateInstanceStatus
@@ -43,7 +48,9 @@ import com.tencent.devops.process.pojo.template.v2.PipelineTemplateInstanceBase
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateInstanceItem
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateInstanceItemCondition
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateInstanceItemUpdate
+import com.tencent.devops.process.pojo.`var`.dto.PublicVarGroupReferDTO
 import com.tencent.devops.process.service.pipeline.version.PipelineVersionManager
+import com.tencent.devops.process.service.`var`.PublicVarGroupReferManageService
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -64,36 +71,40 @@ class PipelineTemplateInstanceListener @Autowired constructor(
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val pipelineVersionManager: PipelineVersionManager,
     private val pipelineTemplateRelatedService: PipelineTemplateRelatedService,
-    private val pipelineTemplateInstanceService: PipelineTemplateInstanceService,
     private val sampleEventDispatcher: SampleEventDispatcher,
+    private val publicVarGroupReferManageService: PublicVarGroupReferManageService,
+    private val pipelineResourceVersionDao: PipelineResourceVersionDao
 ) {
     fun handle(event: PipelineTemplateInstanceEvent) {
         logger.info("consume pipeline template instance event {}", event)
-        handleTemplateInstanceEvent(event)
+        ChannelContext.withChannel(event.channelCode.name) {
+            handleTemplateInstanceEvent(event)
+        }
     }
 
     private fun handleTemplateInstanceEvent(event: PipelineTemplateInstanceEvent) {
-        val baseId = event.baseId
         val projectId = event.projectId
-        val type = event.templateInstanceType
-        PipelineTemplateInstanceLock(redisOperation, event.templateId).use { lock ->
-            logger.info("start to handle template event {}|,{}", type, event)
-            if (!lock.tryLock()) {
-                logger.warn("handle template instance event running ${event.projectId}|${event.baseId}")
-                event.retry()
-                return
-            }
-            val instanceBase = templateInstanceBaseDao.getTemplateInstanceBase(
-                dslContext = dslContext,
-                projectId = event.projectId,
-                baseId = event.baseId
-            ) ?: run {
-                logger.info(
-                    "handle template instance event failed, baseId not found|${event.projectId}|${event.baseId}"
-                )
-                return
-            }
+        val templateId = event.templateId
+        val baseId = event.baseId
 
+        val acquireResult = tryAcquireExecution(
+            projectId = projectId,
+            templateId = templateId,
+            baseId = baseId
+        )
+
+        when (acquireResult) {
+            AcquireResult.LOCK_FAILED -> {
+                retryEvent(event)
+                return
+            }
+            AcquireResult.DISCARD -> return
+            else -> Unit
+        }
+
+        val instanceBase = acquireResult.instanceBase ?: return
+
+        try {
             val itemCount = templateInstanceItemDao.getTemplateInstanceItemCountByBaseId(
                 dslContext = dslContext,
                 projectId = projectId,
@@ -115,24 +126,126 @@ class PipelineTemplateInstanceListener @Autowired constructor(
                 projectId = projectId,
                 itemCount = itemCount
             )
+        } finally {
+            dispatchNextIfExists(
+                projectId = projectId,
+                templateId = templateId,
+                userId = event.userId
+            )
         }
     }
 
-    private fun PipelineTemplateInstanceEvent.retry() {
-        logger.info("template instance|$projectId|$templateId|RETRY_TO_TEMPLATE_INSTANCE_LOCK")
-        this.delayMills = DEFAULT_DELAY
-        sampleEventDispatcher.dispatch(this)
+    private fun retryEvent(event: PipelineTemplateInstanceEvent) {
+        if (event.retryTime >= MAX_LOCK_RETRY) {
+            logger.warn(
+                "tryLock retry exhausted, discard" +
+                    "|${event.projectId}|${event.templateId}|${event.baseId}"
+            )
+            return
+        }
+        logger.info(
+            "tryLock failed, retry" +
+                "|${event.projectId}|${event.templateId}|${event.baseId}" +
+                "|retryTime=${event.retryTime}"
+        )
+        event.retryTime = event.retryTime + 1
+        event.delayMills = LOCK_RETRY_DELAY
+        sampleEventDispatcher.dispatch(event)
     }
 
-    private fun PipelineTemplateInstanceBase.handleTemplateInstanceBase(projectId: String, itemCount: Long) {
-        // 开始执行任务
-        templateInstanceBaseDao.updateTemplateInstanceBase(
+    /**
+     * 短时持锁，判断是否可以执行当前任务。
+     * 返回值含义：
+     * - LOCK_FAILED: 获取锁失败，需短延迟重试
+     * - DISCARD: 已有其他任务在执行，或 base 不存在，直接丢弃
+     * - 携带 instanceBase: 抢占成功，可以执行
+     */
+    private fun tryAcquireExecution(
+        projectId: String,
+        templateId: String,
+        baseId: String
+    ): AcquireResult {
+        PipelineTemplateInstanceLock(
+            redisOperation = redisOperation,
+            projectId = projectId,
+            templateId = templateId
+        ).use { lock ->
+            if (!lock.tryLock()) {
+                logger.warn(
+                    "tryAcquireExecution failed to get lock" +
+                        "|$projectId|$templateId|$baseId"
+                )
+                return AcquireResult.LOCK_FAILED
+            }
+
+            if (templateInstanceBaseDao.hasInstancingTask(
+                    dslContext = dslContext,
+                    projectId = projectId,
+                    templateId = templateId,
+                    excludeBaseId = baseId
+                )
+            ) {
+                logger.info(
+                    "another task is instancing, discard" +
+                        "|$projectId|$templateId|$baseId"
+                )
+                return AcquireResult.DISCARD
+            }
+
+            val instanceBase = templateInstanceBaseDao.getTemplateInstanceBase(
+                dslContext = dslContext,
+                projectId = projectId,
+                baseId = baseId
+            ) ?: run {
+                logger.info(
+                    "baseId not found, discard|$projectId|$baseId"
+                )
+                return AcquireResult.DISCARD
+            }
+
+            if (instanceBase.status == TemplateInstanceStatus.INIT) {
+                templateInstanceBaseDao.updateTemplateInstanceBase(
+                    dslContext = dslContext,
+                    projectId = projectId,
+                    baseId = baseId,
+                    status = TemplateInstanceStatus.INSTANCING.name,
+                    userId = "system"
+                )
+            }
+
+            return AcquireResult(instanceBase)
+        }
+    }
+
+    private fun dispatchNextIfExists(
+        projectId: String,
+        templateId: String,
+        userId: String
+    ) {
+        val nextBase = templateInstanceBaseDao.getNextInitBase(
             dslContext = dslContext,
             projectId = projectId,
-            baseId = baseId,
-            status = TemplateInstanceStatus.INSTANCING.name,
-            userId = "system"
+            templateId = templateId
+        ) ?: return
+
+        logger.info(
+            "dispatch next template instance|$projectId|$templateId|${nextBase.baseId}"
         )
+        sampleEventDispatcher.dispatch(
+            PipelineTemplateInstanceEvent(
+                userId = userId,
+                projectId = projectId,
+                templateId = templateId,
+                baseId = nextBase.baseId,
+                templateInstanceType = nextBase.type
+            )
+        )
+    }
+
+    private fun PipelineTemplateInstanceBase.handleTemplateInstanceBase(
+        projectId: String,
+        itemCount: Long
+    ) {
         val successPipelines = mutableListOf<String>()
         val failurePipelines = mutableListOf<String>()
         val totalPages = PageUtil.calTotalPage(PageUtil.MAX_PAGE_SIZE, itemCount)
@@ -199,6 +312,7 @@ class PipelineTemplateInstanceListener @Autowired constructor(
         )
         val instanceCreateReq = PipelineTemplateInstanceReq(
             projectId = projectId,
+            baseId = baseId,
             templateId = instanceBase.templateId,
             templateVersion = instanceBase.templateVersion,
             templateRefType = instanceBase.templateRefType,
@@ -307,6 +421,31 @@ class PipelineTemplateInstanceListener @Autowired constructor(
                 pullRequestUrl = deployPipelineResult.targetUrl,
                 pullRequestId = deployPipelineResult.pullRequestId
             )
+            val versionResource = pipelineResourceVersionDao.getVersionResource(
+                dslContext = transactionContext,
+                pipelineId = deployPipelineResult.pipelineId,
+                projectId = projectId,
+                version = deployPipelineResult.version
+            )
+            if (versionResource != null) {
+                // 实例化落库版本为 RELEASED/BRANCH 时才是生效版本，需同步 LATEST_FLAG；草稿则不同步
+                val activeVersion = versionResource.status?.fix()?.let {
+                    it == VersionStatus.RELEASED || it == VersionStatus.BRANCH
+                } ?: false
+                publicVarGroupReferManageService.handleVarGroupReferBus(
+                    PublicVarGroupReferDTO(
+                        userId = "system",
+                        projectId = projectId,
+                        referType = PublicVarGroupReferenceTypeEnum.PIPELINE,
+                        referId = deployPipelineResult.pipelineId,
+                        referName = deployPipelineResult.pipelineName,
+                        referVersion = deployPipelineResult.version,
+                        referVersionName = deployPipelineResult.versionName,
+                        model = versionResource.model,
+                        activeVersion = activeVersion
+                    )
+                )
+            }
         }
     }
 
@@ -316,7 +455,7 @@ class PipelineTemplateInstanceListener @Autowired constructor(
         instanceItem: PipelineTemplateInstanceItem,
         exception: Throwable
     ) {
-        val failedReason = pipelineTemplateInstanceService.translateInstanceException(
+        val failedReason = TemplateInstanceUtil.translateInstanceException(
             userId = userId,
             projectId = projectId,
             pipelineId = instanceItem.pipelineId,
@@ -325,7 +464,7 @@ class PipelineTemplateInstanceListener @Autowired constructor(
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
             templateInstanceItemDao.updateErrorMessage(
-                dslContext = dslContext,
+                dslContext = transactionContext,
                 projectId = projectId,
                 baseId = instanceItem.baseId,
                 pipelineId = instanceItem.pipelineId,
@@ -341,8 +480,19 @@ class PipelineTemplateInstanceListener @Autowired constructor(
         }
     }
 
+    private data class AcquireResult(
+        val instanceBase: PipelineTemplateInstanceBase? = null
+    ) {
+        companion object {
+            val LOCK_FAILED = AcquireResult()
+            val DISCARD = AcquireResult()
+        }
+    }
+
     companion object {
-        private val logger = LoggerFactory.getLogger(PipelineTemplateInstanceListener::class.java)
-        private const val DEFAULT_DELAY = 1000
+        private val logger =
+            LoggerFactory.getLogger(PipelineTemplateInstanceListener::class.java)
+        private const val LOCK_RETRY_DELAY = 1000
+        private const val MAX_LOCK_RETRY = 3
     }
 }
