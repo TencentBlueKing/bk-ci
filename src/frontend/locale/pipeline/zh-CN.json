@@ -1022,7 +1022,7 @@
       "TRY_FINALLY": "补偿任务",
       "QUEUE_CACHE": "队列待处理",
       "UNKNOWN": "未知状态",
-      "STAGE_SUCCESS": "Stage成功"
+      "STAGE_SUCCESS": "阶段成功"
     },
     "toArtifactory": "到版本仓库查看",
     "saveToCustom": "保存到自定义仓库",
