@@ -85,7 +85,7 @@ class UserAuthAuthorizationResourceImpl(
             permissionAuthorizationService.resetResourceAuthorizationByResourceType(
                 operator = userId,
                 projectCode = projectId,
-                condition = condition
+                condition = condition.copy(checkPermission = true)
             )
         )
     }

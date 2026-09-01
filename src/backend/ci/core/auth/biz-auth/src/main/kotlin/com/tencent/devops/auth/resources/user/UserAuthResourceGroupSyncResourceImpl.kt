@@ -32,7 +32,10 @@ import com.tencent.devops.auth.pojo.enum.AuthMigrateStatus
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupPermissionService
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupSyncService
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.auth.api.BkManagerCheck
+import com.tencent.devops.common.auth.api.BkProjectMemberCheck
 import com.tencent.devops.common.web.RestResource
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -40,34 +43,44 @@ class UserAuthResourceGroupSyncResourceImpl @Autowired constructor(
     private val permissionResourceGroupSyncService: PermissionResourceGroupSyncService,
     private val permissionResourceGroupPermissionService: PermissionResourceGroupPermissionService
 ) : UserAuthResourceGroupSyncResource {
+    @BkProjectMemberCheck
     override fun syncGroupAndMember(userId: String, projectId: String): Result<Boolean> {
         permissionResourceGroupSyncService.syncGroupAndMember(projectId)
         return Result(true)
     }
 
+    @BkProjectMemberCheck
     override fun syncGroupMember(userId: String, projectId: String, groupId: Int): Result<Boolean> {
         permissionResourceGroupSyncService.syncIamGroupMember(projectCode = projectId, iamGroupId = groupId)
         return Result(true)
     }
 
+    @BkProjectMemberCheck
     override fun getStatusOfSync(userId: String, projectId: String): Result<AuthMigrateStatus> {
         return Result(
             permissionResourceGroupSyncService.getStatusOfSync(projectCode = projectId)
         )
     }
 
+    @BkProjectMemberCheck
     override fun syncGroupPermissions(userId: String, projectId: String, groupId: Int): Result<Boolean> {
         return Result(
             permissionResourceGroupPermissionService.syncGroupPermissions(projectCode = projectId, iamGroupId = groupId)
         )
     }
 
+    @BkManagerCheck
     override fun deleteGroupPermissions(userId: String, projectId: String, groupId: Int): Result<Boolean> {
+        logger.info("deleteGroupPermissions|$userId|$projectId|$groupId")
         return Result(
             permissionResourceGroupPermissionService.deleteByGroupIds(
                 projectCode = projectId,
                 iamGroupIds = listOf(groupId)
             )
         )
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(UserAuthResourceGroupSyncResourceImpl::class.java)
     }
 }
