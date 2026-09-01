@@ -50,7 +50,6 @@ import com.tencent.devops.remotedev.pojo.ImateTokenSession
 import com.tencent.devops.remotedev.pojo.ImateWorkspaceInspect
 import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfigType
 import com.tencent.devops.remotedev.pojo.WorkspaceAiInfo
-import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
 import com.tencent.devops.remotedev.pojo.WorkspaceRecordWithWindows
 import com.tencent.devops.remotedev.pojo.WorkspaceRegistration
 import com.tencent.devops.remotedev.pojo.WorkspaceSearch
@@ -284,7 +283,7 @@ class CoffeeAIService @Autowired constructor(
 
     /**
      * 查 remotedev 工作区归属，不访问 CDS。
-     * 个人桌面所属者是 createUserId；项目桌面所属者是共享表 OWNER。
+     * 所属者取分享表 OWNER，没有行时回退 createUserId。
      */
     fun inspectBuildWorkspace(
         projectId: String,
@@ -482,18 +481,19 @@ class CoffeeAIService @Autowired constructor(
 
     fun getAiWorkspaceList(userId: String): List<WorkspaceAiInfo> {
         logger.info("查询用户开启AI功能的云桌面列表：userId={}", userId)
-        val owned = workspaceJoinDao.fetchWindowsWorkspacesSimple(
+        // 与模块负责人口径一致：T_WORKSPACE ⋈ T_WORKSPACE_SHARED，ASSIGN_TYPE=OWNER，不是 CREATOR、不是分享人。
+        val records = workspaceJoinDao.fetchWindowsWorkspacesSimple(
             dslContext = dslContext,
             owner = userId,
             status = WorkspaceStatus.RUNNING,
             coffeeAi = true
         )
-        val personalFallback = personalAiWorkspacesWithoutSharedOwner(userId, owned.map { it.workspaceName }.toSet())
-        val records = (owned + personalFallback).distinctBy { it.workspaceName }
         if (records.isEmpty()) return emptyList()
 
-        val workspaceNames = records.map { it.workspaceName }
-        val envIdMap = dispatchWorkspaceDao.getEnvIdsByWorkspaceNames(workspaceNames, dslContext)
+        val envIdMap = dispatchWorkspaceDao.getEnvIdsByWorkspaceNames(
+            records.map { it.workspaceName },
+            dslContext
+        )
 
         // 批量查询 zoneConfigType
         val zoneTypeMap = records.mapNotNull { it.zoneId }
@@ -512,39 +512,13 @@ class CoffeeAIService @Autowired constructor(
                 projectId = record.projectId.takeIf { it != "NO_CHECK" } ?: "",
                 zoneConfigType = record.zoneId?.let { zoneTypeMap[it] } ?: "",
                 os = record.os,
-                owner = if (record.ownerType == WorkspaceOwnerType.PERSONAL) record.createUserId else userId,
+                owner = userId,
                 createUserId = record.createUserId,
                 ownerType = record.ownerType.name,
                 status = record.status.name,
                 imateEnabled = record.coffeeAi == true
             )
         }
-    }
-
-    private fun personalAiWorkspacesWithoutSharedOwner(
-        userId: String,
-        alreadyListed: Set<String>
-    ): List<WorkspaceRecordWithWindows> {
-        val personalNames = workspaceDao.limitFetchUserWorkspace(
-            dslContext = dslContext,
-            userId = userId,
-            ownerType = WorkspaceOwnerType.PERSONAL
-        )?.asSequence()
-            ?.filter {
-                it.status == WorkspaceStatus.RUNNING &&
-                    it.coffeeAi == true &&
-                    it.workspaceName !in alreadyListed
-            }
-            ?.map { it.workspaceName }
-            ?.toSet()
-            .orEmpty()
-        if (personalNames.isEmpty()) {
-            return emptyList()
-        }
-        return workspaceJoinDao.fetchWindowsWorkspaces(
-            dslContext = dslContext,
-            workspaceNames = personalNames
-        ).filter { it.status == WorkspaceStatus.RUNNING && it.coffeeAi == true }
     }
 
     private fun assertWorkspaceUsable(
