@@ -69,8 +69,7 @@ class PipelineTemplateVersionDeleteHandler @Autowired constructor(
     private val pipelineTemplateResourceService: PipelineTemplateResourceService,
     private val pipelineTemplateInfoService: PipelineTemplateInfoService,
     private val pipelineYamlFacadeService: PipelineYamlFacadeService,
-private val publicVarGroupReferManageService: PublicVarGroupReferManageService
-
+    private val publicVarGroupReferManageService: PublicVarGroupReferManageService
 ) {
     fun handle(context: PipelineTemplateVersionDeleteContext) {
         with(context) {
