@@ -68,7 +68,14 @@ object ModelVarRefValidator {
         if (ChannelCode.getRequestChannelCode() != ChannelCode.CREATIVE_STREAM) {
             return emptyList()
         }
-        val refs = ModelVarRefUtils.parseModelVarReferences(model, projectId, filterByTriggerParams = false)
+        val (resourceType, resourceId) = ModelVarRefUtils.determineResourceTypeAndId(model)
+        val refs = ModelVarRefUtils.parseModelVarReferences(
+            model = model,
+            projectId = projectId,
+            resourceId = resourceId,
+            resourceType = resourceType,
+            filterByTriggerParams = false
+        )
         return refs.filter { ref -> !isValidRef(ref, allowedPrefixes) }
     }
 

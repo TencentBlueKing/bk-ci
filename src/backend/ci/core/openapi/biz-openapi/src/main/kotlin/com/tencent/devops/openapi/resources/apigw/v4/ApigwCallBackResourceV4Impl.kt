@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.event.CallBackEvent
 import com.tencent.devops.common.pipeline.event.CallBackNetWorkRegionType
+import com.tencent.devops.common.pipeline.event.PipelineCallbackEvent
 import com.tencent.devops.common.pipeline.event.ProjectPipelineCallBack
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.v4.ApigwCallBackResourceV4
@@ -169,6 +170,57 @@ class ApigwCallBackResourceV4Impl @Autowired constructor(
             userId = userId,
             projectId = projectId,
             id = id
+        )
+    }
+
+    override fun createPipelineCallBack(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        callbackInfoList: List<PipelineCallbackEvent>
+    ): Result<Boolean> {
+        logger.info("OPENAPI_CALLBACK_V4|$userId|create pipeline callback|$projectId|$pipelineId|$callbackInfoList")
+        return client.get(ServiceCallBackResource::class).createPipelineCallBack(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            callbackInfoList = callbackInfoList
+        )
+    }
+
+    override fun listPipelineCallBack(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        event: CallBackEvent?
+    ): Result<List<PipelineCallbackEvent>> {
+        logger.info("OPENAPI_CALLBACK_V4|$userId|list pipeline callback|$projectId|$pipelineId|$event")
+        return client.get(ServiceCallBackResource::class).listPipelineCallBack(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            event = event
+        )
+    }
+
+    override fun deletePipelineCallBack(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        callbackName: String
+    ): Result<Boolean> {
+        logger.info("OPENAPI_CALLBACK_V4|$userId|delete pipeline callback|$projectId|$pipelineId|$callbackName")
+        return client.get(ServiceCallBackResource::class).deletePipelineCallBack(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            callbackName = callbackName
         )
     }
 

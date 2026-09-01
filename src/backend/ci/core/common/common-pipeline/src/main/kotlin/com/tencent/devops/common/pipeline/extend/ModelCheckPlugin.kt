@@ -32,6 +32,7 @@ import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.dialect.IPipelineDialect
 import com.tencent.devops.common.pipeline.option.JobControlOption
+import com.tencent.devops.common.pipeline.pojo.PipelineRunEnvOsCheckParam
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.atom.BeforeDeleteParam
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
@@ -47,6 +48,7 @@ interface ModelCheckPlugin {
      * @param userId 操作人
      * @param oauthUser 当前流水线权限代持人
      * @param pipelineDialect 流水线方言,只有新增/编辑流水线或模版时才需要传入
+     * @param runEnvOsCheckParam 插件与运行环境操作系统适配度的校验入参,为空则不做该项校验
      * @throws RuntimeException 子类  将检查失败或异常的以[ErrorCodeException]类抛出
      */
     @Throws(ErrorCodeException::class)
@@ -57,7 +59,8 @@ interface ModelCheckPlugin {
         isTemplate: Boolean = false,
         oauthUser: String? = null,
         pipelineDialect: IPipelineDialect? = null,
-        pipelineId: String = ""
+        pipelineId: String = "",
+        runEnvOsCheckParam: PipelineRunEnvOsCheckParam? = null
     ): Int
 
     /**

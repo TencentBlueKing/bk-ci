@@ -253,7 +253,7 @@ class CallBackControl @Autowired constructor(
             )
         )
         // 流水线级别回调，旧数据存在model中，新数据存在数据库中
-        val pipelineCallback = projectPipelineCallBackService.getPipelineCallback(
+        val pipelineCallback = projectPipelineCallBackService.listPipelineCallback(
             projectId = projectId,
             pipelineId = pipelineId,
             event = callBackEvent.name
