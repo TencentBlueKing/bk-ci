@@ -109,6 +109,14 @@ class AiMcpServerConfigDao {
         }
     }
 
+    fun listAll(dslContext: DSLContext): Result<TAiMcpServerConfigRecord> {
+        with(TAiMcpServerConfig.T_AI_MCP_SERVER_CONFIG) {
+            return dslContext.selectFrom(this)
+                .orderBy(SCOPE.asc(), UPDATED_TIME.desc())
+                .fetch()
+        }
+    }
+
     fun listByUser(
         dslContext: DSLContext,
         userId: String
