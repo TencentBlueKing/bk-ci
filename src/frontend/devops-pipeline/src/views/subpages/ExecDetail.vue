@@ -37,6 +37,12 @@
                             :theme="statusTagTheme"
                         >
                             <span class="exec-status-label">
+                                <logo
+                                    v-if="execDetail.status === 'STAGE_SUCCESS'"
+                                    name="flag"
+                                    size="12"
+                                    fill="#34d97b"
+                                />
                                 {{ statusLabel }}
                                 <span
                                     v-if="!execDetail.buildEndInfo"
