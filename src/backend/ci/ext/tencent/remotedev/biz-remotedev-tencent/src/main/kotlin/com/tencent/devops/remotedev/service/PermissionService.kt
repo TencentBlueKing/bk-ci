@@ -52,6 +52,7 @@ import com.tencent.devops.project.api.service.ServiceUserResource
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.dao.WorkspaceSharedDao
+import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.client.WorkspaceStartCloudClient
 import com.tencent.devops.remotedev.pojo.CdsToken
 import com.tencent.devops.remotedev.pojo.UserOnePassword
 import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
@@ -74,7 +75,8 @@ class PermissionService @Autowired constructor(
     private val workspaceDao: WorkspaceDao,
     private val workspaceSharedDao: WorkspaceSharedDao,
     private val redisCache: ConfigCacheService,
-    private val checkTokenService: ClientTokenService
+    private val checkTokenService: ClientTokenService,
+    private val workspaceStartCloudClient: WorkspaceStartCloudClient
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(PermissionService::class.java)
@@ -148,6 +150,31 @@ class PermissionService @Autowired constructor(
             }
         )
 
+    private val imateTeamPermissionCache = CacheBuilder.newBuilder()
+        .maximumSize(10000)
+        .expireAfterWrite(1, TimeUnit.MINUTES)
+        .build(
+            object : CacheLoader<String, Boolean>() {
+                override fun load(name: String): Boolean {
+                    val (userId, workspaceName) = name.split("@@")
+                    val workspace = workspaceDao.fetchAnyWorkspace(
+                        dslContext = dslContext,
+                        workspaceName = workspaceName
+                    ) ?: return false
+                    if (workspace.coffeeAi != true) {
+                        return false
+                    }
+                    return kotlin.runCatching {
+                        workspaceStartCloudClient.checkTeamAccessible(userId, workspaceName)
+                    }.onFailure {
+                        logger.warn(
+                            "checkUserPermissionByImateTeam fail|$userId|$workspaceName|${it.message}"
+                        )
+                    }.getOrDefault(false)
+                }
+            }
+        )
+
     fun getWorkspaceOwner(workspaceName: String): List<String> = workspaceOwnerCache.get(workspaceName)
 
     fun checkOwnerPermission(userId: String, workspaceName: String, projectId: String, ownerType: WorkspaceOwnerType) {
@@ -171,7 +198,7 @@ class PermissionService @Autowired constructor(
         workspaceNameList: List<String>
     ) {
         for (workspaceName in workspaceNameList) {
-            if (!workspaceViewerCache.get(workspaceName).contains(userId)) {
+            if (!checkUserPermission(userId, workspaceName)) {
                 throw ErrorCodeException(
                     errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
                     params = arrayOf("We're sorry you don't have view permission to access workspace $workspaceName")
@@ -213,7 +240,7 @@ class PermissionService @Autowired constructor(
     }
 
     fun checkViewerPermission(userId: String, workspaceName: String, projectId: String) {
-        if (!workspaceViewerCache.get(workspaceName).contains(userId)) {
+        if (!checkUserPermission(userId, workspaceName)) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
                 params = arrayOf("We're sorry but you don't have viewer permission to access workspace $workspaceName")
@@ -372,7 +399,14 @@ class PermissionService @Autowired constructor(
     }
 
     fun checkUserPermission(userId: String, workspaceName: String): Boolean {
-        return workspaceViewerCache.get(workspaceName).contains(userId)
+        return workspaceViewerCache.get(workspaceName).contains(userId) || checkUserPermissionByImateTeam(
+            userId,
+            workspaceName
+        )
+    }
+
+    fun checkUserPermissionByImateTeam(userId: String, workspaceName: String): Boolean {
+        return imateTeamPermissionCache.get("$userId@@$workspaceName")
     }
 
     fun getCDIOauth(workspaceName: String, appId: String): Oauth2AccessTokenVo {
