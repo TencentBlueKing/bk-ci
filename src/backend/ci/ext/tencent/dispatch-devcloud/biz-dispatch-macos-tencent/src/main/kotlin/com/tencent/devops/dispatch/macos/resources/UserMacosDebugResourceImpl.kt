@@ -1,5 +1,6 @@
 package com.tencent.devops.dispatch.macos.resources
 
+import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.dispatch.macos.api.UserMacosDebugResource
@@ -46,6 +47,8 @@ class UserMacosDebugResourceImpl @Autowired constructor(
             } else {
                 Result(data = debugLoginResponse)
             }
+        } catch (e: PermissionForbiddenException) {
+            throw e
         } catch (e: Exception) {
             logger.error(
                 "Start macOS debug login failed - userId: $userId, pipelineId: $pipelineId, vmSeqId: $vmSeqId, " +

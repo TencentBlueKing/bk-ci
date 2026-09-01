@@ -3,11 +3,18 @@ package com.tencent.devops.dispatch.macos.service
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.common.api.constant.CommonMessageCode.USER_NOT_PERMISSIONS_OPERATE_PIPELINE
+import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.AuthPermissionApi
+import com.tencent.devops.common.auth.api.AuthResourceType
+import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
 import com.tencent.devops.common.dispatch.sdk.pojo.docker.DockerConstants
 import com.tencent.devops.common.environment.agent.utils.SmartProxyUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.pipeline.type.macos.MacOSDispatchType
 import com.tencent.devops.dispatch.macos.dao.BuildHistoryDao
 import com.tencent.devops.dispatch.macos.dao.DebugHistoryDao
@@ -42,7 +49,9 @@ class DevCloudMacosService @Autowired constructor(
     private val macVmTypeService: MacVmTypeService,
     private val devcloudVirtualMachineDao: DevcloudVirtualMachineDao,
     private val buildHistoryDao: BuildHistoryDao,
-    private val debugHistoryDao: DebugHistoryDao
+    private val debugHistoryDao: DebugHistoryDao,
+    private val bkAuthPermissionApi: AuthPermissionApi,
+    private val pipelineAuthServiceCode: PipelineAuthServiceCode
 ) {
 
     companion object {
@@ -574,6 +583,8 @@ class DevCloudMacosService @Autowired constructor(
                 "vmSeqId: $vmSeqId, buildId: $actualBuildId"
         )
 
+        checkPermission(projectId = projectId, userId = userId, pipelineId = pipelineId)
+
         val debugLoginRequest = DevCloudMacosVmDebugLoginRequest(taskId = taskId)
         // 调用debug接口，actionCode非200时重试最多3次，每次间隔5秒
         val maxRetryCount = 6
@@ -826,6 +837,11 @@ class DevCloudMacosService @Autowired constructor(
                     "VM is done, re-creating VM for debug - pipelineId: $pipelineId, " +
                         "vmSeqId: $vmSeqId, buildId: ${buildHistoryRecord.buildId}"
                 )
+                checkPermission(
+                    projectId = buildHistoryRecord.projectId,
+                    userId = userId,
+                    pipelineId = pipelineId
+                )
                 val newTaskId = creatVmForDebug(
                     userId = userId,
                     projectId = buildHistoryRecord.projectId,
@@ -921,5 +937,33 @@ class DevCloudMacosService @Autowired constructor(
 
         val vmCreateInfo = waitForVmReady(taskId, userId, logTag)
         return if (vmCreateInfo != null) taskId else null
+    }
+
+    private fun checkPermission(
+        projectId: String,
+        userId: String,
+        pipelineId: String
+    ) {
+        if (!bkAuthPermissionApi.validateUserResourcePermission(
+                userId, pipelineAuthServiceCode, AuthResourceType.PIPELINE_DEFAULT,
+                projectId, pipelineId, AuthPermission.EDIT
+            )
+        ) {
+            logger.info(
+                "user($userId)You do not have permission to edit " +
+                    "pipelines($pipelineId) under the project($projectId)"
+            )
+            throw PermissionForbiddenException(
+                I18nUtil.getCodeLanMessage(
+                    messageCode = USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
+                    params = arrayOf(
+                        userId,
+                        projectId,
+                        AuthPermission.EDIT.getI18n(I18nUtil.getLanguage(userId)),
+                        pipelineId
+                    )
+                )
+            )
+        }
     }
 }
