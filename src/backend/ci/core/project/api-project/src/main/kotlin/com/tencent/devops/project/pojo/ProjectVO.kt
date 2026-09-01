@@ -167,5 +167,7 @@ data class ProjectVO(
     @get:Schema(title = "KPI产品编码")
     val kpiCode: String? = null,
     @get:Schema(title = "KPI产品名称")
-    val kpiName: String? = null
+    val kpiName: String? = null,
+    @get:Schema(title = "是否收藏")
+    val favor: Boolean? = false
 )

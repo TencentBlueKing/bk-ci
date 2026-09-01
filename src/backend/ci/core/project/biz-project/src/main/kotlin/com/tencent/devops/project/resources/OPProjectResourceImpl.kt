@@ -194,6 +194,10 @@ class OPProjectResourceImpl @Autowired constructor(
         )
     }
 
+    override fun migratePersonalProjectFavor(userId: String): Result<Int> {
+        return Result(projectService.migratePersonalProjectFavor())
+    }
+
     override fun setHidden(
         hidden: Boolean,
         englishNames: List<String>
