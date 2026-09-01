@@ -363,7 +363,7 @@ class PipelineStageService @Autowired constructor(
                     PipelineBuildReviewBroadCastEvent(
                         source = "stage($stageId) reviewed with PROCESSED", projectId = projectId,
                         pipelineId = pipelineId, buildId = buildId, userId = userId,
-                        stageId = stageId, taskId = null, reviewType = BuildReviewType.QUALITY_CHECK_IN,
+                        stageId = stageId, taskId = null, reviewType = BuildReviewType.STAGE_REVIEW,
                         status = BuildStatus.REVIEW_PROCESSED.name
                     ),
                     // stage 审核通过
@@ -514,7 +514,7 @@ class PipelineStageService @Autowired constructor(
                 PipelineBuildReviewBroadCastEvent(
                     source = "stage($stageId) reviewed with ABORT", projectId = projectId,
                     pipelineId = pipelineId, buildId = buildId, userId = userId,
-                    stageId = stageId, taskId = null, reviewType = BuildReviewType.QUALITY_CHECK_IN,
+                    stageId = stageId, taskId = null, reviewType = BuildReviewType.STAGE_REVIEW,
                     status = BuildStatus.REVIEW_ABORT.name
                 ),
                 // stage 审核驳回
