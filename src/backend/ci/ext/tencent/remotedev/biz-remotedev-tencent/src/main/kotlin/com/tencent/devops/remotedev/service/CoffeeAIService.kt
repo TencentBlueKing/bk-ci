@@ -283,7 +283,7 @@ class CoffeeAIService @Autowired constructor(
 
     /**
      * 查 remotedev 工作区归属，不访问 CDS。
-     * 所属者只认工作区创建人，不查分享表。
+     * 所属者取分享表 OWNER，没有行时回退 createUserId。
      */
     fun inspectBuildWorkspace(
         projectId: String,
@@ -445,7 +445,8 @@ class CoffeeAIService @Autowired constructor(
                 usable = false,
                 reason = "WORKSPACE_NOT_FOUND"
             )
-        val owner = record.createUserId
+        val owner = workspaceService.getWorkspaceMemberInfo(record.projectId, workspaceName)?.owner
+            ?: record.createUserId
         val belongsToUser = owner == username
         val imateEnabled = record.coffeeAi == true
         val running = record.status == WorkspaceStatus.RUNNING
