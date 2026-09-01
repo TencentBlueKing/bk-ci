@@ -804,10 +804,12 @@ export function getTemplateCacheViewId () {
 
 export function getMaterialIconByType (type) {
     const materialIconMap = {
+        ARTIFACT: 'codeArtifactWebhookTrigger',
         CODE_SVN: 'CODE_SVN',
         CODE_GIT: 'CODE_GIT',
         CODE_GITLAB: 'CODE_GITLAB',
         GITHUB: 'codeGithubWebHookTrigger',
+        CODE_GITHUB: 'codeGithubWebHookTrigger',
         CODE_TGIT: 'CODE_GIT',
         CODE_P4: 'CODE_P4',
         CODE_REMOTE: 'remoteTrigger',
