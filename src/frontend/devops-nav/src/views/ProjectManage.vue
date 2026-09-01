@@ -56,9 +56,9 @@
                                 :class="[
                                     'devops-icon',
                                     'collect-icon',
-                                    row.collected ? 'icon-star-shape' : 'icon-star'
+                                    row.favor ? 'icon-star-shape' : 'icon-star'
                                 ]"
-                                :title="row.collected ? $t('collected') : $t('toCollect')"
+                                :title="row.favor ? $t('collected') : $t('toCollect')"
                                 @click.stop.prevent="handleToggleCollect(row)"
                             />
                         </template>
@@ -105,6 +105,12 @@
                                     >
                                         {{ row.projectName }}
                                     </bk-button>
+                                    <span
+                                        v-if="row.projectScope === 1"
+                                        class="personal-tag"
+                                    >
+                                        {{ $t('个人') }}
+                                    </span>
                                 </div>
                             </div>
                         </template>
@@ -425,7 +431,12 @@
         computed: {
             curProjectList () {
                 const { limit, current } = this.pagination
-                const list = this.projectList.filter(i => i.projectName.includes(this.inputValue) && i.enabled === this.isEnabled) || []
+                const list = (this.projectList.filter(i => i.projectName.includes(this.inputValue) && i.enabled === this.isEnabled) || [])
+                    .sort((a, b) => {
+                        const favorDiff = Number(!!b.favor) - Number(!!a.favor)
+                        if (favorDiff !== 0) return favorDiff
+                        return (a.projectName || '').localeCompare(b.projectName || '', 'zh-CN')
+                    })
                 this.pagination.count = list.length
                 return list.slice(limit * (current - 1), limit * current)
             },
@@ -481,26 +492,21 @@
                 'toggleProjectCollect'
             ]),
             async handleToggleCollect (row) {
-                const isCollected = !row.collected
+                const favor = !row.favor
                 try {
-                    this.$set(row, 'collected', isCollected)
+                    this.$set(row, 'favor', favor)
                     await this.toggleProjectCollect({
                         projectCode: row.projectCode,
-                        isCollected
+                        favor
                     })
-                    // 收藏成功后把该项目置顶
-                    if (isCollected) {
-                        const index = this.projectList.findIndex(
-                            item => item.projectCode === row.projectCode
-                        )
-                        if (index > 0) {
-                            const [item] = this.projectList.splice(index, 1)
-                            this.projectList.unshift(item)
-                        }
-                    }
+                    this.projectList = [...this.projectList].sort((a, b) => {
+                        const favorDiff = Number(!!b.favor) - Number(!!a.favor)
+                        if (favorDiff !== 0) return favorDiff
+                        return (a.projectName || '').localeCompare(b.projectName || '', 'zh-CN')
+                    })
                 } catch (e) {
                     console.warn(e)
-                    this.$set(row, 'collected', !isCollected)
+                    this.$set(row, 'favor', !favor)
                 }
             },
             getkeyByValue (obj, value) {
@@ -1049,6 +1055,19 @@
         .project-name-cell {
             display: flex;
             align-items: center;
+            .info {
+                display: flex;
+                align-items: center;
+                min-width: 0;
+            }
+            .personal-tag {
+                flex-shrink: 0;
+                margin-left: 8px;
+                padding: 1px 8px;
+                font-size: 10px;
+                color: #3a84ff;
+                background: rgba(58, 132, 255, 0.1);
+            }
             .avatar {
                 display: inline-block;
                 position: relative;

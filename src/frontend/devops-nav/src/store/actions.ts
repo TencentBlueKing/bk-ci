@@ -49,11 +49,28 @@ const actions: ActionTree<RootState, any> = {
     },
     /**
      * 项目收藏 / 取消收藏
-     * TODO: 接口待后端提供后替换
      */
-    async toggleProjectCollect (_, { projectCode, isCollected }: any) {
-        // return Request.put(`${PROJECT_API_URL_PREFIX}/user/projects/${projectCode}/collector?collector=${isCollected}`)
-        return Promise.resolve({ projectCode, isCollected })
+    async toggleProjectCollect ({ state, dispatch }: ActionContext<RootState, any>, { projectCode, favor }: any) {
+        await Request.put(`${PROJECT_API_URL_PREFIX}/user/projects/${projectCode}/favor?favor=${favor}`)
+        if (!Array.isArray(state.projectList)) return
+        // 收藏接口成功后的本地状态同步
+        const projectList = state.projectList
+            .map((project: any) => {
+                if (project.projectCode === projectCode || project.englishName === projectCode) {
+                    return {
+                        ...project,
+                        favor
+                    }
+                }
+                return project
+            })
+            .sort((a: any, b: any) => {
+                const favorDiff = Number(!!b.favor) - Number(!!a.favor)
+                if (favorDiff !== 0) return favorDiff
+                return (a.projectName || '').localeCompare(b.projectName || '', 'zh-CN')
+            })
+        dispatch('setProjectList', projectList)
+        window.setLsCacheItem('projectList', projectList.filter((project: Project) => project.enabled))
     },
     async fetchLinks ({ commit }, { type }) {
         try {

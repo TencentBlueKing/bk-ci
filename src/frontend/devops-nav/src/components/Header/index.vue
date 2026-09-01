@@ -83,9 +83,9 @@
                                         :class="[
                                             'devops-icon',
                                             'collect-icon',
-                                            item.collected ? 'icon-star-shape' : 'icon-star'
+                                            item.favor ? 'icon-star-shape' : 'icon-star'
                                         ]"
-                                        :title="item.collected ? $t('collected') : $t('toCollect')"
+                                        :title="item.favor ? $t('collected') : $t('toCollect')"
                                         @click.stop.prevent="handleToggleCollect(item)"
                                     />
                                 </div>
@@ -318,7 +318,11 @@
 
         get selectProjectList (): Project[] {
             return [...this.enableProjectList]
-                .sort((a, b) => Number(!!b.collected) - Number(!!a.collected))
+                .sort((a, b) => {
+                    const favorDiff = Number(!!b.favor) - Number(!!a.favor)
+                    if (favorDiff !== 0) return favorDiff
+                    return (a.projectName || '').localeCompare(b.projectName || '', 'zh-CN')
+                })
                 .map(project => ({
                     ...project,
                     id: project.projectCode,
@@ -392,20 +396,20 @@
         }
 
         async handleToggleCollect (item): Promise<void> {
-            const isCollected = !item.collected
+            const favor = !item.favor
             const project = this.enableProjectList.find(
                 (projectItem: Project) => projectItem.projectCode === item.projectCode
             )
             if (!project) return
             try {
-                this.$set(project, 'collected', isCollected)
+                this.$set(project, 'favor', favor)
                 await this.toggleProjectCollect({
                     projectCode: item.projectCode,
-                    isCollected
+                    favor
                 })
             } catch (e) {
                 console.warn(e)
-                this.$set(project, 'collected', !isCollected)
+                this.$set(project, 'favor', !favor)
             }
         }
 
