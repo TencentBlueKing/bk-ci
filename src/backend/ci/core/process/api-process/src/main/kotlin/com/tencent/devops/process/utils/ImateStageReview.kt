@@ -2,6 +2,8 @@ package com.tencent.devops.process.utils
 
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.StageReviewGroup
+import java.net.URLDecoder
+import java.nio.charset.StandardCharsets
 
 /**
  * 创作流 Stage 审核与 imate 会话锁定的约定。
@@ -9,11 +11,16 @@ import com.tencent.devops.common.pipeline.pojo.StageReviewGroup
  * CDS `sessionKey` 是完整 [agent2UserKey]：`userId|groupChatId|conversationId|`。
  * [conversationId] 只是其中第三段，二者不相等。创作流构建变量 `ci.imate_session_id`
  * 按既有 skill 约定保存 agent2UserKey（或带 OpenClaw 前缀的完整 Session，需取最后一个 `:` 之后）。
+ *
+ * [taskId] 用 [TASK_ID_SEPARATOR]（`~`）分段，不能用 `|`：Tomcat / Nginx 默认拒绝
+ * query 中未编码的 `|`；APIGW 转发时还会把 `%7C` 还原成 `|`，后端直接 400 且无响应体。
  */
 object ImateStageReview {
     const val SAAS_ID = "bk-ci-creative-stream"
     const val GROUP_NAME = "IMATE"
     const val TASK_ID_PREFIX = "cs-stage"
+    const val TASK_ID_SEPARATOR = "~"
+    private const val LEGACY_TASK_ID_SEPARATOR = "|"
     private const val TASK_ID_PARTS = 5
 
     /**
@@ -51,11 +58,13 @@ object ImateStageReview {
     }
 
     fun taskId(projectId: String, buildId: String, stageId: String, executeCount: Int): String {
-        return listOf(TASK_ID_PREFIX, projectId, buildId, stageId, executeCount.toString()).joinToString("|")
+        return listOf(TASK_ID_PREFIX, projectId, buildId, stageId, executeCount.toString())
+            .joinToString(TASK_ID_SEPARATOR)
     }
 
     fun parseTaskId(taskId: String): TaskIdParts? {
-        val parts = taskId.trim().split("|")
+        val normalized = decodeTaskId(taskId.trim())
+        val parts = normalized.split(TASK_ID_SEPARATOR, LEGACY_TASK_ID_SEPARATOR)
         if (parts.size != TASK_ID_PARTS || parts[0] != TASK_ID_PREFIX) return null
         val executeCount = parts[4].toIntOrNull() ?: return null
         if (parts[1].isBlank() || parts[2].isBlank() || parts[3].isBlank()) return null
@@ -65,6 +74,14 @@ object ImateStageReview {
             stageId = parts[3],
             executeCount = executeCount
         )
+    }
+
+    private fun decodeTaskId(taskId: String): String {
+        return try {
+            URLDecoder.decode(taskId, StandardCharsets.UTF_8)
+        } catch (_: IllegalArgumentException) {
+            taskId
+        }
     }
 
     fun sessionMatches(boundSessionId: String?, cdsSessionKey: String?): Boolean {
