@@ -465,3 +465,36 @@ span.skip-name {
         }
     }
 }
+
+@keyframes bk-pipeline-locate-cloth-flash {
+    0%,
+    100% {
+        background-color: #FDEED8;
+    }
+    50% {
+        background-color: #F9D090;
+    }
+}
+
+.bk-pipeline {
+    .stage-container-wrap {
+        position: relative;
+    }
+
+    .pipeline-locate-cloth {
+        position: absolute;
+        z-index: 0;
+        pointer-events: none;
+        border-radius: 2px;
+        background-color: transparent;
+
+        &.is-active {
+            animation: bk-pipeline-locate-cloth-flash 0.75s ease-in-out 3;
+        }
+    }
+
+    .stage-container-wrap .devops-stage-container {
+        position: relative;
+        z-index: 1;
+    }
+}
