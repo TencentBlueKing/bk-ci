@@ -73,4 +73,19 @@ object BkApiUtil {
     fun getMigratingPipelinesRedisKey(moduleCode: String): String {
         return "$moduleCode:migrating:pipelines"
     }
+
+    /**
+     * 获取项目下正在迁移流水线列表的redis键
+     *
+     * 该集合同时充当项目的归档标识：集合不存在（或为空）表示项目下没有流水线处于归档中，
+     * 无需再逐条判断流水线的迁移标识；集合非空时其成员即为项目下正在迁移的流水线。
+     * 由于标识由集合成员推导而来，同一项目多条流水线并发归档时不会出现标识被提前清除的问题。
+     *
+     * @param moduleCode 模块标识
+     * @param projectId 项目ID
+     * @return 项目下正在迁移流水线列表的redis键
+     */
+    fun getMigratingPipelinesRedisKey(moduleCode: String, projectId: String): String {
+        return "$moduleCode:migrating:pipelines:$projectId"
+    }
 }
