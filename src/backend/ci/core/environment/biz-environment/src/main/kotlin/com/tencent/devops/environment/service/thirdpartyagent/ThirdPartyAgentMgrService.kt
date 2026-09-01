@@ -82,6 +82,7 @@ import com.tencent.devops.environment.model.AgentHostInfo
 import com.tencent.devops.environment.model.AgentProps
 import com.tencent.devops.environment.permission.EnvironmentPermissionService
 import com.tencent.devops.environment.pojo.EnvVar
+import com.tencent.devops.environment.pojo.NodeBaseInfo
 import com.tencent.devops.environment.pojo.enums.AgentType
 import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.environment.pojo.enums.NodeType
@@ -102,6 +103,7 @@ import com.tencent.devops.environment.service.AgentUrlService
 import com.tencent.devops.environment.service.EnvService
 import com.tencent.devops.environment.service.NodeWebsocketService
 import com.tencent.devops.environment.service.slave.SlaveGatewayService
+import com.tencent.devops.environment.service.thirdpartyagent.AgentMetricService.Companion.AGENT_TELEGRAF_HEARTBEAT
 import com.tencent.devops.environment.service.thirdpartyagent.upgrade.AgentPropsScope
 import com.tencent.devops.environment.utils.FileMD5CacheUtils.getAgentJarFile
 import com.tencent.devops.environment.utils.FileMD5CacheUtils.getFileMD5
@@ -1378,7 +1380,10 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
         newHeartbeatInfo: NewHeartbeatInfo
     ): HeartbeatResponse {
         var online: Boolean? = null
-
+        val heartbeatMetrics = mutableMapOf<String, Any>()
+        val heartbeatTags = mutableMapOf<String, String>()
+        heartbeatTags[NewHeartbeatInfo::agentId.name] = agentHashId
+        heartbeatTags[NewHeartbeatInfo::projectId.name] = projectId
         val agentId = HashUtil.decodeIdToLong(hash = agentHashId)
         val heartbeatResponse = dslContext.transactionResult { configuration ->
             val context = DSL.using(configuration)
@@ -1489,7 +1494,13 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             if (nodeChanged) {
                 nodeDao.saveNode(dslContext = context, nodeRecord = nodeRecord)
             }
-
+            heartbeatMetrics[NewHeartbeatInfo::parallelTaskCount.name] = agentRecord.parallelTaskCount
+            heartbeatMetrics[NewHeartbeatInfo::dockerParallelTaskCount.name] = agentRecord.dockerParallelTaskCount
+            heartbeatMetrics[NewHeartbeatInfo::busyTaskSize.name] = newHeartbeatInfo.busyTaskSize
+            heartbeatMetrics[NewHeartbeatInfo::dockerBusyTaskSize.name] = newHeartbeatInfo.dockerBusyTaskSize
+            heartbeatTags[NodeBaseInfo::nodeId.name] = nodeRecord.nodeHashId
+            heartbeatTags[NodeBaseInfo::displayName.name] = nodeRecord.displayName
+            heartbeatTags[NewHeartbeatInfo::agentIp.name] = agentRecord.ip
             HeartbeatResponse(
                 // 避免老的没有删除 master 校验的版本进程阻塞导致心跳异常
                 masterVersion = newHeartbeatInfo.masterVersion,
@@ -1512,6 +1523,12 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
         }
         thirdPartyAgentHeartbeatUtils.saveNewHeartbeat(projectId, agentId, newHeartbeatInfo)
         online?.let { thirdPartAgentService.addAgentAction(projectId, agentId, action = AgentAction.ONLINE) }
+        agentMetricService.reportAgentMetrics(
+            fields = heartbeatMetrics,
+            name = AGENT_TELEGRAF_HEARTBEAT,
+            tags = heartbeatTags,
+            timestamp = newHeartbeatInfo.heartbeatTime
+        )
         return heartbeatResponse
     }
 
