@@ -219,7 +219,13 @@
                     : this.$route.hash.includes('popupGit')
                         ? 'git'
                         : 'tgit'
-                this.createCodelib(type, '', true)
+                // hash 中代码库类型对应的 scmCode 枚举
+                const scmCodeMap = {
+                    git: 'CODE_GIT',
+                    github: 'GITHUB',
+                    tgit: 'CODE_TGIT'
+                }
+                this.createCodelib(type, scmCodeMap[type], true)
                 this.checkOAuth({ projectId: this.projectId, type })
                 const query = { ...this.$route.query }
                 delete query.userId
