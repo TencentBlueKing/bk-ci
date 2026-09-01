@@ -33,6 +33,7 @@ import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.enums.DependOnType
 import com.tencent.devops.common.pipeline.enums.JobRunCondition
 import com.tencent.devops.common.pipeline.option.JobControlOption
+import com.tencent.devops.process.utils.DependOnJob
 import com.tencent.devops.process.utils.DependOnUtils
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
@@ -480,5 +481,108 @@ class DependOnUtilTest {
             containers = listOf(container1, expectedContainer2)
         )
         Assertions.assertEquals(expectedStage, stage)
+    }
+
+    @Test
+    fun `initDependOn jobs with runtime variable`() {
+        val jobA = JobControlOption(runCondition = JobRunCondition.STAGE_RUNNING, enable = true)
+        val jobB = JobControlOption(
+            runCondition = JobRunCondition.STAGE_RUNNING,
+            enable = true,
+            dependOnType = DependOnType.NAME,
+            dependOnName = "\${DEP_JOB}"
+        )
+        val jobs = listOf(
+            DependOnJob(jobId = "job_a", containerId = "1", jobControlOption = jobA),
+            DependOnJob(jobId = "job_b", containerId = "2", jobControlOption = jobB)
+        )
+        DependOnUtils.initDependOn(jobs = jobs, params = mapOf("DEP_JOB" to "job_a"))
+        Assertions.assertEquals(mapOf("1" to "job_a"), jobB.dependOnContainerId2JobIds)
+    }
+
+    @Test
+    fun `initDependOn jobs clear stale mapping when variable missing`() {
+        val jobA = JobControlOption(runCondition = JobRunCondition.STAGE_RUNNING, enable = true)
+        val jobB = JobControlOption(
+            runCondition = JobRunCondition.STAGE_RUNNING,
+            enable = true,
+            dependOnType = DependOnType.NAME,
+            dependOnName = "\${DEP_JOB}",
+            dependOnContainerId2JobIds = mapOf("1" to "job_a")
+        )
+        val jobs = listOf(
+            DependOnJob(jobId = "job_a", containerId = "1", jobControlOption = jobA),
+            DependOnJob(jobId = "job_b", containerId = "2", jobControlOption = jobB)
+        )
+        DependOnUtils.initDependOn(jobs = jobs, params = emptyMap())
+        Assertions.assertNull(jobB.dependOnContainerId2JobIds)
+    }
+
+    @Test
+    fun `initDependOn jobs throw when runtime variable create cycle`() {
+        val jobA = JobControlOption(
+            runCondition = JobRunCondition.STAGE_RUNNING,
+            enable = true,
+            dependOnType = DependOnType.NAME,
+            dependOnName = "\${NEXT}"
+        )
+        val jobB = JobControlOption(
+            runCondition = JobRunCondition.STAGE_RUNNING,
+            enable = true,
+            dependOnType = DependOnType.NAME,
+            dependOnName = "\${PREV}"
+        )
+        val jobs = listOf(
+            DependOnJob(jobId = "job_a", containerId = "1", jobControlOption = jobA),
+            DependOnJob(jobId = "job_b", containerId = "2", jobControlOption = jobB)
+        )
+        Assertions.assertThrows(ErrorCodeException::class.java) {
+            DependOnUtils.initDependOn(
+                jobs = jobs,
+                params = mapOf("NEXT" to "job_b", "PREV" to "job_a")
+            )
+        }
+    }
+
+    @Test
+    fun `dependOnContainer support cascade`() {
+        val jobA = NormalContainer(
+            id = "1",
+            enableSkip = false,
+            conditions = null,
+            jobId = "job_a",
+            jobControlOption = JobControlOption(runCondition = JobRunCondition.STAGE_RUNNING, enable = true)
+        )
+        val jobB = NormalContainer(
+            id = "2",
+            enableSkip = false,
+            conditions = null,
+            jobId = "job_b",
+            jobControlOption = JobControlOption(
+                runCondition = JobRunCondition.STAGE_RUNNING,
+                enable = true,
+                dependOnType = DependOnType.ID,
+                dependOnId = listOf("job_a"),
+                dependOnContainerId2JobIds = mapOf("1" to "job_a")
+            )
+        )
+        val jobC = NormalContainer(
+            id = "3",
+            enableSkip = false,
+            conditions = null,
+            jobId = "job_c",
+            jobControlOption = JobControlOption(
+                runCondition = JobRunCondition.STAGE_RUNNING,
+                enable = true,
+                dependOnType = DependOnType.ID,
+                dependOnId = listOf("job_b"),
+                dependOnContainerId2JobIds = mapOf("2" to "job_b")
+            )
+        )
+        val stage = Stage(id = "1", containers = listOf(jobA, jobB, jobC))
+        Assertions.assertTrue(DependOnUtils.dependOnContainer(stage, jobB, "1"))
+        Assertions.assertTrue(DependOnUtils.dependOnContainer(stage, jobC, "1"))
+        Assertions.assertFalse(DependOnUtils.dependOnContainer(stage, jobA, "1"))
+        Assertions.assertFalse(DependOnUtils.dependOnContainer(stage, jobC, "9"))
     }
 }

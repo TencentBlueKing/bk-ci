@@ -34,6 +34,7 @@ import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.DependOnType
+import com.tencent.devops.common.pipeline.option.JobControlOption
 import com.tencent.devops.common.pipeline.pojo.DependOnConfig
 import com.tencent.devops.process.constant.ProcessMessageCode
 import java.util.regex.Pattern
@@ -99,57 +100,79 @@ object DependOnUtils {
      */
     fun initDependOn(stage: Stage, params: Map<String, String>) {
         val allJobId2JobMap = mutableMapOf<String, Container>()
+        val jobs = mutableListOf<DependOnJob>()
         stage.containers.forEach container@{ c ->
-            if (c.jobId.isNullOrBlank()) {
-                return@container
+            if (!c.jobId.isNullOrBlank()) {
+                allJobId2JobMap[c.jobId!!] = c
             }
-            allJobId2JobMap[c.jobId!!] = c
-        }
-        if (allJobId2JobMap.isEmpty()) {
-            return
-        }
-
-        val cycleCheckJobMap = mutableMapOf<String, List<String>>()
-        stage.containers.forEach container@{ c ->
             val jobControlOption = when (c) {
                 is VMBuildContainer -> c.jobControlOption
                 is NormalContainer -> c.jobControlOption
                 else -> null
             } ?: return@container
+            val containerId = c.id ?: return@container
+            jobs.add(
+                DependOnJob(
+                    jobId = c.jobId,
+                    containerId = containerId,
+                    jobControlOption = jobControlOption
+                )
+            )
+        }
+        initDependOn(
+            jobs = jobs,
+            params = params,
+            displayName = { jobId ->
+                getContainerName(stage = stage, container = allJobId2JobMap[jobId], jobId = jobId)
+            }
+        )
+    }
+
+    /**
+     * 按给定变量解析 dependOn，并做循环依赖校验。
+     * 解析不到任何已存在 jobId 时会清空旧映射，避免沿用启动期过期结果。
+     */
+    fun initDependOn(
+        jobs: List<DependOnJob>,
+        params: Map<String, String>,
+        displayName: (String) -> String = { it }
+    ) {
+        val allJobId2JobMap = jobs.filter { !it.jobId.isNullOrBlank() }.associateBy { it.jobId!! }
+        if (allJobId2JobMap.isEmpty()) {
+            return
+        }
+
+        val cycleCheckJobMap = mutableMapOf<String, List<String>>()
+        jobs.forEach job@{ job ->
             val dependOnJobIds = getDependOnJobIds(
                 dependOnConfig = DependOnConfig(
-                    dependOnType = jobControlOption.dependOnType,
-                    dependOnId = jobControlOption.dependOnId,
-                    dependOnName = jobControlOption.dependOnName
+                    dependOnType = job.jobControlOption.dependOnType,
+                    dependOnId = job.jobControlOption.dependOnId,
+                    dependOnName = job.jobControlOption.dependOnName
                 ),
                 params = params
             )
             if (dependOnJobIds.isEmpty()) {
-                return@container
+                return@job
             }
-            if (!c.jobId.isNullOrBlank()) {
-                cycleCheckJobMap[c.jobId!!] = dependOnJobIds
+            if (!job.jobId.isNullOrBlank()) {
+                cycleCheckJobMap[job.jobId!!] = dependOnJobIds
             }
             val containerId2JobIds = mutableMapOf<String, String>()
-            // containerId与jobId做映射
             dependOnJobIds.forEach { dependOnJobId ->
                 val dependOnJob = allJobId2JobMap[dependOnJobId] ?: return@forEach
-                containerId2JobIds[dependOnJob.id!!] = dependOnJobId
+                containerId2JobIds[dependOnJob.containerId] = dependOnJobId
             }
-            if (containerId2JobIds.isNotEmpty()) {
-                jobControlOption.dependOnContainerId2JobIds = containerId2JobIds
-            }
+            job.jobControlOption.dependOnContainerId2JobIds = containerId2JobIds.takeIf { it.isNotEmpty() }
         }
 
-        // 校验是否循环依赖
         val visited = mutableMapOf<String, Int>()
         cycleCheckJobMap.keys.forEach { jobId ->
             dsf(
                 jobId = jobId,
                 dependOnMap = cycleCheckJobMap,
                 visited = visited,
-                stage = stage,
-                allJobId2JobMap = allJobId2JobMap
+                displayName = displayName
             )
         }
     }
@@ -160,6 +183,10 @@ object DependOnUtils {
             is NormalContainer -> container.jobControlOption
             else -> null
         } ?: return false
+        return enableDependOn(jobControlOption)
+    }
+
+    fun enableDependOn(jobControlOption: JobControlOption): Boolean {
         return when (jobControlOption.dependOnType) {
             DependOnType.ID ->
                 jobControlOption.dependOnId != null && jobControlOption.dependOnId!!.isNotEmpty()
@@ -173,7 +200,7 @@ object DependOnUtils {
     /**
      * 判断[container]是否直接或间接依赖[targetContainerId]所指的Job。
      * dependOn关系只在同一个Stage内声明，因此只在[stage]范围内做传递闭包搜索。
-     * 依赖映射由[initDependOn]在每次构建启动时刷新，调用前需确保其已执行。
+     * 依赖映射由[initDependOn]刷新，调用前需确保其已执行。
      */
     fun dependOnContainer(stage: Stage, container: Container, targetContainerId: String): Boolean {
         if (container.id == targetContainerId) {
@@ -235,8 +262,7 @@ object DependOnUtils {
         jobId: String,
         dependOnMap: Map<String, List<String>>,
         visited: MutableMap<String, Int>,
-        stage: Stage,
-        allJobId2JobMap: Map<String, Container>
+        displayName: (String) -> String
     ): Boolean {
         if (visited[jobId] == 1) {
             return true
@@ -251,15 +277,12 @@ object DependOnUtils {
                     jobId = dependOnJobId,
                     dependOnMap = dependOnMap,
                     visited = visited,
-                    stage = stage,
-                    allJobId2JobMap = allJobId2JobMap
+                    displayName = displayName
                 )
             ) {
-                val jobName = getContainerName(stage = stage, container = allJobId2JobMap[jobId], jobId = jobId)
-                val dependJobName = getContainerName(stage, allJobId2JobMap[dependOnJobId], jobId = dependOnJobId)
                 throw ErrorCodeException(
                     errorCode = ProcessMessageCode.ERROR_PIPELINE_DEPENDON_CYCLE,
-                    params = arrayOf(jobName, dependJobName)
+                    params = arrayOf(displayName(jobId), displayName(dependOnJobId))
                 )
             }
         }
