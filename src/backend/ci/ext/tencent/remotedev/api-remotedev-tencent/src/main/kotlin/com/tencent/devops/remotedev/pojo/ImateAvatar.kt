@@ -17,5 +17,7 @@ data class ImateAvatar(
     @get:Schema(title = "展示名")
     val displayName: String? = null,
     @get:Schema(title = "登记所属者")
-    val owner: String? = null
+    val owner: String? = null,
+    @get:Schema(title = "头像 URL，供前端直接渲染")
+    val avatarUrl: String? = null
 )

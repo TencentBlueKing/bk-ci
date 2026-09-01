@@ -50,7 +50,6 @@ import com.tencent.devops.remotedev.pojo.ImateTokenSession
 import com.tencent.devops.remotedev.pojo.ImateWorkspaceInspect
 import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfigType
 import com.tencent.devops.remotedev.pojo.WorkspaceAiInfo
-import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
 import com.tencent.devops.remotedev.pojo.WorkspaceRecordWithWindows
 import com.tencent.devops.remotedev.pojo.WorkspaceRegistration
 import com.tencent.devops.remotedev.pojo.WorkspaceSearch
@@ -481,25 +480,13 @@ class CoffeeAIService @Autowired constructor(
 
     fun getAiWorkspaceList(userId: String): List<WorkspaceAiInfo> {
         logger.info("查询用户开启AI功能的云桌面列表：userId={}", userId)
-        val workspaceNames = workspaceDao.limitFetchUserWorkspace(
+        // 与模块负责人口径一致：T_WORKSPACE ⋈ T_WORKSPACE_SHARED，ASSIGN_TYPE=OWNER，不是 CREATOR、不是分享人。
+        val records = workspaceJoinDao.fetchWindowsWorkspacesSimple(
             dslContext = dslContext,
-            userId = userId,
-            ownerType = WorkspaceOwnerType.PERSONAL
-        ).orEmpty()
-            .asSequence()
-            .filter {
-                it.createUserId == userId &&
-                    it.ownerType == WorkspaceOwnerType.PERSONAL &&
-                    it.status == WorkspaceStatus.RUNNING &&
-                    it.coffeeAi == true
-            }
-            .map { it.workspaceName }
-            .toSet()
-        if (workspaceNames.isEmpty()) return emptyList()
-        val records = workspaceJoinDao.fetchWindowsWorkspaces(
-            dslContext = dslContext,
-            workspaceNames = workspaceNames
-        ).filter { it.status == WorkspaceStatus.RUNNING && it.coffeeAi == true }
+            owner = userId,
+            coffeeAi = true,
+            notStatus = listOf(WorkspaceStatus.DELETED)
+        )
         if (records.isEmpty()) return emptyList()
 
         val envIdMap = dispatchWorkspaceDao.getEnvIdsByWorkspaceNames(
