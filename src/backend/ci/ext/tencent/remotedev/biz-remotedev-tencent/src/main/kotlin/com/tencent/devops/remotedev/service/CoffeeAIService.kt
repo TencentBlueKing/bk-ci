@@ -485,8 +485,8 @@ class CoffeeAIService @Autowired constructor(
         val records = workspaceJoinDao.fetchWindowsWorkspacesSimple(
             dslContext = dslContext,
             owner = userId,
-            coffeeAi = true,
-            notStatus = listOf(WorkspaceStatus.DELETED)
+            status = WorkspaceStatus.RUNNING,
+            coffeeAi = true
         )
         if (records.isEmpty()) return emptyList()
 
