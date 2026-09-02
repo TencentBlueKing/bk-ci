@@ -1,7 +1,7 @@
 import { ActionTree, ActionContext } from 'vuex'
 import { AxiosRequestConfig } from 'axios'
 import Request from '../utils/request'
-import { transformObj } from '../utils/util'
+import { transformObj, reorderProjectListByFavor } from '../utils/util'
 import {
     SET_USER_INFO,
     SET_PROJECT_LIST,
@@ -53,22 +53,16 @@ const actions: ActionTree<RootState, any> = {
     async toggleProjectCollect ({ state, dispatch }: ActionContext<RootState, any>, { projectCode, favor }: any) {
         await Request.put(`${PROJECT_API_URL_PREFIX}/user/projects/${projectCode}/favor?favor=${favor}`)
         if (!Array.isArray(state.projectList)) return
-        // 收藏接口成功后的本地状态同步
-        const projectList = state.projectList
-            .map((project: any) => {
-                if (project.projectCode === projectCode || project.englishName === projectCode) {
-                    return {
-                        ...project,
-                        favor
-                    }
+        const nextList = state.projectList.map((project: any) => {
+            if (project.projectCode === projectCode || project.englishName === projectCode) {
+                return {
+                    ...project,
+                    favor
                 }
-                return project
-            })
-            .sort((a: any, b: any) => {
-                const favorDiff = Number(!!b.favor) - Number(!!a.favor)
-                if (favorDiff !== 0) return favorDiff
-                return (a.projectName || '').localeCompare(b.projectName || '', 'zh-CN')
-            })
+            }
+            return project
+        })
+        const projectList = reorderProjectListByFavor(nextList)
         dispatch('setProjectList', projectList)
         window.setLsCacheItem('projectList', projectList.filter((project: Project) => project.enabled))
     },

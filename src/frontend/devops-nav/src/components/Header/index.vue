@@ -25,7 +25,7 @@
                 </template>
             </router-link>
 
-            <template v-if="showProjectList">
+            <template v-if="!showProjectList">
                 <bk-select
                     ref="projectDropdown"
                     class="bkdevops-project-selector"
@@ -317,17 +317,11 @@
         }
 
         get selectProjectList (): Project[] {
-            return [...this.enableProjectList]
-                .sort((a, b) => {
-                    const favorDiff = Number(!!b.favor) - Number(!!a.favor)
-                    if (favorDiff !== 0) return favorDiff
-                    return (a.projectName || '').localeCompare(b.projectName || '', 'zh-CN')
-                })
-                .map(project => ({
-                    ...project,
-                    id: project.projectCode,
-                    name: project.projectName
-                }))
+            return this.enableProjectList.map(project => ({
+                ...project,
+                id: project.projectCode,
+                name: project.projectName
+            }))
         }
 
         get isInIframe () {

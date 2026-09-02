@@ -373,6 +373,7 @@
     import ApplyProjectDialog from '../components/ApplyProjectDialog/index.vue'
     import ProjectUserSelector from '@/components/ProjectUserSelector/index.vue'
     import authInfo from '@/utils/auth'
+    import { reorderProjectListByFavor } from '@/utils/util'
     
     const PROJECT_SORT_FILED = {
         projectName: 'PROJECT_NAME',
@@ -431,12 +432,7 @@
         computed: {
             curProjectList () {
                 const { limit, current } = this.pagination
-                const list = (this.projectList.filter(i => i.projectName.includes(this.inputValue) && i.enabled === this.isEnabled) || [])
-                    .sort((a, b) => {
-                        const favorDiff = Number(!!b.favor) - Number(!!a.favor)
-                        if (favorDiff !== 0) return favorDiff
-                        return (a.projectName || '').localeCompare(b.projectName || '', 'zh-CN')
-                    })
+                const list = this.projectList.filter(i => i.projectName.includes(this.inputValue) && i.enabled === this.isEnabled) || []
                 this.pagination.count = list.length
                 return list.slice(limit * (current - 1), limit * current)
             },
@@ -499,11 +495,7 @@
                         projectCode: row.projectCode,
                         favor
                     })
-                    this.projectList = [...this.projectList].sort((a, b) => {
-                        const favorDiff = Number(!!b.favor) - Number(!!a.favor)
-                        if (favorDiff !== 0) return favorDiff
-                        return (a.projectName || '').localeCompare(b.projectName || '', 'zh-CN')
-                    })
+                    this.projectList = reorderProjectListByFavor(this.projectList)
                 } catch (e) {
                     console.warn(e)
                     this.$set(row, 'favor', !favor)
