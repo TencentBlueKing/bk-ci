@@ -16,13 +16,15 @@ export default function useTaskDetail () {
             : { agentId: currentNode.value?.agentId }
     }
 
-    const fetchJobTaskList = async (params) => {
+    // 获取任务列表（view: PIPELINE / JOB / BUILD）
+    const fetchTaskList = async (view, params) => {
         try {
-            const res = await proxy.$store.dispatch('environment/requestAgentJobTaskList', {
+            const res = await proxy.$store.dispatch('environment/requestAgentPipelineList', {
                 projectId: projectId.value,
-                params: {
+                body: {
                     ...getIdParams(),
-                    ...params
+                    ...params,
+                    view
                 }
             })
             return res
@@ -31,18 +33,32 @@ export default function useTaskDetail () {
         }
     }
 
-    const fetchPipelineBuildHistory = async ({
+    // 视图 -> 展开明细接口映射
+    const BUILD_DETAIL_ACTION_MAP = {
+        PIPELINE: 'environment/fetchAgentBuildsByPipeline',
+        JOB: 'environment/fetchAgentBuildsByJob',
+        BUILD: 'environment/fetchAgentBuildsByBuild'
+    }
+
+    // 展开加载构建明细，按视图维度请求
+    const fetchBuildDetail = async (view, {
         pipelineId,
         jobId,
+        buildId,
+        executeCount,
         params
     }) => {
         try {
-            const res = await proxy.$store.dispatch('environment/requestPipelineBuildHistory', {
+            const action = BUILD_DETAIL_ACTION_MAP[view] || BUILD_DETAIL_ACTION_MAP.JOB
+            const res = await proxy.$store.dispatch(action, {
                 params: {
                     projectId: projectId.value,
                     ...getIdParams(),
-                    pipelineId,
-                    jobId,
+                    ...(pipelineId ? { pipelineId } : {}),
+                    ...(jobId ? { jobId } : {}),
+                    ...(buildId ? { buildId } : {}),
+                    // 仅 BUILD 视图需要 executeCount：始终传值（包括 0），不做 undefined 剔除
+                    ...(view === 'BUILD' ? { executeCount: executeCount ?? '' } : {}),
                     ...params
                 }
             })
@@ -101,8 +117,8 @@ export default function useTaskDetail () {
     }
 
     return {
-        fetchJobTaskList,
-        fetchPipelineBuildHistory,
+        fetchTaskList,
+        fetchBuildDetail,
         searchJobByName,
         searchPipelineByName,
         searchByCreator

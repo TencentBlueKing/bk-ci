@@ -1,15 +1,30 @@
 <template>
     <div class="task-list-container">
-        <!-- 顶部统计和搜索 -->
+        <!-- 顶部视图切换、统计和搜索 -->
         <div class="task-header">
-            <div class="task-stats">
-                <span
-                    class="stats-text"
-                    v-if="pipelineCount"
+            <div class="task-header-left">
+                <bk-radio-group
+                    v-model="currentView"
+                    class="view-switcher"
+                    @change="handleViewChange"
                 >
-                    <i18n path="environment.totalJobTasks">
-                        <span class="count-number">{{ jobCount }}</span>
-                        <span class="count-number">{{ pipelineCount }}</span>
+                    <template v-if="isCreateResType">
+                        <bk-radio-button value="PIPELINE">{{ $t('environment.viewCreationPipeline') }}</bk-radio-button>
+                        <bk-radio-button value="BUILD">{{ $t('environment.viewCreationTask') }}</bk-radio-button>
+                    </template>
+                    <template v-else>
+                        <bk-radio-button value="PIPELINE">{{ $t('environment.viewPipeline') }}</bk-radio-button>
+                        <bk-radio-button value="JOB">{{ $t('environment.viewJob') }}</bk-radio-button>
+                        <bk-radio-button value="BUILD">{{ $t('environment.viewBuild') }}</bk-radio-button>
+                    </template>
+                </bk-radio-group>
+                <span class="stats-text">
+                    <i18n :path="statsConfig.path">
+                        <span
+                            v-for="(value, idx) in statsConfig.values"
+                            :key="idx"
+                            class="count-number"
+                        >{{ value }}</span>
                     </i18n>
                 </span>
             </div>
@@ -43,7 +58,7 @@
             <template v-if="taskList.length > 0">
                 <div
                     v-for="(task, index) in taskList"
-                    :key="task.id || index"
+                    :key="task.taskKey || index"
                     :ref="el => setTaskRef(el, task)"
                     class="task-item"
                     :class="{ expanded: task.isExpanded }"
@@ -57,31 +72,145 @@
                             class="bk-icon expand-icon"
                             :class="task.isExpanded ? 'icon-angle-down' : 'icon-angle-right'"
                         />
-                        <div class="task-title">
-                            <span class="task-name">
-                                <bk-tag v-if="task.stageId">{{ task.stageId }}</bk-tag>
-                                {{ task.jobName }}
-                            </span>
-                            <span class="task-pipeline-name">
-                                <i class="bk-icon icon-pipeline" />
-                                <a
-                                    class="pipeline-text text-link"
-                                    v-bk-overflow-tips
-                                    :href="getPipelineHistoryUrl(task)"
-                                    target="_blank"
-                                    @click.stop
-                                >
-                                    {{ task.pipelineName }}
-                                </a>
-                            </span>
+
+                        <!-- 流水线视图头部 -->
+                        <div
+                            v-if="currentView === 'PIPELINE'"
+                            class="task-title pipeline-view-title"
+                        >
+                            <Logo
+                                v-if="isCreateResType"
+                                name="color-logo-creative"
+                                :size="30"
+                                class="title-icon"
+                            />
+                            <i
+                                v-else
+                                class="bk-icon icon-pipeline title-icon"
+                            />
+                            <div class="task-title-content">
+                                <span class="task-name">
+                                    <a
+                                        class="pipeline-title text-link"
+                                        v-bk-overflow-tips
+                                        :href="getPipelineHistoryUrl(task)"
+                                        target="_blank"
+                                        @click.stop
+                                    >{{ task.pipelineName }}</a>
+                                </span>
+                                <span class="task-sub">
+                                    <i18n :path="isCreateResType ? 'environment.creationTaskUsedCount' : 'environment.pipelineBuildUsedCount'">
+                                        <span>{{ task.buildCount || 0 }}</span>
+                                    </i18n>
+                                </span>
+                            </div>
                         </div>
+
+                        <!-- Job 视图头部 -->
+                        <div
+                            v-else-if="currentView === 'JOB'"
+                            class="task-title pipeline-view-title"
+                        >
+                            <Logo
+                                name="job"
+                                :size="30"
+                                class="title-icon"
+                            />
+                            <div class="task-title-content">
+                                <span class="task-name">
+                                    <bk-tag v-if="getJobStageLabel(task)">{{ getJobStageLabel(task) }}</bk-tag>
+                                    {{ task.jobName }}
+                                </span>
+                                <span class="task-pipeline-name">
+                                    <span class="pipeline-prefix">{{ $t('environment.pipeline') }}：</span>
+                                    <a
+                                        class="pipeline-text text-link"
+                                        v-bk-overflow-tips
+                                        :href="getPipelineHistoryUrl(task)"
+                                        target="_blank"
+                                        @click.stop
+                                    >
+                                        {{ task.pipelineName }}
+                                        <Logo
+                                            name="tiaozhuan"
+                                            :size="12"
+                                            class="jump-icon"
+                                        />
+                                    </a>
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- 构建视图头部 -->
+                        <div
+                            v-else
+                            class="task-title build-view-title"
+                        >
+                            <div class="build-main-info">
+                                <pipeline-status-icon
+                                    v-if="task.status"
+                                    class="build-status-icon"
+                                    :status="task.status"
+                                    :size="26"
+                                />
+                                <div class="build-text-info">
+                                    <span class="task-name build-name">
+                                        <a
+                                            v-if="task.buildId && task.buildNum"
+                                            class="text-link build-num"
+                                            :href="getBuildDetailUrl(task)"
+                                            target="_blank"
+                                            @click.stop
+                                        >#{{ task.buildNum }}</a>
+                                        <span
+                                            v-else
+                                            class="build-num"
+                                        >{{ task.buildNum ? '#' + task.buildNum : task.pipelineName }}</span>
+                                        <span
+                                            v-if="task.statusText"
+                                            class="build-status-text"
+                                        >{{ task.statusText }}</span>
+                                    </span>
+                                    <span class="task-pipeline-name">
+                                        <span class="pipeline-prefix">{{ isCreateResType ? $t('environment.creationFlow') : $t('environment.pipeline') }}：</span>
+                                        <a
+                                            class="pipeline-text text-link"
+                                            v-bk-overflow-tips
+                                            :href="getPipelineHistoryUrl(task)"
+                                            target="_blank"
+                                            @click.stop
+                                        >
+                                            {{ task.pipelineName }}
+                                            <Logo
+                                                name="tiaozhuan"
+                                                :size="12"
+                                                class="jump-icon"
+                                            />
+                                        </a>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="task-info">
                             <div
                                 v-for="item in getTaskInfoItems(task)"
                                 :key="item.label"
                                 class="info-item"
                             >
-                                <span class="info-label">{{ item.label }}</span>
+                                <span class="info-label">
+                                    {{ item.label }}
+                                    <Logo
+                                        v-if="item.tip"
+                                        v-bk-tooltips="{
+                                            content: item.tip,
+                                            placement: 'top'
+                                        }"
+                                        :size="14"
+                                        name="info-circle"
+                                        class="info-tip-icon"
+                                    />
+                                </span>
                                 <span class="info-value">{{ item.value }}</span>
                             </div>
                         </div>
@@ -92,7 +221,9 @@
                         v-if="task.isExpanded"
                         class="task-detail"
                     >
+                        <!-- 流水线视图明细 -->
                         <bk-table
+                            v-if="currentView === 'PIPELINE' && !isCreateResType"
                             v-bkloading="{ isLoading: task.isLoadingDetail }"
                             :data="task.records || []"
                             :outer-border="false"
@@ -108,7 +239,7 @@
                             >
                                 <template #default="{ row }">
                                     <a
-                                        class="text-link"
+                                        class="text-link build-num-link"
                                         :href="getBuildDetailUrl(row)"
                                         target="_blank"
                                     >#{{ row.buildNum }}</a>
@@ -120,11 +251,88 @@
                             >
                                 <template #default="{ row }">
                                     <span class="status-text-container">
-                                        <pipeline-status-icon
-                                            :status="row.status"
-                                        />
+                                        <pipeline-status-icon :status="row.status" />
                                         {{ row.statusText }}
                                     </span>
+                                </template>
+                            </bk-table-column>
+                            <bk-table-column
+                                :label="$t('environment.retryCount')"
+                                min-width="100"
+                            >
+                                <template #default="{ row }">
+                                    <span v-if="Number(row.executeCount) - 1 > 0">
+                                        {{ Number(row.executeCount) - 1 }}
+                                    </span>
+                                    <span v-else>--</span>
+                                </template>
+                            </bk-table-column>
+                            <bk-table-column
+                                :label="$t('environment.associatedJob')"
+                                min-width="200"
+                            >
+                                <template #default="{ row }">
+                                    <associated-jobs :jobs="row.tasks" />
+                                </template>
+                            </bk-table-column>
+                            <bk-table-column
+                                :label="$t('environment.startTime')"
+                                prop="startTime"
+                            />
+                            <bk-table-column
+                                :label="$t('environment.endTime')"
+                                prop="endTime"
+                            />
+                            <bk-table-column
+                                :label="$t('environment.trigger')"
+                                prop="creator"
+                            />
+                        </bk-table>
+
+                        <!-- 创作流视图明细 -->
+                        <bk-table
+                            v-else-if="currentView === 'PIPELINE' && isCreateResType"
+                            v-bkloading="{ isLoading: task.isLoadingDetail }"
+                            :data="task.records || []"
+                            :outer-border="false"
+                            :header-border="false"
+                            :pagination="task.pagination"
+                            @page-change="handlePageChange(task, $event)"
+                            @page-limit-change="handlePageSizeChange(task, $event)"
+                        >
+                            <bk-table-column
+                                :label="$t('environment.taskNumber')"
+                                prop="buildNum"
+                                width="80"
+                            >
+                                <template #default="{ row }">
+                                    <a
+                                        class="text-link build-num-link"
+                                        :href="getBuildDetailUrl(row)"
+                                        target="_blank"
+                                    >#{{ row.buildNum }}</a>
+                                </template>
+                            </bk-table-column>
+                            <bk-table-column
+                                :label="$t('environment.taskStatusLabel')"
+                                prop="status"
+                            >
+                                <template #default="{ row }">
+                                    <span class="status-text-container">
+                                        <pipeline-status-icon :status="row.status" />
+                                        {{ row.statusText }}
+                                    </span>
+                                </template>
+                            </bk-table-column>
+                            <bk-table-column
+                                :label="$t('environment.retryCount')"
+                                min-width="100"
+                            >
+                                <template #default="{ row }">
+                                    <span v-if="Number(row.executeCount) - 1 > 0">
+                                        {{ Number(row.executeCount) - 1 }}
+                                    </span>
+                                    <span v-else>--</span>
                                 </template>
                             </bk-table-column>
                             <bk-table-column
@@ -142,6 +350,153 @@
                             <bk-table-column
                                 :label="$t('environment.trigger')"
                                 prop="creator"
+                            />
+                        </bk-table>
+
+                        <!-- Job 视图明细 -->
+                        <bk-table
+                            v-else-if="currentView === 'JOB'"
+                            v-bkloading="{ isLoading: task.isLoadingDetail }"
+                            :data="task.records || []"
+                            :outer-border="false"
+                            :header-border="false"
+                            :pagination="task.pagination"
+                            @page-change="handlePageChange(task, $event)"
+                            @page-limit-change="handlePageSizeChange(task, $event)"
+                        >
+                            <bk-table-column
+                                :label="$t('environment.buildNumber')"
+                                prop="buildNum"
+                                width="80"
+                            >
+                                <template #default="{ row }">
+                                    <a
+                                        class="text-link build-num-link"
+                                        :href="getBuildDetailUrl(row)"
+                                        target="_blank"
+                                    >#{{ row.buildNum }}</a>
+                                </template>
+                            </bk-table-column>
+                            <bk-table-column
+                                :label="$t('environment.buildStatus')"
+                                prop="status"
+                            >
+                                <template #default="{ row }">
+                                    <span class="status-text-container">
+                                        <pipeline-status-icon :status="row.status" />
+                                        {{ row.statusText }}
+                                    </span>
+                                </template>
+                            </bk-table-column>
+                            <bk-table-column
+                                v-if="isEnvDetail"
+                                :label="$t('environment.workerNode')"
+                                min-width="120"
+                            >
+                                <template #default="{ row }">
+                                    <a
+                                        v-if="row.nodeInfo?.displayName"
+                                        class="text-link node-link"
+                                        :href="getNodeDetailUrl(row)"
+                                        target="_blank"
+                                    >{{ row.nodeInfo.displayName }}</a>
+                                    <span v-else>--</span>
+                                </template>
+                            </bk-table-column>
+                            <bk-table-column
+                                :label="$t('environment.retryCount')"
+                                min-width="100"
+                            >
+                                <template #default="{ row }">
+                                    <span v-if="Number(row.executeCount) - 1 > 0">
+                                        {{ Number(row.executeCount) - 1 }}
+                                    </span>
+                                    <span v-else>--</span>
+                                </template>
+                            </bk-table-column>
+                            <bk-table-column
+                                :label="$t('environment.duration')"
+                                prop="duration"
+                            />
+                            <bk-table-column
+                                :label="$t('environment.startTime')"
+                                prop="startTime"
+                            />
+                            <bk-table-column
+                                :label="$t('environment.endTime')"
+                                prop="endTime"
+                            />
+                            <bk-table-column
+                                :label="$t('environment.trigger')"
+                                prop="creator"
+                            />
+                        </bk-table>
+
+                        <!-- 构建视图明细 -->
+                        <bk-table
+                            v-else
+                            v-bkloading="{ isLoading: task.isLoadingDetail }"
+                            :data="task.records || []"
+                            :outer-border="false"
+                            :header-border="false"
+                            :pagination="task.pagination"
+                            @page-change="handlePageChange(task, $event)"
+                            @page-limit-change="handlePageSizeChange(task, $event)"
+                        >
+                            <bk-table-column
+                                :label="$t('environment.job')"
+                                min-width="180"
+                            >
+                                <template #default="{ row }">
+                                    <span class="job-cell">
+                                        <span
+                                            v-if="row.seq"
+                                            class="job-seq"
+                                        >{{ row.seq }}</span>
+                                        <span
+                                            class="job-name"
+                                            v-bk-overflow-tips
+                                        >{{ row.jobName }}</span>
+                                    </span>
+                                </template>
+                            </bk-table-column>
+                            <bk-table-column
+                                :label="$t('environment.statusLabel')"
+                                prop="status"
+                            >
+                                <template #default="{ row }">
+                                    <span class="status-text-container">
+                                        <pipeline-status-icon :status="row.status" />
+                                        {{ row.statusText }}
+                                    </span>
+                                </template>
+                            </bk-table-column>
+                            <bk-table-column
+                                v-if="isEnvDetail"
+                                :label="$t('environment.workerNode')"
+                                min-width="120"
+                            >
+                                <template #default="{ row }">
+                                    <a
+                                        v-if="row.nodeInfo?.nodeHashId"
+                                        class="text-link node-link"
+                                        :href="getNodeDetailUrl(row)"
+                                        target="_blank"
+                                    >{{ row.nodeInfo.displayName }}</a>
+                                    <span v-else>--</span>
+                                </template>
+                            </bk-table-column>
+                            <bk-table-column
+                                :label="$t('environment.duration')"
+                                prop="duration"
+                            />
+                            <bk-table-column
+                                :label="$t('environment.startTime')"
+                                prop="startTime"
+                            />
+                            <bk-table-column
+                                :label="$t('environment.endTime')"
+                                prop="endTime"
                             />
                         </bk-table>
                     </div>
@@ -179,46 +534,52 @@
 </template>
 
 <script>
-    import { ref, computed, watch, nextTick } from 'vue'
+    import { ref, computed, watch } from 'vue'
     import { convertTime } from '@/utils/util'
+    import { SERVICE_RESOURCE_TYPE } from '@/store/constants'
     import useInstance from '@/hooks/useInstance'
+    import useEnvAside from '@/hooks/useEnvAside'
     import useEnvDetail from '@/hooks/useEnvDetail'
     import useNodeDetail from '@/hooks/useNodeDetail'
     import useTaskDetail from '@/hooks/useTaskDetail'
     import usePagination from '@/hooks/usePagination'
-    import useEnvAside from '@/hooks/useEnvAside'
     import SearchSelect from '@blueking/search-select'
     import '@blueking/search-select/dist/styles/index.css'
     import PipelineStatusIcon from './PipelineStatusIcon'
+    import AssociatedJobs from './AssociatedJobs'
+    import Logo from '@/components/Logo'
 
     export default {
         name: 'TaskList',
         components: {
             SearchSelect,
-            PipelineStatusIcon
+            PipelineStatusIcon,
+            AssociatedJobs,
+            Logo
         },
         setup (props) {
             const { proxy } = useInstance()
             const routeName = proxy.$route.name
+            const isEnvDetail = routeName === 'envDetail'
+            const { isCreateResType, resType } = useEnvAside()
             const { envHashId } = useEnvDetail()
             const { nodeHashId } = useNodeDetail()
             const {
-                fetchJobTaskList,
-                fetchPipelineBuildHistory,
+                fetchTaskList,
+                fetchBuildDetail,
                 searchJobByName,
                 searchPipelineByName,
                 searchByCreator
             } = useTaskDetail()
             const {
-                isCreateResType
-            } = useEnvAside()
-            const {
                 pagination,
                 resetPagination,
                 updateCount
             } = usePagination()
+            const currentView = ref('BUILD')
             const pipelineCount = ref(0)
             const jobCount = ref(0)
+            const buildCount = ref(0)
             const isLoading = ref(false)
             const isLoadingMore = ref(false)
             const taskList = ref([])
@@ -226,78 +587,87 @@
             const searchSelectValue = ref([])
             const taskRefs = new Map()
             const taskListRef = ref(null)
-            
-            const searchSelectData = computed(() => {
-                return [
-                    {
-                        name: 'Job',
-                        id: 'jobId',
-                        default: true,
-                        remoteMethod: async (keyword) => {
-                            try {
-                                const res = await searchJobByName(keyword)
-                                return res.map(item => ({
-                                    id: item.jobId,
-                                    name: item.jobName
-                                }))
-                            } catch (e) {
-                                return []
-                            }
-                        }
-                    },
-                    {
-                        name: proxy.$t('environment.pipeline'),
-                        id: 'pipelineId',
-                        remoteMethod: async (keyword) => {
-                            try {
-                                const res = await searchPipelineByName(keyword)
-                                return res.map(item => ({
-                                    id: item.pipelineId,
-                                    name: item.pipelineName
-                                }))
-                            } catch (e) {
-                                return []
-                            }
-                        }
-                    },
-                    {
-                        name: proxy.$t('environment.operateUser'),
-                        id: 'creator',
-                        remoteMethod: async (keyword) => {
-                            try {
-                                const res = await searchByCreator(keyword)
-                                return res.map(item => ({
-                                    id: item,
-                                    name: item
-                                }))
-                            } catch (e) {
-                                return []
-                            }
-                        }
-                    },
-                    {
-                        name: proxy.$t('environment.taskStatus'),
-                        id: 'taskStatus',
-                        children: [
-                            {
-                                id: 'QUEUE',
-                                name: proxy.$t('environment.pipelineTaskStatusMap.QUEUE')
-                            },
-                            {
-                                id: 'RUNNING',
-                                name: proxy.$t('environment.pipelineTaskStatusMap.RUNNING')
-                            },
-                            {
-                                id: 'DONE',
-                                name: proxy.$t('environment.pipelineTaskStatusMap.DONE')
-                            },
-                            {
-                                id: 'FAILURE',
-                                name: proxy.$t('environment.pipelineTaskStatusMap.FAILURE')
-                            }
-                        ]
+
+            // 各视图的搜索字段
+            const jobField = computed(() => ({
+                name: 'Job',
+                id: 'jobId',
+                default: true,
+                remoteMethod: async (keyword) => {
+                    try {
+                        const res = await searchJobByName(keyword)
+                        return res.map(item => ({
+                            id: item.jobId,
+                            name: item.jobName
+                        }))
+                    } catch (e) {
+                        return []
                     }
+                }
+            }))
+            const pipelineField = computed(() => ({
+                name: isCreateResType.value ? proxy.$t('environment.creationFlow') : proxy.$t('environment.pipeline'),
+                id: 'pipelineId',
+                remoteMethod: async (keyword) => {
+                    try {
+                        const res = await searchPipelineByName(keyword)
+                        return res.map(item => ({
+                            id: item.pipelineId,
+                            name: item.pipelineName
+                        }))
+                    } catch (e) {
+                        return []
+                    }
+                }
+            }))
+            const statusField = computed(() => ({
+                name: proxy.$t('environment.taskStatus'),
+                id: 'taskStatusList',
+                children: [
+                    { id: 'QUEUE', name: proxy.$t('environment.pipelineTaskStatusMap.QUEUE') },
+                    { id: 'RUNNING', name: proxy.$t('environment.pipelineTaskStatusMap.RUNNING') },
+                    // 运行完成 = DONE + FAILURE，传参时在 filterQuery 中展开为枚举数组
+                    { id: 'FINISHED', name: proxy.$t('environment.pipelineTaskStatusMap.FINISHED') }
                 ]
+            }))
+            const creatorField = computed(() => ({
+                name: proxy.$t('environment.trigger'),
+                id: 'creator',
+                remoteMethod: async (keyword) => {
+                    try {
+                        const res = await searchByCreator(keyword)
+                        return res.map(item => ({
+                            id: item,
+                            name: item
+                        }))
+                    } catch (e) {
+                        return []
+                    }
+                }
+            }))
+
+            const searchSelectData = computed(() => {
+                if (currentView.value === 'JOB') {
+                    return [jobField.value, pipelineField.value, statusField.value, creatorField.value]
+                }
+                return [pipelineField.value, statusField.value, creatorField.value]
+            })
+
+            // 顶部统计文案（按资源类型与视图区分）
+            const statsConfig = computed(() => {
+                if (isCreateResType.value) {
+                    if (currentView.value === 'BUILD') {
+                        return { path: 'environment.creationBuildViewCount', values: [buildCount.value, pipelineCount.value] }
+                    }
+                    return { path: 'environment.creationPipelineViewCount', values: [pipelineCount.value, buildCount.value] }
+                }
+                if (currentView.value === 'JOB') {
+                    return { path: 'environment.totalJobTasks', values: [jobCount.value, pipelineCount.value] }
+                }
+                if (currentView.value === 'BUILD') {
+                    return { path: 'environment.buildViewCount', values: [buildCount.value, pipelineCount.value] }
+                }
+                return { path: 'environment.pipelineViewCount', values: [pipelineCount.value, buildCount.value] }
             })
             // 是否还有更多数据
             const hasMore = computed(() => {
@@ -306,6 +676,14 @@
 
             const filterQuery = computed(() => {
                 return searchSelectValue.value.reduce((query, item) => {
+                    // 状态筛选为 List<Enum>：FINISHED（运行完成）展开为 ['DONE', 'FAILURE']，其余状态原样传
+                    if (item.id === 'taskStatusList') {
+                        const statusList = item.values.flatMap(value =>
+                            value.id === 'FINISHED' ? ['DONE', 'FAILURE'] : [value.id]
+                        )
+                        query.taskStatusList = [...new Set(statusList)]
+                        return query
+                    }
                     query[item.id] = item.values.map(value => value.id).join(',')
                     return query
                 }, {})
@@ -323,7 +701,7 @@
             // 设置 task 元素引用
             const setTaskRef = (el, task) => {
                 if (el) {
-                    taskRefs.set(task.pipelineId, el)
+                    taskRefs.set(task.taskKey, el)
                 }
             }
             
@@ -348,22 +726,55 @@
                 }
                 return `/console/pipeline/${row.projectId || projectId.value}/${row.pipelineId}/detail/${row.buildId}/executeDetail`
             }
+
+            // 工作节点详情页（resType 区分流水线资源/创作流资源）
+            const getNodeDetailUrl = (row) => {
+                const nodeHashId = row.nodeInfo?.nodeHashId || ''
+                const displayName = row.nodeInfo?.displayName || ''
+                return `/console/environment/${projectId.value}/${resType.value || SERVICE_RESOURCE_TYPE.PIPELINE}/node/allNode?nodeHashId=${nodeHashId}&displayName=${displayName}`
+            }
             
-            // 获取任务信息项
+            // 获取任务信息项（右侧统计），按视图区分
             const getTaskInfoItems = (task) => {
-                return [
-                    {
-                        label:  proxy.$t('environment.executionCount'),
-                        value: task.buildCount || 0
-                    },
-                    {
-                        label: proxy.$t('environment.avgDuration'),
-                        value: task.avgTimeInterval || '--'
-                    },
-                    {
-                        label: proxy.$t('environment.nodeInfo.lastRunAs'),
-                        value: task.lastBuildTime || '--'
+                if (currentView.value === 'PIPELINE') {
+                    return [
+                        {
+                            label: isCreateResType.value
+                                ? proxy.$t('environment.creationTaskCountLabel')
+                                : proxy.$t('environment.buildCountLabel'),
+                            value: task.buildCount || 0
+                        },
+                        { label: proxy.$t('environment.nodeInfo.lastRunAs'), value: task.lastBuildTime || '--' }
+                    ]
+                }
+                if (currentView.value === 'BUILD') {
+                    const items = []
+                    // 重试次数：后端 executeCount 表示总执行次数（含首次），展示值 = executeCount - 1
+                    // 为 0 时不展示该信息项
+                    const retryCount = formatRetryCount(task.executeCount)
+                    if (retryCount !== '') {
+                        items.push({ label: proxy.$t('environment.retryCount'), value: retryCount })
                     }
+                    // 耗时统计口径提示：节点详情页与环境详情页均展示，仅文案按页面区分
+                    const durationTip = proxy.$t(isEnvDetail
+                        ? 'environment.durationEnvTip'
+                        : 'environment.durationNodeTip')
+                    items.push(
+                        {
+                            label: proxy.$t('environment.duration'),
+                            value: task.duration || '--',
+                            tip: durationTip
+                        },
+                        { label: proxy.$t('environment.trigger'), value: task.creator || '--' },
+                        { label: proxy.$t('environment.startTime'), value: task.startTime || '--' }
+                    )
+                    return items
+                }
+                // JOB
+                return [
+                    { label: proxy.$t('environment.executionCount'), value: task.buildCount || 0 },
+                    { label: proxy.$t('environment.avgDuration'), value: task.avgTimeInterval || '--' },
+                    { label: proxy.$t('environment.nodeInfo.lastRunAs'), value: task.lastBuildTime || '--' }
                 ]
             }
             
@@ -391,6 +802,16 @@
                 
                 return parts.join('')
             }
+
+            // 时长格式化：兼容毫秒/秒
+            const formatDuration = (duration) => {
+                if (duration === null || duration === undefined || duration === '') return '--'
+                const durationNum = Number(duration)
+                if (Number.isNaN(durationNum) || durationNum < 0) return '--'
+                // 10 位以上通常是毫秒级时长，转换为秒
+                const seconds = durationNum >= 100000 ? Math.floor(durationNum / 1000) : Math.floor(durationNum)
+                return formatSeconds(seconds)
+            }
             
             // 计算执行耗时
             const calculateDuration = (startTime, endTime) => {
@@ -403,14 +824,24 @@
                 return formatSeconds(seconds)
             }
             
+            // 重试次数展示：后端 executeCount 表示总执行次数（含首次），展示值 = executeCount - 1
+            // 0、1 时为空；其他情况直接展示数字 N
+            const formatRetryCount = (executeCount) => {
+                const num = Number(executeCount)
+                if (Number.isNaN(num) || num <= 1) return ''
+                return `${num - 1}`
+            }
+
             // 格式化时间
             const formatTime = (time) => {
                 if (!time) return '--'
                 if (typeof time === 'string') {
                     return convertTime(new Date(time).getTime())
                 }
-                // 如果是秒级时间戳
-                return convertTime(time * 1000)
+                // 兼容秒级/毫秒级时间戳
+                const timestamp = Number(time)
+                if (Number.isNaN(timestamp)) return '--'
+                return convertTime(timestamp >= 1000000000000 ? timestamp : timestamp * 1000)
             }
             
             // 流水线编排不展示第一个Stage，转换 stageId 显示：后端从 stage-2 开始，前端显示从 stage-1 开始
@@ -424,15 +855,99 @@
                 }
                 return stageId
             }
-            
-            // 获取状态图标
-            const getStatusIcon = (status) => {
-                const iconMap = {
-                    success: 'icon-success-shape',
-                    running: 'icon-circle-2-1',
-                    failed: 'icon-failed-shape'
+
+            const getJobStageLabel = (task) => {
+                const stageNum = task.stageNumb ?? ''
+                const lastContainerId = task.lastContainerId ?? ''
+                if (stageNum && lastContainerId) return `${stageNum}-${lastContainerId}`
+                return stageNum || lastContainerId || ''
+            }
+
+
+            // 列表记录映射（按视图区分展示字段）
+            const mapListRecord = (view, item, index) => {
+                const base = {
+                    ...item,
+                    isExpanded: false,
+                    isLoadingDetail: false,
+                    records: null,
+                    pagination: {
+                        current: 1,
+                        count: 0,
+                        limit: 10
+                    }
                 }
-                return iconMap[status] || 'icon-circle'
+                if (view === 'PIPELINE') {
+                    return {
+                        ...base,
+                        taskKey: item.pipelineId,
+                        buildCount: item.buildCount,
+                        lastBuildTime: formatTime(item.lastBuildTime)
+                    }
+                }
+                if (view === 'BUILD') {
+                    // 构建视图
+                    const latestBuild = item.buildHistory || {}
+                    const startTime = latestBuild.startTime || item.startTime || item.lastBuildTime
+                    const endTime = latestBuild.endTime || item.endTime
+                    return {
+                        ...base,
+                        taskKey: item.buildId || latestBuild.buildId || `${item.pipelineId}-${startTime || index}`,
+                        buildId: item.buildId || latestBuild.buildId,
+                        buildNum: latestBuild.buildNum || item.buildNum,
+                        status: latestBuild.status || item.status,
+                        statusText: (latestBuild.status || item.status)
+                            ? (proxy.$t(`environment.statusMap.${latestBuild.status || item.status}`) || (latestBuild.status || item.status))
+                            : '',
+                        creator: latestBuild.userId || item.creator || '--',
+                        startTime: formatTime(startTime),
+                        // 来源：listAgentPipeline 接口 buildHistory.executeCount，回退为 0
+                        executeCount: latestBuild.executeCount ?? item.executeCount ?? 0,
+                        duration: (startTime && endTime)
+                            ? calculateDuration(startTime, endTime)
+                            : formatDuration(latestBuild.totalTime || latestBuild.executeTime || item.avgTimeInterval)
+                    }
+                }
+                // JOB
+                return {
+                    ...base,
+                    taskKey: item.jobId || item.pipelineId,
+                    stageId: convertStageId(item.stageId),
+                    buildCount: item.buildCount,
+                    avgTimeInterval: formatSeconds(item.avgTimeInterval),
+                    lastBuildTime: formatTime(item.lastBuildTime)
+                }
+            }
+
+            // 明细记录映射（按视图区分展示字段）
+            const mapDetailRecord = (view, i) => {
+                if (view === 'BUILD') {
+                    // 构建视图展开：每行是该构建下的一个 Job
+                    const firstTask = (i.tasks && i.tasks[0]) || {}
+                    return {
+                        ...i,
+                        seq: (() => {
+                            const vmSeqId = firstTask.vmSeqId || i.containerId || ''
+                            const stageNumb = firstTask.stageNumb
+                            if (!stageNumb) return vmSeqId
+                            return vmSeqId ? `${stageNumb}-${vmSeqId}` : stageNumb
+                        })(),
+                        jobName: firstTask.taskName || '--',
+                        statusText: proxy.$t(`environment.statusMap.${i.status}`) || '',
+                        startTime: formatTime(i.startTime),
+                        endTime: formatTime(i.endTime),
+                        duration: calculateDuration(i.startTime, i.endTime)
+                    }
+                }
+                // PIPELINE / JOB 展开：每行是一次构建
+                return {
+                    ...i,
+                    statusText: proxy.$t(`environment.statusMap.${i.status}`) || '',
+                    startTime: formatTime(i.startTime),
+                    endTime: formatTime(i.endTime),
+                    duration: calculateDuration(i.startTime, i.endTime),
+                    tasks: i.tasks || []
+                }
             }
             
             // 展开/收起任务
@@ -455,26 +970,27 @@
             
             // 加载任务详情
             const loadTaskDetail = async (task) => {
+                // 构建视图展开需要 buildId，后端列表未返回时跳过请求，避免 400
+                if (currentView.value === 'BUILD' && !task.buildId) {
+                    task.records = []
+                    task.pagination.count = 0
+                    return
+                }
                 try {
                     task.isLoadingDetail = true
                     const params = {
                         page: task.pagination.current,
                         pageSize: task.pagination.limit
                     }
-                    const res = await fetchPipelineBuildHistory({
+                    const res = await fetchBuildDetail(currentView.value, {
                         pipelineId: task.pipelineId,
                         jobId: task.jobId,
+                        buildId: task.buildId,
+                        // 数据源：listAgentPipeline 接口里的 executeCount；即使 0/null 也强制传入
+                        executeCount: task.executeCount ?? '',
                         params
                     })
-                    task.records = res.records.map(i => {
-                        return {
-                            ...i,
-                            statusText: proxy.$t(`environment.statusMap.${i.status}`) || '',
-                            startTime: formatTime(i.startTime),
-                            endTime: formatTime(i.endTime),
-                            duration: calculateDuration(i.startTime, i.endTime)
-                        }
-                    }) || []
+                    task.records = (res.records || []).map(i => mapDetailRecord(currentView.value, i))
                     task.pagination.count = res.count || 0
                 } catch (err) {
                     proxy.$bkMessage({
@@ -503,27 +1019,11 @@
                         pageSize: pagination.value.limit
                     }
                     
-                    const res = await fetchJobTaskList(params)
+                    const res = await fetchTaskList(currentView.value, params)
                     pipelineCount.value = res.pipelineCount
                     jobCount.value = res.jobCount
-                    const newTasks = (res.result.records || []).map(task => {
-                        return {
-                            ...task,
-                            stageId: convertStageId(task.stageId),
-                            lastBuildTime: formatTime(task.lastBuildTime),
-                            avgTimeInterval: formatSeconds(task.avgTimeInterval),
-                      
-                            // 流水线列表状态数据
-                            isExpanded: false,
-                            isLoadingDetail: false,
-                            records: null,
-                            pagination: {
-                                current: 1,
-                                count: 0,
-                                limit: 10
-                            }
-                        }
-                    })
+                    buildCount.value = res.buildCount
+                    const newTasks = (res.result.records || []).map((task, idx) => mapListRecord(currentView.value, task, idx))
                     
                     if (isLoadMore) {
                         // 加载更多，追加数据
@@ -575,6 +1075,14 @@
                 if (scrollHeight - scrollTop - clientHeight < 100) {
                     loadMore()
                 }
+            }
+
+            // 切换视图
+            const handleViewChange = () => {
+                resetPagination()
+                taskList.value = []
+                searchSelectValue.value = []
+                loadTaskList()
             }
             
             // 搜索
@@ -629,6 +1137,10 @@
             
             return {
                 // data
+                isCreateResType,
+                isEnvDetail,
+                statsConfig,
+                currentView,
                 isLoading,
                 isLoadingMore,
                 dateRange,
@@ -641,15 +1153,18 @@
                 taskList,
                 jobCount,
                 pipelineCount,
+                buildCount,
 
                 // function
                 setTaskRef,
                 getTaskInfoItems,
                 getPipelineHistoryUrl,
                 getBuildDetailUrl,
+                getNodeDetailUrl,
                 formatTime,
-                getStatusIcon,
+                getJobStageLabel,
                 toggleExpand,
+                handleViewChange,
                 handleSearchChange,
                 handleDateClear,
                 handleDateChange,
@@ -668,11 +1183,11 @@
     flex-direction: column;
     overflow: hidden;
     .date-picker {
-        width: 300px;
+        width: 240px;
         margin-right: 8px;
     }
     .search-input {
-        width: 480px;
+        width: 350px;
         z-index: 1000;
         background: white;
         ::placeholder {
@@ -683,31 +1198,41 @@
     .task-header {
         flex-shrink: 0;
         display: flex;
+        flex-wrap: wrap;
         justify-content: space-between;
         align-items: center;
-        padding: 0 24px;
+        gap: 8px 16px;
         
-        .task-stats {
-            .stats-text {
-                font-size: 12px;
-                color: #63656E;
-            }
-            .count-number {
-                font-weight: 700;
-                color: #3c88ff;
-            }
+        .task-header-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            flex-shrink: 0;
+            min-width: 0;
+        }
+        .stats-text {
+            font-size: 12px;
+            color: #63656E;
+            white-space: nowrap;
+        }
+        .count-number {
+            font-weight: 700;
+            color: #3c88ff;
         }
         
         .task-search {
             display: flex;
             align-items: center;
+            flex: 1 1 auto;
+            justify-content: flex-end;
+            min-width: 0;
         }
     }
     
     .task-list {
         flex: 1;
         overflow-y: auto;
-        padding: 16px 24px;
+        padding: 16px 0;
         min-height: 0;
         
         .task-item {
@@ -751,13 +1276,90 @@
                 .task-title {
                     flex: 1;
                     min-width: 0;
+
+                    &.pipeline-view-title {
+                        display: flex;
+                        align-items: center;
+                        min-width: 0;
+
+                        .title-icon {
+                            flex-shrink: 0;
+                            margin-right: 12px;
+
+                            &.bk-icon {
+                                font-size: 30px;
+                                width: 30px;
+                                height: 30px;
+                                line-height: 30px;
+                                color: #3a84ff;
+                            }
+                        }
+
+                        .task-title-content {
+                            min-width: 0;
+                            flex: 1;
+                        }
+                    }
                     
                     .task-name {
                         font-size: 14px;
                         color: #313238;
                         font-weight: 500;
-                        display: block;
+                        display: flex;
+                        align-items: center;
                         margin-bottom: 8px;
+
+                        &.build-name {
+                            gap: 6px;
+                            margin-bottom: 6px;
+                            align-items: baseline;
+                        }
+
+                        .build-num {
+                            font-weight: 500;
+                        }
+
+                        a.build-num {
+                            color: #3A84FF;
+                        }
+
+                        .build-status-text {
+                            color: #313238;
+                        }
+                    }
+
+                    &.build-view-title {
+                        .build-main-info {
+                            display: flex;
+                            align-items: center;
+                            min-width: 0;
+                        }
+
+                        .build-status-icon {
+                            margin-right: 8px;
+                            margin-top: 0;
+                            flex-shrink: 0;
+                            width: 26px;
+                            height: 26px;
+                            line-height: 26px;
+                        }
+
+                        .build-text-info {
+                            min-width: 0;
+                            flex: 1;
+                        }
+                    }
+
+                    .pipeline-title {
+                        overflow: hidden;
+                        white-space: nowrap;
+                        text-overflow: ellipsis;
+                        color: #3A84FF;
+                    }
+
+                    .task-sub {
+                        font-size: 12px;
+                        color: #979BA5;
                     }
                     
                     .task-pipeline-name {
@@ -771,8 +1373,14 @@
                             margin-right: 4px;
                             flex-shrink: 0;
                         }
+
+                        .pipeline-prefix {
+                            flex-shrink: 0;
+                        }
                         
                         .pipeline-text {
+                            display: flex;
+                            align-items: center;
                             overflow: hidden;
                             white-space: nowrap;
                             text-overflow: ellipsis;
@@ -782,6 +1390,12 @@
                             &:hover {
                                 color: #3a84ff;
                             }
+                        }
+
+                        .jump-icon {
+                            margin-left: 8px;
+                            color: #3a84ff;
+                            flex-shrink: 0;
                         }
                     }
                 }
@@ -804,6 +1418,14 @@
                             color: #979BA5;
                             margin-bottom: 8px;
                             white-space: nowrap;
+                            display: inline-flex;
+                            align-items: center;
+                            gap: 4px;
+
+                            .info-tip-icon {
+                                color: #979BA5;
+                                flex-shrink: 0;
+                            }
                         }
                         
                         .info-value {
@@ -826,6 +1448,32 @@
                     align-items: center;
                     gap: 2px;
                 }
+                .job-cell {
+                    display: flex;
+                    align-items: center;
+                    min-width: 0;
+                    .job-seq {
+                        display: inline-flex;
+                        align-items: center;
+                        justify-content: center;
+                        height: 18px;
+                        padding: 0 4px;
+                        margin-right: 6px;
+                        font-size: 12px;
+                        line-height: 16px;
+                        color: #63656e;
+                        background: #fafbfd;
+                        border: 1px solid #dcdee5;
+                        border-radius: 2px;
+                        flex-shrink: 0;
+                        box-sizing: border-box;
+                    }
+                    .job-name {
+                        overflow: hidden;
+                        white-space: nowrap;
+                        text-overflow: ellipsis;
+                    }
+                }
             }
         }
 
@@ -836,6 +1484,14 @@
             &:hover {
                 color: #3a84ff;
             }
+        }
+
+        a.build-num-link {
+            color: #3A84FF;
+        }
+
+        a.node-link {
+            color: #3A84FF;
         }
         
         .loading-more,

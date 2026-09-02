@@ -208,7 +208,7 @@
                 },
                 {
                     name: 'taskList',
-                    label: proxy.$t('environment.taskDetail')
+                    label: proxy.$t('environment.nodeInfo.buildTask')
                 },
                 {
                     name: 'offlineRecords',

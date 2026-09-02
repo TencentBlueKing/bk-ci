@@ -52,7 +52,8 @@
     import { ref, computed, onMounted, onUnmounted } from 'vue'
     import {
         SERVICE_RESOURCE_TYPE,
-        RES_TYPE_STORAGE_KEY
+        RES_TYPE_STORAGE_KEY,
+        ENV_TYPE_MAP
     } from '@/store/constants'
     import UseInstance from '@/hooks/useInstance'
     import Logo from '@/components/Logo'
@@ -100,11 +101,20 @@
                     activeValue.value = value
                     localStorage.setItem(RES_TYPE_STORAGE_KEY, value)
 
+                    // 切换资源类型时，一次性重置相关参数（envType / envId / tabName），
+                    // 避免与 group_aside.vue 的 watch resType 连续触发多次 replace 产生竞争。
+                    // 同时捕获 "Navigation cancelled" 异常，防止其冒泡到全局错误处理器。
                     proxy.$router.replace({
+                        name: 'envDetail',
                         params: {
                             ...proxy.$route.params,
-                            resType: value
+                            resType: value,
+                            envType: ENV_TYPE_MAP.ALL,
+                            envId: undefined,
+                            tabName: 'node'
                         }
+                    }).catch(err => {
+                        console.warn('路由导航被取消:', err?.message || err)
                     })
                 }
                 isDropdownOpen.value = false
