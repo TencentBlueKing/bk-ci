@@ -215,7 +215,7 @@ class ThirdPartyAgentBuildService @Autowired constructor(
             }
         }
         total += Duration.between(curStart, curEnd).seconds
-        return Pair(intervals.first().second, total)
+        return Pair(intervals.first().first, total)
     }
 
     @Deprecated("fetchBuildPipelineView")
